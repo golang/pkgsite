@@ -55,3 +55,31 @@ type License struct {
 	Type     string
 	Contents string
 }
+
+// A VersionSource is the source of a record in the version logs.
+type VersionSource string
+
+const (
+	// Version fetched by the Proxy Index Cron
+	VersionLogProxyIndex = VersionSource("proxy-index")
+
+	// Version requested by user from Frontend
+	VersionLogFrontend = VersionSource("frontend")
+)
+
+func (vs VersionSource) String() string {
+	return string(vs)
+}
+
+// A Version Log is a record of a version that was
+// (1) fetched from the module proxy index,
+// (2) requested by user from the frontend
+// The Name and Version may not necessarily be valid module versions (for example, if a
+// user requests a module or version that does not exist).
+type VersionLog struct {
+	Name      string
+	Version   string
+	CreatedAt time.Time
+	Source    VersionSource
+	Error     string
+}
