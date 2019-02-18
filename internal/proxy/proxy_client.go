@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package proxyclient
+package proxy
 
 import (
 	"encoding/json"
@@ -27,13 +27,13 @@ type VersionInfo struct {
 
 // cleanURL trims the rawurl of trailing slashes.
 func cleanURL(rawurl string) string {
-	return strings.TrimRight(rawurl, "/"), nil
+	return strings.TrimRight(rawurl, "/")
 }
 
 // New constructs a *Client using the provided rawurl, which is expected to
 // be an absolute URI that can be directly passed to http.Get.
 func New(rawurl string) *Client {
-	return &Client{url: cleanURL(rawurl)}, nil
+	return &Client{url: cleanURL(rawurl)}
 }
 
 // infoURL constructs a url for a GET request to $GOPROXY/<module>/@v/list.
