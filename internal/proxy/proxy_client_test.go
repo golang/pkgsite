@@ -5,6 +5,7 @@
 package proxy
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -71,5 +72,51 @@ func TestGetInfoVersionDoesNotExist(t *testing.T) {
 	info, _ := testCase.client.GetInfo(name, version)
 	if info != nil {
 		t.Errorf("GetInfo(%q, %q) = %v, want %v", name, version, info, nil)
+	}
+}
+
+func TestGetZip(t *testing.T) {
+	teardownTestCase, testCase := setupTestCase(t)
+	defer teardownTestCase(t)
+
+	name := "my/module"
+	version := "v1.0.0"
+	zipReader, err := testCase.client.GetZip(name, version)
+	if err != nil {
+		t.Errorf("GetZip(%q, %q) error: %v", name, version, err)
+	}
+
+	expectedFiles := map[string]bool{
+		"my/":                        true,
+		"my/module@v1.0.0/":          true,
+		"my/module@v1.0.0/LICENSE":   true,
+		"my/module@v1.0.0/README.md": true,
+		"my/module@v1.0.0/go.mod":    true,
+	}
+	if len(zipReader.File) != len(expectedFiles) {
+		t.Errorf("GetZip(%q, %q) returned number of files: got %d, want %d",
+			name, version, len(zipReader.File), len(expectedFiles))
+	}
+
+	for _, zipFile := range zipReader.File {
+		if !expectedFiles[zipFile.Name] {
+			t.Errorf("GetZip(%q, %q) returned unexpected file: %q", name,
+				version, zipFile.Name)
+		}
+		delete(expectedFiles, zipFile.Name)
+	}
+}
+
+func TestGetZipNonExist(t *testing.T) {
+	teardownTestCase, testCase := setupTestCase(t)
+	defer teardownTestCase(t)
+
+	name := "my/nonexistmodule"
+	version := "v1.0.0"
+	expectedErr := fmt.Sprintf("http.Get(%q) returned response: %d (%q)",
+		testCase.client.zipURL(name, version), 404, "404 Not Found")
+
+	if _, err := testCase.client.GetZip(name, version); err.Error() != expectedErr {
+		t.Errorf("GetZip(%q, %q) returned error %v, want %v", name, version, err, expectedErr)
 	}
 }
