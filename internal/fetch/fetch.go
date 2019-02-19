@@ -9,6 +9,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -46,4 +47,36 @@ func readReadme(rc *zip.ReadCloser) ([]byte, error) {
 		}
 	}
 	return nil, errReadmeNotFound
+}
+
+// seriesNameForModule reports the series name for the given module. The series
+// name is the shared base path of a group of major-version variants. For
+// example, my/module, my/module/v2, my/module/v3 are a single series, with the
+// series name my/module.
+func seriesNameForModule(name string) (string, error) {
+	if name == "" {
+		return "", errors.New("module name cannot be empty")
+	}
+
+	name = strings.TrimSuffix(name, "/")
+	parts := strings.Split(name, "/")
+	if len(parts) <= 1 {
+		return name, nil
+	}
+
+	suffix := parts[len(parts)-1]
+	if string(suffix[0]) == "v" {
+		// Attempt to convert the portion of suffix following "v" to an
+		// integer. If that portion cannot be converted to an integer, or the
+		// version = 0 or 1, return the full module name. For example:
+		// my/module/v2 has series name my/module
+		// my/module/v1 has series name my/module/v1
+		// my/module/v2x has series name my/module/v2x
+		version, err := strconv.Atoi(suffix[1:len(suffix)])
+		if err != nil || version < 2 {
+			return name, nil
+		}
+		return strings.Join(parts[0:len(parts)-1], "/"), nil
+	}
+	return name, nil
 }

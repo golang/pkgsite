@@ -7,12 +7,13 @@ package fetch
 import (
 	"archive/zip"
 	"bytes"
+	"errors"
 	"io/ioutil"
 	"testing"
 )
 
 func TestIsReadme(t *testing.T) {
-	for input, expected := range map[string]bool{
+	for input, want := range map[string]bool{
 		"rEaDme":         true,
 		"README.FOO":     true,
 		"FOO_README":     false,
@@ -20,8 +21,8 @@ func TestIsReadme(t *testing.T) {
 		"README.FOO.FOO": false,
 	} {
 		got := isReadme(input)
-		if got != expected {
-			t.Errorf("isReadme(%q) = %t: %t", input, got, expected)
+		if got != want {
+			t.Errorf("isReadme(%q) = %t: %t", input, got, want)
 		}
 	}
 
@@ -66,19 +67,19 @@ func TestReadZip(t *testing.T) {
 	}
 	defer zipReader.Close()
 
-	readme, err := readReadme(zipReader)
+	got, err := readReadme(zipReader)
 	if err != nil {
 		t.Errorf("readReadme(%q) error: %v", testZip, err)
 	}
 
 	testReadmeFilename := "testdata/module/README.md"
-	expectedReadme, err := ioutil.ReadFile(testReadmeFilename)
+	want, err := ioutil.ReadFile(testReadmeFilename)
 	if err != nil {
 		t.Errorf("readReadme(%q) error: %v", testReadmeFilename, err)
 	}
 
-	if !bytes.Equal(expectedReadme, readme) {
-		t.Errorf("readReadme(%q) = %q, want %q", testZip, readme, expectedReadme)
+	if !bytes.Equal(want, got) {
+		t.Errorf("readReadme(%q) = %q, want %q", testZip, got, want)
 	}
 }
 
@@ -93,5 +94,31 @@ func TestReadZipEmptyZip(t *testing.T) {
 	_, err = readReadme(zipReader)
 	if err != errReadmeNotFound {
 		t.Errorf("readReadme(%q) error: %v, want %v", testZip, err, errReadmeNotFound)
+	}
+}
+
+func TestSeriesNameForModule(t *testing.T) {
+	for input, want := range map[string]string{
+		"module/":          "module",
+		"module/v2/":       "module",
+		"my/module":        "my/module",
+		"my/module/v":      "my/module/v",
+		"my/module/v0":     "my/module/v0",
+		"my/module/v1":     "my/module/v1",
+		"my/module/v23456": "my/module",
+		"v2/":              "v2",
+	} {
+		got, err := seriesNameForModule(input)
+		if err != nil {
+			t.Errorf("seriesNameForModule(%q): %v", input, err)
+		}
+		if got != want {
+			t.Errorf("seriesNameForModule(%q) = %q, want %q", input, got, want)
+		}
+	}
+
+	want := errors.New("module name cannot be empty")
+	if _, got := seriesNameForModule(""); got.Error() != want.Error() {
+		t.Errorf("seriesNameForModule(%q) returned error: %v; want %v", "", got, want)
 	}
 }
