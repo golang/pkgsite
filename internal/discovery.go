@@ -42,9 +42,10 @@ type Version struct {
 // A Package is a group of one or more Go source files with the same package
 // header. Packages are part of a module.
 type Package struct {
-	Version  *Version
+	Name     string
 	Path     string
 	Synopsis string
+	Version  *Version
 }
 
 // A ReadMe represents the contents of a README file.

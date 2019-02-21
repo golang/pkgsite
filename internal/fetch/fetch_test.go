@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"errors"
 	"io/ioutil"
+	"strings"
 	"testing"
 )
 
@@ -72,7 +73,7 @@ func TestReadZip(t *testing.T) {
 		t.Errorf("readReadme(%q) error: %v", testZip, err)
 	}
 
-	testReadmeFilename := "testdata/module/README.md"
+	testReadmeFilename := "testdata/my/module/README.md"
 	want, err := ioutil.ReadFile(testReadmeFilename)
 	if err != nil {
 		t.Errorf("readReadme(%q) error: %v", testReadmeFilename, err)
@@ -120,5 +121,49 @@ func TestSeriesNameForModule(t *testing.T) {
 	want := errors.New("module name cannot be empty")
 	if _, got := seriesNameForModule(""); got.Error() != want.Error() {
 		t.Errorf("seriesNameForModule(%q) returned error: %v; want %v", "", got, want)
+	}
+}
+
+func TestExtractPackagesFromZip(t *testing.T) {
+	testZip := "testdata/module.zip"
+	zipReader, err := zip.OpenReader(testZip)
+	if err != nil {
+		t.Fatalf("zip.OpenReader(%q): %v", testZip, err)
+	}
+
+	name := "my/module"
+	packages, err := extractPackagesFromZip(name, zipReader)
+	if err != nil {
+		t.Fatalf("zipToPackages(%q, %q): %v", name, testZip, err)
+	}
+
+	expectedNamesToPath := map[string]string{
+		"foo": "my/module/foo",
+		"bar": "my/module/bar",
+	}
+	for _, p := range packages {
+		expectedPath, ok := expectedNamesToPath[p.Name]
+		if !ok {
+			t.Errorf("zipToPackages(%q, %q) returned unexpected package: %q", name, testZip, p.Name)
+		}
+		if expectedPath != p.Path {
+			t.Errorf("zipToPackages(%q, %q) returned unexpected path for package %q: %q, want %q", name, testZip, p.Name, p.Path, expectedPath)
+		}
+
+		delete(expectedNamesToPath, p.Name)
+	}
+}
+
+func TestExtractPackagesFromZipEmptyZip(t *testing.T) {
+	testZip := "testdata/empty.zip"
+	zipReader, err := zip.OpenReader(testZip)
+	if err != nil {
+		t.Fatalf("zip.OpenReader(%q): %v", testZip, err)
+	}
+
+	name := "empty/module"
+	_, err = extractPackagesFromZip(name, zipReader)
+	if !strings.HasSuffix(err.Error(), "returned 0 packages") {
+		t.Fatalf("zipToPackages(%q, %q): %v", name, testZip, err)
 	}
 }
