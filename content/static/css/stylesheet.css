@@ -1,0 +1,51 @@
+/*
+	Copyright 2019 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+*/
+
+.GoLogo {
+  padding: 10px;
+}
+.GlobalNav {
+  display: flex;
+  padding: 0;
+  list-style: none;
+}
+.GlobalNav,
+.ModulesNav {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #e7e7e7;
+  background-color: #f3f3f3;
+}
+.GlobalNav-link,
+.ModulesNav-tab {
+  float: left;
+  display: flex;
+  padding: 0 10px;
+}
+.ModulesNav-link {
+  display: block;
+  color: #000;
+  text-align: center;
+  padding: 14px 3px 16px 3px;
+  text-decoration: none;
+}
+.ModulesNav-link:hover {
+  background-color: #d6d2d1;
+}
+.ModulesNav-tab.active {
+  background-color: #d6d2d1;
+}
+.OverviewContent {
+  font-family: Arial;
+  color: #000;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+.OverviewContent-readMe {
+  margin-top: 10px;
+}

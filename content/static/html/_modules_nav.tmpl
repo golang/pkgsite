@@ -1,0 +1,17 @@
+<!--
+	Copyright 2019 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+
+{{ define "modules_nav" }}
+{{/* TODO(ckimblebrown): These need to become accessible tabs, work with katiehockman and/or andybons */}}
+  <ul class="ModulesNav">
+    <li class="active ModulesNav-tab"><a href="/{{.Name}}?v={{.Version}}" class="ModulesNav-link">Overview</a></li>
+    <li class="ModulesNav-tab"><a href="/{{.Name}}?v={{.Version}}&tab=docs" class="ModulesNav-link">Docs</a></li>
+    <li class="ModulesNav-tab"><a href="/{{.Name}}?v={{.Version}}&tab=versions" class="ModulesNav-link">Versions</a></li>
+    <li class="ModulesNav-tab"><a href="/{{.Name}}?v={{.Version}}&tab=dependencies" class="ModulesNav-link">Dependencies</a></li>
+    <li class="ModulesNav-tab"><a href="/{{.Name}}?v={{.Version}}&tab=dependents" class="ModulesNav-link">Dependents</a></li>
+    <li class="ModulesNav-tab"><a href="/{{.Name}}?v={{.Version}}&tab=licenses" class="ModulesNav-link">Licenses</a></li>
+  </ul>
+{{ end }}
