@@ -52,15 +52,16 @@ func TestPostgres_ReadAndWriteVersion(t *testing.T) {
 	}
 
 	var testVersion = &internal.Version{
-		Module:       module,
-		Version:      "v1.0.0",
-		Synopsis:     "This is a synopsis",
-		License:      &internal.License{},
-		ReadMe:       &internal.ReadMe{},
-		CommitTime:   time.Now(),
-		Packages:     []*internal.Package{},
-		Dependencies: []*internal.Version{},
-		Dependents:   []*internal.Version{},
+		Module:          module,
+		Version:         "v1.0.0",
+		Synopsis:        "This is a synopsis",
+		LicenseName:     "licensename",
+		LicenseContents: "licensecontents",
+		ReadMe:          "readme",
+		CommitTime:      time.Now(),
+		Packages:        []*internal.Package{},
+		Dependencies:    []*internal.Version{},
+		Dependents:      []*internal.Version{},
 	}
 
 	testCases := []struct {

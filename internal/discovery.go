@@ -26,17 +26,18 @@ type Module struct {
 
 // A Version is a specific, reproducible build of a module.
 type Version struct {
-	Module       *Module
-	Version      string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	Synopsis     string
-	CommitTime   time.Time
-	License      *License
-	ReadMe       *ReadMe
-	Packages     []*Package
-	Dependencies []*Version
-	Dependents   []*Version
+	Module          *Module
+	Version         string
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	Synopsis        string
+	CommitTime      time.Time
+	LicenseName     string
+	LicenseContents string
+	ReadMe          string
+	Packages        []*Package
+	Dependencies    []*Version
+	Dependents      []*Version
 }
 
 // A Package is a group of one or more Go source files with the same package
@@ -46,19 +47,6 @@ type Package struct {
 	Path     string
 	Synopsis string
 	Version  *Version
-}
-
-// A ReadMe represents the contents of a README file.
-type ReadMe struct {
-	Version  *Version
-	Contents string
-}
-
-// A License represents the contents of a LICENSE file.
-type License struct {
-	Version  *Version
-	Type     string
-	Contents string
 }
 
 // A VersionSource is the source of a record in the version logs.

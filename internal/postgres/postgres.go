@@ -91,9 +91,8 @@ func (db *DB) InsertVersionLogs(logs []*internal.VersionLog) error {
 // GetVersion fetches a Version from the database with the primary key
 // (name, version).
 func (db *DB) GetVersion(name string, version string) (*internal.Version, error) {
-	var synopsis string
 	var commitTime, createdAt, updatedAt time.Time
-	var license string
+	var synopsis, licenseName, readme string
 
 	query := `
 		SELECT
@@ -101,12 +100,13 @@ func (db *DB) GetVersion(name string, version string) (*internal.Version, error)
 			updated_at,
 			synopsis,
 			commit_time,
-			license
+			license_name,
+			readme
 		FROM versions
 		WHERE name = $1 and version = $2;`
 	row := db.QueryRow(query, name, version)
 
-	if err := row.Scan(&createdAt, &updatedAt, &synopsis, &commitTime, &license); err != nil {
+	if err := row.Scan(&createdAt, &updatedAt, &synopsis, &commitTime, &licenseName, &readme); err != nil {
 		return nil, err
 	}
 	return &internal.Version{
@@ -115,12 +115,11 @@ func (db *DB) GetVersion(name string, version string) (*internal.Version, error)
 		Module: &internal.Module{
 			Name: name,
 		},
-		Version:    version,
-		Synopsis:   synopsis,
-		CommitTime: commitTime,
-		License: &internal.License{
-			Type: license,
-		},
+		Version:     version,
+		Synopsis:    synopsis,
+		CommitTime:  commitTime,
+		LicenseName: licenseName,
+		ReadMe:      readme,
 	}, nil
 
 }
@@ -157,14 +156,14 @@ func (db *DB) InsertVersion(version *internal.Version) error {
 		// licenses, dependencies, and packages (the rest of the fields in the
 		// internal.Version struct)
 		if _, err := tx.Exec(
-			`INSERT INTO versions(name, version, synopsis, commit_time, license, deleted)
+			`INSERT INTO versions(name, version, synopsis, commit_time, license_name, readme)
 			VALUES($1,$2,$3,$4,$5,$6)`,
 			version.Module.Name,
 			version.Version,
 			version.Synopsis,
 			version.CommitTime,
-			version.License.Type,
-			false,
+			version.LicenseName,
+			version.ReadMe,
 		); err != nil {
 			return err
 		}
