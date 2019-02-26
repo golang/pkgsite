@@ -1,3 +1,7 @@
+// Copyright 2019 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package postgres
 
 import (
@@ -52,16 +56,15 @@ func TestPostgres_ReadAndWriteVersion(t *testing.T) {
 	}
 
 	var testVersion = &internal.Version{
-		Module:          module,
-		Version:         "v1.0.0",
-		Synopsis:        "This is a synopsis",
-		LicenseName:     "licensename",
-		LicenseContents: "licensecontents",
-		ReadMe:          "readme",
-		CommitTime:      time.Now(),
-		Packages:        []*internal.Package{},
-		Dependencies:    []*internal.Version{},
-		Dependents:      []*internal.Version{},
+		Module:       module,
+		Version:      "v1.0.0",
+		Synopsis:     "This is a synopsis",
+		License:      "licensename",
+		ReadMe:       "readme",
+		CommitTime:   time.Now(),
+		Packages:     []*internal.Package{},
+		Dependencies: []*internal.Version{},
+		Dependents:   []*internal.Version{},
 	}
 
 	testCases := []struct {
