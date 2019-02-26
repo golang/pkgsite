@@ -6,29 +6,9 @@ package proxy
 
 import (
 	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 )
-
-type testCase struct {
-	proxy  *httptest.Server
-	client *Client
-}
-
-func setupTestCase(t *testing.T) (func(t *testing.T), *testCase) {
-	proxy := httptest.NewServer(http.FileServer(http.Dir("testdata/modproxy/proxy")))
-	tc := testCase{
-		proxy:  proxy,
-		client: New(proxy.URL),
-	}
-
-	fn := func(t *testing.T) {
-		proxy.Close()
-	}
-	return fn, &tc
-}
 
 func TestCleanURL(t *testing.T) {
 	for raw, expected := range map[string]string{
@@ -43,12 +23,12 @@ func TestCleanURL(t *testing.T) {
 }
 
 func TestGetInfo(t *testing.T) {
-	teardownTestCase, testCase := setupTestCase(t)
+	teardownTestCase, client := SetupTestProxyClient(t)
 	defer teardownTestCase(t)
 
 	name := "my/module"
 	version := "v1.0.0"
-	info, err := testCase.client.GetInfo(name, version)
+	info, err := client.GetInfo(name, version)
 	if err != nil {
 		t.Errorf("GetInfo(%q, %q) error: %v", name, version, err)
 	}
@@ -64,24 +44,24 @@ func TestGetInfo(t *testing.T) {
 }
 
 func TestGetInfoVersionDoesNotExist(t *testing.T) {
-	teardownTestCase, testCase := setupTestCase(t)
+	teardownTestCase, client := SetupTestProxyClient(t)
 	defer teardownTestCase(t)
 
 	name := "my/module"
 	version := "v3.0.0"
-	info, _ := testCase.client.GetInfo(name, version)
+	info, _ := client.GetInfo(name, version)
 	if info != nil {
 		t.Errorf("GetInfo(%q, %q) = %v, want %v", name, version, info, nil)
 	}
 }
 
 func TestGetZip(t *testing.T) {
-	teardownTestCase, testCase := setupTestCase(t)
+	teardownTestCase, client := SetupTestProxyClient(t)
 	defer teardownTestCase(t)
 
 	name := "my/module"
 	version := "v1.0.0"
-	zipReader, err := testCase.client.GetZip(name, version)
+	zipReader, err := client.GetZip(name, version)
 	if err != nil {
 		t.Errorf("GetZip(%q, %q) error: %v", name, version, err)
 	}
@@ -108,15 +88,15 @@ func TestGetZip(t *testing.T) {
 }
 
 func TestGetZipNonExist(t *testing.T) {
-	teardownTestCase, testCase := setupTestCase(t)
+	teardownTestCase, client := SetupTestProxyClient(t)
 	defer teardownTestCase(t)
 
 	name := "my/nonexistmodule"
 	version := "v1.0.0"
 	expectedErr := fmt.Sprintf("http.Get(%q) returned response: %d (%q)",
-		testCase.client.zipURL(name, version), 404, "404 Not Found")
+		client.zipURL(name, version), 404, "404 Not Found")
 
-	if _, err := testCase.client.GetZip(name, version); err.Error() != expectedErr {
+	if _, err := client.GetZip(name, version); err.Error() != expectedErr {
 		t.Errorf("GetZip(%q, %q) returned error %v, want %v", name, version, err, expectedErr)
 	}
 }

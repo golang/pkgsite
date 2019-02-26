@@ -5,43 +5,12 @@
 package postgres
 
 import (
-	"fmt"
-	"os"
 	"reflect"
 	"testing"
 	"time"
 
-	_ "github.com/lib/pq"
 	"golang.org/x/discovery/internal"
 )
-
-var (
-	user       = getEnv("GO_DISCOVERY_DATABASE_TEST_USER", "postgres")
-	password   = getEnv("GO_DISCOVERY_DATABASE_TEST_PASSWORD", "")
-	host       = getEnv("GO_DISCOVERY_DATABASE_TEST_HOST", "localhost")
-	testdbname = getEnv("GO_DISCOVERY_DATABASE_TEST_NAME", "discovery-database-test")
-	testdb     = fmt.Sprintf("user=%s host=%s dbname=%s sslmode=disable", user, host, testdbname)
-)
-
-func getEnv(key, fallback string) string {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
-	}
-	return fallback
-}
-
-func setupCleanDB(t *testing.T) (func(t *testing.T), *DB) {
-	t.Helper()
-	db, err := Open(testdb)
-	if err != nil {
-		t.Fatalf("Open(%q), error: %v", testdb, err)
-	}
-	cleanup := func(t *testing.T) {
-		db.Exec(`TRUNCATE version_logs;`)     // truncates version_logs
-		db.Exec(`TRUNCATE versions CASCADE;`) // truncates versions and any tables that use versions as a foreign key.
-	}
-	return cleanup, db
-}
 
 func TestPostgres_ReadAndWriteVersion(t *testing.T) {
 	var series = &internal.Series{
@@ -103,7 +72,7 @@ func TestPostgres_ReadAndWriteVersion(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			teardownTestCase, db := setupCleanDB(t)
+			teardownTestCase, db := SetupCleanDB(t)
 			defer teardownTestCase(t)
 
 			if err := db.InsertVersion(tc.versionData); tc.wantWriteErr != (err != nil) {
@@ -134,7 +103,7 @@ func TestPostgres_ReadAndWriteVersion(t *testing.T) {
 }
 
 func TestPostgress_InsertVersionLogs(t *testing.T) {
-	teardownTestCase, db := setupCleanDB(t)
+	teardownTestCase, db := SetupCleanDB(t)
 	defer teardownTestCase(t)
 
 	now := time.Now().UTC()

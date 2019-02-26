@@ -17,7 +17,6 @@ import (
 
 // A Client is used by the fetch service to communicate with a module
 // proxy. It handles all methods defined by go help goproxy.
-// TODO(julieqiu): Implement GetList, GetMod, and GetZip.
 type Client struct {
 	url string // URL of the module proxy web server
 }
@@ -53,6 +52,11 @@ func (c *Client) GetInfo(name, version string) (*VersionInfo, error) {
 		return nil, err
 	}
 	defer r.Body.Close()
+
+	if r.StatusCode < 200 || r.StatusCode >= 300 {
+		return nil, fmt.Errorf("http.Get(%q) returned response: %d (%q)",
+			c.infoURL(name, version), r.StatusCode, r.Status)
+	}
 
 	var v VersionInfo
 	if err = json.NewDecoder(r.Body).Decode(&v); err != nil {

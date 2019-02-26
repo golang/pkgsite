@@ -16,10 +16,14 @@ import (
 	"strings"
 
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/postgres"
+	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/tools/go/packages"
 )
 
-var errReadmeNotFound = errors.New("fetch: zip file does not contain a README")
+var (
+	errModuleContainsNoPackages = errors.New("module contains 0 packages")
+)
 
 // ParseNameAndVersion returns the module and version specified by u. u is
 // assumed to be a valid url following the structure http(s)://<fetchURL>/<module>@<version>.
@@ -40,50 +44,72 @@ func ParseNameAndVersion(u *url.URL) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-// isReadme checks if file is the README. It is case insensitive.
-func isReadme(file string) bool {
-	base := filepath.Base(file)
-	f := strings.TrimSuffix(base, filepath.Ext(base))
-	return strings.ToUpper(f) == "README"
-}
-
-// containsReadme checks if rc contains a README file.
-func containsReadme(rc *zip.ReadCloser) bool {
-	for _, zipFile := range rc.File {
-		if isReadme(zipFile.Name) {
-			return true
-		}
-	}
-	return false
-}
-
-// readReadme reads the contents of the first file from rc that passes the
-// isReadme check. It returns an error if such a file does not exist.
-func readReadme(rc *zip.ReadCloser) ([]byte, error) {
-	for _, zipFile := range rc.File {
-		if isReadme(zipFile.Name) {
-			return readZipFile(zipFile)
-		}
-	}
-	return nil, errReadmeNotFound
-}
-
-// readZipFile returns the uncompressed contents of f or an error if the
-// uncompressed size of f exceeds 1MB.
-func readZipFile(f *zip.File) ([]byte, error) {
-	if f.UncompressedSize64 > 1e6 {
-		return nil, fmt.Errorf("file size %d exceeds 1MB, skipping", f.UncompressedSize64)
-	}
-	rc, err := f.Open()
+// FetchAndInsertVersion downloads the given module version from the module proxy, processes
+// the contents, and writes the data to the database. The fetch service will:
+// (1) Get the version commit time from the proxy
+// (2) Download the version zip from the proxy
+// (3) Process the contents (series name, readme, license, and packages)
+// (4) Write the data to the discovery database
+func FetchAndInsertVersion(name, version string, proxyClient *proxy.Client, db *postgres.DB) error {
+	info, err := proxyClient.GetInfo(name, version)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("proxyClient.GetInfo(%q, %q): %v", name, version, err)
 	}
-	defer rc.Close()
-	return ioutil.ReadAll(rc)
+
+	zipReader, err := proxyClient.GetZip(name, version)
+	if err != nil {
+		return fmt.Errorf("proxyClient.GetZip(%q, %q): %v", name, version, err)
+	}
+
+	var readme []byte
+	readmeFile := "README"
+	if containsFile(zipReader, readmeFile) {
+		readme, err = extractFile(zipReader, readmeFile)
+		if err != nil {
+			return fmt.Errorf("extractFile(%v, %q): %v", zipReader, readmeFile, err)
+		}
+	}
+
+	var license []byte
+	licenseFile := "LICENSE"
+	if containsFile(zipReader, licenseFile) {
+		license, err = extractFile(zipReader, licenseFile)
+		if err != nil {
+			return fmt.Errorf("extractFile(%v, %q): %v", zipReader, licenseFile, err)
+		}
+	}
+
+	seriesName, err := seriesNameForModule(name)
+	if err != nil {
+		return fmt.Errorf("seriesNameForModule(%q): %v", name, err)
+	}
+
+	packages, err := extractPackagesFromZip(name, version, zipReader)
+	if err != nil && err != errModuleContainsNoPackages {
+		return fmt.Errorf("extractPackagesFromZip(%q, %q, %v): %v", name, version, zipReader, err)
+	}
+
+	v := internal.Version{
+		Module: &internal.Module{
+			Name: name,
+			Series: &internal.Series{
+				Name: seriesName,
+			},
+		},
+		Version:    version,
+		CommitTime: info.Time,
+		ReadMe:     string(readme),
+		License:    string(license),
+		Packages:   packages,
+	}
+	if err = db.InsertVersion(&v); err != nil {
+		return fmt.Errorf("db.InsertVersion(%+v): %v", v, err)
+	}
+	return nil
 }
 
 // extractPackagesFromZip returns a slice of packages from the module zip r.
-func extractPackagesFromZip(module string, r *zip.ReadCloser) ([]*internal.Package, error) {
+func extractPackagesFromZip(module, version string, r *zip.Reader) ([]*internal.Package, error) {
 	// Create a temporary directory to write the contents of the module zip.
 	tempPrefix := "discovery_"
 	dir, err := ioutil.TempDir("", tempPrefix)
@@ -121,7 +147,7 @@ func extractPackagesFromZip(module string, r *zip.ReadCloser) ([]*internal.Packa
 
 	config := &packages.Config{
 		Mode: packages.LoadSyntax,
-		Dir:  fmt.Sprintf("%s/%s", dir, module),
+		Dir:  fmt.Sprintf("%s/%s@%s", dir, module, version),
 	}
 	pattern := fmt.Sprintf("%s/...", module)
 	pkgs, err := packages.Load(config, pattern)
@@ -130,7 +156,7 @@ func extractPackagesFromZip(module string, r *zip.ReadCloser) ([]*internal.Packa
 	}
 
 	if len(pkgs) == 0 {
-		return nil, fmt.Errorf("packages.Load(%+v, %q) returned 0 packages", config, pattern)
+		return nil, errModuleContainsNoPackages
 	}
 
 	packages := []*internal.Package{}
@@ -173,4 +199,52 @@ func seriesNameForModule(name string) (string, error) {
 		return strings.Join(parts[0:len(parts)-1], "/"), nil
 	}
 	return name, nil
+}
+
+// extractFile reads the contents of the first file from r that passes the
+// hasFilename check for expectedFile. It returns an error if such a file
+// does not exist.
+func extractFile(r *zip.Reader, expectedFile string) ([]byte, error) {
+	for _, zipFile := range r.File {
+		if hasFilename(zipFile.Name, expectedFile) {
+			c, err := readZipFile(zipFile)
+			return c, err
+		}
+	}
+	return nil, fmt.Errorf("zip does not contain %q", expectedFile)
+}
+
+// containsFile checks if r contains expectedFile.
+func containsFile(r *zip.Reader, expectedFile string) bool {
+	for _, zipFile := range r.File {
+		if hasFilename(zipFile.Name, expectedFile) {
+			return true
+		}
+	}
+	return false
+}
+
+// hasFilename checks if:
+// (1) file is expectedFile, or
+// (2) the name of file, without the base, is equal to expectedFile.
+// It is case insensitive.
+func hasFilename(file string, expectedFile string) bool {
+	base := filepath.Base(file)
+	return strings.EqualFold(base, expectedFile) ||
+		strings.EqualFold(strings.TrimSuffix(base, filepath.Ext(base)), expectedFile)
+}
+
+// readZipFile returns the uncompressed contents of f or an error if the
+// uncompressed size of f exceeds 1MB.
+func readZipFile(f *zip.File) ([]byte, error) {
+	if f.UncompressedSize64 > 1e6 {
+		return nil, fmt.Errorf("file size %d exceeds 1MB, skipping", f.UncompressedSize64)
+	}
+	rc, err := f.Open()
+	if err != nil {
+		return nil, err
+	}
+	defer rc.Close()
+	b, err := ioutil.ReadAll(rc)
+	return b, err
 }
