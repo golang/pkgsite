@@ -9,9 +9,71 @@ import (
 	"bytes"
 	"errors"
 	"io/ioutil"
+	"net/url"
 	"strings"
 	"testing"
 )
+
+func TestParseNameAndVersion(t *testing.T) {
+	testCases := []struct {
+		name    string
+		url     string
+		module  string
+		version string
+		err     error
+	}{
+		{
+			name:    "ValidFetchURL",
+			url:     "https://proxy.com/module/@v/v1.0.0",
+			module:  "module",
+			version: "v1.0.0",
+			err:     nil,
+		},
+		{
+			name: "InvalidFetchURL",
+			url:  "https://proxy.com/",
+			err:  errors.New(`invalid path: "https://proxy.com/"`),
+		},
+		{
+			name: "InvalidFetchURLNoModule",
+			url:  "https://proxy.com/@v/version",
+			err:  errors.New(`invalid path: "https://proxy.com/@v/version"`),
+		},
+		{
+			name: "InvalidFetchURLNoVersion",
+			url:  "https://proxy.com/module/@v/",
+			err:  errors.New(`invalid path: "https://proxy.com/module/@v/"`),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			u, err := url.Parse(tc.url)
+			if err != nil {
+				t.Errorf("url.Parse(%q): %v", tc.url, err)
+			}
+
+			m, v, err := ParseNameAndVersion(u)
+			if tc.err != nil {
+				if err == nil {
+					t.Fatalf("ParseNameAndVersion(%v) error = (%v); want = (%v)", u, err, tc.err)
+				}
+				if tc.err.Error() != err.Error() {
+					t.Fatalf("ParseNameAndVersion(%v) error = (%v); want = (%v)", u, err, tc.err)
+				} else {
+					return
+				}
+			} else if err != nil {
+				t.Fatalf("ParseNameAndVersion(%v) error = (%v); want = (%v)", u, err, tc.err)
+			}
+
+			if tc.module != m || tc.version != v {
+				t.Fatalf("ParseNameAndVersion(%v): %q, %q, %v; want = %q, %q, %v",
+					u, m, v, err, tc.module, tc.version, tc.err)
+			}
+		})
+	}
+}
 
 func TestIsReadme(t *testing.T) {
 	for input, want := range map[string]bool{

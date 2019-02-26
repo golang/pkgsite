@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -19,6 +20,25 @@ import (
 )
 
 var errReadmeNotFound = errors.New("fetch: zip file does not contain a README")
+
+// ParseNameAndVersion returns the module and version specified by u. u is
+// assumed to be a valid url following the structure http(s)://<fetchURL>/<module>@<version>.
+func ParseNameAndVersion(u *url.URL) (string, string, error) {
+	parts := strings.Split(strings.TrimPrefix(u.Path, "/"), "/@v/")
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("invalid path: %q", u)
+	}
+
+	// TODO(julieqiu): Check module name is valid using
+	// https://github.com/golang/go/blob/c97e576/src/cmd/go/internal/module/module.go#L123
+	// Check version is valid using
+	// https://github.com/golang/go/blob/c97e576/src/cmd/go/internal/modload/query.go#L183
+	if parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("invalid path: %q", u)
+	}
+
+	return parts[0], parts[1], nil
+}
 
 // isReadme checks if file is the README. It is case insensitive.
 func isReadme(file string) bool {
