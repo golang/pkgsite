@@ -122,15 +122,19 @@ func extractPackagesFromZip(module, version string, r *zip.Reader) ([]*internal.
 		if !strings.HasPrefix(f.Name, module) && !strings.HasPrefix(module, f.Name) {
 			return nil, fmt.Errorf("expected files to have shared prefix %q, found %q", module, f.Name)
 		}
-		if f.FileInfo().IsDir() {
-			if err := os.MkdirAll(
-				fmt.Sprintf("%s/%s", dir, f.Name), os.ModePerm); err != nil {
-				return nil, fmt.Errorf("ioutil.TempDir(%q, %q): %v", dir, f.Name, err)
+
+		if !f.FileInfo().IsDir() {
+			fileDir := fmt.Sprintf("%s/%s", dir, filepath.Dir(f.Name))
+			if _, err := os.Stat(fileDir); os.IsNotExist(err) {
+				if err := os.MkdirAll(fileDir, os.ModePerm); err != nil {
+					return nil, fmt.Errorf("ioutil.TempDir(%q, %q): %v", dir, f.Name, err)
+				}
 			}
-		} else {
-			file, err := os.Create(fmt.Sprintf("%s/%s", dir, f.Name))
+
+			filename := fmt.Sprintf("%s/%s", dir, f.Name)
+			file, err := os.Create(filename)
 			if err != nil {
-				return nil, fmt.Errorf("ioutil.TempFile(%q, %q): %v", dir, f.Name, err)
+				return nil, fmt.Errorf("os.Create(%q): %v", filename, err)
 			}
 			defer file.Close()
 
@@ -242,9 +246,13 @@ func readZipFile(f *zip.File) ([]byte, error) {
 	}
 	rc, err := f.Open()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("f.Open() for %q: %v", f.Name, err)
 	}
 	defer rc.Close()
+
 	b, err := ioutil.ReadAll(rc)
-	return b, err
+	if err != nil {
+		return nil, fmt.Errorf("ioutil.ReadAll(rc) for %q: %v", f.Name, err)
+	}
+	return b, nil
 }
