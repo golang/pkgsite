@@ -5,8 +5,6 @@
 package fetch
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 )
@@ -24,27 +22,16 @@ func New(url string) *Client {
 	}
 }
 
-// FetchVersion makes a request to url for the given module version.
+// FetchVersion makes a request for the module with name and version.
 func (c *Client) FetchVersion(name, version string) error {
-	data := map[string]string{
-		"name":    name,
-		"version": version,
-	}
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(data); err != nil {
-		return err
-	}
-
-	contentType := "application/json"
-	r, err := http.Post(c.url, contentType, &buf)
+	url := fmt.Sprintf("%s/%s/@v/%s", c.url, name, version)
+	r, err := http.Get(url)
 	if err != nil {
-		return fmt.Errorf("http.Post(%q, %q, %q) error: %v", c.url, contentType, data, err)
+		return fmt.Errorf("http.Get(%q): %v", url, err)
 	}
 
 	if r.StatusCode < 200 || r.StatusCode >= 300 {
-		return fmt.Errorf("http.Post(%q, %q, %q) returned response: %d (%q)",
-			c.url, contentType, data, r.StatusCode, r.Status)
+		return fmt.Errorf("http.Get(%q) returned response: %d (%q)", url, r.StatusCode, r.Status)
 	}
 	return nil
 }

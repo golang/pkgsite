@@ -62,7 +62,7 @@ func (db *DB) LatestProxyIndexUpdate() (time.Time, error) {
 		LIMIT 1`
 
 	var createdAt time.Time
-	row := db.QueryRow(query, internal.VersionLogProxyIndex)
+	row := db.QueryRow(query, internal.VersionSourceProxyIndex)
 	switch err := row.Scan(&createdAt); err {
 	case sql.ErrNoRows:
 		return time.Time{}, nil
@@ -81,7 +81,7 @@ func (db *DB) InsertVersionLogs(logs []*internal.VersionLog) error {
 		for _, l := range logs {
 			if _, err := tx.Exec(
 				`INSERT INTO version_logs(name, version, created_at, source, error)
-				VALUES ($1, $2, $3, $4, $5);`,
+				VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING;`,
 				l.Name, l.Version, l.CreatedAt, l.Source, l.Error,
 			); err != nil {
 				return err

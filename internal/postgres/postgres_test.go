@@ -157,19 +157,19 @@ func TestPostgress_InsertVersionLogs(t *testing.T) {
 			Name:      "testModule",
 			Version:   "v.1.0.0",
 			CreatedAt: now.Add(-10 * time.Minute),
-			Source:    internal.VersionLogProxyIndex,
+			Source:    internal.VersionSourceProxyIndex,
 		},
 		&internal.VersionLog{
 			Name:      "testModule",
 			Version:   "v.1.1.0",
 			CreatedAt: now,
-			Source:    internal.VersionLogProxyIndex,
+			Source:    internal.VersionSourceProxyIndex,
 		},
 		&internal.VersionLog{
 			Name:      "testModule/v2",
 			Version:   "v.2.0.0",
 			CreatedAt: now,
-			Source:    internal.VersionLogProxyIndex,
+			Source:    internal.VersionSourceProxyIndex,
 		},
 	}
 

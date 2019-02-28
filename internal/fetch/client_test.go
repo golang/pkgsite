@@ -38,11 +38,9 @@ func TestFetchVersionInvalidFetchURL(t *testing.T) {
 	m := "module"
 	v := "v1.5.2"
 
-	expectedData := map[string]string{"name": m, "version": v}
-	expectedErr := fmt.Errorf("http.Post(%q, %q, %q) returned response: 400 (%q)",
-		server.URL, "application/json", expectedData, "400 Bad Request")
-
-	if err := c.FetchVersion(m, v); err.Error() != expectedErr.Error() {
-		t.Errorf("fetchVersion(%q, %q, %q) = %v; want %v", server.URL, m, v, err, expectedErr)
+	url := fmt.Sprintf("%s/%s/@v/%s", server.URL, m, v)
+	wantErr := fmt.Errorf(`http.Get(%q) returned response: 400 ("400 Bad Request")`, url)
+	if err := c.FetchVersion(m, v); err.Error() != wantErr.Error() {
+		t.Errorf("fetchVersion(%q) = %v; want %v", url, err, wantErr)
 	}
 }

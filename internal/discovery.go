@@ -4,7 +4,9 @@
 
 package internal
 
-import "time"
+import (
+	"time"
+)
 
 // A Series is a group of modules that share the same base path and are assumed
 // to be major-version variants.
@@ -53,10 +55,10 @@ type VersionSource string
 
 const (
 	// Version fetched by the Proxy Index Cron
-	VersionLogProxyIndex = VersionSource("proxy-index")
+	VersionSourceProxyIndex = VersionSource("proxy-index")
 
 	// Version requested by user from Frontend
-	VersionLogFrontend = VersionSource("frontend")
+	VersionSourceFrontend = VersionSource("frontend")
 )
 
 func (vs VersionSource) String() string {
