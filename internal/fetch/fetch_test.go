@@ -9,8 +9,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/url"
+	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -36,6 +38,56 @@ func structToString(i interface{}) string {
 	return b.String()
 }
 
+// zipFiles compresses the files inside dir files into a single zip archive
+// file. filename is the output zip file's name.
+func zipFiles(filename string, dir string) (func(), error) {
+	cleanup := func() { os.Remove(filename) }
+
+	newZipFile, err := os.Create(filename)
+	if err != nil {
+		return cleanup, fmt.Errorf("os.Create(%q): %v", filename, err)
+	}
+	defer newZipFile.Close()
+
+	zipWriter := zip.NewWriter(newZipFile)
+	defer zipWriter.Close()
+
+	return cleanup, filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		fileToZip, err := os.Open(path)
+		if err != nil {
+			return fmt.Errorf("os.Open(%q): %v", path, err)
+		}
+		defer fileToZip.Close()
+
+		header, err := zip.FileInfoHeader(info)
+		if err != nil {
+			return fmt.Errorf("zipFileInfoHeader(%v): %v", info.Name(), err)
+		}
+
+		// Using FileInfoHeader() above only uses the basename of the file. If we want
+		// to preserve the folder structure we can overwrite this with the full path.
+		header.Name = strings.TrimPrefix(strings.TrimPrefix(path, dir), "/")
+
+		writer, err := zipWriter.CreateHeader(header)
+		if err != nil {
+			return fmt.Errorf("zipWriter.CreateHeader(%+v): %v", header, err)
+		}
+
+		if _, err = io.Copy(writer, fileToZip); err != nil {
+			return fmt.Errorf("io.Copy(%v, %+v): %v", writer, fileToZip, err)
+		}
+		return nil
+	})
+}
+
 func TestFetchAndInsertVersion(t *testing.T) {
 	testCases := []struct {
 		name        string
@@ -52,26 +104,26 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				Version:    "v1.0.0",
 				CommitTime: time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
 				ReadMe:     "README FILE FOR TESTING.",
-				License:    "LICENSE FILE FOR TESTING.",
+				License:    "BSD-3-Clause",
 			},
 		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, test := range testCases {
+		t.Run(test.name, func(t *testing.T) {
 			teardownDB, db := postgres.SetupCleanDB(t)
 			defer teardownDB(t)
 
 			teardownProxyClient, client := proxy.SetupTestProxyClient(t)
 			defer teardownProxyClient(t)
 
-			if err := FetchAndInsertVersion(tc.name, tc.version, client, db); err != nil {
-				t.Fatalf("FetchVersion(%q, %q, %v, %v): %v", tc.name, tc.version, client, db, err)
+			if err := FetchAndInsertVersion(test.name, test.version, client, db); err != nil {
+				t.Fatalf("FetchVersion(%q, %q, %v, %v): %v", test.name, test.version, client, db, err)
 			}
 
-			got, err := db.GetVersion(tc.name, tc.version)
+			got, err := db.GetVersion(test.name, test.version)
 			if err != nil {
-				t.Fatalf("db.GetVersion(%q, %q): %v", tc.name, tc.version, err)
+				t.Fatalf("db.GetVersion(%q, %q): %v", test.name, test.version, err)
 			}
 
 			// Set CreatedAt and UpdatedAt to nil for testing, since these are
@@ -80,14 +132,14 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			got.UpdatedAt = time.Time{}
 
 			// got.CommitTime has a timezone location of +0000, while
-			// tc.versionData.CommitTime has a timezone location of UTC.
+			// test.versionData.CommitTime has a timezone location of UTC.
 			// These are equal according to time.Equal, but fail for
 			// reflect.DeepEqual. Convert the DB time to UTC.
 			got.CommitTime = got.CommitTime.UTC()
 
-			if !reflect.DeepEqual(*got, *tc.versionData) {
+			if !reflect.DeepEqual(*got, *test.versionData) {
 				t.Errorf("db.GetVersion(%q, %q): \n %s \n want: \n %s",
-					tc.name, tc.version, structToString(got), structToString(tc.versionData))
+					test.name, test.version, structToString(got), structToString(test.versionData))
 			}
 		})
 	}
@@ -125,37 +177,37 @@ func TestParseNameAndVersion(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			u, err := url.Parse(tc.url)
+	for _, test := range testCases {
+		t.Run(test.name, func(t *testing.T) {
+			u, err := url.Parse(test.url)
 			if err != nil {
-				t.Errorf("url.Parse(%q): %v", tc.url, err)
+				t.Errorf("url.Parse(%q): %v", test.url, err)
 			}
 
 			m, v, err := ParseNameAndVersion(u)
-			if tc.err != nil {
+			if test.err != nil {
 				if err == nil {
-					t.Fatalf("ParseNameAndVersion(%v) error = (%v); want = (%v)", u, err, tc.err)
+					t.Fatalf("ParseNameAndVersion(%v) error = (%v); want = (%v)", u, err, test.err)
 				}
-				if tc.err.Error() != err.Error() {
-					t.Fatalf("ParseNameAndVersion(%v) error = (%v); want = (%v)", u, err, tc.err)
+				if test.err.Error() != err.Error() {
+					t.Fatalf("ParseNameAndVersion(%v) error = (%v); want = (%v)", u, err, test.err)
 				} else {
 					return
 				}
 			} else if err != nil {
-				t.Fatalf("ParseNameAndVersion(%v) error = (%v); want = (%v)", u, err, tc.err)
+				t.Fatalf("ParseNameAndVersion(%v) error = (%v); want = (%v)", u, err, test.err)
 			}
 
-			if tc.module != m || tc.version != v {
+			if test.module != m || test.version != v {
 				t.Fatalf("ParseNameAndVersion(%v): %q, %q, %v; want = %q, %q, %v",
-					u, m, v, err, tc.module, tc.version, tc.err)
+					u, m, v, err, test.module, test.version, test.err)
 			}
 		})
 	}
 }
 
 func TestHasFilename(t *testing.T) {
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		name         string
 		file         string
 		expectedFile string
@@ -197,10 +249,10 @@ func TestHasFilename(t *testing.T) {
 		},
 	} {
 		{
-			t.Run(tc.file, func(t *testing.T) {
-				got := hasFilename(tc.file, tc.expectedFile)
-				if got != tc.want {
-					t.Errorf("hasFilename(%q, %q) = %t: %t", tc.file, tc.expectedFile, got, tc.want)
+			t.Run(test.file, func(t *testing.T) {
+				got := hasFilename(test.file, test.expectedFile)
+				if got != test.want {
+					t.Errorf("hasFilename(%q, %q) = %t: %t", test.file, test.expectedFile, got, test.want)
 				}
 			})
 		}
@@ -237,7 +289,7 @@ func TestSeriesNameForModule(t *testing.T) {
 }
 
 func TestContainsFile(t *testing.T) {
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		zip  string
 		File string
 		Want bool
@@ -263,8 +315,8 @@ func TestContainsFile(t *testing.T) {
 			Want: false,
 		},
 	} {
-		t.Run(tc.zip, func(t *testing.T) {
-			name := filepath.Join("testdata", tc.zip)
+		t.Run(test.zip, func(t *testing.T) {
+			name := filepath.Join("testdata/modules", test.zip)
 			rc, err := zip.OpenReader(name)
 			if err != nil {
 				t.Fatalf("zip.OpenReader(%q): %v", name, err)
@@ -272,63 +324,63 @@ func TestContainsFile(t *testing.T) {
 			defer rc.Close()
 			z := &rc.Reader
 
-			if got := containsFile(z, tc.File); got != tc.Want {
-				t.Errorf("containsFile(%q, %q) = %t, want %t", name, tc.File, got, tc.Want)
+			if got := containsFile(z, test.File); got != test.Want {
+				t.Errorf("containsFile(%q, %q) = %t, want %t", name, test.File, got, test.Want)
 			}
 		})
 	}
 }
 
 func TestExtractFile(t *testing.T) {
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		zip  string
 		file string
 		err  error
 	}{
 		{
-			zip:  "testdata/module.zip",
+			zip:  "module.zip",
 			file: "my/module@v1.0.0/README.md",
 			err:  nil,
 		},
 		{
-			zip:  "testdata/empty.zip",
+			zip:  "empty.zip",
 			file: "empty/nonexistent/README.md",
 			err:  errors.New(`zip does not contain "README.md"`),
 		},
 	} {
-		t.Run(tc.zip, func(t *testing.T) {
-			rc, err := zip.OpenReader(tc.zip)
+		t.Run(test.zip, func(t *testing.T) {
+			rc, err := zip.OpenReader(filepath.Join("testdata/modules", test.zip))
 			if err != nil {
-				t.Fatalf("zip.OpenReader(%q): %v", tc.zip, err)
+				t.Fatalf("zip.OpenReader(%q): %v", test.zip, err)
 			}
 			defer rc.Close()
 			z := &rc.Reader
 
-			got, err := extractFile(z, filepath.Base(tc.file))
+			got, err := extractFile(z, filepath.Base(test.file))
 			if err != nil {
-				if tc.err == nil || tc.err.Error() != err.Error() {
+				if test.err == nil || test.err.Error() != err.Error() {
 					t.Errorf("extractFile(%q, %q): \n %v, want \n %v",
-						tc.zip, filepath.Base(tc.file), err, tc.err)
+						test.zip, filepath.Base(test.file), err, test.err)
 				} else {
 					return
 				}
 			}
 
-			f := filepath.Join("testdata", tc.file)
+			f := filepath.Join("testdata/modules", test.file)
 			want, err := ioutil.ReadFile(f)
 			if err != nil {
 				t.Fatalf("ioutfil.ReadFile(%q) error: %v", f, err)
 			}
 
 			if !bytes.Equal(want, got) {
-				t.Errorf("extractFile(%q, %q) = %q, want %q", tc.zip, tc.file, got, want)
+				t.Errorf("extractFile(%q, %q) = %q, want %q", test.zip, test.file, got, want)
 			}
 		})
 	}
 }
 
 func TestExtractPackagesFromZip(t *testing.T) {
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		zip      string
 		name     string
 		version  string
@@ -336,7 +388,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 		err      error
 	}{
 		{
-			zip:     "testdata/module.zip",
+			zip:     "module.zip",
 			name:    "my/module",
 			version: "v1.0.0",
 			packages: map[string]*internal.Package{
@@ -351,36 +403,103 @@ func TestExtractPackagesFromZip(t *testing.T) {
 			},
 		},
 		{
-			zip:      "testdata/empty.zip",
+			zip:      "empty.zip",
 			name:     "empty/module",
 			version:  "v1.0.0",
 			packages: map[string]*internal.Package{},
 		},
 	} {
-		t.Run(tc.name, func(t *testing.T) {
-			rc, err := zip.OpenReader(tc.zip)
+		t.Run(test.name, func(t *testing.T) {
+			rc, err := zip.OpenReader(filepath.Join("testdata/modules", test.zip))
 			if err != nil {
-				t.Fatalf("zip.OpenReader(%q): %v", tc.zip, err)
+				t.Fatalf("zip.OpenReader(%q): %v", test.zip, err)
 			}
 			defer rc.Close()
 			z := &rc.Reader
 
-			packages, err := extractPackagesFromZip(tc.name, tc.version, z)
-			if err != nil && len(tc.packages) != 0 {
-				t.Fatalf("zipToPackages(%q, %q): %v", tc.name, tc.zip, err)
+			packages, err := extractPackagesFromZip(test.name, test.version, z)
+			if err != nil && len(test.packages) != 0 {
+				t.Fatalf("zipToPackages(%q, %q): %v", test.name, test.zip, err)
 			}
 
 			for _, got := range packages {
-				want, ok := tc.packages[got.Name]
+				want, ok := test.packages[got.Name]
 				if !ok {
-					t.Errorf("zipToPackages(%q, %q) returned unexpected package: %q", tc.name, tc.zip, got.Name)
+					t.Errorf("zipToPackages(%q, %q) returned unexpected package: %q", test.name, test.zip, got.Name)
 				}
 				if want.Path != got.Path {
 					t.Errorf("zipToPackages(%q, %q) returned unexpected path for package %q: %q, want %q",
-						tc.name, tc.zip, got.Name, got.Path, want.Path)
+						test.name, test.zip, got.Name, got.Path, want.Path)
 				}
 
-				delete(tc.packages, got.Name)
+				delete(test.packages, got.Name)
+			}
+		})
+	}
+}
+
+func TestDetectLicense(t *testing.T) {
+	testCases := []struct {
+		name, zipName, contentsDir, want string
+	}{
+		{
+			name:        "valid_license",
+			zipName:     "license",
+			contentsDir: "rsc.io/quote@v1.4.1",
+			want:        "MIT",
+		}, {
+			name:        "valid_license_md_format",
+			zipName:     "licensemd",
+			contentsDir: "rsc.io/quote@v1.4.1",
+			want:        "MIT",
+		},
+		{
+			name:        "valid_license_copying",
+			zipName:     "copying",
+			contentsDir: "golang.org/x/text@v0.0.3",
+			want:        "Apache-2.0",
+		},
+		{
+			name:        "valid_license_copying_md",
+			zipName:     "copyingmd",
+			contentsDir: "golang.org/x/text@v0.0.3",
+			want:        "Apache-2.0",
+		}, {
+			name:        "low_coverage_license",
+			zipName:     "lowcoveragelicenses",
+			contentsDir: "rsc.io/quote@v1.4.1",
+		}, {
+			name:        "no_license",
+			zipName:     "nolicense",
+			contentsDir: "rsc.io/quote@v1.5.2",
+		}, {
+			name:        "vendor_license_should_ignore",
+			zipName:     "vendorlicense",
+			contentsDir: "rsc.io/quote@v1.5.2",
+		},
+	}
+	for _, test := range testCases {
+		t.Run(test.name, func(t *testing.T) {
+			testDir := filepath.Join("testdata/licenses", test.zipName)
+			cleanUpZip, err := zipFiles(testDir+".zip", testDir)
+			defer cleanUpZip()
+			if err != nil {
+				t.Fatalf("zipFiles(%q): %v", test.zipName, err)
+			}
+
+			if _, err := os.Stat(testDir + ".zip"); err != nil {
+				t.Fatalf("os.Stat(%q): %v", testDir+".zip", err)
+			}
+
+			rc, err := zip.OpenReader(testDir + ".zip")
+			if err != nil {
+				t.Fatalf("zip.OpenReader(%q): %v", test.zipName, err)
+			}
+			defer rc.Close()
+			z := &rc.Reader
+
+			if got := detectLicense(z, test.contentsDir); got != test.want {
+				t.Errorf("detectLicense(%q) = %q, want %q", test.name, got, test.want)
 			}
 		})
 	}

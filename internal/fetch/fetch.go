@@ -9,11 +9,14 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"sos.googlesource.com/sos/license"
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
@@ -70,15 +73,6 @@ func FetchAndInsertVersion(name, version string, proxyClient *proxy.Client, db *
 		}
 	}
 
-	var license []byte
-	licenseFile := "LICENSE"
-	if containsFile(zipReader, licenseFile) {
-		license, err = extractFile(zipReader, licenseFile)
-		if err != nil {
-			return fmt.Errorf("extractFile(%v, %q): %v", zipReader, licenseFile, err)
-		}
-	}
-
 	seriesName, err := seriesNameForModule(name)
 	if err != nil {
 		return fmt.Errorf("seriesNameForModule(%q): %v", name, err)
@@ -99,7 +93,7 @@ func FetchAndInsertVersion(name, version string, proxyClient *proxy.Client, db *
 		Version:    version,
 		CommitTime: info.Time,
 		ReadMe:     string(readme),
-		License:    string(license),
+		License:    detectLicense(zipReader, fmt.Sprintf("%s@%s", name, version)),
 		Packages:   packages,
 	}
 	if err = db.InsertVersion(&v); err != nil {
@@ -255,4 +249,52 @@ func readZipFile(f *zip.File) ([]byte, error) {
 		return nil, fmt.Errorf("ioutil.ReadAll(rc) for %q: %v", f.Name, err)
 	}
 	return b, nil
+}
+
+const (
+	// licenseClassifyThreshold is the minimum confidence percentage/threshold
+	// to classify a license
+	licenseClassifyThreshold = 96 // TODO: run more tests to figure out the best percent.
+
+	// licenseCoverageThreshold is the minimum percentage of the file that must contain license text.
+	licenseCoverageThreshold = 90
+)
+
+var (
+	// licenseFileNames is the list of file names that could contain a license.
+	licenseFileNames = map[string]bool{
+		"LICENSE":    true,
+		"LICENSE.md": true,
+		"COPYING":    true,
+		"COPYING.md": true,
+	}
+)
+
+// detectLicense searches for possible license files in the contents directory
+// of the provided zip path, runs them against a license classifier, and provides all
+// licenses with a confidence score that meet the licenseClassifyThreshold.
+func detectLicense(r *zip.Reader, contentsDir string) string {
+	for _, f := range r.File {
+		if filepath.Dir(f.Name) != contentsDir || !licenseFileNames[filepath.Base(f.Name)] {
+			
+			
+			continue
+		}
+		bytes, err := readZipFile(f)
+		if err != nil {
+			log.Printf("readZipFile(%s): %v", f.Name, err)
+			continue
+		}
+
+		cov, ok := license.Cover(bytes, license.Options{})
+		if !ok || cov.Percent < licenseCoverageThreshold {
+			continue
+		}
+
+		m := cov.Match[0]
+		if m.Percent > licenseClassifyThreshold {
+			return m.Name
+		}
+	}
+	return ""
 }
