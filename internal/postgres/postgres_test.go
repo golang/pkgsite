@@ -10,43 +10,44 @@ import (
 	"time"
 
 	"golang.org/x/discovery/internal"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func TestPostgres_ReadAndWriteVersion(t *testing.T) {
-	var series = &internal.Series{
-		Name:    "myseries",
-		Modules: []*internal.Module{},
-	}
-
-	var module = &internal.Module{
-		Name:     "valid_module_name",
-		Series:   series,
-		Versions: []*internal.Version{},
-	}
-
-	var testVersion = &internal.Version{
-		Module:       module,
-		Version:      "v1.0.0",
-		Synopsis:     "This is a synopsis",
-		License:      "licensename",
-		ReadMe:       "readme",
-		CommitTime:   time.Now(),
-		Packages:     []*internal.Package{},
-		Dependencies: []*internal.Version{},
-		Dependents:   []*internal.Version{},
-	}
+	var (
+		now    = time.Now()
+		series = &internal.Series{
+			Name:    "myseries",
+			Modules: []*internal.Module{},
+		}
+		module = &internal.Module{
+			Name:     "valid_module_name",
+			Series:   series,
+			Versions: []*internal.Version{},
+		}
+		testVersion = &internal.Version{
+			Module:     module,
+			Version:    "v1.0.0",
+			Synopsis:   "This is a synopsis",
+			License:    "licensename",
+			ReadMe:     "readme",
+			CommitTime: now,
+		}
+	)
 
 	testCases := []struct {
 		name, moduleName, version string
 		versionData               *internal.Version
-		wantReadErr, wantWriteErr bool
+		wantWriteErrCode          codes.Code
+		wantReadErr               bool
 	}{
 		{
-			name:         "nil_version_write_error",
-			moduleName:   "valid_module_name",
-			version:      "v1.0.0",
-			wantReadErr:  true,
-			wantWriteErr: true,
+			name:             "nil_version_write_error",
+			moduleName:       "valid_module_name",
+			version:          "v1.0.0",
+			wantWriteErrCode: codes.InvalidArgument,
+			wantReadErr:      true,
 		},
 		{
 			name:        "valid_test",
@@ -68,6 +69,61 @@ func TestPostgres_ReadAndWriteVersion(t *testing.T) {
 			versionData: testVersion,
 			wantReadErr: true,
 		},
+		{
+			name: "missing_module",
+			versionData: &internal.Version{
+				Version:    "v1.0.0",
+				Synopsis:   "This is a synopsis",
+				License:    "licensename",
+				CommitTime: now,
+			},
+			wantWriteErrCode: codes.InvalidArgument,
+			wantReadErr:      true,
+		},
+		{
+			name: "missing_module_name",
+			versionData: &internal.Version{
+				Module:     &internal.Module{},
+				Version:    "v1.0.0",
+				Synopsis:   "This is a synopsis",
+				License:    "licensename",
+				CommitTime: now,
+			},
+			wantWriteErrCode: codes.InvalidArgument,
+			wantReadErr:      true,
+		},
+		{
+			name: "missing_version",
+			versionData: &internal.Version{
+				Module:     module,
+				Synopsis:   "This is a synopsis",
+				License:    "licensename",
+				CommitTime: now,
+			},
+			wantWriteErrCode: codes.InvalidArgument,
+			wantReadErr:      true,
+		},
+		{
+			name: "missing_license_name",
+			versionData: &internal.Version{
+				Module:     module,
+				Version:    "v1.0.0",
+				Synopsis:   "This is a synopsis",
+				CommitTime: now,
+			},
+			wantWriteErrCode: codes.InvalidArgument,
+			wantReadErr:      true,
+		},
+		{
+			name: "empty_commit_time",
+			versionData: &internal.Version{
+				Module:   module,
+				Version:  "v1.0.0",
+				Synopsis: "This is a synopsis",
+			},
+			wantWriteErrCode: codes.InvalidArgument,
+			wantReadErr:      true,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -75,8 +131,8 @@ func TestPostgres_ReadAndWriteVersion(t *testing.T) {
 			teardownTestCase, db := SetupCleanDB(t)
 			defer teardownTestCase(t)
 
-			if err := db.InsertVersion(tc.versionData); tc.wantWriteErr != (err != nil) {
-				t.Errorf("db.InsertVersion(%+v) error: %v, want write error: %t", tc.versionData, err, tc.wantWriteErr)
+			if err := db.InsertVersion(tc.versionData); status.Code(err) != tc.wantWriteErrCode {
+				t.Errorf("db.InsertVersion(%+v) error: %v, want write error: %v", tc.versionData, err, tc.wantWriteErrCode)
 			}
 
 			// Test that insertion of duplicate primary key fails when the first insert worked

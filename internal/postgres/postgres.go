@@ -6,10 +6,12 @@ package postgres
 
 import (
 	"database/sql"
-	"errors"
+	"fmt"
 	"time"
 
 	"golang.org/x/discovery/internal"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type DB struct {
@@ -93,7 +95,6 @@ func (db *DB) InsertVersionLogs(logs []*internal.VersionLog) error {
 func (db *DB) GetVersion(name string, version string) (*internal.Version, error) {
 	var commitTime, createdAt, updatedAt time.Time
 	var synopsis, license, readme string
-
 	query := `
 		SELECT
 			created_at,
@@ -105,9 +106,9 @@ func (db *DB) GetVersion(name string, version string) (*internal.Version, error)
 		FROM versions
 		WHERE name = $1 and version = $2;`
 	row := db.QueryRow(query, name, version)
-
 	if err := row.Scan(&createdAt, &updatedAt, &synopsis, &commitTime, &license, &readme); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("row.Scan(%q, %q, %q, %q, %q, %q): %v",
+			createdAt, updatedAt, synopsis, commitTime, license, readme, err)
 	}
 	return &internal.Version{
 		CreatedAt: createdAt,
@@ -121,7 +122,6 @@ func (db *DB) GetVersion(name string, version string) (*internal.Version, error)
 		License:    license,
 		ReadMe:     readme,
 	}, nil
-
 }
 
 // InsertVersion inserts a Version into the database along with any
@@ -131,8 +131,8 @@ func (db *DB) GetVersion(name string, version string) (*internal.Version, error)
 // exists in the database will not update the existing series or
 // module.
 func (db *DB) InsertVersion(version *internal.Version) error {
-	if version == nil {
-		return errors.New("postgres: cannot insert nil version")
+	if version == nil || version.Module == nil || version.Module.Name == "" || version.Version == "" || version.License == "" || version.CommitTime.IsZero() {
+		return status.Errorf(codes.InvalidArgument, "postgres: InsertVersion: must specify a module name, version, license, and non-zero commit time")
 	}
 
 	return db.Transact(func(tx *sql.Tx) error {
@@ -152,9 +152,6 @@ func (db *DB) InsertVersion(version *internal.Version) error {
 			return err
 		}
 
-		// TODO(ckimblebrown, julieqiu): Update Versions schema and insert readmes,
-		// licenses, dependencies, and packages (the rest of the fields in the
-		// internal.Version struct)
 		if _, err := tx.Exec(
 			`INSERT INTO versions(name, version, synopsis, commit_time, license, readme)
 			VALUES($1,$2,$3,$4,$5,$6)`,
