@@ -104,17 +104,6 @@ func TestPostgres_ReadAndWriteVersion(t *testing.T) {
 			wantReadErr:      true,
 		},
 		{
-			name: "missing_license_name",
-			versionData: &internal.Version{
-				Module:     module,
-				Version:    "v1.0.0",
-				Synopsis:   "This is a synopsis",
-				CommitTime: now,
-			},
-			wantWriteErrCode: codes.InvalidArgument,
-			wantReadErr:      true,
-		},
-		{
 			name: "empty_commit_time",
 			versionData: &internal.Version{
 				Module:   module,

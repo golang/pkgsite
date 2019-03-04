@@ -7,6 +7,7 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"golang.org/x/discovery/internal"
@@ -131,8 +132,23 @@ func (db *DB) GetVersion(name string, version string) (*internal.Version, error)
 // exists in the database will not update the existing series or
 // module.
 func (db *DB) InsertVersion(version *internal.Version) error {
-	if version == nil || version.Module == nil || version.Module.Name == "" || version.Version == "" || version.License == "" || version.CommitTime.IsZero() {
-		return status.Errorf(codes.InvalidArgument, "postgres: InsertVersion: must specify a module name, version, license, and non-zero commit time")
+	if version == nil {
+		return status.Errorf(codes.InvalidArgument, "postgres: cannot insert nil version")
+	}
+
+	if version.Module == nil || version.Module.Name == "" || version.Version == "" || version.CommitTime.IsZero() {
+		var errReasons []string
+		if version.Module == nil || version.Module.Name == "" {
+			errReasons = append(errReasons, "no module name")
+		}
+		if version.Version == "" {
+			errReasons = append(errReasons, "no specified version")
+		}
+		if version.CommitTime.IsZero() {
+			errReasons = append(errReasons, "empty commit time")
+		}
+		return status.Errorf(codes.InvalidArgument,
+			fmt.Sprintf("postgres: cannot insert version %v: %s", version, strings.Join(errReasons, ", ")))
 	}
 
 	return db.Transact(func(tx *sql.Tx) error {
