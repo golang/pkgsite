@@ -156,7 +156,7 @@ func TestFetchModulePage(t *testing.T) {
 	defer teardownDB(t)
 
 	if err := db.InsertVersion(&tc.version); err != nil {
-		t.Fatalf("db.InsertVersion(&%q) returned error: %v", tc.version, err)
+		t.Fatalf("db.InsertVersion(%v) returned error: %v", tc.version, err)
 	}
 
 	mp, err := fetchModulePage(db, tc.version.Module.Name, tc.version.Version)

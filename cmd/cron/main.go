@@ -39,7 +39,7 @@ func getEnv(key, fallback string) string {
 
 func makeNewVersionsHandler(db *postgres.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		logs, err := cron.NewVersionsFromProxyIndex(indexURL, db)
+		logs, err := cron.FetchAndStoreVersions(indexURL, db)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Status %d (%s): %v", http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError), err),
 				http.StatusInternalServerError)
