@@ -38,3 +38,6 @@ override.tf.json
 
 ### macOS ###
 .DS_Store
+
+### imports ###
+sos.googlesource.com/sos

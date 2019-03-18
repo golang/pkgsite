@@ -10,4 +10,4 @@ require (
 	sos.googlesource.com/sos v1.0.0
 )
 
-replace sos.googlesource.com/sos v1.0.0 => ../sos.googlesource.com/sos
+replace sos.googlesource.com/sos v1.0.0 => ./sos.googlesource.com/sos
