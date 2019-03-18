@@ -47,7 +47,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			version: "v1.0.0",
 			versionData: &internal.Version{
 				Module: &internal.Module{
-					Name: "my/module",
+					Path: "my/module",
 				},
 				Version:    "v1.0.0",
 				CommitTime: time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
@@ -93,7 +93,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 	}
 }
 
-func TestParseNameAndVersion(t *testing.T) {
+func TestParseModulePathAndVersion(t *testing.T) {
 	testCases := []struct {
 		name    string
 		url     string
@@ -132,22 +132,22 @@ func TestParseNameAndVersion(t *testing.T) {
 				t.Errorf("url.Parse(%q): %v", test.url, err)
 			}
 
-			m, v, err := ParseNameAndVersion(u)
+			m, v, err := ParseModulePathAndVersion(u)
 			if test.err != nil {
 				if err == nil {
-					t.Fatalf("ParseNameAndVersion(%v) error = (%v); want = (%v)", u, err, test.err)
+					t.Fatalf("ParseModulePathAndVersion(%v) error = (%v); want = (%v)", u, err, test.err)
 				}
 				if test.err.Error() != err.Error() {
-					t.Fatalf("ParseNameAndVersion(%v) error = (%v); want = (%v)", u, err, test.err)
+					t.Fatalf("ParseModulePathAndVersion(%v) error = (%v); want = (%v)", u, err, test.err)
 				} else {
 					return
 				}
 			} else if err != nil {
-				t.Fatalf("ParseNameAndVersion(%v) error = (%v); want = (%v)", u, err, test.err)
+				t.Fatalf("ParseModulePathAndVersion(%v) error = (%v); want = (%v)", u, err, test.err)
 			}
 
 			if test.module != m || test.version != v {
-				t.Fatalf("ParseNameAndVersion(%v): %q, %q, %v; want = %q, %q, %v",
+				t.Fatalf("ParseModulePathAndVersion(%v): %q, %q, %v; want = %q, %q, %v",
 					u, m, v, err, test.module, test.version, test.err)
 			}
 		})
@@ -213,7 +213,7 @@ func TestHasFilename(t *testing.T) {
 
 }
 
-func TestSeriesNameForModule(t *testing.T) {
+func TestSeriesPathForModule(t *testing.T) {
 	for input, want := range map[string]string{
 		"module/":          "module",
 		"module/v2/":       "module",
@@ -225,19 +225,19 @@ func TestSeriesNameForModule(t *testing.T) {
 		"v2/":              "v2",
 	} {
 		t.Run(input, func(t *testing.T) {
-			got, err := seriesNameForModule(input)
+			got, err := seriesPathForModule(input)
 			if err != nil {
-				t.Errorf("seriesNameForModule(%q): %v", input, err)
+				t.Errorf("seriesPathForModule(%q): %v", input, err)
 			}
 			if got != want {
-				t.Errorf("seriesNameForModule(%q) = %q, want %q", input, got, want)
+				t.Errorf("seriesPathForModule(%q) = %q, want %q", input, got, want)
 			}
 		})
 	}
 
 	wantErr := "module name cannot be empty"
-	if _, err := seriesNameForModule(""); err == nil || err.Error() != wantErr {
-		t.Errorf("seriesNameForModule(%q) returned error: %v; want %v", "", err, wantErr)
+	if _, err := seriesPathForModule(""); err == nil || err.Error() != wantErr {
+		t.Errorf("seriesPathForModule(%q) returned error: %v; want %v", "", err, wantErr)
 	}
 }
 

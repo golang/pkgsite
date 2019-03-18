@@ -28,9 +28,9 @@ var (
 	errModuleContainsNoPackages = errors.New("module contains 0 packages")
 )
 
-// ParseNameAndVersion returns the module and version specified by u. u is
+// ParseModulePathAndVersion returns the module and version specified by u. u is
 // assumed to be a valid url following the structure http(s)://<fetchURL>/<module>@<version>.
-func ParseNameAndVersion(u *url.URL) (string, string, error) {
+func ParseModulePathAndVersion(u *url.URL) (string, string, error) {
 	parts := strings.Split(strings.TrimPrefix(u.Path, "/"), "/@v/")
 	if len(parts) != 2 {
 		return "", "", fmt.Errorf("invalid path: %q", u)
@@ -73,9 +73,9 @@ func FetchAndInsertVersion(name, version string, proxyClient *proxy.Client, db *
 		}
 	}
 
-	seriesName, err := seriesNameForModule(name)
+	seriesName, err := seriesPathForModule(name)
 	if err != nil {
-		return fmt.Errorf("seriesNameForModule(%q): %v", name, err)
+		return fmt.Errorf("seriesPathForModule(%q): %v", name, err)
 	}
 
 	packages, err := extractPackagesFromZip(name, version, zipReader)
@@ -85,9 +85,9 @@ func FetchAndInsertVersion(name, version string, proxyClient *proxy.Client, db *
 
 	v := internal.Version{
 		Module: &internal.Module{
-			Name: name,
+			Path: name,
 			Series: &internal.Series{
-				Name: seriesName,
+				Path: seriesName,
 			},
 		},
 		Version:    version,
@@ -167,11 +167,11 @@ func extractPackagesFromZip(module, version string, r *zip.Reader) ([]*internal.
 	return packages, nil
 }
 
-// seriesNameForModule reports the series name for the given module. The series
+// seriesPathForModule reports the series name for the given module. The series
 // name is the shared base path of a group of major-version variants. For
 // example, my/module, my/module/v2, my/module/v3 are a single series, with the
 // series name my/module.
-func seriesNameForModule(name string) (string, error) {
+func seriesPathForModule(name string) (string, error) {
 	if name == "" {
 		return "", errors.New("module name cannot be empty")
 	}

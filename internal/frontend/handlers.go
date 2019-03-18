@@ -21,17 +21,17 @@ import (
 // ModulePage contains all of the data that the overview template
 // needs to populate.
 type ModulePage struct {
-	Name       string
+	Path       string
 	Version    string
 	License    string
 	CommitTime string
 	ReadMe     string
 }
 
-// parseNameAndVersion returns the module and version specified by u. u is
+// parseModulePathAndVersion returns the module and version specified by u. u is
 // assumed to be a valid url following the structure
 // https://<frontendHost>/<module>?v=<version>&tab=<tab>.
-func parseNameAndVersion(u *url.URL) (name, version string, err error) {
+func parseModulePathAndVersion(u *url.URL) (name, version string, err error) {
 	name = strings.TrimPrefix(u.Path, "/")
 	versionQuery := u.Query()["v"]
 	if name == "" || len(versionQuery) != 1 || versionQuery[0] == "" {
@@ -75,7 +75,7 @@ func fetchModulePage(db *postgres.DB, name, version string) (*ModulePage, error)
 	}
 
 	return &ModulePage{
-		Name:       ver.Module.Name,
+		Path:       ver.Module.Path,
 		Version:    ver.Version,
 		License:    ver.License,
 		CommitTime: elapsedTime(ver.CommitTime),
@@ -87,7 +87,7 @@ func fetchModulePage(db *postgres.DB, name, version string) (*ModulePage, error)
 // a database and applies that data and html to a template.
 func MakeModuleHandlerFunc(db *postgres.DB, html string, templates *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		name, version, err := parseNameAndVersion(r.URL)
+		name, version, err := parseModulePathAndVersion(r.URL)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			log.Printf("Error parsing name and version: %v", err)

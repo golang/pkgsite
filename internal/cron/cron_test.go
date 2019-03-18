@@ -78,9 +78,9 @@ func TestGetVersionsFromIndex(t *testing.T) {
 		wantLogs := []*internal.VersionLog{}
 		for _, v := range tc.indexInfo {
 			wantLogs = append(wantLogs, &internal.VersionLog{
-				Name:    v["name"],
-				Version: v["version"],
-				Source:  internal.VersionSourceProxyIndex,
+				ModulePath: v["name"],
+				Version:    v["version"],
+				Source:     internal.VersionSourceProxyIndex,
 			})
 		}
 		if len(wantLogs) > 0 {
@@ -101,7 +101,7 @@ func TestGetVersionsFromIndex(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(logs, tc.wantLogs) {
-				t.Errorf("getVersionFromIndex(%q, %q) = %v; want = %v", index.URL, time.Time{}.String(), versionLogArrayToString(logs), versionLogArrayToString(tc.wantLogs))
+				t.Errorf("getVersionFromIndex(%q, %q) = \n %v; want = \n %v", index.URL, time.Time{}.String(), versionLogArrayToString(logs), versionLogArrayToString(tc.wantLogs))
 			}
 		})
 	}
@@ -125,9 +125,9 @@ func TestNewVersionFromProxyIndex(t *testing.T) {
 			oldVersionLogs: nil,
 			wantVersionLogs: []*internal.VersionLog{
 				&internal.VersionLog{
-					Name:    "my/module",
-					Version: "v1.0.0",
-					Source:  internal.VersionSourceProxyIndex,
+					ModulePath: "my/module",
+					Version:    "v1.0.0",
+					Source:     internal.VersionSourceProxyIndex,
 				},
 			},
 		},
@@ -145,21 +145,21 @@ func TestNewVersionFromProxyIndex(t *testing.T) {
 			},
 			oldVersionLogs: []*internal.VersionLog{
 				&internal.VersionLog{
-					Name:    "my/module",
-					Version: "v1.0.0",
-					Source:  internal.VersionSourceProxyIndex,
+					ModulePath: "my/module",
+					Version:    "v1.0.0",
+					Source:     internal.VersionSourceProxyIndex,
 				},
 			},
 			wantVersionLogs: []*internal.VersionLog{
 				&internal.VersionLog{
-					Name:    "my/module",
-					Version: "v1.0.0",
-					Source:  internal.VersionSourceProxyIndex,
+					ModulePath: "my/module",
+					Version:    "v1.0.0",
+					Source:     internal.VersionSourceProxyIndex,
 				},
 				&internal.VersionLog{
-					Name:    "my/module",
-					Version: "v2.0.0",
-					Source:  internal.VersionSourceProxyIndex,
+					ModulePath: "my/module",
+					Version:    "v2.0.0",
+					Source:     internal.VersionSourceProxyIndex,
 				},
 			},
 		},

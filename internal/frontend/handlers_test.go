@@ -14,7 +14,7 @@ import (
 	"golang.org/x/discovery/internal/postgres"
 )
 
-func TestParseNameAndVersion(t *testing.T) {
+func TestParsePathAndVersion(t *testing.T) {
 	testCases := []struct {
 		name    string
 		url     string
@@ -58,14 +58,14 @@ func TestParseNameAndVersion(t *testing.T) {
 				t.Errorf("url.Parse(%q): %v", tc.url, parseErr)
 			}
 
-			module, version, err := parseNameAndVersion(u)
+			module, version, err := parseModulePathAndVersion(u)
 
 			if (err != nil) != tc.err {
-				t.Fatalf("parseNameAndVersion(%v) error = (%v); want error %t)", u, err, tc.err)
+				t.Fatalf("parseModulePathAndVersion(%v) error = (%v); want error %t)", u, err, tc.err)
 			}
 
 			if !tc.err && (tc.module != module || tc.version != version) {
-				t.Fatalf("parseNameAndVersion(%v): %q, %q, %v; want = %q, %q, want err %t",
+				t.Fatalf("parseModulePathAndVersion(%v): %q, %q, %v; want = %q, %q, want err %t",
 					u, module, version, err, tc.module, tc.version, tc.err)
 			}
 		})
@@ -132,9 +132,9 @@ func TestFetchModulePage(t *testing.T) {
 		name: "want_expected_module_page",
 		version: internal.Version{
 			Module: &internal.Module{
-				Name: "test/module",
+				Path: "test/module",
 				Series: &internal.Series{
-					Name: "series",
+					Path: "series",
 				},
 			},
 			Version:    "v1.0.0",
@@ -144,7 +144,7 @@ func TestFetchModulePage(t *testing.T) {
 			ReadMe:     "This is the readme text.",
 		},
 		expectedModPage: ModulePage{
-			Name:       "test/module",
+			Path:       "test/module",
 			Version:    "v1.0.0",
 			License:    "MIT",
 			CommitTime: "today",
@@ -159,10 +159,10 @@ func TestFetchModulePage(t *testing.T) {
 		t.Fatalf("db.InsertVersion(%v) returned error: %v", tc.version, err)
 	}
 
-	mp, err := fetchModulePage(db, tc.version.Module.Name, tc.version.Version)
+	mp, err := fetchModulePage(db, tc.version.Module.Path, tc.version.Version)
 	if err != nil {
 		t.Fatalf("fetchModulePage(db, %q, %q) = %v err = %v, want %v",
-			tc.version.Module.Name, tc.version.Version, mp, err, tc.expectedModPage)
+			tc.version.Module.Path, tc.version.Version, mp, err, tc.expectedModPage)
 	}
 
 	if !reflect.DeepEqual(*mp, tc.expectedModPage) {

@@ -48,12 +48,12 @@ func makeNewVersionsHandler(db *postgres.DB) http.HandlerFunc {
 
 		client := fetch.New(fetchURL)
 		for _, l := range logs {
-			fmt.Fprintf(w, "Fetch requested: %q %q\n", l.Name, l.Version)
+			fmt.Fprintf(w, "Fetch requested: %q %q\n", l.ModulePath, l.Version)
 			go func(name, version string) {
 				if err := client.FetchVersion(name, version); err != nil {
 					log.Printf("client.FetchVersion(%q, %q): %v", name, version, err)
 				}
-			}(l.Name, l.Version)
+			}(l.ModulePath, l.Version)
 		}
 		fmt.Fprintf(w, "Done!")
 	}

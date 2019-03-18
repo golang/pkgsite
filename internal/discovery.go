@@ -11,7 +11,7 @@ import (
 // A Series is a group of modules that share the same base path and are assumed
 // to be major-version variants.
 type Series struct {
-	Name      string
+	Path      string
 	CreatedAt time.Time
 	Modules   []*Module
 }
@@ -20,7 +20,7 @@ type Series struct {
 // module path) and are versioned as a single unit, along with a go.mod file
 // listing other required modules.
 type Module struct {
-	Name      string
+	Path      string
 	CreatedAt time.Time
 	Series    *Series
 	Versions  []*Version
@@ -44,8 +44,8 @@ type Version struct {
 // A Package is a group of one or more Go source files with the same package
 // header. Packages are part of a module.
 type Package struct {
-	Name     string
 	Path     string
+	Name     string
 	Synopsis string
 	Version  *Version
 }
@@ -68,10 +68,13 @@ func (vs VersionSource) String() string {
 // A Version Log is a record of a version that was
 // (1) fetched from the module proxy index,
 // (2) requested by user from the frontend
-// The Name and Version may not necessarily be valid module versions (for example, if a
+// The Path and Version may not necessarily be valid module versions (for example, if a
 // user requests a module or version that does not exist).
 type VersionLog struct {
-	Name      string
+	// A JSON struct tag is needed because the index gives "Name" instead of
+	// "ModulePath" at the moment
+	ModulePath string `json:"Name"`
+
 	Version   string
 	CreatedAt time.Time
 	Source    VersionSource

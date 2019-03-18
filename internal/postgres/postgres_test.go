@@ -18,11 +18,11 @@ func TestPostgres_ReadAndWriteVersion(t *testing.T) {
 	var (
 		now    = time.Now()
 		series = &internal.Series{
-			Name:    "myseries",
+			Path:    "myseries",
 			Modules: []*internal.Module{},
 		}
 		module = &internal.Module{
-			Name:     "valid_module_name",
+			Path:     "valid_module_name",
 			Series:   series,
 			Versions: []*internal.Version{},
 		}
@@ -37,34 +37,34 @@ func TestPostgres_ReadAndWriteVersion(t *testing.T) {
 	)
 
 	testCases := []struct {
-		name, moduleName, version string
-		versionData               *internal.Version
-		wantWriteErrCode          codes.Code
-		wantReadErr               bool
+		name, module, version string
+		versionData           *internal.Version
+		wantWriteErrCode      codes.Code
+		wantReadErr           bool
 	}{
 		{
 			name:             "nil_version_write_error",
-			moduleName:       "valid_module_name",
+			module:           "valid_module_name",
 			version:          "v1.0.0",
 			wantWriteErrCode: codes.InvalidArgument,
 			wantReadErr:      true,
 		},
 		{
 			name:        "valid_test",
-			moduleName:  "valid_module_name",
+			module:      "valid_module_name",
 			version:     "v1.0.0",
 			versionData: testVersion,
 		},
 		{
 			name:        "nonexistent_version_test",
-			moduleName:  "valid_module_name",
+			module:      "valid_module_name",
 			version:     "v1.2.3",
 			versionData: testVersion,
 			wantReadErr: true,
 		},
 		{
 			name:        "nonexistent_module_test",
-			moduleName:  "nonexistent_module_name",
+			module:      "nonexistent_module_name",
 			version:     "v1.0.0",
 			versionData: testVersion,
 			wantReadErr: true,
@@ -129,19 +129,19 @@ func TestPostgres_ReadAndWriteVersion(t *testing.T) {
 				t.Errorf("db.InsertVersion(%+v) on duplicate version did not produce error", testVersion)
 			}
 
-			got, err := db.GetVersion(tc.moduleName, tc.version)
+			got, err := db.GetVersion(tc.module, tc.version)
 			if tc.wantReadErr != (err != nil) {
-				t.Fatalf("db.GetVersion(%q, %q) error: %v, want read error: %t", tc.moduleName, tc.version, err, tc.wantReadErr)
+				t.Fatalf("db.GetVersion(%q, %q) error: %v, want read error: %t", tc.module, tc.version, err, tc.wantReadErr)
 			}
 
 			if !tc.wantReadErr && got == nil {
 				t.Fatalf("db.GetVersion(%q, %q) = %v, want %v",
-					tc.moduleName, tc.version, got, tc.versionData)
+					tc.module, tc.version, got, tc.versionData)
 			}
 
 			if !tc.wantReadErr && reflect.DeepEqual(*got, *tc.versionData) {
 				t.Errorf("db.GetVersion(%q, %q) = %v, want %v",
-					tc.moduleName, tc.version, got, tc.versionData)
+					tc.module, tc.version, got, tc.versionData)
 			}
 		})
 	}
@@ -154,22 +154,22 @@ func TestPostgress_InsertVersionLogs(t *testing.T) {
 	now := time.Now().UTC()
 	newVersions := []*internal.VersionLog{
 		&internal.VersionLog{
-			Name:      "testModule",
-			Version:   "v.1.0.0",
-			CreatedAt: now.Add(-10 * time.Minute),
-			Source:    internal.VersionSourceProxyIndex,
+			ModulePath: "testModule",
+			Version:    "v.1.0.0",
+			CreatedAt:  now.Add(-10 * time.Minute),
+			Source:     internal.VersionSourceProxyIndex,
 		},
 		&internal.VersionLog{
-			Name:      "testModule",
-			Version:   "v.1.1.0",
-			CreatedAt: now,
-			Source:    internal.VersionSourceProxyIndex,
+			ModulePath: "testModule",
+			Version:    "v.1.1.0",
+			CreatedAt:  now,
+			Source:     internal.VersionSourceProxyIndex,
 		},
 		&internal.VersionLog{
-			Name:      "testModule/v2",
-			Version:   "v.2.0.0",
-			CreatedAt: now,
-			Source:    internal.VersionSourceProxyIndex,
+			ModulePath: "testModule/v2",
+			Version:    "v.2.0.0",
+			CreatedAt:  now,
+			Source:     internal.VersionSourceProxyIndex,
 		},
 	}
 

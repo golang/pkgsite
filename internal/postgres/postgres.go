@@ -80,9 +80,9 @@ func (db *DB) InsertVersionLogs(logs []*internal.VersionLog) error {
 	return db.Transact(func(tx *sql.Tx) error {
 		for _, l := range logs {
 			if _, err := tx.Exec(
-				`INSERT INTO version_logs(name, version, created_at, source, error)
+				`INSERT INTO version_logs(module_path, version, created_at, source, error)
 				VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING;`,
-				l.Name, l.Version, l.CreatedAt, l.Source, l.Error,
+				l.ModulePath, l.Version, l.CreatedAt, l.Source, l.Error,
 			); err != nil {
 				return err
 			}
@@ -92,8 +92,8 @@ func (db *DB) InsertVersionLogs(logs []*internal.VersionLog) error {
 }
 
 // GetVersion fetches a Version from the database with the primary key
-// (name, version).
-func (db *DB) GetVersion(name string, version string) (*internal.Version, error) {
+// (path, version).
+func (db *DB) GetVersion(path string, version string) (*internal.Version, error) {
 	var commitTime, createdAt, updatedAt time.Time
 	var synopsis, license, readme string
 	query := `
@@ -105,8 +105,8 @@ func (db *DB) GetVersion(name string, version string) (*internal.Version, error)
 			license,
 			readme
 		FROM versions
-		WHERE name = $1 and version = $2;`
-	row := db.QueryRow(query, name, version)
+		WHERE module_path = $1 and version = $2;`
+	row := db.QueryRow(query, path, version)
 	if err := row.Scan(&createdAt, &updatedAt, &synopsis, &commitTime, &license, &readme); err != nil {
 		return nil, fmt.Errorf("row.Scan(%q, %q, %q, %q, %q, %q): %v",
 			createdAt, updatedAt, synopsis, commitTime, license, readme, err)
@@ -115,7 +115,7 @@ func (db *DB) GetVersion(name string, version string) (*internal.Version, error)
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,
 		Module: &internal.Module{
-			Name: name,
+			Path: path,
 		},
 		Version:    version,
 		Synopsis:   synopsis,
@@ -136,10 +136,10 @@ func (db *DB) InsertVersion(version *internal.Version) error {
 		return status.Errorf(codes.InvalidArgument, "postgres: cannot insert nil version")
 	}
 
-	if version.Module == nil || version.Module.Name == "" || version.Version == "" || version.CommitTime.IsZero() {
+	if version.Module == nil || version.Module.Path == "" || version.Version == "" || version.CommitTime.IsZero() {
 		var errReasons []string
-		if version.Module == nil || version.Module.Name == "" {
-			errReasons = append(errReasons, "no module name")
+		if version.Module == nil || version.Module.Path == "" {
+			errReasons = append(errReasons, "no module path")
 		}
 		if version.Version == "" {
 			errReasons = append(errReasons, "no specified version")
@@ -153,25 +153,25 @@ func (db *DB) InsertVersion(version *internal.Version) error {
 
 	return db.Transact(func(tx *sql.Tx) error {
 		if _, err := tx.Exec(
-			`INSERT INTO series(name)
+			`INSERT INTO series(path)
 			VALUES($1)
 			ON CONFLICT DO NOTHING`,
-			version.Module.Series.Name); err != nil {
+			version.Module.Series.Path); err != nil {
 			return err
 		}
 
 		if _, err := tx.Exec(
-			`INSERT INTO modules(name, series_name)
+			`INSERT INTO modules(path, series_path)
 			VALUES($1,$2)
 			ON CONFLICT DO NOTHING`,
-			version.Module.Name, version.Module.Series.Name); err != nil {
+			version.Module.Path, version.Module.Series.Path); err != nil {
 			return err
 		}
 
 		if _, err := tx.Exec(
-			`INSERT INTO versions(name, version, synopsis, commit_time, license, readme)
+			`INSERT INTO versions(module_path, version, synopsis, commit_time, license, readme)
 			VALUES($1,$2,$3,$4,$5,$6)`,
-			version.Module.Name,
+			version.Module.Path,
 			version.Version,
 			version.Synopsis,
 			version.CommitTime,
