@@ -5,37 +5,45 @@
 package proxy
 
 import (
+	"archive/zip"
+	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
-// SetupTestProxyClient creates a module proxy for testing using static files
+// SetupTestProxy creates a module proxy for testing using static files
 // stored in internal/proxy/testdata/modproxy/proxy. It returns a function
 // for tearing down the proxy after the test is completed and a Client for
-// interacting with the test proxy. The following module versions are supported
-// by the proxy: (1) my/module v1.0.0 (2) my/module v1.1.0 (3) my/module v1.1.1
-// (4) my/module/v2 v2.0.0.
-func SetupTestProxyClient(t *testing.T) (func(t *testing.T), *Client) {
+// interacting with the test proxy.
+func SetupTestProxy(t *testing.T) (func(t *testing.T), *Client) {
 	t.Helper()
-	proxyDataDir := "../proxy/testdata/modproxy/proxy"
+
+	proxyDataDir := "../proxy/testdata/modproxy"
 	absPath, err := filepath.Abs(proxyDataDir)
 	if err != nil {
 		t.Fatalf("filepath.Abs(%q): %v", proxyDataDir, err)
 	}
 
-	p := httptest.NewServer(http.FileServer(http.Dir(absPath)))
+	p := httptest.NewServer(http.FileServer(http.Dir(fmt.Sprintf("%s/proxy", absPath))))
 	client := New(p.URL)
 
-	expectedVersions := [][]string{
+	for _, v := range [][]string{
 		[]string{"my/module", "v1.0.0"},
-		[]string{"my/module", "v1.1.0"},
-		[]string{"my/module", "v1.1.1"},
-		[]string{"my/module/v2", "v2.0.0"},
-	}
+		[]string{"empty/module", "v1.0.0"},
+		[]string{"rsc.io/quote", "v1.5.2"},
+		[]string{"rsc.io/quote/v2", "v2.0.1"},
+	} {
+		zipfile := fmt.Sprintf("%s/proxy/%s/@v/%s.zip", absPath, v[0], v[1])
+		zipDataDir := fmt.Sprintf("%s/modules/%s@%s", absPath, v[0], v[1])
+		if _, err := ZipFiles(zipfile, zipDataDir, fmt.Sprintf("%s@%s", v[0], v[1])); err != nil {
+			t.Fatalf("proxy.ZipFiles(%q): %v", zipDataDir, err)
+		}
 
-	for _, v := range expectedVersions {
 		if _, err := client.GetInfo(v[0], v[1]); err != nil {
 			t.Fatalf("client.GetInfo(%q, %q): %v", v[0], v[1], err)
 		}
@@ -45,4 +53,57 @@ func SetupTestProxyClient(t *testing.T) (func(t *testing.T), *Client) {
 		p.Close()
 	}
 	return fn, client
+}
+
+// ZipFiles compresses the files inside dir into a single zip archive file.
+// zipfile is the output zip file's name. Files inside zipfile will all have
+// prefix moduleDir. ZipFiles return a function to cleanup files that were
+// created.
+func ZipFiles(zipfile, dir, moduleDir string) (func() error, error) {
+	cleanup := func() error {
+		os.Remove(zipfile)
+	}
+
+	newZipFile, err := os.Create(zipfile)
+	if err != nil {
+		return cleanup, fmt.Errorf("os.Create(%q): %v", zipfile, err)
+	}
+	defer newZipFile.Close()
+
+	zipWriter := zip.NewWriter(newZipFile)
+	defer zipWriter.Close()
+
+	return cleanup, filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		fileToZip, err := os.Open(path)
+		if err != nil {
+			return fmt.Errorf("os.Open(%q): %v", path, err)
+		}
+		defer fileToZip.Close()
+
+		header, err := zip.FileInfoHeader(info)
+		if err != nil {
+			return fmt.Errorf("zipFileInfoHeader(%v): %v", info.Name(), err)
+		}
+
+		// Using FileInfoHeader() above only uses the basename of the file. If we want
+		// to preserve the folder structure we can overwrite this with the full path.
+		header.Name = strings.TrimPrefix(strings.TrimPrefix(path, strings.TrimSuffix(dir, moduleDir)), "/")
+		writer, err := zipWriter.CreateHeader(header)
+		if err != nil {
+			return fmt.Errorf("zipWriter.CreateHeader(%+v): %v", header, err)
+		}
+
+		if _, err = io.Copy(writer, fileToZip); err != nil {
+			return fmt.Errorf("io.Copy(%v, %+v): %v", writer, fileToZip, err)
+		}
+		return nil
+	})
 }

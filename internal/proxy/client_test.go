@@ -23,8 +23,8 @@ func TestCleanURL(t *testing.T) {
 }
 
 func TestGetInfo(t *testing.T) {
-	teardownTestCase, client := SetupTestProxyClient(t)
-	defer teardownTestCase(t)
+	teardownProxy, client := SetupTestProxy(t)
+	defer teardownProxy(t)
 
 	name := "my/module"
 	version := "v1.0.0"
@@ -44,8 +44,8 @@ func TestGetInfo(t *testing.T) {
 }
 
 func TestGetInfoVersionDoesNotExist(t *testing.T) {
-	teardownTestCase, client := SetupTestProxyClient(t)
-	defer teardownTestCase(t)
+	teardownProxy, client := SetupTestProxy(t)
+	defer teardownProxy(t)
 
 	name := "my/module"
 	version := "v3.0.0"
@@ -56,8 +56,8 @@ func TestGetInfoVersionDoesNotExist(t *testing.T) {
 }
 
 func TestGetZip(t *testing.T) {
-	teardownTestCase, client := SetupTestProxyClient(t)
-	defer teardownTestCase(t)
+	teardownProxy, client := SetupTestProxy(t)
+	defer teardownProxy(t)
 
 	name := "my/module"
 	version := "v1.0.0"
@@ -67,11 +67,11 @@ func TestGetZip(t *testing.T) {
 	}
 
 	expectedFiles := map[string]bool{
-		"my/":                        true,
-		"my/module@v1.0.0/":          true,
-		"my/module@v1.0.0/LICENSE":   true,
-		"my/module@v1.0.0/README.md": true,
-		"my/module@v1.0.0/go.mod":    true,
+		"my/module@v1.0.0/LICENSE":    true,
+		"my/module@v1.0.0/README.md":  true,
+		"my/module@v1.0.0/go.mod":     true,
+		"my/module@v1.0.0/foo/foo.go": true,
+		"my/module@v1.0.0/bar/bar.go": true,
 	}
 	if len(zipReader.File) != len(expectedFiles) {
 		t.Errorf("GetZip(%q, %q) returned number of files: got %d, want %d",
@@ -88,8 +88,8 @@ func TestGetZip(t *testing.T) {
 }
 
 func TestGetZipNonExist(t *testing.T) {
-	teardownTestCase, client := SetupTestProxyClient(t)
-	defer teardownTestCase(t)
+	teardownProxy, client := SetupTestProxy(t)
+	defer teardownProxy(t)
 
 	name := "my/nonexistmodule"
 	version := "v1.0.0"

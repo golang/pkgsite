@@ -222,13 +222,12 @@ func containsFile(r *zip.Reader, expectedFile string) bool {
 	return false
 }
 
-// hasFilename checks if:
-// (1) file is expectedFile, or
-// (2) the name of file, without the base, is equal to expectedFile.
-// It is case insensitive.
+// hasFilename checks if file is expectedFile or if the name of file, without
+// the base, is equal to expectedFile. It is case insensitive.
 func hasFilename(file string, expectedFile string) bool {
 	base := filepath.Base(file)
-	return strings.EqualFold(base, expectedFile) ||
+	return strings.EqualFold(file, expectedFile) ||
+		strings.EqualFold(base, expectedFile) ||
 		strings.EqualFold(strings.TrimSuffix(base, filepath.Ext(base)), expectedFile)
 }
 
