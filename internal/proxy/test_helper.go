@@ -61,7 +61,7 @@ func SetupTestProxy(t *testing.T) (func(t *testing.T), *Client) {
 // created.
 func ZipFiles(zipfile, dir, moduleDir string) (func() error, error) {
 	cleanup := func() error {
-		os.Remove(zipfile)
+		return os.Remove(zipfile)
 	}
 
 	newZipFile, err := os.Create(zipfile)
