@@ -8,6 +8,8 @@ import (
 	"archive/zip"
 	"errors"
 	"fmt"
+	"go/ast"
+	"go/doc"
 	"io/ioutil"
 	"log"
 	"net/url"
@@ -159,9 +161,21 @@ func extractPackagesFromZip(module, version string, r *zip.Reader) ([]*internal.
 
 	packages := []*internal.Package{}
 	for _, p := range pkgs {
+		files := make(map[string]*ast.File)
+		for i, f := range p.CompiledGoFiles {
+			files[f] = p.Syntax[i]
+		}
+
+		apkg := &ast.Package{
+			Name:  p.Name,
+			Files: files,
+		}
+		d := doc.New(apkg, p.PkgPath, 0)
+
 		packages = append(packages, &internal.Package{
-			Name: p.Name,
-			Path: p.PkgPath,
+			Name:     p.Name,
+			Path:     p.PkgPath,
+			Synopsis: doc.Synopsis(d.Doc),
 		})
 	}
 	return packages, nil

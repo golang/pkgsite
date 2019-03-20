@@ -125,12 +125,62 @@ func (db *DB) GetVersion(path string, version string) (*internal.Version, error)
 	}, nil
 }
 
-// InsertVersion inserts a Version into the database along with any
-// necessary series and modules. Insertion fails and returns an error
-// if the Version's primary key already exists in the database.
-// Inserting a Version connected to a series or module that already
-// exists in the database will not update the existing series or
-// module.
+// GetPackage returns the first package from the database that has path and
+// version.
+func (db *DB) GetPackage(path string, version string) (*internal.Package, error) {
+	if path == "" || version == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "postgres: path and version cannot be empty")
+	}
+
+	var commitTime, createdAt, updatedAt time.Time
+	var name, synopsis, license string
+	query := `
+		SELECT
+			v.created_at,
+			v.updated_at,
+			v.commit_time,
+			v.license,
+			p.name,
+			p.synopsis
+		FROM
+			versions v
+		INNER JOIN
+			packages p
+		ON
+			p.module_path = v.module_path
+			AND v.version = p.version
+		WHERE
+			p.path = $1
+			AND p.version = $2
+		LIMIT 1;`
+
+	row := db.QueryRow(query, path, version)
+	if err := row.Scan(&createdAt, &updatedAt, &commitTime, &license, &name, &synopsis); err != nil {
+		return nil, fmt.Errorf("row.Scan(%q, %q, %q, %q, %q, %q): %v",
+			createdAt, updatedAt, commitTime, license, name, synopsis, err)
+	}
+
+	return &internal.Package{
+		Name:     name,
+		Path:     path,
+		Synopsis: synopsis,
+		Version: &internal.Version{
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
+			Module: &internal.Module{
+				Path: path,
+			},
+			Version:    version,
+			Synopsis:   synopsis,
+			CommitTime: commitTime,
+			License:    license,
+		},
+	}, nil
+}
+
+// InsertVersion inserts a Version into the database along with any necessary
+// series, modules and packages. If any of these rows already exist, they will
+// not be updated.
 func (db *DB) InsertVersion(version *internal.Version) error {
 	if version == nil {
 		return status.Errorf(codes.InvalidArgument, "postgres: cannot insert nil version")
@@ -157,7 +207,7 @@ func (db *DB) InsertVersion(version *internal.Version) error {
 			VALUES($1)
 			ON CONFLICT DO NOTHING`,
 			version.Module.Series.Path); err != nil {
-			return err
+			return fmt.Errorf("error inserting series: %v", err)
 		}
 
 		if _, err := tx.Exec(
@@ -165,12 +215,12 @@ func (db *DB) InsertVersion(version *internal.Version) error {
 			VALUES($1,$2)
 			ON CONFLICT DO NOTHING`,
 			version.Module.Path, version.Module.Series.Path); err != nil {
-			return err
+			return fmt.Errorf("error inserting module: %v", err)
 		}
 
 		if _, err := tx.Exec(
 			`INSERT INTO versions(module_path, version, synopsis, commit_time, license, readme)
-			VALUES($1,$2,$3,$4,$5,$6)`,
+			VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT DO NOTHING`,
 			version.Module.Path,
 			version.Version,
 			version.Synopsis,
@@ -178,7 +228,20 @@ func (db *DB) InsertVersion(version *internal.Version) error {
 			version.License,
 			version.ReadMe,
 		); err != nil {
-			return err
+			return fmt.Errorf("error inserting version: %v", err)
+		}
+
+		stmt, err := tx.Prepare(
+			`INSERT INTO packages (path, synopsis, name, version, module_path)
+			VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING`)
+		if err != nil {
+			return fmt.Errorf("error preparing package stmt: %v", err)
+		}
+
+		for _, p := range version.Packages {
+			if _, err = stmt.Exec(p.Path, p.Synopsis, p.Name, version.Version, version.Module.Path); err != nil {
+				return fmt.Errorf("error inserting package: %v", err)
+			}
 		}
 
 		return nil

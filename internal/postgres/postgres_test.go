@@ -5,16 +5,18 @@
 package postgres
 
 import (
+	"database/sql"
 	"reflect"
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"golang.org/x/discovery/internal"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func TestPostgres_ReadAndWriteVersion(t *testing.T) {
+func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 	var (
 		now    = time.Now()
 		series = &internal.Series{
@@ -29,18 +31,24 @@ func TestPostgres_ReadAndWriteVersion(t *testing.T) {
 		testVersion = &internal.Version{
 			Module:     module,
 			Version:    "v1.0.0",
-			Synopsis:   "This is a synopsis",
 			License:    "licensename",
 			ReadMe:     "readme",
 			CommitTime: now,
+			Packages: []*internal.Package{
+				&internal.Package{
+					Name:     "foo",
+					Synopsis: "This is a package synopsis",
+					Path:     "path/to/foo",
+				},
+			},
 		}
 	)
 
 	testCases := []struct {
-		name, module, version string
-		versionData           *internal.Version
-		wantWriteErrCode      codes.Code
-		wantReadErr           bool
+		name, module, version, pkgpath string
+		versionData                    *internal.Version
+		wantWriteErrCode               codes.Code
+		wantReadErr                    bool
 	}{
 		{
 			name:             "nil_version_write_error",
@@ -53,6 +61,7 @@ func TestPostgres_ReadAndWriteVersion(t *testing.T) {
 			name:        "valid_test",
 			module:      "valid_module_name",
 			version:     "v1.0.0",
+			pkgpath:     "path/to/foo",
 			versionData: testVersion,
 		},
 		{
@@ -66,6 +75,7 @@ func TestPostgres_ReadAndWriteVersion(t *testing.T) {
 			name:        "nonexistent_module_test",
 			module:      "nonexistent_module_name",
 			version:     "v1.0.0",
+			pkgpath:     "path/to/foo",
 			versionData: testVersion,
 			wantReadErr: true,
 		},
@@ -124,9 +134,9 @@ func TestPostgres_ReadAndWriteVersion(t *testing.T) {
 				t.Errorf("db.InsertVersion(%+v) error: %v, want write error: %v", tc.versionData, err, tc.wantWriteErrCode)
 			}
 
-			// Test that insertion of duplicate primary key fails when the first insert worked
-			if err := db.InsertVersion(tc.versionData); err == nil {
-				t.Errorf("db.InsertVersion(%+v) on duplicate version did not produce error", testVersion)
+			// Test that insertion of duplicate primary key won't fail.
+			if err := db.InsertVersion(tc.versionData); status.Code(err) != tc.wantWriteErrCode {
+				t.Errorf("db.InsertVersion(%+v) second insert error: %v, want write error: %v", tc.versionData, err, tc.wantWriteErrCode)
 			}
 
 			got, err := db.GetVersion(tc.module, tc.version)
@@ -142,6 +152,32 @@ func TestPostgres_ReadAndWriteVersion(t *testing.T) {
 			if !tc.wantReadErr && reflect.DeepEqual(*got, *tc.versionData) {
 				t.Errorf("db.GetVersion(%q, %q) = %v, want %v",
 					tc.module, tc.version, got, tc.versionData)
+			}
+
+			gotPkg, err := db.GetPackage(tc.pkgpath, tc.version)
+			if tc.versionData == nil || tc.versionData.Packages == nil || tc.pkgpath == "" {
+				if tc.wantReadErr != (err != nil) {
+					t.Fatalf("db.GetPackage(%q, %q) = %v, want %v", tc.pkgpath, tc.version, err, sql.ErrNoRows)
+				}
+				return
+			}
+
+			wantPkg := tc.versionData.Packages[0]
+			if err != nil {
+				t.Fatalf("db.GetPackage(%q, %q) = %v, want %v", tc.pkgpath, tc.version, gotPkg, wantPkg)
+			}
+
+			if gotPkg.Version.Version != tc.versionData.Version {
+				t.Errorf("db.GetPackage(%q, %q) version.version = %v, want %v", tc.pkgpath, tc.version, gotPkg.Version.Version, tc.versionData.Version)
+			}
+			if gotPkg.Version.License != tc.versionData.License {
+				t.Errorf("db.GetPackage(%q, %q) version.license = %v, want %v", tc.pkgpath, tc.version, gotPkg.Version.License, tc.versionData.License)
+
+			}
+
+			gotPkg.Version = nil
+			if diff := cmp.Diff(*gotPkg, *wantPkg); diff != "" {
+				t.Errorf("db.GetPackage(%q, %q) Package mismatch (-want +got):\n%s", tc.pkgpath, tc.version, diff)
 			}
 		})
 	}

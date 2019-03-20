@@ -12,29 +12,14 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"reflect"
-	"strings"
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
 )
-
-// structToString returns a string containing the fields and values of a given
-// struct i. It is used in error messages for tests.
-func structToString(i interface{}) string {
-	s := reflect.ValueOf(i).Elem()
-	typeOfT := s.Type()
-
-	var b strings.Builder
-	for i := 0; i < s.NumField(); i++ {
-		f := s.Field(i)
-		fmt.Fprint(&b, fmt.Sprintf("%d: %s %s = %v \n", i, typeOfT.Field(i).Name, f.Type(), f.Interface()))
-	}
-	return b.String()
-}
 
 func TestFetchAndInsertVersion(t *testing.T) {
 	testCases := []struct {
@@ -85,9 +70,8 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			// reflect.DeepEqual. Convert the DB time to UTC.
 			got.CommitTime = got.CommitTime.UTC()
 
-			if !reflect.DeepEqual(*got, *test.versionData) {
-				t.Errorf("db.GetVersion(%q, %q): \n %s \n want: \n %s",
-					test.name, test.version, structToString(got), structToString(test.versionData))
+			if diff := cmp.Diff(*got, *test.versionData); diff != "" {
+				t.Errorf("db.GetVersion(%q, %q) mismatch(-want +got):\n%s", test.name, test.version, diff)
 			}
 		})
 	}
@@ -344,12 +328,14 @@ func TestExtractPackagesFromZip(t *testing.T) {
 			version: "v1.0.0",
 			packages: map[string]*internal.Package{
 				"foo": &internal.Package{
-					Name: "foo",
-					Path: "my/module/foo",
+					Name:     "foo",
+					Path:     "my/module/foo",
+					Synopsis: "package foo",
 				},
 				"bar": &internal.Package{
-					Name: "bar",
-					Path: "my/module/bar",
+					Name:     "bar",
+					Path:     "my/module/bar",
+					Synopsis: "package bar",
 				},
 			},
 		},
@@ -381,6 +367,10 @@ func TestExtractPackagesFromZip(t *testing.T) {
 				if want.Path != got.Path {
 					t.Errorf("extractPackagesFromZip(%q, %q) returned unexpected path for package %q: %q, want %q",
 						test.name, test.zip, got.Name, got.Path, want.Path)
+				}
+				if want.Synopsis != got.Synopsis {
+					t.Errorf("extractPackagesFromZip(%q, %q) returned unexpected synopsis for package %q: %q, want %q",
+						test.name, test.zip, got.Name, got.Synopsis, want.Synopsis)
 				}
 
 				delete(test.packages, got.Name)
