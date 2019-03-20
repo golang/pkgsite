@@ -18,11 +18,6 @@ import (
 	"golang.org/x/discovery/internal/postgres"
 )
 
-type testCase struct {
-	index *httptest.Server
-	fetch *httptest.Server
-}
-
 func setupIndex(t *testing.T, versions []map[string]string) (func(t *testing.T), *httptest.Server) {
 	index := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

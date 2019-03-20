@@ -190,7 +190,7 @@ func seriesPathForModule(name string) (string, error) {
 		// my/module/v2 has series name my/module
 		// my/module/v1 has series name my/module/v1
 		// my/module/v2x has series name my/module/v2x
-		version, err := strconv.Atoi(suffix[1:len(suffix)])
+		version, err := strconv.Atoi(suffix[1:])
 		if err != nil || version < 2 {
 			return name, nil
 		}

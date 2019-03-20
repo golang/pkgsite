@@ -136,7 +136,7 @@ func prependAndReplaceImports(filename, commit, pkg string) error {
 			line = strings.Join(parts, newImportPath)
 			pkgToDownload[newImportPath] = true
 		}
-		fmt.Fprintln(writer, fmt.Sprintf("%s", line))
+		fmt.Fprintln(writer, line)
 	}
 
 	if err := writer.Flush(); err != nil {
@@ -149,7 +149,7 @@ func prependAndReplaceImports(filename, commit, pkg string) error {
 // editFiles applies prependAndReplaceImports on each file inside pkgDir.
 func editFiles(pkg, pkgDir string) {
 	commit := commitForMaster()
-	if err := filepath.Walk(pkgDir, func(path string, info os.FileInfo, err error) error {
+	if err := filepath.Walk(pkgDir, func(path string, info os.FileInfo, e error) error {
 		fileInfo, err := os.Stat(path)
 		if err != nil {
 			log.Fatalf("os.Stat(%q): %v", path, err)

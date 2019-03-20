@@ -17,7 +17,7 @@ var (
 	password   = getEnv("GO_DISCOVERY_DATABASE_TEST_PASSWORD", "")
 	host       = getEnv("GO_DISCOVERY_DATABASE_TEST_HOST", "localhost")
 	testdbname = getEnv("GO_DISCOVERY_DATABASE_TEST_NAME", "discovery-database-test")
-	testdb     = fmt.Sprintf("user=%s host=%s dbname=%s sslmode=disable", user, host, testdbname)
+	testdb     = fmt.Sprintf("user=%s password=%s host=%s dbname=%s sslmode=disable", user, password, host, testdbname)
 )
 
 func getEnv(key, fallback string) string {

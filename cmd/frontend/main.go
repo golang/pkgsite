@@ -21,7 +21,7 @@ var (
 	password = getEnv("GO_DISCOVERY_DATABASE_PASSWORD", "")
 	host     = getEnv("GO_DISCOVERY_DATABASE_HOST", "localhost")
 	dbname   = getEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-database")
-	dbinfo   = fmt.Sprintf("user=%s host=%s dbname=%s sslmode=disable", user, host, dbname)
+	dbinfo   = fmt.Sprintf("user=%s password=%s host=%s dbname=%s sslmode=disable", user, password, host, dbname)
 
 	templates  *template.Template
 	staticPath = flag.String("static", "content/static", "path to folder containing static files served")

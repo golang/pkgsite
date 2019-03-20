@@ -31,7 +31,7 @@ func structToString(i interface{}) string {
 	var b strings.Builder
 	for i := 0; i < s.NumField(); i++ {
 		f := s.Field(i)
-		fmt.Fprintf(&b, fmt.Sprintf("%d: %s %s = %v \n", i, typeOfT.Field(i).Name, f.Type(), f.Interface()))
+		fmt.Fprint(&b, fmt.Sprintf("%d: %s %s = %v \n", i, typeOfT.Field(i).Name, f.Type(), f.Interface()))
 	}
 	return b.String()
 }
@@ -156,7 +156,6 @@ func TestParseModulePathAndVersion(t *testing.T) {
 
 func TestHasFilename(t *testing.T) {
 	for _, test := range []struct {
-		name         string
 		file         string
 		expectedFile string
 		want         bool
@@ -338,7 +337,6 @@ func TestExtractPackagesFromZip(t *testing.T) {
 		name     string
 		version  string
 		packages map[string]*internal.Package
-		err      error
 	}{
 		{
 			zip:     "module.zip",
