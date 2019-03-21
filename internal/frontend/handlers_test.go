@@ -144,7 +144,7 @@ func TestFetchModulePage(t *testing.T) {
 			ReadMe:     "This is the readme text.",
 		},
 		expectedModPage: ModulePage{
-			Path:       "test/module",
+			ModulePath: "test/module",
 			Version:    "v1.0.0",
 			License:    "MIT",
 			CommitTime: "today",

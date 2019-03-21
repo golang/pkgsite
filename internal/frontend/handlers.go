@@ -21,7 +21,7 @@ import (
 // ModulePage contains all of the data that the overview template
 // needs to populate.
 type ModulePage struct {
-	Path       string
+	ModulePath string
 	Version    string
 	License    string
 	CommitTime string
@@ -69,17 +69,17 @@ func elapsedTime(date time.Time) string {
 // fetchModulePage fetches data for the module version specified by name and version
 // from the database and returns a ModulePage.
 func fetchModulePage(db *postgres.DB, name, version string) (*ModulePage, error) {
-	ver, err := db.GetVersion(name, version)
+	v, err := db.GetVersion(name, version)
 	if err != nil {
 		return nil, fmt.Errorf("db.GetVersion(%q, %q) returned error %v", name, version, err)
 	}
 
 	return &ModulePage{
-		Path:       ver.Module.Path,
-		Version:    ver.Version,
-		License:    ver.License,
-		CommitTime: elapsedTime(ver.CommitTime),
-		ReadMe:     ver.ReadMe,
+		ModulePath: v.Module.Path,
+		Version:    v.Version,
+		License:    v.License,
+		CommitTime: elapsedTime(v.CommitTime),
+		ReadMe:     v.ReadMe,
 	}, nil
 }
 
