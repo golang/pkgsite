@@ -322,6 +322,136 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 	}
 }
 
+func TestPostgres_GetLatestPackageForPaths(t *testing.T) {
+	teardownTestCase, db := SetupCleanDB(t)
+	defer teardownTestCase(t)
+	var (
+		now  = time.Now()
+		pkg1 = &internal.Package{
+			Path:     "path/to/foo/bar",
+			Name:     "bar",
+			Synopsis: "This is a package synopsis",
+		}
+		pkg2 = &internal.Package{
+			Path:     "path2/to/foo/bar2",
+			Name:     "bar2",
+			Synopsis: "This is another package synopsis",
+		}
+		series = &internal.Series{
+			Path: "myseries",
+		}
+		module1 = &internal.Module{
+			Path:   "path2/to/foo",
+			Series: series,
+		}
+		module2 = &internal.Module{
+			Path:   "path2/to/foo",
+			Series: series,
+		}
+		testVersions = []*internal.Version{
+			&internal.Version{
+				Module:      module1,
+				Version:     "v1.0.0-alpha.1",
+				License:     "licensename",
+				ReadMe:      []byte("readme"),
+				CommitTime:  now,
+				Packages:    []*internal.Package{pkg1},
+				VersionType: internal.VersionTypePrerelease,
+			},
+			&internal.Version{
+				Module:      module1,
+				Version:     "v1.0.0",
+				License:     "licensename",
+				ReadMe:      []byte("readme"),
+				CommitTime:  now,
+				Packages:    []*internal.Package{pkg1},
+				VersionType: internal.VersionTypeRelease,
+			},
+			&internal.Version{
+				Module:      module2,
+				Version:     "v1.0.0-20190311183353-d8887717615a",
+				License:     "licensename",
+				ReadMe:      []byte("readme"),
+				CommitTime:  now,
+				Packages:    []*internal.Package{pkg2},
+				VersionType: internal.VersionTypePseudo,
+			},
+			&internal.Version{
+				Module:      module2,
+				Version:     "v1.0.1-beta",
+				License:     "licensename",
+				ReadMe:      []byte("readme"),
+				CommitTime:  now,
+				Packages:    []*internal.Package{pkg2},
+				VersionType: internal.VersionTypePseudo,
+			},
+		}
+	)
+
+	tc := struct {
+		paths       []string
+		versions    []*internal.Version
+		wantPkgs    []*internal.Package
+		wantReadErr bool
+	}{
+		paths:    []string{pkg1.Path, pkg2.Path},
+		versions: testVersions,
+		wantPkgs: []*internal.Package{
+			&internal.Package{
+				Name:     pkg1.Name,
+				Path:     pkg1.Path,
+				Synopsis: pkg1.Synopsis,
+				Version: &internal.Version{
+					CreatedAt: testVersions[1].CreatedAt,
+					UpdatedAt: testVersions[1].UpdatedAt,
+					Module: &internal.Module{
+						Path: module1.Path,
+					},
+					Version:    testVersions[1].Version,
+					Synopsis:   testVersions[1].Synopsis,
+					CommitTime: testVersions[1].CommitTime,
+					License:    testVersions[1].License,
+				},
+			},
+			&internal.Package{
+				Name:     pkg2.Name,
+				Path:     pkg2.Path,
+				Synopsis: pkg2.Synopsis,
+				Version: &internal.Version{
+					CreatedAt: testVersions[3].CreatedAt,
+					UpdatedAt: testVersions[3].UpdatedAt,
+					Module: &internal.Module{
+						Path: module1.Path,
+					},
+					Version:    testVersions[3].Version,
+					Synopsis:   testVersions[3].Synopsis,
+					CommitTime: testVersions[3].CommitTime,
+					License:    testVersions[3].License,
+				},
+			},
+		},
+	}
+
+	for _, v := range tc.versions {
+		if err := db.InsertVersion(v); err != nil {
+			t.Errorf("db.InsertVersion(%v): %v", v, err)
+		}
+	}
+
+	gotPkgs, err := db.GetLatestPackageForPaths(tc.paths)
+	if (err != nil) != tc.wantReadErr {
+		t.Errorf("db.GetLatestPackageForPaths(%q): %v", tc.paths, err)
+	}
+
+	for i, gotPkg := range gotPkgs {
+		if diff := packagesDiff(gotPkg, tc.wantPkgs[i]); diff != "" {
+			t.Errorf("got %v at index %v, want %v, diff is %v",
+				gotPkg, i, tc.wantPkgs[i], diff)
+		}
+	}
+
+}
+
 func TestPostgress_InsertVersionLogs(t *testing.T) {
 	teardownTestCase, db := SetupCleanDB(t)
 	defer teardownTestCase(t)

@@ -393,3 +393,80 @@ func (db *DB) InsertVersion(version *internal.Version) error {
 		return nil
 	})
 }
+
+// GetLatestPackageForPaths returns a list of packages that have the latest version that
+// corresponds to each path specified in the list of paths. The resulting list is
+// sorted by package path lexicographically. So if multiple packages have the same
+// path then the package whose module path comes first lexicographically will be
+// returned.
+func (db *DB) GetLatestPackageForPaths(paths []string) ([]*internal.Package, error) {
+	var (
+		packages                                           []*internal.Package
+		commitTime, createdAt, updatedAt                   time.Time
+		path, modulePath, name, synopsis, license, version string
+	)
+
+	query := `
+		SELECT DISTINCT ON (p.path)
+			v.created_at,
+			v.updated_at,
+			p.path,
+			p.module_path,
+			v.version,
+			v.commit_time,
+			v.license,
+			p.name,
+			p.synopsis
+		FROM
+			packages p
+		INNER JOIN
+			versions v
+		ON
+			v.module_path = p.module_path
+			AND v.version = p.version
+		WHERE
+			p.path = $1
+		ORDER BY
+			p.path,
+			p.module_path,
+			v.major DESC,
+			v.minor DESC,
+			v.patch DESC,
+			v.prerelease DESC;`
+
+	anyPaths := fmt.Sprintf("ANY('%s'::text[])", strings.Join(paths, ", "))
+	rows, err := db.Query(query, anyPaths)
+	if err != nil {
+		return nil, fmt.Errorf("db.Query(%q, %q) returned error: %v", query, anyPaths, err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		if err := rows.Scan(&createdAt, &updatedAt, &path, &modulePath, &version, &commitTime, &license, &name, &synopsis); err != nil {
+			return nil, fmt.Errorf("row.Scan(%q, %q, %q, %q, %q, %q, %q, %q, %q): %v",
+				createdAt, updatedAt, path, modulePath, version, commitTime, license, name, synopsis, err)
+		}
+
+		packages = append(packages, &internal.Package{
+			Name:     name,
+			Path:     path,
+			Synopsis: synopsis,
+			Version: &internal.Version{
+				CreatedAt: createdAt,
+				UpdatedAt: updatedAt,
+				Module: &internal.Module{
+					Path: modulePath,
+				},
+				Version:    version,
+				CommitTime: commitTime,
+				License:    license,
+			},
+		})
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows.Err() returned error %v", err)
+	}
+
+	return packages, nil
+}
