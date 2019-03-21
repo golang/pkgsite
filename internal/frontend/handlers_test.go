@@ -5,11 +5,13 @@
 package frontend
 
 import (
+	"html/template"
 	"net/url"
 	"reflect"
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
 )
@@ -146,14 +148,14 @@ func TestFetchModulePage(t *testing.T) {
 			Synopsis:   "test synopsis",
 			CommitTime: time.Now().Add(time.Hour * -8),
 			License:    "MIT",
-			ReadMe:     "This is the readme text.",
+			ReadMe:     []byte("This is the readme text."),
 		},
 		expectedModPage: ModulePage{
 			ModulePath: "test/module",
 			Version:    "v1.0.0",
 			License:    "MIT",
 			CommitTime: "today",
-			ReadMe:     "This is the readme text.",
+			ReadMe:     template.HTML("<p>This is the readme text.</p>\n"),
 		},
 	}
 
@@ -172,5 +174,36 @@ func TestFetchModulePage(t *testing.T) {
 
 	if !reflect.DeepEqual(*mp, tc.expectedModPage) {
 		t.Errorf("reflect.DeepEqual(%q, %q) was false, want true", *mp, tc.expectedModPage)
+	}
+}
+
+func TestReadmeHTML(t *testing.T) {
+	testCases := []struct {
+		name, readme string
+		want         template.HTML
+	}{
+		{
+			name: "valid_markdown_readme",
+			readme: "This package collects pithy sayings.\n\n" +
+				"It's part of a demonstration of\n" +
+				"[package versioning in Go](https://research.swtch.com/vgo1).",
+			want: template.HTML("<p>This package collects pithy sayings.</p>\n\n" +
+				"<p>It’s part of a demonstration of\n" +
+				`<a href="https://research.swtch.com/vgo1" rel="nofollow">package versioning in Go</a>.</p>` + "\n"),
+		},
+		{
+			name:   "empty_readme",
+			readme: "",
+			want:   template.HTML(""),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := readmeHTML([]byte(tc.readme))
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("readmeHTML(%q) mismatch (-want +got):\n%s", tc.readme, diff)
+			}
+		})
 	}
 }

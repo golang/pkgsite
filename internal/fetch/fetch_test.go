@@ -36,7 +36,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				},
 				Version:    "v1.0.0",
 				CommitTime: time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
-				ReadMe:     "README FILE FOR TESTING.",
+				ReadMe:     []byte("README FILE FOR TESTING."),
 				License:    "BSD-3-Clause",
 			},
 		},

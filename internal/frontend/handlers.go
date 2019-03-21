@@ -15,8 +15,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/microcosm-cc/bluemonday"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/thirdparty/semver"
+	"gopkg.in/russross/blackfriday.v2"
 )
 
 // ModulePage contains all of the data that the overview template
@@ -26,7 +28,7 @@ type ModulePage struct {
 	Version    string
 	License    string
 	CommitTime string
-	ReadMe     string
+	ReadMe     template.HTML
 }
 
 // parseModulePathAndVersion returns the module and version specified by u. u is
@@ -83,8 +85,14 @@ func fetchModulePage(db *postgres.DB, name, version string) (*ModulePage, error)
 		Version:    v.Version,
 		License:    v.License,
 		CommitTime: elapsedTime(v.CommitTime),
-		ReadMe:     v.ReadMe,
+		ReadMe:     readmeHTML(v.ReadMe),
 	}, nil
+}
+
+func readmeHTML(readme []byte) template.HTML {
+	unsafe := blackfriday.Run(readme)
+	b := bluemonday.UGCPolicy().SanitizeBytes(unsafe)
+	return template.HTML(string(b))
 }
 
 // MakeModuleHandlerFunc uses a module page that contains module data from

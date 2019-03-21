@@ -134,7 +134,7 @@ func FetchAndInsertVersion(name, version string, proxyClient *proxy.Client, db *
 		},
 		Version:    version,
 		CommitTime: info.Time,
-		ReadMe:     string(readme),
+		ReadMe:     readme,
 		License:    detectLicense(zipReader, fmt.Sprintf("%s@%s", name, version)),
 		Packages:   packages,
 	}

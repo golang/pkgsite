@@ -35,7 +35,7 @@ type Version struct {
 	Synopsis     string
 	CommitTime   time.Time
 	License      string
-	ReadMe       string
+	ReadMe       []byte
 	Packages     []*Package
 	Dependencies []*Version
 	Dependents   []*Version

@@ -94,8 +94,12 @@ func (db *DB) InsertVersionLogs(logs []*internal.VersionLog) error {
 // GetVersion fetches a Version from the database with the primary key
 // (path, version).
 func (db *DB) GetVersion(path string, version string) (*internal.Version, error) {
-	var commitTime, createdAt, updatedAt time.Time
-	var synopsis, license, readme string
+	var (
+		commitTime, createdAt, updatedAt time.Time
+		synopsis, license                string
+		readme                           []byte
+	)
+
 	query := `
 		SELECT
 			created_at,

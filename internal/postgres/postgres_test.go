@@ -32,7 +32,7 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 			Module:     module,
 			Version:    "v1.0.0",
 			License:    "licensename",
-			ReadMe:     "readme",
+			ReadMe:     []byte("readme"),
 			CommitTime: now,
 			Packages: []*internal.Package{
 				&internal.Package{
