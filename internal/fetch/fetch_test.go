@@ -450,6 +450,7 @@ func TestFetch_parseVersion(t *testing.T) {
 	testCases := []struct {
 		name, version   string
 		wantVersionType internal.VersionType
+		wantErr         bool
 	}{
 		{
 			name:            "valid_pseudo-version",
@@ -474,13 +475,14 @@ func TestFetch_parseVersion(t *testing.T) {
 		{
 			name:            "invalid_version",
 			version:         "not_a_version",
-			wantVersionType: internal.VersionTypeInvalid,
+			wantVersionType: "",
+			wantErr:         true,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if gotVt := parseVersion(tc.version); tc.wantVersionType != gotVt {
+			if gotVt, err := parseVersion(tc.version); (tc.wantErr == (err != nil)) && tc.wantVersionType != gotVt {
 				t.Errorf("parseVersion(%v) = %v, want %v", tc.version, gotVt, tc.wantVersionType)
 			}
 		})

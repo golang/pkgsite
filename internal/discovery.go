@@ -36,6 +36,7 @@ type Version struct {
 	CommitTime   time.Time
 	License      string
 	ReadMe       []byte
+	VersionType  VersionType
 	Packages     []*Package
 	Dependencies []*Version
 	Dependents   []*Version
@@ -63,10 +64,6 @@ const (
 	// VersionTypePseudo appears to have a prerelease of the
 	// form <commit date>-<commit hash>.
 	VersionTypePseudo = VersionType("pseudo")
-
-	// VersionTypeInvalid indicates that a given version is
-	// invalid.
-	VersionTypeInvalid = VersionType("invalid")
 )
 
 func (vt VersionType) String() string {

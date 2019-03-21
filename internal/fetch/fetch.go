@@ -53,22 +53,22 @@ func ParseModulePathAndVersion(u *url.URL) (string, string, error) {
 }
 
 // parseVersion returns the VersionType of a given a version.
-func parseVersion(version string) internal.VersionType {
+func parseVersion(version string) (internal.VersionType, error) {
 	if !semver.IsValid(version) {
-		return internal.VersionTypeInvalid
+		return "", fmt.Errorf("semver.IsValid(%q): false", version)
 	}
 
 	prerelease := semver.Prerelease(version)
 	if prerelease == "" {
-		return internal.VersionTypeRelease
+
+		return internal.VersionTypeRelease, nil
 	}
 	prerelease = prerelease[1:] // remove starting dash
 
 	// if prerelease looks like a commit then return VersionTypePseudo
 	matched, err := regexp.MatchString(`[0-9]{14}-[0-9a-z]{12}`, prerelease)
 	if err != nil {
-		log.Printf("regexp.MatchString(`[0-9]{14}-[0-9a-z]{12}`, %v): %v", prerelease, err)
-		return internal.VersionType("regexp.MatchString error")
+		return "", fmt.Errorf("regexp.MatchString(`[0-9]{14}-[0-9a-z]{12}`, %v): %v", prerelease, err)
 	}
 
 	if matched {
@@ -77,11 +77,11 @@ func parseVersion(version string) internal.VersionType {
 		t, err := time.Parse(layout, rawTime)
 
 		if err == nil && t.Before(time.Now()) {
-			return internal.VersionTypePseudo
+			return internal.VersionTypePseudo, nil
 		}
 	}
 
-	return internal.VersionTypePrerelease
+	return internal.VersionTypePrerelease, nil
 }
 
 // FetchAndInsertVersion downloads the given module version from the module proxy, processes
@@ -91,9 +91,9 @@ func parseVersion(version string) internal.VersionType {
 // (3) Process the contents (series name, readme, license, and packages)
 // (4) Write the data to the discovery database
 func FetchAndInsertVersion(name, version string, proxyClient *proxy.Client, db *postgres.DB) error {
-	versionType := parseVersion(version)
-	if versionType == internal.VersionTypeInvalid {
-		return fmt.Errorf("parseVersion(%q) = %v", version, versionType)
+	versionType, err := parseVersion(version)
+	if err != nil {
+		return fmt.Errorf("parseVersion(%q): %v", version, err)
 	}
 
 	info, err := proxyClient.GetInfo(name, version)
@@ -132,11 +132,12 @@ func FetchAndInsertVersion(name, version string, proxyClient *proxy.Client, db *
 				Path: seriesName,
 			},
 		},
-		Version:    version,
-		CommitTime: info.Time,
-		ReadMe:     readme,
-		License:    detectLicense(zipReader, fmt.Sprintf("%s@%s", name, version)),
-		Packages:   packages,
+		Version:     version,
+		CommitTime:  info.Time,
+		ReadMe:      readme,
+		License:     detectLicense(zipReader, fmt.Sprintf("%s@%s", name, version)),
+		Packages:    packages,
+		VersionType: versionType,
 	}
 	if err = db.InsertVersion(&v); err != nil {
 		return fmt.Errorf("db.InsertVersion(%+v): %v", v, err)
