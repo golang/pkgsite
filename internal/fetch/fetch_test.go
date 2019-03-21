@@ -445,3 +445,44 @@ func TestDetectLicense(t *testing.T) {
 		})
 	}
 }
+
+func TestFetch_parseVersion(t *testing.T) {
+	testCases := []struct {
+		name, version   string
+		wantVersionType internal.VersionType
+	}{
+		{
+			name:            "valid_pseudo-version",
+			version:         "v1.0.0-20190311183353-d8887717615a",
+			wantVersionType: internal.VersionTypePseudo,
+		},
+		{
+			name:            "invalid_pseudo-version_future_date",
+			version:         "v1.0.0-40000311183353-d8887717615a",
+			wantVersionType: internal.VersionTypePrerelease,
+		},
+		{
+			name:            "valid_release",
+			version:         "v1.0.0",
+			wantVersionType: internal.VersionTypeRelease,
+		},
+		{
+			name:            "valid_release",
+			version:         "v1.0.0-alpha.1",
+			wantVersionType: internal.VersionTypePrerelease,
+		},
+		{
+			name:            "invalid_version",
+			version:         "not_a_version",
+			wantVersionType: internal.VersionTypeInvalid,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if gotVt := parseVersion(tc.version); tc.wantVersionType != gotVt {
+				t.Errorf("parseVersion(%v) = %v, want %v", tc.version, gotVt, tc.wantVersionType)
+			}
+		})
+	}
+}

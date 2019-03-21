@@ -15,14 +15,17 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"sos.googlesource.com/sos/license"
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
+	"golang.org/x/discovery/internal/thirdparty/semver"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -49,6 +52,38 @@ func ParseModulePathAndVersion(u *url.URL) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
+// parseVersion returns the VersionType of a given a version.
+func parseVersion(version string) internal.VersionType {
+	if !semver.IsValid(version) {
+		return internal.VersionTypeInvalid
+	}
+
+	prerelease := semver.Prerelease(version)
+	if prerelease == "" {
+		return internal.VersionTypeRelease
+	}
+	prerelease = prerelease[1:] // remove starting dash
+
+	// if prerelease looks like a commit then return VersionTypePseudo
+	matched, err := regexp.MatchString(`[0-9]{14}-[0-9a-z]{12}`, prerelease)
+	if err != nil {
+		log.Printf("regexp.MatchString(`[0-9]{14}-[0-9a-z]{12}`, %v): %v", prerelease, err)
+		return internal.VersionType("regexp.MatchString error")
+	}
+
+	if matched {
+		rawTime := strings.Split(prerelease, "-")[0]
+		layout := "20060102150405"
+		t, err := time.Parse(layout, rawTime)
+
+		if err == nil && t.Before(time.Now()) {
+			return internal.VersionTypePseudo
+		}
+	}
+
+	return internal.VersionTypePrerelease
+}
+
 // FetchAndInsertVersion downloads the given module version from the module proxy, processes
 // the contents, and writes the data to the database. The fetch service will:
 // (1) Get the version commit time from the proxy
@@ -56,6 +91,11 @@ func ParseModulePathAndVersion(u *url.URL) (string, string, error) {
 // (3) Process the contents (series name, readme, license, and packages)
 // (4) Write the data to the discovery database
 func FetchAndInsertVersion(name, version string, proxyClient *proxy.Client, db *postgres.DB) error {
+	versionType := parseVersion(version)
+	if versionType == internal.VersionTypeInvalid {
+		return fmt.Errorf("parseVersion(%q) = %v", version, versionType)
+	}
+
 	info, err := proxyClient.GetInfo(name, version)
 	if err != nil {
 		return fmt.Errorf("proxyClient.GetInfo(%q, %q): %v", name, version, err)

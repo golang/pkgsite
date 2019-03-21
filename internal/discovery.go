@@ -50,6 +50,29 @@ type Package struct {
 	Version  *Version
 }
 
+// VersionType defines the version types a module can have.
+type VersionType string
+
+const (
+	// VersionTypeRelease is a normal release.
+	VersionTypeRelease = VersionType("release")
+
+	// VersionTypePrerelease is a version with a prerelease.
+	VersionTypePrerelease = VersionType("prerelease")
+
+	// VersionTypePseudo appears to have a prerelease of the
+	// form <commit date>-<commit hash>.
+	VersionTypePseudo = VersionType("pseudo")
+
+	// VersionTypeInvalid indicates that a given version is
+	// invalid.
+	VersionTypeInvalid = VersionType("invalid")
+)
+
+func (vt VersionType) String() string {
+	return string(vt)
+}
+
 // A VersionSource is the source of a record in the version logs.
 type VersionSource string
 
