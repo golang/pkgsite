@@ -11,32 +11,30 @@ fi
 
 # Check that all .go and .sql files that have been staged in this commit have a
 # license header.
+echo "Running: Checking staged files for license header"
 STAGED_GO_FILES=$(git diff --cached --name-only | grep -E ".go$|.sql$")
-if [[ "$STAGED_GO_FILES" = "" ]]; then
-  exit 0
+if [[ "$STAGED_GO_FILES" != "" ]]; then
+  for FILE in $STAGED_GO_FILES
+  do
+      line="$(head -1 $FILE)"
+      if [[ ! $line == *"The Go Authors. All rights reserved."* ]] &&
+       [[ ! $line == "// DO NOT EDIT. This file was copied from" ]]; then
+  	    echo "missing license header: $FILE"
+      fi
+  done
 fi
 
-echo "Running: Checking staged files for license header"
+# Download staticcheck if it doesn't exists
+if ! [ -x "$(command -v staticcheck)" ]; then
+  echo "Running: go get -u honnef.co/go/tools/cmd/staticcheck"
+  go get -u honnef.co/go/tools/cmd/staticcheck
+fi
 
-for FILE in $STAGED_GO_FILES
-do
-    line="$(head -1 $FILE)"
-    if [[ ! $line == *"The Go Authors. All rights reserved."* ]] &&
-     [[ ! $line == "// DO NOT EDIT. This file was copied from" ]]; then
-	    echo "missing license header: $FILE"
-    fi
-done
-
-# Update and run staticcheck
-echo "Running: go get -u honnef.co/go/tools/cmd/staticcheck"
-go get -u honnef.co/go/tools/cmd/staticcheck
 echo "Running: staticcheck ./..."
 staticcheck ./...
 
-# Tidy modfile
 echo "Running: go mod tidy"
 go mod tidy
 
-# Run all tests
 echo "Running: go test ./..."
 go test ./...
