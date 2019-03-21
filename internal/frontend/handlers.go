@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"golang.org/x/discovery/internal/postgres"
+	"golang.org/x/discovery/internal/thirdparty/semver"
 )
 
 // ModulePage contains all of the data that the overview template
@@ -30,14 +31,17 @@ type ModulePage struct {
 
 // parseModulePathAndVersion returns the module and version specified by u. u is
 // assumed to be a valid url following the structure
-// https://<frontendHost>/<module>?v=<version>&tab=<tab>.
-func parseModulePathAndVersion(u *url.URL) (name, version string, err error) {
-	name = strings.TrimPrefix(u.Path, "/")
-	versionQuery := u.Query()["v"]
-	if name == "" || len(versionQuery) != 1 || versionQuery[0] == "" {
+// https://<frontendHost>/<path>@<version>&tab=<tab>.
+func parseModulePathAndVersion(u *url.URL) (path, version string, err error) {
+	parts := strings.Split(strings.TrimPrefix(u.Path, "/"), "@")
+	if len(parts) != 2 {
 		return "", "", fmt.Errorf("invalid path: %q", u)
 	}
-	return name, versionQuery[0], nil
+	if !semver.IsValid(parts[1]) {
+		return "", "", fmt.Errorf("invalid path (%q): semver.IsValid(%q) = false", u, parts[1])
+	}
+
+	return parts[0], parts[1], nil
 }
 
 // elapsedTime takes a date and returns returns human-readable,

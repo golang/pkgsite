@@ -14,7 +14,7 @@ import (
 	"golang.org/x/discovery/internal/postgres"
 )
 
-func TestParsePathAndVersion(t *testing.T) {
+func TestParseModulePathAndVersion(t *testing.T) {
 	testCases := []struct {
 		name    string
 		url     string
@@ -24,13 +24,13 @@ func TestParsePathAndVersion(t *testing.T) {
 	}{
 		{
 			name:    "valid_url",
-			url:     "https://discovery.com/module?v=v1.0.0",
+			url:     "https://discovery.com/module@v1.0.0",
 			module:  "module",
 			version: "v1.0.0",
 		},
 		{
 			name:    "valid_url_with_tab",
-			url:     "https://discovery.com/module?v=v1.0.0&tab=docs",
+			url:     "https://discovery.com/module@v1.0.0?tab=docs",
 			module:  "module",
 			version: "v1.0.0",
 		},
@@ -41,12 +41,17 @@ func TestParsePathAndVersion(t *testing.T) {
 		},
 		{
 			name: "invalid_url_missing_module",
-			url:  "https://discovery.com?v=v1.0.0",
+			url:  "https://discovery.com@v1.0.0",
 			err:  true,
 		},
 		{
 			name: "invalid_url_missing_version",
 			url:  "https://discovery.com/module",
+			err:  true,
+		},
+		{
+			name: "invalid_version",
+			url:  "https://discovery.com/module@v1.0.0invalid",
 			err:  true,
 		},
 	}
