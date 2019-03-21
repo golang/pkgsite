@@ -28,18 +28,16 @@ type Module struct {
 
 // A Version is a specific, reproducible build of a module.
 type Version struct {
-	Module       *Module
-	Version      string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	Synopsis     string
-	CommitTime   time.Time
-	License      string
-	ReadMe       []byte
-	VersionType  VersionType
-	Packages     []*Package
-	Dependencies []*Version
-	Dependents   []*Version
+	Module      *Module
+	Version     string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Synopsis    string
+	CommitTime  time.Time
+	License     string
+	ReadMe      []byte
+	VersionType VersionType
+	Packages    []*Package
 }
 
 // A Package is a group of one or more Go source files with the same package

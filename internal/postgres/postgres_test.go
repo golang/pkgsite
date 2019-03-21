@@ -6,15 +6,50 @@ package postgres
 
 import (
 	"database/sql"
-	"reflect"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+// versionsDiff takes in two versions, v1 and v2, and returns a string
+// description of the difference between them. If they are the
+// same the string will be empty. Fields "CreatedAt",
+// "UpdatedAt", "Module.Series", "VersionType", "Packages",
+// and "Module.Versions" are ignored during comparison.
+func versionsDiff(v1, v2 *internal.Version) string {
+	if v1 == nil && v2 == nil {
+		return ""
+	}
+
+	if (v1 != nil && v2 == nil) || (v1 == nil && v2 != nil) {
+		return "not equal"
+	}
+
+	return cmp.Diff(*v1, *v2, cmpopts.IgnoreFields(internal.Version{},
+		"CreatedAt", "UpdatedAt", "Module.Series", "VersionType", "Packages", "Module.Versions"))
+}
+
+// packagesDiff takes two packages, p1 and p2, and returns a string description
+// of the difference between them. If they are the same they will be
+// empty.
+func packagesDiff(p1, p2 *internal.Package) string {
+	if p1 == nil && p2 == nil {
+		return ""
+	}
+
+	if (p1 != nil && p2 == nil) || (p1 == nil && p2 != nil) {
+		return "not equal"
+	}
+
+	return fmt.Sprintf("%v%v", cmp.Diff(*p1, *p2, cmpopts.IgnoreFields(internal.Package{}, "Version")),
+		versionsDiff(p1.Version, p2.Version))
+}
 
 func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 	var (
@@ -41,6 +76,7 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 					Path:     "path/to/foo",
 				},
 			},
+			VersionType: internal.VersionTypeRelease,
 		}
 	)
 
@@ -149,9 +185,9 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 					tc.module, tc.version, got, tc.versionData)
 			}
 
-			if !tc.wantReadErr && reflect.DeepEqual(*got, *tc.versionData) {
-				t.Errorf("db.GetVersion(%q, %q) = %v, want %v",
-					tc.module, tc.version, got, tc.versionData)
+			if diff := versionsDiff(got, tc.versionData); !tc.wantReadErr && diff != "" {
+				t.Errorf("db.GetVersion(%q, %q) = %v, want %v | diff is %v",
+					tc.module, tc.version, got, tc.versionData, diff)
 			}
 
 			gotPkg, err := db.GetPackage(tc.pkgpath, tc.version)
@@ -178,6 +214,109 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 			gotPkg.Version = nil
 			if diff := cmp.Diff(*gotPkg, *wantPkg); diff != "" {
 				t.Errorf("db.GetPackage(%q, %q) Package mismatch (-want +got):\n%s", tc.pkgpath, tc.version, diff)
+			}
+		})
+	}
+}
+
+func TestPostgres_GetLatestPackage(t *testing.T) {
+	teardownTestCase, db := SetupCleanDB(t)
+	defer teardownTestCase(t)
+	var (
+		now = time.Now()
+		pkg = &internal.Package{
+			Path:     "path/to/foo/bar",
+			Name:     "bar",
+			Synopsis: "This is a package synopsis",
+		}
+		series = &internal.Series{
+			Path: "myseries",
+		}
+		module = &internal.Module{
+			Path:   "path/to/foo",
+			Series: series,
+		}
+		testVersions = []*internal.Version{
+			&internal.Version{
+				Module:      module,
+				Version:     "v1.0.0-alpha.1",
+				License:     "licensename",
+				ReadMe:      []byte("readme"),
+				CommitTime:  now,
+				Packages:    []*internal.Package{pkg},
+				VersionType: internal.VersionTypePrerelease,
+			},
+			&internal.Version{
+				Module:      module,
+				Version:     "v1.0.0",
+				License:     "licensename",
+				ReadMe:      []byte("readme"),
+				CommitTime:  now,
+				Packages:    []*internal.Package{pkg},
+				VersionType: internal.VersionTypeRelease,
+			},
+			&internal.Version{
+				Module:      module,
+				Version:     "v1.0.0-20190311183353-d8887717615a",
+				License:     "licensename",
+				ReadMe:      []byte("readme"),
+				CommitTime:  now,
+				Packages:    []*internal.Package{pkg},
+				VersionType: internal.VersionTypePseudo,
+			},
+		}
+	)
+
+	testCases := []struct {
+		name, path  string
+		versions    []*internal.Version
+		wantPkg     *internal.Package
+		wantReadErr bool
+	}{
+		{
+			name:     "want_second_package",
+			path:     pkg.Path,
+			versions: testVersions,
+			wantPkg: &internal.Package{
+				Name:     pkg.Name,
+				Path:     pkg.Path,
+				Synopsis: pkg.Synopsis,
+				Version: &internal.Version{
+					CreatedAt: testVersions[1].CreatedAt,
+					UpdatedAt: testVersions[1].UpdatedAt,
+					Module: &internal.Module{
+						Path: module.Path,
+					},
+					Version:    testVersions[1].Version,
+					Synopsis:   testVersions[1].Synopsis,
+					CommitTime: testVersions[1].CommitTime,
+					License:    testVersions[1].License,
+				},
+			},
+		},
+		{
+			name:        "empty_path",
+			path:        "",
+			wantReadErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			for _, v := range tc.versions {
+				if err := db.InsertVersion(v); err != nil {
+					t.Errorf("db.InsertVersion(%v): %v", v, err)
+				}
+			}
+
+			gotPkg, err := db.GetLatestPackage(tc.path)
+			if (err != nil) != tc.wantReadErr {
+				t.Errorf("db.GetLatestPackage(%q): %v", tc.path, err)
+			}
+
+			if diff := packagesDiff(gotPkg, tc.wantPkg); diff != "" {
+				t.Errorf("db.GetLatestPackage(%q) = %v, want %v, diff is %v",
+					tc.path, gotPkg, tc.wantPkg, diff)
 			}
 		})
 	}
@@ -221,5 +360,115 @@ func TestPostgress_InsertVersionLogs(t *testing.T) {
 	// Postgres has less precision than a time.Time value. Truncate to account for it.
 	if !dbTime.Truncate(time.Millisecond).Equal(now.Truncate(time.Millisecond)) {
 		t.Errorf("db.LatestProxyIndexUpdate() = %v, want %v", dbTime, now)
+	}
+}
+
+func TestPostgres_prefixZeroes(t *testing.T) {
+	testCases := []struct {
+		name, input, want string
+		wantErr           bool
+	}{
+		{
+			name:  "add_16_zeroes",
+			input: "1111",
+			want:  "00000000000000001111",
+		},
+		{
+			name:  "add_nothing_exactly_20",
+			input: "11111111111111111111",
+			want:  "11111111111111111111",
+		},
+		{
+			name:  "add_20_zeroes_empty_string",
+			input: "",
+			want:  "00000000000000000000",
+		},
+		{
+			name:    "input_longer_than_20_char",
+			input:   "123456789123456789123456789",
+			want:    "",
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got, err := prefixZeroes(tc.input); got != tc.want {
+				t.Errorf("prefixZeroes(%v) = %v, want %v, err = %v, wantErr = %v", tc.input, got, tc.want, err, tc.wantErr)
+			}
+		})
+	}
+}
+
+func TestPostgres_isNum(t *testing.T) {
+	testCases := []struct {
+		name, input string
+		want        bool
+	}{
+		{
+			name:  "all_numbers",
+			input: "1111",
+			want:  true,
+		},
+		{
+			name:  "number_letter_mix",
+			input: "111111asdf1a1111111asd",
+			want:  false,
+		},
+		{
+			name:  "empty_string",
+			input: "",
+			want:  false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := isNum(tc.input); got != tc.want {
+				t.Errorf("isNum(%v) = %v, want %v", tc.input, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestPostgres_padPrerelease(t *testing.T) {
+	testCases := []struct {
+		name, input, want string
+		wantErr           bool
+	}{
+		{
+			name:  "pad_one_field",
+			input: "-alpha.1",
+			want:  "alpha.00000000000000000001",
+		},
+		{
+			name:  "no_padding",
+			input: "beta",
+			want:  "beta",
+		},
+		{
+			name:  "pad_two_fields",
+			input: "-gamma.11.theta.2",
+			want:  "gamma.00000000000000000011.theta.00000000000000000002",
+		},
+		{
+			name:  "empty_string",
+			input: "",
+			want:  "~",
+		},
+		{
+			name:    "num_field_longer_than_20_char",
+			input:   "-alpha.123456789123456789123456789",
+			want:    "",
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got, err := padPrerelease(tc.input); (err != nil) == tc.wantErr && got != tc.want {
+				t.Errorf("padPrerelease(%v) = %v, want %v, err = %v, wantErr = %v", tc.input, got, tc.want, err, tc.wantErr)
+			}
+		})
 	}
 }
