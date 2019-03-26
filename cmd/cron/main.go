@@ -41,14 +41,15 @@ func makeNewVersionsHandler(db *postgres.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logs, err := cron.FetchAndStoreVersions(indexURL, db)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Status %d (%s): %v", http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError), err),
-				http.StatusInternalServerError)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			log.Printf("FetchAndStoreVersions(%q, db): %v", indexURL, db)
 			return
 		}
 
 		client := fetch.New(fetchURL)
 		for _, l := range logs {
-			fmt.Fprintf(w, "Fetch requested: %q %q\n", l.ModulePath, l.Version)
+			fmt.Fprintln(w, "Fetch requested")
+			log.Printf("Fetch requested: %q %q", l.ModulePath, l.Version)
 			go func(name, version string) {
 				if err := client.FetchVersion(name, version); err != nil {
 					log.Printf("client.FetchVersion(%q, %q): %v", name, version, err)

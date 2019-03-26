@@ -48,19 +48,20 @@ func makeFetchHandler(proxyClient *proxy.Client, db *postgres.DB) http.HandlerFu
 		log.Printf("Request received: %q", r.URL.Path)
 		module, version, err := fetch.ParseModulePathAndVersion(r.URL.Path)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Status %d (%s): %v", http.StatusBadRequest, http.StatusText(http.StatusBadRequest), err),
-				http.StatusBadRequest)
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			log.Printf("ParseModulePathAndVersion(%q): %v", r.URL.Path, err)
 			return
 		}
 
 		if err := fetch.FetchAndInsertVersion(module, version, proxyClient, db); err != nil {
-			http.Error(w, fmt.Sprintf("Status %d (%s): %v", http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError), err),
-				http.StatusInternalServerError)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			log.Printf("FetchAndInsertVersion(%q, %q, proxyClient, db): %v", module, version, err)
 			return
 		}
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusCreated)
-		fmt.Fprintf(w, "Downloaded: %q %q", module, version)
+		fmt.Fprintln(w, "Downloaded module")
+		log.Printf("Downloaded: %q %q", module, version)
 	}
 }
 
