@@ -26,7 +26,7 @@ func TestGetInfo(t *testing.T) {
 	teardownProxy, client := SetupTestProxy(t)
 	defer teardownProxy(t)
 
-	name := "my/module"
+	name := "my.mod/module"
 	version := "v1.0.0"
 	info, err := client.GetInfo(name, version)
 	if err != nil {
@@ -47,7 +47,7 @@ func TestGetInfoVersionDoesNotExist(t *testing.T) {
 	teardownProxy, client := SetupTestProxy(t)
 	defer teardownProxy(t)
 
-	name := "my/module"
+	name := "my.mod/module"
 	version := "v3.0.0"
 	info, _ := client.GetInfo(name, version)
 	if info != nil {
@@ -59,7 +59,7 @@ func TestGetZip(t *testing.T) {
 	teardownProxy, client := SetupTestProxy(t)
 	defer teardownProxy(t)
 
-	name := "my/module"
+	name := "my.mod/module"
 	version := "v1.0.0"
 	zipReader, err := client.GetZip(name, version)
 	if err != nil {
@@ -67,11 +67,11 @@ func TestGetZip(t *testing.T) {
 	}
 
 	expectedFiles := map[string]bool{
-		"my/module@v1.0.0/LICENSE":    true,
-		"my/module@v1.0.0/README.md":  true,
-		"my/module@v1.0.0/go.mod":     true,
-		"my/module@v1.0.0/foo/foo.go": true,
-		"my/module@v1.0.0/bar/bar.go": true,
+		"my.mod/module@v1.0.0/LICENSE":    true,
+		"my.mod/module@v1.0.0/README.md":  true,
+		"my.mod/module@v1.0.0/go.mod":     true,
+		"my.mod/module@v1.0.0/foo/foo.go": true,
+		"my.mod/module@v1.0.0/bar/bar.go": true,
 	}
 	if len(zipReader.File) != len(expectedFiles) {
 		t.Errorf("GetZip(%q, %q) returned number of files: got %d, want %d",
@@ -91,12 +91,51 @@ func TestGetZipNonExist(t *testing.T) {
 	teardownProxy, client := SetupTestProxy(t)
 	defer teardownProxy(t)
 
-	name := "my/nonexistmodule"
+	name := "my.mod/nonexistmodule"
 	version := "v1.0.0"
-	expectedErr := fmt.Sprintf("http.Get(%q) returned response: %d (%q)",
-		client.zipURL(name, version), 404, "404 Not Found")
+	zipURL, err := client.zipURL(name, version)
+	if err != nil {
+		t.Fatalf("client.zipURL(%q, %q): %v", name, version, err)
+	}
 
+	expectedErr := fmt.Sprintf("http.Get(%q) returned response: %d (%q)", zipURL, 404, "404 Not Found")
 	if _, err := client.GetZip(name, version); err.Error() != expectedErr {
 		t.Errorf("GetZip(%q, %q) returned error %v, want %v", name, version, err, expectedErr)
+	}
+}
+
+func TestEncodeModulePathAndVersion(t *testing.T) {
+	for _, tc := range []struct {
+		name, version, wantName, wantVersion string
+		wantErr                              bool
+	}{
+		{
+			name:        "github.com/Azure/go-autorest",
+			version:     "v11.0.0+incompatible",
+			wantName:    "github.com/!azure/go-autorest",
+			wantVersion: "v11.0.0+incompatible",
+			wantErr:     false,
+		},
+		{
+			name:        "github.com/!azure/go-autorest",
+			version:     "v11.0.0+incompatible",
+			wantName:    "github.com/!azure/go-autorest",
+			wantVersion: "v11.0.0+incompatible",
+			wantErr:     true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			gotName, gotVersion, err := encodeModulePathAndVersion(tc.name, tc.version)
+			if err != nil && !tc.wantErr {
+				t.Fatalf("encodeModulePathAndVersion(%q, %q): %v", tc.name, tc.version, err)
+			}
+			if err != nil && tc.wantErr {
+				return
+			}
+
+			if gotName != tc.wantName || gotVersion != tc.wantVersion {
+				t.Errorf("encodeModulePathAndVersion(%q, %q) = %q, %q, %v; want %q, %q, %v", tc.name, tc.version, gotName, gotVersion, err, tc.wantName, tc.wantVersion, nil)
+			}
+		})
 	}
 }

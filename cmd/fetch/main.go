@@ -45,7 +45,6 @@ func makeFetchHandler(proxyClient *proxy.Client, db *postgres.DB) http.HandlerFu
 			return
 		}
 
-		log.Printf("Request received: %q", r.URL.Path)
 		module, version, err := fetch.ParseModulePathAndVersion(r.URL.Path)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)

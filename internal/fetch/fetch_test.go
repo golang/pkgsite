@@ -28,11 +28,11 @@ func TestFetchAndInsertVersion(t *testing.T) {
 		versionData *internal.Version
 	}{
 		{
-			name:    "my/module",
+			name:    "my.mod/module",
 			version: "v1.0.0",
 			versionData: &internal.Version{
 				Module: &internal.Module{
-					Path: "my/module",
+					Path: "my.mod/module",
 				},
 				Version:    "v1.0.0",
 				CommitTime: time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
@@ -145,7 +145,7 @@ func TestHasFilename(t *testing.T) {
 		want         bool
 	}{
 		{
-			file:         "my/module@v1.0.0/README.md",
+			file:         "my.mod/module@v1.0.0/README.md",
 			expectedFile: "README.md",
 			want:         true,
 		},
@@ -179,8 +179,8 @@ func TestHasFilename(t *testing.T) {
 			want:         false,
 		},
 		{
-			file:         "my/module@v1.0.0/LICENSE",
-			expectedFile: "my/module@v1.0.0/LICENSE",
+			file:         "my.mod/module@v1.0.0/LICENSE",
+			expectedFile: "my.mod/module@v1.0.0/LICENSE",
 			want:         true,
 		},
 	} {
@@ -198,14 +198,14 @@ func TestHasFilename(t *testing.T) {
 
 func TestSeriesPathForModule(t *testing.T) {
 	for input, want := range map[string]string{
-		"module/":          "module",
-		"module/v2/":       "module",
-		"my/module":        "my/module",
-		"my/module/v":      "my/module/v",
-		"my/module/v0":     "my/module/v0",
-		"my/module/v1":     "my/module/v1",
-		"my/module/v23456": "my/module",
-		"v2/":              "v2",
+		"module/":              "module",
+		"module/v2/":           "module",
+		"my.mod/module":        "my.mod/module",
+		"my.mod/module/v":      "my.mod/module/v",
+		"my.mod/module/v0":     "my.mod/module/v0",
+		"my.mod/module/v1":     "my.mod/module/v1",
+		"my.mod/module/v23456": "my.mod/module",
+		"v2/":                  "v2",
 	} {
 		t.Run(input, func(t *testing.T) {
 			got, err := seriesPathForModule(input)
@@ -230,25 +230,25 @@ func TestContainsFile(t *testing.T) {
 		want                bool
 	}{
 		{
-			name:    "my/module",
+			name:    "my.mod/module",
 			version: "v1.0.0",
 			file:    "README",
 			want:    true,
 		},
 		{
-			name:    "my/module",
+			name:    "my.mod/module",
 			version: "v1.0.0",
-			file:    "my/module@v1.0.0/LICENSE",
+			file:    "my.mod/module@v1.0.0/LICENSE",
 			want:    true,
 		},
 		{
-			name:    "empty/module",
+			name:    "emp.ty/module",
 			version: "v1.0.0",
 			file:    "README",
 			want:    false,
 		},
 		{
-			name:    "empty/module",
+			name:    "emp.ty/module",
 			version: "v1.0.0",
 			file:    "LICENSE",
 			want:    false,
@@ -277,13 +277,13 @@ func TestExtractFile(t *testing.T) {
 		err                 error
 	}{
 		{
-			name:    "my/module",
+			name:    "my.mod/module",
 			version: "v1.0.0",
-			file:    "my/module@v1.0.0/README.md",
+			file:    "my.mod/module@v1.0.0/README.md",
 			want:    []byte("README FILE FOR TESTING."),
 		},
 		{
-			name:    "empty/module",
+			name:    "emp.ty/module",
 			version: "v1.0.0",
 			file:    "empty/nonexistent/README.md",
 			err:     errors.New(`zip does not contain "README.md"`),
@@ -324,23 +324,23 @@ func TestExtractPackagesFromZip(t *testing.T) {
 	}{
 		{
 			zip:     "module.zip",
-			name:    "my/module",
+			name:    "my.mod/module",
 			version: "v1.0.0",
 			packages: map[string]*internal.Package{
 				"foo": &internal.Package{
 					Name:     "foo",
-					Path:     "my/module/foo",
+					Path:     "my.mod/module/foo",
 					Synopsis: "package foo",
 				},
 				"bar": &internal.Package{
 					Name:     "bar",
-					Path:     "my/module/bar",
+					Path:     "my.mod/module/bar",
 					Synopsis: "package bar",
 				},
 			},
 		},
 		{
-			name:     "empty/module",
+			name:     "emp.ty/module",
 			version:  "v1.0.0",
 			packages: map[string]*internal.Package{},
 		},

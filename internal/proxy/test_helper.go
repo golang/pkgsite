@@ -33,8 +33,8 @@ func SetupTestProxy(t *testing.T) (func(t *testing.T), *Client) {
 	client := New(p.URL)
 
 	for _, v := range [][]string{
-		[]string{"my/module", "v1.0.0"},
-		[]string{"empty/module", "v1.0.0"},
+		[]string{"my.mod/module", "v1.0.0"},
+		[]string{"emp.ty/module", "v1.0.0"},
 		[]string{"rsc.io/quote", "v1.5.2"},
 		[]string{"rsc.io/quote/v2", "v2.0.1"},
 	} {

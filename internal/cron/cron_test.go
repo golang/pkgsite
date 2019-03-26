@@ -52,15 +52,15 @@ func TestGetVersionsFromIndex(t *testing.T) {
 			name: "valid_get_versions",
 			indexInfo: []map[string]string{
 				map[string]string{
-					"name":    "my/module",
+					"name":    "my.mod/module",
 					"version": "v1.0.0",
 				},
 				map[string]string{
-					"name":    "my/module",
+					"name":    "my.mod/module",
 					"version": "v1.1.0",
 				},
 				map[string]string{
-					"name":    "my/module/v2",
+					"name":    "my.mod/module/v2",
 					"version": "v2.0.0",
 				},
 			},
@@ -113,14 +113,14 @@ func TestNewVersionFromProxyIndex(t *testing.T) {
 			name: "version-logs-no-existing-entries",
 			indexInfo: []map[string]string{
 				map[string]string{
-					"name":    "my/module",
+					"name":    "my.mod/module",
 					"version": "v1.0.0",
 				},
 			},
 			oldVersionLogs: nil,
 			wantVersionLogs: []*internal.VersionLog{
 				&internal.VersionLog{
-					ModulePath: "my/module",
+					ModulePath: "my.mod/module",
 					Version:    "v1.0.0",
 					Source:     internal.VersionSourceProxyIndex,
 				},
@@ -130,29 +130,29 @@ func TestNewVersionFromProxyIndex(t *testing.T) {
 			name: "version-logs-existing-duplicate-entry",
 			indexInfo: []map[string]string{
 				map[string]string{
-					"name":    "my/module",
+					"name":    "my.mod/module",
 					"version": "v1.0.0",
 				},
 				map[string]string{
-					"name":    "my/module",
+					"name":    "my.mod/module",
 					"version": "v2.0.0",
 				},
 			},
 			oldVersionLogs: []*internal.VersionLog{
 				&internal.VersionLog{
-					ModulePath: "my/module",
+					ModulePath: "my.mod/module",
 					Version:    "v1.0.0",
 					Source:     internal.VersionSourceProxyIndex,
 				},
 			},
 			wantVersionLogs: []*internal.VersionLog{
 				&internal.VersionLog{
-					ModulePath: "my/module",
+					ModulePath: "my.mod/module",
 					Version:    "v1.0.0",
 					Source:     internal.VersionSourceProxyIndex,
 				},
 				&internal.VersionLog{
-					ModulePath: "my/module",
+					ModulePath: "my.mod/module",
 					Version:    "v2.0.0",
 					Source:     internal.VersionSourceProxyIndex,
 				},

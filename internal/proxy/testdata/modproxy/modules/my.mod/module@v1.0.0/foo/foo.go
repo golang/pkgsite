@@ -7,7 +7,8 @@ package foo
 
 import (
 	"fmt"
-	"my/module/bar"
+
+	"my.mod/module/bar"
 )
 
 // FooBar returns the string "foo bar".

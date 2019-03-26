@@ -6,6 +6,7 @@ package fetch
 
 import (
 	"archive/zip"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"go/ast"
@@ -121,7 +122,7 @@ func FetchAndInsertVersion(name, version string, proxyClient *proxy.Client, db *
 
 	packages, err := extractPackagesFromZip(name, version, zipReader)
 	if err != nil && err != errModuleContainsNoPackages {
-		return fmt.Errorf("extractPackagesFromZip(%q, %q, %v): %v", name, version, zipReader, err)
+		return fmt.Errorf("extractPackagesFromZip(%q, %q): %v", name, version, err)
 	}
 
 	v := internal.Version{
@@ -139,7 +140,13 @@ func FetchAndInsertVersion(name, version string, proxyClient *proxy.Client, db *
 		VersionType: versionType,
 	}
 	if err = db.InsertVersion(&v); err != nil {
-		return fmt.Errorf("db.InsertVersion(%+v): %v", v, err)
+		// Encode the struct to a JSON string so that it is more readable in
+		// the error message.
+		b, jsonerr := json.Marshal(v)
+		if jsonerr != nil {
+			return fmt.Errorf("db.InsertVersion(%+v): %v; json.Marshal: %v", v, err, jsonerr)
+		}
+		return fmt.Errorf("db.InsertVersion(%+v): %v", string(b), err)
 	}
 	return nil
 }
@@ -176,7 +183,8 @@ func extractPackagesFromZip(module, version string, r *zip.Reader) ([]*internal.
 
 			b, err := readZipFile(f)
 			if err != nil {
-				return nil, fmt.Errorf("readZipFile(%q): %v", f.Name, err)
+				log.Printf("readZipFile(%q): %v", f.Name, err)
+				continue
 			}
 
 			if _, err := file.Write(b); err != nil {
@@ -223,8 +231,8 @@ func extractPackagesFromZip(module, version string, r *zip.Reader) ([]*internal.
 
 // seriesPathForModule reports the series name for the given module. The series
 // name is the shared base path of a group of major-version variants. For
-// example, my/module, my/module/v2, my/module/v3 are a single series, with the
-// series name my/module.
+// example, my.mod/module, my.mod/module/v2, my.mod/module/v3 are a single series, with the
+// series name my.mod/module.
 func seriesPathForModule(name string) (string, error) {
 	if name == "" {
 		return "", errors.New("module name cannot be empty")
@@ -241,9 +249,9 @@ func seriesPathForModule(name string) (string, error) {
 		// Attempt to convert the portion of suffix following "v" to an
 		// integer. If that portion cannot be converted to an integer, or the
 		// version = 0 or 1, return the full module name. For example:
-		// my/module/v2 has series name my/module
-		// my/module/v1 has series name my/module/v1
-		// my/module/v2x has series name my/module/v2x
+		// my.mod/module/v2 has series name my.mod/module
+		// my.mod/module/v1 has series name my.mod/module/v1
+		// my.mod/module/v2x has series name my.mod/module/v2x
 		version, err := strconv.Atoi(suffix[1:])
 		if err != nil || version < 2 {
 			return name, nil
