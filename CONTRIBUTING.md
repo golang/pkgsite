@@ -16,7 +16,7 @@ the BSD-style license found in the LICENSE file.
 
 All submissions, including submissions by project members, require review. We
 use Gerrit for this purpose. Consult the
-[Gerrit Documentation ](https://www.gerritcodereview.com/index.html) for more
+[Gerrit Documentation](https://www.gerritcodereview.com/index.html) for more
 information on using pull requests.
 
 ## Community Guidelines

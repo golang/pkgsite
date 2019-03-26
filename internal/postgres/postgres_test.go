@@ -217,7 +217,9 @@ func TestPostgress_InsertVersionLogs(t *testing.T) {
 	if err != nil {
 		t.Errorf("db.LatestProxyIndexUpdate error: %v", err)
 	}
-	if !dbTime.Equal(now) {
+
+	// Postgres has less precision than a time.Time value. Truncate to account for it.
+	if !dbTime.Truncate(time.Millisecond).Equal(now.Truncate(time.Millisecond)) {
 		t.Errorf("db.LatestProxyIndexUpdate() = %v, want %v", dbTime, now)
 	}
 }

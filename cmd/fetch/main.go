@@ -39,12 +39,14 @@ func getEnv(key, fallback string) string {
 func makeFetchHandler(proxyClient *proxy.Client, db *postgres.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
-			fmt.Fprintf(w, "Hello, Go Discovery Fetch Service!")
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			fmt.Fprintf(w, "<h1>Hello, Go Discovery Fetch Service!</h1>")
+			fmt.Fprintf(w, `<p><a href="/rsc.io/quote/@v/v1.0.0">Fetch an example module</a></p>`)
 			return
 		}
 
 		log.Printf("Request received: %q", r.URL.Path)
-		module, version, err := fetch.ParseModulePathAndVersion(r.URL)
+		module, version, err := fetch.ParseModulePathAndVersion(r.URL.Path)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Status %d (%s): %v", http.StatusBadRequest, http.StatusText(http.StatusBadRequest), err),
 				http.StatusBadRequest)
@@ -56,6 +58,7 @@ func makeFetchHandler(proxyClient *proxy.Client, db *postgres.DB) http.HandlerFu
 				http.StatusInternalServerError)
 			return
 		}
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusCreated)
 		fmt.Fprintf(w, "Downloaded: %q %q", module, version)
 	}

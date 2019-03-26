@@ -12,7 +12,6 @@ import (
 	"go/doc"
 	"io/ioutil"
 	"log"
-	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -33,12 +32,12 @@ var (
 	errModuleContainsNoPackages = errors.New("module contains 0 packages")
 )
 
-// ParseModulePathAndVersion returns the module and version specified by u. u is
-// assumed to be a valid url following the structure http(s)://<fetchURL>/<module>@<version>.
-func ParseModulePathAndVersion(u *url.URL) (string, string, error) {
-	parts := strings.Split(strings.TrimPrefix(u.Path, "/"), "/@v/")
+// ParseModulePathAndVersion returns the module and version specified by p. p is
+// assumed to have the structure /<module>/@v/<version>.
+func ParseModulePathAndVersion(p string) (string, string, error) {
+	parts := strings.Split(strings.TrimPrefix(p, "/"), "/@v/")
 	if len(parts) != 2 {
-		return "", "", fmt.Errorf("invalid path: %q", u)
+		return "", "", fmt.Errorf("invalid path: %q", p)
 	}
 
 	// TODO(julieqiu): Check module name is valid using
@@ -46,7 +45,7 @@ func ParseModulePathAndVersion(u *url.URL) (string, string, error) {
 	// Check version is valid using
 	// https://github.com/golang/go/blob/c97e576/src/cmd/go/internal/modload/query.go#L183
 	if parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("invalid path: %q", u)
+		return "", "", fmt.Errorf("invalid path: %q", p)
 	}
 
 	return parts[0], parts[1], nil

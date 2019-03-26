@@ -11,7 +11,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
@@ -31,16 +30,15 @@ type ModulePage struct {
 	ReadMe     template.HTML
 }
 
-// parseModulePathAndVersion returns the module and version specified by u. u is
-// assumed to be a valid url following the structure
-// https://<frontendHost>/<path>@<version>&tab=<tab>.
-func parseModulePathAndVersion(u *url.URL) (path, version string, err error) {
-	parts := strings.Split(strings.TrimPrefix(u.Path, "/"), "@")
+// parseModulePathAndVersion returns the module and version specified by p. p is
+// assumed to be a valid path following the structure /<module>@<version>&tab=<tab>.
+func parseModulePathAndVersion(p string) (path, version string, err error) {
+	parts := strings.Split(strings.TrimPrefix(p, "/"), "@")
 	if len(parts) != 2 {
-		return "", "", fmt.Errorf("invalid path: %q", u)
+		return "", "", fmt.Errorf("invalid path: %q", p)
 	}
 	if !semver.IsValid(parts[1]) {
-		return "", "", fmt.Errorf("invalid path (%q): semver.IsValid(%q) = false", u, parts[1])
+		return "", "", fmt.Errorf("invalid path (%q): semver.IsValid(%q) = false", p, parts[1])
 	}
 
 	return parts[0], parts[1], nil
@@ -99,9 +97,9 @@ func readmeHTML(readme []byte) template.HTML {
 // a database and applies that data and html to a template.
 func MakeModuleHandlerFunc(db *postgres.DB, html string, templates *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		name, version, err := parseModulePathAndVersion(r.URL)
+		name, version, err := parseModulePathAndVersion(r.URL.Path)
 		if err != nil {
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 			log.Printf("Error parsing name and version: %v", err)
 			return
 		}

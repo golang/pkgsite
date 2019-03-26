@@ -95,17 +95,17 @@ func TestParseModulePathAndVersion(t *testing.T) {
 		{
 			name: "InvalidFetchURL",
 			url:  "https://proxy.com/",
-			err:  errors.New(`invalid path: "https://proxy.com/"`),
+			err:  errors.New(`invalid path: "/"`),
 		},
 		{
 			name: "InvalidFetchURLNoModule",
 			url:  "https://proxy.com/@v/version",
-			err:  errors.New(`invalid path: "https://proxy.com/@v/version"`),
+			err:  errors.New(`invalid path: "/@v/version"`),
 		},
 		{
 			name: "InvalidFetchURLNoVersion",
 			url:  "https://proxy.com/module/@v/",
-			err:  errors.New(`invalid path: "https://proxy.com/module/@v/"`),
+			err:  errors.New(`invalid path: "/module/@v/"`),
 		},
 	}
 
@@ -116,7 +116,7 @@ func TestParseModulePathAndVersion(t *testing.T) {
 				t.Errorf("url.Parse(%q): %v", test.url, err)
 			}
 
-			m, v, err := ParseModulePathAndVersion(u)
+			m, v, err := ParseModulePathAndVersion(u.Path)
 			if test.err != nil {
 				if err == nil {
 					t.Fatalf("ParseModulePathAndVersion(%v) error = (%v); want = (%v)", u, err, test.err)

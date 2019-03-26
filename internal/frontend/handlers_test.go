@@ -65,7 +65,7 @@ func TestParseModulePathAndVersion(t *testing.T) {
 				t.Errorf("url.Parse(%q): %v", tc.url, parseErr)
 			}
 
-			module, version, err := parseModulePathAndVersion(u)
+			module, version, err := parseModulePathAndVersion(u.Path)
 
 			if (err != nil) != tc.err {
 				t.Fatalf("parseModulePathAndVersion(%v) error = (%v); want error %t)", u, err, tc.err)
