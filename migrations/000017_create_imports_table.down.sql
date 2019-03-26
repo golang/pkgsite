@@ -14,6 +14,6 @@ CREATE TABLE dependencies (
 	PRIMARY KEY (module_path, version),
 	FOREIGN KEY (dependency_path, dependency_version) REFERENCES versions(module_path, version),
 	FOREIGN KEY (module_path, version) REFERENCES versions(module_path, version)
-)
+);
 
 END;
