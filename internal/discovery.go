@@ -89,9 +89,9 @@ func (vs VersionSource) String() string {
 // The Path and Version may not necessarily be valid module versions (for example, if a
 // user requests a module or version that does not exist).
 type VersionLog struct {
-	// A JSON struct tag is needed because the index gives "Name" instead of
-	// "ModulePath" at the moment
-	ModulePath string `json:"Name"`
+	// A JSON struct tag is needed because the index uses the field "Path"
+	// instead of "ModulePath".
+	ModulePath string `json:"Path"`
 
 	Version   string
 	CreatedAt time.Time

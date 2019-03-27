@@ -52,15 +52,15 @@ func TestGetVersionsFromIndex(t *testing.T) {
 			name: "valid_get_versions",
 			indexInfo: []map[string]string{
 				map[string]string{
-					"name":    "my.mod/module",
+					"path":    "my.mod/module",
 					"version": "v1.0.0",
 				},
 				map[string]string{
-					"name":    "my.mod/module",
+					"path":    "my.mod/module",
 					"version": "v1.1.0",
 				},
 				map[string]string{
-					"name":    "my.mod/module/v2",
+					"path":    "my.mod/module/v2",
 					"version": "v2.0.0",
 				},
 			},
@@ -73,7 +73,7 @@ func TestGetVersionsFromIndex(t *testing.T) {
 		wantLogs := []*internal.VersionLog{}
 		for _, v := range tc.indexInfo {
 			wantLogs = append(wantLogs, &internal.VersionLog{
-				ModulePath: v["name"],
+				ModulePath: v["path"],
 				Version:    v["version"],
 				Source:     internal.VersionSourceProxyIndex,
 			})
@@ -113,7 +113,7 @@ func TestNewVersionFromProxyIndex(t *testing.T) {
 			name: "version-logs-no-existing-entries",
 			indexInfo: []map[string]string{
 				map[string]string{
-					"name":    "my.mod/module",
+					"path":    "my.mod/module",
 					"version": "v1.0.0",
 				},
 			},
@@ -130,11 +130,11 @@ func TestNewVersionFromProxyIndex(t *testing.T) {
 			name: "version-logs-existing-duplicate-entry",
 			indexInfo: []map[string]string{
 				map[string]string{
-					"name":    "my.mod/module",
+					"path":    "my.mod/module",
 					"version": "v1.0.0",
 				},
 				map[string]string{
-					"name":    "my.mod/module",
+					"path":    "my.mod/module",
 					"version": "v2.0.0",
 				},
 			},
