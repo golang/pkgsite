@@ -26,14 +26,14 @@ func TestParseModulePathAndVersion(t *testing.T) {
 	}{
 		{
 			name:    "valid_url",
-			url:     "https://discovery.com/module@v1.0.0",
-			module:  "module",
+			url:     "https://discovery.com/test.module@v1.0.0",
+			module:  "test.module",
 			version: "v1.0.0",
 		},
 		{
 			name:    "valid_url_with_tab",
-			url:     "https://discovery.com/module@v1.0.0?tab=docs",
-			module:  "module",
+			url:     "https://discovery.com/test.module@v1.0.0?tab=docs",
+			module:  "test.module",
 			version: "v1.0.0",
 		},
 		{
@@ -139,7 +139,7 @@ func TestFetchModulePage(t *testing.T) {
 		name: "want_expected_module_page",
 		version: internal.Version{
 			Module: &internal.Module{
-				Path: "test/module",
+				Path: "test.com/module",
 				Series: &internal.Series{
 					Path: "series",
 				},
@@ -151,7 +151,7 @@ func TestFetchModulePage(t *testing.T) {
 			ReadMe:     []byte("This is the readme text."),
 		},
 		expectedModPage: ModulePage{
-			ModulePath: "test/module",
+			ModulePath: "test.com/module",
 			Version:    "v1.0.0",
 			License:    "MIT",
 			CommitTime: "today",

@@ -25,6 +25,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
+	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
 	"golang.org/x/tools/go/packages"
 )
@@ -91,6 +92,10 @@ func parseVersion(version string) (internal.VersionType, error) {
 // (3) Process the contents (series name, readme, license, and packages)
 // (4) Write the data to the discovery database
 func FetchAndInsertVersion(name, version string, proxyClient *proxy.Client, db *postgres.DB) error {
+	if err := module.CheckPath(name); err != nil {
+		return fmt.Errorf("fetch: invalid module name %v: %v", name, err)
+	}
+
 	versionType, err := parseVersion(version)
 	if err != nil {
 		return fmt.Errorf("parseVersion(%q): %v", version, err)

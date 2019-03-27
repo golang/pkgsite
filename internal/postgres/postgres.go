@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -315,8 +316,12 @@ func padPrerelease(p string) (string, error) {
 // so all number fields in the prerelease column have 20 characters. If the
 // version is malformed then insertion will fail.
 func (db *DB) InsertVersion(version *internal.Version) error {
-	if version == nil || !semver.IsValid(version.Version) {
-		return status.Errorf(codes.InvalidArgument, "postgres: cannot insert nil version")
+	if version == nil || !semver.IsValid(version.Version) || version.Module == nil {
+		return status.Errorf(codes.InvalidArgument, "postgres: cannot insert nil or invalid version")
+	}
+
+	if err := module.CheckPath(version.Module.Path); err != nil {
+		return status.Errorf(codes.InvalidArgument, "postgres: cannot insert version with invalid module path: %v", err)
 	}
 
 	if version.Module == nil || version.Module.Path == "" || version.Version == "" || version.CommitTime.IsZero() {

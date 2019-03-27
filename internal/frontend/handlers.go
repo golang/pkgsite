@@ -16,6 +16,7 @@ import (
 
 	"github.com/microcosm-cc/bluemonday"
 	"golang.org/x/discovery/internal/postgres"
+	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
 	"gopkg.in/russross/blackfriday.v2"
 )
@@ -37,6 +38,11 @@ func parseModulePathAndVersion(p string) (path, version string, err error) {
 	if len(parts) != 2 {
 		return "", "", fmt.Errorf("invalid path: %q", p)
 	}
+
+	if err := module.CheckPath(parts[0]); err != nil {
+		return "", "", fmt.Errorf("invalid path (%q): module.CheckPath(%q): %v", p, parts[0], err)
+	}
+
 	if !semver.IsValid(parts[1]) {
 		return "", "", fmt.Errorf("invalid path (%q): semver.IsValid(%q) = false", p, parts[1])
 	}

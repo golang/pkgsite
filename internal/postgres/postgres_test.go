@@ -59,7 +59,7 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 			Modules: []*internal.Module{},
 		}
 		module = &internal.Module{
-			Path:     "valid_module_name",
+			Path:     "github.com/valid_module_name",
 			Series:   series,
 			Versions: []*internal.Version{},
 		}
@@ -73,7 +73,7 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 				&internal.Package{
 					Name:     "foo",
 					Synopsis: "This is a package synopsis",
-					Path:     "path/to/foo",
+					Path:     "path.to/foo",
 				},
 			},
 			VersionType: internal.VersionTypeRelease,
@@ -88,21 +88,21 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 	}{
 		{
 			name:             "nil_version_write_error",
-			module:           "valid_module_name",
+			module:           "github.com/valid_module_name",
 			version:          "v1.0.0",
 			wantWriteErrCode: codes.InvalidArgument,
 			wantReadErr:      true,
 		},
 		{
 			name:        "valid_test",
-			module:      "valid_module_name",
+			module:      "github.com/valid_module_name",
 			version:     "v1.0.0",
-			pkgpath:     "path/to/foo",
+			pkgpath:     "path.to/foo",
 			versionData: testVersion,
 		},
 		{
 			name:        "nonexistent_version_test",
-			module:      "valid_module_name",
+			module:      "github.com/valid_module_name",
 			version:     "v1.2.3",
 			versionData: testVersion,
 			wantReadErr: true,
@@ -111,7 +111,7 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 			name:        "nonexistent_module_test",
 			module:      "nonexistent_module_name",
 			version:     "v1.0.0",
-			pkgpath:     "path/to/foo",
+			pkgpath:     "path.to/foo",
 			versionData: testVersion,
 			wantReadErr: true,
 		},
@@ -225,7 +225,7 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 	var (
 		now = time.Now()
 		pkg = &internal.Package{
-			Path:     "path/to/foo/bar",
+			Path:     "path.to/foo/bar",
 			Name:     "bar",
 			Synopsis: "This is a package synopsis",
 		}
@@ -233,7 +233,7 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 			Path: "myseries",
 		}
 		module = &internal.Module{
-			Path:   "path/to/foo",
+			Path:   "path.to/foo",
 			Series: series,
 		}
 		testVersions = []*internal.Version{
@@ -328,12 +328,12 @@ func TestPostgres_GetLatestPackageForPaths(t *testing.T) {
 	var (
 		now  = time.Now()
 		pkg1 = &internal.Package{
-			Path:     "path/to/foo/bar",
+			Path:     "path.to/foo/bar",
 			Name:     "bar",
 			Synopsis: "This is a package synopsis",
 		}
 		pkg2 = &internal.Package{
-			Path:     "path2/to/foo/bar2",
+			Path:     "path2.to/foo/bar2",
 			Name:     "bar2",
 			Synopsis: "This is another package synopsis",
 		}
@@ -341,11 +341,11 @@ func TestPostgres_GetLatestPackageForPaths(t *testing.T) {
 			Path: "myseries",
 		}
 		module1 = &internal.Module{
-			Path:   "path2/to/foo",
+			Path:   "path2.to/foo",
 			Series: series,
 		}
 		module2 = &internal.Module{
-			Path:   "path2/to/foo",
+			Path:   "path2.to/foo",
 			Series: series,
 		}
 		testVersions = []*internal.Version{
