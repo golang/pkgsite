@@ -388,6 +388,7 @@ func (db *DB) InsertVersion(version *internal.Version) error {
 		if err != nil {
 			return fmt.Errorf("error preparing package stmt: %v", err)
 		}
+		defer stmt.Close()
 
 		for _, p := range version.Packages {
 			if _, err = stmt.Exec(p.Path, p.Synopsis, p.Name, version.Version, version.Module.Path, version.VersionType.String()); err != nil {
