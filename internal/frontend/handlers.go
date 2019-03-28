@@ -24,15 +24,24 @@ import (
 // ModulePage contains all of the data that the overview template
 // needs to populate.
 type ModulePage struct {
-	ModulePath string
+	ModulePath    string
+	ReadMe        template.HTML
+	PackageHeader *PackageHeader
+}
+
+// PackageHeader contains all of the data the header template
+// needs to populate.
+type PackageHeader struct {
+	Name       string
 	Version    string
+	Path       string
+	Synopsis   string
 	License    string
 	CommitTime string
-	ReadMe     template.HTML
 }
 
 // parseModulePathAndVersion returns the module and version specified by p. p is
-// assumed to be a valid path following the structure /<module>@<version>&tab=<tab>.
+// assumed to be a valid path following the structure /<module>@<version>.
 func parseModulePathAndVersion(p string) (path, version string, err error) {
 	parts := strings.Split(strings.TrimPrefix(p, "/"), "@")
 	if len(parts) != 2 {
@@ -76,20 +85,25 @@ func elapsedTime(date time.Time) string {
 	return date.Format("Jan _2, 2006")
 }
 
-// fetchModulePage fetches data for the module version specified by name and version
+// fetchModulePage fetches data for the module version specified by path and version
 // from the database and returns a ModulePage.
-func fetchModulePage(db *postgres.DB, name, version string) (*ModulePage, error) {
-	v, err := db.GetVersion(name, version)
+func fetchModulePage(db *postgres.DB, path, version string) (*ModulePage, error) {
+	pkg, err := db.GetPackage(path, version)
 	if err != nil {
-		return nil, fmt.Errorf("db.GetVersion(%q, %q) returned error %v", name, version, err)
+		return nil, fmt.Errorf("db.GetPackage(%q, %q) returned error %v", path, version, err)
 	}
 
 	return &ModulePage{
-		ModulePath: v.Module.Path,
-		Version:    v.Version,
-		License:    v.License,
-		CommitTime: elapsedTime(v.CommitTime),
-		ReadMe:     readmeHTML(v.ReadMe),
+		ModulePath: pkg.Version.Module.Path,
+		ReadMe:     readmeHTML(pkg.Version.ReadMe),
+		PackageHeader: &PackageHeader{
+			Name:       pkg.Name,
+			Version:    pkg.Version.Version,
+			Path:       pkg.Path,
+			Synopsis:   pkg.Synopsis,
+			License:    pkg.Version.License,
+			CommitTime: elapsedTime(pkg.Version.CommitTime),
+		},
 	}, nil
 }
 
@@ -103,14 +117,14 @@ func readmeHTML(readme []byte) template.HTML {
 // a database and applies that data and html to a template.
 func MakeModuleHandlerFunc(db *postgres.DB, html string, templates *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		name, version, err := parseModulePathAndVersion(r.URL.Path)
+		path, version, err := parseModulePathAndVersion(r.URL.Path)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-			log.Printf("Error parsing name and version: %v", err)
+			log.Printf("Error parsing path and version: %v", err)
 			return
 		}
 
-		modPage, err := fetchModulePage(db, name, version)
+		modPage, err := fetchModulePage(db, path, version)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			log.Printf("Error fetching module page: %v", err)

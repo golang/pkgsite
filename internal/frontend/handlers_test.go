@@ -7,7 +7,6 @@ package frontend
 import (
 	"html/template"
 	"net/url"
-	"reflect"
 	"testing"
 	"time"
 
@@ -131,9 +130,9 @@ func TestElapsedTime(t *testing.T) {
 
 func TestFetchModulePage(t *testing.T) {
 	tc := struct {
-		name            string
-		version         internal.Version
-		expectedModPage ModulePage
+		name        string
+		version     internal.Version
+		wantModPage ModulePage
 	}{
 
 		name: "want_expected_module_page",
@@ -149,13 +148,26 @@ func TestFetchModulePage(t *testing.T) {
 			CommitTime: time.Now().Add(time.Hour * -8),
 			License:    "MIT",
 			ReadMe:     []byte("This is the readme text."),
+			Packages: []*internal.Package{
+				&internal.Package{
+					Name:     "pkg_name",
+					Path:     "test.com/module/pkg_name",
+					Synopsis: "Test package synopsis",
+				},
+			},
+			VersionType: internal.VersionTypeRelease,
 		},
-		expectedModPage: ModulePage{
+		wantModPage: ModulePage{
 			ModulePath: "test.com/module",
-			Version:    "v1.0.0",
-			License:    "MIT",
-			CommitTime: "today",
 			ReadMe:     template.HTML("<p>This is the readme text.</p>\n"),
+			PackageHeader: &PackageHeader{
+				Name:       "pkg_name",
+				Version:    "v1.0.0",
+				Path:       "test.com/module/pkg_name",
+				Synopsis:   "Test package synopsis",
+				License:    "MIT",
+				CommitTime: "today",
+			},
 		},
 	}
 
@@ -166,14 +178,14 @@ func TestFetchModulePage(t *testing.T) {
 		t.Fatalf("db.InsertVersion(%v) returned error: %v", tc.version, err)
 	}
 
-	mp, err := fetchModulePage(db, tc.version.Module.Path, tc.version.Version)
+	got, err := fetchModulePage(db, tc.version.Packages[0].Path, tc.version.Version)
 	if err != nil {
 		t.Fatalf("fetchModulePage(db, %q, %q) = %v err = %v, want %v",
-			tc.version.Module.Path, tc.version.Version, mp, err, tc.expectedModPage)
+			tc.version.Packages[0].Path, tc.version.Version, got, err, tc.wantModPage)
 	}
 
-	if !reflect.DeepEqual(*mp, tc.expectedModPage) {
-		t.Errorf("reflect.DeepEqual(%q, %q) was false, want true", *mp, tc.expectedModPage)
+	if diff := cmp.Diff(tc.wantModPage, *got); diff != "" {
+		t.Errorf("fetchModulePage(%q, %q) mismatch (-want +got):\n%s", tc.version.Packages[0].Path, tc.version.Version, diff)
 	}
 }
 

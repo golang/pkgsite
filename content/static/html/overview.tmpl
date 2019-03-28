@@ -5,10 +5,10 @@
 -->
 
 <!DOCTYPE html>
-{{ template "header" . }}
+{{ template "header" .PackageHeader }}
 <div class="OverviewContent">
   {{ template "nav" }}
-  {{ template "mod_header" . }}
+  {{ template "mod_header" .PackageHeader }}
   {{ template "modules_nav" . }}
   <div class="OverviewContent-readMe">
     {{ .ReadMe }}

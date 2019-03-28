@@ -139,14 +139,19 @@ func (db *DB) GetPackage(path string, version string) (*internal.Package, error)
 		return nil, status.Errorf(codes.InvalidArgument, "postgres: path and version cannot be empty")
 	}
 
-	var commitTime, createdAt, updatedAt time.Time
-	var name, synopsis, license string
+	var (
+		commitTime, createdAt, updatedAt     time.Time
+		name, synopsis, license, module_path string
+		readme                               []byte
+	)
 	query := `
 		SELECT
 			v.created_at,
 			v.updated_at,
 			v.commit_time,
 			v.license,
+			v.readme,
+			v.module_path,
 			p.name,
 			p.synopsis
 		FROM
@@ -162,9 +167,9 @@ func (db *DB) GetPackage(path string, version string) (*internal.Package, error)
 		LIMIT 1;`
 
 	row := db.QueryRow(query, path, version)
-	if err := row.Scan(&createdAt, &updatedAt, &commitTime, &license, &name, &synopsis); err != nil {
-		return nil, fmt.Errorf("row.Scan(%q, %q, %q, %q, %q, %q): %v",
-			createdAt, updatedAt, commitTime, license, name, synopsis, err)
+	if err := row.Scan(&createdAt, &updatedAt, &commitTime, &license, &readme, &module_path, &name, &synopsis); err != nil {
+		return nil, fmt.Errorf("row.Scan(%q, %q, %q, %q, %q, %q, %q, %q): %v",
+			createdAt, updatedAt, commitTime, license, readme, module_path, name, synopsis, err)
 	}
 
 	return &internal.Package{
@@ -175,12 +180,13 @@ func (db *DB) GetPackage(path string, version string) (*internal.Package, error)
 			CreatedAt: createdAt,
 			UpdatedAt: updatedAt,
 			Module: &internal.Module{
-				Path: path,
+				Path: module_path,
 			},
 			Version:    version,
 			Synopsis:   synopsis,
 			CommitTime: commitTime,
 			License:    license,
+			ReadMe:     readme,
 		},
 	}, nil
 }

@@ -7,11 +7,11 @@
 {{ define "modules_nav" }}
 {{/* TODO(ckimblebrown): These need to become accessible tabs, work with katiehockman and/or andybons */}}
   <ul class="ModulesNav">
-    <li class="active ModulesNav-tab"><a href="/{{.ModulePath}}?v={{.Version}}" class="ModulesNav-link">Module</a></li>
-    <li class="ModulesNav-tab"><a href="/{{.ModulePath}}?v={{.Version}}&tab=docs" class="ModulesNav-link">Docs</a></li>
-    <li class="ModulesNav-tab"><a href="/{{.ModulePath}}?v={{.Version}}&tab=versions" class="ModulesNav-link">Versions</a></li>
-    <li class="ModulesNav-tab"><a href="/{{.ModulePath}}?v={{.Version}}&tab=imports" class="ModulesNav-link">Imports</a></li>
-    <li class="ModulesNav-tab"><a href="/{{.ModulePath}}?v={{.Version}}&tab=importers" class="ModulesNav-link">Importers</a></li>
-    <li class="ModulesNav-tab"><a href="/{{.ModulePath}}?v={{.Version}}&tab=licenses" class="ModulesNav-link">Licenses</a></li>
+    <li class="active ModulesNav-tab"><a href="/{{.ModulePath}}?v={{.PackageHeader.Version}}" class="ModulesNav-link">Module</a></li>
+    <li class="ModulesNav-tab"><a href="/{{.ModulePath}}?v={{.PackageHeader.Version}}&tab=docs" class="ModulesNav-link">Docs</a></li>
+    <li class="ModulesNav-tab"><a href="/{{.ModulePath}}?v={{.PackageHeader.Version}}&tab=versions" class="ModulesNav-link">Versions</a></li>
+    <li class="ModulesNav-tab"><a href="/{{.ModulePath}}?v={{.PackageHeader.Version}}&tab=imports" class="ModulesNav-link">Imports</a></li>
+    <li class="ModulesNav-tab"><a href="/{{.ModulePath}}?v={{.PackageHeader.Version}}&tab=importers" class="ModulesNav-link">Importers</a></li>
+    <li class="ModulesNav-tab"><a href="/{{.ModulePath}}?v={{.PackageHeader.Version}}&tab=licenses" class="ModulesNav-link">Licenses</a></li>
   </ul>
 {{ end }}

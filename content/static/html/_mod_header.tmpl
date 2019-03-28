@@ -6,7 +6,9 @@
 
 {{ define "mod_header" }}
   <header>
-    <h1><a href="https://{{ .ModulePath }}">{{ .ModulePath }}</a> - {{ .Version }}</h1>
-    <h2>{{ .License }} - {{ .CommitTime }}</h2>
+    <h1>Package <a href="https://{{ .Path }}">{{ .Name }}</a> - {{ .Version }}</h1>
+    <h2>{{ .Path }}</h2>
+    <p>{{ .Synopsis }}</p>
+    <p>{{ .License }} - {{ .CommitTime }}</p>
   </header>
 {{ end }}
