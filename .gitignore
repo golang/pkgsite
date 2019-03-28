@@ -42,3 +42,4 @@ override.tf.json
 ### Discovery Project ###
 sos.googlesource.com/sos
 *.zip
+go-discovery*.json
