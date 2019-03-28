@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: 2019-03-25T17:39:06Z
+  labels:
+    app: fetch
+  name: fetch-service
+  namespace: default
+  resourceVersion: "679141"
+  selfLink: /api/v1/namespaces/default/services/fetch-service
+  uid: e33d4bdf-4f24-11e9-a334-42010a800057
+spec:
+  clusterIP: 10.19.243.190
+  externalTrafficPolicy: Cluster
+  loadBalancerIP: 146.148.42.168
+  ports:
+  - nodePort: 32524
+    port: 80
+    protocol: TCP
+    targetPort: 9000
+  selector:
+    app: fetch
+  sessionAffinity: None
+  type: LoadBalancer
+status:
+  loadBalancer:
+    ingress:
+    - ip: 146.148.42.168
