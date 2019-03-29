@@ -191,12 +191,119 @@ func (db *DB) GetPackage(path string, version string) (*internal.Package, error)
 	}, nil
 }
 
+// getVersions returns a list of a package's tagged versions if pseudo is false
+// and a list of a pacakge's most recent 10 pseudo-versions if pseudo is true.
+// It uses the query parameter to determine what query is sent to the database.
+// The results will be in whatever order the query specified.
+func getVersions(db *DB, path, query string) ([]*internal.Version, error) {
+	var (
+		commitTime, createdAt, updatedAt       time.Time
+		modulePath, synopsis, license, version string
+		versionHistory                         []*internal.Version
+	)
+
+	rows, err := db.Query(query, path)
+	if err != nil {
+		return nil, fmt.Errorf("db.Query(%q, %q) returned error: %v", query, path, err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		if err := rows.Scan(&createdAt, &updatedAt, &modulePath, &version, &commitTime, &license, &synopsis); err != nil {
+			return nil, fmt.Errorf("row.Scan(%q, %q, %q, %q, %q, %q, %q, %q): %v",
+				createdAt, updatedAt, path, modulePath, version, commitTime, license, synopsis, err)
+		}
+
+		versionHistory = append(versionHistory, &internal.Version{
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
+			Module: &internal.Module{
+				Path: modulePath,
+			},
+			Version:    version,
+			Synopsis:   synopsis,
+			CommitTime: commitTime,
+			License:    license,
+		})
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows.Err() returned error %v", err)
+	}
+
+	return versionHistory, nil
+}
+
+// GetTaggedVersions returns a list of a package's tagged versions sorted
+// numerically in descending order by major, minor and patch number and then
+// lexicographically in descending order by prerelease.
+func (db *DB) GetTaggedVersions(path string) ([]*internal.Version, error) {
+	query :=
+		`SELECT
+				v.created_at,
+				v.updated_at,
+				p.module_path,
+				v.version,
+				v.commit_time,
+				v.license,
+				p.synopsis
+			FROM
+				versions v
+			INNER JOIN
+				packages p
+			ON
+				p.module_path = v.module_path
+				AND v.version = p.version
+			WHERE
+				path = $1
+				AND (p.version_type = 'release' OR p.version_type = 'prerelease')
+			ORDER BY
+				v.module_path,
+				v.major DESC,
+				v.minor DESC,
+				v.patch DESC,
+				v.prerelease DESC;`
+	return getVersions(db, path, query)
+}
+
+// GetPseudoVersions returns a list of a package's 10 most recent pseudo-versions
+// sorted numerically in descending order by major, minor and patch number and then
+// lexicographically in descending order by prerelease.
+func (db *DB) GetPseudoVersions(path string) ([]*internal.Version, error) {
+	query :=
+		`SELECT
+				v.created_at,
+				v.updated_at,
+				p.module_path,
+				v.version,
+				v.commit_time,
+				v.license,
+				p.synopsis
+			FROM
+				versions v
+			INNER JOIN
+				packages p
+			ON
+				p.module_path = v.module_path
+				AND v.version = p.version
+			WHERE
+				path = $1 AND p.version_type = 'pseudo'
+			ORDER BY
+				v.module_path,
+				v.major DESC,
+				v.minor DESC,
+				v.patch DESC,
+				v.prerelease DESC
+			LIMIT 10;`
+	return getVersions(db, path, query)
+}
+
 // GetLatestPackage returns the package from the database with the latest version.
 // If multiple packages share the same path then the package that the database
 // chooses is returned.
 func (db *DB) GetLatestPackage(path string) (*internal.Package, error) {
 	if path == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "postgres: path cannot be empty")
+		return nil, fmt.Errorf("postgres: path cannot be empty")
 	}
 
 	var (

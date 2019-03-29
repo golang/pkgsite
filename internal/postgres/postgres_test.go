@@ -322,6 +322,149 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 	}
 }
 
+func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
+	var (
+		now = time.Now()
+		pkg = &internal.Package{
+			Path: "path.to/foo/bar",
+			Name: "bar",
+		}
+		series = &internal.Series{
+			Path: "myseries",
+		}
+		module = &internal.Module{
+			Path:   "path.to/foo",
+			Series: series,
+		}
+		testVersions = []*internal.Version{
+			&internal.Version{
+				Module:      module,
+				Version:     "v1.0.1-alpha.1",
+				CommitTime:  now,
+				Packages:    []*internal.Package{pkg},
+				VersionType: internal.VersionTypePrerelease,
+			},
+			&internal.Version{
+				Module:      module,
+				Version:     "v1.0.1",
+				CommitTime:  now,
+				Packages:    []*internal.Package{pkg},
+				VersionType: internal.VersionTypeRelease,
+			},
+			&internal.Version{
+				Module:      module,
+				Version:     "v1.0.0-20190311183353-d8887717615a",
+				CommitTime:  now,
+				Packages:    []*internal.Package{pkg},
+				VersionType: internal.VersionTypePseudo,
+			},
+			&internal.Version{
+				Module:      module,
+				Version:     "v1.0.1-beta",
+				CommitTime:  now,
+				Packages:    []*internal.Package{pkg},
+				VersionType: internal.VersionTypePrerelease,
+			},
+		}
+	)
+
+	testCases := []struct {
+		name, path   string
+		versions     []*internal.Version
+		wantVersions []*internal.Version
+		pseudo       bool
+	}{
+		{
+			name:     "want_release_and_prerelease",
+			path:     pkg.Path,
+			versions: testVersions,
+			wantVersions: []*internal.Version{
+				&internal.Version{
+					Module: &internal.Module{
+						Path: module.Path,
+					},
+					Version:    "v1.0.1",
+					CommitTime: now,
+				},
+				&internal.Version{
+					Module: &internal.Module{
+						Path: module.Path,
+					},
+					Version:    "v1.0.1-beta",
+					CommitTime: now,
+				},
+				&internal.Version{
+					Module: &internal.Module{
+						Path: module.Path,
+					},
+					Version:    "v1.0.1-alpha.1",
+					CommitTime: now,
+				},
+			},
+		},
+		{
+			name:     "want_pseudo",
+			path:     pkg.Path,
+			versions: testVersions,
+			wantVersions: []*internal.Version{
+				&internal.Version{
+					Module: &internal.Module{
+						Path: module.Path,
+					},
+					Version:    "v1.0.0-20190311183353-d8887717615a",
+					CommitTime: now,
+				},
+			},
+			pseudo: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			teardownTestCase, db := SetupCleanDB(t)
+			defer teardownTestCase(t)
+
+			for _, v := range tc.versions {
+				if err := db.InsertVersion(v); err != nil {
+					t.Errorf("db.InsertVersion(%+v) error: %v", v, err)
+				}
+			}
+
+			var (
+				got             []*internal.Version
+				diffErr, lenErr string
+				err             error
+			)
+
+			if tc.pseudo {
+				got, err = db.GetPseudoVersions(tc.path)
+				if err != nil {
+					t.Fatalf("db.GetPseudoVersions(%v) error: %v", tc.path, err)
+				}
+				diffErr = "db.GetPseudoVersions(%q, %q) mismatch (-want +got):\n%s"
+				lenErr = "db.GetPseudoVersions(%q, %q) returned list of length %v, wanted %v"
+			} else {
+				got, err = db.GetTaggedVersions(tc.path)
+				if err != nil {
+					t.Fatalf("db.GetTaggedVersions(%v) error: %v", tc.path, err)
+				}
+				diffErr = "db.GetTaggedVersions(%q, %q) mismatch (-want +got):\n%s"
+				lenErr = "db.GetTaggedVersions(%q, %q) returned list of length %v, wanted %v"
+			}
+
+			if len(got) != len(tc.wantVersions) {
+				t.Fatalf(lenErr, tc.path, err, len(got), len(tc.wantVersions))
+			}
+
+			for i, v := range got {
+				if diff := versionsDiff(v, tc.wantVersions[i]); diff != "" {
+					t.Errorf(diffErr, v, tc.wantVersions[i], diff)
+				}
+			}
+		})
+	}
+}
+
 func TestPostgres_GetLatestPackageForPaths(t *testing.T) {
 	teardownTestCase, db := SetupCleanDB(t)
 	defer teardownTestCase(t)
@@ -383,7 +526,7 @@ func TestPostgres_GetLatestPackageForPaths(t *testing.T) {
 				ReadMe:      []byte("readme"),
 				CommitTime:  now,
 				Packages:    []*internal.Package{pkg2},
-				VersionType: internal.VersionTypePseudo,
+				VersionType: internal.VersionTypePrerelease,
 			},
 		}
 	)
@@ -449,7 +592,6 @@ func TestPostgres_GetLatestPackageForPaths(t *testing.T) {
 				gotPkg, i, tc.wantPkgs[i], diff)
 		}
 	}
-
 }
 
 func TestPostgress_InsertVersionLogs(t *testing.T) {
