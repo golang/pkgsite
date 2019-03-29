@@ -681,6 +681,12 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 					License:    "licensename",
 					Synopsis:   pkg2.Synopsis,
 					CommitTime: now,
+					Packages: []*internal.Package{
+						&internal.Package{
+							Path: pkg2.Path,
+							Name: pkg2.Name,
+						},
+					},
 				},
 				&internal.Version{
 					Module:     module2,
@@ -688,6 +694,12 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 					License:    "licensename",
 					Synopsis:   pkg2.Synopsis,
 					CommitTime: now,
+					Packages: []*internal.Package{
+						&internal.Package{
+							Path: pkg2.Path,
+							Name: pkg2.Name,
+						},
+					},
 				},
 				&internal.Version{
 					Module:     module1,
@@ -695,6 +707,12 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 					License:    "licensename",
 					Synopsis:   pkg1.Synopsis,
 					CommitTime: now,
+					Packages: []*internal.Package{
+						&internal.Package{
+							Path: pkg1.Path,
+							Name: pkg1.Name,
+						},
+					},
 				},
 				&internal.Version{
 					Module:     module1,
@@ -702,6 +720,12 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 					License:    "licensename",
 					Synopsis:   pkg1.Synopsis,
 					CommitTime: now,
+					Packages: []*internal.Package{
+						&internal.Package{
+							Path: pkg1.Path,
+							Name: pkg1.Name,
+						},
+					},
 				},
 			},
 		},
@@ -745,6 +769,12 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 						License:    "licensename",
 						Synopsis:   pkg1.Synopsis,
 						CommitTime: now,
+						Packages: []*internal.Package{
+							&internal.Package{
+								Path: pkg1.Path,
+								Name: pkg1.Name,
+							},
+						},
 					})
 				}
 			}

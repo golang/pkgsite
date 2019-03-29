@@ -40,12 +40,14 @@
 .ModulesNav-tab.active {
   background-color: #d6d2d1;
 }
-.OverviewContent {
+.OverviewContent,
+.VersionsContent {
   font-family: Arial;
   color: #000;
   padding-top: 20px;
   padding-bottom: 20px;
 }
-.OverviewContent-readMe {
+.OverviewContent-readMe,
+.VersionsContent-list {
   margin-top: 10px;
 }

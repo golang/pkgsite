@@ -128,13 +128,12 @@ func TestElapsedTime(t *testing.T) {
 	}
 }
 
-func TestFetchModulePage(t *testing.T) {
+func TestFetchOverviewPage(t *testing.T) {
 	tc := struct {
-		name        string
-		version     internal.Version
-		wantModPage ModulePage
+		name             string
+		version          internal.Version
+		wantOverviewPage OverviewPage
 	}{
-
 		name: "want_expected_module_page",
 		version: internal.Version{
 			Module: &internal.Module{
@@ -157,7 +156,7 @@ func TestFetchModulePage(t *testing.T) {
 			},
 			VersionType: internal.VersionTypeRelease,
 		},
-		wantModPage: ModulePage{
+		wantOverviewPage: OverviewPage{
 			ModulePath: "test.com/module",
 			ReadMe:     template.HTML("<p>This is the readme text.</p>\n"),
 			PackageHeader: &PackageHeader{
@@ -178,14 +177,235 @@ func TestFetchModulePage(t *testing.T) {
 		t.Fatalf("db.InsertVersion(%v) returned error: %v", tc.version, err)
 	}
 
-	got, err := fetchModulePage(db, tc.version.Packages[0].Path, tc.version.Version)
+	got, err := fetchOverviewPage(db, tc.version.Packages[0].Path, tc.version.Version)
 	if err != nil {
-		t.Fatalf("fetchModulePage(db, %q, %q) = %v err = %v, want %v",
-			tc.version.Packages[0].Path, tc.version.Version, got, err, tc.wantModPage)
+		t.Fatalf("fetchOverviewPage(db, %q, %q) = %v err = %v, want %v",
+			tc.version.Packages[0].Path, tc.version.Version, got, err, tc.wantOverviewPage)
 	}
 
-	if diff := cmp.Diff(tc.wantModPage, *got); diff != "" {
-		t.Errorf("fetchModulePage(%q, %q) mismatch (-want +got):\n%s", tc.version.Packages[0].Path, tc.version.Version, diff)
+	if diff := cmp.Diff(tc.wantOverviewPage, *got); diff != "" {
+		t.Errorf("fetchOverviewPage(%q, %q) mismatch (-want +got):\n%s", tc.version.Packages[0].Path, tc.version.Version, diff)
+	}
+}
+
+func getTestVersion(pkgPath, modulePath, version string, versionType internal.VersionType) *internal.Version {
+	return &internal.Version{
+		Module: &internal.Module{
+			Path: modulePath,
+			Series: &internal.Series{
+				Path: "test.com/module",
+			},
+		},
+		Version:    version,
+		CommitTime: time.Now().Add(time.Hour * -8),
+		License:    "MIT",
+		ReadMe:     []byte("This is the readme text."),
+		Packages: []*internal.Package{
+			&internal.Package{
+				Name:     "pkg_name",
+				Path:     pkgPath,
+				Synopsis: "test synopsis",
+			},
+		},
+		VersionType: versionType,
+	}
+}
+
+func TestFetchVersionsPage(t *testing.T) {
+	var (
+		module1  = "test.com/module"
+		module2  = "test.com/module/v2"
+		pkg1Path = "test.com/module/pkg_name"
+		pkg2Path = "test.com/module/v2/pkg_name"
+	)
+
+	for _, tc := range []struct {
+		name, path, version string
+		versions            []*internal.Version
+		wantVersionsPage    *VersionsPage
+	}{
+		{
+			name:    "want_tagged_versions",
+			path:    pkg1Path,
+			version: "v1.2.1",
+			versions: []*internal.Version{
+				getTestVersion(pkg1Path, module1, "v1.2.3", internal.VersionTypeRelease),
+				getTestVersion(pkg2Path, module2, "v2.0.0", internal.VersionTypeRelease),
+				getTestVersion(pkg1Path, module1, "v1.3.0", internal.VersionTypeRelease),
+				getTestVersion(pkg1Path, module1, "v1.2.1", internal.VersionTypeRelease),
+				getTestVersion(pkg1Path, module1, "v0.0.0-20140414041502-3c2ca4d52544", internal.VersionTypePseudo),
+				getTestVersion(pkg2Path, module2, "v2.2.1-alpha.1", internal.VersionTypePrerelease),
+			},
+			wantVersionsPage: &VersionsPage{
+				Versions: []*MajorVersionGroup{
+					&MajorVersionGroup{
+						Level: "v2",
+						Latest: &VersionInfo{
+							Version:     "2.2.1-alpha.1",
+							PackagePath: pkg2Path,
+							CommitTime:  "today",
+						},
+						Versions: []*MinorVersionGroup{
+							&MinorVersionGroup{
+								Level: "2.2",
+								Latest: &VersionInfo{
+									Version:     "2.2.1-alpha.1",
+									PackagePath: pkg2Path,
+									CommitTime:  "today",
+								},
+								Versions: []*VersionInfo{
+									&VersionInfo{
+										Version:     "2.2.1-alpha.1",
+										PackagePath: pkg2Path,
+										CommitTime:  "today",
+									},
+								},
+							},
+							&MinorVersionGroup{
+								Level: "2.0",
+								Latest: &VersionInfo{
+									Version:     "2.0.0",
+									PackagePath: pkg2Path,
+									CommitTime:  "today",
+								},
+								Versions: []*VersionInfo{
+									&VersionInfo{
+										Version:     "2.0.0",
+										PackagePath: pkg2Path,
+										CommitTime:  "today",
+									},
+								},
+							},
+						},
+					},
+					&MajorVersionGroup{
+						Level: "v1",
+						Latest: &VersionInfo{
+							Version:     "1.3.0",
+							PackagePath: pkg1Path,
+							CommitTime:  "today",
+						},
+						Versions: []*MinorVersionGroup{
+							&MinorVersionGroup{
+								Level: "1.3",
+								Latest: &VersionInfo{
+									Version:     "1.3.0",
+									PackagePath: pkg1Path,
+									CommitTime:  "today",
+								},
+								Versions: []*VersionInfo{
+									&VersionInfo{
+										Version:     "1.3.0",
+										PackagePath: pkg1Path,
+										CommitTime:  "today",
+									},
+								},
+							},
+							&MinorVersionGroup{
+								Level: "1.2",
+								Latest: &VersionInfo{
+									Version:     "1.2.3",
+									PackagePath: pkg1Path,
+									CommitTime:  "today",
+								},
+								Versions: []*VersionInfo{
+									&VersionInfo{
+										Version:     "1.2.3",
+										PackagePath: pkg1Path,
+										CommitTime:  "today",
+									},
+									&VersionInfo{
+										Version:     "1.2.1",
+										PackagePath: pkg1Path,
+										CommitTime:  "today",
+									},
+								},
+							},
+						},
+					},
+				},
+				PackageHeader: &PackageHeader{
+					Name:       "pkg_name",
+					Version:    "v1.2.1",
+					Path:       pkg1Path,
+					Synopsis:   "test synopsis",
+					License:    "MIT",
+					CommitTime: "today",
+				},
+			},
+		},
+		{
+			name:    "want_only_pseudo",
+			path:    pkg1Path,
+			version: "v0.0.0-20140414041501-3c2ca4d52544",
+			versions: []*internal.Version{
+				getTestVersion(pkg1Path, module1, "v0.0.0-20140414041501-3c2ca4d52544", internal.VersionTypePseudo),
+				getTestVersion(pkg1Path, module1, "v0.0.0-20140414041502-3c2ca4d52544", internal.VersionTypePseudo),
+			},
+			wantVersionsPage: &VersionsPage{
+				Versions: []*MajorVersionGroup{
+					&MajorVersionGroup{
+						Level: "v0",
+						Latest: &VersionInfo{
+							Version:     "0.0.0-20140414041502-3c2ca4d52544",
+							PackagePath: pkg1Path,
+							CommitTime:  "today",
+						},
+						Versions: []*MinorVersionGroup{
+							&MinorVersionGroup{
+								Level: "0.0",
+								Latest: &VersionInfo{
+									Version:     "0.0.0-20140414041502-3c2ca4d52544",
+									PackagePath: pkg1Path,
+									CommitTime:  "today",
+								},
+								Versions: []*VersionInfo{
+									&VersionInfo{
+										Version:     "0.0.0-20140414041502-3c2ca4d52544",
+										PackagePath: pkg1Path,
+										CommitTime:  "today",
+									},
+									&VersionInfo{
+										Version:     "0.0.0-20140414041501-3c2ca4d52544",
+										PackagePath: pkg1Path,
+										CommitTime:  "today",
+									},
+								},
+							},
+						},
+					},
+				},
+				PackageHeader: &PackageHeader{
+					Name:       "pkg_name",
+					Version:    "v0.0.0-20140414041501-3c2ca4d52544",
+					Path:       pkg1Path,
+					Synopsis:   "test synopsis",
+					License:    "MIT",
+					CommitTime: "today",
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			teardownDB, db := postgres.SetupCleanDB(t)
+			defer teardownDB(t)
+
+			for _, v := range tc.versions {
+				if err := db.InsertVersion(v); err != nil {
+					t.Fatalf("db.InsertVersion(%v) returned error: %v", v, err)
+				}
+			}
+
+			got, err := fetchVersionsPage(db, tc.path, tc.version)
+			if err != nil {
+				t.Fatalf("fetchVersionsPage(db, %q, %q) = %v err = %v, want %v",
+					tc.path, tc.version, got, err, tc.wantVersionsPage)
+			}
+
+			if diff := cmp.Diff(tc.wantVersionsPage, got); diff != "" {
+				t.Errorf("fetchVersionsPage(db, %q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
+			}
+		})
 	}
 }
 

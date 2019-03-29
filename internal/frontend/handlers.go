@@ -21,9 +21,9 @@ import (
 	"gopkg.in/russross/blackfriday.v2"
 )
 
-// ModulePage contains all of the data that the overview template
+// OverviewPage contains all of the data that the overview template
 // needs to populate.
-type ModulePage struct {
+type OverviewPage struct {
 	ModulePath    string
 	ReadMe        template.HTML
 	PackageHeader *PackageHeader
@@ -38,6 +38,37 @@ type PackageHeader struct {
 	Synopsis   string
 	License    string
 	CommitTime string
+}
+
+// MajorVersionGroup represents the major level of the versions
+// list hierarchy (i.e. "v1").
+type MajorVersionGroup struct {
+	Level    string
+	Latest   *VersionInfo
+	Versions []*MinorVersionGroup
+}
+
+// MinorVersionGroup represents the major/minor level of the versions
+// list hierarchy (i.e. "1.5").
+type MinorVersionGroup struct {
+	Level    string
+	Latest   *VersionInfo
+	Versions []*VersionInfo
+}
+
+// VersionInfo contains the information that will be displayed
+// the lowest level of the versions tab's list hierarchy.
+type VersionInfo struct {
+	Version     string
+	PackagePath string
+	CommitTime  string
+}
+
+// VersionsPage contains all the data that the versions tab
+// template needs to populate.
+type VersionsPage struct {
+	Versions      []*MajorVersionGroup
+	PackageHeader *PackageHeader
 }
 
 // parseModulePathAndVersion returns the module and version specified by p. p is
@@ -85,15 +116,15 @@ func elapsedTime(date time.Time) string {
 	return date.Format("Jan _2, 2006")
 }
 
-// fetchModulePage fetches data for the module version specified by path and version
-// from the database and returns a ModulePage.
-func fetchModulePage(db *postgres.DB, path, version string) (*ModulePage, error) {
+// fetchOverviewPage fetches data for the module version specified by path and version
+// from the database and returns a OverviewPage.
+func fetchOverviewPage(db *postgres.DB, path, version string) (*OverviewPage, error) {
 	pkg, err := db.GetPackage(path, version)
 	if err != nil {
 		return nil, fmt.Errorf("db.GetPackage(%q, %q) returned error %v", path, version, err)
 	}
 
-	return &ModulePage{
+	return &OverviewPage{
 		ModulePath: pkg.Version.Module.Path,
 		ReadMe:     readmeHTML(pkg.Version.ReadMe),
 		PackageHeader: &PackageHeader{
@@ -107,32 +138,139 @@ func fetchModulePage(db *postgres.DB, path, version string) (*ModulePage, error)
 	}, nil
 }
 
+// fetchVersionsPage fetches data for the module version specified by path and version
+// from the database and returns a VersionsPage.
+func fetchVersionsPage(db *postgres.DB, path, version string) (*VersionsPage, error) {
+	versions, err := db.GetTaggedVersionsForPackageSeries(path)
+	if err != nil {
+		return nil, fmt.Errorf("db.GetTaggedVersions(%q): %v", path, err)
+	}
+
+	// if GetTaggedVersionsForPackageSeries returns nothing then that means there are no
+	// tagged versions and we want to get the pseudo-versions instead
+	if len(versions) == 0 {
+		versions, err = db.GetPseudoVersionsForPackageSeries(path)
+		if err != nil {
+			return nil, fmt.Errorf("db.GetPseudoVersions(%q): %v", path, err)
+		}
+	}
+
+	var (
+		pkgHeader       = &PackageHeader{}
+		mvg             = []*MajorVersionGroup{}
+		prevMajor       = ""
+		prevMajMin      = ""
+		prevMajorIndex  = -1
+		prevMajMinIndex = -1
+	)
+
+	for _, v := range versions {
+		vStr := v.Version
+		if vStr == version {
+			pkgHeader = &PackageHeader{
+				Name:       v.Packages[0].Name,
+				Version:    version,
+				Path:       path,
+				Synopsis:   v.Synopsis,
+				License:    v.License,
+				CommitTime: elapsedTime(v.CommitTime),
+			}
+		}
+
+		major := semver.Major(vStr)
+		majMin := strings.TrimPrefix(semver.MajorMinor(vStr), "v")
+		fullVersion := strings.TrimPrefix(vStr, "v")
+
+		if prevMajor != major {
+			prevMajorIndex = len(mvg)
+			prevMajor = major
+			mvg = append(mvg, &MajorVersionGroup{
+				Level: major,
+				Latest: &VersionInfo{
+					Version:     fullVersion,
+					PackagePath: v.Packages[0].Path,
+					CommitTime:  elapsedTime(v.CommitTime),
+				},
+				Versions: []*MinorVersionGroup{},
+			})
+		}
+
+		if prevMajMin != majMin {
+			prevMajMinIndex = len(mvg[prevMajorIndex].Versions)
+			prevMajMin = majMin
+			mvg[prevMajorIndex].Versions = append(mvg[prevMajorIndex].Versions, &MinorVersionGroup{
+				Level: majMin,
+				Latest: &VersionInfo{
+					Version:     fullVersion,
+					PackagePath: v.Packages[0].Path,
+					CommitTime:  elapsedTime(v.CommitTime),
+				},
+			})
+		}
+
+		mvg[prevMajorIndex].Versions[prevMajMinIndex].Versions = append(mvg[prevMajorIndex].Versions[prevMajMinIndex].Versions, &VersionInfo{
+			Version:     fullVersion,
+			PackagePath: v.Packages[0].Path,
+			CommitTime:  elapsedTime(v.CommitTime),
+		})
+	}
+
+	return &VersionsPage{
+		Versions:      mvg,
+		PackageHeader: pkgHeader,
+	}, nil
+}
+
 func readmeHTML(readme []byte) template.HTML {
 	unsafe := blackfriday.Run(readme)
 	b := bluemonday.UGCPolicy().SanitizeBytes(unsafe)
 	return template.HTML(string(b))
 }
 
-// MakeModuleHandlerFunc uses a module page that contains module data from
-// a database and applies that data and html to a template.
-func MakeModuleHandlerFunc(db *postgres.DB, html string, templates *template.Template) http.HandlerFunc {
+// MakeDetailsHandlerFunc returns a handler func that applies database data to the appropriate
+// template. Handles endpoint /<import path>@<version>?tab=versions.
+func MakeDetailsHandlerFunc(db *postgres.DB, templates *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			io.WriteString(w, "Welcome to the Go Discovery Site!")
+			return
+		}
+
 		path, version, err := parseModulePathAndVersion(r.URL.Path)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-			log.Printf("Error parsing path and version: %v", err)
+			log.Printf("error parsing path and version: %v", err)
 			return
 		}
 
-		modPage, err := fetchModulePage(db, path, version)
-		if err != nil {
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			log.Printf("Error fetching module page: %v", err)
-			return
+		var (
+			html string
+			page interface{}
+		)
+
+		switch tab := r.URL.Query().Get("tab"); tab {
+		case "versions":
+			html = "versions.tmpl"
+			page, err = fetchVersionsPage(db, path, version)
+			if err != nil {
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				log.Printf("error fetching module page: %v", err)
+				return
+			}
+		case "overview":
+			fallthrough
+		default:
+			html = "overview.tmpl"
+			page, err = fetchOverviewPage(db, path, version)
+			if err != nil {
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				log.Printf("error fetching module page: %v", err)
+				return
+			}
 		}
 
 		var buf bytes.Buffer
-		if err := templates.ExecuteTemplate(&buf, html, modPage); err != nil {
+		if err := templates.ExecuteTemplate(&buf, html, page); err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			log.Printf("Error executing module page template: %v", err)
 			return

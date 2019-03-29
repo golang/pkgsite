@@ -45,7 +45,7 @@ func main() {
 	defer db.Close()
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(*staticPath))))
-	http.HandleFunc("/", frontend.MakeModuleHandlerFunc(db, "overview.tmpl", templates))
+	http.HandleFunc("/", frontend.MakeDetailsHandlerFunc(db, templates))
 
 	port := os.Getenv("PORT")
 	if port == "" {

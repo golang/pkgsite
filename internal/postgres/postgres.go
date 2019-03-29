@@ -216,9 +216,9 @@ func (db *DB) GetPackage(path string, version string) (*internal.Package, error)
 // and have the same package suffix as the package specified by the path.
 func getVersions(db *DB, path string, versionTypes []internal.VersionType) ([]*internal.Version, error) {
 	var (
-		commitTime                                      time.Time
-		pkgPath, modulePath, synopsis, license, version string
-		versionHistory                                  []*internal.Version
+		commitTime                                               time.Time
+		pkgPath, modulePath, pkgName, synopsis, license, version string
+		versionHistory                                           []*internal.Version
 	)
 
 	baseQuery :=
@@ -228,6 +228,7 @@ func getVersions(db *DB, path string, versionTypes []internal.VersionType) ([]*i
 				p.path AS package_path,
 				p.suffix AS package_suffix,
 				p.module_path,
+				p.name,
 				v.version,
 				v.commit_time,
 				v.license,
@@ -260,6 +261,7 @@ func getVersions(db *DB, path string, versionTypes []internal.VersionType) ([]*i
 		SELECT
 			package_path,
 			module_path,
+			name,
 			version,
 			commit_time,
 			license,
@@ -303,9 +305,9 @@ func getVersions(db *DB, path string, versionTypes []internal.VersionType) ([]*i
 	defer rows.Close()
 
 	for rows.Next() {
-		if err := rows.Scan(&pkgPath, &modulePath, &version, &commitTime, &license, &synopsis); err != nil {
-			return nil, fmt.Errorf("row.Scan( %q, %q, %q, %q, %q, %q): %v",
-				pkgPath, modulePath, version, commitTime, license, synopsis, err)
+		if err := rows.Scan(&pkgPath, &modulePath, &pkgName, &version, &commitTime, &license, &synopsis); err != nil {
+			return nil, fmt.Errorf("row.Scan( %q, %q, %q, %q, %q, %q, %q): %v",
+				pkgPath, modulePath, pkgName, version, commitTime, license, synopsis, err)
 		}
 
 		versionHistory = append(versionHistory, &internal.Version{
@@ -316,6 +318,12 @@ func getVersions(db *DB, path string, versionTypes []internal.VersionType) ([]*i
 			Synopsis:   synopsis,
 			CommitTime: commitTime,
 			License:    license,
+			Packages: []*internal.Package{
+				&internal.Package{
+					Path: pkgPath,
+					Name: pkgName,
+				},
+			},
 		})
 	}
 

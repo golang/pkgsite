@@ -1,0 +1,30 @@
+<!--
+	Copyright 2019 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+
+<!DOCTYPE html>
+{{ template "header" .PackageHeader }}
+
+<div class="VersionsContent">
+  {{ template "nav" }}
+  {{ template "mod_header" .PackageHeader }}
+  {{ template "modules_nav" .PackageHeader }}
+
+  <div class="VersionsContent-list">
+    {{ range $major := .Versions }}
+      <h3>{{$major.Level}} - Latest <a href="/{{$major.Latest.PackagePath}}@v{{$major.Latest.Version}}?tab=versions">{{ $major.Latest.Version }}</a> - {{ $major.Latest.CommitTime }}</h3>
+      <ul>
+        {{ range $majMin := $major.Versions }}
+          <li><h4>{{ $majMin.Level }} - Latest <a href="/{{$majMin.Latest.PackagePath}}@v{{$majMin.Latest.Version}}?tab=versions">{{ $majMin.Latest.Version }}</a> - {{ $majMin.Latest.CommitTime }}</h4></li>
+          <ul>
+            {{ range $v := $majMin.Versions }}
+              <li><a href="/{{$v.PackagePath}}@v{{$v.Version}}?tab=versions">{{ $v.Version }}</a> - {{ $v.CommitTime }}</li>
+            {{ end }}
+          </ul>
+        {{ end }}
+      </ul>
+    {{ end }}
+  </div>
+</div>
