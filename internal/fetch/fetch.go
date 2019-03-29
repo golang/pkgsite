@@ -67,9 +67,9 @@ func parseVersion(version string) (internal.VersionType, error) {
 	prerelease = prerelease[1:] // remove starting dash
 
 	// if prerelease looks like a commit then return VersionTypePseudo
-	matched, err := regexp.MatchString(`[0-9]{14}-[0-9a-z]{12}`, prerelease)
+	matched, err := regexp.MatchString(`^[0-9]{14}-[0-9a-z]{12}$`, prerelease)
 	if err != nil {
-		return "", fmt.Errorf("regexp.MatchString(`[0-9]{14}-[0-9a-z]{12}`, %v): %v", prerelease, err)
+		return "", fmt.Errorf("regexp.MatchString(`^[0-9]{14}-[0-9a-z]{12}$`, %v): %v", prerelease, err)
 	}
 
 	if matched {
@@ -229,6 +229,7 @@ func extractPackagesFromZip(module, version string, r *zip.Reader) ([]*internal.
 			Name:     p.Name,
 			Path:     p.PkgPath,
 			Synopsis: doc.Synopsis(d.Doc),
+			Suffix:   strings.TrimPrefix(strings.TrimPrefix(p.PkgPath, module), "/"),
 		})
 	}
 	return packages, nil

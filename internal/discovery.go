@@ -46,6 +46,7 @@ type Package struct {
 	Path     string
 	Name     string
 	Synopsis string
+	Suffix   string // if my.module/v2/A/B is the path, A/B is the package suffix
 	Version  *Version
 }
 

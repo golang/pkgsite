@@ -496,15 +496,15 @@ func (db *DB) InsertVersion(version *internal.Version) error {
 		}
 
 		stmt, err := tx.Prepare(
-			`INSERT INTO packages (path, synopsis, name, version, module_path, version_type)
-			VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING`)
+			`INSERT INTO packages (path, synopsis, name, version, module_path, version_type, suffix)
+			VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING`)
 		if err != nil {
 			return fmt.Errorf("error preparing package stmt: %v", err)
 		}
 		defer stmt.Close()
 
 		for _, p := range version.Packages {
-			if _, err = stmt.Exec(p.Path, p.Synopsis, p.Name, version.Version, version.Module.Path, version.VersionType.String()); err != nil {
+			if _, err = stmt.Exec(p.Path, p.Synopsis, p.Name, version.Version, version.Module.Path, version.VersionType.String(), p.Suffix); err != nil {
 				return fmt.Errorf("error inserting package: %v", err)
 			}
 		}
