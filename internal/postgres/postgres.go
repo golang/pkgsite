@@ -192,32 +192,107 @@ func (db *DB) GetPackage(path string, version string) (*internal.Package, error)
 	}, nil
 }
 
-// getVersions returns a list of a package's tagged versions if pseudo is false
-// and a list of a pacakge's most recent 10 pseudo-versions if pseudo is true.
-// It uses the query parameter to determine what query is sent to the database.
-// The results will be in whatever order the query specified.
-func getVersions(db *DB, path, query string) ([]*internal.Version, error) {
+// getVersions returns a list of versions sorted numerically
+// in descending order by major, minor and patch number and then
+// lexicographically in descending order by prerelease. The version types
+// included in the list are specified by a list of VersionTypes. The results
+// include the type of versions of packages that are part of the same series
+// and have the same package suffix as the package specified by the path.
+func getVersions(db *DB, path string, versionTypes []internal.VersionType) ([]*internal.Version, error) {
 	var (
-		commitTime, createdAt, updatedAt       time.Time
-		modulePath, synopsis, license, version string
-		versionHistory                         []*internal.Version
+		commitTime                                      time.Time
+		pkgPath, modulePath, synopsis, license, version string
+		versionHistory                                  []*internal.Version
 	)
 
-	rows, err := db.Query(query, path)
+	baseQuery :=
+		`WITH package_series AS (
+			SELECT
+				m.series_path,
+				p.path AS package_path,
+				p.suffix AS package_suffix,
+				p.module_path,
+				v.version,
+				v.commit_time,
+				v.license,
+				p.synopsis,
+				v.major,
+				v.minor,
+				v.patch,
+				v.prerelease,
+				p.version_type
+			FROM
+				modules m
+			INNER JOIN
+				packages p
+			ON
+				p.module_path = m.path
+			INNER JOIN
+				versions v
+			ON
+				p.module_path = v.module_path
+				AND p.version = v.version
+		), filters AS (
+			SELECT
+				series_path,
+				package_suffix
+			FROM
+				package_series
+			WHERE
+				package_path = $1
+		)
+		SELECT
+			package_path,
+			module_path,
+			version,
+			commit_time,
+			license,
+			synopsis
+		FROM
+			package_series
+		WHERE
+			series_path IN (SELECT series_path FROM filters)
+			AND package_suffix IN (SELECT package_suffix FROM filters)
+			AND (%s)
+		ORDER BY
+			module_path DESC,
+			major DESC,
+			minor DESC,
+			patch DESC,
+			prerelease DESC %s`
+
+	queryEnd := `;`
+	if len(versionTypes) == 0 {
+		return nil, fmt.Errorf("error: must specify at least one version type")
+	} else if len(versionTypes) == 1 && versionTypes[0] == internal.VersionTypePseudo {
+		queryEnd = `LIMIT 10;`
+	}
+
+	var (
+		vtQuery []string
+		params  []interface{}
+	)
+	params = append(params, path)
+	for i, vt := range versionTypes {
+		vtQuery = append(vtQuery, fmt.Sprintf(`version_type = $%d`, i+2))
+		params = append(params, vt.String())
+	}
+
+	query := fmt.Sprintf(baseQuery, strings.Join(vtQuery, " OR "), queryEnd)
+
+	rows, err := db.Query(query, params...)
 	if err != nil {
 		return nil, fmt.Errorf("db.Query(%q, %q) returned error: %v", query, path, err)
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		if err := rows.Scan(&createdAt, &updatedAt, &modulePath, &version, &commitTime, &license, &synopsis); err != nil {
-			return nil, fmt.Errorf("row.Scan(%q, %q, %q, %q, %q, %q, %q, %q): %v",
-				createdAt, updatedAt, path, modulePath, version, commitTime, license, synopsis, err)
+		if err := rows.Scan(&pkgPath, &modulePath, &version, &commitTime, &license, &synopsis); err != nil {
+			return nil, fmt.Errorf("row.Scan( %q, %q, %q, %q, %q, %q): %v",
+				pkgPath, modulePath, version, commitTime, license, synopsis, err)
 		}
 
 		versionHistory = append(versionHistory, &internal.Version{
-			CreatedAt: createdAt,
-			UpdatedAt: updatedAt,
 			Module: &internal.Module{
 				Path: modulePath,
 			},
@@ -235,68 +310,21 @@ func getVersions(db *DB, path, query string) ([]*internal.Version, error) {
 	return versionHistory, nil
 }
 
-// GetTaggedVersions returns a list of a package's tagged versions sorted
-// numerically in descending order by major, minor and patch number and then
-// lexicographically in descending order by prerelease.
-func (db *DB) GetTaggedVersions(path string) ([]*internal.Version, error) {
-	query :=
-		`SELECT
-				v.created_at,
-				v.updated_at,
-				p.module_path,
-				v.version,
-				v.commit_time,
-				v.license,
-				p.synopsis
-			FROM
-				versions v
-			INNER JOIN
-				packages p
-			ON
-				p.module_path = v.module_path
-				AND v.version = p.version
-			WHERE
-				path = $1
-				AND (p.version_type = 'release' OR p.version_type = 'prerelease')
-			ORDER BY
-				v.module_path,
-				v.major DESC,
-				v.minor DESC,
-				v.patch DESC,
-				v.prerelease DESC;`
-	return getVersions(db, path, query)
+// GetTaggedVersionsForPackageSeries returns a list of tagged versions sorted
+// in descending order by major, minor and patch number and then lexicographically
+// in descending order by prerelease. This list includes tagged versions of
+// packages that are part of the same series and have the same package suffix.
+func (db *DB) GetTaggedVersionsForPackageSeries(path string) ([]*internal.Version, error) {
+	return getVersions(db, path, []internal.VersionType{internal.VersionTypeRelease, internal.VersionTypePrerelease})
 }
 
-// GetPseudoVersions returns a list of a package's 10 most recent pseudo-versions
-// sorted numerically in descending order by major, minor and patch number and then
-// lexicographically in descending order by prerelease.
-func (db *DB) GetPseudoVersions(path string) ([]*internal.Version, error) {
-	query :=
-		`SELECT
-				v.created_at,
-				v.updated_at,
-				p.module_path,
-				v.version,
-				v.commit_time,
-				v.license,
-				p.synopsis
-			FROM
-				versions v
-			INNER JOIN
-				packages p
-			ON
-				p.module_path = v.module_path
-				AND v.version = p.version
-			WHERE
-				path = $1 AND p.version_type = 'pseudo'
-			ORDER BY
-				v.module_path,
-				v.major DESC,
-				v.minor DESC,
-				v.patch DESC,
-				v.prerelease DESC
-			LIMIT 10;`
-	return getVersions(db, path, query)
+// GetPseudoVersionsForPackageSeries returns the 10 most recent from a list of
+// pseudo-versions sorted in descending order by major, minor and patch number
+// and then lexicographically in descending order by prerelease. This list includes
+// pseudo-versions of packages that are part of the same series and have the same
+// package suffix.
+func (db *DB) GetPseudoVersionsForPackageSeries(path string) ([]*internal.Version, error) {
+	return getVersions(db, path, []internal.VersionType{internal.VersionTypePseudo})
 }
 
 // GetLatestPackage returns the package from the database with the latest version.

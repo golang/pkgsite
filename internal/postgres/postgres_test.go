@@ -6,6 +6,7 @@ package postgres
 
 import (
 	"database/sql"
+	"fmt"
 	"testing"
 	"time"
 
@@ -304,149 +305,6 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 	}
 }
 
-func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
-	var (
-		now = time.Now()
-		pkg = &internal.Package{
-			Path: "path.to/foo/bar",
-			Name: "bar",
-		}
-		series = &internal.Series{
-			Path: "myseries",
-		}
-		module = &internal.Module{
-			Path:   "path.to/foo",
-			Series: series,
-		}
-		testVersions = []*internal.Version{
-			&internal.Version{
-				Module:      module,
-				Version:     "v1.0.1-alpha.1",
-				CommitTime:  now,
-				Packages:    []*internal.Package{pkg},
-				VersionType: internal.VersionTypePrerelease,
-			},
-			&internal.Version{
-				Module:      module,
-				Version:     "v1.0.1",
-				CommitTime:  now,
-				Packages:    []*internal.Package{pkg},
-				VersionType: internal.VersionTypeRelease,
-			},
-			&internal.Version{
-				Module:      module,
-				Version:     "v1.0.0-20190311183353-d8887717615a",
-				CommitTime:  now,
-				Packages:    []*internal.Package{pkg},
-				VersionType: internal.VersionTypePseudo,
-			},
-			&internal.Version{
-				Module:      module,
-				Version:     "v1.0.1-beta",
-				CommitTime:  now,
-				Packages:    []*internal.Package{pkg},
-				VersionType: internal.VersionTypePrerelease,
-			},
-		}
-	)
-
-	testCases := []struct {
-		name, path   string
-		versions     []*internal.Version
-		wantVersions []*internal.Version
-		pseudo       bool
-	}{
-		{
-			name:     "want_release_and_prerelease",
-			path:     pkg.Path,
-			versions: testVersions,
-			wantVersions: []*internal.Version{
-				&internal.Version{
-					Module: &internal.Module{
-						Path: module.Path,
-					},
-					Version:    "v1.0.1",
-					CommitTime: now,
-				},
-				&internal.Version{
-					Module: &internal.Module{
-						Path: module.Path,
-					},
-					Version:    "v1.0.1-beta",
-					CommitTime: now,
-				},
-				&internal.Version{
-					Module: &internal.Module{
-						Path: module.Path,
-					},
-					Version:    "v1.0.1-alpha.1",
-					CommitTime: now,
-				},
-			},
-		},
-		{
-			name:     "want_pseudo",
-			path:     pkg.Path,
-			versions: testVersions,
-			wantVersions: []*internal.Version{
-				&internal.Version{
-					Module: &internal.Module{
-						Path: module.Path,
-					},
-					Version:    "v1.0.0-20190311183353-d8887717615a",
-					CommitTime: now,
-				},
-			},
-			pseudo: true,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			teardownTestCase, db := SetupCleanDB(t)
-			defer teardownTestCase(t)
-
-			for _, v := range tc.versions {
-				if err := db.InsertVersion(v); err != nil {
-					t.Errorf("db.InsertVersion(%+v) error: %v", v, err)
-				}
-			}
-
-			var (
-				got             []*internal.Version
-				diffErr, lenErr string
-				err             error
-			)
-
-			if tc.pseudo {
-				got, err = db.GetPseudoVersions(tc.path)
-				if err != nil {
-					t.Fatalf("db.GetPseudoVersions(%v) error: %v", tc.path, err)
-				}
-				diffErr = "db.GetPseudoVersions(%q, %q) mismatch (-want +got):\n%s"
-				lenErr = "db.GetPseudoVersions(%q, %q) returned list of length %v, wanted %v"
-			} else {
-				got, err = db.GetTaggedVersions(tc.path)
-				if err != nil {
-					t.Fatalf("db.GetTaggedVersions(%v) error: %v", tc.path, err)
-				}
-				diffErr = "db.GetTaggedVersions(%q, %q) mismatch (-want +got):\n%s"
-				lenErr = "db.GetTaggedVersions(%q, %q) returned list of length %v, wanted %v"
-			}
-
-			if len(got) != len(tc.wantVersions) {
-				t.Fatalf(lenErr, tc.path, err, len(got), len(tc.wantVersions))
-			}
-
-			for i, v := range got {
-				if diff := versionsDiff(v, tc.wantVersions[i]); diff != "" {
-					t.Errorf(diffErr, v, tc.wantVersions[i], diff)
-				}
-			}
-		})
-	}
-}
-
 func TestPostgres_GetLatestPackageForPaths(t *testing.T) {
 	teardownTestCase, db := SetupCleanDB(t)
 	defer teardownTestCase(t)
@@ -719,6 +577,216 @@ func TestPostgres_padPrerelease(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			if got, err := padPrerelease(tc.input); (err != nil) == tc.wantErr && got != tc.want {
 				t.Errorf("padPrerelease(%v) = %v, want %v, err = %v, wantErr = %v", tc.input, got, tc.want, err, tc.wantErr)
+			}
+		})
+	}
+}
+
+func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
+	var (
+		now  = time.Now()
+		pkg1 = &internal.Package{
+			Path:     "path.to/foo/bar",
+			Name:     "bar",
+			Synopsis: "This is a package synopsis",
+			Suffix:   "bar",
+		}
+		pkg2 = &internal.Package{
+			Path:     "path.to/foo/v2/bar",
+			Name:     "bar",
+			Synopsis: "This is another package synopsis",
+			Suffix:   "bar",
+		}
+		pkg3 = &internal.Package{
+			Path:     "path.to/some/thing/else",
+			Name:     "else",
+			Synopsis: "something else's package synopsis",
+			Suffix:   "else",
+		}
+		series = &internal.Series{
+			Path: "path.to/foo",
+		}
+		module1 = &internal.Module{
+			Path:   "path.to/foo",
+			Series: series,
+		}
+		module2 = &internal.Module{
+			Path:   "path.to/foo/v2",
+			Series: series,
+		}
+		module3 = &internal.Module{
+			Path:   "path.to/some/thing",
+			Series: series,
+		}
+		testVersions = []*internal.Version{
+			&internal.Version{
+				Module:      module3,
+				Version:     "v3.0.0",
+				License:     "licensename",
+				CommitTime:  now,
+				Packages:    []*internal.Package{pkg3},
+				VersionType: internal.VersionTypeRelease,
+			},
+			&internal.Version{
+				Module:      module1,
+				Version:     "v1.0.0-alpha.1",
+				License:     "licensename",
+				CommitTime:  now,
+				Packages:    []*internal.Package{pkg1},
+				VersionType: internal.VersionTypePrerelease,
+			},
+			&internal.Version{
+				Module:      module1,
+				Version:     "v1.0.0",
+				License:     "licensename",
+				CommitTime:  now,
+				Packages:    []*internal.Package{pkg1},
+				VersionType: internal.VersionTypeRelease,
+			},
+			&internal.Version{
+				Module:      module2,
+				Version:     "v2.0.1-beta",
+				License:     "licensename",
+				CommitTime:  now,
+				Packages:    []*internal.Package{pkg2},
+				VersionType: internal.VersionTypePrerelease,
+			},
+			&internal.Version{
+				Module:      module2,
+				Version:     "v2.1.0",
+				License:     "licensename",
+				CommitTime:  now,
+				Packages:    []*internal.Package{pkg2},
+				VersionType: internal.VersionTypeRelease,
+			},
+		}
+	)
+
+	testCases := []struct {
+		name, path         string
+		numPseudo          int
+		versions           []*internal.Version
+		wantTaggedVersions []*internal.Version
+	}{
+		{
+			name:      "want_releases_and_prereleases_only",
+			path:      "path.to/foo/bar",
+			numPseudo: 12,
+			versions:  testVersions,
+			wantTaggedVersions: []*internal.Version{
+				&internal.Version{
+					Module:     module2,
+					Version:    "v2.1.0",
+					License:    "licensename",
+					Synopsis:   pkg2.Synopsis,
+					CommitTime: now,
+				},
+				&internal.Version{
+					Module:     module2,
+					Version:    "v2.0.1-beta",
+					License:    "licensename",
+					Synopsis:   pkg2.Synopsis,
+					CommitTime: now,
+				},
+				&internal.Version{
+					Module:     module1,
+					Version:    "v1.0.0",
+					License:    "licensename",
+					Synopsis:   pkg1.Synopsis,
+					CommitTime: now,
+				},
+				&internal.Version{
+					Module:     module1,
+					Version:    "v1.0.0-alpha.1",
+					License:    "licensename",
+					Synopsis:   pkg1.Synopsis,
+					CommitTime: now,
+				},
+			},
+		},
+		{
+			name:     "want_zero_results_in_non_empty_db",
+			path:     "not.a/real/path",
+			versions: testVersions,
+		},
+		{
+			name: "want_zero_results_in_empty_db",
+			path: "not.a/real/path",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			teardownTestCase, db := SetupCleanDB(t)
+			defer teardownTestCase(t)
+
+			wantPseudoVersions := []*internal.Version{}
+			for i := 0; i < tc.numPseudo; i++ {
+				v := &internal.Version{
+					Module: module1,
+					// %02d makes a string that is a width of 2 and left pads with zeroes
+					Version:     fmt.Sprintf("v0.0.0-201806111833%02d-d8887717615a", i+1),
+					License:     "licensename",
+					CommitTime:  now,
+					Packages:    []*internal.Package{pkg1},
+					VersionType: internal.VersionTypePseudo,
+				}
+				if err := db.InsertVersion(v); err != nil {
+					t.Errorf("db.InsertVersion(%v): %v", v, err)
+				}
+
+				// GetPseudoVersions should only return the 10 most recent pseudo versions,
+				// if there are more than 10 in the database
+				if i < 10 {
+					wantPseudoVersions = append(wantPseudoVersions, &internal.Version{
+						Module:     module1,
+						Version:    fmt.Sprintf("v0.0.0-201806111833%02d-d8887717615a", tc.numPseudo-i),
+						License:    "licensename",
+						Synopsis:   pkg1.Synopsis,
+						CommitTime: now,
+					})
+				}
+			}
+
+			for _, v := range tc.versions {
+				if err := db.InsertVersion(v); err != nil {
+					t.Errorf("db.InsertVersion(%v): %v", v, err)
+				}
+			}
+
+			var (
+				got []*internal.Version
+				err error
+			)
+
+			got, err = db.GetPseudoVersionsForPackageSeries(tc.path)
+			if err != nil {
+				t.Fatalf("db.GetPseudoVersionsForPackageSeries(%q) error: %v", tc.path, err)
+			}
+
+			if len(got) != len(wantPseudoVersions) {
+				t.Fatalf("db.GetPseudoVersionsForPackageSeries(%q) returned list of length %v, wanted %v", tc.path, len(got), len(wantPseudoVersions))
+			}
+
+			for i, v := range got {
+				if diff := versionsDiff(wantPseudoVersions[i], v); diff != "" {
+					t.Errorf("db.GetPseudoVersionsForPackageSeries(%q) mismatch (-want +got):\n%s", tc.path, diff)
+				}
+			}
+
+			got, err = db.GetTaggedVersionsForPackageSeries(tc.path)
+			if err != nil {
+				t.Fatalf("db.GetTaggedVersionsForPackageSeries(%q) error: %v", tc.path, err)
+			}
+
+			if len(got) != len(tc.wantTaggedVersions) {
+				t.Fatalf("db.GetTaggedVersionsForPackageSeries(%q) returned list of length %v, wanted %v", tc.path, len(got), len(tc.wantTaggedVersions))
+			}
+
+			for i, v := range got {
+				if diff := versionsDiff(tc.wantTaggedVersions[i], v); diff != "" {
+					t.Errorf("db.GetTaggedVersionsForPackageSeries(%q) mismatch (-want +got):\n%s", tc.path, diff)
+				}
 			}
 		})
 	}
