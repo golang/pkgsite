@@ -5,6 +5,7 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"math"
@@ -17,7 +18,7 @@ import (
 )
 
 // InsertDocuments inserts a row for each package in the version.
-func (db *DB) InsertDocuments(version *internal.Version) error {
+func (db *DB) InsertDocuments(ctx context.Context, version *internal.Version) error {
 	if err := validateVersion(version); err != nil {
 		return status.Errorf(codes.InvalidArgument, fmt.Sprintf("validateVersion(%+v): %v", version, err))
 	}
@@ -46,7 +47,7 @@ func (db *DB) InsertDocuments(version *internal.Version) error {
 			) ON CONFLICT DO NOTHING;`, func(stmt *sql.Stmt) error {
 			for _, p := range version.Packages {
 				pathTokens := strings.Join([]string{p.Path, version.Module.Path, version.Module.Series.Path}, " ")
-				if _, err := stmt.Exec(p.Path, p.Suffix, version.Module.Path, version.Module.Series.Path, version.Version, p.Name, pathTokens, p.Synopsis, version.ReadMe); err != nil {
+				if _, err := stmt.ExecContext(ctx, p.Path, p.Suffix, version.Module.Path, version.Module.Series.Path, version.Version, p.Name, pathTokens, p.Synopsis, version.ReadMe); err != nil {
 					return fmt.Errorf("error inserting document for package %+v: %v", p, err)
 				}
 			}
@@ -74,7 +75,7 @@ func calculateRank(relevance float64, imports int64) float64 {
 
 // Search fetches packages from the database that match the terms
 // provided, and returns them in order of relevance as a []*SearchResult.
-func (db *DB) Search(terms []string) ([]*SearchResult, error) {
+func (db *DB) Search(ctx context.Context, terms []string) ([]*SearchResult, error) {
 	if len(terms) == 0 {
 		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("cannot search: no terms"))
 	}
@@ -104,9 +105,9 @@ func (db *DB) Search(terms []string) ([]*SearchResult, error) {
 			GROUP BY 1
 		) i
 		ON d.package_path = i.from_path;`
-	rows, err := db.Query(query, strings.Join(terms, " | "))
+	rows, err := db.QueryContext(ctx, query, strings.Join(terms, " | "))
 	if err != nil {
-		return nil, fmt.Errorf("db.Query(%q, %q) returned error: %v", query, terms, err)
+		return nil, fmt.Errorf("db.QueryContext(ctx, %q, %q) returned error: %v", query, terms, err)
 	}
 	defer rows.Close()
 
@@ -128,7 +129,7 @@ func (db *DB) Search(terms []string) ([]*SearchResult, error) {
 		paths = append(paths, path)
 	}
 
-	pkgs, err := db.GetLatestPackageForPaths(paths)
+	pkgs, err := db.GetLatestPackageForPaths(ctx, paths)
 	if err != nil {
 		return nil, err
 	}

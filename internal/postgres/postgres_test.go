@@ -5,6 +5,7 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"testing"
@@ -16,6 +17,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+const testTimeout = 5 * time.Second
 
 // versionsDiff takes in two versions, v1 and v2, and returns a string
 // description of the difference between them. If they are the
@@ -36,6 +39,8 @@ func versionsDiff(v1, v2 *internal.Version) string {
 }
 
 func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
 	var (
 		now    = NowTruncated()
 		series = &internal.Series{
@@ -150,59 +155,62 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 			teardownTestCase, db := SetupCleanDB(t)
 			defer teardownTestCase(t)
 
-			if err := db.InsertVersion(tc.versionData); status.Code(err) != tc.wantWriteErrCode {
-				t.Errorf("db.InsertVersion(%+v) error: %v, want write error: %v", tc.versionData, err, tc.wantWriteErrCode)
+			if err := db.InsertVersion(ctx, tc.versionData); status.Code(err) != tc.wantWriteErrCode {
+				t.Errorf("db.InsertVersion(ctx, %+v) error: %v, want write error: %v", tc.versionData, err, tc.wantWriteErrCode)
 			}
 
 			// Test that insertion of duplicate primary key won't fail.
-			if err := db.InsertVersion(tc.versionData); status.Code(err) != tc.wantWriteErrCode {
-				t.Errorf("db.InsertVersion(%+v) second insert error: %v, want write error: %v", tc.versionData, err, tc.wantWriteErrCode)
+			if err := db.InsertVersion(ctx, tc.versionData); status.Code(err) != tc.wantWriteErrCode {
+				t.Errorf("db.InsertVersion(ctx, %+v) second insert error: %v, want write error: %v", tc.versionData, err, tc.wantWriteErrCode)
 			}
 
-			got, err := db.GetVersion(tc.module, tc.version)
+			got, err := db.GetVersion(ctx, tc.module, tc.version)
 			if tc.wantReadErr != (err != nil) {
-				t.Fatalf("db.GetVersion(%q, %q) error: %v, want read error: %t", tc.module, tc.version, err, tc.wantReadErr)
+				t.Fatalf("db.GetVersion(ctx, %q, %q) error: %v, want read error: %t", tc.module, tc.version, err, tc.wantReadErr)
 			}
 
 			if !tc.wantReadErr && got == nil {
-				t.Fatalf("db.GetVersion(%q, %q) = %v, want %v",
+				t.Fatalf("db.GetVersion(ctx, %q, %q) = %v, want %v",
 					tc.module, tc.version, got, tc.versionData)
 			}
 
 			if diff := versionsDiff(got, tc.versionData); !tc.wantReadErr && diff != "" {
-				t.Errorf("db.GetVersion(%q, %q) = %v, want %v | diff is %v",
+				t.Errorf("db.GetVersion(ctx, %q, %q) = %v, want %v | diff is %v",
 					tc.module, tc.version, got, tc.versionData, diff)
 			}
 
-			gotPkg, err := db.GetPackage(tc.pkgpath, tc.version)
+			gotPkg, err := db.GetPackage(ctx, tc.pkgpath, tc.version)
 			if tc.versionData == nil || tc.versionData.Packages == nil || tc.pkgpath == "" {
 				if tc.wantReadErr != (err != nil) {
-					t.Fatalf("db.GetPackage(%q, %q) = %v, want %v", tc.pkgpath, tc.version, err, sql.ErrNoRows)
+					t.Fatalf("db.GetPackage(ctx, %q, %q) = %v, want %v", tc.pkgpath, tc.version, err, sql.ErrNoRows)
 				}
 				return
 			}
 
 			wantPkg := tc.versionData.Packages[0]
 			if err != nil {
-				t.Fatalf("db.GetPackage(%q, %q) = %v, want %v", tc.pkgpath, tc.version, gotPkg, wantPkg)
+				t.Fatalf("db.GetPackage(ctx, %q, %q) = %v, want %v", tc.pkgpath, tc.version, gotPkg, wantPkg)
 			}
 
 			if gotPkg.Version.Version != tc.versionData.Version {
-				t.Errorf("db.GetPackage(%q, %q) version.version = %v, want %v", tc.pkgpath, tc.version, gotPkg.Version.Version, tc.versionData.Version)
+				t.Errorf("db.GetPackage(ctx, %q, %q) version.version = %v, want %v", tc.pkgpath, tc.version, gotPkg.Version.Version, tc.versionData.Version)
 			}
 			if gotPkg.Version.License != tc.versionData.License {
-				t.Errorf("db.GetPackage(%q, %q) version.license = %v, want %v", tc.pkgpath, tc.version, gotPkg.Version.License, tc.versionData.License)
+				t.Errorf("db.GetPackage(ctx, %q, %q) version.license = %v, want %v", tc.pkgpath, tc.version, gotPkg.Version.License, tc.versionData.License)
 
 			}
 
 			if diff := cmp.Diff(gotPkg, wantPkg, cmpopts.IgnoreFields(internal.Package{}, "Version")); diff != "" {
-				t.Errorf("db.GetPackage(%q, %q) Package mismatch (-want +got):\n%s", tc.pkgpath, tc.version, diff)
+				t.Errorf("db.GetPackage(ctx, %q, %q) Package mismatch (-want +got):\n%s", tc.pkgpath, tc.version, diff)
 			}
 		})
 	}
 }
 
 func TestPostgres_GetLatestPackage(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
 	teardownTestCase, db := SetupCleanDB(t)
 	defer teardownTestCase(t)
 	var (
@@ -287,18 +295,18 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			for _, v := range tc.versions {
-				if err := db.InsertVersion(v); err != nil {
-					t.Errorf("db.InsertVersion(%v): %v", v, err)
+				if err := db.InsertVersion(ctx, v); err != nil {
+					t.Errorf("db.InsertVersion(ctx, %v): %v", v, err)
 				}
 			}
 
-			gotPkg, err := db.GetLatestPackage(tc.path)
+			gotPkg, err := db.GetLatestPackage(ctx, tc.path)
 			if (err != nil) != tc.wantReadErr {
-				t.Errorf("db.GetLatestPackage(%q): %v", tc.path, err)
+				t.Errorf("db.GetLatestPackage(ctx, %q): %v", tc.path, err)
 			}
 
 			if diff := cmp.Diff(gotPkg, tc.wantPkg, cmpopts.IgnoreFields(internal.Package{}, "Version.UpdatedAt", "Version.CreatedAt")); diff != "" {
-				t.Errorf("db.GetLatestPackage(%q) = %v, want %v, diff is %v",
+				t.Errorf("db.GetLatestPackage(ctx, %q) = %v, want %v, diff is %v",
 					tc.path, gotPkg, tc.wantPkg, diff)
 			}
 		})
@@ -306,6 +314,9 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 }
 
 func TestPostgres_GetLatestPackageForPaths(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
 	teardownTestCase, db := SetupCleanDB(t)
 	defer teardownTestCase(t)
 	var (
@@ -416,14 +427,14 @@ func TestPostgres_GetLatestPackageForPaths(t *testing.T) {
 	}
 
 	for _, v := range tc.versions {
-		if err := db.InsertVersion(v); err != nil {
-			t.Errorf("db.InsertVersion(%v): %v", v, err)
+		if err := db.InsertVersion(ctx, v); err != nil {
+			t.Errorf("db.InsertVersion(ctx, %v): %v", v, err)
 		}
 	}
 
-	gotPkgs, err := db.GetLatestPackageForPaths(tc.paths)
+	gotPkgs, err := db.GetLatestPackageForPaths(ctx, tc.paths)
 	if (err != nil) != tc.wantReadErr {
-		t.Errorf("db.GetLatestPackageForPaths(%q): %v", tc.paths, err)
+		t.Errorf("db.GetLatestPackageForPaths(ctx, %q): %v", tc.paths, err)
 	}
 
 	if diff := cmp.Diff(gotPkgs, tc.wantPkgs); diff != "" {
@@ -432,6 +443,9 @@ func TestPostgres_GetLatestPackageForPaths(t *testing.T) {
 }
 
 func TestPostgress_InsertVersionLogs(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
 	teardownTestCase, db := SetupCleanDB(t)
 	defer teardownTestCase(t)
 
@@ -457,11 +471,11 @@ func TestPostgress_InsertVersionLogs(t *testing.T) {
 		},
 	}
 
-	if err := db.InsertVersionLogs(newVersions); err != nil {
-		t.Errorf("db.InsertVersionLogs(newVersions) error: %v", err)
+	if err := db.InsertVersionLogs(ctx, newVersions); err != nil {
+		t.Errorf("db.InsertVersionLogs(ctx, newVersions) error: %v", err)
 	}
 
-	dbTime, err := db.LatestProxyIndexUpdate()
+	dbTime, err := db.LatestProxyIndexUpdate(ctx)
 	if err != nil {
 		t.Errorf("db.LatestProxyIndexUpdate error: %v", err)
 	}
@@ -469,7 +483,7 @@ func TestPostgress_InsertVersionLogs(t *testing.T) {
 	// Since now is already truncated to Microsecond precision, we should get
 	// back the exact same time.
 	if !dbTime.Equal(now) {
-		t.Errorf("db.LatestProxyIndexUpdate() = %v, want %v", dbTime, now)
+		t.Errorf("db.LatestProxyIndexUpdate(ctx) = %v, want %v", dbTime, now)
 	}
 }
 
@@ -584,6 +598,9 @@ func TestPostgres_padPrerelease(t *testing.T) {
 }
 
 func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
 	var (
 		now  = NowTruncated()
 		pkg1 = &internal.Package{
@@ -756,7 +773,7 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 					Packages:    []*internal.Package{pkg1},
 					VersionType: internal.VersionTypePseudo,
 				}
-				if err := db.InsertVersion(v); err != nil {
+				if err := db.InsertVersion(ctx, v); err != nil {
 					t.Errorf("db.InsertVersion(%v): %v", v, err)
 				}
 
@@ -780,7 +797,7 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 			}
 
 			for _, v := range tc.versions {
-				if err := db.InsertVersion(v); err != nil {
+				if err := db.InsertVersion(ctx, v); err != nil {
 					t.Errorf("db.InsertVersion(%v): %v", v, err)
 				}
 			}
@@ -790,7 +807,7 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 				err error
 			)
 
-			got, err = db.GetPseudoVersionsForPackageSeries(tc.path)
+			got, err = db.GetPseudoVersionsForPackageSeries(ctx, tc.path)
 			if err != nil {
 				t.Fatalf("db.GetPseudoVersionsForPackageSeries(%q) error: %v", tc.path, err)
 			}
@@ -805,7 +822,7 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 				}
 			}
 
-			got, err = db.GetTaggedVersionsForPackageSeries(tc.path)
+			got, err = db.GetTaggedVersionsForPackageSeries(ctx, tc.path)
 			if err != nil {
 				t.Fatalf("db.GetTaggedVersionsForPackageSeries(%q) error: %v", tc.path, err)
 			}

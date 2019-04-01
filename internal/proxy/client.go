@@ -7,14 +7,15 @@ package proxy
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"strings"
 	"time"
 
 	"golang.org/x/discovery/internal/thirdparty/module"
+	"golang.org/x/net/context/ctxhttp"
 )
 
 // A Client is used by the fetch service to communicate with a module
@@ -52,20 +53,20 @@ func (c *Client) infoURL(path, version string) (string, error) {
 
 // GetInfo makes a request to $GOPROXY/<module>/@v/<version>.info and
 // transforms that data into a *VersionInfo.
-func (c *Client) GetInfo(path, version string) (*VersionInfo, error) {
+func (c *Client) GetInfo(ctx context.Context, path, version string) (*VersionInfo, error) {
 	u, err := c.infoURL(path, version)
 	if err != nil {
 		return nil, fmt.Errorf("infoURL(%q, %q): %v", path, version, err)
 	}
 
-	r, err := http.Get(u)
+	r, err := ctxhttp.Get(ctx, nil, u)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ctxhttp.Get(ctx, nil, %q): %v", u, err)
 	}
 	defer r.Body.Close()
 
 	if r.StatusCode < 200 || r.StatusCode >= 300 {
-		return nil, fmt.Errorf("http.Get(%q) returned response: %d (%q)", u, r.StatusCode, r.Status)
+		return nil, fmt.Errorf("ctxhttp.Get(ctx, %q) returned response: %d (%q)", u, r.StatusCode, r.Status)
 	}
 
 	var v VersionInfo
@@ -86,30 +87,30 @@ func (c *Client) zipURL(path, version string) (string, error) {
 
 // GetZip makes a request to $GOPROXY/<module>/@v/<version>.zip and transforms
 // that data into a *zip.Reader.
-func (c *Client) GetZip(path, version string) (*zip.Reader, error) {
+func (c *Client) GetZip(ctx context.Context, path, version string) (*zip.Reader, error) {
 	u, err := c.zipURL(path, version)
 	if err != nil {
 		return nil, fmt.Errorf("zipURL(%q, %q): %v", path, version, err)
 	}
 
-	r, err := http.Get(u)
+	r, err := ctxhttp.Get(ctx, nil, u)
 	if err != nil {
-		return nil, fmt.Errorf("http.Get(%q): %v", u, err)
+		return nil, fmt.Errorf("ctxhttp.Get(ctx, nil, %q): %v", u, err)
 	}
 	defer r.Body.Close()
 
 	if r.StatusCode < 200 || r.StatusCode >= 300 {
-		return nil, fmt.Errorf("http.Get(%q) returned response: %d (%q)", u, r.StatusCode, r.Status)
+		return nil, fmt.Errorf("get(ctx, %q) returned response: %d (%q)", u, r.StatusCode, r.Status)
 	}
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		return nil, fmt.Errorf("http.Get(%q): %v", u, err)
+		return nil, fmt.Errorf("get(ctx, %q): %v", u, err)
 	}
 
 	zipReader, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
 	if err != nil {
-		return nil, fmt.Errorf("http.Get(%q): %v", u, err)
+		return nil, fmt.Errorf("get(ctx, %q): %v", u, err)
 	}
 	return zipReader, nil
 }

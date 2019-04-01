@@ -7,16 +7,25 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	_ "github.com/lib/pq"
 
 	"golang.org/x/discovery/internal/cron"
 	"golang.org/x/discovery/internal/fetch"
+	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
+)
+
+const (
+	// Use generous timeouts as cron traffic is not user-facing.
+	makeNewVersionsTimeout = 10 * time.Minute
+	fetchTimeout           = 5 * time.Minute
 )
 
 var (
@@ -39,7 +48,7 @@ func getEnv(key, fallback string) string {
 
 func makeNewVersionsHandler(db *postgres.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		logs, err := cron.FetchAndStoreVersions(indexURL, db)
+		logs, err := cron.FetchAndStoreVersions(r.Context(), indexURL, db)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			log.Printf("FetchAndStoreVersions(%q, db): %v", indexURL, db)
@@ -51,8 +60,10 @@ func makeNewVersionsHandler(db *postgres.DB) http.HandlerFunc {
 			fmt.Fprintln(w, "Fetch requested")
 			log.Printf("Fetch requested: %q %q", l.ModulePath, l.Version)
 			go func(name, version string) {
-				if err := client.FetchVersion(name, version); err != nil {
-					log.Printf("client.FetchVersion(%q, %q): %v", name, version, err)
+				fetchCtx, cancel := context.WithTimeout(context.Background(), fetchTimeout)
+				defer cancel()
+				if err := client.FetchVersion(fetchCtx, name, version); err != nil {
+					log.Printf("client.FetchVersion(fetchCtx, %q, %q): %v", name, version, err)
 				}
 			}(l.ModulePath, l.Version)
 		}
@@ -67,7 +78,8 @@ func main() {
 	}
 	defer db.Close()
 
-	http.HandleFunc("/new/", makeNewVersionsHandler(db))
+	mw := middleware.Timeout(makeNewVersionsTimeout)
+	http.Handle("/new/", mw(makeNewVersionsHandler(db)))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Hello, Go Discovery Cron!")
 	})

@@ -11,10 +11,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"golang.org/x/discovery/internal/frontend"
+	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
 )
+
+const handlerTimeout = 1 * time.Minute
 
 var (
 	user     = getEnv("GO_DISCOVERY_DATABASE_USER", "postgres")
@@ -44,8 +48,9 @@ func main() {
 	}
 	defer db.Close()
 
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(*staticPath))))
-	http.HandleFunc("/", frontend.MakeDetailsHandlerFunc(db, templates))
+	mux := http.NewServeMux()
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(*staticPath))))
+	mux.HandleFunc("/", frontend.MakeDetailsHandlerFunc(db, templates))
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -53,6 +58,8 @@ func main() {
 		log.Printf("Defaulting to port %s", port)
 	}
 
+	mw := middleware.Timeout(handlerTimeout)
+
 	log.Printf("Listening on port %s", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), mw(mux)))
 }

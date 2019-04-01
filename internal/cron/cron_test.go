@@ -5,6 +5,7 @@
 package cron
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -17,6 +18,8 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
 )
+
+const testTimeout = 5 * time.Second
 
 func setupIndex(t *testing.T, versions []map[string]string) (func(t *testing.T), *httptest.Server) {
 	index := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -43,6 +46,9 @@ func versionLogArrayToString(logs []*internal.VersionLog) string {
 }
 
 func TestGetVersionsFromIndex(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
 	for _, tc := range []struct {
 		name      string
 		indexInfo []map[string]string
@@ -85,9 +91,9 @@ func TestGetVersionsFromIndex(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			teardownTestCase, index := setupIndex(t, tc.indexInfo)
 			defer teardownTestCase(t)
-			logs, err := getVersionsFromIndex(index.URL, time.Time{})
+			logs, err := getVersionsFromIndex(ctx, index.URL, time.Time{})
 			if err != nil {
-				t.Fatalf("getVersionFromIndex(%q, %q) error: %v",
+				t.Fatalf("getVersionFromIndex(ctx, %q, %q) error: %v",
 					index.URL, time.Time{}, err)
 			}
 
@@ -96,13 +102,16 @@ func TestGetVersionsFromIndex(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(logs, tc.wantLogs) {
-				t.Errorf("getVersionFromIndex(%q, %q) = \n %v; want = \n %v", index.URL, time.Time{}.String(), versionLogArrayToString(logs), versionLogArrayToString(tc.wantLogs))
+				t.Errorf("getVersionFromIndex(ctx, %q, %q) = \n %v; want = \n %v", index.URL, time.Time{}.String(), versionLogArrayToString(logs), versionLogArrayToString(tc.wantLogs))
 			}
 		})
 	}
 }
 
-func TestNewVersionFromProxyIndex(t *testing.T) {
+func TestFetchAndStoreVersions(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
 	for _, tc := range []struct {
 		name            string
 		indexInfo       []map[string]string
@@ -172,23 +181,23 @@ func TestNewVersionFromProxyIndex(t *testing.T) {
 			cleanupDB, db := postgres.SetupCleanDB(t)
 			defer cleanupDB(t)
 
-			if err := db.InsertVersionLogs(tc.oldVersionLogs); err != nil {
-				t.Fatalf("db.InsertVersionLogs(%v): %v", tc.oldVersionLogs, err)
+			if err := db.InsertVersionLogs(ctx, tc.oldVersionLogs); err != nil {
+				t.Fatalf("db.InsertVersionLogs(ctx, %v): %v", tc.oldVersionLogs, err)
 			}
 
-			got, err := FetchAndStoreVersions(index.URL, db)
+			got, err := FetchAndStoreVersions(ctx, index.URL, db)
 			if err != nil {
-				t.Fatalf("FetchAndStoreVersions(%q, %v): %v", index.URL, db, err)
+				t.Fatalf("FetchAndStoreVersions(ctx, %q, %v): %v", index.URL, db, err)
 			}
 
 			// do not compare the timestamps, since they are set inside
-			// NewVersionFromProxyIndex.
+			// FetchAndStoreVersions.
 			for _, l := range got {
 				l.CreatedAt = time.Time{}
 			}
 
 			if !reflect.DeepEqual(got, tc.wantVersionLogs) {
-				t.Fatalf("NewVersionFromProxyIndex(%q, %v) = %v; want %v",
+				t.Fatalf("FetchAndStoreVersions(ctx, %q, %v) = %v; want %v",
 					index.URL, db, versionLogArrayToString(got), versionLogArrayToString(tc.wantVersionLogs))
 			}
 		})

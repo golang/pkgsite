@@ -5,6 +5,7 @@
 package postgres
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -15,6 +16,9 @@ import (
 )
 
 func TestInsertDocumentsAndSearch(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
 	var (
 		now     = time.Now()
 		series1 = &internal.Series{
@@ -212,16 +216,16 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 
 			if tc.versions != nil {
 				for _, v := range tc.versions {
-					if err := db.InsertVersion(v); status.Code(err) != tc.insertErr {
+					if err := db.InsertVersion(ctx, v); status.Code(err) != tc.insertErr {
 						t.Fatalf("db.InsertVersion(%+v): %v", tc.versions, err)
 					}
-					if err := db.InsertDocuments(v); status.Code(err) != tc.insertErr {
+					if err := db.InsertDocuments(ctx, v); status.Code(err) != tc.insertErr {
 						t.Fatalf("db.InsertDocuments(%+v): %v", tc.versions, err)
 					}
 				}
 			}
 
-			got, err := db.Search(tc.terms)
+			got, err := db.Search(ctx, tc.terms)
 			if status.Code(err) != tc.searchErr {
 				t.Fatalf("db.Search(%v): %v", tc.terms, err)
 			}

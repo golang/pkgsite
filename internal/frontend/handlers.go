@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"html/template"
 	"io"
@@ -118,10 +119,10 @@ func elapsedTime(date time.Time) string {
 
 // fetchOverviewPage fetches data for the module version specified by path and version
 // from the database and returns a OverviewPage.
-func fetchOverviewPage(db *postgres.DB, path, version string) (*OverviewPage, error) {
-	pkg, err := db.GetPackage(path, version)
+func fetchOverviewPage(ctx context.Context, db *postgres.DB, path, version string) (*OverviewPage, error) {
+	pkg, err := db.GetPackage(ctx, path, version)
 	if err != nil {
-		return nil, fmt.Errorf("db.GetPackage(%q, %q) returned error %v", path, version, err)
+		return nil, fmt.Errorf("db.GetPackage(ctx, %q, %q) returned error %v", path, version, err)
 	}
 
 	return &OverviewPage{
@@ -140,8 +141,8 @@ func fetchOverviewPage(db *postgres.DB, path, version string) (*OverviewPage, er
 
 // fetchVersionsPage fetches data for the module version specified by path and version
 // from the database and returns a VersionsPage.
-func fetchVersionsPage(db *postgres.DB, path, version string) (*VersionsPage, error) {
-	versions, err := db.GetTaggedVersionsForPackageSeries(path)
+func fetchVersionsPage(ctx context.Context, db *postgres.DB, path, version string) (*VersionsPage, error) {
+	versions, err := db.GetTaggedVersionsForPackageSeries(ctx, path)
 	if err != nil {
 		return nil, fmt.Errorf("db.GetTaggedVersions(%q): %v", path, err)
 	}
@@ -149,7 +150,7 @@ func fetchVersionsPage(db *postgres.DB, path, version string) (*VersionsPage, er
 	// if GetTaggedVersionsForPackageSeries returns nothing then that means there are no
 	// tagged versions and we want to get the pseudo-versions instead
 	if len(versions) == 0 {
-		versions, err = db.GetPseudoVersionsForPackageSeries(path)
+		versions, err = db.GetPseudoVersionsForPackageSeries(ctx, path)
 		if err != nil {
 			return nil, fmt.Errorf("db.GetPseudoVersions(%q): %v", path, err)
 		}
@@ -231,6 +232,8 @@ func readmeHTML(readme []byte) template.HTML {
 // template. Handles endpoint /<import path>@<version>?tab=versions.
 func MakeDetailsHandlerFunc(db *postgres.DB, templates *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
 		if r.URL.Path == "/" {
 			io.WriteString(w, "Welcome to the Go Discovery Site!")
 			return
@@ -251,7 +254,7 @@ func MakeDetailsHandlerFunc(db *postgres.DB, templates *template.Template) http.
 		switch tab := r.URL.Query().Get("tab"); tab {
 		case "versions":
 			html = "versions.tmpl"
-			page, err = fetchVersionsPage(db, path, version)
+			page, err = fetchVersionsPage(ctx, db, path, version)
 			if err != nil {
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				log.Printf("error fetching module page: %v", err)
@@ -261,7 +264,7 @@ func MakeDetailsHandlerFunc(db *postgres.DB, templates *template.Template) http.
 			fallthrough
 		default:
 			html = "overview.tmpl"
-			page, err = fetchOverviewPage(db, path, version)
+			page, err = fetchOverviewPage(ctx, db, path, version)
 			if err != nil {
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				log.Printf("error fetching module page: %v", err)
@@ -303,9 +306,9 @@ type SearchResult struct {
 
 // fetchSearchPage fetches data matching the search query from the database and
 // returns a SearchPage.
-func fetchSearchPage(db *postgres.DB, query string) (*SearchPage, error) {
+func fetchSearchPage(ctx context.Context, db *postgres.DB, query string) (*SearchPage, error) {
 	terms := strings.Fields(query)
-	dbresults, err := db.Search(terms)
+	dbresults, err := db.Search(ctx, terms)
 	if err != nil {
 		return nil, fmt.Errorf("db.Search(%v) returned error %v", terms, err)
 	}

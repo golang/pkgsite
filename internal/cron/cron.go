@@ -5,45 +5,46 @@
 package cron
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"strings"
 	"time"
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
+	"golang.org/x/net/context/ctxhttp"
 )
 
 // FetchAndStoreVersions queries indexURL for new versions and writes them to
 // the version_logs table.
-func FetchAndStoreVersions(indexURL string, db *postgres.DB) ([]*internal.VersionLog, error) {
-	t, err := db.LatestProxyIndexUpdate()
+func FetchAndStoreVersions(ctx context.Context, indexURL string, db *postgres.DB) ([]*internal.VersionLog, error) {
+	t, err := db.LatestProxyIndexUpdate(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("db.LatestProxyIndexUpdate(): %v", err)
 	}
 
-	logs, err := getVersionsFromIndex(indexURL, t)
+	logs, err := getVersionsFromIndex(ctx, indexURL, t)
 	if err != nil {
-		return nil, fmt.Errorf("getVersionsFromIndex(%q, %v): %v", indexURL, t, err)
+		return nil, fmt.Errorf("getVersionsFromIndex(ctx, %q, %v): %v", indexURL, t, err)
 	}
 
-	if err = db.InsertVersionLogs(logs); err != nil {
-		return nil, fmt.Errorf("db.InsertVersionLogs(%v): %v", logs, err)
+	if err = db.InsertVersionLogs(ctx, logs); err != nil {
+		return nil, fmt.Errorf("db.InsertVersionLogs(ctx, %v): %v", logs, err)
 	}
 	return logs, nil
 }
 
 // getVersionsFromIndex makes a request to indexURL/<since> and returns the
 // the response as a []*internal.VersionLog.
-func getVersionsFromIndex(indexURL string, since time.Time) ([]*internal.VersionLog, error) {
+func getVersionsFromIndex(ctx context.Context, indexURL string, since time.Time) ([]*internal.VersionLog, error) {
 	latestUpdate := time.Now()
 
 	u := fmt.Sprintf("%s?since=%s", strings.TrimRight(indexURL, "/"), since.Format(time.RFC3339))
-	r, err := http.Get(u)
+	r, err := ctxhttp.Get(ctx, nil, u)
 	if err != nil {
-		return nil, fmt.Errorf("http.Get(%q): %v", u, err)
+		return nil, fmt.Errorf("ctxhttp.Get(ctx, nil, %q): %v", u, err)
 	}
 	defer r.Body.Close()
 

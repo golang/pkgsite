@@ -5,10 +5,13 @@
 package proxy
 
 import (
-	"fmt"
+	"context"
+	"strings"
 	"testing"
 	"time"
 )
+
+const testTimeout = 5 * time.Second
 
 func TestCleanURL(t *testing.T) {
 	for raw, expected := range map[string]string{
@@ -23,47 +26,57 @@ func TestCleanURL(t *testing.T) {
 }
 
 func TestGetInfo(t *testing.T) {
-	teardownProxy, client := SetupTestProxy(t)
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	teardownProxy, client := SetupTestProxy(ctx, t)
 	defer teardownProxy(t)
 
 	name := "my.mod/module"
 	version := "v1.0.0"
-	info, err := client.GetInfo(name, version)
+	info, err := client.GetInfo(ctx, name, version)
 	if err != nil {
-		t.Errorf("GetInfo(%q, %q) error: %v", name, version, err)
+		t.Errorf("GetInfo(ctx, %q, %q) error: %v", name, version, err)
 	}
 
 	if info.Version != version {
-		t.Errorf("VersionInfo.Version for GetInfo(%q, %q) = %q, want %q", name, version, info.Version, version)
+		t.Errorf("VersionInfo.Version for GetInfo(ctx, %q, %q) = %q, want %q", name, version, info.Version, version)
 	}
 
 	expectedTime := time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC)
 	if info.Time != expectedTime {
-		t.Errorf("VersionInfo.Time for GetInfo(%q, %q) = %v, want %v", name, version, info.Time, expectedTime)
+		t.Errorf("VersionInfo.Time for GetInfo(ctx, %q, %q) = %v, want %v", name, version, info.Time, expectedTime)
 	}
 }
 
 func TestGetInfoVersionDoesNotExist(t *testing.T) {
-	teardownProxy, client := SetupTestProxy(t)
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	teardownProxy, client := SetupTestProxy(ctx, t)
 	defer teardownProxy(t)
 
 	name := "my.mod/module"
 	version := "v3.0.0"
-	info, _ := client.GetInfo(name, version)
+	info, _ := client.GetInfo(ctx, name, version)
 	if info != nil {
-		t.Errorf("GetInfo(%q, %q) = %v, want %v", name, version, info, nil)
+		t.Errorf("GetInfo(ctx, %q, %q) = %v, want %v", name, version, info, nil)
 	}
 }
 
 func TestGetZip(t *testing.T) {
-	teardownProxy, client := SetupTestProxy(t)
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	teardownProxy, client := SetupTestProxy(ctx, t)
 	defer teardownProxy(t)
 
 	name := "my.mod/module"
 	version := "v1.0.0"
-	zipReader, err := client.GetZip(name, version)
+
+	zipReader, err := client.GetZip(ctx, name, version)
 	if err != nil {
-		t.Errorf("GetZip(%q, %q) error: %v", name, version, err)
+		t.Errorf("GetZip(ctx, %q, %q) error: %v", name, version, err)
 	}
 
 	expectedFiles := map[string]bool{
@@ -74,13 +87,13 @@ func TestGetZip(t *testing.T) {
 		"my.mod/module@v1.0.0/bar/bar.go": true,
 	}
 	if len(zipReader.File) != len(expectedFiles) {
-		t.Errorf("GetZip(%q, %q) returned number of files: got %d, want %d",
+		t.Errorf("GetZip(ctx, %q, %q) returned number of files: got %d, want %d",
 			name, version, len(zipReader.File), len(expectedFiles))
 	}
 
 	for _, zipFile := range zipReader.File {
 		if !expectedFiles[zipFile.Name] {
-			t.Errorf("GetZip(%q, %q) returned unexpected file: %q", name,
+			t.Errorf("GetZip(ctx, %q, %q) returned unexpected file: %q", name,
 				version, zipFile.Name)
 		}
 		delete(expectedFiles, zipFile.Name)
@@ -88,19 +101,22 @@ func TestGetZip(t *testing.T) {
 }
 
 func TestGetZipNonExist(t *testing.T) {
-	teardownProxy, client := SetupTestProxy(t)
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	teardownProxy, client := SetupTestProxy(ctx, t)
 	defer teardownProxy(t)
 
 	name := "my.mod/nonexistmodule"
 	version := "v1.0.0"
-	zipURL, err := client.zipURL(name, version)
-	if err != nil {
+	if _, err := client.zipURL(name, version); err != nil {
 		t.Fatalf("client.zipURL(%q, %q): %v", name, version, err)
 	}
 
-	expectedErr := fmt.Sprintf("http.Get(%q) returned response: %d (%q)", zipURL, 404, "404 Not Found")
-	if _, err := client.GetZip(name, version); err.Error() != expectedErr {
-		t.Errorf("GetZip(%q, %q) returned error %v, want %v", name, version, err, expectedErr)
+	wantErrString := "Not Found"
+	if _, err := client.GetZip(ctx, name, version); !strings.Contains(err.Error(), wantErrString) {
+		t.Errorf("GetZip(ctx, %q, %q) returned error %v, want error containing %q",
+			name, version, err, wantErrString)
 	}
 }
 

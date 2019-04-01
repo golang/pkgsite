@@ -5,13 +5,17 @@
 package fetch
 
 import (
-	"fmt"
+	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
 func TestFetchVersion(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
 	expectedStatus := http.StatusOK
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(expectedStatus)
@@ -22,12 +26,15 @@ func TestFetchVersion(t *testing.T) {
 	m := "module"
 	v := "v1.5.2"
 
-	if err := c.FetchVersion(m, v); err != nil {
-		t.Errorf("fetchVersion(%q, %q, %q) = %v; want %v", server.URL, m, v, err, nil)
+	if err := c.FetchVersion(ctx, m, v); err != nil {
+		t.Errorf("FetchVersion(ctx, %q, %q) = %v; want %v", m, v, err, nil)
 	}
 }
 
 func TestFetchVersionInvalidFetchURL(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
 	expectedStatus := http.StatusBadRequest
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(expectedStatus)
@@ -38,9 +45,9 @@ func TestFetchVersionInvalidFetchURL(t *testing.T) {
 	m := "module"
 	v := "v1.5.2"
 
-	url := fmt.Sprintf("%s/%s/@v/%s", server.URL, m, v)
-	wantErr := fmt.Errorf(`http.Get(%q) returned response: 400 ("400 Bad Request")`, url)
-	if err := c.FetchVersion(m, v); err.Error() != wantErr.Error() {
-		t.Errorf("fetchVersion(%q) = %v; want %v", url, err, wantErr)
+	wantErrString := "Bad Request"
+	if err := c.FetchVersion(ctx, m, v); !strings.Contains(err.Error(), wantErrString) {
+		t.Errorf("FetchVersion(ctx, %q, %q) returned error %v, want error containing %q",
+			m, v, err, wantErrString)
 	}
 }

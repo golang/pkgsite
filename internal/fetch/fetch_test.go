@@ -7,11 +7,13 @@ package fetch
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -21,7 +23,12 @@ import (
 	"golang.org/x/discovery/internal/proxy"
 )
 
+const testTimeout = 5 * time.Second
+
 func TestFetchAndInsertVersion(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
 	testCases := []struct {
 		name        string
 		version     string
@@ -47,14 +54,14 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			teardownDB, db := postgres.SetupCleanDB(t)
 			defer teardownDB(t)
 
-			teardownProxy, client := proxy.SetupTestProxy(t)
+			teardownProxy, client := proxy.SetupTestProxy(ctx, t)
 			defer teardownProxy(t)
 
 			if err := FetchAndInsertVersion(test.name, test.version, client, db); err != nil {
-				t.Fatalf("FetchVersion(%q, %q, %v, %v): %v", test.name, test.version, client, db, err)
+				t.Fatalf("FetchAndInsertVersion(%q, %q, %v, %v): %v", test.name, test.version, client, db, err)
 			}
 
-			got, err := db.GetVersion(test.name, test.version)
+			got, err := db.GetVersion(ctx, test.name, test.version)
 			if err != nil {
 				t.Fatalf("db.GetVersion(%q, %q): %v", test.name, test.version, err)
 			}
@@ -74,6 +81,31 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				t.Errorf("db.GetVersion(%q, %q) mismatch(-want +got):\n%s", test.name, test.version, diff)
 			}
 		})
+	}
+}
+
+func TestFetchAndInsertVersionTimeout(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	teardownDB, db := postgres.SetupCleanDB(t)
+	defer teardownDB(t)
+
+	defer func(oldTimeout time.Duration) {
+		fetchTimeout = oldTimeout
+	}(fetchTimeout)
+	fetchTimeout = 0
+
+	teardownProxy, client := proxy.SetupTestProxy(ctx, t)
+	defer teardownProxy(t)
+
+	name := "my.mod/version"
+	version := "v1.0.0"
+	wantErrString := "deadline exceeded"
+	err := FetchAndInsertVersion(name, version, client, db)
+	if err == nil || !strings.Contains(err.Error(), wantErrString) {
+		t.Fatalf("FetchAndInsertVersion(%q, %q, %v, %v) returned error %v, want error containing %q",
+			name, version, client, db, err, wantErrString)
 	}
 }
 
@@ -225,6 +257,9 @@ func TestSeriesPathForModule(t *testing.T) {
 }
 
 func TestContainsFile(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
 	for _, test := range []struct {
 		name, version, file string
 		want                bool
@@ -255,12 +290,12 @@ func TestContainsFile(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			teardownProxy, client := proxy.SetupTestProxy(t)
+			teardownProxy, client := proxy.SetupTestProxy(ctx, t)
 			defer teardownProxy(t)
 
-			reader, err := client.GetZip(test.name, test.version)
+			reader, err := client.GetZip(ctx, test.name, test.version)
 			if err != nil {
-				t.Fatalf("client.GetZip(%q %q): %v", test.name, test.version, err)
+				t.Fatalf("client.GetZip(ctx, %q %q): %v", test.name, test.version, err)
 			}
 
 			if got := containsFile(reader, test.file); got != test.want {
@@ -271,6 +306,9 @@ func TestContainsFile(t *testing.T) {
 }
 
 func TestExtractFile(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
 	for _, test := range []struct {
 		name, version, file string
 		want                []byte
@@ -290,12 +328,12 @@ func TestExtractFile(t *testing.T) {
 		},
 	} {
 		t.Run(test.file, func(t *testing.T) {
-			teardownProxy, client := proxy.SetupTestProxy(t)
+			teardownProxy, client := proxy.SetupTestProxy(ctx, t)
 			defer teardownProxy(t)
 
-			reader, err := client.GetZip(test.name, test.version)
+			reader, err := client.GetZip(ctx, test.name, test.version)
 			if err != nil {
-				t.Fatalf("client.GetZip(%q, %q): %v", test.name, test.version, err)
+				t.Fatalf("client.GetZip(ctx, %q, %q): %v", test.name, test.version, err)
 			}
 
 			got, err := extractFile(reader, filepath.Base(test.file))
@@ -316,6 +354,9 @@ func TestExtractFile(t *testing.T) {
 }
 
 func TestExtractPackagesFromZip(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
 	for _, test := range []struct {
 		zip      string
 		name     string
@@ -346,12 +387,12 @@ func TestExtractPackagesFromZip(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			teardownProxy, client := proxy.SetupTestProxy(t)
+			teardownProxy, client := proxy.SetupTestProxy(ctx, t)
 			defer teardownProxy(t)
 
-			reader, err := client.GetZip(test.name, test.version)
+			reader, err := client.GetZip(ctx, test.name, test.version)
 			if err != nil {
-				t.Fatalf("client.GetZip(%q %q): %v", test.name, test.version, err)
+				t.Fatalf("client.GetZip(ctx, %q %q): %v", test.name, test.version, err)
 			}
 
 			packages, err := extractPackagesFromZip(test.name, test.version, reader)

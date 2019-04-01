@@ -5,6 +5,7 @@
 package frontend
 
 import (
+	"context"
 	"html/template"
 	"net/url"
 	"testing"
@@ -14,6 +15,8 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
 )
+
+const testTimeout = 5 * time.Second
 
 func TestParseModulePathAndVersion(t *testing.T) {
 	testCases := []struct {
@@ -129,6 +132,9 @@ func TestElapsedTime(t *testing.T) {
 }
 
 func TestFetchOverviewPage(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
 	tc := struct {
 		name             string
 		version          internal.Version
@@ -173,18 +179,18 @@ func TestFetchOverviewPage(t *testing.T) {
 	teardownDB, db := postgres.SetupCleanDB(t)
 	defer teardownDB(t)
 
-	if err := db.InsertVersion(&tc.version); err != nil {
+	if err := db.InsertVersion(ctx, &tc.version); err != nil {
 		t.Fatalf("db.InsertVersion(%v) returned error: %v", tc.version, err)
 	}
 
-	got, err := fetchOverviewPage(db, tc.version.Packages[0].Path, tc.version.Version)
+	got, err := fetchOverviewPage(ctx, db, tc.version.Packages[0].Path, tc.version.Version)
 	if err != nil {
-		t.Fatalf("fetchOverviewPage(db, %q, %q) = %v err = %v, want %v",
+		t.Fatalf("fetchOverviewPage(ctx, db, %q, %q) = %v err = %v, want %v",
 			tc.version.Packages[0].Path, tc.version.Version, got, err, tc.wantOverviewPage)
 	}
 
 	if diff := cmp.Diff(tc.wantOverviewPage, *got); diff != "" {
-		t.Errorf("fetchOverviewPage(%q, %q) mismatch (-want +got):\n%s", tc.version.Packages[0].Path, tc.version.Version, diff)
+		t.Errorf("fetchOverviewPage(ctx, %q, %q) mismatch (-want +got):\n%s", tc.version.Packages[0].Path, tc.version.Version, diff)
 	}
 }
 
@@ -212,6 +218,9 @@ func getTestVersion(pkgPath, modulePath, version string, versionType internal.Ve
 }
 
 func TestFetchVersionsPage(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
 	var (
 		module1  = "test.com/module"
 		module2  = "test.com/module/v2"
@@ -391,19 +400,19 @@ func TestFetchVersionsPage(t *testing.T) {
 			defer teardownDB(t)
 
 			for _, v := range tc.versions {
-				if err := db.InsertVersion(v); err != nil {
+				if err := db.InsertVersion(ctx, v); err != nil {
 					t.Fatalf("db.InsertVersion(%v) returned error: %v", v, err)
 				}
 			}
 
-			got, err := fetchVersionsPage(db, tc.path, tc.version)
+			got, err := fetchVersionsPage(ctx, db, tc.path, tc.version)
 			if err != nil {
-				t.Fatalf("fetchVersionsPage(db, %q, %q) = %v err = %v, want %v",
+				t.Fatalf("fetchVersionsPage(ctx, db, %q, %q) = %v err = %v, want %v",
 					tc.path, tc.version, got, err, tc.wantVersionsPage)
 			}
 
 			if diff := cmp.Diff(tc.wantVersionsPage, got); diff != "" {
-				t.Errorf("fetchVersionsPage(db, %q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
+				t.Errorf("fetchVersionsPage(ctx, db, %q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
 			}
 		})
 	}
@@ -441,6 +450,9 @@ func TestReadmeHTML(t *testing.T) {
 }
 
 func TestFetchSearchPage(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
 	var (
 		now     = postgres.NowTruncated()
 		series1 = &internal.Series{
@@ -541,15 +553,15 @@ func TestFetchSearchPage(t *testing.T) {
 			defer teardownTestCase(t)
 
 			for _, v := range tc.versions {
-				if err := db.InsertVersion(v); err != nil {
+				if err := db.InsertVersion(ctx, v); err != nil {
 					t.Fatalf("db.InsertVersion(%+v): %v", v, err)
 				}
-				if err := db.InsertDocuments(v); err != nil {
+				if err := db.InsertDocuments(ctx, v); err != nil {
 					t.Fatalf("db.InsertDocuments(%+v): %v", v, err)
 				}
 			}
 
-			got, err := fetchSearchPage(db, tc.query)
+			got, err := fetchSearchPage(ctx, db, tc.query)
 			if err != nil {
 				t.Fatalf("fetchSearchPage(db, %q): %v", tc.query, err)
 			}

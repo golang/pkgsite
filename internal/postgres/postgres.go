@@ -5,6 +5,7 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"strconv"
@@ -35,6 +36,8 @@ func Open(dbinfo string) (*DB, error) {
 	return &DB{db}, nil
 }
 
+// Transact executes the given function in the context of a SQL transaction,
+// rolling back the transaction if the function panics or returns an error.
 func (db *DB) Transact(txFunc func(*sql.Tx) error) (err error) {
 	tx, err := db.Begin()
 	if err != nil {
@@ -73,7 +76,7 @@ func prepareAndExec(tx *sql.Tx, query string, stmtFunc func(*sql.Stmt) error) (e
 
 // LatestProxyIndexUpdate reports the last time the Proxy Index Cron
 // successfully fetched data from the Module Proxy Index.
-func (db *DB) LatestProxyIndexUpdate() (time.Time, error) {
+func (db *DB) LatestProxyIndexUpdate(ctx context.Context) (time.Time, error) {
 	query := `
 		SELECT created_at
 		FROM version_logs
@@ -82,7 +85,7 @@ func (db *DB) LatestProxyIndexUpdate() (time.Time, error) {
 		LIMIT 1`
 
 	var createdAt time.Time
-	row := db.QueryRow(query, internal.VersionSourceProxyIndex)
+	row := db.QueryRowContext(ctx, query, internal.VersionSourceProxyIndex)
 	switch err := row.Scan(&createdAt); err {
 	case sql.ErrNoRows:
 		return time.Time{}, nil
@@ -96,10 +99,10 @@ func (db *DB) LatestProxyIndexUpdate() (time.Time, error) {
 // InsertVersionLogs inserts a VersionLog into the database and
 // insertion fails and returns an error if the VersionLog's primary
 // key already exists in the database.
-func (db *DB) InsertVersionLogs(logs []*internal.VersionLog) error {
+func (db *DB) InsertVersionLogs(ctx context.Context, logs []*internal.VersionLog) error {
 	return db.Transact(func(tx *sql.Tx) error {
 		for _, l := range logs {
-			if _, err := tx.Exec(
+			if _, err := tx.ExecContext(ctx,
 				`INSERT INTO version_logs(module_path, version, created_at, source, error)
 				VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING;`,
 				l.ModulePath, l.Version, l.CreatedAt, l.Source, l.Error,
@@ -113,7 +116,7 @@ func (db *DB) InsertVersionLogs(logs []*internal.VersionLog) error {
 
 // GetVersion fetches a Version from the database with the primary key
 // (path, version).
-func (db *DB) GetVersion(path string, version string) (*internal.Version, error) {
+func (db *DB) GetVersion(ctx context.Context, path string, version string) (*internal.Version, error) {
 	var (
 		commitTime, createdAt, updatedAt time.Time
 		synopsis, license                string
@@ -130,7 +133,7 @@ func (db *DB) GetVersion(path string, version string) (*internal.Version, error)
 			readme
 		FROM versions
 		WHERE module_path = $1 and version = $2;`
-	row := db.QueryRow(query, path, version)
+	row := db.QueryRowContext(ctx, query, path, version)
 	if err := row.Scan(&createdAt, &updatedAt, &synopsis, &commitTime, &license, &readme); err != nil {
 		return nil, fmt.Errorf("row.Scan(%q, %q, %q, %q, %q, %q): %v",
 			createdAt, updatedAt, synopsis, commitTime, license, readme, err)
@@ -151,7 +154,7 @@ func (db *DB) GetVersion(path string, version string) (*internal.Version, error)
 
 // GetPackage returns the first package from the database that has path and
 // version.
-func (db *DB) GetPackage(path string, version string) (*internal.Package, error) {
+func (db *DB) GetPackage(ctx context.Context, path string, version string) (*internal.Package, error) {
 	if path == "" || version == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "postgres: path and version cannot be empty")
 	}
@@ -183,7 +186,7 @@ func (db *DB) GetPackage(path string, version string) (*internal.Package, error)
 			AND p.version = $2
 		LIMIT 1;`
 
-	row := db.QueryRow(query, path, version)
+	row := db.QueryRowContext(ctx, query, path, version)
 	if err := row.Scan(&createdAt, &updatedAt, &commitTime, &license, &readme, &module_path, &name, &synopsis); err != nil {
 		return nil, fmt.Errorf("row.Scan(%q, %q, %q, %q, %q, %q, %q, %q): %v",
 			createdAt, updatedAt, commitTime, license, readme, module_path, name, synopsis, err)
@@ -214,7 +217,7 @@ func (db *DB) GetPackage(path string, version string) (*internal.Package, error)
 // included in the list are specified by a list of VersionTypes. The results
 // include the type of versions of packages that are part of the same series
 // and have the same package suffix as the package specified by the path.
-func getVersions(db *DB, path string, versionTypes []internal.VersionType) ([]*internal.Version, error) {
+func getVersions(ctx context.Context, db *DB, path string, versionTypes []internal.VersionType) ([]*internal.Version, error) {
 	var (
 		commitTime                                               time.Time
 		pkgPath, modulePath, pkgName, synopsis, license, version string
@@ -298,9 +301,9 @@ func getVersions(db *DB, path string, versionTypes []internal.VersionType) ([]*i
 
 	query := fmt.Sprintf(baseQuery, strings.Join(vtQuery, " OR "), queryEnd)
 
-	rows, err := db.Query(query, params...)
+	rows, err := db.QueryContext(ctx, query, params...)
 	if err != nil {
-		return nil, fmt.Errorf("db.Query(%q, %q) returned error: %v", query, path, err)
+		return nil, fmt.Errorf("db.QueryContext(ctx, %q, %q) returned error: %v", query, path, err)
 	}
 	defer rows.Close()
 
@@ -338,8 +341,8 @@ func getVersions(db *DB, path string, versionTypes []internal.VersionType) ([]*i
 // in descending order by major, minor and patch number and then lexicographically
 // in descending order by prerelease. This list includes tagged versions of
 // packages that are part of the same series and have the same package suffix.
-func (db *DB) GetTaggedVersionsForPackageSeries(path string) ([]*internal.Version, error) {
-	return getVersions(db, path, []internal.VersionType{internal.VersionTypeRelease, internal.VersionTypePrerelease})
+func (db *DB) GetTaggedVersionsForPackageSeries(ctx context.Context, path string) ([]*internal.Version, error) {
+	return getVersions(ctx, db, path, []internal.VersionType{internal.VersionTypeRelease, internal.VersionTypePrerelease})
 }
 
 // GetPseudoVersionsForPackageSeries returns the 10 most recent from a list of
@@ -347,14 +350,14 @@ func (db *DB) GetTaggedVersionsForPackageSeries(path string) ([]*internal.Versio
 // and then lexicographically in descending order by prerelease. This list includes
 // pseudo-versions of packages that are part of the same series and have the same
 // package suffix.
-func (db *DB) GetPseudoVersionsForPackageSeries(path string) ([]*internal.Version, error) {
-	return getVersions(db, path, []internal.VersionType{internal.VersionTypePseudo})
+func (db *DB) GetPseudoVersionsForPackageSeries(ctx context.Context, path string) ([]*internal.Version, error) {
+	return getVersions(ctx, db, path, []internal.VersionType{internal.VersionTypePseudo})
 }
 
 // GetLatestPackage returns the package from the database with the latest version.
 // If multiple packages share the same path then the package that the database
 // chooses is returned.
-func (db *DB) GetLatestPackage(path string) (*internal.Package, error) {
+func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Package, error) {
 	if path == "" {
 		return nil, fmt.Errorf("postgres: path cannot be empty")
 	}
@@ -390,7 +393,7 @@ func (db *DB) GetLatestPackage(path string) (*internal.Package, error) {
 			v.prerelease DESC
 		LIMIT 1;`
 
-	row := db.QueryRow(query, path)
+	row := db.QueryRowContext(ctx, query, path)
 	if err := row.Scan(&createdAt, &updatedAt, &modulePath, &version, &commitTime, &license, &name, &synopsis); err != nil {
 		return nil, fmt.Errorf("row.Scan(%q, %q, %q, %q, %q, %q, %q, %q): %v",
 			createdAt, updatedAt, modulePath, version, commitTime, license, name, synopsis, err)
@@ -481,13 +484,13 @@ func padPrerelease(p string) (string, error) {
 // The prerelease column will pad any number fields with zeroes on the left
 // so all number fields in the prerelease column have 20 characters. If the
 // version is malformed then insertion will fail.
-func (db *DB) InsertVersion(version *internal.Version) error {
+func (db *DB) InsertVersion(ctx context.Context, version *internal.Version) error {
 	if err := validateVersion(version); err != nil {
 		return status.Errorf(codes.InvalidArgument, fmt.Sprintf("validateVersion(%+v): %v", version, err))
 	}
 
 	return db.Transact(func(tx *sql.Tx) error {
-		if _, err := tx.Exec(
+		if _, err := tx.ExecContext(ctx,
 			`INSERT INTO series(path)
 			VALUES($1)
 			ON CONFLICT DO NOTHING`,
@@ -495,7 +498,7 @@ func (db *DB) InsertVersion(version *internal.Version) error {
 			return fmt.Errorf("error inserting series: %v", err)
 		}
 
-		if _, err := tx.Exec(
+		if _, err := tx.ExecContext(ctx,
 			`INSERT INTO modules(path, series_path)
 			VALUES($1,$2)
 			ON CONFLICT DO NOTHING`,
@@ -521,7 +524,7 @@ func (db *DB) InsertVersion(version *internal.Version) error {
 			return fmt.Errorf("padPrerelease(%q): %v", semver.Prerelease(version.Version), err)
 		}
 
-		if _, err := tx.Exec(
+		if _, err := tx.ExecContext(ctx,
 			`INSERT INTO versions(module_path, version, synopsis, commit_time, license, readme, major, minor, patch, prerelease)
 			VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT DO NOTHING`,
 			version.Module.Path,
@@ -547,7 +550,7 @@ func (db *DB) InsertVersion(version *internal.Version) error {
 		defer stmt.Close()
 
 		for _, p := range version.Packages {
-			if _, err = stmt.Exec(p.Path, p.Synopsis, p.Name, version.Version, version.Module.Path, version.VersionType.String(), p.Suffix); err != nil {
+			if _, err = stmt.ExecContext(ctx, p.Path, p.Synopsis, p.Name, version.Version, version.Module.Path, version.VersionType.String(), p.Suffix); err != nil {
 				return fmt.Errorf("error inserting package: %v", err)
 			}
 		}
@@ -561,7 +564,7 @@ func (db *DB) InsertVersion(version *internal.Version) error {
 // sorted by package path lexicographically. So if multiple packages have the same
 // path then the package whose module path comes first lexicographically will be
 // returned.
-func (db *DB) GetLatestPackageForPaths(paths []string) ([]*internal.Package, error) {
+func (db *DB) GetLatestPackageForPaths(ctx context.Context, paths []string) ([]*internal.Package, error) {
 	var (
 		packages                                           []*internal.Package
 		commitTime, createdAt, updatedAt                   time.Time
@@ -594,9 +597,9 @@ func (db *DB) GetLatestPackageForPaths(paths []string) ([]*internal.Package, err
 			v.patch DESC,
 			v.prerelease DESC;`
 
-	rows, err := db.Query(query, pq.Array(paths))
+	rows, err := db.QueryContext(ctx, query, pq.Array(paths))
 	if err != nil {
-		return nil, fmt.Errorf("db.Query(%q, %v): %v", query, pq.Array(paths), err)
+		return nil, fmt.Errorf("db.QueryContext(ctx, %q, %v): %v", query, pq.Array(paths), err)
 	}
 	defer rows.Close()
 

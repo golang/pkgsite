@@ -6,6 +6,7 @@ package fetch
 
 import (
 	"archive/zip"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -29,6 +30,10 @@ import (
 	"golang.org/x/discovery/internal/thirdparty/semver"
 	"golang.org/x/tools/go/packages"
 )
+
+// fetchTimeout bounds the time allowed for fetching a single module.  It is
+// mutable for testing purposes.
+var fetchTimeout = 5 * time.Minute
 
 var (
 	errModuleContainsNoPackages = errors.New("module contains 0 packages")
@@ -92,6 +97,12 @@ func parseVersion(version string) (internal.VersionType, error) {
 // (3) Process the contents (series name, readme, license, and packages)
 // (4) Write the data to the discovery database
 func FetchAndInsertVersion(name, version string, proxyClient *proxy.Client, db *postgres.DB) error {
+	// Unlike other actions (which use a Timeout middleware), we set a fixed
+	// timeout for FetchAndInsertVersion.  This allows module processing to
+	// succeed even for extremely short lived requests.
+	ctx, cancel := context.WithTimeout(context.Background(), fetchTimeout)
+	defer cancel()
+
 	if err := module.CheckPath(name); err != nil {
 		return fmt.Errorf("fetch: invalid module name %v: %v", name, err)
 	}
@@ -101,12 +112,12 @@ func FetchAndInsertVersion(name, version string, proxyClient *proxy.Client, db *
 		return fmt.Errorf("parseVersion(%q): %v", version, err)
 	}
 
-	info, err := proxyClient.GetInfo(name, version)
+	info, err := proxyClient.GetInfo(ctx, name, version)
 	if err != nil {
 		return fmt.Errorf("proxyClient.GetInfo(%q, %q): %v", name, version, err)
 	}
 
-	zipReader, err := proxyClient.GetZip(name, version)
+	zipReader, err := proxyClient.GetZip(ctx, name, version)
 	if err != nil {
 		return fmt.Errorf("proxyClient.GetZip(%q, %q): %v", name, version, err)
 	}
@@ -144,7 +155,7 @@ func FetchAndInsertVersion(name, version string, proxyClient *proxy.Client, db *
 		Packages:    packages,
 		VersionType: versionType,
 	}
-	if err = db.InsertVersion(v); err != nil {
+	if err = db.InsertVersion(ctx, v); err != nil {
 		// Encode the struct to a JSON string so that it is more readable in
 		// the error message.
 		b, jsonerr := json.Marshal(v)
@@ -153,7 +164,7 @@ func FetchAndInsertVersion(name, version string, proxyClient *proxy.Client, db *
 		}
 		return fmt.Errorf("db.InsertVersion(%q): %v", string(b), err)
 	}
-	if err = db.InsertDocuments(v); err != nil {
+	if err = db.InsertDocuments(ctx, v); err != nil {
 		// Encode the struct to a JSON string so that it is more readable in
 		// the error message.
 		b, jsonerr := json.Marshal(v)

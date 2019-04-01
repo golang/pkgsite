@@ -6,6 +6,7 @@ package proxy
 
 import (
 	"archive/zip"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -20,7 +21,7 @@ import (
 // stored in internal/proxy/testdata/modproxy/proxy. It returns a function
 // for tearing down the proxy after the test is completed and a Client for
 // interacting with the test proxy.
-func SetupTestProxy(t *testing.T) (func(t *testing.T), *Client) {
+func SetupTestProxy(ctx context.Context, t *testing.T) (func(t *testing.T), *Client) {
 	t.Helper()
 
 	proxyDataDir := "../proxy/testdata/modproxy"
@@ -44,7 +45,7 @@ func SetupTestProxy(t *testing.T) (func(t *testing.T), *Client) {
 			t.Fatalf("proxy.ZipFiles(%q): %v", zipDataDir, err)
 		}
 
-		if _, err := client.GetInfo(v[0], v[1]); err != nil {
+		if _, err := client.GetInfo(ctx, v[0], v[1]); err != nil {
 			t.Fatalf("client.GetInfo(%q, %q): %v", v[0], v[1], err)
 		}
 	}
