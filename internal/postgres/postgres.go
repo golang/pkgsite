@@ -55,6 +55,22 @@ func (db *DB) Transact(txFunc func(*sql.Tx) error) (err error) {
 	return txFunc(tx)
 }
 
+// prepareAndExec prepares a query statement and executes it insde the provided
+// transaction.
+func prepareAndExec(tx *sql.Tx, query string, stmtFunc func(*sql.Stmt) error) (err error) {
+	stmt, err := tx.Prepare(query)
+	if err != nil {
+		return fmt.Errorf("tx.Prepare(%q): %v", query, err)
+	}
+
+	defer func() {
+		if err = stmt.Close(); err != nil {
+			err = fmt.Errorf("stmt.Close: %v", err)
+		}
+	}()
+	return stmtFunc(stmt)
+}
+
 // LatestProxyIndexUpdate reports the last time the Proxy Index Cron
 // successfully fetched data from the Module Proxy Index.
 func (db *DB) LatestProxyIndexUpdate() (time.Time, error) {
@@ -458,27 +474,8 @@ func padPrerelease(p string) (string, error) {
 // so all number fields in the prerelease column have 20 characters. If the
 // version is malformed then insertion will fail.
 func (db *DB) InsertVersion(version *internal.Version) error {
-	if version == nil || !semver.IsValid(version.Version) || version.Module == nil {
-		return status.Errorf(codes.InvalidArgument, "postgres: cannot insert nil or invalid version")
-	}
-
-	if err := module.CheckPath(version.Module.Path); err != nil {
-		return status.Errorf(codes.InvalidArgument, "postgres: cannot insert version with invalid module path: %v", err)
-	}
-
-	if version.Module == nil || version.Module.Path == "" || version.Version == "" || version.CommitTime.IsZero() {
-		var errReasons []string
-		if version.Module == nil || version.Module.Path == "" {
-			errReasons = append(errReasons, "no module path")
-		}
-		if version.Version == "" {
-			errReasons = append(errReasons, "no specified version")
-		}
-		if version.CommitTime.IsZero() {
-			errReasons = append(errReasons, "empty commit time")
-		}
-		return status.Errorf(codes.InvalidArgument,
-			fmt.Sprintf("postgres: cannot insert version %v: %s", version, strings.Join(errReasons, ", ")))
+	if err := validateVersion(version); err != nil {
+		return status.Errorf(codes.InvalidArgument, fmt.Sprintf("validateVersion(%+v): %v", version, err))
 	}
 
 	return db.Transact(func(tx *sql.Tx) error {
@@ -623,4 +620,43 @@ func (db *DB) GetLatestPackageForPaths(paths []string) ([]*internal.Package, err
 	}
 
 	return packages, nil
+}
+
+// validateVersion checks that fields needed to insert a version into the
+// database are present. Otherwise, it returns an error listing the reasons the
+// version cannot be inserted.
+func validateVersion(version *internal.Version) error {
+	if version == nil {
+		return fmt.Errorf("nil version")
+	}
+
+	var errReasons []string
+
+	if version.Version == "" {
+		errReasons = append(errReasons, "no specified version")
+	} else if !semver.IsValid(version.Version) {
+		errReasons = append(errReasons, "invalid version")
+	}
+
+	if version.Module == nil || version.Module.Path == "" {
+		errReasons = append(errReasons, "no module path")
+	} else if err := module.CheckPath(version.Module.Path); err != nil {
+		errReasons = append(errReasons, "invalid module path")
+	} else if version.Module.Series == nil || version.Module.Series.Path == "" {
+		errReasons = append(errReasons, "no series path")
+	}
+
+	if version.CommitTime.IsZero() {
+		errReasons = append(errReasons, "empty commit time")
+	}
+
+	if version.Packages == nil || len(version.Packages) == 0 {
+		errReasons = append(errReasons, "no packages")
+	}
+
+	if len(errReasons) == 0 {
+		return nil
+	}
+
+	return fmt.Errorf("cannot insert version %v: %s", version, strings.Join(errReasons, ", "))
 }
