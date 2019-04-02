@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"sort"
 	"testing"
 	"time"
 
@@ -166,6 +167,16 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 					Name:     "foo",
 					Synopsis: "This is a package synopsis",
 					Path:     "path.to/foo",
+					Imports: []*internal.Import{
+						&internal.Import{
+							Name: "bar",
+							Path: "path/to/bar",
+						},
+						&internal.Import{
+							Name: "fmt",
+							Path: "fmt",
+						},
+					},
 				},
 			},
 			VersionType: internal.VersionTypeRelease,
@@ -300,8 +311,8 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 				t.Errorf("db.GetPackage(ctx, %q, %q) version.version = %v, want %v", tc.pkgpath, tc.version, gotPkg.Version.Version, tc.versionData.Version)
 			}
 
-			if diff := cmp.Diff(gotPkg, wantPkg, cmpopts.IgnoreFields(internal.Package{}, "Version")); diff != "" {
-				t.Errorf("db.GetPackage(ctx, %q, %q) Package mismatch (-want +got):\n%s", tc.pkgpath, tc.version, diff)
+			if diff := cmp.Diff(gotPkg, wantPkg, cmpopts.IgnoreFields(internal.Package{}, "Version", "Imports")); diff != "" {
+				t.Errorf("db.GetPackage(%q, %q) Package mismatch (-want +got):\n%s", tc.pkgpath, tc.version, diff)
 			}
 		})
 	}
@@ -406,6 +417,134 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 			if diff := cmp.Diff(gotPkg, tc.wantPkg, cmpopts.IgnoreFields(internal.Package{}, "Version.UpdatedAt", "Version.CreatedAt")); diff != "" {
 				t.Errorf("db.GetLatestPackage(ctx, %q) mismatch (-got +want):\n%s",
 					tc.path, diff)
+			}
+		})
+	}
+}
+
+func TestPostgres_GetImports(t *testing.T) {
+	var (
+		now  = time.Now()
+		pkg1 = &internal.Package{
+			Path:     "path.to/foo/bar",
+			Name:     "bar",
+			Synopsis: "This is a package synopsis",
+		}
+		pkg2 = &internal.Package{
+			Path:     "path2.to/foo/bar2",
+			Name:     "bar2",
+			Synopsis: "This is another package synopsis",
+			Imports: []*internal.Import{
+				&internal.Import{
+					Name: pkg1.Name,
+					Path: pkg1.Path,
+				},
+			},
+		}
+		pkg3 = &internal.Package{
+			Path:     "path3.to/foo/bar3",
+			Name:     "bar3",
+			Synopsis: "This is another package synopsis",
+			Imports: []*internal.Import{
+				&internal.Import{
+					Name: pkg2.Name,
+					Path: pkg2.Path,
+				},
+				&internal.Import{
+					Name: pkg1.Name,
+					Path: pkg1.Path,
+				},
+			},
+		}
+		series = &internal.Series{
+			Path: "myseries",
+		}
+		module1 = &internal.Module{
+			Path:   "path.to/foo",
+			Series: series,
+		}
+		module2 = &internal.Module{
+			Path:   "path2.to/foo",
+			Series: series,
+		}
+		module3 = &internal.Module{
+			Path:   "path3.to/foo",
+			Series: series,
+		}
+		testVersions = []*internal.Version{
+			&internal.Version{
+				Module:      module1,
+				Version:     "v1.1.0",
+				ReadMe:      []byte("readme"),
+				CommitTime:  now,
+				Packages:    []*internal.Package{pkg1},
+				VersionType: internal.VersionTypePrerelease,
+			},
+			&internal.Version{
+				Module:      module2,
+				Version:     "v1.2.0",
+				ReadMe:      []byte("readme"),
+				CommitTime:  now,
+				Packages:    []*internal.Package{pkg2},
+				VersionType: internal.VersionTypePseudo,
+			},
+			&internal.Version{
+				Module:      module3,
+				Version:     "v1.3.0",
+				ReadMe:      []byte("readme"),
+				CommitTime:  now,
+				Packages:    []*internal.Package{pkg3},
+				VersionType: internal.VersionTypePseudo,
+			},
+		}
+	)
+
+	for _, tc := range []struct {
+		path, version string
+		wantImports   []*internal.Import
+	}{
+		{
+			path:        pkg3.Path,
+			version:     "v1.3.0",
+			wantImports: pkg3.Imports,
+		},
+		{
+			path:        pkg2.Path,
+			version:     "v1.2.0",
+			wantImports: pkg2.Imports,
+		},
+		{
+			path:        pkg1.Path,
+			version:     "v1.1.0",
+			wantImports: nil,
+		},
+	} {
+		t.Run(tc.path, func(t *testing.T) {
+			teardownTestCase, db := SetupCleanDB(t)
+			defer teardownTestCase(t)
+
+			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+			defer cancel()
+
+			for _, v := range testVersions {
+				if err := db.InsertVersion(ctx, v, sampleLicenses); err != nil {
+					t.Errorf("db.InsertVersion(%v): %v", v, err)
+				}
+			}
+
+			got, err := db.GetImports(tc.path, tc.version)
+			if err != nil {
+				t.Fatalf("db.GetImports(%q, %q): %v", tc.path, tc.version, err)
+			}
+
+			sort.Slice(got, func(i, j int) bool {
+				return got[i].Name > got[j].Name
+			})
+			sort.Slice(tc.wantImports, func(i, j int) bool {
+				return tc.wantImports[i].Name > tc.wantImports[j].Name
+			})
+			if diff := cmp.Diff(tc.wantImports, got); diff != "" {
+				t.Errorf("db.GetImports(%q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
 			}
 		})
 	}

@@ -60,6 +60,13 @@ type Package struct {
 	Suffix   string // if my.module/v2/A/B is the path, A/B is the package suffix
 	Version  *Version
 	Licenses []*LicenseInfo // path to applicable version licenses
+	Imports  []*Import
+}
+
+// An Import represents a package that is imported by another package.
+type Import struct {
+	Name string
+	Path string
 }
 
 // VersionType defines the version types a module can have.

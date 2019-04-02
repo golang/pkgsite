@@ -373,11 +373,23 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					Name:     "foo",
 					Path:     "my.mod/module/foo",
 					Synopsis: "package foo",
+					Imports: []*internal.Import{
+						&internal.Import{
+							Name: "fmt",
+							Path: "fmt",
+						},
+						&internal.Import{
+							Name: "bar",
+							Path: "my.mod/module/bar",
+						},
+					},
+					Suffix: "foo",
 				},
 				"bar": &internal.Package{
 					Name:     "bar",
 					Path:     "my.mod/module/bar",
 					Synopsis: "package bar",
+					Suffix:   "bar",
 				},
 			},
 		},
@@ -406,16 +418,14 @@ func TestExtractPackagesFromZip(t *testing.T) {
 				if !ok {
 					t.Errorf("extractPackagesFromZip(%q, %q) returned unexpected package: %q", test.name, test.zip, got.Name)
 				}
-				if want.Path != got.Path {
-					t.Errorf("extractPackagesFromZip(%q, %q) returned unexpected path for package %q: %q, want %q",
-						test.name, test.zip, got.Name, got.Path, want.Path)
-				}
-				if want.Synopsis != got.Synopsis {
-					t.Errorf("extractPackagesFromZip(%q, %q) returned unexpected synopsis for package %q: %q, want %q",
-						test.name, test.zip, got.Name, got.Synopsis, want.Synopsis)
-				}
 
-				delete(test.packages, got.Name)
+				sort.Slice(got.Imports, func(i, j int) bool {
+					return got.Imports[i].Path < got.Imports[j].Path
+				})
+
+				if diff := cmp.Diff(want, got); diff != "" {
+					t.Errorf("extractPackagesFromZip(%q, %q, reader, nil) mismatch (-want +got):\n%s", test.name, test.version, diff)
+				}
 			}
 		})
 	}

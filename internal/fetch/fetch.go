@@ -39,7 +39,9 @@ var (
 	// maxFileSize is the maximum filesize that is allowed for reading.
 	// If a .go file is encountered that exceeds maxFileSize, the fetch request
 	// will fail.  All other filetypes will be ignored.
-	maxFileSize = uint64(1e7)
+	maxFileSize          = uint64(1e7)
+	maxPackagesPerModule = 10000
+	maxImportsPerPackage = 1000
 )
 
 // ParseModulePathAndVersion returns the module and version specified by p. p is
@@ -304,29 +306,49 @@ func (m licenseMatcher) matchLicenses(p *packages.Package) []*internal.LicenseIn
 func transformPackages(workDir, modulePath string, pkgs []*packages.Package, licenses []*internal.License) ([]*internal.Package, error) {
 	matcher := newLicenseMatcher(workDir, licenses)
 	packages := []*internal.Package{}
+
+	if len(pkgs) > maxPackagesPerModule {
+		return nil, fmt.Errorf("%d packages found in %q; exceeds limit %d for maxPackagePerModule", len(pkgs), modulePath, maxPackagesPerModule)
+	}
+
 	for _, p := range pkgs {
-		files := make(map[string]*ast.File)
-		for i, f := range p.CompiledGoFiles {
-			files[f] = p.Syntax[i]
+		var imports []*internal.Import
+		if len(p.Imports) > maxImportsPerPackage {
+			return nil, fmt.Errorf("%d imports found package %q in module %q; exceeds limit %d for maxImportsPerPackage", len(pkgs), p.PkgPath, modulePath, maxImportsPerPackage)
 		}
-
-		apkg := &ast.Package{
-			Name:  p.Name,
-			Files: files,
+		for _, i := range p.Imports {
+			imports = append(imports, &internal.Import{
+				Name: i.Name,
+				Path: i.PkgPath,
+			})
 		}
-		d := doc.New(apkg, p.PkgPath, 0)
-
-		matchedLicenses := matcher.matchLicenses(p)
 
 		packages = append(packages, &internal.Package{
 			Name:     p.Name,
 			Path:     p.PkgPath,
-			Synopsis: doc.Synopsis(d.Doc),
-			Licenses: matchedLicenses,
+			Licenses: matcher.matchLicenses(p),
+			Synopsis: synopsis(p),
 			Suffix:   strings.TrimPrefix(strings.TrimPrefix(p.PkgPath, modulePath), "/"),
+			Imports:  imports,
 		})
 	}
 	return packages, nil
+}
+
+// synopsis returns the first sentence of the package documentation, or an
+// empty string if it cannot be determined.
+func synopsis(p *packages.Package) string {
+	files := make(map[string]*ast.File)
+	for i, f := range p.Syntax {
+		files[string(i)] = f
+	}
+
+	apkg := &ast.Package{
+		Name:  p.Name,
+		Files: files,
+	}
+	d := doc.New(apkg, p.PkgPath, 0)
+	return doc.Synopsis(d.Doc)
 }
 
 // writeFileToDir writes the contents of f to the directory dir.

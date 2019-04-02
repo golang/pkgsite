@@ -232,7 +232,7 @@ func (db *DB) GetVersion(ctx context.Context, modulePath string, version string)
 // determine if it resulted from an invalid package path or version.
 func (db *DB) GetLicenses(ctx context.Context, pkgPath string, version string) ([]*internal.License, error) {
 	if pkgPath == "" || version == "" {
-		return nil, derrors.InvalidArgument("postgres: pkgPath and version cannot be empty")
+		return nil, derrors.InvalidArgument("pkgPath and version cannot be empty")
 	}
 	query := `
 		SELECT
@@ -291,7 +291,7 @@ func (db *DB) GetLicenses(ctx context.Context, pkgPath string, version string) (
 // determine if it was caused by an invalid path or version.
 func (db *DB) GetPackage(ctx context.Context, path string, version string) (*internal.Package, error) {
 	if path == "" || version == "" {
-		return nil, derrors.InvalidArgument("postgres: path and version cannot be empty")
+		return nil, derrors.InvalidArgument("path and version cannot be empty")
 	}
 
 	var (
@@ -367,8 +367,7 @@ func getVersions(ctx context.Context, db *DB, path string, versionTypes []intern
 		licenseTypes, licensePaths                      []string
 	)
 
-	baseQuery :=
-		`WITH package_series AS (
+	baseQuery := `WITH package_series AS (
 			SELECT
 				m.series_path,
 				p.path AS package_path,
@@ -509,7 +508,7 @@ func (db *DB) GetPseudoVersionsForPackageSeries(ctx context.Context, path string
 // chooses is returned.
 func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Package, error) {
 	if path == "" {
-		return nil, fmt.Errorf("postgres: path cannot be empty")
+		return nil, fmt.Errorf("path cannot be empty")
 	}
 
 	var (
@@ -643,7 +642,47 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 	}
 
 	return v, nil
+}
 
+// GetImports fetches and returns all of the imports for the package with path
+// and version. If multiple packages have the same path and version, all of
+// the imports will be returned.
+// The returned error may be checked with derrors.IsInvalidArgument to
+// determine if it resulted from an invalid package path or version.
+func (db *DB) GetImports(path, version string) ([]*internal.Import, error) {
+	if path == "" || version == "" {
+		return nil, derrors.InvalidArgument("path and version cannot be empty")
+	}
+
+	var toPath, toName string
+	query := `
+		SELECT
+			to_name,
+			to_path
+		FROM
+			imports
+		WHERE
+			from_path = $1
+			AND from_version = $2;`
+
+	rows, err := db.Query(query, path, version)
+	if err != nil {
+		return nil, fmt.Errorf("db.Query(%q, %q, %q) returned error: %v", query, path, version, err)
+	}
+	defer rows.Close()
+
+	var imports []*internal.Import
+	for rows.Next() {
+		if err := rows.Scan(&toPath, &toName); err != nil {
+			return nil, fmt.Errorf("row.Scan(): %v", err)
+		}
+		imports = append(imports, &internal.Import{
+			Name: toName,
+			Path: toPath,
+		})
+	}
+
+	return imports, nil
 }
 
 // prefixZeroes returns a string that is padded with zeroes on the
@@ -795,12 +834,17 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 		}
 
 		var pkgValues []interface{}
+		var importValues []interface{}
 		var pkgLicenseValues []interface{}
 		for _, p := range version.Packages {
 			pkgValues = append(pkgValues, p.Path, p.Synopsis, p.Name, version.Version, version.Module.Path, version.VersionType.String(), p.Suffix)
 
 			for _, l := range p.Licenses {
 				pkgLicenseValues = append(pkgLicenseValues, version.Module.Path, version.Version, l.FilePath, p.Path)
+			}
+
+			for _, i := range p.Imports {
+				importValues = append(importValues, p.Path, version.Module.Path, version.Version, i.Name, i.Path)
 			}
 		}
 		if len(pkgValues) > 0 {
@@ -828,6 +872,20 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 			table := "package_licenses"
 			if err := bulkInsert(ctx, tx, table, pkgLicenseCols, pkgLicenseValues, true); err != nil {
 				return fmt.Errorf("bulkInsert(ctx, tx, %q, %v, %d pkgLicenseValues): %v", table, pkgLicenseCols, len(pkgLicenseValues), err)
+			}
+		}
+
+		if len(importValues) > 0 {
+			importCols := []string{
+				"from_path",
+				"from_module_path",
+				"from_version",
+				"to_path",
+				"to_name",
+			}
+			table := "imports"
+			if err := bulkInsert(ctx, tx, table, importCols, importValues, true); err != nil {
+				return fmt.Errorf("bulkInsert(ctx, tx, %q, %v, %d importValues): %v", table, importCols, len(importValues), err)
 			}
 		}
 		return nil
