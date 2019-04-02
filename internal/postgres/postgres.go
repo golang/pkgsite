@@ -470,12 +470,21 @@ func (db *DB) InsertVersion(version *internal.Version) error {
 		}
 
 		versionSplit := strings.Split(version.Version, ".")
-		major, _ := strconv.ParseInt(strings.TrimPrefix("v", versionSplit[0]), 0, 64)
-		minor, _ := strconv.ParseInt(versionSplit[1], 0, 64)
-		patch, _ := strconv.ParseInt(strings.Split(versionSplit[2], semver.Prerelease(version.Version))[0], 0, 64)
+		major, err := strconv.Atoi(strings.TrimPrefix(versionSplit[0], "v"))
+		if err != nil {
+			return fmt.Errorf("strconv.Atoi(%q): %v", strings.TrimPrefix(versionSplit[0], "v"), err)
+		}
+		minor, err := strconv.Atoi(versionSplit[1])
+		if err != nil {
+			return fmt.Errorf("strconv.Atoi(%q): %v", versionSplit[1], err)
+		}
+		patch, err := strconv.Atoi(strings.Split(versionSplit[2], "-")[0])
+		if err != nil {
+			return fmt.Errorf("strconv.Atoi(%q): %v", strings.Split(versionSplit[2], "-")[0], err)
+		}
 		prerelease, err := padPrerelease(semver.Prerelease(version.Version))
 		if err != nil {
-			return fmt.Errorf("error padding prerelease: %v", err)
+			return fmt.Errorf("padPrerelease(%q): %v", semver.Prerelease(version.Version), err)
 		}
 
 		if _, err := tx.Exec(
