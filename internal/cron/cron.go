@@ -39,8 +39,6 @@ func FetchAndStoreVersions(ctx context.Context, indexURL string, db *postgres.DB
 // getVersionsFromIndex makes a request to indexURL/<since> and returns the
 // the response as a []*internal.VersionLog.
 func getVersionsFromIndex(ctx context.Context, indexURL string, since time.Time) ([]*internal.VersionLog, error) {
-	latestUpdate := time.Now()
-
 	u := fmt.Sprintf("%s?since=%s", strings.TrimRight(indexURL, "/"), since.Format(time.RFC3339))
 	r, err := ctxhttp.Get(ctx, nil, u)
 	if err != nil {
@@ -61,9 +59,10 @@ func getVersionsFromIndex(ctx context.Context, indexURL string, since time.Time)
 			log.Printf("dec.Decode: %v", err)
 			continue
 		}
-		logs = append(logs, &l)
 		l.Source = internal.VersionSourceProxyIndex
-		l.CreatedAt = latestUpdate
+		// The created_at column is without timestamp, so we must normalize to UTC.
+		l.CreatedAt = l.CreatedAt.UTC()
+		logs = append(logs, &l)
 	}
 	return logs, nil
 }

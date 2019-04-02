@@ -94,8 +94,11 @@ type VersionLog struct {
 	// instead of "ModulePath".
 	ModulePath string `json:"Path"`
 
-	Version   string
-	CreatedAt time.Time
-	Source    VersionSource
-	Error     string
+	// Use the modproxy timestamp for the CreatedAt field, as this field is used
+	// for polling the index.
+	CreatedAt time.Time `json:"Timestamp"`
+
+	Version string
+	Source  VersionSource
+	Error   string
 }
