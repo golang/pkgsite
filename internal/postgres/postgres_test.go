@@ -6,7 +6,6 @@ package postgres
 
 import (
 	"database/sql"
-	"fmt"
 	"testing"
 	"time"
 
@@ -33,22 +32,6 @@ func versionsDiff(v1, v2 *internal.Version) string {
 
 	return cmp.Diff(*v1, *v2, cmpopts.IgnoreFields(internal.Version{},
 		"CreatedAt", "UpdatedAt", "Module.Series", "VersionType", "Packages", "Module.Versions"))
-}
-
-// packagesDiff takes two packages, p1 and p2, and returns a string description
-// of the difference between them. If they are the same they will be
-// empty.
-func packagesDiff(p1, p2 *internal.Package) string {
-	if p1 == nil && p2 == nil {
-		return ""
-	}
-
-	if (p1 != nil && p2 == nil) || (p1 == nil && p2 != nil) {
-		return "not equal"
-	}
-
-	return fmt.Sprintf("%v%v", cmp.Diff(*p1, *p2, cmpopts.IgnoreFields(internal.Package{}, "Version")),
-		versionsDiff(p1.Version, p2.Version))
 }
 
 func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
@@ -211,8 +194,7 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 
 			}
 
-			gotPkg.Version = nil
-			if diff := cmp.Diff(*gotPkg, *wantPkg); diff != "" {
+			if diff := cmp.Diff(gotPkg, wantPkg, cmpopts.IgnoreFields(internal.Package{}, "Version")); diff != "" {
 				t.Errorf("db.GetPackage(%q, %q) Package mismatch (-want +got):\n%s", tc.pkgpath, tc.version, diff)
 			}
 		})
@@ -314,7 +296,7 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 				t.Errorf("db.GetLatestPackage(%q): %v", tc.path, err)
 			}
 
-			if diff := packagesDiff(gotPkg, tc.wantPkg); diff != "" {
+			if diff := cmp.Diff(gotPkg, tc.wantPkg, cmpopts.IgnoreFields(internal.Package{}, "Version.UpdatedAt", "Version.CreatedAt")); diff != "" {
 				t.Errorf("db.GetLatestPackage(%q) = %v, want %v, diff is %v",
 					tc.path, gotPkg, tc.wantPkg, diff)
 			}
@@ -586,11 +568,8 @@ func TestPostgres_GetLatestPackageForPaths(t *testing.T) {
 		t.Errorf("db.GetLatestPackageForPaths(%q): %v", tc.paths, err)
 	}
 
-	for i, gotPkg := range gotPkgs {
-		if diff := packagesDiff(gotPkg, tc.wantPkgs[i]); diff != "" {
-			t.Errorf("got %v at index %v, want %v, diff is %v",
-				gotPkg, i, tc.wantPkgs[i], diff)
-		}
+	if diff := cmp.Diff(gotPkgs, tc.wantPkgs); diff != "" {
+		t.Errorf("cmp.Diff(gotPkgs, tc.wantPkgs): %s", diff)
 	}
 }
 

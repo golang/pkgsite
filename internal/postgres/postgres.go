@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/lib/pq"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
@@ -536,8 +537,6 @@ func (db *DB) GetLatestPackageForPaths(paths []string) ([]*internal.Package, err
 
 	query := `
 		SELECT DISTINCT ON (p.path)
-			v.created_at,
-			v.updated_at,
 			p.path,
 			p.module_path,
 			v.version,
@@ -553,7 +552,7 @@ func (db *DB) GetLatestPackageForPaths(paths []string) ([]*internal.Package, err
 			v.module_path = p.module_path
 			AND v.version = p.version
 		WHERE
-			p.path = $1
+			p.path = ANY($1)
 		ORDER BY
 			p.path,
 			p.module_path,
@@ -562,17 +561,16 @@ func (db *DB) GetLatestPackageForPaths(paths []string) ([]*internal.Package, err
 			v.patch DESC,
 			v.prerelease DESC;`
 
-	anyPaths := fmt.Sprintf("ANY('%s'::text[])", strings.Join(paths, ", "))
-	rows, err := db.Query(query, anyPaths)
+	rows, err := db.Query(query, pq.Array(paths))
 	if err != nil {
-		return nil, fmt.Errorf("db.Query(%q, %q) returned error: %v", query, anyPaths, err)
+		return nil, fmt.Errorf("db.Query(%q, %v): %v", query, pq.Array(paths), err)
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		if err := rows.Scan(&createdAt, &updatedAt, &path, &modulePath, &version, &commitTime, &license, &name, &synopsis); err != nil {
-			return nil, fmt.Errorf("row.Scan(%q, %q, %q, %q, %q, %q, %q, %q, %q): %v",
-				createdAt, updatedAt, path, modulePath, version, commitTime, license, name, synopsis, err)
+		if err := rows.Scan(&path, &modulePath, &version, &commitTime, &license, &name, &synopsis); err != nil {
+			return nil, fmt.Errorf("row.Scan(%q, %q, %q, %q, %q, %q, %q): %v",
+				path, modulePath, version, commitTime, license, name, synopsis, err)
 		}
 
 		packages = append(packages, &internal.Package{
