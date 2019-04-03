@@ -17,6 +17,15 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// nowTruncated returns time.Now() truncated to Microsecond precision.
+//
+// This makes it easier to work with timestamps in PostgreSQL, which have
+// Microsecond precision:
+//   https://www.postgresql.org/docs/9.1/datatype-datetime.html
+func nowTruncated() time.Time {
+	return time.Now().Truncate(time.Microsecond)
+}
+
 // versionsDiff takes in two versions, v1 and v2, and returns a string
 // description of the difference between them. If they are the
 // same the string will be empty. Fields "CreatedAt",
@@ -37,7 +46,7 @@ func versionsDiff(v1, v2 *internal.Version) string {
 
 func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 	var (
-		now    = time.Now()
+		now    = nowTruncated()
 		series = &internal.Series{
 			Path:    "myseries",
 			Modules: []*internal.Module{},
@@ -206,7 +215,7 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 	teardownTestCase, db := SetupCleanDB(t)
 	defer teardownTestCase(t)
 	var (
-		now = time.Now()
+		now = nowTruncated()
 		pkg = &internal.Package{
 			Path:     "path.to/foo/bar",
 			Name:     "bar",
@@ -309,7 +318,7 @@ func TestPostgres_GetLatestPackageForPaths(t *testing.T) {
 	teardownTestCase, db := SetupCleanDB(t)
 	defer teardownTestCase(t)
 	var (
-		now  = time.Now()
+		now  = nowTruncated()
 		pkg1 = &internal.Package{
 			Path:     "path.to/foo/bar",
 			Name:     "bar",
@@ -435,7 +444,7 @@ func TestPostgress_InsertVersionLogs(t *testing.T) {
 	teardownTestCase, db := SetupCleanDB(t)
 	defer teardownTestCase(t)
 
-	now := time.Now().UTC()
+	now := nowTruncated().UTC()
 	newVersions := []*internal.VersionLog{
 		&internal.VersionLog{
 			ModulePath: "testModule",
@@ -466,8 +475,9 @@ func TestPostgress_InsertVersionLogs(t *testing.T) {
 		t.Errorf("db.LatestProxyIndexUpdate error: %v", err)
 	}
 
-	// Postgres has less precision than a time.Time value. Truncate to account for it.
-	if !dbTime.Truncate(time.Millisecond).Equal(now.Truncate(time.Millisecond)) {
+	// Since now is already truncated to Microsecond precision, we should get
+	// back the exact same time.
+	if !dbTime.Equal(now) {
 		t.Errorf("db.LatestProxyIndexUpdate() = %v, want %v", dbTime, now)
 	}
 }
@@ -584,7 +594,7 @@ func TestPostgres_padPrerelease(t *testing.T) {
 
 func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 	var (
-		now  = time.Now()
+		now  = nowTruncated()
 		pkg1 = &internal.Package{
 			Path:     "path.to/foo/bar",
 			Name:     "bar",
