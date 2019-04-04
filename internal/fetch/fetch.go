@@ -172,28 +172,8 @@ func extractPackagesFromZip(module, version string, r *zip.Reader) ([]*internal.
 		}
 
 		if !f.FileInfo().IsDir() {
-			fileDir := fmt.Sprintf("%s/%s", dir, filepath.Dir(f.Name))
-			if _, err := os.Stat(fileDir); os.IsNotExist(err) {
-				if err := os.MkdirAll(fileDir, os.ModePerm); err != nil {
-					return nil, fmt.Errorf("ioutil.TempDir(%q, %q): %v", dir, f.Name, err)
-				}
-			}
-
-			filename := fmt.Sprintf("%s/%s", dir, f.Name)
-			file, err := os.Create(filename)
-			if err != nil {
-				return nil, fmt.Errorf("os.Create(%q): %v", filename, err)
-			}
-			defer file.Close()
-
-			b, err := readZipFile(f)
-			if err != nil {
-				log.Printf("readZipFile(%q): %v", f.Name, err)
-				continue
-			}
-
-			if _, err := file.Write(b); err != nil {
-				return nil, fmt.Errorf("file.Write: %v", err)
+			if err := writeFileToDir(f, dir); err != nil {
+				return nil, fmt.Errorf("writeFileToDir(%q, %q): %v", f.Name, dir, err)
 			}
 		}
 	}
@@ -233,6 +213,38 @@ func extractPackagesFromZip(module, version string, r *zip.Reader) ([]*internal.
 		})
 	}
 	return packages, nil
+}
+
+// writeFileToDir writes the contents of f to the directory dir.
+func writeFileToDir(f *zip.File, dir string) (err error) {
+	fileDir := filepath.Join(dir, filepath.Dir(f.Name))
+	if _, err := os.Stat(fileDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(fileDir, os.ModePerm); err != nil {
+			return fmt.Errorf("os.MkdirAll(%q, os.ModePerm): %v", fileDir, err)
+		}
+	}
+
+	filename := filepath.Join(dir, f.Name)
+	file, err := os.Create(filename)
+	if err != nil {
+		return fmt.Errorf("os.Create(%q): %v", filename, err)
+	}
+	defer func() {
+		cerr := file.Close()
+		if err == nil && cerr != nil {
+			err = fmt.Errorf("file.Close: %v", cerr)
+		}
+	}()
+
+	b, err := readZipFile(f)
+	if err != nil {
+		return fmt.Errorf("readZipFile(%q): %v", f.Name, err)
+	}
+
+	if _, err := file.Write(b); err != nil {
+		return fmt.Errorf("file.Write: %v", err)
+	}
+	return nil
 }
 
 // seriesPathForModule reports the series name for the given module. The series
@@ -300,9 +312,9 @@ func hasFilename(file string, expectedFile string) bool {
 }
 
 // readZipFile returns the uncompressed contents of f or an error if the
-// uncompressed size of f exceeds 1MB.
+// uncompressed size of f exceeds 10MB.
 func readZipFile(f *zip.File) ([]byte, error) {
-	if f.UncompressedSize64 > 1e6 {
+	if f.UncompressedSize64 > 1e7 {
 		return nil, fmt.Errorf("file size %d exceeds 1MB, skipping", f.UncompressedSize64)
 	}
 	rc, err := f.Open()
