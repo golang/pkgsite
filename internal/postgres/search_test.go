@@ -63,19 +63,19 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 						&internal.Package{
 							Name:     "bar",
 							Path:     "/path/to/bar",
-							Synopsis: "bar",
+							Synopsis: "bar is bar", // add an extra 'bar' to make sorting deterministic
 						},
 					},
 				},
 			},
 			want: []*SearchResult{
 				&SearchResult{
-					Relevance:    0.33435988426208496,
+					Relevance:    0.3478693962097168,
 					NumImporters: 0,
 					Package: &internal.Package{
 						Name:     "bar",
 						Path:     "/path/to/bar",
-						Synopsis: "bar",
+						Synopsis: "bar is bar",
 						Version: &internal.Version{
 							Module: &internal.Module{
 								Path: "github.com/valid_module_name",

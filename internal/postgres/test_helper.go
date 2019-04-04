@@ -5,6 +5,7 @@
 package postgres
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"testing"
@@ -48,10 +49,20 @@ func SetupCleanDB(t *testing.T) (func(t *testing.T), *DB) {
 		t.Fatalf("Open(%q), error: %v", testdb, err)
 	}
 	cleanup := func(t *testing.T) {
-		// truncates series and any tables that uses it as a foreign key.
-		// This includes: modules, versions, documents, packages, and dependencies.
-		db.Exec(`TRUNCATE series CASCADE;`)
-		db.Exec(`TRUNCATE version_logs;`) // truncates version_logs
+		if err := db.Transact(func(tx *sql.Tx) error {
+			if _, err := tx.Exec(`TRUNCATE series CASCADE;`); err != nil {
+				return err
+			}
+			if _, err := tx.Exec(`TRUNCATE version_logs;`); err != nil {
+				return err
+			}
+			return nil
+		}); err != nil {
+			t.Errorf("Error during cleanup: %v", err)
+		}
+		if err := db.Close(); err != nil {
+			t.Errorf("db.Close(), error: %v", err)
+		}
 	}
 	return cleanup, db
 }

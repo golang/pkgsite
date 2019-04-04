@@ -37,4 +37,6 @@ echo "Running: go mod tidy"
 go mod tidy
 
 echo "Running: go test ./..."
-go test ./...
+# We use the `-p 1` flag because several tests must be run in serial due to
+# their non-hermetic nature (as they interact with a running Postgres instance).
+go test -count=1 -p 1 ./...
