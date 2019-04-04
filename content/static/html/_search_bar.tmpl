@@ -1,0 +1,16 @@
+<!--
+  Copyright 2019 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{ define "search_bar" }}
+  <div>
+    <form action="/search" class="HomeContent-search">
+      <label class="HomeContent-searchLabel">Search Packages
+        <input type="text" name="q" class="HomeContent-searchInput" placeholder="Search Packages">
+      </label>
+      <button type="submit" class="HomeContent-searchButton">Search</button>
+    </form>
+  </div>
+{{ end }}

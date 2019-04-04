@@ -504,6 +504,7 @@ func TestFetchSearchPage(t *testing.T) {
 			query:    "foo bar",
 			versions: []*internal.Version{versionFoo, versionBar},
 			wantSearchPage: &SearchPage{
+				Query: "foo bar",
 				Results: []*SearchResult{
 					&SearchResult{
 						Name:         versionBar.Packages[0].Name,
@@ -512,7 +513,7 @@ func TestFetchSearchPage(t *testing.T) {
 						Synopsis:     versionBar.Packages[0].Synopsis,
 						Version:      versionBar.Version,
 						License:      versionBar.License,
-						CommitTime:   versionBar.CommitTime,
+						CommitTime:   elapsedTime(versionBar.CommitTime),
 						NumImporters: 0,
 					},
 					&SearchResult{
@@ -522,7 +523,7 @@ func TestFetchSearchPage(t *testing.T) {
 						Synopsis:     versionFoo.Packages[0].Synopsis,
 						Version:      versionFoo.Version,
 						License:      versionFoo.License,
-						CommitTime:   versionFoo.CommitTime,
+						CommitTime:   elapsedTime(versionFoo.CommitTime),
 						NumImporters: 0,
 					},
 				},
@@ -533,6 +534,7 @@ func TestFetchSearchPage(t *testing.T) {
 			query:    "package",
 			versions: []*internal.Version{versionFoo, versionBar},
 			wantSearchPage: &SearchPage{
+				Query: "package",
 				Results: []*SearchResult{
 					&SearchResult{
 						Name:         versionFoo.Packages[0].Name,
@@ -541,7 +543,7 @@ func TestFetchSearchPage(t *testing.T) {
 						Synopsis:     versionFoo.Packages[0].Synopsis,
 						Version:      versionFoo.Version,
 						License:      versionFoo.License,
-						CommitTime:   versionFoo.CommitTime,
+						CommitTime:   elapsedTime(versionFoo.CommitTime),
 						NumImporters: 0,
 					},
 				},

@@ -1,17 +1,15 @@
 <!--
-	Copyright 2019 The Go Authors. All rights reserved.
-	Use of this source code is governed by a BSD-style
-	license that can be found in the LICENSE file.
+  Copyright 2019 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
 -->
 
 <!DOCTYPE html>
 {{ template "header" .PackageHeader }}
-
+{{ template "nav" }}
 <div class="VersionsContent">
-  {{ template "nav" }}
   {{ template "mod_header" .PackageHeader }}
   {{ template "modules_nav" .PackageHeader }}
-
   <div class="VersionsContent-list">
     {{ range $major := .Versions }}
       <h3>{{$major.Level}} - Latest <a href="/{{$major.Latest.PackagePath}}@v{{$major.Latest.Version}}?tab=versions">{{ $major.Latest.Version }}</a> - {{ $major.Latest.CommitTime }}</h3>

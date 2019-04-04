@@ -1,0 +1,20 @@
+<!--
+  Copyright 2019 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+<!DOCTYPE html>
+<title>Go Discovery - "{{ .Query }}"</title>
+{{ template "header" }}
+<div class="SearchContent">
+  {{ template "nav" }}
+  {{ template "search_bar" }}
+  <div class="SearchContent-results">
+    <h1 class="SearchContent-header"><span>{{ len .Results}}</span> packages found for "{{ .Query }}"</h1>
+    <hr>
+    {{ range .Results }}
+        {{ template "search_snippet" . }}
+    {{ end}}
+  </div>
+</div>

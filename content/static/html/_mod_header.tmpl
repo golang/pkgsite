@@ -5,8 +5,9 @@
 -->
 
 {{ define "mod_header" }}
+  <title>Package {{ .Name }} - {{ .Version }}</title>
   <header>
-    <h1>Package <a href="https://{{ .Path }}">{{ .Name }}</a> - {{ .Version }}</h1>
+    <h1>Package <a href="https://{{ .Path }}" class="DetailsHeader-packageName">{{ .Name }}</a> - {{ .Version }}</h1>
     <h2>{{ .Path }}</h2>
     <p>{{ .Synopsis }}</p>
     <p>{{ .License }} - {{ .CommitTime }}</p>

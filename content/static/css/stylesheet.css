@@ -40,14 +40,76 @@
 .ModulesNav-tab.active {
   background-color: #d6d2d1;
 }
+.DetailsHeader-packageName {
+  text-decoration: none;
+}
 .OverviewContent,
-.VersionsContent {
+.VersionsContent,
+.SearchContent,
+.HomeContent {
   font-family: Arial;
   color: #000;
   padding-top: 20px;
   padding-bottom: 20px;
 }
 .OverviewContent-readMe,
-.VersionsContent-list {
+.VersionsContent-list,
+.HomeContent-search,
+.SearchContent-results {
   margin-top: 10px;
+}
+.SearchContent-header {
+  font-size: 32px;
+}
+.OverviewContent,
+.VersionsContent,
+.SearchContent-results {
+  margin: 0 200px;
+}
+.SearchSnippetContent {
+  margin: 20px 0;
+}
+.SearchSnippetContent-packageName {
+  text-decoration: none;
+  font-size: 24px;
+  font-weight: bold;
+}
+.SearchSnippetContent-packageName:hover,
+.SearchSnippetContent-packageName:focus,
+.DetailsHeader-packageName:hover,
+.DetailsHeader-packageName:focus {
+  text-decoration: underline;
+}
+
+.SearchSnippetContent-version {
+  font-size: 20px;
+  padding: 5px;
+}
+.SearchSnippetContent-commitTime {
+  font-family: Menlo;
+  margin: 15px 0;
+  font-size: 14px;
+}
+.HomeContent-search {
+  width: 100%;
+  margin: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.HomeContent-searchInput {
+  width: 95%;
+  height: 50px;
+  font-size: 32px;
+  padding-left: 15px;
+}
+.HomeContent-searchButton {
+  height: 55px;
+  width: 100px;
+  font-size: 24px;
+  margin-top: 15px;
+}
+.HomeContent-searchLabel {
+  width: 500px;
+  margin: 10px 0;
 }

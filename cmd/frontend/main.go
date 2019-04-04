@@ -50,6 +50,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(*staticPath))))
+	mux.HandleFunc("/search/", frontend.MakeSearchHandlerFunc(db, templates))
 	mux.HandleFunc("/", frontend.MakeDetailsHandlerFunc(db, templates))
 
 	port := os.Getenv("PORT")

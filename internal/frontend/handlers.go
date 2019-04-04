@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/microcosm-cc/bluemonday"
+	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
@@ -117,6 +118,30 @@ func elapsedTime(date time.Time) string {
 	return date.Format("Jan _2, 2006")
 }
 
+// createPackageHeader returns a *PackageHeader based on the fields
+// of the specified package. It assumes that pkg is not nil.
+func createPackageHeader(pkg *internal.Package) (*PackageHeader, error) {
+	if pkg == nil {
+		return nil, fmt.Errorf("package cannot be nil")
+	}
+	if pkg.Version == nil {
+		return nil, fmt.Errorf("package's version cannot be nil")
+	}
+
+	if pkg.Version.License == "" {
+		pkg.Version.License = "Missing License"
+	}
+
+	return &PackageHeader{
+		Name:       pkg.Name,
+		Version:    pkg.Version.Version,
+		Path:       pkg.Path,
+		Synopsis:   pkg.Synopsis,
+		License:    pkg.Version.License,
+		CommitTime: elapsedTime(pkg.Version.CommitTime),
+	}, nil
+}
+
 // fetchOverviewPage fetches data for the module version specified by path and version
 // from the database and returns a OverviewPage.
 func fetchOverviewPage(ctx context.Context, db *postgres.DB, path, version string) (*OverviewPage, error) {
@@ -125,17 +150,14 @@ func fetchOverviewPage(ctx context.Context, db *postgres.DB, path, version strin
 		return nil, fmt.Errorf("db.GetPackage(ctx, %q, %q) returned error %v", path, version, err)
 	}
 
+	pkgHeader, err := createPackageHeader(pkg)
+	if err != nil {
+		return nil, fmt.Errorf("createPackageHeader(%q): %v", pkg, err)
+	}
 	return &OverviewPage{
-		ModulePath: pkg.Version.Module.Path,
-		ReadMe:     readmeHTML(pkg.Version.ReadMe),
-		PackageHeader: &PackageHeader{
-			Name:       pkg.Name,
-			Version:    pkg.Version.Version,
-			Path:       pkg.Path,
-			Synopsis:   pkg.Synopsis,
-			License:    pkg.Version.License,
-			CommitTime: elapsedTime(pkg.Version.CommitTime),
-		},
+		ModulePath:    pkg.Version.Module.Path,
+		ReadMe:        readmeHTML(pkg.Version.ReadMe),
+		PackageHeader: pkgHeader,
 	}, nil
 }
 
@@ -168,13 +190,19 @@ func fetchVersionsPage(ctx context.Context, db *postgres.DB, path, version strin
 	for _, v := range versions {
 		vStr := v.Version
 		if vStr == version {
-			pkgHeader = &PackageHeader{
-				Name:       v.Packages[0].Name,
-				Version:    version,
-				Path:       path,
-				Synopsis:   v.Synopsis,
-				License:    v.License,
-				CommitTime: elapsedTime(v.CommitTime),
+			pkg := &internal.Package{
+				Path:     path,
+				Name:     v.Packages[0].Name,
+				Synopsis: v.Synopsis,
+				Version: &internal.Version{
+					Version:    version,
+					License:    v.License,
+					CommitTime: v.CommitTime,
+				},
+			}
+			pkgHeader, err = createPackageHeader(pkg)
+			if err != nil {
+				return nil, fmt.Errorf("createPackageHeader(%q): %v", pkg, err)
 			}
 		}
 
@@ -228,47 +256,73 @@ func readmeHTML(readme []byte) template.HTML {
 	return template.HTML(string(b))
 }
 
+// MakeSearchHandlerFunc returns a handler func that applies database data to the search
+// template. Handles endpoint /search?q=<query>.
+func MakeSearchHandlerFunc(db *postgres.DB, templates *template.Template) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		html := "search.tmpl"
+		query := r.URL.Query().Get("q")
+		page, err := fetchSearchPage(ctx, db, query)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+			log.Printf("Error parsing path and version: %v", err)
+			return
+		}
+
+		var buf bytes.Buffer
+		if err := templates.ExecuteTemplate(&buf, html, page); err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			log.Printf("Error executing module page template: %v", err)
+			return
+		}
+		if _, err := io.Copy(w, &buf); err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			log.Printf("Error copying template buffer to ResponseWriter: %v", err)
+			return
+		}
+	}
+}
+
 // MakeDetailsHandlerFunc returns a handler func that applies database data to the appropriate
 // template. Handles endpoint /<import path>@<version>?tab=versions.
 func MakeDetailsHandlerFunc(db *postgres.DB, templates *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-
-		if r.URL.Path == "/" {
-			io.WriteString(w, "Welcome to the Go Discovery Site!")
-			return
-		}
-
-		path, version, err := parseModulePathAndVersion(r.URL.Path)
-		if err != nil {
-			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-			log.Printf("error parsing path and version: %v", err)
-			return
-		}
-
 		var (
 			html string
 			page interface{}
+			ctx  = r.Context()
 		)
 
-		switch tab := r.URL.Query().Get("tab"); tab {
-		case "versions":
-			html = "versions.tmpl"
-			page, err = fetchVersionsPage(ctx, db, path, version)
+		if r.URL.Path == "/" {
+			html = "index.tmpl"
+		} else {
+			path, version, err := parseModulePathAndVersion(r.URL.Path)
 			if err != nil {
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-				log.Printf("error fetching module page: %v", err)
+				http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+				log.Printf("error parsing path and version: %v", err)
 				return
 			}
-		case "overview":
-			fallthrough
-		default:
-			html = "overview.tmpl"
-			page, err = fetchOverviewPage(ctx, db, path, version)
-			if err != nil {
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-				log.Printf("error fetching module page: %v", err)
-				return
+
+			switch tab := r.URL.Query().Get("tab"); tab {
+			case "versions":
+				html = "versions.tmpl"
+				page, err = fetchVersionsPage(ctx, db, path, version)
+				if err != nil {
+					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+					log.Printf("error fetching module page: %v", err)
+					return
+				}
+			case "overview":
+				fallthrough
+			default:
+				html = "overview.tmpl"
+				page, err = fetchOverviewPage(ctx, db, path, version)
+				if err != nil {
+					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+					log.Printf("error fetching module page: %v", err)
+					return
+				}
 			}
 		}
 
@@ -289,6 +343,7 @@ func MakeDetailsHandlerFunc(db *postgres.DB, templates *template.Template) http.
 // SearchPage contains all of the data that the search template needs to
 // populate.
 type SearchPage struct {
+	Query   string
 	Results []*SearchResult
 }
 
@@ -300,7 +355,7 @@ type SearchResult struct {
 	Synopsis     string
 	Version      string
 	License      string
-	CommitTime   time.Time
+	CommitTime   string
 	NumImporters int64
 }
 
@@ -322,10 +377,13 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string) (*Searc
 			Synopsis:     r.Package.Synopsis,
 			Version:      r.Package.Version.Version,
 			License:      r.Package.Version.License,
-			CommitTime:   r.Package.Version.CommitTime,
+			CommitTime:   elapsedTime(r.Package.Version.CommitTime),
 			NumImporters: r.NumImporters,
 		})
 	}
 
-	return &SearchPage{Results: results}, nil
+	return &SearchPage{
+		Query:   query,
+		Results: results,
+	}, nil
 }
