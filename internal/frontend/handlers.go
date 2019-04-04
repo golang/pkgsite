@@ -144,3 +144,47 @@ func MakeModuleHandlerFunc(db *postgres.DB, html string, templates *template.Tem
 		}
 	}
 }
+
+// SearchPage contains all of the data that the search template needs to
+// populate.
+type SearchPage struct {
+	Results []*SearchResult
+}
+
+// SearchResult contains data needed to display a single search result.
+type SearchResult struct {
+	Name         string
+	PackagePath  string
+	ModulePath   string
+	Synopsis     string
+	Version      string
+	License      string
+	CommitTime   time.Time
+	NumImporters int64
+}
+
+// fetchSearchPage fetches data matching the search query from the database and
+// returns a SearchPage.
+func fetchSearchPage(db *postgres.DB, query string) (*SearchPage, error) {
+	terms := strings.Fields(query)
+	dbresults, err := db.Search(terms)
+	if err != nil {
+		return nil, fmt.Errorf("db.Search(%v) returned error %v", terms, err)
+	}
+
+	var results []*SearchResult
+	for _, r := range dbresults {
+		results = append(results, &SearchResult{
+			Name:         r.Package.Name,
+			PackagePath:  r.Package.Path,
+			ModulePath:   r.Package.Version.Module.Path,
+			Synopsis:     r.Package.Synopsis,
+			Version:      r.Package.Version.Version,
+			License:      r.Package.Version.License,
+			CommitTime:   r.Package.Version.CommitTime,
+			NumImporters: r.NumImporters,
+		})
+	}
+
+	return &SearchPage{Results: results}, nil
+}

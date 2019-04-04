@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -25,6 +26,15 @@ func getEnv(key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+// NowTruncated returns time.Now() truncated to Microsecond precision.
+//
+// This makes it easier to work with timestamps in PostgreSQL, which have
+// Microsecond precision:
+//   https://www.postgresql.org/docs/9.1/datatype-datetime.html
+func NowTruncated() time.Time {
+	return time.Now().Truncate(time.Microsecond)
 }
 
 // SetupCleanDB is used to test functions that execute Postgres queries. It

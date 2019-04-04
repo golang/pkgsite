@@ -138,7 +138,10 @@ func (db *DB) Search(terms []string) ([]*SearchResult, error) {
 
 	var results []*SearchResult
 	for _, p := range pathToResults {
-		results = append(results, p)
+		// Filter out results that are not relevant to the terms in this search.
+		if calculateRank(p.Relevance, p.NumImporters) > 0 {
+			results = append(results, p)
+		}
 	}
 
 	sort.Slice(results, func(i, j int) bool {

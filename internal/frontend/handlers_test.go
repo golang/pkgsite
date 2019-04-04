@@ -79,7 +79,7 @@ func TestParseModulePathAndVersion(t *testing.T) {
 }
 
 func TestElapsedTime(t *testing.T) {
-	now := time.Now()
+	now := postgres.NowTruncated()
 	testCases := []struct {
 		name        string
 		date        time.Time
@@ -215,6 +215,127 @@ func TestReadmeHTML(t *testing.T) {
 			got := readmeHTML([]byte(tc.readme))
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("readmeHTML(%q) mismatch (-want +got):\n%s", tc.readme, diff)
+			}
+		})
+	}
+}
+
+func TestFetchSearchPage(t *testing.T) {
+	var (
+		now     = postgres.NowTruncated()
+		series1 = &internal.Series{
+			Path: "myseries",
+		}
+		module1 = &internal.Module{
+			Path:   "github.com/valid_module_name",
+			Series: series1,
+		}
+		versionFoo = &internal.Version{
+			Version:     "v1.0.0",
+			License:     "licensename",
+			ReadMe:      []byte("readme"),
+			CommitTime:  now,
+			VersionType: internal.VersionTypeRelease,
+			Module:      module1,
+			Packages: []*internal.Package{
+				&internal.Package{
+					Name:     "foo",
+					Path:     "/path/to/foo",
+					Synopsis: "foo is a package.",
+				},
+			},
+		}
+		versionBar = &internal.Version{
+			Version:     "v1.0.0",
+			License:     "licensename",
+			ReadMe:      []byte("readme"),
+			CommitTime:  now,
+			VersionType: internal.VersionTypeRelease,
+			Module:      module1,
+			Packages: []*internal.Package{
+				&internal.Package{
+					Name:     "bar",
+					Path:     "/path/to/bar",
+					Synopsis: "bar is used by foo.",
+				},
+			},
+		}
+	)
+
+	for _, tc := range []struct {
+		name, query    string
+		versions       []*internal.Version
+		wantSearchPage *SearchPage
+	}{
+		{
+			name:     "want_expected_search_page",
+			query:    "foo bar",
+			versions: []*internal.Version{versionFoo, versionBar},
+			wantSearchPage: &SearchPage{
+				Results: []*SearchResult{
+					&SearchResult{
+						Name:         versionBar.Packages[0].Name,
+						PackagePath:  versionBar.Packages[0].Path,
+						ModulePath:   versionBar.Module.Path,
+						Synopsis:     versionBar.Packages[0].Synopsis,
+						Version:      versionBar.Version,
+						License:      versionBar.License,
+						CommitTime:   versionBar.CommitTime,
+						NumImporters: 0,
+					},
+					&SearchResult{
+						Name:         versionFoo.Packages[0].Name,
+						PackagePath:  versionFoo.Packages[0].Path,
+						ModulePath:   versionFoo.Module.Path,
+						Synopsis:     versionFoo.Packages[0].Synopsis,
+						Version:      versionFoo.Version,
+						License:      versionFoo.License,
+						CommitTime:   versionFoo.CommitTime,
+						NumImporters: 0,
+					},
+				},
+			},
+		},
+		{
+			name:     "want_only_foo_search_page",
+			query:    "package",
+			versions: []*internal.Version{versionFoo, versionBar},
+			wantSearchPage: &SearchPage{
+				Results: []*SearchResult{
+					&SearchResult{
+						Name:         versionFoo.Packages[0].Name,
+						PackagePath:  versionFoo.Packages[0].Path,
+						ModulePath:   versionFoo.Module.Path,
+						Synopsis:     versionFoo.Packages[0].Synopsis,
+						Version:      versionFoo.Version,
+						License:      versionFoo.License,
+						CommitTime:   versionFoo.CommitTime,
+						NumImporters: 0,
+					},
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			teardownTestCase, db := postgres.SetupCleanDB(t)
+			defer teardownTestCase(t)
+
+			for _, v := range tc.versions {
+				if err := db.InsertVersion(v); err != nil {
+					t.Fatalf("db.InsertVersion(%+v): %v", v, err)
+				}
+				if err := db.InsertDocuments(v); err != nil {
+					t.Fatalf("db.InsertDocuments(%+v): %v", v, err)
+				}
+			}
+
+			got, err := fetchSearchPage(db, tc.query)
+			if err != nil {
+				t.Fatalf("fetchSearchPage(db, %q): %v", tc.query, err)
+			}
+
+			if diff := cmp.Diff(tc.wantSearchPage, got); diff != "" {
+				t.Errorf("fetchSearchPage(db, %q) mismatch (-want +got):\n%s", tc.query, diff)
 			}
 		})
 	}

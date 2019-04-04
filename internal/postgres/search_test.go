@@ -105,7 +105,7 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 		},
 
 		{
-			name:  "two_documents_different_packages",
+			name:  "two_documents_different_packages_one_result",
 			terms: []string{"foo"},
 			versions: []*internal.Version{
 				&internal.Version{
@@ -147,22 +147,6 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 						Name:     "foo",
 						Path:     "/path/to/foo",
 						Synopsis: "foo",
-						Version: &internal.Version{
-							Module: &internal.Module{
-								Path: "github.com/valid_module_name",
-							},
-							Version: "v1.0.0",
-							License: "licensename",
-						},
-					},
-				},
-				&SearchResult{
-					Relevance:    0,
-					NumImporters: 0,
-					Package: &internal.Package{
-						Name:     "bar",
-						Path:     "/path/to/bar",
-						Synopsis: "bar",
 						Version: &internal.Version{
 							Module: &internal.Module{
 								Path: "github.com/valid_module_name",
