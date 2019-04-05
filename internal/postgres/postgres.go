@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lib/pq"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
@@ -486,7 +485,7 @@ func padPrerelease(p string) (string, error) {
 // version is malformed then insertion will fail.
 func (db *DB) InsertVersion(ctx context.Context, version *internal.Version) error {
 	if err := validateVersion(version); err != nil {
-		return status.Errorf(codes.InvalidArgument, fmt.Sprintf("validateVersion(%+v): %v", version, err))
+		return status.Errorf(codes.InvalidArgument, fmt.Sprintf("validateVersion: %v", err))
 	}
 
 	return db.Transact(func(tx *sql.Tx) error {
@@ -559,80 +558,6 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version) erro
 	})
 }
 
-// GetLatestPackageForPaths returns a list of packages that have the latest version that
-// corresponds to each path specified in the list of paths. The resulting list is
-// sorted by package path lexicographically. So if multiple packages have the same
-// path then the package whose module path comes first lexicographically will be
-// returned.
-func (db *DB) GetLatestPackageForPaths(ctx context.Context, paths []string) ([]*internal.Package, error) {
-	var (
-		packages                                           []*internal.Package
-		commitTime, createdAt, updatedAt                   time.Time
-		path, modulePath, name, synopsis, license, version string
-	)
-
-	query := `
-		SELECT DISTINCT ON (p.path)
-			p.path,
-			p.module_path,
-			v.version,
-			v.commit_time,
-			v.license,
-			p.name,
-			p.synopsis
-		FROM
-			packages p
-		INNER JOIN
-			versions v
-		ON
-			v.module_path = p.module_path
-			AND v.version = p.version
-		WHERE
-			p.path = ANY($1)
-		ORDER BY
-			p.path,
-			p.module_path,
-			v.major DESC,
-			v.minor DESC,
-			v.patch DESC,
-			v.prerelease DESC;`
-
-	rows, err := db.QueryContext(ctx, query, pq.Array(paths))
-	if err != nil {
-		return nil, fmt.Errorf("db.QueryContext(ctx, %q, %v): %v", query, pq.Array(paths), err)
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		if err := rows.Scan(&path, &modulePath, &version, &commitTime, &license, &name, &synopsis); err != nil {
-			return nil, fmt.Errorf("row.Scan(%q, %q, %q, %q, %q, %q, %q): %v",
-				path, modulePath, version, commitTime, license, name, synopsis, err)
-		}
-
-		packages = append(packages, &internal.Package{
-			Name:     name,
-			Path:     path,
-			Synopsis: synopsis,
-			Version: &internal.Version{
-				CreatedAt: createdAt,
-				UpdatedAt: updatedAt,
-				Module: &internal.Module{
-					Path: modulePath,
-				},
-				Version:    version,
-				CommitTime: commitTime,
-				License:    license,
-			},
-		})
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("rows.Err() returned error %v", err)
-	}
-
-	return packages, nil
-}
-
 // validateVersion checks that fields needed to insert a version into the
 // database are present. Otherwise, it returns an error listing the reasons the
 // version cannot be inserted.
@@ -661,13 +586,9 @@ func validateVersion(version *internal.Version) error {
 		errReasons = append(errReasons, "empty commit time")
 	}
 
-	if version.Packages == nil || len(version.Packages) == 0 {
-		errReasons = append(errReasons, "no packages")
-	}
-
 	if len(errReasons) == 0 {
 		return nil
 	}
 
-	return fmt.Errorf("cannot insert version %v: %s", version, strings.Join(errReasons, ", "))
+	return fmt.Errorf("cannot insert module %+v at version %q: %s", version.Module, version.Version, strings.Join(errReasons, ", "))
 }

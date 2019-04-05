@@ -7,7 +7,6 @@ package fetch
 import (
 	"archive/zip"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"go/ast"
@@ -156,22 +155,10 @@ func FetchAndInsertVersion(name, version string, proxyClient *proxy.Client, db *
 		VersionType: versionType,
 	}
 	if err = db.InsertVersion(ctx, v); err != nil {
-		// Encode the struct to a JSON string so that it is more readable in
-		// the error message.
-		b, jsonerr := json.Marshal(v)
-		if jsonerr != nil {
-			return fmt.Errorf("db.InsertVersion(%+v): %v; json.Marshal: %v", v, err, jsonerr)
-		}
-		return fmt.Errorf("db.InsertVersion(%q): %v", string(b), err)
+		return fmt.Errorf("db.InsertVersion for %q %q: %v", name, version, err)
 	}
 	if err = db.InsertDocuments(ctx, v); err != nil {
-		// Encode the struct to a JSON string so that it is more readable in
-		// the error message.
-		b, jsonerr := json.Marshal(v)
-		if jsonerr != nil {
-			return fmt.Errorf("db.InsertDocuments(%+v): %v; json.Marshal: %v", v, err, jsonerr)
-		}
-		return fmt.Errorf("db.InsertDocuments(%q): %v", string(b), err)
+		return fmt.Errorf("db.InsertDocuments for %q %q: %v", name, version, err)
 	}
 	return nil
 }
@@ -205,7 +192,7 @@ func extractPackagesFromZip(module, version string, r *zip.Reader) ([]*internal.
 	pattern := fmt.Sprintf("%s/...", module)
 	pkgs, err := packages.Load(config, pattern)
 	if err != nil {
-		return nil, fmt.Errorf("packages.Load(%+v, %q): %v", config, pattern, err)
+		return nil, fmt.Errorf("packages.Load(config, %q): %v", pattern, err)
 	}
 
 	if len(pkgs) == 0 {
