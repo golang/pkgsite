@@ -130,7 +130,7 @@ func FetchAndInsertVersion(name, version string, proxyClient *proxy.Client, db *
 		return fmt.Errorf("extractPackagesFromZip(%q, %q): %v", name, version, err)
 	}
 
-	v := internal.Version{
+	v := &internal.Version{
 		Module: &internal.Module{
 			Path: name,
 			Series: &internal.Series{
@@ -144,14 +144,23 @@ func FetchAndInsertVersion(name, version string, proxyClient *proxy.Client, db *
 		Packages:    packages,
 		VersionType: versionType,
 	}
-	if err = db.InsertVersion(&v); err != nil {
+	if err = db.InsertVersion(v); err != nil {
 		// Encode the struct to a JSON string so that it is more readable in
 		// the error message.
 		b, jsonerr := json.Marshal(v)
 		if jsonerr != nil {
 			return fmt.Errorf("db.InsertVersion(%+v): %v; json.Marshal: %v", v, err, jsonerr)
 		}
-		return fmt.Errorf("db.InsertVersion(%+v): %v", string(b), err)
+		return fmt.Errorf("db.InsertVersion(%q): %v", string(b), err)
+	}
+	if err = db.InsertDocuments(v); err != nil {
+		// Encode the struct to a JSON string so that it is more readable in
+		// the error message.
+		b, jsonerr := json.Marshal(v)
+		if jsonerr != nil {
+			return fmt.Errorf("db.InsertDocuments(%+v): %v; json.Marshal: %v", v, err, jsonerr)
+		}
+		return fmt.Errorf("db.InsertDocuments(%q): %v", string(b), err)
 	}
 	return nil
 }
