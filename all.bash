@@ -33,6 +33,15 @@ fi
 echo "Running: staticcheck ./..."
 staticcheck ./...
 
+# Download misspell if it doesn't exists
+if ! [ -x "$(command -v staticcheck)" ]; then
+  echo "Running: go get -u github.com/client9/misspell/cmd/misspell"
+  go get -u github.com/client9/misspell/cmd/misspell
+fi
+
+echo "Running: misspell cmd/**/* internal/**/* README.md"
+misspell cmd/**/* internal/**/* README.md
+
 echo "Running: go mod tidy"
 go mod tidy
 
