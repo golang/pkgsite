@@ -456,7 +456,8 @@ func isNum(v string) bool {
 // full releases will take greatest precedence when sorting
 // in ASCII sort order. The given string may only contain
 // lowercase letters, numbers, periods, hyphens or nothing.
-func padPrerelease(p string) (string, error) {
+func padPrerelease(v string) (string, error) {
+	p := semver.Prerelease(v)
 	if p == "" {
 		return "~", nil
 	}
@@ -505,22 +506,24 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version) erro
 			return fmt.Errorf("error inserting module: %v", err)
 		}
 
-		versionSplit := strings.Split(version.Version, ".")
-		major, err := strconv.Atoi(strings.TrimPrefix(versionSplit[0], "v"))
+		majorint, err := major(version.Version)
 		if err != nil {
-			return fmt.Errorf("strconv.Atoi(%q): %v", strings.TrimPrefix(versionSplit[0], "v"), err)
+			return fmt.Errorf("major(%q): %v", version.Version, err)
 		}
-		minor, err := strconv.Atoi(versionSplit[1])
+
+		minorint, err := minor(version.Version)
 		if err != nil {
-			return fmt.Errorf("strconv.Atoi(%q): %v", versionSplit[1], err)
+			return fmt.Errorf("minor(%q): %v", version.Version, err)
 		}
-		patch, err := strconv.Atoi(strings.Split(versionSplit[2], "-")[0])
+
+		patchint, err := patch(version.Version)
 		if err != nil {
-			return fmt.Errorf("strconv.Atoi(%q): %v", strings.Split(versionSplit[2], "-")[0], err)
+			return fmt.Errorf("patch(%q): %v", version.Version, err)
 		}
-		prerelease, err := padPrerelease(semver.Prerelease(version.Version))
+
+		prerelease, err := padPrerelease(version.Version)
 		if err != nil {
-			return fmt.Errorf("padPrerelease(%q): %v", semver.Prerelease(version.Version), err)
+			return fmt.Errorf("padPrerelease(%q): %v", version.Version, err)
 		}
 
 		if _, err := tx.ExecContext(ctx,
@@ -532,9 +535,9 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version) erro
 			version.CommitTime,
 			version.License,
 			version.ReadMe,
-			major,
-			minor,
-			patch,
+			majorint,
+			minorint,
+			patchint,
 			prerelease,
 		); err != nil {
 			return fmt.Errorf("error inserting version: %v", err)
@@ -556,6 +559,40 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version) erro
 
 		return nil
 	})
+}
+
+// major returns the major version integer value of the semantic version
+// v.  For example, major("v2.1.0") == 2.
+func major(v string) (int, error) {
+	m := strings.TrimPrefix(semver.Major(v), "v")
+	major, err := strconv.Atoi(m)
+	if err != nil {
+		return 0, fmt.Errorf("strconv.Atoi(%q): %v", m, err)
+	}
+	return major, nil
+}
+
+// minor returns the minor version integer value of the semantic version For
+// example, minor("v2.1.0") == 1.
+func minor(v string) (int, error) {
+	m := strings.TrimPrefix(semver.MajorMinor(v), fmt.Sprintf("%s.", semver.Major(v)))
+	minor, err := strconv.Atoi(m)
+	if err != nil {
+		return 0, fmt.Errorf("strconv.Atoi(%q): %v", m, err)
+	}
+	return minor, nil
+}
+
+// patch returns the patch version integer value of the semantic version For
+// example, patch("v2.1.0+incompatible") == 0.
+func patch(v string) (int, error) {
+	s := strings.TrimPrefix(semver.Canonical(v), fmt.Sprintf("%s.", semver.MajorMinor(v)))
+	p := strings.TrimSuffix(s, semver.Prerelease(v))
+	patch, err := strconv.Atoi(p)
+	if err != nil {
+		return 0, fmt.Errorf("strconv.Atoi(%q): %v", p, err)
+	}
+	return patch, nil
 }
 
 // validateVersion checks that fields needed to insert a version into the

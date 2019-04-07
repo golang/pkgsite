@@ -562,27 +562,27 @@ func TestPostgres_padPrerelease(t *testing.T) {
 	}{
 		{
 			name:  "pad_one_field",
-			input: "-alpha.1",
+			input: "v1.0.0-alpha.1",
 			want:  "alpha.00000000000000000001",
 		},
 		{
 			name:  "no_padding",
-			input: "beta",
+			input: "v1.0.0-beta",
 			want:  "beta",
 		},
 		{
 			name:  "pad_two_fields",
-			input: "-gamma.11.theta.2",
+			input: "v1.0.0-gamma.11.theta.2",
 			want:  "gamma.00000000000000000011.theta.00000000000000000002",
 		},
 		{
 			name:  "empty_string",
-			input: "",
+			input: "v1.0.0",
 			want:  "~",
 		},
 		{
 			name:    "num_field_longer_than_20_char",
-			input:   "-alpha.123456789123456789123456789",
+			input:   "v1.0.0-alpha.123456789123456789123456789",
 			want:    "",
 			wantErr: true,
 		},
@@ -835,6 +835,58 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 				if diff := versionsDiff(tc.wantTaggedVersions[i], v); diff != "" {
 					t.Errorf("db.GetTaggedVersionsForPackageSeries(%q) mismatch (-want +got):\n%s", tc.path, diff)
 				}
+			}
+		})
+	}
+}
+
+func TestMajorMinorPatch(t *testing.T) {
+	for _, tc := range []struct {
+		version                         string
+		wantMajor, wantMinor, wantPatch int
+	}{
+		{
+			version:   "v1.5.2",
+			wantMajor: 1,
+			wantMinor: 5,
+			wantPatch: 2,
+		},
+		{
+			version:   "v1.5.2+incompatible",
+			wantMajor: 1,
+			wantMinor: 5,
+			wantPatch: 2,
+		},
+		{
+			version:   "v1.5.2-alpha+buildtag",
+			wantMajor: 1,
+			wantMinor: 5,
+			wantPatch: 2,
+		},
+	} {
+		t.Run(tc.version, func(t *testing.T) {
+			gotMajor, err := major(tc.version)
+			if err != nil {
+				t.Errorf("major(%q): %v", tc.version, err)
+			}
+			if gotMajor != tc.wantMajor {
+				t.Errorf("major(%q) = %d, want = %d", tc.version, gotMajor, tc.wantMajor)
+			}
+
+			gotMinor, err := minor(tc.version)
+			if err != nil {
+				t.Errorf("minor(%q): %v", tc.version, err)
+			}
+			if gotMinor != tc.wantMinor {
+				t.Errorf("minor(%q) = %d, want = %d", tc.version, gotMinor, tc.wantMinor)
+			}
+
+			gotPatch, err := patch(tc.version)
+			if err != nil {
+				t.Errorf("patch(%q): %v", tc.version, err)
+			}
+			if gotPatch != tc.wantPatch {
+				t.Errorf("patch(%q) = %d, want = %d", tc.version, gotPatch, tc.wantPatch)
 			}
 		})
 	}
