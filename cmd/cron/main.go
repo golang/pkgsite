@@ -7,7 +7,7 @@
 package main
 
 import (
-	"context"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -25,7 +25,6 @@ import (
 const (
 	// Use generous timeouts as cron traffic is not user-facing.
 	makeNewVersionsTimeout = 10 * time.Minute
-	fetchTimeout           = 5 * time.Minute
 )
 
 var (
@@ -36,6 +35,7 @@ var (
 	host     = getEnv("GO_DISCOVERY_DATABASE_HOST", "localhost")
 	dbname   = getEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-database")
 	dbinfo   = fmt.Sprintf("user=%s password=%s host=%s dbname=%s sslmode=disable", user, password, host, dbname)
+	workers  = flag.Int("workers", 10, "number of concurrent requests to the fetch service")
 )
 
 func getEnv(key, fallback string) string {
@@ -45,7 +45,7 @@ func getEnv(key, fallback string) string {
 	return fallback
 }
 
-func makeNewVersionsHandler(db *postgres.DB) http.HandlerFunc {
+func makeNewVersionsHandler(db *postgres.DB, workers int) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logs, err := cron.FetchAndStoreVersions(r.Context(), indexURL, db)
 		if err != nil {
@@ -55,22 +55,14 @@ func makeNewVersionsHandler(db *postgres.DB) http.HandlerFunc {
 		}
 
 		client := fetch.New(fetchURL)
-		for _, l := range logs {
-			fmt.Fprintln(w, "Fetch requested")
-			log.Printf("Fetch requested: %q %q", l.ModulePath, l.Version)
-			go func(name, version string) {
-				fetchCtx, cancel := context.WithTimeout(context.Background(), fetchTimeout)
-				defer cancel()
-				if err := client.FetchVersion(fetchCtx, name, version); err != nil {
-					log.Printf("client.FetchVersion(fetchCtx, %q, %q): %v", name, version, err)
-				}
-			}(l.ModulePath, l.Version)
-		}
-		fmt.Fprintf(w, "Done!")
+		cron.FetchVersions(r.Context(), client, logs, fetchTimeout, workers)
+		fmt.Fprint(w, fmt.Sprintf("Requested %d new versions!", len(logs)))
 	}
 }
 
 func main() {
+	flag.Parse()
+
 	db, err := postgres.Open(dbinfo)
 	if err != nil {
 		log.Fatalf("postgres.Open(%q): %v", dbinfo, err)
@@ -78,7 +70,7 @@ func main() {
 	defer db.Close()
 
 	mw := middleware.Timeout(makeNewVersionsTimeout)
-	http.Handle("/new/", mw(makeNewVersionsHandler(db)))
+	http.Handle("/new/", mw(makeNewVersionsHandler(db, *workers)))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Hello, Go Discovery Cron!")
 	})
