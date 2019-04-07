@@ -152,7 +152,7 @@ func fetchOverviewPage(ctx context.Context, db *postgres.DB, path, version strin
 
 	pkgHeader, err := createPackageHeader(pkg)
 	if err != nil {
-		return nil, fmt.Errorf("createPackageHeader(%q): %v", pkg, err)
+		return nil, fmt.Errorf("createPackageHeader(%+v): %v", pkg, err)
 	}
 	return &OverviewPage{
 		ModulePath:    pkg.Version.Module.Path,
@@ -202,7 +202,7 @@ func fetchVersionsPage(ctx context.Context, db *postgres.DB, path, version strin
 			}
 			pkgHeader, err = createPackageHeader(pkg)
 			if err != nil {
-				return nil, fmt.Errorf("createPackageHeader(%q): %v", pkg, err)
+				return nil, fmt.Errorf("createPackageHeader(%+v): %v", pkg, err)
 			}
 		}
 
