@@ -20,13 +20,13 @@ import (
 )
 
 var (
-	proxyURL = getEnv("GO_MODULE_PROXY_URL", "")
+	proxyURL = getEnv("GO_MODULE_PROXY_URL", "https://proxy.golang.org")
 	user     = getEnv("GO_DISCOVERY_DATABASE_USER", "postgres")
 	password = getEnv("GO_DISCOVERY_DATABASE_PASSWORD", "")
 	host     = getEnv("GO_DISCOVERY_DATABASE_HOST", "localhost")
 	dbname   = getEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-database")
 	dbinfo   = fmt.Sprintf("user=%s password=%s host=%s dbname=%s sslmode=disable", user, password, host, dbname)
-	port     = getEnv("PORT", "9000")
+	addr     = getEnv("GO_DISCOVERY_FETCH_ADDR", "localhost:9000")
 )
 
 func getEnv(key, fallback string) string {
@@ -73,6 +73,6 @@ func main() {
 
 	http.HandleFunc("/", makeFetchHandler(proxy.New(proxyURL), db))
 
-	log.Printf("Listening on port %s", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
+	log.Printf("Listening on addr %s", addr)
+	log.Fatal(http.ListenAndServe(addr, nil))
 }

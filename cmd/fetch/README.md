@@ -31,12 +31,12 @@ kubectl create secret generic cloudsql-db-credentials --from-literal=username=fe
 ### To create a new version of fetch for deployment:
 
 1. View a list of docker image tags at http://gcr.io/go-discovery/fetch or by running `gcloud container images list-tags gcr.io/go-discovery/fetch`.
-2. Create a docker image with the next incremental tag, following semver: `docker build -t gcr.io/go-discovery/fetch:v1.0.6 -f cmd/fetch/Dockerfile .`
+2. Create a docker image with the next incremental tag, following semver: `docker build -t gcr.io/go-discovery/fetch:<version> -f cmd/fetch/Dockerfile .`
 3. Push the docker image to gcr.io/go-discovery/fetch: `docker push gcr.io/go-discovery/fetch:<version>`
 
 ### To deploy an existing version of fetch:
 
-1. Edit the image version in `deployment.yaml`.
+1. Edit the image <version> in `deployment.yaml` to match the version to be deployed..
 2. Apply the changes to kubernetes: `kubectl apply -f deployment.yaml`.
 3. Verify: `kubectl describe pod <pod>`.
 

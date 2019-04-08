@@ -25,6 +25,7 @@ var (
 	password = getEnv("GO_DISCOVERY_DATABASE_PASSWORD", "")
 	host     = getEnv("GO_DISCOVERY_DATABASE_HOST", "localhost")
 	dbname   = getEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-database")
+	addr     = getEnv("GO_DISCOVERY_FRONTEND_ADDR", "localhost:8080")
 	dbinfo   = fmt.Sprintf("user=%s password=%s host=%s dbname=%s sslmode=disable", user, password, host, dbname)
 
 	templates  *template.Template
@@ -53,14 +54,8 @@ func main() {
 	mux.HandleFunc("/search/", frontend.MakeSearchHandlerFunc(db, templates))
 	mux.HandleFunc("/", frontend.MakeDetailsHandlerFunc(db, templates))
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-		log.Printf("Defaulting to port %s", port)
-	}
-
 	mw := middleware.Timeout(handlerTimeout)
 
-	log.Printf("Listening on port %s", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), mw(mux)))
+	log.Printf("Listening on addr %s", addr)
+	log.Fatal(http.ListenAndServe(addr, mw(mux)))
 }

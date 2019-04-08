@@ -29,14 +29,14 @@ const (
 )
 
 var (
-	indexURL = getEnv("GO_MODULE_INDEX_URL", "")
+	indexURL = getEnv("GO_MODULE_INDEX_URL", "https://index.golang.org/index")
 	fetchURL = getEnv("GO_DISCOVERY_FETCH_URL", "http://localhost:9000")
 	user     = getEnv("GO_DISCOVERY_DATABASE_USER", "postgres")
 	password = getEnv("GO_DISCOVERY_DATABASE_PASSWORD", "")
 	host     = getEnv("GO_DISCOVERY_DATABASE_HOST", "localhost")
 	dbname   = getEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-database")
 	dbinfo   = fmt.Sprintf("user=%s password=%s host=%s dbname=%s sslmode=disable", user, password, host, dbname)
-	port     = getEnv("PORT", "8000")
+	addr     = getEnv("GO_DISCOVERY_CRON_ADDR", "localhost:8000")
 )
 
 func getEnv(key, fallback string) string {
@@ -84,6 +84,6 @@ func main() {
 		fmt.Fprint(w, "Hello, Go Discovery Cron!")
 	})
 
-	log.Printf("Listening on port %s", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
+	log.Printf("Listening on addr %s", addr)
+	log.Fatal(http.ListenAndServe(addr, nil))
 }
