@@ -47,7 +47,7 @@ func TestChain(t *testing.T) {
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		t.Fatalf("ioutil.ReadAll(resp.Body) returned error %v", err)
+		t.Fatalf("ioutil.ReadAll(resp.Body): %v", err)
 	}
 
 	// Test that both middleware executed, in the correct order.

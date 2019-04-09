@@ -180,7 +180,7 @@ func TestFetchOverviewPage(t *testing.T) {
 	defer teardownDB(t)
 
 	if err := db.InsertVersion(ctx, &tc.version); err != nil {
-		t.Fatalf("db.InsertVersion(%v) returned error: %v", tc.version, err)
+		t.Fatalf("db.InsertVersion(%v): %v", tc.version, err)
 	}
 
 	got, err := fetchOverviewPage(ctx, db, tc.version.Packages[0].Path, tc.version.Version)
@@ -401,7 +401,7 @@ func TestFetchVersionsPage(t *testing.T) {
 
 			for _, v := range tc.versions {
 				if err := db.InsertVersion(ctx, v); err != nil {
-					t.Fatalf("db.InsertVersion(%v) returned error: %v", v, err)
+					t.Fatalf("db.InsertVersion(%v): %v", v, err)
 				}
 			}
 
@@ -634,7 +634,7 @@ func TestFetchModulePage(t *testing.T) {
 	defer teardownDB(t)
 
 	if err := db.InsertVersion(ctx, &tc.version); err != nil {
-		t.Fatalf("db.InsertVersion(%v) returned error: %v", tc.version, err)
+		t.Fatalf("db.InsertVersion(%v): %v", tc.version, err)
 	}
 
 	got, err := fetchModulePage(ctx, db, tc.version.Packages[0].Path, tc.version.Version)

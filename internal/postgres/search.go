@@ -109,7 +109,7 @@ func (db *DB) Search(ctx context.Context, terms []string) ([]*SearchResult, erro
 		ON d.package_path = i.from_path;`
 	rows, err := db.QueryContext(ctx, query, strings.Join(terms, " | "))
 	if err != nil {
-		return nil, fmt.Errorf("db.QueryContext(ctx, %q, %q) returned error: %v", query, terms, err)
+		return nil, fmt.Errorf("db.QueryContext(ctx, %q, %q): %v", query, terms, err)
 	}
 	defer rows.Close()
 

@@ -460,7 +460,7 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string) (*Searc
 	terms := strings.Fields(query)
 	dbresults, err := db.Search(ctx, terms)
 	if err != nil {
-		return nil, fmt.Errorf("db.Search(%v) returned error %v", terms, err)
+		return nil, fmt.Errorf("db.Search(%v): %v", terms, err)
 	}
 
 	var results []*SearchResult

@@ -302,7 +302,7 @@ func getVersions(ctx context.Context, db *DB, path string, versionTypes []intern
 
 	rows, err := db.QueryContext(ctx, query, params...)
 	if err != nil {
-		return nil, fmt.Errorf("db.QueryContext(ctx, %q, %q) returned error: %v", query, path, err)
+		return nil, fmt.Errorf("db.QueryContext(ctx, %q, %q): %v", query, path, err)
 	}
 	defer rows.Close()
 
@@ -330,7 +330,7 @@ func getVersions(ctx context.Context, db *DB, path string, versionTypes []intern
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("rows.Err() returned error %v", err)
+		return nil, fmt.Errorf("rows.Err(): %v", err)
 	}
 
 	return versionHistory, nil
@@ -450,7 +450,7 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 
 	rows, err := db.QueryContext(ctx, query, version, path)
 	if err != nil {
-		return nil, fmt.Errorf("db.QueryContext(ctx, %s, %q) returned error: %v", query, path, err)
+		return nil, fmt.Errorf("db.QueryContext(ctx, %s, %q): %v", query, path, err)
 	}
 	defer rows.Close()
 
@@ -475,7 +475,7 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("rows.Err() returned error %v", err)
+		return nil, fmt.Errorf("rows.Err(): %v", err)
 	}
 
 	return v, nil
