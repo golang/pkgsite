@@ -25,7 +25,6 @@ var (
 	password = getEnv("GO_DISCOVERY_DATABASE_PASSWORD", "")
 	host     = getEnv("GO_DISCOVERY_DATABASE_HOST", "localhost")
 	dbname   = getEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-database")
-	addr     = getEnv("GO_DISCOVERY_FRONTEND_ADDR", "localhost:8080")
 	dbinfo   = fmt.Sprintf("user=%s password=%s host=%s dbname=%s sslmode=disable", user, password, host, dbname)
 
 	staticPath = flag.String("static", "content/static", "path to folder containing static files served")
@@ -59,6 +58,17 @@ func main() {
 	mux.HandleFunc("/", controller.HandleDetails)
 
 	mw := middleware.Timeout(handlerTimeout)
+
+	// Default to addr on localhost to mute security popup about incoming
+	// network connections when running locally. When running in prod, App
+	// Engine requires that the app listens on the port specified by the
+	// environment variable PORT.
+	var addr string
+	if port := os.Getenv("PORT"); port != "" {
+		addr = fmt.Sprintf(":%s", port)
+	} else {
+		addr = "localhost:8080"
+	}
 
 	log.Printf("Listening on addr %s", addr)
 	log.Fatal(http.ListenAndServe(addr, mw(mux)))

@@ -36,7 +36,6 @@ var (
 	host     = getEnv("GO_DISCOVERY_DATABASE_HOST", "localhost")
 	dbname   = getEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-database")
 	dbinfo   = fmt.Sprintf("user=%s password=%s host=%s dbname=%s sslmode=disable", user, password, host, dbname)
-	addr     = getEnv("GO_DISCOVERY_CRON_ADDR", "localhost:8000")
 )
 
 func getEnv(key, fallback string) string {
@@ -83,6 +82,17 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Hello, Go Discovery Cron!")
 	})
+
+	// Default to addr on localhost to mute security popup about incoming
+	// network connections when running locally. When running in prod, App
+	// Engine requires that the app listens on the port specified by the
+	// environment variable PORT.
+	var addr string
+	if port := os.Getenv("PORT"); port != "" {
+		addr = fmt.Sprintf(":%s", port)
+	} else {
+		addr = "localhost:8000"
+	}
 
 	log.Printf("Listening on addr %s", addr)
 	log.Fatal(http.ListenAndServe(addr, nil))
