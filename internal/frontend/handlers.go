@@ -30,25 +30,40 @@ import (
 type OverviewPage struct {
 	ModulePath    string
 	ReadMe        template.HTML
-	PackageHeader *PackageHeader
+	PackageHeader *Package
 }
 
-// PackageHeader contains all of the data the header template
+// ModulePage contains all of the data that the module template
 // needs to populate.
-type PackageHeader struct {
-	Name       string
+type ModulePage struct {
+	ModulePath    string
+	Version       string
+	ReadMe        template.HTML
+	Packages      []*Package
+	PackageHeader *Package
+}
+
+// Package contains information for an individual package.
+type Package struct {
 	Version    string
 	Path       string
+	ModulePath string
 	Synopsis   string
 	License    string
 	CommitTime string
+	Name       string
+}
+
+// Dir returns the directory of the package relative to the root of the module.
+func (p *Package) Dir() string {
+	return strings.TrimPrefix(p.Path, fmt.Sprintf("%s/", p.ModulePath))
 }
 
 // MajorVersionGroup represents the major level of the versions
 // list hierarchy (i.e. "v1").
 type MajorVersionGroup struct {
 	Level    string
-	Latest   *VersionInfo
+	Latest   *Package
 	Versions []*MinorVersionGroup
 }
 
@@ -56,23 +71,15 @@ type MajorVersionGroup struct {
 // list hierarchy (i.e. "1.5").
 type MinorVersionGroup struct {
 	Level    string
-	Latest   *VersionInfo
-	Versions []*VersionInfo
-}
-
-// VersionInfo contains the information that will be displayed
-// the lowest level of the versions tab's list hierarchy.
-type VersionInfo struct {
-	Version     string
-	PackagePath string
-	CommitTime  string
+	Latest   *Package
+	Versions []*Package
 }
 
 // VersionsPage contains all the data that the versions tab
 // template needs to populate.
 type VersionsPage struct {
 	Versions      []*MajorVersionGroup
-	PackageHeader *PackageHeader
+	PackageHeader *Package
 }
 
 // parsePageTemplates parses html templates contained in the given base
@@ -85,7 +92,11 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 		"equal": reflect.DeepEqual,
 	}
 	pages := []string{
-		"index", "overview", "search", "versions",
+		"index",
+		"module",
+		"overview",
+		"search",
+		"versions",
 	}
 	templates := make(map[string]*template.Template)
 	// Loop through and create a template for each page.  This template includes
@@ -173,9 +184,9 @@ func elapsedTime(date time.Time) string {
 	return date.Format("Jan _2, 2006")
 }
 
-// createPackageHeader returns a *PackageHeader based on the fields
+// createPackageHeader returns a *Package based on the fields
 // of the specified package. It assumes that pkg is not nil.
-func createPackageHeader(pkg *internal.Package) (*PackageHeader, error) {
+func createPackageHeader(pkg *internal.Package) (*Package, error) {
 	if pkg == nil {
 		return nil, fmt.Errorf("package cannot be nil")
 	}
@@ -187,7 +198,7 @@ func createPackageHeader(pkg *internal.Package) (*PackageHeader, error) {
 		pkg.Version.License = "Missing License"
 	}
 
-	return &PackageHeader{
+	return &Package{
 		Name:       pkg.Name,
 		Version:    pkg.Version.Version,
 		Path:       pkg.Path,
@@ -202,7 +213,7 @@ func createPackageHeader(pkg *internal.Package) (*PackageHeader, error) {
 func fetchOverviewPage(ctx context.Context, db *postgres.DB, path, version string) (*OverviewPage, error) {
 	pkg, err := db.GetPackage(ctx, path, version)
 	if err != nil {
-		return nil, fmt.Errorf("db.GetPackage(ctx, %q, %q) returned error %v", path, version, err)
+		return nil, fmt.Errorf("db.GetPackage(ctx, %q, %q): %v", path, version, err)
 	}
 
 	pkgHeader, err := createPackageHeader(pkg)
@@ -212,6 +223,49 @@ func fetchOverviewPage(ctx context.Context, db *postgres.DB, path, version strin
 	return &OverviewPage{
 		ModulePath:    pkg.Version.Module.Path,
 		ReadMe:        readmeHTML(pkg.Version.ReadMe),
+		PackageHeader: pkgHeader,
+	}, nil
+}
+
+// fetchModulePage fetches data for the module version specified by pkgPath and pkgversion
+// from the database and returns a ModulePage.
+func fetchModulePage(ctx context.Context, db *postgres.DB, pkgPath, pkgversion string) (*ModulePage, error) {
+	version, err := db.GetVersionForPackage(ctx, pkgPath, pkgversion)
+	if err != nil {
+		return nil, fmt.Errorf("db.GetVersionForPackage(ctx, %q, %q): %v", pkgPath, pkgversion, err)
+	}
+
+	var (
+		pkgHeader *Package
+		packages  []*Package
+	)
+	for _, p := range version.Packages {
+		packages = append(packages, &Package{
+			Name:       p.Name,
+			Path:       p.Path,
+			Synopsis:   p.Synopsis,
+			Version:    version.Version,
+			ModulePath: version.Module.Path,
+		})
+
+		if p.Path == pkgPath {
+			p.Version = &internal.Version{
+				Version:    version.Version,
+				License:    version.License,
+				CommitTime: version.CommitTime,
+			}
+			pkgHeader, err = createPackageHeader(p)
+			if err != nil {
+				return nil, fmt.Errorf("createPackageHeader(%+v): %v", p, err)
+			}
+		}
+	}
+
+	return &ModulePage{
+		ModulePath:    version.Module.Path,
+		Version:       pkgversion,
+		ReadMe:        readmeHTML(version.ReadMe),
+		Packages:      packages,
 		PackageHeader: pkgHeader,
 	}, nil
 }
@@ -234,7 +288,7 @@ func fetchVersionsPage(ctx context.Context, db *postgres.DB, path, version strin
 	}
 
 	var (
-		pkgHeader       = &PackageHeader{}
+		pkgHeader       = &Package{}
 		mvg             = []*MajorVersionGroup{}
 		prevMajor       = ""
 		prevMajMin      = ""
@@ -270,10 +324,10 @@ func fetchVersionsPage(ctx context.Context, db *postgres.DB, path, version strin
 			prevMajor = major
 			mvg = append(mvg, &MajorVersionGroup{
 				Level: major,
-				Latest: &VersionInfo{
-					Version:     fullVersion,
-					PackagePath: v.Packages[0].Path,
-					CommitTime:  elapsedTime(v.CommitTime),
+				Latest: &Package{
+					Version:    fullVersion,
+					Path:       v.Packages[0].Path,
+					CommitTime: elapsedTime(v.CommitTime),
 				},
 				Versions: []*MinorVersionGroup{},
 			})
@@ -284,18 +338,18 @@ func fetchVersionsPage(ctx context.Context, db *postgres.DB, path, version strin
 			prevMajMin = majMin
 			mvg[prevMajorIndex].Versions = append(mvg[prevMajorIndex].Versions, &MinorVersionGroup{
 				Level: majMin,
-				Latest: &VersionInfo{
-					Version:     fullVersion,
-					PackagePath: v.Packages[0].Path,
-					CommitTime:  elapsedTime(v.CommitTime),
+				Latest: &Package{
+					Version:    fullVersion,
+					Path:       v.Packages[0].Path,
+					CommitTime: elapsedTime(v.CommitTime),
 				},
 			})
 		}
 
-		mvg[prevMajorIndex].Versions[prevMajMinIndex].Versions = append(mvg[prevMajorIndex].Versions[prevMajMinIndex].Versions, &VersionInfo{
-			Version:     fullVersion,
-			PackagePath: v.Packages[0].Path,
-			CommitTime:  elapsedTime(v.CommitTime),
+		mvg[prevMajorIndex].Versions[prevMajMinIndex].Versions = append(mvg[prevMajorIndex].Versions[prevMajMinIndex].Versions, &Package{
+			Version:    fullVersion,
+			Path:       v.Packages[0].Path,
+			CommitTime: elapsedTime(v.CommitTime),
 		})
 	}
 
@@ -361,21 +415,20 @@ func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
 		case "versions":
 			html = "versions.tmpl"
 			page, err = fetchVersionsPage(ctx, c.db, path, version)
-			if err != nil {
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-				log.Printf("error fetching module page: %v", err)
-				return
-			}
+		case "module":
+			html = "module.tmpl"
+			page, err = fetchModulePage(ctx, c.db, path, version)
 		case "overview":
 			fallthrough
 		default:
 			html = "overview.tmpl"
 			page, err = fetchOverviewPage(ctx, c.db, path, version)
-			if err != nil {
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-				log.Printf("error fetching module page: %v", err)
-				return
-			}
+		}
+
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			log.Printf("error fetching page for %q: %v", html, err)
+			return
 		}
 	}
 

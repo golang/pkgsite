@@ -114,8 +114,8 @@ func (db *DB) InsertVersionLogs(ctx context.Context, logs []*internal.VersionLog
 }
 
 // GetVersion fetches a Version from the database with the primary key
-// (path, version).
-func (db *DB) GetVersion(ctx context.Context, path string, version string) (*internal.Version, error) {
+// (module_path, version).
+func (db *DB) GetVersion(ctx context.Context, modulePath string, version string) (*internal.Version, error) {
 	var (
 		commitTime, createdAt, updatedAt time.Time
 		synopsis, license                string
@@ -132,7 +132,7 @@ func (db *DB) GetVersion(ctx context.Context, path string, version string) (*int
 			readme
 		FROM versions
 		WHERE module_path = $1 and version = $2;`
-	row := db.QueryRowContext(ctx, query, path, version)
+	row := db.QueryRowContext(ctx, query, modulePath, version)
 	if err := row.Scan(&createdAt, &updatedAt, &synopsis, &commitTime, &license, &readme); err != nil {
 		return nil, fmt.Errorf("row.Scan(%q, %q, %q, %q, %q, %q): %v",
 			createdAt, updatedAt, synopsis, commitTime, license, readme, err)
@@ -141,7 +141,7 @@ func (db *DB) GetVersion(ctx context.Context, path string, version string) (*int
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,
 		Module: &internal.Module{
-			Path: path,
+			Path: modulePath,
 		},
 		Version:    version,
 		Synopsis:   synopsis,
@@ -413,6 +413,73 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Pack
 			License:    license,
 		},
 	}, nil
+}
+
+// GetVersionForPackage returns the module version corresponding to path and
+// version. *internal.Version will contain all packages for that version.
+func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*internal.Version, error) {
+	query := `SELECT
+		p.path,
+		p.module_path,
+		p.name,
+		p.synopsis,
+		v.readme,
+		v.license,
+		v.commit_time
+	FROM
+		packages p
+	INNER JOIN
+		versions v
+	ON
+		v.module_path = p.module_path
+		AND v.version = p.version
+	WHERE
+		p.version = $1
+		AND p.module_path IN (
+			SELECT module_path
+			FROM packages
+			WHERE path=$2
+		)
+	ORDER BY name, path;`
+
+	var (
+		pkgPath, modulePath, pkgName, synopsis, license string
+		readme                                          []byte
+		commitTime                                      time.Time
+	)
+
+	rows, err := db.QueryContext(ctx, query, version, path)
+	if err != nil {
+		return nil, fmt.Errorf("db.QueryContext(ctx, %s, %q) returned error: %v", query, path, err)
+	}
+	defer rows.Close()
+
+	v := &internal.Version{
+		Module:  &internal.Module{},
+		Version: version,
+	}
+	for rows.Next() {
+		if err := rows.Scan(&pkgPath, &modulePath, &pkgName, &synopsis, &readme, &license, &commitTime); err != nil {
+			return nil, fmt.Errorf("row.Scan( %q, %q, %q, %q): %v",
+				pkgPath, modulePath, pkgName, synopsis, err)
+		}
+		v.Module.Path = modulePath
+		v.ReadMe = readme
+		v.License = license
+		v.CommitTime = commitTime
+		v.Packages = append(v.Packages, &internal.Package{
+			Path:     pkgPath,
+			Name:     pkgName,
+			Synopsis: synopsis,
+		})
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows.Err() returned error %v", err)
+	}
+
+	return v, nil
+
 }
 
 // prefixZeroes returns a string that is padded with zeroes on the

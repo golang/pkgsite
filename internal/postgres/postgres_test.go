@@ -891,3 +891,70 @@ func TestMajorMinorPatch(t *testing.T) {
 		})
 	}
 }
+
+func TestGetVersionForPackage(t *testing.T) {
+	var (
+		now    = NowTruncated()
+		series = &internal.Series{
+			Path:    "myseries",
+			Modules: []*internal.Module{},
+		}
+		module = &internal.Module{
+			Path:     "test.module",
+			Series:   series,
+			Versions: []*internal.Version{},
+		}
+		testVersion = &internal.Version{
+			Module:      module,
+			Version:     "v1.0.0",
+			License:     "licensename",
+			ReadMe:      []byte("readme"),
+			CommitTime:  now,
+			VersionType: internal.VersionTypeRelease,
+			Packages: []*internal.Package{
+				&internal.Package{
+					Name:     "foo",
+					Synopsis: "This is a package synopsis",
+					Path:     "test.module/foo",
+				},
+				&internal.Package{
+					Name:     "testmodule",
+					Synopsis: "This is a package synopsis",
+					Path:     "test.module",
+				},
+			},
+		}
+	)
+
+	for _, tc := range []struct {
+		name, path, version string
+		wantVersion         *internal.Version
+	}{
+		{
+			name:        "version_with_multi_packages",
+			path:        "test.module/foo",
+			version:     testVersion.Version,
+			wantVersion: testVersion,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			teardownTestCase, db := SetupCleanDB(t)
+			defer teardownTestCase(t)
+			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+			defer cancel()
+
+			if err := db.InsertVersion(ctx, tc.wantVersion); err != nil {
+				t.Errorf("db.InsertVersion(ctx, %q %q): %v", tc.path, tc.version, err)
+			}
+
+			got, err := db.GetVersionForPackage(ctx, tc.path, tc.version)
+			if err != nil {
+				t.Errorf("db.GetVersionForPackage(ctx, %q, %q): %v", tc.path, tc.version, err)
+			}
+			if diff := cmp.Diff(tc.wantVersion, got,
+				cmpopts.IgnoreFields(internal.Version{}, "Module.Versions", "Module.Series", "VersionType")); diff != "" {
+				t.Errorf("db.GetVersionForPackage(ctx, %q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
+			}
+		})
+	}
+}

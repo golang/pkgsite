@@ -46,6 +46,7 @@
 .OverviewContent,
 .VersionsContent,
 .SearchContent,
+.ModuleContent,
 .HomeContent {
   font-family: Arial;
   color: #000;
@@ -54,6 +55,7 @@
 }
 .OverviewContent-readMe,
 .VersionsContent-list,
+.ModuleContent-list,
 .HomeContent-search,
 .SearchContent-results {
   margin-top: 10px;
@@ -63,6 +65,7 @@
 }
 .OverviewContent,
 .VersionsContent,
+.ModuleContent,
 .SearchContent-results {
   margin: 0 200px;
 }
@@ -112,4 +115,13 @@
 .HomeContent-searchLabel {
   width: 500px;
   margin: 10px 0;
+}
+.ModuleContent-package{
+  display: inline-flex;
+  width: 45%;
+  padding: 10px 0;
+}
+.ModuleContent-synopsis{
+  display: inline-flex;
+  width: 50%;
 }
