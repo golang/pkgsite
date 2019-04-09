@@ -18,11 +18,11 @@ import (
 	"time"
 
 	"github.com/microcosm-cc/bluemonday"
+	"github.com/russross/blackfriday/v2"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
-	"gopkg.in/russross/blackfriday.v2"
 )
 
 // OverviewPage contains all of the data that the overview template
