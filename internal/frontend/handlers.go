@@ -12,6 +12,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"path/filepath"
+	"reflect"
 	"strings"
 	"time"
 
@@ -71,6 +73,59 @@ type VersionInfo struct {
 type VersionsPage struct {
 	Versions      []*MajorVersionGroup
 	PackageHeader *PackageHeader
+}
+
+// parseTabTemplates parses html templates contained in the given base
+// directory in order to generate a map of tabName->*template.Template.
+//
+// Separate templates are used so that certain contextual functions (e.g.
+// tabName) can be bound independently for each tab.
+func parseTabTemplates(base string) (map[string]*template.Template, error) {
+	commonFuncs := template.FuncMap{
+		"equal": reflect.DeepEqual,
+	}
+	tabs := []string{
+		"index", "overview", "search", "versions",
+	}
+	templates := make(map[string]*template.Template)
+	// Loop through and create a template for each tab.  This template includes
+	// the page html template contained in pages/<tab>.tmpl, along with all
+	// helper snippets contained in helpers/*.tmpl.
+	for _, tabName := range tabs {
+		pn := tabName
+		t := template.New("").Funcs(commonFuncs).Funcs(template.FuncMap{
+			"tabName": func() string { return pn },
+		})
+		helperGlob := filepath.Join(base, "helpers", "*.tmpl")
+		if _, err := t.ParseGlob(helperGlob); err != nil {
+			return nil, fmt.Errorf("ParseGlob(%q): %v", helperGlob, err)
+		}
+		templateName := fmt.Sprintf("%s.tmpl", tabName)
+		templateFile := filepath.Join(base, "pages", templateName)
+		if _, err := t.ParseFiles(templateFile); err != nil {
+			return nil, fmt.Errorf("ParseFiles(%q): %v", templateFile, err)
+		}
+		templates[templateName] = t
+	}
+	return templates, nil
+}
+
+// Controller handles requests for the various frontend pages.
+type Controller struct {
+	db        *postgres.DB
+	templates map[string]*template.Template
+}
+
+// New creates a new Controller for the given database and template directory.
+func New(db *postgres.DB, templateDir string) (*Controller, error) {
+	ts, err := parseTabTemplates(templateDir)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing templates: %v", err)
+	}
+	return &Controller{
+		db:        db,
+		templates: ts,
+	}, nil
 }
 
 // parseModulePathAndVersion returns the module and version specified by p. p is
@@ -256,88 +311,75 @@ func readmeHTML(readme []byte) template.HTML {
 	return template.HTML(string(b))
 }
 
-// MakeSearchHandlerFunc returns a handler func that applies database data to the search
-// template. Handles endpoint /search?q=<query>.
-func MakeSearchHandlerFunc(db *postgres.DB, templates *template.Template) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		html := "search.tmpl"
-		query := r.URL.Query().Get("q")
-		page, err := fetchSearchPage(ctx, db, query)
-		if err != nil {
-			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-			log.Printf("Error parsing path and version: %v", err)
-			return
-		}
-
-		var buf bytes.Buffer
-		if err := templates.ExecuteTemplate(&buf, html, page); err != nil {
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			log.Printf("Error executing module page template: %v", err)
-			return
-		}
-		if _, err := io.Copy(w, &buf); err != nil {
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			log.Printf("Error copying template buffer to ResponseWriter: %v", err)
-			return
-		}
+func (c *Controller) renderPage(w http.ResponseWriter, templateName string, page interface{}) {
+	var buf bytes.Buffer
+	if err := c.templates[templateName].ExecuteTemplate(&buf, templateName, page); err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		log.Printf("Error executing page template %q: %v", templateName, err)
+	}
+	if _, err := io.Copy(w, &buf); err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		log.Printf("Error copying template %q buffer to ResponseWriter: %v", templateName, err)
 	}
 }
 
-// MakeDetailsHandlerFunc returns a handler func that applies database data to the appropriate
-// template. Handles endpoint /<import path>@<version>?tab=versions.
-func MakeDetailsHandlerFunc(db *postgres.DB, templates *template.Template) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var (
-			html string
-			page interface{}
-			ctx  = r.Context()
-		)
+// HandleSearch applies database data to the search template. Handles endpoint
+// /search?q=<query>.
+func (c *Controller) HandleSearch(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	query := r.URL.Query().Get("q")
+	page, err := fetchSearchPage(ctx, c.db, query)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		log.Printf("fetchSearchPage(ctx, db, %q): %v", query, err)
+		return
+	}
 
-		if r.URL.Path == "/" {
-			html = "index.tmpl"
-		} else {
-			path, version, err := parseModulePathAndVersion(r.URL.Path)
+	c.renderPage(w, "search.tmpl", page)
+}
+
+// HandleDetails applies database data to the appropriate template. Handles all
+// endpoints that match "/" or "/<import-path>[@<version>?tab=<tab>]"
+func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
+	var (
+		html string
+		page interface{}
+		ctx  = r.Context()
+	)
+
+	if r.URL.Path == "/" {
+		html = "index.tmpl"
+	} else {
+		path, version, err := parseModulePathAndVersion(r.URL.Path)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+			log.Printf("error parsing path and version: %v", err)
+			return
+		}
+
+		switch tab := r.URL.Query().Get("tab"); tab {
+		case "versions":
+			html = "versions.tmpl"
+			page, err = fetchVersionsPage(ctx, c.db, path, version)
 			if err != nil {
-				http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-				log.Printf("error parsing path and version: %v", err)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				log.Printf("error fetching module page: %v", err)
 				return
 			}
-
-			switch tab := r.URL.Query().Get("tab"); tab {
-			case "versions":
-				html = "versions.tmpl"
-				page, err = fetchVersionsPage(ctx, db, path, version)
-				if err != nil {
-					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-					log.Printf("error fetching module page: %v", err)
-					return
-				}
-			case "overview":
-				fallthrough
-			default:
-				html = "overview.tmpl"
-				page, err = fetchOverviewPage(ctx, db, path, version)
-				if err != nil {
-					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-					log.Printf("error fetching module page: %v", err)
-					return
-				}
+		case "overview":
+			fallthrough
+		default:
+			html = "overview.tmpl"
+			page, err = fetchOverviewPage(ctx, c.db, path, version)
+			if err != nil {
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				log.Printf("error fetching module page: %v", err)
+				return
 			}
 		}
-
-		var buf bytes.Buffer
-		if err := templates.ExecuteTemplate(&buf, html, page); err != nil {
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			log.Printf("Error executing module page template: %v", err)
-			return
-		}
-		if _, err := io.Copy(w, &buf); err != nil {
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			log.Printf("Error copying template buffer to ResponseWriter: %v", err)
-			return
-		}
 	}
+
+	c.renderPage(w, html, page)
 }
 
 // SearchPage contains all of the data that the search template needs to

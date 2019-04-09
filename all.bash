@@ -34,7 +34,7 @@ echo "Running: staticcheck ./..."
 staticcheck ./...
 
 # Download misspell if it doesn't exists
-if ! [ -x "$(command -v staticcheck)" ]; then
+if ! [ -x "$(command -v misspell)" ]; then
   echo "Running: go get -u github.com/client9/misspell/cmd/misspell"
   go get -u github.com/client9/misspell/cmd/misspell
 fi

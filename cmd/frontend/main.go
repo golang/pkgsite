@@ -7,10 +7,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"golang.org/x/discovery/internal/frontend"
@@ -28,7 +28,6 @@ var (
 	addr     = getEnv("GO_DISCOVERY_FRONTEND_ADDR", "localhost:8080")
 	dbinfo   = fmt.Sprintf("user=%s password=%s host=%s dbname=%s sslmode=disable", user, password, host, dbname)
 
-	templates  *template.Template
 	staticPath = flag.String("static", "content/static", "path to folder containing static files served")
 )
 
@@ -41,18 +40,23 @@ func getEnv(key, fallback string) string {
 
 func main() {
 	flag.Parse()
-	templates = template.Must(template.ParseGlob(fmt.Sprintf("%s/html/*.tmpl", *staticPath)))
 
 	db, err := postgres.Open(dbinfo)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("postgres.Open(user=%s host=%s db=%s): %v", user, host, dbname, err)
 	}
 	defer db.Close()
 
+	templateDir := filepath.Join(*staticPath, "html")
+	controller, err := frontend.New(db, templateDir)
+	if err != nil {
+		log.Fatalf("frontend.New(db, %q): %v", templateDir, err)
+	}
+
 	mux := http.NewServeMux()
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(*staticPath))))
-	mux.HandleFunc("/search/", frontend.MakeSearchHandlerFunc(db, templates))
-	mux.HandleFunc("/", frontend.MakeDetailsHandlerFunc(db, templates))
+	mux.HandleFunc("/search/", controller.HandleSearch)
+	mux.HandleFunc("/", controller.HandleDetails)
 
 	mw := middleware.Timeout(handlerTimeout)
 
