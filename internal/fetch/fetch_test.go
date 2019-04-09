@@ -480,8 +480,12 @@ func TestDetectLicense(t *testing.T) {
 			defer rc.Close()
 			z := &rc.Reader
 
-			if got := detectLicense(z, test.contentsDir); got != test.want {
-				t.Errorf("detectLicense(%q) = %q, want %q", test.name, got, test.want)
+			got, err := detectLicense(z, test.contentsDir)
+			if err != nil {
+				t.Errorf("detectLicense(z, %q): %v", test.contentsDir, err)
+			}
+			if got != test.want {
+				t.Errorf("detectLicense(z, %q) = %q, want %q", test.contentsDir, got, test.want)
 			}
 		})
 	}

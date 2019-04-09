@@ -12,7 +12,6 @@ import (
 	"go/ast"
 	"go/doc"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -36,6 +35,11 @@ var fetchTimeout = 5 * time.Minute
 
 var (
 	errModuleContainsNoPackages = errors.New("module contains 0 packages")
+
+	// maxFileSize is the maximum filesize that is allowed for reading.
+	// If a .go file is encountered that exceeds maxFileSize, the fetch request
+	// will fail.  All other filetypes will be ignored.
+	maxFileSize = uint64(1e7)
 )
 
 // ParseModulePathAndVersion returns the module and version specified by p. p is
@@ -140,6 +144,12 @@ func FetchAndInsertVersion(name, version string, proxyClient *proxy.Client, db *
 		return fmt.Errorf("extractPackagesFromZip(%q, %q): %v", name, version, err)
 	}
 
+	contentDir := fmt.Sprintf("%s@%s", name, version)
+	license, err := detectLicense(zipReader, contentDir)
+	if err != nil {
+		return fmt.Errorf("detectLicense(zipReader, %q): %v", contentDir, err)
+	}
+
 	v := &internal.Version{
 		Module: &internal.Module{
 			Path: name,
@@ -150,7 +160,7 @@ func FetchAndInsertVersion(name, version string, proxyClient *proxy.Client, db *
 		Version:     version,
 		CommitTime:  info.Time,
 		ReadMe:      readme,
-		License:     detectLicense(zipReader, fmt.Sprintf("%s@%s", name, version)),
+		License:     license,
 		Packages:    packages,
 		VersionType: versionType,
 	}
@@ -179,6 +189,11 @@ func extractPackagesFromZip(module, version string, r *zip.Reader) ([]*internal.
 		}
 
 		if !f.FileInfo().IsDir() {
+			// Skip files that are not .go files and are greater than 10MB.
+			if filepath.Ext(f.Name) != ".go" && f.UncompressedSize64 > maxFileSize {
+				continue
+			}
+
 			if err := writeFileToDir(f, dir); err != nil {
 				return nil, fmt.Errorf("writeFileToDir(%q, %q): %v", f.Name, dir, err)
 			}
@@ -319,10 +334,10 @@ func hasFilename(file string, expectedFile string) bool {
 }
 
 // readZipFile returns the uncompressed contents of f or an error if the
-// uncompressed size of f exceeds 10MB.
+// uncompressed size of f exceeds maxFileSize.
 func readZipFile(f *zip.File) ([]byte, error) {
-	if f.UncompressedSize64 > 1e7 {
-		return nil, fmt.Errorf("file size %d exceeds 1MB, skipping", f.UncompressedSize64)
+	if f.UncompressedSize64 > maxFileSize {
+		return nil, fmt.Errorf("file size %d exceeds %d, skipping", f.UncompressedSize64, maxFileSize)
 	}
 	rc, err := f.Open()
 	if err != nil {
@@ -359,17 +374,17 @@ var (
 // detectLicense searches for possible license files in the contents directory
 // of the provided zip path, runs them against a license classifier, and provides all
 // licenses with a confidence score that meet the licenseClassifyThreshold.
-func detectLicense(r *zip.Reader, contentsDir string) string {
+func detectLicense(r *zip.Reader, contentsDir string) (string, error) {
 	for _, f := range r.File {
-		if filepath.Dir(f.Name) != contentsDir || !licenseFileNames[filepath.Base(f.Name)] {
+		if filepath.Dir(f.Name) != contentsDir || !licenseFileNames[filepath.Base(f.Name)] || f.UncompressedSize64 > 1e7 {
 			
 			
 			continue
 		}
+
 		bytes, err := readZipFile(f)
 		if err != nil {
-			log.Printf("readZipFile(%s): %v", f.Name, err)
-			continue
+			return "", fmt.Errorf("readZipFile(%s): %v", f.Name, err)
 		}
 
 		cov, ok := license.Cover(bytes, license.Options{})
@@ -379,8 +394,8 @@ func detectLicense(r *zip.Reader, contentsDir string) string {
 
 		m := cov.Match[0]
 		if m.Percent > licenseClassifyThreshold {
-			return m.Name
+			return m.Name, nil
 		}
 	}
-	return ""
+	return "", nil
 }
