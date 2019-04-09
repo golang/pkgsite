@@ -75,32 +75,32 @@ type VersionsPage struct {
 	PackageHeader *PackageHeader
 }
 
-// parseTabTemplates parses html templates contained in the given base
-// directory in order to generate a map of tabName->*template.Template.
+// parsePageTemplates parses html templates contained in the given base
+// directory in order to generate a map of pageName->*template.Template.
 //
 // Separate templates are used so that certain contextual functions (e.g.
-// tabName) can be bound independently for each tab.
-func parseTabTemplates(base string) (map[string]*template.Template, error) {
+// pageName) can be bound independently for each page.
+func parsePageTemplates(base string) (map[string]*template.Template, error) {
 	commonFuncs := template.FuncMap{
 		"equal": reflect.DeepEqual,
 	}
-	tabs := []string{
+	pages := []string{
 		"index", "overview", "search", "versions",
 	}
 	templates := make(map[string]*template.Template)
-	// Loop through and create a template for each tab.  This template includes
-	// the page html template contained in pages/<tab>.tmpl, along with all
+	// Loop through and create a template for each page.  This template includes
+	// the page html template contained in pages/<page>.tmpl, along with all
 	// helper snippets contained in helpers/*.tmpl.
-	for _, tabName := range tabs {
-		pn := tabName
+	for _, pageName := range pages {
+		pn := pageName
 		t := template.New("").Funcs(commonFuncs).Funcs(template.FuncMap{
-			"tabName": func() string { return pn },
+			"pageName": func() string { return pn },
 		})
 		helperGlob := filepath.Join(base, "helpers", "*.tmpl")
 		if _, err := t.ParseGlob(helperGlob); err != nil {
 			return nil, fmt.Errorf("ParseGlob(%q): %v", helperGlob, err)
 		}
-		templateName := fmt.Sprintf("%s.tmpl", tabName)
+		templateName := fmt.Sprintf("%s.tmpl", pageName)
 		templateFile := filepath.Join(base, "pages", templateName)
 		if _, err := t.ParseFiles(templateFile); err != nil {
 			return nil, fmt.Errorf("ParseFiles(%q): %v", templateFile, err)
@@ -118,7 +118,7 @@ type Controller struct {
 
 // New creates a new Controller for the given database and template directory.
 func New(db *postgres.DB, templateDir string) (*Controller, error) {
-	ts, err := parseTabTemplates(templateDir)
+	ts, err := parsePageTemplates(templateDir)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing templates: %v", err)
 	}
