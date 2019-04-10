@@ -38,6 +38,7 @@ override.tf.json
 
 ### macOS ###
 .DS_Store
+.idea
 
 ### Discovery Project ###
 sos.googlesource.com/sos
