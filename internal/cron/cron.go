@@ -72,8 +72,7 @@ func getVersionsFromIndex(ctx context.Context, indexURL string, since time.Time)
 
 // FetchVersions makes a request to the fetch service for each entry in logs.
 // It uses workerCount number of goroutines to make these requests.
-func FetchVersions(ctx context.Context, client *fetch.Client,
-	logs []*internal.VersionLog, fetchTimeout time.Duration, workerCount int) error {
+func FetchVersions(ctx context.Context, client *fetch.Client, logs []*internal.VersionLog, workerCount int) error {
 	// Use a buffered channel as a semaphore for controlling access to a
 	// goroutine.
 	sem := make(chan struct{}, workerCount)

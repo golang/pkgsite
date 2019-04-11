@@ -55,7 +55,7 @@ func makeNewVersionsHandler(db *postgres.DB, workers int) http.HandlerFunc {
 		}
 
 		client := fetch.New(fetchURL)
-		cron.FetchVersions(r.Context(), client, logs, fetchTimeout, workers)
+		cron.FetchVersions(r.Context(), client, logs, workers)
 		fmt.Fprint(w, fmt.Sprintf("Requested %d new versions!", len(logs)))
 	}
 }
