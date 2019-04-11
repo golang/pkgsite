@@ -8,8 +8,9 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.1
 	github.com/russross/blackfriday/v2 v2.0.1
 	gocloud.dev v0.12.0
-	golang.org/x/net v0.0.0-20190213061140-3a22650c66bd
-	golang.org/x/tools v0.0.0-20190226205152-f727befe758c
+	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3
+	golang.org/x/sys v0.0.0-20190411185658-b44545bcd369 // indirect
+	golang.org/x/tools v0.0.0-20190411180116-681f9ce8ac52
 	google.golang.org/grpc v1.19.1
 	sos.googlesource.com/sos v1.0.0
 )

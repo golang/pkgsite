@@ -80,11 +80,13 @@ func TestGetZip(t *testing.T) {
 	}
 
 	expectedFiles := map[string]bool{
-		"my.mod/module@v1.0.0/LICENSE":    true,
-		"my.mod/module@v1.0.0/README.md":  true,
-		"my.mod/module@v1.0.0/go.mod":     true,
-		"my.mod/module@v1.0.0/foo/foo.go": true,
-		"my.mod/module@v1.0.0/bar/bar.go": true,
+		"my.mod/module@v1.0.0/LICENSE":        true,
+		"my.mod/module@v1.0.0/README.md":      true,
+		"my.mod/module@v1.0.0/go.mod":         true,
+		"my.mod/module@v1.0.0/foo/foo.go":     true,
+		"my.mod/module@v1.0.0/foo/LICENSE.md": true,
+		"my.mod/module@v1.0.0/bar/bar.go":     true,
+		"my.mod/module@v1.0.0/bar/LICENSE":    true,
 	}
 	if len(zipReader.File) != len(expectedFiles) {
 		t.Errorf("GetZip(ctx, %q, %q) returned number of files: got %d, want %d",

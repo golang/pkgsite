@@ -10,6 +10,6 @@
     <h1>Package <a href="https://{{ .Path }}" class="DetailsHeader-packageName">{{ .Name }}</a> - {{ .Version }}</h1>
     <h3>import "{{ .Path }}"</h3>
     <p>{{ .Synopsis }}</p>
-    <p>{{ .License }} - {{ .CommitTime }}</p>
+    <p>{{range $i, $e := .Licenses}}{{if $i}}, {{end}}{{ $e.Type }}{{end}} - {{ .CommitTime }}</p>
   </header>
 {{ end }}

@@ -26,6 +26,18 @@ type Module struct {
 	Versions  []*Version
 }
 
+// LicenseInfo holds license metadata.
+type LicenseInfo struct {
+	Type     string
+	FilePath string
+}
+
+// A License is a classified license file path and its contents.
+type License struct {
+	LicenseInfo
+	Contents []byte
+}
+
 // A Version is a specific, reproducible build of a module.
 type Version struct {
 	Module      *Module
@@ -34,7 +46,6 @@ type Version struct {
 	UpdatedAt   time.Time
 	Synopsis    string
 	CommitTime  time.Time
-	License     string
 	ReadMe      []byte
 	VersionType VersionType
 	Packages    []*Package
@@ -48,6 +59,7 @@ type Package struct {
 	Synopsis string
 	Suffix   string // if my.module/v2/A/B is the path, A/B is the package suffix
 	Version  *Version
+	Licenses []*LicenseInfo // path to applicable version licenses
 }
 
 // VersionType defines the version types a module can have.

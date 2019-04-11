@@ -12,6 +12,7 @@ import (
 	"go/ast"
 	"go/doc"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -97,17 +98,17 @@ func parseVersion(version string) (internal.VersionType, error) {
 // the contents, and writes the data to the database. The fetch service will:
 // (1) Get the version commit time from the proxy
 // (2) Download the version zip from the proxy
-// (3) Process the contents (series name, readme, license, and packages)
+// (3) Process the contents (series path, readme, licenses, and packages)
 // (4) Write the data to the discovery database
-func FetchAndInsertVersion(name, version string, proxyClient *proxy.Client, db *postgres.DB) error {
+func FetchAndInsertVersion(modulePath, version string, proxyClient *proxy.Client, db *postgres.DB) error {
 	// Unlike other actions (which use a Timeout middleware), we set a fixed
 	// timeout for FetchAndInsertVersion.  This allows module processing to
 	// succeed even for extremely short lived requests.
 	ctx, cancel := context.WithTimeout(context.Background(), fetchTimeout)
 	defer cancel()
 
-	if err := module.CheckPath(name); err != nil {
-		return fmt.Errorf("fetch: invalid module name %v: %v", name, err)
+	if err := module.CheckPath(modulePath); err != nil {
+		return fmt.Errorf("fetch: invalid module name %v: %v", modulePath, err)
 	}
 
 	versionType, err := parseVersion(version)
@@ -115,44 +116,39 @@ func FetchAndInsertVersion(name, version string, proxyClient *proxy.Client, db *
 		return fmt.Errorf("parseVersion(%q): %v", version, err)
 	}
 
-	info, err := proxyClient.GetInfo(ctx, name, version)
+	info, err := proxyClient.GetInfo(ctx, modulePath, version)
 	if err != nil {
-		return fmt.Errorf("proxyClient.GetInfo(%q, %q): %v", name, version, err)
+		return fmt.Errorf("proxyClient.GetInfo(%q, %q): %v", modulePath, version, err)
 	}
 
-	zipReader, err := proxyClient.GetZip(ctx, name, version)
+	zipReader, err := proxyClient.GetZip(ctx, modulePath, version)
 	if err != nil {
-		return fmt.Errorf("proxyClient.GetZip(%q, %q): %v", name, version, err)
+		return fmt.Errorf("proxyClient.GetZip(%q, %q): %v", modulePath, version, err)
 	}
 
-	var readme []byte
-	readmeFile := "README"
-	if containsFile(zipReader, readmeFile) {
-		readme, err = extractFile(zipReader, readmeFile)
-		if err != nil {
-			return fmt.Errorf("extractFile(%v, %q): %v", zipReader, readmeFile, err)
-		}
-	}
-
-	seriesName, err := seriesPathForModule(name)
+	readme, err := extractReadmeFromZip(zipReader)
 	if err != nil {
-		return fmt.Errorf("seriesPathForModule(%q): %v", name, err)
+		return fmt.Errorf("extractReadmeFromZip(zipReader): %v", err)
 	}
 
-	packages, err := extractPackagesFromZip(name, version, zipReader)
-	if err != nil && err != errModuleContainsNoPackages {
-		return fmt.Errorf("extractPackagesFromZip(%q, %q): %v", name, version, err)
-	}
-
-	contentDir := fmt.Sprintf("%s@%s", name, version)
-	license, err := detectLicense(zipReader, contentDir)
+	seriesName, err := seriesPathForModule(modulePath)
 	if err != nil {
-		return fmt.Errorf("detectLicense(zipReader, %q): %v", contentDir, err)
+		return fmt.Errorf("seriesPathForModule(%q): %v", modulePath, err)
+	}
+
+	licenses, err := detectLicenses(zipReader)
+	if err != nil {
+		log.Printf("Error detecting licenses for %v@%v: %v", modulePath, version, err)
+	}
+
+	packages, err := extractPackagesFromZip(modulePath, version, zipReader, licenses)
+	if err != nil {
+		return fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, version, licenses, err)
 	}
 
 	v := &internal.Version{
 		Module: &internal.Module{
-			Path: name,
+			Path: modulePath,
 			Series: &internal.Series{
 				Path: seriesName,
 			},
@@ -160,32 +156,72 @@ func FetchAndInsertVersion(name, version string, proxyClient *proxy.Client, db *
 		Version:     version,
 		CommitTime:  info.Time,
 		ReadMe:      readme,
-		License:     license,
 		Packages:    packages,
 		VersionType: versionType,
 	}
-	if err = db.InsertVersion(ctx, v); err != nil {
-		return fmt.Errorf("db.InsertVersion for %q %q: %v", name, version, err)
+	if err = db.InsertVersion(ctx, v, licenses); err != nil {
+		return fmt.Errorf("db.InsertVersion for %q %q: %v", modulePath, version, err)
 	}
 	if err = db.InsertDocuments(ctx, v); err != nil {
-		return fmt.Errorf("db.InsertDocuments for %q %q: %v", name, version, err)
+		return fmt.Errorf("db.InsertDocuments for %q %q: %v", modulePath, version, err)
 	}
 	return nil
 }
 
+// extractReadmeFromZip returns the README content, if found, else nil.  It
+// returns error if the README file cannot be read.
+func extractReadmeFromZip(r *zip.Reader) ([]byte, error) {
+	var (
+		readme []byte
+		err    error
+	)
+	readmeFile := "README"
+	if containsFile(r, readmeFile) {
+		readme, err = extractFile(r, readmeFile)
+		if err != nil {
+			return nil, fmt.Errorf("extractFile(%v, %q): %v", r, readmeFile, err)
+		}
+	}
+	return readme, nil
+}
+
 // extractPackagesFromZip returns a slice of packages from the module zip r.
-func extractPackagesFromZip(module, version string, r *zip.Reader) ([]*internal.Package, error) {
+// It matches against the given licenses to determine the subset of licenses
+// that applies to each package.
+func extractPackagesFromZip(modulePath, version string, r *zip.Reader, licenses []*internal.License) ([]*internal.Package, error) {
 	// Create a temporary directory to write the contents of the module zip.
 	tempPrefix := "discovery_"
-	dir, err := ioutil.TempDir("", tempPrefix)
+	workDir, err := ioutil.TempDir("", tempPrefix)
 	if err != nil {
 		return nil, fmt.Errorf("ioutil.TempDir(%q, %q): %v", "", tempPrefix, err)
 	}
-	defer os.RemoveAll(dir)
+	defer os.RemoveAll(workDir)
 
+	if err := extractModuleFiles(workDir, modulePath, r); err != nil {
+		return nil, fmt.Errorf("extractModuleFiles(%q, %q, zipReader): %v", workDir, modulePath, err)
+	}
+
+	pkgs, err := loadPackages(workDir, modulePath, version)
+	if err != nil && err != errModuleContainsNoPackages {
+		return nil, fmt.Errorf("loadPackages(%q, %q, %q, zipReader): %v", workDir, modulePath, version, err)
+	}
+
+	packages, err := transformPackages(workDir, modulePath, pkgs, licenses)
+	if err != nil {
+		return nil, fmt.Errorf("transformPackages(%q, %q, pkgs, licenses): %v", workDir, modulePath, err)
+	}
+	return packages, nil
+}
+
+// extractModuleFiles extracts files contained in the given module within the
+// working directory. It returns error if the given *zip.Reader contains files
+// outside of the expected module path, if a Go file exceeds the maximum
+// allowable file size, or if there is an error writing the extracted file.
+// Notably, it simply skips over non-Go files that exceed the maximum file size.
+func extractModuleFiles(workDir, modulePath string, r *zip.Reader) error {
 	for _, f := range r.File {
-		if !strings.HasPrefix(f.Name, module) && !strings.HasPrefix(module, f.Name) {
-			return nil, fmt.Errorf("expected files to have shared prefix %q, found %q", module, f.Name)
+		if !strings.HasPrefix(f.Name, modulePath) && !strings.HasPrefix(modulePath, f.Name) {
+			return fmt.Errorf("expected files to have shared prefix %q, found %q", modulePath, f.Name)
 		}
 
 		if !f.FileInfo().IsDir() {
@@ -194,17 +230,25 @@ func extractPackagesFromZip(module, version string, r *zip.Reader) ([]*internal.
 				continue
 			}
 
-			if err := writeFileToDir(f, dir); err != nil {
-				return nil, fmt.Errorf("writeFileToDir(%q, %q): %v", f.Name, dir, err)
+			if err := writeFileToDir(f, workDir); err != nil {
+				return fmt.Errorf("writeFileToDir(%q, %q): %v", f.Name, workDir, err)
 			}
 		}
 	}
+	return nil
+}
 
+// loadPackages calls packages.Load for the given modulePath and version within
+// the working directory.
+//
+// It returns the special error errModuleContainsNoPackages if the module
+// contains no packages.
+func loadPackages(workDir, modulePath, version string) ([]*packages.Package, error) {
 	config := &packages.Config{
 		Mode: packages.LoadSyntax,
-		Dir:  fmt.Sprintf("%s/%s@%s", dir, module, version),
+		Dir:  fmt.Sprintf("%s/%s@%s", workDir, modulePath, version),
 	}
-	pattern := fmt.Sprintf("%s/...", module)
+	pattern := fmt.Sprintf("%s/...", modulePath)
 	pkgs, err := packages.Load(config, pattern)
 	if err != nil {
 		return nil, fmt.Errorf("packages.Load(config, %q): %v", pattern, err)
@@ -214,6 +258,56 @@ func extractPackagesFromZip(module, version string, r *zip.Reader) ([]*internal.
 		return nil, errModuleContainsNoPackages
 	}
 
+	return pkgs, nil
+}
+
+// licenseMatcher is a map of directory prefix -> license files, that can be
+// used to match packages to their applicable licenses.
+type licenseMatcher map[string][]internal.LicenseInfo
+
+// newLicenseMatcher creates a licenseMatcher that can be used match licenses
+// against packages extracted to the given workDir.
+func newLicenseMatcher(workDir string, licenses []*internal.License) licenseMatcher {
+	var matcher licenseMatcher = make(map[string][]internal.LicenseInfo)
+	for _, l := range licenses {
+		
+		path := filepath.Join(workDir, l.FilePath)
+		prefix := filepath.ToSlash(filepath.Clean(filepath.Dir(path)))
+		matcher[prefix] = append(matcher[prefix], l.LicenseInfo)
+	}
+	return matcher
+}
+
+// matchLicenses returns the slice of licenses that apply to the given package.
+// A license applies to a package if it is contained in a directory that
+// precedes the package directory in a directory hierarchy (i.e., a direct or
+// indirect parent of the package directory).
+func (m licenseMatcher) matchLicenses(p *packages.Package) []*internal.LicenseInfo {
+	if len(p.GoFiles) == 0 {
+		return nil
+	}
+	// Since we're only operating on modules, package dir should be deterministic
+	// based on the location of Go files.
+	pkgDir := filepath.ToSlash(filepath.Clean(filepath.Dir(p.GoFiles[0])))
+
+	var licenseFiles []*internal.LicenseInfo
+	for prefix, lics := range m {
+		// append a slash so that prefix a/b does not match a/bc/d
+		if strings.HasPrefix(pkgDir+"/", prefix+"/") {
+			for _, lic := range lics {
+				lf := lic
+				licenseFiles = append(licenseFiles, &lf)
+			}
+		}
+	}
+	return licenseFiles
+}
+
+// transformPackages maps a slice of *packages.Package to our internal
+// representation (*internal.Package).  To do so, it maps package data
+// and matches packages with their applicable licenses.
+func transformPackages(workDir, modulePath string, pkgs []*packages.Package, licenses []*internal.License) ([]*internal.Package, error) {
+	matcher := newLicenseMatcher(workDir, licenses)
 	packages := []*internal.Package{}
 	for _, p := range pkgs {
 		files := make(map[string]*ast.File)
@@ -227,11 +321,14 @@ func extractPackagesFromZip(module, version string, r *zip.Reader) ([]*internal.
 		}
 		d := doc.New(apkg, p.PkgPath, 0)
 
+		matchedLicenses := matcher.matchLicenses(p)
+
 		packages = append(packages, &internal.Package{
 			Name:     p.Name,
 			Path:     p.PkgPath,
 			Synopsis: doc.Synopsis(d.Doc),
-			Suffix:   strings.TrimPrefix(strings.TrimPrefix(p.PkgPath, module), "/"),
+			Licenses: matchedLicenses,
+			Suffix:   strings.TrimPrefix(strings.TrimPrefix(p.PkgPath, modulePath), "/"),
 		})
 	}
 	return packages, nil
@@ -246,6 +343,7 @@ func writeFileToDir(f *zip.File, dir string) (err error) {
 		}
 	}
 
+	
 	filename := filepath.Join(dir, f.Name)
 	file, err := os.Create(filename)
 	if err != nil {
@@ -374,17 +472,21 @@ var (
 // detectLicense searches for possible license files in the contents directory
 // of the provided zip path, runs them against a license classifier, and provides all
 // licenses with a confidence score that meet the licenseClassifyThreshold.
-func detectLicense(r *zip.Reader, contentsDir string) (string, error) {
+func detectLicenses(r *zip.Reader) ([]*internal.License, error) {
+	var licenses []*internal.License
 	for _, f := range r.File {
-		if filepath.Dir(f.Name) != contentsDir || !licenseFileNames[filepath.Base(f.Name)] || f.UncompressedSize64 > 1e7 {
-			
-			
+		if !licenseFileNames[filepath.Base(f.Name)] || strings.Contains(f.Name, "/vendor/") {
+			// Only consider licenses with an acceptable file name, and not in the
+			// vendor directory.
 			continue
+		}
+		if f.UncompressedSize64 > 1e7 {
+			return nil, fmt.Errorf("potential license file %q exceeds maximum uncompressed size %d", f.Name, int(1e7))
 		}
 
 		bytes, err := readZipFile(f)
 		if err != nil {
-			return "", fmt.Errorf("readZipFile(%s): %v", f.Name, err)
+			return nil, fmt.Errorf("readZipFile(%s): %v", f.Name, err)
 		}
 
 		cov, ok := license.Cover(bytes, license.Options{})
@@ -394,8 +496,15 @@ func detectLicense(r *zip.Reader, contentsDir string) (string, error) {
 
 		m := cov.Match[0]
 		if m.Percent > licenseClassifyThreshold {
-			return m.Name, nil
+			license := &internal.License{
+				LicenseInfo: internal.LicenseInfo{
+					Type:     m.Name,
+					FilePath: f.Name,
+				},
+				Contents: bytes,
+			}
+			licenses = append(licenses, license)
 		}
 	}
-	return "", nil
+	return licenses, nil
 }

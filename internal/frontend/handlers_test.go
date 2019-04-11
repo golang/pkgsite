@@ -17,6 +17,15 @@ import (
 
 const testTimeout = 5 * time.Second
 
+var (
+	sampleLicenseInfos = []*internal.LicenseInfo{
+		{Type: "MIT", FilePath: "LICENSE"},
+	}
+	sampleLicenses = []*internal.License{
+		{LicenseInfo: *sampleLicenseInfos[0], Contents: []byte("Lorem Ipsum")},
+	}
+)
+
 func TestElapsedTime(t *testing.T) {
 	now := postgres.NowTruncated()
 	testCases := []struct {
@@ -87,13 +96,13 @@ func TestFetchOverviewPage(t *testing.T) {
 			Version:    "v1.0.0",
 			Synopsis:   "test synopsis",
 			CommitTime: time.Now().Add(time.Hour * -8),
-			License:    "MIT",
 			ReadMe:     []byte("This is the readme text."),
 			Packages: []*internal.Package{
 				&internal.Package{
 					Name:     "pkg_name",
 					Path:     "test.com/module/pkg_name",
 					Synopsis: "Test package synopsis",
+					Licenses: sampleLicenseInfos,
 				},
 			},
 			VersionType: internal.VersionTypeRelease,
@@ -106,7 +115,7 @@ func TestFetchOverviewPage(t *testing.T) {
 				Version:    "v1.0.0",
 				Path:       "test.com/module/pkg_name",
 				Synopsis:   "Test package synopsis",
-				License:    "MIT",
+				Licenses:   sampleLicenseInfos,
 				CommitTime: "today",
 			},
 		},
@@ -115,7 +124,7 @@ func TestFetchOverviewPage(t *testing.T) {
 	teardownDB, db := postgres.SetupCleanDB(t)
 	defer teardownDB(t)
 
-	if err := db.InsertVersion(ctx, &tc.version); err != nil {
+	if err := db.InsertVersion(ctx, &tc.version, sampleLicenses); err != nil {
 		t.Fatalf("db.InsertVersion(%v): %v", tc.version, err)
 	}
 
@@ -140,13 +149,13 @@ func getTestVersion(pkgPath, modulePath, version string, versionType internal.Ve
 		},
 		Version:    version,
 		CommitTime: time.Now().Add(time.Hour * -8),
-		License:    "MIT",
 		ReadMe:     []byte("This is the readme text."),
 		Packages: []*internal.Package{
 			&internal.Package{
 				Name:     "pkg_name",
 				Path:     pkgPath,
 				Synopsis: "test synopsis",
+				Licenses: sampleLicenseInfos,
 			},
 		},
 		VersionType: versionType,
@@ -274,7 +283,7 @@ func TestFetchVersionsPage(t *testing.T) {
 					Version:    "v1.2.1",
 					Path:       pkg1Path,
 					Synopsis:   "test synopsis",
-					License:    "MIT",
+					Licenses:   []*internal.LicenseInfo{{Type: "MIT", FilePath: "LICENSE"}},
 					CommitTime: "today",
 				},
 			},
@@ -325,7 +334,7 @@ func TestFetchVersionsPage(t *testing.T) {
 					Version:    "v0.0.0-20140414041501-3c2ca4d52544",
 					Path:       pkg1Path,
 					Synopsis:   "test synopsis",
-					License:    "MIT",
+					Licenses:   []*internal.LicenseInfo{{Type: "MIT", FilePath: "LICENSE"}},
 					CommitTime: "today",
 				},
 			},
@@ -336,7 +345,7 @@ func TestFetchVersionsPage(t *testing.T) {
 			defer teardownDB(t)
 
 			for _, v := range tc.versions {
-				if err := db.InsertVersion(ctx, v); err != nil {
+				if err := db.InsertVersion(ctx, v, sampleLicenses); err != nil {
 					t.Fatalf("db.InsertVersion(%v): %v", v, err)
 				}
 			}
@@ -400,7 +409,6 @@ func TestFetchSearchPage(t *testing.T) {
 		}
 		versionFoo = &internal.Version{
 			Version:     "v1.0.0",
-			License:     "licensename",
 			ReadMe:      []byte("readme"),
 			CommitTime:  now,
 			VersionType: internal.VersionTypeRelease,
@@ -410,12 +418,12 @@ func TestFetchSearchPage(t *testing.T) {
 					Name:     "foo",
 					Path:     "/path/to/foo",
 					Synopsis: "foo is a package.",
+					Licenses: sampleLicenseInfos,
 				},
 			},
 		}
 		versionBar = &internal.Version{
 			Version:     "v1.0.0",
-			License:     "licensename",
 			ReadMe:      []byte("readme"),
 			CommitTime:  now,
 			VersionType: internal.VersionTypeRelease,
@@ -448,7 +456,7 @@ func TestFetchSearchPage(t *testing.T) {
 						ModulePath:   versionBar.Module.Path,
 						Synopsis:     versionBar.Packages[0].Synopsis,
 						Version:      versionBar.Version,
-						License:      versionBar.License,
+						Licenses:     versionBar.Packages[0].Licenses,
 						CommitTime:   elapsedTime(versionBar.CommitTime),
 						NumImporters: 0,
 					},
@@ -458,7 +466,7 @@ func TestFetchSearchPage(t *testing.T) {
 						ModulePath:   versionFoo.Module.Path,
 						Synopsis:     versionFoo.Packages[0].Synopsis,
 						Version:      versionFoo.Version,
-						License:      versionFoo.License,
+						Licenses:     versionFoo.Packages[0].Licenses,
 						CommitTime:   elapsedTime(versionFoo.CommitTime),
 						NumImporters: 0,
 					},
@@ -478,7 +486,7 @@ func TestFetchSearchPage(t *testing.T) {
 						ModulePath:   versionFoo.Module.Path,
 						Synopsis:     versionFoo.Packages[0].Synopsis,
 						Version:      versionFoo.Version,
-						License:      versionFoo.License,
+						Licenses:     versionFoo.Packages[0].Licenses,
 						CommitTime:   elapsedTime(versionFoo.CommitTime),
 						NumImporters: 0,
 					},
@@ -491,7 +499,7 @@ func TestFetchSearchPage(t *testing.T) {
 			defer teardownTestCase(t)
 
 			for _, v := range tc.versions {
-				if err := db.InsertVersion(ctx, v); err != nil {
+				if err := db.InsertVersion(ctx, v, sampleLicenses); err != nil {
 					t.Fatalf("db.InsertVersion(%+v): %v", v, err)
 				}
 				if err := db.InsertDocuments(ctx, v); err != nil {
@@ -531,13 +539,13 @@ func TestFetchModulePage(t *testing.T) {
 			Version:    "v1.0.0",
 			Synopsis:   "test synopsis",
 			CommitTime: time.Now().Add(time.Hour * -8),
-			License:    "MIT",
 			ReadMe:     []byte("This is the readme text."),
 			Packages: []*internal.Package{
 				&internal.Package{
 					Name:     "pkg_name",
 					Path:     "test.com/module/pkg_name",
 					Synopsis: "Test package synopsis",
+					Licenses: sampleLicenseInfos,
 				},
 			},
 			VersionType: internal.VersionTypeRelease,
@@ -553,6 +561,7 @@ func TestFetchModulePage(t *testing.T) {
 					Path:       "test.com/module/pkg_name",
 					Version:    "v1.0.0",
 					Synopsis:   "Test package synopsis",
+					Licenses:   sampleLicenseInfos,
 				},
 			},
 			PackageHeader: &Package{
@@ -560,7 +569,7 @@ func TestFetchModulePage(t *testing.T) {
 				Version:    "v1.0.0",
 				Path:       "test.com/module/pkg_name",
 				Synopsis:   "Test package synopsis",
-				License:    "MIT",
+				Licenses:   sampleLicenseInfos,
 				CommitTime: "today",
 			},
 		},
@@ -569,7 +578,7 @@ func TestFetchModulePage(t *testing.T) {
 	teardownDB, db := postgres.SetupCleanDB(t)
 	defer teardownDB(t)
 
-	if err := db.InsertVersion(ctx, &tc.version); err != nil {
+	if err := db.InsertVersion(ctx, &tc.version, sampleLicenses); err != nil {
 		t.Fatalf("db.InsertVersion(%v): %v", tc.version, err)
 	}
 

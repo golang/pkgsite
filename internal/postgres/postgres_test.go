@@ -20,6 +20,15 @@ import (
 
 const testTimeout = 5 * time.Second
 
+var (
+	sampleLicenseInfos = []*internal.LicenseInfo{
+		{Type: "licensename", FilePath: "bar/LICENSE"},
+	}
+	sampleLicenses = []*internal.License{
+		{LicenseInfo: *sampleLicenseInfos[0], Contents: []byte("Lorem Ipsum")},
+	}
+)
+
 // versionsDiff takes in two versions, v1 and v2, and returns a string
 // description of the difference between them. If they are the
 // same the string will be empty. Fields "CreatedAt",
@@ -55,7 +64,6 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 		testVersion = &internal.Version{
 			Module:     module,
 			Version:    "v1.0.0",
-			License:    "licensename",
 			ReadMe:     []byte("readme"),
 			CommitTime: now,
 			Packages: []*internal.Package{
@@ -109,7 +117,6 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 			versionData: &internal.Version{
 				Version:    "v1.0.0",
 				Synopsis:   "This is a synopsis",
-				License:    "licensename",
 				CommitTime: now,
 			},
 			wantWriteErrCode: codes.InvalidArgument,
@@ -121,7 +128,6 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 				Module:     &internal.Module{},
 				Version:    "v1.0.0",
 				Synopsis:   "This is a synopsis",
-				License:    "licensename",
 				CommitTime: now,
 			},
 			wantWriteErrCode: codes.InvalidArgument,
@@ -132,7 +138,6 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 			versionData: &internal.Version{
 				Module:     module,
 				Synopsis:   "This is a synopsis",
-				License:    "licensename",
 				CommitTime: now,
 			},
 			wantWriteErrCode: codes.InvalidArgument,
@@ -155,12 +160,12 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 			teardownTestCase, db := SetupCleanDB(t)
 			defer teardownTestCase(t)
 
-			if err := db.InsertVersion(ctx, tc.versionData); status.Code(err) != tc.wantWriteErrCode {
+			if err := db.InsertVersion(ctx, tc.versionData, sampleLicenses); status.Code(err) != tc.wantWriteErrCode {
 				t.Errorf("db.InsertVersion(ctx, %+v) error: %v, want write error: %v", tc.versionData, err, tc.wantWriteErrCode)
 			}
 
 			// Test that insertion of duplicate primary key won't fail.
-			if err := db.InsertVersion(ctx, tc.versionData); status.Code(err) != tc.wantWriteErrCode {
+			if err := db.InsertVersion(ctx, tc.versionData, sampleLicenses); status.Code(err) != tc.wantWriteErrCode {
 				t.Errorf("db.InsertVersion(ctx, %+v) second insert error: %v, want write error: %v", tc.versionData, err, tc.wantWriteErrCode)
 			}
 
@@ -185,6 +190,10 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 					t.Fatalf("db.GetPackage(ctx, %q, %q) = %v, want %v", tc.pkgpath, tc.version, err, sql.ErrNoRows)
 				}
 				return
+			} else {
+				if err != nil {
+					t.Errorf("db.GetPackage(ctx, %q, %q): %v", tc.pkgpath, tc.version, err)
+				}
 			}
 
 			wantPkg := tc.versionData.Packages[0]
@@ -194,10 +203,6 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 
 			if gotPkg.Version.Version != tc.versionData.Version {
 				t.Errorf("db.GetPackage(ctx, %q, %q) version.version = %v, want %v", tc.pkgpath, tc.version, gotPkg.Version.Version, tc.versionData.Version)
-			}
-			if gotPkg.Version.License != tc.versionData.License {
-				t.Errorf("db.GetPackage(ctx, %q, %q) version.license = %v, want %v", tc.pkgpath, tc.version, gotPkg.Version.License, tc.versionData.License)
-
 			}
 
 			if diff := cmp.Diff(gotPkg, wantPkg, cmpopts.IgnoreFields(internal.Package{}, "Version")); diff != "" {
@@ -219,6 +224,7 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 			Path:     "path.to/foo/bar",
 			Name:     "bar",
 			Synopsis: "This is a package synopsis",
+			Licenses: sampleLicenseInfos,
 		}
 		series = &internal.Series{
 			Path: "myseries",
@@ -231,7 +237,6 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 			&internal.Version{
 				Module:      module,
 				Version:     "v1.0.0-alpha.1",
-				License:     "licensename",
 				ReadMe:      []byte("readme"),
 				CommitTime:  now,
 				Packages:    []*internal.Package{pkg},
@@ -240,7 +245,6 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 			&internal.Version{
 				Module:      module,
 				Version:     "v1.0.0",
-				License:     "licensename",
 				ReadMe:      []byte("readme"),
 				CommitTime:  now,
 				Packages:    []*internal.Package{pkg},
@@ -249,7 +253,6 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 			&internal.Version{
 				Module:      module,
 				Version:     "v1.0.0-20190311183353-d8887717615a",
-				License:     "licensename",
 				ReadMe:      []byte("readme"),
 				CommitTime:  now,
 				Packages:    []*internal.Package{pkg},
@@ -272,6 +275,7 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 				Name:     pkg.Name,
 				Path:     pkg.Path,
 				Synopsis: pkg.Synopsis,
+				Licenses: sampleLicenseInfos,
 				Version: &internal.Version{
 					CreatedAt: testVersions[1].CreatedAt,
 					UpdatedAt: testVersions[1].UpdatedAt,
@@ -281,7 +285,6 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 					Version:    testVersions[1].Version,
 					Synopsis:   testVersions[1].Synopsis,
 					CommitTime: testVersions[1].CommitTime,
-					License:    testVersions[1].License,
 				},
 			},
 		},
@@ -295,7 +298,7 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			for _, v := range tc.versions {
-				if err := db.InsertVersion(ctx, v); err != nil {
+				if err := db.InsertVersion(ctx, v, sampleLicenses); err != nil {
 					t.Errorf("db.InsertVersion(ctx, %v): %v", v, err)
 				}
 			}
@@ -306,8 +309,8 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 			}
 
 			if diff := cmp.Diff(gotPkg, tc.wantPkg, cmpopts.IgnoreFields(internal.Package{}, "Version.UpdatedAt", "Version.CreatedAt")); diff != "" {
-				t.Errorf("db.GetLatestPackage(ctx, %q) = %v, want %v, diff is %v",
-					tc.path, gotPkg, tc.wantPkg, diff)
+				t.Errorf("db.GetLatestPackage(ctx, %q) mismatch (-got +want):\n%s",
+					tc.path, diff)
 			}
 		})
 	}
@@ -325,6 +328,7 @@ func TestPostgres_GetLatestPackageForPaths(t *testing.T) {
 			Path:     "path.to/foo/bar",
 			Name:     "bar",
 			Synopsis: "This is a package synopsis",
+			Licenses: sampleLicenseInfos,
 		}
 		pkg2 = &internal.Package{
 			Path:     "path2.to/foo/bar2",
@@ -346,7 +350,6 @@ func TestPostgres_GetLatestPackageForPaths(t *testing.T) {
 			&internal.Version{
 				Module:      module1,
 				Version:     "v1.0.0-alpha.1",
-				License:     "licensename",
 				ReadMe:      []byte("readme"),
 				CommitTime:  now,
 				Packages:    []*internal.Package{pkg1},
@@ -355,7 +358,6 @@ func TestPostgres_GetLatestPackageForPaths(t *testing.T) {
 			&internal.Version{
 				Module:      module1,
 				Version:     "v1.0.0",
-				License:     "licensename",
 				ReadMe:      []byte("readme"),
 				CommitTime:  now,
 				Packages:    []*internal.Package{pkg1},
@@ -364,7 +366,6 @@ func TestPostgres_GetLatestPackageForPaths(t *testing.T) {
 			&internal.Version{
 				Module:      module2,
 				Version:     "v1.0.0-20190311183353-d8887717615a",
-				License:     "licensename",
 				ReadMe:      []byte("readme"),
 				CommitTime:  now,
 				Packages:    []*internal.Package{pkg2},
@@ -373,7 +374,6 @@ func TestPostgres_GetLatestPackageForPaths(t *testing.T) {
 			&internal.Version{
 				Module:      module2,
 				Version:     "v1.0.1-beta",
-				License:     "licensename",
 				ReadMe:      []byte("readme"),
 				CommitTime:  now,
 				Packages:    []*internal.Package{pkg2},
@@ -395,6 +395,7 @@ func TestPostgres_GetLatestPackageForPaths(t *testing.T) {
 				Name:     pkg1.Name,
 				Path:     pkg1.Path,
 				Synopsis: pkg1.Synopsis,
+				Licenses: pkg1.Licenses,
 				Version: &internal.Version{
 					CreatedAt: testVersions[1].CreatedAt,
 					UpdatedAt: testVersions[1].UpdatedAt,
@@ -404,13 +405,13 @@ func TestPostgres_GetLatestPackageForPaths(t *testing.T) {
 					Version:    testVersions[1].Version,
 					Synopsis:   testVersions[1].Synopsis,
 					CommitTime: testVersions[1].CommitTime,
-					License:    testVersions[1].License,
 				},
 			},
 			&internal.Package{
 				Name:     pkg2.Name,
 				Path:     pkg2.Path,
 				Synopsis: pkg2.Synopsis,
+				Licenses: pkg2.Licenses,
 				Version: &internal.Version{
 					CreatedAt: testVersions[3].CreatedAt,
 					UpdatedAt: testVersions[3].UpdatedAt,
@@ -420,14 +421,13 @@ func TestPostgres_GetLatestPackageForPaths(t *testing.T) {
 					Version:    testVersions[3].Version,
 					Synopsis:   testVersions[3].Synopsis,
 					CommitTime: testVersions[3].CommitTime,
-					License:    testVersions[3].License,
 				},
 			},
 		},
 	}
 
 	for _, v := range tc.versions {
-		if err := db.InsertVersion(ctx, v); err != nil {
+		if err := db.InsertVersion(ctx, v, sampleLicenses); err != nil {
 			t.Errorf("db.InsertVersion(ctx, %v): %v", v, err)
 		}
 	}
@@ -438,7 +438,7 @@ func TestPostgres_GetLatestPackageForPaths(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(gotPkgs, tc.wantPkgs); diff != "" {
-		t.Errorf("cmp.Diff(gotPkgs, tc.wantPkgs): %s", diff)
+		t.Errorf("db.GetLatestPackageForPaths(ctx, %q) mismatch (-got +want):\n%s", tc.paths, diff)
 	}
 }
 
@@ -640,7 +640,6 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 			&internal.Version{
 				Module:      module3,
 				Version:     "v3.0.0",
-				License:     "licensename",
 				CommitTime:  now,
 				Packages:    []*internal.Package{pkg3},
 				VersionType: internal.VersionTypeRelease,
@@ -648,7 +647,6 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 			&internal.Version{
 				Module:      module1,
 				Version:     "v1.0.0-alpha.1",
-				License:     "licensename",
 				CommitTime:  now,
 				Packages:    []*internal.Package{pkg1},
 				VersionType: internal.VersionTypePrerelease,
@@ -656,7 +654,6 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 			&internal.Version{
 				Module:      module1,
 				Version:     "v1.0.0",
-				License:     "licensename",
 				CommitTime:  now,
 				Packages:    []*internal.Package{pkg1},
 				VersionType: internal.VersionTypeRelease,
@@ -664,7 +661,6 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 			&internal.Version{
 				Module:      module2,
 				Version:     "v2.0.1-beta",
-				License:     "licensename",
 				CommitTime:  now,
 				Packages:    []*internal.Package{pkg2},
 				VersionType: internal.VersionTypePrerelease,
@@ -672,7 +668,6 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 			&internal.Version{
 				Module:      module2,
 				Version:     "v2.1.0",
-				License:     "licensename",
 				CommitTime:  now,
 				Packages:    []*internal.Package{pkg2},
 				VersionType: internal.VersionTypeRelease,
@@ -695,7 +690,6 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 				&internal.Version{
 					Module:     module2,
 					Version:    "v2.1.0",
-					License:    "licensename",
 					Synopsis:   pkg2.Synopsis,
 					CommitTime: now,
 					Packages: []*internal.Package{
@@ -708,7 +702,6 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 				&internal.Version{
 					Module:     module2,
 					Version:    "v2.0.1-beta",
-					License:    "licensename",
 					Synopsis:   pkg2.Synopsis,
 					CommitTime: now,
 					Packages: []*internal.Package{
@@ -721,7 +714,6 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 				&internal.Version{
 					Module:     module1,
 					Version:    "v1.0.0",
-					License:    "licensename",
 					Synopsis:   pkg1.Synopsis,
 					CommitTime: now,
 					Packages: []*internal.Package{
@@ -734,7 +726,6 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 				&internal.Version{
 					Module:     module1,
 					Version:    "v1.0.0-alpha.1",
-					License:    "licensename",
 					Synopsis:   pkg1.Synopsis,
 					CommitTime: now,
 					Packages: []*internal.Package{
@@ -768,12 +759,11 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 					Module: module1,
 					// %02d makes a string that is a width of 2 and left pads with zeroes
 					Version:     fmt.Sprintf("v0.0.0-201806111833%02d-d8887717615a", i+1),
-					License:     "licensename",
 					CommitTime:  now,
 					Packages:    []*internal.Package{pkg1},
 					VersionType: internal.VersionTypePseudo,
 				}
-				if err := db.InsertVersion(ctx, v); err != nil {
+				if err := db.InsertVersion(ctx, v, nil); err != nil {
 					t.Errorf("db.InsertVersion(%v): %v", v, err)
 				}
 
@@ -783,7 +773,6 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 					wantPseudoVersions = append(wantPseudoVersions, &internal.Version{
 						Module:     module1,
 						Version:    fmt.Sprintf("v0.0.0-201806111833%02d-d8887717615a", tc.numPseudo-i),
-						License:    "licensename",
 						Synopsis:   pkg1.Synopsis,
 						CommitTime: now,
 						Packages: []*internal.Package{
@@ -797,7 +786,7 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 			}
 
 			for _, v := range tc.versions {
-				if err := db.InsertVersion(ctx, v); err != nil {
+				if err := db.InsertVersion(ctx, v, nil); err != nil {
 					t.Errorf("db.InsertVersion(%v): %v", v, err)
 				}
 			}
@@ -907,7 +896,6 @@ func TestGetVersionForPackage(t *testing.T) {
 		testVersion = &internal.Version{
 			Module:      module,
 			Version:     "v1.0.0",
-			License:     "licensename",
 			ReadMe:      []byte("readme"),
 			CommitTime:  now,
 			VersionType: internal.VersionTypeRelease,
@@ -916,6 +904,7 @@ func TestGetVersionForPackage(t *testing.T) {
 					Name:     "foo",
 					Synopsis: "This is a package synopsis",
 					Path:     "test.module/foo",
+					Licenses: sampleLicenseInfos,
 				},
 				&internal.Package{
 					Name:     "testmodule",
@@ -943,7 +932,7 @@ func TestGetVersionForPackage(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 			defer cancel()
 
-			if err := db.InsertVersion(ctx, tc.wantVersion); err != nil {
+			if err := db.InsertVersion(ctx, tc.wantVersion, sampleLicenses); err != nil {
 				t.Errorf("db.InsertVersion(ctx, %q %q): %v", tc.path, tc.version, err)
 			}
 

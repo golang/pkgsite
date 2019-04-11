@@ -30,13 +30,15 @@ func TestFetchAndInsertVersion(t *testing.T) {
 	defer cancel()
 
 	testCases := []struct {
-		name        string
+		modulePath  string
 		version     string
 		versionData *internal.Version
+		pkg         string
+		pkgData     *internal.Package
 	}{
 		{
-			name:    "my.mod/module",
-			version: "v1.0.0",
+			modulePath: "my.mod/module",
+			version:    "v1.0.0",
 			versionData: &internal.Version{
 				Module: &internal.Module{
 					Path: "my.mod/module",
@@ -44,28 +46,39 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				Version:    "v1.0.0",
 				CommitTime: time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
 				ReadMe:     []byte("README FILE FOR TESTING."),
-				License:    "BSD-3-Clause",
+			},
+			pkg: "my.mod/module/bar",
+			pkgData: &internal.Package{
+				Path:     "my.mod/module/bar",
+				Name:     "bar",
+				Synopsis: "package bar",
+				Licenses: []*internal.LicenseInfo{
+					{Type: "BSD-3-Clause", FilePath: "my.mod/module@v1.0.0/LICENSE"},
+					{Type: "BSD-3-Clause", FilePath: "my.mod/module@v1.0.0/bar/LICENSE"},
+				},
 			},
 		},
 	}
 
 	for _, test := range testCases {
-		t.Run(test.name, func(t *testing.T) {
+		t.Run(test.modulePath, func(t *testing.T) {
 			teardownDB, db := postgres.SetupCleanDB(t)
 			defer teardownDB(t)
 
 			teardownProxy, client := proxy.SetupTestProxy(ctx, t)
 			defer teardownProxy(t)
 
-			if err := FetchAndInsertVersion(test.name, test.version, client, db); err != nil {
-				t.Fatalf("FetchAndInsertVersion(%q, %q, %v, %v): %v", test.name, test.version, client, db, err)
+			if err := FetchAndInsertVersion(test.modulePath, test.version, client, db); err != nil {
+				t.Fatalf("FetchAndInsertVersion(%q, %q, %v, %v): %v", test.modulePath, test.version, client, db, err)
 			}
 
-			got, err := db.GetVersion(ctx, test.name, test.version)
+			dbVersion, err := db.GetVersion(ctx, test.modulePath, test.version)
 			if err != nil {
-				t.Fatalf("db.GetVersion(%q, %q): %v", test.name, test.version, err)
+				t.Fatalf("db.GetVersion(ctx, %q, %q): %v", test.modulePath, test.version, err)
 			}
 
+			// create a clone of dbVersion, as we want to use it for package testing later.
+			got := *dbVersion
 			// Set CreatedAt and UpdatedAt to nil for testing, since these are
 			// set by the database.
 			got.CreatedAt = time.Time{}
@@ -77,8 +90,19 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			// reflect.DeepEqual. Convert the DB time to UTC.
 			got.CommitTime = got.CommitTime.UTC()
 
-			if diff := cmp.Diff(*got, *test.versionData); diff != "" {
-				t.Errorf("db.GetVersion(%q, %q) mismatch(-want +got):\n%s", test.name, test.version, diff)
+			if diff := cmp.Diff(got, *test.versionData); diff != "" {
+				t.Errorf("db.GetVersion(ctx, %q, %q) mismatch (-got +want):\n%s", test.modulePath, test.version, diff)
+			}
+
+			test.pkgData.Version = dbVersion
+			// TODO(b/130367504): this shouldn't be necessary
+			test.pkgData.Version.Synopsis = test.pkgData.Synopsis
+			gotPkg, err := db.GetPackage(ctx, test.pkg, test.version)
+			if err != nil {
+				t.Fatalf("db.GetPackage(ctx, %q, %q): %v", test.pkg, test.version, err)
+			}
+			if diff := cmp.Diff(gotPkg, test.pkgData); diff != "" {
+				t.Errorf("db.GetPackage(ctx, %q, %q) mismatch (-got +want):\n%s", test.pkg, test.version, diff)
 			}
 		})
 	}
@@ -395,7 +419,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 				t.Fatalf("client.GetZip(ctx, %q %q): %v", test.name, test.version, err)
 			}
 
-			packages, err := extractPackagesFromZip(test.name, test.version, reader)
+			packages, err := extractPackagesFromZip(test.name, test.version, reader, nil)
 			if err != nil && len(test.packages) != 0 {
 				t.Fatalf("extractPackagesFromZip(%q, %q): %v", test.name, test.zip, err)
 			}
@@ -420,44 +444,52 @@ func TestExtractPackagesFromZip(t *testing.T) {
 	}
 }
 
-func TestDetectLicense(t *testing.T) {
+func TestDetectLicenses(t *testing.T) {
+	makeLicenses := func(licType, licFile string) []*internal.LicenseInfo {
+		return []*internal.LicenseInfo{{Type: licType, FilePath: licFile}}
+	}
 	testCases := []struct {
-		name, zipName, contentsDir, want string
+		name, zipName string
+		want          []*internal.LicenseInfo
 	}{
 		{
-			name:        "valid_license",
-			zipName:     "license",
-			contentsDir: "rsc.io/quote@v1.4.1",
-			want:        "MIT",
+			name:    "valid_license",
+			zipName: "license",
+			want:    makeLicenses("MIT", "rsc.io/quote@v1.4.1/LICENSE"),
 		}, {
-			name:        "valid_license_md_format",
-			zipName:     "licensemd",
-			contentsDir: "rsc.io/quote@v1.4.1",
-			want:        "MIT",
+			name:    "valid_license_md_format",
+			zipName: "licensemd",
+			want:    makeLicenses("MIT", "rsc.io/quote@v1.4.1/LICENSE.md"),
 		},
 		{
-			name:        "valid_license_copying",
-			zipName:     "copying",
-			contentsDir: "golang.org/x/text@v0.0.3",
-			want:        "Apache-2.0",
-		},
-		{
-			name:        "valid_license_copying_md",
-			zipName:     "copyingmd",
-			contentsDir: "golang.org/x/text@v0.0.3",
-			want:        "Apache-2.0",
+			name:    "valid_license_copying",
+			zipName: "copying",
+			want:    makeLicenses("Apache-2.0", "golang.org/x/text@v0.0.3/COPYING"),
 		}, {
-			name:        "low_coverage_license",
-			zipName:     "lowcoveragelicenses",
-			contentsDir: "rsc.io/quote@v1.4.1",
+			name:    "valid_license_copying_md",
+			zipName: "copyingmd",
+			want:    makeLicenses("Apache-2.0", "golang.org/x/text@v0.0.3/COPYING.md"),
 		}, {
-			name:        "no_license",
-			zipName:     "nolicense",
-			contentsDir: "rsc.io/quote@v1.5.2",
+			name:    "multiple_licenses",
+			zipName: "multiplelicenses",
+			want: []*internal.LicenseInfo{
+				{Type: "MIT", FilePath: "rsc.io/quote@v1.4.1/LICENSE"},
+				{Type: "MIT", FilePath: "rsc.io/quote@v1.4.1/bar/LICENSE.md"},
+				{Type: "Apache-2.0", FilePath: "rsc.io/quote@v1.4.1/foo/COPYING"},
+				{Type: "Apache-2.0", FilePath: "rsc.io/quote@v1.4.1/foo/COPYING.md"},
+			},
 		}, {
-			name:        "vendor_license_should_ignore",
-			zipName:     "vendorlicense",
-			contentsDir: "rsc.io/quote@v1.5.2",
+			name:    "low_coverage_license",
+			zipName: "lowcoveragelicenses",
+		}, {
+			name:    "no_license",
+			zipName: "nolicense",
+		}, {
+			name:    "no_license",
+			zipName: "nolicense",
+		}, {
+			name:    "vendor_license_should_ignore",
+			zipName: "vendorlicense",
 		},
 	}
 	for _, test := range testCases {
@@ -480,12 +512,16 @@ func TestDetectLicense(t *testing.T) {
 			defer rc.Close()
 			z := &rc.Reader
 
-			got, err := detectLicense(z, test.contentsDir)
+			got, err := detectLicenses(z)
 			if err != nil {
-				t.Errorf("detectLicense(z, %q): %v", test.contentsDir, err)
+				t.Errorf("detectLicenses(z): %v", err)
 			}
-			if got != test.want {
-				t.Errorf("detectLicense(z, %q) = %q, want %q", test.contentsDir, got, test.want)
+			var gotFiles []*internal.LicenseInfo
+			for _, l := range got {
+				gotFiles = append(gotFiles, &l.LicenseInfo)
+			}
+			if diff := cmp.Diff(gotFiles, test.want); diff != "" {
+				t.Errorf("detectLicense(z) mismatch (-got +want):\n%s", diff)
 			}
 		})
 	}

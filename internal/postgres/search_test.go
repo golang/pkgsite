@@ -43,7 +43,6 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 			versions: []*internal.Version{
 				&internal.Version{
 					Version:     "v1.0.0",
-					License:     "licensename",
 					ReadMe:      []byte("readme"),
 					CommitTime:  now,
 					VersionType: internal.VersionTypeRelease,
@@ -58,7 +57,6 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 				},
 				&internal.Version{
 					Version:     "v1.0.0",
-					License:     "licensename",
 					ReadMe:      []byte("readme"),
 					CommitTime:  now,
 					VersionType: internal.VersionTypeRelease,
@@ -85,7 +83,6 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 								Path: "github.com/valid_module_name",
 							},
 							Version: "v1.0.0",
-							License: "licensename",
 						},
 					},
 				},
@@ -101,7 +98,6 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 								Path: "github.com/valid_module_name",
 							},
 							Version: "v1.0.0",
-							License: "licensename",
 						},
 					},
 				},
@@ -114,7 +110,6 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 			versions: []*internal.Version{
 				&internal.Version{
 					Version:     "v1.0.0",
-					License:     "licensename",
 					ReadMe:      []byte("readme"),
 					CommitTime:  now,
 					VersionType: internal.VersionTypeRelease,
@@ -129,7 +124,6 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 				},
 				&internal.Version{
 					Version:     "v1.0.0",
-					License:     "licensename",
 					ReadMe:      []byte("readme"),
 					CommitTime:  now,
 					VersionType: internal.VersionTypeRelease,
@@ -156,7 +150,6 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 								Path: "github.com/valid_module_name",
 							},
 							Version: "v1.0.0",
-							License: "licensename",
 						},
 					},
 				},
@@ -168,7 +161,6 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 			versions: []*internal.Version{
 				&internal.Version{
 					Version:     "v1.0.0",
-					License:     "licensename",
 					ReadMe:      []byte("readme"),
 					CommitTime:  now,
 					VersionType: internal.VersionTypeRelease,
@@ -195,7 +187,6 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 								Path: "github.com/valid_module_name",
 							},
 							Version: "v1.0.0",
-							License: "licensename",
 						},
 					},
 				},
@@ -216,7 +207,7 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 
 			if tc.versions != nil {
 				for _, v := range tc.versions {
-					if err := db.InsertVersion(ctx, v); status.Code(err) != tc.insertErr {
+					if err := db.InsertVersion(ctx, v, nil); status.Code(err) != tc.insertErr {
 						t.Fatalf("db.InsertVersion(%+v): %v", tc.versions, err)
 					}
 					if err := db.InsertDocuments(ctx, v); status.Code(err) != tc.insertErr {

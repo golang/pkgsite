@@ -122,7 +122,7 @@ func (db *DB) Search(ctx context.Context, terms []string) ([]*SearchResult, erro
 	pathToResults := map[string]*SearchResult{}
 	for rows.Next() {
 		if err := rows.Scan(&path, &rank, &importers); err != nil {
-			return nil, fmt.Errorf("row.Scan(%q, %f, %d): %v", path, rank, importers, err)
+			return nil, fmt.Errorf("rows.Scan(): %v", err)
 		}
 		pathToResults[path] = &SearchResult{
 			Relevance:    rank,
@@ -160,9 +160,10 @@ func (db *DB) Search(ctx context.Context, terms []string) ([]*SearchResult, erro
 // returned.
 func (db *DB) GetLatestPackageForPaths(ctx context.Context, paths []string) ([]*internal.Package, error) {
 	var (
-		packages                                           []*internal.Package
-		commitTime, createdAt, updatedAt                   time.Time
-		path, modulePath, name, synopsis, license, version string
+		packages                                  []*internal.Package
+		commitTime, createdAt, updatedAt          time.Time
+		path, modulePath, name, synopsis, version string
+		licenseTypes, licensePaths                []string
 	)
 
 	query := `
@@ -171,11 +172,12 @@ func (db *DB) GetLatestPackageForPaths(ctx context.Context, paths []string) ([]*
 			p.module_path,
 			v.version,
 			v.commit_time,
-			v.license,
+			p.license_types,
+			p.license_paths,
 			p.name,
 			p.synopsis
 		FROM
-			packages p
+			vw_licensed_packages p
 		INNER JOIN
 			versions v
 		ON
@@ -198,15 +200,19 @@ func (db *DB) GetLatestPackageForPaths(ctx context.Context, paths []string) ([]*
 	defer rows.Close()
 
 	for rows.Next() {
-		if err := rows.Scan(&path, &modulePath, &version, &commitTime, &license, &name, &synopsis); err != nil {
-			return nil, fmt.Errorf("row.Scan(%q, %q, %q, %q, %q, %q, %q): %v",
-				path, modulePath, version, commitTime, license, name, synopsis, err)
+		if err := rows.Scan(&path, &modulePath, &version, &commitTime,
+			pq.Array(&licenseTypes), pq.Array(&licensePaths), &name, &synopsis); err != nil {
+			return nil, fmt.Errorf("row.Scan(): %v", err)
 		}
-
+		lics, err := zipLicenseInfo(licenseTypes, licensePaths)
+		if err != nil {
+			return nil, fmt.Errorf("zipLicenseInfo(%v, %v): %v", licenseTypes, licensePaths, err)
+		}
 		packages = append(packages, &internal.Package{
 			Name:     name,
 			Path:     path,
 			Synopsis: synopsis,
+			Licenses: lics,
 			Version: &internal.Version{
 				CreatedAt: createdAt,
 				UpdatedAt: updatedAt,
@@ -215,7 +221,6 @@ func (db *DB) GetLatestPackageForPaths(ctx context.Context, paths []string) ([]*
 				},
 				Version:    version,
 				CommitTime: commitTime,
-				License:    license,
 			},
 		})
 	}

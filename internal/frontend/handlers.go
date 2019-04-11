@@ -54,9 +54,9 @@ type Package struct {
 	Path       string
 	ModulePath string
 	Synopsis   string
-	License    string
 	CommitTime string
 	Name       string
+	Licenses   []*internal.LicenseInfo
 }
 
 // Dir returns the directory of the package relative to the root of the module.
@@ -178,16 +178,12 @@ func createPackageHeader(pkg *internal.Package) (*Package, error) {
 		return nil, fmt.Errorf("package's version cannot be nil")
 	}
 
-	if pkg.Version.License == "" {
-		pkg.Version.License = "Missing License"
-	}
-
 	return &Package{
 		Name:       pkg.Name,
 		Version:    pkg.Version.Version,
 		Path:       pkg.Path,
 		Synopsis:   pkg.Synopsis,
-		License:    pkg.Version.License,
+		Licenses:   pkg.Licenses,
 		CommitTime: elapsedTime(pkg.Version.CommitTime),
 	}, nil
 }
@@ -246,6 +242,7 @@ func fetchModulePage(ctx context.Context, db *postgres.DB, pkgPath, pkgversion s
 			Name:       p.Name,
 			Path:       p.Path,
 			Synopsis:   p.Synopsis,
+			Licenses:   p.Licenses,
 			Version:    version.Version,
 			ModulePath: version.Module.Path,
 		})
@@ -253,7 +250,6 @@ func fetchModulePage(ctx context.Context, db *postgres.DB, pkgPath, pkgversion s
 		if p.Path == pkgPath {
 			p.Version = &internal.Version{
 				Version:    version.Version,
-				License:    version.License,
 				CommitTime: version.CommitTime,
 			}
 			pkgHeader, err = createPackageHeader(p)
@@ -305,9 +301,9 @@ func fetchVersionsPage(ctx context.Context, db *postgres.DB, path, version strin
 				Path:     path,
 				Name:     v.Packages[0].Name,
 				Synopsis: v.Synopsis,
+				Licenses: v.Packages[0].Licenses,
 				Version: &internal.Version{
 					Version:    version,
-					License:    v.License,
 					CommitTime: v.CommitTime,
 				},
 			}
@@ -372,6 +368,7 @@ func (c *Controller) renderPage(w http.ResponseWriter, templateName string, page
 	if err := c.templates[templateName].ExecuteTemplate(&buf, templateName, page); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		log.Printf("Error executing page template %q: %v", templateName, err)
+		return
 	}
 	if _, err := io.Copy(w, &buf); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -465,7 +462,7 @@ type SearchResult struct {
 	ModulePath   string
 	Synopsis     string
 	Version      string
-	License      string
+	Licenses     []*internal.LicenseInfo
 	CommitTime   string
 	NumImporters int64
 }
@@ -487,7 +484,7 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string) (*Searc
 			ModulePath:   r.Package.Version.Module.Path,
 			Synopsis:     r.Package.Synopsis,
 			Version:      r.Package.Version.Version,
-			License:      r.Package.Version.License,
+			Licenses:     r.Package.Licenses,
 			CommitTime:   elapsedTime(r.Package.Version.CommitTime),
 			NumImporters: r.NumImporters,
 		})
