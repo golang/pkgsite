@@ -41,7 +41,7 @@ func Open(dbinfo string) (*DB, error) {
 func (db *DB) Transact(txFunc func(*sql.Tx) error) (err error) {
 	tx, err := db.Begin()
 	if err != nil {
-		return
+		return fmt.Errorf("db.Begin(): %v", err)
 	}
 
 	defer func() {
@@ -51,11 +51,16 @@ func (db *DB) Transact(txFunc func(*sql.Tx) error) (err error) {
 		} else if err != nil {
 			tx.Rollback()
 		} else {
-			err = tx.Commit()
+			if err = tx.Commit(); err != nil {
+				err = fmt.Errorf("tx.Commit(): %v", err)
+			}
 		}
 	}()
 
-	return txFunc(tx)
+	if err := txFunc(tx); err != nil {
+		return fmt.Errorf("txFunc(tx): %v", err)
+	}
+	return nil
 }
 
 // prepareAndExec prepares a query statement and executes it insde the provided
@@ -72,6 +77,64 @@ func prepareAndExec(tx *sql.Tx, query string, stmtFunc func(*sql.Stmt) error) (e
 		}
 	}()
 	return stmtFunc(stmt)
+}
+
+// buildInsertQuery builds an multi-value insert query, following the format:
+// INSERT TO <table> (<columns>) VALUES
+// (<placeholders-for-each-item-in-values>) If conflictNoAction is true, it
+// append ON CONFLICT DO NOTHING to the end of the query.
+func buildInsertQuery(table string, columns []string, values []interface{}, conflictNoAction bool) (string, error) {
+	if remainder := len(values) % len(columns); remainder != 0 {
+		return "", fmt.Errorf("modulus of len(values) and len(columns) must be 0: got %d", remainder)
+	}
+
+	var b strings.Builder
+	fmt.Fprintf(&b, "INSERT INTO %s", table)
+	fmt.Fprintf(&b, "(%s) VALUES", strings.Join(columns, ", "))
+
+	var placeholders []string
+	for i := 1; i <= len(values); i++ {
+		// Construct the full query by adding placeholders for each
+		// set of values that we want to insert.
+		placeholders = append(placeholders, fmt.Sprintf("$%d", i))
+		if i%len(columns) != 0 {
+			continue
+		}
+
+		// When the end of a set is reached, write it to the query
+		// builder and reset placeholders.
+		fmt.Fprintf(&b, "(%s)", strings.Join(placeholders, ", "))
+		placeholders = []string{}
+
+		// Do not add a comma delimiter after the last set of values.
+		if i == len(values) {
+			break
+		}
+		b.WriteString(", ")
+	}
+
+	if conflictNoAction {
+		b.WriteString("ON CONFLICT DO NOTHING")
+	}
+
+	return b.String(), nil
+}
+
+// bulkInsert constructs and executes a multi-value insert statement. The
+// query is constructed using the format: INSERT TO <table> (<columns>) VALUES
+// (<placeholders-for-each-item-in-values>) If conflictNoAction is true, it
+// append ON CONFLICT DO NOTHING to the end of the query. The query is executed
+// using a PREPARE statement with the provided values.
+func bulkInsert(ctx context.Context, tx *sql.Tx, table string, columns []string, values []interface{}, conflictNoAction bool) error {
+	query, err := buildInsertQuery(table, columns, values, conflictNoAction)
+	if err != nil {
+		return fmt.Errorf("buildInsertQuery(%q, %v, values, %t): %v", table, columns, conflictNoAction, err)
+	}
+
+	if _, err := tx.ExecContext(ctx, query, values...); err != nil {
+		return fmt.Errorf("tx.ExecContext(ctx, %q, values): %v", query, err)
+	}
+	return nil
 }
 
 // LatestProxyIndexUpdate reports the last time the Proxy Index Cron
@@ -646,51 +709,60 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 			return fmt.Errorf("error inserting version: %v", err)
 		}
 
-		licstmt, err := tx.Prepare(
-			`INSERT INTO licenses (module_path, version, file_path, contents, type)
-			VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING`)
-		if err != nil {
-			return fmt.Errorf("error preparing license stmt: %v", err)
-		}
-		defer licstmt.Close()
-
+		var licenseValues []interface{}
 		for _, l := range licenses {
-			if _, err := licstmt.ExecContext(ctx, version.Module.Path, version.Version,
-				l.FilePath, l.Contents, l.Type); err != nil {
-				return fmt.Errorf("error inserting license: %v", err)
+			licenseValues = append(licenseValues, version.Module.Path, version.Version, l.FilePath, l.Contents, l.Type)
+		}
+		if len(licenseValues) > 0 {
+			licenseCols := []string{
+				"module_path",
+				"version",
+				"file_path",
+				"contents",
+				"type",
+			}
+			table := "licenses"
+			if err := bulkInsert(ctx, tx, table, licenseCols, licenseValues, true); err != nil {
+				return fmt.Errorf("bulkInsert(ctx, tx, %q, %v, [%d licenseValues]): %v", table, licenseCols, len(licenseValues), err)
 			}
 		}
 
-		pkgstmt, err := tx.Prepare(
-			`INSERT INTO packages (path, synopsis, name, version, module_path, version_type, suffix)
-			VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING`)
-		if err != nil {
-			return fmt.Errorf("error preparing package stmt: %v", err)
-		}
-		defer pkgstmt.Close()
-
-		plstmt, err := tx.Prepare(
-			`INSERT INTO package_licenses (module_path, version, file_path, package_path)
-			VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`)
-		if err != nil {
-			return fmt.Errorf("error preparing package license stmt: %v", err)
-		}
-		defer plstmt.Close()
-
+		var pkgValues []interface{}
+		var pkgLicenseValues []interface{}
 		for _, p := range version.Packages {
-			if _, err = pkgstmt.ExecContext(ctx, p.Path, p.Synopsis, p.Name, version.Version,
-				version.Module.Path, version.VersionType.String(), p.Suffix); err != nil {
-				return fmt.Errorf("error inserting package: %v", err)
-			}
+			pkgValues = append(pkgValues, p.Path, p.Synopsis, p.Name, version.Version, version.Module.Path, version.VersionType.String(), p.Suffix)
 
 			for _, l := range p.Licenses {
-				if _, err := plstmt.ExecContext(ctx, version.Module.Path, version.Version, l.FilePath,
-					p.Path); err != nil {
-					return fmt.Errorf("error inserting package license: %v", err)
-				}
+				pkgLicenseValues = append(pkgLicenseValues, version.Module.Path, version.Version, l.FilePath, p.Path)
 			}
 		}
-
+		if len(pkgValues) > 0 {
+			pkgCols := []string{
+				"path",
+				"synopsis",
+				"name",
+				"version",
+				"module_path",
+				"version_type",
+				"suffix",
+			}
+			table := "packages"
+			if err := bulkInsert(ctx, tx, table, pkgCols, pkgValues, true); err != nil {
+				return fmt.Errorf("bulkInsert(ctx, tx, %q, %v, %d pkgValues): %v", table, pkgCols, len(pkgValues), err)
+			}
+		}
+		if len(pkgLicenseValues) > 0 {
+			pkgLicenseCols := []string{
+				"module_path",
+				"version",
+				"file_path",
+				"package_path",
+			}
+			table := "package_licenses"
+			if err := bulkInsert(ctx, tx, table, pkgLicenseCols, pkgLicenseValues, true); err != nil {
+				return fmt.Errorf("bulkInsert(ctx, tx, %q, %v, %d pkgLicenseValues): %v", table, pkgLicenseCols, len(pkgLicenseValues), err)
+			}
+		}
 		return nil
 	})
 }

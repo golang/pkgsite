@@ -29,22 +29,118 @@ var (
 	}
 )
 
-// versionsDiff takes in two versions, v1 and v2, and returns a string
-// description of the difference between them. If they are the
-// same the string will be empty. Fields "CreatedAt",
-// "UpdatedAt", "Module.Series", "VersionType", "Packages",
-// and "Module.Versions" are ignored during comparison.
-func versionsDiff(v1, v2 *internal.Version) string {
-	if v1 == nil && v2 == nil {
-		return ""
+func TestBulkInsert(t *testing.T) {
+	table := "test_bulk_insert"
+	for _, tc := range []struct {
+		name             string
+		columns          []string
+		values           []interface{}
+		conflictNoAction bool
+		wantErr          bool
+		wantCount        int
+	}{
+		{
+
+			name:      "test-one-row",
+			columns:   []string{"colA"},
+			values:    []interface{}{"valueA"},
+			wantCount: 1,
+		},
+		{
+
+			name:      "test-multiple-rows",
+			columns:   []string{"colA"},
+			values:    []interface{}{"valueA1", "valueA2", "valueA3"},
+			wantCount: 3,
+		},
+		{
+
+			name:    "test-invalid-column-name",
+			columns: []string{"invalid_col"},
+			values:  []interface{}{"valueA"},
+			wantErr: true,
+		},
+		{
+
+			name:    "test-mismatch-num-cols-and-vals",
+			columns: []string{"colA", "colB"},
+			values:  []interface{}{"valueA1", "valueB1", "valueA2"},
+			wantErr: true,
+		},
+		{
+
+			name:             "test-conflict-no-action-true",
+			columns:          []string{"colA"},
+			values:           []interface{}{"valueA", "valueA"},
+			conflictNoAction: true,
+			wantCount:        1,
+		},
+		{
+
+			name:             "test-conflict-no-action-false",
+			columns:          []string{"colA"},
+			values:           []interface{}{"valueA", "valueA"},
+			conflictNoAction: false,
+			wantErr:          true,
+		},
+		{
+
+			// This should execute the statement
+			// INSERT INTO series (path) VALUES ('''); TRUNCATE series CASCADE;)');
+			// which will insert a row with path value:
+			// '); TRUNCATE series CASCADE;)
+			// Rather than the statement
+			// INSERT INTO series (path) VALUES (''); TRUNCATE series CASCADE;));
+			// which would truncate most tables in the database.
+			name:             "test-sql-injection",
+			columns:          []string{"colA"},
+			values:           []interface{}{fmt.Sprintf("''); TRUNCATE %s CASCADE;))", table)},
+			conflictNoAction: true,
+			wantCount:        1,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			teardownTestCase, db := SetupCleanDB(t)
+			defer teardownTestCase(t)
+			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+			defer cancel()
+
+			createQuery := fmt.Sprintf(`CREATE TABLE %s (
+					colA TEXT NOT NULL,
+					colB TEXT,
+					PRIMARY KEY (colA)
+				);`, table)
+			if _, err := db.ExecContext(ctx, createQuery); err != nil {
+				t.Fatalf("db.ExecContext(ctx, %q): %v", createQuery, err)
+			}
+			defer func() {
+				dropTableQuery := fmt.Sprintf("DROP TABLE %s;", table)
+				if _, err := db.ExecContext(ctx, dropTableQuery); err != nil {
+					t.Fatalf("db.ExecContext(ctx, %q): %v", dropTableQuery, err)
+				}
+			}()
+
+			if err := db.Transact(func(tx *sql.Tx) error {
+				return bulkInsert(ctx, tx, table, tc.columns, tc.values, tc.conflictNoAction)
+			}); tc.wantErr && err == nil || !tc.wantErr && err != nil {
+				t.Errorf("db.Transact: %v | wantErr = %t", err, tc.wantErr)
+			}
+
+			if tc.wantCount != 0 {
+				var count int
+				query := "SELECT COUNT(*) FROM " + table
+				row := db.QueryRow(query)
+				err := row.Scan(&count)
+				if err != nil {
+					t.Fatalf("db.QueryRow(%q): %v", query, err)
+				}
+				if count != tc.wantCount {
+					t.Errorf("db.QueryRow(%q) = %d; want = %d", query, count, tc.wantCount)
+				}
+			}
+		})
 	}
 
-	if (v1 != nil && v2 == nil) || (v1 == nil && v2 != nil) {
-		return "not equal"
-	}
-
-	return cmp.Diff(*v1, *v2, cmpopts.IgnoreFields(internal.Version{},
-		"CreatedAt", "UpdatedAt", "Module.Series", "VersionType", "Packages", "Module.Versions"))
 }
 
 func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
@@ -179,7 +275,8 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 					tc.module, tc.version, got, tc.versionData)
 			}
 
-			if diff := versionsDiff(got, tc.versionData); !tc.wantReadErr && diff != "" {
+			if diff := cmp.Diff(tc.versionData, got, cmpopts.IgnoreFields(internal.Version{},
+				"CreatedAt", "UpdatedAt", "Module.Series", "VersionType", "Packages", "Module.Versions")); !tc.wantReadErr && diff != "" {
 				t.Errorf("db.GetVersion(ctx, %q, %q) = %v, want %v | diff is %v",
 					tc.module, tc.version, got, tc.versionData, diff)
 			}
@@ -428,7 +525,7 @@ func TestPostgres_GetLatestPackageForPaths(t *testing.T) {
 
 	for _, v := range tc.versions {
 		if err := db.InsertVersion(ctx, v, sampleLicenses); err != nil {
-			t.Errorf("db.InsertVersion(ctx, %v): %v", v, err)
+			t.Errorf("db.InsertVersion(ctx, %q %q): %v", v.Module.Path, v.Version, err)
 		}
 	}
 
@@ -806,7 +903,7 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 			}
 
 			for i, v := range got {
-				if diff := versionsDiff(wantPseudoVersions[i], v); diff != "" {
+				if diff := cmp.Diff(wantPseudoVersions[i], v, cmpopts.IgnoreFields(internal.Version{}, "CreatedAt", "UpdatedAt", "Module.Series", "VersionType", "Packages", "Module.Versions")); diff != "" {
 					t.Errorf("db.GetPseudoVersionsForPackageSeries(%q) mismatch (-want +got):\n%s", tc.path, diff)
 				}
 			}
@@ -821,7 +918,9 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 			}
 
 			for i, v := range got {
-				if diff := versionsDiff(tc.wantTaggedVersions[i], v); diff != "" {
+
+				if diff := cmp.Diff(tc.wantTaggedVersions[i], v, cmpopts.IgnoreFields(internal.Version{},
+					"CreatedAt", "UpdatedAt", "Module.Series", "VersionType", "Packages", "Module.Versions")); diff != "" {
 					t.Errorf("db.GetTaggedVersionsForPackageSeries(%q) mismatch (-want +got):\n%s", tc.path, diff)
 				}
 			}
