@@ -5,16 +5,17 @@
 -->
 
 <!DOCTYPE html>
-<title>Go Discovery - "{{ .Query }}"</title>
-{{ template "header" }}
+<title>{{ .Query }} — Go Discovery</title>
+{{ template "header" . }}
 <div class="SearchContent">
-  {{ template "nav" }}
-  {{ template "search_bar" }}
+  {{ template "nav" . }}
+  {{ template "search_bar" . }}
   <div class="SearchContent-results">
-    <h1 class="SearchContent-header"><span>{{ len .Results}}</span> packages found for "{{ .Query }}"</h1>
+    {{ $len := len .Results }}
+    <h1 class="SearchContent-header">{{ $len }} package{{if gt $len 1 }}s{{end}} found for “{{ .Query }}”</h1>
     <hr>
     {{ range .Results }}
-        {{ template "search_snippet" . }}
+      {{ template "search_snippet" . }}
     {{ end}}
   </div>
 </div>

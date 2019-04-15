@@ -13,7 +13,6 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"time"
 
@@ -88,9 +87,6 @@ type VersionsPage struct {
 // Separate templates are used so that certain contextual functions (e.g.
 // pageName) can be bound independently for each page.
 func parsePageTemplates(base string) (map[string]*template.Template, error) {
-	commonFuncs := template.FuncMap{
-		"equal": reflect.DeepEqual,
-	}
 	pages := []string{
 		"index",
 		"module",
@@ -104,7 +100,7 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 	// helper snippets contained in helpers/*.tmpl.
 	for _, pageName := range pages {
 		pn := pageName
-		t := template.New("").Funcs(commonFuncs).Funcs(template.FuncMap{
+		t := template.New("").Funcs(template.FuncMap{
 			"pageName": func() string { return pn },
 		})
 		helperGlob := filepath.Join(base, "helpers", "*.tmpl")
@@ -381,7 +377,11 @@ func (c *Controller) renderPage(w http.ResponseWriter, templateName string, page
 // /search?q=<query>.
 func (c *Controller) HandleSearch(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	query := r.URL.Query().Get("q")
+	query := strings.TrimSpace(r.FormValue("q"))
+	if query == "" {
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
 	page, err := fetchSearchPage(ctx, c.db, query)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)

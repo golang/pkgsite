@@ -6,9 +6,18 @@
 
 {{ define "search_bar" }}
   <div>
-    <form action="/search" class="HomeContent-search">
-      <label class="HomeContent-searchLabel">Search Packages
-        <input type="text" name="q" class="HomeContent-searchInput" placeholder="Search Packages">
+    <form class="HomeContent-search" action="/search" role="search">
+      <label class="HomeContent-searchLabel">Search packages
+        <input class="HomeContent-searchInput"
+               type="text"
+               name="q"
+               placeholder="Search packages"
+               autocapitalize="off"
+               autocomplete="off"
+               autocorrect="off"
+               spellcheck="false"
+               title="Search packages"
+               value={{.Query}}>
       </label>
       <button type="submit" class="HomeContent-searchButton">Search</button>
     </form>
