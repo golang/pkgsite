@@ -15,7 +15,13 @@
     <h1 class="SearchContent-header">{{ $len }} package{{if gt $len 1 }}s{{end}} found for “{{ .Query }}”</h1>
     <hr>
     {{ range .Results }}
-      {{ template "search_snippet" . }}
+      <div class="SearchSnippetContent">
+        <h2><a href="/{{.PackagePath}}?v={{.Version}}" class="SearchSnippetContent-packageName">{{ .PackagePath }}</a></h2>
+        <p><i>{{ .Version }}</i></p>
+        <p>{{ .Synopsis }}</p>
+        <p class="SearchSnippetContent-commitTime">Published {{ .CommitTime }}</p>
+        <hr>
+      </div>
     {{ end}}
   </div>
 </div>
