@@ -44,6 +44,7 @@
   text-decoration: none;
 }
 .OverviewContent,
+.DocumentationContent,
 .VersionsContent,
 .SearchContent,
 .ModuleContent,
@@ -54,6 +55,7 @@
   padding-bottom: 20px;
 }
 .OverviewContent-readMe,
+.DocumentationContent-doc,
 .VersionsContent-list,
 .ModuleContent-list,
 .HomeContent-search,
@@ -64,6 +66,7 @@
   font-size: 32px;
 }
 .OverviewContent,
+.DocumentationContent,
 .VersionsContent,
 .ModuleContent,
 .SearchContent-results {

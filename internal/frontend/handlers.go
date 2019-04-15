@@ -32,6 +32,12 @@ type OverviewPage struct {
 	PackageHeader *Package
 }
 
+// DocumentationPage contains data for the documentation template.
+type DocumentationPage struct {
+	ModulePath    string
+	PackageHeader *Package
+}
+
 // ModulePage contains all of the data that the module template
 // needs to populate.
 type ModulePage struct {
@@ -91,6 +97,7 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 		"index",
 		"module",
 		"overview",
+		"documentation",
 		"search",
 		"versions",
 	}
@@ -200,6 +207,24 @@ func fetchOverviewPage(ctx context.Context, db *postgres.DB, path, version strin
 	return &OverviewPage{
 		ModulePath:    pkg.Version.Module.Path,
 		ReadMe:        readmeHTML(pkg.Version.ReadMe),
+		PackageHeader: pkgHeader,
+	}, nil
+}
+
+// fetchDocumentationPage fetches data for the package specified by path and version
+// from the database and returns a DocumentationPage.
+func fetchDocumentationPage(ctx context.Context, db *postgres.DB, path, version string) (*DocumentationPage, error) {
+	pkg, err := db.GetPackage(ctx, path, version)
+	if err != nil {
+		return nil, fmt.Errorf("db.GetPackage(ctx, %q, %q): %v", path, version, err)
+	}
+
+	pkgHeader, err := createPackageHeader(pkg)
+	if err != nil {
+		return nil, fmt.Errorf("createPackageHeader(%+v): %v", pkg, err)
+	}
+	return &DocumentationPage{
+		ModulePath:    pkg.Version.Module.Path,
 		PackageHeader: pkgHeader,
 	}, nil
 }
@@ -401,6 +426,9 @@ func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
 		ctx  = r.Context()
 	)
 	switch tab := r.FormValue("tab"); tab {
+	case "doc":
+		html = "documentation.tmpl"
+		page, err = fetchDocumentationPage(ctx, c.db, path, version)
 	case "versions":
 		html = "versions.tmpl"
 		page, err = fetchVersionsPage(ctx, c.db, path, version)
