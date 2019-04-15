@@ -135,25 +135,6 @@ func New(db *postgres.DB, templateDir string) (*Controller, error) {
 	}, nil
 }
 
-// parseModulePathAndVersion returns the module and version specified by p. p is
-// assumed to be a valid path following the structure /<module>@<version>.
-func parseModulePathAndVersion(p string) (path, version string, err error) {
-	parts := strings.Split(strings.TrimPrefix(p, "/"), "@")
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("invalid path: %q", p)
-	}
-
-	if err := module.CheckPath(parts[0]); err != nil {
-		return "", "", fmt.Errorf("invalid path (%q): module.CheckPath(%q): %v", p, parts[0], err)
-	}
-
-	if !semver.IsValid(parts[1]) {
-		return "", "", fmt.Errorf("invalid path (%q): semver.IsValid(%q) = false", p, parts[1])
-	}
-
-	return parts[0], parts[1], nil
-}
-
 // elapsedTime takes a date and returns returns human-readable,
 // relative timestamps based on the following rules:
 // (1) 'X hours ago' when X < 6
@@ -274,8 +255,8 @@ func fetchVersionsPage(ctx context.Context, db *postgres.DB, path, version strin
 		return nil, fmt.Errorf("db.GetTaggedVersions(%q): %v", path, err)
 	}
 
-	// if GetTaggedVersionsForPackageSeries returns nothing then that means there are no
-	// tagged versions and we want to get the pseudo-versions instead
+	// If no tagged versions for the package series are found,
+	// fetch the pseudo-versions instead.
 	if len(versions) == 0 {
 		versions, err = db.GetPseudoVersionsForPackageSeries(ctx, path)
 		if err != nil {
@@ -395,41 +376,48 @@ func (c *Controller) HandleSearch(w http.ResponseWriter, r *http.Request) {
 // HandleDetails applies database data to the appropriate template. Handles all
 // endpoints that match "/" or "/<import-path>[@<version>?tab=<tab>]"
 func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/" {
+		c.renderPage(w, "index.tmpl", nil)
+		return
+	}
+
+	path := strings.TrimPrefix(r.URL.Path, "/")
+	if err := module.CheckPath(path); err != nil {
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		log.Printf("Malformed path %q: %v", path, err)
+		return
+	}
+	version := r.FormValue("v")
+	if version != "" && !semver.IsValid(version) {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		log.Printf("Malformed version %q", version)
+		return
+	}
+
 	var (
 		html string
 		page interface{}
+		err  error
 		ctx  = r.Context()
 	)
+	switch tab := r.FormValue("tab"); tab {
+	case "versions":
+		html = "versions.tmpl"
+		page, err = fetchVersionsPage(ctx, c.db, path, version)
+	case "module":
+		html = "module.tmpl"
+		page, err = fetchModulePage(ctx, c.db, path, version)
+	case "overview":
+		fallthrough
+	default:
+		html = "overview.tmpl"
+		page, err = fetchOverviewPage(ctx, c.db, path, version)
+	}
 
-	if r.URL.Path == "/" {
-		html = "index.tmpl"
-	} else {
-		path, version, err := parseModulePathAndVersion(r.URL.Path)
-		if err != nil {
-			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-			log.Printf("error parsing path and version: %v", err)
-			return
-		}
-
-		switch tab := r.URL.Query().Get("tab"); tab {
-		case "versions":
-			html = "versions.tmpl"
-			page, err = fetchVersionsPage(ctx, c.db, path, version)
-		case "module":
-			html = "module.tmpl"
-			page, err = fetchModulePage(ctx, c.db, path, version)
-		case "overview":
-			fallthrough
-		default:
-			html = "overview.tmpl"
-			page, err = fetchOverviewPage(ctx, c.db, path, version)
-		}
-
-		if err != nil {
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			log.Printf("error fetching page for %q: %v", html, err)
-			return
-		}
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		log.Printf("error fetching page for %q: %v", html, err)
+		return
 	}
 
 	c.renderPage(w, html, page)

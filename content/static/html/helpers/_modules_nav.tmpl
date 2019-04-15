@@ -6,12 +6,12 @@
 
 {{ define "modules_nav" }}
   <ul class="ModulesNav">
-    <li class="{{if eq "overview" pageName}}active {{end}}ModulesNav-tab"><a href="/{{.Path}}@{{.Version}}" class="ModulesNav-link">Overview</a></li>
-    <li class="{{if eq "module" pageName}}active {{end}}ModulesNav-tab"><a href="/{{.Path}}@{{.Version}}?tab=module" class="ModulesNav-link">Module</a></li>
-    <li class="{{if eq "docs" pageName}}active {{end}}ModulesNav-tab"><a href="/{{.Path}}@{{.Version}}?tab=docs" class="ModulesNav-link">Docs</a></li>
-    <li class="{{if eq "versions" pageName}}active {{end}}ModulesNav-tab"><a href="/{{.Path}}@{{.Version}}?tab=versions" class="ModulesNav-link">Versions</a></li>
-    <li class="{{if eq "imports" pageName}}active {{end}}ModulesNav-tab"><a href="/{{.Path}}@{{.Version}}?tab=imports" class="ModulesNav-link">Imports</a></li>
-    <li class="{{if eq "importers" pageName}}active {{end}}ModulesNav-tab"><a href="/{{.Path}}@{{.Version}}?tab=importers" class="ModulesNav-link">Importers</a></li>
-    <li class="{{if eq "licenses" pageName}}active {{end}}ModulesNav-tab"><a href="/{{.Path}}@{{.Version}}?tab=licenses" class="ModulesNav-link">Licenses</a></li>
+    <li class="{{if eq "overview" pageName}}active {{end}}ModulesNav-tab"><a href="/{{.Path}}?v={{.Version}}" class="ModulesNav-link">Overview</a></li>
+    <li class="{{if eq "module" pageName}}active {{end}}ModulesNav-tab"><a href="/{{.Path}}?v={{.Version}}&tab=module" class="ModulesNav-link">Module</a></li>
+    <li class="{{if eq "docs" pageName}}active {{end}}ModulesNav-tab"><a href="/{{.Path}}?v={{.Version}}&tab=docs" class="ModulesNav-link">Docs</a></li>
+    <li class="{{if eq "versions" pageName}}active {{end}}ModulesNav-tab"><a href="/{{.Path}}?v={{.Version}}&tab=versions" class="ModulesNav-link">Versions</a></li>
+    <li class="{{if eq "imports" pageName}}active {{end}}ModulesNav-tab"><a href="/{{.Path}}?v={{.Version}}&tab=imports" class="ModulesNav-link">Imports</a></li>
+    <li class="{{if eq "importers" pageName}}active {{end}}ModulesNav-tab"><a href="/{{.Path}}?v={{.Version}}&tab=importers" class="ModulesNav-link">Importers</a></li>
+    <li class="{{if eq "licenses" pageName}}active {{end}}ModulesNav-tab"><a href="/{{.Path}}?v={{.Version}}&tab=licenses" class="ModulesNav-link">Licenses</a></li>
   </ul>
 {{ end }}

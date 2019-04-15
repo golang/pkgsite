@@ -7,7 +7,6 @@ package frontend
 import (
 	"context"
 	"html/template"
-	"net/url"
 	"testing"
 	"time"
 
@@ -17,69 +16,6 @@ import (
 )
 
 const testTimeout = 5 * time.Second
-
-func TestParseModulePathAndVersion(t *testing.T) {
-	testCases := []struct {
-		name    string
-		url     string
-		module  string
-		version string
-		err     bool
-	}{
-		{
-			name:    "valid_url",
-			url:     "https://discovery.com/test.module@v1.0.0",
-			module:  "test.module",
-			version: "v1.0.0",
-		},
-		{
-			name:    "valid_url_with_tab",
-			url:     "https://discovery.com/test.module@v1.0.0?tab=docs",
-			module:  "test.module",
-			version: "v1.0.0",
-		},
-		{
-			name: "invalid_url",
-			url:  "https://discovery.com/",
-			err:  true,
-		},
-		{
-			name: "invalid_url_missing_module",
-			url:  "https://discovery.com@v1.0.0",
-			err:  true,
-		},
-		{
-			name: "invalid_url_missing_version",
-			url:  "https://discovery.com/module",
-			err:  true,
-		},
-		{
-			name: "invalid_version",
-			url:  "https://discovery.com/module@v1.0.0invalid",
-			err:  true,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			u, parseErr := url.Parse(tc.url)
-			if parseErr != nil {
-				t.Errorf("url.Parse(%q): %v", tc.url, parseErr)
-			}
-
-			module, version, err := parseModulePathAndVersion(u.Path)
-
-			if (err != nil) != tc.err {
-				t.Fatalf("parseModulePathAndVersion(%v) error = (%v); want error %t)", u, err, tc.err)
-			}
-
-			if !tc.err && (tc.module != module || tc.version != version) {
-				t.Fatalf("parseModulePathAndVersion(%v): %q, %q, %v; want = %q, %q, want err %t",
-					u, module, version, err, tc.module, tc.version, tc.err)
-			}
-		})
-	}
-}
 
 func TestElapsedTime(t *testing.T) {
 	now := postgres.NowTruncated()

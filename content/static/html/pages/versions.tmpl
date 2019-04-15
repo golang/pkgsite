@@ -6,7 +6,7 @@
 
 <!DOCTYPE html>
 {{ template "header" .PackageHeader }}
-{{ template "nav" }}
+{{ template "nav" . }}
 <div class="VersionsContent">
   {{ template "mod_header" .PackageHeader }}
   {{ template "modules_nav" .PackageHeader }}
