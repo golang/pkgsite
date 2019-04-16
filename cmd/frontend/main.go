@@ -54,6 +54,9 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(*staticPath))))
+	mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(*staticPath)))
+	})
 	mux.HandleFunc("/search/", controller.HandleSearch)
 	mux.HandleFunc("/", controller.HandleDetails)
 
