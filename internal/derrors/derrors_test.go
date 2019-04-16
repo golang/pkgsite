@@ -10,18 +10,24 @@ func TestErrors(t *testing.T) {
 		label                          string
 		err                            error
 		isNotFound, isInvalidArguments bool
+		wantType                       ErrorType
 	}{
 		{
 			label:      "identifies not found errors",
 			err:        NotFound("couldn't find it"),
 			isNotFound: true,
+			wantType:   NotFoundType,
 		}, {
 			label:              "identifies invalid argument errors",
-			err:                InvalidArguments("bad arguments"),
+			err:                InvalidArgument("bad arguments"),
 			isInvalidArguments: true,
+			wantType:           InvalidArgumentType,
 		}, {
-			label: "doesn't identify an unknown error",
-			err:   errors.New("bad"),
+			label:    "doesn't identify an unknown error",
+			err:      errors.New("bad"),
+			wantType: UncategorizedErrorType,
+		}, {
+			label: "doesn't identify a nil error",
 		},
 	}
 
@@ -30,8 +36,12 @@ func TestErrors(t *testing.T) {
 			if got := IsNotFound(test.err); got != test.isNotFound {
 				t.Errorf("IsNotFound(%v) = %t, want %t", test.err, got, test.isNotFound)
 			}
-			if got := IsInvalidArguments(test.err); got != test.isInvalidArguments {
+			if got := IsInvalidArgument(test.err); got != test.isInvalidArguments {
 				t.Errorf("IsInvalidArguments(%v) = %t, want %t", test.err, got, test.isInvalidArguments)
+			}
+
+			if got := Type(test.err); got != test.wantType {
+				t.Errorf("Type(%v) = %v, want %v", test.err, got, test.wantType)
 			}
 		})
 	}

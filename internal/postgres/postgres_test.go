@@ -14,8 +14,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"golang.org/x/discovery/internal/derrors"
 )
 
 const testTimeout = 5 * time.Second
@@ -176,14 +175,14 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 	testCases := []struct {
 		name, module, version, pkgpath string
 		versionData                    *internal.Version
-		wantWriteErrCode               codes.Code
+		wantWriteErrType               derrors.ErrorType
 		wantReadErr                    bool
 	}{
 		{
 			name:             "nil_version_write_error",
 			module:           "github.com/valid_module_name",
 			version:          "v1.0.0",
-			wantWriteErrCode: codes.InvalidArgument,
+			wantWriteErrType: derrors.InvalidArgumentType,
 			wantReadErr:      true,
 		},
 		{
@@ -215,7 +214,7 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 				Synopsis:   "This is a synopsis",
 				CommitTime: now,
 			},
-			wantWriteErrCode: codes.InvalidArgument,
+			wantWriteErrType: derrors.InvalidArgumentType,
 			wantReadErr:      true,
 		},
 		{
@@ -226,7 +225,7 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 				Synopsis:   "This is a synopsis",
 				CommitTime: now,
 			},
-			wantWriteErrCode: codes.InvalidArgument,
+			wantWriteErrType: derrors.InvalidArgumentType,
 			wantReadErr:      true,
 		},
 		{
@@ -236,7 +235,7 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 				Synopsis:   "This is a synopsis",
 				CommitTime: now,
 			},
-			wantWriteErrCode: codes.InvalidArgument,
+			wantWriteErrType: derrors.InvalidArgumentType,
 			wantReadErr:      true,
 		},
 		{
@@ -246,7 +245,7 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 				Version:  "v1.0.0",
 				Synopsis: "This is a synopsis",
 			},
-			wantWriteErrCode: codes.InvalidArgument,
+			wantWriteErrType: derrors.InvalidArgumentType,
 			wantReadErr:      true,
 		},
 	}
@@ -256,13 +255,13 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 			teardownTestCase, db := SetupCleanDB(t)
 			defer teardownTestCase(t)
 
-			if err := db.InsertVersion(ctx, tc.versionData, sampleLicenses); status.Code(err) != tc.wantWriteErrCode {
-				t.Errorf("db.InsertVersion(ctx, %+v) error: %v, want write error: %v", tc.versionData, err, tc.wantWriteErrCode)
+			if err := db.InsertVersion(ctx, tc.versionData, sampleLicenses); derrors.Type(err) != tc.wantWriteErrType {
+				t.Errorf("db.InsertVersion(ctx, %+v) error: %v, want write error: %v", tc.versionData, err, tc.wantWriteErrType)
 			}
 
 			// Test that insertion of duplicate primary key won't fail.
-			if err := db.InsertVersion(ctx, tc.versionData, sampleLicenses); status.Code(err) != tc.wantWriteErrCode {
-				t.Errorf("db.InsertVersion(ctx, %+v) second insert error: %v, want write error: %v", tc.versionData, err, tc.wantWriteErrCode)
+			if err := db.InsertVersion(ctx, tc.versionData, sampleLicenses); derrors.Type(err) != tc.wantWriteErrType {
+				t.Errorf("db.InsertVersion(ctx, %+v) second insert error: %v, want write error: %v", tc.versionData, err, tc.wantWriteErrType)
 			}
 
 			got, err := db.GetVersion(ctx, tc.module, tc.version)
@@ -287,10 +286,9 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 					t.Fatalf("db.GetPackage(ctx, %q, %q) = %v, want %v", tc.pkgpath, tc.version, err, sql.ErrNoRows)
 				}
 				return
-			} else {
-				if err != nil {
-					t.Errorf("db.GetPackage(ctx, %q, %q): %v", tc.pkgpath, tc.version, err)
-				}
+			}
+			if err != nil {
+				t.Errorf("db.GetPackage(ctx, %q, %q): %v", tc.pkgpath, tc.version, err)
 			}
 
 			wantPkg := tc.versionData.Packages[0]

@@ -15,14 +15,16 @@ import (
 
 	"github.com/lib/pq"
 	"golang.org/x/discovery/internal"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"golang.org/x/discovery/internal/derrors"
 )
 
 // InsertDocuments inserts a row for each package in the version.
+//
+// The returned error may be checked with derrors.IsInvalidArgument to
+// determine if it was caused by an invalid version.
 func (db *DB) InsertDocuments(ctx context.Context, version *internal.Version) error {
 	if err := validateVersion(version); err != nil {
-		return status.Errorf(codes.InvalidArgument, fmt.Sprintf("validateVersion(%+v): %v", version, err))
+		return derrors.InvalidArgument(fmt.Sprintf("validateVersion(%+v): %v", version, err))
 	}
 
 	return db.Transact(func(tx *sql.Tx) error {
@@ -79,7 +81,7 @@ func calculateRank(relevance float64, imports int64) float64 {
 // provided, and returns them in order of relevance as a []*SearchResult.
 func (db *DB) Search(ctx context.Context, terms []string) ([]*SearchResult, error) {
 	if len(terms) == 0 {
-		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("cannot search: no terms"))
+		return nil, derrors.InvalidArgument(fmt.Sprintf("cannot search: no terms"))
 	}
 	query := `SELECT
 			d.package_path,

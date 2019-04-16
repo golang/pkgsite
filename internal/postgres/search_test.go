@@ -11,8 +11,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/discovery/internal"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"golang.org/x/discovery/internal/derrors"
 )
 
 func TestInsertDocumentsAndSearch(t *testing.T) {
@@ -35,7 +34,7 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 		terms                []string
 		versions             []*internal.Version
 		want                 []*SearchResult
-		insertErr, searchErr codes.Code
+		insertErr, searchErr derrors.ErrorType
 	}{
 		{
 			name:  "two_documents_different_packages_multiple_terms",
@@ -197,8 +196,8 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 			terms:     []string{},
 			versions:  nil,
 			want:      nil,
-			insertErr: codes.InvalidArgument,
-			searchErr: codes.InvalidArgument,
+			insertErr: derrors.InvalidArgumentType,
+			searchErr: derrors.InvalidArgumentType,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -207,17 +206,17 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 
 			if tc.versions != nil {
 				for _, v := range tc.versions {
-					if err := db.InsertVersion(ctx, v, nil); status.Code(err) != tc.insertErr {
+					if err := db.InsertVersion(ctx, v, nil); derrors.Type(err) != tc.insertErr {
 						t.Fatalf("db.InsertVersion(%+v): %v", tc.versions, err)
 					}
-					if err := db.InsertDocuments(ctx, v); status.Code(err) != tc.insertErr {
+					if err := db.InsertDocuments(ctx, v); derrors.Type(err) != tc.insertErr {
 						t.Fatalf("db.InsertDocuments(%+v): %v", tc.versions, err)
 					}
 				}
 			}
 
 			got, err := db.Search(ctx, tc.terms)
-			if status.Code(err) != tc.searchErr {
+			if derrors.Type(err) != tc.searchErr {
 				t.Fatalf("db.Search(%v): %v", tc.terms, err)
 			}
 

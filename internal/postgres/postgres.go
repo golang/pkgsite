@@ -14,16 +14,18 @@ import (
 
 	"github.com/lib/pq"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
+// DB wraps a sql.DB to provide an API for interacting with discovery data
+// stored in Postgres.
 type DB struct {
 	*sql.DB
 }
 
+// Open creates a new DB for the given Postgres connection string.
 func Open(dbinfo string) (*DB, error) {
 	db, err := sql.Open("postgres", dbinfo)
 	if err != nil {
@@ -225,9 +227,12 @@ func (db *DB) GetVersion(ctx context.Context, modulePath string, version string)
 
 // GetPackage returns the first package from the database that has path and
 // version.
+//
+// The returned error may be checked with derrors.IsInvalidArgument to
+// determine if it was caused by an invalid path or version.
 func (db *DB) GetPackage(ctx context.Context, path string, version string) (*internal.Package, error) {
 	if path == "" || version == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "postgres: path and version cannot be empty")
+		return nil, derrors.InvalidArgument("postgres: path and version cannot be empty")
 	}
 
 	var (
@@ -651,9 +656,12 @@ func padPrerelease(v string) (string, error) {
 // The prerelease column will pad any number fields with zeroes on the left so
 // all number fields in the prerelease column have 20 characters. If the
 // version is malformed then insertion will fail.
+//
+// The returned error may be checked with derrors.IsInvalidArgument to
+// determine whether it was caused by an invalid version.
 func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, licenses []*internal.License) error {
 	if err := validateVersion(version); err != nil {
-		return status.Errorf(codes.InvalidArgument, fmt.Sprintf("validateVersion: %v", err))
+		return derrors.InvalidArgument(fmt.Sprintf("validateVersion: %v", err))
 	}
 
 	return db.Transact(func(tx *sql.Tx) error {

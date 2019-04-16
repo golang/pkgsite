@@ -31,20 +31,20 @@ func IsNotFound(err error) bool {
 	return ok
 }
 
-type invalidArguments struct {
+type invalidArgument struct {
 	errorMessage
 }
 
-// InvalidArguments creates a new error that indicates the given arguments are
+// InvalidArgument creates a new error that indicates the given arguments are
 // invalid.
-func InvalidArguments(msg string) error {
-	return invalidArguments{
+func InvalidArgument(msg string) error {
+	return invalidArgument{
 		errorMessage: errorMessage(msg),
 	}
 }
 
-// IsInvalidArguments reports whether err is an InvalidArguments error.
-func IsInvalidArguments(err error) bool {
-	_, ok := err.(invalidArguments)
+// IsInvalidArgument reports whether err is an InvalidArguments error.
+func IsInvalidArgument(err error) bool {
+	_, ok := err.(invalidArgument)
 	return ok
 }
