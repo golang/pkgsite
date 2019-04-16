@@ -4,11 +4,14 @@
   license that can be found in the LICENSE file.
 -->
 
+{{ define "ROOT" }}
 <!DOCTYPE html>
 <title>{{ .Query }} — Go Discovery</title>
+
 {{ template "header" . }}
-<div class="SearchContent">
-  {{ template "nav" . }}
+{{ template "nav" . }}
+
+<div class="Container">
   {{ template "search_bar" . }}
   <div class="SearchContent-results">
     {{ $len := len .Results }}
@@ -25,3 +28,4 @@
     {{ end}}
   </div>
 </div>
+{{ end }}

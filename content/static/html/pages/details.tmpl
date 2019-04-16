@@ -4,14 +4,27 @@
 	license that can be found in the LICENSE file.
 -->
 
+{{define "ROOT"}}
+
 <!DOCTYPE html>
+<html lang="en">
+<body>
+
 {{ template "header" .PackageHeader }}
 {{ template "nav" }}
-<div class="DocumentationContent">
+
+<div class="Container">
   {{ template "mod_header" .PackageHeader }}
   {{ template "modules_nav" .PackageHeader }}
-  <div class="DocumentationContent-doc">
-    &lt;godoc of package {{.PackageHeader.Name}} will go here&gt;
+
+  <div class="Content">
+    {{ template "content" . }}
   </div>
+
   <footer></footer>
 </div>
+
+</body>
+</html>
+
+{{end}}

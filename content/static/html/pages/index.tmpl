@@ -4,10 +4,16 @@
 	license that can be found in the LICENSE file.
 -->
 
+{{ define "ROOT" }}
+
 <!DOCTYPE html>
 <title>Go Discovery</title>
+
 {{ template "header" }}
-<div class="HomeContent">
-  {{ template "nav" . }}
+{{ template "nav" . }}
+
+<div class="Container">
   {{ template "search_bar" . }}
 </div>
+
+{{ end }}

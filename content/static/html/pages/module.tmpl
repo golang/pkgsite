@@ -4,12 +4,7 @@
   license that can be found in the LICENSE file.
 -->
 
-<!DOCTYPE html>
-{{ template "header" .PackageHeader }}
-{{ template "nav" . }}
-<div class="ModuleContent">
-  {{ template "mod_header" .PackageHeader }}
-  {{ template "modules_nav" .PackageHeader }}
+{{ define "content" }}
   <div class="ModuleContent-list">
     <h2>Module {{ .ModulePath }} @ {{ .Version }} contains packages:</h2>
     <div>
@@ -31,4 +26,4 @@
     <br>
     {{ .ReadMe }}
   </div>
-</div>
+{{ end }}

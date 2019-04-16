@@ -4,13 +4,8 @@
   license that can be found in the LICENSE file.
 -->
 
-<!DOCTYPE html>
-{{ template "header" .PackageHeader }}
-{{ template "nav" . }}
-<div class="VersionsContent">
-  {{ template "mod_header" .PackageHeader }}
-  {{ template "modules_nav" .PackageHeader }}
-  <div class="VersionsContent-list">
+{{ define "content" }}
+  <div>
     {{ range $major := .Versions }}
       <h3>{{$major.Level}} - Latest <a href="/{{$major.Latest.Path}}@v{{$major.Latest.Version}}">{{ $major.Latest.Version }}</a> - {{ $major.Latest.CommitTime }}</h3>
       <ul>
@@ -25,4 +20,4 @@
       </ul>
     {{ end }}
   </div>
-</div>
+{{ end }}

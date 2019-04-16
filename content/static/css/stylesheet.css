@@ -43,38 +43,20 @@
 .DetailsHeader-packageName {
   text-decoration: none;
 }
-.OverviewContent,
-.DocumentationContent,
-.VersionsContent,
-.LicensesContent,
-.SearchContent,
-.ModuleContent,
-.HomeContent {
-  font-family: Arial;
+.Container {
   color: #000;
-  padding-top: 20px;
-  padding-bottom: 20px;
+  font-family: Arial;
+  margin: 0 200px;
+  padding: 20px 0;
+
 }
-.OverviewContent-readMe,
-.DocumentationContent-doc,
-.VersionsContent-list,
-.LicensesContent-licenses,
-.ModuleContent-list,
-.HomeContent-search,
-.SearchContent-results {
+.Content {
   margin-top: 10px;
 }
 .SearchContent-header {
   font-size: 32px;
 }
-.OverviewContent,
-.DocumentationContent,
-.VersionsContent,
-.LicensesContent,
-.ModuleContent,
-.SearchContent-results {
-  margin: 0 200px;
-}
+
 .SearchSnippetContent {
   margin: 20px 0;
 }

@@ -32,7 +32,7 @@ type OverviewPage struct {
 	PackageHeader *Package
 }
 
-// DocumentationPage contains data for the documentation template.
+// DocumentationPage contains data for the doc template.
 type DocumentationPage struct {
 	ModulePath    string
 	PackageHeader *Package
@@ -45,6 +45,16 @@ type ModulePage struct {
 	Version       string
 	ReadMe        template.HTML
 	Packages      []*Package
+	PackageHeader *Package
+}
+
+// ImportsPage contains information for a package's imports.
+type ImportsPage struct {
+	PackageHeader *Package
+}
+
+// ImportersPage contains information for importers of a package.
+type ImportersPage struct {
 	PackageHeader *Package
 }
 
@@ -93,39 +103,45 @@ type VersionsPage struct {
 }
 
 // parsePageTemplates parses html templates contained in the given base
-// directory in order to generate a map of pageName->*template.Template.
+// directory in order to generate a map of Name->*template.Template.
 //
 // Separate templates are used so that certain contextual functions (e.g.
-// pageName) can be bound independently for each page.
+// templateName) can be bound independently for each page.
 func parsePageTemplates(base string) (map[string]*template.Template, error) {
-	pages := []string{
-		"index",
-		"module",
-		"overview",
-		"documentation",
-		"search",
-		"versions",
-		"licenses",
+	htmlSets := [][]string{
+		{"index.tmpl"},
+		{"search.tmpl"},
+		{"doc.tmpl", "details.tmpl"},
+		{"importers.tmpl", "details.tmpl"},
+		{"imports.tmpl", "details.tmpl"},
+		{"licenses.tmpl", "details.tmpl"},
+		{"module.tmpl", "details.tmpl"},
+		{"overview.tmpl", "details.tmpl"},
+		{"versions.tmpl", "details.tmpl"},
 	}
+
 	templates := make(map[string]*template.Template)
 	// Loop through and create a template for each page.  This template includes
 	// the page html template contained in pages/<page>.tmpl, along with all
 	// helper snippets contained in helpers/*.tmpl.
-	for _, pageName := range pages {
-		pn := pageName
+	for _, set := range htmlSets {
+		templateName := set[0]
 		t := template.New("").Funcs(template.FuncMap{
-			"pageName": func() string { return pn },
+			"templateName": func() string { return templateName },
 		})
 		helperGlob := filepath.Join(base, "helpers", "*.tmpl")
 		if _, err := t.ParseGlob(helperGlob); err != nil {
 			return nil, fmt.Errorf("ParseGlob(%q): %v", helperGlob, err)
 		}
-		templateName := fmt.Sprintf("%s.tmpl", pageName)
-		templateFile := filepath.Join(base, "pages", templateName)
-		if _, err := t.ParseFiles(templateFile); err != nil {
-			return nil, fmt.Errorf("ParseFiles(%q): %v", templateFile, err)
+
+		var files []string
+		for _, f := range set {
+			files = append(files, filepath.Join(base, "pages", f))
 		}
-		templates[templateName] = t
+		if _, err := t.ParseFiles(files...); err != nil {
+			return nil, fmt.Errorf("ParseFiles(%v): %v", files, err)
+		}
+		templates[set[0]] = t
 	}
 	return templates, nil
 }
@@ -380,6 +396,40 @@ func fetchLicensesPage(ctx context.Context, db *postgres.DB, path, version strin
 	}, nil
 }
 
+// fetchImportsPage fetches imports for the package version specified by
+// path and version from the database and returns a ImportsPage.
+func fetchImportsPage(ctx context.Context, db *postgres.DB, path, version string) (*ImportsPage, error) {
+	pkg, err := db.GetPackage(ctx, path, version)
+	if err != nil {
+		return nil, fmt.Errorf("db.GetPackage(ctx, %q, %q): %v", path, version, err)
+	}
+
+	pkgHeader, err := createPackageHeader(pkg)
+	if err != nil {
+		return nil, fmt.Errorf("createPackageHeader(%+v): %v", pkg, err)
+	}
+	return &ImportsPage{
+		PackageHeader: pkgHeader,
+	}, nil
+}
+
+// fetchImportersPage fetches importers for the package version specified by
+// path and version from the database and returns a ImportersPage.
+func fetchImportersPage(ctx context.Context, db *postgres.DB, path, version string) (*ImportersPage, error) {
+	pkg, err := db.GetPackage(ctx, path, version)
+	if err != nil {
+		return nil, fmt.Errorf("db.GetPackage(ctx, %q, %q): %v", path, version, err)
+	}
+
+	pkgHeader, err := createPackageHeader(pkg)
+	if err != nil {
+		return nil, fmt.Errorf("createPackageHeader(%+v): %v", pkg, err)
+	}
+	return &ImportersPage{
+		PackageHeader: pkgHeader,
+	}, nil
+}
+
 func readmeHTML(readme []byte) template.HTML {
 	unsafe := blackfriday.Run(readme)
 	b := bluemonday.UGCPolicy().SanitizeBytes(unsafe)
@@ -388,7 +438,7 @@ func readmeHTML(readme []byte) template.HTML {
 
 func (c *Controller) renderPage(w http.ResponseWriter, templateName string, page interface{}) {
 	var buf bytes.Buffer
-	if err := c.templates[templateName].ExecuteTemplate(&buf, templateName, page); err != nil {
+	if err := c.templates[templateName].ExecuteTemplate(&buf, "ROOT", page); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		log.Printf("Error executing page template %q: %v", templateName, err)
 		return
@@ -440,38 +490,39 @@ func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var (
-		html string
 		page interface{}
 		err  error
 		ctx  = r.Context()
 	)
-	switch tab := r.FormValue("tab"); tab {
+
+	tab := r.FormValue("tab")
+	switch tab {
 	case "doc":
-		html = "documentation.tmpl"
 		page, err = fetchDocumentationPage(ctx, c.db, path, version)
 	case "versions":
-		html = "versions.tmpl"
 		page, err = fetchVersionsPage(ctx, c.db, path, version)
 	case "module":
-		html = "module.tmpl"
 		page, err = fetchModulePage(ctx, c.db, path, version)
+	case "imports":
+		page, err = fetchImportsPage(ctx, c.db, path, version)
+	case "importers":
+		page, err = fetchImportersPage(ctx, c.db, path, version)
 	case "licenses":
-		html = "licenses.tmpl"
 		page, err = fetchLicensesPage(ctx, c.db, path, version)
 	case "overview":
 		fallthrough
 	default:
-		html = "overview.tmpl"
+		tab = "overview"
 		page, err = fetchOverviewPage(ctx, c.db, path, version)
 	}
 
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		log.Printf("error fetching page for %q: %v", html, err)
+		log.Printf("error fetching page for %q: %v", tab, err)
 		return
 	}
 
-	c.renderPage(w, html, page)
+	c.renderPage(w, tab+".tmpl", page)
 }
 
 // SearchPage contains all of the data that the search template needs to
