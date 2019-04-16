@@ -2,6 +2,8 @@
 -- Use of this source code is governed by a BSD-style
 -- license that can be found in the LICENSE file.
 
+BEGIN;
+
 -- vw_licensed_packages is a helper view that captures package licenses when
 -- querying.
 CREATE OR REPLACE VIEW vw_licensed_packages AS
@@ -28,3 +30,5 @@ ON
   AND pl.version = l.version
   AND pl.file_path = l.file_path
 GROUP BY (p.module_path, p.version, p.path);
+
+END;

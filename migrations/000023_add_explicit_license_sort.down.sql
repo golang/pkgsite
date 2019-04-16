@@ -2,6 +2,8 @@
 -- Use of this source code is governed by a BSD-style
 -- license that can be found in the LICENSE file.
 
+BEGIN;
+
 CREATE OR REPLACE VIEW vw_licensed_packages AS
 SELECT
   p.*,
@@ -22,3 +24,5 @@ ON
   AND pl.version = l.version
   AND pl.file_path = l.file_path
 GROUP BY (p.module_path, p.version, p.path);
+
+END;
