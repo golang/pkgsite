@@ -53,8 +53,8 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				Name:     "bar",
 				Synopsis: "package bar",
 				Licenses: []*internal.LicenseInfo{
+					{Type: "MIT", FilePath: "my.mod/module@v1.0.0/bar/LICENSE"},
 					{Type: "BSD-3-Clause", FilePath: "my.mod/module@v1.0.0/LICENSE"},
-					{Type: "BSD-3-Clause", FilePath: "my.mod/module@v1.0.0/bar/LICENSE"},
 				},
 			},
 		},
