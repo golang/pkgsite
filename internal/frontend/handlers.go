@@ -48,6 +48,11 @@ type ModulePage struct {
 	PackageHeader *Package
 }
 
+// LicensesPage contains license information for a package.
+type LicensesPage struct {
+	PackageHeader *Package
+}
+
 // Package contains information for an individual package.
 type Package struct {
 	Version    string
@@ -100,6 +105,7 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 		"documentation",
 		"search",
 		"versions",
+		"licenses",
 	}
 	templates := make(map[string]*template.Template)
 	// Loop through and create a template for each page.  This template includes
@@ -357,6 +363,23 @@ func fetchVersionsPage(ctx context.Context, db *postgres.DB, path, version strin
 	}, nil
 }
 
+// fetchLicensesPage fetches license data for the package version specified by
+// path and version from the database and returns a LicensesPage.
+func fetchLicensesPage(ctx context.Context, db *postgres.DB, path, version string) (*LicensesPage, error) {
+	pkg, err := db.GetPackage(ctx, path, version)
+	if err != nil {
+		return nil, fmt.Errorf("db.GetPackage(ctx, %q, %q): %v", path, version, err)
+	}
+
+	pkgHeader, err := createPackageHeader(pkg)
+	if err != nil {
+		return nil, fmt.Errorf("createPackageHeader(%+v): %v", pkg, err)
+	}
+	return &LicensesPage{
+		PackageHeader: pkgHeader,
+	}, nil
+}
+
 func readmeHTML(readme []byte) template.HTML {
 	unsafe := blackfriday.Run(readme)
 	b := bluemonday.UGCPolicy().SanitizeBytes(unsafe)
@@ -432,6 +455,9 @@ func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
 	case "module":
 		html = "module.tmpl"
 		page, err = fetchModulePage(ctx, c.db, path, version)
+	case "licenses":
+		html = "licenses.tmpl"
+		page, err = fetchLicensesPage(ctx, c.db, path, version)
 	case "overview":
 		fallthrough
 	default:

@@ -46,6 +46,7 @@
 .OverviewContent,
 .DocumentationContent,
 .VersionsContent,
+.LicensesContent,
 .SearchContent,
 .ModuleContent,
 .HomeContent {
@@ -57,6 +58,7 @@
 .OverviewContent-readMe,
 .DocumentationContent-doc,
 .VersionsContent-list,
+.LicensesContent-licenses,
 .ModuleContent-list,
 .HomeContent-search,
 .SearchContent-results {
@@ -68,6 +70,7 @@
 .OverviewContent,
 .DocumentationContent,
 .VersionsContent,
+.LicensesContent,
 .ModuleContent,
 .SearchContent-results {
   margin: 0 200px;
