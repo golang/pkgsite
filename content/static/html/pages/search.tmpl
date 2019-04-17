@@ -14,8 +14,18 @@
 <div class="Container">
   {{ template "search_bar" . }}
   <div class="SearchContent-results">
-    {{ $len := len .Results }}
-    <h1 class="SearchContent-header">{{ $len }} package{{if gt $len 1 }}s{{end}} found for “{{ .Query }}”</h1>
+    <h1 class="SearchContent-header">{{ .Total }} package{{if gt .Total 1 }}s{{end}} found for “{{ .Query }}”</h1>
+    <div>
+      <p>Page {{ .Page }}</p>
+      <div>
+        {{ if .Prev }}
+          <a href="/search?q={{ .Query }}&page={{ .Prev }}">&lt;&lt; Prev</a>
+        {{ end }}
+        {{ if .Next }}
+          <a href="/search?q={{ .Query }}&page={{ .Next }}">Next &gt;&gt;</a>
+        {{ end }}
+      </div>
+    </div>
     <hr>
     {{ range .Results }}
       <div class="SearchSnippetContent">

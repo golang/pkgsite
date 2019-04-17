@@ -75,7 +75,10 @@ type SearchResult struct {
 
 // Search fetches packages from the database that match the terms
 // provided, and returns them in order of relevance as a []*SearchResult.
-func (db *DB) Search(ctx context.Context, terms []string) ([]*SearchResult, error) {
+func (db *DB) Search(ctx context.Context, terms []string, limit, offset int) ([]*SearchResult, error) {
+	if limit == 0 {
+		return nil, derrors.InvalidArgument(fmt.Sprintf("cannot search: limit cannot be 0"))
+	}
 	if len(terms) == 0 {
 		return nil, derrors.InvalidArgument(fmt.Sprintf("cannot search: no terms"))
 	}
@@ -119,10 +122,12 @@ func (db *DB) Search(ctx context.Context, terms []string) ([]*SearchResult, erro
 		WHERE
 			r.rank > POWER(10,-10)
 		ORDER BY
-			r.rank DESC;`
-	rows, err := db.QueryContext(ctx, query, strings.Join(terms, " | "))
+			r.rank DESC
+		LIMIT $2
+		OFFSET $3;`
+	rows, err := db.QueryContext(ctx, query, strings.Join(terms, " | "), limit, offset)
 	if err != nil {
-		return nil, fmt.Errorf("db.QueryContext(ctx, %s, %q): %v", query, terms, err)
+		return nil, fmt.Errorf("db.QueryContext(ctx, %s, %q, %d, %d): %v", query, terms, limit, offset, err)
 	}
 	defer rows.Close()
 

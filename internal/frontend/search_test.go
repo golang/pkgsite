@@ -65,6 +65,10 @@ func TestFetchSearchPage(t *testing.T) {
 			versions: []*internal.Version{versionFoo, versionBar},
 			wantSearchPage: &SearchPage{
 				Query: "foo bar",
+				Total: 2,
+				Prev:  0,
+				Next:  0,
+				Page:  1,
 				Results: []*SearchResult{
 					&SearchResult{
 						Name:          versionBar.Packages[0].Name,
@@ -95,6 +99,10 @@ func TestFetchSearchPage(t *testing.T) {
 			versions: []*internal.Version{versionFoo, versionBar},
 			wantSearchPage: &SearchPage{
 				Query: "package",
+				Total: 1,
+				Prev:  0,
+				Next:  0,
+				Page:  1,
 				Results: []*SearchResult{
 					&SearchResult{
 						Name:          versionFoo.Packages[0].Name,
@@ -123,7 +131,7 @@ func TestFetchSearchPage(t *testing.T) {
 				}
 			}
 
-			got, err := fetchSearchPage(ctx, db, tc.query)
+			got, err := fetchSearchPage(ctx, db, tc.query, 20, 1)
 			if err != nil {
 				t.Fatalf("fetchSearchPage(db, %q): %v", tc.query, err)
 			}

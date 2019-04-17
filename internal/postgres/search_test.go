@@ -7,10 +7,8 @@ package postgres
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 )
@@ -20,44 +18,33 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 	defer cancel()
 
 	var (
-		now        = time.Now()
-		versionFoo = &internal.Version{
-			Version:     "v1.0.0",
-			ReadMe:      []byte("readme"),
-			CommitTime:  now,
-			VersionType: internal.VersionTypeRelease,
-			ModulePath:  "github.com/valid_module_name",
-			SeriesPath:  "myseries",
-			Packages: []*internal.Package{
+		versionFoo = sampleVersion(func(v *internal.Version) {
+			v.Packages = []*internal.Package{
 				&internal.Package{
 					Name:     "foo",
 					Path:     "/path/to/foo",
 					Synopsis: "foo",
 				},
-			},
-		}
-		versionBar = &internal.Version{
-			Version:     "v1.0.0",
-			ReadMe:      []byte("readme"),
-			CommitTime:  now,
-			VersionType: internal.VersionTypeRelease,
-			ModulePath:  "github.com/valid_module_name",
-			SeriesPath:  "myseries",
-			Packages: []*internal.Package{
+			}
+		})
+		versionBar = sampleVersion(func(v *internal.Version) {
+			v.Packages = []*internal.Package{
 				&internal.Package{
 					Name:     "bar",
 					Path:     "/path/to/bar",
 					Synopsis: "bar is bar", // add an extra 'bar' to make sorting deterministic
 				},
-			},
-		}
+			}
+		})
+
 		pkgFoo = &internal.Package{
 			Name:     "foo",
 			Path:     "/path/to/foo",
 			Synopsis: "foo",
 			Version: &internal.Version{
-				ModulePath: "github.com/valid_module_name",
-				Version:    "v1.0.0",
+				ModulePath: versionFoo.ModulePath,
+				Version:    versionFoo.Version,
+				CommitTime: versionFoo.CommitTime,
 			},
 		}
 		pkgBar = &internal.Package{
@@ -65,8 +52,9 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 			Path:     "/path/to/bar",
 			Synopsis: "bar is bar",
 			Version: &internal.Version{
-				ModulePath: "github.com/valid_module_name",
-				Version:    "v1.0.0",
+				ModulePath: versionBar.ModulePath,
+				Version:    versionBar.Version,
+				CommitTime: versionBar.CommitTime,
 			},
 		}
 	)
@@ -77,6 +65,7 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 		versions             []*internal.Version
 		want                 []*SearchResult
 		insertErr, searchErr derrors.ErrorType
+		limit, offset        int
 	}{
 		{
 			name:     "two_documents_different_packages_multiple_terms",
@@ -94,6 +83,36 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 					NumImportedBy: 0,
 					Total:         2,
 					Package:       pkgFoo,
+				},
+			},
+		},
+		{
+			name:     "two_documents_different_packages_multiple_terms_limit_1_offset_0",
+			terms:    []string{"foo", "bar"},
+			limit:    1,
+			offset:   0,
+			versions: []*internal.Version{versionFoo, versionBar},
+			want: []*SearchResult{
+				&SearchResult{
+					Rank:          0.15107775919689598,
+					NumImportedBy: 0,
+					Package:       pkgBar,
+					Total:         2,
+				},
+			},
+		},
+		{
+			name:     "two_documents_different_packages_multiple_terms_limit_1_offset_1",
+			terms:    []string{"foo", "bar"},
+			limit:    1,
+			offset:   1,
+			versions: []*internal.Version{versionFoo, versionBar},
+			want: []*SearchResult{
+				&SearchResult{
+					Rank:          0.14521065270483344,
+					NumImportedBy: 0,
+					Package:       pkgFoo,
+					Total:         2,
 				},
 			},
 		},
@@ -147,15 +166,20 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 				}
 			}
 
-			got, err := db.Search(ctx, tc.terms)
+			if tc.limit < 1 {
+				tc.limit = 10
+			}
+			got, err := db.Search(ctx, tc.terms, tc.limit, tc.offset)
 			if derrors.Type(err) != tc.searchErr {
-				t.Fatalf("db.Search(ctx, %v): %v", tc.terms, err)
+				t.Fatalf("db.Search(%v, %d, %d): %v", tc.terms, tc.limit, tc.offset, err)
 			}
+
 			if len(got) != len(tc.want) {
-				t.Errorf("db.Search(ctx, %v) mismatch: len(got) = %d, want = %d\n", tc.terms, len(got), len(tc.want))
+				t.Errorf("db.Search(%v, %d, %d) mismatch: len(got) = %d, want = %d\n", tc.terms, tc.limit, tc.offset, len(got), len(tc.want))
 			}
-			if diff := cmp.Diff(tc.want, got, cmpopts.IgnoreFields(internal.Version{}, "CommitTime")); diff != "" {
-				t.Errorf("db.Search(ctx, %v) mismatch (-want +got):\n%s", tc.terms, diff)
+
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("db.Search(%v, %d, %d) mismatch (-want +got):\n%s", tc.terms, tc.limit, tc.offset, diff)
 			}
 		})
 	}
