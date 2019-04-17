@@ -225,6 +225,65 @@ func (db *DB) GetVersion(ctx context.Context, modulePath string, version string)
 	}, nil
 }
 
+// GetLicenses returns all licenses associated with the given package path and
+// version.
+//
+// The returned error may be checked with derrors.IsInvalidArgument to
+// determine if it resulted from an invalid package path or version.
+func (db *DB) GetLicenses(ctx context.Context, pkgPath string, version string) ([]*internal.License, error) {
+	if pkgPath == "" || version == "" {
+		return nil, derrors.InvalidArgument("postgres: pkgPath and version cannot be empty")
+	}
+	query := `
+		SELECT
+			l.type,
+			l.file_path,
+			l.contents
+		FROM
+			licenses l
+		INNER JOIN
+			package_licenses pl
+		ON
+			pl.module_path = l.module_path
+			AND pl.version = l.version
+			AND pl.file_path = l.file_path
+		INNER JOIN
+			packages p
+		ON
+			p.module_path = pl.module_path
+			AND p.version = pl.version
+			AND p.path = pl.package_path
+		WHERE
+			p.path = $1
+			AND p.version = $2
+		ORDER BY l.file_path;`
+
+	var (
+		licenseType, licensePath string
+		contents                 []byte
+	)
+	rows, err := db.QueryContext(ctx, query, pkgPath, version)
+	if err != nil {
+		return nil, fmt.Errorf("db.QueryContext(ctx, %q, %q): %v", query, pkgPath, err)
+	}
+	defer rows.Close()
+
+	var licenses []*internal.License
+	for rows.Next() {
+		if err := rows.Scan(&licenseType, &licensePath, &contents); err != nil {
+			return nil, fmt.Errorf("row.Scan(): %v", err)
+		}
+		licenses = append(licenses, &internal.License{
+			LicenseInfo: internal.LicenseInfo{
+				Type:     licenseType,
+				FilePath: licensePath,
+			},
+			Contents: contents,
+		})
+	}
+	return licenses, nil
+}
+
 // GetPackage returns the first package from the database that has path and
 // version.
 //

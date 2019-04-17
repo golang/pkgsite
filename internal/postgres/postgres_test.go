@@ -1044,3 +1044,74 @@ func TestGetVersionForPackage(t *testing.T) {
 		})
 	}
 }
+
+func TestGetLicenses(t *testing.T) {
+	var (
+		now    = NowTruncated()
+		series = &internal.Series{
+			Path:    "myseries",
+			Modules: []*internal.Module{},
+		}
+		module = &internal.Module{
+			Path:     "test.module",
+			Series:   series,
+			Versions: []*internal.Version{},
+		}
+		testVersion = &internal.Version{
+			Module:      module,
+			Version:     "v1.0.0",
+			ReadMe:      []byte("readme"),
+			CommitTime:  now,
+			VersionType: internal.VersionTypeRelease,
+			Packages: []*internal.Package{
+				&internal.Package{
+					Name:     "foo",
+					Synopsis: "This is a package synopsis",
+					Path:     "test.module/foo",
+					Licenses: sampleLicenseInfos,
+				},
+				&internal.Package{
+					Name:     "testmodule",
+					Synopsis: "This is a package synopsis",
+					Path:     "test.module",
+				},
+			},
+		}
+	)
+
+	tests := []struct {
+		label, pkgPath string
+		wantLicenses   []*internal.License
+	}{
+		{
+			label:        "package with licenses",
+			pkgPath:      "test.module/foo",
+			wantLicenses: sampleLicenses,
+		}, {
+			label:        "package with no licenses",
+			pkgPath:      "test.module",
+			wantLicenses: nil,
+		},
+	}
+
+	teardownTestCase, db := SetupCleanDB(t)
+	defer teardownTestCase(t)
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	if err := db.InsertVersion(ctx, testVersion, sampleLicenses); err != nil {
+		t.Errorf("db.InsertVersion(ctx, %q, licenses): %v", testVersion.Version, err)
+	}
+
+	for _, test := range tests {
+		t.Run(test.label, func(t *testing.T) {
+			got, err := db.GetLicenses(ctx, test.pkgPath, testVersion.Version)
+			if err != nil {
+				t.Fatalf("db.GetLicenses(ctx, %q, %q): %v", test.pkgPath, testVersion.Version, err)
+			}
+			if diff := cmp.Diff(got, test.wantLicenses); diff != "" {
+				t.Errorf("db.GetLicenses(ctx, %q, %q) mismatch (-got +want):\n%s", test.pkgPath, testVersion.Version, diff)
+			}
+		})
+	}
+}
