@@ -31,7 +31,7 @@ var (
 		Version:    "v1.0.0",
 		Path:       "test.com/module/pkg_name",
 		Synopsis:   "Test package synopsis",
-		Licenses:   sampleLicenseInfos,
+		Licenses:   transformLicenseInfos(sampleLicenseInfos),
 		CommitTime: "today",
 	}
 	sampleInternalPackage = &internal.Package{
@@ -60,7 +60,7 @@ var (
 		Version:    "v1.0.0",
 		Path:       "test.com/module/pkg_name",
 		Synopsis:   "Test package synopsis",
-		Licenses:   sampleLicenseInfos,
+		Licenses:   transformLicenseInfos(sampleLicenseInfos),
 	}
 )
 
@@ -299,7 +299,7 @@ func TestFetchVersionsDetails(t *testing.T) {
 					Version:    "v1.2.1",
 					Path:       pkg1Path,
 					Synopsis:   "test synopsis",
-					Licenses:   []*internal.LicenseInfo{{Type: "MIT", FilePath: "LICENSE"}},
+					Licenses:   transformLicenseInfos([]*internal.LicenseInfo{{Type: "MIT", FilePath: "LICENSE"}}),
 					CommitTime: "today",
 				},
 			},
@@ -353,7 +353,7 @@ func TestFetchVersionsDetails(t *testing.T) {
 					Version:    "v0.0.0-20140414041501-3c2ca4d52544",
 					Path:       pkg1Path,
 					Synopsis:   "test synopsis",
-					Licenses:   []*internal.LicenseInfo{{Type: "MIT", FilePath: "LICENSE"}},
+					Licenses:   transformLicenseInfos([]*internal.LicenseInfo{{Type: "MIT", FilePath: "LICENSE"}}),
 					CommitTime: "today",
 				},
 			},

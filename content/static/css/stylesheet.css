@@ -135,3 +135,15 @@
   display: inline-flex;
   width: 50%;
 }
+.License-contents {
+  background-color: var(--grey-10);
+  padding: 10px;
+  border: 1px solid var(--grey-8);
+  border-radius: 3px;
+}
+.License-disclaimer {
+  font-style: italic;
+}
+.Disclaimer-link {
+  font-style: italic;
+}

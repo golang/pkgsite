@@ -24,7 +24,10 @@
           <p>import "{{ $header.Path }}"</p>
         {{ end }}
         <p>{{ $header.Synopsis }}</p>
-        <p>{{range $i, $e := $header.Licenses}}{{if $i}}, {{end}}{{ $e.Type }}{{end}} - {{ $header.CommitTime }}</p>
+        <p>{{ range $i, $e := $header.Licenses -}}{{ if $i }}, {{ end }}
+          <a href="/{{$header.Path}}?v={{$header.Version}}&tab=licenses#{{.Anchor}}">{{ $e.Type }}</a>
+        {{- end }}
+        <a href="/{{$header.Path}}?v={{$header.Version}}&tab=licenses#Disclaimer" class="Disclaimer-link">(This is not legal advice)</a> {{ $header.CommitTime }}</p>
       </header>
 
       <ul class="ModulesNav">

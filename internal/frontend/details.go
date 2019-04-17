@@ -10,6 +10,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"strings"
 	"time"
@@ -57,8 +58,21 @@ type ImportsDetails struct {
 type ImportersDetails struct {
 }
 
+// License contains information used for a single license section.
+type License struct {
+	*internal.License
+	Anchor string
+}
+
 // LicensesDetails contains license information for a package.
 type LicensesDetails struct {
+	Licenses []License
+}
+
+// LicenseInfo contains license metadata that is used in the package header.
+type LicenseInfo struct {
+	*internal.LicenseInfo
+	Anchor string
 }
 
 // VersionsDetails contains all the data that the versions tab
@@ -92,13 +106,26 @@ type Package struct {
 	Synopsis   string
 	CommitTime string
 	Title      string
-	Licenses   []*internal.LicenseInfo
+	Licenses   []LicenseInfo
 	IsCommand  bool
 }
 
 // Dir returns the directory of the package relative to the root of the module.
 func (p *Package) Dir() string {
 	return strings.TrimPrefix(p.Path, fmt.Sprintf("%s/", p.ModulePath))
+}
+
+// transformLicenseInfos transforms an internal.LicenseInfo into a LicenseInfo,
+// by adding an anchor field.
+func transformLicenseInfos(dbLicenses []*internal.LicenseInfo) []LicenseInfo {
+	var licenseInfos []LicenseInfo
+	for _, l := range dbLicenses {
+		licenseInfos = append(licenseInfos, LicenseInfo{
+			LicenseInfo: l,
+			Anchor:      licenseAnchor(l.FilePath),
+		})
+	}
+	return licenseInfos
 }
 
 // createPackageHeader returns a *Package based on the fields of the specified
@@ -123,7 +150,7 @@ func createPackageHeader(pkg *internal.Package) (*Package, error) {
 		Version:    pkg.Version.Version,
 		Path:       pkg.Path,
 		Synopsis:   pkg.Synopsis,
-		Licenses:   pkg.Licenses,
+		Licenses:   transformLicenseInfos(pkg.Licenses),
 		CommitTime: elapsedTime(pkg.Version.CommitTime),
 	}, nil
 }
@@ -245,7 +272,7 @@ func fetchModuleDetails(ctx context.Context, db *postgres.DB, pkgPath, pkgversio
 			Name:       p.Name,
 			Path:       p.Path,
 			Synopsis:   p.Synopsis,
-			Licenses:   p.Licenses,
+			Licenses:   transformLicenseInfos(p.Licenses),
 			Version:    version.Version,
 			ModulePath: version.Module.Path,
 		})
@@ -364,6 +391,12 @@ func fetchVersionsDetails(ctx context.Context, db *postgres.DB, path, version st
 	}, nil
 }
 
+// licenseAnchor returns the anchor that should be used to jump to the specific
+// license on the licenses page.
+func licenseAnchor(filePath string) string {
+	return url.QueryEscape(filePath)
+}
+
 // fetchLicensesDetails fetches license data for the package version specified by
 // path and version from the database and returns a LicensesDetails.
 func fetchLicensesDetails(ctx context.Context, db *postgres.DB, path, version string) (*DetailsPage, error) {
@@ -371,8 +404,24 @@ func fetchLicensesDetails(ctx context.Context, db *postgres.DB, path, version st
 	if err != nil {
 		return nil, fmt.Errorf("db.fetchPackageHeader(ctx, db, %q, %q): %v", path, version, err)
 	}
+	dbLicenses, err := db.GetLicenses(ctx, path, version)
+	if err != nil {
+		return nil, fmt.Errorf("db.GetLicenses(ctx, %q, %q): %v", path, version, err)
+	}
+
+	licenses := make([]License, len(dbLicenses))
+	for i, l := range dbLicenses {
+		licenses[i] = License{
+			Anchor:  licenseAnchor(l.FilePath),
+			License: l,
+		}
+	}
+
 	return &DetailsPage{
 		PackageHeader: pkgHeader,
+		Details: &LicensesDetails{
+			Licenses: licenses,
+		},
 	}, nil
 }
 
