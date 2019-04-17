@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -53,8 +54,8 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				Name:     "bar",
 				Synopsis: "package bar",
 				Licenses: []*internal.LicenseInfo{
-					{Type: "MIT", FilePath: "my.mod/module@v1.0.0/bar/LICENSE"},
 					{Type: "BSD-3-Clause", FilePath: "my.mod/module@v1.0.0/LICENSE"},
+					{Type: "MIT", FilePath: "my.mod/module@v1.0.0/bar/LICENSE"},
 				},
 			},
 		},
@@ -101,6 +102,10 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			if err != nil {
 				t.Fatalf("db.GetPackage(ctx, %q, %q): %v", test.pkg, test.version, err)
 			}
+
+			sort.Slice(gotPkg.Licenses, func(i, j int) bool {
+				return gotPkg.Licenses[i].Type < gotPkg.Licenses[j].Type
+			})
 			if diff := cmp.Diff(gotPkg, test.pkgData); diff != "" {
 				t.Errorf("db.GetPackage(ctx, %q, %q) mismatch (-got +want):\n%s", test.pkg, test.version, diff)
 			}
