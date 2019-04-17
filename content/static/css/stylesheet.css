@@ -4,6 +4,28 @@
 	license that can be found in the LICENSE file.
 */
 
+:root {
+  --grey-1: #202224;
+  --grey-2: #3E4042;
+  --grey-3: #555759;
+  --grey-4: #6E7072;
+  --grey-5: #848688;
+  --grey-6: #AAACAE;
+  --grey-7: #C6C8CA;
+  --grey-8: #DCDEE0;
+  --grey-9: #F0F1F2;
+  --grey-10: #F8F9F9;
+
+  --turq-text: #007D9C;
+  --turq-med: #00ADD8;
+  --turq-light: #5DC9E2;
+
+  --purple: #542C7D;
+  --yellow: #FDDD00;
+  --pink: #CE3262;
+  --green: #00A29C;
+}
+
 .GoLogo {
   padding: 10px;
 }
@@ -18,8 +40,8 @@
   margin: 0;
   padding: 0;
   overflow: hidden;
-  border: 1px solid #e7e7e7;
-  background-color: #f3f3f3;
+  border: 1px solid var(--grey-8);
+  background-color: var(--grey-9);
 }
 .GlobalNav-link,
 .ModulesNav-tab {
@@ -29,22 +51,22 @@
 }
 .ModulesNav-link {
   display: block;
-  color: #000;
+  color: var(--grey-1);
   text-align: center;
   padding: 14px 3px 16px 3px;
   text-decoration: none;
 }
 .ModulesNav-link:hover {
-  background-color: #d6d2d1;
+  background-color: var(--grey-8);
 }
 .ModulesNav-tab.active {
-  background-color: #d6d2d1;
+  background-color: var(--grey-8);
 }
 .DetailsHeader-packageName {
   text-decoration: none;
 }
 .Container {
-  color: #000;
+  color: var(--grey-1);
   font-family: Arial;
   margin: 0 200px;
   padding: 20px 0;
