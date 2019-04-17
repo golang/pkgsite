@@ -5,10 +5,18 @@
 -->
 
 {{ define "mod_header" }}
-  <title>Package {{ .Name }} - {{ .Version }}</title>
+  <title>
+  	<span>{{ .Title }}</span>
+	<span>- {{ .Version }}</span>
+  </title>
   <header>
-    <h1>Package <a href="https://{{ .Path }}" class="DetailsHeader-packageName">{{ .Name }}</a> - {{ .Version }}</h1>
-    <h3>import "{{ .Path }}"</h3>
+    <h1>
+    	<span>{{ .Title }}</span>
+    </h1>
+    <h3><a href="https://{{ .Path }}" class="DetailsHeader-packageName">{{ .Version }}</a></h3>
+    {{ if not .IsCommand }}
+      <p>import "{{ .Path }}"</p>
+    {{ end }}
     <p>{{ .Synopsis }}</p>
     <p>{{range $i, $e := .Licenses}}{{if $i}}, {{end}}{{ $e.Type }}{{end}} - {{ .CommitTime }}</p>
   </header>

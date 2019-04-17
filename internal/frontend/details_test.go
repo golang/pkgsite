@@ -113,7 +113,7 @@ func TestFetchOverviewDetails(t *testing.T) {
 				ReadMe:     template.HTML("<p>This is the readme text.</p>\n"),
 			},
 			PackageHeader: &Package{
-				Name:       "pkg_name",
+				dbname:     "pkg_name",
 				Version:    "v1.0.0",
 				Path:       "test.com/module/pkg_name",
 				Synopsis:   "Test package synopsis",
@@ -136,7 +136,7 @@ func TestFetchOverviewDetails(t *testing.T) {
 			tc.version.Packages[0].Path, tc.version.Version, got, err, tc.wantDetailsPage)
 	}
 
-	if diff := cmp.Diff(tc.wantDetailsPage, got); diff != "" {
+	if diff := cmp.Diff(tc.wantDetailsPage, got, cmp.AllowUnexported(Package{})); diff != "" {
 		t.Errorf("fetchOverviewDetails(ctx, %q, %q) mismatch (-want +got):\n%s", tc.version.Packages[0].Path, tc.version.Version, diff)
 	}
 }
@@ -283,7 +283,7 @@ func TestFetchVersionsDetails(t *testing.T) {
 					},
 				},
 				PackageHeader: &Package{
-					Name:       "pkg_name",
+					dbname:     "pkg_name",
 					Version:    "v1.2.1",
 					Path:       pkg1Path,
 					Synopsis:   "test synopsis",
@@ -336,7 +336,7 @@ func TestFetchVersionsDetails(t *testing.T) {
 					},
 				},
 				PackageHeader: &Package{
-					Name:       "pkg_name",
+					dbname:     "pkg_name",
 					Version:    "v0.0.0-20140414041501-3c2ca4d52544",
 					Path:       pkg1Path,
 					Synopsis:   "test synopsis",
@@ -362,7 +362,7 @@ func TestFetchVersionsDetails(t *testing.T) {
 					tc.path, tc.version, got, err, tc.wantDetailsPage)
 			}
 
-			if diff := cmp.Diff(tc.wantDetailsPage, got); diff != "" {
+			if diff := cmp.Diff(tc.wantDetailsPage, got, cmp.AllowUnexported(Package{})); diff != "" {
 				t.Errorf("fetchVersionsDetails(ctx, db, %q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
 			}
 		})
@@ -448,7 +448,7 @@ func TestFetchModuleDetails(t *testing.T) {
 				},
 			},
 			PackageHeader: &Package{
-				Name:       "pkg_name",
+				dbname:     "pkg_name",
 				Version:    "v1.0.0",
 				Path:       "test.com/module/pkg_name",
 				Synopsis:   "Test package synopsis",
@@ -471,7 +471,60 @@ func TestFetchModuleDetails(t *testing.T) {
 			tc.version.Packages[0].Path, tc.version.Version, got, err, tc.wantDetailsPage)
 	}
 
-	if diff := cmp.Diff(tc.wantDetailsPage, got); diff != "" {
+	if diff := cmp.Diff(tc.wantDetailsPage, *got, cmp.AllowUnexported(Package{})); diff != "" {
 		t.Errorf("fetchModuleDetails(ctx, %q, %q) mismatch (-want +got):\n%s", tc.version.Packages[0].Path, tc.version.Version, diff)
+	}
+}
+
+func TestPackageMethods(t *testing.T) {
+	for _, tc := range []struct {
+		path, dbname, wantName, wantTitle string
+		wantIsCommand                     bool
+	}{
+		{
+			dbname:        "foo",
+			path:          "pa.th/to/foo",
+			wantName:      "foo",
+			wantTitle:     "Package foo",
+			wantIsCommand: false,
+		},
+		{
+			dbname:        "main",
+			path:          "pa.th/to/foo",
+			wantName:      "foo",
+			wantTitle:     "Command foo",
+			wantIsCommand: true,
+		},
+		{
+			dbname:        "main",
+			path:          "pa.th/to/foo/v2",
+			wantName:      "foo",
+			wantTitle:     "Command foo",
+			wantIsCommand: true,
+		},
+		{
+			dbname:        "main",
+			path:          "pa.th/to/foo/v1",
+			wantName:      "foo",
+			wantTitle:     "Command foo",
+			wantIsCommand: true,
+		},
+	} {
+
+		t.Run(tc.path, func(t *testing.T) {
+			p := &Package{
+				dbname: tc.dbname,
+				Path:   tc.path,
+			}
+			if p.Name() != tc.wantName {
+				t.Errorf("p.Name() = %q; want = %q", p.Name(), tc.wantName)
+			}
+			if p.IsCommand() != tc.wantIsCommand {
+				t.Errorf("p.IsCommand() = %t; want = %t", p.IsCommand(), tc.wantIsCommand)
+			}
+			if p.Title() != tc.wantTitle {
+				t.Errorf("p.Header() = %q; want = %q", p.Title(), tc.wantTitle)
+			}
+		})
 	}
 }
