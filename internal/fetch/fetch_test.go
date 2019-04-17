@@ -252,6 +252,34 @@ func TestHasFilename(t *testing.T) {
 
 }
 
+func TestSeriesPathForModule(t *testing.T) {
+	for input, want := range map[string]string{
+		"module/":              "module",
+		"module/v2/":           "module",
+		"my.mod/module":        "my.mod/module",
+		"my.mod/module/v":      "my.mod/module/v",
+		"my.mod/module/v0":     "my.mod/module/v0",
+		"my.mod/module/v1":     "my.mod/module/v1",
+		"my.mod/module/v23456": "my.mod/module",
+		"v2/":                  "v2",
+	} {
+		t.Run(input, func(t *testing.T) {
+			got, err := seriesPathForModule(input)
+			if err != nil {
+				t.Errorf("seriesPathForModule(%q): %v", input, err)
+			}
+			if got != want {
+				t.Errorf("seriesPathForModule(%q) = %q, want %q", input, got, want)
+			}
+		})
+	}
+
+	wantErr := "module name cannot be empty"
+	if _, err := seriesPathForModule(""); err == nil || err.Error() != wantErr {
+		t.Errorf("seriesPathForModule(%q) returned error: %v; want %v", "", err, wantErr)
+	}
+}
+
 func TestContainsFile(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()

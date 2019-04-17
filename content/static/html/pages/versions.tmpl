@@ -7,13 +7,13 @@
 {{ define "content" }}
   <div>
     {{ range $major := .Versions }}
-      <h3>{{$major.Level}} - Latest <a href="/{{$major.Latest.Path}}?v=v{{$major.Latest.Version}}">{{ $major.Latest.Version }}</a> - {{ $major.Latest.CommitTime }}</h3>
+      <h3>{{$major.Level}} - Latest <a href="/{{$major.Latest.Path}}@v{{$major.Latest.Version}}">{{ $major.Latest.Version }}</a> - {{ $major.Latest.CommitTime }}</h3>
       <ul>
         {{ range $majMin := $major.Versions }}
-          <li><h4>{{ $majMin.Level }} - Latest <a href="/{{$majMin.Latest.Path}}?v=v{{$majMin.Latest.Version}}">{{ $majMin.Latest.Version }}</a> - {{ $majMin.Latest.CommitTime }}</h4></li>
+          <li><h4>{{ $majMin.Level }} - Latest <a href="/{{$majMin.Latest.Path}}@v{{$majMin.Latest.Version}}">{{ $majMin.Latest.Version }}</a> - {{ $majMin.Latest.CommitTime }}</h4></li>
           <ul>
             {{ range $v := $majMin.Versions }}
-              <li><a href="/{{$v.Path}}?v=v{{$v.Version}}">{{ $v.Version }}</a> - {{ $v.CommitTime }}</li>
+              <li><a href="/{{$v.Path}}@v{{$v.Version}}">{{ $v.Version }}</a> - {{ $v.CommitTime }}</li>
             {{ end }}
           </ul>
         {{ end }}

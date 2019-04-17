@@ -10,7 +10,6 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -76,38 +75,6 @@ type Package struct {
 	CommitTime string
 	Name       string
 	Licenses   []*internal.LicenseInfo
-	dbname     string
-}
-
-// Title returns p.Name(), prefixed by "Command" if p.IsCommand() is true and
-// "Package" if it is not.
-func (p *Package) Title() string {
-	if p.IsCommand() {
-		return fmt.Sprintf("Command %s", p.Name())
-	}
-	return fmt.Sprintf("Package %s", p.Name())
-}
-
-// Name returns dname if dbname is not "main". Otherwise, it returns the last
-// element of dbname that is not a major version identifier (such as "v2"),
-// prefixed by Command. For example, if p.dbname is "main" and p.Path is
-// foo/bar/v2, it will return Command bar.
-func (p *Package) Name() string {
-	if p.dbname != "main" {
-		return p.dbname
-	}
-
-	if p.Path[len(p.Path)-3:] == "/v1" {
-		return filepath.Base(p.Path[:len(p.Path)-3])
-	}
-	path, _, _ := module.SplitPathVersion(p.Path)
-	return filepath.Base(path)
-}
-
-// IsCommand reports whether p is a Go command, based on whether p.dbname is
-// "main".
-func (p *Package) IsCommand() bool {
-	return p.dbname == "main"
 }
 
 // Dir returns the directory of the package relative to the root of the module.
