@@ -114,6 +114,7 @@ func TestFetchOverviewDetails(t *testing.T) {
 			},
 			PackageHeader: &Package{
 				Name:       "pkg_name",
+				Title:      "Package pkg_name",
 				Version:    "v1.0.0",
 				Path:       "test.com/module/pkg_name",
 				Synopsis:   "Test package synopsis",
@@ -284,6 +285,7 @@ func TestFetchVersionsDetails(t *testing.T) {
 				},
 				PackageHeader: &Package{
 					Name:       "pkg_name",
+					Title:      "Package pkg_name",
 					Version:    "v1.2.1",
 					Path:       pkg1Path,
 					Synopsis:   "test synopsis",
@@ -337,6 +339,7 @@ func TestFetchVersionsDetails(t *testing.T) {
 				},
 				PackageHeader: &Package{
 					Name:       "pkg_name",
+					Title:      "Package pkg_name",
 					Version:    "v0.0.0-20140414041501-3c2ca4d52544",
 					Path:       pkg1Path,
 					Synopsis:   "test synopsis",
@@ -449,6 +452,7 @@ func TestFetchModuleDetails(t *testing.T) {
 			},
 			PackageHeader: &Package{
 				Name:       "pkg_name",
+				Title:      "Package pkg_name",
 				Version:    "v1.0.0",
 				Path:       "test.com/module/pkg_name",
 				Synopsis:   "Test package synopsis",
@@ -473,5 +477,89 @@ func TestFetchModuleDetails(t *testing.T) {
 
 	if diff := cmp.Diff(tc.wantDetailsPage, got); diff != "" {
 		t.Errorf("fetchModuleDetails(ctx, %q, %q) mismatch (-want +got):\n%s", tc.version.Packages[0].Path, tc.version.Version, diff)
+	}
+}
+
+func TestCreatePackageHeader(t *testing.T) {
+	var version = &internal.Version{
+		Version: "v1.0.0",
+	}
+	for _, tc := range []struct {
+		pkg     *internal.Package
+		wantPkg *Package
+	}{
+		{
+			pkg: &internal.Package{
+				Version: version,
+				Name:    "foo",
+				Path:    "pa.th/to/foo",
+			},
+			wantPkg: &Package{
+				Version:    version.Version,
+				Name:       "foo",
+				Title:      "Package foo",
+				Path:       "pa.th/to/foo",
+				CommitTime: "Jan  1, 0001",
+				IsCommand:  false,
+			},
+		},
+		{
+			pkg: &internal.Package{
+				Version: version,
+				Name:    "main",
+				Path:    "pa.th/to/foo",
+			},
+			wantPkg: &Package{
+				Version:    version.Version,
+				Name:       "foo",
+				Title:      "Command foo",
+				Path:       "pa.th/to/foo",
+				CommitTime: "Jan  1, 0001",
+				IsCommand:  true,
+			},
+		},
+		{
+			pkg: &internal.Package{
+				Version: version,
+				Name:    "main",
+				Path:    "pa.th/to/foo/v2",
+			},
+			wantPkg: &Package{
+				Version:    version.Version,
+				Name:       "foo",
+				Title:      "Command foo",
+				Path:       "pa.th/to/foo/v2",
+				CommitTime: "Jan  1, 0001",
+				IsCommand:  true,
+			},
+		},
+		{
+			pkg: &internal.Package{
+				Version: version,
+				Name:    "main",
+				Path:    "pa.th/to/foo/v1",
+			},
+			wantPkg: &Package{
+				Version:    version.Version,
+				Name:       "foo",
+				Title:      "Command foo",
+				Path:       "pa.th/to/foo/v1",
+				CommitTime: "Jan  1, 0001",
+				IsCommand:  true,
+			},
+		},
+	} {
+
+		t.Run(tc.pkg.Path, func(t *testing.T) {
+			got, err := createPackageHeader(tc.pkg)
+			if err != nil {
+				t.Fatalf("createPackageHeader(%v): %v", tc.pkg, err)
+			}
+
+			if diff := cmp.Diff(tc.wantPkg, got); diff != "" {
+				t.Errorf("createPackageHeader(%v) mismatch (-want +got):\n%s", tc.pkg, diff)
+			}
+
+		})
 	}
 }

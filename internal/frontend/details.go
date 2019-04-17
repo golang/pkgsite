@@ -10,6 +10,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -48,12 +49,6 @@ type ModuleDetails struct {
 	Packages   []*Package
 }
 
-// VersionsDetails contains all the data that the versions tab
-// template needs to populate.
-type VersionsDetails struct {
-	Versions []*MajorVersionGroup
-}
-
 // ImportsDetails contains information for a package's imports.
 type ImportsDetails struct {
 }
@@ -66,20 +61,10 @@ type ImportersDetails struct {
 type LicensesDetails struct {
 }
 
-// Package contains information for an individual package.
-type Package struct {
-	Version    string
-	Path       string
-	ModulePath string
-	Synopsis   string
-	CommitTime string
-	Name       string
-	Licenses   []*internal.LicenseInfo
-}
-
-// Dir returns the directory of the package relative to the root of the module.
-func (p *Package) Dir() string {
-	return strings.TrimPrefix(p.Path, fmt.Sprintf("%s/", p.ModulePath))
+// VersionsDetails contains all the data that the versions tab
+// template needs to populate.
+type VersionsDetails struct {
+	Versions []*MajorVersionGroup
 }
 
 // MajorVersionGroup represents the major level of the versions
@@ -96,6 +81,76 @@ type MinorVersionGroup struct {
 	Level    string
 	Latest   *Package
 	Versions []*Package
+}
+
+// Package contains information for an individual package.
+type Package struct {
+	Name       string
+	Version    string
+	Path       string
+	ModulePath string
+	Synopsis   string
+	CommitTime string
+	Title      string
+	Licenses   []*internal.LicenseInfo
+	IsCommand  bool
+}
+
+// Dir returns the directory of the package relative to the root of the module.
+func (p *Package) Dir() string {
+	return strings.TrimPrefix(p.Path, fmt.Sprintf("%s/", p.ModulePath))
+}
+
+// createPackageHeader returns a *Package based on the fields of the specified
+// package. It assumes that pkg and pkg.Version are not nil.
+func createPackageHeader(pkg *internal.Package) (*Package, error) {
+	if pkg == nil {
+		return nil, fmt.Errorf("package cannot be nil")
+	}
+	if pkg.Version == nil {
+		return nil, fmt.Errorf("package's version cannot be nil")
+	}
+
+	var isCmd bool
+	if pkg.Name == "main" {
+		isCmd = true
+	}
+	name := packageName(pkg.Name, pkg.Path)
+	return &Package{
+		Name:       name,
+		IsCommand:  isCmd,
+		Title:      packageTitle(name, isCmd),
+		Version:    pkg.Version.Version,
+		Path:       pkg.Path,
+		Synopsis:   pkg.Synopsis,
+		Licenses:   pkg.Licenses,
+		CommitTime: elapsedTime(pkg.Version.CommitTime),
+	}, nil
+}
+
+// packageName returns name if it is not "main". Otherwise, it returns the last
+// element of pkg.Path that is not a version identifier (such as "v2"). For
+// example, if name is "main" and path is foo/bar/v2, name will be "bar".
+func packageName(name, path string) string {
+	if name != "main" {
+		return name
+	}
+
+	if path[len(path)-3:] == "/v1" {
+		return filepath.Base(path[:len(path)-3])
+	}
+
+	prefix, _, _ := module.SplitPathVersion(path)
+	return filepath.Base(prefix)
+}
+
+// packageTitle returns name prefixed by "Command" if isCommand is true and
+// "Package" if false.
+func packageTitle(name string, isCommand bool) string {
+	if isCommand {
+		return fmt.Sprintf("Command %s", name)
+	}
+	return fmt.Sprintf("Package %s", name)
 }
 
 // elapsedTime takes a date and returns returns human-readable,
@@ -135,26 +190,6 @@ func fetchPackageHeader(ctx context.Context, db *postgres.DB, path, version stri
 		return nil, fmt.Errorf("createPackageHeader(%+v): %v", pkg, err)
 	}
 	return pkgHeader, nil
-}
-
-// createPackageHeader returns a *Package based on the fields
-// of the specified package. It assumes that pkg is not nil.
-func createPackageHeader(pkg *internal.Package) (*Package, error) {
-	if pkg == nil {
-		return nil, fmt.Errorf("package cannot be nil")
-	}
-	if pkg.Version == nil {
-		return nil, fmt.Errorf("package's version cannot be nil")
-	}
-
-	return &Package{
-		Name:       pkg.Name,
-		Version:    pkg.Version.Version,
-		Path:       pkg.Path,
-		Synopsis:   pkg.Synopsis,
-		Licenses:   pkg.Licenses,
-		CommitTime: elapsedTime(pkg.Version.CommitTime),
-	}, nil
 }
 
 // fetchOverviewDetails fetches data for the module version specified by path and version

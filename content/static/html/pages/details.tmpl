@@ -9,22 +9,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <body>
+  {{ template "header" }}
+  {{ template "nav" }}
 
-{{ template "header" .PackageHeader }}
-{{ template "nav" }}
+  <div class="Container">
 
-<div class="Container">
-  {{ template "mod_header" .PackageHeader }}
-  {{ template "modules_nav" .PackageHeader }}
+    {{$header := .PackageHeader}}
 
-  <div class="Content">
-    {{ template "content" .Details }}
+      <title>{{ $header.Title }} - {{ $header.Version }}</title>
+      <header>
+        <h1>{{ $header.Title }}</h1>
+        <h3><a href="https://{{ $header.Path }}" class="DetailsHeader-packageName">{{ $header.Version }}</a></h3>
+        {{ if not $header.IsCommand }}
+          <p>import "{{ $header.Path }}"</p>
+        {{ end }}
+        <p>{{ $header.Synopsis }}</p>
+        <p>{{range $i, $e := $header.Licenses}}{{if $i}}, {{end}}{{ $e.Type }}{{end}} - {{ $header.CommitTime }}</p>
+      </header>
+
+      <ul class="ModulesNav">
+        <li class="{{if eq "overview.tmpl" templateName}}active {{end}}ModulesNav-tab"><a href="/{{$header.Path}}?v={{$header.Version}}" class="ModulesNav-link">Overview</a></li>
+        <li class="{{if eq "module.tmpl" templateName}}active {{end}}ModulesNav-tab"><a href="/{{$header.Path}}?v={{$header.Version}}&tab=module" class="ModulesNav-link">Module</a></li>
+        <li class="{{if eq "doc.tmpl" templateName}}active {{end}}ModulesNav-tab"><a href="/{{$header.Path}}?v={{$header.Version}}&tab=doc" class="ModulesNav-link">Doc</a></li>
+        <li class="{{if eq "versions.tmpl" templateName}}active {{end}}ModulesNav-tab"><a href="/{{$header.Path}}?v={{$header.Version}}&tab=versions" class="ModulesNav-link">Versions</a></li>
+        <li class="{{if eq "imports.tmpl" templateName}}active {{end}}ModulesNav-tab"><a href="/{{$header.Path}}?v={{$header.Version}}&tab=imports" class="ModulesNav-link">Imports</a></li>
+        <li class="{{if eq "importers.tmpl" templateName}}active {{end}}ModulesNav-tab"><a href="/{{$header.Path}}?v={{$header.Version}}&tab=importers" class="ModulesNav-link">Importers</a></li>
+        <li class="{{if eq "licenses.tmpl" templateName}}active {{end}}ModulesNav-tab"><a href="/{{$header.Path}}?v={{$header.Version}}&tab=licenses" class="ModulesNav-link">Licenses</a></li>
+      </ul>
+
+
+    <div class="Content">
+      {{ template "content" .Details }}
+    </div>
+
+    <footer></footer>
+
   </div>
-
-  <footer></footer>
-</div>
 
 </body>
 </html>
-
 {{end}}

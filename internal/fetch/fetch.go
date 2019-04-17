@@ -16,7 +16,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -131,11 +130,6 @@ func FetchAndInsertVersion(modulePath, version string, proxyClient *proxy.Client
 		return fmt.Errorf("extractReadmeFromZip(zipReader): %v", err)
 	}
 
-	seriesName, err := seriesPathForModule(modulePath)
-	if err != nil {
-		return fmt.Errorf("seriesPathForModule(%q): %v", modulePath, err)
-	}
-
 	licenses, err := detectLicenses(zipReader)
 	if err != nil {
 		log.Printf("Error detecting licenses for %v@%v: %v", modulePath, version, err)
@@ -146,11 +140,12 @@ func FetchAndInsertVersion(modulePath, version string, proxyClient *proxy.Client
 		return fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, version, licenses, err)
 	}
 
+	seriesPath, _, _ := module.SplitPathVersion(modulePath)
 	v := &internal.Version{
 		Module: &internal.Module{
 			Path: modulePath,
 			Series: &internal.Series{
-				Path: seriesName,
+				Path: seriesPath,
 			},
 		},
 		Version:     version,
@@ -365,38 +360,6 @@ func writeFileToDir(f *zip.File, dir string) (err error) {
 		return fmt.Errorf("file.Write: %v", err)
 	}
 	return nil
-}
-
-// seriesPathForModule reports the series name for the given module. The series
-// name is the shared base path of a group of major-version variants. For
-// example, my.mod/module, my.mod/module/v2, my.mod/module/v3 are a single series, with the
-// series name my.mod/module.
-func seriesPathForModule(name string) (string, error) {
-	if name == "" {
-		return "", errors.New("module name cannot be empty")
-	}
-
-	name = strings.TrimSuffix(name, "/")
-	parts := strings.Split(name, "/")
-	if len(parts) <= 1 {
-		return name, nil
-	}
-
-	suffix := parts[len(parts)-1]
-	if string(suffix[0]) == "v" {
-		// Attempt to convert the portion of suffix following "v" to an
-		// integer. If that portion cannot be converted to an integer, or the
-		// version = 0 or 1, return the full module name. For example:
-		// my.mod/module/v2 has series name my.mod/module
-		// my.mod/module/v1 has series name my.mod/module/v1
-		// my.mod/module/v2x has series name my.mod/module/v2x
-		version, err := strconv.Atoi(suffix[1:])
-		if err != nil || version < 2 {
-			return name, nil
-		}
-		return strings.Join(parts[0:len(parts)-1], "/"), nil
-	}
-	return name, nil
 }
 
 // extractFile reads the contents of the first file from r that passes the
