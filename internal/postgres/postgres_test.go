@@ -422,9 +422,9 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 	}
 }
 
-func TestPostgres_GetImports(t *testing.T) {
+func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 	var (
-		now  = time.Now()
+		now  = NowTruncated()
 		pkg1 = &internal.Package{
 			Name:     "bar",
 			Path:     "path.to/foo/bar",
@@ -500,23 +500,27 @@ func TestPostgres_GetImports(t *testing.T) {
 	)
 
 	for _, tc := range []struct {
-		path, version string
-		wantImports   []*internal.Import
+		path, version  string
+		wantImports    []*internal.Import
+		wantImportedBy []string
 	}{
 		{
-			path:        pkg3.Path,
-			version:     "v1.3.0",
-			wantImports: pkg3.Imports,
+			path:           pkg3.Path,
+			version:        "v1.3.0",
+			wantImports:    pkg3.Imports,
+			wantImportedBy: nil,
 		},
 		{
-			path:        pkg2.Path,
-			version:     "v1.2.0",
-			wantImports: pkg2.Imports,
+			path:           pkg2.Path,
+			version:        "v1.2.0",
+			wantImports:    pkg2.Imports,
+			wantImportedBy: []string{pkg3.Path},
 		},
 		{
-			path:        pkg1.Path,
-			version:     "v1.1.0",
-			wantImports: nil,
+			path:           pkg1.Path,
+			version:        "v1.1.0",
+			wantImports:    nil,
+			wantImportedBy: []string{pkg2.Path, pkg3.Path},
 		},
 	} {
 		t.Run(tc.path, func(t *testing.T) {
@@ -545,6 +549,15 @@ func TestPostgres_GetImports(t *testing.T) {
 			})
 			if diff := cmp.Diff(tc.wantImports, got); diff != "" {
 				t.Errorf("db.GetImports(%q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
+			}
+
+			gotImportedBy, err := db.GetImportedBy(ctx, tc.path)
+			if err != nil {
+				t.Fatalf("db.GetImports(%q, %q): %v", tc.path, tc.version, err)
+			}
+
+			if diff := cmp.Diff(tc.wantImportedBy, gotImportedBy); diff != "" {
+				t.Errorf("db.GetImportedBy(%q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
 			}
 		})
 	}

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
 )
@@ -618,6 +619,97 @@ func TestFetchImportsDetails(t *testing.T) {
 
 			if diff := cmp.Diff(tc.wantDetailsPage, got); diff != "" {
 				t.Errorf("fetchModuleDetails(ctx, %q, %q) mismatch (-want +got):\n%s", version.Packages[0].Path, version.Version, diff)
+			}
+		})
+	}
+}
+
+func TestFetchImportedByDetails(t *testing.T) {
+	var (
+		pkg1 = &internal.Package{
+			Name: "bar",
+			Path: "path.to/foo/bar",
+		}
+		pkg2 = &internal.Package{
+			Name: "bar2",
+			Path: "path2.to/foo/bar2",
+			Imports: []*internal.Import{
+				&internal.Import{
+					Name: pkg1.Name,
+					Path: pkg1.Path,
+				},
+			},
+		}
+		pkg3 = &internal.Package{
+			Name: "bar3",
+			Path: "path3.to/foo/bar3",
+			Imports: []*internal.Import{
+				&internal.Import{
+					Name: pkg2.Name,
+					Path: pkg2.Path,
+				},
+				&internal.Import{
+					Name: pkg1.Name,
+					Path: pkg1.Path,
+				},
+			},
+		}
+	)
+
+	for _, tc := range []struct {
+		path, version string
+		wantDetails   *DetailsPage
+	}{
+		{
+			path:    pkg3.Path,
+			version: sampleInternalVersion.Version,
+			wantDetails: &DetailsPage{
+				Details: &ImportedByDetails{},
+			},
+		},
+		{
+			path:    pkg2.Path,
+			version: sampleInternalVersion.Version,
+			wantDetails: &DetailsPage{
+				Details: &ImportedByDetails{
+					ImportedBy: []string{pkg3.Path},
+				},
+			},
+		},
+		{
+
+			path:    pkg1.Path,
+			version: sampleInternalVersion.Version,
+			wantDetails: &DetailsPage{
+				Details: &ImportedByDetails{
+					ImportedBy: []string{pkg2.Path, pkg3.Path},
+				},
+			},
+		},
+	} {
+		t.Run(tc.path, func(t *testing.T) {
+			teardownTestCase, db := postgres.SetupCleanDB(t)
+			defer teardownTestCase(t)
+
+			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+			defer cancel()
+
+			for _, p := range []*internal.Package{pkg1, pkg2, pkg3} {
+				v := sampleInternalVersion
+				v.Packages = []*internal.Package{p}
+				if err := db.InsertVersion(ctx, v, sampleLicenses); err != nil {
+					t.Errorf("db.InsertVersion(%v): %v", v, err)
+				}
+			}
+
+			got, err := fetchImportedByDetails(ctx, db, tc.path, tc.version)
+			if err != nil {
+				t.Fatalf("fetchImportedByDetails(ctx, db, %q, %q) = %v err = %v, want %v",
+					tc.path, tc.version, got, err, tc.wantDetails)
+			}
+
+			if diff := cmp.Diff(tc.wantDetails, got, cmpopts.IgnoreFields(DetailsPage{}, "PackageHeader")); diff != "" {
+				t.Errorf("fetchImportedByDetails(ctx, %q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
 			}
 		})
 	}

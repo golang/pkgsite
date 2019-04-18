@@ -25,9 +25,9 @@
         <p class="SearchSnippetContent-commitTime">
 	  <span>Published {{ .CommitTime }}</span>
 	  {{ if gt .NumImporters 1 }}
-	    <span> | Imported by {{ .NumImporters}} packages</span>
+	    <span> | Imported by {{ .NumImporters }} packages</span>
 	  {{ else if eq .NumImporters 1 }}
-	    <span> | Imported by {{ .NumImporters}} package</span>
+	    <span> | Imported by {{ .NumImporters }} package</span>
 	  {{ end }}
 	</p>
         <hr>

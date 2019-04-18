@@ -59,7 +59,7 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 		{"index.tmpl"},
 		{"search.tmpl"},
 		{"doc.tmpl", "details.tmpl"},
-		{"importers.tmpl", "details.tmpl"},
+		{"importedby.tmpl", "details.tmpl"},
 		{"imports.tmpl", "details.tmpl"},
 		{"licenses.tmpl", "details.tmpl"},
 		{"module.tmpl", "details.tmpl"},

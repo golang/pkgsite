@@ -6,6 +6,9 @@
 
 {{ define "content" }}
   <div>
-    &lt;importers here&gt;
+    <h3>Imported by</h3>
+    {{ range .ImportedBy }}
+      <p>{{ . }}</p>
+    {{ end }}
   </div>
 {{ end }}

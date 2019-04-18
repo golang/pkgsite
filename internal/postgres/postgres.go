@@ -665,8 +665,8 @@ func (db *DB) GetImports(ctx context.Context, path, version string) ([]*internal
 			from_path = $1
 			AND from_version = $2
 		ORDER BY
-			to_name,
-			to_path;`
+			to_path,
+			to_name;`
 
 	rows, err := db.QueryContext(ctx, query, path, version)
 	if err != nil {
@@ -685,6 +685,42 @@ func (db *DB) GetImports(ctx context.Context, path, version string) ([]*internal
 		})
 	}
 	return imports, nil
+}
+
+// GetImportedBy fetches and returns all of the packages that import the
+// package with path.
+// The returned error may be checked with derrors.IsInvalidArgument to
+// determine if it resulted from an invalid package path or version.
+func (db *DB) GetImportedBy(ctx context.Context, path string) ([]string, error) {
+	if path == "" {
+		return nil, derrors.InvalidArgument("path cannot be empty")
+	}
+
+	var fromPath string
+	query := `
+		SELECT
+			DISTINCT ON (from_path) from_path
+		FROM
+			imports
+		WHERE
+			to_path = $1
+		ORDER BY
+			from_path;`
+
+	rows, err := db.QueryContext(ctx, query, path)
+	if err != nil {
+		return nil, fmt.Errorf("db.Query(%q, %q) returned error: %v", query, path, err)
+	}
+	defer rows.Close()
+
+	var importedby []string
+	for rows.Next() {
+		if err := rows.Scan(&fromPath); err != nil {
+			return nil, fmt.Errorf("row.Scan(): %v", err)
+		}
+		importedby = append(importedby, fromPath)
+	}
+	return importedby, nil
 }
 
 // prefixZeroes returns a string that is padded with zeroes on the

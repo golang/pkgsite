@@ -61,8 +61,12 @@ type ImportsDetails struct {
 	StdLib []*internal.Import
 }
 
-// ImportersDetails contains information for importers of a package.
-type ImportersDetails struct {
+// ImportedByDetails contains information for all packages that import a given
+// package.
+type ImportedByDetails struct {
+	// ImportedBy is an array of the package paths that import a given
+	// package.
+	ImportedBy []string
 }
 
 // License contains information used for a single license section.
@@ -472,15 +476,24 @@ func fetchImportsDetails(ctx context.Context, db *postgres.DB, path, version str
 	}, nil
 }
 
-// fetchImportersDetails fetches importers for the package version specified by
-// path and version from the database and returns a ImportersDetails.
-func fetchImportersDetails(ctx context.Context, db *postgres.DB, path, version string) (*DetailsPage, error) {
+// fetchImportedByDetails fetches all packages that import the package
+// specified by path and returns an ImportedByDetails.
+func fetchImportedByDetails(ctx context.Context, db *postgres.DB, path, version string) (*DetailsPage, error) {
 	pkgHeader, err := fetchPackageHeader(ctx, db, path, version)
 	if err != nil {
 		return nil, fmt.Errorf("db.fetchPackageHeader(ctx, db, %q, %q): %v", path, version, err)
 	}
+
+	importedBy, err := db.GetImportedBy(ctx, path)
+	if err != nil {
+		return nil, fmt.Errorf("db.GetImportedBy(ctx, %q): %v", path, err)
+	}
+
 	return &DetailsPage{
 		PackageHeader: pkgHeader,
+		Details: &ImportedByDetails{
+			ImportedBy: importedBy,
+		},
 	}, nil
 }
 
@@ -527,8 +540,8 @@ func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
 		page, err = fetchModuleDetails(ctx, c.db, path, version)
 	case "imports":
 		page, err = fetchImportsDetails(ctx, c.db, path, version)
-	case "importers":
-		page, err = fetchImportersDetails(ctx, c.db, path, version)
+	case "importedby":
+		page, err = fetchImportedByDetails(ctx, c.db, path, version)
 	case "licenses":
 		page, err = fetchLicensesDetails(ctx, c.db, path, version)
 	case "overview":
