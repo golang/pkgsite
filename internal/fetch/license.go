@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/google/licensecheck"
 	"golang.org/x/discovery/internal"
-	"sos.googlesource.com/sos/license"
 )
 
 const (
@@ -49,7 +49,7 @@ func detectLicenses(r *zip.Reader) ([]*internal.License, error) {
 			return nil, fmt.Errorf("readZipFile(%s): %v", f.Name, err)
 		}
 
-		cov, ok := license.Cover(bytes, license.Options{})
+		cov, ok := licensecheck.Cover(bytes, licensecheck.Options{})
 		if !ok || cov.Percent < licenseCoverageThreshold {
 			continue
 		}

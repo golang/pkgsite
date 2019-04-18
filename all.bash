@@ -3,12 +3,6 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
- # Clone SOS license detector if it doesn't exist.
-if [ ! -d "sos.googlesource.com" ]; then
-  echo "Running: git clone sso://sos/sos sos.googlesource.com/sos"
-  git clone sso://sos/sos sos.googlesource.com/sos
-fi
-
 # Check that all .go and .sql files that have been staged in this commit have a
 # license header.
 echo "Running: Checking staged files for license header"
