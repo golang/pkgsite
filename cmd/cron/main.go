@@ -50,7 +50,7 @@ func makeNewVersionsHandler(db *postgres.DB, workers int) http.HandlerFunc {
 		logs, err := cron.FetchAndStoreVersions(r.Context(), indexURL, db)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			log.Printf("FetchAndStoreVersions(%q, db): %v", indexURL, db)
+			log.Printf("FetchAndStoreVersions(%q, db): %v", indexURL, err)
 			return
 		}
 
