@@ -22,7 +22,14 @@
         <h2><a href="/{{.PackagePath}}?v={{.Version}}" class="SearchSnippetContent-packageName">{{ .PackagePath }}</a></h2>
         <p><i>{{ .Version }}</i></p>
         <p>{{ .Synopsis }}</p>
-        <p class="SearchSnippetContent-commitTime">Published {{ .CommitTime }}</p>
+        <p class="SearchSnippetContent-commitTime">
+	  <span>Published {{ .CommitTime }}</span>
+	  {{ if gt .NumImporters 1 }}
+	    <span> | Imported by {{ .NumImporters}} packages</span>
+	  {{ else if eq .NumImporters 1 }}
+	    <span> | Imported by {{ .NumImporters}} package</span>
+	  {{ end }}
+	</p>
         <hr>
       </div>
     {{ end}}
