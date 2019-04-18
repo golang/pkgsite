@@ -24,6 +24,44 @@ var (
 	sampleLicenses = []*internal.License{
 		{LicenseInfo: *sampleLicenseInfos[0], Contents: []byte("Lorem Ipsum")},
 	}
+
+	samplePackageHeader = &Package{
+		Name:       "pkg_name",
+		Title:      "Package pkg_name",
+		Version:    "v1.0.0",
+		Path:       "test.com/module/pkg_name",
+		Synopsis:   "Test package synopsis",
+		Licenses:   sampleLicenseInfos,
+		CommitTime: "today",
+	}
+	sampleInternalPackage = &internal.Package{
+		Name:     "pkg_name",
+		Path:     "test.com/module/pkg_name",
+		Synopsis: "Test package synopsis",
+		Licenses: sampleLicenseInfos,
+	}
+	sampleInternalVersion = &internal.Version{
+		Module: &internal.Module{
+			Path: "test.com/module",
+			Series: &internal.Series{
+				Path: "series",
+			},
+		},
+		Version:     "v1.0.0",
+		Synopsis:    "test synopsis",
+		CommitTime:  time.Now().Add(time.Hour * -8),
+		ReadMe:      []byte("This is the readme text."),
+		Packages:    []*internal.Package{sampleInternalPackage},
+		VersionType: internal.VersionTypeRelease,
+	}
+	samplePackage = &Package{
+		Name:       "pkg_name",
+		ModulePath: "test.com/module",
+		Version:    "v1.0.0",
+		Path:       "test.com/module/pkg_name",
+		Synopsis:   "Test package synopsis",
+		Licenses:   sampleLicenseInfos,
+	}
 )
 
 func TestElapsedTime(t *testing.T) {
@@ -82,52 +120,24 @@ func TestFetchOverviewDetails(t *testing.T) {
 
 	tc := struct {
 		name            string
-		version         internal.Version
+		version         *internal.Version
 		wantDetailsPage *DetailsPage
 	}{
-		name: "want_expected_module_page",
-		version: internal.Version{
-			Module: &internal.Module{
-				Path: "test.com/module",
-				Series: &internal.Series{
-					Path: "series",
-				},
-			},
-			Version:    "v1.0.0",
-			Synopsis:   "test synopsis",
-			CommitTime: time.Now().Add(time.Hour * -8),
-			ReadMe:     []byte("This is the readme text."),
-			Packages: []*internal.Package{
-				&internal.Package{
-					Name:     "pkg_name",
-					Path:     "test.com/module/pkg_name",
-					Synopsis: "Test package synopsis",
-					Licenses: sampleLicenseInfos,
-				},
-			},
-			VersionType: internal.VersionTypeRelease,
-		},
+		name:    "want_expected_overview_details",
+		version: sampleInternalVersion,
 		wantDetailsPage: &DetailsPage{
 			Details: &OverviewDetails{
 				ModulePath: "test.com/module",
 				ReadMe:     template.HTML("<p>This is the readme text.</p>\n"),
 			},
-			PackageHeader: &Package{
-				Name:       "pkg_name",
-				Title:      "Package pkg_name",
-				Version:    "v1.0.0",
-				Path:       "test.com/module/pkg_name",
-				Synopsis:   "Test package synopsis",
-				Licenses:   sampleLicenseInfos,
-				CommitTime: "today",
-			},
+			PackageHeader: samplePackageHeader,
 		},
 	}
 
 	teardownDB, db := postgres.SetupCleanDB(t)
 	defer teardownDB(t)
 
-	if err := db.InsertVersion(ctx, &tc.version, sampleLicenses); err != nil {
+	if err := db.InsertVersion(ctx, tc.version, sampleLicenses); err != nil {
 		t.Fatalf("db.InsertVersion(%v): %v", tc.version, err)
 	}
 
@@ -409,63 +419,26 @@ func TestFetchModuleDetails(t *testing.T) {
 
 	tc := struct {
 		name            string
-		version         internal.Version
+		version         *internal.Version
 		wantDetailsPage *DetailsPage
 	}{
-		name: "want_expected_module_page",
-		version: internal.Version{
-			Module: &internal.Module{
-				Path: "test.com/module",
-				Series: &internal.Series{
-					Path: "series",
-				},
-			},
-			Version:    "v1.0.0",
-			Synopsis:   "test synopsis",
-			CommitTime: time.Now().Add(time.Hour * -8),
-			ReadMe:     []byte("This is the readme text."),
-			Packages: []*internal.Package{
-				&internal.Package{
-					Name:     "pkg_name",
-					Path:     "test.com/module/pkg_name",
-					Synopsis: "Test package synopsis",
-					Licenses: sampleLicenseInfos,
-				},
-			},
-			VersionType: internal.VersionTypeRelease,
-		},
+		name:    "want_expected_module_details",
+		version: sampleInternalVersion,
 		wantDetailsPage: &DetailsPage{
 			Details: &ModuleDetails{
 				ModulePath: "test.com/module",
 				ReadMe:     template.HTML("<p>This is the readme text.</p>\n"),
 				Version:    "v1.0.0",
-				Packages: []*Package{
-					&Package{
-						Name:       "pkg_name",
-						ModulePath: "test.com/module",
-						Path:       "test.com/module/pkg_name",
-						Version:    "v1.0.0",
-						Synopsis:   "Test package synopsis",
-						Licenses:   sampleLicenseInfos,
-					},
-				},
+				Packages:   []*Package{samplePackage},
 			},
-			PackageHeader: &Package{
-				Name:       "pkg_name",
-				Title:      "Package pkg_name",
-				Version:    "v1.0.0",
-				Path:       "test.com/module/pkg_name",
-				Synopsis:   "Test package synopsis",
-				Licenses:   sampleLicenseInfos,
-				CommitTime: "today",
-			},
+			PackageHeader: samplePackageHeader,
 		},
 	}
 
 	teardownDB, db := postgres.SetupCleanDB(t)
 	defer teardownDB(t)
 
-	if err := db.InsertVersion(ctx, &tc.version, sampleLicenses); err != nil {
+	if err := db.InsertVersion(ctx, tc.version, sampleLicenses); err != nil {
 		t.Fatalf("db.InsertVersion(%v): %v", tc.version, err)
 	}
 
