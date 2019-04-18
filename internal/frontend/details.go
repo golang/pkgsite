@@ -52,6 +52,13 @@ type ModuleDetails struct {
 
 // ImportsDetails contains information for a package's imports.
 type ImportsDetails struct {
+	// Imports is an array of packages representing the package's imports
+	// that are not in the Go standard library.
+	Imports []*internal.Import
+
+	// StdLib is an array of packages representing the package's imports
+	// that are in the Go standard library.
+	StdLib []*internal.Import
 }
 
 // ImportersDetails contains information for importers of a package.
@@ -153,6 +160,14 @@ func createPackageHeader(pkg *internal.Package) (*Package, error) {
 		Licenses:   transformLicenseInfos(pkg.Licenses),
 		CommitTime: elapsedTime(pkg.Version.CommitTime),
 	}, nil
+}
+
+// inStdLib reports whether the package is part of the Go standard library.
+func inStdLib(path string) bool {
+	if i := strings.IndexByte(path, '/'); i != -1 {
+		return !strings.Contains(path[:i], ".")
+	}
+	return !strings.Contains(path, ".")
 }
 
 // packageName returns name if it is not "main". Otherwise, it returns the last
@@ -432,8 +447,28 @@ func fetchImportsDetails(ctx context.Context, db *postgres.DB, path, version str
 	if err != nil {
 		return nil, fmt.Errorf("db.fetchPackageHeader(ctx, db, %q, %q): %v", path, version, err)
 	}
+
+	dbImports, err := db.GetImports(ctx, path, version)
+	if err != nil {
+		return nil, fmt.Errorf("db.GetImports(ctx, %q, %q): %v", path, version, err)
+	}
+
+	var imports []*internal.Import
+	var std []*internal.Import
+	for _, p := range dbImports {
+		if inStdLib(p.Path) {
+			std = append(std, p)
+		} else {
+			imports = append(imports, p)
+		}
+	}
+
 	return &DetailsPage{
 		PackageHeader: pkgHeader,
+		Details: &ImportsDetails{
+			Imports: imports,
+			StdLib:  std,
+		},
 	}, nil
 }
 

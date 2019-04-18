@@ -426,13 +426,13 @@ func TestPostgres_GetImports(t *testing.T) {
 	var (
 		now  = time.Now()
 		pkg1 = &internal.Package{
-			Path:     "path.to/foo/bar",
 			Name:     "bar",
+			Path:     "path.to/foo/bar",
 			Synopsis: "This is a package synopsis",
 		}
 		pkg2 = &internal.Package{
-			Path:     "path2.to/foo/bar2",
 			Name:     "bar2",
+			Path:     "path2.to/foo/bar2",
 			Synopsis: "This is another package synopsis",
 			Imports: []*internal.Import{
 				&internal.Import{
@@ -442,8 +442,8 @@ func TestPostgres_GetImports(t *testing.T) {
 			},
 		}
 		pkg3 = &internal.Package{
-			Path:     "path3.to/foo/bar3",
 			Name:     "bar3",
+			Path:     "path3.to/foo/bar3",
 			Synopsis: "This is another package synopsis",
 			Imports: []*internal.Import{
 				&internal.Import{
@@ -532,7 +532,7 @@ func TestPostgres_GetImports(t *testing.T) {
 				}
 			}
 
-			got, err := db.GetImports(tc.path, tc.version)
+			got, err := db.GetImports(ctx, tc.path, tc.version)
 			if err != nil {
 				t.Fatalf("db.GetImports(%q, %q): %v", tc.path, tc.version, err)
 			}

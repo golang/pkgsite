@@ -123,7 +123,7 @@ func TestFetchOverviewDetails(t *testing.T) {
 		version         *internal.Version
 		wantDetailsPage *DetailsPage
 	}{
-		name:    "want_expected_overview_details",
+		name:    "want expected overview details",
 		version: sampleInternalVersion,
 		wantDetailsPage: &DetailsPage{
 			Details: &OverviewDetails{
@@ -192,7 +192,7 @@ func TestFetchVersionsDetails(t *testing.T) {
 		wantDetailsPage     *DetailsPage
 	}{
 		{
-			name:    "want_tagged_versions",
+			name:    "want tagged versions",
 			path:    pkg1Path,
 			version: "v1.2.1",
 			versions: []*internal.Version{
@@ -305,7 +305,7 @@ func TestFetchVersionsDetails(t *testing.T) {
 			},
 		},
 		{
-			name:    "want_only_pseudo",
+			name:    "want only pseudo",
 			path:    pkg1Path,
 			version: "v0.0.0-20140414041501-3c2ca4d52544",
 			versions: []*internal.Version{
@@ -422,7 +422,7 @@ func TestFetchModuleDetails(t *testing.T) {
 		version         *internal.Version
 		wantDetailsPage *DetailsPage
 	}{
-		name:    "want_expected_module_details",
+		name:    "want expected module details",
 		version: sampleInternalVersion,
 		wantDetailsPage: &DetailsPage{
 			Details: &ModuleDetails{
@@ -439,7 +439,7 @@ func TestFetchModuleDetails(t *testing.T) {
 	defer teardownDB(t)
 
 	if err := db.InsertVersion(ctx, tc.version, sampleLicenses); err != nil {
-		t.Fatalf("db.InsertVersion(%v): %v", tc.version, err)
+		t.Fatalf("db.InsertVersion(ctx, %v, %v): %v", tc.version, sampleLicenses, err)
 	}
 
 	got, err := fetchModuleDetails(ctx, db, tc.version.Packages[0].Path, tc.version.Version)
@@ -533,6 +533,92 @@ func TestCreatePackageHeader(t *testing.T) {
 				t.Errorf("createPackageHeader(%v) mismatch (-want +got):\n%s", tc.pkg, diff)
 			}
 
+		})
+	}
+}
+
+func TestFetchImportsDetails(t *testing.T) {
+	for _, tc := range []struct {
+		name            string
+		imports         []*internal.Import
+		wantDetailsPage *DetailsPage
+	}{
+		{
+			name: "want imports details with standard",
+			imports: []*internal.Import{
+				{Name: "import1", Path: "pa.th/import/1"},
+				{Name: "context", Path: "context"},
+			},
+			wantDetailsPage: &DetailsPage{
+				Details: &ImportsDetails{
+					Imports: []*internal.Import{
+						{
+							Name: "import1",
+							Path: "pa.th/import/1",
+						},
+					},
+					StdLib: []*internal.Import{
+						{
+							Name: "context",
+							Path: "context",
+						},
+					},
+				},
+				PackageHeader: samplePackageHeader,
+			},
+		},
+		{
+			name: "want expected imports details with multiple",
+			imports: []*internal.Import{
+				{Name: "import1", Path: "pa.th/import/1"},
+				{Name: "import2", Path: "pa.th/import/2"},
+				{Name: "import3", Path: "pa.th/import/3"},
+			},
+			wantDetailsPage: &DetailsPage{
+				Details: &ImportsDetails{
+					Imports: []*internal.Import{
+						{
+							Name: "import1",
+							Path: "pa.th/import/1",
+						},
+						{
+							Name: "import2",
+							Path: "pa.th/import/2",
+						},
+						{
+							Name: "import3",
+							Path: "pa.th/import/3",
+						},
+					},
+					StdLib: nil,
+				},
+				PackageHeader: samplePackageHeader,
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			version := sampleInternalVersion
+			version.Packages[0].Imports = tc.imports
+
+			teardownDB, db := postgres.SetupCleanDB(t)
+			defer teardownDB(t)
+
+			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+			defer cancel()
+
+			if err := db.InsertVersion(ctx, version, sampleLicenses); err != nil {
+				t.Fatalf("db.InsertVersion(ctx, %v, %v): %v", version, sampleLicenses, err)
+			}
+
+			got, err := fetchImportsDetails(ctx, db, version.Packages[0].Path, version.Version)
+			if err != nil {
+				t.Fatalf("fetchModuleDetails(ctx, db, %q, %q) = %v err = %v, want %v",
+					version.Packages[0].Path, version.Version, got, err, tc.wantDetailsPage)
+			}
+
+			if diff := cmp.Diff(tc.wantDetailsPage, got); diff != "" {
+				t.Errorf("fetchModuleDetails(ctx, %q, %q) mismatch (-want +got):\n%s", version.Packages[0].Path, version.Version, diff)
+			}
 		})
 	}
 }

@@ -649,7 +649,7 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 // the imports will be returned.
 // The returned error may be checked with derrors.IsInvalidArgument to
 // determine if it resulted from an invalid package path or version.
-func (db *DB) GetImports(path, version string) ([]*internal.Import, error) {
+func (db *DB) GetImports(ctx context.Context, path, version string) ([]*internal.Import, error) {
 	if path == "" || version == "" {
 		return nil, derrors.InvalidArgument("path and version cannot be empty")
 	}
@@ -663,17 +663,20 @@ func (db *DB) GetImports(path, version string) ([]*internal.Import, error) {
 			imports
 		WHERE
 			from_path = $1
-			AND from_version = $2;`
+			AND from_version = $2
+		ORDER BY
+			to_name,
+			to_path;`
 
-	rows, err := db.Query(query, path, version)
+	rows, err := db.QueryContext(ctx, query, path, version)
 	if err != nil {
-		return nil, fmt.Errorf("db.Query(%q, %q, %q) returned error: %v", query, path, version, err)
+		return nil, fmt.Errorf("db.QueryContext(ctx, %q, %q, %q): %v", query, path, version, err)
 	}
 	defer rows.Close()
 
 	var imports []*internal.Import
 	for rows.Next() {
-		if err := rows.Scan(&toPath, &toName); err != nil {
+		if err := rows.Scan(&toName, &toPath); err != nil {
 			return nil, fmt.Errorf("row.Scan(): %v", err)
 		}
 		imports = append(imports, &internal.Import{
@@ -681,7 +684,6 @@ func (db *DB) GetImports(path, version string) ([]*internal.Import, error) {
 			Path: toPath,
 		})
 	}
-
 	return imports, nil
 }
 
@@ -844,7 +846,7 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 			}
 
 			for _, i := range p.Imports {
-				importValues = append(importValues, p.Path, version.Module.Path, version.Version, i.Name, i.Path)
+				importValues = append(importValues, p.Path, version.Module.Path, version.Version, i.Path, i.Name)
 			}
 		}
 		if len(pkgValues) > 0 {

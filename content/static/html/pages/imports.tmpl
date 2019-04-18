@@ -6,6 +6,21 @@
 
 {{ define "content" }}
   <div>
-    &lt;imports here&gt;
+    {{ if .Imports  }}
+      <h3>Imports</h3>
+      {{ range .Imports }}
+      	<p>
+          <div><b>{{ .Name }}</b></div>
+	  <div>{{ .Path }}</div>
+      	</p>
+      {{ end }}
+    {{ end }}
+
+    {{ if .StdLib  }}
+      <h3>Standard Library</h3>
+      {{ range .StdLib  }}
+        <div><a href="https://golang.org/pkg/{{.Path}}">{{ .Path }}</a></div>
+      {{ end }}
+    {{ end }}
   </div>
 {{ end }}
