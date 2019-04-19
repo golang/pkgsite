@@ -44,6 +44,9 @@ func makeFetchHandler(proxyClient *proxy.Client, db *postgres.DB) http.HandlerFu
 			fmt.Fprintf(w, `<p><a href="/rsc.io/quote/@v/v1.0.0">Fetch an example module</a></p>`)
 			return
 		}
+		if r.URL.Path == "/favicon.ico" {
+			return
+		}
 
 		module, version, err := fetch.ParseModulePathAndVersion(r.URL.Path)
 		if err != nil {
