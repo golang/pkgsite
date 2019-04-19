@@ -24,14 +24,14 @@ type SearchPage struct {
 
 // SearchResult contains data needed to display a single search result.
 type SearchResult struct {
-	Name         string
-	PackagePath  string
-	ModulePath   string
-	Synopsis     string
-	Version      string
-	Licenses     []*internal.LicenseInfo
-	CommitTime   string
-	NumImporters int64
+	Name          string
+	PackagePath   string
+	ModulePath    string
+	Synopsis      string
+	Version       string
+	Licenses      []*internal.LicenseInfo
+	CommitTime    string
+	NumImportedBy uint64
 }
 
 // fetchSearchPage fetches data matching the search query from the database and
@@ -46,14 +46,14 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string) (*Searc
 	var results []*SearchResult
 	for _, r := range dbresults {
 		results = append(results, &SearchResult{
-			Name:         r.Package.Name,
-			PackagePath:  r.Package.Path,
-			ModulePath:   r.Package.Version.ModulePath,
-			Synopsis:     r.Package.Synopsis,
-			Version:      r.Package.Version.Version,
-			Licenses:     r.Package.Licenses,
-			CommitTime:   elapsedTime(r.Package.Version.CommitTime),
-			NumImporters: r.NumImporters,
+			Name:          r.Package.Name,
+			PackagePath:   r.Package.Path,
+			ModulePath:    r.Package.Version.ModulePath,
+			Synopsis:      r.Package.Synopsis,
+			Version:       r.Package.Version.Version,
+			Licenses:      r.Package.Licenses,
+			CommitTime:    elapsedTime(r.Package.Version.CommitTime),
+			NumImportedBy: r.NumImportedBy,
 		})
 	}
 

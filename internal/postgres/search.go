@@ -8,8 +8,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"math"
-	"sort"
 	"strings"
 	"time"
 
@@ -62,19 +60,17 @@ func (db *DB) InsertDocuments(ctx context.Context, version *internal.Version) er
 
 // SearchResult represents a single search result from SearchDocuments.
 type SearchResult struct {
-	// Relevance is the ts_rank score for this package based on the terms used
-	// for search.
-	Relevance float64
+	// Rank is used to sort items in an array of SearchResult.
+	Rank float64
 
-	// NumImporters is the number of packages that import Package.
-	NumImporters int64
+	// NumImportedBy is the number of packages that import Package.
+	NumImportedBy uint64
 
 	// Package is the package data corresponding to this SearchResult.
 	Package *internal.Package
-}
 
-func calculateRank(relevance float64, imports int64) float64 {
-	return relevance * math.Log(math.E+float64(imports))
+	// Total is the total number of packages that were returned for this search.
+	Total uint64
 }
 
 // Search fetches packages from the database that match the terms
@@ -83,157 +79,87 @@ func (db *DB) Search(ctx context.Context, terms []string) ([]*SearchResult, erro
 	if len(terms) == 0 {
 		return nil, derrors.InvalidArgument(fmt.Sprintf("cannot search: no terms"))
 	}
-	query := `SELECT
-			d.package_path,
-			d.relevance,
-			CASE WHEN
-				i.importers IS NULL THEN 0
-				ELSE i.importers
-				END AS importers
-		FROM (
-			SELECT DISTINCT ON (package_path) package_path,
-			ts_rank (
-				name_tokens ||
-				path_tokens ||
-				synopsis_tokens ||
-				readme_tokens, to_tsquery($1)
-			) AS relevance
+	query := `WITH results AS (
+			SELECT
+				package_path,
+				version,
+				module_path,
+				name,
+				synopsis,
+				license_types,
+				license_paths,
+				commit_time,
+				num_imported_by,
+				(
+					ts_rank (
+						name_tokens ||
+						path_tokens ||
+						synopsis_tokens ||
+						readme_tokens, to_tsquery($1)
+					) *  log(exp(1)+num_imported_by)
+				) AS rank
 			FROM
-				documents
-			ORDER BY
-				package_path, relevance DESC
-		) d
-		LEFT JOIN (
-			SELECT imports.from_path, COUNT(*) AS importers
-			FROM imports
-			GROUP BY 1
-		) i
-		ON d.package_path = i.from_path;`
+				vw_search_results
+		)
+
+		SELECT
+			r.package_path,
+			r.version,
+			r.module_path,
+			r.name,
+			r.synopsis,
+			r.license_types,
+			r.license_paths,
+			r.commit_time,
+			r.num_imported_by,
+			r.rank,
+			COUNT(*) OVER() AS total
+		FROM
+			results r
+		WHERE
+			r.rank > POWER(10,-10)
+		ORDER BY
+			r.rank DESC;`
 	rows, err := db.QueryContext(ctx, query, strings.Join(terms, " | "))
 	if err != nil {
-		return nil, fmt.Errorf("db.QueryContext(ctx, %q, %q): %v", query, terms, err)
+		return nil, fmt.Errorf("db.QueryContext(ctx, %s, %q): %v", query, terms, err)
 	}
 	defer rows.Close()
 
 	var (
-		path      string
-		rank      float64
-		importers int64
-		paths     []string
+		path, version, modulePath, name, synopsis string
+		licenseTypes, licensePaths                []string
+		commitTime                                time.Time
+		numImportedBy, total                      uint64
+		rank                                      float64
+		results                                   []*SearchResult
 	)
-	pathToResults := map[string]*SearchResult{}
 	for rows.Next() {
-		if err := rows.Scan(&path, &rank, &importers); err != nil {
+		if err := rows.Scan(&path, &version, &modulePath, &name, &synopsis,
+			pq.Array(&licenseTypes), pq.Array(&licensePaths), &commitTime, &numImportedBy, &rank, &total); err != nil {
 			return nil, fmt.Errorf("rows.Scan(): %v", err)
 		}
-		pathToResults[path] = &SearchResult{
-			Relevance:    rank,
-			NumImporters: importers,
-		}
-		paths = append(paths, path)
-	}
 
-	pkgs, err := db.GetLatestPackageForPaths(ctx, paths)
-	if err != nil {
-		return nil, err
-	}
-	for _, p := range pkgs {
-		pathToResults[p.Path].Package = p
-	}
-
-	var results []*SearchResult
-	for _, p := range pathToResults {
-		// Filter out results that are not relevant to the terms in this search.
-		if calculateRank(p.Relevance, p.NumImporters) > 0 {
-			results = append(results, p)
-		}
-	}
-
-	sort.Slice(results, func(i, j int) bool {
-		return calculateRank(results[i].Relevance, results[i].NumImporters) > calculateRank(results[j].Relevance, results[j].NumImporters)
-	})
-	return results, nil
-}
-
-// GetLatestPackageForPaths returns a list of packages that have the latest version that
-// corresponds to each path specified in the list of paths. The resulting list is
-// sorted by package path lexicographically. So if multiple packages have the same
-// path then the package whose module path comes first lexicographically will be
-// returned.
-func (db *DB) GetLatestPackageForPaths(ctx context.Context, paths []string) ([]*internal.Package, error) {
-	var (
-		packages                                              []*internal.Package
-		commitTime, createdAt, updatedAt                      time.Time
-		path, seriesPath, modulePath, name, synopsis, version string
-		licenseTypes, licensePaths                            []string
-	)
-
-	query := `
-		SELECT DISTINCT ON (p.path)
-			p.path,
-			m.series_path,
-			p.module_path,
-			v.version,
-			v.commit_time,
-			p.license_types,
-			p.license_paths,
-			p.name,
-			p.synopsis
-		FROM
-			vw_licensed_packages p
-		INNER JOIN
-			versions v
-		ON
-			v.module_path = p.module_path
-			AND v.version = p.version
-		INNER JOIN
-			modules m
-		ON
-			m.path = v.module_path
-		WHERE
-			p.path = ANY($1)
-		ORDER BY
-			p.path,
-			p.module_path,
-			v.major DESC,
-			v.minor DESC,
-			v.patch DESC,
-			v.prerelease DESC;`
-
-	rows, err := db.QueryContext(ctx, query, pq.Array(paths))
-	if err != nil {
-		return nil, fmt.Errorf("db.QueryContext(ctx, %q, %v): %v", query, pq.Array(paths), err)
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		if err := rows.Scan(&path, &seriesPath, &modulePath, &version, &commitTime,
-			pq.Array(&licenseTypes), pq.Array(&licensePaths), &name, &synopsis); err != nil {
-			return nil, fmt.Errorf("row.Scan(): %v", err)
-		}
 		lics, err := zipLicenseInfo(licenseTypes, licensePaths)
 		if err != nil {
 			return nil, fmt.Errorf("zipLicenseInfo(%v, %v): %v", licenseTypes, licensePaths, err)
 		}
-		packages = append(packages, &internal.Package{
-			Name:     name,
-			Path:     path,
-			Synopsis: synopsis,
-			Licenses: lics,
-			Version: &internal.Version{
-				CreatedAt:  createdAt,
-				UpdatedAt:  updatedAt,
-				SeriesPath: seriesPath,
-				ModulePath: modulePath,
-				Version:    version,
-				CommitTime: commitTime,
+		results = append(results, &SearchResult{
+			Rank:          rank,
+			NumImportedBy: numImportedBy,
+			Total:         total,
+			Package: &internal.Package{
+				Name:     name,
+				Path:     path,
+				Synopsis: synopsis,
+				Licenses: lics,
+				Version: &internal.Version{
+					ModulePath: modulePath,
+					Version:    version,
+					CommitTime: commitTime,
+				},
 			},
 		})
 	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("rows.Err() returned error %v", err)
-	}
-
-	return packages, nil
+	return results, nil
 }

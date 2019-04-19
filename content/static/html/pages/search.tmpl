@@ -24,10 +24,10 @@
         <p>{{ .Synopsis }}</p>
         <p class="SearchSnippetContent-commitTime">
 	  <span>Published {{ .CommitTime }}</span>
-	  {{ if gt .NumImporters 1 }}
-	    <span> | Imported by {{ .NumImporters }} packages</span>
-	  {{ else if eq .NumImporters 1 }}
-	    <span> | Imported by {{ .NumImporters }} package</span>
+	  {{ if gt .NumImportedBy 1 }}
+	    <span> | Imported by {{ .NumImportedBy}} packages</span>
+	  {{ else if eq .NumImportedBy 1 }}
+	    <span> | Imported by {{ .NumImportedBy}} package</span>
 	  {{ end }}
 	</p>
         <hr>

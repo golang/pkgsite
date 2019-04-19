@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 )
@@ -20,8 +21,54 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 
 	var (
 		now        = time.Now()
-		seriesPath = "myseries"
-		modulePath = "github.com/valid_module_name"
+		versionFoo = &internal.Version{
+			Version:     "v1.0.0",
+			ReadMe:      []byte("readme"),
+			CommitTime:  now,
+			VersionType: internal.VersionTypeRelease,
+			ModulePath:  "github.com/valid_module_name",
+			SeriesPath:  "myseries",
+			Packages: []*internal.Package{
+				&internal.Package{
+					Name:     "foo",
+					Path:     "/path/to/foo",
+					Synopsis: "foo",
+				},
+			},
+		}
+		versionBar = &internal.Version{
+			Version:     "v1.0.0",
+			ReadMe:      []byte("readme"),
+			CommitTime:  now,
+			VersionType: internal.VersionTypeRelease,
+			ModulePath:  "github.com/valid_module_name",
+			SeriesPath:  "myseries",
+			Packages: []*internal.Package{
+				&internal.Package{
+					Name:     "bar",
+					Path:     "/path/to/bar",
+					Synopsis: "bar is bar", // add an extra 'bar' to make sorting deterministic
+				},
+			},
+		}
+		pkgFoo = &internal.Package{
+			Name:     "foo",
+			Path:     "/path/to/foo",
+			Synopsis: "foo",
+			Version: &internal.Version{
+				ModulePath: "github.com/valid_module_name",
+				Version:    "v1.0.0",
+			},
+		}
+		pkgBar = &internal.Package{
+			Name:     "bar",
+			Path:     "/path/to/bar",
+			Synopsis: "bar is bar",
+			Version: &internal.Version{
+				ModulePath: "github.com/valid_module_name",
+				Version:    "v1.0.0",
+			},
+		}
 	)
 
 	for _, tc := range []struct {
@@ -32,158 +79,47 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 		insertErr, searchErr derrors.ErrorType
 	}{
 		{
-			name:  "two_documents_different_packages_multiple_terms",
-			terms: []string{"foo", "bar"},
-			versions: []*internal.Version{
-				&internal.Version{
-					SeriesPath:  seriesPath,
-					ModulePath:  modulePath,
-					Version:     "v1.0.0",
-					ReadMe:      []byte("readme"),
-					CommitTime:  now,
-					VersionType: internal.VersionTypeRelease,
-					Packages: []*internal.Package{
-						&internal.Package{
-							Name:     "foo",
-							Path:     "/path/to/foo",
-							Synopsis: "foo",
-						},
-					},
-				},
-				&internal.Version{
-					SeriesPath:  seriesPath,
-					ModulePath:  modulePath,
-					Version:     "v1.0.0",
-					ReadMe:      []byte("readme"),
-					CommitTime:  now,
-					VersionType: internal.VersionTypeRelease,
-					Packages: []*internal.Package{
-						&internal.Package{
-							Name:     "bar",
-							Path:     "/path/to/bar",
-							Synopsis: "bar is bar", // add an extra 'bar' to make sorting deterministic
-						},
-					},
-				},
-			},
+			name:     "two_documents_different_packages_multiple_terms",
+			terms:    []string{"foo", "bar"},
+			versions: []*internal.Version{versionFoo, versionBar},
 			want: []*SearchResult{
 				&SearchResult{
-					Relevance:    0.3478693962097168,
-					NumImporters: 0,
-					Package: &internal.Package{
-						Name:     "bar",
-						Path:     "/path/to/bar",
-						Synopsis: "bar is bar",
-						Version: &internal.Version{
-							SeriesPath: seriesPath,
-							ModulePath: "github.com/valid_module_name",
-							Version:    "v1.0.0",
-						},
-					},
+					Rank:          0.15107775919689598,
+					NumImportedBy: 0,
+					Total:         2,
+					Package:       pkgBar,
 				},
 				&SearchResult{
-					Relevance:    0.33435988426208496,
-					NumImporters: 0,
-					Package: &internal.Package{
-						Name:     "foo",
-						Path:     "/path/to/foo",
-						Synopsis: "foo",
-						Version: &internal.Version{
-							SeriesPath: seriesPath,
-							ModulePath: "github.com/valid_module_name",
-							Version:    "v1.0.0",
-						},
-					},
-				},
-			},
-		},
-
-		{
-			name:  "two_documents_different_packages_one_result",
-			terms: []string{"foo"},
-			versions: []*internal.Version{
-				&internal.Version{
-					SeriesPath:  seriesPath,
-					ModulePath:  modulePath,
-					Version:     "v1.0.0",
-					ReadMe:      []byte("readme"),
-					CommitTime:  now,
-					VersionType: internal.VersionTypeRelease,
-					Packages: []*internal.Package{
-						&internal.Package{
-							Name:     "foo",
-							Path:     "/path/to/foo",
-							Synopsis: "foo",
-						},
-					},
-				},
-				&internal.Version{
-					SeriesPath:  seriesPath,
-					ModulePath:  modulePath,
-					Version:     "v1.0.0",
-					ReadMe:      []byte("readme"),
-					CommitTime:  now,
-					VersionType: internal.VersionTypeRelease,
-					Packages: []*internal.Package{
-						&internal.Package{
-							Name:     "bar",
-							Path:     "/path/to/bar",
-							Synopsis: "bar",
-						},
-					},
-				},
-			},
-			want: []*SearchResult{
-				&SearchResult{
-					Relevance:    0.6687197685241699,
-					NumImporters: 0,
-					Package: &internal.Package{
-						Name:     "foo",
-						Path:     "/path/to/foo",
-						Synopsis: "foo",
-						Version: &internal.Version{
-							SeriesPath: seriesPath,
-							ModulePath: "github.com/valid_module_name",
-							Version:    "v1.0.0",
-						},
-					},
+					Rank:          0.14521065270483344,
+					NumImportedBy: 0,
+					Total:         2,
+					Package:       pkgFoo,
 				},
 			},
 		},
 		{
-			name:  "one_document",
-			terms: []string{"foo"},
-			versions: []*internal.Version{
-				&internal.Version{
-					SeriesPath:  seriesPath,
-					ModulePath:  modulePath,
-					Version:     "v1.0.0",
-					ReadMe:      []byte("readme"),
-					CommitTime:  now,
-					VersionType: internal.VersionTypeRelease,
-					Packages: []*internal.Package{
-						&internal.Package{
-							Name:     "foo",
-							Path:     "/path/to/foo",
-							Synopsis: "foo",
-						},
-					},
-				},
-			},
+			name:     "two_documents_different_packages_one_result",
+			terms:    []string{"foo"},
+			versions: []*internal.Version{versionFoo, versionBar},
 			want: []*SearchResult{
 				&SearchResult{
-					Relevance:    0.6687197685241699,
-					NumImporters: 0,
-					Package: &internal.Package{
-						Name:     "foo",
-						Path:     "/path/to/foo",
-						Synopsis: "foo",
-						Version: &internal.Version{
-							SeriesPath: seriesPath,
-							ModulePath: "github.com/valid_module_name",
-							Version:    "v1.0.0",
-						},
-					},
+					Rank:          0.2904213054096669,
+					NumImportedBy: 0,
+					Total:         1,
+					Package:       pkgFoo,
+				},
+			},
+		},
+		{
+			name:     "one_document",
+			terms:    []string{"foo"},
+			versions: []*internal.Version{versionFoo},
+			want: []*SearchResult{
+				&SearchResult{
+					Rank:          0.2904213054096669,
+					NumImportedBy: 0,
+					Total:         1,
+					Package:       pkgFoo,
 				},
 			},
 		},
@@ -213,22 +149,13 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 
 			got, err := db.Search(ctx, tc.terms)
 			if derrors.Type(err) != tc.searchErr {
-				t.Fatalf("db.Search(%v): %v", tc.terms, err)
+				t.Fatalf("db.Search(ctx, %v): %v", tc.terms, err)
 			}
-
 			if len(got) != len(tc.want) {
-				t.Errorf("db.Search(%v) mismatch: len(got) = %d, want = %d\n", tc.terms, len(got), len(tc.want))
+				t.Errorf("db.Search(ctx, %v) mismatch: len(got) = %d, want = %d\n", tc.terms, len(got), len(tc.want))
 			}
-
-			for _, s := range got {
-				if s.Package != nil && s.Package.Version != nil {
-					s.Package.Version.CreatedAt = time.Time{}
-					s.Package.Version.UpdatedAt = time.Time{}
-					s.Package.Version.CommitTime = time.Time{}
-				}
-			}
-			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("db.Search(%v) mismatch (-want +got):\n%s", tc.terms, diff)
+			if diff := cmp.Diff(tc.want, got, cmpopts.IgnoreFields(internal.Version{}, "CommitTime")); diff != "" {
+				t.Errorf("db.Search(ctx, %v) mismatch (-want +got):\n%s", tc.terms, diff)
 			}
 		})
 	}
