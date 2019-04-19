@@ -57,6 +57,7 @@ func (c *Controller) renderPage(w http.ResponseWriter, templateName string, page
 func parsePageTemplates(base string) (map[string]*template.Template, error) {
 	htmlSets := [][]string{
 		{"index.tmpl"},
+		{"package404.tmpl"},
 		{"search.tmpl"},
 		{"doc.tmpl", "details.tmpl"},
 		{"importedby.tmpl", "details.tmpl"},

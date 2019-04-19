@@ -332,6 +332,9 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 	row := db.QueryRowContext(ctx, query, path, version)
 	if err := row.Scan(&commitTime, pq.Array(&licenseTypes),
 		pq.Array(&licensePaths), &readmeFilePath, &readmeContents, &seriesPath, &modulePath, &name, &synopsis, &suffix); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, derrors.NotFound(fmt.Sprintf("package %s@%s not found", path, version))
+		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
 

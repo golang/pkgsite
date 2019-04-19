@@ -19,6 +19,7 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
@@ -238,52 +239,28 @@ func fetchPackageHeader(ctx context.Context, db *postgres.DB, path, version stri
 
 // fetchOverviewDetails fetches data for the module version specified by path and version
 // from the database and returns a OverviewDetails.
-func fetchOverviewDetails(ctx context.Context, db *postgres.DB, path, version string) (*DetailsPage, error) {
-	pkg, err := db.GetPackage(ctx, path, version)
-	if err != nil {
-		return nil, fmt.Errorf("db.GetPackage(ctx, %q, %q): %v", path, version, err)
-	}
-
-	pkgHeader, err := createPackageHeader(pkg)
-	if err != nil {
-		return nil, fmt.Errorf("createPackageHeader(%+v): %v", pkg, err)
-	}
-	return &DetailsPage{
-		PackageHeader: pkgHeader,
-		Details: &OverviewDetails{
-			ModulePath: pkg.VersionInfo.ModulePath,
-			ReadMe:     readmeHTML(pkg.VersionInfo.ReadmeFilePath, pkg.VersionInfo.ReadmeContents),
-		},
+func fetchOverviewDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*OverviewDetails, error) {
+	return &OverviewDetails{
+		ModulePath: pkg.VersionInfo.ModulePath,
+		ReadMe:     readmeHTML(pkg.VersionInfo.ReadmeFilePath, pkg.VersionInfo.ReadmeContents),
 	}, nil
 }
 
 // fetchDocumentationDetails fetches data for the package specified by path and version
 // from the database and returns a DocumentationDetails.
-func fetchDocumentationDetails(ctx context.Context, db *postgres.DB, path, version string) (*DetailsPage, error) {
-	pkgHeader, err := fetchPackageHeader(ctx, db, path, version)
-	if err != nil {
-		return nil, fmt.Errorf("db.fetchPackageHeader(ctx, db, %q, %q): %v", path, version, err)
-	}
-	return &DetailsPage{
-		PackageHeader: pkgHeader,
-		Details: &DocumentationDetails{
-			ModulePath: pkgHeader.ModulePath,
-		},
-	}, nil
+func fetchDocumentationDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*DocumentationDetails, error) {
+	return &DocumentationDetails{pkg.VersionInfo.ModulePath}, nil
 }
 
 // fetchModuleDetails fetches data for the module version specified by pkgPath and pkgversion
 // from the database and returns a ModuleDetails.
-func fetchModuleDetails(ctx context.Context, db *postgres.DB, pkgPath, pkgversion string) (*DetailsPage, error) {
-	version, err := db.GetVersionForPackage(ctx, pkgPath, pkgversion)
+func fetchModuleDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*ModuleDetails, error) {
+	version, err := db.GetVersionForPackage(ctx, pkg.Path, pkg.VersionInfo.Version)
 	if err != nil {
-		return nil, fmt.Errorf("db.GetVersionForPackage(ctx, %q, %q): %v", pkgPath, pkgversion, err)
+		return nil, fmt.Errorf("db.GetVersionForPackage(ctx, %q, %q): %v", pkg.Path, pkg.VersionInfo.Version, err)
 	}
 
-	var (
-		pkgHeader *Package
-		packages  []*Package
-	)
+	var packages []*Package
 	for _, p := range version.Packages {
 		packages = append(packages, &Package{
 			Name:       p.Name,
@@ -293,53 +270,30 @@ func fetchModuleDetails(ctx context.Context, db *postgres.DB, pkgPath, pkgversio
 			Version:    version.Version,
 			ModulePath: version.ModulePath,
 		})
-
-		if p.Path == pkgPath {
-			vp := &internal.VersionedPackage{
-				Package:     *p,
-				VersionInfo: version.VersionInfo,
-			}
-			pkgHeader, err = createPackageHeader(vp)
-			if err != nil {
-				return nil, fmt.Errorf("createPackageHeader(%+v): %v", p, err)
-			}
-		}
 	}
 
-	return &DetailsPage{
-		PackageHeader: pkgHeader,
-		Details: &ModuleDetails{
-			ModulePath: version.ModulePath,
-			Version:    pkgversion,
-			ReadMe:     readmeHTML(version.ReadmeFilePath, version.ReadmeContents),
-			Packages:   packages,
-		},
+	return &ModuleDetails{
+		ModulePath: version.ModulePath,
+		Version:    pkg.VersionInfo.Version,
+		ReadMe:     readmeHTML(version.ReadmeFilePath, version.ReadmeContents),
+		Packages:   packages,
 	}, nil
 }
 
 // fetchVersionsDetails fetches data for the module version specified by path and version
 // from the database and returns a VersionsDetails.
-func fetchVersionsDetails(ctx context.Context, db *postgres.DB, path, version string) (*DetailsPage, error) {
-	pkg, err := db.GetPackage(ctx, path, version)
+func fetchVersionsDetails(ctx context.Context, db *postgres.DB, pkg *internal.Package) (*VersionsDetails, error) {
+	versions, err := db.GetTaggedVersionsForPackageSeries(ctx, pkg.Path)
 	if err != nil {
-		return nil, fmt.Errorf("db.GetPackage(ctx, %q, %q): %v", path, version, err)
-	}
-
-	pkgHeader, err := createPackageHeader(pkg)
-	if err != nil {
-		return nil, fmt.Errorf("createPackageHeader(%+v): %v", pkg, err)
-	}
-	versions, err := db.GetTaggedVersionsForPackageSeries(ctx, path)
-	if err != nil {
-		return nil, fmt.Errorf("db.GetTaggedVersions(%q): %v", path, err)
+		return nil, fmt.Errorf("db.GetTaggedVersions(%q): %v", pkg.Path, err)
 	}
 
 	// If no tagged versions for the package series are found,
 	// fetch the pseudo-versions instead.
 	if len(versions) == 0 {
-		versions, err = db.GetPseudoVersionsForPackageSeries(ctx, path)
+		versions, err = db.GetPseudoVersionsForPackageSeries(ctx, pkg.Path)
 		if err != nil {
-			return nil, fmt.Errorf("db.GetPseudoVersions(%q): %v", path, err)
+			return nil, fmt.Errorf("db.GetPseudoVersions(%q): %v", pkg.Path, err)
 		}
 	}
 
@@ -353,7 +307,6 @@ func fetchVersionsDetails(ctx context.Context, db *postgres.DB, path, version st
 
 	for _, v := range versions {
 		vStr := v.Version
-
 		major := semver.Major(vStr)
 		majMin := strings.TrimPrefix(semver.MajorMinor(vStr), "v")
 		fullVersion := strings.TrimPrefix(vStr, "v")
@@ -395,11 +348,8 @@ func fetchVersionsDetails(ctx context.Context, db *postgres.DB, path, version st
 		})
 	}
 
-	return &DetailsPage{
-		PackageHeader: pkgHeader,
-		Details: &VersionsDetails{
-			Versions: mvg,
-		},
+	return &VersionsDetails{
+		Versions: mvg,
 	}, nil
 }
 
@@ -411,14 +361,10 @@ func licenseAnchor(filePath string) string {
 
 // fetchLicensesDetails fetches license data for the package version specified by
 // path and version from the database and returns a LicensesDetails.
-func fetchLicensesDetails(ctx context.Context, db *postgres.DB, path, version string) (*DetailsPage, error) {
-	pkgHeader, err := fetchPackageHeader(ctx, db, path, version)
+func fetchLicensesDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*LicensesDetails, error) {
+	dbLicenses, err := db.GetLicenses(ctx, pkg.Path, pkg.VersionInfo.Version)
 	if err != nil {
-		return nil, fmt.Errorf("db.fetchPackageHeader(ctx, db, %q, %q): %v", path, version, err)
-	}
-	dbLicenses, err := db.GetLicenses(ctx, path, version)
-	if err != nil {
-		return nil, fmt.Errorf("db.GetLicenses(ctx, %q, %q): %v", path, version, err)
+		return nil, fmt.Errorf("db.GetLicenses(ctx, %q, %q): %v", pkg.Path, pkg.VersionInfo.Version, err)
 	}
 
 	licenses := make([]License, len(dbLicenses))
@@ -429,25 +375,17 @@ func fetchLicensesDetails(ctx context.Context, db *postgres.DB, path, version st
 		}
 	}
 
-	return &DetailsPage{
-		PackageHeader: pkgHeader,
-		Details: &LicensesDetails{
-			Licenses: licenses,
-		},
+	return &LicensesDetails{
+		Licenses: licenses,
 	}, nil
 }
 
 // fetchImportsDetails fetches imports for the package version specified by
 // path and version from the database and returns a ImportsDetails.
-func fetchImportsDetails(ctx context.Context, db *postgres.DB, path, version string) (*DetailsPage, error) {
-	pkgHeader, err := fetchPackageHeader(ctx, db, path, version)
+func fetchImportsDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*ImportsDetails, error) {
+	dbImports, err := db.GetImports(ctx, pkg.Path, pkg.VersionInfo.Version)
 	if err != nil {
-		return nil, fmt.Errorf("db.fetchPackageHeader(ctx, db, %q, %q): %v", path, version, err)
-	}
-
-	dbImports, err := db.GetImports(ctx, path, version)
-	if err != nil {
-		return nil, fmt.Errorf("db.GetImports(ctx, %q, %q): %v", path, version, err)
+		return nil, fmt.Errorf("db.GetImports(ctx, %q, %q): %v", pkg.Path, pkg.VersionInfo.Version, err)
 	}
 
 	var imports []*internal.Import
@@ -460,33 +398,21 @@ func fetchImportsDetails(ctx context.Context, db *postgres.DB, path, version str
 		}
 	}
 
-	return &DetailsPage{
-		PackageHeader: pkgHeader,
-		Details: &ImportsDetails{
-			Imports: imports,
-			StdLib:  std,
-		},
+	return &ImportsDetails{
+		Imports: imports,
+		StdLib:  std,
 	}, nil
 }
 
-// fetchImportedByDetails fetches all packages that import the package
-// specified by path and returns an ImportedByDetails.
-func fetchImportedByDetails(ctx context.Context, db *postgres.DB, path, version string) (*DetailsPage, error) {
-	pkgHeader, err := fetchPackageHeader(ctx, db, path, version)
+// fetchImportedByDetails fetches importers for the package version specified by
+// path and version from the database and returns a ImportersDetails.
+func fetchImportedByDetails(ctx context.Context, db *postgres.DB, pkg *internal.Package) (*ImportedByDetails, error) {
+	importedBy, err := db.GetImportedBy(ctx, pkg.Path)
 	if err != nil {
-		return nil, fmt.Errorf("db.fetchPackageHeader(ctx, db, %q, %q): %v", path, version, err)
+		return nil, fmt.Errorf("db.GetImportedBy(ctx, %q): %v", pkg.Path, err)
 	}
-
-	importedBy, err := db.GetImportedBy(ctx, path)
-	if err != nil {
-		return nil, fmt.Errorf("db.GetImportedBy(ctx, %q): %v", path, err)
-	}
-
-	return &DetailsPage{
-		PackageHeader: pkgHeader,
-		Details: &ImportedByDetails{
-			ImportedBy: importedBy,
-		},
+	return &ImportedByDetails{
+		ImportedBy: importedBy,
 	}, nil
 }
 
@@ -528,30 +454,46 @@ func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var (
-		page *DetailsPage
-		err  error
-		ctx  = r.Context()
+		details interface{}
+		err     error
+		ctx     = r.Context()
 	)
+
+	pkg, err := c.db.GetPackage(ctx, path, version)
+	if err != nil {
+		if derrors.IsNotFound(err) {
+			w.WriteHeader(http.StatusNotFound)
+			c.renderPage(w, "package404.tmpl", nil)
+			return
+		}
+		log.Printf("error getting package for %s@%s: %v", path, version, err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	}
+	pkgHeader, err := createPackageHeader(pkg)
+	if err != nil {
+		log.Printf("error creating package header for %s@%s: %v", path, version, err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	}
 
 	tab := r.FormValue("tab")
 	switch tab {
 	case "doc":
-		page, err = fetchDocumentationDetails(ctx, c.db, path, version)
+		details, err = fetchDocumentationDetails(ctx, c.db, pkg)
 	case "versions":
-		page, err = fetchVersionsDetails(ctx, c.db, path, version)
+		details, err = fetchVersionsDetails(ctx, c.db, &pkg.Package)
 	case "module":
-		page, err = fetchModuleDetails(ctx, c.db, path, version)
+		details, err = fetchModuleDetails(ctx, c.db, pkg)
 	case "imports":
-		page, err = fetchImportsDetails(ctx, c.db, path, version)
+		details, err = fetchImportsDetails(ctx, c.db, pkg)
 	case "importedby":
-		page, err = fetchImportedByDetails(ctx, c.db, path, version)
+		details, err = fetchImportedByDetails(ctx, c.db, &pkg.Package)
 	case "licenses":
-		page, err = fetchLicensesDetails(ctx, c.db, path, version)
+		details, err = fetchLicensesDetails(ctx, c.db, pkg)
 	case "overview":
 		fallthrough
 	default:
 		tab = "overview"
-		page, err = fetchOverviewDetails(ctx, c.db, path, version)
+		details, err = fetchOverviewDetails(ctx, c.db, pkg)
 	}
 
 	if err != nil {
@@ -560,5 +502,11 @@ func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	page := &DetailsPage{
+		PackageHeader: pkgHeader,
+		Details:       details,
+	}
+
 	c.renderPage(w, tab+".tmpl", page)
+	return
 }

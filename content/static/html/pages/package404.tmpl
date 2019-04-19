@@ -1,0 +1,19 @@
+<!--
+	Copyright 2019 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+
+{{ define "ROOT" }}
+
+<!DOCTYPE html>
+<title>Package Not Found</title>
+
+{{ template "header" }}
+{{ template "nav" . }}
+
+<div class="Container">
+  <h1>The requested package was not found.</h1>
+</div>
+
+{{ end }}

@@ -7,7 +7,6 @@ package frontend
 import (
 	"context"
 	"html/template"
-	"strings"
 	"testing"
 	"time"
 
@@ -114,23 +113,30 @@ func TestElapsedTime(t *testing.T) {
 	}
 }
 
+// firstVersionedPackage is a helper function that returns an
+// *internal.VersionedPackage corresponding to the first package in the
+// version.
+func firstVersionedPackage(v *internal.Version) *internal.VersionedPackage {
+	return &internal.VersionedPackage{
+		Package:     *v.Packages[0],
+		VersionInfo: v.VersionInfo,
+	}
+}
+
 func TestFetchOverviewDetails(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
 	tc := struct {
-		name            string
-		version         *internal.Version
-		wantDetailsPage *DetailsPage
+		name        string
+		version     *internal.Version
+		wantDetails *OverviewDetails
 	}{
 		name:    "want expected overview details",
 		version: sampleInternalVersion,
-		wantDetailsPage: &DetailsPage{
-			Details: &OverviewDetails{
-				ModulePath: "test.com/module",
-				ReadMe:     template.HTML("<p>This is the readme text.</p>\n"),
-			},
-			PackageHeader: samplePackageHeader,
+		wantDetails: &OverviewDetails{
+			ModulePath: "test.com/module",
+			ReadMe:     template.HTML("<p>This is the readme text.</p>\n"),
 		},
 	}
 
@@ -141,19 +147,18 @@ func TestFetchOverviewDetails(t *testing.T) {
 		t.Fatalf("db.InsertVersion(%v): %v", tc.version, err)
 	}
 
-	got, err := fetchOverviewDetails(ctx, db, tc.version.Packages[0].Path, tc.version.Version)
+	got, err := fetchOverviewDetails(ctx, db, firstVersionedPackage(tc.version))
 	if err != nil {
 		t.Fatalf("fetchOverviewDetails(ctx, db, %q, %q) = %v err = %v, want %v",
-			tc.version.Packages[0].Path, tc.version.Version, got, err, tc.wantDetailsPage)
+			tc.version.Packages[0].Path, tc.version.Version, got, err, tc.wantDetails)
 	}
 
-	if diff := cmp.Diff(tc.wantDetailsPage, got); diff != "" {
+	if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
 		t.Errorf("fetchOverviewDetails(ctx, %q, %q) mismatch (-want +got):\n%s", tc.version.Packages[0].Path, tc.version.Version, diff)
 	}
 }
 
-func getTestVersion(pkgPath, modulePath, version string, versionType internal.VersionType) *internal.Version {
-	suffix := strings.TrimPrefix(strings.TrimPrefix(pkgPath, modulePath), "/")
+func getTestVersion(pkgPath, modulePath, version string, versionType internal.VersionType, packages ...*internal.Package) *internal.Version {
 	return &internal.Version{
 		VersionInfo: internal.VersionInfo{
 			SeriesPath:     "test.com/module",
@@ -163,15 +168,7 @@ func getTestVersion(pkgPath, modulePath, version string, versionType internal.Ve
 			ReadmeContents: []byte("This is the readme text."),
 			VersionType:    versionType,
 		},
-		Packages: []*internal.Package{
-			&internal.Package{
-				Name:     "pkg_name",
-				Path:     pkgPath,
-				Synopsis: "test synopsis",
-				Licenses: sampleLicenseInfos,
-				Suffix:   suffix,
-			},
-		},
+		Packages: packages,
 	}
 }
 
@@ -184,123 +181,119 @@ func TestFetchVersionsDetails(t *testing.T) {
 		modulePath2 = "test.com/module/v2"
 		pkg1Path    = "test.com/module/pkg_name"
 		pkg2Path    = "test.com/module/v2/pkg_name"
+		pkg1        = &internal.Package{
+			Name:     "pkg_name",
+			Path:     pkg1Path,
+			Synopsis: "test synopsis",
+			Licenses: sampleLicenseInfos,
+			Suffix:   "pkg_name",
+		}
 	)
 
 	for _, tc := range []struct {
 		name, path, version string
 		versions            []*internal.Version
-		wantDetailsPage     *DetailsPage
+		wantDetails         *VersionsDetails
 	}{
 		{
 			name:    "want tagged versions",
 			path:    pkg1Path,
 			version: "v1.2.1",
 			versions: []*internal.Version{
-				getTestVersion(pkg1Path, modulePath1, "v1.2.3", internal.VersionTypeRelease),
-				getTestVersion(pkg2Path, modulePath2, "v2.0.0", internal.VersionTypeRelease),
-				getTestVersion(pkg1Path, modulePath1, "v1.3.0", internal.VersionTypeRelease),
-				getTestVersion(pkg1Path, modulePath1, "v1.2.1", internal.VersionTypeRelease),
-				getTestVersion(pkg1Path, modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", internal.VersionTypePseudo),
-				getTestVersion(pkg2Path, modulePath2, "v2.2.1-alpha.1", internal.VersionTypePrerelease),
+				getTestVersion(pkg1Path, modulePath1, "v1.2.3", internal.VersionTypeRelease, pkg1),
+				getTestVersion(pkg2Path, modulePath2, "v2.0.0", internal.VersionTypeRelease, pkg1),
+				getTestVersion(pkg1Path, modulePath1, "v1.3.0", internal.VersionTypeRelease, pkg1),
+				getTestVersion(pkg1Path, modulePath1, "v1.2.1", internal.VersionTypeRelease, pkg1),
+				getTestVersion(pkg1Path, modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", internal.VersionTypePseudo, pkg1),
+				getTestVersion(pkg2Path, modulePath2, "v2.2.1-alpha.1", internal.VersionTypePrerelease, pkg1),
 			},
-			wantDetailsPage: &DetailsPage{
-				Details: &VersionsDetails{
-					Versions: []*MajorVersionGroup{
-						&MajorVersionGroup{
-							Level: "v2",
-							Latest: &Package{
-								Version:    "2.2.1-alpha.1",
-								Path:       pkg2Path,
-								CommitTime: "today",
-							},
-							Versions: []*MinorVersionGroup{
-								&MinorVersionGroup{
-									Level: "2.2",
-									Latest: &Package{
+			wantDetails: &VersionsDetails{
+				Versions: []*MajorVersionGroup{
+					&MajorVersionGroup{
+						Level: "v2",
+						Latest: &Package{
+							Version:    "2.2.1-alpha.1",
+							Path:       pkg2Path,
+							CommitTime: "today",
+						},
+						Versions: []*MinorVersionGroup{
+							&MinorVersionGroup{
+								Level: "2.2",
+								Latest: &Package{
+									Version:    "2.2.1-alpha.1",
+									Path:       pkg2Path,
+									CommitTime: "today",
+								},
+								Versions: []*Package{
+									&Package{
 										Version:    "2.2.1-alpha.1",
 										Path:       pkg2Path,
 										CommitTime: "today",
 									},
-									Versions: []*Package{
-										&Package{
-											Version:    "2.2.1-alpha.1",
-											Path:       pkg2Path,
-											CommitTime: "today",
-										},
-									},
 								},
-								&MinorVersionGroup{
-									Level: "2.0",
-									Latest: &Package{
+							},
+							&MinorVersionGroup{
+								Level: "2.0",
+								Latest: &Package{
+									Version:    "2.0.0",
+									Path:       pkg2Path,
+									CommitTime: "today",
+								},
+								Versions: []*Package{
+									&Package{
 										Version:    "2.0.0",
 										Path:       pkg2Path,
 										CommitTime: "today",
-									},
-									Versions: []*Package{
-										&Package{
-											Version:    "2.0.0",
-											Path:       pkg2Path,
-											CommitTime: "today",
-										},
-									},
-								},
-							},
-						},
-						&MajorVersionGroup{
-							Level: "v1",
-							Latest: &Package{
-								Version:    "1.3.0",
-								Path:       pkg1Path,
-								CommitTime: "today",
-							},
-							Versions: []*MinorVersionGroup{
-								&MinorVersionGroup{
-									Level: "1.3",
-									Latest: &Package{
-										Version:    "1.3.0",
-										Path:       pkg1Path,
-										CommitTime: "today",
-									},
-									Versions: []*Package{
-										&Package{
-											Version:    "1.3.0",
-											Path:       pkg1Path,
-											CommitTime: "today",
-										},
-									},
-								},
-								&MinorVersionGroup{
-									Level: "1.2",
-									Latest: &Package{
-										Version:    "1.2.3",
-										Path:       pkg1Path,
-										CommitTime: "today",
-									},
-									Versions: []*Package{
-										&Package{
-											Version:    "1.2.3",
-											Path:       pkg1Path,
-											CommitTime: "today",
-										},
-										&Package{
-											Version:    "1.2.1",
-											Path:       pkg1Path,
-											CommitTime: "today",
-										},
 									},
 								},
 							},
 						},
 					},
-				},
-				PackageHeader: &Package{
-					Name:       "pkg_name",
-					Title:      "Package pkg_name",
-					Version:    "v1.2.1",
-					Path:       pkg1Path,
-					Synopsis:   "test synopsis",
-					Licenses:   transformLicenseInfos([]*internal.LicenseInfo{{Type: "MIT", FilePath: "LICENSE"}}),
-					CommitTime: "today",
+					&MajorVersionGroup{
+						Level: "v1",
+						Latest: &Package{
+							Version:    "1.3.0",
+							Path:       pkg1Path,
+							CommitTime: "today",
+						},
+						Versions: []*MinorVersionGroup{
+							&MinorVersionGroup{
+								Level: "1.3",
+								Latest: &Package{
+									Version:    "1.3.0",
+									Path:       pkg1Path,
+									CommitTime: "today",
+								},
+								Versions: []*Package{
+									&Package{
+										Version:    "1.3.0",
+										Path:       pkg1Path,
+										CommitTime: "today",
+									},
+								},
+							},
+							&MinorVersionGroup{
+								Level: "1.2",
+								Latest: &Package{
+									Version:    "1.2.3",
+									Path:       pkg1Path,
+									CommitTime: "today",
+								},
+								Versions: []*Package{
+									&Package{
+										Version:    "1.2.3",
+										Path:       pkg1Path,
+										CommitTime: "today",
+									},
+									&Package{
+										Version:    "1.2.1",
+										Path:       pkg1Path,
+										CommitTime: "today",
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -309,52 +302,41 @@ func TestFetchVersionsDetails(t *testing.T) {
 			path:    pkg1Path,
 			version: "v0.0.0-20140414041501-3c2ca4d52544",
 			versions: []*internal.Version{
-				getTestVersion(pkg1Path, modulePath1, "v0.0.0-20140414041501-3c2ca4d52544", internal.VersionTypePseudo),
-				getTestVersion(pkg1Path, modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", internal.VersionTypePseudo),
+				getTestVersion(pkg1Path, modulePath1, "v0.0.0-20140414041501-3c2ca4d52544", internal.VersionTypePseudo, pkg1),
+				getTestVersion(pkg1Path, modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", internal.VersionTypePseudo, pkg1),
 			},
-			wantDetailsPage: &DetailsPage{
-				Details: &VersionsDetails{
-					Versions: []*MajorVersionGroup{
-						&MajorVersionGroup{
-							Level: "v0",
-							Latest: &Package{
-								Version:    "0.0.0-20140414041502-3c2ca4d52544",
-								Path:       pkg1Path,
-								CommitTime: "today",
-							},
-							Versions: []*MinorVersionGroup{
-								&MinorVersionGroup{
-									Level: "0.0",
-									Latest: &Package{
+			wantDetails: &VersionsDetails{
+				Versions: []*MajorVersionGroup{
+					&MajorVersionGroup{
+						Level: "v0",
+						Latest: &Package{
+							Version:    "0.0.0-20140414041502-3c2ca4d52544",
+							Path:       pkg1Path,
+							CommitTime: "today",
+						},
+						Versions: []*MinorVersionGroup{
+							&MinorVersionGroup{
+								Level: "0.0",
+								Latest: &Package{
+									Version:    "0.0.0-20140414041502-3c2ca4d52544",
+									Path:       pkg1Path,
+									CommitTime: "today",
+								},
+								Versions: []*Package{
+									&Package{
 										Version:    "0.0.0-20140414041502-3c2ca4d52544",
 										Path:       pkg1Path,
 										CommitTime: "today",
 									},
-									Versions: []*Package{
-										&Package{
-											Version:    "0.0.0-20140414041502-3c2ca4d52544",
-											Path:       pkg1Path,
-											CommitTime: "today",
-										},
-										&Package{
-											Version:    "0.0.0-20140414041501-3c2ca4d52544",
-											Path:       pkg1Path,
-											CommitTime: "today",
-										},
+									&Package{
+										Version:    "0.0.0-20140414041501-3c2ca4d52544",
+										Path:       pkg1Path,
+										CommitTime: "today",
 									},
 								},
 							},
 						},
 					},
-				},
-				PackageHeader: &Package{
-					Name:       "pkg_name",
-					Title:      "Package pkg_name",
-					Version:    "v0.0.0-20140414041501-3c2ca4d52544",
-					Path:       pkg1Path,
-					Synopsis:   "test synopsis",
-					Licenses:   transformLicenseInfos([]*internal.LicenseInfo{{Type: "MIT", FilePath: "LICENSE"}}),
-					CommitTime: "today",
 				},
 			},
 		},
@@ -369,13 +351,13 @@ func TestFetchVersionsDetails(t *testing.T) {
 				}
 			}
 
-			got, err := fetchVersionsDetails(ctx, db, tc.path, tc.version)
+			got, err := fetchVersionsDetails(ctx, db, pkg1)
 			if err != nil {
 				t.Fatalf("fetchVersionsDetails(ctx, db, %q, %q) = %v err = %v, want %v",
-					tc.path, tc.version, got, err, tc.wantDetailsPage)
+					tc.path, tc.version, got, err, tc.wantDetails)
 			}
 
-			if diff := cmp.Diff(tc.wantDetailsPage, got); diff != "" {
+			if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
 				t.Errorf("fetchVersionsDetails(ctx, db, %q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
 			}
 		})
@@ -434,20 +416,17 @@ func TestFetchModuleDetails(t *testing.T) {
 	defer cancel()
 
 	tc := struct {
-		name            string
-		version         *internal.Version
-		wantDetailsPage *DetailsPage
+		name        string
+		version     *internal.Version
+		wantDetails *ModuleDetails
 	}{
 		name:    "want expected module details",
 		version: sampleInternalVersion,
-		wantDetailsPage: &DetailsPage{
-			Details: &ModuleDetails{
-				ModulePath: "test.com/module",
-				ReadMe:     template.HTML("<p>This is the readme text.</p>\n"),
-				Version:    "v1.0.0",
-				Packages:   []*Package{samplePackage},
-			},
-			PackageHeader: samplePackageHeader,
+		wantDetails: &ModuleDetails{
+			ModulePath: "test.com/module",
+			ReadMe:     template.HTML("<p>This is the readme text.</p>\n"),
+			Version:    "v1.0.0",
+			Packages:   []*Package{samplePackage},
 		},
 	}
 
@@ -458,13 +437,13 @@ func TestFetchModuleDetails(t *testing.T) {
 		t.Fatalf("db.InsertVersion(ctx, %v, %v): %v", tc.version, sampleLicenses, err)
 	}
 
-	got, err := fetchModuleDetails(ctx, db, tc.version.Packages[0].Path, tc.version.Version)
+	got, err := fetchModuleDetails(ctx, db, firstVersionedPackage(tc.version))
 	if err != nil {
 		t.Fatalf("fetchModuleDetails(ctx, db, %q, %q) = %v err = %v, want %v",
-			tc.version.Packages[0].Path, tc.version.Version, got, err, tc.wantDetailsPage)
+			tc.version.Packages[0].Path, tc.version.Version, got, err, tc.wantDetails)
 	}
 
-	if diff := cmp.Diff(tc.wantDetailsPage, got); diff != "" {
+	if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
 		t.Errorf("fetchModuleDetails(ctx, %q, %q) mismatch (-want +got):\n%s", tc.version.Packages[0].Path, tc.version.Version, diff)
 	}
 }
@@ -563,9 +542,9 @@ func TestCreatePackageHeader(t *testing.T) {
 
 func TestFetchImportsDetails(t *testing.T) {
 	for _, tc := range []struct {
-		name            string
-		imports         []*internal.Import
-		wantDetailsPage *DetailsPage
+		name        string
+		imports     []*internal.Import
+		wantDetails *ImportsDetails
 	}{
 		{
 			name: "want imports details with standard",
@@ -573,22 +552,19 @@ func TestFetchImportsDetails(t *testing.T) {
 				{Name: "import1", Path: "pa.th/import/1"},
 				{Name: "context", Path: "context"},
 			},
-			wantDetailsPage: &DetailsPage{
-				Details: &ImportsDetails{
-					Imports: []*internal.Import{
-						{
-							Name: "import1",
-							Path: "pa.th/import/1",
-						},
-					},
-					StdLib: []*internal.Import{
-						{
-							Name: "context",
-							Path: "context",
-						},
+			wantDetails: &ImportsDetails{
+				Imports: []*internal.Import{
+					{
+						Name: "import1",
+						Path: "pa.th/import/1",
 					},
 				},
-				PackageHeader: samplePackageHeader,
+				StdLib: []*internal.Import{
+					{
+						Name: "context",
+						Path: "context",
+					},
+				},
 			},
 		},
 		{
@@ -598,25 +574,22 @@ func TestFetchImportsDetails(t *testing.T) {
 				{Name: "import2", Path: "pa.th/import/2"},
 				{Name: "import3", Path: "pa.th/import/3"},
 			},
-			wantDetailsPage: &DetailsPage{
-				Details: &ImportsDetails{
-					Imports: []*internal.Import{
-						{
-							Name: "import1",
-							Path: "pa.th/import/1",
-						},
-						{
-							Name: "import2",
-							Path: "pa.th/import/2",
-						},
-						{
-							Name: "import3",
-							Path: "pa.th/import/3",
-						},
+			wantDetails: &ImportsDetails{
+				Imports: []*internal.Import{
+					{
+						Name: "import1",
+						Path: "pa.th/import/1",
 					},
-					StdLib: nil,
+					{
+						Name: "import2",
+						Path: "pa.th/import/2",
+					},
+					{
+						Name: "import3",
+						Path: "pa.th/import/3",
+					},
 				},
-				PackageHeader: samplePackageHeader,
+				StdLib: nil,
 			},
 		},
 	} {
@@ -634,13 +607,13 @@ func TestFetchImportsDetails(t *testing.T) {
 				t.Fatalf("db.InsertVersion(ctx, %v, %v): %v", version, sampleLicenses, err)
 			}
 
-			got, err := fetchImportsDetails(ctx, db, version.Packages[0].Path, version.Version)
+			got, err := fetchImportsDetails(ctx, db, firstVersionedPackage(version))
 			if err != nil {
 				t.Fatalf("fetchModuleDetails(ctx, db, %q, %q) = %v err = %v, want %v",
-					version.Packages[0].Path, version.Version, got, err, tc.wantDetailsPage)
+					version.Packages[0].Path, version.Version, got, err, tc.wantDetails)
 			}
 
-			if diff := cmp.Diff(tc.wantDetailsPage, got); diff != "" {
+			if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
 				t.Errorf("fetchModuleDetails(ctx, %q, %q) mismatch (-want +got):\n%s", version.Packages[0].Path, version.Version, diff)
 			}
 		})
@@ -648,6 +621,11 @@ func TestFetchImportsDetails(t *testing.T) {
 }
 
 func TestFetchImportedByDetails(t *testing.T) {
+	makeVersion := func(packages ...*internal.Package) *internal.Version {
+		v := *sampleInternalVersion
+		v.Packages = packages
+		return &v
+	}
 	var (
 		pkg1 = &internal.Package{
 			Name: "bar",
@@ -680,37 +658,27 @@ func TestFetchImportedByDetails(t *testing.T) {
 	)
 
 	for _, tc := range []struct {
-		path, version string
-		wantDetails   *DetailsPage
+		pkg         *internal.Package
+		wantDetails *ImportedByDetails
 	}{
 		{
-			path:    pkg3.Path,
-			version: sampleInternalVersion.Version,
-			wantDetails: &DetailsPage{
-				Details: &ImportedByDetails{},
+			pkg:         pkg3,
+			wantDetails: &ImportedByDetails{},
+		},
+		{
+			pkg: pkg2,
+			wantDetails: &ImportedByDetails{
+				ImportedBy: []string{pkg3.Path},
 			},
 		},
 		{
-			path:    pkg2.Path,
-			version: sampleInternalVersion.Version,
-			wantDetails: &DetailsPage{
-				Details: &ImportedByDetails{
-					ImportedBy: []string{pkg3.Path},
-				},
-			},
-		},
-		{
-
-			path:    pkg1.Path,
-			version: sampleInternalVersion.Version,
-			wantDetails: &DetailsPage{
-				Details: &ImportedByDetails{
-					ImportedBy: []string{pkg2.Path, pkg3.Path},
-				},
+			pkg: pkg1,
+			wantDetails: &ImportedByDetails{
+				ImportedBy: []string{pkg2.Path, pkg3.Path},
 			},
 		},
 	} {
-		t.Run(tc.path, func(t *testing.T) {
+		t.Run(tc.pkg.Path, func(t *testing.T) {
 			teardownTestCase, db := postgres.SetupCleanDB(t)
 			defer teardownTestCase(t)
 
@@ -718,21 +686,21 @@ func TestFetchImportedByDetails(t *testing.T) {
 			defer cancel()
 
 			for _, p := range []*internal.Package{pkg1, pkg2, pkg3} {
-				v := sampleInternalVersion
-				v.Packages = []*internal.Package{p}
+				v := makeVersion(p)
 				if err := db.InsertVersion(ctx, v, sampleLicenses); err != nil {
 					t.Errorf("db.InsertVersion(%v): %v", v, err)
 				}
 			}
 
-			got, err := fetchImportedByDetails(ctx, db, tc.path, tc.version)
+			vp := firstVersionedPackage(makeVersion(tc.pkg))
+			got, err := fetchImportedByDetails(ctx, db, &vp.Package)
 			if err != nil {
-				t.Fatalf("fetchImportedByDetails(ctx, db, %q, %q) = %v err = %v, want %v",
-					tc.path, tc.version, got, err, tc.wantDetails)
+				t.Fatalf("fetchImportedByDetails(ctx, db, %q) = %v err = %v, want %v",
+					tc.pkg.Path, got, err, tc.wantDetails)
 			}
 
 			if diff := cmp.Diff(tc.wantDetails, got, cmpopts.IgnoreFields(DetailsPage{}, "PackageHeader")); diff != "" {
-				t.Errorf("fetchImportedByDetails(ctx, %q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
+				t.Errorf("fetchImportedByDetails(ctx, db, %q) mismatch (-want +got):\n%s", tc.pkg.Path, diff)
 			}
 		})
 	}
