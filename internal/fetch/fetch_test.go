@@ -39,9 +39,8 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			modulePath: "my.mod/module",
 			version:    "v1.0.0",
 			versionData: &internal.Version{
-				Module: &internal.Module{
-					Path: "my.mod/module",
-				},
+				SeriesPath: "my.mod/module",
+				ModulePath: "my.mod/module",
 				Version:    "v1.0.0",
 				CommitTime: time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
 				ReadMe:     []byte("README FILE FOR TESTING."),
@@ -104,8 +103,8 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			sort.Slice(gotPkg.Licenses, func(i, j int) bool {
 				return gotPkg.Licenses[i].Type < gotPkg.Licenses[j].Type
 			})
-			if diff := cmp.Diff(gotPkg, test.pkgData); diff != "" {
-				t.Errorf("db.GetPackage(ctx, %q, %q) mismatch (-got +want):\n%s", test.pkg, test.version, diff)
+			if diff := cmp.Diff(test.pkgData, gotPkg); diff != "" {
+				t.Errorf("db.GetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", test.pkg, test.version, diff)
 			}
 		})
 	}

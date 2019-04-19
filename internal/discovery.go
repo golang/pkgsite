@@ -8,24 +8,6 @@ import (
 	"time"
 )
 
-// A Series is a group of modules that share the same base path and are assumed
-// to be major-version variants.
-type Series struct {
-	Path      string
-	CreatedAt time.Time
-	Modules   []*Module
-}
-
-// A Module is a collection of packages that share a common path prefix (the
-// module path) and are versioned as a single unit, along with a go.mod file
-// listing other required modules.
-type Module struct {
-	Path      string
-	CreatedAt time.Time
-	Series    *Series
-	Versions  []*Version
-}
-
 // LicenseInfo holds license metadata.
 type LicenseInfo struct {
 	Type     string
@@ -40,7 +22,8 @@ type License struct {
 
 // A Version is a specific, reproducible build of a module.
 type Version struct {
-	Module      *Module
+	SeriesPath  string
+	ModulePath  string
 	Version     string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time

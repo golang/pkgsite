@@ -50,8 +50,8 @@ func (db *DB) InsertDocuments(ctx context.Context, version *internal.Version) er
 				SETWEIGHT(TO_TSVECTOR($9), 'C')
 			) ON CONFLICT DO NOTHING;`, func(stmt *sql.Stmt) error {
 			for _, p := range version.Packages {
-				pathTokens := strings.Join([]string{p.Path, version.Module.Path, version.Module.Series.Path}, " ")
-				if _, err := stmt.ExecContext(ctx, p.Path, p.Suffix, version.Module.Path, version.Module.Series.Path, version.Version, p.Name, pathTokens, p.Synopsis, version.ReadMe); err != nil {
+				pathTokens := strings.Join([]string{p.Path, version.ModulePath, version.SeriesPath}, " ")
+				if _, err := stmt.ExecContext(ctx, p.Path, p.Suffix, version.ModulePath, version.SeriesPath, version.Version, p.Name, pathTokens, p.Synopsis, version.ReadMe); err != nil {
 					return fmt.Errorf("error inserting document for package %+v: %v", p, err)
 				}
 			}
@@ -162,15 +162,16 @@ func (db *DB) Search(ctx context.Context, terms []string) ([]*SearchResult, erro
 // returned.
 func (db *DB) GetLatestPackageForPaths(ctx context.Context, paths []string) ([]*internal.Package, error) {
 	var (
-		packages                                  []*internal.Package
-		commitTime, createdAt, updatedAt          time.Time
-		path, modulePath, name, synopsis, version string
-		licenseTypes, licensePaths                []string
+		packages                                              []*internal.Package
+		commitTime, createdAt, updatedAt                      time.Time
+		path, seriesPath, modulePath, name, synopsis, version string
+		licenseTypes, licensePaths                            []string
 	)
 
 	query := `
 		SELECT DISTINCT ON (p.path)
 			p.path,
+			m.series_path,
 			p.module_path,
 			v.version,
 			v.commit_time,
@@ -185,6 +186,10 @@ func (db *DB) GetLatestPackageForPaths(ctx context.Context, paths []string) ([]*
 		ON
 			v.module_path = p.module_path
 			AND v.version = p.version
+		INNER JOIN
+			modules m
+		ON
+			m.path = v.module_path
 		WHERE
 			p.path = ANY($1)
 		ORDER BY
@@ -202,7 +207,7 @@ func (db *DB) GetLatestPackageForPaths(ctx context.Context, paths []string) ([]*
 	defer rows.Close()
 
 	for rows.Next() {
-		if err := rows.Scan(&path, &modulePath, &version, &commitTime,
+		if err := rows.Scan(&path, &seriesPath, &modulePath, &version, &commitTime,
 			pq.Array(&licenseTypes), pq.Array(&licensePaths), &name, &synopsis); err != nil {
 			return nil, fmt.Errorf("row.Scan(): %v", err)
 		}
@@ -216,11 +221,10 @@ func (db *DB) GetLatestPackageForPaths(ctx context.Context, paths []string) ([]*
 			Synopsis: synopsis,
 			Licenses: lics,
 			Version: &internal.Version{
-				CreatedAt: createdAt,
-				UpdatedAt: updatedAt,
-				Module: &internal.Module{
-					Path: modulePath,
-				},
+				CreatedAt:  createdAt,
+				UpdatedAt:  updatedAt,
+				SeriesPath: seriesPath,
+				ModulePath: modulePath,
 				Version:    version,
 				CommitTime: commitTime,
 			},

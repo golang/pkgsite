@@ -42,12 +42,8 @@ var (
 		Licenses: sampleLicenseInfos,
 	}
 	sampleInternalVersion = &internal.Version{
-		Module: &internal.Module{
-			Path: "test.com/module",
-			Series: &internal.Series{
-				Path: "series",
-			},
-		},
+		SeriesPath:  "series",
+		ModulePath:  "test.com/module",
 		Version:     "v1.0.0",
 		Synopsis:    "test synopsis",
 		CommitTime:  time.Now().Add(time.Hour * -8),
@@ -155,12 +151,8 @@ func TestFetchOverviewDetails(t *testing.T) {
 
 func getTestVersion(pkgPath, modulePath, version string, versionType internal.VersionType) *internal.Version {
 	return &internal.Version{
-		Module: &internal.Module{
-			Path: modulePath,
-			Series: &internal.Series{
-				Path: "test.com/module",
-			},
-		},
+		SeriesPath: "test.com/module",
+		ModulePath: modulePath,
 		Version:    version,
 		CommitTime: time.Now().Add(time.Hour * -8),
 		ReadMe:     []byte("This is the readme text."),
@@ -181,10 +173,10 @@ func TestFetchVersionsDetails(t *testing.T) {
 	defer cancel()
 
 	var (
-		module1  = "test.com/module"
-		module2  = "test.com/module/v2"
-		pkg1Path = "test.com/module/pkg_name"
-		pkg2Path = "test.com/module/v2/pkg_name"
+		modulePath1 = "test.com/module"
+		modulePath2 = "test.com/module/v2"
+		pkg1Path    = "test.com/module/pkg_name"
+		pkg2Path    = "test.com/module/v2/pkg_name"
 	)
 
 	for _, tc := range []struct {
@@ -197,12 +189,12 @@ func TestFetchVersionsDetails(t *testing.T) {
 			path:    pkg1Path,
 			version: "v1.2.1",
 			versions: []*internal.Version{
-				getTestVersion(pkg1Path, module1, "v1.2.3", internal.VersionTypeRelease),
-				getTestVersion(pkg2Path, module2, "v2.0.0", internal.VersionTypeRelease),
-				getTestVersion(pkg1Path, module1, "v1.3.0", internal.VersionTypeRelease),
-				getTestVersion(pkg1Path, module1, "v1.2.1", internal.VersionTypeRelease),
-				getTestVersion(pkg1Path, module1, "v0.0.0-20140414041502-3c2ca4d52544", internal.VersionTypePseudo),
-				getTestVersion(pkg2Path, module2, "v2.2.1-alpha.1", internal.VersionTypePrerelease),
+				getTestVersion(pkg1Path, modulePath1, "v1.2.3", internal.VersionTypeRelease),
+				getTestVersion(pkg2Path, modulePath2, "v2.0.0", internal.VersionTypeRelease),
+				getTestVersion(pkg1Path, modulePath1, "v1.3.0", internal.VersionTypeRelease),
+				getTestVersion(pkg1Path, modulePath1, "v1.2.1", internal.VersionTypeRelease),
+				getTestVersion(pkg1Path, modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", internal.VersionTypePseudo),
+				getTestVersion(pkg2Path, modulePath2, "v2.2.1-alpha.1", internal.VersionTypePrerelease),
 			},
 			wantDetailsPage: &DetailsPage{
 				Details: &VersionsDetails{
@@ -310,8 +302,8 @@ func TestFetchVersionsDetails(t *testing.T) {
 			path:    pkg1Path,
 			version: "v0.0.0-20140414041501-3c2ca4d52544",
 			versions: []*internal.Version{
-				getTestVersion(pkg1Path, module1, "v0.0.0-20140414041501-3c2ca4d52544", internal.VersionTypePseudo),
-				getTestVersion(pkg1Path, module1, "v0.0.0-20140414041502-3c2ca4d52544", internal.VersionTypePseudo),
+				getTestVersion(pkg1Path, modulePath1, "v0.0.0-20140414041501-3c2ca4d52544", internal.VersionTypePseudo),
+				getTestVersion(pkg1Path, modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", internal.VersionTypePseudo),
 			},
 			wantDetailsPage: &DetailsPage{
 				Details: &VersionsDetails{

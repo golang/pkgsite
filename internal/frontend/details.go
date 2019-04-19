@@ -253,7 +253,7 @@ func fetchOverviewDetails(ctx context.Context, db *postgres.DB, path, version st
 	return &DetailsPage{
 		PackageHeader: pkgHeader,
 		Details: &OverviewDetails{
-			ModulePath: pkg.Version.Module.Path,
+			ModulePath: pkg.Version.ModulePath,
 			ReadMe:     readmeHTML(pkg.Version.ReadMe),
 		},
 	}, nil
@@ -293,7 +293,7 @@ func fetchModuleDetails(ctx context.Context, db *postgres.DB, pkgPath, pkgversio
 			Synopsis:   p.Synopsis,
 			Licenses:   transformLicenseInfos(p.Licenses),
 			Version:    version.Version,
-			ModulePath: version.Module.Path,
+			ModulePath: version.ModulePath,
 		})
 
 		if p.Path == pkgPath {
@@ -311,7 +311,7 @@ func fetchModuleDetails(ctx context.Context, db *postgres.DB, pkgPath, pkgversio
 	return &DetailsPage{
 		PackageHeader: pkgHeader,
 		Details: &ModuleDetails{
-			ModulePath: version.Module.Path,
+			ModulePath: version.ModulePath,
 			Version:    pkgversion,
 			ReadMe:     readmeHTML(version.ReadMe),
 			Packages:   packages,

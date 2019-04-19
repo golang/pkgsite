@@ -18,20 +18,16 @@ func TestFetchSearchPage(t *testing.T) {
 	defer cancel()
 
 	var (
-		now     = postgres.NowTruncated()
-		series1 = &internal.Series{
-			Path: "myseries",
-		}
-		module1 = &internal.Module{
-			Path:   "github.com/valid_module_name",
-			Series: series1,
-		}
+		now        = postgres.NowTruncated()
+		seriesPath = "myseries"
+		modulePath = "github.com/valid_module_name"
 		versionFoo = &internal.Version{
+			SeriesPath:  seriesPath,
+			ModulePath:  modulePath,
 			Version:     "v1.0.0",
 			ReadMe:      []byte("readme"),
 			CommitTime:  now,
 			VersionType: internal.VersionTypeRelease,
-			Module:      module1,
 			Packages: []*internal.Package{
 				&internal.Package{
 					Name:     "foo",
@@ -42,11 +38,12 @@ func TestFetchSearchPage(t *testing.T) {
 			},
 		}
 		versionBar = &internal.Version{
+			SeriesPath:  seriesPath,
+			ModulePath:  modulePath,
 			Version:     "v1.0.0",
 			ReadMe:      []byte("readme"),
 			CommitTime:  now,
 			VersionType: internal.VersionTypeRelease,
-			Module:      module1,
 			Packages: []*internal.Package{
 				&internal.Package{
 					Name:     "bar",
@@ -72,7 +69,7 @@ func TestFetchSearchPage(t *testing.T) {
 					&SearchResult{
 						Name:         versionBar.Packages[0].Name,
 						PackagePath:  versionBar.Packages[0].Path,
-						ModulePath:   versionBar.Module.Path,
+						ModulePath:   versionBar.ModulePath,
 						Synopsis:     versionBar.Packages[0].Synopsis,
 						Version:      versionBar.Version,
 						Licenses:     versionBar.Packages[0].Licenses,
@@ -82,7 +79,7 @@ func TestFetchSearchPage(t *testing.T) {
 					&SearchResult{
 						Name:         versionFoo.Packages[0].Name,
 						PackagePath:  versionFoo.Packages[0].Path,
-						ModulePath:   versionFoo.Module.Path,
+						ModulePath:   versionFoo.ModulePath,
 						Synopsis:     versionFoo.Packages[0].Synopsis,
 						Version:      versionFoo.Version,
 						Licenses:     versionFoo.Packages[0].Licenses,
@@ -102,7 +99,7 @@ func TestFetchSearchPage(t *testing.T) {
 					&SearchResult{
 						Name:         versionFoo.Packages[0].Name,
 						PackagePath:  versionFoo.Packages[0].Path,
-						ModulePath:   versionFoo.Module.Path,
+						ModulePath:   versionFoo.ModulePath,
 						Synopsis:     versionFoo.Packages[0].Synopsis,
 						Version:      versionFoo.Version,
 						Licenses:     versionFoo.Packages[0].Licenses,

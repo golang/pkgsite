@@ -48,7 +48,7 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string) (*Searc
 		results = append(results, &SearchResult{
 			Name:         r.Package.Name,
 			PackagePath:  r.Package.Path,
-			ModulePath:   r.Package.Version.Module.Path,
+			ModulePath:   r.Package.Version.ModulePath,
 			Synopsis:     r.Package.Synopsis,
 			Version:      r.Package.Version.Version,
 			Licenses:     r.Package.Licenses,

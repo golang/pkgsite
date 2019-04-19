@@ -142,12 +142,8 @@ func FetchAndInsertVersion(modulePath, version string, proxyClient *proxy.Client
 
 	seriesPath, _, _ := module.SplitPathVersion(modulePath)
 	v := &internal.Version{
-		Module: &internal.Module{
-			Path: modulePath,
-			Series: &internal.Series{
-				Path: seriesPath,
-			},
-		},
+		SeriesPath:  seriesPath,
+		ModulePath:  modulePath,
 		Version:     version,
 		CommitTime:  info.Time,
 		ReadMe:      readme,

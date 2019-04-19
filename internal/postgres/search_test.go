@@ -19,14 +19,9 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 	defer cancel()
 
 	var (
-		now     = time.Now()
-		series1 = &internal.Series{
-			Path: "myseries",
-		}
-		module1 = &internal.Module{
-			Path:   "github.com/valid_module_name",
-			Series: series1,
-		}
+		now        = time.Now()
+		seriesPath = "myseries"
+		modulePath = "github.com/valid_module_name"
 	)
 
 	for _, tc := range []struct {
@@ -41,11 +36,12 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 			terms: []string{"foo", "bar"},
 			versions: []*internal.Version{
 				&internal.Version{
+					SeriesPath:  seriesPath,
+					ModulePath:  modulePath,
 					Version:     "v1.0.0",
 					ReadMe:      []byte("readme"),
 					CommitTime:  now,
 					VersionType: internal.VersionTypeRelease,
-					Module:      module1,
 					Packages: []*internal.Package{
 						&internal.Package{
 							Name:     "foo",
@@ -55,11 +51,12 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 					},
 				},
 				&internal.Version{
+					SeriesPath:  seriesPath,
+					ModulePath:  modulePath,
 					Version:     "v1.0.0",
 					ReadMe:      []byte("readme"),
 					CommitTime:  now,
 					VersionType: internal.VersionTypeRelease,
-					Module:      module1,
 					Packages: []*internal.Package{
 						&internal.Package{
 							Name:     "bar",
@@ -78,10 +75,9 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 						Path:     "/path/to/bar",
 						Synopsis: "bar is bar",
 						Version: &internal.Version{
-							Module: &internal.Module{
-								Path: "github.com/valid_module_name",
-							},
-							Version: "v1.0.0",
+							SeriesPath: seriesPath,
+							ModulePath: "github.com/valid_module_name",
+							Version:    "v1.0.0",
 						},
 					},
 				},
@@ -93,10 +89,9 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 						Path:     "/path/to/foo",
 						Synopsis: "foo",
 						Version: &internal.Version{
-							Module: &internal.Module{
-								Path: "github.com/valid_module_name",
-							},
-							Version: "v1.0.0",
+							SeriesPath: seriesPath,
+							ModulePath: "github.com/valid_module_name",
+							Version:    "v1.0.0",
 						},
 					},
 				},
@@ -108,11 +103,12 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 			terms: []string{"foo"},
 			versions: []*internal.Version{
 				&internal.Version{
+					SeriesPath:  seriesPath,
+					ModulePath:  modulePath,
 					Version:     "v1.0.0",
 					ReadMe:      []byte("readme"),
 					CommitTime:  now,
 					VersionType: internal.VersionTypeRelease,
-					Module:      module1,
 					Packages: []*internal.Package{
 						&internal.Package{
 							Name:     "foo",
@@ -122,11 +118,12 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 					},
 				},
 				&internal.Version{
+					SeriesPath:  seriesPath,
+					ModulePath:  modulePath,
 					Version:     "v1.0.0",
 					ReadMe:      []byte("readme"),
 					CommitTime:  now,
 					VersionType: internal.VersionTypeRelease,
-					Module:      module1,
 					Packages: []*internal.Package{
 						&internal.Package{
 							Name:     "bar",
@@ -145,10 +142,9 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 						Path:     "/path/to/foo",
 						Synopsis: "foo",
 						Version: &internal.Version{
-							Module: &internal.Module{
-								Path: "github.com/valid_module_name",
-							},
-							Version: "v1.0.0",
+							SeriesPath: seriesPath,
+							ModulePath: "github.com/valid_module_name",
+							Version:    "v1.0.0",
 						},
 					},
 				},
@@ -159,11 +155,12 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 			terms: []string{"foo"},
 			versions: []*internal.Version{
 				&internal.Version{
+					SeriesPath:  seriesPath,
+					ModulePath:  modulePath,
 					Version:     "v1.0.0",
 					ReadMe:      []byte("readme"),
 					CommitTime:  now,
 					VersionType: internal.VersionTypeRelease,
-					Module:      module1,
 					Packages: []*internal.Package{
 						&internal.Package{
 							Name:     "foo",
@@ -182,10 +179,9 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 						Path:     "/path/to/foo",
 						Synopsis: "foo",
 						Version: &internal.Version{
-							Module: &internal.Module{
-								Path: "github.com/valid_module_name",
-							},
-							Version: "v1.0.0",
+							SeriesPath: seriesPath,
+							ModulePath: "github.com/valid_module_name",
+							Version:    "v1.0.0",
 						},
 					},
 				},
