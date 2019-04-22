@@ -179,6 +179,52 @@ func (db *DB) InsertVersionLogs(ctx context.Context, logs []*internal.VersionLog
 	})
 }
 
+// UpdateVersionLogError updates the version_log row for modulePath and version with fetchErr.
+func (db *DB) UpdateVersionLogError(ctx context.Context, modulePath, version string, fetchErr error) error {
+	query := "UPDATE version_logs SET error=$1 WHERE module_path=$2 AND version=$3"
+
+	if _, err := db.ExecContext(ctx, query, fetchErr.Error(), modulePath, version); err != nil {
+		return fmt.Errorf("tx.ExecContext(ctx %q, %q, %q, %q): %v", query, fetchErr.Error(), modulePath, version, err)
+	}
+	return nil
+}
+
+// GetVersionsToRetry fetches all rows from the version_logs table that do not
+// have an error and do not exist in the versions table.
+func (db *DB) GetVersionsToRetry(ctx context.Context) ([]*internal.VersionLog, error) {
+	query := `
+		SELECT
+			vl.module_path,
+			vl.version
+		FROM
+			version_logs vl
+		LEFT JOIN
+			 versions v
+		ON
+			v.module_path=vl.module_path
+			AND v.version=vl.version
+		WHERE
+			v.version IS NULL
+			AND (vl.error IS NULL OR vl.error = '');
+	`
+	rows, err := db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("db.QueryContext(ctx, %q): %v", query, err)
+	}
+
+	var (
+		version, modulePath string
+		logs                []*internal.VersionLog
+	)
+	for rows.Next() {
+		if err := rows.Scan(&modulePath, &version); err != nil {
+			return nil, fmt.Errorf("row.Scan(): %v", err)
+		}
+		logs = append(logs, &internal.VersionLog{ModulePath: modulePath, Version: version})
+	}
+	return logs, nil
+}
+
 func zipLicenseInfo(licenseTypes []string, licensePaths []string) ([]*internal.LicenseInfo, error) {
 	if len(licenseTypes) != len(licensePaths) {
 		return nil, fmt.Errorf("BUG: got %d license types and %d license paths", len(licenseTypes), len(licensePaths))

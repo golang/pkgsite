@@ -97,7 +97,14 @@ func parseVersion(version string) (internal.VersionType, error) {
 // (2) Download the version zip from the proxy
 // (3) Process the contents (series path, readme, licenses, and packages)
 // (4) Write the data to the discovery database
-func FetchAndInsertVersion(modulePath, version string, proxyClient *proxy.Client, db *postgres.DB) error {
+func FetchAndInsertVersion(modulePath, version string, proxyClient *proxy.Client, db *postgres.DB) (err error) {
+	defer func() {
+		if err != nil && err != context.DeadlineExceeded {
+			if dberr := db.UpdateVersionLogError(context.Background(), modulePath, version, err); dberr != nil {
+				log.Printf("db.UpdateVersionLogError(ctx, %q, %q, %v): %v", modulePath, version, err, dberr)
+			}
+		}
+	}()
 	// Unlike other actions (which use a Timeout middleware), we set a fixed
 	// timeout for FetchAndInsertVersion.  This allows module processing to
 	// succeed even for extremely short lived requests.

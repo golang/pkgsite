@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -23,11 +24,6 @@ import (
 	"golang.org/x/discovery/internal/postgres"
 )
 
-const (
-	// Use generous timeouts as cron traffic is not user-facing.
-	makeNewVersionsTimeout = 10 * time.Minute
-)
-
 var (
 	indexURL = getEnv("GO_MODULE_INDEX_URL", "https://index.golang.org/index")
 	fetchURL = getEnv("GO_DISCOVERY_FETCH_URL", "http://localhost:9000")
@@ -35,6 +31,7 @@ var (
 	password = getEnv("GO_DISCOVERY_DATABASE_PASSWORD", "")
 	host     = getEnv("GO_DISCOVERY_DATABASE_HOST", "localhost")
 	dbname   = getEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-database")
+	timeout  = getEnv("GO_DISCOVERY_CRON_TIMEOUT_MINUTES", "10")
 	dbinfo   = fmt.Sprintf("user=%s password=%s host=%s dbname=%s sslmode=disable", user, password, host, dbname)
 	workers  = flag.Int("workers", 10, "number of concurrent requests to the fetch service")
 )
@@ -54,10 +51,27 @@ func makeNewVersionsHandler(db *postgres.DB, idxClient *index.Client, workers in
 			log.Printf("FetchAndStoreVersions(%q, db): %v", indexURL, err)
 			return
 		}
+		log.Printf("Fetching %d versions", len(logs))
 
 		client := fetch.New(fetchURL)
 		cron.FetchVersions(r.Context(), client, logs, workers)
 		fmt.Fprint(w, fmt.Sprintf("Requested %d new versions!", len(logs)))
+	}
+}
+
+func makeRetryVersionsHandler(db *postgres.DB, workers int) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		logs, err := db.GetVersionsToRetry(r.Context())
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			log.Printf("db.GetVersionsToRetry(ctx): %v", err)
+			return
+		}
+		log.Printf("Fetching %d versions", len(logs))
+
+		client := fetch.New(fetchURL)
+		cron.FetchVersions(r.Context(), client, logs, workers)
+		fmt.Fprint(w, fmt.Sprintf("Requested %d versions!", len(logs)))
 	}
 }
 
@@ -75,8 +89,13 @@ func main() {
 		log.Fatalf("index.New(%q): %v", indexURL, err)
 	}
 
-	mw := middleware.Timeout(makeNewVersionsTimeout)
+	handlerTimeout, err := strconv.Atoi(timeout)
+	if err != nil {
+		fmt.Errorf("strconv.Atoi(%q): %v", timeout, err)
+	}
+	mw := middleware.Timeout(time.Duration(handlerTimeout) * time.Minute)
 	http.Handle("/new/", mw(makeNewVersionsHandler(db, idxClient, *workers)))
+	http.Handle("/retry/", mw(makeRetryVersionsHandler(db, *workers)))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Hello, Go Discovery Cron!")
 	})
