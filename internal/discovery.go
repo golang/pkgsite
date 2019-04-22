@@ -20,18 +20,20 @@ type License struct {
 	Contents []byte
 }
 
-// A Version is a specific, reproducible build of a module.
-type Version struct {
+// VersionInfo holds metadata associated with a version.
+type VersionInfo struct {
 	SeriesPath  string
 	ModulePath  string
 	Version     string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	Synopsis    string
 	CommitTime  time.Time
 	ReadMe      []byte
 	VersionType VersionType
-	Packages    []*Package
+}
+
+// A Version is a specific, reproducible build of a module.
+type Version struct {
+	VersionInfo
+	Packages []*Package
 }
 
 // A Package is a group of one or more Go source files with the same package
@@ -40,10 +42,16 @@ type Package struct {
 	Path     string
 	Name     string
 	Synopsis string
-	Suffix   string // if my.module/v2/A/B is the path, A/B is the package suffix
-	Version  *Version
+	Suffix   string         // if my.module/v2/A/B is the path, A/B is the package suffix
 	Licenses []*LicenseInfo // path to applicable version licenses
 	Imports  []*Import
+}
+
+// VersionedPackage is a Package along with its corresponding version
+// information.
+type VersionedPackage struct {
+	Package
+	VersionInfo
 }
 
 // An Import represents a package that is imported by another package.

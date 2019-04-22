@@ -142,13 +142,15 @@ func FetchAndInsertVersion(modulePath, version string, proxyClient *proxy.Client
 
 	seriesPath, _, _ := module.SplitPathVersion(modulePath)
 	v := &internal.Version{
-		SeriesPath:  seriesPath,
-		ModulePath:  modulePath,
-		Version:     version,
-		CommitTime:  info.Time,
-		ReadMe:      readme,
-		Packages:    packages,
-		VersionType: versionType,
+		VersionInfo: internal.VersionInfo{
+			SeriesPath:  seriesPath,
+			ModulePath:  modulePath,
+			Version:     version,
+			CommitTime:  info.Time,
+			ReadMe:      readme,
+			VersionType: versionType,
+		},
+		Packages: packages,
 	}
 	if err = db.InsertVersion(ctx, v, licenses); err != nil {
 		return fmt.Errorf("db.InsertVersion for %q %q: %v", modulePath, version, err)

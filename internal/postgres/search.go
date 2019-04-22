@@ -67,7 +67,7 @@ type SearchResult struct {
 	NumImportedBy uint64
 
 	// Package is the package data corresponding to this SearchResult.
-	Package *internal.Package
+	Package *internal.VersionedPackage
 
 	// Total is the total number of packages that were returned for this search.
 	Total uint64
@@ -153,12 +153,14 @@ func (db *DB) Search(ctx context.Context, terms []string, limit, offset int) ([]
 			Rank:          rank,
 			NumImportedBy: numImportedBy,
 			Total:         total,
-			Package: &internal.Package{
-				Name:     name,
-				Path:     path,
-				Synopsis: synopsis,
-				Licenses: lics,
-				Version: &internal.Version{
+			Package: &internal.VersionedPackage{
+				Package: internal.Package{
+					Name:     name,
+					Path:     path,
+					Synopsis: synopsis,
+					Licenses: lics,
+				},
+				VersionInfo: internal.VersionInfo{
 					ModulePath: modulePath,
 					Version:    version,
 					CommitTime: commitTime,

@@ -31,14 +31,14 @@ func TestFetchAndInsertVersion(t *testing.T) {
 	testCases := []struct {
 		modulePath  string
 		version     string
-		versionData *internal.Version
+		versionData *internal.VersionInfo
 		pkg         string
 		pkgData     *internal.Package
 	}{
 		{
 			modulePath: "my.mod/module",
 			version:    "v1.0.0",
-			versionData: &internal.Version{
+			versionData: &internal.VersionInfo{
 				SeriesPath: "my.mod/module",
 				ModulePath: "my.mod/module",
 				Version:    "v1.0.0",
@@ -50,6 +50,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				Path:     "my.mod/module/bar",
 				Name:     "bar",
 				Synopsis: "package bar",
+				Suffix:   "bar",
 				Licenses: []*internal.LicenseInfo{
 					{Type: "BSD-3-Clause", FilePath: "my.mod/module@v1.0.0/LICENSE"},
 					{Type: "MIT", FilePath: "my.mod/module@v1.0.0/bar/LICENSE"},
@@ -77,10 +78,6 @@ func TestFetchAndInsertVersion(t *testing.T) {
 
 			// create a clone of dbVersion, as we want to use it for package testing later.
 			got := *dbVersion
-			// Set CreatedAt and UpdatedAt to nil for testing, since these are
-			// set by the database.
-			got.CreatedAt = time.Time{}
-			got.UpdatedAt = time.Time{}
 
 			// got.CommitTime has a timezone location of +0000, while
 			// test.versionData.CommitTime has a timezone location of UTC.
@@ -92,9 +89,6 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				t.Errorf("db.GetVersion(ctx, %q, %q) mismatch (-got +want):\n%s", test.modulePath, test.version, diff)
 			}
 
-			test.pkgData.Version = dbVersion
-			// TODO(b/130367504): this shouldn't be necessary
-			test.pkgData.Version.Synopsis = test.pkgData.Synopsis
 			gotPkg, err := db.GetPackage(ctx, test.pkg, test.version)
 			if err != nil {
 				t.Fatalf("db.GetPackage(ctx, %q, %q): %v", test.pkg, test.version, err)
@@ -103,7 +97,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			sort.Slice(gotPkg.Licenses, func(i, j int) bool {
 				return gotPkg.Licenses[i].Type < gotPkg.Licenses[j].Type
 			})
-			if diff := cmp.Diff(test.pkgData, gotPkg); diff != "" {
+			if diff := cmp.Diff(test.pkgData, &gotPkg.Package); diff != "" {
 				t.Errorf("db.GetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", test.pkg, test.version, diff)
 			}
 		})

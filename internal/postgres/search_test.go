@@ -37,21 +37,25 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 			}
 		})
 
-		pkgFoo = &internal.Package{
-			Name:     "foo",
-			Path:     "/path/to/foo",
-			Synopsis: "foo",
-			Version: &internal.Version{
+		pkgFoo = &internal.VersionedPackage{
+			Package: internal.Package{
+				Name:     "foo",
+				Path:     "/path/to/foo",
+				Synopsis: "foo",
+			},
+			VersionInfo: internal.VersionInfo{
 				ModulePath: versionFoo.ModulePath,
 				Version:    versionFoo.Version,
 				CommitTime: versionFoo.CommitTime,
 			},
 		}
-		pkgBar = &internal.Package{
-			Name:     "bar",
-			Path:     "/path/to/bar",
-			Synopsis: "bar is bar",
-			Version: &internal.Version{
+		pkgBar = &internal.VersionedPackage{
+			Package: internal.Package{
+				Name:     "bar",
+				Path:     "/path/to/bar",
+				Synopsis: "bar is bar",
+			},
+			VersionInfo: internal.VersionInfo{
 				ModulePath: versionBar.ModulePath,
 				Version:    versionBar.Version,
 				CommitTime: versionBar.CommitTime,

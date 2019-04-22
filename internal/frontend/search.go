@@ -78,11 +78,11 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, limit, 
 		results = append(results, &SearchResult{
 			Name:          r.Package.Name,
 			PackagePath:   r.Package.Path,
-			ModulePath:    r.Package.Version.ModulePath,
-			Synopsis:      r.Package.Synopsis,
-			Version:       r.Package.Version.Version,
+			ModulePath:    r.Package.VersionInfo.ModulePath,
+			Synopsis:      r.Package.Package.Synopsis,
+			Version:       r.Package.VersionInfo.Version,
 			Licenses:      r.Package.Licenses,
-			CommitTime:    elapsedTime(r.Package.Version.CommitTime),
+			CommitTime:    elapsedTime(r.Package.VersionInfo.CommitTime),
 			NumImportedBy: r.NumImportedBy,
 		})
 	}

@@ -22,12 +22,14 @@ func TestFetchSearchPage(t *testing.T) {
 		seriesPath = "myseries"
 		modulePath = "github.com/valid_module_name"
 		versionFoo = &internal.Version{
-			SeriesPath:  seriesPath,
-			ModulePath:  modulePath,
-			Version:     "v1.0.0",
-			ReadMe:      []byte("readme"),
-			CommitTime:  now,
-			VersionType: internal.VersionTypeRelease,
+			VersionInfo: internal.VersionInfo{
+				SeriesPath:  seriesPath,
+				ModulePath:  modulePath,
+				Version:     "v1.0.0",
+				ReadMe:      []byte("readme"),
+				CommitTime:  now,
+				VersionType: internal.VersionTypeRelease,
+			},
 			Packages: []*internal.Package{
 				&internal.Package{
 					Name:     "foo",
@@ -38,12 +40,14 @@ func TestFetchSearchPage(t *testing.T) {
 			},
 		}
 		versionBar = &internal.Version{
-			SeriesPath:  seriesPath,
-			ModulePath:  modulePath,
-			Version:     "v1.0.0",
-			ReadMe:      []byte("readme"),
-			CommitTime:  now,
-			VersionType: internal.VersionTypeRelease,
+			VersionInfo: internal.VersionInfo{
+				SeriesPath:  seriesPath,
+				ModulePath:  modulePath,
+				Version:     "v1.0.0",
+				ReadMe:      []byte("readme"),
+				CommitTime:  now,
+				VersionType: internal.VersionTypeRelease,
+			},
 			Packages: []*internal.Package{
 				&internal.Package{
 					Name:     "bar",

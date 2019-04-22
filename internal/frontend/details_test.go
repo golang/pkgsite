@@ -7,6 +7,7 @@ package frontend
 import (
 	"context"
 	"html/template"
+	"strings"
 	"testing"
 	"time"
 
@@ -42,14 +43,15 @@ var (
 		Licenses: sampleLicenseInfos,
 	}
 	sampleInternalVersion = &internal.Version{
-		SeriesPath:  "series",
-		ModulePath:  "test.com/module",
-		Version:     "v1.0.0",
-		Synopsis:    "test synopsis",
-		CommitTime:  time.Now().Add(time.Hour * -8),
-		ReadMe:      []byte("This is the readme text."),
-		Packages:    []*internal.Package{sampleInternalPackage},
-		VersionType: internal.VersionTypeRelease,
+		VersionInfo: internal.VersionInfo{
+			SeriesPath:  "series",
+			ModulePath:  "test.com/module",
+			Version:     "v1.0.0",
+			CommitTime:  time.Now().Add(time.Hour * -8),
+			ReadMe:      []byte("This is the readme text."),
+			VersionType: internal.VersionTypeRelease,
+		},
+		Packages: []*internal.Package{sampleInternalPackage},
 	}
 	samplePackage = &Package{
 		Name:       "pkg_name",
@@ -150,21 +152,25 @@ func TestFetchOverviewDetails(t *testing.T) {
 }
 
 func getTestVersion(pkgPath, modulePath, version string, versionType internal.VersionType) *internal.Version {
+	suffix := strings.TrimPrefix(strings.TrimPrefix(pkgPath, modulePath), "/")
 	return &internal.Version{
-		SeriesPath: "test.com/module",
-		ModulePath: modulePath,
-		Version:    version,
-		CommitTime: time.Now().Add(time.Hour * -8),
-		ReadMe:     []byte("This is the readme text."),
+		VersionInfo: internal.VersionInfo{
+			SeriesPath:  "test.com/module",
+			ModulePath:  modulePath,
+			Version:     version,
+			CommitTime:  time.Now().Add(time.Hour * -8),
+			ReadMe:      []byte("This is the readme text."),
+			VersionType: versionType,
+		},
 		Packages: []*internal.Package{
 			&internal.Package{
 				Name:     "pkg_name",
 				Path:     pkgPath,
 				Synopsis: "test synopsis",
 				Licenses: sampleLicenseInfos,
+				Suffix:   suffix,
 			},
 		},
-		VersionType: versionType,
 	}
 }
 
@@ -447,21 +453,23 @@ func TestFetchModuleDetails(t *testing.T) {
 }
 
 func TestCreatePackageHeader(t *testing.T) {
-	var version = &internal.Version{
+	versionInfo := internal.VersionInfo{
 		Version: "v1.0.0",
 	}
 	for _, tc := range []struct {
-		pkg     *internal.Package
+		pkg     *internal.VersionedPackage
 		wantPkg *Package
 	}{
 		{
-			pkg: &internal.Package{
-				Version: version,
-				Name:    "foo",
-				Path:    "pa.th/to/foo",
+			pkg: &internal.VersionedPackage{
+				Package: internal.Package{
+					Name: "foo",
+					Path: "pa.th/to/foo",
+				},
+				VersionInfo: versionInfo,
 			},
 			wantPkg: &Package{
-				Version:    version.Version,
+				Version:    versionInfo.Version,
 				Name:       "foo",
 				Title:      "Package foo",
 				Path:       "pa.th/to/foo",
@@ -470,13 +478,15 @@ func TestCreatePackageHeader(t *testing.T) {
 			},
 		},
 		{
-			pkg: &internal.Package{
-				Version: version,
-				Name:    "main",
-				Path:    "pa.th/to/foo",
+			pkg: &internal.VersionedPackage{
+				Package: internal.Package{
+					Name: "main",
+					Path: "pa.th/to/foo",
+				},
+				VersionInfo: versionInfo,
 			},
 			wantPkg: &Package{
-				Version:    version.Version,
+				Version:    versionInfo.Version,
 				Name:       "foo",
 				Title:      "Command foo",
 				Path:       "pa.th/to/foo",
@@ -485,13 +495,15 @@ func TestCreatePackageHeader(t *testing.T) {
 			},
 		},
 		{
-			pkg: &internal.Package{
-				Version: version,
-				Name:    "main",
-				Path:    "pa.th/to/foo/v2",
+			pkg: &internal.VersionedPackage{
+				Package: internal.Package{
+					Name: "main",
+					Path: "pa.th/to/foo/v2",
+				},
+				VersionInfo: versionInfo,
 			},
 			wantPkg: &Package{
-				Version:    version.Version,
+				Version:    versionInfo.Version,
 				Name:       "foo",
 				Title:      "Command foo",
 				Path:       "pa.th/to/foo/v2",
@@ -500,13 +512,15 @@ func TestCreatePackageHeader(t *testing.T) {
 			},
 		},
 		{
-			pkg: &internal.Package{
-				Version: version,
-				Name:    "main",
-				Path:    "pa.th/to/foo/v1",
+			pkg: &internal.VersionedPackage{
+				Package: internal.Package{
+					Name: "main",
+					Path: "pa.th/to/foo/v1",
+				},
+				VersionInfo: versionInfo,
 			},
 			wantPkg: &Package{
-				Version:    version.Version,
+				Version:    versionInfo.Version,
 				Name:       "foo",
 				Title:      "Command foo",
 				Path:       "pa.th/to/foo/v1",

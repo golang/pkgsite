@@ -37,11 +37,14 @@ var (
 
 func sampleVersion(mutators ...func(*internal.Version)) *internal.Version {
 	v := &internal.Version{
-		SeriesPath: sampleSeriesPath,
-		ModulePath: sampleModulePath,
-		Version:    sampleVersionString,
-		ReadMe:     []byte("readme"),
-		CommitTime: now,
+		VersionInfo: internal.VersionInfo{
+			SeriesPath:  sampleSeriesPath,
+			ModulePath:  sampleModulePath,
+			Version:     sampleVersionString,
+			ReadMe:      []byte("readme"),
+			CommitTime:  now,
+			VersionType: internal.VersionTypeRelease,
+		},
 		Packages: []*internal.Package{
 			&internal.Package{
 				Name:     "foo",
@@ -59,7 +62,6 @@ func sampleVersion(mutators ...func(*internal.Version)) *internal.Version {
 				},
 			},
 		},
-		VersionType: internal.VersionTypeRelease,
 	}
 	for _, mut := range mutators {
 		mut(v)
@@ -280,9 +282,11 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 				t.Fatalf("db.GetVersion(ctx, %q, %q) = %v, want %v", tc.getModule, tc.getVersion, got, tc.version)
 			}
 
-			if diff := cmp.Diff(tc.version, got, cmpopts.IgnoreFields(internal.Version{},
-				"CreatedAt", "UpdatedAt", "VersionType", "Packages")); !tc.wantReadErr && diff != "" {
-				t.Errorf("db.GetVersion(ctx, %q, %q) mismatch (-want +got):\n%s", tc.getModule, tc.getVersion, diff)
+			if tc.version != nil {
+				if diff := cmp.Diff(&tc.version.VersionInfo, got, cmpopts.IgnoreFields(internal.VersionInfo{},
+					"VersionType")); !tc.wantReadErr && diff != "" {
+					t.Errorf("db.GetVersion(ctx, %q, %q) mismatch (-want +got):\n%s", tc.getModule, tc.getVersion, diff)
+				}
 			}
 
 			gotPkg, err := db.GetPackage(ctx, tc.getPkg, tc.getVersion)
@@ -301,11 +305,11 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 				t.Fatalf("db.GetPackage(ctx, %q, %q) = %v, want %v", tc.getPkg, tc.getVersion, gotPkg, wantPkg)
 			}
 
-			if gotPkg.Version.Version != tc.version.Version {
-				t.Errorf("db.GetPackage(ctx, %q, %q) version.version = %v, want %v", tc.getPkg, tc.getVersion, gotPkg.Version.Version, tc.version.Version)
+			if gotPkg.VersionInfo.Version != tc.version.Version {
+				t.Errorf("db.GetPackage(ctx, %q, %q) version.version = %v, want %v", tc.getPkg, tc.getVersion, gotPkg.VersionInfo.Version, tc.version.Version)
 			}
 
-			if diff := cmp.Diff(gotPkg, wantPkg, cmpopts.IgnoreFields(internal.Package{}, "Version", "Imports")); diff != "" {
+			if diff := cmp.Diff(wantPkg, &gotPkg.Package, cmpopts.IgnoreFields(internal.Package{}, "Imports")); diff != "" {
 				t.Errorf("db.GetPackage(%q, %q) Package mismatch (-want +got):\n%s", tc.getPkg, tc.getVersion, diff)
 			}
 		})
@@ -330,31 +334,37 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 		modulePath   = "path.to/foo"
 		testVersions = []*internal.Version{
 			&internal.Version{
-				SeriesPath:  seriesPath,
-				ModulePath:  modulePath,
-				Version:     "v1.0.0-alpha.1",
-				ReadMe:      []byte("readme"),
-				CommitTime:  now,
-				Packages:    []*internal.Package{pkg},
-				VersionType: internal.VersionTypePrerelease,
+				VersionInfo: internal.VersionInfo{
+					SeriesPath:  seriesPath,
+					ModulePath:  modulePath,
+					Version:     "v1.0.0-alpha.1",
+					ReadMe:      []byte("readme"),
+					CommitTime:  now,
+					VersionType: internal.VersionTypePrerelease,
+				},
+				Packages: []*internal.Package{pkg},
 			},
 			&internal.Version{
-				SeriesPath:  seriesPath,
-				ModulePath:  modulePath,
-				Version:     "v1.0.0",
-				ReadMe:      []byte("readme"),
-				CommitTime:  now,
-				Packages:    []*internal.Package{pkg},
-				VersionType: internal.VersionTypeRelease,
+				VersionInfo: internal.VersionInfo{
+					SeriesPath:  seriesPath,
+					ModulePath:  modulePath,
+					Version:     "v1.0.0",
+					ReadMe:      []byte("readme"),
+					CommitTime:  now,
+					VersionType: internal.VersionTypeRelease,
+				},
+				Packages: []*internal.Package{pkg},
 			},
 			&internal.Version{
-				SeriesPath:  seriesPath,
-				ModulePath:  modulePath,
-				Version:     "v1.0.0-20190311183353-d8887717615a",
-				ReadMe:      []byte("readme"),
-				CommitTime:  now,
-				Packages:    []*internal.Package{pkg},
-				VersionType: internal.VersionTypePseudo,
+				VersionInfo: internal.VersionInfo{
+					SeriesPath:  seriesPath,
+					ModulePath:  modulePath,
+					Version:     "v1.0.0-20190311183353-d8887717615a",
+					ReadMe:      []byte("readme"),
+					CommitTime:  now,
+					VersionType: internal.VersionTypePseudo,
+				},
+				Packages: []*internal.Package{pkg},
 			},
 		}
 	)
@@ -362,25 +372,24 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 	testCases := []struct {
 		name, path  string
 		versions    []*internal.Version
-		wantPkg     *internal.Package
+		wantPkg     *internal.VersionedPackage
 		wantReadErr bool
 	}{
 		{
 			name:     "want_second_package",
 			path:     pkg.Path,
 			versions: testVersions,
-			wantPkg: &internal.Package{
-				Name:     pkg.Name,
-				Path:     pkg.Path,
-				Synopsis: pkg.Synopsis,
-				Licenses: sampleLicenseInfos,
-				Version: &internal.Version{
+			wantPkg: &internal.VersionedPackage{
+				Package: internal.Package{
+					Name:     pkg.Name,
+					Path:     pkg.Path,
+					Synopsis: pkg.Synopsis,
+					Licenses: sampleLicenseInfos,
+				},
+				VersionInfo: internal.VersionInfo{
 					SeriesPath: seriesPath,
-					CreatedAt:  testVersions[1].CreatedAt,
-					UpdatedAt:  testVersions[1].UpdatedAt,
 					ModulePath: testVersions[1].ModulePath,
 					Version:    testVersions[1].Version,
-					Synopsis:   testVersions[1].Synopsis,
 					CommitTime: testVersions[1].CommitTime,
 				},
 			},
@@ -405,7 +414,7 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 				t.Errorf("db.GetLatestPackage(ctx, %q): %v", tc.path, err)
 			}
 
-			if diff := cmp.Diff(gotPkg, tc.wantPkg, cmpopts.IgnoreFields(internal.Package{}, "Version.UpdatedAt", "Version.CreatedAt")); diff != "" {
+			if diff := cmp.Diff(gotPkg, tc.wantPkg); diff != "" {
 				t.Errorf("db.GetLatestPackage(ctx, %q) mismatch (-got +want):\n%s",
 					tc.path, diff)
 			}
@@ -453,31 +462,37 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 		modulePath3  = "path3.to/foo"
 		testVersions = []*internal.Version{
 			&internal.Version{
-				SeriesPath:  seriesPath,
-				ModulePath:  modulePath1,
-				Version:     "v1.1.0",
-				ReadMe:      []byte("readme"),
-				CommitTime:  now,
-				Packages:    []*internal.Package{pkg1},
-				VersionType: internal.VersionTypePrerelease,
+				VersionInfo: internal.VersionInfo{
+					SeriesPath:  seriesPath,
+					ModulePath:  modulePath1,
+					Version:     "v1.1.0",
+					ReadMe:      []byte("readme"),
+					CommitTime:  now,
+					VersionType: internal.VersionTypePrerelease,
+				},
+				Packages: []*internal.Package{pkg1},
 			},
 			&internal.Version{
-				SeriesPath:  seriesPath,
-				ModulePath:  modulePath2,
-				Version:     "v1.2.0",
-				ReadMe:      []byte("readme"),
-				CommitTime:  now,
-				Packages:    []*internal.Package{pkg2},
-				VersionType: internal.VersionTypePseudo,
+				VersionInfo: internal.VersionInfo{
+					SeriesPath:  seriesPath,
+					ModulePath:  modulePath2,
+					Version:     "v1.2.0",
+					ReadMe:      []byte("readme"),
+					CommitTime:  now,
+					VersionType: internal.VersionTypePseudo,
+				},
+				Packages: []*internal.Package{pkg2},
 			},
 			&internal.Version{
-				SeriesPath:  seriesPath,
-				ModulePath:  modulePath3,
-				Version:     "v1.3.0",
-				ReadMe:      []byte("readme"),
-				CommitTime:  now,
-				Packages:    []*internal.Package{pkg3},
-				VersionType: internal.VersionTypePseudo,
+				VersionInfo: internal.VersionInfo{
+					SeriesPath:  seriesPath,
+					ModulePath:  modulePath3,
+					Version:     "v1.3.0",
+					ReadMe:      []byte("readme"),
+					CommitTime:  now,
+					VersionType: internal.VersionTypePseudo,
+				},
+				Packages: []*internal.Package{pkg3},
 			},
 		}
 	)
@@ -731,44 +746,54 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 		modulePath3  = "path.to/some/thing"
 		testVersions = []*internal.Version{
 			&internal.Version{
-				SeriesPath:  seriesPath,
-				ModulePath:  modulePath3,
-				Version:     "v3.0.0",
-				CommitTime:  now,
-				Packages:    []*internal.Package{pkg3},
-				VersionType: internal.VersionTypeRelease,
+				VersionInfo: internal.VersionInfo{
+					SeriesPath:  seriesPath,
+					ModulePath:  modulePath3,
+					Version:     "v3.0.0",
+					CommitTime:  now,
+					VersionType: internal.VersionTypeRelease,
+				},
+				Packages: []*internal.Package{pkg3},
 			},
 			&internal.Version{
-				SeriesPath:  seriesPath,
-				ModulePath:  modulePath1,
-				Version:     "v1.0.0-alpha.1",
-				CommitTime:  now,
-				Packages:    []*internal.Package{pkg1},
-				VersionType: internal.VersionTypePrerelease,
+				VersionInfo: internal.VersionInfo{
+					SeriesPath:  seriesPath,
+					ModulePath:  modulePath1,
+					Version:     "v1.0.0-alpha.1",
+					CommitTime:  now,
+					VersionType: internal.VersionTypePrerelease,
+				},
+				Packages: []*internal.Package{pkg1},
 			},
 			&internal.Version{
-				SeriesPath:  seriesPath,
-				ModulePath:  modulePath1,
-				Version:     "v1.0.0",
-				CommitTime:  now,
-				Packages:    []*internal.Package{pkg1},
-				VersionType: internal.VersionTypeRelease,
+				VersionInfo: internal.VersionInfo{
+					SeriesPath:  seriesPath,
+					ModulePath:  modulePath1,
+					Version:     "v1.0.0",
+					CommitTime:  now,
+					VersionType: internal.VersionTypeRelease,
+				},
+				Packages: []*internal.Package{pkg1},
 			},
 			&internal.Version{
-				SeriesPath:  seriesPath,
-				ModulePath:  modulePath2,
-				Version:     "v2.0.1-beta",
-				CommitTime:  now,
-				Packages:    []*internal.Package{pkg2},
-				VersionType: internal.VersionTypePrerelease,
+				VersionInfo: internal.VersionInfo{
+					SeriesPath:  seriesPath,
+					ModulePath:  modulePath2,
+					Version:     "v2.0.1-beta",
+					CommitTime:  now,
+					VersionType: internal.VersionTypePrerelease,
+				},
+				Packages: []*internal.Package{pkg2},
 			},
 			&internal.Version{
-				SeriesPath:  seriesPath,
-				ModulePath:  modulePath2,
-				Version:     "v2.1.0",
-				CommitTime:  now,
-				Packages:    []*internal.Package{pkg2},
-				VersionType: internal.VersionTypeRelease,
+				VersionInfo: internal.VersionInfo{
+					SeriesPath:  seriesPath,
+					ModulePath:  modulePath2,
+					Version:     "v2.1.0",
+					CommitTime:  now,
+					VersionType: internal.VersionTypeRelease,
+				},
+				Packages: []*internal.Package{pkg2},
 			},
 		}
 	)
@@ -777,65 +802,37 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 		name, path         string
 		numPseudo          int
 		versions           []*internal.Version
-		wantTaggedVersions []*internal.Version
+		wantTaggedVersions []*internal.VersionInfo
 	}{
 		{
 			name:      "want_releases_and_prereleases_only",
 			path:      "path.to/foo/bar",
 			numPseudo: 12,
 			versions:  testVersions,
-			wantTaggedVersions: []*internal.Version{
-				&internal.Version{
+			wantTaggedVersions: []*internal.VersionInfo{
+				&internal.VersionInfo{
 					SeriesPath: seriesPath,
 					ModulePath: modulePath2,
 					Version:    "v2.1.0",
-					Synopsis:   pkg2.Synopsis,
 					CommitTime: now,
-					Packages: []*internal.Package{
-						&internal.Package{
-							Path: pkg2.Path,
-							Name: pkg2.Name,
-						},
-					},
 				},
-				&internal.Version{
+				&internal.VersionInfo{
 					SeriesPath: seriesPath,
 					ModulePath: modulePath2,
 					Version:    "v2.0.1-beta",
-					Synopsis:   pkg2.Synopsis,
 					CommitTime: now,
-					Packages: []*internal.Package{
-						&internal.Package{
-							Path: pkg2.Path,
-							Name: pkg2.Name,
-						},
-					},
 				},
-				&internal.Version{
+				&internal.VersionInfo{
 					SeriesPath: seriesPath,
 					ModulePath: modulePath1,
 					Version:    "v1.0.0",
-					Synopsis:   pkg1.Synopsis,
 					CommitTime: now,
-					Packages: []*internal.Package{
-						&internal.Package{
-							Path: pkg1.Path,
-							Name: pkg1.Name,
-						},
-					},
 				},
-				&internal.Version{
+				&internal.VersionInfo{
 					SeriesPath: seriesPath,
 					ModulePath: modulePath1,
 					Version:    "v1.0.0-alpha.1",
-					Synopsis:   pkg1.Synopsis,
 					CommitTime: now,
-					Packages: []*internal.Package{
-						&internal.Package{
-							Path: pkg1.Path,
-							Name: pkg1.Name,
-						},
-					},
 				},
 			},
 		},
@@ -855,16 +852,18 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 			teardownTestCase, db := SetupCleanDB(t)
 			defer teardownTestCase(t)
 
-			wantPseudoVersions := []*internal.Version{}
+			wantPseudoVersions := []*internal.VersionInfo{}
 			for i := 0; i < tc.numPseudo; i++ {
 				v := &internal.Version{
-					SeriesPath: seriesPath,
-					ModulePath: modulePath1,
-					// %02d makes a string that is a width of 2 and left pads with zeroes
-					Version:     fmt.Sprintf("v0.0.0-201806111833%02d-d8887717615a", i+1),
-					CommitTime:  now,
-					Packages:    []*internal.Package{pkg1},
-					VersionType: internal.VersionTypePseudo,
+					VersionInfo: internal.VersionInfo{
+						SeriesPath: seriesPath,
+						ModulePath: modulePath1,
+						// %02d makes a string that is a width of 2 and left pads with zeroes
+						Version:     fmt.Sprintf("v0.0.0-201806111833%02d-d8887717615a", i+1),
+						CommitTime:  now,
+						VersionType: internal.VersionTypePseudo,
+					},
+					Packages: []*internal.Package{pkg1},
 				}
 				if err := db.InsertVersion(ctx, v, nil); err != nil {
 					t.Errorf("db.InsertVersion(%v): %v", v, err)
@@ -873,18 +872,11 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 				// GetPseudoVersions should only return the 10 most recent pseudo versions,
 				// if there are more than 10 in the database
 				if i < 10 {
-					wantPseudoVersions = append(wantPseudoVersions, &internal.Version{
+					wantPseudoVersions = append(wantPseudoVersions, &internal.VersionInfo{
 						SeriesPath: seriesPath,
 						ModulePath: modulePath1,
 						Version:    fmt.Sprintf("v0.0.0-201806111833%02d-d8887717615a", tc.numPseudo-i),
-						Synopsis:   pkg1.Synopsis,
 						CommitTime: now,
-						Packages: []*internal.Package{
-							&internal.Package{
-								Path: pkg1.Path,
-								Name: pkg1.Name,
-							},
-						},
 					})
 				}
 			}
@@ -896,7 +888,7 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 			}
 
 			var (
-				got []*internal.Version
+				got []*internal.VersionInfo
 				err error
 			)
 
@@ -910,7 +902,7 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 			}
 
 			for i, v := range got {
-				if diff := cmp.Diff(wantPseudoVersions[i], v, cmpopts.IgnoreFields(internal.Version{}, "CreatedAt", "UpdatedAt", "VersionType", "Packages")); diff != "" {
+				if diff := cmp.Diff(wantPseudoVersions[i], v, cmpopts.IgnoreFields(internal.VersionInfo{}, "VersionType")); diff != "" {
 					t.Errorf("db.GetPseudoVersionsForPackageSeries(%q) mismatch (-want +got):\n%s", tc.path, diff)
 				}
 			}
@@ -926,8 +918,8 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 
 			for i, v := range got {
 
-				if diff := cmp.Diff(tc.wantTaggedVersions[i], v, cmpopts.IgnoreFields(internal.Version{},
-					"CreatedAt", "UpdatedAt", "VersionType", "Packages")); diff != "" {
+				if diff := cmp.Diff(tc.wantTaggedVersions[i], v, cmpopts.IgnoreFields(internal.VersionInfo{},
+					"VersionType")); diff != "" {
 					t.Errorf("db.GetTaggedVersionsForPackageSeries(%q) mismatch (-want +got):\n%s", tc.path, diff)
 				}
 			}
@@ -993,12 +985,14 @@ func TestGetVersionForPackage(t *testing.T) {
 		seriesPath  = "myseries"
 		modulePath  = "test.module"
 		testVersion = &internal.Version{
-			SeriesPath:  seriesPath,
-			ModulePath:  modulePath,
-			Version:     "v1.0.0",
-			ReadMe:      []byte("readme"),
-			CommitTime:  now,
-			VersionType: internal.VersionTypeRelease,
+			VersionInfo: internal.VersionInfo{
+				SeriesPath:  seriesPath,
+				ModulePath:  modulePath,
+				Version:     "v1.0.0",
+				ReadMe:      []byte("readme"),
+				CommitTime:  now,
+				VersionType: internal.VersionTypeRelease,
+			},
 			Packages: []*internal.Package{
 				&internal.Package{
 					Name:     "foo",
@@ -1054,12 +1048,14 @@ func TestGetLicenses(t *testing.T) {
 		seriesPath  = "myseries"
 		modulePath  = "test.module"
 		testVersion = &internal.Version{
-			SeriesPath:  seriesPath,
-			ModulePath:  modulePath,
-			Version:     "v1.0.0",
-			ReadMe:      []byte("readme"),
-			CommitTime:  now,
-			VersionType: internal.VersionTypeRelease,
+			VersionInfo: internal.VersionInfo{
+				SeriesPath:  seriesPath,
+				ModulePath:  modulePath,
+				Version:     "v1.0.0",
+				ReadMe:      []byte("readme"),
+				CommitTime:  now,
+				VersionType: internal.VersionTypeRelease,
+			},
 			Packages: []*internal.Package{
 				&internal.Package{
 					Name:     "foo",

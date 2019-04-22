@@ -141,12 +141,9 @@ func transformLicenseInfos(dbLicenses []*internal.LicenseInfo) []LicenseInfo {
 
 // createPackageHeader returns a *Package based on the fields of the specified
 // package. It assumes that pkg and pkg.Version are not nil.
-func createPackageHeader(pkg *internal.Package) (*Package, error) {
+func createPackageHeader(pkg *internal.VersionedPackage) (*Package, error) {
 	if pkg == nil {
 		return nil, fmt.Errorf("package cannot be nil")
-	}
-	if pkg.Version == nil {
-		return nil, fmt.Errorf("package's version cannot be nil")
 	}
 
 	var isCmd bool
@@ -158,11 +155,11 @@ func createPackageHeader(pkg *internal.Package) (*Package, error) {
 		Name:       name,
 		IsCommand:  isCmd,
 		Title:      packageTitle(name, isCmd),
-		Version:    pkg.Version.Version,
+		Version:    pkg.VersionInfo.Version,
 		Path:       pkg.Path,
-		Synopsis:   pkg.Synopsis,
+		Synopsis:   pkg.Package.Synopsis,
 		Licenses:   transformLicenseInfos(pkg.Licenses),
-		CommitTime: elapsedTime(pkg.Version.CommitTime),
+		CommitTime: elapsedTime(pkg.VersionInfo.CommitTime),
 	}, nil
 }
 
@@ -253,8 +250,8 @@ func fetchOverviewDetails(ctx context.Context, db *postgres.DB, path, version st
 	return &DetailsPage{
 		PackageHeader: pkgHeader,
 		Details: &OverviewDetails{
-			ModulePath: pkg.Version.ModulePath,
-			ReadMe:     readmeHTML(pkg.Version.ReadMe),
+			ModulePath: pkg.VersionInfo.ModulePath,
+			ReadMe:     readmeHTML(pkg.VersionInfo.ReadMe),
 		},
 	}, nil
 }
@@ -297,11 +294,11 @@ func fetchModuleDetails(ctx context.Context, db *postgres.DB, pkgPath, pkgversio
 		})
 
 		if p.Path == pkgPath {
-			p.Version = &internal.Version{
-				Version:    version.Version,
-				CommitTime: version.CommitTime,
+			vp := &internal.VersionedPackage{
+				Package:     *p,
+				VersionInfo: version.VersionInfo,
 			}
-			pkgHeader, err = createPackageHeader(p)
+			pkgHeader, err = createPackageHeader(vp)
 			if err != nil {
 				return nil, fmt.Errorf("createPackageHeader(%+v): %v", p, err)
 			}
@@ -322,6 +319,15 @@ func fetchModuleDetails(ctx context.Context, db *postgres.DB, pkgPath, pkgversio
 // fetchVersionsDetails fetches data for the module version specified by path and version
 // from the database and returns a VersionsDetails.
 func fetchVersionsDetails(ctx context.Context, db *postgres.DB, path, version string) (*DetailsPage, error) {
+	pkg, err := db.GetPackage(ctx, path, version)
+	if err != nil {
+		return nil, fmt.Errorf("db.GetPackage(ctx, %q, %q): %v", path, version, err)
+	}
+
+	pkgHeader, err := createPackageHeader(pkg)
+	if err != nil {
+		return nil, fmt.Errorf("createPackageHeader(%+v): %v", pkg, err)
+	}
 	versions, err := db.GetTaggedVersionsForPackageSeries(ctx, path)
 	if err != nil {
 		return nil, fmt.Errorf("db.GetTaggedVersions(%q): %v", path, err)
@@ -337,7 +343,6 @@ func fetchVersionsDetails(ctx context.Context, db *postgres.DB, path, version st
 	}
 
 	var (
-		pkgHeader       = &Package{}
 		mvg             = []*MajorVersionGroup{}
 		prevMajor       = ""
 		prevMajMin      = ""
@@ -347,26 +352,13 @@ func fetchVersionsDetails(ctx context.Context, db *postgres.DB, path, version st
 
 	for _, v := range versions {
 		vStr := v.Version
-		if vStr == version {
-			pkg := &internal.Package{
-				Path:     path,
-				Name:     v.Packages[0].Name,
-				Synopsis: v.Synopsis,
-				Licenses: v.Packages[0].Licenses,
-				Version: &internal.Version{
-					Version:    version,
-					CommitTime: v.CommitTime,
-				},
-			}
-			pkgHeader, err = createPackageHeader(pkg)
-			if err != nil {
-				return nil, fmt.Errorf("createPackageHeader(%+v): %v", pkg, err)
-			}
-		}
 
 		major := semver.Major(vStr)
 		majMin := strings.TrimPrefix(semver.MajorMinor(vStr), "v")
 		fullVersion := strings.TrimPrefix(vStr, "v")
+		// It is a bit overly defensive to accept all conventions for leading and
+		// trailing slashes here.
+		pkgPath := strings.TrimSuffix(v.ModulePath, "/") + "/" + strings.TrimPrefix(pkg.Suffix, "/")
 
 		if prevMajor != major {
 			prevMajorIndex = len(mvg)
@@ -375,7 +367,7 @@ func fetchVersionsDetails(ctx context.Context, db *postgres.DB, path, version st
 				Level: major,
 				Latest: &Package{
 					Version:    fullVersion,
-					Path:       v.Packages[0].Path,
+					Path:       pkgPath,
 					CommitTime: elapsedTime(v.CommitTime),
 				},
 				Versions: []*MinorVersionGroup{},
@@ -389,7 +381,7 @@ func fetchVersionsDetails(ctx context.Context, db *postgres.DB, path, version st
 				Level: majMin,
 				Latest: &Package{
 					Version:    fullVersion,
-					Path:       v.Packages[0].Path,
+					Path:       pkgPath,
 					CommitTime: elapsedTime(v.CommitTime),
 				},
 			})
@@ -397,7 +389,7 @@ func fetchVersionsDetails(ctx context.Context, db *postgres.DB, path, version st
 
 		mvg[prevMajorIndex].Versions[prevMajMinIndex].Versions = append(mvg[prevMajorIndex].Versions[prevMajMinIndex].Versions, &Package{
 			Version:    fullVersion,
-			Path:       v.Packages[0].Path,
+			Path:       pkgPath,
 			CommitTime: elapsedTime(v.CommitTime),
 		})
 	}
