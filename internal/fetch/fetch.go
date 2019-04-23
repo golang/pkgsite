@@ -27,17 +27,19 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-// fetchTimeout bounds the time allowed for fetching a single module.  It is
-// mutable for testing purposes.
-var fetchTimeout = 5 * time.Minute
-
 var (
 	errModuleContainsNoPackages = errors.New("module contains 0 packages")
 	errReadmeNotFound           = errors.New("module does not contain a README")
 
-	// maxFileSize is the maximum filesize that is allowed for reading.
-	// If a .go file is encountered that exceeds maxFileSize, the fetch request
-	// will fail.  All other filetypes will be ignored.
+	// fetchTimeout bounds the time allowed for fetching a single module.  It is
+	// mutable for testing purposes.
+	fetchTimeout = 5 * time.Minute
+
+	// maxFileSize is the maximum filesize that is allowed for reading.  If a .go
+	// file is encountered that exceeds maxFileSize, the fetch request will fail.
+	// All other filetypes will be ignored.
+	//
+	// It is mutable for testing purposes.
 	maxFileSize          = uint64(3e7)
 	maxPackagesPerModule = 10000
 	maxImportsPerPackage = 1000
@@ -271,8 +273,7 @@ type licenseMatcher map[string][]internal.LicenseInfo
 func newLicenseMatcher(workDir string, licenses []*internal.License) licenseMatcher {
 	var matcher licenseMatcher = make(map[string][]internal.LicenseInfo)
 	for _, l := range licenses {
-		
-		path := filepath.Join(workDir, l.FilePath)
+		path := filepath.Join(workDir, filepath.FromSlash(l.FilePath))
 		prefix := filepath.ToSlash(filepath.Clean(filepath.Dir(path)))
 		matcher[prefix] = append(matcher[prefix], l.LicenseInfo)
 	}
@@ -355,20 +356,25 @@ func synopsis(p *packages.Package) string {
 	return doc.Synopsis(d.Doc)
 }
 
-// writeFileToDir writes the contents of f to the directory dir.
+// writeFileToDir writes the contents of f to the directory dir.  It returns an
+// error if the file has an invalid path, if the file exceeds the maximum
+// allowable file size, or if there is an error in file extraction.
 func writeFileToDir(f *zip.File, dir string) (err error) {
-	fileDir := filepath.Join(dir, filepath.Dir(f.Name))
+	if err := module.CheckFilePath(f.Name); err != nil {
+		return fmt.Errorf("module.CheckFilePath(%q): %v", f.Name, err)
+	}
+
+	dest := filepath.Clean(filepath.Join(dir, filepath.FromSlash(f.Name)))
+	fileDir := filepath.Dir(dest)
 	if _, err := os.Stat(fileDir); os.IsNotExist(err) {
 		if err := os.MkdirAll(fileDir, os.ModePerm); err != nil {
 			return fmt.Errorf("os.MkdirAll(%q, os.ModePerm): %v", fileDir, err)
 		}
 	}
 
-	
-	filename := filepath.Join(dir, f.Name)
-	file, err := os.Create(filename)
+	file, err := os.Create(dest)
 	if err != nil {
-		return fmt.Errorf("os.Create(%q): %v", filename, err)
+		return fmt.Errorf("os.Create(%q): %v", dest, err)
 	}
 	defer func() {
 		cerr := file.Close()

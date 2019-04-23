@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/licensecheck"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/thirdparty/module"
 )
 
 const (
@@ -39,6 +40,9 @@ func detectLicenses(r *zip.Reader) ([]*internal.License, error) {
 			// Only consider licenses with an acceptable file name, and not in the
 			// vendor directory.
 			continue
+		}
+		if err := module.CheckFilePath(f.Name); err != nil {
+			return nil, fmt.Errorf("module.CheckFilePath(%q): %v", f.Name, err)
 		}
 		if f.UncompressedSize64 > 1e7 {
 			return nil, fmt.Errorf("potential license file %q exceeds maximum uncompressed size %d", f.Name, int(1e7))
