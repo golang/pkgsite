@@ -27,9 +27,6 @@ func NotFound(msg string) error {
 
 // IsNotFound reports whether err is a NotFound error.
 func IsNotFound(err error) bool {
-	if err == nil {
-		return false
-	}
 	_, ok := err.(notFound)
 	return ok
 }
@@ -48,9 +45,6 @@ func InvalidArgument(msg string) error {
 
 // IsInvalidArgument reports whether err is an InvalidArguments error.
 func IsInvalidArgument(err error) bool {
-	if err == nil {
-		return false
-	}
 	_, ok := err.(invalidArgument)
 	return ok
 }
