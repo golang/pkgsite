@@ -468,11 +468,13 @@ func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Printf("error getting package for %s@%s: %v", path, version, err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
 	}
 	pkgHeader, err := createPackageHeader(pkg)
 	if err != nil {
 		log.Printf("error creating package header for %s@%s: %v", path, version, err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
 	}
 
 	tab := r.FormValue("tab")
