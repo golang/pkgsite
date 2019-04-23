@@ -23,12 +23,12 @@ func TestFetchSearchPage(t *testing.T) {
 		modulePath = "github.com/valid_module_name"
 		versionFoo = &internal.Version{
 			VersionInfo: internal.VersionInfo{
-				SeriesPath:  seriesPath,
-				ModulePath:  modulePath,
-				Version:     "v1.0.0",
-				ReadMe:      []byte("readme"),
-				CommitTime:  now,
-				VersionType: internal.VersionTypeRelease,
+				SeriesPath:     seriesPath,
+				ModulePath:     modulePath,
+				Version:        "v1.0.0",
+				ReadmeContents: []byte("readme"),
+				CommitTime:     now,
+				VersionType:    internal.VersionTypeRelease,
 			},
 			Packages: []*internal.Package{
 				&internal.Package{
@@ -41,12 +41,12 @@ func TestFetchSearchPage(t *testing.T) {
 		}
 		versionBar = &internal.Version{
 			VersionInfo: internal.VersionInfo{
-				SeriesPath:  seriesPath,
-				ModulePath:  modulePath,
-				Version:     "v1.0.0",
-				ReadMe:      []byte("readme"),
-				CommitTime:  now,
-				VersionType: internal.VersionTypeRelease,
+				SeriesPath:     seriesPath,
+				ModulePath:     modulePath,
+				Version:        "v1.0.0",
+				ReadmeContents: []byte("readme"),
+				CommitTime:     now,
+				VersionType:    internal.VersionTypeRelease,
 			},
 			Packages: []*internal.Package{
 				&internal.Package{

@@ -44,12 +44,13 @@ var (
 	}
 	sampleInternalVersion = &internal.Version{
 		VersionInfo: internal.VersionInfo{
-			SeriesPath:  "series",
-			ModulePath:  "test.com/module",
-			Version:     "v1.0.0",
-			CommitTime:  time.Now().Add(time.Hour * -8),
-			ReadMe:      []byte("This is the readme text."),
-			VersionType: internal.VersionTypeRelease,
+			SeriesPath:     "series",
+			ModulePath:     "test.com/module",
+			Version:        "v1.0.0",
+			CommitTime:     time.Now().Add(time.Hour * -8),
+			ReadmeFilePath: "README.md",
+			ReadmeContents: []byte("This is the readme text."),
+			VersionType:    internal.VersionTypeRelease,
 		},
 		Packages: []*internal.Package{sampleInternalPackage},
 	}
@@ -155,12 +156,12 @@ func getTestVersion(pkgPath, modulePath, version string, versionType internal.Ve
 	suffix := strings.TrimPrefix(strings.TrimPrefix(pkgPath, modulePath), "/")
 	return &internal.Version{
 		VersionInfo: internal.VersionInfo{
-			SeriesPath:  "test.com/module",
-			ModulePath:  modulePath,
-			Version:     version,
-			CommitTime:  time.Now().Add(time.Hour * -8),
-			ReadMe:      []byte("This is the readme text."),
-			VersionType: versionType,
+			SeriesPath:     "test.com/module",
+			ModulePath:     modulePath,
+			Version:        version,
+			CommitTime:     time.Now().Add(time.Hour * -8),
+			ReadmeContents: []byte("This is the readme text."),
+			VersionType:    versionType,
 		},
 		Packages: []*internal.Package{
 			&internal.Package{
@@ -383,12 +384,13 @@ func TestFetchVersionsDetails(t *testing.T) {
 
 func TestReadmeHTML(t *testing.T) {
 	testCases := []struct {
-		name, readme string
-		want         template.HTML
+		name, readmeFilePath, readmeContents string
+		want                                 template.HTML
 	}{
 		{
-			name: "valid_markdown_readme",
-			readme: "This package collects pithy sayings.\n\n" +
+			name:           "valid markdown readme",
+			readmeFilePath: "README.md",
+			readmeContents: "This package collects pithy sayings.\n\n" +
 				"It's part of a demonstration of\n" +
 				"[package versioning in Go](https://research.swtch.com/vgo1).",
 			want: template.HTML("<p>This package collects pithy sayings.</p>\n\n" +
@@ -396,17 +398,32 @@ func TestReadmeHTML(t *testing.T) {
 				`<a href="https://research.swtch.com/vgo1" rel="nofollow">package versioning in Go</a>.</p>` + "\n"),
 		},
 		{
-			name:   "empty_readme",
-			readme: "",
-			want:   template.HTML(""),
+			name:           "not markdown readme",
+			readmeFilePath: "README.rst",
+			readmeContents: "This package collects pithy sayings.\n\n" +
+				"It's part of a demonstration of\n" +
+				"[package versioning in Go](https://research.swtch.com/vgo1).",
+			want: template.HTML("<pre class=\"readme\">This package collects pithy sayings.\n\nIt&#39;s part of a demonstration of\n[package versioning in Go](https://research.swtch.com/vgo1).</pre>"),
+		},
+		{
+			name:           "empty readme",
+			readmeFilePath: "",
+			readmeContents: "",
+			want:           template.HTML("<pre class=\"readme\"></pre>"),
+		},
+		{
+			name:           "sanitized readme",
+			readmeFilePath: "README",
+			readmeContents: `<a onblur="alert(secret)" href="http://www.google.com">Google</a>`,
+			want:           template.HTML(`<pre class="readme">&lt;a onblur=&#34;alert(secret)&#34; href=&#34;http://www.google.com&#34;&gt;Google&lt;/a&gt;</pre>`),
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := readmeHTML([]byte(tc.readme))
+			got := readmeHTML(tc.readmeFilePath, []byte(tc.readmeContents))
 			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("readmeHTML(%q) mismatch (-want +got):\n%s", tc.readme, diff)
+				t.Errorf("readmeHTML(%q, %q) mismatch (-want +got):\n%s", tc.readmeFilePath, tc.readmeContents, diff)
 			}
 		})
 	}

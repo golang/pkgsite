@@ -39,11 +39,12 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			modulePath: "my.mod/module",
 			version:    "v1.0.0",
 			versionData: &internal.VersionInfo{
-				SeriesPath: "my.mod/module",
-				ModulePath: "my.mod/module",
-				Version:    "v1.0.0",
-				CommitTime: time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
-				ReadMe:     []byte("README FILE FOR TESTING."),
+				SeriesPath:     "my.mod/module",
+				ModulePath:     "my.mod/module",
+				Version:        "v1.0.0",
+				CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
+				ReadmeFilePath: "README.md",
+				ReadmeContents: []byte("README FILE FOR TESTING."),
 			},
 			pkg: "my.mod/module/bar",
 			pkgData: &internal.Package{
@@ -248,75 +249,26 @@ func TestHasFilename(t *testing.T) {
 
 }
 
-func TestContainsFile(t *testing.T) {
+func TestExtractReadmeFromZip(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
 	for _, test := range []struct {
-		name, version, file string
-		want                bool
+		name, version, file, wantPath string
+		wantContents                  []byte
+		err                           error
 	}{
 		{
-			name:    "my.mod/module",
-			version: "v1.0.0",
-			file:    "README",
-			want:    true,
-		},
-		{
-			name:    "my.mod/module",
-			version: "v1.0.0",
-			file:    "my.mod/module@v1.0.0/LICENSE",
-			want:    true,
+			name:         "my.mod/module",
+			version:      "v1.0.0",
+			file:         "my.mod/module@v1.0.0/README.md",
+			wantPath:     "README.md",
+			wantContents: []byte("README FILE FOR TESTING."),
 		},
 		{
 			name:    "emp.ty/module",
 			version: "v1.0.0",
-			file:    "README",
-			want:    false,
-		},
-		{
-			name:    "emp.ty/module",
-			version: "v1.0.0",
-			file:    "LICENSE",
-			want:    false,
-		},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			teardownProxy, client := proxy.SetupTestProxy(ctx, t)
-			defer teardownProxy(t)
-
-			reader, err := client.GetZip(ctx, test.name, test.version)
-			if err != nil {
-				t.Fatalf("client.GetZip(ctx, %q %q): %v", test.name, test.version, err)
-			}
-
-			if got := containsFile(reader, test.file); got != test.want {
-				t.Errorf("containsFile(%q, %q) = %t, want %t", fmt.Sprintf("%s %s", test.name, test.version), test.file, got, test.want)
-			}
-		})
-	}
-}
-
-func TestExtractFile(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
-
-	for _, test := range []struct {
-		name, version, file string
-		want                []byte
-		err                 error
-	}{
-		{
-			name:    "my.mod/module",
-			version: "v1.0.0",
-			file:    "my.mod/module@v1.0.0/README.md",
-			want:    []byte("README FILE FOR TESTING."),
-		},
-		{
-			name:    "emp.ty/module",
-			version: "v1.0.0",
-			file:    "empty/nonexistent/README.md",
-			err:     errors.New(`zip does not contain "README.md"`),
+			err:     errReadmeNotFound,
 		},
 	} {
 		t.Run(test.file, func(t *testing.T) {
@@ -328,7 +280,7 @@ func TestExtractFile(t *testing.T) {
 				t.Fatalf("client.GetZip(ctx, %q, %q): %v", test.name, test.version, err)
 			}
 
-			got, err := extractFile(reader, filepath.Base(test.file))
+			gotPath, gotContents, err := extractReadmeFromZip(test.name, test.version, reader)
 			if err != nil {
 				if test.err == nil || test.err.Error() != err.Error() {
 					t.Errorf("extractFile(%q, %q): \n %v, want \n %v",
@@ -338,8 +290,11 @@ func TestExtractFile(t *testing.T) {
 				}
 			}
 
-			if !bytes.Equal(test.want, got) {
-				t.Errorf("extractFile(%q, %q) = %q, want %q", test.name, test.file, got, test.want)
+			if test.wantPath != gotPath {
+				t.Errorf("extractFile(%q, %q) path = %q, want %q", test.name, test.file, gotPath, test.wantPath)
+			}
+			if !bytes.Equal(test.wantContents, gotContents) {
+				t.Errorf("extractFile(%q, %q) contents = %q, want %q", test.name, test.file, gotContents, test.wantContents)
 			}
 		})
 	}

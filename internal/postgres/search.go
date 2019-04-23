@@ -49,7 +49,7 @@ func (db *DB) InsertDocuments(ctx context.Context, version *internal.Version) er
 			) ON CONFLICT DO NOTHING;`, func(stmt *sql.Stmt) error {
 			for _, p := range version.Packages {
 				pathTokens := strings.Join([]string{p.Path, version.ModulePath, version.SeriesPath}, " ")
-				if _, err := stmt.ExecContext(ctx, p.Path, p.Suffix, version.ModulePath, version.SeriesPath, version.Version, p.Name, pathTokens, p.Synopsis, version.ReadMe); err != nil {
+				if _, err := stmt.ExecContext(ctx, p.Path, p.Suffix, version.ModulePath, version.SeriesPath, version.Version, p.Name, pathTokens, p.Synopsis, version.ReadmeContents); err != nil {
 					return fmt.Errorf("error inserting document for package %+v: %v", p, err)
 				}
 			}

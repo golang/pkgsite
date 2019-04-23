@@ -22,12 +22,13 @@ type License struct {
 
 // VersionInfo holds metadata associated with a version.
 type VersionInfo struct {
-	SeriesPath  string
-	ModulePath  string
-	Version     string
-	CommitTime  time.Time
-	ReadMe      []byte
-	VersionType VersionType
+	SeriesPath     string
+	ModulePath     string
+	Version        string
+	CommitTime     time.Time
+	ReadmeFilePath string
+	ReadmeContents []byte
+	VersionType    VersionType
 }
 
 // A Version is a specific, reproducible build of a module.

@@ -33,6 +33,7 @@ var fetchTimeout = 5 * time.Minute
 
 var (
 	errModuleContainsNoPackages = errors.New("module contains 0 packages")
+	errReadmeNotFound           = errors.New("module does not contain a README")
 
 	// maxFileSize is the maximum filesize that is allowed for reading.
 	// If a .go file is encountered that exceeds maxFileSize, the fetch request
@@ -125,9 +126,9 @@ func FetchAndInsertVersion(modulePath, version string, proxyClient *proxy.Client
 		return fmt.Errorf("proxyClient.GetZip(%q, %q): %v", modulePath, version, err)
 	}
 
-	readme, err := extractReadmeFromZip(zipReader)
+	readmeFilePath, readmeContents, err := extractReadmeFromZip(modulePath, version, zipReader)
 	if err != nil {
-		return fmt.Errorf("extractReadmeFromZip(zipReader): %v", err)
+		return fmt.Errorf("extractReadmeFromZip(%q, %q, zipReader): %v", modulePath, version, err)
 	}
 
 	licenses, err := detectLicenses(zipReader)
@@ -143,12 +144,13 @@ func FetchAndInsertVersion(modulePath, version string, proxyClient *proxy.Client
 	seriesPath, _, _ := module.SplitPathVersion(modulePath)
 	v := &internal.Version{
 		VersionInfo: internal.VersionInfo{
-			SeriesPath:  seriesPath,
-			ModulePath:  modulePath,
-			Version:     version,
-			CommitTime:  info.Time,
-			ReadMe:      readme,
-			VersionType: versionType,
+			SeriesPath:     seriesPath,
+			ModulePath:     modulePath,
+			Version:        version,
+			CommitTime:     info.Time,
+			ReadmeFilePath: readmeFilePath,
+			ReadmeContents: readmeContents,
+			VersionType:    versionType,
 		},
 		Packages: packages,
 	}
@@ -161,21 +163,27 @@ func FetchAndInsertVersion(modulePath, version string, proxyClient *proxy.Client
 	return nil
 }
 
-// extractReadmeFromZip returns the README content, if found, else nil.  It
-// returns error if the README file cannot be read.
-func extractReadmeFromZip(r *zip.Reader) ([]byte, error) {
-	var (
-		readme []byte
-		err    error
-	)
-	readmeFile := "README"
-	if containsFile(r, readmeFile) {
-		readme, err = extractFile(r, readmeFile)
-		if err != nil {
-			return nil, fmt.Errorf("extractFile(%v, %q): %v", r, readmeFile, err)
+// trimeModuleVersionPrefix trims the prefix <modulePath>@<version>/ from the
+// filepath, which is the expected base directory for the contents of a module
+// zip from the proxy.
+func trimModuleVersionPrefix(modulePath, version, filePath string) string {
+	return strings.TrimPrefix(filePath, fmt.Sprintf("%s@%s/", modulePath, version))
+}
+
+// extractReadmeFromZip returns the file path and contents of the first file
+// from r that is a README file. errReadmeNotFound is returned if a README is
+// not found.
+func extractReadmeFromZip(modulePath, version string, r *zip.Reader) (string, []byte, error) {
+	for _, zipFile := range r.File {
+		if hasFilename(zipFile.Name, "README") {
+			c, err := readZipFile(zipFile)
+			if err != nil {
+				return "", nil, fmt.Errorf("readZipFile(%q): %v", zipFile.Name, err)
+			}
+			return trimModuleVersionPrefix(modulePath, version, zipFile.Name), c, nil
 		}
 	}
-	return readme, nil
+	return "", nil, errReadmeNotFound
 }
 
 // extractPackagesFromZip returns a slice of packages from the module zip r.
@@ -378,29 +386,6 @@ func writeFileToDir(f *zip.File, dir string) (err error) {
 		return fmt.Errorf("file.Write: %v", err)
 	}
 	return nil
-}
-
-// extractFile reads the contents of the first file from r that passes the
-// hasFilename check for expectedFile. It returns an error if such a file
-// does not exist.
-func extractFile(r *zip.Reader, expectedFile string) ([]byte, error) {
-	for _, zipFile := range r.File {
-		if hasFilename(zipFile.Name, expectedFile) {
-			c, err := readZipFile(zipFile)
-			return c, err
-		}
-	}
-	return nil, fmt.Errorf("zip does not contain %q", expectedFile)
-}
-
-// containsFile checks if r contains expectedFile.
-func containsFile(r *zip.Reader, expectedFile string) bool {
-	for _, zipFile := range r.File {
-		if hasFilename(zipFile.Name, expectedFile) {
-			return true
-		}
-	}
-	return false
 }
 
 // hasFilename checks if file is expectedFile or if the name of file, without

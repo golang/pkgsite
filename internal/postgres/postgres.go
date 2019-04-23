@@ -194,16 +194,17 @@ func zipLicenseInfo(licenseTypes []string, licensePaths []string) ([]*internal.L
 // (module_path, version).
 func (db *DB) GetVersion(ctx context.Context, modulePath string, version string) (*internal.VersionInfo, error) {
 	var (
-		commitTime time.Time
-		seriesPath string
-		readme     []byte
+		commitTime                 time.Time
+		seriesPath, readmeFilePath string
+		readmeContents             []byte
 	)
 
 	query := `
 		SELECT
 			m.series_path,
 			v.commit_time,
-			v.readme
+			v.readme_file_path,
+			v.readme_contents
 		FROM
 			versions v
 		INNER JOIN
@@ -212,15 +213,16 @@ func (db *DB) GetVersion(ctx context.Context, modulePath string, version string)
 			m.path = v.module_path
 		WHERE module_path = $1 and version = $2;`
 	row := db.QueryRowContext(ctx, query, modulePath, version)
-	if err := row.Scan(&seriesPath, &commitTime, &readme); err != nil {
+	if err := row.Scan(&seriesPath, &commitTime, &readmeFilePath, &readmeContents); err != nil {
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
 	return &internal.VersionInfo{
-		SeriesPath: seriesPath,
-		ModulePath: modulePath,
-		Version:    version,
-		CommitTime: commitTime,
-		ReadMe:     readme,
+		SeriesPath:     seriesPath,
+		ModulePath:     modulePath,
+		Version:        version,
+		CommitTime:     commitTime,
+		ReadmeFilePath: readmeFilePath,
+		ReadmeContents: readmeContents,
 	}, nil
 }
 
@@ -294,17 +296,18 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 	}
 
 	var (
-		commitTime                                     time.Time
-		name, synopsis, seriesPath, modulePath, suffix string
-		readme                                         []byte
-		licenseTypes, licensePaths                     []string
+		commitTime                                                     time.Time
+		name, synopsis, seriesPath, modulePath, suffix, readmeFilePath string
+		readmeContents                                                 []byte
+		licenseTypes, licensePaths                                     []string
 	)
 	query := `
 		SELECT
 			v.commit_time,
 			p.license_types,
 			p.license_paths,
-			v.readme,
+			v.readme_file_path,
+			v.readme_contents,
 			m.series_path,
 			v.module_path,
 			p.name,
@@ -328,7 +331,7 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 
 	row := db.QueryRowContext(ctx, query, path, version)
 	if err := row.Scan(&commitTime, pq.Array(&licenseTypes),
-		pq.Array(&licensePaths), &readme, &seriesPath, &modulePath, &name, &synopsis, &suffix); err != nil {
+		pq.Array(&licensePaths), &readmeFilePath, &readmeContents, &seriesPath, &modulePath, &name, &synopsis, &suffix); err != nil {
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
 
@@ -346,11 +349,12 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 			Suffix:   suffix,
 		},
 		VersionInfo: internal.VersionInfo{
-			SeriesPath: seriesPath,
-			ModulePath: modulePath,
-			Version:    version,
-			CommitTime: commitTime,
-			ReadMe:     readme,
+			SeriesPath:     seriesPath,
+			ModulePath:     modulePath,
+			Version:        version,
+			CommitTime:     commitTime,
+			ReadmeFilePath: readmeFilePath,
+			ReadmeContents: readmeContents,
 		},
 	}, nil
 }
@@ -570,7 +574,8 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 		p.suffix,
 		p.license_types,
 		p.license_paths,
-		v.readme,
+		v.readme_file_path,
+		v.readme_contents,
 		v.commit_time
 	FROM
 		vw_licensed_packages p
@@ -593,10 +598,10 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 	ORDER BY name, path;`
 
 	var (
-		pkgPath, seriesPath, modulePath, pkgName, synopsis, suffix string
-		readme                                                     []byte
-		commitTime                                                 time.Time
-		licenseTypes, licensePaths                                 []string
+		pkgPath, seriesPath, modulePath, pkgName, synopsis, suffix, readmeFilePath string
+		readmeContents                                                             []byte
+		commitTime                                                                 time.Time
+		licenseTypes, licensePaths                                                 []string
 	)
 
 	rows, err := db.QueryContext(ctx, query, version, path)
@@ -609,7 +614,7 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 	v.Version = version
 	for rows.Next() {
 		if err := rows.Scan(&pkgPath, &seriesPath, &modulePath, &pkgName, &synopsis, &suffix,
-			pq.Array(&licenseTypes), pq.Array(&licensePaths), &readme, &commitTime); err != nil {
+			pq.Array(&licenseTypes), pq.Array(&licensePaths), &readmeFilePath, &readmeContents, &commitTime); err != nil {
 			return nil, fmt.Errorf("row.Scan(): %v", err)
 		}
 		lics, err := zipLicenseInfo(licenseTypes, licensePaths)
@@ -618,7 +623,8 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 		}
 		v.SeriesPath = seriesPath
 		v.ModulePath = modulePath
-		v.ReadMe = readme
+		v.ReadmeFilePath = readmeFilePath
+		v.ReadmeContents = readmeContents
 		v.CommitTime = commitTime
 		v.Packages = append(v.Packages, &internal.Package{
 			Path:     pkgPath,
@@ -830,12 +836,13 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 		}
 
 		if _, err := tx.ExecContext(ctx,
-			`INSERT INTO versions(module_path, version, commit_time, readme, major, minor, patch, prerelease)
-			VALUES($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT DO NOTHING`,
+			`INSERT INTO versions(module_path, version, commit_time, readme_file_path, readme_contents, major, minor, patch, prerelease)
+			VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT DO NOTHING`,
 			version.ModulePath,
 			version.Version,
 			version.CommitTime,
-			version.ReadMe,
+			version.ReadmeFilePath,
+			version.ReadmeContents,
 			majorint,
 			minorint,
 			patchint,

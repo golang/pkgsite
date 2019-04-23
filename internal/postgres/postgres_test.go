@@ -38,12 +38,13 @@ var (
 func sampleVersion(mutators ...func(*internal.Version)) *internal.Version {
 	v := &internal.Version{
 		VersionInfo: internal.VersionInfo{
-			SeriesPath:  sampleSeriesPath,
-			ModulePath:  sampleModulePath,
-			Version:     sampleVersionString,
-			ReadMe:      []byte("readme"),
-			CommitTime:  now,
-			VersionType: internal.VersionTypeRelease,
+			SeriesPath:     sampleSeriesPath,
+			ModulePath:     sampleModulePath,
+			Version:        sampleVersionString,
+			ReadmeFilePath: "README.md",
+			ReadmeContents: []byte("readme"),
+			CommitTime:     now,
+			VersionType:    internal.VersionTypeRelease,
 		},
 		Packages: []*internal.Package{
 			&internal.Package{
@@ -323,49 +324,28 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 	teardownTestCase, db := SetupCleanDB(t)
 	defer teardownTestCase(t)
 	var (
-		now = NowTruncated()
 		pkg = &internal.Package{
 			Path:     "path.to/foo/bar",
 			Name:     "bar",
 			Synopsis: "This is a package synopsis",
 			Licenses: sampleLicenseInfos,
 		}
-		seriesPath   = "path.to/foo"
-		modulePath   = "path.to/foo"
 		testVersions = []*internal.Version{
-			&internal.Version{
-				VersionInfo: internal.VersionInfo{
-					SeriesPath:  seriesPath,
-					ModulePath:  modulePath,
-					Version:     "v1.0.0-alpha.1",
-					ReadMe:      []byte("readme"),
-					CommitTime:  now,
-					VersionType: internal.VersionTypePrerelease,
-				},
-				Packages: []*internal.Package{pkg},
-			},
-			&internal.Version{
-				VersionInfo: internal.VersionInfo{
-					SeriesPath:  seriesPath,
-					ModulePath:  modulePath,
-					Version:     "v1.0.0",
-					ReadMe:      []byte("readme"),
-					CommitTime:  now,
-					VersionType: internal.VersionTypeRelease,
-				},
-				Packages: []*internal.Package{pkg},
-			},
-			&internal.Version{
-				VersionInfo: internal.VersionInfo{
-					SeriesPath:  seriesPath,
-					ModulePath:  modulePath,
-					Version:     "v1.0.0-20190311183353-d8887717615a",
-					ReadMe:      []byte("readme"),
-					CommitTime:  now,
-					VersionType: internal.VersionTypePseudo,
-				},
-				Packages: []*internal.Package{pkg},
-			},
+			sampleVersion(func(v *internal.Version) {
+				v.Version = "v1.0.0-alpha.1"
+				v.VersionType = internal.VersionTypePrerelease
+				v.Packages = []*internal.Package{pkg}
+			}),
+			sampleVersion(func(v *internal.Version) {
+				v.Version = "v1.0.0"
+				v.VersionType = internal.VersionTypeRelease
+				v.Packages = []*internal.Package{pkg}
+			}),
+			sampleVersion(func(v *internal.Version) {
+				v.Version = "v1.0.0-20190311183353-d8887717615a"
+				v.VersionType = internal.VersionTypePseudo
+				v.Packages = []*internal.Package{pkg}
+			}),
 		}
 	)
 
@@ -387,7 +367,7 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 					Licenses: sampleLicenseInfos,
 				},
 				VersionInfo: internal.VersionInfo{
-					SeriesPath: seriesPath,
+					SeriesPath: testVersions[1].SeriesPath,
 					ModulePath: testVersions[1].ModulePath,
 					Version:    testVersions[1].Version,
 					CommitTime: testVersions[1].CommitTime,
@@ -463,34 +443,34 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 		testVersions = []*internal.Version{
 			&internal.Version{
 				VersionInfo: internal.VersionInfo{
-					SeriesPath:  seriesPath,
-					ModulePath:  modulePath1,
-					Version:     "v1.1.0",
-					ReadMe:      []byte("readme"),
-					CommitTime:  now,
-					VersionType: internal.VersionTypePrerelease,
+					SeriesPath:     seriesPath,
+					ModulePath:     modulePath1,
+					Version:        "v1.1.0",
+					ReadmeContents: []byte("readme"),
+					CommitTime:     now,
+					VersionType:    internal.VersionTypePrerelease,
 				},
 				Packages: []*internal.Package{pkg1},
 			},
 			&internal.Version{
 				VersionInfo: internal.VersionInfo{
-					SeriesPath:  seriesPath,
-					ModulePath:  modulePath2,
-					Version:     "v1.2.0",
-					ReadMe:      []byte("readme"),
-					CommitTime:  now,
-					VersionType: internal.VersionTypePseudo,
+					SeriesPath:     seriesPath,
+					ModulePath:     modulePath2,
+					Version:        "v1.2.0",
+					ReadmeContents: []byte("readme"),
+					CommitTime:     now,
+					VersionType:    internal.VersionTypePseudo,
 				},
 				Packages: []*internal.Package{pkg2},
 			},
 			&internal.Version{
 				VersionInfo: internal.VersionInfo{
-					SeriesPath:  seriesPath,
-					ModulePath:  modulePath3,
-					Version:     "v1.3.0",
-					ReadMe:      []byte("readme"),
-					CommitTime:  now,
-					VersionType: internal.VersionTypePseudo,
+					SeriesPath:     seriesPath,
+					ModulePath:     modulePath3,
+					Version:        "v1.3.0",
+					ReadmeContents: []byte("readme"),
+					CommitTime:     now,
+					VersionType:    internal.VersionTypePseudo,
 				},
 				Packages: []*internal.Package{pkg3},
 			},
@@ -986,12 +966,12 @@ func TestGetVersionForPackage(t *testing.T) {
 		modulePath  = "test.module"
 		testVersion = &internal.Version{
 			VersionInfo: internal.VersionInfo{
-				SeriesPath:  seriesPath,
-				ModulePath:  modulePath,
-				Version:     "v1.0.0",
-				ReadMe:      []byte("readme"),
-				CommitTime:  now,
-				VersionType: internal.VersionTypeRelease,
+				SeriesPath:     seriesPath,
+				ModulePath:     modulePath,
+				Version:        "v1.0.0",
+				ReadmeContents: []byte("readme"),
+				CommitTime:     now,
+				VersionType:    internal.VersionTypeRelease,
 			},
 			Packages: []*internal.Package{
 				&internal.Package{
@@ -1049,12 +1029,12 @@ func TestGetLicenses(t *testing.T) {
 		modulePath  = "test.module"
 		testVersion = &internal.Version{
 			VersionInfo: internal.VersionInfo{
-				SeriesPath:  seriesPath,
-				ModulePath:  modulePath,
-				Version:     "v1.0.0",
-				ReadMe:      []byte("readme"),
-				CommitTime:  now,
-				VersionType: internal.VersionTypeRelease,
+				SeriesPath:     seriesPath,
+				ModulePath:     modulePath,
+				Version:        "v1.0.0",
+				ReadmeContents: []byte("readme"),
+				CommitTime:     now,
+				VersionType:    internal.VersionTypeRelease,
 			},
 			Packages: []*internal.Package{
 				&internal.Package{

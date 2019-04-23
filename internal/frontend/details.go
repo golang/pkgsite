@@ -7,6 +7,7 @@ package frontend
 import (
 	"context"
 	"fmt"
+	"html"
 	"html/template"
 	"log"
 	"net/http"
@@ -251,7 +252,7 @@ func fetchOverviewDetails(ctx context.Context, db *postgres.DB, path, version st
 		PackageHeader: pkgHeader,
 		Details: &OverviewDetails{
 			ModulePath: pkg.VersionInfo.ModulePath,
-			ReadMe:     readmeHTML(pkg.VersionInfo.ReadMe),
+			ReadMe:     readmeHTML(pkg.VersionInfo.ReadmeFilePath, pkg.VersionInfo.ReadmeContents),
 		},
 	}, nil
 }
@@ -310,7 +311,7 @@ func fetchModuleDetails(ctx context.Context, db *postgres.DB, pkgPath, pkgversio
 		Details: &ModuleDetails{
 			ModulePath: version.ModulePath,
 			Version:    pkgversion,
-			ReadMe:     readmeHTML(version.ReadMe),
+			ReadMe:     readmeHTML(version.ReadmeFilePath, version.ReadmeContents),
 			Packages:   packages,
 		},
 	}, nil
@@ -489,10 +490,20 @@ func fetchImportedByDetails(ctx context.Context, db *postgres.DB, path, version 
 	}, nil
 }
 
-func readmeHTML(readme []byte) template.HTML {
-	unsafe := blackfriday.Run(readme)
-	b := bluemonday.UGCPolicy().SanitizeBytes(unsafe)
-	return template.HTML(string(b))
+// readmeHTML sanitizes readmeContents based on bluemondy.UGCPolicy and returns
+// a template.HTML. If readmeFilePath indicates that this is a markdown file,
+// it will also render the markdown contents using blackfriday.
+func readmeHTML(readmeFilePath string, readmeContents []byte) template.HTML {
+	if filepath.Ext(readmeFilePath) != ".md" {
+		return template.HTML(fmt.Sprintf(`<pre class="readme">%s</pre>`, html.EscapeString(string(readmeContents))))
+	}
+
+	// bluemonday.UGCPolicy allows a broad selection of HTML elements and
+	// attributes that are safe for user generated content. This policy does
+	// not whitelist iframes, object, embed, styles, script, etc.
+	p := bluemonday.UGCPolicy()
+	unsafe := blackfriday.Run(readmeContents)
+	return template.HTML(string(p.SanitizeBytes(unsafe)))
 }
 
 // HandleDetails applies database data to the appropriate template. Handles all
