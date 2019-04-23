@@ -38,7 +38,7 @@ var (
 	// maxFileSize is the maximum filesize that is allowed for reading.
 	// If a .go file is encountered that exceeds maxFileSize, the fetch request
 	// will fail.  All other filetypes will be ignored.
-	maxFileSize          = uint64(1e7)
+	maxFileSize          = uint64(3e7)
 	maxPackagesPerModule = 10000
 	maxImportsPerPackage = 1000
 )
@@ -226,7 +226,7 @@ func extractModuleFiles(workDir, modulePath string, r *zip.Reader) error {
 		}
 
 		if !f.FileInfo().IsDir() {
-			// Skip files that are not .go files and are greater than 10MB.
+			// Skip files that are not .go files and are greater than maxFileSize.
 			if filepath.Ext(f.Name) != ".go" && f.UncompressedSize64 > maxFileSize {
 				continue
 			}
