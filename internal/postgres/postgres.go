@@ -990,6 +990,10 @@ func validateVersion(version *internal.Version) error {
 		errReasons = append(errReasons, "invalid module path")
 	}
 
+	if len(version.Packages) == 0 {
+		errReasons = append(errReasons, "module does not have any packages")
+	}
+
 	if version.CommitTime.IsZero() {
 		errReasons = append(errReasons, "empty commit time")
 	}

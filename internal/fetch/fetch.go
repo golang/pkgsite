@@ -203,7 +203,7 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, licenses 
 	}
 
 	pkgs, err := loadPackages(workDir, modulePath, version)
-	if err != nil && err != errModuleContainsNoPackages {
+	if err != nil {
 		return nil, fmt.Errorf("loadPackages(%q, %q, %q, zipReader): %v", workDir, modulePath, version, err)
 	}
 
