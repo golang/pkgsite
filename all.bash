@@ -18,7 +18,7 @@ if [[ "$STAGED_GO_FILES" != "" ]]; then
   done
 fi
 
-# Download staticcheck if it doesn't exists
+# Download staticcheck if it doesn't exist
 if ! [ -x "$(command -v staticcheck)" ]; then
   echo "Running: go get -u honnef.co/go/tools/cmd/staticcheck"
   go get -u honnef.co/go/tools/cmd/staticcheck
@@ -27,7 +27,7 @@ fi
 echo "Running: staticcheck ./..."
 staticcheck ./...
 
-# Download misspell if it doesn't exists
+# Download misspell if it doesn't exist
 if ! [ -x "$(command -v misspell)" ]; then
   echo "Running: go get -u github.com/client9/misspell/cmd/misspell"
   go get -u github.com/client9/misspell/cmd/misspell
@@ -43,3 +43,8 @@ echo "Running: go test ./..."
 # We use the `-p 1` flag because several tests must be run in serial due to
 # their non-hermetic nature (as they interact with a running Postgres instance).
 go test -count=1 -p 1 ./...
+
+# This test needs to be run separately since an attempt to use the given flag
+# will fail if other tests caught by "./..." don't have it defined.
+echo "Running: go test ./internal/secrets/ -use_cloud"
+go test ./internal/secrets/ -use_cloud
