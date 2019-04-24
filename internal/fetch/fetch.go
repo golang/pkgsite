@@ -127,7 +127,7 @@ func FetchAndInsertVersion(modulePath, version string, proxyClient *proxy.Client
 	}
 
 	readmeFilePath, readmeContents, err := extractReadmeFromZip(modulePath, version, zipReader)
-	if err != nil {
+	if err != nil && err != errReadmeNotFound {
 		return fmt.Errorf("extractReadmeFromZip(%q, %q, zipReader): %v", modulePath, version, err)
 	}
 
