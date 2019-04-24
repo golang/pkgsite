@@ -25,16 +25,6 @@ var (
 	sampleLicenses = []*internal.License{
 		{LicenseInfo: *sampleLicenseInfos[0], Contents: []byte("Lorem Ipsum")},
 	}
-
-	samplePackageHeader = &Package{
-		Name:       "pkg_name",
-		Title:      "Package pkg_name",
-		Version:    "v1.0.0",
-		Path:       "test.com/module/pkg_name",
-		Synopsis:   "Test package synopsis",
-		Licenses:   transformLicenseInfos(sampleLicenseInfos),
-		CommitTime: "today",
-	}
 	sampleInternalPackage = &internal.Package{
 		Name:     "pkg_name",
 		Path:     "test.com/module/pkg_name",

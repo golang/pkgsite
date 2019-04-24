@@ -224,19 +224,6 @@ func elapsedTime(date time.Time) string {
 	return date.Format("Jan _2, 2006")
 }
 
-func fetchPackageHeader(ctx context.Context, db *postgres.DB, path, version string) (*Package, error) {
-	pkg, err := db.GetPackage(ctx, path, version)
-	if err != nil {
-		return nil, fmt.Errorf("db.GetPackage(ctx, %q, %q): %v", path, version, err)
-	}
-
-	pkgHeader, err := createPackageHeader(pkg)
-	if err != nil {
-		return nil, fmt.Errorf("createPackageHeader(%+v): %v", pkg, err)
-	}
-	return pkgHeader, nil
-}
-
 // fetchOverviewDetails fetches data for the module version specified by path and version
 // from the database and returns a OverviewDetails.
 func fetchOverviewDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*OverviewDetails, error) {
@@ -510,5 +497,4 @@ func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c.renderPage(w, tab+".tmpl", page)
-	return
 }
