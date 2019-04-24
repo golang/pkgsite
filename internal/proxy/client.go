@@ -11,6 +11,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -21,7 +23,11 @@ import (
 // A Client is used by the fetch service to communicate with a module
 // proxy. It handles all methods defined by go help goproxy.
 type Client struct {
-	url string // URL of the module proxy web server
+	// URL of the module proxy web server
+	url string
+
+	// client used for HTTP requests. It is mutable for testing purposes.
+	httpClient *http.Client
 }
 
 // A VersionInfo contains metadata about a given version of a module.
@@ -37,8 +43,15 @@ func cleanURL(rawurl string) string {
 
 // New constructs a *Client using the provided rawurl, which is expected to
 // be an absolute URI that can be directly passed to http.Get.
-func New(rawurl string) *Client {
-	return &Client{url: cleanURL(rawurl)}
+func New(rawurl string) (*Client, error) {
+	url, err := url.Parse(rawurl)
+	if err != nil {
+		return nil, fmt.Errorf("url.Parse(%q): %v", rawurl, err)
+	}
+	if url.Scheme != "https" {
+		return nil, fmt.Errorf("scheme must be https (got %s)", url.Scheme)
+	}
+	return &Client{url: cleanURL(rawurl), httpClient: http.DefaultClient}, nil
 }
 
 // infoURL constructs a url for a request to
@@ -59,7 +72,7 @@ func (c *Client) GetInfo(ctx context.Context, path, version string) (*VersionInf
 		return nil, fmt.Errorf("infoURL(%q, %q): %v", path, version, err)
 	}
 
-	r, err := ctxhttp.Get(ctx, nil, u)
+	r, err := ctxhttp.Get(ctx, c.httpClient, u)
 	if err != nil {
 		return nil, fmt.Errorf("ctxhttp.Get(ctx, nil, %q): %v", u, err)
 	}
@@ -93,7 +106,7 @@ func (c *Client) GetZip(ctx context.Context, path, version string) (*zip.Reader,
 		return nil, fmt.Errorf("zipURL(%q, %q): %v", path, version, err)
 	}
 
-	r, err := ctxhttp.Get(ctx, nil, u)
+	r, err := ctxhttp.Get(ctx, c.httpClient, u)
 	if err != nil {
 		return nil, fmt.Errorf("ctxhttp.Get(ctx, nil, %q): %v", u, err)
 	}

@@ -7,6 +7,7 @@ package proxy
 import (
 	"archive/zip"
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net/http"
@@ -16,6 +17,17 @@ import (
 	"strings"
 	"testing"
 )
+
+// insecureHTTPClient is used to disable TLS verification when running against
+// a test server.
+var insecureHTTPClient = &http.Client{
+	Transport: &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+	},
+}
 
 // SetupTestProxy creates a module proxy for testing using static files
 // stored in internal/proxy/testdata/modproxy/proxy. It returns a function
@@ -30,8 +42,14 @@ func SetupTestProxy(ctx context.Context, t *testing.T) (func(t *testing.T), *Cli
 		t.Fatalf("filepath.Abs(%q): %v", proxyDataDir, err)
 	}
 
-	p := httptest.NewServer(http.FileServer(http.Dir(fmt.Sprintf("%s/proxy", absPath))))
-	client := New(p.URL)
+	p := httptest.NewTLSServer(http.FileServer(http.Dir(fmt.Sprintf("%s/proxy", absPath))))
+
+	client, err := New(p.URL)
+	if err != nil {
+		t.Fatalf("New(%q): %v", p.URL, err)
+	}
+	// override client.httpClient to skip TLS verification
+	client.httpClient = insecureHTTPClient
 
 	for _, v := range [][]string{
 		[]string{"my.mod/module", "v1.0.0"},

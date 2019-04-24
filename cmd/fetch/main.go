@@ -70,11 +70,16 @@ func makeFetchHandler(proxyClient *proxy.Client, db *postgres.DB) http.HandlerFu
 func main() {
 	db, err := postgres.Open(dbinfo)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("postgres.Open(...): %v", err)
 	}
 	defer db.Close()
 
-	http.HandleFunc("/", makeFetchHandler(proxy.New(proxyURL), db))
+	proxyClient, err := proxy.New(proxyURL)
+	if err != nil {
+		log.Fatalf("proxy.New(%q): %v", proxyURL, err)
+	}
+
+	http.HandleFunc("/", makeFetchHandler(proxyClient, db))
 
 	log.Printf("Listening on addr %s", addr)
 	log.Fatal(http.ListenAndServe(addr, nil))
