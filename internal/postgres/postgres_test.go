@@ -284,8 +284,7 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 			}
 
 			if tc.version != nil {
-				if diff := cmp.Diff(&tc.version.VersionInfo, got, cmpopts.IgnoreFields(internal.VersionInfo{},
-					"VersionType")); !tc.wantReadErr && diff != "" {
+				if diff := cmp.Diff(&tc.version.VersionInfo, got); !tc.wantReadErr && diff != "" {
 					t.Errorf("db.GetVersion(ctx, %q, %q) mismatch (-want +got):\n%s", tc.getModule, tc.getVersion, diff)
 				}
 			}
@@ -882,7 +881,7 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 			}
 
 			for i, v := range got {
-				if diff := cmp.Diff(wantPseudoVersions[i], v, cmpopts.IgnoreFields(internal.VersionInfo{}, "VersionType")); diff != "" {
+				if diff := cmp.Diff(wantPseudoVersions[i], v); diff != "" {
 					t.Errorf("db.GetPseudoVersionsForPackageSeries(%q) mismatch (-want +got):\n%s", tc.path, diff)
 				}
 			}
@@ -898,8 +897,7 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 
 			for i, v := range got {
 
-				if diff := cmp.Diff(tc.wantTaggedVersions[i], v, cmpopts.IgnoreFields(internal.VersionInfo{},
-					"VersionType")); diff != "" {
+				if diff := cmp.Diff(tc.wantTaggedVersions[i], v); diff != "" {
 					t.Errorf("db.GetTaggedVersionsForPackageSeries(%q) mismatch (-want +got):\n%s", tc.path, diff)
 				}
 			}
@@ -1014,8 +1012,7 @@ func TestGetVersionForPackage(t *testing.T) {
 			if err != nil {
 				t.Errorf("db.GetVersionForPackage(ctx, %q, %q): %v", tc.path, tc.version, err)
 			}
-			if diff := cmp.Diff(tc.wantVersion, got,
-				cmpopts.IgnoreFields(internal.Version{}, "VersionType")); diff != "" {
+			if diff := cmp.Diff(tc.wantVersion, got); diff != "" {
 				t.Errorf("db.GetVersionForPackage(ctx, %q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
 			}
 		})

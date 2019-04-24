@@ -45,6 +45,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
 				ReadmeFilePath: "README.md",
 				ReadmeContents: []byte("README FILE FOR TESTING."),
+				VersionType:    "release",
 			},
 			pkg: "my.mod/module/bar",
 			pkgData: &internal.Package{
@@ -86,8 +87,8 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			// reflect.DeepEqual. Convert the DB time to UTC.
 			got.CommitTime = got.CommitTime.UTC()
 
-			if diff := cmp.Diff(got, *test.versionData); diff != "" {
-				t.Errorf("db.GetVersion(ctx, %q, %q) mismatch (-got +want):\n%s", test.modulePath, test.version, diff)
+			if diff := cmp.Diff(*test.versionData, got); diff != "" {
+				t.Errorf("db.GetVersion(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
 			}
 
 			gotPkg, err := db.GetPackage(ctx, test.pkg, test.version)
