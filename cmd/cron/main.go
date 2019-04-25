@@ -7,6 +7,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -22,19 +23,80 @@ import (
 	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
+	"golang.org/x/discovery/internal/secrets"
 )
 
 var (
 	indexURL = getEnv("GO_MODULE_INDEX_URL", "https://index.golang.org/index")
 	fetchURL = getEnv("GO_DISCOVERY_FETCH_URL", "http://localhost:9000")
-	user     = getEnv("GO_DISCOVERY_DATABASE_USER", "postgres")
-	password = getEnv("GO_DISCOVERY_DATABASE_PASSWORD", "")
-	host     = getEnv("GO_DISCOVERY_DATABASE_HOST", "localhost")
-	dbname   = getEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-database")
-	timeout  = getEnv("GO_DISCOVERY_CRON_TIMEOUT_MINUTES", "10")
-	dbinfo   = fmt.Sprintf("user=%s password=%s host=%s dbname=%s sslmode=disable", user, password, host, dbname)
 	workers  = flag.Int("workers", 10, "number of concurrent requests to the fetch service")
+	timeout  = getEnv("GO_DISCOVERY_CRON_TIMEOUT_MINUTES", "10")
 )
+
+func main() {
+	flag.Parse()
+
+	ctx := context.Background()
+	dbinfo, err := dbConnInfo(ctx)
+	if err != nil {
+		log.Fatalf("Unable to construct database connection info string: %v", err)
+	}
+	db, err := postgres.Open(dbinfo)
+	if err != nil {
+		log.Fatalf("postgres.Open(%q): %v", dbinfo, err)
+	}
+	defer db.Close()
+
+	idxClient, err := index.New(indexURL)
+	if err != nil {
+		log.Fatalf("index.New(%q): %v", indexURL, err)
+	}
+
+	handlerTimeout, err := strconv.Atoi(timeout)
+	if err != nil {
+		log.Fatalf("strconv.Atoi(%q): %v", timeout, err)
+	}
+	mw := middleware.Timeout(time.Duration(handlerTimeout) * time.Minute)
+	http.Handle("/new/", mw(makeNewVersionsHandler(db, idxClient, *workers)))
+	http.Handle("/retry/", mw(makeRetryVersionsHandler(db, *workers)))
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "Hello, Go Discovery Cron!")
+	})
+
+	// Default to addr on localhost to mute security popup about incoming
+	// network connections when running locally. When running in prod, App
+	// Engine requires that the app listens on the port specified by the
+	// environment variable PORT.
+	var addr string
+	if port := os.Getenv("PORT"); port != "" {
+		addr = fmt.Sprintf(":%s", port)
+	} else {
+		addr = "localhost:8000"
+	}
+
+	log.Printf("Listening on addr %s", addr)
+	log.Fatal(http.ListenAndServe(addr, nil))
+}
+
+func dbConnInfo(ctx context.Context) (string, error) {
+	var (
+		user     = getEnv("GO_DISCOVERY_DATABASE_USER", "postgres")
+		password = getEnv("GO_DISCOVERY_DATABASE_PASSWORD", "")
+		host     = getEnv("GO_DISCOVERY_DATABASE_HOST", "localhost")
+		dbname   = getEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-database")
+	)
+
+	// When running on App Engine, the runtime sets GAE_ENV to 'standard' per
+	// https://cloud.google.com/appengine/docs/standard/go111/runtime
+	if os.Getenv("GAE_ENV") == "standard" {
+		var err error
+		password, err = secrets.Get(ctx, "go_discovery_database_password_proxy_index_cron")
+		if err != nil {
+			return "", fmt.Errorf("could not get database password secret: %v", err)
+		}
+	}
+	return fmt.Sprintf("user='%s' password='%s' host='%s' dbname='%s' sslmode=disable", user, password, host, dbname), nil
+}
 
 func getEnv(key, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok {
@@ -73,44 +135,4 @@ func makeRetryVersionsHandler(db *postgres.DB, workers int) http.HandlerFunc {
 		cron.FetchVersions(r.Context(), client, logs, workers)
 		fmt.Fprint(w, fmt.Sprintf("Requested %d versions!", len(logs)))
 	}
-}
-
-func main() {
-	flag.Parse()
-
-	db, err := postgres.Open(dbinfo)
-	if err != nil {
-		log.Fatalf("postgres.Open(%q): %v", dbinfo, err)
-	}
-	defer db.Close()
-
-	idxClient, err := index.New(indexURL)
-	if err != nil {
-		log.Fatalf("index.New(%q): %v", indexURL, err)
-	}
-
-	handlerTimeout, err := strconv.Atoi(timeout)
-	if err != nil {
-		log.Fatalf("strconv.Atoi(%q): %v", timeout, err)
-	}
-	mw := middleware.Timeout(time.Duration(handlerTimeout) * time.Minute)
-	http.Handle("/new/", mw(makeNewVersionsHandler(db, idxClient, *workers)))
-	http.Handle("/retry/", mw(makeRetryVersionsHandler(db, *workers)))
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "Hello, Go Discovery Cron!")
-	})
-
-	// Default to addr on localhost to mute security popup about incoming
-	// network connections when running locally. When running in prod, App
-	// Engine requires that the app listens on the port specified by the
-	// environment variable PORT.
-	var addr string
-	if port := os.Getenv("PORT"); port != "" {
-		addr = fmt.Sprintf(":%s", port)
-	} else {
-		addr = "localhost:8000"
-	}
-
-	log.Printf("Listening on addr %s", addr)
-	log.Fatal(http.ListenAndServe(addr, nil))
 }
