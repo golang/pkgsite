@@ -21,6 +21,12 @@ import (
 
 const testTimeout = 5 * time.Second
 
+var testDB *postgres.DB
+
+func TestMain(m *testing.M) {
+	postgres.RunDBTests("discovery_cron_test", m, &testDB)
+}
+
 func setupIndex(t *testing.T, versions []map[string]string) (func(t *testing.T), *httptest.Server) {
 	index := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -178,16 +184,15 @@ func TestFetchAndStoreVersions(t *testing.T) {
 			teardownTestCase, index := setupIndex(t, tc.indexInfo)
 			defer teardownTestCase(t)
 
-			cleanupDB, db := postgres.SetupCleanDB(t)
-			defer cleanupDB(t)
+			defer postgres.ResetTestDB(testDB, t)
 
-			if err := db.InsertVersionLogs(ctx, tc.oldVersionLogs); err != nil {
+			if err := testDB.InsertVersionLogs(ctx, tc.oldVersionLogs); err != nil {
 				t.Fatalf("db.InsertVersionLogs(ctx, %v): %v", tc.oldVersionLogs, err)
 			}
 
-			got, err := FetchAndStoreVersions(ctx, index.URL, db)
+			got, err := FetchAndStoreVersions(ctx, index.URL, testDB)
 			if err != nil {
-				t.Fatalf("FetchAndStoreVersions(ctx, %q, %v): %v", index.URL, db, err)
+				t.Fatalf("FetchAndStoreVersions(ctx, %q, %v): %v", index.URL, testDB, err)
 			}
 
 			// do not compare the timestamps, since they are set inside
@@ -198,7 +203,7 @@ func TestFetchAndStoreVersions(t *testing.T) {
 
 			if !reflect.DeepEqual(got, tc.wantVersionLogs) {
 				t.Fatalf("FetchAndStoreVersions(ctx, %q, %v) = %v; want %v",
-					index.URL, db, versionLogArrayToString(got), versionLogArrayToString(tc.wantVersionLogs))
+					index.URL, testDB, versionLogArrayToString(got), versionLogArrayToString(tc.wantVersionLogs))
 			}
 		})
 	}

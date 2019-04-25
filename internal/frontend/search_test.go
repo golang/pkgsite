@@ -123,19 +123,18 @@ func TestFetchSearchPage(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			teardownTestCase, db := postgres.SetupCleanDB(t)
-			defer teardownTestCase(t)
+			defer postgres.ResetTestDB(testDB, t)
 
 			for _, v := range tc.versions {
-				if err := db.InsertVersion(ctx, v, sampleLicenses); err != nil {
+				if err := testDB.InsertVersion(ctx, v, sampleLicenses); err != nil {
 					t.Fatalf("db.InsertVersion(%+v): %v", v, err)
 				}
-				if err := db.InsertDocuments(ctx, v); err != nil {
+				if err := testDB.InsertDocuments(ctx, v); err != nil {
 					t.Fatalf("db.InsertDocuments(%+v): %v", v, err)
 				}
 			}
 
-			got, err := fetchSearchPage(ctx, db, tc.query, 20, 1)
+			got, err := fetchSearchPage(ctx, testDB, tc.query, 20, 1)
 			if err != nil {
 				t.Fatalf("fetchSearchPage(db, %q): %v", tc.query, err)
 			}

@@ -70,6 +70,12 @@ func sampleVersion(mutators ...func(*internal.Version)) *internal.Version {
 	return v
 }
 
+var testDB *DB
+
+func TestMain(m *testing.M) {
+	RunDBTests("discovery_postgres_test", m, &testDB)
+}
+
 func TestBulkInsert(t *testing.T) {
 	table := "test_bulk_insert"
 	for _, tc := range []struct {
@@ -141,8 +147,7 @@ func TestBulkInsert(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			teardownTestCase, db := SetupCleanDB(t)
-			defer teardownTestCase(t)
+			defer ResetTestDB(testDB, t)
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 			defer cancel()
 
@@ -151,17 +156,17 @@ func TestBulkInsert(t *testing.T) {
 					colB TEXT,
 					PRIMARY KEY (colA)
 				);`, table)
-			if _, err := db.ExecContext(ctx, createQuery); err != nil {
+			if _, err := testDB.ExecContext(ctx, createQuery); err != nil {
 				t.Fatalf("db.ExecContext(ctx, %q): %v", createQuery, err)
 			}
 			defer func() {
 				dropTableQuery := fmt.Sprintf("DROP TABLE %s;", table)
-				if _, err := db.ExecContext(ctx, dropTableQuery); err != nil {
+				if _, err := testDB.ExecContext(ctx, dropTableQuery); err != nil {
 					t.Fatalf("db.ExecContext(ctx, %q): %v", dropTableQuery, err)
 				}
 			}()
 
-			if err := db.Transact(func(tx *sql.Tx) error {
+			if err := testDB.Transact(func(tx *sql.Tx) error {
 				return bulkInsert(ctx, tx, table, tc.columns, tc.values, tc.conflictNoAction)
 			}); tc.wantErr && err == nil || !tc.wantErr && err != nil {
 				t.Errorf("db.Transact: %v | wantErr = %t", err, tc.wantErr)
@@ -170,7 +175,7 @@ func TestBulkInsert(t *testing.T) {
 			if tc.wantCount != 0 {
 				var count int
 				query := "SELECT COUNT(*) FROM " + table
-				row := db.QueryRow(query)
+				row := testDB.QueryRow(query)
 				err := row.Scan(&count)
 				if err != nil {
 					t.Fatalf("db.QueryRow(%q): %v", query, err)
@@ -262,19 +267,18 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			teardownTestCase, db := SetupCleanDB(t)
-			defer teardownTestCase(t)
+			defer ResetTestDB(testDB, t)
 
-			if err := db.InsertVersion(ctx, tc.version, sampleLicenses); derrors.Type(err) != tc.wantWriteErrType {
+			if err := testDB.InsertVersion(ctx, tc.version, sampleLicenses); derrors.Type(err) != tc.wantWriteErrType {
 				t.Errorf("db.InsertVersion(ctx, %+v) error: %v, want write error: %v", tc.version, err, tc.wantWriteErrType)
 			}
 
 			// Test that insertion of duplicate primary key won't fail.
-			if err := db.InsertVersion(ctx, tc.version, sampleLicenses); derrors.Type(err) != tc.wantWriteErrType {
+			if err := testDB.InsertVersion(ctx, tc.version, sampleLicenses); derrors.Type(err) != tc.wantWriteErrType {
 				t.Errorf("db.InsertVersion(ctx, %+v) second insert error: %v, want write error: %v", tc.version, err, tc.wantWriteErrType)
 			}
 
-			got, err := db.GetVersion(ctx, tc.getModule, tc.getVersion)
+			got, err := testDB.GetVersion(ctx, tc.getModule, tc.getVersion)
 			if tc.wantReadErr != (err != nil) {
 				t.Fatalf("db.GetVersion(ctx, %q, %q) error: %v, want read error: %t", tc.getModule, tc.getVersion, err, tc.wantReadErr)
 			}
@@ -289,7 +293,7 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 				}
 			}
 
-			gotPkg, err := db.GetPackage(ctx, tc.getPkg, tc.getVersion)
+			gotPkg, err := testDB.GetPackage(ctx, tc.getPkg, tc.getVersion)
 			if tc.version == nil || tc.version.Packages == nil || tc.getPkg == "" {
 				if tc.wantReadErr != (err != nil) {
 					t.Fatalf("db.GetPackage(ctx, %q, %q) = %v, want %v", tc.getPkg, tc.getVersion, err, sql.ErrNoRows)
@@ -320,8 +324,7 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	teardownTestCase, db := SetupCleanDB(t)
-	defer teardownTestCase(t)
+	defer ResetTestDB(testDB, t)
 	var (
 		pkg = &internal.Package{
 			Path:     "path.to/foo/bar",
@@ -383,12 +386,12 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			for _, v := range tc.versions {
-				if err := db.InsertVersion(ctx, v, sampleLicenses); err != nil {
+				if err := testDB.InsertVersion(ctx, v, sampleLicenses); err != nil {
 					t.Errorf("db.InsertVersion(ctx, %v): %v", v, err)
 				}
 			}
 
-			gotPkg, err := db.GetLatestPackage(ctx, tc.path)
+			gotPkg, err := testDB.GetLatestPackage(ctx, tc.path)
 			if (err != nil) != tc.wantReadErr {
 				t.Errorf("db.GetLatestPackage(ctx, %q): %v", tc.path, err)
 			}
@@ -501,19 +504,18 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 		},
 	} {
 		t.Run(tc.path, func(t *testing.T) {
-			teardownTestCase, db := SetupCleanDB(t)
-			defer teardownTestCase(t)
+			defer ResetTestDB(testDB, t)
 
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 			defer cancel()
 
 			for _, v := range testVersions {
-				if err := db.InsertVersion(ctx, v, sampleLicenses); err != nil {
+				if err := testDB.InsertVersion(ctx, v, sampleLicenses); err != nil {
 					t.Errorf("db.InsertVersion(%v): %v", v, err)
 				}
 			}
 
-			got, err := db.GetImports(ctx, tc.path, tc.version)
+			got, err := testDB.GetImports(ctx, tc.path, tc.version)
 			if err != nil {
 				t.Fatalf("db.GetImports(%q, %q): %v", tc.path, tc.version, err)
 			}
@@ -528,7 +530,7 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 				t.Errorf("db.GetImports(%q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
 			}
 
-			gotImportedBy, err := db.GetImportedBy(ctx, tc.path)
+			gotImportedBy, err := testDB.GetImportedBy(ctx, tc.path)
 			if err != nil {
 				t.Fatalf("db.GetImports(%q, %q): %v", tc.path, tc.version, err)
 			}
@@ -544,8 +546,7 @@ func TestPostgress_InsertVersionLogs(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	teardownTestCase, db := SetupCleanDB(t)
-	defer teardownTestCase(t)
+	defer ResetTestDB(testDB, t)
 
 	now := NowTruncated().UTC()
 	newVersions := []*internal.VersionLog{
@@ -569,11 +570,11 @@ func TestPostgress_InsertVersionLogs(t *testing.T) {
 		},
 	}
 
-	if err := db.InsertVersionLogs(ctx, newVersions); err != nil {
+	if err := testDB.InsertVersionLogs(ctx, newVersions); err != nil {
 		t.Errorf("db.InsertVersionLogs(ctx, newVersions) error: %v", err)
 	}
 
-	dbTime, err := db.LatestProxyIndexUpdate(ctx)
+	dbTime, err := testDB.LatestProxyIndexUpdate(ctx)
 	if err != nil {
 		t.Errorf("db.LatestProxyIndexUpdate error: %v", err)
 	}
@@ -828,8 +829,7 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			teardownTestCase, db := SetupCleanDB(t)
-			defer teardownTestCase(t)
+			defer ResetTestDB(testDB, t)
 
 			wantPseudoVersions := []*internal.VersionInfo{}
 			for i := 0; i < tc.numPseudo; i++ {
@@ -844,8 +844,8 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 					},
 					Packages: []*internal.Package{pkg1},
 				}
-				if err := db.InsertVersion(ctx, v, nil); err != nil {
-					t.Errorf("db.InsertVersion(%v): %v", v, err)
+				if err := testDB.InsertVersion(ctx, v, nil); err != nil {
+					t.Errorf("testDB.InsertVersion(%v): %v", v, err)
 				}
 
 				// GetPseudoVersions should only return the 10 most recent pseudo versions,
@@ -861,8 +861,8 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 			}
 
 			for _, v := range tc.versions {
-				if err := db.InsertVersion(ctx, v, nil); err != nil {
-					t.Errorf("db.InsertVersion(%v): %v", v, err)
+				if err := testDB.InsertVersion(ctx, v, nil); err != nil {
+					t.Errorf("testDB.InsertVersion(%v): %v", v, err)
 				}
 			}
 
@@ -871,28 +871,28 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 				err error
 			)
 
-			got, err = db.GetPseudoVersionsForPackageSeries(ctx, tc.path)
+			got, err = testDB.GetPseudoVersionsForPackageSeries(ctx, tc.path)
 			if err != nil {
-				t.Fatalf("db.GetPseudoVersionsForPackageSeries(%q) error: %v", tc.path, err)
+				t.Fatalf("testDB.GetPseudoVersionsForPackageSeries(%q) error: %v", tc.path, err)
 			}
 
 			if len(got) != len(wantPseudoVersions) {
-				t.Fatalf("db.GetPseudoVersionsForPackageSeries(%q) returned list of length %v, wanted %v", tc.path, len(got), len(wantPseudoVersions))
+				t.Fatalf("testDB.GetPseudoVersionsForPackageSeries(%q) returned list of length %v, wanted %v", tc.path, len(got), len(wantPseudoVersions))
 			}
 
 			for i, v := range got {
 				if diff := cmp.Diff(wantPseudoVersions[i], v); diff != "" {
-					t.Errorf("db.GetPseudoVersionsForPackageSeries(%q) mismatch (-want +got):\n%s", tc.path, diff)
+					t.Errorf("testDB.GetPseudoVersionsForPackageSeries(%q) mismatch (-want +got):\n%s", tc.path, diff)
 				}
 			}
 
-			got, err = db.GetTaggedVersionsForPackageSeries(ctx, tc.path)
+			got, err = testDB.GetTaggedVersionsForPackageSeries(ctx, tc.path)
 			if err != nil {
-				t.Fatalf("db.GetTaggedVersionsForPackageSeries(%q) error: %v", tc.path, err)
+				t.Fatalf("testDB.GetTaggedVersionsForPackageSeries(%q) error: %v", tc.path, err)
 			}
 
 			if len(got) != len(tc.wantTaggedVersions) {
-				t.Fatalf("db.GetTaggedVersionsForPackageSeries(%q) returned list of length %v, wanted %v", tc.path, len(got), len(tc.wantTaggedVersions))
+				t.Fatalf("testDB.GetTaggedVersionsForPackageSeries(%q) returned list of length %v, wanted %v", tc.path, len(got), len(tc.wantTaggedVersions))
 			}
 
 			for i, v := range got {
@@ -999,16 +999,15 @@ func TestGetVersionForPackage(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			teardownTestCase, db := SetupCleanDB(t)
-			defer teardownTestCase(t)
+			defer ResetTestDB(testDB, t)
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 			defer cancel()
 
-			if err := db.InsertVersion(ctx, tc.wantVersion, sampleLicenses); err != nil {
+			if err := testDB.InsertVersion(ctx, tc.wantVersion, sampleLicenses); err != nil {
 				t.Errorf("db.InsertVersion(ctx, %q %q): %v", tc.path, tc.version, err)
 			}
 
-			got, err := db.GetVersionForPackage(ctx, tc.path, tc.version)
+			got, err := testDB.GetVersionForPackage(ctx, tc.path, tc.version)
 			if err != nil {
 				t.Errorf("db.GetVersionForPackage(ctx, %q, %q): %v", tc.path, tc.version, err)
 			}
@@ -1064,18 +1063,17 @@ func TestGetLicenses(t *testing.T) {
 		},
 	}
 
-	teardownTestCase, db := SetupCleanDB(t)
-	defer teardownTestCase(t)
+	defer ResetTestDB(testDB, t)
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	if err := db.InsertVersion(ctx, testVersion, sampleLicenses); err != nil {
+	if err := testDB.InsertVersion(ctx, testVersion, sampleLicenses); err != nil {
 		t.Errorf("db.InsertVersion(ctx, %q, licenses): %v", testVersion.Version, err)
 	}
 
 	for _, test := range tests {
 		t.Run(test.label, func(t *testing.T) {
-			got, err := db.GetLicenses(ctx, test.pkgPath, testVersion.Version)
+			got, err := testDB.GetLicenses(ctx, test.pkgPath, testVersion.Version)
 			if err != nil {
 				t.Fatalf("db.GetLicenses(ctx, %q, %q): %v", test.pkgPath, testVersion.Version, err)
 			}

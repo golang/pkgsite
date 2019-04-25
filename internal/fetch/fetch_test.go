@@ -24,6 +24,12 @@ import (
 
 const testTimeout = 5 * time.Second
 
+var testDB *postgres.DB
+
+func TestMain(m *testing.M) {
+	postgres.RunDBTests("discovery_fetch_test", m, &testDB)
+}
+
 func TestFetchAndInsertVersion(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
@@ -63,19 +69,18 @@ func TestFetchAndInsertVersion(t *testing.T) {
 
 	for _, test := range testCases {
 		t.Run(test.modulePath, func(t *testing.T) {
-			teardownDB, db := postgres.SetupCleanDB(t)
-			defer teardownDB(t)
+			defer postgres.ResetTestDB(testDB, t)
 
 			teardownProxy, client := proxy.SetupTestProxy(ctx, t)
 			defer teardownProxy(t)
 
-			if err := FetchAndInsertVersion(test.modulePath, test.version, client, db); err != nil {
-				t.Fatalf("FetchAndInsertVersion(%q, %q, %v, %v): %v", test.modulePath, test.version, client, db, err)
+			if err := FetchAndInsertVersion(test.modulePath, test.version, client, testDB); err != nil {
+				t.Fatalf("FetchAndInsertVersion(%q, %q, %v, %v): %v", test.modulePath, test.version, client, testDB, err)
 			}
 
-			dbVersion, err := db.GetVersion(ctx, test.modulePath, test.version)
+			dbVersion, err := testDB.GetVersion(ctx, test.modulePath, test.version)
 			if err != nil {
-				t.Fatalf("db.GetVersion(ctx, %q, %q): %v", test.modulePath, test.version, err)
+				t.Fatalf("testDB.GetVersion(ctx, %q, %q): %v", test.modulePath, test.version, err)
 			}
 
 			// create a clone of dbVersion, as we want to use it for package testing later.
@@ -88,19 +93,19 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			got.CommitTime = got.CommitTime.UTC()
 
 			if diff := cmp.Diff(*test.versionData, got); diff != "" {
-				t.Errorf("db.GetVersion(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
+				t.Errorf("testDB.GetVersion(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
 			}
 
-			gotPkg, err := db.GetPackage(ctx, test.pkg, test.version)
+			gotPkg, err := testDB.GetPackage(ctx, test.pkg, test.version)
 			if err != nil {
-				t.Fatalf("db.GetPackage(ctx, %q, %q): %v", test.pkg, test.version, err)
+				t.Fatalf("testDB.GetPackage(ctx, %q, %q): %v", test.pkg, test.version, err)
 			}
 
 			sort.Slice(gotPkg.Licenses, func(i, j int) bool {
 				return gotPkg.Licenses[i].Type < gotPkg.Licenses[j].Type
 			})
 			if diff := cmp.Diff(test.pkgData, &gotPkg.Package); diff != "" {
-				t.Errorf("db.GetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", test.pkg, test.version, diff)
+				t.Errorf("testDB.GetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", test.pkg, test.version, diff)
 			}
 		})
 	}
@@ -110,8 +115,7 @@ func TestFetchAndInsertVersionTimeout(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	teardownDB, db := postgres.SetupCleanDB(t)
-	defer teardownDB(t)
+	defer postgres.ResetTestDB(testDB, t)
 
 	defer func(oldTimeout time.Duration) {
 		fetchTimeout = oldTimeout
@@ -124,10 +128,10 @@ func TestFetchAndInsertVersionTimeout(t *testing.T) {
 	name := "my.mod/version"
 	version := "v1.0.0"
 	wantErrString := "deadline exceeded"
-	err := FetchAndInsertVersion(name, version, client, db)
+	err := FetchAndInsertVersion(name, version, client, testDB)
 	if err == nil || !strings.Contains(err.Error(), wantErrString) {
 		t.Fatalf("FetchAndInsertVersion(%q, %q, %v, %v) returned error %v, want error containing %q",
-			name, version, client, db, err, wantErrString)
+			name, version, client, testDB, err, wantErrString)
 	}
 }
 

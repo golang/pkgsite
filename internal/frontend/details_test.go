@@ -18,6 +18,12 @@ import (
 
 const testTimeout = 5 * time.Second
 
+var testDB *postgres.DB
+
+func TestMain(m *testing.M) {
+	postgres.RunDBTests("discovery_frontend_test", m, &testDB)
+}
+
 var (
 	sampleLicenseInfos = []*internal.LicenseInfo{
 		{Type: "MIT", FilePath: "LICENSE"},
@@ -130,14 +136,13 @@ func TestFetchOverviewDetails(t *testing.T) {
 		},
 	}
 
-	teardownDB, db := postgres.SetupCleanDB(t)
-	defer teardownDB(t)
+	defer postgres.ResetTestDB(testDB, t)
 
-	if err := db.InsertVersion(ctx, tc.version, sampleLicenses); err != nil {
+	if err := testDB.InsertVersion(ctx, tc.version, sampleLicenses); err != nil {
 		t.Fatalf("db.InsertVersion(%v): %v", tc.version, err)
 	}
 
-	got, err := fetchOverviewDetails(ctx, db, firstVersionedPackage(tc.version))
+	got, err := fetchOverviewDetails(ctx, testDB, firstVersionedPackage(tc.version))
 	if err != nil {
 		t.Fatalf("fetchOverviewDetails(ctx, db, %q, %q) = %v err = %v, want %v",
 			tc.version.Packages[0].Path, tc.version.Version, got, err, tc.wantDetails)
@@ -332,16 +337,15 @@ func TestFetchVersionsDetails(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			teardownDB, db := postgres.SetupCleanDB(t)
-			defer teardownDB(t)
+			defer postgres.ResetTestDB(testDB, t)
 
 			for _, v := range tc.versions {
-				if err := db.InsertVersion(ctx, v, sampleLicenses); err != nil {
+				if err := testDB.InsertVersion(ctx, v, sampleLicenses); err != nil {
 					t.Fatalf("db.InsertVersion(%v): %v", v, err)
 				}
 			}
 
-			got, err := fetchVersionsDetails(ctx, db, pkg1)
+			got, err := fetchVersionsDetails(ctx, testDB, pkg1)
 			if err != nil {
 				t.Fatalf("fetchVersionsDetails(ctx, db, %q, %q) = %v err = %v, want %v",
 					tc.path, tc.version, got, err, tc.wantDetails)
@@ -420,14 +424,13 @@ func TestFetchModuleDetails(t *testing.T) {
 		},
 	}
 
-	teardownDB, db := postgres.SetupCleanDB(t)
-	defer teardownDB(t)
+	defer postgres.ResetTestDB(testDB, t)
 
-	if err := db.InsertVersion(ctx, tc.version, sampleLicenses); err != nil {
+	if err := testDB.InsertVersion(ctx, tc.version, sampleLicenses); err != nil {
 		t.Fatalf("db.InsertVersion(ctx, %v, %v): %v", tc.version, sampleLicenses, err)
 	}
 
-	got, err := fetchModuleDetails(ctx, db, firstVersionedPackage(tc.version))
+	got, err := fetchModuleDetails(ctx, testDB, firstVersionedPackage(tc.version))
 	if err != nil {
 		t.Fatalf("fetchModuleDetails(ctx, db, %q, %q) = %v err = %v, want %v",
 			tc.version.Packages[0].Path, tc.version.Version, got, err, tc.wantDetails)
@@ -587,17 +590,16 @@ func TestFetchImportsDetails(t *testing.T) {
 			version := sampleInternalVersion
 			version.Packages[0].Imports = tc.imports
 
-			teardownDB, db := postgres.SetupCleanDB(t)
-			defer teardownDB(t)
+			defer postgres.ResetTestDB(testDB, t)
 
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 			defer cancel()
 
-			if err := db.InsertVersion(ctx, version, sampleLicenses); err != nil {
+			if err := testDB.InsertVersion(ctx, version, sampleLicenses); err != nil {
 				t.Fatalf("db.InsertVersion(ctx, %v, %v): %v", version, sampleLicenses, err)
 			}
 
-			got, err := fetchImportsDetails(ctx, db, firstVersionedPackage(version))
+			got, err := fetchImportsDetails(ctx, testDB, firstVersionedPackage(version))
 			if err != nil {
 				t.Fatalf("fetchModuleDetails(ctx, db, %q, %q) = %v err = %v, want %v",
 					version.Packages[0].Path, version.Version, got, err, tc.wantDetails)
@@ -669,21 +671,20 @@ func TestFetchImportedByDetails(t *testing.T) {
 		},
 	} {
 		t.Run(tc.pkg.Path, func(t *testing.T) {
-			teardownTestCase, db := postgres.SetupCleanDB(t)
-			defer teardownTestCase(t)
+			defer postgres.ResetTestDB(testDB, t)
 
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 			defer cancel()
 
 			for _, p := range []*internal.Package{pkg1, pkg2, pkg3} {
 				v := makeVersion(p)
-				if err := db.InsertVersion(ctx, v, sampleLicenses); err != nil {
+				if err := testDB.InsertVersion(ctx, v, sampleLicenses); err != nil {
 					t.Errorf("db.InsertVersion(%v): %v", v, err)
 				}
 			}
 
 			vp := firstVersionedPackage(makeVersion(tc.pkg))
-			got, err := fetchImportedByDetails(ctx, db, &vp.Package)
+			got, err := fetchImportedByDetails(ctx, testDB, &vp.Package)
 			if err != nil {
 				t.Fatalf("fetchImportedByDetails(ctx, db, %q) = %v err = %v, want %v",
 					tc.pkg.Path, got, err, tc.wantDetails)
