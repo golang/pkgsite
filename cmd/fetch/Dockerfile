@@ -6,7 +6,8 @@ LABEL maintainer="Julie Qiu <julie@golang.org>"
 # calls to HTTPS endpoints.
 RUN apk add --no-cache ca-certificates
 
-ENV GOPROXY ENV CGO_ENABLED 0
+ENV GOPROXY https://proxy.golang.org
+ENV CGO_ENABLED 0
 ENV GO111MODULE on
 
 # Set the working directory outside $GOPATH to ensure module mode is enabled.
