@@ -16,8 +16,8 @@ func TestDetectLicenses(t *testing.T) {
 		return []*internal.LicenseInfo{{Type: licType, FilePath: licFile}}
 	}
 	testCases := []struct {
-		name, zipName string
-		want          []*internal.LicenseInfo
+		name, zipName, subdir string
+		want                  []*internal.LicenseInfo
 	}{
 		{
 			name:    "valid_license",
@@ -27,8 +27,12 @@ func TestDetectLicenses(t *testing.T) {
 			name:    "valid_license_md_format",
 			zipName: "licensemd",
 			want:    makeLicenses("MIT", "rsc.io/quote@v1.4.1/LICENSE.md"),
-		},
-		{
+		}, {
+			name:    "valid_license_trim_prefix",
+			subdir:  "rsc.io/quote@v1.4.1",
+			zipName: "licensemd",
+			want:    makeLicenses("MIT", "LICENSE.md"),
+		}, {
 			name:    "valid_license_copying",
 			zipName: "copying",
 			want:    makeLicenses("Apache-2.0", "golang.org/x/text@v0.0.3/COPYING"),
@@ -79,7 +83,7 @@ func TestDetectLicenses(t *testing.T) {
 			defer rc.Close()
 			z := &rc.Reader
 
-			got, err := detectLicenses(z)
+			got, err := detectLicenses(test.subdir, z)
 			if err != nil {
 				t.Errorf("detectLicenses(z): %v", err)
 			}

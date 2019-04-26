@@ -27,8 +27,9 @@ import (
 
 // DetailsPage contains data for the doc template.
 type DetailsPage struct {
-	Details       interface{}
-	PackageHeader *Package
+	CanShowDetails bool
+	Details        interface{}
+	PackageHeader  *Package
 }
 
 // OverviewDetails contains all of the data that the overview template
@@ -112,16 +113,17 @@ type MinorVersionGroup struct {
 
 // Package contains information for an individual package.
 type Package struct {
-	Name       string
-	Version    string
-	Path       string
-	ModulePath string
-	Synopsis   string
-	CommitTime string
-	Title      string
-	Suffix     string
-	Licenses   []LicenseInfo
-	IsCommand  bool
+	Name              string
+	Version           string
+	Path              string
+	ModulePath        string
+	Synopsis          string
+	CommitTime        string
+	Title             string
+	Suffix            string
+	Licenses          []LicenseInfo
+	IsCommand         bool
+	IsRedistributable bool
 }
 
 // transformLicenseInfos transforms an internal.LicenseInfo into a LicenseInfo,
@@ -150,15 +152,16 @@ func createPackageHeader(pkg *internal.VersionedPackage) (*Package, error) {
 	}
 	name := packageName(pkg.Name, pkg.Path)
 	return &Package{
-		Name:       name,
-		IsCommand:  isCmd,
-		Title:      packageTitle(name, isCmd),
-		Version:    pkg.VersionInfo.Version,
-		Path:       pkg.Path,
-		Synopsis:   pkg.Package.Synopsis,
-		Suffix:     pkg.Package.Suffix,
-		Licenses:   transformLicenseInfos(pkg.Licenses),
-		CommitTime: elapsedTime(pkg.VersionInfo.CommitTime),
+		Name:              name,
+		IsCommand:         isCmd,
+		Title:             packageTitle(name, isCmd),
+		Version:           pkg.VersionInfo.Version,
+		Path:              pkg.Path,
+		Synopsis:          pkg.Package.Synopsis,
+		Suffix:            pkg.Package.Suffix,
+		Licenses:          transformLicenseInfos(pkg.Licenses),
+		CommitTime:        elapsedTime(pkg.VersionInfo.CommitTime),
+		IsRedistributable: pkg.IsRedistributable(),
 	}, nil
 }
 
@@ -429,6 +432,42 @@ func readmeHTML(readmeFilePath string, readmeContents []byte) template.HTML {
 	return template.HTML(string(p.SanitizeBytes(unsafe)))
 }
 
+// tabSettings defines rendering options associated to each tab.  Any tab value
+// not present in this map will be handled as a request to 'overview'.
+var tabSettings = map[string]struct {
+	alwaysShowDetails bool
+}{
+	"doc":        {},
+	"importedby": {alwaysShowDetails: true},
+	"imports":    {alwaysShowDetails: true},
+	"licenses":   {},
+	"module":     {},
+	"overview":   {},
+	"versions":   {alwaysShowDetails: true},
+}
+
+// fetchDetails returns tab details by delegating to the correct detail
+// handler.
+func fetchDetails(ctx context.Context, tab string, db *postgres.DB, pkg *internal.VersionedPackage) (interface{}, error) {
+	switch tab {
+	case "doc":
+		return fetchDocumentationDetails(ctx, db, pkg)
+	case "versions":
+		return fetchVersionsDetails(ctx, db, &pkg.Package)
+	case "module":
+		return fetchModuleDetails(ctx, db, pkg)
+	case "imports":
+		return fetchImportsDetails(ctx, db, pkg)
+	case "importedby":
+		return fetchImportedByDetails(ctx, db, &pkg.Package)
+	case "licenses":
+		return fetchLicensesDetails(ctx, db, pkg)
+	case "overview":
+		return fetchOverviewDetails(ctx, db, pkg)
+	}
+	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
+}
+
 // HandleDetails applies database data to the appropriate template. Handles all
 // endpoints that match "/" or "/<import-path>[@<version>?tab=<tab>]"
 func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
@@ -452,10 +491,9 @@ func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var (
-		details interface{}
-		pkg     *internal.VersionedPackage
-		err     error
-		ctx     = r.Context()
+		pkg *internal.VersionedPackage
+		err error
+		ctx = r.Context()
 	)
 
 	if version == "" {
@@ -482,35 +520,28 @@ func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tab := r.FormValue("tab")
-	switch tab {
-	case "doc":
-		details, err = fetchDocumentationDetails(ctx, c.db, pkg)
-	case "versions":
-		details, err = fetchVersionsDetails(ctx, c.db, &pkg.Package)
-	case "module":
-		details, err = fetchModuleDetails(ctx, c.db, pkg)
-	case "imports":
-		details, err = fetchImportsDetails(ctx, c.db, pkg)
-	case "importedby":
-		details, err = fetchImportedByDetails(ctx, c.db, &pkg.Package)
-	case "licenses":
-		details, err = fetchLicensesDetails(ctx, c.db, pkg)
-	case "overview":
-		fallthrough
-	default:
+	settings, ok := tabSettings[tab]
+	if !ok {
 		tab = "overview"
-		details, err = fetchOverviewDetails(ctx, c.db, pkg)
+		settings = tabSettings["overview"]
 	}
+	canShowDetails := pkg.IsRedistributable() || settings.alwaysShowDetails
 
-	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		log.Printf("error fetching page for %q: %v", tab, err)
-		return
+	var details interface{}
+	if canShowDetails {
+		var err error
+		details, err = fetchDetails(ctx, tab, c.db, pkg)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			log.Printf("error fetching page for %q: %v", tab, err)
+			return
+		}
 	}
 
 	page := &DetailsPage{
-		PackageHeader: pkgHeader,
-		Details:       details,
+		PackageHeader:  pkgHeader,
+		Details:        details,
+		CanShowDetails: canShowDetails,
 	}
 
 	c.renderPage(w, tab+".tmpl", page)

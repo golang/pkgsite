@@ -53,6 +53,7 @@ func TestFetchSearchPage(t *testing.T) {
 					Name:     "bar",
 					Path:     "/path/to/bar",
 					Synopsis: "bar is used by foo.",
+					Licenses: sampleLicenseInfos,
 				},
 			},
 		}

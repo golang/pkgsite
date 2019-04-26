@@ -34,6 +34,14 @@ func New(db *postgres.DB, templateDir string) (*Controller, error) {
 	}, nil
 }
 
+// HandleStaticPage handles requests to a template that contains no dynamic
+// content.
+func (c *Controller) HandleStaticPage(templateName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		c.renderPage(w, templateName, nil)
+	}
+}
+
 // renderPage is used to execute all templates for a *Controller. It expects
 // the file for templateName to be defined as "ROOT".
 func (c *Controller) renderPage(w http.ResponseWriter, templateName string, page interface{}) {
@@ -59,6 +67,7 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 		{"index.tmpl"},
 		{"package404.tmpl"},
 		{"search.tmpl"},
+		{"license_policy.tmpl"},
 		{"doc.tmpl", "details.tmpl"},
 		{"importedby.tmpl", "details.tmpl"},
 		{"imports.tmpl", "details.tmpl"},

@@ -128,7 +128,7 @@ func FetchAndInsertVersion(modulePath, version string, proxyClient *proxy.Client
 		return fmt.Errorf("extractReadmeFromZip(%q, %q, zipReader): %v", modulePath, version, err)
 	}
 
-	licenses, err := detectLicenses(zipReader)
+	licenses, err := detectLicenses(moduleVersionDir(modulePath, version), zipReader)
 	if err != nil {
 		log.Printf("Error detecting licenses for %v@%v: %v", modulePath, version, err)
 	}
@@ -151,6 +151,7 @@ func FetchAndInsertVersion(modulePath, version string, proxyClient *proxy.Client
 		},
 		Packages: packages,
 	}
+
 	if err = db.InsertVersion(ctx, v, licenses); err != nil {
 		return fmt.Errorf("db.InsertVersion for %q %q: %v", modulePath, version, err)
 	}
@@ -160,11 +161,10 @@ func FetchAndInsertVersion(modulePath, version string, proxyClient *proxy.Client
 	return nil
 }
 
-// trimeModuleVersionPrefix trims the prefix <modulePath>@<version>/ from the
-// filepath, which is the expected base directory for the contents of a module
-// zip from the proxy.
-func trimModuleVersionPrefix(modulePath, version, filePath string) string {
-	return strings.TrimPrefix(filePath, fmt.Sprintf("%s@%s/", modulePath, version))
+// moduleVersionDir formats the content subdirectory for the given
+// modulePath and version.
+func moduleVersionDir(modulePath, version string) string {
+	return fmt.Sprintf("%s@%s", modulePath, version)
 }
 
 // extractReadmeFromZip returns the file path and contents of the first file
@@ -177,7 +177,7 @@ func extractReadmeFromZip(modulePath, version string, r *zip.Reader) (string, []
 			if err != nil {
 				return "", nil, fmt.Errorf("readZipFile(%q): %v", zipFile.Name, err)
 			}
-			return trimModuleVersionPrefix(modulePath, version, zipFile.Name), c, nil
+			return strings.TrimPrefix(zipFile.Name, moduleVersionDir(modulePath, version)+"/"), c, nil
 		}
 	}
 	return "", nil, errReadmeNotFound
@@ -214,7 +214,7 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, licenses 
 		return nil, fmt.Errorf("loadPackages(%q, %q, %q, zipReader): %v", workDir, modulePath, version, err)
 	}
 
-	packages, err := transformPackages(workDir, modulePath, pkgs, licenses)
+	packages, err := transformPackages(workDir, modulePath, version, pkgs, licenses)
 	if err != nil {
 		return nil, fmt.Errorf("transformPackages(%q, %q, pkgs, licenses): %v", workDir, modulePath, err)
 	}
@@ -274,7 +274,7 @@ func writeGoModFile(filename, modulePath string) error {
 func loadPackages(workDir, modulePath, version string) ([]*packages.Package, error) {
 	config := &packages.Config{
 		Mode: packages.LoadSyntax,
-		Dir:  fmt.Sprintf("%s/%s@%s", workDir, modulePath, version),
+		Dir:  filepath.Join(workDir, moduleVersionDir(modulePath, version)),
 	}
 	pattern := fmt.Sprintf("%s/...", modulePath)
 	pkgs, err := packages.Load(config, pattern)
@@ -333,8 +333,9 @@ func (m licenseMatcher) matchLicenses(p *packages.Package) []*internal.LicenseIn
 // transformPackages maps a slice of *packages.Package to our internal
 // representation (*internal.Package).  To do so, it maps package data
 // and matches packages with their applicable licenses.
-func transformPackages(workDir, modulePath string, pkgs []*packages.Package, licenses []*internal.License) ([]*internal.Package, error) {
-	matcher := newLicenseMatcher(workDir, licenses)
+func transformPackages(workDir, modulePath, version string, pkgs []*packages.Package, licenses []*internal.License) ([]*internal.Package, error) {
+	licenseDir := filepath.Join(workDir, moduleVersionDir(modulePath, version))
+	matcher := newLicenseMatcher(licenseDir, licenses)
 	packages := []*internal.Package{}
 
 	if len(pkgs) > maxPackagesPerModule {

@@ -1,0 +1,27 @@
+<!--
+  Copyright 2019 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{ define "ROOT" }}
+
+<!DOCTYPE html>
+<title>Licenses — Go Discovery</title>
+
+{{ template "header" . }}
+{{ template "nav" . }}
+
+<div class="Container">
+  <h1>License Disclaimer</h1>
+  <p class="License-disclaimer">
+    The go.dev website displays license information in order to help users
+    evaluate packages for their intended use. Licenses are detected based on
+    the name and contents of the linked license files to the best of our
+    ability. We hope this information is helpful, but this is not legal advice
+    and we do not make any guarantees regarding the accuracy of our license
+    detection.
+  </p>
+</div>
+
+{{ end }}

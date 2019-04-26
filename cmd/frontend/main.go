@@ -47,6 +47,7 @@ func main() {
 		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(*staticPath)))
 	})
 	mux.HandleFunc("/search/", controller.HandleSearch)
+	mux.HandleFunc("/license-policy/", controller.HandleStaticPage("license_policy.tmpl"))
 	mux.HandleFunc("/", controller.HandleDetails)
 
 	mw := middleware.Timeout(1 * time.Minute)

@@ -48,6 +48,11 @@ type Package struct {
 	Imports  []*Import
 }
 
+// IsRedistributable reports whether the package may be redistributed.
+func (p *Package) IsRedistributable() bool {
+	return licensesAreRedistributable(p.Licenses)
+}
+
 // VersionedPackage is a Package along with its corresponding version
 // information.
 type VersionedPackage struct {

@@ -54,6 +54,7 @@ func SetupTestProxy(ctx context.Context, t *testing.T) (func(t *testing.T), *Cli
 	for _, v := range [][]string{
 		[]string{"my.mod/module", "v1.0.0"},
 		[]string{"no.mod/module", "v1.0.0"},
+		[]string{"nonredistributable.mod/module", "v1.0.0"},
 		[]string{"emp.ty/module", "v1.0.0"},
 		[]string{"rsc.io/quote", "v1.5.2"},
 		[]string{"rsc.io/quote/v2", "v2.0.1"},

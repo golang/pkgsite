@@ -24,6 +24,7 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 					Name:     "foo",
 					Path:     "/path/to/foo",
 					Synopsis: "foo",
+					Licenses: sampleLicenseInfos,
 				},
 			}
 		})
@@ -33,6 +34,7 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 					Name:     "bar",
 					Path:     "/path/to/bar",
 					Synopsis: "bar is bar", // add an extra 'bar' to make sorting deterministic
+					Licenses: sampleLicenseInfos,
 				},
 			}
 		})
@@ -42,6 +44,7 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 				Name:     "foo",
 				Path:     "/path/to/foo",
 				Synopsis: "foo",
+				Licenses: sampleLicenseInfos,
 			},
 			VersionInfo: internal.VersionInfo{
 				ModulePath: versionFoo.ModulePath,
@@ -54,6 +57,7 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 				Name:     "bar",
 				Path:     "/path/to/bar",
 				Synopsis: "bar is bar",
+				Licenses: sampleLicenseInfos,
 			},
 			VersionInfo: internal.VersionInfo{
 				ModulePath: versionBar.ModulePath,
@@ -160,7 +164,7 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 
 			if tc.versions != nil {
 				for _, v := range tc.versions {
-					if err := testDB.InsertVersion(ctx, v, nil); derrors.Type(err) != tc.insertErr {
+					if err := testDB.InsertVersion(ctx, v, sampleLicenses); derrors.Type(err) != tc.insertErr {
 						t.Fatalf("testDB.InsertVersion(%+v): %v", tc.versions, err)
 					}
 					if err := testDB.InsertDocuments(ctx, v); derrors.Type(err) != tc.insertErr {

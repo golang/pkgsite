@@ -298,10 +298,10 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 	}
 
 	var (
-		commitTime                                                     time.Time
-		name, synopsis, seriesPath, modulePath, suffix, readmeFilePath string
-		readmeContents                                                 []byte
-		licenseTypes, licensePaths                                     []string
+		commitTime                                                                  time.Time
+		name, synopsis, seriesPath, modulePath, suffix, readmeFilePath, versionType string
+		readmeContents                                                              []byte
+		licenseTypes, licensePaths                                                  []string
 	)
 	query := `
 		SELECT
@@ -314,7 +314,8 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 			v.module_path,
 			p.name,
 			p.synopsis,
-			p.suffix
+			p.suffix,
+			v.version_type
 		FROM
 			versions v
 		INNER JOIN
@@ -333,7 +334,8 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 
 	row := db.QueryRowContext(ctx, query, path, version)
 	if err := row.Scan(&commitTime, pq.Array(&licenseTypes),
-		pq.Array(&licensePaths), &readmeFilePath, &readmeContents, &seriesPath, &modulePath, &name, &synopsis, &suffix); err != nil {
+		pq.Array(&licensePaths), &readmeFilePath, &readmeContents, &seriesPath, &modulePath,
+		&name, &synopsis, &suffix, &versionType); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, derrors.NotFound(fmt.Sprintf("package %s@%s not found", path, version))
 		}
@@ -360,6 +362,7 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 			CommitTime:     commitTime,
 			ReadmeFilePath: readmeFilePath,
 			ReadmeContents: readmeContents,
+			VersionType:    internal.VersionType(versionType),
 		},
 	}, nil
 }
@@ -797,6 +800,30 @@ func padPrerelease(v string) (string, error) {
 	return strings.Join(pre, "."), nil
 }
 
+// removeNonDistributableData removes any information from the version payload,
+// after checking licenses.
+func removeNonDistributableData(v *internal.Version) {
+	hasRedistributablePackage := false
+	for _, p := range v.Packages {
+		if p.IsRedistributable() {
+			hasRedistributablePackage = true
+		} else {
+			// Not redistributable, so prune information that can't be stored. In the
+			// future this should also include documentation.
+			p.Synopsis = ""
+		}
+	}
+
+	// If no packages are redistributable, we have no need for the readme
+	// contents, so drop them. Note that if a single package is redistributable,
+	// it must be true by definition that the module itself it redistributable,
+	// so capturing the README contents is OK.
+	if !hasRedistributablePackage {
+		v.ReadmeFilePath = ""
+		v.ReadmeContents = nil
+	}
+}
+
 // InsertVersion inserts a Version into the database along with any necessary
 // series, modules and packages. If any of these rows already exist, they will
 // not be updated. The version string is also parsed into major, minor, patch
@@ -811,6 +838,8 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 	if err := validateVersion(version); err != nil {
 		return derrors.InvalidArgument(fmt.Sprintf("validateVersion: %v", err))
 	}
+
+	removeNonDistributableData(version)
 
 	return db.Transact(func(tx *sql.Tx) error {
 		if _, err := tx.ExecContext(ctx,
@@ -888,7 +917,15 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 		var importValues []interface{}
 		var pkgLicenseValues []interface{}
 		for _, p := range version.Packages {
-			pkgValues = append(pkgValues, p.Path, p.Synopsis, p.Name, version.Version, version.ModulePath, p.Suffix)
+			pkgValues = append(pkgValues,
+				p.Path,
+				p.Synopsis,
+				p.Name,
+				version.Version,
+				version.ModulePath,
+				p.Suffix,
+				p.IsRedistributable(),
+			)
 
 			for _, l := range p.Licenses {
 				pkgLicenseValues = append(pkgLicenseValues, version.ModulePath, version.Version, l.FilePath, p.Path)
@@ -906,6 +943,7 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 				"version",
 				"module_path",
 				"suffix",
+				"redistributable",
 			}
 			table := "packages"
 			if err := bulkInsert(ctx, tx, table, pkgCols, pkgValues, true); err != nil {

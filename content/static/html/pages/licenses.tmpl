@@ -5,17 +5,6 @@
 -->
 
 {{ define "content" }}
-<section id="Disclaimer">
-  <h3><a href="#Disclaimer">Disclaimer</a></h3>
-  <p class="License-disclaimer">
-    The go.dev website displays license information in order to help users
-    evaluate packages for their intended use. Licenses are detected based on
-    the name and contents of the linked license files to the best of our
-    ability. We hope this information is helpful, but this is not legal advice
-    and we do not make any guarantees regarding the accuracy of our license
-    detection.
-  </p>
-</section>
 {{ range .Licenses }}
 <section class="License" id="{{ .Anchor }}">
   <h3><a href="#{{ .Anchor }}">{{ .Type }} <small>({{ .FilePath }})</small></a></h3>

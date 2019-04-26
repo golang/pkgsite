@@ -28,10 +28,10 @@ const (
 var (
 	now                = NowTruncated()
 	sampleLicenseInfos = []*internal.LicenseInfo{
-		{Type: "licensename", FilePath: "bar/LICENSE"},
+		{Type: "MIT", FilePath: "LICENSE"},
 	}
 	sampleLicenses = []*internal.License{
-		{LicenseInfo: *sampleLicenseInfos[0], Contents: []byte("Lorem Ipsum")},
+		{LicenseInfo: *sampleLicenseInfos[0], Contents: []byte(`Lorem Ipsum`)},
 	}
 )
 
@@ -51,6 +51,7 @@ func sampleVersion(mutators ...func(*internal.Version)) *internal.Version {
 				Name:     "foo",
 				Synopsis: "This is a package synopsis",
 				Path:     "path.to/foo",
+				Licenses: sampleLicenseInfos,
 				Imports: []*internal.Import{
 					&internal.Import{
 						Name: "bar",

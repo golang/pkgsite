@@ -35,40 +35,95 @@ func TestFetchAndInsertVersion(t *testing.T) {
 	defer cancel()
 
 	testCases := []struct {
-		modulePath  string
-		version     string
-		versionData *internal.VersionInfo
-		pkg         string
-		pkgData     *internal.Package
+		modulePath string
+		version    string
+		pkg        string
+		want       *internal.VersionedPackage
 	}{
 		{
 			modulePath: "my.mod/module",
 			version:    "v1.0.0",
-			versionData: &internal.VersionInfo{
-				SeriesPath:     "my.mod/module",
-				ModulePath:     "my.mod/module",
-				Version:        "v1.0.0",
-				CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
-				ReadmeFilePath: "README.md",
-				ReadmeContents: []byte("README FILE FOR TESTING."),
-				VersionType:    "release",
+			pkg:        "my.mod/module/bar",
+			want: &internal.VersionedPackage{
+				VersionInfo: internal.VersionInfo{
+					SeriesPath:     "my.mod/module",
+					ModulePath:     "my.mod/module",
+					Version:        "v1.0.0",
+					CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
+					ReadmeFilePath: "README.md",
+					ReadmeContents: []byte("README FILE FOR TESTING."),
+					VersionType:    "release",
+				},
+				Package: internal.Package{
+					Path:     "my.mod/module/bar",
+					Name:     "bar",
+					Synopsis: "package bar",
+					Suffix:   "bar",
+					Licenses: []*internal.LicenseInfo{
+						{Type: "BSD-3-Clause", FilePath: "LICENSE"},
+						{Type: "MIT", FilePath: "bar/LICENSE"},
+					},
+				},
 			},
-			pkg: "my.mod/module/bar",
-			pkgData: &internal.Package{
-				Path:     "my.mod/module/bar",
-				Name:     "bar",
-				Synopsis: "package bar",
-				Suffix:   "bar",
-				Licenses: []*internal.LicenseInfo{
-					{Type: "BSD-3-Clause", FilePath: "my.mod/module@v1.0.0/LICENSE"},
-					{Type: "MIT", FilePath: "my.mod/module@v1.0.0/bar/LICENSE"},
+		}, {
+			modulePath: "nonredistributable.mod/module",
+			version:    "v1.0.0",
+			pkg:        "nonredistributable.mod/module/bar/baz",
+			want: &internal.VersionedPackage{
+				VersionInfo: internal.VersionInfo{
+					SeriesPath:     "nonredistributable.mod/module",
+					ModulePath:     "nonredistributable.mod/module",
+					Version:        "v1.0.0",
+					CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
+					ReadmeFilePath: "README.md",
+					ReadmeContents: []byte("README FILE FOR TESTING."),
+					VersionType:    "release",
+				},
+				Package: internal.Package{
+					Path:     "nonredistributable.mod/module/bar/baz",
+					Name:     "baz",
+					Synopsis: "package baz",
+					Suffix:   "bar/baz",
+					Licenses: []*internal.LicenseInfo{
+						{Type: "BSD-0-Clause", FilePath: "bar/baz/LICENSE"},
+						{Type: "BSD-0-Clause", FilePath: "LICENSE.txt"},
+						{Type: "BSD-3-Clause", FilePath: "LICENSE"},
+						{Type: "MIT", FilePath: "bar/baz/COPYING"},
+						{Type: "MIT", FilePath: "bar/LICENSE"},
+					},
+				},
+			},
+		}, {
+			modulePath: "nonredistributable.mod/module",
+			version:    "v1.0.0",
+			pkg:        "nonredistributable.mod/module/foo",
+			want: &internal.VersionedPackage{
+				VersionInfo: internal.VersionInfo{
+					SeriesPath:     "nonredistributable.mod/module",
+					ModulePath:     "nonredistributable.mod/module",
+					Version:        "v1.0.0",
+					CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
+					ReadmeFilePath: "README.md",
+					ReadmeContents: []byte("README FILE FOR TESTING."),
+					VersionType:    "release",
+				},
+				Package: internal.Package{
+					Path:     "nonredistributable.mod/module/foo",
+					Name:     "foo",
+					Synopsis: "",
+					Suffix:   "foo",
+					Licenses: []*internal.LicenseInfo{
+						{Type: "BSD-0-Clause", FilePath: "foo/LICENSE.md"},
+						{Type: "BSD-0-Clause", FilePath: "LICENSE.txt"},
+						{Type: "BSD-3-Clause", FilePath: "LICENSE"},
+					},
 				},
 			},
 		},
 	}
 
 	for _, test := range testCases {
-		t.Run(test.modulePath, func(t *testing.T) {
+		t.Run(test.pkg, func(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
 
 			teardownProxy, client := proxy.SetupTestProxy(ctx, t)
@@ -78,21 +133,12 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				t.Fatalf("FetchAndInsertVersion(%q, %q, %v, %v): %v", test.modulePath, test.version, client, testDB, err)
 			}
 
-			dbVersion, err := testDB.GetVersion(ctx, test.modulePath, test.version)
+			gotVersion, err := testDB.GetVersion(ctx, test.modulePath, test.version)
 			if err != nil {
 				t.Fatalf("testDB.GetVersion(ctx, %q, %q): %v", test.modulePath, test.version, err)
 			}
 
-			// create a clone of dbVersion, as we want to use it for package testing later.
-			got := *dbVersion
-
-			// got.CommitTime has a timezone location of +0000, while
-			// test.versionData.CommitTime has a timezone location of UTC.
-			// These are equal according to time.Equal, but fail for
-			// reflect.DeepEqual. Convert the DB time to UTC.
-			got.CommitTime = got.CommitTime.UTC()
-
-			if diff := cmp.Diff(*test.versionData, got); diff != "" {
+			if diff := cmp.Diff(test.want.VersionInfo, *gotVersion); diff != "" {
 				t.Errorf("testDB.GetVersion(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
 			}
 
@@ -104,7 +150,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			sort.Slice(gotPkg.Licenses, func(i, j int) bool {
 				return gotPkg.Licenses[i].Type < gotPkg.Licenses[j].Type
 			})
-			if diff := cmp.Diff(test.pkgData, &gotPkg.Package); diff != "" {
+			if diff := cmp.Diff(test.want, gotPkg); diff != "" {
 				t.Errorf("testDB.GetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", test.pkg, test.version, diff)
 			}
 		})
