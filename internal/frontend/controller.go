@@ -76,6 +76,16 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 		templateName := set[0]
 		t := template.New("").Funcs(template.FuncMap{
 			"templateName": func() string { return templateName },
+			"add": func(i, j int) int {
+				return i + j
+			},
+			"iterate": func(count int) []int {
+				var items []int
+				for i := 0; i < count; i++ {
+					items = append(items, i)
+				}
+				return items
+			},
 		})
 		helperGlob := filepath.Join(base, "helpers", "*.tmpl")
 		if _, err := t.ParseGlob(helperGlob); err != nil {

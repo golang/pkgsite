@@ -69,8 +69,8 @@ type SearchResult struct {
 	// Package is the package data corresponding to this SearchResult.
 	Package *internal.VersionedPackage
 
-	// Total is the total number of packages that were returned for this search.
-	Total uint64
+	// NumResults is the total number of packages that were returned for this search.
+	NumResults uint64
 }
 
 // Search fetches packages from the database that match the terms
@@ -152,7 +152,7 @@ func (db *DB) Search(ctx context.Context, terms []string, limit, offset int) ([]
 		results = append(results, &SearchResult{
 			Rank:          rank,
 			NumImportedBy: numImportedBy,
-			Total:         total,
+			NumResults:    total,
 			Package: &internal.VersionedPackage{
 				Package: internal.Package{
 					Name:     name,

@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -17,18 +18,20 @@ import (
 )
 
 const (
-	defaultSearchLimit = 20
+	defaultSearchLimit = 10
 )
 
 // SearchPage contains all of the data that the search template needs to
 // populate.
 type SearchPage struct {
-	Query   string
-	Results []*SearchResult
-	Total   int
-	Prev    int
-	Next    int
-	Page    int
+	Query      string
+	Results    []*SearchResult
+	NumPages   int
+	NumResults int
+	Offset     int
+	Page       int
+	Prev       int
+	Next       int
 }
 
 // SearchResult contains data needed to display a single search result.
@@ -58,10 +61,16 @@ func prev(page int) int {
 }
 
 func next(page, limit, numResults int) int {
-	if numResults < limit {
+	if page >= numPages(limit, numResults) {
 		return 0
 	}
 	return page + 1
+}
+
+// numPages is the total number of pages needed to display all the results,
+// given the specified limit.
+func numPages(limit, numResults int) int {
+	return int(math.Ceil(float64(numResults) / float64(limit)))
 }
 
 // fetchSearchPage fetches data matching the search query from the database and
@@ -87,17 +96,20 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, limit, 
 		})
 	}
 
-	var total int
+	var numResults int
 	if len(dbresults) > 0 {
-		total = int(dbresults[0].Total)
+		numResults = int(dbresults[0].NumResults)
 	}
+
 	return &SearchPage{
-		Page:    page,
-		Query:   query,
-		Results: results,
-		Total:   total,
-		Prev:    prev(page),
-		Next:    next(page, limit, len(results)),
+		Query:      query,
+		Results:    results,
+		NumPages:   numPages(limit, numResults),
+		NumResults: numResults,
+		Page:       page,
+		Offset:     offset(page, limit),
+		Prev:       prev(page),
+		Next:       next(page, limit, numResults),
 	}, nil
 }
 

@@ -68,11 +68,12 @@ func TestFetchSearchPage(t *testing.T) {
 			query:    "foo bar",
 			versions: []*internal.Version{versionFoo, versionBar},
 			wantSearchPage: &SearchPage{
-				Query: "foo bar",
-				Total: 2,
-				Prev:  0,
-				Next:  0,
-				Page:  1,
+				Query:      "foo bar",
+				NumResults: 2,
+				NumPages:   1,
+				Prev:       0,
+				Next:       0,
+				Page:       1,
 				Results: []*SearchResult{
 					&SearchResult{
 						Name:          versionBar.Packages[0].Name,
@@ -102,11 +103,12 @@ func TestFetchSearchPage(t *testing.T) {
 			query:    "package",
 			versions: []*internal.Version{versionFoo, versionBar},
 			wantSearchPage: &SearchPage{
-				Query: "package",
-				Total: 1,
-				Prev:  0,
-				Next:  0,
-				Page:  1,
+				Query:      "package",
+				NumResults: 1,
+				NumPages:   1,
+				Prev:       0,
+				Next:       0,
+				Page:       1,
 				Results: []*SearchResult{
 					&SearchResult{
 						Name:          versionFoo.Packages[0].Name,
@@ -141,6 +143,87 @@ func TestFetchSearchPage(t *testing.T) {
 
 			if diff := cmp.Diff(tc.wantSearchPage, got); diff != "" {
 				t.Errorf("fetchSearchPage(db, %q) mismatch (-want +got):\n%s", tc.query, diff)
+			}
+		})
+	}
+}
+
+func TestSearchPageMethods(t *testing.T) {
+	for _, tc := range []struct {
+		page, numResults, wantNumPages, wantOffset, wantPrev, wantNext int
+		name                                                           string
+	}{
+		{
+			name:         "single page of results with numResults below limit",
+			page:         1,
+			numResults:   7,
+			wantNumPages: 1,
+			wantOffset:   0,
+			wantPrev:     0,
+			wantNext:     0,
+		},
+		{
+			name:         "single page of results with numResults exactly limit",
+			page:         1,
+			numResults:   10,
+			wantNumPages: 1,
+			wantOffset:   0,
+			wantPrev:     0,
+			wantNext:     0,
+		},
+		{
+			name:         "first page of results for total of 5 pages",
+			page:         1,
+			numResults:   47,
+			wantNumPages: 5,
+			wantOffset:   0,
+			wantPrev:     0,
+			wantNext:     2,
+		},
+		{
+			name:         "second page of results for total of 5 pages",
+			page:         2,
+			numResults:   47,
+			wantNumPages: 5,
+			wantOffset:   10,
+			wantPrev:     1,
+			wantNext:     3,
+		},
+		{
+			name:         "last page of results for total of 5 pages",
+			page:         5,
+			numResults:   47,
+			wantNumPages: 5,
+			wantOffset:   40,
+			wantPrev:     4,
+			wantNext:     0,
+		},
+		{
+			name:         "page out of range",
+			page:         8,
+			numResults:   47,
+			wantNumPages: 5,
+			wantOffset:   70,
+			wantPrev:     7,
+			wantNext:     0,
+		},
+	} {
+		testLimit := 10
+		t.Run(tc.name, func(t *testing.T) {
+			if got := numPages(testLimit, tc.numResults); got != tc.wantNumPages {
+				t.Errorf("numPages(%d, %d) = %d; want = %d",
+					testLimit, tc.numResults, got, tc.wantNumPages)
+			}
+			if got := offset(tc.page, testLimit); got != tc.wantOffset {
+				t.Errorf("offset(%d, %d) = %d; want = %d",
+					tc.page, testLimit, got, tc.wantOffset)
+			}
+			if got := prev(tc.page); got != tc.wantPrev {
+				t.Errorf("prev(%d) = %d; want = %d", tc.page, got, tc.wantPrev)
+			}
+			if got := next(tc.page, testLimit, tc.numResults); got != tc.wantNext {
+				t.Errorf("next(%d, %d, %d) = %d; want = %d",
+					tc.page, testLimit, tc.numResults, got, tc.wantNext)
 			}
 		})
 	}

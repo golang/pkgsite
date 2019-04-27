@@ -14,35 +14,49 @@
 <div class="Container">
   {{ template "search_bar" . }}
   <div class="SearchContent-results">
-    <h1 class="SearchContent-header">{{ .Total }} package{{if gt .Total 1 }}s{{end}} found for “{{ .Query }}”</h1>
-    <div>
-      <p>Page {{ .Page }}</p>
-      <div>
-        {{ if .Prev }}
-          <a href="/search?q={{ .Query }}&page={{ .Prev }}">&lt;&lt; Prev</a>
-        {{ end }}
-        {{ if .Next }}
-          <a href="/search?q={{ .Query }}&page={{ .Next }}">Next &gt;&gt;</a>
-        {{ end }}
-      </div>
-    </div>
+    <h1 class="SearchContent-header">Results for “{{ .Query }}”</h1>
+    <p>{{ .Offset }} of {{ .NumResults }} results</p>
     <hr>
     {{ range .Results }}
       <div class="SearchSnippetContent">
-        <h2><a href="/{{.PackagePath}}?v={{.Version}}" class="SearchSnippetContent-packageName">{{ .PackagePath }}</a></h2>
-        <p><i>{{ .Version }}</i></p>
+        <h2><b>{{ .Name }} - </b><a href="/{{.PackagePath}}?v={{.Version}}" class="SearchSnippetContent-packageName">{{ .PackagePath }}</a></h2>
         <p>{{ .Synopsis }}</p>
-        <p class="SearchSnippetContent-commitTime">
-	  <span>Published {{ .CommitTime }}</span>
+	<div>
+          <span>Version: {{ .Version }}</span>
+	  <span>|</span>
+          <span>License(s): </span>
+	  <span>{{ range $i, $e := .Licenses -}}{{ if $i }}, {{ end }} {{ $e.Type }} {{ end }}</span>
+	</div>
+	<div>
 	  {{ if gt .NumImportedBy 1 }}
-	    <span> | Imported by {{ .NumImportedBy}} packages</span>
+	    <span>Imported by {{ .NumImportedBy}}</span>
+	    <span>|</span>
 	  {{ else if eq .NumImportedBy 1 }}
-	    <span> | Imported by {{ .NumImportedBy}} package</span>
+	    <span>Imported by {{ .NumImportedBy}}</span>
+	    <span>|</span>
 	  {{ end }}
-	</p>
+	  <span>Published: {{ .CommitTime }}</span>
+	</div>
         <hr>
       </div>
     {{ end}}
+    <div>
+      {{ if .Prev }}
+        <a href="/search?q={{ .Query }}&page={{ .Prev }}">Previous</a>
+      {{ else }}
+        <span>Previous</span>
+      {{ end }}
+
+      {{ range $i := iterate .NumPages }}
+        <a href="/search?q={{ $.Query }}&page={{ add $i 1 }}">{{ add $i 1 }}</a>
+      {{ end }}
+
+      {{ if .Next }}
+        <a href="/search?q={{ .Query }}&page={{ .Next }}">Next</a>
+      {{ else }}
+        <span>Next</span>
+      {{ end }}
+    </div>
   </div>
 
   {{ template "footer" }}
