@@ -433,6 +433,7 @@ func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Malformed path %q: %v", path, err)
 		return
 	}
+
 	version := r.FormValue("v")
 	if version != "" && !semver.IsValid(version) {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
@@ -442,11 +443,17 @@ func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		details interface{}
+		pkg     *internal.VersionedPackage
 		err     error
 		ctx     = r.Context()
 	)
 
-	pkg, err := c.db.GetPackage(ctx, path, version)
+	if version == "" {
+		pkg, err = c.db.GetLatestPackage(ctx, path)
+		version = pkg.VersionInfo.Version
+	} else {
+		pkg, err = c.db.GetPackage(ctx, path, version)
+	}
 	if err != nil {
 		if derrors.IsNotFound(err) {
 			w.WriteHeader(http.StatusNotFound)

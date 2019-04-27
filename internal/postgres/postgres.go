@@ -501,14 +501,13 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 	}
 
 	var (
-		commitTime, createdAt, updatedAt                        time.Time
-		seriesPath, modulePath, name, synopsis, version, suffix string
-		licenseTypes, licensePaths                              []string
+		commitTime                                                              time.Time
+		seriesPath, modulePath, name, synopsis, version, suffix, readmeFilePath string
+		licenseTypes, licensePaths                                              []string
+		readmeContents                                                          []byte
 	)
 	query := `
 		SELECT
-			v.created_at,
-			v.updated_at,
 			m.series_path,
 			p.module_path,
 			p.license_types,
@@ -517,7 +516,9 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 			v.commit_time,
 			p.name,
 			p.synopsis,
-			p.suffix
+			p.suffix,
+			v.readme_file_path,
+			v.readme_contents
 		FROM
 			versions v
 		INNER JOIN
@@ -540,8 +541,10 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 		LIMIT 1;`
 
 	row := db.QueryRowContext(ctx, query, path)
-	if err := row.Scan(&createdAt, &updatedAt, &seriesPath, &modulePath, pq.Array(&licenseTypes), pq.Array(&licensePaths),
-		&version, &commitTime, &name, &synopsis, &suffix); err != nil {
+	if err := row.Scan(&seriesPath, &modulePath, pq.Array(&licenseTypes), pq.Array(&licensePaths), &version, &commitTime, &name, &synopsis, &suffix, &readmeFilePath, &readmeContents); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, derrors.NotFound(fmt.Sprintf("package %s@%s not found", path, version))
+		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
 
@@ -559,10 +562,12 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 			Suffix:   suffix,
 		},
 		VersionInfo: internal.VersionInfo{
-			SeriesPath: seriesPath,
-			ModulePath: modulePath,
-			Version:    version,
-			CommitTime: commitTime,
+			SeriesPath:     seriesPath,
+			ModulePath:     modulePath,
+			Version:        version,
+			CommitTime:     commitTime,
+			ReadmeFilePath: readmeFilePath,
+			ReadmeContents: readmeContents,
 		},
 	}, nil
 }
