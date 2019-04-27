@@ -54,6 +54,7 @@ var (
 		ModulePath: "test.com/module",
 		Version:    "v1.0.0",
 		Path:       "test.com/module/pkg_name",
+		Suffix:     "pkg_name",
 		Synopsis:   "Test package synopsis",
 		Licenses:   transformLicenseInfos(sampleLicenseInfos),
 	}
@@ -660,13 +661,18 @@ func TestFetchImportedByDetails(t *testing.T) {
 		{
 			pkg: pkg2,
 			wantDetails: &ImportedByDetails{
-				ImportedBy: []string{pkg3.Path},
+				ImportedBy: []*internal.Import{
+					{Path: pkg3.Path, Name: pkg3.Name},
+				},
 			},
 		},
 		{
 			pkg: pkg1,
 			wantDetails: &ImportedByDetails{
-				ImportedBy: []string{pkg2.Path, pkg3.Path},
+				ImportedBy: []*internal.Import{
+					{Name: pkg2.Name, Path: pkg2.Path},
+					{Name: pkg3.Name, Path: pkg3.Path},
+				},
 			},
 		},
 	} {

@@ -7,8 +7,9 @@
 {{ define "content" }}
   <div>
     <h3>Imported by</h3>
+    <p><b>Known importers: </b>{{ len .ImportedBy }} packages</p>
     {{ range .ImportedBy }}
-      <p>{{ . }}</p>
+      <p><b>{{ .Name }}</b><span> - </span><a href="/{{.Path}}">{{ .Path }}</a></p>
     {{ end }}
   </div>
 {{ end }}

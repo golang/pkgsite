@@ -6,24 +6,17 @@
 
 {{ define "content" }}
   <div class="ModuleContent-list">
-    <h2>Module {{ .ModulePath }} @ {{ .Version }} contains packages:</h2>
-    <div>
-      <h3 class="ModuleContent-package">Package</h3>
-      <h3 class="ModuleContent-synopsis">Synopsis</h3>
-    </div>
-    <hr>
+    <h2>Packages in this module</h2>
     {{ range .Packages }}
-      <div>
-        <div class="ModuleContent-package">
-          <a href="/{{ .Path }}@{{ .Version }}">
-            <b>{{ .Dir }}</b>
+      <p>
+        <div>
+          <b>{{ .Name }} - </b>
+          <a href="/{{ .Path }}?v={{ .Version }}">
+            <b>{{ .Suffix }}</b>
           </a>
         </div>
-        <div class="ModuleContent-synopsis">{{ .Synopsis }}</div>
-        <hr>
-      </div>
+        <div>{{ .Synopsis }}</div>
+      </p>
     {{ end }}
-    <br>
-    {{ .ReadMe }}
   </div>
 {{ end }}

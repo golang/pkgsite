@@ -63,12 +63,12 @@ type ImportsDetails struct {
 	StdLib []*internal.Import
 }
 
-// ImportedByDetails contains information for all packages that import a given
-// package.
+// ImportedByDetails contains information for the collection of packages that
+// import a given package.
 type ImportedByDetails struct {
-	// ImportedBy is an array of the package paths that import a given
+	// ImportedBy is the collection of packages that import the given
 	// package.
-	ImportedBy []string
+	ImportedBy []*internal.Import
 }
 
 // License contains information used for a single license section.
@@ -119,13 +119,9 @@ type Package struct {
 	Synopsis   string
 	CommitTime string
 	Title      string
+	Suffix     string
 	Licenses   []LicenseInfo
 	IsCommand  bool
-}
-
-// Dir returns the directory of the package relative to the root of the module.
-func (p *Package) Dir() string {
-	return strings.TrimPrefix(p.Path, fmt.Sprintf("%s/", p.ModulePath))
 }
 
 // transformLicenseInfos transforms an internal.LicenseInfo into a LicenseInfo,
@@ -160,6 +156,7 @@ func createPackageHeader(pkg *internal.VersionedPackage) (*Package, error) {
 		Version:    pkg.VersionInfo.Version,
 		Path:       pkg.Path,
 		Synopsis:   pkg.Package.Synopsis,
+		Suffix:     pkg.Package.Suffix,
 		Licenses:   transformLicenseInfos(pkg.Licenses),
 		CommitTime: elapsedTime(pkg.VersionInfo.CommitTime),
 	}, nil
@@ -249,6 +246,11 @@ func fetchModuleDetails(ctx context.Context, db *postgres.DB, pkg *internal.Vers
 
 	var packages []*Package
 	for _, p := range version.Packages {
+		if p.Suffix == "" {
+			// Display the package name if the package is at the
+			// root of the module.
+			p.Suffix = p.Name
+		}
 		packages = append(packages, &Package{
 			Name:       p.Name,
 			Path:       p.Path,
@@ -256,6 +258,7 @@ func fetchModuleDetails(ctx context.Context, db *postgres.DB, pkg *internal.Vers
 			Licenses:   transformLicenseInfos(p.Licenses),
 			Version:    version.Version,
 			ModulePath: version.ModulePath,
+			Suffix:     p.Suffix,
 		})
 	}
 
@@ -392,11 +395,18 @@ func fetchImportsDetails(ctx context.Context, db *postgres.DB, pkg *internal.Ver
 }
 
 // fetchImportedByDetails fetches importers for the package version specified by
-// path and version from the database and returns a ImportersDetails.
+// path and version from the database and returns a ImportedByDetails.
 func fetchImportedByDetails(ctx context.Context, db *postgres.DB, pkg *internal.Package) (*ImportedByDetails, error) {
-	importedBy, err := db.GetImportedBy(ctx, pkg.Path)
+	importedByPaths, err := db.GetImportedBy(ctx, pkg.Path)
 	if err != nil {
 		return nil, fmt.Errorf("db.GetImportedBy(ctx, %q): %v", pkg.Path, err)
+	}
+	var importedBy []*internal.Import
+	for _, p := range importedByPaths {
+		importedBy = append(importedBy, &internal.Import{
+			Name: packageName("main", p),
+			Path: p,
+		})
 	}
 	return &ImportedByDetails{
 		ImportedBy: importedBy,
@@ -450,7 +460,6 @@ func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
 
 	if version == "" {
 		pkg, err = c.db.GetLatestPackage(ctx, path)
-		version = pkg.VersionInfo.Version
 	} else {
 		pkg, err = c.db.GetPackage(ctx, path, version)
 	}
@@ -464,6 +473,7 @@ func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
+	version = pkg.VersionInfo.Version
 	pkgHeader, err := createPackageHeader(pkg)
 	if err != nil {
 		log.Printf("error creating package header for %s@%s: %v", path, version, err)

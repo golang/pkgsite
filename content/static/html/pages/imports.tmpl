@@ -6,16 +6,11 @@
 
 {{ define "content" }}
   <div>
-    {{ if .Imports  }}
-      <h3>Imports</h3>
-      {{ range .Imports }}
-      	<p>
-          <div><b>{{ .Name }}</b></div>
-	  <div>{{ .Path }}</div>
-      	</p>
-      {{ end }}
+    <h3>Imports</h3>
+    <p><b>Packages: </b>{{ len .Imports }}</p>
+    {{ range .Imports }}
+      <p><b>{{ .Name }}</b><span> - </span><a href="/{{.Path}}">{{ .Path }}</a></p>
     {{ end }}
-
     {{ if .StdLib  }}
       <h3>Standard Library</h3>
       {{ range .StdLib  }}
