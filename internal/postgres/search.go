@@ -32,19 +32,16 @@ func (db *DB) InsertDocuments(ctx context.Context, version *internal.Version) er
 				module_path,
 				series_path,
 				version,
-				name_tokens,
-				path_tokens,
-				synopsis_tokens,
-				readme_tokens
+				tsv_search_tokens
 			) VALUES(
 				 $1,
 				 $2,
 				 $3,
 				 $4,
 				 $5,
-				SETWEIGHT(TO_TSVECTOR($6), 'A'),
-				SETWEIGHT(TO_TSVECTOR($7), 'A'),
-				SETWEIGHT(TO_TSVECTOR($8), 'B'),
+				SETWEIGHT(TO_TSVECTOR($6), 'A') ||
+				SETWEIGHT(TO_TSVECTOR($7), 'A') ||
+				SETWEIGHT(TO_TSVECTOR($8), 'B') ||
 				SETWEIGHT(TO_TSVECTOR($9), 'C')
 			) ON CONFLICT DO NOTHING;`, func(stmt *sql.Stmt) error {
 			for _, p := range version.Packages {
@@ -82,49 +79,52 @@ func (db *DB) Search(ctx context.Context, terms []string, limit, offset int) ([]
 	if len(terms) == 0 {
 		return nil, derrors.InvalidArgument(fmt.Sprintf("cannot search: no terms"))
 	}
-	query := `WITH results AS (
-			SELECT
-				package_path,
-				version,
-				module_path,
-				name,
-				synopsis,
-				license_types,
-				license_paths,
-				commit_time,
-				num_imported_by,
-				(
-					ts_rank (
-						name_tokens ||
-						path_tokens ||
-						synopsis_tokens ||
-						readme_tokens, to_tsquery($1)
-					) *  log(exp(1)+num_imported_by)
-				) AS rank
-			FROM
-				vw_search_results
-		)
 
-		SELECT
-			r.package_path,
-			r.version,
-			r.module_path,
-			r.name,
-			r.synopsis,
-			r.license_types,
-			r.license_paths,
-			r.commit_time,
-			r.num_imported_by,
-			r.rank,
-			COUNT(*) OVER() AS total
-		FROM
-			results r
-		WHERE
-			r.rank > POWER(10,-10)
-		ORDER BY
-			r.rank DESC
-		LIMIT $2
-		OFFSET $3;`
+	query := `
+	WITH imported_by AS (
+		SELECT to_path, COALESCE(COUNT(*),0) AS num_imported_by
+		FROM (SELECT to_path, from_path FROM imports GROUP BY 1,2) i
+		GROUP BY 1
+	),
+	docs AS (
+		SELECT package_path, MAX(relevance) AS relevance
+		FROM (
+			SELECT package_path, version,
+			ts_rank (tsv_search_tokens, to_tsquery($1)) AS relevance
+			FROM documents
+		) d
+		WHERE relevance > POWER(10,-10)
+		GROUP BY 1
+	),
+	latest_versions AS (
+		SELECT DISTINCT ON (module_path) module_path, version, commit_time
+		FROM versions
+		ORDER BY module_path, major DESC, minor DESC, patch DESC, prerelease DESC
+	)
+
+
+	SELECT
+		p.path AS package_path,
+		v.version,
+		p.module_path,
+		p.name,
+		p.synopsis,
+		p.license_types,
+		p.license_paths,
+		v.commit_time,
+		COALESCE(i.num_imported_by, 0) AS num_imported_by,
+		d.relevance * log(exp(1) + COALESCE(i.num_imported_by, 0)) AS rank,
+		COUNT(*) OVER() AS total
+	FROM latest_versions v
+	INNER JOIN vw_licensed_packages p
+		ON p.module_path = v.module_path
+		AND p.version=v.version
+	INNER JOIN docs d
+		ON d.package_path = p.path
+	LEFT JOIN imported_by i
+		ON i.to_path = p.path
+	ORDER BY rank DESC
+	LIMIT $2 OFFSET $3;`
 	rows, err := db.QueryContext(ctx, query, strings.Join(terms, " | "), limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("db.QueryContext(ctx, %s, %q, %d, %d): %v", query, terms, limit, offset, err)

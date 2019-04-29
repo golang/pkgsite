@@ -74,11 +74,15 @@ func prepareAndExec(tx *sql.Tx, query string, stmtFunc func(*sql.Stmt) error) (e
 	}
 
 	defer func() {
-		if err = stmt.Close(); err != nil {
-			err = fmt.Errorf("stmt.Close: %v", err)
+		cerr := stmt.Close()
+		if err == nil {
+			err = cerr
 		}
 	}()
-	return stmtFunc(stmt)
+	if err := stmtFunc(stmt); err != nil {
+		return fmt.Errorf("stmtFunc(stmt): %v", err)
+	}
+	return nil
 }
 
 // buildInsertQuery builds an multi-value insert query, following the format:
