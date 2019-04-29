@@ -18,6 +18,7 @@ import (
 
 	"golang.org/x/discovery/internal/cron"
 	"golang.org/x/discovery/internal/fetch"
+	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
 )
@@ -45,9 +46,9 @@ func getEnv(key, fallback string) string {
 	return fallback
 }
 
-func makeNewVersionsHandler(db *postgres.DB, workers int) http.HandlerFunc {
+func makeNewVersionsHandler(db *postgres.DB, idxClient *index.Client, workers int) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		logs, err := cron.FetchAndStoreVersions(r.Context(), indexURL, db)
+		logs, err := cron.FetchAndStoreVersions(r.Context(), idxClient, db)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			log.Printf("FetchAndStoreVersions(%q, db): %v", indexURL, err)
@@ -69,8 +70,13 @@ func main() {
 	}
 	defer db.Close()
 
+	idxClient, err := index.New(indexURL)
+	if err != nil {
+		log.Fatalf("index.New(%q): %v", indexURL, err)
+	}
+
 	mw := middleware.Timeout(makeNewVersionsTimeout)
-	http.Handle("/new/", mw(makeNewVersionsHandler(db, *workers)))
+	http.Handle("/new/", mw(makeNewVersionsHandler(db, idxClient, *workers)))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Hello, Go Discovery Cron!")
 	})
