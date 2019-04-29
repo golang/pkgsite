@@ -16,3 +16,11 @@ To update an existing package to the version at master:
 ```
 go run download.go -pkg=<name> -update
 ```
+
+When updating the `modfile` package, need to also run:
+
+```
+# TODO: Automate this.
+gofmt -r '"internal/lazyregexp" -> "regexp"' -w ./modfile/rule.go
+gofmt -r 'lazyregexp.New -> regexp.MustCompile' -w ./modfile/rule.go
+```
