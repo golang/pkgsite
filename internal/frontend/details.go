@@ -438,7 +438,7 @@ func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	path := strings.TrimPrefix(r.URL.Path, "/")
-	if err := module.CheckPath(path); err != nil {
+	if err := module.CheckImportPath(path); err != nil {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		log.Printf("Malformed path %q: %v", path, err)
 		return
