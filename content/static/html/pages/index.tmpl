@@ -10,10 +10,12 @@
 <title>Go Discovery</title>
 
 {{ template "header" }}
-{{ template "nav" . }}
 
 <div class="Container">
-  {{ template "search_bar" . }}
+  <div class="HomeContent-search">
+    {{ template "search_bar" . }}
+  </div>
+  {{ template "footer" }}
 </div>
 
 {{ end }}

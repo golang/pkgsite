@@ -29,6 +29,13 @@
 .GoLogo {
   padding: 10px;
 }
+.Gopher {
+  width: 80px;
+}
+.Footer {
+  border-top: 1px solid var(--grey-8);
+  padding-top: 20px;
+}
 .GlobalNav {
   display: flex;
   padding: 0;
@@ -40,7 +47,7 @@
   margin: 0;
   padding: 0;
   overflow: hidden;
-  border: 1px solid var(--grey-8);
+  border-bottom: 1px solid var(--grey-8);
   background-color: var(--grey-9);
 }
 .GlobalNav-link,
@@ -74,6 +81,7 @@
 }
 .Content {
   margin-top: 10px;
+  min-height: 500px;
 }
 .SearchContent-header {
   font-size: 32px;
@@ -104,11 +112,11 @@
   font-size: 14px;
 }
 .HomeContent-search {
-  width: 100%;
   margin: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: 250px;
 }
 .HomeContent-searchInput {
   width: 95%;

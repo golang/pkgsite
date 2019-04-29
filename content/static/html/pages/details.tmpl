@@ -7,48 +7,62 @@
 {{define "ROOT"}}
 
 <!DOCTYPE html>
-<html lang="en">
-<body>
-  {{ template "header" }}
-  {{ template "nav" }}
+{{ template "header" }}
+{{ template "nav" }}
 
-  <div class="Container">
+<div class="Container">
+ {{$header := .PackageHeader}}
+ <title>{{ $header.Title }} - {{ $header.Version }}</title>
+ <header>
+   <h1>{{ $header.Title }}</h1>
+   {{ if not $header.IsCommand }}
+     <p>import "{{ $header.Path }}"</p>
+   {{ end }}
+   <p>{{ $header.Synopsis }}</p>
+   <p>
+     <b>Version: </b><span>{{ $header.Version }}</span>
+     <span>|</span>
+     <b>Published: </b><span>{{ $header.CommitTime }}</span>
+     <span>|</span>
+     <b>License(s): </b>
+     {{ if $header.Licenses }}
+       {{ range $i, $e := $header.Licenses -}}{{ if $i }}, {{ end }}
+         <a href="/{{$header.Path}}?v={{$header.Version}}&tab=licenses#{{.Anchor}}">{{ $e.Type }}</a>
+       {{- end }}
+     {{ else }}
+       <span>No license files detected</span>
+     {{ end }}
+       <a href="/{{$header.Path}}?v={{$header.Version}}&tab=licenses#Disclaimer" class="Disclaimer-link">(This is not legal advice)</a>
+   </p>
+ </header>
 
-    {{$header := .PackageHeader}}
+ <ul class="ModulesNav">
+   <li class="{{if eq "overview.tmpl" templateName}}active {{end}}ModulesNav-tab">
+     <a href="/{{$header.Path}}?v={{$header.Version}}" class="ModulesNav-link">Overview</a>
+   </li>
+   <li class="{{if eq "module.tmpl" templateName}}active {{end}}ModulesNav-tab">
+     <a href="/{{$header.Path}}?v={{$header.Version}}&tab=module" class="ModulesNav-link">Module</a>
+   </li>
+   <li class="{{if eq "doc.tmpl" templateName}}active {{end}}ModulesNav-tab">
+     <a href="/{{$header.Path}}?v={{$header.Version}}&tab=doc" class="ModulesNav-link">Doc</a>
+   </li>
+   <li class="{{if eq "versions.tmpl" templateName}}active {{end}}ModulesNav-tab">
+     <a href="/{{$header.Path}}?v={{$header.Version}}&tab=versions" class="ModulesNav-link">Versions</a>
+   </li>
+   <li class="{{if eq "imports.tmpl" templateName}}active {{end}}ModulesNav-tab">
+     <a href="/{{$header.Path}}?v={{$header.Version}}&tab=imports" class="ModulesNav-link">Imports</a>
+   </li>
+   <li class="{{if eq "importedby.tmpl" templateName}}active {{end}}ModulesNav-tab">
+     <a href="/{{$header.Path}}?v={{$header.Version}}&tab=importedby" class="ModulesNav-link">Imported By</a>
+   </li>
+   <li class="{{if eq "licenses.tmpl" templateName}}active {{end}}ModulesNav-tab">
+     <a href="/{{$header.Path}}?v={{$header.Version}}&tab=licenses" class="ModulesNav-link">Licenses</a>
+   </li>
+ </ul>
+ <div class="Content">
+   {{ template "content" .Details }}
+ </div>
+ {{ template "footer" }}
+</div>
 
-      <title>{{ $header.Title }} - {{ $header.Version }}</title>
-      <header>
-        <h1>{{ $header.Title }}</h1>
-        <h3><a href="https://{{ $header.Path }}" class="DetailsHeader-packageName">{{ $header.Version }}</a></h3>
-        {{ if not $header.IsCommand }}
-          <p>import "{{ $header.Path }}"</p>
-        {{ end }}
-        <p>{{ $header.Synopsis }}</p>
-        <p>{{ range $i, $e := $header.Licenses -}}{{ if $i }}, {{ end }}
-          <a href="/{{$header.Path}}?v={{$header.Version}}&tab=licenses#{{.Anchor}}">{{ $e.Type }}</a>
-        {{- end }}
-        <a href="/{{$header.Path}}?v={{$header.Version}}&tab=licenses#Disclaimer" class="Disclaimer-link">(This is not legal advice)</a> {{ $header.CommitTime }}</p>
-      </header>
-
-      <ul class="ModulesNav">
-        <li class="{{if eq "overview.tmpl" templateName}}active {{end}}ModulesNav-tab"><a href="/{{$header.Path}}?v={{$header.Version}}" class="ModulesNav-link">Overview</a></li>
-        <li class="{{if eq "module.tmpl" templateName}}active {{end}}ModulesNav-tab"><a href="/{{$header.Path}}?v={{$header.Version}}&tab=module" class="ModulesNav-link">Module</a></li>
-        <li class="{{if eq "doc.tmpl" templateName}}active {{end}}ModulesNav-tab"><a href="/{{$header.Path}}?v={{$header.Version}}&tab=doc" class="ModulesNav-link">Doc</a></li>
-        <li class="{{if eq "versions.tmpl" templateName}}active {{end}}ModulesNav-tab"><a href="/{{$header.Path}}?v={{$header.Version}}&tab=versions" class="ModulesNav-link">Versions</a></li>
-        <li class="{{if eq "imports.tmpl" templateName}}active {{end}}ModulesNav-tab"><a href="/{{$header.Path}}?v={{$header.Version}}&tab=imports" class="ModulesNav-link">Imports</a></li>
-        <li class="{{if eq "importedby.tmpl" templateName}}active {{end}}ModulesNav-tab"><a href="/{{$header.Path}}?v={{$header.Version}}&tab=importedby" class="ModulesNav-link">Imported By</a></li>
-        <li class="{{if eq "licenses.tmpl" templateName}}active {{end}}ModulesNav-tab"><a href="/{{$header.Path}}?v={{$header.Version}}&tab=licenses" class="ModulesNav-link">Licenses</a></li>
-      </ul>
-
-
-    <div class="Content">
-      {{ template "content" .Details }}
-    </div>
-
-    <footer></footer>
-
-  </div>
-
-</body>
-</html>
 {{end}}
