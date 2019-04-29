@@ -310,13 +310,11 @@ func TestExtractPackagesFromZip(t *testing.T) {
 	defer cancel()
 
 	for _, test := range []struct {
-		zip      string
 		name     string
 		version  string
 		packages map[string]*internal.Package
 	}{
 		{
-			zip:     "module.zip",
 			name:    "my.mod/module",
 			version: "v1.0.0",
 			packages: map[string]*internal.Package{
@@ -345,6 +343,19 @@ func TestExtractPackagesFromZip(t *testing.T) {
 			},
 		},
 		{
+			name:    "no.mod/module",
+			version: "v1.0.0",
+			packages: map[string]*internal.Package{
+				"p": &internal.Package{
+					Name:     "p",
+					Path:     "no.mod/module/p",
+					Synopsis: "Package p is inside a module where a go.mod file hasn't been explicitly added yet.",
+					Imports:  nil,
+					Suffix:   "p",
+				},
+			},
+		},
+		{
 			name:     "emp.ty/module",
 			version:  "v1.0.0",
 			packages: map[string]*internal.Package{},
@@ -361,13 +372,13 @@ func TestExtractPackagesFromZip(t *testing.T) {
 
 			packages, err := extractPackagesFromZip(test.name, test.version, reader, nil)
 			if err != nil && len(test.packages) != 0 {
-				t.Fatalf("extractPackagesFromZip(%q, %q): %v", test.name, test.zip, err)
+				t.Fatalf("extractPackagesFromZip(%q, %q, reader, nil): %v", test.name, test.version, err)
 			}
 
 			for _, got := range packages {
 				want, ok := test.packages[got.Name]
 				if !ok {
-					t.Errorf("extractPackagesFromZip(%q, %q) returned unexpected package: %q", test.name, test.zip, got.Name)
+					t.Errorf("extractPackagesFromZip(%q, %q, reader, nil) returned unexpected package: %q", test.name, test.version, got.Name)
 				}
 
 				sort.Slice(got.Imports, func(i, j int) bool {

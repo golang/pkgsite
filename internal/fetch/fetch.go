@@ -22,6 +22,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
+	"golang.org/x/discovery/internal/thirdparty/modfile"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
 	"golang.org/x/tools/go/packages"
@@ -198,6 +199,16 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, licenses 
 		return nil, fmt.Errorf("extractModuleFiles(%q, %q, zipReader): %v", workDir, modulePath, err)
 	}
 
+	// If the module doesn't have an explicit go.mod file at the root,
+	// write one ourselves. Otherwise, it's not possible for go/packages
+	// to know where it's located on disk when it's the main module.
+	goMod := filepath.Join(workDir, modulePath+"@"+version, "go.mod")
+	if _, err := os.Stat(goMod); os.IsNotExist(err) {
+		if err := writeGoModFile(goMod, modulePath); err != nil {
+			return nil, fmt.Errorf("writeGoModFile(%q, %q): %v", goMod, modulePath, err)
+		}
+	}
+
 	pkgs, err := loadPackages(workDir, modulePath, version)
 	if err != nil {
 		return nil, fmt.Errorf("loadPackages(%q, %q, %q, zipReader): %v", workDir, modulePath, version, err)
@@ -231,6 +242,26 @@ func extractModuleFiles(workDir, modulePath string, r *zip.Reader) error {
 				return fmt.Errorf("writeFileToDir(%q, %q): %v", f.Name, workDir, err)
 			}
 		}
+	}
+	return nil
+}
+
+// writeGoModFile writes a go.mod file with a module statement at filename.
+//
+// It can be used on modules that don't have an explicit go.mod file,
+// so that it's possible to treat such modules as main modules.
+func writeGoModFile(filename, modulePath string) error {
+	var f modfile.File
+	if err := f.AddModuleStmt(modulePath); err != nil {
+		return fmt.Errorf("f.AddModuleStmt(%q): %v", modulePath, err)
+	}
+	b, err := f.Format()
+	if err != nil {
+		return fmt.Errorf("f.Format(): %v", err)
+	}
+	err = ioutil.WriteFile(filename, b, 0600)
+	if err != nil {
+		return fmt.Errorf("ioutil.WriteFile(%q, b, 0600): %v", filename, err)
 	}
 	return nil
 }
