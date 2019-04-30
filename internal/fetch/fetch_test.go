@@ -55,10 +55,11 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					VersionType:    "release",
 				},
 				Package: internal.Package{
-					Path:     "my.mod/module/bar",
-					Name:     "bar",
-					Synopsis: "package bar",
-					Suffix:   "bar",
+					Path:              "my.mod/module/bar",
+					Name:              "bar",
+					Synopsis:          "package bar",
+					Suffix:            "bar",
+					DocumentationHTML: tmpDocumentationHTML,
 					Licenses: []*internal.LicenseInfo{
 						{Type: "BSD-3-Clause", FilePath: "LICENSE"},
 						{Type: "MIT", FilePath: "bar/LICENSE"},
@@ -80,10 +81,11 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					VersionType:    "release",
 				},
 				Package: internal.Package{
-					Path:     "nonredistributable.mod/module/bar/baz",
-					Name:     "baz",
-					Synopsis: "package baz",
-					Suffix:   "bar/baz",
+					Path:              "nonredistributable.mod/module/bar/baz",
+					Name:              "baz",
+					Synopsis:          "package baz",
+					Suffix:            "bar/baz",
+					DocumentationHTML: tmpDocumentationHTML,
 					Licenses: []*internal.LicenseInfo{
 						{Type: "BSD-3-Clause", FilePath: "LICENSE"},
 						{Type: "BSD-0-Clause", FilePath: "LICENSE.txt"},
@@ -108,10 +110,11 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					VersionType:    "release",
 				},
 				Package: internal.Package{
-					Path:     "nonredistributable.mod/module/foo",
-					Name:     "foo",
-					Synopsis: "",
-					Suffix:   "foo",
+					Path:              "nonredistributable.mod/module/foo",
+					Name:              "foo",
+					Synopsis:          "",
+					Suffix:            "foo",
+					DocumentationHTML: tmpDocumentationHTML,
 					Licenses: []*internal.LicenseInfo{
 						{Type: "BSD-3-Clause", FilePath: "LICENSE"},
 						{Type: "BSD-0-Clause", FilePath: "LICENSE.txt"},

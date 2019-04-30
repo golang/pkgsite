@@ -49,10 +49,11 @@ func sampleVersion(mutators ...func(*internal.Version)) *internal.Version {
 		},
 		Packages: []*internal.Package{
 			&internal.Package{
-				Name:     "foo",
-				Synopsis: "This is a package synopsis",
-				Path:     "path.to/foo",
-				Licenses: sampleLicenseInfos,
+				Name:              "foo",
+				Synopsis:          "This is a package synopsis",
+				Path:              "path.to/foo",
+				Licenses:          sampleLicenseInfos,
+				DocumentationHTML: []byte("This is the documentation HTML"),
 				Imports: []*internal.Import{
 					&internal.Import{
 						Name: "bar",
@@ -463,9 +464,8 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 				t.Errorf("testDB.GetLatestPackage(ctx, %q): %v", tc.path, err)
 			}
 
-			if diff := cmp.Diff(gotPkg, tc.wantPkg); diff != "" {
-				t.Errorf("testDB.GetLatestPackage(ctx, %q) mismatch (-got +want):\n%s",
-					tc.path, diff)
+			if diff := cmp.Diff(tc.wantPkg, gotPkg, cmpopts.EquateEmpty()); diff != "" {
+				t.Errorf("testDB.GetLatestPackage(ctx, %q) mismatch (-want +got):\n%s", tc.path, diff)
 			}
 		})
 	}
@@ -1093,7 +1093,7 @@ func TestGetVersionForPackage(t *testing.T) {
 			if err != nil {
 				t.Errorf("testDB.GetVersionForPackage(ctx, %q, %q): %v", tc.path, tc.version, err)
 			}
-			if diff := cmp.Diff(tc.wantVersion, got); diff != "" {
+			if diff := cmp.Diff(tc.wantVersion, got, cmpopts.EquateEmpty()); diff != "" {
 				t.Errorf("testDB.GetVersionForPackage(ctx, %q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
 			}
 		})

@@ -41,7 +41,8 @@ type OverviewDetails struct {
 
 // DocumentationDetails contains data for the doc template.
 type DocumentationDetails struct {
-	ModulePath string
+	ModulePath    string
+	Documentation template.HTML
 }
 
 // ModuleDetails contains all of the data that the module template
@@ -236,7 +237,10 @@ func fetchOverviewDetails(ctx context.Context, db *postgres.DB, pkg *internal.Ve
 // fetchDocumentationDetails fetches data for the package specified by path and version
 // from the database and returns a DocumentationDetails.
 func fetchDocumentationDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*DocumentationDetails, error) {
-	return &DocumentationDetails{pkg.VersionInfo.ModulePath}, nil
+	return &DocumentationDetails{
+		ModulePath:    pkg.VersionInfo.ModulePath,
+		Documentation: template.HTML(pkg.DocumentationHTML),
+	}, nil
 }
 
 // fetchModuleDetails fetches data for the module version specified by pkgPath and pkgversion
@@ -429,7 +433,7 @@ func readmeHTML(readmeFilePath string, readmeContents []byte) template.HTML {
 	// not whitelist iframes, object, embed, styles, script, etc.
 	p := bluemonday.UGCPolicy()
 	unsafe := blackfriday.Run(readmeContents)
-	return template.HTML(string(p.SanitizeBytes(unsafe)))
+	return template.HTML(p.SanitizeBytes(unsafe))
 }
 
 // tabSettings defines rendering options associated to each tab.  Any tab value
