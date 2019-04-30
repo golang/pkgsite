@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/doc"
+	"html"
 	"io/ioutil"
 	"log"
 	"os"
@@ -38,6 +39,10 @@ var (
 
 	maxPackagesPerModule = 10000
 	maxImportsPerPackage = 1000
+
+	// tmpDocumentationHTML is a placeholder for documentation. This will be
+	// removed once documentation rendering is implemented.
+	tmpDocumentationHTML = []byte(html.EscapeString("TODO: <go documentation will go here>"))
 )
 
 // ParseModulePathAndVersion returns the module and version specified by p. p is
@@ -362,12 +367,13 @@ func transformPackages(workDir, modulePath, version string, pkgs []*packages.Pac
 		}
 
 		packages = append(packages, &internal.Package{
-			Name:     p.Name,
-			Path:     p.PkgPath,
-			Licenses: matcher.matchLicenses(p),
-			Synopsis: synopsis(p),
-			Suffix:   strings.TrimPrefix(strings.TrimPrefix(p.PkgPath, modulePath), "/"),
-			Imports:  imports,
+			Name:              p.Name,
+			Path:              p.PkgPath,
+			Licenses:          matcher.matchLicenses(p),
+			Synopsis:          synopsis(p),
+			Suffix:            strings.TrimPrefix(strings.TrimPrefix(p.PkgPath, modulePath), "/"),
+			Imports:           imports,
+			DocumentationHTML: tmpDocumentationHTML,
 		})
 	}
 	return packages, nil

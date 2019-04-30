@@ -365,9 +365,10 @@ func TestExtractPackagesFromZip(t *testing.T) {
 			version: "v1.0.0",
 			packages: map[string]*internal.Package{
 				"foo": &internal.Package{
-					Name:     "foo",
-					Path:     "my.mod/module/foo",
-					Synopsis: "package foo",
+					Name:              "foo",
+					Path:              "my.mod/module/foo",
+					Synopsis:          "package foo",
+					DocumentationHTML: tmpDocumentationHTML,
 					Imports: []*internal.Import{
 						&internal.Import{
 							Name: "fmt",
@@ -381,10 +382,11 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					Suffix: "foo",
 				},
 				"bar": &internal.Package{
-					Name:     "bar",
-					Path:     "my.mod/module/bar",
-					Synopsis: "package bar",
-					Suffix:   "bar",
+					Name:              "bar",
+					Path:              "my.mod/module/bar",
+					Synopsis:          "package bar",
+					Suffix:            "bar",
+					DocumentationHTML: tmpDocumentationHTML,
 				},
 			},
 		},
@@ -393,11 +395,12 @@ func TestExtractPackagesFromZip(t *testing.T) {
 			version: "v1.0.0",
 			packages: map[string]*internal.Package{
 				"p": &internal.Package{
-					Name:     "p",
-					Path:     "no.mod/module/p",
-					Synopsis: "Package p is inside a module where a go.mod file hasn't been explicitly added yet.",
-					Imports:  nil,
-					Suffix:   "p",
+					Name:              "p",
+					Path:              "no.mod/module/p",
+					Synopsis:          "Package p is inside a module where a go.mod file hasn't been explicitly added yet.",
+					Imports:           nil,
+					Suffix:            "p",
+					DocumentationHTML: tmpDocumentationHTML,
 				},
 			},
 		},

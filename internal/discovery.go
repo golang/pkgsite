@@ -40,12 +40,13 @@ type Version struct {
 // A Package is a group of one or more Go source files with the same package
 // header. Packages are part of a module.
 type Package struct {
-	Path     string
-	Name     string
-	Synopsis string
-	Suffix   string         // if my.module/v2/A/B is the path, A/B is the package suffix
-	Licenses []*LicenseInfo // path to applicable version licenses
-	Imports  []*Import
+	Path              string
+	Name              string
+	Synopsis          string
+	Suffix            string         // if my.module/v2/A/B is the path, A/B is the package suffix
+	Licenses          []*LicenseInfo // path to applicable version licenses
+	Imports           []*Import
+	DocumentationHTML []byte
 }
 
 // IsRedistributable reports whether the package may be redistributed.

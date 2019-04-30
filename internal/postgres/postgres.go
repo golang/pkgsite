@@ -975,6 +975,7 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 				version.ModulePath,
 				p.Suffix,
 				p.IsRedistributable(),
+				p.DocumentationHTML,
 			)
 
 			for _, l := range p.Licenses {
@@ -994,6 +995,7 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 				"module_path",
 				"suffix",
 				"redistributable",
+				"documentation",
 			}
 			table := "packages"
 			if err := bulkInsert(ctx, tx, table, pkgCols, pkgValues, true); err != nil {
