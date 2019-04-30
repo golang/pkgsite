@@ -36,8 +36,8 @@ kubectl create secret generic cloudsql-db-credentials --from-literal=username=fe
 
 ### To deploy an existing version of fetch:
 
-1. Edit the image <version> in `deployment.yaml` to match the version to be deployed..
-2. Apply the changes to kubernetes: `kubectl apply -f deployment.yaml`.
+1. Edit the image <version> in `statefulset.yaml` to match the version to be deployed..
+2. Apply the changes to kubernetes: `kubectl apply -f statefulset.yaml`.
 3. Verify: `kubectl describe pod <pod>`.
 
 ### To view logs:
