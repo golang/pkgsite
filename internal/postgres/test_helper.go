@@ -74,10 +74,10 @@ func (m multiErr) Error() string {
 	return sb.String()
 }
 
-// createDBIfNotExists checks whether the given dbName is an existing database,
-// and creates one if not.
-func createDBIfNotExists(dbName string) (outerErr error) {
-	pg, err := sql.Open("postgres", dbConnURI(""))
+// connectAndExecute connects to the postgres database specified by uri and
+// executes dbFunc, then cleans up the database connection.
+func connectAndExecute(uri string, dbFunc func(*sql.DB) error) (outerErr error) {
+	pg, err := sql.Open("postgres", uri)
 	if err != nil {
 		return err
 	}
@@ -86,22 +86,45 @@ func createDBIfNotExists(dbName string) (outerErr error) {
 			outerErr = multiErr{outerErr, err}
 		}
 	}()
-
-	rows, err := pg.Query("SELECT 1 from pg_database WHERE datname = $1 LIMIT 1", dbName)
-	if err != nil {
-		return err
-	}
-	if !rows.Next() {
-		if err := rows.Err(); err != nil {
-			return err
-		}
-		if _, err := pg.Exec(fmt.Sprintf("CREATE DATABASE %q;", dbName)); err != nil {
-			return err
-		}
-	}
-	return nil
+	return dbFunc(pg)
 }
 
+// createDBIfNotExists checks whether the given dbName is an existing database,
+// and creates one if not.
+func createDBIfNotExists(dbName string) error {
+	return connectAndExecute(dbConnURI(""), func(pg *sql.DB) error {
+		rows, err := pg.Query("SELECT 1 from pg_database WHERE datname = $1 LIMIT 1", dbName)
+		if err != nil {
+			return err
+		}
+		if !rows.Next() {
+			if err := rows.Err(); err != nil {
+				return err
+			}
+			log.Printf("Test database %q does not exist, creating.", dbName)
+			if _, err := pg.Exec(fmt.Sprintf("CREATE DATABASE %q;", dbName)); err != nil {
+				return fmt.Errorf("error creating %q: %v", dbName, err)
+			}
+		}
+		return nil
+	})
+}
+
+// recreateDB drops and recreates the database named dbName.
+func recreateDB(dbName string) error {
+	return connectAndExecute(dbConnURI(""), func(pg *sql.DB) error {
+		if _, err := pg.Exec(fmt.Sprintf("DROP DATABASE %q;", dbName)); err != nil {
+			return fmt.Errorf("error dropping %q: %v", dbName, err)
+		}
+		if _, err := pg.Exec(fmt.Sprintf("CREATE DATABASE %q;", dbName)); err != nil {
+			return fmt.Errorf("error creating %q: %v", dbName, err)
+		}
+		return nil
+	})
+}
+
+// migrationsSource returns a uri pointing to the migrations directory.  It
+// returns an error if unable to determine this path.
 func migrationsSource() (string, error) {
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
@@ -112,27 +135,50 @@ func migrationsSource() (string, error) {
 	return "file://" + migrationDir, nil
 }
 
+// tryToMigrate attempts to migrate the database named dbName to the latest
+// migration. If this operation fails in the migration step, it returns
+// isMigrationError=true to signal that the database should be recreated.
+func tryToMigrate(dbName string) (isMigrationError bool, outerErr error) {
+	dbURI := dbConnURI(dbName)
+	source, err := migrationsSource()
+	if err != nil {
+		return false, fmt.Errorf("migrationsSource(): %v", err)
+	}
+	m, err := migrate.New(source, dbURI)
+	if err != nil {
+		return false, fmt.Errorf("migrate.New(): %v", err)
+	}
+	defer func() {
+		if srcErr, dbErr := m.Close(); srcErr != nil || dbErr != nil {
+			outerErr = multiErr{outerErr, srcErr, dbErr}
+		}
+	}()
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		return true, fmt.Errorf("m.Up(): %v", err)
+	}
+	return false, nil
+}
+
 // SetupTestDB creates a test database named dbName if it does not already
 // exist, and migrates it to the latest schema from the migrations directory.
 func SetupTestDB(dbName string) (*DB, error) {
 	if err := createDBIfNotExists(dbName); err != nil {
 		return nil, fmt.Errorf("ensureDBExists(%q): %v", dbName, err)
 	}
-	dbURI := dbConnURI(dbName)
-	source, err := migrationsSource()
-	if err != nil {
-		return nil, fmt.Errorf("migrationsSource(): %v", err)
+	if isMigrationError, err := tryToMigrate(dbName); err != nil {
+		if isMigrationError {
+			// failed during migration stage, recreate and try again
+			log.Printf("Migration failed for %s: %v, recreating database.", dbName, err)
+			if err := recreateDB(dbName); err != nil {
+				return nil, fmt.Errorf("recreateDB(%q): %v", dbName, err)
+			}
+			_, err = tryToMigrate(dbName)
+		}
+		if err != nil {
+			return nil, fmt.Errorf("unfixable error migrating database: %v", err)
+		}
 	}
-	m, err := migrate.New(source, dbURI)
-	if err != nil {
-		log.Fatalf("migrate.New(%q, [db=%q]): %v", source, dbName, err)
-	}
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-		serr, dberr := m.Close()
-		return nil, multiErr{fmt.Errorf("m.Up(): %v", err), serr, dberr}
-	}
-	m.Close()
-	return Open(dbURI)
+	return Open(dbConnURI(dbName))
 }
 
 // ResetTestDB truncates all data from the given test DB.  It should be called
