@@ -91,7 +91,7 @@ func main() {
 
 	handlerTimeout, err := strconv.Atoi(timeout)
 	if err != nil {
-		fmt.Errorf("strconv.Atoi(%q): %v", timeout, err)
+		log.Fatalf("strconv.Atoi(%q): %v", timeout, err)
 	}
 	mw := middleware.Timeout(time.Duration(handlerTimeout) * time.Minute)
 	http.Handle("/new/", mw(makeNewVersionsHandler(db, idxClient, *workers)))
