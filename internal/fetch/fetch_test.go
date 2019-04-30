@@ -85,11 +85,11 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					Synopsis: "package baz",
 					Suffix:   "bar/baz",
 					Licenses: []*internal.LicenseInfo{
-						{Type: "BSD-0-Clause", FilePath: "bar/baz/LICENSE"},
-						{Type: "BSD-0-Clause", FilePath: "LICENSE.txt"},
 						{Type: "BSD-3-Clause", FilePath: "LICENSE"},
-						{Type: "MIT", FilePath: "bar/baz/COPYING"},
+						{Type: "BSD-0-Clause", FilePath: "LICENSE.txt"},
 						{Type: "MIT", FilePath: "bar/LICENSE"},
+						{Type: "MIT", FilePath: "bar/baz/COPYING"},
+						{Type: "BSD-0-Clause", FilePath: "bar/baz/LICENSE"},
 					},
 				},
 			},
@@ -113,9 +113,9 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					Synopsis: "",
 					Suffix:   "foo",
 					Licenses: []*internal.LicenseInfo{
-						{Type: "BSD-0-Clause", FilePath: "foo/LICENSE.md"},
-						{Type: "BSD-0-Clause", FilePath: "LICENSE.txt"},
 						{Type: "BSD-3-Clause", FilePath: "LICENSE"},
+						{Type: "BSD-0-Clause", FilePath: "LICENSE.txt"},
+						{Type: "BSD-0-Clause", FilePath: "foo/LICENSE.md"},
 					},
 				},
 			},
@@ -148,7 +148,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			}
 
 			sort.Slice(gotPkg.Licenses, func(i, j int) bool {
-				return gotPkg.Licenses[i].Type < gotPkg.Licenses[j].Type
+				return gotPkg.Licenses[i].FilePath < gotPkg.Licenses[j].FilePath
 			})
 			if diff := cmp.Diff(test.want, gotPkg); diff != "" {
 				t.Errorf("testDB.GetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", test.pkg, test.version, diff)
