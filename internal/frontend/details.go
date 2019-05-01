@@ -526,8 +526,8 @@ func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
 	tab := r.FormValue("tab")
 	settings, ok := tabSettings[tab]
 	if !ok {
-		tab = "overview"
-		settings = tabSettings["overview"]
+		tab = "doc"
+		settings = tabSettings["doc"]
 	}
 	canShowDetails := pkg.IsRedistributable() || settings.alwaysShowDetails
 

@@ -41,14 +41,14 @@
  </header>
 
  <ul class="ModulesNav">
+   <li class="{{if eq "doc.tmpl" templateName}}active {{end}}ModulesNav-tab">
+     <a href="/{{$header.Path}}?v={{$header.Version}}" class="ModulesNav-link">Doc</a>
+   </li>
    <li class="{{if eq "overview.tmpl" templateName}}active {{end}}ModulesNav-tab">
-     <a href="/{{$header.Path}}?v={{$header.Version}}" class="ModulesNav-link">Overview</a>
+     <a href="/{{$header.Path}}?v={{$header.Version}}&tab=overview" class="ModulesNav-link">Overview</a>
    </li>
    <li class="{{if eq "module.tmpl" templateName}}active {{end}}ModulesNav-tab">
      <a href="/{{$header.Path}}?v={{$header.Version}}&tab=module" class="ModulesNav-link">Module</a>
-   </li>
-   <li class="{{if eq "doc.tmpl" templateName}}active {{end}}ModulesNav-tab">
-     <a href="/{{$header.Path}}?v={{$header.Version}}&tab=doc" class="ModulesNav-link">Doc</a>
    </li>
    <li class="{{if eq "versions.tmpl" templateName}}active {{end}}ModulesNav-tab">
      <a href="/{{$header.Path}}?v={{$header.Version}}&tab=versions" class="ModulesNav-link">Versions</a>
@@ -63,6 +63,7 @@
      <a href="/{{$header.Path}}?v={{$header.Version}}&tab=licenses" class="ModulesNav-link">Licenses</a>
    </li>
  </ul>
+
  <div class="Content">
   {{ if .CanShowDetails -}}
     {{ template "content" .Details }}

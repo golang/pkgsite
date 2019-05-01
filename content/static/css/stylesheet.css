@@ -56,6 +56,14 @@
   display: flex;
   padding: 0 10px;
 }
+.GlobalNav-feedback {
+  font-size: 24px;
+  padding: 10px;
+  float: right;
+}
+.GlobalNav-search {
+  width: 100%;
+}
 .ModulesNav-link {
   display: block;
   color: var(--grey-1);
