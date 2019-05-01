@@ -864,9 +864,10 @@ func removeNonDistributableData(v *internal.Version) {
 		if p.IsRedistributable() {
 			hasRedistributablePackage = true
 		} else {
-			// Not redistributable, so prune information that can't be stored. In the
-			// future this should also include documentation.
+			// Not redistributable, so prune derived information
+			// that can't be stored.
 			p.Synopsis = ""
+			p.DocumentationHTML = nil
 		}
 	}
 

@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
@@ -58,8 +59,8 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					Path:              "my.mod/module/bar",
 					Name:              "bar",
 					Synopsis:          "package bar",
+					DocumentationHTML: []byte("Bar returns the string &#34;bar&#34;."),
 					Suffix:            "bar",
-					DocumentationHTML: tmpDocumentationHTML,
 					Licenses: []*internal.LicenseInfo{
 						{Type: "BSD-3-Clause", FilePath: "LICENSE"},
 						{Type: "MIT", FilePath: "bar/LICENSE"},
@@ -84,8 +85,8 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					Path:              "nonredistributable.mod/module/bar/baz",
 					Name:              "baz",
 					Synopsis:          "package baz",
+					DocumentationHTML: []byte("Baz returns the string &#34;baz&#34;."),
 					Suffix:            "bar/baz",
-					DocumentationHTML: tmpDocumentationHTML,
 					Licenses: []*internal.LicenseInfo{
 						{Type: "BSD-3-Clause", FilePath: "LICENSE"},
 						{Type: "BSD-0-Clause", FilePath: "LICENSE.txt"},
@@ -113,8 +114,8 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					Path:              "nonredistributable.mod/module/foo",
 					Name:              "foo",
 					Synopsis:          "",
+					DocumentationHTML: nil,
 					Suffix:            "foo",
-					DocumentationHTML: tmpDocumentationHTML,
 					Licenses: []*internal.LicenseInfo{
 						{Type: "BSD-3-Clause", FilePath: "LICENSE"},
 						{Type: "BSD-0-Clause", FilePath: "LICENSE.txt"},
@@ -153,8 +154,13 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			sort.Slice(gotPkg.Licenses, func(i, j int) bool {
 				return gotPkg.Licenses[i].FilePath < gotPkg.Licenses[j].FilePath
 			})
-			if diff := cmp.Diff(test.want, gotPkg); diff != "" {
+			if diff := cmp.Diff(test.want, gotPkg, cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML")); diff != "" {
 				t.Errorf("testDB.GetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", test.pkg, test.version, diff)
+			}
+			if got, want := gotPkg.DocumentationHTML, test.want.DocumentationHTML; len(want) == 0 && len(got) != 0 {
+				t.Errorf("got non-empty documentation but want empty:\ngot: %q\nwant: %q", got, want)
+			} else if !bytes.Contains(got, want) {
+				t.Errorf("got documentation doesn't contain wanted documentation substring:\ngot: %q\nwant (substring): %q", got, want)
 			}
 		})
 	}
@@ -300,7 +306,6 @@ func TestHasFilename(t *testing.T) {
 			})
 		}
 	}
-
 }
 
 func TestExtractReadmeFromZip(t *testing.T) {
@@ -371,7 +376,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					Name:              "foo",
 					Path:              "my.mod/module/foo",
 					Synopsis:          "package foo",
-					DocumentationHTML: tmpDocumentationHTML,
+					DocumentationHTML: []byte("FooBar returns the string &#34;foo bar&#34;."),
 					Imports: []*internal.Import{
 						&internal.Import{
 							Name: "fmt",
@@ -388,8 +393,8 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					Name:              "bar",
 					Path:              "my.mod/module/bar",
 					Synopsis:          "package bar",
+					DocumentationHTML: []byte("Bar returns the string &#34;bar&#34;."),
 					Suffix:            "bar",
-					DocumentationHTML: tmpDocumentationHTML,
 				},
 			},
 		},
@@ -401,9 +406,9 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					Name:              "p",
 					Path:              "no.mod/module/p",
 					Synopsis:          "Package p is inside a module where a go.mod file hasn't been explicitly added yet.",
+					DocumentationHTML: []byte("const Year = 2009"),
 					Imports:           nil,
 					Suffix:            "p",
-					DocumentationHTML: tmpDocumentationHTML,
 				},
 			},
 		},
@@ -437,8 +442,14 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					return got.Imports[i].Path < got.Imports[j].Path
 				})
 
-				if diff := cmp.Diff(want, got); diff != "" {
+				if diff := cmp.Diff(want, got, cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML")); diff != "" {
 					t.Errorf("extractPackagesFromZip(%q, %q, reader, nil) mismatch (-want +got):\n%s", test.name, test.version, diff)
+				}
+
+				if got, want := got.DocumentationHTML, want.DocumentationHTML; len(want) == 0 && len(got) != 0 {
+					t.Errorf("got non-empty documentation but want empty:\ngot: %q\nwant: %q", got, want)
+				} else if !bytes.Contains(got, want) {
+					t.Errorf("got documentation doesn't contain wanted documentation substring:\ngot: %q\nwant (substring): %q", got, want)
 				}
 			}
 		})

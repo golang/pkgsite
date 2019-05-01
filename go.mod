@@ -11,9 +11,11 @@ require (
 	github.com/lib/pq v1.1.0
 	github.com/microcosm-cc/bluemonday v1.0.2
 	github.com/russross/blackfriday/v2 v2.0.1
+	github.com/shurcooL/component v0.0.0-20170202220835-f88ec8f54cc4 // indirect
+	github.com/shurcooL/htmlg v0.0.0-20190423052055-0eac288d3659
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	gocloud.dev v0.12.0
 	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3
-	golang.org/x/tools v0.0.0-20190418152851-6732636ccdfd
+	golang.org/x/tools v0.0.0-20190501045030-23463209683d
 	google.golang.org/genproto v0.0.0-20190404172233-64821d5d2107
 )

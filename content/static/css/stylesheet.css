@@ -163,3 +163,41 @@
 .Disclaimer-link {
   font-style: italic;
 }
+
+.Documentation {
+  font-family: "Roboto";
+  font-size: 85%;
+  color: #333;
+  margin-top: 25px;
+  margin-bottom: 100px;
+}
+.Documentation a {
+  color: #375eab;
+  text-decoration: none;
+}
+.Documentation a:hover {
+  text-decoration: underline;
+}
+.Documentation h1, h2, h3, h4, h5, h6 {
+  font-family: "Work Sans";
+}
+
+.Documentation h2 a {
+  display: none;
+}
+.Documentation h2:hover a {
+  display: initial;
+}
+
+.Documentation code, pre {
+  font-family: "Source Code Pro";
+  font-size: 0.875em;
+  tab-size: 4;
+}
+.Documentation pre {
+  padding: 0.75em;
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+  border-radius: 0.3em;
+  overflow-x: auto;
+}

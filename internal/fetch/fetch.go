@@ -9,12 +9,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"go/ast"
 	"go/doc"
-	"html"
 	"io/ioutil"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -39,10 +38,6 @@ var (
 
 	maxPackagesPerModule = 10000
 	maxImportsPerPackage = 1000
-
-	// tmpDocumentationHTML is a placeholder for documentation. This will be
-	// removed once documentation rendering is implemented.
-	tmpDocumentationHTML = []byte(html.EscapeString("TODO: <go documentation will go here>"))
 )
 
 // ParseModulePathAndVersion returns the module and version specified by p. p is
@@ -221,16 +216,11 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, licenses 
 		}
 	}
 
-	pkgs, err := loadPackages(workDir, modulePath, version)
+	pkgs, err := loadAndProcessPackages(workDir, modulePath, version, licenses)
 	if err != nil {
-		return nil, fmt.Errorf("loadPackages(%q, %q, %q, zipReader): %v", workDir, modulePath, version, err)
+		return nil, fmt.Errorf("loadAndProcessPackages(%q, %q, %q, licenses): %v", workDir, modulePath, version, err)
 	}
-
-	packages, err := transformPackages(workDir, modulePath, version, pkgs, licenses)
-	if err != nil {
-		return nil, fmt.Errorf("transformPackages(%q, %q, pkgs, licenses): %v", workDir, modulePath, err)
-	}
-	return packages, nil
+	return pkgs, nil
 }
 
 // extractModuleFiles extracts files contained in the given module within the
@@ -278,14 +268,17 @@ func writeGoModFile(filename, modulePath string) error {
 	return nil
 }
 
-// loadPackages calls packages.Load for the given modulePath and version within
-// the working directory.
+// loadAndProcessPackages loads packages using the default build context
+// from the given modulePath and version relative to the working directory.
+// It matches each package to an applicable license and computes its imports,
+// documentation, and other package-specific fields.
 //
-// It returns the special error errModuleContainsNoPackages if the module
-// contains no packages.
-func loadPackages(workDir, modulePath, version string) ([]*packages.Package, error) {
+// If there were no packages found in the module, the error value
+// errModuleContainsNoPackages is returned.
+func loadAndProcessPackages(workDir, modulePath, version string, licenses []*internal.License) ([]*internal.Package, error) {
+	// TODO: find a way to test that the configuration doesn't use the internet to fetch dependencies
 	config := &packages.Config{
-		Mode: packages.LoadSyntax,
+		Mode: packages.NeedName | packages.NeedFiles,
 		Dir:  filepath.Join(workDir, moduleVersionDir(modulePath, version)),
 	}
 	pattern := fmt.Sprintf("%s/...", modulePath)
@@ -293,12 +286,50 @@ func loadPackages(workDir, modulePath, version string) ([]*packages.Package, err
 	if err != nil {
 		return nil, fmt.Errorf("packages.Load(config, %q): %v", pattern, err)
 	}
-
 	if len(pkgs) == 0 {
 		return nil, errModuleContainsNoPackages
 	}
+	if len(pkgs) > maxPackagesPerModule {
+		return nil, fmt.Errorf("%d packages found in %q; exceeds limit %d for maxPackagePerModule", len(pkgs), modulePath, maxPackagesPerModule)
+	}
+	// TODO: consider p.Errors and act accordingly; issue b/131836733
 
-	return pkgs, nil
+	licenseDir := filepath.Join(workDir, moduleVersionDir(modulePath, version))
+	matcher := newLicenseMatcher(licenseDir, licenses)
+	var packages []*internal.Package
+	for _, p := range pkgs {
+		fset, d, err := computeDoc(p)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(d.Imports) > maxImportsPerPackage {
+			return nil, fmt.Errorf("%d imports found package %q in module %q; exceeds limit %d for maxImportsPerPackage", len(pkgs), p.PkgPath, modulePath, maxImportsPerPackage)
+		}
+		var imports []*internal.Import
+		for _, i := range d.Imports {
+			imports = append(imports, &internal.Import{
+				Name: path.Base(i), // TODO: this is a heuristic that just uses last path element for now; need to use database to do better; issue b/131835416
+				Path: i,
+			})
+		}
+
+		docHTML, err := renderDocHTML(fset, d)
+		if err != nil {
+			return nil, err
+		}
+
+		packages = append(packages, &internal.Package{
+			Name:              p.Name,
+			Path:              p.PkgPath,
+			Licenses:          matcher.matchLicenses(p),
+			Synopsis:          doc.Synopsis(d.Doc),
+			Suffix:            strings.TrimPrefix(strings.TrimPrefix(p.PkgPath, modulePath), "/"),
+			Imports:           imports,
+			DocumentationHTML: docHTML,
+		})
+	}
+	return packages, nil
 }
 
 // licenseMatcher is a map of directory prefix -> license files, that can be
@@ -340,59 +371,6 @@ func (m licenseMatcher) matchLicenses(p *packages.Package) []*internal.LicenseIn
 		}
 	}
 	return licenseFiles
-}
-
-// transformPackages maps a slice of *packages.Package to our internal
-// representation (*internal.Package).  To do so, it maps package data
-// and matches packages with their applicable licenses.
-func transformPackages(workDir, modulePath, version string, pkgs []*packages.Package, licenses []*internal.License) ([]*internal.Package, error) {
-	licenseDir := filepath.Join(workDir, moduleVersionDir(modulePath, version))
-	matcher := newLicenseMatcher(licenseDir, licenses)
-	packages := []*internal.Package{}
-
-	if len(pkgs) > maxPackagesPerModule {
-		return nil, fmt.Errorf("%d packages found in %q; exceeds limit %d for maxPackagePerModule", len(pkgs), modulePath, maxPackagesPerModule)
-	}
-
-	for _, p := range pkgs {
-		var imports []*internal.Import
-		if len(p.Imports) > maxImportsPerPackage {
-			return nil, fmt.Errorf("%d imports found package %q in module %q; exceeds limit %d for maxImportsPerPackage", len(pkgs), p.PkgPath, modulePath, maxImportsPerPackage)
-		}
-		for _, i := range p.Imports {
-			imports = append(imports, &internal.Import{
-				Name: i.Name,
-				Path: i.PkgPath,
-			})
-		}
-
-		packages = append(packages, &internal.Package{
-			Name:              p.Name,
-			Path:              p.PkgPath,
-			Licenses:          matcher.matchLicenses(p),
-			Synopsis:          synopsis(p),
-			Suffix:            strings.TrimPrefix(strings.TrimPrefix(p.PkgPath, modulePath), "/"),
-			Imports:           imports,
-			DocumentationHTML: tmpDocumentationHTML,
-		})
-	}
-	return packages, nil
-}
-
-// synopsis returns the first sentence of the package documentation, or an
-// empty string if it cannot be determined.
-func synopsis(p *packages.Package) string {
-	files := make(map[string]*ast.File)
-	for i, f := range p.Syntax {
-		files[string(i)] = f
-	}
-
-	apkg := &ast.Package{
-		Name:  p.Name,
-		Files: files,
-	}
-	d := doc.New(apkg, p.PkgPath, 0)
-	return doc.Synopsis(d.Doc)
 }
 
 // hasFilename checks if file is expectedFile or if the name of file, without
