@@ -4,14 +4,13 @@
   license that can be found in the LICENSE file.
 -->
 
-{{ define "content" }}
+{{ define "details_content" }}
   <div class="ModuleContent-list">
     <h2>Packages in this module</h2>
     <h3>Module: {{ .ModulePath }}</h3>
     {{ range .Packages }}
       <p>
         <div>
-          <b>{{ .Name }} - </b>
           <a href="/{{ .Path }}?v={{ .Version }}">
             <b>{{ .Suffix }}</b>
           </a>

@@ -4,14 +4,12 @@
   license that can be found in the LICENSE file.
 -->
 
-{{ define "ROOT" }}
+{{define "header"}}
+  {{/* This ideally would be empty, but you cannot redefine a template with only whitespace or comments. */}}
+  <wbr>
+{{end}}
 
-<!DOCTYPE html>
-<title>Licenses — Go Discovery</title>
-
-{{ template "header" . }}
-{{ template "nav" . }}
-
+{{define "main_content"}}
 <div class="Container">
   <h1>License Disclaimer</h1>
   <p class="License-disclaimer">
@@ -23,5 +21,4 @@
     detection.
   </p>
 </div>
-
-{{ end }}
+{{end}}

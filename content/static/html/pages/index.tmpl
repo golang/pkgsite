@@ -4,18 +4,14 @@
 	license that can be found in the LICENSE file.
 -->
 
-{{ define "ROOT" }}
+{{define "header"}}
+  {{/* This ideally would be empty, but you cannot redefine a template with only whitespace or comments. */}}
+  <wbr>
+{{end}}
 
-<!DOCTYPE html>
-<title>Go Discovery</title>
-
-{{ template "header" }}
-
-<div class="Container">
-  <div class="HomeContent-search">
-    {{ template "search_bar" . }}
+{{define "main_content"}}
+  <div class="Search">
+    <img class="Search-logo" src="/static/img/logo.svg" alt="Go Discovery">
+    {{template "search" .}}
   </div>
-  {{ template "footer" }}
-</div>
-
-{{ end }}
+{{end}}

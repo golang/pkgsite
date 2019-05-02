@@ -4,61 +4,48 @@
   license that can be found in the LICENSE file.
 -->
 
-{{ define "ROOT" }}
-<!DOCTYPE html>
-<title>{{ .Query }} — Go Discovery</title>
+{{define "main_content"}}
+  <div class="SearchResults">
+    <h1 class="SearchResults-header">Results for “{{.Query}}”</h1>
+    <div class="SearchResults-resultCount">{{.Offset}} of {{.NumResults}} results</div>
+    <div>{{/* Containing element is needed to use *-of-type selectors */}}
+      {{$query := .Query}}
+      {{range .Results}}
+        <div class="SearchSnippet">
+          <h2 class="SearchSnippet-header">
+            {{.Name}} - <a href="/{{.PackagePath}}?v={{.Version}}{{if $query}}&q={{$query}}{{end}}">{{.PackagePath}}</a>
+          </h2>
+          <p class="SearchSnippet-synopsis">{{.Synopsis}}</p>
+          <div class="SearchSnippet-subtext">
+            <b class="SearchSnippet-subtextTitle">Version:</b> {{.Version}}
+            <span class="SearchSnippet-subtextDivide">|</span>
+            <b class="SearchSnippet-subtextTitle">License(s):</b>
+            {{range $i, $e := .Licenses -}}{{if $i}}, {{end}} {{$e.Type}} {{end}}
+          </div>
+          <div class="SearchSnippet-subtext">
+            <b class="SearchSnippet-subtextTitle">Imported by:</b> {{.NumImportedBy}}
+            <span class="SearchSnippet-subtextDivide">|</span>
+            <b class="SearchSnippet-subtextTitle">Published:</b> {{.CommitTime}}
+          </div>
+        </div>
+      {{end}}
+    </div>
+    <div class="SearchResults-nav">
+      {{if .Prev}}
+        <a class="SearchResults-previous" href="/search?q={{.Query}}&page={{.Prev}}">Previous</a>
+      {{else}}
+        <span class="SearchResults-previous" aria-disabled="true">Previous</span>
+      {{end}}
 
-{{ template "header" . }}
-{{ template "nav" . }}
+      {{range $i := iterate .NumPages}}
+        <a class="SearchResults-pageNum" href="/search?q={{$.Query}}&page={{add $i 1}}">{{add $i 1}}</a>
+      {{end}}
 
-<div class="Container">
-  {{ template "search_bar" . }}
-  <div class="SearchContent-results">
-    <h1 class="SearchContent-header">Results for “{{ .Query }}”</h1>
-    <p>{{ .Offset }} of {{ .NumResults }} results</p>
-    <hr>
-    {{ range .Results }}
-      <div class="SearchSnippetContent">
-        <h2><b>{{ .Name }} - </b><a href="/{{.PackagePath}}?v={{.Version}}" class="SearchSnippetContent-packageName">{{ .PackagePath }}</a></h2>
-        <p>{{ .Synopsis }}</p>
-	<div>
-          <span>Version: {{ .Version }}</span>
-	  <span>|</span>
-          <span>License(s): </span>
-	  <span>{{ range $i, $e := .Licenses -}}{{ if $i }}, {{ end }} {{ $e.Type }} {{ end }}</span>
-	</div>
-	<div>
-	  {{ if gt .NumImportedBy 1 }}
-	    <span>Imported by {{ .NumImportedBy}}</span>
-	    <span>|</span>
-	  {{ else if eq .NumImportedBy 1 }}
-	    <span>Imported by {{ .NumImportedBy}}</span>
-	    <span>|</span>
-	  {{ end }}
-	  <span>Published: {{ .CommitTime }}</span>
-	</div>
-        <hr>
-      </div>
-    {{ end}}
-    <div>
-      {{ if .Prev }}
-        <a href="/search?q={{ .Query }}&page={{ .Prev }}">Previous</a>
-      {{ else }}
-        <span>Previous</span>
-      {{ end }}
-
-      {{ range $i := iterate .NumPages }}
-        <a href="/search?q={{ $.Query }}&page={{ add $i 1 }}">{{ add $i 1 }}</a>
-      {{ end }}
-
-      {{ if .Next }}
-        <a href="/search?q={{ .Query }}&page={{ .Next }}">Next</a>
-      {{ else }}
-        <span>Next</span>
-      {{ end }}
+      {{if .Next}}
+        <a class="SearchResults-next" href="/search?q={{.Query}}&page={{.Next}}">Next</a>
+      {{else}}
+        <span class="SearchResults-next" aria-disabled="true">Next</span>
+      {{end}}
     </div>
   </div>
-
-  {{ template "footer" }}
-</div>
-{{ end }}
+{{end}}

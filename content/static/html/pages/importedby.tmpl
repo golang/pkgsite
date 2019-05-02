@@ -4,12 +4,12 @@
 	license that can be found in the LICENSE file.
 -->
 
-{{ define "content" }}
+{{ define "details_content" }}
   <div>
     <h3>Imported by</h3>
     <p><b>Known importers: </b>{{ len .ImportedBy }} packages</p>
     {{ range .ImportedBy }}
-      <p><b>{{ .Name }}</b><span> - </span><a href="/{{.Path}}">{{ .Path }}</a></p>
+      <p><a href="/{{.Path}}">{{ .Path }}</a></p>
     {{ end }}
   </div>
 {{ end }}

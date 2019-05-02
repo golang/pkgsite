@@ -69,7 +69,10 @@ func TestFetchSearchPage(t *testing.T) {
 			query:    "foo bar",
 			versions: []*internal.Version{versionFoo, versionBar},
 			wantSearchPage: &SearchPage{
-				Query:      "foo bar",
+				basePageData: basePageData{
+					Query: "foo bar",
+					Title: "foo bar",
+				},
 				NumResults: 2,
 				NumPages:   1,
 				Prev:       0,
@@ -104,7 +107,10 @@ func TestFetchSearchPage(t *testing.T) {
 			query:    "package",
 			versions: []*internal.Version{versionFoo, versionBar},
 			wantSearchPage: &SearchPage{
-				Query:      "package",
+				basePageData: basePageData{
+					Query: "package",
+					Title: "package",
+				},
 				NumResults: 1,
 				NumPages:   1,
 				Prev:       0,
@@ -142,7 +148,7 @@ func TestFetchSearchPage(t *testing.T) {
 				t.Fatalf("fetchSearchPage(db, %q): %v", tc.query, err)
 			}
 
-			if diff := cmp.Diff(tc.wantSearchPage, got); diff != "" {
+			if diff := cmp.Diff(tc.wantSearchPage, got, cmp.AllowUnexported(SearchPage{})); diff != "" {
 				t.Errorf("fetchSearchPage(db, %q) mismatch (-want +got):\n%s", tc.query, diff)
 			}
 		})

@@ -170,7 +170,7 @@ func docHTML(text string) string {
 	return buf.String()
 }
 
-// TODO: skip this unneccessary round-trip
+// TODO: skip this unnecessary round-trip
 func parseHTML(s string) *html.Node {
 	n, err := html.Parse(strings.NewReader(s))
 	if err != nil {

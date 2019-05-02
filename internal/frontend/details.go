@@ -27,6 +27,7 @@ import (
 
 // DetailsPage contains data for the doc template.
 type DetailsPage struct {
+	basePageData
 	CanShowDetails bool
 	Details        interface{}
 	PackageHeader  *Package
@@ -550,6 +551,10 @@ func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page := &DetailsPage{
+		basePageData: basePageData{
+			Title: fmt.Sprintf("%s - %s", pkgHeader.Title, pkgHeader.Version),
+			Query: strings.TrimSpace(r.FormValue("q")),
+		},
 		PackageHeader:  pkgHeader,
 		Details:        details,
 		CanShowDetails: canShowDetails,

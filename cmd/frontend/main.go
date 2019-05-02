@@ -21,7 +21,10 @@ import (
 )
 
 func main() {
-	var staticPath = flag.String("static", "content/static", "path to folder containing static files served")
+	var (
+		staticPath      = flag.String("static", "content/static", "path to folder containing static files served")
+		reloadTemplates = flag.Bool("reload_templates", false, "reload templates on each page load (to be used during development)")
+	)
 	flag.Parse()
 
 	ctx := context.Background()
@@ -36,7 +39,7 @@ func main() {
 	defer db.Close()
 
 	templateDir := filepath.Join(*staticPath, "html")
-	controller, err := frontend.New(db, templateDir)
+	controller, err := frontend.New(db, templateDir, *reloadTemplates)
 	if err != nil {
 		log.Fatalf("frontend.New(db, %q): %v", templateDir, err)
 	}

@@ -3,16 +3,9 @@
 	Use of this source code is governed by a BSD-style
 	license that can be found in the LICENSE file.
 -->
-
-{{define "ROOT"}}
-
-<!DOCTYPE html>
-{{ template "header" }}
-{{ template "nav" }}
-
+{{define "main_content"}}
 <div class="Container">
  {{$header := .PackageHeader}}
- <title>{{ $header.Title }} - {{ $header.Version }}</title>
  <header>
    <h1>{{ $header.Title }}</h1>
    {{ if not $header.IsCommand }}
@@ -66,12 +59,10 @@
 
  <div class="Content">
   {{ if .CanShowDetails -}}
-    {{ template "content" .Details }}
+    {{ template "details_content" .Details }}
   {{- else }}
     <h2>This data is not redistributable due to license restrictions.</h2>
   {{ end }}
   </div>
- {{ template "footer" }}
 </div>
-
 {{end}}

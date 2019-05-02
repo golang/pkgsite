@@ -12,25 +12,35 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"sync"
+	"time"
 
 	"golang.org/x/discovery/internal/postgres"
 )
 
 // Controller handles requests for the various frontend pages.
 type Controller struct {
-	db        *postgres.DB
+	db              *postgres.DB
+	templateDir     string
+	reloadTemplates bool
+
+	mu        sync.RWMutex // Protects all fields below
 	templates map[string]*template.Template
 }
 
 // New creates a new Controller for the given database and template directory.
-func New(db *postgres.DB, templateDir string) (*Controller, error) {
+// reloadTemplates should be used during development when it can be helpful to
+// reload templates from disk each time a page is loaded.
+func New(db *postgres.DB, templateDir string, reloadTemplates bool) (*Controller, error) {
 	ts, err := parsePageTemplates(templateDir)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing templates: %v", err)
 	}
 	return &Controller{
-		db:        db,
-		templates: ts,
+		db:              db,
+		templateDir:     templateDir,
+		reloadTemplates: reloadTemplates,
+		templates:       ts,
 	}, nil
 }
 
@@ -38,15 +48,28 @@ func New(db *postgres.DB, templateDir string) (*Controller, error) {
 // content.
 func (c *Controller) HandleStaticPage(templateName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		c.renderPage(w, templateName, nil)
+		c.renderPage(w, templateName, basePageData{Title: "Licenses"})
 	}
 }
 
-// renderPage is used to execute all templates for a *Controller. It expects
-// the file for templateName to be defined as "ROOT".
+// renderPage is used to execute all templates for a *Controller.
 func (c *Controller) renderPage(w http.ResponseWriter, templateName string, page interface{}) {
+	if c.reloadTemplates {
+		c.mu.Lock()
+		var err error
+		c.templates, err = parsePageTemplates(c.templateDir)
+		c.mu.Unlock()
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			log.Printf("Error parsing templates: %v", err)
+			return
+		}
+	}
+
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	var buf bytes.Buffer
-	if err := c.templates[templateName].ExecuteTemplate(&buf, "ROOT", page); err != nil {
+	if err := c.templates[templateName].Execute(&buf, page); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		log.Printf("Error executing page template %q: %v", templateName, err)
 		return
@@ -55,6 +78,12 @@ func (c *Controller) renderPage(w http.ResponseWriter, templateName string, page
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		log.Printf("Error copying template %q buffer to ResponseWriter: %v", templateName, err)
 	}
+}
+
+// basePageData contains fields shared by all pages when rendering templates.
+type basePageData struct {
+	Title string
+	Query string
 }
 
 // parsePageTemplates parses html templates contained in the given base
@@ -78,12 +107,9 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 	}
 
 	templates := make(map[string]*template.Template)
-	// Loop through and create a template for each page.  This template includes
-	// the page html template contained in pages/<page>.tmpl, along with all
-	// helper snippets contained in helpers/*.tmpl.
 	for _, set := range htmlSets {
 		templateName := set[0]
-		t := template.New("").Funcs(template.FuncMap{
+		t, err := template.New("base.tmpl").Funcs(template.FuncMap{
 			"templateName": func() string { return templateName },
 			"add": func(i, j int) int {
 				return i + j
@@ -95,7 +121,13 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 				}
 				return items
 			},
-		})
+			"curYear": func() int {
+				return time.Now().Year()
+			},
+		}).ParseFiles(filepath.Join(base, "base.tmpl"))
+		if err != nil {
+			return nil, fmt.Errorf("ParseFiles: %v", err)
+		}
 		helperGlob := filepath.Join(base, "helpers", "*.tmpl")
 		if _, err := t.ParseGlob(helperGlob); err != nil {
 			return nil, fmt.Errorf("ParseGlob(%q): %v", helperGlob, err)

@@ -17,14 +17,12 @@ import (
 	"golang.org/x/discovery/internal/postgres"
 )
 
-const (
-	defaultSearchLimit = 10
-)
+const defaultSearchLimit = 10
 
 // SearchPage contains all of the data that the search template needs to
 // populate.
 type SearchPage struct {
-	Query      string
+	basePageData
 	Results    []*SearchResult
 	NumPages   int
 	NumResults int
@@ -102,7 +100,10 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, limit, 
 	}
 
 	return &SearchPage{
-		Query:      query,
+		basePageData: basePageData{
+			Title: query,
+			Query: query,
+		},
 		Results:    results,
 		NumPages:   numPages(limit, numResults),
 		NumResults: numResults,

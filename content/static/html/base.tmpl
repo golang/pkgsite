@@ -1,0 +1,45 @@
+<!--
+  Copyright 2019 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css?family=Work+Sans:600|Roboto|Source+Code+Pro" rel="stylesheet">
+<link href="/static/css/stylesheet.css" rel="stylesheet">
+<title>{{if .Title}}{{.Title}} · {{end}}Go Discovery</title>
+<body class="Site">
+<header>
+  {{block "header" .}}
+    <div class="Header">
+      <a class="Header-logo" href="/">
+        <img class="Header-logoImg" src="/static/img/logo.svg" alt="Go Discovery">
+      </a>
+      <div class="Header-search">
+        {{template "search" .}}
+      </div>
+    </div>
+  {{end}}
+</header>
+<main class="Site-content">{{block "main_content" .}}{{end}}</main>
+<footer>
+  <div class="Footer">
+    <div class="Footer-innerContent Footer-innerContent--left">
+      <img class="Footer-gopher" src="/static/img/gopher.jpg" alt="The Go Gopher">
+      <span class="Footer-text Footer-text--copyright">©{{curYear}} Go</span>
+      |
+      <a class="Footer-text" href="https://golang.org/doc/tos.html">Terms of Service</a>
+      |
+      <a class="Footer-text" href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+      |
+      <a class="Footer-text" href="">Report a website issue or send feedback</a>
+    </div>
+    <div class="Footer-innerContent Footer-innerContent--right">
+      <img class="Footer-googleLogo" src="/static/img/google.svg" alt="Google logo">
+    </div>
+  </div>
+</footer>

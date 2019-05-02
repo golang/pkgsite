@@ -4,7 +4,7 @@
   license that can be found in the LICENSE file.
 -->
 
-{{ define "content" }}
+{{ define "details_content" }}
   <div>
     {{ range $major := .Versions }}
       <h3>{{$major.Level}} - Latest <a href="/{{$major.Latest.Path}}?v=v{{$major.Latest.Version}}">{{ $major.Latest.Version }}</a> - {{ $major.Latest.CommitTime }}</h3>
