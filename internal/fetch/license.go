@@ -18,7 +18,7 @@ import (
 const (
 	// licenseClassifyThreshold is the minimum confidence percentage/threshold
 	// to classify a license
-	licenseClassifyThreshold = 96 // TODO: run more tests to figure out the best percent.
+	licenseClassifyThreshold = 90
 
 	// licenseCoverageThreshold is the minimum percentage of the file that must contain license text.
 	licenseCoverageThreshold = 90

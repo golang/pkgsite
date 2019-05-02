@@ -11,6 +11,7 @@ import "path"
 var RedistributableLicenses = map[string]bool{
 	"Apache-2.0":           true,
 	"Artistic-2.0":         true,
+	"BSD-2-Clause":         true,
 	"BSD-2-Clause-FreeBSD": true,
 	"BSD-3-Clause":         true,
 	"BSL-1.0":              true,
