@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 )
@@ -185,7 +186,7 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 				t.Errorf("testDB.Search(%v, %d, %d) mismatch: len(got) = %d, want = %d\n", tc.terms, tc.limit, tc.offset, len(got), len(tc.want))
 			}
 
-			if diff := cmp.Diff(tc.want, got); diff != "" {
+			if diff := cmp.Diff(tc.want, got, cmpopts.IgnoreFields(internal.LicenseInfo{}, "FilePath")); diff != "" {
 				t.Errorf("testDB.Search(%v, %d, %d) mismatch (-want +got):\n%s", tc.terms, tc.limit, tc.offset, diff)
 			}
 		})

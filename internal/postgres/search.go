@@ -82,49 +82,65 @@ func (db *DB) Search(ctx context.Context, terms []string, limit, offset int) ([]
 
 	query := `
 	WITH imported_by AS (
-		SELECT to_path, COALESCE(COUNT(*),0) AS num_imported_by
+		SELECT to_path, COUNT(*) AS num_imported_by
 		FROM (SELECT to_path, from_path FROM imports GROUP BY 1,2) i
 		GROUP BY 1
 	),
 	docs AS (
-		SELECT package_path, MAX(relevance) AS relevance
-		FROM (
-			SELECT package_path, version,
-			ts_rank (tsv_search_tokens, to_tsquery($1)) AS relevance
+		SELECT package_path, relevance FROM (
+			SELECT DISTINCT ON(package_path) package_path,
+			ts_rank(tsv_search_tokens, to_tsquery($1)) AS relevance
 			FROM documents
+			WHERE tsv_search_tokens @@ to_tsquery($1)
+			ORDER BY 1,2 DESC
 		) d
 		WHERE relevance > POWER(10,-10)
-		GROUP BY 1
 	),
-	latest_versions AS (
-		SELECT DISTINCT ON (module_path) module_path, version, commit_time
-		FROM versions
-		ORDER BY module_path, major DESC, minor DESC, patch DESC, prerelease DESC
+	licensed_packages AS (
+		SELECT p.path,
+		p.synopsis,
+		p.module_path,
+		p.version,
+		p.name,
+		v.commit_time,
+		array_agg(l.type) FILTER (WHERE l.version IS NOT NULL) AS license_types
+		FROM packages p
+		INNER JOIN (
+			SELECT DISTINCT ON (module_path) module_path, version, commit_time
+			FROM versions
+			ORDER BY module_path, major DESC, minor DESC, patch DESC, prerelease DESC
+		) v
+		ON v.module_path=p.module_path AND v.version=p.version
+		LEFT JOIN package_licenses pl
+			ON p.module_path = pl.module_path
+			AND p.version = pl.version
+			AND p.path = pl.package_path
+		LEFT JOIN licenses l
+			ON pl.module_path = l.module_path
+			AND pl.version = l.version
+			AND pl.file_path = l.file_path
+		WHERE p.path IN (SELECT package_path FROM docs)
+		GROUP BY p.module_path, p.version, p.path, v.commit_time
 	)
-
 
 	SELECT
 		p.path AS package_path,
-		v.version,
+		p.version,
 		p.module_path,
 		p.name,
 		p.synopsis,
 		p.license_types,
-		p.license_paths,
-		v.commit_time,
+		p.commit_time,
 		COALESCE(i.num_imported_by, 0) AS num_imported_by,
 		d.relevance * log(exp(1) + COALESCE(i.num_imported_by, 0)) AS rank,
 		COUNT(*) OVER() AS total
-	FROM latest_versions v
-	INNER JOIN vw_licensed_packages p
-		ON p.module_path = v.module_path
-		AND p.version=v.version
-	INNER JOIN docs d
-		ON d.package_path = p.path
-	LEFT JOIN imported_by i
-		ON i.to_path = p.path
-	ORDER BY rank DESC
-	LIMIT $2 OFFSET $3;`
+		FROM licensed_packages p
+		INNER JOIN docs d
+			ON d.package_path = p.path
+		LEFT JOIN imported_by i
+			ON i.to_path = p.path
+		ORDER BY rank DESC
+		LIMIT $2 OFFSET $3;`
 	rows, err := db.QueryContext(ctx, query, strings.Join(terms, " | "), limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("db.QueryContext(ctx, %s, %q, %d, %d): %v", query, terms, limit, offset, err)
@@ -133,7 +149,7 @@ func (db *DB) Search(ctx context.Context, terms []string, limit, offset int) ([]
 
 	var (
 		path, version, modulePath, name, synopsis string
-		licenseTypes, licensePaths                []string
+		licenseTypes                              []string
 		commitTime                                time.Time
 		numImportedBy, total                      uint64
 		rank                                      float64
@@ -141,13 +157,12 @@ func (db *DB) Search(ctx context.Context, terms []string, limit, offset int) ([]
 	)
 	for rows.Next() {
 		if err := rows.Scan(&path, &version, &modulePath, &name, &synopsis,
-			pq.Array(&licenseTypes), pq.Array(&licensePaths), &commitTime, &numImportedBy, &rank, &total); err != nil {
+			pq.Array(&licenseTypes), &commitTime, &numImportedBy, &rank, &total); err != nil {
 			return nil, fmt.Errorf("rows.Scan(): %v", err)
 		}
-
-		lics, err := zipLicenseInfo(licenseTypes, licensePaths)
-		if err != nil {
-			return nil, fmt.Errorf("zipLicenseInfo(%v, %v): %v", licenseTypes, licensePaths, err)
+		var licenses []*internal.LicenseInfo
+		for _, t := range licenseTypes {
+			licenses = append(licenses, &internal.LicenseInfo{Type: t})
 		}
 		results = append(results, &SearchResult{
 			Rank:          rank,
@@ -158,7 +173,7 @@ func (db *DB) Search(ctx context.Context, terms []string, limit, offset int) ([]
 					Name:     name,
 					Path:     path,
 					Synopsis: synopsis,
-					Licenses: lics,
+					Licenses: licenses,
 				},
 				VersionInfo: internal.VersionInfo{
 					ModulePath: modulePath,

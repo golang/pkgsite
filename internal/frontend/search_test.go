@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
 )
@@ -149,8 +150,8 @@ func TestFetchSearchPage(t *testing.T) {
 			if err != nil {
 				t.Fatalf("fetchSearchPage(db, %q): %v", tc.query, err)
 			}
-
-			if diff := cmp.Diff(tc.wantSearchPage, got, cmp.AllowUnexported(SearchPage{})); diff != "" {
+			if diff := cmp.Diff(tc.wantSearchPage, got,
+				cmp.AllowUnexported(SearchPage{}), cmpopts.IgnoreFields(internal.LicenseInfo{}, "FilePath")); diff != "" {
 				t.Errorf("fetchSearchPage(db, %q) mismatch (-want +got):\n%s", tc.query, diff)
 			}
 		})
