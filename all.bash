@@ -3,46 +3,91 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
+if [ -t 1 ] && which tput >/dev/null 2>&1; then
+  RED="$(tput setaf 1)"
+  GREEN="$(tput setaf 2)"
+  YELLOW="$(tput setaf 3)"
+  NORMAL="$(tput sgr0)"
+else
+  RED=""
+  GREEN=""
+  YELLOW=""
+  NORMAL=""
+fi
+
+info() { echo -e "${GREEN}$@${NORMAL}" 1>&2; }
+warn() { echo -e "${YELLOW}$@${NORMAL}" 1>&2; }
+err() { echo -e "${RED}$@${NORMAL}" 1>&2; }
+
+warnout() {
+  while read line; do
+    warn "$line"
+  done
+}
+
+# codedirs lists directories that contain discovery code. If they include
+# directories containing external code, those directories must be excluded in
+# findcode below.
+codedirs=(
+  "cmd"
+  "content"
+  "internal"
+  "migrations"
+)
+
+checkheaders() {
+  if [[ "$@" != "" ]]; then
+    for FILE in $@
+    do
+        # Allow for the copyright header to start on either of the first two
+        # lines, to accomodate conventions for CSS and HTML.
+        line="$(head -2 $FILE)"
+        if [[ ! $line == *"The Go Authors. All rights reserved."* ]] &&
+         [[ ! $line == "// DO NOT EDIT. This file was copied from" ]]; then
+              err "missing license header: $FILE"
+        fi
+    done
+  fi
+}
+
+findcode() {
+  find ${codedirs[@]} \
+    -not -path 'internal/thirdparty/*' \
+    \( -name *.go -o -name *.sql -o -name *.tmpl -o -name *.css \)
+}
+
 # Check that all .go and .sql files that have been staged in this commit have a
 # license header.
-echo "Running: Checking staged files for license header"
-STAGED_GO_FILES=$(git diff --cached --name-only | grep -E ".go$|.sql$")
-if [[ "$STAGED_GO_FILES" != "" ]]; then
-  for FILE in $STAGED_GO_FILES
-  do
-      line="$(head -1 $FILE)"
-      if [[ ! $line == *"The Go Authors. All rights reserved."* ]] &&
-       [[ ! $line == "// DO NOT EDIT. This file was copied from" ]]; then
-  	    echo "missing license header: $FILE"
-      fi
-  done
-fi
+info "Running: Checking staged files for license header"
+checkheaders $(git diff --cached --name-only | grep -E ".go$|.sql$")
+info "Running: Checking internal files for license header"
+checkheaders $(findcode)
 
 # Download staticcheck if it doesn't exist
 if ! [ -x "$(command -v staticcheck)" ]; then
-  echo "Running: go get -u honnef.co/go/tools/cmd/staticcheck"
+  info "Running: go get -u honnef.co/go/tools/cmd/staticcheck"
   go get -u honnef.co/go/tools/cmd/staticcheck
 fi
 
-echo "Running: staticcheck ./..."
-staticcheck ./...
+info "Running: staticcheck ./..."
+staticcheck ./... | warnout
 
 # Download misspell if it doesn't exist
 if ! [ -x "$(command -v misspell)" ]; then
-  echo "Running: go get -u github.com/client9/misspell/cmd/misspell"
+  info "Running: go get -u github.com/client9/misspell/cmd/misspell"
   go get -u github.com/client9/misspell/cmd/misspell
 fi
 
-echo "Running: misspell cmd/**/* internal/**/* README.md"
-misspell cmd/**/* internal/**/* README.md
+info "Running: misspell cmd/**/* internal/**/* README.md"
+misspell cmd/**/* internal/**/* README.md | warnout
 
-echo "Running: go mod tidy"
+info "Running: go mod tidy"
 go mod tidy
 
-echo "Running: go test ./..."
+info "Running: go test ./..."
 go test -count=1 ./...
 
 # This test needs to be run separately since an attempt to use the given flag
 # will fail if other tests caught by "./..." don't have it defined.
-echo "Running: go test ./internal/secrets/ -use_cloud"
+info "Running: go test ./internal/secrets/ -use_cloud"
 go test ./internal/secrets/ -use_cloud
