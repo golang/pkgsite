@@ -69,8 +69,8 @@ if ! [ -x "$(command -v staticcheck)" ]; then
   go get -u honnef.co/go/tools/cmd/staticcheck
 fi
 
-info "Running: staticcheck ./..."
-staticcheck ./... | warnout
+info "Running: staticcheck ./... (skipping thirdparty)"
+staticcheck $(go list ./... | grep -v thirdparty) | warnout
 
 # Download misspell if it doesn't exist
 if ! [ -x "$(command -v misspell)" ]; then
@@ -89,5 +89,5 @@ go test -count=1 ./...
 
 # This test needs to be run separately since an attempt to use the given flag
 # will fail if other tests caught by "./..." don't have it defined.
-info "Running: go test ./internal/secrets/ -use_cloud"
-go test ./internal/secrets/ -use_cloud
+info "Running: go test ./internal/secrets -use_cloud"
+go test ./internal/secrets -use_cloud
