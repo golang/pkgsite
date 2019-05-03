@@ -50,7 +50,10 @@ func main() {
 	mux.HandleFunc("/license-policy/", controller.HandleStaticPage("license_policy.tmpl"))
 	mux.HandleFunc("/", controller.HandleDetails)
 
-	mw := middleware.Timeout(1 * time.Minute)
+	mw := middleware.Chain(
+		middleware.ContentSecurityPolicy(),
+		middleware.Timeout(1*time.Minute),
+	)
 
 	// Default to addr on localhost to prevent external connections. When running
 	// in prod, App Engine requires that the app listens on the port specified by

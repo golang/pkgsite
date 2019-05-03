@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// package middleware implements a simple middleware pattern for http handlers,
+// Package middleware implements a simple middleware pattern for http handlers,
 // along with implementations for some common middlewares.
 package middleware
 
