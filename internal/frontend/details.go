@@ -307,9 +307,16 @@ func fetchVersionsDetails(ctx context.Context, db *postgres.DB, pkg *internal.Pa
 		major := semver.Major(vStr)
 		majMin := strings.TrimPrefix(semver.MajorMinor(vStr), "v")
 		fullVersion := strings.TrimPrefix(vStr, "v")
+
 		// It is a bit overly defensive to accept all conventions for leading and
 		// trailing slashes here.
-		pkgPath := strings.TrimSuffix(v.ModulePath, "/") + "/" + strings.TrimPrefix(pkg.Suffix, "/")
+		modulePath := strings.TrimSuffix(v.ModulePath, "/")
+		var pkgPath string
+		if pkg.Suffix == "" {
+			pkgPath = modulePath
+		} else {
+			pkgPath = modulePath + "/" + strings.TrimPrefix(pkg.Suffix, "/")
+		}
 
 		if prevMajor != major {
 			prevMajorIndex = len(mvg)
