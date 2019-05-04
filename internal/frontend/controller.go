@@ -111,16 +111,6 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 		templateName := set[0]
 		t, err := template.New("base.tmpl").Funcs(template.FuncMap{
 			"templateName": func() string { return templateName },
-			"add": func(i, j int) int {
-				return i + j
-			},
-			"iterate": func(count int) []int {
-				var items []int
-				for i := 0; i < count; i++ {
-					items = append(items, i)
-				}
-				return items
-			},
 			"curYear": func() int {
 				return time.Now().Year()
 			},

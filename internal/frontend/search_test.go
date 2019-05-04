@@ -78,6 +78,7 @@ func TestFetchSearchPage(t *testing.T) {
 				Prev:       0,
 				Next:       0,
 				Page:       1,
+				Pages:      []int{1},
 				Results: []*SearchResult{
 					&SearchResult{
 						Name:          versionBar.Packages[0].Name,
@@ -116,6 +117,7 @@ func TestFetchSearchPage(t *testing.T) {
 				Prev:       0,
 				Next:       0,
 				Page:       1,
+				Pages:      []int{1},
 				Results: []*SearchResult{
 					&SearchResult{
 						Name:          versionFoo.Packages[0].Name,
@@ -215,8 +217,8 @@ func TestSearchPageMethods(t *testing.T) {
 			wantNext:     0,
 		},
 	} {
-		testLimit := 10
 		t.Run(tc.name, func(t *testing.T) {
+			testLimit := 10
 			if got := numPages(testLimit, tc.numResults); got != tc.wantNumPages {
 				t.Errorf("numPages(%d, %d) = %d; want = %d",
 					testLimit, tc.numResults, got, tc.wantNumPages)
@@ -231,6 +233,106 @@ func TestSearchPageMethods(t *testing.T) {
 			if got := next(tc.page, testLimit, tc.numResults); got != tc.wantNext {
 				t.Errorf("next(%d, %d, %d) = %d; want = %d",
 					tc.page, testLimit, tc.numResults, got, tc.wantNext)
+			}
+		})
+	}
+}
+
+func TestPagesToDisplay(t *testing.T) {
+	for _, tc := range []struct {
+		name                         string
+		page, numPages, numToDisplay int
+		wantPages                    []int
+	}{
+		{
+			name:         "page 1 of 10- first in range",
+			page:         1,
+			numPages:     10,
+			numToDisplay: 5,
+			wantPages:    []int{1, 2, 3, 4, 5},
+		},
+		{
+			name:         "page 3 of 10 - last in range to include 1 in wantPages ",
+			page:         3,
+			numPages:     10,
+			numToDisplay: 5,
+			wantPages:    []int{1, 2, 3, 4, 5},
+		},
+		{
+			name:         "page 4 of 10 - first in range to include 1 in wantPages",
+			page:         4,
+			numPages:     10,
+			numToDisplay: 5,
+			wantPages:    []int{2, 3, 4, 5, 6},
+		},
+		{
+			name:         "page 7 of 10 - page in the middle",
+			page:         7,
+			numPages:     10,
+			numToDisplay: 5,
+			wantPages:    []int{5, 6, 7, 8, 9},
+		},
+		{
+			name:         "page 8 of 10- first in range to include page 10",
+			page:         8,
+			numPages:     10,
+			numToDisplay: 5,
+			wantPages:    []int{6, 7, 8, 9, 10},
+		},
+		{
+			name:         "page 10 of 10 - last page in range",
+			page:         10,
+			numPages:     10,
+			numToDisplay: 5,
+			wantPages:    []int{6, 7, 8, 9, 10},
+		},
+		{
+			name:         "page 1 of 11, displaying 4 pages - first in range",
+			page:         1,
+			numPages:     11,
+			numToDisplay: 4,
+			wantPages:    []int{1, 2, 3, 4},
+		},
+		{
+			name:         "page 3 of 11, display 4 pages - last in range to include 1 in wantPages ",
+			page:         3,
+			numPages:     11,
+			numToDisplay: 4,
+			wantPages:    []int{1, 2, 3, 4},
+		},
+		{
+			name:         "page 4 of 11, displaying 4 pages - first in range to include 1 in wantPages",
+			page:         4,
+			numPages:     11,
+			numToDisplay: 4,
+			wantPages:    []int{2, 3, 4, 5},
+		},
+		{
+			name:         "page 7 of 11, displaying 4 pages - page in the middle",
+			page:         7,
+			numPages:     11,
+			numToDisplay: 4,
+			wantPages:    []int{5, 6, 7, 8},
+		},
+		{
+			name:         "page 8 of 11, displaying 4 pages",
+			page:         8,
+			numPages:     11,
+			numToDisplay: 4,
+			wantPages:    []int{6, 7, 8, 9},
+		},
+		{
+			name:         "page 10 of 11, displaying 4 pages - second to last page in range",
+			page:         10,
+			numPages:     11,
+			numToDisplay: 4,
+			wantPages:    []int{8, 9, 10, 11},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got := pagesToLink(tc.page, tc.numPages, tc.numToDisplay)
+			if diff := cmp.Diff(got, tc.wantPages); diff != "" {
+				t.Errorf("pagesToLink(%d, %d, %d) = %v; want = %v", tc.page, tc.numPages, tc.numToDisplay, got, tc.wantPages)
 			}
 		})
 	}

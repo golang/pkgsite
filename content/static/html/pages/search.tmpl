@@ -37,8 +37,15 @@
         <span class="SearchResults-previous" aria-disabled="true">Previous</span>
       {{end}}
 
-      {{range $i := iterate .NumPages}}
-        <a class="SearchResults-pageNum" href="/search?q={{$.Query}}&page={{add $i 1}}">{{add $i 1}}</a>
+      {{ $page := .Page }}
+      {{range $i := .Pages}}
+        {{ if eq $i $page }}
+          <span class="SearchResults-pageNum">{{ $i }}</span>
+        {{ else }}
+          <a class="SearchResults-pageNum" href="/search?q={{$.Query}}&page={{ $i }}">
+            {{ $i }}
+          </a>
+        {{ end }}
       {{end}}
 
       {{if .Next}}

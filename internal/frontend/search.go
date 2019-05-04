@@ -24,6 +24,7 @@ const defaultSearchLimit = 10
 type SearchPage struct {
 	basePageData
 	Results    []*SearchResult
+	Pages      []int
 	NumPages   int
 	NumResults int
 	Offset     int
@@ -71,6 +72,27 @@ func numPages(limit, numResults int) int {
 	return int(math.Ceil(float64(numResults) / float64(limit)))
 }
 
+// pagesToLink returns the page numbers that will be displayed. Given a
+// page, it returns a slice containing numPagesToLink integers in ascending
+// order and optimizes for page to be in the middle of that range. The max
+// value of an integer in the return slice will be less than numPages.
+func pagesToLink(page, numPages, numPagesToLink int) []int {
+	var pages []int
+	start := page - (numPagesToLink / 2)
+	if start < 1 {
+		start = 1
+	} else if (numPages - start) < numPagesToLink {
+		start = numPages - numPagesToLink + 1
+	}
+
+	for i := start; (i < start+numPagesToLink) && (i <= numPages); i++ {
+		pages = append(pages, i)
+	}
+	return pages
+}
+
+const defaultNumPagesToLink = 7
+
 // fetchSearchPage fetches data matching the search query from the database and
 // returns a SearchPage.
 func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, limit, page int) (*SearchPage, error) {
@@ -106,6 +128,7 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, limit, 
 		},
 		Results:    results,
 		NumPages:   numPages(limit, numResults),
+		Pages:      pagesToLink(page, numPages(limit, numResults), defaultNumPagesToLink),
 		NumResults: numResults,
 		Page:       page,
 		Offset:     offset(page, limit),
@@ -129,8 +152,7 @@ func (c *Controller) HandleSearch(w http.ResponseWriter, r *http.Request) {
 		err            error
 	)
 
-	l := r.URL.Query().Get("limit")
-	if l != "" {
+	if l := r.URL.Query().Get("limit"); l != "" {
 		limit, err = strconv.Atoi(l)
 		if err != nil {
 			log.Printf("strconv.Atoi(%q) for limit: %v", l, err)
@@ -140,11 +162,10 @@ func (c *Controller) HandleSearch(w http.ResponseWriter, r *http.Request) {
 		limit = defaultSearchLimit
 	}
 
-	p := r.URL.Query().Get("page")
-	if p != "" {
+	if p := r.URL.Query().Get("page"); p != "" {
 		pageNum, err = strconv.Atoi(p)
 		if err != nil {
-			log.Printf("strconv.Atoi(%q) for page: %v", l, err)
+			log.Printf("strconv.Atoi(%q) for page: %v", p, err)
 		}
 	}
 	if pageNum <= 1 {
