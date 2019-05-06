@@ -630,7 +630,8 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 }
 
 // GetVersionForPackage returns the module version corresponding to path and
-// version. *internal.Version will contain all packages for that version.
+// version. *internal.Version will contain all packages for that version, in
+// sorted order by package path.
 func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*internal.Version, error) {
 	query := `SELECT
 		p.path,
@@ -664,7 +665,7 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 			FROM packages
 			WHERE path=$2
 		)
-	ORDER BY name, path;`
+	ORDER BY path;`
 
 	var (
 		pkgPath, seriesPath, modulePath, pkgName      string

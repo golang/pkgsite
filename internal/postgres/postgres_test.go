@@ -1055,15 +1055,15 @@ func TestGetVersionForPackage(t *testing.T) {
 			},
 			Packages: []*internal.Package{
 				&internal.Package{
+					Name:     "testmodule",
+					Synopsis: "This is a package synopsis",
+					Path:     "test.module",
+				},
+				&internal.Package{
 					Name:     "foo",
 					Synopsis: "This is a package synopsis",
 					Path:     "test.module/foo",
 					Licenses: sampleLicenseInfos,
-				},
-				&internal.Package{
-					Name:     "testmodule",
-					Synopsis: "This is a package synopsis",
-					Path:     "test.module",
 				},
 			},
 		}
