@@ -141,8 +141,8 @@ func TestFetchSearchPage(t *testing.T) {
 				if err := testDB.InsertVersion(ctx, v, sampleLicenses); err != nil {
 					t.Fatalf("db.InsertVersion(%+v): %v", v, err)
 				}
-				if err := testDB.InsertDocuments(ctx, v); err != nil {
-					t.Fatalf("db.InsertDocuments(%+v): %v", v, err)
+				if err := testDB.RefreshSearchDocuments(ctx); err != nil {
+					t.Fatalf("testDB.RefreshSearchDocuments(ctx): %v", err)
 				}
 			}
 
@@ -150,8 +150,8 @@ func TestFetchSearchPage(t *testing.T) {
 			if err != nil {
 				t.Fatalf("fetchSearchPage(db, %q): %v", tc.query, err)
 			}
-			if diff := cmp.Diff(tc.wantSearchPage, got,
-				cmp.AllowUnexported(SearchPage{}), cmpopts.IgnoreFields(internal.LicenseInfo{}, "FilePath")); diff != "" {
+
+			if diff := cmp.Diff(tc.wantSearchPage, got, cmp.AllowUnexported(SearchPage{}), cmpopts.IgnoreFields(internal.LicenseInfo{}, "FilePath")); diff != "" {
 				t.Errorf("fetchSearchPage(db, %q) mismatch (-want +got):\n%s", tc.query, diff)
 			}
 		})

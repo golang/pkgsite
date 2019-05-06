@@ -16,6 +16,17 @@ import (
 	"golang.org/x/discovery/internal/derrors"
 )
 
+// RefreshSearchDocuments replaces the old contents ofthe mvw_search_documents
+// and executes the backing query to provide new data. It does so without
+// locking out concurrent selects on the materialized view.
+func (db *DB) RefreshSearchDocuments(ctx context.Context) error {
+	query := "REFRESH MATERIALIZED VIEW CONCURRENTLY mvw_search_documents;"
+	if _, err := db.ExecContext(ctx, query); err != nil {
+		return fmt.Errorf("db.ExecContext(ctx, %q): %v", query, err)
+	}
+	return nil
+}
+
 // InsertDocuments inserts a row for each package in the version.
 //
 // The returned error may be checked with derrors.IsInvalidArgument to
@@ -81,66 +92,43 @@ func (db *DB) Search(ctx context.Context, terms []string, limit, offset int) ([]
 	}
 
 	query := `
-	WITH imported_by AS (
-		SELECT to_path, COUNT(*) AS num_imported_by
-		FROM (SELECT to_path, from_path FROM imports GROUP BY 1,2) i
-		GROUP BY 1
-	),
-	docs AS (
-		SELECT package_path, relevance FROM (
-			SELECT DISTINCT ON(package_path) package_path,
-			ts_rank(tsv_search_tokens, to_tsquery($1)) AS relevance
-			FROM documents
-			WHERE tsv_search_tokens @@ to_tsquery($1)
-			ORDER BY 1,2 DESC
-		) d
-		WHERE relevance > POWER(10,-10)
-	),
-	licensed_packages AS (
-		SELECT p.path,
-		p.synopsis,
-		p.module_path,
-		p.version,
-		p.name,
-		v.commit_time,
-		array_agg(l.type) FILTER (WHERE l.version IS NOT NULL) AS license_types
-		FROM packages p
-		INNER JOIN (
-			SELECT DISTINCT ON (module_path) module_path, version, commit_time
-			FROM versions
-			ORDER BY module_path, major DESC, minor DESC, patch DESC, prerelease DESC
-		) v
-		ON v.module_path=p.module_path AND v.version=p.version
-		LEFT JOIN package_licenses pl
-			ON p.module_path = pl.module_path
-			AND p.version = pl.version
-			AND p.path = pl.package_path
-		LEFT JOIN licenses l
-			ON pl.module_path = l.module_path
-			AND pl.version = l.version
-			AND pl.file_path = l.file_path
-		WHERE p.path IN (SELECT package_path FROM docs)
-		GROUP BY p.module_path, p.version, p.path, v.commit_time
-	)
+		WITH results AS (
+			SELECT
+				package_path,
+				version,
+				module_path,
+				name,
+				synopsis,
+				license_types,
+				commit_time,
+				num_imported_by,
+				(ts_rank(tsv_search_tokens, to_tsquery($1))*log(exp(1)+num_imported_by)) AS rank
+			FROM
+				mvw_search_documents
+			WHERE
+				tsv_search_tokens @@ to_tsquery($1)
+		)
 
-	SELECT
-		p.path AS package_path,
-		p.version,
-		p.module_path,
-		p.name,
-		p.synopsis,
-		p.license_types,
-		p.commit_time,
-		COALESCE(i.num_imported_by, 0) AS num_imported_by,
-		d.relevance * log(exp(1) + COALESCE(i.num_imported_by, 0)) AS rank,
-		COUNT(*) OVER() AS total
-		FROM licensed_packages p
-		INNER JOIN docs d
-			ON d.package_path = p.path
-		LEFT JOIN imported_by i
-			ON i.to_path = p.path
-		ORDER BY rank DESC
-		LIMIT $2 OFFSET $3;`
+		SELECT
+			r.package_path,
+			r.version,
+			r.module_path,
+			r.name,
+			r.synopsis,
+			r.license_types,
+			r.commit_time,
+			r.num_imported_by,
+			r.rank,
+			COUNT(*) OVER() AS total
+		FROM
+			results r
+		WHERE
+			r.rank > POWER(10,-10)
+		ORDER BY
+			r.rank DESC, package_path
+		LIMIT $2
+		OFFSET $3;
+	`
 	rows, err := db.QueryContext(ctx, query, strings.Join(terms, " | "), limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("db.QueryContext(ctx, %s, %q, %d, %d): %v", query, terms, limit, offset, err)

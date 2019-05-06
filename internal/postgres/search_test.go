@@ -168,8 +168,8 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 					if err := testDB.InsertVersion(ctx, v, sampleLicenses); derrors.Type(err) != tc.insertErr {
 						t.Fatalf("testDB.InsertVersion(%+v): %v", tc.versions, err)
 					}
-					if err := testDB.InsertDocuments(ctx, v); derrors.Type(err) != tc.insertErr {
-						t.Fatalf("testDB.InsertDocuments(%+v): %v", tc.versions, err)
+					if err := testDB.RefreshSearchDocuments(ctx); err != nil {
+						t.Fatalf("testDB.RefreshSearchDocuments(ctx): %v", err)
 					}
 				}
 			}
