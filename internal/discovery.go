@@ -101,7 +101,45 @@ func (vs VersionSource) String() string {
 	return string(vs)
 }
 
-// A Version Log is a record of a version that was
+// IndexVersion holds the version information returned by the module index.
+type IndexVersion struct {
+	Path      string
+	Version   string
+	Timestamp time.Time
+}
+
+// VersionState holds the ETL version state.
+type VersionState struct {
+	ModulePath string
+	Version    string
+
+	// IndexTimestamp is the timestamp received from the Index for this version,
+	// which should correspond to the time this version was committed to the
+	// Index.
+	IndexTimestamp time.Time
+	// CreatedAt is the time this version was originally inserted into the
+	// version state table.
+	CreatedAt time.Time
+
+	// Status is the most recent HTTP status code received from the Fetch service
+	// for this version, or nil if no request to the fetch service has been made.
+	Status *int
+	// Error is the most recent HTTP response body received from the Fetch
+	// service, for a response with an unsuccessful status code. It is used for
+	// debugging only, and has no semantic significance.
+	Error *string
+	// TryCount is the number of times a fetch of this version has been
+	// attempted.
+	TryCount int
+	// LastProcessedAt is the last time this version was updated with a result
+	// from the fetch service.
+	LastProcessedAt *time.Time
+	// NextProcessedAfter is the next time a fetch for thsi version should be
+	// attempted.
+	NextProcessedAfter time.Time
+}
+
+// A VersionLog is a record of a version that was
 // (1) fetched from the module proxy index,
 // (2) requested by user from the frontend
 // The Path and Version may not necessarily be valid module versions (for example, if a
