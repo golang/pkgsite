@@ -13,6 +13,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/postgres"
 )
 
@@ -25,17 +26,17 @@ func TestMain(m *testing.M) {
 }
 
 var (
-	sampleLicenseInfos = []*internal.LicenseInfo{
+	sampleLicenseMetadata = []*license.Metadata{
 		{Type: "MIT", FilePath: "LICENSE"},
 	}
-	sampleLicenses = []*internal.License{
-		{LicenseInfo: *sampleLicenseInfos[0], Contents: []byte("Lorem Ipsum")},
+	sampleLicenses = []*license.License{
+		{Metadata: *sampleLicenseMetadata[0], Contents: []byte("Lorem Ipsum")},
 	}
 	sampleInternalPackage = &internal.Package{
 		Name:     "pkg_name",
 		Path:     "test.com/module/pkg_name",
 		Synopsis: "Test package synopsis",
-		Licenses: sampleLicenseInfos,
+		Licenses: sampleLicenseMetadata,
 	}
 	sampleInternalVersion = &internal.Version{
 		VersionInfo: internal.VersionInfo{
@@ -56,7 +57,7 @@ var (
 		Path:       "test.com/module/pkg_name",
 		Suffix:     "pkg_name",
 		Synopsis:   "Test package synopsis",
-		Licenses:   transformLicenseInfos(sampleLicenseInfos),
+		Licenses:   transformLicenseMetadata(sampleLicenseMetadata),
 	}
 )
 
@@ -181,7 +182,7 @@ func TestFetchVersionsDetails(t *testing.T) {
 			Name:     "pkg_name",
 			Path:     pkg1Path,
 			Synopsis: "test synopsis",
-			Licenses: sampleLicenseInfos,
+			Licenses: sampleLicenseMetadata,
 			Suffix:   "pkg_name",
 		}
 	)

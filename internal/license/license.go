@@ -2,13 +2,25 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package internal
+package license
 
 import "path"
 
-// RedistributableLicenses defines the set of licenses that are permissive of
+// Metadata holds license metadata.
+type Metadata struct {
+	Type     string
+	FilePath string
+}
+
+// A License is a classified license file path and its contents.
+type License struct {
+	Metadata
+	Contents []byte
+}
+
+// redistributableLicenses defines the set of licenses that are permissive of
 // redistribution.
-var RedistributableLicenses = map[string]bool{
+var redistributableLicenses = map[string]bool{
 	"Apache-2.0":           true,
 	"Artistic-2.0":         true,
 	"BSD-2-Clause":         true,
@@ -28,9 +40,9 @@ var RedistributableLicenses = map[string]bool{
 	"Zlib":                 true,
 }
 
-// LicenseFileNames defines the set of filenames to be considered for license
+// fileNames defines the set of filenames to be considered for license
 // extraction.
-var LicenseFileNames = map[string]bool{
+var fileNames = map[string]bool{
 	"LICENSE":     true,
 	"LICENSE.md":  true,
 	"LICENSE.txt": true,
@@ -38,12 +50,12 @@ var LicenseFileNames = map[string]bool{
 	"COPYING.md":  true,
 }
 
-// licensesAreRedistributable determines whether content subject to the given
-// licenses should be considered redistributable. The current algorithm for
-// this is to ensure that (1) There is at least one license permitting
-// redistribution in the root directory, and (2) every directory containing an
-// applicable license contains at least one license that is redistributable.
-func licensesAreRedistributable(licenses []*LicenseInfo) bool {
+// AreRedistributable determines whether content subject to the given licenses
+// should be considered redistributable. The current algorithm for this is to
+// ensure that (1) There is at least one license permitting redistribution in
+// the root directory, and (2) every directory containing an applicable license
+// contains at least one license that is redistributable.
+func AreRedistributable(licenses []*Metadata) bool {
 	byDir := make(map[string][]string)
 	for _, l := range licenses {
 		dir := path.Dir(l.FilePath)
@@ -52,7 +64,7 @@ func licensesAreRedistributable(licenses []*LicenseInfo) bool {
 
 	anyRedistributable := func(lics []string) bool {
 		for _, l := range lics {
-			if RedistributableLicenses[l] {
+			if redistributableLicenses[l] {
 				return true
 			}
 		}

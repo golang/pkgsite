@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/thirdparty/modfile"
@@ -135,7 +136,7 @@ func FetchAndInsertVersion(modulePath, version string, proxyClient *proxy.Client
 		return fmt.Errorf("extractReadmeFromZip(%q, %q, zipReader): %v", modulePath, version, err)
 	}
 
-	licenses, err := detectLicenses(moduleVersionDir(modulePath, version), zipReader)
+	licenses, err := license.Detect(moduleVersionDir(modulePath, version), zipReader)
 	if err != nil {
 		log.Printf("Error detecting licenses for %v@%v: %v", modulePath, version, err)
 	}
@@ -193,7 +194,7 @@ func extractReadmeFromZip(modulePath, version string, r *zip.Reader) (string, []
 // extractPackagesFromZip returns a slice of packages from the module zip r.
 // It matches against the given licenses to determine the subset of licenses
 // that applies to each package.
-func extractPackagesFromZip(modulePath, version string, r *zip.Reader, licenses []*internal.License) ([]*internal.Package, error) {
+func extractPackagesFromZip(modulePath, version string, r *zip.Reader, licenses []*license.License) ([]*internal.Package, error) {
 	// Create a temporary directory to write the contents of the module zip.
 	tempPrefix := "discovery_"
 	workDir, err := ioutil.TempDir("", tempPrefix)
@@ -275,11 +276,12 @@ func writeGoModFile(filename, modulePath string) error {
 //
 // If there were no packages found in the module, the error value
 // errModuleContainsNoPackages is returned.
-func loadAndProcessPackages(workDir, modulePath, version string, licenses []*internal.License) ([]*internal.Package, error) {
+func loadAndProcessPackages(workDir, modulePath, version string, licenses []*license.License) ([]*internal.Package, error) {
 	// TODO: find a way to test that the configuration doesn't use the internet to fetch dependencies
+	moduleRoot := filepath.Join(workDir, moduleVersionDir(modulePath, version))
 	config := &packages.Config{
 		Mode: packages.NeedName | packages.NeedFiles,
-		Dir:  filepath.Join(workDir, moduleVersionDir(modulePath, version)),
+		Dir:  moduleRoot,
 	}
 	pattern := fmt.Sprintf("%s/...", modulePath)
 	pkgs, err := packages.Load(config, pattern)
@@ -294,8 +296,7 @@ func loadAndProcessPackages(workDir, modulePath, version string, licenses []*int
 	}
 	// TODO: consider p.Errors and act accordingly; issue b/131836733
 
-	licenseDir := filepath.Join(workDir, moduleVersionDir(modulePath, version))
-	matcher := newLicenseMatcher(licenseDir, licenses)
+	licenseMatcher := license.NewMatcher(licenses)
 	var packages []*internal.Package
 	for _, p := range pkgs {
 		fset, d, err := computeDoc(p)
@@ -319,10 +320,18 @@ func loadAndProcessPackages(workDir, modulePath, version string, licenses []*int
 			return nil, err
 		}
 
+		var packageDir string
+		if len(p.GoFiles) > 0 {
+			packageDir = filepath.Dir(strings.TrimPrefix(p.GoFiles[0], moduleRoot+"/"))
+		} else {
+			// by default, all root-level licenses should apply
+			packageDir = "."
+		}
+
 		packages = append(packages, &internal.Package{
 			Name:              p.Name,
 			Path:              p.PkgPath,
-			Licenses:          matcher.matchLicenses(p),
+			Licenses:          licenseMatcher.Match(packageDir),
 			Synopsis:          doc.Synopsis(d.Doc),
 			Suffix:            strings.TrimPrefix(strings.TrimPrefix(p.PkgPath, modulePath), "/"),
 			Imports:           imports,
@@ -330,47 +339,6 @@ func loadAndProcessPackages(workDir, modulePath, version string, licenses []*int
 		})
 	}
 	return packages, nil
-}
-
-// licenseMatcher is a map of directory prefix -> license files, that can be
-// used to match packages to their applicable licenses.
-type licenseMatcher map[string][]internal.LicenseInfo
-
-// newLicenseMatcher creates a licenseMatcher that can be used match licenses
-// against packages extracted to the given workDir.
-func newLicenseMatcher(workDir string, licenses []*internal.License) licenseMatcher {
-	var matcher licenseMatcher = make(map[string][]internal.LicenseInfo)
-	for _, l := range licenses {
-		path := filepath.Join(workDir, filepath.FromSlash(l.FilePath))
-		prefix := filepath.ToSlash(filepath.Clean(filepath.Dir(path)))
-		matcher[prefix] = append(matcher[prefix], l.LicenseInfo)
-	}
-	return matcher
-}
-
-// matchLicenses returns the slice of licenses that apply to the given package.
-// A license applies to a package if it is contained in a directory that
-// precedes the package directory in a directory hierarchy (i.e., a direct or
-// indirect parent of the package directory).
-func (m licenseMatcher) matchLicenses(p *packages.Package) []*internal.LicenseInfo {
-	if len(p.GoFiles) == 0 {
-		return nil
-	}
-	// Since we're only operating on modules, package dir should be deterministic
-	// based on the location of Go files.
-	pkgDir := filepath.ToSlash(filepath.Clean(filepath.Dir(p.GoFiles[0])))
-
-	var licenseFiles []*internal.LicenseInfo
-	for prefix, lics := range m {
-		// append a slash so that prefix a/b does not match a/bc/d
-		if strings.HasPrefix(pkgDir+"/", prefix+"/") {
-			for _, lic := range lics {
-				lf := lic
-				licenseFiles = append(licenseFiles, &lf)
-			}
-		}
-	}
-	return licenseFiles
 }
 
 // hasFilename checks if file is expectedFile or if the name of file, without

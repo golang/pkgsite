@@ -2,25 +2,25 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package internal
+package license
 
 import "testing"
 
 func TestLicensesAreRedistributable(t *testing.T) {
 	tests := []struct {
 		label    string
-		licenses []*LicenseInfo
+		licenses []*Metadata
 		want     bool
 	}{
 		{
 			label: "redistributable license",
-			licenses: []*LicenseInfo{
+			licenses: []*Metadata{
 				{Type: "MIT", FilePath: "LICENSE"},
 			},
 			want: true,
 		}, {
 			label: "no redistributable license at root",
-			licenses: []*LicenseInfo{
+			licenses: []*Metadata{
 				{Type: "MIT", FilePath: "bar/LICENSE"},
 			},
 			want: false,
@@ -29,20 +29,20 @@ func TestLicensesAreRedistributable(t *testing.T) {
 			want:  false,
 		}, {
 			label: "non-redistributable license",
-			licenses: []*LicenseInfo{
+			licenses: []*Metadata{
 				{Type: "AGPL-3.0", FilePath: "LICENSE"},
 			},
 			want: false,
 		}, {
 			label: "multiple redistributable",
-			licenses: []*LicenseInfo{
+			licenses: []*Metadata{
 				{Type: "BSD-3-Clause", FilePath: "LICENSE"},
 				{Type: "MIT", FilePath: "bar/LICENSE"},
 			},
 			want: true,
 		}, {
 			label: "not all redistributable",
-			licenses: []*LicenseInfo{
+			licenses: []*Metadata{
 				{Type: "BSD-3-Clause", FilePath: "LICENSE"},
 				{Type: "AGPL-3.0", FilePath: "foo/LICENSE"},
 				{Type: "MIT", FilePath: "foo/bar/LICENSE"},
@@ -50,7 +50,7 @@ func TestLicensesAreRedistributable(t *testing.T) {
 			want: false,
 		}, {
 			label: "at least one redistributable per directory",
-			licenses: []*LicenseInfo{
+			licenses: []*Metadata{
 				{Type: "BSD-3-Clause", FilePath: "LICENSE"},
 				{Type: "BSD-0-Clause", FilePath: "LICENSE.txt"},
 				{Type: "AGPL-3.0", FilePath: "foo/LICENSE"},
@@ -62,7 +62,7 @@ func TestLicensesAreRedistributable(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.label, func(t *testing.T) {
-			if got := licensesAreRedistributable(test.licenses); got != test.want {
+			if got := AreRedistributable(test.licenses); got != test.want {
 				t.Errorf("licensesAreRedistributable([licenses]) = %t, want %t", got, test.want)
 			}
 		})

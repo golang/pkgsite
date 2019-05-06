@@ -11,6 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/postgres"
 )
 
@@ -36,7 +37,7 @@ func TestFetchSearchPage(t *testing.T) {
 					Name:     "foo",
 					Path:     "/path/to/foo",
 					Synopsis: "foo is a package.",
-					Licenses: sampleLicenseInfos,
+					Licenses: sampleLicenseMetadata,
 				},
 			},
 		}
@@ -54,7 +55,7 @@ func TestFetchSearchPage(t *testing.T) {
 					Name:     "bar",
 					Path:     "/path/to/bar",
 					Synopsis: "bar is used by foo.",
-					Licenses: sampleLicenseInfos,
+					Licenses: sampleLicenseMetadata,
 				},
 			},
 		}
@@ -151,7 +152,7 @@ func TestFetchSearchPage(t *testing.T) {
 				t.Fatalf("fetchSearchPage(db, %q): %v", tc.query, err)
 			}
 
-			if diff := cmp.Diff(tc.wantSearchPage, got, cmp.AllowUnexported(SearchPage{}), cmpopts.IgnoreFields(internal.LicenseInfo{}, "FilePath")); diff != "" {
+			if diff := cmp.Diff(tc.wantSearchPage, got, cmp.AllowUnexported(SearchPage{}), cmpopts.IgnoreFields(license.Metadata{}, "FilePath")); diff != "" {
 				t.Errorf("fetchSearchPage(db, %q) mismatch (-want +got):\n%s", tc.query, diff)
 			}
 		})

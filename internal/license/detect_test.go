@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package fetch
+package license
 
 import (
 	"archive/zip"
@@ -11,17 +11,16 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/proxy"
 )
 
-func TestDetectLicenses(t *testing.T) {
-	makeLicenses := func(licType, licFile string) []*internal.LicenseInfo {
-		return []*internal.LicenseInfo{{Type: licType, FilePath: licFile}}
+func TestDetect(t *testing.T) {
+	makeLicenses := func(licType, licFile string) []*Metadata {
+		return []*Metadata{{Type: licType, FilePath: licFile}}
 	}
 	testCases := []struct {
 		name, zipName, subdir string
-		want                  []*internal.LicenseInfo
+		want                  []*Metadata
 	}{
 		{
 			name:    "valid_license",
@@ -47,7 +46,7 @@ func TestDetectLicenses(t *testing.T) {
 		}, {
 			name:    "multiple_licenses",
 			zipName: "multiplelicenses",
-			want: []*internal.LicenseInfo{
+			want: []*Metadata{
 				{Type: "MIT", FilePath: "rsc.io/quote@v1.4.1/LICENSE"},
 				{Type: "MIT", FilePath: "rsc.io/quote@v1.4.1/bar/LICENSE.md"},
 				{Type: "Apache-2.0", FilePath: "rsc.io/quote@v1.4.1/foo/COPYING"},
@@ -69,7 +68,7 @@ func TestDetectLicenses(t *testing.T) {
 	}
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
-			testDir := filepath.Join("testdata/licenses", test.zipName)
+			testDir := filepath.Join("../fetch/testdata/licenses", test.zipName)
 			cleanUpZip, err := proxy.ZipFiles(testDir+".zip", testDir, "")
 			defer cleanUpZip()
 			if err != nil {
@@ -87,13 +86,13 @@ func TestDetectLicenses(t *testing.T) {
 			defer rc.Close()
 			z := &rc.Reader
 
-			got, err := detectLicenses(test.subdir, z)
+			got, err := Detect(test.subdir, z)
 			if err != nil {
 				t.Errorf("detectLicenses(z): %v", err)
 			}
-			var gotFiles []*internal.LicenseInfo
+			var gotFiles []*Metadata
 			for _, l := range got {
-				gotFiles = append(gotFiles, &l.LicenseInfo)
+				gotFiles = append(gotFiles, &l.Metadata)
 			}
 			if diff := cmp.Diff(gotFiles, test.want); diff != "" {
 				t.Errorf("detectLicense(z) mismatch (-got +want):\n%s", diff)

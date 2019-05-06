@@ -14,8 +14,8 @@ import (
 	"strconv"
 	"strings"
 
-	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/postgres"
 )
 
@@ -42,7 +42,7 @@ type SearchResult struct {
 	ModulePath    string
 	Synopsis      string
 	Version       string
-	Licenses      []*internal.LicenseInfo
+	Licenses      []*license.Metadata
 	CommitTime    string
 	NumImportedBy uint64
 }

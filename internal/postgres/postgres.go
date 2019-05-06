@@ -15,6 +15,7 @@ import (
 	"github.com/lib/pq"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
 )
@@ -229,13 +230,13 @@ func (db *DB) GetVersionsToRetry(ctx context.Context) ([]*internal.VersionLog, e
 	return logs, nil
 }
 
-func zipLicenseInfo(licenseTypes []string, licensePaths []string) ([]*internal.LicenseInfo, error) {
+func zipLicenseInfo(licenseTypes []string, licensePaths []string) ([]*license.Metadata, error) {
 	if len(licenseTypes) != len(licensePaths) {
 		return nil, fmt.Errorf("BUG: got %d license types and %d license paths", len(licenseTypes), len(licensePaths))
 	}
-	var licenseFiles []*internal.LicenseInfo
+	var licenseFiles []*license.Metadata
 	for i, t := range licenseTypes {
-		licenseFiles = append(licenseFiles, &internal.LicenseInfo{Type: t, FilePath: licensePaths[i]})
+		licenseFiles = append(licenseFiles, &license.Metadata{Type: t, FilePath: licensePaths[i]})
 	}
 	return licenseFiles, nil
 }
@@ -283,7 +284,7 @@ func (db *DB) GetVersion(ctx context.Context, modulePath string, version string)
 //
 // The returned error may be checked with derrors.IsInvalidArgument to
 // determine if it resulted from an invalid package path or version.
-func (db *DB) GetLicenses(ctx context.Context, pkgPath string, version string) ([]*internal.License, error) {
+func (db *DB) GetLicenses(ctx context.Context, pkgPath string, version string) ([]*license.License, error) {
 	if pkgPath == "" || version == "" {
 		return nil, derrors.InvalidArgument("pkgPath and version cannot be empty")
 	}
@@ -321,13 +322,13 @@ func (db *DB) GetLicenses(ctx context.Context, pkgPath string, version string) (
 	}
 	defer rows.Close()
 
-	var licenses []*internal.License
+	var licenses []*license.License
 	for rows.Next() {
 		if err := rows.Scan(&licenseType, &licensePath, &contents); err != nil {
 			return nil, fmt.Errorf("row.Scan(): %v", err)
 		}
-		licenses = append(licenses, &internal.License{
-			LicenseInfo: internal.LicenseInfo{
+		licenses = append(licenses, &license.License{
+			Metadata: license.Metadata{
 				Type:     licenseType,
 				FilePath: licensePath,
 			},
@@ -892,7 +893,7 @@ func removeNonDistributableData(v *internal.Version) {
 //
 // The returned error may be checked with derrors.IsInvalidArgument to
 // determine whether it was caused by an invalid version or module.
-func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, licenses []*internal.License) error {
+func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, licenses []*license.License) error {
 	if err := validateVersion(version); err != nil {
 		return derrors.InvalidArgument(fmt.Sprintf("validateVersion: %v", err))
 	}

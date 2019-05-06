@@ -14,6 +14,7 @@ import (
 	"github.com/lib/pq"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/license"
 )
 
 // RefreshSearchDocuments replaces the old contents ofthe mvw_search_documents
@@ -148,9 +149,9 @@ func (db *DB) Search(ctx context.Context, terms []string, limit, offset int) ([]
 			pq.Array(&licenseTypes), &commitTime, &numImportedBy, &rank, &total); err != nil {
 			return nil, fmt.Errorf("rows.Scan(): %v", err)
 		}
-		var licenses []*internal.LicenseInfo
+		var licenses []*license.Metadata
 		for _, t := range licenseTypes {
-			licenses = append(licenses, &internal.LicenseInfo{Type: t})
+			licenses = append(licenses, &license.Metadata{Type: t})
 		}
 		results = append(results, &SearchResult{
 			Rank:          rank,

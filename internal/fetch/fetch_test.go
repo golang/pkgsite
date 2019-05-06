@@ -19,6 +19,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
 )
@@ -61,7 +62,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					Synopsis:          "package bar",
 					DocumentationHTML: []byte("Bar returns the string &#34;bar&#34;."),
 					Suffix:            "bar",
-					Licenses: []*internal.LicenseInfo{
+					Licenses: []*license.Metadata{
 						{Type: "BSD-3-Clause", FilePath: "LICENSE"},
 						{Type: "MIT", FilePath: "bar/LICENSE"},
 					},
@@ -87,7 +88,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					Synopsis:          "package baz",
 					DocumentationHTML: []byte("Baz returns the string &#34;baz&#34;."),
 					Suffix:            "bar/baz",
-					Licenses: []*internal.LicenseInfo{
+					Licenses: []*license.Metadata{
 						{Type: "BSD-3-Clause", FilePath: "LICENSE"},
 						{Type: "BSD-0-Clause", FilePath: "LICENSE.txt"},
 						{Type: "MIT", FilePath: "bar/LICENSE"},
@@ -116,7 +117,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					Synopsis:          "",
 					DocumentationHTML: nil,
 					Suffix:            "foo",
-					Licenses: []*internal.LicenseInfo{
+					Licenses: []*license.Metadata{
 						{Type: "BSD-3-Clause", FilePath: "LICENSE"},
 						{Type: "BSD-0-Clause", FilePath: "LICENSE.txt"},
 						{Type: "BSD-0-Clause", FilePath: "foo/LICENSE.md"},

@@ -17,6 +17,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/license"
 )
 
 const (
@@ -28,11 +29,11 @@ const (
 
 var (
 	now                = NowTruncated()
-	sampleLicenseInfos = []*internal.LicenseInfo{
+	sampleLicenseInfos = []*license.Metadata{
 		{Type: "MIT", FilePath: "LICENSE"},
 	}
-	sampleLicenses = []*internal.License{
-		{LicenseInfo: *sampleLicenseInfos[0], Contents: []byte(`Lorem Ipsum`)},
+	sampleLicenses = []*license.License{
+		{Metadata: *sampleLicenseInfos[0], Contents: []byte(`Lorem Ipsum`)},
 	}
 )
 
@@ -1132,7 +1133,7 @@ func TestGetLicenses(t *testing.T) {
 
 	tests := []struct {
 		label, pkgPath string
-		wantLicenses   []*internal.License
+		wantLicenses   []*license.License
 	}{
 		{
 			label:        "package with licenses",

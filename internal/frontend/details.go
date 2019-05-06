@@ -20,6 +20,7 @@ import (
 	"github.com/russross/blackfriday/v2"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
@@ -76,7 +77,7 @@ type ImportedByDetails struct {
 
 // License contains information used for a single license section.
 type License struct {
-	*internal.License
+	*license.License
 	Anchor string
 }
 
@@ -85,9 +86,10 @@ type LicensesDetails struct {
 	Licenses []License
 }
 
-// LicenseInfo contains license metadata that is used in the package header.
-type LicenseInfo struct {
-	*internal.LicenseInfo
+// LicenseMetadata contains license metadata that is used in the package
+// header.
+type LicenseMetadata struct {
+	*license.Metadata
 	Anchor string
 }
 
@@ -123,19 +125,19 @@ type Package struct {
 	CommitTime        string
 	Title             string
 	Suffix            string
-	Licenses          []LicenseInfo
+	Licenses          []LicenseMetadata
 	IsCommand         bool
 	IsRedistributable bool
 }
 
-// transformLicenseInfos transforms an internal.LicenseInfo into a LicenseInfo,
+// transformLicenseMetadata transforms license.Metadata into a LicenseMetadata
 // by adding an anchor field.
-func transformLicenseInfos(dbLicenses []*internal.LicenseInfo) []LicenseInfo {
-	var licenseInfos []LicenseInfo
+func transformLicenseMetadata(dbLicenses []*license.Metadata) []LicenseMetadata {
+	var licenseInfos []LicenseMetadata
 	for _, l := range dbLicenses {
-		licenseInfos = append(licenseInfos, LicenseInfo{
-			LicenseInfo: l,
-			Anchor:      licenseAnchor(l.FilePath),
+		licenseInfos = append(licenseInfos, LicenseMetadata{
+			Metadata: l,
+			Anchor:   licenseAnchor(l.FilePath),
 		})
 	}
 	return licenseInfos
@@ -161,7 +163,7 @@ func createPackageHeader(pkg *internal.VersionedPackage) (*Package, error) {
 		Path:              pkg.Path,
 		Synopsis:          pkg.Package.Synopsis,
 		Suffix:            pkg.Package.Suffix,
-		Licenses:          transformLicenseInfos(pkg.Licenses),
+		Licenses:          transformLicenseMetadata(pkg.Licenses),
 		CommitTime:        elapsedTime(pkg.VersionInfo.CommitTime),
 		IsRedistributable: pkg.IsRedistributable(),
 	}, nil
@@ -263,7 +265,7 @@ func fetchModuleDetails(ctx context.Context, db *postgres.DB, pkg *internal.Vers
 			Name:       p.Name,
 			Path:       p.Path,
 			Synopsis:   p.Synopsis,
-			Licenses:   transformLicenseInfos(p.Licenses),
+			Licenses:   transformLicenseMetadata(p.Licenses),
 			Version:    version.Version,
 			ModulePath: version.ModulePath,
 			Suffix:     p.Suffix,
