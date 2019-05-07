@@ -58,10 +58,21 @@ findcode() {
 
 # Check that all .go and .sql files that have been staged in this commit have a
 # license header.
-info "Running: Checking staged files for license header"
+info "Checking staged files for license header"
 checkheaders $(git diff --cached --name-only | grep -E ".go$|.sql$")
-info "Running: Checking internal files for license header"
+info "Checking internal files for license header"
 checkheaders $(findcode)
+
+# Find migrations with bad sequence numbers, possibly resulting from a bad merge
+bad_migrations() {
+  ls migrations | cut -d _ -f 1 | sort | uniq -c | grep -vE '^\s+2 '
+}
+
+info "Checking for bad migrations"
+bad_migrations | while read line
+do
+  err "unexpected number of migrations: $line"
+done
 
 # Download staticcheck if it doesn't exist
 if ! [ -x "$(command -v staticcheck)" ]; then
