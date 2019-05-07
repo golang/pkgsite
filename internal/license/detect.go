@@ -28,6 +28,25 @@ const (
 	maxLicenseSize = 1e7
 )
 
+// isVendoredFile reports if the given file is in a proper subdirectory nested
+// under a 'vendor' directory, to allow for Go packages named 'vendor'.
+//
+// e.g. isVendoredFile("vendor/LICENSE") == false, and
+//      isVendoredFile("vendor/foo/LICENSE") == true
+func isVendoredFile(name string) bool {
+	var vendorOffset int
+	if strings.HasPrefix(name, "vendor/") {
+		vendorOffset = len("vendor/")
+	} else if i := strings.Index(name, "/vendor/"); i >= 0 {
+		vendorOffset = i + len("/vendor/")
+	} else {
+		// no vendor directory
+		return false
+	}
+	// check if the file is in a proper subdirectory of vendor
+	return strings.Contains(name[vendorOffset:], "/")
+}
+
 // Detect searches for possible license files in a subdirectory within the
 // provided zip path, runs them against a license classifier, and provides all
 // licenses with a confidence score that meets a confidence threshold.
@@ -38,7 +57,7 @@ const (
 func Detect(contentsDir string, r *zip.Reader) ([]*License, error) {
 	var licenses []*License
 	for _, f := range r.File {
-		if !fileNames[filepath.Base(f.Name)] || strings.Contains(f.Name, "/vendor/") {
+		if !licenseFileNames[filepath.Base(f.Name)] || isVendoredFile(f.Name) {
 			// Only consider licenses with an acceptable file name, and not in the
 			// vendor directory.
 			continue

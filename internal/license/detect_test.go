@@ -62,8 +62,12 @@ func TestDetect(t *testing.T) {
 			name:    "no_license",
 			zipName: "nolicense",
 		}, {
-			name:    "vendor_license_should_ignore",
+			name:    "ignores licenses in vendored packages, but not packages named vendor",
+			subdir:  "rsc.io/quote@v1.5.2",
 			zipName: "vendorlicense",
+			want: []*Metadata{
+				{Type: "MIT", FilePath: "pkg/vendor/LICENSE"},
+			},
 		},
 	}
 	for _, test := range testCases {
@@ -94,8 +98,8 @@ func TestDetect(t *testing.T) {
 			for _, l := range got {
 				gotFiles = append(gotFiles, &l.Metadata)
 			}
-			if diff := cmp.Diff(gotFiles, test.want); diff != "" {
-				t.Errorf("detectLicense(z) mismatch (-got +want):\n%s", diff)
+			if diff := cmp.Diff(test.want, gotFiles); diff != "" {
+				t.Errorf("detectLicense(z) mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}

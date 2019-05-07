@@ -40,9 +40,9 @@ var redistributableLicenses = map[string]bool{
 	"Zlib":                 true,
 }
 
-// fileNames defines the set of filenames to be considered for license
+// licenseFileNames defines the set of filenames to be considered for license
 // extraction.
-var fileNames = map[string]bool{
+var licenseFileNames = map[string]bool{
 	"LICENSE":     true,
 	"LICENSE.md":  true,
 	"LICENSE.txt": true,
