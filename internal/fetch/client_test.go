@@ -8,7 +8,6 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 )
 
@@ -23,11 +22,13 @@ func TestFetchVersion(t *testing.T) {
 	defer server.Close()
 
 	c := New(server.URL)
-	m := "module"
-	v := "v1.5.2"
+	request := &Request{
+		ModulePath: "module",
+		Version:    "v1.5.2",
+	}
 
-	if err := c.FetchVersion(ctx, m, v); err != nil {
-		t.Errorf("FetchVersion(ctx, %q, %q) = %v; want %v", m, v, err, nil)
+	if resp := c.FetchVersion(ctx, request); resp.StatusCode != http.StatusOK {
+		t.Errorf("FetchVersion(ctx, %v) = %v; want OK", request, resp)
 	}
 }
 
@@ -42,12 +43,13 @@ func TestFetchVersionInvalidFetchURL(t *testing.T) {
 	defer server.Close()
 
 	c := New(server.URL)
-	m := "module"
-	v := "v1.5.2"
+	request := &Request{
+		ModulePath: "module",
+		Version:    "v1.5.2",
+	}
 
-	wantErrString := "Bad Request"
-	if err := c.FetchVersion(ctx, m, v); !strings.Contains(err.Error(), wantErrString) {
-		t.Errorf("FetchVersion(ctx, %q, %q) returned error %v, want error containing %q",
-			m, v, err, wantErrString)
+	if resp := c.FetchVersion(ctx, request); resp.StatusCode != expectedStatus {
+		t.Errorf("FetchVersion(ctx, %q) returned resp %v, want status %d",
+			request, resp, expectedStatus)
 	}
 }

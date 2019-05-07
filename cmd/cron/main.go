@@ -10,13 +10,13 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
-
-	_ "github.com/lib/pq"
 
 	"golang.org/x/discovery/internal/cron"
 	"golang.org/x/discovery/internal/fetch"
@@ -27,10 +27,11 @@ import (
 )
 
 var (
-	indexURL = getEnv("GO_MODULE_INDEX_URL", "https://index.golang.org/index")
-	fetchURL = getEnv("GO_DISCOVERY_FETCH_URL", "http://localhost:9000")
-	workers  = flag.Int("workers", 10, "number of concurrent requests to the fetch service")
-	timeout  = getEnv("GO_DISCOVERY_CRON_TIMEOUT_MINUTES", "10")
+	indexURL   = getEnv("GO_MODULE_INDEX_URL", "https://index.golang.org/index")
+	fetchURL   = getEnv("GO_DISCOVERY_FETCH_URL", "http://localhost:9000")
+	timeout    = getEnv("GO_DISCOVERY_CRON_TIMEOUT_MINUTES", "10")
+	workers    = flag.Int("workers", 10, "number of concurrent requests to the fetch service")
+	staticPath = flag.String("static", "content/static", "path to folder containing static files served")
 )
 
 func main() {
@@ -47,21 +48,25 @@ func main() {
 	}
 	defer db.Close()
 
-	idxClient, err := index.New(indexURL)
+	indexClient, err := index.New(indexURL)
 	if err != nil {
 		log.Fatalf("index.New(%q): %v", indexURL, err)
+	}
+
+	fetchClient := fetch.New(fetchURL)
+
+	templatePath := filepath.Join(*staticPath, "html/cron/index.tmpl")
+	indexTemplate, err := template.New("index.tmpl").ParseFiles(templatePath)
+	if err != nil {
+		log.Fatalf("template.ParseFiles(%q): %v", templatePath, err)
 	}
 
 	handlerTimeout, err := strconv.Atoi(timeout)
 	if err != nil {
 		log.Fatalf("strconv.Atoi(%q): %v", timeout, err)
 	}
-	mw := middleware.Timeout(time.Duration(handlerTimeout) * time.Minute)
-	http.Handle("/new/", mw(makeNewVersionsHandler(db, idxClient, *workers)))
-	http.Handle("/retry/", mw(makeRetryVersionsHandler(db, *workers)))
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "Hello, Go Discovery Cron!")
-	})
+
+	server := cron.NewServer(db, indexClient, fetchClient, indexTemplate, *workers)
 
 	// Default to addr on localhost to mute security popup about incoming
 	// network connections when running locally. When running in prod, App
@@ -74,8 +79,9 @@ func main() {
 		addr = "localhost:8000"
 	}
 
+	mw := middleware.Timeout(time.Duration(handlerTimeout) * time.Minute)
 	log.Printf("Listening on addr %s", addr)
-	log.Fatal(http.ListenAndServe(addr, nil))
+	log.Fatal(http.ListenAndServe(addr, mw(server)))
 }
 
 func dbConnInfo(ctx context.Context) (string, error) {
@@ -103,36 +109,4 @@ func getEnv(key, fallback string) string {
 		return value
 	}
 	return fallback
-}
-
-func makeNewVersionsHandler(db *postgres.DB, idxClient *index.Client, workers int) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		logs, err := cron.FetchAndStoreVersions(r.Context(), idxClient, db)
-		if err != nil {
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			log.Printf("FetchAndStoreVersions(%q, db): %v", indexURL, err)
-			return
-		}
-		log.Printf("Fetching %d versions", len(logs))
-
-		client := fetch.New(fetchURL)
-		cron.FetchVersions(r.Context(), client, logs, workers)
-		fmt.Fprint(w, fmt.Sprintf("Requested %d new versions!", len(logs)))
-	}
-}
-
-func makeRetryVersionsHandler(db *postgres.DB, workers int) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		logs, err := db.GetVersionsToRetry(r.Context())
-		if err != nil {
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			log.Printf("db.GetVersionsToRetry(ctx): %v", err)
-			return
-		}
-		log.Printf("Fetching %d versions", len(logs))
-
-		client := fetch.New(fetchURL)
-		cron.FetchVersions(r.Context(), client, logs, workers)
-		fmt.Fprint(w, fmt.Sprintf("Requested %d versions!", len(logs)))
-	}
 }

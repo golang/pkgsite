@@ -29,17 +29,14 @@ func TestFetchAndStoreVersions(t *testing.T) {
 
 	for _, tc := range []struct {
 		name            string
-		indexInfo       []map[string]string
+		indexInfo       []*internal.IndexVersion
 		oldVersionLogs  []*internal.VersionLog
 		wantVersionLogs []*internal.VersionLog
 	}{
 		{
 			name: "version-logs-no-existing-entries",
-			indexInfo: []map[string]string{
-				map[string]string{
-					"path":    "my.mod/module",
-					"version": "v1.0.0",
-				},
+			indexInfo: []*internal.IndexVersion{
+				{Path: "my.mod/module", Version: "v1.0.0"},
 			},
 			oldVersionLogs: nil,
 			wantVersionLogs: []*internal.VersionLog{
@@ -52,15 +49,9 @@ func TestFetchAndStoreVersions(t *testing.T) {
 		},
 		{
 			name: "version-logs-existing-duplicate-entry",
-			indexInfo: []map[string]string{
-				map[string]string{
-					"path":    "my.mod/module",
-					"version": "v1.0.0",
-				},
-				map[string]string{
-					"path":    "my.mod/module",
-					"version": "v2.0.0",
-				},
+			indexInfo: []*internal.IndexVersion{
+				{Path: "my.mod/module", Version: "v1.0.0"},
+				{Path: "my.mod/module", Version: "v2.0.0"},
 			},
 			oldVersionLogs: []*internal.VersionLog{
 				&internal.VersionLog{
@@ -84,7 +75,7 @@ func TestFetchAndStoreVersions(t *testing.T) {
 		},
 		{
 			name:            "version-logs-no-new-entries",
-			indexInfo:       []map[string]string{},
+			indexInfo:       []*internal.IndexVersion{},
 			oldVersionLogs:  nil,
 			wantVersionLogs: nil,
 		},
@@ -99,7 +90,7 @@ func TestFetchAndStoreVersions(t *testing.T) {
 				t.Fatalf("db.InsertVersionLogs(ctx, %v): %v", tc.oldVersionLogs, err)
 			}
 
-			got, err := FetchAndStoreVersions(ctx, client, testDB)
+			got, err := fetchAndStoreVersions(ctx, client, testDB)
 			if err != nil {
 				t.Fatalf("FetchAndStoreVersions(ctx, %v, %v): %v", client, testDB, err)
 			}

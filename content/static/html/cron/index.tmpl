@@ -1,0 +1,110 @@
+<!--
+	Copyright 2019 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+
+{{define "versionTable"}}
+	<table>
+	<thead>
+	{{if .}}
+		<tr>
+			<th>Module Path</th>
+			<th>Version</th>
+			<th>Timestamp</th>
+			<th>Status</th>
+			<th>Error</th>
+			<th>Attempts</th>
+			<th>LastAttempt</th>
+			<th>NextAttempt</th>
+		</tr>
+		</thead>
+		<tbody>
+		{{range .}}
+		<tr>
+			<td>{{.ModulePath}}</td>
+			<td>{{.Version}}</td>
+			<td>{{.IndexTimestamp}}</td>
+			<td>{{.Status}}</td>
+			<td>{{.Error}}</td>
+			<td>{{.TryCount}}</td>
+			<td>{{.LastProcessedAt}}</td>
+			<td>{{.NextProcessedAfter}}</td>
+		</tr>
+		{{end}}
+	{{else}}
+	<p>No versions.</p>
+	{{end}}
+	</tbody>
+	</table>
+{{end -}}
+
+<!DOCTYPE html>
+<script>
+function submitForm(formName) {
+	let form = document[formName];
+	form.result.value = "request pending...";
+	let xhr = new XMLHttpRequest();
+	xhr.onreadystatechange = function() {
+	  if (this.readyState == 4) {
+			if (this.status >= 200 && this.status < 300) {
+				location.reload();
+			} else {
+				form.result.value = "ERROR: " + this.responseText;
+			}
+		}
+	}
+	xhr.open(form.method, form.action);
+	xhr.send(new FormData(form));
+}
+</script>
+<style>
+body {
+	font-family: Verdana, Arial, sans-serif;
+}
+label {
+	display: inline-block;
+	text-align: right;
+	width: 200px;
+}
+input {
+	width: 50px;
+}
+button {
+	width: 200px;
+	background-color: #eee;
+	border-radius: 2px;
+	border: 1px solid #ccc;
+}
+table {
+	border-spacing: 10px 2px;
+	padding: 3px 0 2px 0;
+	font-size: 12px;
+}
+td {
+	border-top: 1px solid #ddd;
+}
+</style>
+<title>Go Discovery Cron</title>
+<h1>Go Discovery Cron</h1>
+
+<div class="actions">
+	<form action="/indexupdate/" method="post" name="indexForm">
+		<label>Query new versions:</label>
+		<input type="number" name="limit" value="10"></input>
+		<button onclick="submitForm('indexForm'); return false">Query From Module Index</button>
+		<output name="result"></output>
+	</form>
+	<form action="/fetchversions/" method="post" name="fetchForm">
+		<label>Process versions:</label>
+		<input type="number" name="limit" value="10">
+		<button onclick="submitForm('fetchForm'); return false">Process in Fetch Service</button>
+		<output name="result"></output>
+	</form>
+</div>
+
+<h3>Next versions to process:</h3>
+{{template "versionTable" .Next}}
+
+<h3>Recent failed attempts:</h3>
+{{template "versionTable" .RecentFailures}}

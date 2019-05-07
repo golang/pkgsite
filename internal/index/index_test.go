@@ -19,34 +19,25 @@ func TestGetVersions(t *testing.T) {
 
 	for _, tc := range []struct {
 		name      string
-		indexInfo []map[string]string
+		indexInfo []*internal.IndexVersion
 	}{
 		{
 			name: "valid_get_versions",
-			indexInfo: []map[string]string{
-				map[string]string{
-					"path":    "my.mod/module",
-					"version": "v1.0.0",
-				},
-				map[string]string{
-					"path":    "my.mod/module",
-					"version": "v1.1.0",
-				},
-				map[string]string{
-					"path":    "my.mod/module/v2",
-					"version": "v2.0.0",
-				},
+			indexInfo: []*internal.IndexVersion{
+				{Path: "my.mod/module", Version: "v1.0.0"},
+				{Path: "my.mod/module", Version: "v1.1.0"},
+				{Path: "my.mod/module/v2", Version: "v2.0.0"},
 			},
 		}, {
 			name:      "empty_get_versions",
-			indexInfo: []map[string]string{},
+			indexInfo: []*internal.IndexVersion{},
 		},
 	} {
 		var wantLogs []*internal.VersionLog
 		for _, v := range tc.indexInfo {
 			wantLogs = append(wantLogs, &internal.VersionLog{
-				ModulePath: v["path"],
-				Version:    v["version"],
+				ModulePath: v.Path,
+				Version:    v.Version,
 				Source:     internal.VersionSourceProxyIndex,
 			})
 		}

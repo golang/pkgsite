@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"golang.org/x/discovery/internal"
 )
 
 // insecureHTTPClient is used to disable TLS verification when running against
@@ -26,7 +28,7 @@ var insecureHTTPClient = &http.Client{
 // SetupTestIndex creates a module index for testing using the given version
 // map for data.  It returns a function for tearing down the index server after
 // the test is completed, and a Client for interacting with the test index.
-func SetupTestIndex(t *testing.T, versions []map[string]string) (func(t *testing.T), *Client) {
+func SetupTestIndex(t *testing.T, versions []*internal.IndexVersion) (func(t *testing.T), *Client) {
 	t.Helper()
 
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
