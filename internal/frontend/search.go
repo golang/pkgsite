@@ -10,10 +10,12 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"path"
 	"strconv"
 	"strings"
 
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/postgres"
 )
 
@@ -138,7 +140,8 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, limit, 
 }
 
 // HandleSearch applies database data to the search template. Handles endpoint
-// /search?q=<query>.
+// /search?q=<query>. If <query> is an exact match for a package path, the user
+// will be redirected to the details page.
 func (c *Controller) HandleSearch(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	query := strings.TrimSpace(r.FormValue("q"))
@@ -147,11 +150,15 @@ func (c *Controller) HandleSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var (
-		limit, pageNum int
-		err            error
-	)
+	pkg, err := c.db.GetLatestPackage(ctx, path.Clean(query))
+	if err == nil {
+		http.Redirect(w, r, fmt.Sprintf("/%s", pkg.Path), http.StatusFound)
+		return
+	} else if !derrors.IsNotFound(err) {
+		log.Printf("error getting package for %s: %v", path.Clean(query), err)
+	}
 
+	var limit, pageNum int
 	if l := r.URL.Query().Get("limit"); l != "" {
 		limit, err = strconv.Atoi(l)
 		if err != nil {
