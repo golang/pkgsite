@@ -58,9 +58,15 @@ type ModuleDetails struct {
 
 // ImportsDetails contains information for a package's imports.
 type ImportsDetails struct {
-	// Imports is an array of packages representing the package's imports
-	// that are not in the Go standard library.
-	Imports []*internal.Import
+	ModulePath string
+
+	// ExternalImports is the collection of package imports that are not in
+	// the Go standard library and are not part of the same module
+	ExternalImports []*internal.Import
+
+	// InternalImports is an array of packages representing the package's
+	// imports that are part of the same module.
+	InternalImports []*internal.Import
 
 	// StdLib is an array of packages representing the package's imports
 	// that are in the Go standard library.
@@ -70,9 +76,15 @@ type ImportsDetails struct {
 // ImportedByDetails contains information for the collection of packages that
 // import a given package.
 type ImportedByDetails struct {
-	// ImportedBy is the collection of packages that import the given
-	// package.
-	ImportedBy []*internal.Import
+	ModulePath string
+
+	// ExternalImportedBy is the collection of packages that import the
+	// given package and are not part of the same module.
+	ExternalImportedBy []*internal.Import
+
+	// InternalImportedBy is the collection of packages that import the given
+	// package and are inside the same module.
+	InternalImportedBy []*internal.Import
 }
 
 // License contains information used for a single license section.
@@ -395,38 +407,48 @@ func fetchImportsDetails(ctx context.Context, db *postgres.DB, pkg *internal.Ver
 		return nil, fmt.Errorf("db.GetImports(ctx, %q, %q): %v", pkg.Path, pkg.VersionInfo.Version, err)
 	}
 
-	var imports []*internal.Import
-	var std []*internal.Import
+	var externalImports, moduleImports, std []*internal.Import
 	for _, p := range dbImports {
 		if inStdLib(p.Path) {
 			std = append(std, p)
+		} else if strings.HasPrefix(p.Path+"/", pkg.VersionInfo.ModulePath+"/") {
+			moduleImports = append(moduleImports, p)
 		} else {
-			imports = append(imports, p)
+			externalImports = append(externalImports, p)
 		}
 	}
 
 	return &ImportsDetails{
-		Imports: imports,
-		StdLib:  std,
+		ModulePath:      pkg.VersionInfo.ModulePath,
+		ExternalImports: externalImports,
+		InternalImports: moduleImports,
+		StdLib:          std,
 	}, nil
 }
 
 // fetchImportedByDetails fetches importers for the package version specified by
 // path and version from the database and returns a ImportedByDetails.
-func fetchImportedByDetails(ctx context.Context, db *postgres.DB, pkg *internal.Package) (*ImportedByDetails, error) {
+func fetchImportedByDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*ImportedByDetails, error) {
 	importedByPaths, err := db.GetImportedBy(ctx, pkg.Path)
 	if err != nil {
 		return nil, fmt.Errorf("db.GetImportedBy(ctx, %q): %v", pkg.Path, err)
 	}
-	var importedBy []*internal.Import
-	for _, p := range importedByPaths {
-		importedBy = append(importedBy, &internal.Import{
-			Name: packageName("main", p),
-			Path: p,
-		})
+	var externalImportedBy, moduleImportedBy []*internal.Import
+	for _, path := range importedByPaths {
+		importer := &internal.Import{
+			Name: packageName("main", path),
+			Path: path,
+		}
+		if strings.HasPrefix(path, pkg.VersionInfo.ModulePath) {
+			moduleImportedBy = append(moduleImportedBy, importer)
+		} else {
+			externalImportedBy = append(externalImportedBy, importer)
+		}
 	}
 	return &ImportedByDetails{
-		ImportedBy: importedBy,
+		ModulePath:         pkg.VersionInfo.ModulePath,
+		ExternalImportedBy: externalImportedBy,
+		InternalImportedBy: moduleImportedBy,
 	}, nil
 }
 
@@ -473,7 +495,7 @@ func fetchDetails(ctx context.Context, tab string, db *postgres.DB, pkg *interna
 	case "imports":
 		return fetchImportsDetails(ctx, db, pkg)
 	case "importedby":
-		return fetchImportedByDetails(ctx, db, &pkg.Package)
+		return fetchImportedByDetails(ctx, db, pkg)
 	case "licenses":
 		return fetchLicensesDetails(ctx, db, pkg)
 	case "overview":

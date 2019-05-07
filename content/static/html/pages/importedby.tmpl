@@ -4,12 +4,24 @@
 	license that can be found in the LICENSE file.
 -->
 
-{{ define "details_content" }}
+{{define "details_content"}}
   <div>
     <h3>Imported by</h3>
-    <p><b>Known importers: </b>{{ len .ImportedBy }} packages</p>
-    {{ range .ImportedBy }}
-      <p><a href="/{{.Path}}">{{ .Path }}</a></p>
-    {{ end }}
+    {{if .ExternalImportedBy}}
+      <p>
+        <b>Known importers: </b>
+        <span>{{len .ExternalImportedBy}} package(s)</span>
+      </p>
+      {{range .ExternalImportedBy}}
+        <p><a href="/{{.Path}}">{{.Path}}</a></p>
+      {{end}}
+    {{end}}
+
+    {{if .InternalImportedBy}}
+      <h3>Module: {{.ModulePath}}</h3>
+      {{range .InternalImportedBy}}
+        <p><a href="/{{.Path}}">{{.Path}}</a></p>
+      {{end}}
+    {{end}}
   </div>
-{{ end }}
+{{end}}

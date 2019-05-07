@@ -542,16 +542,23 @@ func TestFetchImportsDetails(t *testing.T) {
 		wantDetails *ImportsDetails
 	}{
 		{
-			name: "want imports details with standard",
+			name: "want imports details with standard and internal",
 			imports: []*internal.Import{
 				{Name: "import1", Path: "pa.th/import/1"},
+				{Name: sampleInternalVersion.Packages[0].Name, Path: sampleInternalVersion.Packages[0].Path},
 				{Name: "context", Path: "context"},
 			},
 			wantDetails: &ImportsDetails{
-				Imports: []*internal.Import{
+				ExternalImports: []*internal.Import{
 					{
 						Name: "import1",
 						Path: "pa.th/import/1",
+					},
+				},
+				InternalImports: []*internal.Import{
+					{
+						Name: sampleInternalVersion.Packages[0].Name,
+						Path: sampleInternalVersion.Packages[0].Path,
 					},
 				},
 				StdLib: []*internal.Import{
@@ -570,7 +577,7 @@ func TestFetchImportsDetails(t *testing.T) {
 				{Name: "import3", Path: "pa.th/import/3"},
 			},
 			wantDetails: &ImportsDetails{
-				Imports: []*internal.Import{
+				ExternalImports: []*internal.Import{
 					{
 						Name: "import1",
 						Path: "pa.th/import/1",
@@ -607,6 +614,7 @@ func TestFetchImportsDetails(t *testing.T) {
 					version.Packages[0].Path, version.Version, got, err, tc.wantDetails)
 			}
 
+			tc.wantDetails.ModulePath = version.VersionInfo.ModulePath
 			if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
 				t.Errorf("fetchModuleDetails(ctx, %q, %q) mismatch (-want +got):\n%s", version.Packages[0].Path, version.Version, diff)
 			}
@@ -662,7 +670,7 @@ func TestFetchImportedByDetails(t *testing.T) {
 		{
 			pkg: pkg2,
 			wantDetails: &ImportedByDetails{
-				ImportedBy: []*internal.Import{
+				ExternalImportedBy: []*internal.Import{
 					{Path: pkg3.Path, Name: pkg3.Name},
 				},
 			},
@@ -670,7 +678,7 @@ func TestFetchImportedByDetails(t *testing.T) {
 		{
 			pkg: pkg1,
 			wantDetails: &ImportedByDetails{
-				ImportedBy: []*internal.Import{
+				ExternalImportedBy: []*internal.Import{
 					{Name: pkg2.Name, Path: pkg2.Path},
 					{Name: pkg3.Name, Path: pkg3.Path},
 				},
@@ -691,12 +699,13 @@ func TestFetchImportedByDetails(t *testing.T) {
 			}
 
 			vp := firstVersionedPackage(makeVersion(tc.pkg))
-			got, err := fetchImportedByDetails(ctx, testDB, &vp.Package)
+			got, err := fetchImportedByDetails(ctx, testDB, vp)
 			if err != nil {
 				t.Fatalf("fetchImportedByDetails(ctx, db, %q) = %v err = %v, want %v",
 					tc.pkg.Path, got, err, tc.wantDetails)
 			}
 
+			tc.wantDetails.ModulePath = vp.VersionInfo.ModulePath
 			if diff := cmp.Diff(tc.wantDetails, got, cmpopts.IgnoreFields(DetailsPage{}, "PackageHeader")); diff != "" {
 				t.Errorf("fetchImportedByDetails(ctx, db, %q) mismatch (-want +got):\n%s", tc.pkg.Path, diff)
 			}
