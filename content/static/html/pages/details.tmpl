@@ -7,28 +7,28 @@
 <div class="Container">
  {{$header := .PackageHeader}}
  <header>
-   <h1>{{ $header.Title }}</h1>
-   {{ if not $header.IsCommand }}
-     <p>import "{{ $header.Path }}"</p>
-   {{ end }}
+   <h1>{{$header.Title}}</h1>
+   {{if not $header.IsCommand}}
+     <p>import "{{$header.Path}}"</p>
+   {{end}}
    <p>
-    {{ if $header.IsRedistributable -}}
-      {{ $header.Synopsis }}
+    {{if $header.IsRedistributable -}}
+      {{$header.Synopsis}}
     {{- else -}}
       <em>Synopsis hidden due to license restrictions.</em>
-    {{ end }}
+    {{end}}
     </p>
    <p>
-     <b>Version: </b><span>{{ $header.Version }}</span>
+     <b>Version: </b><span>{{$header.Version}}</span>
      <span>|</span>
-     <b>Published: </b><span>{{ $header.CommitTime }}</span>
+     <b>Published: </b><span>{{$header.CommitTime}}</span>
      <span>|</span>
      <b>License(s): </b>
-      {{ range $i, $e := $header.Licenses -}}{{ if $i }}, {{ end }}
-        <a href="/{{$header.Path}}?v={{$header.Version}}&tab=licenses#{{.Anchor}}">{{ $e.Type }}</a>
+      {{range $i, $e := $header.Licenses -}}{{if $i}}, {{end}}
+        <a href="/{{$header.Path}}?v={{$header.Version}}&tab=licenses#{{.Anchor}}">{{$e.Type}}</a>
       {{- else -}}
         <span>No license files detected</span>
-      {{- end }}
+      {{- end}}
       <a href="/license-policy/" class="Disclaimer-link">(This is not legal advice)</a>
    </p>
  </header>
@@ -58,11 +58,11 @@
  </ul>
 
  <div class="Content">
-  {{ if .CanShowDetails -}}
-    {{ template "details_content" .Details }}
-  {{- else }}
+  {{if .CanShowDetails -}}
+    {{template "details_content" .Details}}
+  {{- else}}
     <h2>This data is not redistributable due to license restrictions.</h2>
-  {{ end }}
+  {{end}}
   </div>
 </div>
 {{end}}

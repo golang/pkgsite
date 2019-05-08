@@ -4,11 +4,11 @@
 	license that can be found in the LICENSE file.
 -->
 
-{{ define "details_content" }}
-{{ range .Licenses }}
-<section class="License" id="{{ .Anchor }}">
-  <h3><a href="#{{ .Anchor }}">{{ .Type }} <small>({{ .FilePath }})</small></a></h3>
-  <pre class="License-contents">{{ printf "%s" .Contents }}</pre>
+{{define "details_content"}}
+{{range .Licenses}}
+<section class="License" id="{{.Anchor}}">
+  <h3><a href="#{{.Anchor}}">{{.Type}} <small>({{.FilePath}})</small></a></h3>
+  <pre class="License-contents">{{printf "%s" .Contents}}</pre>
 </section>
-{{ end }}
-{{ end }}
+{{end}}
+{{end}}

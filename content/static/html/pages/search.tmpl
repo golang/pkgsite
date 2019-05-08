@@ -8,7 +8,7 @@
   <div class="SearchResults">
     <h1 class="SearchResults-header">Results for “{{.Query}}”</h1>
     <div class="SearchResults-resultCount">
-      {{ add .Offset 1 }} - {{ add .Offset (len .Results) }} of {{.NumResults}} results
+      {{add .Offset 1}} - {{add .Offset (len .Results)}} of {{.NumResults}} results
     </div>
     <div>{{/* Containing element is needed to use *-of-type selectors */}}
       {{$query := .Query}}
@@ -39,15 +39,15 @@
         <span class="SearchResults-previous" aria-disabled="true">Previous</span>
       {{end}}
 
-      {{ $page := .Page }}
+      {{$page := .Page}}
       {{range $i := .Pages}}
-        {{ if eq $i $page }}
-          <span class="SearchResults-pageNum">{{ $i }}</span>
-        {{ else }}
-          <a class="SearchResults-pageNum" href="/search?q={{$.Query}}&page={{ $i }}">
-            {{ $i }}
+        {{if eq $i $page}}
+          <span class="SearchResults-pageNum">{{$i}}</span>
+        {{else}}
+          <a class="SearchResults-pageNum" href="/search?q={{$.Query}}&page={{$i}}">
+            {{$i}}
           </a>
-        {{ end }}
+        {{end}}
       {{end}}
 
       {{if .Next}}
