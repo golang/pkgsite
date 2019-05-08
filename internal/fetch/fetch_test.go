@@ -24,7 +24,7 @@ import (
 	"golang.org/x/discovery/internal/proxy"
 )
 
-const testTimeout = 5 * time.Second
+const testTimeout = 10 * time.Second
 
 var testDB *postgres.DB
 
