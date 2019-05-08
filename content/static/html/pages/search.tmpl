@@ -8,7 +8,10 @@
   <div class="SearchResults">
     <h1 class="SearchResults-header">Results for “{{.Query}}”</h1>
     <div class="SearchResults-resultCount">
-      {{add .Offset 1}} - {{add .Offset (len .Results)}} of {{.NumResults}} results
+      {{if gt .NumResults (len .Results)}}
+        {{ add .Offset 1 }} – {{ add .Offset (len .Results) }} of
+      {{end}}
+      {{.NumResults}} {{pluralize .NumResults "result"}}
     </div>
     <div>{{/* Containing element is needed to use *-of-type selectors */}}
       {{$query := .Query}}
