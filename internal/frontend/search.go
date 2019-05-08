@@ -15,7 +15,6 @@ import (
 	"strings"
 
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/postgres"
 )
 
@@ -42,7 +41,7 @@ type SearchResult struct {
 	ModulePath    string
 	Synopsis      string
 	Version       string
-	Licenses      []*license.Metadata
+	Licenses      []string
 	CommitTime    string
 	NumImportedBy uint64
 }
@@ -98,22 +97,21 @@ const defaultNumPagesToLink = 7
 // fetchSearchPage fetches data matching the search query from the database and
 // returns a SearchPage.
 func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, limit, page int) (*SearchPage, error) {
-	terms := strings.Fields(query)
-	dbresults, err := db.Search(ctx, terms, limit, offset(page, limit))
+	dbresults, err := db.Search(ctx, query, limit, offset(page, limit))
 	if err != nil {
-		return nil, fmt.Errorf("db.Search(%v): %v", terms, err)
+		return nil, fmt.Errorf("db.Search(%v, %d, %d): %v", query, limit, offset(page, limit), err)
 	}
 
 	var results []*SearchResult
 	for _, r := range dbresults {
 		results = append(results, &SearchResult{
-			Name:          r.Package.Name,
-			PackagePath:   r.Package.Path,
-			ModulePath:    r.Package.VersionInfo.ModulePath,
-			Synopsis:      r.Package.Package.Synopsis,
-			Version:       r.Package.VersionInfo.Version,
-			Licenses:      r.Package.Licenses,
-			CommitTime:    elapsedTime(r.Package.VersionInfo.CommitTime),
+			Name:          r.Name,
+			PackagePath:   r.PackagePath,
+			ModulePath:    r.ModulePath,
+			Synopsis:      r.Synopsis,
+			Version:       r.Version,
+			Licenses:      r.Licenses,
+			CommitTime:    elapsedTime(r.CommitTime),
 			NumImportedBy: r.NumImportedBy,
 		})
 	}

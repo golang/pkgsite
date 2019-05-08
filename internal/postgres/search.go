@@ -14,7 +14,6 @@ import (
 	"github.com/lib/pq"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/license"
 )
 
 // RefreshSearchDocuments replaces the old contents ofthe mvw_search_documents
@@ -69,14 +68,19 @@ func (db *DB) InsertDocuments(ctx context.Context, version *internal.Version) er
 
 // SearchResult represents a single search result from SearchDocuments.
 type SearchResult struct {
+	Name        string
+	PackagePath string
+	ModulePath  string
+	Version     string
+	Synopsis    string
+	Licenses    []string
+
+	CommitTime time.Time
 	// Rank is used to sort items in an array of SearchResult.
 	Rank float64
 
 	// NumImportedBy is the number of packages that import Package.
 	NumImportedBy uint64
-
-	// Package is the package data corresponding to this SearchResult.
-	Package *internal.VersionedPackage
 
 	// NumResults is the total number of packages that were returned for this search.
 	NumResults uint64
@@ -84,12 +88,9 @@ type SearchResult struct {
 
 // Search fetches packages from the database that match the terms
 // provided, and returns them in order of relevance as a []*SearchResult.
-func (db *DB) Search(ctx context.Context, terms []string, limit, offset int) ([]*SearchResult, error) {
+func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int) ([]*SearchResult, error) {
 	if limit == 0 {
 		return nil, derrors.InvalidArgument(fmt.Sprintf("cannot search: limit cannot be 0"))
-	}
-	if len(terms) == 0 {
-		return nil, derrors.InvalidArgument(fmt.Sprintf("cannot search: no terms"))
 	}
 
 	query := `
@@ -103,11 +104,11 @@ func (db *DB) Search(ctx context.Context, terms []string, limit, offset int) ([]
 				license_types,
 				commit_time,
 				num_imported_by,
-				(ts_rank(tsv_search_tokens, to_tsquery($1))*log(exp(1)+num_imported_by)) AS rank
+				(ts_rank(tsv_search_tokens, plainto_tsquery($1))*log(exp(1)+num_imported_by)) AS rank
 			FROM
 				mvw_search_documents
 			WHERE
-				tsv_search_tokens @@ to_tsquery($1)
+				tsv_search_tokens @@ plainto_tsquery($1)
 		)
 
 		SELECT
@@ -130,9 +131,9 @@ func (db *DB) Search(ctx context.Context, terms []string, limit, offset int) ([]
 		LIMIT $2
 		OFFSET $3;
 	`
-	rows, err := db.QueryContext(ctx, query, strings.Join(terms, " | "), limit, offset)
+	rows, err := db.QueryContext(ctx, query, searchQuery, limit, offset)
 	if err != nil {
-		return nil, fmt.Errorf("db.QueryContext(ctx, %s, %q, %d, %d): %v", query, terms, limit, offset, err)
+		return nil, fmt.Errorf("db.QueryContext(ctx, %s, %q, %d, %d): %v", query, searchQuery, limit, offset, err)
 	}
 	defer rows.Close()
 
@@ -149,27 +150,17 @@ func (db *DB) Search(ctx context.Context, terms []string, limit, offset int) ([]
 			pq.Array(&licenseTypes), &commitTime, &numImportedBy, &rank, &total); err != nil {
 			return nil, fmt.Errorf("rows.Scan(): %v", err)
 		}
-		var licenses []*license.Metadata
-		for _, t := range licenseTypes {
-			licenses = append(licenses, &license.Metadata{Type: t})
-		}
 		results = append(results, &SearchResult{
+			Name:          name,
+			PackagePath:   path,
+			ModulePath:    modulePath,
+			Version:       version,
+			Synopsis:      synopsis,
+			Licenses:      licenseTypes,
+			CommitTime:    commitTime,
 			Rank:          rank,
 			NumImportedBy: numImportedBy,
 			NumResults:    total,
-			Package: &internal.VersionedPackage{
-				Package: internal.Package{
-					Name:     name,
-					Path:     path,
-					Synopsis: synopsis,
-					Licenses: licenses,
-				},
-				VersionInfo: internal.VersionInfo{
-					ModulePath: modulePath,
-					Version:    version,
-					CommitTime: commitTime,
-				},
-			},
 		})
 	}
 	return results, nil
