@@ -90,10 +90,8 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					Suffix:            "bar/baz",
 					Licenses: []*license.Metadata{
 						{Type: "BSD-3-Clause", FilePath: "LICENSE"},
-						{Type: "BSD-0-Clause", FilePath: "LICENSE.txt"},
 						{Type: "MIT", FilePath: "bar/LICENSE"},
 						{Type: "MIT", FilePath: "bar/baz/COPYING"},
-						{Type: "BSD-0-Clause", FilePath: "bar/baz/LICENSE"},
 					},
 				},
 			},
@@ -119,7 +117,6 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					Suffix:            "foo",
 					Licenses: []*license.Metadata{
 						{Type: "BSD-3-Clause", FilePath: "LICENSE"},
-						{Type: "BSD-0-Clause", FilePath: "LICENSE.txt"},
 						{Type: "BSD-0-Clause", FilePath: "foo/LICENSE.md"},
 					},
 				},

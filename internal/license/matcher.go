@@ -17,7 +17,7 @@ type Matcher map[string][]Metadata
 func NewMatcher(licenses []*License) Matcher {
 	var matcher Matcher = make(map[string][]Metadata)
 	for _, l := range licenses {
-		prefix := filepath.ToSlash(filepath.Clean(filepath.Dir(l.FilePath)))
+		prefix := path.Dir(l.FilePath)
 		matcher[prefix] = append(matcher[prefix], l.Metadata)
 	}
 	return matcher

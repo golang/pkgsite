@@ -8,7 +8,7 @@ import (
 	"archive/zip"
 	"fmt"
 	"io/ioutil"
-	"path/filepath"
+	"path"
 	"strings"
 
 	"github.com/google/licensecheck"
@@ -26,7 +26,22 @@ const (
 	// maxLicenseSize is the maximum allowable size (in bytes) for a license
 	// file.
 	maxLicenseSize = 1e7
+
+	// unknownLicense is used for candidate license files where either the
+	// license type was not detected, or did not meet requisite thresholds.
+	unknownLicense = "UNKNOWN"
 )
+
+// licenseFileNames defines the set of filenames to be considered for license
+// extraction.
+var licenseFileNames = map[string]bool{
+	"LICENSE":     true,
+	"LICENSE.md":  true,
+	"LICENSE.txt": true,
+	"COPYING":     true,
+	"COPYING.md":  true,
+	"COPYING.txt": true,
+}
 
 // isVendoredFile reports if the given file is in a proper subdirectory nested
 // under a 'vendor' directory, to allow for Go packages named 'vendor'.
@@ -57,7 +72,7 @@ func isVendoredFile(name string) bool {
 func Detect(contentsDir string, r *zip.Reader) ([]*License, error) {
 	var licenses []*License
 	for _, f := range r.File {
-		if !licenseFileNames[filepath.Base(f.Name)] || isVendoredFile(f.Name) {
+		if !licenseFileNames[path.Base(f.Name)] || isVendoredFile(f.Name) {
 			// Only consider licenses with an acceptable file name, and not in the
 			// vendor directory.
 			continue
@@ -87,21 +102,30 @@ func Detect(contentsDir string, r *zip.Reader) ([]*License, error) {
 			return nil, fmt.Errorf("ioutil.ReadAll(rc) for %q: %v", f.Name, err)
 		}
 
+		// At this point we have a valid license candidate, and so expect a match.
+		// If we don't find one, we must return an unknown license.
+		matched := false
+		filePath := strings.TrimPrefix(f.Name, prefix)
 		cov, ok := licensecheck.Cover(contents, licensecheck.Options{})
-		if !ok || cov.Percent < coverageThreshold {
-			continue
-		}
-
-		m := cov.Match[0]
-		if m.Percent > classifyThreshold {
-			license := &License{
-				Metadata: Metadata{
-					Type:     m.Name,
-					FilePath: strings.TrimPrefix(f.Name, prefix),
-				},
-				Contents: contents,
+		if ok && cov.Percent >= coverageThreshold {
+			for _, m := range cov.Match {
+				if m.Percent >= classifyThreshold {
+					licenses = append(licenses, &License{
+						Metadata: Metadata{
+							Type:     m.Name,
+							FilePath: filePath,
+						},
+						Contents: contents,
+					})
+					matched = true
+				}
 			}
-			licenses = append(licenses, license)
+		}
+		if !matched {
+			licenses = append(licenses, &License{
+				Metadata: Metadata{Type: unknownLicense, FilePath: filePath},
+			})
+
 		}
 	}
 	return licenses, nil

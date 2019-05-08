@@ -30,7 +30,7 @@ func TestLicensesAreRedistributable(t *testing.T) {
 		}, {
 			label: "non-redistributable license",
 			licenses: []*Metadata{
-				{Type: "AGPL-3.0", FilePath: "LICENSE"},
+				{Type: "BADLICENSE", FilePath: "LICENSE"},
 			},
 			want: false,
 		}, {
@@ -44,17 +44,16 @@ func TestLicensesAreRedistributable(t *testing.T) {
 			label: "not all redistributable",
 			licenses: []*Metadata{
 				{Type: "BSD-3-Clause", FilePath: "LICENSE"},
-				{Type: "AGPL-3.0", FilePath: "foo/LICENSE"},
+				{Type: "BADLICENSE", FilePath: "foo/LICENSE"},
 				{Type: "MIT", FilePath: "foo/bar/LICENSE"},
 			},
 			want: false,
 		}, {
-			label: "at least one redistributable per directory",
+			label: "multiple redistributable in a single file",
 			licenses: []*Metadata{
 				{Type: "BSD-3-Clause", FilePath: "LICENSE"},
-				{Type: "BSD-0-Clause", FilePath: "LICENSE.txt"},
 				{Type: "AGPL-3.0", FilePath: "foo/LICENSE"},
-				{Type: "MIT", FilePath: "foo/COPYING"},
+				{Type: "MIT", FilePath: "foo/LICENSE"},
 			},
 			want: true,
 		},
