@@ -54,7 +54,7 @@ func main() {
 	mux.HandleFunc("/", controller.HandleDetails)
 
 	mw := middleware.Chain(
-		middleware.ContentSecurityPolicy(),
+		middleware.SecureHeaders(),
 		middleware.Timeout(1*time.Minute),
 	)
 
