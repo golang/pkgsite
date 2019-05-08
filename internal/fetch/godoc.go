@@ -137,6 +137,21 @@ func (p godocComponent) Render() []*html.Node {
 				),
 			)
 		}
+		for _, f := range t.Funcs {
+			heading := htmlg.H2(htmlg.Text("func "+f.Name+" "), htmlg.A("¶", "#"+f.Name))
+			heading.Attr = append(heading.Attr, html.Attribute{
+				Key: atom.Id.String(), Val: f.Name,
+			})
+			ns = append(ns,
+				heading,
+				htmlg.Pre(
+					htmlg.Text(printASTNode(p.Fset, f.Decl)),
+				),
+				htmlg.P(
+					parseHTML(docHTML(f.Doc)),
+				),
+			)
+		}
 		for _, m := range t.Methods {
 			ns = append(ns,
 				htmlg.H3(htmlg.Text("func ("+m.Recv+") "+m.Name)),
