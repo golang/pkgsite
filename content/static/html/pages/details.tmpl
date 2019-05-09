@@ -61,7 +61,7 @@
   {{if .CanShowDetails -}}
     {{template "details_content" .Details}}
   {{- else}}
-    <h2>This data is not redistributable due to license restrictions.</h2>
+    <h2>“{{.DisplayName}}” hidden due to license restrictions.</h2>
   {{end}}
   </div>
 </div>

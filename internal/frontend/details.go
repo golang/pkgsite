@@ -30,6 +30,7 @@ import (
 type DetailsPage struct {
 	basePageData
 	CanShowDetails bool
+	DisplayName    string
 	Details        interface{}
 	PackageHeader  *Package
 }
@@ -471,15 +472,20 @@ func readmeHTML(readmeFilePath string, readmeContents []byte) template.HTML {
 // tabSettings defines rendering options associated to each tab.  Any tab value
 // not present in this map will be handled as a request to 'overview'.
 var tabSettings = map[string]struct {
+	// name is the 'vanity' name of this tab
+	name string
+
+	// alwaysShowDetails determines whether details in this tab are shown even if
+	// the package is not determined to be redistributable.
 	alwaysShowDetails bool
 }{
-	"doc":        {},
-	"importedby": {alwaysShowDetails: true},
-	"imports":    {alwaysShowDetails: true},
-	"licenses":   {},
-	"module":     {},
-	"overview":   {},
-	"versions":   {alwaysShowDetails: true},
+	"doc":        {name: "Doc"},
+	"importedby": {alwaysShowDetails: true, name: "Imported By"},
+	"imports":    {alwaysShowDetails: true, name: "Imports"},
+	"licenses":   {name: "Licenses"},
+	"module":     {name: "Module"},
+	"overview":   {name: "Overview"},
+	"versions":   {alwaysShowDetails: true, name: "Versions"},
 }
 
 // fetchDetails returns tab details by delegating to the correct detail
@@ -579,6 +585,7 @@ func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
 			Title: fmt.Sprintf("%s - %s", pkgHeader.Title, pkgHeader.Version),
 			Query: strings.TrimSpace(r.FormValue("q")),
 		},
+		DisplayName:    settings.name,
 		PackageHeader:  pkgHeader,
 		Details:        details,
 		CanShowDetails: canShowDetails,
