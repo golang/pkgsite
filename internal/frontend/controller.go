@@ -108,7 +108,6 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 
 	templates := make(map[string]*template.Template)
 	for _, set := range htmlSets {
-		templateName := set[0]
 		t, err := template.New("base.tmpl").Funcs(template.FuncMap{
 			"add":     func(i, j int) int { return i + j },
 			"curYear": func() int { return time.Now().Year() },
@@ -118,7 +117,6 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 				}
 				return s + "s"
 			},
-			"templateName": func() string { return templateName },
 		}).ParseFiles(filepath.Join(base, "base.tmpl"))
 		if err != nil {
 			return nil, fmt.Errorf("ParseFiles: %v", err)

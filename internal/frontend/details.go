@@ -26,13 +26,27 @@ import (
 	"golang.org/x/discovery/internal/thirdparty/semver"
 )
 
+// TabSettings defines tab-specific metadata.
+type TabSettings struct {
+	// Name is the tab name used in the URL.
+	Name string
+
+	// DisplayName is the formatted tab name.
+	DisplayName string
+
+	// AlwaysShowDetails defines whether the tab content can be shown even if the
+	// package is not determined to be redistributable.
+	AlwaysShowDetails bool
+}
+
 // DetailsPage contains data for the doc template.
 type DetailsPage struct {
 	basePageData
 	CanShowDetails bool
-	DisplayName    string
+	Settings       TabSettings
 	Details        interface{}
 	PackageHeader  *Package
+	Tabs           []TabSettings
 }
 
 // OverviewDetails contains all of the data that the overview template
@@ -469,23 +483,47 @@ func readmeHTML(readmeFilePath string, readmeContents []byte) template.HTML {
 	return template.HTML(p.SanitizeBytes(unsafe))
 }
 
-// tabSettings defines rendering options associated to each tab.  Any tab value
-// not present in this map will be handled as a request to 'overview'.
-var tabSettings = map[string]struct {
-	// name is the 'vanity' name of this tab
-	name string
+var (
+	tabSettings = []TabSettings{
+		{
+			Name:        "doc",
+			DisplayName: "Doc",
+		},
+		{
+			Name:        "overview",
+			DisplayName: "Overview",
+		},
+		{
+			Name:        "module",
+			DisplayName: "Module",
+		},
+		{
+			Name:              "versions",
+			AlwaysShowDetails: true,
+			DisplayName:       "Versions",
+		},
+		{
+			Name:              "imports",
+			DisplayName:       "Imports",
+			AlwaysShowDetails: true,
+		},
+		{
+			Name:              "importedby",
+			DisplayName:       "Imported By",
+			AlwaysShowDetails: true,
+		},
+		{
+			Name:        "licenses",
+			DisplayName: "Licenses",
+		},
+	}
+	tabLookup = make(map[string]TabSettings)
+)
 
-	// alwaysShowDetails determines whether details in this tab are shown even if
-	// the package is not determined to be redistributable.
-	alwaysShowDetails bool
-}{
-	"doc":        {name: "Doc"},
-	"importedby": {alwaysShowDetails: true, name: "Imported By"},
-	"imports":    {alwaysShowDetails: true, name: "Imports"},
-	"licenses":   {name: "Licenses"},
-	"module":     {name: "Module"},
-	"overview":   {name: "Overview"},
-	"versions":   {alwaysShowDetails: true, name: "Versions"},
+func init() {
+	for _, d := range tabSettings {
+		tabLookup[d.Name] = d
+	}
 }
 
 // fetchDetails returns tab details by delegating to the correct detail
@@ -562,12 +600,12 @@ func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tab := r.FormValue("tab")
-	settings, ok := tabSettings[tab]
+	settings, ok := tabLookup[tab]
 	if !ok {
 		tab = "doc"
-		settings = tabSettings["doc"]
+		settings = tabLookup["doc"]
 	}
-	canShowDetails := pkg.IsRedistributable() || settings.alwaysShowDetails
+	canShowDetails := pkg.IsRedistributable() || settings.AlwaysShowDetails
 
 	var details interface{}
 	if canShowDetails {
@@ -585,10 +623,11 @@ func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
 			Title: fmt.Sprintf("%s - %s", pkgHeader.Title, pkgHeader.Version),
 			Query: strings.TrimSpace(r.FormValue("q")),
 		},
-		DisplayName:    settings.name,
+		Settings:       settings,
 		PackageHeader:  pkgHeader,
 		Details:        details,
 		CanShowDetails: canShowDetails,
+		Tabs:           tabSettings,
 	}
 
 	c.renderPage(w, tab+".tmpl", page)
