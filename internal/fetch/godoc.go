@@ -7,9 +7,7 @@ package fetch
 import (
 	"bytes"
 	"fmt"
-	"go/ast"
 	"go/doc"
-	"go/parser"
 	"go/printer"
 	"go/token"
 	"strings"
@@ -17,28 +15,7 @@ import (
 	"github.com/shurcooL/htmlg"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
-	"golang.org/x/tools/go/packages"
 )
-
-// computeDoc computes the package documentation for p.
-func computeDoc(p *packages.Package) (*token.FileSet, *doc.Package, error) {
-	var (
-		fset  = token.NewFileSet()
-		files = make(map[string]*ast.File)
-	)
-	for _, name := range p.GoFiles {
-		f, err := parser.ParseFile(fset, name, nil, parser.ParseComments)
-		if err != nil {
-			return nil, nil, err
-		}
-		files[name] = f
-	}
-	apkg := &ast.Package{
-		Name:  p.Name,
-		Files: files,
-	}
-	return fset, doc.New(apkg, p.PkgPath, 0), nil
-}
 
 // renderDocHTML renders package documentation HTML for the
 // provided file set and package.

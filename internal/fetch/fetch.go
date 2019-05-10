@@ -6,16 +6,22 @@ package fetch
 
 import (
 	"archive/zip"
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"go/ast"
+	"go/build"
 	"go/doc"
+	"go/parser"
+	"go/token"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"path"
-	"path/filepath"
 	"regexp"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -23,10 +29,8 @@ import (
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
-	"golang.org/x/discovery/internal/thirdparty/modfile"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
-	"golang.org/x/tools/go/packages"
 )
 
 var (
@@ -100,6 +104,12 @@ func parseVersion(version string) (internal.VersionType, error) {
 // (4) Write the data to the discovery database
 func FetchAndInsertVersion(modulePath, version string, proxyClient *proxy.Client, db *postgres.DB) (err error) {
 	defer func() {
+		if e := recover(); e != nil {
+			// The package processing code performs some sanity checks along the way.
+			// None of the panics should occur, but if they do, we want to log them and
+			// be able to find them. So, convert internal panics to internal errors here.
+			err = fmt.Errorf("internal panic: %v\n\n%s", e, debug.Stack())
+		}
 		if err != nil && err != context.DeadlineExceeded {
 			if dberr := db.UpdateVersionLogError(context.Background(), modulePath, version, err); dberr != nil {
 				log.Printf("db.UpdateVersionLogError(ctx, %q, %q, %v): %v", modulePath, version, err, dberr)
@@ -141,7 +151,7 @@ func FetchAndInsertVersion(modulePath, version string, proxyClient *proxy.Client
 		log.Printf("Error detecting licenses for %v@%v: %v", modulePath, version, err)
 	}
 
-	packages, err := extractPackagesFromZip(modulePath, version, zipReader, licenses)
+	packages, err := extractPackagesFromZip(modulePath, version, zipReader, license.NewMatcher(licenses))
 	if err != nil {
 		return fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, version, licenses, err)
 	}
@@ -181,6 +191,9 @@ func moduleVersionDir(modulePath, version string) string {
 func extractReadmeFromZip(modulePath, version string, r *zip.Reader) (string, []byte, error) {
 	for _, zipFile := range r.File {
 		if hasFilename(zipFile.Name, "README") {
+			if zipFile.UncompressedSize64 > maxFileSize {
+				return "", nil, fmt.Errorf("file size %d exceeds max limit %d", zipFile.UncompressedSize64, maxFileSize)
+			}
 			c, err := readZipFile(zipFile)
 			if err != nil {
 				return "", nil, fmt.Errorf("readZipFile(%q): %v", zipFile.Name, err)
@@ -191,161 +204,273 @@ func extractReadmeFromZip(modulePath, version string, r *zip.Reader) (string, []
 	return "", nil, errReadmeNotFound
 }
 
+// hasFilename checks if file is expectedFile or if the name of file, without
+// the base, is equal to expectedFile. It is case insensitive.
+// It operates on '/'-separated paths.
+func hasFilename(file string, expectedFile string) bool {
+	base := path.Base(file)
+	return strings.EqualFold(file, expectedFile) ||
+		strings.EqualFold(base, expectedFile) ||
+		strings.EqualFold(strings.TrimSuffix(base, path.Ext(base)), expectedFile)
+}
+
 // extractPackagesFromZip returns a slice of packages from the module zip r.
 // It matches against the given licenses to determine the subset of licenses
 // that applies to each package.
-func extractPackagesFromZip(modulePath, version string, r *zip.Reader, licenses []*license.License) ([]*internal.Package, error) {
-	// Create a temporary directory to write the contents of the module zip.
-	tempPrefix := "discovery_"
-	workDir, err := ioutil.TempDir("", tempPrefix)
-	if err != nil {
-		return nil, fmt.Errorf("ioutil.TempDir(%q, %q): %v", "", tempPrefix, err)
-	}
-	defer os.RemoveAll(workDir)
+func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher license.Matcher) ([]*internal.Package, error) {
 
-	if err := extractModuleFiles(workDir, modulePath, r); err != nil {
-		return nil, fmt.Errorf("extractModuleFiles(%q, %q, zipReader): %v", workDir, modulePath, err)
-	}
+	// The high-level approach is to split the processing of the zip file
+	// into two phases:
+	//
+	// 	1. loop over all files, looking at file metadata only
+	// 	2. process all files by reading their contents
+	//
+	// During phase 1, we populate the dirs map for each directory
+	// that contains at least one non-test .go file.
 
-	// If the module doesn't have an explicit go.mod file at the root,
-	// write one ourselves. Otherwise, it's not possible for go/packages
-	// to know where it's located on disk when it's the main module.
-	goMod := filepath.Join(workDir, modulePath+"@"+version, "go.mod")
-	if _, err := os.Stat(goMod); os.IsNotExist(err) {
-		if err := writeGoModFile(goMod, modulePath); err != nil {
-			return nil, fmt.Errorf("writeGoModFile(%q, %q): %v", goMod, modulePath, err)
-		}
-	}
+	var (
+		// modulePrefix is the "<module>@<version>/" prefix that all files
+		// are expected to have according to the zip archive layout specification
+		// at the bottom of https://golang.org/cmd/go/#hdr-Module_proxy_protocol.
+		modulePrefix = moduleVersionDir(modulePath, version) + "/"
 
-	pkgs, err := loadAndProcessPackages(workDir, modulePath, version, licenses)
-	if err != nil {
-		return nil, fmt.Errorf("loadAndProcessPackages(%q, %q, %q, licenses): %v", workDir, modulePath, version, err)
-	}
-	return pkgs, nil
-}
+		// dirs is the set of directories with at least one non-test .go file,
+		// to be populated during phase 1 and used during phase 2.
+		//
+		// The map key is the directory path, with the modulePrefix trimmed.
+		// The map value is a slice of all non-test .go files, and no other files.
+		dirs = make(map[string][]*zip.File)
+	)
 
-// extractModuleFiles extracts files contained in the given module within the
-// working directory. It returns error if the given *zip.Reader contains files
-// outside of the expected module path, if a Go file exceeds the maximum
-// allowable file size, or if there is an error writing the extracted file.
-// Notably, it simply skips over non-Go files that exceed the maximum file size.
-func extractModuleFiles(workDir, modulePath string, r *zip.Reader) error {
+	// Phase 1.
+	// Loop over zip files preemptively and check for problems
+	// that can be detected by looking at metadata alone.
+	// We'll be looking at file contents starting with phase 2 only,
+	// only we're sure this phase passed without errors.
 	for _, f := range r.File {
-		if !strings.HasPrefix(f.Name, modulePath) && !strings.HasPrefix(modulePath, f.Name) {
-			return fmt.Errorf("expected files to have shared prefix %q, found %q", modulePath, f.Name)
+		if f.Mode().IsDir() {
+			return nil, fmt.Errorf("expected only files, found directory %q", f.Name)
 		}
-
-		if !f.FileInfo().IsDir() {
-			// Skip files that are not .go files and are greater than maxFileSize.
-			if filepath.Ext(f.Name) != ".go" && f.UncompressedSize64 > maxFileSize {
-				continue
-			}
-
-			if err := writeFileToDir(f, workDir); err != nil {
-				return fmt.Errorf("writeFileToDir(%q, %q): %v", f.Name, workDir, err)
-			}
+		if !strings.HasPrefix(f.Name, modulePrefix) {
+			return nil, fmt.Errorf(`expected file to have "<module>@<version>/" prefix %q, found %q`, modulePrefix, f.Name)
+		}
+		innerPath := path.Dir(f.Name[len(modulePrefix):])
+		importPath := path.Join(modulePath, innerPath)
+		if ignoredByGoTool(importPath) || isVendored(importPath) {
+			// File is in a directory we're not looking to process at this time, so skip it.
+			continue
+		}
+		if !strings.HasSuffix(f.Name, ".go") || strings.HasSuffix(f.Name, "_test.go") {
+			// We care about non-test .go files only.
+			continue
+		}
+		if f.UncompressedSize64 > maxFileSize {
+			return nil, fmt.Errorf("file size %d exceeds max limit %d", f.UncompressedSize64, maxFileSize)
+		}
+		dirs[innerPath] = append(dirs[innerPath], f)
+		if len(dirs) > maxPackagesPerModule {
+			return nil, fmt.Errorf("%d packages found in %q; exceeds limit %d for maxPackagePerModule", len(dirs), modulePath, maxPackagesPerModule)
 		}
 	}
-	return nil
-}
 
-// writeGoModFile writes a go.mod file with a module statement at filename.
-//
-// It can be used on modules that don't have an explicit go.mod file,
-// so that it's possible to treat such modules as main modules.
-func writeGoModFile(filename, modulePath string) error {
-	var f modfile.File
-	if err := f.AddModuleStmt(modulePath); err != nil {
-		return fmt.Errorf("f.AddModuleStmt(%q): %v", modulePath, err)
-	}
-	b, err := f.Format()
-	if err != nil {
-		return fmt.Errorf("f.Format(): %v", err)
-	}
-	err = ioutil.WriteFile(filename, b, 0600)
-	if err != nil {
-		return fmt.Errorf("ioutil.WriteFile(%q, b, 0600): %v", filename, err)
-	}
-	return nil
-}
-
-// loadAndProcessPackages loads packages using the default build context
-// from the given modulePath and version relative to the working directory.
-// It matches each package to an applicable license and computes its imports,
-// documentation, and other package-specific fields.
-//
-// If there were no packages found in the module, the error value
-// errModuleContainsNoPackages is returned.
-func loadAndProcessPackages(workDir, modulePath, version string, licenses []*license.License) ([]*internal.Package, error) {
-	// TODO: find a way to test that the configuration doesn't use the internet to fetch dependencies
-	moduleRoot := filepath.Join(workDir, moduleVersionDir(modulePath, version))
-	config := &packages.Config{
-		Mode: packages.NeedName | packages.NeedFiles,
-		Dir:  moduleRoot,
-	}
-	pattern := fmt.Sprintf("%s/...", modulePath)
-	pkgs, err := packages.Load(config, pattern)
-	if err != nil {
-		return nil, fmt.Errorf("packages.Load(config, %q): %v", pattern, err)
+	// Phase 2.
+	// If we got this far, the file metadata was okay.
+	// Start reading the file contents now to extract information
+	// about Go packages.
+	var pkgs []*internal.Package
+	for innerPath, goFiles := range dirs {
+		importPath := path.Join(modulePath, innerPath)
+		pkg, err := loadPackage(goFiles, importPath, innerPath)
+		if err != nil {
+			return nil, err
+		} else if pkg == nil {
+			// No package.
+			continue
+		}
+		pkg.Licenses = matcher.Match(innerPath)
+		pkgs = append(pkgs, pkg)
 	}
 	if len(pkgs) == 0 {
 		return nil, errModuleContainsNoPackages
 	}
-	if len(pkgs) > maxPackagesPerModule {
-		return nil, fmt.Errorf("%d packages found in %q; exceeds limit %d for maxPackagePerModule", len(pkgs), modulePath, maxPackagesPerModule)
-	}
-	// TODO: consider p.Errors and act accordingly; issue b/131836733
-
-	licenseMatcher := license.NewMatcher(licenses)
-	var packages []*internal.Package
-	for _, p := range pkgs {
-		fset, d, err := computeDoc(p)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(d.Imports) > maxImportsPerPackage {
-			return nil, fmt.Errorf("%d imports found package %q in module %q; exceeds limit %d for maxImportsPerPackage", len(pkgs), p.PkgPath, modulePath, maxImportsPerPackage)
-		}
-		var imports []*internal.Import
-		for _, i := range d.Imports {
-			imports = append(imports, &internal.Import{
-				Name: path.Base(i), // TODO: this is a heuristic that just uses last path element for now; need to use database to do better; issue b/131835416
-				Path: i,
-			})
-		}
-
-		docHTML, err := renderDocHTML(fset, d)
-		if err != nil {
-			return nil, err
-		}
-
-		var packageDir string
-		if len(p.GoFiles) > 0 {
-			packageDir = filepath.Dir(strings.TrimPrefix(p.GoFiles[0], moduleRoot+"/"))
-		} else {
-			// by default, all root-level licenses should apply
-			packageDir = "."
-		}
-
-		packages = append(packages, &internal.Package{
-			Name:              p.Name,
-			Path:              p.PkgPath,
-			Licenses:          licenseMatcher.Match(packageDir),
-			Synopsis:          doc.Synopsis(d.Doc),
-			Suffix:            strings.TrimPrefix(strings.TrimPrefix(p.PkgPath, modulePath), "/"),
-			Imports:           imports,
-			DocumentationHTML: docHTML,
-		})
-	}
-	return packages, nil
+	return pkgs, nil
 }
 
-// hasFilename checks if file is expectedFile or if the name of file, without
-// the base, is equal to expectedFile. It is case insensitive.
-func hasFilename(file string, expectedFile string) bool {
-	base := filepath.Base(file)
-	return strings.EqualFold(file, expectedFile) ||
-		strings.EqualFold(base, expectedFile) ||
-		strings.EqualFold(strings.TrimSuffix(base, filepath.Ext(base)), expectedFile)
+// ignoredByGoTool reports whether the given import path corresponds
+// to a directory that would be ignored by the go tool.
+//
+// The logic of the go tool for ignoring directories is documented at
+// https://golang.org/cmd/go/#hdr-Package_lists_and_patterns:
+//
+// 	Directory and file names that begin with "." or "_" are ignored
+// 	by the go tool, as are directories named "testdata".
+//
+func ignoredByGoTool(importPath string) bool {
+	for _, el := range strings.Split(importPath, "/") {
+		if strings.HasPrefix(el, ".") || strings.HasPrefix(el, "_") || el == "testdata" {
+			return true
+		}
+	}
+	return false
+}
+
+// isVendored reports whether the given import path corresponds
+// to a Go package that is inside a vendor directory.
+//
+// The logic for what is considered a vendor directory is documented at
+// https://golang.org/cmd/go/#hdr-Vendor_Directories.
+func isVendored(importPath string) bool {
+	return strings.HasPrefix(importPath, "vendor/") ||
+		strings.Contains(importPath, "/vendor/")
+}
+
+// loadPackage loads a Go package with import path importPath
+// from zipGoFiles using the default build context.
+//
+// zipGoFiles must contain only non-test .go files
+// that have been verified to be of reasonable size.
+//
+// The returned Package.Licenses field is not populated.
+//
+// It returns a nil Package if the directory doesn't contain a Go package
+// or all .go files have been excluded by constraints.
+// A *build.MultiplePackageError error is returned if the directory
+// contains multiple buildable Go source files for multiple packages.
+func loadPackage(zipGoFiles []*zip.File, importPath, innerPath string) (*internal.Package, error) {
+	var (
+		// files is a map of file names to their contents.
+		//
+		// The logic to access it needs to stay in sync across the
+		// matchFile, joinPath, and openFile functions below.
+		// See the comment inside matchFile for details on how it's used.
+		files = make(map[string][]byte)
+
+		// matchFile reports whether the file with the given name and content
+		// matches the build context bctx.
+		//
+		// The JoinPath and OpenFile fields of bctx must be set to the joinPath
+		// and openFile functions below.
+		matchFile = func(bctx *build.Context, name string, src []byte) (match bool, err error) {
+			// bctx.MatchFile will use bctx.JoinPath to join its first and second parameters,
+			// and then use the joined result as the name parameter its call to bctx.OpenFile.
+			//
+			// Since we control the bctx.OpenFile implementation and have configured it to read
+			// from the files map, we need to populate the files map accordingly just before
+			// calling bctx.MatchFile.
+			//
+			// The "." path we're joining with name is arbitrary, it just needs to stay in sync
+			// across the calls that populate and access the files map.
+			//
+			files[bctx.JoinPath(".", name)] = src
+			return bctx.MatchFile(".", name) // This will access the file we just added to files map above.
+		}
+
+		joinPath = path.Join
+		openFile = func(name string) (io.ReadCloser, error) {
+			return ioutil.NopCloser(bytes.NewReader(files[name])), nil
+		}
+	)
+
+	// bctx is the build context. It's used to make decisions about which
+	// of the .go files are included or excluded by build constraints.
+	bctx := &build.Context{
+		GOOS:        "linux",
+		GOARCH:      "amd64",
+		CgoEnabled:  true,
+		Compiler:    build.Default.Compiler,
+		ReleaseTags: build.Default.ReleaseTags,
+
+		JoinPath: joinPath,
+		OpenFile: openFile,
+
+		// If left nil, the default implementation of these reads from disk,
+		// which we do not want. None of these functions should be used
+		// inside loadPackage; it would be an internal error if they are.
+		// Set them to non-nil values to catch if that happens.
+		SplitPathList: func(string) []string { panic("internal error: unexpected call to SplitPathList") },
+		IsAbsPath:     func(string) bool { panic("internal error: unexpected call to IsAbsPath") },
+		IsDir:         func(string) bool { panic("internal error: unexpected call to IsDir") },
+		HasSubdir:     func(string, string) (string, bool) { panic("internal error: unexpected call to HasSubdir") },
+		ReadDir:       func(string) ([]os.FileInfo, error) { panic("internal error: unexpected call to ReadDir") },
+	}
+
+	// Parse .go files and add them to the goFiles slice.
+	// Build constraints are taken into account, and files
+	// that don't match are skipped.
+	var (
+		fset            = token.NewFileSet()
+		goFiles         = make(map[string]*ast.File)
+		packageName     string
+		packageNameFile string // Name of file where packageName came from.
+	)
+	for _, f := range zipGoFiles {
+		b, err := readZipFile(f)
+		if err != nil {
+			return nil, err
+		}
+		match, err := matchFile(bctx, f.Name, b)
+		if err != nil {
+			return nil, err
+		} else if !match {
+			// Excluded by build context.
+			continue
+		}
+		pf, err := parser.ParseFile(fset, f.Name, b, parser.ParseComments)
+		if err != nil {
+			return nil, err
+		}
+		goFiles[f.Name] = pf
+		if len(goFiles) == 1 {
+			packageName = pf.Name.Name
+			packageNameFile = f.Name
+		} else if pf.Name.Name != packageName {
+			return nil, &build.MultiplePackageError{
+				Dir:      innerPath,
+				Packages: []string{packageName, pf.Name.Name},
+				Files:    []string{packageNameFile, f.Name},
+			}
+		}
+	}
+	if len(goFiles) == 0 {
+		// This directory doesn't contain a package.
+		// TODO(b/132621615): or does but all .go files excluded by constraints; tell apart
+		return nil, nil
+	}
+
+	// Compute package documentation.
+	apkg := &ast.Package{
+		Name:  packageName,
+		Files: goFiles,
+	}
+	d := doc.New(apkg, importPath, 0)
+	if d.ImportPath != importPath || d.Name != packageName {
+		panic("internal error: *doc.Package has an unexpected import path or package name")
+	}
+
+	// Process package imports.
+	if len(d.Imports) > maxImportsPerPackage {
+		return nil, fmt.Errorf("%d imports found package %q; exceeds limit %d for maxImportsPerPackage", len(d.Imports), importPath, maxImportsPerPackage)
+	}
+	var imports []*internal.Import
+	for _, i := range d.Imports {
+		imports = append(imports, &internal.Import{
+			Name: path.Base(i), // TODO(b/131835416): this is a heuristic that just uses last path element for now; need to use database to do better
+			Path: i,
+		})
+	}
+
+	// Render documentation HTML.
+	docHTML, err := renderDocHTML(fset, d)
+	if err != nil {
+		return nil, fmt.Errorf("renderDocHTML: %v", err)
+	}
+
+	return &internal.Package{
+		Path:              importPath,
+		Name:              packageName,
+		Synopsis:          doc.Synopsis(d.Doc),
+		Suffix:            innerPath,
+		Imports:           imports,
+		DocumentationHTML: docHTML,
+	}, nil
 }
