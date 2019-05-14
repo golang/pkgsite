@@ -16,6 +16,5 @@ require (
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	gocloud.dev v0.13.1-0.20190502202051-0bc0698f3925
 	golang.org/x/net v0.0.0-20190424112056-4829fb13d2c6
-	golang.org/x/tools v0.0.0-20190501045030-23463209683d
 	google.golang.org/genproto v0.0.0-20190502173448-54afdca5d873
 )
