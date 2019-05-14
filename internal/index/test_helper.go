@@ -5,25 +5,14 @@
 package index
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/testhelper"
 )
-
-// insecureHTTPClient is used to disable TLS verification when running against
-// a test server.
-var insecureHTTPClient = &http.Client{
-	Transport: &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
-		},
-	},
-}
 
 // SetupTestIndex creates a module index for testing using the given version
 // map for data.  It returns a function for tearing down the index server after
@@ -42,7 +31,7 @@ func SetupTestIndex(t *testing.T, versions []*internal.IndexVersion) (func(t *te
 	if err != nil {
 		t.Fatalf("index.New(%q): %v", server.URL, err)
 	}
-	client.httpClient = insecureHTTPClient
+	client.httpClient = testhelper.InsecureHTTPClient
 
 	fn := func(t *testing.T) {
 		server.Close()

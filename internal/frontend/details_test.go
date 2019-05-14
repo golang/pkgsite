@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"context"
+	"fmt"
 	"html/template"
 	"testing"
 	"time"
@@ -623,9 +624,13 @@ func TestFetchImportsDetails(t *testing.T) {
 }
 
 func TestFetchImportedByDetails(t *testing.T) {
+	var versionCount = 0
 	makeVersion := func(packages ...*internal.Package) *internal.Version {
 		v := *sampleInternalVersion
 		v.Packages = packages
+		// Set Version to something unique.
+		v.Version = fmt.Sprintf("v1.0.%d", versionCount)
+		versionCount++
 		return &v
 	}
 	var (

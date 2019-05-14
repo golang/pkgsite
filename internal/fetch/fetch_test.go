@@ -19,9 +19,11 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
+	"golang.org/x/discovery/internal/testhelper"
 )
 
 const testTimeout = 10 * time.Second
@@ -30,6 +32,89 @@ var testDB *postgres.DB
 
 func TestMain(m *testing.M) {
 	postgres.RunDBTests("discovery_fetch_test", m, &testDB)
+}
+
+func TestReFetch(t *testing.T) {
+	// This test checks that re-fetching a version will cause its data to be
+	// overwritten.  This is achieved by fetching against two different versions
+	// of the (fake) proxy, though in reality the most likely cause of changes to
+	// a version is updates to our data model or fetch logic.
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	defer postgres.ResetTestDB(testDB, t)
+
+	var (
+		modulePath = "my.mod/module"
+		version    = "v1.0.0"
+		pkgFoo     = "my.mod/module/foo"
+		pkgBar     = "my.mod/module/bar"
+		foo        = map[string]string{
+			"foo/foo.go": "// Package foo\npackage foo\n\nconst Foo = 42",
+			"README.md":  "This is a readme",
+			"LICENSE":    testhelper.MITLicense,
+		}
+		bar = map[string]string{
+			"bar/bar.go": "// Package bar\npackage bar\n\nconst Bar = 21",
+			"README.md":  "This is another readme",
+			"COPYING":    testhelper.MITLicense,
+		}
+	)
+
+	// First fetch and insert a version containing package foo, and verify that
+	// foo can be retrieved.
+	teardownProxy, client := proxy.SetupTestProxy(ctx, t, []*proxy.TestVersion{
+		proxy.NewTestVersion(t, modulePath, version, foo),
+	})
+	defer teardownProxy(t)
+	if err := FetchAndInsertVersion(modulePath, version, client, testDB); err != nil {
+		t.Fatalf("FetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
+	}
+	if _, err := testDB.GetPackage(ctx, pkgFoo, version); err != nil {
+		t.Errorf("testDB.GetPackage(ctx, %q, %q): %v", pkgFoo, version, err)
+	}
+
+	// Now re-fetch and verify that contents were overwritten.
+	teardownProxy, client = proxy.SetupTestProxy(ctx, t, []*proxy.TestVersion{
+		proxy.NewTestVersion(t, modulePath, version, bar),
+	})
+	defer teardownProxy(t)
+
+	if err := FetchAndInsertVersion(modulePath, version, client, testDB); err != nil {
+		t.Fatalf("FetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
+	}
+	want := &internal.VersionedPackage{
+		VersionInfo: internal.VersionInfo{
+			SeriesPath:     modulePath,
+			ModulePath:     modulePath,
+			Version:        version,
+			CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
+			ReadmeFilePath: "README.md",
+			ReadmeContents: []byte("This is another readme"),
+			VersionType:    "release",
+		},
+		Package: internal.Package{
+			Path:              "my.mod/module/bar",
+			Name:              "bar",
+			Synopsis:          "Package bar",
+			DocumentationHTML: []byte("Bar returns the string &#34;bar&#34;."),
+			Suffix:            "bar",
+			Licenses: []*license.Metadata{
+				{Type: "MIT", FilePath: "COPYING"},
+			},
+		},
+	}
+	got, err := testDB.GetPackage(ctx, pkgBar, version)
+	if err != nil {
+		t.Fatalf("testDB.GetPackage(ctx, %q, %q): %v", pkgBar, version, err)
+	}
+	if diff := cmp.Diff(want, got, cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML")); diff != "" {
+		t.Errorf("testDB.GetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", pkgBar, version, diff)
+	}
+
+	// For good measure, verify that package foo is now NotFound.
+	if _, err := testDB.GetPackage(ctx, pkgFoo, version); !derrors.IsNotFound(err) {
+		t.Errorf("testDB.GetPackage(ctx, %q, %q): %v, want NotFound", pkgFoo, version, err)
+	}
 }
 
 func TestFetchAndInsertVersion(t *testing.T) {
@@ -128,7 +213,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 		t.Run(test.pkg, func(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
 
-			teardownProxy, client := proxy.SetupTestProxy(ctx, t)
+			teardownProxy, client := proxy.SetupTestProxy(ctx, t, nil)
 			defer teardownProxy(t)
 
 			if err := FetchAndInsertVersion(test.modulePath, test.version, client, testDB); err != nil {
@@ -175,7 +260,7 @@ func TestFetchAndInsertVersionTimeout(t *testing.T) {
 	}(fetchTimeout)
 	fetchTimeout = 0
 
-	teardownProxy, client := proxy.SetupTestProxy(ctx, t)
+	teardownProxy, client := proxy.SetupTestProxy(ctx, t, nil)
 	defer teardownProxy(t)
 
 	name := "my.mod/version"
@@ -329,7 +414,7 @@ func TestExtractReadmeFromZip(t *testing.T) {
 		},
 	} {
 		t.Run(test.file, func(t *testing.T) {
-			teardownProxy, client := proxy.SetupTestProxy(ctx, t)
+			teardownProxy, client := proxy.SetupTestProxy(ctx, t, nil)
 			defer teardownProxy(t)
 
 			reader, err := client.GetZip(ctx, test.name, test.version)
@@ -417,7 +502,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			teardownProxy, client := proxy.SetupTestProxy(ctx, t)
+			teardownProxy, client := proxy.SetupTestProxy(ctx, t, nil)
 			defer teardownProxy(t)
 
 			reader, err := client.GetZip(ctx, test.name, test.version)

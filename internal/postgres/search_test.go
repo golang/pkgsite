@@ -15,10 +15,11 @@ import (
 // insertPackage creates and inserts a version using sampleVersion, that has
 // only the package pkg. It is a helper function for
 // TestInsertDocumentsAndSearch.
-func insertPackage(ctx context.Context, t *testing.T, pkg *internal.Package) {
+func insertPackage(ctx context.Context, t *testing.T, modulePath string, pkg *internal.Package) {
 	t.Helper()
 
 	v := sampleVersion(func(v *internal.Version) {
+		v.ModulePath = modulePath
 		pkg.Licenses = sampleLicenseInfos
 		v.Packages = []*internal.Package{pkg}
 	})
@@ -32,12 +33,14 @@ func insertPackage(ctx context.Context, t *testing.T, pkg *internal.Package) {
 
 func TestInsertDocumentsAndSearch(t *testing.T) {
 	var (
+		modGoCDK = "my.mod/cdk"
 		pkgGoCDK = &internal.Package{
 			Name:     "cloud",
 			Path:     "gocloud.dev",
 			Synopsis: "Package cloud contains a library and tools for open cloud development in Go. The Go Cloud Development Kit (Go CDK)",
 		}
 
+		modKube = "my.mod/kube"
 		pkgKube = &internal.Package{
 			Name:     "client-go",
 			Path:     "k8s.io/client-go",
@@ -52,7 +55,7 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 				Licenses:    []string{"MIT"},
 				CommitTime:  now,
 				Version:     sampleVersionString,
-				ModulePath:  sampleModulePath,
+				ModulePath:  modKube,
 				Rank:        rank,
 				NumResults:  numResults,
 			}
@@ -66,7 +69,7 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 				Licenses:    []string{"MIT"},
 				CommitTime:  now,
 				Version:     sampleVersionString,
-				ModulePath:  sampleModulePath,
+				ModulePath:  modGoCDK,
 				Rank:        rank,
 				NumResults:  numResults,
 			}
@@ -75,7 +78,7 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 
 	for _, tc := range []struct {
 		name          string
-		packages      []*internal.Package
+		packages      map[string]*internal.Package
 		limit, offset int
 		searchQuery   string
 		want          []*SearchResult
@@ -83,7 +86,10 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 		{
 			name:        "two documents, single term search",
 			searchQuery: "package",
-			packages:    []*internal.Package{pkgGoCDK, pkgKube},
+			packages: map[string]*internal.Package{
+				modGoCDK: pkgGoCDK,
+				modKube:  pkgKube,
+			},
 			want: []*SearchResult{
 				goCdkResult(0.10560775506982405, 2),
 				kubeResult(0.10560775506982405, 2),
@@ -94,7 +100,10 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 			limit:       1,
 			offset:      0,
 			searchQuery: "package",
-			packages:    []*internal.Package{pkgGoCDK, pkgKube},
+			packages: map[string]*internal.Package{
+				modGoCDK: pkgGoCDK,
+				modKube:  pkgKube,
+			},
 			want: []*SearchResult{
 				goCdkResult(0.10560775506982405, 2),
 			},
@@ -104,7 +113,10 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 			limit:       1,
 			offset:      1,
 			searchQuery: "package",
-			packages:    []*internal.Package{pkgGoCDK, pkgKube},
+			packages: map[string]*internal.Package{
+				modGoCDK: pkgGoCDK,
+				modKube:  pkgKube,
+			},
 			want: []*SearchResult{
 				kubeResult(0.10560775506982405, 2),
 			},
@@ -112,7 +124,10 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 		{
 			name:        "two documents, multiple term search",
 			searchQuery: "go & cdk",
-			packages:    []*internal.Package{pkgGoCDK, pkgKube},
+			packages: map[string]*internal.Package{
+				modGoCDK: pkgGoCDK,
+				modKube:  pkgKube,
+			},
 			want: []*SearchResult{
 				goCdkResult(0.3187147723292191, 1),
 			},
@@ -120,7 +135,9 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 		{
 			name:        "one document, single term search",
 			searchQuery: "cloud",
-			packages:    []*internal.Package{pkgGoCDK},
+			packages: map[string]*internal.Package{
+				modGoCDK: pkgGoCDK,
+			},
 			want: []*SearchResult{
 				goCdkResult(0.30875602614034653, 1),
 			},
@@ -132,8 +149,8 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 			defer cancel()
 
-			for _, p := range tc.packages {
-				insertPackage(ctx, t, p)
+			for m, p := range tc.packages {
+				insertPackage(ctx, t, m, p)
 			}
 
 			if tc.limit < 1 {

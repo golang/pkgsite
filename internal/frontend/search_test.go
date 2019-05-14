@@ -22,11 +22,10 @@ func TestFetchSearchPage(t *testing.T) {
 	var (
 		now        = postgres.NowTruncated()
 		seriesPath = "myseries"
-		modulePath = "github.com/valid_module_name"
 		versionFoo = &internal.Version{
 			VersionInfo: internal.VersionInfo{
 				SeriesPath:     seriesPath,
-				ModulePath:     modulePath,
+				ModulePath:     "github.com/mod/foo",
 				Version:        "v1.0.0",
 				ReadmeContents: []byte("readme"),
 				CommitTime:     now,
@@ -44,7 +43,7 @@ func TestFetchSearchPage(t *testing.T) {
 		versionBar = &internal.Version{
 			VersionInfo: internal.VersionInfo{
 				SeriesPath:     seriesPath,
-				ModulePath:     modulePath,
+				ModulePath:     "github.com/mod/bar",
 				Version:        "v1.0.0",
 				ReadmeContents: []byte("readme"),
 				CommitTime:     now,

@@ -15,12 +15,14 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+
+	"golang.org/x/discovery/internal/proxy"
 )
 
 var proxyURL, _ = filepath.Abs("proxy")
 
 func main() {
-	http.Handle("/", http.FileServer(http.Dir(proxyURL)))
+	http.Handle("/", proxy.TestProxy(nil))
 
 	addr := ":7000"
 	log.Println(fmt.Sprintf("Listening on http://localhost%s", addr))

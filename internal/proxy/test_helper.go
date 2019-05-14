@@ -6,51 +6,112 @@ package proxy
 
 import (
 	"archive/zip"
+	"bytes"
 	"context"
-	"crypto/tls"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
+	"time"
+
+	"golang.org/x/discovery/internal/testhelper"
+	"golang.org/x/discovery/internal/thirdparty/semver"
 )
 
-// insecureHTTPClient is used to disable TLS verification when running against
-// a test server.
-var insecureHTTPClient = &http.Client{
-	Transport: &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
-		},
-	},
+// TestVersion represents a module version to host in the fake proxy.
+type TestVersion struct {
+	ModulePath string
+	Version    string
+	Zip        []byte
+	GoMod      string
 }
 
-// SetupTestProxy creates a module proxy for testing using static files
-// stored in internal/proxy/testdata/modproxy/proxy. It returns a function
-// for tearing down the proxy after the test is completed and a Client for
-// interacting with the test proxy.
-func SetupTestProxy(ctx context.Context, t *testing.T) (func(t *testing.T), *Client) {
+// NewTestVersion creates a new TestVersion from the given contents.
+func NewTestVersion(t *testing.T, modulePath, version string, contents map[string]string) *TestVersion {
 	t.Helper()
+	nestedContents := make(map[string]string)
+	for name, content := range contents {
+		nestedContents[fmt.Sprintf("%s@%s/%s", modulePath, version, name)] = content
+	}
+	zip, err := testhelper.ZipContents(nestedContents)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return &TestVersion{
+		ModulePath: modulePath,
+		Version:    version,
+		Zip:        zip,
+		GoMod:      contents["go.mod"],
+	}
+}
 
-	proxyDataDir := "../proxy/testdata/modproxy"
+// defaultGoMod creates a bare-bones go.mod contents.
+func defaultGoMod(modulePath string) string {
+	return fmt.Sprintf("module %s\n\ngo 1.12", modulePath)
+}
+
+// TestProxy implements a fake proxy, hosting the given versions. If versions
+// is nil, it serves the modules in the testdata directory.
+func TestProxy(versions []*TestVersion) *http.ServeMux {
+	const versionTime = "2019-01-30T00:00:00Z"
+
+	if versions == nil {
+		versions = defaultTestVersions()
+	}
+
+	defaultInfo := func(version string) string {
+		return fmt.Sprintf("{\n\t\"Version\": %q,\n\t\"Time\": %q\n}", version, versionTime)
+	}
+
+	byModule := make(map[string][]*TestVersion)
+	for _, v := range versions {
+		byModule[v.ModulePath] = append(byModule[v.ModulePath], v)
+	}
+
+	mux := http.NewServeMux()
+	for m, vs := range byModule {
+		sort.Slice(vs, func(i, j int) bool {
+			return semver.Compare(vs[i].Version, vs[j].Version) < 0
+		})
+		var vList []string
+		for _, v := range vs {
+			vList = append(vList, v.Version)
+		}
+		handle := func(path string, content io.ReadSeeker) {
+			mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+				http.ServeContent(w, r, path, time.Now(), content)
+			})
+		}
+		handle(fmt.Sprintf("/%s/@v/list", m), strings.NewReader(strings.Join(vList, "\n")))
+		for _, v := range vs {
+			goMod := v.GoMod
+			if goMod == "" {
+				goMod = defaultGoMod(m)
+			}
+			handle(fmt.Sprintf("/%s/@v/%s.mod", m, v.Version), strings.NewReader(goMod))
+			handle(fmt.Sprintf("/%s/@v/%s.info", m, v.Version), strings.NewReader(defaultInfo(v.Version)))
+			handle(fmt.Sprintf("/%s/@v/%s.zip", m, v.Version), bytes.NewReader(v.Zip))
+		}
+	}
+	return mux
+}
+
+// defaultTestVersions creates TestVersions for the modules contained in the
+// testdata directory.
+func defaultTestVersions() []*TestVersion {
+	proxyDataDir := testhelper.TestDataPath("testdata/modproxy")
+
 	absPath, err := filepath.Abs(proxyDataDir)
 	if err != nil {
-		t.Fatalf("filepath.Abs(%q): %v", proxyDataDir, err)
+		panic(fmt.Sprintf("filepath.Abs(%q): %v", proxyDataDir, err))
 	}
 
-	p := httptest.NewTLSServer(http.FileServer(http.Dir(fmt.Sprintf("%s/proxy", absPath))))
-
-	client, err := New(p.URL)
-	if err != nil {
-		t.Fatalf("New(%q): %v", p.URL, err)
-	}
-	// override client.httpClient to skip TLS verification
-	client.httpClient = insecureHTTPClient
-
+	var versions []*TestVersion
 	for _, v := range [][]string{
 		[]string{"my.mod/module", "v1.0.0"},
 		[]string{"no.mod/module", "v1.0.0"},
@@ -59,16 +120,39 @@ func SetupTestProxy(ctx context.Context, t *testing.T) (func(t *testing.T), *Cli
 		[]string{"rsc.io/quote", "v1.5.2"},
 		[]string{"rsc.io/quote/v2", "v2.0.1"},
 	} {
-		zipfile := fmt.Sprintf("%s/proxy/%s/@v/%s.zip", absPath, v[0], v[1])
-		zipDataDir := fmt.Sprintf("%s/modules/%s@%s", absPath, v[0], v[1])
-		if _, err := ZipFiles(zipfile, zipDataDir, fmt.Sprintf("%s@%s", v[0], v[1])); err != nil {
-			t.Fatalf("proxy.ZipFiles(%q): %v", zipDataDir, err)
+		rootDir := filepath.Join(absPath, "modules")
+		bytes, err := zipFiles(rootDir, filepath.FromSlash(fmt.Sprintf("%s@%s", v[0], v[1])))
+		if err != nil {
+			panic(err)
 		}
 
-		if _, err := client.GetInfo(ctx, v[0], v[1]); err != nil {
-			t.Fatalf("client.GetInfo(%q, %q): %v", v[0], v[1], err)
-		}
+		versions = append(versions, &TestVersion{
+			ModulePath: v[0],
+			Version:    v[1],
+			Zip:        bytes,
+		})
 	}
+
+	return versions
+}
+
+// SetupTestProxy creates a fake module proxy for testing using the given test
+// version information. If versions is nil, it will default to hosting the
+// modules in the testdata directory.
+//
+// It returns a function for tearing down the proxy after the test is completed
+// and a Client for interacting with the test proxy.
+func SetupTestProxy(ctx context.Context, t *testing.T, versions []*TestVersion) (func(t *testing.T), *Client) {
+	t.Helper()
+
+	p := httptest.NewTLSServer(TestProxy(versions))
+
+	client, err := New(p.URL)
+	if err != nil {
+		t.Fatalf("New(%q): %v", p.URL, err)
+	}
+	// override client.httpClient to skip TLS verification
+	client.httpClient = testhelper.InsecureHTTPClient
 
 	fn := func(t *testing.T) {
 		p.Close()
@@ -76,25 +160,19 @@ func SetupTestProxy(ctx context.Context, t *testing.T) (func(t *testing.T), *Cli
 	return fn, client
 }
 
-// ZipFiles compresses the files inside dir into a single zip archive file.
-// zipfile is the output zip file's name. Files inside zipfile will all have
-// prefix moduleDir. ZipFiles return a function to cleanup files that were
-// created.
-func ZipFiles(zipfile, dir, moduleDir string) (func() error, error) {
-	cleanup := func() error {
-		return os.Remove(zipfile)
+func zipFiles(dir, moduleDir string) ([]byte, error) {
+	buf := bytes.NewBuffer(nil)
+	if err := writeZip(buf, dir, moduleDir); err != nil {
+		return nil, err
 	}
+	return buf.Bytes(), nil
+}
 
-	newZipFile, err := os.Create(zipfile)
-	if err != nil {
-		return cleanup, fmt.Errorf("os.Create(%q): %v", zipfile, err)
-	}
-	defer newZipFile.Close()
-
-	zipWriter := zip.NewWriter(newZipFile)
+func writeZip(w io.Writer, rootDir, moduleDir string) error {
+	zipWriter := zip.NewWriter(w)
 	defer zipWriter.Close()
 
-	return cleanup, filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	return filepath.Walk(filepath.Join(rootDir, moduleDir), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -116,7 +194,7 @@ func ZipFiles(zipfile, dir, moduleDir string) (func() error, error) {
 
 		// Using FileInfoHeader() above only uses the basename of the file. If we want
 		// to preserve the folder structure we can overwrite this with the full path.
-		header.Name = strings.TrimPrefix(strings.TrimPrefix(path, strings.TrimSuffix(dir, moduleDir)), "/")
+		header.Name = strings.TrimPrefix(path, filepath.ToSlash(rootDir)+"/")
 		writer, err := zipWriter.CreateHeader(header)
 		if err != nil {
 			return fmt.Errorf("zipWriter.CreateHeader(%+v): %v", header, err)

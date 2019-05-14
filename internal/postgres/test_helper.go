@@ -6,19 +6,17 @@ package postgres
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"net/url"
 	"os"
-	"path"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
+	"golang.org/x/discovery/internal/testhelper"
 
 	// imported to register the postgres migration driver
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -125,14 +123,9 @@ func recreateDB(dbName string) error {
 
 // migrationsSource returns a uri pointing to the migrations directory.  It
 // returns an error if unable to determine this path.
-func migrationsSource() (string, error) {
-	_, filename, _, ok := runtime.Caller(0)
-	if !ok {
-		return "", errors.New("unable to determine path to migrations directory")
-	}
-	dirpath := filepath.ToSlash(filepath.Dir(filename))
-	migrationDir := path.Clean(path.Join(dirpath, "../../migrations"))
-	return "file://" + migrationDir, nil
+func migrationsSource() string {
+	migrationsDir := testhelper.TestDataPath("../../migrations")
+	return "file://" + filepath.ToSlash(migrationsDir)
 }
 
 // tryToMigrate attempts to migrate the database named dbName to the latest
@@ -140,10 +133,7 @@ func migrationsSource() (string, error) {
 // isMigrationError=true to signal that the database should be recreated.
 func tryToMigrate(dbName string) (isMigrationError bool, outerErr error) {
 	dbURI := dbConnURI(dbName)
-	source, err := migrationsSource()
-	if err != nil {
-		return false, fmt.Errorf("migrationsSource(): %v", err)
-	}
+	source := migrationsSource()
 	m, err := migrate.New(source, dbURI)
 	if err != nil {
 		return false, fmt.Errorf("migrate.New(): %v", err)

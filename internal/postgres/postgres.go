@@ -958,6 +958,15 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 			return fmt.Errorf("padPrerelease(%q): %v", version.Version, err)
 		}
 
+		// If the version exists, delete it to force an overwrite. This allows us
+		// to selectively repopulate data after a code change.
+		if _, err := tx.ExecContext(ctx,
+			`DELETE FROM versions WHERE module_path=$1 AND version=$2`,
+			version.ModulePath,
+			version.Version,
+		); err != nil {
+			return fmt.Errorf("error deleting existing versions: %v", err)
+		}
 		if _, err := tx.ExecContext(ctx,
 			`INSERT INTO versions(module_path, version, commit_time, readme_file_path, readme_contents, major, minor, patch, prerelease, version_type)
 			VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT DO NOTHING`,

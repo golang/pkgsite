@@ -29,14 +29,14 @@ func TestGetInfo(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	teardownProxy, client := SetupTestProxy(ctx, t)
+	teardownProxy, client := SetupTestProxy(ctx, t, nil)
 	defer teardownProxy(t)
 
 	name := "my.mod/module"
 	version := "v1.0.0"
 	info, err := client.GetInfo(ctx, name, version)
 	if err != nil {
-		t.Errorf("GetInfo(ctx, %q, %q) error: %v", name, version, err)
+		t.Fatalf("GetInfo(ctx, %q, %q) error: %v", name, version, err)
 	}
 
 	if info.Version != version {
@@ -53,7 +53,7 @@ func TestGetInfoVersionDoesNotExist(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	teardownProxy, client := SetupTestProxy(ctx, t)
+	teardownProxy, client := SetupTestProxy(ctx, t, nil)
 	defer teardownProxy(t)
 
 	name := "my.mod/module"
@@ -68,7 +68,7 @@ func TestGetZip(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	teardownProxy, client := SetupTestProxy(ctx, t)
+	teardownProxy, client := SetupTestProxy(ctx, t, nil)
 	defer teardownProxy(t)
 
 	name := "my.mod/module"
@@ -76,7 +76,7 @@ func TestGetZip(t *testing.T) {
 
 	zipReader, err := client.GetZip(ctx, name, version)
 	if err != nil {
-		t.Errorf("GetZip(ctx, %q, %q) error: %v", name, version, err)
+		t.Fatalf("GetZip(ctx, %q, %q) error: %v", name, version, err)
 	}
 
 	expectedFiles := map[string]bool{
@@ -106,7 +106,7 @@ func TestGetZipNonExist(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	teardownProxy, client := SetupTestProxy(ctx, t)
+	teardownProxy, client := SetupTestProxy(ctx, t, nil)
 	defer teardownProxy(t)
 
 	name := "my.mod/nonexistmodule"
