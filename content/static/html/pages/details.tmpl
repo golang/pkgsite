@@ -23,7 +23,7 @@
      <span>|</span>
      <b>Published: </b><span>{{$header.CommitTime}}</span>
      <span>|</span>
-     <b>License(s): </b>
+     <b>{{pluralize (len $header.Licenses) "License"}}: </b>
       {{range $i, $e := $header.Licenses -}}{{if $i}}, {{end}}
         <a href="/{{$header.Path}}?v={{$header.Version}}&tab=licenses#{{.Anchor}}">{{$e.Type}}</a>
       {{- else -}}

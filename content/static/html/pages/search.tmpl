@@ -24,7 +24,7 @@
           <div class="SearchSnippet-subtext">
             <b class="SearchSnippet-subtextTitle">Version:</b> {{.Version}}
             <span class="SearchSnippet-subtextDivide">|</span>
-            <b class="SearchSnippet-subtextTitle">License(s):</b>
+            <b class="SearchSnippet-subtextTitle">{{pluralize (len .Licenses) "License"}}:</b>
             {{range $i, $e := .Licenses -}}{{if $i}}, {{end}} {{$e.Type}} {{end}}
           </div>
           <div class="SearchSnippet-subtext">
