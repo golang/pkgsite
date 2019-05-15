@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -230,15 +231,32 @@ func (db *DB) GetVersionsToRetry(ctx context.Context) ([]*internal.VersionLog, e
 	return logs, nil
 }
 
-func zipLicenseInfo(licenseTypes []string, licensePaths []string) ([]*license.Metadata, error) {
+// compareLicenses reports whether i < j according to our license sorting
+// semantics.
+func compareLicenses(i, j license.Metadata) bool {
+	if len(strings.Split(i.FilePath, "/")) > len(strings.Split(j.FilePath, "/")) {
+		return true
+	}
+	if i.FilePath < j.FilePath {
+		return true
+	}
+	return i.Type < j.Type
+}
+
+// zipLicenseMetadata constructs license.Metadata from the given license types
+// and paths, by zipping and then sorting.
+func zipLicenseMetadata(licenseTypes []string, licensePaths []string) ([]*license.Metadata, error) {
 	if len(licenseTypes) != len(licensePaths) {
 		return nil, fmt.Errorf("BUG: got %d license types and %d license paths", len(licenseTypes), len(licensePaths))
 	}
-	var licenseFiles []*license.Metadata
+	var metadata []*license.Metadata
 	for i, t := range licenseTypes {
-		licenseFiles = append(licenseFiles, &license.Metadata{Type: t, FilePath: licensePaths[i]})
+		metadata = append(metadata, &license.Metadata{Type: t, FilePath: licensePaths[i]})
 	}
-	return licenseFiles, nil
+	sort.Slice(metadata, func(i, j int) bool {
+		return compareLicenses(*metadata[i], *metadata[j])
+	})
+	return metadata, nil
 }
 
 // GetVersion fetches a Version from the database with the primary key
@@ -335,6 +353,9 @@ func (db *DB) GetLicenses(ctx context.Context, pkgPath string, version string) (
 			Contents: contents,
 		})
 	}
+	sort.Slice(licenses, func(i, j int) bool {
+		return compareLicenses(licenses[i].Metadata, licenses[j].Metadata)
+	})
 	return licenses, nil
 }
 
@@ -394,9 +415,9 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
 
-	lics, err := zipLicenseInfo(licenseTypes, licensePaths)
+	lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
 	if err != nil {
-		return nil, fmt.Errorf("zipLicenseInfo(%v, %v): %v", licenseTypes, licensePaths, err)
+		return nil, fmt.Errorf("zipLicenseMetadata(%v, %v): %v", licenseTypes, licensePaths, err)
 	}
 
 	return &internal.VersionedPackage{
@@ -605,9 +626,9 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
 
-	lics, err := zipLicenseInfo(licenseTypes, licensePaths)
+	lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
 	if err != nil {
-		return nil, fmt.Errorf("zipLicenseInfo(%v, %v): %v", licenseTypes, licensePaths, err)
+		return nil, fmt.Errorf("zipLicenseMetadata(%v, %v): %v", licenseTypes, licensePaths, err)
 	}
 
 	return &internal.VersionedPackage{
@@ -690,9 +711,9 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 			&readmeContents, &commitTime, &versionType, &documentation); err != nil {
 			return nil, fmt.Errorf("row.Scan(): %v", err)
 		}
-		lics, err := zipLicenseInfo(licenseTypes, licensePaths)
+		lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
 		if err != nil {
-			return nil, fmt.Errorf("zipLicenseInfo(%v, %v): %v", licenseTypes, licensePaths, err)
+			return nil, fmt.Errorf("zipLicenseMetadata(%v, %v): %v", licenseTypes, licensePaths, err)
 		}
 		v.SeriesPath = seriesPath
 		v.ModulePath = modulePath
