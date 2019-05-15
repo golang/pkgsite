@@ -50,6 +50,7 @@ func NewServer(db *postgres.DB, indexClient *index.Client, fetchClient *fetch.Cl
 	mux.HandleFunc("/retry/", s.handleRetryVersions)
 	mux.HandleFunc("/indexupdate/", s.handleIndexUpdate)
 	mux.HandleFunc("/fetchversions/", s.handleFetchVersions)
+	mux.HandleFunc("/refreshsearch/", s.handleRefreshSearch)
 	mux.HandleFunc("/", s.handleIndex)
 	return s
 }
@@ -67,6 +68,10 @@ func (s *Server) handleNewVersions(w http.ResponseWriter, r *http.Request) {
 
 	fetchVersions(r.Context(), s.fetchClient, logs, s.workers)
 	fmt.Fprint(w, fmt.Sprintf("Requested %d new versions!", len(logs)))
+}
+
+func (s *Server) handleRefreshSearch(w http.ResponseWriter, r *http.Request) {
+	s.db.RefreshSearchDocuments(r.Context())
 }
 
 // handleRetryVersions retries versions in the version_logs table that have

@@ -41,14 +41,18 @@
 
 <!DOCTYPE html>
 <script>
-function submitForm(formName) {
+function submitForm(formName, reload) {
 	let form = document[formName];
 	form.result.value = "request pending...";
 	let xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function() {
 	  if (this.readyState == 4) {
 			if (this.status >= 200 && this.status < 300) {
-				location.reload();
+        if (reload) {
+          location.reload();
+        } else {
+          form.result.value = "Success."
+        }
 			} else {
 				form.result.value = "ERROR: " + this.responseText;
 			}
@@ -92,13 +96,19 @@ td {
 	<form action="/indexupdate/" method="post" name="indexForm">
 		<label>Query new versions:</label>
 		<input type="number" name="limit" value="10"></input>
-		<button onclick="submitForm('indexForm'); return false">Query From Module Index</button>
+		<button onclick="submitForm('indexForm', true); return false">Query From Module Index</button>
 		<output name="result"></output>
 	</form>
 	<form action="/fetchversions/" method="post" name="fetchForm">
 		<label>Process versions:</label>
 		<input type="number" name="limit" value="10">
-		<button onclick="submitForm('fetchForm'); return false">Process in Fetch Service</button>
+		<button onclick="submitForm('fetchForm', true); return false">Process in Fetch Service</button>
+		<output name="result"></output>
+	</form>
+	<form action="/refreshsearch/" method="post" name="searchRefreshForm">
+		<label>Refresh Search:</label>
+		<input type="number" name="limit" value="10">
+		<button onclick="submitForm('searchRefreshForm', false); return false">Refresh Materialized View</button>
 		<output name="result"></output>
 	</form>
 </div>
