@@ -18,14 +18,14 @@
       {{range .Results}}
         <div class="SearchSnippet">
           <h2 class="SearchSnippet-header">
-            {{.Name}} - <a href="/{{.PackagePath}}?v={{.Version}}{{if $query}}&q={{$query}}{{end}}">{{.PackagePath}}</a>
+            <a href="/{{.PackagePath}}?v={{.Version}}{{if $query}}&q={{$query}}{{end}}">{{.PackagePath}}</a>
           </h2>
           <p class="SearchSnippet-synopsis">{{.Synopsis}}</p>
           <div class="SearchSnippet-subtext">
             <b class="SearchSnippet-subtextTitle">Version:</b> {{.Version}}
             <span class="SearchSnippet-subtextDivide">|</span>
             <b class="SearchSnippet-subtextTitle">{{pluralize (len .Licenses) "License"}}:</b>
-            {{range $i, $e := .Licenses -}}{{if $i}}, {{end}} {{$e.Type}} {{end}}
+            {{range $i, $e := .Licenses -}}{{if $i}}, {{end}} {{$e}} {{end}}
           </div>
           <div class="SearchSnippet-subtext">
             <b class="SearchSnippet-subtextTitle">Imported by:</b> {{.NumImportedBy}}
