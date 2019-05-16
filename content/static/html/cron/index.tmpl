@@ -95,19 +95,18 @@ td {
 <div class="actions">
 	<form action="/indexupdate/" method="post" name="indexForm">
 		<label>Query new versions:</label>
-		<input type="number" name="limit" value="10"></input>
 		<button onclick="submitForm('indexForm', true); return false">Query From Module Index</button>
+		<input type="number" name="limit" value="10"></input>
 		<output name="result"></output>
 	</form>
 	<form action="/fetchversions/" method="post" name="fetchForm">
 		<label>Process versions:</label>
-		<input type="number" name="limit" value="10">
 		<button onclick="submitForm('fetchForm', true); return false">Process in Fetch Service</button>
+		<input type="number" name="limit" value="10">
 		<output name="result"></output>
 	</form>
 	<form action="/refreshsearch/" method="post" name="searchRefreshForm">
 		<label>Refresh Search:</label>
-		<input type="number" name="limit" value="10">
 		<button onclick="submitForm('searchRefreshForm', false); return false">Refresh Materialized View</button>
 		<output name="result"></output>
 	</form>
