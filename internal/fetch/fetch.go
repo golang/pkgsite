@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
@@ -110,11 +111,6 @@ func FetchAndInsertVersion(modulePath, version string, proxyClient *proxy.Client
 			// be able to find them. So, convert internal panics to internal errors here.
 			err = fmt.Errorf("internal panic: %v\n\n%s", e, debug.Stack())
 		}
-		if err != nil && err != context.DeadlineExceeded {
-			if dberr := db.UpdateVersionLogError(context.Background(), modulePath, version, err); dberr != nil {
-				log.Printf("db.UpdateVersionLogError(ctx, %q, %q, %v): %v", modulePath, version, err, dberr)
-			}
-		}
 	}()
 	// Unlike other actions (which use a Timeout middleware), we set a fixed
 	// timeout for FetchAndInsertVersion.  This allows module processing to
@@ -133,11 +129,15 @@ func FetchAndInsertVersion(modulePath, version string, proxyClient *proxy.Client
 
 	info, err := proxyClient.GetInfo(ctx, modulePath, version)
 	if err != nil {
-		return fmt.Errorf("proxyClient.GetInfo(%q, %q): %v", modulePath, version, err)
+		// Since this is our first client request, we wrap it to preserve error
+		// semantics: if info is not found, then we return NotFound.
+		return derrors.Wrap(err, "proxyClient.GetInfo(%q, %q)", modulePath, version)
 	}
 
 	zipReader, err := proxyClient.GetZip(ctx, modulePath, version)
 	if err != nil {
+		// Here we expect the zip to exist since we got info above, so we shouldn't
+		// wrap the error.
 		return fmt.Errorf("proxyClient.GetZip(%q, %q): %v", modulePath, version, err)
 	}
 

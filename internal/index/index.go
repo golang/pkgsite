@@ -50,9 +50,8 @@ func (c *Client) pollURL(since time.Time, limit int) string {
 	return fmt.Sprintf("%s?%s", c.url, values.Encode())
 }
 
-// GetIndexVersions queries the index for new versions. It is intended to
-// replace 'GetVersions', and will be renamed once that method is deleted.
-func (c *Client) GetIndexVersions(ctx context.Context, since time.Time, limit int) ([]*internal.IndexVersion, error) {
+// GetVersions queries the index for new versions.
+func (c *Client) GetVersions(ctx context.Context, since time.Time, limit int) ([]*internal.IndexVersion, error) {
 	u := c.pollURL(since, limit)
 	r, err := ctxhttp.Get(ctx, c.httpClient, u)
 	if err != nil {
@@ -78,34 +77,4 @@ func (c *Client) GetIndexVersions(ctx context.Context, since time.Time, limit in
 		versions = append(versions, &l)
 	}
 	return versions, nil
-}
-
-// GetVersions queries the index for new versions.
-func (c *Client) GetVersions(ctx context.Context, since time.Time) ([]*internal.VersionLog, error) {
-	u := fmt.Sprintf("%s?since=%s", c.url, since.Format(time.RFC3339))
-	r, err := ctxhttp.Get(ctx, c.httpClient, u)
-	if err != nil {
-		return nil, fmt.Errorf("ctxhttp.Get(ctx, nil, %q): %v", u, err)
-	}
-	defer r.Body.Close()
-
-	var logs []*internal.VersionLog
-	dec := json.NewDecoder(r.Body)
-
-	// The module index returns a stream of JSON objects formatted with newline
-	// as the delimiter. For each version log, we want to set source to
-	// "proxy-index" and created_at to the time right before the proxy index is
-	// queried.
-	for dec.More() {
-		var l internal.VersionLog
-		if err := dec.Decode(&l); err != nil {
-			log.Printf("dec.Decode: %v", err)
-			continue
-		}
-		l.Source = internal.VersionSourceProxyIndex
-		// The created_at column is without timestamp, so we must normalize to UTC.
-		l.CreatedAt = l.CreatedAt.UTC()
-		logs = append(logs, &l)
-	}
-	return logs, nil
 }

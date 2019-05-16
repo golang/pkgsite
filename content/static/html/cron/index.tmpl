@@ -9,9 +9,8 @@
 	<thead>
 	{{if .}}
 		<tr>
-			<th>Module Path</th>
-			<th>Version</th>
-			<th>Timestamp</th>
+			<th>Module Version</th>
+			<th>Index Timestamp</th>
 			<th>Status</th>
 			<th>Error</th>
 			<th>Attempts</th>
@@ -22,11 +21,10 @@
 		<tbody>
 		{{range .}}
 		<tr>
-			<td>{{.ModulePath}}</td>
-			<td>{{.Version}}</td>
+			<td>{{.ModulePath}}/@v/{{.Version}}</td>
 			<td>{{.IndexTimestamp}}</td>
 			<td>{{.Status}}</td>
-			<td>{{.Error}}</td>
+			<td>{{.Error | truncate 300}}</td>
 			<td>{{.TryCount}}</td>
 			<td>{{.LastProcessedAt}}</td>
 			<td>{{.NextProcessedAfter}}</td>
@@ -93,24 +91,41 @@ td {
 <h1>Go Discovery Cron</h1>
 
 <div class="actions">
-	<form action="/indexupdate/" method="post" name="indexForm">
-		<label>Query new versions:</label>
-		<button onclick="submitForm('indexForm', true); return false">Query From Module Index</button>
+	<form action="/poll-and-queue/" method="post" name="queueForm">
+		<button title="Poll the module index for up to 2000 new versions, and enqueue them for processing."
+      onclick="submitForm('queueForm', false); return false">Enqueue From Module Index</button>
 		<input type="number" name="limit" value="10"></input>
 		<output name="result"></output>
 	</form>
-	<form action="/fetchversions/" method="post" name="fetchForm">
-		<label>Process versions:</label>
-		<button onclick="submitForm('fetchForm', true); return false">Process in Fetch Service</button>
+	<form action="/requeue/" method="post" name="requeueForm">
+		<button title="Query the discovery database for failed versions, and re-queue them for processing."
+      onclick="submitForm('requeueForm', true); return false">Requeue Failed Versions</button>
 		<input type="number" name="limit" value="10">
 		<output name="result"></output>
 	</form>
-	<form action="/refreshsearch/" method="post" name="searchRefreshForm">
-		<label>Refresh Search:</label>
-		<button onclick="submitForm('searchRefreshForm', false); return false">Refresh Materialized View</button>
+	<form action="/refresh-search/" method="post" name="searchRefreshForm">
+		<button title="Refresh the search materialized view in Postgres."
+      onclick="submitForm('searchRefreshForm', false); return false">Refresh Materialized View</button>
 		<output name="result"></output>
 	</form>
 </div>
+
+<div class="stats">
+  <h3>Statistics</h3>
+  <p>Latest timestamp from the module index: {{.Stats.LatestTimestamp}}</p>
+  <table>
+    <caption>Results by status:</caption>
+    <thead><tr><th>Status</th><th>Count</th></tr></thead>
+    <tbody>
+      {{range $status, $count := .Stats.VersionCounts}}
+        <tr><td>{{$status}}</td><td>{{$count}}</td></tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+
+<h3>Recent versions:</h3>
+{{template "versionTable" .Recent}}
 
 <h3>Next versions to process:</h3>
 {{template "versionTable" .Next}}

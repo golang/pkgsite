@@ -7,7 +7,6 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"sort"
 	"testing"
@@ -83,12 +82,12 @@ func TestMain(m *testing.M) {
 func TestBulkInsert(t *testing.T) {
 	table := "test_bulk_insert"
 	for _, tc := range []struct {
-		name             string
-		columns          []string
-		values           []interface{}
-		conflictNoAction bool
-		wantErr          bool
-		wantCount        int
+		name           string
+		columns        []string
+		values         []interface{}
+		conflictAction string
+		wantErr        bool
+		wantCount      int
 	}{
 		{
 
@@ -120,19 +119,18 @@ func TestBulkInsert(t *testing.T) {
 		},
 		{
 
-			name:             "test-conflict-no-action-true",
-			columns:          []string{"colA"},
-			values:           []interface{}{"valueA", "valueA"},
-			conflictNoAction: true,
-			wantCount:        1,
+			name:           "test-conflict-no-action-true",
+			columns:        []string{"colA"},
+			values:         []interface{}{"valueA", "valueA"},
+			conflictAction: onConflictDoNothing,
+			wantCount:      1,
 		},
 		{
 
-			name:             "test-conflict-no-action-false",
-			columns:          []string{"colA"},
-			values:           []interface{}{"valueA", "valueA"},
-			conflictNoAction: false,
-			wantErr:          true,
+			name:    "test-conflict-no-action-false",
+			columns: []string{"colA"},
+			values:  []interface{}{"valueA", "valueA"},
+			wantErr: true,
 		},
 		{
 
@@ -143,11 +141,11 @@ func TestBulkInsert(t *testing.T) {
 			// Rather than the statement
 			// INSERT INTO series (path) VALUES (''); TRUNCATE series CASCADE;));
 			// which would truncate most tables in the database.
-			name:             "test-sql-injection",
-			columns:          []string{"colA"},
-			values:           []interface{}{fmt.Sprintf("''); TRUNCATE %s CASCADE;))", table)},
-			conflictNoAction: true,
-			wantCount:        1,
+			name:           "test-sql-injection",
+			columns:        []string{"colA"},
+			values:         []interface{}{fmt.Sprintf("''); TRUNCATE %s CASCADE;))", table)},
+			conflictAction: onConflictDoNothing,
+			wantCount:      1,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -171,7 +169,7 @@ func TestBulkInsert(t *testing.T) {
 			}()
 
 			if err := testDB.Transact(func(tx *sql.Tx) error {
-				return bulkInsert(ctx, tx, table, tc.columns, tc.values, tc.conflictNoAction)
+				return bulkInsert(ctx, tx, table, tc.columns, tc.values, tc.conflictAction)
 			}); tc.wantErr && err == nil || !tc.wantErr && err != nil {
 				t.Errorf("testDB.Transact: %v | wantErr = %t", err, tc.wantErr)
 			}
@@ -187,69 +185,6 @@ func TestBulkInsert(t *testing.T) {
 				if count != tc.wantCount {
 					t.Errorf("testDB.QueryRow(%q) = %d; want = %d", query, count, tc.wantCount)
 				}
-			}
-		})
-	}
-}
-
-func TestGetVersionsToRetry(t *testing.T) {
-	for _, tc := range []struct {
-		name              string
-		versions          []*internal.Version
-		logs, wantDropped []*internal.VersionLog
-	}{
-		{
-			name: "insert version logs fo.o and ba.r and drop ba.r",
-			versions: []*internal.Version{
-				sampleVersion(func(v *internal.Version) {
-					v.ModulePath = "fo.o"
-					v.Version = "v1.0.0"
-				}),
-			},
-			logs: []*internal.VersionLog{
-				{
-					ModulePath: "fo.o",
-					Version:    "v1.0.0",
-					CreatedAt:  NowTruncated(),
-					Source:     internal.VersionSourceProxyIndex,
-				},
-				{
-					ModulePath: "ba.r",
-					Version:    "v1.0.0",
-					CreatedAt:  NowTruncated(),
-					Source:     internal.VersionSourceProxyIndex,
-				},
-			},
-			wantDropped: []*internal.VersionLog{
-				{
-					ModulePath: "ba.r",
-					Version:    "v1.0.0",
-				},
-			},
-		},
-	} {
-
-		t.Run(tc.name, func(t *testing.T) {
-			defer ResetTestDB(testDB, t)
-
-			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-			defer cancel()
-
-			for _, v := range tc.versions {
-				if err := testDB.InsertVersion(ctx, v, sampleLicenses); err != nil {
-					t.Errorf("testDB.InsertVersion(ctx, %+v): %v", v, err)
-				}
-			}
-			if err := testDB.InsertVersionLogs(ctx, tc.logs); err != nil {
-				t.Errorf("testDB.InsertVersionLogs(ctx, %+v) error: %v", tc.logs, err)
-			}
-
-			got, err := testDB.GetVersionsToRetry(ctx)
-			if err != nil {
-				t.Errorf("testDB.GetVersionsToRetry(ctx): %v", err)
-			}
-			if diff := cmp.Diff(tc.wantDropped, got); diff != "" {
-				t.Errorf("testDB.GetVersionsToRetry(ctx) mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
@@ -607,65 +542,6 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 				t.Errorf("testDB.GetImportedBy(%q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
 			}
 		})
-	}
-}
-
-func TestInsertAndUpdateVersionLogs(t *testing.T) {
-	now := NowTruncated().UTC()
-	newVersions := []*internal.VersionLog{
-		&internal.VersionLog{
-			ModulePath: "testModule",
-			Version:    "v.1.0.0",
-			CreatedAt:  now.Add(-10 * time.Minute),
-			Source:     internal.VersionSourceProxyIndex,
-		},
-		&internal.VersionLog{
-			ModulePath: "testModule",
-			Version:    "v.1.1.0",
-			CreatedAt:  now,
-			Source:     internal.VersionSourceProxyIndex,
-		},
-		&internal.VersionLog{
-			ModulePath: "testModule/v2",
-			Version:    "v.2.0.0",
-			CreatedAt:  now,
-			Source:     internal.VersionSourceProxyIndex,
-		},
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
-
-	defer ResetTestDB(testDB, t)
-
-	if err := testDB.InsertVersionLogs(ctx, newVersions); err != nil {
-		t.Errorf("testDB.InsertVersionLogs(ctx, newVersions) error: %v", err)
-	}
-
-	dbTime, err := testDB.LatestProxyIndexUpdate(ctx)
-	if err != nil {
-		t.Errorf("testDB.LatestProxyIndexUpdate error: %v", err)
-	}
-
-	// Since now is already truncated to Microsecond precision, we should get
-	// back the exact same time.
-	if !dbTime.Equal(now) {
-		t.Errorf("testDB.LatestProxyIndexUpdate(ctx) = %v, want %v", dbTime, now)
-	}
-
-	for _, v := range newVersions {
-		if err := testDB.UpdateVersionLogError(ctx, v.ModulePath, v.Version, errors.New("test error")); err != nil {
-			t.Errorf("testDB.UpdateVersionLogError(ctx, %q, %q, errors.New(test error)): %v", v.ModulePath, v.Version, err)
-		}
-	}
-
-	var count int
-	row := testDB.QueryRowContext(ctx, `SELECT COUNT(*) FROM version_logs WHERE error='test error';`)
-	if err := row.Scan(&count); err != nil {
-		t.Fatalf("row.Scan(&count): %v", err)
-	}
-	if count != len(newVersions) {
-		t.Errorf("Number of rows with error='test error' = %d, want = %d", count, len(newVersions))
 	}
 }
 

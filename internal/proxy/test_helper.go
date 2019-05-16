@@ -7,7 +7,6 @@ package proxy
 import (
 	"archive/zip"
 	"bytes"
-	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -143,7 +142,7 @@ func defaultTestVersions() []*TestVersion {
 //
 // It returns a function for tearing down the proxy after the test is completed
 // and a Client for interacting with the test proxy.
-func SetupTestProxy(ctx context.Context, t *testing.T, versions []*TestVersion) (func(t *testing.T), *Client) {
+func SetupTestProxy(t *testing.T, versions []*TestVersion) (func(t *testing.T), *Client) {
 	t.Helper()
 
 	p := httptest.NewTLSServer(TestProxy(versions))

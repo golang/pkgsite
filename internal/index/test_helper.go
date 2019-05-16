@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"golang.org/x/discovery/internal"
@@ -21,9 +22,17 @@ func SetupTestIndex(t *testing.T, versions []*internal.IndexVersion) (func(t *te
 	t.Helper()
 
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		limit := len(versions)
+		if limitParam := r.FormValue("limit"); limitParam != "" {
+			var err error
+			limit, err = strconv.Atoi(limitParam)
+			if err != nil {
+				t.Fatalf("error parsing limit parameter: %v", err)
+			}
+		}
 		w.Header().Set("Content-Type", "application/json")
-		for _, v := range versions {
-			json.NewEncoder(w).Encode(v)
+		for i := 0; i < limit && i < len(versions); i++ {
+			json.NewEncoder(w).Encode(versions[i])
 		}
 	}))
 

@@ -23,8 +23,14 @@ func (db *DB) InsertIndexVersions(ctx context.Context, versions []*internal.Inde
 		vals = append(vals, v.Path, v.Version, v.Timestamp)
 	}
 	cols := []string{"module_path", "version", "index_timestamp"}
+	conflictAction := `
+		ON CONFLICT
+			(module_path, version)
+		DO UPDATE SET
+			index_timestamp=excluded.index_timestamp,
+			next_processed_after=CURRENT_TIMESTAMP`
 	return db.Transact(func(tx *sql.Tx) error {
-		return bulkInsert(ctx, tx, "module_version_states", cols, vals, true)
+		return bulkInsert(ctx, tx, "module_version_states", cols, vals, conflictAction)
 	})
 }
 
@@ -148,44 +154,45 @@ func (db *DB) GetRecentFailedVersions(ctx context.Context, limit int) ([]*intern
 	return db.queryVersionStates(ctx, queryFormat, limit)
 }
 
-// encodeDuration formats the given duration for use in Postgres queries. It
-// encodes with microsecond precision.
-func encodeDuration(d time.Duration) string {
-	const usPerSecond = int64(time.Second / time.Microsecond)
-
-	prefix := ""
-	micros := int64(d / time.Microsecond)
-	if micros < 0 {
-		prefix = "-"
-		micros = -micros
-	}
-	seconds, micros := micros/usPerSecond, micros%usPerSecond
-	return fmt.Sprintf("%s%d.%d", prefix, seconds, micros)
+// GetRecentVersions returns recent versions that have been processed.
+func (db *DB) GetRecentVersions(ctx context.Context, limit int) ([]*internal.VersionState, error) {
+	queryFormat := `
+		SELECT %s
+		FROM
+			module_version_states
+		ORDER BY created_at DESC
+		LIMIT $1`
+	return db.queryVersionStates(ctx, queryFormat, limit)
 }
 
-// UpdateVersionState updates a version state following a call to the fetch
-// service.
-func (db *DB) UpdateVersionState(ctx context.Context, modulePath, version string, status int, errorMsg string, backOff time.Duration) error {
-	stmt := `
-		UPDATE
-			module_version_states
-		SET
-			status=$1,
-			error=$2,
-			try_count=try_count+1,
-			last_processed_at=CURRENT_TIMESTAMP,
-			next_processed_after=CASE
-				WHEN last_processed_at IS NULL
-					THEN CURRENT_TIMESTAMP + $5
-				ELSE
-					CURRENT_TIMESTAMP + $5
-				END
-		WHERE
-			module_path = $3
-			AND version = $4;`
-	result, err := db.ExecContext(ctx, stmt, status, errorMsg, modulePath, version, encodeDuration(backOff))
+// UpsertVersionState inserts or updates the module_version_state table with
+// the results of a fetch operation for a given module version.
+func (db *DB) UpsertVersionState(ctx context.Context, modulePath, version string, timestamp time.Time, status int, fetchErr error) error {
+	query := `
+		INSERT INTO module_version_states AS mvs (module_path, version, index_timestamp, status, error)
+		VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT (module_path, version) DO UPDATE
+			SET
+				status=excluded.status,
+				error=excluded.error,
+				try_count=mvs.try_count+1,
+				last_processed_at=CURRENT_TIMESTAMP,
+				next_processed_after=CASE
+					WHEN mvs.last_processed_at IS NULL THEN
+						CURRENT_TIMESTAMP + INTERVAL '1 minute'
+					WHEN 2*(mvs.next_processed_after - mvs.last_processed_at) < INTERVAL '1 hour' THEN
+						CURRENT_TIMESTAMP + 2*(mvs.next_processed_after - mvs.last_processed_at)
+					ELSE
+						CURRENT_TIMESTAMP + INTERVAL '1 hour'
+					END;`
+
+	var sqlErrorMsg sql.NullString
+	if fetchErr != nil {
+		sqlErrorMsg = sql.NullString{Valid: true, String: fetchErr.Error()}
+	}
+	result, err := db.ExecContext(ctx, query, modulePath, version, timestamp, status, sqlErrorMsg)
 	if err != nil {
-		return fmt.Errorf("db.ExecContext(ctx, %q, %q, %q, %q): %v", stmt, errorMsg, modulePath, version, err)
+		return fmt.Errorf("db.ExecContext(ctx, %q, %q, %q, %q, %q, %v): %v", query, modulePath, version, timestamp, status, sqlErrorMsg, err)
 	}
 	affected, err := result.RowsAffected()
 	if err != nil {
@@ -218,4 +225,48 @@ func (db *DB) GetVersionState(ctx context.Context, modulePath, version string) (
 	default:
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
+}
+
+// VersionStats holds statistics extracted from the module_version_states
+// table.
+type VersionStats struct {
+	LatestTimestamp time.Time
+	VersionCounts   map[int]int
+}
+
+// GetVersionStats queries the module_version_states table for aggregate
+// information about the current state of module versions, grouping them by
+// their current status code.
+func (db *DB) GetVersionStats(ctx context.Context) (*VersionStats, error) {
+	query := `
+		SELECT
+			status,
+			max(index_timestamp),
+			count(*)
+		FROM
+			module_version_states
+		GROUP BY status;`
+
+	var (
+		status         sql.NullInt64
+		indexTimestamp time.Time
+		count          int
+	)
+	rows, err := db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("db.QueryContext(ctx, %q): %v", query, err)
+	}
+	stats := &VersionStats{
+		VersionCounts: make(map[int]int),
+	}
+	for rows.Next() {
+		if err := rows.Scan(&status, &indexTimestamp, &count); err != nil {
+			return nil, fmt.Errorf("row.Scan(): %v", err)
+		}
+		if indexTimestamp.After(stats.LatestTimestamp) {
+			stats.LatestTimestamp = indexTimestamp
+		}
+		stats.VersionCounts[int(status.Int64)] = count
+	}
+	return stats, nil
 }

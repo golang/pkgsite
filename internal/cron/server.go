@@ -12,13 +12,13 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"sync"
-	"time"
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/fetch"
 	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/postgres"
+	"golang.org/x/discovery/internal/proxy"
+	"google.golang.org/appengine"
 )
 
 // Server is an http.Handler that implements functionality for managing the
@@ -27,47 +27,65 @@ type Server struct {
 	http.Handler
 
 	indexClient *index.Client
-	fetchClient *fetch.Client
+	proxyClient *proxy.Client
 	db          *postgres.DB
+	queue       Queue
 
-	workers       int
 	indexTemplate *template.Template
 }
 
 // NewServer creates a new Server with the given dependencies.
-func NewServer(db *postgres.DB, indexClient *index.Client, fetchClient *fetch.Client, indexTemplate *template.Template, workers int) *Server {
+func NewServer(db *postgres.DB,
+	indexClient *index.Client,
+	proxyClient *proxy.Client,
+	queue Queue,
+	indexTemplate *template.Template,
+) *Server {
 	mux := http.NewServeMux()
 	s := &Server{
 		Handler:     mux,
 		db:          db,
 		indexClient: indexClient,
-		fetchClient: fetchClient,
+		proxyClient: proxyClient,
+		queue:       queue,
 
-		workers:       workers,
 		indexTemplate: indexTemplate,
 	}
-	mux.HandleFunc("/new/", s.handleNewVersions)
-	mux.HandleFunc("/retry/", s.handleRetryVersions)
-	mux.HandleFunc("/indexupdate/", s.handleIndexUpdate)
-	mux.HandleFunc("/fetchversions/", s.handleFetchVersions)
-	mux.HandleFunc("/refreshsearch/", s.handleRefreshSearch)
-	mux.HandleFunc("/", s.handleIndex)
+	mux.HandleFunc("/poll-and-queue/", s.handleIndexAndQueue)
+	mux.HandleFunc("/requeue/", s.handleRequeue)
+	mux.HandleFunc("/refresh-search/", s.handleRefreshSearch)
+	mux.Handle("/fetch/", http.StripPrefix("/fetch", http.HandlerFunc(s.handleFetch)))
+	mux.HandleFunc("/", s.handleStatusPage)
 	return s
 }
 
-// handleNewVersions fetches new versions from the module index and fetches
-// them.
-func (s *Server) handleNewVersions(w http.ResponseWriter, r *http.Request) {
-	logs, err := fetchAndStoreVersions(r.Context(), s.indexClient, s.db)
-	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		log.Printf("FetchAndStoreVersions(indexClient, db): %v", err)
+func (s *Server) handleFetch(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/" {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		fmt.Fprintf(w, "<h1>Hello, Go Discovery Fetch Service!</h1>")
+		fmt.Fprintf(w, `<p><a href="/fetch/rsc.io/quote/@v/v1.0.0">Fetch an example module</a></p>`)
 		return
 	}
-	log.Printf("Fetching %d versions", len(logs))
+	if r.URL.Path == "/favicon.ico" {
+		return
+	}
 
-	fetchVersions(r.Context(), s.fetchClient, logs, s.workers)
-	fmt.Fprint(w, fmt.Sprintf("Requested %d new versions!", len(logs)))
+	modulePath, version, err := fetch.ParseModulePathAndVersion(r.URL.Path)
+	if err != nil {
+		log.Printf("fetch.ParseModulePathAndVersion(%q): %v", r.URL.Path, err)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	code, err := fetchAndUpdateState(r.Context(), modulePath, version, s.proxyClient, s.db)
+	if err != nil {
+		http.Error(w, http.StatusText(code), code)
+		return
+	}
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(code)
+	fmt.Fprintf(w, "Downloaded %s@%s\n", modulePath, version)
+	log.Printf("Downloaded: %q %q", modulePath, version)
 }
 
 func (s *Server) handleRefreshSearch(w http.ResponseWriter, r *http.Request) {
@@ -78,24 +96,7 @@ func (s *Server) handleRefreshSearch(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleRetryVersions retries versions in the version_logs table that have
-// errors.
-func (s *Server) handleRetryVersions(w http.ResponseWriter, r *http.Request) {
-	logs, err := s.db.GetVersionsToRetry(r.Context())
-	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		log.Printf("db.GetVersionsToRetry(ctx): %v", err)
-		return
-	}
-	log.Printf("Fetching %d versions", len(logs))
-
-	fetchVersions(r.Context(), s.fetchClient, logs, s.workers)
-	fmt.Fprint(w, fmt.Sprintf("Requested %d versions!", len(logs)))
-}
-
-// handleIndexUpdate fetches new versions from the module index and inserts
-// them into the module_version_states table, but does not perform a fetch.
-func (s *Server) handleIndexUpdate(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleIndexAndQueue(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	limitParam := r.FormValue("limit")
 	var (
@@ -105,49 +106,44 @@ func (s *Server) handleIndexUpdate(w http.ResponseWriter, r *http.Request) {
 	if limitParam != "" {
 		limit, err = strconv.Atoi(limitParam)
 		if err != nil {
-			log.Printf("error parsing limit parameter: %v", err)
+			log.Printf("Error parsing limit parameter: %v", err)
 			limit = 10
 		}
 	}
 	since, err := s.db.LatestIndexTimestamp(ctx)
 	if err != nil {
-		log.Printf("error doing proxy index update: %v", err)
+		log.Printf("Error doing proxy index update: %v", err)
 		http.Error(w, "error doing proxy index update", http.StatusInternalServerError)
 		return
 	}
-	versions, err := s.indexClient.GetIndexVersions(ctx, since, limit)
+	versions, err := s.indexClient.GetVersions(ctx, since, limit)
 	if err != nil {
-		log.Printf("error getting index versions: %v", err)
+		log.Printf("Error getting index versions: %v", err)
 		http.Error(w, "error getting versions", http.StatusInternalServerError)
 		return
 	}
 	if err := s.db.InsertIndexVersions(ctx, versions); err != nil {
-		log.Printf("error inserting index versions: %v", err)
+		log.Printf("Error inserting index versions: %v", err)
 		http.Error(w, "error inserting versions", http.StatusInternalServerError)
 		return
 	}
+	for _, version := range versions {
+		if err := s.queue.ScheduleFetch(appengine.NewContext(r), version.Path, version.Version); err != nil {
+			log.Printf("Error scheduling fetch: %v", err)
+			http.Error(w, "error scheduling fetch", http.StatusInternalServerError)
+			return
+		}
+	}
 	w.Header().Set("Content-Type", "text/plain")
 	for _, v := range versions {
-		fmt.Fprintf(w, "inserted %s@%s\n", v.Path, v.Version)
+		fmt.Fprintf(w, "scheduled %s@%s\n", v.Path, v.Version)
 	}
 }
 
-// computeBackoff computes the duration of time to wait before next attempting
-// to fetch the given version.
-func computeBackoff(state *internal.VersionState, resp *fetch.Response) time.Duration {
-	const (
-		minBackoff    = time.Minute
-		backOffFactor = 2
-	)
-	if state.LastProcessedAt == nil {
-		return minBackoff
-	}
-	return backOffFactor * state.NextProcessedAfter.Sub(*state.LastProcessedAt)
-}
-
-// handleFetchVersions queries the module_version_states table for the next
-// batch of module versions to process, and calls the fetch service.
-func (s *Server) handleFetchVersions(w http.ResponseWriter, r *http.Request) {
+// handleRequeue queries the module_version_states table for the next
+// batch of module versions to process, and enqueues them for processing.  Note
+// that this may cause duplicate processing.
+func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	limitParam := r.FormValue("limit")
 	var (
@@ -157,69 +153,64 @@ func (s *Server) handleFetchVersions(w http.ResponseWriter, r *http.Request) {
 	if limitParam != "" {
 		limit, err = strconv.Atoi(limitParam)
 		if err != nil {
-			log.Printf("error parsing limit parameter: %v", err)
+			log.Printf("Error parsing limit parameter: %v", err)
 			limit = 10
 		}
 	}
 	versions, err := s.db.GetNextVersionsToFetch(ctx, limit)
 	if err != nil {
-		log.Printf("error getting versions to fetch: %v", err)
+		log.Printf("Error getting versions to fetch: %v", err)
 		http.Error(w, "error getting versions to fetch", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "text/plain")
-	var requests []*fetch.Request
-	versionLookup := make(map[fetch.Request]*internal.VersionState)
 	for _, v := range versions {
-		request := fetch.Request{ModulePath: v.ModulePath, Version: v.Version}
-		versionLookup[request] = v
-		requests = append(requests, &request)
+		s.queue.ScheduleFetch(ctx, v.ModulePath, v.Version)
 	}
-	responses := make(chan *fetch.Response, 10)
-	go fetchIndexVersions(ctx, s.fetchClient, requests, s.workers, responses)
-	var wg sync.WaitGroup
-	for resp := range responses {
-		wg.Add(1)
-		go func(resp *fetch.Response) {
-			defer wg.Done()
-			v, ok := versionLookup[resp.Request]
-			if !ok {
-				log.Printf("BUG: response not found in requests")
-				return
-			}
-			backOff := computeBackoff(v, resp)
-			if err := s.db.UpdateVersionState(ctx, resp.ModulePath, resp.Version, resp.StatusCode, resp.Error, backOff); err != nil {
-				log.Printf("db.SetVersionState(): %v", err)
-			}
-			fmt.Fprintf(w, "got %d for %s@%s:%s\n", resp.StatusCode, resp.ModulePath, resp.Version, resp.Error)
-		}(resp)
-	}
-	wg.Wait()
 }
 
-// handleIndex serves the cron status page.
-func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
-	next, err := s.db.GetNextVersionsToFetch(r.Context(), 100)
+// handleStatusPage serves the cron status page.
+func (s *Server) handleStatusPage(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	const pageSize = 20
+	next, err := s.db.GetNextVersionsToFetch(ctx, pageSize)
 	if err != nil {
-		log.Printf("error fetching versions: %v", err)
-		http.Error(w, "error fetching versions", http.StatusInternalServerError)
+		log.Printf("Error fetching next versions: %v", err)
+		http.Error(w, "error fetching next versions", http.StatusInternalServerError)
 		return
 	}
-	failures, err := s.db.GetRecentFailedVersions(r.Context(), 100)
+	failures, err := s.db.GetRecentFailedVersions(ctx, pageSize)
 	if err != nil {
-		log.Printf("error fetching recent failures: %v", err)
+		log.Printf("Error fetching recent failures: %v", err)
 		http.Error(w, "error fetching recent failures", http.StatusInternalServerError)
 		return
 	}
+	recents, err := s.db.GetRecentVersions(ctx, pageSize)
+	if err != nil {
+		log.Printf("Error fetching recent versions")
+		http.Error(w, "error fetching recent versions", http.StatusInternalServerError)
+		return
+	}
+	stats, err := s.db.GetVersionStats(ctx)
+	if err != nil {
+		log.Printf("Error fetching stats: %v", err)
+		http.Error(w, "error fetching stats", http.StatusInternalServerError)
+		return
+	}
 	page := struct {
-		Next, RecentFailures []*internal.VersionState
+		Stats                        *postgres.VersionStats
+		Next, Recent, RecentFailures []*internal.VersionState
 	}{
-		next, failures,
+		Stats:          stats,
+		Next:           next,
+		Recent:         recents,
+		RecentFailures: failures,
 	}
 	var buf bytes.Buffer
 	if err := s.indexTemplate.Execute(&buf, page); err != nil {
-		log.Printf("error rendering template: %v", err)
+		log.Printf("Error rendering template: %v", err)
 		http.Error(w, "error rendering template", http.StatusInternalServerError)
+		return
 	}
 	if _, err := io.Copy(w, &buf); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)

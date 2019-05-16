@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/net/context/ctxhttp"
 )
@@ -74,12 +75,12 @@ func (c *Client) GetInfo(ctx context.Context, path, version string) (*VersionInf
 
 	r, err := ctxhttp.Get(ctx, c.httpClient, u)
 	if err != nil {
-		return nil, fmt.Errorf("ctxhttp.Get(ctx, nil, %q): %v", u, err)
+		return nil, fmt.Errorf("ctxhttp.Get(ctx, client, %q): %v", u, err)
 	}
 	defer r.Body.Close()
 
-	if r.StatusCode < 200 || r.StatusCode >= 300 {
-		return nil, fmt.Errorf("ctxhttp.Get(ctx, %q) returned response: %d (%q)", u, r.StatusCode, r.Status)
+	if err := derrors.StatusError(r.StatusCode, "ctxhttp.Get(ctx, client, %q)", u); err != nil {
+		return nil, err
 	}
 
 	var v VersionInfo
@@ -112,8 +113,8 @@ func (c *Client) GetZip(ctx context.Context, path, version string) (*zip.Reader,
 	}
 	defer r.Body.Close()
 
-	if r.StatusCode < 200 || r.StatusCode >= 300 {
-		return nil, fmt.Errorf("get(ctx, %q) returned response: %d (%q)", u, r.StatusCode, r.Status)
+	if err := derrors.StatusError(r.StatusCode, "HTTP error from proxy: %d", r.StatusCode); err != nil {
+		return nil, err
 	}
 
 	body, err := ioutil.ReadAll(r.Body)

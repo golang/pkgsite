@@ -128,22 +128,3 @@ type VersionState struct {
 	// attempted.
 	NextProcessedAfter time.Time
 }
-
-// A VersionLog is a record of a version that was
-// (1) fetched from the module proxy index,
-// (2) requested by user from the frontend
-// The Path and Version may not necessarily be valid module versions (for example, if a
-// user requests a module or version that does not exist).
-type VersionLog struct {
-	// A JSON struct tag is needed because the index uses the field "Path"
-	// instead of "ModulePath".
-	ModulePath string `json:"Path"`
-
-	// Use the modproxy timestamp for the CreatedAt field, as this field is used
-	// for polling the index.
-	CreatedAt time.Time `json:"Timestamp"`
-
-	Version string
-	Source  VersionSource
-	Error   string
-}

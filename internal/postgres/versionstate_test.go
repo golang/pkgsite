@@ -6,7 +6,7 @@ package postgres
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 	"time"
 
@@ -14,37 +14,6 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 )
-
-func TestEncodeDuration(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
-
-	tests := []time.Duration{
-		1 * time.Second,
-		1 * time.Hour,
-		168 * time.Hour,  // one week
-		8760 * time.Hour, // one year
-	}
-
-	now := NowTruncated()
-	// This query executes some timestamp arithmetic in postgres, so that we can
-	// verify the encoded duration is behaving as expected. In the absence of a
-	// schema, the type specifications (::INTERVAL) are necessary for postgres to
-	// correctly interpret the encoded values.
-	query := `SELECT $1::TIMESTAMPTZ + $2::INTERVAL;`
-	for _, test := range tests {
-		t.Run(fmt.Sprint(test), func(t *testing.T) {
-			row := testDB.QueryRowContext(ctx, query, now, encodeDuration(test))
-			var later time.Time
-			if err := row.Scan(&later); err != nil {
-				t.Fatalf("row.Scan(): %v", err)
-			}
-			if got := later.Sub(now); got != test {
-				t.Errorf("got %v later, want %v", got, test)
-			}
-		})
-	}
-}
 
 func TestVersionState(t *testing.T) {
 	defer ResetTestDB(testDB, t)
@@ -60,22 +29,41 @@ func TestVersionState(t *testing.T) {
 		t.Errorf("testDB.LatestIndexTimestamp(ctx) = %v, want %v", initialTime, want)
 	}
 
-	now := NowTruncated().UTC()
-	fooVersion := &internal.IndexVersion{Path: "foo.com/bar", Version: "v1.0.0", Timestamp: now}
-	bazVersion := &internal.IndexVersion{Path: "baz.com/quux", Version: "v2.0.1", Timestamp: now.Add(10 * time.Second)}
+	now := NowTruncated()
+	latest := now.Add(10 * time.Second)
+	// insert a FooVersion with no Timestamp, to ensure that it is later updated
+	// on conflict.
+	initialFooVersion := &internal.IndexVersion{
+		Path:    "foo.com/bar",
+		Version: "v1.0.0",
+	}
+	if err := testDB.InsertIndexVersions(ctx, []*internal.IndexVersion{initialFooVersion}); err != nil {
+		t.Fatalf("testDB.InsertIndexVersions(ctx, [%v]): %v", initialFooVersion, err)
+	}
+	fooVersion := &internal.IndexVersion{
+		Path:      "foo.com/bar",
+		Version:   "v1.0.0",
+		Timestamp: now,
+	}
+	bazVersion := &internal.IndexVersion{
+		Path:      "baz.com/quux",
+		Version:   "v2.0.1",
+		Timestamp: latest,
+	}
 	versions := []*internal.IndexVersion{fooVersion, bazVersion}
 	if err := testDB.InsertIndexVersions(ctx, versions); err != nil {
 		t.Fatalf("testDB.InsertIndexVersions(ctx, %v): %v", versions, err)
 	}
 
 	gotVersions, err := testDB.GetNextVersionsToFetch(ctx, 10)
+	t.Logf("%+v", gotVersions)
 	if err != nil {
 		t.Fatalf("testDB.GetVersionsToFetch(ctx, 10): %v", err)
 	}
 
 	wantVersions := []*internal.VersionState{
-		{ModulePath: "baz.com/quux", Version: "v2.0.1", IndexTimestamp: now.Add(10 * time.Second)},
-		{ModulePath: "foo.com/bar", Version: "v1.0.0", IndexTimestamp: now},
+		{ModulePath: "baz.com/quux", Version: "v2.0.1", IndexTimestamp: bazVersion.Timestamp},
+		{ModulePath: "foo.com/bar", Version: "v1.0.0", IndexTimestamp: fooVersion.Timestamp},
 	}
 	ignore := cmpopts.IgnoreFields(internal.VersionState{}, "CreatedAt", "LastProcessedAt", "NextProcessedAfter")
 	if diff := cmp.Diff(wantVersions, gotVersions, ignore); diff != "" {
@@ -84,22 +72,21 @@ func TestVersionState(t *testing.T) {
 
 	var (
 		statusCode = 500
-		errorMsg   = "bad request"
-		backOff    = 2 * time.Minute
+		fetchErr   = errors.New("bad request")
 	)
-	if err := testDB.UpdateVersionState(ctx, fooVersion.Path, fooVersion.Version, statusCode, errorMsg, backOff); err != nil {
-		t.Fatalf("testDB.SetVersionState(ctx, %q, %q, %d, %q): %v", fooVersion.Path,
-			versions[0].Version, statusCode, errorMsg, err)
+	if err := testDB.UpsertVersionState(ctx, fooVersion.Path, fooVersion.Version, fooVersion.Timestamp, statusCode, fetchErr); err != nil {
+		t.Fatalf("testDB.UpsertVersionState(ctx, %q, %q, %d, %v): %v", fooVersion.Path,
+			versions[0].Version, statusCode, fetchErr, err)
 	}
-
+	errString := fetchErr.Error()
 	wantFooState := &internal.VersionState{
 		ModulePath:         "foo.com/bar",
 		Version:            "v1.0.0",
 		IndexTimestamp:     now,
 		TryCount:           1,
-		Error:              &errorMsg,
+		Error:              &errString,
 		Status:             &statusCode,
-		NextProcessedAfter: gotVersions[1].CreatedAt.Add(backOff),
+		NextProcessedAfter: gotVersions[1].CreatedAt.Add(1 * time.Minute),
 	}
 	gotFooState, err := testDB.GetVersionState(ctx, wantFooState.ModulePath, wantFooState.Version)
 	if err != nil {
@@ -107,5 +94,20 @@ func TestVersionState(t *testing.T) {
 	}
 	if diff := cmp.Diff(wantFooState, gotFooState, ignore); diff != "" {
 		t.Errorf("testDB.GetVersionState(ctx, %q, %q) mismatch (-want +got)\n%s", wantFooState.ModulePath, wantFooState.Version, diff)
+	}
+
+	stats, err := testDB.GetVersionStats(ctx)
+	if err != nil {
+		t.Fatalf("testDB.GetVersionStats(ctx): %v", err)
+	}
+	wantStats := &VersionStats{
+		LatestTimestamp: latest,
+		VersionCounts: map[int]int{
+			0:   1,
+			500: 1,
+		},
+	}
+	if diff := cmp.Diff(wantStats, stats); diff != "" {
+		t.Errorf("testDB.GetVersionStats(ctx) mismatch (-want +got):\n%s", diff)
 	}
 }

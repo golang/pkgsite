@@ -29,7 +29,7 @@ func TestGetInfo(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	teardownProxy, client := SetupTestProxy(ctx, t, nil)
+	teardownProxy, client := SetupTestProxy(t, nil)
 	defer teardownProxy(t)
 
 	name := "my.mod/module"
@@ -53,7 +53,7 @@ func TestGetInfoVersionDoesNotExist(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	teardownProxy, client := SetupTestProxy(ctx, t, nil)
+	teardownProxy, client := SetupTestProxy(t, nil)
 	defer teardownProxy(t)
 
 	name := "my.mod/module"
@@ -68,7 +68,7 @@ func TestGetZip(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	teardownProxy, client := SetupTestProxy(ctx, t, nil)
+	teardownProxy, client := SetupTestProxy(t, nil)
 	defer teardownProxy(t)
 
 	name := "my.mod/module"
@@ -106,7 +106,7 @@ func TestGetZipNonExist(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	teardownProxy, client := SetupTestProxy(ctx, t, nil)
+	teardownProxy, client := SetupTestProxy(t, nil)
 	defer teardownProxy(t)
 
 	name := "my.mod/nonexistmodule"

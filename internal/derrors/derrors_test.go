@@ -6,6 +6,7 @@ package derrors
 
 import (
 	"errors"
+	"net/http"
 	"testing"
 )
 
@@ -31,7 +32,22 @@ func TestErrors(t *testing.T) {
 			err:      errors.New("bad"),
 			wantType: UncategorizedErrorType,
 		}, {
-			label: "doesn't identify a nil error",
+			label:    "doesn't identify a nil error",
+			wantType: NilErrorType,
+		}, {
+			label:              "wraps a known error",
+			err:                Wrap(InvalidArgument("bad arguments"), "error validating %s", "abc123"),
+			isInvalidArguments: true,
+			wantType:           InvalidArgumentType,
+		}, {
+			label:      "interprets HTTP 404 as Not Found",
+			err:        StatusError(http.StatusNotFound, "%s was not found", "foo"),
+			isNotFound: true,
+			wantType:   NotFoundType,
+		}, {
+			label:    "interprets HTTP 500 as Uncategorized",
+			err:      StatusError(http.StatusInternalServerError, "bad"),
+			wantType: UncategorizedErrorType,
 		},
 	}
 
@@ -43,7 +59,6 @@ func TestErrors(t *testing.T) {
 			if got := IsInvalidArgument(test.err); got != test.isInvalidArguments {
 				t.Errorf("IsInvalidArguments(%v) = %t, want %t", test.err, got, test.isInvalidArguments)
 			}
-
 			if got := Type(test.err); got != test.wantType {
 				t.Errorf("Type(%v) = %v, want %v", test.err, got, test.wantType)
 			}

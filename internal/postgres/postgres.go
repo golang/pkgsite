@@ -87,11 +87,13 @@ func prepareAndExec(tx *sql.Tx, query string, stmtFunc func(*sql.Stmt) error) (e
 	return nil
 }
 
+const onConflictDoNothing = "ON CONFLICT DO NOTHING"
+
 // buildInsertQuery builds an multi-value insert query, following the format:
 // INSERT TO <table> (<columns>) VALUES
 // (<placeholders-for-each-item-in-values>) If conflictNoAction is true, it
 // append ON CONFLICT DO NOTHING to the end of the query.
-func buildInsertQuery(table string, columns []string, values []interface{}, conflictNoAction bool) (string, error) {
+func buildInsertQuery(table string, columns []string, values []interface{}, conflictAction string) (string, error) {
 	if remainder := len(values) % len(columns); remainder != 0 {
 		return "", fmt.Errorf("modulus of len(values) and len(columns) must be 0: got %d", remainder)
 	}
@@ -120,9 +122,8 @@ func buildInsertQuery(table string, columns []string, values []interface{}, conf
 		}
 		b.WriteString(", ")
 	}
-
-	if conflictNoAction {
-		b.WriteString("ON CONFLICT DO NOTHING")
+	if conflictAction != "" {
+		b.WriteString(" " + conflictAction)
 	}
 
 	return b.String(), nil
@@ -133,10 +134,10 @@ func buildInsertQuery(table string, columns []string, values []interface{}, conf
 // (<placeholders-for-each-item-in-values>) If conflictNoAction is true, it
 // append ON CONFLICT DO NOTHING to the end of the query. The query is executed
 // using a PREPARE statement with the provided values.
-func bulkInsert(ctx context.Context, tx *sql.Tx, table string, columns []string, values []interface{}, conflictNoAction bool) error {
-	query, err := buildInsertQuery(table, columns, values, conflictNoAction)
+func bulkInsert(ctx context.Context, tx *sql.Tx, table string, columns []string, values []interface{}, conflictAction string) error {
+	query, err := buildInsertQuery(table, columns, values, conflictAction)
 	if err != nil {
-		return fmt.Errorf("buildInsertQuery(%q, %v, values, %t): %v", table, columns, conflictNoAction, err)
+		return fmt.Errorf("buildInsertQuery(%q, %v, values, %q): %v", table, columns, conflictAction, err)
 	}
 
 	if _, err := tx.ExecContext(ctx, query, values...); err != nil {
@@ -165,70 +166,6 @@ func (db *DB) LatestProxyIndexUpdate(ctx context.Context) (time.Time, error) {
 	default:
 		return time.Time{}, err
 	}
-}
-
-// InsertVersionLogs inserts a VersionLog into the database and
-// insertion fails and returns an error if the VersionLog's primary
-// key already exists in the database.
-func (db *DB) InsertVersionLogs(ctx context.Context, logs []*internal.VersionLog) error {
-	return db.Transact(func(tx *sql.Tx) error {
-		for _, l := range logs {
-			if _, err := tx.ExecContext(ctx,
-				`INSERT INTO version_logs(module_path, version, created_at, source, error)
-				VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING;`,
-				l.ModulePath, l.Version, l.CreatedAt, l.Source, l.Error,
-			); err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-}
-
-// UpdateVersionLogError updates the version_log row for modulePath and version with fetchErr.
-func (db *DB) UpdateVersionLogError(ctx context.Context, modulePath, version string, fetchErr error) error {
-	query := "UPDATE version_logs SET error=$1 WHERE module_path=$2 AND version=$3"
-
-	if _, err := db.ExecContext(ctx, query, fetchErr.Error(), modulePath, version); err != nil {
-		return fmt.Errorf("tx.ExecContext(ctx %q, %q, %q, %q): %v", query, fetchErr.Error(), modulePath, version, err)
-	}
-	return nil
-}
-
-// GetVersionsToRetry fetches all rows from the version_logs table that do not
-// have an error and do not exist in the versions table.
-func (db *DB) GetVersionsToRetry(ctx context.Context) ([]*internal.VersionLog, error) {
-	query := `
-		SELECT
-			vl.module_path,
-			vl.version
-		FROM
-			version_logs vl
-		LEFT JOIN
-			 versions v
-		ON
-			v.module_path=vl.module_path
-			AND v.version=vl.version
-		WHERE
-			v.version IS NULL
-			AND (vl.error IS NULL OR vl.error = '');
-	`
-	rows, err := db.QueryContext(ctx, query)
-	if err != nil {
-		return nil, fmt.Errorf("db.QueryContext(ctx, %q): %v", query, err)
-	}
-
-	var (
-		version, modulePath string
-		logs                []*internal.VersionLog
-	)
-	for rows.Next() {
-		if err := rows.Scan(&modulePath, &version); err != nil {
-			return nil, fmt.Errorf("row.Scan(): %v", err)
-		}
-		logs = append(logs, &internal.VersionLog{ModulePath: modulePath, Version: version})
-	}
-	return logs, nil
 }
 
 // compareLicenses reports whether i < j according to our license sorting
@@ -997,7 +934,7 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 				"type",
 			}
 			table := "licenses"
-			if err := bulkInsert(ctx, tx, table, licenseCols, licenseValues, true); err != nil {
+			if err := bulkInsert(ctx, tx, table, licenseCols, licenseValues, onConflictDoNothing); err != nil {
 				return fmt.Errorf("bulkInsert(ctx, tx, %q, %v, [%d licenseValues]): %v", table, licenseCols, len(licenseValues), err)
 			}
 		}
@@ -1037,7 +974,7 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 				"documentation",
 			}
 			table := "packages"
-			if err := bulkInsert(ctx, tx, table, pkgCols, pkgValues, true); err != nil {
+			if err := bulkInsert(ctx, tx, table, pkgCols, pkgValues, onConflictDoNothing); err != nil {
 				return fmt.Errorf("bulkInsert(ctx, tx, %q, %v, %d pkgValues): %v", table, pkgCols, len(pkgValues), err)
 			}
 		}
@@ -1049,7 +986,7 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 				"package_path",
 			}
 			table := "package_licenses"
-			if err := bulkInsert(ctx, tx, table, pkgLicenseCols, pkgLicenseValues, true); err != nil {
+			if err := bulkInsert(ctx, tx, table, pkgLicenseCols, pkgLicenseValues, onConflictDoNothing); err != nil {
 				return fmt.Errorf("bulkInsert(ctx, tx, %q, %v, %d pkgLicenseValues): %v", table, pkgLicenseCols, len(pkgLicenseValues), err)
 			}
 		}
@@ -1063,7 +1000,7 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 				"to_name",
 			}
 			table := "imports"
-			if err := bulkInsert(ctx, tx, table, importCols, importValues, true); err != nil {
+			if err := bulkInsert(ctx, tx, table, importCols, importValues, onConflictDoNothing); err != nil {
 				return fmt.Errorf("bulkInsert(ctx, tx, %q, %v, %d importValues): %v", table, importCols, len(importValues), err)
 			}
 		}

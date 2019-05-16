@@ -19,18 +19,20 @@ import (
 	"time"
 
 	"golang.org/x/discovery/internal/cron"
-	"golang.org/x/discovery/internal/fetch"
 	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
+	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/secrets"
+	"google.golang.org/appengine"
 )
 
 var (
 	indexURL   = getEnv("GO_MODULE_INDEX_URL", "https://index.golang.org/index")
-	fetchURL   = getEnv("GO_DISCOVERY_FETCH_URL", "http://localhost:9000")
+	proxyURL   = getEnv("GO_MODULE_PROXY_URL", "https://proxy.golang.org")
 	timeout    = getEnv("GO_DISCOVERY_CRON_TIMEOUT_MINUTES", "10")
-	workers    = flag.Int("workers", 10, "number of concurrent requests to the fetch service")
+	queueName  = getEnv("GO_DISCOVERY_CRON_TASK_QUEUE", "dev-fetch-tasks")
+	workers    = flag.Int("workers", 10, "number of concurrent requests to the fetch service, when running locally")
 	staticPath = flag.String("static", "content/static", "path to folder containing static files served")
 )
 
@@ -53,10 +55,24 @@ func main() {
 		log.Fatalf("index.New(%q): %v", indexURL, err)
 	}
 
-	fetchClient := fetch.New(fetchURL)
+	proxyClient, err := proxy.New(proxyURL)
+	if err != nil {
+		log.Fatalf("proxy.New(%q): %v", proxyURL, err)
+	}
 
 	templatePath := filepath.Join(*staticPath, "html/cron/index.tmpl")
-	indexTemplate, err := template.New("index.tmpl").ParseFiles(templatePath)
+	indexTemplate, err := template.New("index.tmpl").Funcs(template.FuncMap{
+		"truncate": func(length int, text *string) *string {
+			if text == nil {
+				return nil
+			}
+			if len(*text) <= length {
+				return text
+			}
+			s := (*text)[:length] + "..."
+			return &s
+		},
+	}).ParseFiles(templatePath)
 	if err != nil {
 		log.Fatalf("template.ParseFiles(%q): %v", templatePath, err)
 	}
@@ -66,7 +82,14 @@ func main() {
 		log.Fatalf("strconv.Atoi(%q): %v", timeout, err)
 	}
 
-	server := cron.NewServer(db, indexClient, fetchClient, indexTemplate, *workers)
+	var q cron.Queue
+	if os.Getenv("GAE_ENV") == "standard" {
+		q = &cron.GCPQueue{QueueName: queueName}
+	} else {
+		q = cron.NewInMemoryQueue(ctx, proxyClient, db, *workers)
+	}
+
+	server := cron.NewServer(db, indexClient, proxyClient, q, indexTemplate)
 
 	// Default to addr on localhost to mute security popup about incoming
 	// network connections when running locally. When running in prod, App
@@ -80,8 +103,13 @@ func main() {
 	}
 
 	mw := middleware.Timeout(time.Duration(handlerTimeout) * time.Minute)
-	log.Printf("Listening on addr %s", addr)
-	log.Fatal(http.ListenAndServe(addr, mw(server)))
+	http.Handle("/", mw(server))
+	if os.Getenv("GAE_ENV") == "standard" {
+		appengine.Main()
+	} else {
+		log.Printf("Listening on addr %s", addr)
+		log.Fatal(http.ListenAndServe(addr, nil))
+	}
 }
 
 func dbConnInfo(ctx context.Context) (string, error) {

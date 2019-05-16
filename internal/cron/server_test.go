@@ -8,104 +8,128 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"sort"
+	"runtime"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/fetch"
+	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/postgres"
+	"golang.org/x/discovery/internal/proxy"
 )
+
+const testTimeout = 5 * time.Second
+
+var testDB *postgres.DB
+
+func TestMain(m *testing.M) {
+	postgres.RunDBTests("discovery_cron_test", m, &testDB)
+}
 
 func TestETL(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	start := postgres.NowTruncated()
+	// This test relies on asynchronous things happening synchronously: namely
+	// that queue processing happens before we start testing our assertions.
+	// Setting GOMAXPROCS=1 enables this, but could concievably prove to be
+	// fragile in the future.
+	defer func(maxprocs int) {
+		runtime.GOMAXPROCS(maxprocs)
+	}(runtime.GOMAXPROCS(1))
+
 	var (
-		notFound            = http.StatusNotFound
-		internalServerError = http.StatusInternalServerError
+		start    = postgres.NowTruncated()
+		fooIndex = &internal.IndexVersion{
+			Path:      "foo.com/foo",
+			Timestamp: start,
+			Version:   "v1.0.0",
+		}
+		barIndex = &internal.IndexVersion{
+			Path:      "foo.com/bar",
+			Timestamp: start.Add(time.Second),
+			Version:   "v0.0.1",
+		}
+		fooProxy = proxy.NewTestVersion(t, fooIndex.Path, fooIndex.Version, map[string]string{
+			"foo.go": "package foo\nconst Foo = \"Foo\"",
+		})
+		barProxy = proxy.NewTestVersion(t, barIndex.Path, barIndex.Version, map[string]string{
+			"bar.go": "package bar\nconst Bar = \"Bar\"",
+		})
+		state = func(version *internal.IndexVersion, code, tryCount int) *internal.VersionState {
+			status := &code
+			if code == 0 {
+				status = nil
+			}
+			return &internal.VersionState{
+				ModulePath:     version.Path,
+				IndexTimestamp: version.Timestamp,
+				Status:         status,
+				TryCount:       tryCount,
+				Version:        version.Version,
+			}
+		}
+		fooState = func(code, tryCount int) *internal.VersionState {
+			return state(fooIndex, code, tryCount)
+		}
+		barState = func(code, tryCount int) *internal.VersionState {
+			return state(barIndex, code, tryCount)
+		}
 	)
 
 	tests := []struct {
-		label      string
-		index      []*internal.IndexVersion
-		fetch      map[fetch.Request]*fetch.Response
-		requests   []*http.Request
-		wantNext   []*internal.VersionState
-		wantErrors []*internal.VersionState
+		label    string
+		index    []*internal.IndexVersion
+		proxy    []*proxy.TestVersion
+		requests []*http.Request
+		wantFoo  *internal.VersionState
+		wantBar  *internal.VersionState
 	}{
 		{
-			label: "index update without fetch",
-			index: []*internal.IndexVersion{
-				{Path: "foo.com/bar", Timestamp: start, Version: "v1.0.0"},
-			},
-			fetch: map[fetch.Request]*fetch.Response{
-				{ModulePath: "foo.com/bar", Version: "v1.0.0"}: {StatusCode: 200},
-			},
+			label: "full fetch",
+			index: []*internal.IndexVersion{fooIndex, barIndex},
+			proxy: []*proxy.TestVersion{fooProxy, barProxy},
 			requests: []*http.Request{
-				httptest.NewRequest("POST", "/indexupdate/", nil),
+				httptest.NewRequest("POST", "/poll-and-queue/", nil),
 			},
-			wantNext: []*internal.VersionState{
-				{ModulePath: "foo.com/bar", IndexTimestamp: start, Version: "v1.0.0"},
-			},
+			wantFoo: fooState(http.StatusOK, 1),
+			wantBar: barState(http.StatusOK, 1),
 		}, {
 			label: "partial fetch",
-			index: []*internal.IndexVersion{
-				{Path: "foo.com/foo", Timestamp: start, Version: "v1.0.0"},
-				{Path: "foo.com/bar", Timestamp: start.Add(time.Second), Version: "v0.0.1"},
-			},
-			fetch: map[fetch.Request]*fetch.Response{
-				{ModulePath: "foo.com/bar", Version: "v0.0.1"}: {StatusCode: 200},
-			},
+			index: []*internal.IndexVersion{fooIndex, barIndex},
+			proxy: []*proxy.TestVersion{fooProxy, barProxy},
 			requests: []*http.Request{
-				httptest.NewRequest("POST", "/indexupdate/", nil),
-				httptest.NewRequest("POST", "/fetchversions/?limit=1", nil),
+				httptest.NewRequest("POST", "/poll-and-queue/?limit=1", nil),
 			},
-			wantNext: []*internal.VersionState{
-				{ModulePath: "foo.com/foo", IndexTimestamp: start, Version: "v1.0.0"},
-			},
+			wantFoo: fooState(http.StatusOK, 1),
 		}, {
 			label: "fetch with errors",
-			index: []*internal.IndexVersion{
-				{Path: "foo.com/foo", Timestamp: start, Version: "v1.0.0"},
-				{Path: "foo.com/bar", Timestamp: start.Add(time.Second), Version: "v0.0.1"},
-			},
-			fetch: map[fetch.Request]*fetch.Response{
-				{ModulePath: "foo.com/bar", Version: "v0.0.1"}: {StatusCode: 500},
-			},
+			index: []*internal.IndexVersion{fooIndex, barIndex},
+			proxy: []*proxy.TestVersion{fooProxy},
 			requests: []*http.Request{
-				httptest.NewRequest("POST", "/indexupdate/", nil),
-				httptest.NewRequest("POST", "/fetchversions/", nil),
+				httptest.NewRequest("POST", "/poll-and-queue/", nil),
 			},
-			wantErrors: []*internal.VersionState{{
-				ModulePath:     "foo.com/bar",
-				IndexTimestamp: start.Add(time.Second),
-				Version:        "v0.0.1",
-				TryCount:       1,
-				Status:         &internalServerError,
-			}, {
-				ModulePath:     "foo.com/foo",
-				IndexTimestamp: start,
-				Version:        "v1.0.0",
-				TryCount:       1,
-				Status:         &notFound,
-			}},
+			wantFoo: fooState(http.StatusOK, 1),
+			wantBar: barState(http.StatusNotFound, 1),
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.label, func(t *testing.T) {
 			teardownIndex, indexClient := index.SetupTestIndex(t, test.index)
 			defer teardownIndex(t)
-			teardownFetch, fetchClient := fetch.SetupTestFetch(t, test.fetch)
-			defer teardownFetch(t)
+
+			teardownProxy, proxyClient := proxy.SetupTestProxy(t, test.proxy)
+			defer teardownProxy(t)
+
 			defer postgres.ResetTestDB(testDB, t)
 
 			// Use 10 workers to have parallelism consistent with the cron binary.
-			s := NewServer(testDB, indexClient, fetchClient, nil, 10)
+			queue := NewInMemoryQueue(ctx, proxyClient, testDB, 10)
+
+			s := NewServer(testDB, indexClient, proxyClient, queue, nil)
 
 			for _, r := range test.requests {
 				w := httptest.NewRecorder()
@@ -115,28 +139,42 @@ func TestETL(t *testing.T) {
 				}
 			}
 
-			// for the upcoming checks, query a large enough number of versions to
-			// capture all state resulting from the test operations.
-			const versionsToFetch = 100
+			// Gosched forces the queue to start processing requests to run, which
+			// should not yield until all current requests have been scheduled. Note
+			// that if GOMAXPROCS were > 1 here, this trick would not work.
+			runtime.Gosched()
+			queue.waitForTesting(ctx)
 
-			got, err := testDB.GetNextVersionsToFetch(ctx, versionsToFetch)
-			if err != nil {
-				t.Fatalf("testDB.GetNextVersionsToFetch(ctx, %d): %v", versionsToFetch, err)
-			}
-			ignore := cmpopts.IgnoreFields(internal.VersionState{}, "CreatedAt", "NextProcessedAfter", "LastProcessedAt", "Error")
-			if diff := cmp.Diff(test.wantNext, got, ignore); diff != "" {
-				t.Errorf("testDB.GetNextVersionsToFetch(ctx, %d) mismatch (-want +got):\n%s", versionsToFetch, diff)
-			}
+			// To avoid being a change detector, only look at ModulePath, Version,
+			// Timestamp, and Status.
+			ignore := cmpopts.IgnoreFields(internal.VersionState{},
+				"CreatedAt", "NextProcessedAfter", "LastProcessedAt", "Error")
 
-			got, err = testDB.GetRecentFailedVersions(ctx, versionsToFetch)
-			if err != nil {
-				t.Fatalf("testDB.GetRecentFailedVersions(ctx, %d): %v", versionsToFetch, err)
+			got, err := testDB.GetVersionState(ctx, fooIndex.Path, fooIndex.Version)
+			if err == nil {
+				if diff := cmp.Diff(test.wantFoo, got, ignore); diff != "" {
+					t.Errorf("testDB.GetVersionState(ctx, %q, %q) mismatch (-want +got):\n%s",
+						fooIndex.Path, fooIndex.Version, diff)
+				}
+			} else if test.wantFoo == nil {
+				if !derrors.IsNotFound(err) {
+					t.Errorf("expected Not Found error for foo, got %v", err)
+				}
+			} else {
+				t.Fatal(err)
 			}
-			sort.Slice(got, func(i, j int) bool {
-				return got[i].ModulePath < got[j].ModulePath
-			})
-			if diff := cmp.Diff(test.wantErrors, got, ignore); diff != "" {
-				t.Errorf("testDB.GetRecentFailedVersions(ctx, 100) mismatch (-want +got):\n%s", diff)
+			got, err = testDB.GetVersionState(ctx, barIndex.Path, barIndex.Version)
+			if err == nil {
+				if diff := cmp.Diff(test.wantBar, got, ignore); diff != "" {
+					t.Errorf("testDB.GetVersionState(ctx, %q, %q) mismatch (-want +got):\n%s",
+						barIndex.Path, barIndex.Version, diff)
+				}
+			} else if test.wantBar == nil {
+				if !derrors.IsNotFound(err) {
+					t.Errorf("expected Not Found error for bar, got %v", err)
+				}
+			} else {
+				t.Fatal(err)
 			}
 		})
 	}

@@ -62,7 +62,7 @@ func TestReFetch(t *testing.T) {
 
 	// First fetch and insert a version containing package foo, and verify that
 	// foo can be retrieved.
-	teardownProxy, client := proxy.SetupTestProxy(ctx, t, []*proxy.TestVersion{
+	teardownProxy, client := proxy.SetupTestProxy(t, []*proxy.TestVersion{
 		proxy.NewTestVersion(t, modulePath, version, foo),
 	})
 	defer teardownProxy(t)
@@ -74,7 +74,7 @@ func TestReFetch(t *testing.T) {
 	}
 
 	// Now re-fetch and verify that contents were overwritten.
-	teardownProxy, client = proxy.SetupTestProxy(ctx, t, []*proxy.TestVersion{
+	teardownProxy, client = proxy.SetupTestProxy(t, []*proxy.TestVersion{
 		proxy.NewTestVersion(t, modulePath, version, bar),
 	})
 	defer teardownProxy(t)
@@ -213,7 +213,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 		t.Run(test.pkg, func(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
 
-			teardownProxy, client := proxy.SetupTestProxy(ctx, t, nil)
+			teardownProxy, client := proxy.SetupTestProxy(t, nil)
 			defer teardownProxy(t)
 
 			if err := FetchAndInsertVersion(test.modulePath, test.version, client, testDB); err != nil {
@@ -250,9 +250,6 @@ func TestFetchAndInsertVersion(t *testing.T) {
 }
 
 func TestFetchAndInsertVersionTimeout(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
-
 	defer postgres.ResetTestDB(testDB, t)
 
 	defer func(oldTimeout time.Duration) {
@@ -260,7 +257,7 @@ func TestFetchAndInsertVersionTimeout(t *testing.T) {
 	}(fetchTimeout)
 	fetchTimeout = 0
 
-	teardownProxy, client := proxy.SetupTestProxy(ctx, t, nil)
+	teardownProxy, client := proxy.SetupTestProxy(t, nil)
 	defer teardownProxy(t)
 
 	name := "my.mod/version"
@@ -414,7 +411,7 @@ func TestExtractReadmeFromZip(t *testing.T) {
 		},
 	} {
 		t.Run(test.file, func(t *testing.T) {
-			teardownProxy, client := proxy.SetupTestProxy(ctx, t, nil)
+			teardownProxy, client := proxy.SetupTestProxy(t, nil)
 			defer teardownProxy(t)
 
 			reader, err := client.GetZip(ctx, test.name, test.version)
@@ -516,7 +513,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			teardownProxy, client := proxy.SetupTestProxy(ctx, t, nil)
+			teardownProxy, client := proxy.SetupTestProxy(t, nil)
 			defer teardownProxy(t)
 
 			reader, err := client.GetZip(ctx, test.name, test.version)
