@@ -71,7 +71,11 @@ func (s *Server) handleNewVersions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleRefreshSearch(w http.ResponseWriter, r *http.Request) {
-	s.db.RefreshSearchDocuments(r.Context())
+	if err := s.db.RefreshSearchDocuments(r.Context()); err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		log.Printf("db.RefreshSearchDocuments(ctx): %v", err)
+		return
+	}
 }
 
 // handleRetryVersions retries versions in the version_logs table that have
