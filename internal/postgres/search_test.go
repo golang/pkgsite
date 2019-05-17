@@ -6,11 +6,76 @@ package postgres
 
 import (
 	"context"
+	"sort"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/discovery/internal"
 )
+
+func TestPathTokens(t *testing.T) {
+	for _, tc := range []struct {
+		path string
+		want []string
+	}{
+		{
+			path: "context",
+			want: []string{"context"},
+		},
+		{
+			path: "rsc.io/quote",
+			want: []string{
+				"rsc.io",
+				"quote",
+				"rsc.io/quote",
+			},
+		},
+		{
+			path: "golang.org/x/tools/go/packages",
+			want: []string{
+				"go",
+				"go/packages",
+				"golang.org",
+				"golang.org/x",
+				"golang.org/x/tools",
+				"golang.org/x/tools/go",
+				"golang.org/x/tools/go/packages",
+				"packages",
+				"tools",
+				"tools/go",
+				"tools/go/packages",
+				"x",
+				"x/tools",
+				"x/tools/go",
+				"x/tools/go/packages",
+			},
+		},
+		{
+			path: "/example.com/foo///package///",
+			want: []string{
+				"example.com",
+				"example.com/foo",
+				"example.com/foo///package",
+				"foo",
+				"foo///package",
+				"package",
+			},
+		},
+		{
+			path: "/",
+			want: nil,
+		},
+	} {
+		t.Run(tc.path, func(t *testing.T) {
+			got := generateSubPaths(tc.path)
+			sort.Strings(got)
+			sort.Strings(tc.want)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("generateSubPaths(%q) mismatch (-want +got):\n%s", tc.path, diff)
+			}
+		})
+	}
+}
 
 // insertPackage creates and inserts a version using sampleVersion, that has
 // only the package pkg. It is a helper function for

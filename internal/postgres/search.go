@@ -16,56 +16,6 @@ import (
 	"golang.org/x/discovery/internal/derrors"
 )
 
-// RefreshSearchDocuments replaces the old contents ofthe mvw_search_documents
-// and executes the backing query to provide new data. It does so without
-// locking out concurrent selects on the materialized view.
-func (db *DB) RefreshSearchDocuments(ctx context.Context) error {
-	query := "REFRESH MATERIALIZED VIEW CONCURRENTLY mvw_search_documents;"
-	if _, err := db.ExecContext(ctx, query); err != nil {
-		return fmt.Errorf("db.ExecContext(ctx, %q): %v", query, err)
-	}
-	return nil
-}
-
-// InsertDocuments inserts a row for each package in the version.
-//
-// The returned error may be checked with derrors.IsInvalidArgument to
-// determine if it was caused by an invalid version.
-func (db *DB) InsertDocuments(ctx context.Context, version *internal.Version) error {
-	if err := validateVersion(version); err != nil {
-		return derrors.InvalidArgument(fmt.Sprintf("validateVersion(%+v): %v", version, err))
-	}
-
-	return db.Transact(func(tx *sql.Tx) error {
-		return prepareAndExec(tx, `INSERT INTO documents (
-				package_path,
-				package_suffix,
-				module_path,
-				series_path,
-				version,
-				tsv_search_tokens
-			) VALUES(
-				 $1,
-				 $2,
-				 $3,
-				 $4,
-				 $5,
-				SETWEIGHT(TO_TSVECTOR($6), 'A') ||
-				SETWEIGHT(TO_TSVECTOR($7), 'A') ||
-				SETWEIGHT(TO_TSVECTOR($8), 'B') ||
-				SETWEIGHT(TO_TSVECTOR($9), 'C')
-			) ON CONFLICT DO NOTHING;`, func(stmt *sql.Stmt) error {
-			for _, p := range version.Packages {
-				pathTokens := strings.Join([]string{p.Path, version.ModulePath, version.SeriesPath}, " ")
-				if _, err := stmt.ExecContext(ctx, p.Path, p.Suffix, version.ModulePath, version.SeriesPath, version.Version, p.Name, pathTokens, p.Synopsis, version.ReadmeContents); err != nil {
-					return fmt.Errorf("error inserting document for package %+v: %v", p, err)
-				}
-			}
-			return nil
-		})
-	})
-}
-
 // SearchResult represents a single search result from SearchDocuments.
 type SearchResult struct {
 	Name        string
@@ -164,4 +114,78 @@ func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int)
 		})
 	}
 	return results, nil
+}
+
+// RefreshSearchDocuments replaces the old contents ofthe mvw_search_documents
+// and executes the backing query to provide new data. It does so without
+// locking out concurrent selects on the materialized view.
+func (db *DB) RefreshSearchDocuments(ctx context.Context) error {
+	query := "REFRESH MATERIALIZED VIEW CONCURRENTLY mvw_search_documents;"
+	if _, err := db.ExecContext(ctx, query); err != nil {
+		return fmt.Errorf("db.ExecContext(ctx, %q): %v", query, err)
+	}
+	return nil
+}
+
+// InsertDocuments inserts a row for each package in the version.
+//
+// The returned error may be checked with derrors.IsInvalidArgument to
+// determine if it was caused by an invalid version.
+func (db *DB) InsertDocuments(ctx context.Context, version *internal.Version) error {
+	if err := validateVersion(version); err != nil {
+		return derrors.InvalidArgument(fmt.Sprintf("validateVersion(%+v): %v", version, err))
+	}
+
+	return db.Transact(func(tx *sql.Tx) error {
+		return prepareAndExec(tx, `INSERT INTO documents (
+				package_path,
+				package_suffix,
+				module_path,
+				series_path,
+				version,
+				tsv_search_tokens
+			) VALUES(
+				 $1,
+				 $2,
+				 $3,
+				 $4,
+				 $5,
+				SETWEIGHT(TO_TSVECTOR($6), 'A') ||
+				SETWEIGHT(TO_TSVECTOR($7), 'A') ||
+				SETWEIGHT(TO_TSVECTOR($8), 'B') ||
+				SETWEIGHT(TO_TSVECTOR($9), 'C')
+			) ON CONFLICT DO NOTHING;`, func(stmt *sql.Stmt) error {
+			for _, p := range version.Packages {
+				if _, err := stmt.ExecContext(ctx, p.Path, p.Suffix, version.ModulePath, version.SeriesPath, version.Version, p.Name, strings.Join(generateSubPaths(p.Path), " "), p.Synopsis, version.ReadmeContents); err != nil {
+					return fmt.Errorf("error inserting document for package %+v: %v", p, err)
+				}
+			}
+			return nil
+		})
+	})
+}
+
+// generateSubPaths returns the path token parts that will be indexed for search,
+// which include the packagePath and all sub-paths of the packagePath.
+func generateSubPaths(packagePath string) []string {
+	packagePath = strings.TrimRight(strings.TrimLeft(packagePath, "/"), "/")
+
+	subPathSet := make(map[string]bool)
+	parts := strings.Split(packagePath, "/")
+	for i := 0; i < len(parts); i++ {
+		subPathSet[parts[i]] = true
+		for j := i + 1; j <= len(parts); j++ {
+			p := strings.Join(parts[i:j], "/")
+			p = strings.TrimRight(strings.TrimLeft(p, "/"), "/")
+			subPathSet[p] = true
+		}
+	}
+
+	var subPaths []string
+	for sp := range subPathSet {
+		if len(sp) > 0 {
+			subPaths = append(subPaths, sp)
+		}
+	}
+	return subPaths
 }
