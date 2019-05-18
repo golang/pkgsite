@@ -140,7 +140,7 @@ func bulkInsert(ctx context.Context, tx *sql.Tx, table string, columns []string,
 	}
 
 	if _, err := tx.ExecContext(ctx, query, values...); err != nil {
-		return fmt.Errorf("tx.ExecContext(ctx, %q, values): %v", query, err)
+		return fmt.Errorf("tx.ExecContext(ctx, [bulk insert query], values): %v", err)
 	}
 	return nil
 }
