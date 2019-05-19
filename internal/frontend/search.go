@@ -138,10 +138,10 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, limit, 
 	}, nil
 }
 
-// HandleSearch applies database data to the search template. Handles endpoint
+// handleSearch applies database data to the search template. Handles endpoint
 // /search?q=<query>. If <query> is an exact match for a package path, the user
 // will be redirected to the details page.
-func (c *Controller) HandleSearch(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	query := strings.TrimSpace(r.FormValue("q"))
 	if query == "" {
@@ -149,7 +149,7 @@ func (c *Controller) HandleSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pkg, err := c.db.GetLatestPackage(ctx, path.Clean(query))
+	pkg, err := s.db.GetLatestPackage(ctx, path.Clean(query))
 	if err == nil {
 		http.Redirect(w, r, fmt.Sprintf("/%s", pkg.Path), http.StatusFound)
 		return
@@ -178,12 +178,12 @@ func (c *Controller) HandleSearch(w http.ResponseWriter, r *http.Request) {
 		pageNum = 1
 	}
 
-	page, err := fetchSearchPage(ctx, c.db, query, limit, pageNum)
+	page, err := fetchSearchPage(ctx, s.db, query, limit, pageNum)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		log.Printf("fetchSearchDetails(ctx, db, %q): %v", query, err)
 		return
 	}
 
-	c.renderPage(w, "search.tmpl", page)
+	s.renderPage(w, "search.tmpl", page)
 }

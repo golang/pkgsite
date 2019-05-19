@@ -548,11 +548,11 @@ func fetchDetails(ctx context.Context, tab string, db *postgres.DB, pkg *interna
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
 
-// HandleDetails applies database data to the appropriate template. Handles all
+// handleDetails applies database data to the appropriate template. Handles all
 // endpoints that match "/" or "/<import-path>[@<version>?tab=<tab>]"
-func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" {
-		c.renderPage(w, "index.tmpl", nil)
+		s.renderPage(w, "index.tmpl", nil)
 		return
 	}
 
@@ -577,14 +577,14 @@ func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if version == "" {
-		pkg, err = c.db.GetLatestPackage(ctx, path)
+		pkg, err = s.db.GetLatestPackage(ctx, path)
 	} else {
-		pkg, err = c.db.GetPackage(ctx, path, version)
+		pkg, err = s.db.GetPackage(ctx, path, version)
 	}
 	if err != nil {
 		if derrors.IsNotFound(err) {
 			w.WriteHeader(http.StatusNotFound)
-			c.renderPage(w, "package404.tmpl", nil)
+			s.renderPage(w, "package404.tmpl", nil)
 			return
 		}
 		log.Printf("error getting package for %s@%s: %v", path, version, err)
@@ -610,7 +610,7 @@ func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = fetchDetails(ctx, tab, c.db, pkg)
+		details, err = fetchDetails(ctx, tab, s.db, pkg)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			log.Printf("error fetching page for %q: %v", tab, err)
@@ -630,5 +630,5 @@ func (c *Controller) HandleDetails(w http.ResponseWriter, r *http.Request) {
 		Tabs:           tabSettings,
 	}
 
-	c.renderPage(w, tab+".tmpl", page)
+	s.renderPage(w, tab+".tmpl", page)
 }

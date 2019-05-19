@@ -11,7 +11,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"time"
 
 	"golang.org/x/discovery/internal/frontend"
@@ -38,25 +37,10 @@ func main() {
 	}
 	defer db.Close()
 
-	templateDir := filepath.Join(*staticPath, "html")
-	controller, err := frontend.New(db, templateDir, *reloadTemplates)
+	server, err := frontend.NewServer(db, *staticPath, *reloadTemplates)
 	if err != nil {
-		log.Fatalf("frontend.New(db, %q): %v", templateDir, err)
+		log.Fatalf("frontend.NewServer: %v", err)
 	}
-
-	mux := http.NewServeMux()
-	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(*staticPath))))
-	mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(*staticPath)))
-	})
-	mux.HandleFunc("/search/", controller.HandleSearch)
-	mux.HandleFunc("/license-policy/", controller.HandleStaticPage("license_policy.tmpl"))
-	mux.HandleFunc("/", controller.HandleDetails)
-
-	mw := middleware.Chain(
-		middleware.SecureHeaders(),
-		middleware.Timeout(1*time.Minute),
-	)
 
 	// Default to addr on localhost to prevent external connections. When running
 	// in prod, App Engine requires that the app listens on the port specified by
@@ -67,9 +51,14 @@ func main() {
 	} else {
 		addr = "localhost:8080"
 	}
-
 	log.Printf("Listening on addr %s", addr)
-	log.Fatal(http.ListenAndServe(addr, mw(mux)))
+
+	mw := middleware.Chain(
+		middleware.SecureHeaders(),
+		middleware.Timeout(1*time.Minute),
+	)
+	log.Fatal(http.ListenAndServe(addr, mw(server)))
+
 }
 
 func dbConnInfo(ctx context.Context) (string, error) {

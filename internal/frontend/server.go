@@ -18,8 +18,10 @@ import (
 	"golang.org/x/discovery/internal/postgres"
 )
 
-// Controller handles requests for the various frontend pages.
-type Controller struct {
+// Server handles requests for the various frontend pages.
+type Server struct {
+	http.Handler
+
 	db              *postgres.DB
 	templateDir     string
 	reloadTemplates bool
@@ -28,37 +30,51 @@ type Controller struct {
 	templates map[string]*template.Template
 }
 
-// New creates a new Controller for the given database and template directory.
+// New creates a new Server for the given database and template directory.
 // reloadTemplates should be used during development when it can be helpful to
 // reload templates from disk each time a page is loaded.
-func New(db *postgres.DB, templateDir string, reloadTemplates bool) (*Controller, error) {
+func NewServer(db *postgres.DB, staticPath string, reloadTemplates bool) (*Server, error) {
+	templateDir := filepath.Join(staticPath, "html")
 	ts, err := parsePageTemplates(templateDir)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing templates: %v", err)
 	}
-	return &Controller{
+
+	mux := http.NewServeMux()
+	s := &Server{
+		Handler:         mux,
 		db:              db,
 		templateDir:     templateDir,
 		reloadTemplates: reloadTemplates,
 		templates:       ts,
-	}, nil
+	}
+
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticPath))))
+	mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(staticPath)))
+	})
+	mux.HandleFunc("/search/", s.handleSearch)
+	mux.HandleFunc("/license-policy/", s.handleStaticPage("license_policy.tmpl"))
+	mux.HandleFunc("/", s.handleDetails)
+
+	return s, nil
 }
 
-// HandleStaticPage handles requests to a template that contains no dynamic
+// handleStaticPage handles requests to a template that contains no dynamic
 // content.
-func (c *Controller) HandleStaticPage(templateName string) http.HandlerFunc {
+func (s *Server) handleStaticPage(templateName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		c.renderPage(w, templateName, basePageData{Title: "Licenses"})
+		s.renderPage(w, templateName, basePageData{Title: "Licenses"})
 	}
 }
 
-// renderPage is used to execute all templates for a *Controller.
-func (c *Controller) renderPage(w http.ResponseWriter, templateName string, page interface{}) {
-	if c.reloadTemplates {
-		c.mu.Lock()
+// renderPage is used to execute all templates for a *Server.
+func (s *Server) renderPage(w http.ResponseWriter, templateName string, page interface{}) {
+	if s.reloadTemplates {
+		s.mu.Lock()
 		var err error
-		c.templates, err = parsePageTemplates(c.templateDir)
-		c.mu.Unlock()
+		s.templates, err = parsePageTemplates(s.templateDir)
+		s.mu.Unlock()
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			log.Printf("Error parsing templates: %v", err)
@@ -66,10 +82,10 @@ func (c *Controller) renderPage(w http.ResponseWriter, templateName string, page
 		}
 	}
 
-	c.mu.RLock()
-	defer c.mu.RUnlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	var buf bytes.Buffer
-	if err := c.templates[templateName].Execute(&buf, page); err != nil {
+	if err := s.templates[templateName].Execute(&buf, page); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		log.Printf("Error executing page template %q: %v", templateName, err)
 		return
