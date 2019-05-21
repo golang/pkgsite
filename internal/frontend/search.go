@@ -80,10 +80,11 @@ func numPages(limit, numResults int) int {
 func pagesToLink(page, numPages, numPagesToLink int) []int {
 	var pages []int
 	start := page - (numPagesToLink / 2)
+	if (numPages - start) < numPagesToLink {
+		start = numPages - numPagesToLink + 1
+	}
 	if start < 1 {
 		start = 1
-	} else if (numPages - start) < numPagesToLink {
-		start = numPages - numPagesToLink + 1
 	}
 
 	for i := start; (i < start+numPagesToLink) && (i <= numPages); i++ {

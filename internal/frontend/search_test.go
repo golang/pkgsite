@@ -322,6 +322,13 @@ func TestPagesToDisplay(t *testing.T) {
 			numToDisplay: 4,
 			wantPages:    []int{8, 9, 10, 11},
 		},
+		{
+			name:         "page 4 of 6, displays all pages",
+			page:         4,
+			numPages:     6,
+			numToDisplay: 7,
+			wantPages:    []int{1, 2, 3, 4, 5, 6},
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			got := pagesToLink(tc.page, tc.numPages, tc.numToDisplay)
