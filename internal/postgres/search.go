@@ -156,7 +156,7 @@ func (db *DB) InsertDocuments(ctx context.Context, version *internal.Version) er
 				SETWEIGHT(TO_TSVECTOR($9), 'C')
 			) ON CONFLICT DO NOTHING;`, func(stmt *sql.Stmt) error {
 			for _, p := range version.Packages {
-				if _, err := stmt.ExecContext(ctx, p.Path, p.Suffix, version.ModulePath, version.SeriesPath, version.Version, p.Name, strings.Join(generateSubPaths(p.Path), " "), p.Synopsis, version.ReadmeContents); err != nil {
+				if _, err := stmt.ExecContext(ctx, p.Path, p.Suffix, version.ModulePath, version.SeriesPath, version.Version, p.Name, strings.Join(generatePathTokens(p.Path), " "), p.Synopsis, version.ReadmeContents); err != nil {
 					return fmt.Errorf("error inserting document for package %+v: %v", p, err)
 				}
 			}
@@ -165,18 +165,36 @@ func (db *DB) InsertDocuments(ctx context.Context, version *internal.Version) er
 	})
 }
 
-// generateSubPaths returns the path token parts that will be indexed for search,
-// which include the packagePath and all sub-paths of the packagePath.
-func generateSubPaths(packagePath string) []string {
-	packagePath = strings.TrimRight(strings.TrimLeft(packagePath, "/"), "/")
+// generatePathTokens returns the subPaths and path token parts that will be
+// indexed for search, which includes (1) the packagePath (2) all sub-paths of
+// the packagePath (3) all parts for a path element that is delimited by a dash
+// and (4) all parts of a path element that is delimited by a dot, except for
+// the last element.
+func generatePathTokens(packagePath string) []string {
+	packagePath = strings.Trim(packagePath, "/")
 
 	subPathSet := make(map[string]bool)
 	parts := strings.Split(packagePath, "/")
 	for i := 0; i < len(parts); i++ {
 		subPathSet[parts[i]] = true
+
+		dotParts := strings.Split(parts[i], ".")
+		if len(dotParts) > 1 {
+			for _, p := range dotParts[:len(dotParts)-1] {
+				subPathSet[p] = true
+			}
+		}
+
+		dashParts := strings.Split(parts[i], "-")
+		if len(dashParts) > 1 {
+			for _, p := range dashParts {
+				subPathSet[p] = true
+			}
+		}
+
 		for j := i + 1; j <= len(parts); j++ {
 			p := strings.Join(parts[i:j], "/")
-			p = strings.TrimRight(strings.TrimLeft(p, "/"), "/")
+			p = strings.Trim(p, "/")
 			subPathSet[p] = true
 		}
 	}

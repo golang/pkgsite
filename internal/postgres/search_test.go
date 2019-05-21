@@ -25,9 +25,21 @@ func TestPathTokens(t *testing.T) {
 		{
 			path: "rsc.io/quote",
 			want: []string{
-				"rsc.io",
 				"quote",
+				"rsc",
+				"rsc.io",
 				"rsc.io/quote",
+			},
+		},
+		{
+			path: "k8s.io/client-go",
+			want: []string{
+				"k8s",
+				"k8s.io",
+				"client",
+				"go",
+				"client-go",
+				"k8s.io/client-go",
 			},
 		},
 		{
@@ -35,6 +47,7 @@ func TestPathTokens(t *testing.T) {
 			want: []string{
 				"go",
 				"go/packages",
+				"golang",
 				"golang.org",
 				"golang.org/x",
 				"golang.org/x/tools",
@@ -51,14 +64,47 @@ func TestPathTokens(t *testing.T) {
 			},
 		},
 		{
-			path: "/example.com/foo///package///",
+			path: "/example.com/foo-bar///package///",
 			want: []string{
+				"bar",
+				"example",
 				"example.com",
-				"example.com/foo",
-				"example.com/foo///package",
+				"example.com/foo-bar",
+				"example.com/foo-bar///package",
 				"foo",
-				"foo///package",
+				"foo-bar",
+				"foo-bar///package",
 				"package",
+			},
+		},
+		{
+			path: "cloud.google.com/go/cmd/go-cloud-debug-agent/internal/valuecollector",
+			want: []string{
+				"agent",
+				"cloud",
+				"cloud.google.com",
+				"cloud.google.com/go",
+				"cloud.google.com/go/cmd",
+				"cloud.google.com/go/cmd/go-cloud-debug-agent",
+				"cloud.google.com/go/cmd/go-cloud-debug-agent/internal",
+				"cloud.google.com/go/cmd/go-cloud-debug-agent/internal/valuecollector",
+				"cmd",
+				"cmd/go-cloud-debug-agent",
+				"cmd/go-cloud-debug-agent/internal",
+				"cmd/go-cloud-debug-agent/internal/valuecollector",
+				"debug",
+				"go",
+				"go-cloud-debug-agent",
+				"go-cloud-debug-agent/internal",
+				"go-cloud-debug-agent/internal/valuecollector",
+				"go/cmd",
+				"go/cmd/go-cloud-debug-agent",
+				"go/cmd/go-cloud-debug-agent/internal",
+				"go/cmd/go-cloud-debug-agent/internal/valuecollector",
+				"google",
+				"internal",
+				"internal/valuecollector",
+				"valuecollector",
 			},
 		},
 		{
@@ -67,11 +113,11 @@ func TestPathTokens(t *testing.T) {
 		},
 	} {
 		t.Run(tc.path, func(t *testing.T) {
-			got := generateSubPaths(tc.path)
+			got := generatePathTokens(tc.path)
 			sort.Strings(got)
 			sort.Strings(tc.want)
 			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("generateSubPaths(%q) mismatch (-want +got):\n%s", tc.path, diff)
+				t.Errorf("generatePathTokens(%q) mismatch (-want +got):\n%s", tc.path, diff)
 			}
 		})
 	}
