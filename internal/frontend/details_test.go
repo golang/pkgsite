@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"html/template"
+	"net/url"
 	"testing"
 	"time"
 
@@ -713,6 +714,68 @@ func TestFetchImportedByDetails(t *testing.T) {
 			tc.wantDetails.ModulePath = vp.VersionInfo.ModulePath
 			if diff := cmp.Diff(tc.wantDetails, got, cmpopts.IgnoreFields(DetailsPage{}, "PackageHeader")); diff != "" {
 				t.Errorf("fetchImportedByDetails(ctx, db, %q) mismatch (-want +got):\n%s", tc.pkg.Path, diff)
+			}
+		})
+	}
+}
+
+func TestParseModulePathAndVersion(t *testing.T) {
+	testCases := []struct {
+		name        string
+		url         string
+		wantModule  string
+		wantVersion string
+		wantErr     bool
+	}{
+		{
+			name:        "valid_url",
+			url:         "https://discovery.com/test.module@v1.0.0",
+			wantModule:  "test.module",
+			wantVersion: "v1.0.0",
+		},
+		{
+			name:        "valid_url_with_tab",
+			url:         "https://discovery.com/test.module@v1.0.0?tab=docs",
+			wantModule:  "test.module",
+			wantVersion: "v1.0.0",
+		},
+		{
+			name:        "valid_url_missing_version",
+			url:         "https://discovery.com/module",
+			wantModule:  "module",
+			wantVersion: "",
+		},
+		{
+			name:    "invalid_url",
+			url:     "https://discovery.com/",
+			wantErr: true,
+		},
+		{
+			name:    "invalid_url_missing_module",
+			url:     "https://discovery.com@v1.0.0",
+			wantErr: true,
+		},
+		{
+			name:    "invalid_version",
+			url:     "https://discovery.com/module@v1.0.0invalid",
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			u, parseErr := url.Parse(tc.url)
+			if parseErr != nil {
+				t.Errorf("url.Parse(%q): %v", tc.url, parseErr)
+			}
+
+			gotModule, gotVersion, err := parseModulePathAndVersion(u.Path)
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("parseModulePathAndVersion(%v) error = (%v); want error %t)", u, err, tc.wantErr)
+			}
+			if !tc.wantErr && (tc.wantModule != gotModule || tc.wantVersion != gotVersion) {
+				t.Fatalf("parseModulePathAndVersion(%v): %q, %q, %v; want = %q, %q, want err %t",
+					u, gotModule, gotVersion, err, tc.wantModule, tc.wantVersion, tc.wantErr)
 			}
 		})
 	}

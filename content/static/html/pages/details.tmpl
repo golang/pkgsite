@@ -12,7 +12,7 @@
      <strong>{{$header.Version}} </strong><span>({{$header.CommitTime}})</span>
      <span>|</span>
      {{range $i, $e := $header.Licenses -}}{{if $i}}, {{end}}
-       <a href="/{{$header.Path}}?v={{$header.Version}}&tab=licenses#{{.Anchor}}"><strong>{{$e.Type}}</strong></a>
+       <a href="/{{$header.Path}}@{{$header.Version}}?tab=licenses#{{.Anchor}}"><strong>{{$e.Type}}</strong></a>
      {{- else -}}
        <span>No license files detected</span>
      {{- end}}
@@ -23,7 +23,7 @@
  <ul class="ModulesNav">
    {{range .Tabs}}
      <li class="{{if eq .Name $.Settings.Name}}active {{end}}ModulesNav-tab">
-       <a href="/{{$header.Path}}?v={{$header.Version}}&tab={{.Name}}" class="ModulesNav-link">{{.DisplayName}}</a>
+       <a href="/{{$header.Path}}@{{$header.Version}}?tab={{.Name}}" class="ModulesNav-link">{{.DisplayName}}</a>
      </li>
    {{end}}
  </ul>

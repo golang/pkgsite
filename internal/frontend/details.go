@@ -548,7 +548,31 @@ func fetchDetails(ctx context.Context, tab string, db *postgres.DB, pkg *interna
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
 
-// handleDetails applies database data to the appropriate template. Handles all
+// parseModulePathAndVersion returns the module and version specified by
+// urlPath. urlPath is assumed to be a valid path following the structure
+// /<module>@<version>.
+func parseModulePathAndVersion(urlPath string) (importPath, version string, err error) {
+	parts := strings.Split(strings.TrimPrefix(urlPath, "/"), "@")
+	if len(parts) < 1 || len(parts) > 2 {
+		return "", "", fmt.Errorf("malformed URL path %q", urlPath)
+	}
+
+	importPath = parts[0]
+	if err := module.CheckImportPath(importPath); err != nil {
+		return "", "", fmt.Errorf("malformed import path %q: %v", importPath, err)
+	}
+	if len(parts) == 1 {
+		return importPath, "", nil
+	}
+
+	version = parts[1]
+	if !semver.IsValid(version) {
+		return "", "", fmt.Errorf("malformed version %q: semver.IsValid(%q) = false", parts[1], parts[1])
+	}
+	return importPath, version, nil
+}
+
+// HandleDetails applies database data to the appropriate template. Handles all
 // endpoints that match "/" or "/<import-path>[@<version>?tab=<tab>]"
 func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" {
@@ -556,26 +580,17 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	path := strings.TrimPrefix(r.URL.Path, "/")
-	if err := module.CheckImportPath(path); err != nil {
-		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-		log.Printf("Malformed path %q: %v", path, err)
-		return
-	}
-
-	version := r.FormValue("v")
-	if version != "" && !semver.IsValid(version) {
+	path, version, err := parseModulePathAndVersion(r.URL.Path)
+	if err != nil {
+		log.Printf("parseModulePathAndVersion(%q): %v", r.URL.Path, err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		log.Printf("Malformed version %q", version)
 		return
 	}
 
 	var (
 		pkg *internal.VersionedPackage
-		err error
 		ctx = r.Context()
 	)
-
 	if version == "" {
 		pkg, err = s.db.GetLatestPackage(ctx, path)
 	} else {
