@@ -7,29 +7,16 @@
 <div class="Container">
  {{$header := .PackageHeader}}
  <header>
-   <h1>{{$header.Title}}</h1>
-   {{if not $header.IsCommand}}
-     <p>import "{{$header.Path}}"</p>
-   {{end}}
+   <h1>{{$header.Path}}</h1>
    <p>
-    {{if $header.IsRedistributable -}}
-      {{$header.Synopsis}}
-    {{- else -}}
-      <em>Synopsis hidden due to license restrictions.</em>
-    {{end}}
-    </p>
-   <p>
-     <b>Version: </b><span>{{$header.Version}}</span>
+     <strong>{{$header.Version}} </strong><span>({{$header.CommitTime}})</span>
      <span>|</span>
-     <b>Published: </b><span>{{$header.CommitTime}}</span>
-     <span>|</span>
-     <b>{{pluralize (len $header.Licenses) "License"}}: </b>
-      {{range $i, $e := $header.Licenses -}}{{if $i}}, {{end}}
-        <a href="/{{$header.Path}}?v={{$header.Version}}&tab=licenses#{{.Anchor}}">{{$e.Type}}</a>
-      {{- else -}}
-        <span>No license files detected</span>
-      {{- end}}
-      <a href="/license-policy/" class="Disclaimer-link">(This is not legal advice)</a>
+     {{range $i, $e := $header.Licenses -}}{{if $i}}, {{end}}
+       <a href="/{{$header.Path}}?v={{$header.Version}}&tab=licenses#{{.Anchor}}"><strong>{{$e.Type}}</strong></a>
+     {{- else -}}
+       <span>No license files detected</span>
+     {{- end}}
+     <a href="/license-policy/" class="Disclaimer-link"><em>not legal advice</em></a>
    </p>
  </header>
 
