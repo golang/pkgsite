@@ -500,6 +500,20 @@ func TestExtractPackagesFromZip(t *testing.T) {
 			version:  "v1.0.0",
 			packages: map[string]*internal.Package{},
 		},
+		{
+			name:    "bad.mod/module",
+			version: "v1.0.0",
+			packages: map[string]*internal.Package{
+				"good": &internal.Package{
+					Name:              "good",
+					Path:              "bad.mod/module/good",
+					Synopsis:          "Package good is inside a module that has bad packages.",
+					DocumentationHTML: []byte("const Good = true"),
+					Imports:           nil,
+					Suffix:            "good",
+				},
+			},
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			teardownProxy, client := proxy.SetupTestProxy(ctx, t, nil)

@@ -281,9 +281,14 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 	for innerPath, goFiles := range dirs {
 		importPath := path.Join(modulePath, innerPath)
 		pkg, err := loadPackage(goFiles, importPath, innerPath)
-		if err != nil {
-			return nil, err
-		} else if pkg == nil {
+		if _, ok := err.(*BadPackageError); ok {
+			// TODO(b/133187024): Record and display this information instead of just skipping.
+			log.Printf("skipping %q because of *BadPackageError: %v\n", importPath, err)
+			continue
+		} else if err != nil {
+			return nil, fmt.Errorf("unexpected error loading package: %v", err)
+		}
+		if pkg == nil {
 			// No package.
 			continue
 		}
@@ -324,6 +329,17 @@ func isVendored(importPath string) bool {
 		strings.Contains(importPath, "/vendor/")
 }
 
+// BadPackageError represents an error loading a package
+// because its contents do not make up a valid package.
+//
+// This can happen, for example, if the .go files fail
+// to parse or declare different package names.
+type BadPackageError struct {
+	Err error // Not nil.
+}
+
+func (bpe *BadPackageError) Error() string { return bpe.Err.Error() }
+
 // loadPackage loads a Go package with import path importPath
 // from zipGoFiles using the default build context.
 //
@@ -334,8 +350,8 @@ func isVendored(importPath string) bool {
 //
 // It returns a nil Package if the directory doesn't contain a Go package
 // or all .go files have been excluded by constraints.
-// A *build.MultiplePackageError error is returned if the directory
-// contains multiple buildable Go source files for multiple packages.
+// A *BadPackageError error is returned if the directory
+// contains .go files but do not make up a valid package.
 func loadPackage(zipGoFiles []*zip.File, importPath, innerPath string) (*internal.Package, error) {
 	var (
 		// files is a map of file names to their contents.
@@ -417,18 +433,21 @@ func loadPackage(zipGoFiles []*zip.File, importPath, innerPath string) (*interna
 		}
 		pf, err := parser.ParseFile(fset, f.Name, b, parser.ParseComments)
 		if err != nil {
-			return nil, err
+			if pf == nil {
+				return nil, fmt.Errorf("internal error: the source couldn't be read: %v", err)
+			}
+			return nil, &BadPackageError{Err: err}
 		}
 		goFiles[f.Name] = pf
 		if len(goFiles) == 1 {
 			packageName = pf.Name.Name
 			packageNameFile = f.Name
 		} else if pf.Name.Name != packageName {
-			return nil, &build.MultiplePackageError{
+			return nil, &BadPackageError{Err: &build.MultiplePackageError{
 				Dir:      innerPath,
 				Packages: []string{packageName, pf.Name.Name},
 				Files:    []string{packageNameFile, f.Name},
-			}
+			}}
 		}
 	}
 	if len(goFiles) == 0 {

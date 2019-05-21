@@ -119,6 +119,7 @@ func defaultTestVersions() []*TestVersion {
 		[]string{"emp.ty/module", "v1.0.0"},
 		[]string{"rsc.io/quote", "v1.5.2"},
 		[]string{"rsc.io/quote/v2", "v2.0.1"},
+		[]string{"bad.mod/module", "v1.0.0"},
 	} {
 		rootDir := filepath.Join(absPath, "modules")
 		bytes, err := zipFiles(rootDir, filepath.FromSlash(fmt.Sprintf("%s@%s", v[0], v[1])))
