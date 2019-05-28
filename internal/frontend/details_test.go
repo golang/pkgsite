@@ -180,12 +180,30 @@ func TestFetchVersionsDetails(t *testing.T) {
 		modulePath2 = "test.com/module/v2"
 		pkg1Path    = "test.com/module/pkg_name"
 		pkg2Path    = "test.com/module/v2/pkg_name"
-		pkg1        = &internal.Package{
-			Name:     "pkg_name",
-			Path:     pkg1Path,
-			Synopsis: "test synopsis",
-			Licenses: sampleLicenseMetadata,
-			Suffix:   "pkg_name",
+		versionInfo = internal.VersionInfo{
+			SeriesPath: "test.com/module",
+			ModulePath: "test.com/module/v2",
+			Version:    "v2.2.1-alpha.1",
+		}
+		pkg1 = &internal.VersionedPackage{
+			Package: internal.Package{
+				Name:     "pkg_name",
+				Path:     pkg1Path,
+				Synopsis: "test synopsis",
+				Licenses: sampleLicenseMetadata,
+				Suffix:   "pkg_name",
+			},
+			VersionInfo: versionInfo,
+		}
+		latestTagged = &Package{
+			Version:    "2.2.1-alpha.1",
+			Path:       pkg2Path,
+			CommitTime: "today",
+		}
+		latestPseudo = &Package{
+			Version:    "0.0.0-20140414041502-3c2ca4d52544",
+			Path:       pkg1Path,
+			CommitTime: "today",
 		}
 	)
 
@@ -199,144 +217,105 @@ func TestFetchVersionsDetails(t *testing.T) {
 			path:    pkg1Path,
 			version: "v1.2.1",
 			versions: []*internal.Version{
-				getTestVersion(pkg1Path, modulePath1, "v1.2.3", internal.VersionTypeRelease, pkg1),
-				getTestVersion(pkg2Path, modulePath2, "v2.0.0", internal.VersionTypeRelease, pkg1),
-				getTestVersion(pkg1Path, modulePath1, "v1.3.0", internal.VersionTypeRelease, pkg1),
-				getTestVersion(pkg1Path, modulePath1, "v1.2.1", internal.VersionTypeRelease, pkg1),
-				getTestVersion(pkg1Path, modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", internal.VersionTypePseudo, pkg1),
-				getTestVersion(pkg2Path, modulePath2, "v2.2.1-alpha.1", internal.VersionTypePrerelease, pkg1),
+				getTestVersion(pkg1Path, modulePath1, "v1.2.3", internal.VersionTypeRelease, &pkg1.Package),
+				getTestVersion(pkg2Path, modulePath2, "v2.0.0", internal.VersionTypeRelease, &pkg1.Package),
+				getTestVersion(pkg1Path, modulePath1, "v1.3.0", internal.VersionTypeRelease, &pkg1.Package),
+				getTestVersion(pkg1Path, modulePath1, "v1.2.1", internal.VersionTypeRelease, &pkg1.Package),
+				getTestVersion(pkg1Path, modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", internal.VersionTypePseudo, &pkg1.Package),
+				getTestVersion(pkg2Path, modulePath2, "v2.2.1-alpha.1", internal.VersionTypePrerelease, &pkg1.Package),
 			},
 			wantDetails: &VersionsDetails{
-				Versions: []*MajorVersionGroup{
-					&MajorVersionGroup{
-						Level: "v2",
-						Latest: &Package{
-							Version:    "2.2.1-alpha.1",
-							Path:       pkg2Path,
-							CommitTime: "today",
-						},
-						Versions: []*MinorVersionGroup{
-							&MinorVersionGroup{
-								Level: "2.2",
-								Latest: &Package{
-									Version:    "2.2.1-alpha.1",
-									Path:       pkg2Path,
-									CommitTime: "today",
-								},
-								Versions: []*Package{
-									&Package{
-										Version:    "2.2.1-alpha.1",
-										Path:       pkg2Path,
-										CommitTime: "today",
-									},
-								},
+				Versions: []*SeriesVersionGroup{{
+					Series: "test.com/module",
+					Latest: latestTagged,
+					MajorVersions: []*MajorVersionGroup{{
+						Major:  "v2",
+						Latest: latestTagged,
+						MinorVersions: []*MinorVersionGroup{{
+							Minor:         "2.2",
+							Latest:        latestTagged,
+							PatchVersions: []*Package{latestTagged},
+						}, {
+							Minor: "2.0",
+							Latest: &Package{
+								Version:    "2.0.0",
+								Path:       pkg2Path,
+								CommitTime: "today",
 							},
-							&MinorVersionGroup{
-								Level: "2.0",
-								Latest: &Package{
-									Version:    "2.0.0",
-									Path:       pkg2Path,
-									CommitTime: "today",
-								},
-								Versions: []*Package{
-									&Package{
-										Version:    "2.0.0",
-										Path:       pkg2Path,
-										CommitTime: "today",
-									},
-								},
-							},
-						},
-					},
-					&MajorVersionGroup{
-						Level: "v1",
+							PatchVersions: []*Package{{
+								Version:    "2.0.0",
+								Path:       pkg2Path,
+								CommitTime: "today",
+							}},
+						}},
+					}, {
+						Major: "v1",
 						Latest: &Package{
 							Version:    "1.3.0",
 							Path:       pkg1Path,
 							CommitTime: "today",
 						},
-						Versions: []*MinorVersionGroup{
-							&MinorVersionGroup{
-								Level: "1.3",
-								Latest: &Package{
-									Version:    "1.3.0",
-									Path:       pkg1Path,
-									CommitTime: "today",
-								},
-								Versions: []*Package{
-									&Package{
-										Version:    "1.3.0",
-										Path:       pkg1Path,
-										CommitTime: "today",
-									},
-								},
+						MinorVersions: []*MinorVersionGroup{{
+							Minor: "1.3",
+							Latest: &Package{
+								Version:    "1.3.0",
+								Path:       pkg1Path,
+								CommitTime: "today",
 							},
-							&MinorVersionGroup{
-								Level: "1.2",
-								Latest: &Package{
-									Version:    "1.2.3",
-									Path:       pkg1Path,
-									CommitTime: "today",
-								},
-								Versions: []*Package{
-									&Package{
-										Version:    "1.2.3",
-										Path:       pkg1Path,
-										CommitTime: "today",
-									},
-									&Package{
-										Version:    "1.2.1",
-										Path:       pkg1Path,
-										CommitTime: "today",
-									},
-								},
+							PatchVersions: []*Package{{
+								Version:    "1.3.0",
+								Path:       pkg1Path,
+								CommitTime: "today",
+							}},
+						}, {
+							Minor: "1.2",
+							Latest: &Package{
+								Version:    "1.2.3",
+								Path:       pkg1Path,
+								CommitTime: "today",
 							},
-						},
-					},
-				},
+							PatchVersions: []*Package{{
+								Version:    "1.2.3",
+								Path:       pkg1Path,
+								CommitTime: "today",
+							}, {
+								Version:    "1.2.1",
+								Path:       pkg1Path,
+								CommitTime: "today",
+							}},
+						}},
+					}},
+				}},
 			},
-		},
-		{
+		}, {
 			name:    "want only pseudo",
 			path:    pkg1Path,
 			version: "v0.0.0-20140414041501-3c2ca4d52544",
 			versions: []*internal.Version{
-				getTestVersion(pkg1Path, modulePath1, "v0.0.0-20140414041501-3c2ca4d52544", internal.VersionTypePseudo, pkg1),
-				getTestVersion(pkg1Path, modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", internal.VersionTypePseudo, pkg1),
+				getTestVersion(pkg1Path, modulePath1, "v0.0.0-20140414041501-3c2ca4d52544", internal.VersionTypePseudo, &pkg1.Package),
+				getTestVersion(pkg1Path, modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", internal.VersionTypePseudo, &pkg1.Package),
 			},
 			wantDetails: &VersionsDetails{
-				Versions: []*MajorVersionGroup{
-					&MajorVersionGroup{
-						Level: "v0",
-						Latest: &Package{
-							Version:    "0.0.0-20140414041502-3c2ca4d52544",
-							Path:       pkg1Path,
-							CommitTime: "today",
-						},
-						Versions: []*MinorVersionGroup{
-							&MinorVersionGroup{
-								Level: "0.0",
-								Latest: &Package{
-									Version:    "0.0.0-20140414041502-3c2ca4d52544",
+				Versions: []*SeriesVersionGroup{{
+					Series: "test.com/module",
+					Latest: latestPseudo,
+					MajorVersions: []*MajorVersionGroup{{
+						Major:  "v0",
+						Latest: latestPseudo,
+						MinorVersions: []*MinorVersionGroup{{
+							Minor:  "0.0",
+							Latest: latestPseudo,
+							PatchVersions: []*Package{
+								latestPseudo,
+								{
+									Version:    "0.0.0-20140414041501-3c2ca4d52544",
 									Path:       pkg1Path,
 									CommitTime: "today",
 								},
-								Versions: []*Package{
-									&Package{
-										Version:    "0.0.0-20140414041502-3c2ca4d52544",
-										Path:       pkg1Path,
-										CommitTime: "today",
-									},
-									&Package{
-										Version:    "0.0.0-20140414041501-3c2ca4d52544",
-										Path:       pkg1Path,
-										CommitTime: "today",
-									},
-								},
 							},
-						},
-					},
-				},
+						}},
+					}},
+				}},
 			},
 		},
 	} {

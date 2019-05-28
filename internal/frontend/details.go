@@ -123,23 +123,31 @@ type LicenseMetadata struct {
 // VersionsDetails contains all the data that the versions tab
 // template needs to populate.
 type VersionsDetails struct {
-	Versions []*MajorVersionGroup
+	Versions []*SeriesVersionGroup
+}
+
+// SeriesVersionGroup represents the series level of the versions list
+// hierarchy.
+type SeriesVersionGroup struct {
+	Series        string
+	Latest        *Package
+	MajorVersions []*MajorVersionGroup
 }
 
 // MajorVersionGroup represents the major level of the versions
 // list hierarchy (i.e. "v1").
 type MajorVersionGroup struct {
-	Level    string
-	Latest   *Package
-	Versions []*MinorVersionGroup
+	Major         string
+	Latest        *Package
+	MinorVersions []*MinorVersionGroup
 }
 
 // MinorVersionGroup represents the major/minor level of the versions
 // list hierarchy (i.e. "1.5").
 type MinorVersionGroup struct {
-	Level    string
-	Latest   *Package
-	Versions []*Package
+	Minor         string
+	Latest        *Package
+	PatchVersions []*Package
 }
 
 // Package contains information for an individual package.
@@ -309,7 +317,7 @@ func fetchModuleDetails(ctx context.Context, db *postgres.DB, pkg *internal.Vers
 
 // fetchVersionsDetails fetches data for the module version specified by path and version
 // from the database and returns a VersionsDetails.
-func fetchVersionsDetails(ctx context.Context, db *postgres.DB, pkg *internal.Package) (*VersionsDetails, error) {
+func fetchVersionsDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*VersionsDetails, error) {
 	versions, err := db.GetTaggedVersionsForPackageSeries(ctx, pkg.Path)
 	if err != nil {
 		return nil, fmt.Errorf("db.GetTaggedVersions(%q): %v", pkg.Path, err)
@@ -325,65 +333,74 @@ func fetchVersionsDetails(ctx context.Context, db *postgres.DB, pkg *internal.Pa
 	}
 
 	var (
-		mvg             = []*MajorVersionGroup{}
-		prevMajor       = ""
-		prevMajMin      = ""
-		prevMajorIndex  = -1
-		prevMajMinIndex = -1
+		svg       = []*SeriesVersionGroup{}
+		curSeries *SeriesVersionGroup
+		curMajor  *MajorVersionGroup
+		curMinor  *MinorVersionGroup
 	)
 
 	for _, v := range versions {
-		vStr := v.Version
-		major := semver.Major(vStr)
-		majMin := strings.TrimPrefix(semver.MajorMinor(vStr), "v")
-		fullVersion := strings.TrimPrefix(vStr, "v")
 
-		// It is a bit overly defensive to accept all conventions for leading and
-		// trailing slashes here.
-		modulePath := strings.TrimSuffix(v.ModulePath, "/")
+		suffix := pkg.Suffix
+		if v.SeriesPath != pkg.SeriesPath {
+			// Reverse-engineer the package suffix for package versions from
+			// different modules. For example
+			//	github.com/hashicorp/vault/v2/api
+			// vs.
+			//	github.com/hashicorp/vault/api/v2
+			v1path := pkg.SeriesPath + "/" + pkg.Suffix
+			if !strings.HasPrefix(v1path, v.SeriesPath) {
+				log.Printf("got version with mismatching series: %q", v.SeriesPath)
+				continue
+			}
+			suffix = strings.TrimPrefix(strings.TrimPrefix(v1path, v.SeriesPath), "/")
+		}
+
 		var pkgPath string
-		if pkg.Suffix == "" {
-			pkgPath = modulePath
+		if suffix == "" {
+			pkgPath = v.ModulePath
 		} else {
-			pkgPath = modulePath + "/" + strings.TrimPrefix(pkg.Suffix, "/")
+			pkgPath = v.ModulePath + "/" + suffix
 		}
 
-		if prevMajor != major {
-			prevMajorIndex = len(mvg)
-			prevMajor = major
-			mvg = append(mvg, &MajorVersionGroup{
-				Level: major,
-				Latest: &Package{
-					Version:    fullVersion,
-					Path:       pkgPath,
-					CommitTime: elapsedTime(v.CommitTime),
-				},
-				Versions: []*MinorVersionGroup{},
-			})
-		}
-
-		if prevMajMin != majMin {
-			prevMajMinIndex = len(mvg[prevMajorIndex].Versions)
-			prevMajMin = majMin
-			mvg[prevMajorIndex].Versions = append(mvg[prevMajorIndex].Versions, &MinorVersionGroup{
-				Level: majMin,
-				Latest: &Package{
-					Version:    fullVersion,
-					Path:       pkgPath,
-					CommitTime: elapsedTime(v.CommitTime),
-				},
-			})
-		}
-
-		mvg[prevMajorIndex].Versions[prevMajMinIndex].Versions = append(mvg[prevMajorIndex].Versions[prevMajMinIndex].Versions, &Package{
-			Version:    fullVersion,
+		latest := &Package{
+			Version:    strings.TrimPrefix(v.Version, "v"),
 			Path:       pkgPath,
 			CommitTime: elapsedTime(v.CommitTime),
-		})
+		}
+
+		if series := v.SeriesPath; curSeries == nil || curSeries.Series != series {
+			curSeries = &SeriesVersionGroup{
+				Series: series,
+				Latest: latest,
+			}
+			svg = append(svg, curSeries)
+			// nil-out curMajor and curMinor to force new version groups.
+			curMajor = nil
+			curMinor = nil
+		}
+
+		if major := semver.Major(v.Version); curMajor == nil || curMajor.Major != major {
+			curMajor = &MajorVersionGroup{
+				Major:  major,
+				Latest: latest,
+			}
+			curSeries.MajorVersions = append(curSeries.MajorVersions, curMajor)
+		}
+
+		if majMin := strings.TrimPrefix(semver.MajorMinor(v.Version), "v"); curMinor == nil || curMinor.Minor != majMin {
+			curMinor = &MinorVersionGroup{
+				Minor:  majMin,
+				Latest: latest,
+			}
+			curMajor.MinorVersions = append(curMajor.MinorVersions, curMinor)
+		}
+
+		curMinor.PatchVersions = append(curMinor.PatchVersions, latest)
 	}
 
 	return &VersionsDetails{
-		Versions: mvg,
+		Versions: svg,
 	}, nil
 }
 
@@ -533,7 +550,7 @@ func fetchDetails(ctx context.Context, tab string, db *postgres.DB, pkg *interna
 	case "doc":
 		return fetchDocumentationDetails(ctx, db, pkg)
 	case "versions":
-		return fetchVersionsDetails(ctx, db, &pkg.Package)
+		return fetchVersionsDetails(ctx, db, pkg)
 	case "module":
 		return fetchModuleDetails(ctx, db, pkg)
 	case "imports":

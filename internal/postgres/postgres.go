@@ -408,6 +408,9 @@ func getVersions(ctx context.Context, db *DB, path string, versionTypes []intern
 		versionHistory                            []*internal.VersionInfo
 	)
 
+	// This query is complicated by the need to match my.mod/foo as history for
+	// my.mod/v2/foo -- we need to match all packages in the series with the same
+	// suffix.
 	baseQuery := `WITH package_series AS (
 			SELECT
 				m.series_path,
@@ -433,14 +436,6 @@ func getVersions(ctx context.Context, db *DB, path string, versionTypes []intern
 			ON
 				p.module_path = v.module_path
 				AND p.version = v.version
-		), filters AS (
-			SELECT
-				series_path,
-				package_suffix
-			FROM
-				package_series
-			WHERE
-				package_path = $1
 		)
 		SELECT
 			series_path,
@@ -451,8 +446,10 @@ func getVersions(ctx context.Context, db *DB, path string, versionTypes []intern
 		FROM
 			package_series
 		WHERE
-			series_path IN (SELECT series_path FROM filters)
-			AND package_suffix IN (SELECT package_suffix FROM filters)
+			(series_path, package_suffix) IN (
+				SELECT series_path, package_suffix
+				FROM package_series WHERE package_path=$1
+			)
 			AND (%s)
 		ORDER BY
 			module_path DESC,
@@ -470,9 +467,8 @@ func getVersions(ctx context.Context, db *DB, path string, versionTypes []intern
 
 	var (
 		vtQuery []string
-		params  []interface{}
+		params  = []interface{}{path}
 	)
-	params = append(params, path)
 	for i, vt := range versionTypes {
 		vtQuery = append(vtQuery, fmt.Sprintf(`version_type = $%d`, i+2))
 		params = append(params, vt.String())

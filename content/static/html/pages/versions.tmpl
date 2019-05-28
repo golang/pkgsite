@@ -6,18 +6,26 @@
 
 {{define "details_content"}}
   <div>
-    {{range $major := .Versions}}
-      <h3>{{$major.Level}} - Latest <a href="/{{$major.Latest.Path}}@v{{$major.Latest.Version}}">{{$major.Latest.Version}}</a> - {{$major.Latest.CommitTime}}</h3>
-      <ul>
-        {{range $majMin := $major.Versions}}
-          <li><h4>{{$majMin.Level}} - Latest <a href="/{{$majMin.Latest.Path}}@v{{$majMin.Latest.Version}}">{{$majMin.Latest.Version}}</a> - {{$majMin.Latest.CommitTime}}</h4></li>
-          <ul>
-            {{range $v := $majMin.Versions}}
-              <li><a href="/{{$v.Path}}@v{{$v.Version}}">{{$v.Version}}</a> - {{$v.CommitTime}}</li>
-            {{end}}
-          </ul>
-        {{end}}
-      </ul>
+    {{$showSeries := (gt (len $.Versions) 1)}}
+    {{range $series := .Versions}}
+      {{if $showSeries}}
+        <h3>{{$series.Series}} - Latest <a href="/{{$series.Latest.Path}}@v{{$series.Latest.Version}}">{{$series.Latest.Version}}</a> - {{$series.Latest.CommitTime}}</h3>
+        <ul>
+      {{end}}
+      {{range $major := $series.MajorVersions}}
+        <h3>{{$major.Major}} - Latest <a href="/{{$major.Latest.Path}}@v{{$major.Latest.Version}}">{{$major.Latest.Version}}</a> - {{$major.Latest.CommitTime}}</h3>
+        <ul>
+          {{range $majMin := $major.MinorVersions}}
+            <li><h4>{{$majMin.Minor}} - Latest <a href="/{{$majMin.Latest.Path}}@v{{$majMin.Latest.Version}}">{{$majMin.Latest.Version}}</a> - {{$majMin.Latest.CommitTime}}</h4></li>
+            <ul>
+              {{range $v := $majMin.PatchVersions}}
+                <li><a href="/{{$v.Path}}@v{{$v.Version}}">{{$v.Version}}</a> - {{$v.CommitTime}}</li>
+              {{end}}
+            </ul>
+          {{end}}
+        </ul>
+      {{end}}
+      {{if $showSeries}}</ul>{{end}}
     {{end}}
   </div>
 {{end}}
