@@ -75,7 +75,7 @@ func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int)
 		FROM
 			results r
 		WHERE
-			r.rank > POWER(10,-10)
+			r.rank > 0.1
 		ORDER BY
 			r.rank DESC, package_path
 		LIMIT $2
