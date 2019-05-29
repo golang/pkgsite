@@ -190,6 +190,40 @@ func TestBulkInsert(t *testing.T) {
 	}
 }
 
+func TestLargeBulkInsert(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	if _, err := testDB.ExecContext(ctx, `CREATE TEMPORARY TABLE test_large_bulk (i BIGINT);`); err != nil {
+		t.Fatal(err)
+	}
+	const size = 150000
+	vals := make([]interface{}, size)
+	for i := 0; i < size; i++ {
+		vals[i] = i + 1
+	}
+	if err := testDB.Transact(func(tx *sql.Tx) error {
+		return bulkInsert(ctx, tx, "test_large_bulk", []string{"i"}, vals, "")
+	}); err != nil {
+		t.Fatal(err)
+	}
+	rows, err := testDB.QueryContext(ctx, `SELECT i FROM test_large_bulk;`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sum := int64(0)
+	for rows.Next() {
+		var i int64
+		if err := rows.Scan(&i); err != nil {
+			t.Fatal(err)
+		}
+		sum += i
+	}
+	var want int64 = size * (size + 1) / 2
+	if sum != want {
+		t.Errorf("sum = %d, want %d", sum, want)
+	}
+}
+
 func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()

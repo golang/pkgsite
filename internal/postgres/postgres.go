@@ -93,11 +93,10 @@ const onConflictDoNothing = "ON CONFLICT DO NOTHING"
 // INSERT TO <table> (<columns>) VALUES
 // (<placeholders-for-each-item-in-values>) If conflictNoAction is true, it
 // append ON CONFLICT DO NOTHING to the end of the query.
+//
+// When calling buildInsertQuery, it must be true that
+//	len(values) % len(columns) == 0
 func buildInsertQuery(table string, columns []string, values []interface{}, conflictAction string) (string, error) {
-	if remainder := len(values) % len(columns); remainder != 0 {
-		return "", fmt.Errorf("modulus of len(values) and len(columns) must be 0: got %d", remainder)
-	}
-
 	var b strings.Builder
 	fmt.Fprintf(&b, "INSERT INTO %s", table)
 	fmt.Fprintf(&b, "(%s) VALUES", strings.Join(columns, ", "))
@@ -135,13 +134,31 @@ func buildInsertQuery(table string, columns []string, values []interface{}, conf
 // append ON CONFLICT DO NOTHING to the end of the query. The query is executed
 // using a PREPARE statement with the provided values.
 func bulkInsert(ctx context.Context, tx *sql.Tx, table string, columns []string, values []interface{}, conflictAction string) error {
-	query, err := buildInsertQuery(table, columns, values, conflictAction)
-	if err != nil {
-		return fmt.Errorf("buildInsertQuery(%q, %v, values, %q): %v", table, columns, conflictAction, err)
+	if remainder := len(values) % len(columns); remainder != 0 {
+		return fmt.Errorf("modulus of len(values) and len(columns) must be 0: got %d", remainder)
 	}
 
-	if _, err := tx.ExecContext(ctx, query, values...); err != nil {
-		return fmt.Errorf("tx.ExecContext(ctx, [bulk insert query], values): %v", err)
+	const maxParameters = 65535 // maximum number of parameters allowed by Postgres
+	stride := (maxParameters / len(columns)) * len(columns)
+	if stride == 0 {
+		// This is a pathological case (len(columns) > maxParameters), but we
+		// handle it cautiously.
+		return fmt.Errorf("too many columns to insert: %d", len(columns))
+	}
+	for leftBound := 0; leftBound < len(values); leftBound += stride {
+		rightBound := leftBound + stride
+		if rightBound > len(values) {
+			rightBound = len(values)
+		}
+		valueSlice := values[leftBound:rightBound]
+		query, err := buildInsertQuery(table, columns, valueSlice, conflictAction)
+		if err != nil {
+			return fmt.Errorf("buildInsertQuery(%q, %v, values[%d:%d], %q): %v", table, columns, leftBound, rightBound, conflictAction, err)
+		}
+
+		if _, err := tx.ExecContext(ctx, query, valueSlice...); err != nil {
+			return fmt.Errorf("tx.ExecContext(ctx, [bulk insert query], values[%d:%d]): %v", leftBound, rightBound, err)
+		}
 	}
 	return nil
 }
