@@ -65,36 +65,28 @@ func ParseModulePathAndVersion(p string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
+var pseudoVersionRE = regexp.MustCompile(`^v[0-9]+\.(0\.0-|\d+\.\d+-([^+]*\.)?0\.)\d{14}-[A-Za-z0-9]+(\+incompatible)?$`)
+
+// isPseudoVersion reports whether a valid version v is a pseudo-version.
+// Modified from src/cmd/go/internal/modfetch.
+func isPseudoVersion(v string) bool {
+	return strings.Count(v, "-") >= 2 && pseudoVersionRE.MatchString(v)
+}
+
 // parseVersion returns the VersionType of a given a version.
 func parseVersion(version string) (internal.VersionType, error) {
 	if !semver.IsValid(version) {
 		return "", fmt.Errorf("semver.IsValid(%q): false", version)
 	}
 
-	prerelease := semver.Prerelease(version)
-	if prerelease == "" {
-
+	switch {
+	case isPseudoVersion(version):
+		return internal.VersionTypePseudo, nil
+	case semver.Prerelease(version) != "":
+		return internal.VersionTypePrerelease, nil
+	default:
 		return internal.VersionTypeRelease, nil
 	}
-	prerelease = prerelease[1:] // remove starting dash
-
-	// if prerelease looks like a commit then return VersionTypePseudo
-	matched, err := regexp.MatchString(`^[0-9]{14}-[0-9a-z]{12}$`, prerelease)
-	if err != nil {
-		return "", fmt.Errorf("regexp.MatchString(`^[0-9]{14}-[0-9a-z]{12}$`, %v): %v", prerelease, err)
-	}
-
-	if matched {
-		rawTime := strings.Split(prerelease, "-")[0]
-		layout := "20060102150405"
-		t, err := time.Parse(layout, rawTime)
-
-		if err == nil && t.Before(time.Now()) {
-			return internal.VersionTypePseudo, nil
-		}
-	}
-
-	return internal.VersionTypePrerelease, nil
 }
 
 // FetchAndInsertVersion downloads the given module version from the module proxy, processes

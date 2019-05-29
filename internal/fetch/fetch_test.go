@@ -557,27 +557,37 @@ func TestFetch_parseVersion(t *testing.T) {
 		wantErr         bool
 	}{
 		{
-			name:            "valid_pseudo-version",
+			name:            "pseudo major version",
 			version:         "v1.0.0-20190311183353-d8887717615a",
 			wantVersionType: internal.VersionTypePseudo,
 		},
 		{
-			name:            "invalid_pseudo-version_future_date",
-			version:         "v1.0.0-40000311183353-d8887717615a",
+			name:            "pseudo prerelease version",
+			version:         "v1.2.3-pre.0.20190311183353-d8887717615a",
+			wantVersionType: internal.VersionTypePseudo,
+		},
+		{
+			name:            "pseudo minor version",
+			version:         "v1.2.4-0.20190311183353-d8887717615a",
+			wantVersionType: internal.VersionTypePseudo,
+		},
+		{
+			name:            "pseudo version invalid",
+			version:         "v1.2.3-20190311183353-d8887717615a",
 			wantVersionType: internal.VersionTypePrerelease,
 		},
 		{
-			name:            "valid_release",
+			name:            "valid release",
 			version:         "v1.0.0",
 			wantVersionType: internal.VersionTypeRelease,
 		},
 		{
-			name:            "valid_release",
+			name:            "valid prerelease",
 			version:         "v1.0.0-alpha.1",
 			wantVersionType: internal.VersionTypePrerelease,
 		},
 		{
-			name:            "invalid_version",
+			name:            "invalid version",
 			version:         "not_a_version",
 			wantVersionType: "",
 			wantErr:         true,
