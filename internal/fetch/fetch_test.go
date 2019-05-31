@@ -34,6 +34,45 @@ func TestMain(m *testing.M) {
 	postgres.RunDBTests("discovery_fetch_test", m, &testDB)
 }
 
+func TestSkipBadPackage(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	defer postgres.ResetTestDB(testDB, t)
+	badModule := map[string]string{
+		"foo/foo.go": "// Package foo\npackage foo\n\nconst Foo = 42",
+		"README.md":  "This is a readme",
+		"LICENSE":    testhelper.MITLicense,
+	}
+	var bigFile strings.Builder
+	bigFile.WriteString("package bar\n")
+	bigFile.WriteString("const Bar = 123\n")
+	for bigFile.Len() < int(maxFileSize) {
+		bigFile.WriteString("// All work and no play makes Jack a dull boy.\n")
+	}
+	badModule["bar/bar.go"] = bigFile.String()
+	var (
+		modulePath = "my.mod/module"
+		version    = "v1.0.0"
+	)
+	teardownProxy, client := proxy.SetupTestProxy(t, []*proxy.TestVersion{
+		proxy.NewTestVersion(t, modulePath, version, badModule),
+	})
+	defer teardownProxy(t)
+
+	if err := FetchAndInsertVersion(modulePath, version, client, testDB); err != nil {
+		t.Fatalf("FetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
+	}
+
+	pkgFoo := modulePath + "/foo"
+	if _, err := testDB.GetPackage(ctx, pkgFoo, version); err != nil {
+		t.Errorf("testDB.GetPackage(ctx, %q, %q): %v, want nil", pkgFoo, version, err)
+	}
+	pkgBar := modulePath + "/bar"
+	if _, err := testDB.GetPackage(ctx, pkgBar, version); !derrors.IsNotFound(err) {
+		t.Errorf("testDB.GetPackage(ctx, %q, %q): %v, want NotFound", pkgBar, version, err)
+	}
+}
+
 func TestReFetch(t *testing.T) {
 	// This test checks that re-fetching a version will cause its data to be
 	// overwritten.  This is achieved by fetching against two different versions

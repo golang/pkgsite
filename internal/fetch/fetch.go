@@ -232,6 +232,12 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 		// The map key is the directory path, with the modulePrefix trimmed.
 		// The map value is a slice of all non-test .go files, and no other files.
 		dirs = make(map[string][]*zip.File)
+
+		// incompleteDirs tracks directories for which we have incomplete
+		// information, due to a problem processing one of the go files contained
+		// therein. We use this so that a single unprocessable package does not
+		// prevent processing of other packages in the module.
+		incompleteDirs = make(map[string]bool)
 	)
 
 	// Phase 1.
@@ -247,6 +253,10 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 			return nil, fmt.Errorf(`expected file to have "<module>@<version>/" prefix %q, found %q`, modulePrefix, f.Name)
 		}
 		innerPath := path.Dir(f.Name[len(modulePrefix):])
+		if incompleteDirs[innerPath] {
+			// We already know this directory cannot be processed, so skip.
+			continue
+		}
 		importPath := path.Join(modulePath, innerPath)
 		if ignoredByGoTool(importPath) || isVendored(importPath) {
 			// File is in a directory we're not looking to process at this time, so skip it.
@@ -257,7 +267,10 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 			continue
 		}
 		if f.UncompressedSize64 > maxFileSize {
-			return nil, fmt.Errorf("file size %d exceeds max limit %d", f.UncompressedSize64, maxFileSize)
+			log.Printf("Unable to process %s: file size %d exceeds max limit %d",
+				f.Name, f.UncompressedSize64, maxFileSize)
+			incompleteDirs[innerPath] = true
+			continue
 		}
 		dirs[innerPath] = append(dirs[innerPath], f)
 		if len(dirs) > maxPackagesPerModule {
@@ -271,11 +284,16 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 	// about Go packages.
 	var pkgs []*internal.Package
 	for innerPath, goFiles := range dirs {
+		if incompleteDirs[innerPath] {
+			// Something went wrong when processing this directory, so we skip.
+			log.Printf("Skipping %q because it is incomplete", innerPath)
+			continue
+		}
 		importPath := path.Join(modulePath, innerPath)
 		pkg, err := loadPackage(goFiles, importPath, innerPath)
 		if _, ok := err.(*BadPackageError); ok {
 			// TODO(b/133187024): Record and display this information instead of just skipping.
-			log.Printf("skipping %q because of *BadPackageError: %v\n", importPath, err)
+			log.Printf("Skipping %q because of *BadPackageError: %v\n", importPath, err)
 			continue
 		} else if err != nil {
 			return nil, fmt.Errorf("unexpected error loading package: %v", err)
