@@ -19,14 +19,6 @@ import (
 	"golang.org/x/discovery/internal/postgres"
 )
 
-const testTimeout = 5 * time.Second
-
-var testDB *postgres.DB
-
-func TestMain(m *testing.M) {
-	postgres.RunDBTests("discovery_frontend_test", m, &testDB)
-}
-
 var (
 	sampleLicenseMetadata = []*license.Metadata{
 		{Type: "MIT", FilePath: "LICENSE"},
