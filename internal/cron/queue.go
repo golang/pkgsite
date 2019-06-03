@@ -6,10 +6,8 @@ package cron
 
 import (
 	"context"
-	"crypto/sha1"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"golang.org/x/discovery/internal/postgres"
@@ -28,32 +26,6 @@ type GCPQueue struct {
 	QueueName string
 }
 
-// hashTaskName produces a task name that is both unique to the module version,
-// and searchable. This is a bit tricky due to the limited set of acceptable
-// characters in a task name (a-Z, 0-9, -, _), so for convenience we just
-// enforce uniqueness by appending a base64-encoded sha1 hash at the end. For
-// example, github.com/pkg/errors@v1.0.0 hashes to:
-//   github-com-pkg-errors-v1-0-0_e4c1bbf3381b2106c7672bd5679aae712e968ffd.
-//
-// Not pretty, but having a deterministic task name allows both search and
-// de-duping of tasks.
-func hashTaskName(name string) (string, error) {
-	cleanName := strings.Map(func(r rune) rune {
-		if ('0' <= r && r <= '9') ||
-			('A' <= r && r <= 'Z') ||
-			('a' <= r && r <= 'z') ||
-			(r == '-') || (r == '_') {
-			return r
-		}
-		return '-'
-	}, name)
-
-	h := sha1.New()
-	h.Write([]byte(name))
-	bs := h.Sum(nil)
-	return fmt.Sprintf("%s_%x", cleanName, bs), nil
-}
-
 // ScheduleFetch enqueues a task on GCP to fetch the given modulePath and
 // version. It returns an error if there was an error hashing the task name, or
 // an error pushing the task to GCP.
@@ -63,20 +35,8 @@ func (q *GCPQueue) ScheduleFetch(ctx context.Context, modulePath, version string
 	}
 	u := fmt.Sprintf("/fetch/%s/@v/%s", modulePath, version)
 	t := taskqueue.NewPOSTTask(u, nil)
-	// Name the task using the constraints described in
-	// https://cloud.google.com/tasks/docs/reference/rpc/google.cloud.tasks.v2
-	taskName, err := hashTaskName(fmt.Sprintf("%s@%s", modulePath, version))
-	if err != nil {
-		return fmt.Errorf("error hashing task name: %v", err)
-	}
-	t.Name = taskName
-
-	if _, err = taskqueue.Add(ctx, t, q.QueueName); err != nil {
-		if err == taskqueue.ErrTaskAlreadyAdded {
-			log.Printf("taskqueue.Add(ctx, %q, %q): already added", taskName, q.QueueName)
-		} else {
-			return fmt.Errorf("taskqueue.Add(ctx, %q, %q): %v", taskName, q.QueueName, err)
-		}
+	if _, err := taskqueue.Add(ctx, t, q.QueueName); err != nil {
+		log.Printf("taskqueue.Add(ctx, t, %q): %v", q.QueueName, err)
 	}
 
 	return nil

@@ -124,7 +124,7 @@ func dbConnInfo(ctx context.Context) (string, error) {
 	// https://cloud.google.com/appengine/docs/standard/go111/runtime
 	if os.Getenv("GAE_ENV") == "standard" {
 		var err error
-		password, err = secrets.Get(ctx, "go_discovery_database_password_proxy_index_cron")
+		password, err = secrets.Get(ctx, "go_discovery_database_password_etl")
 		if err != nil {
 			return "", fmt.Errorf("could not get database password secret: %v", err)
 		}
