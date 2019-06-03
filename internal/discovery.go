@@ -76,21 +76,6 @@ func (vt VersionType) String() string {
 	return string(vt)
 }
 
-// A VersionSource is the source of a record in the version logs.
-type VersionSource string
-
-const (
-	// Version fetched by the Proxy Index Cron
-	VersionSourceProxyIndex = VersionSource("proxy-index")
-
-	// Version requested by user from Frontend
-	VersionSourceFrontend = VersionSource("frontend")
-)
-
-func (vs VersionSource) String() string {
-	return string(vs)
-}
-
 // IndexVersion holds the version information returned by the module index.
 type IndexVersion struct {
 	Path      string

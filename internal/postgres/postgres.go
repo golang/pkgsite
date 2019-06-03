@@ -163,28 +163,6 @@ func bulkInsert(ctx context.Context, tx *sql.Tx, table string, columns []string,
 	return nil
 }
 
-// LatestProxyIndexUpdate reports the last time the Proxy Index Cron
-// successfully fetched data from the Module Proxy Index.
-func (db *DB) LatestProxyIndexUpdate(ctx context.Context) (time.Time, error) {
-	query := `
-		SELECT created_at
-		FROM version_logs
-		WHERE source=$1
-		ORDER BY created_at DESC
-		LIMIT 1`
-
-	var createdAt time.Time
-	row := db.QueryRowContext(ctx, query, internal.VersionSourceProxyIndex)
-	switch err := row.Scan(&createdAt); err {
-	case sql.ErrNoRows:
-		return time.Time{}, nil
-	case nil:
-		return createdAt, nil
-	default:
-		return time.Time{}, err
-	}
-}
-
 // compareLicenses reports whether i < j according to our license sorting
 // semantics.
 func compareLicenses(i, j license.Metadata) bool {
