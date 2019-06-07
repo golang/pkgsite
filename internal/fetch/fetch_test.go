@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/dzip"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
@@ -46,7 +47,7 @@ func TestSkipBadPackage(t *testing.T) {
 	var bigFile strings.Builder
 	bigFile.WriteString("package bar\n")
 	bigFile.WriteString("const Bar = 123\n")
-	for bigFile.Len() < int(maxFileSize) {
+	for bigFile.Len() < int(dzip.MaxFileSize) {
 		bigFile.WriteString("// All work and no play makes Jack a dull boy.\n")
 	}
 	badModule["bar/bar.go"] = bigFile.String()
@@ -245,6 +246,27 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					},
 				},
 			},
+		}, {
+			modulePath: "std",
+			version:    "v1.12.5",
+			pkg:        "context",
+			want: &internal.VersionedPackage{
+				VersionInfo: internal.VersionInfo{
+					SeriesPath:     "std",
+					ModulePath:     "std",
+					Version:        "v1.12.5",
+					CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
+					VersionType:    "release",
+					ReadmeContents: []uint8{},
+				},
+				Package: internal.Package{
+					Path:              "context",
+					Name:              "context",
+					Synopsis:          "",
+					DocumentationHTML: nil,
+					Suffix:            "context",
+				},
+			},
 		},
 	}
 
@@ -263,7 +285,6 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			if err != nil {
 				t.Fatalf("testDB.GetVersion(ctx, %q, %q): %v", test.modulePath, test.version, err)
 			}
-
 			if diff := cmp.Diff(test.want.VersionInfo, *gotVersion); diff != "" {
 				t.Errorf("testDB.GetVersion(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
 			}
@@ -589,7 +610,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 	}
 }
 
-func TestFetch_parseVersion(t *testing.T) {
+func TestFetch_parseVersionType(t *testing.T) {
 	testCases := []struct {
 		name, version   string
 		wantVersionType internal.VersionType
@@ -635,8 +656,8 @@ func TestFetch_parseVersion(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if gotVt, err := parseVersion(tc.version); (tc.wantErr == (err != nil)) && tc.wantVersionType != gotVt {
-				t.Errorf("parseVersion(%v) = %v, want %v", tc.version, gotVt, tc.wantVersionType)
+			if gotVt, err := parseVersionType(tc.version); (tc.wantErr == (err != nil)) && tc.wantVersionType != gotVt {
+				t.Errorf("parseVersionType(%v) = %v, want %v", tc.version, gotVt, tc.wantVersionType)
 			}
 		})
 	}

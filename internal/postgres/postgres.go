@@ -794,7 +794,6 @@ func padPrerelease(v string) (string, error) {
 
 	pre := strings.Split(strings.TrimPrefix(p, "-"), ".")
 	var err error
-
 	for i, segment := range pre {
 		if isNum(segment) {
 			pre[i], err = prefixZeroes(segment)
@@ -803,7 +802,6 @@ func padPrerelease(v string) (string, error) {
 			}
 		}
 	}
-
 	return strings.Join(pre, "."), nil
 }
 
@@ -866,24 +864,9 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 			return fmt.Errorf("error inserting module: %v", err)
 		}
 
-		majorint, err := major(version.Version)
+		majorint, minorint, patchint, prerelease, err := extractSemverParts(version.Version)
 		if err != nil {
-			return fmt.Errorf("major(%q): %v", version.Version, err)
-		}
-
-		minorint, err := minor(version.Version)
-		if err != nil {
-			return fmt.Errorf("minor(%q): %v", version.Version, err)
-		}
-
-		patchint, err := patch(version.Version)
-		if err != nil {
-			return fmt.Errorf("patch(%q): %v", version.Version, err)
-		}
-
-		prerelease, err := padPrerelease(version.Version)
-		if err != nil {
-			return fmt.Errorf("padPrerelease(%q): %v", version.Version, err)
+			return fmt.Errorf("extractSemverParts(%q): %v", version.Version, err)
 		}
 
 		// If the version exists, delete it to force an overwrite. This allows us
@@ -999,6 +982,33 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 	})
 }
 
+// extractSemverParts extracts the major, minor, patch and prerelease from
+// version to be used for sorting versions in the database. The prerelease
+// string is padded with zeroes so that the resulting field is 20 characters
+// and returns the string "~" if it is empty.
+func extractSemverParts(version string) (majorint, minorint, patchint int, prerelease string, err error) {
+	majorint, err = major(version)
+	if err != nil {
+		return 0, 0, 0, "", fmt.Errorf("major(%q): %v", version, err)
+	}
+
+	minorint, err = minor(version)
+	if err != nil {
+		return 0, 0, 0, "", fmt.Errorf("minor(%q): %v", version, err)
+	}
+
+	patchint, err = patch(version)
+	if err != nil {
+		return 0, 0, 0, "", fmt.Errorf("patch(%q): %v", version, err)
+	}
+
+	prerelease, err = padPrerelease(version)
+	if err != nil {
+		return 0, 0, 0, "", fmt.Errorf("padPrerelease(%q): %v", version, err)
+	}
+	return majorint, minorint, patchint, prerelease, nil
+}
+
 // major returns the major version integer value of the semantic version
 // v.  For example, major("v2.1.0") == 2.
 func major(v string) (int, error) {
@@ -1042,33 +1052,27 @@ func validateVersion(version *internal.Version) error {
 	}
 
 	var errReasons []string
-
 	if version.SeriesPath == "" {
 		errReasons = append(errReasons, "no series path")
 	}
 	if version.Version == "" {
 		errReasons = append(errReasons, "no specified version")
-	} else if !semver.IsValid(version.Version) {
+	} else if version.ModulePath != "std" && !semver.IsValid(version.Version) {
 		errReasons = append(errReasons, "invalid version")
 	}
-
 	if version.ModulePath == "" {
 		errReasons = append(errReasons, "no module path")
-	} else if err := module.CheckPath(version.ModulePath); err != nil {
+	} else if err := module.CheckPath(version.ModulePath); err != nil && version.ModulePath != "std" {
 		errReasons = append(errReasons, "invalid module path")
 	}
-
 	if len(version.Packages) == 0 {
 		errReasons = append(errReasons, "module does not have any packages")
 	}
-
 	if version.CommitTime.IsZero() {
 		errReasons = append(errReasons, "empty commit time")
 	}
-
 	if len(errReasons) == 0 {
 		return nil
 	}
-
 	return fmt.Errorf("cannot insert version %q: %s", version.Version, strings.Join(errReasons, ", "))
 }

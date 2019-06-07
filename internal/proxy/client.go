@@ -11,14 +11,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/dzip"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/net/context/ctxhttp"
+)
+
+const (
+	stdlibModulePathProxy = "go.googlesource.com/go.git"
 )
 
 // A Client is used by the fetch service to communicate with a module
@@ -37,11 +43,6 @@ type VersionInfo struct {
 	Time    time.Time
 }
 
-// cleanURL trims the rawurl of trailing slashes.
-func cleanURL(rawurl string) string {
-	return strings.TrimRight(rawurl, "/")
-}
-
 // New constructs a *Client using the provided rawurl, which is expected to
 // be an absolute URI that can be directly passed to http.Get.
 func New(rawurl string) (*Client, error) {
@@ -55,19 +56,25 @@ func New(rawurl string) (*Client, error) {
 	return &Client{url: cleanURL(rawurl), httpClient: http.DefaultClient}, nil
 }
 
-// infoURL constructs a url for a request to
-// $GOPROXY/<module>/@v/list.
-func (c *Client) infoURL(path, version string) (string, error) {
-	encodedPath, encodedVersion, err := encodeModulePathAndVersion(path, version)
-	if err != nil {
-		return "", fmt.Errorf("encodeModulePathAndVersion(%q, %q): %v", path, version, err)
-	}
-	return fmt.Sprintf("%s/%s/@v/%s.info", c.url, encodedPath, encodedVersion), nil
+// cleanURL trims the rawurl of trailing slashes.
+func cleanURL(rawurl string) string {
+	return strings.TrimRight(rawurl, "/")
 }
 
 // GetInfo makes a request to $GOPROXY/<module>/@v/<version>.info and
 // transforms that data into a *VersionInfo.
 func (c *Client) GetInfo(ctx context.Context, path, version string) (*VersionInfo, error) {
+	v, err := c.getInfo(ctx, path, version)
+	if err != nil {
+		return nil, err
+	}
+	if path == "std" {
+		v.Version = version
+	}
+	return v, nil
+}
+
+func (c *Client) getInfo(ctx context.Context, path, version string) (*VersionInfo, error) {
 	u, err := c.infoURL(path, version)
 	if err != nil {
 		return nil, fmt.Errorf("infoURL(%q, %q): %v", path, version, err)
@@ -90,18 +97,44 @@ func (c *Client) GetInfo(ctx context.Context, path, version string) (*VersionInf
 	return &v, nil
 }
 
-// zipURL constructs a url for a request to $GOPROXY/<module>/@v/<version>.zip.
-func (c *Client) zipURL(path, version string) (string, error) {
-	encodedPath, encodedVersion, err := encodeModulePathAndVersion(path, version)
+// infoURL constructs a url for a request to $GOPROXY/<module>/@v/<version>.info.
+// If the path is "std", the version will be converted to the corresponding go
+// tag. For example, "v1.12.5" will be converted to "go1.12.5" and "v1.12.0"
+// will be converted to "go1.12".
+func (c *Client) infoURL(path, version string) (string, error) {
+	if path == "std" {
+		path = stdlibModulePathProxy
+		version = fmt.Sprintf("go%s", strings.TrimSuffix(strings.TrimPrefix(version, "v"), ".0"))
+	}
+	path, version, err := encodeModulePathAndVersion(path, version)
 	if err != nil {
 		return "", fmt.Errorf("encodeModulePathAndVersion(%q, %q): %v", path, version, err)
 	}
-	return fmt.Sprintf("%s/%s/@v/%s.zip", c.url, encodedPath, encodedVersion), nil
+	return fmt.Sprintf("%s/%s/@v/%s.info", c.url, path, version), nil
 }
 
-// GetZip makes a request to $GOPROXY/<module>/@v/<version>.zip and transforms
+// GetZip makes a request to $GOPROXY/<path>/@v/<version>.zip and transforms
+// that data into a *zip.Reader. <version> is obtained by first making a
+// request to $GOPROXY/<path>/@v/<requestedVersion>.info to obtained the valid
+// semantic version.
+func (c *Client) GetZip(ctx context.Context, path, requestedVersion string) (*zip.Reader, error) {
+	info, err := c.getInfo(ctx, path, requestedVersion)
+	if err != nil {
+		return nil, err
+	}
+	zipReader, err := c.getZip(ctx, path, info.Version)
+	if err != nil {
+		return nil, err
+	}
+	if path == "std" {
+		return createGoZipReader(zipReader, info.Version, requestedVersion)
+	}
+	return zipReader, nil
+}
+
+// getZip makes a request to $GOPROXY/<path>/@v/<version>.zip and transforms
 // that data into a *zip.Reader.
-func (c *Client) GetZip(ctx context.Context, path, version string) (*zip.Reader, error) {
+func (c *Client) getZip(ctx context.Context, path, version string) (*zip.Reader, error) {
 	u, err := c.zipURL(path, version)
 	if err != nil {
 		return nil, fmt.Errorf("zipURL(%q, %q): %v", path, version, err)
@@ -113,7 +146,7 @@ func (c *Client) GetZip(ctx context.Context, path, version string) (*zip.Reader,
 	}
 	defer r.Body.Close()
 
-	if err := derrors.StatusError(r.StatusCode, "HTTP error from proxy: %d", r.StatusCode); err != nil {
+	if err := derrors.StatusError(r.StatusCode, "HTTP error from proxy for %q: %d", u, r.StatusCode); err != nil {
 		return nil, err
 	}
 
@@ -121,10 +154,65 @@ func (c *Client) GetZip(ctx context.Context, path, version string) (*zip.Reader,
 	if err != nil {
 		return nil, fmt.Errorf("get(ctx, %q): %v", u, err)
 	}
-
 	zipReader, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
 	if err != nil {
 		return nil, fmt.Errorf("get(ctx, %q): %v", u, err)
+	}
+	return zipReader, nil
+}
+
+// zipURL constructs a url for a request to $GOPROXY/<module>/@v/<version>.zip.
+func (c *Client) zipURL(path, version string) (string, error) {
+	if path == "std" {
+		path = stdlibModulePathProxy
+	}
+	return fmt.Sprintf("%s/%s/@v/%s.zip", c.url, path, version), nil
+}
+
+// createGoZipReader returns a *zip.Reader containing the README, LICENSE and
+// contents of the src/ directory for a zip obtained from a request to
+// $GOPROXY/go.googlesource.com/go.git/@v/<version>.zip. The filenames returned
+// will be trimmed of the prefix go.googlesource.com@<infoVersion> or
+// go.googlesource.com@<infoVersion>/src. The prefix std@<goVersion> will be
+// added to each of the resulting filenames.
+func createGoZipReader(r *zip.Reader, infoVersion string, goVersion string) (*zip.Reader, error) {
+	buf := new(bytes.Buffer)
+	w := zip.NewWriter(buf)
+
+	for _, file := range r.File {
+		stdlibFilePrefix := fmt.Sprintf("%s@%s/", stdlibModulePathProxy, infoVersion)
+		if !strings.HasPrefix(file.Name, stdlibFilePrefix+"src/") &&
+			!strings.HasPrefix(file.Name, stdlibFilePrefix+"README") &&
+			!strings.HasPrefix(file.Name, stdlibFilePrefix+"LICENSE") {
+			continue
+		}
+
+		// Trim stdlibFilePrefix from README and LICENSE, and
+		// stdlibFilePrefix+"src/" from files in the src/ directory.
+		fileName := fmt.Sprintf("std@%s/%s", goVersion, strings.TrimPrefix(strings.TrimPrefix(file.Name, stdlibFilePrefix), "src/"))
+		f, err := w.Create(fileName)
+		if err != nil {
+			return nil, fmt.Errorf("w.Create(%q): %v", file.Name, err)
+		}
+
+		contents, err := dzip.ReadZipFile(file)
+		if err != nil {
+			log.Printf("zip.ReadZipFile(%q): %v", file.Name, err)
+			continue
+		}
+
+		if _, err = f.Write(contents); err != nil {
+			return nil, fmt.Errorf("f.Write: %v", err)
+		}
+	}
+
+	if err := w.Close(); err != nil {
+		return nil, fmt.Errorf("w.Close(): %v", err)
+	}
+
+	zipReader, err := zip.NewReader(bytes.NewReader(buf.Bytes()), int64(buf.Len()))
+	if err != nil {
+		return nil, fmt.Errorf("zip.NewReader: %v", err)
 	}
 	return zipReader, nil
 }

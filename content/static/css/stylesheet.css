@@ -376,3 +376,12 @@ a:hover {
   border-radius: 0.3em;
   overflow-x: auto;
 }
+
+.Versions-commitTime {
+  color: var(--gray-3);
+  font-weight: 400;
+}
+.Versions-seriesPath {
+  color: var(--gray-3);
+  font-size: 0.875em;
+}

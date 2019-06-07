@@ -315,14 +315,15 @@ func fetchModuleDetails(ctx context.Context, db *postgres.DB, pkg *internal.Vers
 	}, nil
 }
 
-// fetchVersionsDetails fetches data for the module version specified by path and version
-// from the database and returns a VersionsDetails.
+// fetchVersionsDetails fetches data for the module version specified by path
+// and version from the database and returns a VersionsDetails. The package
+// path for each SeriesVersionGroup is calculated as the module path and
+// package suffix. For the standard library packages, it is the package path.
 func fetchVersionsDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*VersionsDetails, error) {
 	versions, err := db.GetTaggedVersionsForPackageSeries(ctx, pkg.Path)
 	if err != nil {
 		return nil, fmt.Errorf("db.GetTaggedVersions(%q): %v", pkg.Path, err)
 	}
-
 	// If no tagged versions for the package series are found,
 	// fetch the pseudo-versions instead.
 	if len(versions) == 0 {
@@ -340,7 +341,6 @@ func fetchVersionsDetails(ctx context.Context, db *postgres.DB, pkg *internal.Ve
 	)
 
 	for _, v := range versions {
-
 		suffix := pkg.Suffix
 		if v.SeriesPath != pkg.SeriesPath {
 			// Reverse-engineer the package suffix for package versions from
@@ -357,14 +357,15 @@ func fetchVersionsDetails(ctx context.Context, db *postgres.DB, pkg *internal.Ve
 		}
 
 		var pkgPath string
-		if suffix == "" {
+		if inStdLib(pkg.Path) {
+			pkgPath = pkg.Path
+		} else if suffix == "" {
 			pkgPath = v.ModulePath
 		} else {
 			pkgPath = v.ModulePath + "/" + suffix
 		}
-
 		latest := &Package{
-			Version:    strings.TrimPrefix(v.Version, "v"),
+			Version:    v.Version,
 			Path:       pkgPath,
 			CommitTime: elapsedTime(v.CommitTime),
 		}
@@ -380,7 +381,8 @@ func fetchVersionsDetails(ctx context.Context, db *postgres.DB, pkg *internal.Ve
 			curMinor = nil
 		}
 
-		if major := semver.Major(v.Version); curMajor == nil || curMajor.Major != major {
+		major := semver.Major(v.Version)
+		if curMajor == nil || curMajor.Major != major {
 			curMajor = &MajorVersionGroup{
 				Major:  major,
 				Latest: latest,
@@ -388,14 +390,14 @@ func fetchVersionsDetails(ctx context.Context, db *postgres.DB, pkg *internal.Ve
 			curSeries.MajorVersions = append(curSeries.MajorVersions, curMajor)
 		}
 
-		if majMin := strings.TrimPrefix(semver.MajorMinor(v.Version), "v"); curMinor == nil || curMinor.Minor != majMin {
+		majMin := semver.MajorMinor(v.Version)
+		if curMinor == nil || curMinor.Minor != majMin {
 			curMinor = &MinorVersionGroup{
 				Minor:  majMin,
 				Latest: latest,
 			}
 			curMajor.MinorVersions = append(curMajor.MinorVersions, curMinor)
 		}
-
 		curMinor.PatchVersions = append(curMinor.PatchVersions, latest)
 	}
 
@@ -567,14 +569,15 @@ func fetchDetails(ctx context.Context, tab string, db *postgres.DB, pkg *interna
 
 // parseModulePathAndVersion returns the module and version specified by
 // urlPath. urlPath is assumed to be a valid path following the structure
-// /<module>@<version>.
+// /<module>@<version>. Any leading or trailing slashes in the module path are
+// trimmed.
 func parseModulePathAndVersion(urlPath string) (importPath, version string, err error) {
-	parts := strings.Split(strings.TrimPrefix(urlPath, "/"), "@")
+	parts := strings.Split(urlPath, "@")
 	if len(parts) < 1 || len(parts) > 2 {
 		return "", "", fmt.Errorf("malformed URL path %q", urlPath)
 	}
 
-	importPath = parts[0]
+	importPath = strings.Trim(parts[0], "/")
 	if err := module.CheckImportPath(importPath); err != nil {
 		return "", "", fmt.Errorf("malformed import path %q: %v", importPath, err)
 	}
@@ -584,7 +587,7 @@ func parseModulePathAndVersion(urlPath string) (importPath, version string, err 
 
 	version = parts[1]
 	if !semver.IsValid(version) {
-		return "", "", fmt.Errorf("malformed version %q: semver.IsValid(%q) = false", parts[1], parts[1])
+		return "", "", fmt.Errorf("malformed version: semver.IsValid(%q) = false", version)
 	}
 	return importPath, version, nil
 }
@@ -596,7 +599,6 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 		s.renderPage(w, "index.tmpl", nil)
 		return
 	}
-
 	path, version, err := parseModulePathAndVersion(r.URL.Path)
 	if err != nil {
 		log.Printf("parseModulePathAndVersion(%q): %v", r.URL.Path, err)

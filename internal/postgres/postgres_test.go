@@ -299,6 +299,24 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 			wantWriteErrType: derrors.InvalidArgumentType,
 			wantReadErr:      true,
 		},
+		{
+			name: "stdlib",
+			version: sampleVersion(func(v *internal.Version) {
+				v.ModulePath = "std"
+				v.SeriesPath = "std"
+				v.Version = "v1.12.5"
+				v.Packages = []*internal.Package{{
+					Name:              "context",
+					Path:              "context",
+					Synopsis:          "This is a package synopsis",
+					Licenses:          sampleLicenseInfos,
+					DocumentationHTML: []byte("This is the documentation HTML"),
+				}}
+			}),
+			getModule:  "std",
+			getVersion: "v1.12.5",
+			getPkg:     "context",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -898,53 +916,58 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 	}
 }
 
-func TestMajorMinorPatch(t *testing.T) {
+func TestExtractSemverParts(t *testing.T) {
 	for _, tc := range []struct {
-		version                         string
+		version, wantPrerelease         string
 		wantMajor, wantMinor, wantPatch int
 	}{
 		{
-			version:   "v1.5.2",
-			wantMajor: 1,
-			wantMinor: 5,
-			wantPatch: 2,
+			version:        "v1.5.2",
+			wantMajor:      1,
+			wantMinor:      5,
+			wantPatch:      2,
+			wantPrerelease: "~",
 		},
 		{
-			version:   "v1.5.2+incompatible",
-			wantMajor: 1,
-			wantMinor: 5,
-			wantPatch: 2,
+			version:        "v1.5.2",
+			wantMajor:      1,
+			wantMinor:      5,
+			wantPatch:      2,
+			wantPrerelease: "~",
 		},
 		{
-			version:   "v1.5.2-alpha+buildtag",
-			wantMajor: 1,
-			wantMinor: 5,
-			wantPatch: 2,
+			version:        "v1.5.2+incompatible",
+			wantMajor:      1,
+			wantMinor:      5,
+			wantPatch:      2,
+			wantPrerelease: "~",
+		},
+		{
+			version:        "v1.5.2-alpha+buildtag",
+			wantMajor:      1,
+			wantMinor:      5,
+			wantPatch:      2,
+			wantPrerelease: "alpha",
+		},
+		{
+			version:        "v1.5.2-alpha.1+buildtag",
+			wantMajor:      1,
+			wantMinor:      5,
+			wantPatch:      2,
+			wantPrerelease: "alpha.00000000000000000001",
 		},
 	} {
 		t.Run(tc.version, func(t *testing.T) {
-			gotMajor, err := major(tc.version)
-			if err != nil {
-				t.Errorf("major(%q): %v", tc.version, err)
-			}
-			if gotMajor != tc.wantMajor {
-				t.Errorf("major(%q) = %d, want = %d", tc.version, gotMajor, tc.wantMajor)
-			}
+			gotMajor, gotMinor, gotPatch, gotPrerelease, err := extractSemverParts(tc.version)
 
-			gotMinor, err := minor(tc.version)
 			if err != nil {
-				t.Errorf("minor(%q): %v", tc.version, err)
+				t.Errorf("extractSemverParts(%q): %v", tc.version, err)
 			}
-			if gotMinor != tc.wantMinor {
-				t.Errorf("minor(%q) = %d, want = %d", tc.version, gotMinor, tc.wantMinor)
-			}
-
-			gotPatch, err := patch(tc.version)
-			if err != nil {
-				t.Errorf("patch(%q): %v", tc.version, err)
-			}
-			if gotPatch != tc.wantPatch {
-				t.Errorf("patch(%q) = %d, want = %d", tc.version, gotPatch, tc.wantPatch)
+			if gotMajor != tc.wantMajor ||
+				gotMinor != tc.wantMinor ||
+				gotPatch != tc.wantPatch ||
+				gotPrerelease != tc.wantPrerelease {
+				t.Errorf("extractSemverParts(%q) = %d, %d, %d, %q; want = %d, %d, %d, %q", tc.version, gotMajor, gotMinor, gotPatch, gotPrerelease, tc.wantMajor, tc.wantMinor, tc.wantPatch, tc.wantPrerelease)
 			}
 		})
 	}

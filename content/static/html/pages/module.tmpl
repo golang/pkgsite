@@ -6,8 +6,12 @@
 
 {{define "details_content"}}
   <div class="ModuleContent-list">
-    <h2>Packages in this module</h2>
-    <h3>Module: {{.ModulePath}}</h3>
+    {{ if eq .ModulePath "std" }}
+      <h2>Packages in the Go Standard Library</h2>
+    {{ else }}
+      <h2>Packages in this module</h2>
+      <h3>Module: {{.ModulePath}}</h3>
+    {{ end }}
     {{range .Packages}}
       <p>
         <div>

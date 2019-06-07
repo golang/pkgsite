@@ -17,6 +17,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/postgres"
+	"golang.org/x/discovery/internal/thirdparty/module"
 )
 
 var (
@@ -150,9 +151,10 @@ func TestFetchOverviewDetails(t *testing.T) {
 }
 
 func getTestVersion(pkgPath, modulePath, version string, versionType internal.VersionType, packages ...*internal.Package) *internal.Version {
+	seriesPath, _, _ := module.SplitPathVersion(modulePath)
 	return &internal.Version{
 		VersionInfo: internal.VersionInfo{
-			SeriesPath:     "test.com/module",
+			SeriesPath:     seriesPath,
 			ModulePath:     modulePath,
 			Version:        version,
 			CommitTime:     time.Now().Add(time.Hour * -8),
@@ -187,33 +189,98 @@ func TestFetchVersionsDetails(t *testing.T) {
 			},
 			VersionInfo: versionInfo,
 		}
+		nethttpPkg = &internal.VersionedPackage{
+			Package: internal.Package{
+				Name:     "http",
+				Path:     "net/http",
+				Synopsis: "test synopsis",
+				Licenses: sampleLicenseMetadata,
+				Suffix:   "http",
+			},
+			VersionInfo: internal.VersionInfo{
+				SeriesPath: "std",
+				ModulePath: "net/http",
+				Version:    "v1.12.5",
+			},
+		}
 		latestTagged = &Package{
-			Version:    "2.2.1-alpha.1",
+			Version:    "v2.2.1-alpha.1",
 			Path:       pkg2Path,
 			CommitTime: "today",
 		}
 		latestPseudo = &Package{
-			Version:    "0.0.0-20140414041502-3c2ca4d52544",
+			Version:    "v0.0.0-20140414041502-3c2ca4d52544",
 			Path:       pkg1Path,
+			CommitTime: "today",
+		}
+		latestStdlib = &Package{
+			Version:    "v1.12.5",
+			Path:       "net/http",
 			CommitTime: "today",
 		}
 	)
 
 	for _, tc := range []struct {
 		name, path, version string
+		pkg                 *internal.VersionedPackage
 		versions            []*internal.Version
 		wantDetails         *VersionsDetails
 	}{
 		{
+			name:    "want stdlib versions",
+			path:    "net/http",
+			version: "v1.12.5",
+			pkg:     nethttpPkg,
+			versions: []*internal.Version{
+				getTestVersion("net/http", "std", "v1.12.5", internal.VersionTypeRelease, &nethttpPkg.Package),
+				getTestVersion("net/http", "std", "v1.11.6", internal.VersionTypeRelease, &nethttpPkg.Package),
+			},
+			wantDetails: &VersionsDetails{
+				Versions: []*SeriesVersionGroup{{
+					Series: "std",
+					Latest: latestStdlib,
+					MajorVersions: []*MajorVersionGroup{{
+						Major:  "v1",
+						Latest: latestStdlib,
+						MinorVersions: []*MinorVersionGroup{
+							{
+								Minor:  "v1.12",
+								Latest: latestStdlib,
+								PatchVersions: []*Package{
+									latestStdlib,
+								},
+							},
+							{
+								Minor: "v1.11",
+								Latest: &Package{
+									Version:    "v1.11.6",
+									Path:       "net/http",
+									CommitTime: "today",
+								},
+								PatchVersions: []*Package{
+									{
+										Version:    "v1.11.6",
+										Path:       "net/http",
+										CommitTime: "today",
+									},
+								},
+							},
+						},
+					}},
+				}},
+			},
+		},
+		{
 			name:    "want tagged versions",
 			path:    pkg1Path,
 			version: "v1.2.1",
+			pkg:     pkg1,
 			versions: []*internal.Version{
-				getTestVersion(pkg1Path, modulePath1, "v1.2.3", internal.VersionTypeRelease, &pkg1.Package),
-				getTestVersion(pkg2Path, modulePath2, "v2.0.0", internal.VersionTypeRelease, &pkg1.Package),
-				getTestVersion(pkg1Path, modulePath1, "v1.3.0", internal.VersionTypeRelease, &pkg1.Package),
-				getTestVersion(pkg1Path, modulePath1, "v1.2.1", internal.VersionTypeRelease, &pkg1.Package),
 				getTestVersion(pkg1Path, modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", internal.VersionTypePseudo, &pkg1.Package),
+				getTestVersion(pkg1Path, modulePath1, "v1.2.1", internal.VersionTypeRelease, &pkg1.Package),
+				getTestVersion(pkg1Path, modulePath1, "v1.2.3", internal.VersionTypeRelease, &pkg1.Package),
+				getTestVersion(pkg1Path, modulePath1, "v1.3.0", internal.VersionTypeRelease, &pkg1.Package),
+				getTestVersion(pkg2Path, modulePath2, "v2.0.0", internal.VersionTypeRelease, &pkg1.Package),
 				getTestVersion(pkg2Path, modulePath2, "v2.2.1-alpha.1", internal.VersionTypePrerelease, &pkg1.Package),
 			},
 			wantDetails: &VersionsDetails{
@@ -224,18 +291,18 @@ func TestFetchVersionsDetails(t *testing.T) {
 						Major:  "v2",
 						Latest: latestTagged,
 						MinorVersions: []*MinorVersionGroup{{
-							Minor:         "2.2",
+							Minor:         "v2.2",
 							Latest:        latestTagged,
 							PatchVersions: []*Package{latestTagged},
 						}, {
-							Minor: "2.0",
+							Minor: "v2.0",
 							Latest: &Package{
-								Version:    "2.0.0",
+								Version:    "v2.0.0",
 								Path:       pkg2Path,
 								CommitTime: "today",
 							},
 							PatchVersions: []*Package{{
-								Version:    "2.0.0",
+								Version:    "v2.0.0",
 								Path:       pkg2Path,
 								CommitTime: "today",
 							}},
@@ -243,35 +310,35 @@ func TestFetchVersionsDetails(t *testing.T) {
 					}, {
 						Major: "v1",
 						Latest: &Package{
-							Version:    "1.3.0",
+							Version:    "v1.3.0",
 							Path:       pkg1Path,
 							CommitTime: "today",
 						},
 						MinorVersions: []*MinorVersionGroup{{
-							Minor: "1.3",
+							Minor: "v1.3",
 							Latest: &Package{
-								Version:    "1.3.0",
+								Version:    "v1.3.0",
 								Path:       pkg1Path,
 								CommitTime: "today",
 							},
 							PatchVersions: []*Package{{
-								Version:    "1.3.0",
+								Version:    "v1.3.0",
 								Path:       pkg1Path,
 								CommitTime: "today",
 							}},
 						}, {
-							Minor: "1.2",
+							Minor: "v1.2",
 							Latest: &Package{
-								Version:    "1.2.3",
+								Version:    "v1.2.3",
 								Path:       pkg1Path,
 								CommitTime: "today",
 							},
 							PatchVersions: []*Package{{
-								Version:    "1.2.3",
+								Version:    "v1.2.3",
 								Path:       pkg1Path,
 								CommitTime: "today",
 							}, {
-								Version:    "1.2.1",
+								Version:    "v1.2.1",
 								Path:       pkg1Path,
 								CommitTime: "today",
 							}},
@@ -282,6 +349,7 @@ func TestFetchVersionsDetails(t *testing.T) {
 		}, {
 			name:    "want only pseudo",
 			path:    pkg1Path,
+			pkg:     pkg1,
 			version: "v0.0.0-20140414041501-3c2ca4d52544",
 			versions: []*internal.Version{
 				getTestVersion(pkg1Path, modulePath1, "v0.0.0-20140414041501-3c2ca4d52544", internal.VersionTypePseudo, &pkg1.Package),
@@ -295,12 +363,12 @@ func TestFetchVersionsDetails(t *testing.T) {
 						Major:  "v0",
 						Latest: latestPseudo,
 						MinorVersions: []*MinorVersionGroup{{
-							Minor:  "0.0",
+							Minor:  "v0.0",
 							Latest: latestPseudo,
 							PatchVersions: []*Package{
 								latestPseudo,
 								{
-									Version:    "0.0.0-20140414041501-3c2ca4d52544",
+									Version:    "v0.0.0-20140414041501-3c2ca4d52544",
 									Path:       pkg1Path,
 									CommitTime: "today",
 								},
@@ -320,7 +388,7 @@ func TestFetchVersionsDetails(t *testing.T) {
 				}
 			}
 
-			got, err := fetchVersionsDetails(ctx, testDB, pkg1)
+			got, err := fetchVersionsDetails(ctx, testDB, tc.pkg)
 			if err != nil {
 				t.Fatalf("fetchVersionsDetails(ctx, db, %q, %q) = %v err = %v, want %v",
 					tc.path, tc.version, got, err, tc.wantDetails)

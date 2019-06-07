@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -92,6 +93,9 @@ func TestProxy(versions []*TestVersion) *http.ServeMux {
 			if goMod == "" {
 				goMod = defaultGoMod(m)
 			}
+			if m == stdlibModulePathProxy {
+				handle(fmt.Sprintf("/%s/@v/%s.info", m, "go1.12.5"), strings.NewReader(defaultInfo(v.Version)))
+			}
 			handle(fmt.Sprintf("/%s/@v/%s.mod", m, v.Version), strings.NewReader(goMod))
 			handle(fmt.Sprintf("/%s/@v/%s.info", m, v.Version), strings.NewReader(defaultInfo(v.Version)))
 			handle(fmt.Sprintf("/%s/@v/%s.zip", m, v.Version), bytes.NewReader(v.Zip))
@@ -104,26 +108,27 @@ func TestProxy(versions []*TestVersion) *http.ServeMux {
 // testdata directory.
 func defaultTestVersions() []*TestVersion {
 	proxyDataDir := testhelper.TestDataPath("testdata/modproxy")
-
 	absPath, err := filepath.Abs(proxyDataDir)
 	if err != nil {
-		panic(fmt.Sprintf("filepath.Abs(%q): %v", proxyDataDir, err))
+		log.Fatalf(fmt.Sprintf("filepath.Abs(%q): %v", proxyDataDir, err))
 	}
 
 	var versions []*TestVersion
 	for _, v := range [][]string{
+		[]string{"go.googlesource.com/go.git", "v1.12.5"},
+		[]string{"bad.mod/module", "v1.0.0"},
+		[]string{"emp.ty/module", "v1.0.0"},
 		[]string{"my.mod/module", "v1.0.0"},
 		[]string{"no.mod/module", "v1.0.0"},
 		[]string{"nonredistributable.mod/module", "v1.0.0"},
-		[]string{"emp.ty/module", "v1.0.0"},
 		[]string{"rsc.io/quote", "v1.5.2"},
 		[]string{"rsc.io/quote/v2", "v2.0.1"},
-		[]string{"bad.mod/module", "v1.0.0"},
 	} {
 		rootDir := filepath.Join(absPath, "modules")
-		bytes, err := zipFiles(rootDir, filepath.FromSlash(fmt.Sprintf("%s@%s", v[0], v[1])))
+		f := filepath.FromSlash(fmt.Sprintf("%s@%s", v[0], v[1]))
+		bytes, err := zipFiles(rootDir, f)
 		if err != nil {
-			panic(err)
+			log.Fatalf(fmt.Sprintf("zipFiles(%q, %q): %v", rootDir, f, err))
 		}
 
 		versions = append(versions, &TestVersion{
@@ -132,7 +137,6 @@ func defaultTestVersions() []*TestVersion {
 			Zip:        bytes,
 		})
 	}
-
 	return versions
 }
 

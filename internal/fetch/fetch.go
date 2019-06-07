@@ -27,6 +27,7 @@ import (
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/dzip"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
@@ -53,15 +54,9 @@ func ParseModulePathAndVersion(p string) (string, string, error) {
 	if len(parts) != 2 {
 		return "", "", fmt.Errorf("invalid path: %q", p)
 	}
-
-	// TODO(julieqiu): Check module name is valid using
-	// https://github.com/golang/go/blob/c97e576/src/cmd/go/internal/module/module.go#L123
-	// Check version is valid using
-	// https://github.com/golang/go/blob/c97e576/src/cmd/go/internal/modload/query.go#L183
 	if parts[0] == "" || parts[1] == "" {
 		return "", "", fmt.Errorf("invalid path: %q", p)
 	}
-
 	return parts[0], parts[1], nil
 }
 
@@ -73,8 +68,8 @@ func isPseudoVersion(v string) bool {
 	return strings.Count(v, "-") >= 2 && pseudoVersionRE.MatchString(v)
 }
 
-// parseVersion returns the VersionType of a given a version.
-func parseVersion(version string) (internal.VersionType, error) {
+// parseVersionType returns the VersionType of a given a version.
+func parseVersionType(version string) (internal.VersionType, error) {
 	if !semver.IsValid(version) {
 		return "", fmt.Errorf("semver.IsValid(%q): false", version)
 	}
@@ -95,7 +90,7 @@ func parseVersion(version string) (internal.VersionType, error) {
 // (2) Download the version zip from the proxy
 // (3) Process the contents (series path, readme, licenses, and packages)
 // (4) Write the data to the discovery database
-func FetchAndInsertVersion(modulePath, version string, proxyClient *proxy.Client, db *postgres.DB) (err error) {
+func FetchAndInsertVersion(modulePath, requestedVersion string, proxyClient *proxy.Client, db *postgres.DB) (err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			// The package processing code performs some sanity checks along the way.
@@ -110,50 +105,41 @@ func FetchAndInsertVersion(modulePath, version string, proxyClient *proxy.Client
 	ctx, cancel := context.WithTimeout(context.Background(), fetchTimeout)
 	defer cancel()
 
-	if err := module.CheckPath(modulePath); err != nil {
-		return fmt.Errorf("fetch: invalid module name %v: %v", modulePath, err)
-	}
-
-	versionType, err := parseVersion(version)
-	if err != nil {
-		return fmt.Errorf("parseVersion(%q): %v", version, err)
-	}
-
-	info, err := proxyClient.GetInfo(ctx, modulePath, version)
+	info, err := proxyClient.GetInfo(ctx, modulePath, requestedVersion)
 	if err != nil {
 		// Since this is our first client request, we wrap it to preserve error
 		// semantics: if info is not found, then we return NotFound.
-		return derrors.Wrap(err, "proxyClient.GetInfo(%q, %q)", modulePath, version)
+		return derrors.Wrap(err, "proxyClient.GetInfo(%q, %q)", modulePath, requestedVersion)
 	}
-
-	zipReader, err := proxyClient.GetZip(ctx, modulePath, version)
+	zipReader, err := proxyClient.GetZip(ctx, modulePath, info.Version)
 	if err != nil {
 		// Here we expect the zip to exist since we got info above, so we shouldn't
 		// wrap the error.
-		return fmt.Errorf("proxyClient.GetZip(%q, %q): %v", modulePath, version, err)
+		return fmt.Errorf("proxyClient.GetZip(%q, %q): %v", modulePath, info.Version, err)
 	}
-
-	readmeFilePath, readmeContents, err := extractReadmeFromZip(modulePath, version, zipReader)
+	readmeFilePath, readmeContents, err := extractReadmeFromZip(modulePath, info.Version, zipReader)
 	if err != nil && err != errReadmeNotFound {
-		return fmt.Errorf("extractReadmeFromZip(%q, %q, zipReader): %v", modulePath, version, err)
+		return fmt.Errorf("extractReadmeFromZip(%q, %q, zipReader): %v", modulePath, info.Version, err)
 	}
-
-	licenses, err := license.Detect(moduleVersionDir(modulePath, version), zipReader)
+	licenses, err := license.Detect(moduleVersionDir(modulePath, info.Version), zipReader)
 	if err != nil {
-		log.Printf("Error detecting licenses for %v@%v: %v", modulePath, version, err)
+		log.Printf("Error detecting licenses for %v@%v: %v", modulePath, info.Version, err)
 	}
-
-	packages, err := extractPackagesFromZip(modulePath, version, zipReader, license.NewMatcher(licenses))
+	packages, err := extractPackagesFromZip(modulePath, info.Version, zipReader, license.NewMatcher(licenses))
 	if err != nil {
-		return fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, version, licenses, err)
+		return fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, info.Version, licenses, err)
 	}
 
+	versionType, err := parseVersionType(info.Version)
+	if err != nil {
+		return fmt.Errorf("parseVersion(%q): %v", info.Version, err)
+	}
 	seriesPath, _, _ := module.SplitPathVersion(modulePath)
 	v := &internal.Version{
 		VersionInfo: internal.VersionInfo{
 			SeriesPath:     seriesPath,
 			ModulePath:     modulePath,
-			Version:        version,
+			Version:        info.Version,
 			CommitTime:     info.Time,
 			ReadmeFilePath: readmeFilePath,
 			ReadmeContents: readmeContents,
@@ -161,12 +147,11 @@ func FetchAndInsertVersion(modulePath, version string, proxyClient *proxy.Client
 		},
 		Packages: packages,
 	}
-
 	if err = db.InsertVersion(ctx, v, licenses); err != nil {
-		return fmt.Errorf("db.InsertVersion for %q %q: %v", modulePath, version, err)
+		return fmt.Errorf("db.InsertVersion for %q %q: %v", modulePath, info.Version, err)
 	}
 	if err = db.InsertDocuments(ctx, v); err != nil {
-		return fmt.Errorf("db.InsertDocuments for %q %q: %v", modulePath, version, err)
+		return fmt.Errorf("db.InsertDocuments for %q %q: %v", modulePath, info.Version, err)
 	}
 	return nil
 }
@@ -183,12 +168,12 @@ func moduleVersionDir(modulePath, version string) string {
 func extractReadmeFromZip(modulePath, version string, r *zip.Reader) (string, []byte, error) {
 	for _, zipFile := range r.File {
 		if hasFilename(zipFile.Name, "README") {
-			if zipFile.UncompressedSize64 > maxFileSize {
-				return "", nil, fmt.Errorf("file size %d exceeds max limit %d", zipFile.UncompressedSize64, maxFileSize)
+			if zipFile.UncompressedSize64 > dzip.MaxFileSize {
+				return "", nil, fmt.Errorf("file size %d exceeds max limit %d", zipFile.UncompressedSize64, dzip.MaxFileSize)
 			}
-			c, err := readZipFile(zipFile)
+			c, err := dzip.ReadZipFile(zipFile)
 			if err != nil {
-				return "", nil, fmt.Errorf("readZipFile(%q): %v", zipFile.Name, err)
+				return "", nil, fmt.Errorf("ReadZipFile(%q): %v", zipFile.Name, err)
 			}
 			return strings.TrimPrefix(zipFile.Name, moduleVersionDir(modulePath, version)+"/"), c, nil
 		}
@@ -266,9 +251,9 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 			// We care about non-test .go files only.
 			continue
 		}
-		if f.UncompressedSize64 > maxFileSize {
+		if f.UncompressedSize64 > dzip.MaxFileSize {
 			log.Printf("Unable to process %s: file size %d exceeds max limit %d",
-				f.Name, f.UncompressedSize64, maxFileSize)
+				f.Name, f.UncompressedSize64, dzip.MaxFileSize)
 			incompleteDirs[innerPath] = true
 			continue
 		}
@@ -303,6 +288,9 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 			continue
 		}
 		pkg.Licenses = matcher.Match(innerPath)
+		if modulePath == "std" {
+			pkg.Path = innerPath
+		}
 		pkgs = append(pkgs, pkg)
 	}
 	if len(pkgs) == 0 {
@@ -430,7 +418,7 @@ func loadPackage(zipGoFiles []*zip.File, importPath, innerPath string) (*interna
 		packageNameFile string // Name of file where packageName came from.
 	)
 	for _, f := range zipGoFiles {
-		b, err := readZipFile(f)
+		b, err := dzip.ReadZipFile(f)
 		if err != nil {
 			return nil, err
 		}
