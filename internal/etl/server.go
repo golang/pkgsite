@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/index"

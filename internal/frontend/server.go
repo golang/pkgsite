@@ -100,6 +100,12 @@ func (s *Server) renderPage(w http.ResponseWriter, templateName string, page int
 type basePageData struct {
 	Title string
 	Query string
+	Nonce string
+}
+
+// GoogleAnalyticsTrackingID returns the tracking ID from
+// func (b basePageData) GoogleAnalyticsTrackingID() string {
+	return "UA-141356704-1"
 }
 
 // parsePageTemplates parses html templates contained in the given base

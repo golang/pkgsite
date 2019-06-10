@@ -21,6 +21,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
@@ -595,8 +596,12 @@ func parseModulePathAndVersion(urlPath string) (importPath, version string, err 
 // HandleDetails applies database data to the appropriate template. Handles all
 // endpoints that match "/" or "/<import-path>[@<version>?tab=<tab>]"
 func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
+	nonce, ok := middleware.GetNonce(r.Context())
+	if !ok {
+		log.Printf("middleware.GetNonce(r.Context()): nonce was not set")
+	}
 	if r.URL.Path == "/" {
-		s.renderPage(w, "index.tmpl", nil)
+		s.renderPage(w, "index.tmpl", basePageData{Nonce: nonce})
 		return
 	}
 	path, version, err := parseModulePathAndVersion(r.URL.Path)
@@ -656,6 +661,7 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 		basePageData: basePageData{
 			Title: fmt.Sprintf("%s - %s", pkgHeader.Title, pkgHeader.Version),
 			Query: strings.TrimSpace(r.FormValue("q")),
+			Nonce: nonce,
 		},
 		Settings:       settings,
 		PackageHeader:  pkgHeader,
@@ -663,6 +669,5 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 		CanShowDetails: canShowDetails,
 		Tabs:           tabSettings,
 	}
-
 	s.renderPage(w, tab+".tmpl", page)
 }

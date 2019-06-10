@@ -12,6 +12,15 @@
 <link href="https://fonts.googleapis.com/css?family=Work+Sans:600|Roboto|Source+Code+Pro" rel="stylesheet">
 <link href="/static/css/stylesheet.css" rel="stylesheet">
 <title>{{if .Title}}{{.Title}} · {{end}}Go Discovery</title>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script nonce="{{.Nonce}}" async src="https://www.googletagmanager.com/gtag/js?id={{.GoogleAnalyticsTrackingID}}"></script>
+<script nonce="{{.Nonce}}">
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', '{{.GoogleAnalyticsTrackingID}}');
+</script>
 <body class="Site">
 <header>
   {{block "header" .}}

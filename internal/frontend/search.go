@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
 )
 
@@ -185,5 +186,10 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	nonce, ok := middleware.GetNonce(ctx)
+	if !ok {
+		log.Printf("middleware.GetNonce(r.Context()): nonce was not set")
+	}
+	page.Nonce = nonce
 	s.renderPage(w, "search.tmpl", page)
 }
