@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	cloud.google.com/go v0.38.0
+	github.com/GoogleCloudPlatform/cloudsql-proxy v0.0.0-20190605020000-c4ba1fdf4d36
 	github.com/golang-migrate/migrate/v4 v4.3.1
 	github.com/google/go-cmp v0.3.0
 	github.com/google/licensecheck v0.0.0-20190416041930-a13d4b3c90fd
@@ -13,6 +14,7 @@ require (
 	github.com/shurcooL/component v0.0.0-20190503025225-90263df59ff6 // indirect
 	github.com/shurcooL/htmlg v0.0.0-20190503024804-b6326af49ef6
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
+	golang.org/x/crypto v0.0.0-20190426145343-a29dc8fdc734
 	golang.org/x/net v0.0.0-20190424112056-4829fb13d2c6
 	google.golang.org/appengine v1.6.0
 	google.golang.org/genproto v0.0.0-20190502173448-54afdca5d873
