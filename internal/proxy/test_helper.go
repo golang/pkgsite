@@ -27,32 +27,31 @@ import (
 type TestVersion struct {
 	ModulePath string
 	Version    string
-	Zip        []byte
 	GoMod      string
+	Zip        []byte
 }
 
-// NewTestVersion creates a new TestVersion from the given contents.
-func NewTestVersion(t *testing.T, modulePath, version string, contents map[string]string) *TestVersion {
+// SetupTestProxy creates a fake module proxy for testing using the given test
+// version information. If versions is nil, it will default to hosting the
+// modules in the testdata directory.
+//
+// It returns a function for tearing down the proxy after the test is completed
+// and a Client for interacting with the test proxy.
+func SetupTestProxy(t *testing.T, versions []*TestVersion) (func(t *testing.T), *Client) {
 	t.Helper()
-	nestedContents := make(map[string]string)
-	for name, content := range contents {
-		nestedContents[fmt.Sprintf("%s@%s/%s", modulePath, version, name)] = content
-	}
-	zip, err := testhelper.ZipContents(nestedContents)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return &TestVersion{
-		ModulePath: modulePath,
-		Version:    version,
-		Zip:        zip,
-		GoMod:      contents["go.mod"],
-	}
-}
 
-// defaultGoMod creates a bare-bones go.mod contents.
-func defaultGoMod(modulePath string) string {
-	return fmt.Sprintf("module %s\n\ngo 1.12", modulePath)
+	p := httptest.NewTLSServer(TestProxy(versions))
+	client, err := New(p.URL)
+	if err != nil {
+		t.Fatalf("New(%q): %v", p.URL, err)
+	}
+	// override client.httpClient to skip TLS verification
+	client.httpClient = testhelper.InsecureHTTPClient
+
+	fn := func(t *testing.T) {
+		p.Close()
+	}
+	return fn, client
 }
 
 // TestProxy implements a fake proxy, hosting the given versions. If versions
@@ -104,6 +103,30 @@ func TestProxy(versions []*TestVersion) *http.ServeMux {
 	return mux
 }
 
+// NewTestVersion creates a new TestVersion from the given contents.
+func NewTestVersion(t *testing.T, modulePath, version string, contents map[string]string) *TestVersion {
+	t.Helper()
+	nestedContents := make(map[string]string)
+	for name, content := range contents {
+		nestedContents[fmt.Sprintf("%s@%s/%s", modulePath, version, name)] = content
+	}
+	zip, err := testhelper.ZipContents(nestedContents)
+	if err != nil {
+		t.Fatalf("testhelper.ZipContents(%v): %v,", nestedContents, err)
+	}
+	return &TestVersion{
+		ModulePath: modulePath,
+		Version:    version,
+		Zip:        zip,
+		GoMod:      contents["go.mod"],
+	}
+}
+
+// defaultGoMod creates a bare-bones go.mod contents.
+func defaultGoMod(modulePath string) string {
+	return fmt.Sprintf("module %s\n\ngo 1.12", modulePath)
+}
+
 // defaultTestVersions creates TestVersions for the modules contained in the
 // testdata directory.
 func defaultTestVersions() []*TestVersion {
@@ -138,30 +161,6 @@ func defaultTestVersions() []*TestVersion {
 		})
 	}
 	return versions
-}
-
-// SetupTestProxy creates a fake module proxy for testing using the given test
-// version information. If versions is nil, it will default to hosting the
-// modules in the testdata directory.
-//
-// It returns a function for tearing down the proxy after the test is completed
-// and a Client for interacting with the test proxy.
-func SetupTestProxy(t *testing.T, versions []*TestVersion) (func(t *testing.T), *Client) {
-	t.Helper()
-
-	p := httptest.NewTLSServer(TestProxy(versions))
-
-	client, err := New(p.URL)
-	if err != nil {
-		t.Fatalf("New(%q): %v", p.URL, err)
-	}
-	// override client.httpClient to skip TLS verification
-	client.httpClient = testhelper.InsecureHTTPClient
-
-	fn := func(t *testing.T) {
-		p.Close()
-	}
-	return fn, client
 }
 
 func zipFiles(dir, moduleDir string) ([]byte, error) {

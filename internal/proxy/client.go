@@ -166,6 +166,10 @@ func (c *Client) zipURL(path, version string) (string, error) {
 	if path == "std" {
 		path = stdlibModulePathProxy
 	}
+	path, version, err := encodeModulePathAndVersion(path, version)
+	if err != nil {
+		return "", fmt.Errorf("encodeModulePathAndVersion(%q, %q): %v", path, version, err)
+	}
 	return fmt.Sprintf("%s/%s/@v/%s.zip", c.url, path, version), nil
 }
 
