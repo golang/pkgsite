@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package cron
+package etl
 
 import (
 	"context"
@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/fetch"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
 )
@@ -26,7 +25,7 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 		code     = http.StatusOK
 		fetchErr error
 	)
-	if fetchErr = fetch.FetchAndInsertVersion(modulePath, version, client, db); fetchErr != nil {
+	if fetchErr = FetchAndInsertVersion(modulePath, version, client, db); fetchErr != nil {
 		log.Printf("Error executing fetch: %v", fetchErr)
 		if derrors.IsNotFound(fetchErr) {
 			code = http.StatusNotFound

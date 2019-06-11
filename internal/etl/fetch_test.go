@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package fetch
+package etl
 
 import (
 	"bytes"
@@ -26,14 +26,6 @@ import (
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/testhelper"
 )
-
-const testTimeout = 10 * time.Second
-
-var testDB *postgres.DB
-
-func TestMain(m *testing.M) {
-	postgres.RunDBTests("discovery_fetch_test", m, &testDB)
-}
 
 func TestSkipBadPackage(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)

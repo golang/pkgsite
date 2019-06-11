@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package cron
+package etl
 
 import (
 	"bytes"
@@ -14,7 +14,6 @@ import (
 	"strconv"
 
 	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/fetch"
 	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
@@ -70,7 +69,7 @@ func (s *Server) handleFetch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	modulePath, version, err := fetch.ParseModulePathAndVersion(r.URL.Path)
+	modulePath, version, err := ParseModulePathAndVersion(r.URL.Path)
 	if err != nil {
 		log.Printf("fetch.ParseModulePathAndVersion(%q): %v", r.URL.Path, err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)

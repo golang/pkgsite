@@ -18,7 +18,7 @@ import (
 	"strconv"
 	"time"
 
-	"golang.org/x/discovery/internal/cron"
+	"golang.org/x/discovery/internal/etl"
 	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
@@ -82,14 +82,14 @@ func main() {
 		log.Fatalf("strconv.Atoi(%q): %v", timeout, err)
 	}
 
-	var q cron.Queue
+	var q etl.Queue
 	if os.Getenv("GAE_ENV") == "standard" {
-		q = &cron.GCPQueue{QueueName: queueName}
+		q = &etl.GCPQueue{QueueName: queueName}
 	} else {
-		q = cron.NewInMemoryQueue(ctx, proxyClient, db, *workers)
+		q = etl.NewInMemoryQueue(ctx, proxyClient, db, *workers)
 	}
 
-	server := cron.NewServer(db, indexClient, proxyClient, q, indexTemplate)
+	server := etl.NewServer(db, indexClient, proxyClient, q, indexTemplate)
 
 	// Default to addr on localhost to mute security popup about incoming
 	// network connections when running locally. When running in prod, App
