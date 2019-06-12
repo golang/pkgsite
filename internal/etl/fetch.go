@@ -18,6 +18,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path"
 	"regexp"
@@ -47,50 +48,42 @@ var (
 	maxImportsPerPackage = 1000
 )
 
-// ParseModulePathAndVersion returns the module and version specified by p. p is
-// assumed to have the structure /<module>/@v/<version>.
-func ParseModulePathAndVersion(p string) (string, string, error) {
-	parts := strings.Split(strings.TrimPrefix(p, "/"), "/@v/")
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("invalid path: %q", p)
+// fetchAndUpdateState fetches and processes a module version, and then updates
+// the module_version_state_table according to the result. It returns an HTTP
+// status code representing the result of the fetch operation, and a non-nil
+// error if this status code is not 200.
+func fetchAndUpdateState(ctx context.Context, modulePath, version string, client *proxy.Client, db *postgres.DB) (int, error) {
+	var (
+		code     = http.StatusOK
+		fetchErr error
+	)
+	if fetchErr = fetchAndInsertVersion(modulePath, version, client, db); fetchErr != nil {
+		log.Printf("Error executing fetch: %v", fetchErr)
+		if derrors.IsNotFound(fetchErr) {
+			code = http.StatusNotFound
+		} else {
+			code = http.StatusInternalServerError
+		}
 	}
-	if parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("invalid path: %q", p)
+
+	if err := db.UpsertVersionState(ctx, modulePath, version, time.Time{}, code, fetchErr); err != nil {
+		log.Printf("db.UpsertVersionState(ctx, %q, %q, %q, %v): %q", modulePath, version, code, fetchErr, err)
+		if fetchErr != nil {
+			err = fmt.Errorf("error updating version state: %v, original error: %v", err, fetchErr)
+		}
+		return http.StatusInternalServerError, err
 	}
-	return parts[0], parts[1], nil
+
+	return code, fetchErr
 }
 
-var pseudoVersionRE = regexp.MustCompile(`^v[0-9]+\.(0\.0-|\d+\.\d+-([^+]*\.)?0\.)\d{14}-[A-Za-z0-9]+(\+incompatible)?$`)
-
-// isPseudoVersion reports whether a valid version v is a pseudo-version.
-// Modified from src/cmd/go/internal/modfetch.
-func isPseudoVersion(v string) bool {
-	return strings.Count(v, "-") >= 2 && pseudoVersionRE.MatchString(v)
-}
-
-// parseVersionType returns the VersionType of a given a version.
-func parseVersionType(version string) (internal.VersionType, error) {
-	if !semver.IsValid(version) {
-		return "", fmt.Errorf("semver.IsValid(%q): false", version)
-	}
-
-	switch {
-	case isPseudoVersion(version):
-		return internal.VersionTypePseudo, nil
-	case semver.Prerelease(version) != "":
-		return internal.VersionTypePrerelease, nil
-	default:
-		return internal.VersionTypeRelease, nil
-	}
-}
-
-// FetchAndInsertVersion downloads the given module version from the module proxy, processes
+// fetchAndInsertVersion downloads the given module version from the module proxy, processes
 // the contents, and writes the data to the database. The fetch service will:
 // (1) Get the version commit time from the proxy
 // (2) Download the version zip from the proxy
 // (3) Process the contents (series path, readme, licenses, and packages)
 // (4) Write the data to the discovery database
-func FetchAndInsertVersion(modulePath, requestedVersion string, proxyClient *proxy.Client, db *postgres.DB) (err error) {
+func fetchAndInsertVersion(modulePath, requestedVersion string, proxyClient *proxy.Client, db *postgres.DB) (err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			// The package processing code performs some sanity checks along the way.
@@ -100,7 +93,7 @@ func FetchAndInsertVersion(modulePath, requestedVersion string, proxyClient *pro
 		}
 	}()
 	// Unlike other actions (which use a Timeout middleware), we set a fixed
-	// timeout for FetchAndInsertVersion.  This allows module processing to
+	// timeout for fetchAndInsertVersion.  This allows module processing to
 	// succeed even for extremely short lived requests.
 	ctx, cancel := context.WithTimeout(context.Background(), fetchTimeout)
 	defer cancel()
@@ -160,6 +153,30 @@ func FetchAndInsertVersion(modulePath, requestedVersion string, proxyClient *pro
 // modulePath and version.
 func moduleVersionDir(modulePath, version string) string {
 	return fmt.Sprintf("%s@%s", modulePath, version)
+}
+
+var pseudoVersionRE = regexp.MustCompile(`^v[0-9]+\.(0\.0-|\d+\.\d+-([^+]*\.)?0\.)\d{14}-[A-Za-z0-9]+(\+incompatible)?$`)
+
+// isPseudoVersion reports whether a valid version v is a pseudo-version.
+// Modified from src/cmd/go/internal/modfetch.
+func isPseudoVersion(v string) bool {
+	return strings.Count(v, "-") >= 2 && pseudoVersionRE.MatchString(v)
+}
+
+// parseVersionType returns the VersionType of a given a version.
+func parseVersionType(version string) (internal.VersionType, error) {
+	if !semver.IsValid(version) {
+		return "", fmt.Errorf("semver.IsValid(%q): false", version)
+	}
+
+	switch {
+	case isPseudoVersion(version):
+		return internal.VersionTypePseudo, nil
+	case semver.Prerelease(version) != "":
+		return internal.VersionTypePrerelease, nil
+	default:
+		return internal.VersionTypeRelease, nil
+	}
 }
 
 // extractReadmeFromZip returns the file path and contents of the first file

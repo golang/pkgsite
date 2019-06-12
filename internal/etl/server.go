@@ -69,9 +69,9 @@ func (s *Server) handleFetch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	modulePath, version, err := ParseModulePathAndVersion(r.URL.Path)
+	modulePath, version, err := parseModulePathAndVersion(r.URL.Path)
 	if err != nil {
-		log.Printf("fetch.ParseModulePathAndVersion(%q): %v", r.URL.Path, err)
+		log.Printf("parseModulePathAndVersion(%q): %v", r.URL.Path, err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
@@ -85,6 +85,19 @@ func (s *Server) handleFetch(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(code)
 	fmt.Fprintf(w, "Downloaded %s@%s\n", modulePath, version)
 	log.Printf("Downloaded: %q %q", modulePath, version)
+}
+
+// parseModulePathAndVersion returns the module and version specified by p. p
+// is assumed to have the structure /<module>/@v/<version>.
+func parseModulePathAndVersion(p string) (string, string, error) {
+	parts := strings.Split(strings.TrimPrefix(p, "/"), "/@v/")
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("invalid path: %q", p)
+	}
+	if parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("invalid path: %q", p)
+	}
+	return parts[0], parts[1], nil
 }
 
 func (s *Server) handleRefreshSearch(w http.ResponseWriter, r *http.Request) {

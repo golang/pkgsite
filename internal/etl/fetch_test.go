@@ -52,8 +52,8 @@ func TestSkipBadPackage(t *testing.T) {
 	})
 	defer teardownProxy(t)
 
-	if err := FetchAndInsertVersion(modulePath, version, client, testDB); err != nil {
-		t.Fatalf("FetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
+	if err := fetchAndInsertVersion(modulePath, version, client, testDB); err != nil {
+		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
 	}
 
 	pkgFoo := modulePath + "/foo"
@@ -98,8 +98,8 @@ func TestReFetch(t *testing.T) {
 		proxy.NewTestVersion(t, modulePath, version, foo),
 	})
 	defer teardownProxy(t)
-	if err := FetchAndInsertVersion(modulePath, version, client, testDB); err != nil {
-		t.Fatalf("FetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
+	if err := fetchAndInsertVersion(modulePath, version, client, testDB); err != nil {
+		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
 	}
 	if _, err := testDB.GetPackage(ctx, pkgFoo, version); err != nil {
 		t.Errorf("testDB.GetPackage(ctx, %q, %q): %v", pkgFoo, version, err)
@@ -111,8 +111,8 @@ func TestReFetch(t *testing.T) {
 	})
 	defer teardownProxy(t)
 
-	if err := FetchAndInsertVersion(modulePath, version, client, testDB); err != nil {
-		t.Fatalf("FetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
+	if err := fetchAndInsertVersion(modulePath, version, client, testDB); err != nil {
+		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
 	}
 	want := &internal.VersionedPackage{
 		VersionInfo: internal.VersionInfo{
@@ -269,8 +269,8 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			teardownProxy, client := proxy.SetupTestProxy(t, nil)
 			defer teardownProxy(t)
 
-			if err := FetchAndInsertVersion(test.modulePath, test.version, client, testDB); err != nil {
-				t.Fatalf("FetchAndInsertVersion(%q, %q, %v, %v): %v", test.modulePath, test.version, client, testDB, err)
+			if err := fetchAndInsertVersion(test.modulePath, test.version, client, testDB); err != nil {
+				t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", test.modulePath, test.version, client, testDB, err)
 			}
 
 			gotVersion, err := testDB.GetVersion(ctx, test.modulePath, test.version)
@@ -315,9 +315,9 @@ func TestFetchAndInsertVersionTimeout(t *testing.T) {
 	name := "my.mod/version"
 	version := "v1.0.0"
 	wantErrString := "deadline exceeded"
-	err := FetchAndInsertVersion(name, version, client, testDB)
+	err := fetchAndInsertVersion(name, version, client, testDB)
 	if err == nil || !strings.Contains(err.Error(), wantErrString) {
-		t.Fatalf("FetchAndInsertVersion(%q, %q, %v, %v) returned error %v, want error containing %q",
+		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v) returned error %v, want error containing %q",
 			name, version, client, testDB, err, wantErrString)
 	}
 }
@@ -361,22 +361,22 @@ func TestParseModulePathAndVersion(t *testing.T) {
 				t.Errorf("url.Parse(%q): %v", test.url, err)
 			}
 
-			m, v, err := ParseModulePathAndVersion(u.Path)
+			m, v, err := parseModulePathAndVersion(u.Path)
 			if test.err != nil {
 				if err == nil {
-					t.Fatalf("ParseModulePathAndVersion(%v) error = (%v); want = (%v)", u, err, test.err)
+					t.Fatalf("parseModulePathAndVersion(%v) error = (%v); want = (%v)", u, err, test.err)
 				}
 				if test.err.Error() != err.Error() {
-					t.Fatalf("ParseModulePathAndVersion(%v) error = (%v); want = (%v)", u, err, test.err)
+					t.Fatalf("parseModulePathAndVersion(%v) error = (%v); want = (%v)", u, err, test.err)
 				} else {
 					return
 				}
 			} else if err != nil {
-				t.Fatalf("ParseModulePathAndVersion(%v) error = (%v); want = (%v)", u, err, test.err)
+				t.Fatalf("parseModulePathAndVersion(%v) error = (%v); want = (%v)", u, err, test.err)
 			}
 
 			if test.module != m || test.version != v {
-				t.Fatalf("ParseModulePathAndVersion(%v): %q, %q, %v; want = %q, %q, %v",
+				t.Fatalf("parseModulePathAndVersion(%v): %q, %q, %v; want = %q, %q, %v",
 					u, m, v, err, test.module, test.version, test.err)
 			}
 		})
