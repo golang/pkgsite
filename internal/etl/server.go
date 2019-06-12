@@ -54,6 +54,7 @@ func NewServer(db *postgres.DB,
 	mux.HandleFunc("/poll-and-queue/", s.handleIndexAndQueue)
 	mux.HandleFunc("/requeue/", s.handleRequeue)
 	mux.HandleFunc("/refresh-search/", s.handleRefreshSearch)
+	mux.HandleFunc("/populate-stdlib/", s.handlePopulateStdLib)
 	mux.Handle("/fetch/", http.StripPrefix("/fetch", http.HandlerFunc(s.handleFetch)))
 	mux.HandleFunc("/", s.handleStatusPage)
 	return s
@@ -177,7 +178,11 @@ func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "text/plain")
 	for _, v := range versions {
-		s.queue.ScheduleFetch(ctx, v.ModulePath, v.Version)
+		if err := s.queue.ScheduleFetch(ctx, v.ModulePath, v.Version); err != nil {
+			log.Printf("Error scheduling fetch: %v", err)
+			http.Error(w, "error scheduling fetch", http.StatusInternalServerError)
+			return
+		}
 	}
 }
 
@@ -227,5 +232,28 @@ func (s *Server) handleStatusPage(w http.ResponseWriter, r *http.Request) {
 	if _, err := io.Copy(w, &buf); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		log.Printf("Error copying buffer to ResponseWriter: %v", err)
+	}
+}
+
+func (s *Server) handlePopulateStdLib(w http.ResponseWriter, r *http.Request) {
+	// stdlibVersions is a map of each minor version of Go and the latest
+	// patch version available for that minor version, according to
+	// https://golang.org/doc/devel/release.html. This map will need to be
+	// updated each time a new Go version is released.
+	stdlibVersions := map[string]int{
+		"v1.12": 6,
+		"v1.11": 11,
+	}
+
+	w.Header().Set("Content-Type", "text/plain")
+	for majMin, maxPatch := range stdlibVersions {
+		for patch := 0; patch <= maxPatch; patch++ {
+			if err := s.queue.ScheduleFetch(r.Context(), "std", fmt.Sprintf("%s.%d", majMin, patch)); err != nil {
+				log.Printf("Error scheduling fetch: %v", err)
+				http.Error(w, "error scheduling fetch", http.StatusInternalServerError)
+				return
+
+			}
+		}
 	}
 }
