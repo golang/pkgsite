@@ -20,6 +20,7 @@ import (
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/dzip"
 	"golang.org/x/discovery/internal/thirdparty/module"
+	"golang.org/x/discovery/internal/thirdparty/semver"
 	"golang.org/x/net/context/ctxhttp"
 )
 
@@ -69,7 +70,7 @@ func (c *Client) GetInfo(ctx context.Context, path, version string) (*VersionInf
 		return nil, err
 	}
 	if path == "std" {
-		v.Version = version
+		v.Version = semver.Canonical(version)
 	}
 	return v, nil
 }

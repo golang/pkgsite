@@ -85,7 +85,6 @@ func (s *Server) handleFetch(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(code)
 	fmt.Fprintf(w, "Downloaded %s@%s\n", modulePath, version)
-	log.Printf("Downloaded: %q %q", modulePath, version)
 }
 
 // parseModulePathAndVersion returns the module and version specified by p. p

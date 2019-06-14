@@ -146,6 +146,8 @@ func fetchAndInsertVersion(modulePath, requestedVersion string, proxyClient *pro
 	if err = db.InsertDocuments(ctx, v); err != nil {
 		return fmt.Errorf("db.InsertDocuments for %q %q: %v", modulePath, info.Version, err)
 	}
+
+	log.Printf("Downloaded: %s@%s", modulePath, info.Version)
 	return nil
 }
 
