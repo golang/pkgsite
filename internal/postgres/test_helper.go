@@ -16,6 +16,8 @@ import (
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
+	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/testhelper"
 
 	// imported to register the postgres migration driver
@@ -205,4 +207,58 @@ func RunDBTests(dbName string, m *testing.M, testDB **DB) {
 		log.Fatal(err)
 	}
 	os.Exit(code)
+}
+
+const (
+	testTimeout         = 5 * time.Second
+	sampleSeriesPath    = "github.com/valid_module_name"
+	sampleModulePath    = "github.com/valid_module_name"
+	sampleVersionString = "v1.0.0"
+)
+
+var (
+	now                = NowTruncated()
+	sampleLicenseInfos = []*license.Metadata{
+		{Type: "MIT", FilePath: "LICENSE"},
+	}
+	sampleLicenses = []*license.License{
+		{Metadata: *sampleLicenseInfos[0], Contents: []byte(`Lorem Ipsum`)},
+	}
+)
+
+func sampleVersion(mutators ...func(*internal.Version)) *internal.Version {
+	v := &internal.Version{
+		VersionInfo: internal.VersionInfo{
+			SeriesPath:     sampleSeriesPath,
+			ModulePath:     sampleModulePath,
+			Version:        sampleVersionString,
+			ReadmeFilePath: "README.md",
+			ReadmeContents: []byte("readme"),
+			CommitTime:     now,
+			VersionType:    internal.VersionTypeRelease,
+		},
+		Packages: []*internal.Package{
+			&internal.Package{
+				Name:              "foo",
+				Synopsis:          "This is a package synopsis",
+				Path:              "path.to/foo",
+				Licenses:          sampleLicenseInfos,
+				DocumentationHTML: []byte("This is the documentation HTML"),
+				Imports: []*internal.Import{
+					&internal.Import{
+						Name: "bar",
+						Path: "path/to/bar",
+					},
+					&internal.Import{
+						Name: "fmt",
+						Path: "fmt",
+					},
+				},
+			},
+		},
+	}
+	for _, mut := range mutators {
+		mut(v)
+	}
+	return v
 }
