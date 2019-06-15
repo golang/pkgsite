@@ -54,11 +54,11 @@ func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int)
 				license_types,
 				commit_time,
 				num_imported_by,
-				(ts_rank(tsv_search_tokens, plainto_tsquery($1))*log(exp(1)+num_imported_by)) AS rank
+				(ts_rank(tsv_search_tokens, websearch_to_tsquery($1))*log(exp(1)+num_imported_by)) AS rank
 			FROM
 				mvw_search_documents
 			WHERE
-				tsv_search_tokens @@ plainto_tsquery($1)
+				tsv_search_tokens @@ websearch_to_tsquery($1)
 		)
 
 		SELECT
