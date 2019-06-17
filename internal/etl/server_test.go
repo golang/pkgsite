@@ -8,7 +8,6 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"runtime"
 	"testing"
 	"time"
 
@@ -32,14 +31,6 @@ func TestMain(m *testing.M) {
 func TestETL(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-
-	// This test relies on asynchronous things happening synchronously: namely
-	// that queue processing happens before we start testing our assertions.
-	// Setting GOMAXPROCS=1 enables this, but could concievably prove to be
-	// fragile in the future.
-	defer func(maxprocs int) {
-		runtime.GOMAXPROCS(maxprocs)
-	}(runtime.GOMAXPROCS(1))
 
 	var (
 		start    = postgres.NowTruncated()
@@ -139,10 +130,11 @@ func TestETL(t *testing.T) {
 				}
 			}
 
-			// Gosched forces the queue to start processing requests to run, which
-			// should not yield until all current requests have been scheduled. Note
-			// that if GOMAXPROCS were > 1 here, this trick would not work.
-			runtime.Gosched()
+			// Sleep to hopefully allow the work to begin processing, at which point
+			// waitForTesting will successfully block until it is complete.
+			// Experimentally this was not flaky with even 10ms sleep, but we bump to
+			// 50ms to be extra careful.
+			time.Sleep(50 * time.Millisecond)
 			queue.waitForTesting(ctx)
 
 			// To avoid being a change detector, only look at ModulePath, Version,
