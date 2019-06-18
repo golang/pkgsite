@@ -43,6 +43,7 @@ override.tf.json
 ### Discovery Project ###
 sos.googlesource.com/sos
 *.zip
+internal/**/go.sum
 
 #### GKE
 go-discovery*.json
