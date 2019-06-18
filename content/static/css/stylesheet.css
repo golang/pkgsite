@@ -191,7 +191,7 @@ a:hover {
   margin: 0 16px;
 }
 .SearchResults-nav {
-  font-size: 14px;
+  font-size: 18px;
   text-align: right;
 }
 .SearchResults-previous {
@@ -341,7 +341,7 @@ a:hover {
 
 .Documentation {
   font-family: "Roboto";
-  font-size: 85%;
+  font-size: 1rem;
   color: #333;
   margin-top: 25px;
   margin-bottom: 100px;
@@ -375,6 +375,10 @@ a:hover {
   border: 1px solid #ccc;
   border-radius: 0.3em;
   overflow-x: auto;
+}
+
+.ModuleContent-list {
+  max-width: 620px;
 }
 
 .Versions-commitTime {
