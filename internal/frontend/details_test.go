@@ -15,44 +15,19 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/thirdparty/module"
 )
 
 var (
-	sampleLicenseMetadata = []*license.Metadata{
-		{Type: "MIT", FilePath: "LICENSE"},
-	}
-	sampleLicenses = []*license.License{
-		{Metadata: *sampleLicenseMetadata[0], Contents: []byte("Lorem Ipsum")},
-	}
-	sampleInternalPackage = &internal.Package{
-		Name:     "pkg_name",
-		Path:     "test.com/module/pkg_name",
-		Synopsis: "Test package synopsis",
-		Licenses: sampleLicenseMetadata,
-	}
-	sampleInternalVersion = &internal.Version{
-		VersionInfo: internal.VersionInfo{
-			SeriesPath:     "series",
-			ModulePath:     "test.com/module",
-			Version:        "v1.0.0",
-			CommitTime:     time.Now().Add(time.Hour * -8),
-			ReadmeFilePath: "README.md",
-			ReadmeContents: []byte("This is the readme text."),
-			VersionType:    internal.VersionTypeRelease,
-		},
-		Packages: []*internal.Package{sampleInternalPackage},
-	}
 	samplePackage = &Package{
-		Name:       "pkg_name",
-		ModulePath: "test.com/module",
-		Version:    "v1.0.0",
-		Path:       "test.com/module/pkg_name",
-		Suffix:     "pkg_name",
-		Synopsis:   "Test package synopsis",
-		Licenses:   transformLicenseMetadata(sampleLicenseMetadata),
+		Name:       postgres.SamplePackage.Name,
+		ModulePath: postgres.SampleModulePath,
+		Version:    postgres.SampleVersionString,
+		Suffix:     postgres.SamplePackage.Suffix,
+		Path:       postgres.SamplePackage.Path,
+		Synopsis:   postgres.SamplePackage.Synopsis,
+		Licenses:   transformLicenseMetadata(postgres.SampleLicenseMetadata),
 	}
 )
 
@@ -126,16 +101,16 @@ func TestFetchOverviewDetails(t *testing.T) {
 		wantDetails *OverviewDetails
 	}{
 		name:    "want expected overview details",
-		version: sampleInternalVersion,
+		version: postgres.SampleVersion(),
 		wantDetails: &OverviewDetails{
-			ModulePath: "test.com/module",
-			ReadMe:     template.HTML("<p>This is the readme text.</p>\n"),
+			ModulePath: postgres.SampleModulePath,
+			ReadMe:     template.HTML("<p>readme</p>\n"),
 		},
 	}
 
 	defer postgres.ResetTestDB(testDB, t)
 
-	if err := testDB.InsertVersion(ctx, tc.version, sampleLicenses); err != nil {
+	if err := testDB.InsertVersion(ctx, tc.version, postgres.SampleLicenses); err != nil {
 		t.Fatalf("db.InsertVersion(%v): %v", tc.version, err)
 	}
 
@@ -184,7 +159,7 @@ func TestFetchVersionsDetails(t *testing.T) {
 				Name:     "pkg_name",
 				Path:     pkg1Path,
 				Synopsis: "test synopsis",
-				Licenses: sampleLicenseMetadata,
+				Licenses: postgres.SampleLicenseMetadata,
 				Suffix:   "pkg_name",
 			},
 			VersionInfo: versionInfo,
@@ -194,7 +169,7 @@ func TestFetchVersionsDetails(t *testing.T) {
 				Name:     "http",
 				Path:     "net/http",
 				Synopsis: "test synopsis",
-				Licenses: sampleLicenseMetadata,
+				Licenses: postgres.SampleLicenseMetadata,
 				Suffix:   "http",
 			},
 			VersionInfo: internal.VersionInfo{
@@ -383,7 +358,7 @@ func TestFetchVersionsDetails(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
 
 			for _, v := range tc.versions {
-				if err := testDB.InsertVersion(ctx, v, sampleLicenses); err != nil {
+				if err := testDB.InsertVersion(ctx, v, postgres.SampleLicenses); err != nil {
 					t.Fatalf("db.InsertVersion(%v): %v", v, err)
 				}
 			}
@@ -458,19 +433,19 @@ func TestFetchModuleDetails(t *testing.T) {
 		wantDetails *ModuleDetails
 	}{
 		name:    "want expected module details",
-		version: sampleInternalVersion,
+		version: postgres.SampleVersion(),
 		wantDetails: &ModuleDetails{
-			ModulePath: "test.com/module",
-			ReadMe:     template.HTML("<p>This is the readme text.</p>\n"),
-			Version:    "v1.0.0",
+			ModulePath: postgres.SampleModulePath,
+			ReadMe:     template.HTML("<p>readme</p>\n"),
+			Version:    postgres.SampleVersionString,
 			Packages:   []*Package{samplePackage},
 		},
 	}
 
 	defer postgres.ResetTestDB(testDB, t)
 
-	if err := testDB.InsertVersion(ctx, tc.version, sampleLicenses); err != nil {
-		t.Fatalf("db.InsertVersion(ctx, %v, %v): %v", tc.version, sampleLicenses, err)
+	if err := testDB.InsertVersion(ctx, tc.version, postgres.SampleLicenses); err != nil {
+		t.Fatalf("db.InsertVersion(ctx, %v, %v): %v", tc.version, postgres.SampleLicenses, err)
 	}
 
 	got, err := fetchModuleDetails(ctx, testDB, firstVersionedPackage(tc.version))
@@ -586,7 +561,7 @@ func TestFetchImportsDetails(t *testing.T) {
 			name: "want imports details with standard and internal",
 			imports: []*internal.Import{
 				{Name: "import1", Path: "pa.th/import/1"},
-				{Name: sampleInternalVersion.Packages[0].Name, Path: sampleInternalVersion.Packages[0].Path},
+				{Name: postgres.SamplePackage.Name, Path: postgres.SamplePackage.Path},
 				{Name: "context", Path: "context"},
 			},
 			wantDetails: &ImportsDetails{
@@ -598,8 +573,8 @@ func TestFetchImportsDetails(t *testing.T) {
 				},
 				InternalImports: []*internal.Import{
 					{
-						Name: sampleInternalVersion.Packages[0].Name,
-						Path: sampleInternalVersion.Packages[0].Path,
+						Name: postgres.SamplePackage.Name,
+						Path: postgres.SamplePackage.Path,
 					},
 				},
 				StdLib: []*internal.Import{
@@ -637,16 +612,18 @@ func TestFetchImportsDetails(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			version := sampleInternalVersion
-			version.Packages[0].Imports = tc.imports
-
 			defer postgres.ResetTestDB(testDB, t)
 
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 			defer cancel()
 
-			if err := testDB.InsertVersion(ctx, version, sampleLicenses); err != nil {
-				t.Fatalf("db.InsertVersion(ctx, %v, %v): %v", version, sampleLicenses, err)
+			version := postgres.SampleVersion(func(v *internal.Version) {
+				pkg := postgres.SamplePackage
+				pkg.Imports = tc.imports
+				v.Packages = []*internal.Package{pkg}
+			})
+			if err := testDB.InsertVersion(ctx, version, postgres.SampleLicenses); err != nil {
+				t.Fatalf("db.InsertVersion(ctx, %v, %v): %v", version, postgres.SampleLicenses, err)
 			}
 
 			got, err := fetchImportsDetails(ctx, testDB, firstVersionedPackage(version))
@@ -666,12 +643,12 @@ func TestFetchImportsDetails(t *testing.T) {
 func TestFetchImportedByDetails(t *testing.T) {
 	var versionCount = 0
 	makeVersion := func(packages ...*internal.Package) *internal.Version {
-		v := *sampleInternalVersion
+		v := postgres.SampleVersion()
 		v.Packages = packages
 		// Set Version to something unique.
 		v.Version = fmt.Sprintf("v1.0.%d", versionCount)
 		versionCount++
-		return &v
+		return v
 	}
 	var (
 		pkg1 = &internal.Package{
@@ -738,7 +715,7 @@ func TestFetchImportedByDetails(t *testing.T) {
 
 			for _, p := range []*internal.Package{pkg1, pkg2, pkg3} {
 				v := makeVersion(p)
-				if err := testDB.InsertVersion(ctx, v, sampleLicenses); err != nil {
+				if err := testDB.InsertVersion(ctx, v, postgres.SampleLicenses); err != nil {
 					t.Errorf("db.InsertVersion(%v): %v", v, err)
 				}
 			}

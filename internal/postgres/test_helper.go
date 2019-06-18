@@ -210,52 +210,57 @@ func RunDBTests(dbName string, m *testing.M, testDB **DB) {
 }
 
 const (
-	testTimeout         = 5 * time.Second
-	sampleSeriesPath    = "github.com/valid_module_name"
-	sampleModulePath    = "github.com/valid_module_name"
-	sampleVersionString = "v1.0.0"
+	testTimeout = 5 * time.Second
+)
+
+const (
+	SampleSeriesPath    = "github.com/valid_module_name"
+	SampleModulePath    = "github.com/valid_module_name"
+	SampleVersionString = "v1.0.0"
 )
 
 var (
-	now                = NowTruncated()
-	sampleLicenseInfos = []*license.Metadata{
+	SampleCommitTime      = NowTruncated()
+	SampleLicenseMetadata = []*license.Metadata{
 		{Type: "MIT", FilePath: "LICENSE"},
 	}
-	sampleLicenses = []*license.License{
-		{Metadata: *sampleLicenseInfos[0], Contents: []byte(`Lorem Ipsum`)},
+	SampleLicenses = []*license.License{
+		{Metadata: *SampleLicenseMetadata[0], Contents: []byte(`Lorem Ipsum`)},
+	}
+	SamplePackage = &internal.Package{
+		Name:              "foo",
+		Synopsis:          "This is a package synopsis",
+		Path:              "github.com/valid_module_name/foo",
+		Licenses:          SampleLicenseMetadata,
+		DocumentationHTML: []byte("This is the documentation HTML"),
+		Suffix:            "foo",
+		Imports: []*internal.Import{
+			&internal.Import{
+				Name: "bar",
+				Path: "path/to/bar",
+			},
+			&internal.Import{
+				Name: "fmt",
+				Path: "fmt",
+			},
+		},
 	}
 )
 
-func sampleVersion(mutators ...func(*internal.Version)) *internal.Version {
+// SampleVersion is used to create an *internal.Version for testing. The
+// default fields can be changed by passing in one or more mutators.
+func SampleVersion(mutators ...func(*internal.Version)) *internal.Version {
 	v := &internal.Version{
 		VersionInfo: internal.VersionInfo{
-			SeriesPath:     sampleSeriesPath,
-			ModulePath:     sampleModulePath,
-			Version:        sampleVersionString,
+			SeriesPath:     SampleSeriesPath,
+			ModulePath:     SampleModulePath,
+			Version:        SampleVersionString,
 			ReadmeFilePath: "README.md",
 			ReadmeContents: []byte("readme"),
-			CommitTime:     now,
+			CommitTime:     SampleCommitTime,
 			VersionType:    internal.VersionTypeRelease,
 		},
-		Packages: []*internal.Package{
-			&internal.Package{
-				Name:              "foo",
-				Synopsis:          "This is a package synopsis",
-				Path:              "path.to/foo",
-				Licenses:          sampleLicenseInfos,
-				DocumentationHTML: []byte("This is the documentation HTML"),
-				Imports: []*internal.Import{
-					&internal.Import{
-						Name: "bar",
-						Path: "path/to/bar",
-					},
-					&internal.Import{
-						Name: "fmt",
-						Path: "fmt",
-					},
-				},
-			},
-		},
+		Packages: []*internal.Package{SamplePackage},
 	}
 	for _, mut := range mutators {
 		mut(v)

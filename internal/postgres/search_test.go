@@ -123,18 +123,18 @@ func TestPathTokens(t *testing.T) {
 	}
 }
 
-// insertPackage creates and inserts a version using sampleVersion, that has
+// insertPackage creates and inserts a version using SampleVersion, that has
 // only the package pkg. It is a helper function for
 // TestInsertDocumentsAndSearch.
 func insertPackage(ctx context.Context, t *testing.T, modulePath string, pkg *internal.Package) {
 	t.Helper()
 
-	v := sampleVersion(func(v *internal.Version) {
+	v := SampleVersion(func(v *internal.Version) {
 		v.ModulePath = modulePath
-		pkg.Licenses = sampleLicenseInfos
+		pkg.Licenses = SampleLicenseMetadata
 		v.Packages = []*internal.Package{pkg}
 	})
-	if err := testDB.InsertVersion(ctx, v, sampleLicenses); err != nil {
+	if err := testDB.InsertVersion(ctx, v, SampleLicenses); err != nil {
 		t.Fatalf("testDB.InsertVersion(%+v): %v", v, err)
 	}
 	if err := testDB.InsertDocuments(ctx, v); err != nil {
@@ -167,8 +167,8 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 				PackagePath: pkgKube.Path,
 				Synopsis:    pkgKube.Synopsis,
 				Licenses:    []string{"MIT"},
-				CommitTime:  now,
-				Version:     sampleVersionString,
+				CommitTime:  SampleCommitTime,
+				Version:     SampleVersionString,
 				ModulePath:  modKube,
 				Rank:        rank,
 				NumResults:  numResults,
@@ -181,8 +181,8 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 				PackagePath: pkgGoCDK.Path,
 				Synopsis:    pkgGoCDK.Synopsis,
 				Licenses:    []string{"MIT"},
-				CommitTime:  now,
-				Version:     sampleVersionString,
+				CommitTime:  SampleCommitTime,
+				Version:     SampleVersionString,
 				ModulePath:  modGoCDK,
 				Rank:        rank,
 				NumResults:  numResults,

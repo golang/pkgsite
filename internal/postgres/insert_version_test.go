@@ -26,74 +26,74 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 		version *internal.Version
 
 		// identifiers to use for fetch
-		getVersion, getModule, getPkg string
+		wantModulePath, wantVersion, wantPkgPath string
 
 		// error conditions
 		wantWriteErrType derrors.ErrorType
 		wantReadErr      bool
 	}{
 		{
-			name:       "valid test",
-			version:    sampleVersion(),
-			getModule:  sampleModulePath,
-			getVersion: sampleVersionString,
-			getPkg:     "path.to/foo",
+			name:           "valid test",
+			version:        SampleVersion(),
+			wantModulePath: SampleModulePath,
+			wantVersion:    SampleVersionString,
+			wantPkgPath:    SamplePackage.Path,
 		},
 		{
 			name:             "nil version write error",
-			getModule:        sampleModulePath,
-			getVersion:       sampleVersionString,
+			wantModulePath:   SampleModulePath,
+			wantVersion:      SampleVersionString,
 			wantWriteErrType: derrors.InvalidArgumentType,
 			wantReadErr:      true,
 		},
 		{
-			name:        "nonexistent version",
-			version:     sampleVersion(),
-			getModule:   sampleModulePath,
-			getVersion:  "v1.2.3",
-			wantReadErr: true,
+			name:           "nonexistent version",
+			version:        SampleVersion(),
+			wantModulePath: SampleModulePath,
+			wantVersion:    "v1.2.3",
+			wantReadErr:    true,
 		},
 		{
-			name:        "nonexistent module",
-			version:     sampleVersion(),
-			getModule:   "nonexistent_module_name",
-			getVersion:  "v1.0.0",
-			getPkg:      "path.to/foo",
-			wantReadErr: true,
+			name:           "nonexistent module",
+			version:        SampleVersion(),
+			wantModulePath: "nonexistent_module_path",
+			wantVersion:    "v1.0.0",
+			wantPkgPath:    SamplePackage.Path,
+			wantReadErr:    true,
 		},
 		{
 			name: "missing module path",
-			version: sampleVersion(func(v *internal.Version) {
+			version: SampleVersion(func(v *internal.Version) {
 				v.ModulePath = ""
 			}),
-			getVersion:       sampleVersionString,
-			getModule:        sampleModulePath,
+			wantVersion:      SampleVersionString,
+			wantModulePath:   SampleModulePath,
 			wantWriteErrType: derrors.InvalidArgumentType,
 			wantReadErr:      true,
 		},
 		{
 			name: "missing version",
-			version: sampleVersion(func(v *internal.Version) {
+			version: SampleVersion(func(v *internal.Version) {
 				v.Version = ""
 			}),
-			getVersion:       sampleVersionString,
-			getModule:        sampleModulePath,
+			wantVersion:      SampleVersionString,
+			wantModulePath:   SampleModulePath,
 			wantWriteErrType: derrors.InvalidArgumentType,
 			wantReadErr:      true,
 		},
 		{
 			name: "empty commit time",
-			version: sampleVersion(func(v *internal.Version) {
+			version: SampleVersion(func(v *internal.Version) {
 				v.CommitTime = time.Time{}
 			}),
-			getVersion:       sampleVersionString,
-			getModule:        sampleModulePath,
+			wantVersion:      SampleVersionString,
+			wantModulePath:   SampleModulePath,
 			wantWriteErrType: derrors.InvalidArgumentType,
 			wantReadErr:      true,
 		},
 		{
 			name: "stdlib",
-			version: sampleVersion(func(v *internal.Version) {
+			version: SampleVersion(func(v *internal.Version) {
 				v.ModulePath = "std"
 				v.SeriesPath = "std"
 				v.Version = "v1.12.5"
@@ -101,13 +101,13 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 					Name:              "context",
 					Path:              "context",
 					Synopsis:          "This is a package synopsis",
-					Licenses:          sampleLicenseInfos,
+					Licenses:          SampleLicenseMetadata,
 					DocumentationHTML: []byte("This is the documentation HTML"),
 				}}
 			}),
-			getModule:  "std",
-			getVersion: "v1.12.5",
-			getPkg:     "context",
+			wantModulePath: "std",
+			wantVersion:    "v1.12.5",
+			wantPkgPath:    "context",
 		},
 	}
 
@@ -115,52 +115,52 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			defer ResetTestDB(testDB, t)
 
-			if err := testDB.InsertVersion(ctx, tc.version, sampleLicenses); derrors.Type(err) != tc.wantWriteErrType {
+			if err := testDB.InsertVersion(ctx, tc.version, SampleLicenses); derrors.Type(err) != tc.wantWriteErrType {
 				t.Errorf("testDB.InsertVersion(ctx, %+v) error: %v, want write error: %v", tc.version, err, tc.wantWriteErrType)
 			}
 
 			// Test that insertion of duplicate primary key won't fail.
-			if err := testDB.InsertVersion(ctx, tc.version, sampleLicenses); derrors.Type(err) != tc.wantWriteErrType {
+			if err := testDB.InsertVersion(ctx, tc.version, SampleLicenses); derrors.Type(err) != tc.wantWriteErrType {
 				t.Errorf("testDB.InsertVersion(ctx, %+v) second insert error: %v, want write error: %v", tc.version, err, tc.wantWriteErrType)
 			}
 
-			got, err := testDB.GetVersion(ctx, tc.getModule, tc.getVersion)
+			got, err := testDB.GetVersion(ctx, tc.wantModulePath, tc.wantVersion)
 			if tc.wantReadErr != (err != nil) {
-				t.Fatalf("testDB.GetVersion(ctx, %q, %q) error: %v, want read error: %t", tc.getModule, tc.getVersion, err, tc.wantReadErr)
+				t.Fatalf("testDB.GetVersion(ctx, %q, %q) error: %v, want read error: %t", tc.wantModulePath, tc.wantVersion, err, tc.wantReadErr)
 			}
 
 			if !tc.wantReadErr && got == nil {
-				t.Fatalf("testDB.GetVersion(ctx, %q, %q) = %v, want %v", tc.getModule, tc.getVersion, got, tc.version)
+				t.Fatalf("testDB.GetVersion(ctx, %q, %q) = %v, want %v", tc.wantModulePath, tc.wantVersion, got, tc.version)
 			}
 
 			if tc.version != nil {
 				if diff := cmp.Diff(&tc.version.VersionInfo, got); !tc.wantReadErr && diff != "" {
-					t.Errorf("testDB.GetVersion(ctx, %q, %q) mismatch (-want +got):\n%s", tc.getModule, tc.getVersion, diff)
+					t.Errorf("testDB.GetVersion(ctx, %q, %q) mismatch (-want +got):\n%s", tc.wantModulePath, tc.wantVersion, diff)
 				}
 			}
 
-			gotPkg, err := testDB.GetPackage(ctx, tc.getPkg, tc.getVersion)
-			if tc.version == nil || tc.version.Packages == nil || tc.getPkg == "" {
+			gotPkg, err := testDB.GetPackage(ctx, tc.wantPkgPath, tc.wantVersion)
+			if tc.version == nil || tc.version.Packages == nil || tc.wantPkgPath == "" {
 				if tc.wantReadErr != (err != nil) {
-					t.Fatalf("testDB.GetPackage(ctx, %q, %q) = %v, want %v", tc.getPkg, tc.getVersion, err, sql.ErrNoRows)
+					t.Fatalf("testDB.GetPackage(ctx, %q, %q) = %v, want %v", tc.wantPkgPath, tc.wantVersion, err, sql.ErrNoRows)
 				}
 				return
 			}
 			if err != nil {
-				t.Errorf("testDB.GetPackage(ctx, %q, %q): %v", tc.getPkg, tc.getVersion, err)
+				t.Errorf("testDB.GetPackage(ctx, %q, %q): %v", tc.wantPkgPath, tc.wantVersion, err)
 			}
 
 			wantPkg := tc.version.Packages[0]
 			if err != nil {
-				t.Fatalf("testDB.GetPackage(ctx, %q, %q) = %v, want %v", tc.getPkg, tc.getVersion, gotPkg, wantPkg)
+				t.Fatalf("testDB.GetPackage(ctx, %q, %q) = %v, want %v", tc.wantPkgPath, tc.wantVersion, gotPkg, wantPkg)
 			}
 
 			if gotPkg.VersionInfo.Version != tc.version.Version {
-				t.Errorf("testDB.GetPackage(ctx, %q, %q) version.version = %v, want %v", tc.getPkg, tc.getVersion, gotPkg.VersionInfo.Version, tc.version.Version)
+				t.Errorf("testDB.GetPackage(ctx, %q, %q) version.version = %v, want %v", tc.wantPkgPath, tc.wantVersion, gotPkg.VersionInfo.Version, tc.version.Version)
 			}
 
 			if diff := cmp.Diff(wantPkg, &gotPkg.Package, cmpopts.IgnoreFields(internal.Package{}, "Imports")); diff != "" {
-				t.Errorf("testDB.GetPackage(%q, %q) Package mismatch (-want +got):\n%s", tc.getPkg, tc.getVersion, diff)
+				t.Errorf("testDB.GetPackage(%q, %q) Package mismatch (-want +got):\n%s", tc.wantPkgPath, tc.wantVersion, diff)
 			}
 		})
 	}

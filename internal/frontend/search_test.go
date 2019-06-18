@@ -36,7 +36,7 @@ func TestFetchSearchPage(t *testing.T) {
 					Name:     "foo",
 					Path:     "/path/to/foo",
 					Synopsis: "foo is a package.",
-					Licenses: sampleLicenseMetadata,
+					Licenses: postgres.SampleLicenseMetadata,
 				},
 			},
 		}
@@ -54,7 +54,7 @@ func TestFetchSearchPage(t *testing.T) {
 					Name:     "bar",
 					Path:     "/path/to/bar",
 					Synopsis: "bar is used by foo.",
-					Licenses: sampleLicenseMetadata,
+					Licenses: postgres.SampleLicenseMetadata,
 				},
 			},
 		}
@@ -128,7 +128,7 @@ func TestFetchSearchPage(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
 
 			for _, v := range tc.versions {
-				if err := testDB.InsertVersion(ctx, v, sampleLicenses); err != nil {
+				if err := testDB.InsertVersion(ctx, v, postgres.SampleLicenses); err != nil {
 					t.Fatalf("db.InsertVersion(%+v): %v", v, err)
 				}
 				if err := testDB.InsertDocuments(ctx, v); err != nil {

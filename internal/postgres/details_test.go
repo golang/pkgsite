@@ -26,20 +26,20 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 			Path:     "path.to/foo/bar",
 			Name:     "bar",
 			Synopsis: "This is a package synopsis",
-			Licenses: sampleLicenseInfos,
+			Licenses: SampleLicenseMetadata,
 		}
 		testVersions = []*internal.Version{
-			sampleVersion(func(v *internal.Version) {
+			SampleVersion(func(v *internal.Version) {
 				v.Version = "v1.0.0-alpha.1"
 				v.VersionType = internal.VersionTypePrerelease
 				v.Packages = []*internal.Package{pkg}
 			}),
-			sampleVersion(func(v *internal.Version) {
+			SampleVersion(func(v *internal.Version) {
 				v.Version = "v1.0.0"
 				v.VersionType = internal.VersionTypeRelease
 				v.Packages = []*internal.Package{pkg}
 			}),
-			sampleVersion(func(v *internal.Version) {
+			SampleVersion(func(v *internal.Version) {
 				v.Version = "v1.0.0-20190311183353-d8887717615a"
 				v.VersionType = internal.VersionTypePseudo
 				v.Packages = []*internal.Package{pkg}
@@ -62,7 +62,7 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 					Name:     pkg.Name,
 					Path:     pkg.Path,
 					Synopsis: pkg.Synopsis,
-					Licenses: sampleLicenseInfos,
+					Licenses: SampleLicenseMetadata,
 				},
 				VersionInfo: internal.VersionInfo{
 					SeriesPath:     testVersions[1].SeriesPath,
@@ -84,7 +84,7 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			for _, v := range tc.versions {
-				if err := testDB.InsertVersion(ctx, v, sampleLicenses); err != nil {
+				if err := testDB.InsertVersion(ctx, v, SampleLicenses); err != nil {
 					t.Errorf("testDB.InsertVersion(ctx, %v): %v", v, err)
 				}
 			}
@@ -207,7 +207,7 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 			defer cancel()
 
 			for _, v := range testVersions {
-				if err := testDB.InsertVersion(ctx, v, sampleLicenses); err != nil {
+				if err := testDB.InsertVersion(ctx, v, SampleLicenses); err != nil {
 					t.Errorf("testDB.InsertVersion(%v): %v", v, err)
 				}
 			}
@@ -472,7 +472,7 @@ func TestGetVersionForPackage(t *testing.T) {
 					Name:     "foo",
 					Synopsis: "This is a package synopsis",
 					Path:     "test.module/foo",
-					Licenses: sampleLicenseInfos,
+					Licenses: SampleLicenseMetadata,
 				},
 			},
 		}
@@ -494,7 +494,7 @@ func TestGetVersionForPackage(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 			defer cancel()
 
-			if err := testDB.InsertVersion(ctx, tc.wantVersion, sampleLicenses); err != nil {
+			if err := testDB.InsertVersion(ctx, tc.wantVersion, SampleLicenses); err != nil {
 				t.Errorf("testDB.InsertVersion(ctx, %q %q): %v", tc.path, tc.version, err)
 			}
 
@@ -528,7 +528,7 @@ func TestGetLicenses(t *testing.T) {
 					Name:     "foo",
 					Synopsis: "This is a package synopsis",
 					Path:     "test.module/foo",
-					Licenses: sampleLicenseInfos,
+					Licenses: SampleLicenseMetadata,
 				},
 				&internal.Package{
 					Name:     "testmodule",
@@ -546,7 +546,7 @@ func TestGetLicenses(t *testing.T) {
 		{
 			label:        "package with licenses",
 			pkgPath:      "test.module/foo",
-			wantLicenses: sampleLicenses,
+			wantLicenses: SampleLicenses,
 		}, {
 			label:        "package with no licenses",
 			pkgPath:      "test.module",
@@ -558,7 +558,7 @@ func TestGetLicenses(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	if err := testDB.InsertVersion(ctx, testVersion, sampleLicenses); err != nil {
+	if err := testDB.InsertVersion(ctx, testVersion, SampleLicenses); err != nil {
 		t.Errorf("testDB.InsertVersion(ctx, %q, licenses): %v", testVersion.Version, err)
 	}
 
