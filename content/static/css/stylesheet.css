@@ -86,13 +86,6 @@ a:hover {
   height: 24px;
   width: 72px;
 }
-.Footer-verticalRule {
-  background-color: var(--gray-7);
-  display: inline-block;
-  height: 40px;
-  margin: 0 25px;
-  width: 1px;
-}
 .SearchForm {
   align-items: center;
   border: 1px solid var(--gray-8);
@@ -209,15 +202,6 @@ a:hover {
   color: var(--gray-6);
 }
 
-.Gopher {
-  width: 80px;
-}
-.GlobalNav {
-  display: flex;
-  padding: 0;
-  list-style: none;
-}
-.GlobalNav,
 .ModulesNav {
   list-style-type: none;
   margin: 0;
@@ -226,19 +210,10 @@ a:hover {
   border-bottom: 1px solid var(--gray-8);
   background-color: var(--gray-9);
 }
-.GlobalNav-link,
 .ModulesNav-tab {
   float: left;
   display: flex;
   padding: 0 10px;
-}
-.GlobalNav-feedback {
-  font-size: 24px;
-  padding: 10px;
-  float: right;
-}
-.GlobalNav-search {
-  width: 100%;
 }
 .ModulesNav-link {
   display: block;
@@ -253,9 +228,6 @@ a:hover {
 .ModulesNav-tab.active {
   background-color: var(--gray-8);
 }
-.DetailsHeader-packageName {
-  text-decoration: none;
-}
 .Container {
   color: var(--gray-1);
   font-family: Arial;
@@ -265,57 +237,6 @@ a:hover {
 .Content {
   margin-top: 10px;
   min-height: 500px;
-}
-.SearchContent-header {
-  font-size: 32px;
-}
-
-.SearchSnippetContent {
-  margin: 20px 0;
-}
-.SearchSnippetContent-packageName {
-  text-decoration: none;
-  font-size: 24px;
-  font-weight: bold;
-}
-.SearchSnippetContent-packageName:hover,
-.SearchSnippetContent-packageName:focus,
-.DetailsHeader-packageName:hover,
-.DetailsHeader-packageName:focus {
-  text-decoration: underline;
-}
-
-.SearchSnippetContent-version {
-  font-size: 20px;
-  padding: 5px;
-}
-.SearchSnippetContent-commitTime {
-  font-family: Menlo;
-  margin: 15px 0;
-  font-size: 14px;
-}
-.HomeContent-search {
-  margin: 100px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 250px;
-}
-.HomeContent-searchInput {
-  width: 95%;
-  height: 50px;
-  font-size: 32px;
-  padding-left: 15px;
-}
-.HomeContent-searchButton {
-  height: 55px;
-  width: 100px;
-  font-size: 24px;
-  margin-top: 15px;
-}
-.HomeContent-searchLabel {
-  width: 500px;
-  margin: 10px 0;
 }
 .ModuleContent-package {
   display: inline-flex;
