@@ -226,7 +226,7 @@ var (
 		Path:              "github.com/valid_module_name/foo",
 		Licenses:          SampleLicenseMetadata,
 		DocumentationHTML: []byte("This is the documentation HTML"),
-		Suffix:            "foo",
+		V1Path:            "github.com/valid_module_name/foo",
 		Imports: []*internal.Import{
 			&internal.Import{
 				Name: "bar",

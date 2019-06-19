@@ -244,19 +244,19 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 			Path:     "path.to/foo/bar",
 			Name:     "bar",
 			Synopsis: "This is a package synopsis",
-			Suffix:   "bar",
+			V1Path:   "bar",
 		}
 		pkg2 = &internal.Package{
 			Path:     "path.to/foo/v2/bar",
 			Name:     "bar",
 			Synopsis: "This is another package synopsis",
-			Suffix:   "bar",
+			V1Path:   "bar",
 		}
 		pkg3 = &internal.Package{
 			Path:     "path.to/some/thing/else",
 			Name:     "else",
 			Synopsis: "something else's package synopsis",
-			Suffix:   "else",
+			V1Path:   "else",
 		}
 		modulePath1  = "path.to/foo"
 		modulePath2  = "path.to/foo/v2"

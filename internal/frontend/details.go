@@ -160,10 +160,17 @@ type Package struct {
 	Synopsis          string
 	CommitTime        string
 	Title             string
-	Suffix            string
 	Licenses          []LicenseMetadata
 	IsCommand         bool
 	IsRedistributable bool
+}
+
+func (p *Package) Suffix() string {
+	suffix := strings.TrimPrefix(p.Path, p.ModulePath)
+	if suffix == "" {
+		return p.Name
+	}
+	return suffix
 }
 
 // transformLicenseMetadata transforms license.Metadata into a LicenseMetadata
@@ -198,7 +205,6 @@ func createPackageHeader(pkg *internal.VersionedPackage) (*Package, error) {
 		Version:           pkg.VersionInfo.Version,
 		Path:              pkg.Path,
 		Synopsis:          pkg.Package.Synopsis,
-		Suffix:            pkg.Package.Suffix,
 		Licenses:          transformLicenseMetadata(pkg.Licenses),
 		CommitTime:        elapsedTime(pkg.VersionInfo.CommitTime),
 		IsRedistributable: pkg.IsRedistributable(),
@@ -292,11 +298,6 @@ func fetchModuleDetails(ctx context.Context, db *postgres.DB, pkg *internal.Vers
 
 	var packages []*Package
 	for _, p := range version.Packages {
-		if p.Suffix == "" {
-			// Display the package name if the package is at the
-			// root of the module.
-			p.Suffix = p.Name
-		}
 		packages = append(packages, &Package{
 			Name:       p.Name,
 			Path:       p.Path,
@@ -304,7 +305,6 @@ func fetchModuleDetails(ctx context.Context, db *postgres.DB, pkg *internal.Vers
 			Licenses:   transformLicenseMetadata(p.Licenses),
 			Version:    version.Version,
 			ModulePath: version.ModulePath,
-			Suffix:     p.Suffix,
 		})
 	}
 
@@ -341,35 +341,17 @@ func fetchVersionsDetails(ctx context.Context, db *postgres.DB, pkg *internal.Ve
 		curMinor  *MinorVersionGroup
 	)
 	for _, v := range versions {
-		suffix := pkg.Suffix
 		if v.SeriesPath() != pkg.SeriesPath() {
-			// Reverse-engineer the package suffix for package versions from
-			// different modules. For example
-			//	github.com/hashicorp/vault/v2/api
-			// vs.
-			//	github.com/hashicorp/vault/api/v2
-			v1path := pkg.SeriesPath() + "/" + pkg.Suffix
-			if !strings.HasPrefix(v1path, v.SeriesPath()) {
+			if !strings.HasPrefix(pkg.V1Path, v.SeriesPath()) {
 				log.Printf("got version with mismatching series: %q", v.SeriesPath())
 				continue
 			}
-			suffix = strings.TrimPrefix(strings.TrimPrefix(v1path, v.SeriesPath()), "/")
 		}
 
-		var pkgPath string
-		if inStdLib(pkg.Path) {
-			pkgPath = pkg.Path
-		} else if suffix == "" {
-			pkgPath = v.ModulePath
-		} else {
-			pkgPath = v.ModulePath + "/" + suffix
-		}
 		latest := &Package{
 			Version:    v.Version,
-			Path:       pkgPath,
 			CommitTime: elapsedTime(v.CommitTime),
 		}
-
 		if series := v.SeriesPath(); curSeries == nil || curSeries.Series != series {
 			curSeries = &SeriesVersionGroup{
 				Series: series,

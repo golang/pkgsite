@@ -23,7 +23,6 @@ var (
 		Name:       postgres.SamplePackage.Name,
 		ModulePath: postgres.SampleModulePath,
 		Version:    postgres.SampleVersionString,
-		Suffix:     postgres.SamplePackage.Suffix,
 		Path:       postgres.SamplePackage.Path,
 		Synopsis:   postgres.SamplePackage.Synopsis,
 		Licenses:   transformLicenseMetadata(postgres.SampleLicenseMetadata),
@@ -156,7 +155,7 @@ func TestFetchVersionsDetails(t *testing.T) {
 				Path:     pkg1Path,
 				Synopsis: "test synopsis",
 				Licenses: postgres.SampleLicenseMetadata,
-				Suffix:   "pkg_name",
+				V1Path:   "pkg_name",
 			},
 			VersionInfo: versionInfo,
 		}
@@ -166,7 +165,7 @@ func TestFetchVersionsDetails(t *testing.T) {
 				Path:     "net/http",
 				Synopsis: "test synopsis",
 				Licenses: postgres.SampleLicenseMetadata,
-				Suffix:   "http",
+				V1Path:   "http",
 			},
 			VersionInfo: internal.VersionInfo{
 				ModulePath: "std",
@@ -175,17 +174,14 @@ func TestFetchVersionsDetails(t *testing.T) {
 		}
 		latestTagged = &Package{
 			Version:    "v2.2.1-alpha.1",
-			Path:       pkg2Path,
 			CommitTime: "today",
 		}
 		latestPseudo = &Package{
 			Version:    "v0.0.0-20140414041502-3c2ca4d52544",
-			Path:       pkg1Path,
 			CommitTime: "today",
 		}
 		latestStdlib = &Package{
 			Version:    "v1.12.5",
-			Path:       "net/http",
 			CommitTime: "today",
 		}
 	)
@@ -224,13 +220,11 @@ func TestFetchVersionsDetails(t *testing.T) {
 								Minor: "v1.11",
 								Latest: &Package{
 									Version:    "v1.11.6",
-									Path:       "net/http",
 									CommitTime: "today",
 								},
 								PatchVersions: []*Package{
 									{
 										Version:    "v1.11.6",
-										Path:       "net/http",
 										CommitTime: "today",
 									},
 								},
@@ -268,12 +262,10 @@ func TestFetchVersionsDetails(t *testing.T) {
 							Minor: "v2.0",
 							Latest: &Package{
 								Version:    "v2.0.0",
-								Path:       pkg2Path,
 								CommitTime: "today",
 							},
 							PatchVersions: []*Package{{
 								Version:    "v2.0.0",
-								Path:       pkg2Path,
 								CommitTime: "today",
 							}},
 						}},
@@ -281,35 +273,29 @@ func TestFetchVersionsDetails(t *testing.T) {
 						Major: "v1",
 						Latest: &Package{
 							Version:    "v1.3.0",
-							Path:       pkg1Path,
 							CommitTime: "today",
 						},
 						MinorVersions: []*MinorVersionGroup{{
 							Minor: "v1.3",
 							Latest: &Package{
 								Version:    "v1.3.0",
-								Path:       pkg1Path,
 								CommitTime: "today",
 							},
 							PatchVersions: []*Package{{
 								Version:    "v1.3.0",
-								Path:       pkg1Path,
 								CommitTime: "today",
 							}},
 						}, {
 							Minor: "v1.2",
 							Latest: &Package{
 								Version:    "v1.2.3",
-								Path:       pkg1Path,
 								CommitTime: "today",
 							},
 							PatchVersions: []*Package{{
 								Version:    "v1.2.3",
-								Path:       pkg1Path,
 								CommitTime: "today",
 							}, {
 								Version:    "v1.2.1",
-								Path:       pkg1Path,
 								CommitTime: "today",
 							}},
 						}},
@@ -339,7 +325,6 @@ func TestFetchVersionsDetails(t *testing.T) {
 								latestPseudo,
 								{
 									Version:    "v0.0.0-20140414041501-3c2ca4d52544",
-									Path:       pkg1Path,
 									CommitTime: "today",
 								},
 							},

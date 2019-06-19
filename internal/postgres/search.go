@@ -156,7 +156,7 @@ func (db *DB) InsertDocuments(ctx context.Context, version *internal.Version) er
 				SETWEIGHT(TO_TSVECTOR($9), 'C')
 			) ON CONFLICT DO NOTHING;`, func(stmt *sql.Stmt) error {
 			for _, p := range version.Packages {
-				if _, err := stmt.ExecContext(ctx, p.Path, p.Suffix, version.ModulePath, version.SeriesPath(), version.Version, p.Name, strings.Join(generatePathTokens(p.Path), " "), p.Synopsis, version.ReadmeContents); err != nil {
+				if _, err := stmt.ExecContext(ctx, p.Path, p.V1Path, version.ModulePath, version.SeriesPath(), version.Version, p.Name, strings.Join(generatePathTokens(p.Path), " "), p.Synopsis, version.ReadmeContents); err != nil {
 					return fmt.Errorf("error inserting document for package %+v: %v", p, err)
 				}
 			}

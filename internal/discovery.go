@@ -44,10 +44,12 @@ type Package struct {
 	Path              string
 	Name              string
 	Synopsis          string
-	Suffix            string              // if my.module/v2/A/B is the path, A/B is the package suffix
 	Licenses          []*license.Metadata // path to applicable version licenses
 	Imports           []*Import
 	DocumentationHTML []byte
+
+	// V1Path is the package path of a package with major version 1 in a given series.
+	V1Path string
 }
 
 // IsRedistributable reports whether the package may be redistributed.

@@ -30,7 +30,7 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 
 	var (
 		commitTime                                                                  time.Time
-		name, synopsis, seriesPath, modulePath, suffix, readmeFilePath, versionType string
+		name, synopsis, seriesPath, modulePath, v1path, readmeFilePath, versionType string
 		readmeContents, documentation                                               []byte
 		licenseTypes, licensePaths                                                  []string
 	)
@@ -45,7 +45,7 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 			v.module_path,
 			p.name,
 			p.synopsis,
-			p.suffix,
+			p.v1_path,
 			v.version_type,
 			p.documentation
 		FROM
@@ -67,7 +67,7 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 	row := db.QueryRowContext(ctx, query, path, version)
 	if err := row.Scan(&commitTime, pq.Array(&licenseTypes),
 		pq.Array(&licensePaths), &readmeFilePath, &readmeContents, &seriesPath, &modulePath,
-		&name, &synopsis, &suffix, &versionType, &documentation); err != nil {
+		&name, &synopsis, &v1path, &versionType, &documentation); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, derrors.NotFound(fmt.Sprintf("package %s@%s not found", path, version))
 		}
@@ -85,7 +85,7 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 			Path:              path,
 			Synopsis:          synopsis,
 			Licenses:          lics,
-			Suffix:            suffix,
+			V1Path:            v1path,
 			DocumentationHTML: documentation,
 		},
 		VersionInfo: internal.VersionInfo{
@@ -109,7 +109,7 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 
 	var (
 		commitTime                                                              time.Time
-		seriesPath, modulePath, name, synopsis, version, suffix, readmeFilePath string
+		seriesPath, modulePath, name, synopsis, version, v1path, readmeFilePath string
 		licenseTypes, licensePaths                                              []string
 		readmeContents, documentation                                           []byte
 	)
@@ -123,7 +123,7 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 			v.commit_time,
 			p.name,
 			p.synopsis,
-			p.suffix,
+			p.v1_path,
 			v.readme_file_path,
 			v.readme_contents,
 			p.documentation
@@ -149,7 +149,7 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 		LIMIT 1;`
 
 	row := db.QueryRowContext(ctx, query, path)
-	if err := row.Scan(&seriesPath, &modulePath, pq.Array(&licenseTypes), pq.Array(&licensePaths), &version, &commitTime, &name, &synopsis, &suffix, &readmeFilePath, &readmeContents, &documentation); err != nil {
+	if err := row.Scan(&seriesPath, &modulePath, pq.Array(&licenseTypes), pq.Array(&licensePaths), &version, &commitTime, &name, &synopsis, &v1path, &readmeFilePath, &readmeContents, &documentation); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, derrors.NotFound(fmt.Sprintf("package %s@%s not found", path, version))
 		}
@@ -167,7 +167,7 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 			Path:              path,
 			Synopsis:          synopsis,
 			Licenses:          lics,
-			Suffix:            suffix,
+			V1Path:            v1path,
 			DocumentationHTML: documentation,
 		},
 		VersionInfo: internal.VersionInfo{
@@ -190,7 +190,7 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 		p.module_path,
 		p.name,
 		p.synopsis,
-		p.suffix,
+		p.v1_path,
 		p.license_types,
 		p.license_paths,
 		v.readme_file_path,
@@ -220,7 +220,7 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 
 	var (
 		pkgPath, seriesPath, modulePath, pkgName      string
-		synopsis, suffix, readmeFilePath, versionType string
+		synopsis, v1path, readmeFilePath, versionType string
 		readmeContents, documentation                 []byte
 		commitTime                                    time.Time
 		licenseTypes, licensePaths                    []string
@@ -235,7 +235,7 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 	v := &internal.Version{}
 	v.Version = version
 	for rows.Next() {
-		if err := rows.Scan(&pkgPath, &seriesPath, &modulePath, &pkgName, &synopsis, &suffix,
+		if err := rows.Scan(&pkgPath, &seriesPath, &modulePath, &pkgName, &synopsis, &v1path,
 			pq.Array(&licenseTypes), pq.Array(&licensePaths), &readmeFilePath,
 			&readmeContents, &commitTime, &versionType, &documentation); err != nil {
 			return nil, fmt.Errorf("row.Scan(): %v", err)
@@ -254,7 +254,7 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 			Name:              pkgName,
 			Synopsis:          synopsis,
 			Licenses:          lics,
-			Suffix:            suffix,
+			V1Path:            v1path,
 			DocumentationHTML: documentation,
 		})
 	}
@@ -269,7 +269,7 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 // GetTaggedVersionsForPackageSeries returns a list of tagged versions sorted
 // in descending order by major, minor and patch number and then lexicographically
 // in descending order by prerelease. This list includes tagged versions of
-// packages that are part of the same series and have the same package suffix.
+// packages that have the same v1path.
 func (db *DB) GetTaggedVersionsForPackageSeries(ctx context.Context, path string) ([]*internal.VersionInfo, error) {
 	return getVersions(ctx, db, path, []internal.VersionType{internal.VersionTypeRelease, internal.VersionTypePrerelease})
 }
@@ -277,8 +277,7 @@ func (db *DB) GetTaggedVersionsForPackageSeries(ctx context.Context, path string
 // GetPseudoVersionsForPackageSeries returns the 10 most recent from a list of
 // pseudo-versions sorted in descending order by major, minor and patch number
 // and then lexicographically in descending order by prerelease. This list includes
-// pseudo-versions of packages that are part of the same series and have the same
-// package suffix.
+// pseudo-versions of packages that have the same v1path.
 func (db *DB) GetPseudoVersionsForPackageSeries(ctx context.Context, path string) ([]*internal.VersionInfo, error) {
 	return getVersions(ctx, db, path, []internal.VersionType{internal.VersionTypePseudo})
 }
@@ -288,64 +287,40 @@ func (db *DB) GetPseudoVersionsForPackageSeries(ctx context.Context, path string
 // lexicographically in descending order by prerelease. The version types
 // included in the list are specified by a list of VersionTypes. The results
 // include the type of versions of packages that are part of the same series
-// and have the same package suffix as the package specified by the path.
+// and have the same package v1path.
 func getVersions(ctx context.Context, db *DB, path string, versionTypes []internal.VersionType) ([]*internal.VersionInfo, error) {
 	var (
-		commitTime                                time.Time
-		seriesPath, modulePath, synopsis, version string
-		versionHistory                            []*internal.VersionInfo
+		commitTime                            time.Time
+		modulePath, synopsis, version, v1path string
+		versionHistory                        []*internal.VersionInfo
 	)
 
-	// This query is complicated by the need to match my.mod/foo as history for
-	// my.mod/v2/foo -- we need to match all packages in the series with the same
-	// suffix.
-	baseQuery := `WITH package_series AS (
-			SELECT
-				m.series_path,
-				p.path AS package_path,
-				p.suffix AS package_suffix,
-				p.module_path,
-				v.version,
-				v.commit_time,
-				p.synopsis,
-				v.major,
-				v.minor,
-				v.patch,
-				v.prerelease,
-				v.version_type
-			FROM
-				modules m
-			INNER JOIN
-				packages p
-			ON
-				p.module_path = m.path
-			INNER JOIN
-				versions v
-			ON
-				p.module_path = v.module_path
-				AND p.version = v.version
-		)
-		SELECT
-			series_path,
-			module_path,
-			version,
-			commit_time,
-			synopsis
+	baseQuery := `SELECT
+			p.module_path,
+			p.version,
+			p.v1_path,
+			v.commit_time,
+			p.synopsis
 		FROM
-			package_series
+			packages p
+		INNER JOIN
+			versions v
+		ON
+			p.module_path = v.module_path
+			AND p.version = v.version
 		WHERE
-			(series_path, package_suffix) IN (
-				SELECT series_path, package_suffix
-				FROM package_series WHERE package_path=$1
+			p.v1_path IN (
+				SELECT v1_path
+				FROM packages
+				WHERE path=$1
 			)
 			AND (%s)
 		ORDER BY
-			module_path DESC,
-			major DESC,
-			minor DESC,
-			patch DESC,
-			prerelease DESC %s`
-
+			v.module_path DESC,
+			v.major DESC,
+			v.minor DESC,
+			v.patch DESC,
+			v.prerelease DESC %s`
 	queryEnd := `;`
 	if len(versionTypes) == 0 {
 		return nil, fmt.Errorf("error: must specify at least one version type")
@@ -358,7 +333,9 @@ func getVersions(ctx context.Context, db *DB, path string, versionTypes []intern
 		params  = []interface{}{path}
 	)
 	for i, vt := range versionTypes {
-		vtQuery = append(vtQuery, fmt.Sprintf(`version_type = $%d`, i+2))
+		// v.version_type can be just version_type once
+		// packages.version_type is dropped.
+		vtQuery = append(vtQuery, fmt.Sprintf(`v.version_type = $%d`, i+2))
 		params = append(params, vt.String())
 	}
 
@@ -371,7 +348,7 @@ func getVersions(ctx context.Context, db *DB, path string, versionTypes []intern
 	defer rows.Close()
 
 	for rows.Next() {
-		if err := rows.Scan(&seriesPath, &modulePath, &version, &commitTime, &synopsis); err != nil {
+		if err := rows.Scan(&modulePath, &version, &v1path, &commitTime, &synopsis); err != nil {
 			return nil, fmt.Errorf("row.Scan(): %v", err)
 		}
 
