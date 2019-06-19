@@ -340,21 +340,20 @@ func fetchVersionsDetails(ctx context.Context, db *postgres.DB, pkg *internal.Ve
 		curMajor  *MajorVersionGroup
 		curMinor  *MinorVersionGroup
 	)
-
 	for _, v := range versions {
 		suffix := pkg.Suffix
-		if v.SeriesPath != pkg.SeriesPath {
+		if v.SeriesPath() != pkg.SeriesPath() {
 			// Reverse-engineer the package suffix for package versions from
 			// different modules. For example
 			//	github.com/hashicorp/vault/v2/api
 			// vs.
 			//	github.com/hashicorp/vault/api/v2
-			v1path := pkg.SeriesPath + "/" + pkg.Suffix
-			if !strings.HasPrefix(v1path, v.SeriesPath) {
-				log.Printf("got version with mismatching series: %q", v.SeriesPath)
+			v1path := pkg.SeriesPath() + "/" + pkg.Suffix
+			if !strings.HasPrefix(v1path, v.SeriesPath()) {
+				log.Printf("got version with mismatching series: %q", v.SeriesPath())
 				continue
 			}
-			suffix = strings.TrimPrefix(strings.TrimPrefix(v1path, v.SeriesPath), "/")
+			suffix = strings.TrimPrefix(strings.TrimPrefix(v1path, v.SeriesPath()), "/")
 		}
 
 		var pkgPath string
@@ -371,7 +370,7 @@ func fetchVersionsDetails(ctx context.Context, db *postgres.DB, pkg *internal.Ve
 			CommitTime: elapsedTime(v.CommitTime),
 		}
 
-		if series := v.SeriesPath; curSeries == nil || curSeries.Series != series {
+		if series := v.SeriesPath(); curSeries == nil || curSeries.Series != series {
 			curSeries = &SeriesVersionGroup{
 				Series: series,
 				Latest: latest,

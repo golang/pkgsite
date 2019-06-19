@@ -40,7 +40,7 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 			`INSERT INTO series(path)
 			VALUES($1)
 			ON CONFLICT DO NOTHING`,
-			version.SeriesPath); err != nil {
+			version.SeriesPath()); err != nil {
 			return fmt.Errorf("error inserting series: %v", err)
 		}
 
@@ -48,7 +48,7 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 			`INSERT INTO modules(path, series_path)
 			VALUES($1,$2)
 			ON CONFLICT DO NOTHING`,
-			version.ModulePath, version.SeriesPath); err != nil {
+			version.ModulePath, version.SeriesPath()); err != nil {
 			return fmt.Errorf("error inserting module: %v", err)
 		}
 
@@ -179,9 +179,6 @@ func validateVersion(version *internal.Version) error {
 	}
 
 	var errReasons []string
-	if version.SeriesPath == "" {
-		errReasons = append(errReasons, "no series path")
-	}
 	if version.Version == "" {
 		errReasons = append(errReasons, "no specified version")
 	} else if version.ModulePath != "std" && !semver.IsValid(version.Version) {

@@ -32,7 +32,6 @@ import (
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
-	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
 )
 
@@ -127,10 +126,8 @@ func fetchAndInsertVersion(modulePath, requestedVersion string, proxyClient *pro
 	if err != nil {
 		return fmt.Errorf("parseVersion(%q): %v", info.Version, err)
 	}
-	seriesPath, _, _ := module.SplitPathVersion(modulePath)
 	v := &internal.Version{
 		VersionInfo: internal.VersionInfo{
-			SeriesPath:     seriesPath,
 			ModulePath:     modulePath,
 			Version:        info.Version,
 			CommitTime:     info.Time,
@@ -293,11 +290,10 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 			log.Printf("Skipping %q because it is incomplete", innerPath)
 			continue
 		}
-		importPath := path.Join(modulePath, innerPath)
-		pkg, err := loadPackage(goFiles, importPath, innerPath)
+		pkg, err := loadPackage(goFiles, innerPath, modulePath)
 		if _, ok := err.(*BadPackageError); ok {
 			// TODO(b/133187024): Record and display this information instead of just skipping.
-			log.Printf("Skipping %q because of *BadPackageError: %v\n", importPath, err)
+			log.Printf("Skipping %q because of *BadPackageError: %v\n", path.Join(modulePath, innerPath), err)
 			continue
 		} else if err != nil {
 			return nil, fmt.Errorf("unexpected error loading package: %v", err)
@@ -307,9 +303,6 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 			continue
 		}
 		pkg.Licenses = matcher.Match(innerPath)
-		if modulePath == "std" {
-			pkg.Path = innerPath
-		}
 		pkgs = append(pkgs, pkg)
 	}
 	if len(pkgs) == 0 {
@@ -369,7 +362,7 @@ func (bpe *BadPackageError) Error() string { return bpe.Err.Error() }
 // or all .go files have been excluded by constraints.
 // A *BadPackageError error is returned if the directory
 // contains .go files but do not make up a valid package.
-func loadPackage(zipGoFiles []*zip.File, importPath, innerPath string) (*internal.Package, error) {
+func loadPackage(zipGoFiles []*zip.File, innerPath, modulePath string) (*internal.Package, error) {
 	var (
 		// files is a map of file names to their contents.
 		//
@@ -478,6 +471,8 @@ func loadPackage(zipGoFiles []*zip.File, importPath, innerPath string) (*interna
 		Name:  packageName,
 		Files: goFiles,
 	}
+
+	importPath := path.Join(modulePath, innerPath)
 	d := doc.New(apkg, importPath, 0)
 	if d.ImportPath != importPath || d.Name != packageName {
 		panic("internal error: *doc.Package has an unexpected import path or package name")
@@ -501,6 +496,9 @@ func loadPackage(zipGoFiles []*zip.File, importPath, innerPath string) (*interna
 		return nil, fmt.Errorf("renderDocHTML: %v", err)
 	}
 
+	if modulePath == "std" {
+		importPath = innerPath
+	}
 	return &internal.Package{
 		Path:              importPath,
 		Name:              packageName,

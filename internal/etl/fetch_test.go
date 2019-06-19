@@ -116,7 +116,6 @@ func TestReFetch(t *testing.T) {
 	}
 	want := &internal.VersionedPackage{
 		VersionInfo: internal.VersionInfo{
-			SeriesPath:     modulePath,
 			ModulePath:     modulePath,
 			Version:        version,
 			CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
@@ -165,7 +164,6 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			pkg:        "my.mod/module/bar",
 			want: &internal.VersionedPackage{
 				VersionInfo: internal.VersionInfo{
-					SeriesPath:     "my.mod/module",
 					ModulePath:     "my.mod/module",
 					Version:        "v1.0.0",
 					CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
@@ -191,7 +189,6 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			pkg:        "nonredistributable.mod/module/bar/baz",
 			want: &internal.VersionedPackage{
 				VersionInfo: internal.VersionInfo{
-					SeriesPath:     "nonredistributable.mod/module",
 					ModulePath:     "nonredistributable.mod/module",
 					Version:        "v1.0.0",
 					CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
@@ -218,7 +215,6 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			pkg:        "nonredistributable.mod/module/foo",
 			want: &internal.VersionedPackage{
 				VersionInfo: internal.VersionInfo{
-					SeriesPath:     "nonredistributable.mod/module",
 					ModulePath:     "nonredistributable.mod/module",
 					Version:        "v1.0.0",
 					CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
@@ -244,7 +240,6 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			pkg:        "context",
 			want: &internal.VersionedPackage{
 				VersionInfo: internal.VersionInfo{
-					SeriesPath:     "std",
 					ModulePath:     "std",
 					Version:        "v1.12.5",
 					CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),

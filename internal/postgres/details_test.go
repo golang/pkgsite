@@ -65,7 +65,6 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 					Licenses: SampleLicenseMetadata,
 				},
 				VersionInfo: internal.VersionInfo{
-					SeriesPath:     testVersions[1].SeriesPath,
 					ModulePath:     testVersions[1].ModulePath,
 					Version:        testVersions[1].Version,
 					CommitTime:     testVersions[1].CommitTime,
@@ -135,14 +134,12 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 				},
 			},
 		}
-		seriesPath   = "myseries"
 		modulePath1  = "path.to/foo"
 		modulePath2  = "path2.to/foo"
 		modulePath3  = "path3.to/foo"
 		testVersions = []*internal.Version{
 			&internal.Version{
 				VersionInfo: internal.VersionInfo{
-					SeriesPath:     seriesPath,
 					ModulePath:     modulePath1,
 					Version:        "v1.1.0",
 					ReadmeContents: []byte("readme"),
@@ -153,7 +150,6 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 			},
 			&internal.Version{
 				VersionInfo: internal.VersionInfo{
-					SeriesPath:     seriesPath,
 					ModulePath:     modulePath2,
 					Version:        "v1.2.0",
 					ReadmeContents: []byte("readme"),
@@ -164,7 +160,6 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 			},
 			&internal.Version{
 				VersionInfo: internal.VersionInfo{
-					SeriesPath:     seriesPath,
 					ModulePath:     modulePath3,
 					Version:        "v1.3.0",
 					ReadmeContents: []byte("readme"),
@@ -263,14 +258,12 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 			Synopsis: "something else's package synopsis",
 			Suffix:   "else",
 		}
-		seriesPath   = "path.to/foo"
 		modulePath1  = "path.to/foo"
 		modulePath2  = "path.to/foo/v2"
 		modulePath3  = "path.to/some/thing"
 		testVersions = []*internal.Version{
 			&internal.Version{
 				VersionInfo: internal.VersionInfo{
-					SeriesPath:  seriesPath,
 					ModulePath:  modulePath3,
 					Version:     "v3.0.0",
 					CommitTime:  now,
@@ -280,7 +273,6 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 			},
 			&internal.Version{
 				VersionInfo: internal.VersionInfo{
-					SeriesPath:  seriesPath,
 					ModulePath:  modulePath1,
 					Version:     "v1.0.0-alpha.1",
 					CommitTime:  now,
@@ -290,7 +282,6 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 			},
 			&internal.Version{
 				VersionInfo: internal.VersionInfo{
-					SeriesPath:  seriesPath,
 					ModulePath:  modulePath1,
 					Version:     "v1.0.0",
 					CommitTime:  now,
@@ -300,7 +291,6 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 			},
 			&internal.Version{
 				VersionInfo: internal.VersionInfo{
-					SeriesPath:  seriesPath,
 					ModulePath:  modulePath2,
 					Version:     "v2.0.1-beta",
 					CommitTime:  now,
@@ -310,7 +300,6 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 			},
 			&internal.Version{
 				VersionInfo: internal.VersionInfo{
-					SeriesPath:  seriesPath,
 					ModulePath:  modulePath2,
 					Version:     "v2.1.0",
 					CommitTime:  now,
@@ -334,25 +323,21 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 			versions:  testVersions,
 			wantTaggedVersions: []*internal.VersionInfo{
 				&internal.VersionInfo{
-					SeriesPath: seriesPath,
 					ModulePath: modulePath2,
 					Version:    "v2.1.0",
 					CommitTime: now,
 				},
 				&internal.VersionInfo{
-					SeriesPath: seriesPath,
 					ModulePath: modulePath2,
 					Version:    "v2.0.1-beta",
 					CommitTime: now,
 				},
 				&internal.VersionInfo{
-					SeriesPath: seriesPath,
 					ModulePath: modulePath1,
 					Version:    "v1.0.0",
 					CommitTime: now,
 				},
 				&internal.VersionInfo{
-					SeriesPath: seriesPath,
 					ModulePath: modulePath1,
 					Version:    "v1.0.0-alpha.1",
 					CommitTime: now,
@@ -378,7 +363,6 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 			for i := 0; i < tc.numPseudo; i++ {
 				v := &internal.Version{
 					VersionInfo: internal.VersionInfo{
-						SeriesPath: seriesPath,
 						ModulePath: modulePath1,
 						// %02d makes a string that is a width of 2 and left pads with zeroes
 						Version:     fmt.Sprintf("v0.0.0-201806111833%02d-d8887717615a", i+1),
@@ -395,7 +379,6 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 				// if there are more than 10 in the database
 				if i < 10 {
 					wantPseudoVersions = append(wantPseudoVersions, &internal.VersionInfo{
-						SeriesPath: seriesPath,
 						ModulePath: modulePath1,
 						Version:    fmt.Sprintf("v0.0.0-201806111833%02d-d8887717615a", tc.numPseudo-i),
 						CommitTime: now,
@@ -451,11 +434,9 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 func TestGetVersionForPackage(t *testing.T) {
 	var (
 		now         = NowTruncated()
-		seriesPath  = "myseries"
 		modulePath  = "test.module"
 		testVersion = &internal.Version{
 			VersionInfo: internal.VersionInfo{
-				SeriesPath:     seriesPath,
 				ModulePath:     modulePath,
 				Version:        "v1.0.0",
 				ReadmeContents: []byte("readme"),
@@ -512,11 +493,9 @@ func TestGetVersionForPackage(t *testing.T) {
 func TestGetLicenses(t *testing.T) {
 	var (
 		now         = NowTruncated()
-		seriesPath  = "myseries"
 		modulePath  = "test.module"
 		testVersion = &internal.Version{
 			VersionInfo: internal.VersionInfo{
-				SeriesPath:     seriesPath,
 				ModulePath:     modulePath,
 				Version:        "v1.0.0",
 				ReadmeContents: []byte("readme"),

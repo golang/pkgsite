@@ -89,7 +89,6 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 			DocumentationHTML: documentation,
 		},
 		VersionInfo: internal.VersionInfo{
-			SeriesPath:     seriesPath,
 			ModulePath:     modulePath,
 			Version:        version,
 			CommitTime:     commitTime,
@@ -172,7 +171,6 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 			DocumentationHTML: documentation,
 		},
 		VersionInfo: internal.VersionInfo{
-			SeriesPath:     seriesPath,
 			ModulePath:     modulePath,
 			Version:        version,
 			CommitTime:     commitTime,
@@ -246,7 +244,6 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 		if err != nil {
 			return nil, fmt.Errorf("zipLicenseMetadata(%v, %v): %v", licenseTypes, licensePaths, err)
 		}
-		v.SeriesPath = seriesPath
 		v.ModulePath = modulePath
 		v.ReadmeFilePath = readmeFilePath
 		v.ReadmeContents = readmeContents
@@ -379,7 +376,6 @@ func getVersions(ctx context.Context, db *DB, path string, versionTypes []intern
 		}
 
 		versionHistory = append(versionHistory, &internal.VersionInfo{
-			SeriesPath: seriesPath,
 			ModulePath: modulePath,
 			Version:    version,
 			CommitTime: commitTime,
@@ -590,7 +586,6 @@ func (db *DB) GetVersion(ctx context.Context, modulePath string, version string)
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
 	return &internal.VersionInfo{
-		SeriesPath:     seriesPath,
 		ModulePath:     modulePath,
 		Version:        version,
 		CommitTime:     commitTime,

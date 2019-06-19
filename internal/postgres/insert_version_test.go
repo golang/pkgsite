@@ -95,7 +95,6 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 			name: "stdlib",
 			version: SampleVersion(func(v *internal.Version) {
 				v.ModulePath = "std"
-				v.SeriesPath = "std"
 				v.Version = "v1.12.5"
 				v.Packages = []*internal.Package{{
 					Name:              "context",

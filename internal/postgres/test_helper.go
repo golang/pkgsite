@@ -209,17 +209,10 @@ func RunDBTests(dbName string, m *testing.M, testDB **DB) {
 	os.Exit(code)
 }
 
-const (
-	testTimeout = 5 * time.Second
-)
-
-const (
-	SampleSeriesPath    = "github.com/valid_module_name"
-	SampleModulePath    = "github.com/valid_module_name"
-	SampleVersionString = "v1.0.0"
-)
-
+// These sample values can be used to construct test cases.
 var (
+	SampleModulePath      = "github.com/valid_module_name"
+	SampleVersionString   = "v1.0.0"
 	SampleCommitTime      = NowTruncated()
 	SampleLicenseMetadata = []*license.Metadata{
 		{Type: "MIT", FilePath: "LICENSE"},
@@ -252,7 +245,6 @@ var (
 func SampleVersion(mutators ...func(*internal.Version)) *internal.Version {
 	v := &internal.Version{
 		VersionInfo: internal.VersionInfo{
-			SeriesPath:     SampleSeriesPath,
 			ModulePath:     SampleModulePath,
 			Version:        SampleVersionString,
 			ReadmeFilePath: "README.md",

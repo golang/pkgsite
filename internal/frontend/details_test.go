@@ -16,7 +16,6 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
-	"golang.org/x/discovery/internal/thirdparty/module"
 )
 
 var (
@@ -126,10 +125,8 @@ func TestFetchOverviewDetails(t *testing.T) {
 }
 
 func getTestVersion(pkgPath, modulePath, version string, versionType internal.VersionType, packages ...*internal.Package) *internal.Version {
-	seriesPath, _, _ := module.SplitPathVersion(modulePath)
 	return &internal.Version{
 		VersionInfo: internal.VersionInfo{
-			SeriesPath:     seriesPath,
 			ModulePath:     modulePath,
 			Version:        version,
 			CommitTime:     time.Now().Add(time.Hour * -8),
@@ -150,7 +147,6 @@ func TestFetchVersionsDetails(t *testing.T) {
 		pkg1Path    = "test.com/module/pkg_name"
 		pkg2Path    = "test.com/module/v2/pkg_name"
 		versionInfo = internal.VersionInfo{
-			SeriesPath: "test.com/module",
 			ModulePath: "test.com/module/v2",
 			Version:    "v2.2.1-alpha.1",
 		}
@@ -173,8 +169,7 @@ func TestFetchVersionsDetails(t *testing.T) {
 				Suffix:   "http",
 			},
 			VersionInfo: internal.VersionInfo{
-				SeriesPath: "std",
-				ModulePath: "net/http",
+				ModulePath: "std",
 				Version:    "v1.12.5",
 			},
 		}

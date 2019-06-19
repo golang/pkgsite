@@ -9,7 +9,10 @@ import (
 	"database/sql"
 	"fmt"
 	"testing"
+	"time"
 )
+
+const testTimeout = 5 * time.Second
 
 var testDB *DB
 

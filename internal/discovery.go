@@ -8,17 +8,28 @@ import (
 	"time"
 
 	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/thirdparty/module"
 )
 
 // VersionInfo holds metadata associated with a version.
 type VersionInfo struct {
-	SeriesPath     string
 	ModulePath     string
 	Version        string
 	CommitTime     time.Time
 	ReadmeFilePath string
 	ReadmeContents []byte
 	VersionType    VersionType
+}
+
+// SeriesPath returns the series path for the module.
+func (v *VersionInfo) SeriesPath() string {
+	return SeriesPathForModule(v.ModulePath)
+}
+
+// SeriesPathForModule returns the series path for the provided modulePath.
+func SeriesPathForModule(modulePath string) string {
+	seriesPath, _, _ := module.SplitPathVersion(modulePath)
+	return seriesPath
 }
 
 // A Version is a specific, reproducible build of a module.
