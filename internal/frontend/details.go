@@ -78,15 +78,15 @@ type ImportsDetails struct {
 
 	// ExternalImports is the collection of package imports that are not in
 	// the Go standard library and are not part of the same module
-	ExternalImports []*internal.Import
+	ExternalImports []string
 
 	// InternalImports is an array of packages representing the package's
 	// imports that are part of the same module.
-	InternalImports []*internal.Import
+	InternalImports []string
 
 	// StdLib is an array of packages representing the package's imports
 	// that are in the Go standard library.
-	StdLib []*internal.Import
+	StdLib []string
 }
 
 // ImportedByDetails contains information for the collection of packages that
@@ -96,11 +96,11 @@ type ImportedByDetails struct {
 
 	// ExternalImportedBy is the collection of packages that import the
 	// given package and are not part of the same module.
-	ExternalImportedBy []*internal.Import
+	ExternalImportedBy []string
 
 	// InternalImportedBy is the collection of packages that import the given
 	// package and are inside the same module.
-	InternalImportedBy []*internal.Import
+	InternalImportedBy []string
 }
 
 // License contains information used for a single license section.
@@ -165,6 +165,7 @@ type Package struct {
 	IsRedistributable bool
 }
 
+// Suffix returns the package path less the ModulePath prefix.
 func (p *Package) Suffix() string {
 	suffix := strings.TrimPrefix(p.Path, p.ModulePath)
 	if suffix == "" {
@@ -423,11 +424,11 @@ func fetchImportsDetails(ctx context.Context, db *postgres.DB, pkg *internal.Ver
 		return nil, fmt.Errorf("db.GetImports(ctx, %q, %q): %v", pkg.Path, pkg.VersionInfo.Version, err)
 	}
 
-	var externalImports, moduleImports, std []*internal.Import
+	var externalImports, moduleImports, std []string
 	for _, p := range dbImports {
-		if inStdLib(p.Path) {
+		if inStdLib(p) {
 			std = append(std, p)
-		} else if strings.HasPrefix(p.Path+"/", pkg.VersionInfo.ModulePath+"/") {
+		} else if strings.HasPrefix(p+"/", pkg.VersionInfo.ModulePath+"/") {
 			moduleImports = append(moduleImports, p)
 		} else {
 			externalImports = append(externalImports, p)
@@ -449,16 +450,12 @@ func fetchImportedByDetails(ctx context.Context, db *postgres.DB, pkg *internal.
 	if err != nil {
 		return nil, fmt.Errorf("db.GetImportedBy(ctx, %q): %v", pkg.Path, err)
 	}
-	var externalImportedBy, moduleImportedBy []*internal.Import
+	var externalImportedBy, moduleImportedBy []string
 	for _, path := range importedByPaths {
-		importer := &internal.Import{
-			Name: packageName("main", path),
-			Path: path,
-		}
 		if strings.HasPrefix(path, pkg.VersionInfo.ModulePath) {
-			moduleImportedBy = append(moduleImportedBy, importer)
+			moduleImportedBy = append(moduleImportedBy, path)
 		} else {
-			externalImportedBy = append(externalImportedBy, importer)
+			externalImportedBy = append(externalImportedBy, path)
 		}
 	}
 	return &ImportedByDetails{

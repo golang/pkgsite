@@ -112,27 +112,13 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 			Name:     "bar2",
 			Path:     "path2.to/foo/bar2",
 			Synopsis: "This is another package synopsis",
-			Imports: []*internal.Import{
-				&internal.Import{
-					Name: pkg1.Name,
-					Path: pkg1.Path,
-				},
-			},
+			Imports:  []string{pkg1.Path},
 		}
 		pkg3 = &internal.Package{
 			Name:     "bar3",
 			Path:     "path3.to/foo/bar3",
 			Synopsis: "This is another package synopsis",
-			Imports: []*internal.Import{
-				&internal.Import{
-					Name: pkg2.Name,
-					Path: pkg2.Path,
-				},
-				&internal.Import{
-					Name: pkg1.Name,
-					Path: pkg1.Path,
-				},
-			},
+			Imports:  []string{pkg2.Path, pkg1.Path},
 		}
 		modulePath1  = "path.to/foo"
 		modulePath2  = "path2.to/foo"
@@ -173,7 +159,7 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 
 	for _, tc := range []struct {
 		path, version  string
-		wantImports    []*internal.Import
+		wantImports    []string
 		wantImportedBy []string
 	}{
 		{
@@ -212,12 +198,8 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 				t.Fatalf("testDB.GetImports(%q, %q): %v", tc.path, tc.version, err)
 			}
 
-			sort.Slice(got, func(i, j int) bool {
-				return got[i].Name > got[j].Name
-			})
-			sort.Slice(tc.wantImports, func(i, j int) bool {
-				return tc.wantImports[i].Name > tc.wantImports[j].Name
-			})
+			sort.Strings(got)
+			sort.Strings(tc.wantImports)
 			if diff := cmp.Diff(tc.wantImports, got); diff != "" {
 				t.Errorf("testDB.GetImports(%q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
 			}

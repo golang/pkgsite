@@ -107,7 +107,7 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 				pq.Array(licensePaths),
 			)
 			for _, i := range p.Imports {
-				importValues = append(importValues, p.Path, version.ModulePath, version.Version, i.Path, i.Name)
+				importValues = append(importValues, p.Path, version.ModulePath, version.Version, i)
 			}
 		}
 		if len(pkgValues) > 0 {
@@ -135,7 +135,6 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 				"from_module_path",
 				"from_version",
 				"to_path",
-				"to_name",
 			}
 			table := "imports"
 			if err := bulkInsert(ctx, tx, table, importCols, importValues, onConflictDoNothing); err != nil {

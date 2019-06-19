@@ -224,16 +224,7 @@ var (
 		Licenses:          SampleLicenseMetadata,
 		DocumentationHTML: []byte("This is the documentation HTML"),
 		V1Path:            "github.com/valid_module_name/foo",
-		Imports: []*internal.Import{
-			&internal.Import{
-				Name: "bar",
-				Path: "path/to/bar",
-			},
-			&internal.Import{
-				Name: "fmt",
-				Path: "fmt",
-			},
-		},
+		Imports:           []string{"path/to/bar", "fmt"},
 	}
 )
 

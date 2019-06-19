@@ -534,60 +534,28 @@ func TestCreatePackageHeader(t *testing.T) {
 func TestFetchImportsDetails(t *testing.T) {
 	for _, tc := range []struct {
 		name        string
-		imports     []*internal.Import
+		imports     []string
 		wantDetails *ImportsDetails
 	}{
 		{
 			name: "want imports details with standard and internal",
-			imports: []*internal.Import{
-				{Name: "import1", Path: "pa.th/import/1"},
-				{Name: postgres.SamplePackage.Name, Path: postgres.SamplePackage.Path},
-				{Name: "context", Path: "context"},
+			imports: []string{
+				"pa.th/import/1",
+				postgres.SamplePackage.Path,
+				"context",
 			},
 			wantDetails: &ImportsDetails{
-				ExternalImports: []*internal.Import{
-					{
-						Name: "import1",
-						Path: "pa.th/import/1",
-					},
-				},
-				InternalImports: []*internal.Import{
-					{
-						Name: postgres.SamplePackage.Name,
-						Path: postgres.SamplePackage.Path,
-					},
-				},
-				StdLib: []*internal.Import{
-					{
-						Name: "context",
-						Path: "context",
-					},
-				},
+				ExternalImports: []string{"pa.th/import/1"},
+				InternalImports: []string{postgres.SamplePackage.Path},
+				StdLib:          []string{"context"},
 			},
 		},
 		{
-			name: "want expected imports details with multiple",
-			imports: []*internal.Import{
-				{Name: "import1", Path: "pa.th/import/1"},
-				{Name: "import2", Path: "pa.th/import/2"},
-				{Name: "import3", Path: "pa.th/import/3"},
-			},
+			name:    "want expected imports details with multiple",
+			imports: []string{"pa.th/import/1", "pa.th/import/2", "pa.th/import/3"},
 			wantDetails: &ImportsDetails{
-				ExternalImports: []*internal.Import{
-					{
-						Name: "import1",
-						Path: "pa.th/import/1",
-					},
-					{
-						Name: "import2",
-						Path: "pa.th/import/2",
-					},
-					{
-						Name: "import3",
-						Path: "pa.th/import/3",
-					},
-				},
-				StdLib: nil,
+				ExternalImports: []string{"pa.th/import/1", "pa.th/import/2", "pa.th/import/3"},
+				StdLib:          nil,
 			},
 		},
 	} {
@@ -636,28 +604,14 @@ func TestFetchImportedByDetails(t *testing.T) {
 			Path: "path.to/foo/bar",
 		}
 		pkg2 = &internal.Package{
-			Name: "bar2",
-			Path: "path2.to/foo/bar2",
-			Imports: []*internal.Import{
-				&internal.Import{
-					Name: pkg1.Name,
-					Path: pkg1.Path,
-				},
-			},
+			Name:    "bar2",
+			Path:    "path2.to/foo/bar2",
+			Imports: []string{pkg1.Path},
 		}
 		pkg3 = &internal.Package{
-			Name: "bar3",
-			Path: "path3.to/foo/bar3",
-			Imports: []*internal.Import{
-				&internal.Import{
-					Name: pkg2.Name,
-					Path: pkg2.Path,
-				},
-				&internal.Import{
-					Name: pkg1.Name,
-					Path: pkg1.Path,
-				},
-			},
+			Name:    "bar3",
+			Path:    "path3.to/foo/bar3",
+			Imports: []string{pkg2.Path, pkg1.Path},
 		}
 	)
 
@@ -672,18 +626,13 @@ func TestFetchImportedByDetails(t *testing.T) {
 		{
 			pkg: pkg2,
 			wantDetails: &ImportedByDetails{
-				ExternalImportedBy: []*internal.Import{
-					{Path: pkg3.Path, Name: pkg3.Name},
-				},
+				ExternalImportedBy: []string{pkg3.Path},
 			},
 		},
 		{
 			pkg: pkg1,
 			wantDetails: &ImportedByDetails{
-				ExternalImportedBy: []*internal.Import{
-					{Name: pkg2.Name, Path: pkg2.Path},
-					{Name: pkg3.Name, Path: pkg3.Path},
-				},
+				ExternalImportedBy: []string{pkg2.Path, pkg3.Path},
 			},
 		},
 	} {

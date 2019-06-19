@@ -356,15 +356,14 @@ func getVersions(ctx context.Context, db *DB, path string, versionTypes []intern
 // the imports will be returned.
 // The returned error may be checked with derrors.IsInvalidArgument to
 // determine if it resulted from an invalid package path or version.
-func (db *DB) GetImports(ctx context.Context, path, version string) ([]*internal.Import, error) {
+func (db *DB) GetImports(ctx context.Context, path, version string) ([]string, error) {
 	if path == "" || version == "" {
 		return nil, derrors.InvalidArgument("path and version cannot be empty")
 	}
 
-	var toPath, toName string
+	var toPath string
 	query := `
 		SELECT
-			to_name,
 			to_path
 		FROM
 			imports
@@ -372,8 +371,7 @@ func (db *DB) GetImports(ctx context.Context, path, version string) ([]*internal
 			from_path = $1
 			AND from_version = $2
 		ORDER BY
-			to_path,
-			to_name;`
+			to_path;`
 
 	rows, err := db.QueryContext(ctx, query, path, version)
 	if err != nil {
@@ -381,15 +379,12 @@ func (db *DB) GetImports(ctx context.Context, path, version string) ([]*internal
 	}
 	defer rows.Close()
 
-	var imports []*internal.Import
+	var imports []string
 	for rows.Next() {
-		if err := rows.Scan(&toName, &toPath); err != nil {
+		if err := rows.Scan(&toPath); err != nil {
 			return nil, fmt.Errorf("row.Scan(): %v", err)
 		}
-		imports = append(imports, &internal.Import{
-			Name: toName,
-			Path: toPath,
-		})
+		imports = append(imports, toPath)
 	}
 	return imports, nil
 }

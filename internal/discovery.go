@@ -45,7 +45,7 @@ type Package struct {
 	Name              string
 	Synopsis          string
 	Licenses          []*license.Metadata // path to applicable version licenses
-	Imports           []*Import
+	Imports           []string
 	DocumentationHTML []byte
 
 	// V1Path is the package path of a package with major version 1 in a given series.
@@ -62,12 +62,6 @@ func (p *Package) IsRedistributable() bool {
 type VersionedPackage struct {
 	Package
 	VersionInfo
-}
-
-// An Import represents a package that is imported by another package.
-type Import struct {
-	Name string
-	Path string
 }
 
 // VersionType defines the version types a module can have.

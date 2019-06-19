@@ -504,23 +504,15 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					Path:              "my.mod/module/foo",
 					Synopsis:          "package foo",
 					DocumentationHTML: []byte("FooBar returns the string &#34;foo bar&#34;."),
-					Imports: []*internal.Import{
-						&internal.Import{
-							Name: "fmt",
-							Path: "fmt",
-						},
-						&internal.Import{
-							Name: "bar",
-							Path: "my.mod/module/bar",
-						},
-					},
-					V1Path: "my.mod/module/foo",
+					Imports:           []string{"fmt", "my.mod/module/bar"},
+					V1Path:            "my.mod/module/foo",
 				},
 				"bar": &internal.Package{
 					Name:              "bar",
 					Path:              "my.mod/module/bar",
 					Synopsis:          "package bar",
 					DocumentationHTML: []byte("Bar returns the string &#34;bar&#34;."),
+					Imports:           []string{},
 					V1Path:            "my.mod/module/bar",
 				},
 			},
@@ -534,7 +526,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					Path:              "no.mod/module/p",
 					Synopsis:          "Package p is inside a module where a go.mod file hasn't been explicitly added yet.",
 					DocumentationHTML: []byte("const Year = 2009"),
-					Imports:           nil,
+					Imports:           []string{},
 					V1Path:            "no.mod/module/p",
 				},
 			},
@@ -553,7 +545,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					Path:              "bad.mod/module/good",
 					Synopsis:          "Package good is inside a module that has bad packages.",
 					DocumentationHTML: []byte("const Good = true"),
-					Imports:           nil,
+					Imports:           []string{},
 					V1Path:            "bad.mod/module/good",
 				},
 			},
@@ -579,9 +571,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					t.Errorf("extractPackagesFromZip(%q, %q, reader, nil) returned unexpected package: %q", test.name, test.version, got.Name)
 				}
 
-				sort.Slice(got.Imports, func(i, j int) bool {
-					return got.Imports[i].Path < got.Imports[j].Path
-				})
+				sort.Strings(got.Imports)
 
 				if diff := cmp.Diff(want, got, cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML")); diff != "" {
 					t.Errorf("extractPackagesFromZip(%q, %q, reader, nil) mismatch (-want +got):\n%s", test.name, test.version, diff)

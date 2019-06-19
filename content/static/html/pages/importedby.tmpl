@@ -13,14 +13,14 @@
         <span>{{len .ExternalImportedBy}} package(s)</span>
       </p>
       {{range .ExternalImportedBy}}
-        <p><a href="/{{.Path}}">{{.Path}}</a></p>
+        <p><a href="/{{.}}">{{.}}</a></p>
       {{end}}
     {{end}}
 
     {{if .InternalImportedBy}}
       <h3>Module: {{.ModulePath}}</h3>
       {{range .InternalImportedBy}}
-        <p><a href="/{{.Path}}">{{.Path}}</a></p>
+        <p><a href="/{{.}}">{{.}}</a></p>
       {{end}}
     {{end}}
   </div>

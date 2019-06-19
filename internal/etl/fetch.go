@@ -482,13 +482,6 @@ func loadPackage(zipGoFiles []*zip.File, innerPath, modulePath string) (*interna
 	if len(d.Imports) > maxImportsPerPackage {
 		return nil, fmt.Errorf("%d imports found package %q; exceeds limit %d for maxImportsPerPackage", len(d.Imports), importPath, maxImportsPerPackage)
 	}
-	var imports []*internal.Import
-	for _, i := range d.Imports {
-		imports = append(imports, &internal.Import{
-			Name: path.Base(i), // TODO(b/131835416): this is a heuristic that just uses last path element for now; need to use database to do better
-			Path: i,
-		})
-	}
 
 	// Render documentation HTML.
 	docHTML, err := renderDocHTML(fset, d)
@@ -506,7 +499,7 @@ func loadPackage(zipGoFiles []*zip.File, innerPath, modulePath string) (*interna
 		Name:              packageName,
 		Synopsis:          doc.Synopsis(d.Doc),
 		V1Path:            v1path,
-		Imports:           imports,
+		Imports:           d.Imports,
 		DocumentationHTML: docHTML,
 	}, nil
 }
