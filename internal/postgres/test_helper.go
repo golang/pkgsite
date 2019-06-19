@@ -181,9 +181,6 @@ func ResetTestDB(db *DB, t *testing.T) {
 		if _, err := tx.Exec(`TRUNCATE versions CASCADE;`); err != nil {
 			return err
 		}
-		if _, err := tx.Exec(`TRUNCATE version_logs;`); err != nil {
-			return err
-		}
 		if _, err := tx.Exec(`TRUNCATE module_version_states;`); err != nil {
 			return err
 		}
