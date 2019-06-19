@@ -51,7 +51,7 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 		FROM
 			versions v
 		INNER JOIN
-			vw_licensed_packages p
+			packages p
 		ON
 			p.module_path = v.module_path
 			AND v.version = p.version
@@ -134,7 +134,7 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 		ON
 			v.module_path = m.path
 		INNER JOIN
-			vw_licensed_packages p
+			packages p
 		ON
 			p.module_path = v.module_path
 			AND v.version = p.version
@@ -199,7 +199,7 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 		v.version_type,
 		p.documentation
 	FROM
-		vw_licensed_packages p
+		packages p
 	INNER JOIN
 		versions v
 	ON
@@ -484,21 +484,21 @@ func (db *DB) GetLicenses(ctx context.Context, pkgPath string, version string) (
 			l.contents
 		FROM
 			licenses l
-		INNER JOIN
-			package_licenses pl
+		INNER JOIN (
+			SELECT
+				module_path,
+				version,
+				unnest(license_types),
+				unnest(license_paths)
+			FROM
+				packages
+			WHERE
+				path = $1
+				AND version = $2
+		) p
 		ON
-			pl.module_path = l.module_path
-			AND pl.version = l.version
-			AND pl.file_path = l.file_path
-		INNER JOIN
-			packages p
-		ON
-			p.module_path = pl.module_path
-			AND p.version = pl.version
-			AND p.path = pl.package_path
-		WHERE
-			p.path = $1
-			AND p.version = $2
+			p.module_path = p.module_path
+			AND p.version = p.version
 		ORDER BY l.file_path;`
 
 	var (

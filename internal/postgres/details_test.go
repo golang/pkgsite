@@ -547,8 +547,8 @@ func TestGetLicenses(t *testing.T) {
 			if err != nil {
 				t.Fatalf("testDB.GetLicenses(ctx, %q, %q): %v", test.pkgPath, testVersion.Version, err)
 			}
-			if diff := cmp.Diff(got, test.wantLicenses); diff != "" {
-				t.Errorf("testDB.GetLicenses(ctx, %q, %q) mismatch (-got +want):\n%s", test.pkgPath, testVersion.Version, diff)
+			if diff := cmp.Diff(test.wantLicenses, got); diff != "" {
+				t.Errorf("testDB.GetLicenses(ctx, %q, %q) mismatch (-want +got):\n%s", test.pkgPath, testVersion.Version, diff)
 			}
 		})
 	}

@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/lib/pq"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/license"
@@ -103,8 +104,12 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 
 		var pkgValues []interface{}
 		var importValues []interface{}
-		var pkgLicenseValues []interface{}
 		for _, p := range version.Packages {
+			var licenseTypes, licensePaths []string
+			for _, l := range p.Licenses {
+				licenseTypes = append(licenseTypes, l.Type)
+				licensePaths = append(licensePaths, l.FilePath)
+			}
 			pkgValues = append(pkgValues,
 				p.Path,
 				p.Synopsis,
@@ -114,12 +119,9 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 				p.Suffix,
 				p.IsRedistributable(),
 				p.DocumentationHTML,
+				pq.Array(licenseTypes),
+				pq.Array(licensePaths),
 			)
-
-			for _, l := range p.Licenses {
-				pkgLicenseValues = append(pkgLicenseValues, version.ModulePath, version.Version, l.FilePath, p.Path)
-			}
-
 			for _, i := range p.Imports {
 				importValues = append(importValues, p.Path, version.ModulePath, version.Version, i.Path, i.Name)
 			}
@@ -134,22 +136,12 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 				"suffix",
 				"redistributable",
 				"documentation",
+				"license_types",
+				"license_paths",
 			}
 			table := "packages"
 			if err := bulkInsert(ctx, tx, table, pkgCols, pkgValues, onConflictDoNothing); err != nil {
 				return fmt.Errorf("bulkInsert(ctx, tx, %q, %v, %d pkgValues): %v", table, pkgCols, len(pkgValues), err)
-			}
-		}
-		if len(pkgLicenseValues) > 0 {
-			pkgLicenseCols := []string{
-				"module_path",
-				"version",
-				"file_path",
-				"package_path",
-			}
-			table := "package_licenses"
-			if err := bulkInsert(ctx, tx, table, pkgLicenseCols, pkgLicenseValues, onConflictDoNothing); err != nil {
-				return fmt.Errorf("bulkInsert(ctx, tx, %q, %v, %d pkgLicenseValues): %v", table, pkgLicenseCols, len(pkgLicenseValues), err)
 			}
 		}
 

@@ -63,7 +63,7 @@ func TestFetchSearchPage(t *testing.T) {
 		wantSearchPage *SearchPage
 	}{
 		{
-			name:     "want_expected_search_page",
+			name:     "want expected search page",
 			query:    "foo bar",
 			versions: []*internal.Version{versionFoo, versionBar},
 			wantSearchPage: &SearchPage{
@@ -84,7 +84,6 @@ func TestFetchSearchPage(t *testing.T) {
 						ModulePath:    versionBar.ModulePath,
 						Synopsis:      versionBar.Packages[0].Synopsis,
 						Version:       versionBar.Version,
-						Licenses:      []string{"MIT"},
 						CommitTime:    elapsedTime(versionBar.CommitTime),
 						NumImportedBy: 0,
 					},
@@ -92,7 +91,7 @@ func TestFetchSearchPage(t *testing.T) {
 			},
 		},
 		{
-			name:     "want_only_foo_search_page",
+			name:     "want only foo search page",
 			query:    "package",
 			versions: []*internal.Version{versionFoo, versionBar},
 			wantSearchPage: &SearchPage{
@@ -113,7 +112,6 @@ func TestFetchSearchPage(t *testing.T) {
 						ModulePath:    versionFoo.ModulePath,
 						Synopsis:      versionFoo.Packages[0].Synopsis,
 						Version:       versionFoo.Version,
-						Licenses:      []string{"MIT"},
 						CommitTime:    elapsedTime(versionFoo.CommitTime),
 						NumImportedBy: 0,
 					},
