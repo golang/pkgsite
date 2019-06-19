@@ -51,3 +51,6 @@ go-discovery*.json
 #### App Engine
 *credentials.yaml
 *.gcloudignore
+
+#### Editor Related Files ####
+tags
