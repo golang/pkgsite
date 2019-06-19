@@ -25,6 +25,7 @@ type Server struct {
 	db              *postgres.DB
 	templateDir     string
 	reloadTemplates bool
+	errorPage       []byte
 
 	mu        sync.RWMutex // Protects all fields below
 	templates map[string]*template.Template
@@ -48,13 +49,18 @@ func NewServer(db *postgres.DB, staticPath string, reloadTemplates bool) (*Serve
 		reloadTemplates: reloadTemplates,
 		templates:       ts,
 	}
+	errorPageBytes, err := s.renderErrorPage(http.StatusInternalServerError, nil)
+	if err != nil {
+		return nil, fmt.Errorf("s.renderErrorPage(http.StatusInternalServerError, nil): %v", err)
+	}
+	s.errorPage = errorPageBytes
 
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticPath))))
 	mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(staticPath)))
 	})
 	mux.HandleFunc("/search/", s.handleSearch)
-	mux.HandleFunc("/license-policy/", s.handleStaticPage("license_policy.tmpl"))
+	mux.HandleFunc("/license-policy/", s.handleStaticPage("license_policy.tmpl", "Licenses"))
 	mux.HandleFunc("/", s.handleDetails)
 
 	return s, nil
@@ -62,37 +68,9 @@ func NewServer(db *postgres.DB, staticPath string, reloadTemplates bool) (*Serve
 
 // handleStaticPage handles requests to a template that contains no dynamic
 // content.
-func (s *Server) handleStaticPage(templateName string) http.HandlerFunc {
+func (s *Server) handleStaticPage(templateName, title string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.renderPage(w, templateName, basePageData{Title: "Licenses"})
-	}
-}
-
-// renderPage is used to execute all templates for a *Server.
-func (s *Server) renderPage(w http.ResponseWriter, templateName string, page interface{}) {
-	if s.reloadTemplates {
-		s.mu.Lock()
-		var err error
-		s.templates, err = parsePageTemplates(s.templateDir)
-		s.mu.Unlock()
-		if err != nil {
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			log.Printf("Error parsing templates: %v", err)
-			return
-		}
-	}
-
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	var buf bytes.Buffer
-	if err := s.templates[templateName].Execute(&buf, page); err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		log.Printf("Error executing page template %q: %v", templateName, err)
-		return
-	}
-	if _, err := io.Copy(w, &buf); err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		log.Printf("Error copying template %q buffer to ResponseWriter: %v", templateName, err)
+		s.servePage(w, templateName, basePageData{Title: title})
 	}
 }
 
@@ -108,6 +86,78 @@ type basePageData struct {
 	return "UA-141356704-1"
 }
 
+// errorPage contains fields for rendering a HTTP error page.
+type errorPage struct {
+	basePageData
+	Message          string
+	SecondaryMessage template.HTML
+}
+
+func (s *Server) serveErrorPage(w http.ResponseWriter, r *http.Request, status int, page *errorPage) {
+	buf, err := s.renderErrorPage(status, page)
+	if err != nil {
+		log.Printf("s.renderErrorPage(w, %d, %v): %v", status, page, err)
+		buf = s.errorPage
+		status = http.StatusInternalServerError
+	}
+
+	w.WriteHeader(status)
+	if _, err := io.Copy(w, bytes.NewReader(buf)); err != nil {
+		log.Printf("Error copying template %q buffer to ResponseWriter: %v", "error.tmpl", err)
+	}
+}
+
+// renderErrorPage executes error.tmpl with the given errorPage
+func (s *Server) renderErrorPage(status int, page *errorPage) ([]byte, error) {
+	statusInfo := fmt.Sprintf("%d %s", status, http.StatusText(status))
+	if page == nil {
+		page = &errorPage{
+			Message: statusInfo,
+		}
+	}
+	page.basePageData = basePageData{Title: statusInfo}
+	return s.renderPage("error.tmpl", page)
+}
+
+// servePage is used to execute all templates for a *Server.
+func (s *Server) servePage(w http.ResponseWriter, templateName string, page interface{}) {
+	if s.reloadTemplates {
+		s.mu.Lock()
+		var err error
+		s.templates, err = parsePageTemplates(s.templateDir)
+		s.mu.Unlock()
+		if err != nil {
+			log.Printf("Error parsing templates: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+
+	buf, err := s.renderPage(templateName, page)
+	if err != nil {
+		log.Printf("s.renderPage(%q, %v): %v", templateName, page, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		buf = s.errorPage
+	}
+	if _, err := io.Copy(w, bytes.NewReader(buf)); err != nil {
+		log.Printf("Error copying template %q buffer to ResponseWriter: %v", templateName, err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
+
+// renderErrorPage executes the given templateName with page.
+func (s *Server) renderPage(templateName string, page interface{}) ([]byte, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	var buf bytes.Buffer
+	if err := s.templates[templateName].Execute(&buf, page); err != nil {
+		log.Printf("Error executing page template %q: %v", templateName, err)
+		return nil, err
+
+	}
+	return buf.Bytes(), nil
+}
+
 // parsePageTemplates parses html templates contained in the given base
 // directory in order to generate a map of Name->*template.Template.
 //
@@ -116,7 +166,7 @@ type basePageData struct {
 func parsePageTemplates(base string) (map[string]*template.Template, error) {
 	htmlSets := [][]string{
 		{"index.tmpl"},
-		{"package404.tmpl"},
+		{"error.tmpl"},
 		{"search.tmpl"},
 		{"license_policy.tmpl"},
 		{"doc.tmpl", "details.tmpl"},

@@ -701,9 +701,10 @@ func TestParseModulePathAndVersion(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:    "invalid_version",
-			url:     "https://discovery.com/module@v1.0.0invalid",
-			wantErr: true,
+			name:        "invalid_version",
+			url:         "https://discovery.com/module@v1.0.0invalid",
+			wantModule:  "module",
+			wantVersion: "v1.0.0invalid",
 		},
 	}
 

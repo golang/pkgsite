@@ -181,8 +181,8 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 
 	page, err := fetchSearchPage(ctx, s.db, query, limit, pageNum)
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		log.Printf("fetchSearchDetails(ctx, db, %q): %v", query, err)
+		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return
 	}
 
@@ -191,5 +191,5 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 		log.Printf("middleware.GetNonce(r.Context()): nonce was not set")
 	}
 	page.Nonce = nonce
-	s.renderPage(w, "search.tmpl", page)
+	s.servePage(w, "search.tmpl", page)
 }

@@ -552,23 +552,22 @@ func fetchDetails(ctx context.Context, tab string, db *postgres.DB, pkg *interna
 // trimmed.
 func parseModulePathAndVersion(urlPath string) (importPath, version string, err error) {
 	parts := strings.Split(urlPath, "@")
-	if len(parts) < 1 || len(parts) > 2 {
+	if len(parts) != 1 && len(parts) != 2 {
 		return "", "", fmt.Errorf("malformed URL path %q", urlPath)
 	}
 
-	importPath = strings.Trim(parts[0], "/")
+	importPath = strings.TrimPrefix(parts[0], "/")
+	if len(parts) == 1 {
+		importPath = strings.TrimSuffix(importPath, "/")
+	}
 	if err := module.CheckImportPath(importPath); err != nil {
 		return "", "", fmt.Errorf("malformed import path %q: %v", importPath, err)
 	}
+
 	if len(parts) == 1 {
 		return importPath, "", nil
 	}
-
-	version = parts[1]
-	if !semver.IsValid(version) {
-		return "", "", fmt.Errorf("malformed version: semver.IsValid(%q) = false", version)
-	}
-	return importPath, version, nil
+	return importPath, strings.TrimRight(parts[1], "/"), nil
 }
 
 // HandleDetails applies database data to the appropriate template. Handles all
@@ -579,13 +578,22 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 		log.Printf("middleware.GetNonce(r.Context()): nonce was not set")
 	}
 	if r.URL.Path == "/" {
-		s.renderPage(w, "index.tmpl", basePageData{Nonce: nonce})
+		s.servePage(w, "index.tmpl", basePageData{Nonce: nonce})
 		return
 	}
+
 	path, version, err := parseModulePathAndVersion(r.URL.Path)
 	if err != nil {
 		log.Printf("parseModulePathAndVersion(%q): %v", r.URL.Path, err)
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
+		return
+	}
+	if version != "" && !semver.IsValid(version) {
+		s.serveErrorPage(w, r, http.StatusBadRequest, &errorPage{
+			Message: fmt.Sprintf("%q is not a valid semantic version.", version),
+			SecondaryMessage: template.HTML(
+				fmt.Sprintf(`To search for packages like %q, <a href="/search?q=%s">click here</a>.</p>`, path, path)),
+		})
 		return
 	}
 
@@ -599,20 +607,42 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 		pkg, err = s.db.GetPackage(ctx, path, version)
 	}
 	if err != nil {
-		if derrors.IsNotFound(err) {
-			w.WriteHeader(http.StatusNotFound)
-			s.renderPage(w, "package404.tmpl", nil)
+		if !derrors.IsNotFound(err) {
+			log.Printf("error getting package for %s@%s: %v", path, version, err)
+			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 			return
 		}
-		log.Printf("error getting package for %s@%s: %v", path, version, err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		if version == "" {
+			// If the version is empty, it means that we already tried fetching
+			// the latest version of the package, and it does not exist.
+			s.serveErrorPage(w, r, http.StatusBadRequest, nil)
+			return
+		}
+		// Get the latest package to check if any versions of
+		// the package exists.
+		_, latestErr := s.db.GetLatestPackage(ctx, path)
+		if latestErr == nil {
+			s.serveErrorPage(w, r, http.StatusBadRequest, &errorPage{
+				Message: fmt.Sprintf("Package %s@%s is not available.", path, version),
+				SecondaryMessage: template.HTML(
+					fmt.Sprintf(`There are other versions of this package that are! To view them, <a href="/%s?tab=versions">click here</a>.</p>`, path)),
+			})
+			return
+		}
+		if !derrors.IsNotFound(latestErr) {
+			// We succeeded in fetching with GetPackage, but failed in fetching
+			// with GetLatestPackage.
+			log.Printf("error getting package for %s: %v", path, latestErr)
+		}
+		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
 		return
 	}
+
 	version = pkg.VersionInfo.Version
 	pkgHeader, err := createPackageHeader(pkg)
 	if err != nil {
 		log.Printf("error creating package header for %s@%s: %v", path, version, err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return
 	}
 
@@ -629,8 +659,8 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 		var err error
 		details, err = fetchDetails(ctx, tab, s.db, pkg)
 		if err != nil {
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			log.Printf("error fetching page for %q: %v", tab, err)
+			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 			return
 		}
 	}
@@ -647,5 +677,5 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 		CanShowDetails: canShowDetails,
 		Tabs:           tabSettings,
 	}
-	s.renderPage(w, tab+".tmpl", page)
+	s.servePage(w, tab+".tmpl", page)
 }

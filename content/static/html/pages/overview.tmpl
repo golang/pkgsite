@@ -5,5 +5,12 @@
 -->
 
 {{define "details_content"}}
-  <div>{{.ReadMe}}</div>
+  {{if .ReadMe}}
+    <div>{{.ReadMe}}</div>
+  {{else}}
+    <div class="Overview-readmeNone">
+      <img class="Overview-gopher" src="/static/img/gopher-airplane.jpg" alt="The Go Gopher">
+      <h3 class="Overview-readmeNoneMessage">No overview information for this package!</h3>
+    </div>
+  {{end}}
 {{end}}

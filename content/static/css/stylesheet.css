@@ -310,3 +310,29 @@ a:hover {
   color: var(--gray-3);
   font-size: 0.875em;
 }
+.Overview-gopher{
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 20px 0;
+  width: 240px;
+}
+.Overview-readmeNone{
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 20px 0;
+}
+.Overview-readmeNoneMessage {
+  text-align: center;
+}
+.Error-gopher {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 20px 0;
+  width: 240px;
+}
+.Error-message {
+  text-align: center;
+}
