@@ -37,22 +37,6 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 	removeNonDistributableData(version)
 
 	return db.Transact(func(tx *sql.Tx) error {
-		if _, err := tx.ExecContext(ctx,
-			`INSERT INTO series(path)
-			VALUES($1)
-			ON CONFLICT DO NOTHING`,
-			version.SeriesPath()); err != nil {
-			return fmt.Errorf("error inserting series: %v", err)
-		}
-
-		if _, err := tx.ExecContext(ctx,
-			`INSERT INTO modules(path, series_path)
-			VALUES($1,$2)
-			ON CONFLICT DO NOTHING`,
-			version.ModulePath, version.SeriesPath()); err != nil {
-			return fmt.Errorf("error inserting module: %v", err)
-		}
-
 		majorint, minorint, patchint, prerelease, err := extractSemverParts(version.Version)
 		if err != nil {
 			return fmt.Errorf("extractSemverParts(%q): %v", version.Version, err)

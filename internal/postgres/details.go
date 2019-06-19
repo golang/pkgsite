@@ -29,10 +29,10 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 	}
 
 	var (
-		commitTime                                                                  time.Time
-		name, synopsis, seriesPath, modulePath, v1path, readmeFilePath, versionType string
-		readmeContents, documentation                                               []byte
-		licenseTypes, licensePaths                                                  []string
+		commitTime                                                      time.Time
+		name, synopsis, modulePath, v1path, readmeFilePath, versionType string
+		readmeContents, documentation                                   []byte
+		licenseTypes, licensePaths                                      []string
 	)
 	query := `
 		SELECT
@@ -41,7 +41,6 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 			p.license_paths,
 			v.readme_file_path,
 			v.readme_contents,
-			m.series_path,
 			v.module_path,
 			p.name,
 			p.synopsis,
@@ -55,10 +54,6 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 		ON
 			p.module_path = v.module_path
 			AND v.version = p.version
-		INNER JOIN
-			modules m
-		ON
-		  m.path = v.module_path
 		WHERE
 			p.path = $1
 			AND p.version = $2
@@ -66,7 +61,7 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 
 	row := db.QueryRowContext(ctx, query, path, version)
 	if err := row.Scan(&commitTime, pq.Array(&licenseTypes),
-		pq.Array(&licensePaths), &readmeFilePath, &readmeContents, &seriesPath, &modulePath,
+		pq.Array(&licensePaths), &readmeFilePath, &readmeContents, &modulePath,
 		&name, &synopsis, &v1path, &versionType, &documentation); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, derrors.NotFound(fmt.Sprintf("package %s@%s not found", path, version))
@@ -108,14 +103,13 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 	}
 
 	var (
-		commitTime                                                              time.Time
-		seriesPath, modulePath, name, synopsis, version, v1path, readmeFilePath string
-		licenseTypes, licensePaths                                              []string
-		readmeContents, documentation                                           []byte
+		commitTime                                                  time.Time
+		modulePath, name, synopsis, version, v1path, readmeFilePath string
+		licenseTypes, licensePaths                                  []string
+		readmeContents, documentation                               []byte
 	)
 	query := `
 		SELECT
-			m.series_path,
 			p.module_path,
 			p.license_types,
 			p.license_paths,
@@ -129,10 +123,6 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 			p.documentation
 		FROM
 			versions v
-		INNER JOIN
-			modules m
-		ON
-			v.module_path = m.path
 		INNER JOIN
 			packages p
 		ON
@@ -149,7 +139,7 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 		LIMIT 1;`
 
 	row := db.QueryRowContext(ctx, query, path)
-	if err := row.Scan(&seriesPath, &modulePath, pq.Array(&licenseTypes), pq.Array(&licensePaths), &version, &commitTime, &name, &synopsis, &v1path, &readmeFilePath, &readmeContents, &documentation); err != nil {
+	if err := row.Scan(&modulePath, pq.Array(&licenseTypes), pq.Array(&licensePaths), &version, &commitTime, &name, &synopsis, &v1path, &readmeFilePath, &readmeContents, &documentation); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, derrors.NotFound(fmt.Sprintf("package %s@%s not found", path, version))
 		}
@@ -186,7 +176,6 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*internal.Version, error) {
 	query := `SELECT
 		p.path,
-		m.series_path,
 		p.module_path,
 		p.name,
 		p.synopsis,
@@ -205,10 +194,6 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 	ON
 		v.module_path = p.module_path
 		AND v.version = p.version
-	INNER JOIN
-		modules m
-	ON
-		m.path = v.module_path
 	WHERE
 		p.version = $1
 		AND p.module_path IN (
@@ -219,7 +204,7 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 	ORDER BY path;`
 
 	var (
-		pkgPath, seriesPath, modulePath, pkgName      string
+		pkgPath, modulePath, pkgName                  string
 		synopsis, v1path, readmeFilePath, versionType string
 		readmeContents, documentation                 []byte
 		commitTime                                    time.Time
@@ -235,7 +220,7 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 	v := &internal.Version{}
 	v.Version = version
 	for rows.Next() {
-		if err := rows.Scan(&pkgPath, &seriesPath, &modulePath, &pkgName, &synopsis, &v1path,
+		if err := rows.Scan(&pkgPath, &modulePath, &pkgName, &synopsis, &v1path,
 			pq.Array(&licenseTypes), pq.Array(&licensePaths), &readmeFilePath,
 			&readmeContents, &commitTime, &versionType, &documentation); err != nil {
 			return nil, fmt.Errorf("row.Scan(): %v", err)
@@ -539,27 +524,22 @@ func compareLicenses(i, j license.Metadata) bool {
 // (module_path, version).
 func (db *DB) GetVersion(ctx context.Context, modulePath string, version string) (*internal.VersionInfo, error) {
 	var (
-		commitTime                              time.Time
-		seriesPath, readmeFilePath, versionType string
-		readmeContents                          []byte
+		commitTime                  time.Time
+		readmeFilePath, versionType string
+		readmeContents              []byte
 	)
 
 	query := `
 		SELECT
-			m.series_path,
 			v.commit_time,
 			v.readme_file_path,
 			v.readme_contents,
 			v.version_type
 		FROM
 			versions v
-		INNER JOIN
-			modules m
-		ON
-			m.path = v.module_path
 		WHERE module_path = $1 and version = $2;`
 	row := db.QueryRowContext(ctx, query, modulePath, version)
-	if err := row.Scan(&seriesPath, &commitTime, &readmeFilePath, &readmeContents, &versionType); err != nil {
+	if err := row.Scan(&commitTime, &readmeFilePath, &readmeContents, &versionType); err != nil {
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
 	return &internal.VersionInfo{
