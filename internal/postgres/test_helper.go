@@ -178,7 +178,7 @@ func SetupTestDB(dbName string) (*DB, error) {
 func ResetTestDB(db *DB, t *testing.T) {
 	t.Helper()
 	if err := db.Transact(func(tx *sql.Tx) error {
-		if _, err := tx.Exec(`TRUNCATE series CASCADE;`); err != nil {
+		if _, err := tx.Exec(`TRUNCATE versions CASCADE;`); err != nil {
 			return err
 		}
 		if _, err := tx.Exec(`TRUNCATE version_logs;`); err != nil {
