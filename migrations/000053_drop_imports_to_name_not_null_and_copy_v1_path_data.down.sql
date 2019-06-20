@@ -6,4 +6,7 @@ BEGIN;
 
 ALTER TABLE imports ADD COLUMN to_name TEXT;
 
+ALTER TABLE packages ALTER COLUMN v1_path DROP NOT NULL;
+UPDATE packages SET v1_path = NULL;
+
 END;

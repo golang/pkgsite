@@ -21,13 +21,15 @@ ALTER TABLE documents
 
 CREATE TABLE series (
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    path text NOT NULL
+    path text NOT NULL,
+    PRIMARY KEY (path)
 );
 
 CREATE TABLE modules (
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     path text NOT NULL,
-    series_path text NOT NULL
+    series_path text NOT NULL,
+    PRIMARY KEY (path)
 );
 
 CREATE TABLE version_logs (
