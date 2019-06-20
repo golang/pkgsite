@@ -349,8 +349,18 @@ func fetchVersionsDetails(ctx context.Context, db *postgres.DB, pkg *internal.Ve
 			}
 		}
 
+		var pkgPath string
+		suffix := strings.TrimPrefix(strings.TrimPrefix(pkg.V1Path, v.SeriesPath()), "/")
+		if inStdLib(pkg.Path) {
+			pkgPath = pkg.Path
+		} else if suffix == "" {
+			pkgPath = v.ModulePath
+		} else {
+			pkgPath = v.ModulePath + "/" + suffix
+		}
 		latest := &Package{
 			Version:    v.Version,
+			Path:       pkgPath,
 			CommitTime: elapsedTime(v.CommitTime),
 		}
 		if series := v.SeriesPath(); curSeries == nil || curSeries.Series != series {
