@@ -445,8 +445,8 @@ func (db *DB) GetLicenses(ctx context.Context, pkgPath string, version string) (
 			SELECT
 				module_path,
 				version,
-				unnest(license_types),
-				unnest(license_paths)
+				unnest(license_types) AS license_type,
+				unnest(license_paths) AS license_file_path
 			FROM
 				packages
 			WHERE
@@ -456,6 +456,7 @@ func (db *DB) GetLicenses(ctx context.Context, pkgPath string, version string) (
 		ON
 			p.module_path = l.module_path
 			AND p.version = l.version
+			AND p.license_file_path = l.file_path
 		ORDER BY l.file_path;`
 
 	var (
