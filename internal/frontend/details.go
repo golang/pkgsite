@@ -167,7 +167,7 @@ type Package struct {
 
 // Suffix returns the package path less the ModulePath prefix.
 func (p *Package) Suffix() string {
-	suffix := strings.TrimPrefix(p.Path, p.ModulePath)
+	suffix := strings.TrimPrefix(strings.TrimPrefix(p.Path, p.ModulePath), "/")
 	if suffix == "" {
 		return p.Name
 	}
