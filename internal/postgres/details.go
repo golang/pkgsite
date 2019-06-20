@@ -454,8 +454,8 @@ func (db *DB) GetLicenses(ctx context.Context, pkgPath string, version string) (
 				AND version = $2
 		) p
 		ON
-			p.module_path = p.module_path
-			AND p.version = p.version
+			p.module_path = l.module_path
+			AND p.version = l.version
 		ORDER BY l.file_path;`
 
 	var (
