@@ -16,7 +16,7 @@
       {{range $majMin := $major.MinorVersions}}
         {{range $i, $v := $majMin.PatchVersions}}
 	  {{if eq $i 0}}<h3>{{else}}<h4>{{end}}
-              <a href="/{{$v.Path}}@{{$v.Version}}">{{$v.Version}}</a>
+              <a href="/pkg/{{$v.Path}}@{{$v.Version}}">{{$v.Version}}</a>
               <span class="Versions-commitTime"> - {{$v.CommitTime}}</span>
 	  {{if eq $i 0}}</h3>{{else}}</h4>{{end}}
         {{end}}

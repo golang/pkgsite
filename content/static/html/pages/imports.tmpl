@@ -13,19 +13,19 @@
         <span>{{len .ExternalImports}} package(s)</span>
       </p>
       {{range .ExternalImports}}
-        <p><a href="/{{.}}">{{.}}</a></p>
+        <p><a href="/pkg/{{.}}">{{.}}</a></p>
       {{end}}
     {{end}}
     {{if .InternalImports}}
       <h3>Module: {{.ModulePath}}</h3>
       {{range .InternalImports}}
-        <p><a href="/{{.}}">{{.}}</a></p>
+        <p><a href="/pkg/{{.}}">{{.}}</a></p>
       {{end}}
     {{end}}
     {{if .StdLib}}
       <h3>Standard Library</h3>
       {{range .StdLib}}
-        <div><a href="/{{.}}">{{.}}</a></div>
+        <div><a href="/pkg/{{.}}">{{.}}</a></div>
       {{end}}
     {{end}}
   </div>

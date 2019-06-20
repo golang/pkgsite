@@ -583,15 +583,6 @@ func parseModulePathAndVersion(urlPath string) (importPath, version string, err 
 // HandleDetails applies database data to the appropriate template. Handles all
 // endpoints that match "/" or "/<import-path>[@<version>?tab=<tab>]"
 func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
-	nonce, ok := middleware.GetNonce(r.Context())
-	if !ok {
-		log.Printf("middleware.GetNonce(r.Context()): nonce was not set")
-	}
-	if r.URL.Path == "/" {
-		s.servePage(w, "index.tmpl", basePageData{Nonce: nonce})
-		return
-	}
-
 	path, version, err := parseModulePathAndVersion(r.URL.Path)
 	if err != nil {
 		log.Printf("parseModulePathAndVersion(%q): %v", r.URL.Path, err)
@@ -675,6 +666,10 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	nonce, ok := middleware.GetNonce(r.Context())
+	if !ok {
+		log.Printf("middleware.GetNonce(r.Context()): nonce was not set")
+	}
 	page := &DetailsPage{
 		basePageData: basePageData{
 			Title: fmt.Sprintf("%s - %s", pkgHeader.Title, pkgHeader.Version),

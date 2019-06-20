@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
 )
 
@@ -59,9 +60,10 @@ func NewServer(db *postgres.DB, staticPath string, reloadTemplates bool) (*Serve
 	mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(staticPath)))
 	})
+	mux.Handle("/pkg/", http.StripPrefix("/pkg", http.HandlerFunc(s.handleDetails)))
 	mux.HandleFunc("/search/", s.handleSearch)
 	mux.HandleFunc("/license-policy/", s.handleStaticPage("license_policy.tmpl", "Licenses"))
-	mux.HandleFunc("/", s.handleDetails)
+	mux.HandleFunc("/", s.handleStaticPage("index.tmpl", "Go Discovery"))
 
 	return s, nil
 }
@@ -70,7 +72,11 @@ func NewServer(db *postgres.DB, staticPath string, reloadTemplates bool) (*Serve
 // content.
 func (s *Server) handleStaticPage(templateName, title string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.servePage(w, templateName, basePageData{Title: title})
+		nonce, ok := middleware.GetNonce(r.Context())
+		if !ok {
+			log.Printf("middleware.GetNonce(r.Context()): nonce was not set")
+		}
+		s.servePage(w, templateName, basePageData{Title: title, Nonce: nonce})
 	}
 }
 
