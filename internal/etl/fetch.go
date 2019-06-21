@@ -26,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	"go.opencensus.io/trace"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/dzip"
@@ -52,11 +53,16 @@ var (
 // status code representing the result of the fetch operation, and a non-nil
 // error if this status code is not 200.
 func fetchAndUpdateState(ctx context.Context, modulePath, version string, client *proxy.Client, db *postgres.DB) (int, error) {
+	ctx, span := trace.StartSpan(ctx, "fetchAndUpdateState")
+	span.AddAttributes(
+		trace.StringAttribute("modulePath", modulePath),
+		trace.StringAttribute("version", version))
+	defer span.End()
 	var (
 		code     = http.StatusOK
 		fetchErr error
 	)
-	if fetchErr = fetchAndInsertVersion(modulePath, version, client, db); fetchErr != nil {
+	if fetchErr = fetchAndInsertVersion(ctx, modulePath, version, client, db); fetchErr != nil {
 		log.Printf("Error executing fetch: %v", fetchErr)
 		switch {
 		case derrors.IsNotFound(fetchErr):
@@ -85,7 +91,11 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 // (2) Download the version zip from the proxy
 // (3) Process the contents (series path, readme, licenses, and packages)
 // (4) Write the data to the discovery database
-func fetchAndInsertVersion(modulePath, requestedVersion string, proxyClient *proxy.Client, db *postgres.DB) (err error) {
+//
+// The given parentCtx is used for tracing, but fetches actually execute in a
+// detached context with fixed timeout, so that fetches are allowed to complete
+// even for short-lived requests.
+func fetchAndInsertVersion(parentCtx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, db *postgres.DB) (err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			// The package processing code performs some sanity checks along the way.
@@ -94,11 +104,15 @@ func fetchAndInsertVersion(modulePath, requestedVersion string, proxyClient *pro
 			err = fmt.Errorf("internal panic: %v\n\n%s", e, debug.Stack())
 		}
 	}()
+
+	parentSpan := trace.FromContext(parentCtx)
 	// Unlike other actions (which use a Timeout middleware), we set a fixed
 	// timeout for fetchAndInsertVersion.  This allows module processing to
 	// succeed even for extremely short lived requests.
 	ctx, cancel := context.WithTimeout(context.Background(), fetchTimeout)
 	defer cancel()
+	ctx, span := trace.StartSpanWithRemoteParent(ctx, "fetchAndInsertVersion", parentSpan.SpanContext())
+	defer span.End()
 
 	info, err := proxyClient.GetInfo(ctx, modulePath, requestedVersion)
 	if err != nil {
@@ -112,43 +126,61 @@ func fetchAndInsertVersion(modulePath, requestedVersion string, proxyClient *pro
 		// wrap the error.
 		return fmt.Errorf("proxyClient.GetZip(%q, %q): %v", modulePath, info.Version, err)
 	}
-	readmeFilePath, readmeContents, err := extractReadmeFromZip(modulePath, info.Version, zipReader)
-	if err != nil && err != errReadmeNotFound {
-		return fmt.Errorf("extractReadmeFromZip(%q, %q, zipReader): %v", modulePath, info.Version, err)
-	}
-	licenses, err := license.Detect(moduleVersionDir(modulePath, info.Version), zipReader)
-	if err != nil {
-		log.Printf("Error detecting licenses for %v@%v: %v", modulePath, info.Version, err)
-	}
-	packages, err := extractPackagesFromZip(modulePath, info.Version, zipReader, license.NewMatcher(licenses))
-	if err == errModuleContainsNoPackages {
-		return derrors.NotAcceptable(errModuleContainsNoPackages.Error())
-	}
-	if err != nil {
-		return fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, info.Version, licenses, err)
+
+	// Module processing is wrapped in an inline func to facilitate tracing.
+	var (
+		v        *internal.Version
+		licenses []*license.License
+	)
+	if err := func() error {
+		_, span := trace.StartSpan(ctx, "processing zipFile")
+		defer span.End()
+		readmeFilePath, readmeContents, err := extractReadmeFromZip(modulePath, info.Version, zipReader)
+		if err != nil && err != errReadmeNotFound {
+			return fmt.Errorf("extractReadmeFromZip(%q, %q, zipReader): %v", modulePath, info.Version, err)
+		}
+		licenses, err = license.Detect(moduleVersionDir(modulePath, info.Version), zipReader)
+		if err != nil {
+			log.Printf("Error detecting licenses for %v@%v: %v", modulePath, info.Version, err)
+		}
+		span.Annotate([]trace.Attribute{trace.Int64Attribute("licenseCt", int64(len(licenses)))}, "detected licenses")
+		packages, err := extractPackagesFromZip(modulePath, info.Version, zipReader, license.NewMatcher(licenses))
+		if err == errModuleContainsNoPackages {
+			return derrors.NotAcceptable(errModuleContainsNoPackages.Error())
+		}
+		if err != nil {
+			return fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, info.Version, licenses, err)
+		}
+		span.Annotate([]trace.Attribute{trace.Int64Attribute("packageCt", int64(len(packages)))}, "extracted packages")
+
+		versionType, err := parseVersionType(info.Version)
+		if err != nil {
+			return fmt.Errorf("parseVersion(%q): %v", info.Version, err)
+		}
+		v = &internal.Version{
+			VersionInfo: internal.VersionInfo{
+				ModulePath:     modulePath,
+				Version:        info.Version,
+				CommitTime:     info.Time,
+				ReadmeFilePath: readmeFilePath,
+				ReadmeContents: readmeContents,
+				VersionType:    versionType,
+			},
+			Packages: packages,
+		}
+		return nil
+	}(); err != nil {
+		return err
 	}
 
-	versionType, err := parseVersionType(info.Version)
-	if err != nil {
-		return fmt.Errorf("parseVersion(%q): %v", info.Version, err)
-	}
-	v := &internal.Version{
-		VersionInfo: internal.VersionInfo{
-			ModulePath:     modulePath,
-			Version:        info.Version,
-			CommitTime:     info.Time,
-			ReadmeFilePath: readmeFilePath,
-			ReadmeContents: readmeContents,
-			VersionType:    versionType,
-		},
-		Packages: packages,
-	}
 	if err = db.InsertVersion(ctx, v, licenses); err != nil {
 		return fmt.Errorf("db.InsertVersion for %q %q: %v", modulePath, info.Version, err)
 	}
+	span.Annotate(nil, "inserted version")
 	if err = db.InsertDocuments(ctx, v); err != nil {
 		return fmt.Errorf("db.InsertDocuments for %q %q: %v", modulePath, info.Version, err)
 	}
+	span.Annotate(nil, "inserted documents")
 
 	log.Printf("Downloaded: %s@%s", modulePath, info.Version)
 	return nil

@@ -14,7 +14,9 @@ import (
 	"strconv"
 	"strings"
 
+	"go.opencensus.io/trace"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/dcensus"
 	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
@@ -41,9 +43,7 @@ func NewServer(db *postgres.DB,
 	queue Queue,
 	indexTemplate *template.Template,
 ) *Server {
-	mux := http.NewServeMux()
 	s := &Server{
-		Handler:     mux,
 		db:          db,
 		indexClient: indexClient,
 		proxyClient: proxyClient,
@@ -51,13 +51,15 @@ func NewServer(db *postgres.DB,
 
 		indexTemplate: indexTemplate,
 	}
-	mux.HandleFunc("/poll-and-queue/", s.handleIndexAndQueue)
-	mux.HandleFunc("/requeue/", s.handleRequeue)
-	mux.HandleFunc("/refresh-search/", s.handleRefreshSearch)
-	mux.HandleFunc("/populate-stdlib/", s.handlePopulateStdLib)
-	mux.Handle("/fetch/", http.StripPrefix("/fetch", http.HandlerFunc(s.handleFetch)))
-	mux.Handle("/queue-fetch/", http.StripPrefix("/queue-fetch", http.HandlerFunc(s.handleQueueFetch)))
-	mux.HandleFunc("/", s.handleStatusPage)
+	r := dcensus.NewRouter()
+	r.HandleFunc("/poll-and-queue/", s.handleIndexAndQueue)
+	r.HandleFunc("/requeue/", s.handleRequeue)
+	r.HandleFunc("/refresh-search/", s.handleRefreshSearch)
+	r.HandleFunc("/populate-stdlib/", s.handlePopulateStdLib)
+	r.Handle("/fetch/", http.StripPrefix("/fetch", http.HandlerFunc(s.handleFetch)))
+	r.Handle("/queue-fetch/", http.StripPrefix("/queue-fetch", http.HandlerFunc(s.handleQueueFetch)))
+	r.HandleFunc("/", s.handleStatusPage)
+	s.Handler = r
 	return s
 }
 
@@ -194,6 +196,7 @@ func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) {
 		limit = 10
 		err   error
 	)
+	span := trace.FromContext(r.Context())
 	if limitParam != "" {
 		limit, err = strconv.Atoi(limitParam)
 		if err != nil {
@@ -201,12 +204,14 @@ func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) {
 			limit = 10
 		}
 	}
+	span.Annotate([]trace.Attribute{trace.Int64Attribute("limit", int64(limit))}, "processed limit")
 	versions, err := s.db.GetNextVersionsToFetch(ctx, limit)
 	if err != nil {
 		log.Printf("Error getting versions to fetch: %v", err)
 		http.Error(w, "error getting versions to fetch", http.StatusInternalServerError)
 		return
 	}
+	span.Annotate([]trace.Attribute{trace.Int64Attribute("versions to fetch", int64(len(versions)))}, "processed limit")
 	w.Header().Set("Content-Type", "text/plain")
 	for _, v := range versions {
 		if err := s.queue.ScheduleFetch(ctx, v.ModulePath, v.Version); err != nil {

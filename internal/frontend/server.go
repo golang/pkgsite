@@ -16,6 +16,7 @@ import (
 	"sync"
 	"time"
 
+	"golang.org/x/discovery/internal/dcensus"
 	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
 )
@@ -33,7 +34,7 @@ type Server struct {
 	templates map[string]*template.Template
 }
 
-// New creates a new Server for the given database and template directory.
+// NewServer creates a new Server for the given database and template directory.
 // reloadTemplates should be used during development when it can be helpful to
 // reload templates from disk each time a page is loaded.
 func NewServer(db *postgres.DB, staticPath string, reloadTemplates bool) (*Server, error) {
@@ -43,9 +44,7 @@ func NewServer(db *postgres.DB, staticPath string, reloadTemplates bool) (*Serve
 		return nil, fmt.Errorf("error parsing templates: %v", err)
 	}
 
-	mux := http.NewServeMux()
 	s := &Server{
-		Handler:         mux,
 		db:              db,
 		templateDir:     templateDir,
 		reloadTemplates: reloadTemplates,
@@ -57,15 +56,17 @@ func NewServer(db *postgres.DB, staticPath string, reloadTemplates bool) (*Serve
 	}
 	s.errorPage = errorPageBytes
 
-	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticPath))))
-	mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+	r := dcensus.NewRouter()
+	r.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticPath))))
+	r.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(staticPath)))
 	})
-	mux.Handle("/pkg/", http.StripPrefix("/pkg", http.HandlerFunc(s.handleDetails)))
-	mux.HandleFunc("/search", s.handleSearch)
-	mux.HandleFunc("/advanced-search", s.handleStaticPage("advanced_search.tmpl", "Advanced Search"))
-	mux.HandleFunc("/license-policy", s.handleStaticPage("license_policy.tmpl", "Licenses"))
-	mux.HandleFunc("/", s.handleIndexPage)
+	r.Handle("/pkg/", http.StripPrefix("/pkg", http.HandlerFunc(s.handleDetails)))
+	r.HandleFunc("/search", s.handleSearch)
+	r.HandleFunc("/advanced-search", s.handleStaticPage("advanced_search.tmpl", "Advanced Search"))
+	r.HandleFunc("/license-policy", s.handleStaticPage("license_policy.tmpl", "Licenses"))
+	r.HandleFunc("/", s.handleIndexPage)
+	s.Handler = r
 
 	return s, nil
 }

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/lib/pq"
+	"go.opencensus.io/trace"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 )
@@ -168,6 +169,8 @@ func (db *DB) GetRecentVersions(ctx context.Context, limit int) ([]*internal.Ver
 // UpsertVersionState inserts or updates the module_version_state table with
 // the results of a fetch operation for a given module version.
 func (db *DB) UpsertVersionState(ctx context.Context, modulePath, version string, timestamp time.Time, status int, fetchErr error) error {
+	ctx, span := trace.StartSpan(ctx, "UpsertVersionState")
+	defer span.End()
 	query := `
 		INSERT INTO module_version_states AS mvs (module_path, version, index_timestamp, status, error)
 		VALUES ($1, $2, $3, $4, $5)

@@ -17,6 +17,7 @@ import (
 	"strings"
 	"time"
 
+	"go.opencensus.io/plugin/ochttp"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/dzip"
 	"golang.org/x/discovery/internal/thirdparty/module"
@@ -54,7 +55,7 @@ func New(rawurl string) (*Client, error) {
 	if url.Scheme != "https" {
 		return nil, fmt.Errorf("scheme must be https (got %s)", url.Scheme)
 	}
-	return &Client{url: cleanURL(rawurl), httpClient: http.DefaultClient}, nil
+	return &Client{url: cleanURL(rawurl), httpClient: &http.Client{Transport: &ochttp.Transport{}}}, nil
 }
 
 // cleanURL trims the rawurl of trailing slashes.

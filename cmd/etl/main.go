@@ -18,6 +18,8 @@ import (
 	"strconv"
 	"time"
 
+	"golang.org/x/discovery/internal/config"
+	"golang.org/x/discovery/internal/dcensus"
 	"golang.org/x/discovery/internal/etl"
 	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/middleware"
@@ -25,6 +27,9 @@ import (
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/secrets"
 	"google.golang.org/appengine"
+
+	"contrib.go.opencensus.io/integrations/ocsql"
+	"go.opencensus.io/plugin/ochttp"
 )
 
 var (
@@ -44,7 +49,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("Unable to construct database connection info string: %v", err)
 	}
-	db, err := postgres.Open(dbinfo)
+	// Wrap the postgres driver with OpenCensus instrumentation.
+	driverName, err := ocsql.Register("postgres", ocsql.WithAllTraceOptions())
+	if err != nil {
+		log.Fatalf("unable to register our ocsql driver: %v\n", err)
+	}
+	db, err := postgres.Open(driverName, dbinfo)
+	db.Driver()
 	if err != nil {
 		log.Fatalf("postgres.Open(%q): %v", dbinfo, err)
 	}
@@ -77,11 +88,6 @@ func main() {
 		log.Fatalf("template.ParseFiles(%q): %v", templatePath, err)
 	}
 
-	handlerTimeout, err := strconv.Atoi(timeout)
-	if err != nil {
-		log.Fatalf("strconv.Atoi(%q): %v", timeout, err)
-	}
-
 	var q etl.Queue
 	if os.Getenv("GAE_ENV") == "standard" {
 		q = &etl.GCPQueue{QueueName: queueName}
@@ -90,6 +96,14 @@ func main() {
 	}
 
 	server := etl.NewServer(db, indexClient, proxyClient, q, indexTemplate)
+
+	views := append(ochttp.DefaultServerViews, ochttp.DefaultClientViews...)
+	views = append(views, dcensus.ViewByCodeRouteMethod)
+	dcensusServer, err := dcensus.NewServer(views...)
+	if err != nil {
+		log.Fatalf("dcensus.NewServer: %v", err)
+	}
+	go http.ListenAndServe(config.DebugAddr("localhost:8001"), dcensusServer)
 
 	// Default to addr on localhost to mute security popup about incoming
 	// network connections when running locally. When running in prod, App
@@ -102,6 +116,10 @@ func main() {
 		addr = "localhost:8000"
 	}
 
+	handlerTimeout, err := strconv.Atoi(timeout)
+	if err != nil {
+		log.Fatalf("strconv.Atoi(%q): %v", timeout, err)
+	}
 	mw := middleware.Timeout(time.Duration(handlerTimeout) * time.Minute)
 	http.Handle("/", mw(server))
 	if os.Getenv("GAE_ENV") == "standard" {

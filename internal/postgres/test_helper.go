@@ -170,7 +170,7 @@ func SetupTestDB(dbName string) (*DB, error) {
 			return nil, fmt.Errorf("unfixable error migrating database: %v", err)
 		}
 	}
-	return Open(dbConnURI(dbName))
+	return Open("postgres", dbConnURI(dbName))
 }
 
 // ResetTestDB truncates all data from the given test DB.  It should be called

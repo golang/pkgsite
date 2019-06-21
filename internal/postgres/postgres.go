@@ -18,8 +18,8 @@ type DB struct {
 }
 
 // Open creates a new DB for the given Postgres connection string.
-func Open(dbinfo string) (*DB, error) {
-	db, err := sql.Open("postgres", dbinfo)
+func Open(driverName, dbinfo string) (*DB, error) {
+	db, err := sql.Open(driverName, dbinfo)
 	if err != nil {
 		return nil, err
 	}

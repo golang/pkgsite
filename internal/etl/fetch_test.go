@@ -52,7 +52,7 @@ func TestSkipBadPackage(t *testing.T) {
 	})
 	defer teardownProxy(t)
 
-	if err := fetchAndInsertVersion(modulePath, version, client, testDB); err != nil {
+	if err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB); err != nil {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
 	}
 
@@ -98,7 +98,7 @@ func TestReFetch(t *testing.T) {
 		proxy.NewTestVersion(t, modulePath, version, foo),
 	})
 	defer teardownProxy(t)
-	if err := fetchAndInsertVersion(modulePath, version, client, testDB); err != nil {
+	if err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB); err != nil {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
 	}
 	if _, err := testDB.GetPackage(ctx, pkgFoo, version); err != nil {
@@ -111,7 +111,7 @@ func TestReFetch(t *testing.T) {
 	})
 	defer teardownProxy(t)
 
-	if err := fetchAndInsertVersion(modulePath, version, client, testDB); err != nil {
+	if err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB); err != nil {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
 	}
 	want := &internal.VersionedPackage{
@@ -264,7 +264,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			teardownProxy, client := proxy.SetupTestProxy(t, nil)
 			defer teardownProxy(t)
 
-			if err := fetchAndInsertVersion(test.modulePath, test.version, client, testDB); err != nil {
+			if err := fetchAndInsertVersion(ctx, test.modulePath, test.version, client, testDB); err != nil {
 				t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", test.modulePath, test.version, client, testDB, err)
 			}
 
@@ -310,7 +310,7 @@ func TestFetchAndInsertVersionTimeout(t *testing.T) {
 	name := "my.mod/version"
 	version := "v1.0.0"
 	wantErrString := "deadline exceeded"
-	err := fetchAndInsertVersion(name, version, client, testDB)
+	err := fetchAndInsertVersion(context.Background(), name, version, client, testDB)
 	if err == nil || !strings.Contains(err.Error(), wantErrString) {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v) returned error %v, want error containing %q",
 			name, version, client, testDB, err, wantErrString)

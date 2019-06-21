@@ -13,6 +13,10 @@ import (
 	"os"
 	"time"
 
+	"contrib.go.opencensus.io/integrations/ocsql"
+	"go.opencensus.io/plugin/ochttp"
+	"golang.org/x/discovery/internal/config"
+	"golang.org/x/discovery/internal/dcensus"
 	"golang.org/x/discovery/internal/frontend"
 	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
@@ -27,11 +31,17 @@ func main() {
 	flag.Parse()
 
 	ctx := context.Background()
+
 	dbinfo, err := dbConnInfo(ctx)
 	if err != nil {
 		log.Fatalf("Unable to construct database connection info string: %v", err)
 	}
-	db, err := postgres.Open(dbinfo)
+	// Wrap the postgres driver with OpenCensus instrumentation.
+	ocDriver, err := ocsql.Register("postgres", ocsql.WithAllTraceOptions())
+	if err != nil {
+		log.Fatalf("unable to register our ocsql driver: %v\n", err)
+	}
+	db, err := postgres.Open(ocDriver, dbinfo)
 	if err != nil {
 		log.Fatalf("postgres.Open: %v", err)
 	}
@@ -41,6 +51,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("frontend.NewServer: %v", err)
 	}
+
+	views := append(ochttp.DefaultServerViews, dcensus.ViewByCodeRouteMethod)
+	dcensusServer, err := dcensus.NewServer(views...)
+	if err != nil {
+		log.Fatalf("dcensus.NewServer: %v", err)
+	}
+	go http.ListenAndServe(config.DebugAddr("localhost:8081"), dcensusServer)
 
 	// Default to addr on localhost to prevent external connections. When running
 	// in prod, App Engine requires that the app listens on the port specified by
@@ -58,7 +75,6 @@ func main() {
 		middleware.Timeout(1*time.Minute),
 	)
 	log.Fatal(http.ListenAndServe(addr, mw(server)))
-
 }
 
 func dbConnInfo(ctx context.Context) (string, error) {

@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"go.opencensus.io/plugin/ochttp"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/net/context/ctxhttp"
 )
@@ -38,7 +39,7 @@ func New(rawurl string) (*Client, error) {
 	if u.Scheme != "https" {
 		return nil, fmt.Errorf("scheme must be https (got %s)", u.Scheme)
 	}
-	return &Client{url: strings.TrimRight(rawurl, "/"), httpClient: http.DefaultClient}, nil
+	return &Client{url: strings.TrimRight(rawurl, "/"), httpClient: &http.Client{Transport: &ochttp.Transport{}}}, nil
 }
 
 func (c *Client) pollURL(since time.Time, limit int) string {
