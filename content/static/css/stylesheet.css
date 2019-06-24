@@ -473,3 +473,7 @@ code {
 .EmptyContent-message {
   text-align: center;
 }
+
+#Feedback-button {
+  color: var(--turq-text);
+}
