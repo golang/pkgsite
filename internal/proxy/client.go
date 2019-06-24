@@ -76,6 +76,10 @@ func (c *Client) GetInfo(ctx context.Context, path, version string) (*VersionInf
 }
 
 func (c *Client) getInfo(ctx context.Context, path, version string) (*VersionInfo, error) {
+	if path == stdlibModulePathProxy {
+		return nil, derrors.NotAcceptable("%q is not an accepted module. Fetch std instead.", stdlibModulePathProxy)
+	}
+
 	u, err := c.infoURL(path, version)
 	if err != nil {
 		return nil, fmt.Errorf("infoURL(%q, %q): %v", path, version, err)
