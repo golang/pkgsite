@@ -195,11 +195,10 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 		v.module_path = p.module_path
 		AND v.version = p.version
 	WHERE
-		p.version = $1
-		AND p.module_path IN (
-			SELECT module_path
+		(p.module_path, p.version) IN (
+			SELECT module_path, version
 			FROM packages
-			WHERE path=$2
+			WHERE path = $1 AND version = $2
 		)
 	ORDER BY path;`
 
@@ -211,9 +210,9 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 		licenseTypes, licensePaths                    []string
 	)
 
-	rows, err := db.QueryContext(ctx, query, version, path)
+	rows, err := db.QueryContext(ctx, query, path, version)
 	if err != nil {
-		return nil, fmt.Errorf("db.QueryContext(ctx, %s, %q): %v", query, path, err)
+		return nil, fmt.Errorf("db.QueryContext(ctx, %s, %q, %q): %v", query, path, version, err)
 	}
 	defer rows.Close()
 
