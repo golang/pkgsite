@@ -9,10 +9,13 @@
   <header>
     <h1>{{$header.Path}}</h1>
     <p>
-      <strong>{{$header.Version}} </strong><span>({{$header.CommitTime}})</span>
-      <span>|</span>
+      <strong>Version: </strong><span>{{$header.Version}}</span>
+      <span class="Header-verticalBar">|</span>
+      <strong>Published: </strong><span>{{$header.CommitTime}}</span>
+      <span class="Header-verticalBar">|</span>
+      <strong>{{pluralize (len $header.Licenses) "License"}}: </strong>
       {{range $i, $e := $header.Licenses -}}{{if $i}}, {{end}}
-        <a href="/pkg/{{$header.Path}}@{{$header.Version}}?tab=licenses#{{.Anchor}}"><strong>{{$e.Type}}</strong></a>
+        <a href="/pkg/{{$header.Path}}@{{$header.Version}}&tab=licenses#{{.Anchor}}">{{$e.Type}}</a>
       {{- else -}}
         <span>No license files detected</span>
       {{- end}}

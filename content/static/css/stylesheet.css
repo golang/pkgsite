@@ -210,6 +210,11 @@ code {
     top: 22px;
   }
 }
+.Header-verticalBar {
+  margin: 0 10px;
+  font-weight: bold;
+  color: var(--turq-med);
+}
 
 .SearchResults {
   margin: 0 auto;
