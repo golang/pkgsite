@@ -70,7 +70,7 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 
 		var licenseValues []interface{}
 		for _, l := range licenses {
-			licenseValues = append(licenseValues, version.ModulePath, version.Version, l.FilePath, l.Contents, l.Type)
+			licenseValues = append(licenseValues, version.ModulePath, version.Version, l.FilePath, l.Contents, pq.Array(l.Types))
 		}
 		if len(licenseValues) > 0 {
 			licenseCols := []string{
@@ -78,7 +78,7 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 				"version",
 				"file_path",
 				"contents",
-				"type",
+				"types",
 			}
 			table := "licenses"
 			if err := bulkInsert(ctx, tx, table, licenseCols, licenseValues, onConflictDoNothing); err != nil {
@@ -91,8 +91,19 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 		for _, p := range version.Packages {
 			var licenseTypes, licensePaths []string
 			for _, l := range p.Licenses {
-				licenseTypes = append(licenseTypes, l.Type)
-				licensePaths = append(licensePaths, l.FilePath)
+				if len(l.Types) == 0 {
+					// If a license file has no detected license types, we still need to
+					// record it as applicable to the package, because we want to fail
+					// closed (meaning if there is a LICENSE file containing unknown
+					// licenses, we assume them not to be permissive of redistribution.)
+					licenseTypes = append(licenseTypes, "")
+					licensePaths = append(licensePaths, l.FilePath)
+				} else {
+					for _, typ := range l.Types {
+						licenseTypes = append(licenseTypes, typ)
+						licensePaths = append(licensePaths, l.FilePath)
+					}
+				}
 			}
 			pkgValues = append(pkgValues,
 				p.Path,

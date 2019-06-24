@@ -430,28 +430,28 @@ func (db *DB) GetImportedBy(ctx context.Context, path string) ([]string, error) 
 //
 // The returned error may be checked with derrors.IsInvalidArgument to
 // determine if it resulted from an invalid package path or version.
-func (db *DB) GetLicenses(ctx context.Context, pkgPath string, version string) ([]*license.License, error) {
+func (db *DB) GetLicenses(ctx context.Context, pkgPath, modulePath, version string) ([]*license.License, error) {
 	if pkgPath == "" || version == "" {
 		return nil, derrors.InvalidArgument("pkgPath and version cannot be empty")
 	}
 	query := `
 		SELECT
-			l.type,
+			l.types,
 			l.file_path,
 			l.contents
 		FROM
 			licenses l
 		INNER JOIN (
-			SELECT
+			SELECT DISTINCT ON (license_file_path)
 				module_path,
 				version,
-				unnest(license_types) AS license_type,
 				unnest(license_paths) AS license_file_path
 			FROM
 				packages
 			WHERE
 				path = $1
-				AND version = $2
+				AND module_path = $2
+				AND version = $3
 		) p
 		ON
 			p.module_path = l.module_path
@@ -460,10 +460,11 @@ func (db *DB) GetLicenses(ctx context.Context, pkgPath string, version string) (
 		ORDER BY l.file_path;`
 
 	var (
-		licenseType, licensePath string
-		contents                 []byte
+		licenseTypes []string
+		licensePath  string
+		contents     []byte
 	)
-	rows, err := db.QueryContext(ctx, query, pkgPath, version)
+	rows, err := db.QueryContext(ctx, query, pkgPath, modulePath, version)
 	if err != nil {
 		return nil, fmt.Errorf("db.QueryContext(ctx, %q, %q): %v", query, pkgPath, err)
 	}
@@ -471,12 +472,12 @@ func (db *DB) GetLicenses(ctx context.Context, pkgPath string, version string) (
 
 	var licenses []*license.License
 	for rows.Next() {
-		if err := rows.Scan(&licenseType, &licensePath, &contents); err != nil {
+		if err := rows.Scan(pq.Array(&licenseTypes), &licensePath, &contents); err != nil {
 			return nil, fmt.Errorf("row.Scan(): %v", err)
 		}
 		licenses = append(licenses, &license.License{
 			Metadata: license.Metadata{
-				Type:     licenseType,
+				Types:    licenseTypes,
 				FilePath: licensePath,
 			},
 			Contents: contents,
@@ -494,14 +495,25 @@ func zipLicenseMetadata(licenseTypes []string, licensePaths []string) ([]*licens
 	if len(licenseTypes) != len(licensePaths) {
 		return nil, fmt.Errorf("BUG: got %d license types and %d license paths", len(licenseTypes), len(licensePaths))
 	}
-	var metadata []*license.Metadata
-	for i, t := range licenseTypes {
-		metadata = append(metadata, &license.Metadata{Type: t, FilePath: licensePaths[i]})
+	byPath := make(map[string]*license.Metadata)
+	var mds []*license.Metadata
+	for i, p := range licensePaths {
+		md, ok := byPath[p]
+		if !ok {
+			md = &license.Metadata{FilePath: p}
+			mds = append(mds, md)
+		}
+		// By convention, we insert a license path with empty corresponding license
+		// type if we are unable to detect *any* licenses in the file. This ensures
+		// that we mark this package as non-redistributable.
+		if licenseTypes[i] != "" {
+			md.Types = append(md.Types, licenseTypes[i])
+		}
 	}
-	sort.Slice(metadata, func(i, j int) bool {
-		return compareLicenses(*metadata[i], *metadata[j])
+	sort.Slice(mds, func(i, j int) bool {
+		return compareLicenses(*mds[i], *mds[j])
 	})
-	return metadata, nil
+	return mds, nil
 }
 
 // compareLicenses reports whether i < j according to our license sorting
@@ -510,10 +522,7 @@ func compareLicenses(i, j license.Metadata) bool {
 	if len(strings.Split(i.FilePath, "/")) > len(strings.Split(j.FilePath, "/")) {
 		return true
 	}
-	if i.FilePath < j.FilePath {
-		return true
-	}
-	return i.Type < j.Type
+	return i.FilePath < j.FilePath
 }
 
 // GetVersion fetches a Version from the database with the primary key

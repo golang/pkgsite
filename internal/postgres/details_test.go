@@ -525,7 +525,7 @@ func TestGetLicenses(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.label, func(t *testing.T) {
-			got, err := testDB.GetLicenses(ctx, test.pkgPath, testVersion.Version)
+			got, err := testDB.GetLicenses(ctx, test.pkgPath, modulePath, testVersion.Version)
 			if err != nil {
 				t.Fatalf("testDB.GetLicenses(ctx, %q, %q): %v", test.pkgPath, testVersion.Version, err)
 			}

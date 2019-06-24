@@ -212,7 +212,7 @@ var (
 	SampleVersionString   = "v1.0.0"
 	SampleCommitTime      = NowTruncated()
 	SampleLicenseMetadata = []*license.Metadata{
-		{Type: "MIT", FilePath: "LICENSE"},
+		{Types: []string{"MIT"}, FilePath: "LICENSE"},
 	}
 	SampleLicenses = []*license.License{
 		{Metadata: *SampleLicenseMetadata[0], Contents: []byte(`Lorem Ipsum`)},

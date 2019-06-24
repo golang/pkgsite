@@ -16,7 +16,7 @@ func TestMatch(t *testing.T) {
 	fake := func(path string) *License {
 		var l License
 		l.FilePath = path
-		l.Type = "MIT"
+		l.Types = []string{"MIT"}
 		return &l
 	}
 

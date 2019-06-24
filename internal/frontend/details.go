@@ -117,7 +117,7 @@ type LicensesDetails struct {
 // LicenseMetadata contains license metadata that is used in the package
 // header.
 type LicenseMetadata struct {
-	*license.Metadata
+	Type   string
 	Anchor string
 }
 
@@ -177,14 +177,17 @@ func (p *Package) Suffix() string {
 // transformLicenseMetadata transforms license.Metadata into a LicenseMetadata
 // by adding an anchor field.
 func transformLicenseMetadata(dbLicenses []*license.Metadata) []LicenseMetadata {
-	var licenseInfos []LicenseMetadata
+	var mds []LicenseMetadata
 	for _, l := range dbLicenses {
-		licenseInfos = append(licenseInfos, LicenseMetadata{
-			Metadata: l,
-			Anchor:   licenseAnchor(l.FilePath),
-		})
+		anchor := licenseAnchor(l.FilePath)
+		for _, typ := range l.Types {
+			mds = append(mds, LicenseMetadata{
+				Type:   typ,
+				Anchor: anchor,
+			})
+		}
 	}
-	return licenseInfos
+	return mds
 }
 
 // createPackageHeader returns a *Package based on the fields of the specified
@@ -408,7 +411,7 @@ func licenseAnchor(filePath string) string {
 // fetchLicensesDetails fetches license data for the package version specified by
 // path and version from the database and returns a LicensesDetails.
 func fetchLicensesDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*LicensesDetails, error) {
-	dbLicenses, err := db.GetLicenses(ctx, pkg.Path, pkg.VersionInfo.Version)
+	dbLicenses, err := db.GetLicenses(ctx, pkg.Path, pkg.ModulePath, pkg.VersionInfo.Version)
 	if err != nil {
 		return nil, fmt.Errorf("db.GetLicenses(ctx, %q, %q): %v", pkg.Path, pkg.VersionInfo.Version, err)
 	}

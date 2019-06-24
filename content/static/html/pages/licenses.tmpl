@@ -7,7 +7,7 @@
 {{define "details_content"}}
 {{range .Licenses}}
 <section class="License" id="{{.Anchor}}">
-  <h3><a href="#{{.Anchor}}">{{.Type}} <small>({{.FilePath}})</small></a></h3>
+  <h3><a href="#{{.Anchor}}">{{range $i, $e := .Types}}{{if $i}}, {{end}}{{$e}}{{end}} <small>({{.FilePath}})</small></a></h3>
   <pre class="License-contents">{{printf "%s" .Contents}}</pre>
 </section>
 {{end}}

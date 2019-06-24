@@ -25,20 +25,20 @@ func TestDetect(t *testing.T) {
 			contents: map[string]string{
 				"foo/LICENSE": testhelper.MITLicense,
 			},
-			want: []*Metadata{{Type: "MIT", FilePath: "foo/LICENSE"}},
+			want: []*Metadata{{Types: []string{"MIT"}, FilePath: "foo/LICENSE"}},
 		}, {
 			name: "valid license md format",
 			contents: map[string]string{
 				"foo/LICENSE.md": testhelper.MITLicense,
 			},
-			want: []*Metadata{{Type: "MIT", FilePath: "foo/LICENSE.md"}},
+			want: []*Metadata{{Types: []string{"MIT"}, FilePath: "foo/LICENSE.md"}},
 		}, {
 			name: "valid license trim prefix",
 			contents: map[string]string{
 				"rsc.io/quote@v1.4.1/LICENSE.md": testhelper.MITLicense,
 			},
 			subdir: "rsc.io/quote@v1.4.1",
-			want:   []*Metadata{{Type: "MIT", FilePath: "LICENSE.md"}},
+			want:   []*Metadata{{Types: []string{"MIT"}, FilePath: "LICENSE.md"}},
 		}, {
 			name: "multiple licenses",
 			contents: map[string]string{
@@ -47,9 +47,9 @@ func TestDetect(t *testing.T) {
 				"foo/COPYING":    testhelper.BSD0License,
 			},
 			want: []*Metadata{
-				{Type: "MIT", FilePath: "LICENSE"},
-				{Type: "MIT", FilePath: "bar/LICENSE.md"},
-				{Type: "BSD-0-Clause", FilePath: "foo/COPYING"},
+				{Types: []string{"MIT"}, FilePath: "LICENSE"},
+				{Types: []string{"MIT"}, FilePath: "bar/LICENSE.md"},
+				{Types: []string{"BSD-0-Clause"}, FilePath: "foo/COPYING"},
 			},
 		}, {
 			name: "multiple licenses in a single file",
@@ -57,8 +57,7 @@ func TestDetect(t *testing.T) {
 				"LICENSE": testhelper.MITLicense + "\n" + testhelper.BSD0License,
 			},
 			want: []*Metadata{
-				{Type: "BSD-0-Clause", FilePath: "LICENSE"},
-				{Type: "MIT", FilePath: "LICENSE"},
+				{Types: []string{"BSD-0-Clause", "MIT"}, FilePath: "LICENSE"},
 			},
 		}, {
 			name: "unknown license",
@@ -66,7 +65,7 @@ func TestDetect(t *testing.T) {
 				"LICENSE": testhelper.UnknownLicense,
 			},
 			want: []*Metadata{
-				{Type: unknownLicense, FilePath: "LICENSE"},
+				{FilePath: "LICENSE"},
 			},
 		}, {
 			name: "low coverage license",
@@ -78,7 +77,7 @@ veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
 commodo consequat.`,
 			},
 			want: []*Metadata{
-				{Type: unknownLicense, FilePath: "LICENSE"},
+				{FilePath: "LICENSE"},
 			},
 		}, {
 			name: "no license",
@@ -97,7 +96,7 @@ commodo consequat.`,
 				"vendor/pkg/LICENSE": testhelper.MITLicense,
 			},
 			want: []*Metadata{
-				{Type: "MIT", FilePath: "pkg/vendor/LICENSE"},
+				{Types: []string{"MIT"}, FilePath: "pkg/vendor/LICENSE"},
 			},
 		},
 	}
@@ -124,10 +123,8 @@ commodo consequat.`,
 			sort.Slice(got, func(i, j int) bool {
 				if got[i].FilePath < got[j].FilePath {
 					return true
-				} else if got[i].FilePath > got[j].FilePath {
-					return false
 				}
-				return got[i].Type < got[j].Type
+				return got[i].FilePath < got[j].FilePath
 			})
 			var gotFiles []*Metadata
 			for _, l := range got {

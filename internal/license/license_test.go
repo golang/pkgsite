@@ -15,13 +15,13 @@ func TestLicensesAreRedistributable(t *testing.T) {
 		{
 			label: "redistributable license",
 			licenses: []*Metadata{
-				{Type: "MIT", FilePath: "LICENSE"},
+				{Types: []string{"MIT"}, FilePath: "LICENSE"},
 			},
 			want: true,
 		}, {
 			label: "no redistributable license at root",
 			licenses: []*Metadata{
-				{Type: "MIT", FilePath: "bar/LICENSE"},
+				{Types: []string{"MIT"}, FilePath: "bar/LICENSE"},
 			},
 			want: false,
 		}, {
@@ -30,32 +30,45 @@ func TestLicensesAreRedistributable(t *testing.T) {
 		}, {
 			label: "non-redistributable license",
 			licenses: []*Metadata{
-				{Type: "BADLICENSE", FilePath: "LICENSE"},
+				{Types: []string{"BADLICENSE"}, FilePath: "LICENSE"},
 			},
 			want: false,
 		}, {
 			label: "multiple redistributable",
 			licenses: []*Metadata{
-				{Type: "BSD-3-Clause", FilePath: "LICENSE"},
-				{Type: "MIT", FilePath: "bar/LICENSE"},
+				{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
+				{Types: []string{"MIT"}, FilePath: "bar/LICENSE"},
 			},
 			want: true,
 		}, {
 			label: "not all redistributable",
 			licenses: []*Metadata{
-				{Type: "BSD-3-Clause", FilePath: "LICENSE"},
-				{Type: "BADLICENSE", FilePath: "foo/LICENSE"},
-				{Type: "MIT", FilePath: "foo/bar/LICENSE"},
+				{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
+				{Types: []string{"BADLICENSE"}, FilePath: "foo/LICENSE"},
+				{Types: []string{"MIT"}, FilePath: "foo/bar/LICENSE"},
 			},
 			want: false,
 		}, {
 			label: "multiple redistributable in a single file",
 			licenses: []*Metadata{
-				{Type: "BSD-3-Clause", FilePath: "LICENSE"},
-				{Type: "AGPL-3.0", FilePath: "foo/LICENSE"},
-				{Type: "MIT", FilePath: "foo/LICENSE"},
+				{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
+				{Types: []string{"AGPL-3.0", "MIT"}, FilePath: "foo/LICENSE"},
 			},
 			want: true,
+		}, {
+			label: "single file with one bad license",
+			licenses: []*Metadata{
+				{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
+				{Types: []string{"AGPL-3.0", "BADLICENSE"}, FilePath: "foo/LICENSE"},
+			},
+			want: false,
+		}, {
+			label: "single file with no license",
+			licenses: []*Metadata{
+				{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
+				{FilePath: "foo/LICENSE"},
+			},
+			want: false,
 		},
 	}
 

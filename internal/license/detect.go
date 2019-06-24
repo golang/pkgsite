@@ -8,7 +8,9 @@ import (
 	"archive/zip"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"path"
+	"sort"
 	"strings"
 
 	"github.com/google/licensecheck"
@@ -26,10 +28,6 @@ const (
 	// maxLicenseSize is the maximum allowable size (in bytes) for a license
 	// file.
 	maxLicenseSize = 1e7
-
-	// unknownLicense is used for candidate license files where either the
-	// license type was not detected, or did not meet requisite thresholds.
-	unknownLicense = "UNKNOWN"
 )
 
 // licenseFileNames defines the set of filenames to be considered for license
@@ -108,22 +106,35 @@ func Detect(contentsDir string, r *zip.Reader) ([]*License, error) {
 		filePath := strings.TrimPrefix(f.Name, prefix)
 		cov, ok := licensecheck.Cover(contents, licensecheck.Options{})
 		if ok && cov.Percent >= coverageThreshold {
+			matchedTypes := make(map[string]bool)
+
 			for _, m := range cov.Match {
 				if m.Percent >= classifyThreshold {
-					licenses = append(licenses, &License{
-						Metadata: Metadata{
-							Type:     m.Name,
-							FilePath: filePath,
-						},
-						Contents: contents,
-					})
-					matched = true
+					if matchedTypes[m.Name] {
+						log.Printf("WARNING: found license type %s more than once in %s", m.Name, filePath)
+					}
+					matchedTypes[m.Name] = true
 				}
+			}
+			if len(matchedTypes) > 0 {
+				matched = true
+				var typs []string
+				for t := range matchedTypes {
+					typs = append(typs, t)
+				}
+				sort.Strings(typs)
+				licenses = append(licenses, &License{
+					Metadata: Metadata{
+						Types:    typs,
+						FilePath: filePath,
+					},
+					Contents: contents,
+				})
 			}
 		}
 		if !matched {
 			licenses = append(licenses, &License{
-				Metadata: Metadata{Type: unknownLicense, FilePath: filePath},
+				Metadata: Metadata{FilePath: filePath},
 			})
 
 		}

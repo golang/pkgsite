@@ -130,7 +130,7 @@ func TestReFetch(t *testing.T) {
 			DocumentationHTML: []byte("Bar returns the string &#34;bar&#34;."),
 			V1Path:            "my.mod/module/bar",
 			Licenses: []*license.Metadata{
-				{Type: "MIT", FilePath: "COPYING"},
+				{Types: []string{"MIT"}, FilePath: "COPYING"},
 			},
 		},
 	}
@@ -178,8 +178,8 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					DocumentationHTML: []byte("Bar returns the string &#34;bar&#34;."),
 					V1Path:            "my.mod/module/bar",
 					Licenses: []*license.Metadata{
-						{Type: "BSD-3-Clause", FilePath: "LICENSE"},
-						{Type: "MIT", FilePath: "bar/LICENSE"},
+						{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
+						{Types: []string{"MIT"}, FilePath: "bar/LICENSE"},
 					},
 				},
 			},
@@ -203,9 +203,9 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					DocumentationHTML: []byte("Baz returns the string &#34;baz&#34;."),
 					V1Path:            "nonredistributable.mod/module/bar/baz",
 					Licenses: []*license.Metadata{
-						{Type: "BSD-3-Clause", FilePath: "LICENSE"},
-						{Type: "MIT", FilePath: "bar/LICENSE"},
-						{Type: "MIT", FilePath: "bar/baz/COPYING"},
+						{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
+						{Types: []string{"MIT"}, FilePath: "bar/LICENSE"},
+						{Types: []string{"MIT"}, FilePath: "bar/baz/COPYING"},
 					},
 				},
 			},
@@ -229,8 +229,8 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					DocumentationHTML: nil,
 					V1Path:            "nonredistributable.mod/module/foo",
 					Licenses: []*license.Metadata{
-						{Type: "BSD-3-Clause", FilePath: "LICENSE"},
-						{Type: "BSD-0-Clause", FilePath: "foo/LICENSE.md"},
+						{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
+						{Types: []string{"BSD-0-Clause"}, FilePath: "foo/LICENSE.md"},
 					},
 				},
 			},
