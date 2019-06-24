@@ -1,26 +1,35 @@
 <!--
-	Copyright 2019 The Go Authors. All rights reserved.
-	Use of this source code is governed by a BSD-style
-	license that can be found in the LICENSE file.
+Copyright 2019 The Go Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
 -->
 
 {{define "details_content"}}
   <div>
-    <h3>Imported by</h3>
-    {{if .ExternalImportedBy}}
+    {{if (eq 0 (len .ExternalImportedBy)) and (eq 0 (len .InternalImportedBy))}}
+      <img class="ImportedBy-gopher" src="/static/img/gopher-airplane.jpg" alt="The Go Gopher">
+      <h3 class="ImportedBy-noneMessage">No known importers for this package!</h3>
+    {{else}}
+      <h2>Imported by</h2>
+      {{if .ExternalImportedBy}}
       <p>
         <b>Known importers: </b>
-        <span>{{len .ExternalImportedBy}} package(s)</span>
+        <span>{{len .ExternalImportedBy}}</span>
       </p>
-      {{range .ExternalImportedBy}}
-        <p><a class="u-breakWord" href="/pkg/{{.}}">{{.}}</a></p>
+      <ul class="ImportedBy-list">
+        {{range .ExternalImportedBy}}
+          <li><a class="u-breakWord" href="/pkg/{{.}}">{{.}}</a></li>
+        {{end}}
+      </ul>
       {{end}}
-    {{end}}
 
-    {{if .InternalImportedBy}}
-      <h3>Module: {{.ModulePath}}</h3>
-      {{range .InternalImportedBy}}
-        <p><a class="u-breakWord" href="/pkg/{{.}}">{{.}}</a></p>
+      {{if .InternalImportedBy}}
+        <h3>Module: {{.ModulePath}}</h3>
+        <ul class="ImportedBy-list">
+        {{range .InternalImportedBy}}
+          <li><a class="u-breakWord" href="/pkg/{{.}}">{{.}}</a></li>
+        {{end}}
+        </ul>
       {{end}}
     {{end}}
   </div>
