@@ -1,14 +1,15 @@
 <!--
-	Copyright 2019 The Go Authors. All rights reserved.
-	Use of this source code is governed by a BSD-style
-	license that can be found in the LICENSE file.
+        Copyright 2019 The Go Authors. All rights reserved.
+        Use of this source code is governed by a BSD-style
+        license that can be found in the LICENSE file.
 -->
 
 {{define "details_content"}}
-{{range .Licenses}}
-<section class="License" id="{{.Anchor}}">
-  <h3><a href="#{{.Anchor}}">{{range $i, $e := .Types}}{{if $i}}, {{end}}{{$e}}{{end}} <small>({{.FilePath}})</small></a></h3>
-  <pre class="License-contents">{{printf "%s" .Contents}}</pre>
-</section>
-{{end}}
+  {{range .Licenses}}
+    <section class="License" id="{{.Anchor}}">
+      <h2><a href="#{{.Anchor}}">{{range $i, $e := .Types}}{{if $i}}, {{end}}{{$e}}{{end}}</a></h2>
+      <p>This is not legal advice. <a href="/license-policy">Read disclaimer.</a></p>
+      <pre class="License-contents">{{printf "%s" .Contents}}</pre>
+    </section>
+  {{end}}
 {{end}}
