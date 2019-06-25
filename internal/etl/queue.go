@@ -33,7 +33,7 @@ func (q *GCPQueue) ScheduleFetch(ctx context.Context, modulePath, version string
 	if q == nil {
 		return nil
 	}
-	u := fmt.Sprintf("/fetch/%s/@v/%s", modulePath, version)
+	u := fmt.Sprintf("/queue-fetch/%s/@v/%s", modulePath, version)
 	t := taskqueue.NewPOSTTask(u, nil)
 	if _, err := taskqueue.Add(ctx, t, q.QueueName); err != nil {
 		log.Printf("taskqueue.Add(ctx, t, %q): %v", q.QueueName, err)

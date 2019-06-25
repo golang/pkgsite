@@ -56,10 +56,13 @@ func NewServer(db *postgres.DB,
 	mux.HandleFunc("/refresh-search/", s.handleRefreshSearch)
 	mux.HandleFunc("/populate-stdlib/", s.handlePopulateStdLib)
 	mux.Handle("/fetch/", http.StripPrefix("/fetch", http.HandlerFunc(s.handleFetch)))
+	mux.Handle("/queue-fetch/", http.StripPrefix("/queue-fetch", http.HandlerFunc(s.handleQueueFetch)))
 	mux.HandleFunc("/", s.handleStatusPage)
 	return s
 }
 
+// handleFetch executes a fetch requests and returns the outcome of that
+// request.
 func (s *Server) handleFetch(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -71,21 +74,49 @@ func (s *Server) handleFetch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	msg, code := s.doFetch(r)
+	log.Println(msg)
+
+	if code != http.StatusOK {
+		http.Error(w, http.StatusText(code), code)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	fmt.Fprint(w, msg)
+}
+
+// handleQueueFetch executes a fetch request and returns a http.StatusOK if the
+// status is not http.StatusInternalServerError, so that the task queue does
+// not retry fetching module versions that have a terminal error.
+func (s *Server) handleQueueFetch(w http.ResponseWriter, r *http.Request) {
+	msg, code := s.doFetch(r)
+	log.Println(msg)
+
+	if code == http.StatusInternalServerError {
+		http.Error(w, http.StatusText(code), code)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	if code == http.StatusOK {
+		fmt.Fprint(w, msg)
+	}
+	fmt.Fprintf(w, http.StatusText(code))
+}
+
+// doFetch executes a fetch request and returns the msg and status.
+func (s *Server) doFetch(r *http.Request) (string, int) {
 	modulePath, version, err := parseModulePathAndVersion(r.URL.Path)
 	if err != nil {
-		log.Printf("parseModulePathAndVersion(%q): %v", r.URL.Path, err)
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
+		return fmt.Sprintf("parseModulePathAndVersion(%q): %v", r.URL.Path, err), http.StatusBadRequest
 	}
 
 	code, err := fetchAndUpdateState(r.Context(), modulePath, version, s.proxyClient, s.db)
 	if err != nil {
-		http.Error(w, http.StatusText(code), code)
-		return
+		return fmt.Sprintf("fetchAndUpdateState for %q, %q", modulePath, version), code
 	}
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(code)
-	fmt.Fprintf(w, "Downloaded %s@%s\n", modulePath, version)
+	return fmt.Sprintf("Downloaded %s@%s\n", modulePath, version), http.StatusOK
 }
 
 // parseModulePathAndVersion returns the module and version specified by p. p
