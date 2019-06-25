@@ -12,10 +12,10 @@ import (
 
 func TestErrors(t *testing.T) {
 	tests := []struct {
-		label                          string
-		err                            error
-		isNotFound, isInvalidArguments bool
-		wantType                       ErrorType
+		label                                           string
+		err                                             error
+		isNotFound, isInvalidArguments, isNotAcceptable bool
+		wantType                                        ErrorType
 	}{
 		{
 			label:      "identifies not found errors",
@@ -27,6 +27,11 @@ func TestErrors(t *testing.T) {
 			err:                InvalidArgument("bad arguments"),
 			isInvalidArguments: true,
 			wantType:           InvalidArgumentType,
+		}, {
+			label:           "identifies not acceptable errors",
+			err:             NotAcceptable("not acceptable"),
+			isNotAcceptable: true,
+			wantType:        NotAcceptableType,
 		}, {
 			label:    "doesn't identify an unknown error",
 			err:      errors.New("bad"),
@@ -45,6 +50,11 @@ func TestErrors(t *testing.T) {
 			isNotFound: true,
 			wantType:   NotFoundType,
 		}, {
+			label:           "interprets HTTP 406 as Not Acceptable",
+			err:             StatusError(http.StatusNotAcceptable, "not acceptable"),
+			isNotAcceptable: true,
+			wantType:        NotAcceptableType,
+		}, {
 			label:    "interprets HTTP 500 as Uncategorized",
 			err:      StatusError(http.StatusInternalServerError, "bad"),
 			wantType: UncategorizedErrorType,
@@ -58,6 +68,9 @@ func TestErrors(t *testing.T) {
 			}
 			if got := IsInvalidArgument(test.err); got != test.isInvalidArguments {
 				t.Errorf("IsInvalidArguments(%v) = %t, want %t", test.err, got, test.isInvalidArguments)
+			}
+			if got := IsNotAcceptable(test.err); got != test.isNotAcceptable {
+				t.Errorf("IsNotAcceptable(%v) = %t, want %t", test.err, got, test.isNotAcceptable)
 			}
 			if got := Type(test.err); got != test.wantType {
 				t.Errorf("Type(%v) = %v, want %v", test.err, got, test.wantType)
