@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -63,9 +64,24 @@ func NewServer(db *postgres.DB, staticPath string, reloadTemplates bool) (*Serve
 	mux.Handle("/pkg/", http.StripPrefix("/pkg", http.HandlerFunc(s.handleDetails)))
 	mux.HandleFunc("/search", s.handleSearch)
 	mux.HandleFunc("/license-policy", s.handleStaticPage("license_policy.tmpl", "Licenses"))
-	mux.HandleFunc("/", s.handleStaticPage("index.tmpl", "Go Discovery"))
+	mux.HandleFunc("/", s.handleIndexPage)
 
 	return s, nil
+}
+
+// handleIndexPage handles requests to the index page.
+func (s *Server) handleIndexPage(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/" {
+		s.handleStaticPage("index.tmpl", "Go Discovery")(w, r)
+		return
+	}
+
+	query := strings.TrimPrefix(r.URL.Path, "/")
+	s.serveErrorPage(w, r, http.StatusBadRequest, &errorPage{
+		Message: fmt.Sprintf("%d %s", http.StatusBadRequest, http.StatusText(http.StatusBadRequest)),
+		SecondaryMessage: template.HTML(
+			fmt.Sprintf(`To search for packages like %q, <a href="/search?q=%s">click here</a>.</p>`, query, query)),
+	})
 }
 
 // handleStaticPage handles requests to a template that contains no dynamic
