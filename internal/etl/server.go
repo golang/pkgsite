@@ -102,7 +102,7 @@ func (s *Server) handleQueueFetch(w http.ResponseWriter, r *http.Request) {
 	if code == http.StatusOK {
 		fmt.Fprint(w, msg)
 	}
-	fmt.Fprintf(w, http.StatusText(code))
+	fmt.Fprint(w, http.StatusText(code))
 }
 
 // doFetch executes a fetch request and returns the msg and status.

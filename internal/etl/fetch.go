@@ -58,9 +58,12 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 	)
 	if fetchErr = fetchAndInsertVersion(modulePath, version, client, db); fetchErr != nil {
 		log.Printf("Error executing fetch: %v", fetchErr)
-		if derrors.IsNotFound(fetchErr) {
+		switch {
+		case derrors.IsNotFound(fetchErr):
 			code = http.StatusNotFound
-		} else {
+		case derrors.IsNotAcceptable(fetchErr):
+			code = http.StatusNotAcceptable
+		default:
 			code = http.StatusInternalServerError
 		}
 	}
@@ -118,6 +121,9 @@ func fetchAndInsertVersion(modulePath, requestedVersion string, proxyClient *pro
 		log.Printf("Error detecting licenses for %v@%v: %v", modulePath, info.Version, err)
 	}
 	packages, err := extractPackagesFromZip(modulePath, info.Version, zipReader, license.NewMatcher(licenses))
+	if err == errModuleContainsNoPackages {
+		return derrors.NotAcceptable(errModuleContainsNoPackages.Error())
+	}
 	if err != nil {
 		return fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, info.Version, licenses, err)
 	}
