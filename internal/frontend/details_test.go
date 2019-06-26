@@ -179,7 +179,7 @@ func TestFetchVersionsDetails(t *testing.T) {
 		}
 		latestPseudo = &Package{
 			Path:       pkg1Path,
-			Version:    "v0.0.0-20140414041502-3c2ca4d52544",
+			Version:    "v0.0.0-20140414041502-4c2ca4d52544",
 			CommitTime: "today",
 		}
 		latestStdlib = &Package{
@@ -205,38 +205,33 @@ func TestFetchVersionsDetails(t *testing.T) {
 				getTestVersion("net/http", "std", "v1.11.6", internal.VersionTypeRelease, &nethttpPkg.Package),
 			},
 			wantDetails: &VersionsDetails{
-				Versions: []*SeriesVersionGroup{{
+				ThisSeries: &SeriesVersionGroup{
 					Series: "std",
-					Latest: latestStdlib,
 					MajorVersions: []*MajorVersionGroup{{
-						Major:  "v1",
-						Latest: latestStdlib,
+						Major:      "v1",
+						ModulePath: "std",
 						MinorVersions: []*MinorVersionGroup{
 							{
-								Minor:  "v1.12",
-								Latest: latestStdlib,
-								PatchVersions: []*Package{
-									latestStdlib,
-								},
+								Minor: "v1.12",
+								PatchVersions: []*PatchVersion{{
+									Package:          latestStdlib,
+									FormattedVersion: "v1.12.5",
+								}},
 							},
 							{
 								Minor: "v1.11",
-								Latest: &Package{
-									Version:    "v1.11.6",
-									Path:       nethttpPkg.Path,
-									CommitTime: "today",
-								},
-								PatchVersions: []*Package{
-									{
+								PatchVersions: []*PatchVersion{{
+									Package: &Package{
 										Version:    "v1.11.6",
 										Path:       nethttpPkg.Path,
 										CommitTime: "today",
 									},
-								},
+									FormattedVersion: "v1.11.6",
+								}},
 							},
 						},
 					}},
-				}},
+				},
 			},
 		},
 		{
@@ -253,67 +248,61 @@ func TestFetchVersionsDetails(t *testing.T) {
 				getTestVersion(pkg2Path, modulePath2, "v2.2.1-alpha.1", internal.VersionTypePrerelease, &pkg1.Package),
 			},
 			wantDetails: &VersionsDetails{
-				Versions: []*SeriesVersionGroup{{
+				ThisSeries: &SeriesVersionGroup{
 					Series: "test.com/module",
-					Latest: latestTagged,
 					MajorVersions: []*MajorVersionGroup{{
-						Major:  "v2",
-						Latest: latestTagged,
+						Major:      "v2",
+						ModulePath: "test.com/module/v2",
 						MinorVersions: []*MinorVersionGroup{{
-							Minor:         "v2.2",
-							Latest:        latestTagged,
-							PatchVersions: []*Package{latestTagged},
+							Minor: "v2.2",
+							PatchVersions: []*PatchVersion{{
+								Package:          latestTagged,
+								FormattedVersion: "v2.2.1 (alpha.1)",
+							}},
 						}, {
 							Minor: "v2.0",
-							Latest: &Package{
-								Version:    "v2.0.0",
-								Path:       pkg2Path,
-								CommitTime: "today",
-							},
-							PatchVersions: []*Package{{
-								Version:    "v2.0.0",
-								Path:       pkg2Path,
-								CommitTime: "today",
+							PatchVersions: []*PatchVersion{{
+								Package: &Package{
+									Version:    "v2.0.0",
+									Path:       pkg2Path,
+									CommitTime: "today",
+								},
+								FormattedVersion: "v2.0.0",
 							}},
 						}},
 					}, {
-						Major: "v1",
-						Latest: &Package{
-							Version:    "v1.3.0",
-							Path:       pkg1Path,
-							CommitTime: "today",
-						},
+						Major:      "v1",
+						ModulePath: "test.com/module",
 						MinorVersions: []*MinorVersionGroup{{
 							Minor: "v1.3",
-							Latest: &Package{
-								Version:    "v1.3.0",
-								Path:       pkg1Path,
-								CommitTime: "today",
-							},
-							PatchVersions: []*Package{{
-								Version:    "v1.3.0",
-								Path:       pkg1Path,
-								CommitTime: "today",
+							PatchVersions: []*PatchVersion{{
+								Package: &Package{
+									Version:    "v1.3.0",
+									Path:       pkg1Path,
+									CommitTime: "today",
+								},
+								FormattedVersion: "v1.3.0",
 							}},
 						}, {
 							Minor: "v1.2",
-							Latest: &Package{
-								Version:    "v1.2.3",
-								Path:       pkg1Path,
-								CommitTime: "today",
-							},
-							PatchVersions: []*Package{{
-								Version:    "v1.2.3",
-								Path:       pkg1Path,
-								CommitTime: "today",
+							PatchVersions: []*PatchVersion{{
+								Package: &Package{
+									Version:    "v1.2.3",
+									Path:       pkg1Path,
+									CommitTime: "today",
+								},
+								FormattedVersion: "v1.2.3",
 							}, {
-								Version:    "v1.2.1",
-								Path:       pkg1Path,
-								CommitTime: "today",
+								Package: &Package{
+									Version:    "v1.2.1",
+									Path:       pkg1Path,
+									CommitTime: "today",
+								},
+								FormattedVersion: "v1.2.1",
 							}},
 						}},
 					}},
-				}},
+				},
 			},
 		}, {
 			name:    "want only pseudo",
@@ -322,29 +311,33 @@ func TestFetchVersionsDetails(t *testing.T) {
 			version: "v0.0.0-20140414041501-3c2ca4d52544",
 			versions: []*internal.Version{
 				getTestVersion(pkg1Path, modulePath1, "v0.0.0-20140414041501-3c2ca4d52544", internal.VersionTypePseudo, &pkg1.Package),
-				getTestVersion(pkg1Path, modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", internal.VersionTypePseudo, &pkg1.Package),
+				getTestVersion(pkg1Path, modulePath1, "v0.0.0-20140414041502-4c2ca4d52544", internal.VersionTypePseudo, &pkg1.Package),
 			},
 			wantDetails: &VersionsDetails{
-				Versions: []*SeriesVersionGroup{{
+				ThisSeries: &SeriesVersionGroup{
 					Series: "test.com/module",
-					Latest: latestPseudo,
 					MajorVersions: []*MajorVersionGroup{{
-						Major:  "v0",
-						Latest: latestPseudo,
+						Major:      "v0",
+						ModulePath: "test.com/module",
 						MinorVersions: []*MinorVersionGroup{{
-							Minor:  "v0.0",
-							Latest: latestPseudo,
-							PatchVersions: []*Package{
-								latestPseudo,
+							Minor: "v0.0",
+							PatchVersions: []*PatchVersion{
 								{
-									Version:    "v0.0.0-20140414041501-3c2ca4d52544",
-									Path:       pkg1Path,
-									CommitTime: "today",
+									Package:          latestPseudo,
+									FormattedVersion: "v0.0.0 (4c2ca4d)",
+								},
+								{
+									Package: &Package{
+										Version:    "v0.0.0-20140414041501-3c2ca4d52544",
+										Path:       pkg1Path,
+										CommitTime: "today",
+									},
+									FormattedVersion: "v0.0.0 (3c2ca4d)",
 								},
 							},
 						}},
 					}},
-				}},
+				},
 			},
 		},
 	} {
@@ -365,6 +358,28 @@ func TestFetchVersionsDetails(t *testing.T) {
 
 			if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
 				t.Errorf("fetchVersionsDetails(ctx, db, %q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
+			}
+		})
+	}
+}
+
+func TestFormatVersion(t *testing.T) {
+	tests := []struct {
+		version, want string
+	}{
+		{"v1.2.3", "v1.2.3"},
+		{"v2.0.0", "v2.0.0"},
+		{"v1.2.3-alpha.1", "v1.2.3 (alpha.1)"},
+		{"v1.0.0-20190311183353-d8887717615a", "v1.0.0 (d888771)"},
+		{"v1.2.3-pre.0.20190311183353-d8887717615a", "v1.2.3 (d888771)"},
+		{"v1.2.4-0.20190311183353-d8887717615a", "v1.2.4 (d888771)"},
+		{"v1.0.0-20190311183353-d88877", "v1.0.0 (d88877)"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.version, func(t *testing.T) {
+			if got := formatVersion(test.version); got != test.want {
+				t.Errorf("formatVersion(%q) = %q, want %q", test.version, got, test.want)
 			}
 		})
 	}

@@ -411,13 +411,36 @@ code {
   max-width: 620px;
 }
 
+.Versions-list {
+  list-style: none;
+  padding-left: 16px;
+}
+.Versions-list li {
+  font-size: 18px;
+  margin-bottom: 8px;
+  line-height: 24px;
+  padding-left: 16px;
+}
+.Versions-latest {
+  font-weight: bold;
+}
+.Versions-notlatest {
+  margin-left: 16px;
+}
 .Versions-commitTime {
   color: var(--gray-3);
   font-weight: 400;
+  font-size: 16px;
 }
 .Versions-seriesPath {
   color: var(--gray-3);
-  font-size: 0.875em;
+  font-size: 16px;
+  font-family: Roboto;
+  font-weight: normal;
+}
+.Versions-separator {
+  border-bottom: 1px solid var(--gray-8);
+  margin: 32px 0;
 }
 
 .Imports-list {

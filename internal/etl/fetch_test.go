@@ -656,7 +656,7 @@ func TestFetch_parseVersionType(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if gotVt, err := parseVersionType(tc.version); (tc.wantErr == (err != nil)) && tc.wantVersionType != gotVt {
+			if gotVt, err := ParseVersionType(tc.version); (tc.wantErr == (err != nil)) && tc.wantVersionType != gotVt {
 				t.Errorf("parseVersionType(%v) = %v, want %v", tc.version, gotVt, tc.wantVersionType)
 			}
 		})

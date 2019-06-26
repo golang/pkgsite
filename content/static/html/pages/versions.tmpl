@@ -3,24 +3,34 @@
   Use of this source code is governed by a BSD-style
   license that can be found in the LICENSE file.
 -->
-{{define "details_content"}}
-  <div class="Versions">
-    {{$packageSeriesHasMultipleModules := (gt (len $.Versions) 1)}}
-    {{range $series := .Versions}}
-        {{$seriesPath := $series.Series}}
-      {{range $major := .MajorVersions}}
-      <h2>
-        {{$major.Major}}
-        {{if $packageSeriesHasMultipleModules}}<span class="Versions-seriesPath">{{$seriesPath}}</span>{{end}}
-      </h2>
+{{define "series_version_list"}}
+  {{range $major := .MajorVersions}}
+    <h2>
+      {{$major.Major}}
+      <span class="Versions-seriesPath"> &ndash; {{$major.ModulePath}}</span>
+    </h2>
+    <ul class="Versions-list">
       {{range $majMin := $major.MinorVersions}}
         {{range $i, $v := $majMin.PatchVersions}}
-	  {{if eq $i 0}}<h3>{{else}}<h4>{{end}}
-              <a href="/pkg/{{$v.Path}}@{{$v.Version}}">{{$v.Version}}</a>
-              <span class="Versions-commitTime"> - {{$v.CommitTime}}</span>
-	  {{if eq $i 0}}</h3>{{else}}</h4>{{end}}
+          <li class="Versions-{{if $i}}notlatest{{else}}latest{{end}}">
+            <a href="/pkg/{{$v.Path}}@{{$v.Version}}" title="{{$v.Version}}">{{$v.FormattedVersion}}</a>
+            <span class="Versions-commitTime"> &ndash; {{$v.CommitTime}}</span>
+          </li>
         {{end}}
       {{end}}
+    </ul>
+  {{end}}
+{{end}}
+
+{{define "details_content"}}
+  <div class="Versions">
+    <h2>{{if .OtherSeries}}Versions in this module{{else}}Versions{{end}}</h2>
+    {{template "series_version_list" .ThisSeries}}
+    {{if .OtherSeries}}
+      <div class="Versions-separator"></div>
+      <h2>Other major versions</h2>
+      {{range $series := .OtherSeries}}
+        {{template "series_version_list" $series}}
       {{end}}
     {{end}}
   </div>

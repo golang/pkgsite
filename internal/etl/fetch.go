@@ -153,7 +153,7 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, requestedVersi
 		}
 		span.Annotate([]trace.Attribute{trace.Int64Attribute("packageCt", int64(len(packages)))}, "extracted packages")
 
-		versionType, err := parseVersionType(info.Version)
+		versionType, err := ParseVersionType(info.Version)
 		if err != nil {
 			return fmt.Errorf("parseVersion(%q): %v", info.Version, err)
 		}
@@ -200,8 +200,8 @@ func isPseudoVersion(v string) bool {
 	return strings.Count(v, "-") >= 2 && pseudoVersionRE.MatchString(v)
 }
 
-// parseVersionType returns the VersionType of a given a version.
-func parseVersionType(version string) (internal.VersionType, error) {
+// ParseVersionType returns the VersionType of a given a version.
+func ParseVersionType(version string) (internal.VersionType, error) {
 	if !semver.IsValid(version) {
 		return "", fmt.Errorf("semver.IsValid(%q): false", version)
 	}
