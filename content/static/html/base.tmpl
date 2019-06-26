@@ -35,20 +35,22 @@
   {{end}}
 </header>
 <main class="Site-content">{{block "main_content" .}}{{end}}</main>
-<footer>
+<footer class="Site-footer">
   <div class="Footer">
-    <div class="Footer-innerContent Footer-innerContent--left">
-      <img class="Footer-gopher" src="/static/img/gopher-footer.jpg" alt="The Go Gopher">
-      <span class="Footer-text Footer-text--copyright">©{{curYear}} Go</span>
-      |
-      <a class="Footer-text" href="https://golang.org/doc/tos.html">Terms of Service</a>
-      |
-      <a class="Footer-text" href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
-      |
-      <a class="Footer-text" href="">Report a website issue or send feedback</a>
-    </div>
-    <div class="Footer-innerContent Footer-innerContent--right">
-      <img class="Footer-googleLogo" src="/static/img/google.svg" alt="Google logo">
-    </div>
+    <img class="Footer-gopher" src="/static/img/gopher-footer.jpg" alt="The Go Gopher">
+    <ul class="Footer-links">
+      <li class="Footer-link"><a href="/doc/copyright.html">Copyright</a></li>
+      <li class="Footer-link"><a href="/doc/tos.html">Terms of Service</a></li>
+      <li class="Footer-link"><a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a></li>
+      <li class="Footer-link">
+        <a href="" target="_blank" rel="noopener">
+          <span class="Footer-link--long">Report a website issue or send feedback</span>
+          <span class="Footer-link--short">Report issue</span>
+        </a>
+      </li>
+    </ul>
+    <a class="Footer-googleLogo" href="https://google.com">
+      <img class="Footer-googleLogoImg" src="/static/img/google.svg" alt="Google logo">
+    </a>
   </div>
 </footer>

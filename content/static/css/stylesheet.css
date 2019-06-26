@@ -31,6 +31,9 @@
 :after {
   box-sizing: border-box;
 }
+html {
+  height: 100%;
+}
 body {
   font-family: sans-serif;
   color: var(--gray-1);
@@ -45,47 +48,82 @@ a:visited {
 a:hover {
   text-decoration: underline;
 }
+
 .Site {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: 100%;
 }
 .Site-content {
   flex: 1;
+  padding: 0 16px;
 }
+.Site-footer {
+  padding-top: 72px;
+}
+
 .Footer {
   align-items: center;
   display: flex;
-  justify-content: space-between;
-  padding: 16px;
+  justify-content: flex-start;
+  margin: 0 auto;
+  padding: 16px 20px;
   position: relative;
-}
-.Footer-innerContent {
-  align-items: center;
-  display: flex;
-}
-.Footer-innerContent--left {
-  padding-left: 113px;
 }
 .Footer-gopher {
   bottom: 0;
-  left: 24px;
+  left: 20px;
   position: absolute;
   width: 80px;
 }
-.Footer-text {
-  color: var(--gray-1);
-  font-size: 14px;
-  margin: 0 12px;
+.Footer-links {
+  flex: 1;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  text-align: center;
 }
-.Footer-text--copyright {
-  color: var(--gray-3);
-  margin-left: 0;
+.Footer-link {
+  font-size: 14px;
+  white-space: nowrap;
+}
+.Footer-link + .Footer-link {
+  margin-top: 8px;
+}
+.Footer-link--long {
+  display: none;
 }
 .Footer-googleLogo {
-  height: 24px;
-  width: 72px;
+  bottom: 13px;
+  position: absolute;
+  right: 20px;
 }
+.Footer-googleLogoImg {
+  display: block;
+  height: 24px;
+  width: 72;
+}
+@media only screen and (min-width: 825px) {
+  .Footer-links {
+    padding-left: 100px;
+    text-align: left;
+  }
+  .Footer-link {
+    display: inline;
+  }
+  .Footer-link + .Footer-link {
+    border-left: 1px solid var(--gray-2);
+    margin-left: 12px;
+    padding-left: 12px;
+  }
+  .Footer-link--long {
+    display: inline;
+  }
+  .Footer-link--short {
+    display: none;
+  }
+}
+
 .SearchForm {
   align-items: center;
   border: 1px solid var(--gray-8);
@@ -115,7 +153,7 @@ a:hover {
   width: 23px;
 }
 .Search {
-  margin-top: 235px;
+  margin-top: 135px;
 }
 .Search-logo {
   display: block;
@@ -123,6 +161,12 @@ a:hover {
   margin: 0 auto 50px;
   width: 194px;
 }
+@media only screen and (min-width: 1000px) {
+  .Search {
+    margin-top: 235px;
+  }
+}
+
 .Header {
   border-bottom: 1px solid var(--gray-8);
   padding: 14px 24px;
@@ -261,7 +305,7 @@ a:hover {
 }
 
 .Documentation {
-  font-family: "Roboto";
+  font-family: 'Roboto';
   font-size: 1rem;
   color: #333;
   margin-top: 25px;
@@ -274,8 +318,13 @@ a:hover {
 .Documentation a:hover {
   text-decoration: underline;
 }
-.Documentation h1, h2, h3, h4, h5, h6 {
-  font-family: "Work Sans";
+.Documentation h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Work Sans';
 }
 
 .Documentation h2 a {
@@ -285,8 +334,9 @@ a:hover {
   display: initial;
 }
 
-.Documentation code, pre {
-  font-family: "Source Code Pro";
+.Documentation code,
+pre {
+  font-family: 'Source Code Pro';
   font-size: 0.875em;
   tab-size: 4;
 }
@@ -310,14 +360,14 @@ a:hover {
   color: var(--gray-3);
   font-size: 0.875em;
 }
-.Overview-gopher{
+.Overview-gopher {
   display: block;
   margin-left: auto;
   margin-right: auto;
   padding: 20px 0;
   width: 240px;
 }
-.Overview-readmeNone{
+.Overview-readmeNone {
   display: block;
   margin-left: auto;
   margin-right: auto;
