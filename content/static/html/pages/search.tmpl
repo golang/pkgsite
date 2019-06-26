@@ -36,28 +36,28 @@
       {{end}}
     </div>
     <div class="SearchResults-nav">
-      {{if .Prev}}
-        <a class="SearchResults-previous" href="/search?q={{.Query}}&page={{.Prev}}">Previous</a>
-      {{else}}
-        <span class="SearchResults-previous" aria-disabled="true">Previous</span>
-      {{end}}
-
-      {{$page := .Page}}
-      {{range $i := .Pages}}
-        {{if eq $i $page}}
-          <span class="SearchResults-pageNum">{{$i}}</span>
+      <div class="SearchResults-navInner">
+        {{if .Prev}}
+          <a class="SearchResults-previous" href="/search?q={{.Query}}&page={{.Prev}}">Previous</a>
         {{else}}
-          <a class="SearchResults-pageNum" href="/search?q={{$.Query}}&page={{$i}}">
-            {{$i}}
-          </a>
+          <span class="SearchResults-previous" aria-disabled="true">Previous</span>
         {{end}}
-      {{end}}
 
-      {{if .Next}}
-        <a class="SearchResults-next" href="/search?q={{.Query}}&page={{.Next}}">Next</a>
-      {{else}}
-        <span class="SearchResults-next" aria-disabled="true">Next</span>
-      {{end}}
+        {{$page := .Page}}
+        {{range $i := .Pages}}
+          {{if eq $i $page}}
+            <span>{{$i}}</span>
+          {{else}}
+            <a href="/search?q={{$.Query}}&page={{$i}}">{{$i}}</a>
+          {{end}}
+        {{end}}
+
+        {{if .Next}}
+          <a class="SearchResults-next" href="/search?q={{.Query}}&page={{.Next}}">Next</a>
+        {{else}}
+          <span class="SearchResults-next" aria-disabled="true">Next</span>
+        {{end}}
+      </div>
     </div>
   </div>
 {{end}}

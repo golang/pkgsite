@@ -35,7 +35,7 @@ html {
   height: 100%;
 }
 body {
-  font-family: sans-serif;
+  font-family: Roboto, arial, sans-serif;
   color: var(--gray-1);
   margin: 0;
 }
@@ -48,6 +48,14 @@ a:visited {
 a:hover {
   text-decoration: underline;
 }
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Work Sans', arial, sans-serif;
+}
 
 .Site {
   display: flex;
@@ -59,7 +67,7 @@ a:hover {
   padding: 0 16px;
 }
 .Site-footer {
-  padding-top: 72px;
+  padding-top: 20px;
 }
 
 .Footer {
@@ -163,24 +171,39 @@ a:hover {
 }
 @media only screen and (min-width: 1000px) {
   .Search {
-    margin-top: 235px;
+    margin-top: 200px;
   }
 }
 
 .Header {
   border-bottom: 1px solid var(--gray-8);
-  padding: 14px 24px;
+  display: flex;
+  padding: 14px 16px;
 }
 .Header-logo {
+  align-items: center;
   display: flex;
-  left: 24px;
-  position: absolute;
-  top: 20px;
+  margin-right: 20px;
 }
 .Header-logoImg {
   height: 28px;
   width: 70px;
 }
+.Header-search {
+  flex: 1;
+}
+@media only screen and (min-width: 850px) {
+  .Header {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  .Header-logo {
+    left: 24px;
+    position: absolute;
+    top: 22px;
+  }
+}
+
 .SearchResults {
   margin: 0 auto;
   max-width: 818px;
@@ -211,6 +234,7 @@ a:hover {
 .SearchSnippet-synopsis {
   color: var(--gray-3);
   font-size: 16px;
+  line-height: 1.4;
   margin: 0 0 16px;
 }
 .SearchSnippet-subtext {
@@ -228,22 +252,32 @@ a:hover {
   margin: 0 16px;
 }
 .SearchResults-nav {
-  font-size: 18px;
-  text-align: right;
+  display: flex;
+  font-size: 14px;
+  justify-content: flex-end;
 }
-.SearchResults-previous {
-  margin-right: 12px;
+.SearchResults-navInner {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
 }
-.SearchResults-pageNum {
-  margin: 0 12px;
-}
-.SearchResults-next {
-  margin-left: 12px;
-}
-
 .SearchResults-previous[aria-disabled='true'],
 .SearchResults-next[aria-disabled='true'] {
   color: var(--gray-6);
+}
+@media only screen and (min-width: 800px) {
+  .SearchResults-nav {
+    font-size: 18px;
+  }
+  .SearchResults-navInner {
+    max-width: 400px;
+  }
+  .SearchResults-previous {
+    margin-right: 12px;
+  }
+  .SearchResults-next {
+    margin-left: 12px;
+  }
 }
 
 .ModulesNav {
@@ -274,9 +308,8 @@ a:hover {
 }
 .Container {
   color: var(--gray-1);
-  font-family: Arial;
-  margin: 0 200px;
-  padding: 20px 0;
+  margin: 0 auto;
+  max-width: 60em;
 }
 .Content {
   margin-top: 10px;
@@ -305,11 +338,10 @@ a:hover {
 }
 
 .Documentation {
+  color: #333;
   font-family: 'Roboto';
   font-size: 1rem;
-  color: #333;
   margin-top: 25px;
-  margin-bottom: 100px;
 }
 .Documentation a {
   color: #375eab;
@@ -318,34 +350,25 @@ a:hover {
 .Documentation a:hover {
   text-decoration: underline;
 }
-.Documentation h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: 'Work Sans';
-}
-
 .Documentation h2 a {
   display: none;
 }
 .Documentation h2:hover a {
   display: initial;
 }
-
-.Documentation code,
-pre {
-  font-family: 'Source Code Pro';
-  font-size: 0.875em;
-  tab-size: 4;
+.Documentation p {
+  line-height: 1.4;
 }
-.Documentation pre {
-  padding: 0.75em;
+.Documentation code,
+.Documentation pre,
+.License-contents {
   background-color: #f5f5f5;
   border: 1px solid #ccc;
   border-radius: 0.3em;
+  font: 0.875em 'Source Code Pro', monospace;
   overflow-x: auto;
+  padding: 0.75em;
+  tab-size: 4;
 }
 
 .ModuleContent-list {
