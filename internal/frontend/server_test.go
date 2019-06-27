@@ -38,9 +38,9 @@ func TestServer(t *testing.T) {
 
 	for _, urlPath := range []string{
 		"/static/",
-		"/license-policy/",
+		"/license-policy",
 		"/favicon.ico",
-		fmt.Sprintf("/search/?q=%s", postgres.SamplePackage.Name),
+		fmt.Sprintf("/search?q=%s", postgres.SamplePackage.Name),
 		fmt.Sprintf("/pkg/%s", postgres.SamplePackage.Path),
 		fmt.Sprintf("/pkg/%s@%s", postgres.SamplePackage.Path, postgres.SampleVersion().Version),
 		fmt.Sprintf("/pkg/%s?tab=doc", postgres.SamplePackage.Path),

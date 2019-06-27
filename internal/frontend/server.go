@@ -61,8 +61,8 @@ func NewServer(db *postgres.DB, staticPath string, reloadTemplates bool) (*Serve
 		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(staticPath)))
 	})
 	mux.Handle("/pkg/", http.StripPrefix("/pkg", http.HandlerFunc(s.handleDetails)))
-	mux.HandleFunc("/search/", s.handleSearch)
-	mux.HandleFunc("/license-policy/", s.handleStaticPage("license_policy.tmpl", "Licenses"))
+	mux.HandleFunc("/search", s.handleSearch)
+	mux.HandleFunc("/license-policy", s.handleStaticPage("license_policy.tmpl", "Licenses"))
 	mux.HandleFunc("/", s.handleStaticPage("index.tmpl", "Go Discovery"))
 
 	return s, nil
