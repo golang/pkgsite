@@ -25,7 +25,11 @@
             <b class="SearchSnippet-subtextTitle">Version:</b> {{.Version}}
             <span class="SearchSnippet-subtextDivide">|</span>
             <b class="SearchSnippet-subtextTitle">{{pluralize (len .Licenses) "License"}}:</b>
-            {{range $i, $e := .Licenses -}}{{if $i}}, {{end}} {{$e}} {{end}}
+            {{if .Licenses}}
+              {{range $i, $e := .Licenses -}}{{if $i}}, {{end}} {{$e}} {{end}}
+            {{else}}
+              <span>N/A</span>
+            {{end}}
           </div>
           <div class="SearchSnippet-subtext">
             <b class="SearchSnippet-subtextTitle">Imported by:</b> {{.NumImportedBy}}
