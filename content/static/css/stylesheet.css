@@ -55,6 +55,10 @@ h4,
 h5,
 h6 {
   font-family: 'Work Sans', arial, sans-serif;
+  word-break: break-word;
+}
+.u-breakWord {
+  word-break: break-word;
 }
 
 .Site {
@@ -281,38 +285,59 @@ h6 {
 }
 
 .ModulesNav {
-  list-style-type: none;
+  margin: 0 -16px 16px -16px;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 20px, #000 calc(100% - 20px), transparent);
+  padding: 0 16px;
+  -ms-overflow-style: -ms-autohiding-scrollbar;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 20px, #000 calc(100% - 20px), transparent);
+  -webkit-overflow-scrolling: touch;
+}
+.ModulesNav-list {
+  display: inline-block;
+  list-style: none;
   margin: 0;
-  padding: 0;
   overflow: hidden;
-  border-bottom: 1px solid var(--gray-8);
-  background-color: var(--gray-9);
+  padding: 0;
+  white-space: nowrap;
+}
+.ModulesNav::-webkit-scrollbar {
+  display: none;
 }
 .ModulesNav-tab {
-  float: left;
-  display: flex;
-  padding: 0 10px;
+  color: var(--gray-2);
+  display: inline-block;
 }
-.ModulesNav-link {
-  display: block;
+.ModulesNav-tab + .ModulesNav-tab {
+  margin-left: 16px;
+}
+.ModulesNav-tab[aria-selected='true'] {
+  border-bottom: 2px solid var(--turq-med);
   color: var(--gray-1);
-  text-align: center;
-  padding: 14px 3px 16px 3px;
+  font-weight: bold;
+}
+.ModulesNav-tab:hover {
+  border-bottom: 2px solid var(--purple);
+}
+.ModulesNav-link,
+.ModulesNav-link:link,
+.ModulesNav-link:visited {
+  display: inline-block;
+  color: inherit;
+  padding: 10px 8px;
+}
+.ModulesNav-link,
+.ModulesNav-link:hover {
   text-decoration: none;
 }
-.ModulesNav-link:hover {
-  background-color: var(--gray-8);
-}
-.ModulesNav-tab.active {
-  background-color: var(--gray-8);
-}
+
 .Container {
   color: var(--gray-1);
   margin: 0 auto;
   max-width: 60em;
 }
 .Content {
-  margin-top: 10px;
   min-height: 500px;
 }
 .ModuleContent-package {
@@ -324,6 +349,7 @@ h6 {
   display: inline-flex;
   width: 50%;
 }
+
 .License-contents {
   background-color: var(--gray-10);
   padding: 10px;
@@ -338,10 +364,8 @@ h6 {
 }
 
 .Documentation {
-  color: #333;
-  font-family: 'Roboto';
+  color: var(--gray-1);
   font-size: 1rem;
-  margin-top: 25px;
 }
 .Documentation a {
   color: #375eab;

@@ -5,35 +5,47 @@
 -->
 {{define "main_content"}}
 <div class="Container">
- {{$header := .PackageHeader}}
- <header>
-   <h1>{{$header.Path}}</h1>
-   <p>
-     <strong>{{$header.Version}} </strong><span>({{$header.CommitTime}})</span>
-     <span>|</span>
-     {{range $i, $e := $header.Licenses -}}{{if $i}}, {{end}}
-       <a href="/pkg/{{$header.Path}}@{{$header.Version}}?tab=licenses#{{.Anchor}}"><strong>{{$e.Type}}</strong></a>
-     {{- else -}}
-       <span>No license files detected</span>
-     {{- end}}
-     <a href="/license-policy" class="Disclaimer-link"><em>not legal advice</em></a>
-   </p>
- </header>
+  {{$header := .PackageHeader}}
+  <header>
+    <h1>{{$header.Path}}</h1>
+    <p>
+      <strong>{{$header.Version}} </strong><span>({{$header.CommitTime}})</span>
+      <span>|</span>
+      {{range $i, $e := $header.Licenses -}}{{if $i}}, {{end}}
+        <a href="/pkg/{{$header.Path}}@{{$header.Version}}?tab=licenses#{{.Anchor}}"><strong>{{$e.Type}}</strong></a>
+      {{- else -}}
+        <span>No license files detected</span>
+      {{- end}}
+      <a href="/license-policy" class="Disclaimer-link"><em>not legal advice</em></a>
+    </p>
+  </header>
 
- <ul class="ModulesNav">
-   {{range .Tabs}}
-     <li class="{{if eq .Name $.Settings.Name}}active {{end}}ModulesNav-tab">
-       <a href="/pkg/{{$header.Path}}@{{$header.Version}}?tab={{.Name}}" class="ModulesNav-link">{{.DisplayName}}</a>
-     </li>
-   {{end}}
- </ul>
+  <nav class="ModulesNav js-modulesNav">
+    <ul class="ModulesNav-list" role="tablist">
+      {{range .Tabs}}
+        <li class="ModulesNav-tab" role="presentation" {{if eq .Name $.Settings.Name}}aria-selected="true"{{end}}>
+          <a class="ModulesNav-link" href="/pkg/{{$header.Path}}@{{$header.Version}}?tab={{.Name}}" role="tab">{{.DisplayName}}</a>
+        </li>
+      {{end}}
+    </ul>
+  </nav>
 
- <div class="Content">
-  {{if .CanShowDetails -}}
-    {{template "details_content" .Details}}
-  {{- else}}
-    <h2>“{{.Settings.DisplayName}}” hidden due to license restrictions.</h2>
-  {{end}}
+  <div class="Content">
+    {{if .CanShowDetails -}}
+      {{template "details_content" .Details}}
+    {{- else}}
+      <h2>“{{.Settings.DisplayName}}” hidden due to license restrictions.</h2>
+    {{end}}
   </div>
 </div>
+{{end}}
+
+{{define "post_content"}}
+<script nonce="{{.Nonce}}">
+const navEl = document.querySelector('.js-modulesNav');
+const selectedEl = navEl.querySelector(`[aria-selected='true']`);
+if (selectedEl.offsetLeft + selectedEl.offsetWidth > navEl.offsetWidth) {
+  navEl.scrollLeft = selectedEl.offsetLeft;
+}
+</script>
 {{end}}
