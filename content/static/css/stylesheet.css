@@ -60,6 +60,9 @@ h6 {
 .u-breakWord {
   word-break: break-word;
 }
+code {
+  font-size: 16px;
+}
 
 .Site {
   display: flex;

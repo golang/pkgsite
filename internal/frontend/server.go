@@ -63,6 +63,7 @@ func NewServer(db *postgres.DB, staticPath string, reloadTemplates bool) (*Serve
 	})
 	mux.Handle("/pkg/", http.StripPrefix("/pkg", http.HandlerFunc(s.handleDetails)))
 	mux.HandleFunc("/search", s.handleSearch)
+	mux.HandleFunc("/advanced-search", s.handleStaticPage("advanced_search.tmpl", "Advanced Search"))
 	mux.HandleFunc("/license-policy", s.handleStaticPage("license_policy.tmpl", "Licenses"))
 	mux.HandleFunc("/", s.handleIndexPage)
 
@@ -191,6 +192,7 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 		{"error.tmpl"},
 		{"search.tmpl"},
 		{"license_policy.tmpl"},
+		{"advanced_search.tmpl"},
 		{"doc.tmpl", "details.tmpl"},
 		{"importedby.tmpl", "details.tmpl"},
 		{"imports.tmpl", "details.tmpl"},

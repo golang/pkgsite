@@ -1,0 +1,23 @@
+<!--
+  Copyright 2019 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "main_content"}}
+  <div class="Container">
+    <div class="Content">
+      <h1>Advanced Search</h1>
+      <div>
+        <p>You can use symbols or words in your search to make your search results more precise.</p>
+        <h2>Search for an exact match</h2>
+        <p>Put a word or phrase inside quotes. For example, <a href="/search?q=&quot;go+cloud&quot;"><code>"go cloud"</code></a>.</p>
+        <h2>Combine searches</h2>
+        <p>Put <code>OR</code> between each search query. For example, <a href="/search?q=yaml+OR+json"><code>yaml OR json</code></a>.</p>
+        <h2>Search by package path</h2>
+        <p>You can search for a package by its full or partial import path. For example, <a href="/search?q=go%2Fpackages"><code>go/packages</code></a>.</p>
+        <p>If the query matches a package import path, you will be redirected to the package details page for the latest version of that package. For example, <a href="/search?q=golang.org/x/tools/go/packages"><code>golang.org/x/tools/go/packages</code></a>.</p>
+      </div>
+    </div>
+  </div>
+{{end}}
