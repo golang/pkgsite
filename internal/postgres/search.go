@@ -54,7 +54,17 @@ func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int)
 				license_types,
 				commit_time,
 				num_imported_by,
-				(ts_rank(tsv_search_tokens, websearch_to_tsquery($1))*log(exp(1)+num_imported_by)) AS rank
+				CASE WHEN COALESCE(cardinality(license_types), 0) = 0
+				  -- If the package does not have any license
+				  -- files, lower its rank by 50% since it will not be
+				  -- redistributable.
+				  -- TODO(b/136283982): improve how this signal
+				  -- is used in search ranking
+				  THEN (ts_rank(tsv_search_tokens, websearch_to_tsquery($1))*
+				  	log(exp(1)+num_imported_by)*0.5)
+				  ELSE (ts_rank(tsv_search_tokens, websearch_to_tsquery($1))*
+				  	log(exp(1)+num_imported_by))
+				  END AS rank
 			FROM
 				mvw_search_documents
 			WHERE
@@ -77,10 +87,11 @@ func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int)
 		WHERE
 			r.rank > 0.1
 		ORDER BY
-			r.rank DESC, package_path
+			r.rank DESC,
+			commit_time DESC,
+			package_path
 		LIMIT $2
-		OFFSET $3;
-	`
+		OFFSET $3;`
 	rows, err := db.QueryContext(ctx, query, searchQuery, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("db.QueryContext(ctx, %s, %q, %d, %d): %v", query, searchQuery, limit, offset, err)
