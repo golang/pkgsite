@@ -6,27 +6,33 @@
 
 {{define "details_content"}}
   <div>
-    <h3> Imports</h3>
+    <h2> Imports</h2>
     {{if .ExternalImports}}
       <p>
-        <b>Imports:</b>
-        <span>{{len .ExternalImports}} package(s)</span>
+        <strong>Packages:</strong>
+        <span>{{len .ExternalImports}}</span>
       </p>
+      <ul class="Imports-list">
       {{range .ExternalImports}}
-        <p><a href="/pkg/{{.}}">{{.}}</a></p>
+        <li><a href="/pkg/{{.}}">{{.}}</a></li>
       {{end}}
+      </ul>
     {{end}}
     {{if .InternalImports}}
       <h3>Module: {{.ModulePath}}</h3>
+      <ul class="Imports-list">
       {{range .InternalImports}}
-        <p><a href="/pkg/{{.}}">{{.}}</a></p>
+        <li><a href="/pkg/{{.}}">{{.}}</a></li>
       {{end}}
+      </ul>
     {{end}}
     {{if .StdLib}}
       <h3>Standard Library</h3>
+      <ul class="Imports-list">
       {{range .StdLib}}
-        <div><a href="/pkg/{{.}}">{{.}}</a></div>
+        <li><a href="/pkg/{{.}}">{{.}}</a></li>
       {{end}}
+      </ul>
     {{end}}
   </div>
 {{end}}
