@@ -301,14 +301,17 @@ func fetchModuleDetails(ctx context.Context, db *postgres.DB, pkg *internal.Vers
 
 	var packages []*Package
 	for _, p := range version.Packages {
-		packages = append(packages, &Package{
+		newPkg := &Package{
 			Name:       p.Name,
 			Path:       p.Path,
-			Synopsis:   p.Synopsis,
-			Licenses:   transformLicenseMetadata(p.Licenses),
 			Version:    version.Version,
 			ModulePath: version.ModulePath,
-		})
+			Licenses:   transformLicenseMetadata(p.Licenses),
+		}
+		if pkg.IsRedistributable() {
+			newPkg.Synopsis = p.Synopsis
+		}
+		packages = append(packages, newPkg)
 	}
 
 	return &ModuleDetails{
@@ -503,8 +506,9 @@ var (
 			DisplayName: "Overview",
 		},
 		{
-			Name:        "module",
-			DisplayName: "Module",
+			Name:              "module",
+			AlwaysShowDetails: true,
+			DisplayName:       "Module",
 		},
 		{
 			Name:              "versions",
