@@ -527,7 +527,7 @@ func loadPackage(zipGoFiles []*zip.File, innerPath, modulePath string) (*interna
 		return nil, fmt.Errorf("renderDocHTML: %v", err)
 	}
 
-	v1path := internal.SeriesPathForModule(modulePath) + "/" + innerPath
+	v1path := path.Join(internal.SeriesPathForModule(modulePath), innerPath)
 	if modulePath == "std" {
 		importPath = innerPath
 		v1path = innerPath

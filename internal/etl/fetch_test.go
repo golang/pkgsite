@@ -66,6 +66,29 @@ func TestSkipBadPackage(t *testing.T) {
 	}
 }
 
+func TestFetch_V1Path(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	defer postgres.ResetTestDB(testDB, t)
+	tearDown, client := proxy.SetupTestProxy(t, []*proxy.TestVersion{
+		proxy.NewTestVersion(t, "my.mod/foo", "v1.0.0", map[string]string{
+			"foo.go":  "package foo\nconst Foo = 41",
+			"LICENSE": testhelper.MITLicense,
+		}),
+	})
+	defer tearDown(t)
+	if err := fetchAndInsertVersion("my.mod/foo", "v1.0.0", client, testDB); err != nil {
+		t.Fatalf("fetchAndInsertVersion: %v", err)
+	}
+	pkg, err := testDB.GetPackage(ctx, "my.mod/foo", "v1.0.0")
+	if err != nil {
+		t.Fatalf("GetPackage: %v", err)
+	}
+	if got, want := pkg.V1Path, "my.mod/foo"; got != want {
+		t.Errorf("V1Path = %q, want %q", got, want)
+	}
+}
+
 func TestReFetch(t *testing.T) {
 	// This test checks that re-fetching a version will cause its data to be
 	// overwritten.  This is achieved by fetching against two different versions
