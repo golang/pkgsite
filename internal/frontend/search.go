@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"math"
 	"net/http"
 	"path"
 	"strconv"
@@ -25,14 +24,8 @@ const defaultSearchLimit = 10
 // populate.
 type SearchPage struct {
 	basePageData
-	Results    []*SearchResult
-	Pages      []int
-	NumPages   int
-	NumResults int
-	Offset     int
-	Page       int
-	Prev       int
-	Next       int
+	pagination
+	Results []*SearchResult
 }
 
 // SearchResult contains data needed to display a single search result.
@@ -46,55 +39,6 @@ type SearchResult struct {
 	CommitTime    string
 	NumImportedBy uint64
 }
-
-func offset(page, limit int) int {
-	if page < 2 {
-		return 0
-	}
-	return (page - 1) * limit
-}
-
-func prev(page int) int {
-	if page < 2 {
-		return 0
-	}
-	return page - 1
-}
-
-func next(page, limit, numResults int) int {
-	if page >= numPages(limit, numResults) {
-		return 0
-	}
-	return page + 1
-}
-
-// numPages is the total number of pages needed to display all the results,
-// given the specified limit.
-func numPages(limit, numResults int) int {
-	return int(math.Ceil(float64(numResults) / float64(limit)))
-}
-
-// pagesToLink returns the page numbers that will be displayed. Given a
-// page, it returns a slice containing numPagesToLink integers in ascending
-// order and optimizes for page to be in the middle of that range. The max
-// value of an integer in the return slice will be less than numPages.
-func pagesToLink(page, numPages, numPagesToLink int) []int {
-	var pages []int
-	start := page - (numPagesToLink / 2)
-	if (numPages - start) < numPagesToLink {
-		start = numPages - numPagesToLink + 1
-	}
-	if start < 1 {
-		start = 1
-	}
-
-	for i := start; (i < start+numPagesToLink) && (i <= numPages); i++ {
-		pages = append(pages, i)
-	}
-	return pages
-}
-
-const defaultNumPagesToLink = 7
 
 // fetchSearchPage fetches data matching the search query from the database and
 // returns a SearchPage.
@@ -129,13 +73,7 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, limit, 
 			Query: query,
 		},
 		Results:    results,
-		NumPages:   numPages(limit, numResults),
-		Pages:      pagesToLink(page, numPages(limit, numResults), defaultNumPagesToLink),
-		NumResults: numResults,
-		Page:       page,
-		Offset:     offset(page, limit),
-		Prev:       prev(page),
-		Next:       next(page, limit, numResults),
+		pagination: newPagination(page, len(results), numResults, limit),
 	}, nil
 }
 

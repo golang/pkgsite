@@ -8,10 +8,10 @@
   <div class="SearchResults">
     <h1 class="SearchResults-header">Results for “{{.Query}}”</h1>
     <div class="SearchResults-resultCount">
-      {{if gt .NumResults (len .Results)}}
-        {{ add .Offset 1 }} – {{ add .Offset (len .Results) }} of
+      {{if gt .TotalCount .ResultCount}}
+        {{add .Offset 1}} – {{add .Offset .ResultCount}} of
       {{end}}
-      {{.NumResults}} {{pluralize .NumResults "result"}}
+      {{.TotalCount}} {{pluralize .TotalCount "result"}}
     </div>
     <div>{{/* Containing element is needed to use *-of-type selectors */}}
       {{$query := .Query}}
@@ -37,8 +37,8 @@
     </div>
     <div class="SearchResults-nav">
       <div class="SearchResults-navInner">
-        {{if .Prev}}
-          <a class="SearchResults-previous" href="/search?q={{.Query}}&page={{.Prev}}">Previous</a>
+        {{if .PrevPage}}
+          <a class="SearchResults-previous" href="/search?q={{.Query}}&page={{.PrevPage}}">Previous</a>
         {{else}}
           <span class="SearchResults-previous" aria-disabled="true">Previous</span>
         {{end}}
@@ -52,8 +52,8 @@
           {{end}}
         {{end}}
 
-        {{if .Next}}
-          <a class="SearchResults-next" href="/search?q={{.Query}}&page={{.Next}}">Next</a>
+        {{if .NextPage}}
+          <a class="SearchResults-next" href="/search?q={{.Query}}&page={{.NextPage}}">Next</a>
         {{else}}
           <span class="SearchResults-next" aria-disabled="true">Next</span>
         {{end}}
