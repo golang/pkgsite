@@ -68,7 +68,6 @@ type DocumentationDetails struct {
 type ModuleDetails struct {
 	ModulePath string
 	Version    string
-	ReadMe     template.HTML
 	Packages   []*Package
 }
 
@@ -315,7 +314,6 @@ func fetchModuleDetails(ctx context.Context, db *postgres.DB, pkg *internal.Vers
 	return &ModuleDetails{
 		ModulePath: version.ModulePath,
 		Version:    pkg.VersionInfo.Version,
-		ReadMe:     readmeHTML(version.ReadmeFilePath, version.ReadmeContents),
 		Packages:   packages,
 	}, nil
 }

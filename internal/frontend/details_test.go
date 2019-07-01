@@ -430,7 +430,6 @@ func TestFetchModuleDetails(t *testing.T) {
 		version: postgres.SampleVersion(),
 		wantDetails: &ModuleDetails{
 			ModulePath: postgres.SampleModulePath,
-			ReadMe:     template.HTML("<p>readme</p>\n"),
 			Version:    postgres.SampleVersionString,
 			Packages:   []*Package{samplePackage},
 		},
