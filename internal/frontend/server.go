@@ -79,10 +79,14 @@ func (s *Server) handleIndexPage(w http.ResponseWriter, r *http.Request) {
 
 	query := strings.TrimPrefix(r.URL.Path, "/")
 	s.serveErrorPage(w, r, http.StatusBadRequest, &errorPage{
-		Message: fmt.Sprintf("%d %s", http.StatusBadRequest, http.StatusText(http.StatusBadRequest)),
-		SecondaryMessage: template.HTML(
-			fmt.Sprintf(`To search for packages like %q, <a href="/search?q=%s">click here</a>.</p>`, query, query)),
+		Message:          fmt.Sprintf("%d %s", http.StatusBadRequest, http.StatusText(http.StatusBadRequest)),
+		SecondaryMessage: suggestedSearch(query),
 	})
+}
+
+func suggestedSearch(userInput string) template.HTML {
+	safe := template.HTMLEscapeString(userInput)
+	return template.HTML(fmt.Sprintf(`To search for packages like %q, <a href="/search?q=%s">click here</a>.</p>`, safe, safe))
 }
 
 // handleStaticPage handles requests to a template that contains no dynamic

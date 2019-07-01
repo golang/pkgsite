@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -21,6 +22,19 @@ var testDB *postgres.DB
 
 func TestMain(m *testing.M) {
 	postgres.RunDBTests("discovery_frontend_test", m, &testDB)
+}
+
+func TestHTMLInjection(t *testing.T) {
+	s, err := NewServer(testDB, "../../content/static", false)
+	if err != nil {
+		t.Fatalf("NewServer: %v", err)
+	}
+
+	w := httptest.NewRecorder()
+	s.ServeHTTP(w, httptest.NewRequest("GET", "/<em>UHOH</em>", nil))
+	if strings.Contains(w.Body.String(), "<em>") {
+		t.Error("User input was rendered unescaped.")
+	}
 }
 
 func TestServer(t *testing.T) {

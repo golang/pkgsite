@@ -594,9 +594,8 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 	}
 	if version != "" && !semver.IsValid(version) {
 		s.serveErrorPage(w, r, http.StatusBadRequest, &errorPage{
-			Message: fmt.Sprintf("%q is not a valid semantic version.", version),
-			SecondaryMessage: template.HTML(
-				fmt.Sprintf(`To search for packages like %q, <a href="/search?q=%s">click here</a>.</p>`, path, path)),
+			Message:          fmt.Sprintf("%q is not a valid semantic version.", version),
+			SecondaryMessage: suggestedSearch(path),
 		})
 		return
 	}
