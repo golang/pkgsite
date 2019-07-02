@@ -4,10 +4,6 @@
 
 package frontend
 
-import (
-	"math"
-)
-
 // pagination holds information related to pagination. It is intended to be
 // embedded in a view model struct.
 type pagination struct {
@@ -61,7 +57,7 @@ func pagesToLink(page, numPages, numPagesToLink int) []int {
 // numPages is the total number of pages needed to display all the results,
 // given the specified limit.
 func numPages(limit, totalCount int) int {
-	return int(math.Ceil(float64(totalCount) / float64(limit)))
+	return (totalCount + limit - 1) / limit
 }
 
 func offset(page, limit int) int {
