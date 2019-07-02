@@ -30,7 +30,7 @@ func main() {
 
 	ctx := context.Background()
 
-	dbinfo, err := config.DBConnInfo(ctx)
+	dbinfo, err := config.DBConnInfo(ctx, "go_discovery_database_password_frontend")
 	if err != nil {
 		log.Fatalf("Unable to construct database connection info string: %v", err)
 	}

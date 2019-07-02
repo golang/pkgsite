@@ -52,7 +52,7 @@ func ProxyURL() string {
 
 // DBConnInfo returns a PostgreSQL connection string constructed from
 // environment variables.
-func DBConnInfo(ctx context.Context) (string, error) {
+func DBConnInfo(ctx context.Context, secret string) (string, error) {
 	var (
 		user     = GetEnv("GO_DISCOVERY_DATABASE_USER", "postgres")
 		password = GetEnv("GO_DISCOVERY_DATABASE_PASSWORD", "")
@@ -64,7 +64,7 @@ func DBConnInfo(ctx context.Context) (string, error) {
 	// https://cloud.google.com/appengine/docs/standard/go111/runtime
 	if os.Getenv("GAE_ENV") == "standard" {
 		var err error
-		password, err = secrets.Get(ctx, "go_discovery_database_password_etl")
+		password, err = secrets.Get(ctx, secret)
 		if err != nil {
 			return "", fmt.Errorf("could not get database password secret: %v", err)
 		}

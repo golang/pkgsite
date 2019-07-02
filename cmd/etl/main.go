@@ -41,7 +41,7 @@ func main() {
 	flag.Parse()
 
 	ctx := context.Background()
-	dbinfo, err := config.DBConnInfo(ctx)
+	dbinfo, err := config.DBConnInfo(ctx, "go_discovery_database_password_etl")
 	if err != nil {
 		log.Fatalf("Unable to construct database connection info string: %v", err)
 	}
