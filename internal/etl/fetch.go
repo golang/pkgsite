@@ -26,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/trace"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
@@ -34,6 +35,7 @@ import (
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/thirdparty/semver"
+	"golang.org/x/net/context/ctxhttp"
 )
 
 var (
@@ -46,6 +48,14 @@ var (
 
 	maxPackagesPerModule = 10000
 	maxImportsPerPackage = 1000
+
+	// vcsClient is used to make HTTP requests to the url where a module is
+	// hosted to determine the repository url. It is mutable for testing
+	// purposes.
+	vcsClient = &http.Client{
+		Timeout:   time.Second * 30,
+		Transport: &ochttp.Transport{},
+	}
 )
 
 // fetchAndUpdateState fetches and processes a module version, and then updates
@@ -87,10 +97,11 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 
 // fetchAndInsertVersion downloads the given module version from the module proxy, processes
 // the contents, and writes the data to the database. The fetch service will:
-// (1) Get the version commit time from the proxy
-// (2) Download the version zip from the proxy
-// (3) Process the contents (series path, readme, licenses, and packages)
-// (4) Write the data to the discovery database
+// (1) Get the repository url for the module
+// (2) Get the version commit time from the proxy
+// (3) Download the version zip from the proxy
+// (4) Process the contents (series path, readme, licenses, packages, documentation)
+// (5) Write the data to the discovery database
 //
 // The given parentCtx is used for tracing, but fetches actually execute in a
 // detached context with fixed timeout, so that fetches are allowed to complete
@@ -113,6 +124,11 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, requestedVersi
 	defer cancel()
 	ctx, span := trace.StartSpanWithRemoteParent(ctx, "fetchAndInsertVersion", parentSpan.SpanContext())
 	defer span.End()
+
+	repositoryURL, err := fetchRepositoryURL(ctx, modulePath)
+	if err != nil {
+		log.Printf("fetchRepositoryURL(ctx, %q): %v", modulePath, err)
+	}
 
 	info, err := proxyClient.GetInfo(ctx, modulePath, requestedVersion)
 	if err != nil {
@@ -165,6 +181,7 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, requestedVersi
 				ReadmeFilePath: readmeFilePath,
 				ReadmeContents: readmeContents,
 				VersionType:    versionType,
+				RepositoryURL:  repositoryURL,
 			},
 			Packages: packages,
 		}
@@ -540,4 +557,66 @@ func loadPackage(zipGoFiles []*zip.File, innerPath, modulePath string) (*interna
 		Imports:           d.Imports,
 		DocumentationHTML: docHTML,
 	}, nil
+}
+
+// fetchRepositoryURL returns the repositoryURL for the modulePath if the a GET
+// request to the expected repositoryURL returns a 200-series status code.
+func fetchRepositoryURL(ctx context.Context, modulePath string) (string, error) {
+	repositoryURL, err := modulePathToRepoURL(modulePath)
+	if repositoryURL == "" {
+		return "", fmt.Errorf("modulePathToRepoURL(%q): %v", modulePath, err)
+	}
+
+	r, err := ctxhttp.Get(ctx, vcsClient, repositoryURL)
+	if err != nil {
+		return "", fmt.Errorf("ctxhttp.Get(ctx, client, %q): %v", modulePath, err)
+	}
+	if err := derrors.StatusError(r.StatusCode, "ctxhttp.Get(ctx, client, %q)", repositoryURL); err != nil {
+		return "", err
+	}
+	return repositoryURL, nil
+}
+
+// acceptedVCSHosts is the list of hosts for which we will try to detect a
+// repositoryURL for a given modulePath with that hostname.
+var acceptedVCSHosts = map[string]bool{
+	"bitbucket.org": true,
+	"github.com":    true,
+	"golang.org":    true,
+}
+
+const goRepositoryURLPrefix = "https://github.com/golang"
+
+// modulePathToRepoURL returns the expected repositoryURL for the
+// modulePath. It returns an expected repositoryURL if the modulePath is
+// (1) in the acceptedVCSHosts (2) has the prefix golang.org/x or,
+// (3) internal.IsStandardLibraryModule(modulePath) returns true. Otherwise,
+// the empty string is returned.  It is not guaranteed that the repository url
+// returned is a valid url, and this is validated using fetchRepositoryURL.
+func modulePathToRepoURL(modulePath string) (string, error) {
+	if internal.IsStandardLibraryModule(modulePath) {
+		return goRepositoryURLPrefix + "/go", nil
+	}
+
+	pathParts := strings.Split(modulePath, "/")
+	if ok := acceptedVCSHosts[pathParts[0]]; !ok {
+		// If the host (first element of the modulePath) is included in the
+		// acceptedVCSHosts, return the empty string.
+		return "", fmt.Errorf("repository url could not be determined for %q", modulePath)
+	}
+	if len(pathParts) < 3 {
+		// golang.org/x, github.com and bitbucket.org expect the modulePath to
+		// have 3 parts exactly when delimited by a "/". If the modulePath has
+		// less than 3 parts, it will not be a valid URL for these hosts, so
+		// return the empty string.  Otherwise, use the first three elements
+		// for the repository URL. For example, for the module
+		// "github.com/hashicorp/vault/api", the repository URL would
+		// "github.com/hashicorp/vault".
+		return "", fmt.Errorf("expected module with host %q to have at least 3 elements in the path: %q", pathParts[0], modulePath)
+	}
+
+	if strings.HasPrefix(modulePath, "golang.org/x/") {
+		return goRepositoryURLPrefix + "/" + pathParts[2], nil
+	}
+	return fmt.Sprintf("https://%s", strings.Join(pathParts[0:3], "/")), nil
 }

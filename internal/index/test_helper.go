@@ -7,7 +7,6 @@ package index
 import (
 	"encoding/json"
 	"net/http"
-	"net/http/httptest"
 	"strconv"
 	"testing"
 
@@ -21,29 +20,30 @@ import (
 func SetupTestIndex(t *testing.T, versions []*internal.IndexVersion) (func(t *testing.T), *Client) {
 	t.Helper()
 
-	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		limit := len(versions)
-		if limitParam := r.FormValue("limit"); limitParam != "" {
-			var err error
-			limit, err = strconv.Atoi(limitParam)
-			if err != nil {
-				t.Fatalf("error parsing limit parameter: %v", err)
+	httpClient, server, serverCloseFn := testhelper.SetupTestClientAndServer(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			limit := len(versions)
+			if limitParam := r.FormValue("limit"); limitParam != "" {
+				var err error
+				limit, err = strconv.Atoi(limitParam)
+				if err != nil {
+					t.Fatalf("error parsing limit parameter: %v", err)
+				}
 			}
-		}
-		w.Header().Set("Content-Type", "application/json")
-		for i := 0; i < limit && i < len(versions); i++ {
-			json.NewEncoder(w).Encode(versions[i])
-		}
-	}))
+			w.Header().Set("Content-Type", "application/json")
+			for i := 0; i < limit && i < len(versions); i++ {
+				json.NewEncoder(w).Encode(versions[i])
+			}
+		}))
 
 	client, err := New(server.URL)
 	if err != nil {
 		t.Fatalf("index.New(%q): %v", server.URL, err)
 	}
-	client.httpClient = testhelper.InsecureHTTPClient
+	client.httpClient = httpClient
 
 	fn := func(t *testing.T) {
-		server.Close()
+		serverCloseFn()
 	}
 	return fn, client
 }

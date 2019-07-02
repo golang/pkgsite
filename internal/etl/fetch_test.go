@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"path/filepath"
 	"sort"
@@ -26,6 +27,20 @@ import (
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/testhelper"
 )
+
+// setupTestVCSClient sets the value of vcsClient to a handler that will return
+// a http.StatusOK if the request host is in acceptedVCSHosts or is a standard
+// library module. Otherwise, it returns http.StatusNotFound.
+func setupTestVCSClient() func() {
+	testClient, _, teardownRemoteServer := testhelper.SetupTestClientAndServer(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if ok := acceptedVCSHosts[r.Host]; !ok && !internal.IsStandardLibraryModule(r.URL.Path) {
+				w.WriteHeader(http.StatusNotFound)
+			}
+		}))
+	vcsClient = testClient
+	return teardownRemoteServer
+}
 
 func TestSkipBadPackage(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
@@ -124,6 +139,10 @@ func TestReFetch(t *testing.T) {
 	if err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB); err != nil {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
 	}
+
+	teardownRemoteServer := setupTestVCSClient()
+	defer teardownRemoteServer()
+
 	if _, err := testDB.GetPackage(ctx, pkgFoo, version); err != nil {
 		t.Errorf("testDB.GetPackage(ctx, %q, %q): %v", pkgFoo, version, err)
 	}
@@ -145,6 +164,7 @@ func TestReFetch(t *testing.T) {
 			ReadmeFilePath: "README.md",
 			ReadmeContents: []byte("This is another readme"),
 			VersionType:    "release",
+			RepositoryURL:  "https://github.com/my/module",
 		},
 		Package: internal.Package{
 			Path:              "github.com/my/module/bar",
@@ -192,6 +212,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
 					ReadmeFilePath: "README.md",
 					ReadmeContents: []byte("README FILE FOR TESTING."),
+					RepositoryURL:  "https://github.com/my/module",
 					VersionType:    "release",
 				},
 				Package: internal.Package{
@@ -268,6 +289,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
 					VersionType:    "release",
 					ReadmeContents: []uint8{},
+					RepositoryURL:  goRepositoryURLPrefix + "/go",
 				},
 				Package: internal.Package{
 					Path:              "context",
@@ -293,6 +315,9 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			teardownProxy, client := proxy.SetupTestProxy(t, nil)
 			defer teardownProxy(t)
 
+			teardownRemoteServer := setupTestVCSClient()
+			defer teardownRemoteServer()
+
 			if err := fetchAndInsertVersion(ctx, test.modulePath, test.version, client, testDB); err != nil {
 				t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", test.modulePath, test.version, client, testDB, err)
 			}
@@ -302,7 +327,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				t.Fatalf("testDB.GetVersion(ctx, %q, %q): %v", test.modulePath, test.version, err)
 			}
 			if diff := cmp.Diff(test.want.VersionInfo, *gotVersion); diff != "" {
-				t.Errorf("testDB.GetVersion(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
+				t.Fatalf("testDB.GetVersion(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
 			}
 
 			gotPkg, err := testDB.GetPackage(ctx, test.pkg, test.version)

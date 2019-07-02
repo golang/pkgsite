@@ -11,7 +11,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"sort"
@@ -40,16 +39,16 @@ type TestVersion struct {
 func SetupTestProxy(t *testing.T, versions []*TestVersion) (func(t *testing.T), *Client) {
 	t.Helper()
 
-	p := httptest.NewTLSServer(TestProxy(versions))
-	client, err := New(p.URL)
-	if err != nil {
-		t.Fatalf("New(%q): %v", p.URL, err)
-	}
 	// override client.httpClient to skip TLS verification
-	client.httpClient = testhelper.InsecureHTTPClient
+	httpClient, proxy, serverClose := testhelper.SetupTestClientAndServer(TestProxy(versions))
+	client, err := New(proxy.URL)
+	if err != nil {
+		t.Fatalf("New(%q): %v", proxy.URL, err)
+	}
+	client.httpClient = httpClient
 
 	fn := func(t *testing.T) {
-		p.Close()
+		serverClose()
 	}
 	return fn, client
 }

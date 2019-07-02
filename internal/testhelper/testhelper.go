@@ -9,10 +9,13 @@ package testhelper
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"crypto/tls"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"net/http/httptest"
 	"path/filepath"
 	"runtime"
 )
@@ -40,15 +43,26 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH RE
 	UnknownLicense = `THIS IS A LICENSE THAT I JUST MADE UP. YOU CAN DO WHATEVER YOU WANT WITH THIS CODE, TRUST ME.`
 )
 
-// InsecureHTTPClient is used to disable TLS verification when running against
-// a test server.
-var InsecureHTTPClient = &http.Client{
-	Transport: &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
+// SetupTestClientAndServer returns a *httpClient that can be used to
+// stub requests to remote hosts by redirecting all requests that the client
+// makes to a httptest.Server.  with the given handler. It also disables TLS
+// verification.
+func SetupTestClientAndServer(handler http.Handler) (*http.Client, *httptest.Server, func()) {
+	srv := httptest.NewTLSServer(handler)
+
+	cli := &http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			DialContext: func(_ context.Context, network, _ string) (net.Conn, error) {
+				return net.Dial(network, srv.Listener.Addr().String())
+			},
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
 		},
-	},
+	}
+
+	return cli, srv, srv.Close
 }
 
 func writeZip(w io.Writer, contents map[string]string) (err error) {
