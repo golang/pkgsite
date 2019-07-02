@@ -77,7 +77,7 @@ func TestFetch_V1Path(t *testing.T) {
 		}),
 	})
 	defer tearDown(t)
-	if err := fetchAndInsertVersion("my.mod/foo", "v1.0.0", client, testDB); err != nil {
+	if err := fetchAndInsertVersion(ctx, "my.mod/foo", "v1.0.0", client, testDB); err != nil {
 		t.Fatalf("fetchAndInsertVersion: %v", err)
 	}
 	pkg, err := testDB.GetPackage(ctx, "my.mod/foo", "v1.0.0")
