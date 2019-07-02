@@ -1,38 +1,41 @@
 <!--
-	Copyright 2019 The Go Authors. All rights reserved.
-	Use of this source code is governed by a BSD-style
-	license that can be found in the LICENSE file.
+  Copyright 2019 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
 -->
 
 {{define "details_content"}}
   <div>
-    <h2> Imports</h2>
-    {{if .ExternalImports}}
-      <p>
-        <strong>Packages:</strong>
-        <span>{{len .ExternalImports}}</span>
-      </p>
-      <ul class="Imports-list">
-      {{range .ExternalImports}}
-        <li><a href="/pkg/{{.}}">{{.}}</a></li>
+    {{if or .ExternalImports .InternalImports}}
+      <h2> Imports</h2>
+      {{if .ExternalImports}}
+        <p>
+          <strong>Packages:</strong>
+          <span>{{len .ExternalImports}}</span>
+        </p>
+        <ul class="Imports-list">
+        {{range .ExternalImports}}
+          <li><a href="/pkg/{{.}}">{{.}}</a></li>
+        {{end}}
+        </ul>
       {{end}}
-      </ul>
-    {{end}}
-    {{if .InternalImports}}
-      <h3>Module: {{.ModulePath}}</h3>
-      <ul class="Imports-list">
-      {{range .InternalImports}}
-        <li><a href="/pkg/{{.}}">{{.}}</a></li>
+      {{if .InternalImports}}
+        <h3>Module: {{.ModulePath}}</h3>
+        <ul class="Imports-list">
+        {{range .InternalImports}}
+          <li><a href="/pkg/{{.}}">{{.}}</a></li>
+        {{end}}
+        </ul>
       {{end}}
-      </ul>
-    {{end}}
-    {{if .StdLib}}
-      <h3>Standard Library</h3>
-      <ul class="Imports-list">
-      {{range .StdLib}}
-        <li><a href="/pkg/{{.}}">{{.}}</a></li>
+      {{if .StdLib}}
+        <h3>Standard Library</h3>
+        <ul class="Imports-list">
+        {{range .StdLib}}
+          <li><a href="/pkg/{{.}}">{{.}}</a></li>
+        {{end}}
       {{end}}
-      </ul>
+    {{else}}
+      {{template "empty_content" "This package does not have any imports!"}}
     {{end}}
   </div>
 {{end}}

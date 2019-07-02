@@ -1,16 +1,13 @@
 <!--
-	Copyright 2019 The Go Authors. All rights reserved.
-	Use of this source code is governed by a BSD-style
-	license that can be found in the LICENSE file.
+  Copyright 2019 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
 -->
 
 {{define "details_content"}}
   {{if .ReadMe}}
     <div>{{.ReadMe}}</div>
   {{else}}
-    <div class="Overview-readmeNone">
-      <img class="Overview-gopher" src="/static/img/gopher-airplane.jpg" alt="The Go Gopher">
-      <h3 class="Overview-readmeNoneMessage">No overview information for this package!</h3>
-    </div>
+    {{template "empty_content" "No overview information for this package!"}}
   {{end}}
 {{end}}

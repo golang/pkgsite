@@ -419,15 +419,17 @@ code {
   color: var(--gray-3);
   font-size: 0.875em;
 }
-.Overview-gopher {
-  display: block;
-  margin: auto;
-  padding: 40px 0;
-  width: 240px;
+
+.Imports-list {
+  list-style: none;
+  padding: 0;
 }
-.Overview-readmeNoneMessage {
-  text-align: center;
+
+.ImportedBy-list {
+  list-style: none;
+  padding: 0;
 }
+
 .Error-gopher {
   display: block;
   margin-left: auto;
@@ -438,20 +440,13 @@ code {
 .Error-message {
   text-align: center;
 }
-.ImportedBy-gopher{
+
+.EmptyContent-gopher {
   display: block;
   margin: auto;
   padding: 40px 0;
   width: 240px;
 }
-.ImportedBy-noneMessage {
+.EmptyContent-message {
   text-align: center;
-}
-.ImportedBy-list {
-  list-style: none;
-  padding: 0;
-}
-.Imports-list {
-  list-style: none;
-  padding: 0;
 }
