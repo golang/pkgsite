@@ -414,36 +414,48 @@ func (db *DB) GetImports(ctx context.Context, path, version string) ([]string, e
 // package with path.
 // The returned error may be checked with derrors.IsInvalidArgument to
 // determine if it resulted from an invalid package path or version.
-func (db *DB) GetImportedBy(ctx context.Context, path string) ([]string, error) {
+func (db *DB) GetImportedBy(ctx context.Context, path, modulePath string, limit, offset int) ([]string, int, error) {
 	if path == "" {
-		return nil, derrors.InvalidArgument("path cannot be empty")
+		return nil, 0, derrors.InvalidArgument("path cannot be empty")
 	}
 
-	var fromPath string
 	query := `
 		SELECT
-			DISTINCT ON (from_path) from_path
-		FROM
-			imports
-		WHERE
-			to_path = $1
-		ORDER BY
-			from_path;`
+			from_path,
+			COUNT(*) OVER() as total
+			FROM (
+				SELECT
+					DISTINCT ON (from_path) from_path
+				FROM
+					imports
+				WHERE
+					to_path = $1
+				AND
+					from_module_path <> $2
+				ORDER BY
+					from_path
+			) t
+		LIMIT $3
+		OFFSET $4;`
 
-	rows, err := db.QueryContext(ctx, query, path)
+	rows, err := db.QueryContext(ctx, query, path, modulePath, limit, offset)
 	if err != nil {
-		return nil, fmt.Errorf("db.Query(%q, %q) returned error: %v", query, path, err)
+		return nil, 0, fmt.Errorf("db.Query(%q, %q) returned error: %v", query, path, err)
 	}
 	defer rows.Close()
 
-	var importedby []string
+	var (
+		fromPath   string
+		total      int
+		importedby []string
+	)
 	for rows.Next() {
-		if err := rows.Scan(&fromPath); err != nil {
-			return nil, fmt.Errorf("row.Scan(): %v", err)
+		if err := rows.Scan(&fromPath, &total); err != nil {
+			return nil, 0, fmt.Errorf("row.Scan(): %v", err)
 		}
 		importedby = append(importedby, fromPath)
 	}
-	return importedby, nil
+	return importedby, total, nil
 }
 
 // GetLicenses returns all licenses associated with the given package path and

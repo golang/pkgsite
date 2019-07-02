@@ -4,9 +4,17 @@
 
 package frontend
 
+import (
+	"log"
+	"net/http"
+	"net/url"
+	"strconv"
+)
+
 // pagination holds information related to pagination. It is intended to be
 // embedded in a view model struct.
 type pagination struct {
+	BaseURL     string
 	Pages       []int
 	PageCount   int
 	TotalCount  int
@@ -18,17 +26,61 @@ type pagination struct {
 	NextPage    int
 }
 
-func newPagination(page, resultCount, totalCount, limit int) pagination {
+func (p pagination) PageURL(page int) string {
+	u, err := url.Parse(p.BaseURL)
+	if err != nil {
+		log.Printf("BUG: error parsing page base URL: %v", err)
+	}
+	newQuery := u.Query()
+	newQuery.Set("page", strconv.Itoa(page))
+	u.RawQuery = newQuery.Encode()
+	return u.String()
+}
+
+func newPagination(params paginationParams, resultCount, totalCount int) pagination {
 	return pagination{
-		Pages:       pagesToLink(page, numPages(limit, totalCount), defaultNumPagesToLink),
-		PageCount:   numPages(limit, totalCount),
+		BaseURL:     params.baseURL,
+		Pages:       pagesToLink(params.page, numPages(params.limit, totalCount), defaultNumPagesToLink),
+		PageCount:   numPages(params.limit, totalCount),
 		TotalCount:  totalCount,
 		ResultCount: resultCount,
-		Offset:      offset(page, limit),
-		PerPage:     limit,
-		Page:        page,
-		PrevPage:    prev(page),
-		NextPage:    next(page, limit, totalCount),
+		Offset:      params.offset(),
+		PerPage:     params.limit,
+		Page:        params.page,
+		PrevPage:    prev(params.page),
+		NextPage:    next(params.page, params.limit, totalCount),
+	}
+}
+
+// paginationParams holds pagination parameters extracted from the request.
+type paginationParams struct {
+	baseURL     string
+	page, limit int
+}
+
+func (p paginationParams) offset() int {
+	return offset(p.page, p.limit)
+}
+
+// newPaginationParams extracts pagination params from the request.
+func newPaginationParams(r *http.Request, defaultLimit int) paginationParams {
+	positiveParam := func(key string, dflt int) (val int) {
+		var err error
+		if a := r.FormValue(key); a != "" {
+			val, err = strconv.Atoi(a)
+			if err != nil {
+				log.Printf("strconv.Atoi(%q) for page: %v", a, err)
+			}
+		}
+		if val < 1 {
+			val = dflt
+		}
+		return
+	}
+	return paginationParams{
+		baseURL: r.URL.String(),
+		page:    positiveParam("page", 1),
+		limit:   positiveParam("limit", defaultLimit),
 	}
 }
 

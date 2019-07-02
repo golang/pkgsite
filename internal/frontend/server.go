@@ -62,7 +62,7 @@ func NewServer(db *postgres.DB, staticPath string, reloadTemplates bool) (*Serve
 	r.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(staticPath)))
 	})
-	r.Handle("/pkg/", http.StripPrefix("/pkg", http.HandlerFunc(s.handleDetails)))
+	r.Handle("/pkg/", http.HandlerFunc(s.handleDetails))
 	r.HandleFunc("/search", s.handleSearch)
 	r.HandleFunc("/advanced-search", s.handleStaticPage("advanced_search.tmpl", "Advanced Search - Go Discovery"))
 	r.HandleFunc("/license-policy", s.handleStaticPage("license_policy.tmpl", "Licenses - Go Discovery"))
@@ -97,48 +97,53 @@ func suggestedSearch(userInput string) template.HTML {
 // content.
 func (s *Server) handleStaticPage(templateName, title string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		nonce, ok := middleware.GetNonce(r.Context())
-		if !ok {
-			log.Printf("middleware.GetNonce(r.Context()): nonce was not set")
-		}
-		s.servePage(w, templateName, basePageData{Title: title, Nonce: nonce})
+		s.servePage(w, templateName, basePage{Title: title})
 	}
 }
 
-// basePageData contains fields shared by all pages when rendering templates.
-type basePageData struct {
+// basePage contains fields shared by all pages when rendering templates.
+type basePage struct {
 	Title string
 	Query string
 	Nonce string
 }
 
+// newBasePage returns a base page for the given request and title.
+func newBasePage(r *http.Request, title string) basePage {
+	nonce, ok := middleware.GetNonce(r.Context())
+	if !ok {
+		log.Printf("middleware.GetNonce: nonce was not set")
+	}
+	return basePage{
+		Title: title,
+		Query: searchQuery(r),
+		Nonce: nonce,
+	}
+}
+
 // GoogleAnalyticsTrackingID returns the tracking ID from
-// func (b basePageData) GoogleAnalyticsTrackingID() string {
+// func (b basePage) GoogleAnalyticsTrackingID() string {
 	return "UA-141356704-1"
 }
 
-// VersionLabel uniquely identifies the currently running binary. It can be
+// AppVersionLabel uniquely identifies the currently running binary. It can be
 // used for cache-busting query parameters.
-func (b basePageData) AppVersionLabel() string {
+func (b basePage) AppVersionLabel() string {
 	return config.AppVersionLabel()
 }
 
 // errorPage contains fields for rendering a HTTP error page.
 type errorPage struct {
-	basePageData
+	basePage
 	Message          string
 	SecondaryMessage template.HTML
 }
 
 func (s *Server) serveErrorPage(w http.ResponseWriter, r *http.Request, status int, page *errorPage) {
-	nonce, ok := middleware.GetNonce(r.Context())
-	if !ok {
-		log.Printf("middleware.GetNonce(r.Context()): nonce was not set")
-	}
 	if page == nil {
-		page = &errorPage{basePageData: basePageData{Nonce: nonce}}
-	} else {
-		page.Nonce = nonce
+		page = &errorPage{
+			basePage: newBasePage(r, ""),
+		}
 	}
 	buf, err := s.renderErrorPage(status, page)
 	if err != nil {
@@ -159,7 +164,7 @@ func (s *Server) renderErrorPage(status int, page *errorPage) ([]byte, error) {
 	if page == nil {
 		page = &errorPage{
 			Message: statusInfo,
-			basePageData: basePageData{
+			basePage: basePage{
 				Title: statusInfo,
 			},
 		}

@@ -10,11 +10,9 @@ import (
 	"log"
 	"net/http"
 	"path"
-	"strconv"
 	"strings"
 
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
 )
 
@@ -23,9 +21,9 @@ const defaultSearchLimit = 10
 // SearchPage contains all of the data that the search template needs to
 // populate.
 type SearchPage struct {
-	basePageData
-	pagination
-	Results []*SearchResult
+	basePage
+	Pagination pagination
+	Results    []*SearchResult
 }
 
 // SearchResult contains data needed to display a single search result.
@@ -42,10 +40,10 @@ type SearchResult struct {
 
 // fetchSearchPage fetches data matching the search query from the database and
 // returns a SearchPage.
-func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, limit, page int) (*SearchPage, error) {
-	dbresults, err := db.Search(ctx, query, limit, offset(page, limit))
+func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pageParams paginationParams) (*SearchPage, error) {
+	dbresults, err := db.Search(ctx, query, pageParams.limit, pageParams.offset())
 	if err != nil {
-		return nil, fmt.Errorf("db.Search(%v, %d, %d): %v", query, limit, offset(page, limit), err)
+		return nil, fmt.Errorf("db.Search(%v, %d, %d): %v", query, pageParams.limit, pageParams.offset(), err)
 	}
 
 	var results []*SearchResult
@@ -68,12 +66,8 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, limit, 
 	}
 
 	return &SearchPage{
-		basePageData: basePageData{
-			Title: query,
-			Query: query,
-		},
 		Results:    results,
-		pagination: newPagination(page, len(results), numResults, limit),
+		Pagination: newPagination(pageParams, len(results), numResults),
 	}, nil
 }
 
@@ -82,7 +76,7 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, limit, 
 // will be redirected to the details page.
 func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	query := strings.TrimSpace(r.FormValue("q"))
+	query := searchQuery(r)
 	if query == "" {
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
@@ -98,41 +92,17 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var (
-		limit, pageNum int
-		err            error
-	)
-	if l := r.URL.Query().Get("limit"); l != "" {
-		limit, err = strconv.Atoi(l)
-		if err != nil {
-			log.Printf("strconv.Atoi(%q) for limit: %v", l, err)
-		}
-	}
-	if limit < 1 {
-		limit = defaultSearchLimit
-	}
-
-	if p := r.URL.Query().Get("page"); p != "" {
-		pageNum, err = strconv.Atoi(p)
-		if err != nil {
-			log.Printf("strconv.Atoi(%q) for page: %v", p, err)
-		}
-	}
-	if pageNum <= 1 {
-		pageNum = 1
-	}
-
-	page, err := fetchSearchPage(ctx, s.db, query, limit, pageNum)
+	page, err := fetchSearchPage(ctx, s.db, query, newPaginationParams(r, defaultSearchLimit))
 	if err != nil {
 		log.Printf("fetchSearchDetails(ctx, db, %q): %v", query, err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return
 	}
-
-	nonce, ok := middleware.GetNonce(ctx)
-	if !ok {
-		log.Printf("middleware.GetNonce(r.Context()): nonce was not set")
-	}
-	page.Nonce = nonce
+	page.basePage = newBasePage(r, query)
 	s.servePage(w, "search.tmpl", page)
+}
+
+// searchQuery extracts a search query from the request.
+func searchQuery(r *http.Request) string {
+	return strings.TrimSpace(r.FormValue("q"))
 }

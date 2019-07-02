@@ -68,11 +68,7 @@ func TestFetchSearchPage(t *testing.T) {
 			query:    "foo bar",
 			versions: []*internal.Version{versionFoo, versionBar},
 			wantSearchPage: &SearchPage{
-				basePageData: basePageData{
-					Query: "foo bar",
-					Title: "foo bar",
-				},
-				pagination: pagination{
+				Pagination: pagination{
 					TotalCount:  1,
 					ResultCount: 1,
 					PageCount:   1,
@@ -101,11 +97,7 @@ func TestFetchSearchPage(t *testing.T) {
 			query:    "package",
 			versions: []*internal.Version{versionFoo, versionBar},
 			wantSearchPage: &SearchPage{
-				basePageData: basePageData{
-					Query: "package",
-					Title: "package",
-				},
-				pagination: pagination{
+				Pagination: pagination{
 					TotalCount:  1,
 					ResultCount: 1,
 					PageCount:   1,
@@ -145,7 +137,7 @@ func TestFetchSearchPage(t *testing.T) {
 				}
 			}
 
-			got, err := fetchSearchPage(ctx, testDB, tc.query, 20, 1)
+			got, err := fetchSearchPage(ctx, testDB, tc.query, paginationParams{limit: 20, page: 1})
 			if err != nil {
 				t.Fatalf("fetchSearchPage(db, %q): %v", tc.query, err)
 			}

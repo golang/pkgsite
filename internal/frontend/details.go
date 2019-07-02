@@ -22,7 +22,6 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/license"
-	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
@@ -43,7 +42,7 @@ type TabSettings struct {
 
 // DetailsPage contains data for the doc template.
 type DetailsPage struct {
-	basePageData
+	basePage
 	CanShowDetails bool
 	Settings       TabSettings
 	Details        interface{}
@@ -92,15 +91,13 @@ type ImportsDetails struct {
 // ImportedByDetails contains information for the collection of packages that
 // import a given package.
 type ImportedByDetails struct {
+	Pagination pagination
+
 	ModulePath string
 
-	// ExternalImportedBy is the collection of packages that import the
+	// ImportedBy is the collection of packages that import the
 	// given package and are not part of the same module.
-	ExternalImportedBy []string
-
-	// InternalImportedBy is the collection of packages that import the given
-	// package and are inside the same module.
-	InternalImportedBy []string
+	ImportedBy []string
 }
 
 // License contains information used for a single license section.
@@ -332,23 +329,16 @@ func fetchImportsDetails(ctx context.Context, db *postgres.DB, pkg *internal.Ver
 
 // fetchImportedByDetails fetches importers for the package version specified by
 // path and version from the database and returns a ImportedByDetails.
-func fetchImportedByDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*ImportedByDetails, error) {
-	importedByPaths, err := db.GetImportedBy(ctx, pkg.Path)
+func fetchImportedByDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage, pageParams paginationParams) (*ImportedByDetails, error) {
+
+	importedBy, total, err := db.GetImportedBy(ctx, pkg.Path, pkg.ModulePath, pageParams.limit, pageParams.offset())
 	if err != nil {
 		return nil, fmt.Errorf("db.GetImportedBy(ctx, %q): %v", pkg.Path, err)
 	}
-	var externalImportedBy, moduleImportedBy []string
-	for _, path := range importedByPaths {
-		if strings.HasPrefix(path, pkg.VersionInfo.ModulePath) {
-			moduleImportedBy = append(moduleImportedBy, path)
-		} else {
-			externalImportedBy = append(externalImportedBy, path)
-		}
-	}
 	return &ImportedByDetails{
-		ModulePath:         pkg.VersionInfo.ModulePath,
-		ExternalImportedBy: externalImportedBy,
-		InternalImportedBy: moduleImportedBy,
+		ModulePath: pkg.VersionInfo.ModulePath,
+		ImportedBy: importedBy,
+		Pagination: newPagination(pageParams, len(importedBy), total),
 	}, nil
 }
 
@@ -414,7 +404,7 @@ func init() {
 
 // fetchDetails returns tab details by delegating to the correct detail
 // handler.
-func fetchDetails(ctx context.Context, tab string, db *postgres.DB, pkg *internal.VersionedPackage) (interface{}, error) {
+func fetchDetails(ctx context.Context, r *http.Request, tab string, db *postgres.DB, pkg *internal.VersionedPackage) (interface{}, error) {
 	switch tab {
 	case "doc":
 		return fetchDocumentationDetails(ctx, db, pkg)
@@ -425,7 +415,7 @@ func fetchDetails(ctx context.Context, tab string, db *postgres.DB, pkg *interna
 	case "imports":
 		return fetchImportsDetails(ctx, db, pkg)
 	case "importedby":
-		return fetchImportedByDetails(ctx, db, pkg)
+		return fetchImportedByDetails(ctx, db, pkg, newPaginationParams(r, 100))
 	case "licenses":
 		return fetchLicensesDetails(ctx, db, pkg)
 	case "overview":
@@ -439,6 +429,7 @@ func fetchDetails(ctx context.Context, tab string, db *postgres.DB, pkg *interna
 // /<module>@<version>. Any leading or trailing slashes in the module path are
 // trimmed.
 func parseModulePathAndVersion(urlPath string) (importPath, version string, err error) {
+	urlPath = strings.TrimPrefix(urlPath, "/pkg")
 	parts := strings.Split(urlPath, "@")
 	if len(parts) != 1 && len(parts) != 2 {
 		return "", "", fmt.Errorf("malformed URL path %q", urlPath)
@@ -541,7 +532,7 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = fetchDetails(ctx, tab, s.db, pkg)
+		details, err = fetchDetails(ctx, r, tab, s.db, pkg)
 		if err != nil {
 			log.Printf("error fetching page for %q: %v", tab, err)
 			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
@@ -549,16 +540,8 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	nonce, ok := middleware.GetNonce(r.Context())
-	if !ok {
-		log.Printf("middleware.GetNonce(r.Context()): nonce was not set")
-	}
 	page := &DetailsPage{
-		basePageData: basePageData{
-			Title: packageTitle(&pkg.Package),
-			Query: strings.TrimSpace(r.FormValue("q")),
-			Nonce: nonce,
-		},
+		basePage:       newBasePage(r, packageTitle(&pkg.Package)),
 		Settings:       settings,
 		PackageHeader:  pkgHeader,
 		Details:        details,

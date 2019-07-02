@@ -342,9 +342,9 @@ func TestFetchImportedByDetails(t *testing.T) {
 			return sample.Version(sample.WithModulePath("path.to/foo"))
 		})
 		testVersions = []*internal.Version{
-			sampler.Sample(sample.WithVersion("v1.0.1"), sample.WithPackages(pkg1)),
-			sampler.Sample(sample.WithVersion("v1.0.2"), sample.WithPackages(pkg2)),
-			sampler.Sample(sample.WithVersion("v1.0.3"), sample.WithPackages(pkg3)),
+			sampler.Sample(sample.WithPackages(pkg1)),
+			sampler.Sample(sample.WithModulePath("path2.to/foo"), sample.WithPackages(pkg2)),
+			sampler.Sample(sample.WithModulePath("path3.to/foo"), sample.WithPackages(pkg3)),
 		}
 	)
 
@@ -365,28 +365,28 @@ func TestFetchImportedByDetails(t *testing.T) {
 		{
 			pkg: pkg2,
 			wantDetails: &ImportedByDetails{
-				ExternalImportedBy: []string{pkg3.Path},
+				ImportedBy: []string{pkg3.Path},
 			},
 		},
 		{
 			pkg: pkg1,
 			wantDetails: &ImportedByDetails{
-				ExternalImportedBy: []string{pkg2.Path, pkg3.Path},
+				ImportedBy: []string{pkg2.Path, pkg3.Path},
 			},
 		},
 	} {
 		t.Run(tc.pkg.Path, func(t *testing.T) {
 			otherVersion := sampler.Sample(sample.WithVersion("v1.0.5"), sample.WithPackages(tc.pkg))
 			vp := firstVersionedPackage(otherVersion)
-			got, err := fetchImportedByDetails(ctx, testDB, vp)
+			got, err := fetchImportedByDetails(ctx, testDB, vp, paginationParams{limit: 20, page: 1})
 			if err != nil {
-				t.Fatalf("fetchImportedByDetails(ctx, db, %q) = %v err = %v, want %v",
+				t.Fatalf("fetchImportedByDetails(ctx, db, %q, 1) = %v err = %v, want %v",
 					tc.pkg.Path, got, err, tc.wantDetails)
 			}
 
 			tc.wantDetails.ModulePath = vp.VersionInfo.ModulePath
-			if diff := cmp.Diff(tc.wantDetails, got, cmpopts.IgnoreFields(DetailsPage{}, "PackageHeader")); diff != "" {
-				t.Errorf("fetchImportedByDetails(ctx, db, %q) mismatch (-want +got):\n%s", tc.pkg.Path, diff)
+			if diff := cmp.Diff(tc.wantDetails, got, cmpopts.IgnoreFields(ImportedByDetails{}, "Pagination")); diff != "" {
+				t.Errorf("fetchImportedByDetails(ctx, db, %q, 1) mismatch (-want +got):\n%s", tc.pkg.Path, diff)
 			}
 		})
 	}

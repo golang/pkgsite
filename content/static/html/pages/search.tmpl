@@ -8,10 +8,7 @@
   <div class="SearchResults">
     <h1 class="SearchResults-header">Results for “{{.Query}}”</h1>
     <div class="SearchResults-resultCount">
-      {{if gt .TotalCount .ResultCount}}
-        {{add .Offset 1}} – {{add .Offset .ResultCount}} of
-      {{end}}
-      {{.TotalCount}} {{pluralize .TotalCount "result"}}
+      {{template "pagination_summary" .Pagination}} {{pluralize .Pagination.TotalCount "result"}}
     </div>
     <div>{{/* Containing element is needed to use *-of-type selectors */}}
       {{$query := .Query}}
@@ -39,29 +36,6 @@
         </div>
       {{end}}
     </div>
-    <div class="SearchResults-nav">
-      <div class="SearchResults-navInner">
-        {{if .PrevPage}}
-          <a class="SearchResults-previous" href="/search?q={{.Query}}&page={{.PrevPage}}">Previous</a>
-        {{else}}
-          <span class="SearchResults-previous" aria-disabled="true">Previous</span>
-        {{end}}
-
-        {{$page := .Page}}
-        {{range $i := .Pages}}
-          {{if eq $i $page}}
-            <span>{{$i}}</span>
-          {{else}}
-            <a href="/search?q={{$.Query}}&page={{$i}}">{{$i}}</a>
-          {{end}}
-        {{end}}
-
-        {{if .NextPage}}
-          <a class="SearchResults-next" href="/search?q={{.Query}}&page={{.NextPage}}">Next</a>
-        {{else}}
-          <span class="SearchResults-next" aria-disabled="true">Next</span>
-        {{end}}
-      </div>
-    </div>
+    {{template "pagination_nav" .Pagination}}
   </div>
 {{end}}
