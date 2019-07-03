@@ -15,7 +15,7 @@
       <span class="Header-verticalBar">|</span>
       <strong>{{pluralize (len $header.Licenses) "License"}}: </strong>
       {{range $i, $e := $header.Licenses -}}{{if $i}}, {{end}}
-        <a href="/pkg/{{$header.Path}}@{{$header.Version}}&tab=licenses#{{.Anchor}}">{{$e.Type}}</a>
+        <a href="/pkg/{{$header.Path}}@{{$header.Version}}?tab=licenses#{{.Anchor}}">{{$e.Type}}</a>
       {{- else -}}
         <span>No license files detected</span>
         <a href="/license-policy" class="Disclaimer-link"><em>not legal advice</em></a>
