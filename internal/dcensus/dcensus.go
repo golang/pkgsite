@@ -54,19 +54,22 @@ const debugPage = `
 <p><a href="/statsz">/statz</a> - prometheus metrics page</p>
 `
 
-// NewServer creates a new http.Handler for serving debug information.
-func NewServer(views ...*view.View) (http.Handler, error) {
+// Init configures tracing and aggregation according to the given Views. If
+// running on GCP, Init also configures exporting to StackDriver.
+func Init(views ...*view.View) error {
 	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
-
-	// Since the fetch service is both a client and server, register all the default views.
 	if err := view.Register(views...); err != nil {
-		log.Fatalf("Error registering http views: %v", err)
+		return fmt.Errorf("view.Register: %v", err)
 	}
 	exportToStackdriver()
+	return nil
+}
 
+// NewServer creates a new http.Handler for serving debug information.
+func NewServer(views ...*view.View) (http.Handler, error) {
 	pe, err := prometheus.NewExporter(prometheus.Options{})
 	if err != nil {
-		return nil, fmt.Errorf("error creating the Prometheus exporter: %v", err)
+		return nil, fmt.Errorf("prometheus.NewExporter: %v", err)
 	}
 	mux := http.NewServeMux()
 	zpages.Handle(mux, "/")

@@ -50,6 +50,13 @@ func ProxyURL() string {
 	return GetEnv("GO_MODULE_PROXY_URL", "https://proxy.golang.org")
 }
 
+// OnAppEngine reports if the current process is running in an AppEngine
+// environment.
+func OnAppEngine() bool {
+	// TODO(rfindley): verify that this works for the go1.12 runtime
+	return os.Getenv("GAE_ENV") == "standard"
+}
+
 // DBConnInfo returns a PostgreSQL connection string constructed from
 // environment variables.
 func DBConnInfo(ctx context.Context, secret string) (string, error) {
@@ -62,7 +69,7 @@ func DBConnInfo(ctx context.Context, secret string) (string, error) {
 
 	// When running on App Engine, the runtime sets GAE_ENV to 'standard' per
 	// https://cloud.google.com/appengine/docs/standard/go111/runtime
-	if os.Getenv("GAE_ENV") == "standard" {
+	if OnAppEngine() {
 		var err error
 		password, err = secrets.Get(ctx, secret)
 		if err != nil {

@@ -51,11 +51,18 @@ func main() {
 	}
 
 	views := append(ochttp.DefaultServerViews, dcensus.ViewByCodeRouteMethod)
-	dcensusServer, err := dcensus.NewServer(views...)
-	if err != nil {
-		log.Fatalf("dcensus.NewServer: %v", err)
+	if err := dcensus.Init(views...); err != nil {
+		log.Fatalf("dcensus.Init: %v", err)
 	}
-	go http.ListenAndServe(config.DebugAddr("localhost:8081"), dcensusServer)
+	// We are not currently forwarding any ports on AppEngine, so serving debug
+	// information is broken.
+	if !config.OnAppEngine() {
+		dcensusServer, err := dcensus.NewServer(views...)
+		if err != nil {
+			log.Fatalf("dcensus.NewServer: %v", err)
+		}
+		go http.ListenAndServe(config.DebugAddr("localhost:8081"), dcensusServer)
+	}
 
 	addr := config.HostAddr("localhost:8080")
 	log.Printf("Listening on addr %s", addr)
