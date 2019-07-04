@@ -19,6 +19,9 @@ type VersionInfo struct {
 	ReadmeFilePath string
 	ReadmeContents []byte
 	VersionType    VersionType
+	VCSType        string
+	RepositoryURL  string
+	HomepageURL    string
 }
 
 // SeriesPath returns the series path for the module.

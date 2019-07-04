@@ -54,7 +54,7 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 		wantReadErr bool
 	}{
 		{
-			name:     "want_second_package",
+			name:     "want second package",
 			path:     pkg.Path,
 			versions: testVersions,
 			wantPkg: &internal.VersionedPackage{
@@ -70,11 +70,14 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 					CommitTime:     testVersions[1].CommitTime,
 					ReadmeContents: testVersions[1].ReadmeContents,
 					ReadmeFilePath: testVersions[1].ReadmeFilePath,
+					VCSType:        testVersions[1].VCSType,
+					RepositoryURL:  testVersions[1].RepositoryURL,
+					HomepageURL:    testVersions[1].HomepageURL,
 				},
 			},
 		},
 		{
-			name:        "empty_path",
+			name:        "empty path",
 			path:        "",
 			wantReadErr: true,
 		},

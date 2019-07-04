@@ -239,6 +239,9 @@ func SampleVersion(mutators ...func(*internal.Version)) *internal.Version {
 			ReadmeContents: []byte("readme"),
 			CommitTime:     SampleCommitTime,
 			VersionType:    internal.VersionTypeRelease,
+			VCSType:        "git",
+			RepositoryURL:  SampleModulePath,
+			HomepageURL:    SampleModulePath,
 		},
 		Packages: []*internal.Package{SamplePackage},
 	}

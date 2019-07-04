@@ -20,6 +20,10 @@
         <span>No license files detected</span>
         <a href="/license-policy" class="Disclaimer-link"><em>not legal advice</em></a>
       {{- end}}
+      {{if $header.RepositoryURL}}
+        <span class="Header-verticalBar">|</span>
+        <a href="{{$header.RepositoryURL}}">Source Code</a>
+      {{end}}
     </p>
   </header>
 

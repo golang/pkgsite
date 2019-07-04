@@ -52,8 +52,21 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 			return fmt.Errorf("error deleting existing versions: %v", err)
 		}
 		if _, err := tx.ExecContext(ctx,
-			`INSERT INTO versions(module_path, version, commit_time, readme_file_path, readme_contents, major, minor, patch, prerelease, version_type)
-			VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT DO NOTHING`,
+			`INSERT INTO versions(
+				module_path,
+				version,
+				commit_time,
+				readme_file_path,
+				readme_contents,
+				major,
+				minor,
+				patch,
+				prerelease,
+				version_type,
+				vcs_type,
+				repository_url,
+				homepage_url)
+			VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) ON CONFLICT DO NOTHING`,
 			version.ModulePath,
 			version.Version,
 			version.CommitTime,
@@ -64,6 +77,9 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 			patchint,
 			prerelease,
 			version.VersionType,
+			version.VCSType,
+			version.RepositoryURL,
+			version.HomepageURL,
 		); err != nil {
 			return fmt.Errorf("error inserting version: %v", err)
 		}

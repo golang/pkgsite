@@ -172,6 +172,7 @@ type Package struct {
 	Licenses          []LicenseMetadata
 	IsCommand         bool
 	IsRedistributable bool
+	RepositoryURL     string
 }
 
 // Suffix returns the package path less the ModulePath prefix.
@@ -221,6 +222,7 @@ func createPackageHeader(pkg *internal.VersionedPackage) (*Package, error) {
 		Licenses:          transformLicenseMetadata(pkg.Licenses),
 		CommitTime:        elapsedTime(pkg.VersionInfo.CommitTime),
 		IsRedistributable: pkg.IsRedistributable(),
+		RepositoryURL:     pkg.RepositoryURL,
 	}, nil
 }
 
@@ -672,12 +674,17 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 	)
 	if version == "" {
 		pkg, err = s.db.GetLatestPackage(ctx, path)
+		if err != nil {
+			log.Printf("s.db.GetLatestPackage(ctx, %q): %v", path, err)
+		}
 	} else {
 		pkg, err = s.db.GetPackage(ctx, path, version)
+		if err != nil {
+			log.Printf("s.db.GetPackage(ctx, %q, %q): %v", path, version, err)
+		}
 	}
 	if err != nil {
 		if !derrors.IsNotFound(err) {
-			log.Printf("error getting package for %s@%s: %v", path, version, err)
 			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 			return
 		}

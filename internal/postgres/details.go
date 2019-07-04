@@ -29,8 +29,9 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 	}
 
 	var (
-		commitTime                                                      time.Time
 		name, synopsis, modulePath, v1path, readmeFilePath, versionType string
+		repositoryURL, vcsType, homepageURL                             sql.NullString
+		commitTime                                                      time.Time
 		readmeContents, documentation                                   []byte
 		licenseTypes, licensePaths                                      []string
 	)
@@ -46,7 +47,10 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 			p.synopsis,
 			p.v1_path,
 			v.version_type,
-			p.documentation
+			p.documentation,
+			v.repository_url,
+			v.vcs_type,
+			v.homepage_url
 		FROM
 			versions v
 		INNER JOIN
@@ -62,7 +66,7 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 	row := db.QueryRowContext(ctx, query, path, version)
 	if err := row.Scan(&commitTime, pq.Array(&licenseTypes),
 		pq.Array(&licensePaths), &readmeFilePath, &readmeContents, &modulePath,
-		&name, &synopsis, &v1path, &versionType, &documentation); err != nil {
+		&name, &synopsis, &v1path, &versionType, &documentation, &repositoryURL, &vcsType, &homepageURL); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, derrors.NotFound(fmt.Sprintf("package %s@%s not found", path, version))
 		}
@@ -90,6 +94,9 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 			ReadmeFilePath: readmeFilePath,
 			ReadmeContents: readmeContents,
 			VersionType:    internal.VersionType(versionType),
+			VCSType:        vcsType.String,
+			RepositoryURL:  repositoryURL.String,
+			HomepageURL:    homepageURL.String,
 		},
 	}, nil
 }
@@ -103,8 +110,9 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 	}
 
 	var (
-		commitTime                                                  time.Time
 		modulePath, name, synopsis, version, v1path, readmeFilePath string
+		repositoryURL, vcsType, homepageURL                         sql.NullString
+		commitTime                                                  time.Time
 		licenseTypes, licensePaths                                  []string
 		readmeContents, documentation                               []byte
 	)
@@ -120,7 +128,10 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 			p.v1_path,
 			v.readme_file_path,
 			v.readme_contents,
-			p.documentation
+			p.documentation,
+			v.repository_url,
+			v.vcs_type,
+			v.homepage_url
 		FROM
 			versions v
 		INNER JOIN
@@ -139,7 +150,7 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 		LIMIT 1;`
 
 	row := db.QueryRowContext(ctx, query, path)
-	if err := row.Scan(&modulePath, pq.Array(&licenseTypes), pq.Array(&licensePaths), &version, &commitTime, &name, &synopsis, &v1path, &readmeFilePath, &readmeContents, &documentation); err != nil {
+	if err := row.Scan(&modulePath, pq.Array(&licenseTypes), pq.Array(&licensePaths), &version, &commitTime, &name, &synopsis, &v1path, &readmeFilePath, &readmeContents, &documentation, &repositoryURL, &vcsType, &homepageURL); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, derrors.NotFound(fmt.Sprintf("package %s@%s not found", path, version))
 		}
@@ -166,6 +177,9 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 			CommitTime:     commitTime,
 			ReadmeFilePath: readmeFilePath,
 			ReadmeContents: readmeContents,
+			VCSType:        vcsType.String,
+			RepositoryURL:  repositoryURL.String,
+			HomepageURL:    homepageURL.String,
 		},
 	}, nil
 }
@@ -186,7 +200,10 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 		v.readme_contents,
 		v.commit_time,
 		v.version_type,
-		p.documentation
+		p.documentation,
+		v.repository_url,
+		v.vcs_type,
+		v.homepage_url
 	FROM
 		packages p
 	INNER JOIN
@@ -203,11 +220,11 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 	ORDER BY path;`
 
 	var (
-		pkgPath, modulePath, pkgName                  string
-		synopsis, v1path, readmeFilePath, versionType string
-		readmeContents, documentation                 []byte
-		commitTime                                    time.Time
-		licenseTypes, licensePaths                    []string
+		pkgPath, modulePath, pkgName, synopsis, v1path, readmeFilePath, versionType string
+		repositoryURL, vcsType, homepageURL                                         sql.NullString
+		readmeContents, documentation                                               []byte
+		commitTime                                                                  time.Time
+		licenseTypes, licensePaths                                                  []string
 	)
 
 	rows, err := db.QueryContext(ctx, query, path, version)
@@ -221,7 +238,7 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 	for rows.Next() {
 		if err := rows.Scan(&pkgPath, &modulePath, &pkgName, &synopsis, &v1path,
 			pq.Array(&licenseTypes), pq.Array(&licensePaths), &readmeFilePath,
-			&readmeContents, &commitTime, &versionType, &documentation); err != nil {
+			&readmeContents, &commitTime, &versionType, &documentation, &repositoryURL, &vcsType, &homepageURL); err != nil {
 			return nil, fmt.Errorf("row.Scan(): %v", err)
 		}
 		lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
@@ -233,6 +250,9 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 		v.ReadmeContents = readmeContents
 		v.CommitTime = commitTime
 		v.VersionType = internal.VersionType(versionType)
+		v.RepositoryURL = repositoryURL.String
+		v.VCSType = vcsType.String
+		v.HomepageURL = homepageURL.String
 		v.Packages = append(v.Packages, &internal.Package{
 			Path:              pkgPath,
 			Name:              pkgName,
@@ -274,8 +294,8 @@ func (db *DB) GetPseudoVersionsForPackageSeries(ctx context.Context, path string
 // and have the same package v1path.
 func getVersions(ctx context.Context, db *DB, path string, versionTypes []internal.VersionType) ([]*internal.VersionInfo, error) {
 	var (
-		commitTime                            time.Time
 		modulePath, synopsis, version, v1path string
+		commitTime                            time.Time
 		versionHistory                        []*internal.VersionInfo
 	)
 
@@ -528,9 +548,10 @@ func compareLicenses(i, j license.Metadata) bool {
 // (module_path, version).
 func (db *DB) GetVersion(ctx context.Context, modulePath string, version string) (*internal.VersionInfo, error) {
 	var (
-		commitTime                  time.Time
-		readmeFilePath, versionType string
-		readmeContents              []byte
+		repositoryURL, vcsType, homepageURL sql.NullString
+		readmeFilePath, versionType         string
+		commitTime                          time.Time
+		readmeContents                      []byte
 	)
 
 	query := `
@@ -538,12 +559,15 @@ func (db *DB) GetVersion(ctx context.Context, modulePath string, version string)
 			v.commit_time,
 			v.readme_file_path,
 			v.readme_contents,
-			v.version_type
+			v.version_type,
+			v.repository_url,
+			v.vcs_type,
+			v.homepage_url
 		FROM
 			versions v
 		WHERE module_path = $1 and version = $2;`
 	row := db.QueryRowContext(ctx, query, modulePath, version)
-	if err := row.Scan(&commitTime, &readmeFilePath, &readmeContents, &versionType); err != nil {
+	if err := row.Scan(&commitTime, &readmeFilePath, &readmeContents, &versionType, &repositoryURL, &vcsType, &homepageURL); err != nil {
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
 	return &internal.VersionInfo{
@@ -553,5 +577,8 @@ func (db *DB) GetVersion(ctx context.Context, modulePath string, version string)
 		ReadmeFilePath: readmeFilePath,
 		ReadmeContents: readmeContents,
 		VersionType:    internal.VersionType(versionType),
+		VCSType:        vcsType.String,
+		RepositoryURL:  repositoryURL.String,
+		HomepageURL:    homepageURL.String,
 	}, nil
 }
