@@ -120,7 +120,11 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, requestedVersi
 		// semantics: if info is not found, then we return NotFound.
 		return derrors.Wrap(err, "proxyClient.GetInfo(%q, %q)", modulePath, requestedVersion)
 	}
-	zipReader, err := proxyClient.GetZip(ctx, modulePath, info.Version)
+	versionType, err := ParseVersionType(info.Version)
+	if err != nil {
+		return derrors.NotAcceptable("parseVersion(%q): %v", info.Version, err)
+	}
+	zipReader, err := proxyClient.GetZip(ctx, modulePath, requestedVersion)
 	if err != nil {
 		// Here we expect the zip to exist since we got info above, so we shouldn't
 		// wrap the error.
@@ -153,10 +157,6 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, requestedVersi
 		}
 		span.Annotate([]trace.Attribute{trace.Int64Attribute("packageCt", int64(len(packages)))}, "extracted packages")
 
-		versionType, err := ParseVersionType(info.Version)
-		if err != nil {
-			return fmt.Errorf("parseVersion(%q): %v", info.Version, err)
-		}
 		v = &internal.Version{
 			VersionInfo: internal.VersionInfo{
 				ModulePath:     modulePath,
@@ -289,7 +289,7 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 			return nil, fmt.Errorf("expected only files, found directory %q", f.Name)
 		}
 		if !strings.HasPrefix(f.Name, modulePrefix) {
-			return nil, fmt.Errorf(`expected file to have "<module>@<version>/" prefix %q, found %q`, modulePrefix, f.Name)
+			return nil, fmt.Errorf("expected file to have prefix %q; got = %q", modulePrefix, f.Name)
 		}
 		innerPath := path.Dir(f.Name[len(modulePrefix):])
 		if incompleteDirs[innerPath] {

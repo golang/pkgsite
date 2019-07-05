@@ -92,11 +92,13 @@ func TestProxy(versions []*TestVersion) *http.ServeMux {
 			if goMod == "" {
 				goMod = defaultGoMod(m)
 			}
-			if m == stdlibModulePathProxy {
-				handle(fmt.Sprintf("/%s/@v/%s.info", m, "go1.12.5"), strings.NewReader(defaultInfo(v.Version)))
+			if strings.HasPrefix(m, stdlibProxyModulePathPrefix) {
+				goVersion := goVersionForSemanticVersion(v.Version)
+				handle(fmt.Sprintf("/%s/@v/%s.info", m, goVersion), strings.NewReader(defaultInfo(v.Version)))
+			} else {
+				handle(fmt.Sprintf("/%s/@v/%s.info", m, v.Version), strings.NewReader(defaultInfo(v.Version)))
 			}
 			handle(fmt.Sprintf("/%s/@v/%s.mod", m, v.Version), strings.NewReader(goMod))
-			handle(fmt.Sprintf("/%s/@v/%s.info", m, v.Version), strings.NewReader(defaultInfo(v.Version)))
 			handle(fmt.Sprintf("/%s/@v/%s.zip", m, v.Version), bytes.NewReader(v.Zip))
 		}
 	}
@@ -139,6 +141,8 @@ func defaultTestVersions() []*TestVersion {
 	var versions []*TestVersion
 	for _, v := range [][]string{
 		[]string{"go.googlesource.com/go.git", "v1.12.5"},
+		[]string{"go.googlesource.com/go.git/src", "v1.13.0-beta1"},
+		[]string{"go.googlesource.com/go.git/src/cmd", "v1.13.0-beta1"},
 		[]string{"bad.mod/module", "v1.0.0"},
 		[]string{"emp.ty/module", "v1.0.0"},
 		[]string{"my.mod/module", "v1.0.0"},

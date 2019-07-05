@@ -6,7 +6,6 @@ package proxy
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -26,54 +25,61 @@ func TestCleanURL(t *testing.T) {
 	}
 }
 
-func TestInfoURLAndZipURL(t *testing.T) {
-	rawurl := "https://proxy.golang.org"
-	client, err := New(rawurl)
-	if err != nil {
-		t.Fatalf("New(%q): %v", rawurl, err)
-	}
-
+func TestModulePathAndVersionForProxyRequest(t *testing.T) {
 	for _, tc := range []struct {
-		name, path, version, wantInfoURL, wantZipURL string
+		name, requestedPath, requestedVersion, wantPath, wantVersion string
 	}{
 		{
-			name:        "module with tagged version",
-			path:        "google.golang.org/api",
-			version:     "v1.0.0",
-			wantInfoURL: "google.golang.org/api/@v/v1.0.0.info",
-			wantZipURL:  "google.golang.org/api/@v/v1.0.0.zip",
+			name:             "module with tagged version",
+			requestedPath:    "google.golang.org/api",
+			requestedVersion: "v1.0.0",
+			wantPath:         "google.golang.org/api",
+			wantVersion:      "v1.0.0",
 		},
 		{
-			name:        "must encode path and version",
-			path:        "github.com/Azure/azure-sdk-for-go",
-			version:     "v8.0.1-beta+incompatible",
-			wantInfoURL: "github.com/!azure/azure-sdk-for-go/@v/v8.0.1-beta+incompatible.info",
-			wantZipURL:  "github.com/!azure/azure-sdk-for-go/@v/v8.0.1-beta+incompatible.zip",
+			name:             "must encode path and version",
+			requestedPath:    "github.com/Azure/azure-sdk-for-go",
+			requestedVersion: "v8.0.1-beta+incompatible",
+			wantPath:         "github.com/!azure/azure-sdk-for-go",
+			wantVersion:      "v8.0.1-beta+incompatible",
 		},
 		{
-			name:        "standard library",
-			path:        "std",
-			version:     "v1.12.5",
-			wantInfoURL: stdlibModulePathProxy + "/@v/go1.12.5.info",
-			wantZipURL:  stdlibModulePathProxy + "/@v/v1.12.5.zip",
+			name:             "std version v1.12.5",
+			requestedPath:    "std",
+			requestedVersion: "v1.12.5",
+			wantPath:         stdlibProxyModulePathPrefix,
+			wantVersion:      "go1.12.5",
 		},
 		{
-			name:        "standard library, patch version 0",
-			path:        "std",
-			version:     "v1.12.0",
-			wantInfoURL: stdlibModulePathProxy + "/@v/go1.12.info",
-			wantZipURL:  stdlibModulePathProxy + "/@v/v1.12.0.zip",
+			name:             "std version v1.13, incomplete canonical version",
+			requestedPath:    "std",
+			requestedVersion: "v1.13",
+			wantPath:         stdlibProxyModulePathPrefix + "/src",
+			wantVersion:      "go1.13",
+		},
+		{
+			name:             "std version v1.13.0-beta1",
+			requestedPath:    "std",
+			requestedVersion: "v1.13.0-beta1",
+			wantPath:         stdlibProxyModulePathPrefix + "/src",
+			wantVersion:      "go1.13beta1",
+		},
+		{
+			name:             "cmd version v1.13.0",
+			requestedPath:    "cmd",
+			requestedVersion: "v1.13.0",
+			wantPath:         stdlibProxyModulePathPrefix + "/src/cmd",
+			wantVersion:      "go1.13",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			want := fmt.Sprintf("%s/%s", client.url, tc.wantInfoURL)
-			if got, _ := client.infoURL(tc.path, tc.version); got != want {
-				t.Errorf("infoURL(%q, %q) = %q; want = %q", tc.path, tc.version, got, want)
+			path, version, err := modulePathAndVersionForProxyRequest(tc.requestedPath, tc.requestedVersion)
+			if err != nil {
+				t.Fatalf("modulePathAndVersionForProxyRequest(%q, %q): %v", tc.requestedPath, tc.requestedVersion, err)
 			}
 
-			want = fmt.Sprintf("%s/%s", client.url, tc.wantZipURL)
-			if got, _ := client.zipURL(tc.path, tc.version); got != want {
-				t.Errorf("zipURL(%q, %q) = %q; want = %q", tc.path, tc.version, got, want)
+			if path != tc.wantPath || version != tc.wantVersion {
+				t.Errorf("modulePathAndVersionForProxyRequest(%q, %q) = %q, %q; want = %q, %q", tc.requestedPath, tc.requestedVersion, path, version, tc.wantPath, tc.wantVersion)
 			}
 		})
 	}
@@ -125,34 +131,81 @@ func TestGetZip(t *testing.T) {
 	teardownProxy, client := SetupTestProxy(t, nil)
 	defer teardownProxy(t)
 
-	path := "my.mod/module"
-	version := "v1.0.0"
+	for _, tc := range []struct {
+		path, version string
+		wantFiles     []string
+	}{
+		{
+			path:    "my.mod/module",
+			version: "v1.0.0",
+			wantFiles: []string{
+				"my.mod/module@v1.0.0/LICENSE",
+				"my.mod/module@v1.0.0/README.md",
+				"my.mod/module@v1.0.0/go.mod",
+				"my.mod/module@v1.0.0/foo/foo.go",
+				"my.mod/module@v1.0.0/foo/LICENSE.md",
+				"my.mod/module@v1.0.0/bar/bar.go",
+				"my.mod/module@v1.0.0/bar/LICENSE",
+			},
+		},
+		{
+			path:    "std",
+			version: "v1.12.5",
+			wantFiles: []string{
+				"std@v1.12.5/LICENSE",
+				"std@v1.12.5/context/benchmark_test.go",
+				"std@v1.12.5/context/context.go",
+				"std@v1.12.5/context/context_test.go",
+				"std@v1.12.5/context/example_test.go",
+				"std@v1.12.5/context/net_test.go",
+				"std@v1.12.5/context/x_test.go",
+			},
+		},
+		{
+			path:    "cmd",
+			version: "v1.13.0-beta1",
+			wantFiles: []string{
+				"cmd@v1.13.0-beta1/LICENSE",
+				"cmd@v1.13.0-beta1/go/go11.go",
+			},
+		},
+		{
+			path:    "std",
+			version: "v1.13.0-beta1",
+			wantFiles: []string{
+				"std@v1.13.0-beta1/LICENSE",
+				"std@v1.13.0-beta1/context/benchmark_test.go",
+				"std@v1.13.0-beta1/context/context.go",
+				"std@v1.13.0-beta1/context/context_test.go",
+				"std@v1.13.0-beta1/context/example_test.go",
+				"std@v1.13.0-beta1/context/net_test.go",
+				"std@v1.13.0-beta1/context/x_test.go",
+			},
+		},
+	} {
+		t.Run(tc.path, func(t *testing.T) {
+			zipReader, err := client.GetZip(ctx, tc.path, tc.version)
+			if err != nil {
+				t.Fatalf("GetZip(ctx, %q, %q) error: %v", tc.path, tc.version, err)
+			}
 
-	zipReader, err := client.GetZip(ctx, path, version)
-	if err != nil {
-		t.Fatalf("GetZip(ctx, %q, %q) error: %v", path, version, err)
-	}
+			if len(zipReader.File) != len(tc.wantFiles) {
+				t.Errorf("GetZip(ctx, %q, %q) returned number of files: got %d, want %d",
+					tc.path, tc.version, len(zipReader.File), len(tc.wantFiles))
+			}
 
-	expectedFiles := map[string]bool{
-		"my.mod/module@v1.0.0/LICENSE":        true,
-		"my.mod/module@v1.0.0/README.md":      true,
-		"my.mod/module@v1.0.0/go.mod":         true,
-		"my.mod/module@v1.0.0/foo/foo.go":     true,
-		"my.mod/module@v1.0.0/foo/LICENSE.md": true,
-		"my.mod/module@v1.0.0/bar/bar.go":     true,
-		"my.mod/module@v1.0.0/bar/LICENSE":    true,
-	}
-	if len(zipReader.File) != len(expectedFiles) {
-		t.Errorf("GetZip(ctx, %q, %q) returned number of files: got %d, want %d",
-			path, version, len(zipReader.File), len(expectedFiles))
-	}
-
-	for _, zipFile := range zipReader.File {
-		if !expectedFiles[zipFile.Name] {
-			t.Errorf("GetZip(ctx, %q, %q) returned unexpected file: %q", path,
-				version, zipFile.Name)
-		}
-		delete(expectedFiles, zipFile.Name)
+			expectedFileSet := map[string]bool{}
+			for _, ef := range tc.wantFiles {
+				expectedFileSet[ef] = true
+			}
+			for _, zipFile := range zipReader.File {
+				if !expectedFileSet[zipFile.Name] {
+					t.Errorf("GetZip(ctx, %q, %q) returned unexpected file: %q", tc.path,
+						tc.version, zipFile.Name)
+				}
+				expectedFileSet[zipFile.Name] = false
+			}
+		})
 	}
 }
 
@@ -165,10 +218,6 @@ func TestGetZipNonExist(t *testing.T) {
 
 	path := "my.mod/nonexistmodule"
 	version := "v1.0.0"
-	if _, err := client.zipURL(path, version); err != nil {
-		t.Fatalf("client.zipURL(%q, %q): %v", path, version, err)
-	}
-
 	wantErrString := "Not Found"
 	if _, err := client.GetZip(ctx, path, version); !strings.Contains(err.Error(), wantErrString) {
 		t.Errorf("GetZip(ctx, %q, %q) returned error %v, want error containing %q",

@@ -32,6 +32,12 @@ func SeriesPathForModule(modulePath string) string {
 	return seriesPath
 }
 
+// IsStandardLibraryModule reports whether the modulePath is "cmd" or "std",
+// which are the two modules in the standard library, starting in go1.13.
+func IsStandardLibraryModule(modulePath string) bool {
+	return modulePath == "cmd" || modulePath == "std"
+}
+
 // A Version is a specific, reproducible build of a module.
 type Version struct {
 	VersionInfo

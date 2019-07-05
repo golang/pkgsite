@@ -167,13 +167,17 @@ func validateVersion(version *internal.Version) error {
 	var errReasons []string
 	if version.Version == "" {
 		errReasons = append(errReasons, "no specified version")
-	} else if version.ModulePath != "std" && !semver.IsValid(version.Version) {
-		errReasons = append(errReasons, "invalid version")
 	}
 	if version.ModulePath == "" {
 		errReasons = append(errReasons, "no module path")
-	} else if err := module.CheckPath(version.ModulePath); err != nil && version.ModulePath != "std" {
-		errReasons = append(errReasons, "invalid module path")
+	}
+	if !internal.IsStandardLibraryModule(version.ModulePath) {
+		if err := module.CheckPath(version.ModulePath); err != nil {
+			errReasons = append(errReasons, "invalid module path")
+		}
+		if !semver.IsValid(version.Version) {
+			errReasons = append(errReasons, "invalid version")
+		}
 	}
 	if len(version.Packages) == 0 {
 		errReasons = append(errReasons, "module does not have any packages")

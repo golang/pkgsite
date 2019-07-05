@@ -272,9 +272,15 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				Package: internal.Package{
 					Path:              "context",
 					Name:              "context",
-					Synopsis:          "",
+					Synopsis:          "Package context defines the Context type, which carries deadlines, cancelation signals, and other request-scoped values across API boundaries and between processes.",
 					DocumentationHTML: nil,
 					V1Path:            "context",
+					Licenses: []*license.Metadata{
+						{
+							Types:    []string{"BSD-3-Clause"},
+							FilePath: "LICENSE",
+						},
+					},
 				},
 			},
 		},
@@ -309,6 +315,11 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			})
 			if diff := cmp.Diff(test.want, gotPkg, cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML")); diff != "" {
 				t.Errorf("testDB.GetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", test.pkg, test.version, diff)
+			}
+			if test.want.ModulePath == "std" {
+				// Do not validate documentation packages in
+				// the std module because it is very large.
+				return
 			}
 			if got, want := gotPkg.DocumentationHTML, test.want.DocumentationHTML; len(want) == 0 && len(got) != 0 {
 				t.Errorf("got non-empty documentation but want empty:\ngot: %q\nwant: %q", got, want)

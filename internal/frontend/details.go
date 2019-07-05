@@ -358,7 +358,8 @@ func fetchVersionsDetails(ctx context.Context, db *postgres.DB, pkg *internal.Ve
 	)
 	for _, v := range versions {
 		if v.SeriesPath() != pkg.SeriesPath() {
-			if !strings.HasPrefix(pkg.V1Path, v.SeriesPath()) {
+			if !strings.HasPrefix(pkg.V1Path, v.SeriesPath()) &&
+				!internal.IsStandardLibraryModule(v.SeriesPath()) {
 				log.Printf("got version with mismatching series: %q", v.SeriesPath())
 				continue
 			}

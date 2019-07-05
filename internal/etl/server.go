@@ -116,7 +116,7 @@ func (s *Server) doFetch(r *http.Request) (string, int) {
 
 	code, err := fetchAndUpdateState(r.Context(), modulePath, version, s.proxyClient, s.db)
 	if err != nil {
-		return fmt.Sprintf("fetchAndUpdateState for %q, %q", modulePath, version), code
+		return fmt.Sprintf("fetchAndUpdateState(r.Context(), %q, %q, s.proxyClient, s.db): %d, %v", modulePath, version, code, err), code
 	}
 	return fmt.Sprintf("Downloaded %s@%s\n", modulePath, version), http.StatusOK
 }
@@ -277,19 +277,38 @@ func (s *Server) handlePopulateStdLib(w http.ResponseWriter, r *http.Request) {
 	// https://golang.org/doc/devel/release.html. This map will need to be
 	// updated each time a new Go version is released.
 	stdlibVersions := map[string]int{
-		"v1.12": 6,
+		"v1.12": 7,
 		"v1.11": 11,
 	}
+	// stdlibBetaVersions is a slice of beta versions available for Go.
+	// This slice will need to be updated each time a new Go beta version
+	// is released.
+	stdlibBetaVersions := []string{"v1.13.0-beta1"}
 
-	w.Header().Set("Content-Type", "text/plain")
+	var versionsToQueue [][]string
 	for majMin, maxPatch := range stdlibVersions {
 		for patch := 0; patch <= maxPatch; patch++ {
-			if err := s.queue.ScheduleFetch(r.Context(), "std", fmt.Sprintf("%s.%d", majMin, patch)); err != nil {
-				log.Printf("Error scheduling fetch: %v", err)
-				http.Error(w, "error scheduling fetch", http.StatusInternalServerError)
-				return
-
+			v := fmt.Sprintf("%s.%d", majMin, patch)
+			versionsToQueue = append(versionsToQueue, []string{"std", v})
+			if majMin == "v1.13" {
+				// Starting in go1.13, "cmd" becomes a nested
+				// module and needs to be fetched separately.
+				versionsToQueue = append(versionsToQueue, []string{"cmd", v})
 			}
+		}
+	}
+	for _, betaVersion := range stdlibBetaVersions {
+		versionsToQueue = append(versionsToQueue,
+			[]string{"std", betaVersion},
+			[]string{"cmd", betaVersion})
+	}
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	for _, moduleVersion := range versionsToQueue {
+		if err := s.queue.ScheduleFetch(r.Context(), moduleVersion[0], moduleVersion[1]); err != nil {
+			log.Printf("Error scheduling fetch: %v", err)
+			http.Error(w, "error scheduling fetch", http.StatusInternalServerError)
+			return
 		}
 	}
 }

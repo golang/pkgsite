@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"go.opencensus.io/plugin/ochttp"
+	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/dzip"
 	"golang.org/x/discovery/internal/thirdparty/module"
@@ -26,7 +27,7 @@ import (
 )
 
 const (
-	stdlibModulePathProxy = "go.googlesource.com/go.git"
+	stdlibProxyModulePathPrefix = "go.googlesource.com/go.git"
 )
 
 // A Client is used by the fetch service to communicate with a module
@@ -70,22 +71,19 @@ func (c *Client) GetInfo(ctx context.Context, path, version string) (*VersionInf
 	if err != nil {
 		return nil, err
 	}
-	if path == "std" {
+	if internal.IsStandardLibraryModule(path) {
 		v.Version = semver.Canonical(version)
 	}
 	return v, nil
 }
 
-func (c *Client) getInfo(ctx context.Context, path, version string) (*VersionInfo, error) {
-	if path == stdlibModulePathProxy {
-		return nil, derrors.NotAcceptable("%q is not an accepted module. Fetch std instead.", stdlibModulePathProxy)
-	}
-
-	u, err := c.infoURL(path, version)
+func (c *Client) getInfo(ctx context.Context, requestedPath, requestedVersion string) (*VersionInfo, error) {
+	path, version, err := modulePathAndVersionForProxyRequest(requestedPath, requestedVersion)
 	if err != nil {
-		return nil, fmt.Errorf("infoURL(%q, %q): %v", path, version, err)
+		return nil, err
 	}
 
+	u := fmt.Sprintf("%s/%s/@v/%s.info", c.url, path, version)
 	r, err := ctxhttp.Get(ctx, c.httpClient, u)
 	if err != nil {
 		return nil, fmt.Errorf("ctxhttp.Get(ctx, client, %q): %v", u, err)
@@ -103,49 +101,36 @@ func (c *Client) getInfo(ctx context.Context, path, version string) (*VersionInf
 	return &v, nil
 }
 
-// infoURL constructs a url for a request to $GOPROXY/<module>/@v/<version>.info.
-// If the path is "std", the version will be converted to the corresponding go
-// tag. For example, "v1.12.5" will be converted to "go1.12.5" and "v1.12.0"
-// will be converted to "go1.12".
-func (c *Client) infoURL(path, version string) (string, error) {
-	if path == "std" {
-		path = stdlibModulePathProxy
-		version = fmt.Sprintf("go%s", strings.TrimSuffix(strings.TrimPrefix(version, "v"), ".0"))
-	}
-	path, version, err := encodeModulePathAndVersion(path, version)
-	if err != nil {
-		return "", fmt.Errorf("encodeModulePathAndVersion(%q, %q): %v", path, version, err)
-	}
-	return fmt.Sprintf("%s/%s/@v/%s.info", c.url, path, version), nil
-}
-
 // GetZip makes a request to $GOPROXY/<path>/@v/<version>.zip and transforms
 // that data into a *zip.Reader. <version> is obtained by first making a
-// request to $GOPROXY/<path>/@v/<requestedVersion>.info to obtained the valid
+// request to $GOPROXY/<path>/@v/<version>.info to obtained the valid
 // semantic version.
-func (c *Client) GetZip(ctx context.Context, path, requestedVersion string) (*zip.Reader, error) {
-	info, err := c.getInfo(ctx, path, requestedVersion)
+func (c *Client) GetZip(ctx context.Context, requestedPath, requestedVersion string) (*zip.Reader, error) {
+	info, err := c.getInfo(ctx, requestedPath, requestedVersion)
 	if err != nil {
 		return nil, err
 	}
-	zipReader, err := c.getZip(ctx, path, info.Version)
+	zipPath, _, err := modulePathAndVersionForProxyRequest(requestedPath, requestedVersion)
 	if err != nil {
 		return nil, err
 	}
-	if path == "std" {
-		return createGoZipReader(zipReader, info.Version, requestedVersion)
+	zipReader, err := c.getZip(ctx, zipPath, info.Version)
+	if err != nil {
+		return nil, err
+	}
+
+	if strings.HasPrefix(zipPath, stdlibProxyModulePathPrefix) {
+		return createGoZipReader(zipReader, requestedPath, info.Version, requestedVersion)
 	}
 	return zipReader, nil
 }
 
-// getZip makes a request to $GOPROXY/<path>/@v/<version>.zip and transforms
-// that data into a *zip.Reader.
-func (c *Client) getZip(ctx context.Context, path, version string) (*zip.Reader, error) {
-	u, err := c.zipURL(path, version)
-	if err != nil {
-		return nil, fmt.Errorf("zipURL(%q, %q): %v", path, version, err)
-	}
-
+// getZip makes a request to $GOPROXY/<proxyModulePath>/@v/<proxyVersion>.zip
+// and transforms that data into a *zip.Reader. proxyPath and proxyVersion are
+// expected to be encoded for a proxy request. proxyVersion is expected to be a
+// valid semantic version.
+func (c *Client) getZip(ctx context.Context, proxyModulePath, proxyVersion string) (*zip.Reader, error) {
+	u := fmt.Sprintf("%s/%s/@v/%s.zip", c.url, proxyModulePath, proxyVersion)
 	r, err := ctxhttp.Get(ctx, c.httpClient, u)
 	if err != nil {
 		return nil, fmt.Errorf("ctxhttp.Get(ctx, nil, %q): %v", u, err)
@@ -167,39 +152,46 @@ func (c *Client) getZip(ctx context.Context, path, version string) (*zip.Reader,
 	return zipReader, nil
 }
 
-// zipURL constructs a url for a request to $GOPROXY/<module>/@v/<version>.zip.
-func (c *Client) zipURL(path, version string) (string, error) {
-	if path == "std" {
-		path = stdlibModulePathProxy
-	}
-	path, version, err := encodeModulePathAndVersion(path, version)
-	if err != nil {
-		return "", fmt.Errorf("encodeModulePathAndVersion(%q, %q): %v", path, version, err)
-	}
-	return fmt.Sprintf("%s/%s/@v/%s.zip", c.url, path, version), nil
-}
-
 // createGoZipReader returns a *zip.Reader containing the README, LICENSE and
 // contents of the src/ directory for a zip obtained from a request to
 // $GOPROXY/go.googlesource.com/go.git/@v/<version>.zip. The filenames returned
-// will be trimmed of the prefix go.googlesource.com@<infoVersion> or
-// go.googlesource.com@<infoVersion>/src. The prefix std@<goVersion> will be
+// will be trimmed of the prefix go.googlesource.com@<pseudoVersion> or
+// go.googlesource.com@<pseudoVersion>/src. The prefix std@<requestedSemanticVersion> will be
 // added to each of the resulting filenames.
-func createGoZipReader(r *zip.Reader, infoVersion string, goVersion string) (*zip.Reader, error) {
+func createGoZipReader(r *zip.Reader, path, pseudoVersion, requestedSemanticVersion string) (*zip.Reader, error) {
+	proxyPath, _, err := modulePathAndVersionForProxyRequest(path, requestedSemanticVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	var originalZipFilePrefix string
+	if semver.MajorMinor(requestedSemanticVersion) != "v1.13" {
+		originalZipFilePrefix = fmt.Sprintf("%s@%s/src", proxyPath, pseudoVersion)
+	} else {
+		originalZipFilePrefix = fmt.Sprintf("%s@%s", proxyPath, pseudoVersion)
+	}
+	newZipFilePrefix := fmt.Sprintf("%s@%s", path, requestedSemanticVersion)
+
 	buf := new(bytes.Buffer)
 	w := zip.NewWriter(buf)
-
 	for _, file := range r.File {
-		stdlibFilePrefix := fmt.Sprintf("%s@%s/", stdlibModulePathProxy, infoVersion)
-		if !strings.HasPrefix(file.Name, stdlibFilePrefix+"src/") &&
-			!strings.HasPrefix(file.Name, stdlibFilePrefix+"README") &&
-			!strings.HasPrefix(file.Name, stdlibFilePrefix+"LICENSE") {
+		preVersion113Root := strings.TrimSuffix(originalZipFilePrefix, "/src")
+		if !strings.HasPrefix(
+			file.Name, originalZipFilePrefix) &&
+			!strings.HasPrefix(file.Name, preVersion113Root+"/README") &&
+			!strings.HasPrefix(file.Name, preVersion113Root+"/LICENSE") {
 			continue
 		}
 
-		// Trim stdlibFilePrefix from README and LICENSE, and
-		// stdlibFilePrefix+"src/" from files in the src/ directory.
-		fileName := fmt.Sprintf("std@%s/%s", goVersion, strings.TrimPrefix(strings.TrimPrefix(file.Name, stdlibFilePrefix), "src/"))
+		var fileName string
+		if semver.MajorMinor(requestedSemanticVersion) == "v1.13" {
+			fileName = newZipFilePrefix + strings.TrimPrefix(file.Name, originalZipFilePrefix)
+		} else {
+			// Trim originalZipFilePrefix from README and LICENSE, and
+			// originalZipFilePrefix+"src" from files in the src/ directory.
+			fileName = newZipFilePrefix + strings.TrimPrefix(strings.TrimPrefix(file.Name, preVersion113Root), "/src")
+		}
+
 		f, err := w.Create(fileName)
 		if err != nil {
 			return nil, fmt.Errorf("w.Create(%q): %v", file.Name, err)
@@ -227,14 +219,55 @@ func createGoZipReader(r *zip.Reader, infoVersion string, goVersion string) (*zi
 	return zipReader, nil
 }
 
+func modulePathAndVersionForProxyRequest(path, version string) (string, string, error) {
+	if !internal.IsStandardLibraryModule(path) {
+		return encodeModulePathAndVersion(path, version)
+	}
+	if !semver.IsValid(version) {
+		return "", "", derrors.StatusError(http.StatusBadRequest, "requests for std must provide a valid semantic version: %q ", version)
+	}
+	if path == "cmd" {
+		if semver.MajorMinor(version) != "v1.13" {
+			return "", "", derrors.StatusError(http.StatusBadRequest, "module cmd can only be fetched for versions v1.13.x: version = %q", version)
+		}
+		path = fmt.Sprintf("%s/src/cmd", stdlibProxyModulePathPrefix)
+	} else if path == "std" {
+		if semver.MajorMinor(version) == "v1.13" {
+			path = fmt.Sprintf("%s/src", stdlibProxyModulePathPrefix)
+		} else {
+			path = stdlibProxyModulePathPrefix
+		}
+	}
+	if strings.HasPrefix(path, stdlibProxyModulePathPrefix) {
+		version = goVersionForSemanticVersion(version)
+	}
+	return path, version, nil
+}
+
 func encodeModulePathAndVersion(path, version string) (string, string, error) {
 	encodedPath, err := module.EncodePath(path)
 	if err != nil {
-		return "", "", fmt.Errorf("module.EncodePath(%q): %v", path, err)
+		return "", "", derrors.StatusError(http.StatusBadRequest, "module.EncodePath(%q): %v", path, err)
 	}
 	encodedVersion, err := module.EncodeVersion(version)
 	if err != nil {
-		return "", "", fmt.Errorf("module.EncodeVersion(%q): %v", version, err)
+		return "", "", derrors.StatusError(http.StatusBadRequest, "module.EncodeVersion(%q): %v", version, err)
 	}
 	return encodedPath, encodedVersion, nil
+}
+
+func goVersionForSemanticVersion(requestedVersion string) string {
+	goVersion := semver.Canonical(requestedVersion)
+	prerelease := semver.Prerelease(goVersion)
+	versionWithoutPrerelease := strings.TrimSuffix(goVersion, prerelease)
+	patch := strings.TrimPrefix(versionWithoutPrerelease, semver.MajorMinor(goVersion)+".")
+	if patch == "0" {
+		versionWithoutPrerelease = strings.TrimSuffix(versionWithoutPrerelease, ".0")
+	}
+
+	goVersion = fmt.Sprintf("go%s", strings.TrimPrefix(versionWithoutPrerelease, "v"))
+	if prerelease != "" {
+		goVersion = goVersion + strings.TrimPrefix(prerelease, "-")
+	}
+	return goVersion
 }
