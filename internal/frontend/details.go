@@ -20,7 +20,6 @@ import (
 	"github.com/russross/blackfriday/v2"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/etl"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
@@ -119,45 +118,6 @@ type LicensesDetails struct {
 type LicenseMetadata struct {
 	Type   string
 	Anchor string
-}
-
-// VersionsDetails contains all the data that the versions tab
-// template needs to populate.
-type VersionsDetails struct {
-	// ThisSeries is the SeriesVersionGroup containing the package currently
-	// being viewed.
-	ThisSeries *SeriesVersionGroup
-	// OtherSeries contains other series matching the V1Path of the current
-	// package.
-	OtherSeries []*SeriesVersionGroup
-}
-
-// SeriesVersionGroup represents the series level of the versions list
-// hierarchy.
-type SeriesVersionGroup struct {
-	Series        string
-	MajorVersions []*MajorVersionGroup
-}
-
-// MajorVersionGroup represents the major level of the versions
-// list hierarchy (i.e. "v1").
-type MajorVersionGroup struct {
-	Major         string
-	ModulePath    string
-	MinorVersions []*MinorVersionGroup
-}
-
-// MinorVersionGroup represents the major/minor level of the versions
-// list hierarchy (i.e. "1.5").
-type MinorVersionGroup struct {
-	Minor         string
-	PatchVersions []*PatchVersion
-}
-
-// PatchVersion represents the patch level of the versions list hierarchy.
-type PatchVersion struct {
-	*Package
-	FormattedVersion string
 }
 
 // Package contains information for an individual package.
@@ -331,142 +291,6 @@ func fetchModuleDetails(ctx context.Context, db *postgres.DB, pkg *internal.Vers
 		Version:    pkg.VersionInfo.Version,
 		Packages:   packages,
 	}, nil
-}
-
-// fetchVersionsDetails fetches data for the module version specified by path
-// and version from the database and returns a VersionsDetails. The package
-// path for each SeriesVersionGroup is calculated as the module path and
-// package suffix. For the standard library packages, it is the package path.
-func fetchVersionsDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*VersionsDetails, error) {
-	versions, err := db.GetTaggedVersionsForPackageSeries(ctx, pkg.Path)
-	if err != nil {
-		return nil, fmt.Errorf("db.GetTaggedVersions(%q): %v", pkg.Path, err)
-	}
-	// If no tagged versions for the package series are found,
-	// fetch the pseudo-versions instead.
-	if len(versions) == 0 {
-		versions, err = db.GetPseudoVersionsForPackageSeries(ctx, pkg.Path)
-		if err != nil {
-			return nil, fmt.Errorf("db.GetPseudoVersions(%q): %v", pkg.Path, err)
-		}
-	}
-
-	var (
-		thisSeries  *SeriesVersionGroup
-		otherSeries []*SeriesVersionGroup
-		curSeries   *SeriesVersionGroup
-		curMajor    *MajorVersionGroup
-		curMinor    *MinorVersionGroup
-	)
-	for _, v := range versions {
-		if v.SeriesPath() != pkg.SeriesPath() {
-			if !strings.HasPrefix(pkg.V1Path, v.SeriesPath()) &&
-				!internal.IsStandardLibraryModule(v.SeriesPath()) {
-				log.Printf("got version with mismatching series: %q", v.SeriesPath())
-				continue
-			}
-		}
-
-		var pkgPath string
-		suffix := strings.TrimPrefix(strings.TrimPrefix(pkg.V1Path, v.SeriesPath()), "/")
-		if inStdLib(pkg.Path) {
-			pkgPath = pkg.Path
-		} else if suffix == "" {
-			pkgPath = v.ModulePath
-		} else {
-			pkgPath = v.ModulePath + "/" + suffix
-		}
-		latest := &Package{
-			Version:    v.Version,
-			Path:       pkgPath,
-			CommitTime: elapsedTime(v.CommitTime),
-		}
-		if series := v.SeriesPath(); curSeries == nil || curSeries.Series != series {
-			curSeries = &SeriesVersionGroup{
-				Series: series,
-			}
-			if series == pkg.SeriesPath() {
-				if thisSeries != nil {
-					return nil, fmt.Errorf("BUG: got duplicate series for path %q", series)
-				}
-				thisSeries = curSeries
-			} else {
-				otherSeries = append(otherSeries, curSeries)
-			}
-			// nil-out curMajor and curMinor to force new version groups.
-			curMajor = nil
-			curMinor = nil
-		}
-
-		major := semver.Major(v.Version)
-		if curMajor == nil || curMajor.Major != major {
-			curMajor = &MajorVersionGroup{
-				Major:      major,
-				ModulePath: v.ModulePath,
-			}
-			curSeries.MajorVersions = append(curSeries.MajorVersions, curMajor)
-		}
-
-		majMin := semver.MajorMinor(v.Version)
-		if curMinor == nil || curMinor.Minor != majMin {
-			curMinor = &MinorVersionGroup{
-				Minor: majMin,
-			}
-			curMajor.MinorVersions = append(curMajor.MinorVersions, curMinor)
-		}
-		curMinor.PatchVersions = append(curMinor.PatchVersions, &PatchVersion{
-			Package:          latest,
-			FormattedVersion: formatVersion(latest.Version),
-		})
-	}
-
-	return &VersionsDetails{
-		ThisSeries:  thisSeries,
-		OtherSeries: otherSeries,
-	}, nil
-}
-
-// pseudoVersionRev extracts the commit identifier from a pseudo version
-// string. It assumes the pseudo version is correctly formatted.
-func pseudoVersionRev(v string) string {
-	v = strings.TrimSuffix(v, "+incompatible")
-	j := strings.LastIndex(v, "-")
-	return v[j+1:]
-}
-
-// formatVersion formats a more readable representation of the given version
-// string. On any parsing error, it simply returns the input unmodified.
-//
-// For prerelease versions, formatVersion separates the prerelease portion of
-// the version string into a parenthetical. i.e.
-//   formatVersion("v1.2.3-alpha") = "v1.2.3 (alpha)"
-//
-// For pseudo versions, formatVersion uses a short commit hash to identify the
-// version. i.e.
-//   formatVersion("v1.2.3-20190311183353-d8887717615a") = "v.1.2.3 (d888771)"
-func formatVersion(version string) string {
-	// TODO(b/136649901): move ParseVersionType to a better location.
-	vType, err := etl.ParseVersionType(version)
-	if err != nil {
-		log.Printf("Error parsing version %q: %v", version, err)
-		return version
-	}
-	pre := semver.Prerelease(version)
-	base := strings.TrimSuffix(version, pre)
-	pre = strings.TrimPrefix(pre, "-")
-	switch vType {
-	case internal.VersionTypePrerelease:
-		return fmt.Sprintf("%s (%s)", base, pre)
-	case internal.VersionTypePseudo:
-		rev := pseudoVersionRev(version)
-		commitLen := 7
-		if len(rev) < commitLen {
-			commitLen = len(rev)
-		}
-		return fmt.Sprintf("%s (%s)", base, rev[0:commitLen])
-	default:
-		return version
-	}
 }
 
 // licenseAnchor returns the anchor that should be used to jump to the specific
