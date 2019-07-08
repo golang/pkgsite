@@ -122,6 +122,15 @@ type errorPage struct {
 }
 
 func (s *Server) serveErrorPage(w http.ResponseWriter, r *http.Request, status int, page *errorPage) {
+	nonce, ok := middleware.GetNonce(r.Context())
+	if !ok {
+		log.Printf("middleware.GetNonce(r.Context()): nonce was not set")
+	}
+	if page == nil {
+		page = &errorPage{basePageData: basePageData{Nonce: nonce}}
+	} else {
+		page.Nonce = nonce
+	}
 	buf, err := s.renderErrorPage(status, page)
 	if err != nil {
 		log.Printf("s.renderErrorPage(w, %d, %v): %v", status, page, err)
@@ -141,9 +150,17 @@ func (s *Server) renderErrorPage(status int, page *errorPage) ([]byte, error) {
 	if page == nil {
 		page = &errorPage{
 			Message: statusInfo,
+			basePageData: basePageData{
+				Title: statusInfo,
+			},
 		}
 	}
-	page.basePageData = basePageData{Title: statusInfo}
+	if page.Message == "" {
+		page.Message = statusInfo
+	}
+	if page.Title == "" {
+		page.Title = statusInfo
+	}
 	return s.renderPage("error.tmpl", page)
 }
 
@@ -173,7 +190,7 @@ func (s *Server) servePage(w http.ResponseWriter, templateName string, page inte
 	}
 }
 
-// renderErrorPage executes the given templateName with page.
+// renderPage executes the given templateName with page.
 func (s *Server) renderPage(templateName string, page interface{}) ([]byte, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
