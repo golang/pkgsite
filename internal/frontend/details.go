@@ -693,7 +693,7 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 			s.serveErrorPage(w, r, http.StatusBadRequest, &errorPage{
 				Message: fmt.Sprintf("Package %s@%s is not available.", path, version),
 				SecondaryMessage: template.HTML(
-					fmt.Sprintf(`There are other versions of this package that are! To view them, <a href="/%s?tab=versions">click here</a>.</p>`, path)),
+					fmt.Sprintf(`There are other versions of this package that are! To view them, <a href="/pkg/%s?tab=versions">click here</a>.</p>`, path)),
 			})
 			return
 		}
