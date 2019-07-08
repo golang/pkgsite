@@ -674,12 +674,12 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 	)
 	if version == "" {
 		pkg, err = s.db.GetLatestPackage(ctx, path)
-		if err != nil {
+		if err != nil && !derrors.IsNotFound(err) {
 			log.Printf("s.db.GetLatestPackage(ctx, %q): %v", path, err)
 		}
 	} else {
 		pkg, err = s.db.GetPackage(ctx, path, version)
-		if err != nil {
+		if err != nil && !derrors.IsNotFound(err) {
 			log.Printf("s.db.GetPackage(ctx, %q, %q): %v", path, version, err)
 		}
 	}
@@ -689,16 +689,17 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if version == "" {
-			// If the version is empty, it means that we already tried fetching
-			// the latest version of the package, and it does not exist.
-			s.serveErrorPage(w, r, http.StatusBadRequest, nil)
+			// If the version is empty, it means that we already
+			// tried fetching the latest version of the package,
+			// and this package does not exist.
+			s.serveErrorPage(w, r, http.StatusNotFound, nil)
 			return
 		}
 		// Get the latest package to check if any versions of
 		// the package exists.
 		_, latestErr := s.db.GetLatestPackage(ctx, path)
 		if latestErr == nil {
-			s.serveErrorPage(w, r, http.StatusBadRequest, &errorPage{
+			s.serveErrorPage(w, r, http.StatusNotFound, &errorPage{
 				Message: fmt.Sprintf("Package %s@%s is not available.", path, version),
 				SecondaryMessage: template.HTML(
 					fmt.Sprintf(`There are other versions of this package that are! To view them, <a href="/pkg/%s?tab=versions">click here</a>.</p>`, path)),
@@ -706,11 +707,11 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if !derrors.IsNotFound(latestErr) {
-			// We succeeded in fetching with GetPackage, but failed in fetching
-			// with GetLatestPackage.
-			log.Printf("error getting package for %s: %v", path, latestErr)
+			// GetPackage returned a NotFound error, but
+			// GetLatestPackage returned a different error.
+			log.Printf("error getting latest package for %s: %v", path, latestErr)
 		}
-		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
+		s.serveErrorPage(w, r, http.StatusNotFound, nil)
 		return
 	}
 
