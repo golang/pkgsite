@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/sample"
 )
 
 func TestPathTokens(t *testing.T) {
@@ -123,18 +124,17 @@ func TestPathTokens(t *testing.T) {
 	}
 }
 
-// insertPackage creates and inserts a version using SampleVersion, that has
+// insertPackage creates and inserts a version using sample.Version, that has
 // only the package pkg. It is a helper function for
 // TestInsertDocumentsAndSearch.
 func insertPackage(ctx context.Context, t *testing.T, modulePath string, pkg *internal.Package) {
 	t.Helper()
 
-	v := SampleVersion(func(v *internal.Version) {
-		v.ModulePath = modulePath
-		pkg.Licenses = SampleLicenseMetadata
-		v.Packages = []*internal.Package{pkg}
-	})
-	if err := testDB.InsertVersion(ctx, v, SampleLicenses); err != nil {
+	v := sample.Version()
+	v.ModulePath = modulePath
+	pkg.Licenses = sample.LicenseMetadata
+	v.Packages = []*internal.Package{pkg}
+	if err := testDB.InsertVersion(ctx, v, sample.Licenses); err != nil {
 		t.Fatalf("testDB.InsertVersion(%+v): %v", v, err)
 	}
 	if err := testDB.InsertDocuments(ctx, v); err != nil {
@@ -167,8 +167,8 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 				PackagePath: pkgKube.Path,
 				Synopsis:    pkgKube.Synopsis,
 				Licenses:    []string{"MIT"},
-				CommitTime:  SampleCommitTime,
-				Version:     SampleVersionString,
+				CommitTime:  sample.CommitTime,
+				Version:     sample.VersionString,
 				ModulePath:  modKube,
 				Rank:        rank,
 				NumResults:  numResults,
@@ -181,8 +181,8 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 				PackagePath: pkgGoCDK.Path,
 				Synopsis:    pkgGoCDK.Synopsis,
 				Licenses:    []string{"MIT"},
-				CommitTime:  SampleCommitTime,
-				Version:     SampleVersionString,
+				CommitTime:  sample.CommitTime,
+				Version:     sample.VersionString,
 				ModulePath:  modGoCDK,
 				Rank:        rank,
 				NumResults:  numResults,

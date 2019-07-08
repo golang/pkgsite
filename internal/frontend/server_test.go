@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"golang.org/x/discovery/internal/postgres"
+	"golang.org/x/discovery/internal/sample"
 )
 
 const testTimeout = 5 * time.Second
@@ -42,11 +43,12 @@ func TestServer(t *testing.T) {
 	defer cancel()
 
 	defer postgres.ResetTestDB(testDB, t)
-	if err := testDB.InsertVersion(ctx, postgres.SampleVersion(), postgres.SampleLicenses); err != nil {
-		t.Fatalf("db.InsertVersion(%+v): %v", postgres.SampleVersion(), err)
+	sampleVersion := sample.Version()
+	if err := testDB.InsertVersion(ctx, sampleVersion, sample.Licenses); err != nil {
+		t.Fatalf("db.InsertVersion(%+v): %v", sampleVersion, err)
 	}
-	if err := testDB.InsertDocuments(ctx, postgres.SampleVersion()); err != nil {
-		t.Fatalf("testDB.InsertDocument(%+v): %v", postgres.SampleVersion(), err)
+	if err := testDB.InsertDocuments(ctx, sampleVersion); err != nil {
+		t.Fatalf("testDB.InsertDocument(%+v): %v", sampleVersion, err)
 	}
 	testDB.RefreshSearchDocuments(ctx)
 
@@ -54,16 +56,16 @@ func TestServer(t *testing.T) {
 		"/static/",
 		"/license-policy",
 		"/favicon.ico",
-		fmt.Sprintf("/search?q=%s", postgres.SamplePackage.Name),
-		fmt.Sprintf("/pkg/%s", postgres.SamplePackage.Path),
-		fmt.Sprintf("/pkg/%s@%s", postgres.SamplePackage.Path, postgres.SampleVersion().Version),
-		fmt.Sprintf("/pkg/%s?tab=doc", postgres.SamplePackage.Path),
-		fmt.Sprintf("/pkg/%s?tab=overview", postgres.SamplePackage.Path),
-		fmt.Sprintf("/pkg/%s?tab=module", postgres.SamplePackage.Path),
-		fmt.Sprintf("/pkg/%s?tab=versions", postgres.SamplePackage.Path),
-		fmt.Sprintf("/pkg/%s?tab=imports", postgres.SamplePackage.Path),
-		fmt.Sprintf("/pkg/%s?tab=importedby", postgres.SamplePackage.Path),
-		fmt.Sprintf("/pkg/%s?tab=licenses", postgres.SamplePackage.Path),
+		fmt.Sprintf("/search?q=%s", sample.PackageName),
+		fmt.Sprintf("/pkg/%s", sample.PackagePath),
+		fmt.Sprintf("/pkg/%s@%s", sample.PackagePath, sample.VersionString),
+		fmt.Sprintf("/pkg/%s?tab=doc", sample.PackagePath),
+		fmt.Sprintf("/pkg/%s?tab=overview", sample.PackagePath),
+		fmt.Sprintf("/pkg/%s?tab=module", sample.PackagePath),
+		fmt.Sprintf("/pkg/%s?tab=versions", sample.PackagePath),
+		fmt.Sprintf("/pkg/%s?tab=imports", sample.PackagePath),
+		fmt.Sprintf("/pkg/%s?tab=importedby", sample.PackagePath),
+		fmt.Sprintf("/pkg/%s?tab=licenses", sample.PackagePath),
 	} {
 		t.Run(urlPath, func(t *testing.T) {
 			s, err := NewServer(testDB, "../../content/static", false)

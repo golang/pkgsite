@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -122,26 +123,15 @@ type LicenseMetadata struct {
 
 // Package contains information for an individual package.
 type Package struct {
-	Name              string
+	Suffix            string
 	Version           string
 	Path              string
 	ModulePath        string
 	Synopsis          string
 	CommitTime        string
-	Title             string
 	Licenses          []LicenseMetadata
-	IsCommand         bool
 	IsRedistributable bool
 	RepositoryURL     string
-}
-
-// Suffix returns the package path less the ModulePath prefix.
-func (p *Package) Suffix() string {
-	suffix := strings.TrimPrefix(strings.TrimPrefix(p.Path, p.ModulePath), "/")
-	if suffix == "" {
-		return p.Name
-	}
-	return suffix
 }
 
 // transformLicenseMetadata transforms license.Metadata into a LicenseMetadata
@@ -160,29 +150,27 @@ func transformLicenseMetadata(dbLicenses []*license.Metadata) []LicenseMetadata 
 	return mds
 }
 
-// createPackageHeader returns a *Package based on the fields of the specified
-// package. It assumes that pkg and pkg.Version are not nil.
-func createPackageHeader(pkg *internal.VersionedPackage) (*Package, error) {
-	if pkg == nil {
-		return nil, fmt.Errorf("package cannot be nil")
+// createPackage returns a *Package based on the fields of the specified
+// internal package and version info.
+func createPackage(pkg *internal.Package, vi *internal.VersionInfo) (*Package, error) {
+	if pkg == nil || vi == nil {
+		return nil, fmt.Errorf("package and version info must not be nil")
 	}
 
-	var isCmd bool
-	if pkg.Name == "main" {
-		isCmd = true
+	suffix := strings.TrimPrefix(strings.TrimPrefix(pkg.Path, vi.ModulePath), "/")
+	if suffix == "" {
+		suffix = effectiveName(pkg) + " (root)"
 	}
-	name := packageName(pkg.Name, pkg.Path)
 	return &Package{
-		Name:              name,
-		IsCommand:         isCmd,
-		Title:             packageTitle(name, isCmd),
-		Version:           pkg.VersionInfo.Version,
+		Suffix:            suffix,
+		Version:           vi.Version,
 		Path:              pkg.Path,
-		Synopsis:          pkg.Package.Synopsis,
+		Synopsis:          pkg.Synopsis,
 		Licenses:          transformLicenseMetadata(pkg.Licenses),
-		CommitTime:        elapsedTime(pkg.VersionInfo.CommitTime),
+		CommitTime:        elapsedTime(vi.CommitTime),
+		ModulePath:        vi.ModulePath,
 		IsRedistributable: pkg.IsRedistributable(),
-		RepositoryURL:     pkg.RepositoryURL,
+		RepositoryURL:     vi.RepositoryURL,
 	}, nil
 }
 
@@ -194,29 +182,27 @@ func inStdLib(path string) bool {
 	return !strings.Contains(path, ".")
 }
 
-// packageName returns name if it is not "main". Otherwise, it returns the last
-// element of pkg.Path that is not a version identifier (such as "v2"). For
-// example, if name is "main" and path is foo/bar/v2, name will be "bar".
-func packageName(name, path string) string {
-	if name != "main" {
-		return name
+// effectiveName returns either the command name or package name.
+func effectiveName(pkg *internal.Package) string {
+	if pkg.Name != "main" {
+		return pkg.Name
 	}
-
-	if path[len(path)-3:] == "/v1" {
-		return filepath.Base(path[:len(path)-3])
+	var prefix string
+	if pkg.Path[len(pkg.Path)-3:] == "/v1" {
+		prefix = pkg.Path[:len(pkg.Path)-3]
+	} else {
+		prefix, _, _ = module.SplitPathVersion(pkg.Path)
 	}
-
-	prefix, _, _ := module.SplitPathVersion(path)
-	return filepath.Base(prefix)
+	_, base := path.Split(prefix)
+	return base
 }
 
-// packageTitle returns name prefixed by "Command" if isCommand is true and
-// "Package" if false.
-func packageTitle(name string, isCommand bool) string {
-	if isCommand {
-		return fmt.Sprintf("Command %s", name)
+// packageTitle constructs the details page title for pkg.
+func packageTitle(pkg *internal.Package) string {
+	if pkg.Name != "main" {
+		return "Package" + pkg.Name
 	}
-	return fmt.Sprintf("Package %s", name)
+	return "Command " + effectiveName(pkg)
 }
 
 // elapsedTime takes a date and returns returns human-readable,
@@ -273,12 +259,9 @@ func fetchModuleDetails(ctx context.Context, db *postgres.DB, pkg *internal.Vers
 
 	var packages []*Package
 	for _, p := range version.Packages {
-		newPkg := &Package{
-			Name:       p.Name,
-			Path:       p.Path,
-			Version:    version.Version,
-			ModulePath: version.ModulePath,
-			Licenses:   transformLicenseMetadata(p.Licenses),
+		newPkg, err := createPackage(p, &pkg.VersionInfo)
+		if err != nil {
+			return nil, fmt.Errorf("createPackageHeader: %v", err)
 		}
 		if pkg.IsRedistributable() {
 			newPkg.Synopsis = p.Synopsis
@@ -540,7 +523,7 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	version = pkg.VersionInfo.Version
-	pkgHeader, err := createPackageHeader(pkg)
+	pkgHeader, err := createPackage(&pkg.Package, &pkg.VersionInfo)
 	if err != nil {
 		log.Printf("error creating package header for %s@%s: %v", path, version, err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
@@ -572,7 +555,7 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 	}
 	page := &DetailsPage{
 		basePageData: basePageData{
-			Title: fmt.Sprintf("%s - %s", pkgHeader.Title, pkgHeader.Version),
+			Title: packageTitle(&pkg.Package),
 			Query: strings.TrimSpace(r.FormValue("q")),
 			Nonce: nonce,
 		},

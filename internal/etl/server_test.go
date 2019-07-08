@@ -18,6 +18,7 @@ import (
 	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
+	"golang.org/x/discovery/internal/sample"
 )
 
 const testTimeout = 5 * time.Second
@@ -33,7 +34,7 @@ func TestETL(t *testing.T) {
 	defer cancel()
 
 	var (
-		start    = postgres.NowTruncated()
+		start    = sample.NowTruncated()
 		fooIndex = &internal.IndexVersion{
 			Path:      "foo.com/foo",
 			Timestamp: start,

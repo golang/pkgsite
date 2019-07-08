@@ -6,7 +6,6 @@ package frontend
 
 import (
 	"context"
-	"fmt"
 	"html/template"
 	"net/url"
 	"testing"
@@ -16,21 +15,29 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
+	"golang.org/x/discovery/internal/sample"
 )
 
-var (
-	samplePackage = &Package{
-		Name:       postgres.SamplePackage.Name,
-		ModulePath: postgres.SampleModulePath,
-		Version:    postgres.SampleVersionString,
-		Path:       postgres.SamplePackage.Path,
-		Synopsis:   postgres.SamplePackage.Synopsis,
-		Licenses:   transformLicenseMetadata(postgres.SampleLicenseMetadata),
+func samplePackage(mutators ...func(*Package)) *Package {
+	p := &Package{
+		Version:           sample.VersionString,
+		Path:              sample.PackagePath,
+		CommitTime:        "0 hours ago",
+		Suffix:            sample.PackageName,
+		ModulePath:        sample.ModulePath,
+		RepositoryURL:     sample.RepositoryURL,
+		Synopsis:          sample.Synopsis,
+		IsRedistributable: true,
+		Licenses:          transformLicenseMetadata(sample.LicenseMetadata),
 	}
-)
+	for _, mut := range mutators {
+		mut(p)
+	}
+	return p
+}
 
 func TestElapsedTime(t *testing.T) {
-	now := postgres.NowTruncated()
+	now := sample.NowTruncated()
 	testCases := []struct {
 		name        string
 		date        time.Time
@@ -99,16 +106,16 @@ func TestFetchOverviewDetails(t *testing.T) {
 		wantDetails *OverviewDetails
 	}{
 		name:    "want expected overview details",
-		version: postgres.SampleVersion(),
+		version: sample.Version(),
 		wantDetails: &OverviewDetails{
-			ModulePath: postgres.SampleModulePath,
+			ModulePath: sample.ModulePath,
 			ReadMe:     template.HTML("<p>readme</p>\n"),
 		},
 	}
 
 	defer postgres.ResetTestDB(testDB, t)
 
-	if err := testDB.InsertVersion(ctx, tc.version, postgres.SampleLicenses); err != nil {
+	if err := testDB.InsertVersion(ctx, tc.version, sample.Licenses); err != nil {
 		t.Fatalf("db.InsertVersion(%v): %v", tc.version, err)
 	}
 
@@ -173,6 +180,7 @@ func TestReadmeHTML(t *testing.T) {
 func TestFetchModuleDetails(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
+	defer postgres.ResetTestDB(testDB, t)
 
 	tc := struct {
 		name        string
@@ -180,18 +188,16 @@ func TestFetchModuleDetails(t *testing.T) {
 		wantDetails *ModuleDetails
 	}{
 		name:    "want expected module details",
-		version: postgres.SampleVersion(),
+		version: sample.Version(),
 		wantDetails: &ModuleDetails{
-			ModulePath: postgres.SampleModulePath,
-			Version:    postgres.SampleVersionString,
-			Packages:   []*Package{samplePackage},
+			ModulePath: sample.ModulePath,
+			Version:    sample.VersionString,
+			Packages:   []*Package{samplePackage()},
 		},
 	}
 
-	defer postgres.ResetTestDB(testDB, t)
-
-	if err := testDB.InsertVersion(ctx, tc.version, postgres.SampleLicenses); err != nil {
-		t.Fatalf("db.InsertVersion(ctx, %v, %v): %v", tc.version, postgres.SampleLicenses, err)
+	if err := testDB.InsertVersion(ctx, tc.version, sample.Licenses); err != nil {
+		t.Fatalf("db.InsertVersion(ctx, %v, %v): %v", tc.version, sample.Licenses, err)
 	}
 
 	got, err := fetchModuleDetails(ctx, testDB, firstVersionedPackage(tc.version))
@@ -206,91 +212,59 @@ func TestFetchModuleDetails(t *testing.T) {
 }
 
 func TestCreatePackageHeader(t *testing.T) {
-	versionInfo := internal.VersionInfo{
-		Version: "v1.0.0",
-	}
 	for _, tc := range []struct {
+		label   string
 		pkg     *internal.VersionedPackage
 		wantPkg *Package
 	}{
 		{
-			pkg: &internal.VersionedPackage{
-				Package: internal.Package{
-					Name: "foo",
-					Path: "pa.th/to/foo",
-				},
-				VersionInfo: versionInfo,
-			},
-			wantPkg: &Package{
-				Version:    versionInfo.Version,
-				Name:       "foo",
-				Title:      "Package foo",
-				Path:       "pa.th/to/foo",
-				CommitTime: "Jan  1, 0001",
-				IsCommand:  false,
-			},
+			label:   "simple package",
+			pkg:     sample.VersionedPackage(),
+			wantPkg: samplePackage(),
 		},
 		{
-			pkg: &internal.VersionedPackage{
-				Package: internal.Package{
-					Name: "main",
-					Path: "pa.th/to/foo",
-				},
-				VersionInfo: versionInfo,
-			},
-			wantPkg: &Package{
-				Version:    versionInfo.Version,
-				Name:       "foo",
-				Title:      "Command foo",
-				Path:       "pa.th/to/foo",
-				CommitTime: "Jan  1, 0001",
-				IsCommand:  true,
-			},
+			label: "command package",
+			pkg: sample.VersionedPackage(func(vp *internal.VersionedPackage) {
+				vp.Name = "main"
+			}),
+			wantPkg: samplePackage(),
 		},
 		{
-			pkg: &internal.VersionedPackage{
-				Package: internal.Package{
-					Name: "main",
-					Path: "pa.th/to/foo/v2",
-				},
-				VersionInfo: versionInfo,
-			},
-			wantPkg: &Package{
-				Version:    versionInfo.Version,
-				Name:       "foo",
-				Title:      "Command foo",
-				Path:       "pa.th/to/foo/v2",
-				CommitTime: "Jan  1, 0001",
-				IsCommand:  true,
-			},
+			label: "v2 command",
+			pkg: sample.VersionedPackage(func(vp *internal.VersionedPackage) {
+				vp.Name = "main"
+				vp.Path = "pa.th/to/foo/v2/bar"
+				vp.ModulePath = "pa.th/to/foo/v2"
+			}),
+			wantPkg: samplePackage(func(p *Package) {
+				p.Path = "pa.th/to/foo/v2/bar"
+				p.Suffix = "bar"
+				p.ModulePath = "pa.th/to/foo/v2"
+			}),
 		},
 		{
-			pkg: &internal.VersionedPackage{
-				Package: internal.Package{
-					Name: "main",
-					Path: "pa.th/to/foo/v1",
-				},
-				VersionInfo: versionInfo,
-			},
-			wantPkg: &Package{
-				Version:    versionInfo.Version,
-				Name:       "foo",
-				Title:      "Command foo",
-				Path:       "pa.th/to/foo/v1",
-				CommitTime: "Jan  1, 0001",
-				IsCommand:  true,
-			},
+			label: "explicit v1 command",
+			pkg: sample.VersionedPackage(func(vp *internal.VersionedPackage) {
+				vp.Name = "main"
+				vp.Path = "pa.th/to/foo/v1"
+				vp.ModulePath = "pa.th/to/foo/v1"
+			}),
+			wantPkg: samplePackage(func(p *Package) {
+				p.Path = "pa.th/to/foo/v1"
+				p.Suffix = "foo (root)"
+				p.ModulePath = "pa.th/to/foo/v1"
+			}),
 		},
 	} {
 
-		t.Run(tc.pkg.Path, func(t *testing.T) {
-			got, err := createPackageHeader(tc.pkg)
+		t.Run(tc.label, func(t *testing.T) {
+			got, err := createPackage(&tc.pkg.Package, &tc.pkg.VersionInfo)
 			if err != nil {
-				t.Fatalf("createPackageHeader(%v): %v", tc.pkg, err)
+				t.Fatalf("createPackage(%v): %v", tc.pkg, err)
 			}
 
 			if diff := cmp.Diff(tc.wantPkg, got); diff != "" {
-				t.Errorf("createPackageHeader(%v) mismatch (-want +got):\n%s", tc.pkg, diff)
+				t.Errorf("createPackage(%v) mismatch (-want +got):\n%s", tc.pkg, diff)
 			}
 
 		})
@@ -307,12 +281,12 @@ func TestFetchImportsDetails(t *testing.T) {
 			name: "want imports details with standard and internal",
 			imports: []string{
 				"pa.th/import/1",
-				postgres.SamplePackage.Path,
+				sample.PackagePath,
 				"context",
 			},
 			wantDetails: &ImportsDetails{
 				ExternalImports: []string{"pa.th/import/1"},
-				InternalImports: []string{postgres.SamplePackage.Path},
+				InternalImports: []string{sample.PackagePath},
 				StdLib:          []string{"context"},
 			},
 		},
@@ -331,13 +305,13 @@ func TestFetchImportsDetails(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 			defer cancel()
 
-			version := postgres.SampleVersion(func(v *internal.Version) {
-				pkg := postgres.SamplePackage
+			version := sample.Version(func(v *internal.Version) {
+				pkg := sample.Package()
 				pkg.Imports = tc.imports
 				v.Packages = []*internal.Package{pkg}
 			})
-			if err := testDB.InsertVersion(ctx, version, postgres.SampleLicenses); err != nil {
-				t.Fatalf("db.InsertVersion(ctx, %v, %v): %v", version, postgres.SampleLicenses, err)
+			if err := testDB.InsertVersion(ctx, version, sample.Licenses); err != nil {
+				t.Fatalf("db.InsertVersion(ctx, %v, %v): %v", version, sample.Licenses, err)
 			}
 
 			got, err := fetchImportsDetails(ctx, testDB, firstVersionedPackage(version))
@@ -355,31 +329,30 @@ func TestFetchImportsDetails(t *testing.T) {
 }
 
 func TestFetchImportedByDetails(t *testing.T) {
-	var versionCount = 0
-	makeVersion := func(packages ...*internal.Package) *internal.Version {
-		v := postgres.SampleVersion()
-		v.Packages = packages
-		// Set Version to something unique.
-		v.Version = fmt.Sprintf("v1.0.%d", versionCount)
-		versionCount++
-		return v
-	}
+	defer postgres.ResetTestDB(testDB, t)
+
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
 	var (
-		pkg1 = &internal.Package{
-			Name: "bar",
-			Path: "path.to/foo/bar",
-		}
-		pkg2 = &internal.Package{
-			Name:    "bar2",
-			Path:    "path2.to/foo/bar2",
-			Imports: []string{pkg1.Path},
-		}
-		pkg3 = &internal.Package{
-			Name:    "bar3",
-			Path:    "path3.to/foo/bar3",
-			Imports: []string{pkg2.Path, pkg1.Path},
+		pkg1    = sample.Package(sample.WithPath("path.to/foo/bar"))
+		pkg2    = sample.Package(sample.WithPath("path2.to/foo/bar2"), sample.WithImports(pkg1.Path))
+		pkg3    = sample.Package(sample.WithPath("path3.to/foo/bar3"), sample.WithImports(pkg2.Path, pkg1.Path))
+		sampler = sample.VersionSampler(func() *internal.Version {
+			return sample.Version(sample.WithModulePath("path.to/foo"))
+		})
+		testVersions = []*internal.Version{
+			sampler.Sample(sample.WithVersion("v1.0.1"), sample.WithPackages(pkg1)),
+			sampler.Sample(sample.WithVersion("v1.0.2"), sample.WithPackages(pkg2)),
+			sampler.Sample(sample.WithVersion("v1.0.3"), sample.WithPackages(pkg3)),
 		}
 	)
+
+	for _, v := range testVersions {
+		if err := testDB.InsertVersion(ctx, v, sample.Licenses); err != nil {
+			t.Fatalf("db.InsertVersion(%v): %v", v, err)
+		}
+	}
 
 	for _, tc := range []struct {
 		pkg         *internal.Package
@@ -403,19 +376,8 @@ func TestFetchImportedByDetails(t *testing.T) {
 		},
 	} {
 		t.Run(tc.pkg.Path, func(t *testing.T) {
-			defer postgres.ResetTestDB(testDB, t)
-
-			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-			defer cancel()
-
-			for _, p := range []*internal.Package{pkg1, pkg2, pkg3} {
-				v := makeVersion(p)
-				if err := testDB.InsertVersion(ctx, v, postgres.SampleLicenses); err != nil {
-					t.Errorf("db.InsertVersion(%v): %v", v, err)
-				}
-			}
-
-			vp := firstVersionedPackage(makeVersion(tc.pkg))
+			otherVersion := sampler.Sample(sample.WithVersion("v1.0.5"), sample.WithPackages(tc.pkg))
+			vp := firstVersionedPackage(otherVersion)
 			got, err := fetchImportedByDetails(ctx, testDB, vp)
 			if err != nil {
 				t.Fatalf("fetchImportedByDetails(ctx, db, %q) = %v err = %v, want %v",

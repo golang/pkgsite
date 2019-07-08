@@ -14,6 +14,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/sample"
 )
 
 func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
@@ -34,73 +35,69 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 	}{
 		{
 			name:           "valid test",
-			version:        SampleVersion(),
-			wantModulePath: SampleModulePath,
-			wantVersion:    SampleVersionString,
-			wantPkgPath:    SamplePackage.Path,
+			version:        sample.Version(),
+			wantModulePath: sample.ModulePath,
+			wantVersion:    sample.VersionString,
+			wantPkgPath:    sample.PackagePath,
 		},
 		{
 			name:             "nil version write error",
-			wantModulePath:   SampleModulePath,
-			wantVersion:      SampleVersionString,
+			wantModulePath:   sample.ModulePath,
+			wantVersion:      sample.VersionString,
 			wantWriteErrType: derrors.InvalidArgumentType,
 			wantReadErr:      true,
 		},
 		{
 			name:           "nonexistent version",
-			version:        SampleVersion(),
-			wantModulePath: SampleModulePath,
+			version:        sample.Version(),
+			wantModulePath: sample.ModulePath,
 			wantVersion:    "v1.2.3",
 			wantReadErr:    true,
 		},
 		{
 			name:           "nonexistent module",
-			version:        SampleVersion(),
+			version:        sample.Version(),
 			wantModulePath: "nonexistent_module_path",
 			wantVersion:    "v1.0.0",
-			wantPkgPath:    SamplePackage.Path,
+			wantPkgPath:    sample.PackagePath,
 			wantReadErr:    true,
 		},
 		{
-			name: "missing module path",
-			version: SampleVersion(func(v *internal.Version) {
-				v.ModulePath = ""
-			}),
-			wantVersion:      SampleVersionString,
-			wantModulePath:   SampleModulePath,
+			name:             "missing module path",
+			version:          sample.Version(sample.WithModulePath("")),
+			wantVersion:      sample.VersionString,
+			wantModulePath:   sample.ModulePath,
 			wantWriteErrType: derrors.InvalidArgumentType,
 			wantReadErr:      true,
 		},
 		{
-			name: "missing version",
-			version: SampleVersion(func(v *internal.Version) {
-				v.Version = ""
-			}),
-			wantVersion:      SampleVersionString,
-			wantModulePath:   SampleModulePath,
+			name:             "missing version",
+			version:          sample.Version(sample.WithVersion("")),
+			wantVersion:      sample.VersionString,
+			wantModulePath:   sample.ModulePath,
 			wantWriteErrType: derrors.InvalidArgumentType,
 			wantReadErr:      true,
 		},
 		{
 			name: "empty commit time",
-			version: SampleVersion(func(v *internal.Version) {
+			version: sample.Version(func(v *internal.Version) {
 				v.CommitTime = time.Time{}
 			}),
-			wantVersion:      SampleVersionString,
-			wantModulePath:   SampleModulePath,
+			wantVersion:      sample.VersionString,
+			wantModulePath:   sample.ModulePath,
 			wantWriteErrType: derrors.InvalidArgumentType,
 			wantReadErr:      true,
 		},
 		{
 			name: "stdlib",
-			version: SampleVersion(func(v *internal.Version) {
+			version: sample.Version(func(v *internal.Version) {
 				v.ModulePath = "std"
 				v.Version = "v1.12.5"
 				v.Packages = []*internal.Package{{
 					Name:              "context",
 					Path:              "context",
 					Synopsis:          "This is a package synopsis",
-					Licenses:          SampleLicenseMetadata,
+					Licenses:          sample.LicenseMetadata,
 					DocumentationHTML: []byte("This is the documentation HTML"),
 				}}
 			}),
@@ -114,12 +111,12 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			defer ResetTestDB(testDB, t)
 
-			if err := testDB.InsertVersion(ctx, tc.version, SampleLicenses); derrors.Type(err) != tc.wantWriteErrType {
+			if err := testDB.InsertVersion(ctx, tc.version, sample.Licenses); derrors.Type(err) != tc.wantWriteErrType {
 				t.Errorf("testDB.InsertVersion(ctx, %+v) error: %v, want write error: %v", tc.version, err, tc.wantWriteErrType)
 			}
 
 			// Test that insertion of duplicate primary key won't fail.
-			if err := testDB.InsertVersion(ctx, tc.version, SampleLicenses); derrors.Type(err) != tc.wantWriteErrType {
+			if err := testDB.InsertVersion(ctx, tc.version, sample.Licenses); derrors.Type(err) != tc.wantWriteErrType {
 				t.Errorf("testDB.InsertVersion(ctx, %+v) second insert error: %v, want write error: %v", tc.version, err, tc.wantWriteErrType)
 			}
 

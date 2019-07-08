@@ -7,74 +7,49 @@ package frontend
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
+	"golang.org/x/discovery/internal/sample"
 )
-
-func sampleVersion(pkgPath, modulePath, version string, versionType internal.VersionType, packages ...*internal.Package) *internal.Version {
-	return &internal.Version{
-		VersionInfo: internal.VersionInfo{
-			ModulePath:     modulePath,
-			Version:        version,
-			CommitTime:     time.Now().Add(time.Hour * -8),
-			ReadmeContents: []byte("This is the readme text."),
-			VersionType:    versionType,
-		},
-		Packages: packages,
-	}
-}
 
 func TestFetchVersionsDetails(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
+	sampleVersion := func(modulePath, version string, versionType internal.VersionType, packages ...*internal.Package) *internal.Version {
+		return sample.Version(
+			sample.WithModulePath(modulePath),
+			sample.WithVersion(version),
+			sample.WithVersionType(versionType),
+			sample.WithPackages(packages...))
+	}
+
 	var (
 		modulePath1 = "test.com/module"
 		modulePath2 = "test.com/module/v2"
-		pkg1Path    = "test.com/module/pkg_name"
-		pkg2Path    = "test.com/module/v2/pkg_name"
-		pkg1        = &internal.VersionedPackage{
-			Package: internal.Package{
-				Name:     "pkg_name",
-				Path:     pkg2Path,
-				Synopsis: "test synopsis",
-				Licenses: postgres.SampleLicenseMetadata,
-				V1Path:   pkg1Path,
-			},
-			VersionInfo: internal.VersionInfo{
-				ModulePath: "test.com/module",
-				Version:    "v1.2.1",
-			},
-		}
-		pkg2 = &internal.VersionedPackage{
-			Package: internal.Package{
-				Name:     "pkg_name",
-				Path:     pkg2Path,
-				Synopsis: "test synopsis",
-				Licenses: postgres.SampleLicenseMetadata,
-				V1Path:   pkg1Path,
-			},
-			VersionInfo: internal.VersionInfo{
-				ModulePath: "test.com/module/v2",
-				Version:    "v2.2.1-alpha.1",
-			},
-		}
-		nethttpPkg = &internal.VersionedPackage{
-			Package: internal.Package{
-				Name:     "http",
-				Path:     "net/http",
-				Synopsis: "test synopsis",
-				Licenses: postgres.SampleLicenseMetadata,
-				V1Path:   "http",
-			},
-			VersionInfo: internal.VersionInfo{
-				ModulePath: "std",
-				Version:    "v1.12.5",
-			},
-		}
+		v2Path      = "test.com/module/v2/foo"
+		v1Path      = "test.com/module/foo"
+		commitTime  = "0 hours ago"
+		pkg1        = sample.VersionedPackage(func(vp *internal.VersionedPackage) {
+			vp.Path = v1Path
+			vp.V1Path = v1Path
+			vp.ModulePath = modulePath1
+			vp.Version = "v1.2.1"
+		})
+		pkg2 = sample.VersionedPackage(func(vp *internal.VersionedPackage) {
+			vp.Path = v2Path
+			vp.V1Path = v1Path
+			vp.ModulePath = modulePath2
+			vp.Version = "v2.2.1-alpha.1"
+		})
+		nethttpPkg = sample.VersionedPackage(func(vp *internal.VersionedPackage) {
+			vp.Path = "net/http"
+			vp.V1Path = "net/http"
+			vp.ModulePath = "std"
+			vp.Version = "v1.12.5"
+		})
 	)
 
 	for _, tc := range []struct {
@@ -87,8 +62,8 @@ func TestFetchVersionsDetails(t *testing.T) {
 			name: "want stdlib versions",
 			pkg:  nethttpPkg,
 			versions: []*internal.Version{
-				sampleVersion("net/http", "std", "v1.12.5", internal.VersionTypeRelease, &nethttpPkg.Package),
-				sampleVersion("net/http", "std", "v1.11.6", internal.VersionTypeRelease, &nethttpPkg.Package),
+				sampleVersion("std", "v1.12.5", internal.VersionTypeRelease, &nethttpPkg.Package),
+				sampleVersion("std", "v1.11.6", internal.VersionTypeRelease, &nethttpPkg.Package),
 			},
 			wantDetails: &VersionsDetails{
 				ThisModule: []*ModuleVersion{
@@ -101,7 +76,7 @@ func TestFetchVersionsDetails(t *testing.T) {
 									Version:          "v1.12.5",
 									FormattedVersion: "v1.12.5",
 									Path:             "net/http",
-									CommitTime:       "today",
+									CommitTime:       commitTime,
 								},
 							},
 							{
@@ -109,7 +84,7 @@ func TestFetchVersionsDetails(t *testing.T) {
 									Version:          "v1.11.6",
 									FormattedVersion: "v1.11.6",
 									Path:             "net/http",
-									CommitTime:       "today",
+									CommitTime:       commitTime,
 								},
 							},
 						},
@@ -121,21 +96,13 @@ func TestFetchVersionsDetails(t *testing.T) {
 			name: "want v1 first",
 			pkg:  pkg1,
 			versions: []*internal.Version{
-				sampleVersion(pkg1Path, modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", internal.VersionTypePseudo, &pkg2.Package),
-				sampleVersion(pkg1Path, modulePath1, "v1.2.1", internal.VersionTypeRelease, &pkg1.Package),
-				sampleVersion(pkg1Path, modulePath1, "v1.2.3", internal.VersionTypeRelease, &pkg1.Package),
-				sampleVersion(pkg1Path, modulePath1, "v1.3.0", internal.VersionTypeRelease, &pkg1.Package),
-				sampleVersion(pkg2Path, modulePath2, "v2.0.0", internal.VersionTypeRelease, &pkg2.Package),
-				sampleVersion(pkg2Path, modulePath2, "v2.2.1-alpha.1", internal.VersionTypePrerelease, &pkg2.Package),
-				&internal.Version{
-					VersionInfo: internal.VersionInfo{
-						ModulePath:  "test.com",
-						Version:     "v1.2.1",
-						CommitTime:  time.Now().Add(time.Hour * -7),
-						VersionType: internal.VersionTypeRelease,
-					},
-					Packages: []*internal.Package{&pkg1.Package},
-				},
+				sampleVersion(modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", internal.VersionTypePseudo, &pkg2.Package),
+				sampleVersion(modulePath1, "v1.2.1", internal.VersionTypeRelease, &pkg1.Package),
+				sampleVersion(modulePath1, "v1.2.3", internal.VersionTypeRelease, &pkg1.Package),
+				sampleVersion(modulePath1, "v1.3.0", internal.VersionTypeRelease, &pkg1.Package),
+				sampleVersion(modulePath2, "v2.0.0", internal.VersionTypeRelease, &pkg2.Package),
+				sampleVersion(modulePath2, "v2.2.1-alpha.1", internal.VersionTypePrerelease, &pkg2.Package),
+				sampleVersion("test.com", "v1.2.1", internal.VersionTypeRelease, &pkg1.Package),
 			},
 			wantDetails: &VersionsDetails{
 				ThisModule: []*ModuleVersion{
@@ -146,22 +113,22 @@ func TestFetchVersionsDetails(t *testing.T) {
 							{
 								{
 									Version:          "v1.3.0",
-									Path:             "test.com/module/pkg_name",
-									CommitTime:       "today",
+									Path:             v1Path,
+									CommitTime:       commitTime,
 									FormattedVersion: "v1.3.0",
 								},
 							},
 							{
 								{
 									Version:          "v1.2.3",
-									Path:             "test.com/module/pkg_name",
-									CommitTime:       "today",
+									Path:             v1Path,
+									CommitTime:       commitTime,
 									FormattedVersion: "v1.2.3",
 								},
 								{
 									Version:          "v1.2.1",
-									Path:             "test.com/module/pkg_name",
-									CommitTime:       "today",
+									Path:             v1Path,
+									CommitTime:       commitTime,
 									FormattedVersion: "v1.2.1",
 								},
 							},
@@ -177,16 +144,16 @@ func TestFetchVersionsDetails(t *testing.T) {
 								{
 									Version:          "v2.2.1-alpha.1",
 									FormattedVersion: "v2.2.1 (alpha.1)",
-									Path:             "test.com/module/v2/pkg_name",
-									CommitTime:       "today",
+									Path:             v2Path,
+									CommitTime:       commitTime,
 								},
 							},
 							{
 								{
 									Version:          "v2.0.0",
 									FormattedVersion: "v2.0.0",
-									Path:             "test.com/module/v2/pkg_name",
-									CommitTime:       "today",
+									Path:             v2Path,
+									CommitTime:       commitTime,
 								},
 							},
 						},
@@ -198,8 +165,8 @@ func TestFetchVersionsDetails(t *testing.T) {
 							{
 								{
 									Version:          "v1.2.1",
-									Path:             "test.com/module/pkg_name",
-									CommitTime:       "today",
+									Path:             v1Path,
+									CommitTime:       commitTime,
 									FormattedVersion: "v1.2.1",
 								},
 							},
@@ -212,12 +179,12 @@ func TestFetchVersionsDetails(t *testing.T) {
 			name: "want v2 first",
 			pkg:  pkg2,
 			versions: []*internal.Version{
-				sampleVersion(pkg1Path, modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", internal.VersionTypePseudo, &pkg2.Package),
-				sampleVersion(pkg1Path, modulePath1, "v1.2.1", internal.VersionTypeRelease, &pkg2.Package),
-				sampleVersion(pkg1Path, modulePath1, "v1.2.3", internal.VersionTypeRelease, &pkg2.Package),
-				sampleVersion(pkg1Path, modulePath1, "v1.3.0", internal.VersionTypeRelease, &pkg2.Package),
-				sampleVersion(pkg2Path, modulePath2, "v2.0.0", internal.VersionTypeRelease, &pkg2.Package),
-				sampleVersion(pkg2Path, modulePath2, "v2.2.1-alpha.1", internal.VersionTypePrerelease, &pkg2.Package),
+				sampleVersion(modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", internal.VersionTypePseudo, &pkg2.Package),
+				sampleVersion(modulePath1, "v1.2.1", internal.VersionTypeRelease, &pkg2.Package),
+				sampleVersion(modulePath1, "v1.2.3", internal.VersionTypeRelease, &pkg2.Package),
+				sampleVersion(modulePath1, "v1.3.0", internal.VersionTypeRelease, &pkg2.Package),
+				sampleVersion(modulePath2, "v2.0.0", internal.VersionTypeRelease, &pkg2.Package),
+				sampleVersion(modulePath2, "v2.2.1-alpha.1", internal.VersionTypePrerelease, &pkg2.Package),
 			},
 			wantDetails: &VersionsDetails{
 				ThisModule: []*ModuleVersion{
@@ -229,16 +196,16 @@ func TestFetchVersionsDetails(t *testing.T) {
 								{
 									Version:          "v2.2.1-alpha.1",
 									FormattedVersion: "v2.2.1 (alpha.1)",
-									Path:             "test.com/module/v2/pkg_name",
-									CommitTime:       "today",
+									Path:             v2Path,
+									CommitTime:       commitTime,
 								},
 							},
 							{
 								{
 									Version:          "v2.0.0",
 									FormattedVersion: "v2.0.0",
-									Path:             "test.com/module/v2/pkg_name",
-									CommitTime:       "today",
+									Path:             v2Path,
+									CommitTime:       commitTime,
 								},
 							},
 						},
@@ -252,22 +219,22 @@ func TestFetchVersionsDetails(t *testing.T) {
 							{
 								{
 									Version:          "v1.3.0",
-									Path:             "test.com/module/pkg_name",
-									CommitTime:       "today",
+									Path:             v1Path,
+									CommitTime:       commitTime,
 									FormattedVersion: "v1.3.0",
 								},
 							},
 							{
 								{
 									Version:          "v1.2.3",
-									Path:             "test.com/module/pkg_name",
-									CommitTime:       "today",
+									Path:             v1Path,
+									CommitTime:       commitTime,
 									FormattedVersion: "v1.2.3",
 								},
 								{
 									Version:          "v1.2.1",
-									Path:             "test.com/module/pkg_name",
-									CommitTime:       "today",
+									Path:             v1Path,
+									CommitTime:       commitTime,
 									FormattedVersion: "v1.2.1",
 								},
 							},
@@ -280,8 +247,8 @@ func TestFetchVersionsDetails(t *testing.T) {
 			name: "want only pseudo",
 			pkg:  pkg2,
 			versions: []*internal.Version{
-				sampleVersion(pkg1Path, modulePath1, "v0.0.0-20140414041501-3c2ca4d52544", internal.VersionTypePseudo, &pkg2.Package),
-				sampleVersion(pkg1Path, modulePath1, "v0.0.0-20140414041502-4c2ca4d52544", internal.VersionTypePseudo, &pkg2.Package),
+				sampleVersion(modulePath1, "v0.0.0-20140414041501-3c2ca4d52544", internal.VersionTypePseudo, &pkg2.Package),
+				sampleVersion(modulePath1, "v0.0.0-20140414041502-4c2ca4d52544", internal.VersionTypePseudo, &pkg2.Package),
 			},
 			wantDetails: &VersionsDetails{
 				OtherModules: []*ModuleVersion{
@@ -292,14 +259,14 @@ func TestFetchVersionsDetails(t *testing.T) {
 							{
 								{
 									Version:          "v0.0.0-20140414041502-4c2ca4d52544",
-									Path:             "test.com/module/pkg_name",
-									CommitTime:       "today",
+									Path:             v1Path,
+									CommitTime:       commitTime,
 									FormattedVersion: "v0.0.0 (4c2ca4d)",
 								},
 								{
 									Version:          "v0.0.0-20140414041501-3c2ca4d52544",
-									Path:             "test.com/module/pkg_name",
-									CommitTime:       "today",
+									Path:             v1Path,
+									CommitTime:       commitTime,
 									FormattedVersion: "v0.0.0 (3c2ca4d)",
 								},
 							},
@@ -313,7 +280,7 @@ func TestFetchVersionsDetails(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
 
 			for _, v := range tc.versions {
-				if err := testDB.InsertVersion(ctx, v, postgres.SampleLicenses); err != nil {
+				if err := testDB.InsertVersion(ctx, v, sample.Licenses); err != nil {
 					t.Fatalf("db.InsertVersion(%v): %v", v, err)
 				}
 			}

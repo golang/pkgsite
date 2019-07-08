@@ -110,11 +110,11 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 	}
 
 	var (
-		modulePath, name, synopsis, version, v1path, readmeFilePath string
-		repositoryURL, vcsType, homepageURL                         sql.NullString
-		commitTime                                                  time.Time
-		licenseTypes, licensePaths                                  []string
-		readmeContents, documentation                               []byte
+		modulePath, name, synopsis, version, v1path, readmeFilePath, versionType string
+		repositoryURL, vcsType, homepageURL                                      sql.NullString
+		commitTime                                                               time.Time
+		licenseTypes, licensePaths                                               []string
+		readmeContents, documentation                                            []byte
 	)
 	query := `
 		SELECT
@@ -131,7 +131,8 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 			p.documentation,
 			v.repository_url,
 			v.vcs_type,
-			v.homepage_url
+			v.homepage_url,
+			v.version_type
 		FROM
 			versions v
 		INNER JOIN
@@ -150,7 +151,7 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 		LIMIT 1;`
 
 	row := db.QueryRowContext(ctx, query, path)
-	if err := row.Scan(&modulePath, pq.Array(&licenseTypes), pq.Array(&licensePaths), &version, &commitTime, &name, &synopsis, &v1path, &readmeFilePath, &readmeContents, &documentation, &repositoryURL, &vcsType, &homepageURL); err != nil {
+	if err := row.Scan(&modulePath, pq.Array(&licenseTypes), pq.Array(&licensePaths), &version, &commitTime, &name, &synopsis, &v1path, &readmeFilePath, &readmeContents, &documentation, &repositoryURL, &vcsType, &homepageURL, &versionType); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, derrors.NotFound(fmt.Sprintf("package %s@%s not found", path, version))
 		}
@@ -180,6 +181,7 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 			VCSType:        vcsType.String,
 			RepositoryURL:  repositoryURL.String,
 			HomepageURL:    homepageURL.String,
+			VersionType:    internal.VersionType(versionType),
 		},
 	}, nil
 }

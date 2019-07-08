@@ -13,6 +13,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/postgres"
+	"golang.org/x/discovery/internal/sample"
 )
 
 func TestFetchSearchPage(t *testing.T) {
@@ -20,7 +21,7 @@ func TestFetchSearchPage(t *testing.T) {
 	defer cancel()
 
 	var (
-		now        = postgres.NowTruncated()
+		now        = sample.NowTruncated()
 		versionFoo = &internal.Version{
 			VersionInfo: internal.VersionInfo{
 				ModulePath:     "github.com/mod/foo",
@@ -34,7 +35,7 @@ func TestFetchSearchPage(t *testing.T) {
 					Name:     "foo",
 					Path:     "/path/to/foo",
 					Synopsis: "foo is a package.",
-					Licenses: postgres.SampleLicenseMetadata,
+					Licenses: sample.LicenseMetadata,
 				},
 			},
 		}
@@ -51,7 +52,7 @@ func TestFetchSearchPage(t *testing.T) {
 					Name:     "bar",
 					Path:     "/path/to/bar",
 					Synopsis: "bar is used by foo.",
-					Licenses: postgres.SampleLicenseMetadata,
+					Licenses: sample.LicenseMetadata,
 				},
 			},
 		}
@@ -133,7 +134,7 @@ func TestFetchSearchPage(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
 
 			for _, v := range tc.versions {
-				if err := testDB.InsertVersion(ctx, v, postgres.SampleLicenses); err != nil {
+				if err := testDB.InsertVersion(ctx, v, sample.Licenses); err != nil {
 					t.Fatalf("db.InsertVersion(%+v): %v", v, err)
 				}
 				if err := testDB.InsertDocuments(ctx, v); err != nil {

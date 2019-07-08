@@ -13,11 +13,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/golang-migrate/migrate/v4"
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/testhelper"
 
 	// imported to register the postgres migration driver
@@ -46,15 +43,6 @@ func dbConnURI(dbName string) string {
 	cs := fmt.Sprintf("postgres://%s/%s?sslmode=disable&user=%s&password=%s",
 		host, dbName, url.QueryEscape(user), url.QueryEscape(password))
 	return cs
-}
-
-// NowTruncated returns time.Now() truncated to Microsecond precision.
-//
-// This makes it easier to work with timestamps in PostgreSQL, which have
-// Microsecond precision:
-//   https://www.postgresql.org/docs/9.1/datatype-datetime.html
-func NowTruncated() time.Time {
-	return time.Now().Truncate(time.Microsecond)
 }
 
 // multiErr can be used to combine one or more errors into a single error.
@@ -204,49 +192,4 @@ func RunDBTests(dbName string, m *testing.M, testDB **DB) {
 		log.Fatal(err)
 	}
 	os.Exit(code)
-}
-
-// These sample values can be used to construct test cases.
-var (
-	SampleModulePath      = "github.com/valid_module_name"
-	SampleVersionString   = "v1.0.0"
-	SampleCommitTime      = NowTruncated()
-	SampleLicenseMetadata = []*license.Metadata{
-		{Types: []string{"MIT"}, FilePath: "LICENSE"},
-	}
-	SampleLicenses = []*license.License{
-		{Metadata: *SampleLicenseMetadata[0], Contents: []byte(`Lorem Ipsum`)},
-	}
-	SamplePackage = &internal.Package{
-		Name:              "foo",
-		Synopsis:          "This is a package synopsis",
-		Path:              "github.com/valid_module_name/foo",
-		Licenses:          SampleLicenseMetadata,
-		DocumentationHTML: []byte("This is the documentation HTML"),
-		V1Path:            "github.com/valid_module_name/foo",
-		Imports:           []string{"path/to/bar", "fmt"},
-	}
-)
-
-// SampleVersion is used to create an *internal.Version for testing. The
-// default fields can be changed by passing in one or more mutators.
-func SampleVersion(mutators ...func(*internal.Version)) *internal.Version {
-	v := &internal.Version{
-		VersionInfo: internal.VersionInfo{
-			ModulePath:     SampleModulePath,
-			Version:        SampleVersionString,
-			ReadmeFilePath: "README.md",
-			ReadmeContents: []byte("readme"),
-			CommitTime:     SampleCommitTime,
-			VersionType:    internal.VersionTypeRelease,
-			VCSType:        "git",
-			RepositoryURL:  SampleModulePath,
-			HomepageURL:    SampleModulePath,
-		},
-		Packages: []*internal.Package{SamplePackage},
-	}
-	for _, mut := range mutators {
-		mut(v)
-	}
-	return v
 }

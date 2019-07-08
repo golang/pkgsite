@@ -13,6 +13,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/sample"
 )
 
 func TestVersionState(t *testing.T) {
@@ -29,7 +30,7 @@ func TestVersionState(t *testing.T) {
 		t.Errorf("testDB.LatestIndexTimestamp(ctx) = %v, want %v", initialTime, want)
 	}
 
-	now := NowTruncated()
+	now := sample.NowTruncated()
 	latest := now.Add(10 * time.Second)
 	// insert a FooVersion with no Timestamp, to ensure that it is later updated
 	// on conflict.
