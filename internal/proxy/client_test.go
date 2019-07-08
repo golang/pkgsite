@@ -92,7 +92,7 @@ func TestGetInfo(t *testing.T) {
 	teardownProxy, client := SetupTestProxy(t, nil)
 	defer teardownProxy(t)
 
-	path := "my.mod/module"
+	path := "github.com/my/module"
 	version := "v1.0.0"
 	info, err := client.GetInfo(ctx, path, version)
 	if err != nil {
@@ -116,7 +116,7 @@ func TestGetInfoVersionDoesNotExist(t *testing.T) {
 	teardownProxy, client := SetupTestProxy(t, nil)
 	defer teardownProxy(t)
 
-	path := "my.mod/module"
+	path := "github.com/my/module"
 	version := "v3.0.0"
 	info, _ := client.GetInfo(ctx, path, version)
 	if info != nil {
@@ -136,16 +136,16 @@ func TestGetZip(t *testing.T) {
 		wantFiles     []string
 	}{
 		{
-			path:    "my.mod/module",
+			path:    "github.com/my/module",
 			version: "v1.0.0",
 			wantFiles: []string{
-				"my.mod/module@v1.0.0/LICENSE",
-				"my.mod/module@v1.0.0/README.md",
-				"my.mod/module@v1.0.0/go.mod",
-				"my.mod/module@v1.0.0/foo/foo.go",
-				"my.mod/module@v1.0.0/foo/LICENSE.md",
-				"my.mod/module@v1.0.0/bar/bar.go",
-				"my.mod/module@v1.0.0/bar/LICENSE",
+				"github.com/my/module@v1.0.0/LICENSE",
+				"github.com/my/module@v1.0.0/README.md",
+				"github.com/my/module@v1.0.0/go.mod",
+				"github.com/my/module@v1.0.0/foo/foo.go",
+				"github.com/my/module@v1.0.0/foo/LICENSE.md",
+				"github.com/my/module@v1.0.0/bar/bar.go",
+				"github.com/my/module@v1.0.0/bar/LICENSE",
 			},
 		},
 		{

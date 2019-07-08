@@ -3,11 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // modproxy runs a local module proxy for testing. It implements the Module
-// proxy protocol described at `go help goproxy` by serving files stored at
-// ./proxy. The following modules are supported by this proxy:
-// my.mod/module   v1.0.0
-// my.mod/module   v1.1.0
-// my.mod/module/2 v12.0.0
+// proxy protocol described at `go help goproxy` using proxy.TestProxy.
 package main
 
 import (

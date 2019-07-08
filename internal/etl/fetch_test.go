@@ -44,7 +44,7 @@ func TestSkipBadPackage(t *testing.T) {
 	}
 	badModule["bar/bar.go"] = bigFile.String()
 	var (
-		modulePath = "my.mod/module"
+		modulePath = "github.com/my/module"
 		version    = "v1.0.0"
 	)
 	teardownProxy, client := proxy.SetupTestProxy(t, []*proxy.TestVersion{
@@ -99,10 +99,10 @@ func TestReFetch(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
 
 	var (
-		modulePath = "my.mod/module"
+		modulePath = "github.com/my/module"
 		version    = "v1.0.0"
-		pkgFoo     = "my.mod/module/foo"
-		pkgBar     = "my.mod/module/bar"
+		pkgFoo     = "github.com/my/module/foo"
+		pkgBar     = "github.com/my/module/bar"
 		foo        = map[string]string{
 			"foo/foo.go": "// Package foo\npackage foo\n\nconst Foo = 42",
 			"README.md":  "This is a readme",
@@ -147,11 +147,11 @@ func TestReFetch(t *testing.T) {
 			VersionType:    "release",
 		},
 		Package: internal.Package{
-			Path:              "my.mod/module/bar",
+			Path:              "github.com/my/module/bar",
 			Name:              "bar",
 			Synopsis:          "Package bar",
 			DocumentationHTML: []byte("Bar returns the string &#34;bar&#34;."),
-			V1Path:            "my.mod/module/bar",
+			V1Path:            "github.com/my/module/bar",
 			Licenses: []*license.Metadata{
 				{Types: []string{"MIT"}, FilePath: "COPYING"},
 			},
@@ -182,12 +182,12 @@ func TestFetchAndInsertVersion(t *testing.T) {
 		want       *internal.VersionedPackage
 	}{
 		{
-			modulePath: "my.mod/module",
+			modulePath: "github.com/my/module",
 			version:    "v1.0.0",
-			pkg:        "my.mod/module/bar",
+			pkg:        "github.com/my/module/bar",
 			want: &internal.VersionedPackage{
 				VersionInfo: internal.VersionInfo{
-					ModulePath:     "my.mod/module",
+					ModulePath:     "github.com/my/module",
 					Version:        "v1.0.0",
 					CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
 					ReadmeFilePath: "README.md",
@@ -195,11 +195,11 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					VersionType:    "release",
 				},
 				Package: internal.Package{
-					Path:              "my.mod/module/bar",
+					Path:              "github.com/my/module/bar",
 					Name:              "bar",
 					Synopsis:          "package bar",
 					DocumentationHTML: []byte("Bar returns the string &#34;bar&#34;."),
-					V1Path:            "my.mod/module/bar",
+					V1Path:            "github.com/my/module/bar",
 					Licenses: []*license.Metadata{
 						{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
 						{Types: []string{"MIT"}, FilePath: "bar/LICENSE"},
@@ -419,7 +419,7 @@ func TestHasFilename(t *testing.T) {
 		want         bool
 	}{
 		{
-			file:         "my.mod/module@v1.0.0/README.md",
+			file:         "github.com/my/module@v1.0.0/README.md",
 			expectedFile: "README.md",
 			want:         true,
 		},
@@ -453,8 +453,8 @@ func TestHasFilename(t *testing.T) {
 			want:         false,
 		},
 		{
-			file:         "my.mod/module@v1.0.0/LICENSE",
-			expectedFile: "my.mod/module@v1.0.0/LICENSE",
+			file:         "github.com/my/module@v1.0.0/LICENSE",
+			expectedFile: "github.com/my/module@v1.0.0/LICENSE",
 			want:         true,
 		},
 	} {
@@ -479,9 +479,9 @@ func TestExtractReadmeFromZip(t *testing.T) {
 		err                           error
 	}{
 		{
-			name:         "my.mod/module",
+			name:         "github.com/my/module",
 			version:      "v1.0.0",
-			file:         "my.mod/module@v1.0.0/README.md",
+			file:         "github.com/my/module@v1.0.0/README.md",
 			wantPath:     "README.md",
 			wantContents: []byte("README FILE FOR TESTING."),
 		},
@@ -530,24 +530,24 @@ func TestExtractPackagesFromZip(t *testing.T) {
 		packages map[string]*internal.Package
 	}{
 		{
-			name:    "my.mod/module",
+			name:    "github.com/my/module",
 			version: "v1.0.0",
 			packages: map[string]*internal.Package{
 				"foo": &internal.Package{
 					Name:              "foo",
-					Path:              "my.mod/module/foo",
+					Path:              "github.com/my/module/foo",
 					Synopsis:          "package foo",
 					DocumentationHTML: []byte("FooBar returns the string &#34;foo bar&#34;."),
-					Imports:           []string{"fmt", "my.mod/module/bar"},
-					V1Path:            "my.mod/module/foo",
+					Imports:           []string{"fmt", "github.com/my/module/bar"},
+					V1Path:            "github.com/my/module/foo",
 				},
 				"bar": &internal.Package{
 					Name:              "bar",
-					Path:              "my.mod/module/bar",
+					Path:              "github.com/my/module/bar",
 					Synopsis:          "package bar",
 					DocumentationHTML: []byte("Bar returns the string &#34;bar&#34;."),
 					Imports:           []string{},
-					V1Path:            "my.mod/module/bar",
+					V1Path:            "github.com/my/module/bar",
 				},
 			},
 		},

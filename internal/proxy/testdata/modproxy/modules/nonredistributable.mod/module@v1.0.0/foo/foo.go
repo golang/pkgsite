@@ -8,7 +8,7 @@ package foo
 import (
 	"fmt"
 
-	"my.mod/module/bar"
+	"github.com/my/module/bar"
 )
 
 // FooBar returns the string "foo bar".

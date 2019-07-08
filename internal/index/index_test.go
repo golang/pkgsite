@@ -18,9 +18,9 @@ func TestGetVersions(t *testing.T) {
 	defer cancel()
 
 	allVersions := []*internal.IndexVersion{
-		{Path: "my.mod/module", Version: "v1.0.0"},
-		{Path: "my.mod/module", Version: "v1.1.0"},
-		{Path: "my.mod/module/v2", Version: "v2.0.0"},
+		{Path: "github.com/my/module", Version: "v1.0.0"},
+		{Path: "github.com/my/module", Version: "v1.1.0"},
+		{Path: "github.com/my/module/v2", Version: "v2.0.0"},
 	}
 
 	for _, tc := range []struct {

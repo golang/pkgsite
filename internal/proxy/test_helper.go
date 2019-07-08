@@ -145,7 +145,7 @@ func defaultTestVersions() []*TestVersion {
 		[]string{"go.googlesource.com/go.git/src/cmd", "v1.13.0-beta1"},
 		[]string{"bad.mod/module", "v1.0.0"},
 		[]string{"emp.ty/module", "v1.0.0"},
-		[]string{"my.mod/module", "v1.0.0"},
+		[]string{"github.com/my/module", "v1.0.0"},
 		[]string{"no.mod/module", "v1.0.0"},
 		[]string{"nonredistributable.mod/module", "v1.0.0"},
 		[]string{"rsc.io/quote", "v1.5.2"},
