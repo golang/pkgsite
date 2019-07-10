@@ -657,7 +657,7 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 	path, version, err := parseModulePathAndVersion(r.URL.Path)
 	if err != nil {
 		log.Printf("parseModulePathAndVersion(%q): %v", r.URL.Path, err)
-		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
+		s.serveErrorPage(w, r, http.StatusNotFound, nil)
 		return
 	}
 	if version != "" && !semver.IsValid(version) {

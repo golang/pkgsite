@@ -79,8 +79,8 @@ func (s *Server) handleIndexPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	query := strings.TrimPrefix(r.URL.Path, "/")
-	s.serveErrorPage(w, r, http.StatusBadRequest, &errorPage{
-		Message:          fmt.Sprintf("%d %s", http.StatusBadRequest, http.StatusText(http.StatusBadRequest)),
+	s.serveErrorPage(w, r, http.StatusNotFound, &errorPage{
+		Message:          fmt.Sprintf("%d %s", http.StatusNotFound, http.StatusText(http.StatusNotFound)),
 		SecondaryMessage: suggestedSearch(query),
 	})
 }
