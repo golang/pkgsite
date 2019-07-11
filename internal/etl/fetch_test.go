@@ -196,10 +196,11 @@ func TestFetchAndInsertVersion(t *testing.T) {
 	defer cancel()
 
 	testCases := []struct {
-		modulePath string
-		version    string
-		pkg        string
-		want       *internal.VersionedPackage
+		modulePath  string
+		version     string
+		pkg         string
+		want        *internal.VersionedPackage
+		dontWantDoc []string // Substrings we expect not to see in DocumentationHTML.
 	}{
 		{
 			modulePath: "github.com/my/module",
@@ -305,6 +306,33 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					},
 				},
 			},
+		}, {
+			modulePath: "build.constraints/module",
+			version:    "v1.0.0",
+			pkg:        "build.constraints/module/cpu",
+			want: &internal.VersionedPackage{
+				VersionInfo: internal.VersionInfo{
+					ModulePath:     "build.constraints/module",
+					Version:        "v1.0.0",
+					CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
+					VersionType:    "release",
+					ReadmeContents: []uint8{},
+				},
+				Package: internal.Package{
+					Path:              "build.constraints/module/cpu",
+					Name:              "cpu",
+					Synopsis:          "Package cpu implements processor feature detection used by the Go standard library.",
+					DocumentationHTML: []byte("const CacheLinePadSize = 3"),
+					V1Path:            "build.constraints/module/cpu",
+					Licenses: []*license.Metadata{
+						{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
+					},
+				},
+			},
+			dontWantDoc: []string{
+				"const CacheLinePadSize = 1",
+				"const CacheLinePadSize = 2",
+			},
 		},
 	}
 
@@ -350,6 +378,11 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				t.Errorf("got non-empty documentation but want empty:\ngot: %q\nwant: %q", got, want)
 			} else if !bytes.Contains(got, want) {
 				t.Errorf("got documentation doesn't contain wanted documentation substring:\ngot: %q\nwant (substring): %q", got, want)
+			}
+			for _, dontWant := range test.dontWantDoc {
+				if got := gotPkg.DocumentationHTML; bytes.Contains(got, []byte(dontWant)) {
+					t.Errorf("got documentation contains unwanted documentation substring:\ngot: %q\ndontWant (substring): %q", got, dontWant)
+				}
 			}
 		})
 	}

@@ -427,7 +427,8 @@ func loadPackage(zipGoFiles []*zip.File, innerPath, modulePath string) (*interna
 		files = make(map[string][]byte)
 
 		// matchFile reports whether the file with the given name and content
-		// matches the build context bctx.
+		// matches the build context bctx. name must be just the file name, not
+		// a file path that includes directory names.
 		//
 		// The JoinPath and OpenFile fields of bctx must be set to the joinPath
 		// and openFile functions below.
@@ -485,33 +486,34 @@ func loadPackage(zipGoFiles []*zip.File, innerPath, modulePath string) (*interna
 		packageNameFile string // Name of file where packageName came from.
 	)
 	for _, f := range zipGoFiles {
+		_, name := path.Split(f.Name)
 		b, err := dzip.ReadZipFile(f)
 		if err != nil {
 			return nil, err
 		}
-		match, err := matchFile(bctx, f.Name, b)
+		match, err := matchFile(bctx, name, b)
 		if err != nil {
 			return nil, err
 		} else if !match {
 			// Excluded by build context.
 			continue
 		}
-		pf, err := parser.ParseFile(fset, f.Name, b, parser.ParseComments)
+		pf, err := parser.ParseFile(fset, name, b, parser.ParseComments)
 		if err != nil {
 			if pf == nil {
 				return nil, fmt.Errorf("internal error: the source couldn't be read: %v", err)
 			}
 			return nil, &BadPackageError{Err: err}
 		}
-		goFiles[f.Name] = pf
+		goFiles[name] = pf
 		if len(goFiles) == 1 {
 			packageName = pf.Name.Name
-			packageNameFile = f.Name
+			packageNameFile = name
 		} else if pf.Name.Name != packageName {
 			return nil, &BadPackageError{Err: &build.MultiplePackageError{
 				Dir:      innerPath,
 				Packages: []string{packageName, pf.Name.Name},
-				Files:    []string{packageNameFile, f.Name},
+				Files:    []string{packageNameFile, name},
 			}}
 		}
 	}

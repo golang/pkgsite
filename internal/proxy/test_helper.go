@@ -149,6 +149,7 @@ func defaultTestVersions() []*TestVersion {
 		[]string{"nonredistributable.mod/module", "v1.0.0"},
 		[]string{"rsc.io/quote", "v1.5.2"},
 		[]string{"rsc.io/quote/v2", "v2.0.1"},
+		[]string{"build.constraints/module", "v1.0.0"},
 	} {
 		rootDir := filepath.Join(absPath, "modules")
 		f := filepath.FromSlash(fmt.Sprintf("%s@%s", v[0], v[1]))
