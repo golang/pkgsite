@@ -7,8 +7,8 @@
 <div class="Container">
   {{$header := .PackageHeader}}
   <header>
-    <h1>{{$header.Path}}</h1>
-    <p>
+    <h1 class="Header-title">{{$header.Path}}</h1>
+    <p class="Header-labels">
       <strong>Version: </strong><span>{{$header.Version}}</span>
       <span class="Header-verticalBar">|</span>
       <strong>Published: </strong><span>{{$header.CommitTime}}</span>

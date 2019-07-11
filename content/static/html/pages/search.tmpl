@@ -17,9 +17,9 @@
       {{$query := .Query}}
       {{range .Results}}
         <div class="SearchSnippet">
-          <h2 class="SearchSnippet-header">
+          <h1 class="SearchSnippet-header">
             <a href="/pkg/{{.PackagePath}}{{if $query}}?q={{$query}}{{end}}">{{.PackagePath}}</a>
-          </h2>
+          </h1>
           <p class="SearchSnippet-synopsis">{{.Synopsis}}</p>
           <div class="SearchSnippet-subtext">
             <b class="SearchSnippet-subtextTitle">Version:</b> {{.Version}}
