@@ -16,6 +16,7 @@ import (
 	"sync"
 	"time"
 
+	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/dcensus"
 	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
@@ -112,6 +113,12 @@ type basePageData struct {
 // GoogleAnalyticsTrackingID returns the tracking ID from
 // func (b basePageData) GoogleAnalyticsTrackingID() string {
 	return "UA-141356704-1"
+}
+
+// VersionLabel uniquely identifies the currently running binary. It can be
+// used for cache-busting query parameters.
+func (b basePageData) AppVersionLabel() string {
+	return config.AppVersionLabel()
 }
 
 // errorPage contains fields for rendering a HTTP error page.

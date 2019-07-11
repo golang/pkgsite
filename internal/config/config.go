@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"golang.org/x/discovery/internal/secrets"
 )
@@ -48,6 +49,22 @@ func IndexURL() string {
 // ProxyURL returns the URL of the Go module proxy.
 func ProxyURL() string {
 	return GetEnv("GO_MODULE_PROXY_URL", "https://proxy.golang.org")
+}
+
+// AppVersionLabel returns the version label for the current instance.  This is
+// the AppEngine version if available, otherwise a string constructed using the
+// timestamp of process start.
+func AppVersionLabel() string {
+	if gv := os.Getenv("GAE_VERSION"); gv != "" {
+		return gv
+	}
+	return fallbackVersionLabel
+}
+
+var fallbackVersionLabel string
+
+func init() {
+	fallbackVersionLabel = time.Now().Format("20060102t150405")
 }
 
 // OnAppEngine reports if the current process is running in an AppEngine
