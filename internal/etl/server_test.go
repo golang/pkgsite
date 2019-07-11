@@ -26,13 +26,14 @@ const testTimeout = 5 * time.Second
 var testDB *postgres.DB
 
 func TestMain(m *testing.M) {
-	postgres.RunDBTests("discovery_cron_test", m, &testDB)
+	postgres.RunDBTests("discovery_etl_test", m, &testDB)
 }
 
 func TestETL(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
+	appVersionLabel = "20190000t000000"
 	var (
 		start    = sample.NowTruncated()
 		fooIndex = &internal.IndexVersion{
@@ -62,6 +63,7 @@ func TestETL(t *testing.T) {
 				Status:         status,
 				TryCount:       tryCount,
 				Version:        version.Version,
+				AppVersion:     appVersionLabel,
 			}
 		}
 		fooState = func(code, tryCount int) *internal.VersionState {
@@ -118,7 +120,7 @@ func TestETL(t *testing.T) {
 
 			defer postgres.ResetTestDB(testDB, t)
 
-			// Use 10 workers to have parallelism consistent with the cron binary.
+			// Use 10 workers to have parallelism consistent with the etl binary.
 			queue := NewInMemoryQueue(ctx, proxyClient, testDB, 10)
 
 			s := NewServer(testDB, indexClient, proxyClient, queue, nil)

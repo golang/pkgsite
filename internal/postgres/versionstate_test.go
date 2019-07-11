@@ -7,6 +7,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"net/http"
 	"testing"
 	"time"
 
@@ -75,9 +76,9 @@ func TestVersionState(t *testing.T) {
 		statusCode = 500
 		fetchErr   = errors.New("bad request")
 	)
-	if err := testDB.UpsertVersionState(ctx, fooVersion.Path, fooVersion.Version, fooVersion.Timestamp, statusCode, fetchErr); err != nil {
-		t.Fatalf("testDB.UpsertVersionState(ctx, %q, %q, %d, %v): %v", fooVersion.Path,
-			versions[0].Version, statusCode, fetchErr, err)
+	if err := testDB.UpsertVersionState(ctx, fooVersion.Path, fooVersion.Version, "", fooVersion.Timestamp, statusCode, fetchErr); err != nil {
+		t.Fatalf("testDB.UpsertVersionState(ctx, %q, %q, %q, %d, %v): %v", fooVersion.Path,
+			versions[0].Version, "", statusCode, fetchErr, err)
 	}
 	errString := fetchErr.Error()
 	wantFooState := &internal.VersionState{
@@ -110,5 +111,55 @@ func TestVersionState(t *testing.T) {
 	}
 	if diff := cmp.Diff(wantStats, stats); diff != "" {
 		t.Errorf("testDB.GetVersionStats(ctx) mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestUpdateVersionStatesForReprocessing(t *testing.T) {
+	defer ResetTestDB(testDB, t)
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	now := sample.NowTruncated()
+	for _, v := range []*internal.IndexVersion{
+		&internal.IndexVersion{
+			Path:      "foo.com/bar",
+			Version:   "v1.0.0",
+			Timestamp: now,
+		},
+		&internal.IndexVersion{
+			Path:      "baz.com/quux",
+			Version:   "v2.0.1",
+			Timestamp: now,
+		},
+	} {
+		if err := testDB.UpsertVersionState(ctx, v.Path, v.Version, "", v.Timestamp, http.StatusOK, nil); err != nil {
+			t.Fatalf("testDB.UpsertVersionState(ctx, %q, %q, %v, %d, nil): %v", v.Path, v.Version, v.Timestamp, http.StatusOK, err)
+		}
+	}
+
+	gotVersions, err := testDB.GetNextVersionsToFetch(ctx, 10)
+	if err != nil {
+		t.Fatalf("testDB.GetVersionsToFetch(ctx, 10): %v", err)
+	}
+	if len(gotVersions) != 0 {
+		t.Fatalf("testDB.GetVersionsToFetch(ctx, 10) = %v; wanted 0 versions", gotVersions)
+	}
+	if err := testDB.UpdateVersionStatesForReprocessing(ctx, "20190709t112655"); err != nil {
+		t.Fatalf("testDB.UpdateVersionStatesForReprocessing(ctx, 20190709t112655): %v", err)
+	}
+
+	gotVersions, err = testDB.GetNextVersionsToFetch(ctx, 10)
+	if err != nil {
+		t.Fatalf("testDB.GetVersionsToFetch(ctx, 10): %v", err)
+	}
+
+	code := http.StatusHTTPVersionNotSupported
+	wantVersions := []*internal.VersionState{
+		{ModulePath: "foo.com/bar", Version: "v1.0.0", IndexTimestamp: now, Status: &code},
+		{ModulePath: "baz.com/quux", Version: "v2.0.1", IndexTimestamp: now, Status: &code},
+	}
+	ignore := cmpopts.IgnoreFields(internal.VersionState{}, "CreatedAt", "LastProcessedAt", "NextProcessedAfter")
+	if diff := cmp.Diff(wantVersions, gotVersions, ignore); diff != "" {
+		t.Fatalf("testDB.GetVersionsToFetch(ctx, 10) mismatch (-want +got):\n%s", diff)
 	}
 }

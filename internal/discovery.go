@@ -128,4 +128,10 @@ type VersionState struct {
 	// NextProcessedAfter is the next time a fetch for thsi version should be
 	// attempted.
 	NextProcessedAfter time.Time
+
+	// AppVersion is the value of the GAE_VERSION environment variable, which
+	// is set by app engine. It represents the timestamp close to when a serice
+	// is deployed, and has the format - 20190709t112655, for example, for a
+	// deployment time of Jul 9, 2019, 11:29:59 AM.
+	AppVersion string
 }

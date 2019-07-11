@@ -20,7 +20,7 @@ import (
 	"golang.org/x/net/context/ctxhttp"
 )
 
-// A Client is used by the cron service to communicate with the module index.
+// A Client is used by the etl service to communicate with the module index.
 type Client struct {
 	// URL of the module index
 	url string

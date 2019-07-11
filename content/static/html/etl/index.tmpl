@@ -87,8 +87,8 @@ td {
 	border-top: 1px solid #ddd;
 }
 </style>
-<title>Go Discovery Cron</title>
-<h1>Go Discovery Cron</h1>
+<title>Go Discovery ETL</title>
+<h1>Go Discovery ETL</h1>
 
 <div class="actions">
 	<form action="/poll-and-queue/" method="post" name="queueForm">
@@ -101,6 +101,12 @@ td {
 		<button title="Query the discovery database for failed versions, and re-queue them for processing."
       onclick="submitForm('requeueForm', true); return false">Requeue Failed Versions</button>
 		<input type="number" name="limit" value="10">
+		<output name="result"></output>
+	</form>
+	<form action="/reprocess/" method="post" name="reprocessForm">
+		<button title="Mark all versions created before the specified app_version to be reprocessed."
+      onclick="submitForm('reprocessForm', true); return false">Reprocess Versions</button>
+		<input type="text" name="app_version">
 		<output name="result"></output>
 	</form>
 	<form action="/refresh-search/" method="post" name="searchRefreshForm">

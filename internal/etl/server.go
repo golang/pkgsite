@@ -56,6 +56,7 @@ func NewServer(db *postgres.DB,
 	r.HandleFunc("/requeue/", s.handleRequeue)
 	r.HandleFunc("/refresh-search/", s.handleRefreshSearch)
 	r.HandleFunc("/populate-stdlib/", s.handlePopulateStdLib)
+	r.HandleFunc("/reprocess/", s.handleReprocess)
 	r.Handle("/fetch/", http.StripPrefix("/fetch", http.HandlerFunc(s.handleFetch)))
 	r.Handle("/queue-fetch/", http.StripPrefix("/queue-fetch", http.HandlerFunc(s.handleQueueFetch)))
 	r.HandleFunc("/", s.handleStatusPage)
@@ -207,7 +208,7 @@ func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) {
 	span.Annotate([]trace.Attribute{trace.Int64Attribute("limit", int64(limit))}, "processed limit")
 	versions, err := s.db.GetNextVersionsToFetch(ctx, limit)
 	if err != nil {
-		log.Printf("Error getting versions to fetch: %v", err)
+		log.Printf("s.db.GetNextVersionsToFetch(ctx, %d): %v", limit, err)
 		http.Error(w, "error getting versions to fetch", http.StatusInternalServerError)
 		return
 	}
@@ -222,7 +223,7 @@ func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleStatusPage serves the cron status page.
+// handleStatusPage serves the etl status page.
 func (s *Server) handleStatusPage(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	const pageSize = 20
@@ -310,5 +311,18 @@ func (s *Server) handlePopulateStdLib(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "error scheduling fetch", http.StatusInternalServerError)
 			return
 		}
+	}
+}
+
+func (s *Server) handleReprocess(w http.ResponseWriter, r *http.Request) {
+	appVersion := r.FormValue("app_version")
+	if appVersion == "" {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusBadRequest)
+		log.Printf("app_version was not specified")
+	}
+	if err := s.db.UpdateVersionStatesForReprocessing(r.Context(), appVersion); err != nil {
+		log.Printf("s.db.UpdateVersionsToReprocess(ctx, %q): %v", appVersion, err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
 	}
 }

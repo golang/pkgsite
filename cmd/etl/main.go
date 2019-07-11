@@ -65,7 +65,7 @@ func main() {
 		log.Fatalf("proxy.New: %v", err)
 	}
 
-	templatePath := filepath.Join(*staticPath, "html/cron/index.tmpl")
+	templatePath := filepath.Join(*staticPath, "html/etl/index.tmpl")
 	indexTemplate, err := template.New("index.tmpl").Funcs(template.FuncMap{
 		"truncate": truncate,
 	}).ParseFiles(templatePath)

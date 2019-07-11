@@ -29,6 +29,7 @@ import (
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/trace"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/dzip"
 	"golang.org/x/discovery/internal/license"
@@ -58,6 +59,10 @@ var (
 	}
 )
 
+// appVersionLabel is used to mark the app version at which a module version is
+// fetched. It is mutable for testing purposes.
+var appVersionLabel = config.AppVersionLabel()
+
 // fetchAndUpdateState fetches and processes a module version, and then updates
 // the module_version_state_table according to the result. It returns an HTTP
 // status code representing the result of the fetch operation, and a non-nil
@@ -84,8 +89,8 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 		}
 	}
 
-	if err := db.UpsertVersionState(ctx, modulePath, version, time.Time{}, code, fetchErr); err != nil {
-		log.Printf("db.UpsertVersionState(ctx, %q, %q, %q, %v): %q", modulePath, version, code, fetchErr, err)
+	if err := db.UpsertVersionState(ctx, modulePath, version, appVersionLabel, time.Time{}, code, fetchErr); err != nil {
+		log.Printf("db.UpsertVersionState(ctx, %q, %q, %q, %q, %v): %q", modulePath, version, config.AppVersionLabel(), code, fetchErr, err)
 		if fetchErr != nil {
 			err = fmt.Errorf("error updating version state: %v, original error: %v", err, fetchErr)
 		}
