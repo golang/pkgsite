@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"golang.org/x/discovery/internal/secrets"
@@ -49,6 +50,22 @@ func IndexURL() string {
 // ProxyURL returns the URL of the Go module proxy.
 func ProxyURL() string {
 	return GetEnv("GO_MODULE_PROXY_URL", "https://proxy.golang.org")
+}
+
+// ServiceID returns a the name of the current application.
+func ServiceID() string {
+	if app := os.Getenv("GAE_SERVICE"); app != "" {
+		return app
+	}
+	if exe, err := os.Executable(); err == nil {
+		return filepath.Base(exe)
+	}
+	return ""
+}
+
+// InstanceID returns a unique identifier for this process instance.
+func InstanceID() string {
+	return os.Getenv("GAE_INSTANCE")
 }
 
 // AppVersionLabel returns the version label for the current instance.  This is

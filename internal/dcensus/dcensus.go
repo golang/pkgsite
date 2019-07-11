@@ -14,11 +14,13 @@ import (
 
 	"contrib.go.opencensus.io/exporter/prometheus"
 	"contrib.go.opencensus.io/exporter/stackdriver"
+	"contrib.go.opencensus.io/exporter/stackdriver/monitoredresource"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
 	"go.opencensus.io/zpages"
+	"golang.org/x/discovery/internal/config"
 )
 
 // Router is an http multiplexer that instruments per-handler debugging
@@ -94,7 +96,16 @@ func exportToStackdriver() {
 	// https://cloud.google.com/monitoring/custom-metrics/creating-metrics#writing-ts
 	view.SetReportingPeriod(time.Minute)
 
-	exporter, err := stackdriver.NewExporter(stackdriver.Options{ProjectID: project})
+	labels := &stackdriver.Labels{}
+	labels.Set("version_label", config.AppVersionLabel(), "Version label of the running binary")
+	labels.Set("instance", config.InstanceID(), "Identifier of the executing instance")
+	labels.Set("service", config.ServiceID(), "Identifier of the executing application")
+
+	exporter, err := stackdriver.NewExporter(stackdriver.Options{
+		ProjectID:               project,
+		MonitoredResource:       monitoredresource.Autodetect(),
+		DefaultMonitoringLabels: labels,
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
