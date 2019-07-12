@@ -64,8 +64,10 @@ func NewServer(db *postgres.DB, staticPath string, reloadTemplates bool) (*Serve
 	})
 	r.Handle("/pkg/", http.StripPrefix("/pkg", http.HandlerFunc(s.handleDetails)))
 	r.HandleFunc("/search", s.handleSearch)
-	r.HandleFunc("/advanced-search", s.handleStaticPage("advanced_search.tmpl", "Advanced Search"))
-	r.HandleFunc("/license-policy", s.handleStaticPage("license_policy.tmpl", "Licenses"))
+	r.HandleFunc("/advanced-search", s.handleStaticPage("advanced_search.tmpl", "Advanced Search - Go Discovery"))
+	r.HandleFunc("/license-policy", s.handleStaticPage("license_policy.tmpl", "Licenses - Go Discovery"))
+	r.HandleFunc("/copyright", s.handleStaticPage("copyright.tmpl", "Copyright - Go Discovery"))
+	r.HandleFunc("/tos", s.handleStaticPage("tos.tmpl", "Terms of Service - Go Discovery"))
 	r.HandleFunc("/", s.handleIndexPage)
 	s.Handler = r
 
@@ -220,8 +222,10 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 		{"index.tmpl"},
 		{"error.tmpl"},
 		{"search.tmpl"},
-		{"license_policy.tmpl"},
 		{"advanced_search.tmpl"},
+		{"copyright.tmpl"},
+		{"license_policy.tmpl"},
+		{"tos.tmpl"},
 		{"doc.tmpl", "details.tmpl"},
 		{"importedby.tmpl", "details.tmpl"},
 		{"imports.tmpl", "details.tmpl"},
