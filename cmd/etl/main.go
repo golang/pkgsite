@@ -31,8 +31,8 @@ import (
 )
 
 var (
-	timeout    = config.GetEnv("GO_DISCOVERY_CRON_TIMEOUT_MINUTES", "10")
-	queueName  = config.GetEnv("GO_DISCOVERY_CRON_TASK_QUEUE", "dev-fetch-tasks")
+	timeout    = config.GetEnv("GO_DISCOVERY_ETL_TIMEOUT_MINUTES", "10")
+	queueName  = config.GetEnv("GO_DISCOVERY_ETL_TASK_QUEUE", "dev-fetch-tasks")
 	workers    = flag.Int("workers", 10, "number of concurrent requests to the fetch service, when running locally")
 	staticPath = flag.String("static", "content/static", "path to folder containing static files served")
 )
