@@ -247,6 +247,7 @@ code {
 }
 .SearchResults-header {
   font-size: var(--header-title-font-size);
+  font-size: 1.5rem;
   margin: 0 0 8px;
 }
 .SearchResults-resultCount {
