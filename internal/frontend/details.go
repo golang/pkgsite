@@ -50,9 +50,9 @@ type DetailsPage struct {
 	Tabs           []TabSettings
 }
 
-// OverviewDetails contains all of the data that the overview template
+// ReadMeDetails contains all of the data that the readme template
 // needs to populate.
-type OverviewDetails struct {
+type ReadMeDetails struct {
 	ModulePath string
 	ReadMe     template.HTML
 }
@@ -228,10 +228,10 @@ func elapsedTime(date time.Time) string {
 	return date.Format("Jan _2, 2006")
 }
 
-// fetchOverviewDetails fetches data for the module version specified by path and version
-// from the database and returns a OverviewDetails.
-func fetchOverviewDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*OverviewDetails, error) {
-	return &OverviewDetails{
+// fetchReadMeDetails fetches data for the module version specified by path and version
+// from the database and returns a ReadMeDetails.
+func fetchReadMeDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*ReadMeDetails, error) {
+	return &ReadMeDetails{
 		ModulePath: pkg.VersionInfo.ModulePath,
 		ReadMe:     readmeHTML(pkg.VersionInfo.ReadmeFilePath, pkg.VersionInfo.ReadmeContents),
 	}, nil
@@ -365,8 +365,8 @@ var (
 			DisplayName: "Doc",
 		},
 		{
-			Name:        "overview",
-			DisplayName: "Overview",
+			Name:        "readme",
+			DisplayName: "README",
 		},
 		{
 			Name:              "module",
@@ -418,8 +418,8 @@ func fetchDetails(ctx context.Context, r *http.Request, tab string, db *postgres
 		return fetchImportedByDetails(ctx, db, pkg, newPaginationParams(r, 100))
 	case "licenses":
 		return fetchLicensesDetails(ctx, db, pkg)
-	case "overview":
-		return fetchOverviewDetails(ctx, db, pkg)
+	case "readme":
+		return fetchReadMeDetails(ctx, db, pkg)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }

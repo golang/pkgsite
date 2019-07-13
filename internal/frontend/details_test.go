@@ -96,18 +96,18 @@ func firstVersionedPackage(v *internal.Version) *internal.VersionedPackage {
 	}
 }
 
-func TestFetchOverviewDetails(t *testing.T) {
+func TestFetchReadMeDetails(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
 	tc := struct {
 		name        string
 		version     *internal.Version
-		wantDetails *OverviewDetails
+		wantDetails *ReadMeDetails
 	}{
 		name:    "want expected overview details",
 		version: sample.Version(),
-		wantDetails: &OverviewDetails{
+		wantDetails: &ReadMeDetails{
 			ModulePath: sample.ModulePath,
 			ReadMe:     template.HTML("<p>readme</p>\n"),
 		},
@@ -119,14 +119,14 @@ func TestFetchOverviewDetails(t *testing.T) {
 		t.Fatalf("db.InsertVersion(%v): %v", tc.version, err)
 	}
 
-	got, err := fetchOverviewDetails(ctx, testDB, firstVersionedPackage(tc.version))
+	got, err := fetchReadMeDetails(ctx, testDB, firstVersionedPackage(tc.version))
 	if err != nil {
-		t.Fatalf("fetchOverviewDetails(ctx, db, %q, %q) = %v err = %v, want %v",
+		t.Fatalf("fetchReadMeDetails(ctx, db, %q, %q) = %v err = %v, want %v",
 			tc.version.Packages[0].Path, tc.version.Version, got, err, tc.wantDetails)
 	}
 
 	if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
-		t.Errorf("fetchOverviewDetails(ctx, %q, %q) mismatch (-want +got):\n%s", tc.version.Packages[0].Path, tc.version.Version, diff)
+		t.Errorf("fetchReadMeDetails(ctx, %q, %q) mismatch (-want +got):\n%s", tc.version.Packages[0].Path, tc.version.Version, diff)
 	}
 }
 
