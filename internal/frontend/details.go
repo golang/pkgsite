@@ -354,6 +354,12 @@ func readmeHTML(readmeFilePath string, readmeContents []byte) template.HTML {
 	// attributes that are safe for user generated content. This policy does
 	// not whitelist iframes, object, embed, styles, script, etc.
 	p := bluemonday.UGCPolicy()
+
+	// Allow width and align attributes on img. This is used to size README
+	// images appropriately where used, like the gin-gonic/logo/color.png
+	// image in the github.com/gin-gonic/gin README.
+	p.AllowAttrs("width", "align").OnElements("img")
+
 	unsafe := blackfriday.Run(readmeContents)
 	return template.HTML(p.SanitizeBytes(unsafe))
 }

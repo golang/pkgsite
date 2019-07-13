@@ -320,6 +320,13 @@ code {
   }
 }
 
+.ReadMe {
+  overflow-wrap: break-word;
+}
+.ReadMe img {
+  max-width: 100%;
+}
+
 .ModulesNav {
   margin: 0 -16px 16px -16px;
   overflow-x: scroll;

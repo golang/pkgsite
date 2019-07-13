@@ -6,7 +6,7 @@
 
 {{define "details_content"}}
   {{if .ReadMe}}
-    <div>{{.ReadMe}}</div>
+    <div class="ReadMe">{{.ReadMe}}</div>
   {{else}}
     {{template "empty_content" "No README found for this package!"}}
   {{end}}
