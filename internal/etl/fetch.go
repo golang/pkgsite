@@ -80,6 +80,8 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 	if fetchErr = fetchAndInsertVersion(ctx, modulePath, version, client, db); fetchErr != nil {
 		log.Printf("Error executing fetch: %v", fetchErr)
 		switch {
+		case derrors.IsInvalidArgument(fetchErr):
+			code = http.StatusBadRequest
 		case derrors.IsNotFound(fetchErr):
 			code = http.StatusNotFound
 		case derrors.IsNotAcceptable(fetchErr):
@@ -147,9 +149,7 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, requestedVersi
 	}
 	zipReader, err := proxyClient.GetZip(ctx, modulePath, requestedVersion)
 	if err != nil {
-		// Here we expect the zip to exist since we got info above, so we shouldn't
-		// wrap the error.
-		return fmt.Errorf("proxyClient.GetZip(%q, %q): %v", modulePath, info.Version, err)
+		return derrors.Wrap(err, "proxyClient.GetZip(%q, %q)", modulePath, requestedVersion)
 	}
 
 	// Module processing is wrapped in an inline func to facilitate tracing.
