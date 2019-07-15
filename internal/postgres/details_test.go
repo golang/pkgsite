@@ -30,11 +30,11 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 		wantReadErr bool
 	}{
 		{
-			name: "want_second_package",
+			name: "want latest package to be most recent release version",
 			path: sample.PackagePath,
 			versions: []*internal.Version{
 				sample.Version(
-					sample.WithVersion("v1.0.0-alpha.1"),
+					sample.WithVersion("v1.1.0-alpha.1"),
 					sample.WithVersionType(internal.VersionTypePrerelease)),
 				sample.Version(
 					sample.WithVersion("v1.0.0"),
