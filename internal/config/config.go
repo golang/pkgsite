@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"golang.org/x/discovery/internal/secrets"
+	mrpb "google.golang.org/genproto/googleapis/api/monitoredres"
 )
 
 // HostAddr returns the network on which to serve the primary HTTP service.
@@ -73,11 +74,6 @@ func LocationID() string {
 	return "us-central1"
 }
 
-// ProjectID returns the go discovery GCP project ID.
-func ProjectID() string {
-	return "go-discovery"
-}
-
 // AppVersionLabel returns the version label for the current instance.  This is
 // the AppEngine version if available, otherwise a string constructed using the
 // timestamp of process start.
@@ -98,6 +94,36 @@ func ValidateAppVersion(appVersion string) error {
 		return fmt.Errorf("time.Parse(%q, %q): %v", AppVersionFormat, appVersion, err)
 	}
 	return nil
+}
+
+// ProjectID returns the GCP project ID.
+func ProjectID() string {
+	return "go-discovery"
+}
+
+// MonitoredResource is the resource for the current GAE app.
+// See https://cloud.google.com/monitoring/api/resources#tag_gae_app for more
+// details:
+// "An object representing a resource that can be used for monitoring, logging,
+// billing, or other purposes. Examples include virtual machine instances,
+// databases, and storage devices such as disks.""
+func MonitoredResource() *mrpb.MonitoredResource {
+	return monitoredResource
+}
+
+var monitoredResource *mrpb.MonitoredResource
+
+func init() {
+	if OnAppEngine() {
+		monitoredResource = &mrpb.MonitoredResource{
+			Type: "gae_app",
+			Labels: map[string]string{
+				"project_id": ProjectID(),
+				"module_id":  os.Getenv("GAE_SERVICE"),
+				"version_id": os.Getenv("GAE_VERSION"),
+			},
+		}
+	}
 }
 
 var fallbackVersionLabel string

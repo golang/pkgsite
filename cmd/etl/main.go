@@ -17,6 +17,7 @@ import (
 	"time"
 
 	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
+	"cloud.google.com/go/logging"
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/dcensus"
 	"golang.org/x/discovery/internal/etl"
@@ -104,12 +105,27 @@ func main() {
 	if err != nil {
 		log.Fatalf("strconv.Atoi(%q): %v", timeout, err)
 	}
-	mw := middleware.Timeout(time.Duration(handlerTimeout) * time.Minute)
+	requestLogger := getLogger(ctx)
+	mw := middleware.Chain(
+		middleware.RequestLog(requestLogger),
+		middleware.Timeout(time.Duration(handlerTimeout)*time.Minute),
+	)
 	http.Handle("/", mw(server))
 
 	addr := config.HostAddr("localhost:8000")
 	log.Printf("Listening on addr %s", addr)
 	log.Fatal(http.ListenAndServe(addr, nil))
+}
+
+func getLogger(ctx context.Context) middleware.Logger {
+	if config.OnAppEngine() {
+		logClient, err := logging.NewClient(ctx, config.ProjectID())
+		if err != nil {
+			log.Fatalf("logging.NewClient: %v", err)
+		}
+		return logClient.Logger("etl-log")
+	}
+	return middleware.LocalLogger{}
 }
 
 func truncate(length int, text *string) *string {

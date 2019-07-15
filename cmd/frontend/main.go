@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"time"
 
+	"cloud.google.com/go/logging"
 	"contrib.go.opencensus.io/integrations/ocsql"
 	"go.opencensus.io/plugin/ochttp"
 	"golang.org/x/discovery/internal/config"
@@ -64,12 +65,25 @@ func main() {
 		go http.ListenAndServe(config.DebugAddr("localhost:8081"), dcensusServer)
 	}
 
-	addr := config.HostAddr("localhost:8080")
-	log.Printf("Listening on addr %s", addr)
-
+	requestLogger := getLogger(ctx)
 	mw := middleware.Chain(
+		middleware.RequestLog(requestLogger),
 		middleware.SecureHeaders(),
 		middleware.Timeout(1*time.Minute),
 	)
+
+	addr := config.HostAddr("localhost:8080")
+	log.Printf("Listening on addr %s", addr)
 	log.Fatal(http.ListenAndServe(addr, mw(server)))
+}
+
+func getLogger(ctx context.Context) middleware.Logger {
+	if config.OnAppEngine() {
+		logClient, err := logging.NewClient(ctx, config.ProjectID())
+		if err != nil {
+			log.Fatalf("logging.NewClient: %v", err)
+		}
+		return logClient.Logger("frontend-log")
+	}
+	return middleware.LocalLogger{}
 }
