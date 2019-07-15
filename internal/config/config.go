@@ -78,10 +78,22 @@ func AppVersionLabel() string {
 	return fallbackVersionLabel
 }
 
+// AppVersionFormat is the expected format of the app version timestamp.
+const AppVersionFormat = "20060102t150405"
+
+// ValidateAppVersion validates that appVersion follows the expected format
+// defined by AppVersionFormat.
+func ValidateAppVersion(appVersion string) error {
+	if _, err := time.Parse(AppVersionFormat, appVersion); err != nil {
+		return fmt.Errorf("time.Parse(%q, %q): %v", AppVersionFormat, appVersion, err)
+	}
+	return nil
+}
+
 var fallbackVersionLabel string
 
 func init() {
-	fallbackVersionLabel = time.Now().Format("20060102t150405")
+	fallbackVersionLabel = time.Now().Format(AppVersionFormat)
 }
 
 // OnAppEngine reports if the current process is running in an AppEngine

@@ -16,6 +16,7 @@ import (
 
 	"go.opencensus.io/trace"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/dcensus"
 	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/postgres"
@@ -317,8 +318,14 @@ func (s *Server) handlePopulateStdLib(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleReprocess(w http.ResponseWriter, r *http.Request) {
 	appVersion := r.FormValue("app_version")
 	if appVersion == "" {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusBadRequest)
 		log.Printf("app_version was not specified")
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+	if err := config.ValidateAppVersion(appVersion); err != nil {
+		log.Printf("config.ValidateAppVersion(%q): %v", appVersion, err)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
 	}
 	if err := s.db.UpdateVersionStatesForReprocessing(r.Context(), appVersion); err != nil {
 		log.Printf("s.db.UpdateVersionsToReprocess(ctx, %q): %v", appVersion, err)
