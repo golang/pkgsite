@@ -68,6 +68,16 @@ func InstanceID() string {
 	return os.Getenv("GAE_INSTANCE")
 }
 
+// LocationID returns the region containing our AppEngine apps.
+func LocationID() string {
+	return "us-central1"
+}
+
+// ProjectID returns the go discovery GCP project ID.
+func ProjectID() string {
+	return "go-discovery"
+}
+
 // AppVersionLabel returns the version label for the current instance.  This is
 // the AppEngine version if available, otherwise a string constructed using the
 // timestamp of process start.

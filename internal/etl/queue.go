@@ -8,11 +8,14 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
+	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
+	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
-	"google.golang.org/appengine/taskqueue"
+	taskspb "google.golang.org/genproto/googleapis/cloud/tasks/v2"
 )
 
 // A Queue provides an interface for asynchronous scheduling of fetch actions.
@@ -23,22 +26,46 @@ type Queue interface {
 // GCPQueue provides a Queue implementation backed by the Google Cloud Tasks
 // API.
 type GCPQueue struct {
-	QueueName string
+	client  *cloudtasks.Client
+	queueID string
+}
+
+// NewGCPQueue returns a new Queue that can be used to enqueue tasks using the
+// cloud tasks API.  The given queueID should be the name of the queue in the
+// cloud tasks console.
+func NewGCPQueue(client *cloudtasks.Client, queueID string) *GCPQueue {
+	return &GCPQueue{
+		client:  client,
+		queueID: queueID,
+	}
 }
 
 // ScheduleFetch enqueues a task on GCP to fetch the given modulePath and
 // version. It returns an error if there was an error hashing the task name, or
 // an error pushing the task to GCP.
 func (q *GCPQueue) ScheduleFetch(ctx context.Context, modulePath, version string) error {
-	if q == nil {
-		return nil
-	}
+	// the new taskqueue API requires a deadline of <= 30s
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+	queueName := fmt.Sprintf("projects/%s/locations/%s/queues/%s", config.ProjectID(), config.LocationID(), q.queueID)
 	u := fmt.Sprintf("/queue-fetch/%s/@v/%s", modulePath, version)
-	t := taskqueue.NewPOSTTask(u, nil)
-	if _, err := taskqueue.Add(ctx, t, q.QueueName); err != nil {
-		log.Printf("taskqueue.Add(ctx, t, %q): %v", q.QueueName, err)
+	req := &taskspb.CreateTaskRequest{
+		Parent: queueName,
+		Task: &taskspb.Task{
+			MessageType: &taskspb.Task_AppEngineHttpRequest{
+				AppEngineHttpRequest: &taskspb.AppEngineHttpRequest{
+					HttpMethod:  taskspb.HttpMethod_POST,
+					RelativeUri: u,
+					AppEngineRouting: &taskspb.AppEngineRouting{
+						Service: os.Getenv("GAE_SERVICE"),
+					},
+				},
+			},
+		},
 	}
-
+	if _, err := q.client.CreateTask(ctx, req); err != nil {
+		return fmt.Errorf("q.client.CreateTask(ctx, req): %v", err)
+	}
 	return nil
 }
 

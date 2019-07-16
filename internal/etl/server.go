@@ -21,7 +21,6 @@ import (
 	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
-	"google.golang.org/appengine"
 )
 
 // Server is an http.Handler that implements functionality for managing the
@@ -176,7 +175,7 @@ func (s *Server) handleIndexAndQueue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for _, version := range versions {
-		if err := s.queue.ScheduleFetch(appengine.NewContext(r), version.Path, version.Version); err != nil {
+		if err := s.queue.ScheduleFetch(ctx, version.Path, version.Version); err != nil {
 			log.Printf("Error scheduling fetch: %v", err)
 			http.Error(w, "error scheduling fetch", http.StatusInternalServerError)
 			return

@@ -12,11 +12,11 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strconv"
 	"time"
 
+	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/dcensus"
 	"golang.org/x/discovery/internal/etl"
@@ -24,7 +24,6 @@ import (
 	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
-	"google.golang.org/appengine"
 
 	"contrib.go.opencensus.io/integrations/ocsql"
 	"go.opencensus.io/plugin/ochttp"
@@ -74,8 +73,12 @@ func main() {
 	}
 
 	var q etl.Queue
-	if os.Getenv("GAE_ENV") == "standard" {
-		q = &etl.GCPQueue{QueueName: queueName}
+	if config.OnAppEngine() {
+		client, err := cloudtasks.NewClient(ctx)
+		if err != nil {
+			log.Fatal(err)
+		}
+		q = etl.NewGCPQueue(client, queueName)
 	} else {
 		q = etl.NewInMemoryQueue(ctx, proxyClient, db, *workers)
 	}
@@ -103,13 +106,10 @@ func main() {
 	}
 	mw := middleware.Timeout(time.Duration(handlerTimeout) * time.Minute)
 	http.Handle("/", mw(server))
-	if os.Getenv("GAE_ENV") == "standard" {
-		appengine.Main()
-	} else {
-		addr := config.HostAddr("localhost:8000")
-		log.Printf("Listening on addr %s", addr)
-		log.Fatal(http.ListenAndServe(addr, nil))
-	}
+
+	addr := config.HostAddr("localhost:8000")
+	log.Printf("Listening on addr %s", addr)
+	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
 func truncate(length int, text *string) *string {
