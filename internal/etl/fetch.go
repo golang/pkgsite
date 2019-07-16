@@ -25,7 +25,6 @@ import (
 	"strings"
 	"time"
 
-	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/trace"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/config"
@@ -37,7 +36,6 @@ import (
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/thirdparty/semver"
-	"golang.org/x/net/context/ctxhttp"
 )
 
 var (
@@ -50,14 +48,6 @@ var (
 
 	maxPackagesPerModule = 10000
 	maxImportsPerPackage = 1000
-
-	// vcsClient is used to make HTTP requests to the url where a module is
-	// hosted to determine the repository url. It is mutable for testing
-	// purposes.
-	vcsClient = &http.Client{
-		Timeout:   time.Second * 30,
-		Transport: &ochttp.Transport{},
-	}
 )
 
 // appVersionLabel is used to mark the app version at which a module version is
@@ -133,9 +123,9 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, requestedVersi
 	ctx, span := trace.StartSpanWithRemoteParent(ctx, "fetchAndInsertVersion", parentSpan.SpanContext())
 	defer span.End()
 
-	repositoryURL, err := fetchRepositoryURL(ctx, modulePath)
+	repositoryURL, err := modulePathToRepoURL(modulePath)
 	if err != nil {
-		log.Printf("fetchRepositoryURL(ctx, %q): %v", modulePath, err)
+		log.Printf("modulePathToRepoURL(%q): %v", modulePath, err)
 	}
 
 	info, err := proxyClient.GetInfo(ctx, modulePath, requestedVersion)
@@ -586,24 +576,6 @@ func simpleImporter(imports map[string]*ast.Object, path string) (*ast.Object, e
 	return pkg, nil
 }
 
-// fetchRepositoryURL returns the repositoryURL for the modulePath if the a GET
-// request to the expected repositoryURL returns a 200-series status code.
-func fetchRepositoryURL(ctx context.Context, modulePath string) (string, error) {
-	repositoryURL, err := modulePathToRepoURL(modulePath)
-	if repositoryURL == "" {
-		return "", fmt.Errorf("modulePathToRepoURL(%q): %v", modulePath, err)
-	}
-
-	r, err := ctxhttp.Get(ctx, vcsClient, repositoryURL)
-	if err != nil {
-		return "", fmt.Errorf("ctxhttp.Get(ctx, client, %q): %v", modulePath, err)
-	}
-	if err := derrors.StatusError(r.StatusCode, "ctxhttp.Get(ctx, client, %q)", repositoryURL); err != nil {
-		return "", err
-	}
-	return repositoryURL, nil
-}
-
 // acceptedVCSHosts is the list of hosts for which we will try to detect a
 // repositoryURL for a given modulePath with that hostname.
 var acceptedVCSHosts = map[string]bool{
@@ -618,8 +590,7 @@ const goRepositoryURLPrefix = "https://github.com/golang"
 // modulePath. It returns an expected repositoryURL if the modulePath is
 // (1) in the acceptedVCSHosts (2) has the prefix golang.org/x or,
 // (3) internal.IsStandardLibraryModule(modulePath) returns true. Otherwise,
-// the empty string is returned.  It is not guaranteed that the repository url
-// returned is a valid url, and this is validated using fetchRepositoryURL.
+// the empty string is returned.
 func modulePathToRepoURL(modulePath string) (string, error) {
 	if internal.IsStandardLibraryModule(modulePath) {
 		return goRepositoryURLPrefix + "/go", nil

@@ -9,7 +9,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"net/url"
 	"path/filepath"
 	"sort"
@@ -27,20 +26,6 @@ import (
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/testhelper"
 )
-
-// setupTestVCSClient sets the value of vcsClient to a handler that will return
-// a http.StatusOK if the request host is in acceptedVCSHosts or is a standard
-// library module. Otherwise, it returns http.StatusNotFound.
-func setupTestVCSClient() func() {
-	testClient, _, teardownRemoteServer := testhelper.SetupTestClientAndServer(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if ok := acceptedVCSHosts[r.Host]; !ok && !internal.IsStandardLibraryModule(r.URL.Path) {
-				w.WriteHeader(http.StatusNotFound)
-			}
-		}))
-	vcsClient = testClient
-	return teardownRemoteServer
-}
 
 func TestSkipBadPackage(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
@@ -139,9 +124,6 @@ func TestReFetch(t *testing.T) {
 	if err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB); err != nil {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
 	}
-
-	teardownRemoteServer := setupTestVCSClient()
-	defer teardownRemoteServer()
 
 	if _, err := testDB.GetPackage(ctx, pkgFoo, version); err != nil {
 		t.Errorf("testDB.GetPackage(ctx, %q, %q): %v", pkgFoo, version, err)
@@ -342,9 +324,6 @@ func TestFetchAndInsertVersion(t *testing.T) {
 
 			teardownProxy, client := proxy.SetupTestProxy(t, nil)
 			defer teardownProxy(t)
-
-			teardownRemoteServer := setupTestVCSClient()
-			defer teardownRemoteServer()
 
 			if err := fetchAndInsertVersion(ctx, test.modulePath, test.version, client, testDB); err != nil {
 				t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", test.modulePath, test.version, client, testDB, err)
