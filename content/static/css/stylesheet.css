@@ -400,6 +400,11 @@ code {
   padding: 10px;
   border: 1px solid var(--gray-8);
   border-radius: 3px;
+  font: .875rem/1.375rem var(--pre-code-font-family);
+  margin: 0;
+  overflow-x: auto;
+  padding: 1.5rem;
+  tab-size: 4;
 }
 .License-disclaimer {
   font-style: italic;
@@ -419,23 +424,52 @@ code {
 .Documentation a:hover {
   text-decoration: underline;
 }
-.Documentation h2 a {
+.Documentation h2 a,
+.Documentation h3 a {
   display: none;
 }
-.Documentation h2:hover a {
+.Documentation h2:hover a,
+.Documentation h3:hover a {
   display: initial;
 }
 .Documentation code,
-.Documentation pre,
-.License-contents {
+.Documentation pre {
   background-color: #f5f5f5;
   border-radius: 0.3em;
   border: 1px solid #ccc;
   font: .875rem/1.375rem var(--pre-code-font-family);
   margin: 0;
   overflow-x: auto;
-  padding: 1.5rem;
+  padding: 0.75rem;
   tab-size: 4;
+}
+.Documentation pre + pre {
+  margin-top: 10px;
+}
+.Documentation pre .comment {
+  color: #060;
+}
+.Documentation .example {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin: 10px 0px;
+}
+.Documentation .indent {
+  margin-left: 20px;
+}
+.Documentation .example-header {
+  padding: 10px;
+}
+.Documentation .example-body {
+  border-top: solid 1px #ccc;
+  display: none;
+  padding: 0 10px 10px 10px;
+}
+.Documentation dl {
+  line-height: 150%;
+}
+.Documentation dd {
+  margin-left: 0;
 }
 
 .ModuleContent-list {

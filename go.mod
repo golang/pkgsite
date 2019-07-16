@@ -16,8 +16,6 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.2
 	github.com/prometheus/common v0.6.0 // indirect
 	github.com/russross/blackfriday/v2 v2.0.1
-	github.com/shurcooL/component v0.0.0-20190503025225-90263df59ff6 // indirect
-	github.com/shurcooL/htmlg v0.0.0-20190503024804-b6326af49ef6
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.4.2 // indirect
 	go.opencensus.io v0.22.0

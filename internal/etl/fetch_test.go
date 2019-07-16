@@ -636,7 +636,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					Name:              "good",
 					Path:              "bad.mod/module/good",
 					Synopsis:          "Package good is inside a module that has bad packages.",
-					DocumentationHTML: []byte("const Good = true"),
+					DocumentationHTML: []byte(`const Good = <a href="/pkg/builtin#true">true</a>`),
 					Imports:           []string{},
 					V1Path:            "bad.mod/module/good",
 				},

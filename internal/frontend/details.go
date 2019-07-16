@@ -197,7 +197,7 @@ func effectiveName(pkg *internal.Package) string {
 // packageTitle constructs the details page title for pkg.
 func packageTitle(pkg *internal.Package) string {
 	if pkg.Name != "main" {
-		return "Package" + pkg.Name
+		return "Package " + pkg.Name
 	}
 	return "Command " + effectiveName(pkg)
 }

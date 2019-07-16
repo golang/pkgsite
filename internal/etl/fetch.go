@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"go/ast"
 	"go/build"
-	"go/doc"
 	"go/parser"
 	"go/token"
 	"io"
@@ -32,6 +31,8 @@ import (
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/dzip"
+	"golang.org/x/discovery/internal/etl/dochtml"
+	"golang.org/x/discovery/internal/etl/internal/doc"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
@@ -279,7 +280,7 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 	// 	2. process all files by reading their contents
 	//
 	// During phase 1, we populate the dirs map for each directory
-	// that contains at least one non-test .go file.
+	// that contains at least one .go file.
 
 	var (
 		// modulePrefix is the "<module>@<version>/" prefix that all files
@@ -287,11 +288,11 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 		// at the bottom of https://golang.org/cmd/go/#hdr-Module_proxy_protocol.
 		modulePrefix = moduleVersionDir(modulePath, version) + "/"
 
-		// dirs is the set of directories with at least one non-test .go file,
+		// dirs is the set of directories with at least one .go file,
 		// to be populated during phase 1 and used during phase 2.
 		//
 		// The map key is the directory path, with the modulePrefix trimmed.
-		// The map value is a slice of all non-test .go files, and no other files.
+		// The map value is a slice of all .go files, and no other files.
 		dirs = make(map[string][]*zip.File)
 
 		// incompleteDirs tracks directories for which we have incomplete
@@ -323,8 +324,8 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 			// File is in a directory we're not looking to process at this time, so skip it.
 			continue
 		}
-		if !strings.HasSuffix(f.Name, ".go") || strings.HasSuffix(f.Name, "_test.go") {
-			// We care about non-test .go files only.
+		if !strings.HasSuffix(f.Name, ".go") {
+			// We care about .go files only.
 			continue
 		}
 		if f.UncompressedSize64 > dzip.MaxFileSize {
@@ -413,8 +414,8 @@ func (bpe *BadPackageError) Error() string { return bpe.Err.Error() }
 // loadPackage loads a Go package with import path importPath
 // from zipGoFiles using the default build context.
 //
-// zipGoFiles must contain only non-test .go files
-// that have been verified to be of reasonable size.
+// zipGoFiles must contain only .go files that have been verified
+// to be of reasonable size.
 //
 // The returned Package.Licenses field is not populated.
 //
@@ -487,6 +488,7 @@ func loadPackage(zipGoFiles []*zip.File, innerPath, modulePath string) (*interna
 	var (
 		fset            = token.NewFileSet()
 		goFiles         = make(map[string]*ast.File)
+		testGoFiles     = make(map[string]*ast.File)
 		packageName     string
 		packageNameFile string // Name of file where packageName came from.
 	)
@@ -510,6 +512,10 @@ func loadPackage(zipGoFiles []*zip.File, innerPath, modulePath string) (*interna
 			}
 			return nil, &BadPackageError{Err: err}
 		}
+		if strings.HasSuffix(name, "_test.go") {
+			testGoFiles[name] = pf
+			continue
+		}
 		goFiles[name] = pf
 		if len(goFiles) == 1 {
 			packageName = pf.Name.Name
@@ -529,15 +535,14 @@ func loadPackage(zipGoFiles []*zip.File, innerPath, modulePath string) (*interna
 	}
 
 	// Compute package documentation.
-	apkg := &ast.Package{
-		Name:  packageName,
-		Files: goFiles,
+	apkg, _ := ast.NewPackage(fset, goFiles, simpleImporter, nil) // Ignore errors that can happen due to unresolved identifiers.
+	for name, f := range testGoFiles {                            // TODO(b/137567588): Improve upstream doc.New API design.
+		apkg.Files[name] = f
 	}
-
 	importPath := path.Join(modulePath, innerPath)
 	d := doc.New(apkg, importPath, 0)
 	if d.ImportPath != importPath || d.Name != packageName {
-		panic("internal error: *doc.Package has an unexpected import path or package name")
+		panic(fmt.Errorf("internal error: *doc.Package has an unexpected import path (%q != %q) or package name (%q != %q)", d.ImportPath, importPath, d.Name, packageName))
 	}
 
 	// Process package imports.
@@ -546,9 +551,9 @@ func loadPackage(zipGoFiles []*zip.File, innerPath, modulePath string) (*interna
 	}
 
 	// Render documentation HTML.
-	docHTML, err := renderDocHTML(fset, d)
+	docHTML, err := dochtml.Render(fset, d)
 	if err != nil {
-		return nil, fmt.Errorf("renderDocHTML: %v", err)
+		return nil, fmt.Errorf("dochtml.Render: %v", err)
 	}
 
 	v1path := path.Join(internal.SeriesPathForModule(modulePath), innerPath)
@@ -564,6 +569,21 @@ func loadPackage(zipGoFiles []*zip.File, innerPath, modulePath string) (*interna
 		Imports:           d.Imports,
 		DocumentationHTML: docHTML,
 	}, nil
+}
+
+// simpleImporter returns a (dummy) package object named by the last path
+// component of the provided package path (as is the convention for packages).
+// This is sufficient to resolve package identifiers without doing an actual
+// import. It never returns an error.
+func simpleImporter(imports map[string]*ast.Object, path string) (*ast.Object, error) {
+	pkg := imports[path]
+	if pkg == nil {
+		// note that strings.LastIndex returns -1 if there is no "/"
+		pkg = ast.NewObj(ast.Pkg, path[strings.LastIndex(path, "/")+1:])
+		pkg.Data = ast.NewScope(nil) // required by ast.NewPackage for dot-import
+		imports[path] = pkg
+	}
+	return pkg, nil
 }
 
 // fetchRepositoryURL returns the repositoryURL for the modulePath if the a GET

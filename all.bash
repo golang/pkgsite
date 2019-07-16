@@ -80,8 +80,8 @@ if ! [ -x "$(command -v staticcheck)" ]; then
   go get -u honnef.co/go/tools/cmd/staticcheck
 fi
 
-info "Running: staticcheck ./... (skipping thirdparty)"
-staticcheck $(go list ./... | grep -v thirdparty) | warnout
+info "Running: staticcheck ./... (skipping thirdparty, internal/doc, internal/render)"
+staticcheck $(go list ./... | grep -v thirdparty | grep -v internal/doc | grep -v internal/render) | warnout
 
 # Download misspell if it doesn't exist
 if ! [ -x "$(command -v misspell)" ]; then
