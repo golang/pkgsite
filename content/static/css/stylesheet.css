@@ -247,7 +247,6 @@ code {
 }
 .SearchResults-header {
   font-size: var(--header-title-font-size);
-  font-size: 1.5rem;
   margin: 0 0 8px;
 }
 .SearchResults-resultCount {
@@ -264,6 +263,7 @@ code {
   margin-bottom: 16px;
 }
 .SearchSnippet-header {
+  font-size: 1.5rem;
   margin: 0 0 5px;
 }
 .SearchSnippet-synopsis {
