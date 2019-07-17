@@ -87,7 +87,7 @@ func TestETL(t *testing.T) {
 			index: []*internal.IndexVersion{fooIndex, barIndex},
 			proxy: []*proxy.TestVersion{fooProxy, barProxy},
 			requests: []*http.Request{
-				httptest.NewRequest("POST", "/poll-and-queue/", nil),
+				httptest.NewRequest("POST", "/poll-and-queue", nil),
 			},
 			wantFoo: fooState(http.StatusOK, 1),
 			wantBar: barState(http.StatusOK, 1),
@@ -96,7 +96,7 @@ func TestETL(t *testing.T) {
 			index: []*internal.IndexVersion{fooIndex, barIndex},
 			proxy: []*proxy.TestVersion{fooProxy, barProxy},
 			requests: []*http.Request{
-				httptest.NewRequest("POST", "/poll-and-queue/?limit=1", nil),
+				httptest.NewRequest("POST", "/poll-and-queue?limit=1", nil),
 			},
 			wantFoo: fooState(http.StatusOK, 1),
 		}, {
@@ -104,7 +104,7 @@ func TestETL(t *testing.T) {
 			index: []*internal.IndexVersion{fooIndex, barIndex},
 			proxy: []*proxy.TestVersion{fooProxy},
 			requests: []*http.Request{
-				httptest.NewRequest("POST", "/poll-and-queue/", nil),
+				httptest.NewRequest("POST", "/poll-and-queue", nil),
 			},
 			wantFoo: fooState(http.StatusOK, 1),
 			wantBar: barState(http.StatusNotFound, 1),

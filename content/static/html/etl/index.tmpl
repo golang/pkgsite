@@ -91,30 +91,30 @@ td {
 <h1>Go Discovery ETL</h1>
 
 <div class="actions">
-	<form action="/poll-and-queue/" method="post" name="queueForm">
+	<form action="/poll-and-queue" method="post" name="queueForm">
 		<button title="Poll the module index for up to 2000 new versions, and enqueue them for processing."
       onclick="submitForm('queueForm', false); return false">Enqueue From Module Index</button>
 		<input type="number" name="limit" value="10"></input>
 		<output name="result"></output>
 	</form>
-	<form action="/requeue/" method="post" name="requeueForm">
+	<form action="/requeue" method="post" name="requeueForm">
 		<button title="Query the discovery database for failed versions, and re-queue them for processing."
       onclick="submitForm('requeueForm', true); return false">Requeue Failed Versions</button>
 		<input type="number" name="limit" value="10">
 		<output name="result"></output>
 	</form>
-	<form action="/reprocess/" method="post" name="reprocessForm">
+	<form action="/reprocess" method="post" name="reprocessForm">
 		<button title="Mark all versions created before the specified app_version to be reprocessed."
       onclick="submitForm('reprocessForm', true); return false">Reprocess Versions</button>
 		<input type="text" name="app_version">
 		<output name="result"></output>
 	</form>
-	<form action="/refresh-search/" method="post" name="searchRefreshForm">
+	<form action="/refresh-search" method="post" name="searchRefreshForm">
 		<button title="Refresh the search materialized view in Postgres."
       onclick="submitForm('searchRefreshForm', false); return false">Refresh Materialized View</button>
 		<output name="result"></output>
 	</form>
-	<form action="/populate-stdlib/" method="post" name="populateStdlibForm">
+	<form action="/populate-stdlib" method="post" name="populateStdlibForm">
 		<button title="Populates the database with all supported versions of the Go standard library."
       onclick="submitForm('populateStdlibForm', false); return false">Populate Standard Library</button>
 		<output name="result"></output>

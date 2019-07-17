@@ -52,11 +52,11 @@ func NewServer(db *postgres.DB,
 		indexTemplate: indexTemplate,
 	}
 	r := dcensus.NewRouter()
-	r.HandleFunc("/poll-and-queue/", s.handleIndexAndQueue)
-	r.HandleFunc("/requeue/", s.handleRequeue)
-	r.HandleFunc("/refresh-search/", s.handleRefreshSearch)
-	r.HandleFunc("/populate-stdlib/", s.handlePopulateStdLib)
-	r.HandleFunc("/reprocess/", s.handleReprocess)
+	r.HandleFunc("/poll-and-queue", s.handleIndexAndQueue)
+	r.HandleFunc("/requeue", s.handleRequeue)
+	r.HandleFunc("/refresh-search", s.handleRefreshSearch)
+	r.HandleFunc("/populate-stdlib", s.handlePopulateStdLib)
+	r.HandleFunc("/reprocess", s.handleReprocess)
 	r.Handle("/fetch/", http.StripPrefix("/fetch", http.HandlerFunc(s.handleFetch)))
 	r.Handle("/queue-fetch/", http.StripPrefix("/queue-fetch", http.HandlerFunc(s.handleQueueFetch)))
 	r.HandleFunc("/", s.handleStatusPage)
