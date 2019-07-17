@@ -58,7 +58,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.logger.Log(logging.Entry{
 		HTTPRequest: &logging.HTTPRequest{Request: r},
 		Payload:     "request start",
-		Resource:    config.MonitoredResource(),
+		Resource:    config.AppMonitoredResource(),
 	})
 	w2 := &responseWriter{ResponseWriter: w}
 	h.delegate.ServeHTTP(w2, r)
@@ -69,7 +69,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			Latency: time.Since(start),
 		},
 		Payload:  "request end",
-		Resource: config.MonitoredResource(),
+		Resource: config.AppMonitoredResource(),
 	})
 }
 

@@ -9,18 +9,17 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"contrib.go.opencensus.io/exporter/prometheus"
 	"contrib.go.opencensus.io/exporter/stackdriver"
-	"contrib.go.opencensus.io/exporter/stackdriver/monitoredresource"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
 	"go.opencensus.io/zpages"
 	"golang.org/x/discovery/internal/config"
+	mrpb "google.golang.org/genproto/googleapis/api/monitoredres"
 )
 
 // Router is an http multiplexer that instruments per-handler debugging
@@ -83,11 +82,18 @@ func NewServer(views ...*view.View) (http.Handler, error) {
 	return mux, nil
 }
 
+// monitoredResource wraps a *mrpb.MonitoredResource to implement the
+// monitoredresource.MonitoredResource interface.
+type monitoredResource mrpb.MonitoredResource
+
+func (r *monitoredResource) MonitoredResource() (resType string, labels map[string]string) {
+	return r.Type, r.Labels
+}
+
 // ExportToStackdriver checks to see if the process is running in a GCP
 // environment, and if so configures exporting to stackdriver.
 func exportToStackdriver() {
-	project := os.Getenv("GOOGLE_CLOUD_PROJECT")
-	if project == "" {
+	if config.ProjectID() == "" {
 		log.Printf("Not exporting to StackDriver: GOOGLE_CLOUD_PROJECT is unset.")
 		return
 	}
@@ -97,20 +103,40 @@ func exportToStackdriver() {
 	view.SetReportingPeriod(time.Minute)
 
 	labels := &stackdriver.Labels{}
-	labels.Set("version_label", config.AppVersionLabel(), "Version label of the running binary")
-	labels.Set("instance", config.InstanceID(), "Identifier of the executing instance")
-	labels.Set("service", config.ServiceID(), "Identifier of the executing application")
+	labels.Set("version", config.AppVersionLabel(), "Version label of the running binary")
 
-	exporter, err := stackdriver.NewExporter(stackdriver.Options{
-		ProjectID:               project,
-		MonitoredResource:       monitoredresource.Autodetect(),
+	// Views must be associated with the instance, else we run into overlapping
+	// timeseries problems. Note that generic_task is used because the
+	// gae_instance resource type is not supported for metrics:
+	// https://cloud.google.com/monitoring/custom-metrics/creating-metrics#which-resource
+	viewExporter, err := stackdriver.NewExporter(stackdriver.Options{
+		ProjectID: config.ProjectID(),
+		MonitoredResource: &monitoredResource{
+			Type: "generic_task",
+			Labels: map[string]string{
+				"project_id": config.ProjectID(),
+				"location":   config.LocationID(),
+				"job":        config.ServiceID(),
+				"namespace":  "go-discovery",
+				"task_id":    config.InstanceID(),
+			},
+		},
 		DefaultMonitoringLabels: labels,
 	})
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("error creating view exporter: %v", err)
 	}
-	view.RegisterExporter(exporter)
-	trace.RegisterExporter(exporter)
+	view.RegisterExporter(viewExporter)
+
+	// We want traces to be associated with the *app*, not the instance.
+	traceExporter, err := stackdriver.NewExporter(stackdriver.Options{
+		ProjectID:         config.ProjectID(),
+		MonitoredResource: (*monitoredResource)(config.AppMonitoredResource()),
+	})
+	if err != nil {
+		log.Fatalf("error creating trace exporter: %v", err)
+	}
+	trace.RegisterExporter(traceExporter)
 }
 
 // ViewByCodeRouteMethod is a view of HTTP server requests parameterized by

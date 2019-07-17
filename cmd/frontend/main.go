@@ -9,6 +9,7 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"cloud.google.com/go/logging"
@@ -31,16 +32,17 @@ func main() {
 
 	ctx := context.Background()
 
-	dbinfo, err := config.DBConnInfo(ctx, "go_discovery_database_password_frontend")
-	if err != nil {
-		log.Fatalf("Unable to construct database connection info string: %v", err)
+	if err := config.Init(ctx); err != nil {
+		log.Fatalf("config.Init: %v", err)
 	}
+	config.Dump(os.Stderr)
+
 	// Wrap the postgres driver with OpenCensus instrumentation.
 	ocDriver, err := ocsql.Register("postgres", ocsql.WithAllTraceOptions())
 	if err != nil {
 		log.Fatalf("unable to register our ocsql driver: %v\n", err)
 	}
-	db, err := postgres.Open(ocDriver, dbinfo)
+	db, err := postgres.Open(ocDriver, config.DBConnInfo())
 	if err != nil {
 		log.Fatalf("postgres.Open: %v", err)
 	}
