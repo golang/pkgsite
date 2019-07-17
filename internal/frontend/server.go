@@ -97,7 +97,7 @@ func suggestedSearch(userInput string) template.HTML {
 // content.
 func (s *Server) handleStaticPage(templateName, title string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.servePage(w, templateName, basePage{Title: title})
+		s.servePage(w, templateName, newBasePage(r, title))
 	}
 }
 
