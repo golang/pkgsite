@@ -386,10 +386,6 @@ code {
   width: 45%;
   padding: 10px 0;
 }
-.ModuleContent-subtitle {
-  margin-bottom: 25px;
-  margin-top: 10px;
-}
 .ModuleContent-synopsis {
   display: inline-flex;
   width: 50%;

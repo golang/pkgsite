@@ -9,8 +9,7 @@
     {{if eq .ModulePath "std"}}
       <h2>Packages in the Go Standard Library</h2>
     {{else}}
-      <h2>Packages in this module</h2>
-      <p class="ModuleContent-subtitle"><strong>Module: </strong>{{.ModulePath}}</p>
+      <h2>Packages in {{.ModulePath}}</h2>
     {{end}}
 
     {{range .Packages}}
