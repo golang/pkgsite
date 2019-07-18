@@ -85,6 +85,7 @@ func createDBIfNotExists(dbName string) error {
 		if err != nil {
 			return err
 		}
+		defer rows.Close()
 		if !rows.Next() {
 			if err := rows.Err(); err != nil {
 				return err

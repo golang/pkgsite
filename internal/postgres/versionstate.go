@@ -179,6 +179,7 @@ func (db *DB) queryVersionStates(ctx context.Context, queryFormat string, args .
 	if err != nil {
 		return nil, fmt.Errorf("db.QueryContext(ctx, %q, %v): %v", query, args, err)
 	}
+	defer rows.Close()
 
 	var versions []*internal.VersionState
 	for rows.Next() {
@@ -284,6 +285,7 @@ func (db *DB) GetVersionStats(ctx context.Context) (*VersionStats, error) {
 	if err != nil {
 		return nil, fmt.Errorf("db.QueryContext(ctx, %q): %v", query, err)
 	}
+	defer rows.Close()
 	stats := &VersionStats{
 		VersionCounts: make(map[int]int),
 	}

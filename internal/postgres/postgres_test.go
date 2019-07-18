@@ -151,6 +151,7 @@ func TestLargeBulkInsert(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer rows.Close()
 	sum := int64(0)
 	for rows.Next() {
 		var i int64
