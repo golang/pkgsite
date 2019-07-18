@@ -22,6 +22,7 @@ import (
 	"path"
 	"regexp"
 	"runtime/debug"
+	"sort"
 	"strings"
 	"time"
 
@@ -401,8 +402,11 @@ type BadPackageError struct {
 
 func (bpe *BadPackageError) Error() string { return bpe.Err.Error() }
 
-// loadPackage loads a Go package with import path importPath
-// from zipGoFiles using the default build context.
+// loadPackage loads a Go package made of .go files in zipGoFiles
+// using the default build context. modulePath is "std" for the
+// Go standard library and the module path for all other modules.
+// innerPath is the path of the Go package directory relative to
+// the module root.
 //
 // zipGoFiles must contain only .go files that have been verified
 // to be of reasonable size.
@@ -524,15 +528,37 @@ func loadPackage(zipGoFiles []*zip.File, innerPath, modulePath string) (*interna
 		return nil, nil
 	}
 
+	// The "builtin" package in the standard library is a special case.
+	// We want to show documentation for all globals (not just exported ones),
+	// and avoid association of consts, vars, and factory functions with types
+	// since it's not helpful (see golang.org/issue/6645).
+	var noFiltering, noTypeAssociation bool
+	if modulePath == "std" && innerPath == "builtin" {
+		noFiltering = true
+		noTypeAssociation = true
+	}
+
 	// Compute package documentation.
 	apkg, _ := ast.NewPackage(fset, goFiles, simpleImporter, nil) // Ignore errors that can happen due to unresolved identifiers.
 	for name, f := range testGoFiles {                            // TODO(b/137567588): Improve upstream doc.New API design.
 		apkg.Files[name] = f
 	}
 	importPath := path.Join(modulePath, innerPath)
-	d := doc.New(apkg, importPath, 0)
+	var m doc.Mode
+	if noFiltering {
+		m |= doc.AllDecls
+	}
+	d := doc.New(apkg, importPath, m)
 	if d.ImportPath != importPath || d.Name != packageName {
 		panic(fmt.Errorf("internal error: *doc.Package has an unexpected import path (%q != %q) or package name (%q != %q)", d.ImportPath, importPath, d.Name, packageName))
+	}
+	if noTypeAssociation {
+		for _, t := range d.Types {
+			d.Consts, t.Consts = append(d.Consts, t.Consts...), nil
+			d.Vars, t.Vars = append(d.Vars, t.Vars...), nil
+			d.Funcs, t.Funcs = append(d.Funcs, t.Funcs...), nil
+		}
+		sort.Slice(d.Funcs, func(i, j int) bool { return d.Funcs[i].Name < d.Funcs[j].Name })
 	}
 
 	// Process package imports.

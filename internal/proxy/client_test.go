@@ -153,6 +153,7 @@ func TestGetZip(t *testing.T) {
 			version: "v1.12.5",
 			wantFiles: []string{
 				"std@v1.12.5/LICENSE",
+				"std@v1.12.5/builtin/builtin.go",
 				"std@v1.12.5/context/benchmark_test.go",
 				"std@v1.12.5/context/context.go",
 				"std@v1.12.5/context/context_test.go",

@@ -278,8 +278,35 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					Path:              "context",
 					Name:              "context",
 					Synopsis:          "Package context defines the Context type, which carries deadlines, cancelation signals, and other request-scoped values across API boundaries and between processes.",
-					DocumentationHTML: nil,
+					DocumentationHTML: []byte("This example demonstrates the use of a cancelable context to prevent a\ngoroutine leak."),
 					V1Path:            "context",
+					Licenses: []*license.Metadata{
+						{
+							Types:    []string{"BSD-3-Clause"},
+							FilePath: "LICENSE",
+						},
+					},
+				},
+			},
+		}, {
+			modulePath: "std",
+			version:    "v1.12.5",
+			pkg:        "builtin",
+			want: &internal.VersionedPackage{
+				VersionInfo: internal.VersionInfo{
+					ModulePath:     "std",
+					Version:        "v1.12.5",
+					CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
+					VersionType:    "release",
+					ReadmeContents: []uint8{},
+					RepositoryURL:  goRepositoryURLPrefix + "/go",
+				},
+				Package: internal.Package{
+					Path:              "builtin",
+					Name:              "builtin",
+					Synopsis:          "Package builtin provides documentation for Go's predeclared identifiers.",
+					DocumentationHTML: []byte("int64 is the set of all signed 64-bit integers."),
+					V1Path:            "builtin",
 					Licenses: []*license.Metadata{
 						{
 							Types:    []string{"BSD-3-Clause"},
@@ -347,11 +374,6 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			})
 			if diff := cmp.Diff(test.want, gotPkg, cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML")); diff != "" {
 				t.Errorf("testDB.GetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", test.pkg, test.version, diff)
-			}
-			if test.want.ModulePath == "std" {
-				// Do not validate documentation packages in
-				// the std module because it is very large.
-				return
 			}
 			if got, want := gotPkg.DocumentationHTML, test.want.DocumentationHTML; len(want) == 0 && len(got) != 0 {
 				t.Errorf("got non-empty documentation but want empty:\ngot: %q\nwant: %q", got, want)
