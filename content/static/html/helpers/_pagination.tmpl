@@ -11,27 +11,29 @@
 {{end}}
 
 {{define "pagination_nav"}}
-  <div class="Pagination-nav">
-    <div class="Pagination-navInner">
-      {{ $pagination := . }}
-      {{if .PrevPage}}
-        <a class="Pagination-previous" href="{{.PageURL .PrevPage}}">Previous</a>
-      {{else}}
-        <span class="Pagination-previous" aria-disabled="true">Previous</span>
-      {{end}}
-      {{$page := .Page}}
-      {{range $i := .Pages}}
-        {{if eq $i $page}}
-          <span class="Pagination-number">{{$i}}</span>
+  {{if gt (len .Pages) 1}}
+    <div class="Pagination-nav">
+      <div class="Pagination-navInner">
+        {{ $pagination := . }}
+        {{if .PrevPage}}
+          <a class="Pagination-previous" href="{{.PageURL .PrevPage}}">Previous</a>
         {{else}}
-          <a class="Pagination-number" href="{{$pagination.PageURL $i}}">{{$i}}</a>
+          <span class="Pagination-previous" aria-disabled="true">Previous</span>
         {{end}}
-      {{end}}
-      {{if .NextPage}}
-        <a class="Pagination-next" href="{{.PageURL .NextPage}}">Next</a>
-      {{else}}
-        <span class="Pagination-next" aria-disabled="true">Next</span>
-      {{end}}
+        {{$page := .Page}}
+        {{range $i := .Pages}}
+          {{if eq $i $page}}
+            <span class="Pagination-number">{{$i}}</span>
+          {{else}}
+            <a class="Pagination-number" href="{{$pagination.PageURL $i}}">{{$i}}</a>
+          {{end}}
+        {{end}}
+        {{if .NextPage}}
+          <a class="Pagination-next" href="{{.PageURL .NextPage}}">Next</a>
+        {{else}}
+          <span class="Pagination-next" aria-disabled="true">Next</span>
+        {{end}}
+      </div>
     </div>
-  </div>
+  {{end}}
 {{end}}
