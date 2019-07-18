@@ -27,7 +27,7 @@
     <h2>{{if .OtherModules}}Versions in this module{{else}}Versions{{end}}</h2>
     {{template "module_list" .ThisModule}}
     {{if .OtherModules}}
-      <em>Other modules containing this package:</em>
+      <h2>Other modules containing this package</h2>
       {{template "module_list" .OtherModules}}
     {{end}}
 {{end}}
