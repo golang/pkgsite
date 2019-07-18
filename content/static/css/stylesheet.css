@@ -458,7 +458,7 @@ code {
   padding: 10px;
 }
 .Documentation .example-body {
-  border-top: solid 1px #ccc;
+  border-top: 1px solid #ccc;
   display: none;
   padding: 0 10px 10px 10px;
 }
