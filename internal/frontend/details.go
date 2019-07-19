@@ -5,6 +5,7 @@
 package frontend
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"html"
@@ -233,7 +234,7 @@ func elapsedTime(date time.Time) string {
 func fetchReadMeDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*ReadMeDetails, error) {
 	return &ReadMeDetails{
 		ModulePath: pkg.VersionInfo.ModulePath,
-		ReadMe:     readmeHTML(pkg.VersionInfo.ReadmeFilePath, pkg.VersionInfo.ReadmeContents),
+		ReadMe:     readmeHTML(pkg.VersionInfo.ReadmeFilePath, pkg.VersionInfo.ReadmeContents, pkg.RepositoryURL),
 	}, nil
 }
 
@@ -345,7 +346,7 @@ func fetchImportedByDetails(ctx context.Context, db *postgres.DB, pkg *internal.
 // readmeHTML sanitizes readmeContents based on bluemondy.UGCPolicy and returns
 // a template.HTML. If readmeFilePath indicates that this is a markdown file,
 // it will also render the markdown contents using blackfriday.
-func readmeHTML(readmeFilePath string, readmeContents []byte) template.HTML {
+func readmeHTML(readmeFilePath string, readmeContents []byte, repositoryURL string) template.HTML {
 	if filepath.Ext(readmeFilePath) != ".md" {
 		return template.HTML(fmt.Sprintf(`<pre class="readme">%s</pre>`, html.EscapeString(string(readmeContents))))
 	}
@@ -360,8 +361,39 @@ func readmeHTML(readmeFilePath string, readmeContents []byte) template.HTML {
 	// image in the github.com/gin-gonic/gin README.
 	p.AllowAttrs("width", "align").OnElements("img")
 
-	unsafe := blackfriday.Run(readmeContents)
-	return template.HTML(p.SanitizeBytes(unsafe))
+	// The parsed repositoryURL is used to construct absolute image paths.
+	parsedRepo, err := url.Parse(repositoryURL)
+	if err != nil {
+		parsedRepo = &url.URL{}
+	}
+
+	// blackfriday.Run() uses CommonHTMLFlags and CommonExtensions by default.
+	renderer := blackfriday.NewHTMLRenderer(blackfriday.HTMLRendererParameters{Flags: blackfriday.CommonHTMLFlags})
+	parser := blackfriday.New(blackfriday.WithExtensions(blackfriday.CommonExtensions))
+
+	b := &bytes.Buffer{}
+	rootNode := parser.Parse(readmeContents)
+	rootNode.Walk(func(node *blackfriday.Node, entering bool) blackfriday.WalkStatus {
+		if node.Type == blackfriday.Image {
+			translateRelativeLink(node, parsedRepo)
+		}
+		return renderer.RenderNode(b, node, entering)
+	})
+	return template.HTML(p.SanitizeReader(b).String())
+}
+
+// translateRelativeLink modifies a blackfriday.Node to convert relative image
+// paths to absolute paths.
+func translateRelativeLink(node *blackfriday.Node, repository *url.URL) {
+	if repository.Hostname() != "github.com" {
+		return
+	}
+	imageURL, err := url.Parse(string(node.LinkData.Destination))
+	if err != nil || imageURL.IsAbs() {
+		return
+	}
+	abs := &url.URL{Scheme: "https", Host: "raw.githubusercontent.com", Path: path.Join(repository.Path, "master", path.Clean(imageURL.Path))}
+	node.LinkData.Destination = []byte(abs.String())
 }
 
 var (

@@ -132,8 +132,8 @@ func TestFetchReadMeDetails(t *testing.T) {
 
 func TestReadmeHTML(t *testing.T) {
 	testCases := []struct {
-		name, readmeFilePath, readmeContents string
-		want                                 template.HTML
+		name, readmeFilePath, readmeContents, repositoryURL string
+		want                                                template.HTML
 	}{
 		{
 			name:           "valid markdown readme",
@@ -165,11 +165,32 @@ func TestReadmeHTML(t *testing.T) {
 			readmeContents: `<a onblur="alert(secret)" href="http://www.google.com">Google</a>`,
 			want:           template.HTML(`<pre class="readme">&lt;a onblur=&#34;alert(secret)&#34; href=&#34;http://www.google.com&#34;&gt;Google&lt;/a&gt;</pre>`),
 		},
+		{
+			name:           "relative image markdown is made absolute for GitHub",
+			readmeFilePath: "README.md",
+			readmeContents: "![Go logo](doc/logo.png)",
+			repositoryURL:  "http://github.com/golang/go",
+			want:           template.HTML("<p><img src=\"https://raw.githubusercontent.com/golang/go/master/doc/logo.png\" alt=\"Go logo\"/></p>\n"),
+		},
+		{
+			name:           "relative image markdown is left alone for unknown origins",
+			readmeFilePath: "README.md",
+			readmeContents: "![Go logo](doc/logo.png)",
+			repositoryURL:  "http://example.com/golang/go",
+			want:           template.HTML("<p><img src=\"doc/logo.png\" alt=\"Go logo\"/></p>\n"),
+		},
+		{
+			name:           "valid markdown readme, invalid repositoryURL",
+			readmeFilePath: "README.md",
+			readmeContents: "![Go logo](doc/logo.png)",
+			repositoryURL:  ":",
+			want:           template.HTML("<p><img src=\"doc/logo.png\" alt=\"Go logo\"/></p>\n"),
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := readmeHTML(tc.readmeFilePath, []byte(tc.readmeContents))
+			got := readmeHTML(tc.readmeFilePath, []byte(tc.readmeContents), tc.repositoryURL)
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("readmeHTML(%q, %q) mismatch (-want +got):\n%s", tc.readmeFilePath, tc.readmeContents, diff)
 			}
