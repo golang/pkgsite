@@ -143,7 +143,6 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 		WHERE
 			p.path = $1
 		ORDER BY
-			v.module_path,
 			-- Order the versions by release then prerelease.
 			-- The default version should be the first release
 			-- version available, if one exists.
