@@ -111,13 +111,19 @@ func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int)
 			pq.Array(&licenseTypes), &commitTime, &numImportedBy, &rank, &total); err != nil {
 			return nil, fmt.Errorf("rows.Scan(): %v", err)
 		}
+		var lics []string
+		for _, l := range licenseTypes {
+			if l != "" {
+				lics = append(lics, l)
+			}
+		}
 		results = append(results, &SearchResult{
 			Name:          name,
 			PackagePath:   path,
 			ModulePath:    modulePath,
 			Version:       version,
 			Synopsis:      synopsis,
-			Licenses:      licenseTypes,
+			Licenses:      lics,
 			CommitTime:    commitTime,
 			Rank:          rank,
 			NumImportedBy: numImportedBy,
