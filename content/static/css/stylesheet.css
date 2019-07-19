@@ -242,7 +242,7 @@ code {
 
 .SearchResults {
   margin: 0 auto;
-  max-width: 818px;
+  max-width: 60em;
   padding: 40px 0;
 }
 .SearchResults-header {
