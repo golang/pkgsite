@@ -326,6 +326,9 @@ code {
 .ReadMe img {
   max-width: 100%;
 }
+.ReadMe pre {
+  overflow-x: auto;
+}
 
 .ModulesNav {
   margin: 0 -16px 16px -16px;
