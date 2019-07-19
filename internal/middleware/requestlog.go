@@ -29,11 +29,9 @@ type LocalLogger struct{}
 func (l LocalLogger) Log(entry logging.Entry) {
 	var msg strings.Builder
 	if entry.HTTPRequest != nil {
+		msg.WriteString(strconv.Itoa(entry.HTTPRequest.Status) + " ")
 		if entry.HTTPRequest.Request != nil {
-			msg.WriteString(entry.HTTPRequest.Request.URL.RawPath + "\t")
-		}
-		if entry.HTTPRequest.Status != 0 {
-			msg.WriteString(strconv.Itoa(entry.HTTPRequest.Status) + "\t")
+			msg.WriteString(entry.HTTPRequest.Request.URL.Path + " ")
 		}
 	}
 	msg.WriteString(fmt.Sprint(entry.Payload))
