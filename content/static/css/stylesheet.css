@@ -354,6 +354,7 @@ code {
   margin: 0;
   padding: 0;
   white-space: nowrap;
+  border-bottom: 1px solid var(--gray-8);
 }
 .ModulesNav::-webkit-scrollbar {
   display: none;
