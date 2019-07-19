@@ -32,6 +32,7 @@ func TestSecureHeaders(t *testing.T) {
 	if err != nil {
 		t.Errorf("GET returned error %v", err)
 	}
+	defer resp.Body.Close()
 	// Simply test that the expected headers are set.
 	expectedHeaders := []string{
 		"content-security-policy",

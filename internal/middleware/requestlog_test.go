@@ -39,10 +39,11 @@ func TestRequestLog(t *testing.T) {
 			mw := RequestLog(&lg)
 			ts := httptest.NewServer(mw(test.handler))
 			defer ts.Close()
-			_, err := ts.Client().Get(ts.URL)
+			resp, err := ts.Client().Get(ts.URL)
 			if err != nil {
 				t.Fatalf("GET returned error %v", err)
 			}
+			resp.Body.Close()
 			if diff := cmp.Diff(test.want, lg); diff != "" {
 				t.Errorf("mismatching log state (-want +got):\n%s", diff)
 			}

@@ -59,6 +59,7 @@ func TestTimeout(t *testing.T) {
 			if err != nil {
 				t.Errorf("GET %s got error %v, want nil", test.url, err)
 			}
+			defer resp.Body.Close()
 
 			if resp.StatusCode != test.wantStatus {
 				t.Errorf("GET %s returned status %d, want %d", test.url, resp.StatusCode, test.wantStatus)
