@@ -14,7 +14,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"time"
 
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/dcensus"
@@ -243,8 +242,7 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 	templates := make(map[string]*template.Template)
 	for _, set := range htmlSets {
 		t, err := template.New("base.tmpl").Funcs(template.FuncMap{
-			"add":     func(i, j int) int { return i + j },
-			"curYear": func() int { return time.Now().Year() },
+			"add": func(i, j int) int { return i + j },
 			"pluralize": func(i int, s string) string {
 				if i == 1 {
 					return s

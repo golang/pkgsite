@@ -4,17 +4,17 @@
   license that can be found in the LICENSE file.
 */
 
-window.onload=function(){
-  var el = document.getElementById("Feedback-button");
+window.onload = function() {
+  var el = document.getElementById('Feedback-button');
   if (el) {
-    el.addEventListener("click", sendFeedback);
+    el.addEventListener('click', sendFeedback);
   } else {
-    console.log("No Feedback-button");
+    console.log('No Feedback-button');
   }
-}
+};
 
 // Launches the feedback interface.
 function sendFeedback() {
-  var configuration = {'productId': '5131929', 'bucket': 'Default'};
+  var configuration = { productId: '5131929', bucket: 'Default' };
   userfeedback.api.startFeedback(configuration);
-};
+}

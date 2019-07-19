@@ -35,7 +35,9 @@ codedirs=(
   "migrations"
 )
 
-checkheaders() {
+# verify_header checks that all given files contain the standard header for Go
+# projects.
+verify_header() {
   if [[ "$@" != "" ]]; then
     for FILE in $@
     do
@@ -50,55 +52,166 @@ checkheaders() {
   fi
 }
 
+# findcode finds source files in the repo, skipping third-party source.
 findcode() {
   find ${codedirs[@]} \
     -not -path 'internal/thirdparty/*' \
     \( -name *.go -o -name *.sql -o -name *.tmpl -o -name *.css \)
 }
 
-# Check that all .go and .sql files that have been staged in this commit have a
-# license header.
-info "Checking staged files for license header"
-checkheaders $(git diff --cached --name-only | grep -E ".go$|.sql$")
-info "Checking internal files for license header"
-checkheaders $(findcode)
+# ensure_go_binary verifies that a binary exists in $PATH corresponding to the
+# given go-gettable URI. If no such binary exists, it is fetched via `go get`.
+ensure_go_binary() {
+  local binary=$(basename $1)
+  if ! [ -x "$(command -v $binary)" ]; then
+    info "Running: go get -u $1"
+    go get -u $1
+  fi
+}
 
-# Find migrations with bad sequence numbers, possibly resulting from a bad merge
+# runcmd prints an info log describing the command that is about to be run, and
+# then runs it.
+runcmd() {
+  info "Running: $@"
+  $@
+}
+
+# check_headers checks that all source files that have been staged in this
+# commit have a license header.
+check_headers() {
+  # Check that all   info "Checking staged files for license header"
+  verify_header $(git diff --cached --name-only | grep -E ".go$|.sql$")
+  info "Checking internal files for license header"
+  verify_header $(findcode)
+}
+
+# bad_migrations outputs migrations with bad sequence numbers.
 bad_migrations() {
   ls migrations | cut -d _ -f 1 | sort | uniq -c | grep -vE '^\s+2 '
 }
 
-info "Checking for bad migrations"
-bad_migrations | while read line
-do
-  err "unexpected number of migrations: $line"
-done
+# check_bad_migrations looks for sql migration files with bad sequence numbers,
+# possibly resulting from a bad merge.
+check_bad_migrations() {
+  info "Checking for bad migrations"
+  bad_migrations | while read line
+  do
+    err "unexpected number of migrations: $line"
+  done
+}
 
-# Download staticcheck if it doesn't exist
-if ! [ -x "$(command -v staticcheck)" ]; then
-  info "Running: go get -u honnef.co/go/tools/cmd/staticcheck"
-  go get -u honnef.co/go/tools/cmd/staticcheck
-fi
+# check_staticcheck runs staticcheck on source files.
+check_staticcheck() {
+  ensure_go_binary honnef.co/go/tools/cmd/staticcheck
+  info "Running: staticcheck ./... (skipping thirdparty, internal/doc, internal/render)"
+  staticcheck $(go list ./... | grep -v thirdparty | grep -v internal/doc | grep -v internal/render) | warnout
+}
 
-info "Running: staticcheck ./... (skipping thirdparty, internal/doc, internal/render)"
-staticcheck $(go list ./... | grep -v thirdparty | grep -v internal/doc | grep -v internal/render) | warnout
+# check_misspell runs misspell on source files.
+check_misspell() {
+  ensure_go_binary github.com/client9/misspell/cmd/misspell
+  info "Running: misspell cmd/**/* internal/**/* README.md"
+  misspell cmd/**/* internal/**/* README.md | warnout
+}
 
-# Download misspell if it doesn't exist
-if ! [ -x "$(command -v misspell)" ]; then
-  info "Running: go get -u github.com/client9/misspell/cmd/misspell"
-  go get -u github.com/client9/misspell/cmd/misspell
-fi
+# check_templates runs go-template-lint on template files. Unfortunately it
+# doesn't handler the /helpers/ fileglob correctly, so it is too noisy to be
+# included in standard checks.
+check_templates() {
+  ensure_go_binary sourcegraph.com/sourcegraph/go-template-lint
+  runcmd go-template-lint \
+    -f=internal/frontend/server.go \
+    -t=internal/frontend/server.go \
+    -td=content/static/html/pages | warnout
+}
 
-info "Running: misspell cmd/**/* internal/**/* README.md"
-misspell cmd/**/* internal/**/* README.md | warnout
 
-info "Running: go mod tidy"
-go mod tidy
+run_prettier() {
+  if ! [ -x "$(command -v prettier)" ]; then
+    err "prettier must be installed"
+  fi
+  runcmd prettier --write content/static/css/*.css
+  runcmd prettier --write content/static/js/*.js
+}
 
-info "Running: go test ./..."
-go test -count=1 ./...
+# run_go_mod_tidy runs `go mod tidy`.
+run_go_mod_tidy() {
+  runcmd go mod tidy
+}
 
-# This test needs to be run separately since an attempt to use the given flag
-# will fail if other tests caught by "./..." don't have it defined.
-info "Running: go test ./internal/secrets -use_cloud"
-go test ./internal/secrets -use_cloud
+# run_go_test runs our main set of go tests.
+run_go_test() {
+  runcmd go test -count=1 ./...
+}
+
+# run_go_test_secrets runs tests on the internal/secrets package, which must
+# be tested indepedently in order to accept the -use_cloud flag.
+run_go_test_secrets() {
+  runcmd go test ./internal/secrets -use_cloud
+}
+
+standard_linters() {
+  check_headers
+  check_bad_migrations
+  check_staticcheck
+  check_misspell
+}
+
+run_tests() {
+  run_go_test
+  run_go_test_secrets
+}
+
+usage() {
+  cat <<EOUSAGE
+Usage: ./all.bash [subcommand]
+Available subcommands:
+  help        - display this help message
+  (empty)     - run all standard checks and tests
+  all         - run all checks and tests, including nonstandard
+  test        - run go tests
+  tidy        - run go mod tidy
+  lint        - run all standard linters below:
+  headers     - (lint) check source files for the license disclaimer
+  migrations  - (lint) check migration sequence numbers
+  misspell    - (lint) run misspell on source files
+  staticcheck - (lint) run staticcheck on source files
+  prettier    - (lint, nonstandard) run prettier on .js and .css files.
+  templates   - (lint, nonstandard) run go-template-lint on templates
+EOUSAGE
+}
+
+main() {
+  case "$1" in
+    "-h" | "--help" | "help")
+      usage
+      exit 0
+      ;;
+    "")
+      standard_linters
+      run_go_mod_tidy
+      run_tests
+      ;;
+    all)
+      standard_linters
+      check_templates
+      run_prettier
+      run_go_mod_tidy
+      run_tests
+      ;;
+    test) run_tests ;;
+    tidy) run_go_mod_tidy ;;
+    lint) all_linters ;;
+    headers) check_headers ;;
+    migrations) check_migrations ;;
+    misspell) check_misspell ;;
+    staticcheck) check_staticcheck ;;
+    prettier) run_prettier ;;
+    templates) check_templates ;;
+    *)
+      usage
+      exit 1
+  esac
+}
+
+main $@
