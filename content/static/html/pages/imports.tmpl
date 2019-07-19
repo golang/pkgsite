@@ -6,7 +6,7 @@
 
 {{define "details_content"}}
   <div>
-    {{if or .ExternalImports .InternalImports}}
+    {{if or .ExternalImports .InternalImports .StdLib}}
       <h2> Imports</h2>
       {{if .ExternalImports}}
         <p>
