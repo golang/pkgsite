@@ -188,11 +188,11 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, requestedVersi
 	}
 
 	if err = db.InsertVersion(ctx, v, licenses); err != nil {
-		return fmt.Errorf("db.InsertVersion for %q %q: %v", modulePath, info.Version, err)
+		return derrors.Wrap(err, "db.InsertVersion for %q %q", modulePath, info.Version)
 	}
 	span.Annotate(nil, "inserted version")
 	if err = db.InsertDocuments(ctx, v); err != nil {
-		return fmt.Errorf("db.InsertDocuments for %q %q: %v", modulePath, info.Version, err)
+		return derrors.Wrap(err, "db.InsertDocuments for %q %q", modulePath, info.Version)
 	}
 	span.Annotate(nil, "inserted documents")
 

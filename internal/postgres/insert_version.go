@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/lib/pq"
 	"golang.org/x/discovery/internal"
@@ -27,13 +28,12 @@ import (
 // all number fields in the prerelease column have 20 characters. If the
 // version is malformed then insertion will fail.
 //
-// The returned error may be checked with derrors.IsInvalidArgument to
-// determine whether it was caused by an invalid version or module.
+// A derrors.InvalidArgument error will be returned if the given version and
+// licenses are invalid.
 func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, licenses []*license.License) error {
-	if err := validateVersion(version); err != nil {
-		return derrors.InvalidArgument(fmt.Sprintf("validateVersion: %v", err))
+	if err := validateVersion(version, licenses); err != nil {
+		return derrors.InvalidArgument("validateVersion: %v", err)
 	}
-
 	removeNonDistributableData(version)
 
 	return db.Transact(func(tx *sql.Tx) error {
@@ -175,12 +175,20 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 // validateVersion checks that fields needed to insert a version into the
 // database are present. Otherwise, it returns an error listing the reasons the
 // version cannot be inserted.
-func validateVersion(version *internal.Version) error {
+func validateVersion(version *internal.Version, lics []*license.License) error {
 	if version == nil {
 		return fmt.Errorf("nil version")
 	}
 
 	var errReasons []string
+	if !utf8.Valid(version.ReadmeContents) {
+		errReasons = append(errReasons, fmt.Sprintf("readme %q is not valid utf8", version.ReadmeFilePath))
+	}
+	for _, l := range lics {
+		if !utf8.Valid(l.Contents) {
+			errReasons = append(errReasons, fmt.Sprintf("license %q contains invalid unicode", l.FilePath))
+		}
+	}
 	if version.Version == "" {
 		errReasons = append(errReasons, "no specified version")
 	}

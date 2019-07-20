@@ -146,13 +146,9 @@ func (db *DB) RefreshSearchDocuments(ctx context.Context) error {
 
 // InsertDocuments inserts a row for each package in the version.
 //
-// The returned error may be checked with derrors.IsInvalidArgument to
-// determine if it was caused by an invalid version.
+// The given version should have already been validated via a call to
+// validateVersion.
 func (db *DB) InsertDocuments(ctx context.Context, version *internal.Version) error {
-	if err := validateVersion(version); err != nil {
-		return derrors.InvalidArgument(fmt.Sprintf("validateVersion(%+v): %v", version, err))
-	}
-
 	return db.Transact(func(tx *sql.Tx) error {
 		return prepareAndExec(tx, `INSERT INTO documents (
 				package_path,
