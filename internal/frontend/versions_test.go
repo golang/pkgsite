@@ -179,10 +179,10 @@ func TestFetchVersionsDetails(t *testing.T) {
 			name: "want v2 first",
 			pkg:  pkg2,
 			versions: []*internal.Version{
-				sampleVersion(modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", internal.VersionTypePseudo, &pkg2.Package),
-				sampleVersion(modulePath1, "v1.2.1", internal.VersionTypeRelease, &pkg2.Package),
-				sampleVersion(modulePath1, "v1.2.3", internal.VersionTypeRelease, &pkg2.Package),
-				sampleVersion(modulePath1, "v1.3.0", internal.VersionTypeRelease, &pkg2.Package),
+				sampleVersion(modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", internal.VersionTypePseudo, &pkg1.Package),
+				sampleVersion(modulePath1, "v1.2.1", internal.VersionTypeRelease, &pkg1.Package),
+				sampleVersion(modulePath1, "v1.2.3", internal.VersionTypeRelease, &pkg1.Package),
+				sampleVersion(modulePath1, "v2.1.0+incompatible", internal.VersionTypeRelease, &pkg1.Package),
 				sampleVersion(modulePath2, "v2.0.0", internal.VersionTypeRelease, &pkg2.Package),
 				sampleVersion(modulePath2, "v2.2.1-alpha.1", internal.VersionTypePrerelease, &pkg2.Package),
 			},
@@ -218,10 +218,10 @@ func TestFetchVersionsDetails(t *testing.T) {
 						Versions: [][]*PackageVersion{
 							{
 								{
-									Version:          "v1.3.0",
+									Version:          "v2.1.0+incompatible",
 									Path:             v1Path,
 									CommitTime:       commitTime,
-									FormattedVersion: "v1.3.0",
+									FormattedVersion: "v2.1.0+incompatible",
 								},
 							},
 							{

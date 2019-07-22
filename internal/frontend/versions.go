@@ -14,6 +14,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/etl"
 	"golang.org/x/discovery/internal/postgres"
+	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
 )
 
@@ -65,11 +66,24 @@ func fetchVersionsDetails(ctx context.Context, db *postgres.DB, pkg *internal.Ve
 	// Next, build a versionTree containing all valid versions.
 	tree := &versionTree{}
 	for _, v := range versions {
-		if vs := v.SeriesPath(); !strings.HasPrefix(pkg.V1Path, vs) && !internal.IsStandardLibraryModule(vs) {
-			log.Printf("got version with mismatching series: %q", vs)
+		seriesPath, pathMajor, ok := module.SplitPathVersion(v.ModulePath)
+		if !strings.HasPrefix(pkg.V1Path, seriesPath) && !internal.IsStandardLibraryModule(seriesPath) {
+			log.Printf("got version with mismatching series: %q", seriesPath)
 			continue
 		}
+
+		// Resolve the most appropriate major version for this version. Here we are
+		// conservative, but try to do The Right Thing. Specifically, if we detect
+		// a +incompatible version (when the path version does not match the
+		// sematic version), we prefer the path version.
 		major := semver.Major(v.Version)
+		if ok {
+			// If we successfully parsed the import path, we should prefer the major
+			// version from the path over the semver for grouping purposes.
+			// Trim both '/' and '.' from the path major version to account for
+			// standard and gopkg module paths.
+			major = majorVersion(strings.TrimLeft(pathMajor, "/."), major)
+		}
 		majMin := semver.MajorMinor(v.Version)
 		tree.push(v, v.ModulePath, major, majMin, v.Version)
 	}
@@ -123,6 +137,23 @@ func fetchVersionsDetails(ctx context.Context, db *postgres.DB, pkg *internal.Ve
 		})
 	})
 	return &details, nil
+}
+
+// majorVersion resolves the major version to use given a major version string
+// extracted from the module import path and a major version string extracted
+// from the version. Specifically, this handles +incompatible versions where
+// these are in disagreement.
+//
+// We have chosen to group versions by import path rather than by semver, with
+// the exception of separating v0 and v1 versions.
+func majorVersion(pathMajor, semverMajor string) string {
+	if pathMajor == "" {
+		if semverMajor == "v1" || semverMajor == "v0" {
+			return semverMajor
+		}
+		return "v1"
+	}
+	return pathMajor
 }
 
 // versionTree represents the version hierarchy. It preserves the order in
