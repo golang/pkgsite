@@ -90,6 +90,7 @@ func SecureHeaders() Middleware {
 			// www.google-analytics.com is needed for Google Analytics.
 			p.add("script-src",
 				fmt.Sprintf("'nonce-%s'", nonce),
+				"www.gstatic.com",
 				"support.google.com")
 			ctx := setNonce(r.Context(), nonce)
 
