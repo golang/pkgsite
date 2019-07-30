@@ -22,13 +22,25 @@ import (
 	"golang.org/x/xerrors"
 )
 
-// HandleDetails applies database data to the appropriate template. Handles all
-// endpoints that match "/" or "/<import-path>[@<version>?tab=<tab>]"
-func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
-	path, version, err := parseModulePathAndVersion(r.URL.Path)
+// DetailsPage contains data for a package of module details template.
+type DetailsPage struct {
+	basePage
+	CanShowDetails bool
+	Settings       TabSettings
+	Details        interface{}
+	Header         interface{}
+	Tabs           []TabSettings
+	Namespace      string
+}
+
+// handlePackageDetails applies database data to the appropriate template.
+// Handles all endpoints that match "/pkg/<import-path>[@<version>?tab=<tab>]".
+func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
+	urlPath := strings.TrimPrefix(r.URL.Path, "/pkg")
+	path, version, err := parseModulePathAndVersion(urlPath)
 	if err != nil {
-		log.Printf("parseModulePathAndVersion(%q): %v", r.URL.Path, err)
-		s.serveErrorPage(w, r, http.StatusNotFound, nil)
+		log.Printf("parseModulePathAndVersion(%q): %v", urlPath, err)
+		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
 		return
 	}
 	if version != "" && !semver.IsValid(version) {
@@ -95,21 +107,21 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tab := r.FormValue("tab")
-	settings, ok := tabLookup[tab]
+	settings, ok := packageTabLookup[tab]
 	if !ok {
 		if pkg.IsRedistributable() {
 			tab = "doc"
 		} else {
 			tab = "module"
 		}
-		settings = tabLookup[tab]
+		settings = packageTabLookup[tab]
 	}
 	canShowDetails := pkg.IsRedistributable() || settings.AlwaysShowDetails
 
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = fetchDetails(ctx, r, tab, s.db, pkg)
+		details, err = fetchDetailsForPackage(ctx, r, tab, s.db, pkg)
 		if err != nil {
 			log.Printf("error fetching page for %q: %v", tab, err)
 			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
@@ -120,24 +132,25 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 	page := &DetailsPage{
 		basePage:       newBasePage(r, packageTitle(&pkg.Package)),
 		Settings:       settings,
-		PackageHeader:  pkgHeader,
+		Header:         pkgHeader,
 		Details:        details,
 		CanShowDetails: canShowDetails,
-		Tabs:           tabSettings,
+		Tabs:           packageTabSettings,
+		Namespace:      "pkg",
 	}
-	s.servePage(w, tab+".tmpl", page)
+	s.servePage(w, settings.TemplateName, page)
 }
 
-// fetchDetails returns tab details by delegating to the correct detail
+// fetchDetailsForPackage returns tab details by delegating to the correct detail
 // handler.
-func fetchDetails(ctx context.Context, r *http.Request, tab string, db *postgres.DB, pkg *internal.VersionedPackage) (interface{}, error) {
+func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, db *postgres.DB, pkg *internal.VersionedPackage) (interface{}, error) {
 	switch tab {
 	case "doc":
 		return fetchDocumentationDetails(ctx, db, pkg)
 	case "versions":
 		return fetchVersionsDetails(ctx, db, pkg)
 	case "module":
-		return fetchModuleDetails(ctx, db, pkg)
+		return fetchModuleDetails(ctx, db, &pkg.VersionInfo)
 	case "imports":
 		return fetchImportsDetails(ctx, db, pkg)
 	case "importedby":
@@ -145,7 +158,94 @@ func fetchDetails(ctx context.Context, r *http.Request, tab string, db *postgres
 	case "licenses":
 		return fetchLicensesDetails(ctx, db, pkg)
 	case "readme":
-		return fetchReadMeDetails(ctx, db, pkg)
+		return fetchReadMeDetails(ctx, db, &pkg.VersionInfo)
+	}
+	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
+}
+
+// handleModuleDetails applies database data to the appropriate template.
+// Handles all endpoints that match "/mod/<module-path>[@<version>?tab=<tab>]".
+func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
+	urlPath := strings.TrimPrefix(r.URL.Path, "/mod")
+	path, version, err := parseModulePathAndVersion(urlPath)
+	if err != nil {
+		log.Printf("parseModulePathAndVersion(%q): %v", r.URL.Path, err)
+		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
+		return
+	}
+	if !semver.IsValid(version) {
+		msg := fmt.Sprintf("%q is not a valid semantic version.", version)
+		if version == "" {
+			// TODO(b/138647480): Fall back to latest module version if version
+			// is not found.
+			msg = fmt.Sprintf("Version for %q must be specified.", path)
+		}
+		s.serveErrorPage(w, r, http.StatusBadRequest, &errorPage{
+			Message: msg,
+		})
+		return
+	}
+
+	ctx := r.Context()
+	moduleVersion, err := s.db.GetVersionInfo(ctx, path, version)
+	if err != nil {
+		code := http.StatusNotFound
+		if !xerrors.Is(err, derrors.NotFound) {
+			log.Printf("s.db.GetVersion(ctx, %q, %q): %v", path, version, err)
+			code = http.StatusInternalServerError
+		}
+		s.serveErrorPage(w, r, code, nil)
+		return
+	}
+
+	modHeader, err := createModule(moduleVersion)
+	if err != nil {
+		log.Printf("error creating module header for %s@%s: %v", path, version, err)
+		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	tab := r.FormValue("tab")
+	settings, ok := moduleTabLookup[tab]
+	if !ok {
+		tab = "readme"
+		settings = moduleTabLookup["readme"]
+	}
+	// TODO(b/138616475): Determine if a module version is redistributable.
+	canShowDetails := true
+
+	var details interface{}
+	if canShowDetails {
+		var err error
+		details, err = fetchDetailsForModule(ctx, r, tab, s.db, moduleVersion)
+		if err != nil {
+			log.Printf("error fetching page for %q: %v", tab, err)
+			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
+			return
+		}
+	}
+
+	page := &DetailsPage{
+		basePage:       newBasePage(r, moduleVersion.ModulePath),
+		Settings:       settings,
+		Header:         modHeader,
+		Details:        details,
+		CanShowDetails: canShowDetails,
+		Tabs:           moduleTabSettings,
+		Namespace:      "mod",
+	}
+	s.servePage(w, settings.TemplateName, page)
+}
+
+// fetchDetailsForModule returns tab details by delegating to the correct detail
+// handler.
+func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, db *postgres.DB, vi *internal.VersionInfo) (interface{}, error) {
+	switch tab {
+	case "packages":
+		return fetchModuleDetails(ctx, db, vi)
+	case "readme", "modfile", "versions", "dependents", "dependencies", "importedby", "licenses":
+		// TODO(b/138448402): implement remaining module views.
+		return fetchReadMeDetails(ctx, db, vi)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
@@ -155,7 +255,6 @@ func fetchDetails(ctx context.Context, r *http.Request, tab string, db *postgres
 // /<module>@<version>. Any leading or trailing slashes in the module path are
 // trimmed.
 func parseModulePathAndVersion(urlPath string) (importPath, version string, err error) {
-	urlPath = strings.TrimPrefix(urlPath, "/pkg")
 	parts := strings.Split(urlPath, "@")
 	if len(parts) != 1 && len(parts) != 2 {
 		return "", "", fmt.Errorf("malformed URL path %q", urlPath)
@@ -186,73 +285,128 @@ type TabSettings struct {
 	// AlwaysShowDetails defines whether the tab content can be shown even if the
 	// package is not determined to be redistributable.
 	AlwaysShowDetails bool
+
+	// TemplateName is the name of the template used to render the
+	// corresponding tab, as defined in Server.templates.
+	TemplateName string
 }
 
 var (
-	tabSettings = []TabSettings{
+	packageTabSettings = []TabSettings{
 		{
-			Name:        "doc",
-			DisplayName: "Doc",
+			Name:         "doc",
+			DisplayName:  "Doc",
+			TemplateName: "pkg_doc.tmpl",
 		},
 		{
-			Name:        "readme",
-			DisplayName: "README",
+			Name:         "readme",
+			DisplayName:  "README",
+			TemplateName: "readme.tmpl",
 		},
 		{
 			Name:              "module",
 			AlwaysShowDetails: true,
 			DisplayName:       "Module",
+			TemplateName:      "module.tmpl",
 		},
 		{
 			Name:              "versions",
 			AlwaysShowDetails: true,
 			DisplayName:       "Versions",
+			TemplateName:      "pkg_versions.tmpl",
 		},
 		{
 			Name:              "imports",
 			DisplayName:       "Imports",
 			AlwaysShowDetails: true,
+			TemplateName:      "pkg_imports.tmpl",
 		},
 		{
 			Name:              "importedby",
 			DisplayName:       "Imported By",
 			AlwaysShowDetails: true,
+			TemplateName:      "pkg_importedby.tmpl",
 		},
 		{
-			Name:        "licenses",
-			DisplayName: "Licenses",
+			Name:         "licenses",
+			DisplayName:  "Licenses",
+			TemplateName: "pkg_licenses.tmpl",
 		},
 	}
-	tabLookup = make(map[string]TabSettings)
+	packageTabLookup = make(map[string]TabSettings)
+
+	moduleTabSettings = []TabSettings{
+		{
+			Name:         "readme",
+			DisplayName:  "README",
+			TemplateName: "readme.tmpl",
+		},
+		{
+			Name:              "packages",
+			AlwaysShowDetails: true,
+			DisplayName:       "Packages",
+			TemplateName:      "module.tmpl",
+		},
+		{
+			Name:              "modfile",
+			DisplayName:       "go.mod",
+			AlwaysShowDetails: true,
+			TemplateName:      "not_implemented.tmpl",
+		},
+		{
+			Name:              "dependencies",
+			DisplayName:       "Dependencies",
+			AlwaysShowDetails: true,
+			TemplateName:      "not_implemented.tmpl",
+		},
+		{
+			Name:              "dependents",
+			DisplayName:       "Dependents",
+			AlwaysShowDetails: true,
+			TemplateName:      "not_implemented.tmpl",
+		},
+		{
+			Name:              "versions",
+			AlwaysShowDetails: true,
+			DisplayName:       "Versions",
+			TemplateName:      "not_implemented.tmpl",
+		},
+		{
+			Name:         "licenses",
+			DisplayName:  "Licenses",
+			TemplateName: "not_implemented.tmpl",
+		},
+	}
+	moduleTabLookup = make(map[string]TabSettings)
 )
 
 func init() {
-	for _, d := range tabSettings {
-		tabLookup[d.Name] = d
+	for _, d := range packageTabSettings {
+		packageTabLookup[d.Name] = d
 	}
-}
-
-// DetailsPage contains data for the doc template.
-type DetailsPage struct {
-	basePage
-	CanShowDetails bool
-	Settings       TabSettings
-	Details        interface{}
-	PackageHeader  *Package
-	Tabs           []TabSettings
+	for _, d := range moduleTabSettings {
+		moduleTabLookup[d.Name] = d
+	}
 }
 
 // Package contains information for an individual package.
 type Package struct {
+	Module
+	Path              string
 	Suffix            string
+	Synopsis          string
+	IsRedistributable bool
+	Licenses          []LicenseMetadata
+}
+
+// Module contains information for an individual module.
+type Module struct {
 	Version           string
 	Path              string
-	ModulePath        string
-	Synopsis          string
 	CommitTime        string
-	Licenses          []LicenseMetadata
-	IsRedistributable bool
 	RepositoryURL     string
+	IsRedistributable bool
+	Licenses          []LicenseMetadata
 }
 
 // createPackage returns a *Package based on the fields of the specified
@@ -266,16 +420,31 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo) (*Package, e
 	if suffix == "" {
 		suffix = effectiveName(pkg) + " (root)"
 	}
+
+	m, err := createModule(vi)
+	if err != nil {
+		return nil, fmt.Errorf("createModule(%v): %v", vi, err)
+	}
 	return &Package{
-		Suffix:            suffix,
-		Version:           vi.Version,
 		Path:              pkg.Path,
+		Suffix:            suffix,
 		Synopsis:          pkg.Synopsis,
-		Licenses:          transformLicenseMetadata(pkg.Licenses),
-		CommitTime:        elapsedTime(vi.CommitTime),
-		ModulePath:        vi.ModulePath,
 		IsRedistributable: pkg.IsRedistributable(),
-		RepositoryURL:     vi.RepositoryURL,
+		Licenses:          transformLicenseMetadata(pkg.Licenses),
+		Module:            *m,
+	}, nil
+}
+
+// createModule returns a *Module based on the fields of the specified
+// versionInfo.
+func createModule(vi *internal.VersionInfo) (*Module, error) {
+	return &Module{
+		// TODO(b/138616475): Determine licenses for a module version
+		// and set Licenses and IsRedistributable fields.
+		Version:       vi.Version,
+		Path:          vi.ModulePath,
+		CommitTime:    elapsedTime(vi.CommitTime),
+		RepositoryURL: vi.RepositoryURL,
 	}, nil
 }
 
@@ -361,19 +530,19 @@ type ModuleDetails struct {
 
 // fetchModuleDetails fetches data for the module version specified by pkgPath and pkgversion
 // from the database and returns a ModuleDetails.
-func fetchModuleDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*ModuleDetails, error) {
-	version, err := db.GetVersionForPackage(ctx, pkg.Path, pkg.VersionInfo.Version)
+func fetchModuleDetails(ctx context.Context, db *postgres.DB, vi *internal.VersionInfo) (*ModuleDetails, error) {
+	version, err := db.GetVersion(ctx, vi.ModulePath, vi.Version)
 	if err != nil {
-		return nil, fmt.Errorf("db.GetVersionForPackage(ctx, %q, %q): %v", pkg.Path, pkg.VersionInfo.Version, err)
+		return nil, fmt.Errorf("db.GetVersion(ctx, %q, %q): %v", vi.ModulePath, vi.Version, err)
 	}
 
 	var packages []*Package
 	for _, p := range version.Packages {
-		newPkg, err := createPackage(p, &pkg.VersionInfo)
+		newPkg, err := createPackage(p, vi)
 		if err != nil {
 			return nil, fmt.Errorf("createPackageHeader: %v", err)
 		}
-		if pkg.IsRedistributable() {
+		if p.IsRedistributable() {
 			newPkg.Synopsis = p.Synopsis
 		}
 		packages = append(packages, newPkg)
@@ -381,7 +550,7 @@ func fetchModuleDetails(ctx context.Context, db *postgres.DB, pkg *internal.Vers
 
 	return &ModuleDetails{
 		ModulePath: version.ModulePath,
-		Version:    pkg.VersionInfo.Version,
+		Version:    vi.Version,
 		Packages:   packages,
 	}, nil
 }

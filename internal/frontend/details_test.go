@@ -18,15 +18,17 @@ import (
 
 func samplePackage(mutators ...func(*Package)) *Package {
 	p := &Package{
-		Version:           sample.VersionString,
 		Path:              sample.PackagePath,
-		CommitTime:        "0 hours ago",
 		Suffix:            sample.PackageName,
-		ModulePath:        sample.ModulePath,
-		RepositoryURL:     sample.RepositoryURL,
 		Synopsis:          sample.Synopsis,
 		IsRedistributable: true,
 		Licenses:          transformLicenseMetadata(sample.LicenseMetadata),
+		Module: Module{
+			Version:       sample.VersionString,
+			CommitTime:    "0 hours ago",
+			Path:          sample.ModulePath,
+			RepositoryURL: sample.RepositoryURL,
+		},
 	}
 	for _, mut := range mutators {
 		mut(p)
@@ -117,7 +119,7 @@ func TestFetchModuleDetails(t *testing.T) {
 		t.Fatalf("db.InsertVersion(ctx, %v, %v): %v", tc.version, sample.Licenses, err)
 	}
 
-	got, err := fetchModuleDetails(ctx, testDB, firstVersionedPackage(tc.version))
+	got, err := fetchModuleDetails(ctx, testDB, &tc.version.VersionInfo)
 	if err != nil {
 		t.Fatalf("fetchModuleDetails(ctx, db, %q, %q) = %v err = %v, want %v",
 			tc.version.Packages[0].Path, tc.version.Version, got, err, tc.wantDetails)
@@ -156,7 +158,7 @@ func TestCreatePackageHeader(t *testing.T) {
 			wantPkg: samplePackage(func(p *Package) {
 				p.Path = "pa.th/to/foo/v2/bar"
 				p.Suffix = "bar"
-				p.ModulePath = "pa.th/to/foo/v2"
+				p.Module.Path = "pa.th/to/foo/v2"
 			}),
 		},
 		{
@@ -169,7 +171,7 @@ func TestCreatePackageHeader(t *testing.T) {
 			wantPkg: samplePackage(func(p *Package) {
 				p.Path = "pa.th/to/foo/v1"
 				p.Suffix = "foo (root)"
-				p.ModulePath = "pa.th/to/foo/v1"
+				p.Module.Path = "pa.th/to/foo/v1"
 			}),
 		},
 	} {

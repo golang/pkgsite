@@ -29,10 +29,10 @@ type ReadMeDetails struct {
 
 // fetchReadMeDetails fetches data for the module version specified by path and version
 // from the database and returns a ReadMeDetails.
-func fetchReadMeDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*ReadMeDetails, error) {
+func fetchReadMeDetails(ctx context.Context, db *postgres.DB, vi *internal.VersionInfo) (*ReadMeDetails, error) {
 	return &ReadMeDetails{
-		ModulePath: pkg.VersionInfo.ModulePath,
-		ReadMe:     readmeHTML(pkg.VersionInfo.ReadmeFilePath, pkg.VersionInfo.ReadmeContents, pkg.RepositoryURL),
+		ModulePath: vi.ModulePath,
+		ReadMe:     readmeHTML(vi.ReadmeFilePath, vi.ReadmeContents, vi.RepositoryURL),
 	}, nil
 }
 

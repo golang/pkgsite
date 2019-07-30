@@ -61,7 +61,9 @@ func NewServer(db *postgres.DB, staticPath string, reloadTemplates bool) (*Serve
 	r.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(staticPath)))
 	})
-	r.Handle("/pkg/", http.HandlerFunc(s.handleDetails))
+	r.Handle("/pkg/", http.HandlerFunc(s.handlePackageDetails))
+	r.Handle("/mod/", http.HandlerFunc(s.handleModuleDetails))
+
 	r.HandleFunc("/search", s.handleSearch)
 	r.HandleFunc("/advanced-search", s.handleStaticPage("advanced_search.tmpl", "Advanced Search - Go Discovery"))
 	r.HandleFunc("/license-policy", s.handleStaticPage("license_policy.tmpl", "Licenses - Go Discovery"))
@@ -193,7 +195,7 @@ func (s *Server) servePage(w http.ResponseWriter, templateName string, page inte
 
 	buf, err := s.renderPage(templateName, page)
 	if err != nil {
-		log.Printf("s.renderPage(%q, %v): %v", templateName, page, err)
+		log.Printf("s.renderPage(%q, %+v): %v", templateName, page, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		buf = s.errorPage
 	}
@@ -208,7 +210,11 @@ func (s *Server) renderPage(templateName string, page interface{}) ([]byte, erro
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	var buf bytes.Buffer
-	if err := s.templates[templateName].Execute(&buf, page); err != nil {
+	tmpl := s.templates[templateName]
+	if tmpl == nil {
+		return nil, fmt.Errorf("BUG: s.templates[%q] not found", templateName)
+	}
+	if err := tmpl.Execute(&buf, page); err != nil {
 		log.Printf("Error executing page template %q: %v", templateName, err)
 		return nil, err
 
@@ -230,13 +236,14 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 		{"copyright.tmpl"},
 		{"license_policy.tmpl"},
 		{"tos.tmpl"},
-		{"doc.tmpl", "details.tmpl"},
-		{"importedby.tmpl", "details.tmpl"},
-		{"imports.tmpl", "details.tmpl"},
-		{"licenses.tmpl", "details.tmpl"},
-		{"module.tmpl", "details.tmpl"},
 		{"readme.tmpl", "details.tmpl"},
-		{"versions.tmpl", "details.tmpl"},
+		{"module.tmpl", "details.tmpl"},
+		{"pkg_doc.tmpl", "details.tmpl"},
+		{"pkg_importedby.tmpl", "details.tmpl"},
+		{"pkg_imports.tmpl", "details.tmpl"},
+		{"pkg_licenses.tmpl", "details.tmpl"},
+		{"pkg_versions.tmpl", "details.tmpl"},
+		{"not_implemented.tmpl", "details.tmpl"},
 	}
 
 	templates := make(map[string]*template.Template)

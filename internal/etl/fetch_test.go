@@ -357,12 +357,12 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", test.modulePath, test.version, client, testDB, err)
 			}
 
-			gotVersion, err := testDB.GetVersion(ctx, test.modulePath, test.version)
+			gotVersionInfo, err := testDB.GetVersionInfo(ctx, test.modulePath, test.version)
 			if err != nil {
-				t.Fatalf("testDB.GetVersion(ctx, %q, %q): %v", test.modulePath, test.version, err)
+				t.Fatalf("testDB.GetVersionInfo(ctx, %q, %q): %v", test.modulePath, test.version, err)
 			}
-			if diff := cmp.Diff(test.want.VersionInfo, *gotVersion); diff != "" {
-				t.Fatalf("testDB.GetVersion(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
+			if diff := cmp.Diff(test.want.VersionInfo, *gotVersionInfo); diff != "" {
+				t.Fatalf("testDB.GetVersionInfo(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
 			}
 
 			gotPkg, err := testDB.GetPackage(ctx, test.pkg, test.version)

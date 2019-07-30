@@ -5,9 +5,10 @@
 -->
 {{define "main_content"}}
 <div class="Container">
-  {{$header := .PackageHeader}}
+  {{$header := .Header}}
+  {{$namespace := .Namespace}}
   <header>
-    <h1 class="Header-title">{{$header.Path}}</h1>
+    <h1 class="Header-title">{{if eq $header.Path "std"}}The Go Standard Library{{else}}{{$header.Path}}{{end}}</h1>
     <p class="Header-labels">
       <strong>Version: </strong><span>{{$header.Version}}</span>
       <span class="Header-verticalBar">|</span>
@@ -15,7 +16,7 @@
       <span class="Header-verticalBar">|</span>
       <strong>{{pluralize (len $header.Licenses) "License"}}: </strong>
       {{range $i, $e := $header.Licenses -}}{{if $i}}, {{end}}
-        <a href="/pkg/{{$header.Path}}@{{$header.Version}}?tab=licenses#{{.Anchor}}">{{$e.Type}}</a>
+        <a href="/{{$namespace}}/{{$header.Path}}@{{$header.Version}}?tab=licenses#{{.Anchor}}">{{$e.Type}}</a>
       {{- else -}}
         <span>No license files detected</span>
         <a href="/license-policy" class="Disclaimer-link"><em>not legal advice</em></a>
@@ -31,7 +32,7 @@
     <ul class="ModulesNav-list" role="tablist">
       {{range .Tabs}}
         <li class="ModulesNav-tab" role="presentation" {{if eq .Name $.Settings.Name}}aria-selected="true"{{end}}>
-          <a class="ModulesNav-link" href="/pkg/{{$header.Path}}@{{$header.Version}}?tab={{.Name}}" role="tab">{{.DisplayName}}</a>
+          <a class="ModulesNav-link" href="/{{$namespace}}/{{$header.Path}}@{{$header.Version}}?tab={{.Name}}" role="tab">{{.DisplayName}}</a>
         </li>
       {{end}}
     </ul>

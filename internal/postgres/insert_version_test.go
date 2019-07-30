@@ -121,18 +121,18 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 				t.Errorf("testDB.InsertVersion(ctx, %+v) second insert error: %v, want write error: %v", tc.version, err, tc.wantWriteErr)
 			}
 
-			got, err := testDB.GetVersion(ctx, tc.wantModulePath, tc.wantVersion)
+			got, err := testDB.GetVersionInfo(ctx, tc.wantModulePath, tc.wantVersion)
 			if tc.wantReadErr != (err != nil) {
-				t.Fatalf("testDB.GetVersion(ctx, %q, %q) error: %v, want read error: %t", tc.wantModulePath, tc.wantVersion, err, tc.wantReadErr)
+				t.Fatalf("testDB.GetVersionInfo(ctx, %q, %q) error: %v, want read error: %t", tc.wantModulePath, tc.wantVersion, err, tc.wantReadErr)
 			}
 
 			if !tc.wantReadErr && got == nil {
-				t.Fatalf("testDB.GetVersion(ctx, %q, %q) = %v, want %v", tc.wantModulePath, tc.wantVersion, got, tc.version)
+				t.Fatalf("testDB.GetVersionInfo(ctx, %q, %q) = %v, want %v", tc.wantModulePath, tc.wantVersion, got, tc.version)
 			}
 
 			if tc.version != nil {
 				if diff := cmp.Diff(&tc.version.VersionInfo, got); !tc.wantReadErr && diff != "" {
-					t.Errorf("testDB.GetVersion(ctx, %q, %q) mismatch (-want +got):\n%s", tc.wantModulePath, tc.wantVersion, diff)
+					t.Errorf("testDB.GetVersionInfo(ctx, %q, %q) mismatch (-want +got):\n%s", tc.wantModulePath, tc.wantVersion, diff)
 				}
 			}
 

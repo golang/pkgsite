@@ -52,32 +52,53 @@ func TestServer(t *testing.T) {
 	}
 	testDB.RefreshSearchDocuments(ctx)
 
-	for _, urlPath := range []string{
-		"/static/",
-		"/license-policy",
-		"/favicon.ico",
-		fmt.Sprintf("/search?q=%s", sample.PackageName),
-		fmt.Sprintf("/pkg/%s", sample.PackagePath),
-		fmt.Sprintf("/pkg/%s@%s", sample.PackagePath, sample.VersionString),
-		fmt.Sprintf("/pkg/%s?tab=doc", sample.PackagePath),
-		fmt.Sprintf("/pkg/%s?tab=overview", sample.PackagePath),
-		fmt.Sprintf("/pkg/%s?tab=module", sample.PackagePath),
-		fmt.Sprintf("/pkg/%s?tab=versions", sample.PackagePath),
-		fmt.Sprintf("/pkg/%s?tab=imports", sample.PackagePath),
-		fmt.Sprintf("/pkg/%s?tab=importedby", sample.PackagePath),
-		fmt.Sprintf("/pkg/%s?tab=licenses", sample.PackagePath),
-	} {
-		t.Run(urlPath, func(t *testing.T) {
-			s, err := NewServer(testDB, "../../content/static", false)
-			if err != nil {
-				t.Fatalf("NewServer: %v", err)
-			}
+	s, err := NewServer(testDB, "../../content/static", false)
+	if err != nil {
+		t.Fatalf("NewServer: %v", err)
+	}
 
-			w := httptest.NewRecorder()
-			s.ServeHTTP(w, httptest.NewRequest("GET", urlPath, nil))
-			if got, want := w.Code, http.StatusOK; got != want {
-				t.Fatalf("Code = %d, want %d", got, want)
-			}
-		})
+	for _, tc := range []struct {
+		want     int
+		urlPaths []string
+	}{
+		{
+			want:     http.StatusNotFound,
+			urlPaths: []string{"/invalid-page"},
+		},
+		{
+			want: http.StatusOK,
+			urlPaths: []string{
+				"/static/",
+				"/license-policy",
+				"/favicon.ico",
+				fmt.Sprintf("/search?q=%s", sample.PackageName),
+				fmt.Sprintf("/pkg/%s", sample.PackagePath),
+				fmt.Sprintf("/pkg/%s@%s", sample.PackagePath, sample.VersionString),
+				fmt.Sprintf("/pkg/%s?tab=doc", sample.PackagePath),
+				fmt.Sprintf("/pkg/%s?tab=readme", sample.PackagePath),
+				fmt.Sprintf("/pkg/%s?tab=module", sample.PackagePath),
+				fmt.Sprintf("/pkg/%s?tab=versions", sample.PackagePath),
+				fmt.Sprintf("/pkg/%s?tab=imports", sample.PackagePath),
+				fmt.Sprintf("/pkg/%s?tab=importedby", sample.PackagePath),
+				fmt.Sprintf("/pkg/%s?tab=licenses", sample.PackagePath),
+				fmt.Sprintf("/mod/%s@%s?tab=readme", sample.ModulePath, sample.VersionString),
+				fmt.Sprintf("/mod/%s@%s?tab=packages", sample.ModulePath, sample.VersionString),
+				fmt.Sprintf("/mod/%s@%s?tab=modfile", sample.ModulePath, sample.VersionString),
+				fmt.Sprintf("/mod/%s@%s?tab=dependencies", sample.ModulePath, sample.VersionString),
+				fmt.Sprintf("/mod/%s@%s?tab=dependents", sample.ModulePath, sample.VersionString),
+				fmt.Sprintf("/mod/%s@%s?tab=versions", sample.ModulePath, sample.VersionString),
+				fmt.Sprintf("/mod/%s@%s?tab=licenses", sample.ModulePath, sample.VersionString),
+			},
+		},
+	} {
+		for _, urlPath := range tc.urlPaths {
+			t.Run(urlPath, func(t *testing.T) {
+				w := httptest.NewRecorder()
+				s.ServeHTTP(w, httptest.NewRequest("GET", urlPath, nil))
+				if w.Code != tc.want {
+					t.Errorf("Code = %d, want %d", w.Code, tc.want)
+				}
+			})
+		}
 	}
 }

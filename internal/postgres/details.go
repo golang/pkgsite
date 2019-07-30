@@ -190,13 +190,12 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 	}, nil
 }
 
-// GetVersionForPackage returns the module version corresponding to path and
+// GetVersion returns the module version corresponding to path and
 // version. *internal.Version will contain all packages for that version, in
 // sorted order by package path.
-func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*internal.Version, error) {
+func (db *DB) GetVersion(ctx context.Context, modulePath, version string) (*internal.Version, error) {
 	query := `SELECT
 		p.path,
-		p.module_path,
 		p.name,
 		p.synopsis,
 		p.v1_path,
@@ -218,31 +217,28 @@ func (db *DB) GetVersionForPackage(ctx context.Context, path, version string) (*
 		v.module_path = p.module_path
 		AND v.version = p.version
 	WHERE
-		(p.module_path, p.version) IN (
-			SELECT module_path, version
-			FROM packages
-			WHERE path = $1 AND version = $2
-		)
+		v.module_path = $1
+		AND v.version = $2
 	ORDER BY path;`
 
 	var (
-		pkgPath, modulePath, pkgName, synopsis, v1path, readmeFilePath, versionType string
-		repositoryURL, vcsType, homepageURL                                         sql.NullString
-		readmeContents, documentation                                               []byte
-		commitTime                                                                  time.Time
-		licenseTypes, licensePaths                                                  []string
+		pkgPath, pkgName, synopsis, v1path, readmeFilePath, versionType string
+		repositoryURL, vcsType, homepageURL                             sql.NullString
+		readmeContents, documentation                                   []byte
+		commitTime                                                      time.Time
+		licenseTypes, licensePaths                                      []string
 	)
 
-	rows, err := db.QueryContext(ctx, query, path, version)
+	rows, err := db.QueryContext(ctx, query, modulePath, version)
 	if err != nil {
-		return nil, fmt.Errorf("db.QueryContext(ctx, %s, %q, %q): %v", query, path, version, err)
+		return nil, fmt.Errorf("db.QueryContext(ctx, %s, %q, %q): %v", query, modulePath, version, err)
 	}
 	defer rows.Close()
 
 	v := &internal.Version{}
 	v.Version = version
 	for rows.Next() {
-		if err := rows.Scan(&pkgPath, &modulePath, &pkgName, &synopsis, &v1path,
+		if err := rows.Scan(&pkgPath, &pkgName, &synopsis, &v1path,
 			pq.Array(&licenseTypes), pq.Array(&licensePaths), &readmeFilePath,
 			&readmeContents, &commitTime, &versionType, &documentation, &repositoryURL, &vcsType, &homepageURL); err != nil {
 			return nil, fmt.Errorf("row.Scan(): %v", err)
@@ -562,9 +558,9 @@ func compareLicenses(i, j license.Metadata) bool {
 	return i.FilePath < j.FilePath
 }
 
-// GetVersion fetches a Version from the database with the primary key
+// GetVersionInfo fetches a Version from the database with the primary key
 // (module_path, version).
-func (db *DB) GetVersion(ctx context.Context, modulePath string, version string) (*internal.VersionInfo, error) {
+func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version string) (*internal.VersionInfo, error) {
 	var (
 		repositoryURL, vcsType, homepageURL sql.NullString
 		readmeFilePath, versionType         string
@@ -586,6 +582,9 @@ func (db *DB) GetVersion(ctx context.Context, modulePath string, version string)
 		WHERE module_path = $1 and version = $2;`
 	row := db.QueryRowContext(ctx, query, modulePath, version)
 	if err := row.Scan(&commitTime, &readmeFilePath, &readmeContents, &versionType, &repositoryURL, &vcsType, &homepageURL); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, xerrors.Errorf("module version %s@%s: %w", modulePath, version, derrors.NotFound)
+		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
 	return &internal.VersionInfo{

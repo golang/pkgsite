@@ -38,7 +38,7 @@ func TestFetchReadMeDetails(t *testing.T) {
 		t.Fatalf("db.InsertVersion(%v): %v", tc.version, err)
 	}
 
-	got, err := fetchReadMeDetails(ctx, testDB, firstVersionedPackage(tc.version))
+	got, err := fetchReadMeDetails(ctx, testDB, &tc.version.VersionInfo)
 	if err != nil {
 		t.Fatalf("fetchReadMeDetails(ctx, db, %q, %q) = %v err = %v, want %v",
 			tc.version.Packages[0].Path, tc.version.Version, got, err, tc.wantDetails)
