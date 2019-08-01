@@ -102,6 +102,11 @@ code {
   padding: 16px 20px;
   position: relative;
 }
+.Footer-feedbackButton {
+  border: none;
+  color: var(--turq-text);
+  font-size: 0.875rem;
+}
 .Footer-gopher {
   bottom: 0;
   left: 20px;
@@ -204,6 +209,16 @@ code {
   display: flex;
   padding: 14px 16px;
 }
+.Header-feedbackButton {
+  background: none;
+  border-radius: 10px;
+  border: 1px solid var(--gray-8);
+  color: var(--turq-text);
+  font-size: 1rem;
+  max-width: 100px;
+  padding: 10px;
+  text-align: center;
+}
 .Header-logo {
   align-items: center;
   display: flex;
@@ -227,6 +242,9 @@ code {
   .Header {
     padding-left: 24px;
     padding-right: 24px;
+  }
+  .Header-feedbackButton {
+    max-width: none;
   }
   .Header-logo {
     left: 24px;
@@ -550,8 +568,4 @@ code {
 }
 .EmptyContent-message {
   text-align: center;
-}
-
-#Feedback-button {
-  color: var(--turq-text);
 }

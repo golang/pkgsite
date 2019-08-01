@@ -34,6 +34,7 @@
       <div class="Header-search">
         {{template "search" .}}
       </div>
+      <button class="js-feedbackButton Header-feedbackButton">Send Feedback</button>
     </div>
   {{end}}
 </header>
@@ -47,10 +48,10 @@
       <li class="Footer-link"><a href="http://www.google.com/intl/en/policies/privacy/">Privacy Policy</a></li>
       <li class="Footer-link"><a href="/advanced-search">Advanced Search</a></li>
       <li class="Footer-link">
-        <a href="#" id="Feedback-button" rel="noopener">
+        <button class="js-feedbackButton Footer-feedbackButton">
           <span class="Footer-link--long">Report a website issue or send feedback</span>
           <span class="Footer-link--short">Report issue</span>
-        </a>
+        </button>
       </li>
     </ul>
     <a class="Footer-googleLogo" href="https://google.com">

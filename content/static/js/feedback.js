@@ -4,14 +4,12 @@
   license that can be found in the LICENSE file.
 */
 
-window.onload = function() {
-  var el = document.getElementById('Feedback-button');
-  if (el) {
-    el.addEventListener('click', sendFeedback);
-  } else {
-    console.log('No Feedback-button');
-  }
-};
+window.addEventListener("load", function() {
+  var elements = document.getElementsByClassName('js-feedbackButton');
+  for (var i = 0; i < elements.length; i++) {
+    elements[i].addEventListener('click', sendFeedback)
+  };
+});
 
 // Launches the feedback interface.
 function sendFeedback() {
