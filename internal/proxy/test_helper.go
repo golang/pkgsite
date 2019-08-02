@@ -92,7 +92,10 @@ func TestProxy(versions []*TestVersion) *http.ServeMux {
 				goMod = defaultGoMod(m)
 			}
 			if strings.HasPrefix(m, stdlibProxyModulePathPrefix) {
-				goVersion := goVersionForSemanticVersion(v.Version)
+				goVersion, err := goVersionForSemanticVersion(v.Version)
+				if err != nil {
+					panic(fmt.Sprintf("bad test data: v.Version = %q", v.Version))
+				}
 				handle(fmt.Sprintf("/%s/@v/%s.info", m, goVersion), strings.NewReader(defaultInfo(v.Version)))
 			} else {
 				handle(fmt.Sprintf("/%s/@v/%s.info", m, v.Version), strings.NewReader(defaultInfo(v.Version)))
@@ -140,8 +143,8 @@ func defaultTestVersions() []*TestVersion {
 	var versions []*TestVersion
 	for _, v := range [][]string{
 		{"go.googlesource.com/go.git", "v1.12.5"},
-		{"go.googlesource.com/go.git/src", "v1.13.0-beta1"},
-		{"go.googlesource.com/go.git/src/cmd", "v1.13.0-beta1"},
+		{"go.googlesource.com/go.git/src", "v1.13.0-beta.1"},
+		{"go.googlesource.com/go.git/src/cmd", "v1.13.0-beta.1"},
 		{"bad.mod/module", "v1.0.0"},
 		{"emp.ty/module", "v1.0.0"},
 		{"github.com/my/module", "v1.0.0"},

@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"golang.org/x/discovery/internal/derrors"
 )
 
 const testTimeout = 5 * time.Second
@@ -58,11 +60,18 @@ func TestModulePathAndVersionForProxyRequest(t *testing.T) {
 			wantVersion:      "go1.13",
 		},
 		{
-			name:             "std version v1.13.0-beta1",
+			name:             "std version v1.13.0-beta.1",
 			requestedPath:    "std",
-			requestedVersion: "v1.13.0-beta1",
+			requestedVersion: "v1.13.0-beta.1",
 			wantPath:         stdlibProxyModulePathPrefix + "/src",
 			wantVersion:      "go1.13beta1",
+		},
+		{
+			name:             "std with digitless prerelease",
+			requestedPath:    "std",
+			requestedVersion: "v1.13.0-prerelease",
+			wantPath:         stdlibProxyModulePathPrefix + "/src",
+			wantVersion:      "go1.13prerelease",
 		},
 		{
 			name:             "cmd version v1.13.0",
@@ -80,6 +89,46 @@ func TestModulePathAndVersionForProxyRequest(t *testing.T) {
 
 			if path != tc.wantPath || version != tc.wantVersion {
 				t.Errorf("modulePathAndVersionForProxyRequest(%q, %q) = %q, %q; want = %q, %q", tc.requestedPath, tc.requestedVersion, path, version, tc.wantPath, tc.wantVersion)
+			}
+		})
+	}
+}
+
+func TestModulePathAndVersionForProxyRequestErrors(t *testing.T) {
+	for _, tc := range []struct {
+		name, requestedPath, requestedVersion string
+	}{
+		{
+			name:             "bad std semver",
+			requestedPath:    "std",
+			requestedVersion: "v1.x",
+		},
+		{
+			name:             "more bad std semver",
+			requestedPath:    "std",
+			requestedVersion: "v1.0-",
+		},
+		{
+			name:             "bad std cmd version",
+			requestedPath:    "cmd",
+			requestedVersion: "v1.12",
+		},
+		{
+			name:             "bad prerelease",
+			requestedPath:    "std",
+			requestedVersion: "v1.13.0-beta1",
+		},
+		{
+			name:             "another bad prerelease",
+			requestedPath:    "std",
+			requestedVersion: "v1.13.0-whatevs99",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, err := modulePathAndVersionForProxyRequest(tc.requestedPath, tc.requestedVersion)
+			if derrors.Type(err) != derrors.InvalidArgumentType {
+				t.Fatalf("modulePathAndVersionForProxyRequest(%q, %q): got %v, want InvalidArgument error",
+					tc.requestedPath, tc.requestedVersion, err)
 			}
 		})
 	}
@@ -164,23 +213,23 @@ func TestGetZip(t *testing.T) {
 		},
 		{
 			path:    "cmd",
-			version: "v1.13.0-beta1",
+			version: "v1.13.0-beta.1",
 			wantFiles: []string{
-				"cmd@v1.13.0-beta1/LICENSE",
-				"cmd@v1.13.0-beta1/go/go11.go",
+				"cmd@v1.13.0-beta.1/LICENSE",
+				"cmd@v1.13.0-beta.1/go/go11.go",
 			},
 		},
 		{
 			path:    "std",
-			version: "v1.13.0-beta1",
+			version: "v1.13.0-beta.1",
 			wantFiles: []string{
-				"std@v1.13.0-beta1/LICENSE",
-				"std@v1.13.0-beta1/context/benchmark_test.go",
-				"std@v1.13.0-beta1/context/context.go",
-				"std@v1.13.0-beta1/context/context_test.go",
-				"std@v1.13.0-beta1/context/example_test.go",
-				"std@v1.13.0-beta1/context/net_test.go",
-				"std@v1.13.0-beta1/context/x_test.go",
+				"std@v1.13.0-beta.1/LICENSE",
+				"std@v1.13.0-beta.1/context/benchmark_test.go",
+				"std@v1.13.0-beta.1/context/context.go",
+				"std@v1.13.0-beta.1/context/context_test.go",
+				"std@v1.13.0-beta.1/context/example_test.go",
+				"std@v1.13.0-beta.1/context/net_test.go",
+				"std@v1.13.0-beta.1/context/x_test.go",
 			},
 		},
 	} {
