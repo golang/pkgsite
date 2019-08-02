@@ -31,7 +31,7 @@ func TestFetchSearchPage(t *testing.T) {
 				VersionType:    internal.VersionTypeRelease,
 			},
 			Packages: []*internal.Package{
-				&internal.Package{
+				{
 					Name:     "foo",
 					Path:     "/path/to/foo",
 					Synopsis: "foo is a package.",
@@ -48,7 +48,7 @@ func TestFetchSearchPage(t *testing.T) {
 				VersionType:    internal.VersionTypeRelease,
 			},
 			Packages: []*internal.Package{
-				&internal.Package{
+				{
 					Name:     "bar",
 					Path:     "/path/to/bar",
 					Synopsis: "bar is used by foo.",
@@ -79,7 +79,7 @@ func TestFetchSearchPage(t *testing.T) {
 					Pages:       []int{1},
 				},
 				Results: []*SearchResult{
-					&SearchResult{
+					{
 						Name:          versionBar.Packages[0].Name,
 						PackagePath:   versionBar.Packages[0].Path,
 						ModulePath:    versionBar.ModulePath,
@@ -108,7 +108,7 @@ func TestFetchSearchPage(t *testing.T) {
 					Pages:       []int{1},
 				},
 				Results: []*SearchResult{
-					&SearchResult{
+					{
 						Name:          versionFoo.Packages[0].Name,
 						PackagePath:   versionFoo.Packages[0].Path,
 						ModulePath:    versionFoo.ModulePath,

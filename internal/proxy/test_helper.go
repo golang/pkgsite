@@ -139,17 +139,17 @@ func defaultTestVersions() []*TestVersion {
 
 	var versions []*TestVersion
 	for _, v := range [][]string{
-		[]string{"go.googlesource.com/go.git", "v1.12.5"},
-		[]string{"go.googlesource.com/go.git/src", "v1.13.0-beta1"},
-		[]string{"go.googlesource.com/go.git/src/cmd", "v1.13.0-beta1"},
-		[]string{"bad.mod/module", "v1.0.0"},
-		[]string{"emp.ty/module", "v1.0.0"},
-		[]string{"github.com/my/module", "v1.0.0"},
-		[]string{"no.mod/module", "v1.0.0"},
-		[]string{"nonredistributable.mod/module", "v1.0.0"},
-		[]string{"rsc.io/quote", "v1.5.2"},
-		[]string{"rsc.io/quote/v2", "v2.0.1"},
-		[]string{"build.constraints/module", "v1.0.0"},
+		{"go.googlesource.com/go.git", "v1.12.5"},
+		{"go.googlesource.com/go.git/src", "v1.13.0-beta1"},
+		{"go.googlesource.com/go.git/src/cmd", "v1.13.0-beta1"},
+		{"bad.mod/module", "v1.0.0"},
+		{"emp.ty/module", "v1.0.0"},
+		{"github.com/my/module", "v1.0.0"},
+		{"no.mod/module", "v1.0.0"},
+		{"nonredistributable.mod/module", "v1.0.0"},
+		{"rsc.io/quote", "v1.5.2"},
+		{"rsc.io/quote/v2", "v2.0.1"},
+		{"build.constraints/module", "v1.0.0"},
 	} {
 		rootDir := filepath.Join(absPath, "modules")
 		f := filepath.FromSlash(fmt.Sprintf("%s@%s", v[0], v[1]))

@@ -592,7 +592,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 			name:    "github.com/my/module",
 			version: "v1.0.0",
 			packages: map[string]*internal.Package{
-				"foo": &internal.Package{
+				"foo": {
 					Name:              "foo",
 					Path:              "github.com/my/module/foo",
 					Synopsis:          "package foo",
@@ -600,7 +600,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					Imports:           []string{"fmt", "github.com/my/module/bar"},
 					V1Path:            "github.com/my/module/foo",
 				},
-				"bar": &internal.Package{
+				"bar": {
 					Name:              "bar",
 					Path:              "github.com/my/module/bar",
 					Synopsis:          "package bar",
@@ -614,7 +614,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 			name:    "no.mod/module",
 			version: "v1.0.0",
 			packages: map[string]*internal.Package{
-				"p": &internal.Package{
+				"p": {
 					Name:              "p",
 					Path:              "no.mod/module/p",
 					Synopsis:          "Package p is inside a module where a go.mod file hasn't been explicitly added yet.",
@@ -633,7 +633,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 			name:    "bad.mod/module",
 			version: "v1.0.0",
 			packages: map[string]*internal.Package{
-				"good": &internal.Package{
+				"good": {
 					Name:              "good",
 					Path:              "bad.mod/module/good",
 					Synopsis:          "Package good is inside a module that has bad packages.",

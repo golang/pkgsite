@@ -121,12 +121,12 @@ func TestUpdateVersionStatesForReprocessing(t *testing.T) {
 
 	now := sample.NowTruncated()
 	for _, v := range []*internal.IndexVersion{
-		&internal.IndexVersion{
+		{
 			Path:      "foo.com/bar",
 			Version:   "v1.0.0",
 			Timestamp: now,
 		},
-		&internal.IndexVersion{
+		{
 			Path:      "baz.com/quux",
 			Version:   "v2.0.1",
 			Timestamp: now,

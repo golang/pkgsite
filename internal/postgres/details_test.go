@@ -245,22 +245,22 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 			numPseudo: 12,
 			versions:  testVersions,
 			wantTaggedVersions: []*internal.VersionInfo{
-				&internal.VersionInfo{
+				{
 					ModulePath: modulePath2,
 					Version:    "v2.1.0",
 					CommitTime: sample.CommitTime,
 				},
-				&internal.VersionInfo{
+				{
 					ModulePath: modulePath2,
 					Version:    "v2.0.1-beta",
 					CommitTime: sample.CommitTime,
 				},
-				&internal.VersionInfo{
+				{
 					ModulePath: modulePath1,
 					Version:    "v1.0.0",
 					CommitTime: sample.CommitTime,
 				},
-				&internal.VersionInfo{
+				{
 					ModulePath: modulePath1,
 					Version:    "v1.0.0-alpha.1",
 					CommitTime: sample.CommitTime,
