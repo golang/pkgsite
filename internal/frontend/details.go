@@ -96,8 +96,12 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 	tab := r.FormValue("tab")
 	settings, ok := tabLookup[tab]
 	if !ok {
-		tab = "doc"
-		settings = tabLookup["doc"]
+		if pkg.IsRedistributable() {
+			tab = "doc"
+		} else {
+			tab = "module"
+		}
+		settings = tabLookup[tab]
 	}
 	canShowDetails := pkg.IsRedistributable() || settings.AlwaysShowDetails
 
