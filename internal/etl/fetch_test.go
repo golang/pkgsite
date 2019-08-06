@@ -25,6 +25,7 @@ import (
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/testhelper"
+	"golang.org/x/xerrors"
 )
 
 func TestSkipBadPackage(t *testing.T) {
@@ -61,7 +62,7 @@ func TestSkipBadPackage(t *testing.T) {
 		t.Errorf("testDB.GetPackage(ctx, %q, %q): %v, want nil", pkgFoo, version, err)
 	}
 	pkgBar := modulePath + "/bar"
-	if _, err := testDB.GetPackage(ctx, pkgBar, version); !derrors.IsNotFound(err) {
+	if _, err := testDB.GetPackage(ctx, pkgBar, version); !xerrors.Is(err, derrors.NotFound) {
 		t.Errorf("testDB.GetPackage(ctx, %q, %q): %v, want NotFound", pkgBar, version, err)
 	}
 }
@@ -168,7 +169,7 @@ func TestReFetch(t *testing.T) {
 	}
 
 	// For good measure, verify that package foo is now NotFound.
-	if _, err := testDB.GetPackage(ctx, pkgFoo, version); !derrors.IsNotFound(err) {
+	if _, err := testDB.GetPackage(ctx, pkgFoo, version); !xerrors.Is(err, derrors.NotFound) {
 		t.Errorf("testDB.GetPackage(ctx, %q, %q): %v, want NotFound", pkgFoo, version, err)
 	}
 }

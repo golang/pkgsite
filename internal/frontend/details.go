@@ -19,6 +19,7 @@ import (
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
+	"golang.org/x/xerrors"
 )
 
 // HandleDetails applies database data to the appropriate template. Handles all
@@ -44,17 +45,17 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 	)
 	if version == "" {
 		pkg, err = s.db.GetLatestPackage(ctx, path)
-		if err != nil && !derrors.IsNotFound(err) {
+		if err != nil && !xerrors.Is(err, derrors.NotFound) {
 			log.Printf("s.db.GetLatestPackage(ctx, %q): %v", path, err)
 		}
 	} else {
 		pkg, err = s.db.GetPackage(ctx, path, version)
-		if err != nil && !derrors.IsNotFound(err) {
+		if err != nil && !xerrors.Is(err, derrors.NotFound) {
 			log.Printf("s.db.GetPackage(ctx, %q, %q): %v", path, version, err)
 		}
 	}
 	if err != nil {
-		if !derrors.IsNotFound(err) {
+		if !xerrors.Is(err, derrors.NotFound) {
 			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 			return
 		}
@@ -76,7 +77,7 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		if !derrors.IsNotFound(latestErr) {
+		if !xerrors.Is(err, derrors.NotFound) {
 			// GetPackage returned a NotFound error, but
 			// GetLatestPackage returned a different error.
 			log.Printf("error getting latest package for %s: %v", path, latestErr)

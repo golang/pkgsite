@@ -5,75 +5,36 @@
 package derrors
 
 import (
-	"errors"
-	"net/http"
 	"testing"
+
+	"golang.org/x/xerrors"
 )
 
-func TestErrors(t *testing.T) {
+func TestFromHTTPStatus(t *testing.T) {
 	tests := []struct {
-		label                                           string
-		err                                             error
-		isNotFound, isInvalidArguments, isNotAcceptable bool
-		wantType                                        ErrorType
+		label  string
+		status int
+		want   error
 	}{
 		{
-			label:      "identifies not found errors",
-			err:        NotFound("couldn't find it"),
-			isNotFound: true,
-			wantType:   NotFoundType,
-		}, {
-			label:              "identifies invalid argument errors",
-			err:                InvalidArgument("bad arguments"),
-			isInvalidArguments: true,
-			wantType:           InvalidArgumentType,
-		}, {
-			label:           "identifies not acceptable errors",
-			err:             NotAcceptable("not acceptable"),
-			isNotAcceptable: true,
-			wantType:        NotAcceptableType,
-		}, {
-			label:    "doesn't identify an unknown error",
-			err:      errors.New("bad"),
-			wantType: UncategorizedErrorType,
-		}, {
-			label:    "doesn't identify a nil error",
-			wantType: NilErrorType,
-		}, {
-			label:              "wraps a known error",
-			err:                Wrap(InvalidArgument("bad arguments"), "error validating %s", "abc123"),
-			isInvalidArguments: true,
-			wantType:           InvalidArgumentType,
-		}, {
-			label:      "interprets HTTP 404 as Not Found",
-			err:        StatusError(http.StatusNotFound, "%s was not found", "foo"),
-			isNotFound: true,
-			wantType:   NotFoundType,
-		}, {
-			label:           "interprets HTTP 406 as Not Acceptable",
-			err:             StatusError(http.StatusNotAcceptable, "not acceptable"),
-			isNotAcceptable: true,
-			wantType:        NotAcceptableType,
-		}, {
-			label:    "interprets HTTP 500 as Uncategorized",
-			err:      StatusError(http.StatusInternalServerError, "bad"),
-			wantType: UncategorizedErrorType,
+			label:  "OK translates to nil error",
+			status: 200,
 		},
+		{
+			label:  "400 translates to invalid argument",
+			status: 400,
+			want:   InvalidArgument,
+		},
+		// Testing other specific HTTP status codes is intentionally omitted to
+		// avoid writing a change detector.
 	}
 
 	for _, test := range tests {
+		test := test
 		t.Run(test.label, func(t *testing.T) {
-			if got := IsNotFound(test.err); got != test.isNotFound {
-				t.Errorf("IsNotFound(%v) = %t, want %t", test.err, got, test.isNotFound)
-			}
-			if got := IsInvalidArgument(test.err); got != test.isInvalidArguments {
-				t.Errorf("IsInvalidArguments(%v) = %t, want %t", test.err, got, test.isInvalidArguments)
-			}
-			if got := IsNotAcceptable(test.err); got != test.isNotAcceptable {
-				t.Errorf("IsNotAcceptable(%v) = %t, want %t", test.err, got, test.isNotAcceptable)
-			}
-			if got := Type(test.err); got != test.wantType {
-				t.Errorf("Type(%v) = %v, want %v", test.err, got, test.wantType)
+			err := FromHTTPStatus(test.status, "error")
+			if !xerrors.Is(err, test.want) {
+				t.Errorf("FromHTTPStatus(%d, ...) = %v, want %v", test.status, err, test.want)
 			}
 		})
 	}

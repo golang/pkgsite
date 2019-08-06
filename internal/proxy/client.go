@@ -24,6 +24,7 @@ import (
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
 	"golang.org/x/net/context/ctxhttp"
+	"golang.org/x/xerrors"
 )
 
 const (
@@ -90,7 +91,7 @@ func (c *Client) getInfo(ctx context.Context, requestedPath, requestedVersion st
 	}
 	defer r.Body.Close()
 
-	if err := derrors.StatusError(r.StatusCode, "ctxhttp.Get(ctx, client, %q)", u); err != nil {
+	if err := derrors.FromHTTPStatus(r.StatusCode, "ctxhttp.Get(ctx, client, %q)", u); err != nil {
 		return nil, err
 	}
 
@@ -137,7 +138,7 @@ func (c *Client) getZip(ctx context.Context, proxyModulePath, proxyVersion strin
 	}
 	defer r.Body.Close()
 
-	if err := derrors.StatusError(r.StatusCode, "HTTP error from proxy for %q: %d", u, r.StatusCode); err != nil {
+	if err := derrors.FromHTTPStatus(r.StatusCode, "HTTP error from proxy for %q: %d", u, r.StatusCode); err != nil {
 		return nil, err
 	}
 
@@ -224,11 +225,11 @@ func modulePathAndVersionForProxyRequest(path, version string) (string, string, 
 		return encodeModulePathAndVersion(path, version)
 	}
 	if !semver.IsValid(version) {
-		return "", "", derrors.StatusError(http.StatusBadRequest, "requests for std must provide a valid semantic version: %q ", version)
+		return "", "", derrors.FromHTTPStatus(http.StatusBadRequest, "requests for std must provide a valid semantic version: %q ", version)
 	}
 	if path == "cmd" {
 		if semver.MajorMinor(version) != "v1.13" {
-			return "", "", derrors.StatusError(http.StatusBadRequest, "module cmd can only be fetched for versions v1.13.x: version = %q", version)
+			return "", "", derrors.FromHTTPStatus(http.StatusBadRequest, "module cmd can only be fetched for versions v1.13.x: version = %q", version)
 		}
 		path = fmt.Sprintf("%s/src/cmd", stdlibProxyModulePathPrefix)
 	} else if path == "std" {
@@ -241,7 +242,7 @@ func modulePathAndVersionForProxyRequest(path, version string) (string, string, 
 	if strings.HasPrefix(path, stdlibProxyModulePathPrefix) {
 		ver, err := goVersionForSemanticVersion(version)
 		if err != nil {
-			return "", "", derrors.InvalidArgument("goVersionForSemanticVersion(%q): %v", version, err)
+			return "", "", xerrors.Errorf("goVersionForSemanticVersion(%q): %v: %w", version, err, derrors.InvalidArgument)
 		}
 		version = ver
 	}
@@ -251,11 +252,11 @@ func modulePathAndVersionForProxyRequest(path, version string) (string, string, 
 func encodeModulePathAndVersion(path, version string) (string, string, error) {
 	encodedPath, err := module.EncodePath(path)
 	if err != nil {
-		return "", "", derrors.StatusError(http.StatusBadRequest, "module.EncodePath(%q): %v", path, err)
+		return "", "", derrors.FromHTTPStatus(http.StatusBadRequest, "module.EncodePath(%q): %v", path, err)
 	}
 	encodedVersion, err := module.EncodeVersion(version)
 	if err != nil {
-		return "", "", derrors.StatusError(http.StatusBadRequest, "module.EncodeVersion(%q): %v", version, err)
+		return "", "", derrors.FromHTTPStatus(http.StatusBadRequest, "module.EncodeVersion(%q): %v", version, err)
 	}
 	return encodedPath, encodedVersion, nil
 }
@@ -277,7 +278,7 @@ func goVersionForSemanticVersion(requestedVersion string) (string, error) {
 		i := finalDigitsIndex(prerelease)
 		if i >= 1 {
 			if prerelease[i-1] != '.' {
-				return "", derrors.StatusError(http.StatusBadRequest, "final digits in a prerelease must follow a period")
+				return "", derrors.FromHTTPStatus(http.StatusBadRequest, "final digits in a prerelease must follow a period")
 			}
 			// Remove the dot.
 			prerelease = prerelease[:i-1] + prerelease[i:]

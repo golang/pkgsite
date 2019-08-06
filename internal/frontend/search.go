@@ -14,6 +14,7 @@ import (
 
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/postgres"
+	"golang.org/x/xerrors"
 )
 
 const defaultSearchLimit = 10
@@ -87,7 +88,7 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			http.Redirect(w, r, fmt.Sprintf("/pkg/%s", pkg.Path), http.StatusFound)
 			return
-		} else if !derrors.IsNotFound(err) {
+		} else if !xerrors.Is(err, derrors.NotFound) {
 			log.Printf("error getting package for %s: %v", path.Clean(query), err)
 		}
 	}

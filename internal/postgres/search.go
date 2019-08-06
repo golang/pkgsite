@@ -14,6 +14,7 @@ import (
 	"github.com/lib/pq"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/xerrors"
 )
 
 // SearchResult represents a single search result from SearchDocuments.
@@ -40,7 +41,7 @@ type SearchResult struct {
 // provided, and returns them in order of relevance as a []*SearchResult.
 func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int) ([]*SearchResult, error) {
 	if limit == 0 {
-		return nil, derrors.InvalidArgument(fmt.Sprintf("cannot search: limit cannot be 0"))
+		return nil, xerrors.Errorf("cannot search: limit cannot be 0: %w", derrors.InvalidArgument)
 	}
 
 	query := `

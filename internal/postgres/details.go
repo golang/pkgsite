@@ -16,6 +16,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/license"
+	"golang.org/x/xerrors"
 )
 
 // GetPackage returns the first package from the database that has path and
@@ -25,7 +26,7 @@ import (
 // determine if it was caused by an invalid path or version.
 func (db *DB) GetPackage(ctx context.Context, path string, version string) (*internal.VersionedPackage, error) {
 	if path == "" || version == "" {
-		return nil, derrors.InvalidArgument("path and version cannot be empty")
+		return nil, xerrors.Errorf("neither path nor version can be empty: %w", derrors.InvalidArgument)
 	}
 
 	var (
@@ -68,7 +69,7 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 		pq.Array(&licensePaths), &readmeFilePath, &readmeContents, &modulePath,
 		&name, &synopsis, &v1path, &versionType, &documentation, &repositoryURL, &vcsType, &homepageURL); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, derrors.NotFound(fmt.Sprintf("package %s@%s not found", path, version))
+			return nil, xerrors.Errorf("package %s@%s: %w", path, version, derrors.NotFound)
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
@@ -156,7 +157,7 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 	row := db.QueryRowContext(ctx, query, path)
 	if err := row.Scan(&modulePath, pq.Array(&licenseTypes), pq.Array(&licensePaths), &version, &commitTime, &name, &synopsis, &v1path, &readmeFilePath, &readmeContents, &documentation, &repositoryURL, &vcsType, &homepageURL, &versionType); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, derrors.NotFound(fmt.Sprintf("package %s@%s not found", path, version))
+			return nil, xerrors.Errorf("package %s@%s: %w", path, version, derrors.NotFound)
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
@@ -382,7 +383,7 @@ func getVersions(ctx context.Context, db *DB, path string, versionTypes []intern
 // determine if it resulted from an invalid package path or version.
 func (db *DB) GetImports(ctx context.Context, path, version string) ([]string, error) {
 	if path == "" || version == "" {
-		return nil, derrors.InvalidArgument("path and version cannot be empty")
+		return nil, xerrors.Errorf("neither path nor version can be empty: %w", derrors.InvalidArgument)
 	}
 
 	var toPath string
@@ -419,7 +420,7 @@ func (db *DB) GetImports(ctx context.Context, path, version string) ([]string, e
 // determine if it resulted from an invalid package path or version.
 func (db *DB) GetImportedBy(ctx context.Context, path, modulePath string, limit, offset int) ([]string, int, error) {
 	if path == "" {
-		return nil, 0, derrors.InvalidArgument("path cannot be empty")
+		return nil, 0, xerrors.Errorf("path cannot be empty: %w", derrors.InvalidArgument)
 	}
 
 	query := `
@@ -468,7 +469,7 @@ func (db *DB) GetImportedBy(ctx context.Context, path, modulePath string, limit,
 // determine if it resulted from an invalid package path or version.
 func (db *DB) GetLicenses(ctx context.Context, pkgPath, modulePath, version string) ([]*license.License, error) {
 	if pkgPath == "" || version == "" {
-		return nil, derrors.InvalidArgument("pkgPath and version cannot be empty")
+		return nil, xerrors.Errorf("neither pkgPath nor version can be empty: %w", derrors.InvalidArgument)
 	}
 	query := `
 		SELECT

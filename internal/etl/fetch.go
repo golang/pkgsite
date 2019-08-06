@@ -37,6 +37,7 @@ import (
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/thirdparty/semver"
+	"golang.org/x/xerrors"
 )
 
 var (
@@ -72,11 +73,11 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 	if fetchErr = fetchAndInsertVersion(ctx, modulePath, version, client, db); fetchErr != nil {
 		log.Printf("Error executing fetch: %v", fetchErr)
 		switch {
-		case derrors.IsInvalidArgument(fetchErr):
+		case xerrors.Is(fetchErr, derrors.InvalidArgument):
 			code = http.StatusBadRequest
-		case derrors.IsNotFound(fetchErr):
+		case xerrors.Is(fetchErr, derrors.NotFound):
 			code = http.StatusNotFound
-		case derrors.IsNotAcceptable(fetchErr):
+		case xerrors.Is(fetchErr, derrors.NotAcceptable):
 			code = http.StatusNotAcceptable
 		default:
 			code = http.StatusInternalServerError
@@ -133,15 +134,15 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, requestedVersi
 	if err != nil {
 		// Since this is our first client request, we wrap it to preserve error
 		// semantics: if info is not found, then we return NotFound.
-		return derrors.Wrap(err, "proxyClient.GetInfo(%q, %q)", modulePath, requestedVersion)
+		return xerrors.Errorf("proxyClient.GetInfo(%q, %q): %w", modulePath, requestedVersion, err)
 	}
 	versionType, err := ParseVersionType(info.Version)
 	if err != nil {
-		return derrors.NotAcceptable("parseVersion(%q): %v", info.Version, err)
+		return xerrors.Errorf("parseVersion(%q): %v: %w", info.Version, err, derrors.NotAcceptable)
 	}
 	zipReader, err := proxyClient.GetZip(ctx, modulePath, requestedVersion)
 	if err != nil {
-		return derrors.Wrap(err, "proxyClient.GetZip(%q, %q)", modulePath, requestedVersion)
+		return xerrors.Errorf("proxyClient.GetZip(%q, %q): %w", modulePath, requestedVersion, err)
 	}
 
 	// Module processing is wrapped in an inline func to facilitate tracing.
@@ -163,7 +164,7 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, requestedVersi
 		span.Annotate([]trace.Attribute{trace.Int64Attribute("licenseCt", int64(len(licenses)))}, "detected licenses")
 		packages, err := extractPackagesFromZip(modulePath, info.Version, zipReader, license.NewMatcher(licenses))
 		if err == errModuleContainsNoPackages {
-			return derrors.NotAcceptable(errModuleContainsNoPackages.Error())
+			return xerrors.Errorf("%v: %w", errModuleContainsNoPackages.Error(), derrors.NotAcceptable)
 		}
 		if err != nil {
 			return fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, info.Version, licenses, err)
@@ -188,11 +189,11 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, requestedVersi
 	}
 
 	if err = db.InsertVersion(ctx, v, licenses); err != nil {
-		return derrors.Wrap(err, "db.InsertVersion for %q %q", modulePath, info.Version)
+		return xerrors.Errorf("db.InsertVersion for %q %q: %w", modulePath, info.Version, err)
 	}
 	span.Annotate(nil, "inserted version")
 	if err = db.InsertDocuments(ctx, v); err != nil {
-		return derrors.Wrap(err, "db.InsertDocuments for %q %q", modulePath, info.Version)
+		return xerrors.Errorf("db.InsertDocuments for %q %q: %w", modulePath, info.Version, err)
 	}
 	span.Annotate(nil, "inserted documents")
 

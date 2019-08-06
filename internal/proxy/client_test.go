@@ -6,11 +6,11 @@ package proxy
 
 import (
 	"context"
-	"strings"
 	"testing"
 	"time"
 
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/xerrors"
 )
 
 const testTimeout = 5 * time.Second
@@ -126,7 +126,7 @@ func TestModulePathAndVersionForProxyRequestErrors(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			_, _, err := modulePathAndVersionForProxyRequest(tc.requestedPath, tc.requestedVersion)
-			if derrors.Type(err) != derrors.InvalidArgumentType {
+			if !xerrors.Is(err, derrors.InvalidArgument) {
 				t.Fatalf("modulePathAndVersionForProxyRequest(%q, %q): got %v, want InvalidArgument error",
 					tc.requestedPath, tc.requestedVersion, err)
 			}
@@ -268,10 +268,9 @@ func TestGetZipNonExist(t *testing.T) {
 
 	path := "my.mod/nonexistmodule"
 	version := "v1.0.0"
-	wantErrString := "Not Found"
-	if _, err := client.GetZip(ctx, path, version); !strings.Contains(err.Error(), wantErrString) {
-		t.Errorf("GetZip(ctx, %q, %q) returned error %v, want error containing %q",
-			path, version, err, wantErrString)
+	if _, err := client.GetZip(ctx, path, version); !xerrors.Is(err, derrors.NotFound) {
+		t.Errorf("GetZip(ctx, %q, %q) returned error %v, want %v",
+			path, version, err, derrors.NotFound)
 	}
 }
 

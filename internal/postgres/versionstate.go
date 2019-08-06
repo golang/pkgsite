@@ -250,7 +250,7 @@ func (db *DB) GetVersionState(ctx context.Context, modulePath, version string) (
 	case nil:
 		return v, nil
 	case sql.ErrNoRows:
-		return nil, derrors.NotFound("version not found")
+		return nil, derrors.NotFound
 	default:
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}

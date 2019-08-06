@@ -18,6 +18,7 @@ import (
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
+	"golang.org/x/xerrors"
 )
 
 // InsertVersion inserts a Version into the database along with any necessary
@@ -32,7 +33,7 @@ import (
 // licenses are invalid.
 func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, licenses []*license.License) error {
 	if err := validateVersion(version, licenses); err != nil {
-		return derrors.InvalidArgument("validateVersion: %v", err)
+		return xerrors.Errorf("validateVersion: %v: %w", err, derrors.InvalidArgument)
 	}
 	removeNonDistributableData(version)
 
