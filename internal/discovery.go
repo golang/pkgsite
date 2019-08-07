@@ -25,6 +25,18 @@ type VersionInfo struct {
 }
 
 // SeriesPath returns the series path for the module.
+//
+// A series is a group of modules that share the same base path and are assumed
+// to be major-version variants.
+//
+// The series path is the module path without the version. For most modules,
+// this will be the module path for all module versions with major version 0 or
+// 1. For gopkg.in modules, the series path does not correspond to any module
+// version.
+//
+// Examples:
+// The module paths "a/b" and "a/b/v2"  both have series path "a/b".
+// The module paths "gopkg.in/yaml.v1" and "gopkg.in/yaml.v2" both have series path "gopkg.in/yaml".
 func (v *VersionInfo) SeriesPath() string {
 	return SeriesPathForModule(v.ModulePath)
 }
@@ -74,6 +86,7 @@ type VersionedPackage struct {
 }
 
 // VersionType defines the version types a module can have.
+// This must be kept in sync with the 'version_type' database enum.
 type VersionType string
 
 const (
@@ -125,13 +138,13 @@ type VersionState struct {
 	// LastProcessedAt is the last time this version was updated with a result
 	// from the fetch service.
 	LastProcessedAt *time.Time
-	// NextProcessedAfter is the next time a fetch for thsi version should be
+	// NextProcessedAfter is the next time a fetch for this version should be
 	// attempted.
 	NextProcessedAfter time.Time
 
-	// AppVersion is the value of the GAE_VERSION environment variable, which
-	// is set by app engine. It represents the timestamp close to when a serice
-	// is deployed, and has the format - 20190709t112655, for example, for a
-	// deployment time of Jul 9, 2019, 11:29:59 AM.
+	// AppVersion is the value of the GAE_VERSION environment variable, which is
+	// set by app engine. It is a timestamp in the format 20190709t112655 that
+	// is close to, but not the same as, the deployment time. For example, the
+	// deployment time for the above timestamp might be Jul 9, 2019, 11:29:59 AM.
 	AppVersion string
 }

@@ -57,7 +57,7 @@ var (
 var appVersionLabel = config.AppVersionLabel()
 
 // fetchAndUpdateState fetches and processes a module version, and then updates
-// the module_version_state_table according to the result. It returns an HTTP
+// the module_version_states table according to the result. It returns an HTTP
 // status code representing the result of the fetch operation, and a non-nil
 // error if this status code is not 200.
 func fetchAndUpdateState(ctx context.Context, modulePath, version string, client *proxy.Client, db *postgres.DB) (int, error) {
@@ -250,9 +250,9 @@ func extractReadmeFromZip(modulePath, version string, r *zip.Reader) (string, []
 	return "", nil, errReadmeNotFound
 }
 
-// hasFilename checks if file is expectedFile or if the name of file, without
-// the base, is equal to expectedFile. It is case insensitive.
-// It operates on '/'-separated paths.
+// hasFilename reports whether file is expectedFile or if the base name of file,
+// with or without the extension, is equal to expectedFile. It is case
+// insensitive. It operates on '/'-separated paths.
 func hasFilename(file string, expectedFile string) bool {
 	base := path.Base(file)
 	return strings.EqualFold(file, expectedFile) ||
@@ -298,7 +298,7 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 	// Loop over zip files preemptively and check for problems
 	// that can be detected by looking at metadata alone.
 	// We'll be looking at file contents starting with phase 2 only,
-	// only we're sure this phase passed without errors.
+	// only after we're sure this phase passed without errors.
 	for _, f := range r.File {
 		if f.Mode().IsDir() {
 			return nil, fmt.Errorf("expected only files, found directory %q", f.Name)
