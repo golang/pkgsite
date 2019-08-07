@@ -51,6 +51,7 @@ func (db *DB) UpsertVersionState(ctx context.Context, modulePath, version, appVe
 				error=excluded.error,
 				try_count=mvs.try_count+1,
 				last_processed_at=CURRENT_TIMESTAMP,
+			    -- back off exponentially until 1 hour, then at constant 1-hour intervals
 				next_processed_after=CASE
 					WHEN mvs.last_processed_at IS NULL THEN
 						CURRENT_TIMESTAMP + INTERVAL '1 minute'
@@ -260,7 +261,7 @@ func (db *DB) GetVersionState(ctx context.Context, modulePath, version string) (
 // table.
 type VersionStats struct {
 	LatestTimestamp time.Time
-	VersionCounts   map[int]int
+	VersionCounts   map[int]int // from status to number of rows
 }
 
 // GetVersionStats queries the module_version_states table for aggregate

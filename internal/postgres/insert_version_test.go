@@ -163,6 +163,26 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 	}
 }
 
+func TestPostgres_DeleteVersion(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	defer ResetTestDB(testDB, t)
+
+	v := sample.Version()
+	if err := testDB.InsertVersion(ctx, v, sample.Licenses); err != nil {
+		t.Fatalf("testDB.InsertVersion(ctx, %+v) error: %v", v, err)
+	}
+	if _, err := testDB.GetVersionInfo(ctx, v.ModulePath, v.Version); err != nil {
+		t.Fatalf("testDB.GetVersionInfo(ctx, %q, %q) error: %v", v.ModulePath, v.Version, err)
+	}
+	if err := testDB.DeleteVersion(ctx, nil, v.ModulePath, v.Version); err != nil {
+		t.Fatalf("testDB.DeleteVersion(ctx, %q, %q) error: %v", v.ModulePath, v.Version, err)
+	}
+	if _, err := testDB.GetVersionInfo(ctx, v.ModulePath, v.Version); !xerrors.Is(err, derrors.NotFound) {
+		t.Errorf("testDB.GetVersionInfo(ctx, %q, %q): got %v, want NotFound", v.ModulePath, v.Version, err)
+	}
+}
+
 func TestPostgres_prefixZeroes(t *testing.T) {
 	testCases := []struct {
 		name, input, want string

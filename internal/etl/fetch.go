@@ -79,12 +79,31 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 			code = http.StatusNotFound
 		case xerrors.Is(fetchErr, derrors.NotAcceptable):
 			code = http.StatusNotAcceptable
+		case xerrors.Is(fetchErr, derrors.Gone):
+			code = http.StatusGone
 		default:
 			code = http.StatusInternalServerError
 		}
 	}
 
-	if err := db.UpsertVersionState(ctx, modulePath, version, appVersionLabel, time.Time{}, code, fetchErr); err != nil {
+	
+	
+	
+	if code == http.StatusGone {
+		log.Printf("%s@%s: proxy said 410 Gone, deleting", modulePath, version)
+		if err := db.DeleteVersion(ctx, nil, modulePath, version); err != nil {
+			err = fmt.Errorf("db.DeleteVersion(ctx, nil, %q, %q): %v", modulePath, version, err)
+			log.Print(err)
+			return http.StatusInternalServerError, err
+		}
+	}
+
+	// Update the module_version_states table with the new status of
+	// module@version. This must happen last, because if it succeeds with a
+	// code < 500 but a later action fails, we will never retry the later action.
+
+	// TODO(jba): Split UpsertVersionState into InsertVersionState and UpdateVersionState.
+	// See 	if err := db.UpsertVersionState(ctx, modulePath, version, appVersionLabel, time.Time{}, code, fetchErr); err != nil {
 		log.Printf("db.UpsertVersionState(ctx, %q, %q, %q, %q, %v): %q", modulePath, version, config.AppVersionLabel(), code, fetchErr, err)
 		if fetchErr != nil {
 			err = fmt.Errorf("error updating version state: %v, original error: %v", err, fetchErr)

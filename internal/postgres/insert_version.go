@@ -45,11 +45,7 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 
 		// If the version exists, delete it to force an overwrite. This allows us
 		// to selectively repopulate data after a code change.
-		if _, err := tx.ExecContext(ctx,
-			`DELETE FROM versions WHERE module_path=$1 AND version=$2`,
-			version.ModulePath,
-			version.Version,
-		); err != nil {
+		if err := db.DeleteVersion(ctx, tx, version.ModulePath, version.Version); err != nil {
 			return fmt.Errorf("error deleting existing versions: %v", err)
 		}
 		if _, err := tx.ExecContext(ctx,
@@ -360,4 +356,20 @@ func isNum(v string) bool {
 		i++
 	}
 	return len(v) > 0 && i == len(v)
+}
+
+// DeleteVersion deletes a Version from the database.
+// If tx is non-nil, it will be used to execute the statement.
+// Otherwise the statement will be run outside of a transaction.
+func (db *DB) DeleteVersion(ctx context.Context, tx *sql.Tx, modulePath, version string) error {
+	// We only need to delete from the versions table. Thanks to ON DELETE
+	// CASCADE constraints, that will trigger deletions from all other tables.
+	const stmt = `DELETE FROM versions WHERE module_path=$1 AND version=$2`
+	var err error
+	if tx != nil {
+		_, err = tx.ExecContext(ctx, stmt, modulePath, version)
+	} else {
+		_, err = db.ExecContext(ctx, stmt, modulePath, version)
+	}
+	return err
 }

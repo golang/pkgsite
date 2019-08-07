@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"path/filepath"
 	"sort"
@@ -408,6 +409,72 @@ func TestFetchAndInsertVersionTimeout(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), wantErrString) {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v) returned error %v, want error containing %q",
 			name, version, client, testDB, err, wantErrString)
+	}
+}
+
+// Check that when the proxy says a module@version is gone, we delete it from the database.
+func TestFetchAndUpdateState_Gone(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	defer postgres.ResetTestDB(testDB, t)
+
+	var (
+		modulePath = "github.com/take/down"
+		version    = "v1.0.0"
+	)
+
+	teardownProxy, client := proxy.SetupTestProxy(t, []*proxy.TestVersion{
+		proxy.NewTestVersion(t, modulePath, version, map[string]string{
+			"foo/foo.go": "// Package foo\npackage foo\n\nconst Foo = 42",
+			"README.md":  "This is a readme",
+			"LICENSE":    testhelper.MITLicense,
+		}),
+	})
+
+	checkStatus := func(want int) {
+		t.Helper()
+		vs, err := testDB.GetVersionState(ctx, modulePath, version)
+		if err != nil {
+			t.Fatalf("testDB.GetVersionState(ctx, %q, %q): error %v", modulePath, version, err)
+		}
+		if vs.Status == nil || *vs.Status != want {
+			t.Fatalf("testDB.GetVersionState(ctx, %q, %q): status=%v, want %d", modulePath, version, vs.Status, want)
+		}
+	}
+
+	// Fetch a module@version that the proxy serves successfully.
+	if _, err := fetchAndUpdateState(ctx, modulePath, version, client, testDB); err != nil {
+		t.Fatalf("fetchAndUpdateState(ctx, %q, %q, client, testDB): error %v", modulePath, version, err)
+	}
+
+	// Verify that the module status is recorded correctly, and that the version is in the DB.
+	checkStatus(http.StatusOK)
+
+	if _, err := testDB.GetVersionInfo(ctx, modulePath, version); err != nil {
+		t.Fatalf("testDB.GetVersionInfo(ctx, %q, %q): %v", modulePath, version, err)
+	}
+
+	teardownProxy(t)
+
+	// Take down the module, by having the proxy serve a 410 for it.
+	proxyMux := proxy.TestProxy([]*proxy.TestVersion{}) // serve no versions, not even the defaults.
+	proxyMux.HandleFunc(fmt.Sprintf("/%s/@v/%s.info", modulePath, version),
+		func(w http.ResponseWriter, r *http.Request) { http.Error(w, "taken down", http.StatusGone) })
+	client, teardownProxy2 := proxy.TestProxyServer(t, proxyMux)
+	defer teardownProxy2()
+
+	// Now fetch it again.
+	if code, _ := fetchAndUpdateState(ctx, modulePath, version, client, testDB); code != http.StatusGone {
+		t.Fatalf("fetchAndUpdateState(ctx, %q, %q, client, testDB): got code %d, want 410 Gone", modulePath, version, code)
+	}
+
+	// The new state should have a status of Gone.
+	checkStatus(http.StatusGone)
+
+	// The module should no longer be in the database.
+	if _, err := testDB.GetVersionInfo(ctx, modulePath, version); !xerrors.Is(err, derrors.NotFound) {
+		t.Fatalf("testDB.GetVersionInfo(ctx, %q, %q): got %v, want NotFound", modulePath, version, err)
 	}
 }
 

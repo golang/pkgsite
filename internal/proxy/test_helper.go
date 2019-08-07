@@ -39,18 +39,21 @@ type TestVersion struct {
 func SetupTestProxy(t *testing.T, versions []*TestVersion) (func(t *testing.T), *Client) {
 	t.Helper()
 
+	client, cleanup := TestProxyServer(t, TestProxy(versions))
+	return func(*testing.T) { cleanup() }, client
+}
+
+// TestProxyServer starts serving proxyMux locally. It returns a client to the
+// server and a function to shut down the server.
+func TestProxyServer(t *testing.T, proxyMux *http.ServeMux) (*Client, func()) {
 	// override client.httpClient to skip TLS verification
-	httpClient, proxy, serverClose := testhelper.SetupTestClientAndServer(TestProxy(versions))
+	httpClient, proxy, serverClose := testhelper.SetupTestClientAndServer(proxyMux)
 	client, err := New(proxy.URL)
 	if err != nil {
 		t.Fatalf("New(%q): %v", proxy.URL, err)
 	}
 	client.httpClient = httpClient
-
-	fn := func(t *testing.T) {
-		serverClose()
-	}
-	return fn, client
+	return client, serverClose
 }
 
 // TestProxy implements a fake proxy, hosting the given versions. If versions
