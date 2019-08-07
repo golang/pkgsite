@@ -241,5 +241,7 @@ func Init(ctx context.Context) error {
 // Dump outputs the current config information to the given Writer.
 func Dump(w io.Writer) error {
 	fmt.Fprint(w, "config: ")
-	return json.NewEncoder(w).Encode(cfg)
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "    ")
+	return enc.Encode(cfg)
 }

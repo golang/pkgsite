@@ -225,31 +225,33 @@ func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) {
 
 // handleStatusPage serves the etl status page.
 func (s *Server) handleStatusPage(w http.ResponseWriter, r *http.Request) {
+	msg, err := s.doStatusPage(w, r)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, msg, http.StatusInternalServerError)
+	}
+}
+
+// doStatusPage writes the status page. On error it returns the error and a short
+// string to be written back to the client.
+func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (string, error) {
 	ctx := r.Context()
 	const pageSize = 20
 	next, err := s.db.GetNextVersionsToFetch(ctx, pageSize)
 	if err != nil {
-		log.Printf("Error fetching next versions: %v", err)
-		http.Error(w, "error fetching next versions", http.StatusInternalServerError)
-		return
+		return "error fetching next versions", fmt.Errorf("s.db.GetNextVersionsToFetch(ctx, %d): %v", pageSize, err)
 	}
 	failures, err := s.db.GetRecentFailedVersions(ctx, pageSize)
 	if err != nil {
-		log.Printf("Error fetching recent failures: %v", err)
-		http.Error(w, "error fetching recent failures", http.StatusInternalServerError)
-		return
+		return "error fetching recent failures", fmt.Errorf("s.db.GetRecentFailedVersions(ctx, %d): %v", pageSize, err)
 	}
 	recents, err := s.db.GetRecentVersions(ctx, pageSize)
 	if err != nil {
-		log.Printf("Error fetching recent versions")
-		http.Error(w, "error fetching recent versions", http.StatusInternalServerError)
-		return
+		return "error fetching recent versions", fmt.Errorf("s.db.GetRecentVersions(ctx, %d): %v", pageSize, err)
 	}
 	stats, err := s.db.GetVersionStats(ctx)
 	if err != nil {
-		log.Printf("Error fetching stats: %v", err)
-		http.Error(w, "error fetching stats", http.StatusInternalServerError)
-		return
+		return "error fetching stats", fmt.Errorf("s.db.GetVersionStats(ctx): %v", err)
 	}
 	page := struct {
 		Stats                        *postgres.VersionStats
@@ -262,14 +264,13 @@ func (s *Server) handleStatusPage(w http.ResponseWriter, r *http.Request) {
 	}
 	var buf bytes.Buffer
 	if err := s.indexTemplate.Execute(&buf, page); err != nil {
-		log.Printf("Error rendering template: %v", err)
-		http.Error(w, "error rendering template", http.StatusInternalServerError)
-		return
+		return "error rendering template", err
 	}
 	if _, err := io.Copy(w, &buf); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		log.Printf("Error copying buffer to ResponseWriter: %v", err)
 	}
+	return "", nil
 }
 
 func (s *Server) handlePopulateStdLib(w http.ResponseWriter, r *http.Request) {
