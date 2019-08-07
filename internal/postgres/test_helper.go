@@ -144,7 +144,7 @@ func tryToMigrate(dbName string) (isMigrationError bool, outerErr error) {
 // exist, and migrates it to the latest schema from the migrations directory.
 func SetupTestDB(dbName string) (*DB, error) {
 	if err := createDBIfNotExists(dbName); err != nil {
-		return nil, fmt.Errorf("ensureDBExists(%q): %v", dbName, err)
+		return nil, fmt.Errorf("createDBIfNotExists(%q): %v", dbName, err)
 	}
 	if isMigrationError, err := tryToMigrate(dbName); err != nil {
 		if isMigrationError {

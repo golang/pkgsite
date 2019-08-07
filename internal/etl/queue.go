@@ -84,8 +84,6 @@ type InMemoryQueue struct {
 
 	queue chan moduleVersion
 	sem   chan struct{}
-
-	workerCount int
 }
 
 // NewInMemoryQueue creates a new InMemoryQueue that asynchronously fetches
@@ -96,7 +94,6 @@ func NewInMemoryQueue(ctx context.Context, proxyClient *proxy.Client, db *postgr
 		proxyClient: proxyClient,
 		db:          db,
 		queue:       make(chan moduleVersion, 1000),
-		workerCount: workerCount,
 		sem:         make(chan struct{}, workerCount),
 	}
 	go q.process(ctx)
@@ -117,7 +114,7 @@ func (q *InMemoryQueue) process(ctx context.Context) {
 		go func(v moduleVersion) {
 			defer func() { <-q.sem }()
 
-			log.Printf("Fetch requested: %q %q (workerCount = %d)", v.modulePath, v.version, q.workerCount)
+			log.Printf("Fetch requested: %q %q (workerCount = %d)", v.modulePath, v.version, cap(q.sem))
 
 			fetchCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 			defer cancel()
@@ -138,7 +135,7 @@ func (q *InMemoryQueue) ScheduleFetch(ctx context.Context, modulePath, version s
 // waitForTesting waits for all queued requests to finish. It should only be
 // used by test code.
 func (q InMemoryQueue) waitForTesting(ctx context.Context) {
-	for i := 0; i < q.workerCount; i++ {
+	for i := 0; i < cap(q.sem); i++ {
 		select {
 		case <-ctx.Done():
 			return
