@@ -8,6 +8,7 @@ import (
 	"context"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/discovery/internal"
@@ -124,37 +125,16 @@ func TestPathTokens(t *testing.T) {
 	}
 }
 
-// insertPackage creates and inserts a version using sample.Version, that has
-// only the package pkg. It is a helper function for
-// TestInsertDocumentsAndSearch.
-func insertPackage(ctx context.Context, t *testing.T, modulePath string, pkg *internal.Package) {
-	t.Helper()
-
-	v := sample.Version()
-	v.ModulePath = modulePath
-	pkg.Licenses = sample.LicenseMetadata
-	v.Packages = []*internal.Package{pkg}
-	if err := testDB.InsertVersion(ctx, v, sample.Licenses); err != nil {
-		t.Fatalf("testDB.InsertVersion(%+v): %v", v, err)
-	}
-	if err := testDB.InsertDocuments(ctx, v); err != nil {
-		t.Fatalf("testDB.InsertDocument(%+v): %v", v, err)
-	}
-	if err := testDB.RefreshSearchDocuments(ctx); err != nil {
-		t.Fatalf("testDB.RefreshSearchDocuments(ctx): %v", err)
-	}
-}
-
-func TestInsertDocumentsAndSearch(t *testing.T) {
+func TestInsertSearchDocumentAndSearch(t *testing.T) {
 	var (
-		modGoCDK = "my.mod/cdk"
+		modGoCDK = "gocloud.dev"
 		pkgGoCDK = &internal.Package{
 			Name:     "cloud",
-			Path:     "gocloud.dev",
+			Path:     "gocloud.dev/cloud",
 			Synopsis: "Package cloud contains a library and tools for open cloud development in Go. The Go Cloud Development Kit (Go CDK)",
 		}
 
-		modKube = "my.mod/kube"
+		modKube = "k8s.io"
 		pkgKube = &internal.Package{
 			Name:     "client-go",
 			Path:     "k8s.io/client-go",
@@ -215,8 +195,8 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 			offset:      0,
 			searchQuery: "package",
 			packages: map[string]*internal.Package{
-				modGoCDK: pkgGoCDK,
 				modKube:  pkgKube,
+				modGoCDK: pkgGoCDK,
 			},
 			want: []*SearchResult{
 				goCdkResult(0.10560775506982405, 2),
@@ -263,8 +243,14 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 			defer cancel()
 
-			for m, p := range tc.packages {
-				insertPackage(ctx, t, m, p)
+			for modulePath, pkg := range tc.packages {
+				pkg.Licenses = sample.LicenseMetadata
+				v := sample.Version(
+					sample.WithModulePath(modulePath),
+					sample.WithPackages(pkg))
+				if err := testDB.InsertVersion(ctx, v, sample.Licenses); err != nil {
+					t.Fatalf("testDB.InsertVersion(%q %q): %v", v.ModulePath, v.Version, err)
+				}
 			}
 
 			if tc.limit < 1 {
@@ -284,5 +270,46 @@ func TestInsertDocumentsAndSearch(t *testing.T) {
 				t.Errorf("testDB.Search(%v, %d, %d) mismatch (-want +got):\n%s", tc.searchQuery, tc.limit, tc.offset, diff)
 			}
 		})
+	}
+}
+
+func TestUpsertSearchDocumentVersionUpdatedAt(t *testing.T) {
+	defer ResetTestDB(testDB, t)
+
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	getVersionUpdatedAt := func(path string) time.Time {
+		t.Helper()
+		sd, err := testDB.getSearchDocument(ctx, path)
+		if err != nil {
+			t.Fatalf("testDB.getSearchDocument(ctx, %q): %v", path, err)
+		}
+		return sd.versionUpdatedAt
+	}
+
+	pkgA := &internal.Package{Path: "A", Name: "A"}
+	mustInsertVersion := func(version string) {
+		v := sample.Version(sample.WithPackages(pkgA), sample.WithVersion(version))
+		if err := testDB.InsertVersion(ctx, v, sample.Licenses); err != nil {
+			t.Fatalf("testDB.InsertVersion(%q %q): %v", v.ModulePath, v.Version, err)
+		}
+	}
+
+	mustInsertVersion("v1.0.0")
+	versionUpdatedAtOriginal := getVersionUpdatedAt(pkgA.Path)
+
+	mustInsertVersion("v0.5.0")
+	versionUpdatedAtNew := getVersionUpdatedAt(pkgA.Path)
+	if versionUpdatedAtOriginal != versionUpdatedAtNew {
+		t.Fatalf("expected version_updated_at to remain unchanged an older version was inserted; got versionUpdatedAtOriginal = %v; versionUpdatedAtNew = %v",
+			versionUpdatedAtOriginal, versionUpdatedAtNew)
+	}
+
+	mustInsertVersion("v1.5.2")
+	versionUpdatedAtNew2 := getVersionUpdatedAt(pkgA.Path)
+	if versionUpdatedAtOriginal == versionUpdatedAtNew2 {
+		t.Fatalf("expected version_updated_at to change since a newer version was inserted; got versionUpdatedAtNew = %v; versionUpdatedAtNew2 = %v",
+			versionUpdatedAtOriginal, versionUpdatedAtNew)
 	}
 }

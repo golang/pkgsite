@@ -112,13 +112,13 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			defer ResetTestDB(testDB, t)
 
-			if err := testDB.InsertVersion(ctx, tc.version, sample.Licenses); !xerrors.Is(err, tc.wantWriteErr) {
-				t.Errorf("testDB.InsertVersion(ctx, %+v) error: %v, want write error: %v", tc.version, err, tc.wantWriteErr)
+			if err := testDB.saveVersion(ctx, tc.version, sample.Licenses); !xerrors.Is(err, tc.wantWriteErr) {
+				t.Errorf("testDB.saveVersion(ctx, %+v) error: %v, want write error: %v", tc.version, err, tc.wantWriteErr)
 			}
 
 			// Test that insertion of duplicate primary key won't fail.
-			if err := testDB.InsertVersion(ctx, tc.version, sample.Licenses); !xerrors.Is(err, tc.wantWriteErr) {
-				t.Errorf("testDB.InsertVersion(ctx, %+v) second insert error: %v, want write error: %v", tc.version, err, tc.wantWriteErr)
+			if err := testDB.saveVersion(ctx, tc.version, sample.Licenses); !xerrors.Is(err, tc.wantWriteErr) {
+				t.Errorf("testDB.saveVersion(ctx, %+v) second insert error: %v, want write error: %v", tc.version, err, tc.wantWriteErr)
 			}
 
 			got, err := testDB.GetVersionInfo(ctx, tc.wantModulePath, tc.wantVersion)
@@ -169,8 +169,8 @@ func TestPostgres_DeleteVersion(t *testing.T) {
 	defer ResetTestDB(testDB, t)
 
 	v := sample.Version()
-	if err := testDB.InsertVersion(ctx, v, sample.Licenses); err != nil {
-		t.Fatalf("testDB.InsertVersion(ctx, %+v) error: %v", v, err)
+	if err := testDB.saveVersion(ctx, v, sample.Licenses); err != nil {
+		t.Fatalf("testDB.saveVersion(ctx, %+v) error: %v", v, err)
 	}
 	if _, err := testDB.GetVersionInfo(ctx, v.ModulePath, v.Version); err != nil {
 		t.Fatalf("testDB.GetVersionInfo(ctx, %q, %q) error: %v", v.ModulePath, v.Version, err)

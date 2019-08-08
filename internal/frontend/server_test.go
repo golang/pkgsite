@@ -47,9 +47,6 @@ func TestServer(t *testing.T) {
 	if err := testDB.InsertVersion(ctx, sampleVersion, sample.Licenses); err != nil {
 		t.Fatalf("db.InsertVersion(%+v): %v", sampleVersion, err)
 	}
-	if err := testDB.InsertDocuments(ctx, sampleVersion); err != nil {
-		t.Fatalf("testDB.InsertDocument(%+v): %v", sampleVersion, err)
-	}
 	testDB.RefreshSearchDocuments(ctx)
 
 	s, err := NewServer(testDB, "../../content/static", false)

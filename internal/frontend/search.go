@@ -42,9 +42,9 @@ type SearchResult struct {
 // fetchSearchPage fetches data matching the search query from the database and
 // returns a SearchPage.
 func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pageParams paginationParams) (*SearchPage, error) {
-	dbresults, err := db.Search(ctx, query, pageParams.limit, pageParams.offset())
+	dbresults, err := db.LegacySearch(ctx, query, pageParams.limit, pageParams.offset())
 	if err != nil {
-		return nil, fmt.Errorf("db.Search(%v, %d, %d): %v", query, pageParams.limit, pageParams.offset(), err)
+		return nil, fmt.Errorf("db.LegacySearch(%v, %d, %d): %v", query, pageParams.limit, pageParams.offset(), err)
 	}
 
 	var results []*SearchResult

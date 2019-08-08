@@ -21,9 +21,29 @@ import (
 	"golang.org/x/xerrors"
 )
 
-// InsertVersion inserts a Version into the database along with any necessary
-// series, modules and packages. If any of these rows already exist, they will
-// not be updated. The version string is also parsed into major, minor, patch
+// InsertVersion inserts a version into the database using
+// db.saveVersion, along with a search document corresponding to each of its
+// packages.
+func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, licenses []*license.License) error {
+	if err := db.saveVersion(ctx, version, licenses); err != nil {
+		return fmt.Errorf("db.saveVersion for %q %q: %v", version.ModulePath, version.Version, err)
+	}
+	if err := db.legacyInsertDocuments(ctx, version); err != nil {
+		return fmt.Errorf("db.InsertDocuments for %q %q: %v", version.ModulePath, version.Version, err)
+	}
+	for _, pkg := range version.Packages {
+		if err := db.UpsertSearchDocument(ctx, pkg.Path); err != nil {
+			return fmt.Errorf("db.UpsertSearchDocument(ctx, %q): %v", pkg.Path, err)
+		}
+	}
+	return nil
+}
+
+// saveVersion inserts a Version into the database along with its packages,
+// imports, and licenses.  If any of these rows already exist, the version and
+// corresponding will be deleted and reinserted.
+//
+// The version string is also parsed into major, minor, patch
 // and prerelease used solely for sorting database queries by semantic version.
 // The prerelease column will pad any number fields with zeroes on the left so
 // all number fields in the prerelease column have 20 characters. If the
@@ -31,7 +51,7 @@ import (
 //
 // A derrors.InvalidArgument error will be returned if the given version and
 // licenses are invalid.
-func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, licenses []*license.License) error {
+func (db *DB) saveVersion(ctx context.Context, version *internal.Version, licenses []*license.License) error {
 	if err := validateVersion(version, licenses); err != nil {
 		return xerrors.Errorf("validateVersion: %v: %w", err, derrors.InvalidArgument)
 	}
