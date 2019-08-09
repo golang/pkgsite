@@ -510,8 +510,7 @@ func (db *DB) GetPackageLicenses(ctx context.Context, pkgPath, modulePath, versi
 		ON
 			p.module_path = l.module_path
 			AND p.version = l.version
-			AND p.license_file_path = l.file_path
-		ORDER BY l.file_path;`
+			AND p.license_file_path = l.file_path;`
 
 	rows, err := db.QueryContext(ctx, query, pkgPath, modulePath, version)
 	if err != nil {

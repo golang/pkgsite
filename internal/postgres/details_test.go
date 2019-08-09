@@ -412,7 +412,7 @@ func TestGetPackageLicenses(t *testing.T) {
 	defer cancel()
 
 	if err := testDB.InsertVersion(ctx, testVersion, sample.Licenses); err != nil {
-		t.Errorf("testDB.InsertVersion(ctx, %q, licenses): %v", testVersion.Version, err)
+		t.Fatalf("testDB.InsertVersion(ctx, %q, licenses): %v", testVersion.Version, err)
 	}
 
 	for _, test := range tests {
