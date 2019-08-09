@@ -65,9 +65,9 @@ func (db *DB) UpsertVersionState(ctx context.Context, modulePath, version, appVe
 	if fetchErr != nil {
 		sqlErrorMsg = sql.NullString{Valid: true, String: fetchErr.Error()}
 	}
-	result, err := db.ExecContext(ctx, query, modulePath, version, appVersion, timestamp, status, sqlErrorMsg)
+	result, err := db.execContext(ctx, query, modulePath, version, appVersion, timestamp, status, sqlErrorMsg)
 	if err != nil {
-		return fmt.Errorf("db.ExecContext(ctx, %q, %q, %q, %q, %q, %q, %v): %v", query, modulePath, version, appVersion, timestamp, status, sqlErrorMsg, err)
+		return fmt.Errorf("db.execContext(ctx, %q, %q, %q, %q, %q, %q, %v): %v", query, modulePath, version, appVersion, timestamp, status, sqlErrorMsg, err)
 	}
 	affected, err := result.RowsAffected()
 	if err != nil {
@@ -88,7 +88,7 @@ func (db *DB) LatestIndexTimestamp(ctx context.Context) (time.Time, error) {
 		LIMIT 1`
 
 	var ts time.Time
-	row := db.QueryRowContext(ctx, query)
+	row := db.queryRowContext(ctx, query)
 	switch err := row.Scan(&ts); err {
 	case sql.ErrNoRows:
 		return time.Time{}, nil
@@ -108,9 +108,9 @@ func (db *DB) UpdateVersionStatesForReprocessing(ctx context.Context, appVersion
 			last_processed_at = NULL
 		WHERE
 			app_version <= $1;`
-	result, err := db.ExecContext(ctx, query, appVersion)
+	result, err := db.execContext(ctx, query, appVersion)
 	if err != nil {
-		return fmt.Errorf("db.ExecContext(ctx, %q, %q): %v", query, appVersion, err)
+		return fmt.Errorf("db.execContext(ctx, %q, %q): %v", query, appVersion, err)
 	}
 	affected, err := result.RowsAffected()
 	if err != nil {
@@ -176,9 +176,9 @@ func scanVersionState(scan func(dest ...interface{}) error) (*internal.VersionSt
 // for the query columns.
 func (db *DB) queryVersionStates(ctx context.Context, queryFormat string, args ...interface{}) ([]*internal.VersionState, error) {
 	query := fmt.Sprintf(queryFormat, versionStateColumns)
-	rows, err := db.QueryContext(ctx, query, args...)
+	rows, err := db.queryContext(ctx, query, args...)
 	if err != nil {
-		return nil, fmt.Errorf("db.QueryContext(ctx, %q, %v): %v", query, args, err)
+		return nil, fmt.Errorf("db.queryContext(ctx, %q, %v): %v", query, args, err)
 	}
 	defer rows.Close()
 
@@ -245,7 +245,7 @@ func (db *DB) GetVersionState(ctx context.Context, modulePath, version string) (
 			module_path = $1
 			AND version = $2;`, versionStateColumns)
 
-	row := db.QueryRowContext(ctx, query, modulePath, version)
+	row := db.queryRowContext(ctx, query, modulePath, version)
 	v, err := scanVersionState(row.Scan)
 	switch err {
 	case nil:
@@ -282,9 +282,9 @@ func (db *DB) GetVersionStats(ctx context.Context) (*VersionStats, error) {
 		indexTimestamp time.Time
 		count          int
 	)
-	rows, err := db.QueryContext(ctx, query)
+	rows, err := db.queryContext(ctx, query)
 	if err != nil {
-		return nil, fmt.Errorf("db.QueryContext(ctx, %q): %v", query, err)
+		return nil, fmt.Errorf("db.queryContext(ctx, %q): %v", query, err)
 	}
 	defer rows.Close()
 	stats := &VersionStats{

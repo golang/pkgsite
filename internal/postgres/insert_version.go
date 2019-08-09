@@ -369,7 +369,7 @@ func (db *DB) DeleteVersion(ctx context.Context, tx *sql.Tx, modulePath, version
 	if tx != nil {
 		_, err = tx.ExecContext(ctx, stmt, modulePath, version)
 	} else {
-		_, err = db.ExecContext(ctx, stmt, modulePath, version)
+		_, err = db.execContext(ctx, stmt, modulePath, version)
 	}
 	return err
 }

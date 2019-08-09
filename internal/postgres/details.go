@@ -65,7 +65,7 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 			AND p.version = $2
 		LIMIT 1;`
 
-	row := db.QueryRowContext(ctx, query, path, version)
+	row := db.queryRowContext(ctx, query, path, version)
 	if err := row.Scan(&commitTime, pq.Array(&licenseTypes),
 		pq.Array(&licensePaths), &readmeFilePath, &readmeContents, &modulePath,
 		&name, &synopsis, &v1path, &versionType, &documentation, &repositoryURL, &vcsType, &homepageURL); err != nil {
@@ -155,7 +155,7 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 			v.prerelease DESC
 		LIMIT 1;`
 
-	row := db.QueryRowContext(ctx, query, path)
+	row := db.queryRowContext(ctx, query, path)
 	if err := row.Scan(&modulePath, pq.Array(&licenseTypes), pq.Array(&licensePaths), &version, &commitTime, &name, &synopsis, &v1path, &readmeFilePath, &readmeContents, &documentation, &repositoryURL, &vcsType, &homepageURL, &versionType); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, xerrors.Errorf("package %s@%s: %w", path, version, derrors.NotFound)
@@ -230,9 +230,9 @@ func (db *DB) GetVersion(ctx context.Context, modulePath, version string) (*inte
 		licenseTypes, licensePaths                                      []string
 	)
 
-	rows, err := db.QueryContext(ctx, query, modulePath, version)
+	rows, err := db.queryContext(ctx, query, modulePath, version)
 	if err != nil {
-		return nil, fmt.Errorf("db.QueryContext(ctx, %s, %q, %q): %v", query, modulePath, version, err)
+		return nil, fmt.Errorf("db.queryContext(ctx, %s, %q, %q): %v", query, modulePath, version, err)
 	}
 	defer rows.Close()
 
@@ -348,9 +348,9 @@ func getVersions(ctx context.Context, db *DB, path string, versionTypes []intern
 
 	query := fmt.Sprintf(baseQuery, strings.Join(vtQuery, " OR "), queryEnd)
 
-	rows, err := db.QueryContext(ctx, query, params...)
+	rows, err := db.queryContext(ctx, query, params...)
 	if err != nil {
-		return nil, fmt.Errorf("db.QueryContext(ctx, %q, %q): %v", query, path, err)
+		return nil, fmt.Errorf("db.queryContext(ctx, %q, %q): %v", query, path, err)
 	}
 	defer rows.Close()
 
@@ -395,9 +395,9 @@ func (db *DB) GetImports(ctx context.Context, path, version string) ([]string, e
 		ORDER BY
 			to_path;`
 
-	rows, err := db.QueryContext(ctx, query, path, version)
+	rows, err := db.queryContext(ctx, query, path, version)
 	if err != nil {
-		return nil, fmt.Errorf("db.QueryContext(ctx, %q, %q, %q): %v", query, path, version, err)
+		return nil, fmt.Errorf("db.queryContext(ctx, %q, %q, %q): %v", query, path, version, err)
 	}
 	defer rows.Close()
 
@@ -439,9 +439,9 @@ func (db *DB) GetImportedBy(ctx context.Context, path, modulePath string, limit,
 		LIMIT $3
 		OFFSET $4;`
 
-	rows, err := db.QueryContext(ctx, query, path, modulePath, limit, offset)
+	rows, err := db.queryContext(ctx, query, path, modulePath, limit, offset)
 	if err != nil {
-		return nil, 0, fmt.Errorf("db.Query(%q, %q) returned error: %v", query, path, err)
+		return nil, 0, fmt.Errorf("db.query(%q, %q) returned error: %v", query, path, err)
 	}
 	defer rows.Close()
 
@@ -473,9 +473,9 @@ func (db *DB) GetModuleLicenses(ctx context.Context, modulePath, version string)
 		licenses
 	WHERE
 		module_path = $1 AND version = $2;`
-	rows, err := db.QueryContext(ctx, query, modulePath, version)
+	rows, err := db.queryContext(ctx, query, modulePath, version)
 	if err != nil {
-		return nil, fmt.Errorf("db.QueryContext(ctx, %q, %q, %q): %v", query, modulePath, version, err)
+		return nil, fmt.Errorf("db.queryContext(ctx, %q, %q, %q): %v", query, modulePath, version, err)
 	}
 	defer rows.Close()
 	return collectLicenses(rows)
@@ -512,9 +512,9 @@ func (db *DB) GetPackageLicenses(ctx context.Context, pkgPath, modulePath, versi
 			AND p.version = l.version
 			AND p.license_file_path = l.file_path;`
 
-	rows, err := db.QueryContext(ctx, query, pkgPath, modulePath, version)
+	rows, err := db.queryContext(ctx, query, pkgPath, modulePath, version)
 	if err != nil {
-		return nil, fmt.Errorf("db.QueryContext(ctx, %q, %q): %v", query, pkgPath, err)
+		return nil, fmt.Errorf("db.queryContext(ctx, %q, %q): %v", query, pkgPath, err)
 	}
 	defer rows.Close()
 	return collectLicenses(rows)
@@ -611,7 +611,7 @@ func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version str
 		FROM
 			versions v
 		WHERE module_path = $1 and version = $2;`
-	row := db.QueryRowContext(ctx, query, modulePath, version)
+	row := db.queryRowContext(ctx, query, modulePath, version)
 	if err := row.Scan(&commitTime, &readmeFilePath, &readmeContents, &versionType, &repositoryURL, &vcsType, &homepageURL); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, xerrors.Errorf("module version %s@%s: %w", modulePath, version, derrors.NotFound)

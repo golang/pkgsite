@@ -14,7 +14,19 @@ import (
 // DB wraps a sql.DB to provide an API for interacting with discovery data
 // stored in Postgres.
 type DB struct {
-	*sql.DB
+	db *sql.DB
+}
+
+func (db *DB) execContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	return db.db.ExecContext(ctx, query, args...)
+}
+
+func (db *DB) queryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	return db.db.QueryContext(ctx, query, args...)
+}
+
+func (db *DB) queryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
+	return db.db.QueryRowContext(ctx, query, args...)
 }
 
 // Open creates a new DB for the given Postgres connection string.
@@ -33,7 +45,7 @@ func Open(driverName, dbinfo string) (*DB, error) {
 // Transact executes the given function in the context of a SQL transaction,
 // rolling back the transaction if the function panics or returns an error.
 func (db *DB) Transact(txFunc func(*sql.Tx) error) (err error) {
-	tx, err := db.Begin()
+	tx, err := db.db.Begin()
 	if err != nil {
 		return fmt.Errorf("db.Begin(): %v", err)
 	}
@@ -151,4 +163,9 @@ func buildInsertQuery(table string, columns []string, values []interface{}, conf
 	}
 
 	return b.String(), nil
+}
+
+// Close closes the database connection.
+func (db *DB) Close() error {
+	return db.db.Close()
 }
