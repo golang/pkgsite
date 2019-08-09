@@ -15,9 +15,11 @@ else
   NORMAL=""
 fi
 
+EXIT_CODE=0
+
 info() { echo -e "${GREEN}$@${NORMAL}" 1>&2; }
 warn() { echo -e "${YELLOW}$@${NORMAL}" 1>&2; }
-err() { echo -e "${RED}$@${NORMAL}" 1>&2; }
+err() { echo -e "${RED}$@${NORMAL}" 1>&2; EXIT_CODE=1; }
 
 warnout() {
   while read line; do
@@ -70,16 +72,21 @@ ensure_go_binary() {
 }
 
 # runcmd prints an info log describing the command that is about to be run, and
-# then runs it.
+# then runs it. It exits the script if the command fails.
 runcmd() {
-  info "Running: $@"
-  $@
+  msg="$@"
+  if [[ ${#msg} -gt 100 ]]; then
+    msg="${msg::100}..."
+  fi
+  info "Running: $msg"
+  $@ || err "command failed"
 }
 
 # check_headers checks that all source files that have been staged in this
-# commit have a license header.
+# commit, and all other non-third-party files in the repo, have a license
+# header.
 check_headers() {
-  # Check that all   info "Checking staged files for license header"
+  info "Checking staged files for license header"
   verify_header $(git diff --cached --name-only | grep -E ".go$|.sql$")
   info "Checking internal files for license header"
   verify_header $(findcode)
@@ -103,15 +110,13 @@ check_bad_migrations() {
 # check_staticcheck runs staticcheck on source files.
 check_staticcheck() {
   ensure_go_binary honnef.co/go/tools/cmd/staticcheck
-  info "Running: staticcheck ./... (skipping thirdparty, internal/doc, internal/render)"
-  staticcheck $(go list ./... | grep -v thirdparty | grep -v internal/doc | grep -v internal/render) | warnout
+  runcmd staticcheck $(go list ./... | grep -v thirdparty | grep -v internal/doc | grep -v internal/render) | warnout
 }
 
 # check_misspell runs misspell on source files.
 check_misspell() {
   ensure_go_binary github.com/client9/misspell/cmd/misspell
-  info "Running: misspell cmd/**/* internal/**/* README.md"
-  misspell cmd/**/* internal/**/* README.md | warnout
+  runcmd misspell cmd/**/* internal/**/* README.md | warnout
 }
 
 # check_templates runs go-template-lint on template files. Unfortunately it
@@ -212,6 +217,10 @@ main() {
       usage
       exit 1
   esac
+  if [[ $EXIT_CODE != 0 ]]; then
+    err "FAILED; see errors above"
+  fi
+  exit $EXIT_CODE
 }
 
 main $@
