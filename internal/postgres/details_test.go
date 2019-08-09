@@ -386,7 +386,7 @@ func TestGetVersion(t *testing.T) {
 	}
 }
 
-func TestGetLicenses(t *testing.T) {
+func TestGetPackageLicenses(t *testing.T) {
 	modulePath := "test.module"
 	testVersion := sample.Version(sample.WithModulePath(modulePath), sample.WithSuffixes("", "foo"))
 	testVersion.Packages[0].Licenses = nil
@@ -417,7 +417,7 @@ func TestGetLicenses(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.label, func(t *testing.T) {
-			got, err := testDB.GetLicenses(ctx, test.pkgPath, modulePath, testVersion.Version)
+			got, err := testDB.GetPackageLicenses(ctx, test.pkgPath, modulePath, testVersion.Version)
 			if err != nil {
 				t.Fatalf("testDB.GetLicenses(ctx, %q, %q): %v", test.pkgPath, testVersion.Version, err)
 			}
@@ -425,5 +425,39 @@ func TestGetLicenses(t *testing.T) {
 				t.Errorf("testDB.GetLicenses(ctx, %q, %q) mismatch (-want +got):\n%s", test.pkgPath, testVersion.Version, diff)
 			}
 		})
+	}
+}
+
+func TestGetModuleLicenses(t *testing.T) {
+	modulePath := "test.module"
+	testVersion := sample.Version(sample.WithModulePath(modulePath), sample.WithSuffixes("", "foo", "bar"))
+	testVersion.Packages[0].Licenses = []*license.Metadata{{Types: []string{"ISC"}, FilePath: "LICENSE"}}
+	testVersion.Packages[1].Licenses = []*license.Metadata{{Types: []string{"MIT"}, FilePath: "foo/LICENSE"}}
+	testVersion.Packages[2].Licenses = []*license.Metadata{{Types: []string{"GPL2"}, FilePath: "bar/LICENSE.txt"}}
+
+	defer ResetTestDB(testDB, t)
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	var licenses []*license.License
+	for _, p := range testVersion.Packages {
+		licenses = append(licenses, &license.License{
+			Metadata: *p.Licenses[0],
+			Contents: []byte(`Lorem Ipsum`),
+		})
+	}
+
+	if err := testDB.InsertVersion(ctx, testVersion, licenses); err != nil {
+		t.Fatalf("testDB.InsertVersion(ctx, %q, licenses): %v", testVersion.Version, err)
+	}
+
+	got, err := testDB.GetModuleLicenses(ctx, modulePath, testVersion.Version)
+	if err != nil {
+		t.Fatalf("testDB.GetModuleLicenses(ctx, %q, %q): %v", modulePath, testVersion.Version, err)
+	}
+	// "bar" sorts before "foo", and both sort before the top level.
+	wantLicenses := []*license.License{licenses[2], licenses[1], licenses[0]}
+	if diff := cmp.Diff(wantLicenses, got); diff != "" {
+		t.Errorf("testDB.GetModuleLicenses(ctx, %q, %q) mismatch (-want +got):\n%s", modulePath, testVersion.Version, diff)
 	}
 }

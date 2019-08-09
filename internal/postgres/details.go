@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"reflect"
 	"sort"
 	"strings"
 	"time"
@@ -458,12 +459,32 @@ func (db *DB) GetImportedBy(ctx context.Context, path, modulePath string, limit,
 	return importedby, total, nil
 }
 
-// GetLicenses returns all licenses associated with the given package path and
+// GetModuleLicenses returns all licenses associated with the given module path and
 // version.
-//
-// The returned error may be checked with derrors.IsInvalidArgument to
-// determine if it resulted from an invalid package path or version.
-func (db *DB) GetLicenses(ctx context.Context, pkgPath, modulePath, version string) ([]*license.License, error) {
+// It returns an InvalidArgument error if the module path or version is invalid.
+func (db *DB) GetModuleLicenses(ctx context.Context, modulePath, version string) ([]*license.License, error) {
+	if modulePath == "" || version == "" {
+		return nil, xerrors.Errorf("neither modulePath nor version can be empty: %w", derrors.InvalidArgument)
+	}
+	query := `
+	SELECT
+		types, file_path, contents
+	FROM
+		licenses
+	WHERE
+		module_path = $1 AND version = $2;`
+	rows, err := db.QueryContext(ctx, query, modulePath, version)
+	if err != nil {
+		return nil, fmt.Errorf("db.QueryContext(ctx, %q, %q, %q): %v", query, modulePath, version, err)
+	}
+	defer rows.Close()
+	return collectLicenses(rows)
+}
+
+// GetPackageLicenses returns all licenses associated with the given package path and
+// version.
+// It returns an InvalidArgument error if the module path or version is invalid.
+func (db *DB) GetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) ([]*license.License, error) {
 	if pkgPath == "" || version == "" {
 		return nil, xerrors.Errorf("neither pkgPath nor version can be empty: %w", derrors.InvalidArgument)
 	}
@@ -492,34 +513,45 @@ func (db *DB) GetLicenses(ctx context.Context, pkgPath, modulePath, version stri
 			AND p.license_file_path = l.file_path
 		ORDER BY l.file_path;`
 
-	var (
-		licenseTypes []string
-		licensePath  string
-		contents     []byte
-	)
 	rows, err := db.QueryContext(ctx, query, pkgPath, modulePath, version)
 	if err != nil {
 		return nil, fmt.Errorf("db.QueryContext(ctx, %q, %q): %v", query, pkgPath, err)
 	}
 	defer rows.Close()
+	return collectLicenses(rows)
+}
 
+// collectLicenses converts the sql rows to a list of licenses. The columns
+// must be types, file_path and contents, in that order.
+func collectLicenses(rows *sql.Rows) ([]*license.License, error) {
+	mustHaveColumns(rows, "types", "file_path", "contents")
 	var licenses []*license.License
 	for rows.Next() {
-		if err := rows.Scan(pq.Array(&licenseTypes), &licensePath, &contents); err != nil {
+		var (
+			lic          license.License
+			licenseTypes []string
+		)
+		if err := rows.Scan(pq.Array(&licenseTypes), &lic.FilePath, &lic.Contents); err != nil {
 			return nil, fmt.Errorf("row.Scan(): %v", err)
 		}
-		licenses = append(licenses, &license.License{
-			Metadata: license.Metadata{
-				Types:    licenseTypes,
-				FilePath: licensePath,
-			},
-			Contents: contents,
-		})
+		lic.Types = licenseTypes
+		licenses = append(licenses, &lic)
 	}
 	sort.Slice(licenses, func(i, j int) bool {
 		return compareLicenses(licenses[i].Metadata, licenses[j].Metadata)
 	})
 	return licenses, nil
+}
+
+// mustHaveColumns panics if the columns of rows does not match wantColumns.
+func mustHaveColumns(rows *sql.Rows, wantColumns ...string) {
+	gotColumns, err := rows.Columns()
+	if err != nil {
+		panic(err)
+	}
+	if !reflect.DeepEqual(gotColumns, wantColumns) {
+		panic(fmt.Sprintf("got columns %v, want $%v", gotColumns, wantColumns))
+	}
 }
 
 // zipLicenseMetadata constructs license.Metadata from the given license types
