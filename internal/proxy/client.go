@@ -240,9 +240,9 @@ func modulePathAndVersionForProxyRequest(path, version string) (string, string, 
 		}
 	}
 	if strings.HasPrefix(path, stdlibProxyModulePathPrefix) {
-		ver, err := goVersionForSemanticVersion(version)
+		ver, err := internal.GoVersionForSemanticVersion(version)
 		if err != nil {
-			return "", "", xerrors.Errorf("goVersionForSemanticVersion(%q): %v: %w", version, err, derrors.InvalidArgument)
+			return "", "", xerrors.Errorf("GoVersionForSemanticVersion(%q): %v: %w", version, err, derrors.InvalidArgument)
 		}
 		version = ver
 	}
@@ -259,47 +259,4 @@ func encodeModulePathAndVersion(path, version string) (string, string, error) {
 		return "", "", derrors.FromHTTPStatus(http.StatusBadRequest, "module.EncodeVersion(%q): %v", version, err)
 	}
 	return encodedPath, encodedVersion, nil
-}
-
-func goVersionForSemanticVersion(requestedVersion string) (string, error) {
-	goVersion := semver.Canonical(requestedVersion)
-	prerelease := semver.Prerelease(goVersion)
-	versionWithoutPrerelease := strings.TrimSuffix(goVersion, prerelease)
-	patch := strings.TrimPrefix(versionWithoutPrerelease, semver.MajorMinor(goVersion)+".")
-	if patch == "0" {
-		versionWithoutPrerelease = strings.TrimSuffix(versionWithoutPrerelease, ".0")
-	}
-
-	goVersion = fmt.Sprintf("go%s", strings.TrimPrefix(versionWithoutPrerelease, "v"))
-	if prerelease != "" {
-		// Go prereleases look like  "beta1" instead of "beta.1".
-		// "beta1" is bad for sorting (since beta10 comes before beta9), so
-		// require the dot form.
-		i := finalDigitsIndex(prerelease)
-		if i >= 1 {
-			if prerelease[i-1] != '.' {
-				return "", derrors.FromHTTPStatus(http.StatusBadRequest, "final digits in a prerelease must follow a period")
-			}
-			// Remove the dot.
-			prerelease = prerelease[:i-1] + prerelease[i:]
-		}
-		goVersion += strings.TrimPrefix(prerelease, "-")
-	}
-	return goVersion, nil
-}
-
-// finalDigitsIndex returns the index of the first digit in the sequence of digits ending s.
-// If s doesn't end in digits, it returns -1.
-func finalDigitsIndex(s string) int {
-	// Assume ASCII (since the semver package does anyway).
-	var i int
-	for i = len(s) - 1; i >= 0; i-- {
-		if s[i] < '0' || s[i] > '9' {
-			break
-		}
-	}
-	if i == len(s)-1 {
-		return -1
-	}
-	return i + 1
 }

@@ -122,12 +122,12 @@ func TestReadmeHTML(t *testing.T) {
 			vi: &internal.VersionInfo{
 				ReadmeFilePath: "README.md",
 				ReadmeContents: []byte("![Go logo](doc/logo.png)"),
-				Version:        "v1.12.7",
+				Version:        "v1.12.0",
 				VersionType:    internal.VersionTypeRelease,
 				RepositoryURL:  "http://github.com/golang/go",
 				ModulePath:     "std",
 			},
-			want: template.HTML("<p><img src=\"https://raw.githubusercontent.com/golang/go/go1.12.7/doc/logo.png\" alt=\"Go logo\"/></p>\n"),
+			want: template.HTML("<p><img src=\"https://raw.githubusercontent.com/golang/go/go1.12/doc/logo.png\" alt=\"Go logo\"/></p>\n"),
 		},
 		{
 			name: "module release versions are referenced in relative images",

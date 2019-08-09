@@ -59,6 +59,8 @@ func readmeHTML(vi *internal.VersionInfo) template.HTML {
 	renderer := blackfriday.NewHTMLRenderer(blackfriday.HTMLRendererParameters{Flags: blackfriday.CommonHTMLFlags})
 	parser := blackfriday.New(blackfriday.WithExtensions(blackfriday.CommonExtensions))
 
+	// Render HTML similar to blackfriday.Run(), but here we implement a custom
+	// Walk function in order to modify image paths in the rendered HTML.
 	b := &bytes.Buffer{}
 	rootNode := parser.Parse(vi.ReadmeContents)
 	rootNode.Walk(func(node *blackfriday.Node, entering bool) blackfriday.WalkStatus {
@@ -72,6 +74,11 @@ func readmeHTML(vi *internal.VersionInfo) template.HTML {
 
 // translateRelativeLink modifies a blackfriday.Node to convert relative image
 // paths to absolute paths.
+//
+// Markdown files, such as the Go README, sometimes use relative image paths to
+// image files inside the repository. As the discovery site doesn't host the
+// full repository content, in order for the image to render, we need to
+// convert the relative path to an absolute URL to a hosted image.
 func translateRelativeLink(node *blackfriday.Node, vi *internal.VersionInfo) {
 	repo, err := url.Parse(vi.RepositoryURL)
 	if err != nil || repo.Hostname() != "github.com" {
@@ -85,8 +92,11 @@ func translateRelativeLink(node *blackfriday.Node, vi *internal.VersionInfo) {
 	switch vi.VersionType {
 	case internal.VersionTypeRelease, internal.VersionTypePrerelease:
 		ref = vi.Version
-		if vi.ModulePath == "std" {
-			ref = "go" + strings.TrimPrefix(ref, "v")
+		if internal.IsStandardLibraryModule(vi.ModulePath) {
+			ref, err = internal.GoVersionForSemanticVersion(ref)
+			if err != nil {
+				ref = "master"
+			}
 		}
 	case internal.VersionTypePseudo:
 		if segs := strings.SplitAfter(vi.Version, "-"); len(segs) != 0 {
