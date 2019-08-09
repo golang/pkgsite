@@ -56,18 +56,37 @@ var redistributableLicenses = map[string]bool{
 //   2. There is at least one license in the root directory.
 func AreRedistributable(licenses []*Metadata) bool {
 	haveRootLicense := false
-	for _, l := range licenses {
-		if path.Dir(l.FilePath) == "." {
+	for _, lm := range licenses {
+		if path.Dir(lm.FilePath) == "." {
 			haveRootLicense = true
 		}
-		if len(l.Types) == 0 {
+		if !lm.IsRedistributable() {
 			return false
-		}
-		for _, typ := range l.Types {
-			if !redistributableLicenses[typ] {
-				return false
-			}
 		}
 	}
 	return haveRootLicense
+}
+
+// IsRedistributable reports whether content subject to the given
+// license should be considered redistributable. The license
+// must have at least one type, and all its types must be redistributable.
+func (lm *Metadata) IsRedistributable() bool {
+	if len(lm.Types) == 0 {
+		return false
+	}
+	for _, typ := range lm.Types {
+		if !redistributableLicenses[typ] {
+			return false
+		}
+	}
+	return true
+}
+
+// ToMetadatas converts a slice of Licenses to a slice of Metadatas.
+func ToMetadatas(lics []*License) []*Metadata {
+	var ms []*Metadata
+	for _, l := range lics {
+		ms = append(ms, &l.Metadata)
+	}
+	return ms
 }

@@ -455,8 +455,8 @@ func TestGetModuleLicenses(t *testing.T) {
 	if err != nil {
 		t.Fatalf("testDB.GetModuleLicenses(ctx, %q, %q): %v", modulePath, testVersion.Version, err)
 	}
-	// "bar" sorts before "foo", and both sort before the top level.
-	wantLicenses := []*license.License{licenses[2], licenses[1], licenses[0]}
+	// We only want the top-level license.
+	wantLicenses := []*license.License{licenses[0]}
 	if diff := cmp.Diff(wantLicenses, got); diff != "" {
 		t.Errorf("testDB.GetModuleLicenses(ctx, %q, %q) mismatch (-want +got):\n%s", modulePath, testVersion.Version, diff)
 	}

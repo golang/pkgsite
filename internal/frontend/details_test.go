@@ -24,10 +24,12 @@ func samplePackage(mutators ...func(*Package)) *Package {
 		IsRedistributable: true,
 		Licenses:          transformLicenseMetadata(sample.LicenseMetadata),
 		Module: Module{
-			Version:       sample.VersionString,
-			CommitTime:    "0 hours ago",
-			Path:          sample.ModulePath,
-			RepositoryURL: sample.RepositoryURL,
+			Version:           sample.VersionString,
+			CommitTime:        "0 hours ago",
+			Path:              sample.ModulePath,
+			RepositoryURL:     sample.RepositoryURL,
+			IsRedistributable: true,
+			Licenses:          transformLicenseMetadata(sample.LicenseMetadata),
 		},
 	}
 	for _, mut := range mutators {

@@ -16,6 +16,7 @@ import (
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
@@ -156,7 +157,7 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, db
 	case "importedby":
 		return fetchImportedByDetails(ctx, db, pkg, newPaginationParams(r, 100))
 	case "licenses":
-		return fetchLicensesDetails(ctx, db, pkg)
+		return fetchPackageLicensesDetails(ctx, db, pkg)
 	case "readme":
 		return fetchReadMeDetails(ctx, db, &pkg.VersionInfo)
 	}
@@ -197,8 +198,14 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 		s.serveErrorPage(w, r, code, nil)
 		return
 	}
+	licenses, err := s.db.GetModuleLicenses(ctx, path, version)
+	if err != nil {
+		log.Printf("error getting module licenses for %s@%s: %v", path, version, err)
+		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
+		return
+	}
 
-	modHeader, err := createModule(moduleVersion)
+	modHeader, err := createModule(moduleVersion, license.ToMetadatas(licenses))
 	if err != nil {
 		log.Printf("error creating module header for %s@%s: %v", path, version, err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
@@ -211,13 +218,11 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 		tab = "readme"
 		settings = moduleTabLookup["readme"]
 	}
-	// TODO(b/138616475): Determine if a module version is redistributable.
-	canShowDetails := true
-
+	canShowDetails := modHeader.IsRedistributable || settings.AlwaysShowDetails
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = fetchDetailsForModule(ctx, r, tab, s.db, moduleVersion)
+		details, err = fetchDetailsForModule(ctx, r, tab, s.db, moduleVersion, licenses)
 		if err != nil {
 			log.Printf("error fetching page for %q: %v", tab, err)
 			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
@@ -239,11 +244,13 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 
 // fetchDetailsForModule returns tab details by delegating to the correct detail
 // handler.
-func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, db *postgres.DB, vi *internal.VersionInfo) (interface{}, error) {
+func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, db *postgres.DB, vi *internal.VersionInfo, licenses []*license.License) (interface{}, error) {
 	switch tab {
 	case "packages":
 		return fetchModuleDetails(ctx, db, vi)
-	case "readme", "modfile", "versions", "dependents", "dependencies", "importedby", "licenses":
+	case "licenses":
+		return &LicensesDetails{Licenses: transformLicenses(licenses)}, nil
+	case "readme", "modfile", "versions", "dependents", "dependencies", "importedby":
 		// TODO(b/138448402): implement remaining module views.
 		return fetchReadMeDetails(ctx, db, vi)
 	}
@@ -330,7 +337,7 @@ var (
 		{
 			Name:         "licenses",
 			DisplayName:  "Licenses",
-			TemplateName: "pkg_licenses.tmpl",
+			TemplateName: "licenses.tmpl",
 		},
 	}
 	packageTabLookup = make(map[string]TabSettings)
@@ -374,7 +381,7 @@ var (
 		{
 			Name:         "licenses",
 			DisplayName:  "Licenses",
-			TemplateName: "not_implemented.tmpl",
+			TemplateName: "licenses.tmpl",
 		},
 	}
 	moduleTabLookup = make(map[string]TabSettings)
@@ -421,7 +428,14 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo) (*Package, e
 		suffix = effectiveName(pkg) + " (root)"
 	}
 
-	m, err := createModule(vi)
+	var modLicenses []*license.Metadata
+	for _, lm := range pkg.Licenses {
+		if path.Dir(lm.FilePath) == "." {
+			modLicenses = append(modLicenses, lm)
+		}
+	}
+
+	m, err := createModule(vi, modLicenses)
 	if err != nil {
 		return nil, fmt.Errorf("createModule(%v): %v", vi, err)
 	}
@@ -437,14 +451,14 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo) (*Package, e
 
 // createModule returns a *Module based on the fields of the specified
 // versionInfo.
-func createModule(vi *internal.VersionInfo) (*Module, error) {
+func createModule(vi *internal.VersionInfo, licmetas []*license.Metadata) (*Module, error) {
 	return &Module{
-		// TODO(b/138616475): Determine licenses for a module version
-		// and set Licenses and IsRedistributable fields.
-		Version:       vi.Version,
-		Path:          vi.ModulePath,
-		CommitTime:    elapsedTime(vi.CommitTime),
-		RepositoryURL: vi.RepositoryURL,
+		Version:           vi.Version,
+		Path:              vi.ModulePath,
+		CommitTime:        elapsedTime(vi.CommitTime),
+		RepositoryURL:     vi.RepositoryURL,
+		IsRedistributable: license.AreRedistributable(licmetas),
+		Licenses:          transformLicenseMetadata(licmetas),
 	}, nil
 }
 

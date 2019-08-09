@@ -460,7 +460,7 @@ func (db *DB) GetImportedBy(ctx context.Context, path, modulePath string, limit,
 }
 
 // GetModuleLicenses returns all licenses associated with the given module path and
-// version.
+// version. These are the top-level licenses in the module zip file.
 // It returns an InvalidArgument error if the module path or version is invalid.
 func (db *DB) GetModuleLicenses(ctx context.Context, modulePath, version string) ([]*license.License, error) {
 	if modulePath == "" || version == "" {
@@ -472,7 +472,8 @@ func (db *DB) GetModuleLicenses(ctx context.Context, modulePath, version string)
 	FROM
 		licenses
 	WHERE
-		module_path = $1 AND version = $2;`
+		module_path = $1 AND version = $2 AND position('/' in file_path) = 0
+    `
 	rows, err := db.query(ctx, query, modulePath, version)
 	if err != nil {
 		return nil, fmt.Errorf("db.query(ctx, %q, %q, %q): %v", query, modulePath, version, err)

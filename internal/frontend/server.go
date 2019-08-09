@@ -241,7 +241,7 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 		{"pkg_doc.tmpl", "details.tmpl"},
 		{"pkg_importedby.tmpl", "details.tmpl"},
 		{"pkg_imports.tmpl", "details.tmpl"},
-		{"pkg_licenses.tmpl", "details.tmpl"},
+		{"licenses.tmpl", "details.tmpl"},
 		{"pkg_versions.tmpl", "details.tmpl"},
 		{"not_implemented.tmpl", "details.tmpl"},
 	}

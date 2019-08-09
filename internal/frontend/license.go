@@ -20,7 +20,7 @@ type License struct {
 	Anchor string
 }
 
-// LicensesDetails contains license information for a package.
+// LicensesDetails contains license information for a package or module.
 type LicensesDetails struct {
 	Licenses []License
 }
@@ -32,14 +32,19 @@ type LicenseMetadata struct {
 	Anchor string
 }
 
-// fetchLicensesDetails fetches license data for the package version specified by
+// fetchPackageLicensesDetails fetches license data for the package version specified by
 // path and version from the database and returns a LicensesDetails.
-func fetchLicensesDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*LicensesDetails, error) {
+func fetchPackageLicensesDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*LicensesDetails, error) {
 	dbLicenses, err := db.GetPackageLicenses(ctx, pkg.Path, pkg.ModulePath, pkg.VersionInfo.Version)
 	if err != nil {
-		return nil, fmt.Errorf("db.GetLicenses(ctx, %q, %q): %v", pkg.Path, pkg.VersionInfo.Version, err)
+		return nil, fmt.Errorf("db.GetPackageLicenses(ctx, %q, %q): %v", pkg.Path, pkg.VersionInfo.Version, err)
 	}
+	return &LicensesDetails{Licenses: transformLicenses(dbLicenses)}, nil
+}
 
+// transformLicenses transforms license.License into a License
+// by adding an anchor field.
+func transformLicenses(dbLicenses []*license.License) []License {
 	licenses := make([]License, len(dbLicenses))
 	for i, l := range dbLicenses {
 		licenses[i] = License{
@@ -47,10 +52,7 @@ func fetchLicensesDetails(ctx context.Context, db *postgres.DB, pkg *internal.Ve
 			License: l,
 		}
 	}
-
-	return &LicensesDetails{
-		Licenses: licenses,
-	}, nil
+	return licenses
 }
 
 // transformLicenseMetadata transforms license.Metadata into a LicenseMetadata
