@@ -75,8 +75,10 @@ ensure_go_binary() {
 # then runs it. It exits the script if the command fails.
 runcmd() {
   msg="$@"
-  if [[ ${#msg} -gt 100 ]]; then
-    msg="${msg::100}..."
+  # Truncate command logging for narrow terminals. Here a length of 71
+  # characters is checked to allow for 9 characters of 'Running: '.
+  if [[ ${#msg} -gt 71 ]]; then
+    msg="${msg::68}..."
   fi
   info "Running: $msg"
   $@ || err "command failed"
