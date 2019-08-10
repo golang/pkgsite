@@ -38,7 +38,7 @@ func SetupTestIndex(t *testing.T, versions []*internal.IndexVersion) (func(t *te
 
 	client, err := New(server.URL)
 	if err != nil {
-		t.Fatalf("index.New(%q): %v", server.URL, err)
+		t.Fatal(err)
 	}
 	client.httpClient = httpClient
 

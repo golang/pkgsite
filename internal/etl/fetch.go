@@ -178,7 +178,7 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, requestedVersi
 		}
 		licenses, err = license.Detect(moduleVersionDir(modulePath, info.Version), zipReader)
 		if err != nil {
-			log.Printf("Error detecting licenses for %v@%v: %v", modulePath, info.Version, err)
+			log.Print(err)
 		}
 		span.Annotate([]trace.Attribute{trace.Int64Attribute("licenseCt", int64(len(licenses)))}, "detected licenses")
 		packages, err := extractPackagesFromZip(modulePath, info.Version, zipReader, license.NewMatcher(licenses))
@@ -256,7 +256,7 @@ func extractReadmeFromZip(modulePath, version string, r *zip.Reader) (string, []
 			}
 			c, err := dzip.ReadZipFile(zipFile)
 			if err != nil {
-				return "", nil, fmt.Errorf("ReadZipFile(%q): %v", zipFile.Name, err)
+				return "", nil, err
 			}
 			return strings.TrimPrefix(zipFile.Name, moduleVersionDir(modulePath, version)+"/"), c, nil
 		}

@@ -19,6 +19,7 @@ import (
 	"path"
 	"time"
 
+	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/secrets"
 	"golang.org/x/net/context/ctxhttp"
 	mrpb "google.golang.org/genproto/googleapis/api/monitoredres"
@@ -164,7 +165,9 @@ var cfg config
 
 // Init resolves all configuration values provided by the config package. It
 // must be called before any configuration values are used.
-func Init(ctx context.Context) error {
+func Init(ctx context.Context) (err error) {
+	defer derrors.Add(&err, "config.Init(ctx)")
+
 	// Resolve client/server configuration from the environment.
 	cfg.IndexURL = GetEnv("GO_MODULE_INDEX_URL", "https://index.golang.org/index")
 	cfg.ProxyURL = GetEnv("GO_MODULE_PROXY_URL", "https://proxy.golang.org")

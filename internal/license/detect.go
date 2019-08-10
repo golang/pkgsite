@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/google/licensecheck"
+	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/thirdparty/module"
 )
 
@@ -67,7 +68,8 @@ func isVendoredFile(name string) bool {
 // It returns an error if the given file path is invalid, if the uncompressed
 // size of the license file is too large, if a license is discovered outside of
 // the expected path, or if an error occurs during extraction.
-func Detect(contentsDir string, r *zip.Reader) ([]*License, error) {
+func Detect(contentsDir string, r *zip.Reader) (_ []*License, err error) {
+	defer derrors.Add(&err, "Detect(%q)", contentsDir)
 	var licenses []*License
 	for _, f := range r.File {
 		if !licenseFileNames[path.Base(f.Name)] || isVendoredFile(f.Name) {

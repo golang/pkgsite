@@ -51,7 +51,7 @@ func TestGetVersions(t *testing.T) {
 			since := time.Time{}
 			got, err := client.GetVersions(ctx, since, tc.limit)
 			if err != nil {
-				t.Fatalf("client.GetVersions(ctx, %q) error: %v", since, err)
+				t.Fatal(err)
 			}
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("client.GetVersions(ctx, %q) mismatch (-want +got):\n%s", since, diff)

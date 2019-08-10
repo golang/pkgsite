@@ -200,7 +200,7 @@ func createGoZipReader(r *zip.Reader, path, pseudoVersion, requestedSemanticVers
 
 		contents, err := dzip.ReadZipFile(file)
 		if err != nil {
-			log.Printf("zip.ReadZipFile(%q): %v", file.Name, err)
+			log.Print(err)
 			continue
 		}
 

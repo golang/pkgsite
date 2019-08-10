@@ -17,6 +17,7 @@ import (
 
 	"go.opencensus.io/plugin/ochttp"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/net/context/ctxhttp"
 )
 
@@ -31,7 +32,9 @@ type Client struct {
 
 // New constructs a *Client using the provided rawurl, which is expected to
 // be an absolute URI that can be directly passed to http.Get.
-func New(rawurl string) (*Client, error) {
+func New(rawurl string) (_ *Client, err error) {
+	defer derrors.Add(&err, "index.New(%q)", rawurl)
+
 	u, err := url.Parse(rawurl)
 	if err != nil {
 		return nil, fmt.Errorf("url.Parse(%q): %v", rawurl, err)
@@ -56,7 +59,8 @@ func (c *Client) GetVersions(ctx context.Context, since time.Time, limit int) ([
 	u := c.pollURL(since, limit)
 	r, err := ctxhttp.Get(ctx, c.httpClient, u)
 	if err != nil {
-		return nil, fmt.Errorf("ctxhttp.Get(ctx, nil, %q): %v", u, err)
+		return nil, fmt.Errorf("index.Client.GetVersions(ctx, %s, %d): ctxhttp.Get(ctx, nil, %q): %v",
+			since, limit, u, err)
 	}
 	defer r.Body.Close()
 

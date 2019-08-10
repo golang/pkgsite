@@ -118,7 +118,7 @@ commodo consequat.`,
 			}
 			got, err := Detect(test.subdir, z)
 			if err != nil {
-				t.Errorf("detectLicenses(z): %v", err)
+				t.Error(err)
 			}
 			sort.Slice(got, func(i, j int) bool {
 				if got[i].FilePath < got[j].FilePath {

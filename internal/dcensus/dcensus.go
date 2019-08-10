@@ -60,7 +60,7 @@ const debugPage = `
 func Init(views ...*view.View) error {
 	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 	if err := view.Register(views...); err != nil {
-		return fmt.Errorf("view.Register: %v", err)
+		return fmt.Errorf("dcensus.Init(views): view.Register: %v", err)
 	}
 	exportToStackdriver()
 	return nil
@@ -70,7 +70,7 @@ func Init(views ...*view.View) error {
 func NewServer(views ...*view.View) (http.Handler, error) {
 	pe, err := prometheus.NewExporter(prometheus.Options{})
 	if err != nil {
-		return nil, fmt.Errorf("prometheus.NewExporter: %v", err)
+		return nil, fmt.Errorf("dcensus.NewServer: prometheus.NewExporter: %v", err)
 	}
 	mux := http.NewServeMux()
 	zpages.Handle(mux, "/")
