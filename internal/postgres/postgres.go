@@ -17,15 +17,15 @@ type DB struct {
 	db *sql.DB
 }
 
-func (db *DB) execContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+func (db *DB) exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	return db.db.ExecContext(ctx, query, args...)
 }
 
-func (db *DB) queryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+func (db *DB) query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	return db.db.QueryContext(ctx, query, args...)
 }
 
-func (db *DB) queryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
+func (db *DB) queryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	return db.db.QueryRowContext(ctx, query, args...)
 }
 

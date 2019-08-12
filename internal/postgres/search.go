@@ -93,7 +93,7 @@ func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int)
 			package_path
 		LIMIT $2
 		OFFSET $3;`
-	rows, err := db.queryContext(ctx, query, searchQuery, limit, offset)
+	rows, err := db.query(ctx, query, searchQuery, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("db.QueryContext(ctx, %s, %q, %d, %d): %v", query, searchQuery, limit, offset, err)
 	}
@@ -139,7 +139,7 @@ func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int)
 // locking out concurrent selects on the materialized view.
 func (db *DB) RefreshSearchDocuments(ctx context.Context) error {
 	query := "REFRESH MATERIALIZED VIEW CONCURRENTLY mvw_search_documents;"
-	if _, err := db.execContext(ctx, query); err != nil {
+	if _, err := db.exec(ctx, query); err != nil {
 		return fmt.Errorf("db.ExecContext(ctx, %q): %v", query, err)
 	}
 	return nil

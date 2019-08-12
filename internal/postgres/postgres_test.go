@@ -99,13 +99,13 @@ func TestBulkInsert(t *testing.T) {
 					colB TEXT,
 					PRIMARY KEY (colA)
 				);`, table)
-			if _, err := testDB.execContext(ctx, createQuery); err != nil {
-				t.Fatalf("testDB.execContext(ctx, %q): %v", createQuery, err)
+			if _, err := testDB.exec(ctx, createQuery); err != nil {
+				t.Fatalf("testDB.exec(ctx, %q): %v", createQuery, err)
 			}
 			defer func() {
 				dropTableQuery := fmt.Sprintf("DROP TABLE %s;", table)
-				if _, err := testDB.execContext(ctx, dropTableQuery); err != nil {
-					t.Fatalf("testDB.execContext(ctx, %q): %v", dropTableQuery, err)
+				if _, err := testDB.exec(ctx, dropTableQuery); err != nil {
+					t.Fatalf("testDB.exec(ctx, %q): %v", dropTableQuery, err)
 				}
 			}()
 
@@ -118,7 +118,7 @@ func TestBulkInsert(t *testing.T) {
 			if tc.wantCount != 0 {
 				var count int
 				query := "SELECT COUNT(*) FROM " + table
-				row := testDB.queryRowContext(ctx, query)
+				row := testDB.queryRow(ctx, query)
 				err := row.Scan(&count)
 				if err != nil {
 					t.Fatalf("testDB.QueryRow(%q): %v", query, err)
@@ -134,7 +134,7 @@ func TestBulkInsert(t *testing.T) {
 func TestLargeBulkInsert(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	if _, err := testDB.execContext(ctx, `CREATE TEMPORARY TABLE test_large_bulk (i BIGINT);`); err != nil {
+	if _, err := testDB.exec(ctx, `CREATE TEMPORARY TABLE test_large_bulk (i BIGINT);`); err != nil {
 		t.Fatal(err)
 	}
 	const size = 150000
@@ -147,7 +147,7 @@ func TestLargeBulkInsert(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	rows, err := testDB.queryContext(ctx, `SELECT i FROM test_large_bulk;`)
+	rows, err := testDB.query(ctx, `SELECT i FROM test_large_bulk;`)
 	if err != nil {
 		t.Fatal(err)
 	}
