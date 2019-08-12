@@ -21,6 +21,11 @@ info() { echo -e "${GREEN}$@${NORMAL}" 1>&2; }
 warn() { echo -e "${YELLOW}$@${NORMAL}" 1>&2; }
 err() { echo -e "${RED}$@${NORMAL}" 1>&2; EXIT_CODE=1; }
 
+if [[ $PWD != $(git rev-parse --show-toplevel) ]]; then
+  err "all.bash must be run from the repo root directory"
+  exit 1
+fi
+
 warnout() {
   while read line; do
     warn "$line"
