@@ -25,6 +25,11 @@ import (
 // db.saveVersion, along with a search document corresponding to each of its
 // packages.
 func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, licenses []*license.License) error {
+	if err := validateVersion(version, licenses); err != nil {
+		return xerrors.Errorf("validateVersion: %v: %w", err, derrors.InvalidArgument)
+	}
+	removeNonDistributableData(version)
+
 	if err := db.saveVersion(ctx, version, licenses); err != nil {
 		return fmt.Errorf("db.saveVersion for %q %q: %v", version.ModulePath, version.Version, err)
 	}
@@ -32,7 +37,7 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 		return fmt.Errorf("db.InsertDocuments for %q %q: %v", version.ModulePath, version.Version, err)
 	}
 	for _, pkg := range version.Packages {
-		if err := db.UpsertSearchDocument(ctx, pkg.Path); err != nil {
+		if err := db.UpsertSearchDocument(ctx, pkg.Path); err != nil && !xerrors.Is(err, derrors.InvalidArgument) {
 			return fmt.Errorf("db.UpsertSearchDocument(ctx, %q): %v", pkg.Path, err)
 		}
 	}
@@ -52,11 +57,6 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 // A derrors.InvalidArgument error will be returned if the given version and
 // licenses are invalid.
 func (db *DB) saveVersion(ctx context.Context, version *internal.Version, licenses []*license.License) error {
-	if err := validateVersion(version, licenses); err != nil {
-		return xerrors.Errorf("validateVersion: %v: %w", err, derrors.InvalidArgument)
-	}
-	removeNonDistributableData(version)
-
 	return db.Transact(func(tx *sql.Tx) error {
 		majorint, minorint, patchint, prerelease, err := extractSemverParts(version.Version)
 		if err != nil {
