@@ -67,7 +67,7 @@ func (db *DB) UpsertVersionState(ctx context.Context, modulePath, version, appVe
 	}
 	result, err := db.exec(ctx, query, modulePath, version, appVersion, timestamp, status, sqlErrorMsg)
 	if err != nil {
-		return fmt.Errorf("db.exec(ctx, %q, %q, %q, %q, %q, %q, %v): %v", query, modulePath, version, appVersion, timestamp, status, sqlErrorMsg, err)
+		return err
 	}
 	affected, err := result.RowsAffected()
 	if err != nil {
@@ -110,7 +110,7 @@ func (db *DB) UpdateVersionStatesForReprocessing(ctx context.Context, appVersion
 			app_version <= $1;`
 	result, err := db.exec(ctx, query, appVersion)
 	if err != nil {
-		return fmt.Errorf("db.exec(ctx, %q, %q): %v", query, appVersion, err)
+		return err
 	}
 	affected, err := result.RowsAffected()
 	if err != nil {
@@ -178,7 +178,7 @@ func (db *DB) queryVersionStates(ctx context.Context, queryFormat string, args .
 	query := fmt.Sprintf(queryFormat, versionStateColumns)
 	rows, err := db.query(ctx, query, args...)
 	if err != nil {
-		return nil, fmt.Errorf("db.query(ctx, %q, %v): %v", query, args, err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -284,7 +284,7 @@ func (db *DB) GetVersionStats(ctx context.Context) (*VersionStats, error) {
 	)
 	rows, err := db.query(ctx, query)
 	if err != nil {
-		return nil, fmt.Errorf("db.query(ctx, %q): %v", query, err)
+		return nil, err
 	}
 	defer rows.Close()
 	stats := &VersionStats{

@@ -18,11 +18,19 @@ type DB struct {
 }
 
 func (db *DB) exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
-	return db.db.ExecContext(ctx, query, args...)
+	res, err := db.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("DB.exec(ctx, %q, %v): %v", query, args, err)
+	}
+	return res, nil
 }
 
 func (db *DB) query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
-	return db.db.QueryContext(ctx, query, args...)
+	rows, err := db.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("DB.query(ctx, %q, %v): %v", query, args, err)
+	}
+	return rows, nil
 }
 
 func (db *DB) queryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {

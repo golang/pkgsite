@@ -297,7 +297,7 @@ func (db *DB) LegacySearch(ctx context.Context, searchQuery string, limit, offse
 		OFFSET $3;`
 	rows, err := db.query(ctx, query, searchQuery, limit, offset)
 	if err != nil {
-		return nil, fmt.Errorf("db.query(ctx, %s, %q, %d, %d): %v", query, searchQuery, limit, offset, err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -342,7 +342,7 @@ func (db *DB) LegacySearch(ctx context.Context, searchQuery string, limit, offse
 func (db *DB) RefreshSearchDocuments(ctx context.Context) error {
 	query := "REFRESH MATERIALIZED VIEW CONCURRENTLY mvw_search_documents;"
 	if _, err := db.exec(ctx, query); err != nil {
-		return fmt.Errorf("db.ExecContext(ctx, %q): %v", query, err)
+		return err
 	}
 	return nil
 }

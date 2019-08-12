@@ -232,7 +232,7 @@ func (db *DB) GetVersion(ctx context.Context, modulePath, version string) (*inte
 
 	rows, err := db.query(ctx, query, modulePath, version)
 	if err != nil {
-		return nil, fmt.Errorf("db.query(ctx, %s, %q, %q): %v", query, modulePath, version, err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -350,7 +350,7 @@ func getVersions(ctx context.Context, db *DB, path string, versionTypes []intern
 
 	rows, err := db.query(ctx, query, params...)
 	if err != nil {
-		return nil, fmt.Errorf("db.query(ctx, %q, %q): %v", query, path, err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -397,7 +397,7 @@ func (db *DB) GetImports(ctx context.Context, path, version string) ([]string, e
 
 	rows, err := db.query(ctx, query, path, version)
 	if err != nil {
-		return nil, fmt.Errorf("db.query(ctx, %q, %q, %q): %v", query, path, version, err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -441,7 +441,7 @@ func (db *DB) GetImportedBy(ctx context.Context, path, modulePath string, limit,
 
 	rows, err := db.query(ctx, query, path, modulePath, limit, offset)
 	if err != nil {
-		return nil, 0, fmt.Errorf("db.query(%q, %q) returned error: %v", query, path, err)
+		return nil, 0, err
 	}
 	defer rows.Close()
 
@@ -476,7 +476,7 @@ func (db *DB) GetModuleLicenses(ctx context.Context, modulePath, version string)
     `
 	rows, err := db.query(ctx, query, modulePath, version)
 	if err != nil {
-		return nil, fmt.Errorf("db.query(ctx, %q, %q, %q): %v", query, modulePath, version, err)
+		return nil, err
 	}
 	defer rows.Close()
 	return collectLicenses(rows)
@@ -515,7 +515,7 @@ func (db *DB) GetPackageLicenses(ctx context.Context, pkgPath, modulePath, versi
 
 	rows, err := db.query(ctx, query, pkgPath, modulePath, version)
 	if err != nil {
-		return nil, fmt.Errorf("db.query(ctx, %q, %q): %v", query, pkgPath, err)
+		return nil, err
 	}
 	defer rows.Close()
 	return collectLicenses(rows)

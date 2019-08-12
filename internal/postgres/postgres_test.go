@@ -100,12 +100,12 @@ func TestBulkInsert(t *testing.T) {
 					PRIMARY KEY (colA)
 				);`, table)
 			if _, err := testDB.exec(ctx, createQuery); err != nil {
-				t.Fatalf("testDB.exec(ctx, %q): %v", createQuery, err)
+				t.Fatal(err)
 			}
 			defer func() {
 				dropTableQuery := fmt.Sprintf("DROP TABLE %s;", table)
 				if _, err := testDB.exec(ctx, dropTableQuery); err != nil {
-					t.Fatalf("testDB.exec(ctx, %q): %v", dropTableQuery, err)
+					t.Fatal(err)
 				}
 			}()
 
@@ -121,10 +121,10 @@ func TestBulkInsert(t *testing.T) {
 				row := testDB.queryRow(ctx, query)
 				err := row.Scan(&count)
 				if err != nil {
-					t.Fatalf("testDB.QueryRow(%q): %v", query, err)
+					t.Fatalf("testDB.queryRow(%q): %v", query, err)
 				}
 				if count != tc.wantCount {
-					t.Errorf("testDB.QueryRow(%q) = %d; want = %d", query, count, tc.wantCount)
+					t.Errorf("testDB.queryRow(%q) = %d; want = %d", query, count, tc.wantCount)
 				}
 			}
 		})
