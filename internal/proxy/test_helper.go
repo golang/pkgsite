@@ -36,11 +36,9 @@ type TestVersion struct {
 //
 // It returns a function for tearing down the proxy after the test is completed
 // and a Client for interacting with the test proxy.
-func SetupTestProxy(t *testing.T, versions []*TestVersion) (func(t *testing.T), *Client) {
+func SetupTestProxy(t *testing.T, versions []*TestVersion) (*Client, func()) {
 	t.Helper()
-
-	client, cleanup := TestProxyServer(t, TestProxy(versions))
-	return func(*testing.T) { cleanup() }, client
+	return TestProxyServer(t, TestProxy(versions))
 }
 
 // TestProxyServer starts serving proxyMux locally. It returns a client to the

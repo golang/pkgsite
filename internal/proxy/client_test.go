@@ -138,8 +138,8 @@ func TestGetInfo(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	teardownProxy, client := SetupTestProxy(t, nil)
-	defer teardownProxy(t)
+	client, teardownProxy := SetupTestProxy(t, nil)
+	defer teardownProxy()
 
 	path := "github.com/my/module"
 	version := "v1.0.0"
@@ -162,8 +162,8 @@ func TestGetInfoVersionDoesNotExist(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	teardownProxy, client := SetupTestProxy(t, nil)
-	defer teardownProxy(t)
+	client, teardownProxy := SetupTestProxy(t, nil)
+	defer teardownProxy()
 
 	path := "github.com/my/module"
 	version := "v3.0.0"
@@ -177,8 +177,8 @@ func TestGetZip(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	teardownProxy, client := SetupTestProxy(t, nil)
-	defer teardownProxy(t)
+	client, teardownProxy := SetupTestProxy(t, nil)
+	defer teardownProxy()
 
 	for _, tc := range []struct {
 		path, version string
@@ -263,8 +263,8 @@ func TestGetZipNonExist(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	teardownProxy, client := SetupTestProxy(t, nil)
-	defer teardownProxy(t)
+	client, teardownProxy := SetupTestProxy(t, nil)
+	defer teardownProxy()
 
 	path := "my.mod/nonexistmodule"
 	version := "v1.0.0"

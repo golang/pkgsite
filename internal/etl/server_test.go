@@ -116,8 +116,8 @@ func TestETL(t *testing.T) {
 			teardownIndex, indexClient := index.SetupTestIndex(t, test.index)
 			defer teardownIndex(t)
 
-			teardownProxy, proxyClient := proxy.SetupTestProxy(t, test.proxy)
-			defer teardownProxy(t)
+			proxyClient, teardownProxy := proxy.SetupTestProxy(t, test.proxy)
+			defer teardownProxy()
 
 			defer postgres.ResetTestDB(testDB, t)
 

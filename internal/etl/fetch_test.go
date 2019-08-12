@@ -49,10 +49,10 @@ func TestSkipBadPackage(t *testing.T) {
 		modulePath = "github.com/my/module"
 		version    = "v1.0.0"
 	)
-	teardownProxy, client := proxy.SetupTestProxy(t, []*proxy.TestVersion{
+	client, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
 		proxy.NewTestVersion(t, modulePath, version, badModule),
 	})
-	defer teardownProxy(t)
+	defer teardownProxy()
 
 	if err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB); err != nil {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
@@ -72,13 +72,13 @@ func TestFetch_V1Path(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 	defer postgres.ResetTestDB(testDB, t)
-	tearDown, client := proxy.SetupTestProxy(t, []*proxy.TestVersion{
+	client, tearDown := proxy.SetupTestProxy(t, []*proxy.TestVersion{
 		proxy.NewTestVersion(t, "my.mod/foo", "v1.0.0", map[string]string{
 			"foo.go":  "package foo\nconst Foo = 41",
 			"LICENSE": testhelper.MITLicense,
 		}),
 	})
-	defer tearDown(t)
+	defer tearDown()
 	if err := fetchAndInsertVersion(ctx, "my.mod/foo", "v1.0.0", client, testDB); err != nil {
 		t.Fatalf("fetchAndInsertVersion: %v", err)
 	}
@@ -119,10 +119,10 @@ func TestReFetch(t *testing.T) {
 
 	// First fetch and insert a version containing package foo, and verify that
 	// foo can be retrieved.
-	teardownProxy, client := proxy.SetupTestProxy(t, []*proxy.TestVersion{
+	client, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
 		proxy.NewTestVersion(t, modulePath, version, foo),
 	})
-	defer teardownProxy(t)
+	defer teardownProxy()
 	if err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB); err != nil {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
 	}
@@ -132,10 +132,10 @@ func TestReFetch(t *testing.T) {
 	}
 
 	// Now re-fetch and verify that contents were overwritten.
-	teardownProxy, client = proxy.SetupTestProxy(t, []*proxy.TestVersion{
+	client, teardownProxy = proxy.SetupTestProxy(t, []*proxy.TestVersion{
 		proxy.NewTestVersion(t, modulePath, version, bar),
 	})
-	defer teardownProxy(t)
+	defer teardownProxy()
 
 	if err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB); err != nil {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
@@ -351,8 +351,8 @@ func TestFetchAndInsertVersion(t *testing.T) {
 		t.Run(test.pkg, func(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
 
-			teardownProxy, client := proxy.SetupTestProxy(t, nil)
-			defer teardownProxy(t)
+			client, teardownProxy := proxy.SetupTestProxy(t, nil)
+			defer teardownProxy()
 
 			if err := fetchAndInsertVersion(ctx, test.modulePath, test.version, client, testDB); err != nil {
 				t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", test.modulePath, test.version, client, testDB, err)
@@ -399,8 +399,8 @@ func TestFetchAndInsertVersionTimeout(t *testing.T) {
 	}(fetchTimeout)
 	fetchTimeout = 0
 
-	teardownProxy, client := proxy.SetupTestProxy(t, nil)
-	defer teardownProxy(t)
+	client, teardownProxy := proxy.SetupTestProxy(t, nil)
+	defer teardownProxy()
 
 	name := "my.mod/version"
 	version := "v1.0.0"
@@ -424,7 +424,7 @@ func TestFetchAndUpdateState_Gone(t *testing.T) {
 		version    = "v1.0.0"
 	)
 
-	teardownProxy, client := proxy.SetupTestProxy(t, []*proxy.TestVersion{
+	client, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
 		proxy.NewTestVersion(t, modulePath, version, map[string]string{
 			"foo/foo.go": "// Package foo\npackage foo\n\nconst Foo = 42",
 			"README.md":  "This is a readme",
@@ -455,7 +455,7 @@ func TestFetchAndUpdateState_Gone(t *testing.T) {
 		t.Fatalf("testDB.GetVersionInfo(ctx, %q, %q): %v", modulePath, version, err)
 	}
 
-	teardownProxy(t)
+	teardownProxy()
 
 	// Take down the module, by having the proxy serve a 410 for it.
 	proxyMux := proxy.TestProxy([]*proxy.TestVersion{}) // serve no versions, not even the defaults.
@@ -619,8 +619,8 @@ func TestExtractReadmeFromZip(t *testing.T) {
 		},
 	} {
 		t.Run(test.file, func(t *testing.T) {
-			teardownProxy, client := proxy.SetupTestProxy(t, nil)
-			defer teardownProxy(t)
+			client, teardownProxy := proxy.SetupTestProxy(t, nil)
+			defer teardownProxy()
 
 			reader, err := client.GetZip(ctx, test.name, test.version)
 			if err != nil {
@@ -713,8 +713,8 @@ func TestExtractPackagesFromZip(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			teardownProxy, client := proxy.SetupTestProxy(t, nil)
-			defer teardownProxy(t)
+			client, teardownProxy := proxy.SetupTestProxy(t, nil)
+			defer teardownProxy()
 
 			reader, err := client.GetZip(ctx, test.name, test.version)
 			if err != nil {
