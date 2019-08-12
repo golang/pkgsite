@@ -528,14 +528,14 @@ func collectLicenses(rows *sql.Rows) ([]*license.License, error) {
 	var licenses []*license.License
 	for rows.Next() {
 		var (
-			lic          license.License
+			lic          = &license.License{Metadata: &license.Metadata{}}
 			licenseTypes []string
 		)
 		if err := rows.Scan(pq.Array(&licenseTypes), &lic.FilePath, &lic.Contents); err != nil {
 			return nil, fmt.Errorf("row.Scan(): %v", err)
 		}
 		lic.Types = licenseTypes
-		licenses = append(licenses, &lic)
+		licenses = append(licenses, lic)
 	}
 	sort.Slice(licenses, func(i, j int) bool {
 		return compareLicenses(licenses[i].Metadata, licenses[j].Metadata)
@@ -576,14 +576,14 @@ func zipLicenseMetadata(licenseTypes []string, licensePaths []string) ([]*licens
 		}
 	}
 	sort.Slice(mds, func(i, j int) bool {
-		return compareLicenses(*mds[i], *mds[j])
+		return compareLicenses(mds[i], mds[j])
 	})
 	return mds, nil
 }
 
 // compareLicenses reports whether i < j according to our license sorting
 // semantics.
-func compareLicenses(i, j license.Metadata) bool {
+func compareLicenses(i, j *license.Metadata) bool {
 	if len(strings.Split(i.FilePath, "/")) > len(strings.Split(j.FilePath, "/")) {
 		return true
 	}

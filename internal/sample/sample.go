@@ -25,7 +25,7 @@ var (
 		{Types: []string{"MIT"}, FilePath: "LICENSE"},
 	}
 	Licenses = []*license.License{
-		{Metadata: *LicenseMetadata[0], Contents: []byte(`Lorem Ipsum`)},
+		{Metadata: LicenseMetadata[0], Contents: []byte(`Lorem Ipsum`)},
 	}
 	DocumentationHTML = []byte("This is the documentation HTML")
 	PackageName       = "foo"

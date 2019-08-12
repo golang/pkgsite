@@ -124,7 +124,7 @@ func Detect(contentsDir string, r *zip.Reader) ([]*License, error) {
 				}
 				sort.Strings(typs)
 				licenses = append(licenses, &License{
-					Metadata: Metadata{
+					Metadata: &Metadata{
 						Types:    typs,
 						FilePath: filePath,
 					},
@@ -134,7 +134,7 @@ func Detect(contentsDir string, r *zip.Reader) ([]*License, error) {
 		}
 		if !matched {
 			licenses = append(licenses, &License{
-				Metadata: Metadata{FilePath: filePath},
+				Metadata: &Metadata{FilePath: filePath},
 			})
 
 		}

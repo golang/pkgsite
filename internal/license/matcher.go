@@ -11,11 +11,11 @@ import (
 )
 
 // Matcher associates directories with their applicable licenses.
-type Matcher map[string][]Metadata
+type Matcher map[string][]*Metadata
 
 // NewMatcher creates a Matcher for the given licenses.
 func NewMatcher(licenses []*License) Matcher {
-	var matcher Matcher = make(map[string][]Metadata)
+	var matcher Matcher = make(map[string][]*Metadata)
 	for _, l := range licenses {
 		prefix := path.Dir(l.FilePath)
 		matcher[prefix] = append(matcher[prefix], l.Metadata)
@@ -33,13 +33,10 @@ func (m Matcher) Match(dir string) []*Metadata {
 	}
 
 	var licenseFiles []*Metadata
-	for prefix, lics := range m {
+	for prefix, lms := range m {
 		// append a slash so that prefix a/b does not match a/bc/d
 		if prefix == "." || strings.HasPrefix(cleanDir+"/", prefix+"/") {
-			for _, lic := range lics {
-				lf := lic
-				licenseFiles = append(licenseFiles, &lf)
-			}
+			licenseFiles = append(licenseFiles, lms...)
 		}
 	}
 	return licenseFiles

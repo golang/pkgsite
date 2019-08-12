@@ -128,7 +128,7 @@ commodo consequat.`,
 			})
 			var gotFiles []*Metadata
 			for _, l := range got {
-				gotFiles = append(gotFiles, &l.Metadata)
+				gotFiles = append(gotFiles, l.Metadata)
 			}
 			if diff := cmp.Diff(test.want, gotFiles); diff != "" {
 				t.Errorf("detectLicense(z) mismatch (-want +got):\n%s", diff)

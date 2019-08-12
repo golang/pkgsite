@@ -18,7 +18,7 @@ type Metadata struct {
 
 // A License is a classified license file path and its contents.
 type License struct {
-	Metadata
+	*Metadata
 	Contents []byte
 }
 
@@ -86,7 +86,7 @@ func (lm *Metadata) IsRedistributable() bool {
 func ToMetadatas(lics []*License) []*Metadata {
 	var ms []*Metadata
 	for _, l := range lics {
-		ms = append(ms, &l.Metadata)
+		ms = append(ms, l.Metadata)
 	}
 	return ms
 }

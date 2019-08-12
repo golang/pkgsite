@@ -14,10 +14,12 @@ import (
 func TestMatch(t *testing.T) {
 
 	fake := func(path string) *License {
-		var l License
-		l.FilePath = path
-		l.Types = []string{"MIT"}
-		return &l
+		return &License{
+			Metadata: &Metadata{
+				FilePath: path,
+				Types:    []string{"MIT"},
+			},
+		}
 	}
 
 	tests := []struct {
