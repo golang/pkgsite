@@ -54,7 +54,11 @@ func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int)
 				-- lower its rank by 50% since a lot of details
 				-- cannot be displayed.
 				-- TODO(b/136283982): improve how this signal
-				-- is used in search ranking
+				-- is used in search ranking.
+				-- The log factor contains exp(1) (which is e) so that
+				-- it is always >= 1. Taking the log of imported_by_count
+				-- instead of using it directly makes the effect less dramatic:
+				-- being 2x as popular only has an additive effect.
 				ts_rank(tsv_search_tokens, websearch_to_tsquery($1)) *
 					log(exp(1)+imported_by_count) *
 					CASE WHEN redistributable THEN 1 ELSE 0.5 END
