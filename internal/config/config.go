@@ -132,8 +132,8 @@ func OnAppEngine() bool {
 // DBConnInfo returns a PostgreSQL connection string constructed from
 // environment variables.
 func DBConnInfo() string {
-	return fmt.Sprintf("user='%s' password='%s' host='%s' dbname='%s' sslmode=disable",
-		cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBName)
+	return fmt.Sprintf("user='%s' password='%s' host='%s' port=%s dbname='%s' sslmode=disable",
+		cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName)
 }
 
 type config struct {
@@ -155,7 +155,7 @@ type config struct {
 	// AppEngine.
 	FallbackVersionLabel string
 
-	DBSecret, DBUser, DBHost, DBName string
+	DBSecret, DBUser, DBHost, DBPort, DBName string
 
 	DBPassword string `json:"-"`
 }
@@ -225,6 +225,7 @@ func Init(ctx context.Context) error {
 	cfg.DBUser = GetEnv("GO_DISCOVERY_DATABASE_USER", "postgres")
 	cfg.DBPassword = os.Getenv("GO_DISCOVERY_DATABASE_PASSWORD")
 	cfg.DBHost = GetEnv("GO_DISCOVERY_DATABASE_HOST", "localhost")
+	cfg.DBPort = GetEnv("GO_DISCOVERY_DATABASE_PORT", "5432")
 	cfg.DBName = GetEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-database")
 	cfg.DBSecret = os.Getenv("GO_DISCOVERY_DATABASE_SECRET")
 
