@@ -284,7 +284,7 @@ func (db *DB) GetVersion(ctx context.Context, modulePath, version string) (_ *in
 // in descending order by prerelease. This list includes tagged versions of
 // packages that have the same v1path.
 func (db *DB) GetTaggedVersionsForPackageSeries(ctx context.Context, path string) ([]*internal.VersionInfo, error) {
-	return getVersions(ctx, db, path, []internal.VersionType{internal.VersionTypeRelease, internal.VersionTypePrerelease})
+	return getPackageVersions(ctx, db, path, []internal.VersionType{internal.VersionTypeRelease, internal.VersionTypePrerelease})
 }
 
 // GetPseudoVersionsForPackageSeries returns the 10 most recent from a list of
@@ -292,30 +292,22 @@ func (db *DB) GetTaggedVersionsForPackageSeries(ctx context.Context, path string
 // and then lexicographically in descending order by prerelease. This list includes
 // pseudo-versions of packages that have the same v1path.
 func (db *DB) GetPseudoVersionsForPackageSeries(ctx context.Context, path string) ([]*internal.VersionInfo, error) {
-	return getVersions(ctx, db, path, []internal.VersionType{internal.VersionTypePseudo})
+	return getPackageVersions(ctx, db, path, []internal.VersionType{internal.VersionTypePseudo})
 }
 
-// getVersions returns a list of versions sorted numerically
+// getPackageVersions returns a list of versions sorted numerically
 // in descending order by major, minor and patch number and then
 // lexicographically in descending order by prerelease. The version types
 // included in the list are specified by a list of VersionTypes. The results
 // include the type of versions of packages that are part of the same series
 // and have the same package v1path.
-func getVersions(ctx context.Context, db *DB, path string, versionTypes []internal.VersionType) (_ []*internal.VersionInfo, err error) {
-	defer derrors.Wrap(&err, "DB.getVersions(ctx, db, %q, %v)", path, versionTypes)
-
-	var (
-		modulePath, synopsis, version, v1path string
-		commitTime                            time.Time
-		versionHistory                        []*internal.VersionInfo
-	)
+func getPackageVersions(ctx context.Context, db *DB, path string, versionTypes []internal.VersionType) (_ []*internal.VersionInfo, err error) {
+	defer derrors.Wrap(&err, "DB.getPackageVersions(ctx, db, %q, %v)", path, versionTypes)
 
 	baseQuery := `SELECT
 			p.module_path,
 			p.version,
-			p.v1_path,
-			v.commit_time,
-			p.synopsis
+			v.commit_time
 		FROM
 			packages p
 		INNER JOIN
@@ -329,7 +321,7 @@ func getVersions(ctx context.Context, db *DB, path string, versionTypes []intern
 				FROM packages
 				WHERE path=$1
 			)
-			AND (%s)
+			AND version_type in (%s)
 		ORDER BY
 			v.module_path DESC,
 			v.major DESC,
@@ -342,36 +334,21 @@ func getVersions(ctx context.Context, db *DB, path string, versionTypes []intern
 	} else if len(versionTypes) == 1 && versionTypes[0] == internal.VersionTypePseudo {
 		queryEnd = `LIMIT 10;`
 	}
+	query := fmt.Sprintf(baseQuery, versionTypeExpr(versionTypes), queryEnd)
 
-	var (
-		vtQuery []string
-		params  = []interface{}{path}
-	)
-	for i, vt := range versionTypes {
-		// v.version_type can be just version_type once
-		// packages.version_type is dropped.
-		vtQuery = append(vtQuery, fmt.Sprintf(`v.version_type = $%d`, i+2))
-		params = append(params, vt.String())
-	}
-
-	query := fmt.Sprintf(baseQuery, strings.Join(vtQuery, " OR "), queryEnd)
-
-	rows, err := db.query(ctx, query, params...)
+	rows, err := db.query(ctx, query, path)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
+	var versionHistory []*internal.VersionInfo
 	for rows.Next() {
-		if err := rows.Scan(&modulePath, &version, &v1path, &commitTime, &synopsis); err != nil {
+		var vi internal.VersionInfo
+		if err := rows.Scan(&vi.ModulePath, &vi.Version, &vi.CommitTime); err != nil {
 			return nil, fmt.Errorf("row.Scan(): %v", err)
 		}
-
-		versionHistory = append(versionHistory, &internal.VersionInfo{
-			ModulePath: modulePath,
-			Version:    version,
-			CommitTime: commitTime,
-		})
+		versionHistory = append(versionHistory, &vi)
 	}
 
 	if err := rows.Err(); err != nil {
@@ -379,6 +356,16 @@ func getVersions(ctx context.Context, db *DB, path string, versionTypes []intern
 	}
 
 	return versionHistory, nil
+}
+
+// versionTypeExpr returns a comma-separated list of version types,
+// for use in a clause like "WHERE version_type IN (%s)"
+func versionTypeExpr(vts []internal.VersionType) string {
+	var vs []string
+	for _, vt := range vts {
+		vs = append(vs, fmt.Sprintf("'%s'", vt.String()))
+	}
+	return strings.Join(vs, ", ")
 }
 
 // GetImports fetches and returns all of the imports for the package with path
