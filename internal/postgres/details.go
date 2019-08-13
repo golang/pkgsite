@@ -25,7 +25,9 @@ import (
 //
 // The returned error may be checked with derrors.IsInvalidArgument to
 // determine if it was caused by an invalid path or version.
-func (db *DB) GetPackage(ctx context.Context, path string, version string) (*internal.VersionedPackage, error) {
+func (db *DB) GetPackage(ctx context.Context, path string, version string) (_ *internal.VersionedPackage, err error) {
+	defer derrors.Wrap(&err, "DB.GetPackage(ctx, %q, %q)", path, version)
+
 	if path == "" || version == "" {
 		return nil, xerrors.Errorf("neither path nor version can be empty: %w", derrors.InvalidArgument)
 	}
@@ -106,7 +108,9 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (*int
 // GetLatestPackage returns the package from the database with the latest version.
 // If multiple packages share the same path then the package that the database
 // chooses is returned.
-func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.VersionedPackage, error) {
+func (db *DB) GetLatestPackage(ctx context.Context, path string) (_ *internal.VersionedPackage, err error) {
+	defer derrors.Wrap(&err, "DB.GetLatestPackage(ctx, %q)", path)
+
 	if path == "" {
 		return nil, fmt.Errorf("path cannot be empty")
 	}
@@ -194,7 +198,9 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (*internal.Vers
 // GetVersion returns the module version corresponding to path and
 // version. *internal.Version will contain all packages for that version, in
 // sorted order by package path.
-func (db *DB) GetVersion(ctx context.Context, modulePath, version string) (*internal.Version, error) {
+func (db *DB) GetVersion(ctx context.Context, modulePath, version string) (_ *internal.Version, err error) {
+	defer derrors.Wrap(&err, "DB.GetVersion(ctx, %q, %q)", modulePath, version)
+
 	query := `SELECT
 		p.path,
 		p.name,
@@ -295,7 +301,9 @@ func (db *DB) GetPseudoVersionsForPackageSeries(ctx context.Context, path string
 // included in the list are specified by a list of VersionTypes. The results
 // include the type of versions of packages that are part of the same series
 // and have the same package v1path.
-func getVersions(ctx context.Context, db *DB, path string, versionTypes []internal.VersionType) ([]*internal.VersionInfo, error) {
+func getVersions(ctx context.Context, db *DB, path string, versionTypes []internal.VersionType) (_ []*internal.VersionInfo, err error) {
+	defer derrors.Wrap(&err, "DB.getVersions(ctx, db, %q, %v)", path, versionTypes)
+
 	var (
 		modulePath, synopsis, version, v1path string
 		commitTime                            time.Time
@@ -378,7 +386,9 @@ func getVersions(ctx context.Context, db *DB, path string, versionTypes []intern
 // the imports will be returned.
 // The returned error may be checked with derrors.IsInvalidArgument to
 // determine if it resulted from an invalid package path or version.
-func (db *DB) GetImports(ctx context.Context, path, version string) ([]string, error) {
+func (db *DB) GetImports(ctx context.Context, path, version string) (paths []string, err error) {
+	defer derrors.Wrap(&err, "DB.GetImports(ctx, %q, %q)", path, version)
+
 	if path == "" || version == "" {
 		return nil, xerrors.Errorf("neither path nor version can be empty: %w", derrors.InvalidArgument)
 	}
@@ -415,7 +425,8 @@ func (db *DB) GetImports(ctx context.Context, path, version string) ([]string, e
 // package with path.
 // The returned error may be checked with derrors.IsInvalidArgument to
 // determine if it resulted from an invalid package path or version.
-func (db *DB) GetImportedBy(ctx context.Context, path, modulePath string, limit, offset int) ([]string, int, error) {
+func (db *DB) GetImportedBy(ctx context.Context, path, modulePath string, limit, offset int) (paths []string, total int, err error) {
+	defer derrors.Wrap(&err, "GetImportedBy(ctx, %q, %q, %d, %d)", path, modulePath, limit, offset)
 	if path == "" {
 		return nil, 0, xerrors.Errorf("path cannot be empty: %w", derrors.InvalidArgument)
 	}
@@ -447,7 +458,6 @@ func (db *DB) GetImportedBy(ctx context.Context, path, modulePath string, limit,
 
 	var (
 		fromPath   string
-		total      int
 		importedby []string
 	)
 	for rows.Next() {
@@ -462,7 +472,9 @@ func (db *DB) GetImportedBy(ctx context.Context, path, modulePath string, limit,
 // GetModuleLicenses returns all licenses associated with the given module path and
 // version. These are the top-level licenses in the module zip file.
 // It returns an InvalidArgument error if the module path or version is invalid.
-func (db *DB) GetModuleLicenses(ctx context.Context, modulePath, version string) ([]*license.License, error) {
+func (db *DB) GetModuleLicenses(ctx context.Context, modulePath, version string) (_ []*license.License, err error) {
+	defer derrors.Wrap(&err, "GetModuleLicenses(ctx, %q, %q)", modulePath, version)
+
 	if modulePath == "" || version == "" {
 		return nil, xerrors.Errorf("neither modulePath nor version can be empty: %w", derrors.InvalidArgument)
 	}
@@ -485,7 +497,9 @@ func (db *DB) GetModuleLicenses(ctx context.Context, modulePath, version string)
 // GetPackageLicenses returns all licenses associated with the given package path and
 // version.
 // It returns an InvalidArgument error if the module path or version is invalid.
-func (db *DB) GetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) ([]*license.License, error) {
+func (db *DB) GetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) (_ []*license.License, err error) {
+	defer derrors.Wrap(&err, "GetPackageLicenses(ctx, %q, %q, %q)", pkgPath, modulePath, version)
+
 	if pkgPath == "" || version == "" {
 		return nil, xerrors.Errorf("neither pkgPath nor version can be empty: %w", derrors.InvalidArgument)
 	}
@@ -592,7 +606,9 @@ func compareLicenses(i, j *license.Metadata) bool {
 
 // GetVersionInfo fetches a Version from the database with the primary key
 // (module_path, version).
-func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version string) (*internal.VersionInfo, error) {
+func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version string) (_ *internal.VersionInfo, err error) {
+	defer derrors.Wrap(&err, "GetVersionInfo(ctx, %q, %q)", modulePath, version)
+
 	var (
 		repositoryURL, vcsType, homepageURL sql.NullString
 		readmeFilePath, versionType         string

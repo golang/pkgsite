@@ -59,12 +59,12 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 	if version == "" {
 		pkg, err = s.db.GetLatestPackage(ctx, path)
 		if err != nil && !xerrors.Is(err, derrors.NotFound) {
-			log.Printf("s.db.GetLatestPackage(ctx, %q): %v", path, err)
+			log.Print(err)
 		}
 	} else {
 		pkg, err = s.db.GetPackage(ctx, path, version)
 		if err != nil && !xerrors.Is(err, derrors.NotFound) {
-			log.Printf("s.db.GetPackage(ctx, %q, %q): %v", path, version, err)
+			log.Print(err)
 		}
 	}
 	if err != nil {
@@ -192,7 +192,7 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		code := http.StatusNotFound
 		if !xerrors.Is(err, derrors.NotFound) {
-			log.Printf("s.db.GetVersion(ctx, %q, %q): %v", path, version, err)
+			log.Print(err)
 			code = http.StatusInternalServerError
 		}
 		s.serveErrorPage(w, r, code, nil)
@@ -547,7 +547,7 @@ type ModuleDetails struct {
 func fetchModuleDetails(ctx context.Context, db *postgres.DB, vi *internal.VersionInfo) (*ModuleDetails, error) {
 	version, err := db.GetVersion(ctx, vi.ModulePath, vi.Version)
 	if err != nil {
-		return nil, fmt.Errorf("db.GetVersion(ctx, %q, %q): %v", vi.ModulePath, vi.Version, err)
+		return nil, err
 	}
 
 	var packages []*Package

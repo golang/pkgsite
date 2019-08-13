@@ -67,7 +67,7 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 
 			gotPkg, err := testDB.GetLatestPackage(ctx, tc.path)
 			if (err != nil) != tc.wantReadErr {
-				t.Errorf("testDB.GetLatestPackage(ctx, %q): %v", tc.path, err)
+				t.Fatal(err)
 			}
 
 			if diff := cmp.Diff(tc.wantPkg, gotPkg, cmpopts.EquateEmpty()); diff != "" {
@@ -186,7 +186,7 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 
 			got, err := testDB.GetImports(ctx, tc.path, tc.version)
 			if err != nil {
-				t.Fatalf("testDB.GetImports(%q, %q): %v", tc.path, tc.version, err)
+				t.Fatal(err)
 			}
 
 			sort.Strings(got)
@@ -197,7 +197,7 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 
 			gotImportedBy, total, err := testDB.GetImportedBy(ctx, tc.path, tc.modulePath, tc.limit, tc.offset)
 			if err != nil {
-				t.Fatalf("testDB.GetImportedBy(%q, %q, %d, %d): %v", tc.path, tc.modulePath, tc.limit, tc.offset, err)
+				t.Fatal(err)
 			}
 			if total != tc.wantTotalImportedBy {
 				t.Errorf("testDB.GetImportedBy(%q, %q, %d, %d): total = %d, want %d", tc.path, tc.modulePath, tc.limit, tc.offset, total, tc.wantTotalImportedBy)
@@ -318,7 +318,7 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 
 			got, err = testDB.GetPseudoVersionsForPackageSeries(ctx, tc.path)
 			if err != nil {
-				t.Fatalf("testDB.GetPseudoVersionsForPackageSeries(%q) error: %v", tc.path, err)
+				t.Fatal(err)
 			}
 
 			if len(got) != len(wantPseudoVersions) {
@@ -333,7 +333,7 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 
 			got, err = testDB.GetTaggedVersionsForPackageSeries(ctx, tc.path)
 			if err != nil {
-				t.Fatalf("testDB.GetTaggedVersionsForPackageSeries(%q) error: %v", tc.path, err)
+				t.Fatal(err)
 			}
 
 			if len(got) != len(tc.wantTaggedVersions) {
@@ -375,7 +375,7 @@ func TestGetVersion(t *testing.T) {
 
 			got, err := testDB.GetVersion(ctx, tc.path, tc.version)
 			if err != nil {
-				t.Errorf("testDB.GetVersion(ctx, %q, %q): %v", tc.path, tc.version, err)
+				t.Fatal(err)
 			}
 
 			// TODO(b/130367504): remove this ignore once imports are not asymmetric
@@ -419,7 +419,7 @@ func TestGetPackageLicenses(t *testing.T) {
 		t.Run(test.label, func(t *testing.T) {
 			got, err := testDB.GetPackageLicenses(ctx, test.pkgPath, modulePath, testVersion.Version)
 			if err != nil {
-				t.Fatalf("testDB.GetLicenses(ctx, %q, %q): %v", test.pkgPath, testVersion.Version, err)
+				t.Fatal(err)
 			}
 			if diff := cmp.Diff(test.wantLicenses, got); diff != "" {
 				t.Errorf("testDB.GetLicenses(ctx, %q, %q) mismatch (-want +got):\n%s", test.pkgPath, testVersion.Version, diff)
@@ -453,7 +453,7 @@ func TestGetModuleLicenses(t *testing.T) {
 
 	got, err := testDB.GetModuleLicenses(ctx, modulePath, testVersion.Version)
 	if err != nil {
-		t.Fatalf("testDB.GetModuleLicenses(ctx, %q, %q): %v", modulePath, testVersion.Version, err)
+		t.Fatal(err)
 	}
 	// We only want the top-level license.
 	wantLicenses := []*license.License{licenses[0]}

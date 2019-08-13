@@ -60,11 +60,11 @@ func TestSkipBadPackage(t *testing.T) {
 
 	pkgFoo := modulePath + "/foo"
 	if _, err := testDB.GetPackage(ctx, pkgFoo, version); err != nil {
-		t.Errorf("testDB.GetPackage(ctx, %q, %q): %v, want nil", pkgFoo, version, err)
+		t.Errorf("got %v, want nil", err)
 	}
 	pkgBar := modulePath + "/bar"
 	if _, err := testDB.GetPackage(ctx, pkgBar, version); !xerrors.Is(err, derrors.NotFound) {
-		t.Errorf("testDB.GetPackage(ctx, %q, %q): %v, want NotFound", pkgBar, version, err)
+		t.Errorf("got %v, want NotFound", err)
 	}
 }
 
@@ -84,7 +84,7 @@ func TestFetch_V1Path(t *testing.T) {
 	}
 	pkg, err := testDB.GetPackage(ctx, "my.mod/foo", "v1.0.0")
 	if err != nil {
-		t.Fatalf("GetPackage: %v", err)
+		t.Fatal(err)
 	}
 	if got, want := pkg.V1Path, "my.mod/foo"; got != want {
 		t.Errorf("V1Path = %q, want %q", got, want)
@@ -128,7 +128,7 @@ func TestReFetch(t *testing.T) {
 	}
 
 	if _, err := testDB.GetPackage(ctx, pkgFoo, version); err != nil {
-		t.Errorf("testDB.GetPackage(ctx, %q, %q): %v", pkgFoo, version, err)
+		t.Error(err)
 	}
 
 	// Now re-fetch and verify that contents were overwritten.
@@ -163,7 +163,7 @@ func TestReFetch(t *testing.T) {
 	}
 	got, err := testDB.GetPackage(ctx, pkgBar, version)
 	if err != nil {
-		t.Fatalf("testDB.GetPackage(ctx, %q, %q): %v", pkgBar, version, err)
+		t.Fatal(err)
 	}
 	if diff := cmp.Diff(want, got, cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML")); diff != "" {
 		t.Errorf("testDB.GetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", pkgBar, version, diff)
@@ -171,7 +171,7 @@ func TestReFetch(t *testing.T) {
 
 	// For good measure, verify that package foo is now NotFound.
 	if _, err := testDB.GetPackage(ctx, pkgFoo, version); !xerrors.Is(err, derrors.NotFound) {
-		t.Errorf("testDB.GetPackage(ctx, %q, %q): %v, want NotFound", pkgFoo, version, err)
+		t.Errorf("got %v, want NotFound", err)
 	}
 }
 
@@ -360,7 +360,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 
 			gotVersionInfo, err := testDB.GetVersionInfo(ctx, test.modulePath, test.version)
 			if err != nil {
-				t.Fatalf("testDB.GetVersionInfo(ctx, %q, %q): %v", test.modulePath, test.version, err)
+				t.Fatal(err)
 			}
 			if diff := cmp.Diff(test.want.VersionInfo, *gotVersionInfo); diff != "" {
 				t.Fatalf("testDB.GetVersionInfo(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
@@ -368,7 +368,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 
 			gotPkg, err := testDB.GetPackage(ctx, test.pkg, test.version)
 			if err != nil {
-				t.Fatalf("testDB.GetPackage(ctx, %q, %q): %v", test.pkg, test.version, err)
+				t.Fatal(err)
 			}
 
 			sort.Slice(gotPkg.Licenses, func(i, j int) bool {
@@ -452,7 +452,7 @@ func TestFetchAndUpdateState_Gone(t *testing.T) {
 	checkStatus(http.StatusOK)
 
 	if _, err := testDB.GetVersionInfo(ctx, modulePath, version); err != nil {
-		t.Fatalf("testDB.GetVersionInfo(ctx, %q, %q): %v", modulePath, version, err)
+		t.Fatal(err)
 	}
 
 	teardownProxy()
@@ -474,7 +474,7 @@ func TestFetchAndUpdateState_Gone(t *testing.T) {
 
 	// The module should no longer be in the database.
 	if _, err := testDB.GetVersionInfo(ctx, modulePath, version); !xerrors.Is(err, derrors.NotFound) {
-		t.Fatalf("testDB.GetVersionInfo(ctx, %q, %q): got %v, want NotFound", modulePath, version, err)
+		t.Fatalf("got %v, want NotFound", err)
 	}
 }
 

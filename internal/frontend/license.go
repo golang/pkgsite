@@ -6,7 +6,6 @@ package frontend
 
 import (
 	"context"
-	"fmt"
 	"net/url"
 
 	"golang.org/x/discovery/internal"
@@ -37,7 +36,7 @@ type LicenseMetadata struct {
 func fetchPackageLicensesDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*LicensesDetails, error) {
 	dbLicenses, err := db.GetPackageLicenses(ctx, pkg.Path, pkg.ModulePath, pkg.VersionInfo.Version)
 	if err != nil {
-		return nil, fmt.Errorf("db.GetPackageLicenses(ctx, %q, %q): %v", pkg.Path, pkg.VersionInfo.Version, err)
+		return nil, err
 	}
 	return &LicensesDetails{Licenses: transformLicenses(dbLicenses)}, nil
 }

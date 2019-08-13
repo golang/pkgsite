@@ -6,7 +6,6 @@ package frontend
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"golang.org/x/discovery/internal"
@@ -35,7 +34,7 @@ type ImportsDetails struct {
 func fetchImportsDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*ImportsDetails, error) {
 	dbImports, err := db.GetImports(ctx, pkg.Path, pkg.VersionInfo.Version)
 	if err != nil {
-		return nil, fmt.Errorf("db.GetImports(ctx, %q, %q): %v", pkg.Path, pkg.VersionInfo.Version, err)
+		return nil, err
 	}
 
 	var externalImports, moduleImports, std []string
@@ -75,7 +74,7 @@ func fetchImportedByDetails(ctx context.Context, db *postgres.DB, pkg *internal.
 
 	importedBy, total, err := db.GetImportedBy(ctx, pkg.Path, pkg.ModulePath, pageParams.limit, pageParams.offset())
 	if err != nil {
-		return nil, fmt.Errorf("db.GetImportedBy(ctx, %q): %v", pkg.Path, err)
+		return nil, err
 	}
 	return &ImportedByDetails{
 		ModulePath: pkg.VersionInfo.ModulePath,

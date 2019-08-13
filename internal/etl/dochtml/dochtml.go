@@ -13,6 +13,7 @@ package dochtml
 
 import (
 	"bytes"
+	"fmt"
 	"go/printer"
 	"go/token"
 	"html/template"
@@ -48,6 +49,9 @@ func Render(fset *token.FileSet, p *doc.Package) ([]byte, error) {
 		Package:  p,
 		Examples: collectExamples(p),
 	})
+	if err != nil {
+		err = fmt.Errorf("dochtml.Render: %v", err)
+	}
 	return buf.Bytes(), err
 }
 

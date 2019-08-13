@@ -131,7 +131,7 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 
 			got, err := testDB.GetVersionInfo(ctx, tc.wantModulePath, tc.wantVersion)
 			if tc.wantReadErr != (err != nil) {
-				t.Fatalf("testDB.GetVersionInfo(ctx, %q, %q) error: %v, want read error: %t", tc.wantModulePath, tc.wantVersion, err, tc.wantReadErr)
+				t.Fatalf("error: got %v, want read error: %t", err, tc.wantReadErr)
 			}
 
 			if !tc.wantReadErr && got == nil {
@@ -147,19 +147,15 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 			gotPkg, err := testDB.GetPackage(ctx, tc.wantPkgPath, tc.wantVersion)
 			if tc.version == nil || tc.version.Packages == nil || tc.wantPkgPath == "" {
 				if tc.wantReadErr != (err != nil) {
-					t.Fatalf("testDB.GetPackage(ctx, %q, %q) = %v, want %v", tc.wantPkgPath, tc.wantVersion, err, sql.ErrNoRows)
+					t.Fatalf("got %v, want %v", err, sql.ErrNoRows)
 				}
 				return
 			}
 			if err != nil {
-				t.Errorf("testDB.GetPackage(ctx, %q, %q): %v", tc.wantPkgPath, tc.wantVersion, err)
+				t.Error(err)
 			}
 
 			wantPkg := tc.version.Packages[0]
-			if err != nil {
-				t.Fatalf("testDB.GetPackage(ctx, %q, %q) = %v, want %v", tc.wantPkgPath, tc.wantVersion, gotPkg, wantPkg)
-			}
-
 			if gotPkg.VersionInfo.Version != tc.version.Version {
 				t.Errorf("testDB.GetPackage(ctx, %q, %q) version.version = %v, want %v", tc.wantPkgPath, tc.wantVersion, gotPkg.VersionInfo.Version, tc.version.Version)
 			}
@@ -181,13 +177,13 @@ func TestPostgres_DeleteVersion(t *testing.T) {
 		t.Fatalf("testDB.InsertVersion(ctx, %+v) error: %v", v, err)
 	}
 	if _, err := testDB.GetVersionInfo(ctx, v.ModulePath, v.Version); err != nil {
-		t.Fatalf("testDB.GetVersionInfo(ctx, %q, %q) error: %v", v.ModulePath, v.Version, err)
+		t.Fatal(err)
 	}
 	if err := testDB.DeleteVersion(ctx, nil, v.ModulePath, v.Version); err != nil {
 		t.Fatalf("testDB.DeleteVersion(ctx, %q, %q) error: %v", v.ModulePath, v.Version, err)
 	}
 	if _, err := testDB.GetVersionInfo(ctx, v.ModulePath, v.Version); !xerrors.Is(err, derrors.NotFound) {
-		t.Errorf("testDB.GetVersionInfo(ctx, %q, %q): got %v, want NotFound", v.ModulePath, v.Version, err)
+		t.Errorf("got %v, want NotFound", err)
 	}
 }
 

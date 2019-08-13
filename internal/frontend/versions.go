@@ -52,14 +52,14 @@ type PackageVersion struct {
 func fetchVersionsDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*VersionsDetails, error) {
 	versions, err := db.GetTaggedVersionsForPackageSeries(ctx, pkg.Path)
 	if err != nil {
-		return nil, fmt.Errorf("db.GetTaggedVersions(%q): %v", pkg.Path, err)
+		return nil, err
 	}
 	// If no tagged versions for the package series are found,
 	// fetch the pseudo-versions instead.
 	if len(versions) == 0 {
 		versions, err = db.GetPseudoVersionsForPackageSeries(ctx, pkg.Path)
 		if err != nil {
-			return nil, fmt.Errorf("db.GetPseudoVersions(%q): %v", pkg.Path, err)
+			return nil, err
 		}
 	}
 
