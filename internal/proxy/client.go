@@ -52,10 +52,10 @@ type VersionInfo struct {
 func New(rawurl string) (*Client, error) {
 	url, err := url.Parse(rawurl)
 	if err != nil {
-		return nil, fmt.Errorf("url.Parse(%q): %v", rawurl, err)
+		return nil, fmt.Errorf("proxy.New(%q): url.Parse: %v", rawurl, err)
 	}
 	if url.Scheme != "https" {
-		return nil, fmt.Errorf("scheme must be https (got %s)", url.Scheme)
+		return nil, fmt.Errorf("proxy.New(%q): scheme must be https (got %s)", rawurl, url.Scheme)
 	}
 	return &Client{url: cleanURL(rawurl), httpClient: &http.Client{Transport: &ochttp.Transport{}}}, nil
 }
@@ -70,7 +70,7 @@ func cleanURL(rawurl string) string {
 func (c *Client) GetInfo(ctx context.Context, path, version string) (*VersionInfo, error) {
 	v, err := c.getInfo(ctx, path, version)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("proxy.Client.GetInfo(ctx, %q, %q): %w", path, version, err)
 	}
 	if internal.IsStandardLibraryModule(path) {
 		v.Version = semver.Canonical(version)
@@ -106,7 +106,9 @@ func (c *Client) getInfo(ctx context.Context, requestedPath, requestedVersion st
 // that data into a *zip.Reader. <version> is obtained by first making a
 // request to $GOPROXY/<path>/@v/<version>.info to obtained the valid
 // semantic version.
-func (c *Client) GetZip(ctx context.Context, requestedPath, requestedVersion string) (*zip.Reader, error) {
+func (c *Client) GetZip(ctx context.Context, requestedPath, requestedVersion string) (_ *zip.Reader, err error) {
+	defer derrors.Wrap(&err, "proxy.Client.GetZip(ctx, %q, %q)", requestedPath, requestedVersion)
+
 	info, err := c.getInfo(ctx, requestedPath, requestedVersion)
 	if err != nil {
 		return nil, err

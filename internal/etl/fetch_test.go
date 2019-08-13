@@ -624,7 +624,7 @@ func TestExtractReadmeFromZip(t *testing.T) {
 
 			reader, err := client.GetZip(ctx, test.name, test.version)
 			if err != nil {
-				t.Fatalf("client.GetZip(ctx, %q, %q): %v", test.name, test.version, err)
+				t.Fatal(err)
 			}
 
 			gotPath, gotContents, err := extractReadmeFromZip(test.name, test.version, reader)
@@ -718,7 +718,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 
 			reader, err := client.GetZip(ctx, test.name, test.version)
 			if err != nil {
-				t.Fatalf("client.GetZip(ctx, %q %q): %v", test.name, test.version, err)
+				t.Fatal(err)
 			}
 
 			packages, err := extractPackagesFromZip(test.name, test.version, reader, nil)

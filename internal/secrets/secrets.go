@@ -11,6 +11,7 @@ import (
 
 	cloudkms "cloud.google.com/go/kms/apiv1"
 	"cloud.google.com/go/storage"
+	"golang.org/x/discovery/internal/derrors"
 	kmspb "google.golang.org/genproto/googleapis/cloud/kms/v1"
 )
 
@@ -23,6 +24,8 @@ var (
 
 // Get returns the named secret value as plaintext.
 func Get(ctx context.Context, name string) (plaintext string, err error) {
+	defer derrors.Add(&err, "secrets.Get(ctx, %q)", name)
+
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		return "", fmt.Errorf("could not create GCS storage client: %v", err)
@@ -56,6 +59,8 @@ func Get(ctx context.Context, name string) (plaintext string, err error) {
 // Set writes the named secret value. It will overwrite an existing secret with
 // the same name without returning an error.
 func Set(ctx context.Context, name, plaintext string) (err error) {
+	defer derrors.Add(&err, "secrets.Set(ctx, %q, plaintext)", name)
+
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		return fmt.Errorf("could not create GCS storage client: %v", err)

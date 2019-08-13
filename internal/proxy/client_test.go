@@ -145,7 +145,7 @@ func TestGetInfo(t *testing.T) {
 	version := "v1.0.0"
 	info, err := client.GetInfo(ctx, path, version)
 	if err != nil {
-		t.Fatalf("GetInfo(ctx, %q, %q) error: %v", path, version, err)
+		t.Fatal(err)
 	}
 
 	if info.Version != version {
@@ -236,7 +236,7 @@ func TestGetZip(t *testing.T) {
 		t.Run(tc.path, func(t *testing.T) {
 			zipReader, err := client.GetZip(ctx, tc.path, tc.version)
 			if err != nil {
-				t.Fatalf("GetZip(ctx, %q, %q) error: %v", tc.path, tc.version, err)
+				t.Fatal(err)
 			}
 
 			if len(zipReader.File) != len(tc.wantFiles) {
@@ -269,8 +269,7 @@ func TestGetZipNonExist(t *testing.T) {
 	path := "my.mod/nonexistmodule"
 	version := "v1.0.0"
 	if _, err := client.GetZip(ctx, path, version); !xerrors.Is(err, derrors.NotFound) {
-		t.Errorf("GetZip(ctx, %q, %q) returned error %v, want %v",
-			path, version, err, derrors.NotFound)
+		t.Errorf("got %v, want %v", err, derrors.NotFound)
 	}
 }
 

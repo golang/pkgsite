@@ -65,7 +65,7 @@ func main() {
 	}
 	proxyClient, err := proxy.New(config.ProxyURL())
 	if err != nil {
-		log.Fatalf("proxy.New: %v", err)
+		log.Fatal(err)
 	}
 
 	templatePath := filepath.Join(*staticPath, "html/etl/index.tmpl")

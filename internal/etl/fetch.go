@@ -153,7 +153,7 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, requestedVersi
 	if err != nil {
 		// Since this is our first client request, we wrap it to preserve error
 		// semantics: if info is not found, then we return NotFound.
-		return xerrors.Errorf("proxyClient.GetInfo(%q, %q): %w", modulePath, requestedVersion, err)
+		return xerrors.Errorf("fetchAndInsertVersion: %w", err)
 	}
 	versionType, err := ParseVersionType(info.Version)
 	if err != nil {
@@ -161,7 +161,7 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, requestedVersi
 	}
 	zipReader, err := proxyClient.GetZip(ctx, modulePath, requestedVersion)
 	if err != nil {
-		return xerrors.Errorf("proxyClient.GetZip(%q, %q): %w", modulePath, requestedVersion, err)
+		return xerrors.Errorf("fetchAndInsertVersion: %w", err)
 	}
 
 	// Module processing is wrapped in an inline func to facilitate tracing.

@@ -49,7 +49,7 @@ func TestProxyServer(t *testing.T, proxyMux *http.ServeMux) (*Client, func()) {
 	httpClient, proxy, serverClose := testhelper.SetupTestClientAndServer(proxyMux)
 	client, err := New(proxy.URL)
 	if err != nil {
-		t.Fatalf("New(%q): %v", proxy.URL, err)
+		t.Fatal(err)
 	}
 	client.httpClient = httpClient
 	return client, serverClose
@@ -118,7 +118,7 @@ func NewTestVersion(t *testing.T, modulePath, version string, contents map[strin
 	}
 	zip, err := testhelper.ZipContents(nestedContents)
 	if err != nil {
-		t.Fatalf("testhelper.ZipContents(%v): %v,", nestedContents, err)
+		t.Fatal(err)
 	}
 	return &TestVersion{
 		ModulePath: modulePath,
@@ -139,7 +139,7 @@ func defaultTestVersions() []*TestVersion {
 	proxyDataDir := testhelper.TestDataPath("testdata/modproxy")
 	absPath, err := filepath.Abs(proxyDataDir)
 	if err != nil {
-		log.Fatalf(fmt.Sprintf("filepath.Abs(%q): %v", proxyDataDir, err))
+		log.Fatalf("filepath.Abs(%q): %v", proxyDataDir, err)
 	}
 
 	var versions []*TestVersion
@@ -160,7 +160,7 @@ func defaultTestVersions() []*TestVersion {
 		f := filepath.FromSlash(fmt.Sprintf("%s@%s", v[0], v[1]))
 		bytes, err := zipFiles(rootDir, f)
 		if err != nil {
-			log.Fatalf(fmt.Sprintf("zipFiles(%q, %q): %v", rootDir, f, err))
+			log.Fatalf("zipFiles(%q, %q): %v", rootDir, f, err)
 		}
 
 		versions = append(versions, &TestVersion{

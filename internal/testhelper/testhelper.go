@@ -90,7 +90,7 @@ func writeZip(w io.Writer, contents map[string]string) (err error) {
 func ZipContents(contents map[string]string) ([]byte, error) {
 	bs := &bytes.Buffer{}
 	if err := writeZip(bs, contents); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("testhelper.ZipContents(%v): %v", contents, err)
 	}
 	return bs.Bytes(), nil
 }
