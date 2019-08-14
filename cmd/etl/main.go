@@ -55,7 +55,7 @@ func main() {
 	}
 	db, err := postgres.Open(driverName, config.DBConnInfo())
 	if err != nil {
-		log.Fatalf("postgres.Open(%q): %v", config.DBConnInfo(), err)
+		log.Fatalf("postgres.Open: %v", err)
 	}
 	defer db.Close()
 
