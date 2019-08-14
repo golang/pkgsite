@@ -21,7 +21,7 @@ info() { echo -e "${GREEN}$@${NORMAL}" 1>&2; }
 warn() { echo -e "${YELLOW}$@${NORMAL}" 1>&2; }
 err() { echo -e "${RED}$@${NORMAL}" 1>&2; EXIT_CODE=1; }
 
-if [[ $PWD != $(git rev-parse --show-toplevel) ]]; then
+if [[ ! -f ./all.bash ]]; then
   err "all.bash must be run from the repo root directory"
   exit 1
 fi
@@ -157,7 +157,7 @@ run_go_test() {
 }
 
 # run_go_test_secrets runs tests on the internal/secrets package, which must
-# be tested indepedently in order to accept the -use_cloud flag.
+# be tested independently in order to accept the -use_cloud flag.
 run_go_test_secrets() {
   runcmd go test ./internal/secrets -use_cloud
 }
@@ -181,6 +181,7 @@ Available subcommands:
   help        - display this help message
   (empty)     - run all standard checks and tests
   all         - run all checks and tests, including nonstandard
+  ci          - run checks and tests suitable for continuous integration
   test        - run go tests
   tidy        - run go mod tidy
   lint        - run all standard linters below:
@@ -210,6 +211,12 @@ main() {
       run_prettier
       run_go_mod_tidy
       run_tests
+      ;;
+    ci)
+      # Similar to the no-arg mode, but omit actions that require GCP
+      # permissions or that don't test the code.
+      standard_linters
+      run_go_test
       ;;
     test) run_tests ;;
     tidy) run_go_mod_tidy ;;
