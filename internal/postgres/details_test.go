@@ -219,7 +219,7 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 	}
 }
 
-func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
+func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
@@ -244,16 +244,17 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 	)
 
 	testCases := []struct {
-		name, path         string
-		numPseudo          int
-		versions           []*internal.Version
-		wantTaggedVersions []*internal.VersionInfo
+		name, path, modulePath string
+		numPseudo              int
+		versions               []*internal.Version
+		wantTaggedVersions     []*internal.VersionInfo
 	}{
 		{
-			name:      "want_releases_and_prereleases_only",
-			path:      "path.to/foo/bar",
-			numPseudo: 12,
-			versions:  testVersions,
+			name:       "want_releases_and_prereleases_only",
+			path:       "path.to/foo/bar",
+			modulePath: modulePath1,
+			numPseudo:  12,
+			versions:   testVersions,
 			wantTaggedVersions: []*internal.VersionInfo{
 				{
 					ModulePath: modulePath2,
@@ -278,13 +279,15 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 			},
 		},
 		{
-			name:     "want_zero_results_in_non_empty_db",
-			path:     "not.a/real/path",
-			versions: testVersions,
+			name:       "want_zero_results_in_non_empty_db",
+			path:       "not.a/real/path",
+			modulePath: "not.a/real/path",
+			versions:   testVersions,
 		},
 		{
-			name: "want_zero_results_in_empty_db",
-			path: "not.a/real/path",
+			name:       "want_zero_results_in_empty_db",
+			path:       "not.a/real/path",
+			modulePath: "not.a/real/path",
 		},
 	}
 
@@ -292,7 +295,7 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			defer ResetTestDB(testDB, t)
 
-			wantPseudoVersions := []*internal.VersionInfo{}
+			var wantPseudoVersions []*internal.VersionInfo
 			for i := 0; i < tc.numPseudo; i++ {
 
 				pseudo := fmt.Sprintf("v0.0.0-201806111833%02d-d8887717615a", i+1)
@@ -301,7 +304,7 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 				// factored out of fetch.go
 				v.VersionType = internal.VersionTypePseudo
 				if err := testDB.saveVersion(ctx, v, nil); err != nil {
-					t.Error(err)
+					t.Fatal(err)
 				}
 
 				// GetPseudoVersions should only return the 10 most recent pseudo versions,
@@ -317,45 +320,42 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 
 			for _, v := range tc.versions {
 				if err := testDB.saveVersion(ctx, v, nil); err != nil {
-					t.Error(err)
+					t.Fatal(err)
 				}
 			}
 
-			var (
-				got []*internal.VersionInfo
-				err error
-			)
-
-			got, err = testDB.GetPseudoVersionsForPackageSeries(ctx, tc.path)
+			got, err := testDB.GetPseudoVersionsForPackageSeries(ctx, tc.path)
 			if err != nil {
 				t.Fatal(err)
 			}
-
-			if len(got) != len(wantPseudoVersions) {
-				t.Fatalf("testDB.GetPseudoVersionsForPackageSeries(%q) returned list of length %v, wanted %v", tc.path, len(got), len(wantPseudoVersions))
-			}
-
-			for i, v := range got {
-				if diff := cmp.Diff(wantPseudoVersions[i], v); diff != "" {
-					t.Errorf("testDB.GetPseudoVersionsForPackageSeries(%q) mismatch (-want +got):\n%s", tc.path, diff)
-				}
+			if diff := cmp.Diff(wantPseudoVersions, got); diff != "" {
+				t.Errorf("testDB.GetPseudoVersionsForPackageSeries(%q) mismatch (-want +got):\n%s", tc.path, diff)
 			}
 
 			got, err = testDB.GetTaggedVersionsForPackageSeries(ctx, tc.path)
 			if err != nil {
 				t.Fatal(err)
 			}
-
-			if len(got) != len(tc.wantTaggedVersions) {
-				t.Fatalf("testDB.GetTaggedVersionsForPackageSeries(%q) returned list of length %v, wanted %v", tc.path, len(got), len(tc.wantTaggedVersions))
+			if diff := cmp.Diff(tc.wantTaggedVersions, got); diff != "" {
+				t.Errorf("testDB.GetTaggedVersionsForPackageSeries(%q) mismatch (-want +got):\n%s", tc.path, diff)
 			}
 
-			for i, v := range got {
-
-				if diff := cmp.Diff(tc.wantTaggedVersions[i], v); diff != "" {
-					t.Errorf("testDB.GetTaggedVersionsForPackageSeries(%q) mismatch (-want +got):\n%s", tc.path, diff)
-				}
+			got, err = testDB.GetPseudoVersionsForModule(ctx, tc.modulePath)
+			if err != nil {
+				t.Fatal(err)
 			}
+			if diff := cmp.Diff(wantPseudoVersions, got); diff != "" {
+				t.Errorf("testDB.GetPseudoVersionsForModule(%q) mismatch (-want +got):\n%s", tc.path, diff)
+			}
+
+			got, err = testDB.GetTaggedVersionsForModule(ctx, tc.modulePath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := cmp.Diff(tc.wantTaggedVersions, got); diff != "" {
+				t.Errorf("testDB.GetTaggedVersionsForModule(%q) mismatch (-want +got):\n%s", tc.path, diff)
+			}
+
 		})
 	}
 }

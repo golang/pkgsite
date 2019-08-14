@@ -368,6 +368,64 @@ func versionTypeExpr(vts []internal.VersionType) string {
 	return strings.Join(vs, ", ")
 }
 
+// GetTaggedVersionsForModule returns a list of tagged versions sorted
+// in descending order by major, minor and patch number and then lexicographically
+// in descending order by prerelease.
+func (db *DB) GetTaggedVersionsForModule(ctx context.Context, modulePath string) ([]*internal.VersionInfo, error) {
+	return getModuleVersions(ctx, db, modulePath, []internal.VersionType{internal.VersionTypeRelease, internal.VersionTypePrerelease})
+}
+
+// GetPseudoVersionsForModule returns the 10 most recent from a list of
+// pseudo-versions sorted in descending order by major, minor and patch number
+// and then lexicographically in descending order by prerelease.
+func (db *DB) GetPseudoVersionsForModule(ctx context.Context, modulePath string) ([]*internal.VersionInfo, error) {
+	return getModuleVersions(ctx, db, modulePath, []internal.VersionType{internal.VersionTypePseudo})
+}
+
+// getModuleVersions returns a list of versions sorted numerically
+// in descending order by major, minor and patch number and then
+// lexicographically in descending order by prerelease. The version types
+// included in the list are specified by a list of VersionTypes.
+func getModuleVersions(ctx context.Context, db *DB, modulePath string, versionTypes []internal.VersionType) (_ []*internal.VersionInfo, err error) {
+	// TODO(b/139530312): get information for parent modules.
+	defer derrors.Wrap(&err, "getModuleVersions(ctx, db, %q, %v)", modulePath, versionTypes)
+
+	baseQuery := `
+	SELECT
+		module_path, version, commit_time
+    FROM
+		versions
+	WHERE
+		series_path = $1
+	    AND version_type in (%s)
+	ORDER BY
+		major DESC,
+		minor DESC,
+		patch DESC,
+		prerelease DESC %s`
+
+	queryEnd := `;`
+	if len(versionTypes) == 0 {
+		return nil, fmt.Errorf("error: must specify at least one version type")
+	} else if len(versionTypes) == 1 && versionTypes[0] == internal.VersionTypePseudo {
+		queryEnd = `LIMIT 10;`
+	}
+	query := fmt.Sprintf(baseQuery, versionTypeExpr(versionTypes), queryEnd)
+	var vinfos []*internal.VersionInfo
+	collect := func(rows *sql.Rows) error {
+		var vi internal.VersionInfo
+		if err := rows.Scan(&vi.ModulePath, &vi.Version, &vi.CommitTime); err != nil {
+			return err
+		}
+		vinfos = append(vinfos, &vi)
+		return nil
+	}
+	if err := db.runQuery(ctx, query, collect, internal.SeriesPathForModule(modulePath)); err != nil {
+		return nil, err
+	}
+	return vinfos, nil
+}
+
 // GetImports fetches and returns all of the imports for the package with path
 // and version. If multiple packages have the same path and version, all of
 // the imports will be returned.
@@ -402,6 +460,9 @@ func (db *DB) GetImports(ctx context.Context, path, version string) (paths []str
 	}
 	if err := db.runQuery(ctx, query, collect, path, version); err != nil {
 		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows.Err(): %v", err)
 	}
 	return imports, nil
 }
