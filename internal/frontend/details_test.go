@@ -145,18 +145,22 @@ func TestCreatePackageHeader(t *testing.T) {
 		},
 		{
 			label: "command package",
-			pkg: sample.VersionedPackage(func(vp *internal.VersionedPackage) {
+			pkg: func() *internal.VersionedPackage {
+				vp := sample.VersionedPackage()
 				vp.Name = "main"
-			}),
+				return vp
+			}(),
 			wantPkg: samplePackage(),
 		},
 		{
 			label: "v2 command",
-			pkg: sample.VersionedPackage(func(vp *internal.VersionedPackage) {
+			pkg: func() *internal.VersionedPackage {
+				vp := sample.VersionedPackage()
 				vp.Name = "main"
 				vp.Path = "pa.th/to/foo/v2/bar"
 				vp.ModulePath = "pa.th/to/foo/v2"
-			}),
+				return vp
+			}(),
 			wantPkg: samplePackage(func(p *Package) {
 				p.Path = "pa.th/to/foo/v2/bar"
 				p.Suffix = "bar"
@@ -165,11 +169,13 @@ func TestCreatePackageHeader(t *testing.T) {
 		},
 		{
 			label: "explicit v1 command",
-			pkg: sample.VersionedPackage(func(vp *internal.VersionedPackage) {
+			pkg: func() *internal.VersionedPackage {
+				vp := sample.VersionedPackage()
 				vp.Name = "main"
 				vp.Path = "pa.th/to/foo/v1"
 				vp.ModulePath = "pa.th/to/foo/v1"
-			}),
+				return vp
+			}(),
 			wantPkg: samplePackage(func(p *Package) {
 				p.Path = "pa.th/to/foo/v1"
 				p.Suffix = "foo (root)"

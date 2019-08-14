@@ -32,25 +32,25 @@ func TestFetchVersionsDetails(t *testing.T) {
 		v2Path      = "test.com/module/v2/foo"
 		v1Path      = "test.com/module/foo"
 		commitTime  = "0 hours ago"
-		pkg1        = sample.VersionedPackage(func(vp *internal.VersionedPackage) {
-			vp.Path = v1Path
-			vp.V1Path = v1Path
-			vp.ModulePath = modulePath1
-			vp.Version = "v1.2.1"
-		})
-		pkg2 = sample.VersionedPackage(func(vp *internal.VersionedPackage) {
-			vp.Path = v2Path
-			vp.V1Path = v1Path
-			vp.ModulePath = modulePath2
-			vp.Version = "v2.2.1-alpha.1"
-		})
-		nethttpPkg = sample.VersionedPackage(func(vp *internal.VersionedPackage) {
-			vp.Path = "net/http"
-			vp.V1Path = "net/http"
-			vp.ModulePath = "std"
-			vp.Version = "v1.12.5"
-		})
 	)
+
+	pkg1 := sample.VersionedPackage()
+	pkg1.Path = v1Path
+	pkg1.V1Path = v1Path
+	pkg1.ModulePath = modulePath1
+	pkg1.Version = "v1.2.1"
+
+	pkg2 := sample.VersionedPackage()
+	pkg2.Path = v2Path
+	pkg2.V1Path = v1Path
+	pkg2.ModulePath = modulePath2
+	pkg2.Version = "v2.2.1-alpha.1"
+
+	nethttpPkg := sample.VersionedPackage()
+	nethttpPkg.Path = "net/http"
+	nethttpPkg.V1Path = "net/http"
+	nethttpPkg.ModulePath = "std"
+	nethttpPkg.Version = "v1.12.5"
 
 	for _, tc := range []struct {
 		name        string

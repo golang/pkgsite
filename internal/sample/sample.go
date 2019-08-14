@@ -55,12 +55,6 @@ var (
 			Packages:    []*internal.Package{Package()},
 		}
 	}).Sample
-	VersionedPackage = VersionedPackageSampler(func() *internal.VersionedPackage {
-		return &internal.VersionedPackage{
-			VersionInfo: *VersionInfo(),
-			Package:     *Package(),
-		}
-	}).Sample
 )
 
 // NowTruncated returns time.Now() truncated to Microsecond precision.
@@ -84,6 +78,13 @@ func Package() *internal.Package {
 	}
 }
 
+func VersionedPackage() *internal.VersionedPackage {
+	return &internal.VersionedPackage{
+		VersionInfo: *VersionInfo(),
+		Package:     *Package(),
+	}
+}
+
 // Samplers and Mutators are used to generate composite types. A Sampler
 // provides a Sample method that creates a new instance of the type, after
 // applying zero or more Mutators. This pattern facilitates generation of test
@@ -91,20 +92,9 @@ func Package() *internal.Package {
 //
 // Mutators are intended to be composable, though they may be order-dependent.
 type (
-	VersionedPackageSampler func() *internal.VersionedPackage
-	VersionedPackageMutator func(*internal.VersionedPackage)
-	VersionSampler          func() *internal.Version
-	VersionMutator          func(*internal.Version)
+	VersionSampler func() *internal.Version
+	VersionMutator func(*internal.Version)
 )
-
-// Sample returns the templated VersionedPackage, after applying mutators.
-func (s VersionedPackageSampler) Sample(mutators ...VersionedPackageMutator) *internal.VersionedPackage {
-	p := s()
-	for _, mut := range mutators {
-		mut(p)
-	}
-	return p
-}
 
 // Sample returns the templated Version, after applying mutators.
 func (s VersionSampler) Sample(mutators ...VersionMutator) *internal.Version {

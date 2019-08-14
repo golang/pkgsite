@@ -43,12 +43,14 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 					sample.WithVersion("v1.0.0-20190311183353-d8887717615a"),
 					sample.WithVersionType(internal.VersionTypePseudo)),
 			},
-			wantPkg: sample.VersionedPackage(func(p *internal.VersionedPackage) {
+			wantPkg: func() *internal.VersionedPackage {
+				p := sample.VersionedPackage()
 				p.Version = "v1.0.0"
 				p.VersionType = internal.VersionTypeRelease
 				// TODO(b/130367504): GetLatest does not return imports.
 				p.Imports = nil
-			}),
+				return p
+			}(),
 		},
 		{
 			name:        "empty path",
