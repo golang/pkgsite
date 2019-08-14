@@ -92,7 +92,6 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 	if code == http.StatusGone {
 		log.Printf("%s@%s: proxy said 410 Gone, deleting", modulePath, version)
 		if err := db.DeleteVersion(ctx, nil, modulePath, version); err != nil {
-			err = fmt.Errorf("db.DeleteVersion(ctx, nil, %q, %q): %v", modulePath, version, err)
 			log.Print(err)
 			return http.StatusInternalServerError, err
 		}
@@ -104,7 +103,7 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 
 	// TODO(b/139178863): Split UpsertVersionState into InsertVersionState and UpdateVersionState.
 	if err := db.UpsertVersionState(ctx, modulePath, version, appVersionLabel, time.Time{}, code, fetchErr); err != nil {
-		log.Printf("db.UpsertVersionState(ctx, %q, %q, %q, %q, %v): %q", modulePath, version, config.AppVersionLabel(), code, fetchErr, err)
+		log.Print(err)
 		if fetchErr != nil {
 			err = fmt.Errorf("error updating version state: %v, original error: %v", err, fetchErr)
 		}
@@ -208,7 +207,7 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, requestedVersi
 	}
 
 	if err = db.InsertVersion(ctx, v, licenses); err != nil {
-		return fmt.Errorf("db.InsertVersion for %q %q: %v", modulePath, info.Version, err)
+		return err
 	}
 	span.Annotate(nil, "inserted version")
 	log.Printf("Downloaded: %s@%s", modulePath, info.Version)

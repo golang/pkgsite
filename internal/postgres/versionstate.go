@@ -19,7 +19,9 @@ import (
 
 // InsertIndexVersions inserts new versions into the module_version_states
 // table.
-func (db *DB) InsertIndexVersions(ctx context.Context, versions []*internal.IndexVersion) error {
+func (db *DB) InsertIndexVersions(ctx context.Context, versions []*internal.IndexVersion) (err error) {
+	defer derrors.Wrap(&err, "InsertIndexVersions(ctx, %v)", versions)
+
 	var vals []interface{}
 	for _, v := range versions {
 		vals = append(vals, v.Path, v.Version, v.Timestamp)
@@ -38,7 +40,10 @@ func (db *DB) InsertIndexVersions(ctx context.Context, versions []*internal.Inde
 
 // UpsertVersionState inserts or updates the module_version_state table with
 // the results of a fetch operation for a given module version.
-func (db *DB) UpsertVersionState(ctx context.Context, modulePath, version, appVersion string, timestamp time.Time, status int, fetchErr error) error {
+func (db *DB) UpsertVersionState(ctx context.Context, modulePath, version, appVersion string, timestamp time.Time, status int, fetchErr error) (err error) {
+	derrors.Wrap(&err, "UpsertVersionState(ctx, %q, %q, %q, %s, %d, %v",
+		modulePath, version, appVersion, timestamp, status, fetchErr)
+
 	ctx, span := trace.StartSpan(ctx, "UpsertVersionState")
 	defer span.End()
 	query := `
@@ -81,7 +86,9 @@ func (db *DB) UpsertVersionState(ctx context.Context, modulePath, version, appVe
 
 // LatestIndexTimestamp returns the last timestamp successfully inserted into
 // the module_version_states table.
-func (db *DB) LatestIndexTimestamp(ctx context.Context) (time.Time, error) {
+func (db *DB) LatestIndexTimestamp(ctx context.Context) (_ time.Time, err error) {
+	defer derrors.Wrap(&err, "LatestIndexTimestamp(ctx)")
+
 	query := `SELECT index_timestamp
 		FROM module_version_states
 		ORDER BY index_timestamp DESC
@@ -99,7 +106,9 @@ func (db *DB) LatestIndexTimestamp(ctx context.Context) (time.Time, error) {
 	}
 }
 
-func (db *DB) UpdateVersionStatesForReprocessing(ctx context.Context, appVersion string) error {
+func (db *DB) UpdateVersionStatesForReprocessing(ctx context.Context, appVersion string) (err error) {
+	defer derrors.Wrap(&err, "UpdateVersionStatesForReprocessing(ctx, %q)", appVersion)
+
 	query := `
 		UPDATE module_version_states
 		SET
@@ -196,7 +205,9 @@ func (db *DB) queryVersionStates(ctx context.Context, queryFormat string, args .
 
 // GetNextVersionsToFetch returns the next batch of versions that must be
 // processed.
-func (db *DB) GetNextVersionsToFetch(ctx context.Context, limit int) ([]*internal.VersionState, error) {
+func (db *DB) GetNextVersionsToFetch(ctx context.Context, limit int) (_ []*internal.VersionState, err error) {
+	defer derrors.Wrap(&err, "GetNextVersionsToFetch(ctx, %d)", limit)
+
 	queryFormat := `
 		SELECT %s
 		FROM
@@ -211,7 +222,9 @@ func (db *DB) GetNextVersionsToFetch(ctx context.Context, limit int) ([]*interna
 }
 
 // GetRecentFailedVersions returns versions that have most recently failed.
-func (db *DB) GetRecentFailedVersions(ctx context.Context, limit int) ([]*internal.VersionState, error) {
+func (db *DB) GetRecentFailedVersions(ctx context.Context, limit int) (_ []*internal.VersionState, err error) {
+	defer derrors.Wrap(&err, "GetRecentFailedVersions(ctx, %d)", limit)
+
 	queryFormat := `
 		SELECT %s
 		FROM
@@ -224,7 +237,9 @@ func (db *DB) GetRecentFailedVersions(ctx context.Context, limit int) ([]*intern
 }
 
 // GetRecentVersions returns recent versions that have been processed.
-func (db *DB) GetRecentVersions(ctx context.Context, limit int) ([]*internal.VersionState, error) {
+func (db *DB) GetRecentVersions(ctx context.Context, limit int) (_ []*internal.VersionState, err error) {
+	defer derrors.Wrap(&err, "GetRecentVersions(ctx, %d)", limit)
+
 	queryFormat := `
 		SELECT %s
 		FROM
@@ -236,7 +251,9 @@ func (db *DB) GetRecentVersions(ctx context.Context, limit int) ([]*internal.Ver
 
 // GetVersionState returns the current version state for modulePath and
 // version.
-func (db *DB) GetVersionState(ctx context.Context, modulePath, version string) (*internal.VersionState, error) {
+func (db *DB) GetVersionState(ctx context.Context, modulePath, version string) (_ *internal.VersionState, err error) {
+	defer derrors.Wrap(&err, "GetVersionState(ctx, %q, %q)", modulePath, version)
+
 	query := fmt.Sprintf(`
 		SELECT %s
 		FROM
@@ -267,7 +284,9 @@ type VersionStats struct {
 // GetVersionStats queries the module_version_states table for aggregate
 // information about the current state of module versions, grouping them by
 // their current status code.
-func (db *DB) GetVersionStats(ctx context.Context) (*VersionStats, error) {
+func (db *DB) GetVersionStats(ctx context.Context) (_ *VersionStats, err error) {
+	defer derrors.Wrap(&err, "GetVersionStats(ctx)")
+
 	query := `
 		SELECT
 			status,

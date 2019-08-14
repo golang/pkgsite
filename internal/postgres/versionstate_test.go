@@ -25,7 +25,7 @@ func TestVersionState(t *testing.T) {
 	// verify that latest index timestamp works
 	initialTime, err := testDB.LatestIndexTimestamp(ctx)
 	if err != nil {
-		t.Fatalf("testDB.LatestIndexTimestamp(ctx): %v", err)
+		t.Fatal(err)
 	}
 	if want := (time.Time{}); initialTime != want {
 		t.Errorf("testDB.LatestIndexTimestamp(ctx) = %v, want %v", initialTime, want)
@@ -40,7 +40,7 @@ func TestVersionState(t *testing.T) {
 		Version: "v1.0.0",
 	}
 	if err := testDB.InsertIndexVersions(ctx, []*internal.IndexVersion{initialFooVersion}); err != nil {
-		t.Fatalf("testDB.InsertIndexVersions(ctx, [%v]): %v", initialFooVersion, err)
+		t.Fatal(err)
 	}
 	fooVersion := &internal.IndexVersion{
 		Path:      "foo.com/bar",
@@ -54,13 +54,13 @@ func TestVersionState(t *testing.T) {
 	}
 	versions := []*internal.IndexVersion{fooVersion, bazVersion}
 	if err := testDB.InsertIndexVersions(ctx, versions); err != nil {
-		t.Fatalf("testDB.InsertIndexVersions(ctx, %v): %v", versions, err)
+		t.Fatal(err)
 	}
 
 	gotVersions, err := testDB.GetNextVersionsToFetch(ctx, 10)
 	t.Logf("%+v", gotVersions)
 	if err != nil {
-		t.Fatalf("testDB.GetVersionsToFetch(ctx, 10): %v", err)
+		t.Fatal(err)
 	}
 
 	wantVersions := []*internal.VersionState{
@@ -77,8 +77,7 @@ func TestVersionState(t *testing.T) {
 		fetchErr   = errors.New("bad request")
 	)
 	if err := testDB.UpsertVersionState(ctx, fooVersion.Path, fooVersion.Version, "", fooVersion.Timestamp, statusCode, fetchErr); err != nil {
-		t.Fatalf("testDB.UpsertVersionState(ctx, %q, %q, %q, %d, %v): %v", fooVersion.Path,
-			versions[0].Version, "", statusCode, fetchErr, err)
+		t.Fatal(err)
 	}
 	errString := fetchErr.Error()
 	wantFooState := &internal.VersionState{
@@ -92,7 +91,7 @@ func TestVersionState(t *testing.T) {
 	}
 	gotFooState, err := testDB.GetVersionState(ctx, wantFooState.ModulePath, wantFooState.Version)
 	if err != nil {
-		t.Fatalf("testDB.GetVersionState(ctx, %q, %q): %v", wantFooState.ModulePath, wantFooState.Version, err)
+		t.Fatal(err)
 	}
 	if diff := cmp.Diff(wantFooState, gotFooState, ignore); diff != "" {
 		t.Errorf("testDB.GetVersionState(ctx, %q, %q) mismatch (-want +got)\n%s", wantFooState.ModulePath, wantFooState.Version, diff)
@@ -100,7 +99,7 @@ func TestVersionState(t *testing.T) {
 
 	stats, err := testDB.GetVersionStats(ctx)
 	if err != nil {
-		t.Fatalf("testDB.GetVersionStats(ctx): %v", err)
+		t.Fatal(err)
 	}
 	wantStats := &VersionStats{
 		LatestTimestamp: latest,
@@ -133,24 +132,24 @@ func TestUpdateVersionStatesForReprocessing(t *testing.T) {
 		},
 	} {
 		if err := testDB.UpsertVersionState(ctx, v.Path, v.Version, "", v.Timestamp, http.StatusOK, nil); err != nil {
-			t.Fatalf("testDB.UpsertVersionState(ctx, %q, %q, %v, %d, nil): %v", v.Path, v.Version, v.Timestamp, http.StatusOK, err)
+			t.Fatal(err)
 		}
 	}
 
 	gotVersions, err := testDB.GetNextVersionsToFetch(ctx, 10)
 	if err != nil {
-		t.Fatalf("testDB.GetVersionsToFetch(ctx, 10): %v", err)
+		t.Fatal(err)
 	}
 	if len(gotVersions) != 0 {
 		t.Fatalf("testDB.GetVersionsToFetch(ctx, 10) = %v; wanted 0 versions", gotVersions)
 	}
 	if err := testDB.UpdateVersionStatesForReprocessing(ctx, "20190709t112655"); err != nil {
-		t.Fatalf("testDB.UpdateVersionStatesForReprocessing(ctx, 20190709t112655): %v", err)
+		t.Fatal(err)
 	}
 
 	gotVersions, err = testDB.GetNextVersionsToFetch(ctx, 10)
 	if err != nil {
-		t.Fatalf("testDB.GetVersionsToFetch(ctx, 10): %v", err)
+		t.Fatal(err)
 	}
 
 	code := http.StatusHTTPVersionNotSupported

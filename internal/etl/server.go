@@ -138,7 +138,7 @@ func parseModulePathAndVersion(p string) (string, string, error) {
 func (s *Server) handleRefreshSearch(w http.ResponseWriter, r *http.Request) {
 	if err := s.db.RefreshSearchDocuments(r.Context()); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		log.Printf("db.RefreshSearchDocuments(ctx): %v", err)
+		log.Print(err)
 		return
 	}
 }
@@ -170,7 +170,7 @@ func (s *Server) handleIndexAndQueue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := s.db.InsertIndexVersions(ctx, versions); err != nil {
-		log.Printf("Error inserting index versions: %v", err)
+		log.Print(err)
 		http.Error(w, "error inserting versions", http.StatusInternalServerError)
 		return
 	}
@@ -208,7 +208,7 @@ func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) {
 	span.Annotate([]trace.Attribute{trace.Int64Attribute("limit", int64(limit))}, "processed limit")
 	versions, err := s.db.GetNextVersionsToFetch(ctx, limit)
 	if err != nil {
-		log.Printf("s.db.GetNextVersionsToFetch(ctx, %d): %v", limit, err)
+		log.Print(err)
 		http.Error(w, "error getting versions to fetch", http.StatusInternalServerError)
 		return
 	}
@@ -239,19 +239,19 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (string, e
 	const pageSize = 20
 	next, err := s.db.GetNextVersionsToFetch(ctx, pageSize)
 	if err != nil {
-		return "error fetching next versions", fmt.Errorf("s.db.GetNextVersionsToFetch(ctx, %d): %v", pageSize, err)
+		return "error fetching next versions", err
 	}
 	failures, err := s.db.GetRecentFailedVersions(ctx, pageSize)
 	if err != nil {
-		return "error fetching recent failures", fmt.Errorf("s.db.GetRecentFailedVersions(ctx, %d): %v", pageSize, err)
+		return "error fetching recent failures", err
 	}
 	recents, err := s.db.GetRecentVersions(ctx, pageSize)
 	if err != nil {
-		return "error fetching recent versions", fmt.Errorf("s.db.GetRecentVersions(ctx, %d): %v", pageSize, err)
+		return "error fetching recent versions", err
 	}
 	stats, err := s.db.GetVersionStats(ctx)
 	if err != nil {
-		return "error fetching stats", fmt.Errorf("s.db.GetVersionStats(ctx): %v", err)
+		return "error fetching stats", err
 	}
 	page := struct {
 		Stats                        *postgres.VersionStats
@@ -328,7 +328,7 @@ func (s *Server) handleReprocess(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := s.db.UpdateVersionStatesForReprocessing(r.Context(), appVersion); err != nil {
-		log.Printf("s.db.UpdateVersionsToReprocess(ctx, %q): %v", appVersion, err)
+		log.Print(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}

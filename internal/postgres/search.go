@@ -39,7 +39,9 @@ type SearchResult struct {
 
 // Search fetches packages from the database that match the terms
 // provided, and returns them in order of relevance.
-func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int) ([]*SearchResult, error) {
+func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int) (_ []*SearchResult, err error) {
+	defer derrors.Wrap(&err, "DB.Search(ctx, %q, %d, %d)", searchQuery, limit, offset)
+
 	query := `
 		WITH results AS (
 			SELECT
@@ -101,7 +103,7 @@ func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int)
 		OFFSET $3;`
 	rows, err := db.query(ctx, query, searchQuery, limit, offset)
 	if err != nil {
-		return nil, fmt.Errorf("db.query(ctx, %s, %q, %d, %d): %v", query, searchQuery, limit, offset, err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -130,13 +132,15 @@ func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int)
 //
 // The given version should have already been validated via a call to
 // validateVersion.
-func (db *DB) UpsertSearchDocument(ctx context.Context, path string) error {
+func (db *DB) UpsertSearchDocument(ctx context.Context, path string) (err error) {
+	defer derrors.Wrap(&err, "UpsertSearchDocument(ctx, %q)", path)
+
 	if strings.Contains(path, "internal") {
 		return xerrors.Errorf("cannot insert internal package %q into search documents: %w", path, derrors.InvalidArgument)
 	}
 
 	pathTokens := strings.Join(generatePathTokens(path), " ")
-	_, err := db.exec(ctx, `
+	_, err = db.exec(ctx, `
 		INSERT INTO search_documents (
 			package_path,
 			version,
@@ -190,10 +194,7 @@ func (db *DB) UpsertSearchDocument(ctx context.Context, path string) error {
 				ELSE CURRENT_TIMESTAMP
 				END)
 		;`, path, pathTokens)
-	if err != nil {
-		return fmt.Errorf("db.exec(ctx, [query], %q, %q): %v", path, pathTokens, err)
-	}
-	return nil
+	return err
 }
 
 type searchDocument struct {
@@ -241,7 +242,9 @@ func (db *DB) getSearchDocument(ctx context.Context, path string) (*searchDocume
 
 // LegacySearch fetches packages from the database that match the terms
 // provided, and returns them in order of relevance as a []*SearchResult.
-func (db *DB) LegacySearch(ctx context.Context, searchQuery string, limit, offset int) ([]*SearchResult, error) {
+func (db *DB) LegacySearch(ctx context.Context, searchQuery string, limit, offset int) (_ []*SearchResult, err error) {
+	defer derrors.Wrap(&err, "LegacySearch(ctx, %q, %d, %d)", searchQuery, limit, offset)
+
 	if limit == 0 {
 		return nil, xerrors.Errorf("cannot search: limit cannot be 0: %w", derrors.InvalidArgument)
 	}
@@ -342,7 +345,7 @@ func (db *DB) LegacySearch(ctx context.Context, searchQuery string, limit, offse
 func (db *DB) RefreshSearchDocuments(ctx context.Context) error {
 	query := "REFRESH MATERIALIZED VIEW CONCURRENTLY mvw_search_documents;"
 	if _, err := db.exec(ctx, query); err != nil {
-		return err
+		return xerrors.Errorf("DB.RefreshSearchDocuments(ctx): %w", err)
 	}
 	return nil
 }

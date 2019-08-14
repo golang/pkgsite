@@ -24,21 +24,29 @@ import (
 // InsertVersion inserts a version into the database using
 // db.saveVersion, along with a search document corresponding to each of its
 // packages.
-func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, licenses []*license.License) error {
+func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, licenses []*license.License) (err error) {
+	defer func() {
+		if version == nil {
+			derrors.Wrap(&err, "DB.InsertVersion(ctx, nil)")
+		} else {
+			derrors.Wrap(&err, "DB.InsertVersion(ctx, Version(%q, %q))", version.ModulePath, version.Version)
+		}
+	}()
+
 	if err := validateVersion(version, licenses); err != nil {
 		return xerrors.Errorf("validateVersion: %v: %w", err, derrors.InvalidArgument)
 	}
 	removeNonDistributableData(version)
 
 	if err := db.saveVersion(ctx, version, licenses); err != nil {
-		return fmt.Errorf("db.saveVersion for %q %q: %v", version.ModulePath, version.Version, err)
+		return err
 	}
 	if err := db.legacyInsertDocuments(ctx, version); err != nil {
-		return fmt.Errorf("db.InsertDocuments for %q %q: %v", version.ModulePath, version.Version, err)
+		return err
 	}
 	for _, pkg := range version.Packages {
 		if err := db.UpsertSearchDocument(ctx, pkg.Path); err != nil && !xerrors.Is(err, derrors.InvalidArgument) {
-			return fmt.Errorf("db.UpsertSearchDocument(ctx, %q): %v", pkg.Path, err)
+			return err
 		}
 	}
 	return nil
@@ -57,7 +65,7 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 // A derrors.InvalidArgument error will be returned if the given version and
 // licenses are invalid.
 func (db *DB) saveVersion(ctx context.Context, version *internal.Version, licenses []*license.License) error {
-	return db.Transact(func(tx *sql.Tx) error {
+	err := db.Transact(func(tx *sql.Tx) error {
 		majorint, minorint, patchint, prerelease, err := extractSemverParts(version.Version)
 		if err != nil {
 			return fmt.Errorf("extractSemverParts(%q): %v", version.Version, err)
@@ -187,6 +195,10 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version, licens
 		}
 		return nil
 	})
+	if err != nil {
+		return xerrors.Errorf("DB.saveVersion(ctx, Version(%q, %q)): %w", version.ModulePath, version.Version, err)
+	}
+	return nil
 }
 
 // validateVersion checks that fields needed to insert a version into the
@@ -391,5 +403,6 @@ func (db *DB) DeleteVersion(ctx context.Context, tx *sql.Tx, modulePath, version
 	} else {
 		_, err = db.exec(ctx, stmt, modulePath, version)
 	}
+	derrors.Wrap(&err, "DB.DeleteVersion(ctx, tx, %q, %q)", modulePath, version)
 	return err
 }

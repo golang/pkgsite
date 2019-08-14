@@ -249,7 +249,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 					sample.WithModulePath(modulePath),
 					sample.WithPackages(pkg))
 				if err := testDB.InsertVersion(ctx, v, sample.Licenses); err != nil {
-					t.Fatalf("testDB.InsertVersion(%q %q): %v", v.ModulePath, v.Version, err)
+					t.Fatal(err)
 				}
 			}
 
@@ -259,7 +259,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 
 			got, err := testDB.Search(ctx, tc.searchQuery, tc.limit, tc.offset)
 			if err != nil {
-				t.Fatalf("testDB.Search(%v, %d, %d): %v", tc.searchQuery, tc.limit, tc.offset, err)
+				t.Fatal(err)
 			}
 
 			if len(got) != len(tc.want) {
@@ -292,7 +292,7 @@ func TestUpsertSearchDocumentVersionUpdatedAt(t *testing.T) {
 	mustInsertVersion := func(version string) {
 		v := sample.Version(sample.WithPackages(pkgA), sample.WithVersion(version))
 		if err := testDB.InsertVersion(ctx, v, sample.Licenses); err != nil {
-			t.Fatalf("testDB.InsertVersion(%q %q): %v", v.ModulePath, v.Version, err)
+			t.Fatal(err)
 		}
 	}
 

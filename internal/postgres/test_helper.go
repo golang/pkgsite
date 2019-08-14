@@ -15,6 +15,7 @@ import (
 	"testing"
 
 	"github.com/golang-migrate/migrate/v4"
+	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/testhelper"
 
 	// imported to register the postgres migration driver
@@ -142,7 +143,9 @@ func tryToMigrate(dbName string) (isMigrationError bool, outerErr error) {
 
 // SetupTestDB creates a test database named dbName if it does not already
 // exist, and migrates it to the latest schema from the migrations directory.
-func SetupTestDB(dbName string) (*DB, error) {
+func SetupTestDB(dbName string) (_ *DB, err error) {
+	defer derrors.Wrap(&err, "SetupTestDB(%q)", dbName)
+
 	if err := createDBIfNotExists(dbName); err != nil {
 		return nil, fmt.Errorf("createDBIfNotExists(%q): %v", dbName, err)
 	}

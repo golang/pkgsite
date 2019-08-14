@@ -124,12 +124,12 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 			defer ResetTestDB(testDB, t)
 
 			if err := testDB.InsertVersion(ctx, tc.version, sample.Licenses); !xerrors.Is(err, tc.wantWriteErr) {
-				t.Errorf("testDB.InsertVersion(ctx, %+v) error: %v, want write error: %v", tc.version, err, tc.wantWriteErr)
+				t.Errorf("error: %v, want write error: %v", err, tc.wantWriteErr)
 			}
 
 			// Test that insertion of duplicate primary key won't fail.
 			if err := testDB.InsertVersion(ctx, tc.version, sample.Licenses); !xerrors.Is(err, tc.wantWriteErr) {
-				t.Errorf("testDB.InsertVersion(ctx, %+v) second insert error: %v, want write error: %v", tc.version, err, tc.wantWriteErr)
+				t.Errorf("second insert error: %v, want write error: %v", err, tc.wantWriteErr)
 			}
 
 			got, err := testDB.GetVersionInfo(ctx, tc.wantModulePath, tc.wantVersion)
@@ -177,13 +177,13 @@ func TestPostgres_DeleteVersion(t *testing.T) {
 
 	v := sample.Version()
 	if err := testDB.InsertVersion(ctx, v, sample.Licenses); err != nil {
-		t.Fatalf("testDB.InsertVersion(ctx, %+v) error: %v", v, err)
+		t.Fatal(err)
 	}
 	if _, err := testDB.GetVersionInfo(ctx, v.ModulePath, v.Version); err != nil {
 		t.Fatal(err)
 	}
 	if err := testDB.DeleteVersion(ctx, nil, v.ModulePath, v.Version); err != nil {
-		t.Fatalf("testDB.DeleteVersion(ctx, %q, %q) error: %v", v.ModulePath, v.Version, err)
+		t.Fatal(err)
 	}
 	if _, err := testDB.GetVersionInfo(ctx, v.ModulePath, v.Version); !xerrors.Is(err, derrors.NotFound) {
 		t.Errorf("got %v, want NotFound", err)

@@ -436,7 +436,7 @@ func TestFetchAndUpdateState_Gone(t *testing.T) {
 		t.Helper()
 		vs, err := testDB.GetVersionState(ctx, modulePath, version)
 		if err != nil {
-			t.Fatalf("testDB.GetVersionState(ctx, %q, %q): error %v", modulePath, version, err)
+			t.Fatal(err)
 		}
 		if vs.Status == nil || *vs.Status != want {
 			t.Fatalf("testDB.GetVersionState(ctx, %q, %q): status=%v, want %d", modulePath, version, vs.Status, want)

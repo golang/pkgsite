@@ -63,7 +63,7 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			for _, v := range tc.versions {
 				if err := testDB.saveVersion(ctx, v, sample.Licenses); err != nil {
-					t.Errorf("testDB.saveVersion(ctx, %v): %v", v, err)
+					t.Error(err)
 				}
 			}
 
@@ -188,7 +188,7 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 
 			for _, v := range testVersions {
 				if err := testDB.saveVersion(ctx, v, sample.Licenses); err != nil {
-					t.Errorf("testDB.saveVersion(%v): %v", v, err)
+					t.Error(err)
 				}
 			}
 
@@ -299,7 +299,7 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 				// factored out of fetch.go
 				v.VersionType = internal.VersionTypePseudo
 				if err := testDB.saveVersion(ctx, v, nil); err != nil {
-					t.Errorf("testDB.saveVersion(%v): %v", v, err)
+					t.Error(err)
 				}
 
 				// GetPseudoVersions should only return the 10 most recent pseudo versions,
@@ -315,7 +315,7 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 
 			for _, v := range tc.versions {
 				if err := testDB.saveVersion(ctx, v, nil); err != nil {
-					t.Errorf("testDB.saveVersion(%v): %v", v, err)
+					t.Error(err)
 				}
 			}
 
@@ -378,7 +378,7 @@ func TestGetVersion(t *testing.T) {
 			defer cancel()
 
 			if err := testDB.saveVersion(ctx, tc.want, sample.Licenses); err != nil {
-				t.Errorf("testDB.saveVersion(ctx, %q %q): %v", tc.path, tc.version, err)
+				t.Error(err)
 			}
 
 			got, err := testDB.GetVersion(ctx, tc.path, tc.version)
@@ -420,7 +420,7 @@ func TestGetPackageLicenses(t *testing.T) {
 	defer cancel()
 
 	if err := testDB.saveVersion(ctx, testVersion, sample.Licenses); err != nil {
-		t.Fatalf("testDB.saveVersion(ctx, %q, licenses): %v", testVersion.Version, err)
+		t.Fatal(err)
 	}
 
 	for _, test := range tests {
@@ -456,7 +456,7 @@ func TestGetModuleLicenses(t *testing.T) {
 	}
 
 	if err := testDB.InsertVersion(ctx, testVersion, licenses); err != nil {
-		t.Fatalf("testDB.InsertVersion(ctx, %q, licenses): %v", testVersion.Version, err)
+		t.Fatal(err)
 	}
 
 	got, err := testDB.GetModuleLicenses(ctx, modulePath, testVersion.Version)

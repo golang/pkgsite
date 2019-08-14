@@ -44,7 +44,7 @@ type SearchResult struct {
 func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pageParams paginationParams) (*SearchPage, error) {
 	dbresults, err := db.LegacySearch(ctx, query, pageParams.limit, pageParams.offset())
 	if err != nil {
-		return nil, fmt.Errorf("db.LegacySearch(%v, %d, %d): %v", query, pageParams.limit, pageParams.offset(), err)
+		return nil, err
 	}
 
 	var results []*SearchResult

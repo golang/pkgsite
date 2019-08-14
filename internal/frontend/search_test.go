@@ -127,10 +127,10 @@ func TestFetchSearchPage(t *testing.T) {
 
 			for _, v := range tc.versions {
 				if err := testDB.InsertVersion(ctx, v, sample.Licenses); err != nil {
-					t.Fatalf("db.InsertVersion(%+v): %v", v, err)
+					t.Fatal(err)
 				}
 				if err := testDB.RefreshSearchDocuments(ctx); err != nil {
-					t.Fatalf("db.RefreshSearchDocuments(ctx): %v", err)
+					t.Fatal(err)
 				}
 			}
 

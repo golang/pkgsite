@@ -118,7 +118,7 @@ func TestFetchModuleDetails(t *testing.T) {
 	}
 
 	if err := testDB.InsertVersion(ctx, tc.version, sample.Licenses); err != nil {
-		t.Fatalf("db.InsertVersion(ctx, %v, %v): %v", tc.version, sample.Licenses, err)
+		t.Fatal(err)
 	}
 
 	got, err := fetchModuleDetails(ctx, testDB, &tc.version.VersionInfo)

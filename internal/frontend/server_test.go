@@ -47,7 +47,7 @@ func TestServer(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
 	sampleVersion := sample.Version()
 	if err := testDB.InsertVersion(ctx, sampleVersion, sample.Licenses); err != nil {
-		t.Fatalf("db.InsertVersion(%+v): %v", sampleVersion, err)
+		t.Fatal(err)
 	}
 	nonRedistModulePath := "github.com/non_redistributable"
 	nonRedistPkgPath := nonRedistModulePath + "/bar"
@@ -61,10 +61,12 @@ func TestServer(t *testing.T) {
 	nonRedistVersion.RepositoryURL = nonRedistModulePath
 
 	if err := testDB.InsertVersion(ctx, nonRedistVersion, nil); err != nil {
-		t.Fatalf("db.InsertVersion(%+v): %v", nonRedistVersion, err)
+		t.Fatal(err)
 	}
 
-	testDB.RefreshSearchDocuments(ctx)
+	if err := testDB.RefreshSearchDocuments(ctx); err != nil {
+		t.Fatal(err)
+	}
 
 	s, err := NewServer(testDB, "../../content/static", false)
 	if err != nil {
@@ -263,7 +265,7 @@ func TestServerErrors(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
 	sampleVersion := sample.Version()
 	if err := testDB.InsertVersion(ctx, sampleVersion, sample.Licenses); err != nil {
-		t.Fatalf("db.InsertVersion(%+v): %v", sampleVersion, err)
+		t.Fatal(err)
 	}
 
 	s, err := NewServer(testDB, "../../content/static", false)

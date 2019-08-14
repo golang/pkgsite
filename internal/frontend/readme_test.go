@@ -35,7 +35,7 @@ func TestFetchReadMeDetails(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
 
 	if err := testDB.InsertVersion(ctx, tc.version, sample.Licenses); err != nil {
-		t.Fatalf("db.InsertVersion(%v): %v", tc.version, err)
+		t.Fatal(err)
 	}
 
 	got, err := fetchReadMeDetails(ctx, testDB, &tc.version.VersionInfo)
