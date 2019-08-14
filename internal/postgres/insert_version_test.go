@@ -43,8 +43,11 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 		},
 		{
 			name: "valid test with internal package",
-			version: sample.Version(sample.WithPackages(sample.Package(
-				sample.WithPath(sample.ModulePath + "/internal/foo")))),
+			version: sample.Version(sample.WithPackages(func() *internal.Package {
+				p := sample.Package()
+				p.Path = sample.ModulePath + "/internal/foo"
+				return p
+			}())),
 			wantModulePath: sample.ModulePath,
 			wantVersion:    sample.VersionString,
 			wantPkgPath:    sample.ModulePath + "/internal/foo",

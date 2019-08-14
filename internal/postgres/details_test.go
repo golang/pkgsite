@@ -78,6 +78,12 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 }
 
 func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
+	pkg := func(path string, imports []string) *internal.Package {
+		p := sample.Package()
+		p.Path = path
+		p.Imports = imports
+		return p
+	}
 	var (
 		modulePath1  = "path.to/foo"
 		pkgPath1     = "path.to/foo/bar"
@@ -85,9 +91,9 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 		pkgPath2     = "path2.to/foo/bar2"
 		modulePath3  = "path3.to/foo"
 		pkgPath3     = "path3.to/foo/bar3"
-		pkg1         = sample.Package(sample.WithPath(pkgPath1), sample.WithImports())
-		pkg2         = sample.Package(sample.WithPath(pkgPath2), sample.WithImports(pkgPath1))
-		pkg3         = sample.Package(sample.WithPath(pkgPath3), sample.WithImports(pkgPath2, pkgPath1))
+		pkg1         = pkg(pkgPath1, nil)
+		pkg2         = pkg(pkgPath2, []string{pkgPath1})
+		pkg3         = pkg(pkgPath3, []string{pkgPath2, pkgPath1})
 		testVersions = []*internal.Version{
 			sample.Version(
 				sample.WithModulePath(modulePath1),

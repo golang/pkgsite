@@ -78,19 +78,26 @@ func TestFetchImportedByDetails(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	var (
-		pkg1    = sample.Package(sample.WithPath("path.to/foo/bar"))
-		pkg2    = sample.Package(sample.WithPath("path2.to/foo/bar2"), sample.WithImports(pkg1.Path))
-		pkg3    = sample.Package(sample.WithPath("path3.to/foo/bar3"), sample.WithImports(pkg2.Path, pkg1.Path))
-		sampler = sample.VersionSampler(func() *internal.Version {
-			return sample.Version(sample.WithModulePath("path.to/foo"))
-		})
-		testVersions = []*internal.Version{
-			sampler.Sample(sample.WithPackages(pkg1)),
-			sampler.Sample(sample.WithModulePath("path2.to/foo"), sample.WithPackages(pkg2)),
-			sampler.Sample(sample.WithModulePath("path3.to/foo"), sample.WithPackages(pkg3)),
-		}
-	)
+	sampler := sample.VersionSampler(func() *internal.Version {
+		return sample.Version(sample.WithModulePath("path.to/foo"))
+	})
+
+	pkg1 := sample.Package()
+	pkg1.Path = "path.to/foo/bar"
+
+	pkg2 := sample.Package()
+	pkg2.Path = "path2.to/foo/bar2"
+	pkg2.Imports = []string{pkg1.Path}
+
+	pkg3 := sample.Package()
+	pkg3.Path = "path3.to/foo/bar3"
+	pkg3.Imports = []string{pkg2.Path, pkg1.Path}
+
+	testVersions := []*internal.Version{
+		sampler.Sample(sample.WithPackages(pkg1)),
+		sampler.Sample(sample.WithModulePath("path2.to/foo"), sample.WithPackages(pkg2)),
+		sampler.Sample(sample.WithModulePath("path3.to/foo"), sample.WithPackages(pkg3)),
+	}
 
 	for _, v := range testVersions {
 		if err := testDB.InsertVersion(ctx, v, sample.Licenses); err != nil {
