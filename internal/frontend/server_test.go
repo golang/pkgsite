@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/sample"
 )
@@ -48,6 +49,21 @@ func TestServer(t *testing.T) {
 	if err := testDB.InsertVersion(ctx, sampleVersion, sample.Licenses); err != nil {
 		t.Fatalf("db.InsertVersion(%+v): %v", sampleVersion, err)
 	}
+	nonRedistModulePath := "github.com/non_redistributable"
+	nonRedistPkgPath := nonRedistModulePath + "/bar"
+	nonRedistVersion := sample.Version(
+		sample.WithModulePath(nonRedistModulePath),
+		sample.WithPackages(&internal.Package{
+			Name:   "bar",
+			Path:   nonRedistPkgPath,
+			V1Path: nonRedistPkgPath,
+		}))
+	nonRedistVersion.RepositoryURL = nonRedistModulePath
+
+	if err := testDB.InsertVersion(ctx, nonRedistVersion, nil); err != nil {
+		t.Fatalf("db.InsertVersion(%+v): %v", nonRedistVersion, err)
+	}
+
 	testDB.RefreshSearchDocuments(ctx)
 
 	s, err := NewServer(testDB, "../../content/static", false)
@@ -62,6 +78,15 @@ func TestServer(t *testing.T) {
 		`<a href="/pkg/github.com/valid_module_name/foo@v1.0.0?tab=licenses#LICENSE">MIT</a>`,
 		`<a href="github.com/valid_module_name">Source Code</a>`,
 	}
+	nonRedistPkgHeader := []string{
+		`<h1 class="Header-title">github.com/non_redistributable/bar</h1>`,
+		`Version:`,
+		`v1.0.0`,
+		`No license files detected`,
+		`not legal advice`,
+		`<a href="github.com/non_redistributable">Source Code</a>`,
+	}
+
 	modHeader := []string{
 		`<h1 class="Header-title">github.com/valid_module_name</h1>`,
 		`Version:`,
@@ -103,13 +128,34 @@ func TestServer(t *testing.T) {
 			append(pkgHeader, `This is the documentation HTML`),
 		},
 		{
+			// For a non-redistributable package, the "latest" route goes to the modules tab.
+			fmt.Sprintf("/pkg/%s", nonRedistPkgPath),
+			append(nonRedistPkgHeader, `Packages in github.com/non_redistributable`),
+		},
+		{
+			// For a non-redistributable package, the name@version route goes to the modules tab.
+			fmt.Sprintf("/pkg/%s@%s", nonRedistPkgPath, sample.VersionString),
+			append(nonRedistPkgHeader, `Packages in github.com/non_redistributable`),
+		},
+		{
 			fmt.Sprintf("/pkg/%s?tab=doc", sample.PackagePath),
 			append(pkgHeader, `This is the documentation HTML`),
 		},
 		{
-			fmt.Sprintf("/pkg/%s?tab=readme", sample.PackagePath),
-			append(pkgHeader, `readme`),
+			// For a non-redistributable package, the doc tab will not show the doc.
+			fmt.Sprintf("/pkg/%s?tab=doc", nonRedistPkgPath),
+			append(nonRedistPkgHeader, `hidden due to license restrictions`),
 		},
+		{
+			fmt.Sprintf("/pkg/%s?tab=readme", sample.PackagePath),
+			append(pkgHeader, `<div class="ReadMe"><p>readme</p>`),
+		},
+		{
+			// For a non-redistributable package, the readme tab will not show the readme.
+			fmt.Sprintf("/pkg/%s?tab=readme", nonRedistPkgPath),
+			append(nonRedistPkgHeader, `hidden due to license restrictions`),
+		},
+
 		{
 			fmt.Sprintf("/pkg/%s?tab=module", sample.PackagePath),
 			append(pkgHeader,
