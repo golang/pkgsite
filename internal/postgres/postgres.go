@@ -182,3 +182,19 @@ func buildInsertQuery(table string, columns []string, values []interface{}, conf
 func (db *DB) Close() error {
 	return db.db.Close()
 }
+
+// runQuery executes query, then calls f on each row.
+func (db *DB) runQuery(ctx context.Context, query string, f func(*sql.Rows) error, params ...interface{}) error {
+	rows, err := db.query(ctx, query, params...)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		if err := f(rows); err != nil {
+			return err
+		}
+	}
+	return rows.Err()
+}

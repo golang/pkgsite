@@ -437,21 +437,17 @@ func (db *DB) GetImportedBy(ctx context.Context, path, modulePath string, limit,
 		LIMIT $3
 		OFFSET $4;`
 
-	rows, err := db.query(ctx, query, path, modulePath, limit, offset)
-	if err != nil {
-		return nil, 0, err
-	}
-	defer rows.Close()
-
-	var (
-		fromPath   string
-		importedby []string
-	)
-	for rows.Next() {
+	var importedby []string
+	collect := func(rows *sql.Rows) error {
+		var fromPath string
 		if err := rows.Scan(&fromPath, &total); err != nil {
-			return nil, 0, fmt.Errorf("row.Scan(): %v", err)
+			return fmt.Errorf("row.Scan(): %v", err)
 		}
 		importedby = append(importedby, fromPath)
+		return nil
+	}
+	if err := db.runQuery(ctx, query, collect, path, modulePath, limit, offset); err != nil {
+		return nil, 0, err
 	}
 	return importedby, total, nil
 }
