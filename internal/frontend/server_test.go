@@ -51,13 +51,15 @@ func TestServer(t *testing.T) {
 	}
 	nonRedistModulePath := "github.com/non_redistributable"
 	nonRedistPkgPath := nonRedistModulePath + "/bar"
-	nonRedistVersion := sample.Version(
-		sample.WithModulePath(nonRedistModulePath),
-		sample.WithPackages(&internal.Package{
+	nonRedistVersion := sample.Version()
+	nonRedistVersion.ModulePath = nonRedistModulePath
+	nonRedistVersion.Packages = []*internal.Package{
+		{
 			Name:   "bar",
 			Path:   nonRedistPkgPath,
 			V1Path: nonRedistPkgPath,
-		}))
+		},
+	}
 	nonRedistVersion.RepositoryURL = nonRedistModulePath
 
 	if err := testDB.InsertVersion(ctx, nonRedistVersion, nil); err != nil {

@@ -49,12 +49,6 @@ var (
 			HomepageURL:    ModulePath,
 		}
 	}
-	Version = VersionSampler(func() *internal.Version {
-		return &internal.Version{
-			VersionInfo: *VersionInfo(),
-			Packages:    []*internal.Package{Package()},
-		}
-	}).Sample
 )
 
 // NowTruncated returns time.Now() truncated to Microsecond precision.
@@ -85,57 +79,22 @@ func VersionedPackage() *internal.VersionedPackage {
 	}
 }
 
-// Samplers and Mutators are used to generate composite types. A Sampler
-// provides a Sample method that creates a new instance of the type, after
-// applying zero or more Mutators. This pattern facilitates generation of test
-// data inline within a table-driven test struct.
-//
-// Mutators are intended to be composable, though they may be order-dependent.
-type (
-	VersionSampler func() *internal.Version
-	VersionMutator func(*internal.Version)
-)
-
-// Sample returns the templated Version, after applying mutators.
-func (s VersionSampler) Sample(mutators ...VersionMutator) *internal.Version {
-	v := s()
-	for _, mut := range mutators {
-		mut(v)
+func Version() *internal.Version {
+	return &internal.Version{
+		VersionInfo: *VersionInfo(),
+		Packages:    []*internal.Package{Package()},
 	}
-	return v
 }
 
-// WithModulePath sets Version.ModulePath
-func WithModulePath(modulePath string) VersionMutator {
-	return func(v *internal.Version) { v.ModulePath = modulePath }
-}
-
-// WithVersion sets the Version.Version.
-func WithVersion(version string) VersionMutator {
-	return func(v *internal.Version) { v.Version = version }
-}
-
-// WithVersionType sets Version.VersionType.
-func WithVersionType(versionType internal.VersionType) VersionMutator {
-	return func(v *internal.Version) { v.VersionType = versionType }
-}
-
-// WithPackages sets the given packages.
-func WithPackages(packages ...*internal.Package) VersionMutator {
-	return func(v *internal.Version) { v.Packages = packages }
-}
-
-// WithSuffixes sets packages corresponding to the given path suffixes.  Paths
+// SetSuffixes sets packages corresponding to the given path suffixes.  Paths
 // are constructed using the existing module path of the Version.
-func WithSuffixes(suffixes ...string) VersionMutator {
-	return func(v *internal.Version) {
-		series := internal.SeriesPathForModule(v.ModulePath)
-		v.Packages = nil
-		for _, suffix := range suffixes {
-			p := Package()
-			p.Path = path.Join(v.ModulePath, suffix)
-			p.V1Path = path.Join(series, suffix)
-			v.Packages = append(v.Packages, p)
-		}
+func SetSuffixes(v *internal.Version, suffixes ...string) {
+	series := internal.SeriesPathForModule(v.ModulePath)
+	v.Packages = nil
+	for _, suffix := range suffixes {
+		p := Package()
+		p.Path = path.Join(v.ModulePath, suffix)
+		p.V1Path = path.Join(series, suffix)
+		v.Packages = append(v.Packages, p)
 	}
 }

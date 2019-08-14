@@ -49,11 +49,11 @@ func TestFetchImportsDetails(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 			defer cancel()
 
-			version := sample.Version(func(v *internal.Version) {
-				pkg := sample.Package()
-				pkg.Imports = tc.imports
-				v.Packages = []*internal.Package{pkg}
-			})
+			version := sample.Version()
+			pkg := sample.Package()
+			pkg.Imports = tc.imports
+			version.Packages = []*internal.Package{pkg}
+
 			if err := testDB.InsertVersion(ctx, version, sample.Licenses); err != nil {
 				t.Fatal(err)
 			}
@@ -78,9 +78,12 @@ func TestFetchImportedByDetails(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	sampler := sample.VersionSampler(func() *internal.Version {
-		return sample.Version(sample.WithModulePath("path.to/foo"))
-	})
+	newVersion := func(modPath string, pkgs ...*internal.Package) *internal.Version {
+		v := sample.Version()
+		v.ModulePath = modPath
+		v.Packages = pkgs
+		return v
+	}
 
 	pkg1 := sample.Package()
 	pkg1.Path = "path.to/foo/bar"
@@ -94,9 +97,9 @@ func TestFetchImportedByDetails(t *testing.T) {
 	pkg3.Imports = []string{pkg2.Path, pkg1.Path}
 
 	testVersions := []*internal.Version{
-		sampler.Sample(sample.WithPackages(pkg1)),
-		sampler.Sample(sample.WithModulePath("path2.to/foo"), sample.WithPackages(pkg2)),
-		sampler.Sample(sample.WithModulePath("path3.to/foo"), sample.WithPackages(pkg3)),
+		newVersion("path.to/foo", pkg1),
+		newVersion("path2.to/foo", pkg2),
+		newVersion("path3.to/foo", pkg3),
 	}
 
 	for _, v := range testVersions {
@@ -127,7 +130,8 @@ func TestFetchImportedByDetails(t *testing.T) {
 		},
 	} {
 		t.Run(tc.pkg.Path, func(t *testing.T) {
-			otherVersion := sampler.Sample(sample.WithVersion("v1.0.5"), sample.WithPackages(tc.pkg))
+			otherVersion := newVersion("path.to/foo", tc.pkg)
+			otherVersion.Version = "v1.0.5"
 			vp := firstVersionedPackage(otherVersion)
 			got, err := fetchImportedByDetails(ctx, testDB, vp, paginationParams{limit: 20, page: 1})
 			if err != nil {

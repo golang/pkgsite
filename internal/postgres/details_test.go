@@ -23,6 +23,13 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 
 	defer ResetTestDB(testDB, t)
 
+	sampleVersion := func(version string, vtype internal.VersionType) *internal.Version {
+		v := sample.Version()
+		v.Version = version
+		v.VersionType = vtype
+		return v
+	}
+
 	testCases := []struct {
 		name, path  string
 		versions    []*internal.Version
@@ -33,15 +40,9 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 			name: "want latest package to be most recent release version",
 			path: sample.PackagePath,
 			versions: []*internal.Version{
-				sample.Version(
-					sample.WithVersion("v1.1.0-alpha.1"),
-					sample.WithVersionType(internal.VersionTypePrerelease)),
-				sample.Version(
-					sample.WithVersion("v1.0.0"),
-					sample.WithVersionType(internal.VersionTypeRelease)),
-				sample.Version(
-					sample.WithVersion("v1.0.0-20190311183353-d8887717615a"),
-					sample.WithVersionType(internal.VersionTypePseudo)),
+				sampleVersion("v1.1.0-alpha.1", internal.VersionTypePrerelease),
+				sampleVersion("v1.0.0", internal.VersionTypeRelease),
+				sampleVersion("v1.0.0-20190311183353-d8887717615a", internal.VersionTypePseudo),
 			},
 			wantPkg: func() *internal.VersionedPackage {
 				p := sample.VersionedPackage()
@@ -86,6 +87,15 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 		p.Imports = imports
 		return p
 	}
+
+	sampleVersion := func(mpath, version string, pkg *internal.Package) *internal.Version {
+		v := sample.Version()
+		v.ModulePath = mpath
+		v.Version = version
+		v.Packages = []*internal.Package{pkg}
+		return v
+	}
+
 	var (
 		modulePath1  = "path.to/foo"
 		pkgPath1     = "path.to/foo/bar"
@@ -97,18 +107,9 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 		pkg2         = pkg(pkgPath2, []string{pkgPath1})
 		pkg3         = pkg(pkgPath3, []string{pkgPath2, pkgPath1})
 		testVersions = []*internal.Version{
-			sample.Version(
-				sample.WithModulePath(modulePath1),
-				sample.WithVersion("v1.1.0"),
-				sample.WithPackages(pkg1)),
-			sample.Version(
-				sample.WithModulePath(modulePath2),
-				sample.WithVersion("v1.2.0"),
-				sample.WithPackages(pkg2)),
-			sample.Version(
-				sample.WithModulePath(modulePath3),
-				sample.WithVersion("v1.3.0"),
-				sample.WithPackages(pkg3)),
+			sampleVersion(modulePath1, "v1.1.0", pkg1),
+			sampleVersion(modulePath2, "v1.2.0", pkg2),
+			sampleVersion(modulePath3, "v1.3.0", pkg3),
 		}
 	)
 
@@ -224,10 +225,11 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 
 	var (
 		sampleVersion = func(modulePath, version string, suffixes ...string) *internal.Version {
-			return sample.Version(
-				sample.WithModulePath(modulePath),
-				sample.WithVersion(version),
-				sample.WithSuffixes(suffixes...))
+			v := sample.Version()
+			v.ModulePath = modulePath
+			v.Version = version
+			sample.SetSuffixes(v, suffixes...)
+			return v
 		}
 		modulePath1  = "path.to/foo"
 		modulePath2  = "path.to/foo/v2"
@@ -359,7 +361,9 @@ func TestPostgres_GetTaggedAndPseudoVersionsForPackageSeries(t *testing.T) {
 }
 
 func TestGetVersion(t *testing.T) {
-	testVersion := sample.Version(sample.WithModulePath("test.module"), sample.WithSuffixes("", "foo"))
+	testVersion := sample.Version()
+	testVersion.ModulePath = "test.module"
+	sample.SetSuffixes(testVersion, "", "foo")
 
 	for _, tc := range []struct {
 		name, path, version string
@@ -396,7 +400,9 @@ func TestGetVersion(t *testing.T) {
 
 func TestGetPackageLicenses(t *testing.T) {
 	modulePath := "test.module"
-	testVersion := sample.Version(sample.WithModulePath(modulePath), sample.WithSuffixes("", "foo"))
+	testVersion := sample.Version()
+	testVersion.ModulePath = modulePath
+	sample.SetSuffixes(testVersion, "", "foo")
 	testVersion.Packages[0].Licenses = nil
 	testVersion.Packages[1].Licenses = sample.LicenseMetadata
 
@@ -438,7 +444,9 @@ func TestGetPackageLicenses(t *testing.T) {
 
 func TestGetModuleLicenses(t *testing.T) {
 	modulePath := "test.module"
-	testVersion := sample.Version(sample.WithModulePath(modulePath), sample.WithSuffixes("", "foo", "bar"))
+	testVersion := sample.Version()
+	testVersion.ModulePath = modulePath
+	sample.SetSuffixes(testVersion, "", "foo", "bar")
 	testVersion.Packages[0].Licenses = []*license.Metadata{{Types: []string{"ISC"}, FilePath: "LICENSE"}}
 	testVersion.Packages[1].Licenses = []*license.Metadata{{Types: []string{"MIT"}, FilePath: "foo/LICENSE"}}
 	testVersion.Packages[2].Licenses = []*license.Metadata{{Types: []string{"GPL2"}, FilePath: "bar/LICENSE.txt"}}

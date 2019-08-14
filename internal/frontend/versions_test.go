@@ -19,11 +19,12 @@ func TestFetchVersionsDetails(t *testing.T) {
 	defer cancel()
 
 	sampleVersion := func(modulePath, version string, versionType internal.VersionType, packages ...*internal.Package) *internal.Version {
-		return sample.Version(
-			sample.WithModulePath(modulePath),
-			sample.WithVersion(version),
-			sample.WithVersionType(versionType),
-			sample.WithPackages(packages...))
+		v := sample.Version()
+		v.ModulePath = modulePath
+		v.Version = version
+		v.VersionType = versionType
+		v.Packages = packages
+		return v
 	}
 
 	var (

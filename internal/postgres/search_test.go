@@ -245,9 +245,9 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 
 			for modulePath, pkg := range tc.packages {
 				pkg.Licenses = sample.LicenseMetadata
-				v := sample.Version(
-					sample.WithModulePath(modulePath),
-					sample.WithPackages(pkg))
+				v := sample.Version()
+				v.ModulePath = modulePath
+				v.Packages = []*internal.Package{pkg}
 				if err := testDB.InsertVersion(ctx, v, sample.Licenses); err != nil {
 					t.Fatal(err)
 				}
@@ -290,7 +290,9 @@ func TestUpsertSearchDocumentVersionUpdatedAt(t *testing.T) {
 
 	pkgA := &internal.Package{Path: "A", Name: "A"}
 	mustInsertVersion := func(version string) {
-		v := sample.Version(sample.WithPackages(pkgA), sample.WithVersion(version))
+		v := sample.Version()
+		v.Packages = []*internal.Package{pkgA}
+		v.Version = version
 		if err := testDB.InsertVersion(ctx, v, sample.Licenses); err != nil {
 			t.Fatal(err)
 		}

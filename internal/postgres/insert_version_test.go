@@ -43,11 +43,13 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 		},
 		{
 			name: "valid test with internal package",
-			version: sample.Version(sample.WithPackages(func() *internal.Package {
+			version: func() *internal.Version {
+				v := sample.Version()
 				p := sample.Package()
 				p.Path = sample.ModulePath + "/internal/foo"
-				return p
-			}())),
+				v.Packages = []*internal.Package{p}
+				return v
+			}(),
 			wantModulePath: sample.ModulePath,
 			wantVersion:    sample.VersionString,
 			wantPkgPath:    sample.ModulePath + "/internal/foo",
@@ -75,16 +77,24 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 			wantReadErr:    true,
 		},
 		{
-			name:           "missing module path",
-			version:        sample.Version(sample.WithModulePath("")),
+			name: "missing module path",
+			version: func() *internal.Version {
+				v := sample.Version()
+				v.ModulePath = ""
+				return v
+			}(),
 			wantVersion:    sample.VersionString,
 			wantModulePath: sample.ModulePath,
 			wantWriteErr:   derrors.InvalidArgument,
 			wantReadErr:    true,
 		},
 		{
-			name:           "missing version",
-			version:        sample.Version(sample.WithVersion("")),
+			name: "missing version",
+			version: func() *internal.Version {
+				v := sample.Version()
+				v.Version = ""
+				return v
+			}(),
 			wantVersion:    sample.VersionString,
 			wantModulePath: sample.ModulePath,
 			wantWriteErr:   derrors.InvalidArgument,
@@ -92,9 +102,11 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 		},
 		{
 			name: "empty commit time",
-			version: sample.Version(func(v *internal.Version) {
+			version: func() *internal.Version {
+				v := sample.Version()
 				v.CommitTime = time.Time{}
-			}),
+				return v
+			}(),
 			wantVersion:    sample.VersionString,
 			wantModulePath: sample.ModulePath,
 			wantWriteErr:   derrors.InvalidArgument,
@@ -102,7 +114,8 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 		},
 		{
 			name: "stdlib",
-			version: sample.Version(func(v *internal.Version) {
+			version: func() *internal.Version {
+				v := sample.Version()
 				v.ModulePath = "std"
 				v.Version = "v1.12.5"
 				v.Packages = []*internal.Package{{
@@ -112,7 +125,8 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 					Licenses:          sample.LicenseMetadata,
 					DocumentationHTML: []byte("This is the documentation HTML"),
 				}}
-			}),
+				return v
+			}(),
 			wantModulePath: "std",
 			wantVersion:    "v1.12.5",
 			wantPkgPath:    "context",
