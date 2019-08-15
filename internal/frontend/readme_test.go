@@ -100,6 +100,15 @@ func TestReadmeHTML(t *testing.T) {
 			want: template.HTML("<p><img src=\"https://raw.githubusercontent.com/golang/go/master/doc/logo.png\" alt=\"Go logo\"/></p>\n"),
 		},
 		{
+			name: "relative image markdown is made absolute for GitLab",
+			vi: &internal.VersionInfo{
+				ReadmeFilePath: "README.md",
+				ReadmeContents: []byte("![Gitaly benchmark timings.](doc/img/rugged-new-timings.png)"),
+				RepositoryURL:  "http://gitlab.com/gitlab-org/gitaly",
+			},
+			want: template.HTML("<p><img src=\"https://gitlab.com/gitlab-org/gitaly/raw/master/doc/img/rugged-new-timings.png\" alt=\"Gitaly benchmark timings.\"/></p>\n"),
+		},
+		{
 			name: "relative image markdown is left alone for unknown origins",
 			vi: &internal.VersionInfo{
 				ReadmeFilePath: "README.md",

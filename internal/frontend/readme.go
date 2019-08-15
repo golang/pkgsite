@@ -81,7 +81,7 @@ func readmeHTML(vi *internal.VersionInfo) template.HTML {
 // convert the relative path to an absolute URL to a hosted image.
 func translateRelativeLink(node *blackfriday.Node, vi *internal.VersionInfo) {
 	repo, err := url.Parse(vi.RepositoryURL)
-	if err != nil || repo.Hostname() != "github.com" {
+	if err != nil {
 		return
 	}
 	imageURL, err := url.Parse(string(node.LinkData.Destination))
@@ -103,6 +103,14 @@ func translateRelativeLink(node *blackfriday.Node, vi *internal.VersionInfo) {
 			ref = segs[len(segs)-1]
 		}
 	}
-	abs := &url.URL{Scheme: "https", Host: "raw.githubusercontent.com", Path: path.Join(repo.Path, ref, path.Clean(imageURL.Path))}
+	var abs *url.URL
+	switch repo.Hostname() {
+	case "github.com":
+		abs = &url.URL{Scheme: "https", Host: "raw.githubusercontent.com", Path: path.Join(repo.Path, ref, path.Clean(imageURL.Path))}
+	case "gitlab.com":
+		abs = &url.URL{Scheme: "https", Host: "gitlab.com", Path: path.Join(repo.Path, "raw", ref, path.Clean(imageURL.Path))}
+	default:
+		return
+	}
 	node.LinkData.Destination = []byte(abs.String())
 }
