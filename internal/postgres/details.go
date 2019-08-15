@@ -79,7 +79,7 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (_ *i
 
 	lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
 	if err != nil {
-		return nil, fmt.Errorf("zipLicenseMetadata(%v, %v): %v", licenseTypes, licensePaths, err)
+		return nil, err
 	}
 
 	return &internal.VersionedPackage{
@@ -169,7 +169,7 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (_ *internal.Ve
 
 	lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
 	if err != nil {
-		return nil, fmt.Errorf("zipLicenseMetadata(%v, %v): %v", licenseTypes, licensePaths, err)
+		return nil, err
 	}
 
 	return &internal.VersionedPackage{
@@ -252,7 +252,7 @@ func (db *DB) GetVersion(ctx context.Context, modulePath, version string) (_ *in
 		}
 		lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
 		if err != nil {
-			return nil, fmt.Errorf("zipLicenseMetadata(%v, %v): %v", licenseTypes, licensePaths, err)
+			return nil, err
 		}
 		v.ModulePath = modulePath
 		v.ReadmeFilePath = readmeFilePath
@@ -557,7 +557,9 @@ func mustHaveColumns(rows *sql.Rows, wantColumns ...string) {
 
 // zipLicenseMetadata constructs license.Metadata from the given license types
 // and paths, by zipping and then sorting.
-func zipLicenseMetadata(licenseTypes []string, licensePaths []string) ([]*license.Metadata, error) {
+func zipLicenseMetadata(licenseTypes []string, licensePaths []string) (_ []*license.Metadata, err error) {
+	defer derrors.Wrap(&err, "zipLicenseMetadata(%v, %v)", licenseTypes, licensePaths)
+
 	if len(licenseTypes) != len(licensePaths) {
 		return nil, fmt.Errorf("BUG: got %d license types and %d license paths", len(licenseTypes), len(licensePaths))
 	}

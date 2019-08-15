@@ -60,7 +60,9 @@ var appVersionLabel = config.AppVersionLabel()
 // the module_version_states table according to the result. It returns an HTTP
 // status code representing the result of the fetch operation, and a non-nil
 // error if this status code is not 200.
-func fetchAndUpdateState(ctx context.Context, modulePath, version string, client *proxy.Client, db *postgres.DB) (int, error) {
+func fetchAndUpdateState(ctx context.Context, modulePath, version string, client *proxy.Client, db *postgres.DB) (_ int, err error) {
+	defer derrors.Wrap(&err, "fetchAndUpdateState(%q, %q)", modulePath, version)
+
 	ctx, span := trace.StartSpan(ctx, "fetchAndUpdateState")
 	span.AddAttributes(
 		trace.StringAttribute("modulePath", modulePath),
@@ -125,6 +127,8 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 // detached context with fixed timeout, so that fetches are allowed to complete
 // even for short-lived requests.
 func fetchAndInsertVersion(parentCtx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, db *postgres.DB) (err error) {
+	defer derrors.Wrap(&err, "fetchAndInsertVersion(%q, %q)", modulePath, requestedVersion)
+
 	defer func() {
 		if e := recover(); e != nil {
 			// The package processing code performs some sanity checks along the way.
@@ -156,11 +160,11 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, requestedVersi
 	}
 	versionType, err := ParseVersionType(info.Version)
 	if err != nil {
-		return xerrors.Errorf("parseVersion(%q): %v: %w", info.Version, err, derrors.NotAcceptable)
+		return xerrors.Errorf("%v: %w", err, derrors.NotAcceptable)
 	}
 	zipReader, err := proxyClient.GetZip(ctx, modulePath, requestedVersion)
 	if err != nil {
-		return xerrors.Errorf("fetchAndInsertVersion: %w", err)
+		return err
 	}
 
 	// Module processing is wrapped in an inline func to facilitate tracing.
@@ -231,7 +235,7 @@ func isPseudoVersion(v string) bool {
 // ParseVersionType returns the VersionType of a given a version.
 func ParseVersionType(version string) (internal.VersionType, error) {
 	if !semver.IsValid(version) {
-		return "", fmt.Errorf("semver.IsValid(%q): false", version)
+		return "", fmt.Errorf("ParseVersionType(%q): invalid semver", version)
 	}
 
 	switch {

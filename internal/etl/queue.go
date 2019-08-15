@@ -119,7 +119,7 @@ func (q *InMemoryQueue) process(ctx context.Context) {
 			fetchCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 			defer cancel()
 			if _, err := fetchAndUpdateState(fetchCtx, v.modulePath, v.version, q.proxyClient, q.db); err != nil {
-				log.Printf("fetchAndUpdateState(ctx, %q, %q, ...): %v", v.modulePath, v.version, err)
+				log.Print(err)
 			}
 		}(v)
 	}

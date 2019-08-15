@@ -9,6 +9,8 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+
+	"golang.org/x/discovery/internal/derrors"
 )
 
 // DB wraps a sql.DB to provide an API for interacting with discovery data
@@ -104,7 +106,10 @@ const onConflictDoNothing = "ON CONFLICT DO NOTHING"
 // (<placeholders-for-each-item-in-values>) If conflictNoAction is true, it
 // append ON CONFLICT DO NOTHING to the end of the query. The query is executed
 // using a PREPARE statement with the provided values.
-func bulkInsert(ctx context.Context, tx *sql.Tx, table string, columns []string, values []interface{}, conflictAction string) error {
+func bulkInsert(ctx context.Context, tx *sql.Tx, table string, columns []string, values []interface{}, conflictAction string) (err error) {
+	defer derrors.Wrap(&err, "bulkInsert(ctx, tx, %q, %v, [%d values], %q)",
+		table, columns, len(values), conflictAction)
+
 	if remainder := len(values) % len(columns); remainder != 0 {
 		return fmt.Errorf("modulus of len(values) and len(columns) must be 0: got %d", remainder)
 	}

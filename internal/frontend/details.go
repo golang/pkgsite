@@ -40,7 +40,7 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 	urlPath := strings.TrimPrefix(r.URL.Path, "/pkg")
 	path, version, err := parseModulePathAndVersion(urlPath)
 	if err != nil {
-		log.Printf("parseModulePathAndVersion(%q): %v", urlPath, err)
+		log.Print(err)
 		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
 		return
 	}
@@ -170,7 +170,7 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 	urlPath := strings.TrimPrefix(r.URL.Path, "/mod")
 	path, version, err := parseModulePathAndVersion(urlPath)
 	if err != nil {
-		log.Printf("parseModulePathAndVersion(%q): %v", r.URL.Path, err)
+		log.Print(err)
 		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
 		return
 	}
@@ -262,6 +262,8 @@ func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, db 
 // /<module>@<version>. Any leading or trailing slashes in the module path are
 // trimmed.
 func parseModulePathAndVersion(urlPath string) (importPath, version string, err error) {
+	defer derrors.Wrap(&err, "parseModulePathAndVersion(%q)", urlPath)
+
 	parts := strings.Split(urlPath, "@")
 	if len(parts) != 1 && len(parts) != 2 {
 		return "", "", fmt.Errorf("malformed URL path %q", urlPath)

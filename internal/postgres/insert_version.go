@@ -123,7 +123,7 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version, licens
 			}
 			table := "licenses"
 			if err := bulkInsert(ctx, tx, table, licenseCols, licenseValues, onConflictDoNothing); err != nil {
-				return fmt.Errorf("bulkInsert(ctx, tx, %q, %v, [%d licenseValues]): %v", table, licenseCols, len(licenseValues), err)
+				return err
 			}
 		}
 
@@ -177,7 +177,7 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version, licens
 			}
 			table := "packages"
 			if err := bulkInsert(ctx, tx, table, pkgCols, pkgValues, onConflictDoNothing); err != nil {
-				return fmt.Errorf("bulkInsert(ctx, tx, %q, %v, %d pkgValues): %v", table, pkgCols, len(pkgValues), err)
+				return err
 			}
 		}
 
@@ -190,7 +190,7 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version, licens
 			}
 			table := "imports"
 			if err := bulkInsert(ctx, tx, table, importCols, importValues, onConflictDoNothing); err != nil {
-				return fmt.Errorf("bulkInsert(ctx, tx, %q, %v, %d importValues): %v", table, importCols, len(importValues), err)
+				return err
 			}
 		}
 		return nil

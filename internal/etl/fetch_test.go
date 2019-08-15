@@ -445,7 +445,7 @@ func TestFetchAndUpdateState_Gone(t *testing.T) {
 
 	// Fetch a module@version that the proxy serves successfully.
 	if _, err := fetchAndUpdateState(ctx, modulePath, version, client, testDB); err != nil {
-		t.Fatalf("fetchAndUpdateState(ctx, %q, %q, client, testDB): error %v", modulePath, version, err)
+		t.Fatal(err)
 	}
 
 	// Verify that the module status is recorded correctly, and that the version is in the DB.
@@ -520,15 +520,15 @@ func TestParseModulePathAndVersion(t *testing.T) {
 			m, v, err := parseModulePathAndVersion(u.Path)
 			if test.err != nil {
 				if err == nil {
-					t.Fatalf("parseModulePathAndVersion(%v) error = (%v); want = (%v)", u, err, test.err)
+					t.Fatalf("parseModulePathAndVersion(%q): error = nil; want = (%v)", u.Path, test.err)
 				}
 				if test.err.Error() != err.Error() {
-					t.Fatalf("parseModulePathAndVersion(%v) error = (%v); want = (%v)", u, err, test.err)
+					t.Fatalf("error = (%v); want = (%v)", err, test.err)
 				} else {
 					return
 				}
 			} else if err != nil {
-				t.Fatalf("parseModulePathAndVersion(%v) error = (%v); want = (%v)", u, err, test.err)
+				t.Fatalf("error = (%v); want = (%v)", err, test.err)
 			}
 
 			if test.module != m || test.version != v {

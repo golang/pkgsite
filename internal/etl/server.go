@@ -112,12 +112,12 @@ func (s *Server) handleQueueFetch(w http.ResponseWriter, r *http.Request) {
 func (s *Server) doFetch(r *http.Request) (string, int) {
 	modulePath, version, err := parseModulePathAndVersion(r.URL.Path)
 	if err != nil {
-		return fmt.Sprintf("parseModulePathAndVersion(%q): %v", r.URL.Path, err), http.StatusBadRequest
+		return err.Error(), http.StatusBadRequest
 	}
 
 	code, err := fetchAndUpdateState(r.Context(), modulePath, version, s.proxyClient, s.db)
 	if err != nil {
-		return fmt.Sprintf("fetchAndUpdateState(r.Context(), %q, %q, s.proxyClient, s.db): %d, %v", modulePath, version, code, err), code
+		return err.Error(), code
 	}
 	return fmt.Sprintf("Downloaded %s@%s\n", modulePath, version), http.StatusOK
 }
