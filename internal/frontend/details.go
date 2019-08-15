@@ -357,24 +357,6 @@ var (
 			TemplateName:      "module.tmpl",
 		},
 		{
-			Name:              "modfile",
-			DisplayName:       "go.mod",
-			AlwaysShowDetails: true,
-			TemplateName:      "not_implemented.tmpl",
-		},
-		{
-			Name:              "dependencies",
-			DisplayName:       "Dependencies",
-			AlwaysShowDetails: true,
-			TemplateName:      "not_implemented.tmpl",
-		},
-		{
-			Name:              "dependents",
-			DisplayName:       "Dependents",
-			AlwaysShowDetails: true,
-			TemplateName:      "not_implemented.tmpl",
-		},
-		{
 			Name:              "versions",
 			AlwaysShowDetails: true,
 			DisplayName:       "Versions",

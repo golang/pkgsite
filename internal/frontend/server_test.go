@@ -92,7 +92,7 @@ func TestServer(t *testing.T) {
 	}
 
 	modHeader := []string{
-		`<h1 class="Header-title">github.com/valid_module_name</h1>`,
+		`<h1 class="Header-title">module github.com/valid_module_name</h1>`,
 		`Version:`,
 		`v1.0.0`,
 		`<a href="/mod/github.com/valid_module_name@v1.0.0?tab=licenses#LICENSE">MIT</a>`,
@@ -205,21 +205,6 @@ func TestServer(t *testing.T) {
 				`<a href="/pkg/github.com/valid_module_name/foo@v1.0.0">`,
 				`foo`,
 				`This is a package synopsis`),
-		},
-		{
-			fmt.Sprintf("/mod/%s@%s?tab=modfile", sample.ModulePath, sample.VersionString),
-			append(modHeader,
-				`Page has not been implemented yet!`),
-		},
-		{
-			fmt.Sprintf("/mod/%s@%s?tab=dependencies", sample.ModulePath, sample.VersionString),
-			append(modHeader,
-				`Page has not been implemented yet!`),
-		},
-		{
-			fmt.Sprintf("/mod/%s@%s?tab=dependents", sample.ModulePath, sample.VersionString),
-			append(modHeader,
-				`Page has not been implemented yet!`),
 		},
 		{
 			fmt.Sprintf("/mod/%s@%s?tab=versions", sample.ModulePath, sample.VersionString),
