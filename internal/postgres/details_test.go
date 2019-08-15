@@ -13,8 +13,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/sample"
+	"golang.org/x/xerrors"
 )
 
 func TestPostgres_GetLatestPackage(t *testing.T) {
@@ -75,6 +77,82 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 
 			if diff := cmp.Diff(tc.wantPkg, gotPkg, cmpopts.EquateEmpty()); diff != "" {
 				t.Errorf("testDB.GetLatestPackage(ctx, %q) mismatch (-want +got):\n%s", tc.path, diff)
+			}
+		})
+	}
+}
+
+func TestPostgres_GetLatestVersionInfo(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	defer ResetTestDB(testDB, t)
+
+	sampleVersion := func(path, version string, vtype internal.VersionType) *internal.Version {
+		v := sample.Version()
+		v.ModulePath = path
+		v.Version = version
+		v.VersionType = vtype
+		return v
+	}
+
+	testCases := []struct {
+		name, path string
+		versions   []*internal.Version
+		wantIndex  int // index into versions
+		wantErr    error
+	}{
+		{
+			name: "largest release",
+			path: "mod1",
+			versions: []*internal.Version{
+				sampleVersion("mod1", "v1.1.0-alpha.1", internal.VersionTypePrerelease),
+				sampleVersion("mod1", "v1.0.0", internal.VersionTypeRelease),
+				sampleVersion("mod1", "v1.0.0-20190311183353-d8887717615a", internal.VersionTypePseudo),
+			},
+			wantIndex: 1,
+		},
+		{
+			name: "largest prerelease",
+			path: "mod2",
+			versions: []*internal.Version{
+				sampleVersion("mod2", "v1.1.0-beta.10", internal.VersionTypePrerelease),
+				sampleVersion("mod2", "v1.1.0-beta.2", internal.VersionTypePrerelease),
+				sampleVersion("mod2", "v1.0.0-20190311183353-d8887717615a", internal.VersionTypePseudo),
+			},
+			wantIndex: 0,
+		},
+		{
+			name:    "no versions",
+			path:    "mod3",
+			wantErr: derrors.NotFound,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			for _, v := range tc.versions {
+				if err := testDB.saveVersion(ctx, v, sample.Licenses); err != nil {
+					t.Error(err)
+				}
+			}
+
+			gotVI, err := testDB.GetLatestVersionInfo(ctx, tc.path)
+			if err != nil {
+				if tc.wantErr == nil {
+					t.Fatalf("got unexpected error %v", err)
+				}
+				if !xerrors.Is(err, tc.wantErr) {
+					t.Fatalf("got error %v, want Is(%v)", err, tc.wantErr)
+				}
+				return
+			}
+			if tc.wantIndex >= len(tc.versions) {
+				t.Fatal("wantIndex too large")
+			}
+			wantVI := &tc.versions[tc.wantIndex].VersionInfo
+			if diff := cmp.Diff(wantVI, gotVI, cmpopts.EquateEmpty()); diff != "" {
+				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}

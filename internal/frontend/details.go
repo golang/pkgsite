@@ -174,40 +174,56 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
 		return
 	}
-	if !semver.IsValid(version) {
-		msg := fmt.Sprintf("%q is not a valid semantic version.", version)
-		if version == "" {
-			// TODO(b/138647480): Fall back to latest module version if version
-			// is not found.
-			msg = fmt.Sprintf("Version for %q must be specified.", path)
-		}
+	if version != "" && !semver.IsValid(version) {
 		s.serveErrorPage(w, r, http.StatusBadRequest, &errorPage{
-			Message: msg,
+			Message: fmt.Sprintf("%q is not a valid semantic version.", version),
 		})
 		return
 	}
 
 	ctx := r.Context()
-	moduleVersion, err := s.db.GetVersionInfo(ctx, path, version)
+	var moduleVersion *internal.VersionInfo
+	if version == "" {
+		moduleVersion, err = s.db.GetLatestVersionInfo(ctx, path)
+	} else {
+		moduleVersion, err = s.db.GetVersionInfo(ctx, path, version)
+	}
 	if err != nil {
 		code := http.StatusNotFound
 		if !xerrors.Is(err, derrors.NotFound) {
 			log.Print(err)
 			code = http.StatusInternalServerError
 		}
-		s.serveErrorPage(w, r, code, nil)
+		var epage *errorPage
+		if version != "" {
+			// The specific requested version doesn't exist.
+			// See if any versions do by getting the latest package.
+			_, latestErr := s.db.GetLatestVersionInfo(ctx, path)
+			if latestErr == nil {
+				epage = &errorPage{
+					Message: fmt.Sprintf("Module %s@%s is not available.", path, version),
+					SecondaryMessage: template.HTML(
+						fmt.Sprintf(`There are other versions of this module that are! To view them, <a href="/mod/%s?tab=versions">click here</a>.</p>`, path)),
+				}
+			} else if xerrors.Is(err, derrors.NotFound) && !xerrors.Is(latestErr, derrors.NotFound) {
+				// GetVersionInfo returned NotFound but GetLatestVersionInfo did not.
+				log.Printf("error getting latest module for %s: %v", path, latestErr)
+			}
+		}
+		s.serveErrorPage(w, r, code, epage)
 		return
 	}
-	licenses, err := s.db.GetModuleLicenses(ctx, path, version)
+	// Here, moduleVersion is a valid *VersionInfo.
+	licenses, err := s.db.GetModuleLicenses(ctx, moduleVersion.ModulePath, moduleVersion.Version)
 	if err != nil {
-		log.Printf("error getting module licenses for %s@%s: %v", path, version, err)
+		log.Printf("error getting module licenses for %s@%s: %v", moduleVersion.ModulePath, moduleVersion.Version, err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return
 	}
 
 	modHeader, err := createModule(moduleVersion, license.ToMetadatas(licenses))
 	if err != nil {
-		log.Printf("error creating module header for %s@%s: %v", path, version, err)
+		log.Printf("error creating module header for %s@%s: %v", moduleVersion.ModulePath, moduleVersion.Version, err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return
 	}

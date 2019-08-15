@@ -36,19 +36,6 @@ var (
 	ReadmeFilePath    = "README.md"
 	ReadmeContents    = []byte("readme")
 	VersionType       = internal.VersionTypeRelease
-	VersionInfo       = func() *internal.VersionInfo {
-		return &internal.VersionInfo{
-			ModulePath:     ModulePath,
-			Version:        VersionString,
-			ReadmeFilePath: ReadmeFilePath,
-			ReadmeContents: ReadmeContents,
-			CommitTime:     CommitTime,
-			VersionType:    VersionType,
-			VCSType:        VCSType,
-			RepositoryURL:  RepositoryURL,
-			HomepageURL:    ModulePath,
-		}
-	}
 )
 
 // NowTruncated returns time.Now() truncated to Microsecond precision.
@@ -69,6 +56,20 @@ func Package() *internal.Package {
 		DocumentationHTML: DocumentationHTML,
 		V1Path:            V1Path,
 		Imports:           Imports,
+	}
+}
+
+func VersionInfo() *internal.VersionInfo {
+	return &internal.VersionInfo{
+		ModulePath:     ModulePath,
+		Version:        VersionString,
+		ReadmeFilePath: ReadmeFilePath,
+		ReadmeContents: ReadmeContents,
+		CommitTime:     CommitTime,
+		VersionType:    VersionType,
+		VCSType:        VCSType,
+		RepositoryURL:  RepositoryURL,
+		HomepageURL:    ModulePath,
 	}
 }
 

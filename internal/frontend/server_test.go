@@ -203,6 +203,27 @@ func TestServer(t *testing.T) {
 				`<a href="/license-policy">Read disclaimer.</a>`,
 				`Lorem Ipsum`),
 		},
+
+		{
+			fmt.Sprintf("/mod/%s@%s", sample.ModulePath, sample.VersionString),
+			// Show the readme tab by default.
+			append(modHeader, `readme`),
+		},
+		{
+			fmt.Sprintf("/mod/%s", sample.ModulePath),
+			// Fall back to the latest version, show readme tab by default.
+			append(modHeader, `readme`),
+		},
+		// TODO(b/139498072): add a second module, so we can verify that we get the latest version.
+		{
+			fmt.Sprintf("/mod/%s?tab=packages", sample.ModulePath),
+			// Fall back to the latest version.
+			append(modHeader,
+				`Packages in github.com/valid_module_name`,
+				`<a href="/pkg/github.com/valid_module_name/foo@v1.0.0">`,
+				`foo`,
+				`This is a package synopsis`),
+		},
 		{
 			fmt.Sprintf("/mod/%s@%s?tab=readme", sample.ModulePath, sample.VersionString),
 			append(modHeader, `readme`),

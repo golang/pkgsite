@@ -7,6 +7,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"reflect"
 	"sort"
@@ -162,7 +163,7 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (_ *internal.Ve
 	row := db.queryRow(ctx, query, path)
 	if err := row.Scan(&modulePath, pq.Array(&licenseTypes), pq.Array(&licensePaths), &version, &commitTime, &name, &synopsis, &v1path, &readmeFilePath, &readmeContents, &documentation, &repositoryURL, &vcsType, &homepageURL, &versionType); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, xerrors.Errorf("package %s@%s: %w", path, version, derrors.NotFound)
+			return nil, derrors.NotFound
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
@@ -693,4 +694,58 @@ func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version str
 		RepositoryURL:  repositoryURL.String,
 		HomepageURL:    homepageURL.String,
 	}, nil
+}
+
+// GetLatestVersionInfo fetches a Version from the database with given modulePath at the latest version.
+// (module_path, version).
+func (db *DB) GetLatestVersionInfo(ctx context.Context, modulePath string) (_ *internal.VersionInfo, err error) {
+	defer derrors.Wrap(&err, "GetLatestVersionInfo(ctx, %q)", modulePath)
+
+	if modulePath == "" {
+		return nil, errors.New("modulePath cannot be empty")
+	}
+
+	query := `
+		SELECT
+			commit_time,
+			readme_file_path,
+			readme_contents,
+			version,
+			version_type,
+			repository_url,
+			vcs_type,
+			homepage_url,
+			prerelease
+		FROM
+			versions
+		WHERE module_path = $1
+		ORDER BY
+			-- Order the versions by release then prerelease.
+			-- The default version should be the first release
+			-- version available, if one exists.
+			CASE WHEN prerelease = '~' THEN 0 ELSE 1 END,
+			major DESC,
+			minor DESC,
+			patch DESC,
+			prerelease DESC
+		LIMIT 1;`
+	row := db.queryRow(ctx, query, modulePath)
+	var (
+		vi                                  = &internal.VersionInfo{ModulePath: modulePath}
+		repositoryURL, vcsType, homepageURL sql.NullString
+	)
+
+	var pr string
+	err = row.Scan(&vi.CommitTime, &vi.ReadmeFilePath, &vi.ReadmeContents, &vi.Version, &vi.VersionType,
+		&repositoryURL, &vcsType, &homepageURL, &pr)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, derrors.NotFound
+		}
+		return nil, err
+	}
+	vi.VCSType = vcsType.String
+	vi.RepositoryURL = repositoryURL.String
+	vi.HomepageURL = homepageURL.String
+	return vi, nil
 }
