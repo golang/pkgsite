@@ -387,7 +387,7 @@ code {
 .ModulesNav-tab + .ModulesNav-tab {
   margin-left: 16px;
 }
-.ModulesNav-tab[aria-selected='true'] {
+.ModulesNav-tab.selected {
   border-bottom: 2px solid var(--turq-med);
   color: var(--gray-1);
   font-weight: bold;

@@ -38,8 +38,10 @@
   <nav class="ModulesNav js-modulesNav">
     <ul class="ModulesNav-list" role="tablist">
       {{range .Tabs}}
-        <li class="ModulesNav-tab" role="presentation" {{if eq .Name $.Settings.Name}}aria-selected="true"{{end}}>
-          <a class="ModulesNav-link" href="/{{$namespace}}/{{$header.Path}}@{{$header.Version}}?tab={{.Name}}" role="tab">{{.DisplayName}}</a>
+        <li class="ModulesNav-tab{{if eq .Name $.Settings.Name}} selected{{end}}" role="presentation">
+          <a class="ModulesNav-link" href="/{{$namespace}}/{{$header.Path}}@{{$header.Version}}?tab={{.Name}}" role="tab" aria-selected="{{if eq .Name $.Settings.Name}}true{{else}}false{{end}}">
+            {{.DisplayName}}
+          </a>
         </li>
       {{end}}
     </ul>
