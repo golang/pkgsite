@@ -14,24 +14,24 @@
       {{$query := .Query}}
       {{range .Results}}
         <div class="SearchSnippet">
-          <h1 class="SearchSnippet-header">
+          <h2 class="SearchSnippet-header">
             <a href="/pkg/{{.PackagePath}}{{if $query}}?q={{$query}}{{end}}">{{.PackagePath}}</a>
-          </h1>
+          </h2>
           <p class="SearchSnippet-synopsis">{{.Synopsis}}</p>
-          <div class="SearchSnippet-subtext">
-            <b class="SearchSnippet-subtextTitle">Version:</b> {{.Version}}
-            <span class="SearchSnippet-subtextDivide">|</span>
-            <b class="SearchSnippet-subtextTitle">{{pluralize (len .Licenses) "License"}}:</b>
+          <div class="InfoLabel">
+            <b class="InfoLabel-title">Version:</b> {{.Version}}
+            <span class="InfoLabel-divider">|</span>
+            <b class="InfoLabel-title">{{pluralize (len .Licenses) "License"}}:</b>
             {{if .Licenses}}
               {{range $i, $e := .Licenses -}}{{if $i}}, {{end}} {{$e}} {{end}}
             {{else}}
               <span>N/A</span>
             {{end}}
           </div>
-          <div class="SearchSnippet-subtext">
-            <b class="SearchSnippet-subtextTitle">Imported by:</b> {{.NumImportedBy}}
-            <span class="SearchSnippet-subtextDivide">|</span>
-            <b class="SearchSnippet-subtextTitle">Published:</b> {{.CommitTime}}
+          <div class="InfoLabel">
+            <b class="InfoLabel-title">Imported by:</b> {{.NumImportedBy}}
+            <span class="InfoLabel-divider">|</span>
+            <b class="InfoLabel-title">Published:</b> {{.CommitTime}}
           </div>
         </div>
       {{end}}

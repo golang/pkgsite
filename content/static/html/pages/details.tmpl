@@ -16,12 +16,12 @@
       {{- else -}}
         {{$header.Path}}
       {{- end}}</h1>
-    <p class="Header-labels">
-      <strong>Version: </strong><span>{{$header.Version}}</span>
-      <span class="Header-verticalBar">|</span>
-      <strong>Published: </strong><span>{{$header.CommitTime}}</span>
-      <span class="Header-verticalBar">|</span>
-      <strong>{{pluralize (len $header.Licenses) "License"}}: </strong>
+    <p class="InfoLabel">
+      <strong class="InfoLabel-title">Version:</strong> {{$header.Version}}
+      <span class="InfoLabel-divider">|</span>
+      <strong class="InfoLabel-title">Published:</strong> {{$header.CommitTime}}
+      <span class="InfoLabel-divider">|</span>
+      <strong class="InfoLabel-title">{{pluralize (len $header.Licenses) "License"}}: </strong>
       {{range $i, $e := $header.Licenses -}}{{if $i}}, {{end}}
         <a href="/{{$namespace}}/{{$header.Path}}@{{$header.Version}}?tab=licenses#{{.Anchor}}">{{$e.Type}}</a>
       {{- else -}}
@@ -29,7 +29,7 @@
         <a href="/license-policy" class="Disclaimer-link"><em>not legal advice</em></a>
       {{- end}}
       {{if $header.RepositoryURL}}
-        <span class="Header-verticalBar">|</span>
+        <span class="InfoLabel-divider">|</span>
         <a href="{{$header.RepositoryURL}}">Source Code</a>
       {{end}}
     </p>

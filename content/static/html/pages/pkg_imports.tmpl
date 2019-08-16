@@ -7,11 +7,10 @@
 {{define "details_content"}}
   <div>
     {{if or .ExternalImports .InternalImports .StdLib}}
-      <h2> Imports</h2>
       {{if .ExternalImports}}
-        <p>
-          <strong>Packages:</strong>
-          <span>{{len .ExternalImports}}</span>
+        <h2 class="Imports-heading">Imports</h2>
+        <p class="InfoLabel">
+          <strong class="InfoLabel-title">Packages:</strong> {{len .ExternalImports}}
         </p>
         <ul class="Imports-list">
         {{range .ExternalImports}}
@@ -20,7 +19,7 @@
         </ul>
       {{end}}
       {{if .InternalImports}}
-        <h3>Module: {{.ModulePath}}</h3>
+        <h2 class="Imports-heading">Module: {{.ModulePath}}</h2>
         <ul class="Imports-list">
         {{range .InternalImports}}
           <li><a href="/pkg/{{.}}">{{.}}</a></li>
@@ -28,11 +27,12 @@
         </ul>
       {{end}}
       {{if .StdLib}}
-        <h3>Standard Library</h3>
+        <h2 class="Imports-heading">Standard Library</h2>
         <ul class="Imports-list">
         {{range .StdLib}}
           <li><a href="/pkg/{{.}}">{{.}}</a></li>
         {{end}}
+        </ul>
       {{end}}
     {{else}}
       {{template "empty_content" "This package does not have any imports!"}}

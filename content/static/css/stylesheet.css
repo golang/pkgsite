@@ -24,11 +24,6 @@
   --yellow: #fddd00;
   --pink: #ce3262;
   --green: #00a29c;
-
-  --header-title-font-size: 1.875rem;
-  --body-font-family: Roboto, Arial, sans-serif;
-  --header-font-family: 'Work Sans', arial, sans-serif;
-  --pre-code-font-family: 'Go Mono', 'Source Code Pro', monospace;
 }
 
 *,
@@ -41,7 +36,7 @@ html {
 }
 body {
   color: var(--gray-1);
-  font-family: var(--body-font-family);
+  font-family: Roboto, Arial, sans-serif;
   margin: 0;
 }
 a,
@@ -59,16 +54,22 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: var(--header-font-family);
+  font-family: 'Work Sans', arial, sans-serif;
   word-break: break-word;
 }
+h1,
+h2,
+h3 {
+  font-weight: bold
+}
 h1 {
-  font-size: 2rem;
-  font-weight: 600;
+  font-size: 1.5rem;
 }
 h2 {
   font-size: 1.125rem;
-  font-weight: 600;
+}
+h3 {
+  font-size: 1rem;
 }
 p {
   font-size: 1rem;
@@ -170,8 +171,7 @@ code {
   justify-content: space-between;
   margin: 0 auto;
   max-width: 612px;
-  padding: 8px;
-  padding-left: 16px;
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
 }
 .SearchForm-input {
   border: none;
@@ -232,11 +232,7 @@ code {
   flex: 1;
 }
 .Header-title {
-  font-size: var(--header-title-font-size);
-}
-.Header-labels {
-  font-size: 0.875rem;
-  line-height: 1.365rem;
+  font:  600 1.875rem 'Work Sans', arial, sans-serif;
 }
 @media only screen and (min-width: 850px) {
   .Header {
@@ -252,11 +248,6 @@ code {
     top: 22px;
   }
 }
-.Header-verticalBar {
-  margin: 0 10px;
-  font-weight: bold;
-  color: var(--turq-med);
-}
 
 .SearchResults {
   margin: 0 auto;
@@ -264,7 +255,7 @@ code {
   padding: 40px 0;
 }
 .SearchResults-header {
-  font-size: var(--header-title-font-size);
+  font-size: 1.875rem;
   margin: 0 0 8px;
 }
 .SearchResults-resultCount {
@@ -286,21 +277,7 @@ code {
 }
 .SearchSnippet-synopsis {
   color: var(--gray-3);
-  font-size: 1rem;
-  line-height: 1.4;
-  margin: 0 0 16px;
-}
-.SearchSnippet-subtext {
-  color: var(--gray-3);
-  font-size: 0.875rem;
-  line-height: 1.375rem;
-}
-.SearchSnippet-subtextTitle {
-  color: var(--gray-1);
-}
-.SearchSnippet-subtextDivide {
-  display: inline-block;
-  margin: 0 16px;
+  margin: 0 0 1rem;
 }
 .SearchResults .Pagination-nav {
   font-size: 0.875rem;
@@ -427,10 +404,9 @@ code {
 
 .License-contents {
   background-color: var(--gray-10);
-  padding: 10px;
   border: 1px solid var(--gray-8);
   border-radius: 3px;
-  font: 0.875rem/1.375rem var(--pre-code-font-family);
+  font: 0.875rem/1.375rem 'Go Mono', 'Source Code Pro', monospace;
   margin: 0;
   overflow-x: auto;
   padding: 1.5rem;
@@ -442,7 +418,6 @@ code {
 
 .Documentation {
   color: var(--gray-1);
-  font-size: 1rem;
 }
 .Documentation a {
   color: #375eab;
@@ -464,7 +439,7 @@ code {
   background-color: #f5f5f5;
   border-radius: 0.3em;
   border: 1px solid #ccc;
-  font: 0.875rem/1.375rem var(--pre-code-font-family);
+  font: 0.875rem/1.375rem 'Go Mono', 'Source Code Pro', monospace;
   margin: 0;
   overflow-x: auto;
   padding: 0.75rem;
@@ -527,7 +502,7 @@ code {
 .Versions-modulePath {
   color: var(--gray-3);
   font-size: 1rem;
-  font-family: var(--body-font-family);
+  font-family: Roboto, Arial, sans-serif;
   font-weight: normal;
 }
 .Versions-separator {
@@ -538,6 +513,10 @@ code {
 .Imports-list {
   list-style: none;
   padding: 0;
+}
+.Imports-heading {
+  font-size: 1.125rem;
+  line-height: 1.125rem;
 }
 
 .ImportedBy-list {
@@ -568,4 +547,17 @@ code {
 }
 .EmptyContent-message {
   text-align: center;
+}
+.InfoLabel {
+  color: var(--gray-3);
+  font-size: .875rem;
+  line-height: 1.375rem;
+}
+.InfoLabel-title {
+  color: var(--gray-1);
+  font-weight: bold;
+}
+.InfoLabel-divider {
+  display: inline-block;
+  margin: 0 10px;
 }
