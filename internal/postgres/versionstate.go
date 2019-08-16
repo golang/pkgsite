@@ -296,27 +296,26 @@ func (db *DB) GetVersionStats(ctx context.Context) (_ *VersionStats, err error) 
 			module_version_states
 		GROUP BY status;`
 
-	var (
-		status         sql.NullInt64
-		indexTimestamp time.Time
-		count          int
-	)
-	rows, err := db.query(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
 	stats := &VersionStats{
 		VersionCounts: make(map[int]int),
 	}
-	for rows.Next() {
+	err = db.runQuery(ctx, query, func(rows *sql.Rows) error {
+		var (
+			status         sql.NullInt64
+			indexTimestamp time.Time
+			count          int
+		)
 		if err := rows.Scan(&status, &indexTimestamp, &count); err != nil {
-			return nil, fmt.Errorf("row.Scan(): %v", err)
+			return fmt.Errorf("row.Scan(): %v", err)
 		}
 		if indexTimestamp.After(stats.LatestTimestamp) {
 			stats.LatestTimestamp = indexTimestamp
 		}
 		stats.VersionCounts[int(status.Int64)] = count
+		return nil
+	})
+	if err != nil {
+		return nil, err
 	}
 	return stats, nil
 }

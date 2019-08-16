@@ -392,18 +392,16 @@ func (db *DB) GetImports(ctx context.Context, path, version string) (paths []str
 		ORDER BY
 			to_path;`
 
-	rows, err := db.query(ctx, query, path, version)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
 	var imports []string
-	for rows.Next() {
+	collect := func(rows *sql.Rows) error {
 		if err := rows.Scan(&toPath); err != nil {
-			return nil, fmt.Errorf("row.Scan(): %v", err)
+			return fmt.Errorf("row.Scan(): %v", err)
 		}
 		imports = append(imports, toPath)
+		return nil
+	}
+	if err := db.runQuery(ctx, query, collect, path, version); err != nil {
+		return nil, err
 	}
 	return imports, nil
 }
@@ -537,6 +535,9 @@ func collectLicenses(rows *sql.Rows) ([]*license.License, error) {
 	sort.Slice(licenses, func(i, j int) bool {
 		return compareLicenses(licenses[i].Metadata, licenses[j].Metadata)
 	})
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return licenses, nil
 }
 

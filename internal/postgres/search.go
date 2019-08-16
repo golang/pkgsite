@@ -101,21 +101,16 @@ func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int)
 			p.path
 		LIMIT $2
 		OFFSET $3;`
-	rows, err := db.query(ctx, query, searchQuery, limit, offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
 
 	var results []*SearchResult
-	for rows.Next() {
+	collect := func(rows *sql.Rows) error {
 		var (
 			sr           SearchResult
 			licenseTypes []string
 		)
 		if err := rows.Scan(&sr.PackagePath, &sr.Version, &sr.ModulePath, &sr.Name, &sr.Synopsis,
 			pq.Array(&licenseTypes), &sr.CommitTime, &sr.NumImportedBy, &sr.Rank, &sr.NumResults); err != nil {
-			return nil, fmt.Errorf("rows.Scan(): %v", err)
+			return fmt.Errorf("rows.Scan(): %v", err)
 		}
 		for _, l := range licenseTypes {
 			if l != "" {
@@ -123,6 +118,10 @@ func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int)
 			}
 		}
 		results = append(results, &sr)
+		return nil
+	}
+	if err := db.runQuery(ctx, query, collect, searchQuery, limit, offset); err != nil {
+		return nil, err
 	}
 	return results, nil
 }
