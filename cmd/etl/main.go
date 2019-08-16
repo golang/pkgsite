@@ -88,6 +88,8 @@ func main() {
 	}
 
 	server := etl.NewServer(db, indexClient, proxyClient, q, indexTemplate)
+	router := dcensus.NewRouter()
+	server.Install(router.Handle)
 
 	views := append(ochttp.DefaultServerViews, ochttp.DefaultClientViews...)
 	views = append(views, dcensus.ViewByCodeRouteMethod)
@@ -113,7 +115,7 @@ func main() {
 		middleware.RequestLog(requestLogger),
 		middleware.Timeout(time.Duration(handlerTimeout)*time.Minute),
 	)
-	http.Handle("/", mw(server))
+	http.Handle("/", mw(router))
 
 	addr := config.HostAddr("localhost:8000")
 	log.Printf("Listening on addr %s", addr)

@@ -125,10 +125,12 @@ func TestETL(t *testing.T) {
 			queue := NewInMemoryQueue(ctx, proxyClient, testDB, 10)
 
 			s := NewServer(testDB, indexClient, proxyClient, queue, nil)
+			mux := http.NewServeMux()
+			s.Install(mux.Handle)
 
 			for _, r := range test.requests {
 				w := httptest.NewRecorder()
-				s.ServeHTTP(w, r)
+				mux.ServeHTTP(w, r)
 				if got, want := w.Code, http.StatusOK; got != want {
 					t.Fatalf("Code = %d, want %d", got, want)
 				}

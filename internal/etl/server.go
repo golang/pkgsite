@@ -17,7 +17,6 @@ import (
 	"go.opencensus.io/trace"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/config"
-	"golang.org/x/discovery/internal/dcensus"
 	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
@@ -43,7 +42,7 @@ func NewServer(db *postgres.DB,
 	queue Queue,
 	indexTemplate *template.Template,
 ) *Server {
-	s := &Server{
+	return &Server{
 		db:          db,
 		indexClient: indexClient,
 		proxyClient: proxyClient,
@@ -51,17 +50,18 @@ func NewServer(db *postgres.DB,
 
 		indexTemplate: indexTemplate,
 	}
-	r := dcensus.NewRouter()
-	r.HandleFunc("/poll-and-queue", s.handleIndexAndQueue)
-	r.HandleFunc("/requeue", s.handleRequeue)
-	r.HandleFunc("/refresh-search", s.handleRefreshSearch)
-	r.HandleFunc("/populate-stdlib", s.handlePopulateStdLib)
-	r.HandleFunc("/reprocess", s.handleReprocess)
-	r.Handle("/fetch/", http.StripPrefix("/fetch", http.HandlerFunc(s.handleFetch)))
-	r.Handle("/queue-fetch/", http.StripPrefix("/queue-fetch", http.HandlerFunc(s.handleQueueFetch)))
-	r.HandleFunc("/", s.handleStatusPage)
-	s.Handler = r
-	return s
+}
+
+// Install registers server routes using the given handler registration func.
+func (s *Server) Install(handle func(string, http.Handler)) {
+	handle("/poll-and-queue", http.HandlerFunc(s.handleIndexAndQueue))
+	handle("/requeue", http.HandlerFunc(s.handleRequeue))
+	handle("/refresh-search", http.HandlerFunc(s.handleRefreshSearch))
+	handle("/populate-stdlib", http.HandlerFunc(s.handlePopulateStdLib))
+	handle("/reprocess", http.HandlerFunc(s.handleReprocess))
+	handle("/fetch/", http.StripPrefix("/fetch", http.HandlerFunc(s.handleFetch)))
+	handle("/queue-fetch/", http.StripPrefix("/queue-fetch", http.HandlerFunc(s.handleQueueFetch)))
+	handle("/", http.HandlerFunc(s.handleStatusPage))
 }
 
 // handleFetch executes a fetch requests and returns the outcome of that
