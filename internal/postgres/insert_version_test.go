@@ -184,6 +184,49 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 	}
 }
 
+func TestPostgres_ReadAndWriteVersionOtherColumns(t *testing.T) {
+	// Verify that InsertVersion correctly populates the columns in the versions
+	// table that are not in the VersionInfo struct.
+	defer ResetTestDB(testDB, t)
+	ctx := context.Background()
+
+	type other struct {
+		major, minor, patch    int
+		prerelease, seriesPath string
+	}
+
+	v := sample.Version()
+	v.ModulePath = "github.com/user/repo/path/v2"
+	v.Version = "v1.2.3-beta.4.a"
+
+	want := other{
+		major:      1,
+		minor:      2,
+		patch:      3,
+		prerelease: "beta.00000000000000000004.a",
+		seriesPath: "github.com/user/repo/path",
+	}
+
+	if err := testDB.InsertVersion(ctx, v, sample.Licenses); err != nil {
+		t.Fatal(err)
+	}
+	query := `
+	SELECT
+		major, minor, patch, prerelease, series_path
+	FROM
+		versions
+	WHERE
+		module_path = $1 AND version = $2`
+	row := testDB.queryRow(ctx, query, v.ModulePath, v.Version)
+	var got other
+	if err := row.Scan(&got.major, &got.minor, &got.patch, &got.prerelease, &got.seriesPath); err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Errorf("\ngot  %+v\nwant %+v", got, want)
+	}
+}
+
 func TestPostgres_DeleteVersion(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()

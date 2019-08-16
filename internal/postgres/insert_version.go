@@ -90,8 +90,9 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version, licens
 				version_type,
 				vcs_type,
 				repository_url,
-				homepage_url)
-			VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) ON CONFLICT DO NOTHING`,
+				homepage_url,
+				series_path)
+			VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) ON CONFLICT DO NOTHING`,
 			version.ModulePath,
 			version.Version,
 			version.CommitTime,
@@ -105,6 +106,7 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version, licens
 			version.VCSType,
 			version.RepositoryURL,
 			version.HomepageURL,
+			version.SeriesPath(),
 		); err != nil {
 			return fmt.Errorf("error inserting version: %v", err)
 		}
