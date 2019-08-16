@@ -32,9 +32,11 @@ func TestHTMLInjection(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewServer: %v", err)
 	}
+	mux := http.NewServeMux()
+	s.Install(mux.Handle)
 
 	w := httptest.NewRecorder()
-	s.ServeHTTP(w, httptest.NewRequest("GET", "/<em>UHOH</em>", nil))
+	mux.ServeHTTP(w, httptest.NewRequest("GET", "/<em>UHOH</em>", nil))
 	if strings.Contains(w.Body.String(), "<em>") {
 		t.Error("User input was rendered unescaped.")
 	}
@@ -74,6 +76,8 @@ func TestServer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewServer: %v", err)
 	}
+	mux := http.NewServeMux()
+	s.Install(mux.Handle)
 
 	pkgHeader := []string{
 		`<h1 class="Header-title">github.com/valid_module_name/foo</h1>`,
@@ -222,7 +226,7 @@ func TestServer(t *testing.T) {
 	} {
 		t.Run(tc.urlPath[1:], func(t *testing.T) { // remove initial '/' for name
 			w := httptest.NewRecorder()
-			s.ServeHTTP(w, httptest.NewRequest("GET", tc.urlPath, nil))
+			mux.ServeHTTP(w, httptest.NewRequest("GET", tc.urlPath, nil))
 			res := w.Result()
 			if res.StatusCode != http.StatusOK {
 				t.Fatalf("status code: got = %d, want %d", res.StatusCode, http.StatusOK)
@@ -259,9 +263,11 @@ func TestServerErrors(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewServer: %v", err)
 	}
+	mux := http.NewServeMux()
+	s.Install(mux.Handle)
 
 	w := httptest.NewRecorder()
-	s.ServeHTTP(w, httptest.NewRequest("GET", "/invalid-page", nil))
+	mux.ServeHTTP(w, httptest.NewRequest("GET", "/invalid-page", nil))
 	if w.Code != http.StatusNotFound {
 		t.Fatalf("status code: got = %d, want %d", w.Code, http.StatusNotFound)
 	}

@@ -22,11 +22,8 @@ import (
 	"golang.org/x/discovery/internal/proxy"
 )
 
-// Server is an http.Handler that implements functionality for managing the
-// processing of new module versions.
+// Server can be installed to serve the go discovery etl.
 type Server struct {
-	http.Handler
-
 	indexClient *index.Client
 	proxyClient *proxy.Client
 	db          *postgres.DB

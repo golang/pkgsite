@@ -16,16 +16,14 @@ import (
 	"sync"
 
 	"golang.org/x/discovery/internal/config"
-	"golang.org/x/discovery/internal/dcensus"
 	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
 )
 
-// Server handles requests for the various frontend pages.
+// Server can be installed to serve the go discovery frontend.
 type Server struct {
-	http.Handler
-
 	db              *postgres.DB
+	staticPath      string
 	templateDir     string
 	reloadTemplates bool
 	errorPage       []byte
@@ -46,6 +44,7 @@ func NewServer(db *postgres.DB, staticPath string, reloadTemplates bool) (*Serve
 
 	s := &Server{
 		db:              db,
+		staticPath:      staticPath,
 		templateDir:     templateDir,
 		reloadTemplates: reloadTemplates,
 		templates:       ts,
@@ -55,24 +54,23 @@ func NewServer(db *postgres.DB, staticPath string, reloadTemplates bool) (*Serve
 		return nil, fmt.Errorf("s.renderErrorPage(http.StatusInternalServerError, nil): %v", err)
 	}
 	s.errorPage = errorPageBytes
-
-	r := dcensus.NewRouter()
-	r.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticPath))))
-	r.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(staticPath)))
-	})
-	r.Handle("/pkg/", http.HandlerFunc(s.handlePackageDetails))
-	r.Handle("/mod/", http.HandlerFunc(s.handleModuleDetails))
-
-	r.HandleFunc("/search", s.handleSearch)
-	r.HandleFunc("/advanced-search", s.handleStaticPage("advanced_search.tmpl", "Advanced Search - Go Discovery"))
-	r.HandleFunc("/license-policy", s.handleStaticPage("license_policy.tmpl", "Licenses - Go Discovery"))
-	r.HandleFunc("/copyright", s.handleStaticPage("copyright.tmpl", "Copyright - Go Discovery"))
-	r.HandleFunc("/tos", s.handleStaticPage("tos.tmpl", "Terms of Service - Go Discovery"))
-	r.HandleFunc("/", s.handleIndexPage)
-	s.Handler = r
-
 	return s, nil
+}
+
+// Install registers server routes using the given handler registration func.
+func (s *Server) Install(handle func(string, http.Handler)) {
+	handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(s.staticPath))))
+	handle("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(s.staticPath)))
+	}))
+	handle("/pkg/", http.HandlerFunc(s.handlePackageDetails))
+	handle("/mod/", http.HandlerFunc(s.handleModuleDetails))
+	handle("/search", http.HandlerFunc(s.handleSearch))
+	handle("/advanced-search", s.handleStaticPage("advanced_search.tmpl", "Advanced Search - Go Discovery"))
+	handle("/license-policy", s.handleStaticPage("license_policy.tmpl", "Licenses - Go Discovery"))
+	handle("/copyright", s.handleStaticPage("copyright.tmpl", "Copyright - Go Discovery"))
+	handle("/tos", s.handleStaticPage("tos.tmpl", "Terms of Service - Go Discovery"))
+	handle("/", http.HandlerFunc(s.handleIndexPage))
 }
 
 // handleIndexPage handles requests to the index page.

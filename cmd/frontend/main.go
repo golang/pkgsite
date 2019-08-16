@@ -52,6 +52,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("frontend.NewServer: %v", err)
 	}
+	router := dcensus.NewRouter()
+	server.Install(router.Handle)
 
 	views := append(ochttp.DefaultServerViews, dcensus.ViewByCodeRouteMethod)
 	if err := dcensus.Init(views...); err != nil {
@@ -76,7 +78,7 @@ func main() {
 
 	addr := config.HostAddr("localhost:8080")
 	log.Printf("Listening on addr %s", addr)
-	log.Fatal(http.ListenAndServe(addr, mw(server)))
+	log.Fatal(http.ListenAndServe(addr, mw(router)))
 }
 
 func getLogger(ctx context.Context) middleware.Logger {
