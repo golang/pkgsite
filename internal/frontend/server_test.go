@@ -191,6 +191,11 @@ func TestServer(t *testing.T) {
 				`No known importers for this package`),
 		},
 		{
+			fmt.Sprintf("/pkg/%s?tab=importedby&page=2", sample.PackagePath),
+			append(pkgHeader,
+				`No known importers for this package`),
+		},
+		{
 			fmt.Sprintf("/pkg/%s?tab=licenses", sample.PackagePath),
 			append(pkgHeader,
 				`<a href="#LICENSE">MIT</a>`,

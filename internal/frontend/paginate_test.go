@@ -98,7 +98,7 @@ func TestPagesToDisplay(t *testing.T) {
 		wantPages                    []int
 	}{
 		{
-			name:         "page 1 of 10- first in range",
+			name:         "page 1 of 10 - first in range",
 			page:         1,
 			numPages:     10,
 			numToDisplay: 5,
@@ -112,7 +112,7 @@ func TestPagesToDisplay(t *testing.T) {
 			wantPages:    []int{1, 2, 3, 4, 5},
 		},
 		{
-			name:         "page 4 of 10 - first in range to include 1 in wantPages",
+			name:         "page 4 of 10 - first in range to not include 1 in wantPages",
 			page:         4,
 			numPages:     10,
 			numToDisplay: 5,
@@ -154,7 +154,7 @@ func TestPagesToDisplay(t *testing.T) {
 			wantPages:    []int{1, 2, 3, 4},
 		},
 		{
-			name:         "page 4 of 11, displaying 4 pages - first in range to include 1 in wantPages",
+			name:         "page 4 of 11, displaying 4 pages - first in range to not include 1 in wantPages",
 			page:         4,
 			numPages:     11,
 			numToDisplay: 4,

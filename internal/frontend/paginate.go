@@ -11,53 +11,60 @@ import (
 	"strconv"
 )
 
-// pagination holds information related to pagination. It is intended to be
-// embedded in a view model struct.
+// pagination holds information related to paginated display. It is intended to
+// be part of a view model struct.
+//
+// Given a sequence of results with offsets 0, 1, 2 ... (typically from a
+// database query), we paginate it by dividing it into numbered pages
+// 1, 2, 3, .... Each page except possibly the last has the same number of results.
 type pagination struct {
-	BaseURL     string
-	Pages       []int
-	PageCount   int
-	TotalCount  int
-	ResultCount int
-	Offset      int
-	PerPage     int
-	Page        int
-	PrevPage    int
-	NextPage    int
+	baseURL     *url.URL // URL common to all pages
+	limit       int      // the maximum number of results on a page
+	ResultCount int      // number of results on this page
+	TotalCount  int      // total number of results
+	Page        int      // number of the current page
+	PrevPage    int      //   "    "   "  previous page, usually Page-1 but zero if Page == 1
+	NextPage    int      //   "    "   "  next page, usually Page+1, but zero on the last page
+	Offset      int      // offset of the first item on the current page
+	Pages       []int    // consecutive page numbers to be displayed for navigation
+
 }
 
+// PageURL constructs a URL that displays the given page.
+// It adds a "page" query parameter to the base URL.
 func (p pagination) PageURL(page int) string {
-	u, err := url.Parse(p.BaseURL)
-	if err != nil {
-		log.Printf("BUG: error parsing page base URL: %v", err)
-	}
-	newQuery := u.Query()
+	newQuery := p.baseURL.Query()
 	newQuery.Set("page", strconv.Itoa(page))
-	u.RawQuery = newQuery.Encode()
-	return u.String()
+	p.baseURL.RawQuery = newQuery.Encode()
+	return p.baseURL.String()
 }
 
+// newPagination constructs a pagination. Call it after some results have been
+// obtained.
+// resultCount is the number of results in the current page.
+// totalCount is the total number of results.
 func newPagination(params paginationParams, resultCount, totalCount int) pagination {
 	return pagination{
-		BaseURL:     params.baseURL,
-		Pages:       pagesToLink(params.page, numPages(params.limit, totalCount), defaultNumPagesToLink),
-		PageCount:   numPages(params.limit, totalCount),
+		baseURL:     params.baseURL,
 		TotalCount:  totalCount,
 		ResultCount: resultCount,
 		Offset:      params.offset(),
-		PerPage:     params.limit,
+		limit:       params.limit,
 		Page:        params.page,
 		PrevPage:    prev(params.page),
 		NextPage:    next(params.page, params.limit, totalCount),
+		Pages:       pagesToLink(params.page, numPages(params.limit, totalCount), defaultNumPagesToLink),
 	}
 }
 
 // paginationParams holds pagination parameters extracted from the request.
 type paginationParams struct {
-	baseURL     string
-	page, limit int
+	baseURL *url.URL
+	page    int // the number of the page to display
+	limit   int // the maximum number of results to display on the page
 }
 
+// offset returns the offset of the first result on the page.
 func (p paginationParams) offset() int {
 	return offset(p.page, p.limit)
 }
@@ -75,10 +82,10 @@ func newPaginationParams(r *http.Request, defaultLimit int) paginationParams {
 		if val < 1 {
 			val = dflt
 		}
-		return
+		return val
 	}
 	return paginationParams{
-		baseURL: r.URL.String(),
+		baseURL: r.URL,
 		page:    positiveParam("page", 1),
 		limit:   positiveParam("limit", defaultLimit),
 	}
@@ -107,27 +114,33 @@ func pagesToLink(page, numPages, numPagesToLink int) []int {
 }
 
 // numPages is the total number of pages needed to display all the results,
-// given the specified limit.
-func numPages(limit, totalCount int) int {
-	return (totalCount + limit - 1) / limit
+// given the specified maximum page size and the total number of results.
+func numPages(pageSize, totalCount int) int {
+	return (totalCount + pageSize - 1) / pageSize
 }
 
+// offset returns the offset of the first result on page, assuming all previous
+// pages were of size limit.
 func offset(page, limit int) int {
-	if page < 2 {
+	if page <= 1 {
 		return 0
 	}
 	return (page - 1) * limit
 }
 
+// prev returns the number of the page before the given page, or zero if the
+// given page is 1 or smaller.
 func prev(page int) int {
-	if page < 2 {
+	if page <= 1 {
 		return 0
 	}
 	return page - 1
 }
 
-func next(page, limit, perPage int) int {
-	if page >= numPages(limit, perPage) {
+// next returns the number of the page after the given page, or zero if page is is the last page or larger.
+// limit and totalCount are used to calculate the last page (see numPages).
+func next(page, limit, totalCount int) int {
+	if page >= numPages(limit, totalCount) {
 		return 0
 	}
 	return page + 1

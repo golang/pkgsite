@@ -71,10 +71,9 @@ func TestFetchSearchPage(t *testing.T) {
 				Pagination: pagination{
 					TotalCount:  1,
 					ResultCount: 1,
-					PageCount:   1,
 					PrevPage:    0,
 					NextPage:    0,
-					PerPage:     20,
+					limit:       20,
 					Page:        1,
 					Pages:       []int{1},
 				},
@@ -100,10 +99,9 @@ func TestFetchSearchPage(t *testing.T) {
 				Pagination: pagination{
 					TotalCount:  1,
 					ResultCount: 1,
-					PageCount:   1,
 					PrevPage:    0,
 					NextPage:    0,
-					PerPage:     20,
+					limit:       20,
 					Page:        1,
 					Pages:       []int{1},
 				},
@@ -139,7 +137,7 @@ func TestFetchSearchPage(t *testing.T) {
 				t.Fatalf("fetchSearchPage(db, %q): %v", tc.query, err)
 			}
 
-			if diff := cmp.Diff(tc.wantSearchPage, got, cmp.AllowUnexported(SearchPage{}), cmpopts.IgnoreFields(license.Metadata{}, "FilePath")); diff != "" {
+			if diff := cmp.Diff(tc.wantSearchPage, got, cmp.AllowUnexported(SearchPage{}, pagination{}), cmpopts.IgnoreFields(license.Metadata{}, "FilePath")); diff != "" {
 				t.Errorf("fetchSearchPage(db, %q) mismatch (-want +got):\n%s", tc.query, diff)
 			}
 		})
