@@ -582,3 +582,10 @@ code {
 .Directory-header {
   border-bottom: 1px solid var(--gray-8);
 }
+
+.Details-content {
+  margin-left: 40px
+}
+.Details-indent {
+  margin-left: 1.1rem
+}

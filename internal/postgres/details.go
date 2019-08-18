@@ -425,48 +425,46 @@ func (db *DB) GetImports(ctx context.Context, path, version string) (paths []str
 	return imports, nil
 }
 
+// The limit used in the GetImportedBy query.
+const ImportedByLimit = 7001
+
 // GetImportedBy fetches and returns all of the packages that import the
 // package with path.
 // The returned error may be checked with derrors.IsInvalidArgument to
 // determine if it resulted from an invalid package path or version.
-func (db *DB) GetImportedBy(ctx context.Context, path, modulePath string, limit, offset int) (paths []string, total int, err error) {
-	defer derrors.Wrap(&err, "GetImportedBy(ctx, %q, %q, %d, %d)", path, modulePath, limit, offset)
+//
+// Instead of supporting pagination, this query runs with a limit.
+func (db *DB) GetImportedBy(ctx context.Context, path, modulePath string, limit int) (paths []string, err error) {
+	defer derrors.Wrap(&err, "GetImportedBy(ctx, %q, %q)", path, modulePath)
 	if path == "" {
-		return nil, 0, xerrors.Errorf("path cannot be empty: %w", derrors.InvalidArgument)
+		return nil, xerrors.Errorf("path cannot be empty: %w", derrors.InvalidArgument)
 	}
-
 	query := `
 		SELECT
-			from_path,
-			COUNT(*) OVER() as total
-			FROM (
-				SELECT
-					DISTINCT ON (from_path) from_path
-				FROM
-					imports
-				WHERE
-					to_path = $1
-				AND
-					from_module_path <> $2
-				ORDER BY
-					from_path
-			) t
-		LIMIT $3
-		OFFSET $4;`
+			DISTINCT from_path
+		FROM
+			imports
+		WHERE
+			to_path = $1
+		AND
+			from_module_path <> $2
+		ORDER BY
+			from_path
+		LIMIT $3`
 
 	var importedby []string
 	collect := func(rows *sql.Rows) error {
 		var fromPath string
-		if err := rows.Scan(&fromPath, &total); err != nil {
+		if err := rows.Scan(&fromPath); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
 		importedby = append(importedby, fromPath)
 		return nil
 	}
-	if err := db.runQuery(ctx, query, collect, path, modulePath, limit, offset); err != nil {
-		return nil, 0, err
+	if err := db.runQuery(ctx, query, collect, path, modulePath, limit); err != nil {
+		return nil, err
 	}
-	return importedby, total, nil
+	return importedby, nil
 }
 
 // GetModuleLicenses returns all licenses associated with the given module path and

@@ -9,16 +9,32 @@
     {{if .ImportedBy}}
       <h2>Imported by</h2>
       <p>
-        {{template "pagination_summary" .Pagination}} {{pluralize .Pagination.TotalCount "importer"}}
+        <b>Known {{pluralize .Total "importer"}}:</b> {{.Total}}{{if not .TotalIsExact}}+{{end}}
       </p>
-      <ul class="ImportedBy-list">
-        {{range .ImportedBy}}
-          <li><a class="u-breakWord" href="/pkg/{{.}}">{{.}}</a></li>
-        {{end}}
-      </ul>
-      {{template "pagination_nav" .Pagination}}
+      {{template "sections" .ImportedBy}}
     {{else}}
       {{template "empty_content" "No known importers for this package!"}}
     {{end}}
   </div>
+{{end}}
+
+{{define "sections"}}
+  <ul class="ImportedBy-list">
+    {{range .}}
+      {{template "section" .}}
+    {{end}}
+  </ul>
+{{end}}
+
+{{define "section"}}
+  {{if .Subs}}
+    <details>
+      <summary>{{.Prefix}} ({{.NumLines}})</summary>
+      <div class="Details-content">
+        {{template "sections" .Subs}}
+      </div>
+    </details>
+  {{else}}
+    <li class="Details-indent"><a class="u-breakWord" href="/pkg/{{.Prefix}}">{{.Prefix}}</a></li>
+  {{end}}
 {{end}}

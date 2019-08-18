@@ -193,70 +193,36 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 
 	for _, tc := range []struct {
 		path, modulePath, version string
-		limit, offset             int
 		wantImports               []string
 		wantImportedBy            []string
-		wantTotalImportedBy       int
 	}{
 		{
-			path:                pkg3.Path,
-			modulePath:          modulePath3,
-			version:             "v1.3.0",
-			limit:               10,
-			offset:              0,
-			wantImports:         pkg3.Imports,
-			wantImportedBy:      nil,
-			wantTotalImportedBy: 0,
+			path:           pkg3.Path,
+			modulePath:     modulePath3,
+			version:        "v1.3.0",
+			wantImports:    pkg3.Imports,
+			wantImportedBy: nil,
 		},
 		{
-			path:                pkg2.Path,
-			modulePath:          modulePath2,
-			limit:               10,
-			offset:              0,
-			version:             "v1.2.0",
-			wantImports:         pkg2.Imports,
-			wantImportedBy:      []string{pkg3.Path},
-			wantTotalImportedBy: 1,
+			path:           pkg2.Path,
+			modulePath:     modulePath2,
+			version:        "v1.2.0",
+			wantImports:    pkg2.Imports,
+			wantImportedBy: []string{pkg3.Path},
 		},
 		{
-			path:                pkg1.Path,
-			modulePath:          modulePath1,
-			limit:               10,
-			offset:              0,
-			version:             "v1.1.0",
-			wantImports:         nil,
-			wantImportedBy:      []string{pkg2.Path, pkg3.Path},
-			wantTotalImportedBy: 2,
+			path:           pkg1.Path,
+			modulePath:     modulePath1,
+			version:        "v1.1.0",
+			wantImports:    nil,
+			wantImportedBy: []string{pkg2.Path, pkg3.Path},
 		},
 		{
-			path:                pkg1.Path,
-			modulePath:          modulePath1,
-			version:             "v1.1.0",
-			limit:               1,
-			offset:              0,
-			wantImports:         nil,
-			wantImportedBy:      []string{pkg2.Path},
-			wantTotalImportedBy: 2,
-		},
-		{
-			path:                pkg1.Path,
-			modulePath:          modulePath1,
-			version:             "v1.1.0",
-			limit:               1,
-			offset:              1,
-			wantImports:         nil,
-			wantImportedBy:      []string{pkg3.Path},
-			wantTotalImportedBy: 2,
-		},
-		{
-			path:                pkg1.Path,
-			modulePath:          modulePath2, // should cause pkg2 to be excluded.
-			version:             "v1.1.0",
-			limit:               10,
-			offset:              0,
-			wantImports:         nil,
-			wantImportedBy:      []string{pkg3.Path},
-			wantTotalImportedBy: 1,
+			path:           pkg1.Path,
+			modulePath:     modulePath2, // should cause pkg2 to be excluded.
+			version:        "v1.1.0",
+			wantImports:    nil,
+			wantImportedBy: []string{pkg3.Path},
 		},
 	} {
 		t.Run(tc.path, func(t *testing.T) {
@@ -282,16 +248,12 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 				t.Errorf("testDB.GetImports(%q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
 			}
 
-			gotImportedBy, total, err := testDB.GetImportedBy(ctx, tc.path, tc.modulePath, tc.limit, tc.offset)
+			gotImportedBy, err := testDB.GetImportedBy(ctx, tc.path, tc.modulePath, 100)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if total != tc.wantTotalImportedBy {
-				t.Errorf("testDB.GetImportedBy(%q, %q, %d, %d): total = %d, want %d", tc.path, tc.modulePath, tc.limit, tc.offset, total, tc.wantTotalImportedBy)
-			}
-
 			if diff := cmp.Diff(tc.wantImportedBy, gotImportedBy); diff != "" {
-				t.Errorf("testDB.GetImportedBy(%q, %q, %d, %d) mismatch (-want +got):\n%s", tc.path, tc.modulePath, tc.limit, tc.offset, diff)
+				t.Errorf("testDB.GetImportedBy(%q, %q) mismatch (-want +got):\n%s", tc.path, tc.modulePath, diff)
 			}
 		})
 	}

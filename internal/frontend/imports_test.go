@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/sample"
@@ -114,18 +113,25 @@ func TestFetchImportedByDetails(t *testing.T) {
 	}{
 		{
 			pkg:         pkg3,
-			wantDetails: &ImportedByDetails{},
+			wantDetails: &ImportedByDetails{TotalIsExact: true},
 		},
 		{
 			pkg: pkg2,
 			wantDetails: &ImportedByDetails{
-				ImportedBy: []string{pkg3.Path},
+				ImportedBy:   []*Section{{Prefix: pkg3.Path, NumLines: 0}},
+				Total:        1,
+				TotalIsExact: true,
 			},
 		},
 		{
 			pkg: pkg1,
 			wantDetails: &ImportedByDetails{
-				ImportedBy: []string{pkg2.Path, pkg3.Path},
+				ImportedBy: []*Section{
+					{Prefix: pkg2.Path, NumLines: 0},
+					{Prefix: pkg3.Path, NumLines: 0},
+				},
+				Total:        2,
+				TotalIsExact: true,
 			},
 		},
 	} {
@@ -133,15 +139,15 @@ func TestFetchImportedByDetails(t *testing.T) {
 			otherVersion := newVersion("path.to/foo", tc.pkg)
 			otherVersion.Version = "v1.0.5"
 			vp := firstVersionedPackage(otherVersion)
-			got, err := fetchImportedByDetails(ctx, testDB, vp, paginationParams{limit: 20, page: 1})
+			got, err := fetchImportedByDetails(ctx, testDB, vp)
 			if err != nil {
-				t.Fatalf("fetchImportedByDetails(ctx, db, %q, 1) = %v err = %v, want %v",
+				t.Fatalf("fetchImportedByDetails(ctx, db, %q) = %v err = %v, want %v",
 					tc.pkg.Path, got, err, tc.wantDetails)
 			}
 
 			tc.wantDetails.ModulePath = vp.VersionInfo.ModulePath
-			if diff := cmp.Diff(tc.wantDetails, got, cmpopts.IgnoreFields(ImportedByDetails{}, "Pagination")); diff != "" {
-				t.Errorf("fetchImportedByDetails(ctx, db, %q, 1) mismatch (-want +got):\n%s", tc.pkg.Path, diff)
+			if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
+				t.Errorf("fetchImportedByDetails(ctx, db, %q) mismatch (-want +got):\n%s", tc.pkg.Path, diff)
 			}
 		})
 	}

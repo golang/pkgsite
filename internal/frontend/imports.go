@@ -59,26 +59,40 @@ func fetchImportsDetails(ctx context.Context, db *postgres.DB, pkg *internal.Ver
 // ImportedByDetails contains information for the collection of packages that
 // import a given package.
 type ImportedByDetails struct {
-	Pagination pagination
-
 	ModulePath string
 
 	// ImportedBy is the collection of packages that import the
 	// given package and are not part of the same module.
-	ImportedBy []string
+	// They are organized into a tree of sections by prefix.
+	ImportedBy []*Section
+
+	Total        int  // number of packages in ImportedBy
+	TotalIsExact bool // if false, then there may be more than Total
 }
+
+const importedByLimit = 7001
 
 // fetchImportedByDetails fetches importers for the package version specified by
 // path and version from the database and returns a ImportedByDetails.
-func fetchImportedByDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage, pageParams paginationParams) (*ImportedByDetails, error) {
-
-	importedBy, total, err := db.GetImportedBy(ctx, pkg.Path, pkg.ModulePath, pageParams.limit, pageParams.offset())
+func fetchImportedByDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*ImportedByDetails, error) {
+	importedBy, err := db.GetImportedBy(ctx, pkg.Path, pkg.ModulePath, importedByLimit)
 	if err != nil {
 		return nil, err
 	}
+	// If we reached the query limit, then we don't know the total.
+	// Say so, and show one less than the limit.
+	// For example, if the limit is 101 and we get 101 results, then we'll
+	// say there are more than 100, and show the first 100.
+	totalIsExact := true
+	if len(importedBy) == importedByLimit {
+		importedBy = importedBy[:len(importedBy)-1]
+		totalIsExact = false
+	}
+	sections := Sections(importedBy, nextPrefixAccount)
 	return &ImportedByDetails{
-		ModulePath: pkg.VersionInfo.ModulePath,
-		ImportedBy: importedBy,
-		Pagination: newPagination(pageParams, len(importedBy), total),
+		ModulePath:   pkg.VersionInfo.ModulePath,
+		ImportedBy:   sections,
+		Total:        len(importedBy),
+		TotalIsExact: totalIsExact,
 	}, nil
 }

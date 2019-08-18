@@ -158,7 +158,7 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, db
 	case "imports":
 		return fetchImportsDetails(ctx, db, pkg)
 	case "importedby":
-		return fetchImportedByDetails(ctx, db, pkg, newPaginationParams(r, 100))
+		return fetchImportedByDetails(ctx, db, pkg)
 	case "licenses":
 		return fetchPackageLicensesDetails(ctx, db, pkg)
 	case "readme":
