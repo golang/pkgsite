@@ -462,9 +462,6 @@ func (db *DB) GetImports(ctx context.Context, path, version string) (paths []str
 	if err := db.runQuery(ctx, query, collect, path, version); err != nil {
 		return nil, err
 	}
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("rows.Err(): %v", err)
-	}
 	return imports, nil
 }
 
