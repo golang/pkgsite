@@ -239,6 +239,66 @@ func (db *DB) getSearchDocument(ctx context.Context, path string) (*searchDocume
 	return &sd, nil
 }
 
+// UpdateSearchDocumentsImportedByCount updates imported_by_count and
+// imported_by_count_updated_at for packages where:
+//
+// (1) The package is imported by a package in search_documents, whose
+// imported_by_count_updated_at < version_updated_at. For example, if package B
+// imports package A, and in search_documents B's imported_by_count_updated_at
+// < version_updated_at, imported_by_count and imported_by_count_updated_at for
+// A will be updated.
+// (2) Packages where imported_by_count_updated_at < version_updated_at. That
+// way, we won't keep updating B's importers (i.e. A), if B is never imported
+// by anything.
+//
+// Note: we assume that clock drift is not an issue.
+func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context) error {
+	query := `
+		WITH modified_packages AS (
+			SELECT
+				p.path AS package_path,
+				v.updated_at
+			FROM packages p
+			INNER JOIN versions v
+			ON p.module_path=v.module_path
+			AND p.version=v.version
+			WHERE v.updated_at > (
+				SELECT COALESCE(MAX(imported_by_count_updated_at), TO_TIMESTAMP(0))
+				FROM search_documents
+			)
+		), packages_for_imported_by_count_refresh AS (
+			SELECT package_path
+			FROM modified_packages
+			UNION (
+				SELECT DISTINCT(to_path) AS package_path
+				FROM imports i
+				INNER JOIN modified_packages m
+				ON i.from_path = m.package_path
+			)
+		), new_imported_by_counts AS (
+			SELECT
+				p.package_path,
+				COUNT(DISTINCT(i.from_path)) AS imported_by_count
+			FROM packages_for_imported_by_count_refresh p
+			LEFT JOIN imports i
+			ON p.package_path = i.to_path
+			GROUP BY p.package_path
+		)
+
+		UPDATE search_documents
+		SET
+			imported_by_count = n.imported_by_count,
+			-- Note: we assume that max(updated_at) is only
+			-- computed once for all rows updated.
+			imported_by_count_updated_at = (SELECT MAX(updated_at) FROM modified_packages)
+		FROM new_imported_by_counts n
+		WHERE search_documents.package_path = n.package_path;`
+	if _, err := db.exec(ctx, query); err != nil {
+		return fmt.Errorf("error updating imported_by_count and imported_by_count_updated_at for search documents: %v", err)
+	}
+	return nil
+}
+
 // LegacySearch fetches packages from the database that match the terms
 // provided, and returns them in order of relevance as a []*SearchResult.
 func (db *DB) LegacySearch(ctx context.Context, searchQuery string, limit, offset int) (_ []*SearchResult, err error) {

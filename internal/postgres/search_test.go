@@ -315,3 +315,104 @@ func TestUpsertSearchDocumentVersionUpdatedAt(t *testing.T) {
 			versionUpdatedAtOriginal, versionUpdatedAtNew)
 	}
 }
+
+func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
+	defer ResetTestDB(testDB, t)
+
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	mustInsertPackageVersion := func(pkg *internal.Package, version string) {
+		t.Helper()
+		v := sample.Version()
+		v.Packages = []*internal.Package{pkg}
+		v.ModulePath = v.ModulePath + pkg.Path
+		v.Version = version
+		if err := testDB.InsertVersion(ctx, v, sample.Licenses); err != nil {
+			t.Fatalf("testDB.InsertVersionAndSearchDocuments(%q %q): %v", v.ModulePath, v.Version, err)
+		}
+	}
+	mustUpdateImportedByCount := func() {
+		t.Helper()
+		if err := testDB.UpdateSearchDocumentsImportedByCount(ctx); err != nil {
+			t.Fatalf("testDB.UpdateSearchDocumentsImportedByCount(ctx): %v", err)
+		}
+	}
+	validateImportedByCountAndGetSearchDocument := func(path string, count int) *searchDocument {
+		t.Helper()
+		sd, err := testDB.getSearchDocument(ctx, path)
+		if err != nil {
+			t.Fatalf("testDB.getSearchDocument(ctx, %q): %v", path, err)
+		}
+		if sd.importedByCountUpdatedAt.IsZero() {
+			t.Fatalf("importedByCountUpdatedAt for package %q should not by empty", path)
+		}
+		if count != sd.importedByCount {
+			t.Fatalf("importedByCount for package %q = %d; want = %d", path, sd.importedByCount, count)
+		}
+		return sd
+	}
+
+	// Test imported_by_count = 0 when only pkgA is added.
+	pkgA := &internal.Package{Path: "A", Name: "A"}
+	mustInsertPackageVersion(pkgA, "v1.0.0")
+	mustUpdateImportedByCount()
+	_ = validateImportedByCountAndGetSearchDocument(pkgA.Path, 0)
+
+	// Test imported_by_count = 1 for pkgA when pkgB is added.
+	pkgB := &internal.Package{Path: "B", Name: "B", Imports: []string{"A"}}
+	mustInsertPackageVersion(pkgB, "v1.0.0")
+	mustUpdateImportedByCount()
+	_ = validateImportedByCountAndGetSearchDocument(pkgA.Path, 1)
+	sdB := validateImportedByCountAndGetSearchDocument(pkgB.Path, 0)
+	wantSearchDocBUpdatedAt := sdB.importedByCountUpdatedAt
+
+	// Test imported_by_count = 2 for pkgA, when C is added.
+	pkgC := &internal.Package{Path: "C", Name: "C", Imports: []string{"A"}}
+	mustInsertPackageVersion(pkgC, "v1.0.0")
+	mustUpdateImportedByCount()
+	sdA := validateImportedByCountAndGetSearchDocument(pkgA.Path, 2)
+	sdC := validateImportedByCountAndGetSearchDocument(pkgC.Path, 0)
+
+	// Test imported_by_count_updated_at for A and C are the same.
+	if sdA.importedByCountUpdatedAt != sdC.importedByCountUpdatedAt {
+		t.Fatalf("expected imported_by_count_updated_at for pkgA and pkgC to be the same; pkgA = %v, pkgC = %v", sdA.importedByCountUpdatedAt, sdC.importedByCountUpdatedAt)
+	}
+
+	// Test imported_by_count_updated_at for B has not changed.
+	sdB = validateImportedByCountAndGetSearchDocument(pkgB.Path, 0)
+	if sdB.importedByCountUpdatedAt != wantSearchDocBUpdatedAt {
+		t.Fatalf("expected imported_by_count_updated_at for pkgB not to have changed; old = %v, new = %v", wantSearchDocBUpdatedAt, sdB.importedByCountUpdatedAt)
+	}
+
+	// Test imported_by_count_updated_at for B is before imported_by_count_updated_at for A.
+	if !sdB.importedByCountUpdatedAt.Before(sdA.importedByCountUpdatedAt) {
+		t.Fatalf("expected mported_by_count_updated_at for pkgB to be before pkgA; pkgB = %v, pkgA = %v", sdB.importedByCountUpdatedAt, sdA.importedByCountUpdatedAt)
+	}
+
+	// Test imported_by_count_updated_at for A and B have changed when a
+	// newer version of B is added.
+	mustInsertPackageVersion(pkgB, "v1.2.0")
+	mustUpdateImportedByCount()
+	sdA = validateImportedByCountAndGetSearchDocument(pkgA.Path, 2)
+	sdB = validateImportedByCountAndGetSearchDocument(pkgB.Path, 0)
+	if sdA.importedByCountUpdatedAt != sdB.importedByCountUpdatedAt {
+		t.Fatalf("expected imported_by_count_updated_at for pkgA and pkgB to be the same; pkgA = %v, pkgB = %v", sdA.importedByCountUpdatedAt, sdB.importedByCountUpdatedAt)
+	}
+
+	// Test imported_by_count_updated_at for C is before imported_by_count_updated_at for A.
+	_ = validateImportedByCountAndGetSearchDocument(pkgC.Path, 0)
+	if !sdC.importedByCountUpdatedAt.Before(sdA.importedByCountUpdatedAt) {
+		t.Fatalf("expected mported_by_count_updated_at for pkgC to be before pkgA; pkgB = %v, pkgA = %v", sdB.importedByCountUpdatedAt, sdA.importedByCountUpdatedAt)
+	}
+
+	// Test imported_by_count_updated_at for D changes when
+	// an older version of A imports D.
+	pkgD := &internal.Package{Path: "D", Name: "D"}
+	mustInsertPackageVersion(pkgD, "v1.0.0")
+	pkgA.Imports = []string{"D"}
+	mustInsertPackageVersion(pkgA, "v0.9.0")
+	mustUpdateImportedByCount()
+	_ = validateImportedByCountAndGetSearchDocument(pkgA.Path, 2)
+	_ = validateImportedByCountAndGetSearchDocument(pkgD.Path, 1)
+}

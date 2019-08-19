@@ -62,6 +62,11 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// search_documents for storing search data (b/136674524).
 	// This endpoint is invoked by a Cloud Scheduler job:
 	// 	handle("/refresh-search", http.HandlerFunc(s.handleRefreshSearch))
+	// cloud-scheduler: update-imported-by-count updates the imported_by_count for packages
+	// in search_documents where imported_by_count_updated_at is null or
+	// imported_by_count_updated_at < version_updated_at.
+	// This endpoint is invoked by a Cloud Scheduler job:
+	// 	handle("/update-imported-by-count", http.HandlerFunc(s.handleUpdateImportedByCount))
 	// task-queue: queue-fetch fetches a module version from the Module Mirror,
 	// and processes the contents, and inserts it into the database. If a fetch
 	// request fails for any reason other than an
@@ -87,6 +92,16 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// proxy. It is used primarily for local development.
 	handle("/fetch/", http.StripPrefix("/fetch", http.HandlerFunc(s.handleFetch)))
 	handle("/", http.HandlerFunc(s.handleStatusPage))
+}
+
+// handleUpdateImportedByCount updates imported_by_count for packages in
+// search_documents where imported_by_count_updated_at < version_updated_at or
+// imported_by_count_updated_at is null.
+func (s *Server) handleUpdateImportedByCount(w http.ResponseWriter, r *http.Request) {
+	if err := s.db.UpdateSearchDocumentsImportedByCount(r.Context()); err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		log.Printf("db.UpdateSearchDocumentsImportedByCount(ctx): %v", err)
+	}
 }
 
 // handleFetch executes a fetch requests and returns the outcome of that
