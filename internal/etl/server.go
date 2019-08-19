@@ -51,13 +51,41 @@ func NewServer(db *postgres.DB,
 
 // Install registers server routes using the given handler registration func.
 func (s *Server) Install(handle func(string, http.Handler)) {
-	handle("/poll-and-queue", http.HandlerFunc(s.handleIndexAndQueue))
+	// cloud-scheduler: poll-and-queue polls the Module Index for new versions
+	// that have been published and inserts that metadata into
+	// module_version_states. It also inserts the version into the task-queue
+	// to to be fetched and processed.
+	// This endpoint is invoked by a Cloud Scheduler job:
+	// 	handle("/poll-and-queue", http.HandlerFunc(s.handleIndexAndQueue))
+	// cloud-scheduler: refresh-search is used to refresh data in mvw_search_documents. This
+	// is in the process of being deprecated in favor of using
+	// search_documents for storing search data (b/136674524).
+	// This endpoint is invoked by a Cloud Scheduler job:
+	// 	handle("/refresh-search", http.HandlerFunc(s.handleRefreshSearch))
+	// task-queue: queue-fetch fetches a module version from the Module Mirror,
+	// and processes the contents, and inserts it into the database. If a fetch
+	// request fails for any reason other than an
+	// http.StatusInternalServerError, it will return an http.StatusOK so that
+	// the task queue does not retry fetching module versions that have a
+	// terminal error.
+	// This endpoint is invoked by a Cloud Tasks queue:
+	// 	handle("/queue-fetch/", http.StripPrefix("/queue-fetch", http.HandlerFunc(s.handleQueueFetch)))
+	// manual: requeue queries the module_version_states table for the next
+	// batch of module versions to process, and enqueues them for processing.
+	// Note that this may cause duplicate processing.
 	handle("/requeue", http.HandlerFunc(s.handleRequeue))
-	handle("/refresh-search", http.HandlerFunc(s.handleRefreshSearch))
-	handle("/populate-stdlib", http.HandlerFunc(s.handlePopulateStdLib))
+	// manual: reprocess sets status = 505 for all records in the
+	// module_version_states table that were processed by an app_version
+	// that occurred after the provided app_version param, so that they
+	// will be scheduled for reprocessing the next time a request to
+	// /requeue is made.
 	handle("/reprocess", http.HandlerFunc(s.handleReprocess))
+	// manual: populate-stdlib inserts all versions of the Go standard library
+	// into the tasks queue to be processed and inserted into the database.
+	handle("/populate-stdlib", http.HandlerFunc(s.handlePopulateStdLib))
+	// manual: fetch fetches the specified module version from the module
+	// proxy. It is used primarily for local development.
 	handle("/fetch/", http.StripPrefix("/fetch", http.HandlerFunc(s.handleFetch)))
-	handle("/queue-fetch/", http.StripPrefix("/queue-fetch", http.HandlerFunc(s.handleQueueFetch)))
 	handle("/", http.HandlerFunc(s.handleStatusPage))
 }
 
