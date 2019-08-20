@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -134,7 +135,7 @@ func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int)
 func (db *DB) UpsertSearchDocument(ctx context.Context, path string) (err error) {
 	defer derrors.Wrap(&err, "UpsertSearchDocument(ctx, %q)", path)
 
-	if strings.Contains(path, "internal") {
+	if isInternalPackage(path) {
 		return xerrors.Errorf("cannot insert internal package %q into search documents: %w", path, derrors.InvalidArgument)
 	}
 
@@ -194,6 +195,42 @@ func (db *DB) UpsertSearchDocument(ctx context.Context, path string) (err error)
 				END)
 		;`, path, pathTokens)
 	return err
+}
+
+// GetPackagesForSearchDocumentUpsert fetches all paths from packages that do
+// not exist in search_documents.
+func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context) (paths []string, err error) {
+	defer derrors.Add(&err, "GetPackagesForSearchDocumentUpsert(ctx)")
+
+	query := `
+		SELECT DISTINCT(path)
+		FROM packages p
+		LEFT JOIN search_documents sd
+		ON p.path = sd.package_path
+		WHERE sd.package_path IS NULL`
+
+	var pkgPaths []string
+	collect := func(rows *sql.Rows) error {
+		var path string
+		if err := rows.Scan(&path); err != nil {
+			return err
+		}
+		pkgPaths = append(pkgPaths, path)
+		return nil
+	}
+	if err := db.runQuery(ctx, query, collect); err != nil {
+		return nil, err
+	}
+	for _, p := range pkgPaths {
+		if isInternalPackage(p) {
+			// Filter out packages in internal directories, since
+			// they are skipped when upserting search_documents.
+			continue
+		}
+		paths = append(paths, p)
+	}
+	sort.Strings(paths)
+	return paths, nil
 }
 
 type searchDocument struct {
@@ -487,4 +524,14 @@ func generatePathTokens(packagePath string) []string {
 		}
 	}
 	return subPaths
+}
+
+// isInternalPackage reports whether the path represents an internal directory.
+func isInternalPackage(path string) bool {
+	for _, p := range strings.Split(path, "/") {
+		if p == "internal" {
+			return true
+		}
+	}
+	return false
 }

@@ -416,3 +416,46 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 	_ = validateImportedByCountAndGetSearchDocument(pkgA.Path, 2)
 	_ = validateImportedByCountAndGetSearchDocument(pkgD.Path, 1)
 }
+
+func TestGetPackagesForSearchDocumentUpsert(t *testing.T) {
+	defer ResetTestDB(testDB, t)
+
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	versionA := sample.Version()
+	versionA.Packages = []*internal.Package{
+		{Path: "A", Name: "A"},
+		{Path: "A/notinternal", Name: "A/notinternal"},
+		{Path: "A/internal", Name: "A/internal"},
+		{Path: "A/internal/B", Name: "A/internal/B"},
+	}
+	if err := testDB.saveVersion(ctx, versionA, sample.Licenses); err != nil {
+		t.Fatal(err)
+	}
+	// pkgPaths should be "A", since pkg "A" exists in packages but not
+	// search_documents.
+	pkgPaths, err := testDB.GetPackagesForSearchDocumentUpsert(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"A", "A/notinternal"}
+	if diff := cmp.Diff(want, pkgPaths); diff != "" {
+		t.Fatalf("testDB.GetPackagesForSearchDocumentUpsert mismatch(-want +got):\n%s", diff)
+	}
+
+	for _, path := range want {
+		if err := testDB.UpsertSearchDocument(ctx, path); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// pkgPaths should be an empty slice, since pkg "A" and "A/notinternal"
+	// were just inserted into search_documents.
+	pkgPaths, err = testDB.GetPackagesForSearchDocumentUpsert(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(pkgPaths) != 0 {
+		t.Fatalf("expected testDB.GetPackagesForSearchDocumentUpsert to return an empty slice; got %v", pkgPaths)
+	}
+}

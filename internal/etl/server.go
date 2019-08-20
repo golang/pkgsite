@@ -57,16 +57,19 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// to to be fetched and processed.
 	// This endpoint is invoked by a Cloud Scheduler job:
 	// 	handle("/poll-and-queue", http.HandlerFunc(s.handleIndexAndQueue))
+
 	// cloud-scheduler: refresh-search is used to refresh data in mvw_search_documents. This
 	// is in the process of being deprecated in favor of using
 	// search_documents for storing search data (b/136674524).
 	// This endpoint is invoked by a Cloud Scheduler job:
 	// 	handle("/refresh-search", http.HandlerFunc(s.handleRefreshSearch))
+
 	// cloud-scheduler: update-imported-by-count updates the imported_by_count for packages
 	// in search_documents where imported_by_count_updated_at is null or
 	// imported_by_count_updated_at < version_updated_at.
 	// This endpoint is invoked by a Cloud Scheduler job:
 	// 	handle("/update-imported-by-count", http.HandlerFunc(s.handleUpdateImportedByCount))
+
 	// task-queue: queue-fetch fetches a module version from the Module Mirror,
 	// and processes the contents, and inserts it into the database. If a fetch
 	// request fails for any reason other than an
@@ -75,22 +78,37 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// terminal error.
 	// This endpoint is invoked by a Cloud Tasks queue:
 	// 	handle("/queue-fetch/", http.StripPrefix("/queue-fetch", http.HandlerFunc(s.handleQueueFetch)))
+
 	// manual: requeue queries the module_version_states table for the next
 	// batch of module versions to process, and enqueues them for processing.
 	// Note that this may cause duplicate processing.
 	handle("/requeue", http.HandlerFunc(s.handleRequeue))
+
 	// manual: reprocess sets status = 505 for all records in the
 	// module_version_states table that were processed by an app_version
 	// that occurred after the provided app_version param, so that they
 	// will be scheduled for reprocessing the next time a request to
 	// /requeue is made.
 	handle("/reprocess", http.HandlerFunc(s.handleReprocess))
-	// manual: populate-stdlib inserts all versions of the Go standard library
-	// into the tasks queue to be processed and inserted into the database.
+
+	// manual: populate-stdlib inserts all versions of the Go standard
+	// library into the tasks queue to be processed and inserted into the
+	 handlePopulateStdLib should be updated whenever a new
+	// version of Go is released.
 	handle("/populate-stdlib", http.HandlerFunc(s.handlePopulateStdLib))
+
+	// manual: populate-search-documents inserts a record into
+	// search_documents for all paths in the packages table that do not
+	// exist in search_documents.
+	handle("/populate-search-documents", http.HandlerFunc(s.handlePopulateSearchDocuments))
+
 	// manual: fetch fetches the specified module version from the module
-	// proxy. It is used primarily for local development.
+	// proxy. It is used primarily for local development, but can also used
+	// to fetch a specific module version in dev and prod. Fetching with
+	// this endpoint skips the task queue.
 	handle("/fetch/", http.StripPrefix("/fetch", http.HandlerFunc(s.handleFetch)))
+
+	// returns the ETL homepage.
 	handle("/", http.HandlerFunc(s.handleStatusPage))
 }
 
@@ -101,6 +119,26 @@ func (s *Server) handleUpdateImportedByCount(w http.ResponseWriter, r *http.Requ
 	if err := s.db.UpdateSearchDocumentsImportedByCount(r.Context()); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		log.Printf("db.UpdateSearchDocumentsImportedByCount(ctx): %v", err)
+	}
+}
+
+// handlePopulateSearchDocuments inserts a record into search_documents for all
+// package_paths that exist in packages but not in search_documents.
+func (s *Server) handlePopulateSearchDocuments(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	pkgPaths, err := s.db.GetPackagesForSearchDocumentUpsert(ctx)
+	if err != nil {
+		log.Printf("s.db.GetPackagesSearchDocumentUpsert(ctx): %v", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	for _, path := range pkgPaths {
+		if err := s.db.UpsertSearchDocument(ctx, path); err != nil {
+			log.Printf("s.db.UpsertSearchDocument(ctx, %q): %v", path, err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
 	}
 }
 
