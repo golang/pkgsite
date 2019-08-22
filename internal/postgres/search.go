@@ -209,25 +209,20 @@ func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context) (paths []s
 		ON p.path = sd.package_path
 		WHERE sd.package_path IS NULL`
 
-	var pkgPaths []string
 	collect := func(rows *sql.Rows) error {
 		var path string
 		if err := rows.Scan(&path); err != nil {
 			return err
 		}
-		pkgPaths = append(pkgPaths, path)
+		// Filter out packages in internal directories, since
+		// they are skipped when upserting search_documents.
+		if !isInternalPackage(path) {
+			paths = append(paths, path)
+		}
 		return nil
 	}
 	if err := db.runQuery(ctx, query, collect); err != nil {
 		return nil, err
-	}
-	for _, p := range pkgPaths {
-		if isInternalPackage(p) {
-			// Filter out packages in internal directories, since
-			// they are skipped when upserting search_documents.
-			continue
-		}
-		paths = append(paths, p)
 	}
 	sort.Strings(paths)
 	return paths, nil
