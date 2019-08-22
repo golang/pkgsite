@@ -13,7 +13,7 @@
       {{range $minor := $major.Versions}}
         {{range $i, $v := $minor}}
           <li class="Versions-{{if $i}}notlatest{{else}}latest{{end}}">
-            <a href="/pkg/{{$v.Path}}@{{$v.Version}}" title="{{$v.Version}}">{{$v.FormattedVersion}}</a>
+            <a href="{{$v.Link}}" title="{{$v.Version}}">{{$v.FormattedVersion}}</a>
             <span class="Versions-commitTime"> &ndash; {{$v.CommitTime}}</span>
           </li>
         {{end}}

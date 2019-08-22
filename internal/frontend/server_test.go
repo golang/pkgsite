@@ -239,7 +239,9 @@ func TestServer(t *testing.T) {
 		{
 			fmt.Sprintf("/mod/%s@%s?tab=versions", sample.ModulePath, sample.VersionString),
 			append(modHeader,
-				`Page has not been implemented yet!`),
+				`Versions`,
+				`v1`,
+				`<a href="/mod/github.com/valid_module_name@v1.0.0" title="v1.0.0">v1.0.0</a>`),
 		},
 		{
 			fmt.Sprintf("/mod/%s@%s?tab=licenses", sample.ModulePath, sample.VersionString),

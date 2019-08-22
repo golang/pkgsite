@@ -149,7 +149,7 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, db
 	case "doc":
 		return fetchDocumentationDetails(ctx, db, pkg)
 	case "versions":
-		return fetchVersionsDetails(ctx, db, pkg)
+		return fetchPackageVersionsDetails(ctx, db, pkg)
 	case "module":
 		return fetchModuleDetails(ctx, db, &pkg.VersionInfo)
 	case "imports":
@@ -266,7 +266,9 @@ func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, db 
 		return fetchModuleDetails(ctx, db, vi)
 	case "licenses":
 		return &LicensesDetails{Licenses: transformLicenses(licenses)}, nil
-	case "readme", "modfile", "versions", "dependents", "dependencies", "importedby":
+	case "versions":
+		return fetchModuleVersionsDetails(ctx, db, vi)
+	case "readme":
 		// TODO(b/138448402): implement remaining module views.
 		return fetchReadMeDetails(ctx, db, vi)
 	}
@@ -338,7 +340,7 @@ var (
 			Name:              "versions",
 			AlwaysShowDetails: true,
 			DisplayName:       "Versions",
-			TemplateName:      "pkg_versions.tmpl",
+			TemplateName:      "versions.tmpl",
 		},
 		{
 			Name:              "imports",
@@ -376,7 +378,7 @@ var (
 			Name:              "versions",
 			AlwaysShowDetails: true,
 			DisplayName:       "Versions",
-			TemplateName:      "not_implemented.tmpl",
+			TemplateName:      "versions.tmpl",
 		},
 		{
 			Name:         "licenses",

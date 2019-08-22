@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"path"
+	"sort"
 	"strings"
 
 	"golang.org/x/discovery/internal"
@@ -18,44 +19,72 @@ import (
 	"golang.org/x/discovery/internal/thirdparty/semver"
 )
 
-// VersionsDetails contains all the data that the versions tab
-// template needs to populate.
+// VersionsDetails contains the hierarchy of version summary information used
+// to populate the version tab.
 type VersionsDetails struct {
-	// ThisMajorVersion is the MajorVersionGroup containing the package currently
-	// being viewed.
-	ThisModule []*ModuleVersion
+	// ThisModule is the slice of MajorVersionGroups with the same module path as
+	// the current package.
+	ThisModule []*MajorVersionGroup
 
-	// OtherMajorVersions is other major module versions in the current module
-	// series.
-	OtherModules []*ModuleVersion
+	// OtherModules is the slice of MajorVersionGroups with a different module
+	// path from the current package.
+	OtherModules []*MajorVersionGroup
 }
 
-// ModuleVersion holds all versions within a unique module path in the version hierarchy.
-type ModuleVersion struct {
+// MajorVersionGroup holds all versions corresponding to a unique (module path,
+// major version) tuple in the version hierarchy. Notably v0 and v1 module
+// versions are in separate MajorVersionGroups, despite having the same module
+// path.
+type MajorVersionGroup struct {
+	// Major is the major version string (e.g. v1, v2)
 	Major      string
 	ModulePath string
-	Versions   [][]*PackageVersion
+	// Versions holds the nested version summaries, organized in descending minor
+	// and patch version order.
+	Versions [][]*VersionSummary
 }
 
-// PackageVersion represents the patch level of the versions hierarchy.
-type PackageVersion struct {
+// VersionSummary holds data required to format the version link on the
+// versions tab.
+type VersionSummary struct {
 	Version          string
-	Path             string
 	CommitTime       string
 	FormattedVersion string
+	// Link to this version, for use in the anchor href.
+	Link string
 }
 
-// fetchVersionsDetails fetches data for the module version specified by path
-// and version from the database and returns a VersionsDetails. The package
-// path for each SeriesVersionGroup is calculated as the module path and
-// package suffix. For the standard library packages, it is the package path.
-func fetchVersionsDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*VersionsDetails, error) {
+// fetchModuleVersionsDetails builds a version hierarchy for module versions
+// with the same series path as the given version.
+func fetchModuleVersionsDetails(ctx context.Context, db *postgres.DB, vi *internal.VersionInfo) (*VersionsDetails, error) {
+	versions, err := db.GetTaggedVersionsForModule(ctx, vi.ModulePath)
+	if err != nil {
+		return nil, err
+	}
+	// If no tagged versions of the module are found, fetch pseudo-versions
+	// instead.
+	if len(versions) == 0 {
+		versions, err = db.GetPseudoVersionsForModule(ctx, vi.ModulePath)
+		if err != nil {
+			return nil, err
+		}
+	}
+	linkify := func(v *internal.VersionInfo) string {
+		return fmt.Sprintf("/mod/%s@%s", v.ModulePath, v.Version)
+	}
+	return buildVersionDetails(vi.ModulePath, versions, linkify), nil
+}
+
+// fetchPackageVersionsDetails builds a version hierarchy for all module
+// versions containing a package path with v1 import path matching the v1
+// import path of pkg.
+func fetchPackageVersionsDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*VersionsDetails, error) {
 	versions, err := db.GetTaggedVersionsForPackageSeries(ctx, pkg.Path)
 	if err != nil {
 		return nil, err
 	}
-	// If no tagged versions for the package series are found,
-	// fetch the pseudo-versions instead.
+	// If no tagged versions for the package series are found, fetch the
+	// pseudo-versions instead.
 	if len(versions) == 0 {
 		versions, err = db.GetPseudoVersionsForPackageSeries(ctx, pkg.Path)
 		if err != nil {
@@ -63,57 +92,99 @@ func fetchVersionsDetails(ctx context.Context, db *postgres.DB, pkg *internal.Ve
 		}
 	}
 
-	// Next, build a versionTree containing all valid versions.
+	var filteredVersions []*internal.VersionInfo
+	// TODO(rfindley): remove this filtering, as it should not be necessary and
+	// is probably a relic of earlier version query implementations.
+	for _, v := range versions {
+		if seriesPath := v.SeriesPath(); strings.HasPrefix(pkg.V1Path, seriesPath) || internal.IsStandardLibraryModule(seriesPath) {
+			filteredVersions = append(filteredVersions, v)
+		} else {
+			log.Printf("got version with mismatching series: %q", seriesPath)
+		}
+	}
+
+	linkify := func(vi *internal.VersionInfo) string {
+		// Here we have only version information, but need to construct the full
+		// import path of the package corresponding to this version.
+		var versionPath string
+		if inStdLib(pkg.Path) {
+			// Standard library paths are constant.
+			versionPath = pkg.Path
+		} else {
+			versionPath = pathInVersion(pkg.V1Path, vi)
+		}
+		return fmt.Sprintf("/pkg/%s@%s", versionPath, vi.Version)
+	}
+	return buildVersionDetails(pkg.ModulePath, filteredVersions, linkify), nil
+}
+
+// pathInVersion constructs the full import path of the package corresponding
+// to vi, given its v1 path. To do this, we first compute the suffix of the
+// package path in the given module series, and then append it to the real
+// (versioned) module path.
+//
+// For example: if we're considering package foo.com/v3/bar/baz, and encounter
+// module version foo.com/bar/v2, we do the following:
+//   1) Start with the v1Path foo.com/bar/baz.
+//   2) Trim off the version series path foo.com/bar to get 'baz'.
+//   3) Join with the versioned module path foo.com/bar/v2 to get
+//      foo.com/bar/v2/baz.
+// ...being careful about slashes along the way.
+func pathInVersion(v1Path string, vi *internal.VersionInfo) string {
+	suffix := strings.TrimPrefix(strings.TrimPrefix(v1Path, vi.SeriesPath()), "/")
+	if suffix == "" {
+		return vi.ModulePath
+	}
+	return path.Join(vi.ModulePath, suffix)
+}
+
+// buildVersionDetails constructs the version hierarchy to be rendered on the
+// versions tab, organizing major versions into those that have the same module
+// path as the package version under consideration, and those that don't.
+func buildVersionDetails(currentModulePath string, versions []*internal.VersionInfo, linkify func(v *internal.VersionInfo) string) *VersionsDetails {
+	// Pre-sort versions to ensure they are in descending semver order.
+	sort.Slice(versions, func(i, j int) bool {
+		return semver.Compare(versions[i].Version, versions[j].Version) > 0
+	})
+
+	// Next, build a version tree containing each unique version path:
+	//   modulePath->major->majMin->version
 	tree := &versionTree{}
 	for _, v := range versions {
-		seriesPath, pathMajor, ok := module.SplitPathVersion(v.ModulePath)
-		if !strings.HasPrefix(pkg.V1Path, seriesPath) && !internal.IsStandardLibraryModule(seriesPath) {
-			log.Printf("got version with mismatching series: %q", seriesPath)
-			continue
-		}
-
-		// Resolve the most appropriate major version for this version. Here we are
-		// conservative, but try to do The Right Thing. Specifically, if we detect
-		// a +incompatible version (when the path version does not match the
-		// sematic version), we prefer the path version.
+		// Try to resolve the most appropriate major version for this version. If
+		// we detect a +incompatible version (when the path version does not match
+		// the sematic version), we prefer the path version.
 		major := semver.Major(v.Version)
-		if ok {
-			// If we successfully parsed the import path, we should prefer the major
-			// version from the path over the semver for grouping purposes.
-			// Trim both '/' and '.' from the path major version to account for
-			// standard and gopkg module paths.
-			major = majorVersion(strings.TrimLeft(pathMajor, "/."), major)
+		if _, pathMajor, ok := module.SplitPathVersion(v.ModulePath); ok {
+			// We prefer the path major version except for v1 import paths where the
+			// semver major version is v0. In this case, we prefer the more specific
+			// semver version.
+
+			if pathMajor != "" {
+				// Trim both '/' and '.' from the path major version to account for
+				// standard and gopkg.in module paths.
+				major = strings.TrimLeft(pathMajor, "/.")
+			} else if major != "v0" {
+				major = "v1"
+			}
 		}
 		majMin := semver.MajorMinor(v.Version)
 		tree.push(v, v.ModulePath, major, majMin, v.Version)
 	}
 
-	// versionPath backs-out the package path corresponding to a package version,
-	// by computing the relative path to the package within the module version.
-	versionPath := func(v *internal.VersionInfo) string {
-		if inStdLib(pkg.Path) {
-			return pkg.Path
-		}
-		suffix := strings.TrimPrefix(strings.TrimPrefix(pkg.V1Path, v.SeriesPath()), "/")
-		if suffix == "" {
-			return v.ModulePath
-		}
-		return path.Join(v.ModulePath, suffix)
-	}
-
 	// makeMV builds a MajorVersionGroup from a major subtree of the version
 	// hierarchy.
-	makeMV := func(modulePath, major string, majorTree *versionTree) *ModuleVersion {
-		mvg := ModuleVersion{
+	makeMV := func(modulePath, major string, majorTree *versionTree) *MajorVersionGroup {
+		mvg := MajorVersionGroup{
 			Major:      major,
 			ModulePath: modulePath,
 		}
 		majorTree.forEach(func(_ string, minorTree *versionTree) {
-			patches := []*PackageVersion{}
-			minorTree.forEach(func(version string, patchTree *versionTree) {
-				patches = append(patches, &PackageVersion{
+			patches := []*VersionSummary{}
+			minorTree.forEach(func(_ string, patchTree *versionTree) {
+				patches = append(patches, &VersionSummary{
 					Version:          patchTree.versionInfo.Version,
-					Path:             versionPath(patchTree.versionInfo),
+					Link:             linkify(patchTree.versionInfo),
 					CommitTime:       elapsedTime(patchTree.versionInfo.CommitTime),
 					FormattedVersion: formatVersion(patchTree.versionInfo.Version),
 				})
@@ -123,37 +194,20 @@ func fetchVersionsDetails(ctx context.Context, db *postgres.DB, pkg *internal.Ve
 		return &mvg
 	}
 
-	// Finally, VersionDetails is built by traversing the version hierarchy using
-	// the helper functions defined above.
+	// Finally, VersionDetails is built by traversing the major version
+	// hierarchy.
 	var details VersionsDetails
 	tree.forEach(func(modulePath string, moduleTree *versionTree) {
 		moduleTree.forEach(func(major string, majorTree *versionTree) {
 			mv := makeMV(modulePath, major, majorTree)
-			if modulePath == pkg.ModulePath {
+			if modulePath == currentModulePath {
 				details.ThisModule = append(details.ThisModule, mv)
 			} else {
 				details.OtherModules = append(details.OtherModules, mv)
 			}
 		})
 	})
-	return &details, nil
-}
-
-// majorVersion resolves the major version to use given a major version string
-// extracted from the module import path and a major version string extracted
-// from the version. Specifically, this handles +incompatible versions where
-// these are in disagreement.
-//
-// We have chosen to group versions by import path rather than by semver, with
-// the exception of separating v0 and v1 versions.
-func majorVersion(pathMajor, semverMajor string) string {
-	if pathMajor == "" {
-		if semverMajor == "v1" || semverMajor == "v0" {
-			return semverMajor
-		}
-		return "v1"
-	}
-	return pathMajor
+	return &details
 }
 
 // versionTree represents the version hierarchy. It preserves the order in
