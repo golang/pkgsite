@@ -54,7 +54,7 @@ func TestFetchImportsDetails(t *testing.T) {
 			pkg.Imports = tc.imports
 			version.Packages = []*internal.Package{pkg}
 
-			if err := testDB.InsertVersion(ctx, version, sample.Licenses); err != nil {
+			if err := testDB.InsertVersion(ctx, version); err != nil {
 				t.Fatal(err)
 			}
 
@@ -103,7 +103,7 @@ func TestFetchImportedByDetails(t *testing.T) {
 	}
 
 	for _, v := range testVersions {
-		if err := testDB.InsertVersion(ctx, v, sample.Licenses); err != nil {
+		if err := testDB.InsertVersion(ctx, v); err != nil {
 			t.Fatal(err)
 		}
 	}

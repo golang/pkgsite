@@ -248,7 +248,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				v := sample.Version()
 				v.ModulePath = modulePath
 				v.Packages = []*internal.Package{pkg}
-				if err := testDB.InsertVersion(ctx, v, sample.Licenses); err != nil {
+				if err := testDB.InsertVersion(ctx, v); err != nil {
 					t.Fatal(err)
 				}
 			}
@@ -293,7 +293,7 @@ func TestUpsertSearchDocumentVersionUpdatedAt(t *testing.T) {
 		v := sample.Version()
 		v.Packages = []*internal.Package{pkgA}
 		v.Version = version
-		if err := testDB.InsertVersion(ctx, v, sample.Licenses); err != nil {
+		if err := testDB.InsertVersion(ctx, v); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -328,7 +328,7 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		v.Packages = []*internal.Package{pkg}
 		v.ModulePath = v.ModulePath + pkg.Path
 		v.Version = version
-		if err := testDB.InsertVersion(ctx, v, sample.Licenses); err != nil {
+		if err := testDB.InsertVersion(ctx, v); err != nil {
 			t.Fatalf("testDB.InsertVersionAndSearchDocuments(%q %q): %v", v.ModulePath, v.Version, err)
 		}
 	}
@@ -430,7 +430,7 @@ func TestGetPackagesForSearchDocumentUpsert(t *testing.T) {
 		{Path: "A/internal", Name: "A/internal"},
 		{Path: "A/internal/B", Name: "A/internal/B"},
 	}
-	if err := testDB.saveVersion(ctx, versionA, sample.Licenses); err != nil {
+	if err := testDB.saveVersion(ctx, versionA); err != nil {
 		t.Fatal(err)
 	}
 	// pkgPaths should be "A", since pkg "A" exists in packages but not

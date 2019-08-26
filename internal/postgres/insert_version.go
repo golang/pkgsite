@@ -15,7 +15,6 @@ import (
 	"github.com/lib/pq"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
 	"golang.org/x/xerrors"
@@ -24,7 +23,7 @@ import (
 // InsertVersion inserts a version into the database using
 // db.saveVersion, along with a search document corresponding to each of its
 // packages.
-func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, licenses []*license.License) (err error) {
+func (db *DB) InsertVersion(ctx context.Context, version *internal.Version) (err error) {
 	defer func() {
 		if version == nil {
 			derrors.Wrap(&err, "DB.InsertVersion(ctx, nil)")
@@ -33,12 +32,12 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 		}
 	}()
 
-	if err := validateVersion(version, licenses); err != nil {
+	if err := validateVersion(version); err != nil {
 		return xerrors.Errorf("validateVersion: %v: %w", err, derrors.InvalidArgument)
 	}
 	removeNonDistributableData(version)
 
-	if err := db.saveVersion(ctx, version, licenses); err != nil {
+	if err := db.saveVersion(ctx, version); err != nil {
 		return err
 	}
 	if err := db.legacyInsertDocuments(ctx, version); err != nil {
@@ -64,7 +63,7 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version, lice
 //
 // A derrors.InvalidArgument error will be returned if the given version and
 // licenses are invalid.
-func (db *DB) saveVersion(ctx context.Context, version *internal.Version, licenses []*license.License) error {
+func (db *DB) saveVersion(ctx context.Context, version *internal.Version) error {
 	err := db.Transact(func(tx *sql.Tx) error {
 		majorint, minorint, patchint, prerelease, err := extractSemverParts(version.Version)
 		if err != nil {
@@ -112,7 +111,7 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version, licens
 		}
 
 		var licenseValues []interface{}
-		for _, l := range licenses {
+		for _, l := range version.Licenses {
 			licenseValues = append(licenseValues, version.ModulePath, version.Version, l.FilePath, l.Contents, pq.Array(l.Types))
 		}
 		if len(licenseValues) > 0 {
@@ -206,7 +205,7 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version, licens
 // validateVersion checks that fields needed to insert a version into the
 // database are present. Otherwise, it returns an error listing the reasons the
 // version cannot be inserted.
-func validateVersion(version *internal.Version, lics []*license.License) error {
+func validateVersion(version *internal.Version) error {
 	if version == nil {
 		return fmt.Errorf("nil version")
 	}
@@ -215,7 +214,7 @@ func validateVersion(version *internal.Version, lics []*license.License) error {
 	if !utf8.Valid(version.ReadmeContents) {
 		errReasons = append(errReasons, fmt.Sprintf("readme %q is not valid utf8", version.ReadmeFilePath))
 	}
-	for _, l := range lics {
+	for _, l := range version.Licenses {
 		if !utf8.Valid(l.Contents) {
 			errReasons = append(errReasons, fmt.Sprintf("license %q contains invalid unicode", l.FilePath))
 		}

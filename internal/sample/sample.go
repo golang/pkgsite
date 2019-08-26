@@ -84,6 +84,7 @@ func Version() *internal.Version {
 	return &internal.Version{
 		VersionInfo: *VersionInfo(),
 		Packages:    []*internal.Package{Package()},
+		Licenses:    Licenses,
 	}
 }
 

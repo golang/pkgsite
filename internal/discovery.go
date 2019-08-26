@@ -62,6 +62,9 @@ func IsStandardLibraryModule(modulePath string) bool {
 type Version struct {
 	VersionInfo
 	Packages []*Package
+	// Licenses holds all licenses within this module version, including those
+	// that may be contained in nested subdirectories.
+	Licenses []*license.License
 }
 
 // A Package is a group of one or more Go source files with the same package

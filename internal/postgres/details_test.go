@@ -65,7 +65,7 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			for _, v := range tc.versions {
-				if err := testDB.saveVersion(ctx, v, sample.Licenses); err != nil {
+				if err := testDB.saveVersion(ctx, v); err != nil {
 					t.Error(err)
 				}
 			}
@@ -132,7 +132,7 @@ func TestPostgres_GetLatestVersionInfo(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			for _, v := range tc.versions {
-				if err := testDB.saveVersion(ctx, v, sample.Licenses); err != nil {
+				if err := testDB.saveVersion(ctx, v); err != nil {
 					t.Error(err)
 				}
 			}
@@ -266,7 +266,7 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 			defer cancel()
 
 			for _, v := range testVersions {
-				if err := testDB.saveVersion(ctx, v, sample.Licenses); err != nil {
+				if err := testDB.saveVersion(ctx, v); err != nil {
 					t.Error(err)
 				}
 			}
@@ -381,7 +381,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 				// TODO: move this handling into SimpleVersion once ParseVersionType is
 				// factored out of fetch.go
 				v.VersionType = internal.VersionTypePseudo
-				if err := testDB.saveVersion(ctx, v, nil); err != nil {
+				if err := testDB.saveVersion(ctx, v); err != nil {
 					t.Fatal(err)
 				}
 
@@ -397,7 +397,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 			}
 
 			for _, v := range tc.versions {
-				if err := testDB.saveVersion(ctx, v, nil); err != nil {
+				if err := testDB.saveVersion(ctx, v); err != nil {
 					t.Fatal(err)
 				}
 			}
@@ -458,7 +458,7 @@ func TestGetPackagesInVersion(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 			defer cancel()
 
-			if err := testDB.saveVersion(ctx, tc.version, sample.Licenses); err != nil {
+			if err := testDB.saveVersion(ctx, tc.version); err != nil {
 				t.Error(err)
 			}
 
@@ -502,7 +502,7 @@ func TestGetPackageLicenses(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	if err := testDB.saveVersion(ctx, testVersion, sample.Licenses); err != nil {
+	if err := testDB.saveVersion(ctx, testVersion); err != nil {
 		t.Fatal(err)
 	}
 
@@ -532,15 +532,14 @@ func TestGetModuleLicenses(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	var licenses []*license.License
 	for _, p := range testVersion.Packages {
-		licenses = append(licenses, &license.License{
+		testVersion.Licenses = append(testVersion.Licenses, &license.License{
 			Metadata: p.Licenses[0],
 			Contents: []byte(`Lorem Ipsum`),
 		})
 	}
 
-	if err := testDB.InsertVersion(ctx, testVersion, licenses); err != nil {
+	if err := testDB.InsertVersion(ctx, testVersion); err != nil {
 		t.Fatal(err)
 	}
 
@@ -549,7 +548,7 @@ func TestGetModuleLicenses(t *testing.T) {
 		t.Fatal(err)
 	}
 	// We only want the top-level license.
-	wantLicenses := []*license.License{licenses[0]}
+	wantLicenses := []*license.License{testVersion.Licenses[0]}
 	if diff := cmp.Diff(wantLicenses, got); diff != "" {
 		t.Errorf("testDB.GetModuleLicenses(ctx, %q, %q) mismatch (-want +got):\n%s", modulePath, testVersion.Version, diff)
 	}

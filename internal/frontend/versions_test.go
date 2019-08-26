@@ -164,7 +164,7 @@ func TestFetchModuleVersionDetails(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
 
 			for _, v := range tc.versions {
-				if err := testDB.InsertVersion(ctx, v, sample.Licenses); err != nil {
+				if err := testDB.InsertVersion(ctx, v); err != nil {
 					t.Fatal(err)
 				}
 			}
@@ -339,7 +339,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
 
 			for _, v := range tc.versions {
-				if err := testDB.InsertVersion(ctx, v, sample.Licenses); err != nil {
+				if err := testDB.InsertVersion(ctx, v); err != nil {
 					t.Fatal(err)
 				}
 			}

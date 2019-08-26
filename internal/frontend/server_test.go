@@ -48,7 +48,7 @@ func TestServer(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 	sampleVersion := sample.Version()
-	if err := testDB.InsertVersion(ctx, sampleVersion, sample.Licenses); err != nil {
+	if err := testDB.InsertVersion(ctx, sampleVersion); err != nil {
 		t.Fatal(err)
 	}
 	nonRedistModulePath := "github.com/non_redistributable"
@@ -64,7 +64,7 @@ func TestServer(t *testing.T) {
 	}
 	nonRedistVersion.RepositoryURL = nonRedistModulePath
 
-	if err := testDB.InsertVersion(ctx, nonRedistVersion, nil); err != nil {
+	if err := testDB.InsertVersion(ctx, nonRedistVersion); err != nil {
 		t.Fatal(err)
 	}
 
@@ -283,7 +283,7 @@ func TestServerErrors(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 	sampleVersion := sample.Version()
-	if err := testDB.InsertVersion(ctx, sampleVersion, sample.Licenses); err != nil {
+	if err := testDB.InsertVersion(ctx, sampleVersion); err != nil {
 		t.Fatal(err)
 	}
 

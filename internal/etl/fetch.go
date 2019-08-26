@@ -204,13 +204,14 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, requestedVersi
 				RepositoryURL:  repositoryURL,
 			},
 			Packages: packages,
+			Licenses: licenses,
 		}
 		return nil
 	}(); err != nil {
 		return err
 	}
 
-	if err = db.InsertVersion(ctx, v, licenses); err != nil {
+	if err = db.InsertVersion(ctx, v); err != nil {
 		return err
 	}
 	span.Annotate(nil, "inserted version")
