@@ -175,6 +175,61 @@ func TestReFetch(t *testing.T) {
 	}
 }
 
+var testProxyCommitTime = time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC)
+
+func TestFetchVersion(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	modulePath := "github.com/my/module"
+	version := "v1.0.0"
+	contents := map[string]string{
+		"README.md":  "THIS IS A README",
+		"foo/foo.go": "// package foo exports a helpful constant.\npackage foo\nimport \"net/http\"\nconst OK = http.StatusOK",
+		"LICENSE.md": testhelper.MITLicense,
+	}
+	want := &internal.Version{
+		VersionInfo: internal.VersionInfo{
+			ModulePath:     "github.com/my/module",
+			Version:        "v1.0.0",
+			CommitTime:     testProxyCommitTime,
+			ReadmeFilePath: "README.md",
+			ReadmeContents: []byte("THIS IS A README"),
+			VersionType:    internal.VersionTypeRelease,
+			RepositoryURL:  "https://github.com/my/module",
+		},
+		Packages: []*internal.Package{
+			{
+				Path:     "github.com/my/module/foo",
+				V1Path:   "github.com/my/module/foo",
+				Name:     "foo",
+				Synopsis: "package foo exports a helpful constant.",
+				Licenses: []*license.Metadata{{Types: []string{"MIT"}, FilePath: "LICENSE.md"}},
+				Imports:  []string{"net/http"},
+			},
+		},
+		Licenses: []*license.License{
+			{
+				Metadata: &license.Metadata{Types: []string{"MIT"}, FilePath: "LICENSE.md"},
+				Contents: []byte(testhelper.MITLicense),
+			},
+		},
+	}
+
+	client, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
+		proxy.NewTestVersion(t, modulePath, version, contents),
+	})
+	defer teardownProxy()
+
+	got, err := FetchVersion(ctx, modulePath, version, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(want, got, cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML")); diff != "" {
+		t.Errorf("FetchVersion(%q, %q) diff:\n%s", modulePath, version, diff)
+	}
+}
+
 func TestFetchAndInsertVersion(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
@@ -194,7 +249,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				VersionInfo: internal.VersionInfo{
 					ModulePath:     "github.com/my/module",
 					Version:        "v1.0.0",
-					CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
+					CommitTime:     testProxyCommitTime,
 					ReadmeFilePath: "README.md",
 					ReadmeContents: []byte("README FILE FOR TESTING."),
 					RepositoryURL:  "https://github.com/my/module",
@@ -220,7 +275,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				VersionInfo: internal.VersionInfo{
 					ModulePath:     "nonredistributable.mod/module",
 					Version:        "v1.0.0",
-					CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
+					CommitTime:     testProxyCommitTime,
 					ReadmeFilePath: "README.md",
 					ReadmeContents: []byte("README FILE FOR TESTING."),
 					VersionType:    "release",
@@ -246,7 +301,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				VersionInfo: internal.VersionInfo{
 					ModulePath:     "nonredistributable.mod/module",
 					Version:        "v1.0.0",
-					CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
+					CommitTime:     testProxyCommitTime,
 					ReadmeFilePath: "README.md",
 					ReadmeContents: []byte("README FILE FOR TESTING."),
 					VersionType:    "release",
@@ -271,7 +326,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				VersionInfo: internal.VersionInfo{
 					ModulePath:     "std",
 					Version:        "v1.12.5",
-					CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
+					CommitTime:     testProxyCommitTime,
 					VersionType:    "release",
 					ReadmeContents: []uint8{},
 					RepositoryURL:  goRepositoryURLPrefix + "/go",
@@ -298,7 +353,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				VersionInfo: internal.VersionInfo{
 					ModulePath:     "std",
 					Version:        "v1.12.5",
-					CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
+					CommitTime:     testProxyCommitTime,
 					VersionType:    "release",
 					ReadmeContents: []uint8{},
 					RepositoryURL:  goRepositoryURLPrefix + "/go",
@@ -325,7 +380,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				VersionInfo: internal.VersionInfo{
 					ModulePath:     "build.constraints/module",
 					Version:        "v1.0.0",
-					CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
+					CommitTime:     testProxyCommitTime,
 					VersionType:    "release",
 					ReadmeContents: []uint8{},
 				},

@@ -104,108 +104,94 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 	return code, fetchErr
 }
 
-// fetchAndInsertVersion downloads the given module version from the module proxy, processes
-// the contents, and writes the data to the database. The fetch service will:
-// (1) Get the repository url for the module
-// (2) Get the version commit time from the proxy
-// (3) Download the version zip from the proxy
-// (4) Process the contents (series path, readme, licenses, packages, documentation)
-// (5) Write the data to the discovery database
+// fetchAndInsertVersion fetches the given module version from the module proxy
+// and writes the resulting data to the database.
 //
 // The given parentCtx is used for tracing, but fetches actually execute in a
 // detached context with fixed timeout, so that fetches are allowed to complete
 // even for short-lived requests.
-func fetchAndInsertVersion(parentCtx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, db *postgres.DB) (err error) {
-	defer derrors.Wrap(&err, "fetchAndInsertVersion(%q, %q)", modulePath, requestedVersion)
-
-	defer func() {
-		if e := recover(); e != nil {
-			// The package processing code performs some sanity checks along the way.
-			// None of the panics should occur, but if they do, we want to log them and
-			// be able to find them. So, convert internal panics to internal errors here.
-			err = fmt.Errorf("internal panic: %v\n\n%s", e, debug.Stack())
-		}
-	}()
+func fetchAndInsertVersion(parentCtx context.Context, modulePath, version string, proxyClient *proxy.Client, db *postgres.DB) (err error) {
+	defer derrors.Wrap(&err, "fetchAndInsertVersion(%q, %q)", modulePath, version)
 
 	parentSpan := trace.FromContext(parentCtx)
-	// Unlike other actions (which use a Timeout middleware), we set a fixed
-	// timeout for fetchAndInsertVersion.  This allows module processing to
+	// A fixed timeout for fetchAndInsertVersion to allow module processing to
 	// succeed even for extremely short lived requests.
 	ctx, cancel := context.WithTimeout(context.Background(), fetchTimeout)
 	defer cancel()
+
 	ctx, span := trace.StartSpanWithRemoteParent(ctx, "fetchAndInsertVersion", parentSpan.SpanContext())
+	defer span.End()
+
+	v, err := FetchVersion(ctx, modulePath, version, proxyClient)
+	if err != nil {
+		return err
+	}
+	if err = db.InsertVersion(ctx, v); err != nil {
+		return err
+	}
+	log.Printf("Downloaded: %s@%s", v.ModulePath, v.Version)
+	return nil
+}
+
+// FetchVersion queries the proxy for the requested module version, downloads
+// the module zip, and processes the contents to return an *internal.Version.
+func FetchVersion(ctx context.Context, modulePath, version string, proxyClient *proxy.Client) (_ *internal.Version, err error) {
+	defer derrors.Wrap(&err, "FetchVersion(%q, %q)", modulePath, version)
+
+	info, err := proxyClient.GetInfo(ctx, modulePath, version)
+	if err != nil {
+		return nil, err
+	}
+	versionType, err := ParseVersionType(info.Version)
+	if err != nil {
+		return nil, xerrors.Errorf("%v: %w", err, derrors.NotAcceptable)
+	}
+	zipReader, err := proxyClient.GetZip(ctx, modulePath, info.Version)
+	if err != nil {
+		return nil, err
+	}
+	return processZipFile(ctx, modulePath, versionType, info, zipReader)
+}
+
+// processZipFile extracts information from the module version zip.
+func processZipFile(ctx context.Context, modulePath string, versionType internal.VersionType, info *proxy.VersionInfo, zipReader *zip.Reader) (_ *internal.Version, err error) {
+	defer derrors.Wrap(&err, "processZipFile(%q, %q)", modulePath, info.Version)
+
+	_, span := trace.StartSpan(ctx, "processing zipFile")
 	defer span.End()
 
 	repositoryURL, err := modulePathToRepoURL(modulePath)
 	if err != nil {
 		log.Printf("modulePathToRepoURL(%q): %v", modulePath, err)
 	}
-
-	info, err := proxyClient.GetInfo(ctx, modulePath, requestedVersion)
+	readmeFilePath, readmeContents, err := extractReadmeFromZip(modulePath, info.Version, zipReader)
+	if err != nil && err != errReadmeNotFound {
+		return nil, fmt.Errorf("extractReadmeFromZip(%q, %q, zipReader): %v", modulePath, info.Version, err)
+	}
+	licenses, err := license.Detect(moduleVersionDir(modulePath, info.Version), zipReader)
 	if err != nil {
-		// Since this is our first client request, we wrap it to preserve error
-		// semantics: if info is not found, then we return NotFound.
-		return xerrors.Errorf("fetchAndInsertVersion: %w", err)
+		log.Print(err)
 	}
-	versionType, err := ParseVersionType(info.Version)
+	packages, err := extractPackagesFromZip(modulePath, info.Version, zipReader, license.NewMatcher(licenses))
+	if err == errModuleContainsNoPackages {
+		return nil, xerrors.Errorf("%v: %w", errModuleContainsNoPackages.Error(), derrors.NotAcceptable)
+	}
 	if err != nil {
-		return xerrors.Errorf("%v: %w", err, derrors.NotAcceptable)
+		return nil, fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, info.Version, licenses, err)
 	}
-	zipReader, err := proxyClient.GetZip(ctx, modulePath, requestedVersion)
-	if err != nil {
-		return err
-	}
-
-	// Module processing is wrapped in an inline func to facilitate tracing.
-	var (
-		v        *internal.Version
-		licenses []*license.License
-	)
-	if err := func() error {
-		_, span := trace.StartSpan(ctx, "processing zipFile")
-		defer span.End()
-		readmeFilePath, readmeContents, err := extractReadmeFromZip(modulePath, info.Version, zipReader)
-		if err != nil && err != errReadmeNotFound {
-			return fmt.Errorf("extractReadmeFromZip(%q, %q, zipReader): %v", modulePath, info.Version, err)
-		}
-		licenses, err = license.Detect(moduleVersionDir(modulePath, info.Version), zipReader)
-		if err != nil {
-			log.Print(err)
-		}
-		span.Annotate([]trace.Attribute{trace.Int64Attribute("licenseCt", int64(len(licenses)))}, "detected licenses")
-		packages, err := extractPackagesFromZip(modulePath, info.Version, zipReader, license.NewMatcher(licenses))
-		if err == errModuleContainsNoPackages {
-			return xerrors.Errorf("%v: %w", errModuleContainsNoPackages.Error(), derrors.NotAcceptable)
-		}
-		if err != nil {
-			return fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, info.Version, licenses, err)
-		}
-		span.Annotate([]trace.Attribute{trace.Int64Attribute("packageCt", int64(len(packages)))}, "extracted packages")
-
-		v = &internal.Version{
-			VersionInfo: internal.VersionInfo{
-				ModulePath:     modulePath,
-				Version:        info.Version,
-				CommitTime:     info.Time,
-				ReadmeFilePath: readmeFilePath,
-				ReadmeContents: readmeContents,
-				VersionType:    versionType,
-				RepositoryURL:  repositoryURL,
-			},
-			Packages: packages,
-			Licenses: licenses,
-		}
-		return nil
-	}(); err != nil {
-		return err
-	}
-
-	if err = db.InsertVersion(ctx, v); err != nil {
-		return err
-	}
-	span.Annotate(nil, "inserted version")
-	log.Printf("Downloaded: %s@%s", modulePath, info.Version)
-	return nil
+	return &internal.Version{
+		VersionInfo: internal.VersionInfo{
+			ModulePath:     modulePath,
+			Version:        info.Version,
+			CommitTime:     info.Time,
+			ReadmeFilePath: readmeFilePath,
+			ReadmeContents: readmeContents,
+			VersionType:    versionType,
+			RepositoryURL:  repositoryURL,
+		},
+		Packages: packages,
+		Licenses: licenses,
+	}, nil
 }
 
 // moduleVersionDir formats the content subdirectory for the given
@@ -270,7 +256,16 @@ func hasFilename(file string, expectedFile string) bool {
 // extractPackagesFromZip returns a slice of packages from the module zip r.
 // It matches against the given licenses to determine the subset of licenses
 // that applies to each package.
-func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher license.Matcher) ([]*internal.Package, error) {
+func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher license.Matcher) (_ []*internal.Package, err error) {
+
+	defer func() {
+		if e := recover(); e != nil {
+			// The package processing code performs some sanity checks along the way.
+			// None of the panics should occur, but if they do, we want to log them and
+			// be able to find them. So, convert internal panics to internal errors here.
+			err = fmt.Errorf("internal panic: %v\n\n%s", e, debug.Stack())
+		}
+	}()
 
 	// The high-level approach is to split the processing of the zip file
 	// into two phases:
