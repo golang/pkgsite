@@ -93,6 +93,14 @@ type VersionedPackage struct {
 	VersionInfo
 }
 
+// Directory represents a folder in a module version, and all of the packages
+// inside that folder.
+type Directory struct {
+	Path     string
+	Version  string
+	Packages []*VersionedPackage
+}
+
 // VersionType defines the version types a module can have.
 // This must be kept in sync with the 'version_type' database enum.
 type VersionType string
