@@ -134,6 +134,29 @@ func TestModulePathAndVersionForProxyRequestErrors(t *testing.T) {
 	}
 }
 
+func TestGetLatestInfo(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	modulePath := "foo.com/bar"
+	testVersions := []*TestVersion{
+		NewTestVersion(t, "foo.com/bar", "v1.1.0", map[string]string{"bar.go": "package bar\nconst Version = 1.1"}),
+		NewTestVersion(t, "foo.com/bar", "v1.2.0", map[string]string{"bar.go": "package bar\nconst Version = 1.2"}),
+	}
+
+	client, teardownProxy := SetupTestProxy(t, testVersions)
+	defer teardownProxy()
+
+	info, err := client.GetLatestInfo(ctx, modulePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got, want := info.Version, "v1.2.0"; got != want {
+		t.Errorf("GetLatestInfo(ctx, %q): Version = %q, want %q", modulePath, got, want)
+	}
+}
+
 func TestGetInfo(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()

@@ -88,6 +88,7 @@ func TestProxy(versions []*TestVersion) *http.ServeMux {
 			})
 		}
 		handle(fmt.Sprintf("/%s/@v/list", m), strings.NewReader(strings.Join(vList, "\n")))
+		handle(fmt.Sprintf("/%s/@latest", m), strings.NewReader(defaultInfo(vs[len(vs)-1].Version)))
 		for _, v := range vs {
 			goMod := v.GoMod
 			if goMod == "" {

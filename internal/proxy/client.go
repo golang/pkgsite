@@ -10,6 +10,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -65,10 +66,23 @@ func cleanURL(rawurl string) string {
 	return strings.TrimRight(rawurl, "/")
 }
 
+// GetLatestInfo makes a request to $GOPROXY/<module>/@latest and transforms
+// that data into a *VersionInfo.
+func (c *Client) GetLatestInfo(ctx context.Context, modulePath string) (_ *VersionInfo, err error) {
+	defer derrors.Wrap(&err, "proxy.Client.GetLatestInfo(%q)", modulePath)
+
+	encodedPath, err := module.EncodePath(modulePath)
+	if err != nil {
+		return nil, xerrors.Errorf("module.EncodePath(%q): %w", modulePath, derrors.InvalidArgument)
+	}
+	u := fmt.Sprintf("%s/%s/@latest", c.url, encodedPath)
+	return c.getInfoAtURL(ctx, u)
+}
+
 // GetInfo makes a request to $GOPROXY/<module>/@v/<version>.info and
 // transforms that data into a *VersionInfo.
 func (c *Client) GetInfo(ctx context.Context, path, version string) (*VersionInfo, error) {
-	v, err := c.getInfo(ctx, path, version)
+	v, err := c.getInfoButDontCanonicalizeTheVersion(ctx, path, version)
 	if err != nil {
 		return nil, xerrors.Errorf("proxy.Client.GetInfo(ctx, %q, %q): %w", path, version, err)
 	}
@@ -78,25 +92,29 @@ func (c *Client) GetInfo(ctx context.Context, path, version string) (*VersionInf
 	return v, nil
 }
 
-func (c *Client) getInfo(ctx context.Context, requestedPath, requestedVersion string) (*VersionInfo, error) {
+// TODO(b/138649628): remove this indirection once this package is not
+// responsible for StdLib complexities.
+// The existence of this function is confusing and is only required due to
+// complexity around StdLib handling. Since the StdLib handling will be
+// deprecated by b/138649628, for now we resist refactoring.
+func (c *Client) getInfoButDontCanonicalizeTheVersion(ctx context.Context, requestedPath, requestedVersion string) (*VersionInfo, error) {
 	path, version, err := modulePathAndVersionForProxyRequest(requestedPath, requestedVersion)
 	if err != nil {
 		return nil, err
 	}
-
 	u := fmt.Sprintf("%s/%s/@v/%s.info", c.url, path, version)
-	r, err := ctxhttp.Get(ctx, c.httpClient, u)
-	if err != nil {
-		return nil, fmt.Errorf("ctxhttp.Get(ctx, client, %q): %v", u, err)
-	}
-	defer r.Body.Close()
+	return c.getInfoAtURL(ctx, u)
+}
 
-	if err := derrors.FromHTTPStatus(r.StatusCode, "ctxhttp.Get(ctx, client, %q)", u); err != nil {
-		return nil, err
-	}
-
+func (c *Client) getInfoAtURL(ctx context.Context, u string) (*VersionInfo, error) {
 	var v VersionInfo
-	if err = json.NewDecoder(r.Body).Decode(&v); err != nil {
+	err := c.executeRequest(ctx, u, func(body io.Reader) error {
+		if err := json.NewDecoder(body).Decode(&v); err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
 		return nil, err
 	}
 	return &v, nil
@@ -109,7 +127,7 @@ func (c *Client) getInfo(ctx context.Context, requestedPath, requestedVersion st
 func (c *Client) GetZip(ctx context.Context, requestedPath, requestedVersion string) (_ *zip.Reader, err error) {
 	defer derrors.Wrap(&err, "proxy.Client.GetZip(ctx, %q, %q)", requestedPath, requestedVersion)
 
-	info, err := c.getInfo(ctx, requestedPath, requestedVersion)
+	info, err := c.getInfoButDontCanonicalizeTheVersion(ctx, requestedPath, requestedVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -134,25 +152,37 @@ func (c *Client) GetZip(ctx context.Context, requestedPath, requestedVersion str
 // valid semantic version.
 func (c *Client) getZip(ctx context.Context, proxyModulePath, proxyVersion string) (*zip.Reader, error) {
 	u := fmt.Sprintf("%s/%s/@v/%s.zip", c.url, proxyModulePath, proxyVersion)
-	r, err := ctxhttp.Get(ctx, c.httpClient, u)
+	var bodyBytes []byte
+	err := c.executeRequest(ctx, u, func(body io.Reader) error {
+		var err error
+		bodyBytes, err = ioutil.ReadAll(body)
+		if err != nil {
+			return fmt.Errorf("ioutil.ReadAll: %v", err)
+		}
+		return nil
+	})
 	if err != nil {
-		return nil, fmt.Errorf("ctxhttp.Get(ctx, nil, %q): %v", u, err)
-	}
-	defer r.Body.Close()
-
-	if err := derrors.FromHTTPStatus(r.StatusCode, "HTTP error from proxy for %q: %d", u, r.StatusCode); err != nil {
 		return nil, err
 	}
-
-	body, err := ioutil.ReadAll(r.Body)
+	zipReader, err := zip.NewReader(bytes.NewReader(bodyBytes), int64(len(bodyBytes)))
 	if err != nil {
-		return nil, fmt.Errorf("get(ctx, %q): %v", u, err)
-	}
-	zipReader, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
-	if err != nil {
-		return nil, fmt.Errorf("get(ctx, %q): %v", u, err)
+		return nil, fmt.Errorf("zip.NewReader: %v", err)
 	}
 	return zipReader, nil
+}
+
+// executeRequest executes an HTTP GET request for u, then calls the bodyFunc
+// on the response body, if no error occurred.
+func (c *Client) executeRequest(ctx context.Context, u string, bodyFunc func(body io.Reader) error) error {
+	r, err := ctxhttp.Get(ctx, c.httpClient, u)
+	if err != nil {
+		return fmt.Errorf("ctxhttp.Get(ctx, client, %q): %v", u, err)
+	}
+	defer r.Body.Close()
+	if err := derrors.FromHTTPStatus(r.StatusCode, "ctxhttp.Get(ctx, client, %q)", u); err != nil {
+		return err
+	}
+	return bodyFunc(r.Body)
 }
 
 // createGoZipReader returns a *zip.Reader containing the README, LICENSE and
@@ -222,6 +252,11 @@ func createGoZipReader(r *zip.Reader, path, pseudoVersion, requestedSemanticVers
 	return zipReader, nil
 }
 
+// TODO(b/138649628): remove this indirection once this package is not
+// responsible for StdLib complexities.
+// The existence of this function is confusing and is only required due to
+// complexity around StdLib handling. Since the StdLib handling will be
+// deprecated by b/138649628, for now we resist refactoring.
 func modulePathAndVersionForProxyRequest(path, version string) (string, string, error) {
 	if !internal.IsStandardLibraryModule(path) {
 		return encodeModulePathAndVersion(path, version)
