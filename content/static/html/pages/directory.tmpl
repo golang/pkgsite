@@ -1,0 +1,30 @@
+<!--
+        Copyright 2019 The Go Authors. All rights reserved.
+        Use of this source code is governed by a BSD-style
+        license that can be found in the LICENSE file.
+-->
+
+{{define "main_content"}}
+  <div class="Container">
+    <header class="Directory-header">
+      <h1>Packages in “{{.Directory}}”</h1>
+      <p class="InfoLabel">
+        <strong class="InfoLabel-title">Version:</strong> {{.Version}}
+      </p>
+    </header>
+    <div class="Content">
+      <div class="Directory-list">
+        {{range .Packages}}
+          <p>
+            <div>
+              <a href="/pkg/{{.Path}}@{{.Version}}">
+                <b>{{.Suffix}}</b>
+              </a>
+            </div>
+            <div>{{.Synopsis}}</div>
+          </p>
+        {{end}}
+      </div>
+    </div>
+  </div>
+{{end}}

@@ -76,7 +76,10 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 			// If the version is empty, it means that we already
 			// tried fetching the latest version of the package,
 			// and this package does not exist.
-			s.serveErrorPage(w, r, http.StatusNotFound, nil)
+			//
+			// In that case, we attempt to fetch a directory view
+			// for this path.
+			s.serveDirectoryPage(w, r, path, version)
 			return
 		}
 		// Get the latest package to check if any versions of
@@ -95,7 +98,7 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 			// GetLatestPackage returned a different error.
 			log.Printf("error getting latest package for %s: %v", path, latestErr)
 		}
-		s.serveErrorPage(w, r, http.StatusNotFound, nil)
+		s.serveDirectoryPage(w, r, path, version)
 		return
 	}
 
@@ -221,19 +224,14 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	modHeader, err := createModule(moduleVersion, license.ToMetadatas(licenses))
-	if err != nil {
-		log.Printf("error creating module header for %s@%s: %v", moduleVersion.ModulePath, moduleVersion.Version, err)
-		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
-		return
-	}
-
 	tab := r.FormValue("tab")
 	settings, ok := moduleTabLookup[tab]
 	if !ok {
 		tab = "readme"
 		settings = moduleTabLookup["readme"]
 	}
+
+	modHeader := createModule(moduleVersion, license.ToMetadatas(licenses))
 	canShowDetails := modHeader.IsRedistributable || settings.AlwaysShowDetails
 	var details interface{}
 	if canShowDetails {
@@ -245,7 +243,6 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
 	page := &DetailsPage{
 		basePage:       newBasePage(r, moduleVersion.ModulePath),
 		Settings:       settings,
@@ -420,7 +417,9 @@ type Module struct {
 
 // createPackage returns a *Package based on the fields of the specified
 // internal package and version info.
-func createPackage(pkg *internal.Package, vi *internal.VersionInfo) (*Package, error) {
+func createPackage(pkg *internal.Package, vi *internal.VersionInfo) (_ *Package, err error) {
+	defer derrors.Wrap(&err, "createPackage(%v, %v)", pkg, vi)
+
 	if pkg == nil || vi == nil {
 		return nil, fmt.Errorf("package and version info must not be nil")
 	}
@@ -437,10 +436,7 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo) (*Package, e
 		}
 	}
 
-	m, err := createModule(vi, modLicenses)
-	if err != nil {
-		return nil, fmt.Errorf("createModule(%v): %v", vi, err)
-	}
+	m := createModule(vi, modLicenses)
 	return &Package{
 		Path:              pkg.Path,
 		Suffix:            suffix,
@@ -453,7 +449,7 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo) (*Package, e
 
 // createModule returns a *Module based on the fields of the specified
 // versionInfo.
-func createModule(vi *internal.VersionInfo, licmetas []*license.Metadata) (*Module, error) {
+func createModule(vi *internal.VersionInfo, licmetas []*license.Metadata) *Module {
 	return &Module{
 		Version:           vi.Version,
 		Path:              vi.ModulePath,
@@ -461,7 +457,7 @@ func createModule(vi *internal.VersionInfo, licmetas []*license.Metadata) (*Modu
 		RepositoryURL:     vi.RepositoryURL,
 		IsRedistributable: license.AreRedistributable(licmetas),
 		Licenses:          transformLicenseMetadata(licmetas),
-	}, nil
+	}
 }
 
 // inStdLib reports whether the package is part of the Go standard library.
@@ -556,7 +552,7 @@ func fetchModuleDetails(ctx context.Context, db *postgres.DB, vi *internal.Versi
 	for _, p := range dbPackages {
 		newPkg, err := createPackage(p, vi)
 		if err != nil {
-			return nil, fmt.Errorf("createPackageHeader: %v", err)
+			return nil, err
 		}
 		if p.IsRedistributable() {
 			newPkg.Synopsis = p.Synopsis

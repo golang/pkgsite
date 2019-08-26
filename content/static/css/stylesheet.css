@@ -575,3 +575,10 @@ code {
   display: inline-block;
   margin: 0 10px;
 }
+
+.Directory-list {
+  max-width: 620px;
+}
+.Directory-header {
+  border-bottom: 1px solid var(--gray-8);
+}

@@ -187,13 +187,11 @@ func TestCreatePackageHeader(t *testing.T) {
 		t.Run(tc.label, func(t *testing.T) {
 			got, err := createPackage(&tc.pkg.Package, &tc.pkg.VersionInfo)
 			if err != nil {
-				t.Fatalf("createPackage(%v): %v", tc.pkg, err)
+				t.Fatal(err)
 			}
-
 			if diff := cmp.Diff(tc.wantPkg, got); diff != "" {
 				t.Errorf("createPackage(%v) mismatch (-want +got):\n%s", tc.pkg, diff)
 			}
-
 		})
 	}
 }
