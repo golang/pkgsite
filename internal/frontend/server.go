@@ -66,7 +66,7 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	handle("/pkg/", http.HandlerFunc(s.handlePackageDetails))
 	handle("/mod/", http.HandlerFunc(s.handleModuleDetails))
 	handle("/search", http.HandlerFunc(s.handleSearch))
-	handle("/advanced-search", s.handleStaticPage("advanced_search.tmpl", "Advanced Search - Go Discovery"))
+	handle("/search-help", s.handleStaticPage("search_help.tmpl", "Search Help - Go Discovery"))
 	handle("/license-policy", s.handleStaticPage("license_policy.tmpl", "Licenses - Go Discovery"))
 	handle("/copyright", s.handleStaticPage("copyright.tmpl", "Copyright - Go Discovery"))
 	handle("/tos", s.handleStaticPage("tos.tmpl", "Terms of Service - Go Discovery"))
@@ -230,7 +230,7 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 		{"index.tmpl"},
 		{"error.tmpl"},
 		{"search.tmpl"},
-		{"advanced_search.tmpl"},
+		{"search_help.tmpl"},
 		{"copyright.tmpl"},
 		{"license_policy.tmpl"},
 		{"tos.tmpl"},

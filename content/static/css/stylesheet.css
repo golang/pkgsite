@@ -256,11 +256,21 @@ code {
 }
 .SearchResults-header {
   font-size: 1.875rem;
-  margin: 0 0 8px;
+  margin: 0;
+}
+.SearchResults-help {
+  margin-top: 5px;
 }
 .SearchResults-resultCount {
   color: var(--gray-3);
-  margin-bottom: 25px;
+  margin-top: 1.125rem;
+  margin-bottom: 0.625rem;
+  display: flex;
+  justify-content: space-between;
+}
+.SearchResults-footer {
+  display: flex;
+  justify-content: flex-end;
 }
 .SearchSnippet {
   border-top: 1px solid var(--gray-8);
@@ -279,13 +289,14 @@ code {
   color: var(--gray-3);
   margin: 0 0 1rem;
 }
-.SearchResults .Pagination-nav {
+.SearchResults .Pagination-nav,
+.SearchResults-help,
+.SearchResults-resultCount{
   font-size: 0.875rem;
 }
 
 .Pagination-nav {
   display: flex;
-  justify-content: flex-end;
 }
 .Pagination-navInner {
   display: flex;
@@ -298,10 +309,13 @@ code {
 }
 .Pagination-number {
   padding: 0 6px;
+  color: var(--gray-1);
 }
 
 @media only screen and (min-width: 800px) {
-  .SearchResults .Pagination-nav {
+  .SearchResults .Pagination-nav,
+  .SearchResults-help,
+  .SearchResults-resultCount{
     font-size: 1.125rem;
   }
   .Pagination-navInner {

@@ -91,7 +91,7 @@ func newPaginationParams(r *http.Request, defaultLimit int) paginationParams {
 	}
 }
 
-const defaultNumPagesToLink = 7
+const defaultNumPagesToLink = 5
 
 // pagesToLink returns the page numbers that will be displayed. Given a
 // page, it returns a slice containing numPagesToLink integers in ascending

@@ -23,7 +23,7 @@
         {{$page := .Page}}
         {{range $i := .Pages}}
           {{if eq $i $page}}
-            <span class="Pagination-number">{{$i}}</span>
+            <b class="Pagination-number">{{$i}}</b>
           {{else}}
             <a class="Pagination-number" href="{{$pagination.PageURL $i}}">{{$i}}</a>
           {{end}}

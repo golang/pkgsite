@@ -7,8 +7,10 @@
 {{define "main_content"}}
   <div class="SearchResults">
     <h1 class="SearchResults-header">Results for “{{.Query}}”</h1>
+    <div class="SearchResults-help"><a href="/search-help">Search help</a></div>
     <div class="SearchResults-resultCount">
       {{template "pagination_summary" .Pagination}} {{pluralize .Pagination.TotalCount "result"}}
+      {{template "pagination_nav" .Pagination}}
     </div>
     <div>{{/* Containing element is needed to use *-of-type selectors */}}
       {{$query := .Query}}
@@ -21,6 +23,10 @@
           <div class="InfoLabel">
             <b class="InfoLabel-title">Version:</b> {{.Version}}
             <span class="InfoLabel-divider">|</span>
+            <b class="InfoLabel-title">Published:</b> {{.CommitTime}}
+            <span class="InfoLabel-divider">|</span>
+            <b class="InfoLabel-title">Imported by:</b> {{.NumImportedBy}}
+            <span class="InfoLabel-divider">|</span>
             <b class="InfoLabel-title">{{pluralize (len .Licenses) "License"}}:</b>
             {{if .Licenses}}
               {{range $i, $e := .Licenses -}}{{if $i}}, {{end}} {{$e}} {{end}}
@@ -28,14 +34,11 @@
               <span>N/A</span>
             {{end}}
           </div>
-          <div class="InfoLabel">
-            <b class="InfoLabel-title">Imported by:</b> {{.NumImportedBy}}
-            <span class="InfoLabel-divider">|</span>
-            <b class="InfoLabel-title">Published:</b> {{.CommitTime}}
-          </div>
         </div>
       {{end}}
     </div>
-    {{template "pagination_nav" .Pagination}}
+    <div class="SearchResults-footer">
+      {{template "pagination_nav" .Pagination}}
+    </div>
   </div>
 {{end}}
