@@ -438,20 +438,19 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 	}
 }
 
-func TestGetVersion(t *testing.T) {
+func TestGetPackagesInVersion(t *testing.T) {
 	testVersion := sample.Version()
 	testVersion.ModulePath = "test.module"
 	sample.SetSuffixes(testVersion, "", "foo")
 
 	for _, tc := range []struct {
-		name, path, version string
-		want                *internal.Version
+		name, pkgPath string
+		version       *internal.Version
 	}{
 		{
 			name:    "version with multiple packages",
-			path:    "test.module",
-			version: sample.VersionString,
-			want:    testVersion,
+			pkgPath: "test.module",
+			version: testVersion,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -459,18 +458,18 @@ func TestGetVersion(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 			defer cancel()
 
-			if err := testDB.saveVersion(ctx, tc.want, sample.Licenses); err != nil {
+			if err := testDB.saveVersion(ctx, tc.version, sample.Licenses); err != nil {
 				t.Error(err)
 			}
 
-			got, err := testDB.GetVersion(ctx, tc.path, tc.version)
+			got, err := testDB.GetPackagesInVersion(ctx, tc.pkgPath, tc.version.Version)
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			// TODO(b/130367504): remove this ignore once imports are not asymmetric
-			if diff := cmp.Diff(tc.want, got, cmpopts.IgnoreFields(internal.Package{}, "Imports")); diff != "" {
-				t.Errorf("testDB.GetVersion(ctx, %q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
+			if diff := cmp.Diff(tc.version.Packages, got, cmpopts.IgnoreFields(internal.Package{}, "Imports")); diff != "" {
+				t.Errorf("testDB.GetPackageInVersion(ctx, %q, %q) mismatch (-want +got):\n%s", tc.pkgPath, tc.version.Version, diff)
 			}
 		})
 	}

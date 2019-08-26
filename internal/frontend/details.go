@@ -547,13 +547,13 @@ type ModuleDetails struct {
 // fetchModuleDetails fetches data for the module version specified by pkgPath and pkgversion
 // from the database and returns a ModuleDetails.
 func fetchModuleDetails(ctx context.Context, db *postgres.DB, vi *internal.VersionInfo) (*ModuleDetails, error) {
-	version, err := db.GetVersion(ctx, vi.ModulePath, vi.Version)
+	dbPackages, err := db.GetPackagesInVersion(ctx, vi.ModulePath, vi.Version)
 	if err != nil {
 		return nil, err
 	}
 
 	var packages []*Package
-	for _, p := range version.Packages {
+	for _, p := range dbPackages {
 		newPkg, err := createPackage(p, vi)
 		if err != nil {
 			return nil, fmt.Errorf("createPackageHeader: %v", err)
@@ -565,7 +565,7 @@ func fetchModuleDetails(ctx context.Context, db *postgres.DB, vi *internal.Versi
 	}
 
 	return &ModuleDetails{
-		ModulePath: version.ModulePath,
+		ModulePath: vi.ModulePath,
 		Version:    vi.Version,
 		Packages:   packages,
 	}, nil

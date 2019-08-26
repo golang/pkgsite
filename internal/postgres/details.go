@@ -196,88 +196,48 @@ func (db *DB) GetLatestPackage(ctx context.Context, path string) (_ *internal.Ve
 	}, nil
 }
 
-// GetVersion returns the module version corresponding to path and
-// version. *internal.Version will contain all packages for that version, in
-// sorted order by package path.
-func (db *DB) GetVersion(ctx context.Context, modulePath, version string) (_ *internal.Version, err error) {
-	defer derrors.Wrap(&err, "DB.GetVersion(ctx, %q, %q)", modulePath, version)
-
+// GetPackagesInVersion returns packages contained in the module version
+// specified by modulePath and version. The returned packages will be sorted
+// their package path.
+func (db *DB) GetPackagesInVersion(ctx context.Context, modulePath, version string) (_ []*internal.Package, err error) {
 	query := `SELECT
-		p.path,
-		p.name,
-		p.synopsis,
-		p.v1_path,
-		p.license_types,
-		p.license_paths,
-		v.readme_file_path,
-		v.readme_contents,
-		v.commit_time,
-		v.version_type,
-		p.documentation,
-		v.repository_url,
-		v.vcs_type,
-		v.homepage_url
+		path,
+		name,
+		synopsis,
+		v1_path,
+		license_types,
+		license_paths,
+		documentation
 	FROM
-		packages p
-	INNER JOIN
-		versions v
-	ON
-		v.module_path = p.module_path
-		AND v.version = p.version
+		packages
 	WHERE
-		v.module_path = $1
-		AND v.version = $2
+		module_path = $1
+		AND version = $2
 	ORDER BY path;`
 
-	var (
-		pkgPath, pkgName, synopsis, v1path, readmeFilePath, versionType string
-		repositoryURL, vcsType, homepageURL                             sql.NullString
-		readmeContents, documentation                                   []byte
-		commitTime                                                      time.Time
-		licenseTypes, licensePaths                                      []string
-	)
-
-	rows, err := db.query(ctx, query, modulePath, version)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	v := &internal.Version{}
-	v.Version = version
-	for rows.Next() {
-		if err := rows.Scan(&pkgPath, &pkgName, &synopsis, &v1path,
-			pq.Array(&licenseTypes), pq.Array(&licensePaths), &readmeFilePath,
-			&readmeContents, &commitTime, &versionType, &documentation, &repositoryURL, &vcsType, &homepageURL); err != nil {
-			return nil, fmt.Errorf("row.Scan(): %v", err)
+	var packages []*internal.Package
+	collect := func(rows *sql.Rows) error {
+		var (
+			p                          internal.Package
+			licenseTypes, licensePaths []string
+		)
+		if err := rows.Scan(&p.Path, &p.Name, &p.Synopsis, &p.V1Path, pq.Array(&licenseTypes),
+			pq.Array(&licensePaths), &p.DocumentationHTML); err != nil {
+			return fmt.Errorf("row.Scan(): %v", err)
 		}
 		lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		v.ModulePath = modulePath
-		v.ReadmeFilePath = readmeFilePath
-		v.ReadmeContents = readmeContents
-		v.CommitTime = commitTime
-		v.VersionType = internal.VersionType(versionType)
-		v.RepositoryURL = repositoryURL.String
-		v.VCSType = vcsType.String
-		v.HomepageURL = homepageURL.String
-		v.Packages = append(v.Packages, &internal.Package{
-			Path:              pkgPath,
-			Name:              pkgName,
-			Synopsis:          synopsis,
-			Licenses:          lics,
-			V1Path:            v1path,
-			DocumentationHTML: documentation,
-		})
+		p.Licenses = lics
+		packages = append(packages, &p)
+		return nil
 	}
 
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("rows.Err(): %v", err)
+	if err := db.runQuery(ctx, query, collect, modulePath, version); err != nil {
+		return nil, xerrors.Errorf("DB.GetPackagesInVersion(ctx, %q, %q): %w", err)
 	}
-
-	return v, nil
+	return packages, nil
 }
 
 // GetTaggedVersionsForPackageSeries returns a list of tagged versions sorted
