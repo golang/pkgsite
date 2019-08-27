@@ -278,7 +278,7 @@ func getPackageVersions(ctx context.Context, db *DB, path string, versionTypes [
 			AND p.version = v.version
 		WHERE
 			p.v1_path IN (
-				SELECT v1_path
+				SELECT DISTINCT v1_path
 				FROM packages
 				WHERE path=$1
 			)
