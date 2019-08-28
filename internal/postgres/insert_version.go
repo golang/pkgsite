@@ -122,14 +122,12 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version) error 
 				"contents",
 				"types",
 			}
-			table := "licenses"
-			if err := bulkInsert(ctx, tx, table, licenseCols, licenseValues, onConflictDoNothing); err != nil {
+			if err := bulkInsert(ctx, tx, "licenses", licenseCols, licenseValues, onConflictDoNothing); err != nil {
 				return err
 			}
 		}
 
-		var pkgValues []interface{}
-		var importValues []interface{}
+		var pkgValues, importValues, importUniqueValues []interface{}
 		for _, p := range version.Packages {
 			var licenseTypes, licensePaths []string
 			for _, l := range p.Licenses {
@@ -161,6 +159,7 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version) error 
 			)
 			for _, i := range p.Imports {
 				importValues = append(importValues, p.Path, version.ModulePath, version.Version, i)
+				importUniqueValues = append(importUniqueValues, p.Path, version.ModulePath, i)
 			}
 		}
 		if len(pkgValues) > 0 {
@@ -176,8 +175,7 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version) error 
 				"license_types",
 				"license_paths",
 			}
-			table := "packages"
-			if err := bulkInsert(ctx, tx, table, pkgCols, pkgValues, onConflictDoNothing); err != nil {
+			if err := bulkInsert(ctx, tx, "packages", pkgCols, pkgValues, onConflictDoNothing); err != nil {
 				return err
 			}
 		}
@@ -189,8 +187,16 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version) error 
 				"from_version",
 				"to_path",
 			}
-			table := "imports"
-			if err := bulkInsert(ctx, tx, table, importCols, importValues, onConflictDoNothing); err != nil {
+			if err := bulkInsert(ctx, tx, "imports", importCols, importValues, onConflictDoNothing); err != nil {
+				return err
+			}
+
+			importUniqueCols := []string{
+				"from_path",
+				"from_module_path",
+				"to_path",
+			}
+			if err := bulkInsert(ctx, tx, "imports_unique", importUniqueCols, importUniqueValues, onConflictDoNothing); err != nil {
 				return err
 			}
 		}
