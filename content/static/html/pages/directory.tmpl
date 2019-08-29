@@ -7,12 +7,13 @@
 {{define "main_content"}}
   <div class="Container">
     <header class="Directory-header">
-      <h1>Packages in “{{.Directory}}”</h1>
+      <h1 class="Header-title">Directory {{.Directory}}</h1>
       <p class="InfoLabel">
         <strong class="InfoLabel-title">Version:</strong> {{.Version}}
       </p>
     </header>
     <div class="Content">
+      <h2>Packages in this directory</h2>
       <div class="Directory-list">
         {{range .Packages}}
           <p>
