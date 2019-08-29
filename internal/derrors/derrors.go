@@ -57,6 +57,24 @@ func FromHTTPStatus(code int, format string, args ...interface{}) error {
 	return xerrors.Errorf(format+": %w", append(args, innerErr)...)
 }
 
+// ToHTTPStatus returns an HTTP status code corresponding to err.
+func ToHTTPStatus(err error) int {
+	switch {
+	case err == nil:
+		return http.StatusOK
+	case xerrors.Is(err, NotFound):
+		return http.StatusNotFound
+	case xerrors.Is(err, NotAcceptable):
+		return http.StatusNotAcceptable
+	case xerrors.Is(err, InvalidArgument):
+		return http.StatusBadRequest
+	case xerrors.Is(err, Gone):
+		return http.StatusGone
+	default:
+		return http.StatusInternalServerError
+	}
+}
+
 // Add adds context to the error.
 // The result cannot be unwrapped to recover the original error.
 // It does nothing when *errp == nil.

@@ -74,18 +74,7 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 	)
 	if fetchErr = fetchAndInsertVersion(ctx, modulePath, version, client, db); fetchErr != nil {
 		log.Printf("Error executing fetch: %v", fetchErr)
-		switch {
-		case xerrors.Is(fetchErr, derrors.InvalidArgument):
-			code = http.StatusBadRequest
-		case xerrors.Is(fetchErr, derrors.NotFound):
-			code = http.StatusNotFound
-		case xerrors.Is(fetchErr, derrors.NotAcceptable):
-			code = http.StatusNotAcceptable
-		case xerrors.Is(fetchErr, derrors.Gone):
-			code = http.StatusGone
-		default:
-			code = http.StatusInternalServerError
-		}
+		code = derrors.ToHTTPStatus(fetchErr)
 	}
 
 	

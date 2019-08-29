@@ -6,6 +6,8 @@ package derrors
 
 import (
 	"errors"
+	"io"
+	"net/http"
 	"testing"
 
 	"golang.org/x/xerrors"
@@ -38,6 +40,27 @@ func TestFromHTTPStatus(t *testing.T) {
 				t.Errorf("FromHTTPStatus(%d, ...) = %v, want %v", test.status, err, test.want)
 			}
 		})
+	}
+}
+
+func TestToHTTPStatus(t *testing.T) {
+	for _, tc := range []struct {
+		in   error
+		want int
+	}{
+		{nil, http.StatusOK},
+		{InvalidArgument, http.StatusBadRequest},
+		{NotFound, http.StatusNotFound},
+		{NotAcceptable, http.StatusNotAcceptable},
+		{Gone, http.StatusGone},
+		{Unknown, http.StatusInternalServerError},
+		{xerrors.Errorf("wrapping: %w", NotFound), http.StatusNotFound},
+		{io.ErrUnexpectedEOF, http.StatusInternalServerError},
+	} {
+		got := ToHTTPStatus(tc.in)
+		if got != tc.want {
+			t.Errorf("ToHTTPStatus(%v) = %d, want %d", tc.in, got, tc.want)
+		}
 	}
 }
 
