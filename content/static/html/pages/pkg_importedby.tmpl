@@ -7,7 +7,6 @@
 {{define "details_content"}}
   <div class="ImportedBy">
     {{if .ImportedBy}}
-      <h2>Imported by</h2>
       <p>
         <b>Known {{pluralize .Total "importer"}}:</b> {{.Total}}{{if not .TotalIsExact}}+{{end}}
       </p>

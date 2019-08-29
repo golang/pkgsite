@@ -425,9 +425,6 @@ func (db *DB) GetImports(ctx context.Context, path, version string) (paths []str
 	return imports, nil
 }
 
-// The limit used in the GetImportedBy query.
-const ImportedByLimit = 7001
-
 // GetImportedBy fetches and returns all of the packages that import the
 // package with path.
 // The returned error may be checked with derrors.IsInvalidArgument to
