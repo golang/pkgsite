@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/xerrors"
 )
@@ -154,6 +155,30 @@ func TestGetLatestInfo(t *testing.T) {
 
 	if got, want := info.Version, "v1.2.0"; got != want {
 		t.Errorf("GetLatestInfo(ctx, %q): Version = %q, want %q", modulePath, got, want)
+	}
+}
+
+func TestListVersions(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	modulePath := "foo.com/bar"
+	testVersions := []*TestVersion{
+		NewTestVersion(t, "foo.com/bar", "v1.1.0", map[string]string{"bar.go": "package bar\nconst Version = 1.1"}),
+		NewTestVersion(t, "foo.com/bar", "v1.2.0", map[string]string{"bar.go": "package bar\nconst Version = 1.2"}),
+		NewTestVersion(t, "foo.com/baz", "v1.3.0", map[string]string{"baz.go": "package bar\nconst Version = 1.3"}),
+	}
+
+	client, teardownProxy := SetupTestProxy(t, testVersions)
+	defer teardownProxy()
+
+	want := []string{"v1.1.0", "v1.2.0"}
+	got, err := client.ListVersions(ctx, modulePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("ListVersions(%q) diff:\n%s", modulePath, diff)
 	}
 }
 

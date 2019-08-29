@@ -6,6 +6,7 @@ package proxy
 
 import (
 	"archive/zip"
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -144,6 +145,28 @@ func (c *Client) GetZip(ctx context.Context, requestedPath, requestedVersion str
 		return createGoZipReader(zipReader, requestedPath, info.Version, requestedVersion)
 	}
 	return zipReader, nil
+}
+
+// ListVersions makes a request to $GOPROXY/<path>/@v/list and returns the
+// resulting version strings.
+func (c *Client) ListVersions(ctx context.Context, modulePath string) ([]string, error) {
+	encodedPath, err := module.EncodePath(modulePath)
+	if err != nil {
+		return nil, xerrors.Errorf("module.EncodePath(%q): %w", modulePath, derrors.InvalidArgument)
+	}
+	u := fmt.Sprintf("%s/%s/@v/list", c.url, encodedPath)
+	var versions []string
+	collect := func(body io.Reader) error {
+		scanner := bufio.NewScanner(body)
+		for scanner.Scan() {
+			versions = append(versions, scanner.Text())
+		}
+		return scanner.Err()
+	}
+	if err := c.executeRequest(ctx, u, collect); err != nil {
+		return nil, err
+	}
+	return versions, nil
 }
 
 // getZip makes a request to $GOPROXY/<proxyModulePath>/@v/<proxyVersion>.zip
