@@ -346,7 +346,7 @@ func (db *DB) GetImportedBy(ctx context.Context, path, modulePath string, limit 
 		SELECT
 			DISTINCT from_path
 		FROM
-			imports
+			imports_unique
 		WHERE
 			to_path = $1
 		AND

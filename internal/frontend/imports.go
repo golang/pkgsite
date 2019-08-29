@@ -69,7 +69,7 @@ type ImportedByDetails struct {
 	TotalIsExact bool // if false, then there may be more than Total
 }
 
-const importedByLimit = 7001
+const importedByLimit = 20001
 
 // fetchImportedByDetails fetches importers for the package version specified by
 // path and version from the database and returns a ImportedByDetails.
