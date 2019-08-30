@@ -15,6 +15,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/etl"
 	"golang.org/x/discovery/internal/postgres"
+	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
 )
@@ -96,7 +97,7 @@ func fetchPackageVersionsDetails(ctx context.Context, db *postgres.DB, pkg *inte
 	// TODO(rfindley): remove this filtering, as it should not be necessary and
 	// is probably a relic of earlier version query implementations.
 	for _, v := range versions {
-		if seriesPath := v.SeriesPath(); strings.HasPrefix(pkg.V1Path, seriesPath) || internal.IsStandardLibraryModule(seriesPath) {
+		if seriesPath := v.SeriesPath(); strings.HasPrefix(pkg.V1Path, seriesPath) || seriesPath == stdlib.ModulePath {
 			filteredVersions = append(filteredVersions, v)
 		} else {
 			log.Printf("got version with mismatching series: %q", seriesPath)

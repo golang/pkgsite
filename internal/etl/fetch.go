@@ -36,6 +36,7 @@ import (
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
+	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/thirdparty/semver"
 	"golang.org/x/xerrors"
 )
@@ -618,10 +619,10 @@ const goRepositoryURLPrefix = "https://github.com/golang"
 // modulePathToRepoURL returns the expected repositoryURL for the
 // modulePath. It returns an expected repositoryURL if the modulePath is
 // (1) in the acceptedVCSHosts (2) has the prefix golang.org/x or,
-// (3) internal.IsStandardLibraryModule(modulePath) returns true. Otherwise,
+// (3) modulePath is the standard library module path. Otherwise,
 // the empty string is returned.
 func modulePathToRepoURL(modulePath string) (string, error) {
-	if internal.IsStandardLibraryModule(modulePath) {
+	if modulePath == stdlib.ModulePath {
 		return goRepositoryURLPrefix + "/go", nil
 	}
 

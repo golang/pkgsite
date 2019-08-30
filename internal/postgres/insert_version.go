@@ -15,6 +15,7 @@ import (
 	"github.com/lib/pq"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
 	"golang.org/x/xerrors"
@@ -231,7 +232,7 @@ func validateVersion(version *internal.Version) error {
 	if version.ModulePath == "" {
 		errReasons = append(errReasons, "no module path")
 	}
-	if !internal.IsStandardLibraryModule(version.ModulePath) {
+	if version.ModulePath != stdlib.ModulePath {
 		if err := module.CheckPath(version.ModulePath); err != nil {
 			errReasons = append(errReasons, "invalid module path")
 		}

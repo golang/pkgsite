@@ -74,13 +74,6 @@ func TestModulePathAndVersionForProxyRequest(t *testing.T) {
 			wantPath:         stdlibProxyModulePathPrefix + "/src",
 			wantVersion:      "go1.13prerelease",
 		},
-		{
-			name:             "cmd version v1.13.0",
-			requestedPath:    "cmd",
-			requestedVersion: "v1.13.0",
-			wantPath:         stdlibProxyModulePathPrefix + "/src/cmd",
-			wantVersion:      "go1.13",
-		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			path, version, err := modulePathAndVersionForProxyRequest(tc.requestedPath, tc.requestedVersion)
@@ -108,11 +101,6 @@ func TestModulePathAndVersionForProxyRequestErrors(t *testing.T) {
 			name:             "more bad std semver",
 			requestedPath:    "std",
 			requestedVersion: "v1.0-",
-		},
-		{
-			name:             "bad std cmd version",
-			requestedPath:    "cmd",
-			requestedVersion: "v1.12",
 		},
 		{
 			name:             "bad prerelease",
@@ -257,14 +245,6 @@ func TestGetZip(t *testing.T) {
 				"std@v1.12.5/context/example_test.go",
 				"std@v1.12.5/context/net_test.go",
 				"std@v1.12.5/context/x_test.go",
-			},
-		},
-		{
-			path:    "cmd",
-			version: "v1.13.0-beta.1",
-			wantFiles: []string{
-				"cmd@v1.13.0-beta.1/LICENSE",
-				"cmd@v1.13.0-beta.1/go/go11.go",
 			},
 		},
 		{

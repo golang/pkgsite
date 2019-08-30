@@ -20,9 +20,9 @@ import (
 	"time"
 
 	"go.opencensus.io/plugin/ochttp"
-	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/dzip"
+	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
 	"golang.org/x/net/context/ctxhttp"
@@ -87,7 +87,7 @@ func (c *Client) GetInfo(ctx context.Context, path, version string) (*VersionInf
 	if err != nil {
 		return nil, xerrors.Errorf("proxy.Client.GetInfo(ctx, %q, %q): %w", path, version, err)
 	}
-	if internal.IsStandardLibraryModule(path) {
+	if path == stdlib.ModulePath {
 		v.Version = semver.Canonical(version)
 	}
 	return v, nil
@@ -281,7 +281,7 @@ func createGoZipReader(r *zip.Reader, path, pseudoVersion, requestedSemanticVers
 // complexity around StdLib handling. Since the StdLib handling will be
 // deprecated by b/138649628, for now we resist refactoring.
 func modulePathAndVersionForProxyRequest(path, version string) (string, string, error) {
-	if !internal.IsStandardLibraryModule(path) {
+	if path != stdlib.ModulePath {
 		return encodeModulePathAndVersion(path, version)
 	}
 	if !semver.IsValid(version) {
@@ -300,7 +300,7 @@ func modulePathAndVersionForProxyRequest(path, version string) (string, string, 
 		}
 	}
 	if strings.HasPrefix(path, stdlibProxyModulePathPrefix) {
-		ver, err := internal.GoVersionForSemanticVersion(version)
+		ver, err := stdlib.TagForVersion(version)
 		if err != nil {
 			return "", "", xerrors.Errorf("GoVersionForSemanticVersion(%q): %v: %w", version, err, derrors.InvalidArgument)
 		}

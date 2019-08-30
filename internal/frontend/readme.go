@@ -19,6 +19,7 @@ import (
 	"github.com/russross/blackfriday/v2"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
+	"golang.org/x/discovery/internal/stdlib"
 )
 
 // ReadMeDetails contains all of the data that the readme template
@@ -92,8 +93,8 @@ func translateRelativeLink(node *blackfriday.Node, vi *internal.VersionInfo) {
 	switch vi.VersionType {
 	case internal.VersionTypeRelease, internal.VersionTypePrerelease:
 		ref = vi.Version
-		if internal.IsStandardLibraryModule(vi.ModulePath) {
-			ref, err = internal.GoVersionForSemanticVersion(ref)
+		if vi.ModulePath == stdlib.ModulePath {
+			ref, err = stdlib.TagForVersion(ref)
 			if err != nil {
 				ref = "master"
 			}

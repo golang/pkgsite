@@ -5,15 +5,10 @@
 package internal
 
 import (
-	"fmt"
-	"net/http"
-	"strings"
 	"time"
 
-	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/thirdparty/module"
-	"golang.org/x/discovery/internal/thirdparty/semver"
 )
 
 // VersionInfo holds metadata associated with a version.
@@ -50,12 +45,6 @@ func (v *VersionInfo) SeriesPath() string {
 func SeriesPathForModule(modulePath string) string {
 	seriesPath, _, _ := module.SplitPathVersion(modulePath)
 	return seriesPath
-}
-
-// IsStandardLibraryModule reports whether the modulePath is "cmd" or "std",
-// which are the two modules in the standard library, starting in go1.13.
-func IsStandardLibraryModule(modulePath string) bool {
-	return modulePath == "cmd" || modulePath == "std"
 }
 
 // A Version is a specific, reproducible build of a module.
@@ -163,52 +152,4 @@ type VersionState struct {
 	// is close to, but not the same as, the deployment time. For example, the
 	// deployment time for the above timestamp might be Jul 9, 2019, 11:29:59 AM.
 	AppVersion string
-}
-
-// GoVersionForSemanticVersion handles special casing of Go repository tags for semantic
-// versioning of the standard library modules.
-func GoVersionForSemanticVersion(requestedVersion string) (string, error) {
-	if !semver.IsValid(requestedVersion) {
-		return "", derrors.FromHTTPStatus(http.StatusBadRequest, "requested version is not a valid semantic version: %q ", requestedVersion)
-	}
-	goVersion := semver.Canonical(requestedVersion)
-	prerelease := semver.Prerelease(goVersion)
-	versionWithoutPrerelease := strings.TrimSuffix(goVersion, prerelease)
-	patch := strings.TrimPrefix(versionWithoutPrerelease, semver.MajorMinor(goVersion)+".")
-	if patch == "0" {
-		versionWithoutPrerelease = strings.TrimSuffix(versionWithoutPrerelease, ".0")
-	}
-
-	goVersion = fmt.Sprintf("go%s", strings.TrimPrefix(versionWithoutPrerelease, "v"))
-	if prerelease != "" {
-		// Go prereleases look like  "beta1" instead of "beta.1".
-		// "beta1" is bad for sorting (since beta10 comes before beta9), so
-		// require the dot form.
-		i := finalDigitsIndex(prerelease)
-		if i >= 1 {
-			if prerelease[i-1] != '.' {
-				return "", derrors.FromHTTPStatus(http.StatusBadRequest, "final digits in a prerelease must follow a period")
-			}
-			// Remove the dot.
-			prerelease = prerelease[:i-1] + prerelease[i:]
-		}
-		goVersion += strings.TrimPrefix(prerelease, "-")
-	}
-	return goVersion, nil
-}
-
-// finalDigitsIndex returns the index of the first digit in the sequence of digits ending s.
-// If s doesn't end in digits, it returns -1.
-func finalDigitsIndex(s string) int {
-	// Assume ASCII (since the semver package does anyway).
-	var i int
-	for i = len(s) - 1; i >= 0; i-- {
-		if s[i] < '0' || s[i] > '9' {
-			break
-		}
-	}
-	if i == len(s)-1 {
-		return -1
-	}
-	return i + 1
 }
