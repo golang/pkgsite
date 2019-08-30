@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/postgres"
 )
 
 // ImportsDetails contains information for a package's imports.
@@ -31,14 +30,14 @@ type ImportsDetails struct {
 
 // fetchImportsDetails fetches imports for the package version specified by
 // path and version from the database and returns a ImportsDetails.
-func fetchImportsDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*ImportsDetails, error) {
-	dbImports, err := db.GetImports(ctx, pkg.Path, pkg.VersionInfo.Version)
+func fetchImportsDetails(ctx context.Context, ds DataSource, pkg *internal.VersionedPackage) (*ImportsDetails, error) {
+	dsImports, err := ds.GetImports(ctx, pkg.Path, pkg.VersionInfo.Version)
 	if err != nil {
 		return nil, err
 	}
 
 	var externalImports, moduleImports, std []string
-	for _, p := range dbImports {
+	for _, p := range dsImports {
 		if inStdLib(p) {
 			std = append(std, p)
 		} else if strings.HasPrefix(p+"/", pkg.VersionInfo.ModulePath+"/") {
@@ -74,8 +73,8 @@ const importedByLimit = 7001
 
 // fetchImportedByDetails fetches importers for the package version specified by
 // path and version from the database and returns a ImportedByDetails.
-func fetchImportedByDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*ImportedByDetails, error) {
-	importedBy, err := db.GetImportedBy(ctx, pkg.Path, pkg.ModulePath, importedByLimit)
+func fetchImportedByDetails(ctx context.Context, ds DataSource, pkg *internal.VersionedPackage) (*ImportedByDetails, error) {
+	importedBy, err := ds.GetImportedBy(ctx, pkg.Path, pkg.ModulePath, importedByLimit)
 	if err != nil {
 		return nil, err
 	}

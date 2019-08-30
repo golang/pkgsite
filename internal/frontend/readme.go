@@ -18,7 +18,6 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
 	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/stdlib"
 )
 
@@ -31,7 +30,7 @@ type ReadMeDetails struct {
 
 // fetchReadMeDetails fetches data for the module version specified by path and version
 // from the database and returns a ReadMeDetails.
-func fetchReadMeDetails(ctx context.Context, db *postgres.DB, vi *internal.VersionInfo) (*ReadMeDetails, error) {
+func fetchReadMeDetails(ctx context.Context, ds DataSource, vi *internal.VersionInfo) (*ReadMeDetails, error) {
 	return &ReadMeDetails{
 		ModulePath: vi.ModulePath,
 		ReadMe:     readmeHTML(vi),

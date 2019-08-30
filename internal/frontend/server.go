@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"html/template"
 	"io"
@@ -15,14 +16,16 @@ import (
 	"strings"
 	"sync"
 
+	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/config"
+	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
 )
 
 // Server can be installed to serve the go discovery frontend.
 type Server struct {
-	db              *postgres.DB
+	ds              DataSource
 	staticPath      string
 	templateDir     string
 	reloadTemplates bool
@@ -32,18 +35,71 @@ type Server struct {
 	templates map[string]*template.Template
 }
 
+// DataSource is the interface used by the frontend to interact with module data.
+type DataSource interface {
+	// See the internal/postgres package for further documentation of these
+	// methods, particularly as they pertain to the main postgres implementation.
+
+	// GetDirectory returns packages whose import path is in a (possibly nested)
+	// subdirectory of the given directory path.
+	GetDirectory(ctx context.Context, dirPath, version string) (_ *internal.Directory, err error)
+	// GetImports returns a slice of import paths imported by the package
+	// specified by path and version.
+	GetImports(ctx context.Context, path, version string) ([]string, error)
+	// GetImportedBy returns a slice of import paths corresponding to packages
+	// that import the given package path (at any version).
+	GetImportedBy(ctx context.Context, path, version string, limit int) ([]string, error)
+	// GetLatestPackage returns the latest VersionedPackage (by semantic version)
+	// with the given import path.
+	GetLatestPackage(ctx context.Context, path string) (*internal.VersionedPackage, error)
+	// GetLatestVersionInfo returns the latest VersionInfo (by semantic version)
+	// for the given module path.
+	GetLatestVersionInfo(ctx context.Context, modulePath string) (*internal.VersionInfo, error)
+	// GetModuleLicenses returns all top-level Licenses for the given modulePath
+	// and version. (i.e., Licenses contained in the module root directory)
+	GetModuleLicenses(ctx context.Context, modulePath, version string) ([]*license.License, error)
+	// GetPackage returns the VersionedPackage corresponding to the given package
+	// path and version. When multiple package paths satisfy this query, it
+	// should prefer the module with the longest path.
+	GetPackage(ctx context.Context, path, version string) (*internal.VersionedPackage, error)
+	// GetPackageLicenses returns all Licenses that apply to pkgPath, within the
+	// module version specified by modulePath and version.
+	GetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) ([]*license.License, error)
+	// GetPackagesInVersion returns Packages contained in the module version
+	// specified by modulePath and version.
+	GetPackagesInVersion(ctx context.Context, modulePath, version string) ([]*internal.Package, error)
+	// GetPseudoVersionsForModule returns VersionInfo for all known
+	// pseudo-versions for the module corresponding to modulePath.
+	GetPseudoVersionsForModule(ctx context.Context, modulePath string) ([]*internal.VersionInfo, error)
+	// GetPseudoVersionsForModule returns VersionInfo for all known
+	// pseudo-versions for any module containing a package with the given import
+	// path.
+	GetPseudoVersionsForPackageSeries(ctx context.Context, path string) ([]*internal.VersionInfo, error)
+	// GetTaggedVersionsForModule returns VersionInfo for all known tagged
+	// versions for the module corresponding to modulePath.
+	GetTaggedVersionsForModule(ctx context.Context, modulePath string) ([]*internal.VersionInfo, error)
+	// GetTaggedVersionsForModule returns VersionInfo for all known tagged
+	// versions for any module containing a package with the given import path.
+	GetTaggedVersionsForPackageSeries(ctx context.Context, path string) ([]*internal.VersionInfo, error)
+	// GetVersionInfo returns the VersionInfo corresponding to modulePath and
+	// version.
+	GetVersionInfo(ctx context.Context, modulePath, version string) (*internal.VersionInfo, error)
+	// LegacySearch performs a search for the given query, with pagination
+	// specified by limit and offset.
+	LegacySearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
+}
+
 // NewServer creates a new Server for the given database and template directory.
 // reloadTemplates should be used during development when it can be helpful to
 // reload templates from disk each time a page is loaded.
-func NewServer(db *postgres.DB, staticPath string, reloadTemplates bool) (*Server, error) {
+func NewServer(ds DataSource, staticPath string, reloadTemplates bool) (*Server, error) {
 	templateDir := filepath.Join(staticPath, "html")
 	ts, err := parsePageTemplates(templateDir)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing templates: %v", err)
 	}
-
 	s := &Server{
-		db:              db,
+		ds:              ds,
 		staticPath:      staticPath,
 		templateDir:     templateDir,
 		reloadTemplates: reloadTemplates,

@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/postgres"
 )
 
 // DirectoryPage contains data for directory template.
@@ -25,7 +24,7 @@ type DirectoryPage struct {
 
 func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirPath, version string) {
 	var ctx = r.Context()
-	page, err := fetchPackagesInDirectory(ctx, s.db, dirPath, version)
+	page, err := fetchPackagesInDirectory(ctx, s.ds, dirPath, version)
 	if err != nil {
 		status := derrors.ToHTTPStatus(err)
 		if status == http.StatusInternalServerError {
@@ -40,10 +39,10 @@ func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirP
 
 // fetchPackagesInDirectory fetches data for the module version specified by pkgPath and pkgversion
 // from the database and returns a ModuleDetails.
-func fetchPackagesInDirectory(ctx context.Context, db *postgres.DB, dirPath, version string) (_ *DirectoryPage, err error) {
+func fetchPackagesInDirectory(ctx context.Context, ds DataSource, dirPath, version string) (_ *DirectoryPage, err error) {
 	defer derrors.Wrap(&err, "fetchPackagesInDirectory(ctx, db, %q, %q)", dirPath, version)
 
-	dir, err := db.GetDirectory(ctx, dirPath, version)
+	dir, err := ds.GetDirectory(ctx, dirPath, version)
 	if err != nil {
 		return nil, err
 	}

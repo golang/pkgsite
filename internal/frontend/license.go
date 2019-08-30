@@ -10,7 +10,6 @@ import (
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/license"
-	"golang.org/x/discovery/internal/postgres"
 )
 
 // License contains information used for a single license section.
@@ -33,12 +32,12 @@ type LicenseMetadata struct {
 
 // fetchPackageLicensesDetails fetches license data for the package version specified by
 // path and version from the database and returns a LicensesDetails.
-func fetchPackageLicensesDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*LicensesDetails, error) {
-	dbLicenses, err := db.GetPackageLicenses(ctx, pkg.Path, pkg.ModulePath, pkg.VersionInfo.Version)
+func fetchPackageLicensesDetails(ctx context.Context, ds DataSource, pkg *internal.VersionedPackage) (*LicensesDetails, error) {
+	dsLicenses, err := ds.GetPackageLicenses(ctx, pkg.Path, pkg.ModulePath, pkg.VersionInfo.Version)
 	if err != nil {
 		return nil, err
 	}
-	return &LicensesDetails{Licenses: transformLicenses(dbLicenses)}, nil
+	return &LicensesDetails{Licenses: transformLicenses(dsLicenses)}, nil
 }
 
 // transformLicenses transforms license.License into a License

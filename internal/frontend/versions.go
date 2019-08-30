@@ -14,7 +14,6 @@ import (
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/etl"
-	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
@@ -57,15 +56,15 @@ type VersionSummary struct {
 
 // fetchModuleVersionsDetails builds a version hierarchy for module versions
 // with the same series path as the given version.
-func fetchModuleVersionsDetails(ctx context.Context, db *postgres.DB, vi *internal.VersionInfo) (*VersionsDetails, error) {
-	versions, err := db.GetTaggedVersionsForModule(ctx, vi.ModulePath)
+func fetchModuleVersionsDetails(ctx context.Context, ds DataSource, vi *internal.VersionInfo) (*VersionsDetails, error) {
+	versions, err := ds.GetTaggedVersionsForModule(ctx, vi.ModulePath)
 	if err != nil {
 		return nil, err
 	}
 	// If no tagged versions of the module are found, fetch pseudo-versions
 	// instead.
 	if len(versions) == 0 {
-		versions, err = db.GetPseudoVersionsForModule(ctx, vi.ModulePath)
+		versions, err = ds.GetPseudoVersionsForModule(ctx, vi.ModulePath)
 		if err != nil {
 			return nil, err
 		}
@@ -79,15 +78,15 @@ func fetchModuleVersionsDetails(ctx context.Context, db *postgres.DB, vi *intern
 // fetchPackageVersionsDetails builds a version hierarchy for all module
 // versions containing a package path with v1 import path matching the v1
 // import path of pkg.
-func fetchPackageVersionsDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*VersionsDetails, error) {
-	versions, err := db.GetTaggedVersionsForPackageSeries(ctx, pkg.Path)
+func fetchPackageVersionsDetails(ctx context.Context, ds DataSource, pkg *internal.VersionedPackage) (*VersionsDetails, error) {
+	versions, err := ds.GetTaggedVersionsForPackageSeries(ctx, pkg.Path)
 	if err != nil {
 		return nil, err
 	}
 	// If no tagged versions for the package series are found, fetch the
 	// pseudo-versions instead.
 	if len(versions) == 0 {
-		versions, err = db.GetPseudoVersionsForPackageSeries(ctx, pkg.Path)
+		versions, err = ds.GetPseudoVersionsForPackageSeries(ctx, pkg.Path)
 		if err != nil {
 			return nil, err
 		}

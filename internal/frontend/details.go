@@ -17,7 +17,6 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/license"
-	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
 	"golang.org/x/xerrors"
@@ -57,12 +56,12 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 		ctx = r.Context()
 	)
 	if version == "" {
-		pkg, err = s.db.GetLatestPackage(ctx, path)
+		pkg, err = s.ds.GetLatestPackage(ctx, path)
 		if err != nil && !xerrors.Is(err, derrors.NotFound) {
 			log.Print(err)
 		}
 	} else {
-		pkg, err = s.db.GetPackage(ctx, path, version)
+		pkg, err = s.ds.GetPackage(ctx, path, version)
 		if err != nil && !xerrors.Is(err, derrors.NotFound) {
 			log.Print(err)
 		}
@@ -84,7 +83,7 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 		}
 		// Get the latest package to check if any versions of
 		// the package exists.
-		_, latestErr := s.db.GetLatestPackage(ctx, path)
+		_, latestErr := s.ds.GetLatestPackage(ctx, path)
 		if latestErr == nil {
 			s.serveErrorPage(w, r, http.StatusNotFound, &errorPage{
 				Message: fmt.Sprintf("Package %s@%s is not available.", path, version),
@@ -125,7 +124,7 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = fetchDetailsForPackage(ctx, r, tab, s.db, pkg)
+		details, err = fetchDetailsForPackage(ctx, r, tab, s.ds, pkg)
 		if err != nil {
 			log.Printf("error fetching page for %q: %v", tab, err)
 			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
@@ -147,22 +146,22 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 
 // fetchDetailsForPackage returns tab details by delegating to the correct detail
 // handler.
-func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, db *postgres.DB, pkg *internal.VersionedPackage) (interface{}, error) {
+func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds DataSource, pkg *internal.VersionedPackage) (interface{}, error) {
 	switch tab {
 	case "doc":
-		return fetchDocumentationDetails(ctx, db, pkg)
+		return fetchDocumentationDetails(ctx, ds, pkg)
 	case "versions":
-		return fetchPackageVersionsDetails(ctx, db, pkg)
+		return fetchPackageVersionsDetails(ctx, ds, pkg)
 	case "module":
-		return fetchModuleDetails(ctx, db, &pkg.VersionInfo)
+		return fetchModuleDetails(ctx, ds, &pkg.VersionInfo)
 	case "imports":
-		return fetchImportsDetails(ctx, db, pkg)
+		return fetchImportsDetails(ctx, ds, pkg)
 	case "importedby":
-		return fetchImportedByDetails(ctx, db, pkg)
+		return fetchImportedByDetails(ctx, ds, pkg)
 	case "licenses":
-		return fetchPackageLicensesDetails(ctx, db, pkg)
+		return fetchPackageLicensesDetails(ctx, ds, pkg)
 	case "readme":
-		return fetchReadMeDetails(ctx, db, &pkg.VersionInfo)
+		return fetchReadMeDetails(ctx, ds, &pkg.VersionInfo)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
@@ -187,9 +186,9 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var moduleVersion *internal.VersionInfo
 	if version == "" {
-		moduleVersion, err = s.db.GetLatestVersionInfo(ctx, path)
+		moduleVersion, err = s.ds.GetLatestVersionInfo(ctx, path)
 	} else {
-		moduleVersion, err = s.db.GetVersionInfo(ctx, path, version)
+		moduleVersion, err = s.ds.GetVersionInfo(ctx, path, version)
 	}
 	if err != nil {
 		code := http.StatusNotFound
@@ -201,7 +200,7 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 		if version != "" {
 			// The specific requested version doesn't exist.
 			// See if any versions do by getting the latest package.
-			_, latestErr := s.db.GetLatestVersionInfo(ctx, path)
+			_, latestErr := s.ds.GetLatestVersionInfo(ctx, path)
 			if latestErr == nil {
 				epage = &errorPage{
 					Message: fmt.Sprintf("Module %s@%s is not available.", path, version),
@@ -217,7 +216,7 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Here, moduleVersion is a valid *VersionInfo.
-	licenses, err := s.db.GetModuleLicenses(ctx, moduleVersion.ModulePath, moduleVersion.Version)
+	licenses, err := s.ds.GetModuleLicenses(ctx, moduleVersion.ModulePath, moduleVersion.Version)
 	if err != nil {
 		log.Printf("error getting module licenses for %s@%s: %v", moduleVersion.ModulePath, moduleVersion.Version, err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
@@ -236,7 +235,7 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = fetchDetailsForModule(ctx, r, tab, s.db, moduleVersion, licenses)
+		details, err = fetchDetailsForModule(ctx, r, tab, s.ds, moduleVersion, licenses)
 		if err != nil {
 			log.Printf("error fetching page for %q: %v", tab, err)
 			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
@@ -257,17 +256,17 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 
 // fetchDetailsForModule returns tab details by delegating to the correct detail
 // handler.
-func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, db *postgres.DB, vi *internal.VersionInfo, licenses []*license.License) (interface{}, error) {
+func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds DataSource, vi *internal.VersionInfo, licenses []*license.License) (interface{}, error) {
 	switch tab {
 	case "packages":
-		return fetchModuleDetails(ctx, db, vi)
+		return fetchModuleDetails(ctx, ds, vi)
 	case "licenses":
 		return &LicensesDetails{Licenses: transformLicenses(licenses)}, nil
 	case "versions":
-		return fetchModuleVersionsDetails(ctx, db, vi)
+		return fetchModuleVersionsDetails(ctx, ds, vi)
 	case "readme":
 		// TODO(b/138448402): implement remaining module views.
-		return fetchReadMeDetails(ctx, db, vi)
+		return fetchReadMeDetails(ctx, ds, vi)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
@@ -525,7 +524,7 @@ type DocumentationDetails struct {
 
 // fetchDocumentationDetails fetches data for the package specified by path and version
 // from the database and returns a DocumentationDetails.
-func fetchDocumentationDetails(ctx context.Context, db *postgres.DB, pkg *internal.VersionedPackage) (*DocumentationDetails, error) {
+func fetchDocumentationDetails(ctx context.Context, ds DataSource, pkg *internal.VersionedPackage) (*DocumentationDetails, error) {
 	return &DocumentationDetails{
 		ModulePath:    pkg.VersionInfo.ModulePath,
 		Documentation: template.HTML(pkg.DocumentationHTML),
@@ -542,8 +541,8 @@ type ModuleDetails struct {
 
 // fetchModuleDetails fetches data for the module version specified by pkgPath and pkgversion
 // from the database and returns a ModuleDetails.
-func fetchModuleDetails(ctx context.Context, db *postgres.DB, vi *internal.VersionInfo) (*ModuleDetails, error) {
-	dbPackages, err := db.GetPackagesInVersion(ctx, vi.ModulePath, vi.Version)
+func fetchModuleDetails(ctx context.Context, ds DataSource, vi *internal.VersionInfo) (*ModuleDetails, error) {
+	dbPackages, err := ds.GetPackagesInVersion(ctx, vi.ModulePath, vi.Version)
 	if err != nil {
 		return nil, err
 	}

@@ -13,7 +13,6 @@ import (
 	"strings"
 
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/xerrors"
 )
 
@@ -41,8 +40,8 @@ type SearchResult struct {
 
 // fetchSearchPage fetches data matching the search query from the database and
 // returns a SearchPage.
-func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pageParams paginationParams) (*SearchPage, error) {
-	dbresults, err := db.LegacySearch(ctx, query, pageParams.limit, pageParams.offset())
+func fetchSearchPage(ctx context.Context, ds DataSource, query string, pageParams paginationParams) (*SearchPage, error) {
+	dbresults, err := ds.LegacySearch(ctx, query, pageParams.limit, pageParams.offset())
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +83,7 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if strings.Contains(query, "/") {
-		pkg, err := s.db.GetLatestPackage(ctx, path.Clean(query))
+		pkg, err := s.ds.GetLatestPackage(ctx, path.Clean(query))
 		if err == nil {
 			http.Redirect(w, r, fmt.Sprintf("/pkg/%s", pkg.Path), http.StatusFound)
 			return
@@ -93,7 +92,7 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	page, err := fetchSearchPage(ctx, s.db, query, newPaginationParams(r, defaultSearchLimit))
+	page, err := fetchSearchPage(ctx, s.ds, query, newPaginationParams(r, defaultSearchLimit))
 	if err != nil {
 		log.Printf("fetchSearchDetails(ctx, db, %q): %v", query, err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
