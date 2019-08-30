@@ -20,11 +20,15 @@ import (
 	"golang.org/x/discovery/internal/frontend"
 	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
+	"golang.org/x/discovery/internal/proxy"
+	"golang.org/x/discovery/internal/proxydatasource"
 )
 
 var (
 	staticPath      = flag.String("static", "content/static", "path to folder containing static files served")
 	reloadTemplates = flag.Bool("reload_templates", false, "reload templates on each page load (to be used during development)")
+	directProxy     = flag.String("direct_proxy", "", "if set to a valid URL, uses the module proxy referred to by this URL "+
+		"as a direct backend, bypassing the database")
 )
 
 func main() {
@@ -36,19 +40,28 @@ func main() {
 		log.Fatal(err)
 	}
 	config.Dump(os.Stderr)
-
-	// Wrap the postgres driver with OpenCensus instrumentation.
-	ocDriver, err := ocsql.Register("postgres", ocsql.WithAllTraceOptions())
-	if err != nil {
-		log.Fatalf("unable to register our ocsql driver: %v\n", err)
+	var ds frontend.DataSource
+	if *directProxy != "" {
+		proxyClient, err := proxy.New(*directProxy)
+		if err != nil {
+			log.Fatal(err)
+		}
+		ds = proxydatasource.New(proxyClient)
+	} else {
+		// Wrap the postgres driver with OpenCensus instrumentation.
+		ocDriver, err := ocsql.Register("postgres", ocsql.WithAllTraceOptions())
+		if err != nil {
+			log.Fatalf("unable to register our ocsql driver: %v\n", err)
+		}
+		db, err := postgres.Open(ocDriver, config.DBConnInfo())
+		if err != nil {
+			log.Fatalf("postgres.Open: %v", err)
+		}
+		defer db.Close()
+		ds = db
 	}
-	db, err := postgres.Open(ocDriver, config.DBConnInfo())
-	if err != nil {
-		log.Fatalf("postgres.Open: %v", err)
-	}
-	defer db.Close()
 
-	server, err := frontend.NewServer(db, *staticPath, *reloadTemplates)
+	server, err := frontend.NewServer(ds, *staticPath, *reloadTemplates)
 	if err != nil {
 		log.Fatalf("frontend.NewServer: %v", err)
 	}

@@ -41,14 +41,15 @@ type DataSource interface {
 	// methods, particularly as they pertain to the main postgres implementation.
 
 	// GetDirectory returns packages whose import path is in a (possibly nested)
-	// subdirectory of the given directory path.
+	// subdirectory of the given directory path. If version is the empty string,
+	// directory operates on the latest version.
 	GetDirectory(ctx context.Context, dirPath, version string) (_ *internal.Directory, err error)
-	// GetImports returns a slice of import paths imported by the package
-	// specified by path and version.
-	GetImports(ctx context.Context, path, version string) ([]string, error)
 	// GetImportedBy returns a slice of import paths corresponding to packages
 	// that import the given package path (at any version).
 	GetImportedBy(ctx context.Context, path, version string, limit int) ([]string, error)
+	// GetImports returns a slice of import paths imported by the package
+	// specified by path and version.
+	GetImports(ctx context.Context, path, version string) ([]string, error)
 	// GetLatestPackage returns the latest VersionedPackage (by semantic version)
 	// with the given import path.
 	GetLatestPackage(ctx context.Context, path string) (*internal.VersionedPackage, error)
