@@ -29,7 +29,7 @@
             <span class="InfoLabel-divider">|</span>
             <b class="InfoLabel-title">{{pluralize (len .Licenses) "License"}}:</b>
             {{if .Licenses}}
-              {{range $i, $e := .Licenses -}}{{if $i}}, {{end}} {{$e}} {{end}}
+              {{commaseparate .Licenses}}
             {{else}}
               <span>N/A</span>
             {{end}}

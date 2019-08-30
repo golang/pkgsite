@@ -31,7 +31,7 @@ const (
 	maxLicenseSize = 1e7
 )
 
-// licenseFileNames defines the set of filenames to be considered for license
+
 // extraction.
 var licenseFileNames = map[string]bool{
 	"LICENSE":     true,
@@ -40,6 +40,17 @@ var licenseFileNames = map[string]bool{
 	"COPYING":     true,
 	"COPYING.md":  true,
 	"COPYING.txt": true,
+}
+
+// FileNames returns the slice of file names to be considered for license
+// detection.
+func FileNames() []string {
+	var names []string
+	for f := range licenseFileNames {
+		names = append(names, f)
+	}
+	sort.Strings(names)
+	return names
 }
 
 // isVendoredFile reports if the given file is in a proper subdirectory nested

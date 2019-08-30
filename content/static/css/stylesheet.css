@@ -103,6 +103,9 @@ code {
   padding: 16px 20px;
   position: relative;
 }
+.FeedbackButton {
+	cursor: pointer;
+}
 .Footer-feedbackButton {
   border: none;
   color: var(--turq-text);

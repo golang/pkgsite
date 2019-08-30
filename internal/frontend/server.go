@@ -117,17 +117,17 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	handle("/pkg/", http.HandlerFunc(s.handlePackageDetails))
 	handle("/mod/", http.HandlerFunc(s.handleModuleDetails))
 	handle("/search", http.HandlerFunc(s.handleSearch))
-	handle("/search-help", s.handleStaticPage("search_help.tmpl", "Search Help - Go Discovery"))
-	handle("/license-policy", s.handleStaticPage("license_policy.tmpl", "Licenses - Go Discovery"))
-	handle("/copyright", s.handleStaticPage("copyright.tmpl", "Copyright - Go Discovery"))
-	handle("/tos", s.handleStaticPage("tos.tmpl", "Terms of Service - Go Discovery"))
+	handle("/search-help", s.staticPageHandler("search_help.tmpl", "Search Help - Go Discovery"))
+	handle("/license-policy", s.licensePolicyHandler())
+	handle("/copyright", s.staticPageHandler("copyright.tmpl", "Copyright - Go Discovery"))
+	handle("/tos", s.staticPageHandler("tos.tmpl", "Terms of Service - Go Discovery"))
 	handle("/", http.HandlerFunc(s.handleIndexPage))
 }
 
 // handleIndexPage handles requests to the index page.
 func (s *Server) handleIndexPage(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" {
-		s.handleStaticPage("index.tmpl", "Go Discovery")(w, r)
+		s.staticPageHandler("index.tmpl", "Go Discovery")(w, r)
 		return
 	}
 
@@ -143,9 +143,9 @@ func suggestedSearch(userInput string) template.HTML {
 	return template.HTML(fmt.Sprintf(`To search for packages like %q, <a href="/search?q=%s">click here</a>.</p>`, safe, safe))
 }
 
-// handleStaticPage handles requests to a template that contains no dynamic
+// staticPageHandler handles requests to a template that contains no dynamic
 // content.
-func (s *Server) handleStaticPage(templateName, title string) http.HandlerFunc {
+func (s *Server) staticPageHandler(templateName, title string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		s.servePage(w, templateName, newBasePage(r, title))
 	}
@@ -156,6 +156,23 @@ type basePage struct {
 	Title string
 	Query string
 	Nonce string
+}
+
+// licensePolicyPage is used to generate the static license policy page.
+type licensePolicyPage struct {
+	basePage
+	LicenseFileNames []string
+}
+
+func (s *Server) licensePolicyHandler() http.HandlerFunc {
+	fileNames := license.FileNames()
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		page := licensePolicyPage{
+			basePage:         newBasePage(r, "Licenses - Go Discovery"),
+			LicenseFileNames: fileNames,
+		}
+		s.servePage(w, "license_policy.tmpl", page)
+	})
 }
 
 // newBasePage returns a base page for the given request and title.
@@ -305,6 +322,9 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 					return s
 				}
 				return s + "s"
+			},
+			"commaseparate": func(s []string) string {
+				return strings.Join(s, ", ")
 			},
 		}).ParseFiles(filepath.Join(base, "base.tmpl"))
 		if err != nil {
