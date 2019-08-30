@@ -61,16 +61,13 @@ func isVendoredFile(name string) bool {
 	return strings.Contains(name[vendorOffset:], "/")
 }
 
-// Detect searches for possible license files in a subdirectory within the
-// provided zip path, runs them against a license classifier, and provides all
-// licenses with a confidence score that meets a confidence threshold.
-//
-// It returns an error if the given file path is invalid, if the uncompressed
-// size of the license file is too large, if a license is discovered outside of
-// the expected path, or if an error occurs during extraction.
-func Detect(contentsDir string, r *zip.Reader) (_ []*License, err error) {
-	defer derrors.Add(&err, "Detect(%q)", contentsDir)
-	var licenses []*License
+// Files returns zip files that are considered to be potential license
+// candidates. It returns an error if any potential license files are invalid.
+func Files(contentsDir string, r *zip.Reader) (_ []*zip.File, err error) {
+	defer derrors.Add(&err, "license.Files(%q)", contentsDir)
+	prefix := pathPrefix(contentsDir)
+
+	var files []*zip.File
 	for _, f := range r.File {
 		if !licenseFileNames[path.Base(f.Name)] || isVendoredFile(f.Name) {
 			// Only consider licenses with an acceptable file name, and not in the
@@ -80,17 +77,33 @@ func Detect(contentsDir string, r *zip.Reader) (_ []*License, err error) {
 		if err := module.CheckFilePath(f.Name); err != nil {
 			return nil, fmt.Errorf("module.CheckFilePath(%q): %v", f.Name, err)
 		}
-		prefix := ""
-		if contentsDir != "" {
-			prefix = contentsDir + "/"
-		}
 		if !strings.HasPrefix(f.Name, prefix) {
 			return nil, fmt.Errorf("potential license file %q found outside of the expected path %s", f.Name, contentsDir)
 		}
 		if f.UncompressedSize64 > maxLicenseSize {
 			return nil, fmt.Errorf("potential license file %q exceeds maximum uncompressed size %d", f.Name, int(1e7))
 		}
+		files = append(files, f)
+	}
+	return files, nil
+}
 
+// Detect searches for possible license files in a subdirectory within the
+// provided zip path, runs them against a license classifier, and provides all
+// licenses with a confidence score that meets a confidence threshold.
+//
+// It returns an error if the given file path is invalid, if the uncompressed
+// size of the license file is too large, if a license is discovered outside of
+// the expected path, or if an error occurs during extraction.
+func Detect(contentsDir string, r *zip.Reader) (_ []*License, err error) {
+	defer derrors.Add(&err, "license.Detect(%q)", contentsDir)
+	files, err := Files(contentsDir, r)
+	if err != nil {
+		return nil, err
+	}
+	prefix := pathPrefix(contentsDir)
+	var licenses []*License
+	for _, f := range files {
 		rc, err := f.Open()
 		if err != nil {
 			return nil, fmt.Errorf("f.Open() for %q: %v", f.Name, err)
@@ -109,11 +122,10 @@ func Detect(contentsDir string, r *zip.Reader) (_ []*License, err error) {
 		cov, ok := licensecheck.Cover(contents, licensecheck.Options{})
 		if ok && cov.Percent >= coverageThreshold {
 			matchedTypes := make(map[string]bool)
-
 			for _, m := range cov.Match {
 				if m.Percent >= classifyThreshold {
 					if matchedTypes[m.Name] {
-						log.Printf("WARNING: found license type %s more than once in %s", m.Name, filePath)
+						log.Printf("WARNING: found license type %q more than once in %q", m.Name, filePath)
 					}
 					matchedTypes[m.Name] = true
 				}
@@ -138,8 +150,16 @@ func Detect(contentsDir string, r *zip.Reader) (_ []*License, err error) {
 			licenses = append(licenses, &License{
 				Metadata: &Metadata{FilePath: filePath},
 			})
-
 		}
 	}
 	return licenses, nil
+}
+
+// pathPrefix is used to defermine whether or not a license file path is within
+// the contents directory.
+func pathPrefix(contentsDir string) string {
+	if contentsDir != "" {
+		return contentsDir + "/"
+	}
+	return ""
 }
