@@ -19,6 +19,7 @@ func TestNextPrefixAccount(t *testing.T) {
 		{"github.com/user", "github.com/user", ""},
 		{"github.com/user/repo", "github.com/user/", "github.com/user/repo"},
 		{"github.com/user/repo/more", "github.com/user/", "github.com/user/repo/"},
+		{"golang.org/x/time/rate", "golang.org/x/", "golang.org/x/time/"},
 		{"hub.jazz.net/git/user/project/more", "hub.jazz.net/git/user/", "hub.jazz.net/git/user/project/"},
 		{"k8s.io/a", "k8s.io/", "k8s.io/a"},
 		{"k8s.io/a/b", "k8s.io/", "k8s.io/a/"},

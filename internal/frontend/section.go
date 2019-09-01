@@ -119,7 +119,7 @@ func accountPrefix(parts []string) (string, []string) {
 	// The first two cases below handle the special cases that the go command does.
 	// See "go help importpath".
 	switch parts[0] {
-	case "github.com", "bitbucket.org", "launchpad.net":
+	case "github.com", "bitbucket.org", "launchpad.net", "golang.org":
 		n = 1
 	case "hub.jazz.net":
 		n = 2
