@@ -6,7 +6,6 @@ package postgres
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sort"
 
@@ -42,74 +41,19 @@ import (
 func (db *DB) GetDirectory(ctx context.Context, dirPath, version string) (_ *internal.Directory, err error) {
 	defer derrors.Wrap(&err, "DB.GetDirectory(ctx, %q, %q)", dirPath, version)
 
-	baseQuery := `
-		SELECT
-			p.path,
-			p.version,
-			p.name,
-			p.synopsis,
-			p.v1_path,
-			p.documentation,
-			p.license_types,
-			p.license_paths,
-			v.module_path,
-			v.readme_file_path,
-			v.readme_contents,
-			v.commit_time,
-			v.version_type,
-			v.repository_url,
-			v.vcs_type,
-			v.homepage_url
-		FROM
-			packages p
-		INNER JOIN
-			versions v
-		ON
-			v.module_path = p.module_path
-			AND v.version = p.version
-		WHERE
-			p.path LIKE $1 || '/' || '%'
-			AND $1 || '/' LIKE p.module_path || '/' || '%'`
+	query, args := constructDirectoryQueryAndArgs(dirPath, version)
 
-	var (
-		query string
-		args  []interface{}
-	)
-	if version == "" {
-		query = fmt.Sprintf(`
-			%s
-			ORDER BY
-				-- Order the versions by release then prerelease.
-				-- The default version should be the first release
-				-- version available, if one exists.
-				CASE WHEN v.prerelease = '~' THEN 0 ELSE 1 END,
-				v.major DESC,
-				v.minor DESC,
-				v.patch DESC,
-				v.prerelease DESC,
-				p.path DESC`, baseQuery)
-		args = []interface{}{dirPath}
-	} else {
-		query = fmt.Sprintf("%s AND p.version = $2 ORDER BY p.path DESC", baseQuery)
-		args = []interface{}{dirPath, version}
-	}
-
-	var (
-		packages    []*internal.VersionedPackage
-		errBreak    = errors.New("break")
-		wantVersion = version
-	)
+	var packages []*internal.VersionedPackage
 	collect := func(rows *sql.Rows) error {
 		var (
 			pkg                                 internal.VersionedPackage
-			v                                   internal.VersionInfo
 			repositoryURL, vcsType, homepageURL sql.NullString
 			licenseTypes, licensePaths          []string
 		)
-		if err := rows.Scan(&pkg.Path, &v.Version, &pkg.Name, &pkg.Synopsis, &pkg.V1Path,
+		if err := rows.Scan(&pkg.Path, &pkg.Version, &pkg.Name, &pkg.Synopsis, &pkg.V1Path,
 			&pkg.DocumentationHTML, pq.Array(&licenseTypes),
-			pq.Array(&licensePaths), &v.ModulePath, &v.ReadmeFilePath,
-			&v.ReadmeContents, &v.CommitTime, &v.VersionType,
+			pq.Array(&licensePaths), &pkg.ModulePath, &pkg.ReadmeFilePath,
+			&pkg.ReadmeContents, &pkg.CommitTime, &pkg.VersionType,
 			&repositoryURL, &vcsType, &homepageURL); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
@@ -117,26 +61,14 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, version string) (_ *int
 		if err != nil {
 			return err
 		}
-		if wantVersion == "" {
-			wantVersion = v.Version
-		}
-		if v.Version != wantVersion {
-			// Only return packages where v.Version matches wantVersion. If we
-			// are fetching the latest version of the directory, the packages
-			// returned by the query will be ordered by version descending, so
-			// it is safe to break once we reach a version that does not match
-			// wantVersion.
-			return errBreak
-		}
-		v.RepositoryURL = repositoryURL.String
-		v.HomepageURL = homepageURL.String
-		v.VCSType = vcsType.String
-		pkg.VersionInfo = v
+		pkg.RepositoryURL = repositoryURL.String
+		pkg.HomepageURL = homepageURL.String
+		pkg.VCSType = vcsType.String
 		pkg.Licenses = lics
 		packages = append(packages, &pkg)
 		return nil
 	}
-	if err := db.runQuery(ctx, query, collect, args...); err != nil && err != errBreak {
+	if err := db.runQuery(ctx, query, collect, args...); err != nil {
 		return nil, err
 	}
 	if len(packages) == 0 {
@@ -150,4 +82,77 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, version string) (_ *int
 		Version:  packages[0].Version,
 		Packages: packages,
 	}, nil
+}
+
+func constructDirectoryQueryAndArgs(dirPath, version string) (string, []interface{}) {
+	baseQuery := `
+		SELECT
+			p.path,
+			p.version,
+			p.name,
+			p.synopsis,
+			p.v1_path,
+			p.documentation,
+			p.license_types,
+			p.license_paths,
+			p.module_path,
+			v.readme_file_path,
+			v.readme_contents,
+			v.commit_time,
+			v.version_type,
+			v.repository_url,
+			v.vcs_type,
+			v.homepage_url
+		FROM
+			packages p`
+
+	if version != "" {
+		return baseQuery + `
+			INNER JOIN (
+				SELECT *
+				FROM versions
+				WHERE
+					version = $2
+					AND $1 || '/' LIKE module_path || '/%'
+			) v
+			ON
+				p.module_path = v.module_path
+				AND v.version = p.version
+			WHERE
+				path LIKE $1 || '/%';`, []interface{}{dirPath, version}
+	}
+
+	return baseQuery + `
+		INNER JOIN (
+			SELECT
+				DISTINCT ON (module_path) module_path,
+				version,
+				readme_file_path,
+				readme_contents,
+				commit_time,
+				version_type,
+				repository_url,
+				vcs_type,
+				homepage_url
+			FROM
+				versions
+			WHERE
+				$1 || '/' LIKE module_path || '/' || '%'
+			ORDER BY
+				-- Order the versions by release then prerelease.
+				-- The default version should be the first release
+				-- version available, if one exists.
+				module_path,
+				CASE WHEN prerelease = '~' THEN 0 ELSE 1 END,
+				major DESC,
+				minor DESC,
+				patch DESC,
+				prerelease DESC
+		) v
+		ON
+			v.module_path = p.module_path
+			AND v.version = p.version
+		WHERE
+			path LIKE $1 || '/' || '%';`, []interface{}{dirPath}
+
 }
