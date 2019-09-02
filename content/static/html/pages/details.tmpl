@@ -17,6 +17,11 @@
         {{$header.Path}}
       {{- end}}</h1>
     <p class="InfoLabel">
+      {{if eq $namespace "pkg"}}
+        <strong class="InfoLabel-title">Module: </strong>
+	<a href="/mod/{{$header.Module.Path}}@{{$header.Version}}">{{$header.Module.Path}}</a>
+        <span class="InfoLabel-divider">|</span>
+      {{end}}
       <strong class="InfoLabel-title">Version:</strong> {{$header.Version}}
       <span class="InfoLabel-divider">|</span>
       <strong class="InfoLabel-title">Published:</strong> {{$header.CommitTime}}
