@@ -81,6 +81,8 @@ func TestServer(t *testing.T) {
 
 	pkgHeader := []string{
 		`<h1 class="Header-title">github.com/valid_module_name/foo</h1>`,
+		`Module:`,
+		`<a href="/mod/github.com/valid_module_name@v1.0.0">github.com/valid_module_name</a>`,
 		`Version:`,
 		`v1.0.0`,
 		`<a href="/pkg/github.com/valid_module_name/foo@v1.0.0?tab=licenses#LICENSE">MIT</a>`,
@@ -88,6 +90,8 @@ func TestServer(t *testing.T) {
 	}
 	nonRedistPkgHeader := []string{
 		`<h1 class="Header-title">github.com/non_redistributable/bar</h1>`,
+		`Module:`,
+		`<a href="/mod/github.com/non_redistributable@v1.0.0">github.com/non_redistributable</a>`,
 		`Version:`,
 		`v1.0.0`,
 		`No license files detected`,
@@ -138,12 +142,12 @@ func TestServer(t *testing.T) {
 		{
 			// For a non-redistributable package, the "latest" route goes to the modules tab.
 			fmt.Sprintf("/pkg/%s", nonRedistPkgPath),
-			append(nonRedistPkgHeader, `Packages in github.com/non_redistributable`),
+			append(nonRedistPkgHeader, `Packages in <a href="/mod/github.com/non_redistributable@v1.0.0">github.com/non_redistributable</a>`),
 		},
 		{
 			// For a non-redistributable package, the name@version route goes to the modules tab.
 			fmt.Sprintf("/pkg/%s@%s", nonRedistPkgPath, sample.VersionString),
-			append(nonRedistPkgHeader, `Packages in github.com/non_redistributable`),
+			append(nonRedistPkgHeader, `Packages in <a href="/mod/github.com/non_redistributable@v1.0.0">github.com/non_redistributable</a>`),
 		},
 		{
 			fmt.Sprintf("/pkg/%s?tab=doc", sample.PackagePath),
@@ -219,9 +223,7 @@ func TestServer(t *testing.T) {
 			fmt.Sprintf("/mod/%s?tab=packages", sample.ModulePath),
 			// Fall back to the latest version.
 			append(modHeader,
-				`Packages in github.com/valid_module_name`,
-				`<a href="/pkg/github.com/valid_module_name/foo@v1.0.0">`,
-				`foo`,
+				`Packages in <a href="/mod/github.com/valid_module_name@v1.0.0">github.com/valid_module_name</a>`,
 				`This is a package synopsis`),
 		},
 		{
@@ -231,9 +233,7 @@ func TestServer(t *testing.T) {
 		{
 			fmt.Sprintf("/mod/%s@%s?tab=packages", sample.ModulePath, sample.VersionString),
 			append(modHeader,
-				`Packages in github.com/valid_module_name`,
-				`<a href="/pkg/github.com/valid_module_name/foo@v1.0.0">`,
-				`foo`,
+				`Packages in <a href="/mod/github.com/valid_module_name@v1.0.0">github.com/valid_module_name</a>`,
 				`This is a package synopsis`),
 		},
 		{
@@ -268,7 +268,7 @@ func TestServer(t *testing.T) {
 			for _, want := range tc.want {
 				if !strings.Contains(body, want) {
 					if len(body) > 100 {
-						body = body[:100] + "..."
+						body = "<content exceeds 100 chars>"
 					}
 					t.Errorf("`%s` not found in body\n%s", want, body)
 				}

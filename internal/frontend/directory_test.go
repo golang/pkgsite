@@ -47,9 +47,10 @@ func TestFetchPackagesInDirectory(t *testing.T) {
 			pkgs = append(pkgs, pkg)
 		}
 		return &DirectoryPage{
-			Directory: dirPath,
-			Version:   v.Version,
-			Packages:  pkgs,
+			Directory:  dirPath,
+			ModulePath: modulePath,
+			Version:    v.Version,
+			Packages:   pkgs,
 		}
 	}
 	checkFetchDirectory := func(version string, want *DirectoryPage) {

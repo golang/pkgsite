@@ -146,12 +146,13 @@ func TestGetDirectory(t *testing.T) {
 			})
 
 			wantDirectory := &internal.Directory{
-				Path:     tc.path,
-				Version:  tc.wantVersion,
-				Packages: tc.wantPackages,
+				Path:       tc.path,
+				ModulePath: tc.wantModulePath,
+				Version:    tc.wantVersion,
+				Packages:   tc.wantPackages,
 			}
 			if diff := cmp.Diff(wantDirectory, got, cmpopts.EquateEmpty()); diff != "" {
-				t.Errorf("testDB.GetDirectoryAtVersion(ctx, %q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
+				t.Errorf("testDB.GetDirectory(ctx, %q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
 			}
 		})
 	}
