@@ -10,17 +10,23 @@ package stdlib
 
 import (
 	"archive/zip"
+	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/testhelper"
 	"golang.org/x/discovery/internal/thirdparty/semver"
 
+	"gopkg.in/src-d/go-billy.v4/osfs"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
@@ -83,18 +89,15 @@ func finalDigitsIndex(s string) int {
 
 const goRepoURL = "https://go.googlesource.com/go"
 
-// Zip writes a module zip representing the entire Go standard library to w.
-// It reads the standard library at the Go repository tag corresponding to
-// to the given semantic version. If version is empty, it uses the
-// latest released version.
-//
-// Zip ignores go.mod files in the standard library, treating it as if it were a
-// single module named "std" at the given version.
-func Zip(w io.Writer, version string) (err error) {
-	// This code taken, with modifications, from
-	// https://github.com/shurcooL/play/blob/master/256/moduleproxy/std/std.go.
-	defer derrors.Wrap(&err, "stdlib.Zip(w, %q)", version)
+// UseTestData determines whether to really clone the Go repo, or use
+// stripped-down versions of the repo from the testdata directory.
+var UseTestData = false
 
+// TestCommitTime is the time used for all commits when UseTestData is true.
+var TestCommitTime = time.Date(2019, 9, 4, 1, 2, 3, 0, time.UTC)
+
+// getGoRepo returns a repo object for the Go repo at version.
+func getGoRepo(version string) (_ *git.Repository, err error) {
 	var tag string
 	if version == "" {
 		tag, err = latestGoReleaseTag()
@@ -102,19 +105,44 @@ func Zip(w io.Writer, version string) (err error) {
 		tag, err = TagForVersion(version)
 	}
 	if err != nil {
-		return err
+		return nil, err
 	}
-	repo, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+	return git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 		URL:           goRepoURL,
 		ReferenceName: plumbing.NewTagReferenceName(tag),
 		SingleBranch:  true,
 		Depth:         1,
 		Tags:          git.NoTags,
 	})
-	if err != nil {
-		return err
+}
+
+// getTestGoRepo gets a Go repo for testing.
+func getTestGoRepo(version string) (_ *git.Repository, err error) {
+	if version == "" {
+		return nil, errors.New("empty version not supported in tests")
 	}
-	return zipGoRepo(w, repo, version)
+	fs := osfs.New(filepath.Join(testhelper.TestDataPath("testdata"), version))
+	repo, err := git.Init(memory.NewStorage(), fs)
+	if err != nil {
+		return nil, err
+	}
+	wt, err := repo.Worktree()
+	if err != nil {
+		return nil, err
+	}
+	// Add all files in the directory.
+	if _, err := wt.Add(""); err != nil {
+		return nil, err
+	}
+	_, err = wt.Commit("", &git.CommitOptions{All: true, Author: &object.Signature{
+		Name:  "Joe Random",
+		Email: "joe@example.com",
+		When:  TestCommitTime,
+	}})
+	if err != nil {
+		return nil, err
+	}
+	return repo, nil
 }
 
 // latestGoReleaseTag returns the tag of the latest Go release.
@@ -168,48 +196,77 @@ func releaseVersionForTag(tag string) string {
 	return ""
 }
 
-// zipGoRepo writes a zip file of the Go standard library in r to w.
-// The zip file is in module form, with each path prefixed by ModuleName + "@" + version.
+// Zip creates a module zip representing the entire Go standard library at the
+// given version and returns a reader to it. It also returns the time of the
+// commit for that version. The zip file is in module form, with each path
+// prefixed by ModuleName + "@" + version.
 //
-// zipGoRepo assumes that the repo follows the layout of the Go repo, with all
-// the Go files of the standard library in a subdirectory, either /src or /src/pkg.
-func zipGoRepo(w io.Writer, r *git.Repository, version string) error {
-	z := zip.NewWriter(w)
-	head, err := r.Head()
-	if err != nil {
-		return err
+// Zip reads the standard library at the Go repository tag corresponding to to
+// the given semantic version. If version is empty, it uses the latest released
+// version.
+//
+// Zip ignores go.mod files in the standard library, treating it as if it were a
+// single module named "std" at the given version.
+func Zip(version string) (_ *zip.Reader, commitTime time.Time, err error) {
+	// This code taken, with modifications, from
+	// https://github.com/shurcooL/play/blob/master/256/moduleproxy/std/std.go.
+	defer derrors.Wrap(&err, "stdlib.Zip(%q)", version)
+
+	var repo *git.Repository
+	if UseTestData {
+		repo, err = getTestGoRepo(version)
+	} else {
+		repo, err = getGoRepo(version)
 	}
-	commit, err := r.CommitObject(head.Hash())
 	if err != nil {
-		return err
+		return nil, time.Time{}, err
 	}
-	root, err := r.TreeObject(commit.TreeHash)
+	var buf bytes.Buffer
+	z := zip.NewWriter(&buf)
+	head, err := repo.Head()
 	if err != nil {
-		return err
+		return nil, time.Time{}, err
+	}
+	commit, err := repo.CommitObject(head.Hash())
+	if err != nil {
+		return nil, time.Time{}, err
+	}
+	root, err := repo.TreeObject(commit.TreeHash)
+	if err != nil {
+		return nil, time.Time{}, err
 	}
 	prefixPath := ModulePath + "@" + version
 	// Add top-level files.
-	if err := addFiles(z, r, root, prefixPath, false); err != nil {
-		return err
+	if err := addFiles(z, repo, root, prefixPath, false); err != nil {
+		return nil, time.Time{}, err
 	}
 	// If there is src/pkg, add that; otherwise, add src.
 	var libdir *object.Tree
-	src, err := subTree(r, root, "src")
+	src, err := subTree(repo, root, "src")
 	if err != nil {
-		return err
+		return nil, time.Time{}, err
 	}
-	pkg, err := subTree(r, src, "pkg")
+	pkg, err := subTree(repo, src, "pkg")
 	if err == os.ErrNotExist {
 		libdir = src
 	} else if err != nil {
-		return err
+		return nil, time.Time{}, err
 	} else {
 		libdir = pkg
 	}
-	if err := addFiles(z, r, libdir, prefixPath, true); err != nil {
-		return err
+	if err := addFiles(z, repo, libdir, prefixPath, true); err != nil {
+		return nil, time.Time{}, err
 	}
-	return z.Close()
+
+	if err := z.Close(); err != nil {
+		return nil, time.Time{}, err
+	}
+	br := bytes.NewReader(buf.Bytes())
+	zr, err := zip.NewReader(br, int64(br.Len()))
+	if err != nil {
+		return nil, time.Time{}, err
+	}
+	return zr, commit.Committer.When, nil
 }
 
 // addFiles adds the files in t to z, using dirpath as the path prefix.

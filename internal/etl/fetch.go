@@ -106,7 +106,8 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 }
 
 // fetchAndInsertVersion fetches the given module version from the module proxy
-// and writes the resulting data to the database.
+// or (in the case of the standard library) from the Go repo and writes the
+// resulting data to the database.
 //
 // The given parentCtx is used for tracing, but fetches actually execute in a
 // detached context with fixed timeout, so that fetches are allowed to complete
@@ -134,29 +135,42 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, version string
 	return nil
 }
 
-// FetchVersion queries the proxy for the requested module version, downloads
-// the module zip, and processes the contents to return an *internal.Version.
+// FetchVersion queries the proxy or the Go repo for the requested module
+// version, downloads the module zip, and processes the contents to return an
+// *internal.Version.
 func FetchVersion(ctx context.Context, modulePath, version string, proxyClient *proxy.Client) (_ *internal.Version, err error) {
-	defer derrors.Wrap(&err, "FetchVersion(%q, %q)", modulePath, version)
+	defer derrors.Wrap(&err, "fetchVersion(%q, %q)", modulePath, version)
 
-	info, err := proxyClient.GetInfo(ctx, modulePath, version)
-	if err != nil {
-		return nil, err
+	var commitTime time.Time
+	var zipReader *zip.Reader
+	if modulePath == "std" {
+		zipReader, commitTime, err = stdlib.Zip(version)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		info, err := proxyClient.GetInfo(ctx, modulePath, version)
+		if err != nil {
+			return nil, err
+		}
+		version = info.Version
+		commitTime = info.Time
+		zipReader, err = proxyClient.GetZip(ctx, modulePath, version)
+		if err != nil {
+			return nil, err
+		}
 	}
-	versionType, err := ParseVersionType(info.Version)
+	versionType, err := ParseVersionType(version)
 	if err != nil {
 		return nil, xerrors.Errorf("%v: %w", err, derrors.NotAcceptable)
 	}
-	zipReader, err := proxyClient.GetZip(ctx, modulePath, info.Version)
-	if err != nil {
-		return nil, err
-	}
-	return processZipFile(ctx, modulePath, versionType, info, zipReader)
+
+	return processZipFile(ctx, modulePath, versionType, version, commitTime, zipReader)
 }
 
 // processZipFile extracts information from the module version zip.
-func processZipFile(ctx context.Context, modulePath string, versionType internal.VersionType, info *proxy.VersionInfo, zipReader *zip.Reader) (_ *internal.Version, err error) {
-	defer derrors.Wrap(&err, "processZipFile(%q, %q)", modulePath, info.Version)
+func processZipFile(ctx context.Context, modulePath string, versionType internal.VersionType, version string, commitTime time.Time, zipReader *zip.Reader) (_ *internal.Version, err error) {
+	defer derrors.Wrap(&err, "processZipFile(%q, %q)", modulePath, version)
 
 	_, span := trace.StartSpan(ctx, "processing zipFile")
 	defer span.End()
@@ -165,26 +179,26 @@ func processZipFile(ctx context.Context, modulePath string, versionType internal
 	if err != nil {
 		log.Printf("modulePathToRepoURL(%q): %v", modulePath, err)
 	}
-	readmeFilePath, readmeContents, err := extractReadmeFromZip(modulePath, info.Version, zipReader)
+	readmeFilePath, readmeContents, err := extractReadmeFromZip(modulePath, version, zipReader)
 	if err != nil && err != errReadmeNotFound {
-		return nil, fmt.Errorf("extractReadmeFromZip(%q, %q, zipReader): %v", modulePath, info.Version, err)
+		return nil, fmt.Errorf("extractReadmeFromZip(%q, %q, zipReader): %v", modulePath, version, err)
 	}
-	licenses, err := license.Detect(moduleVersionDir(modulePath, info.Version), zipReader)
+	licenses, err := license.Detect(moduleVersionDir(modulePath, version), zipReader)
 	if err != nil {
 		log.Print(err)
 	}
-	packages, err := extractPackagesFromZip(modulePath, info.Version, zipReader, license.NewMatcher(licenses))
+	packages, err := extractPackagesFromZip(modulePath, version, zipReader, license.NewMatcher(licenses))
 	if err == errModuleContainsNoPackages {
 		return nil, xerrors.Errorf("%v: %w", errModuleContainsNoPackages.Error(), derrors.NotAcceptable)
 	}
 	if err != nil {
-		return nil, fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, info.Version, licenses, err)
+		return nil, fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, version, licenses, err)
 	}
 	return &internal.Version{
 		VersionInfo: internal.VersionInfo{
 			ModulePath:     modulePath,
-			Version:        info.Version,
-			CommitTime:     info.Time,
+			Version:        version,
+			CommitTime:     commitTime,
 			ReadmeFilePath: readmeFilePath,
 			ReadmeContents: readmeContents,
 			VersionType:    versionType,

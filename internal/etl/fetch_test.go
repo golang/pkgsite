@@ -25,6 +25,7 @@ import (
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
+	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/testhelper"
 	"golang.org/x/xerrors"
 )
@@ -226,13 +227,16 @@ func TestFetchVersion(t *testing.T) {
 		t.Fatal(err)
 	}
 	if diff := cmp.Diff(want, got, cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML")); diff != "" {
-		t.Errorf("FetchVersion(%q, %q) diff:\n%s", modulePath, version, diff)
+		t.Errorf("fetchVersion(%q, %q) diff:\n%s", modulePath, version, diff)
 	}
 }
 
 func TestFetchAndInsertVersion(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
+
+	stdlib.UseTestData = true
+	defer func() { stdlib.UseTestData = false }()
 
 	testCases := []struct {
 		modulePath  string
@@ -326,9 +330,10 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				VersionInfo: internal.VersionInfo{
 					ModulePath:     "std",
 					Version:        "v1.12.5",
-					CommitTime:     testProxyCommitTime,
+					CommitTime:     stdlib.TestCommitTime,
 					VersionType:    "release",
-					ReadmeContents: []uint8{},
+					ReadmeFilePath: "README.md",
+					ReadmeContents: []byte("# The Go Programming Language\n"),
 					RepositoryURL:  goRepositoryURLPrefix + "/go",
 				},
 				Package: internal.Package{
@@ -353,9 +358,10 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				VersionInfo: internal.VersionInfo{
 					ModulePath:     "std",
 					Version:        "v1.12.5",
-					CommitTime:     testProxyCommitTime,
+					CommitTime:     stdlib.TestCommitTime,
 					VersionType:    "release",
-					ReadmeContents: []uint8{},
+					ReadmeFilePath: "README.md",
+					ReadmeContents: []byte("# The Go Programming Language\n"),
 					RepositoryURL:  goRepositoryURLPrefix + "/go",
 				},
 				Package: internal.Package{

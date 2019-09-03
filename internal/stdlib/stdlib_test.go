@@ -5,19 +5,11 @@
 package stdlib
 
 import (
-	"archive/zip"
-	"bytes"
-	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
 	"golang.org/x/discovery/internal/thirdparty/semver"
-
-	"gopkg.in/src-d/go-billy.v4/osfs"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/object"
-	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
 
 func TestTagForVersion(t *testing.T) {
@@ -86,40 +78,18 @@ func TestTagForVersion(t *testing.T) {
 	}
 }
 
-func TestZipGoRepo(t *testing.T) {
-	for _, version := range []string{"v1.12.0", "v1.3.2"} {
-		t.Run(version, func(t *testing.T) {
-			fs := osfs.New(filepath.Join("testdata", version))
-			repo, err := git.Init(memory.NewStorage(), fs)
-			if err != nil {
-				t.Fatal(err)
-			}
-			wt, err := repo.Worktree()
-			if err != nil {
-				t.Fatal(err)
-			}
-			if _, err := wt.Add(""); err != nil {
-				t.Fatal(err)
-			}
-			hash, err := wt.Commit("", &git.CommitOptions{All: true, Author: &object.Signature{
-				Name:  "Joe Random",
-				Email: "joe@example.com",
-			}})
-			if err != nil {
-				t.Fatal(err)
-			}
-			if _, err := repo.CreateTag("go"+version[1:], hash, nil); err != nil {
-				t.Fatal(err)
-			}
+func TestZip(t *testing.T) {
+	UseTestData = true
+	defer func() { UseTestData = false }()
 
-			var buf bytes.Buffer
-			if err := zipGoRepo(&buf, repo, version); err != nil {
-				t.Fatal(err)
-			}
-			r := bytes.NewReader(buf.Bytes())
-			zr, err := zip.NewReader(r, int64(r.Len()))
+	for _, version := range []string{"v1.12.5", "v1.3.2"} {
+		t.Run(version, func(t *testing.T) {
+			zr, gotTime, err := Zip(version)
 			if err != nil {
 				t.Fatal(err)
+			}
+			if !gotTime.Equal(TestCommitTime) {
+				t.Errorf("commit time: got %s, want %s", gotTime, TestCommitTime)
 			}
 			wantFiles := map[string]bool{
 				"LICENSE":               true,

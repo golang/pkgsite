@@ -352,6 +352,8 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (string, e
 }
 
 func (s *Server) handlePopulateStdLib(w http.ResponseWriter, r *http.Request) {
+	// TODO(b/140413605): compute these versions from the Go repo, in internal/stdlib.
+
 	// stdlibVersions is a map of each minor version of Go and the latest
 	// patch version available for that minor version, according to
 	// https://golang.org/doc/devel/release.html. This map will need to be
@@ -363,24 +365,18 @@ func (s *Server) handlePopulateStdLib(w http.ResponseWriter, r *http.Request) {
 	// stdlibBetaVersions is a slice of beta versions available for Go.
 	// This slice will need to be updated each time a new Go beta version
 	// is released.
-	stdlibBetaVersions := []string{"v1.13.0-beta1"}
+	stdlibBetaVersions := []string{"v1.13.0-beta.1"}
 
 	var versionsToQueue [][]string
 	for majMin, maxPatch := range stdlibVersions {
 		for patch := 0; patch <= maxPatch; patch++ {
 			v := fmt.Sprintf("%s.%d", majMin, patch)
 			versionsToQueue = append(versionsToQueue, []string{"std", v})
-			if majMin == "v1.13" {
-				// Starting in go1.13, "cmd" becomes a nested
-				// module and needs to be fetched separately.
-				versionsToQueue = append(versionsToQueue, []string{"cmd", v})
-			}
 		}
 	}
 	for _, betaVersion := range stdlibBetaVersions {
 		versionsToQueue = append(versionsToQueue,
-			[]string{"std", betaVersion},
-			[]string{"cmd", betaVersion})
+			[]string{"std", betaVersion})
 	}
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
