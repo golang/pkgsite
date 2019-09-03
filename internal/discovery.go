@@ -85,10 +85,9 @@ type VersionedPackage struct {
 // Directory represents a folder in a module version, and all of the packages
 // inside that folder.
 type Directory struct {
-	Path       string
-	ModulePath string
-	Version    string
-	Packages   []*VersionedPackage
+	Path     string
+	Version  string
+	Packages []*VersionedPackage
 }
 
 // VersionType defines the version types a module can have.

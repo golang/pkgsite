@@ -78,10 +78,9 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, version string) (_ *int
 		return packages[i].Path < packages[j].Path
 	})
 	return &internal.Directory{
-		Path:       dirPath,
-		ModulePath: packages[0].ModulePath,
-		Version:    packages[0].Version,
-		Packages:   packages,
+		Path:     dirPath,
+		Version:  packages[0].Version,
+		Packages: packages,
 	}, nil
 }
 

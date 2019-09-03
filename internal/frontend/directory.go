@@ -16,10 +16,9 @@ import (
 // DirectoryPage contains data for directory template.
 type DirectoryPage struct {
 	basePage
-	Directory  string
-	Version    string
-	ModulePath string
-	Packages   []*Package
+	Directory string
+	Version   string
+	Packages  []*Package
 }
 
 func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirPath, version string) {
@@ -60,9 +59,8 @@ func fetchPackagesInDirectory(ctx context.Context, ds DataSource, dirPath, versi
 		packages = append(packages, newPkg)
 	}
 	return &DirectoryPage{
-		Directory:  dirPath,
-		Packages:   packages,
-		ModulePath: dir.ModulePath,
-		Version:    dir.Version,
+		Directory: dirPath,
+		Packages:  packages,
+		Version:   dir.Version,
 	}, nil
 }

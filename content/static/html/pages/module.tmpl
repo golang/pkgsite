@@ -7,9 +7,9 @@
 {{define "details_content"}}
   <div class="ModuleContent-list">
     {{if eq .ModulePath "std"}}
-      <h2>Packages in the <a href="/mod/std@{{.Version}}">Go Standard Library</a></h2>
+      <h2>Packages in the Go Standard Library</h2>
     {{else}}
-      <h2>Packages in <a href="/mod/{{.ModulePath}}@{{.Version}}">{{.ModulePath}}</a></h2>
+      <h2>Packages in {{.ModulePath}}</h2>
     {{end}}
 
     {{range .Packages}}
