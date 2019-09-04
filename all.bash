@@ -71,8 +71,10 @@ findcode() {
 ensure_go_binary() {
   local binary=$(basename $1)
   if ! [ -x "$(command -v $binary)" ]; then
-    info "Running: go get -u $1"
-    go get -u $1
+    info "Installing: $1"
+    # Run in a subshell for convenience, so that we don't have to worry about
+    # our PWD.
+    (set -x; cd && env GO111MODULE=on go get -u $1)
   fi
 }
 
