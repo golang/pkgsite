@@ -270,7 +270,7 @@ func (ds *DataSource) getVersion(ctx context.Context, modulePath, version string
 	// preserves uniqueness of versions in the module version list.
 	newVersions := append(ds.modulePathToVersions[modulePath], version)
 	sort.Slice(newVersions, func(i, j int) bool {
-		return semver.Compare(ds.modulePathToVersions[modulePath][i], ds.modulePathToVersions[modulePath][j]) < 0
+		return semver.Compare(newVersions[i], newVersions[j]) < 0
 	})
 	ds.modulePathToVersions[modulePath] = newVersions
 
