@@ -109,9 +109,21 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 // search_documents where imported_by_count_updated_at < version_updated_at or
 // imported_by_count_updated_at is null.
 func (s *Server) handleUpdateImportedByCount(w http.ResponseWriter, r *http.Request) {
-	if err := s.db.UpdateSearchDocumentsImportedByCount(r.Context()); err != nil {
+	limitParam := r.FormValue("limit")
+	var (
+		limit = 1000
+		err   error
+	)
+	if limitParam != "" {
+		limit, err = strconv.Atoi(limitParam)
+		if err != nil {
+			log.Printf("Error parsing limit parameter: %v", err)
+			limit = 10
+		}
+	}
+	if err := s.db.UpdateSearchDocumentsImportedByCount(r.Context(), limit); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		log.Printf("db.UpdateSearchDocumentsImportedByCount(ctx): %v", err)
+		log.Printf("db.UpdateSearchDocumentsImportedByCount(ctx, %d): %v", limit, err)
 	}
 }
 

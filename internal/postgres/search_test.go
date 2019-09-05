@@ -334,8 +334,8 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 	}
 	mustUpdateImportedByCount := func() {
 		t.Helper()
-		if err := testDB.UpdateSearchDocumentsImportedByCount(ctx); err != nil {
-			t.Fatalf("testDB.UpdateSearchDocumentsImportedByCount(ctx): %v", err)
+		if err := testDB.UpdateSearchDocumentsImportedByCount(ctx, 10); err != nil {
+			t.Fatalf("testDB.UpdateSearchDocumentsImportedByCount(ctx, 10): %v", err)
 		}
 	}
 	validateImportedByCountAndGetSearchDocument := func(path string, count int) *searchDocument {

@@ -284,7 +284,7 @@ func (db *DB) getSearchDocument(ctx context.Context, path string) (*searchDocume
 // by anything.
 //
 // Note: we assume that clock drift is not an issue.
-func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context) error {
+func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context, limit int) error {
 	query := `
 		WITH modified_packages AS (
 			SELECT
@@ -298,34 +298,34 @@ func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context) error {
 				SELECT COALESCE(MAX(imported_by_count_updated_at), TO_TIMESTAMP(0))
 				FROM search_documents
 			)
-		), packages_for_imported_by_count_refresh AS (
-			SELECT package_path
-			FROM modified_packages
-			UNION (
-				SELECT DISTINCT(to_path) AS package_path
-				FROM imports i
-				INNER JOIN modified_packages m
-				ON i.from_path = m.package_path
-			)
-		), new_imported_by_counts AS (
-			SELECT
-				p.package_path,
-				COUNT(DISTINCT(i.from_path)) AS imported_by_count
-			FROM packages_for_imported_by_count_refresh p
-			LEFT JOIN imports i
-			ON p.package_path = i.to_path
-			GROUP BY p.package_path
+			LIMIT $1
 		)
-
 		UPDATE search_documents
 		SET
 			imported_by_count = n.imported_by_count,
 			-- Note: we assume that max(updated_at) is only
 			-- computed once for all rows updated.
 			imported_by_count_updated_at = (SELECT MAX(updated_at) FROM modified_packages)
-		FROM new_imported_by_counts n
+		FROM (
+			SELECT
+				p.package_path,
+				COUNT(DISTINCT(i.from_path)) AS imported_by_count
+			FROM (
+				SELECT package_path
+				FROM modified_packages
+				UNION (
+					SELECT i.to_path
+					FROM imports_unique i
+					INNER JOIN modified_packages m
+					ON i.from_path = m.package_path
+				)
+			) p
+			LEFT JOIN imports_unique i
+			ON p.package_path = i.to_path
+			GROUP BY p.package_path
+		) n
 		WHERE search_documents.package_path = n.package_path;`
-	if _, err := db.exec(ctx, query); err != nil {
+	if _, err := db.exec(ctx, query, limit); err != nil {
 		return fmt.Errorf("error updating imported_by_count and imported_by_count_updated_at for search documents: %v", err)
 	}
 	return nil
