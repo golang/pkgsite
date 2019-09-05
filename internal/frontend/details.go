@@ -17,6 +17,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
 	"golang.org/x/xerrors"
@@ -43,7 +44,8 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
 		return
 	}
-	if version != "" && !semver.IsValid(version) {
+	if version != proxy.Latest && !semver.IsValid(version) {
+		log.Printf("%s@%s: invalid version", path, version)
 		s.serveErrorPage(w, r, http.StatusBadRequest, &errorPage{
 			Message:          fmt.Sprintf("%q is not a valid semantic version.", version),
 			SecondaryMessage: suggestedSearch(path),
@@ -55,7 +57,8 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 		pkg *internal.VersionedPackage
 		ctx = r.Context()
 	)
-	if version == "" {
+	// TODO(b/140558033): instead update the datasource API to be proxy.Latest aware.
+	if version == proxy.Latest {
 		pkg, err = s.ds.GetLatestPackage(ctx, path)
 		if err != nil && !xerrors.Is(err, derrors.NotFound) {
 			log.Print(err)
@@ -71,7 +74,7 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 			return
 		}
-		if version == "" {
+		if version == proxy.Latest {
 			// If the version is empty, it means that we already
 			// tried fetching the latest version of the package,
 			// and this package does not exist.
@@ -176,7 +179,7 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
 		return
 	}
-	if version != "" && !semver.IsValid(version) {
+	if version != proxy.Latest && !semver.IsValid(version) {
 		s.serveErrorPage(w, r, http.StatusBadRequest, &errorPage{
 			Message: fmt.Sprintf("%q is not a valid semantic version.", version),
 		})
@@ -185,7 +188,9 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	var moduleVersion *internal.VersionInfo
-	if version == "" {
+	// TODO(b/140558033): remove this special handling once the datasource is
+	// 'Latest' aware.
+	if version == proxy.Latest {
 		moduleVersion, err = s.ds.GetLatestVersionInfo(ctx, path)
 	} else {
 		moduleVersion, err = s.ds.GetVersionInfo(ctx, path, version)
@@ -197,7 +202,7 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 			code = http.StatusInternalServerError
 		}
 		var epage *errorPage
-		if version != "" {
+		if version != proxy.Latest {
 			// The specific requested version doesn't exist.
 			// See if any versions do by getting the latest package.
 			_, latestErr := s.ds.GetLatestVersionInfo(ctx, path)
@@ -292,7 +297,7 @@ func parseModulePathAndVersion(urlPath string) (importPath, version string, err 
 	}
 
 	if len(parts) == 1 {
-		return importPath, "", nil
+		return importPath, proxy.Latest, nil
 	}
 	return importPath, strings.TrimRight(parts[1], "/"), nil
 }

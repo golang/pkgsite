@@ -13,6 +13,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
+	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/sample"
 )
 
@@ -220,7 +221,7 @@ func TestParseModulePathAndVersion(t *testing.T) {
 			name:        "valid_url_missing_version",
 			url:         "https://discovery.com/module",
 			wantModule:  "module",
-			wantVersion: "",
+			wantVersion: proxy.Latest,
 		},
 		{
 			name:    "invalid_url",

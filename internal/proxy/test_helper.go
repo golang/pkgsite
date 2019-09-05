@@ -18,7 +18,6 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/testhelper"
 	"golang.org/x/discovery/internal/thirdparty/semver"
 )
@@ -94,15 +93,7 @@ func TestProxy(versions []*TestVersion) *http.ServeMux {
 			if goMod == "" {
 				goMod = defaultGoMod(m)
 			}
-			if strings.HasPrefix(m, stdlibProxyModulePathPrefix) {
-				goVersion, err := stdlib.TagForVersion(v.Version)
-				if err != nil {
-					panic(fmt.Sprintf("bad test data: v.Version = %q", v.Version))
-				}
-				handle(fmt.Sprintf("/%s/@v/%s.info", m, goVersion), strings.NewReader(defaultInfo(v.Version)))
-			} else {
-				handle(fmt.Sprintf("/%s/@v/%s.info", m, v.Version), strings.NewReader(defaultInfo(v.Version)))
-			}
+			handle(fmt.Sprintf("/%s/@v/%s.info", m, v.Version), strings.NewReader(defaultInfo(v.Version)))
 			handle(fmt.Sprintf("/%s/@v/%s.mod", m, v.Version), strings.NewReader(goMod))
 			handle(fmt.Sprintf("/%s/@v/%s.zip", m, v.Version), bytes.NewReader(v.Zip))
 		}

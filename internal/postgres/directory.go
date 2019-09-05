@@ -6,13 +6,14 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"sort"
 
-	"database/sql"
 	"github.com/lib/pq"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/xerrors"
 )
 
@@ -107,7 +108,7 @@ func constructDirectoryQueryAndArgs(dirPath, version string) (string, []interfac
 		FROM
 			packages p`
 
-	if version != "" {
+	if version != proxy.Latest {
 		return baseQuery + `
 			INNER JOIN (
 				SELECT *
@@ -155,5 +156,4 @@ func constructDirectoryQueryAndArgs(dirPath, version string) (string, []interfac
 			AND v.version = p.version
 		WHERE
 			path LIKE $1 || '/' || '%';`, []interface{}{dirPath}
-
 }

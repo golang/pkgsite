@@ -62,15 +62,7 @@ type versionEntry struct {
 // GetDirectory returns packages contained in the given subdirectory of a module version.
 func (ds *DataSource) GetDirectory(ctx context.Context, dirPath, version string) (_ *internal.Directory, err error) {
 	defer derrors.Wrap(&err, "GetDirectory(%q, %q)", dirPath, version)
-	var finder moduleFinderFunc
-	if version == "" {
-		finder = ds.proxyClient.GetLatestInfo
-	} else {
-		finder = func(ctx context.Context, modulePath string) (*proxy.VersionInfo, error) {
-			return ds.proxyClient.GetInfo(ctx, modulePath, version)
-		}
-	}
-	modulePath, info, err := findModule(ctx, dirPath, finder)
+	modulePath, info, err := ds.findModule(ctx, dirPath, version)
 	if err != nil {
 		return nil, err
 	}
@@ -113,26 +105,14 @@ func (ds *DataSource) GetImports(ctx context.Context, pkgPath, version string) (
 // the proxy to find the longest module path containing the package path.
 func (ds *DataSource) GetLatestPackage(ctx context.Context, pkgPath string) (_ *internal.VersionedPackage, err error) {
 	defer derrors.Wrap(&err, "GetLatestPackage(%q)", pkgPath)
-	modulePath, info, err := findModule(ctx, pkgPath, ds.proxyClient.GetLatestInfo)
-	if err != nil {
-		return nil, err
-	}
-	v, err := ds.getVersion(ctx, modulePath, info.Version)
-	if err != nil {
-		return nil, err
-	}
-	return packageFromVersion(pkgPath, v)
+	return ds.GetPackage(ctx, pkgPath, proxy.Latest)
 }
 
 // GetLatestVersionInfo queries the proxy for the latest version of the given
 // module, and fetches its VersionInfo.
 func (ds *DataSource) GetLatestVersionInfo(ctx context.Context, modulePath string) (_ *internal.VersionInfo, err error) {
 	defer derrors.Wrap(&err, "GetLatestVersionInfo(%q)", modulePath)
-	info, err := ds.proxyClient.GetLatestInfo(ctx, modulePath)
-	if err != nil {
-		return nil, err
-	}
-	return ds.GetVersionInfo(ctx, modulePath, info.Version)
+	return ds.GetVersionInfo(ctx, modulePath, proxy.Latest)
 }
 
 // GetModuleLicenses returns root-level licenses detected within the module zip
@@ -297,17 +277,15 @@ func (ds *DataSource) getVersion(ctx context.Context, modulePath, version string
 	return v, nil
 }
 
-type moduleFinderFunc func(context.Context, string) (*proxy.VersionInfo, error)
-
 // findModule finds the longest module path containing the given package path,
 // using the given finder func and iteratively testing parent directories of
 // the import path. It performs no testing as to whether the specified module
 // version that was found actually contains a package corresponding to pkgPath.
-func findModule(ctx context.Context, pkgPath string, finder moduleFinderFunc) (_ string, _ *proxy.VersionInfo, err error) {
+func (ds *DataSource) findModule(ctx context.Context, pkgPath string, version string) (_ string, _ *proxy.VersionInfo, err error) {
 	defer derrors.Wrap(&err, "findModule(%q, ...)", pkgPath)
 	pkgPath = strings.TrimLeft(pkgPath, "/")
 	for modulePath := pkgPath; modulePath != "" && modulePath != "."; modulePath = path.Dir(modulePath) {
-		info, err := finder(ctx, modulePath)
+		info, err := ds.proxyClient.GetInfo(ctx, modulePath, version)
 		if xerrors.Is(err, derrors.NotFound) {
 			continue
 		}
@@ -333,7 +311,7 @@ func (ds *DataSource) listPackageVersions(ctx context.Context, pkgPath string, p
 		// Since mods is kept sorted, the first element is the longest module.
 		modulePath = mods[0]
 	} else {
-		modulePath, _, err = findModule(ctx, pkgPath, ds.proxyClient.GetLatestInfo)
+		modulePath, _, err = ds.findModule(ctx, pkgPath, proxy.Latest)
 		if err != nil {
 			return nil, err
 		}
@@ -391,9 +369,7 @@ func (ds *DataSource) getPackageVersion(ctx context.Context, pkgPath, version st
 		// This should hit the cache.
 		return ds.getVersion(ctx, modulePath, version)
 	}
-	modulePath, info, err := findModule(ctx, pkgPath, func(ctx context.Context, modulePath string) (*proxy.VersionInfo, error) {
-		return ds.proxyClient.GetInfo(ctx, modulePath, version)
-	})
+	modulePath, info, err := ds.findModule(ctx, pkgPath, version)
 	if err != nil {
 		return nil, err
 	}
