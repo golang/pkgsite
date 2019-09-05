@@ -13,7 +13,6 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/sample"
 	"golang.org/x/xerrors"
 )
@@ -83,7 +82,7 @@ func TestGetDirectory(t *testing.T) {
 		{
 			name:           "get latest version",
 			path:           "github.com/hashicorp/vault",
-			version:        proxy.Latest,
+			version:        internal.LatestVersion,
 			wantVersion:    "v1.1.2",
 			wantModulePath: "github.com/hashicorp/vault",
 			wantPackages:   moduleVaultPackagesV112,

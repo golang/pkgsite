@@ -12,6 +12,7 @@ import (
 	"path"
 	"strings"
 
+	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/xerrors"
 )
@@ -83,7 +84,7 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if strings.Contains(query, "/") {
-		pkg, err := s.ds.GetLatestPackage(ctx, path.Clean(query))
+		pkg, err := s.ds.GetPackage(ctx, path.Clean(query), internal.LatestVersion)
 		if err == nil {
 			http.Redirect(w, r, fmt.Sprintf("/pkg/%s", pkg.Path), http.StatusFound)
 			return

@@ -28,6 +28,10 @@ import (
 // determine if it was caused by an invalid path or version.
 func (db *DB) GetPackage(ctx context.Context, path string, version string) (_ *internal.VersionedPackage, err error) {
 	defer derrors.Wrap(&err, "DB.GetPackage(ctx, %q, %q)", path, version)
+	// TODO(b/140558033): fold the logic in getLatestPackage in here.
+	if version == internal.LatestVersion {
+		return db.getLatestPackage(ctx, path)
+	}
 
 	if path == "" || version == "" {
 		return nil, xerrors.Errorf("neither path nor version can be empty: %w", derrors.InvalidArgument)
@@ -106,10 +110,10 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (_ *i
 	}, nil
 }
 
-// GetLatestPackage returns the package from the database with the latest version.
+// getLatestPackage returns the package from the database with the latest version.
 // If multiple packages share the same path then the package that the database
 // chooses is returned.
-func (db *DB) GetLatestPackage(ctx context.Context, path string) (_ *internal.VersionedPackage, err error) {
+func (db *DB) getLatestPackage(ctx context.Context, path string) (_ *internal.VersionedPackage, err error) {
 	defer derrors.Wrap(&err, "DB.GetLatestPackage(ctx, %q)", path)
 
 	if path == "" {
@@ -608,6 +612,10 @@ func compareLicenses(i, j *license.Metadata) bool {
 // (module_path, version).
 func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version string) (_ *internal.VersionInfo, err error) {
 	defer derrors.Wrap(&err, "GetVersionInfo(ctx, %q, %q)", modulePath, version)
+	// TODO(b/140558033): fold the logic of getLatestVersionInfo in here.
+	if version == internal.LatestVersion {
+		return db.getLatestVersionInfo(ctx, modulePath)
+	}
 
 	var (
 		repositoryURL, vcsType, homepageURL sql.NullString
@@ -648,9 +656,9 @@ func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version str
 	}, nil
 }
 
-// GetLatestVersionInfo fetches a Version from the database with given modulePath at the latest version.
-// (module_path, version).
-func (db *DB) GetLatestVersionInfo(ctx context.Context, modulePath string) (_ *internal.VersionInfo, err error) {
+// getLatestVersionInfo fetches a Version from the database with given
+// modulePath at the latest version.
+func (db *DB) getLatestVersionInfo(ctx context.Context, modulePath string) (_ *internal.VersionInfo, err error) {
 	defer derrors.Wrap(&err, "GetLatestVersionInfo(ctx, %q)", modulePath)
 
 	if modulePath == "" {

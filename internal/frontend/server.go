@@ -50,12 +50,6 @@ type DataSource interface {
 	// GetImports returns a slice of import paths imported by the package
 	// specified by path and version.
 	GetImports(ctx context.Context, path, version string) ([]string, error)
-	// GetLatestPackage returns the latest VersionedPackage (by semantic version)
-	// with the given import path.
-	GetLatestPackage(ctx context.Context, path string) (*internal.VersionedPackage, error)
-	// GetLatestVersionInfo returns the latest VersionInfo (by semantic version)
-	// for the given module path.
-	GetLatestVersionInfo(ctx context.Context, modulePath string) (*internal.VersionInfo, error)
 	// GetModuleLicenses returns all top-level Licenses for the given modulePath
 	// and version. (i.e., Licenses contained in the module root directory)
 	GetModuleLicenses(ctx context.Context, modulePath, version string) ([]*license.License, error)

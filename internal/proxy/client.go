@@ -19,15 +19,12 @@ import (
 	"time"
 
 	"go.opencensus.io/plugin/ochttp"
+	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/net/context/ctxhttp"
 	"golang.org/x/xerrors"
 )
-
-// Latest signifies the latest available version in requests to the proxy
-// client.
-const Latest = "latest"
 
 // A Client is used by the fetch service to communicate with a module
 // proxy. It handles all methods defined by go help goproxy.
@@ -69,7 +66,7 @@ func (c *Client) GetInfo(ctx context.Context, modulePath, version string) (_ *Ve
 		return nil, xerrors.Errorf("module.EncodePath(%q): %v: %q", modulePath, err, derrors.InvalidArgument)
 	}
 	var u string
-	if version == Latest {
+	if version == internal.LatestVersion {
 		u = fmt.Sprintf("%s/%s/@latest", c.url, encodedPath)
 	} else {
 		encodedVersion, err := module.EncodeVersion(version)

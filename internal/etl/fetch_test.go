@@ -238,6 +238,29 @@ func TestFetchAndInsertVersion(t *testing.T) {
 	stdlib.UseTestData = true
 	defer func() { stdlib.UseTestData = false }()
 
+	myModuleV100 := &internal.VersionedPackage{
+		VersionInfo: internal.VersionInfo{
+			ModulePath:     "github.com/my/module",
+			Version:        "v1.0.0",
+			CommitTime:     testProxyCommitTime,
+			ReadmeFilePath: "README.md",
+			ReadmeContents: []byte("README FILE FOR TESTING."),
+			RepositoryURL:  "https://github.com/my/module",
+			VersionType:    "release",
+		},
+		Package: internal.Package{
+			Path:              "github.com/my/module/bar",
+			Name:              "bar",
+			Synopsis:          "package bar",
+			DocumentationHTML: []byte("Bar returns the string &#34;bar&#34;."),
+			V1Path:            "github.com/my/module/bar",
+			Licenses: []*license.Metadata{
+				{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
+				{Types: []string{"MIT"}, FilePath: "bar/LICENSE"},
+			},
+		},
+	}
+
 	testCases := []struct {
 		modulePath  string
 		version     string
@@ -249,29 +272,15 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			modulePath: "github.com/my/module",
 			version:    "v1.0.0",
 			pkg:        "github.com/my/module/bar",
-			want: &internal.VersionedPackage{
-				VersionInfo: internal.VersionInfo{
-					ModulePath:     "github.com/my/module",
-					Version:        "v1.0.0",
-					CommitTime:     testProxyCommitTime,
-					ReadmeFilePath: "README.md",
-					ReadmeContents: []byte("README FILE FOR TESTING."),
-					RepositoryURL:  "https://github.com/my/module",
-					VersionType:    "release",
-				},
-				Package: internal.Package{
-					Path:              "github.com/my/module/bar",
-					Name:              "bar",
-					Synopsis:          "package bar",
-					DocumentationHTML: []byte("Bar returns the string &#34;bar&#34;."),
-					V1Path:            "github.com/my/module/bar",
-					Licenses: []*license.Metadata{
-						{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
-						{Types: []string{"MIT"}, FilePath: "bar/LICENSE"},
-					},
-				},
-			},
-		}, {
+			want:       myModuleV100,
+		},
+		{
+			modulePath: "github.com/my/module",
+			version:    internal.LatestVersion,
+			pkg:        "github.com/my/module/bar",
+			want:       myModuleV100,
+		},
+		{
 			modulePath: "nonredistributable.mod/module",
 			version:    "v1.0.0",
 			pkg:        "nonredistributable.mod/module/bar/baz",

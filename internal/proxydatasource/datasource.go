@@ -101,20 +101,6 @@ func (ds *DataSource) GetImports(ctx context.Context, pkgPath, version string) (
 	return vp.Imports, nil
 }
 
-// GetLatestPackage finds the latest version of the given package, by querying
-// the proxy to find the longest module path containing the package path.
-func (ds *DataSource) GetLatestPackage(ctx context.Context, pkgPath string) (_ *internal.VersionedPackage, err error) {
-	defer derrors.Wrap(&err, "GetLatestPackage(%q)", pkgPath)
-	return ds.GetPackage(ctx, pkgPath, proxy.Latest)
-}
-
-// GetLatestVersionInfo queries the proxy for the latest version of the given
-// module, and fetches its VersionInfo.
-func (ds *DataSource) GetLatestVersionInfo(ctx context.Context, modulePath string) (_ *internal.VersionInfo, err error) {
-	defer derrors.Wrap(&err, "GetLatestVersionInfo(%q)", modulePath)
-	return ds.GetVersionInfo(ctx, modulePath, proxy.Latest)
-}
-
 // GetModuleLicenses returns root-level licenses detected within the module zip
 // for modulePath and version.
 func (ds *DataSource) GetModuleLicenses(ctx context.Context, modulePath, version string) (_ []*license.License, err error) {
@@ -311,7 +297,7 @@ func (ds *DataSource) listPackageVersions(ctx context.Context, pkgPath string, p
 		// Since mods is kept sorted, the first element is the longest module.
 		modulePath = mods[0]
 	} else {
-		modulePath, _, err = ds.findModule(ctx, pkgPath, proxy.Latest)
+		modulePath, _, err = ds.findModule(ctx, pkgPath, internal.LatestVersion)
 		if err != nil {
 			return nil, err
 		}

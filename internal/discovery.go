@@ -11,6 +11,10 @@ import (
 	"golang.org/x/discovery/internal/thirdparty/module"
 )
 
+// LatestVersion signifies the latest available version in requests to the
+// proxy client.
+const LatestVersion = "latest"
+
 // VersionInfo holds metadata associated with a version.
 type VersionInfo struct {
 	ModulePath     string

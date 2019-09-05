@@ -94,10 +94,10 @@ func TestDataSource_GetImports(t *testing.T) {
 	}
 }
 
-func TestDataSource_GetLatestPackage(t *testing.T) {
+func TestDataSource_GetPackage_Latest(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
-	got, err := ds.GetLatestPackage(ctx, "foo.com/bar/baz")
+	got, err := ds.GetPackage(ctx, "foo.com/bar/baz", internal.LatestVersion)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -106,10 +106,10 @@ func TestDataSource_GetLatestPackage(t *testing.T) {
 	}
 }
 
-func TestDataSource_GetLatestVersionInfo(t *testing.T) {
+func TestDataSource_GetVersionInfo_Latest(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
-	got, err := ds.GetLatestVersionInfo(ctx, "foo.com/bar")
+	got, err := ds.GetVersionInfo(ctx, "foo.com/bar", internal.LatestVersion)
 	if err != nil {
 		t.Fatal(err)
 	}

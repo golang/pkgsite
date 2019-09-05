@@ -19,7 +19,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
-func TestPostgres_GetLatestPackage(t *testing.T) {
+func TestPostgres_GetPackage_Latest(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
@@ -50,7 +50,7 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 				p := sample.VersionedPackage()
 				p.Version = "v1.0.0"
 				p.VersionType = internal.VersionTypeRelease
-				// TODO(b/130367504): GetLatest does not return imports.
+				// TODO(b/130367504): GetPackage does not return imports.
 				p.Imports = nil
 				return p
 			}(),
@@ -70,19 +70,19 @@ func TestPostgres_GetLatestPackage(t *testing.T) {
 				}
 			}
 
-			gotPkg, err := testDB.GetLatestPackage(ctx, tc.path)
+			gotPkg, err := testDB.GetPackage(ctx, tc.path, internal.LatestVersion)
 			if (err != nil) != tc.wantReadErr {
 				t.Fatal(err)
 			}
 
 			if diff := cmp.Diff(tc.wantPkg, gotPkg, cmpopts.EquateEmpty()); diff != "" {
-				t.Errorf("testDB.GetLatestPackage(ctx, %q) mismatch (-want +got):\n%s", tc.path, diff)
+				t.Errorf("testDB.GetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", tc.path, internal.LatestVersion, diff)
 			}
 		})
 	}
 }
 
-func TestPostgres_GetLatestVersionInfo(t *testing.T) {
+func TestPostgres_GetVersionInfo_Latest(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
@@ -137,7 +137,7 @@ func TestPostgres_GetLatestVersionInfo(t *testing.T) {
 				}
 			}
 
-			gotVI, err := testDB.GetLatestVersionInfo(ctx, tc.path)
+			gotVI, err := testDB.GetVersionInfo(ctx, tc.path, internal.LatestVersion)
 			if err != nil {
 				if tc.wantErr == nil {
 					t.Fatalf("got unexpected error %v", err)

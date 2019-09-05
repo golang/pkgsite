@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/xerrors"
 )
@@ -29,13 +30,13 @@ func TestGetLatestInfo(t *testing.T) {
 	client, teardownProxy := SetupTestProxy(t, testVersions)
 	defer teardownProxy()
 
-	info, err := client.GetInfo(ctx, modulePath, Latest)
+	info, err := client.GetInfo(ctx, modulePath, internal.LatestVersion)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if got, want := info.Version, "v1.2.0"; got != want {
-		t.Errorf("GetLatestInfo(ctx, %q): Version = %q, want %q", modulePath, got, want)
+		t.Errorf("GetInfo(ctx, %q, %q): Version = %q, want %q", modulePath, internal.LatestVersion, got, want)
 	}
 }
 

@@ -13,7 +13,6 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
-	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/sample"
 )
 
@@ -69,5 +68,5 @@ func TestFetchPackagesInDirectory(t *testing.T) {
 	pagev111 := mustInsertVersionAndGetDirectoryPage("v1.1.0")
 
 	checkFetchDirectory("v1.0.0", pagev110)
-	checkFetchDirectory(proxy.Latest, pagev111)
+	checkFetchDirectory(internal.LatestVersion, pagev111)
 }

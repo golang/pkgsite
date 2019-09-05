@@ -13,7 +13,6 @@ import (
 	"github.com/lib/pq"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/xerrors"
 )
 
@@ -108,7 +107,7 @@ func constructDirectoryQueryAndArgs(dirPath, version string) (string, []interfac
 		FROM
 			packages p`
 
-	if version != proxy.Latest {
+	if version != internal.LatestVersion {
 		return baseQuery + `
 			INNER JOIN (
 				SELECT *
