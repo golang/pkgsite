@@ -7,28 +7,31 @@
 {{define "main_content"}}
   <div class="Container">
     <header class="Directory-header">
-      <h1 class="Header-title">Directory {{.Directory}}</h1>
+      <h1 class="Header-title">Directory {{.Directory.Path}}</h1>
       <p class="InfoLabel">
-        <strong class="InfoLabel-title">Module: </strong>
-	<a href="/mod/{{.ModulePath}}@{{.Version}}">{{.ModulePath}}</a>
-        <span class="InfoLabel-divider">|</span>
-        <strong class="InfoLabel-title">Version:</strong> {{.Version}}
+	{{if .Version}}
+          <strong class="InfoLabel-title">Version:</strong> {{.Version}}
+	{{end}}
       </p>
     </header>
-    <div class="Content">
-      <h2>Packages in this directory</h2>
-      <div class="Directory-list">
-        {{range .Packages}}
-          <p>
-            <div>
-              <a href="/pkg/{{.Path}}@{{.Version}}">
-                <b>{{.Suffix}}</b>
-              </a>
-            </div>
-            <div>{{.Synopsis}}</div>
-          </p>
-        {{end}}
+    {{if .Packages}}
+      <div class="Content">
+        <h2>Packages in this directory</h2>
+        <div class="Directory-list">
+          {{range .Packages}}
+            <p>
+              <div>
+                <a href="/pkg/{{.Path}}@{{.Version}}">
+                  <b>{{.Suffix}}</b>
+                </a>
+              </div>
+              <div>{{.Synopsis}}</div>
+            </p>
+          {{end}}
+        </div>
       </div>
-    </div>
+    {{else}}
+      {{template "empty_content" "There are no packages in this directory!"}}
+    {{end}}
   </div>
 {{end}}

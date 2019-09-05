@@ -59,13 +59,13 @@ func TestFetchImportsDetails(t *testing.T) {
 
 			got, err := fetchImportsDetails(ctx, testDB, firstVersionedPackage(version))
 			if err != nil {
-				t.Fatalf("fetchModuleDetails(ctx, db, %q, %q) = %v err = %v, want %v",
+				t.Fatalf("fetchImportsDetails(ctx, db, %q, %q) = %v err = %v, want %v",
 					version.Packages[0].Path, version.Version, got, err, tc.wantDetails)
 			}
 
 			tc.wantDetails.ModulePath = version.VersionInfo.ModulePath
 			if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
-				t.Errorf("fetchModuleDetails(ctx, %q, %q) mismatch (-want +got):\n%s", version.Packages[0].Path, version.Version, diff)
+				t.Errorf("fetchImportsDetails(ctx, %q, %q) mismatch (-want +got):\n%s", version.Packages[0].Path, version.Version, diff)
 			}
 		})
 	}

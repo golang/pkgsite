@@ -110,7 +110,12 @@ func constructDirectoryQueryAndArgs(dirPath, version string) (string, []interfac
 				FROM versions
 				WHERE
 					version = $2
-					AND $1 || '/' LIKE module_path || '/%'
+					AND (
+						CASE WHEN module_path != 'std'
+						THEN $1 || '/' LIKE module_path || '/' || '%'
+						ELSE TRUE
+						END
+					)
 			) v
 			ON
 				p.module_path = v.module_path
@@ -134,12 +139,17 @@ func constructDirectoryQueryAndArgs(dirPath, version string) (string, []interfac
 			FROM
 				versions
 			WHERE
-				$1 || '/' LIKE module_path || '/' || '%'
+				CASE WHEN module_path != 'std'
+					THEN $1 || '/' LIKE module_path || '/' || '%'
+					ELSE TRUE
+					END
 			ORDER BY
+				-- Must go first because we are selecting
+				-- DISTINCT ON (module_path)
+				module_path DESC,
 				-- Order the versions by release then prerelease.
 				-- The default version should be the first release
 				-- version available, if one exists.
-				module_path,
 				CASE WHEN prerelease = '~' THEN 0 ELSE 1 END,
 				major DESC,
 				minor DESC,

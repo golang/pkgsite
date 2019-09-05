@@ -304,7 +304,7 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 		{"tos.tmpl"},
 		{"directory.tmpl"},
 		{"readme.tmpl", "details.tmpl"},
-		{"module.tmpl", "details.tmpl"},
+		{"subdirectories.tmpl", "details.tmpl"},
 		{"pkg_doc.tmpl", "details.tmpl"},
 		{"pkg_importedby.tmpl", "details.tmpl"},
 		{"pkg_imports.tmpl", "details.tmpl"},

@@ -14,7 +14,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/sample"
 )
 
@@ -97,40 +96,6 @@ func firstVersionedPackage(v *internal.Version) *internal.VersionedPackage {
 	return &internal.VersionedPackage{
 		Package:     *v.Packages[0],
 		VersionInfo: v.VersionInfo,
-	}
-}
-
-func TestFetchModuleDetails(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
-	defer postgres.ResetTestDB(testDB, t)
-
-	tc := struct {
-		name        string
-		version     *internal.Version
-		wantDetails *ModuleDetails
-	}{
-		name:    "want expected module details",
-		version: sample.Version(),
-		wantDetails: &ModuleDetails{
-			ModulePath: sample.ModulePath,
-			Version:    sample.VersionString,
-			Packages:   []*Package{samplePackage()},
-		},
-	}
-
-	if err := testDB.InsertVersion(ctx, tc.version); err != nil {
-		t.Fatal(err)
-	}
-
-	got, err := fetchModuleDetails(ctx, testDB, &tc.version.VersionInfo)
-	if err != nil {
-		t.Fatalf("fetchModuleDetails(ctx, db, %q, %q) = %v err = %v, want %v",
-			tc.version.Packages[0].Path, tc.version.Version, got, err, tc.wantDetails)
-	}
-
-	if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
-		t.Errorf("fetchModuleDetails(ctx, %q, %q) mismatch (-want +got):\n%s", tc.version.Packages[0].Path, tc.version.Version, diff)
 	}
 }
 

@@ -1,0 +1,31 @@
+<!--
+  Copyright 2019 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "details_content"}}
+  {{if .Packages}}
+    <h2>
+      {{if eq .Path "std" }}
+        Packages in the Go Standard Library
+      {{else}}
+        Packages in “{{.Path}}”
+      {{end}}
+    </h2>
+    <ul class="SubDirectoriesContent-list">
+      {{range .Packages}}
+        <li>
+          <div>
+            <a href="/pkg/{{.Path}}@{{.Version}}">
+              <b>{{.Suffix}}</b>
+            </a>
+          </div>
+          <div>{{.Synopsis}}</div>
+        </li>
+      {{end}}
+    </ul>
+  {{else}}
+    {{template "empty_content" "There are no packages in this directory!"}}
+  {{end}}
+{{end}}

@@ -17,6 +17,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
 	"golang.org/x/xerrors"
@@ -65,7 +66,7 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 		if pkg.IsRedistributable() {
 			tab = "doc"
 		} else {
-			tab = "module"
+			tab = "subdirectories"
 		}
 		settings = packageTabLookup[tab]
 	}
@@ -158,8 +159,8 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds
 		return fetchDocumentationDetails(ctx, ds, pkg)
 	case "versions":
 		return fetchPackageVersionsDetails(ctx, ds, pkg)
-	case "module":
-		return fetchModuleDetails(ctx, ds, &pkg.VersionInfo)
+	case "subdirectories":
+		return fetchPackageDirectoryDetails(ctx, ds, pkg.Path, &pkg.VersionInfo)
 	case "imports":
 		return fetchImportsDetails(ctx, ds, pkg)
 	case "importedby":
@@ -170,6 +171,14 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds
 		return fetchReadMeDetails(ctx, ds, &pkg.VersionInfo)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
+}
+
+// moduleTitle constructs the details page title for pkg.
+func moduleTitle(modulePath string) string {
+	if stdlib.ModulePath == modulePath {
+		return "Standard library"
+	}
+	return "Module " + modulePath
 }
 
 // handleModuleDetails applies database data to the appropriate template.
@@ -214,7 +223,7 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	page := &DetailsPage{
-		basePage:       newBasePage(r, moduleVersion.ModulePath),
+		basePage:       newBasePage(r, moduleTitle(moduleVersion.ModulePath)),
 		Settings:       settings,
 		Header:         modHeader,
 		Details:        details,
@@ -230,7 +239,7 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds DataSource, vi *internal.VersionInfo, licenses []*license.License) (interface{}, error) {
 	switch tab {
 	case "packages":
-		return fetchModuleDetails(ctx, ds, vi)
+		return fetchModuleDirectoryDetails(ctx, ds, vi)
 	case "licenses":
 		return &LicensesDetails{Licenses: transformLicenses(licenses)}, nil
 	case "versions":
@@ -302,10 +311,10 @@ var (
 			TemplateName: "readme.tmpl",
 		},
 		{
-			Name:              "module",
+			Name:              "subdirectories",
 			AlwaysShowDetails: true,
-			DisplayName:       "Module",
-			TemplateName:      "module.tmpl",
+			DisplayName:       "Subdirectories",
+			TemplateName:      "subdirectories.tmpl",
 		},
 		{
 			Name:              "versions",
@@ -343,7 +352,7 @@ var (
 			Name:              "packages",
 			AlwaysShowDetails: true,
 			DisplayName:       "Packages",
-			TemplateName:      "module.tmpl",
+			TemplateName:      "subdirectories.tmpl",
 		},
 		{
 			Name:              "versions",
@@ -503,40 +512,5 @@ func fetchDocumentationDetails(ctx context.Context, ds DataSource, pkg *internal
 	return &DocumentationDetails{
 		ModulePath:    pkg.VersionInfo.ModulePath,
 		Documentation: template.HTML(pkg.DocumentationHTML),
-	}, nil
-}
-
-// ModuleDetails contains all of the data that the module template
-// needs to populate.
-type ModuleDetails struct {
-	ModulePath string
-	Version    string
-	Packages   []*Package
-}
-
-// fetchModuleDetails fetches data for the module version specified by pkgPath and pkgversion
-// from the database and returns a ModuleDetails.
-func fetchModuleDetails(ctx context.Context, ds DataSource, vi *internal.VersionInfo) (*ModuleDetails, error) {
-	dbPackages, err := ds.GetPackagesInVersion(ctx, vi.ModulePath, vi.Version)
-	if err != nil {
-		return nil, err
-	}
-
-	var packages []*Package
-	for _, p := range dbPackages {
-		newPkg, err := createPackage(p, vi)
-		if err != nil {
-			return nil, err
-		}
-		if p.IsRedistributable() {
-			newPkg.Synopsis = p.Synopsis
-		}
-		packages = append(packages, newPkg)
-	}
-
-	return &ModuleDetails{
-		ModulePath: vi.ModulePath,
-		Version:    vi.Version,
-		Packages:   packages,
 	}, nil
 }

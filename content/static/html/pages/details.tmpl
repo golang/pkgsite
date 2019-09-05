@@ -19,7 +19,13 @@
     <p class="InfoLabel">
       {{if eq $namespace "pkg"}}
         <strong class="InfoLabel-title">Module: </strong>
-        <a href="/mod/{{$header.Module.Path}}@{{$header.Version}}">{{$header.Module.Path}}</a>
+        <a href="/mod/{{$header.Module.Path}}@{{$header.Version}}">
+          {{if eq $header.Module.Path "std"}}
+            Standard library
+          {{else}}
+            {{$header.Module.Path}}
+          {{end}}
+        </a>
         <span class="InfoLabel-divider">|</span>
       {{end}}
       <strong class="InfoLabel-title">Version:</strong> {{$header.Version}}
@@ -40,11 +46,11 @@
     </p>
   </header>
 
-  <nav class="ModulesNav js-modulesNav">
-    <ul class="ModulesNav-list" role="tablist">
+  <nav class="DetailsNav js-modulesNav">
+    <ul class="DetailsNav-list" role="tablist">
       {{range .Tabs}}
-        <li class="ModulesNav-tab{{if eq .Name $.Settings.Name}} selected{{end}}" role="presentation">
-          <a class="ModulesNav-link" href="/{{$namespace}}/{{$header.Path}}@{{$header.Version}}?tab={{.Name}}" role="tab" aria-selected="{{if eq .Name $.Settings.Name}}true{{else}}false{{end}}">
+        <li class="DetailsNav-tab{{if eq .Name $.Settings.Name}} selected{{end}}" role="presentation">
+          <a class="DetailsNav-link" href="/{{$namespace}}/{{$header.Path}}@{{$header.Version}}?tab={{.Name}}" role="tab" aria-selected="{{if eq .Name $.Settings.Name}}true{{else}}false{{end}}">
             {{.DisplayName}}
           </a>
         </li>
