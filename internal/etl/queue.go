@@ -48,7 +48,7 @@ func (q *GCPQueue) ScheduleFetch(ctx context.Context, modulePath, version string
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 	queueName := fmt.Sprintf("projects/%s/locations/%s/queues/%s", config.ProjectID(), config.LocationID(), q.queueID)
-	u := fmt.Sprintf("/queue-fetch/%s/@v/%s", modulePath, version)
+	u := fmt.Sprintf("/fetch/%s/@v/%s", modulePath, version)
 	req := &taskspb.CreateTaskRequest{
 		Parent: queueName,
 		Task: &taskspb.Task{

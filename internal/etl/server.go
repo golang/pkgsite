@@ -70,14 +70,13 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// This endpoint is invoked by a Cloud Scheduler job:
 	// 	handle("/update-imported-by-count", http.HandlerFunc(s.handleUpdateImportedByCount))
 
-	// task-queue: queue-fetch fetches a module version from the Module Mirror,
-	// and processes the contents, and inserts it into the database. If a fetch
-	// request fails for any reason other than an
-	// http.StatusInternalServerError, it will return an http.StatusOK so that
-	// the task queue does not retry fetching module versions that have a
-	// terminal error.
+	// task-queue: fetch fetches a module version from the Module Mirror, and
+	// processes the contents, and inserts it into the database. If a fetch
+	// request fails for any reason other than an http.StatusInternalServerError,
+	// it will return an http.StatusOK so that the task queue does not retry
+	// fetching module versions that have a terminal error.
 	// This endpoint is invoked by a Cloud Tasks queue:
-	// 	handle("/queue-fetch/", http.StripPrefix("/queue-fetch", http.HandlerFunc(s.handleQueueFetch)))
+	// 	handle("/fetch/", http.StripPrefix("/fetch", http.HandlerFunc(s.handleFetch)))
 
 	// manual: requeue queries the module_version_states table for the next
 	// batch of module versions to process, and enqueues them for processing.
@@ -101,12 +100,6 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// search_documents for all paths in the packages table that do not
 	// exist in search_documents.
 	handle("/populate-search-documents", http.HandlerFunc(s.handlePopulateSearchDocuments))
-
-	// manual: fetch fetches the specified module version from the module
-	// proxy. It is used primarily for local development, but can also used
-	// to fetch a specific module version in dev and prod. Fetching with
-	// this endpoint skips the task queue.
-	handle("/fetch/", http.StripPrefix("/fetch", http.HandlerFunc(s.handleFetch)))
 
 	// returns the ETL homepage.
 	handle("/", http.HandlerFunc(s.handleStatusPage))
@@ -142,8 +135,9 @@ func (s *Server) handlePopulateSearchDocuments(w http.ResponseWriter, r *http.Re
 	}
 }
 
-// handleFetch executes a fetch requests and returns the outcome of that
-// request.
+// handleFetch executes a fetch request and returns a http.StatusOK if the
+// status is not http.StatusInternalServerError, so that the task queue does
+// not retry fetching module versions that have a terminal error.
 func (s *Server) handleFetch(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -155,22 +149,6 @@ func (s *Server) handleFetch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msg, code := s.doFetch(r)
-	log.Println(msg)
-
-	if code != http.StatusOK {
-		http.Error(w, http.StatusText(code), code)
-		return
-	}
-
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	fmt.Fprint(w, msg)
-}
-
-// handleQueueFetch executes a fetch request and returns a http.StatusOK if the
-// status is not http.StatusInternalServerError, so that the task queue does
-// not retry fetching module versions that have a terminal error.
-func (s *Server) handleQueueFetch(w http.ResponseWriter, r *http.Request) {
 	msg, code := s.doFetch(r)
 	log.Println(msg)
 
