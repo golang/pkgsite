@@ -94,7 +94,7 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 	s.servePage(w, settings.TemplateName, page)
 }
 
-// processPackageOrModulePath handles logic common to the intial phase of handling both packages and
+// processPackageOrModulePath handles logic common to the initial phase of handling both packages and
 // modules: fetching information about the package or module.
 // It parses urlPath into an import path and version, then calls the get function with those values.
 // If get fails because the version cannot be found, processPackageOrModulePath calls get again

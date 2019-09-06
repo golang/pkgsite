@@ -3,28 +3,7 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-if [ -t 1 ] && which tput >/dev/null 2>&1; then
-  RED="$(tput setaf 1)"
-  GREEN="$(tput setaf 2)"
-  YELLOW="$(tput setaf 3)"
-  NORMAL="$(tput sgr0)"
-else
-  RED=""
-  GREEN=""
-  YELLOW=""
-  NORMAL=""
-fi
-
-EXIT_CODE=0
-
-info() { echo -e "${GREEN}$@${NORMAL}" 1>&2; }
-warn() { echo -e "${YELLOW}$@${NORMAL}" 1>&2; }
-err() { echo -e "${RED}$@${NORMAL}" 1>&2; EXIT_CODE=1; }
-
-if [[ ! -f ./all.bash ]]; then
-  err "all.bash must be run from the repo root directory"
-  exit 1
-fi
+source devtools/lib.sh || { echo "Are you at repo root?"; exit 1; }
 
 warnout() {
   while read line; do
@@ -76,19 +55,6 @@ ensure_go_binary() {
     # our PWD.
     (set -x; cd && env GO111MODULE=on go get -u $1)
   fi
-}
-
-# runcmd prints an info log describing the command that is about to be run, and
-# then runs it. It exits the script if the command fails.
-runcmd() {
-  msg="$@"
-  # Truncate command logging for narrow terminals. Here a length of 71
-  # characters is checked to allow for 9 characters of 'Running: '.
-  if [[ ${#msg} -gt 71 ]]; then
-    msg="${msg::68}..."
-  fi
-  info "Running: $msg"
-  $@ || err "command failed"
 }
 
 # check_headers checks that all source files that have been staged in this
