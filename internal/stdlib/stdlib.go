@@ -11,7 +11,6 @@ package stdlib
 import (
 	"archive/zip"
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -98,12 +97,7 @@ var TestCommitTime = time.Date(2019, 9, 4, 1, 2, 3, 0, time.UTC)
 
 // getGoRepo returns a repo object for the Go repo at version.
 func getGoRepo(version string) (_ *git.Repository, err error) {
-	var tag string
-	if version == "" {
-		tag, err = latestGoReleaseTag()
-	} else {
-		tag, err = TagForVersion(version)
-	}
+	tag, err := TagForVersion(version)
 	if err != nil {
 		return nil, err
 	}
@@ -118,9 +112,6 @@ func getGoRepo(version string) (_ *git.Repository, err error) {
 
 // getTestGoRepo gets a Go repo for testing.
 func getTestGoRepo(version string) (_ *git.Repository, err error) {
-	if version == "" {
-		return nil, errors.New("empty version not supported in tests")
-	}
 	fs := osfs.New(filepath.Join(testhelper.TestDataPath("testdata"), version))
 	repo, err := git.Init(memory.NewStorage(), fs)
 	if err != nil {
@@ -145,55 +136,71 @@ func getTestGoRepo(version string) (_ *git.Repository, err error) {
 	return repo, nil
 }
 
-// latestGoReleaseTag returns the tag of the latest Go release.
-// Only tags of the forms "goN.N" and "goN.N.N", where N is a number, are
-// considered. Prerelease and other tags are ignored.
-func latestGoReleaseTag() (string, error) {
-	re := git.NewRemote(memory.NewStorage(), &config.RemoteConfig{
-		URLs: []string{goRepoURL},
-	})
-	refs, err := re.List(&git.ListOptions{})
-	if err != nil {
-		return "", err
+// Versions returns all the versions of Go that are relevant to the discovery
+// site. These are all recent release versions (tags of the forms "goN.N" and
+// "goN.N.N", where N is a number) and beta versions (tags of the forms
+// "goN.NbetaN" and "goN.N.NbetaN").
+func Versions() (_ []string, err error) {
+	defer derrors.Wrap(&err, "Versions()")
+
+	var refNames []plumbing.ReferenceName
+	if UseTestData {
+		refNames = testRefs
+	} else {
+		re := git.NewRemote(memory.NewStorage(), &config.RemoteConfig{
+			URLs: []string{goRepoURL},
+		})
+		refs, err := re.List(&git.ListOptions{})
+		if err != nil {
+			return nil, err
+		}
+		for _, r := range refs {
+			refNames = append(refNames, r.Name())
+		}
 	}
-	latestSemver := "v0.0.0"
-	latestTag := ""
-	for _, ref := range refs {
-		name := ref.Name()
+
+	var versions []string
+	for _, name := range refNames {
 		if !name.IsTag() {
 			continue
 		}
-		tag := name.Short()
-		v := releaseVersionForTag(tag)
-		if v == "" {
-			continue
-		}
-		if semver.Compare(latestSemver, v) < 0 {
-			latestSemver = v
-			latestTag = tag
+		v := versionForTag(name.Short())
+		if v != "" {
+			versions = append(versions, v)
 		}
 	}
-	return latestTag, nil
+	return versions, nil
 }
 
 var (
-	minorRegexp = regexp.MustCompile(`^go(\d+\.\d+)$`)
-	patchRegexp = regexp.MustCompile(`^go(\d+\.\d+\.\d+)$`)
+	minorRegexp = regexp.MustCompile(`^go(\d+\.\d+)(beta(\d+))?$`)
+	patchRegexp = regexp.MustCompile(`^go(\d+\.\d+\.\d+)(beta(\d+))?$`)
 )
 
-// releaseVersionForTag returns the semantic version for the Go tag, or "" if
-// tag doesn't correspond to a Go release tag.
+// versionForTag returns the semantic version for the Go tag, or "" if
+// tag doesn't correspond to a Go release or beta tag.
 // Examples:
 //   "go1.2" => "v1.2.0"
-//   "go1.9beta2" => ""
-func releaseVersionForTag(tag string) string {
+//   "go1.13beta1" => "v1.13.0-beta.1"
+func versionForTag(tag string) string {
+	var version, prenum string
 	if m := minorRegexp.FindStringSubmatch(tag); m != nil {
-		return "v" + m[1] + ".0"
+		version = m[1] + ".0"
+		if len(m) > 2 {
+			prenum = m[3]
+		}
+	} else if m := patchRegexp.FindStringSubmatch(tag); m != nil {
+		version = m[1]
+		if len(m) > 2 {
+			prenum = m[3]
+		}
+	} else {
+		return ""
 	}
-	if m := patchRegexp.FindStringSubmatch(tag); m != nil {
-		return "v" + m[1]
+	if prenum == "" {
+		return "v" + version
 	}
-	return ""
+	return "v" + version + "-beta." + prenum
 }
 
 // Zip creates a module zip representing the entire Go standard library at the
@@ -202,8 +209,7 @@ func releaseVersionForTag(tag string) string {
 // prefixed by ModuleName + "@" + version.
 //
 // Zip reads the standard library at the Go repository tag corresponding to to
-// the given semantic version. If version is empty, it uses the latest released
-// version.
+// the given semantic version.
 //
 // Zip ignores go.mod files in the standard library, treating it as if it were a
 // single module named "std" at the given version.
@@ -321,4 +327,26 @@ func subTree(r *git.Repository, t *object.Tree, name string) (*object.Tree, erro
 		}
 	}
 	return nil, os.ErrNotExist
+}
+
+// References used for Versions during testing.
+var testRefs = []plumbing.ReferenceName{
+	"refs/changes/56/93156/13",
+	"refs/tags/weekly.2011-04-13",
+	"refs/tags/go1.8rc2",
+	"refs/tags/go1.8",
+	"refs/tags/release.r59",
+	"refs/tags/go1.9rc1",
+	"refs/tags/go1.12.1",
+	"refs/tags/go1.12.9",
+	"refs/tags/go1.6beta1",
+	"refs/tags/go1.6",
+	"refs/tags/go1.13beta1",
+	"refs/tags/go1.12",
+	"refs/tags/go1.2.1",
+	"refs/tags/go1.4.3",
+	"refs/tags/go1.6.3",
+	"refs/tags/go1.4.2",
+	"refs/tags/go1.11",
+	"refs/tags/go1.13",
 }

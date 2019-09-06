@@ -117,17 +117,43 @@ func TestZip(t *testing.T) {
 	}
 }
 
-func TestReleaseVersionForTag(t *testing.T) {
+func TestVersions(t *testing.T) {
+	UseTestData = true
+	defer func() { UseTestData = false }()
+
+	got, err := Versions()
+	if err != nil {
+		t.Fatal(err)
+	}
+	gotmap := map[string]bool{}
+	for _, g := range got {
+		gotmap[g] = true
+	}
+	wants := []string{
+		"v1.4.2",
+		"v1.11.0",
+		"v1.12.9",
+		"v1.13.0",
+		"v1.13.0-beta.1",
+	}
+	for _, w := range wants {
+		if !gotmap[w] {
+			t.Errorf("missing %s", w)
+		}
+	}
+}
+
+func TestVersionForTag(t *testing.T) {
 	for _, tc := range []struct {
 		in, want string
 	}{
 		{"", ""},
-		{"go1.9beta2", ""},
+		{"go1.9beta2", "v1.9.0-beta.2"},
 		{"go1.12", "v1.12.0"},
 		{"go1.9.7", "v1.9.7"},
 		{"go2.0", "v2.0.0"},
 	} {
-		got := releaseVersionForTag(tc.in)
+		got := versionForTag(tc.in)
 		if got != tc.want {
 			t.Errorf("releaseVersionForTag(%q) = %q, want %q", tc.in, got, tc.want)
 		}

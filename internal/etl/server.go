@@ -6,6 +6,7 @@ package etl
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"html/template"
 	"io"
@@ -20,6 +21,8 @@ import (
 	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
+	"golang.org/x/discovery/internal/stdlib"
+	"golang.org/x/xerrors"
 )
 
 // Server can be installed to serve the go discovery etl.
@@ -367,41 +370,28 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (string, e
 }
 
 func (s *Server) handlePopulateStdLib(w http.ResponseWriter, r *http.Request) {
-	// TODO(b/140413605): compute these versions from the Go repo, in internal/stdlib.
-
-	// stdlibVersions is a map of each minor version of Go and the latest
-	// patch version available for that minor version, according to
-	// https://golang.org/doc/devel/release.html. This map will need to be
-	// updated each time a new Go version is released.
-	stdlibVersions := map[string]int{
-		"v1.12": 7,
-		"v1.11": 11,
-	}
-	// stdlibBetaVersions is a slice of beta versions available for Go.
-	// This slice will need to be updated each time a new Go beta version
-	// is released.
-	stdlibBetaVersions := []string{"v1.13.0-beta.1"}
-
-	var versionsToQueue [][]string
-	for majMin, maxPatch := range stdlibVersions {
-		for patch := 0; patch <= maxPatch; patch++ {
-			v := fmt.Sprintf("%s.%d", majMin, patch)
-			versionsToQueue = append(versionsToQueue, []string{"std", v})
-		}
-	}
-	for _, betaVersion := range stdlibBetaVersions {
-		versionsToQueue = append(versionsToQueue,
-			[]string{"std", betaVersion})
-	}
-
+	msg, err := s.doPopulateStdLib(r.Context())
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	for _, moduleVersion := range versionsToQueue {
-		if err := s.queue.ScheduleFetch(r.Context(), moduleVersion[0], moduleVersion[1]); err != nil {
-			log.Printf("Error scheduling fetch: %v", err)
-			http.Error(w, "error scheduling fetch", http.StatusInternalServerError)
-			return
+	if err != nil {
+		log.Printf("handlePopulateStdLib: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	} else {
+		log.Printf("handlePopulateStdLib: %s", msg)
+		_, _ = io.WriteString(w, msg)
+	}
+}
+
+func (s *Server) doPopulateStdLib(ctx context.Context) (string, error) {
+	versions, err := stdlib.Versions()
+	if err != nil {
+		return "", err
+	}
+	for _, v := range versions {
+		if err := s.queue.ScheduleFetch(ctx, stdlib.ModulePath, v); err != nil {
+			return "", xerrors.Errorf("Error scheduling fetch for %s: %w", v, err)
 		}
 	}
+	return fmt.Sprintf("Scheduled fetches for %s.\n", strings.Join(versions, ", ")), nil
 }
 
 func (s *Server) handleReprocess(w http.ResponseWriter, r *http.Request) {
