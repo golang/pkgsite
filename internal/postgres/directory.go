@@ -46,24 +46,20 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, version string) (_ *int
 	var packages []*internal.VersionedPackage
 	collect := func(rows *sql.Rows) error {
 		var (
-			pkg                                 internal.VersionedPackage
-			repositoryURL, vcsType, homepageURL sql.NullString
-			licenseTypes, licensePaths          []string
+			pkg                        internal.VersionedPackage
+			licenseTypes, licensePaths []string
 		)
 		if err := rows.Scan(&pkg.Path, &pkg.Version, &pkg.Name, &pkg.Synopsis, &pkg.V1Path,
 			&pkg.DocumentationHTML, pq.Array(&licenseTypes),
 			pq.Array(&licensePaths), &pkg.ModulePath, &pkg.ReadmeFilePath,
 			&pkg.ReadmeContents, &pkg.CommitTime, &pkg.VersionType,
-			&repositoryURL, &vcsType, &homepageURL); err != nil {
+			nullIsEmpty(&pkg.RepositoryURL), nullIsEmpty(&pkg.VCSType), nullIsEmpty(&pkg.HomepageURL)); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
 		lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
 		if err != nil {
 			return err
 		}
-		pkg.RepositoryURL = repositoryURL.String
-		pkg.HomepageURL = homepageURL.String
-		pkg.VCSType = vcsType.String
 		pkg.Licenses = lics
 		packages = append(packages, &pkg)
 		return nil

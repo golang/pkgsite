@@ -7,12 +7,10 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"reflect"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/lib/pq"
 	"golang.org/x/discovery/internal"
@@ -28,35 +26,25 @@ import (
 // determine if it was caused by an invalid path or version.
 func (db *DB) GetPackage(ctx context.Context, path string, version string) (_ *internal.VersionedPackage, err error) {
 	defer derrors.Wrap(&err, "DB.GetPackage(ctx, %q, %q)", path, version)
-	// TODO(b/140558033): fold the logic in getLatestPackage in here.
-	if version == internal.LatestVersion {
-		return db.getLatestPackage(ctx, path)
-	}
 
 	if path == "" || version == "" {
 		return nil, xerrors.Errorf("neither path nor version can be empty: %w", derrors.InvalidArgument)
 	}
-
-	var (
-		name, synopsis, modulePath, v1path, readmeFilePath, versionType string
-		repositoryURL, vcsType, homepageURL                             sql.NullString
-		commitTime                                                      time.Time
-		readmeContents, documentation                                   []byte
-		licenseTypes, licensePaths                                      []string
-	)
 	query := `
 		SELECT
-			v.commit_time,
-			p.license_types,
-			p.license_paths,
-			v.readme_file_path,
-			v.readme_contents,
-			v.module_path,
+			p.path,
 			p.name,
 			p.synopsis,
 			p.v1_path,
-			v.version_type,
+			p.license_types,
+			p.license_paths,
 			p.documentation,
+			v.version,
+			v.commit_time,
+			v.readme_file_path,
+			v.readme_contents,
+			v.module_path,
+			v.version_type,
 			v.repository_url,
 			v.vcs_type,
 			v.homepage_url
@@ -66,138 +54,52 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (_ *i
 			packages p
 		ON
 			p.module_path = v.module_path
-			AND v.version = p.version
-		WHERE
-			p.path = $1
-			AND p.version = $2
-		LIMIT 1;`
+			AND v.version = p.version`
+	args := []interface{}{path}
+	if version == internal.LatestVersion {
+		query += `
+			WHERE
+				p.path = $1
+			ORDER BY
+				-- Order the versions by release then prerelease.
+				-- The default version should be the first release
+				-- version available, if one exists.
+				CASE WHEN v.prerelease = '~' THEN 0 ELSE 1 END,
+				v.major DESC,
+				v.minor DESC,
+				v.patch DESC,
+				v.prerelease DESC
+			LIMIT 1;`
+	} else {
+		query += `
+			WHERE
+				p.path = $1
+				AND p.version = $2
+			LIMIT 1;`
+		args = append(args, version)
+	}
 
-	row := db.queryRow(ctx, query, path, version)
-	if err := row.Scan(&commitTime, pq.Array(&licenseTypes),
-		pq.Array(&licensePaths), &readmeFilePath, &readmeContents, &modulePath,
-		&name, &synopsis, &v1path, &versionType, &documentation, &repositoryURL, &vcsType, &homepageURL); err != nil {
+	var (
+		pkg                        internal.VersionedPackage
+		licenseTypes, licensePaths []string
+	)
+	row := db.queryRow(ctx, query, args...)
+	err = row.Scan(&pkg.Path, &pkg.Name, &pkg.Synopsis, &pkg.V1Path, pq.Array(&licenseTypes), pq.Array(&licensePaths),
+		&pkg.DocumentationHTML, &pkg.Version, &pkg.CommitTime, &pkg.ReadmeFilePath, &pkg.ReadmeContents, &pkg.ModulePath,
+		&pkg.VersionType, nullIsEmpty(&pkg.RepositoryURL), nullIsEmpty(&pkg.VCSType), nullIsEmpty(&pkg.HomepageURL))
+	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, xerrors.Errorf("package %s@%s: %w", path, version, derrors.NotFound)
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
-
 	lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
 	if err != nil {
 		return nil, err
 	}
+	pkg.Licenses = lics
 
-	return &internal.VersionedPackage{
-		Package: internal.Package{
-			Name:              name,
-			Path:              path,
-			Synopsis:          synopsis,
-			Licenses:          lics,
-			V1Path:            v1path,
-			DocumentationHTML: documentation,
-		},
-		VersionInfo: internal.VersionInfo{
-			ModulePath:     modulePath,
-			Version:        version,
-			CommitTime:     commitTime,
-			ReadmeFilePath: readmeFilePath,
-			ReadmeContents: readmeContents,
-			VersionType:    internal.VersionType(versionType),
-			VCSType:        vcsType.String,
-			RepositoryURL:  repositoryURL.String,
-			HomepageURL:    homepageURL.String,
-		},
-	}, nil
-}
-
-// getLatestPackage returns the package from the database with the latest version.
-// If multiple packages share the same path then the package that the database
-// chooses is returned.
-func (db *DB) getLatestPackage(ctx context.Context, path string) (_ *internal.VersionedPackage, err error) {
-	defer derrors.Wrap(&err, "DB.GetLatestPackage(ctx, %q)", path)
-
-	if path == "" {
-		return nil, fmt.Errorf("path cannot be empty")
-	}
-
-	var (
-		modulePath, name, synopsis, version, v1path, readmeFilePath, versionType string
-		repositoryURL, vcsType, homepageURL                                      sql.NullString
-		commitTime                                                               time.Time
-		licenseTypes, licensePaths                                               []string
-		readmeContents, documentation                                            []byte
-	)
-	query := `
-		SELECT
-			p.module_path,
-			p.license_types,
-			p.license_paths,
-			v.version,
-			v.commit_time,
-			p.name,
-			p.synopsis,
-			p.v1_path,
-			v.readme_file_path,
-			v.readme_contents,
-			p.documentation,
-			v.repository_url,
-			v.vcs_type,
-			v.homepage_url,
-			v.version_type
-		FROM
-			versions v
-		INNER JOIN
-			packages p
-		ON
-			p.module_path = v.module_path
-			AND v.version = p.version
-		WHERE
-			p.path = $1
-		ORDER BY
-			-- Order the versions by release then prerelease.
-			-- The default version should be the first release
-			-- version available, if one exists.
-			CASE WHEN v.prerelease = '~' THEN 0 ELSE 1 END,
-			v.major DESC,
-			v.minor DESC,
-			v.patch DESC,
-			v.prerelease DESC
-		LIMIT 1;`
-
-	row := db.queryRow(ctx, query, path)
-	if err := row.Scan(&modulePath, pq.Array(&licenseTypes), pq.Array(&licensePaths), &version, &commitTime, &name, &synopsis, &v1path, &readmeFilePath, &readmeContents, &documentation, &repositoryURL, &vcsType, &homepageURL, &versionType); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, derrors.NotFound
-		}
-		return nil, fmt.Errorf("row.Scan(): %v", err)
-	}
-
-	lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
-	if err != nil {
-		return nil, err
-	}
-
-	return &internal.VersionedPackage{
-		Package: internal.Package{
-			Name:              name,
-			Path:              path,
-			Synopsis:          synopsis,
-			Licenses:          lics,
-			V1Path:            v1path,
-			DocumentationHTML: documentation,
-		},
-		VersionInfo: internal.VersionInfo{
-			ModulePath:     modulePath,
-			Version:        version,
-			CommitTime:     commitTime,
-			ReadmeFilePath: readmeFilePath,
-			ReadmeContents: readmeContents,
-			VCSType:        vcsType.String,
-			RepositoryURL:  repositoryURL.String,
-			HomepageURL:    homepageURL.String,
-			VersionType:    internal.VersionType(versionType),
-		},
-	}, nil
+	return &pkg, nil
 }
 
 // GetPackagesInVersion returns packages contained in the module version
@@ -612,100 +514,49 @@ func compareLicenses(i, j *license.Metadata) bool {
 // (module_path, version).
 func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version string) (_ *internal.VersionInfo, err error) {
 	defer derrors.Wrap(&err, "GetVersionInfo(ctx, %q, %q)", modulePath, version)
-	// TODO(b/140558033): fold the logic of getLatestVersionInfo in here.
-	if version == internal.LatestVersion {
-		return db.getLatestVersionInfo(ctx, modulePath)
-	}
-
-	var (
-		repositoryURL, vcsType, homepageURL sql.NullString
-		readmeFilePath, versionType         string
-		commitTime                          time.Time
-		readmeContents                      []byte
-	)
 
 	query := `
 		SELECT
-			v.commit_time,
-			v.readme_file_path,
-			v.readme_contents,
-			v.version_type,
-			v.repository_url,
-			v.vcs_type,
-			v.homepage_url
+			module_path,
+			version,
+			commit_time,
+			readme_file_path,
+			readme_contents,
+			version_type,
+			repository_url,
+			vcs_type,
+			homepage_url
 		FROM
-			versions v
-		WHERE module_path = $1 and version = $2;`
-	row := db.queryRow(ctx, query, modulePath, version)
-	if err := row.Scan(&commitTime, &readmeFilePath, &readmeContents, &versionType, &repositoryURL, &vcsType, &homepageURL); err != nil {
+			versions`
+
+	args := []interface{}{modulePath}
+	if version == internal.LatestVersion {
+		query += `
+			WHERE module_path = $1
+			ORDER BY
+				-- Order the versions by release then prerelease.
+				-- The default version should be the first release
+				-- version available, if one exists.
+				CASE WHEN prerelease = '~' THEN 0 ELSE 1 END,
+				major DESC,
+				minor DESC,
+				patch DESC,
+				prerelease DESC
+			LIMIT 1;`
+	} else {
+		query += `
+			WHERE module_path = $1 AND version = $2;`
+		args = append(args, version)
+	}
+
+	var vi internal.VersionInfo
+	row := db.queryRow(ctx, query, args...)
+	if err := row.Scan(&vi.ModulePath, &vi.Version, &vi.CommitTime, &vi.ReadmeFilePath, &vi.ReadmeContents, &vi.VersionType,
+		nullIsEmpty(&vi.RepositoryURL), nullIsEmpty(&vi.VCSType), nullIsEmpty(&vi.HomepageURL)); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, xerrors.Errorf("module version %s@%s: %w", modulePath, version, derrors.NotFound)
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
-	return &internal.VersionInfo{
-		ModulePath:     modulePath,
-		Version:        version,
-		CommitTime:     commitTime,
-		ReadmeFilePath: readmeFilePath,
-		ReadmeContents: readmeContents,
-		VersionType:    internal.VersionType(versionType),
-		VCSType:        vcsType.String,
-		RepositoryURL:  repositoryURL.String,
-		HomepageURL:    homepageURL.String,
-	}, nil
-}
-
-// getLatestVersionInfo fetches a Version from the database with given
-// modulePath at the latest version.
-func (db *DB) getLatestVersionInfo(ctx context.Context, modulePath string) (_ *internal.VersionInfo, err error) {
-	defer derrors.Wrap(&err, "GetLatestVersionInfo(ctx, %q)", modulePath)
-
-	if modulePath == "" {
-		return nil, errors.New("modulePath cannot be empty")
-	}
-
-	query := `
-		SELECT
-			commit_time,
-			readme_file_path,
-			readme_contents,
-			version,
-			version_type,
-			repository_url,
-			vcs_type,
-			homepage_url,
-			prerelease
-		FROM
-			versions
-		WHERE module_path = $1
-		ORDER BY
-			-- Order the versions by release then prerelease.
-			-- The default version should be the first release
-			-- version available, if one exists.
-			CASE WHEN prerelease = '~' THEN 0 ELSE 1 END,
-			major DESC,
-			minor DESC,
-			patch DESC,
-			prerelease DESC
-		LIMIT 1;`
-	row := db.queryRow(ctx, query, modulePath)
-	var (
-		vi                                  = &internal.VersionInfo{ModulePath: modulePath}
-		repositoryURL, vcsType, homepageURL sql.NullString
-	)
-
-	var pr string
-	err = row.Scan(&vi.CommitTime, &vi.ReadmeFilePath, &vi.ReadmeContents, &vi.Version, &vi.VersionType,
-		&repositoryURL, &vcsType, &homepageURL, &pr)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, derrors.NotFound
-		}
-		return nil, err
-	}
-	vi.VCSType = vcsType.String
-	vi.RepositoryURL = repositoryURL.String
-	vi.HomepageURL = homepageURL.String
-	return vi, nil
+	return &vi, nil
 }

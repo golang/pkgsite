@@ -198,3 +198,24 @@ func (db *DB) runQuery(ctx context.Context, query string, f func(*sql.Rows) erro
 	}
 	return rows.Err()
 }
+
+// emptyStringScanner wraps the functionality of sql.NullString to just write
+// an empty string if the value is NULL.
+type emptyStringScanner struct {
+	ptr *string
+}
+
+func (e emptyStringScanner) Scan(value interface{}) error {
+	var ns sql.NullString
+	if err := ns.Scan(value); err != nil {
+		return err
+	}
+	*e.ptr = ns.String
+	return nil
+}
+
+// nullIsEmpty returns a sql.Scanner that writes the empty string to s if the
+// sql.Value is NULL.
+func nullIsEmpty(s *string) sql.Scanner {
+	return emptyStringScanner{s}
+}
