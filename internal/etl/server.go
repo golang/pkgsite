@@ -191,7 +191,10 @@ func (s *Server) doFetch(r *http.Request) (string, int) {
 }
 
 // parseModulePathAndVersion returns the module and version specified by p. p
-// is assumed to have the structure /<module>/@v/<version>.
+// is assumed to have either of the following two structures:
+//   - <module>/@v/<version>
+//   - <module>/@latest
+// (this is symmetric with the proxy url scheme)
 func parseModulePathAndVersion(requestPath string) (string, string, error) {
 	p := strings.TrimPrefix(requestPath, "/")
 	if strings.HasSuffix(p, "/@latest") {
