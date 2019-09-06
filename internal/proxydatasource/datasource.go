@@ -272,7 +272,7 @@ func (ds *DataSource) findModule(ctx context.Context, pkgPath string, version st
 	pkgPath = strings.TrimLeft(pkgPath, "/")
 	for modulePath := pkgPath; modulePath != "" && modulePath != "."; modulePath = path.Dir(modulePath) {
 		info, err := ds.proxyClient.GetInfo(ctx, modulePath, version)
-		if xerrors.Is(err, derrors.NotFound) {
+		if xerrors.Is(err, derrors.NotFound) || xerrors.Is(err, derrors.Gone) {
 			continue
 		}
 		if err != nil {
