@@ -266,12 +266,17 @@ func TestServer(t *testing.T) {
 			_ = res.Body.Close()
 			body := string(bytes)
 			for _, want := range tc.want {
-				if !strings.Contains(body, want) {
+				i := strings.Index(body, want)
+				if i < 0 {
 					if len(body) > 100 {
 						body = "<content exceeds 100 chars>"
 					}
 					t.Errorf("`%s` not found in body\n%s", want, body)
+					continue
 				}
+				// Truncate the body each time through the loop to make sure the wanted strings
+				// are found in order.
+				body = body[i+len(want):]
 			}
 		})
 	}
