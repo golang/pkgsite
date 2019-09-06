@@ -240,19 +240,17 @@ func Zip(version string) (_ *zip.Reader, commitTime time.Time, err error) {
 	if err := addFiles(z, repo, root, prefixPath, false); err != nil {
 		return nil, time.Time{}, err
 	}
-	// If there is src/pkg, add that; otherwise, add src.
-	var libdir *object.Tree
-	src, err := subTree(repo, root, "src")
+	// Add src, or src/pkg.
+	libdir, err := subTree(repo, root, "src")
 	if err != nil {
 		return nil, time.Time{}, err
 	}
-	pkg, err := subTree(repo, src, "pkg")
-	if err == os.ErrNotExist {
-		libdir = src
-	} else if err != nil {
-		return nil, time.Time{}, err
-	} else {
-		libdir = pkg
+	// For versions older than v1.4.0, skip over the extra "pkg" subdirectory.
+	if semver.Compare(version, "v1.4.0") == -1 {
+		libdir, err = subTree(repo, libdir, "pkg")
+		if err != nil {
+			return nil, time.Time{}, err
+		}
 	}
 	if err := addFiles(z, repo, libdir, prefixPath, true); err != nil {
 		return nil, time.Time{}, err
