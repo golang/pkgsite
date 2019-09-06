@@ -192,13 +192,21 @@ func (s *Server) doFetch(r *http.Request) (string, int) {
 
 // parseModulePathAndVersion returns the module and version specified by p. p
 // is assumed to have the structure /<module>/@v/<version>.
-func parseModulePathAndVersion(p string) (string, string, error) {
-	parts := strings.Split(strings.TrimPrefix(p, "/"), "/@v/")
+func parseModulePathAndVersion(requestPath string) (string, string, error) {
+	p := strings.TrimPrefix(requestPath, "/")
+	if strings.HasSuffix(p, "/@latest") {
+		modulePath := strings.TrimSuffix(p, "/@latest")
+		if modulePath == "" {
+			return "", "", fmt.Errorf("invalid module path: %q", modulePath)
+		}
+		return modulePath, internal.LatestVersion, nil
+	}
+	parts := strings.Split(p, "/@v/")
 	if len(parts) != 2 {
-		return "", "", fmt.Errorf("invalid path: %q", p)
+		return "", "", fmt.Errorf("invalid path: %q", requestPath)
 	}
 	if parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("invalid path: %q", p)
+		return "", "", fmt.Errorf("invalid path: %q", requestPath)
 	}
 	return parts[0], parts[1], nil
 }
