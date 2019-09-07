@@ -36,65 +36,21 @@ type DetailsPage struct {
 // handlePackageDetails applies database data to the appropriate template.
 // Handles all endpoints that match "/pkg/<import-path>[@<version>?tab=<tab>]".
 func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
-	urlPath := strings.TrimPrefix(r.URL.Path, "/pkg")
-	path, version, err := parseImportPathAndVersion(urlPath)
-	if err != nil {
-		log.Print(err)
-		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
-		return
-	}
-	if version != internal.LatestVersion && !semver.IsValid(version) {
-		log.Printf("%s@%s: invalid version", path, version)
-		s.serveErrorPage(w, r, http.StatusBadRequest, &errorPage{
-			Message:          fmt.Sprintf("%q is not a valid semantic version.", version),
-			SecondaryMessage: suggestedSearch(path),
-		})
-		return
-	}
-
-	var (
-		pkg *internal.VersionedPackage
-		ctx = r.Context()
-	)
-	pkg, err = s.ds.GetPackage(ctx, path, version)
-	if err != nil && !xerrors.Is(err, derrors.NotFound) {
-		log.Print(err)
-	}
-	if err != nil {
-		if !xerrors.Is(err, derrors.NotFound) {
-			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
-			return
-		}
-		if version == internal.LatestVersion {
-			// If the version is empty, it means that we already
-			// tried fetching the latest version of the package,
-			// and this package does not exist.
-			//
-			// In that case, we attempt to fetch a directory view
-			// for this path.
+	var pkg *internal.VersionedPackage
+	path, version, code, epage := processPackageOrModulePath("pkg", r.URL.Path, func(path, ver string) error {
+		var err error
+		pkg, err = s.ds.GetPackage(r.Context(), path, ver)
+		return err
+	})
+	if code != http.StatusOK {
+		if code == http.StatusNotFound && epage == nil {
 			s.serveDirectoryPage(w, r, path, version)
-			return
+		} else {
+			s.serveErrorPage(w, r, code, epage)
 		}
-		// Get the latest package to check if any versions of
-		// the package exists.
-		_, latestErr := s.ds.GetPackage(ctx, path, internal.LatestVersion)
-		if latestErr == nil {
-			s.serveErrorPage(w, r, http.StatusNotFound, &errorPage{
-				Message: fmt.Sprintf("Package %s@%s is not available.", path, version),
-				SecondaryMessage: template.HTML(
-					fmt.Sprintf(`There are other versions of this package that are! To view them, <a href="/pkg/%s?tab=versions">click here</a>.</p>`, path)),
-			})
-			return
-		}
-		if !xerrors.Is(err, derrors.NotFound) {
-			// GetPackage at version returned a NotFound error, but
-			// GetPackage at latest returned a different error.
-			log.Printf("error getting latest package for %s: %v", path, latestErr)
-		}
-		s.serveDirectoryPage(w, r, path, version)
 		return
 	}
-
+	// pkg is non-nil here.
 	version = pkg.VersionInfo.Version
 	pkgHeader, err := createPackage(&pkg.Package, &pkg.VersionInfo)
 	if err != nil {
@@ -118,7 +74,7 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = fetchDetailsForPackage(ctx, r, tab, s.ds, pkg)
+		details, err = fetchDetailsForPackage(r.Context(), r, tab, s.ds, pkg)
 		if err != nil {
 			log.Printf("error fetching page for %q: %v", tab, err)
 			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
@@ -136,6 +92,62 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 		Namespace:      "pkg",
 	}
 	s.servePage(w, settings.TemplateName, page)
+}
+
+// processPackageOrModulePath handles logic common to the intial phase of handling both packages and
+// modules: fetching information about the package or module.
+// It parses urlPath into an import path and version, then calls the get function with those values.
+// If get fails because the version cannot be found, processPackageOrModulePath calls get again
+// with the latest version, to see if any versions of the package/module exist, in order to provide
+// a more helpful error message.
+//
+// processPackageOrModulePath returns the import path and version requested, an HTTP status code,
+// and possibly an error page to display.
+func processPackageOrModulePath(namespace, urlPath string, get func(p, v string) error) (path, version string, code int, _ *errorPage) {
+	urlPath = strings.TrimPrefix(urlPath, "/"+namespace)
+	path, version, err := parseImportPathAndVersion(urlPath)
+	if err != nil {
+		log.Print(err)
+		return "", "", http.StatusBadRequest, nil
+	}
+	if version != internal.LatestVersion && !semver.IsValid(version) {
+		epage := &errorPage{Message: fmt.Sprintf("%q is not a valid semantic version.", version)}
+		if namespace == "pkg" {
+			epage.SecondaryMessage = suggestedSearch(path)
+		}
+		log.Printf("%s@%s: invalid version", path, version)
+		return "", "", http.StatusBadRequest, epage
+	}
+	err = get(path, version)
+	if err == nil {
+		return path, version, http.StatusOK, nil
+	}
+	log.Printf("error: get(%q, %q) for %s: %v", path, version, namespace, err)
+	if !xerrors.Is(err, derrors.NotFound) {
+		return "", "", http.StatusInternalServerError, nil
+	}
+	if version == internal.LatestVersion {
+		return "", "", http.StatusNotFound, nil
+	}
+	// We did not find the given version, but maybe there is a later version.
+	latestErr := get(path, internal.LatestVersion)
+	if latestErr != nil {
+		log.Printf("error: get(%s, Latest) for %s: %v", path, namespace, latestErr)
+		// Couldn't get the latest version, for whatever reason. Treat this like
+		// not finding the original version.
+		return "", "", http.StatusNotFound, nil
+	}
+	// There is a later version of this package/module.
+	word := "package"
+	if namespace == "mod" {
+		word = "module"
+	}
+	epage := &errorPage{
+		Message: fmt.Sprintf("%s %s@%s is not available.", strings.ToTitle(word), path, version),
+		SecondaryMessage: template.HTML(
+			fmt.Sprintf(`There are other versions of this %s that are! To view them, <a href="/%s/%s?tab=versions">click here</a>.</p>`, word, namespace, path)),
+	}
+	return path, version, http.StatusNotFound, epage
 }
 
 // fetchDetailsForPackage returns tab details by delegating to the correct detail
@@ -163,46 +175,14 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds
 // handleModuleDetails applies database data to the appropriate template.
 // Handles all endpoints that match "/mod/<module-path>[@<version>?tab=<tab>]".
 func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
-	urlPath := strings.TrimPrefix(r.URL.Path, "/mod")
-	path, version, err := parseImportPathAndVersion(urlPath)
-	if err != nil {
-		log.Print(err)
-		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
-		return
-	}
-	if version != internal.LatestVersion && !semver.IsValid(version) {
-		s.serveErrorPage(w, r, http.StatusBadRequest, &errorPage{
-			Message: fmt.Sprintf("%q is not a valid semantic version.", version),
-		})
-		return
-	}
-
 	ctx := r.Context()
 	var moduleVersion *internal.VersionInfo
-	moduleVersion, err = s.ds.GetVersionInfo(ctx, path, version)
-	if err != nil {
-		code := http.StatusNotFound
-		if !xerrors.Is(err, derrors.NotFound) {
-			log.Print(err)
-			code = http.StatusInternalServerError
-		}
-		var epage *errorPage
-		if version != internal.LatestVersion {
-			// The specific requested version doesn't exist.
-			// See if any versions do by getting the latest package.
-			_, latestErr := s.ds.GetVersionInfo(ctx, path, internal.LatestVersion)
-			if latestErr == nil {
-				epage = &errorPage{
-					Message: fmt.Sprintf("Module %s@%s is not available.", path, version),
-					SecondaryMessage: template.HTML(
-						fmt.Sprintf(`There are other versions of this module that are! To view them, <a href="/mod/%s?tab=versions">click here</a>.</p>`, path)),
-				}
-			} else if xerrors.Is(err, derrors.NotFound) && !xerrors.Is(latestErr, derrors.NotFound) {
-				// GetVersionInfo returned NotFound at version but GetVersionInfo at
-				// latest did not.
-				log.Printf("error getting latest module for %s: %v", path, latestErr)
-			}
-		}
+	_, _, code, epage := processPackageOrModulePath("mod", r.URL.Path, func(path, ver string) error {
+		var err error
+		moduleVersion, err = s.ds.GetVersionInfo(ctx, path, ver)
+		return err
+	})
+	if code != http.StatusOK {
 		s.serveErrorPage(w, r, code, epage)
 		return
 	}
