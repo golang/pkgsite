@@ -196,7 +196,7 @@ func TestCreatePackageHeader(t *testing.T) {
 	}
 }
 
-func TestParseModulePathAndVersion(t *testing.T) {
+func TestParseImportPathAndVersion(t *testing.T) {
 	testCases := []struct {
 		name        string
 		url         string
@@ -247,12 +247,12 @@ func TestParseModulePathAndVersion(t *testing.T) {
 				t.Errorf("url.Parse(%q): %v", tc.url, parseErr)
 			}
 
-			gotModule, gotVersion, err := parseModulePathAndVersion(u.Path)
+			gotModule, gotVersion, err := parseImportPathAndVersion(u.Path)
 			if (err != nil) != tc.wantErr {
-				t.Fatalf("parseModulePathAndVersion(%v) error = (%v); want error %t)", u, err, tc.wantErr)
+				t.Fatalf("parseImportPathAndVersion(%v) error = (%v); want error %t)", u, err, tc.wantErr)
 			}
 			if !tc.wantErr && (tc.wantModule != gotModule || tc.wantVersion != gotVersion) {
-				t.Fatalf("parseModulePathAndVersion(%v): %q, %q, %v; want = %q, %q, want err %t",
+				t.Fatalf("parseImportPathAndVersion(%v): %q, %q, %v; want = %q, %q, want err %t",
 					u, gotModule, gotVersion, err, tc.wantModule, tc.wantVersion, tc.wantErr)
 			}
 		})

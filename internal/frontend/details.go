@@ -37,7 +37,7 @@ type DetailsPage struct {
 // Handles all endpoints that match "/pkg/<import-path>[@<version>?tab=<tab>]".
 func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 	urlPath := strings.TrimPrefix(r.URL.Path, "/pkg")
-	path, version, err := parseModulePathAndVersion(urlPath)
+	path, version, err := parseImportPathAndVersion(urlPath)
 	if err != nil {
 		log.Print(err)
 		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
@@ -164,7 +164,7 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds
 // Handles all endpoints that match "/mod/<module-path>[@<version>?tab=<tab>]".
 func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 	urlPath := strings.TrimPrefix(r.URL.Path, "/mod")
-	path, version, err := parseModulePathAndVersion(urlPath)
+	path, version, err := parseImportPathAndVersion(urlPath)
 	if err != nil {
 		log.Print(err)
 		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
@@ -262,12 +262,16 @@ func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds 
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
 
-// parseModulePathAndVersion returns the module and version specified by
-// urlPath. urlPath is assumed to be a valid path following the structure
-// /<module>@<version>. Any leading or trailing slashes in the module path are
-// trimmed.
-func parseModulePathAndVersion(urlPath string) (importPath, version string, err error) {
-	defer derrors.Wrap(&err, "parseModulePathAndVersion(%q)", urlPath)
+// parseImportPathAndVersion returns the import path and version specified by
+// urlPath. urlPath is assumed to be a valid path following the structures
+//   /<path>@<version>
+// or
+//   /<path>
+// In the latter case, internal.LatestVersion is used for the version.
+//
+// Leading and trailing slashes in the import path are trimmed.
+func parseImportPathAndVersion(urlPath string) (importPath, version string, err error) {
+	defer derrors.Wrap(&err, "parseImportPathAndVersion(%q)", urlPath)
 
 	parts := strings.Split(urlPath, "@")
 	if len(parts) != 1 && len(parts) != 2 {
