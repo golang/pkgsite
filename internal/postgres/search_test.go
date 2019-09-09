@@ -435,7 +435,7 @@ func TestGetPackagesForSearchDocumentUpsert(t *testing.T) {
 	}
 	// pkgPaths should be "A", since pkg "A" exists in packages but not
 	// search_documents.
-	pkgPaths, err := testDB.GetPackagesForSearchDocumentUpsert(ctx)
+	pkgPaths, err := testDB.GetPackagesForSearchDocumentUpsert(ctx, 10)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -451,7 +451,7 @@ func TestGetPackagesForSearchDocumentUpsert(t *testing.T) {
 	}
 	// pkgPaths should be an empty slice, since pkg "A" and "A/notinternal"
 	// were just inserted into search_documents.
-	pkgPaths, err = testDB.GetPackagesForSearchDocumentUpsert(ctx)
+	pkgPaths, err = testDB.GetPackagesForSearchDocumentUpsert(ctx, 10)
 	if err != nil {
 		t.Fatal(err)
 	}

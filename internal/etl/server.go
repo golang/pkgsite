@@ -130,8 +130,22 @@ func (s *Server) handleUpdateImportedByCount(w http.ResponseWriter, r *http.Requ
 // handlePopulateSearchDocuments inserts a record into search_documents for all
 // package_paths that exist in packages but not in search_documents.
 func (s *Server) handlePopulateSearchDocuments(w http.ResponseWriter, r *http.Request) {
+	limitParam := r.FormValue("limit")
+	var (
+		limit = 100
+		err   error
+	)
+	if limitParam != "" {
+		limit, err = strconv.Atoi(limitParam)
+		if err != nil {
+			log.Printf("Error parsing limit parameter: %v", err)
+			limit = 100
+		}
+	}
+
 	ctx := r.Context()
-	pkgPaths, err := s.db.GetPackagesForSearchDocumentUpsert(ctx)
+	log.Printf("Populating search documents for %d packages", limit)
+	pkgPaths, err := s.db.GetPackagesForSearchDocumentUpsert(ctx, limit)
 	if err != nil {
 		log.Printf("s.db.GetPackagesSearchDocumentUpsert(ctx): %v", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)

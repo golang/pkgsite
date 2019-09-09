@@ -199,15 +199,16 @@ func (db *DB) UpsertSearchDocument(ctx context.Context, path string) (err error)
 
 // GetPackagesForSearchDocumentUpsert fetches all paths from packages that do
 // not exist in search_documents.
-func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context) (paths []string, err error) {
-	defer derrors.Add(&err, "GetPackagesForSearchDocumentUpsert(ctx)")
+func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, limit int) (paths []string, err error) {
+	defer derrors.Add(&err, "GetPackagesForSearchDocumentUpsert(ctx, %d)", limit)
 
 	query := `
 		SELECT DISTINCT(path)
 		FROM packages p
 		LEFT JOIN search_documents sd
 		ON p.path = sd.package_path
-		WHERE sd.package_path IS NULL`
+		WHERE sd.package_path IS NULL
+		LIMIT $1`
 
 	collect := func(rows *sql.Rows) error {
 		var path string
@@ -221,7 +222,7 @@ func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context) (paths []s
 		}
 		return nil
 	}
-	if err := db.runQuery(ctx, query, collect); err != nil {
+	if err := db.runQuery(ctx, query, collect, limit); err != nil {
 		return nil, err
 	}
 	sort.Strings(paths)
