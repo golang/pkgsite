@@ -163,7 +163,7 @@ func TestCreatePackageHeader(t *testing.T) {
 	}
 }
 
-func TestParseImportPathAndVersion(t *testing.T) {
+func TestParsePathAndVersion(t *testing.T) {
 	testCases := []struct {
 		name        string
 		url         string
@@ -214,12 +214,12 @@ func TestParseImportPathAndVersion(t *testing.T) {
 				t.Errorf("url.Parse(%q): %v", tc.url, parseErr)
 			}
 
-			gotModule, gotVersion, err := parseImportPathAndVersion(u.Path)
+			gotModule, gotVersion, err := parsePathAndVersion(u.Path, "pkg")
 			if (err != nil) != tc.wantErr {
-				t.Fatalf("parseImportPathAndVersion(%v) error = (%v); want error %t)", u, err, tc.wantErr)
+				t.Fatalf("parsePathAndVersion(%v) error = (%v); want error %t)", u, err, tc.wantErr)
 			}
 			if !tc.wantErr && (tc.wantModule != gotModule || tc.wantVersion != gotVersion) {
-				t.Fatalf("parseImportPathAndVersion(%v): %q, %q, %v; want = %q, %q, want err %t",
+				t.Fatalf("parsePathAndVersion(%v): %q, %q, %v; want = %q, %q, want err %t",
 					u, gotModule, gotVersion, err, tc.wantModule, tc.wantVersion, tc.wantErr)
 			}
 		})
@@ -264,7 +264,7 @@ func TestProcessPackageOrModulePath(t *testing.T) {
 			getErr2:     nil,
 			wantPath:    "import/path",
 			wantVersion: "v1.2.3",
-			wantCode:    http.StatusNotFound,
+			wantCode:    http.StatusSeeOther,
 		},
 		{
 			desc:        "version not found, latest not found",
@@ -287,7 +287,7 @@ func TestProcessPackageOrModulePath(t *testing.T) {
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
 			ncalls := 0
-			get := func(p, v string) error {
+			get := func(v string) error {
 				ncalls++
 				if ncalls == 1 {
 					return tc.getErr1
@@ -295,12 +295,13 @@ func TestProcessPackageOrModulePath(t *testing.T) {
 				return tc.getErr2
 			}
 
-			gotPath, gotVersion, gotCode, _ := processPackageOrModulePath("pkg", tc.urlPath, get)
+			path, version, err := parsePathAndVersion(tc.urlPath, "pkg")
+			if err != nil {
+				t.Fatal(err)
+			}
+			gotCode, _ := fetchPackageOrModule("pkg", path, version, get)
 			if gotCode != tc.wantCode {
 				t.Fatalf("got status code %d, want %d", gotCode, tc.wantCode)
-			}
-			if gotPath != tc.wantPath || gotVersion != tc.wantVersion {
-				t.Fatalf("got %s @ %s, want %s @ %s", gotPath, gotVersion, tc.wantPath, tc.wantVersion)
 			}
 		})
 	}

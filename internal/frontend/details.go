@@ -37,22 +37,30 @@ type DetailsPage struct {
 // handlePackageDetails applies database data to the appropriate template.
 // Handles all endpoints that match "/pkg/<import-path>[@<version>?tab=<tab>]".
 func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
+	path, version, err := parsePathAndVersion(r.URL.Path, "pkg")
+	if err != nil {
+		log.Printf("handlePackageDetails: %v", err)
+		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
+		return
+	}
+
 	var pkg *internal.VersionedPackage
-	path, version, code, epage := processPackageOrModulePath("pkg", r.URL.Path, func(path, ver string) error {
+	code, epage := fetchPackageOrModule("pkg", path, version, func(ver string) error {
 		var err error
 		pkg, err = s.ds.GetPackage(r.Context(), path, ver)
 		return err
 	})
-	if code != http.StatusOK {
-		if code == http.StatusNotFound && epage == nil {
-			s.serveDirectoryPage(w, r, path, version)
-		} else {
-			s.serveErrorPage(w, r, code, epage)
-		}
+	if code == http.StatusNotFound {
+		// We were not able to find the package at any version. In that case,
+		// try and fetch the directory view.
+		s.serveDirectoryPage(w, r, path, version)
 		return
 	}
-	// pkg is non-nil here.
-	version = pkg.VersionInfo.Version
+	if code != http.StatusOK {
+		s.serveErrorPage(w, r, code, epage)
+		return
+	}
+
 	pkgHeader, err := createPackage(&pkg.Package, &pkg.VersionInfo)
 	if err != nil {
 		log.Printf("error creating package header for %s@%s: %v", path, version, err)
@@ -95,49 +103,54 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 	s.servePage(w, settings.TemplateName, page)
 }
 
-// processPackageOrModulePath handles logic common to the initial phase of handling both packages and
-// modules: fetching information about the package or module.
-// It parses urlPath into an import path and version, then calls the get function with those values.
-// If get fails because the version cannot be found, processPackageOrModulePath calls get again
-// with the latest version, to see if any versions of the package/module exist, in order to provide
-// a more helpful error message.
+// fetchPackageOrModule handles logic common to the initial phase of
+// handling both packages and modules: fetching information about the package
+// or module.
+// It parses urlPath into an import path and version, then calls the get
+// function with those values. If get fails because the version cannot be
+// found, fetchPackageOrModule calls get again with the latest version,
+// to see if any versions of the package/module exist, in order to provide a
+// more helpful error message.
 //
-// processPackageOrModulePath returns the import path and version requested, an HTTP status code,
-// and possibly an error page to display.
-func processPackageOrModulePath(namespace, urlPath string, get func(p, v string) error) (path, version string, code int, _ *errorPage) {
-	urlPath = strings.TrimPrefix(urlPath, "/"+namespace)
-	path, version, err := parseImportPathAndVersion(urlPath)
-	if err != nil {
-		log.Print(err)
-		return "", "", http.StatusBadRequest, nil
-	}
+// fetchPackageOrModule returns the import path and version requested, an
+// HTTP status code, and possibly an error page to display.
+func fetchPackageOrModule(namespace, path, version string, get func(v string) error) (code int, _ *errorPage) {
 	if version != internal.LatestVersion && !semver.IsValid(version) {
+		// A valid semantic version was not requested.
 		epage := &errorPage{Message: fmt.Sprintf("%q is not a valid semantic version.", version)}
 		if namespace == "pkg" {
 			epage.SecondaryMessage = suggestedSearch(path)
 		}
 		log.Printf("%s@%s: invalid version", path, version)
-		return "", "", http.StatusBadRequest, epage
+		return http.StatusBadRequest, epage
 	}
-	err = get(path, version)
+
+	// Fetch the package or module from the database.
+	err := get(version)
 	if err == nil {
-		return path, version, http.StatusOK, nil
+		// A package or module was found for this path and version.
+		return http.StatusOK, nil
 	}
-	log.Printf("error: get(%q, %q) for %s: %v", path, version, namespace, err)
+	log.Printf("fetchPackageOrModule(%q, %q, %q): get error: %v",
+		namespace, path, version, err)
 	if !xerrors.Is(err, derrors.NotFound) {
-		return "", "", http.StatusInternalServerError, nil
+		// Something went wrong in executing the get function.
+		return http.StatusInternalServerError, nil
 	}
 	if version == internal.LatestVersion {
-		return "", "", http.StatusNotFound, nil
+		// We were not able to find a module or package at any version.
+		return http.StatusNotFound, nil
 	}
-	// We did not find the given version, but maybe there is a later version.
-	latestErr := get(path, internal.LatestVersion)
-	if latestErr != nil {
-		log.Printf("error: get(%s, Latest) for %s: %v", path, namespace, latestErr)
-		// Couldn't get the latest version, for whatever reason. Treat this like
-		// not finding the original version.
-		return "", "", http.StatusNotFound, nil
+
+	// We did not find the given version, but maybe there is another version
+	// available for this package or module.
+	if err := get(internal.LatestVersion); err != nil {
+		log.Printf("error: get(%s, Latest) for %s: %v", path, namespace, err)
+		// Couldn't get the latest version, for whatever reason. Treat
+		// this like not finding the original version.
+		return http.StatusNotFound, nil
 	}
+
 	// There is a later version of this package/module.
 	word := "package"
 	if namespace == "mod" {
@@ -148,7 +161,7 @@ func processPackageOrModulePath(namespace, urlPath string, get func(p, v string)
 		SecondaryMessage: template.HTML(
 			fmt.Sprintf(`There are other versions of this %s that are! To view them, <a href="/%s/%s?tab=versions">click here</a>.</p>`, word, namespace, path)),
 	}
-	return path, version, http.StatusNotFound, epage
+	return http.StatusSeeOther, epage
 }
 
 // fetchDetailsForPackage returns tab details by delegating to the correct detail
@@ -184,9 +197,16 @@ func moduleTitle(modulePath string) string {
 // handleModuleDetails applies database data to the appropriate template.
 // Handles all endpoints that match "/mod/<module-path>[@<version>?tab=<tab>]".
 func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
+	path, version, err := parsePathAndVersion(r.URL.Path, "mod")
+	if err != nil {
+		log.Printf("handleModuleDetails: %v", err)
+		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
+		return
+	}
+
 	ctx := r.Context()
 	var moduleVersion *internal.VersionInfo
-	_, _, code, epage := processPackageOrModulePath("mod", r.URL.Path, func(path, ver string) error {
+	code, epage := fetchPackageOrModule("mod", path, version, func(ver string) error {
 		var err error
 		moduleVersion, err = s.ds.GetVersionInfo(ctx, path, ver)
 		return err
@@ -251,34 +271,47 @@ func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds 
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
 
-// parseImportPathAndVersion returns the import path and version specified by
-// urlPath. urlPath is assumed to be a valid path following the structures
-//   /<path>@<version>
+// parsePathAndVersion returns the path and version specified by urlPath.
+// urlPath is assumed to be a valid path following the structure:
+//   /<namespace>/<path>@<version>
 // or
-//   /<path>
+//  /<namespace/<path>
+// where <namespace> is always pkg or mod.
 // In the latter case, internal.LatestVersion is used for the version.
 //
-// Leading and trailing slashes in the import path are trimmed.
-func parseImportPathAndVersion(urlPath string) (importPath, version string, err error) {
-	defer derrors.Wrap(&err, "parseImportPathAndVersion(%q)", urlPath)
+// Leading and trailing slashes in the urlPath are trimmed.
+func parsePathAndVersion(urlPath, namespace string) (path, version string, err error) {
+	defer derrors.Wrap(&err, "parsePathAndVersion(%q)", urlPath)
 
+	if namespace != "mod" && namespace != "pkg" {
+		return "", "", fmt.Errorf("invalid namespace: %q", namespace)
+	}
+	urlPath = strings.TrimPrefix(urlPath, "/"+namespace)
 	parts := strings.Split(urlPath, "@")
 	if len(parts) != 1 && len(parts) != 2 {
 		return "", "", fmt.Errorf("malformed URL path %q", urlPath)
 	}
 
-	importPath = strings.TrimPrefix(parts[0], "/")
+	path = strings.TrimPrefix(parts[0], "/")
 	if len(parts) == 1 {
-		importPath = strings.TrimSuffix(importPath, "/")
-	}
-	if err := module.CheckImportPath(importPath); err != nil {
-		return "", "", fmt.Errorf("malformed import path %q: %v", importPath, err)
+		path = strings.TrimSuffix(path, "/")
 	}
 
-	if len(parts) == 1 {
-		return importPath, internal.LatestVersion, nil
+	// CheckPath checks that a module path is valid.
+	if namespace == "mod" {
+		if err := module.CheckImportPath(path); err != nil && path != "std" {
+			return "", "", fmt.Errorf("malformed module path %q: %v", path, err)
+		}
 	}
-	return importPath, strings.TrimRight(parts[1], "/"), nil
+	if namespace == "pkg" {
+		if err := module.CheckImportPath(path); err != nil {
+			return "", "", fmt.Errorf("malformed import path %q: %v", path, err)
+		}
+	}
+	if len(parts) == 1 {
+		return path, internal.LatestVersion, nil
+	}
+	return path, strings.TrimRight(parts[1], "/"), nil
 }
 
 // TabSettings defines tab-specific metadata.

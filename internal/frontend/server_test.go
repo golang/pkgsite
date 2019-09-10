@@ -48,6 +48,10 @@ func TestServer(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 	sampleVersion := sample.Version()
+	pkg := sample.Package()
+	pkg.Name = "hello"
+	pkg.Path = sampleVersion.ModulePath + "/foo/directory/hello"
+	sampleVersion.Packages = append(sampleVersion.Packages, pkg)
 	if err := testDB.InsertVersion(ctx, sampleVersion); err != nil {
 		t.Fatal(err)
 	}
@@ -208,6 +212,10 @@ func TestServer(t *testing.T) {
 				`This is not legal advice`,
 				`<a href="/license-policy">Read disclaimer.</a>`,
 				`Lorem Ipsum`),
+		},
+		{
+			fmt.Sprintf("/pkg/%s", sample.PackagePath+"/directory"),
+			[]string{`<h1 class="Header-title">Directory github.com/valid_module_name/foo/directory</h1>`},
 		},
 
 		{
