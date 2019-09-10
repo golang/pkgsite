@@ -49,6 +49,7 @@ internal/**/go.sum
 go-discovery*.json
 
 #### App Engine
+*credentials.json
 *credentials.yaml
 *.gcloudignore
 
