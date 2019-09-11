@@ -208,8 +208,8 @@ func (ds *DataSource) GetVersionInfo(ctx context.Context, modulePath, version st
 	return &v.VersionInfo, nil
 }
 
-// LegacySearch is unimplemented.
-func (ds *DataSource) LegacySearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error) {
+// Search is unimplemented.
+func (ds *DataSource) Search(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error) {
 	return []*postgres.SearchResult{}, nil
 }
 

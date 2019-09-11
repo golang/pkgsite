@@ -79,9 +79,9 @@ type DataSource interface {
 	// GetVersionInfo returns the VersionInfo corresponding to modulePath and
 	// version.
 	GetVersionInfo(ctx context.Context, modulePath, version string) (*internal.VersionInfo, error)
-	// LegacySearch performs a search for the given query, with pagination
+	// Search performs a search for the given query, with pagination
 	// specified by limit and offset.
-	LegacySearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
+	Search(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
 }
 
 // NewServer creates a new Server for the given database and template directory.
