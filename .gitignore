@@ -56,3 +56,6 @@ go-discovery*.json
 #### Editor Related Files ####
 tags
 env.sh
+
+#### Loadtest Related Files ####
+results.bin

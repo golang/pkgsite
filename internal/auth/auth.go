@@ -7,12 +7,12 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	"golang.org/x/xerrors"
 )
 
 // clientID is the OAuth 2.0 Client ID taken from
@@ -34,10 +34,11 @@ func NewClient(jsonCreds []byte) (_ *http.Client, err error) {
 
 // TokenSource creates an oauth2.TokenSource for accessing go-discovery services.
 // Its argument is the JSON contents of a service account credentials file.
-func TokenSource(json []byte) (oauth2.TokenSource, error) {
+func TokenSource(json []byte) (_ oauth2.TokenSource, err error) {
+	defer derrors.Wrap(&err, "auth.TokenSource(jsonCreds)")
 	config, err := google.JWTConfigFromJSON(json)
 	if err != nil {
-		return nil, xerrors.Errorf("JWTConfigFromJSON: %v", err)
+		return nil, fmt.Errorf("JWTConfigFromJSON: %v", err)
 	}
 	config.PrivateClaims = map[string]interface{}{"target_audience": clientID}
 	// This is required: the docstring says "specifies whether ID token should be
@@ -47,4 +48,25 @@ func TokenSource(json []byte) (oauth2.TokenSource, error) {
 	// Use the background context, in case the token source stores and re-uses it
 	// to refresh the token from a server.
 	return config.TokenSource(context.Background()), nil
+}
+
+// Header returns a header value (typically a Bearer token) to be used in the
+// HTTP 'Authorization' header.
+func Header(jsonCreds []byte) (_ string, err error) {
+	defer derrors.Wrap(&err, "auth.Header(jsonCreds)")
+	ts, err := TokenSource(jsonCreds)
+	if err != nil {
+		return "", err
+	}
+	token, err := ts.Token()
+	if err != nil {
+		return "", fmt.Errorf("TokenSource.Token(): %v", err)
+	}
+	// This is a dummy request to get the authorization header.
+	req, err := http.NewRequest("GET", "http://localhost", nil)
+	if err != nil {
+		return "", fmt.Errorf("http.NewRequest(): %v", err)
+	}
+	token.SetAuthHeader(req)
+	return req.Header.Get("Authorization"), nil
 }
