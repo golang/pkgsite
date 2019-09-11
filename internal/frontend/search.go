@@ -42,7 +42,7 @@ type SearchResult struct {
 // fetchSearchPage fetches data matching the search query from the database and
 // returns a SearchPage.
 func fetchSearchPage(ctx context.Context, ds DataSource, query string, pageParams paginationParams) (*SearchPage, error) {
-	dbresults, err := ds.Search(ctx, query, pageParams.limit, pageParams.offset())
+	dbresults, err := ds.LegacySearch(ctx, query, pageParams.limit, pageParams.offset())
 	if err != nil {
 		return nil, err
 	}
