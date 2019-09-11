@@ -171,7 +171,13 @@ func (db *DB) GetPseudoVersionsForPackageSeries(ctx context.Context, path string
 func getPackageVersions(ctx context.Context, db *DB, path string, versionTypes []internal.VersionType) (_ []*internal.VersionInfo, err error) {
 	defer derrors.Wrap(&err, "DB.getPackageVersions(ctx, db, %q, %v)", path, versionTypes)
 
-	baseQuery := `SELECT
+	baseQuery := `
+		WITH v1paths AS (
+			SELECT DISTINCT v1_path
+			FROM packages
+			WHERE path=$1
+		)
+		SELECT
 			p.module_path,
 			p.version,
 			v.commit_time
@@ -183,11 +189,7 @@ func getPackageVersions(ctx context.Context, db *DB, path string, versionTypes [
 			p.module_path = v.module_path
 			AND p.version = v.version
 		WHERE
-			p.v1_path IN (
-				SELECT DISTINCT v1_path
-				FROM packages
-				WHERE path=$1
-			)
+			p.v1_path IN (SELECT * FROM v1paths)
 			AND version_type in (%s)
 		ORDER BY
 			v.module_path DESC,
