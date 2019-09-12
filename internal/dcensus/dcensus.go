@@ -139,12 +139,22 @@ func exportToStackdriver() {
 	trace.RegisterExporter(traceExporter)
 }
 
-// ViewByCodeRouteMethod is a view of HTTP server requests parameterized by
-// StatusCode, Route, and HTTP method.
+// ViewByCodeRouteMethod is a view of HTTP server requests parameterized
+// by StatusCode, Route, and HTTP method.
 var ViewByCodeRouteMethod = &view.View{
 	Name:        "opencensus.io/http/server/response_count_by_status_code_route_method",
 	Description: "Server response count by status code",
 	TagKeys:     []tag.Key{ochttp.StatusCode, ochttp.KeyServerRoute, ochttp.Method},
 	Measure:     ochttp.ServerLatency,
 	Aggregation: view.Count(),
+}
+
+// ViewByCodeRouteMethodLatencyDistribution is a view of HTTP server requests
+// parameterized by StatusCode, Route, and HTTP method.
+var ViewByCodeRouteMethodLatencyDistribution = &view.View{
+	Name:        "opencensus.io/http/server/response_latency_distribution_by_status_code_route_method",
+	Description: "Server response distribution by status code",
+	TagKeys:     []tag.Key{ochttp.StatusCode, ochttp.KeyServerRoute, ochttp.Method},
+	Measure:     ochttp.ServerLatency,
+	Aggregation: ochttp.DefaultLatencyDistribution,
 }

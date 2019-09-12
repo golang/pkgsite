@@ -68,7 +68,7 @@ func main() {
 	router := dcensus.NewRouter()
 	server.Install(router.Handle)
 
-	views := append(ochttp.DefaultServerViews, dcensus.ViewByCodeRouteMethod)
+	views := append(ochttp.DefaultServerViews, dcensus.ViewByCodeRouteMethod, dcensus.ViewByCodeRouteMethodLatencyDistribution)
 	if err := dcensus.Init(views...); err != nil {
 		log.Fatal(err)
 	}
