@@ -8,7 +8,7 @@ require (
 	contrib.go.opencensus.io/exporter/stackdriver v0.12.2
 	contrib.go.opencensus.io/integrations/ocsql v0.1.4
 	github.com/GoogleCloudPlatform/cloudsql-proxy v0.0.0-20190605020000-c4ba1fdf4d36
-	github.com/golang-migrate/migrate/v4 v4.3.1
+	github.com/golang-migrate/migrate/v4 v4.6.2
 	github.com/google/go-cmp v0.3.0
 	github.com/google/licensecheck v0.0.0-20190416041930-a13d4b3c90fd
 	github.com/googleapis/gax-go/v2 v2.0.5 // indirect
