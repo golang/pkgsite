@@ -20,6 +20,7 @@ import (
 	"go.opencensus.io/trace"
 	"go.opencensus.io/zpages"
 	"golang.org/x/discovery/internal/config"
+	"golang.org/x/discovery/internal/derrors"
 	mrpb "google.golang.org/genproto/googleapis/api/monitoredres"
 )
 
@@ -118,27 +119,7 @@ func exportToStackdriver() {
 	// https://cloud.google.com/monitoring/custom-metrics/creating-metrics#writing-ts
 	view.SetReportingPeriod(time.Minute)
 
-	labels := &stackdriver.Labels{}
-	labels.Set("version", config.AppVersionLabel(), "Version label of the running binary")
-
-	// Views must be associated with the instance, else we run into overlapping
-	// timeseries problems. Note that generic_task is used because the
-	// gae_instance resource type is not supported for metrics:
-	// https://cloud.google.com/monitoring/custom-metrics/creating-metrics#which-resource
-	viewExporter, err := stackdriver.NewExporter(stackdriver.Options{
-		ProjectID: config.ProjectID(),
-		MonitoredResource: &monitoredResource{
-			Type: "generic_task",
-			Labels: map[string]string{
-				"project_id": config.ProjectID(),
-				"location":   config.LocationID(),
-				"job":        config.ServiceID(),
-				"namespace":  "go-discovery",
-				"task_id":    config.InstanceID(),
-			},
-		},
-		DefaultMonitoringLabels: labels,
-	})
+	viewExporter, err := NewViewExporter()
 	if err != nil {
 		log.Fatalf("error creating view exporter: %v", err)
 	}
@@ -153,6 +134,33 @@ func exportToStackdriver() {
 		log.Fatalf("error creating trace exporter: %v", err)
 	}
 	trace.RegisterExporter(traceExporter)
+}
+
+// NewViewExporter creates a StackDriver exporter for stats.
+func NewViewExporter() (_ *stackdriver.Exporter, err error) {
+	defer derrors.Wrap(&err, "NewViewExporter()")
+
+	labels := &stackdriver.Labels{}
+	labels.Set("version", config.AppVersionLabel(), "Version label of the running binary")
+
+	// Views must be associated with the instance, else we run into overlapping
+	// timeseries problems. Note that generic_task is used because the
+	// gae_instance resource type is not supported for metrics:
+	// https://cloud.google.com/monitoring/custom-metrics/creating-metrics#which-resource
+	return stackdriver.NewExporter(stackdriver.Options{
+		ProjectID: config.ProjectID(),
+		MonitoredResource: &monitoredResource{
+			Type: "generic_task",
+			Labels: map[string]string{
+				"project_id": config.ProjectID(),
+				"location":   config.LocationID(),
+				"job":        config.ServiceID(),
+				"namespace":  "go-discovery",
+				"task_id":    config.InstanceID(),
+			},
+		},
+		DefaultMonitoringLabels: labels,
+	})
 }
 
 const (

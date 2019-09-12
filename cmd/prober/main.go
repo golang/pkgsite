@@ -19,8 +19,15 @@ import (
 	"text/template"
 	"time"
 
+	"contrib.go.opencensus.io/exporter/stackdriver"
+	"go.opencensus.io/metric/metricexport"
+	"go.opencensus.io/plugin/ochttp"
+	"go.opencensus.io/stats"
+	"go.opencensus.io/stats/view"
+	"go.opencensus.io/tag"
 	"golang.org/x/discovery/internal/auth"
 	"golang.org/x/discovery/internal/config"
+	"golang.org/x/discovery/internal/dcensus"
 	"golang.org/x/discovery/internal/secrets"
 )
 
@@ -81,8 +88,26 @@ var probes = []*Probe{
 }
 
 var (
-	baseURL = config.GetEnv("PROBER_BASE_URL", "")
-	client  *http.Client
+	baseURL        string
+	client         *http.Client
+	metricExporter *stackdriver.Exporter
+	metricReader   *metricexport.Reader
+	keyName        = tag.MustNewKey("probe.name")
+	keyStatus      = tag.MustNewKey("probe.status")
+
+	firstByteLatency = stats.Float64(
+		"go-discovery/first_byte_latency",
+		"Time between first byte of request headers sent to first byte of response received, or error",
+		stats.UnitMilliseconds,
+	)
+
+	firstByteLatencyDistribution = &view.View{
+		Name:        "go-discovery/first_byte_latency",
+		Measure:     firstByteLatency,
+		Aggregation: ochttp.DefaultLatencyDistribution,
+		Description: "first-byte latency, by probe name and response status",
+		TagKeys:     []tag.Key{keyName, keyStatus},
+	}
 )
 
 func main() {
@@ -92,13 +117,23 @@ func main() {
 	}
 	flag.Parse()
 
+	baseURL = config.GetEnv("PROBER_BASE_URL", "")
 	if baseURL == "" {
 		log.Fatal("must set PROBER_BASE_URL")
 	}
+	log.Printf("base URL %s", baseURL)
+
+	ctx := context.Background()
+	if err := config.Init(ctx); err != nil {
+		log.Fatal(err)
+	}
+	config.Dump(os.Stderr)
+
 	var (
 		jsonCreds []byte
 		err       error
 	)
+
 	if *credsFile != "" {
 		jsonCreds, err = ioutil.ReadFile(*credsFile)
 		if err != nil {
@@ -118,7 +153,22 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	http.HandleFunc("/", handle)
+
+	if err := view.Register(firstByteLatencyDistribution); err != nil {
+		log.Fatalf("view.Register: %v", err)
+	}
+	metricExporter, err = dcensus.NewViewExporter()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// To export metrics immediately, we use a metric reader.  See runProbes, below.
+	metricReader = metricexport.NewReader()
+
+	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "content/static/img/favicon.ico")
+	})
+	http.HandleFunc("/", handleProbe)
 
 	addr := config.HostAddr("localhost:8080")
 	log.Printf("Listening on addr %s", addr)
@@ -132,7 +182,7 @@ type ProbeStatus struct {
 	Latency int    // in milliseconds
 }
 
-func handle(w http.ResponseWriter, r *http.Request) {
+func handleProbe(w http.ResponseWriter, r *http.Request) {
 	statuses := runProbes()
 	var data = struct {
 		Start    time.Time
@@ -158,6 +208,9 @@ func runProbes() []*ProbeStatus {
 		s := runProbe(p)
 		statuses = append(statuses, s)
 	}
+	metricReader.ReadAndExport(metricExporter)
+	metricExporter.Flush()
+	log.Print("metrics exported to StackDriver")
 	return statuses
 }
 
@@ -178,26 +231,40 @@ func runProbe(p *Probe) *ProbeStatus {
 	}
 	start := time.Now()
 	res, err := client.Do(req.WithContext(ctx))
-	status.Latency = int(time.Since(start) / time.Millisecond)
+
+	latency := float64(time.Since(start)) / float64(time.Millisecond)
+	status.Latency = int(latency)
+	record := func(statusTag string) {
+		stats.RecordWithTags(ctx, []tag.Mutator{
+			tag.Upsert(keyName, p.Name),
+			tag.Upsert(keyStatus, statusTag),
+		}, firstByteLatency.M(latency))
+	}
+
 	if err != nil {
 		status.Text = fmt.Sprintf("FAILED call: %v", err)
+		record("FAILED call")
 		return status
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
 		status.Text = fmt.Sprintf("FAILED with status %s", res.Status)
+		record(res.Status)
 		return status
 	}
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		status.Text = fmt.Sprintf("FAILED reading body: %v", err)
+		record("FAILED read body")
 		return status
 	}
 	if !bytes.Contains(body, []byte("Go Discovery")) {
-		status.Text = fmt.Sprintf("FAILED: body does not contain 'Go Discovery':\n%s", body)
+		status.Text = "FAILED: body does not contain 'Go Discovery'"
+		record("FAILED wrong body")
 		return status
 	}
 	status.Text = "OK"
+	record("200 OK")
 	return status
 }
 
