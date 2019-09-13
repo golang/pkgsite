@@ -144,7 +144,7 @@ run_tests() {
 
 usage() {
   cat <<EOUSAGE
-Usage: ./all.bash [subcommand]
+Usage: $0 [subcommand]
 Available subcommands:
   help        - display this help message
   (empty)     - run all standard checks and tests
