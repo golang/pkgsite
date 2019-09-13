@@ -35,6 +35,11 @@ func TestTagForVersion(t *testing.T) {
 			want:    "go1.13beta1",
 		},
 		{
+			name:    "std version v1.9.0-rc.2",
+			version: "v1.9.0-rc.2",
+			want:    "go1.9rc2",
+		},
+		{
 			name:    "std with digitless prerelease",
 			version: "v1.13.0-prerelease",
 			want:    "go1.13prerelease",
@@ -131,6 +136,7 @@ func TestVersions(t *testing.T) {
 	}
 	wants := []string{
 		"v1.4.2",
+		"v1.9.0-rc.1",
 		"v1.11.0",
 		"v1.12.9",
 		"v1.13.0",
@@ -152,6 +158,9 @@ func TestVersionForTag(t *testing.T) {
 		{"go1.12", "v1.12.0"},
 		{"go1.9.7", "v1.9.7"},
 		{"go2.0", "v2.0.0"},
+		{"go1.9rc2", "v1.9.0-rc.2"},
+		{"go1.1beta", ""},
+		{"weekly.2012-02-14", ""},
 	} {
 		got := versionForTag(tc.in)
 		if got != tc.want {

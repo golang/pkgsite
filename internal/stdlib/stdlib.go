@@ -173,8 +173,13 @@ func Versions() (_ []string, err error) {
 }
 
 var (
-	minorRegexp = regexp.MustCompile(`^go(\d+\.\d+)(beta(\d+))?$`)
-	patchRegexp = regexp.MustCompile(`^go(\d+\.\d+\.\d+)(beta(\d+))?$`)
+	// Regexp for matching go tags. The groups are:
+	// 1  the major.minor nversion
+	// 2  the patch version, or empty if none
+	// 3  the entire prerelease, if present
+	// 4  the prerelease type ("beta" or "rc")
+	// 5  the prerelease number
+	tagRegexp = regexp.MustCompile(`^go(\d+\.\d+)(\.\d+|)((beta|rc)(\d+))?$`)
 )
 
 // versionForTag returns the semantic version for the Go tag, or "" if
@@ -182,25 +187,22 @@ var (
 // Examples:
 //   "go1.2" => "v1.2.0"
 //   "go1.13beta1" => "v1.13.0-beta.1"
+//   "go1.9rc2" => "v1.9.0-rc.2"
 func versionForTag(tag string) string {
-	var version, prenum string
-	if m := minorRegexp.FindStringSubmatch(tag); m != nil {
-		version = m[1] + ".0"
-		if len(m) > 2 {
-			prenum = m[3]
-		}
-	} else if m := patchRegexp.FindStringSubmatch(tag); m != nil {
-		version = m[1]
-		if len(m) > 2 {
-			prenum = m[3]
-		}
-	} else {
+	m := tagRegexp.FindStringSubmatch(tag)
+	if m == nil {
 		return ""
 	}
-	if prenum == "" {
-		return "v" + version
+	version := "v" + m[1]
+	if m[2] != "" {
+		version += m[2]
+	} else {
+		version += ".0"
 	}
-	return "v" + version + "-beta." + prenum
+	if m[3] != "" {
+		version += "-" + m[4] + "." + m[5]
+	}
+	return version
 }
 
 // Zip creates a module zip representing the entire Go standard library at the
