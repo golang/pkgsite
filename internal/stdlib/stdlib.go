@@ -251,8 +251,8 @@ func Zip(version string) (_ *zip.Reader, commitTime time.Time, err error) {
 	if err != nil {
 		return nil, time.Time{}, err
 	}
-	// For versions older than v1.4.0, skip over the extra "pkg" subdirectory.
-	if semver.Compare(version, "v1.4.0") == -1 {
+	// For versions older than v1.4.0-beta.1, the stdlib is in src/pkg.
+	if semver.Compare(version, "v1.4.0-beta.1") == -1 {
 		libdir, err = subTree(repo, libdir, "pkg")
 		if err != nil {
 			return nil, time.Time{}, err
