@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"contrib.go.opencensus.io/exporter/prometheus"
@@ -22,26 +23,41 @@ import (
 	mrpb "google.golang.org/genproto/googleapis/api/monitoredres"
 )
 
+// RouteTagger is a func that can be used to derive a dynamic route tag for an
+// incoming request.
+type RouteTagger func(route string, r *http.Request) string
+
 // Router is an http multiplexer that instruments per-handler debugging
 // information and census instrumentation.
 type Router struct {
 	http.Handler
-	mux *http.ServeMux
+	mux    *http.ServeMux
+	tagger RouteTagger
 }
 
-// NewRouter creates a new Router.
-func NewRouter() *Router {
+// NewRouter creates a new Router, using tagger to tag incoming requests in
+// monitoring. If tagger is nil, a default route tagger is used.
+func NewRouter(tagger RouteTagger) *Router {
+	if tagger == nil {
+		tagger = func(route string, r *http.Request) string {
+			return strings.Trim(route, "/")
+		}
+	}
 	mux := http.NewServeMux()
 	return &Router{
 		mux:     mux,
 		Handler: &ochttp.Handler{Handler: mux},
+		tagger:  tagger,
 	}
 }
 
 // Handle registers handler with the given route. It has the same routing
 // semantics as http.ServeMux.
 func (r *Router) Handle(route string, handler http.Handler) {
-	r.mux.Handle(route, ochttp.WithRouteTag(handler, route))
+	r.mux.HandleFunc(route, func(w http.ResponseWriter, req *http.Request) {
+		tag := r.tagger(route, req)
+		ochttp.WithRouteTag(handler, tag).ServeHTTP(w, req)
+	})
 }
 
 // HandleFunc is a wrapper around Handle for http.HandlerFuncs.
@@ -139,10 +155,15 @@ func exportToStackdriver() {
 	trace.RegisterExporter(traceExporter)
 }
 
+const (
+	codeRouteMethodCount   = "opencensus.io/http/server/response_count_by_status_code_route_method"
+	codeRouteMethodLatency = "opencensus.io/http/server/response_latency_distribution_by_status_code_route_method"
+)
+
 // ViewByCodeRouteMethod is a view of HTTP server requests parameterized
 // by StatusCode, Route, and HTTP method.
 var ViewByCodeRouteMethod = &view.View{
-	Name:        "opencensus.io/http/server/response_count_by_status_code_route_method",
+	Name:        codeRouteMethodCount,
 	Description: "Server response count by status code",
 	TagKeys:     []tag.Key{ochttp.StatusCode, ochttp.KeyServerRoute, ochttp.Method},
 	Measure:     ochttp.ServerLatency,
@@ -152,7 +173,7 @@ var ViewByCodeRouteMethod = &view.View{
 // ViewByCodeRouteMethodLatencyDistribution is a view of HTTP server requests
 // parameterized by StatusCode, Route, and HTTP method.
 var ViewByCodeRouteMethodLatencyDistribution = &view.View{
-	Name:        "opencensus.io/http/server/response_latency_distribution_by_status_code_route_method",
+	Name:        codeRouteMethodLatency,
 	Description: "Server response distribution by status code",
 	TagKeys:     []tag.Key{ochttp.StatusCode, ochttp.KeyServerRoute, ochttp.Method},
 	Measure:     ochttp.ServerLatency,

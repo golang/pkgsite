@@ -124,6 +124,22 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	handle("/", http.HandlerFunc(s.handleIndexPage))
 }
 
+// TagRoute categorizes incoming requests to the frontend for use in
+// monitoring.
+func TagRoute(route string, r *http.Request) string {
+	tag := strings.Trim(route, "/")
+	if tab := r.FormValue("tab"); tab != "" {
+		// Verify that the tab value actually exists, otherwise this is unsanitized
+		// input and could result in unbounded cardinality in our metrics.
+		_, pkgOK := packageTabLookup[tab]
+		_, modOK := moduleTabLookup[tab]
+		if pkgOK || modOK {
+			tag += "-" + tab
+		}
+	}
+	return tag
+}
+
 // handleIndexPage handles requests to the index page.
 func (s *Server) handleIndexPage(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" {

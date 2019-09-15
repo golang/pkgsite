@@ -49,7 +49,7 @@ func main() {
 	// Wrap the postgres driver with OpenCensus instrumentation.
 	driverName, err := ocsql.Register("postgres", ocsql.WithAllTraceOptions())
 	if err != nil {
-		log.Fatalf("unable to register our ocsql driver: %v\n", err)
+		log.Fatalf("unable to register the ocsql driver: %v\n", err)
 	}
 	db, err := postgres.Open(driverName, config.DBConnInfo())
 	if err != nil {
@@ -81,7 +81,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	router := dcensus.NewRouter()
+	router := dcensus.NewRouter(nil)
 	server.Install(router.Handle)
 
 	views := append(ochttp.DefaultServerViews, ochttp.DefaultClientViews...)
