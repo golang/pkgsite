@@ -9,11 +9,9 @@ package main
 import (
 	"context"
 	"flag"
-	"html/template"
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 
@@ -68,14 +66,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	templatePath := filepath.Join(*staticPath, "html/etl/index.tmpl")
-	indexTemplate, err := template.New("index.tmpl").Funcs(template.FuncMap{
-		"truncate": truncate,
-	}).ParseFiles(templatePath)
-	if err != nil {
-		log.Fatalf("template.ParseFiles(%q): %v", templatePath, err)
-	}
-
 	var q etl.Queue
 	if config.OnAppEngine() {
 		client, err := cloudtasks.NewClient(ctx)
@@ -87,7 +77,10 @@ func main() {
 		q = etl.NewInMemoryQueue(ctx, proxyClient, db, *workers)
 	}
 
-	server := etl.NewServer(db, indexClient, proxyClient, q, indexTemplate)
+	server, err := etl.NewServer(db, indexClient, proxyClient, q, *staticPath)
+	if err != nil {
+		log.Fatal(err)
+	}
 	router := dcensus.NewRouter()
 	server.Install(router.Handle)
 
@@ -131,15 +124,4 @@ func getLogger(ctx context.Context) middleware.Logger {
 		return logClient.Logger("etl-log")
 	}
 	return middleware.LocalLogger{}
-}
-
-func truncate(length int, text *string) *string {
-	if text == nil {
-		return nil
-	}
-	if len(*text) <= length {
-		return text
-	}
-	s := (*text)[:length] + "..."
-	return &s
 }

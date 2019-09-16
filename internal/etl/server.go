@@ -12,12 +12,14 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"strings"
 
 	"go.opencensus.io/trace"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/config"
+	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
@@ -40,8 +42,21 @@ func NewServer(db *postgres.DB,
 	indexClient *index.Client,
 	proxyClient *proxy.Client,
 	queue Queue,
-	indexTemplate *template.Template,
-) *Server {
+	staticPath string,
+) (_ *Server, err error) {
+	defer derrors.Wrap(&err, "NewServer(db, ic, pc, q, %q)", staticPath)
+
+	var indexTemplate *template.Template
+	if staticPath != "" {
+		templatePath := filepath.Join(staticPath, "html/etl/index.tmpl")
+		indexTemplate, err = template.New("index.tmpl").Funcs(template.FuncMap{
+			"truncate": truncate,
+		}).ParseFiles(templatePath)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &Server{
 		db:          db,
 		indexClient: indexClient,
@@ -49,7 +64,18 @@ func NewServer(db *postgres.DB,
 		queue:       queue,
 
 		indexTemplate: indexTemplate,
+	}, nil
+}
+
+func truncate(length int, text *string) *string {
+	if text == nil {
+		return nil
 	}
+	if len(*text) <= length {
+		return text
+	}
+	s := (*text)[:length] + "..."
+	return &s
 }
 
 // Install registers server routes using the given handler registration func.
