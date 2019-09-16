@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -55,12 +54,13 @@ func (c *Client) pollURL(since time.Time, limit int) string {
 }
 
 // GetVersions queries the index for new versions.
-func (c *Client) GetVersions(ctx context.Context, since time.Time, limit int) ([]*internal.IndexVersion, error) {
+func (c *Client) GetVersions(ctx context.Context, since time.Time, limit int) (_ []*internal.IndexVersion, err error) {
+	defer derrors.Wrap(&err, "index.Client.GetVersions(ctx, %s, %d)", since, limit)
+
 	u := c.pollURL(since, limit)
 	r, err := ctxhttp.Get(ctx, c.httpClient, u)
 	if err != nil {
-		return nil, fmt.Errorf("index.Client.GetVersions(ctx, %s, %d): ctxhttp.Get(ctx, nil, %q): %v",
-			since, limit, u, err)
+		return nil, fmt.Errorf("ctxhttp.Get(ctx, nil, %q): %v", u, err)
 	}
 	defer r.Body.Close()
 
@@ -68,17 +68,12 @@ func (c *Client) GetVersions(ctx context.Context, since time.Time, limit int) ([
 	dec := json.NewDecoder(r.Body)
 
 	// The module index returns a stream of JSON objects formatted with newline
-	// as the delimiter. For each version log, we want to set source to
-	// "proxy-index" and created_at to the time right before the proxy index is
-	// queried.
+	// as the delimiter.
 	for dec.More() {
 		var l internal.IndexVersion
 		if err := dec.Decode(&l); err != nil {
-			log.Printf("dec.Decode: %v", err)
-			continue
+			return nil, fmt.Errorf("decoding JSON: %v", err)
 		}
-		// The created_at column is without timestamp, so we must normalize to UTC.
-		l.Timestamp = l.Timestamp.UTC()
 		versions = append(versions, &l)
 	}
 	return versions, nil
