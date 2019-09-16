@@ -188,18 +188,26 @@ func (s *Server) handleFetch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	msg, code := s.doFetch(r)
-	log.Println(msg)
+	if msg == "" {
+		msg = "[empty message]"
+	}
+	log.Print(msg)
 
 	if code == http.StatusInternalServerError {
+		log.Printf("doFetch of %s returned %d; returning that code to retry task", r.URL.Path, code)
 		http.Error(w, http.StatusText(code), code)
 		return
 	}
-
+	if code == http.StatusOK {
+		log.Printf("doFetch of %s succeeded with %d", r.URL.Path, code)
+	} else {
+		log.Printf("doFetch of %s returned code %d; returning OK to avoid retry", r.URL.Path, code)
+	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	if code == http.StatusOK {
-		fmt.Fprint(w, msg)
+		fmt.Fprintln(w, msg)
 	}
-	fmt.Fprint(w, http.StatusText(code))
+	fmt.Fprintln(w, http.StatusText(code))
 }
 
 // doFetch executes a fetch request and returns the msg and status.
@@ -213,7 +221,7 @@ func (s *Server) doFetch(r *http.Request) (string, int) {
 	if err != nil {
 		return err.Error(), code
 	}
-	return fmt.Sprintf("Downloaded %s@%s", modulePath, version), http.StatusOK
+	return fmt.Sprintf("fetched and updated %s@%s", modulePath, version), http.StatusOK
 }
 
 // parseModulePathAndVersion returns the module and version specified by p. p
@@ -317,6 +325,18 @@ func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "error getting versions to fetch", http.StatusInternalServerError)
 		return
 	}
+
+	log.Printf("GetNextVersionsToFetch limit=%d", limit)
+	for _, v := range versions {
+		status := -99
+		if v.Status != nil {
+			status = *v.Status
+		}
+		log.Printf("  %s @ %s status=%d try_count=%d err=%p indexTS=%s lastProcessedAt=%s nextProcessedAfter=%s",
+			v.ModulePath, v.Version, status, v.TryCount, v.Error,
+			formatTime(&v.IndexTimestamp), formatTime(v.LastProcessedAt), formatTime(&v.NextProcessedAfter))
+	}
+
 	span.Annotate([]trace.Attribute{trace.Int64Attribute("versions to fetch", int64(len(versions)))}, "processed limit")
 	w.Header().Set("Content-Type", "text/plain")
 	for _, v := range versions {

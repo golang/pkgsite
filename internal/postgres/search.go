@@ -471,7 +471,7 @@ func (db *DB) legacyInsertDocuments(ctx context.Context, version *internal.Versi
 			) ON CONFLICT DO NOTHING;`, func(stmt *sql.Stmt) error {
 			for _, p := range version.Packages {
 				if _, err := stmt.ExecContext(ctx, p.Path, p.V1Path, version.ModulePath, version.SeriesPath(), version.Version, p.Name, strings.Join(generatePathTokens(p.Path), " "), p.Synopsis, version.ReadmeContents); err != nil {
-					return fmt.Errorf("error inserting document for package %+v: %v", p, err)
+					return fmt.Errorf("error inserting document for package path %q: %v", p.Path, err)
 				}
 			}
 			return nil

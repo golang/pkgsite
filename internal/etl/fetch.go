@@ -101,7 +101,7 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 		}
 		return http.StatusInternalServerError, err
 	}
-
+	log.Printf("Updated version state for %s@%s: code=%d, err=%v", modulePath, version, code, fetchErr)
 	return code, fetchErr
 }
 
@@ -128,10 +128,11 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, version string
 	if err != nil {
 		return err
 	}
+	log.Printf("Fetched %s@%s", v.ModulePath, v.Version)
 	if err = db.InsertVersion(ctx, v); err != nil {
 		return err
 	}
-	log.Printf("Downloaded: %s@%s", v.ModulePath, v.Version)
+	log.Printf("Inserted version %s@%s", v.ModulePath, v.Version)
 	return nil
 }
 
