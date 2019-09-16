@@ -75,7 +75,10 @@ const debugPage = `
 // Init configures tracing and aggregation according to the given Views. If
 // running on GCP, Init also configures exporting to StackDriver.
 func Init(views ...*view.View) error {
-	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
+	// The default trace sampler samples with probability 1e-4. That's too
+	// infrequent for our traffic levels. In the future we may want to decrease
+	// this sampling rate.
+	trace.ApplyConfig(trace.Config{DefaultSampler: trace.ProbabilitySampler(0.01)})
 	if err := view.Register(views...); err != nil {
 		return fmt.Errorf("dcensus.Init(views): view.Register: %v", err)
 	}
@@ -126,9 +129,13 @@ func exportToStackdriver() {
 	view.RegisterExporter(viewExporter)
 
 	// We want traces to be associated with the *app*, not the instance.
+	// TraceSpansBufferMaxBytes is increased from the default of 8MiB, though we
+	// can't increase *too* much because this is still running in GAE, which is
+	// relatively memory-constrained.
 	traceExporter, err := stackdriver.NewExporter(stackdriver.Options{
-		ProjectID:         config.ProjectID(),
-		MonitoredResource: (*monitoredResource)(config.AppMonitoredResource()),
+		ProjectID:                config.ProjectID(),
+		MonitoredResource:        (*monitoredResource)(config.AppMonitoredResource()),
+		TraceSpansBufferMaxBytes: 32 * 1024 * 1024, // 32 MiB
 	})
 	if err != nil {
 		log.Fatalf("error creating trace exporter: %v", err)
