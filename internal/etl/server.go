@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.opencensus.io/trace"
 	"golang.org/x/discovery/internal"
@@ -46,17 +47,10 @@ func NewServer(db *postgres.DB,
 ) (_ *Server, err error) {
 	defer derrors.Wrap(&err, "NewServer(db, ic, pc, q, %q)", staticPath)
 
-	var indexTemplate *template.Template
-	if staticPath != "" {
-		templatePath := filepath.Join(staticPath, "html/etl/index.tmpl")
-		indexTemplate, err = template.New("index.tmpl").Funcs(template.FuncMap{
-			"truncate": truncate,
-		}).ParseFiles(templatePath)
-		if err != nil {
-			return nil, err
-		}
+	indexTemplate, err := parseTemplate(staticPath)
+	if err != nil {
+		return nil, err
 	}
-
 	return &Server{
 		db:          db,
 		indexClient: indexClient,
@@ -65,17 +59,6 @@ func NewServer(db *postgres.DB,
 
 		indexTemplate: indexTemplate,
 	}, nil
-}
-
-func truncate(length int, text *string) *string {
-	if text == nil {
-		return nil
-	}
-	if len(*text) <= length {
-		return text
-	}
-	s := (*text)[:length] + "..."
-	return &s
 }
 
 // Install registers server routes using the given handler registration func.
@@ -230,7 +213,7 @@ func (s *Server) doFetch(r *http.Request) (string, int) {
 	if err != nil {
 		return err.Error(), code
 	}
-	return fmt.Sprintf("Downloaded %s@%s\n", modulePath, version), http.StatusOK
+	return fmt.Sprintf("Downloaded %s@%s", modulePath, version), http.StatusOK
 }
 
 // parseModulePathAndVersion returns the module and version specified by p. p
@@ -437,4 +420,45 @@ func (s *Server) handleReprocess(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
+}
+
+// Parse the template for the status page.
+func parseTemplate(staticPath string) (*template.Template, error) {
+	if staticPath == "" {
+		return nil, nil
+	}
+	templatePath := filepath.Join(staticPath, "html/etl/index.tmpl")
+	return template.New("index.tmpl").Funcs(template.FuncMap{
+		"truncate": truncate,
+		"timefmt":  formatTime,
+	}).ParseFiles(templatePath)
+}
+
+func truncate(length int, text *string) *string {
+
+	if text == nil {
+		return nil
+	}
+	if len(*text) <= length {
+		return text
+	}
+	s := (*text)[:length] + "..."
+	return &s
+}
+
+var locNewYork *time.Location
+
+func init() {
+	var err error
+	locNewYork, err = time.LoadLocation("America/New_York")
+	if err != nil {
+		log.Fatalf("time.LoadLocation: %v", err)
+	}
+}
+
+func formatTime(t *time.Time) string {
+	if t == nil {
+		return "Never"
+	}
+	return t.In(locNewYork).Format("2006-01-02 15:04:05")
 }

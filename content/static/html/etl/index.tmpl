@@ -22,12 +22,12 @@
 		{{range .}}
 		<tr>
 			<td>{{.ModulePath}}/@v/{{.Version}}</td>
-			<td>{{.IndexTimestamp}}</td>
+			<td>{{.IndexTimestamp | timefmt}}</td>
 			<td>{{.Status}}</td>
 			<td>{{.Error | truncate 300}}</td>
 			<td>{{.TryCount}}</td>
-			<td>{{.LastProcessedAt}}</td>
-			<td>{{.NextProcessedAfter}}</td>
+			<td>{{.LastProcessedAt | timefmt}}</td>
+			<td>{{.NextProcessedAfter | timefmt}}</td>
 		</tr>
 		{{end}}
 	{{else}}
@@ -90,6 +90,8 @@ td {
 <title>Go Discovery ETL</title>
 <h1>Go Discovery ETL</h1>
 
+<p>All times in America/New_York.</p>
+
 <div class="actions">
 	<form action="/poll-and-queue" method="post" name="queueForm">
 		<button title="Poll the module index for up to 2000 new versions, and enqueue them for processing."
@@ -124,7 +126,7 @@ td {
 
 <div class="stats">
   <h3>Statistics</h3>
-  <p>Latest timestamp from the module index: {{.Stats.LatestTimestamp}}</p>
+  <p>Latest timestamp from the module index: {{.Stats.LatestTimestamp | timefmt}}</p>
   <table>
     <caption>Results by status:</caption>
     <thead><tr><th>Status</th><th>Count</th></tr></thead>
