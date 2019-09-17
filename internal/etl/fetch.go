@@ -144,7 +144,7 @@ func FetchVersion(ctx context.Context, modulePath, version string, proxyClient *
 
 	var commitTime time.Time
 	var zipReader *zip.Reader
-	if modulePath == "std" {
+	if modulePath == stdlib.ModulePath {
 		zipReader, commitTime, err = stdlib.Zip(version)
 		if err != nil {
 			return nil, err
@@ -422,7 +422,7 @@ type BadPackageError struct {
 func (bpe *BadPackageError) Error() string { return bpe.Err.Error() }
 
 // loadPackage loads a Go package made of .go files in zipGoFiles
-// using the default build context. modulePath is "std" for the
+// using the default build context. modulePath is stdlib.ModulePath for the
 // Go standard library and the module path for all other modules.
 // innerPath is the path of the Go package directory relative to
 // the module root.
@@ -552,7 +552,7 @@ func loadPackage(zipGoFiles []*zip.File, innerPath, modulePath string) (*interna
 	// and avoid association of consts, vars, and factory functions with types
 	// since it's not helpful (see golang.org/issue/6645).
 	var noFiltering, noTypeAssociation bool
-	if modulePath == "std" && innerPath == "builtin" {
+	if modulePath == stdlib.ModulePath && innerPath == "builtin" {
 		noFiltering = true
 		noTypeAssociation = true
 	}
@@ -592,7 +592,7 @@ func loadPackage(zipGoFiles []*zip.File, innerPath, modulePath string) (*interna
 	}
 
 	v1path := path.Join(internal.SeriesPathForModule(modulePath), innerPath)
-	if modulePath == "std" {
+	if modulePath == stdlib.ModulePath {
 		importPath = innerPath
 		v1path = innerPath
 	}

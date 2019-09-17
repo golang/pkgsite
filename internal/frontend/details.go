@@ -299,7 +299,7 @@ func parsePathAndVersion(urlPath, namespace string) (path, version string, err e
 
 	// CheckPath checks that a module path is valid.
 	if namespace == "mod" {
-		if err := module.CheckImportPath(path); err != nil && path != "std" {
+		if err := module.CheckImportPath(path); err != nil && path != stdlib.ModulePath {
 			return "", "", fmt.Errorf("malformed module path %q: %v", path, err)
 		}
 	}
