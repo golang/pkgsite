@@ -421,11 +421,37 @@ type BadPackageError struct {
 
 func (bpe *BadPackageError) Error() string { return bpe.Err.Error() }
 
-// loadPackage loads a Go package made of .go files in zipGoFiles
-// using the default build context. modulePath is stdlib.ModulePath for the
-// Go standard library and the module path for all other modules.
-// innerPath is the path of the Go package directory relative to
-// the module root.
+// Go environments used to construct build contexts in loadPackage.
+var goEnvs = []struct{ GOOS, GOARCH string }{
+	{"linux", "amd64"},
+	{"windows", "amd64"},
+	{"darwin", "amd64"},
+	{"js", "wasm"},
+	{"linux", "js"},
+}
+
+// loadPackage loads a Go package by calling loadPackageWithBuildContext, trying
+// several build contexts in turn. The first build context in the list to produce
+// a non-empty package is used. If none of them result in a package, then
+// loadPackage returns nil, nil.
+func loadPackage(zipGoFiles []*zip.File, innerPath, modulePath string) (*internal.Package, error) {
+	for _, env := range goEnvs {
+		pkg, err := loadPackageWithBuildContext(env.GOOS, env.GOARCH, zipGoFiles, innerPath, modulePath)
+		if err != nil {
+			return nil, err
+		}
+		if pkg != nil {
+			return pkg, nil
+		}
+	}
+	return nil, nil
+}
+
+// loadPackageWithBuildContext loads a Go package made of .go files in zipGoFiles
+// using a build context constructed from the given GOOS and GOARCH values.
+// modulePath is stdlib.ModulePath for the Go standard library and the module
+// path for all other modules. innerPath is the path of the Go package directory
+// relative to the module root.
 //
 // zipGoFiles must contain only .go files that have been verified
 // to be of reasonable size.
@@ -436,7 +462,7 @@ func (bpe *BadPackageError) Error() string { return bpe.Err.Error() }
 // or all .go files have been excluded by constraints.
 // A *BadPackageError error is returned if the directory
 // contains .go files but do not make up a valid package.
-func loadPackage(zipGoFiles []*zip.File, innerPath, modulePath string) (*internal.Package, error) {
+func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, innerPath, modulePath string) (*internal.Package, error) {
 	var (
 		// files is a map of file names to their contents.
 		//
@@ -475,8 +501,8 @@ func loadPackage(zipGoFiles []*zip.File, innerPath, modulePath string) (*interna
 	// bctx is the build context. It's used to make decisions about which
 	// of the .go files are included or excluded by build constraints.
 	bctx := &build.Context{
-		GOOS:        "linux",
-		GOARCH:      "amd64",
+		GOOS:        goos,
+		GOARCH:      goarch,
 		CgoEnabled:  true,
 		Compiler:    build.Default.Compiler,
 		ReleaseTags: build.Default.ReleaseTags,

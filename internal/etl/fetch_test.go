@@ -184,50 +184,90 @@ func TestFetchVersion(t *testing.T) {
 
 	modulePath := "github.com/my/module"
 	version := "v1.0.0"
-	contents := map[string]string{
-		"README.md":  "THIS IS A README",
-		"foo/foo.go": "// package foo exports a helpful constant.\npackage foo\nimport \"net/http\"\nconst OK = http.StatusOK",
-		"LICENSE.md": testhelper.MITLicense,
+	wantVersionInfo := internal.VersionInfo{
+		ModulePath:     "github.com/my/module",
+		Version:        "v1.0.0",
+		CommitTime:     testProxyCommitTime,
+		ReadmeFilePath: "README.md",
+		ReadmeContents: []byte("THIS IS A README"),
+		VersionType:    internal.VersionTypeRelease,
+		RepositoryURL:  "https://github.com/my/module",
 	}
-	want := &internal.Version{
-		VersionInfo: internal.VersionInfo{
-			ModulePath:     "github.com/my/module",
-			Version:        "v1.0.0",
-			CommitTime:     testProxyCommitTime,
-			ReadmeFilePath: "README.md",
-			ReadmeContents: []byte("THIS IS A README"),
-			VersionType:    internal.VersionTypeRelease,
-			RepositoryURL:  "https://github.com/my/module",
+	wantLicenses := []*license.License{
+		{
+			Metadata: &license.Metadata{Types: []string{"MIT"}, FilePath: "LICENSE.md"},
+			Contents: []byte(testhelper.MITLicense),
 		},
-		Packages: []*internal.Package{
-			{
-				Path:     "github.com/my/module/foo",
-				V1Path:   "github.com/my/module/foo",
-				Name:     "foo",
-				Synopsis: "package foo exports a helpful constant.",
-				Licenses: []*license.Metadata{{Types: []string{"MIT"}, FilePath: "LICENSE.md"}},
-				Imports:  []string{"net/http"},
+	}
+	for _, test := range []struct {
+		name     string
+		contents map[string]string
+		want     *internal.Version
+	}{
+		{
+			name: "basic",
+			contents: map[string]string{
+				"README.md":  "THIS IS A README",
+				"foo/foo.go": "// package foo exports a helpful constant.\npackage foo\nimport \"net/http\"\nconst OK = http.StatusOK",
+				"LICENSE.md": testhelper.MITLicense,
+			},
+			want: &internal.Version{
+				VersionInfo: wantVersionInfo,
+				Packages: []*internal.Package{
+					{
+						Path:     "github.com/my/module/foo",
+						V1Path:   "github.com/my/module/foo",
+						Name:     "foo",
+						Synopsis: "package foo exports a helpful constant.",
+						Licenses: []*license.Metadata{{Types: []string{"MIT"}, FilePath: "LICENSE.md"}},
+						Imports:  []string{"net/http"},
+					},
+				},
+				Licenses: wantLicenses,
 			},
 		},
-		Licenses: []*license.License{
-			{
-				Metadata: &license.Metadata{Types: []string{"MIT"}, FilePath: "LICENSE.md"},
-				Contents: []byte(testhelper.MITLicense),
+		{
+			name: "wasm",
+			contents: map[string]string{
+				"README.md":  "THIS IS A README",
+				"LICENSE.md": testhelper.MITLicense,
+				"js/js.go": `
+					// +build js,wasm
+
+					// Package js only works with wasm.
+					package js
+					type Value int`,
+			},
+			want: &internal.Version{
+				VersionInfo: wantVersionInfo,
+				Packages: []*internal.Package{
+					{
+						Path:     "github.com/my/module/js",
+						V1Path:   "github.com/my/module/js",
+						Name:     "js",
+						Synopsis: "Package js only works with wasm.",
+						Licenses: []*license.Metadata{{Types: []string{"MIT"}, FilePath: "LICENSE.md"}},
+						Imports:  []string{},
+					},
+				},
+				Licenses: wantLicenses,
 			},
 		},
-	}
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			client, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
+				proxy.NewTestVersion(t, modulePath, version, test.contents),
+			})
+			defer teardownProxy()
 
-	client, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
-		proxy.NewTestVersion(t, modulePath, version, contents),
-	})
-	defer teardownProxy()
-
-	got, err := FetchVersion(ctx, modulePath, version, client)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if diff := cmp.Diff(want, got, cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML")); diff != "" {
-		t.Errorf("fetchVersion(%q, %q) diff:\n%s", modulePath, version, diff)
+			got, err := FetchVersion(ctx, modulePath, version, client)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := cmp.Diff(test.want, got, cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML")); diff != "" {
+				t.Errorf("mismatch (-want +got):\n%s", diff)
+			}
+		})
 	}
 }
 
