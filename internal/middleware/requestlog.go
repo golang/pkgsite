@@ -39,7 +39,12 @@ func (l LocalLogger) Log(entry logging.Entry) {
 }
 
 // RequestLog returns a middleware that logs each incoming requests using the
-// given logger.
+// given logger. This logger replaces the built-in appengine request logger,
+// which logged PII when behind IAP, in such a way that was impossible to turn
+// off.
+//
+// Logs may be viewed in Pantheon by selecting the log source corresponding to
+// the AppEngine service name (e.g. 'dev-etl').
 func RequestLog(lg Logger) Middleware {
 	return func(h http.Handler) http.Handler {
 		return &handler{delegate: h, logger: lg}
