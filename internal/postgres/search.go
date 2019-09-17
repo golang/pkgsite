@@ -43,65 +43,65 @@ type SearchResult struct {
 func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int) (_ []*SearchResult, err error) {
 	defer derrors.Wrap(&err, "DB.Search(ctx, %q, %d, %d)", searchQuery, limit, offset)
 
+	// Rank:
+	// Packages are ranked based on their relevance and imported_by_count. If
+	// the package is not redistributable, lower its rank by 50% since a lot of
+	// details cannot be displayed.
+	//
+	// TODO(b/136283982): improve how this signal is used in search ranking.
+	// The log factor contains exp(1) so that it is always >= 1. Taking the log
+	// of imported_by_count instead of using it directly makes the effect less
+	// dramatic: being 2x as popular only has an additive effect.
+	//
+	// Only include results whose rank exceed a certain threshold. Based on
+	// experimentation, we picked a rank of greater than 0.1, but this may
+	// change based on future experimentation.
 	query := `
-		WITH results AS (
+		SELECT
+			r.package_path,
+			r.version,
+			r.module_path,
+			p.NAME,
+			p.synopsis,
+			p.license_types,
+			r.commit_time,
+			r.imported_by_count,
+			r.rank,
+			r.total
+		FROM (
 			SELECT
 				package_path,
 				version,
 				module_path,
 				imported_by_count,
 				commit_time,
-				-- Rank packages based on their relevance and
-				-- imported_by_count.
-				-- If the package is not redistributable,
-				-- lower its rank by 50% since a lot of details
-				-- cannot be displayed.
-				-- TODO(b/136283982): improve how this signal
-				-- is used in search ranking.
-				-- The log factor contains exp(1) (which is e) so that
-				-- it is always >= 1. Taking the log of imported_by_count
-				-- instead of using it directly makes the effect less dramatic:
-				-- being 2x as popular only has an additive effect.
-				ts_rank(tsv_search_tokens, websearch_to_tsquery($1)) *
+				COUNT(*) OVER() AS total,
+				(
+					ts_rank(tsv_search_tokens, websearch_to_tsquery($1)) *
 					log(exp(1)+imported_by_count) *
-					CASE WHEN redistributable THEN 1 ELSE 0.5 END
-					AS rank
-			FROM
+					CASE WHEN redistributable THEN 1
+					ELSE 0.5 END
+				) AS rank
+                    	FROM
 				search_documents
-			WHERE
+                    	WHERE
 				tsv_search_tokens @@ websearch_to_tsquery($1)
-		)
-
-		SELECT
-			r.package_path,
-			r.version,
-			r.module_path,
-			p.name,
-			p.synopsis,
-			p.license_types,
-			r.commit_time,
-			r.imported_by_count,
-			r.rank,
-			COUNT(*) OVER() AS total
-		FROM
-			results r
+                    	ORDER BY
+				rank DESC,
+				commit_time DESC,
+				package_path
+			LIMIT $2
+			OFFSET $3
+		) r
 		INNER JOIN
 			packages p
 		ON
 			p.path = r.package_path
-			AND p.module_path = r.module_path
+		AND
+			p.module_path = r.module_path
 			AND p.version = r.version
 		WHERE
-			-- Only include results whose rank exceed a certain threshold.
-			-- Based on experimentation, we picked a rank of greater than 0.1,
-			-- but this may change based on future experimentation.
-			r.rank > 0.1
-		ORDER BY
-			r.rank DESC,
-			r.commit_time DESC,
-			p.path
-		LIMIT $2
-		OFFSET $3;`
+			r.rank > 0.1;`
 
 	var results []*SearchResult
 	collect := func(rows *sql.Rows) error {
