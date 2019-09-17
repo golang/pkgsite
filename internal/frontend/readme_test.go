@@ -29,6 +29,7 @@ func TestFetchReadMeDetails(t *testing.T) {
 		wantDetails: &ReadMeDetails{
 			ModulePath: sample.ModulePath,
 			ReadMe:     template.HTML("<p>readme</p>\n"),
+			Source:     "github.com/valid_module_name@v1.0.0/README.md",
 		},
 	}
 

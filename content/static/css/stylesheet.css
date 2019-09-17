@@ -104,7 +104,7 @@ code {
   position: relative;
 }
 .FeedbackButton {
-	cursor: pointer;
+  cursor: pointer;
 }
 .Footer-feedbackButton {
   border: none;
@@ -341,6 +341,12 @@ code {
 .ReadMe pre {
   overflow-x: auto;
 }
+.ReadMe-source {
+  color: var(--gray-3);
+  float: right;
+  font-size: 0.875rem;
+  padding-top: 1.5rem;
+}
 
 .DetailsNav {
   margin: 0 -16px 16px -16px;
@@ -419,6 +425,11 @@ code {
   overflow-x: auto;
   padding: 1.5rem;
   tab-size: 4;
+}
+.License-source {
+  font-size: 0.875rem;
+  color: var(--gray-3);
+  padding-top: 0.5rem;
 }
 .Disclaimer-link {
   font-style: italic;

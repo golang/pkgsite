@@ -168,7 +168,8 @@ func TestServer(t *testing.T) {
 		},
 		{
 			fmt.Sprintf("/pkg/%s?tab=readme", sample.PackagePath),
-			append(pkgHeader, `<div class="ReadMe"><p>readme</p>`),
+			append(pkgHeader, `<div class="ReadMe"><p>readme</p>`,
+				`<div class="ReadMe-source">Source: github.com/valid_module_name@v1.0.0/README.md</div>`),
 		},
 		{
 			// For a non-redistributable package, the readme tab will not show the readme.
@@ -208,10 +209,11 @@ func TestServer(t *testing.T) {
 		{
 			fmt.Sprintf("/pkg/%s?tab=licenses", sample.PackagePath),
 			append(pkgHeader,
-				`<a href="#LICENSE">MIT</a>`,
+				`<div id="#LICENSE">MIT</div>`,
 				`This is not legal advice`,
 				`<a href="/license-policy">Read disclaimer.</a>`,
-				`Lorem Ipsum`),
+				`Lorem Ipsum`,
+				`<div class="License-source">Source: github.com/valid_module_name@v1.0.0/LICENSE</div>`),
 		},
 		{
 			fmt.Sprintf("/pkg/%s", sample.PackagePath+"/directory"),
@@ -252,7 +254,7 @@ func TestServer(t *testing.T) {
 		{
 			fmt.Sprintf("/mod/%s@%s?tab=licenses", sample.ModulePath, sample.VersionString),
 			append(modHeader,
-				`<a href="#LICENSE">MIT</a>`,
+				`<div id="#LICENSE">MIT</div>`,
 				`This is not legal advice`,
 				`<a href="/license-policy">Read disclaimer.</a>`,
 				`Lorem Ipsum`),

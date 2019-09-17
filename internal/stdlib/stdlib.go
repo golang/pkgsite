@@ -40,7 +40,9 @@ const ModulePath = "std"
 // TagForVersion returns the Go standard library repository tag corresponding
 // to semver. The Go tags differ from standard semantic versions in a few ways,
 // such as beginning with "go" instead of "v".
-func TagForVersion(version string) (string, error) {
+func TagForVersion(version string) (_ string, err error) {
+	defer derrors.Wrap(&err, "TagForVersion(%q)", version)
+
 	if !semver.IsValid(version) {
 		return "", derrors.FromHTTPStatus(http.StatusBadRequest, "requested version is not a valid semantic version: %q ", version)
 	}
@@ -86,7 +88,7 @@ func finalDigitsIndex(s string) int {
 	return i + 1
 }
 
-const goRepoURL = "https://go.googlesource.com/go"
+const GoRepoURL = "https://go.googlesource.com/go"
 
 // UseTestData determines whether to really clone the Go repo, or use
 // stripped-down versions of the repo from the testdata directory.
@@ -102,7 +104,7 @@ func getGoRepo(version string) (_ *git.Repository, err error) {
 		return nil, err
 	}
 	return git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
-		URL:           goRepoURL,
+		URL:           GoRepoURL,
 		ReferenceName: plumbing.NewTagReferenceName(tag),
 		SingleBranch:  true,
 		Depth:         1,
@@ -148,7 +150,7 @@ func Versions() (_ []string, err error) {
 		refNames = testRefs
 	} else {
 		re := git.NewRemote(memory.NewStorage(), &config.RemoteConfig{
-			URLs: []string{goRepoURL},
+			URLs: []string{GoRepoURL},
 		})
 		refs, err := re.List(&git.ListOptions{})
 		if err != nil {

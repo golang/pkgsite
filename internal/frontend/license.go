@@ -16,6 +16,7 @@ import (
 type License struct {
 	*license.License
 	Anchor string
+	Source string
 }
 
 // LicensesDetails contains license information for a package or module.
@@ -37,17 +38,18 @@ func fetchPackageLicensesDetails(ctx context.Context, ds DataSource, pkg *intern
 	if err != nil {
 		return nil, err
 	}
-	return &LicensesDetails{Licenses: transformLicenses(dsLicenses)}, nil
+	return &LicensesDetails{Licenses: transformLicenses(pkg.ModulePath, pkg.Version, dsLicenses)}, nil
 }
 
 // transformLicenses transforms license.License into a License
 // by adding an anchor field.
-func transformLicenses(dbLicenses []*license.License) []License {
+func transformLicenses(modulePath, version string, dbLicenses []*license.License) []License {
 	licenses := make([]License, len(dbLicenses))
 	for i, l := range dbLicenses {
 		licenses[i] = License{
 			Anchor:  licenseAnchor(l.FilePath),
 			License: l,
+			Source:  fileSource(modulePath, version, l.FilePath),
 		}
 	}
 	return licenses

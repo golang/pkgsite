@@ -25,6 +25,7 @@ import (
 // needs to populate.
 type ReadMeDetails struct {
 	ModulePath string
+	Source     string
 	ReadMe     template.HTML
 }
 
@@ -33,6 +34,7 @@ type ReadMeDetails struct {
 func fetchReadMeDetails(ctx context.Context, ds DataSource, vi *internal.VersionInfo) (*ReadMeDetails, error) {
 	return &ReadMeDetails{
 		ModulePath: vi.ModulePath,
+		Source:     fileSource(vi.ModulePath, vi.Version, vi.ReadmeFilePath),
 		ReadMe:     readmeHTML(vi),
 	}, nil
 }
