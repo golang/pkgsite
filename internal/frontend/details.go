@@ -44,6 +44,13 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Package "C" is a special case: redirect to the Go Blog article on cgo.
+	// (This is what godoc.org does.)
+	if path == "C" {
+		http.Redirect(w, r, "https://golang.org/doc/articles/c_go_cgo.html", http.StatusMovedPermanently)
+		return
+	}
+
 	var pkg *internal.VersionedPackage
 	code, epage := fetchPackageOrModule("pkg", path, version, func(ver string) error {
 		var err error
