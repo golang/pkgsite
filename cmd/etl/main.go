@@ -26,7 +26,6 @@ import (
 	"golang.org/x/discovery/internal/proxy"
 
 	"contrib.go.opencensus.io/integrations/ocsql"
-	"go.opencensus.io/plugin/ochttp"
 )
 
 var (
@@ -84,15 +83,14 @@ func main() {
 	router := dcensus.NewRouter(nil)
 	server.Install(router.Handle)
 
-	views := append(ochttp.DefaultServerViews, ochttp.DefaultClientViews...)
-	views = append(views, dcensus.ViewByCodeRouteMethod, dcensus.ViewByCodeRouteMethodLatencyDistribution)
+	views := append(dcensus.ClientViews, dcensus.ServerViews...)
 	if err := dcensus.Init(views...); err != nil {
 		log.Fatal(err)
 	}
 	// We are not currently forwarding any ports on AppEngine, so serving debug
 	// information is broken.
 	if !config.OnAppEngine() {
-		dcensusServer, err := dcensus.NewServer(views...)
+		dcensusServer, err := dcensus.NewServer()
 		if err != nil {
 			log.Fatal(err)
 		}

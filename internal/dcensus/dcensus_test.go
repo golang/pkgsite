@@ -16,7 +16,7 @@ import (
 )
 
 func TestRouter(t *testing.T) {
-	view.Register(ViewByCodeRouteMethod)
+	view.Register(ServerResponseCount)
 	handler := func(w http.ResponseWriter, r *http.Request) {}
 	tagger := func(route string, r *http.Request) string {
 		tag := strings.Trim(route, "/")
@@ -40,7 +40,7 @@ func TestRouter(t *testing.T) {
 		}
 		resp.Body.Close()
 	}
-	rows, err := view.RetrieveData(codeRouteMethodCount)
+	rows, err := view.RetrieveData(ServerResponseCount.Name)
 	if err != nil {
 		t.Fatal(err)
 	}

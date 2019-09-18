@@ -87,7 +87,7 @@ func Init(views ...*view.View) error {
 }
 
 // NewServer creates a new http.Handler for serving debug information.
-func NewServer(views ...*view.View) (http.Handler, error) {
+func NewServer() (http.Handler, error) {
 	pe, err := prometheus.NewExporter(prometheus.Options{})
 	if err != nil {
 		return nil, fmt.Errorf("dcensus.NewServer: prometheus.NewExporter: %v", err)
@@ -170,27 +170,74 @@ func NewViewExporter() (_ *stackdriver.Exporter, err error) {
 	})
 }
 
-const (
-	codeRouteMethodCount   = "opencensus.io/http/server/response_count_by_status_code_route_method"
-	codeRouteMethodLatency = "opencensus.io/http/server/response_latency_distribution_by_status_code_route_method"
+// Customizations of ochttp views. Views are updated as follows:
+//  + names are changed to use the custom.googleapis.com prefix, in accordance
+//    with https://cloud.google.com/monitoring/api/v3/metrics-details#label_names
+//  + ClientHost and ServerRoute are added to resp. client and server metrics.
+//    Since these are bounded cardinality in our metrics, they are useful to
+//    add additional context.
+//  + Method tags are removed. We don't have any routes that accept more than
+//    one HTTP method.
+var (
+	ClientCompletedCount = &view.View{
+		Name:        "custom.googleapis.com/go-discovery/http/client/completed_count",
+		Measure:     ochttp.ClientRoundtripLatency,
+		Aggregation: view.Count(),
+		Description: "Count of completed requests, by HTTP method and response status",
+		TagKeys:     []tag.Key{ochttp.KeyClientHost, ochttp.KeyClientStatus},
+	}
+	ClientRoundtripLatencyDistribution = &view.View{
+		Name:        "custom.googleapis.com/go-discovery/http/client/roundtrip_latency",
+		Measure:     ochttp.ClientRoundtripLatency,
+		Aggregation: ochttp.DefaultLatencyDistribution,
+		Description: "End-to-end latency, by ClientHost and ClientStatus",
+		TagKeys:     []tag.Key{ochttp.KeyClientHost, ochttp.KeyClientStatus},
+	}
+	ClientReceivedBytesDistribution = &view.View{
+		Name:        "custom.googleapis.com/go-discovery/http/client/received_bytes",
+		Measure:     ochttp.ClientReceivedBytes,
+		Aggregation: ochttp.DefaultSizeDistribution,
+		Description: "Total bytes received in response bodies (not including headers but including " +
+			"error responses with bodies), by ClientHost and ClientStatus",
+		TagKeys: []tag.Key{ochttp.KeyClientHost, ochttp.KeyClientStatus},
+	}
+	ServerRequestCount = &view.View{
+		Name:        "custom.googleapis.com/go-discovery/http/server/request_count",
+		Description: "Count of HTTP requests started by ServerRoute",
+		TagKeys:     []tag.Key{ochttp.KeyServerRoute},
+		Measure:     ochttp.ServerRequestCount,
+		Aggregation: view.Count(),
+	}
+	ServerResponseCount = &view.View{
+		Name:        "custom.googleapis.com/go-discovery/http/server/response_count",
+		Description: "Server response count by status code and route",
+		TagKeys:     []tag.Key{ochttp.StatusCode, ochttp.KeyServerRoute},
+		Measure:     ochttp.ServerLatency,
+		Aggregation: view.Count(),
+	}
+	ServerLatency = &view.View{
+		Name:        "custom.googleapis.com/go-discovery/http/server/response_latency",
+		Description: "Server response distribution by status code and route",
+		TagKeys:     []tag.Key{ochttp.KeyServerRoute},
+		Measure:     ochttp.ServerLatency,
+		Aggregation: ochttp.DefaultLatencyDistribution,
+	}
+	ServerResponseBytes = &view.View{
+		Name:        "custom.googleapis.com/go-discovery/http/server/response_bytes",
+		Description: "Size distribution of HTTP response body",
+		TagKeys:     []tag.Key{ochttp.KeyServerRoute},
+		Measure:     ochttp.ServerResponseBytes,
+		Aggregation: ochttp.DefaultSizeDistribution,
+	}
+	ClientViews = []*view.View{
+		ClientCompletedCount,
+		ClientRoundtripLatencyDistribution,
+		ClientReceivedBytesDistribution,
+	}
+	ServerViews = []*view.View{
+		ServerRequestCount,
+		ServerResponseCount,
+		ServerLatency,
+		ServerResponseBytes,
+	}
 )
-
-// ViewByCodeRouteMethod is a view of HTTP server requests parameterized
-// by StatusCode, Route, and HTTP method.
-var ViewByCodeRouteMethod = &view.View{
-	Name:        codeRouteMethodCount,
-	Description: "Server response count by status code",
-	TagKeys:     []tag.Key{ochttp.StatusCode, ochttp.KeyServerRoute, ochttp.Method},
-	Measure:     ochttp.ServerLatency,
-	Aggregation: view.Count(),
-}
-
-// ViewByCodeRouteMethodLatencyDistribution is a view of HTTP server requests
-// parameterized by StatusCode, Route, and HTTP method.
-var ViewByCodeRouteMethodLatencyDistribution = &view.View{
-	Name:        codeRouteMethodLatency,
-	Description: "Server response distribution by status code",
-	TagKeys:     []tag.Key{ochttp.StatusCode, ochttp.KeyServerRoute, ochttp.Method},
-	Measure:     ochttp.ServerLatency,
-	Aggregation: ochttp.DefaultLatencyDistribution,
-}
