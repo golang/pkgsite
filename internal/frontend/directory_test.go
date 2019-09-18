@@ -53,6 +53,7 @@ func TestFetchPackagesInDirectory(t *testing.T) {
 				Version:  v.Version,
 				Packages: pkgs,
 			},
+			BreadcrumbPath: breadcrumbPath(dirPath, modulePath, version),
 		}
 	}
 	checkFetchDirectory := func(version string, want *DirectoryPage) {

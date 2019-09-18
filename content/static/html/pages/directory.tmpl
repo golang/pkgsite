@@ -7,7 +7,8 @@
 {{define "main_content"}}
   <div class="Container">
     <header class="Directory-header">
-      <h1 class="Header-title">Directory {{.Directory.Path}}</h1>
+      <span>{{.BreadcrumbPath}}</span>
+      <h1 class="Header-title">Directories</h1>
       {{if .Version}}
         <p class="InfoLabel">
           <strong class="InfoLabel-title">Version:</strong> {{.Version}}

@@ -30,6 +30,7 @@ type DetailsPage struct {
 	Settings       TabSettings
 	Details        interface{}
 	Header         interface{}
+	BreadcrumbPath template.HTML
 	Tabs           []TabSettings
 	Namespace      string
 }
@@ -102,6 +103,7 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 		basePage:       newBasePage(r, packageTitle(&pkg.Package)),
 		Settings:       settings,
 		Header:         pkgHeader,
+		BreadcrumbPath: breadcrumbPath(pkgHeader.Path, pkgHeader.Module.Path, pkgHeader.Module.Version),
 		Details:        details,
 		CanShowDetails: canShowDetails,
 		Tabs:           packageTabSettings,
@@ -193,14 +195,6 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
 
-// moduleTitle constructs the details page title for pkg.
-func moduleTitle(modulePath string) string {
-	if stdlib.ModulePath == modulePath {
-		return "Standard library"
-	}
-	return "Module " + modulePath
-}
-
 // handleModuleDetails applies database data to the appropriate template.
 // Handles all endpoints that match "/mod/<module-path>[@<version>?tab=<tab>]".
 func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
@@ -253,6 +247,7 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 		basePage:       newBasePage(r, moduleTitle(moduleVersion.ModulePath)),
 		Settings:       settings,
 		Header:         modHeader,
+		BreadcrumbPath: "",
 		Details:        details,
 		CanShowDetails: canShowDetails,
 		Tabs:           moduleTabSettings,
@@ -496,7 +491,7 @@ func effectiveName(pkg *internal.Package) string {
 	if pkg.Name != "main" {
 		return pkg.Name
 	}
-	var prefix string
+	var prefix string // package path without version
 	if pkg.Path[len(pkg.Path)-3:] == "/v1" {
 		prefix = pkg.Path[:len(pkg.Path)-3]
 	} else {
@@ -507,11 +502,66 @@ func effectiveName(pkg *internal.Package) string {
 }
 
 // packageTitle constructs the details page title for pkg.
+// The string will appear in the <title> and <h1> element.
 func packageTitle(pkg *internal.Package) string {
 	if pkg.Name != "main" {
 		return "Package " + pkg.Name
 	}
 	return "Command " + effectiveName(pkg)
+}
+
+// breadcrumbPath builds HTML that displays pkgPath as a sequence of links
+// to its parents.
+// pkgPath is a slash-separated path, and may be a package import path or a directory.
+// modPath is the package's module path. This will be a prefix of pkgPath, except
+// within the standard library.
+// version is the version for the module, or LatestVersion.
+//
+// See TestBreadcrumbPath for examples.
+func breadcrumbPath(pkgPath, modPath, version string) template.HTML {
+	// Obtain successive prefixes of pkgPath, stopping at modPath,
+	// or for the stdlib, at the end.
+	minLen := len(modPath) - 1
+	if modPath == stdlib.ModulePath {
+		minLen = 1
+	}
+	var dirs []string
+	for dir := pkgPath; len(dir) > minLen; dir = path.Dir(dir) {
+		dirs = append(dirs, dir)
+	}
+	// Construct the path elements of the result.
+	// They will be in reverse order of dirs.
+	elems := make([]string, len(dirs))
+	// The first dir is the current page. If it is the only one, leave it
+	// as is. Otherwise, use its base. In neither case does it get a link.
+	d := dirs[0]
+	if len(dirs) > 1 {
+		d = path.Base(d)
+	}
+	elems[len(elems)-1] = fmt.Sprintf(`<span class="Header-breadcrumbCurrent">%s</span>`, d)
+	// Make all the other parts into links.
+	for i := 1; i < len(dirs); i++ {
+		href := "/pkg/" + dirs[i]
+		if version != internal.LatestVersion {
+			href += "@" + version
+		}
+		el := dirs[i]
+		if i != len(dirs)-1 {
+			el = path.Base(el)
+		}
+		elems[len(elems)-i-1] = fmt.Sprintf(`<a href="%s">%s</a>`, template.HTMLEscapeString(href), template.HTMLEscapeString(el))
+	}
+	return template.HTML(`<div class="Header-breadcrumb">` +
+		strings.Join(elems, `<span class="Header-breadcrumbDivider">/</span>`) +
+		`</div>`)
+}
+
+// moduleTitle constructs the details page title for pkg.
+func moduleTitle(modulePath string) string {
+	if modulePath == stdlib.ModulePath {
+		return "Standard library"
+	}
+	return "Module " + modulePath
 }
 
 // elapsedTime takes a date and returns returns human-readable,

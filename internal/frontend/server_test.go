@@ -84,7 +84,9 @@ func TestServer(t *testing.T) {
 	s.Install(mux.Handle)
 
 	pkgHeader := []string{
-		`<h1 class="Header-title">github.com/valid_module_name/foo</h1>`,
+		// part of breadcrumb path
+		`<span class="Header-breadcrumbDivider">/</span><span class="Header-breadcrumbCurrent">foo</span>`,
+		`<h1 class="Header-title">Package foo</h1>`,
 		`Module:`,
 		`<a href="/mod/github.com/valid_module_name@v1.0.0">`,
 		`github.com/valid_module_name`,
@@ -95,7 +97,7 @@ func TestServer(t *testing.T) {
 		`<a href="github.com/valid_module_name">Source Code</a>`,
 	}
 	nonRedistPkgHeader := []string{
-		`<h1 class="Header-title">github.com/non_redistributable/bar</h1>`,
+		`<h1 class="Header-title">Package bar</h1>`,
 		`Module:`,
 		`<a href="/mod/github.com/non_redistributable@v1.0.0">`,
 		`github.com/non_redistributable`,
@@ -108,7 +110,7 @@ func TestServer(t *testing.T) {
 	}
 
 	modHeader := []string{
-		`<h1 class="Header-title">module github.com/valid_module_name</h1>`,
+		`<h1 class="Header-title">Module github.com/valid_module_name</h1>`,
 		`Version:`,
 		`v1.0.0`,
 		`<a href="/mod/github.com/valid_module_name@v1.0.0?tab=licenses#LICENSE">MIT</a>`,
@@ -217,7 +219,7 @@ func TestServer(t *testing.T) {
 		},
 		{
 			fmt.Sprintf("/pkg/%s", sample.PackagePath+"/directory"),
-			[]string{`<h1 class="Header-title">Directory github.com/valid_module_name/foo/directory</h1>`},
+			[]string{`<h1 class="Header-title">Directories</h1>`},
 		},
 
 		{
@@ -280,10 +282,11 @@ func TestServer(t *testing.T) {
 			for _, want := range tc.want {
 				i := strings.Index(body, want)
 				if i < 0 {
-					if len(body) > 100 {
-						body = "<content exceeds 100 chars>"
+					b := body
+					if len(b) > 100 {
+						b = "<content exceeds 100 chars>"
 					}
-					t.Errorf("`%s` not found in body\n%s", want, body)
+					t.Errorf("`%s` not found in body\n%s", want, b)
 					continue
 				}
 				// Truncate the body each time through the loop to make sure the wanted strings

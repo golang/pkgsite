@@ -8,14 +8,10 @@
   {{$header := .Header}}
   {{$namespace := .Namespace}}
   <header>
-    <h1 class="Header-title">
-      {{- if eq $header.Path "std" -}}
-        The Go Standard Library
-      {{- else if eq $namespace "mod" -}}
-        module {{$header.Path}}
-      {{- else -}}
-        {{$header.Path}}
-      {{- end}}</h1>
+    {{if .BreadcrumbPath}}
+      <span>{{.BreadcrumbPath}}</span>
+    {{end}}
+    <h1 class="Header-title">{{.Title}}</h1>
     <p class="InfoLabel">
       {{if eq $namespace "pkg"}}
         <strong class="InfoLabel-title">Module: </strong>

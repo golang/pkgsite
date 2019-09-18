@@ -236,6 +236,16 @@ code {
 }
 .Header-title {
   font:  600 1.875rem 'Work Sans', arial, sans-serif;
+  margin: 0;
+}
+.Header-breadcrumb {
+  margin-top: 0.75rem;
+}
+.Header-breadcrumbCurrent {
+  color: var(--gray-3);
+}
+.Header-breadcrumbDivider {
+  color: var(--gray-3);
 }
 @media only screen and (min-width: 850px) {
   .Header {

@@ -7,6 +7,7 @@ package frontend
 import (
 	"context"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"sort"
@@ -20,6 +21,7 @@ import (
 type DirectoryPage struct {
 	basePage
 	*Directory
+	BreadcrumbPath template.HTML
 }
 
 // DirectoryDetails contains data needed represent the directory view on
@@ -60,14 +62,19 @@ func fetchPackagesInDirectory(ctx context.Context, ds DataSource, dirPath, versi
 	if err != nil {
 		return nil, err
 	}
+	var dir *Directory
 	if len(dbDir.Packages) == 0 {
-		return &DirectoryPage{Directory: &Directory{Path: dirPath, Version: version}}, nil
+		dir = &Directory{Path: dirPath, Version: version}
+	} else {
+		dir, err = createDirectory(dirPath, dbDir.Packages)
+		if err != nil {
+			return nil, err
+		}
 	}
-	dir, err := createDirectory(dirPath, dbDir.Packages)
-	if err != nil {
-		return nil, err
-	}
-	return &DirectoryPage{Directory: dir}, nil
+	return &DirectoryPage{
+		Directory:      dir,
+		BreadcrumbPath: breadcrumbPath(dbDir.Path, dbDir.ModulePath, dbDir.Version),
+	}, nil
 }
 
 // fetchPackageDirectoryDetails fetches all packages in the directory dirPath
