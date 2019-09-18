@@ -8,28 +8,15 @@
   <div class="Container">
     <header class="Directory-header">
       <h1 class="Header-title">Directory {{.Directory.Path}}</h1>
-      <p class="InfoLabel">
-	{{if .Version}}
+      {{if .Version}}
+        <p class="InfoLabel">
           <strong class="InfoLabel-title">Version:</strong> {{.Version}}
-	{{end}}
-      </p>
+        </p>
+      {{end}}
     </header>
     {{if .Packages}}
       <div class="Content">
-        <h2>Packages in this directory</h2>
-        <div class="Directory-list">
-          {{range .Packages}}
-            <p>
-              <div>
-                <a href="/pkg/{{.Path}}@{{.Version}}">
-                  <b>{{.Suffix}}</b>
-                </a>
-              </div>
-              <div>{{.Synopsis}}</div>
-            </p>
-          {{end}}
-        </div>
-      </div>
+      {{template "directories" .Packages}}
     {{else}}
       {{template "empty_content" "There are no packages in this directory!"}}
     {{end}}

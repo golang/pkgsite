@@ -493,16 +493,6 @@ code {
   margin-left: 0;
 }
 
-.SubDirectoriesContent-list {
-  max-width: 700px;
-  padding-left: 0;
-  list-style: none;
-}
-.SubDirectoriesContent-list li {
-  margin-bottom: 8px;
-  line-height: 24px;
-}
-
 .Versions-list {
   list-style: none;
   padding-left: 16px;
@@ -587,11 +577,22 @@ code {
   margin: 0 10px;
 }
 
-.Directory-list {
-  max-width: 620px;
+.Directories table {
+  max-width: 800px;
+}
+.Directories td {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--gray-8);
+  padding-right: 1rem;
+}
+.Directories th {
+  text-align: left;
+  border-bottom: 1px solid var(--gray-8);
+  padding-right: 1rem;
+  padding-bottom: 0.5rem;
 }
 .Directory-header {
-  border-bottom: 1px solid var(--gray-8);
+  margin-bottom: 2rem;
 }
 
 .Details-content {
