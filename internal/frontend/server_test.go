@@ -102,7 +102,7 @@ func TestServer(t *testing.T) {
 		`</a>`,
 		`Version:`,
 		`v1.0.0`,
-		`No license files detected`,
+		`None detected`,
 		`not legal advice`,
 		`<a href="github.com/non_redistributable">Source Code</a>`,
 	}
