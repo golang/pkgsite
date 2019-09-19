@@ -8,8 +8,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
+	"sync/atomic"
+	"unicode"
 
+	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/derrors"
 )
 
@@ -20,6 +24,8 @@ type DB struct {
 }
 
 func (db *DB) exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	defer logQuery(query, args)()
+
 	res, err := db.db.ExecContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("DB.exec(ctx, %q, %v): %v", query, args, err)
@@ -28,6 +34,7 @@ func (db *DB) exec(ctx context.Context, query string, args ...interface{}) (sql.
 }
 
 func (db *DB) query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	defer logQuery(query, args)()
 	rows, err := db.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("DB.query(ctx, %q, %v): %v", query, args, err)
@@ -36,7 +43,45 @@ func (db *DB) query(ctx context.Context, query string, args ...interface{}) (*sq
 }
 
 func (db *DB) queryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
+	defer logQuery(query, args)()
 	return db.db.QueryRowContext(ctx, query, args...)
+}
+
+var queryCounter int64 // atomic: per-process counter for unique query IDs
+
+func logQuery(query string, args []interface{}) func() {
+	const maxlen = 300 // maximum length of displayed query
+
+	// To make the query more compact and readable, replace newlines with spaces
+	// and collapse adjacent whitespace.
+	var r []rune
+	for _, c := range query {
+		if c == '\n' {
+			c = ' '
+		}
+		if len(r) == 0 || !unicode.IsSpace(r[len(r)-1]) || !unicode.IsSpace(c) {
+			r = append(r, c)
+		}
+	}
+	query = string(r)
+	if len(query) > maxlen {
+		query = query[:maxlen] + "..."
+	}
+
+	instanceID := config.InstanceID()
+	if instanceID == "" {
+		instanceID = "local"
+	} else {
+		// Instance IDs are long strings. The low-order part seems quite random, so
+		// shortening the ID will still likely result in something unique.
+		instanceID = instanceID[:8]
+	}
+	n := atomic.AddInt64(&queryCounter, 1)
+	uid := fmt.Sprintf("%s-%d", instanceID, n)
+	log.Printf("%s %s %v", uid, query, args)
+	return func() {
+		log.Printf("%s done", uid)
+	}
 }
 
 // Open creates a new DB for the given Postgres connection string.
