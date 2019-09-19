@@ -163,7 +163,7 @@ func FetchVersion(ctx context.Context, modulePath, version string, proxyClient *
 	}
 	versionType, err := ParseVersionType(version)
 	if err != nil {
-		return nil, xerrors.Errorf("%v: %w", err, derrors.NotAcceptable)
+		return nil, xerrors.Errorf("%v: %w", err, derrors.BadModule)
 	}
 
 	return processZipFile(ctx, modulePath, versionType, version, commitTime, zipReader)
@@ -190,7 +190,7 @@ func processZipFile(ctx context.Context, modulePath string, versionType internal
 	}
 	packages, err := extractPackagesFromZip(modulePath, version, zipReader, license.NewMatcher(licenses))
 	if err == errModuleContainsNoPackages {
-		return nil, xerrors.Errorf("%v: %w", errModuleContainsNoPackages.Error(), derrors.NotAcceptable)
+		return nil, xerrors.Errorf("%v: %w", errModuleContainsNoPackages.Error(), derrors.BadModule)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, version, licenses, err)
