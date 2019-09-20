@@ -22,7 +22,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
-const testTimeout = 5 * time.Second
+const testTimeout = 20 * time.Second
 
 var testDB *postgres.DB
 
