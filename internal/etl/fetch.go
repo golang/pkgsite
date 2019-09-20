@@ -47,7 +47,7 @@ var (
 
 	// fetchTimeout bounds the time allowed for fetching a single module.  It is
 	// mutable for testing purposes.
-	fetchTimeout = 5 * time.Minute
+	fetchTimeout = 10 * time.Minute
 
 	maxPackagesPerModule = 10000
 	maxImportsPerPackage = 1000
