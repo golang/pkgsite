@@ -9,18 +9,18 @@ package main
 import (
 	"context"
 	"flag"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
 
 	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
-	"cloud.google.com/go/logging"
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/dcensus"
 	"golang.org/x/discovery/internal/etl"
 	"golang.org/x/discovery/internal/index"
+
+	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
@@ -115,11 +115,11 @@ func main() {
 
 func getLogger(ctx context.Context) middleware.Logger {
 	if config.OnAppEngine() {
-		logClient, err := logging.NewClient(ctx, config.ProjectID())
+		logger, err := log.UseStackdriver(ctx, "etl-log")
 		if err != nil {
-			log.Fatalf("logging.NewClient: %v", err)
+			log.Fatal(err)
 		}
-		return logClient.Logger("etl-log")
+		return logger
 	}
 	return middleware.LocalLogger{}
 }
