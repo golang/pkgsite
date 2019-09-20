@@ -23,14 +23,16 @@ type DB struct {
 	db *sql.DB
 }
 
-func (db *DB) exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+func (db *DB) exec(ctx context.Context, query string, args ...interface{}) (res sql.Result, err error) {
 	defer logQuery(query, args)()
 
-	res, err := db.db.ExecContext(ctx, query, args...)
-	if err != nil {
-		return nil, fmt.Errorf("DB.exec(ctx, %q, %v): %v", query, args, err)
-	}
-	return res, nil
+	return db.db.ExecContext(ctx, query, args...)
+}
+
+func (db *DB) execTx(ctx context.Context, tx *sql.Tx, query string, args ...interface{}) (res sql.Result, err error) {
+	defer logQuery(query, args)()
+
+	return tx.ExecContext(ctx, query, args...)
 }
 
 func (db *DB) query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
@@ -78,7 +80,15 @@ func logQuery(query string, args []interface{}) func() {
 	}
 	n := atomic.AddInt64(&queryCounter, 1)
 	uid := fmt.Sprintf("%s-%d", instanceID, n)
-	log.Printf("%s %s %v", uid, query, args)
+
+	const maxargs = 20 // maximum displayed args
+	var moreargs string
+	if len(args) > maxargs {
+		args = args[:maxargs]
+		moreargs = "..."
+	}
+
+	log.Printf("%s %s %v%s", uid, query, args, moreargs)
 	return func() {
 		log.Printf("%s done", uid)
 	}
@@ -177,6 +187,7 @@ func bulkInsert(ctx context.Context, tx *sql.Tx, table string, columns []string,
 			return fmt.Errorf("buildInsertQuery(%q, %v, values[%d:%d], %q): %v", table, columns, leftBound, rightBound, conflictAction, err)
 		}
 
+		defer logQuery(query, valueSlice)()
 		if _, err := tx.ExecContext(ctx, query, valueSlice...); err != nil {
 			return fmt.Errorf("tx.ExecContext(ctx, [bulk insert query], values[%d:%d]): %v", leftBound, rightBound, err)
 		}

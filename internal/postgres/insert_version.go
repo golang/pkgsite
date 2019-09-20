@@ -76,7 +76,7 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version) error 
 		if err := db.DeleteVersion(ctx, tx, version.ModulePath, version.Version); err != nil {
 			return fmt.Errorf("error deleting existing versions: %v", err)
 		}
-		if _, err := tx.ExecContext(ctx,
+		if _, err := db.execTx(ctx, tx,
 			`INSERT INTO versions(
 				module_path,
 				version,
@@ -401,16 +401,16 @@ func isNum(v string) bool {
 // DeleteVersion deletes a Version from the database.
 // If tx is non-nil, it will be used to execute the statement.
 // Otherwise the statement will be run outside of a transaction.
-func (db *DB) DeleteVersion(ctx context.Context, tx *sql.Tx, modulePath, version string) error {
+func (db *DB) DeleteVersion(ctx context.Context, tx *sql.Tx, modulePath, version string) (err error) {
+	defer derrors.Wrap(&err, "DB.DeleteVersion(ctx, tx, %q, %q)", modulePath, version)
+
 	// We only need to delete from the versions table. Thanks to ON DELETE
 	// CASCADE constraints, that will trigger deletions from all other tables.
 	const stmt = `DELETE FROM versions WHERE module_path=$1 AND version=$2`
-	var err error
-	if tx != nil {
-		_, err = tx.ExecContext(ctx, stmt, modulePath, version)
-	} else {
+	if tx == nil {
 		_, err = db.exec(ctx, stmt, modulePath, version)
+	} else {
+		_, err = db.execTx(ctx, tx, stmt, modulePath, version)
 	}
-	derrors.Wrap(&err, "DB.DeleteVersion(ctx, tx, %q, %q)", modulePath, version)
 	return err
 }
