@@ -72,7 +72,7 @@ func logQuery(query string, args []interface{}) func(*error) {
 	} else {
 		// Instance IDs are long strings. The low-order part seems quite random, so
 		// shortening the ID will still likely result in something unique.
-		instanceID = instanceID[:8]
+		instanceID = instanceID[len(instanceID)-4:]
 	}
 	n := atomic.AddInt64(&queryCounter, 1)
 	uid := fmt.Sprintf("%s-%d", instanceID, n)
