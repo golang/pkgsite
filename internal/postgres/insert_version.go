@@ -76,7 +76,7 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version) error 
 		if err := db.DeleteVersion(ctx, tx, version.ModulePath, version.Version); err != nil {
 			return fmt.Errorf("error deleting existing versions: %v", err)
 		}
-		if _, err := db.execTx(ctx, tx,
+		if _, err := execTx(ctx, tx,
 			`INSERT INTO versions(
 				module_path,
 				version,
@@ -410,7 +410,7 @@ func (db *DB) DeleteVersion(ctx context.Context, tx *sql.Tx, modulePath, version
 	if tx == nil {
 		_, err = db.exec(ctx, stmt, modulePath, version)
 	} else {
-		_, err = db.execTx(ctx, tx, stmt, modulePath, version)
+		_, err = execTx(ctx, tx, stmt, modulePath, version)
 	}
 	return err
 }

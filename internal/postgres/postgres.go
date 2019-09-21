@@ -24,34 +24,30 @@ type DB struct {
 }
 
 func (db *DB) exec(ctx context.Context, query string, args ...interface{}) (res sql.Result, err error) {
-	defer logQuery(query, args)()
+	defer logQuery(query, args)(&err)
 
 	return db.db.ExecContext(ctx, query, args...)
 }
 
-func (db *DB) execTx(ctx context.Context, tx *sql.Tx, query string, args ...interface{}) (res sql.Result, err error) {
-	defer logQuery(query, args)()
+func execTx(ctx context.Context, tx *sql.Tx, query string, args ...interface{}) (res sql.Result, err error) {
+	defer logQuery(query, args)(&err)
 
 	return tx.ExecContext(ctx, query, args...)
 }
 
-func (db *DB) query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
-	defer logQuery(query, args)()
-	rows, err := db.db.QueryContext(ctx, query, args...)
-	if err != nil {
-		return nil, fmt.Errorf("DB.query(ctx, %q, %v): %v", query, args, err)
-	}
-	return rows, nil
+func (db *DB) query(ctx context.Context, query string, args ...interface{}) (_ *sql.Rows, err error) {
+	defer logQuery(query, args)(&err)
+	return db.db.QueryContext(ctx, query, args...)
 }
 
 func (db *DB) queryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
-	defer logQuery(query, args)()
+	defer logQuery(query, args)(nil)
 	return db.db.QueryRowContext(ctx, query, args...)
 }
 
 var queryCounter int64 // atomic: per-process counter for unique query IDs
 
-func logQuery(query string, args []interface{}) func() {
+func logQuery(query string, args []interface{}) func(*error) {
 	const maxlen = 300 // maximum length of displayed query
 
 	// To make the query more compact and readable, replace newlines with spaces
@@ -89,8 +85,13 @@ func logQuery(query string, args []interface{}) func() {
 	}
 
 	log.Printf("%s %s %v%s", uid, query, args, moreargs)
-	return func() {
-		log.Printf("%s done", uid)
+	return func(errp *error) {
+		if errp == nil { // happens with queryRow
+			log.Printf("%s done", uid)
+		} else {
+			log.Printf("%s err=%v", uid, *errp)
+			derrors.Wrap(errp, "DB running query %s", uid)
+		}
 	}
 }
 
@@ -187,7 +188,7 @@ func bulkInsert(ctx context.Context, tx *sql.Tx, table string, columns []string,
 			return fmt.Errorf("buildInsertQuery(%q, %v, values[%d:%d], %q): %v", table, columns, leftBound, rightBound, conflictAction, err)
 		}
 
-		defer logQuery(query, valueSlice)()
+		defer logQuery(query, valueSlice)(&err)
 		if _, err := tx.ExecContext(ctx, query, valueSlice...); err != nil {
 			return fmt.Errorf("tx.ExecContext(ctx, [bulk insert query], values[%d:%d]): %v", leftBound, rightBound, err)
 		}
