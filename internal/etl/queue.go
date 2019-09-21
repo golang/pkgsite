@@ -6,9 +6,11 @@ package etl
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
@@ -16,6 +18,8 @@ import (
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
 	taskspb "google.golang.org/genproto/googleapis/cloud/tasks/v2"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // A Queue provides an interface for asynchronous scheduling of fetch actions.
@@ -49,9 +53,11 @@ func (q *GCPQueue) ScheduleFetch(ctx context.Context, modulePath, version string
 	defer cancel()
 	queueName := fmt.Sprintf("projects/%s/locations/%s/queues/%s", config.ProjectID(), config.LocationID(), q.queueID)
 	u := fmt.Sprintf("/fetch/%s/@v/%s", modulePath, version)
+	taskID := newTaskID(modulePath, version)
 	req := &taskspb.CreateTaskRequest{
 		Parent: queueName,
 		Task: &taskspb.Task{
+			Name: fmt.Sprintf("%s/tasks/%s", queueName, taskID),
 			MessageType: &taskspb.Task_AppEngineHttpRequest{
 				AppEngineHttpRequest: &taskspb.AppEngineHttpRequest{
 					HttpMethod:  taskspb.HttpMethod_POST,
@@ -63,10 +69,27 @@ func (q *GCPQueue) ScheduleFetch(ctx context.Context, modulePath, version string
 			},
 		},
 	}
+	// Work around a bug in Cloud Tasks in which duplicate tasks are erroneously detected across queues.
+	if strings.HasPrefix(q.queueID, "dev") {
+		req.Task.Name += "-dev"
+	} else {
+		req.Task.Name += "-prod"
+	}
+
 	if _, err := q.client.CreateTask(ctx, req); err != nil {
-		return fmt.Errorf("q.client.CreateTask(ctx, req): %v", err)
+		if status.Code(err) == codes.AlreadyExists {
+			log.Printf("ignoring duplicate task ID %s", taskID)
+		} else {
+			return fmt.Errorf("q.client.CreateTask(ctx, req): %v", err)
+		}
 	}
 	return nil
+}
+
+// Create a task ID for the given module path and version.
+// Task IDs can contain only letters ([A-Za-z]), numbers ([0-9]), hyphens (-), or underscores (_).
+func newTaskID(modulePath, version string) string {
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(modulePath+"@"+version)))
 }
 
 type moduleVersion struct {
