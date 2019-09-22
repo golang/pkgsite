@@ -489,7 +489,11 @@ func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, in
 			// across the calls that populate and access the files map.
 			//
 			files[bctx.JoinPath(".", name)] = src
-			return bctx.MatchFile(".", name) // This will access the file we just added to files map above.
+			match, err = bctx.MatchFile(".", name) // This will access the file we just added to files map above.
+			if err != nil {
+				return false, xerrors.Errorf("MatchFile(%q): %w", name, err)
+			}
+			return match, nil
 		}
 
 		joinPath = path.Join
@@ -539,7 +543,9 @@ func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, in
 		}
 		match, err := matchFile(bctx, name, b)
 		if err != nil {
-			return nil, err
+			// matchFile is reading from RAM, so the only possible errors are the result of bad
+			// data.
+			return nil, &BadPackageError{Err: err}
 		} else if !match {
 			// Excluded by build context.
 			continue
