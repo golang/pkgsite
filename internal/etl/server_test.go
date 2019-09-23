@@ -6,6 +6,7 @@ package etl
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -178,5 +179,22 @@ func TestETL(t *testing.T) {
 				t.Fatal(err)
 			}
 		})
+	}
+}
+
+func TestParseIntParam(t *testing.T) {
+	for _, test := range []struct {
+		in   string
+		want int
+	}{
+		{"", -1},
+		{"-1", -1},
+		{"312", 312},
+		{"bad", -1},
+	} {
+		got := parseIntParam(httptest.NewRequest("GET", fmt.Sprintf("/foo?x=%s", test.in), nil), "x", -1)
+		if got != test.want {
+			t.Errorf("%q: got %d, want %d", test.in, got, test.want)
+		}
 	}
 }

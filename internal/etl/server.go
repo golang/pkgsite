@@ -128,18 +128,7 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 // search_documents where imported_by_count_updated_at < version_updated_at or
 // imported_by_count_updated_at is null.
 func (s *Server) handleUpdateImportedByCount(w http.ResponseWriter, r *http.Request) {
-	limitParam := r.FormValue("limit")
-	var (
-		limit = 1000
-		err   error
-	)
-	if limitParam != "" {
-		limit, err = strconv.Atoi(limitParam)
-		if err != nil {
-			log.Errorf("Error parsing limit parameter: %v", err)
-			limit = 10
-		}
-	}
+	limit := parseIntParam(r, "limit", 1000)
 	if err := s.db.UpdateSearchDocumentsImportedByCount(r.Context(), limit); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		log.Errorf("db.UpdateSearchDocumentsImportedByCount(ctx, %d): %v", limit, err)
@@ -149,19 +138,7 @@ func (s *Server) handleUpdateImportedByCount(w http.ResponseWriter, r *http.Requ
 // handlePopulateSearchDocuments inserts a record into search_documents for all
 // package_paths that exist in packages but not in search_documents.
 func (s *Server) handlePopulateSearchDocuments(w http.ResponseWriter, r *http.Request) {
-	limitParam := r.FormValue("limit")
-	var (
-		limit = 100
-		err   error
-	)
-	if limitParam != "" {
-		limit, err = strconv.Atoi(limitParam)
-		if err != nil {
-			log.Errorf("Error parsing limit parameter: %v", err)
-			limit = 100
-		}
-	}
-
+	limit := parseIntParam(r, "limit", 100)
 	ctx := r.Context()
 	log.Infof("Populating search documents for %d packages", limit)
 	pkgPaths, err := s.db.GetPackagesForSearchDocumentUpsert(ctx, limit)
@@ -265,19 +242,8 @@ func (s *Server) handleRefreshSearch(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleIndexAndQueue(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	limitParam := r.FormValue("limit")
+	limit := parseIntParam(r, "limit", 10)
 	suffixParam := r.FormValue("suffix")
-	var (
-		limit = 10
-		err   error
-	)
-	if limitParam != "" {
-		limit, err = strconv.Atoi(limitParam)
-		if err != nil {
-			log.Errorf("Error parsing limit parameter: %v", err)
-			limit = 10
-		}
-	}
 	since, err := s.db.LatestIndexTimestamp(ctx)
 	if err != nil {
 		log.Errorf("doing proxy index update: %v", err)
@@ -313,20 +279,9 @@ func (s *Server) handleIndexAndQueue(w http.ResponseWriter, r *http.Request) {
 // that this may cause duplicate processing.
 func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	limitParam := r.FormValue("limit")   // requeue at most this many fetches
+	limit := parseIntParam(r, "limit", 10)
 	suffixParam := r.FormValue("suffix") // append to task name to avoid deduplication
-	var (
-		limit = 10
-		err   error
-	)
 	span := trace.FromContext(r.Context())
-	if limitParam != "" {
-		limit, err = strconv.Atoi(limitParam)
-		if err != nil {
-			log.Errorf("parsing limit parameter: %v", err)
-			limit = 10
-		}
-	}
 	span.Annotate([]trace.Attribute{trace.Int64Attribute("limit", int64(limit))}, "processed limit")
 	versions, err := s.db.GetNextVersionsToFetch(ctx, limit)
 	if err != nil {
@@ -480,4 +435,20 @@ func formatTime(t *time.Time) string {
 		return "Never"
 	}
 	return t.In(locNewYork).Format("2006-01-02 15:04:05")
+}
+
+// parseIntParam parses the query parameter with name as in integer. If the
+// parameter is missing or there is a parse error, it is logged and the default
+// value is returned.
+func parseIntParam(r *http.Request, name string, defaultValue int) int {
+	param := r.FormValue(name)
+	if name == "" {
+		return defaultValue
+	}
+	val, err := strconv.Atoi(param)
+	if err != nil {
+		log.Errorf("parsing query parameter %q: %v", name, err)
+		return defaultValue
+	}
+	return val
 }
