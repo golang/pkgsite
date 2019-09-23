@@ -94,7 +94,7 @@ func TestServer(t *testing.T) {
 		`Version:`,
 		`v1.0.0`,
 		`<a href="/pkg/github.com/valid_module_name/foo@v1.0.0?tab=licenses#LICENSE">MIT</a>`,
-		`<a href="github.com/valid_module_name">Source Code</a>`,
+		`<a href="github.com/valid_module_name" target="_blank">Source Code</a>`,
 	}
 	nonRedistPkgHeader := []string{
 		`<h1 class="Header-title">Package bar</h1>`,
@@ -106,7 +106,7 @@ func TestServer(t *testing.T) {
 		`v1.0.0`,
 		`None detected`,
 		`not legal advice`,
-		`<a href="github.com/non_redistributable">Source Code</a>`,
+		`<a href="github.com/non_redistributable" target="_blank">Source Code</a>`,
 	}
 
 	modHeader := []string{
@@ -114,7 +114,7 @@ func TestServer(t *testing.T) {
 		`Version:`,
 		`v1.0.0`,
 		`<a href="/mod/github.com/valid_module_name@v1.0.0?tab=licenses#LICENSE">MIT</a>`,
-		`<a href="github.com/valid_module_name">Source Code</a>`,
+		`<a href="github.com/valid_module_name" target="_blank">Source Code</a>`,
 	}
 
 	for _, tc := range []struct {
