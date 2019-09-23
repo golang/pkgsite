@@ -35,12 +35,10 @@ type DetailsPage struct {
 	Namespace      string
 }
 
-// handlePackageDetails applies database data to the appropriate template.
-// Handles all endpoints that match "/pkg/<import-path>[@<version>?tab=<tab>]".
-func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 	path, version, err := parsePathAndVersion(r.URL.Path, "pkg")
 	if err != nil {
-		log.Errorf("handlePackageDetails: %v", err)
+		log.Errorf("handleDetails: %v", err)
 		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
 		return
 	}
@@ -58,20 +56,33 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 		pkg, err = s.ds.GetPackage(r.Context(), path, ver)
 		return err
 	})
-	if code == http.StatusNotFound {
-		// We were not able to find the package at any version. In that case,
-		// try and fetch the directory view.
-		s.serveDirectoryPage(w, r, path, version)
+	if code == http.StatusOK {
+		s.servePackagePage(w, r, pkg)
 		return
 	}
-	if code != http.StatusOK {
+	if code != http.StatusNotFound {
 		s.serveErrorPage(w, r, code, epage)
 		return
 	}
 
+	_, err = s.ds.GetVersionInfo(r.Context(), path, version)
+	if err == nil {
+		http.Redirect(w, r, fmt.Sprintf("/mod/%s", path), http.StatusSeeOther)
+		return
+	}
+	if !xerrors.Is(err, derrors.NotFound) {
+		s.serveErrorPage(w, r, http.StatusInternalServerError, epage)
+		return
+	}
+	s.serveDirectoryPage(w, r, path, version)
+}
+
+// servePackagePage applies database data to the appropriate template.
+// Handles all endpoints that match "/pkg/<import-path>[@<version>?tab=<tab>]".
+func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkg *internal.VersionedPackage) {
 	pkgHeader, err := createPackage(&pkg.Package, &pkg.VersionInfo)
 	if err != nil {
-		log.Errorf("error creating package header for %s@%s: %v", path, version, err)
+		log.Errorf("error creating package header for %s@%s: %v", pkg.Path, pkg.Version, err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return
 	}

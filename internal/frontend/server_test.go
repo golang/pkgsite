@@ -120,71 +120,93 @@ func TestServer(t *testing.T) {
 	for _, tc := range []struct {
 		// path to use in an HTTP GET request
 		urlPath string
+		// statusCode we expect to see in the headers.
+		wantStatusCode int
 		// substrings we expect to see in the body
 		want []string
 	}{
 		{
 			"/static/",
+			http.StatusOK,
 			[]string{"css", "html", "img", "js"},
 		},
 		{
 			"/license-policy",
+			http.StatusOK,
 			[]string{
 				"The Go website displays license information",
 				"this is not legal advice",
 			},
 		},
-		{"/favicon.ico", nil}, // just check that it returns 200
+		{"/favicon.ico", http.StatusOK, nil}, // just check that it returns 200
 		{
 			fmt.Sprintf("/search?q=%s", sample.PackageName),
+			http.StatusOK,
 			[]string{
 				`<a href="/pkg/github.com/valid_module_name/foo?q=foo">github.com/valid_module_name/foo</a>`,
 			},
 		},
 		{
 			fmt.Sprintf("/pkg/%s", sample.PackagePath),
+			http.StatusOK,
 			append(pkgHeader, `This is the documentation HTML`),
 		},
 		{
+			fmt.Sprintf("/pkg/%s", sample.ModulePath),
+			http.StatusSeeOther,
+			// In the browser, this will redirect to the
+			// /mod/<path> page.
+			[]string{`<a href="/mod/github.com/valid_module_name">See Other</a>`},
+		},
+		{
 			fmt.Sprintf("/pkg/%s@%s", sample.PackagePath, sample.VersionString),
+			http.StatusOK,
 			append(pkgHeader, `This is the documentation HTML`),
 		},
 		{
 			// For a non-redistributable package, the "latest" route goes to the modules tab.
 			fmt.Sprintf("/pkg/%s", nonRedistPkgPath),
+			http.StatusOK,
 			nonRedistPkgHeader,
 		},
 		{
 			// For a non-redistributable package, the name@version route goes to the modules tab.
 			fmt.Sprintf("/pkg/%s@%s", nonRedistPkgPath, sample.VersionString),
+			http.StatusOK,
 			nonRedistPkgHeader,
 		},
 		{
 			fmt.Sprintf("/pkg/%s?tab=doc", sample.PackagePath),
+			http.StatusOK,
 			append(pkgHeader, `This is the documentation HTML`),
 		},
 		{
 			// For a non-redistributable package, the doc tab will not show the doc.
 			fmt.Sprintf("/pkg/%s?tab=doc", nonRedistPkgPath),
+			http.StatusOK,
 			append(nonRedistPkgHeader, `hidden due to license restrictions`),
 		},
 		{
 			fmt.Sprintf("/pkg/%s?tab=readme", sample.PackagePath),
+			http.StatusOK,
 			append(pkgHeader, `<div class="ReadMe"><p>readme</p>`,
 				`<div class="ReadMe-source">Source: github.com/valid_module_name@v1.0.0/README.md</div>`),
 		},
 		{
 			// For a non-redistributable package, the readme tab will not show the readme.
 			fmt.Sprintf("/pkg/%s?tab=readme", nonRedistPkgPath),
+			http.StatusOK,
 			append(nonRedistPkgHeader, `hidden due to license restrictions`),
 		},
 
 		{
 			fmt.Sprintf("/pkg/%s?tab=module", sample.PackagePath),
+			http.StatusOK,
 			append(pkgHeader, `foo`),
 		},
 		{
 			fmt.Sprintf("/pkg/%s?tab=versions", sample.PackagePath),
+			http.StatusOK,
 			append(pkgHeader,
 				`Versions`,
 				`v1`,
@@ -192,6 +214,7 @@ func TestServer(t *testing.T) {
 		},
 		{
 			fmt.Sprintf("/pkg/%s?tab=imports", sample.PackagePath),
+			http.StatusOK,
 			append(pkgHeader,
 				`Imports`,
 				`Standard Library`,
@@ -200,16 +223,19 @@ func TestServer(t *testing.T) {
 		},
 		{
 			fmt.Sprintf("/pkg/%s?tab=importedby", sample.PackagePath),
+			http.StatusOK,
 			append(pkgHeader,
 				`No known importers for this package`),
 		},
 		{
 			fmt.Sprintf("/pkg/%s?tab=importedby&page=2", sample.PackagePath),
+			http.StatusOK,
 			append(pkgHeader,
 				`No known importers for this package`),
 		},
 		{
 			fmt.Sprintf("/pkg/%s?tab=licenses", sample.PackagePath),
+			http.StatusOK,
 			append(pkgHeader,
 				`<div id="#LICENSE">MIT</div>`,
 				`This is not legal advice`,
@@ -219,35 +245,42 @@ func TestServer(t *testing.T) {
 		},
 		{
 			fmt.Sprintf("/pkg/%s", sample.PackagePath+"/directory"),
+			http.StatusOK,
 			[]string{`<h1 class="Header-title">Directories</h1>`},
 		},
 
 		{
 			fmt.Sprintf("/mod/%s@%s", sample.ModulePath, sample.VersionString),
+			http.StatusOK,
 			// Show the readme tab by default.
 			append(modHeader, `readme`),
 		},
 		{
 			fmt.Sprintf("/mod/%s", sample.ModulePath),
+			http.StatusOK,
 			// Fall back to the latest version, show readme tab by default.
 			append(modHeader, `readme`),
 		},
 		// TODO(b/139498072): add a second module, so we can verify that we get the latest version.
 		{
 			fmt.Sprintf("/mod/%s?tab=packages", sample.ModulePath),
+			http.StatusOK,
 			// Fall back to the latest version.
 			append(modHeader, `This is a package synopsis`),
 		},
 		{
 			fmt.Sprintf("/mod/%s@%s?tab=readme", sample.ModulePath, sample.VersionString),
+			http.StatusOK,
 			append(modHeader, `readme`),
 		},
 		{
 			fmt.Sprintf("/mod/%s@%s?tab=packages", sample.ModulePath, sample.VersionString),
+			http.StatusOK,
 			append(modHeader, `This is a package synopsis`),
 		},
 		{
 			fmt.Sprintf("/mod/%s@%s?tab=versions", sample.ModulePath, sample.VersionString),
+			http.StatusOK,
 			append(modHeader,
 				`Versions`,
 				`v1`,
@@ -255,6 +288,7 @@ func TestServer(t *testing.T) {
 		},
 		{
 			fmt.Sprintf("/mod/%s@%s?tab=licenses", sample.ModulePath, sample.VersionString),
+			http.StatusOK,
 			append(modHeader,
 				`<div id="#LICENSE">MIT</div>`,
 				`This is not legal advice`,
@@ -270,8 +304,8 @@ func TestServer(t *testing.T) {
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, httptest.NewRequest("GET", tc.urlPath, nil))
 			res := w.Result()
-			if res.StatusCode != http.StatusOK {
-				t.Fatalf("status code: got = %d, want %d", res.StatusCode, http.StatusOK)
+			if res.StatusCode != tc.wantStatusCode {
+				t.Fatalf("status code: got = %d, want %d", res.StatusCode, tc.wantStatusCode)
 			}
 			bytes, err := ioutil.ReadAll(res.Body)
 			if err != nil {
