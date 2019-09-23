@@ -6,7 +6,6 @@ package frontend
 
 import (
 	"context"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -62,14 +61,9 @@ func fetchPackagesInDirectory(ctx context.Context, ds DataSource, dirPath, versi
 	if err != nil {
 		return nil, err
 	}
-	var dir *Directory
-	if len(dbDir.Packages) == 0 {
-		dir = &Directory{Path: dirPath, Version: version}
-	} else {
-		dir, err = createDirectory(dirPath, dbDir.Packages)
-		if err != nil {
-			return nil, err
-		}
+	dir, err := createDirectory(dirPath, dbDir.Version, dbDir.Packages)
+	if err != nil {
+		return nil, err
 	}
 	return &DirectoryPage{
 		Directory:      dir,
@@ -100,13 +94,7 @@ func fetchPackageDirectoryDetails(ctx context.Context, ds DataSource, dirPath st
 		}
 		packages = append(packages, vp)
 	}
-	if len(packages) == 0 {
-		return &DirectoryDetails{
-			Directory:  &Directory{Path: dirPath, Version: vi.Version},
-			ModulePath: vi.ModulePath,
-		}, nil
-	}
-	dir, err := createDirectory(dirPath, packages)
+	dir, err := createDirectory(dirPath, vi.Version, packages)
 	if err != nil {
 		return nil, err
 	}
@@ -122,13 +110,6 @@ func fetchModuleDirectoryDetails(ctx context.Context, ds DataSource, vi *interna
 	if err != nil {
 		return nil, err
 	}
-	if len(dbPackages) == 0 {
-		return &DirectoryDetails{
-			Directory:  &Directory{Path: vi.ModulePath, Version: vi.Version},
-			ModulePath: vi.ModulePath,
-		}, nil
-	}
-
 	var packages []*internal.VersionedPackage
 	for _, p := range dbPackages {
 		vp := &internal.VersionedPackage{
@@ -137,19 +118,16 @@ func fetchModuleDirectoryDetails(ctx context.Context, ds DataSource, vi *interna
 		}
 		packages = append(packages, vp)
 	}
-	dir, err := createDirectory(vi.ModulePath, packages)
+	dir, err := createDirectory(vi.ModulePath, vi.Version, packages)
 	if err != nil {
 		return nil, err
 	}
 	return &DirectoryDetails{Directory: dir, ModulePath: vi.ModulePath}, nil
 }
 
-func createDirectory(dirPath string, versionedPackages []*internal.VersionedPackage) (_ *Directory, err error) {
-	defer derrors.Wrap(&err, "createDirectory(%q, packages)", dirPath)
+func createDirectory(dirPath, version string, versionedPackages []*internal.VersionedPackage) (_ *Directory, err error) {
+	defer derrors.Wrap(&err, "createDirectory(%q, %q, packages)", dirPath, version)
 
-	if len(versionedPackages) == 0 {
-		return nil, fmt.Errorf("directory %q does not contain any packages", dirPath)
-	}
 	var packages []*Package
 	for _, pkg := range versionedPackages {
 		newPkg, err := createPackage(&pkg.Package, &pkg.VersionInfo)
@@ -169,7 +147,7 @@ func createDirectory(dirPath string, versionedPackages []*internal.VersionedPack
 	sort.Slice(packages, func(i, j int) bool { return packages[i].Path < packages[j].Path })
 	return &Directory{
 		Path:     dirPath,
+		Version:  version,
 		Packages: packages,
-		Version:  packages[0].Version,
 	}, nil
 }
