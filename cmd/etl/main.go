@@ -109,7 +109,7 @@ func main() {
 	http.Handle("/", mw(router))
 
 	addr := config.HostAddr("localhost:8000")
-	log.Printf("Listening on addr %s", addr)
+	log.Infof("Listening on addr %s", addr)
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
 

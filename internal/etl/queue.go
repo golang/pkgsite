@@ -8,13 +8,13 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"time"
 
 	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
 	"golang.org/x/discovery/internal/config"
+	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
 	taskspb "google.golang.org/genproto/googleapis/cloud/tasks/v2"
@@ -83,7 +83,7 @@ func (q *GCPQueue) ScheduleFetch(ctx context.Context, modulePath, version, suffi
 
 	if _, err := q.client.CreateTask(ctx, req); err != nil {
 		if status.Code(err) == codes.AlreadyExists {
-			log.Printf("ignoring duplicate task ID %s", taskID)
+			log.Infof("ignoring duplicate task ID %s", taskID)
 		} else {
 			return fmt.Errorf("q.client.CreateTask(ctx, req): %v", err)
 		}
@@ -142,12 +142,12 @@ func (q *InMemoryQueue) process(ctx context.Context) {
 		go func(v moduleVersion) {
 			defer func() { <-q.sem }()
 
-			log.Printf("Fetch requested: %q %q (workerCount = %d)", v.modulePath, v.version, cap(q.sem))
+			log.Infof("Fetch requested: %q %q (workerCount = %d)", v.modulePath, v.version, cap(q.sem))
 
 			fetchCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 			defer cancel()
 			if _, err := fetchAndUpdateState(fetchCtx, v.modulePath, v.version, q.proxyClient, q.db); err != nil {
-				log.Print(err)
+				log.Error(err)
 			}
 		}(v)
 	}

@@ -16,7 +16,6 @@ import (
 	"go/token"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"path"
@@ -34,6 +33,7 @@ import (
 	"golang.org/x/discovery/internal/etl/dochtml"
 	"golang.org/x/discovery/internal/etl/internal/doc"
 	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/stdlib"
@@ -74,7 +74,7 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 		fetchErr error
 	)
 	if fetchErr = fetchAndInsertVersion(ctx, modulePath, version, client, db); fetchErr != nil {
-		log.Printf("Error executing fetch: %v", fetchErr)
+		log.Errorf("Error executing fetch: %v", fetchErr)
 		code = derrors.ToHTTPStatus(fetchErr)
 	}
 
@@ -82,9 +82,9 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 	
 	
 	if code == http.StatusGone {
-		log.Printf("%s@%s: proxy said 410 Gone, deleting", modulePath, version)
+		log.Infof("%s@%s: proxy said 410 Gone, deleting", modulePath, version)
 		if err := db.DeleteVersion(ctx, nil, modulePath, version); err != nil {
-			log.Print(err)
+			log.Error(err)
 			return http.StatusInternalServerError, err
 		}
 	}
@@ -95,13 +95,13 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 
 	// TODO(b/139178863): Split UpsertVersionState into InsertVersionState and UpdateVersionState.
 	if err := db.UpsertVersionState(ctx, modulePath, version, appVersionLabel, time.Time{}, code, fetchErr); err != nil {
-		log.Print(err)
+		log.Error(err)
 		if fetchErr != nil {
 			err = fmt.Errorf("error updating version state: %v, original error: %v", err, fetchErr)
 		}
 		return http.StatusInternalServerError, err
 	}
-	log.Printf("Updated version state for %s@%s: code=%d, err=%v", modulePath, version, code, fetchErr)
+	log.Infof("Updated version state for %s@%s: code=%d, err=%v", modulePath, version, code, fetchErr)
 	return code, fetchErr
 }
 
@@ -128,11 +128,11 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, version string
 	if err != nil {
 		return err
 	}
-	log.Printf("Fetched %s@%s", v.ModulePath, v.Version)
+	log.Infof("Fetched %s@%s", v.ModulePath, v.Version)
 	if err = db.InsertVersion(ctx, v); err != nil {
 		return err
 	}
-	log.Printf("Inserted version %s@%s", v.ModulePath, v.Version)
+	log.Infof("Inserted version %s@%s", v.ModulePath, v.Version)
 	return nil
 }
 
@@ -178,7 +178,7 @@ func processZipFile(ctx context.Context, modulePath string, versionType internal
 
 	repositoryURL, err := modulePathToRepoURL(modulePath)
 	if err != nil {
-		log.Printf("modulePathToRepoURL(%q): %v", modulePath, err)
+		log.Errorf("modulePathToRepoURL(%q): %v", modulePath, err)
 	}
 	readmeFilePath, readmeContents, err := extractReadmeFromZip(modulePath, version, zipReader)
 	if err != nil && err != errReadmeNotFound {
@@ -186,7 +186,7 @@ func processZipFile(ctx context.Context, modulePath string, versionType internal
 	}
 	licenses, err := license.Detect(moduleVersionDir(modulePath, version), zipReader)
 	if err != nil {
-		log.Print(err)
+		log.Error(err)
 	}
 	packages, err := extractPackagesFromZip(modulePath, version, zipReader, license.NewMatcher(licenses))
 	if err == errModuleContainsNoPackages {
@@ -339,7 +339,7 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 			continue
 		}
 		if f.UncompressedSize64 > dzip.MaxFileSize {
-			log.Printf("Unable to process %s: file size %d exceeds max limit %d",
+			log.Infof("Unable to process %s: file size %d exceeds max limit %d",
 				f.Name, f.UncompressedSize64, dzip.MaxFileSize)
 			incompleteDirs[innerPath] = true
 			continue
@@ -358,13 +358,13 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 	for innerPath, goFiles := range dirs {
 		if incompleteDirs[innerPath] {
 			// Something went wrong when processing this directory, so we skip.
-			log.Printf("Skipping %q because it is incomplete", innerPath)
+			log.Infof("Skipping %q because it is incomplete", innerPath)
 			continue
 		}
 		pkg, err := loadPackage(goFiles, innerPath, modulePath)
 		if _, ok := err.(*BadPackageError); ok {
 			// TODO(b/133187024): Record and display this information instead of just skipping.
-			log.Printf("Skipping %q because of *BadPackageError: %v\n", path.Join(modulePath, innerPath), err)
+			log.Infof("Skipping %q because of *BadPackageError: %v\n", path.Join(modulePath, innerPath), err)
 			continue
 		} else if err != nil {
 			return nil, fmt.Errorf("unexpected error loading package: %v", err)

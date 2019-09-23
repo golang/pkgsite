@@ -68,9 +68,6 @@ func UseStackdriver(ctx context.Context, logName string) (_ *logging.Logger, err
 // Infof logs a formatted string at the Info level.
 func Infof(format string, args ...interface{}) { logf(logging.Info, format, args) }
 
-// Printf is a synonym for Infof.
-var Printf = Infof
-
 // Errorf logs a formatted string at the Error level.
 func Errorf(format string, args ...interface{}) { logf(logging.Error, format, args) }
 

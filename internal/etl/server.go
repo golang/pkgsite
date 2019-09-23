@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"log"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -22,6 +21,7 @@ import (
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/index"
+	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/stdlib"
@@ -136,13 +136,13 @@ func (s *Server) handleUpdateImportedByCount(w http.ResponseWriter, r *http.Requ
 	if limitParam != "" {
 		limit, err = strconv.Atoi(limitParam)
 		if err != nil {
-			log.Printf("Error parsing limit parameter: %v", err)
+			log.Errorf("Error parsing limit parameter: %v", err)
 			limit = 10
 		}
 	}
 	if err := s.db.UpdateSearchDocumentsImportedByCount(r.Context(), limit); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		log.Printf("db.UpdateSearchDocumentsImportedByCount(ctx, %d): %v", limit, err)
+		log.Errorf("db.UpdateSearchDocumentsImportedByCount(ctx, %d): %v", limit, err)
 	}
 }
 
@@ -157,23 +157,23 @@ func (s *Server) handlePopulateSearchDocuments(w http.ResponseWriter, r *http.Re
 	if limitParam != "" {
 		limit, err = strconv.Atoi(limitParam)
 		if err != nil {
-			log.Printf("Error parsing limit parameter: %v", err)
+			log.Errorf("Error parsing limit parameter: %v", err)
 			limit = 100
 		}
 	}
 
 	ctx := r.Context()
-	log.Printf("Populating search documents for %d packages", limit)
+	log.Infof("Populating search documents for %d packages", limit)
 	pkgPaths, err := s.db.GetPackagesForSearchDocumentUpsert(ctx, limit)
 	if err != nil {
-		log.Printf("s.db.GetPackagesSearchDocumentUpsert(ctx): %v", err)
+		log.Errorf("s.db.GetPackagesSearchDocumentUpsert(ctx): %v", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
 	for _, path := range pkgPaths {
 		if err := s.db.UpsertSearchDocument(ctx, path); err != nil {
-			log.Printf("s.db.UpsertSearchDocument(ctx, %q): %v", path, err)
+			log.Errorf("s.db.UpsertSearchDocument(ctx, %q): %v", path, err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
@@ -198,17 +198,17 @@ func (s *Server) handleFetch(w http.ResponseWriter, r *http.Request) {
 	if msg == "" {
 		msg = "[empty message]"
 	}
-	log.Print(msg)
+	log.Info(msg)
 
 	if code == http.StatusInternalServerError {
-		log.Printf("doFetch of %s returned %d; returning that code to retry task", r.URL.Path, code)
+		log.Infof("doFetch of %s returned %d; returning that code to retry task", r.URL.Path, code)
 		http.Error(w, http.StatusText(code), code)
 		return
 	}
 	if code == http.StatusOK {
-		log.Printf("doFetch of %s succeeded with %d", r.URL.Path, code)
+		log.Infof("doFetch of %s succeeded with %d", r.URL.Path, code)
 	} else {
-		log.Printf("doFetch of %s returned code %d; returning OK to avoid retry", r.URL.Path, code)
+		log.Infof("doFetch of %s returned code %d; returning OK to avoid retry", r.URL.Path, code)
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	if code == http.StatusOK {
@@ -258,7 +258,7 @@ func parseModulePathAndVersion(requestPath string) (string, string, error) {
 func (s *Server) handleRefreshSearch(w http.ResponseWriter, r *http.Request) {
 	if err := s.db.RefreshSearchDocuments(r.Context()); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		log.Print(err)
+		log.Error(err)
 		return
 	}
 }
@@ -274,30 +274,30 @@ func (s *Server) handleIndexAndQueue(w http.ResponseWriter, r *http.Request) {
 	if limitParam != "" {
 		limit, err = strconv.Atoi(limitParam)
 		if err != nil {
-			log.Printf("Error parsing limit parameter: %v", err)
+			log.Errorf("Error parsing limit parameter: %v", err)
 			limit = 10
 		}
 	}
 	since, err := s.db.LatestIndexTimestamp(ctx)
 	if err != nil {
-		log.Printf("Error doing proxy index update: %v", err)
+		log.Errorf("doing proxy index update: %v", err)
 		http.Error(w, "error doing proxy index update", http.StatusInternalServerError)
 		return
 	}
 	versions, err := s.indexClient.GetVersions(ctx, since, limit)
 	if err != nil {
-		log.Printf("Error getting index versions: %v", err)
+		log.Errorf("getting index versions: %v", err)
 		http.Error(w, "error getting versions", http.StatusInternalServerError)
 		return
 	}
 	if err := s.db.InsertIndexVersions(ctx, versions); err != nil {
-		log.Print(err)
+		log.Error(err)
 		http.Error(w, "error inserting versions", http.StatusInternalServerError)
 		return
 	}
 	for _, version := range versions {
 		if err := s.queue.ScheduleFetch(ctx, version.Path, version.Version, suffixParam); err != nil {
-			log.Printf("Error scheduling fetch: %v", err)
+			log.Errorf("scheduling fetch: %v", err)
 			http.Error(w, "error scheduling fetch", http.StatusInternalServerError)
 			return
 		}
@@ -323,24 +323,24 @@ func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) {
 	if limitParam != "" {
 		limit, err = strconv.Atoi(limitParam)
 		if err != nil {
-			log.Printf("Error parsing limit parameter: %v", err)
+			log.Errorf("parsing limit parameter: %v", err)
 			limit = 10
 		}
 	}
 	span.Annotate([]trace.Attribute{trace.Int64Attribute("limit", int64(limit))}, "processed limit")
 	versions, err := s.db.GetNextVersionsToFetch(ctx, limit)
 	if err != nil {
-		log.Print(err)
+		log.Error(err)
 		http.Error(w, "error getting versions to fetch", http.StatusInternalServerError)
 		return
 	}
-	log.Printf("Got %d versions to fetch", len(versions))
+	log.Infof("Got %d versions to fetch", len(versions))
 
 	span.Annotate([]trace.Attribute{trace.Int64Attribute("versions to fetch", int64(len(versions)))}, "processed limit")
 	w.Header().Set("Content-Type", "text/plain")
 	for _, v := range versions {
 		if err := s.queue.ScheduleFetch(ctx, v.ModulePath, v.Version, suffixParam); err != nil {
-			log.Printf("Error scheduling fetch: %v", err)
+			log.Errorf("scheduling fetch: %v", err)
 			http.Error(w, "error scheduling fetch", http.StatusInternalServerError)
 			return
 		}
@@ -351,7 +351,7 @@ func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleStatusPage(w http.ResponseWriter, r *http.Request) {
 	msg, err := s.doStatusPage(w, r)
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 		http.Error(w, msg, http.StatusInternalServerError)
 	}
 }
@@ -392,7 +392,7 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (string, e
 	}
 	if _, err := io.Copy(w, &buf); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		log.Printf("Error copying buffer to ResponseWriter: %v", err)
+		log.Errorf("Error copying buffer to ResponseWriter: %v", err)
 	}
 	return "", nil
 }
@@ -401,10 +401,10 @@ func (s *Server) handlePopulateStdLib(w http.ResponseWriter, r *http.Request) {
 	msg, err := s.doPopulateStdLib(r.Context(), r.FormValue("suffix"))
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	if err != nil {
-		log.Printf("handlePopulateStdLib: %v", err)
+		log.Errorf("handlePopulateStdLib: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
-		log.Printf("handlePopulateStdLib: %s", msg)
+		log.Infof("handlePopulateStdLib: %s", msg)
 		_, _ = io.WriteString(w, msg)
 	}
 }
@@ -425,17 +425,17 @@ func (s *Server) doPopulateStdLib(ctx context.Context, suffix string) (string, e
 func (s *Server) handleReprocess(w http.ResponseWriter, r *http.Request) {
 	appVersion := r.FormValue("app_version")
 	if appVersion == "" {
-		log.Printf("app_version was not specified")
+		log.Error("app_version was not specified")
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 	if err := config.ValidateAppVersion(appVersion); err != nil {
-		log.Printf("config.ValidateAppVersion(%q): %v", appVersion, err)
+		log.Errorf("config.ValidateAppVersion(%q): %v", appVersion, err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 	if err := s.db.UpdateVersionStatesForReprocessing(r.Context(), appVersion); err != nil {
-		log.Print(err)
+		log.Error(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
