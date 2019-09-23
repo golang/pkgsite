@@ -45,12 +45,20 @@ func TestPathTokens(t *testing.T) {
 			},
 		},
 		{
+			path: "github.com/foo/bar",
+			want: []string{
+				"github.com/foo",
+				"github.com/foo/bar",
+				"foo",
+				"foo/bar",
+				"bar",
+			},
+		},
+		{
 			path: "golang.org/x/tools/go/packages",
 			want: []string{
 				"go",
 				"go/packages",
-				"golang",
-				"golang.org",
 				"golang.org/x",
 				"golang.org/x/tools",
 				"golang.org/x/tools/go",
@@ -103,10 +111,17 @@ func TestPathTokens(t *testing.T) {
 				"go/cmd/go-cloud-debug-agent",
 				"go/cmd/go-cloud-debug-agent/internal",
 				"go/cmd/go-cloud-debug-agent/internal/valuecollector",
-				"google",
 				"internal",
 				"internal/valuecollector",
 				"valuecollector",
+			},
+		},
+		{
+			path: "code.cloud.gitlab.google.k8s.io",
+			want: []string{
+				"cloud",
+				"k8s",
+				"code.cloud.gitlab.google.k8s.io",
 			},
 		},
 		{

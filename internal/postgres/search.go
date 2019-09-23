@@ -479,6 +479,30 @@ func (db *DB) legacyInsertDocuments(ctx context.Context, version *internal.Versi
 	})
 }
 
+var (
+	commonHostnames = map[string]bool{
+		"bitbucket.org":         true,
+		"code.cloudfoundry.org": true,
+		"gitea.com":             true,
+		"gitee.com":             true,
+		"github.com":            true,
+		"gitlab.com":            true,
+		"go.etcd.io":            true,
+		"go.googlesource.com":   true,
+		"golang.org":            true,
+		"google.golang.org":     true,
+		"gopkg.in":              true,
+	}
+	commonHostParts = map[string]bool{
+		"code":   true,
+		"git":    true,
+		"gitlab": true,
+		"go":     true,
+		"google": true,
+		"www":    true,
+	}
+)
+
 // generatePathTokens returns the subPaths and path token parts that will be
 // indexed for search, which includes (1) the packagePath (2) all sub-paths of
 // the packagePath (3) all parts for a path element that is delimited by a dash
@@ -489,27 +513,39 @@ func generatePathTokens(packagePath string) []string {
 
 	subPathSet := make(map[string]bool)
 	parts := strings.Split(packagePath, "/")
-	for i := 0; i < len(parts); i++ {
-		subPathSet[parts[i]] = true
-
-		dotParts := strings.Split(parts[i], ".")
-		if len(dotParts) > 1 {
-			for _, p := range dotParts[:len(dotParts)-1] {
-				subPathSet[p] = true
-			}
-		}
-
-		dashParts := strings.Split(parts[i], "-")
+	for i, part := range parts {
+		dashParts := strings.Split(part, "-")
 		if len(dashParts) > 1 {
 			for _, p := range dashParts {
 				subPathSet[p] = true
 			}
 		}
-
-		for j := i + 1; j <= len(parts); j++ {
+		for j := i + 2; j <= len(parts); j++ {
 			p := strings.Join(parts[i:j], "/")
 			p = strings.Trim(p, "/")
 			subPathSet[p] = true
+		}
+
+		if i == 0 && commonHostnames[part] {
+			continue
+		}
+		// Only index host names if they are not part of commonHostnames.
+		// Note that because "SELECT to_tsvector('github.com/foo/bar')"
+		// will return "github.com" as one of its tokens, the common host
+		// name will still be indexed until we change the pg search_config.
+		// TODO(b/141318673).
+		subPathSet[part] = true
+		dotParts := strings.Split(part, ".")
+		if len(dotParts) > 1 {
+			for _, p := range dotParts[:len(dotParts)-1] {
+				if !commonHostParts[p] {
+					// If the host is not in commonHostnames, we want to
+					// index each element up to the extension. For example,
+					// if the host is sigs.k8s.io, we want to index sigs
+					// and k8s. Skip common host parts.
+					subPathSet[p] = true
+				}
+			}
 		}
 	}
 
