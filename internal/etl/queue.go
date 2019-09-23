@@ -24,7 +24,7 @@ import (
 
 // A Queue provides an interface for asynchronous scheduling of fetch actions.
 type Queue interface {
-	ScheduleFetch(ctx context.Context, modulePath, version string) error
+	ScheduleFetch(ctx context.Context, modulePath, version, suffix string) error
 }
 
 // GCPQueue provides a Queue implementation backed by the Google Cloud Tasks
@@ -47,7 +47,7 @@ func NewGCPQueue(client *cloudtasks.Client, queueID string) *GCPQueue {
 // ScheduleFetch enqueues a task on GCP to fetch the given modulePath and
 // version. It returns an error if there was an error hashing the task name, or
 // an error pushing the task to GCP.
-func (q *GCPQueue) ScheduleFetch(ctx context.Context, modulePath, version string) error {
+func (q *GCPQueue) ScheduleFetch(ctx context.Context, modulePath, version, suffix string) error {
 	// the new taskqueue API requires a deadline of <= 30s
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
@@ -68,6 +68,11 @@ func (q *GCPQueue) ScheduleFetch(ctx context.Context, modulePath, version string
 				},
 			},
 		},
+	}
+	// If suffix is non-empty, append it to the task name. This lets us force reprocessing
+	// of tasks that would normally be de-duplicated.
+	if suffix != "" {
+		req.Task.Name += "-" + suffix
 	}
 	// Work around a bug in Cloud Tasks in which duplicate tasks are erroneously detected across queues.
 	if strings.HasPrefix(q.queueID, "dev") {
@@ -150,7 +155,7 @@ func (q *InMemoryQueue) process(ctx context.Context) {
 
 // ScheduleFetch pushes a fetch task into the local queue to be processed
 // asynchronously.
-func (q *InMemoryQueue) ScheduleFetch(ctx context.Context, modulePath, version string) error {
+func (q *InMemoryQueue) ScheduleFetch(ctx context.Context, modulePath, version, suffix string) error {
 	q.queue <- moduleVersion{modulePath, version}
 	return nil
 }

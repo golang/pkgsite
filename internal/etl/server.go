@@ -68,7 +68,8 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// module_version_states. It also inserts the version into the task-queue
 	// to to be fetched and processed.
 	// This endpoint is invoked by a Cloud Scheduler job:
-	// 	handle("/poll-and-queue", http.HandlerFunc(s.handleIndexAndQueue))
+	// 	// See the note about duplicate tasks for "/requeue" below.
+	handle("/poll-and-queue", http.HandlerFunc(s.handleIndexAndQueue))
 
 	// cloud-scheduler: refresh-search is used to refresh data in mvw_search_documents. This
 	// is in the process of being deprecated in favor of using
@@ -92,7 +93,12 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 
 	// manual: requeue queries the module_version_states table for the next
 	// batch of module versions to process, and enqueues them for processing.
-	// Note that this may cause duplicate processing.
+	// Normally this will not cause duplicate processing, because Cloud Tasks
+	// are de-duplicated. That does not apply after a task has been finished or
+	// deleted for one hour (see
+	// https://cloud.google.com/tasks/docs/reference/rpc/google.cloud.tasks.v2#createtaskrequest,
+	// under "Task De-duplication"). If you cannot wait an hour, you can force
+	// duplicate tasks by providing any string as the "suffix" query parameter.
 	handle("/requeue", http.HandlerFunc(s.handleRequeue))
 
 	// manual: reprocess sets status = 505 for all records in the
@@ -106,6 +112,7 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// library into the tasks queue to be processed and inserted into the
 	 handlePopulateStdLib should be updated whenever a new
 	// version of Go is released.
+	// see the comments on duplicate tasks for "/requeue", above.
 	handle("/populate-stdlib", http.HandlerFunc(s.handlePopulateStdLib))
 
 	// manual: populate-search-documents inserts a record into
@@ -259,6 +266,7 @@ func (s *Server) handleRefreshSearch(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleIndexAndQueue(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	limitParam := r.FormValue("limit")
+	suffixParam := r.FormValue("suffix")
 	var (
 		limit = 10
 		err   error
@@ -288,7 +296,7 @@ func (s *Server) handleIndexAndQueue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for _, version := range versions {
-		if err := s.queue.ScheduleFetch(ctx, version.Path, version.Version); err != nil {
+		if err := s.queue.ScheduleFetch(ctx, version.Path, version.Version, suffixParam); err != nil {
 			log.Printf("Error scheduling fetch: %v", err)
 			http.Error(w, "error scheduling fetch", http.StatusInternalServerError)
 			return
@@ -305,7 +313,8 @@ func (s *Server) handleIndexAndQueue(w http.ResponseWriter, r *http.Request) {
 // that this may cause duplicate processing.
 func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	limitParam := r.FormValue("limit")
+	limitParam := r.FormValue("limit")   // requeue at most this many fetches
+	suffixParam := r.FormValue("suffix") // append to task name to avoid deduplication
 	var (
 		limit = 10
 		err   error
@@ -325,22 +334,12 @@ func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "error getting versions to fetch", http.StatusInternalServerError)
 		return
 	}
-
-	log.Printf("GetNextVersionsToFetch limit=%d", limit)
-	for _, v := range versions {
-		status := -99
-		if v.Status != nil {
-			status = *v.Status
-		}
-		log.Printf("  %s @ %s status=%d try_count=%d err=%p indexTS=%s lastProcessedAt=%s nextProcessedAfter=%s",
-			v.ModulePath, v.Version, status, v.TryCount, v.Error,
-			formatTime(&v.IndexTimestamp), formatTime(v.LastProcessedAt), formatTime(&v.NextProcessedAfter))
-	}
+	log.Printf("Got %d versions to fetch", len(versions))
 
 	span.Annotate([]trace.Attribute{trace.Int64Attribute("versions to fetch", int64(len(versions)))}, "processed limit")
 	w.Header().Set("Content-Type", "text/plain")
 	for _, v := range versions {
-		if err := s.queue.ScheduleFetch(ctx, v.ModulePath, v.Version); err != nil {
+		if err := s.queue.ScheduleFetch(ctx, v.ModulePath, v.Version, suffixParam); err != nil {
 			log.Printf("Error scheduling fetch: %v", err)
 			http.Error(w, "error scheduling fetch", http.StatusInternalServerError)
 			return
@@ -399,7 +398,7 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (string, e
 }
 
 func (s *Server) handlePopulateStdLib(w http.ResponseWriter, r *http.Request) {
-	msg, err := s.doPopulateStdLib(r.Context())
+	msg, err := s.doPopulateStdLib(r.Context(), r.FormValue("suffix"))
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	if err != nil {
 		log.Printf("handlePopulateStdLib: %v", err)
@@ -410,13 +409,13 @@ func (s *Server) handlePopulateStdLib(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) doPopulateStdLib(ctx context.Context) (string, error) {
+func (s *Server) doPopulateStdLib(ctx context.Context, suffix string) (string, error) {
 	versions, err := stdlib.Versions()
 	if err != nil {
 		return "", err
 	}
 	for _, v := range versions {
-		if err := s.queue.ScheduleFetch(ctx, stdlib.ModulePath, v); err != nil {
+		if err := s.queue.ScheduleFetch(ctx, stdlib.ModulePath, v, suffix); err != nil {
 			return "", xerrors.Errorf("Error scheduling fetch for %s: %w", v, err)
 		}
 	}
