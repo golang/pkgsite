@@ -7,13 +7,13 @@ package frontend
 import (
 	"context"
 	"html/template"
-	"log"
 	"net/http"
 	"sort"
 	"strings"
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/log"
 )
 
 // DirectoryPage contains data needed to generate a directory template.
@@ -43,7 +43,7 @@ func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirP
 	if err != nil {
 		status := derrors.ToHTTPStatus(err)
 		if status == http.StatusInternalServerError {
-			log.Printf("serveDirectoryPage(w, r, %q, %q): %v", dirPath, version, err)
+			log.Errorf("serveDirectoryPage(w, r, %q, %q): %v", dirPath, version, err)
 		}
 		s.serveErrorPage(w, r, status, nil)
 		return

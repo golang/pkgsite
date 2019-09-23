@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"log"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -19,6 +18,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
 )
@@ -195,7 +195,7 @@ func (s *Server) licensePolicyHandler() http.HandlerFunc {
 func newBasePage(r *http.Request, title string) basePage {
 	nonce, ok := middleware.GetNonce(r.Context())
 	if !ok {
-		log.Printf("middleware.GetNonce: nonce was not set")
+		log.Errorf("middleware.GetNonce: nonce was not set")
 	}
 	return basePage{
 		Title: title,
@@ -230,14 +230,14 @@ func (s *Server) serveErrorPage(w http.ResponseWriter, r *http.Request, status i
 	}
 	buf, err := s.renderErrorPage(status, page)
 	if err != nil {
-		log.Printf("s.renderErrorPage(w, %d, %v): %v", status, page, err)
+		log.Errorf("s.renderErrorPage(w, %d, %v): %v", status, page, err)
 		buf = s.errorPage
 		status = http.StatusInternalServerError
 	}
 
 	w.WriteHeader(status)
 	if _, err := io.Copy(w, bytes.NewReader(buf)); err != nil {
-		log.Printf("Error copying template %q buffer to ResponseWriter: %v", "error.tmpl", err)
+		log.Errorf("Error copying template %q buffer to ResponseWriter: %v", "error.tmpl", err)
 	}
 }
 
@@ -269,7 +269,7 @@ func (s *Server) servePage(w http.ResponseWriter, templateName string, page inte
 		s.templates, err = parsePageTemplates(s.templateDir)
 		s.mu.Unlock()
 		if err != nil {
-			log.Printf("Error parsing templates: %v", err)
+			log.Errorf("Error parsing templates: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -277,12 +277,12 @@ func (s *Server) servePage(w http.ResponseWriter, templateName string, page inte
 
 	buf, err := s.renderPage(templateName, page)
 	if err != nil {
-		log.Printf("s.renderPage(%q, %+v): %v", templateName, page, err)
+		log.Errorf("s.renderPage(%q, %+v): %v", templateName, page, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		buf = s.errorPage
 	}
 	if _, err := io.Copy(w, bytes.NewReader(buf)); err != nil {
-		log.Printf("Error copying template %q buffer to ResponseWriter: %v", templateName, err)
+		log.Errorf("Error copying template %q buffer to ResponseWriter: %v", templateName, err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
@@ -297,7 +297,7 @@ func (s *Server) renderPage(templateName string, page interface{}) ([]byte, erro
 		return nil, fmt.Errorf("BUG: s.templates[%q] not found", templateName)
 	}
 	if err := tmpl.Execute(&buf, page); err != nil {
-		log.Printf("Error executing page template %q: %v", templateName, err)
+		log.Errorf("Error executing page template %q: %v", templateName, err)
 		return nil, err
 
 	}

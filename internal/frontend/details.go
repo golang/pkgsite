@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"path"
 	"strings"
@@ -17,6 +16,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
@@ -40,7 +40,7 @@ type DetailsPage struct {
 func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 	path, version, err := parsePathAndVersion(r.URL.Path, "pkg")
 	if err != nil {
-		log.Printf("handlePackageDetails: %v", err)
+		log.Errorf("handlePackageDetails: %v", err)
 		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
 		return
 	}
@@ -71,7 +71,7 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 
 	pkgHeader, err := createPackage(&pkg.Package, &pkg.VersionInfo)
 	if err != nil {
-		log.Printf("error creating package header for %s@%s: %v", path, version, err)
+		log.Errorf("error creating package header for %s@%s: %v", path, version, err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return
 	}
@@ -93,7 +93,7 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 		var err error
 		details, err = fetchDetailsForPackage(r.Context(), r, tab, s.ds, pkg)
 		if err != nil {
-			log.Printf("error fetching page for %q: %v", tab, err)
+			log.Errorf("error fetching page for %q: %v", tab, err)
 			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 			return
 		}
@@ -130,7 +130,7 @@ func fetchPackageOrModule(namespace, path, version string, get func(v string) er
 		if namespace == "pkg" {
 			epage.SecondaryMessage = suggestedSearch(path)
 		}
-		log.Printf("%s@%s: invalid version", path, version)
+		log.Infof("%s@%s: invalid version", path, version)
 		return http.StatusBadRequest, epage
 	}
 
@@ -140,7 +140,7 @@ func fetchPackageOrModule(namespace, path, version string, get func(v string) er
 		// A package or module was found for this path and version.
 		return http.StatusOK, nil
 	}
-	log.Printf("fetchPackageOrModule(%q, %q, %q): get error: %v",
+	log.Errorf("fetchPackageOrModule(%q, %q, %q): get error: %v",
 		namespace, path, version, err)
 	if !xerrors.Is(err, derrors.NotFound) {
 		// Something went wrong in executing the get function.
@@ -154,7 +154,7 @@ func fetchPackageOrModule(namespace, path, version string, get func(v string) er
 	// We did not find the given version, but maybe there is another version
 	// available for this package or module.
 	if err := get(internal.LatestVersion); err != nil {
-		log.Printf("error: get(%s, Latest) for %s: %v", path, namespace, err)
+		log.Errorf("error: get(%s, Latest) for %s: %v", path, namespace, err)
 		// Couldn't get the latest version, for whatever reason. Treat
 		// this like not finding the original version.
 		return http.StatusNotFound, nil
@@ -200,7 +200,7 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds
 func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 	path, version, err := parsePathAndVersion(r.URL.Path, "mod")
 	if err != nil {
-		log.Printf("handleModuleDetails: %v", err)
+		log.Infof("handleModuleDetails: %v", err)
 		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
 		return
 	}
@@ -219,7 +219,7 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 	// Here, moduleVersion is a valid *VersionInfo.
 	licenses, err := s.ds.GetModuleLicenses(ctx, moduleVersion.ModulePath, moduleVersion.Version)
 	if err != nil {
-		log.Printf("error getting module licenses for %s@%s: %v", moduleVersion.ModulePath, moduleVersion.Version, err)
+		log.Errorf("error getting module licenses for %s@%s: %v", moduleVersion.ModulePath, moduleVersion.Version, err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return
 	}
@@ -238,7 +238,7 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 		var err error
 		details, err = fetchDetailsForModule(ctx, r, tab, s.ds, moduleVersion, licenses)
 		if err != nil {
-			log.Printf("error fetching page for %q: %v", tab, err)
+			log.Errorf("error fetching page for %q: %v", tab, err)
 			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 			return
 		}
@@ -619,7 +619,7 @@ func fileSource(modulePath, version, filePath string) string {
 		// This should never happen unless there is a bug in
 		// stdlib.TagForVersion. In which case, fallback to the default
 		// zipFilePath.
-		log.Printf("fileSource: %v", err)
+		log.Errorf("fileSource: %v", err)
 		return fmt.Sprintf("%s/+/refs/heads/master/%s", root, filePath)
 	}
 	return fmt.Sprintf("%s/+/refs/tags/%s/%s", root, tag, filePath)

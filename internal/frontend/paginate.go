@@ -5,10 +5,11 @@
 package frontend
 
 import (
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"golang.org/x/discovery/internal/log"
 )
 
 // pagination holds information related to paginated display. It is intended to
@@ -76,7 +77,7 @@ func newPaginationParams(r *http.Request, defaultLimit int) paginationParams {
 		if a := r.FormValue(key); a != "" {
 			val, err = strconv.Atoi(a)
 			if err != nil {
-				log.Printf("strconv.Atoi(%q) for page: %v", a, err)
+				log.Errorf("strconv.Atoi(%q) for page: %v", a, err)
 			}
 		}
 		if val < 1 {

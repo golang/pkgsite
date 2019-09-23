@@ -7,13 +7,13 @@ package frontend
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"path"
 	"strings"
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/log"
 	"golang.org/x/xerrors"
 )
 
@@ -89,13 +89,13 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, fmt.Sprintf("/pkg/%s", pkg.Path), http.StatusFound)
 			return
 		} else if !xerrors.Is(err, derrors.NotFound) {
-			log.Printf("error getting package for %s: %v", path.Clean(query), err)
+			log.Errorf("error getting package for %s: %v", path.Clean(query), err)
 		}
 	}
 
 	page, err := fetchSearchPage(ctx, s.ds, query, newPaginationParams(r, defaultSearchLimit))
 	if err != nil {
-		log.Printf("fetchSearchDetails(ctx, db, %q): %v", query, err)
+		log.Errorf("fetchSearchDetails(ctx, db, %q): %v", query, err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return
 	}

@@ -7,13 +7,13 @@ package frontend
 import (
 	"context"
 	"fmt"
-	"log"
 	"path"
 	"sort"
 	"strings"
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/etl"
+	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
@@ -99,7 +99,7 @@ func fetchPackageVersionsDetails(ctx context.Context, ds DataSource, pkg *intern
 		if seriesPath := v.SeriesPath(); strings.HasPrefix(pkg.V1Path, seriesPath) || seriesPath == stdlib.ModulePath {
 			filteredVersions = append(filteredVersions, v)
 		} else {
-			log.Printf("got version with mismatching series: %q", seriesPath)
+			log.Errorf("got version with mismatching series: %q", seriesPath)
 		}
 	}
 
@@ -267,7 +267,7 @@ func formatVersion(version string) string {
 	// TODO(b/136649901): move ParseVersionType to a better location.
 	vType, err := etl.ParseVersionType(version)
 	if err != nil {
-		log.Printf("Error parsing version %q: %v", version, err)
+		log.Errorf("Error parsing version %q: %v", version, err)
 		return version
 	}
 	pre := semver.Prerelease(version)

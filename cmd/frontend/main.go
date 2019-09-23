@@ -7,16 +7,15 @@ package main
 import (
 	"context"
 	"flag"
-	"log"
 	"net/http"
 	"os"
 	"time"
 
-	"cloud.google.com/go/logging"
 	"contrib.go.opencensus.io/integrations/ocsql"
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/dcensus"
 	"golang.org/x/discovery/internal/frontend"
+	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
@@ -88,17 +87,17 @@ func main() {
 	)
 
 	addr := config.HostAddr("localhost:8080")
-	log.Printf("Listening on addr %s", addr)
+	log.Infof("Listening on addr %s", addr)
 	log.Fatal(http.ListenAndServe(addr, mw(router)))
 }
 
 func getLogger(ctx context.Context) middleware.Logger {
 	if config.OnAppEngine() {
-		logClient, err := logging.NewClient(ctx, config.ProjectID())
+		logger, err := log.UseStackdriver(ctx, "frontend-log")
 		if err != nil {
-			log.Fatalf("logging.NewClient: %v", err)
+			log.Fatal(err)
 		}
-		return logClient.Logger("frontend-log")
+		return logger
 	}
 	return middleware.LocalLogger{}
 }
