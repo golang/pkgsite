@@ -50,12 +50,28 @@ var probes = []*Probe{
 		RelativeURL: "",
 	},
 	{
+		Name:        "search-help",
+		RelativeURL: "search-help",
+	},
+	{
+		Name:        "license-policy",
+		RelativeURL: "license-policy",
+	},
+	{
 		Name:        "pkg-firestore",
 		RelativeURL: "pkg/cloud.google.com/go/firestore",
 	},
 	{
+		Name:        "pkg-firestore-readme",
+		RelativeURL: "pkg/cloud.google.com/go/firestore?tab=readme",
+	},
+	{
 		Name:        "pkg-firestore-versions",
 		RelativeURL: "pkg/cloud.google.com/go/firestore?tab=versions",
+	},
+	{
+		Name:        "pkg-firestore-imports",
+		RelativeURL: "pkg/cloud.google.com/go/firestore?tab=imports",
 	},
 	{
 		Name:        "pkg-firestore-importedby",
@@ -64,6 +80,18 @@ var probes = []*Probe{
 	{
 		Name:        "pkg-firestore-licenses",
 		RelativeURL: "pkg/cloud.google.com/go/firestore?tab=licenses",
+	},
+	{
+		Name:        "pkg-errors-importedby",
+		RelativeURL: "pkg/github.com/pkg/errors?tab=importedby",
+	},
+	{
+		Name:        "pkg-hortonworks-versions",
+		RelativeURL: "pkg/github.com/hortonworks/cb-cli?tab=versions",
+	},
+	{
+		Name:        "pkg-xtoolsgo-directory",
+		RelativeURL: "pkg/golang.org/x/tools/go",
 	},
 	{
 		Name:        "mod-xtools",
@@ -78,12 +106,8 @@ var probes = []*Probe{
 		RelativeURL: "mod/golang.org/x/tools?tab=versions",
 	},
 	{
-		Name:        "pkg-errors-importedby",
-		RelativeURL: "pkg/github.com/pkg/errors?tab=importedby",
-	},
-	{
-		Name:        "pkg-hortonworks-versions",
-		RelativeURL: "pkg/github.com/hortonworks/cb-cli?tab=versions",
+		Name:        "search-github",
+		RelativeURL: "search?q=github",
 	},
 }
 
