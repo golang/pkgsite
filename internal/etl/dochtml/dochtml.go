@@ -169,15 +169,15 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 		"render_code":     (*render.Renderer)(nil).CodeHTML,
 	},
 ).Parse(`{{- "" -}}
-<dl>{{"\n" -}}
-<dd><a href="#pkg-overview">Overview</a></dd>{{"\n" -}}
+<ul>{{"\n" -}}
+<li><a href="#pkg-overview">Overview</a></li>{{"\n" -}}
 {{- if or .Consts .Vars .Funcs .Types -}}
-	<dd><a href="#pkg-index">Index</a></dd>{{"\n" -}}
+	<li><a href="#pkg-index">Index</a></li>{{"\n" -}}
 {{- end -}}
 {{- if .Examples.List -}}
-	<dd><a href="#pkg-examples">Examples</a></dd>{{"\n" -}}
+	<li><a href="#pkg-examples">Examples</a></li>{{"\n" -}}
 {{- end -}}
-</dl>{{"\n" -}}
+</ul>{{"\n" -}}
 
 <h2 id="pkg-overview">Overview <a href="#pkg-overview">¶</a></h2>{{"\n\n" -}}
 	{{render_doc .Doc}}{{"\n" -}}
@@ -185,29 +185,29 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 
 {{- if or .Consts .Vars .Funcs .Types -}}
 	<h2 id="pkg-index">Index <a href="#pkg-index">¶</a></h2>{{"\n\n" -}}
-	<dl class="indent">{{"\n" -}}
-	{{- if .Consts -}}<dd><a href="#pkg-constants">Constants</a></dd>{{"\n"}}{{- end -}}
-	{{- if .Vars -}}<dd><a href="#pkg-variables">Variables</a></dd>{{"\n"}}{{- end -}}
-	{{- range .Funcs -}}<dd><a href="#{{.Name}}">{{render_synopsis .Decl}}</a></dd>{{"\n"}}{{- end -}}
+	<ul class="indent">{{"\n" -}}
+	{{- if .Consts -}}<li><a href="#pkg-constants">Constants</a></li>{{"\n"}}{{- end -}}
+	{{- if .Vars -}}<li><a href="#pkg-variables">Variables</a></li>{{"\n"}}{{- end -}}
+	{{- range .Funcs -}}<li><a href="#{{.Name}}">{{render_synopsis .Decl}}</a></li>{{"\n"}}{{- end -}}
 	{{- range .Types -}}
 		{{- $tname := .Name -}}
-		<dd><a href="#{{$tname}}">type {{$tname}}</a></dd>{{"\n"}}
+		<li><a href="#{{$tname}}">type {{$tname}}</a></li>{{"\n"}}
 		{{- range .Funcs -}}
-			<dd class="indent"><a href="#{{.Name}}">{{render_synopsis .Decl}}</a></dd>{{"\n"}}
+			<li class="indent"><a href="#{{.Name}}">{{render_synopsis .Decl}}</a></li>{{"\n"}}
 		{{- end -}}
 		{{- range .Methods -}}
-			<dd class="indent"><a href="#{{$tname}}.{{.Name}}">{{render_synopsis .Decl}}</a></dd>{{"\n"}}
+			<li class="indent"><a href="#{{$tname}}.{{.Name}}">{{render_synopsis .Decl}}</a></li>{{"\n"}}
 		{{- end -}}
 	{{- end -}}
-	</dl>{{"\n" -}}
+	</ul>{{"\n" -}}
 	{{- if .Examples.List -}}
 	<h3 id="pkg-examples">Examples <a href="#pkg-examples">¶</a></h3>{{"\n" -}}
-		<dl class="indent">{{"\n" -}}
+		<ul class="indent">{{"\n" -}}
 		{{- range .Examples.List -}}
 			{{- $suffix := ternary .Suffix (printf " (%s)" .Suffix) "" -}}
-			<dd><a href="#example-{{.Name}}">{{or .ParentID "Package"}}{{$suffix}}</a></dd>{{"\n" -}}
+			<li><a href="#example-{{.Name}}">{{or .ParentID "Package"}}{{$suffix}}</a></li>{{"\n" -}}
 		{{- end -}}
-		</dl>{{"\n" -}}
+		</ul>{{"\n" -}}
 	{{- end -}}
 
 	{{- if .Consts -}}<h3 id="pkg-constants">Constants <a href="#pkg-constants">¶</a></h3>{{"\n"}}{{- end -}}

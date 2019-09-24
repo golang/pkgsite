@@ -463,6 +463,11 @@ code {
 .Documentation h3:hover a {
   display: initial;
 }
+.Documentation ul {
+  line-height: 1.5rem;
+  list-style: none;
+  padding: 0;
+}
 .Documentation code,
 .Documentation pre {
   background-color: #f5f5f5;
