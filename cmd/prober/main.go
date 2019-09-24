@@ -13,7 +13,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"text/template"
@@ -28,6 +27,7 @@ import (
 	"golang.org/x/discovery/internal/auth"
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/dcensus"
+	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/secrets"
 )
 
@@ -121,13 +121,17 @@ func main() {
 	if baseURL == "" {
 		log.Fatal("must set PROBER_BASE_URL")
 	}
-	log.Printf("base URL %s", baseURL)
+	log.Infof("base URL %s", baseURL)
 
 	ctx := context.Background()
 	if err := config.Init(ctx); err != nil {
 		log.Fatal(err)
 	}
 	config.Dump(os.Stderr)
+
+	if _, err := log.UseStackdriver(ctx, "prober-log"); err != nil {
+		log.Fatal(err)
+	}
 
 	var (
 		jsonCreds []byte
@@ -142,7 +146,7 @@ func main() {
 	} else {
 		// TODO(b/140948204): remove
 		const secretName = "load-test-agent-creds"
-		log.Printf("getting secret %q", secretName)
+		log.Infof("getting secret %q", secretName)
 		s, err := secrets.Get(context.Background(), secretName)
 		if err != nil {
 			log.Fatalf("secrets.Get: %v", err)
@@ -171,7 +175,7 @@ func main() {
 	http.HandleFunc("/", handleProbe)
 
 	addr := config.HostAddr("localhost:8080")
-	log.Printf("Listening on addr %s", addr)
+	log.Infof("Listening on addr %s", addr)
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
@@ -210,16 +214,16 @@ func runProbes() []*ProbeStatus {
 	}
 	metricReader.ReadAndExport(metricExporter)
 	metricExporter.Flush()
-	log.Print("metrics exported to StackDriver")
+	log.Info("metrics exported to StackDriver")
 	return statuses
 }
 
 func runProbe(p *Probe) *ProbeStatus {
 	status := &ProbeStatus{Probe: p}
 	url := baseURL + "/" + p.RelativeURL
-	log.Printf("running %s = %s", p.Name, url)
+	log.Infof("running %s = %s", p.Name, url)
 	defer func() {
-		log.Printf("%s in %dms", status.Text, status.Latency)
+		log.Infof("%s in %dms", status.Text, status.Latency)
 	}()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)

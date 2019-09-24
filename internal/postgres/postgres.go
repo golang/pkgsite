@@ -8,13 +8,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"strings"
 	"sync/atomic"
 	"unicode"
 
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/log"
 )
 
 // DB wraps a sql.DB to provide an API for interacting with discovery data
@@ -84,13 +84,17 @@ func logQuery(query string, args []interface{}) func(*error) {
 		moreargs = "..."
 	}
 
-	log.Printf("%s %s %v%s", uid, query, args, moreargs)
+	log.Debugf("%s %s %v%s", uid, query, args, moreargs)
 	return func(errp *error) {
 		if errp == nil { // happens with queryRow
-			log.Printf("%s done", uid)
+			log.Debugf("%s done", uid)
 		} else {
-			log.Printf("%s err=%v", uid, *errp)
 			derrors.Wrap(errp, "DB running query %s", uid)
+			if *errp == nil {
+				log.Debugf("%s OK", uid)
+			} else {
+				log.Errorf("%s err=%v", *errp)
+			}
 		}
 	}
 }

@@ -7,7 +7,6 @@ package dcensus
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -21,6 +20,7 @@ import (
 	"go.opencensus.io/zpages"
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/log"
 	mrpb "google.golang.org/genproto/googleapis/api/monitoredres"
 )
 
@@ -114,7 +114,7 @@ func (r *monitoredResource) MonitoredResource() (resType string, labels map[stri
 // environment, and if so configures exporting to stackdriver.
 func exportToStackdriver() {
 	if config.ProjectID() == "" {
-		log.Printf("Not exporting to StackDriver: GOOGLE_CLOUD_PROJECT is unset.")
+		log.Infof("Not exporting to StackDriver: GOOGLE_CLOUD_PROJECT is unset.")
 		return
 	}
 

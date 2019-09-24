@@ -6,7 +6,6 @@ package middleware
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -14,6 +13,7 @@ import (
 
 	"cloud.google.com/go/logging"
 	"golang.org/x/discovery/internal/config"
+	"golang.org/x/discovery/internal/log"
 )
 
 // Logger is the interface used to write request logs to GCP.
@@ -25,7 +25,7 @@ type Logger interface {
 // GCP)
 type LocalLogger struct{}
 
-// Log implements the Logger interface via the standard log package.
+// Log implements the Logger interface via our internal log package.
 func (l LocalLogger) Log(entry logging.Entry) {
 	var msg strings.Builder
 	if entry.HTTPRequest != nil {
@@ -35,7 +35,7 @@ func (l LocalLogger) Log(entry logging.Entry) {
 		}
 	}
 	msg.WriteString(fmt.Sprint(entry.Payload))
-	log.Print(msg.String())
+	log.Info(msg.String())
 }
 
 // RequestLog returns a middleware that logs each incoming requests using the

@@ -6,9 +6,10 @@ package middleware
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
+
+	"golang.org/x/discovery/internal/log"
 )
 
 // policy is a helper for constructing content security policies.
@@ -81,7 +82,7 @@ func SecureHeaders() Middleware {
 
 			nonce, err := generateNonce()
 			if err != nil {
-				log.Printf("generateNonce(): %v", err)
+				log.Infof("generateNonce(): %v", err)
 			}
 
 			// Because we are using the go/feedback widget, we need to

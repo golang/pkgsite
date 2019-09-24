@@ -8,13 +8,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/lib/pq"
 	"go.opencensus.io/trace"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/log"
 )
 
 // InsertIndexVersions inserts new versions into the module_version_states
@@ -125,7 +125,7 @@ func (db *DB) UpdateVersionStatesForReprocessing(ctx context.Context, appVersion
 	if err != nil {
 		return fmt.Errorf("result.RowsAffected(): %v", err)
 	}
-	log.Printf("Updated %d module version states to be reprocessed for app_version <= %q", affected, appVersion)
+	log.Infof("Updated %d module version states to be reprocessed for app_version <= %q", affected, appVersion)
 	return nil
 }
 
