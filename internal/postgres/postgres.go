@@ -45,9 +45,15 @@ func (db *DB) queryRow(ctx context.Context, query string, args ...interface{}) *
 	return db.db.QueryRowContext(ctx, query, args...)
 }
 
-var queryCounter int64 // atomic: per-process counter for unique query IDs
+var (
+	queryCounter         int64 // atomic: per-process counter for unique query IDs
+	queryLoggingDisabled bool  // For use in benchmarks only: not concurrency-safe.
+)
 
 func logQuery(query string, args []interface{}) func(*error) {
+	if queryLoggingDisabled {
+		return func(*error) {}
+	}
 	const maxlen = 300 // maximum length of displayed query
 
 	// To make the query more compact and readable, replace newlines with spaces
