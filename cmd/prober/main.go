@@ -111,6 +111,17 @@ var probes = []*Probe{
 	},
 }
 
+func init() {
+	// Validate that probe names are unique.
+	names := map[string]bool{}
+	for _, p := range probes {
+		if names[p.Name] {
+			log.Fatalf("duplicate probe name %q", p.Name)
+		}
+		names[p.Name] = true
+	}
+}
+
 var (
 	baseURL        string
 	client         *http.Client
