@@ -24,7 +24,9 @@
 
 {{define "details_content"}}
   <div class="Versions">
-    <h2>{{if .OtherModules}}Versions in this module{{else}}Versions{{end}}</h2>
+    {{if .OtherModules}}
+      <h2>Versions in this module</h2>
+    {{end}}
     {{template "module_list" .ThisModule}}
     {{if .OtherModules}}
       <h2>Other modules containing this package</h2>
