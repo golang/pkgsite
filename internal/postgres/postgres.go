@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"strings"
 	"sync/atomic"
+	"time"
 	"unicode"
 
 	"golang.org/x/discovery/internal/config"
@@ -49,6 +50,15 @@ var (
 	queryCounter         int64 // atomic: per-process counter for unique query IDs
 	queryLoggingDisabled bool  // For use in benchmarks only: not concurrency-safe.
 )
+
+type queryEndLogEntry struct {
+	ID              string
+	Query           string
+	Args            []interface{}
+	ArgsTruncated   bool
+	DurationSeconds float64
+	Error           string `json:",omitempty"`
+}
 
 func logQuery(query string, args []interface{}) func(*error) {
 	if queryLoggingDisabled {
@@ -91,15 +101,25 @@ func logQuery(query string, args []interface{}) func(*error) {
 	}
 
 	log.Debugf("%s %s %v%s", uid, query, args, moreargs)
+	start := time.Now()
 	return func(errp *error) {
+		dur := time.Since(start)
 		if errp == nil { // happens with queryRow
 			log.Debugf("%s done", uid)
 		} else {
 			derrors.Wrap(errp, "DB running query %s", uid)
+			entry := queryEndLogEntry{
+				ID:              uid,
+				Query:           query,
+				Args:            args,
+				ArgsTruncated:   moreargs != "",
+				DurationSeconds: dur.Seconds(),
+			}
 			if *errp == nil {
-				log.Debugf("%s OK", uid)
+				log.Debug(entry)
 			} else {
-				log.Errorf("%s err=%v", *errp)
+				entry.Error = (*errp).Error()
+				log.Error(entry)
 			}
 		}
 	}
