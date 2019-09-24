@@ -6,11 +6,13 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"go.opencensus.io/stats/view"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/sample"
 )
@@ -140,6 +142,150 @@ func TestPathTokens(t *testing.T) {
 	}
 }
 
+func TestFastSearch(t *testing.T) {
+	// importGraph constructs a simple import graph where all importers import
+	// one popular package.  For performance purposes, all importers are added to
+	// a single importing module.
+	importGraph := func(popularPath, importerModule string, importerCount int) []*internal.Version {
+		v := sample.Version()
+		v.ModulePath = popularPath
+		v.Packages[0].Path = popularPath
+		v.Packages[0].Imports = nil
+		// Try to improve the ts_rank of the 'foo' search term.
+		v.Packages[0].Synopsis = "foo"
+		v.ReadmeContents = []byte("foo")
+		vers := []*internal.Version{v}
+		if importerCount > 0 {
+			v := sample.Version()
+			v.ModulePath = importerModule
+			v.Packages = nil
+			for i := 0; i < importerCount; i++ {
+				p := sample.Package()
+				p.Path = fmt.Sprintf("%s/importer%d", importerModule, i)
+				p.Imports = []string{popularPath}
+				v.Packages = append(v.Packages, p)
+			}
+			vers = append(vers, v)
+		}
+		return vers
+	}
+	tests := []struct {
+		label       string
+		versions    []*internal.Version
+		query       string
+		wantSource  string
+		wantResults []string
+	}{
+		{
+			label:       "single package",
+			versions:    importGraph("foo.com/A", "", 0),
+			query:       "foo",
+			wantSource:  "deep",
+			wantResults: []string{"foo.com/A"},
+		},
+		{
+			label:       "empty results",
+			versions:    []*internal.Version{},
+			query:       "foo",
+			wantSource:  "deep",
+			wantResults: nil,
+		},
+		{
+			label:       "insufficient popular results",
+			versions:    importGraph("foo.com/popular", "foo.com", 10),
+			query:       "foo",
+			wantSource:  "deep",
+			wantResults: []string{"foo.com/popular", "foo.com/importer0"},
+		},
+		{
+			label: "popular results",
+			versions: append(importGraph("foo.com/popularA", "foo.com", 60),
+				importGraph("foo.com/popularB", "foo.com", 70)...),
+			query:       "foo",
+			wantSource:  "popular-8",
+			wantResults: []string{"foo.com/popularB", "foo.com/popularA"},
+		},
+		// Adding a test for *very* popular results requires ~300 importers
+		// minimum, which is pretty slow to set up at the moment (~5 seconds), and
+		// doesn't add much additional value.
+	}
+
+	view.Register(SearchResponseCount)
+	responses := make(map[string]int64)
+	// responseDelta captures the change in the SearchResponseCount metric.
+	responseDelta := func() map[string]int64 {
+		rows, err := view.RetrieveData(SearchResponseCount.Name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		delta := make(map[string]int64)
+		for _, row := range rows {
+			// Tags[0] should always be the SearchSource. For simplicity we assume
+			// this.
+			source := row.Tags[0].Value
+			count := row.Data.(*view.CountData).Value
+			if d := count - responses[source]; d != 0 {
+				delta[source] = d
+			}
+			responses[source] = count
+		}
+		return delta
+	}
+	for _, test := range tests {
+		t.Run(test.label, func(t *testing.T) {
+			// use guardTestResult to simulate a scenario where search queries return
+			// in the order: popular-50, popular-8, deep. In practice this should
+			// usually be the order in which they return as these searches represent
+			// progressively larger scans, but in our small test database this need
+			// not be the case.
+			done := map[string](chan struct{}){
+				"popular-50": make(chan struct{}),
+				"popular-8":  make(chan struct{}),
+				"deep":       make(chan struct{}),
+			}
+			// waitFor maps [search type] -> [the search type is should wait for]
+			waitFor := map[string]string{
+				"deep":      "popular-8",
+				"popular-8": "popular-50",
+			}
+			guardTestResult := func(source string) func() {
+				if await, ok := waitFor[source]; ok {
+					<-done[await]
+				}
+				return func() { close(done[source]) }
+			}
+			defer ResetTestDB(testDB, t)
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			for _, v := range test.versions {
+				if err := testDB.InsertVersion(ctx, v); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := testDB.UpdateSearchDocumentsImportedByCount(ctx, 1000); err != nil {
+				t.Fatal(err)
+			}
+			results, err := testDB.guardedFastSearch(ctx, test.query, 2, 0, guardTestResult)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var got []string
+			for _, r := range results {
+				got = append(got, r.PackagePath)
+			}
+			if diff := cmp.Diff(test.wantResults, got); diff != "" {
+				t.Errorf("FastSearch(%q) mismatch (-want +got)\n%s", test.query, diff)
+			}
+			// Finally, validate that metrics are updated correctly
+			gotDelta := responseDelta()
+			wantDelta := map[string]int64{test.wantSource: 1}
+			if diff := cmp.Diff(wantDelta, gotDelta); diff != "" {
+				t.Errorf("SearchResponseCount: unexpected delta (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
 func TestInsertSearchDocumentAndSearch(t *testing.T) {
 	var (
 		modGoCDK = "gocloud.dev"
@@ -156,7 +302,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 			Synopsis: "Package client-go implements a Go client for Kubernetes.",
 		}
 
-		kubeResult = func(rank float64, numResults uint64) *SearchResult {
+		kubeResult = func(score float64, numResults uint64) *SearchResult {
 			return &SearchResult{
 				Name:        pkgKube.Name,
 				PackagePath: pkgKube.Path,
@@ -165,12 +311,12 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				CommitTime:  sample.CommitTime,
 				Version:     sample.VersionString,
 				ModulePath:  modKube,
-				Rank:        rank,
+				Score:       score,
 				NumResults:  numResults,
 			}
 		}
 
-		goCdkResult = func(rank float64, numResults uint64) *SearchResult {
+		goCdkResult = func(score float64, numResults uint64) *SearchResult {
 			return &SearchResult{
 				Name:        pkgGoCDK.Name,
 				PackagePath: pkgGoCDK.Path,
@@ -179,7 +325,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				CommitTime:  sample.CommitTime,
 				Version:     sample.VersionString,
 				ModulePath:  modGoCDK,
-				Rank:        rank,
+				Score:       score,
 				NumResults:  numResults,
 			}
 		}
@@ -200,8 +346,8 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				modKube:  pkgKube,
 			},
 			want: []*SearchResult{
-				goCdkResult(0.10560775506982405, 2),
-				kubeResult(0.10560775506982405, 2),
+				goCdkResult(0.2431708425283432, 2),
+				kubeResult(0.2431708425283432, 2),
 			},
 		},
 		{
@@ -214,7 +360,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				modGoCDK: pkgGoCDK,
 			},
 			want: []*SearchResult{
-				goCdkResult(0.10560775506982405, 2),
+				goCdkResult(0.2431708425283432, 2),
 			},
 		},
 		{
@@ -227,7 +373,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				modKube:  pkgKube,
 			},
 			want: []*SearchResult{
-				kubeResult(0.10560775506982405, 2),
+				kubeResult(0.2431708425283432, 2),
 			},
 		},
 		{
@@ -238,7 +384,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				modKube:  pkgKube,
 			},
 			want: []*SearchResult{
-				goCdkResult(0.3187147723292191, 1),
+				goCdkResult(0.733867883682251, 1),
 			},
 		},
 		{
@@ -248,43 +394,46 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				modGoCDK: pkgGoCDK,
 			},
 			want: []*SearchResult{
-				goCdkResult(0.30875602614034653, 1),
+				goCdkResult(0.7109370231628418, 1),
 			},
 		},
 	} {
-		t.Run(tc.name, func(t *testing.T) {
-			defer ResetTestDB(testDB, t)
+		type searchFunc func(context.Context, string, int, int) ([]*SearchResult, error)
+		for method, search := range map[string]searchFunc{"Search": testDB.Search, "FastSearch": testDB.FastSearch} {
+			t.Run(tc.name+":"+method, func(t *testing.T) {
+				defer ResetTestDB(testDB, t)
 
-			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-			defer cancel()
+				ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+				defer cancel()
 
-			for modulePath, pkg := range tc.packages {
-				pkg.Licenses = sample.LicenseMetadata
-				v := sample.Version()
-				v.ModulePath = modulePath
-				v.Packages = []*internal.Package{pkg}
-				if err := testDB.InsertVersion(ctx, v); err != nil {
+				for modulePath, pkg := range tc.packages {
+					pkg.Licenses = sample.LicenseMetadata
+					v := sample.Version()
+					v.ModulePath = modulePath
+					v.Packages = []*internal.Package{pkg}
+					if err := testDB.InsertVersion(ctx, v); err != nil {
+						t.Fatal(err)
+					}
+				}
+
+				if tc.limit < 1 {
+					tc.limit = 10
+				}
+
+				got, err := search(ctx, tc.searchQuery, tc.limit, tc.offset)
+				if err != nil {
 					t.Fatal(err)
 				}
-			}
 
-			if tc.limit < 1 {
-				tc.limit = 10
-			}
+				if len(got) != len(tc.want) {
+					t.Errorf("testDB.Search(%v, %d, %d) mismatch: len(got) = %d, want = %d\n", tc.searchQuery, tc.limit, tc.offset, len(got), len(tc.want))
+				}
 
-			got, err := testDB.Search(ctx, tc.searchQuery, tc.limit, tc.offset)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			if len(got) != len(tc.want) {
-				t.Errorf("testDB.Search(%v, %d, %d) mismatch: len(got) = %d, want = %d\n", tc.searchQuery, tc.limit, tc.offset, len(got), len(tc.want))
-			}
-
-			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("testDB.Search(%v, %d, %d) mismatch (-want +got):\n%s", tc.searchQuery, tc.limit, tc.offset, diff)
-			}
-		})
+				if diff := cmp.Diff(tc.want, got); diff != "" {
+					t.Errorf("testDB.Search(%v, %d, %d) mismatch (-want +got):\n%s", tc.searchQuery, tc.limit, tc.offset, diff)
+				}
+			})
+		}
 	}
 }
 

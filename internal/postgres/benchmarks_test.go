@@ -32,8 +32,6 @@ var testQueries = []string{
 
 func BenchmarkSearch(b *testing.B) {
 	ctx := context.Background()
-	queryLoggingDisabled = true
-
 	if err := config.Init(ctx); err != nil {
 		b.Fatal(err)
 	}

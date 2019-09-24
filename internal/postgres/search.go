@@ -7,15 +7,50 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/lib/pq"
+	"go.opencensus.io/plugin/ochttp"
+	"go.opencensus.io/stats"
+	"go.opencensus.io/stats/view"
+	"go.opencensus.io/tag"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/xerrors"
+)
+
+var (
+	// SearchLatency holds observed latency in individual search queries.
+	SearchLatency = stats.Float64(
+		"go-discovery/search/latency",
+		"Latency of a search query.",
+		stats.UnitMilliseconds,
+	)
+	// SearchSource is a census tag for search query types.
+	SearchSource = tag.MustNewKey("search.source")
+	// SearchLatencyDistribution aggregates search request latency by search
+	// query type.
+	SearchLatencyDistribution = &view.View{
+		Name:        "custom.googleapis.com/go-discovery/search/latency",
+		Measure:     SearchLatency,
+		Aggregation: ochttp.DefaultLatencyDistribution,
+		Description: "Search latency, by result source query type.",
+		TagKeys:     []tag.Key{SearchSource},
+	}
+	// SearchResponseCount counts search responses by search query type.
+	SearchResponseCount = &view.View{
+		Name:        "custom.googleapis.com/go-discovery/search/count",
+		Measure:     SearchLatency,
+		Aggregation: view.Count(),
+		Description: "Search count, by result source query type.",
+		TagKeys:     []tag.Key{SearchSource},
+	}
+
+	errIncompleteResults = errors.New("incomplete results")
 )
 
 // SearchResult represents a single search result from SearchDocuments.
@@ -28,8 +63,8 @@ type SearchResult struct {
 	Licenses    []string
 
 	CommitTime time.Time
-	// Rank is used to sort items in an array of SearchResult.
-	Rank float64
+	// Score is used to sort items in an array of SearchResult.
+	Score float64
 
 	// NumImportedBy is the number of packages that import Package.
 	NumImportedBy uint64
@@ -38,23 +73,291 @@ type SearchResult struct {
 	NumResults uint64
 }
 
+// searchResponse is used for internal bookkeeping when fanning-out search
+// request to multiple different search queries.
+type searchResponse struct {
+	// source is a unique identifier for the search query type (e.g. 'deep',
+	// 'popular-8'), to be used in logging and reporting.
+	source string
+	// results are partially filled out from only the search_documents table.
+	results []*SearchResult
+	// err indicates a technical failure of the search query, or that results are
+	// not provably complete.
+	err error
+	// latency is recorded by the orchestrator of the search query.
+	latency time.Duration
+}
+
+// A searcher is used to execute a single search request.
+type searcher func(ctx context.Context, q string, limit, offset int) searchResponse
+
+// FastSearch executes three search requests concurrently:
+//   - very popular packages (imported_by_count > 50); the top ~1%
+//   - popular packages (imported_by_count > 8); the top ~5%
+//   - all packages ("deep" search)
+// Popular search takes significantly less time to scan very common search
+// terms (e.g. "errors", "cloud", or "kubernetes"), due to partial indexing.
+// Because 0 <= ts_rank() <= 1, we know that the highest score of any unpopular
+// package is ln(e+N), where N is the number of importers above which a package
+// is 'popular'. Therefore if the lowest scoring result of popular search is
+// greater than ln(e+N), we know that we haven't missed any results and can
+// return the search result immediately, cancelling other searches.
+//
+// On the other hand, if we *have* missed a result it is likely that the search
+// term is infrequent, and deep scan will be fast due to our inverted gin index
+// on search tokens.
+//
+// The gap in this optimization is search terms that are very frequent, but
+// rarely relevant: "int" or "package", for example. In these cases we'll pay
+// the penalty of a deep search that scans nearly every package.
+func (db *DB) FastSearch(ctx context.Context, q string, limit, offset int) (_ []*SearchResult, err error) {
+	defer derrors.Wrap(&err, "DB.FastSearch(ctx, %q, %d, %d)", q, limit, offset)
+	return db.guardedFastSearch(ctx, q, limit, offset, nil)
+}
+
+// guardedFastSearch is factored out for testing purposes: it accepts an
+// optional func to allow tests to control the order in which search results
+// are returned.
+func (db *DB) guardedFastSearch(ctx context.Context, q string, limit, offset int, guardTestResult func(string) func()) ([]*SearchResult, error) {
+	// We fan out multiple search requests, searching very popular, popular, and
+	// all search documents. The thresholds for popularity were chosen as a
+	// trade-off between hit rate and latency: the more selective the subset of
+	// documents, the lower the latency but also the lower the hit rate.
+	//
+	// The heuristic for choosing these thresholds is pinned to a target latency
+	// of ~500ms.  The 'very popular' index was chosen so that extremely dense
+	// and relevant search terms (e.g. 'kubernetes' or 'github') are returned
+	// within this threshold. The 'popular' index was chosen as a backstop for
+	// terms that miss the 'very popular' result set.
+	searchers := []searcher{db.popularSearcher(50), db.popularSearcher(8), db.deepSearch}
+	responses := make(chan searchResponse, len(searchers))
+	// cancel all unfinished searches when a result (or error) is returned. The
+	// effectiveness of this depends on the database driver.
+	searchCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	for _, s := range searchers {
+		s := s
+		go func() {
+			start := time.Now()
+			resp := s(searchCtx, q, limit, offset)
+			resp.latency = time.Since(start)
+			if guardTestResult != nil {
+				defer guardTestResult(resp.source)()
+			}
+			responses <- resp
+		}()
+	}
+	var resp searchResponse
+	for range searchers {
+		resp = <-responses
+		if resp.err == nil {
+			break
+		}
+	}
+	// cancel proactively here: we've got the search result we need.
+	cancel()
+	if resp.err != nil {
+		return nil, resp.err
+	}
+	// latency is only recorded for valid search results, as fast failures could
+	// skew the latency distribution.
+	latency := float64(resp.latency) / float64(time.Millisecond)
+	stats.RecordWithTags(ctx, []tag.Mutator{
+		tag.Upsert(SearchSource, resp.source),
+	}, SearchLatency.M(latency))
+	// To avoid fighting with the query planner, our searches only hit the
+	// search_documents table and we enrich after getting the results. In the
+	// future, we may want to fully denormalize and put all search data in the
+	// search_documents table.
+	if err := db.addPackageDataToSearchResults(ctx, resp.results); err != nil {
+		return nil, err
+	}
+	return resp.results, nil
+}
+
+// deepSearch searches all packages for the query. It is slower, but results
+// are always valid.
+func (db *DB) deepSearch(ctx context.Context, q string, limit, offset int) searchResponse {
+	query := `
+		SELECT *
+		FROM (
+			SELECT
+				package_path,
+				version,
+				module_path,
+				commit_time,
+				imported_by_count,
+				COUNT(*) OVER() AS total,
+				(
+					ts_rank(tsv_search_tokens, websearch_to_tsquery($1)) *
+					ln(exp(1)+imported_by_count) *
+					CASE WHEN redistributable THEN 1 ELSE 0.5 END
+				) AS score
+				FROM
+					search_documents
+				WHERE tsv_search_tokens @@ websearch_to_tsquery($1)
+				ORDER BY
+					score DESC,
+					commit_time DESC,
+					package_path
+		) r
+		WHERE r.score > 0.1
+		LIMIT $2
+		OFFSET $3`
+	var results []*SearchResult
+	collect := func(rows *sql.Rows) error {
+		var r SearchResult
+		if err := rows.Scan(&r.PackagePath, &r.Version, &r.ModulePath, &r.CommitTime,
+			&r.NumImportedBy, &r.NumResults, &r.Score); err != nil {
+			return fmt.Errorf("rows.Scan(): %v", err)
+		}
+		results = append(results, &r)
+		return nil
+	}
+	err := db.runQuery(ctx, query, collect, q, limit, offset)
+	if err != nil {
+		results = nil
+	}
+	return searchResponse{
+		source:  "deep",
+		results: results,
+		err:     err,
+	}
+}
+
+// popularSearcher returns a searcher that only searches packages with more
+// than cutoff importers. Results can be invalid if it does not return the
+// limit of results, all of which have greater score than the highest
+// theoretical score of an unpopular package.
+func (db *DB) popularSearcher(cutoff int) searcher {
+	return func(ctx context.Context, searchQuery string, limit, offset int) searchResponse {
+		query := fmt.Sprintf(`SELECT *
+			FROM (
+				SELECT
+					package_path,
+					version,
+					module_path,
+					commit_time,
+					imported_by_count,
+					(
+						ts_rank(tsv_search_tokens, websearch_to_tsquery($1)) *
+						ln(exp(1)+imported_by_count) *
+						CASE WHEN redistributable THEN 1 ELSE 0.5 END
+					) AS score
+					FROM
+						search_documents
+					WHERE tsv_search_tokens @@ websearch_to_tsquery($1)
+					AND imported_by_count > %[1]d
+					ORDER BY
+						score DESC,
+						commit_time DESC,
+						package_path
+			) r
+			WHERE r.score > ln(exp(1)+%[1]d)
+			LIMIT $2
+			OFFSET $3`, cutoff)
+		var results []*SearchResult
+		collect := func(rows *sql.Rows) error {
+			var r SearchResult
+			// Notably we're not recording r.NumResults here. There's no point, as
+			// we're only scanning a fraction of the total records. In the UI this
+			// should be presented as '1-10 of many'.
+			//
+			// For a potential future improvement, we could implement the hyperloglog
+			// algorithm to estimate result counts.
+			if err := rows.Scan(&r.PackagePath, &r.Version, &r.ModulePath, &r.CommitTime,
+				&r.NumImportedBy, &r.Score); err != nil {
+				return fmt.Errorf("rows.Scan(): %v", err)
+			}
+			results = append(results, &r)
+			return nil
+		}
+		err := db.runQuery(ctx, query, collect, searchQuery, limit, offset)
+		if err != nil {
+			results = nil
+		} else if len(results) != limit {
+			// We didn't get a provably complete set of results.
+			err = errIncompleteResults
+		}
+		return searchResponse{
+			source:  fmt.Sprintf("popular-%d", cutoff),
+			results: results,
+			err:     err,
+		}
+	}
+}
+
+// addPackageDataToSearchResults adds package information to SearchResults that is not stored
+// in the search_documents table.
+func (db *DB) addPackageDataToSearchResults(ctx context.Context, results []*SearchResult) (err error) {
+	defer derrors.Wrap(&err, "DB.enrichResults(results)")
+	if len(results) == 0 {
+		return nil
+	}
+	var (
+		keys []string
+		// resultMap tracks PackagePath->SearchResult, to allow joining with the
+		// returned package data.
+		resultMap = make(map[string]*SearchResult)
+	)
+	for _, r := range results {
+		resultMap[r.PackagePath] = r
+		key := fmt.Sprintf("(%s, %s, %s)", pq.QuoteLiteral(r.PackagePath),
+			pq.QuoteLiteral(r.Version), pq.QuoteLiteral(r.ModulePath))
+		keys = append(keys, key)
+	}
+	query := fmt.Sprintf(`
+		SELECT
+			path,
+			name,
+			synopsis,
+			license_types
+		FROM
+			packages
+		WHERE
+			(path, version, module_path) IN (%s)`, strings.Join(keys, ","))
+	collect := func(rows *sql.Rows) error {
+		var (
+			path, name, synopsis string
+			licenseTypes         []string
+		)
+		if err := rows.Scan(&path, &name, &synopsis, pq.Array(&licenseTypes)); err != nil {
+			return fmt.Errorf("rows.Scan(): %v", err)
+		}
+		r, ok := resultMap[path]
+		if !ok {
+			return fmt.Errorf("BUG: unexpected package path: %q", path)
+		}
+		r.Name = name
+		r.Synopsis = synopsis
+		for _, l := range licenseTypes {
+			if l != "" {
+				r.Licenses = append(r.Licenses, l)
+			}
+		}
+		return nil
+	}
+	return db.runQuery(ctx, query, collect)
+}
+
 // Search fetches packages from the database that match the terms
 // provided, and returns them in order of relevance.
 func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int) (_ []*SearchResult, err error) {
 	defer derrors.Wrap(&err, "DB.Search(ctx, %q, %d, %d)", searchQuery, limit, offset)
 
-	// Rank:
-	// Packages are ranked based on their relevance and imported_by_count. If
-	// the package is not redistributable, lower its rank by 50% since a lot of
+	// Score:
+	// Packages are scored based on their relevance and imported_by_count. If
+	// the package is not redistributable, lower its score by 50% since a lot of
 	// details cannot be displayed.
 	//
-	// TODO(b/136283982): improve how this signal is used in search ranking.
+	// TODO(b/136283982): improve how this signal is used in search scoring.
 	// The log factor contains exp(1) so that it is always >= 1. Taking the log
 	// of imported_by_count instead of using it directly makes the effect less
 	// dramatic: being 2x as popular only has an additive effect.
 	//
-	// Only include results whose rank exceed a certain threshold. Based on
-	// experimentation, we picked a rank of greater than 0.1, but this may
+	// Only include results whose score exceed a certain threshold. Based on
+	// experimentation, we picked a score of greater than 0.1, but this may
 	// change based on future experimentation.
 	query := `
 		SELECT
@@ -66,7 +369,7 @@ func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int)
 			p.license_types,
 			r.commit_time,
 			r.imported_by_count,
-			r.rank,
+			r.score,
 			r.total
 		FROM (
 			SELECT
@@ -78,16 +381,16 @@ func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int)
 				COUNT(*) OVER() AS total,
 				(
 					ts_rank(tsv_search_tokens, websearch_to_tsquery($1)) *
-					log(exp(1)+imported_by_count) *
+					ln(exp(1)+imported_by_count) *
 					CASE WHEN redistributable THEN 1
 					ELSE 0.5 END
-				) AS rank
+				) AS score
                     	FROM
 				search_documents
                     	WHERE
 				tsv_search_tokens @@ websearch_to_tsquery($1)
                     	ORDER BY
-				rank DESC,
+				score DESC,
 				commit_time DESC,
 				package_path
 			LIMIT $2
@@ -101,7 +404,7 @@ func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int)
 			p.module_path = r.module_path
 			AND p.version = r.version
 		WHERE
-			r.rank > 0.1;`
+			r.score > 0.1;`
 
 	var results []*SearchResult
 	collect := func(rows *sql.Rows) error {
@@ -110,7 +413,7 @@ func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int)
 			licenseTypes []string
 		)
 		if err := rows.Scan(&sr.PackagePath, &sr.Version, &sr.ModulePath, &sr.Name, &sr.Synopsis,
-			pq.Array(&licenseTypes), &sr.CommitTime, &sr.NumImportedBy, &sr.Rank, &sr.NumResults); err != nil {
+			pq.Array(&licenseTypes), &sr.CommitTime, &sr.NumImportedBy, &sr.Score, &sr.NumResults); err != nil {
 			return fmt.Errorf("rows.Scan(): %v", err)
 		}
 		for _, l := range licenseTypes {
@@ -354,15 +657,15 @@ func (db *DB) LegacySearch(ctx context.Context, searchQuery string, limit, offse
 				num_imported_by,
 				CASE WHEN COALESCE(cardinality(license_types), 0) = 0
 				  -- If the package does not have any license
-				  -- files, lower its rank by 50% since it will not be
+				  -- files, lower its score by 50% since it will not be
 				  -- redistributable.
 				  -- TODO(b/136283982): improve how this signal
-				  -- is used in search ranking
+				  -- is used in search scoring
 				  THEN (ts_rank(tsv_search_tokens, websearch_to_tsquery($1))*
-				  	log(exp(1)+num_imported_by)*0.5)
+				  	ln(exp(1)+num_imported_by)*0.5)
 				  ELSE (ts_rank(tsv_search_tokens, websearch_to_tsquery($1))*
-				  	log(exp(1)+num_imported_by))
-				  END AS rank
+				  	ln(exp(1)+num_imported_by))
+				  END AS score
 			FROM
 				mvw_search_documents
 			WHERE
@@ -378,14 +681,14 @@ func (db *DB) LegacySearch(ctx context.Context, searchQuery string, limit, offse
 			r.license_types,
 			r.commit_time,
 			r.num_imported_by,
-			r.rank,
+			r.score,
 			COUNT(*) OVER() AS total
 		FROM
 			results r
 		WHERE
-			r.rank > 0.1
+			r.score > 0.1
 		ORDER BY
-			r.rank DESC,
+			r.score DESC,
 			commit_time DESC,
 			package_path
 		LIMIT $2
@@ -401,12 +704,12 @@ func (db *DB) LegacySearch(ctx context.Context, searchQuery string, limit, offse
 		licenseTypes                              []string
 		commitTime                                time.Time
 		numImportedBy, total                      uint64
-		rank                                      float64
+		score                                     float64
 		results                                   []*SearchResult
 	)
 	for rows.Next() {
 		if err := rows.Scan(&path, &version, &modulePath, &name, &synopsis,
-			pq.Array(&licenseTypes), &commitTime, &numImportedBy, &rank, &total); err != nil {
+			pq.Array(&licenseTypes), &commitTime, &numImportedBy, &score, &total); err != nil {
 			return nil, fmt.Errorf("rows.Scan(): %v", err)
 		}
 		var lics []string
@@ -423,7 +726,7 @@ func (db *DB) LegacySearch(ctx context.Context, searchQuery string, limit, offse
 			Synopsis:      synopsis,
 			Licenses:      lics,
 			CommitTime:    commitTime,
-			Rank:          rank,
+			Score:         score,
 			NumImportedBy: numImportedBy,
 			NumResults:    total,
 		})

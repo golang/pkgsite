@@ -48,7 +48,7 @@ func (db *DB) queryRow(ctx context.Context, query string, args ...interface{}) *
 
 var (
 	queryCounter         int64 // atomic: per-process counter for unique query IDs
-	queryLoggingDisabled bool  // For use in benchmarks only: not concurrency-safe.
+	queryLoggingDisabled bool  // For use in tests only: not concurrency-safe.
 )
 
 type queryEndLogEntry struct {

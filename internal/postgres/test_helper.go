@@ -189,6 +189,7 @@ func ResetTestDB(db *DB, t *testing.T) {
 // named dbName.  The given *DB reference will be set to the instantiated test
 
 func RunDBTests(dbName string, m *testing.M, testDB **DB) {
+	queryLoggingDisabled = true
 	db, err := SetupTestDB(dbName)
 	if err != nil {
 		log.Fatal(err)

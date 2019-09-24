@@ -66,7 +66,8 @@ func main() {
 	router := dcensus.NewRouter(frontend.TagRoute)
 	server.Install(router.Handle)
 
-	if err := dcensus.Init(dcensus.ServerViews...); err != nil {
+	views := append(dcensus.ServerViews, postgres.SearchLatencyDistribution, postgres.SearchResponseCount)
+	if err := dcensus.Init(views...); err != nil {
 		log.Fatal(err)
 	}
 	// We are not currently forwarding any ports on AppEngine, so serving debug
