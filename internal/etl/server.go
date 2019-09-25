@@ -442,7 +442,7 @@ func formatTime(t *time.Time) string {
 // value is returned.
 func parseIntParam(r *http.Request, name string, defaultValue int) int {
 	param := r.FormValue(name)
-	if name == "" {
+	if param == "" {
 		return defaultValue
 	}
 	val, err := strconv.Atoi(param)
