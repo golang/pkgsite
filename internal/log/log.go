@@ -31,6 +31,10 @@ type stackdriverLogger struct {
 }
 
 func (l *stackdriverLogger) log(s logging.Severity, payload interface{}) {
+	// Convert errors to strings, or they may serialize as the empty JSON object.
+	if err, ok := payload.(error); ok {
+		payload = err.Error()
+	}
 	l.sdlogger.Log(logging.Entry{
 		Severity: s,
 		Payload:  payload,
