@@ -7,7 +7,7 @@
 {{define "pagination_summary"}}
   {{- if gt .TotalCount .ResultCount -}}
     {{- add .Offset 1}} – {{add .Offset .ResultCount}} of
-  {{- end}} {{.TotalCount -}}
+  {{- end}} {{if .Approximate}}approximately {{end}}{{.TotalCount -}}
 {{end}}
 
 {{define "pagination_nav"}}

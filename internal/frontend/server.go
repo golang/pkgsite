@@ -79,9 +79,17 @@ type DataSource interface {
 	// GetVersionInfo returns the VersionInfo corresponding to modulePath and
 	// version.
 	GetVersionInfo(ctx context.Context, modulePath, version string) (*internal.VersionInfo, error)
+
+	// Temporarily, we support all three types of search, for diagnostic
+	// purposes. In the future this will be pruned to just one.
+
 	// LegacySearch performs a search for the given query, with pagination
 	// specified by limit and offset.
 	LegacySearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
+	// Search is a slow search of all search documents.
+	Search(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
+	// FastSearch is an optimized search.
+	FastSearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
 }
 
 // NewServer creates a new Server for the given database and template directory.

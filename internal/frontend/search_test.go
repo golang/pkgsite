@@ -132,7 +132,7 @@ func TestFetchSearchPage(t *testing.T) {
 				}
 			}
 
-			got, err := fetchSearchPage(ctx, testDB, tc.query, paginationParams{limit: 20, page: 1})
+			got, err := fetchSearchPage(ctx, testDB, tc.query, "", paginationParams{limit: 20, page: 1})
 			if err != nil {
 				t.Fatalf("fetchSearchPage(db, %q): %v", tc.query, err)
 			}
@@ -141,5 +141,28 @@ func TestFetchSearchPage(t *testing.T) {
 				t.Errorf("fetchSearchPage(db, %q) mismatch (-want +got):\n%s", tc.query, diff)
 			}
 		})
+	}
+}
+
+func TestApproximateNumber(t *testing.T) {
+	tests := []struct {
+		estimate int
+		sigma    float64
+		want     int
+	}{
+		{55872, 0.1, 60000},
+		{55872, 1.0, 100000},
+		{45872, 1.0, 0},
+		{85872, 0.1, 90000},
+		{85872, 0.4, 100000},
+		{15711, 0.1, 16000},
+		{136368, 0.05, 140000},
+		{136368, 0.005, 136000},
+		{3, 0.1, 3},
+	}
+	for _, test := range tests {
+		if got := approximateNumber(test.estimate, test.sigma); got != test.want {
+			t.Errorf("approximateNumber(%d, %f) = %d, want %d", test.estimate, test.sigma, got, test.want)
+		}
 	}
 }

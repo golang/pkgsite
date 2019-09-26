@@ -7,6 +7,7 @@ package frontend
 import (
 	"context"
 	"fmt"
+	"math"
 	"net/http"
 	"path"
 	"strings"
@@ -14,6 +15,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/log"
+	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/xerrors"
 )
 
@@ -37,12 +39,24 @@ type SearchResult struct {
 	Licenses      []string
 	CommitTime    string
 	NumImportedBy uint64
+	Approximate   bool
 }
 
 // fetchSearchPage fetches data matching the search query from the database and
 // returns a SearchPage.
-func fetchSearchPage(ctx context.Context, ds DataSource, query string, pageParams paginationParams) (*SearchPage, error) {
-	dbresults, err := ds.LegacySearch(ctx, query, pageParams.limit, pageParams.offset())
+func fetchSearchPage(ctx context.Context, ds DataSource, query, method string, pageParams paginationParams) (*SearchPage, error) {
+	var (
+		dbresults []*postgres.SearchResult
+		err       error
+	)
+	switch method {
+	case "legacy":
+		dbresults, err = ds.LegacySearch(ctx, query, pageParams.limit, pageParams.offset())
+	case "fast":
+		dbresults, err = ds.FastSearch(ctx, query, pageParams.limit, pageParams.offset())
+	default:
+		dbresults, err = ds.Search(ctx, query, pageParams.limit, pageParams.offset())
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -61,15 +75,38 @@ func fetchSearchPage(ctx context.Context, ds DataSource, query string, pageParam
 		})
 	}
 
-	var numResults int
+	var (
+		numResults  int
+		approximate bool
+	)
 	if len(dbresults) > 0 {
 		numResults = int(dbresults[0].NumResults)
+		if dbresults[0].Approximate {
+			// 128 buckets corresponds to a standard error of 10%.
+			// http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf
+			numResults = approximateNumber(numResults, 0.1)
+		}
 	}
 
+	pgs := newPagination(pageParams, len(results), numResults)
+	pgs.Approximate = approximate
 	return &SearchPage{
 		Results:    results,
-		Pagination: newPagination(pageParams, len(results), numResults),
+		Pagination: pgs,
 	}, nil
+}
+
+// approximateNumber returns an approximation of the estimate, calibrated by
+// the statistical estimate of standard error.
+// i.e., a number that isn't misleading when we say '1-10 of approximately N
+// results', but that is still close to our estimate.
+func approximateNumber(estimate int, sigma float64) int {
+	expectedErr := sigma * float64(estimate)
+	// Compute the unit by rounding the error the logarithmically closest power
+	// of 10, so that 300->100, but 400->1000.
+	unit := math.Pow(10, math.Round(math.Log10(expectedErr)))
+	// Now round the estimate to the nearest unit.
+	return int(unit * math.Round(float64(estimate)/unit))
 }
 
 // handleSearch applies database data to the search template. Handles endpoint
@@ -93,7 +130,8 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	page, err := fetchSearchPage(ctx, s.ds, query, newPaginationParams(r, defaultSearchLimit))
+	searchMethod := r.FormValue("method")
+	page, err := fetchSearchPage(ctx, s.ds, query, searchMethod, newPaginationParams(r, defaultSearchLimit))
 	if err != nil {
 		log.Errorf("fetchSearchDetails(ctx, db, %q): %v", query, err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)

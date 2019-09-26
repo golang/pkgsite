@@ -23,12 +23,12 @@ type pagination struct {
 	limit       int      // the maximum number of results on a page
 	ResultCount int      // number of results on this page
 	TotalCount  int      // total number of results
+	Approximate bool     // whether or not the total count is approximate
 	Page        int      // number of the current page
 	PrevPage    int      //   "    "   "  previous page, usually Page-1 but zero if Page == 1
 	NextPage    int      //   "    "   "  next page, usually Page+1, but zero on the last page
 	Offset      int      // offset of the first item on the current page
 	Pages       []int    // consecutive page numbers to be displayed for navigation
-
 }
 
 // PageURL constructs a URL that displays the given page.

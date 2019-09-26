@@ -213,6 +213,16 @@ func (ds *DataSource) LegacySearch(ctx context.Context, query string, limit, off
 	return []*postgres.SearchResult{}, nil
 }
 
+// Search is unimplemented.
+func (ds *DataSource) Search(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error) {
+	return []*postgres.SearchResult{}, nil
+}
+
+// FastSearch is unimplemented.
+func (ds *DataSource) FastSearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error) {
+	return []*postgres.SearchResult{}, nil
+}
+
 // getVersion retrieves a version from the cache, or failing that queries and
 // processes the version from the proxy.
 func (ds *DataSource) getVersion(ctx context.Context, modulePath, version string) (_ *internal.Version, err error) {
