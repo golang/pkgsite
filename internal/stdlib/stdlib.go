@@ -139,9 +139,9 @@ func getTestGoRepo(version string) (_ *git.Repository, err error) {
 }
 
 // Versions returns all the versions of Go that are relevant to the discovery
-// site. These are all recent release versions (tags of the forms "goN.N" and
-// "goN.N.N", where N is a number) and beta versions (tags of the forms
-// "goN.NbetaN" and "goN.N.NbetaN").
+// site. These are all release versions (tags of the forms "goN.N" and
+// "goN.N.N", where N is a number) and beta or rc versions (tags of the forms
+// "goN.NbetaN" and "goN.N.NbetaN", and similarly for "rc" replacing "beta").
 func Versions() (_ []string, err error) {
 	defer derrors.Wrap(&err, "Versions()")
 
@@ -207,6 +207,15 @@ func versionForTag(tag string) string {
 	return version
 }
 
+// Directory returns the directory of the standard library relative to the repo root.
+func Directory(version string) string {
+	// For versions older than v1.4.0-beta.1, the stdlib is in src/pkg.
+	if semver.Compare(version, "v1.4.0-beta.1") == -1 {
+		return "src/pkg"
+	}
+	return "src"
+}
+
 // Zip creates a module zip representing the entire Go standard library at the
 // given version and returns a reader to it. It also returns the time of the
 // commit for that version. The zip file is in module form, with each path
@@ -250,14 +259,10 @@ func Zip(version string) (_ *zip.Reader, commitTime time.Time, err error) {
 	if err := addFiles(z, repo, root, prefixPath, false); err != nil {
 		return nil, time.Time{}, err
 	}
-	// Add src, or src/pkg.
-	libdir, err := subTree(repo, root, "src")
-	if err != nil {
-		return nil, time.Time{}, err
-	}
-	// For versions older than v1.4.0-beta.1, the stdlib is in src/pkg.
-	if semver.Compare(version, "v1.4.0-beta.1") == -1 {
-		libdir, err = subTree(repo, libdir, "pkg")
+	// Add files from the stdlib directory.
+	libdir := root
+	for _, d := range strings.Split(Directory(version), "/") {
+		libdir, err = subTree(repo, libdir, d)
 		if err != nil {
 			return nil, time.Time{}, err
 		}

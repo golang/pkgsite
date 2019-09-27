@@ -14,6 +14,7 @@ require (
 	github.com/dgryski/go-gk v0.0.0-20140819190930-201884a44051 // indirect
 	github.com/golang-migrate/migrate/v4 v4.6.2
 	github.com/google/go-cmp v0.3.1
+	github.com/google/go-replayers/httpreplay v0.1.0
 	github.com/google/licensecheck v0.0.0-20190611011822-e07107a3842f
 	github.com/influxdata/tdigest v0.0.0-20181121200506-bf2b5ad3c0a9 // indirect
 	github.com/lib/pq v1.2.0

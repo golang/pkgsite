@@ -1,0 +1,2705 @@
+{
+  "Initial": null,
+  "Version": "0.2",
+  "Converter": {
+    "ClearHeaders": [
+      "^X-Goog-.*Encryption-Key$"
+    ],
+    "RemoveRequestHeaders": [
+      "^Authorization$",
+      "^Proxy-Authorization$",
+      "^Connection$",
+      "^Content-Type$",
+      "^Date$",
+      "^Host$",
+      "^Transfer-Encoding$",
+      "^Via$",
+      "^X-Forwarded-.*$",
+      "^X-Cloud-Trace-Context$",
+      "^X-Goog-Api-Client$",
+      "^X-Google-.*$",
+      "^X-Gfe-.*$"
+    ],
+    "RemoveResponseHeaders": [
+      "^X-Google-.*$",
+      "^X-Gfe-.*$"
+    ],
+    "ClearParams": null,
+    "RemoveParams": null
+  },
+  "Entries": [
+    {
+      "ID": "26d64446cae07166",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/golang/go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:09 GMT"
+          ],
+          "Etag": [
+            "W/\"393d7908094425dcfdda048019c8bcc1\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:09 -0000",
+            "_octo=GH1.1.1424591766.1569768309; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:09 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:09 -0000; secure; HttpOnly",
+            "_gh_sess=T29OTW9TZ0RsalVzcXB1UHFnMjZyMXlsU3hHbXpvMlJiMm43emFNODA4SVhxU2JyQTI3WEE5eVV5eG9GcGRlZ3grbHkwZTdTRmdEbDc0VlRIdkZJM2hvd05BZFcxQXRMZmxSNFE3YmpsendVemt4SVVJZEF3bCt2WnNUWW5KaEhBOEt5QjArUGxUSmdHZXdFeHZCdlRhc2hRNmUyZkp6OUxUNXM0WFZSRVhoR2YxVzEzbXByOHNuL1NobHhoVDB2eFA0WHNtb1dvY1hDZmlVRFh2dlFPQT09LS1vR0ZPK3duRHhub21wSVdKSVpScElnPT0%3D--4cc8f461d25d90af37f288cf9e8c9cd539829b59; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947AA5:10E7E37:5D90C375"
+          ],
+          "X-Request-Id": [
+            "80c17f88-e0c7-48fa-8380-403ea9fe90bb"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "6d5d524c0396a7db",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/golang/go/tree/go1.12/src",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:09 GMT"
+          ],
+          "Etag": [
+            "W/\"a5c1b5be8ff209fc2c1807b77f0f065d\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:09 -0000",
+            "_octo=GH1.1.229169843.1569768309; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:09 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:09 -0000; secure; HttpOnly",
+            "_gh_sess=Vkd4a2o2Y1ZGSUkwZ2hyd1FLL0hpdlFGSGJGUXltTEcrNi8wMVV1ZTYzUkRZdWZWazhZaERRaXhjQ3VjKzFpZ1ZhVUZMVUh1bjQwbkxmMXBmVjY5YzVsMW9kbU50UG02WG16dDlHbzF3UEMveHZDVzIva1R5VHBhYWtrU2VrU1VESFNxYnhNdW9MY1Zvdzg5THNXai9taEhmRXBFWDA0NGplMWM5WUV5WjlkNnVNeFZDM0d0NVZ1VVN3di8ybldycGc4bVdZZURjTm5qbXBnTFRPRnc5QT09LS1TWnZCMmFPUGd6V0hmb2pETCs1UUNnPT0%3D--3f187441027aab87711cd2ab032e87376d6229b3; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947AC2:10E7E55:5D90C375"
+          ],
+          "X-Request-Id": [
+            "d58c9e1f-bc74-44d8-a673-5194dfa739b9"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "c3bcb9c508e57bda",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/golang/go/blob/go1.12/src/bytes/buffer.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:10 GMT"
+          ],
+          "Etag": [
+            "W/\"3fb5c752327820f7a799019a282c2204\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:09 -0000",
+            "_octo=GH1.1.1786749395.1569768310; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:10 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:10 -0000; secure; HttpOnly",
+            "_gh_sess=YTV1WkhQeU5Jbmhvd3V5NjE4TDBtWm5ob2swMGRHNllKanNLM2x0djBtMXkreElzNzZwZjZuNTVBQkdBMUluZXRVTnhvOTV4VU8vL2hzVXRIelFja1BkV1R5V1lxRkpVL2VYSkYwOWpKUDBrZU9heXdGTC90SDlWcGFNaFo3bUVLeDBKeVBDc2RxQlZvNzFuSFh1Zi9kRWVhem1EamtDMkI3MnJDQ1JraVhhdW9BeHdjL1RGMWhTa0xEbUpGT1ZVMEVSY0JBWFppUjhIMHJHbnU2ZWZCdz09LS01UGN2NHVFZENTNFlOcm1CZnhIVjJRPT0%3D--9451e6596af697173cdbe37c4440fa26ec84bfba; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947AD8:10E7E76:5D90C375"
+          ],
+          "X-Request-Id": [
+            "0dd590b2-6e24-4e89-9dfa-8544ddb66231"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "154944b23a50bf0e",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/golang/go/blob/go1.12/src/bytes/buffer.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:10 GMT"
+          ],
+          "Etag": [
+            "W/\"6fe76c19691a4f2da04758bc2f171130\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:10 -0000",
+            "_octo=GH1.1.1984355307.1569768310; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:10 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:10 -0000; secure; HttpOnly",
+            "_gh_sess=WlhMdGNhMlNSMSsvRVRtVEdCVlRwbUh3T2FQa2lhWWFTTzlaOEFSOFkya0cxdW5LN2ltcHdkZGNKcmJ0aG04QzBXRVNPNnV5KzA4U2NHSnFiQ3R0VHZlOVFzL1JFdU1ob09pdjVLaVlLdmpybWhqdHhWMDlLaHpJNnVSMmxKNWh4V09FTWkrc0xmTWpwUFgzM05jek1BNTJxTDFZTFpGRUsxRFQxd1FGcENOdnN4MThVUkd2aEs2QnFQbXpzekdlSGpOWTJPQUxwNStyVEdDOVpWRUUxdz09LS0xanZlNDBjdVc0UXRVUjBYMm5lajRRPT0%3D--dd3480569a74936f4bca38096e42141615097ad1; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947AF7:10E7EA8:5D90C376"
+          ],
+          "X-Request-Id": [
+            "90db3460-c41d-49a4-985a-b1dad486a44c"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "64d7f252cea4340c",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/golang/go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:10 GMT"
+          ],
+          "Etag": [
+            "W/\"b516541333d27619230833d86edfa778\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:10 -0000",
+            "_octo=GH1.1.85628654.1569768310; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:10 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:10 -0000; secure; HttpOnly",
+            "_gh_sess=andWemFJbkI4RTIrb0R2UU0xU0g0czZDSU9FODc0V3kvTWMyVW1qRzd1eXozTlllRi8wOUVWOFpzeUZvWkZLc2RLS01Bd0wyZjV6RXFEV1N1T1JpMmJkMWlneEpyZUpqOUoza3psUGh6eFJ4Y2lxOUw1WEVuNEk2b24wTHppUFA1U2VQQythOXEvTjV1RUdBQjdkQnNTOTBCUDUyZUYvV011OVhwSnFVT1kzdGxPajZhaktYWHl6VFZBNnR4MDJLcGQ1OGQ0bExPc1htcWhiZkg4Y29zdz09LS1pVVBCZmJsUk52VXFJUWFnOXRUR2dnPT0%3D--d1921e31fbfce8856f1770cd57d90e13a101195f; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947B1A:10E7EDB:5D90C376"
+          ],
+          "X-Request-Id": [
+            "e0922640-b91c-4e0e-b2bb-eb21f2ea2226"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "aff678c6133cc600",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/golang/go/tree/go1.3/src/pkg",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:11 GMT"
+          ],
+          "Etag": [
+            "W/\"6b57956f6ca51f3faf87579a7c8b6a3e\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:10 -0000",
+            "_octo=GH1.1.1755905661.1569768311; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:11 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:11 -0000; secure; HttpOnly",
+            "_gh_sess=QXVPQ3NlZW1TeWlpS2JLWkJiMUxPLzdrd2doOHpGQ1g2bFFuQVRtNC9ZOVcyS3hIKzJGM0tPUGhTL3pGWm5oSWp5Z09CYyt2b2h5R01WakpHS3RUVUkvUEhPT1o4VndqVTFSb2RzcldqMXpaVTcvSVlkRzl2ZEtTcEFTYk5FbFNlcGxpOVJRQWZRLzQxNFQvMjcwM3NXeDFwREMvUVUzWGowTGpNSDE2a2hHb3NFUEVBcmdhMXI2QytjUG5QQzNJSXFXVnExRGg0Umw0ZHorZ2pnQnRRdz09LS1lV1dVQW5ZR1pIcURpbGtrNlRXa1R3PT0%3D--02d9c7da7212d26f3370c1a7cb841f1aa460caba; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947B37:10E7F09:5D90C376"
+          ],
+          "X-Request-Id": [
+            "e123ea95-49e6-4cc0-9eb9-a84ad8365461"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "05673225498b9123",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/golang/go/blob/go1.3/src/pkg/bytes/buffer.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:11 GMT"
+          ],
+          "Etag": [
+            "W/\"4fea17a785b58abb5fff8c7935bee2c5\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:11 -0000",
+            "_octo=GH1.1.450891489.1569768311; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:11 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:11 -0000; secure; HttpOnly",
+            "_gh_sess=YkVOR3RObElLdWtCZnJVUmJFMGwrZXhIb0ljM2dTOXRoY1JaeVpjZisrVUpwaTBzL2R6VlR5Z1NDS1BNU1REWjk3Q0dic1NmZDNML2lvSVRhZDJJampMMzVCVTNHWHhERjdlQlBIZTRha1FGU2R3VlZXdnV5TExPUHk2Y2h3bFdpVVVVbjJ5dDJyTFB3ZTBVL21IeG1ZbGRPeXVWUlMyUTVnUDNlZDNNY1VLT001WjZlSVhyOTd2OG1WbE1IZnVoeGorSVA3V04rbUVwODVxM3BMUzkwQT09LS1rSGhubHkwVk1BeHVseXk3bDZ3Y2x3PT0%3D--9a27330664c2391fa37ec269c37cedcec50d2c7b; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947B44:10E7F24:5D90C377"
+          ],
+          "X-Request-Id": [
+            "11e0dd5a-b144-488d-98cf-73847fe6fc65"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "4654bb7a4543b406",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/golang/go/blob/go1.3/src/pkg/bytes/buffer.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:11 GMT"
+          ],
+          "Etag": [
+            "W/\"3cf46db379a5936d59d5adaff7989546\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:11 -0000",
+            "_octo=GH1.1.895897140.1569768311; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:11 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:11 -0000; secure; HttpOnly",
+            "_gh_sess=YkFGUzQ0LzZpKzZsVE5peXllZDdFQnQ0QytPR3dPbHErT2dSNjhqSzl4RElkSGZZRGZQZTJTMWRaRTVSZ1NDVlZ6ZDRyN3V2SmRoV01DRWFPaFFnU1RUL09jL0xMVXlwUjFqNUx4KzBLeFRQK1hQME42Mm15TzQxQi8rdDUzRUVYQ0wyVjRJMDQ0SlNUbjR6aUJJdEYxQ1RJdjBTdG5rV1dFc1FwcGw2RDg4N1I2QWFhb3pTSUhnWUduVE5jV1hFWExGYXRpZVRLdllYcU50c3JSVTFtQT09LS1OdzUzSit6cHB0eHBxUm5HNVhCanBRPT0%3D--e2b01d3231f054fd835c971f9ef18def2fb43c5b; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947B5E:10E7F49:5D90C377"
+          ],
+          "X-Request-Id": [
+            "f345c935-0661-4fb7-9da4-e895bbf0cd90"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "666911a331beb47e",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/pkg/errors",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:12 GMT"
+          ],
+          "Etag": [
+            "W/\"bc12b14e8bd49bf5817c683067a4bbe2\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:11 -0000",
+            "_octo=GH1.1.512847146.1569768311; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:11 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:12 -0000; secure; HttpOnly",
+            "_gh_sess=Si9ySmhoMFNWZk5udDRPWlBuZWJ3c2xZTGt6bUdrdHh0ajY3aGtwaUNNNmdENXNQUVR3YkFJRnlFVnE2a1lKSXF3M2QzWEtDYTBPanJ5b281bUFhaHVMMFdQSHowTi9PMWEyK213WWRGZXBXTEFOWlR3QU5MNU9EaUxUaytMallqa2RYV0ZXa2Y2WnMrMlYrU21CMUJ6cXlrMTRpS1E4NkhWa2p5K3JidllUYmtXRmk5cDd3b1AvMmpTcUpDdWFTM1dRSHdhVHA2RENzeG9DdUljN3Z1QT09LS03LzNNT1ZKcG5hTndoL2I2ZFBrSWVBPT0%3D--5cda885d0b22743f0f62da8d45f3d38a22422cd9; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947B73:10E7F6B:5D90C377"
+          ],
+          "X-Request-Id": [
+            "5859d175-44d9-4631-9f90-a95f704f5fcc"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "db9c80c70459e0f3",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/pkg/errors/tree/v0.8.1",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:12 GMT"
+          ],
+          "Etag": [
+            "W/\"ec6aa3b14fbb9f0e85ae069d82296239\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:12 -0000",
+            "_octo=GH1.1.2115879546.1569768312; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:12 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:12 -0000; secure; HttpOnly",
+            "_gh_sess=VVZFNll2bmVxWE4vODZzOHY5ZlpTbUkvWmZkVVRzWnlaWVRodHFpTXlodmVlN1N3akJBNzJBUjVuNTN6aEdGaU9obzVXcXJmMnYvQnZ4cjgxTlRsNVMybEROd3V6UW5LbEdsc0tzVG5CZm1kZVFaSmZ1bnZ3QU1XakhQYzRKc0RDUjBUWUI0Z3llaVNnSlVmQ1FGbXQ2dk1zNUl2ZGVpcEZEUDBRZm9UeGJuL0grT1ZaT1lob1dZSnd5VTF0OUIyc1pQZWw1Vi9BSHFST0V3MzFLVkZYdz09LS1WbGhBTjdoRXZCZTBybzZyRmI2YXlBPT0%3D--f8c2877fa1f94d90534903e98d964ce33c98139a; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947B88:10E7F90:5D90C378"
+          ],
+          "X-Request-Id": [
+            "3a8ece10-fc1d-4c95-9460-71d89e721ba1"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "edc453deeae63a4e",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/pkg/errors/blob/v0.8.1/errors.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:12 GMT"
+          ],
+          "Etag": [
+            "W/\"088ee012fc54d4e43427119ab6ff53f5\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:12 -0000",
+            "_octo=GH1.1.1771566857.1569768312; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:12 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:12 -0000; secure; HttpOnly",
+            "_gh_sess=cXhmN0VMY3M0TWdzMFhSVm9sSFFLQjdCMTBkNkZJZ1hVQ2FMb3Bjc3R3QXFqZGppV1NXSEpwS0ZVS2Z4SE9RVGw3SnpwWW1UYlA4cGE1T0ZhVmsxS2h6SU8rRlcvbHVEY281SGxQdjJLclE1RFNiMHAwM1ZLaGM1NGRNOXFWSGYvNlRZKzd6UTF0QXBPcTdjeXhUUko4RXFEbXhDT0NrbWswS28wVndjbGRSb1FzWjlzNHRNYzBMUXdhQzJQUmd3cGJkTWtvd0trdXRIN3Y2MDNNUDQxZz09LS1BcG43cXZ1dUpVNnpVSXl3R1huYkVBPT0%3D--49b8718726975777634d0f10863a641bfd34c0f2; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947B96:10E7FAE:5D90C378"
+          ],
+          "X-Request-Id": [
+            "173c4fca-eded-4abf-abb5-6f70623aec59"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "043720be244bf53c",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/pkg/errors/blob/v0.8.1/errors.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:12 GMT"
+          ],
+          "Etag": [
+            "W/\"3420dc55c3fe7c1bd3ce18d908af78a0\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:12 -0000",
+            "_octo=GH1.1.1260203945.1569768312; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:12 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:12 -0000; secure; HttpOnly",
+            "_gh_sess=ckhPaFFUKzhPWGU2R2xqN0pIWUFUSC9FUCtTcjNhUFNMVTdHNnJJVFRhYkxDb1JlaUZ1N05zRG9lQzVaZWRZdThvMllibWdrekYzekpoWkN1d2VhUHU0Y3ZvZnovS1J2Z1BsWHBMVmc1c0pDZVNFWjd5ZXN2cldEQzR4d3ZMRGNWWmZlSW1Fc3VPR1dGbGk5Y2xlcWFpVjdKV05zdlM0Y2RFQjRsYnNsaWtKcStaVlJqbGJJdVo0ZW0zb1BaQlVwZDFFZ1pwaWl3ZUR0ZGtYblFFVkYydz09LS1rQU9aWlpJazhvSXUwUWRQeFpCTHBRPT0%3D--7da36f119b06887ad9cb14332e2a91f1cb17a5c0; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947BA2:10E7FC4:5D90C378"
+          ],
+          "X-Request-Id": [
+            "d4cb058e-f2bc-4907-b680-63dc2663699f"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "b340b20556a9ce32",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/hashicorp/consul",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:13 GMT"
+          ],
+          "Etag": [
+            "W/\"3dcf3e6a30551e2586b0bdd3f1a8ca48\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:12 -0000",
+            "_octo=GH1.1.403329720.1569768312; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:12 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:13 -0000; secure; HttpOnly",
+            "_gh_sess=TEx6SVJ1SE1ta3ZNMUJBN0hGZU5VWVd2SVczY3JjT1lPZkhOcWlQVG1LV0pzMkx6aFE5QnY5RnhHZk1uR29KVkhCRzd1QXhsTXcyLzBZQkw0MjNZWmRlUGxBWThpbjltblJTOUIyWVZHUHNQMlNpOFZ6Ti9RSHNWNWpjKzJPdGRFNW15YzlHUExGZ3c2ZlVUVWhZaTl1UFMwcUJzTkp1K0svcnNHbERDWmxrYTQ5UmxYd2VaNFdhMVF3THRmdnZPTFZ4NjJTTkwyM2h0M01leTdtMUJqQ25CZVUzNm9JSlVNekZHalhpeVB4ND0tLWFhdHZMODdMNENsZHlkbGlURlBIT3c9PQ%3D%3D--e5a24db8a0edfc3235c2901457d8fd81151c8e8c; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947BB7:10E7FE3:5D90C378"
+          ],
+          "X-Request-Id": [
+            "b4534287-cb40-4e52-9884-9af6111d5a2a"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "4115437dbd8a22e2",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/hashicorp/consul/tree/sdk/v0.2.0/sdk",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:13 GMT"
+          ],
+          "Etag": [
+            "W/\"c05ae99ccbddd39c56d664ac79b71c9b\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:13 -0000",
+            "_octo=GH1.1.2118708817.1569768313; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:13 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:13 -0000; secure; HttpOnly",
+            "_gh_sess=VzZCWllIWHora1hoWWltRVkzY2k3WFhwN1ZKaFgxMnFwNm0vdThrTyttY3ZZenIwQTBBNWFUSE9VMVM3Z2o0YlpQZVY0VExoSWlnZ25TUWFUeE1sSWtIZTVuem4yS3REK01QeUNFYjdvY1djR01FMGVuL1lidjJpQ0JMaUkreWViOUlGNEduUTc0QjZwQk5yQWVaa3hwbzByUGhYeHFXWHlJcXVYWERoeHJ2ZXFoSEFyWWxDQmwvYnBLNnpDclVXYWUxaVY0YkdPSkd4VEk5ZFVvekZGcDY1VnQyRU5pRVQvSmRkeTlybDZ6az0tLUhBQXlBZWlCeGlxQWJDeitqZUJDVnc9PQ%3D%3D--9fead4a09c29a6f602e20d04c1920fffd1eb812e; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947BC9:10E800C:5D90C379"
+          ],
+          "X-Request-Id": [
+            "fd577735-7743-486e-a3f5-e7c9d4abc2b6"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "1f78b2e016db3eed",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/hashicorp/consul/blob/sdk/v0.2.0/sdk/freeport/freeport.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com launch-editor.github.com 'self'; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:13 GMT"
+          ],
+          "Etag": [
+            "W/\"c48a9e58de1a2b9ba713551156661496\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:13 -0000",
+            "_octo=GH1.1.1375462324.1569768313; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:13 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:13 -0000; secure; HttpOnly",
+            "_gh_sess=NHY1Y1NEeXl2NGttUmViYVNoTTlhemNITDVtSmRJV0hrTHlDcGFrL20xazhRVEljMEFTSTR6MlBXSUg3SzJyRW51b3JpZGttSHRFcENBVDFxTkJMMlhEV1EwQmMvRlRzTTZIaEs0cE5IbHh6ZW1jVkloZEY2K0VaZGxXQUZCaXR0K0UzU29GckFmWHBWdFpObG54Ri96Y0VYcW82dmNnSTZ5QjZPZXM1bFJPRmpXaWZCK0RhZ2RwZzJBVVhsY1BxREdBK2pQM0d3cHBpbEJTWjNJQ2htYjM0QXVwYk9NQnh1QTZXSEZaUzZ1MD0tLXNkSEdvWWhIUEZOQ2xRVGZ5SzdHamc9PQ%3D%3D--3a0164b08e6a80213ff82ec3f821cbde619b5834; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947BD6:10E8021:5D90C379"
+          ],
+          "X-Request-Id": [
+            "5b65cde5-ea23-412f-8cb2-b7c4104d36e8"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "bef1cc73cfb7133b",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/hashicorp/consul/blob/sdk/v0.2.0/sdk/freeport/freeport.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com launch-editor.github.com 'self'; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:13 GMT"
+          ],
+          "Etag": [
+            "W/\"fede5454677176a4d4ea0c9c13ab8f5f\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:13 -0000",
+            "_octo=GH1.1.338059857.1569768313; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:13 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:13 -0000; secure; HttpOnly",
+            "_gh_sess=OEhHbnlSbXZxbGFHdFF3M2E1K09aSUo3em0vNlg4WDFOcm5LbUNpU20zNjUrUXUvNkNaN1ZVdXVKemQ3VkdVL20xZUdLcUM2bFB5R0pUY1ExQ2NVbDB6emtka3p6ZGQ2bEJmbzNZTEhoc1pLUlVPOGZFMVNNdUtkNVZFNEZ2ZEJSTXB5Q2tvSE5EV3I2R2lGVEdLVTZWOEhFTkViSFRLN2N5SkdnUTdBOFhvQ0twYno1MzZBUDA5d2cvcThHd0hSZ3BaeVQzZXBYcUFOS0twTVMvdlBnWXRicytsSUxaaHlydGNrU1VxbkdlTT0tLW1OUHJmMTR1T1d3cER0cGh1bUplZHc9PQ%3D%3D--8b01e2e5c0617eae3a3c3683a13ac38a9574f3a0; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947BE3:10E803B:5D90C379"
+          ],
+          "X-Request-Id": [
+            "c40a7134-39d1-4366-81d6-0771e7b1e794"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "926d5bb81af10be8",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://bitbucket.org/plazzaro/kami",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Accept-Ranges": [
+            "bytes"
+          ],
+          "Cache-Control": [
+            "max-age=900"
+          ],
+          "Content-Language": [
+            "en"
+          ],
+          "Content-Length": [
+            "38070"
+          ],
+          "Content-Security-Policy-Report-Only": [
+            "script-src 'unsafe-eval' 'strict-dynamic' 'unsafe-inline' 'self' http: https: https://d301sr5gafysq2.cloudfront.net 'nonce-isN41I1sHOdnpkih'; style-src 'self' 'unsafe-inline' https://aui-cdn.atlassian.com https://d301sr5gafysq2.cloudfront.net; report-uri https://web-security-reports.services.atlassian.com/csp-report/bb-website; default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *; connect-src bitbucket.org *.bitbucket.org bb-inf.net *.bb-inf.net analytics.atlassian.com as.atlassian.com api-private.stg.atlassian.com api-private.atlassian.com intake.opbeat.com api.media.atlassian.com api.segment.io xid.stride.com xid.statuspage.io xid.atlassian.com xdid.hipchat.com xid.sourcetreeapp.com bam.nr-data.net sentry.io https://d301sr5gafysq2.cloudfront.net; object-src about:; base-uri 'self'"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:14 GMT"
+          ],
+          "Server": [
+            "nginx"
+          ],
+          "Set-Cookie": [
+            "csrftoken=LJtefYodnvbIwCs3Trg7ejcIthKJdrxaZKJyw3eVTj63KoHsccTeOUAFzZzNwL6O; expires=Sun, 27-Sep-2020 14:45:14 GMT; Max-Age=31449600; Path=/; secure"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubDomains; preload"
+          ],
+          "Vary": [
+            "Cookie, Accept-Language, Accept-Encoding"
+          ],
+          "X-Cache-Info": [
+            "caching"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Reads-Before-Write-From": [
+            "default"
+          ],
+          "X-Render-Time": [
+            "0.252222061157"
+          ],
+          "X-Request-Count": [
+            "1295"
+          ],
+          "X-Served-By": [
+            "app-166"
+          ],
+          "X-Static-Version": [
+            "4a68d65c1182"
+          ],
+          "X-Version": [
+            "4a68d65c1182"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "2a568c311615619e",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://bitbucket.org/plazzaro/kami/src/v1.2.1",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Accept-Ranges": [
+            "bytes"
+          ],
+          "Cache-Control": [
+            "max-age=900"
+          ],
+          "Content-Language": [
+            "en"
+          ],
+          "Content-Length": [
+            "38077"
+          ],
+          "Content-Security-Policy-Report-Only": [
+            "script-src 'unsafe-eval' 'strict-dynamic' 'unsafe-inline' 'self' http: https: https://d301sr5gafysq2.cloudfront.net 'nonce-UAKnhpXAI0f2zoqn'; style-src 'self' 'unsafe-inline' https://aui-cdn.atlassian.com https://d301sr5gafysq2.cloudfront.net; report-uri https://web-security-reports.services.atlassian.com/csp-report/bb-website; default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *; connect-src bitbucket.org *.bitbucket.org bb-inf.net *.bb-inf.net analytics.atlassian.com as.atlassian.com api-private.stg.atlassian.com api-private.atlassian.com intake.opbeat.com api.media.atlassian.com api.segment.io xid.stride.com xid.statuspage.io xid.atlassian.com xdid.hipchat.com xid.sourcetreeapp.com bam.nr-data.net sentry.io https://d301sr5gafysq2.cloudfront.net; object-src about:; base-uri 'self'"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:14 GMT"
+          ],
+          "Server": [
+            "nginx"
+          ],
+          "Set-Cookie": [
+            "csrftoken=dNIZK5puybHbnY2qTWZMWjRXidlW1uUhudumXWMcYk0NkZ0yaz9KTTKHa7JsnrUX; expires=Sun, 27-Sep-2020 14:45:14 GMT; Max-Age=31449600; Path=/; secure"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubDomains; preload"
+          ],
+          "Vary": [
+            "Cookie, Accept-Language, Accept-Encoding"
+          ],
+          "X-Cache-Info": [
+            "caching"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Reads-Before-Write-From": [
+            "default"
+          ],
+          "X-Render-Time": [
+            "0.12556886673"
+          ],
+          "X-Request-Count": [
+            "1461"
+          ],
+          "X-Served-By": [
+            "app-177"
+          ],
+          "X-Static-Version": [
+            "4a68d65c1182"
+          ],
+          "X-Version": [
+            "4a68d65c1182"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "0baa1fc921c127ba",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://bitbucket.org/plazzaro/kami/src/v1.2.1/defaults.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Accept-Ranges": [
+            "bytes"
+          ],
+          "Cache-Control": [
+            "max-age=900"
+          ],
+          "Content-Language": [
+            "en"
+          ],
+          "Content-Length": [
+            "38101"
+          ],
+          "Content-Security-Policy-Report-Only": [
+            "script-src 'unsafe-eval' 'strict-dynamic' 'unsafe-inline' 'self' http: https: https://d301sr5gafysq2.cloudfront.net 'nonce-73RvUQeU8HDYAOf0'; style-src 'self' 'unsafe-inline' https://aui-cdn.atlassian.com https://d301sr5gafysq2.cloudfront.net; report-uri https://web-security-reports.services.atlassian.com/csp-report/bb-website; default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *; connect-src bitbucket.org *.bitbucket.org bb-inf.net *.bb-inf.net analytics.atlassian.com as.atlassian.com api-private.stg.atlassian.com api-private.atlassian.com intake.opbeat.com api.media.atlassian.com api.segment.io xid.stride.com xid.statuspage.io xid.atlassian.com xdid.hipchat.com xid.sourcetreeapp.com bam.nr-data.net sentry.io https://d301sr5gafysq2.cloudfront.net; object-src about:; base-uri 'self'"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:14 GMT"
+          ],
+          "Expires": [
+            "Sun, 29 Sep 2019 14:45:14 GMT"
+          ],
+          "Server": [
+            "nginx"
+          ],
+          "Set-Cookie": [
+            "csrftoken=vYiNNq5ZFgyNCdvO0MXLCxgPrJcNxVX56cunaFDT385HIkptaLLM6XnUaT9tTPOs; expires=Sun, 27-Sep-2020 14:45:14 GMT; Max-Age=31449600; Path=/; secure"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubDomains; preload"
+          ],
+          "Vary": [
+            "Cookie, Accept-Language, Accept-Encoding"
+          ],
+          "X-Cache-Info": [
+            "caching"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Reads-Before-Write-From": [
+            "default"
+          ],
+          "X-Render-Time": [
+            "0.133019208908"
+          ],
+          "X-Request-Count": [
+            "1808"
+          ],
+          "X-Served-By": [
+            "app-189"
+          ],
+          "X-Static-Version": [
+            "4a68d65c1182"
+          ],
+          "X-Version": [
+            "4a68d65c1182"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "bcf093d42003f9e9",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://bitbucket.org/plazzaro/kami/src/v1.2.1/defaults.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Accept-Ranges": [
+            "bytes"
+          ],
+          "Cache-Control": [
+            "max-age=900"
+          ],
+          "Content-Language": [
+            "en"
+          ],
+          "Content-Length": [
+            "38101"
+          ],
+          "Content-Security-Policy-Report-Only": [
+            "script-src 'unsafe-eval' 'strict-dynamic' 'unsafe-inline' 'self' http: https: https://d301sr5gafysq2.cloudfront.net 'nonce-73RvUQeU8HDYAOf0'; style-src 'self' 'unsafe-inline' https://aui-cdn.atlassian.com https://d301sr5gafysq2.cloudfront.net; report-uri https://web-security-reports.services.atlassian.com/csp-report/bb-website; default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *; connect-src bitbucket.org *.bitbucket.org bb-inf.net *.bb-inf.net analytics.atlassian.com as.atlassian.com api-private.stg.atlassian.com api-private.atlassian.com intake.opbeat.com api.media.atlassian.com api.segment.io xid.stride.com xid.statuspage.io xid.atlassian.com xdid.hipchat.com xid.sourcetreeapp.com bam.nr-data.net sentry.io https://d301sr5gafysq2.cloudfront.net; object-src about:; base-uri 'self'"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:14 GMT"
+          ],
+          "Expires": [
+            "Sun, 29 Sep 2019 14:45:14 GMT"
+          ],
+          "Server": [
+            "nginx"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubDomains; preload"
+          ],
+          "Vary": [
+            "Cookie, Accept-Language, Accept-Encoding"
+          ],
+          "X-Cache-Info": [
+            "cached"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Reads-Before-Write-From": [
+            "default"
+          ],
+          "X-Render-Time": [
+            "0.133019208908"
+          ],
+          "X-Request-Count": [
+            "1808"
+          ],
+          "X-Served-By": [
+            "app-189"
+          ],
+          "X-Static-Version": [
+            "4a68d65c1182"
+          ],
+          "X-Version": [
+            "4a68d65c1182"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "202f4de81a577f07",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/airbrake/gobrake",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:14 GMT"
+          ],
+          "Etag": [
+            "W/\"6a4df38da26b37ebafa997c07a9c6e73\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:14 -0000",
+            "_octo=GH1.1.908468142.1569768314; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:14 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:14 -0000; secure; HttpOnly",
+            "_gh_sess=UjNiLytndHNCNUFKeGFaRjgveWxoa2g1c2ovczl3ck50RW5uK3JqUE5uc2xvZzJ1anRacHZ6SFZtbkdreS8waUMzK2tDdjFJMWJWU0w3WWJQZjNkT1g2ZHRyMnFDck1vaitOcUdHNFd0dVRaU3ZRWTdOYit5ZVVWVGRwcng3cWIrL29ZbU50eUFOTXNHWGdVTmRZc0NlYndoQlVXWklRWncwQm51TWYwV3hvdVIwYnZtM1BPci9WS0VieERaYU82RVNEVkpuUFkzT25USy9PdUs3ZStWM3VWZjYvZ29ISUdoWnJDNk9waWxoND0tLVhtZ2ZYbHo1V2JieExqRE5HNnJmQUE9PQ%3D%3D--216e0aa6431de6b849536a73be9368f79fef4651; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947C16:10E8050:5D90C379"
+          ],
+          "X-Request-Id": [
+            "2ee06b98-59a8-4ce7-8f9e-363a43653912"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "cb37bcb8ec49ecca",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/airbrake/gobrake/tree/v3.5.1",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:15 GMT"
+          ],
+          "Etag": [
+            "W/\"d0b2b606b5dabe9b91e6bc43535beb3a\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:14 -0000",
+            "_octo=GH1.1.173572805.1569768315; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:15 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:15 -0000; secure; HttpOnly",
+            "_gh_sess=RG1XVmZMcXlqa1FOMS9HaEY4Nis1OHdoSEhNbTRWMkZjek1ONTY4Z3pWWHp5MGlVbkwwck5qTHowZnlxU0N5M3dpV2hUa0F3SHZsbmp3UXZIa2NYcFZoSXpxdXVjRURtVThMWktCUjhtT0tsQXNyWndDcVF4bk5Cb2RlckhMNWxBbjRxRW83M2JNTWIyV2hacU55TzdzK0VBWlY5WGVmLzZ6QUhlandOOG1ENytFV1R2ZkRZR2RGN2RMRXloSElhSHNLemc5RzZmYm5iclpKTXRHRzRpSmJnaEh0MWcwWUdweDU5M21TZDB5VT0tLWJpQzlrZDdSS25xN1FvTGF0eVNvVEE9PQ%3D%3D--ba483ce83b7dbd5958a6c16866783d07822db78d; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947C25:10E80BC:5D90C37A"
+          ],
+          "X-Request-Id": [
+            "7abb032c-98c2-4116-930a-6d5bcd29f3ee"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "2e339212a3224e40",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/airbrake/gobrake/blob/v3.5.1/gobrake.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:15 GMT"
+          ],
+          "Etag": [
+            "W/\"9a60a0e9d28e14226b84abbaf2a4116a\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:15 -0000",
+            "_octo=GH1.1.1908096342.1569768315; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:15 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:15 -0000; secure; HttpOnly",
+            "_gh_sess=dUFOKzAwUUNOVjZtTmNyYk9OWTZzdGRuV2FSQ2VTeVJqYnA2YldGUzI2endVbnlzb3MzVS9qa2RGVk5EbGxHd0hmSXprekhpS1I1cWR1TjN0SGZZZVIxNE5PMmRVSmE5elVCTEMrSkcrNFpIZGk0STZSd2c0dEx1bE9hLzhlcy9MZTA4YU1aTHFtaUdOWGFPTVlyYVI1UnhCVy9MU2JRUExUTXM0K2RLQU1WUnlKNFNVMzJSa1BOQWdySW5BL3d1QkhnZEVIVHYvWmwyTUZTK2JtWnpXcXF1SEJJck1jVGU3OXR3amNTLzlxYz0tLWQ5TW1kS1o2SWN0amxYNWYrN1VjSnc9PQ%3D%3D--f241dcc7f7830700dd1e61ebbacaf4fc9956c87b; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947C3D:10E80EE:5D90C37B"
+          ],
+          "X-Request-Id": [
+            "866e0ac7-e6fd-48a5-a06c-7c08194c6419"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "b5b3b00e9d8f8453",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/airbrake/gobrake/blob/v3.5.1/gobrake.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:15 GMT"
+          ],
+          "Etag": [
+            "W/\"f3b9d48d169eb65478427449f26edf16\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:15 -0000",
+            "_octo=GH1.1.429175923.1569768315; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:15 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:15 -0000; secure; HttpOnly",
+            "_gh_sess=dlY3elQrdEs1VWwvNXFTdUlhQ3NmS3FieVFuVUNLRVBUT3c2aTFXb1FaMzh4aHNOVVVJZ0M3bTlIMzBrZVJqZm8ra1B0SzhlV0hrOXp6c0dsa0VVaklNMUhiWXk5RENrUGJFRmV4Z3VsTHdRbHd5VC84NGc5M1pYOTF0SER0SXU4RnJiNHVYOHZrSVVTelJjakZpRmJiQ0JXWDl2eXBYeFcwTkRROWdydFVDOVRNYStGcHJOcEVlLzY3MnE2b3pINVorZ1MxM2NaMytVai94MVF3TTdkNnBOejF6Y3BMNnNSMEpab2wyNnBhYz0tLUVEMG1NbWp2dlN5SWUyRTEycVhVY2c9PQ%3D%3D--b3a236cc0c1474fde8d4ca16087578d94d2dcef4; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947C4D:10E8109:5D90C37B"
+          ],
+          "X-Request-Id": [
+            "bf2421fc-5e26-4aac-8e3f-89b8cf5fc34c"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "76cc6f9d55a8b289",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/golang/tools",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:15 GMT"
+          ],
+          "Etag": [
+            "W/\"98289d39453d3d7b44a9791ac026a857\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:15 -0000",
+            "_octo=GH1.1.1287041593.1569768315; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:15 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:15 -0000; secure; HttpOnly",
+            "_gh_sess=WWhOa2RnZlQxY1N5M2ZKODQ0MnhyQUdDUHB2eTlWWjUvU3QwZVh6TTRnTHl4Sitzd2xhNTVUcVFGdS8rdXlJTXZUTUowcWorZlVCYnNTVHVMUWdnMGxVZndJWldvVUd6MzllVVBFZVpTUk8yZXNma3FxTGNqVlFZLzJrWFRaUFRyRlczbXNBLzVIc2d3TWh2VDRRSUR6bHcrQkJTUE8yanpVbjVVOFp4ZjNMU1NranZZek5aM0dtdlByeGtuQWxmSG1wOENUNHBNOEY0Z0RoK2lZYVB2NWptZUl0L3lKRThQa29QM0N0c2Exbz0tLVlyNzlxNXg3WWg4ZGJBY3JENkw4SVE9PQ%3D%3D--f3226608aeddb35af8ffb5f238bade9200410db1; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947C5E:10E8122:5D90C37B"
+          ],
+          "X-Request-Id": [
+            "ea8a673c-94e7-41a9-ba03-9432cd72e2d1"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "aec59552398d70d6",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/golang/tools/tree/030b2cf1153e",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:16 GMT"
+          ],
+          "Etag": [
+            "W/\"058d0a5febb6745016def6827c3b07ab\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:15 -0000",
+            "_octo=GH1.1.1050034481.1569768316; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:16 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:16 -0000; secure; HttpOnly",
+            "_gh_sess=WHQyRkgwYTJWN1lQYVJZQ0cwRkJweFlXZTQvOTNFS2Ywc3o5MlpaclBHU1FkNHJNZit3WGZvMk1QU1pUWm5nSmMvTThybmFHS1VjOXNmZDI5V1JnV3kzQnhlMjNSc2J4RW95UkJIQ2NiODR6WjB5WDB6ZVlScnE5cStEOWdrbGR0alp3c0xjYjhNZGJIS0FiUjhXZzY1NHhFQkI0Tzc4U0Y3NEFoUHdvbXZLVEMzVlJpT1JVSUNtL1VwNlYxSHJrSkp2ZlFQUkVCcS9BRVlLQlhDTC9wckxocHUwdjYxNTRVWUpiKy9Cd1kyMD0tLUdZcy8rbWZWcG91RkRDYUFMS3ZjYXc9PQ%3D%3D--b99b0132cdf52863af32b33ba0b437dae7f0ae74; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947C71:10E813F:5D90C37B"
+          ],
+          "X-Request-Id": [
+            "de6dcc47-ffca-4109-bc2c-aa7db530a898"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "dc64b11c3c8c6ace",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/golang/tools/blob/030b2cf1153e/README.md",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:16 GMT"
+          ],
+          "Etag": [
+            "W/\"4cc2a1a849ddd808d95074895cf4bcaa\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:16 -0000",
+            "_octo=GH1.1.992087722.1569768316; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:16 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:16 -0000; secure; HttpOnly",
+            "_gh_sess=VGRtL1A5SGVVczY3TXM5allIbUkxYnJQMjIxUTF6Wm5tcHNDTks1RGQySGxLc243N2dFZXAyTXhlTXYvV1lyUXRUdS92ODB4TzBac0dYS2g5WjlScU10dlhaMjB3ZUFLQUpKVGUvQk1kazBGNzN4SklPUjBUZG5hWURDaUxlOTFrZGJqUW0vdjBtaDBRblFBMmFSQ2xYMnJwQURNYWRxOCtUZFBKMTIyQ0JuYXcxQk4rVkczYURPUkV3NmVoMTRVSHFmUTNrTEVtT2xtaFJDQUpVNmdGeVZlZ0NEQ3dtNS80Q2JUTWZZeDluVT0tLWJ3MEFNd1RqWnl1TGpEVml0TFh2a2c9PQ%3D%3D--f86e6be6b00c20b90042b90e01b006fa76eeb5b8; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947C8C:10E8163:5D90C37C"
+          ],
+          "X-Request-Id": [
+            "76f6a336-bbce-432e-a2a8-50c7c20a0672"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "489957e626f0ef15",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/golang/tools/blob/030b2cf1153e/README.md",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:16 GMT"
+          ],
+          "Etag": [
+            "W/\"9ade8b416db12aa85cdccd5a73b9233d\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:16 -0000",
+            "_octo=GH1.1.732944653.1569768316; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:16 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:16 -0000; secure; HttpOnly",
+            "_gh_sess=N0JaVFVpWGFQd24zRWlmMklOOFJoR00xV3BFSnIzNE5SbVRWK1VtUStBL1V3L2xHTzFrMzFqSFF2a1owendob0VIbTlsWFdxVDQyWkl6cGxkUlZ3OEtUR1FxbzZuYVZqZDRvSEhlQnE0aUsySUh3aWtRWnBVNWlOZ2lUdTMzbDNubEVPUjFOcGZ6cEh4ZG9TdWhVQWw5bGRNWXcwYW00OXg3YllhZnBBSmxyWjlmLy81WGZManN5b3MyS1ppT24xQmFmaFJlQW9mVUxZTlAvYkpYaUwvQ1kycm0yOUVKRzJCM2RacDBPMDA5WT0tLU11R0YxbFg2cVJIQVJYeDF6b080RVE9PQ%3D%3D--ea7bba11808f94c7074dae556abb199541ecdcf9; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947C9E:10E8183:5D90C37C"
+          ],
+          "X-Request-Id": [
+            "2472d4eb-7f6e-46c6-8298-44ad1f5f7933"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "5cd7f8a396614b35",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/golang/tools",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:17 GMT"
+          ],
+          "Etag": [
+            "W/\"e0824bcf2dcb8a5d2b2d98de9dfedf0b\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:16 -0000",
+            "_octo=GH1.1.1893038015.1569768316; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:16 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:17 -0000; secure; HttpOnly",
+            "_gh_sess=dzlJb04wOEcwR2d1OUNtbUVPVEVOdllHNEk5bVJHUlNTeUdpOXVKQ05ic3Q0NDQ2dzJOSTNYVTljY3V3RGprREhadElReUlob0dVdTIzQnoxKy9iemd3NjVhZm0vTW9aZG1tYzhPL0pnUkdKWnM5MWd1SXlzK0hJQWE1Ums5YmxhMklYNllLNmJBdEk4SjA5a1dUZXNiTU9RRitCNUhYelFsM2xUZDVIYXBobEFOdmtGT0VxMzEwUEhwdVNkU2s0Z3ViaFZPTkVjb095dExhenNOajRxVWpDdmJCbzRyWm1ISXNzQlV1a2NWND0tLVdLZ0EwZ0JDVjJtOHZZVVY3c3lKVFE9PQ%3D%3D--b7371fa15897c425053909949016342a043bafdb; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947CB8:10E81A2:5D90C37C"
+          ],
+          "X-Request-Id": [
+            "4c1cccc9-0e8d-4805-a835-cf2f30a8153b"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "ea20e8a87fa0ce16",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/golang/tools/tree/gopls/v0.1.4/gopls",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:17 GMT"
+          ],
+          "Etag": [
+            "W/\"950202f681797517a46929079c0fd109\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:17 -0000",
+            "_octo=GH1.1.143722269.1569768317; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:17 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:17 -0000; secure; HttpOnly",
+            "_gh_sess=NkQ3OGRNQWpKeVhPUjFabmhxNnB5RlJoNUxZOHhuTlZhUms4MmJxdExPMUh5TmNvbjJGenI3bkQxYzZ5c3g5anZlTHZUbjlBRUlmVGpqYXNNNGRHY09IR0pLWE51djNhb0FjVlZUb0Zibyt1YVZiMnA0a2xtR281cUxySGphZGxMeWo4ZEgzRllRa2dtZGd3Y2I3WVZtQWphb3VVa0ZrVEVVRFRQMlNjSFArNkh1YkxlWjUyTStOSVZXT0EwQ0ZENjl0KzdrU3I5T0JrTzhtK3Jwd0NEdTA4Zk5nMC9KaHljRzhXZHY3aWZncz0tLTRud3crL1RPTGd2WWdwWUVKcGFISEE9PQ%3D%3D--0dbf68a9734525580f9d96818e4280ad18d92422; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947CDE:10E81DC:5D90C37D"
+          ],
+          "X-Request-Id": [
+            "cfe44ee4-7b29-4453-9c31-67194d86376d"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "35c185d8d177c298",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/golang/tools/blob/gopls/v0.1.4/gopls/main.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:17 GMT"
+          ],
+          "Etag": [
+            "W/\"c29b21ba363bc19a478029643b191de2\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:17 -0000",
+            "_octo=GH1.1.1483435003.1569768317; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:17 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:17 -0000; secure; HttpOnly",
+            "_gh_sess=elJXU092WHM5NUgzbkhkZFJZZTh5Q2NEcS9DVWlpTnFMVEV0OWhJOUVHc1loc2Y2SndzT29lMlk2TDFpMmxGaW9MT2NrdzFnVndGdjhwVXVxUEZKN1E1KzdUWmxCK2I0K3MzV21IbXdmS2xXRnVVT0hqTVAyemU2WlFjeFNjdXcydFhOM29YVGhnYXNvT0lnN3RTc3BudGcvM0VCblZueHhYc1FWaWpQcXdjNTgrY2cyUnNPWWdBd2FxeWV3bFd2bkxSMFhMc1U1ODhiaDRySW9kUThzR2hRM3VZR0t3ejBocVlzSGJyZVFmbz0tLWNuZ0x3YlpZTlA5VUE3bGNMUFdtY3c9PQ%3D%3D--3bcd189ab117c85c287f151668656a214bd5f218; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947CF6:10E8200:5D90C37D"
+          ],
+          "X-Request-Id": [
+            "b86440b5-3952-44cf-94a1-022f38611e98"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "39ebcddea9519de4",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/golang/tools/blob/gopls/v0.1.4/gopls/main.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:17 GMT"
+          ],
+          "Etag": [
+            "W/\"1a9b09d0989f3f1adff367d8646d8101\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Sun, 29 Sep 2019 15:45:17 -0000",
+            "_octo=GH1.1.679620304.1569768317; domain=.github.com; path=/; expires=Wed, 29 Sep 2021 14:45:17 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Thu, 29 Sep 2039 14:45:17 -0000; secure; HttpOnly",
+            "_gh_sess=TDNhUC9XY1M4d2tzWGlZZmdjT2VOUTBrQXBWTUNZc1k0RmJQbGJWOXgwWVkxYzhVSlhtTVBJS2hvNkRsMG5mYjhDUnIzRE1XK1l4eWR3bnJwY0hyMmpaTXRoOXdmdjZ0SEQya2dKdEJYckxITEZHck40VWp6cFpGVjhDR20zMDFZUk5JWXF1Tm1ZOWlQamJZTDM5Q1lOL0Nqby9DeUpCNmxMeTF1R1NrN1BoR0RTSjFuWm9sZmVvc2lXb3hRbVFlYW9OWlRldjNxTERtRDk1WE56U293cXZXUzA4STM3OHNaY1BHQnpIVkN2dz0tLXg4NDFNYSt5elNJVFRMcEZ4bzVucnc9PQ%3D%3D--e0bf369857de2c699a9fbc5a78349d9c64bc99e8; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE0:2697:947D0D:10E8220:5D90C37D"
+          ],
+          "X-Request-Id": [
+            "7f95004f-01f9-4b2a-8230-db1bbf4613eb"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "bf3aad81551d0ae0",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://go.googlesource.com/image",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Content-Security-Policy-Report-Only": [
+            "script-src 'nonce-ED6zVjCHCQxgMeWpErb15A' 'unsafe-inline' 'strict-dynamic' https: http: 'unsafe-eval';object-src 'none';base-uri 'self';report-uri https://csp.withgoogle.com/csp/gerritcodereview/1"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:17 GMT"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubDomains; preload"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "2779ce33b878a854",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://go.googlesource.com/image/+/69e4b8554b2a",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "private, max-age=7200, stale-while-revalidate=604800"
+          ],
+          "Content-Length": [
+            "9224"
+          ],
+          "Content-Security-Policy-Report-Only": [
+            "script-src 'nonce-M8BQMo/IwjCxhw1djjPQrA' 'unsafe-inline' 'strict-dynamic' https: http: 'unsafe-eval';object-src 'none';base-uri 'self';report-uri https://csp.withgoogle.com/csp/gerritcodereview/1"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:17 GMT"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubDomains; preload"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "6cddf64daed9db3d",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://go.googlesource.com/image/+/69e4b8554b2a/math/fixed/fixed.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "private, max-age=7200, stale-while-revalidate=604800"
+          ],
+          "Content-Length": [
+            "114960"
+          ],
+          "Content-Security-Policy-Report-Only": [
+            "script-src 'nonce-fYcEiC6xlvZf/tdsNILpHA' 'unsafe-inline' 'strict-dynamic' https: http: 'unsafe-eval';object-src 'none';base-uri 'self';report-uri https://csp.withgoogle.com/csp/gerritcodereview/1"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:17 GMT"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubDomains; preload"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "81ef81abf31c577b",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://go.googlesource.com/image/+/69e4b8554b2a/math/fixed/fixed.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "private, max-age=7200, stale-while-revalidate=604800"
+          ],
+          "Content-Length": [
+            "114960"
+          ],
+          "Content-Security-Policy-Report-Only": [
+            "script-src 'nonce-W+Ke3MLvFkoy7peVGyQ19w' 'unsafe-inline' 'strict-dynamic' https: http: 'unsafe-eval';object-src 'none';base-uri 'self';report-uri https://csp.withgoogle.com/csp/gerritcodereview/1"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Sun, 29 Sep 2019 14:45:17 GMT"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubDomains; preload"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ]
+        },
+        "Body": ""
+      }
+    }
+  ]
+}
