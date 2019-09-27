@@ -143,7 +143,7 @@ func TestServer(t *testing.T) {
 			fmt.Sprintf("/search?q=%s", sample.PackageName),
 			http.StatusOK,
 			[]string{
-				`<a href="/pkg/github.com/valid_module_name/foo?q=foo">github.com/valid_module_name/foo</a>`,
+				`<a href="/pkg/github.com/valid_module_name/foo">github.com/valid_module_name/foo</a>`,
 			},
 		},
 		{
