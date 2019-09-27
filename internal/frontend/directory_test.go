@@ -87,9 +87,13 @@ func TestFetchPackageDirectoryDetailsAndFetchModuleDirectoryDetails(t *testing.T
 
 	v := sample.Version()
 	pkg1 := createPackageForVersion(v.ModulePath)
+	// Used to test that "/a" is not a subdirectory of "/a".
 	pkg2 := createPackageForVersion(v.ModulePath + "/a")
+	// Used to test that "/a/b" is a subdirectory of "/a".
 	pkg3 := createPackageForVersion(v.ModulePath + "/a/b")
-	v.Packages = []*internal.Package{pkg1, pkg2, pkg3}
+	// Used to test that "/ab" is not a subdirectory of "/a".
+	pkg4 := createPackageForVersion(v.ModulePath + "/ab")
+	v.Packages = []*internal.Package{pkg1, pkg2, pkg3, pkg4}
 
 	checkDirectoryDetails := func(fnName string, dirPath string, got *DirectoryDetails, wantPackages []*internal.Package) {
 		t.Helper()
@@ -134,5 +138,5 @@ func TestFetchPackageDirectoryDetailsAndFetchModuleDirectoryDetails(t *testing.T
 	if err != nil {
 		t.Fatalf("fetchModuleDirectoryDetails(ctx, db, %q, %q): %v", v.ModulePath, v.Version, err)
 	}
-	checkDirectoryDetails("fetchModuleDirectoryDetails", v.ModulePath, got, []*internal.Package{pkg1, pkg2, pkg3})
+	checkDirectoryDetails("fetchModuleDirectoryDetails", v.ModulePath, got, []*internal.Package{pkg1, pkg2, pkg3, pkg4})
 }

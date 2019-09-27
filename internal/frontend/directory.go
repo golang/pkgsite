@@ -84,7 +84,7 @@ func fetchPackageDirectoryDetails(ctx context.Context, ds DataSource, dirPath st
 
 	var packages []*internal.VersionedPackage
 	for _, p := range dbPackages {
-		if !strings.HasPrefix(p.Path, dirPath) || p.Path == dirPath {
+		if !strings.HasPrefix(p.Path, dirPath+"/") || p.Path == dirPath {
 			// Only include packages that are a subdirectory of dirPath.
 			continue
 		}
