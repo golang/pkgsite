@@ -14,7 +14,6 @@ import (
 
 	"github.com/google/licensecheck"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/thirdparty/module"
 )
 
@@ -135,9 +134,6 @@ func Detect(contentsDir string, r *zip.Reader) (_ []*License, err error) {
 			matchedTypes := make(map[string]bool)
 			for _, m := range cov.Match {
 				if m.Percent >= classifyThreshold {
-					if matchedTypes[m.Name] {
-						log.Infof("found license type %q more than once in %q", m.Name, filePath)
-					}
 					matchedTypes[m.Name] = true
 				}
 			}
