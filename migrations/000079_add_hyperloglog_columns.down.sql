@@ -4,9 +4,9 @@
 
 BEGIN;
 
-DROP INDEX idx_hll_bucket_leading_zeros;
+DROP INDEX idx_hll_register_leading_zeros;
 
-ALTER TABLE search_documents DROP COLUMN hll_bucket;
+ALTER TABLE search_documents DROP COLUMN hll_register;
 ALTER TABLE search_documents DROP COLUMN hll_leading_zeros;
 
 END;
