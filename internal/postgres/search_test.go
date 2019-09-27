@@ -6,7 +6,10 @@ package postgres
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/binary"
 	"fmt"
+	"io"
 	"sort"
 	"testing"
 	"time"
@@ -621,5 +624,52 @@ func TestGetPackagesForSearchDocumentUpsert(t *testing.T) {
 	}
 	if len(pkgPaths) != 0 {
 		t.Fatalf("expected testDB.GetPackagesForSearchDocumentUpsert to return an empty slice; got %v", pkgPaths)
+	}
+}
+
+func TestHllHash(t *testing.T) {
+	tests := []string{
+		"",
+		"The lazy fox.",
+		"golang.org/x/tools",
+		"Hello, 世界",
+	}
+	for _, test := range tests {
+		h := md5.New()
+		io.WriteString(h, test)
+		want := int64(binary.BigEndian.Uint64(h.Sum(nil)[0:8]))
+		row := testDB.queryRow(context.Background(), "SELECT hll_hash($1)", test)
+		var got int64
+		if err := row.Scan(&got); err != nil {
+			t.Fatal(err)
+		}
+		if got != want {
+			t.Errorf("hll_hash(%q) = %d, want %d", test, got, want)
+		}
+	}
+}
+
+func TestHllZeros(t *testing.T) {
+	tests := []struct {
+		i    int64
+		want int
+	}{
+		{-1, 0},
+		{-(1 << 63), 0},
+		{0, 64},
+		{1, 63},
+		{1 << 31, 32},
+		{1 << 62, 1},
+		{(1 << 63) - 1, 1},
+	}
+	for _, test := range tests {
+		row := testDB.queryRow(context.Background(), "SELECT hll_zeros($1)", test.i)
+		var got int
+		if err := row.Scan(&got); err != nil {
+			t.Fatal(err)
+		}
+		if got != test.want {
+			t.Errorf("hll_zeros(%d) = %d, want %d", test.i, got, test.want)
+		}
 	}
 }
