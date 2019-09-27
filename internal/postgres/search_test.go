@@ -175,38 +175,51 @@ func TestFastSearch(t *testing.T) {
 	tests := []struct {
 		label       string
 		versions    []*internal.Version
-		query       string
+		resultOrder [4]string
 		wantSource  string
 		wantResults []string
+		wantTotal   uint64
 	}{
 		{
 			label:       "single package",
 			versions:    importGraph("foo.com/A", "", 0),
-			query:       "foo",
+			resultOrder: [4]string{"estimate", "popular-50", "popular-8", "deep"},
 			wantSource:  "deep",
 			wantResults: []string{"foo.com/A"},
+			wantTotal:   1,
 		},
 		{
 			label:       "empty results",
 			versions:    []*internal.Version{},
-			query:       "foo",
+			resultOrder: [4]string{"estimate", "popular-50", "popular-8", "deep"},
 			wantSource:  "deep",
 			wantResults: nil,
 		},
 		{
 			label:       "insufficient popular results",
 			versions:    importGraph("foo.com/popular", "foo.com", 10),
-			query:       "foo",
+			resultOrder: [4]string{"estimate", "popular-50", "popular-8", "deep"},
 			wantSource:  "deep",
 			wantResults: []string{"foo.com/popular", "foo.com/importer0"},
+			wantTotal:   11,
 		},
 		{
-			label: "popular results",
-			versions: append(importGraph("foo.com/popularA", "foo.com", 60),
+			label: "popular results, estimate before deep",
+			versions: append(importGraph("foo.com/popularA", "bar.com", 60),
 				importGraph("foo.com/popularB", "foo.com", 70)...),
-			query:       "foo",
+			resultOrder: [4]string{"popular-50", "popular-8", "estimate", "deep"},
 			wantSource:  "popular-8",
 			wantResults: []string{"foo.com/popularB", "foo.com/popularA"},
+			wantTotal:   67, // 67 is deterministically the HLL result count estimate.
+		},
+		{
+			label: "popular results, deep before estimate",
+			versions: append(importGraph("foo.com/popularA", "foo.com", 60),
+				importGraph("foo.com/popularB", "foo.com", 70)...),
+			resultOrder: [4]string{"popular-50", "popular-8", "deep", "estimate"},
+			wantSource:  "deep",
+			wantResults: []string{"foo.com/popularB", "foo.com/popularA"},
+			wantTotal:   72,
 		},
 		// Adding a test for *very* popular results requires ~300 importers
 		// minimum, which is pretty slow to set up at the moment (~5 seconds), and
@@ -241,17 +254,28 @@ func TestFastSearch(t *testing.T) {
 			// usually be the order in which they return as these searches represent
 			// progressively larger scans, but in our small test database this need
 			// not be the case.
-			done := map[string](chan struct{}){
-				"popular-50": make(chan struct{}),
-				"popular-8":  make(chan struct{}),
-				"deep":       make(chan struct{}),
-			}
+			done := make(map[string](chan struct{}))
 			// waitFor maps [search type] -> [the search type is should wait for]
-			waitFor := map[string]string{
-				"deep":      "popular-8",
-				"popular-8": "popular-50",
+			waitFor := make(map[string]string)
+			for i := 0; i < len(test.resultOrder); i++ {
+				done[test.resultOrder[i]] = make(chan struct{})
+				if i > 0 {
+					waitFor[test.resultOrder[i]] = test.resultOrder[i-1]
+				}
 			}
 			guardTestResult := func(source string) func() {
+				// This test is inherently racy as 'estimate' results are are on a
+				// separate channel, and therefore even after guarding still race to
+				// the select statement.
+				//
+				// Since this is a concern only for testing, and since this test is
+				// rather slow anyway, just wait for a healthy amount of time in order
+				// to de-flake the test. If the test still proves flaky, we can either
+				// increase this sleep or refactor so that all asynchronous results
+				// arrive on the same channel.
+				if source == "estimate" {
+					time.Sleep(100 * time.Millisecond)
+				}
 				if await, ok := waitFor[source]; ok {
 					<-done[await]
 				}
@@ -268,7 +292,7 @@ func TestFastSearch(t *testing.T) {
 			if err := testDB.UpdateSearchDocumentsImportedByCount(ctx, 1000); err != nil {
 				t.Fatal(err)
 			}
-			results, err := testDB.guardedFastSearch(ctx, test.query, 2, 0, guardTestResult)
+			results, err := testDB.guardedFastSearch(ctx, "foo", 2, 0, guardTestResult)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -277,7 +301,10 @@ func TestFastSearch(t *testing.T) {
 				got = append(got, r.PackagePath)
 			}
 			if diff := cmp.Diff(test.wantResults, got); diff != "" {
-				t.Errorf("FastSearch(%q) mismatch (-want +got)\n%s", test.query, diff)
+				t.Errorf("FastSearch(\"foo\") mismatch (-want +got)\n%s", diff)
+			}
+			if len(results) > 0 && results[0].NumResults != test.wantTotal {
+				t.Errorf("NumResults = %d, want %d", results[0].NumResults, test.wantTotal)
 			}
 			// Finally, validate that metrics are updated correctly
 			gotDelta := responseDelta()

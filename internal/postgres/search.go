@@ -71,6 +71,8 @@ type SearchResult struct {
 
 	// NumResults is the total number of packages that were returned for this search.
 	NumResults uint64
+	// Approximate reports whether NumResults is an approximate count.
+	Approximate bool
 }
 
 // searchResponse is used for internal bookkeeping when fanning-out search
@@ -86,6 +88,8 @@ type searchResponse struct {
 	err error
 	// latency is recorded by the orchestrator of the search query.
 	latency time.Duration
+	// uncounted reports whether this response is missing total result counts.
+	uncounted bool
 }
 
 // A searcher is used to execute a single search request.
@@ -136,6 +140,17 @@ func (db *DB) guardedFastSearch(ctx context.Context, q string, limit, offset int
 	searchCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
+	// Asynchronously query for the estimated result count.
+	estimateChan := make(chan estimateResponse, 1)
+	go func() {
+		estimateResp := db.estimateResultsCount(searchCtx, q)
+		if guardTestResult != nil {
+			defer guardTestResult("estimate")()
+		}
+		estimateChan <- estimateResp
+	}()
+
+	// Fan out our search requests.
 	for _, s := range searchers {
 		s := s
 		go func() {
@@ -155,11 +170,41 @@ func (db *DB) guardedFastSearch(ctx context.Context, q string, limit, offset int
 			break
 		}
 	}
+	if resp.err != nil {
+		return nil, fmt.Errorf("all searchers failed: %v", resp.err)
+	}
+	if resp.uncounted {
+		// Since the response is uncounted, we should wait for either the count
+		// estimate to return, or for the first counted response.
+	loop:
+		for {
+			select {
+			case nextResp := <-responses:
+				if nextResp.err == nil && !nextResp.uncounted {
+					// use this response since it is counted.
+					resp = nextResp
+					break loop
+				}
+			case estr := <-estimateChan:
+				if estr.err != nil {
+					return nil, fmt.Errorf("error getting estimated result count: %v", estr.err)
+				}
+				for _, r := range resp.results {
+					// TODO(b/141182438): this is a hack: once search has been fully
+					// replaced with fastsearch, change the return signature of this
+					// function to separate result-level data from this metadata.
+					r.NumResults = estr.estimate
+					r.Approximate = true
+				}
+				break loop
+			//case <-responses:
+			case <-ctx.Done():
+				return nil, fmt.Errorf("context deadline exceeded while waiting for estimated result count")
+			}
+		}
+	}
 	// cancel proactively here: we've got the search result we need.
 	cancel()
-	if resp.err != nil {
-		return nil, resp.err
-	}
 	// latency is only recorded for valid search results, as fast failures could
 	// skew the latency distribution.
 	latency := float64(resp.latency) / float64(time.Millisecond)
@@ -174,6 +219,84 @@ func (db *DB) guardedFastSearch(ctx context.Context, q string, limit, offset int
 		return nil, err
 	}
 	return resp.results, nil
+}
+
+const hllRegisterCount = 128
+
+// hllQuery estimates search result counts using the hyperloglog algorithm.
+// https://en.wikipedia.org/wiki/HyperLogLog
+//
+// Here's how this works:
+//   1) Search documents have been partitioned ~evenly into hllRegisterCount
+//   registers, using the hll_register column. For each hll_register, compute
+//   the maximum number of leading zeros of any element in the register
+//   matching our search query. This is the slowest part of the query, but
+//   since we have an index on (hll_register, hll_leading_zeros desc), we can
+//   parallelize this and it should be very quick if the density of search
+//   results is high.  To achieve this parallelization, we use a trick of
+//   selecting a subselected value from generate_series(0, hllRegisterCount-1).
+//
+//   If there are NO search results in a register, the 'zeros' column will be
+//   NULL.
+//
+//   2) From the results of (1), proceed following the 'Practical
+//   Considerations' in the wikipedia page above:
+//     https://en.wikipedia.org/wiki/HyperLogLog#Practical_Considerations
+//   Specifically, use linear counting when E < (5/2)m and there are empty
+//   registers.
+//
+//   This should work for any register count >= 128. If we are to decrease this
+//   register count, we should adjust the estimate for a_m below according to
+//   the formulas in the wikipedia article above.
+var hllQuery = fmt.Sprintf(`
+	WITH hll_data AS (SELECT (SELECT * FROM (
+			SELECT hll_leading_zeros
+			FROM search_documents
+			WHERE (
+				ts_rank(tsv_search_tokens, websearch_to_tsquery($1)) *
+				ln(exp(1)+imported_by_count) *
+				CASE WHEN redistributable then 1 else 0.5 end
+			) > 0.1
+			AND hll_register=generate_series
+			ORDER BY hll_leading_zeros DESC
+			) t LIMIT 1) zeros
+		FROM generate_series(0,%[1]d-1)
+	),
+	nonempty_registers as (SELECT zeros FROM hll_data WHERE zeros IS NOT NULL)
+	SELECT
+		-- use linear counting when there are not enough results, and there is at
+		-- least one empty register, per 'Practical Considerations'.
+		CASE WHEN result_count < 2.5 * %[1]d AND empty_register_count > 0
+		THEN ((0.7213 / (1 + 1.079 / %[1]d)) * (%[1]d *
+				log(2, (%[1]d::numeric) / empty_register_count)))::int
+		ELSE result_count END AS approx_count
+	FROM (
+		SELECT
+			(
+				(0.7213 / (1 + 1.079 / %[1]d)) *                    -- estimate for a_m
+				pow(%[1]d, 2) *                                     -- m^2
+				(1/((%[1]d - count(1)) + SUM(POW(2, -1 * zeros))))  -- Z
+			)::int AS result_count,
+			%[1]d - count(1) AS empty_register_count
+		FROM nonempty_registers
+	) d`, hllRegisterCount)
+
+type estimateResponse struct {
+	estimate uint64
+	err      error
+}
+
+// EstimateResultsCount uses the hyperloglog algorithm to estimate the number
+// of results for the given search term.
+func (db *DB) estimateResultsCount(ctx context.Context, q string) estimateResponse {
+	row := db.queryRow(ctx, hllQuery, q)
+	var estimate sql.NullInt64
+	if err := row.Scan(&estimate); err != nil {
+		return estimateResponse{err: fmt.Errorf("row.Scan(): %v", err)}
+	}
+	// If estimate is NULL, then we didn't find *any* results, so should return
+	// zero (the default).
+	return estimateResponse{estimate: uint64(estimate.Int64)}
 }
 
 // deepSearch searches all packages for the query. It is slower, but results
@@ -281,9 +404,10 @@ func (db *DB) popularSearcher(cutoff int) searcher {
 			err = errIncompleteResults
 		}
 		return searchResponse{
-			source:  fmt.Sprintf("popular-%d", cutoff),
-			results: results,
-			err:     err,
+			source:    fmt.Sprintf("popular-%d", cutoff),
+			results:   results,
+			err:       err,
+			uncounted: true,
 		}
 	}
 }
@@ -430,6 +554,65 @@ func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int)
 	return results, nil
 }
 
+var upsertSearchStatement = fmt.Sprintf(`
+	INSERT INTO search_documents (
+		package_path,
+		version,
+		module_path,
+		version_updated_at,
+		redistributable,
+		commit_time,
+		tsv_search_tokens,
+		hll_register,
+		hll_leading_zeros
+	)
+	SELECT
+		p.path,
+		p.version,
+		p.module_path,
+		CURRENT_TIMESTAMP,
+		p.redistributable,
+		v.commit_time,
+		(
+			SETWEIGHT(TO_TSVECTOR($2), 'A') ||
+			SETWEIGHT(TO_TSVECTOR(p.synopsis), 'B') ||
+			SETWEIGHT(TO_TSVECTOR(v.readme_contents), 'C')
+		),
+		hll_hash(p.path) & (%[1]d - 1),
+		hll_zeros(hll_hash(p.path))
+	FROM
+		packages p
+	INNER JOIN
+		versions v
+	ON
+		p.module_path = v.module_path
+		AND p.version = v.version
+	WHERE
+		p.path = $1
+	ORDER BY
+		-- Order the versions by release then prerelease.
+		-- The default version should be the first release
+		-- version available, if one exists.
+		CASE WHEN v.prerelease = '~' THEN 0 ELSE 1 END,
+		v.major DESC,
+		v.minor DESC,
+		v.patch DESC,
+		v.prerelease DESC
+	LIMIT 1
+	ON CONFLICT (package_path)
+	DO UPDATE SET
+		package_path=excluded.package_path,
+		version=excluded.version,
+		module_path=excluded.module_path,
+		tsv_search_tokens=excluded.tsv_search_tokens,
+		commit_time=excluded.commit_time,
+		version_updated_at=(
+			CASE WHEN excluded.version = search_documents.version
+			THEN search_documents.version_updated_at
+			ELSE CURRENT_TIMESTAMP
+			END)
+	;`, hllRegisterCount)
+
 // UpsertSearchDocument inserts a row for each package in the version, if that
 // package is the latest version.
 //
@@ -443,60 +626,7 @@ func (db *DB) UpsertSearchDocument(ctx context.Context, path string) (err error)
 	}
 
 	pathTokens := strings.Join(generatePathTokens(path), " ")
-	_, err = db.exec(ctx, `
-		INSERT INTO search_documents (
-			package_path,
-			version,
-			module_path,
-			version_updated_at,
-			redistributable,
-			commit_time,
-			tsv_search_tokens
-		)
-		SELECT
-			p.path,
-			p.version,
-			p.module_path,
-			CURRENT_TIMESTAMP,
-			p.redistributable,
-			v.commit_time,
-			(
-				SETWEIGHT(TO_TSVECTOR($2), 'A') ||
-				SETWEIGHT(TO_TSVECTOR(p.synopsis), 'B') ||
-				SETWEIGHT(TO_TSVECTOR(v.readme_contents), 'C')
-			)
-		FROM
-			packages p
-		INNER JOIN
-			versions v
-		ON
-			p.module_path = v.module_path
-			AND p.version = v.version
-		WHERE
-			p.path = $1
-		ORDER BY
-			-- Order the versions by release then prerelease.
-			-- The default version should be the first release
-			-- version available, if one exists.
-			CASE WHEN v.prerelease = '~' THEN 0 ELSE 1 END,
-			v.major DESC,
-			v.minor DESC,
-			v.patch DESC,
-			v.prerelease DESC
-		LIMIT 1
-		ON CONFLICT (package_path)
-		DO UPDATE SET
-			package_path=excluded.package_path,
-			version=excluded.version,
-			module_path=excluded.module_path,
-			tsv_search_tokens=excluded.tsv_search_tokens,
-			commit_time=excluded.commit_time,
-			version_updated_at=(
-				CASE WHEN excluded.version = search_documents.version
-				THEN search_documents.version_updated_at
-				ELSE CURRENT_TIMESTAMP
-				END)
-		;`, path, pathTokens)
+	_, err = db.exec(ctx, upsertSearchStatement, path, pathTokens)
 	return err
 }
 
