@@ -14,6 +14,7 @@ package dochtml
 import (
 	"bytes"
 	"fmt"
+	"go/ast"
 	"go/printer"
 	"go/token"
 	"html/template"
@@ -27,7 +28,7 @@ import (
 
 // Render renders package documentation HTML for the
 // provided file set and package.
-func Render(fset *token.FileSet, p *doc.Package) ([]byte, error) {
+func Render(fset *token.FileSet, p *doc.Package, sourceLinkFunc func(ast.Node) string) ([]byte, error) {
 	var buf bytes.Buffer
 	r := render.New(fset, p, &render.Options{
 		PackageURL: func(path string) (url string) {
@@ -35,11 +36,21 @@ func Render(fset *token.FileSet, p *doc.Package) ([]byte, error) {
 		},
 		DisableHotlinking: true,
 	})
+
+	sourceLink := func(name string, node ast.Node) template.HTML {
+		link := sourceLinkFunc(node)
+		if link == "" {
+			return template.HTML(name)
+		}
+		return template.HTML(fmt.Sprintf(`<a class="Documentation-source" href="%s">%s</a>`, link, name))
+	}
+
 	err := template.Must(htmlPackage.Clone()).Funcs(map[string]interface{}{
 		"render_synopsis": r.Synopsis,
 		"render_doc":      r.DocHTML,
 		"render_decl":     r.DeclHTML,
 		"render_code":     r.CodeHTML,
+		"source_link":     sourceLink,
 	}).Execute(&buf, struct {
 		RootURL string
 		*doc.Package
@@ -167,6 +178,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 		"render_doc":      (*render.Renderer)(nil).DocHTML,
 		"render_decl":     (*render.Renderer)(nil).DeclHTML,
 		"render_code":     (*render.Renderer)(nil).CodeHTML,
+		"source_link":     func() string { return "" },
 	},
 ).Parse(`{{- "" -}}
 <ul>{{"\n" -}}
@@ -227,7 +239,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 	{{- end -}}
 
 	{{- range .Funcs -}}
-		<h3 id="{{.Name}}">func {{.Name}} <a href="#{{.Name}}">¶</a></h3>{{"\n"}}
+		<h3 id="{{.Name}}">func {{source_link .Name .Decl}} <a href="#{{.Name}}">¶</a></h3>{{"\n"}}
 		{{- $out := render_decl .Doc .Decl -}}
 		{{- $out.Decl -}}
 		{{- $out.Doc -}}
@@ -237,7 +249,8 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 
 	{{- range .Types -}}
 		{{- $tname := .Name -}}
-		<h3 id="{{.Name}}">type {{.Name}} <a href="#{{.Name}}">¶</a></h3>{{"\n"}}
+		<h3 id="{{.Name}}">type {{source_link .Name .Decl}}
+		<a href="#{{.Name}}">¶</a></h3>{{"\n"}}
 		{{- $out := render_decl .Doc .Decl -}}
 		{{- $out.Decl -}}
 		{{- $out.Doc -}}
@@ -259,7 +272,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 		{{- end -}}
 
 		{{- range .Funcs -}}
-			<h3 id="{{.Name}}">func {{.Name}} <a href="#{{.Name}}">¶</a></h3>{{"\n"}}
+			<h3 id="{{.Name}}">func {{source_link .Name .Decl}} <a href="#{{.Name}}">¶</a></h3>{{"\n"}}
 			{{- $out := render_decl .Doc .Decl -}}
 			{{- $out.Decl -}}
 			{{- $out.Doc -}}
@@ -269,7 +282,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 
 		{{- range .Methods -}}
 			{{- $name := (printf "%s.%s" $tname .Name) -}}
-			<h3 id="{{$name}}">func ({{.Recv}}) {{.Name}} <a href="#{{$name}}">¶</a></h3>{{"\n"}}
+			<h3 id="{{$name}}">func ({{.Recv}}) {{source_link .Name .Decl}} <a href="#{{$name}}">¶</a></h3>{{"\n"}}
 			{{- $out := render_decl .Doc .Decl -}}
 			{{- $out.Decl -}}
 			{{- $out.Doc -}}

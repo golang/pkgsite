@@ -459,6 +459,13 @@ code {
 .Documentation h3 a {
   display: none;
 }
+.Documentation h3 {
+  display: initial;
+}
+.Documentation-source a {
+  display: initial;
+}
+
 .Documentation h2:hover a,
 .Documentation h3:hover a {
   display: initial;

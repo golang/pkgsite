@@ -275,6 +275,8 @@ func TestFetchAndInsertVersion(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
+	const goRepositoryURLPrefix = "https://github.com/golang"
+
 	stdlib.UseTestData = true
 	defer func() { stdlib.UseTestData = false }()
 
@@ -831,7 +833,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			packages, err := extractPackagesFromZip(test.name, test.version, reader, nil)
+			packages, err := extractPackagesFromZip(test.name, test.version, reader, nil, nil)
 			if err != nil && len(test.packages) != 0 {
 				t.Fatalf("extractPackagesFromZip(%q, %q, reader, nil): %v", test.name, test.version, err)
 			}

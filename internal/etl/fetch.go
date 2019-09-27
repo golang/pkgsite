@@ -36,6 +36,7 @@ import (
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
+	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/thirdparty/semver"
 	"golang.org/x/xerrors"
@@ -176,9 +177,12 @@ func processZipFile(ctx context.Context, modulePath string, versionType internal
 	_, span := trace.StartSpan(ctx, "processing zipFile")
 	defer span.End()
 
-	repositoryURL, err := modulePathToRepoURL(modulePath)
+	var repoURL string
+	sourceInfo, err := source.ModuleInfo(modulePath, version)
 	if err != nil {
-		log.Errorf("modulePathToRepoURL(%q): %v", modulePath, err)
+		log.Error(err)
+	} else {
+		repoURL = sourceInfo.RepoURL
 	}
 	readmeFilePath, readmeContents, err := extractReadmeFromZip(modulePath, version, zipReader)
 	if err != nil && err != errReadmeNotFound {
@@ -188,7 +192,7 @@ func processZipFile(ctx context.Context, modulePath string, versionType internal
 	if err != nil {
 		log.Error(err)
 	}
-	packages, err := extractPackagesFromZip(modulePath, version, zipReader, license.NewMatcher(licenses))
+	packages, err := extractPackagesFromZip(modulePath, version, zipReader, license.NewMatcher(licenses), sourceInfo)
 	if err == errModuleContainsNoPackages {
 		return nil, xerrors.Errorf("%v: %w", errModuleContainsNoPackages.Error(), derrors.BadModule)
 	}
@@ -203,7 +207,7 @@ func processZipFile(ctx context.Context, modulePath string, versionType internal
 			ReadmeFilePath: readmeFilePath,
 			ReadmeContents: readmeContents,
 			VersionType:    versionType,
-			RepositoryURL:  repositoryURL,
+			RepositoryURL:  repoURL,
 		},
 		Packages: packages,
 		Licenses: licenses,
@@ -272,7 +276,7 @@ func hasFilename(file string, expectedFile string) bool {
 // extractPackagesFromZip returns a slice of packages from the module zip r.
 // It matches against the given licenses to determine the subset of licenses
 // that applies to each package.
-func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher license.Matcher) (_ []*internal.Package, err error) {
+func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher license.Matcher, sourceInfo *source.Info) (_ []*internal.Package, err error) {
 
 	defer func() {
 		if e := recover(); e != nil {
@@ -361,7 +365,7 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 			log.Infof("Skipping %q because it is incomplete", innerPath)
 			continue
 		}
-		pkg, err := loadPackage(goFiles, innerPath, modulePath)
+		pkg, err := loadPackage(goFiles, innerPath, modulePath, sourceInfo)
 		if _, ok := err.(*BadPackageError); ok {
 			// TODO(b/133187024): Record and display this information instead of just skipping.
 			log.Infof("Skipping %q because of *BadPackageError: %v\n", path.Join(modulePath, innerPath), err)
@@ -434,9 +438,9 @@ var goEnvs = []struct{ GOOS, GOARCH string }{
 // several build contexts in turn. The first build context in the list to produce
 // a non-empty package is used. If none of them result in a package, then
 // loadPackage returns nil, nil.
-func loadPackage(zipGoFiles []*zip.File, innerPath, modulePath string) (*internal.Package, error) {
+func loadPackage(zipGoFiles []*zip.File, innerPath, modulePath string, sourceInfo *source.Info) (*internal.Package, error) {
 	for _, env := range goEnvs {
-		pkg, err := loadPackageWithBuildContext(env.GOOS, env.GOARCH, zipGoFiles, innerPath, modulePath)
+		pkg, err := loadPackageWithBuildContext(env.GOOS, env.GOARCH, zipGoFiles, innerPath, modulePath, sourceInfo)
 		if err != nil {
 			return nil, err
 		}
@@ -462,7 +466,7 @@ func loadPackage(zipGoFiles []*zip.File, innerPath, modulePath string) (*interna
 // or all .go files have been excluded by constraints.
 // A *BadPackageError error is returned if the directory
 // contains .go files but do not make up a valid package.
-func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, innerPath, modulePath string) (*internal.Package, error) {
+func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, innerPath, modulePath string, sourceInfo *source.Info) (*internal.Package, error) {
 	var (
 		// files is a map of file names to their contents.
 		//
@@ -618,7 +622,17 @@ func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, in
 	}
 
 	// Render documentation HTML.
-	docHTML, err := dochtml.Render(fset, d)
+	sourceLinkFunc := func(n ast.Node) string {
+		if sourceInfo == nil {
+			return ""
+		}
+		p := fset.Position(n.Pos())
+		if p.Line == 0 { // invalid Position
+			return ""
+		}
+		return sourceInfo.LineURL(p.Filename, p.Line)
+	}
+	docHTML, err := dochtml.Render(fset, d, sourceLinkFunc)
 	if err != nil {
 		return nil, fmt.Errorf("dochtml.Render: %v", err)
 	}
@@ -651,47 +665,4 @@ func simpleImporter(imports map[string]*ast.Object, path string) (*ast.Object, e
 		imports[path] = pkg
 	}
 	return pkg, nil
-}
-
-// acceptedVCSHosts is the list of hosts for which we will try to detect a
-// repositoryURL for a given modulePath with that hostname.
-var acceptedVCSHosts = map[string]bool{
-	"bitbucket.org": true,
-	"github.com":    true,
-	"golang.org":    true,
-}
-
-const goRepositoryURLPrefix = "https://github.com/golang"
-
-// modulePathToRepoURL returns the expected repositoryURL for the
-// modulePath. It returns an expected repositoryURL if the modulePath is
-// (1) in the acceptedVCSHosts (2) has the prefix golang.org/x or,
-// (3) modulePath is the standard library module path. Otherwise,
-// the empty string is returned.
-func modulePathToRepoURL(modulePath string) (string, error) {
-	if modulePath == stdlib.ModulePath {
-		return goRepositoryURLPrefix + "/go", nil
-	}
-
-	pathParts := strings.Split(modulePath, "/")
-	if ok := acceptedVCSHosts[pathParts[0]]; !ok {
-		// If the host (first element of the modulePath) is included in the
-		// acceptedVCSHosts, return the empty string.
-		return "", fmt.Errorf("repository url could not be determined for %q", modulePath)
-	}
-	if len(pathParts) < 3 {
-		// golang.org/x, github.com and bitbucket.org expect the modulePath to
-		// have 3 parts exactly when delimited by a "/". If the modulePath has
-		// less than 3 parts, it will not be a valid URL for these hosts, so
-		// return the empty string.  Otherwise, use the first three elements
-		// for the repository URL. For example, for the module
-		// "github.com/hashicorp/vault/api", the repository URL would
-		// "github.com/hashicorp/vault".
-		return "", fmt.Errorf("expected module with host %q to have at least 3 elements in the path: %q", pathParts[0], modulePath)
-	}
-
-	if strings.HasPrefix(modulePath, "golang.org/x/") {
-		return goRepositoryURLPrefix + "/" + pathParts[2], nil
-	}
-	return fmt.Sprintf("https://%s", strings.Join(pathParts[0:3], "/")), nil
 }
