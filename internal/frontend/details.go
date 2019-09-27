@@ -177,7 +177,7 @@ func fetchPackageOrModule(namespace, path, version string, get func(v string) er
 		word = "module"
 	}
 	epage := &errorPage{
-		Message: fmt.Sprintf("%s %s@%s is not available.", strings.ToTitle(word), path, version),
+		Message: fmt.Sprintf("%s %s@%s is not available.", strings.Title(word), path, version),
 		SecondaryMessage: template.HTML(
 			fmt.Sprintf(`There are other versions of this %s that are! To view them, <a href="/%s/%s?tab=versions">click here</a>.</p>`, word, namespace, path)),
 	}
