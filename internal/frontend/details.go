@@ -549,7 +549,7 @@ func breadcrumbPath(pkgPath, modPath, version string) template.HTML {
 	if len(dirs) > 1 {
 		d = path.Base(d)
 	}
-	elems[len(elems)-1] = fmt.Sprintf(`<span class="Header-breadcrumbCurrent">%s</span>`, d)
+	elems[len(elems)-1] = fmt.Sprintf(`<span class="DetailsHeader-breadcrumbCurrent">%s</span>`, d)
 	// Make all the other parts into links.
 	for i := 1; i < len(dirs); i++ {
 		href := "/pkg/" + dirs[i]
@@ -562,8 +562,8 @@ func breadcrumbPath(pkgPath, modPath, version string) template.HTML {
 		}
 		elems[len(elems)-i-1] = fmt.Sprintf(`<a href="%s">%s</a>`, template.HTMLEscapeString(href), template.HTMLEscapeString(el))
 	}
-	return template.HTML(`<div class="Header-breadcrumb">` +
-		strings.Join(elems, `<span class="Header-breadcrumbDivider">/</span>`) +
+	return template.HTML(`<div class="DetailsHeader-breadcrumb">` +
+		strings.Join(elems, `<span class="DetailsHeader-breadcrumbDivider">/</span>`) +
 		`</div>`)
 }
 

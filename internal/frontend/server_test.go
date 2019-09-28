@@ -85,8 +85,8 @@ func TestServer(t *testing.T) {
 
 	pkgHeader := []string{
 		// part of breadcrumb path
-		`<span class="Header-breadcrumbDivider">/</span><span class="Header-breadcrumbCurrent">foo</span>`,
-		`<h1 class="Header-title">Package foo</h1>`,
+		`<span class="DetailsHeader-breadcrumbDivider">/</span><span class="DetailsHeader-breadcrumbCurrent">foo</span>`,
+		`<h1 class="DetailsHeader-title">Package foo</h1>`,
 		`Module:`,
 		`<a href="/mod/github.com/valid_module_name@v1.0.0">`,
 		`github.com/valid_module_name`,
@@ -97,7 +97,7 @@ func TestServer(t *testing.T) {
 		`<a href="github.com/valid_module_name" target="_blank">Source Code</a>`,
 	}
 	nonRedistPkgHeader := []string{
-		`<h1 class="Header-title">Package bar</h1>`,
+		`<h1 class="DetailsHeader-title">Package bar</h1>`,
 		`Module:`,
 		`<a href="/mod/github.com/non_redistributable@v1.0.0">`,
 		`github.com/non_redistributable`,
@@ -110,7 +110,7 @@ func TestServer(t *testing.T) {
 	}
 
 	modHeader := []string{
-		`<h1 class="Header-title">Module github.com/valid_module_name</h1>`,
+		`<h1 class="DetailsHeader-title">Module github.com/valid_module_name</h1>`,
 		`Version:`,
 		`v1.0.0`,
 		`<a href="/mod/github.com/valid_module_name@v1.0.0?tab=licenses#LICENSE">MIT</a>`,
@@ -246,7 +246,7 @@ func TestServer(t *testing.T) {
 		{
 			fmt.Sprintf("/pkg/%s", sample.PackagePath+"/directory"),
 			http.StatusOK,
-			[]string{`<h1 class="Header-title">Directories</h1>`},
+			[]string{`<h1 class="DetailsHeader-title">Directories</h1>`},
 		},
 
 		{

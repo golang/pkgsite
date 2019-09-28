@@ -234,18 +234,18 @@ code {
 .Header-search {
   flex: 1;
 }
-.Header-title {
-  font:  600 1.875rem 'Work Sans', arial, sans-serif;
-  margin: 0;
-}
-.Header-breadcrumb {
+.DetailsHeader {
   margin-top: 0.75rem;
 }
-.Header-breadcrumbCurrent {
+.DetailsHeader-breadcrumbCurrent {
   color: var(--gray-3);
 }
-.Header-breadcrumbDivider {
+.DetailsHeader-breadcrumbDivider {
   color: var(--gray-3);
+}
+.DetailsHeader-title {
+  font:  600 1.875rem 'Work Sans', arial, sans-serif;
+  margin: 0;
 }
 @media only screen and (min-width: 850px) {
   .Header {

@@ -347,34 +347,34 @@ func TestBreadcrumbPath(t *testing.T) {
 	}{
 		{
 			"example.com/blob/s3blob", "example.com", internal.LatestVersion,
-			`<a href="/pkg/example.com">example.com</a><span class="Header-breadcrumbDivider">/</span><a href="/pkg/example.com/blob">blob</a><span class="Header-breadcrumbDivider">/</span><span class="Header-breadcrumbCurrent">s3blob</span>`,
+			`<a href="/pkg/example.com">example.com</a><span class="DetailsHeader-breadcrumbDivider">/</span><a href="/pkg/example.com/blob">blob</a><span class="DetailsHeader-breadcrumbDivider">/</span><span class="DetailsHeader-breadcrumbCurrent">s3blob</span>`,
 		},
 		{
 			"example.com", "example.com", internal.LatestVersion,
-			`<span class="Header-breadcrumbCurrent">example.com</span>`,
+			`<span class="DetailsHeader-breadcrumbCurrent">example.com</span>`,
 		},
 
 		{
 			"g/x/tools/go/a", "g/x/tools", internal.LatestVersion,
-			`<a href="/pkg/g/x/tools">g/x/tools</a><span class="Header-breadcrumbDivider">/</span><a href="/pkg/g/x/tools/go">go</a><span class="Header-breadcrumbDivider">/</span><span class="Header-breadcrumbCurrent">a</span>`,
+			`<a href="/pkg/g/x/tools">g/x/tools</a><span class="DetailsHeader-breadcrumbDivider">/</span><a href="/pkg/g/x/tools/go">go</a><span class="DetailsHeader-breadcrumbDivider">/</span><span class="DetailsHeader-breadcrumbCurrent">a</span>`,
 		},
 		{
 			"golang.org/x/tools", "golang.org/x/tools", internal.LatestVersion,
-			`<span class="Header-breadcrumbCurrent">golang.org/x/tools</span>`,
+			`<span class="DetailsHeader-breadcrumbCurrent">golang.org/x/tools</span>`,
 		},
 		{
 			// Special case: stdlib.
 			"encoding/json", "std", internal.LatestVersion,
-			`<a href="/pkg/encoding">encoding</a><span class="Header-breadcrumbDivider">/</span><span class="Header-breadcrumbCurrent">json</span>`,
+			`<a href="/pkg/encoding">encoding</a><span class="DetailsHeader-breadcrumbDivider">/</span><span class="DetailsHeader-breadcrumbCurrent">json</span>`,
 		},
 		{
 			"example.com/blob/s3blob", "example.com", "v1",
-			`<a href="/pkg/example.com@v1">example.com</a><span class="Header-breadcrumbDivider">/</span><a href="/pkg/example.com/blob@v1">blob</a><span class="Header-breadcrumbDivider">/</span><span class="Header-breadcrumbCurrent">s3blob</span>`,
+			`<a href="/pkg/example.com@v1">example.com</a><span class="DetailsHeader-breadcrumbDivider">/</span><a href="/pkg/example.com/blob@v1">blob</a><span class="DetailsHeader-breadcrumbDivider">/</span><span class="DetailsHeader-breadcrumbCurrent">s3blob</span>`,
 		},
 	} {
 		t.Run(fmt.Sprintf("%s-%s-%s", test.pkgPath, test.modPath, test.version), func(t *testing.T) {
 			got := breadcrumbPath(test.pkgPath, test.modPath, test.version)
-			want := `<div class="Header-breadcrumb">` + test.want + `</div>`
+			want := `<div class="DetailsHeader-breadcrumb">` + test.want + `</div>`
 			if string(got) != want {
 				t.Errorf("got  %s\nwant %s", got, want)
 			}

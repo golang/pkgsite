@@ -7,11 +7,11 @@
 <div class="Container">
   {{$header := .Header}}
   {{$namespace := .Namespace}}
-  <header>
+  <header class="DetailsHeader">
     {{if .BreadcrumbPath}}
       <span>{{.BreadcrumbPath}}</span>
     {{end}}
-    <h1 class="Header-title">{{.Title}}</h1>
+    <h1 class="DetailsHeader-title">{{.Title}}</h1>
     <p class="InfoLabel">
       {{if eq $namespace "pkg"}}
         <strong class="InfoLabel-title">Module: </strong>
