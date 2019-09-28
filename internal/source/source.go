@@ -23,20 +23,25 @@ package source
 // TODO(b/141769404): distinguish between vN as a branch vs. subdirectory, for N > 1.
 
 import (
+	"context"
 	"fmt"
+	"net/http"
+	"net/url"
 	"path"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/stdlib"
 )
 
 // Info holds source information about a module, used to generate URLs referring
 // to directories, files and lines.
 type Info struct {
-	// TODO(b/141771951): change the DB schema of versions to include all this information
+	// TODO(b/141771951): change the DB schema of versions to include this information
 	RepoURL   string       // URL of repo containing module; exported for DB schema compatibility
 	moduleDir string       // directory of module relative to repo root
 	commit    string       // tag or ID of commit corresponding to version
@@ -81,16 +86,20 @@ func (i *Info) LineURL(pathname string, line int) string {
 // to the repo root.
 //
 // ModuleInfo may fetch from arbitrary URLs, so it can be slow.
-func ModuleInfo(modulePath, version string) (_ *Info, err error) {
-	defer derrors.Wrap(&err, "source.ModuleInfo(%q, %q)", modulePath, version)
+func ModuleInfo(ctx context.Context, modulePath, version string) (_ *Info, err error) {
+	defer derrors.Wrap(&err, "source.ModuleInfo(ctx, %q, %q)", modulePath, version)
 
+	return moduleInfo(ctx, http.DefaultClient, modulePath, version)
+}
+
+func moduleInfo(ctx context.Context, client *http.Client, modulePath, version string) (_ *Info, err error) {
 	if modulePath == stdlib.ModulePath {
 		commit, err := stdlib.TagForVersion(version)
 		if err != nil {
 			return nil, err
 		}
 		return &Info{
-			RepoURL:   "https://github.com/golang/go",
+			RepoURL:   stdlib.GoSourceRepoURL,
 			moduleDir: stdlib.Directory(version),
 			commit:    commit,
 			templates: githubURLTemplates,
@@ -98,7 +107,7 @@ func ModuleInfo(modulePath, version string) (_ *Info, err error) {
 	}
 	repo, dir, templates, err := matchStatic(modulePath)
 	if err != nil {
-		return moduleInfoDynamic(modulePath, version)
+		return moduleInfoDynamic(ctx, client, modulePath, version)
 	}
 	return &Info{
 		RepoURL:   "https://" + repo,
@@ -133,25 +142,51 @@ func matchStatic(modulePathOrRepoURL string) (repo, dir string, _ urlTemplates, 
 }
 
 // moduleInfoDynamic uses the go-import and go-source meta tags to construct an Info.
-func moduleInfoDynamic(modulePath, version string) (_ *Info, err error) {
-	// TODO(b/141771975): support dynamic paths using the go-import and go-source meta tags
-	defer derrors.Wrap(&err, "source.moduleInfoDynamic(%q)", modulePath)
+func moduleInfoDynamic(ctx context.Context, client *http.Client, modulePath, version string) (_ *Info, err error) {
+	defer derrors.Wrap(&err, "source.moduleInfoDynamic(ctx, client, %q, %q)", modulePath, version)
 
-	// Hack to support golang.org/x.
-	re := regexp.MustCompile(`^golang.org/x/([a-z0-9A-Z_.\-]+)(/.*)?$`)
-	matches := re.FindStringSubmatch(modulePath)
-	if matches == nil {
-		return nil, derrors.NotFound
+	// Don't let requests to arbitrary URLs take too long.
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+	sourceMeta, err := fetchMeta(ctx, client, modulePath)
+	if err != nil {
+		return nil, err
 	}
-	dir := ""
-	if len(matches[2]) > 0 {
-		dir = matches[2][1:]
+	// Don't check that the tag information at the repo root prefix is the same
+	// as in the module path. It was done for us by the proxy and/or go command.
+	// (This lets us merge information from the go-import and go-source tags.)
+
+	// sourceMeta contains some information about where the module's source lives. But there
+	// are some problems:
+	// - We may only have a go-import tag, not a go-source tag, so we don't have URL templates for
+	//   building URLs to files and directories.
+	// - Even if we do have a go-source tag, its URL template format predates
+	//   versioning, so the URL templates won't provide a way to specify a
+	//   version or commit.
+	//
+	// We resolve these problems as follows:
+	// 1. First look at the repo URL from the tag. If that matches a known hosting site, use the
+	//    URL templates corresponding to that site and ignore whatever's in the tag.
+	// 2. TODO(b/141847689): heuristically determine how to construct a URL template with a commit from the
+	//    existing go-source template. For example, by replacing "master" with "{commit}".
+	// We could also consider using the repo in the go-import tag instead of the one in the go-source tag,
+	// if the former matches a known pattern but the latter does not.
+	rurl, err := url.Parse(sourceMeta.repoURL)
+	if err != nil {
+		return nil, err
 	}
+	_, _, templates, err := matchStatic(path.Join(rurl.Hostname(), rurl.Path))
+	if templates == (urlTemplates{}) {
+		// Log this as an error so that we can notice it and possibly add it to our
+		// list of static patterns.
+		log.Errorf("no templates for repo URL %q from meta tag: err=%v", sourceMeta.repoURL, err)
+	}
+	dir := strings.TrimPrefix(strings.TrimPrefix(modulePath, sourceMeta.repoRootPrefix), "/")
 	return &Info{
-		RepoURL:   "https://github.com/golang/" + matches[1],
+		RepoURL:   strings.TrimSuffix(sourceMeta.repoURL, "/"),
 		moduleDir: dir,
 		commit:    commitFromVersion(version, dir),
-		templates: githubURLTemplates,
+		templates: templates,
 	}, nil
 }
 

@@ -178,7 +178,7 @@ func processZipFile(ctx context.Context, modulePath string, versionType internal
 	defer span.End()
 
 	var repoURL string
-	sourceInfo, err := source.ModuleInfo(modulePath, version)
+	sourceInfo, err := source.ModuleInfo(ctx, modulePath, version)
 	if err != nil {
 		log.Error(err)
 	} else {
