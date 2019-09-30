@@ -49,28 +49,15 @@ func fetchMeta(ctx context.Context, client *http.Client, importPath string) (_ *
 	}
 	uri = uri + "?go-get=1"
 
-	resp, err := getURL(ctx, client, "https://"+uri)
-	if err != nil || resp.StatusCode != 200 {
-		if err == nil {
-			resp.Body.Close()
-		}
-		resp, err = getURL(ctx, client, "http://"+uri)
+	resp, err := doURL(ctx, client, "GET", "https://"+uri)
+	if err != nil {
+		resp, err = doURL(ctx, client, "GET", "http://"+uri)
 		if err != nil {
 			return nil, err
 		}
 	}
 	defer resp.Body.Close()
 	return parseMeta(importPath, resp.Body)
-}
-
-func getURL(ctx context.Context, client *http.Client, url string) (_ *http.Response, err error) {
-	defer derrors.Wrap(&err, "getURL(ctx, client, %q)", url)
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	return client.Do(req.WithContext(ctx))
 }
 
 func parseMeta(importPath string, r io.Reader) (sm *sourceMeta, err error) {

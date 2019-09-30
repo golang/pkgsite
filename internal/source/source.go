@@ -36,6 +36,7 @@ import (
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/stdlib"
+	"golang.org/x/net/context/ctxhttp"
 )
 
 // Info holds source information about a module, used to generate URLs referring
@@ -92,7 +93,7 @@ func ModuleInfo(ctx context.Context, modulePath, version string) (_ *Info, err e
 	return moduleInfo(ctx, http.DefaultClient, modulePath, version)
 }
 
-func moduleInfo(ctx context.Context, client *http.Client, modulePath, version string) (_ *Info, err error) {
+func moduleInfo(ctx context.Context, client *http.Client, modulePath, version string) (info *Info, err error) {
 	if modulePath == stdlib.ModulePath {
 		commit, err := stdlib.TagForVersion(version)
 		if err != nil {
@@ -105,24 +106,53 @@ func moduleInfo(ctx context.Context, client *http.Client, modulePath, version st
 			templates: githubURLTemplates,
 		}, nil
 	}
-	repo, dir, templates, err := matchStatic(modulePath)
+	// Don't let requests to arbitrary URLs take too long.
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+	repo, relativeModulePath, templates, err := matchStatic(modulePath)
 	if err != nil {
-		return moduleInfoDynamic(ctx, client, modulePath, version)
+		info, err = moduleInfoDynamic(ctx, client, modulePath, version)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		info = &Info{
+			RepoURL:   "https://" + repo,
+			moduleDir: relativeModulePath,
+			commit:    commitFromVersion(version, relativeModulePath),
+			templates: templates,
+		}
 	}
-	return &Info{
-		RepoURL:   "https://" + repo,
-		moduleDir: dir,
-		commit:    commitFromVersion(version, dir),
-		templates: templates,
-	}, nil
+	adjustVersionedModuleDirectory(ctx, client, info)
+	return info, nil
 	// TODO(b/141770842): support launchpad.net, including the special case in cmd/go/internal/get/vcs.go.
 }
 
-// matchStatic matches its argument against a list of known patterns.
-// It returns the repo name, directory and URL templates if there is a match.
-func matchStatic(modulePathOrRepoURL string) (repo, dir string, _ urlTemplates, _ error) {
+// matchStatic matches the given module or repo path against a list of known
+// patterns. It returns the repo name, the module path relative to the repo
+// root, and URL templates if there is a match.
+//
+// The relative module path may not be correct in all cases: it is wrong if it
+// ends in a version that is not part of the repo directory structure, because
+// the repo follows the "major branch" convention for versions 2 and above.
+// E.g. this function could return "foo/v2", but the module files live under "foo"; the
+// "/v2" is part of the module path (and the import paths of its packages) but
+// is not a subdirectory. This mistake is corrected in adjustVersionedModuleDirectory,
+// once we have all the information we need to fix it.
+//
+// repo + "/" + relativeModulePath is often, but not always, equal to
+// moduleOrRepoPath. It is not when the argument is a module path that uses the
+// go command's general syntax, which ends in a ".vcs" (e.g. ".git", ".hg") that
+// is neither part of the repo nor the suffix. For example, if the argument is
+//   github.com/a/b/c
+// then repo="github.com/a/b" and relativeModulePath="c"; together they make up the module path.
+// But if the argument is
+//   example.com/a/b.git/c
+// then repo="example.com/a/b" and relativeModulePath="c"; the ".git" is omitted, since it is neither
+// part of the repo nor part of the relative path to the module within the repo.
+func matchStatic(moduleOrRepoPath string) (repo, relativeModulePath string, _ urlTemplates, _ error) {
 	for _, pat := range patterns {
-		matches := pat.re.FindStringSubmatch(modulePathOrRepoURL)
+		matches := pat.re.FindStringSubmatch(moduleOrRepoPath)
 		if matches == nil {
 			continue
 		}
@@ -133,10 +163,9 @@ func matchStatic(modulePathOrRepoURL string) (repo, dir string, _ urlTemplates, 
 				break
 			}
 		}
-		// The directory is everything after what the pattern matches.
-		dir := modulePathOrRepoURL[len(matches[0]):]
-		dir = strings.TrimPrefix(dir, "/")
-		return repo, dir, pat.templates, nil
+		relativeModulePath = strings.TrimPrefix(moduleOrRepoPath, matches[0])
+		relativeModulePath = strings.TrimPrefix(relativeModulePath, "/")
+		return repo, relativeModulePath, pat.templates, nil
 	}
 	return "", "", urlTemplates{}, derrors.NotFound
 }
@@ -145,9 +174,6 @@ func matchStatic(modulePathOrRepoURL string) (repo, dir string, _ urlTemplates, 
 func moduleInfoDynamic(ctx context.Context, client *http.Client, modulePath, version string) (_ *Info, err error) {
 	defer derrors.Wrap(&err, "source.moduleInfoDynamic(ctx, client, %q, %q)", modulePath, version)
 
-	// Don't let requests to arbitrary URLs take too long.
-	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
-	defer cancel()
 	sourceMeta, err := fetchMeta(ctx, client, modulePath)
 	if err != nil {
 		return nil, err
@@ -190,9 +216,47 @@ func moduleInfoDynamic(ctx context.Context, client *http.Client, modulePath, ver
 	}, nil
 }
 
-//  Patterns for determining repo and URL templates from module paths or repo URLs.
+// adjustVersionedModuleDirectory changes info.moduleDir if necessary to
+// correctly reflect the repo structure. info.moduleDir will be wrong if it has
+// a suffix "/vN" for N > 1, and the repo uses the "major branch" convention,
+// where modules at version 2 and higher live on branches rather than
+// subdirectories. See https://research.swtch.com/vgo-module for a discussion of
+// the "major branch" vs. "major subdirectory" conventions for organizing a
+// repo.
+func adjustVersionedModuleDirectory(ctx context.Context, client *http.Client, info *Info) {
+	dirWithoutVersion := removeVersionSuffix(info.moduleDir)
+	if info.moduleDir == dirWithoutVersion {
+		return
+	}
+	// moduleDir does have a "/vN" for N > 1. To see if that is the actual directory,
+	// fetch the go.mod file from it.
+	res, err := doURL(ctx, client, "HEAD", info.FileURL("go.mod"))
+	// On any failure, assume that the right directory is the one without the version.
+	if err != nil {
+		info.moduleDir = dirWithoutVersion
+	} else {
+		res.Body.Close()
+	}
+}
+
+// removeVersionSuffix returns s with "/vN" removed if N is an integer > 1.
+// Otherwise it returns s.
+func removeVersionSuffix(s string) string {
+	dir, base := path.Split(s)
+	if !strings.HasPrefix(base, "v") {
+		return s
+	}
+	if n, err := strconv.Atoi(base[1:]); err != nil || n < 2 {
+		return s
+	}
+	return strings.TrimSuffix(dir, "/")
+}
+
+// Patterns for determining repo and URL templates from module paths or repo
+// URLs. Each regexp must match a prefix of the target string, and must have a
+// group named "repo".
 var patterns = []struct {
-	re        *regexp.Regexp // matches path or repo; must have a group named "repo"
+	re        *regexp.Regexp
 	templates urlTemplates
 }{
 	// Patterns known to the go command.
@@ -270,21 +334,43 @@ var githubURLTemplates = urlTemplates{
 
 // commitFromVersion returns a string that refers to a commit corresponding to version.
 // The string may be a tag, or it may be the hash or similar unique identifier of a commit.
-// The second argument is the directory of the module relative to the repo root.
-func commitFromVersion(version, dir string) string {
+// The second argument is the module path relative to the repo root.
+func commitFromVersion(version, relativeModulePath string) string {
 	// Commit for the module: either a sha for pseudoversions, or a tag.
 	v := strings.TrimSuffix(version, "+incompatible")
 	if isPseudoVersion(v) {
 		// Use the commit hash at the end.
 		return v[strings.LastIndex(v, "-")+1:]
 	} else {
-		commit := v
-		// The tags for a nested module begin with the relative directory of the module.
-		if dir != "" {
-			commit = dir + "/" + commit
+		// The tags for a nested module begin with the relative module path of the module,
+		// removing a "/vN" suffix if N > 1.
+		prefix := removeVersionSuffix(relativeModulePath)
+		if prefix != "" {
+			return prefix + "/" + v
 		}
-		return commit
+		return v
 	}
+}
+
+// doURL makes an HTTP request using the given url and method. It returns an
+// error if the request returns an error or if any status code other than 200 is
+// returned.
+func doURL(ctx context.Context, client *http.Client, method, url string) (_ *http.Response, err error) {
+	defer derrors.Wrap(&err, "doURL(ctx, client, %q, %q)", method, url)
+
+	req, err := http.NewRequest(method, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := ctxhttp.Do(ctx, client, req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != 200 {
+		resp.Body.Close()
+		return nil, fmt.Errorf("status %s", resp.Status)
+	}
+	return resp, nil
 }
 
 // The following code copied from internal/etl/fetch.go:

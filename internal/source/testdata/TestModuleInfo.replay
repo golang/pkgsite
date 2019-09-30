@@ -29,7 +29,7 @@
   },
   "Entries": [
     {
-      "ID": "6cf02f671faf0977",
+      "ID": "3dd0f17a3a7598d4",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/golang/go",
@@ -59,10 +59,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:13 GMT"
+            "Tue, 01 Oct 2019 21:46:56 GMT"
           ],
           "Etag": [
-            "W/\"f77845dea9a35e34221cdfe078e80e5d\""
+            "W/\"b30d95f697479e464bea30341b5ac5fd\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -71,10 +71,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:13 -0000",
-            "_octo=GH1.1.608685794.1569856453; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:13 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:13 -0000; secure; HttpOnly",
-            "_gh_sess=dWdKNjBJN28wVndJWllLeGxueHhlNTJ6UDF0U1RDWC9YaDdQWUZyYXM3OFBkZ1dZWHBYa1lRMUpnZFpyVlNIOGZJcWpPUWMxd1dCQVI4MUpSMlFzcHhwWXF2QjVCeHh0MWlBZ3ZMWERwRFh4TFNVY0o1eXc0dU0xKysvTkJseXh1Q2pkRmZ5dENRTWNrQUVJaXNxQ0FsdUFZMjRQUytXRXpRT2o5THVEUERLUktzUXlJRDlNQlpaUjJNQS9QY0djRWF3dlU1bG83MGcwRE8zRWd5N3p0dz09LS1QamNzTW1sOVhPZmdzeUJLVlIzSlZRPT0%3D--686ab6e01803aa1e924dbcaadf06b6dbe958a875; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:46:55 -0000",
+            "_octo=GH1.1.1612573432.1569966415; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:46:55 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:46:56 -0000; secure; HttpOnly",
+            "_gh_sess=bFZoR3BxbDhiTUpNWCtPT3lpSlB0NS95WkhnUjRDNUdBalByVlo5ZW5kUzkvTzQrZVJCdFZhTmhxb2U2dFlMN1A4QzdkUlQzQ1FnZVZIT05RZmZaazIxOC81NW82eWoxS0JrdnhHWHE1TFJNS1pVZnBRamRwQ3BIZ3NtNWp4MnU3a2tkcFk5Q294aXA4bXFEOGxZeXRMSlcrb08yU0M3V2krOG5kdGcwOXdhT09YZ09CMVNRRlpaM3N5dU8rUVMxRit0c1d2d1ZnUEozMXRTWkt1YzU4UT09LS1PWS9MeURrVFRNU3lqS2htcTl4b3F3PT0%3D--2fd8b04fc8ed409c31910ef0fdc72bd2ea4acdbf; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -83,8 +83,7 @@
             "max-age=31536000; includeSubdomains; preload"
           ],
           "Vary": [
-            "X-PJAX",
-            "Accept-Encoding"
+            "X-PJAX"
           ],
           "X-Content-Type-Options": [
             "nosniff"
@@ -93,10 +92,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB9039:158E9E7:5D921BC5"
+            "5DE8:395B:299CA5:4BDCE3:5D93C94F"
           ],
           "X-Request-Id": [
-            "93e8674a-b56e-4519-b074-a70bde9638fd"
+            "c014b240-81b0-4f33-877b-ef0e0bb37530"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -106,7 +105,7 @@
       }
     },
     {
-      "ID": "c7648691f9f67f6a",
+      "ID": "75843d4c174465ee",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/golang/go/tree/go1.12/src",
@@ -136,10 +135,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:14 GMT"
+            "Tue, 01 Oct 2019 21:46:56 GMT"
           ],
           "Etag": [
-            "W/\"48ff7a219c7a04270134690ec7dc2e61\""
+            "W/\"edcf6294447763d5faf7e7fdb4d62f5f\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -148,10 +147,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:13 -0000",
-            "_octo=GH1.1.1681725245.1569856454; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:14 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:14 -0000; secure; HttpOnly",
-            "_gh_sess=Q0tFdVhuVjdsTU96TVNvL3ZqajhNMGxmVFZQdkhSdklNYUZDektVWGd3Y3JhQ1ZFUFNyQWhCVDZGa2MwQTZaT1YrRmZFMUZ2MDd4TExjaEVBV0NqWk5lTE9kcGpXdHF4UkxvUERqTTJ0RjljdDFkZHQxZlZ6MEMzZmNkbFdDNFY3QnMwdTFLRmZtTkpGanZuc25BYy83U3U4Tnk3cVRCcVczY25MdVhhc25nL25pWnF5UTlaSWN2ZjN1RjdlRk05L2Jjd1cxK1cyTm41OTFsMDdERU9uQT09LS1BRUxFUklYYXNFN0hzU2oveEN5VzBRPT0%3D--318e40291d3e91ab0915cd5207856f8b85d45390; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:46:56 -0000",
+            "_octo=GH1.1.543063925.1569966416; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:46:56 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:46:56 -0000; secure; HttpOnly",
+            "_gh_sess=ck9GMzN2K2dTY0lweTl5TUMrOVFjU1FvN1pYYmRnOW5Pa2F1RjlBazBIRFhrckpWZExCYjM5QjZHdVNGRkh1MElQc1NVejlBdnNnVkdqanlQRXRFWUNZTFpEQStlNHdrZ3hTM1ZpSDRGL3ZrNmtldVpCcXNqRDg5ajNSSHlibEVnZ2FrazNFZG4zcUtEbTZOekZ1bGVINUZLM0dhTTFScFVTSlBUQm15ei9DZ0NpR0RyTjJNSUVuS3VGSXdpUStLU1ZLYzZjZ1VrV1B2b3N0VVdHcnJVdz09LS1wRVVnOWpqRXE5b1BCanh3R21VeEZRPT0%3D--2336df4494038de2d25c26a5aea6d73d3b2ccc91; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -160,8 +159,7 @@
             "max-age=31536000; includeSubdomains; preload"
           ],
           "Vary": [
-            "X-PJAX",
-            "Accept-Encoding"
+            "X-PJAX"
           ],
           "X-Content-Type-Options": [
             "nosniff"
@@ -170,10 +168,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB9062:158EA18:5D921BC5"
+            "5DE8:395B:299CC7:4BDD1A:5D93C950"
           ],
           "X-Request-Id": [
-            "77814ffb-21cd-4926-9aae-2b45604c1b8f"
+            "9c4f4c66-2dd0-43e9-9896-b6457ea2aab0"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -183,7 +181,7 @@
       }
     },
     {
-      "ID": "6155015a2a303541",
+      "ID": "f35cb93e2b34b418",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/golang/go/blob/go1.12/src/bytes/buffer.go",
@@ -213,10 +211,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:14 GMT"
+            "Tue, 01 Oct 2019 21:46:56 GMT"
           ],
           "Etag": [
-            "W/\"64da74083eef75d5d06c632f46ad4fa3\""
+            "W/\"1bfc48650ec802abbca756766282f560\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -225,10 +223,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:14 -0000",
-            "_octo=GH1.1.863548541.1569856454; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:14 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:14 -0000; secure; HttpOnly",
-            "_gh_sess=UWpDZjZIRFUrZDNXdG9jR2VvSXFIT3RHZ0d3b1Y5MDRyS3FTVUk3cS92LzdHN1NkNXkrd0pncWlBVGI0MEw0MkNSYVZiV3AzSlEyZ05IZitCZkZzNkljMFYxOGR0YWExQmJHOXFkMExTbm5LWVJsVk9Oc3VqcjVTTU82WGVFbjRtSGt5aGlFajVUVmxIWlJ6MVFGQ3ZQRHBiZk9rdjRFVjcyVGJ3UjdKQ3U2bDZNRHFsOG5tUEJqNXU3T2Znc3orNE5HczBiL3BLenN5aDFGZXozTU04Zz09LS00cDFPT2dlSzdGTCtYV0ppbUJtR2tBPT0%3D--73057d4ae7fefc15f2d120e03268b5b568aaa891; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:46:56 -0000",
+            "_octo=GH1.1.921501226.1569966416; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:46:56 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:46:56 -0000; secure; HttpOnly",
+            "_gh_sess=MXQ3SVRoajVPZCtybFRCc0tJRlYwdittTGpqaDVzSVV3NWVaQ0xON0FoQ0ExVzdOUDc3ZlhqWlJaczNydjFFVkF2clV0bXVQeE9BcWJOeE9TTzFwSzFybWUvdFhpekdPeUYwdHB1b0VpUmtwMVNxWVExSVkvd25ObHdRSmd2c3lxaXVjYU5qbmNuL2NOUVlodk5GQ1dncWswMWt5eGdlTURSOXViaXU0cHdvM01sUndLTEd5aFNaT0UwZlZHOVJZUHJib0lMQndSQmdFM3ZOcThKZGRKUT09LS1QNE9wZEw5NTZGK21SeDFxQnZxbDFnPT0%3D--65bccda1e9b3ccccc7a9f75ef5a4257781b119ca; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -237,8 +235,7 @@
             "max-age=31536000; includeSubdomains; preload"
           ],
           "Vary": [
-            "X-PJAX",
-            "Accept-Encoding"
+            "X-PJAX"
           ],
           "X-Content-Type-Options": [
             "nosniff"
@@ -247,10 +244,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB9075:158EA39:5D921BC6"
+            "5DE8:395B:299CDC:4BDD43:5D93C950"
           ],
           "X-Request-Id": [
-            "ee0621ca-296b-4642-9a70-5c7902307821"
+            "c1d4d21a-41b8-4446-96a0-3874df6a8b1e"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -260,7 +257,7 @@
       }
     },
     {
-      "ID": "562d2d840e2aedf7",
+      "ID": "a501c8ee8a6f033b",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/golang/go/blob/go1.12/src/bytes/buffer.go",
@@ -290,10 +287,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:14 GMT"
+            "Tue, 01 Oct 2019 21:46:56 GMT"
           ],
           "Etag": [
-            "W/\"3191cfef41c02dada0ac6461d9b48afe\""
+            "W/\"e2b53740ccfac817caaf8fdfde9050a2\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -302,10 +299,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:14 -0000",
-            "_octo=GH1.1.964406087.1569856454; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:14 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:14 -0000; secure; HttpOnly",
-            "_gh_sess=b0JwbVJiMFc4WkFES3JFUXBvZ2lhRi9UTVFOcENFa21yL3hyRHhEcVBWUXk3QlRucFdQc3JoeE4waEhhYVF3bGt0SWZ1MGh4d1hFNEIxWG9jWnphZXFzYkVaV3RrV0o3L3NUVEdXd0ZiNld2dGY3MUFLMnNHaWMzQ1ZCRXBoV2x6UEx0YWVyQ256RXp3TXN1czlURmgrRk9nSGxoK3l2SmY4cklXMmxhV3FGdUNkTnNHdFF1REVkRm1RZU9ZMXRVd3pZM0wrOHF4UnpwdWV5eW4rU1hiZz09LS1oYkJ4SFRLVllPQ1UwSVVxc0RjNXRRPT0%3D--8c47784af2fa7f63096b21547c13e52ee5fa4c55; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:46:56 -0000",
+            "_octo=GH1.1.1028240528.1569966416; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:46:56 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:46:56 -0000; secure; HttpOnly",
+            "_gh_sess=cDl5UmZQalhpaGNDK05OOEFDdEZwY24rUW5WaVBQakVBWGtNVXpzeUtRL3U2Z0pUSFBCQlNKOVAvcngzYUpMRUprL251WklaNk5wNVpkRE5mZ2RHN293TnFOYjQ3NVRoV2xRMmlVRlVBaGVDL2FDZHBqMUVtekc4ZlF4ZFQrTjdkdDN6ZDJRM0l6M05PQXBaTHBMcDljSnNENlhXbTlONU9JTm1sTXlvNTRaZkZxeVRPdHJHSnhiWTlvVWxFZ1FKT25lYlovVS9hTFRJOE5ETlA0MVRMZz09LS1NUnRLaUY2anVVUzUwSUNDa3hRdElRPT0%3D--1a42140492cf89f7f8d3a1b22cd690dc8cce1c12; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -314,8 +311,7 @@
             "max-age=31536000; includeSubdomains; preload"
           ],
           "Vary": [
-            "X-PJAX",
-            "Accept-Encoding"
+            "X-PJAX"
           ],
           "X-Content-Type-Options": [
             "nosniff"
@@ -324,10 +320,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB908D:158EA65:5D921BC6"
+            "5DE8:395B:299CF8:4BDD6D:5D93C950"
           ],
           "X-Request-Id": [
-            "3a1bcead-abc2-4f82-8cb1-114020a9fc5b"
+            "441eb9f7-3379-4071-b913-a1d8902a6283"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -337,7 +333,7 @@
       }
     },
     {
-      "ID": "5c58b16695a2b157",
+      "ID": "aa454798aa1a7161",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/golang/go",
@@ -367,10 +363,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:15 GMT"
+            "Tue, 01 Oct 2019 21:46:57 GMT"
           ],
           "Etag": [
-            "W/\"ef6a9e4162af06e3b419d2f1b4ca1c76\""
+            "W/\"cd6c6005ae0e8c0c0fd32bfe69bb57c8\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -379,10 +375,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:14 -0000",
-            "_octo=GH1.1.581856842.1569856454; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:14 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:15 -0000; secure; HttpOnly",
-            "_gh_sess=YUJEZngvVDNUSzkzU2xnOFpSeEkrQXVUcjlEa1d3MFV2cDRMRmRsbUQxZ3UxNSsrYU5MUHVvQzh2VEcrSWJnMDRhMFl1TmhiTW9kRjRINVgrZU91U3lNZVpzcWxWdUdlZ21ickphaGdSSE9HY0E0anBaRFdRSHVzV0lwZll3Q3dDZ1VGMmtRd1lhVTY0M2paR1E3OHdkMUg2NExzV3pGS0NIcEZPWFlRMWs5VEFsTzRaU0x0L0hJZzd1UWgyT3RXQXVCVnhvQ2ZvSGxLMUZVbzhjOXo3dz09LS1ZeFZ5UXh5UnVudkZjdm8vQUNid1JRPT0%3D--9b7521ab48aa2c64834a97c7b2efdc98f7200361; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:46:56 -0000",
+            "_octo=GH1.1.1298989598.1569966417; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:46:57 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:46:57 -0000; secure; HttpOnly",
+            "_gh_sess=K21LYjNIWkpMUE9sNzZIRmlwQml4K1pNaGxZYUxpLyt4ejNjS0N0aGZxYkNxOXRocHdVbUNIZFg0blhZYU5keTRCd0pRT1Y2VlFOK3d5aUFmNnV3VFlUQ2wveithZ2NKQXR1cFJpbzBwQVh4Rk5yQzZNZGNjckZYM3FFbm9jemxJOW0xYmg5U1pNdjZvVkx0OVMyZVl2WGJrUzBkTm5Lc2dpdG5kd2hkaENkRUFOL2pQU0VaSGZiTG9JOHkyK3dXUkdkRnBqWDJrV3VJR0VDdE1qV05sZz09LS1BYkkvaVlyRDllWDVjN0YvR2Q4cDJnPT0%3D--804ca6d589986ab2e7a71940f2719cc990d7c8f6; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -391,8 +387,7 @@
             "max-age=31536000; includeSubdomains; preload"
           ],
           "Vary": [
-            "X-PJAX",
-            "Accept-Encoding"
+            "X-PJAX"
           ],
           "X-Content-Type-Options": [
             "nosniff"
@@ -401,10 +396,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB90A6:158EA87:5D921BC6"
+            "5DE8:395B:299D08:4BDD97:5D93C950"
           ],
           "X-Request-Id": [
-            "1bab1066-8ab7-45ca-8757-15182a9ec8eb"
+            "fb9707df-230c-4f07-869e-8b0a72abb047"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -414,7 +409,7 @@
       }
     },
     {
-      "ID": "812c31733a52ec5c",
+      "ID": "7e9e7ebf59a334db",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/golang/go/tree/go1.3/src/pkg",
@@ -444,10 +439,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:15 GMT"
+            "Tue, 01 Oct 2019 21:46:57 GMT"
           ],
           "Etag": [
-            "W/\"8f0982b61dabf1a8554188213a00a060\""
+            "W/\"f73c94e85c862c4a97a748e9f90d8448\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -456,10 +451,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:15 -0000",
-            "_octo=GH1.1.82796852.1569856455; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:15 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:15 -0000; secure; HttpOnly",
-            "_gh_sess=VW9LN3d2blZ0WTdZYjBuekV0eHcvbS9zNXpXWUkvODEzeitEUURIQzIyTEVqc2FlanIzdENXYUxEbzZSNm5LUXM4aFdmK1p4dk53YkdTR200QXhSYlpUbWZNZnVMc1IxSmJIL3dPSzlvaElZdG9NQVRBSnNaalJZRXZ2UU05b040Q1ZTSENCMHpkQ2ZyVWFudkFkamtybjIxWTB0dmEwd0JRei9yajhnUHJxWldtZWZUcldtd2pFbUVGcUx1RFRaR1VpaThxRDE0bkM4L0dKK1k0alBpQT09LS12eW1jVkI0Yk43UmIxMGM4UFJTU1V3PT0%3D--8f03bda8bacb096874482a1ff3783f3f8a312798; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:46:57 -0000",
+            "_octo=GH1.1.375812217.1569966417; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:46:57 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:46:57 -0000; secure; HttpOnly",
+            "_gh_sess=elBuUXh3RjY0c3BIY2tGejJ6RHppUzJiNDh2QzNMMTFVVXV4emQ5MUtKNmlOSEI2b3h0SmhxUHpzSlp1OG5DWTR0R1FGdjNGZ2Q0WHg2ZzdjbGZNZ3QxRGtWekFiMzArRlBwbTNwUjJDNXRPZnFyZi90L3VOZ2xBb1VBMkhHcUoxVTltdUV3c3RMaGQvRnJITFFSOTB4R3ZrNzlVazNBWDh2RS93bmZPdURGd1FBZFA3NGREWjNvK3JvdUxPY0Ruem5QODl6VnExbVNzOFRnM01Pb0ZMdz09LS15QUVKL2QrSk9Sdnl0aWZpRjNFaXFBPT0%3D--5d3bbb7117ec45c61a8e7f775a441488c0dce563; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -477,10 +472,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB90C2:158EAAD:5D921BC7"
+            "5DE8:395B:299D34:4BDDED:5D93C951"
           ],
           "X-Request-Id": [
-            "a757ea5b-6624-4510-bfc3-58bbe61a2db8"
+            "0c5ef96b-b08d-49ab-a996-17d14b14c75b"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -490,7 +485,7 @@
       }
     },
     {
-      "ID": "1938e018043f3187",
+      "ID": "5f998fe757ff9353",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/golang/go/blob/go1.3/src/pkg/bytes/buffer.go",
@@ -520,10 +515,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:15 GMT"
+            "Tue, 01 Oct 2019 21:46:57 GMT"
           ],
           "Etag": [
-            "W/\"49ff9ba1e3395ea0d585e9d8f1c296e5\""
+            "W/\"4981a13b1d415718fffc94de677da537\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -532,10 +527,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:15 -0000",
-            "_octo=GH1.1.55324252.1569856455; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:15 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:15 -0000; secure; HttpOnly",
-            "_gh_sess=Szg1dzVkeUFLWk1ZTnBUNHlzYVR5TExzbTQxakxiTm5hRDczN1pCSG5FQXRpeTMvaVdMKy9LRG5pK1R1bzRqL0V6TWZYVXl2TmhpSWtKT3FDM0Z1QzhHTklCdy9IVU1aN1N0Y2V6dUZYS0FMakw5MlF1dzBUOWhZUGVtZDZ4WFR4NnRPNDhIYndrd29sRkd6Y3g1QlQxOFlSZlExREsyVFZ2aThRVFlpd3dhbW1SZHY1N0FlWFNQUlFUNXQwQ1hnVUszdWljdzR3dU40L2RpSGJoU1hzZz09LS1KMWdHWEhhSjRpYWdQSTFJMkJpK0ZnPT0%3D--5d8ce288fb30d459f979103c3523e20f2955d09c; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:46:57 -0000",
+            "_octo=GH1.1.1932552593.1569966417; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:46:57 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:46:57 -0000; secure; HttpOnly",
+            "_gh_sess=UzUvbVh1aDROekpFVjNzTE1zSkNkTkJXM21iMGQ4bVNNVi9iK0lNR25CUU02R2NDSjl3MWJUaXdsQVMvWlZXTWttNHMzS0RaSDVzQ0tydld3SFd2b1JmU3FNeGhiN2d2NURja2JDM3JwQVA1VUxQVnAwSVB4YWkycEp6ZnBrazFScU5RTlE3S0tSTThpT2ZJbXpMbE5NZ29ucm83WTB1V1RFZ3ZTZVRNSkl5dWF2cmU3RUZRL21uSWt3MGQ0a0Rxek8yOGx3MXJFNnppSy9LN21RNmhwQT09LS1OSEo2MG5zQ0dzd0J2Y3ZSZzdRdDR3PT0%3D--d1c49c5b4761c7f829cc16724c739628e6de8011; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -553,10 +548,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB90D9:158EAD5:5D921BC7"
+            "5DE8:395B:299D49:4BDE10:5D93C951"
           ],
           "X-Request-Id": [
-            "ea3bbf2f-8255-46fc-8d6f-5651892dfb17"
+            "27e457fa-8e0e-47a3-b2c5-485d1a084c41"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -566,7 +561,7 @@
       }
     },
     {
-      "ID": "fa0ac16ef09917cc",
+      "ID": "c8ade4e902aa5099",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/golang/go/blob/go1.3/src/pkg/bytes/buffer.go",
@@ -596,10 +591,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:15 GMT"
+            "Tue, 01 Oct 2019 21:46:58 GMT"
           ],
           "Etag": [
-            "W/\"e17f331371c6f75c0a234925185e1c52\""
+            "W/\"d6f86f45a4000d4bcea787c50ee75010\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -608,10 +603,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:15 -0000",
-            "_octo=GH1.1.1180219643.1569856455; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:15 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:15 -0000; secure; HttpOnly",
-            "_gh_sess=TXJDMlA2UzZJRjIreHlXcG5HdTZ0RDFITlpDdDVIRUZTWWEyQUs4aWxhR0J5aXFOZUpDUDhMcGtsVmdLZmhMU09qb2VnWGs5TzdpNlRTSXpsU2NsNXB5WCtpZlZRRms4SjN6WEJnTHQvV0NJVEM0bGpBSWlLUnZQMHFMZTdtUGlRRktzNDVUQ09JKzlBVGx6cWhTVFVzLzhyWHgvV0s3SlJsZVdQcG9JOThzaEljbmVaNkFoVTNEcU9ZTzZHTGxSa0tIL3NqaFBhQ2R5YlpHZEN3OXpFUT09LS1aR2ZjRjN4QklPNFZiUXNrWUlBL29RPT0%3D--a837443f21b9db41774affb0dbea407443eef5a4; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:46:57 -0000",
+            "_octo=GH1.1.1819837347.1569966418; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:46:58 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:46:58 -0000; secure; HttpOnly",
+            "_gh_sess=MUZzemJ0QUdsK05XYnMwTlMvK3JxekV3Y2owUGp1WU9QT001blNNUzlWOWE3b0V3bEVEZ0dCQkxrektXNFhwMXpoWnplZmlNR0YvN25DVUhmZUNmcDNyNnZFb05NZ2hjWGVYVUQ4dEsxNTJCYmQyREozZkpmQ3UzdC9zdGl2cEprbnZ4c2h1TkxEK2dSMW5YMEJEeGJoZUlkakd6K0s4SFdJVXJKWWN5MStOZ2tRN0NpSm43SDlQL1IxQVkranNESCtWVEd1cUJubk1SSXRsbVI0VklHUT09LS1OcVliRytnMWdtQUxVeTdLTFN6WnpBPT0%3D--6624a06d2124e3bd8d104ba732284daf09d9fe7d; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -620,8 +615,7 @@
             "max-age=31536000; includeSubdomains; preload"
           ],
           "Vary": [
-            "X-PJAX",
-            "Accept-Encoding"
+            "X-PJAX"
           ],
           "X-Content-Type-Options": [
             "nosniff"
@@ -630,10 +624,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB90EF:158EAF4:5D921BC7"
+            "5DE8:395B:299D6C:4BDE49:5D93C951"
           ],
           "X-Request-Id": [
-            "ab5a93ef-88e4-4828-bd4e-0a45e29df195"
+            "bd0e0041-540f-4b33-99ea-b17cde9b36ac"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -643,7 +637,7 @@
       }
     },
     {
-      "ID": "6e3cc5c912735f36",
+      "ID": "0c265b561326f5a7",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/pkg/errors",
@@ -673,10 +667,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:16 GMT"
+            "Tue, 01 Oct 2019 21:46:58 GMT"
           ],
           "Etag": [
-            "W/\"577e93124e59ed16c9682275b73f8287\""
+            "W/\"26bbc48b89366fc8d94b1751c1fc597a\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -685,10 +679,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:16 -0000",
-            "_octo=GH1.1.1654133343.1569856456; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:16 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:16 -0000; secure; HttpOnly",
-            "_gh_sess=dXFRYzdPbmg4WGNNcEFlQ3pMeVhnRmVZL1VkbnlhTTJva1NLNGhLbFB1a204U0VHWDZkMlpXdWNTYVNhMUpWRmordUdyK29xb3l3ZEVzcWZKaU04TTB3VG90VUc1ZU0vTmtTU1RFWlBoR01HZUluQ08rVm9IaEhVVDFnWDBJMFhzcDNIdU0yeHA5R081SzVXa0pjNHdjUEZsNDlwMFh4ZTAyQ09mM1VMMGhZL1ZyNEh5c0JheTloci9sODlUT2cwNUdtdE5NVGNESEEvNFovQjJTaG5kUT09LS05MlhSaFNhZUd3R0NzeVQvR1Y0dnVnPT0%3D--9450bb9360241b7ecaa618bc0e3f9266f57ee8ae; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:46:58 -0000",
+            "_octo=GH1.1.228580358.1569966418; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:46:58 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:46:58 -0000; secure; HttpOnly",
+            "_gh_sess=NmdCWGdNNWpOc0pnZVB3OHJtUnBwbHFFNVZ6Qk5yRmhkUnF1Wk1nWWgySDZaUG9ZZ0ZpalMwSWJDanlkc3RaQVhvRlU4RWJ3RzNoU1FmaGJabGNaWDA0b09SVUVwcGtQNHJvWEpiWjlOQU9NOWtGYk1HUWhESTdGZXZ1S3BTeTFWT0s5S09qWkkzRjNjQkRMWGFndENvQmF2Qk9xeG9ZWEFsZ3NvNjNROWR1WkxhRnFXRmtFOEpZM0dnVmdETUhXOUw1WkY2OTBBelZrUU5RMFUzcXQ4QT09LS0za0YzWXQrSGMwdktqcy9ydUkzVFFRPT0%3D--2fade7a80b9acf5fa6dd8f4ce46d8a819e5d8f12; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -697,8 +691,7 @@
             "max-age=31536000; includeSubdomains; preload"
           ],
           "Vary": [
-            "X-PJAX",
-            "Accept-Encoding"
+            "X-PJAX"
           ],
           "X-Content-Type-Options": [
             "nosniff"
@@ -707,10 +700,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB9106:158EB17:5D921BC8"
+            "5DE8:395B:299D90:4BDE83:5D93C952"
           ],
           "X-Request-Id": [
-            "bb451fb4-87aa-4cfa-9706-8486d5962b86"
+            "7169fce3-d3d2-4f2f-9c2f-30a005a43bb9"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -720,7 +713,7 @@
       }
     },
     {
-      "ID": "0f20eb67782cf302",
+      "ID": "fa8eb01c1b4d6716",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/pkg/errors/tree/v0.8.1",
@@ -750,10 +743,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:16 GMT"
+            "Tue, 01 Oct 2019 21:46:58 GMT"
           ],
           "Etag": [
-            "W/\"68558248565186039bcf44da9f66df98\""
+            "W/\"a683b69de0832c940f0a3e78d536d125\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -762,10 +755,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:16 -0000",
-            "_octo=GH1.1.630621948.1569856456; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:16 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:16 -0000; secure; HttpOnly",
-            "_gh_sess=LzQ4RVhCVElhdlR1a2liWThIVGRKV3ZYVUZKZUVMSlUyMXUzSEhsU0FNeUZobWVqOXM5bG5oS29ZQm5LaktJTmU4Qk9OLzY5OHdhWHVvMW1OZmhleGRxRjNvbjRSTHM2YkF1MkM4bU1Id1N4ZGRDZ3Mvck5CRUxLKzBJOVpldkV2UGlkUjlxQ3hBMjhRcERZNVFmUWdISGlzSUdmTTh2M2x4Y1VPdUM0N1o1cUI5R3ZOa1FCcFdTTHRNekVjcWJuWVBCSTZZeU44REJPSjZURDdTbW5wdz09LS1FbjhGVGRWakFFR25pckJHZEhjckJ3PT0%3D--493dd3411dbe2a5d4156bb55580a187a66207fed; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:46:58 -0000",
+            "_octo=GH1.1.366650245.1569966418; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:46:58 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:46:58 -0000; secure; HttpOnly",
+            "_gh_sess=ZFUvdVVMRDFCa1hZRjNpSFVJZVBZTlpkSWRKbDdTV1RJanZ5OUppUGM4UE9icjlpMnZkWVRyZDFkdDFxNlhIWmJrQUc5ZGY3ci9iQUxKQ01XTmhzb0tOVlRKb2JnTmFUSkxtcm1PdHlER0RVWGg5RFRCckRjcVQvOGN3SE5Sc2JIdFhBQmJRTDYxbmFQMVM2N0F0MGxsNGFYLzNQUWpVRnJLZ0FhM1RkZE1YZXN3N2dFbmtZeDJYZ0lmWG53OGgzY3ZwRHZlZUJFTlVNd1VKYTdsbGRrQT09LS0rSTZ3YXllM3B0RnYvMDlDNjZ2MmtBPT0%3D--167345e8c4d7fe1065892f12eb9a9a6ea5493e9c; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -783,10 +776,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB9115:158EB2F:5D921BC8"
+            "5DE8:395B:299DAE:4BDEBE:5D93C952"
           ],
           "X-Request-Id": [
-            "bb846a77-1377-4f49-83fe-8aeb420eea83"
+            "5e13e617-dcc1-47c8-9dcf-352acebd353c"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -796,7 +789,7 @@
       }
     },
     {
-      "ID": "0ef926f4bc12d7dc",
+      "ID": "5384fcf8908d1589",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/pkg/errors/blob/v0.8.1/errors.go",
@@ -826,10 +819,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:16 GMT"
+            "Tue, 01 Oct 2019 21:46:59 GMT"
           ],
           "Etag": [
-            "W/\"71845b8789e9ade1a96001d215285018\""
+            "W/\"d8ddfd60b5ad1ded519343952101bdfb\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -838,10 +831,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:16 -0000",
-            "_octo=GH1.1.1961388675.1569856456; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:16 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:16 -0000; secure; HttpOnly",
-            "_gh_sess=R2s4cG1BL1ZuS2hzVjluMUh5SVNJUGN1Y2tEMXRLL2UxZE5rTGI0aVJPMzJSUzBrNnZkbnhKUFNKbStzTm9DQ3pVcmNCeStsajhyYXk0UUNlcjJEeDBid24zUnl2UCttMnlpVW1FWHBQTWtsWDVvT2xqZU9yMmdyVFJwb0FMdjVCa25PaGRObjdodGhiaVRLZWhvbXFMbWlrd1pibDlKWHJxa0hGWXdGdEhnTnRKVFRBVjR3cFNoNWVMb3Y1aWJYMFpNWkVRWkpwTU95SVRKZHlOY3VOQT09LS1sdk1aUS9xMzBMdzB1RkZaRmxPbUdRPT0%3D--6fe3e14c4e55a363c62c90184c64f091d3a91be0; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:46:58 -0000",
+            "_octo=GH1.1.1899174074.1569966419; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:46:59 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:46:59 -0000; secure; HttpOnly",
+            "_gh_sess=OFdBdFNJZ0VjSDN1bmZDdkZXZ0FyOEhFOTdpMWpteEtNazQ0a1RGN1VnSTROQXZPTUkyNmRGQS9ZaWFZcG13T05GeWFDNjZJa0JsNVVpaXRBdTI2QUdyV2d4Qk9wWUY3UDZqVkZXZCthR0RZSThiVWFWQ2N6Z3VDeGlGUGVhTlphZU9kWTZ0OWR0RnBmYVZNM0x5SVArZDBlZFdOR1VsZklaZnU1WmM2WUZSU093Mk44TkJuc2I3K1FWQ2VnMEQvTm9zUmp0dWs1UHhoTlNXbVBmUjQ2UT09LS1hbDdWUTBtMERWdHlNVTQ5MXhrK2tnPT0%3D--29e6593ae606bd7de3d3f7c37c9ce4806ddad35f; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -859,10 +852,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB9122:158EB41:5D921BC8"
+            "5DE8:395B:299DCE:4BDEF4:5D93C952"
           ],
           "X-Request-Id": [
-            "312e57b8-e27b-4d3e-8388-b8d3f7729e9e"
+            "6d00484d-1521-4a4a-8baa-0e5e414dae66"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -872,7 +865,7 @@
       }
     },
     {
-      "ID": "991106c0ce100191",
+      "ID": "fde7c032a421f97e",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/pkg/errors/blob/v0.8.1/errors.go",
@@ -902,10 +895,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:17 GMT"
+            "Tue, 01 Oct 2019 21:46:59 GMT"
           ],
           "Etag": [
-            "W/\"2f74633cd503432c54b26eef542117c2\""
+            "W/\"bbb7f90956625aee029a7770136cca6b\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -914,10 +907,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:16 -0000",
-            "_octo=GH1.1.1391123982.1569856457; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:17 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:17 -0000; secure; HttpOnly",
-            "_gh_sess=bkVTYjQvZGtUbER1UGJ4aUNQc01HcGtVKzRpTVNXbzZjQTJheDQ3cmJtZlhNbzFwQW56bGVKVmZxeVB1U1FTMGU1M1V6ZTY0aVFDVmRrM1N5QmdEWmF3MTRJbjdvODIxZkd2a2xHZFBMOTVSYTh3MzhFKzF3OUh2U0RKM3NSN2N1MjZUanhST0Z0TXNoOG9OL2l2TjhZUGh4YTd3U0Ira3lyUXNrWkF5S25YT0NaQzZsMVhrb1ZSTVZnQkdzUTRiMk9ha29Odi9UQ3dtZ2JNZmcwNW5XZz09LS1xMlRNMkJUSjAxNTZkNjN6eGlacUR3PT0%3D--f3baa75a952a975811429d6cec7438bd0dcfe0ec; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:46:59 -0000",
+            "_octo=GH1.1.1079956945.1569966419; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:46:59 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:46:59 -0000; secure; HttpOnly",
+            "_gh_sess=THhSNExuRlVvUlNqdXdoZkVwVWZpZnRQekgwSFhWY3RMZVdEeGJxS1pqVmVuZTNrVThvK3lqWUpCZGg5ZVFuZ0pUY3c3YXhHRVAyY0l5Wnp4aHlyUmF1Q01hUVVjN0FDekh0bTcrT2tnWi9zL3ZkNnRrNXJnNW8yYzFHemFudUVRd1ZsYm1nanhNc2pPMVczaDJUcDRINW9yZUU3NUluaTlhMEhEci8wV0ZsTnZydzAzT2U2ZkNwYXRkc2puU2dIMU1vb25nbHJubEMzcDhiTXVxVmh2Zz09LS1iQlM4RVlIdXI5MlRCT0FXam1JaWZ3PT0%3D--c7b192ad0af5eb76c7b4151ce45f58e4c449c555; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -926,8 +919,7 @@
             "max-age=31536000; includeSubdomains; preload"
           ],
           "Vary": [
-            "X-PJAX",
-            "Accept-Encoding"
+            "X-PJAX"
           ],
           "X-Content-Type-Options": [
             "nosniff"
@@ -936,10 +928,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB912B:158EB4E:5D921BC8"
+            "5DE8:395B:299DEF:4BDF2F:5D93C953"
           ],
           "X-Request-Id": [
-            "98d62585-6dc2-4857-ab4a-04c901de0147"
+            "e9139405-6178-47d2-8cf7-848f5c6b26cb"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -949,7 +941,7 @@
       }
     },
     {
-      "ID": "c2960b702ab35d65",
+      "ID": "4e2d3eeda71f8000",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/hashicorp/consul",
@@ -979,10 +971,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:17 GMT"
+            "Tue, 01 Oct 2019 21:46:59 GMT"
           ],
           "Etag": [
-            "W/\"481bf836f3ac549433a9520ca4cb628c\""
+            "W/\"0c336aeea897a41fc258680cd97808d4\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -991,10 +983,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:17 -0000",
-            "_octo=GH1.1.712567348.1569856457; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:17 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:17 -0000; secure; HttpOnly",
-            "_gh_sess=aVo5QXpKaFNDWjlaOXpDT3ZNemJLSnpzdFlsQlBYeVRIYlZtVkd5QkVQcmxYajFTRTFjbnl0REZVQjZhOEc0Tnpza0g4YWVNU21RckNyQy94NGhXNHpLdFl4ZnU5eXpBSGkzcXQxTHNoeEl4cm44YW4rVlNZOEFHMk95YytJV3ZVTFVIWERpcHVhUFpya2JRTmUwREJqbmxBMWJYaUwycmZLOWxuWnZzY0dnWjIweUZTZDBMUkVZNFdoQ3o5VVliekR3alNxZUNPTHpvY1JnR0JpVC9RdHd2ZWIzUjJodmVLY09ydFdZeUtpbz0tLWE3L294OHpqK0JaZzJmM3FoeGFaR0E9PQ%3D%3D--da8fc114dfaf7f05d765d37ee89399b95ca6397c; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:46:59 -0000",
+            "_octo=GH1.1.1610399427.1569966419; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:46:59 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:46:59 -0000; secure; HttpOnly",
+            "_gh_sess=OGo4R3pSL1NLeE43aVlaTmIxZWtCUEtxV2dtSURSdjBIR0Vna1RseFhGZGJqc0F3YVVNMmtqNll2bTFTOVlXbXdYdE00K01xQlVFQkhlRG11TmloL1dwbG1OWjdCUk1Fb2pRelZueExDbktxZDA5Zys3OU93Vk5TZ1lsSHpHcDN2djZrMGhpWm1oYXRzUFFuQ3FYUVBDcTF6aHhyMnFVeXVqQkx4Zlhnd3BTOU1Id1dsNHFaZkM0M3FoZldac3A3Ymp1QWNlcWNIcm1yM0dXMUJJeGhZdE5iTnY3b3RDMk9ud3pLclZocmJEdz0tLVpSMVlsOHNjc2h4MEV2dWk3Wll0Unc9PQ%3D%3D--76910ae6fe64a08853d22b06f523f4797a4ae150; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -1012,10 +1004,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB9142:158EB72:5D921BC9"
+            "5DE8:395B:299E05:4BDF50:5D93C953"
           ],
           "X-Request-Id": [
-            "aafad6ef-aa94-4aa5-8eb4-f52cfe7e8d65"
+            "832456a3-d546-4900-a353-e68f90c04db9"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -1025,7 +1017,7 @@
       }
     },
     {
-      "ID": "1ab4ee2d8ab6dd9b",
+      "ID": "fe621c591d0e41f9",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/hashicorp/consul/tree/sdk/v0.2.0/sdk",
@@ -1055,10 +1047,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:17 GMT"
+            "Tue, 01 Oct 2019 21:46:59 GMT"
           ],
           "Etag": [
-            "W/\"353122cf105f8c4ceedd70c32e72338a\""
+            "W/\"69dee3b0cad29202232fc8f3de70aebb\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -1067,10 +1059,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:17 -0000",
-            "_octo=GH1.1.158088787.1569856457; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:17 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:17 -0000; secure; HttpOnly",
-            "_gh_sess=NENSRXd5SUlDSXNNNmFUcEtkbmJBRi9HbzFPOTYvTkZDYmpHeXM1ZmJCbnZXNHMyZzQwQzg1NCtmWWE1SFhlSVh2cUc0MW9sVW9tNFpTbTlZMitBNTlPaEpXSXpWanhCRFFia1JVdTRFRkpWak5MTVB1aUttWlFkVWpSbkFZN1YzNHJyZjZxZUlYRStaTVBxS1lXSDU2OXp5ZnVhdWZnTVhMQlo4L1crVkpxSVVBdGRyNzlrNm9nbmhPYUt5K3NFLzJlenR6YUdGcktrZ1E5bnpZd3Z1bkxZUlNYR2NoeEJZRWgwMHc5b1M2ST0tLWgyWXdFR2FHcFdoZDJaSS80Z1JZaEE9PQ%3D%3D--7b776229dcd1adeb9e73b03899ab1a204e059c4f; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:46:59 -0000",
+            "_octo=GH1.1.1198582132.1569966419; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:46:59 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:46:59 -0000; secure; HttpOnly",
+            "_gh_sess=K3lKZXMzQUZYZTd2SE1BRjM2ZmFpaHlxZU51V3BXK0h3bmR6M2UxRzR6bUJ3NEVVd2p4NkMzelVCR1ZXZ0V5ZHpmWGdvL0ZtUmFnOEEzcVlrZk5EZ2hGeWY0OFpxRWE0bFlweXpMcWxIUkJJNi9ITTRpaXN2R1RxeHhrb2o3TnpFY1FCVzY1WXNnM1pyMlkxeUc3V1BJaHNJVDNMV1lQdHNJNDVjd3lMSURFYlhtQVpZVnBVQmRsWWhWcVYvVkdnY3dKaXFJVmJyMnh6YkpFMlRUYW5uYXBEOW9TU1hTTlVNZjl4Mmd2c05ydz0tLXVzc1VsMy90MWUyTWFTMy9sWWtRNlE9PQ%3D%3D--d78f35d4e7ec3e77271161a86d0b19871aa03ed8; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -1088,10 +1080,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB914B:158EB82:5D921BC9"
+            "5DE8:395B:299E24:4BDF8C:5D93C953"
           ],
           "X-Request-Id": [
-            "fb66203e-29ec-4fda-b59b-e3a40564c3d9"
+            "61087078-03c0-435e-8f47-9b1323decb97"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -1101,7 +1093,7 @@
       }
     },
     {
-      "ID": "9a2c4a554b7ed70d",
+      "ID": "da9b70057d0ad26e",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/hashicorp/consul/blob/sdk/v0.2.0/sdk/freeport/freeport.go",
@@ -1131,10 +1123,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:18 GMT"
+            "Tue, 01 Oct 2019 21:47:00 GMT"
           ],
           "Etag": [
-            "W/\"4ba4d58943af42ae301bf084fbe7dd40\""
+            "W/\"fe1470478c40ffb250ae8839034b313e\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -1143,10 +1135,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:17 -0000",
-            "_octo=GH1.1.2018883410.1569856458; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:18 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:18 -0000; secure; HttpOnly",
-            "_gh_sess=QVFzRXcybzNNSmJ5N3ZmbHM0alZNMHVjd1RsY1FhUDd6NlBuUlNRV1FqRXhLQWFHSHJYOFZpTFlDU2FWNk1rV0JLRzFKbTQxdkhxN0xydXd4dlNOTDM0MER2ZnNSMGxoNk5GdzM2elRVSHJyN0ZtYWY1MWg1NG5GYTY0VEZvY0MxUEtjUXZtNWpPOE9wYTNuVTdCNmIrY3RXcmp5RjVRQVlxVXhzcDIzMGhueWRPeW9CeG5oa3p6L2QxRkJnMU1aODZaTUpMaXgyU3UwSW1VeGt4bkZ5c09sUEtyQ1ZyaTRCTzIvSThvamhiUT0tLUhnSHN0MlRkS3pJa0lrT1lKM0k4ckE9PQ%3D%3D--d117ec767c17f05ad8f378d95220107084491b9a; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:47:00 -0000",
+            "_octo=GH1.1.159916034.1569966420; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:47:00 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:47:00 -0000; secure; HttpOnly",
+            "_gh_sess=c2thWHdKL016NWNWT3FrMGxlR2dldVJjTWpwWnlCY3A1UzlhMGNHN1J0Vm5nWFhHZ2Vyc0o1Q0ROQ2poY1JOOUNnLzBQQ3B4S1QyNVp0SEkzS2p4UlVQRG1mQkdiVnl6Um1sMnM0aEpWMEtCYi8ySy96RGZ0QXdaODVDYjNkYjBaRnhscnM2YWFDTEZYTEcyaFZzaFk5dlBLbTRENHVqWVdkS2laR3hNcS9OT0tkeFc3ODBUdWFJdEhzeExmdUhYUWZtVnVGb1lyZVVjNVpDelhFNzM5bG81UlBuTVhycktqZCt0QW5teWpOMD0tLWI2UWtwWnhZc3lBeHNWTTJ3NExFRlE9PQ%3D%3D--e5767066ca28d78f369fd5fc09069f8971a46abc; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -1164,10 +1156,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB9157:158EB91:5D921BC9"
+            "5DE8:395B:299E3B:4BDFB9:5D93C953"
           ],
           "X-Request-Id": [
-            "82af8ac8-ce48-4cc9-a92f-ad36e3c82e26"
+            "7232ed58-5bf4-43be-81be-eda6cc0679a7"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -1177,7 +1169,7 @@
       }
     },
     {
-      "ID": "2d5160138cba6624",
+      "ID": "2f699bcfc8d2d86d",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/hashicorp/consul/blob/sdk/v0.2.0/sdk/freeport/freeport.go",
@@ -1207,10 +1199,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:18 GMT"
+            "Tue, 01 Oct 2019 21:47:00 GMT"
           ],
           "Etag": [
-            "W/\"bdfc819acea3095491ef842fe24ab82b\""
+            "W/\"2e9138ff41646cc5e91ae56e58184256\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -1219,10 +1211,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:18 -0000",
-            "_octo=GH1.1.976104349.1569856458; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:18 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:18 -0000; secure; HttpOnly",
-            "_gh_sess=aER4VUcrOW1zVjhqS0FCOVA0N1ZOWjRBdThmZlhFU3VaU20vM2lKS0RnMGhwZTh1cGthaTVHSTRtU3NSSGRvb3ZZR0tGT1dWRW5oWkphKyt2bTJFSkxhZHBMUm9zVjZubHBwM0k1bTBaQWtSZmJhTElFTC9HNjlDTjJ5MmJPLzM2Vnl4dnd1VHh2SWpidUVNNzI4UXMrT0pKaGc4SUxLYTcwL1c2am8xdklwNWV6b3BiSUhTUko2UFJIeTJwNGFhaENwKzFNMjRFb1pxb1BqdTEyOGpkU2cwNWQwbEFBcGJOK0pSZkw1UDNXTT0tLWpzcHBmVjFpUm81SXU5V3ZGRVFxd2c9PQ%3D%3D--55f3177e84a41c9aaae3d5a30dcec6cad0ec2284; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:47:00 -0000",
+            "_octo=GH1.1.580784153.1569966420; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:47:00 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:47:00 -0000; secure; HttpOnly",
+            "_gh_sess=RlpmOG16WFNOZnJDTTBnS3J3WGtlNit4T2VRSXVPcDVyeUd4ek9mVW82V0t5djhJQ0pVTjN0V3Y4MUE3eGhGVDdpaUhHbHdOcDF4UTR5Y0M1dVZoSHMySzBwaUhuWGI0WXVzUVRnL1hOK2pSTXRxUkplNEtrVHZXcDhzSVVFdVZlNVNxcjVoY09oeXIzTTRXY3EyekFza2VRZDcvWmpMbFdDa3M1MlNqckZFOUprc3F3YXluTlo4bHlQRFVURFV0aGJaNnlEYVY3N3JhY204clFNcmw3bmQzN0xFbkIrSU52SDRzWVlCcVl1Zz0tLXNkNFdDNDlWbXJrMmt2cVBzWGFnTHc9PQ%3D%3D--3dcf8d425f030817db43cf4a7d18d7cc9d7b9339; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -1231,8 +1223,7 @@
             "max-age=31536000; includeSubdomains; preload"
           ],
           "Vary": [
-            "X-PJAX",
-            "Accept-Encoding"
+            "X-PJAX"
           ],
           "X-Content-Type-Options": [
             "nosniff"
@@ -1241,10 +1232,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB9162:158EBA3:5D921BCA"
+            "5DE8:395B:299E50:4BDFE2:5D93C954"
           ],
           "X-Request-Id": [
-            "8c097c0a-1c8a-467d-8fbd-1fc56f00181e"
+            "a2530925-d40e-4df8-8c60-4a3e21cb12e4"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -1254,7 +1245,7 @@
       }
     },
     {
-      "ID": "f0a69e0ff1187655",
+      "ID": "a9edf297accdf3b6",
       "Request": {
         "Method": "HEAD",
         "URL": "https://bitbucket.org/plazzaro/kami",
@@ -1284,22 +1275,22 @@
             "en"
           ],
           "Content-Length": [
-            "38164"
+            "38275"
           ],
           "Content-Security-Policy-Report-Only": [
-            "script-src 'unsafe-eval' 'strict-dynamic' 'unsafe-inline' 'self' http: https: https://d301sr5gafysq2.cloudfront.net 'nonce-BNzlv2PfZWpy1sQH'; style-src 'self' 'unsafe-inline' https://aui-cdn.atlassian.com https://d301sr5gafysq2.cloudfront.net; report-uri https://web-security-reports.services.atlassian.com/csp-report/bb-website; default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *; connect-src bitbucket.org *.bitbucket.org bb-inf.net *.bb-inf.net analytics.atlassian.com as.atlassian.com api-private.stg.atlassian.com api-private.atlassian.com intake.opbeat.com api.media.atlassian.com api.segment.io xid.stride.com xid.statuspage.io xid.atlassian.com xdid.hipchat.com xid.sourcetreeapp.com bam.nr-data.net sentry.io https://d301sr5gafysq2.cloudfront.net; object-src about:; base-uri 'self'"
+            "script-src 'unsafe-eval' 'strict-dynamic' 'unsafe-inline' 'self' http: https: https://d301sr5gafysq2.cloudfront.net 'nonce-5cb6PE9pRZjaNYHD'; style-src 'self' 'unsafe-inline' https://aui-cdn.atlassian.com https://d301sr5gafysq2.cloudfront.net; report-uri https://web-security-reports.services.atlassian.com/csp-report/bb-website; default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *; connect-src bitbucket.org *.bitbucket.org bb-inf.net *.bb-inf.net analytics.atlassian.com as.atlassian.com api-private.stg.atlassian.com api-private.atlassian.com intake.opbeat.com api.media.atlassian.com api.segment.io xid.stride.com xid.statuspage.io xid.atlassian.com xdid.hipchat.com xid.sourcetreeapp.com bam.nr-data.net sentry.io https://d301sr5gafysq2.cloudfront.net; object-src about:; base-uri 'self'"
           ],
           "Content-Type": [
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:18 GMT"
+            "Tue, 01 Oct 2019 21:47:00 GMT"
           ],
           "Server": [
             "nginx"
           ],
           "Set-Cookie": [
-            "csrftoken=ryuK6ocW8KHyP2BGgcpf10Kx0GxhK29PV0EcqzCbxRbPQmPWjK6QIRnBJeom4gJQ; expires=Mon, 28-Sep-2020 15:14:18 GMT; Max-Age=31449600; Path=/; secure"
+            "csrftoken=rR2OaJHvD1jMjAl3vSmoE4fOHEvOC1bzph0lGhAAgfB8qZ9CcAU591W799sHoglc; expires=Tue, 29-Sep-2020 21:47:00 GMT; Max-Age=31449600; Path=/; secure"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000; includeSubDomains; preload"
@@ -1320,13 +1311,13 @@
             "default"
           ],
           "X-Render-Time": [
-            "0.345520019531"
+            "0.139266967773"
           ],
           "X-Request-Count": [
-            "1176"
+            "1379"
           ],
           "X-Served-By": [
-            "app-189"
+            "app-166"
           ],
           "X-Static-Version": [
             "4a68d65c1182"
@@ -1339,7 +1330,7 @@
       }
     },
     {
-      "ID": "b96434278db6353e",
+      "ID": "31a309e5fb9cb624",
       "Request": {
         "Method": "HEAD",
         "URL": "https://bitbucket.org/plazzaro/kami/src/v1.2.1",
@@ -1369,22 +1360,22 @@
             "en"
           ],
           "Content-Length": [
-            "38171"
+            "38282"
           ],
           "Content-Security-Policy-Report-Only": [
-            "script-src 'unsafe-eval' 'strict-dynamic' 'unsafe-inline' 'self' http: https: https://d301sr5gafysq2.cloudfront.net 'nonce-0dMe1KwWCqXD5uob'; style-src 'self' 'unsafe-inline' https://aui-cdn.atlassian.com https://d301sr5gafysq2.cloudfront.net; report-uri https://web-security-reports.services.atlassian.com/csp-report/bb-website; default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *; connect-src bitbucket.org *.bitbucket.org bb-inf.net *.bb-inf.net analytics.atlassian.com as.atlassian.com api-private.stg.atlassian.com api-private.atlassian.com intake.opbeat.com api.media.atlassian.com api.segment.io xid.stride.com xid.statuspage.io xid.atlassian.com xdid.hipchat.com xid.sourcetreeapp.com bam.nr-data.net sentry.io https://d301sr5gafysq2.cloudfront.net; object-src about:; base-uri 'self'"
+            "script-src 'unsafe-eval' 'strict-dynamic' 'unsafe-inline' 'self' http: https: https://d301sr5gafysq2.cloudfront.net 'nonce-WZiSAH4tkOgMMOj8'; style-src 'self' 'unsafe-inline' https://aui-cdn.atlassian.com https://d301sr5gafysq2.cloudfront.net; report-uri https://web-security-reports.services.atlassian.com/csp-report/bb-website; default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *; connect-src bitbucket.org *.bitbucket.org bb-inf.net *.bb-inf.net analytics.atlassian.com as.atlassian.com api-private.stg.atlassian.com api-private.atlassian.com intake.opbeat.com api.media.atlassian.com api.segment.io xid.stride.com xid.statuspage.io xid.atlassian.com xdid.hipchat.com xid.sourcetreeapp.com bam.nr-data.net sentry.io https://d301sr5gafysq2.cloudfront.net; object-src about:; base-uri 'self'"
           ],
           "Content-Type": [
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:19 GMT"
+            "Tue, 01 Oct 2019 21:47:00 GMT"
           ],
           "Server": [
             "nginx"
           ],
           "Set-Cookie": [
-            "csrftoken=yjNz5uNcvoKUsgA01WcGzkHEfOLAww0b3sjAqCwxAsFpqAgNOJyZRA84RweHMub9; expires=Mon, 28-Sep-2020 15:14:19 GMT; Max-Age=31449600; Path=/; secure"
+            "csrftoken=S9IE9Ru88IOadzSPnCR186x2u04VB3lRvnNaxMPQKJUodpM6XWFyhRs3uYBquHKE; expires=Tue, 29-Sep-2020 21:47:00 GMT; Max-Age=31449600; Path=/; secure"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000; includeSubDomains; preload"
@@ -1405,10 +1396,10 @@
             "default"
           ],
           "X-Render-Time": [
-            "0.298994064331"
+            "0.162411928177"
           ],
           "X-Request-Count": [
-            "1312"
+            "1024"
           ],
           "X-Served-By": [
             "app-164"
@@ -1424,7 +1415,7 @@
       }
     },
     {
-      "ID": "94ad719cd11aa2e7",
+      "ID": "96ac8bdae45d5c38",
       "Request": {
         "Method": "HEAD",
         "URL": "https://bitbucket.org/plazzaro/kami/src/v1.2.1/defaults.go",
@@ -1454,25 +1445,25 @@
             "en"
           ],
           "Content-Length": [
-            "38195"
+            "38306"
           ],
           "Content-Security-Policy-Report-Only": [
-            "script-src 'unsafe-eval' 'strict-dynamic' 'unsafe-inline' 'self' http: https: https://d301sr5gafysq2.cloudfront.net 'nonce-ca6PPt2rmkJ3G7my'; style-src 'self' 'unsafe-inline' https://aui-cdn.atlassian.com https://d301sr5gafysq2.cloudfront.net; report-uri https://web-security-reports.services.atlassian.com/csp-report/bb-website; default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *; connect-src bitbucket.org *.bitbucket.org bb-inf.net *.bb-inf.net analytics.atlassian.com as.atlassian.com api-private.stg.atlassian.com api-private.atlassian.com intake.opbeat.com api.media.atlassian.com api.segment.io xid.stride.com xid.statuspage.io xid.atlassian.com xdid.hipchat.com xid.sourcetreeapp.com bam.nr-data.net sentry.io https://d301sr5gafysq2.cloudfront.net; object-src about:; base-uri 'self'"
+            "script-src 'unsafe-eval' 'strict-dynamic' 'unsafe-inline' 'self' http: https: https://d301sr5gafysq2.cloudfront.net 'nonce-T6Bnellnhl8uO2JK'; style-src 'self' 'unsafe-inline' https://aui-cdn.atlassian.com https://d301sr5gafysq2.cloudfront.net; report-uri https://web-security-reports.services.atlassian.com/csp-report/bb-website; default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *; connect-src bitbucket.org *.bitbucket.org bb-inf.net *.bb-inf.net analytics.atlassian.com as.atlassian.com api-private.stg.atlassian.com api-private.atlassian.com intake.opbeat.com api.media.atlassian.com api.segment.io xid.stride.com xid.statuspage.io xid.atlassian.com xdid.hipchat.com xid.sourcetreeapp.com bam.nr-data.net sentry.io https://d301sr5gafysq2.cloudfront.net; object-src about:; base-uri 'self'"
           ],
           "Content-Type": [
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:19 GMT"
+            "Tue, 01 Oct 2019 21:47:01 GMT"
           ],
           "Expires": [
-            "Mon, 30 Sep 2019 15:14:19 GMT"
+            "Tue, 01 Oct 2019 21:47:01 GMT"
           ],
           "Server": [
             "nginx"
           ],
           "Set-Cookie": [
-            "csrftoken=X6kz5Yy8MYCTXIaaBR93usBwJeR8dys6q0DSCy7skMEtKsTXYljOZI4ap7UNGFKc; expires=Mon, 28-Sep-2020 15:14:19 GMT; Max-Age=31449600; Path=/; secure"
+            "csrftoken=jBwv6XzuR46VjpV5qH1ywKeioIabK540NaNE7XVQ3QVUsFFX4Ra6N8qfapJrWc34; expires=Tue, 29-Sep-2020 21:47:01 GMT; Max-Age=31449600; Path=/; secure"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000; includeSubDomains; preload"
@@ -1493,13 +1484,13 @@
             "default"
           ],
           "X-Render-Time": [
-            "0.262963056564"
+            "0.156946897507"
           ],
           "X-Request-Count": [
-            "4056"
+            "1213"
           ],
           "X-Served-By": [
-            "app-151"
+            "app-177"
           ],
           "X-Static-Version": [
             "4a68d65c1182"
@@ -1512,7 +1503,7 @@
       }
     },
     {
-      "ID": "a2f552b8de87849f",
+      "ID": "4933af5b5898e90a",
       "Request": {
         "Method": "HEAD",
         "URL": "https://bitbucket.org/plazzaro/kami/src/v1.2.1/defaults.go",
@@ -1542,19 +1533,19 @@
             "en"
           ],
           "Content-Length": [
-            "38195"
+            "38306"
           ],
           "Content-Security-Policy-Report-Only": [
-            "script-src 'unsafe-eval' 'strict-dynamic' 'unsafe-inline' 'self' http: https: https://d301sr5gafysq2.cloudfront.net 'nonce-ca6PPt2rmkJ3G7my'; style-src 'self' 'unsafe-inline' https://aui-cdn.atlassian.com https://d301sr5gafysq2.cloudfront.net; report-uri https://web-security-reports.services.atlassian.com/csp-report/bb-website; default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *; connect-src bitbucket.org *.bitbucket.org bb-inf.net *.bb-inf.net analytics.atlassian.com as.atlassian.com api-private.stg.atlassian.com api-private.atlassian.com intake.opbeat.com api.media.atlassian.com api.segment.io xid.stride.com xid.statuspage.io xid.atlassian.com xdid.hipchat.com xid.sourcetreeapp.com bam.nr-data.net sentry.io https://d301sr5gafysq2.cloudfront.net; object-src about:; base-uri 'self'"
+            "script-src 'unsafe-eval' 'strict-dynamic' 'unsafe-inline' 'self' http: https: https://d301sr5gafysq2.cloudfront.net 'nonce-T6Bnellnhl8uO2JK'; style-src 'self' 'unsafe-inline' https://aui-cdn.atlassian.com https://d301sr5gafysq2.cloudfront.net; report-uri https://web-security-reports.services.atlassian.com/csp-report/bb-website; default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *; connect-src bitbucket.org *.bitbucket.org bb-inf.net *.bb-inf.net analytics.atlassian.com as.atlassian.com api-private.stg.atlassian.com api-private.atlassian.com intake.opbeat.com api.media.atlassian.com api.segment.io xid.stride.com xid.statuspage.io xid.atlassian.com xdid.hipchat.com xid.sourcetreeapp.com bam.nr-data.net sentry.io https://d301sr5gafysq2.cloudfront.net; object-src about:; base-uri 'self'"
           ],
           "Content-Type": [
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:19 GMT"
+            "Tue, 01 Oct 2019 21:47:01 GMT"
           ],
           "Expires": [
-            "Mon, 30 Sep 2019 15:14:19 GMT"
+            "Tue, 01 Oct 2019 21:47:01 GMT"
           ],
           "Server": [
             "nginx"
@@ -1578,13 +1569,13 @@
             "default"
           ],
           "X-Render-Time": [
-            "0.262963056564"
+            "0.156946897507"
           ],
           "X-Request-Count": [
-            "4056"
+            "1213"
           ],
           "X-Served-By": [
-            "app-151"
+            "app-177"
           ],
           "X-Static-Version": [
             "4a68d65c1182"
@@ -1597,7 +1588,7 @@
       }
     },
     {
-      "ID": "07c76efde3e45623",
+      "ID": "9bbc9bfbc4e31165",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/airbrake/gobrake",
@@ -1627,10 +1618,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:19 GMT"
+            "Tue, 01 Oct 2019 21:47:01 GMT"
           ],
           "Etag": [
-            "W/\"678a8bfe8da8c91eb20b1b582736be2a\""
+            "W/\"7777c14f28bee505d20fa8feeb405b78\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -1639,10 +1630,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:19 -0000",
-            "_octo=GH1.1.693050656.1569856459; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:19 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:19 -0000; secure; HttpOnly",
-            "_gh_sess=Uk5FOXVUQkZ6UlM4YnZqM2V2SU80Z0ppcWErL1FoWDMzNGFzYlNLQmt2VmtWc3JlZU9lL1k4Nm5vcm5ITk9DeG01VTJSNVEvdlFTL3J4bEErVllGRHZ0YmJlZG16aW9vRlZBbm5mSmljdEZaYkZmNHpsdmxxcS9GRDg2VkoxUWhybGVqcUJuWEdOdGpIOExTbDYvK2U4c1ZHRzEybktkcDFaWVZqVzFhQnFoc1pnMElrMTZtUUN5OE05QUp2TTBGN3NLbndBODZZblgzQzNYM016YTg5VUZFTUFJL3RtNWJuWnk3VGkxVU9WWT0tLWRJeVpzdFJMVk5hZEJEN1RuM29OZ1E9PQ%3D%3D--dc36c2373004b6deb4c3cb6355c5d99a7cbe3102; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:47:01 -0000",
+            "_octo=GH1.1.325264224.1569966421; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:47:01 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:47:01 -0000; secure; HttpOnly",
+            "_gh_sess=OGZ5TGV4MUk5eDZyVC9yZmRKdFFhKzUrcFNsL2pmQkdaaUFFUGxnRDY3dXYyMFJFcUJNTWQwbVhJcDZtbEVtd3J1azAyY3RzQ0NOUmltSFJCd2JWdDN3YnBzVWFzVWV0dTQ0QzI1VnhWUEFrRjUxWjc1cHNEcGpmWUhIeWcxeW9OaUN6S20rbTFsY2M5T0k1a3pxY29tSDR0YUNZSXpmV1ZLS1Y2YmhZUE8zSUV3U215dkE2c0o3bzRKN0ZZQXVNcTc5NjMxaEF4bkpLeGswZ1hjQ1BCWnFGbDZ1aVVKbmF5TWVCZ1I0ZzhTbz0tLWVLRTJDMGdvOFdOL0ZmeGFyaE5BYlE9PQ%3D%3D--be6da55e27a0925d5d2a9de5edf3bc5d05a5eed6; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -1660,10 +1651,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB91AF:158EBBC:5D921BCA"
+            "5DE8:395B:299EB7:4BE014:5D93C954"
           ],
           "X-Request-Id": [
-            "0fe7f20e-e73b-4f03-acf4-9891e3eca38b"
+            "04068c25-a7a7-4a38-9d4b-7789180e44c4"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -1673,7 +1664,7 @@
       }
     },
     {
-      "ID": "30dca74be300bbce",
+      "ID": "b22e65d129e79747",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/airbrake/gobrake/tree/v3.5.1",
@@ -1703,10 +1694,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:20 GMT"
+            "Tue, 01 Oct 2019 21:47:01 GMT"
           ],
           "Etag": [
-            "W/\"770b9e88579e20d33cb2a4da6e729510\""
+            "W/\"348dd113d025a11df67defad53a6f1cd\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -1715,10 +1706,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:19 -0000",
-            "_octo=GH1.1.2015118893.1569856459; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:19 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:20 -0000; secure; HttpOnly",
-            "_gh_sess=dWNnUktZZHpYMm95eGhMSEszUHVnU2lGZmRZM2x3d3pMRk9DZ2RNdStaR2I5VE1rSDQ0bkRYZDVmR0htWkIrVFRZRlZoWFZLdkxWYS9obWo3eUlnTU5SMjlqMHJwOEk2ZVYyeEhLVENFM1llRkJOekptNFROZ2lIZVVLR0t2dUFvd1c4N09lT2xlbFhRb2NKUzJOWXBMcWE2YkVMSlB3OWJJL3lyenBDUDN5NFV0WitTYURsUjcwWkRSaDdtQ0tDd1B2cFNQMXhQckJGZUVFNlNrSFB5T0cxYWNjaDd4TDBHa09KQXZrbHo5OD0tLTFLWTVNN3h6MjNpME5TOE11aFFSSnc9PQ%3D%3D--c86e44a25345995e5853324f444fbea9bb2a1615; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:47:01 -0000",
+            "_octo=GH1.1.554957628.1569966421; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:47:01 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:47:01 -0000; secure; HttpOnly",
+            "_gh_sess=aFZSMENzcmJGTXljajRHc1J5Wk9NbUlPdXZmakN6ZEk3VlBHMDhNakcwbjN3UWJVb2llaXJBNjlDcXM1cTZjL0JJOEJUS2hzZDcvaWNBNzdvZnU5VkZkMFhkNHlQdkxrdTYxeitWN2E5U1Jsc0JHSzBBc1BGZUVQWkFzYlZaMC9ZT3luUW5XUjZlQTd5VXNDejAxWFRyeHp2dUFmZjBLWXU5QTBqZHZjNWtGSTYrY3Q4czIyL2VDY2ZidXhicWQwR1QxY0d3dnlGY1ZSczBHa29qeUFVZGlmVktiYkJ1ZWNmd05WZDVJV0dLbz0tLXlKWVFRb3R5R0F2NCt1SjUvZnIxOXc9PQ%3D%3D--176d7c80dbeff34e0cd7ac8bb1ac9b24b73a6518; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -1727,8 +1718,7 @@
             "max-age=31536000; includeSubdomains; preload"
           ],
           "Vary": [
-            "X-PJAX",
-            "Accept-Encoding"
+            "X-PJAX"
           ],
           "X-Content-Type-Options": [
             "nosniff"
@@ -1737,10 +1727,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB91BD:158EC2A:5D921BCB"
+            "5DE8:395B:299EE2:4BE108:5D93C955"
           ],
           "X-Request-Id": [
-            "a5627a51-b447-45ea-91f0-fc03837b1cb8"
+            "492d4e50-2e30-4e3d-b18b-ad41828d0b20"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -1750,7 +1740,7 @@
       }
     },
     {
-      "ID": "dbcec413c08ba2a7",
+      "ID": "8a8bed811a65c9a3",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/airbrake/gobrake/blob/v3.5.1/gobrake.go",
@@ -1780,10 +1770,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:20 GMT"
+            "Tue, 01 Oct 2019 21:47:02 GMT"
           ],
           "Etag": [
-            "W/\"b910dee1d253e386b1c7ec42614bdc19\""
+            "W/\"617610da4efac731fbd8d4d0463988af\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -1792,10 +1782,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:20 -0000",
-            "_octo=GH1.1.425550880.1569856460; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:20 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:20 -0000; secure; HttpOnly",
-            "_gh_sess=VUdkVjV5VXNmR093UWRhRnFtUlhIV0tsKytYVHpFUEVFQzgyUFJXa251YzZjSnJxa1U3SFd6MExyVGhOZ2xzTFFDMGwxcnZtc2cySXlRUGpNdkJ6cDVCNVBqTTFCRlYzdE9OV1k0eTFBb2orQ2daTWpUL1N4SDNYMklCVEltZDZuZVh6ejBKU1M3ME9iaVdScThyR2FHV3ZSTGl0SklqUmZjeEV3RzhzcWxHQTZMczdKckY2YjgrVDJpZGIxL1hldFV2NWJjWjJlRHpaNFc1UEtvb1lMRHp3NTNYNzBRY3pUUVJBWVBJYXlkOD0tLVFKMkJwaHpUTzhLTVcxTWpPaXVVL3c9PQ%3D%3D--31c3ae49e95d51434dc3fb38f2cda0cfb8c490c9; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:47:01 -0000",
+            "_octo=GH1.1.1961428693.1569966422; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:47:02 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:47:02 -0000; secure; HttpOnly",
+            "_gh_sess=TlJmSUkxVWhmemZTSzgxVzErYXl5VzBObUJXb2xuL2lJeW1zWWFHQy9pZXpjMUxjMVdQWHIxR3ZVRVN5V0NaSGxPY25CSjNBQm1aNTV4QWlqUWJ3ajBuM1lIM0ZGQWlYd3lNcjRNWFVXS0lYczBUWFlmTTVDK25wT0xhL1hDejNPbmFnbzlKTTA1V1VQdVFXTzg4LzZrWVZWTysvQng3ejB6Nk5lVnNRTTJxWjcvdVhaaUdWaTVhbjRIZkpoRnNVeGtzWmwrU25zZy9pYlJUR3BBd0pZakxENGdYNXF2V1ZqWjBtdmRqd0l2Yz0tLTFPQXcrMmZBelh3ZC9YOUo1eFVnV3c9PQ%3D%3D--86d4168af96f9adaac45b08da7319131ff5dc2fc; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -1804,8 +1794,7 @@
             "max-age=31536000; includeSubdomains; preload"
           ],
           "Vary": [
-            "X-PJAX",
-            "Accept-Encoding"
+            "X-PJAX"
           ],
           "X-Content-Type-Options": [
             "nosniff"
@@ -1814,10 +1803,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB91DE:158EC65:5D921BCC"
+            "5DE8:395B:299F03:4BE14B:5D93C955"
           ],
           "X-Request-Id": [
-            "81b63cab-9f1e-41f1-82de-19c9610d9c0f"
+            "fc8c9473-15ba-491a-adcc-45e01adc7b9a"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -1827,7 +1816,7 @@
       }
     },
     {
-      "ID": "39e6372f4c503a01",
+      "ID": "3849269927d90392",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/airbrake/gobrake/blob/v3.5.1/gobrake.go",
@@ -1857,10 +1846,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:20 GMT"
+            "Tue, 01 Oct 2019 21:47:02 GMT"
           ],
           "Etag": [
-            "W/\"a785f5da1009c1f5b072cdb9eaa91f4a\""
+            "W/\"6c0b10bb8d396c4f7d09a50fcbcc1f77\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -1869,10 +1858,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:20 -0000",
-            "_octo=GH1.1.268460524.1569856460; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:20 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:20 -0000; secure; HttpOnly",
-            "_gh_sess=RUdMZWltY0lTSUwvZm41bnJmUTZhcE01YVRJRDZZSklMS25YTkRONyswVGdpa2tDcW4yWGsyeW5oMEkvRnBaVW50VG12bDZMd01XWXhiZy9waERUNkVnR2ZOZHlYa1RncEJuNERIUHBiNk1ESEdFT2JnamxGQ0tyQ1N6MGtmcjJ0WGJtYzhFcGVpZlEyL0VFYlVsZjUreWt6MDAxa0M2NzNyYktrekhPa05DclNuc2Nha0ZPRmh1UE5QL2JHaVhhK0VoSnA2SDhuMUhFVitpUS9HK2tPVVpqMk1TRVh3UzdLMUhkb0pObVdSQT0tLVZMY1dQbXE2Y0YyRzFuenlCNmZmRkE9PQ%3D%3D--0714287558e47b67a8e232a2246545ab8c3f4d15; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:47:02 -0000",
+            "_octo=GH1.1.973097387.1569966422; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:47:02 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:47:02 -0000; secure; HttpOnly",
+            "_gh_sess=RXZ3UjF0Um9IbUlIdng0aElZWXVWUGh2aSt0TjJHTHludW1sR2pWOTJMVk9jbzcrMzlLbTNodFBaMk41U1lGTGc5S3ZVRVBVNTRCL1VHUmRpNUw2WXdjaWVDdFFzVHdRNWsraVlXbVNsOGdIUXJEVnZqck1KbkkzQ0RQcUNjNERGTFhuam1rYjUrRDNjb0tpWEcvenNEQ2k5L0t5cnpKZmM3SzRkQTJrUTk5RHNucWViZEJGWVhnK0NxZGZjQ1p4K1JvTG15Z2xOSGJKOTFIRXBMQTYzUC8xY1lJMU1MZjNoT0NFT095R0J0Zz0tLTZ6WTRBUmRVV21kTkpscXYxWk9IbFE9PQ%3D%3D--39bc661a2d8168077a5603ee2e9f90344d63d8fc; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -1881,8 +1870,7 @@
             "max-age=31536000; includeSubdomains; preload"
           ],
           "Vary": [
-            "X-PJAX",
-            "Accept-Encoding"
+            "X-PJAX"
           ],
           "X-Content-Type-Options": [
             "nosniff"
@@ -1891,10 +1879,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB91F7:158EC88:5D921BCC"
+            "5DE8:395B:299F5A:4BE1E2:5D93C956"
           ],
           "X-Request-Id": [
-            "4e17de6b-3f9e-4a69-b476-71165b396b1a"
+            "a61df642-eedf-4ae8-b32e-9a702a792eb6"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -1904,7 +1892,7 @@
       }
     },
     {
-      "ID": "1f0b1b0f5ce7403f",
+      "ID": "5839598af6a5f6e6",
       "Request": {
         "Method": "GET",
         "URL": "https://golang.org/x/tools?go-get=1",
@@ -1934,7 +1922,7 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:21 GMT"
+            "Tue, 01 Oct 2019 21:47:02 GMT"
           ],
           "Vary": [
             "Accept-Encoding"
@@ -1947,7 +1935,7 @@
       }
     },
     {
-      "ID": "25fd37873c8e36b8",
+      "ID": "8eb6a945ef563c49",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/golang/tools",
@@ -1977,10 +1965,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:21 GMT"
+            "Tue, 01 Oct 2019 21:47:03 GMT"
           ],
           "Etag": [
-            "W/\"1a28b452d6ae65cb0f6c97941e12def2\""
+            "W/\"1230a3a398a4fda645d0fe7643a4ee56\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -1989,10 +1977,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:21 -0000",
-            "_octo=GH1.1.575405886.1569856461; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:21 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:21 -0000; secure; HttpOnly",
-            "_gh_sess=ZGd5OWE0RU9oM0lORGh4d082UTQ2MlZ0Y3BmazZMV2wzTkVNa0tGNlpvTVBKU2JqWGNWMTF4NllRTENZUzdBWkpibjdad1doRmJLK3VqWUlnREk2b0JadDk5a2pmaUJtdW5tNEQrZE5uNlVWMCsyTGZjUW1TMWd2NFhWeXkxeEpycGFpL2lrWGgxcVFjeWoxaTFkV0pDOGpzQ1ZWS3JkM3pKWUpLM0xqdEJIYitkTW9DOVpCdHFUTnVOZW1uNk9WcmdSQmFoeG12Z2x6VTgxeS93SDFSTkorZUEzNTQxYlBES3Yyc3I4U1ZHRT0tLWtGZ244N1VVMzRsdEU1clRZNXdCdFE9PQ%3D%3D--127562fbdecfdfd85f73ac8d9298e16270526190; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:47:02 -0000",
+            "_octo=GH1.1.252492623.1569966423; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:47:03 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:47:03 -0000; secure; HttpOnly",
+            "_gh_sess=aWJ5NDRGMnd2c0pmMXc5SERyUXNLVmtLeUNmS0dpNWJjSGljWkhPRW5JVUhMai9GU2F0NWwzd3FmTjZzTGQ3RlVLT0Ric3pkcEUwNTZ5aW0zbnV4VGM3c3lWdVpiWFZxZ1ozeURUQUxDZlBHRmFQNTZiMWJ1WFE1cGdtczJlTm13VkQ2UlZCOWcrajQrOXhPczE3YUxSS3d4MUwrcytVeW1rcDl1eWJVMHQrcmdyS1ZRQUZYZnpTQW9Ga0oxRHNJdkZROC9RM1lHaGtVYVpTbHE5dWdGa01paENWbDZHbEpqZWVMQnV6WHRuQT0tLU5naDVXY0pBSElXakV5dnkxcDNmWEE9PQ%3D%3D--c5cad5db133dbb73c15aa39a2911112ff108f442; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -2001,8 +1989,7 @@
             "max-age=31536000; includeSubdomains; preload"
           ],
           "Vary": [
-            "X-PJAX",
-            "Accept-Encoding"
+            "X-PJAX"
           ],
           "X-Content-Type-Options": [
             "nosniff"
@@ -2011,10 +1998,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB9201:158EC93:5D921BCC"
+            "5DE8:395B:299F85:4BE21B:5D93C956"
           ],
           "X-Request-Id": [
-            "0f2c4edc-b47c-41b8-a442-fb04ad1d9b29"
+            "8911afe8-1d1b-42d7-8acf-c8e7d553e89e"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -2024,7 +2011,7 @@
       }
     },
     {
-      "ID": "60a0e63294a36603",
+      "ID": "ed4601c1ed2024d5",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/golang/tools/tree/030b2cf1153e",
@@ -2054,10 +2041,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:21 GMT"
+            "Tue, 01 Oct 2019 21:47:03 GMT"
           ],
           "Etag": [
-            "W/\"3f384ec28a6c8e529c2ff059a982d62c\""
+            "W/\"4590bd960cee5baf032e1a9edbe086b2\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -2066,10 +2053,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:21 -0000",
-            "_octo=GH1.1.2083184534.1569856461; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:21 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:21 -0000; secure; HttpOnly",
-            "_gh_sess=aGVoT3NRTkVORGc5TTgxZEtBNnlkZHduaVV1UTdJemtBZUFwUkFURjRBTXRuS3dkTVJnNWxTZlBGUUZDRDlzMVM1Nm9yMjMzbExTOEh2RCtVQmNmTzhrdEhWYzZjeVBKMU9UTStydWVhZW9RTGF0Tm9FdElkV040aXFNLzhnOVY4ZjZrcjdZTWczcnZROWtFU3ZKSGxOWUhRTngwVURCb2ZTOXlhWnBXSHNNUXZyckFLN2Y3aHd0Tkg0S3g3MFhSRnFWNGZvVGdheTJyaVlPclMzRllUTE9XK2RQM09HR3FCcG9zUVZxRTE3RT0tLTdYK2RsaFBFSGl5QUFtbHpYT3lLbkE9PQ%3D%3D--8909074cff73f4ffe30a290ecd65757d57fe35c2; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:47:03 -0000",
+            "_octo=GH1.1.798989970.1569966423; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:47:03 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:47:03 -0000; secure; HttpOnly",
+            "_gh_sess=SERQd3VHRExpVEpINm93TGRyRFBZRlJtV05PK3VwdWZ0R01pVlBVQ3djWDdCYWI2VHdwbFlIZEJsYWp4QnBSNDR6M3lwWmt2aWtvaHRYV2JseUlSUzJUdWtUbkM0SHBveXpJOWVGbjEzRUxWcGNBeVhTZHk2TnR4eUNMaHhLeXA1cTU4RTBhcGRSZzRZNDRPYjNCejNhbklPbWtHemhyWUFPUGljL2orVEx2eEhsb055ekVtU3pObU5iemxCR25FWG90bWw1WThIRXVBNHVmRUNJam9xKzNUZzFQbTdCcHlpL3gwS2xtL0wyMD0tLS9Bd3NMcEl0TGNZallYTTRGMnZyL2c9PQ%3D%3D--fd08e4509378246b888be5810eea50daab73f740; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -2078,8 +2065,7 @@
             "max-age=31536000; includeSubdomains; preload"
           ],
           "Vary": [
-            "X-PJAX",
-            "Accept-Encoding"
+            "X-PJAX"
           ],
           "X-Content-Type-Options": [
             "nosniff"
@@ -2088,10 +2074,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB9210:158ECAF:5D921BCD"
+            "5DE8:395B:299FA8:4BE266:5D93C957"
           ],
           "X-Request-Id": [
-            "a4589c1d-24dc-4c64-b319-919a80067232"
+            "5bbe3b73-fcb8-49b2-80f8-7ec660791a90"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -2101,7 +2087,7 @@
       }
     },
     {
-      "ID": "75e6697e99a65221",
+      "ID": "e7a23305644882bc",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/golang/tools/blob/030b2cf1153e/README.md",
@@ -2131,10 +2117,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:21 GMT"
+            "Tue, 01 Oct 2019 21:47:03 GMT"
           ],
           "Etag": [
-            "W/\"c773c499e834387d7de1241968fa6fe9\""
+            "W/\"6ebbf0dccf5d3a0b92fb4745a7e424c0\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -2143,10 +2129,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:21 -0000",
-            "_octo=GH1.1.257475921.1569856461; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:21 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:21 -0000; secure; HttpOnly",
-            "_gh_sess=WFVSK3NmaEJQUUlzU2NHc2owMnR2SUY1N0JQMEtYWHZPM1ZMM24zNVF2R3pvYXFQbkNwK1VESlV1RkxVU1Q4UHhBRmlEZmUzUHVTN0FGcmFJaUJ6Z2g5SlNvY0VkRWJybHc4YW45Y0RpYjhBMFBIQUZGbERXdVZXNFhZdnJrN25pVXZhbVNJZzhRanMxVVhvVnprY2ZzWk5hV2NlRlJPQmN6UnYxWEJZNFhhRmZ4TEhwbXR2cTRqem9uVEhQbFdRT0tXbm1YdExZT3VPOTU5ajUvYk4vNmVseGlBQ3FhdFkrS0IyQ2pvMS9nWT0tLTdubjlxS2RvcitRRlp0TG9QeXF6NlE9PQ%3D%3D--da12a7f62cda46ef3fca0837f89e6a1391170a0a; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:47:03 -0000",
+            "_octo=GH1.1.326050969.1569966423; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:47:03 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:47:03 -0000; secure; HttpOnly",
+            "_gh_sess=Z0VqZDlKRkVQc0pENkM5Y3hSY0NBaldxdmpFcmxHOGVneVZFRk1sK0o1Sm4zNWVkc0QzVmwxN1Z6SzlWdUJSOFNKaHZVcHl1RjllTGhPbzBXZEFpU0U0Z3NleTYzU3dUbnNGOXV3VlNjYlBCRVNJVWEzYVZhMzdiZFlWZ3NYYUVNaUlGeDQxUG5SemNBQTAwZ3pDd0lCUExlcnFTSmJ2WkxRUFR4N2x6dFk0MjBsbjR3NjdJcDVDcGtHRDQ5RmVvdUsvMFY4enZSbWpaS0JScTc0cUc3cTUzMnE2end2dDNNakVKVmtrQ0RlWT0tLWc4eWZXcGdJdTlDOFRoMEtmUElnZnc9PQ%3D%3D--714927e430f27a0aa71e689c99ca2598a1e2adae; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -2155,8 +2141,7 @@
             "max-age=31536000; includeSubdomains; preload"
           ],
           "Vary": [
-            "X-PJAX",
-            "Accept-Encoding"
+            "X-PJAX"
           ],
           "X-Content-Type-Options": [
             "nosniff"
@@ -2165,10 +2150,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB922B:158ECDE:5D921BCD"
+            "5DE8:395B:299FC1:4BE291:5D93C957"
           ],
           "X-Request-Id": [
-            "a112a224-1a3c-49f4-a5fe-6feee97349b0"
+            "8e293c5a-30da-4b38-829f-6c9b9486fcfb"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -2178,7 +2163,7 @@
       }
     },
     {
-      "ID": "18bfaf519e736f26",
+      "ID": "ac74d3bc51bd9c6a",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/golang/tools/blob/030b2cf1153e/README.md",
@@ -2208,10 +2193,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:22 GMT"
+            "Tue, 01 Oct 2019 21:47:03 GMT"
           ],
           "Etag": [
-            "W/\"537a080ba4e8076a6abb555434d9fa2a\""
+            "W/\"db0b974062185c7474a0afad0061e93e\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -2220,10 +2205,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:22 -0000",
-            "_octo=GH1.1.1718345658.1569856462; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:22 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:22 -0000; secure; HttpOnly",
-            "_gh_sess=Vll5TEl3Q2s3UzhQWURuMnlQN3VUbUtSZ2UvRHNlaENWL21LMWcvMHM0SkRVbkFEWFpGVHYrTVRDVy9ic2lTMmFnZTVWVVVRemNuenVMdUcvTEp1L1U3Wmk2MnBXZzdxWnBjZXVWNENMU2xWZngwTkMrUEN1Rk1taHorL3RVY3UyU1NyNHZxSnVsQjZadTRLUG5kSjgvMXl1dVV3MHJmVkRtcTYrQmhuRXBNd1pRQTdEVmR1eUtSRmlqUU43SXNQbkd5Vm1KVFVEcXk1UlU5cmhmZjN6SkpBUUN5TENmSDJEM0t4YWNOa2M1UT0tLVZYb0VBL2F1aTBzTmRvcDlBSGRaYUE9PQ%3D%3D--205b72826f5811a49539d90c7502f1ad7e9d409a; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:47:03 -0000",
+            "_octo=GH1.1.1290363158.1569966423; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:47:03 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:47:03 -0000; secure; HttpOnly",
+            "_gh_sess=Mlk2c2tVYmpGNnZ6ZUxxTUVXMUhkQTZuNS90ZVpnTEZZODNzc0tpeDZJWkVGeCsvOXAxTGtna0ZHaWJveklFbXlrSlRNUDZNOU5JTmZmcVBqT2hyNjVHK0NCUjNKZnhOS2VWemxIUmlCdE9MVS90MmNFRHVGV3haaU02VC9rZVl4RzRNbGJWV3lqU0FzTVlYSTRPSVFTUXZxNDhtV2p2L1JSbWVKQ0trZmZpV1BDdUQ4clhhQUtwKzRmMitQR0Jtc1V6WENZSXprNkZrSjAzSzBuSEM5bkRSbHRFTnFXRjViWXFkSUlOcW91WT0tLXMzSWV4TFFROEYxcGgzYzZkQ3dUeGc9PQ%3D%3D--32a6a0ff3e6be086e57aff89b5ecc3aabd7a3e8d; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -2232,8 +2217,7 @@
             "max-age=31536000; includeSubdomains; preload"
           ],
           "Vary": [
-            "X-PJAX",
-            "Accept-Encoding"
+            "X-PJAX"
           ],
           "X-Content-Type-Options": [
             "nosniff"
@@ -2242,10 +2226,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB923F:158ECF6:5D921BCD"
+            "5DE8:395B:299FDA:4BE2B9:5D93C957"
           ],
           "X-Request-Id": [
-            "4539a37f-5c4c-4a74-bf6b-643762746424"
+            "50bb3093-1813-4fed-88e0-d7c17c5fb49d"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -2255,7 +2239,7 @@
       }
     },
     {
-      "ID": "08ee5c6934e268a4",
+      "ID": "e2efea0b0478a8b5",
       "Request": {
         "Method": "GET",
         "URL": "https://golang.org/x/tools/gopls?go-get=1",
@@ -2285,7 +2269,7 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:22 GMT"
+            "Tue, 01 Oct 2019 21:47:04 GMT"
           ],
           "Vary": [
             "Accept-Encoding"
@@ -2298,7 +2282,7 @@
       }
     },
     {
-      "ID": "ef5bcabaf39850e7",
+      "ID": "a2d245f579442b60",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/golang/tools",
@@ -2328,10 +2312,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:22 GMT"
+            "Tue, 01 Oct 2019 21:47:04 GMT"
           ],
           "Etag": [
-            "W/\"984f6d26f63f3773cc8566af79ed9aed\""
+            "W/\"5c590fab472998eb58773e1f18c6d424\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -2340,10 +2324,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:22 -0000",
-            "_octo=GH1.1.36172572.1569856462; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:22 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:22 -0000; secure; HttpOnly",
-            "_gh_sess=a0UxUXNQYnE4SSt4RHZOM2ZFN0FjcGRMNTRvVHMwb2lFQ0VxQzB5NkEyRHV3VGV0dUtnZWljb2ZEakdsWXREUWFzVEpGR0NQSmo5eVJ2eC9ucVgxYlpRTkZJWHltTE9tcndWd1pzU3ZscXN6UlJkZ05yeUtDeWU3VVpobFNKZXNQckFNRkdRNHBNSU5WdG04a3FtS25aN05pajRhdENJOEhuRkFhZGxuUlc4ZENEeUlYTUFoWEViSU1sbEYwVXU5aDlsNXJwQ3N5YnQzWlJrano4NjQycGFNWGl2eUpjOWtZVzVTOGcyTml4ST0tLXErQXFxMjFxSlVKWDIzTGNYbkhZdGc9PQ%3D%3D--53591141c82ded59f5e9cbfae830a472ba9954bf; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:47:04 -0000",
+            "_octo=GH1.1.693153901.1569966424; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:47:04 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:47:04 -0000; secure; HttpOnly",
+            "_gh_sess=K2xjOEFDZFhwZ3ovbFRmSGlDR3lmcE40dStUaDc2M2xaditmQjJrclh6dnF6TWJSRVNMVXBNYk85ZncrUnJKME5JdzR0UGppbllhRWNwQnlCTFF5SXA3Y08vQTI3Wk5xcUEvMVBBL0R2VVhZUlhrcU1BcTgyYjhScUpvUjZMdXJzWDJ5Q2VGSnptWVhGc1ZDZzZMWXgrMlB2c3ROZjB0dE1KVDB1VmhCVk94RW1lS210aHhMUXhPU2tFQkFVSitDTXVPd3loMnhoeUovd3VldWRiME41aVo2ZENlaDZTbStqeXFjVCs3ZExKMD0tLUk0dTdxSjlwNU1hLy8vWkJGaUlnNnc9PQ%3D%3D--9aeca8674d8283395d70c7486e250e3e0a8df71a; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -2352,8 +2336,7 @@
             "max-age=31536000; includeSubdomains; preload"
           ],
           "Vary": [
-            "X-PJAX",
-            "Accept-Encoding"
+            "X-PJAX"
           ],
           "X-Content-Type-Options": [
             "nosniff"
@@ -2362,10 +2345,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB9251:158ED0C:5D921BCE"
+            "5DE8:395B:299FF7:4BE2E5:5D93C957"
           ],
           "X-Request-Id": [
-            "b9f15e36-f7d8-4be3-aefc-78f356705955"
+            "40683ece-4b7b-4be4-aad8-1d4368d3da0a"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -2375,7 +2358,7 @@
       }
     },
     {
-      "ID": "34a487c0d6716891",
+      "ID": "08a051468e1c704c",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/golang/tools/tree/gopls/v0.1.4/gopls",
@@ -2405,10 +2388,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:22 GMT"
+            "Tue, 01 Oct 2019 21:47:04 GMT"
           ],
           "Etag": [
-            "W/\"59d89e4f064f1affc51adb459620080c\""
+            "W/\"755a6990da1b6efa2a4b7111fde50718\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -2417,164 +2400,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:22 -0000",
-            "_octo=GH1.1.1569372391.1569856462; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:22 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:22 -0000; secure; HttpOnly",
-            "_gh_sess=cVpreUhTMXJkd001ZWQzZk5PK3hEMmxmK1luRUdHVVRJRDlEdnFZQjJzWGlqc0pOeFhxQzlRVG1mUENmMTVWd1VuSkIrS1g4QjZuRE1yWGN6OTlYay9DbWJoNUlFcWlwaW1CTytFbVc1b0V3TGs1eEpGbkk2WVFjeUh1amdvbldhZWFMbVkxVFVXckhkVGQ2WTBWOFhjbk9IOGRQQmJYaW5mLzFIUy9seWpHeEgrRUFVNnZCZGtRVTJFczJraFZUU0g5U0xKZThVeVQxT0J5YUlSYzZlVDF1U0QzTmQ4QmNBaWZGcGVjZnFpdz0tLVBFbFAvUHlVdUkvZXhiSEdrSEtYQkE9PQ%3D%3D--b62d0ac46b521736af12295d41c47c4faeb9b300; path=/; secure; HttpOnly"
-          ],
-          "Status": [
-            "200 OK"
-          ],
-          "Strict-Transport-Security": [
-            "max-age=31536000; includeSubdomains; preload"
-          ],
-          "Vary": [
-            "X-PJAX",
-            "Accept-Encoding"
-          ],
-          "X-Content-Type-Options": [
-            "nosniff"
-          ],
-          "X-Frame-Options": [
-            "deny"
-          ],
-          "X-Github-Request-Id": [
-            "5DE1:4CA7:DB9258:158ED1C:5D921BCE"
-          ],
-          "X-Request-Id": [
-            "35ce5d00-bf64-404e-8847-07e8da2ade6c"
-          ],
-          "X-Xss-Protection": [
-            "1; mode=block"
-          ]
-        },
-        "Body": ""
-      }
-    },
-    {
-      "ID": "a0a5484228798415",
-      "Request": {
-        "Method": "HEAD",
-        "URL": "https://github.com/golang/tools/blob/gopls/v0.1.4/gopls/main.go",
-        "Header": {
-          "User-Agent": [
-            "Go-http-client/1.1"
-          ]
-        },
-        "MediaType": "",
-        "BodyParts": [
-          ""
-        ]
-      },
-      "Response": {
-        "StatusCode": 200,
-        "Proto": "HTTP/1.1",
-        "ProtoMajor": 1,
-        "ProtoMinor": 1,
-        "Header": {
-          "Cache-Control": [
-            "max-age=0, private, must-revalidate"
-          ],
-          "Content-Security-Policy": [
-            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
-          ],
-          "Content-Type": [
-            "text/html; charset=utf-8"
-          ],
-          "Date": [
-            "Mon, 30 Sep 2019 15:14:22 GMT"
-          ],
-          "Etag": [
-            "W/\"be188886a2a569106b8c4d41da56d143\""
-          ],
-          "Expect-Ct": [
-            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
-          ],
-          "Server": [
-            "GitHub.com"
-          ],
-          "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:22 -0000",
-            "_octo=GH1.1.615976770.1569856462; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:22 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:22 -0000; secure; HttpOnly",
-            "_gh_sess=N3FYMVhrd3VPNmxUZ0U4ZytCRktBanNoRkRIdjByMHlrckg0bW02cU95V2h3aUtVNys3T3dGYklWQnJOME5sekxWc1JjcXlremI4b2dQOUh6enRPeVBkc3lpaHVWT1FmbFMyWEo4cWgvcHlmQ01mTE95WWZDelRqaGo5REJDc3RiTnUvYWx0cnhCa0s2V2lkU2xoR2E1UWxJaDVXNUxjd0lTTjNTK2tSeUZGUHZjNVc5d2l0QWIzOXlGYVpXY3A2SFhYdUg2SmdGSW51bUN2TVlMU3ljaFVRdyt5VUlLZUh5M0hOOFhKN2FqMD0tLXd3K25KV21KYlVFMnZGNWVTNENCQ3c9PQ%3D%3D--7bb9f40636e83feabc126f08db57e516c09512d4; path=/; secure; HttpOnly"
-          ],
-          "Status": [
-            "200 OK"
-          ],
-          "Strict-Transport-Security": [
-            "max-age=31536000; includeSubdomains; preload"
-          ],
-          "Vary": [
-            "X-PJAX",
-            "Accept-Encoding"
-          ],
-          "X-Content-Type-Options": [
-            "nosniff"
-          ],
-          "X-Frame-Options": [
-            "deny"
-          ],
-          "X-Github-Request-Id": [
-            "5DE1:4CA7:DB9271:158ED40:5D921BCE"
-          ],
-          "X-Request-Id": [
-            "ef57ffd7-9449-4021-acf5-11ecb12b75ef"
-          ],
-          "X-Xss-Protection": [
-            "1; mode=block"
-          ]
-        },
-        "Body": ""
-      }
-    },
-    {
-      "ID": "1f8bd1ec04eda0db",
-      "Request": {
-        "Method": "HEAD",
-        "URL": "https://github.com/golang/tools/blob/gopls/v0.1.4/gopls/main.go",
-        "Header": {
-          "User-Agent": [
-            "Go-http-client/1.1"
-          ]
-        },
-        "MediaType": "",
-        "BodyParts": [
-          ""
-        ]
-      },
-      "Response": {
-        "StatusCode": 200,
-        "Proto": "HTTP/1.1",
-        "ProtoMajor": 1,
-        "ProtoMinor": 1,
-        "Header": {
-          "Cache-Control": [
-            "max-age=0, private, must-revalidate"
-          ],
-          "Content-Security-Policy": [
-            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
-          ],
-          "Content-Type": [
-            "text/html; charset=utf-8"
-          ],
-          "Date": [
-            "Mon, 30 Sep 2019 15:14:23 GMT"
-          ],
-          "Etag": [
-            "W/\"71333b6e5ad43b8521521f90a39bbf43\""
-          ],
-          "Expect-Ct": [
-            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
-          ],
-          "Server": [
-            "GitHub.com"
-          ],
-          "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:22 -0000",
-            "_octo=GH1.1.2028294159.1569856463; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:23 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:23 -0000; secure; HttpOnly",
-            "_gh_sess=QytsOU9ZS2tvTUNXaVB4WlVrNmp3eXBLMXl3dXdMWmVadWw1ZGRDMzZJUEdQdGZzU0VvdFo3aUwvcHBrNFVPZ2dKUnRXOS9odDB5QmlZZUtyVy82d29hTzBBbW5TKzU1K0I1cFZwZjJzL3plTmZwcEdrL3NCR2lLTkNrQllwZm12Z2dtSUlCbWlNTU5uOFpnNnlkbVQzSDI0bm1Zem9HZ25Sb0pHb3lTTkJ1ZUxzTTlYUWwvUUFvUG9oYTF4L3NHR1lZWjBDaWNwYzFzWmcwMG1kQi94dS96YzEvUWdqYUVPUms1SjM4VkdkUT0tLUNlN2VNdGIvZjFBVE9zVVc0ZWJBbGc9PQ%3D%3D--b1aa24a6ecd9fba00755f3d72e4cdf12b60e3ffc; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:47:04 -0000",
+            "_octo=GH1.1.1375798043.1569966424; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:47:04 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:47:04 -0000; secure; HttpOnly",
+            "_gh_sess=NGVmMUFodURMMWZtY0NjVmswY3A3Rm5IeHdGT2U3SFZGVXhNUW81c0tDTGd4Qzh1ZzRSU3pVVmtHL1J4VlAzMklMUVdoQzZCUDVlams4L21LZnhuNDB0OWZKbjdNT3U4M2JHMC9jL2FCWTFHT0czM1N6bUFYRGdFcEV5ZDZkckszdkhkRVF0YXVuSUpMWTdBdW03SVNpZ3VhaFY5ZjlNRG44NGNFeE5lcXpYd2lJZEtCNDM5eTJMTk5ObHlvdU80ZnJpRldSK0s0N3dhYUsrdWNQd1Z5K0xZdUdVbDAxNUg5bG5kSUlGTmhrVT0tLWkrZjlNb2FPZHRpdmlhekZRV2xLR1E9PQ%3D%3D--06267d23b1f9e446c05649f4c9e004b027b2bb71; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -2592,10 +2421,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB9276:158ED49:5D921BCE"
+            "5DE8:395B:29A02E:4BE358:5D93C958"
           ],
           "X-Request-Id": [
-            "8b9cc15d-c8a7-41a7-8487-59fbcd6e5550"
+            "c67639e3-dd63-4b78-9e9b-0a25159ac45e"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -2605,7 +2434,159 @@
       }
     },
     {
-      "ID": "51fd56261503f30f",
+      "ID": "2c71842675689a0d",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/golang/tools/blob/gopls/v0.1.4/gopls/main.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Tue, 01 Oct 2019 21:47:04 GMT"
+          ],
+          "Etag": [
+            "W/\"a95507d2638ed15be158971287ea459c\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:47:04 -0000",
+            "_octo=GH1.1.580967719.1569966424; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:47:04 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:47:04 -0000; secure; HttpOnly",
+            "_gh_sess=bFFnbnVWVUpBZzhQM3NGeUZqeEx5akZnejVYNDRiaHBSd0xYOXZlY0NxdGlBaWZ4NU1zNFRuNjdXRldXL3cwQmIrWTlwOHdudTlQZ2xrZVdvU1RkQ1NZYk04SUNIUHdhSEcvNWRvSW1pempINDlyKzlJTFVvOFMzWDB6Rmd2THB4eEE5WXNBeHN2bVlXZjNyVFkwZ1FPRlRBRDlCOVlteFFnZDB5UXg2RE1kSjllazlkUEFtMEpLU3hvUDZJS0tVQS9KWDl3VCtHR08yVEFGZVpEUUYxOUpTdVNyWnlKNE9nQ2Z0S2Fuc3ozMD0tLWgvZEdOSlIxbEFBbjhmUGYyZnIyL1E9PQ%3D%3D--789657e5ebb9fdb603d3bb198b56fc7ad916c95b; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE8:395B:29A044:4BE37C:5D93C958"
+          ],
+          "X-Request-Id": [
+            "23db3d9d-1005-4996-ba80-3760c07c8a1f"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "121595a69f365d3b",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/golang/tools/blob/gopls/v0.1.4/gopls/main.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Tue, 01 Oct 2019 21:47:05 GMT"
+          ],
+          "Etag": [
+            "W/\"ca4bb9ca7cf6ce0ee1aa529c016d2a87\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:47:04 -0000",
+            "_octo=GH1.1.948289935.1569966425; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:47:05 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:47:05 -0000; secure; HttpOnly",
+            "_gh_sess=YzlRc2JDc3VWMU1vNGFDVTBIaExtR0xCYVRQTkVnWENHRzBpK1l3TFhSbGo5eU45eE5UMzRJMFRpTHVka2dXSTNFbjNKTlBiVFBWVVhSbDZtbTBNQmV6U0JMRkVFa0FOS0w2eEJ4VSthTWxva21zc2R3MDZTSEE0S210YTR6RkpMTW1veWhMTzdjNTVad3RKQ0MrTTB0RmRyNVVrVmEwaSt0cWRudGdzRU5sM3NNY2laSlVLSkt3amJTNThzSDN1MFEzZGlsaUpwQzZlNy9FUU9SbEtLU2krSDFmNXBDdWZoT2RCbTYrQ3dqdz0tLTZUdnVqeStmaWh1a3pJUDJBOXdhaUE9PQ%3D%3D--1c0b04861b3e190d7d8c42122a4deeda1fa003ea; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE8:395B:29A04F:4BE392:5D93C958"
+          ],
+          "X-Request-Id": [
+            "32e49565-0455-4c05-b692-5be0743646fd"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "69dfceabc9cffd60",
       "Request": {
         "Method": "HEAD",
         "URL": "https://go.googlesource.com/image",
@@ -2626,13 +2607,13 @@
         "ProtoMinor": 1,
         "Header": {
           "Content-Security-Policy-Report-Only": [
-            "script-src 'nonce-rXTpPk2QUPwwSBZa5pZzTg' 'unsafe-inline' 'strict-dynamic' https: http: 'unsafe-eval';object-src 'none';base-uri 'self';report-uri https://csp.withgoogle.com/csp/gerritcodereview/1"
+            "script-src 'nonce-d93YYqYJO9Tbh/70c04i1g' 'unsafe-inline' 'strict-dynamic' https: http: 'unsafe-eval';object-src 'none';base-uri 'self';report-uri https://csp.withgoogle.com/csp/gerritcodereview/1"
           ],
           "Content-Type": [
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:23 GMT"
+            "Tue, 01 Oct 2019 21:47:05 GMT"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000; includeSubDomains; preload"
@@ -2651,7 +2632,7 @@
       }
     },
     {
-      "ID": "42245eac597ea065",
+      "ID": "ef18c7075c01532b",
       "Request": {
         "Method": "HEAD",
         "URL": "https://go.googlesource.com/image/+/69e4b8554b2a",
@@ -2678,13 +2659,13 @@
             "9224"
           ],
           "Content-Security-Policy-Report-Only": [
-            "script-src 'nonce-U2+anx8vC/unO0iMPwAKMg' 'unsafe-inline' 'strict-dynamic' https: http: 'unsafe-eval';object-src 'none';base-uri 'self';report-uri https://csp.withgoogle.com/csp/gerritcodereview/1"
+            "script-src 'nonce-Y4ZX+HSV8vgKeFzt2PgfCA' 'unsafe-inline' 'strict-dynamic' https: http: 'unsafe-eval';object-src 'none';base-uri 'self';report-uri https://csp.withgoogle.com/csp/gerritcodereview/1"
           ],
           "Content-Type": [
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:23 GMT"
+            "Tue, 01 Oct 2019 21:47:05 GMT"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000; includeSubDomains; preload"
@@ -2703,7 +2684,7 @@
       }
     },
     {
-      "ID": "4da24229d6e0797f",
+      "ID": "ccd61648ddac5eca",
       "Request": {
         "Method": "HEAD",
         "URL": "https://go.googlesource.com/image/+/69e4b8554b2a/math/fixed/fixed.go",
@@ -2730,13 +2711,13 @@
             "114960"
           ],
           "Content-Security-Policy-Report-Only": [
-            "script-src 'nonce-nB7QxFsRnTW4ec1jEyqtBg' 'unsafe-inline' 'strict-dynamic' https: http: 'unsafe-eval';object-src 'none';base-uri 'self';report-uri https://csp.withgoogle.com/csp/gerritcodereview/1"
+            "script-src 'nonce-kqvSsdUS6J/mX85avooOhA' 'unsafe-inline' 'strict-dynamic' https: http: 'unsafe-eval';object-src 'none';base-uri 'self';report-uri https://csp.withgoogle.com/csp/gerritcodereview/1"
           ],
           "Content-Type": [
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:23 GMT"
+            "Tue, 01 Oct 2019 21:47:05 GMT"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000; includeSubDomains; preload"
@@ -2755,7 +2736,7 @@
       }
     },
     {
-      "ID": "4117a9dfbcefebec",
+      "ID": "a270e0fac1676121",
       "Request": {
         "Method": "HEAD",
         "URL": "https://go.googlesource.com/image/+/69e4b8554b2a/math/fixed/fixed.go",
@@ -2782,13 +2763,13 @@
             "114960"
           ],
           "Content-Security-Policy-Report-Only": [
-            "script-src 'nonce-j/sSQMzPjn5f4Rlukmwg5w' 'unsafe-inline' 'strict-dynamic' https: http: 'unsafe-eval';object-src 'none';base-uri 'self';report-uri https://csp.withgoogle.com/csp/gerritcodereview/1"
+            "script-src 'nonce-DP0ijrm8U27g8u/Lr6jACg' 'unsafe-inline' 'strict-dynamic' https: http: 'unsafe-eval';object-src 'none';base-uri 'self';report-uri https://csp.withgoogle.com/csp/gerritcodereview/1"
           ],
           "Content-Type": [
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:23 GMT"
+            "Tue, 01 Oct 2019 21:47:05 GMT"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000; includeSubDomains; preload"
@@ -2807,7 +2788,7 @@
       }
     },
     {
-      "ID": "d50d1e19268ec69e",
+      "ID": "ef5a1f6381070e45",
       "Request": {
         "Method": "GET",
         "URL": "https://cloud.google.com/go/spanner?go-get=1",
@@ -2840,7 +2821,7 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:23 GMT"
+            "Tue, 01 Oct 2019 21:47:05 GMT"
           ],
           "Location": [
             "https://cloud.google.com/go/spanner/?go-get=1"
@@ -2855,7 +2836,7 @@
             "Accept-Language"
           ],
           "X-Cloud-Trace-Context": [
-            "63682e20da74cf60f73ca201d998313f"
+            "cb14d1345c9b3551ecb17b35008e6234"
           ],
           "X-Content-Type-Options": [
             "nosniff"
@@ -2871,7 +2852,7 @@
       }
     },
     {
-      "ID": "f4c4c7870c80b27b",
+      "ID": "260085462f8f881f",
       "Request": {
         "Method": "GET",
         "URL": "https://cloud.google.com/go/spanner/?go-get=1",
@@ -2913,13 +2894,13 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:23 GMT"
+            "Tue, 01 Oct 2019 21:47:05 GMT"
           ],
           "Etag": [
             "2d65a79471958b1bec0c75a14e9b13fb"
           ],
           "Expires": [
-            "Mon, 30 Sep 2019 16:14:23 GMT"
+            "Tue, 01 Oct 2019 22:47:05 GMT"
           ],
           "Last-Modified": [
             "Wed, 20 Feb 2019 17:32:11 GMT"
@@ -2935,7 +2916,7 @@
             "Accept-Encoding"
           ],
           "X-Cloud-Trace-Context": [
-            "b4d94850621c29fec511ec140303220b"
+            "951a3262d6c25793ce4dac61f0c3f782"
           ],
           "X-Content-Type-Options": [
             "nosniff"
@@ -2951,7 +2932,7 @@
       }
     },
     {
-      "ID": "d031ec55ec969078",
+      "ID": "0aa997f9e5873d92",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/googleapis/google-cloud-go",
@@ -2981,10 +2962,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:24 GMT"
+            "Tue, 01 Oct 2019 21:47:06 GMT"
           ],
           "Etag": [
-            "W/\"9df865473ece94236a7efc75c9c31e87\""
+            "W/\"8b45096128826cecfcd4d9bde09b922d\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -2993,10 +2974,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:23 -0000",
-            "_octo=GH1.1.850414249.1569856464; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:24 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:24 -0000; secure; HttpOnly",
-            "_gh_sess=MG9pQXFNZm1DOGVrbElaTzhqSkF2bHVRbXpIYmZrUmw0NjZJamhXREhheTV5anpRQ2VQeUdxSnY4bDdUV0hhWnpYNVFUYWF4YmlLbzJuL0VDakFiU21SZXhCbERFQmRWU3RSeExvS2s2Vmk4dFcrTkErbFgzYlc3WXV1aW1DREVlYVNWcWVZNFVjeFMvUEpNV1BRL1JXV2lKdUVMV24wOEJseUFmYU1IbkxYaXJmT0d5R2x6MjlzMmZOSCtoZGszQ1RTQ1YzV0hVNFlwbmdWRnErWTZXT1A4dmh2UTRGK0ZnL3M3a1VWTnZGZz0tLWdpczNNOS9LOHVrUUoybXljQStWNWc9PQ%3D%3D--14fd143eea1513d8572b586941820b0f194c52bd; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:47:05 -0000",
+            "_octo=GH1.1.962276572.1569966425; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:47:05 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:47:06 -0000; secure; HttpOnly",
+            "_gh_sess=N2g4ckgveTFmLytaZUt5KzNkbmhJMlF3aE9ObXgxOExYQVMvZXU4eDkxeHhtVzUxcmtRaEZwRWxySjRaU0k3S0JnU2twazBsT3ZSclF1eWZBbnNENGkzbU5MbkJJdWZJb1ZDV0VJYUJUTmlaUGtIaXdneFFUM2ZZS2E2UDJrbVZnVkdmZ3hzalFSVVR1c0crRW9tRXVuRTFkekJNSFFtWEUzWVJYclJTeG55L2d2aXNuR0hHTHljT1duejl4T0Z3SXhZQjd2YkhuSWhHdHhtTUF2U3B2YVFGQzA3VXhBV1UzR1JaVUFraG1XOD0tLXgrVnBEL3NJNHR6VW1rNmY3ZnRkcFE9PQ%3D%3D--1213457943796bb0852e7ea5e21be95a3100e57e; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -3005,8 +2986,7 @@
             "max-age=31536000; includeSubdomains; preload"
           ],
           "Vary": [
-            "X-PJAX",
-            "Accept-Encoding"
+            "X-PJAX"
           ],
           "X-Content-Type-Options": [
             "nosniff"
@@ -3015,10 +2995,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB92B2:158ED5A:5D921BCF"
+            "5DE8:395B:29A087:4BE3AC:5D93C959"
           ],
           "X-Request-Id": [
-            "03b4fce7-27b6-42b7-8673-554b85a8f7db"
+            "844f200b-29ee-4924-996c-bd241e982a0d"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -3028,7 +3008,7 @@
       }
     },
     {
-      "ID": "527679dd8c0ca98a",
+      "ID": "11e1591ff04c0fa9",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/googleapis/google-cloud-go/tree/spanner/v1.0.0/spanner",
@@ -3058,10 +3038,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:24 GMT"
+            "Tue, 01 Oct 2019 21:47:06 GMT"
           ],
           "Etag": [
-            "W/\"96f8fe9f27beca008c195db7117ff9c7\""
+            "W/\"99c22e2bb521c606fc8a06b02c13f98f\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -3070,10 +3050,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:24 -0000",
-            "_octo=GH1.1.1134673988.1569856464; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:24 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:24 -0000; secure; HttpOnly",
-            "_gh_sess=K25qTjJ2VEpNeTV5akI1N2xOeGZqb0tDdWowMzl0WDU1RTkrT3UyRHdkUzFkQW9iRVdBdmJNWXhQTVYxVTVwaVd0ZFdaTVBrU29HNzFnRUY1eGNWOFdvYjVleEFqYk13WHRaZk5adE5LYW1LcmZldmxmeVU0WDdBUnEwb0JCZHcrdnhmTjMrWVBhRmhTOGovSDNReEJrUkRXaGxpcEZ4M3hXQTNuSlFRaVJ6YXkvVUU1V1VWblRXdnAzN250L2xTaVN3TFZOaEEvZFV2NCtFbGVQSkFJYzl4eUx5bW92bVRSUFAwUUIrbEwzVT0tLUJvdm1Dc1JOT3hVaFJUa0d4RHF3YWc9PQ%3D%3D--241415c443af6a27c03f190a6beb8cca19a1d22d; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:47:06 -0000",
+            "_octo=GH1.1.1388013334.1569966426; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:47:06 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:47:06 -0000; secure; HttpOnly",
+            "_gh_sess=ckhEQkViYmJBeENjSHVtOThJZ0NnOUVqU2xCOGxmYmlEdmFER3Q3VnVnT0xTbW1zemhRdHJwZ0ZMbjZOMWVkaUxYU3dWTWRrVVJrVDFZb1hxNGpVYWlDTnBQUytwYzZ1ZlN5eW1lSDhsT1NVU0o1UUw2Q3gvOGJYNnFnY1NrK29IbHB0YUEydkxkRXdtbnBLZWd0UW9kR0pTSE8yVy9VZ1BPbEorMUw4UFpsdUZXaVY5ck04c3ZQZkxzekdEZ3o5TGpEcWVNMmVWVndldGU1am1OeWNySVZ2TlhYTnJxWGNJcXQzb3JHOGFyOD0tLVU0T1Zqby82NWU0b2RGaTgwMlphd3c9PQ%3D%3D--2c96bb704a6a32fe4cb1fb0109a1d2b5ef7fd644; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -3091,10 +3071,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB92CB:158EDD2:5D921BD0"
+            "5DE8:395B:29A0A5:4BE42B:5D93C95A"
           ],
           "X-Request-Id": [
-            "3c15df94-d9e1-4172-9d87-749e0cb940f7"
+            "26edc6d7-94d5-4ed9-8d0c-73447b975efd"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -3104,7 +3084,7 @@
       }
     },
     {
-      "ID": "4a7a7784d0ef473b",
+      "ID": "8dd1837b7170cb66",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/googleapis/google-cloud-go/blob/spanner/v1.0.0/spanner/doc.go",
@@ -3134,10 +3114,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:24 GMT"
+            "Tue, 01 Oct 2019 21:47:06 GMT"
           ],
           "Etag": [
-            "W/\"a7b517e8e03c58c743c1991808a020b2\""
+            "W/\"da51ec737aa5f33e0bc672f6e3759866\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -3146,10 +3126,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:24 -0000",
-            "_octo=GH1.1.955490805.1569856464; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:24 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:24 -0000; secure; HttpOnly",
-            "_gh_sess=S1ExMWp6cFlnRGhEQW5zMmtlU2RHdkVsS2pvTkd2MjRyNjVOMDFXS003akc1cHBSdWJtTW80a0hTa0x3YzNEVGFxZEU3MjVxbTU0L1N1aHA5MVJpSVU5YnJWSk5hODNjamtzaUQvdDNlVHo2SGxwTXA0NGM1cUhlTFdqbk5GTGV1Z2Nubjd2Wk8vQ01QUTdYcTNnZE12Umg3b2NyTWhFZTFFb0xkWUlXZTkyb21qa0RrTlJrbTUrK1hsRmdQSUx6ZnJTV0EyMTVUbXlLeks1bkppaWljcjRXL2hWMFo4eUJwaGJ0eWZSVUpvUT0tLUYxVlRmY1ZLenVvcFIybXI1UUNmTlE9PQ%3D%3D--6c8a8b71a27fd7964086aa45f97d4f051af42996; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:47:06 -0000",
+            "_octo=GH1.1.279774207.1569966426; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:47:06 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:47:06 -0000; secure; HttpOnly",
+            "_gh_sess=UitWdnNDWFJIcGZiK1phN1NJakxnNldLOXRpa2poV3A3OHdlaC9Jcjc3bEppR2lHazFNS3VqeGFDQzdBOEVKQjNyWi9jL28zaHMycW1sNFlnamJuMmt2RGNjam5na0ZFZWVPNDkxNkFjbDZiV0g2RTk2eWExZkdLb2tvbFZzU2hlWHhqNmRObjVCZUFaaEFYSWN2T2RuSXVYVGJDeHJVVkxZQVlOWUJXQnc3Y3FXNHJXcVV5ODg0c2prZjFQVnl3a0VqdDdHclVWOStoWHdOL3I5WDdwMmJEVHVvaUg1VG5zM0pXakJLZnN5bz0tLTJDZ0RuNUFpTUNmSlUwMCt6U0g5UUE9PQ%3D%3D--6b346f9fc5ca8c437947be45e88ecabc79d5dd0f; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -3158,8 +3138,7 @@
             "max-age=31536000; includeSubdomains; preload"
           ],
           "Vary": [
-            "X-PJAX",
-            "Accept-Encoding"
+            "X-PJAX"
           ],
           "X-Content-Type-Options": [
             "nosniff"
@@ -3168,10 +3147,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB92D8:158EDE7:5D921BD0"
+            "5DE8:395B:29A0D3:4BE472:5D93C95A"
           ],
           "X-Request-Id": [
-            "9ae88c32-4aca-48ff-988f-5e5f1416d2bd"
+            "0eaea61e-dff6-4671-af78-44ae7be7c8f8"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -3181,7 +3160,7 @@
       }
     },
     {
-      "ID": "6189f5f320990e40",
+      "ID": "beeb2316b8065d4b",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/googleapis/google-cloud-go/blob/spanner/v1.0.0/spanner/doc.go",
@@ -3211,10 +3190,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:24 GMT"
+            "Tue, 01 Oct 2019 21:47:07 GMT"
           ],
           "Etag": [
-            "W/\"21ba88041b75affe7d49073015536ed6\""
+            "W/\"d94baa2289d6643bdaef809cb4b51f2c\""
           ],
           "Expect-Ct": [
             "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
@@ -3223,10 +3202,10 @@
             "GitHub.com"
           ],
           "Set-Cookie": [
-            "has_recent_activity=1; path=/; expires=Mon, 30 Sep 2019 16:14:24 -0000",
-            "_octo=GH1.1.1189556381.1569856464; domain=.github.com; path=/; expires=Thu, 30 Sep 2021 15:14:24 -0000",
-            "logged_in=no; domain=.github.com; path=/; expires=Fri, 30 Sep 2039 15:14:24 -0000; secure; HttpOnly",
-            "_gh_sess=ekU2M2I1aVBHOExRcEVzVVlYZ1hWa3h5UDIwdUN4QWRiUEp2Y0MzS0FhZWZsY0FOUDJPdEx0bkVqZWdsS2FndTZWMmkvZmN6Qnc4eXBsYXBFbWlldUthRGZoWGROSEl2R2pzY0pHOURCNVloOXZPekVYNlFEdE1JSjNmVVBWY2s4RlE5bG5LdkFMaFB2WGNTcVhuSk9xR0Yzd2tTc1RDNVlpR01lRDBQc1pVTzRLY3ZyN0dtWjlUQ2M0T1dGUEdnS2E2VkVkYnRKWno4cmRsTjBReS9LYU80TEpZU3RCK003K1UrbTVHSFk1TT0tLWZPeFA1QVB3RTExMU40YS9GSXFQU3c9PQ%3D%3D--fddcba2053131822c3940b49a791ee33bc213353; path=/; secure; HttpOnly"
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:47:06 -0000",
+            "_octo=GH1.1.559585124.1569966427; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:47:07 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:47:07 -0000; secure; HttpOnly",
+            "_gh_sess=a1J4cDY3dnNPTVp3em5Fak15blFMZWlucnlwU2svRkVrdzFKVDNRbytnOWprYTQrUWlCYlZyaWNvM2w4UStEc0Z2ditQMXlDM3dzaktDOXJmVXQvWFNNR2xsWkZKbFU2cTFqQkVqbHNLUWRnWnkvT0ZnMHA0L1c1UXN1elYvZ2c3bXZPNFNCTGNuTmFCdFI0ZjNBTStReG5YTTA3RWw2bXlsK3FTQkoyM3E3TGpkOFN2U2VMMXZGZXJiL1MveFpRT2tXb2dDVHFPZ3BFZ3JKSEpCZzMzSUdFeHhzclVEekUybXdpQVUxZlk1ND0tLU1KVmhjNk5RdDFTMlpRSXVZMHBKVlE9PQ%3D%3D--7d1dd82deecc74467a61e8b586389de78c0f0bf9; path=/; secure; HttpOnly"
           ],
           "Status": [
             "200 OK"
@@ -3235,8 +3214,7 @@
             "max-age=31536000; includeSubdomains; preload"
           ],
           "Vary": [
-            "X-PJAX",
-            "Accept-Encoding"
+            "X-PJAX"
           ],
           "X-Content-Type-Options": [
             "nosniff"
@@ -3245,10 +3223,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "5DE1:4CA7:DB92E6:158EDF9:5D921BD0"
+            "5DE8:395B:29A0F5:4BE4B3:5D93C95A"
           ],
           "X-Request-Id": [
-            "380ea2f7-f544-4cf2-9e9c-4b88802cf8c6"
+            "f013e070-297a-417c-a19d-09908f34df60"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -3258,7 +3236,7 @@
       }
     },
     {
-      "ID": "1de21bc163d4e858",
+      "ID": "851df52ef9d45dbc",
       "Request": {
         "Method": "GET",
         "URL": "https://badc0de.net/pkg/glagolitic?go-get=1",
@@ -3292,7 +3270,7 @@
             "text/html"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:25 GMT"
+            "Tue, 01 Oct 2019 21:47:07 GMT"
           ],
           "Etag": [
             "\"5ab05848-149\""
@@ -3308,7 +3286,7 @@
       }
     },
     {
-      "ID": "030f381ff09e00b3",
+      "ID": "ec0529dc60abb87f",
       "Request": {
         "Method": "HEAD",
         "URL": "https://bitbucket.org/ivucica/go-glagolitic",
@@ -3338,22 +3316,22 @@
             "en"
           ],
           "Content-Length": [
-            "39581"
+            "39659"
           ],
           "Content-Security-Policy-Report-Only": [
-            "script-src 'unsafe-eval' 'strict-dynamic' 'unsafe-inline' 'self' http: https: https://d301sr5gafysq2.cloudfront.net 'nonce-oMdbLcOdQSo4eMYD'; style-src 'self' 'unsafe-inline' https://aui-cdn.atlassian.com https://d301sr5gafysq2.cloudfront.net; report-uri https://web-security-reports.services.atlassian.com/csp-report/bb-website; default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *; connect-src bitbucket.org *.bitbucket.org bb-inf.net *.bb-inf.net analytics.atlassian.com as.atlassian.com api-private.stg.atlassian.com api-private.atlassian.com intake.opbeat.com api.media.atlassian.com api.segment.io xid.stride.com xid.statuspage.io xid.atlassian.com xdid.hipchat.com xid.sourcetreeapp.com bam.nr-data.net sentry.io https://d301sr5gafysq2.cloudfront.net; object-src about:; base-uri 'self'"
+            "script-src 'unsafe-eval' 'strict-dynamic' 'unsafe-inline' 'self' http: https: https://d301sr5gafysq2.cloudfront.net 'nonce-LTq5F5XyY9AJWvGz'; style-src 'self' 'unsafe-inline' https://aui-cdn.atlassian.com https://d301sr5gafysq2.cloudfront.net; report-uri https://web-security-reports.services.atlassian.com/csp-report/bb-website; default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *; connect-src bitbucket.org *.bitbucket.org bb-inf.net *.bb-inf.net analytics.atlassian.com as.atlassian.com api-private.stg.atlassian.com api-private.atlassian.com intake.opbeat.com api.media.atlassian.com api.segment.io xid.stride.com xid.statuspage.io xid.atlassian.com xdid.hipchat.com xid.sourcetreeapp.com bam.nr-data.net sentry.io https://d301sr5gafysq2.cloudfront.net; object-src about:; base-uri 'self'"
           ],
           "Content-Type": [
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:25 GMT"
+            "Tue, 01 Oct 2019 21:47:07 GMT"
           ],
           "Server": [
             "nginx"
           ],
           "Set-Cookie": [
-            "csrftoken=ZoyEzvi2FZneL7CXhvRbKEAwlA3BRMorOXlgrJx2Dy5pqcBL9DWj9yaiK95IISAB; expires=Mon, 28-Sep-2020 15:14:25 GMT; Max-Age=31449600; Path=/; secure"
+            "csrftoken=PydGHtM5SgHqFW1Prhxv7fcERcFWveeqdTcw76jTmETMNnq5CQlzgS18Roz1t0N8; expires=Tue, 29-Sep-2020 21:47:07 GMT; Max-Age=31449600; Path=/; secure"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000; includeSubDomains; preload"
@@ -3374,10 +3352,10 @@
             "default"
           ],
           "X-Render-Time": [
-            "0.446461200714"
+            "0.236898183823"
           ],
           "X-Request-Count": [
-            "1621"
+            "4105"
           ],
           "X-Served-By": [
             "app-151"
@@ -3393,7 +3371,7 @@
       }
     },
     {
-      "ID": "792b76dd6e30894e",
+      "ID": "e6991016ac49518f",
       "Request": {
         "Method": "HEAD",
         "URL": "https://bitbucket.org/ivucica/go-glagolitic/src/92f736eb02d6",
@@ -3423,22 +3401,22 @@
             "en"
           ],
           "Content-Length": [
-            "39593"
+            "39671"
           ],
           "Content-Security-Policy-Report-Only": [
-            "script-src 'unsafe-eval' 'strict-dynamic' 'unsafe-inline' 'self' http: https: https://d301sr5gafysq2.cloudfront.net 'nonce-6J5x0FAG4PCZhBEe'; style-src 'self' 'unsafe-inline' https://aui-cdn.atlassian.com https://d301sr5gafysq2.cloudfront.net; report-uri https://web-security-reports.services.atlassian.com/csp-report/bb-website; default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *; connect-src bitbucket.org *.bitbucket.org bb-inf.net *.bb-inf.net analytics.atlassian.com as.atlassian.com api-private.stg.atlassian.com api-private.atlassian.com intake.opbeat.com api.media.atlassian.com api.segment.io xid.stride.com xid.statuspage.io xid.atlassian.com xdid.hipchat.com xid.sourcetreeapp.com bam.nr-data.net sentry.io https://d301sr5gafysq2.cloudfront.net; object-src about:; base-uri 'self'"
+            "script-src 'unsafe-eval' 'strict-dynamic' 'unsafe-inline' 'self' http: https: https://d301sr5gafysq2.cloudfront.net 'nonce-5S9ysD4CTlc5sh9o'; style-src 'self' 'unsafe-inline' https://aui-cdn.atlassian.com https://d301sr5gafysq2.cloudfront.net; report-uri https://web-security-reports.services.atlassian.com/csp-report/bb-website; default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *; connect-src bitbucket.org *.bitbucket.org bb-inf.net *.bb-inf.net analytics.atlassian.com as.atlassian.com api-private.stg.atlassian.com api-private.atlassian.com intake.opbeat.com api.media.atlassian.com api.segment.io xid.stride.com xid.statuspage.io xid.atlassian.com xdid.hipchat.com xid.sourcetreeapp.com bam.nr-data.net sentry.io https://d301sr5gafysq2.cloudfront.net; object-src about:; base-uri 'self'"
           ],
           "Content-Type": [
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:26 GMT"
+            "Tue, 01 Oct 2019 21:47:08 GMT"
           ],
           "Server": [
             "nginx"
           ],
           "Set-Cookie": [
-            "csrftoken=TN2YxLvgtJbwstSf6kqUci90MQ36UFFxCgTO9vV4KtkjtS2EEaENYitfuLFd4OKe; expires=Mon, 28-Sep-2020 15:14:26 GMT; Max-Age=31449600; Path=/; secure"
+            "csrftoken=ZXdoW1BzZYPF9JOXZ5amxOXPP1F63XBs8DjQNM47Bs2DFoonTT8vLfBiFwRkW4Bc; expires=Tue, 29-Sep-2020 21:47:08 GMT; Max-Age=31449600; Path=/; secure"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000; includeSubDomains; preload"
@@ -3459,13 +3437,13 @@
             "default"
           ],
           "X-Render-Time": [
-            "0.29643702507"
+            "0.271155118942"
           ],
           "X-Request-Count": [
-            "2191"
+            "4923"
           ],
           "X-Served-By": [
-            "app-167"
+            "app-189"
           ],
           "X-Static-Version": [
             "4a68d65c1182"
@@ -3478,7 +3456,7 @@
       }
     },
     {
-      "ID": "7af79953e84abb1c",
+      "ID": "6c5a6e1dfeefc056",
       "Request": {
         "Method": "HEAD",
         "URL": "https://bitbucket.org/ivucica/go-glagolitic/src/92f736eb02d6/doc.go",
@@ -3508,22 +3486,22 @@
             "en"
           ],
           "Content-Length": [
-            "39612"
+            "39692"
           ],
           "Content-Security-Policy-Report-Only": [
-            "script-src 'unsafe-eval' 'strict-dynamic' 'unsafe-inline' 'self' http: https: https://d301sr5gafysq2.cloudfront.net 'nonce-t12L4E6IUjDijYA9'; style-src 'self' 'unsafe-inline' https://aui-cdn.atlassian.com https://d301sr5gafysq2.cloudfront.net; report-uri https://web-security-reports.services.atlassian.com/csp-report/bb-website; default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *; connect-src bitbucket.org *.bitbucket.org bb-inf.net *.bb-inf.net analytics.atlassian.com as.atlassian.com api-private.stg.atlassian.com api-private.atlassian.com intake.opbeat.com api.media.atlassian.com api.segment.io xid.stride.com xid.statuspage.io xid.atlassian.com xdid.hipchat.com xid.sourcetreeapp.com bam.nr-data.net sentry.io https://d301sr5gafysq2.cloudfront.net; object-src about:; base-uri 'self'"
+            "script-src 'unsafe-eval' 'strict-dynamic' 'unsafe-inline' 'self' http: https: https://d301sr5gafysq2.cloudfront.net 'nonce-MWkhxpEP2VWdJCio'; style-src 'self' 'unsafe-inline' https://aui-cdn.atlassian.com https://d301sr5gafysq2.cloudfront.net; report-uri https://web-security-reports.services.atlassian.com/csp-report/bb-website; default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *; connect-src bitbucket.org *.bitbucket.org bb-inf.net *.bb-inf.net analytics.atlassian.com as.atlassian.com api-private.stg.atlassian.com api-private.atlassian.com intake.opbeat.com api.media.atlassian.com api.segment.io xid.stride.com xid.statuspage.io xid.atlassian.com xdid.hipchat.com xid.sourcetreeapp.com bam.nr-data.net sentry.io https://d301sr5gafysq2.cloudfront.net; object-src about:; base-uri 'self'"
           ],
           "Content-Type": [
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:26 GMT"
+            "Tue, 01 Oct 2019 21:47:08 GMT"
           ],
           "Server": [
             "nginx"
           ],
           "Set-Cookie": [
-            "csrftoken=2w4Qu9kB2O26wfxvV03gtIfA4L8yJwyHdFBdW0CccTjBle5SaGYk26ZGXQFn47p1; expires=Mon, 28-Sep-2020 15:14:26 GMT; Max-Age=31449600; Path=/; secure"
+            "csrftoken=QSP7T2BViDoKnKBOIJP42gzdkiaIlDo3FzNhuu8yo6qOtLVR7pSzaAEYDz9MIUEy; expires=Tue, 29-Sep-2020 21:47:08 GMT; Max-Age=31449600; Path=/; secure"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000; includeSubDomains; preload"
@@ -3544,13 +3522,13 @@
             "default"
           ],
           "X-Render-Time": [
-            "0.27375793457"
+            "0.276445150375"
           ],
           "X-Request-Count": [
-            "486"
+            "1168"
           ],
           "X-Served-By": [
-            "app-163"
+            "app-169"
           ],
           "X-Static-Version": [
             "4a68d65c1182"
@@ -3563,7 +3541,7 @@
       }
     },
     {
-      "ID": "d43be0bd9ffd9e57",
+      "ID": "ca2bc949ff19bd75",
       "Request": {
         "Method": "HEAD",
         "URL": "https://bitbucket.org/ivucica/go-glagolitic/src/92f736eb02d6/doc.go",
@@ -3593,16 +3571,16 @@
             "en"
           ],
           "Content-Length": [
-            "39612"
+            "39692"
           ],
           "Content-Security-Policy-Report-Only": [
-            "script-src 'unsafe-eval' 'strict-dynamic' 'unsafe-inline' 'self' http: https: https://d301sr5gafysq2.cloudfront.net 'nonce-t12L4E6IUjDijYA9'; style-src 'self' 'unsafe-inline' https://aui-cdn.atlassian.com https://d301sr5gafysq2.cloudfront.net; report-uri https://web-security-reports.services.atlassian.com/csp-report/bb-website; default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *; connect-src bitbucket.org *.bitbucket.org bb-inf.net *.bb-inf.net analytics.atlassian.com as.atlassian.com api-private.stg.atlassian.com api-private.atlassian.com intake.opbeat.com api.media.atlassian.com api.segment.io xid.stride.com xid.statuspage.io xid.atlassian.com xdid.hipchat.com xid.sourcetreeapp.com bam.nr-data.net sentry.io https://d301sr5gafysq2.cloudfront.net; object-src about:; base-uri 'self'"
+            "script-src 'unsafe-eval' 'strict-dynamic' 'unsafe-inline' 'self' http: https: https://d301sr5gafysq2.cloudfront.net 'nonce-MWkhxpEP2VWdJCio'; style-src 'self' 'unsafe-inline' https://aui-cdn.atlassian.com https://d301sr5gafysq2.cloudfront.net; report-uri https://web-security-reports.services.atlassian.com/csp-report/bb-website; default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *; connect-src bitbucket.org *.bitbucket.org bb-inf.net *.bb-inf.net analytics.atlassian.com as.atlassian.com api-private.stg.atlassian.com api-private.atlassian.com intake.opbeat.com api.media.atlassian.com api.segment.io xid.stride.com xid.statuspage.io xid.atlassian.com xdid.hipchat.com xid.sourcetreeapp.com bam.nr-data.net sentry.io https://d301sr5gafysq2.cloudfront.net; object-src about:; base-uri 'self'"
           ],
           "Content-Type": [
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:26 GMT"
+            "Tue, 01 Oct 2019 21:47:08 GMT"
           ],
           "Server": [
             "nginx"
@@ -3626,13 +3604,13 @@
             "default"
           ],
           "X-Render-Time": [
-            "0.27375793457"
+            "0.276445150375"
           ],
           "X-Request-Count": [
-            "486"
+            "1168"
           ],
           "X-Served-By": [
-            "app-163"
+            "app-169"
           ],
           "X-Static-Version": [
             "4a68d65c1182"
@@ -3645,7 +3623,7 @@
       }
     },
     {
-      "ID": "72bc45855383741e",
+      "ID": "0fec2aa06de4e597",
       "Request": {
         "Method": "GET",
         "URL": "https://cuelang.org/go?go-get=1",
@@ -3669,7 +3647,7 @@
         "ProtoMinor": 1,
         "Header": {
           "Age": [
-            "86161"
+            "17340"
           ],
           "Cache-Control": [
             "public, max-age=0, must-revalidate"
@@ -3684,7 +3662,7 @@
             "text/html; charset=UTF-8"
           ],
           "Date": [
-            "Sun, 29 Sep 2019 15:18:25 GMT"
+            "Tue, 01 Oct 2019 16:58:08 GMT"
           ],
           "Etag": [
             "\"df5f02e0e7d6f95f479a30bd6f705ea6-ssl-df\""
@@ -3699,14 +3677,14 @@
             "Accept-Encoding"
           ],
           "X-Nf-Request-Id": [
-            "115e272a-90c5-428d-a772-d35df2dd89ee-803574"
+            "cece989b-4109-4550-955f-d9996ec33c76-5215854"
           ]
         },
         "Body": "H4sIAAAAAAAAA52RwU7DMAyG73uKKEjcWiPBAdGmF+6ceIGQuklEE3eJi5imvTtpx6QhQEOcrNj+/09/3DoOY7dpHeq+lICshWOeKtzO/k3JR4qMkavn3YRSmONLScZ3hkXaCON0yshq5qG6l3AyiTqgkpYqHyZKfKY1M4462pqSBUvCel6J+QGgjGpLZEfMNCeDtaGwNOU31+P8d9dLjhcX4Prq7raBoDNj2kPv0+E/GtgPfsSD/OlvEw4JszsLcdOIOY3qxLHUk1kTfU0Hix18nuyF+l23eSJ2PlrBJDKWdJiwEW3hFYiSfzBcVOxQTNq8aouColi3W9BdXWhHTLsevfsAsDuOaTYCAAA="
       }
     },
     {
-      "ID": "6d106e7d0b735884",
+      "ID": "308b36ccc1c1a604",
       "Request": {
         "Method": "HEAD",
         "URL": "https://cue.googlesource.com/cue",
@@ -3727,13 +3705,13 @@
         "ProtoMinor": 1,
         "Header": {
           "Content-Security-Policy-Report-Only": [
-            "script-src 'nonce-xB38y8GnG86VhgTI+fmFmQ' 'unsafe-inline' 'strict-dynamic' https: http: 'unsafe-eval';object-src 'none';base-uri 'self';report-uri https://csp.withgoogle.com/csp/gerritcodereview/1"
+            "script-src 'nonce-qyF/oPH8mZEDFc89Xlr/Aw' 'unsafe-inline' 'strict-dynamic' https: http: 'unsafe-eval';object-src 'none';base-uri 'self';report-uri https://csp.withgoogle.com/csp/gerritcodereview/1"
           ],
           "Content-Type": [
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:26 GMT"
+            "Tue, 01 Oct 2019 21:47:08 GMT"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000; includeSubDomains; preload"
@@ -3752,7 +3730,7 @@
       }
     },
     {
-      "ID": "d7db27e5ff627eda",
+      "ID": "733b0890c87b4bfe",
       "Request": {
         "Method": "HEAD",
         "URL": "https://cue.googlesource.com/cue/+/v0.0.9",
@@ -3779,13 +3757,13 @@
             "14214"
           ],
           "Content-Security-Policy-Report-Only": [
-            "script-src 'nonce-xF9gJvN0Yxoz3NJQseZlzw' 'unsafe-inline' 'strict-dynamic' https: http: 'unsafe-eval';object-src 'none';base-uri 'self';report-uri https://csp.withgoogle.com/csp/gerritcodereview/1"
+            "script-src 'nonce-+HTfzWOCeScZBlwHNGq9Pg' 'unsafe-inline' 'strict-dynamic' https: http: 'unsafe-eval';object-src 'none';base-uri 'self';report-uri https://csp.withgoogle.com/csp/gerritcodereview/1"
           ],
           "Content-Type": [
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:26 GMT"
+            "Tue, 01 Oct 2019 21:47:08 GMT"
           ],
           "Expires": [
             "Mon, 01 Jan 1990 00:00:00 GMT"
@@ -3810,7 +3788,7 @@
       }
     },
     {
-      "ID": "ca4681d432f428a2",
+      "ID": "77c644d2d10c1a26",
       "Request": {
         "Method": "HEAD",
         "URL": "https://cue.googlesource.com/cue/+/v0.0.9/cuego/doc.go",
@@ -3837,13 +3815,13 @@
             "20509"
           ],
           "Content-Security-Policy-Report-Only": [
-            "script-src 'nonce-Pfv4PcwOHCpgr3rt/yxmgA' 'unsafe-inline' 'strict-dynamic' https: http: 'unsafe-eval';object-src 'none';base-uri 'self';report-uri https://csp.withgoogle.com/csp/gerritcodereview/1"
+            "script-src 'nonce-bCuO5lYAELW3xz0do5KjoQ' 'unsafe-inline' 'strict-dynamic' https: http: 'unsafe-eval';object-src 'none';base-uri 'self';report-uri https://csp.withgoogle.com/csp/gerritcodereview/1"
           ],
           "Content-Type": [
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:26 GMT"
+            "Tue, 01 Oct 2019 21:47:08 GMT"
           ],
           "Expires": [
             "Mon, 01 Jan 1990 00:00:00 GMT"
@@ -3868,7 +3846,7 @@
       }
     },
     {
-      "ID": "3af163c053328878",
+      "ID": "cc4500754e3abcbd",
       "Request": {
         "Method": "HEAD",
         "URL": "https://cue.googlesource.com/cue/+/v0.0.9/cuego/doc.go",
@@ -3895,13 +3873,13 @@
             "20509"
           ],
           "Content-Security-Policy-Report-Only": [
-            "script-src 'nonce-rMezx1rKK8ourdQQnxWp0g' 'unsafe-inline' 'strict-dynamic' https: http: 'unsafe-eval';object-src 'none';base-uri 'self';report-uri https://csp.withgoogle.com/csp/gerritcodereview/1"
+            "script-src 'nonce-dsXevjk2qanrx/ftso3slQ' 'unsafe-inline' 'strict-dynamic' https: http: 'unsafe-eval';object-src 'none';base-uri 'self';report-uri https://csp.withgoogle.com/csp/gerritcodereview/1"
           ],
           "Content-Type": [
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:26 GMT"
+            "Tue, 01 Oct 2019 21:47:08 GMT"
           ],
           "Expires": [
             "Mon, 01 Jan 1990 00:00:00 GMT"
@@ -3926,7 +3904,7 @@
       }
     },
     {
-      "ID": "072eab68c17554ec",
+      "ID": "3355a55bf20270d7",
       "Request": {
         "Method": "HEAD",
         "URL": "https://gitlab.com/akita/akita",
@@ -3950,22 +3928,22 @@
             "max-age=0, private, must-revalidate"
           ],
           "Content-Security-Policy": [
-            "connect-src 'self' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net wss://gitlab.com https://sentry.gitlab.net https://customers.gitlab.com https://snowplow.trx.gitlab.net; frame-ancestors 'self'; frame-src 'self' https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://content.googleapis.com https://content-compute.googleapis.com https://content-cloudbilling.googleapis.com https://content-cloudresourcemanager.googleapis.com https://*.codesandbox.io; img-src * data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://www.gstatic.com/recaptcha/ https://apis.google.com 'nonce-ogKH00nmrixOnHVkBH/iQg=='; style-src 'self' 'unsafe-inline' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net; worker-src https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://gitlab.com blob:"
+            "connect-src 'self' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net wss://gitlab.com https://sentry.gitlab.net https://customers.gitlab.com https://snowplow.trx.gitlab.net; frame-ancestors 'self'; frame-src 'self' https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://content.googleapis.com https://content-compute.googleapis.com https://content-cloudbilling.googleapis.com https://content-cloudresourcemanager.googleapis.com https://*.codesandbox.io; img-src * data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://www.gstatic.com/recaptcha/ https://apis.google.com 'nonce-TGeCqV/M6gkoz2yRIdUHog=='; style-src 'self' 'unsafe-inline' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net; worker-src https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://gitlab.com blob:"
           ],
           "Content-Type": [
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:27 GMT"
+            "Tue, 01 Oct 2019 21:47:09 GMT"
           ],
           "Etag": [
-            "W/\"a492f254f9027b39d1709bdd02039fa1\""
+            "W/\"b84a704f08aefd4d9db9eda50b08607f\""
           ],
           "Gitlab-Lb": [
-            "fe-19-lb-gprd"
+            "fe-07-lb-gprd"
           ],
           "Gitlab-Sv": [
-            "web-03-sv-gprd"
+            "web-02-sv-gprd"
           ],
           "Referrer-Policy": [
             "strict-origin-when-cross-origin",
@@ -3976,7 +3954,7 @@
           ],
           "Set-Cookie": [
             "event_filter=all; path=/",
-            "_gitlab_session=6974ac67dbe3c6878adc436b2d32fd40; path=/; expires=Mon, 30 Sep 2019 17:14:27 -0000; secure; HttpOnly"
+            "_gitlab_session=fdbdc3c6ab2da0bf45d257ceb414acdc; path=/; expires=Tue, 01 Oct 2019 23:47:09 -0000; secure; HttpOnly"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000"
@@ -3997,10 +3975,10 @@
             "none"
           ],
           "X-Request-Id": [
-            "ryUAazgdou5"
+            "rmHhbNOecR5"
           ],
           "X-Runtime": [
-            "0.386041"
+            "0.395414"
           ],
           "X-Ua-Compatible": [
             "IE=edge"
@@ -4013,7 +3991,7 @@
       }
     },
     {
-      "ID": "d024cec2d77b1bc7",
+      "ID": "7fcb447dced02c3e",
       "Request": {
         "Method": "HEAD",
         "URL": "https://gitlab.com/akita/akita/tree/v1.4.1",
@@ -4037,22 +4015,22 @@
             "max-age=0, private, must-revalidate"
           ],
           "Content-Security-Policy": [
-            "connect-src 'self' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net wss://gitlab.com https://sentry.gitlab.net https://customers.gitlab.com https://snowplow.trx.gitlab.net; frame-ancestors 'self'; frame-src 'self' https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://content.googleapis.com https://content-compute.googleapis.com https://content-cloudbilling.googleapis.com https://content-cloudresourcemanager.googleapis.com https://*.codesandbox.io; img-src * data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://www.gstatic.com/recaptcha/ https://apis.google.com 'nonce-1t14jGAp9eJVYoqM8hNSlQ=='; style-src 'self' 'unsafe-inline' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net; worker-src https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://gitlab.com blob:"
+            "connect-src 'self' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net wss://gitlab.com https://sentry.gitlab.net https://customers.gitlab.com https://snowplow.trx.gitlab.net; frame-ancestors 'self'; frame-src 'self' https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://content.googleapis.com https://content-compute.googleapis.com https://content-cloudbilling.googleapis.com https://content-cloudresourcemanager.googleapis.com https://*.codesandbox.io; img-src * data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://www.gstatic.com/recaptcha/ https://apis.google.com 'nonce-1AGfVSgSasy2nycQ7qS/6g=='; style-src 'self' 'unsafe-inline' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net; worker-src https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://gitlab.com blob:"
           ],
           "Content-Type": [
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:27 GMT"
+            "Tue, 01 Oct 2019 21:47:09 GMT"
           ],
           "Etag": [
-            "W/\"79b010c0b1382c407f3a710f7aa79e73\""
+            "W/\"a8127524de78ff065d6c15dabd0a31a0\""
           ],
           "Gitlab-Lb": [
-            "fe-19-lb-gprd"
+            "fe-07-lb-gprd"
           ],
           "Gitlab-Sv": [
-            "web-21-sv-gprd"
+            "web-36-sv-gprd"
           ],
           "Referrer-Policy": [
             "strict-origin-when-cross-origin",
@@ -4062,7 +4040,7 @@
             "nginx"
           ],
           "Set-Cookie": [
-            "_gitlab_session=2ca0a4bb61db3bf9f86afbcae118c629; path=/; expires=Mon, 30 Sep 2019 17:14:27 -0000; secure; HttpOnly"
+            "_gitlab_session=3e097bf9c88e73ce5b0036e9d4709d3c; path=/; expires=Tue, 01 Oct 2019 23:47:09 -0000; secure; HttpOnly"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000"
@@ -4083,10 +4061,10 @@
             "none"
           ],
           "X-Request-Id": [
-            "aTJQRA5mpP8"
+            "8IX7BNuCeb2"
           ],
           "X-Runtime": [
-            "0.188663"
+            "0.182621"
           ],
           "X-Ua-Compatible": [
             "IE=edge"
@@ -4099,7 +4077,7 @@
       }
     },
     {
-      "ID": "b14d0a198429850a",
+      "ID": "57fb9fce44b3d119",
       "Request": {
         "Method": "HEAD",
         "URL": "https://gitlab.com/akita/akita/blob/v1.4.1/event.go",
@@ -4123,19 +4101,567 @@
             "max-age=0, private, must-revalidate"
           ],
           "Content-Security-Policy": [
-            "connect-src 'self' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net wss://gitlab.com https://sentry.gitlab.net https://customers.gitlab.com https://snowplow.trx.gitlab.net; frame-ancestors 'self'; frame-src 'self' https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://content.googleapis.com https://content-compute.googleapis.com https://content-cloudbilling.googleapis.com https://content-cloudresourcemanager.googleapis.com https://*.codesandbox.io; img-src * data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://www.gstatic.com/recaptcha/ https://apis.google.com 'nonce-hUjnP06wL0hqBioZZgHeMA=='; style-src 'self' 'unsafe-inline' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net; worker-src https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://gitlab.com blob:"
+            "connect-src 'self' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net wss://gitlab.com https://sentry.gitlab.net https://customers.gitlab.com https://snowplow.trx.gitlab.net; frame-ancestors 'self'; frame-src 'self' https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://content.googleapis.com https://content-compute.googleapis.com https://content-cloudbilling.googleapis.com https://content-cloudresourcemanager.googleapis.com https://*.codesandbox.io; img-src * data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://www.gstatic.com/recaptcha/ https://apis.google.com 'nonce-ymnMzqY108cOVpkVV+Xd6A=='; style-src 'self' 'unsafe-inline' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net; worker-src https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://gitlab.com blob:"
           ],
           "Content-Type": [
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:27 GMT"
+            "Tue, 01 Oct 2019 21:47:09 GMT"
           ],
           "Etag": [
-            "W/\"ca1671f0fc5056ff0e954e249efd0246\""
+            "W/\"53eab19de344e26697477a24a495f580\""
           ],
           "Gitlab-Lb": [
-            "fe-19-lb-gprd"
+            "fe-07-lb-gprd"
+          ],
+          "Gitlab-Sv": [
+            "web-01-sv-gprd"
+          ],
+          "Referrer-Policy": [
+            "strict-origin-when-cross-origin",
+            "strict-origin-when-cross-origin"
+          ],
+          "Server": [
+            "nginx"
+          ],
+          "Set-Cookie": [
+            "_gitlab_session=49ce21079d123ac031e36a7423bd7f97; path=/; expires=Tue, 01 Oct 2019 23:47:09 -0000; secure; HttpOnly"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000"
+          ],
+          "Vary": [
+            "Accept-Encoding"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Download-Options": [
+            "noopen"
+          ],
+          "X-Frame-Options": [
+            "DENY"
+          ],
+          "X-Permitted-Cross-Domain-Policies": [
+            "none"
+          ],
+          "X-Request-Id": [
+            "5BNztMf6nE2"
+          ],
+          "X-Runtime": [
+            "0.255639"
+          ],
+          "X-Ua-Compatible": [
+            "IE=edge"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "a01a535df96dcf2c",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://gitlab.com/akita/akita/blob/v1.4.1/event.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "connect-src 'self' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net wss://gitlab.com https://sentry.gitlab.net https://customers.gitlab.com https://snowplow.trx.gitlab.net; frame-ancestors 'self'; frame-src 'self' https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://content.googleapis.com https://content-compute.googleapis.com https://content-cloudbilling.googleapis.com https://content-cloudresourcemanager.googleapis.com https://*.codesandbox.io; img-src * data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://www.gstatic.com/recaptcha/ https://apis.google.com 'nonce-S0rQEa932SWSc2Y956p2Ww=='; style-src 'self' 'unsafe-inline' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net; worker-src https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://gitlab.com blob:"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Tue, 01 Oct 2019 21:47:09 GMT"
+          ],
+          "Etag": [
+            "W/\"48ee9da518fdb8a10e70da9078988040\""
+          ],
+          "Gitlab-Lb": [
+            "fe-07-lb-gprd"
+          ],
+          "Gitlab-Sv": [
+            "web-33-sv-gprd"
+          ],
+          "Referrer-Policy": [
+            "strict-origin-when-cross-origin",
+            "strict-origin-when-cross-origin"
+          ],
+          "Server": [
+            "nginx"
+          ],
+          "Set-Cookie": [
+            "_gitlab_session=9060f307d5e72b922722c95d8443017a; path=/; expires=Tue, 01 Oct 2019 23:47:09 -0000; secure; HttpOnly"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000"
+          ],
+          "Vary": [
+            "Accept-Encoding"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Download-Options": [
+            "noopen"
+          ],
+          "X-Frame-Options": [
+            "DENY"
+          ],
+          "X-Permitted-Cross-Domain-Policies": [
+            "none"
+          ],
+          "X-Request-Id": [
+            "xe60XSuTHt2"
+          ],
+          "X-Runtime": [
+            "0.371231"
+          ],
+          "X-Ua-Compatible": [
+            "IE=edge"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "96f4d067f0e04098",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/jrick/wsrpc/blob/v2.1.1/v2/go.mod",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 404,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "no-cache"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Tue, 01 Oct 2019 21:47:10 GMT"
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:47:09 -0000",
+            "_octo=GH1.1.255093640.1569966429; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:47:09 -0000",
+            "_gh_sess=amd0MC9SL1kvT3ViS1NmeUxVRk51MVVtVWFFQVNaWjcvZzZnYnZJRENFUUFrYXR2UnlXb0NrWDlZaFVzYWMvUVViN2M4dmUwUjR4NnFDRkw1T1E3RG8zc1pKNDloaHhjUExpODQxcFBKd1VPdXlZZU43NEFtL0xQa3ZHY2IvaUtPc3BnMzJ3NWZvbGZLQjc2REgrdUFSNnQwUVJuV01zTy9BUU1qVTBVMjJkbzJrNUE2eGQxZmN0ZmVUWkNCT2FneFUyV0YxZ0V0UzRRYytaa2drU3F6QXNLeHhKcmdSY0dCUmd1K1l2cVU5Yz0tLWZpalVoaXhUd2FZNTZxYS9hd0VNdkE9PQ%3D%3D--6f67bad7fe7cb4befd6d3ebb3f1661128ae17589; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "404 Not Found"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE8:395B:29A200:4BE4E6:5D93C95B"
+          ],
+          "X-Request-Id": [
+            "9aac728c-6b00-4cb1-a60a-3ff9cf32b687"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "7c2948e565d5942c",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/jrick/wsrpc",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Tue, 01 Oct 2019 21:47:10 GMT"
+          ],
+          "Etag": [
+            "W/\"3f951e22211cd4a426aa841a2f6c4ece\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:47:10 -0000",
+            "_octo=GH1.1.780089338.1569966430; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:47:10 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:47:10 -0000; secure; HttpOnly",
+            "_gh_sess=eHBIeEhpcTZJelJFb1ZXQzk1QzRCcVhIckRaeFE4bjh6SjAvK09vcWV2aWVQazZjS1lVam9UY2Q0Q3RjRmRIdElwK2VqdWQ2ZExDbTNGL1JhNVdBVGFQSWNTa2tKQUdBTDV6VVNNdm1FcTFubnc0eXRsZkdpZnBxTlhOWWdEYnY0MVhDVkZRaTlubW8zNjNtU1AvSnhZZWo3QytHSTRsdlV4YnNOU3Q4SktaTEU0ZjNINUFTdVZOUmgwNDZ1eVhiUUVDNG1sSUNMTE5qVjFiWERvTmlIRWdmMVpnKy9CMGlFajQvZndaTjRjST0tLWw3ZkNPaWhOcG1HeEJTY05MZU93OXc9PQ%3D%3D--6d624884fce6e033c9d0563467d1f8e63f386fae; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE8:395B:29A20C:4BE6FC:5D93C95E"
+          ],
+          "X-Request-Id": [
+            "de6fd999-b0c0-4f0d-b444-ed0fe5bae0aa"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "d660138f08b81245",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/jrick/wsrpc/tree/v2.1.1",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Tue, 01 Oct 2019 21:47:11 GMT"
+          ],
+          "Etag": [
+            "W/\"a5cfc05e81bf30414e0777d632454d66\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:47:10 -0000",
+            "_octo=GH1.1.802118592.1569966430; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:47:10 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:47:11 -0000; secure; HttpOnly",
+            "_gh_sess=UWdDWUJPdTJpMFRkSVk4NVc1TkVGVWpka2srNEIxNDZKblQ0RE5aZzRrY1VOOEd2ME5pTFpWZGRUSUcrNWFKOG9FdllIUXFwNDBSMmZNaVJIbWxrNmtudlNzL25LOWdWRldneFJpSjJSYi9YQXNCckdmRXVSV1dBT0ZEM2gvS25hNHdFTU9pYUpuWFFxYUErQ1E2eFF4WWxESnF6OFJ5MjZ3d0g0TFI0NWwwSTFndjE2TS8veWcva3VFK0U0emoyN25HSldkK21aWUVuczdZN2JrOUluWVdNZ291ZUJ0VG83S21maUhBUlZIbz0tLThHK3cvMGdOVldPSDExWTZNdDRaZUE9PQ%3D%3D--dce221421a4defa1760978dd91769437cc93013d; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE8:395B:29A256:4BE79F:5D93C95E"
+          ],
+          "X-Request-Id": [
+            "6b5371ad-ea86-4565-92e3-95b388fd9f02"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "65db1d412ade6ccd",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/jrick/wsrpc/blob/v2.1.1/rpc.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Tue, 01 Oct 2019 21:47:11 GMT"
+          ],
+          "Etag": [
+            "W/\"f6341d9085e9d23dafda7bcbf1c88e8d\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:47:11 -0000",
+            "_octo=GH1.1.1406339635.1569966431; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:47:11 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:47:11 -0000; secure; HttpOnly",
+            "_gh_sess=cjliYU5OK1JRaUZxUys4a1MyaUpHMmt1QVVGOWsxRkhYUjF1UWlrNEpGMXI1dURCL1ViSFh6U0Y0Z3g2OFd5L2J4VFh6Z3cyQTNHdnYzUzRkdDRKZThoM1NQYStHRjBGKzIxb1BLeldIMTVFOXRTYWIzQThod2oralBVZmtLcDkzaUlVOWIvdTJUWDZValBiaWt5bWkvajlVdnNmaTNzUUlodzRvZmNwWkFITzBaKzBMKzB3VWd5ZFJySDd4dnM5bW92M0t4TzBvUWFQMnpBS0h1YURmSVJucXkwU25Fa1RoVVBVUmxkalY1UT0tLW1mM2hWZVBGNkg4TWMrVXZJaXduOFE9PQ%3D%3D--0bd13647ef2a0800b5c584e121298ca5c4ae7f6a; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE8:395B:29A297:4BE83D:5D93C95F"
+          ],
+          "X-Request-Id": [
+            "2e1ccd3c-7756-4ca2-ab55-2f95ed1ab30a"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "a1a98e73e435b60b",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/jrick/wsrpc/blob/v2.1.1/rpc.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Tue, 01 Oct 2019 21:47:12 GMT"
+          ],
+          "Etag": [
+            "W/\"420ee72057b0dddff02db94a3b8037a3\""
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Set-Cookie": [
+            "has_recent_activity=1; path=/; expires=Tue, 01 Oct 2019 22:47:11 -0000",
+            "_octo=GH1.1.1591578403.1569966432; domain=.github.com; path=/; expires=Fri, 01 Oct 2021 21:47:12 -0000",
+            "logged_in=no; domain=.github.com; path=/; expires=Sat, 01 Oct 2039 21:47:12 -0000; secure; HttpOnly",
+            "_gh_sess=ejYycDFpMEtDSFI2aDk1dGhvaWgwN3d4NzVlUmFiand1SUV2MXd1VUpkRmQycU0yVjNLUVlPZ0hoMExDWVZOV3pQYWU3ejdOTzVITGx5QUM5UTNXKzVkNFdDOThKb3ExVmg4YUpBM0M0ZXc5cnZDdy9rdEhWRG5lTkdiUDV1N1NyRnZJZEdGd04zZjdaMWVNSWV2aXFRNklJVzR4TnNjZUxHa0xtNTNhYmxKR0pKcGw0aXRweTJvdG9GMitEbUVqTTFMUWJ4TmZXM2lFbEVIRk1VWjBQSENHVmNhaFF1ckE1QlFCejh2dGt6VT0tLUFna0V1amhjSWc5dkpXa1ZoSXAxcUE9PQ%3D%3D--089698dcd5bea046360c88be36c549dfcc695804; path=/; secure; HttpOnly"
+          ],
+          "Status": [
+            "200 OK"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "5DE8:395B:29A2B4:4BE87D:5D93C95F"
+          ],
+          "X-Request-Id": [
+            "03ab893d-ae7a-4843-86f0-b8a56c82bba2"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "8899cb9eb4b993ef",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://gitlab.com/akita/akita/blob/v2.0.0-rc.2/v2/go.mod",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "connect-src 'self' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net wss://gitlab.com https://sentry.gitlab.net https://customers.gitlab.com https://snowplow.trx.gitlab.net; frame-ancestors 'self'; frame-src 'self' https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://content.googleapis.com https://content-compute.googleapis.com https://content-cloudbilling.googleapis.com https://content-cloudresourcemanager.googleapis.com https://*.codesandbox.io; img-src * data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://www.gstatic.com/recaptcha/ https://apis.google.com 'nonce-dRc7iDIQ7+ShRWL4G8ejLQ=='; style-src 'self' 'unsafe-inline' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net; worker-src https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://gitlab.com blob:"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Tue, 01 Oct 2019 21:47:12 GMT"
+          ],
+          "Etag": [
+            "W/\"182f835bc77c79a8f6f407ddcadffbcd\""
+          ],
+          "Gitlab-Lb": [
+            "fe-07-lb-gprd"
           ],
           "Gitlab-Sv": [
             "web-17-sv-gprd"
@@ -4148,7 +4674,7 @@
             "nginx"
           ],
           "Set-Cookie": [
-            "_gitlab_session=d581386ce5ee8a28ab6435e54d920992; path=/; expires=Mon, 30 Sep 2019 17:14:27 -0000; secure; HttpOnly"
+            "_gitlab_session=4884ab271610a62f8f1f1d2e56906272; path=/; expires=Tue, 01 Oct 2019 23:47:12 -0000; secure; HttpOnly"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000"
@@ -4169,10 +4695,10 @@
             "none"
           ],
           "X-Request-Id": [
-            "9QyqcjGhpw7"
+            "9PzywX7Jix2"
           ],
           "X-Runtime": [
-            "0.220038"
+            "0.198376"
           ],
           "X-Ua-Compatible": [
             "IE=edge"
@@ -4185,10 +4711,10 @@
       }
     },
     {
-      "ID": "4aff2c31320d5feb",
+      "ID": "27a33b8865b3bce9",
       "Request": {
         "Method": "HEAD",
-        "URL": "https://gitlab.com/akita/akita/blob/v1.4.1/event.go",
+        "URL": "https://gitlab.com/akita/akita",
         "Header": {
           "User-Agent": [
             "Go-http-client/1.1"
@@ -4209,22 +4735,22 @@
             "max-age=0, private, must-revalidate"
           ],
           "Content-Security-Policy": [
-            "connect-src 'self' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net wss://gitlab.com https://sentry.gitlab.net https://customers.gitlab.com https://snowplow.trx.gitlab.net; frame-ancestors 'self'; frame-src 'self' https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://content.googleapis.com https://content-compute.googleapis.com https://content-cloudbilling.googleapis.com https://content-cloudresourcemanager.googleapis.com https://*.codesandbox.io; img-src * data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://www.gstatic.com/recaptcha/ https://apis.google.com 'nonce-ZEXCTFSz+8ZVrBd7EdPkSg=='; style-src 'self' 'unsafe-inline' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net; worker-src https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://gitlab.com blob:"
+            "connect-src 'self' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net wss://gitlab.com https://sentry.gitlab.net https://customers.gitlab.com https://snowplow.trx.gitlab.net; frame-ancestors 'self'; frame-src 'self' https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://content.googleapis.com https://content-compute.googleapis.com https://content-cloudbilling.googleapis.com https://content-cloudresourcemanager.googleapis.com https://*.codesandbox.io; img-src * data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://www.gstatic.com/recaptcha/ https://apis.google.com 'nonce-LlZET5eT0QN5b2iu4a17zw=='; style-src 'self' 'unsafe-inline' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net; worker-src https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://gitlab.com blob:"
           ],
           "Content-Type": [
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Mon, 30 Sep 2019 15:14:27 GMT"
+            "Tue, 01 Oct 2019 21:47:12 GMT"
           ],
           "Etag": [
-            "W/\"3ebf71e9a6360ca609f3d75021d8d087\""
+            "W/\"9846f5c767efb2662c5d2f907612f478\""
           ],
           "Gitlab-Lb": [
-            "fe-19-lb-gprd"
+            "fe-07-lb-gprd"
           ],
           "Gitlab-Sv": [
-            "web-20-sv-gprd"
+            "web-30-sv-gprd"
           ],
           "Referrer-Policy": [
             "strict-origin-when-cross-origin",
@@ -4234,7 +4760,8 @@
             "nginx"
           ],
           "Set-Cookie": [
-            "_gitlab_session=d34dc8142545ff0c796334a91199b839; path=/; expires=Mon, 30 Sep 2019 17:14:27 -0000; secure; HttpOnly"
+            "event_filter=all; path=/",
+            "_gitlab_session=18dc488c61a13a213bb49691cd9446ad; path=/; expires=Tue, 01 Oct 2019 23:47:12 -0000; secure; HttpOnly"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000"
@@ -4255,10 +4782,268 @@
             "none"
           ],
           "X-Request-Id": [
-            "HM1iui0JXd5"
+            "H4vpIZZkam5"
           ],
           "X-Runtime": [
-            "0.205260"
+            "0.493397"
+          ],
+          "X-Ua-Compatible": [
+            "IE=edge"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "29e4e6cab78a353b",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://gitlab.com/akita/akita/tree/v2.0.0-rc.2/v2",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "connect-src 'self' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net wss://gitlab.com https://sentry.gitlab.net https://customers.gitlab.com https://snowplow.trx.gitlab.net; frame-ancestors 'self'; frame-src 'self' https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://content.googleapis.com https://content-compute.googleapis.com https://content-cloudbilling.googleapis.com https://content-cloudresourcemanager.googleapis.com https://*.codesandbox.io; img-src * data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://www.gstatic.com/recaptcha/ https://apis.google.com 'nonce-NyoXw51Zmw6KDkVbci4oZg=='; style-src 'self' 'unsafe-inline' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net; worker-src https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://gitlab.com blob:"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Tue, 01 Oct 2019 21:47:13 GMT"
+          ],
+          "Etag": [
+            "W/\"95dd126203005c5d2eaf58a3b7a51ea2\""
+          ],
+          "Gitlab-Lb": [
+            "fe-07-lb-gprd"
+          ],
+          "Gitlab-Sv": [
+            "web-26-sv-gprd"
+          ],
+          "Referrer-Policy": [
+            "strict-origin-when-cross-origin",
+            "strict-origin-when-cross-origin"
+          ],
+          "Server": [
+            "nginx"
+          ],
+          "Set-Cookie": [
+            "_gitlab_session=7f8abb53a7ffe8905d574067c223cf18; path=/; expires=Tue, 01 Oct 2019 23:47:13 -0000; secure; HttpOnly"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000"
+          ],
+          "Vary": [
+            "Accept-Encoding"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Download-Options": [
+            "noopen"
+          ],
+          "X-Frame-Options": [
+            "DENY"
+          ],
+          "X-Permitted-Cross-Domain-Policies": [
+            "none"
+          ],
+          "X-Request-Id": [
+            "SarHQ46FPF"
+          ],
+          "X-Runtime": [
+            "0.194707"
+          ],
+          "X-Ua-Compatible": [
+            "IE=edge"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "65d4d604d4d16e02",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://gitlab.com/akita/akita/blob/v2.0.0-rc.2/v2/event.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "connect-src 'self' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net wss://gitlab.com https://sentry.gitlab.net https://customers.gitlab.com https://snowplow.trx.gitlab.net; frame-ancestors 'self'; frame-src 'self' https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://content.googleapis.com https://content-compute.googleapis.com https://content-cloudbilling.googleapis.com https://content-cloudresourcemanager.googleapis.com https://*.codesandbox.io; img-src * data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://www.gstatic.com/recaptcha/ https://apis.google.com 'nonce-Z1ECIiK39/dgNv8GArvHCw=='; style-src 'self' 'unsafe-inline' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net; worker-src https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://gitlab.com blob:"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Tue, 01 Oct 2019 21:47:13 GMT"
+          ],
+          "Etag": [
+            "W/\"2019a90404ad628250b3c2696187f675\""
+          ],
+          "Gitlab-Lb": [
+            "fe-07-lb-gprd"
+          ],
+          "Gitlab-Sv": [
+            "web-04-sv-gprd"
+          ],
+          "Referrer-Policy": [
+            "strict-origin-when-cross-origin",
+            "strict-origin-when-cross-origin"
+          ],
+          "Server": [
+            "nginx"
+          ],
+          "Set-Cookie": [
+            "_gitlab_session=f59e99b0d366e987227df2c7ba4676ff; path=/; expires=Tue, 01 Oct 2019 23:47:13 -0000; secure; HttpOnly"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000"
+          ],
+          "Vary": [
+            "Accept-Encoding"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Download-Options": [
+            "noopen"
+          ],
+          "X-Frame-Options": [
+            "DENY"
+          ],
+          "X-Permitted-Cross-Domain-Policies": [
+            "none"
+          ],
+          "X-Request-Id": [
+            "Wn8o4K6g4a7"
+          ],
+          "X-Runtime": [
+            "0.219099"
+          ],
+          "X-Ua-Compatible": [
+            "IE=edge"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "e86480c32f294379",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://gitlab.com/akita/akita/blob/v2.0.0-rc.2/v2/event.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "connect-src 'self' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net wss://gitlab.com https://sentry.gitlab.net https://customers.gitlab.com https://snowplow.trx.gitlab.net; frame-ancestors 'self'; frame-src 'self' https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://content.googleapis.com https://content-compute.googleapis.com https://content-cloudbilling.googleapis.com https://content-cloudresourcemanager.googleapis.com https://*.codesandbox.io; img-src * data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://www.google.com/recaptcha/ https://www.recaptcha.net/ https://www.gstatic.com/recaptcha/ https://apis.google.com 'nonce-0Dd+wT3LLNUEQf5A7K51rw=='; style-src 'self' 'unsafe-inline' https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net; worker-src https://assets.gitlab-static.net https://gl-canary.freetls.fastly.net https://gitlab.com blob:"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Tue, 01 Oct 2019 21:47:13 GMT"
+          ],
+          "Etag": [
+            "W/\"99705c0a9bc162e420a2eeb2cabc7a31\""
+          ],
+          "Gitlab-Lb": [
+            "fe-07-lb-gprd"
+          ],
+          "Gitlab-Sv": [
+            "web-05-sv-gprd"
+          ],
+          "Referrer-Policy": [
+            "strict-origin-when-cross-origin",
+            "strict-origin-when-cross-origin"
+          ],
+          "Server": [
+            "nginx"
+          ],
+          "Set-Cookie": [
+            "_gitlab_session=44126e4f54f12aff207b2a9bbd310956; path=/; expires=Tue, 01 Oct 2019 23:47:13 -0000; secure; HttpOnly"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000"
+          ],
+          "Vary": [
+            "Accept-Encoding"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Download-Options": [
+            "noopen"
+          ],
+          "X-Frame-Options": [
+            "DENY"
+          ],
+          "X-Permitted-Cross-Domain-Policies": [
+            "none"
+          ],
+          "X-Request-Id": [
+            "TddXsWPdo3"
+          ],
+          "X-Runtime": [
+            "0.187197"
           ],
           "X-Ua-Compatible": [
             "IE=edge"

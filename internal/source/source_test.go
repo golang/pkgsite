@@ -147,6 +147,24 @@ func TestModuleInfo(t *testing.T) {
 			"https://gitlab.com/akita/akita/blob/v1.4.1/event.go",
 			"https://gitlab.com/akita/akita/blob/v1.4.1/event.go#L1",
 		},
+		{
+			"v2 as a branch",
+			"github.com/jrick/wsrpc/v2", "v2.1.1", "rpc.go",
+
+			"https://github.com/jrick/wsrpc",
+			"https://github.com/jrick/wsrpc/tree/v2.1.1",
+			"https://github.com/jrick/wsrpc/blob/v2.1.1/rpc.go",
+			"https://github.com/jrick/wsrpc/blob/v2.1.1/rpc.go#L1",
+		},
+		{
+			"v2 as subdirectory",
+			"gitlab.com/akita/akita/v2", "v2.0.0-rc.2", "event.go",
+
+			"https://gitlab.com/akita/akita",
+			"https://gitlab.com/akita/akita/tree/v2.0.0-rc.2/v2",
+			"https://gitlab.com/akita/akita/blob/v2.0.0-rc.2/v2/event.go",
+			"https://gitlab.com/akita/akita/blob/v2.0.0-rc.2/v2/event.go#L1",
+		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
 			check := func(msg, got, want string) {
@@ -203,11 +221,9 @@ func newReplayClient(t *testing.T, record bool) (*http.Client, func()) {
 }
 
 func TestMatchStatic(t *testing.T) {
-	// Most of matchStatic is tested in TestModuleInfo, above. This
-	// covers a few other cases.
 	for _, test := range []struct {
-		in                string
-		wantRepo, wantDir string
+		in                   string
+		wantRepo, wantSuffix string
 	}{
 		{"github.com/a/b", "github.com/a/b", ""},
 		{"bitbucket.org/a/b", "bitbucket.org/a/b", ""},
@@ -216,16 +232,18 @@ func TestMatchStatic(t *testing.T) {
 		{"foo.googlesource.com/a/b/c", "foo.googlesource.com/a/b/c", ""},
 		{"foo.googlesource.com/a/b/c.git", "foo.googlesource.com/a/b/c", ""},
 		{"foo.googlesource.com/a/b/c.git/d", "foo.googlesource.com/a/b/c", "d"},
+		{"git.com/repo.git", "git.com/repo", ""},
+		{"git.com/repo.git/dir", "git.com/repo", "dir"},
 		{"mercurial.com/repo.hg", "mercurial.com/repo", ""},
 		{"mercurial.com/repo.hg/dir", "mercurial.com/repo", "dir"},
 	} {
 		t.Run(test.in, func(t *testing.T) {
-			gotRepo, gotDir, _, err := matchStatic(test.in)
+			gotRepo, gotSuffix, _, err := matchStatic(test.in)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if gotRepo != test.wantRepo || gotDir != test.wantDir {
-				t.Errorf("got %q, %q; want %q, %q", gotRepo, gotDir, test.wantRepo, test.wantDir)
+			if gotRepo != test.wantRepo || gotSuffix != test.wantSuffix {
+				t.Errorf("got %q, %q; want %q, %q", gotRepo, gotSuffix, test.wantRepo, test.wantSuffix)
 			}
 		})
 	}
@@ -358,20 +376,104 @@ func TestModuleImportDynamic(t *testing.T) {
 	}
 }
 
-type testTransport map[string]string
+func TestRemoveVersionSuffix(t *testing.T) {
+	for _, test := range []struct {
+		in   string
+		want string
+	}{
+		{"", ""},
+		{"v1", "v1"},
+		{"v2", ""},
+		{"v17", ""},
+		{"foo/bar", "foo/bar"},
+		{"foo/bar/v1", "foo/bar/v1"},
+		{"foo/bar.v2", "foo/bar.v2"},
+		{"foo/bar/v2", "foo/bar"},
+		{"foo/bar/v17", "foo/bar"},
+	} {
+		got := removeVersionSuffix(test.in)
+		if got != test.want {
+			t.Errorf("%q: got %q, want %q", test.in, got, test.want)
+		}
+	}
+}
 
-func (t testTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	statusCode := http.StatusOK
-	req.URL.RawQuery = ""
-	body, ok := t[req.URL.String()]
-	if !ok {
-		statusCode = http.StatusNotFound
+func TestAdjustVersionedModuleDirectory(t *testing.T) {
+	ctx := context.Background()
+	client := &http.Client{Transport: testTransport(map[string]string{
+		// Repo "branch" follows the "major branch" convention: versions 2 and higher
+		// live in the same directory as versions 0 and 1, but on a different branch (or tag).
+		"http://x.com/branch/v1.0.0/go.mod":         "", // v1 module at the root
+		"http://x.com/branch/v2.0.0/go.mod":         "", // v2 module at the root
+		"http://x.com/branch/dir/v1.0.0/dir/go.mod": "", // v1 module in a subdirectory
+		"http://x.com/branch/dir/v2.0.0/dir/go.mod": "", // v2 module in a subdirectory
+		// Repo "sub" follows the "major subdirectory" convention: versions 2 and higher
+		// live in a "vN" subdirectory.
+		"http://x.com/sub/v1.0.0/go.mod":            "", // v1 module at the root
+		"http://x.com/sub/v2.0.0/v2/go.mod":         "", // v2 module at root/v2.
+		"http://x.com/sub/dir/v1.0.0/dir/go.mod":    "", // v1 module in a subdirectory
+		"http://x.com/sub/dir/v2.0.0/dir/v2/go.mod": "", // v2 module in subdirectory/v2
+	})}
+
+	for _, test := range []struct {
+		repo, moduleDir, commit string
+		want                    string
+	}{
+		{
+			// module path is x.com/branch
+			"branch", "", "v1.0.0",
+			"",
+		},
+		{
+			// module path is x.com/branch/v2; remove the "v2" to get the module dir
+			"branch", "v2", "v2.0.0",
+			"",
+		},
+		{
+			// module path is x.com/branch/dir
+			"branch", "dir", "dir/v1.0.0",
+			"dir",
+		},
+		{
+			// module path is x.com/branch/dir/v2; remove the v2 to get the module dir
+			"branch", "dir/v2", "dir/v2.0.0",
+			"dir",
+		},
+		{
+			// module path is x.com/sub
+			"sub", "", "v1.0.0",
+			"",
+		},
+		{
+			// module path is x.com/sub/v2; do not remove the v2
+			"sub", "v2", "v2.0.0",
+			"v2",
+		},
+		{
+			// module path is x.com/sub/dir
+			"sub", "dir", "dir/v1.0.0",
+			"dir",
+		},
+		{
+			// module path is x.com/sub/dir/v2; do not remove the v2
+			"sub", "dir/v2", "dir/v2.0.0",
+			"dir/v2",
+		},
+	} {
+		t.Run(test.repo+","+test.moduleDir+","+test.commit, func(t *testing.T) {
+			info := &Info{
+				RepoURL:   "http://x.com/" + test.repo,
+				moduleDir: test.moduleDir,
+				commit:    test.commit,
+				templates: urlTemplates{file: "{repo}/{commit}/{file}"},
+			}
+			adjustVersionedModuleDirectory(ctx, client, info)
+			got := info.moduleDir
+			if got != test.want {
+				t.Errorf("got %q, want %q", got, test.want)
+			}
+		})
 	}
-	resp := &http.Response{
-		StatusCode: statusCode,
-		Body:       ioutil.NopCloser(strings.NewReader(body)),
-	}
-	return resp, nil
 }
 
 func TestCommitFromVersion(t *testing.T) {
@@ -386,6 +488,22 @@ func TestCommitFromVersion(t *testing.T) {
 		{
 			"v1.2.3", "foo",
 			"foo/v1.2.3",
+		},
+		{
+			"v1.2.3", "foo/v1",
+			"foo/v1/v1.2.3", // don't remove "/vN" if N = 1
+		},
+		{
+			"v1.2.3", "v1", // ditto
+			"v1/v1.2.3",
+		},
+		{
+			"v3.1.0", "foo/v3",
+			"foo/v3.1.0", // do remove "/v2" and higher
+		},
+		{
+			"v3.1.0", "v3",
+			"v3.1.0", // ditto
 		},
 		{
 			"v6.1.1-0.20190615154606-3a9541ec9974", "",
@@ -406,6 +524,22 @@ func TestCommitFromVersion(t *testing.T) {
 			}
 		})
 	}
+}
+
+type testTransport map[string]string
+
+func (t testTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	statusCode := http.StatusOK
+	req.URL.RawQuery = ""
+	body, ok := t[req.URL.String()]
+	if !ok {
+		statusCode = http.StatusNotFound
+	}
+	resp := &http.Response{
+		StatusCode: statusCode,
+		Body:       ioutil.NopCloser(strings.NewReader(body)),
+	}
+	return resp, nil
 }
 
 var testWeb = map[string]string{
