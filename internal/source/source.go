@@ -214,6 +214,12 @@ var patterns = []struct {
 	// git.openstack.org has been rebranded.
 	// chiselapp.com has no Go packages in godoc.org.
 
+	// Patterns that are not (yet) part of the go command.
+	{
+		regexp.MustCompile(`^(?P<repo>gitlab\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)`),
+		githubURLTemplates,
+	},
+
 	// Patterns that match the general go command pattern, where they must have
 	// a ".git" repo suffix in an import path. If matching a repo URL from a meta tag,
 	// there is no ".git".

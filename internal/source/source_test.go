@@ -138,6 +138,15 @@ func TestModuleInfo(t *testing.T) {
 			"https://cue.googlesource.com/cue/+/v0.0.9/cuego/doc.go",
 			"https://cue.googlesource.com/cue/+/v0.0.9/cuego/doc.go#1",
 		},
+		{
+			"gitlab",
+			"gitlab.com/akita/akita", "v1.4.1", "event.go",
+
+			"https://gitlab.com/akita/akita",
+			"https://gitlab.com/akita/akita/tree/v1.4.1",
+			"https://gitlab.com/akita/akita/blob/v1.4.1/event.go",
+			"https://gitlab.com/akita/akita/blob/v1.4.1/event.go#L1",
+		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
 			check := func(msg, got, want string) {
