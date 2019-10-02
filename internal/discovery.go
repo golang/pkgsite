@@ -5,6 +5,8 @@
 package internal
 
 import (
+	"regexp"
+	"strings"
 	"time"
 
 	"golang.org/x/discovery/internal/license"
@@ -157,4 +159,12 @@ type VersionState struct {
 	// is close to, but not the same as, the deployment time. For example, the
 	// deployment time for the above timestamp might be Jul 9, 2019, 11:29:59 AM.
 	AppVersion string
+}
+
+var pseudoVersionRE = regexp.MustCompile(`^v[0-9]+\.(0\.0-|\d+\.\d+-([^+]*\.)?0\.)\d{14}-[A-Za-z0-9]+(\+incompatible)?$`)
+
+// IsPseudoVersion reports whether a valid version v is a pseudo-version.
+// Modified from src/cmd/go/internal/modfetch.
+func IsPseudoVersion(v string) bool {
+	return strings.Count(v, "-") >= 2 && pseudoVersionRE.MatchString(v)
 }

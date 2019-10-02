@@ -322,7 +322,7 @@ func (ds *DataSource) listModuleVersions(ctx context.Context, modulePath string,
 		// In practice, the /list endpoint should only return either pseudo
 		// versions or tagged versions, but we filter here for maximum
 		// compatibility.
-		if etl.IsPseudoVersion(vers) != pseudo {
+		if internal.IsPseudoVersion(vers) != pseudo {
 			continue
 		}
 		if v, ok := ds.versionCache[versionKey{modulePath, vers}]; ok {

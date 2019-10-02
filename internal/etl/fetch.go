@@ -19,7 +19,6 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"regexp"
 	"runtime/debug"
 	"sort"
 	"strings"
@@ -220,14 +219,6 @@ func moduleVersionDir(modulePath, version string) string {
 	return fmt.Sprintf("%s@%s", modulePath, version)
 }
 
-var pseudoVersionRE = regexp.MustCompile(`^v[0-9]+\.(0\.0-|\d+\.\d+-([^+]*\.)?0\.)\d{14}-[A-Za-z0-9]+(\+incompatible)?$`)
-
-// IsPseudoVersion reports whether a valid version v is a pseudo-version.
-// Modified from src/cmd/go/internal/modfetch.
-func IsPseudoVersion(v string) bool {
-	return strings.Count(v, "-") >= 2 && pseudoVersionRE.MatchString(v)
-}
-
 // ParseVersionType returns the VersionType of a given a version.
 func ParseVersionType(version string) (internal.VersionType, error) {
 	if !semver.IsValid(version) {
@@ -235,7 +226,7 @@ func ParseVersionType(version string) (internal.VersionType, error) {
 	}
 
 	switch {
-	case IsPseudoVersion(version):
+	case internal.IsPseudoVersion(version):
 		return internal.VersionTypePseudo, nil
 	case semver.Prerelease(version) != "":
 		return internal.VersionTypePrerelease, nil

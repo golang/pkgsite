@@ -33,6 +33,7 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/stdlib"
@@ -338,7 +339,7 @@ var githubURLTemplates = urlTemplates{
 func commitFromVersion(version, relativeModulePath string) string {
 	// Commit for the module: either a sha for pseudoversions, or a tag.
 	v := strings.TrimSuffix(version, "+incompatible")
-	if isPseudoVersion(v) {
+	if internal.IsPseudoVersion(v) {
 		// Use the commit hash at the end.
 		return v[strings.LastIndex(v, "-")+1:]
 	} else {
@@ -371,16 +372,6 @@ func doURL(ctx context.Context, client *http.Client, method, url string) (_ *htt
 		return nil, fmt.Errorf("status %s", resp.Status)
 	}
 	return resp, nil
-}
-
-// The following code copied from internal/etl/fetch.go:
-
-var pseudoVersionRE = regexp.MustCompile(`^v[0-9]+\.(0\.0-|\d+\.\d+-([^+]*\.)?0\.)\d{14}-[A-Za-z0-9]+(\+incompatible)?$`)
-
-// isPseudoVersion reports whether a valid version v is a pseudo-version.
-// Modified from src/cmd/go/internal/modfetch.
-func isPseudoVersion(v string) bool {
-	return strings.Count(v, "-") >= 2 && pseudoVersionRE.MatchString(v)
 }
 
 // The following code copied from cmd/go/internal/get:
