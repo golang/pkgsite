@@ -57,6 +57,9 @@ var (
 // fetched. It is mutable for testing purposes.
 var appVersionLabel = config.AppVersionLabel()
 
+// Indicates that although we have a valid module, some packages could not be processed.
+const hasIncompletePackagesCode = 290
+
 // fetchAndUpdateState fetches and processes a module version, and then updates
 // the module_version_states table according to the result. It returns an HTTP
 // status code representing the result of the fetch operation, and a non-nil
@@ -73,9 +76,13 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 		code     = http.StatusOK
 		fetchErr error
 	)
-	if fetchErr = fetchAndInsertVersion(ctx, modulePath, version, client, db); fetchErr != nil {
+	hasIncompletePackages, fetchErr := fetchAndInsertVersion(ctx, modulePath, version, client, db)
+	if fetchErr != nil {
 		log.Errorf("Error executing fetch: %v", fetchErr)
 		code = derrors.ToHTTPStatus(fetchErr)
+	}
+	if hasIncompletePackages {
+		code = hasIncompletePackagesCode
 	}
 
 	
@@ -101,7 +108,8 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 		}
 		return http.StatusInternalServerError, err
 	}
-	log.Infof("Updated version state for %s@%s: code=%d, err=%v", modulePath, version, code, fetchErr)
+	log.Infof("Updated version state for %s@%s: code=%d, hasIncompletePackages=%t err=%v",
+		modulePath, version, code, hasIncompletePackages, fetchErr)
 	return code, fetchErr
 }
 
@@ -112,7 +120,7 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 // The given parentCtx is used for tracing, but fetches actually execute in a
 // detached context with fixed timeout, so that fetches are allowed to complete
 // even for short-lived requests.
-func fetchAndInsertVersion(parentCtx context.Context, modulePath, version string, proxyClient *proxy.Client, db *postgres.DB) (err error) {
+func fetchAndInsertVersion(parentCtx context.Context, modulePath, version string, proxyClient *proxy.Client, db *postgres.DB) (hasIncompletePackages bool, err error) {
 	defer derrors.Wrap(&err, "fetchAndInsertVersion(%q, %q)", modulePath, version)
 
 	parentSpan := trace.FromContext(parentCtx)
@@ -124,22 +132,22 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, version string
 	ctx, span := trace.StartSpanWithRemoteParent(ctx, "fetchAndInsertVersion", parentSpan.SpanContext())
 	defer span.End()
 
-	v, err := FetchVersion(ctx, modulePath, version, proxyClient)
+	v, hasIncompletePackages, err := FetchVersion(ctx, modulePath, version, proxyClient)
 	if err != nil {
-		return err
+		return false, err
 	}
 	log.Infof("Fetched %s@%s", v.ModulePath, v.Version)
 	if err = db.InsertVersion(ctx, v); err != nil {
-		return err
+		return false, err
 	}
 	log.Infof("Inserted version %s@%s", v.ModulePath, v.Version)
-	return nil
+	return hasIncompletePackages, nil
 }
 
 // FetchVersion queries the proxy or the Go repo for the requested module
 // version, downloads the module zip, and processes the contents to return an
 // *internal.Version.
-func FetchVersion(ctx context.Context, modulePath, version string, proxyClient *proxy.Client) (_ *internal.Version, err error) {
+func FetchVersion(ctx context.Context, modulePath, version string, proxyClient *proxy.Client) (_ *internal.Version, hasIncompletePackages bool, err error) {
 	defer derrors.Wrap(&err, "fetchVersion(%q, %q)", modulePath, version)
 
 	var commitTime time.Time
@@ -147,30 +155,30 @@ func FetchVersion(ctx context.Context, modulePath, version string, proxyClient *
 	if modulePath == stdlib.ModulePath {
 		zipReader, commitTime, err = stdlib.Zip(version)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 	} else {
 		info, err := proxyClient.GetInfo(ctx, modulePath, version)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 		version = info.Version
 		commitTime = info.Time
 		zipReader, err = proxyClient.GetZip(ctx, modulePath, version)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 	}
 	versionType, err := ParseVersionType(version)
 	if err != nil {
-		return nil, xerrors.Errorf("%v: %w", err, derrors.BadModule)
+		return nil, false, xerrors.Errorf("%v: %w", err, derrors.BadModule)
 	}
 
 	return processZipFile(ctx, modulePath, versionType, version, commitTime, zipReader)
 }
 
 // processZipFile extracts information from the module version zip.
-func processZipFile(ctx context.Context, modulePath string, versionType internal.VersionType, version string, commitTime time.Time, zipReader *zip.Reader) (_ *internal.Version, err error) {
+func processZipFile(ctx context.Context, modulePath string, versionType internal.VersionType, version string, commitTime time.Time, zipReader *zip.Reader) (_ *internal.Version, hasIncompletePackages bool, err error) {
 	defer derrors.Wrap(&err, "processZipFile(%q, %q)", modulePath, version)
 
 	_, span := trace.StartSpan(ctx, "processing zipFile")
@@ -185,18 +193,18 @@ func processZipFile(ctx context.Context, modulePath string, versionType internal
 	}
 	readmeFilePath, readmeContents, err := extractReadmeFromZip(modulePath, version, zipReader)
 	if err != nil && err != errReadmeNotFound {
-		return nil, fmt.Errorf("extractReadmeFromZip(%q, %q, zipReader): %v", modulePath, version, err)
+		return nil, false, fmt.Errorf("extractReadmeFromZip(%q, %q, zipReader): %v", modulePath, version, err)
 	}
 	licenses, err := license.Detect(moduleVersionDir(modulePath, version), zipReader)
 	if err != nil {
 		log.Error(err)
 	}
-	packages, err := extractPackagesFromZip(modulePath, version, zipReader, license.NewMatcher(licenses), sourceInfo)
+	packages, hasIncompletePackages, err := extractPackagesFromZip(modulePath, version, zipReader, license.NewMatcher(licenses), sourceInfo)
 	if err == errModuleContainsNoPackages {
-		return nil, xerrors.Errorf("%v: %w", errModuleContainsNoPackages.Error(), derrors.BadModule)
+		return nil, false, xerrors.Errorf("%v: %w", errModuleContainsNoPackages.Error(), derrors.BadModule)
 	}
 	if err != nil {
-		return nil, fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, version, licenses, err)
+		return nil, false, fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, version, licenses, err)
 	}
 	return &internal.Version{
 		VersionInfo: internal.VersionInfo{
@@ -210,7 +218,7 @@ func processZipFile(ctx context.Context, modulePath string, versionType internal
 		},
 		Packages: packages,
 		Licenses: licenses,
-	}, nil
+	}, hasIncompletePackages, nil
 }
 
 // moduleVersionDir formats the content subdirectory for the given
@@ -267,7 +275,12 @@ func hasFilename(file string, expectedFile string) bool {
 // extractPackagesFromZip returns a slice of packages from the module zip r.
 // It matches against the given licenses to determine the subset of licenses
 // that applies to each package.
-func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher license.Matcher, sourceInfo *source.Info) (_ []*internal.Package, err error) {
+// The second return value says whether any packages are "incomplete," meaning
+// that they contained .go files but couldn't be processed due to current
+// limitations of this site. The two limitations are a maximum file size
+// (dzip.MaxFileSize), and the particular set of build contexts we consider
+// (goEnvs).
+func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher license.Matcher, sourceInfo *source.Info) (_ []*internal.Package, hasIncompletePackages bool, err error) {
 
 	defer func() {
 		if e := recover(); e != nil {
@@ -314,10 +327,10 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 	// only after we're sure this phase passed without errors.
 	for _, f := range r.File {
 		if f.Mode().IsDir() {
-			return nil, fmt.Errorf("expected only files, found directory %q", f.Name)
+			return nil, false, fmt.Errorf("expected only files, found directory %q", f.Name)
 		}
 		if !strings.HasPrefix(f.Name, modulePrefix) {
-			return nil, fmt.Errorf("expected file to have prefix %q; got = %q", modulePrefix, f.Name)
+			return nil, false, fmt.Errorf("expected file to have prefix %q; got = %q", modulePrefix, f.Name)
 		}
 		innerPath := path.Dir(f.Name[len(modulePrefix):])
 		if incompleteDirs[innerPath] {
@@ -341,7 +354,7 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 		}
 		dirs[innerPath] = append(dirs[innerPath], f)
 		if len(dirs) > maxPackagesPerModule {
-			return nil, fmt.Errorf("%d packages found in %q; exceeds limit %d for maxPackagePerModule", len(dirs), modulePath, maxPackagesPerModule)
+			return nil, false, fmt.Errorf("%d packages found in %q; exceeds limit %d for maxPackagePerModule", len(dirs), modulePath, maxPackagesPerModule)
 		}
 	}
 
@@ -362,19 +375,23 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 			log.Infof("Skipping %q because of *BadPackageError: %v\n", path.Join(modulePath, innerPath), err)
 			continue
 		} else if err != nil {
-			return nil, fmt.Errorf("unexpected error loading package: %v", err)
+			return nil, false, fmt.Errorf("unexpected error loading package: %v", err)
 		}
 		if pkg == nil {
 			// No package.
+			if len(goFiles) > 0 {
+				// There were go files, but no build contexts matched them.
+				incompleteDirs[innerPath] = true
+			}
 			continue
 		}
 		pkg.Licenses = matcher.Match(innerPath)
 		pkgs = append(pkgs, pkg)
 	}
 	if len(pkgs) == 0 {
-		return nil, errModuleContainsNoPackages
+		return nil, false, errModuleContainsNoPackages
 	}
-	return pkgs, nil
+	return pkgs, len(incompleteDirs) > 0, nil
 }
 
 // ignoredByGoTool reports whether the given import path corresponds
@@ -569,8 +586,8 @@ func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, in
 		}
 	}
 	if len(goFiles) == 0 {
-		// This directory doesn't contain a package.
-		// TODO(b/132621615): or does but all .go files excluded by constraints; tell apart
+		// This directory doesn't contain a package, or at least not one
+		// that matches this build context.
 		return nil, nil
 	}
 

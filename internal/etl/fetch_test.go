@@ -30,7 +30,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
-func TestSkipBadPackage(t *testing.T) {
+func TestSkipIncompletePackage(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 	defer postgres.ResetTestDB(testDB, t)
@@ -55,8 +55,13 @@ func TestSkipBadPackage(t *testing.T) {
 	})
 	defer teardownProxy()
 
-	if err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB); err != nil {
+	hasIncompletePackages, err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB)
+	if err != nil {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
+	}
+	if !hasIncompletePackages {
+		t.Errorf("fetchAndInsertVersion(%q, %q, %v, %v): hasIncompletePackages=false, want true",
+			modulePath, version, client, testDB)
 	}
 
 	pkgFoo := modulePath + "/foo"
@@ -80,7 +85,7 @@ func TestFetch_V1Path(t *testing.T) {
 		}),
 	})
 	defer tearDown()
-	if err := fetchAndInsertVersion(ctx, "my.mod/foo", "v1.0.0", client, testDB); err != nil {
+	if _, err := fetchAndInsertVersion(ctx, "my.mod/foo", "v1.0.0", client, testDB); err != nil {
 		t.Fatalf("fetchAndInsertVersion: %v", err)
 	}
 	pkg, err := testDB.GetPackage(ctx, "my.mod/foo", "v1.0.0")
@@ -124,7 +129,7 @@ func TestReFetch(t *testing.T) {
 		proxy.NewTestVersion(t, modulePath, version, foo),
 	})
 	defer teardownProxy()
-	if err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB); err != nil {
+	if _, err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB); err != nil {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
 	}
 
@@ -138,7 +143,7 @@ func TestReFetch(t *testing.T) {
 	})
 	defer teardownProxy()
 
-	if err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB); err != nil {
+	if _, err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB); err != nil {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
 	}
 	want := &internal.VersionedPackage{
@@ -260,7 +265,7 @@ func TestFetchVersion(t *testing.T) {
 			})
 			defer teardownProxy()
 
-			got, err := FetchVersion(ctx, modulePath, version, client)
+			got, _, err := FetchVersion(ctx, modulePath, version, client)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -466,7 +471,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			client, teardownProxy := proxy.SetupTestProxy(t, nil)
 			defer teardownProxy()
 
-			if err := fetchAndInsertVersion(ctx, test.modulePath, test.version, client, testDB); err != nil {
+			if _, err := fetchAndInsertVersion(ctx, test.modulePath, test.version, client, testDB); err != nil {
 				t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", test.modulePath, test.version, client, testDB, err)
 			}
 
@@ -517,10 +522,42 @@ func TestFetchAndInsertVersionTimeout(t *testing.T) {
 	name := "my.mod/version"
 	version := "v1.0.0"
 	wantErrString := "deadline exceeded"
-	err := fetchAndInsertVersion(context.Background(), name, version, client, testDB)
+	_, err := fetchAndInsertVersion(context.Background(), name, version, client, testDB)
 	if err == nil || !strings.Contains(err.Error(), wantErrString) {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v) returned error %v, want error containing %q",
 			name, version, client, testDB, err, wantErrString)
+	}
+}
+
+func TestFetchAndUpdateState_Incomplete(t *testing.T) {
+	// Check that we store the special "incomplete" status in module_version_states.
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	defer postgres.ResetTestDB(testDB, t)
+
+	client, teardownProxy := proxy.SetupTestProxy(t, nil)
+	defer teardownProxy()
+
+	const (
+		modulePath = "build.constraints/module"
+		version    = "v1.0.0"
+		want       = hasIncompletePackagesCode
+	)
+
+	code, err := fetchAndUpdateState(ctx, modulePath, version, client, testDB)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if code != want {
+		t.Fatalf("got code %d, want %d", code, want)
+	}
+	vs, err := testDB.GetVersionState(ctx, modulePath, version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if vs.Status == nil || *vs.Status != want {
+		t.Fatalf("testDB.GetVersionState(ctx, %q, %q): status=%v, want %d", modulePath, version, vs.Status, want)
 	}
 }
 
@@ -531,7 +568,7 @@ func TestFetchAndUpdateState_Gone(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 
-	var (
+	const (
 		modulePath = "github.com/take/down"
 		version    = "v1.0.0"
 	)
@@ -764,9 +801,10 @@ func TestExtractPackagesFromZip(t *testing.T) {
 	defer cancel()
 
 	for _, test := range []struct {
-		name     string
-		version  string
-		packages map[string]*internal.Package
+		name                  string
+		version               string
+		packages              map[string]*internal.Package
+		hasIncompletePackages bool
 	}{
 		{
 			name:    "github.com/my/module",
@@ -823,6 +861,21 @@ func TestExtractPackagesFromZip(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:    "build.constraints/module",
+			version: "v1.0.0",
+			packages: map[string]*internal.Package{
+				"cpu": {
+					Name:              "cpu",
+					Path:              "build.constraints/module/cpu",
+					Synopsis:          "Package cpu implements processor feature detection used by the Go standard library.",
+					DocumentationHTML: []byte("const CacheLinePadSize = 3"),
+					Imports:           []string{},
+					V1Path:            "build.constraints/module/cpu",
+				},
+			},
+			hasIncompletePackages: true,
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			client, teardownProxy := proxy.SetupTestProxy(t, nil)
@@ -833,9 +886,14 @@ func TestExtractPackagesFromZip(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			packages, err := extractPackagesFromZip(test.name, test.version, reader, nil, nil)
+			packages, hasIncompletePackages, err := extractPackagesFromZip(test.name, test.version, reader, nil, nil)
 			if err != nil && len(test.packages) != 0 {
 				t.Fatalf("extractPackagesFromZip(%q, %q, reader, nil): %v", test.name, test.version, err)
+			}
+
+			if hasIncompletePackages != test.hasIncompletePackages {
+				t.Fatalf("extractPackagesFromZip(%q, %q, reader, nil): hasIncompletePackages=%t, want %t",
+					test.name, test.version, hasIncompletePackages, test.hasIncompletePackages)
 			}
 
 			for _, got := range packages {

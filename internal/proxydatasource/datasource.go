@@ -225,7 +225,7 @@ func (ds *DataSource) getVersion(ctx context.Context, modulePath, version string
 		return e.version, e.err
 	}
 
-	v, err := etl.FetchVersion(ctx, modulePath, version, ds.proxyClient)
+	v, _, err := etl.FetchVersion(ctx, modulePath, version, ds.proxyClient)
 	ds.versionCache[key] = &versionEntry{version: v, err: err}
 	if err != nil {
 		return nil, err

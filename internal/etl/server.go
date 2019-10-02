@@ -182,13 +182,13 @@ func (s *Server) handleFetch(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(code), code)
 		return
 	}
-	if code == http.StatusOK {
+	if code/100 == 2 {
 		log.Infof("doFetch of %s succeeded with %d", r.URL.Path, code)
 	} else {
 		log.Infof("doFetch of %s returned code %d; returning OK to avoid retry", r.URL.Path, code)
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	if code == http.StatusOK {
+	if code/100 == 2 {
 		fmt.Fprintln(w, msg)
 	}
 	fmt.Fprintln(w, http.StatusText(code))
@@ -205,7 +205,7 @@ func (s *Server) doFetch(r *http.Request) (string, int) {
 	if err != nil {
 		return err.Error(), code
 	}
-	return fmt.Sprintf("fetched and updated %s@%s", modulePath, version), http.StatusOK
+	return fmt.Sprintf("fetched and updated %s@%s", modulePath, version), code
 }
 
 // parseModulePathAndVersion returns the module and version specified by p. p
