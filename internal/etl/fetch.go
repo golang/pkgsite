@@ -657,6 +657,8 @@ func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, in
 		V1Path:            v1path,
 		Imports:           d.Imports,
 		DocumentationHTML: docHTML,
+		GOOS:              goos,
+		GOARCH:            goarch,
 	}, nil
 }
 

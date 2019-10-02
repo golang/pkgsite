@@ -157,6 +157,8 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version) error 
 				p.DocumentationHTML,
 				pq.Array(licenseTypes),
 				pq.Array(licensePaths),
+				p.GOOS,
+				p.GOARCH,
 			)
 			for _, i := range p.Imports {
 				importValues = append(importValues, p.Path, version.ModulePath, version.Version, i)
@@ -175,6 +177,8 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version) error 
 				"documentation",
 				"license_types",
 				"license_paths",
+				"goos",
+				"goarch",
 			}
 			if err := bulkInsert(ctx, tx, "packages", pkgCols, pkgValues, onConflictDoNothing); err != nil {
 				return err

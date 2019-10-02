@@ -39,6 +39,8 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (_ *i
 			p.license_types,
 			p.license_paths,
 			p.documentation,
+			p.goos,
+			p.goarch,
 			v.version,
 			v.commit_time,
 			v.readme_file_path,
@@ -85,7 +87,7 @@ func (db *DB) GetPackage(ctx context.Context, path string, version string) (_ *i
 	)
 	row := db.queryRow(ctx, query, args...)
 	err = row.Scan(&pkg.Path, &pkg.Name, &pkg.Synopsis, &pkg.V1Path, pq.Array(&licenseTypes), pq.Array(&licensePaths),
-		&pkg.DocumentationHTML, &pkg.Version, &pkg.CommitTime, &pkg.ReadmeFilePath, &pkg.ReadmeContents, &pkg.ModulePath,
+		&pkg.DocumentationHTML, &pkg.GOOS, &pkg.GOARCH, &pkg.Version, &pkg.CommitTime, &pkg.ReadmeFilePath, &pkg.ReadmeContents, &pkg.ModulePath,
 		&pkg.VersionType, nullIsEmpty(&pkg.RepositoryURL), nullIsEmpty(&pkg.VCSType), nullIsEmpty(&pkg.HomepageURL))
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -113,7 +115,9 @@ func (db *DB) GetPackagesInVersion(ctx context.Context, modulePath, version stri
 		v1_path,
 		license_types,
 		license_paths,
-		documentation
+		documentation,
+		goos,
+		goarch
 	FROM
 		packages
 	WHERE
@@ -128,7 +132,7 @@ func (db *DB) GetPackagesInVersion(ctx context.Context, modulePath, version stri
 			licenseTypes, licensePaths []string
 		)
 		if err := rows.Scan(&p.Path, &p.Name, &p.Synopsis, &p.V1Path, pq.Array(&licenseTypes),
-			pq.Array(&licensePaths), &p.DocumentationHTML); err != nil {
+			pq.Array(&licensePaths), &p.DocumentationHTML, &p.GOOS, &p.GOARCH); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
 		lics, err := zipLicenseMetadata(licenseTypes, licensePaths)

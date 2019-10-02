@@ -51,8 +51,8 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, version string) (_ *int
 		)
 		if err := rows.Scan(&pkg.Path, &pkg.Version, &pkg.Name, &pkg.Synopsis, &pkg.V1Path,
 			&pkg.DocumentationHTML, pq.Array(&licenseTypes),
-			pq.Array(&licensePaths), &pkg.ModulePath, &pkg.ReadmeFilePath,
-			&pkg.ReadmeContents, &pkg.CommitTime, &pkg.VersionType,
+			pq.Array(&licensePaths), &pkg.ModulePath, &pkg.GOOS, &pkg.GOARCH,
+			&pkg.ReadmeFilePath, &pkg.ReadmeContents, &pkg.CommitTime, &pkg.VersionType,
 			nullIsEmpty(&pkg.RepositoryURL), nullIsEmpty(&pkg.VCSType), nullIsEmpty(&pkg.HomepageURL)); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
@@ -93,6 +93,8 @@ func constructDirectoryQueryAndArgs(dirPath, version string) (string, []interfac
 			p.license_types,
 			p.license_paths,
 			p.module_path,
+			p.goos,
+			p.goarch,
 			v.readme_file_path,
 			v.readme_contents,
 			v.commit_time,

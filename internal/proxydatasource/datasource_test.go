@@ -45,6 +45,8 @@ var (
 		Synopsis: "Package baz provides a helpful constant.",
 		V1Path:   "foo.com/bar/baz",
 		Licenses: []*license.Metadata{wantLicenseMD},
+		GOOS:     "linux",
+		GOARCH:   "amd64",
 	}
 	wantVersionInfo = internal.VersionInfo{
 		ModulePath:  "foo.com/bar",

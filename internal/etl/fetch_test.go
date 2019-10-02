@@ -165,6 +165,8 @@ func TestReFetch(t *testing.T) {
 			Licenses: []*license.Metadata{
 				{Types: []string{"MIT"}, FilePath: "COPYING"},
 			},
+			GOOS:   "linux",
+			GOARCH: "amd64",
 		},
 	}
 	got, err := testDB.GetPackage(ctx, pkgBar, version)
@@ -226,6 +228,8 @@ func TestFetchVersion(t *testing.T) {
 						Synopsis: "package foo exports a helpful constant.",
 						Licenses: []*license.Metadata{{Types: []string{"MIT"}, FilePath: "LICENSE.md"}},
 						Imports:  []string{"net/http"},
+						GOOS:     "linux",
+						GOARCH:   "amd64",
 					},
 				},
 				Licenses: wantLicenses,
@@ -253,6 +257,8 @@ func TestFetchVersion(t *testing.T) {
 						Synopsis: "Package js only works with wasm.",
 						Licenses: []*license.Metadata{{Types: []string{"MIT"}, FilePath: "LICENSE.md"}},
 						Imports:  []string{},
+						GOOS:     "js",
+						GOARCH:   "wasm",
 					},
 				},
 				Licenses: wantLicenses,
@@ -305,6 +311,8 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
 				{Types: []string{"MIT"}, FilePath: "bar/LICENSE"},
 			},
+			GOOS:   "linux",
+			GOARCH: "amd64",
 		},
 	}
 
@@ -351,6 +359,8 @@ func TestFetchAndInsertVersion(t *testing.T) {
 						{Types: []string{"MIT"}, FilePath: "bar/LICENSE"},
 						{Types: []string{"MIT"}, FilePath: "bar/baz/COPYING"},
 					},
+					GOOS:   "linux",
+					GOARCH: "amd64",
 				},
 			},
 		}, {
@@ -376,6 +386,8 @@ func TestFetchAndInsertVersion(t *testing.T) {
 						{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
 						{Types: []string{"BSD-0-Clause"}, FilePath: "foo/LICENSE.md"},
 					},
+					GOOS:   "linux",
+					GOARCH: "amd64",
 				},
 			},
 		}, {
@@ -404,6 +416,8 @@ func TestFetchAndInsertVersion(t *testing.T) {
 							FilePath: "LICENSE",
 						},
 					},
+					GOOS:   "linux",
+					GOARCH: "amd64",
 				},
 			},
 		}, {
@@ -432,6 +446,8 @@ func TestFetchAndInsertVersion(t *testing.T) {
 							FilePath: "LICENSE",
 						},
 					},
+					GOOS:   "linux",
+					GOARCH: "amd64",
 				},
 			},
 		}, {
@@ -455,6 +471,8 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					Licenses: []*license.Metadata{
 						{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
 					},
+					GOOS:   "linux",
+					GOARCH: "amd64",
 				},
 			},
 			dontWantDoc: []string{
@@ -817,6 +835,8 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					DocumentationHTML: []byte("FooBar returns the string &#34;foo bar&#34;."),
 					Imports:           []string{"fmt", "github.com/my/module/bar"},
 					V1Path:            "github.com/my/module/foo",
+					GOOS:              "linux",
+					GOARCH:            "amd64",
 				},
 				"bar": {
 					Name:              "bar",
@@ -825,6 +845,8 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					DocumentationHTML: []byte("Bar returns the string &#34;bar&#34;."),
 					Imports:           []string{},
 					V1Path:            "github.com/my/module/bar",
+					GOOS:              "linux",
+					GOARCH:            "amd64",
 				},
 			},
 		},
@@ -839,6 +861,8 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					DocumentationHTML: []byte("const Year = 2009"),
 					Imports:           []string{},
 					V1Path:            "no.mod/module/p",
+					GOOS:              "linux",
+					GOARCH:            "amd64",
 				},
 			},
 		},
@@ -858,6 +882,8 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					DocumentationHTML: []byte(`const Good = <a href="/pkg/builtin#true">true</a>`),
 					Imports:           []string{},
 					V1Path:            "bad.mod/module/good",
+					GOOS:              "linux",
+					GOARCH:            "amd64",
 				},
 			},
 		},

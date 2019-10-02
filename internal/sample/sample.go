@@ -56,6 +56,8 @@ func Package() *internal.Package {
 		DocumentationHTML: DocumentationHTML,
 		V1Path:            V1Path,
 		Imports:           Imports,
+		GOOS:              "linux",
+		GOARCH:            "amd64",
 	}
 }
 

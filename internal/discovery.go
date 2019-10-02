@@ -71,6 +71,9 @@ type Package struct {
 	Licenses          []*license.Metadata // path to applicable version licenses
 	Imports           []string
 	DocumentationHTML []byte
+	// The values of the GOOS and GOARCH environment variables used to parse the package.
+	GOOS   string
+	GOARCH string
 
 	// V1Path is the package path of a package with major version 1 in a given series.
 	V1Path string
