@@ -137,7 +137,12 @@ func TestFetchSearchPage(t *testing.T) {
 				t.Fatalf("fetchSearchPage(db, %q): %v", tc.query, err)
 			}
 
-			if diff := cmp.Diff(tc.wantSearchPage, got, cmp.AllowUnexported(SearchPage{}, pagination{}), cmpopts.IgnoreFields(license.Metadata{}, "FilePath")); diff != "" {
+			opts := cmp.Options{
+				cmp.AllowUnexported(SearchPage{}, pagination{}),
+				cmpopts.IgnoreFields(license.Metadata{}, "FilePath"),
+				cmpopts.IgnoreFields(pagination{}, "Approximate"),
+			}
+			if diff := cmp.Diff(tc.wantSearchPage, got, opts...); diff != "" {
 				t.Errorf("fetchSearchPage(db, %q) mismatch (-want +got):\n%s", tc.query, diff)
 			}
 		})

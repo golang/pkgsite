@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"go.opencensus.io/stats/view"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/sample"
@@ -183,40 +184,40 @@ func TestFastSearch(t *testing.T) {
 		{
 			label:       "single package",
 			versions:    importGraph("foo.com/A", "", 0),
-			resultOrder: [4]string{"estimate", "popular-50", "popular-8", "deep"},
-			wantSource:  "deep",
+			resultOrder: [4]string{"popular", "estimate", "deep"},
+			wantSource:  "popular",
 			wantResults: []string{"foo.com/A"},
 			wantTotal:   1,
 		},
 		{
 			label:       "empty results",
 			versions:    []*internal.Version{},
-			resultOrder: [4]string{"estimate", "popular-50", "popular-8", "deep"},
+			resultOrder: [4]string{"deep", "estimate", "popular"},
 			wantSource:  "deep",
 			wantResults: nil,
 		},
 		{
-			label:       "insufficient popular results",
+			label:       "both popular and unpopular results",
 			versions:    importGraph("foo.com/popular", "foo.com", 10),
-			resultOrder: [4]string{"estimate", "popular-50", "popular-8", "deep"},
-			wantSource:  "deep",
+			resultOrder: [4]string{"popular", "estimate", "deep"},
+			wantSource:  "popular",
 			wantResults: []string{"foo.com/popular", "foo.com/importer0"},
-			wantTotal:   11,
+			wantTotal:   12, // HLL result count (actual count is 11)
 		},
 		{
 			label: "popular results, estimate before deep",
 			versions: append(importGraph("foo.com/popularA", "bar.com", 60),
 				importGraph("foo.com/popularB", "foo.com", 70)...),
-			resultOrder: [4]string{"popular-50", "popular-8", "estimate", "deep"},
-			wantSource:  "popular-8",
+			resultOrder: [4]string{"popular", "estimate", "deep"},
+			wantSource:  "popular",
 			wantResults: []string{"foo.com/popularB", "foo.com/popularA"},
-			wantTotal:   67, // 67 is deterministically the HLL result count estimate.
+			wantTotal:   67, // HLL result count (actual count is 72)
 		},
 		{
 			label: "popular results, deep before estimate",
 			versions: append(importGraph("foo.com/popularA", "foo.com", 60),
 				importGraph("foo.com/popularB", "foo.com", 70)...),
-			resultOrder: [4]string{"popular-50", "popular-8", "deep", "estimate"},
+			resultOrder: [4]string{"popular", "deep", "estimate"},
 			wantSource:  "deep",
 			wantResults: []string{"foo.com/popularB", "foo.com/popularA"},
 			wantTotal:   72,
@@ -292,7 +293,8 @@ func TestFastSearch(t *testing.T) {
 			if err := testDB.UpdateSearchDocumentsImportedByCount(ctx, 1000); err != nil {
 				t.Fatal(err)
 			}
-			results, err := testDB.guardedFastSearch(ctx, "foo", 2, 0, guardTestResult)
+			searchers := []searcher{testDB.popularSearch, testDB.deepSearch}
+			results, err := testDB.hedgedSearch(ctx, "foo", 2, 0, searchers, guardTestResult)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -459,7 +461,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 					t.Errorf("testDB.Search(%v, %d, %d) mismatch: len(got) = %d, want = %d\n", tc.searchQuery, tc.limit, tc.offset, len(got), len(tc.want))
 				}
 
-				if diff := cmp.Diff(tc.want, got); diff != "" {
+				if diff := cmp.Diff(tc.want, got, cmpopts.IgnoreFields(SearchResult{}, "Approximate")); diff != "" {
 					t.Errorf("testDB.Search(%v, %d, %d) mismatch (-want +got):\n%s", tc.searchQuery, tc.limit, tc.offset, diff)
 				}
 			})

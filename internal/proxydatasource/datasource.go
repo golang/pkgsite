@@ -224,6 +224,16 @@ func (ds *DataSource) FastSearch(ctx context.Context, query string, limit, offse
 	return []*postgres.SearchResult{}, nil
 }
 
+// DeepSearch is unimplemented.
+func (ds *DataSource) DeepSearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error) {
+	return []*postgres.SearchResult{}, nil
+}
+
+// PartialFastSearch is unimplemented.
+func (ds *DataSource) PartialFastSearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error) {
+	return []*postgres.SearchResult{}, nil
+}
+
 // getVersion retrieves a version from the cache, or failing that queries and
 // processes the version from the proxy.
 func (ds *DataSource) getVersion(ctx context.Context, modulePath, version string) (_ *internal.Version, err error) {

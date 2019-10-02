@@ -71,7 +71,9 @@ type SearchResult struct {
 
 	// NumResults is the total number of packages that were returned for this search.
 	NumResults uint64
-	// Approximate reports whether NumResults is an approximate count.
+	// Approximate reports whether NumResults is an approximate count. NumResults
+	// can be approximate if search scanned only a subset of documents, and
+	// result count is estimated using the hyperloglog algorithm.
 	Approximate bool
 }
 
@@ -88,52 +90,59 @@ type searchResponse struct {
 	err error
 	// latency is recorded by the orchestrator of the search query.
 	latency time.Duration
-	// uncounted reports whether this response is missing total result counts.
+	// uncounted reports whether this response is missing total result counts. If
+	// uncounted is true, search will wait for either the hyperloglog count
+	// estimate, or for an alternate search method to return with
+	// uncounted=false.
 	uncounted bool
 }
 
 // A searcher is used to execute a single search request.
 type searcher func(ctx context.Context, q string, limit, offset int) searchResponse
 
-// FastSearch executes three search requests concurrently:
-//   - very popular packages (imported_by_count > 50); the top ~1%
-//   - popular packages (imported_by_count > 8); the top ~5%
-//   - all packages ("deep" search)
-// Popular search takes significantly less time to scan very common search
-// terms (e.g. "errors", "cloud", or "kubernetes"), due to partial indexing.
-// Because 0 <= ts_rank() <= 1, we know that the highest score of any unpopular
-// package is ln(e+N), where N is the number of importers above which a package
-// is 'popular'. Therefore if the lowest scoring result of popular search is
-// greater than ln(e+N), we know that we haven't missed any results and can
-// return the search result immediately, cancelling other searches.
+// FastSearch executes two search requests concurrently:
+//   - a sequential scan of packages in descending order of popularity.
+//   - all packages ("deep" search) using an inverted index to filter to search
+//     terms.
 //
-// On the other hand, if we *have* missed a result it is likely that the search
-// term is infrequent, and deep scan will be fast due to our inverted gin index
-// on search tokens.
+// The sequential scan takes significantly less time when searching for very
+// common terms (e.g. "errors", "cloud", or "kubernetes"), due to its ability
+// to exit early once the requested page of search results is provably
+// complete.
+//
+// Because 0 <= ts_rank() <= 1, we know that the highest score of any unscanned
+// package is ln(e+N), where N is imported_by_count of the package we are
+// currently considering.  Therefore if the lowest scoring result of popular
+// search is greater than ln(e+N), we know that we haven't missed any results
+// and can return the search result immediately, cancelling other searches.
+//
+// On the other hand, if the popular search is slow, it is likely that the
+// search term is infrequent, and deep search will be fast due to our inverted
+// gin index on search tokens.
 //
 // The gap in this optimization is search terms that are very frequent, but
 // rarely relevant: "int" or "package", for example. In these cases we'll pay
 // the penalty of a deep search that scans nearly every package.
 func (db *DB) FastSearch(ctx context.Context, q string, limit, offset int) (_ []*SearchResult, err error) {
 	defer derrors.Wrap(&err, "DB.FastSearch(ctx, %q, %d, %d)", q, limit, offset)
-	return db.guardedFastSearch(ctx, q, limit, offset, nil)
+	searchers := []searcher{db.popularSearch, db.deepSearch}
+	return db.hedgedSearch(ctx, q, limit, offset, searchers, nil)
 }
 
-// guardedFastSearch is factored out for testing purposes: it accepts an
-// optional func to allow tests to control the order in which search results
-// are returned.
-func (db *DB) guardedFastSearch(ctx context.Context, q string, limit, offset int, guardTestResult func(string) func()) ([]*SearchResult, error) {
-	// We fan out multiple search requests, searching very popular, popular, and
-	// all search documents. The thresholds for popularity were chosen as a
-	// trade-off between hit rate and latency: the more selective the subset of
-	// documents, the lower the latency but also the lower the hit rate.
-	//
-	// The heuristic for choosing these thresholds is pinned to a target latency
-	// of ~500ms.  The 'very popular' index was chosen so that extremely dense
-	// and relevant search terms (e.g. 'kubernetes' or 'github') are returned
-	// within this threshold. The 'popular' index was chosen as a backstop for
-	// terms that miss the 'very popular' result set.
-	searchers := []searcher{db.popularSearcher(50), db.popularSearcher(8), db.deepSearch}
+// PartialFastSearch implements a hedged search using partial indexes of
+// popular packages.
+// TODO(b/141182438) delete this once a testing period is over.
+func (db *DB) PartialFastSearch(ctx context.Context, q string, limit, offset int) (_ []*SearchResult, err error) {
+	defer derrors.Wrap(&err, "DB.PartialFastSearch(ctx, %q, %d, %d)", q, limit, offset)
+	searchers := []searcher{db.popularSearcher(50), db.popularSearcher(8)}
+	return db.hedgedSearch(ctx, q, limit, offset, searchers, nil)
+}
+
+// hedgedSearch executes multiple search methods and returns the first
+// available result.
+// The optional guardTestResult func may be used to allow tests to control the
+// order in which search results are returned.
+func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, searchers []searcher, guardTestResult func(string) func()) ([]*SearchResult, error) {
 	responses := make(chan searchResponse, len(searchers))
 	// cancel all unfinished searches when a result (or error) is returned. The
 	// effectiveness of this depends on the database driver.
@@ -249,17 +258,22 @@ const hllRegisterCount = 128
 //   register count, we should adjust the estimate for a_m below according to
 //   the formulas in the wikipedia article above.
 var hllQuery = fmt.Sprintf(`
-	WITH hll_data AS (SELECT (SELECT * FROM (
-			SELECT hll_leading_zeros
-			FROM search_documents
-			WHERE (
-				ts_rank(tsv_search_tokens, websearch_to_tsquery($1)) *
-				ln(exp(1)+imported_by_count) *
-				CASE WHEN redistributable then 1 else 0.5 end
-			) > 0.1
-			AND hll_register=generate_series
-			ORDER BY hll_leading_zeros DESC
-			) t LIMIT 1) zeros
+	WITH hll_data AS (
+		SELECT (
+			SELECT * FROM (
+				SELECT hll_leading_zeros
+				FROM search_documents
+				WHERE (
+					ts_rank(tsv_search_tokens, websearch_to_tsquery($1)) *
+					ln(exp(1)+imported_by_count) *
+					CASE WHEN redistributable then 1 else 0.5 end *
+					CASE WHEN tsv_search_tokens @@ websearch_to_tsquery($1) THEN 1 ELSE 0 END
+				) > 0.1
+				AND hll_register=generate_series
+				ORDER BY hll_leading_zeros DESC
+			) t
+			LIMIT 1
+		) zeros
 		FROM generate_series(0,%[1]d-1)
 	),
 	nonempty_registers as (SELECT zeros FROM hll_data WHERE zeros IS NOT NULL)
@@ -273,9 +287,9 @@ var hllQuery = fmt.Sprintf(`
 	FROM (
 		SELECT
 			(
-				(0.7213 / (1 + 1.079 / %[1]d)) *                    -- estimate for a_m
-				pow(%[1]d, 2) *                                     -- m^2
-				(1/((%[1]d - count(1)) + SUM(POW(2, -1 * zeros))))  -- Z
+				(0.7213 / (1 + 1.079 / %[1]d)) *  -- estimate for a_m
+				pow(%[1]d, 2) *                   -- m^2
+				(1/((%[1]d - count(1)) + SUM(POW(2, -1 * (zeros+1)))))  -- Z
 			)::int AS result_count,
 			%[1]d - count(1) AS empty_register_count
 		FROM nonempty_registers
@@ -303,7 +317,7 @@ func (db *DB) estimateResultsCount(ctx context.Context, q string) estimateRespon
 // are always valid.
 func (db *DB) deepSearch(ctx context.Context, q string, limit, offset int) searchResponse {
 	query := `
-		SELECT *
+		SELECT *, COUNT(*) OVER() AS total
 		FROM (
 			SELECT
 				package_path,
@@ -311,7 +325,6 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit, offset int) searc
 				module_path,
 				commit_time,
 				imported_by_count,
-				COUNT(*) OVER() AS total,
 				(
 					ts_rank(tsv_search_tokens, websearch_to_tsquery($1)) *
 					ln(exp(1)+imported_by_count) *
@@ -332,7 +345,7 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit, offset int) searc
 	collect := func(rows *sql.Rows) error {
 		var r SearchResult
 		if err := rows.Scan(&r.PackagePath, &r.Version, &r.ModulePath, &r.CommitTime,
-			&r.NumImportedBy, &r.NumResults, &r.Score); err != nil {
+			&r.NumImportedBy, &r.Score, &r.NumResults); err != nil {
 			return fmt.Errorf("rows.Scan(): %v", err)
 		}
 		results = append(results, &r)
@@ -349,10 +362,44 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit, offset int) searc
 	}
 }
 
+func (db *DB) popularSearch(ctx context.Context, searchQuery string, limit, offset int) searchResponse {
+	query := `
+		SELECT
+			package_path,
+			version,
+			module_path,
+			commit_time,
+			imported_by_count,
+			score
+		FROM popular_search($1, $2, $3)`
+	var results []*SearchResult
+	collect := func(rows *sql.Rows) error {
+		var r SearchResult
+		if err := rows.Scan(&r.PackagePath, &r.Version, &r.ModulePath, &r.CommitTime,
+			&r.NumImportedBy, &r.Score); err != nil {
+			return fmt.Errorf("rows.Scan(): %v", err)
+		}
+		results = append(results, &r)
+		return nil
+	}
+	err := db.runQuery(ctx, query, collect, searchQuery, limit, offset)
+	if err != nil {
+		results = nil
+	}
+	return searchResponse{
+		source:    "popular",
+		results:   results,
+		err:       err,
+		uncounted: true,
+	}
+}
+
 // popularSearcher returns a searcher that only searches packages with more
 // than cutoff importers. Results can be invalid if it does not return the
 // limit of results, all of which have greater score than the highest
 // theoretical score of an unpopular package.
+// TODO(b/141182438): remove this once the trial period with 'popularSearch' is
+// over, and drop the partial indexes.
 func (db *DB) popularSearcher(cutoff int) searcher {
 	return func(ctx context.Context, searchQuery string, limit, offset int) searchResponse {
 		query := fmt.Sprintf(`SELECT *
@@ -465,10 +512,27 @@ func (db *DB) addPackageDataToSearchResults(ctx context.Context, results []*Sear
 	return db.runQuery(ctx, query, collect)
 }
 
+// DeepSearch executes a full scan of the search table in two steps, by first
+// querying and then enriching.
+// TODO(b/141182438) delete this once a testing period is over.
+func (db *DB) DeepSearch(ctx context.Context, q string, limit, offset int) (_ []*SearchResult, err error) {
+	defer derrors.Wrap(&err, "DB.DeepSearch(ctx, %q, %d, %d)", q, limit, offset)
+	resp := db.deepSearch(ctx, q, limit, offset)
+
+	if resp.err != nil {
+		return nil, resp.err
+	}
+	if err := db.addPackageDataToSearchResults(ctx, resp.results); err != nil {
+		return nil, err
+	}
+	return resp.results, nil
+}
+
 // Search fetches packages from the database that match the terms
 // provided, and returns them in order of relevance.
-func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int) (_ []*SearchResult, err error) {
-	defer derrors.Wrap(&err, "DB.Search(ctx, %q, %d, %d)", searchQuery, limit, offset)
+// TODO(b/141182438) delete this once a testing period is over.
+func (db *DB) Search(ctx context.Context, q string, limit, offset int) (_ []*SearchResult, err error) {
+	defer derrors.Wrap(&err, "DB.Search(ctx, %q, %d, %d)", q, limit, offset)
 
 	// Score:
 	// Packages are scored based on their relevance and imported_by_count. If
@@ -548,7 +612,7 @@ func (db *DB) Search(ctx context.Context, searchQuery string, limit, offset int)
 		results = append(results, &sr)
 		return nil
 	}
-	if err := db.runQuery(ctx, query, collect, searchQuery, limit, offset); err != nil {
+	if err := db.runQuery(ctx, query, collect, q, limit, offset); err != nil {
 		return nil, err
 	}
 	return results, nil
@@ -767,8 +831,9 @@ func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context, limit in
 
 // LegacySearch fetches packages from the database that match the terms
 // provided, and returns them in order of relevance as a []*SearchResult.
-func (db *DB) LegacySearch(ctx context.Context, searchQuery string, limit, offset int) (_ []*SearchResult, err error) {
-	defer derrors.Wrap(&err, "LegacySearch(ctx, %q, %d, %d)", searchQuery, limit, offset)
+// TODO(b/141182438) delete this once a testing period is over.
+func (db *DB) LegacySearch(ctx context.Context, q string, limit, offset int) (_ []*SearchResult, err error) {
+	defer derrors.Wrap(&err, "LegacySearch(ctx, %q, %d, %d)", q, limit, offset)
 
 	if limit == 0 {
 		return nil, xerrors.Errorf("cannot search: limit cannot be 0: %w", derrors.InvalidArgument)
@@ -823,7 +888,7 @@ func (db *DB) LegacySearch(ctx context.Context, searchQuery string, limit, offse
 			package_path
 		LIMIT $2
 		OFFSET $3;`
-	rows, err := db.query(ctx, query, searchQuery, limit, offset)
+	rows, err := db.query(ctx, query, q, limit, offset)
 	if err != nil {
 		return nil, err
 	}

@@ -52,10 +52,14 @@ func fetchSearchPage(ctx context.Context, ds DataSource, query, method string, p
 	switch method {
 	case "legacy":
 		dbresults, err = ds.LegacySearch(ctx, query, pageParams.limit, pageParams.offset())
-	case "fast":
-		dbresults, err = ds.FastSearch(ctx, query, pageParams.limit, pageParams.offset())
-	default:
+	case "slow":
 		dbresults, err = ds.Search(ctx, query, pageParams.limit, pageParams.offset())
+	case "deep":
+		dbresults, err = ds.DeepSearch(ctx, query, pageParams.limit, pageParams.offset())
+	case "partial-fast":
+		dbresults, err = ds.PartialFastSearch(ctx, query, pageParams.limit, pageParams.offset())
+	default:
+		dbresults, err = ds.FastSearch(ctx, query, pageParams.limit, pageParams.offset())
 	}
 	if err != nil {
 		return nil, err
@@ -85,6 +89,7 @@ func fetchSearchPage(ctx context.Context, ds DataSource, query, method string, p
 			// 128 buckets corresponds to a standard error of 10%.
 			// http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf
 			numResults = approximateNumber(numResults, 0.1)
+			approximate = true
 		}
 	}
 

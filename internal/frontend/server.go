@@ -79,19 +79,21 @@ type DataSource interface {
 	// GetVersionInfo returns the VersionInfo corresponding to modulePath and
 	// version.
 	GetVersionInfo(ctx context.Context, modulePath, version string) (*internal.VersionInfo, error)
-
-	// Temporarily, we support all three types of search, for diagnostic
-	// purposes. In the future this will be pruned to just one.
-
-	// LegacySearch performs a search for the given query, with pagination
-	// specified by limit and offset.
-	LegacySearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
-	// Search is a slow search of all search documents.
-	Search(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
-	// FastSearch is an optimized search.
-	FastSearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
 	// IsExcluded reports whether the path is excluded from processinng.
 	IsExcluded(ctx context.Context, path string) (bool, error)
+
+	// Temporarily, we support many types of search, for diagnostic purposes. In
+	// the future this will be pruned to just one (FastSearch).
+
+	// FastSearch performs a hedged search of both popular and all packages.
+	FastSearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
+
+	// Alternative search types, for testing.
+	// TODO(b/141182438): remove all of these.
+	LegacySearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
+	Search(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
+	DeepSearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
+	PartialFastSearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
 }
 
 // NewServer creates a new Server for the given database and template directory.
