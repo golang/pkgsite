@@ -26,7 +26,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/url"
 	"path"
 	"regexp"
 	"strconv"
@@ -194,23 +193,33 @@ func moduleInfoDynamic(ctx context.Context, client *http.Client, modulePath, ver
 	// We resolve these problems as follows:
 	// 1. First look at the repo URL from the tag. If that matches a known hosting site, use the
 	//    URL templates corresponding to that site and ignore whatever's in the tag.
-	// 2. TODO(b/141847689): heuristically determine how to construct a URL template with a commit from the
+	// 2. Then look at the URL templates to see if they match a known pattern, and use the templates
+	//    from that pattern. For example, the meta tags for gopkg.in/yaml.v2 only mention github
+	//    in the URL templates, like "https://github.com/go-yaml/yaml/tree/v2.2.3{/dir}". We can observe
+	//    that that template begins with a known pattern--a GitHub repo, ignore the rest of it, and use the
+	//    GitHub URL templates that we know.
+	// 3. TODO(b/141847689): heuristically determine how to construct a URL template with a commit from the
 	//    existing go-source template. For example, by replacing "master" with "{commit}".
 	// We could also consider using the repo in the go-import tag instead of the one in the go-source tag,
 	// if the former matches a known pattern but the latter does not.
-	rurl, err := url.Parse(sourceMeta.repoURL)
-	if err != nil {
-		return nil, err
-	}
-	_, _, templates, err := matchStatic(path.Join(rurl.Hostname(), rurl.Path))
+	repoURL := sourceMeta.repoURL
+	_, _, templates, _ := matchStatic(removeHTTPScheme(repoURL))
+	// If err != nil, templates will the zero value, so we can ignore it (same just below).
 	if templates == (urlTemplates{}) {
-		// Log this as an error so that we can notice it and possibly add it to our
-		// list of static patterns.
-		log.Errorf("no templates for repo URL %q from meta tag: err=%v", sourceMeta.repoURL, err)
+		var repo string
+		repo, _, templates, _ = matchStatic(removeHTTPScheme(sourceMeta.dirTemplate))
+		if templates == (urlTemplates{}) {
+			// Log an error so that we can notice it and possibly add this case to our
+			// list of static patterns.
+			log.Errorf("no templates for repo URL %q from meta tag: err=%v", sourceMeta.repoURL, err)
+		} else {
+			// Use the repo from the template, not the original one.
+			repoURL = "https://" + repo
+		}
 	}
 	dir := strings.TrimPrefix(strings.TrimPrefix(modulePath, sourceMeta.repoRootPrefix), "/")
 	return &Info{
-		RepoURL:   strings.TrimSuffix(sourceMeta.repoURL, "/"),
+		RepoURL:   strings.TrimSuffix(repoURL, "/"),
 		moduleDir: dir,
 		commit:    commitFromVersion(version, dir),
 		templates: templates,
@@ -238,6 +247,19 @@ func adjustVersionedModuleDirectory(ctx context.Context, client *http.Client, in
 	} else {
 		res.Body.Close()
 	}
+}
+
+// removeHTTPScheme removes an initial "http://" or "https://" from url.
+// The result can be used to match against our static patterns.
+// If the URL uses a different scheme, it won't be removed and it won't
+// match any patterns, as intended.
+func removeHTTPScheme(url string) string {
+	for _, prefix := range []string{"https://", "http://"} {
+		if strings.HasPrefix(url, prefix) {
+			return url[len(prefix):]
+		}
+	}
+	return url
 }
 
 // removeVersionSuffix returns s with "/vN" removed if N is an integer > 1.

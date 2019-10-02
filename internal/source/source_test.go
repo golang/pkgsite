@@ -165,6 +165,24 @@ func TestModuleInfo(t *testing.T) {
 			"https://gitlab.com/akita/akita/blob/v2.0.0-rc.2/v2/event.go",
 			"https://gitlab.com/akita/akita/blob/v2.0.0-rc.2/v2/event.go#L1",
 		},
+		{
+			"gopkg.in, one element",
+			"gopkg.in/yaml.v2", "v2.2.2", "yaml.go",
+
+			"https://github.com/go-yaml/yaml",
+			"https://github.com/go-yaml/yaml/tree/v2.2.2",
+			"https://github.com/go-yaml/yaml/blob/v2.2.2/yaml.go",
+			"https://github.com/go-yaml/yaml/blob/v2.2.2/yaml.go#L1",
+		},
+		{
+			"gopkg.in, two elements",
+			"gopkg.in/boltdb/bolt.v1", "v1.3.0", "doc.go",
+
+			"https://github.com/boltdb/bolt",
+			"https://github.com/boltdb/bolt/tree/v1.3.0",
+			"https://github.com/boltdb/bolt/blob/v1.3.0/doc.go",
+			"https://github.com/boltdb/bolt/blob/v1.3.0/doc.go#L1",
+		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
 			check := func(msg, got, want string) {
