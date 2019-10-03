@@ -179,6 +179,9 @@ func ResetTestDB(db *DB, t *testing.T) {
 		if _, err := tx.Exec(`TRUNCATE module_version_states;`); err != nil {
 			return err
 		}
+		if _, err := tx.Exec(`TRUNCATE blacklist_prefixes;`); err != nil {
+			return err
+		}
 		return nil
 	}); err != nil {
 		t.Fatalf("error resetting test DB: %v", err)
