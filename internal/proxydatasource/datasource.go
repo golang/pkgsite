@@ -403,3 +403,7 @@ func packageFromVersion(pkgPath string, v *internal.Version) (_ *internal.Versio
 	}
 	return nil, xerrors.Errorf("package missing from module %s: %w", v.ModulePath, derrors.NotFound)
 }
+
+func (*DataSource) IsExcluded(context.Context, string) (bool, error) {
+	return false, nil
+}

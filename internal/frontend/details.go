@@ -51,7 +51,7 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pkg *internal.VersionedPackage
-	code, epage := fetchPackageOrModule("pkg", path, version, func(ver string) error {
+	code, epage := fetchPackageOrModule(r.Context(), s.ds, "pkg", path, version, func(ver string) error {
 		var err error
 		pkg, err = s.ds.GetPackage(r.Context(), path, ver)
 		return err
@@ -134,7 +134,7 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkg *i
 //
 // fetchPackageOrModule returns the import path and version requested, an
 // HTTP status code, and possibly an error page to display.
-func fetchPackageOrModule(namespace, path, version string, get func(v string) error) (code int, _ *errorPage) {
+func fetchPackageOrModule(ctx context.Context, ds DataSource, namespace, path, version string, get func(v string) error) (code int, _ *errorPage) {
 	if version != internal.LatestVersion && !semver.IsValid(version) {
 		// A valid semantic version was not requested.
 		epage := &errorPage{Message: fmt.Sprintf("%q is not a valid semantic version.", version)}
@@ -145,8 +145,17 @@ func fetchPackageOrModule(namespace, path, version string, get func(v string) er
 		return http.StatusBadRequest, epage
 	}
 
+	excluded, err := ds.IsExcluded(ctx, path)
+	if err != nil {
+		return http.StatusInternalServerError, nil
+	}
+	if excluded {
+		// Return NotFound; don't let the user know that the package was excluded.
+		return http.StatusNotFound, nil
+	}
+
 	// Fetch the package or module from the database.
-	err := get(version)
+	err = get(version)
 	if err == nil {
 		// A package or module was found for this path and version.
 		return http.StatusOK, nil
@@ -218,7 +227,7 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	var moduleVersion *internal.VersionInfo
-	code, epage := fetchPackageOrModule("mod", path, version, func(ver string) error {
+	code, epage := fetchPackageOrModule(ctx, s.ds, "mod", path, version, func(ver string) error {
 		var err error
 		moduleVersion, err = s.ds.GetVersionInfo(ctx, path, ver)
 		return err

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -286,6 +287,13 @@ func TestProcessPackageOrModulePath(t *testing.T) {
 			wantVersion: "",
 			wantCode:    http.StatusNotFound,
 		},
+		{
+			desc:        "excluded",
+			urlPath:     "bad/path@v1.2.3",
+			wantPath:    "",
+			wantVersion: "",
+			wantCode:    http.StatusNotFound,
+		},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
 			ncalls := 0
@@ -301,12 +309,20 @@ func TestProcessPackageOrModulePath(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			gotCode, _ := fetchPackageOrModule("pkg", path, version, get)
+			gotCode, _ := fetchPackageOrModule(context.Background(), fakeDataSource{}, "pkg", path, version, get)
 			if gotCode != tc.wantCode {
 				t.Fatalf("got status code %d, want %d", gotCode, tc.wantCode)
 			}
 		})
 	}
+}
+
+type fakeDataSource struct {
+	DataSource
+}
+
+func (fakeDataSource) IsExcluded(_ context.Context, path string) (bool, error) {
+	return strings.HasPrefix(path, "bad"), nil
 }
 
 func TestFileSource(t *testing.T) {

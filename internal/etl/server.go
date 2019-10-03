@@ -196,12 +196,12 @@ func (s *Server) handleFetch(w http.ResponseWriter, r *http.Request) {
 
 // doFetch executes a fetch request and returns the msg and status.
 func (s *Server) doFetch(r *http.Request) (string, int) {
-	isb, err := s.db.IsExcluded(r.Context(), r.URL.Path)
+	exc, err := s.db.IsExcluded(r.Context(), r.URL.Path)
 	if err != nil {
 		return err.Error(), http.StatusInternalServerError
 	}
-	if isb {
-		return "blacklisted", http.StatusForbidden
+	if exc {
+		return "excluded", http.StatusForbidden
 	}
 	modulePath, version, err := parseModulePathAndVersion(r.URL.Path)
 	if err != nil {

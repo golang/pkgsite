@@ -90,6 +90,8 @@ type DataSource interface {
 	Search(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
 	// FastSearch is an optimized search.
 	FastSearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
+	// IsExcluded reports whether the path is excluded from processinng.
+	IsExcluded(ctx context.Context, path string) (bool, error)
 }
 
 // NewServer creates a new Server for the given database and template directory.
