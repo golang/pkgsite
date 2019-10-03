@@ -151,7 +151,7 @@ func fetchPackageOrModule(namespace, path, version string, get func(v string) er
 		// A package or module was found for this path and version.
 		return http.StatusOK, nil
 	}
-	log.Errorf("fetchPackageOrModule(%q, %q, %q): get error: %v",
+	log.Errorf("fetchPackageOrModule(%q, %q, %q): got error: %v",
 		namespace, path, version, err)
 	if !xerrors.Is(err, derrors.NotFound) {
 		// Something went wrong in executing the get function.
@@ -537,7 +537,7 @@ func breadcrumbPath(pkgPath, modPath, version string) template.HTML {
 		minLen = 1
 	}
 	var dirs []string
-	for dir := pkgPath; len(dir) > minLen; dir = path.Dir(dir) {
+	for dir := pkgPath; len(dir) > minLen && len(path.Dir(dir)) < len(dir); dir = path.Dir(dir) {
 		dirs = append(dirs, dir)
 	}
 	// Construct the path elements of the result.
