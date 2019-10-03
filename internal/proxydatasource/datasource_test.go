@@ -66,8 +66,9 @@ func TestDataSource_GetDirectory(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
 	want := &internal.Directory{
-		Path:    "foo.com/bar",
-		Version: "v1.2.0",
+		Path:       "foo.com/bar",
+		ModulePath: "foo.com/bar",
+		Version:    "v1.2.0",
 		Packages: []*internal.VersionedPackage{
 			wantVersionedPackage,
 		},

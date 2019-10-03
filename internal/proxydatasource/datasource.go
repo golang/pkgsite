@@ -80,9 +80,10 @@ func (ds *DataSource) GetDirectory(ctx context.Context, dirPath, version string)
 		}
 	}
 	return &internal.Directory{
-		Path:     dirPath,
-		Version:  info.Version,
-		Packages: vps,
+		Path:       dirPath,
+		ModulePath: modulePath,
+		Version:    info.Version,
+		Packages:   vps,
 	}, nil
 }
 
