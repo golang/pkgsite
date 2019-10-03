@@ -40,7 +40,7 @@ type sourceMeta struct {
 // already have it in the module zip file). So we merge the go-import and
 // go-source meta tag information, preferring the latter.
 func fetchMeta(ctx context.Context, client *http.Client, importPath string) (_ *sourceMeta, err error) {
-	derrors.Wrap(&err, "fetchMeta(ctx, client, %q, r)", importPath)
+	defer derrors.Wrap(&err, "fetchMeta(ctx, client, %q, r)", importPath)
 
 	uri := importPath
 	if !strings.Contains(uri, "/") {
