@@ -4,7 +4,7 @@
 
 BEGIN;
 
-CREATE TABLE exclude_prefixes (
+CREATE TABLE excluded_prefixes (
        prefix     TEXT PRIMARY KEY,
        created_by TEXT NOT NULL,
        reason     TEXT NOT NULL,

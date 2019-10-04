@@ -4,6 +4,6 @@
 
 BEGIN;
 
-DROP TABLE exclude_prefixes;
+DROP TABLE excluded_prefixes;
 
 END;

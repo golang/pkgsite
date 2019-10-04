@@ -9,12 +9,12 @@ import (
 	"testing"
 )
 
-func TestIsBlacklisted(t *testing.T) {
+func TestIsExcluded(t *testing.T) {
 	defer ResetTestDB(testDB, t)
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	if _, err := testDB.exec(ctx, "INSERT INTO blacklist_prefixes (prefix) VALUES ('bad')"); err != nil {
+	if _, err := testDB.exec(ctx, "INSERT INTO excluded_prefixes (prefix, created_by, reason) VALUES ('bad', 'someone', 'because')"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -28,7 +28,7 @@ func TestIsBlacklisted(t *testing.T) {
 		{"badness", true},
 		{"bad.com/foo", true},
 	} {
-		got, err := testDB.IsBlacklisted(ctx, test.path)
+		got, err := testDB.IsExcluded(ctx, test.path)
 		if err != nil {
 			t.Fatal(err)
 		}

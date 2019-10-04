@@ -898,6 +898,8 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					DocumentationHTML: []byte("const CacheLinePadSize = 3"),
 					Imports:           []string{},
 					V1Path:            "build.constraints/module/cpu",
+					GOOS:              "linux",
+					GOARCH:            "amd64",
 				},
 			},
 			hasIncompletePackages: true,
