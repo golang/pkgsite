@@ -12,7 +12,7 @@ import (
 	"golang.org/x/discovery/internal/log"
 )
 
-// IsExcluded reports whether the path matches the blacklist.
+// IsExcluded reports whether the path matches the excluded list.
 func (db *DB) IsExcluded(ctx context.Context, path string) (_ bool, err error) {
 	defer derrors.Wrap(&err, "DB.IsExcluded(ctx, %q)", path)
 
