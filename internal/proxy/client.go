@@ -153,8 +153,16 @@ func (c *Client) executeRequest(ctx context.Context, u string, bodyFunc func(bod
 		return fmt.Errorf("ctxhttp.Get(ctx, client, %q): %v", u, err)
 	}
 	defer r.Body.Close()
-	if err := derrors.FromHTTPStatus(r.StatusCode, "ctxhttp.Get(ctx, client, %q)", u); err != nil {
-		return err
+	switch {
+	case 200 <= r.StatusCode && r.StatusCode < 300:
+		// OK.
+	case r.StatusCode == http.StatusNotFound,
+		r.StatusCode == http.StatusGone:
+		// Treat both 404 Not Found and 410 Gone responses
+		// from the proxy as a "not found" error category.
+		return xerrors.Errorf("ctxhttp.Get(ctx, client, %q): %w", u, derrors.NotFound)
+	default:
+		return fmt.Errorf("ctxhttp.Get(ctx, client, %q): unexpected status %d %s", u, r.StatusCode, r.Status)
 	}
 	return bodyFunc(r.Body)
 }

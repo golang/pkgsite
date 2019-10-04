@@ -579,8 +579,9 @@ func TestFetchAndUpdateState_Incomplete(t *testing.T) {
 	}
 }
 
-// Check that when the proxy says a module@version is gone, we delete it from the database.
-func TestFetchAndUpdateState_Gone(t *testing.T) {
+// Check that when the proxy says it does not have module@version,
+// we delete it from the database.
+func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
@@ -624,7 +625,7 @@ func TestFetchAndUpdateState_Gone(t *testing.T) {
 
 	teardownProxy()
 
-	// Take down the module, by having the proxy serve a 410 for it.
+	// Take down the module, by having the proxy serve a 404/410 for it.
 	proxyMux := proxy.TestProxy([]*proxy.TestVersion{}) // serve no versions, not even the defaults.
 	proxyMux.HandleFunc(fmt.Sprintf("/%s/@v/%s.info", modulePath, version),
 		func(w http.ResponseWriter, r *http.Request) { http.Error(w, "taken down", http.StatusGone) })
@@ -632,12 +633,12 @@ func TestFetchAndUpdateState_Gone(t *testing.T) {
 	defer teardownProxy2()
 
 	// Now fetch it again.
-	if code, _ := fetchAndUpdateState(ctx, modulePath, version, client, testDB); code != http.StatusGone {
-		t.Fatalf("fetchAndUpdateState(ctx, %q, %q, client, testDB): got code %d, want 410 Gone", modulePath, version, code)
+	if code, _ := fetchAndUpdateState(ctx, modulePath, version, client, testDB); code != http.StatusNotFound && code != http.StatusGone {
+		t.Fatalf("fetchAndUpdateState(ctx, %q, %q, client, testDB): got code %d, want 404/410", modulePath, version, code)
 	}
 
-	// The new state should have a status of Gone.
-	checkStatus(http.StatusGone)
+	// The new state should have a status of Not Found.
+	checkStatus(http.StatusNotFound)
 
 	// The module should no longer be in the database.
 	if _, err := testDB.GetVersionInfo(ctx, modulePath, version); !xerrors.Is(err, derrors.NotFound) {

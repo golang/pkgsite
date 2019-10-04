@@ -88,8 +88,8 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 	
 	
 	
-	if code == http.StatusGone {
-		log.Infof("%s@%s: proxy said 410 Gone, deleting", modulePath, version)
+	if code == http.StatusNotFound || code == http.StatusGone {
+		log.Infof("%s@%s: proxy said 404/410, deleting", modulePath, version)
 		if err := db.DeleteVersion(ctx, nil, modulePath, version); err != nil {
 			log.Error(err)
 			return http.StatusInternalServerError, err

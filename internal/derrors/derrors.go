@@ -17,14 +17,11 @@ import (
 //lint:file-ignore ST1012 prefixing error values with Err would stutter
 
 var (
-	// NotFound indicates that a requested entity was not found (HTTP 404)
+	// NotFound indicates that a requested entity was not found (HTTP 404).
 	NotFound = errors.New("not found")
 	// InvalidArgument indicates that the input into the request is invalid in
-	// some way (HTTP 400)
+	// some way (HTTP 400).
 	InvalidArgument = errors.New("invalid argument")
-	// Gone indicates that the requested entity was not found, and that this is
-	// likely to be a permanent condition (HTTP 410).
-	Gone = errors.New("gone")
 	// BadModule indicates a problem with a module.
 	BadModule = errors.New("bad module")
 
@@ -38,7 +35,6 @@ var httpCodes = []struct {
 }{
 	{NotFound, http.StatusNotFound},
 	{InvalidArgument, http.StatusBadRequest},
-	{Gone, http.StatusGone},
 	{BadModule, 490}, // since this isn't an HTTP status, pick an unused code
 }
 
