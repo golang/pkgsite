@@ -11,7 +11,7 @@
         <h2 class="Imports-heading">Imports</h2>
         <ul class="Imports-list">
         {{range .ExternalImports}}
-          <li><a href="/pkg/{{.}}">{{.}}</a></li>
+          <li><a href="/{{.}}">{{.}}</a></li>
         {{end}}
         </ul>
       {{end}}
@@ -19,7 +19,7 @@
         <h2 class="Imports-heading">Imports in module “{{.ModulePath}}”</h2>
         <ul class="Imports-list">
         {{range .InternalImports}}
-          <li><a href="/pkg/{{.}}">{{.}}</a></li>
+          <li><a href="/{{.}}">{{.}}</a></li>
         {{end}}
         </ul>
       {{end}}
@@ -27,7 +27,7 @@
         <h2 class="Imports-heading">Standard Library Imports</h2>
         <ul class="Imports-list">
         {{range .StdLib}}
-          <li><a href="/pkg/{{.}}">{{.}}</a></li>
+          <li><a href="/{{.}}">{{.}}</a></li>
         {{end}}
         </ul>
       {{end}}

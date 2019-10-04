@@ -15,7 +15,7 @@
     <p class="InfoLabel">
       {{if eq $namespace "pkg"}}
         <strong class="InfoLabel-title">Module: </strong>
-        <a href="/mod/{{$header.Module.Path}}@{{$header.Version}}">
+        <a href="{{$header.Module.URL}}">
           {{if eq $header.Module.Path "std"}}
             Standard library
           {{else}}
@@ -30,7 +30,7 @@
       <span class="InfoLabel-divider">|</span>
       <strong class="InfoLabel-title">{{pluralize (len $header.Licenses) "License"}}: </strong>
       {{range $i, $e := $header.Licenses -}}{{if $i}}, {{end}}
-        <a href="/{{$namespace}}/{{$header.Path}}@{{$header.Version}}?tab=licenses#{{.Anchor}}">{{$e.Type}}</a>
+        <a href="{{$header.URL}}?tab=licenses#{{.Anchor}}">{{$e.Type}}</a>
       {{- else -}}
         <span>None detected</span>
         <a href="/license-policy" class="Disclaimer-link"><em>not legal advice</em></a>
@@ -46,7 +46,7 @@
     <ul class="DetailsNav-list" role="tablist">
       {{range .Tabs}}
         <li class="DetailsNav-tab{{if eq .Name $.Settings.Name}} selected{{end}}" role="presentation">
-          <a class="DetailsNav-link" href="/{{$namespace}}/{{$header.Path}}@{{$header.Version}}?tab={{.Name}}" role="tab" aria-selected="{{if eq .Name $.Settings.Name}}true{{else}}false{{end}}">
+          <a class="DetailsNav-link" href="{{$header.URL}}?tab={{.Name}}" role="tab" aria-selected="{{if eq .Name $.Settings.Name}}true{{else}}false{{end}}">
             {{.DisplayName}}
           </a>
         </li>

@@ -46,7 +46,7 @@ type DataSource interface {
 	GetDirectory(ctx context.Context, dirPath, version string) (_ *internal.Directory, err error)
 	// GetImportedBy returns a slice of import paths corresponding to packages
 	// that import the given package path (at any version).
-	GetImportedBy(ctx context.Context, path, version string, limit int) ([]string, error)
+	GetImportedBy(ctx context.Context, pkgPath, version string, limit int) ([]string, error)
 	// GetImports returns a slice of import paths imported by the package
 	// specified by path and version.
 	GetImports(ctx context.Context, pkgPath, modulePath, version string) ([]string, error)
@@ -61,7 +61,7 @@ type DataSource interface {
 	// GetPackage returns the VersionedPackage corresponding to the given package
 	// path and version. When multiple package paths satisfy this query, it
 	// should prefer the module with the longest path.
-	GetPackage(ctx context.Context, path, version string) (*internal.VersionedPackage, error)
+	GetPackage(ctx context.Context, pkgPath, version string) (*internal.VersionedPackage, error)
 	// GetPackageLicenses returns all Licenses that apply to pkgPath, within the
 	// module version specified by modulePath and version.
 	GetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) ([]*license.License, error)
@@ -74,13 +74,13 @@ type DataSource interface {
 	// GetPseudoVersionsForModule returns VersionInfo for all known
 	// pseudo-versions for any module containing a package with the given import
 	// path.
-	GetPseudoVersionsForPackageSeries(ctx context.Context, path string) ([]*internal.VersionInfo, error)
+	GetPseudoVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*internal.VersionInfo, error)
 	// GetTaggedVersionsForModule returns VersionInfo for all known tagged
 	// versions for the module corresponding to modulePath.
 	GetTaggedVersionsForModule(ctx context.Context, modulePath string) ([]*internal.VersionInfo, error)
 	// GetTaggedVersionsForModule returns VersionInfo for all known tagged
 	// versions for any module containing a package with the given import path.
-	GetTaggedVersionsForPackageSeries(ctx context.Context, path string) ([]*internal.VersionInfo, error)
+	GetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*internal.VersionInfo, error)
 	// GetVersionInfo returns the VersionInfo corresponding to modulePath and
 	// version.
 	GetVersionInfo(ctx context.Context, modulePath, version string) (*internal.VersionInfo, error)
@@ -131,14 +131,13 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	handle("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(s.staticPath)))
 	}))
-	handle("/pkg/", http.HandlerFunc(s.handleDetails))
 	handle("/mod/", http.HandlerFunc(s.handleModuleDetails))
 	handle("/search", http.HandlerFunc(s.handleSearch))
 	handle("/search-help", s.staticPageHandler("search_help.tmpl", "Search Help - Go Discovery"))
 	handle("/license-policy", s.licensePolicyHandler())
 	handle("/copyright", s.staticPageHandler("copyright.tmpl", "Copyright - Go Discovery"))
 	handle("/tos", s.staticPageHandler("tos.tmpl", "Terms of Service - Go Discovery"))
-	handle("/", http.HandlerFunc(s.handleIndexPage))
+	handle("/", http.HandlerFunc(s.handlePackageDetails))
 }
 
 // TagRoute categorizes incoming requests to the frontend for use in
@@ -155,20 +154,6 @@ func TagRoute(route string, r *http.Request) string {
 		}
 	}
 	return tag
-}
-
-// handleIndexPage handles requests to the index page.
-func (s *Server) handleIndexPage(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path == "/" {
-		s.staticPageHandler("index.tmpl", "Go Discovery")(w, r)
-		return
-	}
-
-	query := strings.TrimPrefix(r.URL.Path, "/")
-	s.serveErrorPage(w, r, http.StatusNotFound, &errorPage{
-		Message:          fmt.Sprintf("%d %s", http.StatusNotFound, http.StatusText(http.StatusNotFound)),
-		SecondaryMessage: suggestedSearch(query),
-	})
 }
 
 func suggestedSearch(userInput string) template.HTML {

@@ -70,7 +70,7 @@ func fetchModuleVersionsDetails(ctx context.Context, ds DataSource, vi *internal
 		}
 	}
 	linkify := func(v *internal.VersionInfo) string {
-		return fmt.Sprintf("/mod/%s@%s", v.ModulePath, v.Version)
+		return constructModuleURL(v.ModulePath, v.Version)
 	}
 	return buildVersionDetails(vi.ModulePath, versions, linkify), nil
 }
@@ -113,7 +113,7 @@ func fetchPackageVersionsDetails(ctx context.Context, ds DataSource, pkg *intern
 		} else {
 			versionPath = pathInVersion(pkg.V1Path, vi)
 		}
-		return fmt.Sprintf("/pkg/%s@%s", versionPath, vi.Version)
+		return constructPackageURL(versionPath, vi.ModulePath, vi.Version)
 	}
 	return buildVersionDetails(pkg.ModulePath, filteredVersions, linkify), nil
 }

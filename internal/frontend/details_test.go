@@ -39,6 +39,8 @@ func samplePackage(mutators ...func(*Package)) *Package {
 	for _, mut := range mutators {
 		mut(p)
 	}
+	p.URL = constructPackageURL(p.Path, p.Module.Path, p.Version)
+	p.Module.URL = constructModuleURL(p.Module.Path, p.Version)
 	return p
 }
 
@@ -166,47 +168,48 @@ func TestCreatePackageHeader(t *testing.T) {
 	}
 }
 
-func TestParsePathAndVersion(t *testing.T) {
+func TestParsePkgPathModulePathAndVersion(t *testing.T) {
 	testCases := []struct {
-		name        string
-		url         string
-		wantModule  string
-		wantVersion string
-		wantErr     bool
+		name, url, wantModulePath, wantPkgPath, wantVersion string
+		wantErr                                             bool
 	}{
 		{
-			name:        "valid_url",
-			url:         "https://discovery.com/test.module@v1.0.0",
-			wantModule:  "test.module",
-			wantVersion: "v1.0.0",
+			name:           "latest",
+			url:            "/github.com/hashicorp/vault/api",
+			wantModulePath: unknownModulePath,
+			wantPkgPath:    "github.com/hashicorp/vault/api",
+			wantVersion:    internal.LatestVersion,
 		},
 		{
-			name:        "valid_url_with_tab",
-			url:         "https://discovery.com/test.module@v1.0.0?tab=docs",
-			wantModule:  "test.module",
-			wantVersion: "v1.0.0",
+			name:           "package at version in nested module",
+			url:            "/github.com/hashicorp/vault/api@v1.0.3",
+			wantModulePath: unknownModulePath,
+			wantPkgPath:    "github.com/hashicorp/vault/api",
+			wantVersion:    "v1.0.3",
 		},
 		{
-			name:        "valid_url_missing_version",
-			url:         "https://discovery.com/module",
-			wantModule:  "module",
-			wantVersion: internal.LatestVersion,
+			name:           "package at version in parent module",
+			url:            "/github.com/hashicorp/vault@v1.0.3/api",
+			wantModulePath: "github.com/hashicorp/vault",
+			wantPkgPath:    "github.com/hashicorp/vault/api",
+			wantVersion:    "v1.0.3",
 		},
 		{
-			name:    "invalid_url",
-			url:     "https://discovery.com/",
+			name:           "package at version trailing slash",
+			url:            "/github.com/hashicorp/vault/api@v1.0.3/",
+			wantModulePath: unknownModulePath,
+			wantPkgPath:    "github.com/hashicorp/vault/api",
+			wantVersion:    "v1.0.3",
+		},
+		{
+			name:    "invalid url",
+			url:     "/",
 			wantErr: true,
 		},
 		{
-			name:    "invalid_url_missing_module",
-			url:     "https://discovery.com@v1.0.0",
+			name:    "invalid url missing module",
+			url:     "@v1.0.0",
 			wantErr: true,
-		},
-		{
-			name:        "invalid_version",
-			url:         "https://discovery.com/module@v1.0.0invalid",
-			wantModule:  "module",
-			wantVersion: "v1.0.0invalid",
 		},
 	}
 
@@ -217,13 +220,13 @@ func TestParsePathAndVersion(t *testing.T) {
 				t.Errorf("url.Parse(%q): %v", tc.url, parseErr)
 			}
 
-			gotModule, gotVersion, err := parsePathAndVersion(u.Path, "pkg")
+			gotPkg, gotModule, gotVersion, err := parseDetailsURLPath(u.Path)
 			if (err != nil) != tc.wantErr {
-				t.Fatalf("parsePathAndVersion(%v) error = (%v); want error %t)", u, err, tc.wantErr)
+				t.Fatalf("parseDetailsURLPath(%q) error = (%v); want error %t)", u, err, tc.wantErr)
 			}
-			if !tc.wantErr && (tc.wantModule != gotModule || tc.wantVersion != gotVersion) {
-				t.Fatalf("parsePathAndVersion(%v): %q, %q, %v; want = %q, %q, want err %t",
-					u, gotModule, gotVersion, err, tc.wantModule, tc.wantVersion, tc.wantErr)
+			if !tc.wantErr && (tc.wantModulePath != gotModule || tc.wantVersion != gotVersion || tc.wantPkgPath != gotPkg) {
+				t.Fatalf("parseDetailsURLPath(%q): %q, %q, %q, %v; want = %q, %q, %q, want err %t",
+					u, gotPkg, gotModule, gotVersion, err, tc.wantPkgPath, tc.wantModulePath, tc.wantVersion, tc.wantErr)
 			}
 		})
 	}
@@ -305,11 +308,11 @@ func TestProcessPackageOrModulePath(t *testing.T) {
 				return tc.getErr2
 			}
 
-			path, version, err := parsePathAndVersion(tc.urlPath, "pkg")
+			pkgPath, _, version, err := parseDetailsURLPath(tc.urlPath)
 			if err != nil {
 				t.Fatal(err)
 			}
-			gotCode, _ := fetchPackageOrModule(context.Background(), fakeDataSource{}, "pkg", path, version, get)
+			gotCode, _ := fetchPackageOrModule(context.Background(), fakeDataSource{}, "pkg", pkgPath, version, get)
 			if gotCode != tc.wantCode {
 				t.Fatalf("got status code %d, want %d", gotCode, tc.wantCode)
 			}
@@ -363,7 +366,7 @@ func TestBreadcrumbPath(t *testing.T) {
 	}{
 		{
 			"example.com/blob/s3blob", "example.com", internal.LatestVersion,
-			`<a href="/pkg/example.com">example.com</a><span class="DetailsHeader-breadcrumbDivider">/</span><a href="/pkg/example.com/blob">blob</a><span class="DetailsHeader-breadcrumbDivider">/</span><span class="DetailsHeader-breadcrumbCurrent">s3blob</span>`,
+			`<a href="/example.com">example.com</a><span class="DetailsHeader-breadcrumbDivider">/</span><a href="/example.com/blob">blob</a><span class="DetailsHeader-breadcrumbDivider">/</span><span class="DetailsHeader-breadcrumbCurrent">s3blob</span>`,
 		},
 		{
 			"example.com", "example.com", internal.LatestVersion,
@@ -372,7 +375,7 @@ func TestBreadcrumbPath(t *testing.T) {
 
 		{
 			"g/x/tools/go/a", "g/x/tools", internal.LatestVersion,
-			`<a href="/pkg/g/x/tools">g/x/tools</a><span class="DetailsHeader-breadcrumbDivider">/</span><a href="/pkg/g/x/tools/go">go</a><span class="DetailsHeader-breadcrumbDivider">/</span><span class="DetailsHeader-breadcrumbCurrent">a</span>`,
+			`<a href="/g/x/tools">g/x/tools</a><span class="DetailsHeader-breadcrumbDivider">/</span><a href="/g/x/tools/go">go</a><span class="DetailsHeader-breadcrumbDivider">/</span><span class="DetailsHeader-breadcrumbCurrent">a</span>`,
 		},
 		{
 			"golang.org/x/tools", "golang.org/x/tools", internal.LatestVersion,
@@ -381,18 +384,18 @@ func TestBreadcrumbPath(t *testing.T) {
 		{
 			// Special case: stdlib.
 			"encoding/json", "std", internal.LatestVersion,
-			`<a href="/pkg/encoding">encoding</a><span class="DetailsHeader-breadcrumbDivider">/</span><span class="DetailsHeader-breadcrumbCurrent">json</span>`,
+			`<a href="/encoding">encoding</a><span class="DetailsHeader-breadcrumbDivider">/</span><span class="DetailsHeader-breadcrumbCurrent">json</span>`,
 		},
 		{
 			"example.com/blob/s3blob", "example.com", "v1",
-			`<a href="/pkg/example.com@v1">example.com</a><span class="DetailsHeader-breadcrumbDivider">/</span><a href="/pkg/example.com/blob@v1">blob</a><span class="DetailsHeader-breadcrumbDivider">/</span><span class="DetailsHeader-breadcrumbCurrent">s3blob</span>`,
+			`<a href="/example.com@v1">example.com</a><span class="DetailsHeader-breadcrumbDivider">/</span><a href="/example.com/blob@v1">blob</a><span class="DetailsHeader-breadcrumbDivider">/</span><span class="DetailsHeader-breadcrumbCurrent">s3blob</span>`,
 		},
 	} {
 		t.Run(fmt.Sprintf("%s-%s-%s", test.pkgPath, test.modPath, test.version), func(t *testing.T) {
 			got := breadcrumbPath(test.pkgPath, test.modPath, test.version)
 			want := `<div class="DetailsHeader-breadcrumb">` + test.want + `</div>`
 			if string(got) != want {
-				t.Errorf("got  %s\nwant %s", got, want)
+				t.Errorf("got:\n%s\n\nwant:\n%s\n", got, want)
 			}
 		})
 	}

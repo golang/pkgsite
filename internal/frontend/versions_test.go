@@ -6,7 +6,6 @@ package frontend
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -62,7 +61,7 @@ func TestFetchModuleVersionDetails(t *testing.T) {
 
 	moduleVersionSummaries := func(path string, versions [][]string) [][]*VersionSummary {
 		return versionSummaries(path, versions, func(path, version string) string {
-			return fmt.Sprintf("/mod/%s@%s", path, version)
+			return constructModuleURL(path, version)
 		})
 	}
 
@@ -207,9 +206,9 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 	nethttpPkg.ModulePath = "std"
 	nethttpPkg.Version = "v1.12.5"
 
-	packageVersionSummaries := func(path string, versions [][]string) [][]*VersionSummary {
-		return versionSummaries(path, versions, func(path, version string) string {
-			return fmt.Sprintf("/pkg/%s@%s", path, version)
+	packageVersionSummaries := func(pkgPath, modulePath string, versions [][]string) [][]*VersionSummary {
+		return versionSummaries(pkgPath, versions, func(pkgPath, version string) string {
+			return constructPackageURL(pkgPath, modulePath, version)
 		})
 	}
 
@@ -231,7 +230,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 					{
 						Major:      "v1",
 						ModulePath: "std",
-						Versions: packageVersionSummaries("net/http", [][]string{
+						Versions: packageVersionSummaries("net/http", "std", [][]string{
 							{"v1.12.5"},
 							{"v1.11.6"},
 						}),
@@ -256,7 +255,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 					{
 						Major:      "v1",
 						ModulePath: "test.com/module",
-						Versions: packageVersionSummaries(v1Path, [][]string{
+						Versions: packageVersionSummaries(v1Path, modulePath1, [][]string{
 							{"v1.3.0"},
 							{"v1.2.3", "v1.2.1"},
 						}),
@@ -266,7 +265,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 					{
 						Major:      "v2",
 						ModulePath: "test.com/module/v2",
-						Versions: packageVersionSummaries(v2Path, [][]string{
+						Versions: packageVersionSummaries(v2Path, modulePath2, [][]string{
 							{"v2.2.1-alpha.1"},
 							{"v2.0.0"},
 						}),
@@ -274,7 +273,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 					{
 						Major:      "v1",
 						ModulePath: "test.com",
-						Versions: packageVersionSummaries(v1Path, [][]string{
+						Versions: packageVersionSummaries(v1Path, "test.com", [][]string{
 							{"v1.2.1"},
 						}),
 					},
@@ -297,7 +296,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 					{
 						Major:      "v2",
 						ModulePath: "test.com/module/v2",
-						Versions: packageVersionSummaries(v2Path, [][]string{
+						Versions: packageVersionSummaries(v2Path, modulePath2, [][]string{
 							{"v2.2.1-alpha.1"},
 							{"v2.0.0"},
 						}),
@@ -307,7 +306,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 					{
 						Major:      "v1",
 						ModulePath: "test.com/module",
-						Versions: packageVersionSummaries(v1Path, [][]string{
+						Versions: packageVersionSummaries(v1Path, modulePath1, [][]string{
 							{"v2.1.0+incompatible"},
 							{"v1.2.3", "v1.2.1"},
 						}),
@@ -327,7 +326,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 					{
 						Major:      "v0",
 						ModulePath: "test.com/module",
-						Versions: packageVersionSummaries(v1Path, [][]string{
+						Versions: packageVersionSummaries(v1Path, modulePath1, [][]string{
 							{"v0.0.0-20140414041502-4c2ca4d52544", "v0.0.0-20140414041501-3c2ca4d52544"},
 						}),
 					},

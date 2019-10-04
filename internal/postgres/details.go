@@ -69,16 +69,16 @@ func (db *DB) GetPackagesInVersion(ctx context.Context, modulePath, version stri
 // in descending order by major, minor and patch number and then lexicographically
 // in descending order by prerelease. This list includes tagged versions of
 // packages that have the same v1path.
-func (db *DB) GetTaggedVersionsForPackageSeries(ctx context.Context, path string) ([]*internal.VersionInfo, error) {
-	return getPackageVersions(ctx, db, path, []internal.VersionType{internal.VersionTypeRelease, internal.VersionTypePrerelease})
+func (db *DB) GetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*internal.VersionInfo, error) {
+	return getPackageVersions(ctx, db, pkgPath, []internal.VersionType{internal.VersionTypeRelease, internal.VersionTypePrerelease})
 }
 
 // GetPseudoVersionsForPackageSeries returns the 10 most recent from a list of
 // pseudo-versions sorted in descending order by major, minor and patch number
 // and then lexicographically in descending order by prerelease. This list includes
 // pseudo-versions of packages that have the same v1path.
-func (db *DB) GetPseudoVersionsForPackageSeries(ctx context.Context, path string) ([]*internal.VersionInfo, error) {
-	return getPackageVersions(ctx, db, path, []internal.VersionType{internal.VersionTypePseudo})
+func (db *DB) GetPseudoVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*internal.VersionInfo, error) {
+	return getPackageVersions(ctx, db, pkgPath, []internal.VersionType{internal.VersionTypePseudo})
 }
 
 // getPackageVersions returns a list of versions sorted numerically
@@ -87,8 +87,8 @@ func (db *DB) GetPseudoVersionsForPackageSeries(ctx context.Context, path string
 // included in the list are specified by a list of VersionTypes. The results
 // include the type of versions of packages that are part of the same series
 // and have the same package v1path.
-func getPackageVersions(ctx context.Context, db *DB, path string, versionTypes []internal.VersionType) (_ []*internal.VersionInfo, err error) {
-	defer derrors.Wrap(&err, "DB.getPackageVersions(ctx, db, %q, %v)", path, versionTypes)
+func getPackageVersions(ctx context.Context, db *DB, pkgPath string, versionTypes []internal.VersionType) (_ []*internal.VersionInfo, err error) {
+	defer derrors.Wrap(&err, "DB.getPackageVersions(ctx, db, %q, %v)", pkgPath, versionTypes)
 
 	baseQuery := `
 		WITH v1paths AS (
@@ -124,7 +124,7 @@ func getPackageVersions(ctx context.Context, db *DB, path string, versionTypes [
 	}
 	query := fmt.Sprintf(baseQuery, versionTypeExpr(versionTypes), queryEnd)
 
-	rows, err := db.query(ctx, query, path)
+	rows, err := db.query(ctx, query, pkgPath)
 	if err != nil {
 		return nil, err
 	}
@@ -228,10 +228,8 @@ func (db *DB) GetImports(ctx context.Context, pkgPath, modulePath, version strin
 
 	var toPath string
 	query := `
-		SELECT
-			to_path
-		FROM
-			imports
+		SELECT to_path
+		FROM imports
 		WHERE
 			from_path = $1
 			AND from_version = $2
@@ -259,10 +257,10 @@ func (db *DB) GetImports(ctx context.Context, pkgPath, modulePath, version strin
 // determine if it resulted from an invalid package path or version.
 //
 // Instead of supporting pagination, this query runs with a limit.
-func (db *DB) GetImportedBy(ctx context.Context, path, modulePath string, limit int) (paths []string, err error) {
-	defer derrors.Wrap(&err, "GetImportedBy(ctx, %q, %q)", path, modulePath)
-	if path == "" {
-		return nil, xerrors.Errorf("path cannot be empty: %w", derrors.InvalidArgument)
+func (db *DB) GetImportedBy(ctx context.Context, pkgPath, modulePath string, limit int) (paths []string, err error) {
+	defer derrors.Wrap(&err, "GetImportedBy(ctx, %q, %q)", pkgPath, modulePath)
+	if pkgPath == "" {
+		return nil, xerrors.Errorf("pkgPath cannot be empty: %w", derrors.InvalidArgument)
 	}
 	query := `
 		SELECT
@@ -286,7 +284,7 @@ func (db *DB) GetImportedBy(ctx context.Context, path, modulePath string, limit 
 		importedby = append(importedby, fromPath)
 		return nil
 	}
-	if err := db.runQuery(ctx, query, collect, path, modulePath, limit); err != nil {
+	if err := db.runQuery(ctx, query, collect, pkgPath, modulePath, limit); err != nil {
 		return nil, err
 	}
 	return importedby, nil

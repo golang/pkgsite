@@ -17,6 +17,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/sample"
+	"golang.org/x/discovery/internal/stdlib"
 )
 
 const testTimeout = 5 * time.Second
@@ -47,30 +48,37 @@ func TestServer(t *testing.T) {
 	defer cancel()
 
 	defer postgres.ResetTestDB(testDB, t)
-	sampleVersion := sample.Version()
-	pkg := sample.Package()
-	pkg.Name = "hello"
-	pkg.Path = sampleVersion.ModulePath + "/foo/directory/hello"
-	sampleVersion.Packages = append(sampleVersion.Packages, pkg)
-	if err := testDB.InsertVersion(ctx, sampleVersion); err != nil {
-		t.Fatal(err)
+
+	mustInsertVersion := func(modulePath string, pkgs []*internal.Package) {
+		v := sample.Version()
+		v.ModulePath = modulePath
+		v.RepositoryURL = modulePath
+		if modulePath == stdlib.ModulePath {
+			v.RepositoryURL = stdlib.GoSourceRepoURL
+		}
+		v.Packages = pkgs
+		if err := testDB.InsertVersion(ctx, v); err != nil {
+			t.Fatal(err)
+		}
 	}
+
+	pkg := sample.Package()
+	pkg2 := sample.Package()
+	pkg2.Path = sample.ModulePath + "/foo/directory/hello"
+	mustInsertVersion(sample.ModulePath, []*internal.Package{pkg, pkg2})
+
 	nonRedistModulePath := "github.com/non_redistributable"
 	nonRedistPkgPath := nonRedistModulePath + "/bar"
-	nonRedistVersion := sample.Version()
-	nonRedistVersion.ModulePath = nonRedistModulePath
-	nonRedistVersion.Packages = []*internal.Package{
-		{
-			Name:   "bar",
-			Path:   nonRedistPkgPath,
-			V1Path: nonRedistPkgPath,
-		},
-	}
-	nonRedistVersion.RepositoryURL = nonRedistModulePath
+	mustInsertVersion(nonRedistModulePath, []*internal.Package{{
+		Name:   "bar",
+		Path:   nonRedistPkgPath,
+		V1Path: nonRedistPkgPath,
+	}})
 
-	if err := testDB.InsertVersion(ctx, nonRedistVersion); err != nil {
-		t.Fatal(err)
-	}
+	cmdGo := sample.Package()
+	cmdGo.Name = "main"
+	cmdGo.Path = "cmd/go"
+	mustInsertVersion(stdlib.ModulePath, []*internal.Package{cmdGo})
 
 	if err := testDB.RefreshSearchDocuments(ctx); err != nil {
 		t.Fatal(err)
@@ -93,7 +101,7 @@ func TestServer(t *testing.T) {
 		`</a>`,
 		`Version:`,
 		`v1.0.0`,
-		`<a href="/pkg/github.com/valid_module_name/foo@v1.0.0?tab=licenses#LICENSE">MIT</a>`,
+		`<a href="/github.com/valid_module_name@v1.0.0/foo?tab=licenses#LICENSE">MIT</a>`,
 		`<a href="github.com/valid_module_name" target="_blank">Source Code</a>`,
 	}
 	nonRedistPkgHeader := []string{
@@ -116,8 +124,31 @@ func TestServer(t *testing.T) {
 		`<a href="/mod/github.com/valid_module_name@v1.0.0?tab=licenses#LICENSE">MIT</a>`,
 		`<a href="github.com/valid_module_name" target="_blank">Source Code</a>`,
 	}
+	cmdGoHeader := []string{
+		`<span class="DetailsHeader-breadcrumbDivider">/</span><span class="DetailsHeader-breadcrumbCurrent">go</span>`,
+		`<h1 class="DetailsHeader-title">Command go</h1>`,
+		`Module:`,
+		`<a href="/std@v1.0.0">`,
+		`Standard library`,
+		`</a>`,
+		`Version:`,
+		`v1.0.0`,
+		`<a href="/cmd/go@v1.0.0?tab=licenses#LICENSE">MIT</a>`,
+		`<a href="https://github.com/golang/go" target="_blank">Source Code</a>`,
+	}
+	stdHeader := []string{
+		`<h1 class="DetailsHeader-title">Standard library</h1>`,
+		`Version:`,
+		`v1.0.0`,
+		`<a href="/std@v1.0.0?tab=licenses#LICENSE">MIT</a>`,
+		`<a href="https://github.com/golang/go" target="_blank">Source Code</a>`,
+	}
 
+	pkgSuffix := strings.TrimPrefix(sample.PackagePath, sample.ModulePath+"/")
+	nonRedistPkgSuffix := strings.TrimPrefix(nonRedistPkgPath, nonRedistModulePath+"/")
 	for _, tc := range []struct {
+		// name of the test
+		name string
 		// path to use in an HTTP GET request
 		urlPath string
 		// statusCode we expect to see in the headers.
@@ -126,11 +157,13 @@ func TestServer(t *testing.T) {
 		want []string
 	}{
 		{
+			"static",
 			"/static/",
 			http.StatusOK,
 			[]string{"css", "html", "img", "js"},
 		},
 		{
+			"license policy",
 			"/license-policy",
 			http.StatusOK,
 			[]string{
@@ -138,103 +171,116 @@ func TestServer(t *testing.T) {
 				"this is not legal advice",
 			},
 		},
-		{"/favicon.ico", http.StatusOK, nil}, // just check that it returns 200
 		{
+			// just check that it returns 200
+			"favicon",
+			"/favicon.ico",
+			http.StatusOK,
+			nil,
+		},
+		{
+			"search",
 			fmt.Sprintf("/search?q=%s", sample.PackageName),
 			http.StatusOK,
 			[]string{
-				`<a href="/pkg/github.com/valid_module_name/foo">github.com/valid_module_name/foo</a>`,
+				`<a href="/github.com/valid_module_name/foo">github.com/valid_module_name/foo</a>`,
 			},
 		},
 		{
-			fmt.Sprintf("/pkg/%s", sample.PackagePath),
+			"package default",
+			fmt.Sprintf("/%s", sample.PackagePath),
 			http.StatusOK,
 			append(pkgHeader, `This is the documentation HTML`),
 		},
 		{
-			fmt.Sprintf("/pkg/%s", sample.ModulePath),
-			http.StatusSeeOther,
-			// In the browser, this will redirect to the
-			// /mod/<path> page.
-			[]string{`<a href="/mod/github.com/valid_module_name">See Other</a>`},
-		},
-		{
-			fmt.Sprintf("/pkg/%s@%s", sample.PackagePath, sample.VersionString),
-			http.StatusOK,
-			append(pkgHeader, `This is the documentation HTML`),
-		},
-		{
+			"package default nonredistributable",
 			// For a non-redistributable package, the "latest" route goes to the modules tab.
-			fmt.Sprintf("/pkg/%s", nonRedistPkgPath),
+			fmt.Sprintf("/%s", nonRedistPkgPath),
 			http.StatusOK,
 			nonRedistPkgHeader,
 		},
 		{
-			// For a non-redistributable package, the name@version route goes to the modules tab.
-			fmt.Sprintf("/pkg/%s@%s", nonRedistPkgPath, sample.VersionString),
-			http.StatusOK,
-			nonRedistPkgHeader,
-		},
-		{
-			fmt.Sprintf("/pkg/%s?tab=doc", sample.PackagePath),
+			"package@version default",
+			fmt.Sprintf("/%s@%s/%s", sample.ModulePath, sample.VersionString, pkgSuffix),
 			http.StatusOK,
 			append(pkgHeader, `This is the documentation HTML`),
 		},
 		{
+			"package@version default specific version nonredistributable",
+			// For a non-redistributable package, the name@version route goes to the modules tab.
+			fmt.Sprintf("/%s@%s/%s", nonRedistModulePath, sample.VersionString, nonRedistPkgSuffix),
+			http.StatusOK,
+			nonRedistPkgHeader,
+		},
+		{
+			"package@version doc tab",
+			fmt.Sprintf("/%s@%s/%s?tab=doc", sample.ModulePath, sample.VersionString, pkgSuffix),
+			http.StatusOK,
+			append(pkgHeader, `This is the documentation HTML`),
+		},
+		{
+			"package@version doc tab nonredistributable",
 			// For a non-redistributable package, the doc tab will not show the doc.
-			fmt.Sprintf("/pkg/%s?tab=doc", nonRedistPkgPath),
+			fmt.Sprintf("/%s@%s/%s?tab=doc", nonRedistModulePath, sample.VersionString, nonRedistPkgSuffix),
 			http.StatusOK,
 			append(nonRedistPkgHeader, `hidden due to license restrictions`),
 		},
 		{
-			fmt.Sprintf("/pkg/%s?tab=readme", sample.PackagePath),
+			"package@version readme tab",
+			fmt.Sprintf("/%s@%s/%s?tab=readme", sample.ModulePath, sample.VersionString, pkgSuffix),
 			http.StatusOK,
 			append(pkgHeader, `<div class="ReadMe"><p>readme</p>`,
 				`<div class="ReadMe-source">Source: github.com/valid_module_name@v1.0.0/README.md</div>`),
 		},
 		{
+			"package@version readme tab nonredistributable",
 			// For a non-redistributable package, the readme tab will not show the readme.
-			fmt.Sprintf("/pkg/%s?tab=readme", nonRedistPkgPath),
+			fmt.Sprintf("/%s@%s/%s?tab=readme", nonRedistModulePath, sample.VersionString, nonRedistPkgSuffix),
 			http.StatusOK,
 			append(nonRedistPkgHeader, `hidden due to license restrictions`),
 		},
-
 		{
-			fmt.Sprintf("/pkg/%s?tab=module", sample.PackagePath),
+			"package@version subdirectories tab",
+			fmt.Sprintf("/%s@%s/%s?tab=subdirectories", sample.ModulePath, sample.VersionString, pkgSuffix),
 			http.StatusOK,
 			append(pkgHeader, `foo`),
 		},
 		{
-			fmt.Sprintf("/pkg/%s?tab=versions", sample.PackagePath),
+			"package@version versions tab",
+			fmt.Sprintf("/%s@%s/%s?tab=versions", sample.ModulePath, sample.VersionString, pkgSuffix),
 			http.StatusOK,
 			append(pkgHeader,
 				`Versions`,
 				`v1`,
-				`<a href="/pkg/github.com/valid_module_name/foo@v1.0.0" title="v1.0.0">v1.0.0</a>`),
+				`<a href="/github.com/valid_module_name@v1.0.0/foo" title="v1.0.0">v1.0.0</a>`),
 		},
 		{
-			fmt.Sprintf("/pkg/%s?tab=imports", sample.PackagePath),
+			"package@version imports tab",
+			fmt.Sprintf("/%s@%s/%s?tab=imports", sample.ModulePath, sample.VersionString, pkgSuffix),
 			http.StatusOK,
 			append(pkgHeader,
 				`Imports`,
 				`Standard Library`,
-				`<a href="/pkg/fmt">fmt</a>`,
-				`<a href="/pkg/path/to/bar">path/to/bar</a>`),
+				`<a href="/fmt">fmt</a>`,
+				`<a href="/path/to/bar">path/to/bar</a>`),
 		},
 		{
-			fmt.Sprintf("/pkg/%s?tab=importedby", sample.PackagePath),
+			"package@version imported by tab",
+			fmt.Sprintf("/%s@%s/%s?tab=importedby", sample.ModulePath, sample.VersionString, pkgSuffix),
 			http.StatusOK,
 			append(pkgHeader,
 				`No known importers for this package`),
 		},
 		{
-			fmt.Sprintf("/pkg/%s?tab=importedby&page=2", sample.PackagePath),
+			"package@version imported by tab second page",
+			fmt.Sprintf("/%s@%s/%s?tab=importedby&page=2", sample.ModulePath, sample.VersionString, pkgSuffix),
 			http.StatusOK,
 			append(pkgHeader,
 				`No known importers for this package`),
 		},
 		{
-			fmt.Sprintf("/pkg/%s?tab=licenses", sample.PackagePath),
+			"package@version licenses tab",
+			fmt.Sprintf("/%s@%s/%s?tab=licenses", sample.ModulePath, sample.VersionString, pkgSuffix),
 			http.StatusOK,
 			append(pkgHeader,
 				`<div id="#LICENSE">MIT</div>`,
@@ -244,41 +290,41 @@ func TestServer(t *testing.T) {
 				`<div class="License-source">Source: github.com/valid_module_name@v1.0.0/LICENSE</div>`),
 		},
 		{
-			fmt.Sprintf("/pkg/%s", sample.PackagePath+"/directory"),
+			"directory",
+			fmt.Sprintf("/%s", sample.PackagePath+"/directory"),
 			http.StatusOK,
 			[]string{`<h1 class="DetailsHeader-title">Directories</h1>`},
 		},
-
 		{
-			fmt.Sprintf("/mod/%s@%s", sample.ModulePath, sample.VersionString),
-			http.StatusOK,
-			// Show the readme tab by default.
-			append(modHeader, `readme`),
-		},
-		{
+			"module default",
 			fmt.Sprintf("/mod/%s", sample.ModulePath),
 			http.StatusOK,
+			// Show the readme tab by default.
 			// Fall back to the latest version, show readme tab by default.
 			append(modHeader, `readme`),
 		},
 		// TODO(b/139498072): add a second module, so we can verify that we get the latest version.
 		{
+			"module packages tab latest version",
 			fmt.Sprintf("/mod/%s?tab=packages", sample.ModulePath),
 			http.StatusOK,
 			// Fall back to the latest version.
 			append(modHeader, `This is a package synopsis`),
 		},
 		{
+			"module@version readme tab",
 			fmt.Sprintf("/mod/%s@%s?tab=readme", sample.ModulePath, sample.VersionString),
 			http.StatusOK,
 			append(modHeader, `readme`),
 		},
 		{
+			"module@version packages tab",
 			fmt.Sprintf("/mod/%s@%s?tab=packages", sample.ModulePath, sample.VersionString),
 			http.StatusOK,
 			append(modHeader, `This is a package synopsis`),
 		},
 		{
+			"module@version versions tab",
 			fmt.Sprintf("/mod/%s@%s?tab=versions", sample.ModulePath, sample.VersionString),
 			http.StatusOK,
 			append(modHeader,
@@ -287,6 +333,7 @@ func TestServer(t *testing.T) {
 				`<a href="/mod/github.com/valid_module_name@v1.0.0" title="v1.0.0">v1.0.0</a>`),
 		},
 		{
+			"module@version licenses tab",
 			fmt.Sprintf("/mod/%s@%s?tab=licenses", sample.ModulePath, sample.VersionString),
 			http.StatusOK,
 			append(modHeader,
@@ -295,17 +342,25 @@ func TestServer(t *testing.T) {
 				`<a href="/license-policy">Read disclaimer.</a>`,
 				`Lorem Ipsum`),
 		},
+		{
+			"cmd go package page",
+			"/cmd/go",
+			http.StatusOK,
+			cmdGoHeader,
+		},
+		{
+			"standard library module page",
+			"/std",
+			http.StatusOK,
+			stdHeader,
+		},
 	} {
-		// Prepend tabName if available to test name, so that it is
-		// easier to run a specific test.
-		parts := strings.Split(tc.urlPath[1:], "?tab=")
-		testName := parts[len(parts)-1] + "-" + tc.urlPath[1:]
-		t.Run(testName, func(t *testing.T) { // remove initial '/' for name
+		t.Run(tc.name, func(t *testing.T) { // remove initial '/' for name
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, httptest.NewRequest("GET", tc.urlPath, nil))
 			res := w.Result()
 			if res.StatusCode != tc.wantStatusCode {
-				t.Fatalf("status code: got = %d, want %d", res.StatusCode, tc.wantStatusCode)
+				t.Errorf("GET %q = %d, want %d", tc.urlPath, res.StatusCode, tc.wantStatusCode)
 			}
 			bytes, err := ioutil.ReadAll(res.Body)
 			if err != nil {

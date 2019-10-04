@@ -23,6 +23,12 @@ import (
 	"golang.org/x/xerrors"
 )
 
+// unknownModulePath is used to indicate cases where the modulePath is
+// ambiguous based on the urlPath. For example, if the urlPath is
+// <path>@<version> or <path>, we cannot know for sure what part of <path> is
+// the modulePath vs the packagePath suffix.
+const unknownModulePath = "<unknown>"
+
 // DetailsPage contains data for a package of module details template.
 type DetailsPage struct {
 	basePage
@@ -35,8 +41,17 @@ type DetailsPage struct {
 	Namespace      string
 }
 
-func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
-	path, version, err := parsePathAndVersion(r.URL.Path, "pkg")
+func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/" {
+		s.staticPageHandler("index.tmpl", "Go Discovery")(w, r)
+		return
+	}
+	if r.URL.Path == "/std" || strings.HasPrefix(r.URL.Path, "/std@v") {
+		s.handleModuleDetails(w, r)
+		return
+	}
+
+	pkgPath, modulePath, version, err := parseDetailsURLPath(r.URL.Path)
 	if err != nil {
 		log.Errorf("handleDetails: %v", err)
 		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
@@ -45,15 +60,19 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 
 	// Package "C" is a special case: redirect to the Go Blog article on cgo.
 	// (This is what godoc.org does.)
-	if path == "C" {
+	if pkgPath == "C" {
 		http.Redirect(w, r, "https://golang.org/doc/articles/c_go_cgo.html", http.StatusMovedPermanently)
 		return
 	}
 
 	var pkg *internal.VersionedPackage
-	code, epage := fetchPackageOrModule(r.Context(), s.ds, "pkg", path, version, func(ver string) error {
+	code, epage := fetchPackageOrModule(r.Context(), s.ds, "pkg", pkgPath, version, func(ver string) error {
 		var err error
-		pkg, err = s.ds.GetPackage(r.Context(), path, ver)
+		if modulePath == unknownModulePath || modulePath == stdlib.ModulePath {
+			pkg, err = s.ds.GetPackage(r.Context(), pkgPath, ver)
+		} else {
+			pkg, err = s.ds.GetPackageInModuleVersion(r.Context(), pkgPath, modulePath, ver)
+		}
 		return err
 	})
 	if code == http.StatusOK {
@@ -64,21 +83,11 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 		s.serveErrorPage(w, r, code, epage)
 		return
 	}
-
-	_, err = s.ds.GetVersionInfo(r.Context(), path, version)
-	if err == nil {
-		http.Redirect(w, r, fmt.Sprintf("/mod/%s", path), http.StatusSeeOther)
-		return
-	}
-	if !xerrors.Is(err, derrors.NotFound) {
-		s.serveErrorPage(w, r, http.StatusInternalServerError, epage)
-		return
-	}
-	s.serveDirectoryPage(w, r, path, version)
+	s.serveDirectoryPage(w, r, pkgPath, version)
 }
 
 // servePackagePage applies database data to the appropriate template.
-// Handles all endpoints that match "/pkg/<import-path>[@<version>?tab=<tab>]".
+// Handles all endpoints that match "/<import-path>[@<version>?tab=<tab>]".
 func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkg *internal.VersionedPackage) {
 	pkgHeader, err := createPackage(&pkg.Package, &pkg.VersionInfo)
 	if err != nil {
@@ -121,6 +130,28 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkg *i
 		Namespace:      "pkg",
 	}
 	s.servePage(w, settings.TemplateName, page)
+}
+
+func constructModuleURL(modulePath, version string) string {
+	url := "/"
+	if modulePath != stdlib.ModulePath {
+		url += "mod/"
+	}
+	url += modulePath
+	if version != internal.LatestVersion {
+		url += "@" + version
+	}
+	return url
+}
+
+func constructPackageURL(pkgPath, modulePath, version string) string {
+	if version == internal.LatestVersion {
+		return "/" + pkgPath
+	}
+	if pkgPath == modulePath || modulePath == stdlib.ModulePath {
+		return fmt.Sprintf("/%s@%s", pkgPath, version)
+	}
+	return fmt.Sprintf("/%s@%s/%s", modulePath, version, strings.TrimPrefix(pkgPath, modulePath+"/"))
 }
 
 // fetchPackageOrModule handles logic common to the initial phase of
@@ -182,13 +213,15 @@ func fetchPackageOrModule(ctx context.Context, ds DataSource, namespace, path, v
 
 	// There is a later version of this package/module.
 	word := "package"
+	urlPath := "/" + path
 	if namespace == "mod" {
 		word = "module"
+		urlPath = "/mod/" + path
 	}
 	epage := &errorPage{
 		Message: fmt.Sprintf("%s %s@%s is not available.", strings.Title(word), path, version),
 		SecondaryMessage: template.HTML(
-			fmt.Sprintf(`There are other versions of this %s that are! To view them, <a href="/%s/%s?tab=versions">click here</a>.</p>`, word, namespace, path)),
+			fmt.Sprintf(`There are other versions of this %s that are! To view them, <a href="%s?tab=versions">click here</a>.</p>`, word, urlPath)),
 	}
 	return http.StatusSeeOther, epage
 }
@@ -218,7 +251,8 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds
 // handleModuleDetails applies database data to the appropriate template.
 // Handles all endpoints that match "/mod/<module-path>[@<version>?tab=<tab>]".
 func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
-	path, version, err := parsePathAndVersion(r.URL.Path, "mod")
+	urlPath := strings.TrimPrefix(r.URL.Path, "/mod")
+	path, _, version, err := parseDetailsURLPath(urlPath)
 	if err != nil {
 		log.Infof("handleModuleDetails: %v", err)
 		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
@@ -293,47 +327,51 @@ func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds 
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
 
-// parsePathAndVersion returns the path and version specified by urlPath.
+// parseDetailsURLPath returns the modulePath (if known),
+// pkgPath and version specified by urlPath.
 // urlPath is assumed to be a valid path following the structure:
-//   /<namespace>/<path>@<version>
-// or
-//  /<namespace/<path>
-// where <namespace> is always pkg or mod.
-// In the latter case, internal.LatestVersion is used for the version.
+//   /<module-path>[@<version>/<suffix>]
+//
+// If <version> is not specified, internal.LatestVersion is used for the
+// version. modulePath can only be determined if <version> is specified.
 //
 // Leading and trailing slashes in the urlPath are trimmed.
-func parsePathAndVersion(urlPath, namespace string) (path, version string, err error) {
-	defer derrors.Wrap(&err, "parsePathAndVersion(%q)", urlPath)
+func parseDetailsURLPath(urlPath string) (pkgPath, modulePath, version string, err error) {
+	defer derrors.Wrap(&err, "parseDetailsURLPath(%q)", urlPath)
 
-	if namespace != "mod" && namespace != "pkg" {
-		return "", "", fmt.Errorf("invalid namespace: %q", namespace)
-	}
-	urlPath = strings.TrimPrefix(urlPath, "/"+namespace)
-	parts := strings.Split(urlPath, "@")
-	if len(parts) != 1 && len(parts) != 2 {
-		return "", "", fmt.Errorf("malformed URL path %q", urlPath)
-	}
-
-	path = strings.TrimPrefix(parts[0], "/")
+	// This splits urlPath into either:
+	//   /<module-path>[/<suffix>]
+	// or
+	//   /<module-path>, @<version>/<suffix>
+	// or
+	//  /<module-path>/<suffix>, @<version>
+	// TODO(b/140191811) The last URL route should redirect.
+	parts := strings.SplitN(urlPath, "@", 2)
+	basePath := strings.TrimSuffix(strings.TrimPrefix(parts[0], "/"), "/")
 	if len(parts) == 1 {
-		path = strings.TrimSuffix(path, "/")
-	}
-
-	// CheckPath checks that a module path is valid.
-	if namespace == "mod" {
-		if err := module.CheckImportPath(path); err != nil && path != stdlib.ModulePath {
-			return "", "", fmt.Errorf("malformed module path %q: %v", path, err)
+		modulePath = unknownModulePath
+		version = internal.LatestVersion
+		pkgPath = basePath
+	} else {
+		// Parse the version and suffix from parts[1].
+		endParts := strings.Split(parts[1], "/")
+		suffix := strings.Join(endParts[1:], "/")
+		version = endParts[0]
+		if suffix == "" || version == internal.LatestVersion {
+			modulePath = unknownModulePath
+			pkgPath = basePath
+		} else {
+			modulePath = basePath
+			pkgPath = basePath + "/" + suffix
 		}
 	}
-	if namespace == "pkg" {
-		if err := module.CheckImportPath(path); err != nil {
-			return "", "", fmt.Errorf("malformed import path %q: %v", path, err)
-		}
+	if err := module.CheckImportPath(pkgPath); err != nil {
+		return "", "", "", fmt.Errorf("malformed path %q: %v", pkgPath, err)
 	}
-	if len(parts) == 1 {
-		return path, internal.LatestVersion, nil
+	if inStdLib(pkgPath) {
+		modulePath = stdlib.ModulePath
 	}
-	return path, strings.TrimRight(parts[1], "/"), nil
+	return pkgPath, modulePath, version, nil
 }
 
 // TabSettings defines tab-specific metadata.
@@ -440,6 +478,7 @@ type Package struct {
 	Suffix            string
 	Synopsis          string
 	IsRedistributable bool
+	URL               string
 	Licenses          []LicenseMetadata
 }
 
@@ -450,6 +489,7 @@ type Module struct {
 	CommitTime        string
 	RepositoryURL     string
 	IsRedistributable bool
+	URL               string
 	Licenses          []LicenseMetadata
 }
 
@@ -482,6 +522,7 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo) (_ *Package,
 		IsRedistributable: pkg.IsRedistributable(),
 		Licenses:          transformLicenseMetadata(pkg.Licenses),
 		Module:            *m,
+		URL:               constructPackageURL(pkg.Path, vi.ModulePath, vi.Version),
 	}, nil
 }
 
@@ -495,6 +536,7 @@ func createModule(vi *internal.VersionInfo, licmetas []*license.Metadata) *Modul
 		RepositoryURL:     vi.RepositoryURL,
 		IsRedistributable: license.AreRedistributable(licmetas),
 		Licenses:          transformLicenseMetadata(licmetas),
+		URL:               constructModuleURL(vi.ModulePath, vi.Version),
 	}
 }
 
@@ -561,7 +603,7 @@ func breadcrumbPath(pkgPath, modPath, version string) template.HTML {
 	elems[len(elems)-1] = fmt.Sprintf(`<span class="DetailsHeader-breadcrumbCurrent">%s</span>`, d)
 	// Make all the other parts into links.
 	for i := 1; i < len(dirs); i++ {
-		href := "/pkg/" + dirs[i]
+		href := "/" + dirs[i]
 		if version != internal.LatestVersion {
 			href += "@" + version
 		}

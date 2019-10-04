@@ -17,7 +17,7 @@
       {{range .Results}}
         <div class="SearchSnippet">
           <h2 class="SearchSnippet-header">
-            <a href="/pkg/{{.PackagePath}}{{if $query}}{{end}}">{{.PackagePath}}</a>
+            <a href="/{{.PackagePath}}">{{.PackagePath}}</a>
           </h2>
           <p class="SearchSnippet-synopsis">{{.Synopsis}}</p>
           <div class="InfoLabel">
