@@ -214,16 +214,16 @@ func getModuleVersions(ctx context.Context, db *DB, modulePath string, versionTy
 	return vinfos, nil
 }
 
-// GetImports fetches and returns all of the imports for the package with path
-// and version. If multiple packages have the same path and version, all of
-// the imports will be returned.
+// GetImports fetches and returns all of the imports for the package with
+// pkgPath, modulePath and version.
+//
 // The returned error may be checked with derrors.IsInvalidArgument to
 // determine if it resulted from an invalid package path or version.
-func (db *DB) GetImports(ctx context.Context, path, version string) (paths []string, err error) {
-	defer derrors.Wrap(&err, "DB.GetImports(ctx, %q, %q)", path, version)
+func (db *DB) GetImports(ctx context.Context, pkgPath, modulePath, version string) (paths []string, err error) {
+	defer derrors.Wrap(&err, "DB.GetImports(ctx, %q, %q, %q)", pkgPath, modulePath, version)
 
-	if path == "" || version == "" {
-		return nil, xerrors.Errorf("neither path nor version can be empty: %w", derrors.InvalidArgument)
+	if pkgPath == "" || version == "" || modulePath == "" {
+		return nil, xerrors.Errorf("pkgPath, modulePath and version must all be non-empty: %w", derrors.InvalidArgument)
 	}
 
 	var toPath string
@@ -235,6 +235,7 @@ func (db *DB) GetImports(ctx context.Context, path, version string) (paths []str
 		WHERE
 			from_path = $1
 			AND from_version = $2
+			AND from_module_path = $3
 		ORDER BY
 			to_path;`
 
@@ -246,7 +247,7 @@ func (db *DB) GetImports(ctx context.Context, path, version string) (paths []str
 		imports = append(imports, toPath)
 		return nil
 	}
-	if err := db.runQuery(ctx, query, collect, path, version); err != nil {
+	if err := db.runQuery(ctx, query, collect, pkgPath, version, modulePath); err != nil {
 		return nil, err
 	}
 	return imports, nil

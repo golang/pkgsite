@@ -29,9 +29,9 @@ type ImportsDetails struct {
 }
 
 // fetchImportsDetails fetches imports for the package version specified by
-// path and version from the database and returns a ImportsDetails.
+// pkgPath, modulePath and version from the database and returns a ImportsDetails.
 func fetchImportsDetails(ctx context.Context, ds DataSource, pkg *internal.VersionedPackage) (*ImportsDetails, error) {
-	dsImports, err := ds.GetImports(ctx, pkg.Path, pkg.VersionInfo.Version)
+	dsImports, err := ds.GetImports(ctx, pkg.Path, pkg.ModulePath, pkg.Version)
 	if err != nil {
 		return nil, err
 	}

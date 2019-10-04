@@ -93,9 +93,9 @@ func (ds *DataSource) GetImportedBy(ctx context.Context, path, version string, l
 }
 
 // GetImports returns package imports as extracted from the module zip.
-func (ds *DataSource) GetImports(ctx context.Context, pkgPath, version string) (_ []string, err error) {
-	defer derrors.Wrap(&err, "GetImports(%q, %q)", pkgPath, version)
-	vp, err := ds.GetPackage(ctx, pkgPath, version)
+func (ds *DataSource) GetImports(ctx context.Context, pkgPath, modulePath, version string) (_ []string, err error) {
+	defer derrors.Wrap(&err, "GetImports(%q, %q, %q)", pkgPath, modulePath, version)
+	vp, err := ds.GetPackageInModuleVersion(ctx, pkgPath, modulePath, version)
 	if err != nil {
 		return nil, err
 	}
@@ -126,6 +126,19 @@ func (ds *DataSource) GetModuleLicenses(ctx context.Context, modulePath, version
 func (ds *DataSource) GetPackage(ctx context.Context, pkgPath, version string) (_ *internal.VersionedPackage, err error) {
 	defer derrors.Wrap(&err, "GetPackage(%q, %q)", pkgPath, version)
 	v, err := ds.getPackageVersion(ctx, pkgPath, version)
+	if err != nil {
+		return nil, err
+	}
+	return packageFromVersion(pkgPath, v)
+}
+
+// GetPackageInModuleVersion returns a VersionedPackage for the given pkgPath
+// and version. If such a package exists in the cache, it will be returned
+// without querying the proxy. Otherwise, the proxy is queried to find the
+// longest module path at that version containing the package.
+func (ds *DataSource) GetPackageInModuleVersion(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.VersionedPackage, err error) {
+	defer derrors.Wrap(&err, "GetPackageInModuleVersion(%q, %q, %q)", pkgPath, modulePath, version)
+	v, err := ds.getVersion(ctx, modulePath, version)
 	if err != nil {
 		return nil, err
 	}

@@ -49,10 +49,15 @@ type DataSource interface {
 	GetImportedBy(ctx context.Context, path, version string, limit int) ([]string, error)
 	// GetImports returns a slice of import paths imported by the package
 	// specified by path and version.
-	GetImports(ctx context.Context, path, version string) ([]string, error)
+	GetImports(ctx context.Context, pkgPath, modulePath, version string) ([]string, error)
 	// GetModuleLicenses returns all top-level Licenses for the given modulePath
 	// and version. (i.e., Licenses contained in the module root directory)
 	GetModuleLicenses(ctx context.Context, modulePath, version string) ([]*license.License, error)
+	// GetPackageInModuleVersion returns the VersionedPackage corresponding
+	// to the given package path , module path, and version. At most one
+	// package should ever satisfy this query.
+	GetPackageInModuleVersion(ctx context.Context,
+		pkgPath, modulePath, version string) (*internal.VersionedPackage, error)
 	// GetPackage returns the VersionedPackage corresponding to the given package
 	// path and version. When multiple package paths satisfy this query, it
 	// should prefer the module with the longest path.

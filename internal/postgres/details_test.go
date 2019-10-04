@@ -174,7 +174,7 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 				}
 			}
 
-			got, err := testDB.GetImports(ctx, tc.path, tc.version)
+			got, err := testDB.GetImports(ctx, tc.path, tc.modulePath, tc.version)
 			if err != nil {
 				t.Fatal(err)
 			}

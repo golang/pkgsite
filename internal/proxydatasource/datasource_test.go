@@ -88,7 +88,7 @@ func TestDataSource_GetImports(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
 	want := []string{"net/http"}
-	got, err := ds.GetImports(ctx, "foo.com/bar/baz", "v1.2.0")
+	got, err := ds.GetImports(ctx, "foo.com/bar/baz", "foo.com/bar", "v1.2.0")
 	if err != nil {
 		t.Fatal(err)
 	}
