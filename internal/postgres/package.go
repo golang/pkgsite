@@ -115,7 +115,7 @@ func (db *DB) getPackage(ctx context.Context, pkgPath, version, modulePath strin
 	row := db.queryRow(ctx, query, args...)
 	err = row.Scan(&pkg.Path, &pkg.Name, &pkg.Synopsis,
 		&pkg.V1Path, pq.Array(&licenseTypes), pq.Array(&licensePaths),
-		&pkg.DocumentationHTML, &pkg.GOOS, &pkg.GOARCH, &pkg.Version,
+		&pkg.DocumentationHTML, nullIsEmpty(&pkg.GOOS), nullIsEmpty(&pkg.GOARCH), &pkg.Version,
 		&pkg.CommitTime, &pkg.ReadmeFilePath, &pkg.ReadmeContents, &pkg.ModulePath,
 		&pkg.VersionType, nullIsEmpty(&pkg.RepositoryURL), nullIsEmpty(&pkg.VCSType),
 		nullIsEmpty(&pkg.HomepageURL))
