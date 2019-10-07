@@ -132,6 +132,7 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(s.staticPath)))
 	}))
 	handle("/mod/", http.HandlerFunc(s.handleModuleDetails))
+	handle("/pkg/", http.HandlerFunc(s.legacyHandlePackageDetails))
 	handle("/search", http.HandlerFunc(s.handleSearch))
 	handle("/search-help", s.staticPageHandler("search_help.tmpl", "Search Help - Go Discovery"))
 	handle("/license-policy", s.licensePolicyHandler())

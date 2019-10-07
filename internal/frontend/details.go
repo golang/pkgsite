@@ -41,6 +41,15 @@ type DetailsPage struct {
 	Namespace      string
 }
 
+// legacyHandlePackageDetails redirects all redirects to "/pkg" to "/", so that
+// old url links from screenshots don't break.
+//
+// This will be deleted before launch.
+func (s *Server) legacyHandlePackageDetails(w http.ResponseWriter, r *http.Request) {
+	urlPath := strings.TrimPrefix(r.URL.Path, "/pkg")
+	http.Redirect(w, r, urlPath, http.StatusMovedPermanently)
+}
+
 func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" {
 		s.staticPageHandler("index.tmpl", "Go Discovery")(w, r)
