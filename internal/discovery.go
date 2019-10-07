@@ -5,9 +5,12 @@
 package internal
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 	"time"
+
+	"golang.org/x/discovery/internal/thirdparty/semver"
 
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/thirdparty/module"
@@ -170,4 +173,20 @@ var pseudoVersionRE = regexp.MustCompile(`^v[0-9]+\.(0\.0-|\d+\.\d+-([^+]*\.)?0\
 // Modified from src/cmd/go/internal/modfetch.
 func IsPseudoVersion(v string) bool {
 	return strings.Count(v, "-") >= 2 && pseudoVersionRE.MatchString(v)
+}
+
+// ParseVersionType returns the VersionType of a given a version.
+func ParseVersionType(version string) (VersionType, error) {
+	if !semver.IsValid(version) {
+		return "", fmt.Errorf("ParseVersionType(%q): invalid semver", version)
+	}
+
+	switch {
+	case IsPseudoVersion(version):
+		return VersionTypePseudo, nil
+	case semver.Prerelease(version) != "":
+		return VersionTypePrerelease, nil
+	default:
+		return VersionTypeRelease, nil
+	}
 }

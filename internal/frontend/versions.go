@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/etl"
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/thirdparty/module"
@@ -264,8 +263,7 @@ func (t *versionTree) forEach(f func(string, *versionTree)) {
 // version. i.e.
 //   formatVersion("v1.2.3-20190311183353-d8887717615a") = "v.1.2.3 (d888771)"
 func formatVersion(version string) string {
-	// TODO(b/136649901): move ParseVersionType to a better location.
-	vType, err := etl.ParseVersionType(version)
+	vType, err := internal.ParseVersionType(version)
 	if err != nil {
 		log.Errorf("Error parsing version %q: %v", version, err)
 		return version

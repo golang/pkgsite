@@ -37,7 +37,6 @@ import (
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/stdlib"
-	"golang.org/x/discovery/internal/thirdparty/semver"
 	"golang.org/x/xerrors"
 )
 
@@ -169,7 +168,7 @@ func FetchVersion(ctx context.Context, modulePath, version string, proxyClient *
 			return nil, false, err
 		}
 	}
-	versionType, err := ParseVersionType(version)
+	versionType, err := internal.ParseVersionType(version)
 	if err != nil {
 		return nil, false, xerrors.Errorf("%v: %w", err, derrors.BadModule)
 	}
@@ -225,22 +224,6 @@ func processZipFile(ctx context.Context, modulePath string, versionType internal
 // modulePath and version.
 func moduleVersionDir(modulePath, version string) string {
 	return fmt.Sprintf("%s@%s", modulePath, version)
-}
-
-// ParseVersionType returns the VersionType of a given a version.
-func ParseVersionType(version string) (internal.VersionType, error) {
-	if !semver.IsValid(version) {
-		return "", fmt.Errorf("ParseVersionType(%q): invalid semver", version)
-	}
-
-	switch {
-	case internal.IsPseudoVersion(version):
-		return internal.VersionTypePseudo, nil
-	case semver.Prerelease(version) != "":
-		return internal.VersionTypePrerelease, nil
-	default:
-		return internal.VersionTypeRelease, nil
-	}
 }
 
 // extractReadmeFromZip returns the file path and contents of the first file
