@@ -37,6 +37,39 @@ import (
 // ModulePath is the name of the module for the standard library.
 const ModulePath = "std"
 
+var (
+	// Regexp for matching go tags. The groups are:
+	// 1  the major.minor version
+	// 2  the patch version, or empty if none
+	// 3  the entire prerelease, if present
+	// 4  the prerelease type ("beta" or "rc")
+	// 5  the prerelease number
+	tagRegexp = regexp.MustCompile(`^go(\d+\.\d+)(\.\d+|)((beta|rc)(\d+))?$`)
+)
+
+// VersionForTag returns the semantic version for the Go tag, or "" if
+// tag doesn't correspond to a Go release or beta tag.
+// Examples:
+//   "go1.2" => "v1.2.0"
+//   "go1.13beta1" => "v1.13.0-beta.1"
+//   "go1.9rc2" => "v1.9.0-rc.2"
+func VersionForTag(tag string) string {
+	m := tagRegexp.FindStringSubmatch(tag)
+	if m == nil {
+		return ""
+	}
+	version := "v" + m[1]
+	if m[2] != "" {
+		version += m[2]
+	} else {
+		version += ".0"
+	}
+	if m[3] != "" {
+		version += "-" + m[4] + "." + m[5]
+	}
+	return version
+}
+
 // TagForVersion returns the Go standard library repository tag corresponding
 // to semver. The Go tags differ from standard semantic versions in a few ways,
 // such as beginning with "go" instead of "v".
@@ -169,45 +202,12 @@ func Versions() (_ []string, err error) {
 		if !name.IsTag() {
 			continue
 		}
-		v := versionForTag(name.Short())
+		v := VersionForTag(name.Short())
 		if v != "" {
 			versions = append(versions, v)
 		}
 	}
 	return versions, nil
-}
-
-var (
-	// Regexp for matching go tags. The groups are:
-	// 1  the major.minor nversion
-	// 2  the patch version, or empty if none
-	// 3  the entire prerelease, if present
-	// 4  the prerelease type ("beta" or "rc")
-	// 5  the prerelease number
-	tagRegexp = regexp.MustCompile(`^go(\d+\.\d+)(\.\d+|)((beta|rc)(\d+))?$`)
-)
-
-// versionForTag returns the semantic version for the Go tag, or "" if
-// tag doesn't correspond to a Go release or beta tag.
-// Examples:
-//   "go1.2" => "v1.2.0"
-//   "go1.13beta1" => "v1.13.0-beta.1"
-//   "go1.9rc2" => "v1.9.0-rc.2"
-func versionForTag(tag string) string {
-	m := tagRegexp.FindStringSubmatch(tag)
-	if m == nil {
-		return ""
-	}
-	version := "v" + m[1]
-	if m[2] != "" {
-		version += m[2]
-	} else {
-		version += ".0"
-	}
-	if m[3] != "" {
-		version += "-" + m[4] + "." + m[5]
-	}
-	return version
 }
 
 // Directory returns the directory of the standard library relative to the repo root.

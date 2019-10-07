@@ -162,7 +162,7 @@ func TestVersionForTag(t *testing.T) {
 		{"go1.1beta", ""},
 		{"weekly.2012-02-14", ""},
 	} {
-		got := versionForTag(tc.in)
+		got := VersionForTag(tc.in)
 		if got != tc.want {
 			t.Errorf("releaseVersionForTag(%q) = %q, want %q", tc.in, got, tc.want)
 		}
