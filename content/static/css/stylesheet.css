@@ -525,10 +525,7 @@ code {
   line-height: 24px;
   padding-left: 16px;
 }
-.Versions-latest {
-  font-weight: bold;
-}
-.Versions-notlatest {
+.Versions-item {
   margin-left: 16px;
 }
 .Versions-commitTime {

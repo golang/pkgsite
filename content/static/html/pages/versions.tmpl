@@ -12,7 +12,7 @@
     <ul class="Versions-list">
       {{range $minor := $major.Versions}}
         {{range $i, $v := $minor}}
-          <li class="Versions-{{if $i}}notlatest{{else}}latest{{end}}">
+          <li class="Versions-item">
             <a href="{{$v.Link}}" title="{{$v.Version}}">{{$v.FormattedVersion}}</a>
             <span class="Versions-commitTime"> &ndash; {{$v.CommitTime}}</span>
           </li>
