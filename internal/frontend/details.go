@@ -39,19 +39,23 @@ type DetailsPage struct {
 	Namespace      string
 }
 
-func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" {
 		s.staticPageHandler("index.tmpl", "Go Discovery")(w, r)
 		return
 	}
-	if r.URL.Path == "/std" || strings.HasPrefix(r.URL.Path, "/std@v") {
-		s.handleModuleDetails(w, r)
+	parts := strings.SplitN(strings.TrimPrefix(r.URL.Path, "/"), "@", 2)
+	if inStdLib(parts[0]) {
+		s.handleStdLib(w, r)
 		return
 	}
+	s.handlePackageDetails(w, r)
+}
 
+func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 	pkgPath, modulePath, version, err := parseDetailsURLPath(r.URL.Path)
 	if err != nil {
-		log.Errorf("handleDetails: %v", err)
+		log.Errorf("handlePackageDetails: %v", err)
 		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
 		return
 	}
@@ -62,26 +66,8 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "https://golang.org/doc/articles/c_go_cgo.html", http.StatusMovedPermanently)
 		return
 	}
+	s.servePackagePage(w, r, pkgPath, modulePath, version)
 
-	var pkg *internal.VersionedPackage
-	code, epage := fetchPackageOrModule(r.Context(), s.ds, "pkg", pkgPath, version, func(ver string) error {
-		var err error
-		if modulePath == unknownModulePath || modulePath == stdlib.ModulePath {
-			pkg, err = s.ds.GetPackage(r.Context(), pkgPath, ver)
-		} else {
-			pkg, err = s.ds.GetPackageInModuleVersion(r.Context(), pkgPath, modulePath, ver)
-		}
-		return err
-	})
-	if code == http.StatusOK {
-		s.servePackagePage(w, r, pkg)
-		return
-	}
-	if code != http.StatusNotFound {
-		s.serveErrorPage(w, r, code, epage)
-		return
-	}
-	s.serveDirectoryPage(w, r, pkgPath, version)
 }
 
 // legacyHandlePackageDetails redirects all redirects to "/pkg" to "/", so that
@@ -103,61 +89,39 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
 		return
 	}
+	s.serveModulePage(w, r, path, version)
 
-	ctx := r.Context()
-	var moduleVersion *internal.VersionInfo
-	code, epage := fetchPackageOrModule(ctx, s.ds, "mod", path, version, func(ver string) error {
-		var err error
-		moduleVersion, err = s.ds.GetVersionInfo(ctx, path, ver)
-		return err
-	})
-	if code != http.StatusOK {
-		s.serveErrorPage(w, r, code, epage)
-		return
-	}
-	// Here, moduleVersion is a valid *VersionInfo.
-	licenses, err := s.ds.GetModuleLicenses(ctx, moduleVersion.ModulePath, moduleVersion.Version)
-	if err != nil {
-		log.Errorf("error getting module licenses for %s@%s: %v", moduleVersion.ModulePath, moduleVersion.Version, err)
-		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
-		return
-	}
-
-	tab := r.FormValue("tab")
-	settings, ok := moduleTabLookup[tab]
-	if !ok {
-		tab = "readme"
-		settings = moduleTabLookup["readme"]
-	}
-
-	modHeader := createModule(moduleVersion, license.ToMetadatas(licenses))
-	canShowDetails := modHeader.IsRedistributable || settings.AlwaysShowDetails
-	var details interface{}
-	if canShowDetails {
-		var err error
-		details, err = fetchDetailsForModule(ctx, r, tab, s.ds, moduleVersion, licenses)
-		if err != nil {
-			log.Errorf("error fetching page for %q: %v", tab, err)
-			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
-			return
-		}
-	}
-	page := &DetailsPage{
-		basePage:       newBasePage(r, moduleTitle(moduleVersion.ModulePath)),
-		Settings:       settings,
-		Header:         modHeader,
-		BreadcrumbPath: "",
-		Details:        details,
-		CanShowDetails: canShowDetails,
-		Tabs:           moduleTabSettings,
-		Namespace:      "mod",
-	}
-	s.servePage(w, settings.TemplateName, page)
 }
 
 // servePackagePage applies database data to the appropriate template.
 // Handles all endpoints that match "/<import-path>[@<version>?tab=<tab>]".
-func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkg *internal.VersionedPackage) {
+func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPath, modulePath, version string) {
+	if version != internal.LatestVersion && !semver.IsValid(version) {
+		epage := &errorPage{Message: fmt.Sprintf("%q is not a valid semantic version.", version)}
+		epage.SecondaryMessage = suggestedSearch(pkgPath)
+		s.serveErrorPage(w, r, http.StatusBadRequest, epage)
+		return
+	}
+
+	var pkg *internal.VersionedPackage
+	code, epage := fetchPackageOrModule(r.Context(), s.ds, "pkg", pkgPath, version, func(ver string) error {
+		var err error
+		if modulePath == unknownModulePath || modulePath == stdlib.ModulePath {
+			pkg, err = s.ds.GetPackage(r.Context(), pkgPath, ver)
+		} else {
+			pkg, err = s.ds.GetPackageInModuleVersion(r.Context(), pkgPath, modulePath, ver)
+		}
+		return err
+	})
+	if code != http.StatusOK {
+		if code == http.StatusNotFound {
+			s.serveDirectoryPage(w, r, pkgPath, version)
+			return
+		}
+		s.serveErrorPage(w, r, code, epage)
+		return
+	}
+
 	pkgHeader, err := createPackage(&pkg.Package, &pkg.VersionInfo)
 	if err != nil {
 		log.Errorf("error creating package header for %s@%s: %v", pkg.Path, pkg.Version, err)
@@ -201,6 +165,69 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkg *i
 	s.servePage(w, settings.TemplateName, page)
 }
 
+// serveModulePage applies database data to the appropriate template.
+func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, modulePath, version string) {
+	if version != internal.LatestVersion && !semver.IsValid(version) {
+		epage := &errorPage{Message: fmt.Sprintf("%q is not a valid semantic version.", version)}
+		s.serveErrorPage(w, r, http.StatusBadRequest, epage)
+		return
+	}
+
+	ctx := r.Context()
+	var moduleVersion *internal.VersionInfo
+	code, epage := fetchPackageOrModule(ctx, s.ds, "mod", modulePath, version, func(ver string) error {
+		var err error
+		moduleVersion, err = s.ds.GetVersionInfo(ctx, modulePath, ver)
+		return err
+	})
+	if code != http.StatusOK {
+		s.serveErrorPage(w, r, code, epage)
+		return
+	}
+	// Here, moduleVersion is a valid *VersionInfo.
+	licenses, err := s.ds.GetModuleLicenses(ctx, moduleVersion.ModulePath, moduleVersion.Version)
+	if err != nil {
+		log.Errorf("error getting module licenses for %s@%s: %v", moduleVersion.ModulePath, moduleVersion.Version, err)
+		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	tab := r.FormValue("tab")
+	settings, ok := moduleTabLookup[tab]
+	if !ok {
+		tab = "readme"
+		settings = moduleTabLookup["readme"]
+	}
+
+	modHeader, err := createModule(moduleVersion, license.ToMetadatas(licenses))
+	if err != nil {
+		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+	canShowDetails := modHeader.IsRedistributable || settings.AlwaysShowDetails
+	var details interface{}
+	if canShowDetails {
+		var err error
+		details, err = fetchDetailsForModule(ctx, r, tab, s.ds, moduleVersion, licenses)
+		if err != nil {
+			log.Errorf("error fetching page for %q: %v", tab, err)
+			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
+			return
+		}
+	}
+	page := &DetailsPage{
+		basePage:       newBasePage(r, moduleTitle(moduleVersion.ModulePath)),
+		Settings:       settings,
+		Header:         modHeader,
+		BreadcrumbPath: "",
+		Details:        details,
+		CanShowDetails: canShowDetails,
+		Tabs:           moduleTabSettings,
+		Namespace:      "mod",
+	}
+	s.servePage(w, settings.TemplateName, page)
+}
+
 // fetchPackageOrModule handles logic common to the initial phase of
 // handling both packages and modules: fetching information about the package
 // or module.
@@ -213,16 +240,6 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkg *i
 // fetchPackageOrModule returns the import path and version requested, an
 // HTTP status code, and possibly an error page to display.
 func fetchPackageOrModule(ctx context.Context, ds DataSource, namespace, path, version string, get func(v string) error) (code int, _ *errorPage) {
-	if version != internal.LatestVersion && !semver.IsValid(version) {
-		// A valid semantic version was not requested.
-		epage := &errorPage{Message: fmt.Sprintf("%q is not a valid semantic version.", version)}
-		if namespace == "pkg" {
-			epage.SecondaryMessage = suggestedSearch(path)
-		}
-		log.Infof("%s@%s: invalid version", path, version)
-		return http.StatusBadRequest, epage
-	}
-
 	excluded, err := ds.IsExcluded(ctx, path)
 	if err != nil {
 		return http.StatusInternalServerError, nil
@@ -242,6 +259,7 @@ func fetchPackageOrModule(ctx context.Context, ds DataSource, namespace, path, v
 		namespace, path, version, err)
 	if !xerrors.Is(err, derrors.NotFound) {
 		// Something went wrong in executing the get function.
+		log.Infof("fetchPackageOrModule %s@%s: %v", path, version, err)
 		return http.StatusInternalServerError, nil
 	}
 	if version == internal.LatestVersion {

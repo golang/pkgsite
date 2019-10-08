@@ -128,19 +128,19 @@ func TestServer(t *testing.T) {
 		`<span class="DetailsHeader-breadcrumbDivider">/</span><span class="DetailsHeader-breadcrumbCurrent">go</span>`,
 		`<h1 class="DetailsHeader-title">Command go</h1>`,
 		`Module:`,
-		`<a href="/std@v1.0.0">`,
+		`<a href="/std@go1.0">`,
 		`Standard library`,
 		`</a>`,
 		`Version:`,
-		`v1.0.0`,
-		`<a href="/cmd/go@v1.0.0?tab=licenses#LICENSE">MIT</a>`,
+		`go1.0`,
+		`<a href="/cmd/go@go1.0?tab=licenses#LICENSE">MIT</a>`,
 		`<a href="https://github.com/golang/go" target="_blank">Source Code</a>`,
 	}
 	stdHeader := []string{
 		`<h1 class="DetailsHeader-title">Standard library</h1>`,
 		`Version:`,
-		`v1.0.0`,
-		`<a href="/std@v1.0.0?tab=licenses#LICENSE">MIT</a>`,
+		`go1.0`,
+		`<a href="/std@go1.0?tab=licenses#LICENSE">MIT</a>`,
 		`<a href="https://github.com/golang/go" target="_blank">Source Code</a>`,
 	}
 
@@ -349,8 +349,20 @@ func TestServer(t *testing.T) {
 			cmdGoHeader,
 		},
 		{
+			"cmd go package page at version",
+			"/cmd/go@go1.0",
+			http.StatusOK,
+			cmdGoHeader,
+		},
+		{
 			"standard library module page",
 			"/std",
+			http.StatusOK,
+			stdHeader,
+		},
+		{
+			"standard library module page at version",
+			"/std@go1.0",
 			http.StatusOK,
 			stdHeader,
 		},

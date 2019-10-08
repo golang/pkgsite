@@ -61,7 +61,10 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo) (_ *Package,
 		}
 	}
 
-	m := createModule(vi, modLicenses)
+	m, err := createModule(vi, modLicenses)
+	if err != nil {
+		return nil, err
+	}
 	return &Package{
 		Path:              pkg.Path,
 		Suffix:            suffix,
@@ -69,52 +72,53 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo) (_ *Package,
 		IsRedistributable: pkg.IsRedistributable(),
 		Licenses:          transformLicenseMetadata(pkg.Licenses),
 		Module:            *m,
-		URL:               constructPackageURL(pkg.Path, vi.ModulePath, vi.Version),
+		URL:               constructPackageURL(pkg.Path, vi.ModulePath, m.Version),
 	}, nil
 }
 
 // createModule returns a *Module based on the fields of the specified
 // versionInfo.
-func createModule(vi *internal.VersionInfo, licmetas []*license.Metadata) *Module {
+func createModule(vi *internal.VersionInfo, licmetas []*license.Metadata) (_ *Module, err error) {
+	defer derrors.Wrap(&err, "createModule(%v, %v)", vi, licmetas)
+
+	formattedVersion := vi.Version
+	if vi.ModulePath == stdlib.ModulePath {
+		formattedVersion, err = stdlib.TagForVersion(vi.Version)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return &Module{
-		Version:           vi.Version,
+		Version:           formattedVersion,
 		Path:              vi.ModulePath,
 		CommitTime:        elapsedTime(vi.CommitTime),
 		RepositoryURL:     vi.RepositoryURL,
 		IsRedistributable: license.AreRedistributable(licmetas),
 		Licenses:          transformLicenseMetadata(licmetas),
-		URL:               constructModuleURL(vi.ModulePath, vi.Version),
-	}
+		URL:               constructModuleURL(vi.ModulePath, formattedVersion),
+	}, nil
 }
 
-func constructModuleURL(modulePath, version string) string {
+func constructModuleURL(modulePath, formattedVersion string) string {
 	url := "/"
 	if modulePath != stdlib.ModulePath {
 		url += "mod/"
 	}
 	url += modulePath
-	if version != internal.LatestVersion {
-		url += "@" + version
+	if formattedVersion != internal.LatestVersion {
+		url += "@" + formattedVersion
 	}
 	return url
 }
 
-func constructPackageURL(pkgPath, modulePath, version string) string {
-	if version == internal.LatestVersion {
+func constructPackageURL(pkgPath, modulePath, formattedVersion string) string {
+	if formattedVersion == internal.LatestVersion {
 		return "/" + pkgPath
 	}
 	if pkgPath == modulePath || modulePath == stdlib.ModulePath {
-		return fmt.Sprintf("/%s@%s", pkgPath, version)
+		return fmt.Sprintf("/%s@%s", pkgPath, formattedVersion)
 	}
-	return fmt.Sprintf("/%s@%s/%s", modulePath, version, strings.TrimPrefix(pkgPath, modulePath+"/"))
-}
-
-// inStdLib reports whether the package is part of the Go standard library.
-func inStdLib(path string) bool {
-	if i := strings.IndexByte(path, '/'); i != -1 {
-		return !strings.Contains(path[:i], ".")
-	}
-	return !strings.Contains(path, ".")
+	return fmt.Sprintf("/%s@%s/%s", modulePath, formattedVersion, strings.TrimPrefix(pkgPath, modulePath+"/"))
 }
 
 // effectiveName returns either the command name or package name.

@@ -12,6 +12,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/sample"
+	"golang.org/x/discovery/internal/stdlib"
 )
 
 var (
@@ -36,9 +37,17 @@ func versionSummaries(path string, versions [][]string, linkify func(path, versi
 	for i, pointVersions := range versions {
 		vs[i] = make([]*VersionSummary, len(pointVersions))
 		for j, version := range pointVersions {
+			var semver, formattedVersion string
+			if inStdLib(path) {
+				semver = stdlib.VersionForTag(version)
+				formattedVersion = version
+			} else {
+				semver = version
+				formattedVersion = formatVersion(semver)
+			}
 			vs[i][j] = &VersionSummary{
-				Version:          version,
-				FormattedVersion: formatVersion(version),
+				Version:          semver,
+				FormattedVersion: formattedVersion,
 				Link:             linkify(path, version),
 				CommitTime:       commitTime,
 			}
@@ -231,8 +240,8 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 						Major:      "v1",
 						ModulePath: "std",
 						Versions: packageVersionSummaries("net/http", "std", [][]string{
-							{"v1.12.5"},
-							{"v1.11.6"},
+							{"go1.12.5"},
+							{"go1.11.6"},
 						}),
 					},
 				},

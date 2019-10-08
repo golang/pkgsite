@@ -16,6 +16,7 @@ import (
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/postgres"
+	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/xerrors"
 )
 
@@ -67,12 +68,16 @@ func fetchSearchPage(ctx context.Context, ds DataSource, query, method string, p
 
 	var results []*SearchResult
 	for _, r := range dbresults {
+		formattedVersion := r.Version
+		if r.ModulePath == stdlib.ModulePath {
+			formattedVersion = goTagForVersion(formattedVersion)
+		}
 		results = append(results, &SearchResult{
 			Name:          r.Name,
 			PackagePath:   r.PackagePath,
 			ModulePath:    r.ModulePath,
 			Synopsis:      r.Synopsis,
-			Version:       r.Version,
+			Version:       formattedVersion,
 			Licenses:      r.Licenses,
 			CommitTime:    elapsedTime(r.CommitTime),
 			NumImportedBy: r.NumImportedBy,

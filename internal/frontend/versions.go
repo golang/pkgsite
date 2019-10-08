@@ -69,7 +69,11 @@ func fetchModuleVersionsDetails(ctx context.Context, ds DataSource, vi *internal
 		}
 	}
 	linkify := func(v *internal.VersionInfo) string {
-		return constructModuleURL(v.ModulePath, v.Version)
+		var formattedVersion = v.Version
+		if v.ModulePath == stdlib.ModulePath {
+			formattedVersion = goTagForVersion(vi.Version)
+		}
+		return constructModuleURL(v.ModulePath, formattedVersion)
 	}
 	return buildVersionDetails(vi.ModulePath, versions, linkify), nil
 }
@@ -105,14 +109,15 @@ func fetchPackageVersionsDetails(ctx context.Context, ds DataSource, pkg *intern
 	linkify := func(vi *internal.VersionInfo) string {
 		// Here we have only version information, but need to construct the full
 		// import path of the package corresponding to this version.
-		var versionPath string
-		if inStdLib(pkg.Path) {
-			// Standard library paths are constant.
+		var versionPath, formattedVersion string
+		if vi.ModulePath == stdlib.ModulePath {
 			versionPath = pkg.Path
+			formattedVersion = goTagForVersion(vi.Version)
 		} else {
 			versionPath = pathInVersion(pkg.V1Path, vi)
+			formattedVersion = vi.Version
 		}
-		return constructPackageURL(versionPath, vi.ModulePath, vi.Version)
+		return constructPackageURL(versionPath, vi.ModulePath, formattedVersion)
 	}
 	return buildVersionDetails(pkg.ModulePath, filteredVersions, linkify), nil
 }
@@ -181,11 +186,17 @@ func buildVersionDetails(currentModulePath string, versions []*internal.VersionI
 		majorTree.forEach(func(_ string, minorTree *versionTree) {
 			patches := []*VersionSummary{}
 			minorTree.forEach(func(_ string, patchTree *versionTree) {
+				var formattedVersion string
+				if patchTree.versionInfo.ModulePath == stdlib.ModulePath {
+					formattedVersion = goTagForVersion(patchTree.versionInfo.Version)
+				} else {
+					formattedVersion = formatVersion(patchTree.versionInfo.Version)
+				}
 				patches = append(patches, &VersionSummary{
 					Version:          patchTree.versionInfo.Version,
 					Link:             linkify(patchTree.versionInfo),
 					CommitTime:       elapsedTime(patchTree.versionInfo.CommitTime),
-					FormattedVersion: formatVersion(patchTree.versionInfo.Version),
+					FormattedVersion: formattedVersion,
 				})
 			})
 			mvg.Versions = append(mvg.Versions, patches)
@@ -292,4 +303,16 @@ func pseudoVersionRev(v string) string {
 	v = strings.TrimSuffix(v, "+incompatible")
 	j := strings.LastIndex(v, "-")
 	return v[j+1:]
+}
+
+// goTagForVersion returns the Go tag corresponding to a given semantic
+// version. It should only be used if we are 100% sure the version will
+// correspond to a Go tag, such as when we are fetching the version from the
+
+func goTagForVersion(v string) string {
+	tag, err := stdlib.TagForVersion(v)
+	if err != nil {
+		panic(fmt.Errorf("BUG: unable to get tag for version: %q", err))
+	}
+	return tag
 }

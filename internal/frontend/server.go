@@ -138,7 +138,7 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	handle("/license-policy", s.licensePolicyHandler())
 	handle("/copyright", s.staticPageHandler("copyright.tmpl", "Copyright - Go Discovery"))
 	handle("/tos", s.staticPageHandler("tos.tmpl", "Terms of Service - Go Discovery"))
-	handle("/", http.HandlerFunc(s.handlePackageDetails))
+	handle("/", http.HandlerFunc(s.handleDetails))
 }
 
 // TagRoute categorizes incoming requests to the frontend for use in

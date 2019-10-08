@@ -7,7 +7,9 @@
   {{range $major := .}}
     <h2>
       {{.Major}}
-      <span class="Versions-modulePath"> &ndash; {{$major.ModulePath}}</span>
+      {{if not (eq $major.ModulePath "std")}}
+        <span class="Versions-modulePath"> &ndash; {{$major.ModulePath}}</span>
+      {{end}}
     </h2>
     <ul class="Versions-list">
       {{range $minor := $major.Versions}}
