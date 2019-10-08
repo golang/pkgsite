@@ -621,7 +621,7 @@ func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, in
 		if p.Line == 0 { // invalid Position
 			return ""
 		}
-		return sourceInfo.LineURL(p.Filename, p.Line)
+		return sourceInfo.LineURL(path.Join(innerPath, p.Filename), p.Line)
 	}
 	docHTML, err := dochtml.Render(fset, d, sourceLinkFunc)
 	if err != nil {

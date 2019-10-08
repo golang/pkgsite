@@ -20,8 +20,6 @@ package source
 // and
 // https://go.googlesource.com/go/+/refs/heads/master/src/cmd/go/internal/get
 
-// TODO(b/141769404): distinguish between vN as a branch vs. subdirectory, for N > 1.
-
 import (
 	"context"
 	"fmt"
