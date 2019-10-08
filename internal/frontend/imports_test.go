@@ -71,6 +71,16 @@ func TestFetchImportsDetails(t *testing.T) {
 	}
 }
 
+// firstVersionedPackage is a helper function that returns an
+// *internal.VersionedPackage corresponding to the first package in the
+// version.
+func firstVersionedPackage(v *internal.Version) *internal.VersionedPackage {
+	return &internal.VersionedPackage{
+		Package:     *v.Packages[0],
+		VersionInfo: v.VersionInfo,
+	}
+}
+
 func TestFetchImportedByDetails(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
 
