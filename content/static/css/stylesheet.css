@@ -462,10 +462,9 @@ code {
 .Documentation h3 {
   display: initial;
 }
-.Documentation-source a {
+.Documentation-source {
   display: initial;
 }
-
 .Documentation h2:hover a,
 .Documentation h3:hover a {
   display: initial;
