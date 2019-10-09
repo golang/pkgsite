@@ -353,7 +353,7 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 			continue
 		}
 		pkg, err := loadPackage(goFiles, innerPath, modulePath, sourceInfo)
-		if _, ok := err.(*BadPackageError); ok {
+		if p := (&BadPackageError{}); xerrors.As(err, &p) {
 			// TODO(b/133187024): Record and display this information instead of just skipping.
 			log.Infof("Skipping %q because of *BadPackageError: %v\n", path.Join(modulePath, innerPath), err)
 			continue
@@ -457,72 +457,16 @@ func loadPackage(zipGoFiles []*zip.File, innerPath, modulePath string, sourceInf
 // or all .go files have been excluded by constraints.
 // A *BadPackageError error is returned if the directory
 // contains .go files but do not make up a valid package.
-func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, innerPath, modulePath string, sourceInfo *source.Info) (*internal.Package, error) {
-	var (
-		// files is a map of file names to their contents.
-		//
-		// The logic to access it needs to stay in sync across the
-		// matchFile, joinPath, and openFile functions below.
-		// See the comment inside matchFile for details on how it's used.
-		files = make(map[string][]byte)
-
-		// matchFile reports whether the file with the given name and content
-		// matches the build context bctx. name must be just the file name, not
-		// a file path that includes directory names.
-		//
-		// The JoinPath and OpenFile fields of bctx must be set to the joinPath
-		// and openFile functions below.
-		matchFile = func(bctx *build.Context, name string, src []byte) (match bool, err error) {
-			// bctx.MatchFile will use bctx.JoinPath to join its first and second parameters,
-			// and then use the joined result as the name parameter its call to bctx.OpenFile.
-			//
-			// Since we control the bctx.OpenFile implementation and have configured it to read
-			// from the files map, we need to populate the files map accordingly just before
-			// calling bctx.MatchFile.
-			//
-			// The "." path we're joining with name is arbitrary, it just needs to stay in sync
-			// across the calls that populate and access the files map.
-			//
-			files[bctx.JoinPath(".", name)] = src
-			match, err = bctx.MatchFile(".", name) // This will access the file we just added to files map above.
-			if err != nil {
-				return false, xerrors.Errorf("MatchFile(%q): %w", name, err)
-			}
-			return match, nil
-		}
-
-		joinPath = path.Join
-		openFile = func(name string) (io.ReadCloser, error) {
-			return ioutil.NopCloser(bytes.NewReader(files[name])), nil
-		}
-	)
-
-	// bctx is the build context. It's used to make decisions about which
-	// of the .go files are included or excluded by build constraints.
-	bctx := &build.Context{
-		GOOS:        goos,
-		GOARCH:      goarch,
-		CgoEnabled:  true,
-		Compiler:    build.Default.Compiler,
-		ReleaseTags: build.Default.ReleaseTags,
-
-		JoinPath: joinPath,
-		OpenFile: openFile,
-
-		// If left nil, the default implementation of these reads from disk,
-		// which we do not want. None of these functions should be used
-		// inside loadPackage; it would be an internal error if they are.
-		// Set them to non-nil values to catch if that happens.
-		SplitPathList: func(string) []string { panic("internal error: unexpected call to SplitPathList") },
-		IsAbsPath:     func(string) bool { panic("internal error: unexpected call to IsAbsPath") },
-		IsDir:         func(string) bool { panic("internal error: unexpected call to IsDir") },
-		HasSubdir:     func(string, string) (string, bool) { panic("internal error: unexpected call to HasSubdir") },
-		ReadDir:       func(string) ([]os.FileInfo, error) { panic("internal error: unexpected call to ReadDir") },
+func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, innerPath, modulePath string, sourceInfo *source.Info) (_ *internal.Package, err error) {
+	defer derrors.Wrap(&err, "loadPackageWithBuildContext(%q, %q, zipGoFiles, %q, %q, %+v)",
+		goos, goarch, innerPath, modulePath, sourceInfo)
+	// Apply build constraints to get a map from matching file names to their contents.
+	files, err := matchingFiles(goos, goarch, zipGoFiles)
+	if err != nil {
+		return nil, err
 	}
 
 	// Parse .go files and add them to the goFiles slice.
-	// Build constraints are taken into account, and files
-	// that don't match are skipped.
 	var (
 		fset            = token.NewFileSet()
 		goFiles         = make(map[string]*ast.File)
@@ -530,21 +474,7 @@ func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, in
 		packageName     string
 		packageNameFile string // Name of file where packageName came from.
 	)
-	for _, f := range zipGoFiles {
-		_, name := path.Split(f.Name)
-		b, err := dzip.ReadZipFile(f)
-		if err != nil {
-			return nil, err
-		}
-		match, err := matchFile(bctx, name, b)
-		if err != nil {
-			// matchFile is reading from RAM, so the only possible errors are the result of bad
-			// data.
-			return nil, &BadPackageError{Err: err}
-		} else if !match {
-			// Excluded by build context.
-			continue
-		}
+	for name, b := range files {
 		pf, err := parser.ParseFile(fset, name, b, parser.ParseComments)
 		if err != nil {
 			if pf == nil {
@@ -643,6 +573,59 @@ func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, in
 		GOOS:              goos,
 		GOARCH:            goarch,
 	}, nil
+}
+
+// matchingFiles returns a map from file names to their contents, read from zipGoFiles.
+// It includes only those files that match the build context determined by goos and goarch.
+func matchingFiles(goos, goarch string, zipGoFiles []*zip.File) (files map[string][]byte, err error) {
+	defer derrors.Wrap(&err, "matchingFiles(%q, %q, zipGoFiles)", goos, goarch)
+	// Populate the map with all the zip files.
+	files = make(map[string][]byte)
+	for _, f := range zipGoFiles {
+		_, name := path.Split(f.Name)
+		b, err := dzip.ReadZipFile(f)
+		if err != nil {
+			return nil, err
+		}
+		files[name] = b
+	}
+
+	// bctx is used to make decisions about which of the .go files are included
+	// by build constraints.
+	bctx := &build.Context{
+		GOOS:        goos,
+		GOARCH:      goarch,
+		CgoEnabled:  true,
+		Compiler:    build.Default.Compiler,
+		ReleaseTags: build.Default.ReleaseTags,
+
+		JoinPath: path.Join,
+		OpenFile: func(name string) (io.ReadCloser, error) {
+			return ioutil.NopCloser(bytes.NewReader(files[name])), nil
+		},
+
+		// If left nil, the default implementations of these read from disk,
+		// which we do not want. None of these functions should be used
+		// inside this function; it would be an internal error if they are.
+		// Set them to non-nil values to catch if that happens.
+		SplitPathList: func(string) []string { panic("internal error: unexpected call to SplitPathList") },
+		IsAbsPath:     func(string) bool { panic("internal error: unexpected call to IsAbsPath") },
+		IsDir:         func(string) bool { panic("internal error: unexpected call to IsDir") },
+		HasSubdir:     func(string, string) (string, bool) { panic("internal error: unexpected call to HasSubdir") },
+		ReadDir:       func(string) ([]os.FileInfo, error) { panic("internal error: unexpected call to ReadDir") },
+	}
+
+	for name := range files {
+		match, err := bctx.MatchFile(".", name) // This will access the file we just added to files map above.
+		if err != nil {
+			return nil, &BadPackageError{Err: xerrors.Errorf(`bctx.MatchFile(".", %q): %w`, name, err)}
+		}
+		if !match {
+			// Excluded by build context.
+			delete(files, name)
+		}
+	}
+	return files, nil
 }
 
 // simpleImporter returns a (dummy) package object named by the last path
