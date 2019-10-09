@@ -5,8 +5,10 @@
 package frontend
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -49,9 +51,10 @@ func TestServer(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 
-	mustInsertVersion := func(modulePath string, pkgs []*internal.Package) {
+	mustInsertVersion := func(modulePath, version string, pkgs []*internal.Package) {
 		v := sample.Version()
 		v.ModulePath = modulePath
+		v.Version = version
 		v.RepositoryURL = modulePath
 		if modulePath == stdlib.ModulePath {
 			v.RepositoryURL = stdlib.GoSourceRepoURL
@@ -65,11 +68,12 @@ func TestServer(t *testing.T) {
 	pkg := sample.Package()
 	pkg2 := sample.Package()
 	pkg2.Path = sample.ModulePath + "/foo/directory/hello"
-	mustInsertVersion(sample.ModulePath, []*internal.Package{pkg, pkg2})
+	mustInsertVersion(sample.ModulePath, "v0.9.0", []*internal.Package{pkg, pkg2})
+	mustInsertVersion(sample.ModulePath, "v1.0.0", []*internal.Package{pkg, pkg2})
 
 	nonRedistModulePath := "github.com/non_redistributable"
 	nonRedistPkgPath := nonRedistModulePath + "/bar"
-	mustInsertVersion(nonRedistModulePath, []*internal.Package{{
+	mustInsertVersion(nonRedistModulePath, "v1.0.0", []*internal.Package{{
 		Name:   "bar",
 		Path:   nonRedistPkgPath,
 		V1Path: nonRedistPkgPath,
@@ -78,7 +82,7 @@ func TestServer(t *testing.T) {
 	cmdGo := sample.Package()
 	cmdGo.Name = "main"
 	cmdGo.Path = "cmd/go"
-	mustInsertVersion(stdlib.ModulePath, []*internal.Package{cmdGo})
+	mustInsertVersion(stdlib.ModulePath, "v1.13.0", []*internal.Package{cmdGo})
 
 	if err := testDB.RefreshSearchDocuments(ctx); err != nil {
 		t.Fatal(err)
@@ -91,58 +95,94 @@ func TestServer(t *testing.T) {
 	mux := http.NewServeMux()
 	s.Install(mux.Handle)
 
-	pkgHeader := []string{
-		// part of breadcrumb path
-		`<span class="DetailsHeader-breadcrumbDivider">/</span><span class="DetailsHeader-breadcrumbCurrent">foo</span>`,
-		`<h1 class="DetailsHeader-title">Package foo</h1>`,
-		`Module:`,
-		`<a href="/mod/github.com/valid_module_name@v1.0.0">`,
-		`github.com/valid_module_name`,
-		`</a>`,
-		`Version:`,
-		`v1.0.0`,
-		`<a href="/github.com/valid_module_name@v1.0.0/foo?tab=licenses#LICENSE">MIT</a>`,
-		`<a href="github.com/valid_module_name" target="_blank">Source Code</a>`,
-	}
-	nonRedistPkgHeader := []string{
-		`<h1 class="DetailsHeader-title">Package bar</h1>`,
-		`Module:`,
-		`<a href="/mod/github.com/non_redistributable@v1.0.0">`,
-		`github.com/non_redistributable`,
-		`</a>`,
-		`Version:`,
-		`v1.0.0`,
-		`None detected`,
-		`not legal advice`,
-		`<a href="github.com/non_redistributable" target="_blank">Source Code</a>`,
+	type header struct {
+		// suffix is not used for the module header.
+		// the fields must be exported for use by template.Execute.
+		Version, Title, Suffix, ModuleURL, SourceURL, LicenseInfo, LatestURL string
+		notLatest                                                            bool
 	}
 
-	modHeader := []string{
-		`<h1 class="DetailsHeader-title">Module github.com/valid_module_name</h1>`,
-		`Version:`,
-		`v1.0.0`,
-		`<a href="/mod/github.com/valid_module_name@v1.0.0?tab=licenses#LICENSE">MIT</a>`,
-		`<a href="github.com/valid_module_name" target="_blank">Source Code</a>`,
+	mustExecuteTemplate := func(h *header, s string) string {
+		t.Helper()
+		tmpl := template.Must(template.New("").Parse(s))
+		var buf bytes.Buffer
+		if err := tmpl.Execute(&buf, h); err != nil {
+			t.Fatal(err)
+		}
+		return buf.String()
 	}
-	cmdGoHeader := []string{
-		`<span class="DetailsHeader-breadcrumbDivider">/</span><span class="DetailsHeader-breadcrumbCurrent">go</span>`,
-		`<h1 class="DetailsHeader-title">Command go</h1>`,
-		`Module:`,
-		`<a href="/std@go1.0">`,
-		`Standard library`,
-		`</a>`,
-		`Version:`,
-		`go1.0`,
-		`<a href="/cmd/go@go1.0?tab=licenses#LICENSE">MIT</a>`,
-		`<a href="https://github.com/golang/go" target="_blank">Source Code</a>`,
+	constructPackageHeader := func(h *header) []string {
+		latestInfo := `<div class="DetailsHeader-badge DetailsHeader-latest">Latest</div>`
+		if h.notLatest {
+			latestInfo = mustExecuteTemplate(h, `<a href="{{.LatestURL}}">Go to latest</a>`)
+		}
+		return []string{
+			mustExecuteTemplate(h, `<span class="DetailsHeader-breadcrumbDivider">/</span>`),
+			mustExecuteTemplate(h, `<span class="DetailsHeader-breadcrumbCurrent">{{.Suffix}}</span>`),
+			mustExecuteTemplate(h, `<h1 class="DetailsHeader-title">{{.Title}}</h1>`),
+			mustExecuteTemplate(h, `<div class="DetailsHeader-version">{{.Version}}</div>`),
+			latestInfo,
+			h.LicenseInfo,
+			h.ModuleURL,
+			mustExecuteTemplate(h, `<a href="{{.SourceURL}}" target="_blank">Source Code</a>`),
+		}
 	}
-	stdHeader := []string{
-		`<h1 class="DetailsHeader-title">Standard library</h1>`,
-		`Version:`,
-		`go1.0`,
-		`<a href="/std@go1.0?tab=licenses#LICENSE">MIT</a>`,
-		`<a href="https://github.com/golang/go" target="_blank">Source Code</a>`,
+	constructModuleHeader := func(h *header) []string {
+		latestInfo := `<div class="DetailsHeader-badge DetailsHeader-latest">Latest</div>`
+		if h.notLatest {
+			latestInfo = mustExecuteTemplate(h, `<a href="{{.LatestURL}}">Go to latest</a>`)
+		}
+		return []string{
+			mustExecuteTemplate(h, `<h1 class="DetailsHeader-title">{{.Title}}</h1>`),
+			mustExecuteTemplate(h, `<div class="DetailsHeader-version">{{.Version}}</div>`),
+			latestInfo,
+			h.LicenseInfo,
+			mustExecuteTemplate(h, `<a href="{{.SourceURL}}" target="_blank">Source Code</a>`),
+		}
 	}
+
+	pkgHeaderLatest := constructPackageHeader(&header{
+		Version:     "v1.0.0",
+		Suffix:      "foo",
+		Title:       "Package foo",
+		SourceURL:   "github.com/valid_module_name",
+		LicenseInfo: `<a href="/github.com/valid_module_name@v1.0.0/foo?tab=licenses#LICENSE">MIT</a>`,
+	})
+	pkgHeaderNotLatest := constructPackageHeader(&header{
+		Version:     "v0.9.0",
+		Suffix:      "foo",
+		Title:       "Package foo",
+		SourceURL:   "github.com/valid_module_name",
+		LicenseInfo: `<a href="/github.com/valid_module_name@v0.9.0/foo?tab=licenses#LICENSE">MIT</a>`,
+		LatestURL:   "/github.com/valid_module_name/foo",
+		notLatest:   true,
+	})
+	nonRedistPkgHeader := constructPackageHeader(&header{
+		Version:     "v1.0.0",
+		Suffix:      "bar",
+		Title:       "Package bar",
+		SourceURL:   "github.com/non_redistributable",
+		LicenseInfo: `None detected`,
+	})
+	cmdGoHeader := constructPackageHeader(&header{
+		Suffix:      "go",
+		Version:     "go1.13",
+		Title:       "Command go",
+		LicenseInfo: `<a href="/cmd/go@go1.13?tab=licenses#LICENSE">MIT</a>`,
+		SourceURL:   "https://github.com/golang/go",
+	})
+	modHeader := constructModuleHeader(&header{
+		Version:     "v1.0.0",
+		Title:       "Module github.com/valid_module_name",
+		SourceURL:   "github.com/valid_module_name",
+		LicenseInfo: `<a href="/mod/github.com/valid_module_name@v1.0.0?tab=licenses#LICENSE">MIT</a>`,
+	})
+	stdHeader := constructModuleHeader(&header{
+		Version:     "go1.13",
+		Title:       "Standard library",
+		SourceURL:   "https://github.com/golang/go",
+		LicenseInfo: `<a href="/std@go1.13?tab=licenses#LICENSE">MIT</a>`,
+	})
 
 	pkgSuffix := strings.TrimPrefix(sample.PackagePath, sample.ModulePath+"/")
 	nonRedistPkgSuffix := strings.TrimPrefix(nonRedistPkgPath, nonRedistModulePath+"/")
@@ -190,7 +230,7 @@ func TestServer(t *testing.T) {
 			"package default",
 			fmt.Sprintf("/%s", sample.PackagePath),
 			http.StatusOK,
-			append(pkgHeader, `This is the documentation HTML`),
+			append(pkgHeaderLatest, `This is the documentation HTML`),
 		},
 		{
 			"package default nonredistributable",
@@ -203,7 +243,7 @@ func TestServer(t *testing.T) {
 			"package@version default",
 			fmt.Sprintf("/%s@%s/%s", sample.ModulePath, sample.VersionString, pkgSuffix),
 			http.StatusOK,
-			append(pkgHeader, `This is the documentation HTML`),
+			append(pkgHeaderLatest, `This is the documentation HTML`),
 		},
 		{
 			"package@version default specific version nonredistributable",
@@ -214,9 +254,9 @@ func TestServer(t *testing.T) {
 		},
 		{
 			"package@version doc tab",
-			fmt.Sprintf("/%s@%s/%s?tab=doc", sample.ModulePath, sample.VersionString, pkgSuffix),
+			fmt.Sprintf("/%s@%s/%s?tab=doc", sample.ModulePath, "v0.9.0", pkgSuffix),
 			http.StatusOK,
-			append(pkgHeader, `This is the documentation HTML`),
+			append(pkgHeaderNotLatest, `This is the documentation HTML`),
 		},
 		{
 			"package@version doc tab nonredistributable",
@@ -229,7 +269,7 @@ func TestServer(t *testing.T) {
 			"package@version readme tab",
 			fmt.Sprintf("/%s@%s/%s?tab=readme", sample.ModulePath, sample.VersionString, pkgSuffix),
 			http.StatusOK,
-			append(pkgHeader, `<div class="ReadMe"><p>readme</p>`,
+			append(pkgHeaderLatest, `<div class="ReadMe"><p>readme</p>`,
 				`<div class="ReadMe-source">Source: github.com/valid_module_name@v1.0.0/README.md</div>`),
 		},
 		{
@@ -243,13 +283,13 @@ func TestServer(t *testing.T) {
 			"package@version subdirectories tab",
 			fmt.Sprintf("/%s@%s/%s?tab=subdirectories", sample.ModulePath, sample.VersionString, pkgSuffix),
 			http.StatusOK,
-			append(pkgHeader, `foo`),
+			append(pkgHeaderLatest, `foo`),
 		},
 		{
 			"package@version versions tab",
 			fmt.Sprintf("/%s@%s/%s?tab=versions", sample.ModulePath, sample.VersionString, pkgSuffix),
 			http.StatusOK,
-			append(pkgHeader,
+			append(pkgHeaderLatest,
 				`Versions`,
 				`v1`,
 				`<a href="/github.com/valid_module_name@v1.0.0/foo" title="v1.0.0">v1.0.0</a>`),
@@ -258,7 +298,7 @@ func TestServer(t *testing.T) {
 			"package@version imports tab",
 			fmt.Sprintf("/%s@%s/%s?tab=imports", sample.ModulePath, sample.VersionString, pkgSuffix),
 			http.StatusOK,
-			append(pkgHeader,
+			append(pkgHeaderLatest,
 				`Imports`,
 				`Standard Library`,
 				`<a href="/fmt">fmt</a>`,
@@ -268,21 +308,21 @@ func TestServer(t *testing.T) {
 			"package@version imported by tab",
 			fmt.Sprintf("/%s@%s/%s?tab=importedby", sample.ModulePath, sample.VersionString, pkgSuffix),
 			http.StatusOK,
-			append(pkgHeader,
+			append(pkgHeaderLatest,
 				`No known importers for this package`),
 		},
 		{
 			"package@version imported by tab second page",
 			fmt.Sprintf("/%s@%s/%s?tab=importedby&page=2", sample.ModulePath, sample.VersionString, pkgSuffix),
 			http.StatusOK,
-			append(pkgHeader,
+			append(pkgHeaderLatest,
 				`No known importers for this package`),
 		},
 		{
 			"package@version licenses tab",
 			fmt.Sprintf("/%s@%s/%s?tab=licenses", sample.ModulePath, sample.VersionString, pkgSuffix),
 			http.StatusOK,
-			append(pkgHeader,
+			append(pkgHeaderLatest,
 				`<div id="#LICENSE">MIT</div>`,
 				`This is not legal advice`,
 				`<a href="/license-policy">Read disclaimer.</a>`,
@@ -350,7 +390,7 @@ func TestServer(t *testing.T) {
 		},
 		{
 			"cmd go package page at version",
-			"/cmd/go@go1.0",
+			"/cmd/go@go1.13",
 			http.StatusOK,
 			cmdGoHeader,
 		},
@@ -362,7 +402,7 @@ func TestServer(t *testing.T) {
 		},
 		{
 			"standard library module page at version",
-			"/std@go1.0",
+			"/std@go1.13",
 			http.StatusOK,
 			stdHeader,
 		},

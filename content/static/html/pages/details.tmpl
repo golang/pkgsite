@@ -11,35 +11,50 @@
     {{if .BreadcrumbPath}}
       <span>{{.BreadcrumbPath}}</span>
     {{end}}
-    <h1 class="DetailsHeader-title">{{.Title}}</h1>
-    <p class="InfoLabel">
-      {{if eq $namespace "pkg"}}
-        <strong class="InfoLabel-title">Module: </strong>
-        <a href="{{$header.Module.URL}}">
-          {{if eq $header.Module.Path "std"}}
-            Standard library
-          {{else}}
-            {{$header.Module.Path}}
-          {{end}}
-        </a>
-        <span class="InfoLabel-divider">|</span>
+    <div class="DetailsHeader-main">
+      <h1 class="DetailsHeader-title">{{.Title}}</h1>
+      <div class="DetailsHeader-version">{{$header.Version}}</div>
+      {{if .IsLatest}}
+        <div class="DetailsHeader-badge DetailsHeader-latest">Latest</div>
+      {{else}}
+        <div class="DetailsHeader-badge DetailsHeader-goToLatest">
+      <a href="/{{$header.Path}}">Go to latest</a>
+    </div>
       {{end}}
-      <strong class="InfoLabel-title">Version:</strong> {{$header.Version}}
+    </div>
+    <div class="InfoLabel">
+      <span class="InfoLabel-title">Published:</span>
+      <strong>{{$header.CommitTime}}</strong>
       <span class="InfoLabel-divider">|</span>
-      <strong class="InfoLabel-title">Published:</strong> {{$header.CommitTime}}
-      <span class="InfoLabel-divider">|</span>
-      <strong class="InfoLabel-title">{{pluralize (len $header.Licenses) "License"}}: </strong>
-      {{range $i, $e := $header.Licenses -}}{{if $i}}, {{end}}
-        <a href="{{$header.URL}}?tab=licenses#{{.Anchor}}">{{$e.Type}}</a>
-      {{- else -}}
-        <span>None detected</span>
-        <a href="/license-policy" class="Disclaimer-link"><em>not legal advice</em></a>
-      {{- end}}
+      <span class="InfoLabel-title">{{pluralize (len $header.Licenses) "License"}}: </span>
+      <span>
+        {{range $i, $e := $header.Licenses -}}{{if $i}}, {{end}}
+          <a href="{{$header.URL}}?tab=licenses#{{.Anchor}}">{{$e.Type}}</a>
+        {{- else -}}
+          <span>None detected</span>
+          <a href="/license-policy" class="Disclaimer-link"><em>not legal advice</em></a>
+        {{- end}}
+      </span>
+      {{if eq $namespace "pkg"}}
+        <span class="InfoLabel-divider">|</span>
+        <span class="InfoLabel-title">Module: </span>
+        <span>
+          <a href="{{$header.Module.URL}}">
+            {{if eq $header.Module.Path "std"}}
+              Standard library
+            {{else}}
+              {{$header.Module.Path}}
+            {{end}}
+          </a>
+        </span>
+      {{end}}
       {{if $header.RepositoryURL}}
         <span class="InfoLabel-divider">|</span>
-        <a href="{{$header.RepositoryURL}}" target="_blank">Source Code</a>
+        <span>
+          <a href="{{$header.RepositoryURL}}" target="_blank">Source Code</a>
+        </span>
       {{end}}
-    </p>
+    </div>
   </header>
 
   <nav class="DetailsNav js-modulesNav">

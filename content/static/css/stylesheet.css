@@ -20,10 +20,12 @@
   --turq-med: #00add8;
   --turq-light: #5dc9e2;
 
+  --blue: #92e1f3;
   --purple: #542c7d;
   --yellow: #fddd00;
   --pink: #ce3262;
   --green: #00a29c;
+  --white: #fff;
 }
 
 *,
@@ -237,15 +239,38 @@ code {
 .DetailsHeader {
   margin-top: 0.75rem;
 }
+.DetailsHeader-main {
+  margin-top: 0.25rem;
+}
+.DetailsHeader-title {
+  display: inline-block;
+  font:  600 1.875rem 'Work Sans', arial, sans-serif;
+  margin: 0;
+}
+.DetailsHeader-version {
+  display: inline-block;
+  margin: 0 0.5rem;
+}
+.DetailsHeader-badge {
+  border-radius: 1rem;
+  display: inline-block;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+}
+.DetailsHeader-latest {
+  background: var(--blue);
+}
+.DetailsHeader-goToLatest {
+  background: var(--pink);
+}
+.DetailsHeader-goToLatest a {
+  color: var(--white);
+}
 .DetailsHeader-breadcrumbCurrent {
   color: var(--gray-3);
 }
 .DetailsHeader-breadcrumbDivider {
   color: var(--gray-3);
-}
-.DetailsHeader-title {
-  font:  600 1.875rem 'Work Sans', arial, sans-serif;
-  margin: 0;
 }
 @media only screen and (min-width: 850px) {
   .Header {
@@ -579,13 +604,12 @@ code {
   text-align: center;
 }
 .InfoLabel {
-  color: var(--gray-3);
   font-size: .875rem;
   line-height: 1.375rem;
+  margin: 0.5rem 0;
 }
 .InfoLabel-title {
   color: var(--gray-1);
-  font-weight: bold;
 }
 .InfoLabel-divider {
   display: inline-block;
