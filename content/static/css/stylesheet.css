@@ -459,10 +459,7 @@ code {
 .Documentation h3 a {
   display: none;
 }
-.Documentation h3 {
-  display: initial;
-}
-.Documentation-source {
+.Documentation h3 a.Documentation-source {
   display: initial;
 }
 .Documentation h2:hover a,
