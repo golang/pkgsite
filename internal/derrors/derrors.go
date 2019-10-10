@@ -24,6 +24,8 @@ var (
 	InvalidArgument = errors.New("invalid argument")
 	// BadModule indicates a problem with a module.
 	BadModule = errors.New("bad module")
+	// Excluded indicates that the module is excluded. (See internal/postgres/excluded.go.)
+	Excluded = errors.New("excluded")
 
 	// Unknown indicates that the error has unknown semantics.
 	Unknown = errors.New("unknown")
@@ -36,6 +38,7 @@ var httpCodes = []struct {
 	{NotFound, http.StatusNotFound},
 	{InvalidArgument, http.StatusBadRequest},
 	{BadModule, 490}, // since this isn't an HTTP status, pick an unused code
+	{Excluded, http.StatusForbidden},
 }
 
 // FromHTTPStatus generates an error according to the HTTP semantics for the given

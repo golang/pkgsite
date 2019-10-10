@@ -663,6 +663,46 @@ func TestFetchAndUpdateState_Incomplete(t *testing.T) {
 	}
 }
 
+func TestFetchAndUpdateState_Excluded(t *testing.T) {
+	// Check that an excluded module is not processed, and is marked excluded in module_version_states.
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	defer postgres.ResetTestDB(testDB, t)
+
+	client, teardownProxy := proxy.SetupTestProxy(t, nil)
+	defer teardownProxy()
+
+	const (
+		modulePath = "github.com/my/module"
+		version    = "v1.0.0"
+	)
+	if err := testDB.InsertExcludedPrefix(ctx, "github.com/my/m", "user", "for testing"); err != nil {
+		t.Fatal(err)
+	}
+
+	code, err := fetchAndUpdateState(ctx, modulePath, version, client, testDB)
+	wantCode := http.StatusForbidden
+	if code != wantCode || !xerrors.Is(err, derrors.Excluded) {
+		t.Fatalf("got %d, %v; want %d, Is(err, derrors.Excluded)", code, err, wantCode)
+	}
+	_, err = testDB.GetVersionInfo(ctx, modulePath, version)
+	if !xerrors.Is(err, derrors.NotFound) {
+		t.Fatalf("got %v, want Is(NotFound)", err)
+	}
+	vs, err := testDB.GetVersionState(ctx, modulePath, version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var gotStatus int
+	if vs.Status != nil {
+		gotStatus = *vs.Status
+	}
+	if gotStatus != wantCode {
+		t.Fatalf("testDB.GetVersionState(ctx, %q, %q): status=%v, want %d", modulePath, version, gotStatus, wantCode)
+	}
+}
+
 // Check that when the proxy says it does not have module@version,
 // we delete it from the database.
 func TestFetchAndUpdateState_NotFound(t *testing.T) {

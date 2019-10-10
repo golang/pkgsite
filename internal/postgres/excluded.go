@@ -30,3 +30,14 @@ func (db *DB) IsExcluded(ctx context.Context, path string) (_ bool, err error) {
 		return false, err
 	}
 }
+
+// InsertExcludedPrefix inserts prefix into the excluded_prefixes table.
+//
+// This is for testing only; use devtools/cmd/dbadmin to exclude or unexclude a prefix.
+func (db *DB) InsertExcludedPrefix(ctx context.Context, prefix, user, reason string) (err error) {
+	defer derrors.Wrap(&err, "DB.InsertExcludedPrefix(ctx, %q, %q)", prefix, reason)
+
+	_, err = db.exec(ctx, "INSERT INTO excluded_prefixes (prefix, created_by, reason) VALUES ($1, $2, $3)",
+		prefix, user, reason)
+	return err
+}

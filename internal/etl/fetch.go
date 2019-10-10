@@ -122,6 +122,14 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 func fetchAndInsertVersion(parentCtx context.Context, modulePath, version string, proxyClient *proxy.Client, db *postgres.DB) (hasIncompletePackages bool, err error) {
 	defer derrors.Wrap(&err, "fetchAndInsertVersion(%q, %q)", modulePath, version)
 
+	exc, err := db.IsExcluded(parentCtx, modulePath)
+	if err != nil {
+		return false, err
+	}
+	if exc {
+		return false, derrors.Excluded
+	}
+
 	parentSpan := trace.FromContext(parentCtx)
 	// A fixed timeout for fetchAndInsertVersion to allow module processing to
 	// succeed even for extremely short lived requests.
