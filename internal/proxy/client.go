@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -61,19 +62,9 @@ func New(rawurl string) (_ *Client, err error) {
 // transforms that data into a *VersionInfo.
 func (c *Client) GetInfo(ctx context.Context, modulePath, version string) (_ *VersionInfo, err error) {
 	defer derrors.Wrap(&err, "proxy.Client.GetInfo(%q, %q)", modulePath, version)
-	encodedPath, err := module.EncodePath(modulePath)
+	u, err := c.encodedURL(modulePath, version, "info")
 	if err != nil {
-		return nil, xerrors.Errorf("module.EncodePath(%q): %v: %q", modulePath, err, derrors.InvalidArgument)
-	}
-	var u string
-	if version == internal.LatestVersion {
-		u = fmt.Sprintf("%s/%s/@latest", c.url, encodedPath)
-	} else {
-		encodedVersion, err := module.EncodeVersion(version)
-		if err != nil {
-			return nil, xerrors.Errorf("module.EncodeVersion(%q): %v: %q", version, err, derrors.InvalidArgument)
-		}
-		u = fmt.Sprintf("%s/%s/@v/%s.info", c.url, encodedPath, encodedVersion)
+		return nil, err
 	}
 	var v VersionInfo
 	err = c.executeRequest(ctx, u, func(body io.Reader) error {
@@ -99,11 +90,10 @@ func (c *Client) GetZip(ctx context.Context, requestedPath, requestedVersion str
 	if err != nil {
 		return nil, err
 	}
-	encodedPath, err := module.EncodePath(requestedPath)
+	u, err := c.encodedURL(requestedPath, info.Version, "zip")
 	if err != nil {
 		return nil, err
 	}
-	u := fmt.Sprintf("%s/%s/@v/%s.zip", c.url, encodedPath, info.Version)
 	var bodyBytes []byte
 	err = c.executeRequest(ctx, u, func(body io.Reader) error {
 		var err error
@@ -121,6 +111,31 @@ func (c *Client) GetZip(ctx context.Context, requestedPath, requestedVersion str
 		return nil, fmt.Errorf("zip.NewReader: %v", err)
 	}
 	return zipReader, nil
+}
+
+func (c *Client) encodedURL(modulePath, version, suffix string) (_ string, err error) {
+	defer func() {
+		derrors.Wrap(&err, "Client.encodedURL(%q, %q, %q)", modulePath, version, suffix)
+	}()
+
+	if suffix != "info" && suffix != "zip" {
+		return "", errors.New(`suffix must be "info" or "zip"`)
+	}
+	encodedPath, err := module.EncodePath(modulePath)
+	if err != nil {
+		return "", xerrors.Errorf("path: %v: %w", err, derrors.InvalidArgument)
+	}
+	if version == internal.LatestVersion {
+		if suffix != "info" {
+			return "", fmt.Errorf("cannot ask for latest with suffix %q", suffix)
+		}
+		return fmt.Sprintf("%s/%s/@latest", c.url, encodedPath), nil
+	}
+	encodedVersion, err := module.EncodeVersion(version)
+	if err != nil {
+		return "", xerrors.Errorf("version: %v: %w", err, derrors.InvalidArgument)
+	}
+	return fmt.Sprintf("%s/%s/@v/%s.%s", c.url, encodedPath, encodedVersion, suffix), nil
 }
 
 // ListVersions makes a request to $GOPROXY/<path>/@v/list and returns the
