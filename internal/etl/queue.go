@@ -9,7 +9,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
@@ -73,12 +72,6 @@ func (q *GCPQueue) ScheduleFetch(ctx context.Context, modulePath, version, suffi
 	// of tasks that would normally be de-duplicated.
 	if suffix != "" {
 		req.Task.Name += "-" + suffix
-	}
-	// Work around a bug in Cloud Tasks in which duplicate tasks are erroneously detected across queues.
-	if strings.HasPrefix(q.queueID, "dev") {
-		req.Task.Name += "-dev"
-	} else {
-		req.Task.Name += "-prod"
 	}
 
 	if _, err := q.client.CreateTask(ctx, req); err != nil {
