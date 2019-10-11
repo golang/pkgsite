@@ -53,7 +53,7 @@ func (q *GCPQueue) ScheduleFetch(ctx context.Context, modulePath, version, suffi
 	defer cancel()
 	queueName := fmt.Sprintf("projects/%s/locations/%s/queues/%s", config.ProjectID(), config.LocationID(), q.queueID)
 	u := fmt.Sprintf("/fetch/%s/@v/%s", modulePath, version)
-	taskID := newTaskID(modulePath, version)
+	taskID := newTaskID(modulePath, version, time.Now())
 	req := &taskspb.CreateTaskRequest{
 		Parent: queueName,
 		Task: &taskspb.Task{
@@ -91,10 +91,20 @@ func (q *GCPQueue) ScheduleFetch(ctx context.Context, modulePath, version, suffi
 	return nil
 }
 
+// How often the task ID for a given module and version will change.
+const taskIDChangeInterval = 3 * time.Hour
+
 // Create a task ID for the given module path and version.
 // Task IDs can contain only letters ([A-Za-z]), numbers ([0-9]), hyphens (-), or underscores (_).
-func newTaskID(modulePath, version string) string {
-	return fmt.Sprintf("%x", sha256.Sum256([]byte(modulePath+"@"+version)))
+// Also include a truncated time in the hash, so it changes periodically.
+//
+// Since we truncate the time to the nearest taskIDChangeInterval, it's still possible
+// for two identical tasks to appear within that time period (for example, one at 2:59
+// and the other at 3:01) -- each is part of a different taskIDChangeInterval-sized chunk
+// of time. But there will never be a third identical task in that interval.
+func newTaskID(modulePath, version string, now time.Time) string {
+	t := now.Truncate(taskIDChangeInterval)
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(modulePath+"@"+version+"-"+t.String())))
 }
 
 type moduleVersion struct {
