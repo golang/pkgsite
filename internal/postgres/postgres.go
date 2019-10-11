@@ -54,8 +54,7 @@ var (
 type queryEndLogEntry struct {
 	ID              string
 	Query           string
-	Args            []interface{}
-	ArgsTruncated   bool
+	Args            string
 	DurationSeconds float64
 	Error           string `json:",omitempty"`
 }
@@ -93,14 +92,25 @@ func logQuery(query string, args []interface{}) func(*error) {
 	n := atomic.AddInt64(&queryCounter, 1)
 	uid := fmt.Sprintf("%s-%d", instanceID, n)
 
-	const maxargs = 20 // maximum displayed args
-	var moreargs string
-	if len(args) > maxargs {
-		args = args[:maxargs]
-		moreargs = "..."
+	// Construct a short string of the args.
+	const (
+		maxArgs   = 20
+		maxArgLen = 50
+	)
+	var argStrings []string
+	for i := 0; i < len(args) && i < maxArgs; i++ {
+		s := fmt.Sprint(args[i])
+		if len(s) > maxArgLen {
+			s = s[:maxArgLen] + "..."
+		}
+		argStrings = append(argStrings, s)
 	}
+	if len(args) > maxArgs {
+		argStrings = append(argStrings, "...")
+	}
+	argString := strings.Join(argStrings, ", ")
 
-	log.Debugf("%s %s %v%s", uid, query, args, moreargs)
+	log.Debugf("%s %s args=%s", uid, query, argString)
 	start := time.Now()
 	return func(errp *error) {
 		dur := time.Since(start)
@@ -111,8 +121,7 @@ func logQuery(query string, args []interface{}) func(*error) {
 			entry := queryEndLogEntry{
 				ID:              uid,
 				Query:           query,
-				Args:            args,
-				ArgsTruncated:   moreargs != "",
+				Args:            argString,
 				DurationSeconds: dur.Seconds(),
 			}
 			if *errp == nil {
