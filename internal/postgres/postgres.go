@@ -209,7 +209,9 @@ func bulkInsert(ctx context.Context, tx *sql.Tx, table string, columns []string,
 		return fmt.Errorf("modulus of len(values) and len(columns) must be 0: got %d", remainder)
 	}
 
-	const maxParameters = 65535 // maximum number of parameters allowed by Postgres
+	// Postgres supports up to 65535 parameters, but stop well before that
+	// so we don't construct humongous queries.
+	const maxParameters = 1000
 	stride := (maxParameters / len(columns)) * len(columns)
 	if stride == 0 {
 		// This is a pathological case (len(columns) > maxParameters), but we
@@ -227,8 +229,7 @@ func bulkInsert(ctx context.Context, tx *sql.Tx, table string, columns []string,
 			return fmt.Errorf("buildInsertQuery(%q, %v, values[%d:%d], %q): %v", table, columns, leftBound, rightBound, conflictAction, err)
 		}
 
-		defer logQuery(query, valueSlice)(&err)
-		if _, err := tx.ExecContext(ctx, query, valueSlice...); err != nil {
+		if _, err := execTx(ctx, tx, query, valueSlice...); err != nil {
 			return fmt.Errorf("tx.ExecContext(ctx, [bulk insert query], values[%d:%d]): %v", leftBound, rightBound, err)
 		}
 	}
