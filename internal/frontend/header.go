@@ -34,7 +34,6 @@ type Module struct {
 	Version           string
 	Path              string
 	CommitTime        string
-	RepositoryURL     string
 	IsRedistributable bool
 	URL               string
 	Licenses          []LicenseMetadata
@@ -92,7 +91,6 @@ func createModule(vi *internal.VersionInfo, licmetas []*license.Metadata) (_ *Mo
 		Version:           formattedVersion,
 		Path:              vi.ModulePath,
 		CommitTime:        elapsedTime(vi.CommitTime),
-		RepositoryURL:     vi.RepositoryURL,
 		IsRedistributable: license.AreRedistributable(licmetas),
 		Licenses:          transformLicenseMetadata(licmetas),
 		URL:               constructModuleURL(vi.ModulePath, formattedVersion),

@@ -55,10 +55,6 @@ func TestServer(t *testing.T) {
 		v := sample.Version()
 		v.ModulePath = modulePath
 		v.Version = version
-		v.RepositoryURL = modulePath
-		if modulePath == stdlib.ModulePath {
-			v.RepositoryURL = stdlib.GoSourceRepoURL
-		}
 		v.Packages = pkgs
 		if err := testDB.InsertVersion(ctx, v); err != nil {
 			t.Fatal(err)
@@ -98,8 +94,8 @@ func TestServer(t *testing.T) {
 	type header struct {
 		// suffix is not used for the module header.
 		// the fields must be exported for use by template.Execute.
-		Version, Title, Suffix, ModuleURL, SourceURL, LicenseInfo, LatestURL string
-		notLatest                                                            bool
+		Version, Title, Suffix, ModuleURL, LicenseInfo, LatestURL string
+		notLatest                                                 bool
 	}
 
 	mustExecuteTemplate := func(h *header, s string) string {
@@ -124,7 +120,6 @@ func TestServer(t *testing.T) {
 			latestInfo,
 			h.LicenseInfo,
 			h.ModuleURL,
-			mustExecuteTemplate(h, `<a href="{{.SourceURL}}" target="_blank">Source Code</a>`),
 		}
 	}
 	constructModuleHeader := func(h *header) []string {
@@ -137,7 +132,6 @@ func TestServer(t *testing.T) {
 			mustExecuteTemplate(h, `<div class="DetailsHeader-version">{{.Version}}</div>`),
 			latestInfo,
 			h.LicenseInfo,
-			mustExecuteTemplate(h, `<a href="{{.SourceURL}}" target="_blank">Source Code</a>`),
 		}
 	}
 
@@ -145,14 +139,12 @@ func TestServer(t *testing.T) {
 		Version:     "v1.0.0",
 		Suffix:      "foo",
 		Title:       "Package foo",
-		SourceURL:   "github.com/valid_module_name",
 		LicenseInfo: `<a href="/github.com/valid_module_name@v1.0.0/foo?tab=licenses#LICENSE">MIT</a>`,
 	})
 	pkgHeaderNotLatest := constructPackageHeader(&header{
 		Version:     "v0.9.0",
 		Suffix:      "foo",
 		Title:       "Package foo",
-		SourceURL:   "github.com/valid_module_name",
 		LicenseInfo: `<a href="/github.com/valid_module_name@v0.9.0/foo?tab=licenses#LICENSE">MIT</a>`,
 		LatestURL:   "/github.com/valid_module_name/foo",
 		notLatest:   true,
@@ -161,7 +153,6 @@ func TestServer(t *testing.T) {
 		Version:     "v1.0.0",
 		Suffix:      "bar",
 		Title:       "Package bar",
-		SourceURL:   "github.com/non_redistributable",
 		LicenseInfo: `None detected`,
 	})
 	cmdGoHeader := constructPackageHeader(&header{
@@ -169,18 +160,15 @@ func TestServer(t *testing.T) {
 		Version:     "go1.13",
 		Title:       "Command go",
 		LicenseInfo: `<a href="/cmd/go@go1.13?tab=licenses#LICENSE">MIT</a>`,
-		SourceURL:   "https://github.com/golang/go",
 	})
 	modHeader := constructModuleHeader(&header{
 		Version:     "v1.0.0",
 		Title:       "Module github.com/valid_module_name",
-		SourceURL:   "github.com/valid_module_name",
 		LicenseInfo: `<a href="/mod/github.com/valid_module_name@v1.0.0?tab=licenses#LICENSE">MIT</a>`,
 	})
 	stdHeader := constructModuleHeader(&header{
 		Version:     "go1.13",
 		Title:       "Standard library",
-		SourceURL:   "https://github.com/golang/go",
 		LicenseInfo: `<a href="/std@go1.13?tab=licenses#LICENSE">MIT</a>`,
 	})
 
