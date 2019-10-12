@@ -139,13 +139,31 @@ func TestModuleInfo(t *testing.T) {
 			"https://cue.googlesource.com/cue/+/v0.0.9/cuego/doc.go#1",
 		},
 		{
-			"gitlab",
+			"gitlab.com",
 			"gitlab.com/akita/akita", "v1.4.1", "event.go",
 
 			"https://gitlab.com/akita/akita",
 			"https://gitlab.com/akita/akita/tree/v1.4.1",
 			"https://gitlab.com/akita/akita/blob/v1.4.1/event.go",
 			"https://gitlab.com/akita/akita/blob/v1.4.1/event.go#L1",
+		},
+		{
+			"other gitlab",
+			"gitlab.66xue.com/daihao/logkit", "v0.1.18", "color.go",
+
+			"https://gitlab.66xue.com/daihao/logkit",
+			"https://gitlab.66xue.com/daihao/logkit/tree/v0.1.18",
+			"https://gitlab.66xue.com/daihao/logkit/blob/v0.1.18/color.go",
+			"https://gitlab.66xue.com/daihao/logkit/blob/v0.1.18/color.go#L1",
+		},
+		{
+			"gitee.com",
+			"gitee.com/290746987/GenMysqlProject", "v1.0.0", "main.go",
+
+			"https://gitee.com/290746987/GenMysqlProject",
+			"https://gitee.com/290746987/GenMysqlProject/tree/v1.0.0",
+			"https://gitee.com/290746987/GenMysqlProject/blob/v1.0.0/main.go",
+			"https://gitee.com/290746987/GenMysqlProject/blob/v1.0.0/main.go#L1",
 		},
 		{
 			"v2 as a branch",

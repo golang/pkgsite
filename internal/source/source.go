@@ -304,6 +304,15 @@ var patterns = []struct {
 		regexp.MustCompile(`^(?P<repo>gitlab\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)`),
 		githubURLTemplates,
 	},
+	{
+		// Assume that any site beginning "gitlab." works like gitlab.com.
+		regexp.MustCompile(`^(?P<repo>gitlab\.[a-z0-9A-Z.-]+/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`),
+		githubURLTemplates,
+	},
+	{
+		regexp.MustCompile(`^(?P<repo>gitee\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`),
+		githubURLTemplates,
+	},
 
 	// Patterns that match the general go command pattern, where they must have
 	// a ".git" repo suffix in an import path. If matching a repo URL from a meta tag,
