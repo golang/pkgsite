@@ -77,8 +77,12 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 	)
 	hasIncompletePackages, fetchErr := fetchAndInsertVersion(ctx, modulePath, version, client, db)
 	if fetchErr != nil {
-		log.Errorf("Error executing fetch: %v", fetchErr)
 		code = derrors.ToHTTPStatus(fetchErr)
+		logf := log.Errorf
+		if code < 500 {
+			logf = log.Infof
+		}
+		logf("Error executing fetch: %v (code %d)", fetchErr, code)
 	}
 	if hasIncompletePackages {
 		code = hasIncompletePackagesCode
@@ -147,7 +151,7 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, version string
 	if err = db.InsertVersion(ctx, v); err != nil {
 		return false, err
 	}
-	log.Infof("Inserted version %s@%s", v.ModulePath, v.Version)
+	log.Infof("Inserted %s@%s", v.ModulePath, v.Version)
 	return hasIncompletePackages, nil
 }
 

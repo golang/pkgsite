@@ -172,23 +172,17 @@ func (s *Server) handleFetch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	msg, code := s.doFetch(r)
-	if msg == "" {
-		msg = "[empty message]"
-	}
-	log.Info(msg)
-
 	if code == http.StatusInternalServerError {
 		log.Infof("doFetch of %s returned %d; returning that code to retry task", r.URL.Path, code)
 		http.Error(w, http.StatusText(code), code)
 		return
 	}
-	if code/100 == 2 {
-		log.Infof("doFetch of %s succeeded with %d", r.URL.Path, code)
-	} else {
+	if code/100 != 2 {
 		log.Infof("doFetch of %s returned code %d; returning OK to avoid retry", r.URL.Path, code)
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	if code/100 == 2 {
+		log.Info(msg)
 		fmt.Fprintln(w, msg)
 	}
 	fmt.Fprintln(w, http.StatusText(code))

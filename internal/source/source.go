@@ -207,9 +207,7 @@ func moduleInfoDynamic(ctx context.Context, client *http.Client, modulePath, ver
 		var repo string
 		repo, _, templates, _ = matchStatic(removeHTTPScheme(sourceMeta.dirTemplate))
 		if templates == (urlTemplates{}) {
-			// Log an error so that we can notice it and possibly add this case to our
-			// list of static patterns.
-			log.Errorf("no templates for repo URL %q from meta tag: err=%v", sourceMeta.repoURL, err)
+			log.Infof("no templates for repo URL %q from meta tag: err=%v", sourceMeta.repoURL, err)
 		} else {
 			// Use the repo from the template, not the original one.
 			repoURL = "https://" + repo
