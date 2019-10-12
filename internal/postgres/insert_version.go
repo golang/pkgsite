@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -65,6 +66,22 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version) (err
 // A derrors.InvalidArgument error will be returned if the given version and
 // licenses are invalid.
 func (db *DB) saveVersion(ctx context.Context, version *internal.Version) error {
+	// Sort to ensure proper lock ordering, avoiding deadlocks. See
+	// b/141164828#comment8. The only deadlocks we've actually seen are on
+	// imports_unique, because they can occur when processing two versions of
+	// the same module, which happens regularly. But if we were ever to process
+	// the same module and version twice, we could see deadlocks in the other
+	// bulk inserts.
+	sort.Slice(version.Packages, func(i, j int) bool {
+		return version.Packages[i].Path < version.Packages[j].Path
+	})
+	sort.Slice(version.Licenses, func(i, j int) bool {
+		return version.Licenses[i].FilePath < version.Licenses[j].FilePath
+	})
+	for _, p := range version.Packages {
+		sort.Strings(p.Imports)
+	}
+
 	err := db.Transact(func(tx *sql.Tx) error {
 		majorint, minorint, patchint, prerelease, err := extractSemverParts(version.Version)
 		if err != nil {
