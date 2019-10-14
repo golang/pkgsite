@@ -24,6 +24,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"path"
 	"regexp"
 	"strconv"
@@ -77,6 +78,28 @@ func (i *Info) LineURL(pathname string, line int) string {
 		"commit": i.commit,
 		"file":   path.Join(i.moduleDir, pathname),
 		"line":   strconv.Itoa(line),
+	})
+}
+
+// RawURL returns a URL referring to the raw contents of a file relative to the
+// module's home directory. In addition to the usual variables, it supports
+// {repoPath}, which is the repo URL's path.
+func (i *Info) RawURL(pathname string) string {
+	// Some templates don't support raw content serving.
+	if i.templates.raw == "" {
+		return ""
+	}
+	u, err := url.Parse(i.RepoURL)
+	if err != nil {
+		// This should never happen. If it does, note it and soldier on.
+		log.Errorf("repo URL %q failed to parse: %v", i.RepoURL, err)
+		u = &url.URL{Path: "ERROR"}
+	}
+	return expand(i.templates.raw, map[string]string{
+		"repo":     i.RepoURL,
+		"repoPath": strings.TrimPrefix(u.Path, "/"),
+		"commit":   i.commit,
+		"file":     path.Join(i.moduleDir, pathname),
 	})
 }
 
@@ -296,6 +319,7 @@ var patterns = []struct {
 			directory: "{repo}/src/{commit}/{dir}",
 			file:      "{repo}/src/{commit}/{file}",
 			line:      "{repo}/src/{commit}/{file}#lines-{line}",
+			raw:       "{repo}/raw/{commit}/{file}",
 		},
 	},
 	// Other patterns from cmd/go/internal/get/vcs.go, that we omit:
@@ -307,16 +331,16 @@ var patterns = []struct {
 	// Patterns that are not (yet) part of the go command.
 	{
 		regexp.MustCompile(`^(?P<repo>gitlab\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)`),
-		githubURLTemplates,
+		gitlabURLTemplates,
 	},
 	{
 		// Assume that any site beginning "gitlab." works like gitlab.com.
 		regexp.MustCompile(`^(?P<repo>gitlab\.[a-z0-9A-Z.-]+/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`),
-		githubURLTemplates,
+		gitlabURLTemplates,
 	},
 	{
 		regexp.MustCompile(`^(?P<repo>gitee\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`),
-		githubURLTemplates,
+		gitlabURLTemplates,
 	},
 
 	// Patterns that match the general go command pattern, where they must have
@@ -328,6 +352,7 @@ var patterns = []struct {
 			directory: "{repo}/+/{commit}/{dir}",
 			file:      "{repo}/+/{commit}/{file}",
 			line:      "{repo}/+/{commit}/{file}#{line}",
+			// no raw support (b/13912564)
 		},
 	},
 	{
@@ -363,13 +388,24 @@ type urlTemplates struct {
 	directory string // URL template for a directory, with {repo}, {commit} and {dir}
 	file      string // URL template for a file, with {repo}, {commit} and {file}
 	line      string // URL template for a line, with {repo}, {commit}, {file} and {line}
+	raw       string // URL template for the raw contents of a file, with {repo}, {repoPath}, {commit} and {file}
 }
 
-var githubURLTemplates = urlTemplates{
-	directory: "{repo}/tree/{commit}/{dir}",
-	file:      "{repo}/blob/{commit}/{file}",
-	line:      "{repo}/blob/{commit}/{file}#L{line}",
-}
+var (
+	githubURLTemplates = urlTemplates{
+		directory: "{repo}/tree/{commit}/{dir}",
+		file:      "{repo}/blob/{commit}/{file}",
+		line:      "{repo}/blob/{commit}/{file}#L{line}",
+		raw:       "https://raw.githubusercontent.com/{repoPath}/{commit}/{file}",
+	}
+
+	gitlabURLTemplates = urlTemplates{
+		directory: "{repo}/tree/{commit}/{dir}",
+		file:      "{repo}/blob/{commit}/{file}",
+		line:      "{repo}/blob/{commit}/{file}#L{line}",
+		raw:       "{repo}/raw/{commit}/{file}",
+	}
+)
 
 // commitFromVersion returns a string that refers to a commit corresponding to version.
 // The string may be a tag, or it may be the hash or similar unique identifier of a commit.

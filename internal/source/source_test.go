@@ -26,9 +26,9 @@ func TestModuleInfo(t *testing.T) {
 	defer done()
 
 	for _, test := range []struct {
-		desc                                     string
-		modulePath, version, file                string
-		wantRepo, wantModule, wantFile, wantLine string
+		desc                                              string
+		modulePath, version, file                         string
+		wantRepo, wantModule, wantFile, wantLine, wantRaw string
 	}{
 		{
 			"standard library",
@@ -38,6 +38,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/golang/go/tree/go1.12/src",
 			"https://github.com/golang/go/blob/go1.12/src/bytes/buffer.go",
 			"https://github.com/golang/go/blob/go1.12/src/bytes/buffer.go#L1",
+			"https://raw.githubusercontent.com/golang/go/go1.12/src/bytes/buffer.go",
 		},
 		{
 			"old standard library",
@@ -47,6 +48,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/golang/go/tree/go1.3/src/pkg",
 			"https://github.com/golang/go/blob/go1.3/src/pkg/bytes/buffer.go",
 			"https://github.com/golang/go/blob/go1.3/src/pkg/bytes/buffer.go#L1",
+			"https://raw.githubusercontent.com/golang/go/go1.3/src/pkg/bytes/buffer.go",
 		},
 		{
 			"github module at repo root",
@@ -56,6 +58,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/pkg/errors/tree/v0.8.1",
 			"https://github.com/pkg/errors/blob/v0.8.1/errors.go",
 			"https://github.com/pkg/errors/blob/v0.8.1/errors.go#L1",
+			"https://raw.githubusercontent.com/pkg/errors/v0.8.1/errors.go",
 		},
 		{
 			"github module not at repo root",
@@ -65,6 +68,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/hashicorp/consul/tree/sdk/v0.2.0/sdk",
 			"https://github.com/hashicorp/consul/blob/sdk/v0.2.0/sdk/freeport/freeport.go",
 			"https://github.com/hashicorp/consul/blob/sdk/v0.2.0/sdk/freeport/freeport.go#L1",
+			"https://raw.githubusercontent.com/hashicorp/consul/sdk/v0.2.0/sdk/freeport/freeport.go",
 		},
 		{
 			"bitbucket",
@@ -74,6 +78,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://bitbucket.org/plazzaro/kami/src/v1.2.1",
 			"https://bitbucket.org/plazzaro/kami/src/v1.2.1/defaults.go",
 			"https://bitbucket.org/plazzaro/kami/src/v1.2.1/defaults.go#lines-1",
+			"https://bitbucket.org/plazzaro/kami/raw/v1.2.1/defaults.go",
 		},
 		{
 			"incompatible",
@@ -83,6 +88,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/airbrake/gobrake/tree/v3.5.1",
 			"https://github.com/airbrake/gobrake/blob/v3.5.1/gobrake.go",
 			"https://github.com/airbrake/gobrake/blob/v3.5.1/gobrake.go#L1",
+			"https://raw.githubusercontent.com/airbrake/gobrake/v3.5.1/gobrake.go",
 		},
 		{
 			"x/tools",
@@ -92,6 +98,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/golang/tools/tree/030b2cf1153e",
 			"https://github.com/golang/tools/blob/030b2cf1153e/README.md",
 			"https://github.com/golang/tools/blob/030b2cf1153e/README.md#L1",
+			"https://raw.githubusercontent.com/golang/tools/030b2cf1153e/README.md",
 		},
 		{
 			"x/tools/gopls",
@@ -101,6 +108,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/golang/tools/tree/gopls/v0.1.4/gopls",
 			"https://github.com/golang/tools/blob/gopls/v0.1.4/gopls/main.go",
 			"https://github.com/golang/tools/blob/gopls/v0.1.4/gopls/main.go#L1",
+			"https://raw.githubusercontent.com/golang/tools/gopls/v0.1.4/gopls/main.go",
 		},
 		{
 			"googlesource.com",
@@ -110,6 +118,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://go.googlesource.com/image/+/69e4b8554b2a",
 			"https://go.googlesource.com/image/+/69e4b8554b2a/math/fixed/fixed.go",
 			"https://go.googlesource.com/image/+/69e4b8554b2a/math/fixed/fixed.go#1",
+			"",
 		},
 		{
 			"git.apache.org",
@@ -119,6 +128,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/apache/thrift/tree/v0.12.0",
 			"https://github.com/apache/thrift/blob/v0.12.0/lib/go/thrift/client.go",
 			"https://github.com/apache/thrift/blob/v0.12.0/lib/go/thrift/client.go#L1",
+			"https://raw.githubusercontent.com/apache/thrift/v0.12.0/lib/go/thrift/client.go",
 		},
 		{
 			"vanity for github",
@@ -128,6 +138,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/googleapis/google-cloud-go/tree/spanner/v1.0.0/spanner",
 			"https://github.com/googleapis/google-cloud-go/blob/spanner/v1.0.0/spanner/doc.go",
 			"https://github.com/googleapis/google-cloud-go/blob/spanner/v1.0.0/spanner/doc.go#L1",
+			"https://raw.githubusercontent.com/googleapis/google-cloud-go/spanner/v1.0.0/spanner/doc.go",
 		},
 		{
 			"vanity for bitbucket",
@@ -137,6 +148,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://bitbucket.org/ivucica/go-glagolitic/src/92f736eb02d6",
 			"https://bitbucket.org/ivucica/go-glagolitic/src/92f736eb02d6/doc.go",
 			"https://bitbucket.org/ivucica/go-glagolitic/src/92f736eb02d6/doc.go#lines-1",
+			"https://bitbucket.org/ivucica/go-glagolitic/raw/92f736eb02d6/doc.go",
 		},
 		{
 			"vanity for googlesource.com",
@@ -146,6 +158,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://cue.googlesource.com/cue/+/v0.0.9",
 			"https://cue.googlesource.com/cue/+/v0.0.9/cuego/doc.go",
 			"https://cue.googlesource.com/cue/+/v0.0.9/cuego/doc.go#1",
+			"",
 		},
 		{
 			"gitlab.com",
@@ -155,6 +168,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://gitlab.com/akita/akita/tree/v1.4.1",
 			"https://gitlab.com/akita/akita/blob/v1.4.1/event.go",
 			"https://gitlab.com/akita/akita/blob/v1.4.1/event.go#L1",
+			"https://gitlab.com/akita/akita/raw/v1.4.1/event.go",
 		},
 		{
 			"other gitlab",
@@ -164,6 +178,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://gitlab.66xue.com/daihao/logkit/tree/v0.1.18",
 			"https://gitlab.66xue.com/daihao/logkit/blob/v0.1.18/color.go",
 			"https://gitlab.66xue.com/daihao/logkit/blob/v0.1.18/color.go#L1",
+			"https://gitlab.66xue.com/daihao/logkit/raw/v0.1.18/color.go",
 		},
 		{
 			"gitee.com",
@@ -173,6 +188,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://gitee.com/290746987/GenMysqlProject/tree/v1.0.0",
 			"https://gitee.com/290746987/GenMysqlProject/blob/v1.0.0/main.go",
 			"https://gitee.com/290746987/GenMysqlProject/blob/v1.0.0/main.go#L1",
+			"https://gitee.com/290746987/GenMysqlProject/raw/v1.0.0/main.go",
 		},
 		{
 			"v2 as a branch",
@@ -182,6 +198,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/jrick/wsrpc/tree/v2.1.1",
 			"https://github.com/jrick/wsrpc/blob/v2.1.1/rpc.go",
 			"https://github.com/jrick/wsrpc/blob/v2.1.1/rpc.go#L1",
+			"https://raw.githubusercontent.com/jrick/wsrpc/v2.1.1/rpc.go",
 		},
 		{
 			"v2 as subdirectory",
@@ -191,6 +208,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://gitlab.com/akita/akita/tree/v2.0.0-rc.2/v2",
 			"https://gitlab.com/akita/akita/blob/v2.0.0-rc.2/v2/event.go",
 			"https://gitlab.com/akita/akita/blob/v2.0.0-rc.2/v2/event.go#L1",
+			"https://gitlab.com/akita/akita/raw/v2.0.0-rc.2/v2/event.go",
 		},
 		{
 			"gopkg.in, one element",
@@ -200,6 +218,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/go-yaml/yaml/tree/v2.2.2",
 			"https://github.com/go-yaml/yaml/blob/v2.2.2/yaml.go",
 			"https://github.com/go-yaml/yaml/blob/v2.2.2/yaml.go#L1",
+			"https://raw.githubusercontent.com/go-yaml/yaml/v2.2.2/yaml.go",
 		},
 		{
 			"gopkg.in, two elements",
@@ -209,6 +228,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/boltdb/bolt/tree/v1.3.0",
 			"https://github.com/boltdb/bolt/blob/v1.3.0/doc.go",
 			"https://github.com/boltdb/bolt/blob/v1.3.0/doc.go#L1",
+			"https://raw.githubusercontent.com/boltdb/bolt/v1.3.0/doc.go",
 		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
@@ -235,6 +255,9 @@ func TestModuleInfo(t *testing.T) {
 			check("module", info.ModuleURL(), test.wantModule)
 			check("file", info.FileURL(test.file), test.wantFile)
 			check("line", info.LineURL(test.file, 1), test.wantLine)
+			if test.wantRaw != "" {
+				check("raw", info.RawURL(test.file), test.wantRaw)
+			}
 		})
 	}
 }
