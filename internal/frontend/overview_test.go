@@ -15,21 +15,23 @@ import (
 	"golang.org/x/discovery/internal/sample"
 )
 
-func TestFetchReadMeDetails(t *testing.T) {
+func TestFetchOverviewDetails(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
 	tc := struct {
 		name        string
 		version     *internal.Version
-		wantDetails *ReadMeDetails
+		wantDetails *OverviewDetails
 	}{
 		name:    "want expected overview details",
 		version: sample.Version(),
-		wantDetails: &ReadMeDetails{
-			ModulePath: sample.ModulePath,
-			ReadMe:     template.HTML("<p>readme</p>\n"),
-			Source:     "github.com/valid_module_name@v1.0.0/README.md",
+		wantDetails: &OverviewDetails{
+			ModulePath:    sample.ModulePath,
+			RepositoryURL: sample.RepositoryURL,
+			NumPackages:   len(sample.Version().Packages),
+			ReadMe:        template.HTML("<p>readme</p>\n"),
+			ReadMeSource:  "github.com/valid_module_name@v1.0.0/README.md",
 		},
 	}
 
@@ -39,14 +41,14 @@ func TestFetchReadMeDetails(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got, err := fetchReadMeDetails(ctx, testDB, &tc.version.VersionInfo)
+	got, err := fetchOverviewDetails(ctx, testDB, &tc.version.VersionInfo)
 	if err != nil {
-		t.Fatalf("fetchReadMeDetails(ctx, db, %q, %q) = %v err = %v, want %v",
+		t.Fatalf("fetchOverviewDetails(ctx, db, %q, %q) = %v err = %v, want %v",
 			tc.version.Packages[0].Path, tc.version.Version, got, err, tc.wantDetails)
 	}
 
 	if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
-		t.Errorf("fetchReadMeDetails(ctx, %q, %q) mismatch (-want +got):\n%s", tc.version.Packages[0].Path, tc.version.Version, diff)
+		t.Errorf("fetchOverviewDetails(ctx, %q, %q) mismatch (-want +got):\n%s", tc.version.Packages[0].Path, tc.version.Version, diff)
 	}
 }
 
@@ -81,7 +83,7 @@ func TestReadmeHTML(t *testing.T) {
 		{
 			name: "empty readme",
 			vi:   &internal.VersionInfo{},
-			want: template.HTML("<pre class=\"readme\"></pre>"),
+			want: "",
 		},
 		{
 			name: "sanitized readme",

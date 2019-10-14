@@ -255,15 +255,19 @@ func TestServer(t *testing.T) {
 		},
 		{
 			"package@version readme tab",
-			fmt.Sprintf("/%s@%s/%s?tab=readme", sample.ModulePath, sample.VersionString, pkgSuffix),
+			fmt.Sprintf("/%s@%s/%s?tab=overview", sample.ModulePath, sample.VersionString, pkgSuffix),
 			http.StatusOK,
-			append(pkgHeaderLatest, `<div class="ReadMe"><p>readme</p>`,
-				`<div class="ReadMe-source">Source: github.com/valid_module_name@v1.0.0/README.md</div>`),
+			append(pkgHeaderLatest,
+				`<div class="Overview-module">`,
+				`<b>Packages in this module: </b>`,
+				`Repository: <a href="github.com/valid_module_name" target="_blank">github.com/valid_module_name</a>`,
+				`<div class="Overview-readmeContent"><p>readme</p>`,
+				`<div class="Overview-readmeSource">Source: github.com/valid_module_name@v1.0.0/README.md</div>`),
 		},
 		{
 			"package@version readme tab nonredistributable",
 			// For a non-redistributable package, the readme tab will not show the readme.
-			fmt.Sprintf("/%s@%s/%s?tab=readme", nonRedistModulePath, sample.VersionString, nonRedistPkgSuffix),
+			fmt.Sprintf("/%s@%s/%s?tab=overview", nonRedistModulePath, sample.VersionString, nonRedistPkgSuffix),
 			http.StatusOK,
 			append(nonRedistPkgHeader, `hidden due to license restrictions`),
 		},
@@ -341,7 +345,7 @@ func TestServer(t *testing.T) {
 		},
 		{
 			"module@version readme tab",
-			fmt.Sprintf("/mod/%s@%s?tab=readme", sample.ModulePath, sample.VersionString),
+			fmt.Sprintf("/mod/%s@%s?tab=overview", sample.ModulePath, sample.VersionString),
 			http.StatusOK,
 			append(modHeader, `readme`),
 		},

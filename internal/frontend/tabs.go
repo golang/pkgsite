@@ -38,9 +38,9 @@ var (
 			TemplateName: "pkg_doc.tmpl",
 		},
 		{
-			Name:         "readme",
-			DisplayName:  "README",
-			TemplateName: "readme.tmpl",
+			Name:         "overview",
+			DisplayName:  "Overview",
+			TemplateName: "overview.tmpl",
 		},
 		{
 			Name:              "subdirectories",
@@ -76,9 +76,9 @@ var (
 
 	moduleTabSettings = []TabSettings{
 		{
-			Name:         "readme",
-			DisplayName:  "README",
-			TemplateName: "readme.tmpl",
+			Name:         "overview",
+			DisplayName:  "Overview",
+			TemplateName: "overview.tmpl",
 		},
 		{
 			Name:              "packages",
@@ -126,8 +126,8 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds
 		return fetchImportedByDetails(ctx, ds, pkg)
 	case "licenses":
 		return fetchPackageLicensesDetails(ctx, ds, pkg)
-	case "readme":
-		return fetchReadMeDetails(ctx, ds, &pkg.VersionInfo)
+	case "overview":
+		return fetchOverviewDetails(ctx, ds, &pkg.VersionInfo)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
@@ -142,9 +142,9 @@ func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds 
 		return &LicensesDetails{Licenses: transformLicenses(vi.ModulePath, vi.Version, licenses)}, nil
 	case "versions":
 		return fetchModuleVersionsDetails(ctx, ds, vi)
-	case "readme":
+	case "overview":
 		// TODO(b/138448402): implement remaining module views.
-		return fetchReadMeDetails(ctx, ds, vi)
+		return fetchOverviewDetails(ctx, ds, vi)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }

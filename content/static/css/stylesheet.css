@@ -91,10 +91,10 @@ code {
 }
 .Site-content {
   flex: 1;
-  padding: 0 16px;
+  padding: 0 1rem;
 }
 .Site-footer {
-  padding-top: 20px;
+  padding-top: 1.25rem;
 }
 
 .Footer {
@@ -102,7 +102,7 @@ code {
   display: flex;
   justify-content: flex-start;
   margin: 0 auto;
-  padding: 16px 20px;
+  padding: 1rem 1.25rem;
   position: relative;
 }
 .FeedbackButton {
@@ -115,7 +115,7 @@ code {
 }
 .Footer-gopher {
   bottom: 0;
-  left: 20px;
+  left: 1.25rem;
   position: absolute;
   width: 80px;
 }
@@ -131,7 +131,7 @@ code {
   white-space: nowrap;
 }
 .Footer-link + .Footer-link {
-  margin-top: 8px;
+  margin-top: 0.5rem;
 }
 .Footer-link--long {
   display: none;
@@ -139,12 +139,12 @@ code {
 .Footer-googleLogo {
   bottom: 13px;
   position: absolute;
-  right: 20px;
+  right: 1.25rem;
 }
 .Footer-googleLogoImg {
   display: block;
-  height: 24px;
-  width: 72px;
+  height: 1.5rem;
+  width: 4.5rem;
 }
 @media only screen and (min-width: 825px) {
   .Footer-links {
@@ -155,7 +155,7 @@ code {
     display: inline;
   }
   .Footer-link + .Footer-link {
-    border-left: 1px solid var(--gray-2);
+    border-left: 0.0625rem solid var(--gray-2);
     margin-left: 12px;
     padding-left: 12px;
   }
@@ -169,7 +169,7 @@ code {
 
 .SearchForm {
   align-items: center;
-  border: 1px solid var(--gray-8);
+  border: 0.0625rem solid var(--gray-8);
   border-radius: 100em;
   display: flex;
   font-size: 1rem;
@@ -199,7 +199,7 @@ code {
 }
 .Search-logo {
   display: block;
-  height: 72px;
+  height: 4.5rem;
   margin: 0 auto 50px;
   width: 194px;
 }
@@ -210,24 +210,24 @@ code {
 }
 
 .Header {
-  border-bottom: 1px solid var(--gray-8);
+  border-bottom: 0.0625rem solid var(--gray-8);
   display: flex;
-  padding: 14px 16px;
+  padding: 0.875rem 1rem;
 }
 .Header-feedbackButton {
   background: none;
-  border-radius: 10px;
-  border: 1px solid var(--gray-8);
+  border-radius: 0.625rem;
+  border: 0.0625rem solid var(--gray-8);
   color: var(--turq-text);
   font-size: 1rem;
   max-width: 100px;
-  padding: 10px;
+  padding: 0.625rem;
   text-align: center;
 }
 .Header-logo {
   align-items: center;
   display: flex;
-  margin-right: 20px;
+  margin-right: 1.25rem;
 }
 .Header-logoImg {
   height: 28px;
@@ -274,14 +274,14 @@ code {
 }
 @media only screen and (min-width: 850px) {
   .Header {
-    padding-left: 24px;
-    padding-right: 24px;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
   }
   .Header-feedbackButton {
     max-width: none;
   }
   .Header-logo {
-    left: 24px;
+    left: 1.5rem;
     position: absolute;
     top: 22px;
   }
@@ -297,7 +297,7 @@ code {
   margin: 0;
 }
 .SearchResults-help {
-  margin-top: 5px;
+  margin-top: 0.3125rem;
 }
 .SearchResults-resultCount {
   color: var(--gray-3);
@@ -311,17 +311,17 @@ code {
   justify-content: flex-end;
 }
 .SearchSnippet {
-  border-top: 1px solid var(--gray-8);
-  padding: 25px 0;
+  border-top: 0.0625rem solid var(--gray-8);
+  padding: 1.5rem 0;
 }
 .SearchSnippet:only-of-type,
 .SearchSnippet:last-of-type {
-  border-bottom: 1px solid var(--gray-8);
-  margin-bottom: 16px;
+  border-bottom: 0.0625rem solid var(--gray-8);
+  margin-bottom: 1rem;
 }
 .SearchSnippet-header {
   font-size: 1.5rem;
-  margin: 0 0 5px;
+  margin: 0 0 0.3125rem;
 }
 .SearchSnippet-synopsis {
   color: var(--gray-3);
@@ -367,40 +367,63 @@ code {
   }
 }
 
-.ReadMe {
-  overflow-wrap: break-word;
+.Overview-module {
+  border-bottom: 0.0625rem solid var(--gray-8);
+  padding-bottom: 2rem;
+  padding-top: 0.5rem;
 }
-.ReadMe img {
+.Overview-sourceCode {
+  border-bottom: 0.0625rem solid var(--gray-8);
+  padding-bottom: 2rem;
+}
+.Overview-sourceCodeLink {
+  margin: 0;
+}
+.Overview-readme {
+  padding-top: 1rem;
+}
+.Overview-readmeContainer {
+  border: 0.0625rem solid var(--gray-8);
+  border-radius: 0.5rem;
+  height: 100%;
+  padding: 1.625rem;
+  padding-top: 0.5rem;
+}
+.Overview-readme img {
   max-width: 100%;
 }
-.ReadMe pre {
+.Overview-readme pre {
   overflow-x: auto;
 }
-.ReadMe-source {
+.Overview-readmeContent {
+  overflow-wrap: break-word;
+}
+.Overview-readmeSource {
   color: var(--gray-3);
-  float: right;
   font-size: 0.875rem;
-  padding-top: 1.5rem;
+  text-align: right;
+  margin-top: 1.5rem;
+  font-style: italic;
 }
 
 .DetailsNav {
-  margin: 0 -16px 16px -16px;
+  margin: 0 -1rem 0 -1rem;
   overflow-x: scroll;
   overflow-y: hidden;
   mask-image: linear-gradient(
     90deg,
     transparent,
-    #000 20px,
-    #000 calc(100% - 20px),
+    #000 1.25rem,
+    #000 calc(100% - 1.25rem),
     transparent
   );
-  padding: 0 16px;
+  padding: 0 1rem;
   -ms-overflow-style: -ms-autohiding-scrollbar;
   -webkit-mask-image: linear-gradient(
     90deg,
     transparent,
-    #000 20px,
-    #000 calc(100% - 20px),
+    #000 1.25rem,
+    #000 calc(100% - 1.25rem),
     transparent
   );
   -webkit-overflow-scrolling: touch;
@@ -410,7 +433,7 @@ code {
   margin: 0;
   padding: 0;
   white-space: nowrap;
-  border-bottom: 1px solid var(--gray-8);
+  border-bottom: 0.0625rem solid var(--gray-8);
 }
 .DetailsNav::-webkit-scrollbar {
   display: none;
@@ -420,7 +443,7 @@ code {
   display: inline-block;
 }
 .DetailsNav-tab + .DetailsNav-tab {
-  margin-left: 16px;
+  margin-left: 1rem;
 }
 .DetailsNav-tab.selected {
   border-bottom: 2px solid var(--turq-med);
@@ -435,7 +458,7 @@ code {
 .DetailsNav-link:visited {
   display: inline-block;
   color: inherit;
-  padding: 10px 8px;
+  padding: 0.625rem 0.5rem;
 }
 .DetailsNav-link,
 .DetailsNav-link:hover {
@@ -453,7 +476,7 @@ code {
 
 .License-contents {
   background-color: var(--gray-10);
-  border: 1px solid var(--gray-8);
+  border: 0.0625rem solid var(--gray-8);
   border-radius: 3px;
   font: 0.875rem/1.375rem 'Go Mono', 'Source Code Pro', monospace;
   margin: 0;
@@ -500,7 +523,7 @@ code {
 .Documentation pre {
   background-color: #f5f5f5;
   border-radius: 0.3em;
-  border: 1px solid #ccc;
+  border: 0.0625rem solid #ccc;
   font: 0.875rem/1.375rem 'Go Mono', 'Source Code Pro', monospace;
   margin: 0;
   overflow-x: auto;
@@ -508,26 +531,26 @@ code {
   tab-size: 4;
 }
 .Documentation pre + pre {
-  margin-top: 10px;
+  margin-top: 0.625rem;
 }
 .Documentation pre .comment {
   color: #060;
 }
 .Documentation .example {
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  margin: 10px 0px;
+  border: 0.0625rem solid #ccc;
+  border-radius: 0.3125rem;
+  margin: 0.625rem 0;
 }
 .Documentation .indent {
-  margin-left: 20px;
+  margin-left: 1.25rem;
 }
 .Documentation .example-header {
-  padding: 10px;
+  padding: 0.625rem;
 }
 .Documentation .example-body {
-  border-top: 1px solid #ccc;
+  border-top: 0.0625rem solid #ccc;
   display: none;
-  padding: 0 10px 10px 10px;
+  padding: 0 0.625rem 0.625rem 0.625rem;
 }
 .Documentation dl {
   line-height: 150%;
@@ -538,16 +561,16 @@ code {
 
 .Versions-list {
   list-style: none;
-  padding-left: 16px;
+  padding-left: 1rem;
 }
 .Versions-list li {
   font-size: 1.125rem;
-  margin-bottom: 8px;
-  line-height: 24px;
-  padding-left: 16px;
+  margin-bottom: 0.5rem;
+  line-height: 1.5rem;
+  padding-left: 1rem;
 }
 .Versions-item {
-  margin-left: 16px;
+  margin-left: 1rem;
 }
 .Versions-commitTime {
   color: var(--gray-3);
@@ -561,8 +584,8 @@ code {
   font-weight: normal;
 }
 .Versions-separator {
-  border-bottom: 1px solid var(--gray-8);
-  margin: 32px 0;
+  border-bottom: 0.0625rem solid var(--gray-8);
+  margin: 2rem 0;
 }
 
 .Imports-list {
@@ -587,7 +610,7 @@ code {
   display: block;
   margin-left: auto;
   margin-right: auto;
-  padding: 20px 0;
+  padding: 1.25rem 0;
   width: 240px;
 }
 .Error-message {
@@ -612,21 +635,23 @@ code {
   color: var(--gray-1);
 }
 .InfoLabel-divider {
+  color: var(--gray-5);
   display: inline-block;
-  margin: 0 10px;
+  margin: 0 0.625rem;
 }
 
-.Directories table {
+table.Directories {
+  margin-top: 1.5rem;
   max-width: 800px;
 }
 .Directories td {
   padding: 0.75rem 0;
-  border-bottom: 1px solid var(--gray-8);
+  border-bottom: 0.0625rem solid var(--gray-8);
   padding-right: 1rem;
 }
 .Directories th {
   text-align: left;
-  border-bottom: 1px solid var(--gray-8);
+  border-bottom: 0.0625rem solid var(--gray-8);
   padding-right: 1rem;
   padding-bottom: 0.5rem;
 }

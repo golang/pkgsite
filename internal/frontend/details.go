@@ -220,8 +220,8 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 	tab := r.FormValue("tab")
 	settings, ok := moduleTabLookup[tab]
 	if !ok {
-		tab = "readme"
-		settings = moduleTabLookup["readme"]
+		tab = "overview"
+		settings = moduleTabLookup["overview"]
 	}
 
 	modHeader, err := createModule(moduleVersion, license.ToMetadatas(licenses))
@@ -244,7 +244,7 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 		basePage:       newBasePage(r, moduleTitle(moduleVersion.ModulePath)),
 		Settings:       settings,
 		Header:         modHeader,
-		BreadcrumbPath: "",
+		BreadcrumbPath: breadcrumbPath(moduleVersion.ModulePath, moduleVersion.ModulePath, moduleVersion.Version),
 		Details:        details,
 		CanShowDetails: canShowDetails,
 		Tabs:           moduleTabSettings,

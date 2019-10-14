@@ -1,0 +1,44 @@
+<!--
+  Copyright 2019 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "details_content"}}
+  <div class="Overview">
+    <div class="Overview-module">
+      {{if eq .ModulePath "std"}}
+        <h2>Standard Library</h2>
+        <a href="/std">Standard Library</a>
+        <span class="InfoLabel-divider">|</span>
+        <b>Packages in the standard library: </b>{{.NumPackages}}
+      {{else}}
+        <h2>Module</h2>
+        <a href="/mod/{{.ModulePath}}">{{.ModulePath}}</a>
+        <span class="InfoLabel-divider">|</span>
+        <b>Packages in this module: </b>{{.NumPackages}}
+      {{end}}
+    </div>
+    <div class="Overview-sourceCode">
+      <h2>Source Code</h2>
+      <p class="Overview-sourceCodeLink">
+        {{if .RepositoryURL}}
+          Repository: <a href="{{.RepositoryURL}}" target="_blank">{{.RepositoryURL}}</a>
+        {{else}}
+          Source code link not available.
+        {{end}}
+      </p>
+    </div>
+    <div class="Overview-readme">
+      <h2>README</h2>
+      <div class="Overview-readmeContainer">
+      {{if .ReadMe}}
+          <div class="Overview-readmeContent">{{.ReadMe}}</div>
+          <div class="Overview-readmeSource">Source: {{.ReadMeSource}}</div>
+      {{else}}
+        {{template "empty_content" "No README found for this package!"}}
+      {{end}}
+      </div>
+    </div>
+  </div>
+{{end}}

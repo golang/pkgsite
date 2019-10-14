@@ -8,9 +8,7 @@
   {{$header := .Header}}
   {{$namespace := .Namespace}}
   <header class="DetailsHeader">
-    {{if .BreadcrumbPath}}
-      <span>{{.BreadcrumbPath}}</span>
-    {{end}}
+    <span>{{.BreadcrumbPath}}</span>
     <div class="DetailsHeader-main">
       <h1 class="DetailsHeader-title">{{.Title}}</h1>
       <div class="DetailsHeader-version">{{$header.Version}}</div>

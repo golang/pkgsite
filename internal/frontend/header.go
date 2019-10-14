@@ -152,6 +152,10 @@ func packageTitle(pkg *internal.Package) string {
 //
 // See TestBreadcrumbPath for examples.
 func breadcrumbPath(pkgPath, modPath, version string) template.HTML {
+	if pkgPath == stdlib.ModulePath {
+		return template.HTML(`<div class="DetailsHeader-breadcrumb"><span class="DetailsHeader-breadcrumbCurrent">Standard library</span></div>`)
+	}
+
 	// Obtain successive prefixes of pkgPath, stopping at modPath,
 	// or for the stdlib, at the end.
 	minLen := len(modPath) - 1

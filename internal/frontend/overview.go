@@ -18,24 +18,34 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/stdlib"
 )
 
-// ReadMeDetails contains all of the data that the readme template
+// OverviewDetails contains all of the data that the readme template
 // needs to populate.
-type ReadMeDetails struct {
-	ModulePath string
-	Source     string
-	ReadMe     template.HTML
+type OverviewDetails struct {
+	ModulePath    string
+	NumPackages   int
+	RepositoryURL string
+	ReadMe        template.HTML
+	ReadMeSource  string
 }
 
-// fetchReadMeDetails fetches data for the module version specified by path and version
-// from the database and returns a ReadMeDetails.
-func fetchReadMeDetails(ctx context.Context, ds DataSource, vi *internal.VersionInfo) (*ReadMeDetails, error) {
-	return &ReadMeDetails{
-		ModulePath: vi.ModulePath,
-		Source:     fileSource(vi.ModulePath, vi.Version, vi.ReadmeFilePath),
-		ReadMe:     readmeHTML(vi),
+// fetchOverviewDetails fetches data for the module version specified by path and version
+// from the database and returns a OverviewDetails.
+func fetchOverviewDetails(ctx context.Context, ds DataSource, vi *internal.VersionInfo) (_ *OverviewDetails, err error) {
+	defer derrors.Wrap(&err, "fetchOverviewDetails for %q %q", vi.ModulePath, vi.Version)
+	pkgs, err := ds.GetPackagesInVersion(ctx, vi.ModulePath, vi.Version)
+	if err != nil {
+		return nil, err
+	}
+	return &OverviewDetails{
+		ModulePath:    vi.ModulePath,
+		NumPackages:   len(pkgs),
+		RepositoryURL: vi.RepositoryURL,
+		ReadMeSource:  fileSource(vi.ModulePath, vi.Version, vi.ReadmeFilePath),
+		ReadMe:        readmeHTML(vi),
 	}, nil
 }
 
@@ -43,6 +53,9 @@ func fetchReadMeDetails(ctx context.Context, ds DataSource, vi *internal.Version
 // a template.HTML. If readmeFilePath indicates that this is a markdown file,
 // it will also render the markdown contents using blackfriday.
 func readmeHTML(vi *internal.VersionInfo) template.HTML {
+	if len(vi.ReadmeContents) == 0 {
+		return ""
+	}
 	if filepath.Ext(vi.ReadmeFilePath) != ".md" {
 		return template.HTML(fmt.Sprintf(`<pre class="readme">%s</pre>`, html.EscapeString(string(vi.ReadmeContents))))
 	}
