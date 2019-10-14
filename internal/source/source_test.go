@@ -112,6 +112,15 @@ func TestModuleInfo(t *testing.T) {
 			"https://go.googlesource.com/image/+/69e4b8554b2a/math/fixed/fixed.go#1",
 		},
 		{
+			"git.apache.org",
+			"git.apache.org/thrift.git", "v0.12.0", "lib/go/thrift/client.go",
+
+			"https://github.com/apache/thrift",
+			"https://github.com/apache/thrift/tree/v0.12.0",
+			"https://github.com/apache/thrift/blob/v0.12.0/lib/go/thrift/client.go",
+			"https://github.com/apache/thrift/blob/v0.12.0/lib/go/thrift/client.go#L1",
+		},
+		{
 			"vanity for github",
 			"cloud.google.com/go/spanner", "v1.0.0", "doc.go",
 

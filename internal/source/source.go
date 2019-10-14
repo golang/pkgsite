@@ -161,6 +161,13 @@ func matchStatic(moduleOrRepoPath string) (repo, relativeModulePath string, _ ur
 				break
 			}
 		}
+		// Special case: git.apache.org has a go-import tag that points to
+		// github.com/apache, but it's not quite right (the repo prefix is
+		// missing a ".git"), so handle it here.
+		const apacheDomain = "git.apache.org/"
+		if strings.HasPrefix(repo, apacheDomain) {
+			repo = strings.Replace(repo, apacheDomain, "github.com/apache/", 1)
+		}
 		relativeModulePath = strings.TrimPrefix(moduleOrRepoPath, matches[0])
 		relativeModulePath = strings.TrimPrefix(relativeModulePath, "/")
 		return repo, relativeModulePath, pat.templates, nil
@@ -316,12 +323,16 @@ var patterns = []struct {
 	// a ".git" repo suffix in an import path. If matching a repo URL from a meta tag,
 	// there is no ".git".
 	{
-		regexp.MustCompile(`^(?P<repo>[^.]+\.googlesource.com/[^.]+)(\.git|$)`),
+		regexp.MustCompile(`^(?P<repo>[^.]+\.googlesource\.com/[^.]+)(\.git|$)`),
 		urlTemplates{
 			directory: "{repo}/+/{commit}/{dir}",
 			file:      "{repo}/+/{commit}/{file}",
 			line:      "{repo}/+/{commit}/{file}#{line}",
 		},
+	},
+	{
+		regexp.MustCompile(`^(?P<repo>git\.apache\.org/[^.]+)(\.git|$)`),
+		githubURLTemplates,
 	},
 	// General syntax for the go command. We can extract the repo and directory, but
 	// we don't know the URL templates.
