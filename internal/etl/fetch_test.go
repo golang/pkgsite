@@ -22,7 +22,6 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/dzip"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
@@ -44,7 +43,7 @@ func TestSkipIncompletePackage(t *testing.T) {
 	var bigFile strings.Builder
 	bigFile.WriteString("package bar\n")
 	bigFile.WriteString("const Bar = 123\n")
-	for bigFile.Len() < int(dzip.MaxFileSize) {
+	for bigFile.Len() <= maxFileSize {
 		bigFile.WriteString("// All work and no play makes Jack a dull boy.\n")
 	}
 	badModule["bar/bar.go"] = bigFile.String()
@@ -73,6 +72,73 @@ func TestSkipIncompletePackage(t *testing.T) {
 	pkgBar := modulePath + "/bar"
 	if _, err := testDB.GetPackage(ctx, pkgBar, version); !xerrors.Is(err, derrors.NotFound) {
 		t.Errorf("got %v, want NotFound", err)
+	}
+}
+
+// Test that large string literals and slices are trimmed when
+// rendering documentation, rather than being included verbatim.
+//
+// This makes it viable for us to show documentation for packages that
+// would otherwise exceed HTML size limit and not get shown at all.
+func TestTrimLargeCode(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	defer postgres.ResetTestDB(testDB, t)
+	trimmedModule := map[string]string{
+		"foo/foo.go": "// Package foo\npackage foo\n\nconst Foo = 42",
+		"LICENSE":    testhelper.MITLicense,
+	}
+	// Create a package with a large string literal. It should not be included verbatim.
+	{
+		var b strings.Builder
+		b.WriteString("package bar\n\n")
+		b.WriteString("const Bar = `\n")
+		for b.Len() <= maxDocumentationHTML {
+			b.WriteString("All work and no play makes Jack a dull boy.\n")
+		}
+		b.WriteString("`\n")
+		trimmedModule["bar/bar.go"] = b.String()
+	}
+	// Create a package with a large slice. It should not be included verbatim.
+	{
+		var b strings.Builder
+		b.WriteString("package baz\n\n")
+		b.WriteString("var Baz = []string{\n")
+		for b.Len() <= maxDocumentationHTML {
+			b.WriteString("`All work and no play makes Jack a dull boy.`,\n")
+		}
+		b.WriteString("}\n")
+		trimmedModule["baz/baz.go"] = b.String()
+	}
+	var (
+		modulePath = "github.com/my/module"
+		version    = "v1.0.0"
+	)
+	client, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
+		proxy.NewTestVersion(t, modulePath, version, trimmedModule),
+	})
+	defer teardownProxy()
+
+	hasIncompletePackages, err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB)
+	if err != nil {
+		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
+	}
+	if hasIncompletePackages {
+		t.Errorf("fetchAndInsertVersion(%q, %q, %v, %v): hasIncompletePackages=true, want false",
+			modulePath, version, client, testDB)
+	}
+
+	pkgFoo := modulePath + "/foo"
+	if _, err := testDB.GetPackage(ctx, pkgFoo, version); err != nil {
+		t.Errorf("got %v, want nil", err)
+	}
+	pkgBar := modulePath + "/bar"
+	if _, err := testDB.GetPackage(ctx, pkgBar, version); err != nil {
+		t.Errorf("got %v, want nil", err)
+	}
+	pkgBaz := modulePath + "/baz"
+	if _, err := testDB.GetPackage(ctx, pkgBaz, version); err != nil {
+		t.Errorf("got %v, want nil", err)
 	}
 }
 

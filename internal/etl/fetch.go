@@ -28,7 +28,6 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/dzip"
 	"golang.org/x/discovery/internal/etl/dochtml"
 	"golang.org/x/discovery/internal/etl/internal/doc"
 	"golang.org/x/discovery/internal/license"
@@ -48,9 +47,6 @@ var (
 	// fetchTimeout bounds the time allowed for fetching a single module.  It is
 	// mutable for testing purposes.
 	fetchTimeout = 10 * time.Minute
-
-	maxPackagesPerModule = 10000
-	maxImportsPerPackage = 1000
 )
 
 // appVersionLabel is used to mark the app version at which a module version is
@@ -248,10 +244,10 @@ func moduleVersionDir(modulePath, version string) string {
 func extractReadmeFromZip(modulePath, version string, r *zip.Reader) (string, []byte, error) {
 	for _, zipFile := range r.File {
 		if hasFilename(zipFile.Name, "README") {
-			if zipFile.UncompressedSize64 > dzip.MaxFileSize {
-				return "", nil, fmt.Errorf("file size %d exceeds max limit %d", zipFile.UncompressedSize64, dzip.MaxFileSize)
+			if zipFile.UncompressedSize64 > maxFileSize {
+				return "", nil, fmt.Errorf("file size %d exceeds max limit %d", zipFile.UncompressedSize64, maxFileSize)
 			}
-			c, err := dzip.ReadZipFile(zipFile)
+			c, err := readZipFile(zipFile)
 			if err != nil {
 				return "", nil, err
 			}
@@ -277,7 +273,7 @@ func hasFilename(file string, expectedFile string) bool {
 // The second return value says whether any packages are "incomplete," meaning
 // that they contained .go files but couldn't be processed due to current
 // limitations of this site. The two limitations are a maximum file size
-// (dzip.MaxFileSize), and the particular set of build contexts we consider
+// (maxFileSize), and the particular set of build contexts we consider
 // (goEnvs).
 func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher license.Matcher, sourceInfo *source.Info) (_ []*internal.Package, hasIncompletePackages bool, err error) {
 
@@ -345,9 +341,9 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 			// We care about .go files only.
 			continue
 		}
-		if f.UncompressedSize64 > dzip.MaxFileSize {
+		if f.UncompressedSize64 > maxFileSize {
 			log.Infof("Unable to process %s: file size %d exceeds max limit %d",
-				f.Name, f.UncompressedSize64, dzip.MaxFileSize)
+				f.Name, f.UncompressedSize64, maxFileSize)
 			incompleteDirs[innerPath] = true
 			continue
 		}
@@ -369,9 +365,13 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 			continue
 		}
 		pkg, err := loadPackage(goFiles, innerPath, modulePath, sourceInfo)
-		if p := (&BadPackageError{}); xerrors.As(err, &p) {
+		if bpe := (*BadPackageError)(nil); xerrors.As(err, &bpe) {
 			// TODO(b/133187024): Record and display this information instead of just skipping.
 			log.Infof("Skipping %q because of *BadPackageError: %v\n", path.Join(modulePath, innerPath), err)
+			continue
+		} else if lpe := (*LargePackageError)(nil); xerrors.As(err, &lpe) {
+			log.Infof("Skipping %q because its rendered documentation HTML is too large", innerPath)
+			incompleteDirs[innerPath] = true
 			continue
 		} else if err != nil {
 			return nil, false, fmt.Errorf("unexpected error loading package: %v", err)
@@ -420,6 +420,14 @@ func isVendored(importPath string) bool {
 	return strings.HasPrefix(importPath, "vendor/") ||
 		strings.Contains(importPath, "/vendor/")
 }
+
+// LargePackageError represents an error where the rendered
+// documentation HTML for a package is excessively large.
+type LargePackageError struct {
+	Err error // Not nil.
+}
+
+func (lpe *LargePackageError) Error() string { return lpe.Err.Error() }
 
 // BadPackageError represents an error loading a package
 // because its contents do not make up a valid package.
@@ -471,6 +479,8 @@ func loadPackage(zipGoFiles []*zip.File, innerPath, modulePath string, sourceInf
 //
 // It returns a nil Package if the directory doesn't contain a Go package
 // or all .go files have been excluded by constraints.
+// A *LargePackageError error is returned if the rendered
+// package documentation HTML exceeds a limit.
 // A *BadPackageError error is returned if the directory
 // contains .go files but do not make up a valid package.
 func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, innerPath, modulePath string, sourceInfo *source.Info) (_ *internal.Package, err error) {
@@ -569,8 +579,13 @@ func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, in
 		}
 		return sourceInfo.LineURL(path.Join(innerPath, p.Filename), p.Line)
 	}
-	docHTML, err := dochtml.Render(fset, d, sourceLinkFunc)
-	if err != nil {
+	docHTML, err := dochtml.Render(fset, d, dochtml.RenderOptions{
+		SourceLinkFunc: sourceLinkFunc,
+		Limit:          maxDocumentationHTML,
+	})
+	if xerrors.Is(err, dochtml.ErrTooLarge) {
+		return nil, &LargePackageError{Err: err}
+	} else if err != nil {
 		return nil, fmt.Errorf("dochtml.Render: %v", err)
 	}
 
@@ -599,7 +614,7 @@ func matchingFiles(goos, goarch string, zipGoFiles []*zip.File) (files map[strin
 	files = make(map[string][]byte)
 	for _, f := range zipGoFiles {
 		_, name := path.Split(f.Name)
-		b, err := dzip.ReadZipFile(f)
+		b, err := readZipFile(f)
 		if err != nil {
 			return nil, err
 		}
@@ -642,6 +657,27 @@ func matchingFiles(goos, goarch string, zipGoFiles []*zip.File) (files map[strin
 		}
 	}
 	return files, nil
+}
+
+// readZipFile decompresses zip file f and returns its uncompressed contents.
+// The caller can check f.UncompressedSize64 before calling readZipFile to
+// get the expected uncompressed size of f.
+func readZipFile(f *zip.File) (_ []byte, err error) {
+	defer derrors.Add(&err, "readZipFile(%q)", f.Name)
+
+	r, err := f.Open()
+	if err != nil {
+		return nil, fmt.Errorf("f.Open(): %v", err)
+	}
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		r.Close()
+		return nil, fmt.Errorf("ioutil.ReadAll(r): %v", err)
+	}
+	if err := r.Close(); err != nil {
+		return nil, fmt.Errorf("closing: %v", err)
+	}
+	return b, nil
 }
 
 // simpleImporter returns a (dummy) package object named by the last path

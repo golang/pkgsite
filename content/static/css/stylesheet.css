@@ -504,20 +504,29 @@ code {
   text-decoration: underline;
 }
 .Documentation h2 a,
-.Documentation h3 a {
-  display: none;
+.Documentation h3 a,
+.Documentation summary a {
+  opacity: 0;
+}
+.Documentation a:focus {
+  opacity: 1;
 }
 .Documentation h3 a.Documentation-source {
-  display: initial;
+  opacity: 1;
 }
 .Documentation h2:hover a,
-.Documentation h3:hover a {
-  display: initial;
+.Documentation h3:hover a,
+.Documentation summary:hover a,
+.Documentation summary:focus a {
+  opacity: 1;
 }
 .Documentation ul {
   line-height: 1.5rem;
   list-style: none;
-  padding: 0;
+  padding-left: 0;
+}
+.Documentation ul ul {
+  padding-left: 2em;
 }
 .Documentation code,
 .Documentation pre {
@@ -535,28 +544,6 @@ code {
 }
 .Documentation pre .comment {
   color: #060;
-}
-.Documentation .example {
-  border: 0.0625rem solid #ccc;
-  border-radius: 0.3125rem;
-  margin: 0.625rem 0;
-}
-.Documentation .indent {
-  margin-left: 1.25rem;
-}
-.Documentation .example-header {
-  padding: 0.625rem;
-}
-.Documentation .example-body {
-  border-top: 0.0625rem solid #ccc;
-  display: none;
-  padding: 0 0.625rem 0.625rem 0.625rem;
-}
-.Documentation dl {
-  line-height: 150%;
-}
-.Documentation dd {
-  margin-left: 0;
 }
 
 .Versions-list {
