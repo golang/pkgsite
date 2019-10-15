@@ -53,9 +53,10 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, version string) (_ *int
 			&pkg.DocumentationHTML, pq.Array(&licenseTypes),
 			pq.Array(&licensePaths), &pkg.ModulePath, nullIsEmpty(&pkg.GOOS), nullIsEmpty(&pkg.GOARCH),
 			&pkg.ReadmeFilePath, &pkg.ReadmeContents, &pkg.CommitTime, &pkg.VersionType,
-			nullIsEmpty(&pkg.RepositoryURL), nullIsEmpty(&pkg.VCSType), nullIsEmpty(&pkg.HomepageURL)); err != nil {
+			nullIsEmpty(&pkg.VCSType), sourceInfoScanner{&pkg.SourceInfo}); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
+		pkg.RepositoryURL = pkg.SourceInfo.RepoURL()
 		lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
 		if err != nil {
 			return err
@@ -99,9 +100,8 @@ func constructDirectoryQueryAndArgs(dirPath, version string) (string, []interfac
 			v.readme_contents,
 			v.commit_time,
 			v.version_type,
-			v.repository_url,
 			v.vcs_type,
-			v.homepage_url
+			v.source_info
 		FROM
 			packages p`
 
@@ -135,9 +135,8 @@ func constructDirectoryQueryAndArgs(dirPath, version string) (string, []interfac
 				readme_contents,
 				commit_time,
 				version_type,
-				repository_url,
 				vcs_type,
-				homepage_url
+				source_info
 			FROM
 				versions
 			WHERE

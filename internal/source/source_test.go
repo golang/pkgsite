@@ -6,6 +6,7 @@ package source
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -251,7 +252,7 @@ func TestModuleInfo(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			check("repo", info.RepoURL, test.wantRepo)
+			check("repo", info.repoURL, test.wantRepo)
 			check("module", info.ModuleURL(), test.wantModule)
 			check("file", info.FileURL(test.file), test.wantFile)
 			check("line", info.LineURL(test.file, 1), test.wantLine)
@@ -331,7 +332,7 @@ func TestModuleImportDynamic(t *testing.T) {
 		{
 			"alice.org/pkg",
 			&Info{
-				RepoURL:   "https://github.com/alice/pkg",
+				repoURL:   "https://github.com/alice/pkg",
 				moduleDir: "",
 				commit:    "v1.2.3",
 				templates: githubURLTemplates,
@@ -340,7 +341,7 @@ func TestModuleImportDynamic(t *testing.T) {
 		{
 			"alice.org/pkg/sub",
 			&Info{
-				RepoURL:   "https://github.com/alice/pkg",
+				repoURL:   "https://github.com/alice/pkg",
 				moduleDir: "sub",
 				commit:    "sub/v1.2.3",
 				templates: githubURLTemplates,
@@ -349,7 +350,7 @@ func TestModuleImportDynamic(t *testing.T) {
 		{
 			"alice.org/pkg/http",
 			&Info{
-				RepoURL:   "https://github.com/alice/pkg",
+				repoURL:   "https://github.com/alice/pkg",
 				moduleDir: "http",
 				commit:    "http/v1.2.3",
 				templates: githubURLTemplates,
@@ -359,7 +360,7 @@ func TestModuleImportDynamic(t *testing.T) {
 			"alice.org/pkg/source",
 			// Has a go-source tag, but we can't use the templates.
 			&Info{
-				RepoURL:   "http://alice.org/pkg",
+				repoURL:   "http://alice.org/pkg",
 				moduleDir: "source",
 				commit:    "source/v1.2.3",
 				// empty templates
@@ -370,7 +371,7 @@ func TestModuleImportDynamic(t *testing.T) {
 			"alice.org/pkg/ignore",
 			// Stop at the first go-source.
 			&Info{
-				RepoURL:   "http://alice.org/pkg",
+				repoURL:   "http://alice.org/pkg",
 				moduleDir: "ignore",
 				commit:    "ignore/v1.2.3",
 				// empty templates
@@ -383,7 +384,7 @@ func TestModuleImportDynamic(t *testing.T) {
 			&Info{
 				// The go-import tag's repo root ends in ".git", but according to the spec
 				// there should not be a .vcs suffix, so we include the ".git" in the repo URL.
-				RepoURL:   "https://vcs.net/bob/pkg.git",
+				repoURL:   "https://vcs.net/bob/pkg.git",
 				moduleDir: "",
 				commit:    "v1.2.3",
 				// empty templates
@@ -392,7 +393,7 @@ func TestModuleImportDynamic(t *testing.T) {
 		{
 			"bob.com/pkg/sub",
 			&Info{
-				RepoURL:   "https://vcs.net/bob/pkg.git",
+				repoURL:   "https://vcs.net/bob/pkg.git",
 				moduleDir: "sub",
 				commit:    "sub/v1.2.3",
 				// empty templates
@@ -403,7 +404,7 @@ func TestModuleImportDynamic(t *testing.T) {
 			// The go-source tag has a template that is handled incorrectly by godoc; but we
 			// ignore the templates.
 			&Info{
-				RepoURL:   "https://github.com/azul3d/examples",
+				repoURL:   "https://github.com/azul3d/examples",
 				moduleDir: "abs",
 				commit:    "abs/v1.2.3",
 				templates: githubURLTemplates,
@@ -413,7 +414,7 @@ func TestModuleImportDynamic(t *testing.T) {
 			"myitcv.io/blah2",
 			// Ignore the "mod" vcs type.
 			&Info{
-				RepoURL:   "https://github.com/myitcv/x",
+				repoURL:   "https://github.com/myitcv/x",
 				moduleDir: "",
 				commit:    "v1.2.3",
 				templates: githubURLTemplates,
@@ -422,7 +423,7 @@ func TestModuleImportDynamic(t *testing.T) {
 		{
 			"alice.org/pkg/default",
 			&Info{
-				RepoURL:   "https://github.com/alice/pkg",
+				repoURL:   "https://github.com/alice/pkg",
 				moduleDir: "default",
 				commit:    "default/v1.2.3",
 				templates: githubURLTemplates,
@@ -530,10 +531,10 @@ func TestAdjustVersionedModuleDirectory(t *testing.T) {
 	} {
 		t.Run(test.repo+","+test.moduleDir+","+test.commit, func(t *testing.T) {
 			info := &Info{
-				RepoURL:   "http://x.com/" + test.repo,
+				repoURL:   "http://x.com/" + test.repo,
 				moduleDir: test.moduleDir,
 				commit:    test.commit,
-				templates: urlTemplates{file: "{repo}/{commit}/{file}"},
+				templates: urlTemplates{File: "{repo}/{commit}/{file}"},
 			}
 			adjustVersionedModuleDirectory(ctx, client, info)
 			got := info.moduleDir
@@ -673,4 +674,49 @@ var testWeb = map[string]string{
 		`<meta name="go-import" content="myitcv.io/blah2 git https://github.com/myitcv/x">` +
 		`<meta name="go-import" content="myitcv.io/blah2 mod https://raw.githubusercontent.com/myitcv/pubx/master">` +
 		`</head>`,
+}
+
+func TestJSON(t *testing.T) {
+	for _, test := range []struct {
+		in   *Info
+		want string
+	}{
+		{
+			nil,
+			`null`,
+		},
+		{
+			&Info{repoURL: "r", moduleDir: "m", commit: "c"},
+			`{"RepoURL":"r","ModuleDir":"m","Commit":"c"}`,
+		},
+		{
+			&Info{repoURL: "r", moduleDir: "m", commit: "c", templates: githubURLTemplates},
+			`{"RepoURL":"r","ModuleDir":"m","Commit":"c","Kind":"github"}`,
+		},
+		{
+			&Info{repoURL: "r", moduleDir: "m", commit: "c", templates: urlTemplates{File: "f"}},
+			`{"RepoURL":"r","ModuleDir":"m","Commit":"c","Templates":{"Directory":"","File":"f","Line":"","Raw":""}}`,
+		},
+	} {
+		bytes, err := json.Marshal(&test.in)
+		if err != nil {
+			t.Fatal(err)
+		}
+		got := string(bytes)
+		if got != test.want {
+			t.Errorf("%#v:\ngot  %s\nwant %s", test.in, got, test.want)
+			continue
+		}
+		var out Info
+		if err := json.Unmarshal(bytes, &out); err != nil {
+			t.Fatal(err)
+		}
+		var want Info
+		if test.in != nil {
+			want = *test.in
+		}
+		if out != want {
+			t.Errorf("got  %#v\nwant %#v", out, want)
+		}
+	}
 }

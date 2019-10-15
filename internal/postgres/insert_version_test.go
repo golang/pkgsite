@@ -15,6 +15,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/sample"
+	"golang.org/x/discovery/internal/source"
 	"golang.org/x/xerrors"
 )
 
@@ -156,7 +157,7 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 			}
 
 			if tc.version != nil {
-				if diff := cmp.Diff(&tc.version.VersionInfo, got); !tc.wantReadErr && diff != "" {
+				if diff := cmp.Diff(&tc.version.VersionInfo, got, cmp.AllowUnexported(source.Info{})); !tc.wantReadErr && diff != "" {
 					t.Errorf("testDB.GetVersionInfo(ctx, %q, %q) mismatch (-want +got):\n%s", tc.wantModulePath, tc.wantVersion, diff)
 				}
 			}

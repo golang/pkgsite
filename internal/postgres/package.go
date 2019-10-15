@@ -65,9 +65,8 @@ func (db *DB) getPackage(ctx context.Context, pkgPath, version, modulePath strin
 			v.readme_contents,
 			v.module_path,
 			v.version_type,
-			v.repository_url,
 			v.vcs_type,
-			v.homepage_url
+		    v.source_info
 		FROM
 			versions v
 		INNER JOIN
@@ -117,14 +116,14 @@ func (db *DB) getPackage(ctx context.Context, pkgPath, version, modulePath strin
 		&pkg.V1Path, pq.Array(&licenseTypes), pq.Array(&licensePaths),
 		&pkg.DocumentationHTML, nullIsEmpty(&pkg.GOOS), nullIsEmpty(&pkg.GOARCH), &pkg.Version,
 		&pkg.CommitTime, &pkg.ReadmeFilePath, &pkg.ReadmeContents, &pkg.ModulePath,
-		&pkg.VersionType, nullIsEmpty(&pkg.RepositoryURL), nullIsEmpty(&pkg.VCSType),
-		nullIsEmpty(&pkg.HomepageURL))
+		&pkg.VersionType, nullIsEmpty(&pkg.VCSType), sourceInfoScanner{&pkg.SourceInfo})
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, xerrors.Errorf("package %s@%s: %w", pkgPath, version, derrors.NotFound)
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
+	pkg.RepositoryURL = pkg.SourceInfo.RepoURL()
 	lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
 	if err != nil {
 		return nil, err

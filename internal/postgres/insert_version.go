@@ -7,6 +7,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strconv"
@@ -90,6 +91,11 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version) error 
 		if err := db.DeleteVersion(ctx, tx, version.ModulePath, version.Version); err != nil {
 			return fmt.Errorf("error deleting existing versions: %v", err)
 		}
+
+		sourceInfoJSON, err := json.Marshal(version.SourceInfo)
+		if err != nil {
+			return err
+		}
 		if _, err := execTx(ctx, tx,
 			`INSERT INTO versions(
 				module_path,
@@ -103,10 +109,9 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version) error 
 				prerelease,
 				version_type,
 				vcs_type,
-				repository_url,
-				homepage_url,
-				series_path)
-			VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) ON CONFLICT DO NOTHING`,
+				series_path,
+				source_info)
+			VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) ON CONFLICT DO NOTHING`,
 			version.ModulePath,
 			version.Version,
 			version.CommitTime,
@@ -118,9 +123,8 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version) error 
 			prerelease,
 			version.VersionType,
 			version.VCSType,
-			version.RepositoryURL,
-			version.HomepageURL,
 			version.SeriesPath(),
+			sourceInfoJSON,
 		); err != nil {
 			return fmt.Errorf("error inserting version: %v", err)
 		}

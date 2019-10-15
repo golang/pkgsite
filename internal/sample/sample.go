@@ -12,6 +12,7 @@ import (
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/version"
 )
 
@@ -72,7 +73,7 @@ func VersionInfo() *internal.VersionInfo {
 		VersionType:    VersionType,
 		VCSType:        VCSType,
 		RepositoryURL:  RepositoryURL,
-		HomepageURL:    ModulePath,
+		SourceInfo:     source.NewGitHubInfo(RepositoryURL, "", ""),
 	}
 }
 

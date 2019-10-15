@@ -7,6 +7,8 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"sort"
@@ -16,6 +18,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/version"
 	"golang.org/x/xerrors"
 )
@@ -444,9 +447,8 @@ func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version str
 			readme_file_path,
 			readme_contents,
 			version_type,
-			repository_url,
 			vcs_type,
-			homepage_url
+			source_info
 		FROM
 			versions`
 
@@ -473,11 +475,36 @@ func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version str
 	var vi internal.VersionInfo
 	row := db.queryRow(ctx, query, args...)
 	if err := row.Scan(&vi.ModulePath, &vi.Version, &vi.CommitTime, &vi.ReadmeFilePath, &vi.ReadmeContents, &vi.VersionType,
-		nullIsEmpty(&vi.RepositoryURL), nullIsEmpty(&vi.VCSType), nullIsEmpty(&vi.HomepageURL)); err != nil {
+		nullIsEmpty(&vi.VCSType), sourceInfoScanner{&vi.SourceInfo}); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, xerrors.Errorf("module version %s@%s: %w", modulePath, version, derrors.NotFound)
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
+	vi.RepositoryURL = vi.SourceInfo.RepoURL()
 	return &vi, nil
+}
+
+// sourceInfoScanner scans a jsonb value into a *source.Info.
+type sourceInfoScanner struct {
+	ptr **source.Info
+}
+
+func (s sourceInfoScanner) Scan(value interface{}) (err error) {
+	defer derrors.Wrap(&err, "sourceInfoScanner(%+v)", value)
+
+	if value == nil {
+		*s.ptr = nil
+		return nil
+	}
+	jsonBytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("not a []byte")
+	}
+	var info source.Info
+	if err := json.Unmarshal(jsonBytes, &info); err != nil {
+		return err
+	}
+	*s.ptr = &info
+	return nil
 }

@@ -16,6 +16,7 @@ import (
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/sample"
+	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/version"
 	"golang.org/x/xerrors"
 )
@@ -89,7 +90,7 @@ func TestPostgres_GetVersionInfo_Latest(t *testing.T) {
 				t.Fatal("wantIndex too large")
 			}
 			wantVI := &tc.versions[tc.wantIndex].VersionInfo
-			if diff := cmp.Diff(wantVI, gotVI, cmpopts.EquateEmpty()); diff != "" {
+			if diff := cmp.Diff(wantVI, gotVI, cmpopts.EquateEmpty(), cmp.AllowUnexported(source.Info{})); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -306,7 +307,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(wantPseudoVersions, got); diff != "" {
+			if diff := cmp.Diff(wantPseudoVersions, got, cmp.AllowUnexported(source.Info{})); diff != "" {
 				t.Errorf("testDB.GetPseudoVersionsForPackageSeries(%q) mismatch (-want +got):\n%s", tc.path, diff)
 			}
 
@@ -314,7 +315,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(tc.wantTaggedVersions, got); diff != "" {
+			if diff := cmp.Diff(tc.wantTaggedVersions, got, cmp.AllowUnexported(source.Info{})); diff != "" {
 				t.Errorf("testDB.GetTaggedVersionsForPackageSeries(%q) mismatch (-want +got):\n%s", tc.path, diff)
 			}
 
@@ -322,7 +323,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(wantPseudoVersions, got); diff != "" {
+			if diff := cmp.Diff(wantPseudoVersions, got, cmp.AllowUnexported(source.Info{})); diff != "" {
 				t.Errorf("testDB.GetPseudoVersionsForModule(%q) mismatch (-want +got):\n%s", tc.path, diff)
 			}
 
@@ -330,7 +331,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(tc.wantTaggedVersions, got); diff != "" {
+			if diff := cmp.Diff(tc.wantTaggedVersions, got, cmp.AllowUnexported(source.Info{})); diff != "" {
 				t.Errorf("testDB.GetTaggedVersionsForModule(%q) mismatch (-want +got):\n%s", tc.path, diff)
 			}
 

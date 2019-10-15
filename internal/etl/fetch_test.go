@@ -25,6 +25,7 @@ import (
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
+	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/testhelper"
 	"golang.org/x/discovery/internal/version"
@@ -223,6 +224,7 @@ func TestReFetch(t *testing.T) {
 			ReadmeContents: []byte("This is another readme"),
 			VersionType:    "release",
 			RepositoryURL:  "https://github.com/my/module",
+			SourceInfo:     source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
 		},
 		Package: internal.Package{
 			Path:              "github.com/my/module/bar",
@@ -241,7 +243,7 @@ func TestReFetch(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(want, got, cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML")); diff != "" {
+	if diff := cmp.Diff(want, got, cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML"), cmp.AllowUnexported(source.Info{})); diff != "" {
 		t.Errorf("testDB.GetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", pkgBar, version, diff)
 	}
 
@@ -350,6 +352,7 @@ func TestFetchVersion(t *testing.T) {
 		ReadmeContents: []byte("THIS IS A README"),
 		VersionType:    version.TypeRelease,
 		RepositoryURL:  "https://github.com/my/module",
+		SourceInfo:     source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
 	}
 	wantLicenses := []*license.License{
 		{
@@ -426,7 +429,7 @@ func TestFetchVersion(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(test.want, got, cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML")); diff != "" {
+			if diff := cmp.Diff(test.want, got, cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML"), cmp.AllowUnexported(source.Info{})); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -450,6 +453,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			ReadmeFilePath: "README.md",
 			ReadmeContents: []byte("README FILE FOR TESTING."),
 			RepositoryURL:  "https://github.com/my/module",
+			SourceInfo:     source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
 			VersionType:    "release",
 		},
 		Package: internal.Package{
@@ -498,6 +502,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					ReadmeFilePath: "README.md",
 					ReadmeContents: []byte("README FILE FOR TESTING."),
 					VersionType:    "release",
+					SourceInfo:     &source.Info{},
 				},
 				Package: internal.Package{
 					Path:              "nonredistributable.mod/module/bar/baz",
@@ -526,6 +531,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					ReadmeFilePath: "README.md",
 					ReadmeContents: []byte("README FILE FOR TESTING."),
 					VersionType:    "release",
+					SourceInfo:     &source.Info{},
 				},
 				Package: internal.Package{
 					Path:              "nonredistributable.mod/module/foo",
@@ -554,6 +560,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					ReadmeFilePath: "README.md",
 					ReadmeContents: []byte("# The Go Programming Language\n"),
 					RepositoryURL:  goRepositoryURLPrefix + "/go",
+					SourceInfo:     source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
 				},
 				Package: internal.Package{
 					Path:              "context",
@@ -584,6 +591,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					ReadmeFilePath: "README.md",
 					ReadmeContents: []byte("# The Go Programming Language\n"),
 					RepositoryURL:  goRepositoryURLPrefix + "/go",
+					SourceInfo:     source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
 				},
 				Package: internal.Package{
 					Path:              "builtin",
@@ -612,6 +620,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					CommitTime:     testProxyCommitTime,
 					VersionType:    "release",
 					ReadmeContents: []uint8{},
+					SourceInfo:     &source.Info{},
 				},
 				Package: internal.Package{
 					Path:              "build.constraints/module/cpu",
@@ -648,7 +657,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(test.want.VersionInfo, *gotVersionInfo); diff != "" {
+			if diff := cmp.Diff(test.want.VersionInfo, *gotVersionInfo, cmp.AllowUnexported(source.Info{})); diff != "" {
 				t.Fatalf("testDB.GetVersionInfo(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
 			}
 
@@ -660,7 +669,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			sort.Slice(gotPkg.Licenses, func(i, j int) bool {
 				return gotPkg.Licenses[i].FilePath < gotPkg.Licenses[j].FilePath
 			})
-			if diff := cmp.Diff(test.want, gotPkg, cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML")); diff != "" {
+			if diff := cmp.Diff(test.want, gotPkg, cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML"), cmp.AllowUnexported(source.Info{})); diff != "" {
 				t.Errorf("testDB.GetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", test.pkg, test.version, diff)
 			}
 			if got, want := gotPkg.DocumentationHTML, test.want.DocumentationHTML; len(want) == 0 && len(got) != 0 {

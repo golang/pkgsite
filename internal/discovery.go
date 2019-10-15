@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/version"
 )
@@ -26,7 +27,7 @@ type VersionInfo struct {
 	VersionType    version.Type
 	VCSType        string
 	RepositoryURL  string
-	HomepageURL    string
+	SourceInfo     *source.Info
 }
 
 // SeriesPath returns the series path for the module.

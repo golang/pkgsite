@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/sample"
+	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/version"
 )
 
@@ -89,7 +90,7 @@ func TestGetPackage(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if diff := cmp.Diff(tc.wantPkg, gotPkg, cmpopts.EquateEmpty()); diff != "" {
+			if diff := cmp.Diff(tc.wantPkg, gotPkg, cmpopts.EquateEmpty(), cmp.AllowUnexported(source.Info{})); diff != "" {
 				t.Errorf("testDB.GetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", tc.path, internal.LatestVersion, diff)
 			}
 		})
@@ -123,7 +124,7 @@ func TestGetPackageInModuleVersion(t *testing.T) {
 		want.ModulePath = modulePath
 		want.Path = pkgPath
 		want.Version = version
-		if diff := cmp.Diff(want, got, cmpopts.EquateEmpty()); diff != "" {
+		if diff := cmp.Diff(want, got, cmpopts.EquateEmpty(), cmp.AllowUnexported(source.Info{})); diff != "" {
 			t.Errorf("testDB.GetPackageInModuleVersion(ctx, %q, %q, %q) mismatch (-want +got):\n%s", pkgPath, modulePath, version, diff)
 		}
 	}

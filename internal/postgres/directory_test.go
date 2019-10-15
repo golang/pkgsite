@@ -14,6 +14,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/sample"
+	"golang.org/x/discovery/internal/source"
 	"golang.org/x/xerrors"
 )
 
@@ -152,7 +153,7 @@ func TestGetDirectory(t *testing.T) {
 				Version:    tc.wantVersion,
 				Packages:   tc.wantPackages,
 			}
-			if diff := cmp.Diff(wantDirectory, got, cmpopts.EquateEmpty()); diff != "" {
+			if diff := cmp.Diff(wantDirectory, got, cmpopts.EquateEmpty(), cmp.AllowUnexported(source.Info{})); diff != "" {
 				t.Errorf("testDB.GetDirectory(ctx, %q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
 			}
 		})

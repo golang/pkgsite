@@ -22,6 +22,7 @@ package source
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -42,10 +43,17 @@ import (
 // to directories, files and lines.
 type Info struct {
 	// TODO(b/141771951): change the DB schema of versions to include this information
-	RepoURL   string       // URL of repo containing module; exported for DB schema compatibility
+	repoURL   string       // URL of repo containing module; exported for DB schema compatibility
 	moduleDir string       // directory of module relative to repo root
 	commit    string       // tag or ID of commit corresponding to version
 	templates urlTemplates // for building URLs
+}
+
+func (i *Info) RepoURL() string {
+	if i == nil {
+		return ""
+	}
+	return i.repoURL
 }
 
 // ModuleURL returns a URL for the home page of the module.
@@ -55,8 +63,8 @@ func (i *Info) ModuleURL() string {
 
 // DirectoryURL returns a URL for a directory relative to the module's home directory.
 func (i *Info) DirectoryURL(dir string) string {
-	return strings.TrimSuffix(expand(i.templates.directory, map[string]string{
-		"repo":   i.RepoURL,
+	return strings.TrimSuffix(expand(i.templates.Directory, map[string]string{
+		"repo":   i.repoURL,
 		"commit": i.commit,
 		"dir":    path.Join(i.moduleDir, dir),
 	}), "/")
@@ -64,8 +72,8 @@ func (i *Info) DirectoryURL(dir string) string {
 
 // FileURL returns a URL for a file whose pathname is relative to the module's home directory.
 func (i *Info) FileURL(pathname string) string {
-	return expand(i.templates.file, map[string]string{
-		"repo":   i.RepoURL,
+	return expand(i.templates.File, map[string]string{
+		"repo":   i.repoURL,
 		"commit": i.commit,
 		"file":   path.Join(i.moduleDir, pathname),
 	})
@@ -73,8 +81,8 @@ func (i *Info) FileURL(pathname string) string {
 
 // LineURL returns a URL referring to a line in a file relative to the module's home directory.
 func (i *Info) LineURL(pathname string, line int) string {
-	return expand(i.templates.line, map[string]string{
-		"repo":   i.RepoURL,
+	return expand(i.templates.Line, map[string]string{
+		"repo":   i.repoURL,
 		"commit": i.commit,
 		"file":   path.Join(i.moduleDir, pathname),
 		"line":   strconv.Itoa(line),
@@ -86,21 +94,79 @@ func (i *Info) LineURL(pathname string, line int) string {
 // {repoPath}, which is the repo URL's path.
 func (i *Info) RawURL(pathname string) string {
 	// Some templates don't support raw content serving.
-	if i.templates.raw == "" {
+	if i.templates.Raw == "" {
 		return ""
 	}
-	u, err := url.Parse(i.RepoURL)
+	u, err := url.Parse(i.repoURL)
 	if err != nil {
 		// This should never happen. If it does, note it and soldier on.
-		log.Errorf("repo URL %q failed to parse: %v", i.RepoURL, err)
+		log.Errorf("repo URL %q failed to parse: %v", i.repoURL, err)
 		u = &url.URL{Path: "ERROR"}
 	}
-	return expand(i.templates.raw, map[string]string{
-		"repo":     i.RepoURL,
+	return expand(i.templates.Raw, map[string]string{
+		"repo":     i.repoURL,
 		"repoPath": strings.TrimPrefix(u.Path, "/"),
 		"commit":   i.commit,
 		"file":     path.Join(i.moduleDir, pathname),
 	})
+}
+
+// map of common urlTemplates
+var urlTemplatesByKind = map[string]urlTemplates{
+	"github":    githubURLTemplates,
+	"gitlab":    gitlabURLTemplates,
+	"bitbucket": bitbucketURLTemplates,
+}
+
+// jsonInfo is a Go struct describing the JSON structure of an INFO.
+type jsonInfo struct {
+	RepoURL   string
+	ModuleDir string
+	Commit    string
+	// Store common templates efficiently by setting this to a short string
+	// we look up in a map. If Kind != "", then Templates == nil.
+	Kind      string        `json:",omitempty"`
+	Templates *urlTemplates `json:",omitempty"`
+}
+
+// ToJSONForDB returns the Info encoded for storage in the database.
+func (i *Info) MarshalJSON() (_ []byte, err error) {
+	defer derrors.Wrap(&err, "MarshalJSON")
+
+	ji := &jsonInfo{
+		RepoURL:   i.repoURL,
+		ModuleDir: i.moduleDir,
+		Commit:    i.commit,
+	}
+	// Store common templates efficiently, by name.
+	for kind, templs := range urlTemplatesByKind {
+		if i.templates == templs {
+			ji.Kind = kind
+			break
+		}
+	}
+	if ji.Kind == "" && i.templates != (urlTemplates{}) {
+		ji.Templates = &i.templates
+	}
+	return json.Marshal(ji)
+}
+
+func (i *Info) UnmarshalJSON(data []byte) (err error) {
+	defer derrors.Wrap(&err, "UnmarshalJSON(data)")
+
+	var ji jsonInfo
+	if err := json.Unmarshal(data, &ji); err != nil {
+		return err
+	}
+	i.repoURL = ji.RepoURL
+	i.moduleDir = ji.ModuleDir
+	i.commit = ji.Commit
+	if ji.Kind != "" {
+		i.templates = urlTemplatesByKind[ji.Kind]
+	} else if ji.Templates != nil {
+		i.templates = *ji.Templates
+	}
+	return nil
 }
 
 // ModuleInfo determines the repository corresponding to the module path. It
@@ -117,7 +183,7 @@ func ModuleInfo(ctx context.Context, client *http.Client, modulePath, version st
 			return nil, err
 		}
 		return &Info{
-			RepoURL:   stdlib.GoSourceRepoURL,
+			repoURL:   stdlib.GoSourceRepoURL,
 			moduleDir: stdlib.Directory(version),
 			commit:    commit,
 			templates: githubURLTemplates,
@@ -134,7 +200,7 @@ func ModuleInfo(ctx context.Context, client *http.Client, modulePath, version st
 		}
 	} else {
 		info = &Info{
-			RepoURL:   "https://" + repo,
+			repoURL:   "https://" + repo,
 			moduleDir: relativeModulePath,
 			commit:    commitFromVersion(version, relativeModulePath),
 			templates: templates,
@@ -241,7 +307,7 @@ func moduleInfoDynamic(ctx context.Context, client *http.Client, modulePath, ver
 	}
 	dir := strings.TrimPrefix(strings.TrimPrefix(modulePath, sourceMeta.repoRootPrefix), "/")
 	return &Info{
-		RepoURL:   strings.TrimSuffix(repoURL, "/"),
+		repoURL:   strings.TrimSuffix(repoURL, "/"),
 		moduleDir: dir,
 		commit:    commitFromVersion(version, dir),
 		templates: templates,
@@ -311,12 +377,7 @@ var patterns = []struct {
 	},
 	{
 		regexp.MustCompile(`^(?P<repo>bitbucket\.org/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)`),
-		urlTemplates{
-			directory: "{repo}/src/{commit}/{dir}",
-			file:      "{repo}/src/{commit}/{file}",
-			line:      "{repo}/src/{commit}/{file}#lines-{line}",
-			raw:       "{repo}/raw/{commit}/{file}",
-		},
+		bitbucketURLTemplates,
 	},
 	// Other patterns from cmd/go/internal/get/vcs.go, that we omit:
 	// hub.jazz.net it no longer exists.
@@ -345,9 +406,9 @@ var patterns = []struct {
 	{
 		regexp.MustCompile(`^(?P<repo>[^.]+\.googlesource\.com/[^.]+)(\.git|$)`),
 		urlTemplates{
-			directory: "{repo}/+/{commit}/{dir}",
-			file:      "{repo}/+/{commit}/{file}",
-			line:      "{repo}/+/{commit}/{file}#{line}",
+			Directory: "{repo}/+/{commit}/{dir}",
+			File:      "{repo}/+/{commit}/{file}",
+			Line:      "{repo}/+/{commit}/{file}#{line}",
 			// no raw support (b/13912564)
 		},
 	},
@@ -380,26 +441,34 @@ func init() {
 }
 
 // urlTemplates describes how to build URLs from bits of source information.
+// The fields are exported for JSON encoding.
 type urlTemplates struct {
-	directory string // URL template for a directory, with {repo}, {commit} and {dir}
-	file      string // URL template for a file, with {repo}, {commit} and {file}
-	line      string // URL template for a line, with {repo}, {commit}, {file} and {line}
-	raw       string // URL template for the raw contents of a file, with {repo}, {repoPath}, {commit} and {file}
+	Directory string // URL template for a directory, with {repo}, {commit} and {dir}
+	File      string // URL template for a file, with {repo}, {commit} and {file}
+	Line      string // URL template for a line, with {repo}, {commit}, {file} and {line}
+	Raw       string // URL template for the raw contents of a file, with {repo}, {repoPath}, {commit} and {file}
 }
 
 var (
 	githubURLTemplates = urlTemplates{
-		directory: "{repo}/tree/{commit}/{dir}",
-		file:      "{repo}/blob/{commit}/{file}",
-		line:      "{repo}/blob/{commit}/{file}#L{line}",
-		raw:       "https://raw.githubusercontent.com/{repoPath}/{commit}/{file}",
+		Directory: "{repo}/tree/{commit}/{dir}",
+		File:      "{repo}/blob/{commit}/{file}",
+		Line:      "{repo}/blob/{commit}/{file}#L{line}",
+		Raw:       "https://raw.githubusercontent.com/{repoPath}/{commit}/{file}",
 	}
 
 	gitlabURLTemplates = urlTemplates{
-		directory: "{repo}/tree/{commit}/{dir}",
-		file:      "{repo}/blob/{commit}/{file}",
-		line:      "{repo}/blob/{commit}/{file}#L{line}",
-		raw:       "{repo}/raw/{commit}/{file}",
+		Directory: "{repo}/tree/{commit}/{dir}",
+		File:      "{repo}/blob/{commit}/{file}",
+		Line:      "{repo}/blob/{commit}/{file}#L{line}",
+		Raw:       "{repo}/raw/{commit}/{file}",
+	}
+
+	bitbucketURLTemplates = urlTemplates{
+		Directory: "{repo}/src/{commit}/{dir}",
+		File:      "{repo}/src/{commit}/{file}",
+		Line:      "{repo}/src/{commit}/{file}#lines-{line}",
+		Raw:       "{repo}/raw/{commit}/{file}",
 	}
 )
 
@@ -456,4 +525,15 @@ func expand(s string, match map[string]string) string {
 		oldNew = append(oldNew, "{"+k+"}", v)
 	}
 	return strings.NewReplacer(oldNew...).Replace(s)
+}
+
+// NewGitHubSourceInfo creates a source.Info with GitHub URL templates.
+// It is for testing only.
+func NewGitHubInfo(repoURL, moduleDir, commit string) *Info {
+	return &Info{
+		repoURL:   repoURL,
+		moduleDir: moduleDir,
+		commit:    commit,
+		templates: githubURLTemplates,
+	}
 }

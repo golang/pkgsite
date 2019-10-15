@@ -195,12 +195,9 @@ func processZipFile(ctx context.Context, modulePath string, versionType version.
 	_, span := trace.StartSpan(ctx, "processing zipFile")
 	defer span.End()
 
-	var repoURL string
 	sourceInfo, err := source.ModuleInfo(ctx, httpClient, modulePath, version)
 	if err != nil {
 		log.Error(err)
-	} else {
-		repoURL = sourceInfo.RepoURL
 	}
 	readmeFilePath, readmeContents, err := extractReadmeFromZip(modulePath, version, zipReader)
 	if err != nil && err != errReadmeNotFound {
@@ -225,7 +222,8 @@ func processZipFile(ctx context.Context, modulePath string, versionType version.
 			ReadmeFilePath: readmeFilePath,
 			ReadmeContents: readmeContents,
 			VersionType:    versionType,
-			RepositoryURL:  repoURL,
+			RepositoryURL:  sourceInfo.RepoURL(),
+			SourceInfo:     sourceInfo,
 		},
 		Packages: packages,
 		Licenses: licenses,
