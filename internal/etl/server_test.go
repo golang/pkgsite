@@ -6,6 +6,7 @@ package etl
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -29,7 +30,14 @@ const testTimeout = 30 * time.Second
 var testDB *postgres.DB
 
 func TestMain(m *testing.M) {
+	httpClient = &http.Client{Transport: fakeTransport{}}
 	postgres.RunDBTests("discovery_etl_test", m, &testDB)
+}
+
+type fakeTransport struct{}
+
+func (fakeTransport) RoundTrip(*http.Request) (*http.Response, error) {
+	return nil, errors.New("bad")
 }
 
 type debugExporter struct {

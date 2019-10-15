@@ -246,7 +246,7 @@ func TestModuleInfo(t *testing.T) {
 				}
 			}
 
-			info, err := moduleInfo(context.Background(), client, test.modulePath, test.version)
+			info, err := ModuleInfo(context.Background(), client, test.modulePath, test.version)
 			if err != nil {
 				t.Fatal(err)
 			}

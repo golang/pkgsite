@@ -56,6 +56,9 @@ var (
 // fetched. It is mutable for testing purposes.
 var appVersionLabel = config.AppVersionLabel()
 
+// For testing
+var httpClient *http.Client = http.DefaultClient
+
 // Indicates that although we have a valid module, some packages could not be processed.
 const hasIncompletePackagesCode = 290
 
@@ -196,7 +199,7 @@ func processZipFile(ctx context.Context, modulePath string, versionType internal
 	defer span.End()
 
 	var repoURL string
-	sourceInfo, err := source.ModuleInfo(ctx, modulePath, version)
+	sourceInfo, err := source.ModuleInfo(ctx, httpClient, modulePath, version)
 	if err != nil {
 		log.Error(err)
 	} else {

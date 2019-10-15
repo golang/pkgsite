@@ -108,13 +108,9 @@ func (i *Info) RawURL(pathname string) string {
 // to the repo root.
 //
 // ModuleInfo may fetch from arbitrary URLs, so it can be slow.
-func ModuleInfo(ctx context.Context, modulePath, version string) (_ *Info, err error) {
+func ModuleInfo(ctx context.Context, client *http.Client, modulePath, version string) (info *Info, err error) {
 	defer derrors.Wrap(&err, "source.ModuleInfo(ctx, %q, %q)", modulePath, version)
 
-	return moduleInfo(ctx, http.DefaultClient, modulePath, version)
-}
-
-func moduleInfo(ctx context.Context, client *http.Client, modulePath, version string) (info *Info, err error) {
 	if modulePath == stdlib.ModulePath {
 		commit, err := stdlib.TagForVersion(version)
 		if err != nil {
