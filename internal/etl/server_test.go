@@ -14,6 +14,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"go.opencensus.io/trace"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/index"
@@ -31,9 +32,24 @@ func TestMain(m *testing.M) {
 	postgres.RunDBTests("discovery_etl_test", m, &testDB)
 }
 
+type debugExporter struct {
+	t *testing.T
+}
+
+func (e debugExporter) ExportSpan(s *trace.SpanData) {
+	e.t.Logf("⚡ %s: %v", s.Name, s.EndTime.Sub(s.StartTime))
+}
+
+func setupTraceDebugging(t *testing.T) {
+	trace.RegisterExporter(debugExporter{t})
+	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
+}
+
 func TestETL(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
+
+	setupTraceDebugging(t)
 
 	appVersionLabel = "20190000t000000"
 	var (
