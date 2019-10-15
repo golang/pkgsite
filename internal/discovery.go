@@ -5,15 +5,11 @@
 package internal
 
 import (
-	"fmt"
-	"regexp"
-	"strings"
 	"time"
-
-	"golang.org/x/discovery/internal/thirdparty/semver"
 
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/thirdparty/module"
+	"golang.org/x/discovery/internal/version"
 )
 
 // LatestVersion signifies the latest available version in requests to the
@@ -27,7 +23,7 @@ type VersionInfo struct {
 	CommitTime     time.Time
 	ReadmeFilePath string
 	ReadmeContents []byte
-	VersionType    VersionType
+	VersionType    version.Type
 	VCSType        string
 	RepositoryURL  string
 	HomepageURL    string
@@ -103,26 +99,6 @@ type Directory struct {
 	Packages   []*VersionedPackage
 }
 
-// VersionType defines the version types a module can have.
-// This must be kept in sync with the 'version_type' database enum.
-type VersionType string
-
-const (
-	// VersionTypeRelease is a normal release.
-	VersionTypeRelease = VersionType("release")
-
-	// VersionTypePrerelease is a version with a prerelease.
-	VersionTypePrerelease = VersionType("prerelease")
-
-	// VersionTypePseudo appears to have a prerelease of the
-	// form <commit date>-<commit hash>.
-	VersionTypePseudo = VersionType("pseudo")
-)
-
-func (vt VersionType) String() string {
-	return string(vt)
-}
-
 // IndexVersion holds the version information returned by the module index.
 type IndexVersion struct {
 	Path      string
@@ -165,28 +141,4 @@ type VersionState struct {
 	// is close to, but not the same as, the deployment time. For example, the
 	// deployment time for the above timestamp might be Jul 9, 2019, 11:29:59 AM.
 	AppVersion string
-}
-
-var pseudoVersionRE = regexp.MustCompile(`^v[0-9]+\.(0\.0-|\d+\.\d+-([^+]*\.)?0\.)\d{14}-[A-Za-z0-9]+(\+incompatible)?$`)
-
-// IsPseudoVersion reports whether a valid version v is a pseudo-version.
-// Modified from src/cmd/go/internal/modfetch.
-func IsPseudoVersion(v string) bool {
-	return strings.Count(v, "-") >= 2 && pseudoVersionRE.MatchString(v)
-}
-
-// ParseVersionType returns the VersionType of a given a version.
-func ParseVersionType(version string) (VersionType, error) {
-	if !semver.IsValid(version) {
-		return "", fmt.Errorf("ParseVersionType(%q): invalid semver", version)
-	}
-
-	switch {
-	case IsPseudoVersion(version):
-		return VersionTypePseudo, nil
-	case semver.Prerelease(version) != "":
-		return VersionTypePrerelease, nil
-	default:
-		return VersionTypeRelease, nil
-	}
 }

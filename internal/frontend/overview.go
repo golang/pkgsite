@@ -20,6 +20,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/stdlib"
+	"golang.org/x/discovery/internal/version"
 )
 
 // OverviewDetails contains all of the data that the readme template
@@ -105,7 +106,7 @@ func translateRelativeLink(node *blackfriday.Node, vi *internal.VersionInfo) {
 	}
 	ref := "master"
 	switch vi.VersionType {
-	case internal.VersionTypeRelease, internal.VersionTypePrerelease:
+	case version.TypeRelease, version.TypePrerelease:
 		ref = vi.Version
 		if vi.ModulePath == stdlib.ModulePath {
 			ref, err = stdlib.TagForVersion(ref)
@@ -113,7 +114,7 @@ func translateRelativeLink(node *blackfriday.Node, vi *internal.VersionInfo) {
 				ref = "master"
 			}
 		}
-	case internal.VersionTypePseudo:
+	case version.TypePseudo:
 		if segs := strings.SplitAfter(vi.Version, "-"); len(segs) != 0 {
 			ref = segs[len(segs)-1]
 		}

@@ -28,6 +28,7 @@ import (
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/testhelper"
+	"golang.org/x/discovery/internal/version"
 	"golang.org/x/xerrors"
 )
 
@@ -274,14 +275,14 @@ func TestFetchVersion(t *testing.T) {
 	defer cancel()
 
 	modulePath := "github.com/my/module"
-	version := "v1.0.0"
+	vers := "v1.0.0"
 	wantVersionInfo := internal.VersionInfo{
 		ModulePath:     "github.com/my/module",
 		Version:        "v1.0.0",
 		CommitTime:     testProxyCommitTime,
 		ReadmeFilePath: "README.md",
 		ReadmeContents: []byte("THIS IS A README"),
-		VersionType:    internal.VersionTypeRelease,
+		VersionType:    version.TypeRelease,
 		RepositoryURL:  "https://github.com/my/module",
 	}
 	wantLicenses := []*license.License{
@@ -351,11 +352,11 @@ func TestFetchVersion(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			client, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
-				proxy.NewTestVersion(t, modulePath, version, test.contents),
+				proxy.NewTestVersion(t, modulePath, vers, test.contents),
 			})
 			defer teardownProxy()
 
-			got, _, err := FetchVersion(ctx, modulePath, version, client)
+			got, _, err := FetchVersion(ctx, modulePath, vers, client)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1074,38 +1075,38 @@ func TestExtractPackagesFromZip(t *testing.T) {
 func TestFetch_parseVersionType(t *testing.T) {
 	testCases := []struct {
 		name, version   string
-		wantVersionType internal.VersionType
+		wantVersionType version.Type
 		wantErr         bool
 	}{
 		{
 			name:            "pseudo major version",
 			version:         "v1.0.0-20190311183353-d8887717615a",
-			wantVersionType: internal.VersionTypePseudo,
+			wantVersionType: version.TypePseudo,
 		},
 		{
 			name:            "pseudo prerelease version",
 			version:         "v1.2.3-pre.0.20190311183353-d8887717615a",
-			wantVersionType: internal.VersionTypePseudo,
+			wantVersionType: version.TypePseudo,
 		},
 		{
 			name:            "pseudo minor version",
 			version:         "v1.2.4-0.20190311183353-d8887717615a",
-			wantVersionType: internal.VersionTypePseudo,
+			wantVersionType: version.TypePseudo,
 		},
 		{
 			name:            "pseudo version invalid",
 			version:         "v1.2.3-20190311183353-d8887717615a",
-			wantVersionType: internal.VersionTypePrerelease,
+			wantVersionType: version.TypePrerelease,
 		},
 		{
 			name:            "valid release",
 			version:         "v1.0.0",
-			wantVersionType: internal.VersionTypeRelease,
+			wantVersionType: version.TypeRelease,
 		},
 		{
 			name:            "valid prerelease",
 			version:         "v1.0.0-alpha.1",
-			wantVersionType: internal.VersionTypePrerelease,
+			wantVersionType: version.TypePrerelease,
 		},
 		{
 			name:            "invalid version",
@@ -1117,7 +1118,7 @@ func TestFetch_parseVersionType(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if gotVt, err := internal.ParseVersionType(tc.version); (tc.wantErr == (err != nil)) && tc.wantVersionType != gotVt {
+			if gotVt, err := version.ParseType(tc.version); (tc.wantErr == (err != nil)) && tc.wantVersionType != gotVt {
 				t.Errorf("parseVersionType(%v) = %v, want %v", tc.version, gotVt, tc.wantVersionType)
 			}
 		})

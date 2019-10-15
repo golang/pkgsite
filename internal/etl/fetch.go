@@ -37,6 +37,7 @@ import (
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/stdlib"
+	"golang.org/x/discovery/internal/version"
 	"golang.org/x/xerrors"
 )
 
@@ -161,38 +162,38 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, version string
 // FetchVersion queries the proxy or the Go repo for the requested module
 // version, downloads the module zip, and processes the contents to return an
 // *internal.Version.
-func FetchVersion(ctx context.Context, modulePath, version string, proxyClient *proxy.Client) (_ *internal.Version, hasIncompletePackages bool, err error) {
-	defer derrors.Wrap(&err, "fetchVersion(%q, %q)", modulePath, version)
+func FetchVersion(ctx context.Context, modulePath, vers string, proxyClient *proxy.Client) (_ *internal.Version, hasIncompletePackages bool, err error) {
+	defer derrors.Wrap(&err, "fetchVersion(%q, %q)", modulePath, vers)
 
 	var commitTime time.Time
 	var zipReader *zip.Reader
 	if modulePath == stdlib.ModulePath {
-		zipReader, commitTime, err = stdlib.Zip(version)
+		zipReader, commitTime, err = stdlib.Zip(vers)
 		if err != nil {
 			return nil, false, err
 		}
 	} else {
-		info, err := proxyClient.GetInfo(ctx, modulePath, version)
+		info, err := proxyClient.GetInfo(ctx, modulePath, vers)
 		if err != nil {
 			return nil, false, err
 		}
-		version = info.Version
+		vers = info.Version
 		commitTime = info.Time
-		zipReader, err = proxyClient.GetZip(ctx, modulePath, version)
+		zipReader, err = proxyClient.GetZip(ctx, modulePath, vers)
 		if err != nil {
 			return nil, false, err
 		}
 	}
-	versionType, err := internal.ParseVersionType(version)
+	versionType, err := version.ParseType(vers)
 	if err != nil {
 		return nil, false, xerrors.Errorf("%v: %w", err, derrors.BadModule)
 	}
 
-	return processZipFile(ctx, modulePath, versionType, version, commitTime, zipReader)
+	return processZipFile(ctx, modulePath, versionType, vers, commitTime, zipReader)
 }
 
 // processZipFile extracts information from the module version zip.
-func processZipFile(ctx context.Context, modulePath string, versionType internal.VersionType, version string, commitTime time.Time, zipReader *zip.Reader) (_ *internal.Version, hasIncompletePackages bool, err error) {
+func processZipFile(ctx context.Context, modulePath string, versionType version.Type, version string, commitTime time.Time, zipReader *zip.Reader) (_ *internal.Version, hasIncompletePackages bool, err error) {
 	defer derrors.Wrap(&err, "processZipFile(%q, %q)", modulePath, version)
 
 	_, span := trace.StartSpan(ctx, "processing zipFile")

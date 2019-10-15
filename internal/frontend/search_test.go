@@ -14,6 +14,7 @@ import (
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/sample"
+	"golang.org/x/discovery/internal/version"
 )
 
 func TestFetchSearchPage(t *testing.T) {
@@ -28,7 +29,7 @@ func TestFetchSearchPage(t *testing.T) {
 				Version:        "v1.0.0",
 				ReadmeContents: []byte("readme"),
 				CommitTime:     now,
-				VersionType:    internal.VersionTypeRelease,
+				VersionType:    version.TypeRelease,
 			},
 			Packages: []*internal.Package{
 				{
@@ -45,7 +46,7 @@ func TestFetchSearchPage(t *testing.T) {
 				Version:        "v1.0.0",
 				ReadmeContents: []byte("readme"),
 				CommitTime:     now,
-				VersionType:    internal.VersionTypeRelease,
+				VersionType:    version.TypeRelease,
 			},
 			Packages: []*internal.Package{
 				{

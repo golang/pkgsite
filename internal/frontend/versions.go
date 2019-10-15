@@ -16,6 +16,7 @@ import (
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/thirdparty/module"
 	"golang.org/x/discovery/internal/thirdparty/semver"
+	"golang.org/x/discovery/internal/version"
 )
 
 // VersionsDetails contains the hierarchy of version summary information used
@@ -273,27 +274,27 @@ func (t *versionTree) forEach(f func(string, *versionTree)) {
 // For pseudo versions, formatVersion uses a short commit hash to identify the
 // version. i.e.
 //   formatVersion("v1.2.3-20190311183353-d8887717615a") = "v.1.2.3 (d888771)"
-func formatVersion(version string) string {
-	vType, err := internal.ParseVersionType(version)
+func formatVersion(v string) string {
+	vType, err := version.ParseType(v)
 	if err != nil {
-		log.Errorf("Error parsing version %q: %v", version, err)
-		return version
+		log.Errorf("Error parsing version %q: %v", v, err)
+		return v
 	}
-	pre := semver.Prerelease(version)
-	base := strings.TrimSuffix(version, pre)
+	pre := semver.Prerelease(v)
+	base := strings.TrimSuffix(v, pre)
 	pre = strings.TrimPrefix(pre, "-")
 	switch vType {
-	case internal.VersionTypePrerelease:
+	case version.TypePrerelease:
 		return fmt.Sprintf("%s (%s)", base, pre)
-	case internal.VersionTypePseudo:
-		rev := pseudoVersionRev(version)
+	case version.TypePseudo:
+		rev := pseudoVersionRev(v)
 		commitLen := 7
 		if len(rev) < commitLen {
 			commitLen = len(rev)
 		}
 		return fmt.Sprintf("%s (%s)", base, rev[0:commitLen])
 	default:
-		return version
+		return v
 	}
 }
 

@@ -20,6 +20,7 @@ import (
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/thirdparty/semver"
+	"golang.org/x/discovery/internal/version"
 	"golang.org/x/xerrors"
 )
 
@@ -356,7 +357,7 @@ func (ds *DataSource) listModuleVersions(ctx context.Context, modulePath string,
 		// In practice, the /list endpoint should only return either pseudo
 		// versions or tagged versions, but we filter here for maximum
 		// compatibility.
-		if internal.IsPseudoVersion(vers) != pseudo {
+		if version.IsPseudo(vers) != pseudo {
 			continue
 		}
 		if v, ok := ds.versionCache[versionKey{modulePath, vers}]; ok {

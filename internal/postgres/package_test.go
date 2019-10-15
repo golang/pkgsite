@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/sample"
+	"golang.org/x/discovery/internal/version"
 )
 
 func TestGetPackage(t *testing.T) {
@@ -20,7 +21,7 @@ func TestGetPackage(t *testing.T) {
 
 	defer ResetTestDB(testDB, t)
 
-	sampleVersion := func(version string, vtype internal.VersionType) *internal.Version {
+	sampleVersion := func(version string, vtype version.Type) *internal.Version {
 		v := sample.Version()
 		v.Version = version
 		v.VersionType = vtype
@@ -37,15 +38,15 @@ func TestGetPackage(t *testing.T) {
 			name: "want latest package to be most recent release version",
 			path: sample.PackagePath,
 			versions: []*internal.Version{
-				sampleVersion("v1.1.0-alpha.1", internal.VersionTypePrerelease),
-				sampleVersion("v1.0.0", internal.VersionTypeRelease),
-				sampleVersion("v1.0.0-20190311183353-d8887717615a", internal.VersionTypePseudo),
+				sampleVersion("v1.1.0-alpha.1", version.TypePrerelease),
+				sampleVersion("v1.0.0", version.TypeRelease),
+				sampleVersion("v1.0.0-20190311183353-d8887717615a", version.TypePseudo),
 			},
 			version: internal.LatestVersion,
 			wantPkg: func() *internal.VersionedPackage {
 				p := sample.VersionedPackage()
 				p.Version = "v1.0.0"
-				p.VersionType = internal.VersionTypeRelease
+				p.VersionType = version.TypeRelease
 				// TODO(b/130367504): GetPackage does not return imports.
 				p.Imports = nil
 				return p
@@ -55,14 +56,14 @@ func TestGetPackage(t *testing.T) {
 			name: "want package for version",
 			path: sample.PackagePath,
 			versions: []*internal.Version{
-				sampleVersion("v1.0.0", internal.VersionTypeRelease),
-				sampleVersion("v1.1.0", internal.VersionTypeRelease),
+				sampleVersion("v1.0.0", version.TypeRelease),
+				sampleVersion("v1.1.0", version.TypeRelease),
 			},
 			version: "v1.1.0",
 			wantPkg: func() *internal.VersionedPackage {
 				p := sample.VersionedPackage()
 				p.Version = "v1.1.0"
-				p.VersionType = internal.VersionTypeRelease
+				p.VersionType = version.TypeRelease
 				// TODO(b/130367504): GetPackage does not return imports.
 				p.Imports = nil
 				return p

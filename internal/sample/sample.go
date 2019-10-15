@@ -12,6 +12,7 @@ import (
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/version"
 )
 
 // These sample values can be used to construct test cases.
@@ -35,7 +36,7 @@ var (
 	Synopsis          = "This is a package synopsis"
 	ReadmeFilePath    = "README.md"
 	ReadmeContents    = []byte("readme")
-	VersionType       = internal.VersionTypeRelease
+	VersionType       = version.TypeRelease
 )
 
 // NowTruncated returns time.Now() truncated to Microsecond precision.

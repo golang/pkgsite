@@ -15,6 +15,7 @@ import (
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/testhelper"
+	"golang.org/x/discovery/internal/version"
 )
 
 func setup(t *testing.T) (context.Context, *DataSource, func()) {
@@ -52,7 +53,7 @@ var (
 		ModulePath:  "foo.com/bar",
 		Version:     "v1.2.0",
 		CommitTime:  time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
-		VersionType: internal.VersionTypeRelease,
+		VersionType: version.TypeRelease,
 	}
 	wantVersionedPackage = &internal.VersionedPackage{
 		VersionInfo: wantVersionInfo,

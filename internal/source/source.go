@@ -31,10 +31,10 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/stdlib"
+	"golang.org/x/discovery/internal/version"
 	"golang.org/x/net/context/ctxhttp"
 )
 
@@ -406,10 +406,10 @@ var (
 // commitFromVersion returns a string that refers to a commit corresponding to version.
 // The string may be a tag, or it may be the hash or similar unique identifier of a commit.
 // The second argument is the module path relative to the repo root.
-func commitFromVersion(version, relativeModulePath string) string {
+func commitFromVersion(vers, relativeModulePath string) string {
 	// Commit for the module: either a sha for pseudoversions, or a tag.
-	v := strings.TrimSuffix(version, "+incompatible")
-	if internal.IsPseudoVersion(v) {
+	v := strings.TrimSuffix(vers, "+incompatible")
+	if version.IsPseudo(v) {
 		// Use the commit hash at the end.
 		return v[strings.LastIndex(v, "-")+1:]
 	} else {

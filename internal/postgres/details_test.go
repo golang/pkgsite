@@ -16,6 +16,7 @@ import (
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/sample"
+	"golang.org/x/discovery/internal/version"
 	"golang.org/x/xerrors"
 )
 
@@ -25,7 +26,7 @@ func TestPostgres_GetVersionInfo_Latest(t *testing.T) {
 
 	defer ResetTestDB(testDB, t)
 
-	sampleVersion := func(path, version string, vtype internal.VersionType) *internal.Version {
+	sampleVersion := func(path, version string, vtype version.Type) *internal.Version {
 		v := sample.Version()
 		v.ModulePath = path
 		v.Version = version
@@ -43,9 +44,9 @@ func TestPostgres_GetVersionInfo_Latest(t *testing.T) {
 			name: "largest release",
 			path: "mod1",
 			versions: []*internal.Version{
-				sampleVersion("mod1", "v1.1.0-alpha.1", internal.VersionTypePrerelease),
-				sampleVersion("mod1", "v1.0.0", internal.VersionTypeRelease),
-				sampleVersion("mod1", "v1.0.0-20190311183353-d8887717615a", internal.VersionTypePseudo),
+				sampleVersion("mod1", "v1.1.0-alpha.1", version.TypePrerelease),
+				sampleVersion("mod1", "v1.0.0", version.TypeRelease),
+				sampleVersion("mod1", "v1.0.0-20190311183353-d8887717615a", version.TypePseudo),
 			},
 			wantIndex: 1,
 		},
@@ -53,9 +54,9 @@ func TestPostgres_GetVersionInfo_Latest(t *testing.T) {
 			name: "largest prerelease",
 			path: "mod2",
 			versions: []*internal.Version{
-				sampleVersion("mod2", "v1.1.0-beta.10", internal.VersionTypePrerelease),
-				sampleVersion("mod2", "v1.1.0-beta.2", internal.VersionTypePrerelease),
-				sampleVersion("mod2", "v1.0.0-20190311183353-d8887717615a", internal.VersionTypePseudo),
+				sampleVersion("mod2", "v1.1.0-beta.10", version.TypePrerelease),
+				sampleVersion("mod2", "v1.1.0-beta.2", version.TypePrerelease),
+				sampleVersion("mod2", "v1.0.0-20190311183353-d8887717615a", version.TypePseudo),
 			},
 			wantIndex: 0,
 		},
@@ -279,7 +280,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 				v := sampleVersion(modulePath1, pseudo, "bar")
 				// TODO: move this handling into SimpleVersion once ParseVersionType is
 				// factored out of fetch.go
-				v.VersionType = internal.VersionTypePseudo
+				v.VersionType = version.TypePseudo
 				if err := testDB.saveVersion(ctx, v); err != nil {
 					t.Fatal(err)
 				}

@@ -13,6 +13,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/sample"
+	"golang.org/x/discovery/internal/version"
 )
 
 func TestFetchOverviewDetails(t *testing.T) {
@@ -135,7 +136,7 @@ func TestReadmeHTML(t *testing.T) {
 				ReadmeFilePath: "README.md",
 				ReadmeContents: []byte("![Go logo](doc/logo.png)"),
 				Version:        "v1.12.0",
-				VersionType:    internal.VersionTypeRelease,
+				VersionType:    version.TypeRelease,
 				RepositoryURL:  "http://github.com/golang/go",
 				ModulePath:     "std",
 			},
@@ -147,7 +148,7 @@ func TestReadmeHTML(t *testing.T) {
 				ReadmeFilePath: "README.md",
 				ReadmeContents: []byte("![Hugo logo](doc/logo.png)"),
 				Version:        "v0.56.3",
-				VersionType:    internal.VersionTypeRelease,
+				VersionType:    version.TypeRelease,
 				RepositoryURL:  "http://github.com/gohugoio/hugo",
 			},
 			want: template.HTML("<p><img src=\"https://raw.githubusercontent.com/gohugoio/hugo/v0.56.3/doc/logo.png\" alt=\"Hugo logo\"/></p>\n"),
@@ -158,7 +159,7 @@ func TestReadmeHTML(t *testing.T) {
 				ReadmeFilePath: "README.md",
 				ReadmeContents: []byte("![Hugo logo](doc/logo.png)"),
 				Version:        "v0.56.3-pre",
-				VersionType:    internal.VersionTypePrerelease,
+				VersionType:    version.TypePrerelease,
 				RepositoryURL:  "http://github.com/gohugoio/hugo",
 			},
 			want: template.HTML("<p><img src=\"https://raw.githubusercontent.com/gohugoio/hugo/v0.56.3-pre/doc/logo.png\" alt=\"Hugo logo\"/></p>\n"),
@@ -170,7 +171,7 @@ func TestReadmeHTML(t *testing.T) {
 				ReadmeContents: []byte("![Go logo](doc/logo.png)"),
 				Version:        "v0.0.0-20190306220234-b354f8bf4d9e",
 				RepositoryURL:  "http://github.com/golang/sys",
-				VersionType:    internal.VersionTypePseudo,
+				VersionType:    version.TypePseudo,
 			},
 			want: template.HTML("<p><img src=\"https://raw.githubusercontent.com/golang/sys/b354f8bf4d9e/doc/logo.png\" alt=\"Go logo\"/></p>\n"),
 		},
