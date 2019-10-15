@@ -71,12 +71,6 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// 	// See the note about duplicate tasks for "/requeue" below.
 	handle("/poll-and-queue", http.HandlerFunc(s.handleIndexAndQueue))
 
-	// cloud-scheduler: refresh-search is used to refresh data in mvw_search_documents. This
-	// is in the process of being deprecated in favor of using
-	// search_documents for storing search data (b/136674524).
-	// This endpoint is invoked by a Cloud Scheduler job:
-	// 	handle("/refresh-search", http.HandlerFunc(s.handleRefreshSearch))
-
 	// cloud-scheduler: update-imported-by-count updates the imported_by_count for packages
 	// in search_documents where imported_by_count_updated_at is null or
 	// imported_by_count_updated_at < version_updated_at.
@@ -226,14 +220,6 @@ func parseModulePathAndVersion(requestPath string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func (s *Server) handleRefreshSearch(w http.ResponseWriter, r *http.Request) {
-	if err := s.db.RefreshSearchDocuments(r.Context()); err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		log.Error(err)
-		return
-	}
-}
-
 func (s *Server) handleIndexAndQueue(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	limit := parseIntParam(r, "limit", 10)
@@ -327,9 +313,13 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (string, e
 		return "error fetching stats", err
 	}
 	page := struct {
+		Project                      string
+		ServicePrefix                string
 		Stats                        *postgres.VersionStats
 		Next, Recent, RecentFailures []*internal.VersionState
 	}{
+		Project:        "go-discovery",
+		ServicePrefix:  strings.TrimSuffix(config.ServiceID(), "etl"),
 		Stats:          stats,
 		Next:           next,
 		Recent:         recents,

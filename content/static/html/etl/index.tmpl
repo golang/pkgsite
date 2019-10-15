@@ -24,7 +24,7 @@
 			<td>{{.ModulePath}}/@v/{{.Version}}</td>
 			<td>{{.IndexTimestamp | timefmt}}</td>
 			<td>{{.Status}}</td>
-			<td>{{.Error | truncate 300}}</td>
+			<td>{{.Error | truncate 500}}</td>
 			<td>{{.TryCount}}</td>
 			<td>{{.LastProcessedAt | timefmt}}</td>
 			<td>{{.NextProcessedAfter | timefmt}}</td>
@@ -92,6 +92,21 @@ td {
 
 <p>All times in America/New_York.</p>
 
+<p>
+  <a href="https://cloud.google.com/console/cloudtasks/queue/{{.ServicePrefix}}fetch-tasks?project={{.Project}}"
+	target="_blank" rel="noreferrer">
+     Task Queue
+  </a> |
+  <a href="https://cloud.google.com/console/cloudscheduler?project={{.Project}}"
+	target="_blank" rel="noreferrer">
+     Scheduler
+  </a> |
+  <a href="https://cloud.google.com/console/logs/viewer?project={{.Project}}&resource=gae_app%2Fmodule_id%2F{{.ServicePrefix}}etl"
+	target="_blank" rel="noreferrer">
+     Logs (switch to "All Logs" when you get there)
+  </a>
+</p>
+
 <div class="actions">
 	<form action="/poll-and-queue" method="post" name="queueForm">
 		<button title="Poll the module index for up to 2000 new versions, and enqueue them for processing."
@@ -111,11 +126,6 @@ td {
 		<input type="text" name="app_version">
 		<output name="result"></output>
 		<a href="">GAE Versions</a>
-	</form>
-	<form action="/refresh-search" method="post" name="searchRefreshForm">
-		<button title="Refresh the search materialized view in Postgres."
-      onclick="submitForm('searchRefreshForm', false); return false">Refresh Materialized View</button>
-		<output name="result"></output>
 	</form>
 	<form action="/populate-stdlib" method="post" name="populateStdlibForm">
 		<button title="Populates the database with all supported versions of the Go standard library."
