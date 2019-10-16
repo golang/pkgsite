@@ -97,7 +97,9 @@ func translateRelativeLink(node *blackfriday.Node, vi *internal.VersionInfo) {
 	if err != nil || imageURL.IsAbs() {
 		return
 	}
-	rawURL := vi.SourceInfo.RawURL(path.Clean(imageURL.Path))
+	// Paths are relative to the README location.
+	imagePath := path.Join(path.Dir(vi.ReadmeFilePath), path.Clean(imageURL.Path))
+	rawURL := vi.SourceInfo.RawURL(imagePath)
 	if rawURL != "" {
 		node.LinkData.Destination = []byte(rawURL)
 	}
