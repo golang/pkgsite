@@ -40,8 +40,7 @@ func BenchmarkSearch(b *testing.B) {
 		b.Fatal(err)
 	}
 	searchers := map[string]func(context.Context, string, int, int) ([]*SearchResult, error){
-		"db.LegacySearch": db.LegacySearch,
-		"db.Search":       db.Search,
+		"db.Search": db.Search,
 	}
 	for name, search := range searchers {
 		for _, query := range testQueries {

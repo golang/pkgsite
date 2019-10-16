@@ -95,7 +95,6 @@ type DataSource interface {
 
 	// Alternative search types, for testing.
 	// TODO(b/141182438): remove all of these.
-	LegacySearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
 	Search(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
 	DeepSearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
 	PartialFastSearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)

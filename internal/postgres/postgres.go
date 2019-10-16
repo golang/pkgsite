@@ -174,26 +174,6 @@ func (db *DB) Transact(txFunc func(*sql.Tx) error) (err error) {
 	return nil
 }
 
-// prepareAndExec prepares a query statement and executes it insde the provided
-// transaction.
-func prepareAndExec(tx *sql.Tx, query string, stmtFunc func(*sql.Stmt) error) (err error) {
-	stmt, err := tx.Prepare(query)
-	if err != nil {
-		return fmt.Errorf("tx.Prepare(%q): %v", query, err)
-	}
-
-	defer func() {
-		cerr := stmt.Close()
-		if err == nil {
-			err = cerr
-		}
-	}()
-	if err := stmtFunc(stmt); err != nil {
-		return fmt.Errorf("stmtFunc(stmt): %v", err)
-	}
-	return nil
-}
-
 const onConflictDoNothing = "ON CONFLICT DO NOTHING"
 
 // bulkInsert constructs and executes a multi-value insert statement. The

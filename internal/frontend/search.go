@@ -51,8 +51,6 @@ func fetchSearchPage(ctx context.Context, ds DataSource, query, method string, p
 		err       error
 	)
 	switch method {
-	case "legacy":
-		dbresults, err = ds.LegacySearch(ctx, query, pageParams.limit, pageParams.offset())
 	case "slow":
 		dbresults, err = ds.Search(ctx, query, pageParams.limit, pageParams.offset())
 	case "deep":

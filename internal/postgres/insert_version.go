@@ -42,9 +42,6 @@ func (db *DB) InsertVersion(ctx context.Context, version *internal.Version) (err
 	if err := db.saveVersion(ctx, version); err != nil {
 		return err
 	}
-	if err := db.legacyInsertDocuments(ctx, version); err != nil {
-		return err
-	}
 	for _, pkg := range version.Packages {
 		if err := db.UpsertSearchDocument(ctx, pkg.Path); err != nil && !xerrors.Is(err, derrors.InvalidArgument) {
 			return err

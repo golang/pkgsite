@@ -80,10 +80,6 @@ func TestServer(t *testing.T) {
 	cmdGo.Path = "cmd/go"
 	mustInsertVersion(stdlib.ModulePath, "v1.13.0", []*internal.Package{cmdGo})
 
-	if err := testDB.RefreshSearchDocuments(ctx); err != nil {
-		t.Fatal(err)
-	}
-
 	s, err := NewServer(testDB, "../../content/static", false)
 	if err != nil {
 		t.Fatalf("NewServer: %v", err)

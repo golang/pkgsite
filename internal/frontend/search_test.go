@@ -128,9 +128,6 @@ func TestFetchSearchPage(t *testing.T) {
 				if err := testDB.InsertVersion(ctx, v); err != nil {
 					t.Fatal(err)
 				}
-				if err := testDB.RefreshSearchDocuments(ctx); err != nil {
-					t.Fatal(err)
-				}
 			}
 
 			got, err := fetchSearchPage(ctx, testDB, tc.query, "", paginationParams{limit: 20, page: 1})
