@@ -223,7 +223,6 @@ func TestReFetch(t *testing.T) {
 			ReadmeFilePath: "README.md",
 			ReadmeContents: []byte("This is another readme"),
 			VersionType:    "release",
-			RepositoryURL:  "https://github.com/my/module",
 			SourceInfo:     source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
 		},
 		Package: internal.Package{
@@ -351,7 +350,6 @@ func TestFetchVersion(t *testing.T) {
 		ReadmeFilePath: "README.md",
 		ReadmeContents: []byte("THIS IS A README"),
 		VersionType:    version.TypeRelease,
-		RepositoryURL:  "https://github.com/my/module",
 		SourceInfo:     source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
 	}
 	wantLicenses := []*license.License{
@@ -452,7 +450,6 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			CommitTime:     testProxyCommitTime,
 			ReadmeFilePath: "README.md",
 			ReadmeContents: []byte("README FILE FOR TESTING."),
-			RepositoryURL:  "https://github.com/my/module",
 			SourceInfo:     source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
 			VersionType:    "release",
 		},
@@ -559,7 +556,6 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					VersionType:    "release",
 					ReadmeFilePath: "README.md",
 					ReadmeContents: []byte("# The Go Programming Language\n"),
-					RepositoryURL:  goRepositoryURLPrefix + "/go",
 					SourceInfo:     source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
 				},
 				Package: internal.Package{
@@ -590,7 +586,6 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					VersionType:    "release",
 					ReadmeFilePath: "README.md",
 					ReadmeContents: []byte("# The Go Programming Language\n"),
-					RepositoryURL:  goRepositoryURLPrefix + "/go",
 					SourceInfo:     source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
 				},
 				Package: internal.Package{

@@ -56,7 +56,6 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, version string) (_ *int
 			nullIsEmpty(&pkg.VCSType), sourceInfoScanner{&pkg.SourceInfo}); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
-		pkg.RepositoryURL = pkg.SourceInfo.RepoURL()
 		lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
 		if err != nil {
 			return err

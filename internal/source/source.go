@@ -93,6 +93,9 @@ func (i *Info) LineURL(pathname string, line int) string {
 // module's home directory. In addition to the usual variables, it supports
 // {repoPath}, which is the repo URL's path.
 func (i *Info) RawURL(pathname string) string {
+	if i == nil {
+		return ""
+	}
 	// Some templates don't support raw content serving.
 	if i.templates.Raw == "" {
 		return ""
@@ -527,7 +530,7 @@ func expand(s string, match map[string]string) string {
 	return strings.NewReplacer(oldNew...).Replace(s)
 }
 
-// NewGitHubSourceInfo creates a source.Info with GitHub URL templates.
+// NewGitHubInfo creates a source.Info with GitHub URL templates.
 // It is for testing only.
 func NewGitHubInfo(repoURL, moduleDir, commit string) *Info {
 	return &Info{
@@ -535,5 +538,16 @@ func NewGitHubInfo(repoURL, moduleDir, commit string) *Info {
 		moduleDir: moduleDir,
 		commit:    commit,
 		templates: githubURLTemplates,
+	}
+}
+
+// NewGitLabInfo creates a source.Info with GitHub URL templates.
+// It is for testing only.
+func NewGitLabInfo(repoURL, moduleDir, commit string) *Info {
+	return &Info{
+		repoURL:   repoURL,
+		moduleDir: moduleDir,
+		commit:    commit,
+		templates: gitlabURLTemplates,
 	}
 }

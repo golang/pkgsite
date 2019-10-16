@@ -72,7 +72,6 @@ func VersionInfo() *internal.VersionInfo {
 		CommitTime:     CommitTime,
 		VersionType:    VersionType,
 		VCSType:        VCSType,
-		RepositoryURL:  RepositoryURL,
 		SourceInfo:     source.NewGitHubInfo(RepositoryURL, "", ""),
 	}
 }

@@ -222,7 +222,6 @@ func processZipFile(ctx context.Context, modulePath string, versionType version.
 			ReadmeFilePath: readmeFilePath,
 			ReadmeContents: readmeContents,
 			VersionType:    versionType,
-			RepositoryURL:  sourceInfo.RepoURL(),
 			SourceInfo:     sourceInfo,
 		},
 		Packages: packages,

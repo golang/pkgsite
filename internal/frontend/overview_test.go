@@ -13,6 +13,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/sample"
+	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/version"
 )
 
@@ -99,7 +100,7 @@ func TestReadmeHTML(t *testing.T) {
 			vi: &internal.VersionInfo{
 				ReadmeFilePath: "README.md",
 				ReadmeContents: []byte("![Go logo](doc/logo.png)"),
-				RepositoryURL:  "http://github.com/golang/go",
+				SourceInfo:     source.NewGitHubInfo("http://github.com/golang/go", "", "master"),
 			},
 			want: template.HTML("<p><img src=\"https://raw.githubusercontent.com/golang/go/master/doc/logo.png\" alt=\"Go logo\"/></p>\n"),
 		},
@@ -108,72 +109,28 @@ func TestReadmeHTML(t *testing.T) {
 			vi: &internal.VersionInfo{
 				ReadmeFilePath: "README.md",
 				ReadmeContents: []byte("![Gitaly benchmark timings.](doc/img/rugged-new-timings.png)"),
-				RepositoryURL:  "http://gitlab.com/gitlab-org/gitaly",
+				SourceInfo:     source.NewGitLabInfo("http://gitlab.com/gitlab-org/gitaly", "", "v1.0.0"),
 			},
-			want: template.HTML("<p><img src=\"https://gitlab.com/gitlab-org/gitaly/raw/master/doc/img/rugged-new-timings.png\" alt=\"Gitaly benchmark timings.\"/></p>\n"),
+			want: template.HTML("<p><img src=\"http://gitlab.com/gitlab-org/gitaly/raw/v1.0.0/doc/img/rugged-new-timings.png\" alt=\"Gitaly benchmark timings.\"/></p>\n"),
 		},
 		{
 			name: "relative image markdown is left alone for unknown origins",
 			vi: &internal.VersionInfo{
 				ReadmeFilePath: "README.md",
 				ReadmeContents: []byte("![Go logo](doc/logo.png)"),
-				RepositoryURL:  "http://example.com/golang/go",
 			},
 			want: template.HTML("<p><img src=\"doc/logo.png\" alt=\"Go logo\"/></p>\n"),
 		},
 		{
-			name: "valid markdown readme, invalid repositoryURL",
-			vi: &internal.VersionInfo{
-				ReadmeFilePath: "README.md",
-				ReadmeContents: []byte("![Go logo](doc/logo.png)"),
-				RepositoryURL:  ":",
-			},
-			want: template.HTML("<p><img src=\"doc/logo.png\" alt=\"Go logo\"/></p>\n"),
-		},
-		{
-			name: "go module versions are converted to go release tags",
-			vi: &internal.VersionInfo{
-				ReadmeFilePath: "README.md",
-				ReadmeContents: []byte("![Go logo](doc/logo.png)"),
-				Version:        "v1.12.0",
-				VersionType:    version.TypeRelease,
-				RepositoryURL:  "http://github.com/golang/go",
-				ModulePath:     "std",
-			},
-			want: template.HTML("<p><img src=\"https://raw.githubusercontent.com/golang/go/go1.12/doc/logo.png\" alt=\"Go logo\"/></p>\n"),
-		},
-		{
-			name: "module release versions are referenced in relative images",
+			name: "module versions are referenced in relative images",
 			vi: &internal.VersionInfo{
 				ReadmeFilePath: "README.md",
 				ReadmeContents: []byte("![Hugo logo](doc/logo.png)"),
 				Version:        "v0.56.3",
 				VersionType:    version.TypeRelease,
-				RepositoryURL:  "http://github.com/gohugoio/hugo",
+				SourceInfo:     source.NewGitHubInfo("http://github.com/gohugoio/hugo", "", "v0.56.3"),
 			},
 			want: template.HTML("<p><img src=\"https://raw.githubusercontent.com/gohugoio/hugo/v0.56.3/doc/logo.png\" alt=\"Hugo logo\"/></p>\n"),
-		},
-		{
-			name: "module prerelease versions are referenced in relative images",
-			vi: &internal.VersionInfo{
-				ReadmeFilePath: "README.md",
-				ReadmeContents: []byte("![Hugo logo](doc/logo.png)"),
-				Version:        "v0.56.3-pre",
-				VersionType:    version.TypePrerelease,
-				RepositoryURL:  "http://github.com/gohugoio/hugo",
-			},
-			want: template.HTML("<p><img src=\"https://raw.githubusercontent.com/gohugoio/hugo/v0.56.3-pre/doc/logo.png\" alt=\"Hugo logo\"/></p>\n"),
-		},
-		{
-			name: "module pseudoversions are converted to git refs in relative images",
-			vi: &internal.VersionInfo{
-				ReadmeFilePath: "README.md",
-				ReadmeContents: []byte("![Go logo](doc/logo.png)"),
-				Version:        "v0.0.0-20190306220234-b354f8bf4d9e",
-				RepositoryURL:  "http://github.com/golang/sys",
-				VersionType:    version.TypePseudo,
-			},
-			want: template.HTML("<p><img src=\"https://raw.githubusercontent.com/golang/sys/b354f8bf4d9e/doc/logo.png\" alt=\"Go logo\"/></p>\n"),
 		},
 	}
 

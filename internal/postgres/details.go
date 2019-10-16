@@ -481,7 +481,6 @@ func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version str
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
-	vi.RepositoryURL = vi.SourceInfo.RepoURL()
 	return &vi, nil
 }
 

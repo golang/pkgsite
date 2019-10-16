@@ -26,7 +26,6 @@ type VersionInfo struct {
 	ReadmeContents []byte
 	VersionType    version.Type
 	VCSType        string
-	RepositoryURL  string
 	SourceInfo     *source.Info
 }
 

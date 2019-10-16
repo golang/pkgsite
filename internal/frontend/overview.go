@@ -13,14 +13,11 @@ import (
 	"net/url"
 	"path"
 	"path/filepath"
-	"strings"
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/stdlib"
-	"golang.org/x/discovery/internal/version"
 )
 
 // OverviewDetails contains all of the data that the readme template
@@ -44,7 +41,7 @@ func fetchOverviewDetails(ctx context.Context, ds DataSource, vi *internal.Versi
 	return &OverviewDetails{
 		ModulePath:    vi.ModulePath,
 		NumPackages:   len(pkgs),
-		RepositoryURL: vi.RepositoryURL,
+		RepositoryURL: vi.SourceInfo.RepoURL(),
 		ReadMeSource:  fileSource(vi.ModulePath, vi.Version, vi.ReadmeFilePath),
 		ReadMe:        readmeHTML(vi),
 	}, nil
@@ -96,37 +93,12 @@ func readmeHTML(vi *internal.VersionInfo) template.HTML {
 // full repository content, in order for the image to render, we need to
 // convert the relative path to an absolute URL to a hosted image.
 func translateRelativeLink(node *blackfriday.Node, vi *internal.VersionInfo) {
-	repo, err := url.Parse(vi.RepositoryURL)
-	if err != nil {
-		return
-	}
 	imageURL, err := url.Parse(string(node.LinkData.Destination))
 	if err != nil || imageURL.IsAbs() {
 		return
 	}
-	ref := "master"
-	switch vi.VersionType {
-	case version.TypeRelease, version.TypePrerelease:
-		ref = vi.Version
-		if vi.ModulePath == stdlib.ModulePath {
-			ref, err = stdlib.TagForVersion(ref)
-			if err != nil {
-				ref = "master"
-			}
-		}
-	case version.TypePseudo:
-		if segs := strings.SplitAfter(vi.Version, "-"); len(segs) != 0 {
-			ref = segs[len(segs)-1]
-		}
+	rawURL := vi.SourceInfo.RawURL(path.Clean(imageURL.Path))
+	if rawURL != "" {
+		node.LinkData.Destination = []byte(rawURL)
 	}
-	var abs *url.URL
-	switch repo.Hostname() {
-	case "github.com":
-		abs = &url.URL{Scheme: "https", Host: "raw.githubusercontent.com", Path: path.Join(repo.Path, ref, path.Clean(imageURL.Path))}
-	case "gitlab.com":
-		abs = &url.URL{Scheme: "https", Host: "gitlab.com", Path: path.Join(repo.Path, "raw", ref, path.Clean(imageURL.Path))}
-	default:
-		return
-	}
-	node.LinkData.Destination = []byte(abs.String())
 }

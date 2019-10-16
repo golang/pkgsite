@@ -123,7 +123,6 @@ func (db *DB) getPackage(ctx context.Context, pkgPath, version, modulePath strin
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
-	pkg.RepositoryURL = pkg.SourceInfo.RepoURL()
 	lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
 	if err != nil {
 		return nil, err
