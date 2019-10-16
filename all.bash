@@ -121,7 +121,7 @@ run_go_mod_tidy() {
 
 # run_go_test runs our main set of go tests.
 run_go_test() {
-  runcmd go test -count=1 $@ ./...
+  runcmd go test $@ ./...
 }
 
 # run_go_test_secrets runs tests on the internal/secrets package, which must
@@ -184,7 +184,7 @@ main() {
       # Similar to the no-arg mode, but omit actions that require GCP
       # permissions or that don't test the code.
       standard_linters
-      run_go_test -race
+      run_go_test -race -count=1
       ;;
     test) run_tests ;;
     tidy) run_go_mod_tidy ;;
