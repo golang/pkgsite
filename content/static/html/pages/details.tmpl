@@ -53,8 +53,17 @@
     <ul class="DetailsNav-list" role="tablist">
       {{range .Tabs}}
         <li class="DetailsNav-tab{{if eq .Name $.Settings.Name}} selected{{end}}" role="presentation">
-          <a class="DetailsNav-link" href="{{$header.URL}}?tab={{.Name}}" role="tab" aria-selected="{{if eq .Name $.Settings.Name}}true{{else}}false{{end}}">
-            {{.DisplayName}}
+          {{if eq .Name $.Settings.Name}}
+            <a class="DetailsNav-link"
+               role="tab"
+               aria-selected="true">
+          {{else}}
+            <a class="DetailsNav-link"
+               href="{{$header.URL}}?tab={{.Name}}"
+               role="tab"
+               aria-selected="false">
+          {{end}}
+          {{.DisplayName}}
           </a>
         </li>
       {{end}}
