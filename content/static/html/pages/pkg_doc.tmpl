@@ -5,7 +5,9 @@
 -->
 
 {{define "details_content"}}
-  <div class="Documentation">
-    {{.Documentation}}
-  </div>
+  {{with .Documentation}}
+    <div class="Documentation">{{.}}</div>
+  {{else}}
+    {{template "empty_content" "No documentation available for this package!"}}
+  {{end}}
 {{end}}

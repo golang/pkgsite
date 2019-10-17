@@ -26,12 +26,16 @@
 
 {{define "details_content"}}
   <div class="Versions">
-    {{if .OtherModules}}
-      <h2>Versions in this module</h2>
-    {{end}}
-    {{template "module_list" .ThisModule}}
-    {{if .OtherModules}}
-      <h2>Other modules containing this package</h2>
-      {{template "module_list" .OtherModules}}
+    {{if or .OtherModules .ThisModule}}
+      {{if .OtherModules}}
+        <h2>Versions in this module</h2>
+      {{end}}
+      {{template "module_list" .ThisModule}}
+      {{if .OtherModules}}
+        <h2>Other modules containing this package</h2>
+        {{template "module_list" .OtherModules}}
+      {{end}}
+    {{else}}
+      {{template "empty_content" "No other known versions of this package!"}}
     {{end}}
 {{end}}
