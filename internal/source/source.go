@@ -63,6 +63,9 @@ func (i *Info) ModuleURL() string {
 
 // DirectoryURL returns a URL for a directory relative to the module's home directory.
 func (i *Info) DirectoryURL(dir string) string {
+	if i == nil {
+		return ""
+	}
 	return strings.TrimSuffix(expand(i.templates.Directory, map[string]string{
 		"repo":   i.repoURL,
 		"commit": i.commit,
@@ -72,6 +75,9 @@ func (i *Info) DirectoryURL(dir string) string {
 
 // FileURL returns a URL for a file whose pathname is relative to the module's home directory.
 func (i *Info) FileURL(pathname string) string {
+	if i == nil {
+		return ""
+	}
 	return expand(i.templates.File, map[string]string{
 		"repo":   i.repoURL,
 		"commit": i.commit,
@@ -81,6 +87,9 @@ func (i *Info) FileURL(pathname string) string {
 
 // LineURL returns a URL referring to a line in a file relative to the module's home directory.
 func (i *Info) LineURL(pathname string, line int) string {
+	if i == nil {
+		return ""
+	}
 	return expand(i.templates.Line, map[string]string{
 		"repo":   i.repoURL,
 		"commit": i.commit,

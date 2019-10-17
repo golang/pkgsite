@@ -133,7 +133,7 @@ func TestReadmeHTML(t *testing.T) {
 			want: template.HTML("<p><img src=\"https://raw.githubusercontent.com/gohugoio/hugo/v0.56.3/doc/logo.png\" alt=\"Hugo logo\"/></p>\n"),
 		},
 		{
-			name: "URLs relative to README directory",
+			name: "image URLs relative to README directory",
 			vi: &internal.VersionInfo{
 				ReadmeFilePath: "dir/sub/README.md",
 				ReadmeContents: []byte("![alt](img/thing.png)"),
@@ -142,6 +142,17 @@ func TestReadmeHTML(t *testing.T) {
 				SourceInfo:     source.NewGitHubInfo("https://github.com/some/repo", "", "v1.2.3"),
 			},
 			want: template.HTML(`<p><img src="https://raw.githubusercontent.com/some/repo/v1.2.3/dir/sub/img/thing.png" alt="alt"/></p>` + "\n"),
+		},
+		{
+			name: "non-image links relative to README directory",
+			vi: &internal.VersionInfo{
+				ReadmeFilePath: "dir/sub/README.md",
+				ReadmeContents: []byte("[something](doc/thing.md)"),
+				Version:        "v1.2.3",
+				VersionType:    version.TypeRelease,
+				SourceInfo:     source.NewGitHubInfo("https://github.com/some/repo", "", "v1.2.3"),
+			},
+			want: template.HTML(`<p><a href="https://github.com/some/repo/blob/v1.2.3/dir/sub/doc/thing.md" rel="nofollow">something</a></p>` + "\n"),
 		},
 	}
 	for _, tc := range testCases {

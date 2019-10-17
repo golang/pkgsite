@@ -77,7 +77,7 @@ func readmeHTML(vi *internal.VersionInfo) template.HTML {
 	b := &bytes.Buffer{}
 	rootNode := parser.Parse(vi.ReadmeContents)
 	rootNode.Walk(func(node *blackfriday.Node, entering bool) blackfriday.WalkStatus {
-		if node.Type == blackfriday.Image {
+		if node.Type == blackfriday.Image || node.Type == blackfriday.Link {
 			translateRelativeLink(node, vi)
 		}
 		return renderer.RenderNode(b, node, entering)
@@ -93,14 +93,19 @@ func readmeHTML(vi *internal.VersionInfo) template.HTML {
 // full repository content, in order for the image to render, we need to
 // convert the relative path to an absolute URL to a hosted image.
 func translateRelativeLink(node *blackfriday.Node, vi *internal.VersionInfo) {
-	imageURL, err := url.Parse(string(node.LinkData.Destination))
-	if err != nil || imageURL.IsAbs() {
+	destURL, err := url.Parse(string(node.LinkData.Destination))
+	if err != nil || destURL.IsAbs() {
 		return
 	}
 	// Paths are relative to the README location.
-	imagePath := path.Join(path.Dir(vi.ReadmeFilePath), path.Clean(imageURL.Path))
-	rawURL := vi.SourceInfo.RawURL(imagePath)
-	if rawURL != "" {
-		node.LinkData.Destination = []byte(rawURL)
+	destPath := path.Join(path.Dir(vi.ReadmeFilePath), path.Clean(destURL.Path))
+	var newURL string
+	if node.Type == blackfriday.Image {
+		newURL = vi.SourceInfo.RawURL(destPath)
+	} else {
+		newURL = vi.SourceInfo.FileURL(destPath)
+	}
+	if newURL != "" {
+		node.LinkData.Destination = []byte(newURL)
 	}
 }
