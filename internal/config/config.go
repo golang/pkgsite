@@ -76,6 +76,16 @@ func LocationID() string {
 	return cfg.LocationID
 }
 
+// RedisHost returns the hostname or IP address of the redis instance.
+func RedisHost() string {
+	return cfg.RedisHost
+}
+
+// RedisPort returns the port of the redis instance.
+func RedisPort() string {
+	return cfg.RedisPort
+}
+
 // AppVersionLabel returns the version label for the current instance.  This is
 // the AppVersionID available, otherwise a string constructed using the
 // timestamp of process start.
@@ -166,6 +176,9 @@ type config struct {
 
 	DBSecret, DBUser, DBHost, DBPort, DBName string
 
+	// Redis related configuration.
+	RedisHost, RedisPort string
+
 	DBPassword string `json:"-"`
 }
 
@@ -247,6 +260,10 @@ func Init(ctx context.Context) (err error) {
 			return fmt.Errorf("could not get database password secret: %v", err)
 		}
 	}
+
+	cfg.RedisHost = os.Getenv("GO_DISCOVERY_REDIS_HOST")
+	cfg.RedisPort = GetEnv("GO_DISOCVERY_REDIS_PORT", "6379")
+
 	return nil
 }
 

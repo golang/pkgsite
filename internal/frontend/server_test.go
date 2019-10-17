@@ -36,7 +36,7 @@ func TestHTMLInjection(t *testing.T) {
 		t.Fatalf("NewServer: %v", err)
 	}
 	mux := http.NewServeMux()
-	s.Install(mux.Handle)
+	s.Install(mux.Handle, nil)
 
 	w := httptest.NewRecorder()
 	mux.ServeHTTP(w, httptest.NewRequest("GET", "/<em>UHOH</em>", nil))
@@ -85,7 +85,7 @@ func TestServer(t *testing.T) {
 		t.Fatalf("NewServer: %v", err)
 	}
 	mux := http.NewServeMux()
-	s.Install(mux.Handle)
+	s.Install(mux.Handle, nil)
 
 	type header struct {
 		// suffix is not used for the module header.
@@ -441,7 +441,7 @@ func TestServerErrors(t *testing.T) {
 		t.Fatalf("NewServer: %v", err)
 	}
 	mux := http.NewServeMux()
-	s.Install(mux.Handle)
+	s.Install(mux.Handle, nil)
 
 	w := httptest.NewRecorder()
 	mux.ServeHTTP(w, httptest.NewRequest("GET", "/invalid-page", nil))

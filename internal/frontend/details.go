@@ -268,6 +268,7 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 func fetchPackageOrModule(ctx context.Context, ds DataSource, namespace, path, version string, get func(v string) error) (code int, _ *errorPage) {
 	excluded, err := ds.IsExcluded(ctx, path)
 	if err != nil {
+		log.Errorf("error checking excluded path: %v", err)
 		return http.StatusInternalServerError, nil
 	}
 	if excluded {

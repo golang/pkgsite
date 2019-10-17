@@ -15,6 +15,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/go-redis/redis/v7"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/license"
@@ -125,19 +126,30 @@ func NewServer(ds DataSource, staticPath string, reloadTemplates bool) (*Server,
 }
 
 // Install registers server routes using the given handler registration func.
-func (s *Server) Install(handle func(string, http.Handler)) {
+func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.Client) {
+	var (
+		modHandler    http.Handler = http.HandlerFunc(s.handleModuleDetails)
+		detailHandler http.Handler = http.HandlerFunc(s.handleDetails)
+		searchHandler http.Handler = http.HandlerFunc(s.handleSearch)
+	)
+	// TODO: uncomment this once the middleware is tested.
+	// if redisClient != nil {
+	// 	modHandler = middleware.Cache("module-details", redisClient, 10*time.Minute)(modHandler)
+	// 	detailHandler = middleware.Cache("package-details", redisClient, 10*time.Minute)(detailHandler)
+	// 	searchHandler = middleware.Cache("search", redisClient, 10*time.Minute)(searchHandler)
+	// }
 	handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(s.staticPath))))
 	handle("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(s.staticPath)))
 	}))
-	handle("/mod/", http.HandlerFunc(s.handleModuleDetails))
+	handle("/mod/", modHandler)
 	handle("/pkg/", http.HandlerFunc(s.legacyHandlePackageDetails))
-	handle("/search", http.HandlerFunc(s.handleSearch))
+	handle("/search", searchHandler)
 	handle("/search-help", s.staticPageHandler("search_help.tmpl", "Search Help - Go Discovery"))
 	handle("/license-policy", s.licensePolicyHandler())
 	handle("/copyright", s.staticPageHandler("copyright.tmpl", "Copyright - Go Discovery"))
 	handle("/tos", s.staticPageHandler("tos.tmpl", "Terms of Service - Go Discovery"))
-	handle("/", http.HandlerFunc(s.handleDetails))
+	handle("/", detailHandler)
 }
 
 // TagRoute categorizes incoming requests to the frontend for use in

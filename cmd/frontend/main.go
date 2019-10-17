@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"contrib.go.opencensus.io/integrations/ocsql"
+	"github.com/go-redis/redis/v7"
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/dcensus"
 	"golang.org/x/discovery/internal/frontend"
@@ -64,9 +65,20 @@ func main() {
 		log.Fatalf("frontend.NewServer: %v", err)
 	}
 	router := dcensus.NewRouter(frontend.TagRoute)
-	server.Install(router.Handle)
+	var redisClient *redis.Client
+	if config.RedisHost() != "" {
+		redisClient = redis.NewClient(&redis.Options{
+			Addr: config.RedisHost() + ":" + config.RedisPort(),
+		})
+	}
+	server.Install(router.Handle, redisClient)
 
-	views := append(dcensus.ServerViews, postgres.SearchLatencyDistribution, postgres.SearchResponseCount)
+	views := append(dcensus.ServerViews,
+		postgres.SearchLatencyDistribution,
+		postgres.SearchResponseCount,
+		middleware.CacheResultCount,
+		middleware.CacheErrorCount,
+	)
 	if err := dcensus.Init(views...); err != nil {
 		log.Fatal(err)
 	}
