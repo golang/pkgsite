@@ -244,19 +244,25 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 		"source_link":     func() string { return "" },
 	},
 ).Parse(`{{- "" -}}
-<ul>{{"\n" -}}
-<li><a href="#pkg-overview">Overview</a></li>{{"\n" -}}
-{{- if or .Consts .Vars .Funcs .Types -}}
-	<li><a href="#pkg-index">Index</a></li>{{"\n" -}}
+{{- if or .Doc .Consts .Vars .Funcs .Types .Examples.List -}}
+	<ul>{{"\n" -}}
+	{{- if or .Doc (index .Examples.Map "") -}}
+		<li><a href="#pkg-overview">Overview</a></li>{{"\n" -}}
+	{{- end -}}
+	{{- if or .Consts .Vars .Funcs .Types -}}
+		<li><a href="#pkg-index">Index</a></li>{{"\n" -}}
+	{{- end -}}
+	{{- if .Examples.List -}}
+		<li><a href="#pkg-examples">Examples</a></li>{{"\n" -}}
+	{{- end -}}
+	</ul>{{"\n" -}}
 {{- end -}}
-{{- if .Examples.List -}}
-	<li><a href="#pkg-examples">Examples</a></li>{{"\n" -}}
-{{- end -}}
-</ul>{{"\n" -}}
 
-<h2 id="pkg-overview">Overview <a href="#pkg-overview">¶</a></h2>{{"\n\n" -}}
+{{- if or .Doc (index .Examples.Map "") -}}
+	<h2 id="pkg-overview">Overview <a href="#pkg-overview">¶</a></h2>{{"\n\n" -}}
 	{{render_doc .Doc}}{{"\n" -}}
-	{{- template "example" (index $.Examples.Map "") -}}
+	{{- template "example" (index .Examples.Map "") -}}
+{{- end -}}
 
 {{- if or .Consts .Vars .Funcs .Types -}}
 	<h2 id="pkg-index">Index <a href="#pkg-index">¶</a></h2>{{"\n\n" -}}

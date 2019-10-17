@@ -1073,6 +1073,22 @@ func TestExtractPackagesFromZip(t *testing.T) {
 			packages: map[string]*internal.Package{},
 		},
 		{
+			name:    "emp.ty/package",
+			version: "v1.0.0",
+			packages: map[string]*internal.Package{
+				"main": {
+					Name:              "main",
+					Path:              "emp.ty/package",
+					Synopsis:          "",
+					DocumentationHTML: []byte{}, // Want empty documentation HTML.
+					Imports:           []string{},
+					V1Path:            "emp.ty/package",
+					GOOS:              "linux",
+					GOARCH:            "amd64",
+				},
+			},
+		},
+		{
 			name:    "bad.mod/module",
 			version: "v1.0.0",
 			packages: map[string]*internal.Package{
@@ -1129,6 +1145,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 				want, ok := test.packages[got.Name]
 				if !ok {
 					t.Errorf("extractPackagesFromZip(%q, %q, reader, nil) returned unexpected package: %q", test.name, test.version, got.Name)
+					continue
 				}
 
 				sort.Strings(got.Imports)
