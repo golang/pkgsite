@@ -108,10 +108,9 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version) error 
 				patch,
 				prerelease,
 				version_type,
-				vcs_type,
 				series_path,
 				source_info)
-			VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) ON CONFLICT DO NOTHING`,
+			VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) ON CONFLICT DO NOTHING`,
 			version.ModulePath,
 			version.Version,
 			version.CommitTime,
@@ -122,7 +121,6 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version) error 
 			patchint,
 			prerelease,
 			version.VersionType,
-			version.VCSType,
 			version.SeriesPath(),
 			sourceInfoJSON,
 		); err != nil {

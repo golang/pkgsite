@@ -447,7 +447,6 @@ func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version str
 			readme_file_path,
 			readme_contents,
 			version_type,
-			vcs_type,
 			source_info
 		FROM
 			versions`
@@ -476,8 +475,7 @@ func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version str
 	row := db.queryRow(ctx, query, args...)
 	if err := row.Scan(&vi.ModulePath, &vi.Version, &vi.CommitTime,
 		nullIsEmpty(&vi.ReadmeFilePath), &vi.ReadmeContents, &vi.VersionType,
-		nullIsEmpty(&vi.VCSType), sourceInfoScanner{&vi.SourceInfo}); err !=
-		nil {
+		sourceInfoScanner{&vi.SourceInfo}); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, xerrors.Errorf("module version %s@%s: %w", modulePath, version, derrors.NotFound)
 		}

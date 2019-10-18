@@ -25,7 +25,6 @@ type VersionInfo struct {
 	ReadmeFilePath string
 	ReadmeContents []byte
 	VersionType    version.Type
-	VCSType        string
 	SourceInfo     *source.Info
 }
 

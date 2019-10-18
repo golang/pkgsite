@@ -21,7 +21,6 @@ var (
 	ModulePath      = "github.com/valid_module_name"
 	RepositoryURL   = "github.com/valid_module_name"
 	VersionString   = "v1.0.0"
-	VCSType         = "git"
 	CommitTime      = NowTruncated()
 	LicenseMetadata = []*license.Metadata{
 		{Types: []string{"MIT"}, FilePath: "LICENSE"},
@@ -71,7 +70,6 @@ func VersionInfo() *internal.VersionInfo {
 		ReadmeContents: ReadmeContents,
 		CommitTime:     CommitTime,
 		VersionType:    VersionType,
-		VCSType:        VCSType,
 		SourceInfo:     source.NewGitHubInfo(RepositoryURL, "", ""),
 	}
 }

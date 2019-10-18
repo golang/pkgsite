@@ -65,7 +65,6 @@ func (db *DB) getPackage(ctx context.Context, pkgPath, version, modulePath strin
 			v.readme_contents,
 			v.module_path,
 			v.version_type,
-			v.vcs_type,
 		    v.source_info
 		FROM
 			versions v
@@ -114,9 +113,10 @@ func (db *DB) getPackage(ctx context.Context, pkgPath, version, modulePath strin
 	row := db.queryRow(ctx, query, args...)
 	err = row.Scan(&pkg.Path, &pkg.Name, &pkg.Synopsis,
 		&pkg.V1Path, pq.Array(&licenseTypes), pq.Array(&licensePaths),
-		&pkg.DocumentationHTML, nullIsEmpty(&pkg.GOOS), nullIsEmpty(&pkg.GOARCH), &pkg.Version,
-		&pkg.CommitTime, nullIsEmpty(&pkg.ReadmeFilePath), &pkg.ReadmeContents, &pkg.ModulePath,
-		&pkg.VersionType, nullIsEmpty(&pkg.VCSType), sourceInfoScanner{&pkg.SourceInfo})
+		&pkg.DocumentationHTML, nullIsEmpty(&pkg.GOOS),
+		nullIsEmpty(&pkg.GOARCH), &pkg.Version, &pkg.CommitTime,
+		nullIsEmpty(&pkg.ReadmeFilePath), &pkg.ReadmeContents, &pkg.ModulePath,
+		&pkg.VersionType, sourceInfoScanner{&pkg.SourceInfo})
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, xerrors.Errorf("package %s@%s: %w", pkgPath, version, derrors.NotFound)
