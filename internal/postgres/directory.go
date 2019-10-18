@@ -134,7 +134,6 @@ func constructDirectoryQueryAndArgs(dirPath, version string) (string, []interfac
 				readme_contents,
 				commit_time,
 				version_type,
-				vcs_type,
 				source_info
 			FROM
 				versions
