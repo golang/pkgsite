@@ -474,8 +474,10 @@ func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version str
 
 	var vi internal.VersionInfo
 	row := db.queryRow(ctx, query, args...)
-	if err := row.Scan(&vi.ModulePath, &vi.Version, &vi.CommitTime, &vi.ReadmeFilePath, &vi.ReadmeContents, &vi.VersionType,
-		nullIsEmpty(&vi.VCSType), sourceInfoScanner{&vi.SourceInfo}); err != nil {
+	if err := row.Scan(&vi.ModulePath, &vi.Version, &vi.CommitTime,
+		nullIsEmpty(&vi.ReadmeFilePath), &vi.ReadmeContents, &vi.VersionType,
+		nullIsEmpty(&vi.VCSType), sourceInfoScanner{&vi.SourceInfo}); err !=
+		nil {
 		if err == sql.ErrNoRows {
 			return nil, xerrors.Errorf("module version %s@%s: %w", modulePath, version, derrors.NotFound)
 		}

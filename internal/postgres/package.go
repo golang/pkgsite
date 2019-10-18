@@ -115,7 +115,7 @@ func (db *DB) getPackage(ctx context.Context, pkgPath, version, modulePath strin
 	err = row.Scan(&pkg.Path, &pkg.Name, &pkg.Synopsis,
 		&pkg.V1Path, pq.Array(&licenseTypes), pq.Array(&licensePaths),
 		&pkg.DocumentationHTML, nullIsEmpty(&pkg.GOOS), nullIsEmpty(&pkg.GOARCH), &pkg.Version,
-		&pkg.CommitTime, &pkg.ReadmeFilePath, &pkg.ReadmeContents, &pkg.ModulePath,
+		&pkg.CommitTime, nullIsEmpty(&pkg.ReadmeFilePath), &pkg.ReadmeContents, &pkg.ModulePath,
 		&pkg.VersionType, nullIsEmpty(&pkg.VCSType), sourceInfoScanner{&pkg.SourceInfo})
 	if err != nil {
 		if err == sql.ErrNoRows {

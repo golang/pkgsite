@@ -52,7 +52,7 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, version string) (_ *int
 		if err := rows.Scan(&pkg.Path, &pkg.Version, &pkg.Name, &pkg.Synopsis, &pkg.V1Path,
 			&pkg.DocumentationHTML, pq.Array(&licenseTypes),
 			pq.Array(&licensePaths), &pkg.ModulePath, nullIsEmpty(&pkg.GOOS), nullIsEmpty(&pkg.GOARCH),
-			&pkg.ReadmeFilePath, &pkg.ReadmeContents, &pkg.CommitTime, &pkg.VersionType,
+			nullIsEmpty(&pkg.ReadmeFilePath), &pkg.ReadmeContents, &pkg.CommitTime, &pkg.VersionType,
 			nullIsEmpty(&pkg.VCSType), sourceInfoScanner{&pkg.SourceInfo}); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
