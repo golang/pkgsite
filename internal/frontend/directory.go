@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"context"
+	"fmt"
 	"html/template"
 	"net/http"
 	"sort"
@@ -13,7 +14,10 @@ import (
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/log"
+	"golang.org/x/discovery/internal/stdlib"
+	"golang.org/x/xerrors"
 )
 
 // DirectoryPage contains data needed to generate a directory template.
@@ -23,131 +27,170 @@ type DirectoryPage struct {
 	BreadcrumbPath template.HTML
 }
 
-// DirectoryDetails contains data needed represent the directory view on
-// package and module pages.
-type DirectoryDetails struct {
-	*Directory
-	ModulePath string
-}
-
 // Directory contains information for an individual directory.
 type Directory struct {
+	Module
 	Path     string
-	Version  string
 	Packages []*Package
+	URL      string
 }
 
-func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirPath, version string) {
+// serveDirectoryPage returns a directory view. It is called by
+// servePackagePage when an attempt to fetch a package path at any version
+// returns a 404.
+func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirPath, modulePath, version string) {
 	var ctx = r.Context()
-	page, err := fetchPackagesInDirectory(ctx, s.ds, dirPath, version)
+
+	tab := r.FormValue("tab")
+	settings, ok := directoryTabLookup[tab]
+	if tab == "" || !ok || settings.Disabled {
+		tab = "subdirectories"
+		settings = directoryTabLookup[tab]
+	}
+
+	dbDir, err := s.ds.GetDirectory(ctx, dirPath, modulePath, version)
 	if err != nil {
-		status := derrors.ToHTTPStatus(err)
-		if status == http.StatusInternalServerError {
-			log.Errorf("serveDirectoryPage(w, r, %q, %q): %v", dirPath, version, err)
+		status := http.StatusInternalServerError
+		if xerrors.Is(err, derrors.NotFound) {
+			status = http.StatusNotFound
 		}
+		log.Errorf("serveDirectoryPage for %s@%s: %v", dirPath, version, err)
 		s.serveErrorPage(w, r, status, nil)
 		return
 	}
-	page.basePage = newBasePage(r, dirPath)
-	s.servePage(w, "directory.tmpl", page)
-}
-
-// fetchPackagesInDirectory fetches data for the module version specified by
-// pkgPath and pkgversion from the database and returns a DirectoryPage.
-func fetchPackagesInDirectory(ctx context.Context, ds DataSource, dirPath, version string) (_ *DirectoryPage, err error) {
-	defer derrors.Wrap(&err, "fetchPackagesInDirectory(ctx, db, %q, %q)", dirPath, version)
-
-	dbDir, err := ds.GetDirectory(ctx, dirPath, version)
+	licenses, err := s.ds.GetModuleLicenses(ctx, dbDir.ModulePath, dbDir.Version)
 	if err != nil {
-		return nil, err
+		log.Errorf("serveDirectoryPage for %s@%s: %v", dirPath, version, err)
+		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
+		return
 	}
-	dir, err := createDirectory(dirPath, dbDir.Version, dbDir.Packages)
+	header, err := createDirectory(dbDir, license.ToMetadatas(licenses), false)
 	if err != nil {
-		return nil, err
-	}
-	return &DirectoryPage{
-		Directory:      dir,
-		BreadcrumbPath: breadcrumbPath(dbDir.Path, dbDir.ModulePath, dbDir.Version),
-	}, nil
-}
-
-// fetchPackageDirectoryDetails fetches all packages in the directory dirPath
-// from the database and returns a DirectoryDetails. The package paths returned
-// do not include dirPath.
-func fetchPackageDirectoryDetails(ctx context.Context, ds DataSource, dirPath string, vi *internal.VersionInfo) (_ *DirectoryDetails, err error) {
-	defer derrors.Wrap(&err, "fetchPackageDirectoryDetails(ctx, ds, %v)", vi)
-
-	dbPackages, err := ds.GetPackagesInVersion(ctx, vi.ModulePath, vi.Version)
-	if err != nil {
-		return nil, err
+		log.Errorf("serveDirectoryPage for %s@%s: %v", dirPath, version, err)
+		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
+		return
 	}
 
-	var packages []*internal.VersionedPackage
-	for _, p := range dbPackages {
-		if !strings.HasPrefix(p.Path, dirPath+"/") || p.Path == dirPath {
-			// Only include packages that are a subdirectory of dirPath.
-			continue
+	details, err := fetchDetailsForDirectory(ctx, r, tab, s.ds, dbDir, licenses)
+	if err != nil {
+		log.Errorf("serveDirectoryPage for %s@%s: %v", dirPath, version, err)
+		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	isLatest := dbDir.Version == internal.LatestVersion
+	if !isLatest {
+		latestMod, err := s.ds.GetVersionInfo(ctx, dbDir.ModulePath, internal.LatestVersion)
+		if err != nil {
+			log.Errorf("serveDirectoryPage for %s@%s: %v", dirPath, version, err)
+			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
+			return
 		}
-		vp := &internal.VersionedPackage{
-			Package:     *p,
-			VersionInfo: *vi,
-		}
-		packages = append(packages, vp)
+		isLatest = (latestMod.Version == dbDir.Version)
 	}
-	dir, err := createDirectory(dirPath, vi.Version, packages)
-	if err != nil {
-		return nil, err
+
+	page := &DetailsPage{
+		basePage:       newBasePage(r, fmt.Sprintf("Directory %s", dirPath)),
+		Settings:       settings,
+		Header:         header,
+		BreadcrumbPath: breadcrumbPath(dirPath, dbDir.ModulePath, dbDir.Version),
+		Details:        details,
+		CanShowDetails: true,
+		Tabs:           directoryTabSettings,
+		Namespace:      "pkg",
+		IsLatest:       isLatest,
 	}
-	return &DirectoryDetails{Directory: dir, ModulePath: vi.ModulePath}, nil
+	s.servePage(w, settings.TemplateName, page)
 }
 
-// fetchModuleDirectoryDetails fetches all packages in the module version from the
-// database and returns a DirectoryDetails.
-func fetchModuleDirectoryDetails(ctx context.Context, ds DataSource, vi *internal.VersionInfo) (_ *DirectoryDetails, err error) {
-	defer derrors.Wrap(&err, "fetchModuleDirectoryDetails(ctx, ds, %v)", vi)
+// fetchDirectoryDetails fetches data for the directory specified by path and
+// version from the database and returns a Directory.
+//
+// includeDirPath indicates whether a package is included if its import path is
+// the same as dirPath.
+// This argument is needed because on the module "Packages" tab, we want to
+// display all packages in the mdoule, even if the import path is the same as
+// the module path. However, on the package and directory view's
+// "Subdirectories" tab, we do not want to include packages whose import paths
+// are the same as the dirPath.
+func fetchDirectoryDetails(ctx context.Context, ds DataSource, dirPath string, vi *internal.VersionInfo,
+	licmetas []*license.Metadata, includeDirPath bool) (_ *Directory, err error) {
+	defer derrors.Wrap(&err, "s.ds.fetchDirectoryDetails(%q, %q, %q, %v)", dirPath, vi.ModulePath, vi.Version, licmetas)
 
-	dbPackages, err := ds.GetPackagesInVersion(ctx, vi.ModulePath, vi.Version)
-	if err != nil {
-		return nil, err
+	if includeDirPath && dirPath != vi.ModulePath {
+		return nil, xerrors.Errorf("includeDirPath can only be set to true if dirPath = modulePath: %w", derrors.InvalidArgument)
 	}
-	var packages []*internal.VersionedPackage
-	for _, p := range dbPackages {
-		vp := &internal.VersionedPackage{
-			Package:     *p,
-			VersionInfo: *vi,
+
+	dbDir, err := ds.GetDirectory(ctx, dirPath, vi.ModulePath, vi.Version)
+	if err != nil {
+		if xerrors.Is(err, derrors.NotFound) {
+			return createDirectory(
+				&internal.Directory{
+					VersionInfo: *vi,
+					Path:        dirPath,
+					Packages:    nil,
+				}, licmetas, includeDirPath)
 		}
-		packages = append(packages, vp)
-	}
-	dir, err := createDirectory(vi.ModulePath, vi.Version, packages)
-	if err != nil {
 		return nil, err
 	}
-	return &DirectoryDetails{Directory: dir, ModulePath: vi.ModulePath}, nil
+	return createDirectory(dbDir, licmetas, includeDirPath)
 }
 
-func createDirectory(dirPath, version string, versionedPackages []*internal.VersionedPackage) (_ *Directory, err error) {
-	defer derrors.Wrap(&err, "createDirectory(%q, %q, packages)", dirPath, version)
+// createDirectory constructs a *Directory from the provided dbDir and licmetas.
+//
+// includeDirPath indicates whether a package is included if its import path is
+// the same as dirPath.
+// This argument is needed because on the module "Packages" tab, we want to
+// display all packages in the mdoule, even if the import path is the same as
+// the module path. However, on the package and directory view's
+// "Subdirectories" tab, we do not want to include packages whose import paths
+// are the same as the dirPath.
+func createDirectory(dbDir *internal.Directory, licmetas []*license.Metadata, includeDirPath bool) (_ *Directory, err error) {
+	defer derrors.Wrap(&err, "createDirectory(%q, %q, %t)", dbDir.Path, dbDir.Version, includeDirPath)
 
 	var packages []*Package
-	for _, pkg := range versionedPackages {
-		newPkg, err := createPackage(&pkg.Package, &pkg.VersionInfo)
+	for _, pkg := range dbDir.Packages {
+		if !includeDirPath && pkg.Path == dbDir.Path {
+			continue
+		}
+		newPkg, err := createPackage(pkg, &dbDir.VersionInfo)
 		if err != nil {
 			return nil, err
 		}
 		if pkg.IsRedistributable() {
 			newPkg.Synopsis = pkg.Synopsis
 		}
-		newPkg.Suffix = strings.TrimPrefix(strings.TrimPrefix(pkg.Path, dirPath), "/")
+		newPkg.Suffix = strings.TrimPrefix(strings.TrimPrefix(pkg.Path, dbDir.Path), "/")
 		if newPkg.Suffix == "" {
-			newPkg.Suffix = effectiveName(&pkg.Package) + " (root)"
+			newPkg.Suffix = effectiveName(pkg) + " (root)"
 		}
 		packages = append(packages, newPkg)
 	}
 
+	mod, err := createModule(&dbDir.VersionInfo, licmetas)
+	if err != nil {
+		return nil, err
+	}
 	sort.Slice(packages, func(i, j int) bool { return packages[i].Path < packages[j].Path })
+
+	formattedVersion := dbDir.Version
+	if dbDir.ModulePath == stdlib.ModulePath {
+		formattedVersion, err = stdlib.TagForVersion(dbDir.Version)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return &Directory{
-		Path:     dirPath,
-		Version:  version,
+		Module:   *mod,
+		Path:     dbDir.Path,
 		Packages: packages,
+		URL:      constructDirectoryURL(dbDir.Path, dbDir.ModulePath, formattedVersion),
 	}, nil
+}
+
+func constructDirectoryURL(dirPath, modulePath, formattedVersion string) string {
+	if dirPath == modulePath || modulePath == stdlib.ModulePath {
+		return fmt.Sprintf("/%s@%s", dirPath, formattedVersion)
+	}
+	return fmt.Sprintf("/%s@%s/%s", modulePath, formattedVersion, strings.TrimPrefix(dirPath, modulePath+"/"))
 }

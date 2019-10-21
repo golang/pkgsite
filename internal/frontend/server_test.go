@@ -109,7 +109,6 @@ func TestServer(t *testing.T) {
 			latestInfo = mustExecuteTemplate(h, `<a href="{{.LatestURL}}">Go to latest</a>`)
 		}
 		return []string{
-			mustExecuteTemplate(h, `<span class="DetailsHeader-breadcrumbDivider">/</span>`),
 			mustExecuteTemplate(h, `<span class="DetailsHeader-breadcrumbCurrent">{{.Suffix}}</span>`),
 			mustExecuteTemplate(h, `<h1 class="DetailsHeader-title">{{.Title}}</h1>`),
 			mustExecuteTemplate(h, `<div class="DetailsHeader-version">{{.Version}}</div>`),
@@ -166,6 +165,18 @@ func TestServer(t *testing.T) {
 		Version:     "go1.13",
 		Title:       "Standard library",
 		LicenseInfo: `<a href="/std@go1.13?tab=licenses#LICENSE">MIT</a>`,
+	})
+	dirHeader := constructPackageHeader(&header{
+		Suffix:      "directory",
+		Version:     "v1.0.0",
+		Title:       "Directory github.com/valid_module_name/foo/directory",
+		LicenseInfo: `<a href="/github.com/valid_module_name@v1.0.0/foo/directory?tab=licenses#LICENSE">MIT</a>`,
+	})
+	cmdDirHeader := constructPackageHeader(&header{
+		Suffix:      "cmd",
+		Version:     "go1.13",
+		Title:       "Directory cmd",
+		LicenseInfo: `<a href="/cmd@go1.13?tab=licenses#LICENSE">MIT</a>`,
 	})
 
 	pkgSuffix := strings.TrimPrefix(sample.PackagePath, sample.ModulePath+"/")
@@ -318,10 +329,75 @@ func TestServer(t *testing.T) {
 				`<div class="License-source">Source: github.com/valid_module_name@v1.0.0/LICENSE</div>`),
 		},
 		{
-			"directory",
+			"directory subdirectories",
 			fmt.Sprintf("/%s", sample.PackagePath+"/directory"),
 			http.StatusOK,
-			[]string{`<h1 class="DetailsHeader-title">Directories</h1>`},
+			append(dirHeader,
+				`<th>Path</th>`,
+				`<th>Synopsis</th>`,
+			),
+		},
+		{
+			"directory overview",
+			fmt.Sprintf("/%s?tab=overview", sample.PackagePath+"/directory"),
+			http.StatusOK,
+			append(dirHeader,
+				`<div class="Overview-module">`,
+				`<b>Packages in this module: </b>`,
+				`Repository: <a href="github.com/valid_module_name" target="_blank">github.com/valid_module_name</a>`,
+				`<div class="Overview-readmeContent"><p>readme</p>`,
+				`<div class="Overview-readmeSource">Source: github.com/valid_module_name@v1.0.0/README.md</div>`),
+		},
+		{
+			"directory licenses",
+			fmt.Sprintf("/%s?tab=licenses", sample.PackagePath+"/directory"),
+			http.StatusOK,
+			append(dirHeader,
+
+				`<div id="#LICENSE">MIT</div>`,
+				`This is not legal advice`,
+				`<a href="/license-policy">Read disclaimer.</a>`,
+				`Lorem Ipsum`,
+				`<div class="License-source">Source: github.com/valid_module_name@v1.0.0/LICENSE</div>`),
+		},
+		{
+			"stdlib directory default",
+			fmt.Sprintf("/cmd"),
+			http.StatusOK,
+			append(cmdDirHeader,
+				`<th>Path</th>`,
+				`<th>Synopsis</th>`,
+			),
+		},
+		{
+			"stdlib directory subdirectories",
+			fmt.Sprintf("/cmd@go1.13?tab=subdirectories"),
+			http.StatusOK,
+			append(cmdDirHeader,
+				`<th>Path</th>`,
+				`<th>Synopsis</th>`,
+			),
+		},
+		{
+			"stdlib directory overview",
+			fmt.Sprintf("/cmd@go1.13?tab=overview"),
+			http.StatusOK,
+			append(cmdDirHeader,
+				`<div class="Overview-module">`,
+				`Repository: <a href="github.com/valid_module_name" target="_blank">github.com/valid_module_name</a>`,
+				`<div class="Overview-readmeContent"><p>readme</p>`,
+				`<div class="Overview-readmeSource">Source: go.googlesource.com/go/&#43;/refs/tags/go1.13/README.md</div>`),
+		},
+		{
+			"stdlib directory licenses",
+			fmt.Sprintf("/cmd@go1.13?tab=licenses"),
+			http.StatusOK,
+			append(cmdDirHeader,
+				`<div id="#LICENSE">MIT</div>`,
+				`This is not legal advice`,
+				`<a href="/license-policy">Read disclaimer.</a>`,
+				`Lorem Ipsum`,
+				`<div class="License-source">Source: go.googlesource.com/go/&#43;/refs/tags/go1.13/LICENSE</div>`),
 		},
 		{
 			"module default",
@@ -415,7 +491,7 @@ func TestServer(t *testing.T) {
 					if len(b) > 100 {
 						b = "<content exceeds 100 chars>"
 					}
-					t.Errorf("`%s` not found in body\n%s", want, b)
+					t.Fatalf("`%s` not found in body\n%s", want, b)
 					continue
 				}
 				// Truncate the body each time through the loop to make sure the wanted strings

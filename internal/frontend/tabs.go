@@ -28,6 +28,9 @@ type TabSettings struct {
 	// TemplateName is the name of the template used to render the
 	// corresponding tab, as defined in Server.templates.
 	TemplateName string
+
+	// Disabled indicates whether a tab should be displayed as disabled.
+	Disabled bool
 }
 
 var (
@@ -74,6 +77,9 @@ var (
 	}
 	packageTabLookup = make(map[string]TabSettings)
 
+	directoryTabSettings = make([]TabSettings, len(packageTabSettings))
+	directoryTabLookup   = make(map[string]TabSettings)
+
 	moduleTabSettings = []TabSettings{
 		{
 			Name:         "overview",
@@ -101,9 +107,28 @@ var (
 	moduleTabLookup = make(map[string]TabSettings)
 )
 
+// validDirectoryTabs indicates if a tab is enabled in the directory view.
+var validDirectoryTabs = map[string]bool{
+	"licenses":       true,
+	"overview":       true,
+	"subdirectories": true,
+}
+
 func init() {
+	for i, ts := range packageTabSettings {
+		// The directory view uses the same design as the packages view
+		// for visual consistency, but some tabs don't make sense, so
+		// we disable them.
+		if !validDirectoryTabs[ts.Name] {
+			ts.Disabled = true
+		}
+		directoryTabSettings[i] = ts
+	}
 	for _, d := range packageTabSettings {
 		packageTabLookup[d.Name] = d
+	}
+	for _, d := range directoryTabSettings {
+		directoryTabLookup[d.Name] = d
 	}
 	for _, d := range moduleTabSettings {
 		moduleTabLookup[d.Name] = d
@@ -119,7 +144,7 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds
 	case "versions":
 		return fetchPackageVersionsDetails(ctx, ds, pkg)
 	case "subdirectories":
-		return fetchPackageDirectoryDetails(ctx, ds, pkg.Path, &pkg.VersionInfo)
+		return fetchDirectoryDetails(ctx, ds, pkg.Path, &pkg.VersionInfo, pkg.Licenses, false)
 	case "imports":
 		return fetchImportsDetails(ctx, ds, pkg)
 	case "importedby":
@@ -137,7 +162,7 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds
 func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds DataSource, vi *internal.VersionInfo, licenses []*license.License) (interface{}, error) {
 	switch tab {
 	case "packages":
-		return fetchModuleDirectoryDetails(ctx, ds, vi)
+		return fetchDirectoryDetails(ctx, ds, vi.ModulePath, vi, license.ToMetadatas(licenses), true)
 	case "licenses":
 		return &LicensesDetails{Licenses: transformLicenses(vi.ModulePath, vi.Version, licenses)}, nil
 	case "versions":
@@ -145,6 +170,25 @@ func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds 
 	case "overview":
 		// TODO(b/138448402): implement remaining module views.
 		return fetchOverviewDetails(ctx, ds, vi)
+	}
+	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
+}
+
+// fetchDetailsForDirectory returns tab details by delegating to the correct
+// detail handler.
+func fetchDetailsForDirectory(ctx context.Context, r *http.Request, tab string, ds DataSource, dir *internal.Directory, licenses []*license.License) (interface{}, error) {
+	switch tab {
+	case "overview":
+		return fetchOverviewDetails(ctx, ds, &dir.VersionInfo)
+	case "subdirectories":
+		// Ideally we would just use fetchDirectoryDetails here so that it
+		// follows the same code path as fetchDetailsForModule and
+		// fetchDetailsForPackage. However, since we already have the directory
+		// and licenses info, it doesn't make sense to call
+		// postgres.GetDirectory again.
+		return createDirectory(dir, license.ToMetadatas(licenses), false)
+	case "licenses":
+		return &LicensesDetails{Licenses: transformLicenses(dir.ModulePath, dir.Version, licenses)}, nil
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }

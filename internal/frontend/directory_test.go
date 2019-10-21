@@ -11,132 +11,177 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/sample"
+	"golang.org/x/xerrors"
 )
 
-func TestFetchPackagesInDirectory(t *testing.T) {
+func TestFetchDirectoryDetails(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
 	defer postgres.ResetTestDB(testDB, t)
+	postgres.InsertSampleDirectoryTree(ctx, t, testDB)
 
-	modulePath := "github.com/foo"
-	dirPath := modulePath + "/bar"
-	mustInsertVersionAndGetDirectoryPage := func(version string) *DirectoryPage {
+	checkDirectory := func(got *Directory, dirPath, modulePath, version string, pkgPaths []string) {
 		t.Helper()
-		v := sample.Version()
-		v.ModulePath = modulePath
-		v.Version = version
-		v.Packages = []*internal.Package{
-			{Name: "A", Path: fmt.Sprintf("%s/%s", dirPath, "A"), Licenses: sample.LicenseMetadata},
-			{Name: "B", Path: fmt.Sprintf("%s/%s", dirPath, "B"), Licenses: sample.LicenseMetadata},
-		}
-		if err := testDB.InsertVersion(ctx, v); err != nil {
-			t.Fatal(err)
-		}
 
-		var pkgs []*Package
-		for _, p := range v.Packages {
-			pkg, err := createPackage(p, &v.VersionInfo)
-			if err != nil {
-				t.Fatal(err)
-			}
-			pkg.Suffix = p.Name
-			pkgs = append(pkgs, pkg)
-		}
-		return &DirectoryPage{
-			Directory: &Directory{
-				Path:     dirPath,
-				Version:  v.Version,
-				Packages: pkgs,
-			},
-			BreadcrumbPath: breadcrumbPath(dirPath, modulePath, version),
-		}
-	}
-	checkFetchDirectory := func(version string, want *DirectoryPage) {
-		t.Helper()
-		got, err := fetchPackagesInDirectory(ctx, testDB, dirPath, version)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if diff := cmp.Diff(want, got, cmpopts.IgnoreUnexported(DirectoryPage{})); diff != "" {
-			t.Errorf("fetchPackagesInDirectory(%q, %q) mismatch (-want +got):\n%s", dirPath, version, diff)
-		}
-	}
-
-	pagev110 := mustInsertVersionAndGetDirectoryPage("v1.0.0")
-	pagev111 := mustInsertVersionAndGetDirectoryPage("v1.1.0")
-
-	checkFetchDirectory("v1.0.0", pagev110)
-	checkFetchDirectory(internal.LatestVersion, pagev111)
-}
-
-func TestFetchPackageDirectoryDetailsAndFetchModuleDirectoryDetails(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
-	defer postgres.ResetTestDB(testDB, t)
-
-	createPackageForVersion := func(path string) *internal.Package {
-		pkg := sample.Package()
-		pkg.Path = path
-		return pkg
-	}
-
-	v := sample.Version()
-	pkg1 := createPackageForVersion(v.ModulePath)
-	// Used to test that "/a" is not a subdirectory of "/a".
-	pkg2 := createPackageForVersion(v.ModulePath + "/a")
-	// Used to test that "/a/b" is a subdirectory of "/a".
-	pkg3 := createPackageForVersion(v.ModulePath + "/a/b")
-	// Used to test that "/ab" is not a subdirectory of "/a".
-	pkg4 := createPackageForVersion(v.ModulePath + "/ab")
-	v.Packages = []*internal.Package{pkg1, pkg2, pkg3, pkg4}
-
-	checkDirectoryDetails := func(fnName string, dirPath string, got *DirectoryDetails, wantPackages []*internal.Package) {
-		t.Helper()
+		vi := sample.VersionInfo()
+		vi.ModulePath = modulePath
+		vi.Version = version
 
 		var wantPkgs []*Package
-		for _, p := range wantPackages {
-			pkg, err := createPackage(p, &v.VersionInfo)
+		for _, path := range pkgPaths {
+			sp := sample.Package()
+			sp.Path = path
+			pkg, err := createPackage(sp, vi)
 			if err != nil {
 				t.Fatal(err)
 			}
-			pkg.Suffix = strings.TrimPrefix(strings.TrimPrefix(pkg.Path, dirPath), "/")
+			pkg.Suffix = strings.TrimPrefix(strings.TrimPrefix(sp.Path, dirPath), "/")
 			if pkg.Suffix == "" {
-				pkg.Suffix = fmt.Sprintf("%s (root)", effectiveName(p))
+				pkg.Suffix = fmt.Sprintf("%s (root)", effectiveName(sp))
 			}
 			wantPkgs = append(wantPkgs, pkg)
 		}
 
-		want := &DirectoryDetails{
-			ModulePath: v.ModulePath,
-			Directory: &Directory{
-				Path:     dirPath,
-				Version:  v.Version,
-				Packages: wantPkgs,
-			},
+		mod, err := createModule(vi, sample.LicenseMetadata)
+		if err != nil {
+			t.Fatal(err)
+		}
+		want := &Directory{
+			Module:   *mod,
+			Path:     dirPath,
+			Packages: wantPkgs,
+			URL:      constructDirectoryURL(dirPath, vi.ModulePath, vi.Version),
 		}
 		if diff := cmp.Diff(want, got); diff != "" {
-			t.Errorf("%s(ctx, %q, %q) mismatch (-want +got):\n%s", fnName, pkg1.Path, v.Version, diff)
+			t.Errorf("fetchDirectoryDetails(ctx, %q, %q, %q) mismatch (-want +got):\n%s", dirPath, modulePath, version, diff)
 		}
 	}
 
-	if err := testDB.InsertVersion(ctx, v); err != nil {
-		t.Fatal(err)
-	}
+	for _, tc := range []struct {
+		name, dirPath, modulePath, version, wantModulePath, wantVersion string
+		wantPkgPaths                                                    []string
+		includeDirPath, wantInvalidArgumentErr                          bool
+	}{
+		{
+			name:           "dirPath is modulePath, includeDirPath = true, want longest module path",
+			includeDirPath: true,
+			dirPath:        "github.com/hashicorp/vault/api",
+			modulePath:     "github.com/hashicorp/vault/api",
+			version:        internal.LatestVersion,
+			wantModulePath: "github.com/hashicorp/vault/api",
+			wantVersion:    "v1.1.2",
+			wantPkgPaths: []string{
+				"github.com/hashicorp/vault/api",
+			},
+		},
+		{
+			name:           "only dirPath provided, includeDirPath = false, want longest module path",
+			dirPath:        "github.com/hashicorp/vault/api",
+			modulePath:     internal.UnknownModulePath,
+			version:        internal.LatestVersion,
+			wantModulePath: "github.com/hashicorp/vault/api",
+			wantVersion:    "v1.1.2",
+			wantPkgPaths:   []string{},
+		},
+		{
+			name:           "dirPath@version, includeDirPath = false, want longest module path",
+			dirPath:        "github.com/hashicorp/vault/api",
+			modulePath:     internal.UnknownModulePath,
+			version:        "v1.1.2",
+			wantModulePath: "github.com/hashicorp/vault/api",
+			wantVersion:    "v1.1.2",
+			wantPkgPaths:   []string{},
+		},
+		{
+			name:           "dirPath@version,  includeDirPath = false, version only exists for shorter module path",
+			dirPath:        "github.com/hashicorp/vault/api",
+			modulePath:     internal.UnknownModulePath,
+			version:        "v1.0.3",
+			wantModulePath: "github.com/hashicorp/vault",
+			wantVersion:    "v1.0.3",
+			wantPkgPaths:   []string{},
+		},
+		{
+			name:           "valid directory for modulePath@version/suffix, includeDirPath = false",
+			dirPath:        "github.com/hashicorp/vault/builtin",
+			modulePath:     "github.com/hashicorp/vault",
+			version:        "v1.0.3",
+			wantModulePath: "github.com/hashicorp/vault",
+			wantVersion:    "v1.0.3",
+			wantPkgPaths: []string{
+				"github.com/hashicorp/vault/builtin/audit/file",
+				"github.com/hashicorp/vault/builtin/audit/socket",
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			vi := sample.VersionInfo()
+			vi.ModulePath = tc.modulePath
+			vi.Version = tc.version
 
-	got, err := fetchPackageDirectoryDetails(ctx, testDB, pkg2.Path, &v.VersionInfo)
-	if err != nil {
-		t.Fatalf("fetchPackageDirectoryDetails(ctx, db, %q, %q): %v", pkg2.Path, v.Version, err)
+			got, err := fetchDirectoryDetails(ctx, testDB,
+				tc.dirPath, vi, sample.LicenseMetadata, tc.includeDirPath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			checkDirectory(got, tc.dirPath, tc.wantModulePath, tc.wantVersion, tc.wantPkgPaths)
+		})
 	}
-	checkDirectoryDetails("fetchPackageDirectoryDetails", pkg2.Path, got, []*internal.Package{pkg3})
+}
 
-	got, err = fetchModuleDirectoryDetails(ctx, testDB, &v.VersionInfo)
-	if err != nil {
-		t.Fatalf("fetchModuleDirectoryDetails(ctx, db, %q, %q): %v", v.ModulePath, v.Version, err)
+func TestFetchDirectoryDetailsInvalidArguments(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	defer postgres.ResetTestDB(testDB, t)
+	postgres.InsertSampleDirectoryTree(ctx, t, testDB)
+
+	for _, tc := range []struct {
+		name, dirPath, modulePath, version, wantModulePath, wantVersion string
+		includeDirPath                                                  bool
+		wantPkgPaths                                                    []string
+	}{
+		{
+			name:       "dirPath is empty",
+			dirPath:    "github.com/hashicorp/vault/api",
+			modulePath: "",
+			version:    internal.LatestVersion,
+		},
+		{
+			name:       "modulePath is empty",
+			dirPath:    "github.com/hashicorp/vault/api",
+			modulePath: "",
+			version:    internal.LatestVersion,
+		},
+		{
+			name:       "version is empty",
+			dirPath:    "github.com/hashicorp/vault/api",
+			modulePath: internal.UnknownModulePath,
+			version:    "",
+		},
+		{
+			name:           "dirPath is not modulePath, includeDirPath = true",
+			dirPath:        "github.com/hashicorp/vault/api",
+			modulePath:     "github.com/hashicorp/vault",
+			version:        internal.LatestVersion,
+			includeDirPath: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			vi := sample.VersionInfo()
+			vi.ModulePath = tc.modulePath
+			vi.Version = tc.version
+
+			got, err := fetchDirectoryDetails(ctx, testDB,
+				tc.dirPath, vi, sample.LicenseMetadata, tc.includeDirPath)
+			if !xerrors.Is(err, derrors.InvalidArgument) {
+				t.Fatalf("expected err; got = \n%+v, %v", got, err)
+			}
+		})
 	}
-	checkDirectoryDetails("fetchModuleDirectoryDetails", v.ModulePath, got, []*internal.Package{pkg1, pkg2, pkg3, pkg4})
 }

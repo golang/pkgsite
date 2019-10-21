@@ -15,6 +15,7 @@ import (
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/sample"
 	"golang.org/x/discovery/internal/source"
+	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/xerrors"
 )
 
@@ -22,98 +23,128 @@ func TestGetDirectory(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	defer ResetTestDB(testDB, t)
+	// defer ResetTestDB(testDB, t)
 
-	mustInsertVersion := func(modulePath, version string, packages []*internal.Package) {
-		v := sample.Version()
-		v.ModulePath = modulePath
-		v.Version = version
-		for _, p := range packages {
-			p.Licenses = sample.LicenseMetadata
-			v.Packages = append(v.Packages, p)
-		}
-		if err := testDB.InsertVersion(ctx, v); err != nil {
-			t.Fatal(err)
-		}
-	}
-	createVersionedPackages := func(modulePath, version string, packages []*internal.Package) []*internal.VersionedPackage {
-		vi := sample.VersionInfo()
-		vi.ModulePath = modulePath
-		vi.Version = version
-
-		var vps []*internal.VersionedPackage
-		for _, pkg := range packages {
-			pkg.Licenses = sample.LicenseMetadata
-			vps = append(vps, &internal.VersionedPackage{VersionInfo: *vi, Package: *pkg})
-		}
-		return vps
-	}
-	createPackage := func(name, path string) *internal.Package {
-		p := sample.Package()
-		p.Name = name
-		p.Path = path
-		p.Imports = nil
-		return p
-	}
-
-	apiPackage := createPackage("api", "github.com/hashicorp/vault/api")
-	auditPackages := []*internal.Package{
-		createPackage("file", "github.com/hashicorp/vault/builtin/audit/file"),
-		createPackage("socket", "github.com/hashicorp/vault/builtin/audit/socket"),
-	}
-	v112Packages := append(
-		auditPackages,
-		createPackage("replication", "github.com/hashicorp/vault/vault/replication"),
-		createPackage("transit", "github.com/hashicorp/vault/vault/seal/transit"),
-		apiPackage)
-
-	mustInsertVersion("github.com/hashicorp/vault", "v1.0.3", append(auditPackages, apiPackage))
-	mustInsertVersion("github.com/hashicorp/vault/api", "v1.0.3", []*internal.Package{apiPackage})
-	mustInsertVersion("github.com/hashicorp/vault", "v1.1.2", v112Packages)
-
-	moduleVaultPackagesV103 := createVersionedPackages("github.com/hashicorp/vault", "v1.0.3", append(auditPackages, apiPackage))
-	moduleVaultPackagesV112 := createVersionedPackages("github.com/hashicorp/vault", "v1.1.2", v112Packages)
-	moduleVaultAuditPackages := createVersionedPackages("github.com/hashicorp/vault", "v1.0.3", auditPackages)
+	InsertSampleDirectoryTree(ctx, t, testDB)
 
 	for _, tc := range []struct {
-		name, path, version, wantModulePath, wantVersion string
-		wantPackages                                     []*internal.VersionedPackage
-		wantNotFoundErr                                  bool
+		name, dirPath, modulePath, version, wantModulePath, wantVersion string
+		wantPkgPaths                                                    []string
+		wantNotFoundErr                                                 bool
 	}{
 		{
-			name:           "get latest version",
-			path:           "github.com/hashicorp/vault",
+			name:           "latest with ambigious module path, should match longest module path",
+			dirPath:        "github.com/hashicorp/vault/api",
+			modulePath:     internal.UnknownModulePath,
+			version:        internal.LatestVersion,
+			wantVersion:    "v1.1.2",
+			wantModulePath: "github.com/hashicorp/vault/api",
+			wantPkgPaths: []string{
+				"github.com/hashicorp/vault/api",
+			},
+		},
+		{
+			name:           "specified version with ambigious module path, should match longest module path",
+			dirPath:        "github.com/hashicorp/vault/api",
+			modulePath:     internal.UnknownModulePath,
+			version:        "v1.1.2",
+			wantVersion:    "v1.1.2",
+			wantModulePath: "github.com/hashicorp/vault/api",
+			wantPkgPaths: []string{
+				"github.com/hashicorp/vault/api",
+			},
+		},
+		{
+			name:           "specified version with ambigous module path, but only shorter module path matches for specified version",
+			dirPath:        "github.com/hashicorp/vault/api",
+			modulePath:     internal.UnknownModulePath,
+			version:        "v1.0.3",
+			wantVersion:    "v1.0.3",
+			wantModulePath: "github.com/hashicorp/vault",
+			wantPkgPaths: []string{
+				"github.com/hashicorp/vault/api",
+			},
+		},
+		{
+			name:           "specified module path and version, should match specified shorter module path",
+			dirPath:        "github.com/hashicorp/vault/api",
+			modulePath:     "github.com/hashicorp/vault",
+			version:        "v1.0.3",
+			wantVersion:    "v1.0.3",
+			wantModulePath: "github.com/hashicorp/vault",
+			wantPkgPaths: []string{
+				"github.com/hashicorp/vault/api",
+			},
+		},
+		{
+			name:           "directory path is the module path at latest",
+			dirPath:        "github.com/hashicorp/vault",
+			modulePath:     "github.com/hashicorp/vault",
 			version:        internal.LatestVersion,
 			wantVersion:    "v1.1.2",
 			wantModulePath: "github.com/hashicorp/vault",
-			wantPackages:   moduleVaultPackagesV112,
+			wantPkgPaths: []string{
+				"github.com/hashicorp/vault/api",
+				"github.com/hashicorp/vault/builtin/audit/file",
+				"github.com/hashicorp/vault/builtin/audit/socket",
+				"github.com/hashicorp/vault/vault/replication",
+				"github.com/hashicorp/vault/vault/seal/transit",
+			},
 		},
 		{
-			name:           "module containing packages with same import path in different modules",
-			path:           "github.com/hashicorp/vault",
+			name:           "directory path is the module path with specified version",
+			dirPath:        "github.com/hashicorp/vault",
+			modulePath:     "github.com/hashicorp/vault",
+			version:        "v1.0.3",
+			wantVersion:    "v1.0.3",
+			wantModulePath: "github.com/hashicorp/vault",
+			wantPkgPaths: []string{
+				"github.com/hashicorp/vault/api",
+				"github.com/hashicorp/vault/builtin/audit/file",
+				"github.com/hashicorp/vault/builtin/audit/socket",
+			},
+		},
+		{
+			name:           "directory path is a package path",
+			dirPath:        "github.com/hashicorp/vault",
+			modulePath:     "github.com/hashicorp/vault",
+			version:        "v1.0.3",
+			wantVersion:    "v1.0.3",
+			wantModulePath: "github.com/hashicorp/vault",
+			wantPkgPaths: []string{
+				"github.com/hashicorp/vault/api",
+				"github.com/hashicorp/vault/builtin/audit/file",
+				"github.com/hashicorp/vault/builtin/audit/socket",
+			},
+		},
+		{
+			name:           "valid directory path with package at version, no module path",
+			dirPath:        "github.com/hashicorp/vault/builtin",
+			modulePath:     internal.UnknownModulePath,
 			wantModulePath: "github.com/hashicorp/vault",
 			version:        "v1.0.3",
 			wantVersion:    "v1.0.3",
-			wantPackages:   moduleVaultPackagesV103,
+			wantPkgPaths: []string{
+				"github.com/hashicorp/vault/builtin/audit/file",
+				"github.com/hashicorp/vault/builtin/audit/socket",
+			},
 		},
 		{
-			name:            "valid directory not containing packages",
-			path:            "github.com/hashicorp/vault/api",
-			version:         "v1.0.3",
-			wantVersion:     "v1.0.3",
-			wantNotFoundErr: true,
-		},
-		{
-			name:           "valid directory path with package",
-			path:           "github.com/hashicorp/vault/builtin",
+			name:           "valid directory path with package, specified version and module path",
+			dirPath:        "github.com/hashicorp/vault/builtin",
+			modulePath:     "github.com/hashicorp/vault",
 			wantModulePath: "github.com/hashicorp/vault",
 			version:        "v1.0.3",
 			wantVersion:    "v1.0.3",
-			wantPackages:   moduleVaultAuditPackages,
+			wantPkgPaths: []string{
+				"github.com/hashicorp/vault/builtin/audit/file",
+				"github.com/hashicorp/vault/builtin/audit/socket",
+			},
 		},
 		{
 			name:            "invalid directory, incomplete last element",
-			path:            "github.com/hashicorp/vault/api/builti",
+			dirPath:         "github.com/hashicorp/vault/api/builti",
+			modulePath:      internal.UnknownModulePath,
 			wantModulePath:  "github.com/hashicorp/vault",
 			version:         "v1.0.3",
 			wantVersion:     "v1.0.3",
@@ -121,15 +152,39 @@ func TestGetDirectory(t *testing.T) {
 		},
 		{
 			name:            "invalid directory, not a subpath of a module path",
-			path:            "github.com/hashicorp/vault/api/builti",
-			wantModulePath:  "github.com/hashicorp/vault",
+			dirPath:         "github.com/hashicorp/vault/api/builti",
+			modulePath:      internal.UnknownModulePath,
 			version:         "v1.0.3",
+			wantModulePath:  "github.com/hashicorp/vault",
 			wantVersion:     "v1.0.3",
 			wantNotFoundErr: true,
 		},
+		{
+			name:           "stdlib directory",
+			dirPath:        "archive",
+			modulePath:     stdlib.ModulePath,
+			version:        internal.LatestVersion,
+			wantModulePath: stdlib.ModulePath,
+			wantVersion:    "v1.13.0",
+			wantPkgPaths: []string{
+				"archive/zip",
+				"archive/tar",
+			},
+		},
+		{
+			name:           "stdlib package",
+			dirPath:        "archive/zip",
+			modulePath:     stdlib.ModulePath,
+			version:        internal.LatestVersion,
+			wantModulePath: stdlib.ModulePath,
+			wantVersion:    "v1.13.0",
+			wantPkgPaths: []string{
+				"archive/zip",
+			},
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := testDB.GetDirectory(ctx, tc.path, tc.version)
+			got, err := testDB.GetDirectory(ctx, tc.dirPath, tc.modulePath, tc.version)
 			if tc.wantNotFoundErr {
 				if !xerrors.Is(err, derrors.NotFound) {
 					t.Fatalf("expected err; got = \n%+v, %v", got, err)
@@ -140,21 +195,28 @@ func TestGetDirectory(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			v := sample.VersionInfo()
-			v.ModulePath = tc.wantModulePath
-			v.Version = tc.version
-			sort.Slice(tc.wantPackages, func(i, j int) bool {
-				return tc.wantPackages[i].Path < tc.wantPackages[j].Path
+			vi := sample.VersionInfo()
+			vi.ModulePath = tc.wantModulePath
+			vi.Version = tc.wantVersion
+
+			var wantPackages []*internal.Package
+			for _, path := range tc.wantPkgPaths {
+				pkg := sample.Package()
+				pkg.Path = path
+				pkg.Imports = nil
+				wantPackages = append(wantPackages, pkg)
+			}
+			sort.Slice(wantPackages, func(i, j int) bool {
+				return wantPackages[i].Path < wantPackages[j].Path
 			})
 
 			wantDirectory := &internal.Directory{
-				Path:       tc.path,
-				ModulePath: tc.wantModulePath,
-				Version:    tc.wantVersion,
-				Packages:   tc.wantPackages,
+				VersionInfo: *vi,
+				Packages:    wantPackages,
+				Path:        tc.dirPath,
 			}
 			if diff := cmp.Diff(wantDirectory, got, cmpopts.EquateEmpty(), cmp.AllowUnexported(source.Info{})); diff != "" {
-				t.Errorf("testDB.GetDirectory(ctx, %q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
+				t.Errorf("testDB.GetDirectory(ctx, %q, %q, %q) mismatch (-want +got):\n%s", tc.dirPath, tc.modulePath, tc.version, diff)
 			}
 		})
 	}

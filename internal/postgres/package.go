@@ -15,38 +15,37 @@ import (
 	"golang.org/x/xerrors"
 )
 
-// GetPackage returns the first package from the database that has path and
-// version.
+// GetPackage returns the a package from the database with the corresponding
+// pkgPath, modulePath and version.
+//
+// If version = internal.LatestVersion, the package corresponding to
+// the latest matching module version will be fetched.
+//
+// If more than one module tie for a given dirPath and version pair, and
+// modulePath = internal.UnknownModulePath, the package in the module with the
+// longest module path will be fetched.
+// For example, if there are
+// two rows in the packages table:
+// (1) path = "github.com/hashicorp/vault/api"
+//     module_path = "github.com/hashicorp/vault"
+// AND
+// (2) path = "github.com/hashicorp/vault/api"
+//     module_path = "github.com/hashicorp/vault/api"
+// The latter will be returned.
+//
+// The returned error may be checked with
+// xerrors.Is(err, derrors.InvalidArgument) to determine if it was caused by an
+// invalid pkgPath, modulePath or version.
 //
 // The returned error may be checked with
 // xerrors.Is(err, derrors.InvalidArgument) to determine if it was caused by an
 // invalid path or version.
-func (db *DB) GetPackage(ctx context.Context, pkgPath, version string) (_ *internal.VersionedPackage, err error) {
+func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.VersionedPackage, err error) {
 	defer derrors.Wrap(&err, "DB.GetPackage(ctx, %q, %q)", pkgPath, version)
-	if pkgPath == "" || version == "" {
-		return nil, xerrors.Errorf("neither path nor version can be empty: %w", derrors.InvalidArgument)
-	}
-	return db.getPackage(ctx, pkgPath, version, "")
-}
-
-// GetPackageInModuleVersion returns a package from the database with pkgPath,
-// modulePath and version.
-//
-// The returned error may be checked with
-// xerrors.Is(err, derrors.InvalidArgument) to determine if it was caused by an
-// invalid path or version.
-func (db *DB) GetPackageInModuleVersion(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.VersionedPackage, err error) {
-	defer derrors.Wrap(&err, "DB.GetPackageInModuleVersion(ctx, %q, %q, %q)", pkgPath, modulePath, version)
 	if pkgPath == "" || modulePath == "" || version == "" {
 		return nil, xerrors.Errorf("none of pkgPath, modulePath, or version can be empty: %w", derrors.InvalidArgument)
 	}
-	if version == internal.LatestVersion {
-		return nil, xerrors.Errorf("version must be a specific semantic version: %w", derrors.InvalidArgument)
-	}
-	return db.getPackage(ctx, pkgPath, version, modulePath)
-}
 
-func (db *DB) getPackage(ctx context.Context, pkgPath, version, modulePath string) (_ *internal.VersionedPackage, err error) {
 	args := []interface{}{pkgPath}
 	query := `
 		SELECT
@@ -88,7 +87,7 @@ func (db *DB) getPackage(ctx context.Context, pkgPath, version, modulePath strin
 				v.patch DESC,
 				v.prerelease DESC
 			LIMIT 1;`
-	} else if modulePath == "" {
+	} else if modulePath == internal.UnknownModulePath {
 		query += `
 			WHERE
 				p.path = $1

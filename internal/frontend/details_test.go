@@ -23,14 +23,14 @@ func TestParseDetailsURLPath(t *testing.T) {
 		{
 			name:           "latest",
 			url:            "/github.com/hashicorp/vault/api",
-			wantModulePath: unknownModulePath,
+			wantModulePath: internal.UnknownModulePath,
 			wantPkgPath:    "github.com/hashicorp/vault/api",
 			wantVersion:    internal.LatestVersion,
 		},
 		{
 			name:           "package at version in nested module",
 			url:            "/github.com/hashicorp/vault/api@v1.0.3",
-			wantModulePath: unknownModulePath,
+			wantModulePath: internal.UnknownModulePath,
 			wantPkgPath:    "github.com/hashicorp/vault/api",
 			wantVersion:    "v1.0.3",
 		},
@@ -44,7 +44,7 @@ func TestParseDetailsURLPath(t *testing.T) {
 		{
 			name:           "package at version trailing slash",
 			url:            "/github.com/hashicorp/vault/api@v1.0.3/",
-			wantModulePath: unknownModulePath,
+			wantModulePath: internal.UnknownModulePath,
 			wantPkgPath:    "github.com/hashicorp/vault/api",
 			wantVersion:    "v1.0.3",
 		},

@@ -162,7 +162,7 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 				}
 			}
 
-			gotPkg, err := testDB.GetPackage(ctx, tc.wantPkgPath, tc.wantVersion)
+			gotPkg, err := testDB.GetPackage(ctx, tc.wantPkgPath, internal.UnknownModulePath, tc.wantVersion)
 			if tc.version == nil || tc.version.Packages == nil || tc.wantPkgPath == "" {
 				if tc.wantReadErr != (err != nil) {
 					t.Fatalf("got %v, want %v", err, sql.ErrNoRows)
@@ -170,7 +170,7 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 				return
 			}
 			if err != nil {
-				t.Error(err)
+				t.Fatal(err)
 			}
 
 			wantPkg := tc.version.Packages[0]

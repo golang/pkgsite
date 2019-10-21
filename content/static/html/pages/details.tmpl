@@ -54,8 +54,12 @@
   <nav class="DetailsNav js-modulesNav">
     <ul class="DetailsNav-list" role="tablist">
       {{range .Tabs}}
-        <li class="DetailsNav-tab{{if eq .Name $.Settings.Name}} selected{{end}}" role="presentation">
-          {{if eq .Name $.Settings.Name}}
+        <li class="{{if .Disabled}}DetailsNav-tabDisabled {{end}}DetailsNav-tab{{if eq .Name $.Settings.Name}} selected{{end}}" role="presentation">
+          {{if .Disabled}}
+            <a class="DetailsNav-link"
+               role="tab"
+               aria-selected="false"></a>
+          {{else if eq .Name $.Settings.Name}}
             <a class="DetailsNav-link"
                role="tab"
                aria-selected="true">

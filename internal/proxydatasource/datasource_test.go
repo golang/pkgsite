@@ -69,14 +69,11 @@ func TestDataSource_GetDirectory(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
 	want := &internal.Directory{
-		Path:       "foo.com/bar",
-		ModulePath: "foo.com/bar",
-		Version:    "v1.2.0",
-		Packages: []*internal.VersionedPackage{
-			wantVersionedPackage,
-		},
+		Path:        "foo.com/bar",
+		VersionInfo: wantVersionInfo,
+		Packages:    []*internal.Package{&wantPackage},
 	}
-	got, err := ds.GetDirectory(ctx, "foo.com/bar", "v1.2.0")
+	got, err := ds.GetDirectory(ctx, "foo.com/bar", internal.UnknownModulePath, "v1.2.0")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,7 +98,7 @@ func TestDataSource_GetImports(t *testing.T) {
 func TestDataSource_GetPackage_Latest(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
-	got, err := ds.GetPackage(ctx, "foo.com/bar/baz", internal.LatestVersion)
+	got, err := ds.GetPackage(ctx, "foo.com/bar/baz", internal.UnknownModulePath, internal.LatestVersion)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,7 +135,7 @@ func TestDataSource_GetModuleLicenses(t *testing.T) {
 func TestDataSource_GetPackage(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
-	got, err := ds.GetPackage(ctx, "foo.com/bar/baz", "v1.2.0")
+	got, err := ds.GetPackage(ctx, "foo.com/bar/baz", internal.UnknownModulePath, "v1.2.0")
 	if err != nil {
 		t.Fatal(err)
 	}

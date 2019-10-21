@@ -42,10 +42,11 @@ type DataSource interface {
 	// See the internal/postgres package for further documentation of these
 	// methods, particularly as they pertain to the main postgres implementation.
 
-	// GetDirectory returns packages whose import path is in a (possibly nested)
-	// subdirectory of the given directory path. If version is the empty string,
-	// directory operates on the latest version.
-	GetDirectory(ctx context.Context, dirPath, version string) (_ *internal.Directory, err error)
+	// GetDirectory returns packages whose import path is in a (possibly
+	// nested) subdirectory of the given directory path. When multiple
+	// package paths satisfy this query, it should prefer the module with
+	// the longest path.
+	GetDirectory(ctx context.Context, dirPath, modulePath, version string) (_ *internal.Directory, err error)
 	// GetImportedBy returns a slice of import paths corresponding to packages
 	// that import the given package path (at any version).
 	GetImportedBy(ctx context.Context, pkgPath, version string, limit int) ([]string, error)
@@ -55,15 +56,10 @@ type DataSource interface {
 	// GetModuleLicenses returns all top-level Licenses for the given modulePath
 	// and version. (i.e., Licenses contained in the module root directory)
 	GetModuleLicenses(ctx context.Context, modulePath, version string) ([]*license.License, error)
-	// GetPackageInModuleVersion returns the VersionedPackage corresponding
-	// to the given package path , module path, and version. At most one
-	// package should ever satisfy this query.
-	GetPackageInModuleVersion(ctx context.Context,
-		pkgPath, modulePath, version string) (*internal.VersionedPackage, error)
 	// GetPackage returns the VersionedPackage corresponding to the given package
-	// path and version. When multiple package paths satisfy this query, it
+	// pkgPath, modulePath, and version. When multiple package paths satisfy this query, it
 	// should prefer the module with the longest path.
-	GetPackage(ctx context.Context, pkgPath, version string) (*internal.VersionedPackage, error)
+	GetPackage(ctx context.Context, pkgPath, modulePath, version string) (*internal.VersionedPackage, error)
 	// GetPackageLicenses returns all Licenses that apply to pkgPath, within the
 	// module version specified by modulePath and version.
 	GetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) ([]*license.License, error)

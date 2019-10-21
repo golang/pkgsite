@@ -463,6 +463,11 @@ code {
 .DetailsNav-tab:hover {
   border-bottom: 2px solid var(--purple);
 }
+.DetailsNav-tabDisabled,
+.DetailsNav-tabDisabled:hover {
+  border-bottom: 2px solid var(--white);
+  color: var(--gray-5);
+}
 .DetailsNav-link,
 .DetailsNav-link:link,
 .DetailsNav-link:visited {

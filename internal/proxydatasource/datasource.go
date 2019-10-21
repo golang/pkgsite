@@ -61,30 +61,25 @@ type versionEntry struct {
 }
 
 // GetDirectory returns packages contained in the given subdirectory of a module version.
-func (ds *DataSource) GetDirectory(ctx context.Context, dirPath, version string) (_ *internal.Directory, err error) {
-	defer derrors.Wrap(&err, "GetDirectory(%q, %q)", dirPath, version)
-	modulePath, info, err := ds.findModule(ctx, dirPath, version)
-	if err != nil {
-		return nil, err
-	}
-	v, err := ds.getVersion(ctx, modulePath, info.Version)
-	if err != nil {
-		return nil, err
-	}
-	var vps []*internal.VersionedPackage
-	for _, p := range v.Packages {
-		if strings.HasPrefix(p.Path+"/", dirPath+"/") {
-			vps = append(vps, &internal.VersionedPackage{
-				Package:     *p,
-				VersionInfo: v.VersionInfo,
-			})
+func (ds *DataSource) GetDirectory(ctx context.Context, dirPath, modulePath, version string) (_ *internal.Directory, err error) {
+	defer derrors.Wrap(&err, "GetDirectory(%q, %q, %q)", dirPath, modulePath, version)
+
+	var info *proxy.VersionInfo
+	if modulePath == internal.UnknownModulePath {
+		modulePath, info, err = ds.findModule(ctx, dirPath, version)
+		if err != nil {
+			return nil, err
 		}
+		version = info.Version
+	}
+	v, err := ds.getVersion(ctx, modulePath, version)
+	if err != nil {
+		return nil, err
 	}
 	return &internal.Directory{
-		Path:       dirPath,
-		ModulePath: modulePath,
-		Version:    info.Version,
-		Packages:   vps,
+		Path:        dirPath,
+		VersionInfo: v.VersionInfo,
+		Packages:    v.Packages,
 	}, nil
 }
 
@@ -96,7 +91,7 @@ func (ds *DataSource) GetImportedBy(ctx context.Context, path, version string, l
 // GetImports returns package imports as extracted from the module zip.
 func (ds *DataSource) GetImports(ctx context.Context, pkgPath, modulePath, version string) (_ []string, err error) {
 	defer derrors.Wrap(&err, "GetImports(%q, %q, %q)", pkgPath, modulePath, version)
-	vp, err := ds.GetPackageInModuleVersion(ctx, pkgPath, modulePath, version)
+	vp, err := ds.GetPackage(ctx, pkgPath, modulePath, version)
 	if err != nil {
 		return nil, err
 	}
@@ -124,22 +119,15 @@ func (ds *DataSource) GetModuleLicenses(ctx context.Context, modulePath, version
 // such a package exists in the cache, it will be returned without querying the
 // proxy. Otherwise, the proxy is queried to find the longest module path at
 // that version containing the package.
-func (ds *DataSource) GetPackage(ctx context.Context, pkgPath, version string) (_ *internal.VersionedPackage, err error) {
+func (ds *DataSource) GetPackage(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.VersionedPackage, err error) {
 	defer derrors.Wrap(&err, "GetPackage(%q, %q)", pkgPath, version)
-	v, err := ds.getPackageVersion(ctx, pkgPath, version)
-	if err != nil {
-		return nil, err
-	}
-	return packageFromVersion(pkgPath, v)
-}
 
-// GetPackageInModuleVersion returns a VersionedPackage for the given pkgPath
-// and version. If such a package exists in the cache, it will be returned
-// without querying the proxy. Otherwise, the proxy is queried to find the
-// longest module path at that version containing the package.
-func (ds *DataSource) GetPackageInModuleVersion(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.VersionedPackage, err error) {
-	defer derrors.Wrap(&err, "GetPackageInModuleVersion(%q, %q, %q)", pkgPath, modulePath, version)
-	v, err := ds.getVersion(ctx, modulePath, version)
+	var v *internal.Version
+	if modulePath != internal.UnknownModulePath {
+		v, err = ds.getVersion(ctx, modulePath, version)
+	} else {
+		v, err = ds.getPackageVersion(ctx, pkgPath, version)
+	}
 	if err != nil {
 		return nil, err
 	}

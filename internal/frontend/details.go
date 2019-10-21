@@ -21,12 +21,6 @@ import (
 	"golang.org/x/xerrors"
 )
 
-// unknownModulePath is used to indicate cases where the modulePath is
-// ambiguous based on the urlPath. For example, if the urlPath is
-// <path>@<version> or <path>, we cannot know for sure what part of <path> is
-// the modulePath vs the packagePath suffix.
-const unknownModulePath = "<unknown>"
-
 // DetailsPage contains data for a package of module details template.
 type DetailsPage struct {
 	basePage
@@ -107,16 +101,12 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 	var pkg *internal.VersionedPackage
 	code, epage := fetchPackageOrModule(r.Context(), s.ds, "pkg", pkgPath, version, func(ver string) error {
 		var err error
-		if modulePath == unknownModulePath || modulePath == stdlib.ModulePath {
-			pkg, err = s.ds.GetPackage(r.Context(), pkgPath, ver)
-		} else {
-			pkg, err = s.ds.GetPackageInModuleVersion(r.Context(), pkgPath, modulePath, ver)
-		}
+		pkg, err = s.ds.GetPackage(r.Context(), pkgPath, modulePath, ver)
 		return err
 	})
 	if code != http.StatusOK {
 		if code == http.StatusNotFound {
-			s.serveDirectoryPage(w, r, pkgPath, version)
+			s.serveDirectoryPage(w, r, pkgPath, modulePath, version)
 			return
 		}
 		s.serveErrorPage(w, r, code, epage)
@@ -125,7 +115,7 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 
 	isLatest := version == internal.LatestVersion
 	if !isLatest {
-		latestPkg, err := s.ds.GetPackage(r.Context(), pkgPath, internal.LatestVersion)
+		latestPkg, err := s.ds.GetPackage(r.Context(), pkgPath, modulePath, internal.LatestVersion)
 		if err != nil {
 			log.Errorf("servePackagePage for %s@%s: %v", pkgPath, version, err)
 			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
@@ -163,7 +153,6 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 			return
 		}
 	}
-
 	page := &DetailsPage{
 		basePage:       newBasePage(r, packageTitle(&pkg.Package)),
 		Settings:       settings,
@@ -340,7 +329,7 @@ func parseDetailsURLPath(urlPath string) (pkgPath, modulePath, version string, e
 	parts := strings.SplitN(urlPath, "@", 2)
 	basePath := strings.TrimSuffix(strings.TrimPrefix(parts[0], "/"), "/")
 	if len(parts) == 1 {
-		modulePath = unknownModulePath
+		modulePath = internal.UnknownModulePath
 		version = internal.LatestVersion
 		pkgPath = basePath
 	} else {
@@ -349,7 +338,7 @@ func parseDetailsURLPath(urlPath string) (pkgPath, modulePath, version string, e
 		suffix := strings.Join(endParts[1:], "/")
 		version = endParts[0]
 		if suffix == "" || version == internal.LatestVersion {
-			modulePath = unknownModulePath
+			modulePath = internal.UnknownModulePath
 			pkgPath = basePath
 		} else {
 			modulePath = basePath

@@ -67,11 +67,11 @@ func TestSkipIncompletePackage(t *testing.T) {
 	}
 
 	pkgFoo := modulePath + "/foo"
-	if _, err := testDB.GetPackage(ctx, pkgFoo, version); err != nil {
+	if _, err := testDB.GetPackage(ctx, pkgFoo, internal.UnknownModulePath, version); err != nil {
 		t.Errorf("got %v, want nil", err)
 	}
 	pkgBar := modulePath + "/bar"
-	if _, err := testDB.GetPackage(ctx, pkgBar, version); !xerrors.Is(err, derrors.NotFound) {
+	if _, err := testDB.GetPackage(ctx, pkgBar, internal.UnknownModulePath, version); !xerrors.Is(err, derrors.NotFound) {
 		t.Errorf("got %v, want NotFound", err)
 	}
 }
@@ -130,15 +130,15 @@ func TestTrimLargeCode(t *testing.T) {
 	}
 
 	pkgFoo := modulePath + "/foo"
-	if _, err := testDB.GetPackage(ctx, pkgFoo, version); err != nil {
+	if _, err := testDB.GetPackage(ctx, pkgFoo, internal.UnknownModulePath, version); err != nil {
 		t.Errorf("got %v, want nil", err)
 	}
 	pkgBar := modulePath + "/bar"
-	if _, err := testDB.GetPackage(ctx, pkgBar, version); err != nil {
+	if _, err := testDB.GetPackage(ctx, pkgBar, internal.UnknownModulePath, version); err != nil {
 		t.Errorf("got %v, want nil", err)
 	}
 	pkgBaz := modulePath + "/baz"
-	if _, err := testDB.GetPackage(ctx, pkgBaz, version); err != nil {
+	if _, err := testDB.GetPackage(ctx, pkgBaz, internal.UnknownModulePath, version); err != nil {
 		t.Errorf("got %v, want nil", err)
 	}
 }
@@ -157,7 +157,7 @@ func TestFetch_V1Path(t *testing.T) {
 	if _, err := fetchAndInsertVersion(ctx, "my.mod/foo", "v1.0.0", client, testDB); err != nil {
 		t.Fatalf("fetchAndInsertVersion: %v", err)
 	}
-	pkg, err := testDB.GetPackage(ctx, "my.mod/foo", "v1.0.0")
+	pkg, err := testDB.GetPackage(ctx, "my.mod/foo", internal.UnknownModulePath, "v1.0.0")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -202,7 +202,7 @@ func TestReFetch(t *testing.T) {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
 	}
 
-	if _, err := testDB.GetPackage(ctx, pkgFoo, version); err != nil {
+	if _, err := testDB.GetPackage(ctx, pkgFoo, internal.UnknownModulePath, version); err != nil {
 		t.Error(err)
 	}
 
@@ -238,7 +238,7 @@ func TestReFetch(t *testing.T) {
 			GOARCH: "amd64",
 		},
 	}
-	got, err := testDB.GetPackage(ctx, pkgBar, version)
+	got, err := testDB.GetPackage(ctx, pkgBar, internal.UnknownModulePath, version)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -247,7 +247,7 @@ func TestReFetch(t *testing.T) {
 	}
 
 	// For good measure, verify that package foo is now NotFound.
-	if _, err := testDB.GetPackage(ctx, pkgFoo, version); !xerrors.Is(err, derrors.NotFound) {
+	if _, err := testDB.GetPackage(ctx, pkgFoo, internal.UnknownModulePath, version); !xerrors.Is(err, derrors.NotFound) {
 		t.Errorf("got %v, want NotFound", err)
 	}
 }
@@ -656,7 +656,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				t.Fatalf("testDB.GetVersionInfo(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
 			}
 
-			gotPkg, err := testDB.GetPackage(ctx, test.pkg, test.version)
+			gotPkg, err := testDB.GetPackage(ctx, test.pkg, internal.UnknownModulePath, test.version)
 			if err != nil {
 				t.Fatal(err)
 			}

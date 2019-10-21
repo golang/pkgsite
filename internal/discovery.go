@@ -13,9 +13,17 @@ import (
 	"golang.org/x/discovery/internal/version"
 )
 
-// LatestVersion signifies the latest available version in requests to the
-// proxy client.
-const LatestVersion = "latest"
+const (
+	// LatestVersion signifies the latest available version in requests to the
+	// proxy client.
+	LatestVersion = "latest"
+
+	// UnknownModulePath signifies that the module path for a given package
+	// path is ambiguous or not known. This is because requests to the
+	// frontend can come in the form of <import-path>[@<version>], and it is
+	// not clear which part of the import-path is the module path.
+	UnknownModulePath = "unknownModulePath"
+)
 
 // VersionInfo holds metadata associated with a version.
 type VersionInfo struct {
@@ -92,10 +100,9 @@ type VersionedPackage struct {
 // Directory represents a folder in a module version, and all of the packages
 // inside that folder.
 type Directory struct {
-	Path       string
-	ModulePath string
-	Version    string
-	Packages   []*VersionedPackage
+	VersionInfo
+	Path     string
+	Packages []*Package
 }
 
 // IndexVersion holds the version information returned by the module index.

@@ -5,6 +5,7 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -15,7 +16,9 @@ import (
 	"testing"
 
 	"github.com/golang-migrate/migrate/v4"
+	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/sample"
 	"golang.org/x/discovery/internal/testhelper"
 
 	// imported to register the postgres migration driver
@@ -203,4 +206,66 @@ func RunDBTests(dbName string, m *testing.M, testDB **DB) {
 		log.Fatal(err)
 	}
 	os.Exit(code)
+}
+
+// InsertSampleDirectory tree inserts a set of packages for testing
+// GetDirectory and frontend.FetchDirectoryDetails.
+func InsertSampleDirectoryTree(ctx context.Context, t *testing.T, testDB *DB) {
+	t.Helper()
+
+	for _, data := range []struct {
+		modulePath, version string
+		paths               []string
+	}{
+		{
+			"std",
+			"v1.13.0",
+			[]string{
+				"archive/zip",
+				"archive/tar",
+			},
+		},
+		{
+			"github.com/hashicorp/vault/api",
+			"v1.1.2",
+			[]string{"github.com/hashicorp/vault/api"},
+		},
+		{
+			"github.com/hashicorp/vault",
+			"v1.1.2",
+			[]string{
+				"github.com/hashicorp/vault/api",
+				"github.com/hashicorp/vault/builtin/audit/file",
+				"github.com/hashicorp/vault/builtin/audit/socket",
+				"github.com/hashicorp/vault/vault/replication",
+				"github.com/hashicorp/vault/vault/seal/transit",
+			},
+		},
+		{
+			"github.com/hashicorp/vault",
+			"v1.0.3",
+			[]string{
+				"github.com/hashicorp/vault/api",
+				"github.com/hashicorp/vault/builtin/audit/file",
+				"github.com/hashicorp/vault/builtin/audit/socket",
+			},
+		},
+	} {
+		var pkgs []*internal.Package
+		for _, path := range data.paths {
+			p := sample.Package()
+			p.Path = path
+			p.Imports = nil
+			pkgs = append(pkgs, p)
+		}
+
+		v := sample.Version()
+		v.ModulePath = data.modulePath
+		v.Version = data.version
+		v.Packages = pkgs
+		if err := testDB.InsertVersion(ctx, v); err != nil {
+			t.Fatal(err)
+		}
+	}
+
 }
