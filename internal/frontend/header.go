@@ -188,9 +188,18 @@ func breadcrumbPath(pkgPath, modPath, version string) template.HTML {
 		}
 		elems[len(elems)-i-1] = fmt.Sprintf(`<a href="%s">%s</a>`, template.HTMLEscapeString(href), template.HTMLEscapeString(el))
 	}
-	return template.HTML(`<div class="DetailsHeader-breadcrumb">` +
-		strings.Join(elems, `<span class="DetailsHeader-breadcrumbDivider">/</span>`) +
-		`</div>`)
+	// Include the path as a breadcrumb, and also a "copy" button for the path.
+	// We need the 'path' input element to copy it to the clipboard.
+	// Setting its type="hidden" doesn't work, so we position it off screen.
+	f := `<div class="DetailsHeader-breadcrumb">
+%s
+<img id="DetailsHeader-copyPath" role="button" src="/static/img/ic_copy.svg" alt="Copy path to clipboard">
+<input id="DetailsHeader-path" value="%s"/>
+</div>`
+
+	return template.HTML(fmt.Sprintf(f,
+		strings.Join(elems, `<span class="DetailsHeader-breadcrumbDivider">/</span>`),
+		pkgPath))
 }
 
 // moduleTitle constructs the details page title for pkg.

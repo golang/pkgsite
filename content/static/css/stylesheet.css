@@ -272,6 +272,16 @@ code {
 .DetailsHeader-breadcrumbDivider {
   color: var(--gray-3);
 }
+#DetailsHeader-path {
+/*
+   An input element that can be selected so its contents can be
+   copied to the clipboard. We can't use a hidden element, so
+   put this visible one very far off the screen.
+*/
+  position: absolute;
+  left: -62rem;
+  top: 62rem;
+}
 @media only screen and (min-width: 850px) {
   .Header {
     padding-left: 1.5rem;

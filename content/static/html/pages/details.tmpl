@@ -8,7 +8,9 @@
   {{$header := .Header}}
   {{$namespace := .Namespace}}
   <header class="DetailsHeader">
-    <span>{{.BreadcrumbPath}}</span>
+    <div class="DetailsHeader-breadcrumb">
+      {{.BreadcrumbPath}}
+    </div>
     <div class="DetailsHeader-main">
       <h1 class="DetailsHeader-title">{{.Title}}</h1>
       <div class="DetailsHeader-version">{{$header.Version}}</div>
@@ -86,6 +88,18 @@ const navEl = document.querySelector('.js-modulesNav');
 const selectedEl = navEl.querySelector(`[aria-selected='true']`);
 if (selectedEl.offsetLeft + selectedEl.offsetWidth > navEl.offsetWidth) {
   navEl.scrollLeft = selectedEl.offsetLeft;
+}
+</script>
+
+<script nonce="{{.Nonce}}" src="/static/js/button.js"></script>
+
+<script nonce="{{.Nonce}}">
+const cp = document.querySelector('#DetailsHeader-copyPath')
+if (cp) {
+  addButtonHandlers(cp, function() {
+    document.querySelector('#DetailsHeader-path').select();
+    document.execCommand("copy");
+  });
 }
 </script>
 {{end}}

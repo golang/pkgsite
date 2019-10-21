@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -184,9 +185,11 @@ func TestBreadcrumbPath(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("%s-%s-%s", test.pkgPath, test.modPath, test.version), func(t *testing.T) {
-			got := breadcrumbPath(test.pkgPath, test.modPath, test.version)
-			want := `<div class="DetailsHeader-breadcrumb">` + test.want + `</div>`
-			if string(got) != want {
+			got := string(breadcrumbPath(test.pkgPath, test.modPath, test.version))
+			got = strings.Replace(got, "\n", "", -1)
+			want := `<div class="DetailsHeader-breadcrumb">` + test.want +
+				fmt.Sprintf(`<img id="DetailsHeader-copyPath" role="button" src="/static/img/ic_copy.svg" alt="Copy path to clipboard"><input id="DetailsHeader-path" value="%s"/></div>`, test.pkgPath)
+			if got != want {
 				t.Errorf("got:\n%s\n\nwant:\n%s\n", got, want)
 			}
 		})
