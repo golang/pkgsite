@@ -506,8 +506,12 @@ code {
 .Documentation {
   color: var(--gray-1);
 }
+.Documentation h2,
+.Documentation h3 {
+  font-size: 1.5rem;
+}
 .Documentation a {
-  color: #375eab;
+  color: var(--turq-text);
   text-decoration: none;
 }
 .Documentation a:hover {
@@ -546,14 +550,47 @@ code {
   font: 0.875rem/1.375rem 'Go Mono', 'Source Code Pro', monospace;
   margin: 0;
   overflow-x: auto;
-  padding: 0.75rem;
+  padding: 0.625rem;
   tab-size: 4;
+  line-height: 1.25rem;
 }
 .Documentation pre + pre {
   margin-top: 0.625rem;
 }
 .Documentation pre .comment {
   color: #060;
+}
+
+.Documentation-overview,
+.Documentation-index,
+.Documentation-examples,
+.Documentation-constants,
+.Documentation-variables,
+.Documentation-function,
+.Documentation-type,
+.Documentation-note {
+  border-top: 0.0625rem solid var(--gray-8);
+  padding-bottom: 1.5rem;
+}
+
+.Documentation-exampleDetailsHeader {
+  color: var(--turq-text);
+  text-decoration: none;
+  outline: none;
+  margin-bottom: 2rem;
+}
+
+.Documentation .Documentation-typeMethodHeader,
+.Documentation .Documentation-typeFuncHeader {
+  font-size: 1.25rem;
+}
+
+.Documentation .example-header {
+  color: var(--turq-text);
+  font-size: 1rem;
+  outline: none;
+  padding-top: 0.5rem;
+  text-decoration: none;
 }
 
 .Versions-list {
