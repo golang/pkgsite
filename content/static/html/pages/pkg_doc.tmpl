@@ -7,7 +7,24 @@
 {{define "details_content"}}
   {{with .Documentation}}
     <div class="Documentation">{{.}}</div>
+
+    <dialog class="JumpDialog">
+      <h4 class="JumpDialog-title">Jump to identifier</h4>
+      <form method="dialog">
+        <input class="JumpDialog-filter" autocomplete="off" type="text">
+        <div class="JumpDialog-body">
+          <div class="JumpDialog-list"></div>
+        </div>
+        <button class="JumpDialog-button">Close</button>
+      </form>
+    </dialog>
+
   {{else}}
     {{template "empty_content" "No documentation available for this package!"}}
   {{end}}
 {{end}}
+
+{{define "details_post_content"}}
+<script nonce="{{.Nonce}}" src="/static/js/jump.js?version={{.AppVersionLabel}}"></script>
+{{end}}
+

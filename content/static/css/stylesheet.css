@@ -711,3 +711,25 @@ table.Directories {
 .Details-indent {
   margin-left: 1.1rem
 }
+
+/* jump-to-identifier dialog on documentation page */
+
+.JumpDialog {
+}
+.JumpDialog-title {
+}
+.JumpDialog-body {
+  height: 8rem;
+  overflow: scroll;
+}
+.JumpDialog-list {
+  display: flex;
+  flex-direction: column;
+}
+.JumpDialog-filter {
+}
+.JumpDialog a {
+  text-decoration: none;
+}
+.JumpDialog-button {
+}
