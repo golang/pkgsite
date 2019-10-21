@@ -18,6 +18,7 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-redis/redis/v7 v7.0.0-beta.4
 	github.com/golang-migrate/migrate/v4 v4.6.2
+	github.com/golang/groupcache v0.0.0-20190702054246-869f871628b6
 	github.com/golang/protobuf v1.3.2
 	github.com/google/go-cmp v0.3.1
 	github.com/google/go-replayers/httpreplay v0.1.0
@@ -41,6 +42,7 @@ require (
 	golang.org/x/net v0.0.0-20191007182048-72f939374954
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
+	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
 	golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7
 	google.golang.org/api v0.10.0
 	google.golang.org/genproto v0.0.0-20191007204434-a023cd5227bd
