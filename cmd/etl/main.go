@@ -7,11 +7,13 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"flag"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
@@ -44,6 +46,8 @@ func main() {
 		log.Fatal(err)
 	}
 	config.Dump(os.Stderr)
+
+	readProxyRemoved()
 
 	// Wrap the postgres driver with OpenCensus instrumentation.
 	driverName, err := ocsql.Register("postgres", ocsql.WithAllTraceOptions())
@@ -122,4 +126,28 @@ func getLogger(ctx context.Context) middleware.Logger {
 		return logger
 	}
 	return middleware.LocalLogger{}
+}
+
+// Read a file of module versions that we should ignore because
+// the are in the index but not stored in the proxy.
+// Format of the file: each line is
+//     module@version
+func readProxyRemoved() {
+	filename := config.GetEnv("GO_DISCOVERY_PROXY_REMOVED", "")
+	if filename == "" {
+		return
+	}
+	f, err := os.Open(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+	scan := bufio.NewScanner(f)
+	for scan.Scan() {
+		etl.ProxyRemoved[strings.TrimSpace(scan.Text())] = true
+	}
+	if err := scan.Err(); err != nil {
+		log.Fatalf("scanning %s: %v", filename, err)
+	}
+	log.Infof("read %d excluded module versions from %s", len(etl.ProxyRemoved), filename)
 }

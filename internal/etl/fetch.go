@@ -116,6 +116,10 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 	return code, fetchErr
 }
 
+// ProxyRemoved is a set of module@version that have been removed from the proxy,
+// even though they are still in the index.
+var ProxyRemoved = map[string]bool{}
+
 // fetchAndInsertVersion fetches the given module version from the module proxy
 // or (in the case of the standard library) from the Go repo and writes the
 // resulting data to the database.
@@ -125,6 +129,11 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 // even for short-lived requests.
 func fetchAndInsertVersion(parentCtx context.Context, modulePath, version string, proxyClient *proxy.Client, db *postgres.DB) (hasIncompletePackages bool, err error) {
 	defer derrors.Wrap(&err, "fetchAndInsertVersion(%q, %q)", modulePath, version)
+
+	if ProxyRemoved[modulePath+"@"+version] {
+		log.Infof("not fetching %s@%s because it is on the ProxyRemoved list", modulePath, version)
+		return false, derrors.Excluded
+	}
 
 	exc, err := db.IsExcluded(parentCtx, modulePath)
 	if err != nil {
