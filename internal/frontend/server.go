@@ -33,7 +33,7 @@ type Server struct {
 	reloadTemplates bool
 	errorPage       []byte
 
-	mu        sync.RWMutex // Protects all fields below
+	mu        sync.Mutex // Protects all fields below
 	templates map[string]*template.Template
 }
 
@@ -270,18 +270,6 @@ func (s *Server) renderErrorPage(status int, page *errorPage) ([]byte, error) {
 
 // servePage is used to execute all templates for a *Server.
 func (s *Server) servePage(w http.ResponseWriter, templateName string, page interface{}) {
-	if s.reloadTemplates {
-		s.mu.Lock()
-		var err error
-		s.templates, err = parsePageTemplates(s.templateDir)
-		s.mu.Unlock()
-		if err != nil {
-			log.Errorf("Error parsing templates: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-	}
-
 	buf, err := s.renderPage(templateName, page)
 	if err != nil {
 		log.Errorf("s.renderPage(%q, %+v): %v", templateName, page, err)
@@ -296,8 +284,16 @@ func (s *Server) servePage(w http.ResponseWriter, templateName string, page inte
 
 // renderPage executes the given templateName with page.
 func (s *Server) renderPage(templateName string, page interface{}) ([]byte, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+	if s.reloadTemplates {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		var err error
+		s.templates, err = parsePageTemplates(s.templateDir)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing templates: %v", err)
+		}
+	}
+
 	var buf bytes.Buffer
 	tmpl := s.templates[templateName]
 	if tmpl == nil {
