@@ -10,16 +10,15 @@ require (
 	contrib.go.opencensus.io/exporter/stackdriver v0.12.7
 	contrib.go.opencensus.io/integrations/ocsql v0.1.4
 	github.com/GoogleCloudPlatform/cloudsql-proxy v0.0.0-20190828224159-d93c53a4824c
+	github.com/alicebob/miniredis/v2 v2.10.1
 	github.com/bmizerany/perks v0.0.0-20141205001514-d9a9656a3a4b // indirect
-	github.com/chzyer/logex v1.1.10 // indirect
-	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
-	github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1 // indirect
 	github.com/dgryski/go-gk v0.0.0-20140819190930-201884a44051 // indirect
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-redis/redis/v7 v7.0.0-beta.4
 	github.com/golang-migrate/migrate/v4 v4.6.2
 	github.com/golang/groupcache v0.0.0-20190702054246-869f871628b6
 	github.com/golang/protobuf v1.3.2
+	github.com/gomodule/redigo v2.0.0+incompatible // indirect
 	github.com/google/go-cmp v0.3.1
 	github.com/google/go-replayers/httpreplay v0.1.0
 	github.com/google/licensecheck v0.0.0-20190611011822-e07107a3842f
@@ -37,6 +36,7 @@ require (
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/streadway/quantile v0.0.0-20150917103942-b0c588724d25 // indirect
 	github.com/tsenart/vegeta v12.7.0+incompatible
+	github.com/yuin/gopher-lua v0.0.0-20190514113301-1cd887cd7036 // indirect
 	go.opencensus.io v0.22.1
 	golang.org/x/crypto v0.0.0-20190923035154-9ee001bba392
 	golang.org/x/net v0.0.0-20191007182048-72f939374954
