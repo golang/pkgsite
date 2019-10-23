@@ -207,14 +207,10 @@ func (s *Server) licensePolicyHandler() http.HandlerFunc {
 
 // newBasePage returns a base page for the given request and title.
 func newBasePage(r *http.Request, title string) basePage {
-	nonce, ok := middleware.GetNonce(r.Context())
-	if !ok {
-		log.Errorf("middleware.GetNonce: nonce was not set")
-	}
 	return basePage{
 		Title: title,
 		Query: searchQuery(r),
-		Nonce: nonce,
+		Nonce: middleware.NoncePlaceholder,
 	}
 }
 

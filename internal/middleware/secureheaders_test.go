@@ -6,8 +6,10 @@ package middleware
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"testing"
 )
 
@@ -22,8 +24,22 @@ func TestPolicySerialization(t *testing.T) {
 }
 
 func TestSecureHeaders(t *testing.T) {
+	const origBody = `
+    <link foo>
+    <script nonce="$$GODISCOVERYNONCE$$" async src="bar"></script>
+    blah blah blah
+    <script nonce="$$GODISCOVERYNONCE$$">js</script>
+`
+
+	const wantBodyFmt = `
+    <link foo>
+    <script nonce="%[1]s" async src="bar"></script>
+    blah blah blah
+    <script nonce="%[1]s">js</script>
+`
+
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "Hello!")
+		fmt.Fprint(w, origBody)
 	})
 	mw := SecureHeaders()
 	ts := httptest.NewServer(mw(handler))
@@ -45,4 +61,20 @@ func TestSecureHeaders(t *testing.T) {
 		}
 	}
 
+	// Check that the nonce was substituted correctly.
+	// We need to extract it from the header.
+	nonceRE := regexp.MustCompile(`'nonce-([^']+)'`)
+	matches := nonceRE.FindStringSubmatch(resp.Header.Get("content-security-policy"))
+	if matches == nil {
+		t.Fatal("cannot extract nonce")
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	gotBody := string(body)
+	wantBody := fmt.Sprintf(wantBodyFmt, matches[1])
+	if gotBody != wantBody {
+		t.Errorf("got  body %s\nwant body %s", gotBody, wantBody)
+	}
 }

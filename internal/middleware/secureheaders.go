@@ -5,12 +5,17 @@
 package middleware
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"strings"
 
 	"golang.org/x/discovery/internal/log"
 )
+
+// NoncePlaceholder should be used as the value for nonces in rendered content.
+// It is substituted for the actual nonce value by the SecureHeaders middleware.
+const NoncePlaceholder = "$$GODISCOVERYNONCE$$"
 
 // policy is a helper for constructing content security policies.
 type policy struct {
@@ -93,7 +98,6 @@ func SecureHeaders() Middleware {
 				fmt.Sprintf("'nonce-%s'", nonce),
 				"www.gstatic.com",
 				"support.google.com")
-			ctx := setNonce(r.Context(), nonce)
 
 			// Don't allow framing.
 			p.add("frame-ancestors", none)
@@ -105,7 +109,36 @@ func SecureHeaders() Middleware {
 			// Prevent MIME sniffing.
 			w.Header().Set("X-Content-Type-Options", "nosniff")
 
-			h.ServeHTTP(w, r.WithContext(ctx))
+			// Replace the nonce in the page body.
+			target := []byte(fmt.Sprintf("<script nonce=%q", NoncePlaceholder))
+			replacement := []byte(fmt.Sprintf("<script nonce=%q", nonce))
+			rrw := &replacingResponseWriter{
+				ResponseWriter: w,
+				target:         target,
+				replacement:    replacement,
+			}
+			h.ServeHTTP(rrw, r)
+			rrw.flush()
 		})
+	}
+}
+
+// replacingResponseWriter is an http.ResponseWriter that replaces
+// target with replacement in the response body.
+type replacingResponseWriter struct {
+	http.ResponseWriter
+	target, replacement []byte
+	buf                 bytes.Buffer
+}
+
+func (r *replacingResponseWriter) Write(b []byte) (int, error) {
+	return r.buf.Write(b)
+}
+
+func (r *replacingResponseWriter) flush() {
+	data := r.buf.Bytes()
+	data = bytes.ReplaceAll(data, r.target, r.replacement)
+	if _, err := r.ResponseWriter.Write(data); err != nil {
+		log.Errorf("replacingResponseWriter.flush: %v", err)
 	}
 }

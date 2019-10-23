@@ -95,7 +95,7 @@ func main() {
 	requestLogger := getLogger(ctx)
 	mw := middleware.Chain(
 		middleware.RequestLog(requestLogger),
-		middleware.SecureHeaders(),
+		middleware.SecureHeaders(), // must come before any caching middleware for nonces to work
 		middleware.Timeout(1*time.Minute),
 	)
 
