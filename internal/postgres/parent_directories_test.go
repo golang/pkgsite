@@ -20,36 +20,26 @@ func TestToTsvectorParentDirectoriesStoredProcedure(t *testing.T) {
 
 	defer ResetTestDB(testDB, t)
 
-	v := sample.Version()
-	v.ModulePath = "github.com/a/b"
-	v.Version = "v1.0.0"
-	v.Packages = []*internal.Package{}
-	path1 := "github.com/a/b"
-	path2 := "github.com/a/b/c"
-	path3 := "github.com/a/b/c/github.com/a/b/c"
-	for _, p := range []string{path1, path2, path3} {
-		pkg := sample.Package()
-		pkg.Path = p
-		v.Packages = append(v.Packages, pkg)
-	}
-	if err := testDB.InsertVersion(ctx, v); err != nil {
-		t.Fatal(err)
-	}
-
 	for _, tc := range []struct {
-		path string
-		want []string
+		path, modulePath string
+		want             []string
 	}{
 		{
-			path: path1,
-			want: []string{path1},
+			path:       "github.com/a/b",
+			modulePath: "github.com/a/b",
+			want:       []string{"github.com/a/b"},
 		},
 		{
-			path: path2,
-			want: []string{path1, path2},
+			path:       "github.com/a/b/c",
+			modulePath: "github.com/a/b",
+			want: []string{
+				"github.com/a/b",
+				"github.com/a/b/c",
+			},
 		},
 		{
-			path: path3,
+			path:       "github.com/a/b/c/github.com/a/b/c",
+			modulePath: "github.com/a/b",
 			want: []string{
 				"github.com/a/b",
 				"github.com/a/b/c",
@@ -59,8 +49,32 @@ func TestToTsvectorParentDirectoriesStoredProcedure(t *testing.T) {
 				"github.com/a/b/c/github.com/a/b/c",
 			},
 		},
+		{
+			path:       "bufio",
+			modulePath: "std",
+			want: []string{
+				"bufio",
+			},
+		},
+		{
+			path:       "archive/zip",
+			modulePath: "std",
+			want: []string{
+				"archive",
+				"archive/zip",
+			},
+		},
 	} {
 		t.Run(tc.path, func(t *testing.T) {
+			v := sample.Version()
+			v.ModulePath = tc.modulePath
+			pkg := sample.Package()
+			pkg.Path = tc.path
+			v.Packages = []*internal.Package{pkg}
+			if err := testDB.InsertVersion(ctx, v); err != nil {
+				t.Fatal(err)
+			}
+
 			var got []string
 			err := testDB.queryRow(ctx,
 				`SELECT tsvector_to_array(tsv_parent_directories) FROM packages WHERE path = $1;`,
