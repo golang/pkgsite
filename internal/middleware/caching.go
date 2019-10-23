@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"path"
+	"strconv"
 	"time"
 
 	"github.com/go-redis/redis/v7"
@@ -29,7 +30,7 @@ var (
 	)
 	cacheErrors = stats.Int64(
 		"go-discovery/cache_errors",
-		"Errors retreiving from cache.",
+		"Errors retrieving from cache.",
 		stats.UnitDimensionless,
 	)
 
@@ -54,7 +55,7 @@ var (
 func recordCacheResult(ctx context.Context, name string, hit bool) {
 	stats.RecordWithTags(ctx, []tag.Mutator{
 		tag.Upsert(keyCacheName, name),
-		tag.Upsert(keyCacheHit, fmt.Sprint(hit)),
+		tag.Upsert(keyCacheHit, strconv.FormatBool(hit)),
 	}, cacheResults.M(1))
 }
 
@@ -64,43 +65,47 @@ func recordCacheError(ctx context.Context, name string) {
 	}, cacheErrors.M(1))
 }
 
-// Cache returns a new Middleware that times out each request after the given
-// duration.
-func Cache(name string, client *redis.Client, d time.Duration) Middleware {
-
+// Cache returns a new Middleware that caches every request.
+// The name of the cache is used only for metrics.
+// The expiration is TTL of the cache keys.
+func Cache(name string, client *redis.Client, expiration time.Duration) Middleware {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			key := r.URL.String()
-			// set a short timeout for redis requests, so that we can quickly
-			// fall-back to un-cached serving if redis is unavailable.
+			// Set a short timeout for redis requests, so that we can quickly
+			// fall back to un-cached serving if redis is unavailable.
 			getCtx, cancelGet := context.WithTimeout(ctx, 50*time.Millisecond)
 			defer cancelGet()
 			val, err := client.WithContext(getCtx).Get(key).Bytes()
-			if err == redis.Nil {
-				recordCacheResult(ctx, name, false)
-			} else if err != nil {
-				log.Errorf("client.Get(): %v", err)
-			} else {
+			switch err {
+			case nil: // cache hit; serve the bytes
 				recordCacheResult(ctx, name, true)
 				content := bytes.NewReader(val)
-				name := path.Base(r.URL.Path)
-				http.ServeContent(w, r, name, time.Now(), content)
+				// Use the last component of the URL path as a content-type hint
+				// to ServeContent.
+				contentName := path.Base(r.URL.Path)
+				http.ServeContent(w, r, contentName, time.Now(), content)
 				return
+			case redis.Nil: // cache miss
+				recordCacheResult(ctx, name, false)
+			default: // cache error
+				log.Errorf("cache get %q: %v", key, err)
+				recordCacheError(ctx, name)
 			}
 			rec := &cacheRecorder{ResponseWriter: w, buf: &bytes.Buffer{}}
 			h.ServeHTTP(rec, r)
 			if rec.bufErr == nil && (rec.statusCode == 0 || rec.statusCode == http.StatusOK) {
 				log.Infof("caching response of length %d for %s", rec.buf.Len(), key)
-				// write cache results asynchronously, since we don't want to slow down
+				// Write cache results asynchronously, since we don't want to slow down
 				// our response.
 				go func() {
 					setCtx, cancelSet := context.WithTimeout(context.Background(), 1*time.Second)
 					defer cancelSet()
-					_, err := client.WithContext(setCtx).Set(key, rec.buf.Bytes(), d).Result()
+					_, err := client.WithContext(setCtx).Set(key, rec.buf.Bytes(), expiration).Result()
 					if err != nil {
 						recordCacheError(ctx, name)
-						log.Errorf("client.Set(): %v", err)
+						log.Errorf("cache set %q: %v", key, err)
 					}
 				}()
 			}
@@ -134,7 +139,7 @@ func (r *cacheRecorder) Write(b []byte) (int, error) {
 
 func (r *cacheRecorder) WriteHeader(statusCode int) {
 	if statusCode > r.statusCode {
-		// defensively take the largest status code that's written, so if any
+		// Defensively take the largest status code that's written, so if any
 		// middleware thinks the response is not OK, we will capture this.
 		r.statusCode = statusCode
 	}
