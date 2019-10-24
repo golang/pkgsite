@@ -4,7 +4,10 @@
 
 package config
 
-import "testing"
+import (
+	"regexp"
+	"testing"
+)
 
 func TestValidateAppVersion(t *testing.T) {
 	for _, tc := range []struct {
@@ -21,6 +24,31 @@ func TestValidateAppVersion(t *testing.T) {
 		err := ValidateAppVersion(tc.in)
 		if (err != nil) != tc.wantErr {
 			t.Errorf("ValidateAppVersion(%q) = %v, want error = %t", tc.in, err, tc.wantErr)
+		}
+	}
+}
+
+func TestChooseOne(t *testing.T) {
+	tests := []struct {
+		configVar   string
+		wantMatches string
+	}{
+		{"foo", "foo"},
+		{"foo1 \n foo2", "^foo[12]$"},
+		{"foo1\nfoo2", "^foo[12]$"},
+		{"foo1 foo2", "^foo[12]$"},
+	}
+	for _, test := range tests {
+		got, err := chooseOne(test.configVar)
+		if err != nil {
+			t.Fatal(err)
+		}
+		matched, err := regexp.MatchString(test.wantMatches, got)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !matched {
+			t.Errorf("chooseOne(%q) = %q, _, want matches %q", test.configVar, got, test.wantMatches)
 		}
 	}
 }

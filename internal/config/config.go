@@ -14,9 +14,11 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	"golang.org/x/discovery/internal/derrors"
@@ -248,7 +250,10 @@ func Init(ctx context.Context) (err error) {
 
 	cfg.DBUser = GetEnv("GO_DISCOVERY_DATABASE_USER", "postgres")
 	cfg.DBPassword = os.Getenv("GO_DISCOVERY_DATABASE_PASSWORD")
-	cfg.DBHost = GetEnv("GO_DISCOVERY_DATABASE_HOST", "localhost")
+	cfg.DBHost, err = chooseOne(GetEnv("GO_DISCOVERY_DATABASE_HOST", "localhost"))
+	if err != nil {
+		return err
+	}
 	cfg.DBPort = GetEnv("GO_DISCOVERY_DATABASE_PORT", "5432")
 	cfg.DBName = GetEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-database")
 	cfg.DBSecret = os.Getenv("GO_DISCOVERY_DATABASE_SECRET")
@@ -262,7 +267,7 @@ func Init(ctx context.Context) (err error) {
 	}
 
 	cfg.RedisHost = os.Getenv("GO_DISCOVERY_REDIS_HOST")
-	cfg.RedisPort = GetEnv("GO_DISOCVERY_REDIS_PORT", "6379")
+	cfg.RedisPort = GetEnv("GO_DISCOVERY_REDIS_PORT", "6379")
 
 	return nil
 }
@@ -274,3 +279,16 @@ func Dump(w io.Writer) error {
 	enc.SetIndent("", "    ")
 	return enc.Encode(cfg)
 }
+
+// chooseOne selects one entry at random from a whitespace-separated
+// configuration variable.
+func chooseOne(configVar string) (string, error) {
+	fields := strings.Fields(configVar)
+	if len(fields) == 0 {
+		return "", fmt.Errorf("no valid entries in %q", configVar)
+	}
+	src := rand.NewSource(time.Now().UnixNano())
+	rng := rand.New(src)
+	return fields[rng.Intn(len(fields))], nil
+}
+
