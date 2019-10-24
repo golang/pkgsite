@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/go-redis/redis/v7"
 	"golang.org/x/discovery/internal"
@@ -132,12 +133,11 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 		detailHandler http.Handler = http.HandlerFunc(s.handleDetails)
 		searchHandler http.Handler = http.HandlerFunc(s.handleSearch)
 	)
-	// TODO: uncomment this once the middleware is tested.
-	// if redisClient != nil {
-	// 	modHandler = middleware.Cache("module-details", redisClient, 10*time.Minute)(modHandler)
-	// 	detailHandler = middleware.Cache("package-details", redisClient, 10*time.Minute)(detailHandler)
-	// 	searchHandler = middleware.Cache("search", redisClient, 10*time.Minute)(searchHandler)
-	// }
+	if redisClient != nil {
+		modHandler = middleware.Cache("module-details", redisClient, 10*time.Minute)(modHandler)
+		detailHandler = middleware.Cache("package-details", redisClient, 10*time.Minute)(detailHandler)
+		searchHandler = middleware.Cache("search", redisClient, 10*time.Minute)(searchHandler)
+	}
 	handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(s.staticPath))))
 	handle("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(s.staticPath)))
