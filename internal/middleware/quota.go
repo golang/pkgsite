@@ -5,44 +5,83 @@
 package middleware
 
 import (
+	"context"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/golang/groupcache/lru"
+	"go.opencensus.io/stats"
+	"go.opencensus.io/stats/view"
+	"go.opencensus.io/tag"
+	"golang.org/x/discovery/internal/log"
 	"golang.org/x/time/rate"
 )
 
+var (
+	keyQuotaBlocked = tag.MustNewKey("quota.blocked")
+	quotaResults    = stats.Int64(
+		"go-discovery/quota_result_count",
+		"The result of a quota check.",
+		stats.UnitDimensionless,
+	)
+	// QuotaResultCount is a counter of quota results, by whether the request was blocked or not.
+	QuotaResultCount = &view.View{
+		Name:        "custom.googleapis.com/go-discovery/quota/result_count",
+		Measure:     quotaResults,
+		Aggregation: view.Count(),
+		Description: "quota results, by blocked or allowed",
+		TagKeys:     []tag.Key{keyQuotaBlocked},
+	}
+)
+
+type QuotaSettings struct {
+	QPS        int  // allowed queries per second, per IP block
+	Burst      int  // maximum requests per second, per block; the size of the token bucket
+	MaxEntries int  // maximum number of entries to keep track of
+	RecordOnly bool // record data about blocking, but do not actually block
+}
+
 // Quota implements a simple IP-based rate limiter. Each set of incoming IP
 // addresses with the same low-order byte gets qps requests per second, with the
-// given burst (maximum requests per second; the size of the token bucket).
+// given burst (
 // Information is kept in an LRU cache of size maxEntries.
 //
 // If a request is disallowed, a 429 (TooManyRequests) will be served.
-func Quota(qps, burst, maxEntries int) Middleware {
-	cache := lru.New(maxEntries)
+func Quota(settings QuotaSettings) Middleware {
+	log.Infof("QuotaSettings: %v", settings)
+	cache := lru.New(settings.MaxEntries)
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			key := ipKey(r.Header.Get("X-Forwarded-For"))
 			// key is empty if we couldn't parse an IP, or there is no IP.
 			// Fail open in this case: allow serving.
+			var limiter *rate.Limiter
 			if key != "" {
-				var limiter *rate.Limiter
 				if v, ok := cache.Get(key); ok {
 					limiter = v.(*rate.Limiter)
 				} else {
-					limiter = rate.NewLimiter(rate.Limit(qps), burst)
+					limiter = rate.NewLimiter(rate.Limit(settings.QPS), settings.Burst)
 					cache.Add(key, limiter)
 				}
-				if !limiter.Allow() {
-					const tmr = http.StatusTooManyRequests
-					http.Error(w, http.StatusText(tmr), tmr)
-					return
-				}
+			}
+			blocked := limiter != nil && !limiter.Allow()
+			recordQuotaMetric(blocked)
+			if blocked && !settings.RecordOnly {
+				const tmr = http.StatusTooManyRequests
+				http.Error(w, http.StatusText(tmr), tmr)
+				return
 			}
 			h.ServeHTTP(w, r)
 		})
 	}
+}
+
+func recordQuotaMetric(blocked bool) {
+	stats.RecordWithTags(context.Background(), []tag.Mutator{
+		tag.Upsert(keyQuotaBlocked, strconv.FormatBool(blocked)),
+	}, quotaResults.M(1))
 }
 
 func ipKey(s string) string {
