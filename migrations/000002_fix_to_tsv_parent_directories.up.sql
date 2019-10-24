@@ -37,9 +37,6 @@ CREATE OR REPLACE FUNCTION to_tsvector_parent_directories(package_path text, mod
     END LOOP;
     RETURN parent_directories::tsvector;
 END;
-$$;
-
-UPDATE packages SET tsv_parent_directories = to_tsvector_parent_directories(path, module_path);
-UPDATE search_documents SET tsv_parent_directories = to_tsvector_parent_directories(package_path, module_path);
+$$ PARALLEL SAFE;
 
 END;
