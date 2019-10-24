@@ -20,6 +20,8 @@ import (
 )
 
 func TestCache(t *testing.T) {
+	// force cache writes to be synchronous
+	testMode = true
 	// These variables are mutated before each test case to control the handler
 	// response.
 	var (
