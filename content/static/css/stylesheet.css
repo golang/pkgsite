@@ -577,7 +577,9 @@ code {
   border-top: 0.0625rem solid var(--gray-8);
   padding-bottom: 1.5rem;
 }
-
+.Documentation-exampleDetails {
+  margin-top: 1rem;
+}
 .Documentation-exampleDetailsHeader {
   color: var(--turq-text);
   text-decoration: none;
