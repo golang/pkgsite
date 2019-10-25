@@ -55,6 +55,7 @@ func TestCache(t *testing.T) {
 		path          string
 		body          string
 		status        int
+		bypass        bool
 		wantHitCounts map[bool]int
 		wantBody      string
 		wantStatus    int
@@ -118,13 +119,30 @@ func TestCache(t *testing.T) {
 			wantBody:      "4",
 			wantStatus:    http.StatusOK,
 		},
+		{
+			label:  "bypassing the cache",
+			path:   "A",
+			body:   "6",
+			bypass: true,
+			// hitCounts should not be modified.
+			wantHitCounts: map[bool]int{false: 3, true: 2},
+			wantBody:      "6",
+			wantStatus:    http.StatusOK,
+		},
 	}
 
 	for _, test := range tests {
 		s.FastForward(test.advanceTime)
 		body = test.body
 		status = test.status
-		resp, err := ts.Client().Get(ts.URL + "/" + test.path)
+		req, err := http.NewRequest("GET", ts.URL+"/"+test.path, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if test.bypass {
+			req.Header.Set(cacheBypassHeader, "yes")
+		}
+		resp, err := ts.Client().Do(req)
 		if err != nil {
 			t.Fatal(err)
 		}
