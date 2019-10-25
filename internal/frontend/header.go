@@ -193,7 +193,9 @@ func breadcrumbPath(pkgPath, modPath, version string) template.HTML {
 	// Setting its type="hidden" doesn't work, so we position it off screen.
 	f := `<div class="DetailsHeader-breadcrumb">
 %s
-<img id="DetailsHeader-copyPath" role="button" src="/static/img/ic_copy.svg" alt="Copy path to clipboard">
+<button id="DetailsHeader-copyPath" aria-label="Copy path to clipboard">
+ <img id="DetailsHeader-copyPathIcon" src="/static/img/ic_copy.svg" alt="icon for copy path to clipboard">
+</button>
 <input id="DetailsHeader-path" value="%s"/>
 </div>`
 

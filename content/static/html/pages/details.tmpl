@@ -93,17 +93,15 @@ const selectedEl = navEl.querySelector(`[aria-selected='true']`);
 if (selectedEl.offsetLeft + selectedEl.offsetWidth > navEl.offsetWidth) {
   navEl.scrollLeft = selectedEl.offsetLeft;
 }
-</script>
 
-<script nonce="{{.Nonce}}" src="/static/js/button.js"></script>
-
-<script nonce="{{.Nonce}}">
-const cp = document.querySelector('#DetailsHeader-copyPath')
-if (cp) {
-  addButtonHandlers(cp, function() {
-    document.querySelector('#DetailsHeader-path').select();
-    document.execCommand("copy");
-  });
+const copyButton = document.querySelector('#DetailsHeader-copyPath');
+if (copyButton) {
+   copyButton.addEventListener('click', function (event) {
+     event.preventDefault();
+     document.querySelector('#DetailsHeader-path').select();
+     document.execCommand("copy");
+   })
 }
 </script>
+
 {{end}}

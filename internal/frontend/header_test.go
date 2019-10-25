@@ -188,7 +188,7 @@ func TestBreadcrumbPath(t *testing.T) {
 			got := string(breadcrumbPath(test.pkgPath, test.modPath, test.version))
 			got = strings.Replace(got, "\n", "", -1)
 			want := `<div class="DetailsHeader-breadcrumb">` + test.want +
-				fmt.Sprintf(`<img id="DetailsHeader-copyPath" role="button" src="/static/img/ic_copy.svg" alt="Copy path to clipboard"><input id="DetailsHeader-path" value="%s"/></div>`, test.pkgPath)
+				fmt.Sprintf(`<button id="DetailsHeader-copyPath" aria-label="Copy path to clipboard"> <img id="DetailsHeader-copyPathIcon" src="/static/img/ic_copy.svg" alt="icon for copy path to clipboard"></button><input id="DetailsHeader-path" value="%s"/></div>`, test.pkgPath)
 			if got != want {
 				t.Errorf("got:\n%s\n\nwant:\n%s\n", got, want)
 			}

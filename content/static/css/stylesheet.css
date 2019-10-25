@@ -272,6 +272,11 @@ code {
 .DetailsHeader-breadcrumbDivider {
   color: var(--gray-3);
 }
+#DetailsHeader-copyPath {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+}
 #DetailsHeader-path {
 /*
    An input element that can be selected so its contents can be
