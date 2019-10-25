@@ -249,7 +249,7 @@ code {
 }
 .DetailsHeader-title {
   display: inline-block;
-  font: 600 1.875rem 'Work Sans', arial, sans-serif;
+  font-size: 1.875rem;
   margin: 0;
 }
 .DetailsHeader-version {
@@ -310,7 +310,7 @@ code {
 .SearchResults {
   margin: 0 auto;
   max-width: 60em;
-  padding: 40px 0;
+  padding: 2rem 0;
 }
 .SearchResults-header {
   font-size: 1.875rem;
@@ -340,7 +340,6 @@ code {
   margin-bottom: 1rem;
 }
 .SearchSnippet-header {
-  font-size: 1.5rem;
   margin: 0 0 0.3125rem;
 }
 .SearchSnippet-synopsis {
@@ -425,7 +424,11 @@ code {
   margin-top: 1.5rem;
   font-style: italic;
 }
-
+.DetailsContent {
+  min-height: 32rem;
+  margin: 0 auto;
+  max-width: 60em;
+}
 .DetailsNav {
   margin: 0 -1rem 0 -1rem;
   overflow-x: scroll;
@@ -496,7 +499,20 @@ code {
   max-width: 60em;
 }
 .Content {
-  min-height: 500px;
+  min-height: 32rem;
+  margin: 0 auto;
+  max-width: 60em;
+  padding: 2rem 0;
+}
+.Content-header {
+  margin: 0;
+  font-size: 1.875rem;
+}
+.Content h2 {
+  margin: 0;
+}
+.Content p {
+  color: var(--gray-3);
 }
 
 .License-contents {

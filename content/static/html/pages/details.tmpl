@@ -37,16 +37,14 @@
       </span>
       {{if eq $namespace "pkg"}}
         <span class="InfoLabel-divider">|</span>
-        <span class="InfoLabel-title">Module: </span>
-        <span>
-          <a href="{{$header.Module.URL}}">
-            {{if eq $header.Module.Path "std"}}
-              Standard library
-            {{else}}
-              {{$header.Module.Path}}
-            {{end}}
-          </a>
-        </span>
+        {{if eq $header.Module.Path "std"}}
+	  <a href="{{$header.Module.URL}}">Standard library</a>
+        {{else}}
+          <span class="InfoLabel-title">Module: </span>
+          <span>
+	    <a href="{{$header.Module.URL}}">{{$header.Module.Path}}</a>
+          </span>
+        {{end}}
       {{end}}
     </div>
   </header>
@@ -76,7 +74,7 @@
     </ul>
   </nav>
 
-  <div class="Content">
+  <div class="DetailsContent">
     {{if .CanShowDetails -}}
       {{template "details_content" .Details}}
     {{- else}}

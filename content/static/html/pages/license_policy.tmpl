@@ -6,26 +6,28 @@
 
 {{define "main_content"}}
 <div class="Container">
-  <h1>License Disclaimer</h1>
-  <p>
-    The Go website displays license information in order to help users evaluate
-    packages for their intended use. Licenses are detected using heuristics
-    based on their file name and contents. We hope this information is helpful,
-    but this is not legal advice and we do not make any guarantees regarding
-    the accuracy of our license detection.
-  </p>
-  <p>
-    If we are not able to detect a suitable license, only limited package and
-    module information will be made available. If you are a package author
-    seeking to make your content available on the Go website, please be aware
-    that our detection algorithms can be affected by any modifications of the
-    license text, or by the use of an uncommon license file name. We currently
-    check for licenses only in files with the following names:
-    {{commaseparate .LicenseFileNames}}.
-  </p>
-  <p>
-    If you believe a package license should have been detected and was not,
-    please <a class="js-feedbackButton FeedbackButton">send feedback</a>.
-  </p>
+  <div class="Content">
+    <h1 class="Content-header">License Disclaimer</h1>
+    <p>
+      The Go website displays license information in order to help users evaluate
+      packages for their intended use. Licenses are detected using heuristics
+      based on their file name and contents. We hope this information is helpful,
+      but this is not legal advice and we do not make any guarantees regarding
+      the accuracy of our license detection.
+    </p>
+    <p>
+      If we are not able to detect a suitable license, only limited package and
+      module information will be made available. If you are a package author
+      seeking to make your content available on the Go website, please be aware
+      that our detection algorithms can be affected by any modifications of the
+      license text, or by the use of an uncommon license file name. We currently
+      check for licenses only in files with the following names:
+      {{commaseparate .LicenseFileNames}}.
+    </p>
+    <p>
+      If you believe a package license should have been detected and was not,
+      please <a class="js-feedbackButton FeedbackButton">send feedback</a>.
+    </p>
+  </div>
 </div>
 {{end}}
