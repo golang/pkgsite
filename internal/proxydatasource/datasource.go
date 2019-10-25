@@ -231,6 +231,11 @@ func (ds *DataSource) PartialFastSearch(ctx context.Context, query string, limit
 	return []*postgres.SearchResult{}, nil
 }
 
+// PopularSearch is unimplemented.
+func (ds *DataSource) PopularSearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error) {
+	return []*postgres.SearchResult{}, nil
+}
+
 // getVersion retrieves a version from the cache, or failing that queries and
 // processes the version from the proxy.
 func (ds *DataSource) getVersion(ctx context.Context, modulePath, version string) (_ *internal.Version, err error) {

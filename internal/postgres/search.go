@@ -133,7 +133,7 @@ func (db *DB) FastSearch(ctx context.Context, q string, limit, offset int) (_ []
 // TODO(b/141182438) delete this once a testing period is over.
 func (db *DB) PartialFastSearch(ctx context.Context, q string, limit, offset int) (_ []*SearchResult, err error) {
 	defer derrors.Wrap(&err, "DB.PartialFastSearch(ctx, %q, %d, %d)", q, limit, offset)
-	searchers := []searcher{db.popularSearcher(50), db.popularSearcher(8)}
+	searchers := []searcher{db.popularSearcher(50), db.popularSearcher(8), db.deepSearch}
 	return db.hedgedSearch(ctx, q, limit, offset, searchers, nil)
 }
 
@@ -525,6 +525,22 @@ func (db *DB) DeepSearch(ctx context.Context, q string, limit, offset int) (_ []
 		return nil, err
 	}
 	return resp.results, nil
+}
+
+// PopularSearch executes a sequential scan of the search table in descending
+// order of popularity.
+func (db *DB) PopularSearch(ctx context.Context, q string, limit, offset int) (_ []*SearchResult, err error) {
+	defer derrors.Wrap(&err, "DB.PopularSearch(ctx, %q, %d, %d)", q, limit, offset)
+	resp := db.popularSearch(ctx, q, limit, offset)
+
+	if resp.err != nil {
+		return nil, resp.err
+	}
+	if err := db.addPackageDataToSearchResults(ctx, resp.results); err != nil {
+		return nil, err
+	}
+	return resp.results, nil
+
 }
 
 // Search fetches packages from the database that match the terms

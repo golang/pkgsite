@@ -57,6 +57,8 @@ func fetchSearchPage(ctx context.Context, ds DataSource, query, method string, p
 		dbresults, err = ds.DeepSearch(ctx, query, pageParams.limit, pageParams.offset())
 	case "partial-fast":
 		dbresults, err = ds.PartialFastSearch(ctx, query, pageParams.limit, pageParams.offset())
+	case "popular":
+		dbresults, err = ds.PopularSearch(ctx, query, pageParams.limit, pageParams.offset())
 	default:
 		dbresults, err = ds.FastSearch(ctx, query, pageParams.limit, pageParams.offset())
 	}

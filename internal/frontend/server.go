@@ -96,6 +96,7 @@ type DataSource interface {
 	Search(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
 	DeepSearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
 	PartialFastSearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
+	PopularSearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
 }
 
 // NewServer creates a new Server for the given database and template directory.
