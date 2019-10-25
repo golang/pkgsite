@@ -660,8 +660,9 @@ var upsertSearchStatement = fmt.Sprintf(`
 		v.commit_time,
 		(
 			SETWEIGHT(TO_TSVECTOR($2), 'A') ||
-			SETWEIGHT(TO_TSVECTOR(p.synopsis), 'B') ||
-			SETWEIGHT(TO_TSVECTOR(v.readme_contents), 'C')
+		    -- limit to the maximum length that TO_TSVECTOR allows
+			SETWEIGHT(TO_TSVECTOR(left(p.synopsis, 1048575)), 'B') ||
+			SETWEIGHT(TO_TSVECTOR(left(v.readme_contents, 1048575)), 'C')
 		),
 		hll_hash(p.path) & (%[1]d - 1),
 		hll_zeros(hll_hash(p.path))
