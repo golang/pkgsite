@@ -135,7 +135,9 @@ func logQuery(query string, args []interface{}) func(*error) {
 }
 
 // Open creates a new DB for the given Postgres connection string.
-func Open(driverName, dbinfo string) (*DB, error) {
+func Open(driverName, dbinfo string) (_ *DB, err error) {
+	defer derrors.Wrap(&err, "Open(%q, %q)", driverName, dbinfo)
+
 	db, err := sql.Open(driverName, dbinfo)
 	if err != nil {
 		return nil, err

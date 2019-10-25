@@ -46,7 +46,7 @@ var (
 
 	// fetchTimeout bounds the time allowed for fetching a single module.  It is
 	// mutable for testing purposes.
-	fetchTimeout = 10 * time.Minute
+	fetchTimeout = 2 * config.StatementTimeout
 )
 
 // appVersionLabel is used to mark the app version at which a module version is

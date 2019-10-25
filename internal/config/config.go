@@ -150,11 +150,22 @@ func OnAppEngine() bool {
 	return cfg.GaeEnv == "standard"
 }
 
+// StatementTimeout is the value of the Postgres statement_timeout parameter.
+// Statements that run longer than this are terminated.
+// 10 minutes is the App Engine standard request timeout.
+const StatementTimeout = 10 * time.Minute
+
 // DBConnInfo returns a PostgreSQL connection string constructed from
 // environment variables.
 func DBConnInfo() string {
-	return fmt.Sprintf("user='%s' password='%s' host='%s' port=%s dbname='%s' sslmode=disable",
-		cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName)
+	// For the connection string syntax, see
+	// https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING.
+
+	// Set the statement_timeout config parameter for this session.
+	// See https://www.postgresql.org/docs/current/runtime-config-client.html.
+	timeoutOption := fmt.Sprintf("-c statement_timeout=%d", StatementTimeout/time.Millisecond)
+	return fmt.Sprintf("user='%s' password='%s' host='%s' port=%s dbname='%s' sslmode=disable options='%s'",
+		cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName, timeoutOption)
 }
 
 type config struct {
@@ -291,4 +302,3 @@ func chooseOne(configVar string) (string, error) {
 	rng := rand.New(src)
 	return fields[rng.Intn(len(fields))], nil
 }
-
