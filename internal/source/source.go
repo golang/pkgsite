@@ -115,11 +115,22 @@ func (i *Info) RawURL(pathname string) string {
 		log.Errorf("repo URL %q failed to parse: %v", i.repoURL, err)
 		u = &url.URL{Path: "ERROR"}
 	}
+
+	moduleDir := i.moduleDir
+	// Special case: the standard library's source module path is set to "src",
+	// which is correct for source file links. But the README is at the repo
+	// root, not in the src directory. In other words,
+	// VersionInfo.ReadmeFilePath is not relative to
+	// VersionInfo.SourceInfo.moduleDir, as it is for every other module.
+	// Correct for that here.
+	if i.repoURL == stdlib.GoSourceRepoURL {
+		moduleDir = ""
+	}
 	return expand(i.templates.Raw, map[string]string{
 		"repo":     i.repoURL,
 		"repoPath": strings.TrimPrefix(u.Path, "/"),
 		"commit":   i.commit,
-		"file":     path.Join(i.moduleDir, pathname),
+		"file":     path.Join(moduleDir, pathname),
 	})
 }
 
