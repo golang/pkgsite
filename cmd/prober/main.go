@@ -42,6 +42,10 @@ type Probe struct {
 
 	// The part of the URL after the host:port.
 	RelativeURL string
+
+	// Whether or not to set a header that causes the frontend to skip the redis
+	// cache.
+	BypassCache bool
 }
 
 var probes = []*Probe{
@@ -62,52 +66,97 @@ var probes = []*Probe{
 		RelativeURL: "pkg/cloud.google.com/go/firestore",
 	},
 	{
+		Name:        "pkg-firestore-nocache",
+		RelativeURL: "pkg/cloud.google.com/go/firestore",
+		BypassCache: true,
+	},
+	{
 		Name:        "pkg-firestore-readme",
 		RelativeURL: "pkg/cloud.google.com/go/firestore?tab=readme",
+	},
+	{
+		Name:        "pkg-firestore-readme-nocache",
+		RelativeURL: "pkg/cloud.google.com/go/firestore?tab=readme",
+		BypassCache: true,
 	},
 	{
 		Name:        "pkg-firestore-versions",
 		RelativeURL: "pkg/cloud.google.com/go/firestore?tab=versions",
 	},
 	{
+		Name:        "pkg-firestore-versions-nocache",
+		RelativeURL: "pkg/cloud.google.com/go/firestore?tab=versions",
+		BypassCache: true,
+	},
+	{
 		Name:        "pkg-firestore-imports",
 		RelativeURL: "pkg/cloud.google.com/go/firestore?tab=imports",
+	},
+	{
+		Name:        "pkg-firestore-imports-nocache",
+		RelativeURL: "pkg/cloud.google.com/go/firestore?tab=imports",
+		BypassCache: true,
 	},
 	{
 		Name:        "pkg-firestore-importedby",
 		RelativeURL: "pkg/cloud.google.com/go/firestore?tab=importedby",
 	},
 	{
+		Name:        "pkg-firestore-importedby-nocache",
+		RelativeURL: "pkg/cloud.google.com/go/firestore?tab=importedby",
+		BypassCache: true,
+	},
+	{
 		Name:        "pkg-firestore-licenses",
 		RelativeURL: "pkg/cloud.google.com/go/firestore?tab=licenses",
+	},
+	{
+		Name:        "pkg-firestore-licenses-nocache",
+		RelativeURL: "pkg/cloud.google.com/go/firestore?tab=licenses",
+		BypassCache: true,
 	},
 	{
 		Name:        "pkg-errors-importedby",
 		RelativeURL: "pkg/github.com/pkg/errors?tab=importedby",
 	},
 	{
+		Name:        "pkg-errors-importedby-nocache",
+		RelativeURL: "pkg/github.com/pkg/errors?tab=importedby",
+		BypassCache: true,
+	},
+	{
 		Name:        "pkg-hortonworks-versions",
 		RelativeURL: "pkg/github.com/hortonworks/cb-cli?tab=versions",
+		BypassCache: true,
 	},
 	{
 		Name:        "pkg-xtoolsgo-directory",
 		RelativeURL: "pkg/golang.org/x/tools/go",
+		BypassCache: true,
 	},
 	{
-		Name:        "mod-xtools",
+		Name:        "mod-xtools-nocache",
 		RelativeURL: "mod/golang.org/x/tools",
+		BypassCache: true,
 	},
 	{
-		Name:        "mod-xtools-packages",
+		Name:        "mod-xtools-packages-nocache",
 		RelativeURL: "mod/golang.org/x/tools?tab=packages",
+		BypassCache: true,
 	},
 	{
-		Name:        "mod-xtools-versions",
+		Name:        "mod-xtools-versions-nocache",
 		RelativeURL: "mod/golang.org/x/tools?tab=versions",
+		BypassCache: true,
 	},
 	{
 		Name:        "search-github",
 		RelativeURL: "search?q=github",
+	},
+	{
+		Name:        "search-github-nocache",
+		RelativeURL: "search?q=github",
+		BypassCache: true,
 	},
 }
 
@@ -264,6 +313,9 @@ func runProbe(p *Probe) *ProbeStatus {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if p.BypassCache {
+		req.Header.Set("x-go-discovery-bypass-cache", "yes")
+	}
 	if err != nil {
 		status.Text = fmt.Sprintf("FAILED making request: %v", err)
 		return status
