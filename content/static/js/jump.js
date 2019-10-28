@@ -18,6 +18,7 @@
 // It was modified to remove the dependence on jquery and bootstrap.
 
 const jumpDialog = document.querySelector('.JumpDialog');
+const jumpBody = jumpDialog.querySelector('.JumpDialog-body');
 const jumpList = jumpDialog.querySelector('.JumpDialog-list');
 const jumpFilter = jumpDialog.querySelector('.JumpDialog-input');
 
@@ -129,6 +130,7 @@ function updateJumpList(filter) {
     item.link.innerHTML = name + ' <i>' + item.kind + '</i>';
     jumpList.appendChild(item.link);
   }
+  jumpBody.scrollTop = 0;
 }
 
 // Pressing a key in the filter updates the list (if the filter actually changed).
@@ -162,6 +164,6 @@ document.addEventListener('keypress', function (e) {
   if (ch != 'f') return;
   e.preventDefault();
   jumpFilter.value = '';
-  updateJumpList('');
   jumpDialog.showModal();
+  updateJumpList('');
 });
