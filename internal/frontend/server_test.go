@@ -525,3 +525,26 @@ func TestServerErrors(t *testing.T) {
 		t.Fatalf("status code: got = %d, want %d", w.Code, http.StatusNotFound)
 	}
 }
+
+func TestTagRoute(t *testing.T) {
+	mustRequest := func(url string) *http.Request {
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return req
+	}
+	tests := []struct {
+		route string
+		req   *http.Request
+		want  string
+	}{
+		{"/pkg", mustRequest("http://localhost/pkg/foo?tab=versions"), "pkg-versions"},
+		{"/", mustRequest("http://localhost/foo?tab=imports"), "imports"},
+	}
+	for _, test := range tests {
+		if got := TagRoute(test.route, test.req); got != test.want {
+			t.Errorf("TagRoute(%q, %v) = %q, want %q", test.route, test.req, got, test.want)
+		}
+	}
+}

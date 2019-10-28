@@ -159,7 +159,10 @@ func TagRoute(route string, r *http.Request) string {
 		_, pkgOK := packageTabLookup[tab]
 		_, modOK := moduleTabLookup[tab]
 		if pkgOK || modOK {
-			tag += "-" + tab
+			if tag != "" {
+				tag += "-"
+			}
+			tag += tab
 		}
 	}
 	return tag
