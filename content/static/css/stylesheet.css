@@ -715,21 +715,46 @@ table.Directories {
 /* jump-to-identifier dialog on documentation page */
 
 .JumpDialog {
+  width: 25rem;
+  padding: 0;
+  border: 0.0625rem solid rgba(0, 0, 0, .2);
+  border-radius: 6px;
+  box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, .5);
 }
 .JumpDialog-title {
+  font-size: 1.125rem;
+  padding: 0 0.8rem;
 }
 .JumpDialog-body {
-  height: 8rem;
-  overflow: scroll;
+  height: 12rem;
+  overflow-y: scroll;
+  padding: 0 0 0 0.8rem;
 }
 .JumpDialog-list {
   display: flex;
   flex-direction: column;
 }
 .JumpDialog-filter {
+  margin: 0.5rem 0.8rem;
+}
+.JumpDialog-input {
+  width: 100%;
 }
 .JumpDialog a {
   text-decoration: none;
+  padding: 0.25rem 0;
+}
+.JumpDialog-actions {
+  text-align: right;
+  padding: 0.8rem;
 }
 .JumpDialog-button {
+  background: none;
+  border-radius: 0.625rem;
+  border: 0.0625rem solid var(--gray-8);
+  color: var(--turq-text);
+  font-size: 1rem;
+  max-width: 6.25rem;
+  padding: 0.625rem;
+  text-align: center;
 }

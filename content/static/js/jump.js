@@ -19,7 +19,7 @@
 
 const jumpDialog = document.querySelector('.JumpDialog');
 const jumpList = jumpDialog.querySelector('.JumpDialog-list');
-const jumpFilter = jumpDialog.querySelector('.JumpDialog-filter');
+const jumpFilter = jumpDialog.querySelector('.JumpDialog-input');
 
 let jumpListItems; // All the identifiers in the doc; computed only once.
 

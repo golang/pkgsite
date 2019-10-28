@@ -9,13 +9,17 @@
     <div class="Documentation">{{.}}</div>
 
     <dialog class="JumpDialog">
-      <h4 class="JumpDialog-title">Jump to identifier</h4>
+      <h2 class="JumpDialog-title">Jump to identifier</h2>
       <form method="dialog">
-        <input class="JumpDialog-filter" autocomplete="off" type="text">
+        <div class="JumpDialog-filter">
+         <input class="JumpDialog-input" autocomplete="off" type="text">
+        </div>
         <div class="JumpDialog-body">
           <div class="JumpDialog-list"></div>
         </div>
-        <button class="JumpDialog-button">Close</button>
+        <div class="JumpDialog-actions">
+          <button class="JumpDialog-button">Close</button>
+	</div>
       </form>
     </dialog>
 
