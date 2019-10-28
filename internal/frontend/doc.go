@@ -17,7 +17,8 @@ import (
 
 // DocumentationDetails contains data for the doc template.
 type DocumentationDetails struct {
-	ModulePath    string
+	GOOS          string
+	GOARCH        string
 	Documentation template.HTML
 }
 
@@ -25,7 +26,8 @@ type DocumentationDetails struct {
 // from the database and returns a DocumentationDetails.
 func fetchDocumentationDetails(ctx context.Context, ds DataSource, pkg *internal.VersionedPackage) (*DocumentationDetails, error) {
 	return &DocumentationDetails{
-		ModulePath:    pkg.VersionInfo.ModulePath,
+		GOOS:          pkg.GOOS,
+		GOARCH:        pkg.GOARCH,
 		Documentation: template.HTML(pkg.DocumentationHTML),
 	}, nil
 }

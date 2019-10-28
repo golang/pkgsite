@@ -591,18 +591,21 @@ code {
   outline: none;
   margin-bottom: 2rem;
 }
-
 .Documentation .Documentation-typeMethodHeader,
 .Documentation .Documentation-typeFuncHeader {
   font-size: 1.25rem;
 }
-
 .Documentation .example-header {
   color: var(--turq-text);
   font-size: 1rem;
   outline: none;
   padding-top: 0.5rem;
   text-decoration: none;
+}
+.Documentation-build {
+  text-align: right;
+  border-top: 0.0625rem solid var(--gray-8);
+  padding-top: 1rem;
 }
 
 .Versions-list {

@@ -51,7 +51,7 @@ func (db *DB) GetPackagesInVersion(ctx context.Context, modulePath, version stri
 			licenseTypes, licensePaths []string
 		)
 		if err := rows.Scan(&p.Path, &p.Name, &p.Synopsis, &p.V1Path, pq.Array(&licenseTypes),
-			pq.Array(&licensePaths), &p.DocumentationHTML, nullIsEmpty(&p.GOOS), nullIsEmpty(&p.GOARCH)); err != nil {
+			pq.Array(&licensePaths), &p.DocumentationHTML, &p.GOOS, &p.GOARCH); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
 		lics, err := zipLicenseMetadata(licenseTypes, licensePaths)

@@ -37,6 +37,8 @@ var (
 	ReadmeFilePath    = "README.md"
 	ReadmeContents    = []byte("readme")
 	VersionType       = version.TypeRelease
+	GOOS              = "linux"
+	GOARCH            = "amd64"
 )
 
 // NowTruncated returns time.Now() truncated to Microsecond precision.
@@ -57,8 +59,8 @@ func Package() *internal.Package {
 		DocumentationHTML: DocumentationHTML,
 		V1Path:            V1Path,
 		Imports:           Imports,
-		GOOS:              "linux",
-		GOARCH:            "amd64",
+		GOOS:              GOOS,
+		GOARCH:            GOARCH,
 	}
 }
 

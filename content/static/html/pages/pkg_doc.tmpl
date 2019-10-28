@@ -5,8 +5,14 @@
 -->
 
 {{define "details_content"}}
-  {{with .Documentation}}
-    <div class="Documentation">{{.}}</div>
+  {{if .Documentation}}
+    <div class="Documentation">
+      {{.Documentation}}
+      <div class="Documentation-build">
+        <div>GOOS={{.GOOS}}</div>
+        <div>GOARCH={{.GOARCH}}</div>
+      </div>
+    </div>
 
     <dialog class="JumpDialog">
       <h2 class="JumpDialog-title">Jump to identifier</h2>
@@ -29,6 +35,5 @@
 {{end}}
 
 {{define "details_post_content"}}
-<script nonce="{{.Nonce}}" src="/static/js/jump.js?version={{.AppVersionLabel}}"></script>
+  <script nonce="{{.Nonce}}" src="/static/js/jump.js?version={{.AppVersionLabel}}"></script>
 {{end}}
-
