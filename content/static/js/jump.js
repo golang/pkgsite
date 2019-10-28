@@ -99,6 +99,7 @@ function guessKind(el) {
 }
 
 let lastFilterValue;    // The last contents of the filter text box.
+let activeJumpItem = -1;     // The index of the currently active item in the list.
 
 // updateJumpList sets the elements of the dialog list to
 // everything whose name contains filter.
@@ -107,6 +108,8 @@ function updateJumpList(filter) {
   if (!jumpListItems) {
     jumpListItems = collectJumpListItems();
   }
+  setActiveJumpItem(-1);
+
   // Remove all children from list.
   while (jumpList.firstChild) {
     jumpList.firstChild.remove();
@@ -131,6 +134,51 @@ function updateJumpList(filter) {
     jumpList.appendChild(item.link);
   }
   jumpBody.scrollTop = 0;
+  if (jumpList.children.length > 0) {
+    setActiveJumpItem(0);
+  }
+}
+
+// Set the active jump item to n.
+function setActiveJumpItem(n) {
+  const cs = jumpList.children;
+  if (activeJumpItem >= 0) {
+    cs[activeJumpItem].classList.remove('JumpDialog-active');
+  }
+  if (n >= cs.length) {
+    n = cs.length - 1;
+  }
+  if (n >= 0) {
+    cs[n].classList.add('JumpDialog-active');
+
+    // Scroll so the active item is visible.
+    // For some reason cs[n].scrollIntoView() doesn't behave as I'd expect:
+    // it moves the entire dialog box in the viewport.
+
+    // Get the top and bottom of the active item relative to jumpBody.
+    const activeTop = cs[n].offsetTop - cs[0].offsetTop;
+    const activeBottom = activeTop + cs[n].clientHeight;
+    if (activeTop < jumpBody.scrollTop) {
+      // Off the top; scroll up.
+      jumpBody.scrollTop = activeTop;
+    } else if (activeBottom > jumpBody.scrollTop + jumpBody.clientHeight) {
+      // Off the bottom; scroll down.
+      jumpBody.scrollTop = activeBottom - jumpBody.clientHeight;
+    }
+  }
+  activeJumpItem = n;
+}
+
+// Increment the activeJumpItem by delta.
+function incActiveJumpItem(delta) {
+  if (activeJumpItem < 0) {
+    return;
+  }
+  let n = activeJumpItem + delta;
+  if (n < 0) {
+    n = 0;
+  }
+  setActiveJumpItem(n);
 }
 
 // Pressing a key in the filter updates the list (if the filter actually changed).
@@ -143,11 +191,23 @@ jumpFilter.addEventListener('keyup', function(event) {
 // Pressing enter in the filter selects the first element in the list.
 // TODO(b/143454398) add arrow keys and track the active list element.
 jumpFilter.addEventListener('keydown', function(event) {
-  const enterKey = 13
-  if (event.which == enterKey) {
-    event.preventDefault();
-    const active = jumpList.firstChild;
-    if (active) active.click();
+  const upArrow = 38;
+  const downArrow = 40;
+  const enterKey = 13;
+  switch (event.which) {
+    case upArrow:
+      incActiveJumpItem(-1);
+      event.preventDefault();
+      break;
+    case downArrow:
+      incActiveJumpItem(1);
+      event.preventDefault();
+      break;
+    case enterKey:
+      if (activeJumpItem >= 0) {
+        jumpList.children[activeJumpItem].click();
+      }
+      break;
   }
 });
 

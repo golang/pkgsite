@@ -747,6 +747,11 @@ table.Directories {
   text-decoration: none;
   padding: 0.25rem 0;
 }
+.JumpDialog .JumpDialog-active {
+  color: var(--white);
+  background-color: var(--turq-med);
+}
+
 .JumpDialog-actions {
   text-align: right;
   padding: 0.8rem;
