@@ -196,7 +196,7 @@ func breadcrumbPath(pkgPath, modPath, version string) template.HTML {
 <button id="DetailsHeader-copyPath" aria-label="Copy path to clipboard">
  <img id="DetailsHeader-copyPathIcon" src="/static/img/ic_copy.svg" alt="icon for copy path to clipboard">
 </button>
-<input id="DetailsHeader-path" value="%s"/>
+<input id="DetailsHeader-path" tabindex="-1" value="%s"/>
 </div>`
 
 	return template.HTML(fmt.Sprintf(f,
