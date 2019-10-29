@@ -41,8 +41,8 @@ verify_header() {
 # findcode finds source files in the repo, skipping third-party source.
 findcode() {
   find ${codedirs[@]} \
-    -not -path 'internal/thirdparty/*' \
-    \( -name *.go -o -name *.sql -o -name *.tmpl -o -name *.css \)
+    -not -path '*/thirdparty/*' \
+    \( -name *.go -o -name *.sql -o -name *.tmpl -o -name *.css -o -name *.js \)
 }
 
 # ensure_go_binary verifies that a binary exists in $PATH corresponding to the

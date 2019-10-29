@@ -22,6 +22,10 @@ const jumpBody = jumpDialog.querySelector('.JumpDialog-body');
 const jumpList = jumpDialog.querySelector('.JumpDialog-list');
 const jumpFilter = jumpDialog.querySelector('.JumpDialog-input');
 
+if (!jumpDialog.showModal) {
+  dialogPolyfill.registerDialog(jumpDialog);
+}
+
 let jumpListItems; // All the identifiers in the doc; computed only once.
 
 // collectJumpListItems returns a list of items, one for each identifier in the
