@@ -66,6 +66,18 @@ func TestGetDirectory(t *testing.T) {
 			},
 		},
 		{
+			name:           "specified version with ambiguous module path, two module versions exist, but only shorter module path contains matching package",
+			dirPath:        "github.com/hashicorp/vault/builtin/audit",
+			modulePath:     internal.UnknownModulePath,
+			version:        "v1.1.2",
+			wantVersion:    "v1.1.2",
+			wantModulePath: "github.com/hashicorp/vault",
+			wantPkgPaths: []string{
+				"github.com/hashicorp/vault/builtin/audit/file",
+				"github.com/hashicorp/vault/builtin/audit/socket",
+			},
+		},
+		{
 			name:           "specified module path and version, should match specified shorter module path",
 			dirPath:        "github.com/hashicorp/vault/api",
 			modulePath:     "github.com/hashicorp/vault",

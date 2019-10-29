@@ -118,7 +118,10 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version str
 		INNER JOIN (
 			SELECT *
 			FROM versions
-			WHERE version = $2
+			WHERE module_path IN (
+				SELECT module_path FROM parent_directories
+			)
+			AND version = $2
 			ORDER BY module_path DESC
 			LIMIT 1
 		) v
