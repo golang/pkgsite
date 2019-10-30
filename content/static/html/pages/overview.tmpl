@@ -10,13 +10,9 @@
       {{if eq .ModulePath "std"}}
         <h2>Standard Library</h2>
         <a href="/std">Standard Library</a>
-        <span class="InfoLabel-divider">|</span>
-        <b>Packages in the standard library: </b>{{.NumPackages}}
       {{else}}
         <h2>Module</h2>
         <a href="/mod/{{.ModulePath}}">{{.ModulePath}}</a>
-        <span class="InfoLabel-divider">|</span>
-        <b>Packages in this module: </b>{{.NumPackages}}
       {{end}}
     </div>
     <div class="Overview-sourceCode">

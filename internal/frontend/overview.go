@@ -17,14 +17,12 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
 	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/derrors"
 )
 
 // OverviewDetails contains all of the data that the readme template
 // needs to populate.
 type OverviewDetails struct {
 	ModulePath    string
-	NumPackages   int
 	RepositoryURL string
 	ReadMe        template.HTML
 	ReadMeSource  string
@@ -33,14 +31,8 @@ type OverviewDetails struct {
 // fetchOverviewDetails fetches data for the module version specified by path and version
 // from the database and returns a OverviewDetails.
 func fetchOverviewDetails(ctx context.Context, ds DataSource, vi *internal.VersionInfo) (_ *OverviewDetails, err error) {
-	defer derrors.Wrap(&err, "fetchOverviewDetails for %q %q", vi.ModulePath, vi.Version)
-	pkgs, err := ds.GetPackagesInVersion(ctx, vi.ModulePath, vi.Version)
-	if err != nil {
-		return nil, err
-	}
 	return &OverviewDetails{
 		ModulePath:    vi.ModulePath,
-		NumPackages:   len(pkgs),
 		RepositoryURL: vi.SourceInfo.RepoURL(),
 		ReadMeSource:  fileSource(vi.ModulePath, vi.Version, vi.ReadmeFilePath),
 		ReadMe:        readmeHTML(vi),

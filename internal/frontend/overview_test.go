@@ -31,7 +31,6 @@ func TestFetchOverviewDetails(t *testing.T) {
 		wantDetails: &OverviewDetails{
 			ModulePath:    sample.ModulePath,
 			RepositoryURL: sample.RepositoryURL,
-			NumPackages:   len(sample.Version().Packages),
 			ReadMe:        template.HTML("<p>readme</p>\n"),
 			ReadMeSource:  "github.com/valid_module_name@v1.0.0/README.md",
 		},
