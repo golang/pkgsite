@@ -99,8 +99,10 @@ const copyButton = document.querySelector('#DetailsHeader-copyPath');
 if (copyButton) {
    copyButton.addEventListener('click', function (event) {
      event.preventDefault();
-     document.querySelector('#DetailsHeader-path').select();
+     const input = document.querySelector('#DetailsHeader-path');
+     input.select();
      document.execCommand("copy");
+     input.blur(); // prevents jump to focused element in some browsers
    })
 }
 
