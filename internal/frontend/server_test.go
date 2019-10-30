@@ -214,6 +214,12 @@ func TestServer(t *testing.T) {
 			nil,
 		},
 		{
+			"robots.txt",
+			"/robots.txt",
+			http.StatusOK,
+			[]string{"User-agent: *", "Disallow: /*?tab=*"},
+		},
+		{
 			"search",
 			fmt.Sprintf("/search?q=%s", sample.PackageName),
 			http.StatusOK,
