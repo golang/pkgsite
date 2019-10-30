@@ -62,7 +62,7 @@ h6 {
 h1,
 h2,
 h3 {
-  font-weight: bold
+  font-weight: bold;
 }
 h1 {
   font-size: 1.5rem;
@@ -109,9 +109,14 @@ code {
   cursor: pointer;
 }
 .Footer-feedbackButton {
+  background: none;
   border: none;
   color: var(--turq-text);
   font-size: 0.875rem;
+  padding: 0;
+}
+.Footer-feedbackButton:hover {
+  text-decoration: underline;
 }
 .Footer-gopher {
   bottom: 0;
@@ -244,7 +249,7 @@ code {
 }
 .DetailsHeader-title {
   display: inline-block;
-  font:  600 1.875rem 'Work Sans', arial, sans-serif;
+  font: 600 1.875rem 'Work Sans', arial, sans-serif;
   margin: 0;
 }
 .DetailsHeader-version {
@@ -278,11 +283,11 @@ code {
   cursor: pointer;
 }
 #DetailsHeader-path {
-/*
-   An input element that can be selected so its contents can be
-   copied to the clipboard. We can't use a hidden element, so
-   put this visible one very far off the screen.
-*/
+  /*
+   * An input element that can be selected so its contents can be
+   * copied to the clipboard. We can't use a hidden element, so
+   * put this visible one very far off the screen.
+   */
   position: absolute;
   left: -62rem;
   top: 62rem;
@@ -344,7 +349,7 @@ code {
 }
 .SearchResults .Pagination-nav,
 .SearchResults-help,
-.SearchResults-resultCount{
+.SearchResults-resultCount {
   font-size: 0.875rem;
 }
 
@@ -368,7 +373,7 @@ code {
 @media only screen and (min-width: 800px) {
   .SearchResults .Pagination-nav,
   .SearchResults-help,
-  .SearchResults-resultCount{
+  .SearchResults-resultCount {
     font-size: 1.125rem;
   }
   .Pagination-navInner {
@@ -676,7 +681,7 @@ code {
   text-align: center;
 }
 .InfoLabel {
-  font-size: .875rem;
+  font-size: 0.875rem;
   line-height: 1.375rem;
   margin: 0.5rem 0;
 }
@@ -709,10 +714,10 @@ table.Directories {
 }
 
 .Details-content {
-  margin-left: 40px
+  margin-left: 40px;
 }
 .Details-indent {
-  margin-left: 1.1rem
+  margin-left: 1.1rem;
 }
 
 /* jump-to-identifier dialog on documentation page */
@@ -720,9 +725,9 @@ table.Directories {
 .JumpDialog {
   width: 25rem;
   padding: 0;
-  border: 0.0625rem solid rgba(0, 0, 0, .2);
+  border: 0.0625rem solid rgba(0, 0, 0, 0.2);
   border-radius: 6px;
-  box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, .5);
+  box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.5);
 }
 .JumpDialog-title {
   font-size: 1.125rem;
