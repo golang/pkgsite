@@ -70,14 +70,14 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 				{{- $tname := .Name -}}
 				<li class="Documentation-indexType"><a href="#{{$tname}}">type {{$tname}}</a></li>{{"\n"}}
 				{{- with .Funcs -}}
-					<ul class="Documentation-indexTypeFunctions">{{"\n" -}}
+					<li><ul class="Documentation-indexTypeFunctions">{{"\n" -}}
 					{{range .}}<li><a href="#{{.Name}}">{{render_synopsis .Decl}}</a></li>{{"\n"}}{{end}}
-					</ul>{{"\n" -}}
+					</ul></li>{{"\n" -}}
 				{{- end -}}
 				{{- with .Methods -}}
-					<ul class="Documentation-indexTypeMethods">{{"\n" -}}
+					<li><ul class="Documentation-indexTypeMethods">{{"\n" -}}
 					{{range .}}<li><a href="#{{$tname}}.{{.Name}}">{{render_synopsis .Decl}}</a></li>{{"\n"}}{{end}}
-					</ul>{{"\n" -}}
+					</ul></li>{{"\n" -}}
 				{{- end -}}
 			{{- end -}}
 

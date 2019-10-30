@@ -14,7 +14,7 @@
   --gray-7: #c6c8ca;
   --gray-8: #dcdee0;
   --gray-9: #f0f1f2;
-  --gray-10: #f8f9f9;
+  --gray-10: #fafafa;
 
   --turq-text: #007d9c;
   --turq-med: #00add8;
@@ -559,7 +559,7 @@ code {
 }
 .Documentation code,
 .Documentation pre {
-  background-color: #f5f5f5;
+  background-color: var(--gray-10);
   border-radius: 0.3em;
   border: 0.0625rem solid #ccc;
   font: 0.875rem/1.375rem 'Go Mono', 'Source Code Pro', monospace;
@@ -576,17 +576,25 @@ code {
   color: #060;
 }
 
+.Documentation-toc,
 .Documentation-overview,
 .Documentation-index,
-.Documentation-examples,
-.Documentation-constants,
-.Documentation-variables,
-.Documentation-function,
-.Documentation-type,
-.Documentation-note {
-  border-top: 0.0625rem solid var(--gray-8);
-  padding-bottom: 1.5rem;
+.Documentation-examples {
+  padding-bottom: 0;
 }
+
+.Documentation-overviewHeader,
+.Documentation-indexHeader,
+.Documentation-constantsHeader,
+.Documentation-variablesHeader,
+.Documentation-examplesHeader,
+.Documentation-functionHeader,
+.Documentation-typeHeader,
+.Documentation-typeMethodHeader,
+.Documentation-typeFuncHeader {
+  margin-bottom: 0.5rem;
+}
+
 .Documentation-exampleDetails {
   margin-top: 1rem;
 }
@@ -595,10 +603,6 @@ code {
   text-decoration: none;
   outline: none;
   margin-bottom: 2rem;
-}
-.Documentation .Documentation-typeMethodHeader,
-.Documentation .Documentation-typeFuncHeader {
-  font-size: 1.25rem;
 }
 .Documentation .example-header {
   color: var(--turq-text);
@@ -609,8 +613,7 @@ code {
 }
 .Documentation-build {
   text-align: right;
-  border-top: 0.0625rem solid var(--gray-8);
-  padding-top: 1rem;
+  padding-top: 1.5rem;
 }
 
 .Versions-list {

@@ -50,19 +50,28 @@ func Render(fset *token.FileSet, p *doc.Package, opt RenderOptions) ([]byte, err
 		opt.Limit = 10 * megabyte
 	}
 
+	// Make a copy to avoid modifying caller's *doc.Package.
+	p2 := *p
+	p = &p2
+
 	// When rendering documentation for commands, display
 	// the package comment and notes, but no declarations.
 	if p.Name == "main" {
-		// Make a copy to avoid modifying caller's *doc.Package.
-		p2 := *p
-		p = &p2
-
 		// Clear top-level declarations.
 		p.Consts = nil
 		p.Types = nil
 		p.Vars = nil
 		p.Funcs = nil
 		p.Examples = nil
+	}
+
+	// Remove everything from the notes section that is not a bug. This
+	// includes TODOs and other arbitrary notes.
+	for k := range p.Notes {
+		if k == "BUG" {
+			continue
+		}
+		delete(p.Notes, k)
 	}
 
 	r := render.New(fset, p, &render.Options{
