@@ -148,6 +148,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/copyright", s.staticPageHandler("copyright.tmpl", "Copyright - Go Discovery"))
 	handle("/tos", s.staticPageHandler("tos.tmpl", "Terms of Service - Go Discovery"))
 	handle("/", detailHandler)
+	handle("/latest-version/", http.HandlerFunc(s.handleLatestVersion))
 	handle("/robots.txt", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		http.ServeContent(w, r, "", time.Time{}, strings.NewReader(`User-agent: *
@@ -155,6 +156,7 @@ Disallow: /*?tab=*
 Disallow: /search?*
 Disallow: /mod/
 Disallow: /pkg/
+Disallow: /latest-version/
 `))
 	}))
 }

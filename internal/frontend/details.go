@@ -85,7 +85,6 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.serveModulePage(w, r, path, version)
-
 }
 
 // servePackagePage applies database data to the appropriate template.
@@ -352,4 +351,31 @@ func parseDetailsURLPath(urlPath string) (pkgPath, modulePath, version string, e
 		modulePath = stdlib.ModulePath
 	}
 	return pkgPath, modulePath, version, nil
+}
+
+func (s *Server) handleLatestVersion(w http.ResponseWriter, r *http.Request) {
+	modulePath := strings.TrimPrefix(r.URL.Path, "/latest-version/")
+	v, err := s.latestVersion(r.Context(), modulePath)
+	if err != nil {
+		log.Errorf("handleLatestVersion(%q): %v", modulePath, err)
+		http.Error(w, `""`, http.StatusInternalServerError) // send valid json
+		return
+	}
+	if _, err = fmt.Fprintf(w, "%q", v); err != nil {
+		log.Errorf("handleLatestVersion: fmt.Fprintf: %v", err)
+	}
+}
+func (s *Server) latestVersion(ctx context.Context, modulePath string) (string, error) {
+	latestMod, err := s.ds.GetVersionInfo(ctx, modulePath, internal.LatestVersion)
+	if err != nil {
+		return "", err
+	}
+	v := latestMod.Version
+	if modulePath == stdlib.ModulePath {
+		v, err = stdlib.TagForVersion(v)
+		if err != nil {
+			return "", err
+		}
+	}
+	return v, nil
 }

@@ -104,28 +104,18 @@ func TestServer(t *testing.T) {
 		return buf.String()
 	}
 	constructPackageHeader := func(h *header) []string {
-		latestInfo := `<div class="DetailsHeader-badge DetailsHeader-latest">Latest</div>`
-		if h.notLatest {
-			latestInfo = mustExecuteTemplate(h, `<a href="{{.LatestURL}}">Go to latest</a>`)
-		}
 		return []string{
 			mustExecuteTemplate(h, `<span class="DetailsHeader-breadcrumbCurrent">{{.Suffix}}</span>`),
 			mustExecuteTemplate(h, `<h1 class="DetailsHeader-title">{{.Title}}</h1>`),
 			mustExecuteTemplate(h, `<div class="DetailsHeader-version">{{.Version}}</div>`),
-			latestInfo,
 			h.LicenseInfo,
 			h.ModuleURL,
 		}
 	}
 	constructModuleHeader := func(h *header) []string {
-		latestInfo := `<div class="DetailsHeader-badge DetailsHeader-latest">Latest</div>`
-		if h.notLatest {
-			latestInfo = mustExecuteTemplate(h, `<a href="{{.LatestURL}}">Go to latest</a>`)
-		}
 		return []string{
 			mustExecuteTemplate(h, `<h1 class="DetailsHeader-title">{{.Title}}</h1>`),
 			mustExecuteTemplate(h, `<div class="DetailsHeader-version">{{.Version}}</div>`),
-			latestInfo,
 			h.LicenseInfo,
 		}
 	}

@@ -14,13 +14,16 @@
     <div class="DetailsHeader-main">
       <h1 class="DetailsHeader-title">{{.Title}}</h1>
       <div class="DetailsHeader-version">{{$header.Version}}</div>
-      {{if .IsLatest}}
-        <div class="DetailsHeader-badge DetailsHeader-latest">Latest</div>
-      {{else}}
-        <div class="DetailsHeader-badge DetailsHeader-goToLatest">
-      <a href="/{{$header.Path}}">Go to latest</a>
-    </div>
-      {{end}}
+      <div class="DetailsHeader-badge"
+        data-version="{{$header.Version}}"
+        {{ if eq $namespace "mod" -}}
+          data-mpath="{{$header.Path}}"
+          data-href="mod/{{$header.Path}}">
+        {{- else -}}
+          data-mpath="{{$header.Module.Path}}"
+          data-href="{{$header.Path}}">
+        {{- end }}
+      </div>
     </div>
     <div class="InfoLabel">
       <span class="InfoLabel-title">Published:</span>
@@ -38,11 +41,11 @@
       {{if eq $namespace "pkg"}}
         <span class="InfoLabel-divider">|</span>
         {{if eq $header.Module.Path "std"}}
-	  <a href="{{$header.Module.URL}}">Standard library</a>
+          <a href="{{$header.Module.URL}}">Standard library</a>
         {{else}}
           <span class="InfoLabel-title">Module: </span>
           <span>
-	    <a href="{{$header.Module.URL}}">{{$header.Module.Path}}</a>
+            <a href="{{$header.Module.URL}}">{{$header.Module.Path}}</a>
           </span>
         {{end}}
       {{end}}
@@ -100,6 +103,28 @@ if (copyButton) {
      document.execCommand("copy");
    })
 }
+
+async function latest() {
+  const latestBadge = document.querySelector('.DetailsHeader-badge');
+  const url = '/latest-version/' + latestBadge.getAttribute('data-mpath');
+  const res = await fetch(url);
+  if (!res.ok) {
+    // server-side error; do nothing
+    return
+  } else {
+    const latestVersion = await res.json();
+   if (latestVersion == latestBadge.getAttribute('data-version')) {
+      latestBadge.classList.add('DetailsHeader-latest');
+      latestBadge.innerHTML = 'Latest';
+    } else {
+      latestBadge.classList.add('DetailsHeader-goToLatest');
+      latestBadge.innerHTML = '<a href="/' + latestBadge.getAttribute('data-href') + '">Go to latest</a>'
+    }
+  }
+}
+
+latest();
+
 </script>
 
 {{block "details_post_content" .}}{{end}}
