@@ -14,12 +14,15 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"net/http"
 	"os"
 	"strings"
 	"time"
 
+	"cloud.google.com/go/storage"
+	"github.com/ghodss/yaml"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/secrets"
 	"golang.org/x/net/context/ctxhttp"
@@ -85,6 +88,11 @@ func RedisHost() string {
 // RedisPort returns the port of the redis instance.
 func RedisPort() string {
 	return cfg.RedisPort
+}
+
+// Quota returns the settings for the quota middleware.
+func Quota() QuotaSettings {
+	return cfg.Quota
 }
 
 // AppVersionLabel returns the version label for the current instance.  This is
@@ -187,14 +195,34 @@ type config struct {
 	FallbackVersionLabel string
 
 	DBSecret, DBUser, DBHost, DBPort, DBName string
+	DBPassword                               string `json:"-"`
 
 	// Redis related configuration.
 	RedisHost, RedisPort string
 
-	DBPassword string `json:"-"`
+	Quota QuotaSettings
+}
+
+// configOverride holds selected config settings that can be dynamically overridden.
+type configOverride struct {
+	DBHost string
+	DBName string
+	Quota  QuotaSettings
+}
+
+// QuotaSettings is config for internal/middleware/quota.go
+type QuotaSettings struct {
+	QPS        int // allowed queries per second, per IP block
+	Burst      int // maximum requests per second, per block; the size of the token bucket
+	MaxEntries int // maximum number of entries to keep track of
+	// Record data about blocking, but do not actually block.
+	// This is a *bool, so we can distinguish "not present" from "false" in an override
+	RecordOnly *bool
 }
 
 var cfg config
+
+const overrideBucket = "go-discovery"
 
 // Init resolves all configuration values provided by the config package. It
 // must be called before any configuration values are used.
@@ -262,7 +290,79 @@ func Init(ctx context.Context) (err error) {
 	cfg.RedisHost = os.Getenv("GO_DISCOVERY_REDIS_HOST")
 	cfg.RedisPort = GetEnv("GO_DISCOVERY_REDIS_PORT", "6379")
 
+	cfg.Quota = QuotaSettings{
+		QPS:        10,
+		Burst:      20,
+		MaxEntries: 1000,
+		RecordOnly: func() *bool { t := true; return &t }(),
+	}
+
+	// If GO_DISCOVERY_CONFIG_OVERRIDE is set, it should point to a file
+	// in overrideBucket which provides overrides for selected configuration.
+	// Use this when you want to fix something in prod quickly, without waiting
+	// to re-deploy. (Otherwise, do not use it.)
+	overrideObj := os.Getenv("GO_DISCOVERY_CONFIG_OVERRIDE")
+	if overrideObj != "" {
+		overrideBytes, err := readOverrideFile(ctx, overrideBucket, overrideObj)
+		if err != nil {
+			log.Print(err)
+		} else {
+			log.Printf("processing overrides from gs://%s/%s", overrideBucket, overrideObj)
+			processOverrides(&cfg, overrideBytes)
+		}
+	}
 	return nil
+}
+
+func readOverrideFile(ctx context.Context, bucketName, objName string) (_ []byte, err error) {
+	defer derrors.Wrap(&err, "readOverrideFile(ctx, %q)", objName)
+
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+	r, err := client.Bucket(overrideBucket).Object(objName).NewReader(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Close()
+	return ioutil.ReadAll(r)
+}
+
+func processOverrides(cfg *config, bytes []byte) {
+	var ov configOverride
+	if err := yaml.Unmarshal(bytes, &ov); err != nil {
+		log.Printf("processOverrides: %v", err)
+		return
+	}
+	overrideString("DBHost", &cfg.DBHost, ov.DBHost)
+	overrideString("DBName", &cfg.DBName, ov.DBName)
+	overrideInt("Quota.QPS", &cfg.Quota.QPS, ov.Quota.QPS)
+	overrideInt("Quota.Burst", &cfg.Quota.Burst, ov.Quota.Burst)
+	overrideInt("Quota.MaxEntries", &cfg.Quota.MaxEntries, ov.Quota.MaxEntries)
+	overrideBool("Quota.RecordOnly", &cfg.Quota.RecordOnly, ov.Quota.RecordOnly)
+}
+
+func overrideString(name string, field *string, val string) {
+	if val != "" {
+		*field = val
+		log.Printf("overriding %s with %q", name, val)
+	}
+}
+
+func overrideInt(name string, field *int, val int) {
+	if val != 0 {
+		*field = val
+		log.Printf("overriding %s with %d", name, val)
+	}
+}
+
+func overrideBool(name string, field **bool, val *bool) {
+	if val != nil {
+		*field = val
+		log.Printf("overriding %s with %t", name, *val)
+	}
 }
 
 // Dump outputs the current config information to the given Writer.

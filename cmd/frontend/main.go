@@ -95,12 +95,7 @@ func main() {
 	requestLogger := getLogger(ctx)
 	mw := middleware.Chain(
 		middleware.RequestLog(requestLogger),
-		middleware.Quota(middleware.QuotaSettings{
-			QPS:        10,
-			Burst:      20,
-			MaxEntries: 1000,
-			RecordOnly: true,
-		}),
+		middleware.Quota(config.Quota()),
 		middleware.SecureHeaders(), // must come before any caching middleware for nonces to work
 		middleware.Timeout(1*time.Minute),
 	)

@@ -13,10 +13,11 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"go.opencensus.io/stats/view"
+	"golang.org/x/discovery/internal/config"
 )
 
 func TestQuota(t *testing.T) {
-	mw := Quota(QuotaSettings{QPS: 1, Burst: 2, MaxEntries: 1})
+	mw := Quota(config.QuotaSettings{QPS: 1, Burst: 2, MaxEntries: 1, RecordOnly: boolptr(false)})
 	var npass int
 	h := func(w http.ResponseWriter, r *http.Request) {
 		npass++
@@ -71,7 +72,7 @@ func TestQuota(t *testing.T) {
 
 func TestQuotaRecordOnly(t *testing.T) {
 	// Like TestQuota, but with in RecordOnly mode nothing is actually blocked.
-	mw := Quota(QuotaSettings{QPS: 1, Burst: 2, MaxEntries: 1, RecordOnly: true})
+	mw := Quota(config.QuotaSettings{QPS: 1, Burst: 2, MaxEntries: 1, RecordOnly: boolptr(true)})
 	npass := 0
 	h := func(w http.ResponseWriter, r *http.Request) {
 		npass++
@@ -107,7 +108,7 @@ func TestQuotaRecordOnly(t *testing.T) {
 
 func TestQuotaBadKey(t *testing.T) {
 	// Verify that invalid IP addresses are not blocked.
-	mw := Quota(QuotaSettings{QPS: 1, Burst: 2, MaxEntries: 1, RecordOnly: true})
+	mw := Quota(config.QuotaSettings{QPS: 1, Burst: 2, MaxEntries: 1, RecordOnly: boolptr(true)})
 	npass := 0
 	h := func(w http.ResponseWriter, r *http.Request) {
 		npass++
@@ -175,3 +176,5 @@ func TestIPKey(t *testing.T) {
 		}
 	}
 }
+
+func boolptr(b bool) *bool { return &b }

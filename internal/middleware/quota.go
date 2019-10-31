@@ -15,7 +15,7 @@ import (
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
-	"golang.org/x/discovery/internal/log"
+	"golang.org/x/discovery/internal/config"
 	"golang.org/x/time/rate"
 )
 
@@ -36,21 +36,13 @@ var (
 	}
 )
 
-type QuotaSettings struct {
-	QPS        int  // allowed queries per second, per IP block
-	Burst      int  // maximum requests per second, per block; the size of the token bucket
-	MaxEntries int  // maximum number of entries to keep track of
-	RecordOnly bool // record data about blocking, but do not actually block
-}
-
 // Quota implements a simple IP-based rate limiter. Each set of incoming IP
 // addresses with the same low-order byte gets qps requests per second, with the
 // given burst (
 // Information is kept in an LRU cache of size maxEntries.
 //
 // If a request is disallowed, a 429 (TooManyRequests) will be served.
-func Quota(settings QuotaSettings) Middleware {
-	log.Infof("QuotaSettings: %v", settings)
+func Quota(settings config.QuotaSettings) Middleware {
 	cache := lru.New(settings.MaxEntries)
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -68,7 +60,7 @@ func Quota(settings QuotaSettings) Middleware {
 			}
 			blocked := limiter != nil && !limiter.Allow()
 			recordQuotaMetric(blocked)
-			if blocked && !settings.RecordOnly {
+			if blocked && settings.RecordOnly != nil && !*settings.RecordOnly {
 				const tmr = http.StatusTooManyRequests
 				http.Error(w, http.StatusText(tmr), tmr)
 				return

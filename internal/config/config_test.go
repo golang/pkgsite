@@ -7,6 +7,8 @@ package config
 import (
 	"regexp"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestValidateAppVersion(t *testing.T) {
@@ -50,5 +52,31 @@ func TestChooseOne(t *testing.T) {
 		if !matched {
 			t.Errorf("chooseOne(%q) = %q, _, want matches %q", test.configVar, got, test.wantMatches)
 		}
+	}
+}
+
+func TestProcessOverrides(t *testing.T) {
+	tr := true
+	f := false
+	cfg := config{
+		DBHost: "origHost",
+		DBName: "origName",
+		Quota:  QuotaSettings{QPS: 1, Burst: 2, MaxEntries: 3, RecordOnly: &tr},
+	}
+	ov := `
+        DBHost: newHost
+        Quota:
+           MaxEntries: 17
+           RecordOnly: false
+    `
+	processOverrides(&cfg, []byte(ov))
+	got := cfg
+	want := config{
+		DBHost: "newHost",
+		DBName: "origName",
+		Quota:  QuotaSettings{QPS: 1, Burst: 2, MaxEntries: 17, RecordOnly: &f},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("mismatch (-want, +got):\n%s", diff)
 	}
 }
