@@ -92,11 +92,16 @@ func main() {
 		go http.ListenAndServe(config.DebugAddr("localhost:8081"), dcensusServer)
 	}
 
+	panicHandler, err := server.PanicHandler()
+	if err != nil {
+		log.Fatal(err)
+	}
 	requestLogger := getLogger(ctx)
 	mw := middleware.Chain(
 		middleware.RequestLog(requestLogger),
 		middleware.Quota(config.Quota()),
 		middleware.SecureHeaders(), // must come before any caching middleware for nonces to work
+		middleware.Panic(panicHandler),
 		middleware.Timeout(1*time.Minute),
 	)
 

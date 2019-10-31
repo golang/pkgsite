@@ -19,6 +19,7 @@ import (
 	"github.com/go-redis/redis/v7"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/config"
+	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/middleware"
@@ -232,6 +233,24 @@ type errorPage struct {
 	SecondaryMessage template.HTML
 }
 
+// PanicHandler returns an http.HandlerFunc that can be used in HTTP
+// middleware. It returns an error if something goes wrong pre-rendering the
+// error template.
+func (s *Server) PanicHandler() (_ http.HandlerFunc, err error) {
+	defer derrors.Wrap(&err, "PanicHandler")
+	status := http.StatusInternalServerError
+	buf, err := s.renderErrorPage(status, nil)
+	if err != nil {
+		return nil, err
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(status)
+		if _, err := io.Copy(w, bytes.NewReader(buf)); err != nil {
+			log.Errorf("Error copying panic template to ResponseWriter: %v", err)
+		}
+	}, nil
+}
+
 func (s *Server) serveErrorPage(w http.ResponseWriter, r *http.Request, status int, page *errorPage) {
 	if page == nil {
 		page = &errorPage{
@@ -259,6 +278,7 @@ func (s *Server) renderErrorPage(status int, page *errorPage) ([]byte, error) {
 			Message: statusInfo,
 			basePage: basePage{
 				Title: statusInfo,
+				Nonce: middleware.NoncePlaceholder,
 			},
 		}
 	}
