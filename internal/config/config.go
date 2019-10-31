@@ -17,7 +17,6 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"path"
 	"strings"
 	"time"
 
@@ -221,29 +220,12 @@ func Init(ctx context.Context) (err error) {
 	cfg.LocationID = GetEnv("GO_DISCOVERY_GAE_LOCATION_ID", "us-central1")
 
 	if cfg.GaeEnv != "" {
-		// zone is not available in the environment but can be queried via the
-		// metadata api as described at
-		// https://cloud.google.com/appengine/docs/standard/java/accessing-instance-metadata
-		// (this documentation doesn't exist for Golang, but it seems to work).
-		zoneURL := "http://metadata.google.internal/computeMetadata/v1/instance/zone"
-		req, err := http.NewRequest("GET", zoneURL, nil)
+		// Zone is not available in the environment but can be queried via the metadata API.
+		zone, err := gceMetadata(ctx, "instance/zone")
 		if err != nil {
-			return fmt.Errorf("error creating metadata client: %v", err)
+			return err
 		}
-		req.Header.Set("Metadata-Flavor", "Google")
-		resp, err := ctxhttp.Do(ctx, nil, req)
-		if err != nil {
-			return fmt.Errorf("error resolving zone metadata: %v", err)
-		}
-		if resp.StatusCode != http.StatusOK {
-			return fmt.Errorf("got status code %d when querying metadata", http.StatusOK)
-		}
-		defer resp.Body.Close()
-		zoneBytes, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return fmt.Errorf("error reading zone query body: %v", err)
-		}
-		cfg.ZoneID = path.Base(string(zoneBytes))
+		cfg.ZoneID = zone
 	}
 
 	// this fallback should only be used when developing locally.
@@ -301,4 +283,31 @@ func chooseOne(configVar string) (string, error) {
 	src := rand.NewSource(time.Now().UnixNano())
 	rng := rand.New(src)
 	return fields[rng.Intn(len(fields))], nil
+}
+
+// gceMetadata reads a metadata value from GCE.
+func gceMetadata(ctx context.Context, name string) (_ string, err error) {
+	// See https://cloud.google.com/appengine/docs/standard/java/accessing-instance-metadata.
+	// (This documentation doesn't exist for Golang, but it seems to work).
+	defer derrors.Wrap(&err, "gceMetadata(ctx, %q)", name)
+
+	const zoneURL = "http://metadata.google.internal/computeMetadata/v1/"
+	req, err := http.NewRequest("GET", zoneURL+name, nil)
+	if err != nil {
+		return "", fmt.Errorf("http.NewRequest: %v", err)
+	}
+	req.Header.Set("Metadata-Flavor", "Google")
+	resp, err := ctxhttp.Do(ctx, nil, req)
+	if err != nil {
+		return "", fmt.Errorf("ctxhttp.Do: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("bad status: %s", resp.Status)
+	}
+	bytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("ioutil.ReadAll: %v", err)
+	}
+	return string(bytes), nil
 }
