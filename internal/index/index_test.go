@@ -45,8 +45,8 @@ func TestGetVersions(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			teardownTestCase, client := SetupTestIndex(t, tc.versions)
-			defer teardownTestCase(t)
+			client, teardown := SetupTestIndex(t, tc.versions)
+			defer teardown()
 
 			since := time.Time{}
 			got, err := client.GetVersions(ctx, since, tc.limit)

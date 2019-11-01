@@ -163,9 +163,9 @@ func (q *InMemoryQueue) ScheduleFetch(ctx context.Context, modulePath, version, 
 	return nil
 }
 
-// waitForTesting waits for all queued requests to finish. It should only be
+// WaitForTesting waits for all queued requests to finish. It should only be
 // used by test code.
-func (q InMemoryQueue) waitForTesting(ctx context.Context) {
+func (q InMemoryQueue) WaitForTesting(ctx context.Context) {
 	for i := 0; i < cap(q.sem); i++ {
 		select {
 		case <-ctx.Done():

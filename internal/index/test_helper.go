@@ -17,7 +17,7 @@ import (
 // SetupTestIndex creates a module index for testing using the given version
 // map for data.  It returns a function for tearing down the index server after
 // the test is completed, and a Client for interacting with the test index.
-func SetupTestIndex(t *testing.T, versions []*internal.IndexVersion) (func(t *testing.T), *Client) {
+func SetupTestIndex(t *testing.T, versions []*internal.IndexVersion) (*Client, func()) {
 	t.Helper()
 
 	httpClient, server, serverCloseFn := testhelper.SetupTestClientAndServer(
@@ -42,8 +42,8 @@ func SetupTestIndex(t *testing.T, versions []*internal.IndexVersion) (func(t *te
 	}
 	client.httpClient = httpClient
 
-	fn := func(t *testing.T) {
+	fn := func() {
 		serverCloseFn()
 	}
-	return fn, client
+	return client, fn
 }

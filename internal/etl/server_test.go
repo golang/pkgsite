@@ -138,8 +138,8 @@ func TestETL(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.label, func(t *testing.T) {
-			teardownIndex, indexClient := index.SetupTestIndex(t, test.index)
-			defer teardownIndex(t)
+			indexClient, teardownIndex := index.SetupTestIndex(t, test.index)
+			defer teardownIndex()
 
 			proxyClient, teardownProxy := proxy.SetupTestProxy(t, test.proxy)
 			defer teardownProxy()
@@ -167,9 +167,9 @@ func TestETL(t *testing.T) {
 			// Sleep to hopefully allow the work to begin processing, at which point
 			// waitForTesting will successfully block until it is complete.
 			// Experimentally this was not flaky with even 10ms sleep, but we bump to
-			// 50ms to be extra careful.
-			time.Sleep(50 * time.Millisecond)
-			queue.waitForTesting(ctx)
+			// 100ms to be extra careful.
+			time.Sleep(100 * time.Millisecond)
+			queue.WaitForTesting(ctx)
 
 			// To avoid being a change detector, only look at ModulePath, Version,
 			// Timestamp, and Status.
