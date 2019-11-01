@@ -97,13 +97,13 @@ if (selectedEl.offsetLeft + selectedEl.offsetWidth > navEl.offsetWidth) {
 
 const copyButton = document.querySelector('#DetailsHeader-copyPath');
 if (copyButton) {
-   copyButton.addEventListener('click', function (event) {
-     event.preventDefault();
-     const input = document.querySelector('#DetailsHeader-path');
-     input.select();
-     document.execCommand("copy");
-     input.blur(); // prevents jump to focused element in some browsers
-   })
+  copyButton.addEventListener('click', function(event) {
+    event.preventDefault();
+    const input = document.querySelector('#DetailsHeader-path');
+    input.select();
+    document.execCommand('copy');
+    input.blur(); // prevents jump to focused element in some browsers
+  });
 }
 
 async function latest() {
@@ -112,16 +112,15 @@ async function latest() {
   const res = await fetch(url);
   if (!res.ok) {
     // server-side error; do nothing
-    return
+    return;
+  }
+  const latestVersion = await res.json();
+  if (latestVersion === latestBadge.getAttribute('data-version')) {
+    latestBadge.classList.add('DetailsHeader-latest');
+    latestBadge.innerHTML = 'Latest';
   } else {
-    const latestVersion = await res.json();
-   if (latestVersion == latestBadge.getAttribute('data-version')) {
-      latestBadge.classList.add('DetailsHeader-latest');
-      latestBadge.innerHTML = 'Latest';
-    } else {
-      latestBadge.classList.add('DetailsHeader-goToLatest');
-      latestBadge.innerHTML = '<a href="/' + latestBadge.getAttribute('data-href') + '">Go to latest</a>'
-    }
+    latestBadge.classList.add('DetailsHeader-goToLatest');
+    latestBadge.innerHTML = '<a href="/' + latestBadge.getAttribute('data-href') + '">Go to latest</a>';
   }
 }
 
