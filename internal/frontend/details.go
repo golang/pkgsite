@@ -62,7 +62,6 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.servePackagePage(w, r, pkgPath, modulePath, version)
-
 }
 
 // legacyHandlePackageDetails redirects all redirects to "/pkg" to "/", so that

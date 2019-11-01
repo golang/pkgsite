@@ -132,9 +132,9 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 		searchHandler http.Handler = http.HandlerFunc(s.handleSearch)
 	)
 	if redisClient != nil {
-		modHandler = middleware.Cache("module-details", redisClient, 10*time.Minute)(modHandler)
-		detailHandler = middleware.Cache("package-details", redisClient, 10*time.Minute)(detailHandler)
-		searchHandler = middleware.Cache("search", redisClient, 10*time.Minute)(searchHandler)
+		modHandler = middleware.Cache("module-details", redisClient, moduleTTL)(modHandler)
+		detailHandler = middleware.Cache("package-details", redisClient, packageTTL)(detailHandler)
+		searchHandler = middleware.Cache("search", redisClient, middleware.TTL(1*time.Hour))(searchHandler)
 	}
 	handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(s.staticPath))))
 	handle("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -159,6 +159,43 @@ Disallow: /pkg/
 Disallow: /latest-version/
 `))
 	}))
+}
+
+const (
+	// defaultTTL is used when details tab contents are subject to change, or when
+	// there is a problem confirming that the details can be permanently cached.
+	defaultTTL = 1 * time.Hour
+	// shortTTL is used for volatile content, such as the latest version of a
+	// package or module.
+	shortTTL = 10 * time.Minute
+	// longTTL is used when details content is essentially static.
+	longTTL = 24 * time.Hour
+)
+
+// packageTTL assigns the cache TTL for package detail requests.
+func packageTTL(r *http.Request) time.Duration {
+	return detailsTTL(r.URL.Path, r.FormValue("tab"))
+}
+
+// moduleTTL assigns the cache TTL for /mod/ requests.
+func moduleTTL(r *http.Request) time.Duration {
+	urlPath := strings.TrimPrefix(r.URL.Path, "/mod")
+	return detailsTTL(urlPath, r.FormValue("tab"))
+}
+
+func detailsTTL(urlPath, tab string) time.Duration {
+	_, _, version, err := parseDetailsURLPath(urlPath)
+	if err != nil {
+		log.Errorf("falling back to default module TTL: %v", err)
+		return defaultTTL
+	}
+	if version == internal.LatestVersion {
+		return shortTTL
+	}
+	if tab == "importedby" || tab == "versions" {
+		return defaultTTL
+	}
+	return longTTL
 }
 
 // TagRoute categorizes incoming requests to the frontend for use in

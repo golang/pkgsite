@@ -520,6 +520,51 @@ func TestServerErrors(t *testing.T) {
 	}
 }
 
+func mustRequest(urlPath string, t *testing.T) *http.Request {
+	t.Helper()
+	r, err := http.NewRequest(http.MethodGet, "http://localhost"+urlPath, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return r
+}
+
+func TestPackageTTL(t *testing.T) {
+	tests := []struct {
+		r    *http.Request
+		want time.Duration
+	}{
+		{mustRequest("/host.com/module@v1.2.3/suffix", t), longTTL},
+		{mustRequest("/host.com/module/suffix", t), shortTTL},
+		{mustRequest("/host.com/module@v1.2.3/suffix?tab=overview", t), longTTL},
+		{mustRequest("/host.com/module@v1.2.3/suffix?tab=versions", t), defaultTTL},
+		{mustRequest("/host.com/module@v1.2.3/suffix?tab=importedby", t), defaultTTL},
+	}
+	for _, test := range tests {
+		if got := packageTTL(test.r); got != test.want {
+			t.Errorf("packageTTL(%v) = %v, want %v", test.r, got, test.want)
+		}
+	}
+}
+
+func TestModuleTTL(t *testing.T) {
+	tests := []struct {
+		r    *http.Request
+		want time.Duration
+	}{
+		{mustRequest("/mod/host.com/module@v1.2.3/suffix", t), longTTL},
+		{mustRequest("/mod/host.com/module/suffix", t), shortTTL},
+		{mustRequest("/mod/host.com/module@v1.2.3/suffix?tab=overview", t), longTTL},
+		{mustRequest("/mod/host.com/module@v1.2.3/suffix?tab=versions", t), defaultTTL},
+		{mustRequest("/mod/host.com/module@v1.2.3/suffix?tab=importedby", t), defaultTTL},
+	}
+	for _, test := range tests {
+		if got := moduleTTL(test.r); got != test.want {
+			t.Errorf("packageTTL(%v) = %v, want %v", test.r, got, test.want)
+		}
+	}
+}
+
 func TestTagRoute(t *testing.T) {
 	mustRequest := func(url string) *http.Request {
 		req, err := http.NewRequest("GET", url, nil)

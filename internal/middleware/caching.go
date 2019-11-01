@@ -74,22 +74,32 @@ func recordCacheError(ctx context.Context, name, operation string) {
 }
 
 type cache struct {
-	expiration time.Duration
-	name       string
-	client     *redis.Client
-	delegate   http.Handler
+	name     string
+	client   *redis.Client
+	delegate http.Handler
+	expirer  Expirer
+}
+
+// An Expirer computes the TTL that should be used when caching a page.
+type Expirer func(r *http.Request) time.Duration
+
+// TTL returns an Expirer that expires all pages after the given TTL.
+func TTL(ttl time.Duration) Expirer {
+	return func(r *http.Request) time.Duration {
+		return ttl
+	}
 }
 
 // Cache returns a new Middleware that caches every request.
 // The name of the cache is used only for metrics.
-// The expiration is TTL of the cache keys.
-func Cache(name string, client *redis.Client, expiration time.Duration) Middleware {
+// The expirer is a func that is used to map a new request to its TTL.
+func Cache(name string, client *redis.Client, expirer Expirer) Middleware {
 	return func(h http.Handler) http.Handler {
 		return &cache{
-			expiration: expiration,
-			name:       name,
-			client:     client,
-			delegate:   h,
+			name:     name,
+			client:   client,
+			delegate: h,
+			expirer:  expirer,
 		}
 	}
 }
@@ -117,10 +127,11 @@ func (c *cache) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	rec := newRecorder(w)
 	c.delegate.ServeHTTP(rec, r)
 	if rec.bufErr == nil && (rec.statusCode == 0 || rec.statusCode == http.StatusOK) {
+		ttl := c.expirer(r)
 		if testMode {
-			c.put(ctx, key, rec)
+			c.put(ctx, key, rec, ttl)
 		} else {
-			go c.put(ctx, key, rec)
+			go c.put(ctx, key, rec, ttl)
 		}
 	}
 }
@@ -148,7 +159,7 @@ func (c *cache) get(ctx context.Context, key string) (io.Reader, bool) {
 	return zr, true
 }
 
-func (c *cache) put(ctx context.Context, key string, rec *cacheRecorder) {
+func (c *cache) put(ctx context.Context, key string, rec *cacheRecorder, ttl time.Duration) {
 	if err := rec.zipWriter.Close(); err != nil {
 		log.Errorf("cache: error closing zip for %q: %v", key, err)
 		return
@@ -156,7 +167,7 @@ func (c *cache) put(ctx context.Context, key string, rec *cacheRecorder) {
 	log.Infof("caching response of length %d for %s", rec.buf.Len(), key)
 	setCtx, cancelSet := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancelSet()
-	_, err := c.client.WithContext(setCtx).Set(key, rec.buf.Bytes(), c.expiration).Result()
+	_, err := c.client.WithContext(setCtx).Set(key, rec.buf.Bytes(), ttl).Result()
 	if err != nil {
 		recordCacheError(ctx, c.name, "SET")
 		log.Errorf("cache set %q: %v", key, err)
