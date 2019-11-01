@@ -83,6 +83,27 @@ func TestTagForVersion(t *testing.T) {
 	}
 }
 
+func TestMajorVersionForVersion(t *testing.T) {
+	for _, test := range []struct {
+		in   string
+		want string // empty => error
+	}{
+		{"", ""},
+		{"garbage", ""},
+		{"v1.13.3", "go1"},
+		{"v1.9.0-rc.2", "go1"},
+		{"v2.1.3", "go2"},
+	} {
+		got, err := MajorVersionForVersion(test.in)
+		if (err != nil) != (test.want == "") {
+			t.Errorf("%q: err: got %v, wanted error: %t", test.in, err, test.want == "")
+		}
+		if err == nil && got != test.want {
+			t.Errorf("%q: got %q, want %q", test.in, got, test.want)
+		}
+	}
+}
+
 func TestZip(t *testing.T) {
 	UseTestData = true
 	defer func() { UseTestData = false }()

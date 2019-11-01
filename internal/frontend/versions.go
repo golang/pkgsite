@@ -160,6 +160,13 @@ func buildVersionDetails(currentModulePath string, versions []*internal.VersionI
 		// we detect a +incompatible version (when the path version does not match
 		// the sematic version), we prefer the path version.
 		major := semver.Major(v.Version)
+		if v.ModulePath == stdlib.ModulePath {
+			var err error
+			major, err = stdlib.MajorVersionForVersion(v.Version)
+			if err != nil {
+				panic(err)
+			}
+		}
 		if _, pathMajor, ok := module.SplitPathVersion(v.ModulePath); ok {
 			// We prefer the path major version except for v1 import paths where the
 			// semver major version is v0. In this case, we prefer the more specific
@@ -169,7 +176,7 @@ func buildVersionDetails(currentModulePath string, versions []*internal.VersionI
 				// Trim both '/' and '.' from the path major version to account for
 				// standard and gopkg.in module paths.
 				major = strings.TrimLeft(pathMajor, "/.")
-			} else if major != "v0" {
+			} else if major != "v0" && !strings.HasPrefix(major, "go") {
 				major = "v1"
 			}
 		}
@@ -187,14 +194,15 @@ func buildVersionDetails(currentModulePath string, versions []*internal.VersionI
 		majorTree.forEach(func(_ string, minorTree *versionTree) {
 			patches := []*VersionSummary{}
 			minorTree.forEach(func(_ string, patchTree *versionTree) {
-				var formattedVersion string
+
+				version := patchTree.versionInfo.Version
+				formattedVersion := formatVersion(version)
 				if patchTree.versionInfo.ModulePath == stdlib.ModulePath {
 					formattedVersion = goTagForVersion(patchTree.versionInfo.Version)
-				} else {
-					formattedVersion = formatVersion(patchTree.versionInfo.Version)
+					version = formattedVersion
 				}
 				patches = append(patches, &VersionSummary{
-					Version:          patchTree.versionInfo.Version,
+					Version:          version,
 					Link:             linkify(patchTree.versionInfo),
 					CommitTime:       elapsedTime(patchTree.versionInfo.CommitTime),
 					FormattedVersion: formattedVersion,

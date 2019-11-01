@@ -105,6 +105,22 @@ func TagForVersion(version string) (_ string, err error) {
 	return goVersion, nil
 }
 
+// MajorVersionForVersion returns the Go major version for version.
+// E.g. "v1.13.3" => "go1".
+func MajorVersionForVersion(version string) (_ string, err error) {
+	defer derrors.Wrap(&err, "MajorTagForVersion(%q)", version)
+
+	tag, err := TagForVersion(version)
+	if err != nil {
+		return "", err
+	}
+	i := strings.IndexRune(tag, '.')
+	if i < 0 {
+		return "", fmt.Errorf("no '.' in go tag %q", tag)
+	}
+	return tag[:i], nil
+}
+
 // finalDigitsIndex returns the index of the first digit in the sequence of digits ending s.
 // If s doesn't end in digits, it returns -1.
 func finalDigitsIndex(s string) int {

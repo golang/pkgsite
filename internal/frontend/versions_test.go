@@ -12,7 +12,6 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/sample"
-	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/version"
 )
 
@@ -40,7 +39,7 @@ func versionSummaries(path string, versions [][]string, linkify func(path, versi
 		for j, version := range pointVersions {
 			var semver, formattedVersion string
 			if inStdLib(path) {
-				semver = stdlib.VersionForTag(version)
+				semver = version
 				formattedVersion = version
 			} else {
 				semver = version
@@ -238,7 +237,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			wantDetails: &VersionsDetails{
 				ThisModule: []*MajorVersionGroup{
 					{
-						Major:      "v1",
+						Major:      "go1",
 						ModulePath: "std",
 						Versions: packageVersionSummaries("net/http", "std", [][]string{
 							{"go1.12.5"},
