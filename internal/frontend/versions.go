@@ -72,7 +72,7 @@ func fetchModuleVersionsDetails(ctx context.Context, ds DataSource, vi *internal
 	linkify := func(v *internal.VersionInfo) string {
 		var formattedVersion = v.Version
 		if v.ModulePath == stdlib.ModulePath {
-			formattedVersion = goTagForVersion(vi.Version)
+			formattedVersion = goTagForVersion(v.Version)
 		}
 		return constructModuleURL(v.ModulePath, formattedVersion)
 	}
