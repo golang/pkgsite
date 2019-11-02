@@ -15,6 +15,7 @@ import (
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/sample"
+	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/xerrors"
 )
 
@@ -51,11 +52,19 @@ func TestFetchDirectoryDetails(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
+		formattedVersion := vi.Version
+		if vi.ModulePath == stdlib.ModulePath {
+			formattedVersion, err = stdlib.TagForVersion(vi.Version)
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
 		want := &Directory{
 			Module:   *mod,
 			Path:     dirPath,
 			Packages: wantPkgs,
-			URL:      constructDirectoryURL(dirPath, vi.ModulePath, vi.Version),
+			URL:      constructDirectoryURL(dirPath, vi.ModulePath, formattedVersion),
 		}
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("fetchDirectoryDetails(ctx, %q, %q, %q) mismatch (-want +got):\n%s", dirPath, modulePath, version, diff)
@@ -116,6 +125,18 @@ func TestFetchDirectoryDetails(t *testing.T) {
 			wantPkgPaths: []string{
 				"github.com/hashicorp/vault/builtin/audit/file",
 				"github.com/hashicorp/vault/builtin/audit/socket",
+			},
+		},
+		{
+			name:           "standard library",
+			dirPath:        stdlib.ModulePath,
+			modulePath:     stdlib.ModulePath,
+			version:        "v1.13.4",
+			wantModulePath: stdlib.ModulePath,
+			wantVersion:    "v1.13.4",
+			wantPkgPaths: []string{
+				"archive/tar",
+				"archive/zip",
 			},
 		},
 	} {
