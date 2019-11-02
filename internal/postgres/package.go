@@ -12,6 +12,7 @@ import (
 	"github.com/lib/pq"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/xerrors"
 )
 
@@ -73,8 +74,11 @@ func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version strin
 			p.module_path = v.module_path
 			AND v.version = p.version`
 
-	if version == internal.LatestVersion {
-		query += `
+	if modulePath == internal.UnknownModulePath || modulePath == stdlib.ModulePath {
+		if version == internal.LatestVersion {
+			// Only pkgPath is specified, so get the latest version of the
+			// package found in any module.
+			query += `
 			WHERE
 				p.path = $1
 			ORDER BY
@@ -85,18 +89,43 @@ func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version strin
 				v.major DESC,
 				v.minor DESC,
 				v.patch DESC,
-				v.prerelease DESC
+				v.prerelease DESC,
+				v.module_path DESC
 			LIMIT 1;`
-	} else if modulePath == internal.UnknownModulePath {
-		query += `
+		} else {
+			// pkgPath and version are specified, so get that package version
+			// from any module.  If it exists in multiple modules, return the
+			// one with the longest path.
+			query += `
 			WHERE
 				p.path = $1
 				AND p.version = $2
 			ORDER BY
 				p.module_path DESC
 			LIMIT 1;`
-		args = append(args, version)
+			args = append(args, version)
+		}
+	} else if version == internal.LatestVersion {
+		// pkgPath and modulePath are specified, so get the latest version of
+		// the package in the specified module.
+		query += `
+			WHERE
+				p.path = $1
+				AND p.module_path = $2
+			ORDER BY
+				-- Order the versions by release then prerelease.
+				-- The default version should be the first release
+				-- version available, if one exists.
+				CASE WHEN v.prerelease = '~' THEN 0 ELSE 1 END,
+				v.major DESC,
+				v.minor DESC,
+				v.patch DESC,
+				v.prerelease DESC
+			LIMIT 1;`
+		args = append(args, modulePath)
 	} else {
+		// pkgPath, modulePath and version were all specified. Only one
+		// directory should ever match this query.
 		query += `
 			WHERE
 				p.path = $1

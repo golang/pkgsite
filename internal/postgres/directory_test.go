@@ -93,10 +93,9 @@ func TestGetDirectory(t *testing.T) {
 			dirPath:        "github.com/hashicorp/vault",
 			modulePath:     "github.com/hashicorp/vault",
 			version:        internal.LatestVersion,
-			wantVersion:    "v1.1.2",
+			wantVersion:    "v1.2.3",
 			wantModulePath: "github.com/hashicorp/vault",
 			wantPkgPaths: []string{
-				"github.com/hashicorp/vault/api",
 				"github.com/hashicorp/vault/builtin/audit/file",
 				"github.com/hashicorp/vault/builtin/audit/socket",
 				"github.com/hashicorp/vault/vault/replication",
@@ -151,6 +150,28 @@ func TestGetDirectory(t *testing.T) {
 			wantPkgPaths: []string{
 				"github.com/hashicorp/vault/builtin/audit/file",
 				"github.com/hashicorp/vault/builtin/audit/socket",
+			},
+		},
+		{
+			name:           "latest version of github.com/hashicorp/vault/api in github.com/hashicorp/vault",
+			dirPath:        "github.com/hashicorp/vault/api",
+			modulePath:     "github.com/hashicorp/vault",
+			version:        internal.LatestVersion,
+			wantModulePath: "github.com/hashicorp/vault",
+			wantVersion:    "v1.1.2",
+			wantPkgPaths: []string{
+				"github.com/hashicorp/vault/api",
+			},
+		},
+		{
+			name:           "latest version of github.com/hashicorp/vault/api in github.com/hashicorp/vault/api",
+			dirPath:        "github.com/hashicorp/vault/api",
+			modulePath:     "github.com/hashicorp/vault/api",
+			version:        internal.LatestVersion,
+			wantModulePath: "github.com/hashicorp/vault/api",
+			wantVersion:    "v1.1.2",
+			wantPkgPaths: []string{
+				"github.com/hashicorp/vault/api",
 			},
 		},
 		{

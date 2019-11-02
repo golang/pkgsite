@@ -251,6 +251,16 @@ func InsertSampleDirectoryTree(ctx context.Context, t *testing.T, testDB *DB) {
 		},
 		{
 			"github.com/hashicorp/vault",
+			"v1.2.3",
+			[]string{
+				"github.com/hashicorp/vault/builtin/audit/file",
+				"github.com/hashicorp/vault/builtin/audit/socket",
+				"github.com/hashicorp/vault/vault/replication",
+				"github.com/hashicorp/vault/vault/seal/transit",
+			},
+		},
+		{
+			"github.com/hashicorp/vault",
 			"v1.0.3",
 			[]string{
 				"github.com/hashicorp/vault/api",

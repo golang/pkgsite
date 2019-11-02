@@ -13,6 +13,7 @@ import (
 	"github.com/lib/pq"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/xerrors"
 )
 
@@ -54,86 +55,14 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version str
 		return nil, xerrors.Errorf("none of pkgPath, modulePath, or version can be empty: %w", derrors.InvalidArgument)
 	}
 
-	query := `
-		WITH parent_directories AS (
-			SELECT *
-			FROM packages
-			WHERE tsv_parent_directories @@ $1::tsquery
-		)
-		SELECT
-			p.path,
-			p.name,
-			p.synopsis,
-			p.v1_path,
-			p.documentation,
-			p.license_types,
-			p.license_paths,
-			p.goos,
-			p.goarch,
-			v.version,
-			v.module_path,
-			v.readme_file_path,
-			v.readme_contents,
-			v.commit_time,
-			v.version_type,
-			v.source_info
-		FROM
-			parent_directories p`
-
-	var args = []interface{}{dirPath}
-	if version == internal.LatestVersion {
-		query += `
-		INNER JOIN (
-			SELECT *
-			FROM versions v
-			WHERE v.module_path IN (
-				SELECT module_path
-				FROM parent_directories
-			)
-			ORDER BY
-				-- Order the versions by release then prerelease.
-				-- The default version should be the first release
-				-- version available, if one exists.
-				CASE WHEN
-					prerelease = '~' THEN 0 ELSE 1 END,
-					major DESC,
-					minor DESC,
-					patch DESC,
-					prerelease DESC,
-					module_path DESC
-			LIMIT 1
-		) v
-		ON
-			p.module_path = v.module_path
-			AND p.version = v.version;`
-	} else if modulePath == internal.UnknownModulePath {
-		query += `
-		INNER JOIN (
-			SELECT *
-			FROM versions
-			WHERE module_path IN (
-				SELECT module_path FROM parent_directories
-			)
-			AND version = $2
-			ORDER BY module_path DESC
-			LIMIT 1
-		) v
-		ON
-			p.module_path = v.module_path
-			AND p.version = v.version;`
-		args = append(args, version)
+	var (
+		query string
+		args  []interface{}
+	)
+	if modulePath == internal.UnknownModulePath || modulePath == stdlib.ModulePath {
+		query, args = directoryQueryWithoutModulePath(dirPath, version)
 	} else {
-		query += `
-		INNER JOIN (
-			SELECT *
-			FROM versions
-			WHERE version = $2
-			AND module_path = $3
-		) v
-		ON
-			p.module_path = v.module_path
-			AND p.version = v.version;`
-		args = append(args, version, modulePath)
+		query, args = directoryQueryWithModulePath(dirPath, modulePath, version)
 	}
 
 	var (
@@ -186,4 +115,156 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version str
 		VersionInfo: vi,
 		Packages:    packages,
 	}, nil
+}
+
+const directoryColumns = `
+			p.path,
+			p.name,
+			p.synopsis,
+			p.v1_path,
+			p.documentation,
+			p.license_types,
+			p.license_paths,
+			p.goos,
+			p.goarch,
+			p.version,
+			p.module_path,
+			v.readme_file_path,
+			v.readme_contents,
+			v.commit_time,
+			v.version_type,
+			v.source_info`
+
+const orderByLatest = `
+			ORDER BY
+				-- Order the versions by release then prerelease.
+				-- The default version should be the first release
+				-- version available, if one exists.
+				CASE WHEN
+					prerelease = '~' THEN 0 ELSE 1 END,
+					major DESC,
+					minor DESC,
+					patch DESC,
+					prerelease DESC,
+					module_path DESC`
+
+// directoryQueryWithoutModulePath returns the query and args needed to fetch a
+// directory when no module path is provided.
+func directoryQueryWithoutModulePath(dirPath, version string) (string, []interface{}) {
+	if version == internal.LatestVersion {
+		// Only dirPath is specified, so get the latest version of the
+		// package found in any module that contains that directory.
+		//
+		// This might not necessarily be the latest module version that
+		// matches the directory path. For example,
+		// github.com/hashicorp/vault@v1.2.3 does not contain
+		// github.com/hashicorp/vault/api, but
+		// github.com/hashicorp/vault/api@v1.1.5 does.
+		return fmt.Sprintf(`
+			WITH potential_packages AS (
+				SELECT *
+				FROM
+					packages
+				WHERE
+					tsv_parent_directories @@ $1::tsquery
+			),
+			latest_module AS (
+				SELECT v.*
+				FROM
+					versions v
+				INNER JOIN
+					potential_packages p
+				ON
+					p.module_path = v.module_path
+					AND p.version = v.version
+				%s
+				LIMIT 1
+			)
+			SELECT %s
+			FROM
+				potential_packages p
+			INNER JOIN
+				latest_module v
+			ON
+				p.module_path = v.module_path
+				AND p.version = v.version;`, orderByLatest, directoryColumns), []interface{}{dirPath}
+	}
+
+	// dirPath and version are specified, so get that directory version
+	// from any module.  If it exists in multiple modules, return the one
+	// with the longest path.
+	return fmt.Sprintf(`
+		WITH potential_packages AS (
+			SELECT *
+			FROM packages
+			WHERE tsv_parent_directories @@ $1::tsquery
+		),
+		module_version AS (
+			SELECT v.*
+			FROM versions v
+			INNER JOIN potential_packages p
+			ON
+				p.module_path = v.module_path
+				AND p.version = v.version
+			WHERE
+				p.version = $2
+			ORDER BY
+				module_path DESC
+			LIMIT 1
+		)
+		SELECT %s
+		FROM potential_packages p
+		INNER JOIN module_version v
+		ON
+			p.module_path = v.module_path
+			AND p.version = v.version;`, directoryColumns), []interface{}{dirPath, version}
+}
+
+// directoryQueryWithoutModulePath returns the query and args needed to fetch a
+// directory when a module path is provided.
+func directoryQueryWithModulePath(dirPath, modulePath, version string) (string, []interface{}) {
+	if version == internal.LatestVersion {
+		// dirPath and modulePath are specified, so get the latest version of
+		// the package in the specified module.
+		return fmt.Sprintf(`
+			SELECT %s
+			FROM packages p
+			INNER JOIN (
+				SELECT *
+				FROM versions
+				WHERE
+					module_path = $2
+					AND version IN (
+						SELECT version
+						FROM packages
+						WHERE
+							tsv_parent_directories @@ $1::tsquery
+							AND module_path=$2
+					)
+				%s
+				LIMIT 1
+			) v
+			ON
+				p.module_path = v.module_path
+				AND p.version = v.version
+			WHERE
+				p.module_path = $2
+				AND tsv_parent_directories @@ $1::tsquery;`, directoryColumns, orderByLatest), []interface{}{dirPath, modulePath}
+	}
+
+	// dirPath, modulePath and version were all specified. Only one
+	// directory should ever match this query.
+	return fmt.Sprintf(`
+			SELECT %s
+			FROM
+				packages p
+			INNER JOIN
+				versions v
+			ON
+				p.module_path = v.module_path
+				AND p.version = v.version
+			WHERE
+				tsv_parent_directories @@ $1::tsquery
+				AND p.module_path = $2
+				AND p.version = $3;`, directoryColumns), []interface{}{dirPath, modulePath, version}
 }
