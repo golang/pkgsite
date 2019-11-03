@@ -352,9 +352,16 @@ func parseDetailsURLPath(urlPath string) (pkgPath, modulePath, version string, e
 	return pkgPath, modulePath, version, nil
 }
 
+// handleLatestVersion writes a JSON string with the latest version of the package or module.
+// It expects URLs of the form
+//   /latest-version/MODULE_PATH
+// for modules, or
+//   /latest-version/MODULE_PATH?pkg=PACKAGE_PATH
+// for packages.
 func (s *Server) handleLatestVersion(w http.ResponseWriter, r *http.Request) {
 	modulePath := strings.TrimPrefix(r.URL.Path, "/latest-version/")
-	v, err := s.latestVersion(r.Context(), modulePath)
+	packagePath := r.URL.Query().Get("pkg")
+	v, err := s.latestVersion(r.Context(), modulePath, packagePath)
 	if err != nil {
 		log.Errorf("handleLatestVersion(%q): %v", modulePath, err)
 		http.Error(w, `""`, http.StatusInternalServerError) // send valid json
@@ -364,12 +371,23 @@ func (s *Server) handleLatestVersion(w http.ResponseWriter, r *http.Request) {
 		log.Errorf("handleLatestVersion: fmt.Fprintf: %v", err)
 	}
 }
-func (s *Server) latestVersion(ctx context.Context, modulePath string) (string, error) {
-	latestMod, err := s.ds.GetVersionInfo(ctx, modulePath, internal.LatestVersion)
-	if err != nil {
-		return "", err
+func (s *Server) latestVersion(ctx context.Context, modulePath, packagePath string) (_ string, err error) {
+	defer derrors.Wrap(&err, "latestVersion(ctx, %q, %q)", modulePath, packagePath)
+
+	var vi *internal.VersionInfo
+	if packagePath == "" {
+		vi, err = s.ds.GetVersionInfo(ctx, modulePath, internal.LatestVersion)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		pkg, err := s.ds.GetPackage(ctx, packagePath, modulePath, internal.LatestVersion)
+		if err != nil {
+			return "", err
+		}
+		vi = &pkg.VersionInfo
 	}
-	v := latestMod.Version
+	v := vi.Version
 	if modulePath == stdlib.ModulePath {
 		v, err = stdlib.TagForVersion(v)
 		if err != nil {

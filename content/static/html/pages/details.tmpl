@@ -21,6 +21,7 @@
           data-href="mod/{{$header.Path}}">
         {{- else -}}
           data-mpath="{{$header.Module.Path}}"
+          data-ppath="{{$header.Path}}"
           data-href="{{$header.Path}}">
         {{- end }}
       </div>
@@ -108,7 +109,12 @@ if (copyButton) {
 
 async function latest() {
   const latestBadge = document.querySelector('.DetailsHeader-badge');
-  const url = '/latest-version/' + latestBadge.getAttribute('data-mpath');
+  let url = '/latest-version/' + latestBadge.getAttribute('data-mpath');
+  const ppath = latestBadge.getAttribute('data-ppath');
+  if (ppath) {
+    url += '?pkg=' + ppath;
+  }
+  console.log(url);
   const res = await fetch(url);
   if (!res.ok) {
     // server-side error; do nothing

@@ -464,6 +464,24 @@ func TestServer(t *testing.T) {
 			http.StatusOK,
 			stdHeader,
 		},
+		{
+			"latest version for the standard library",
+			"/latest-version/std",
+			http.StatusOK,
+			[]string{`"go1.13"`},
+		},
+		{
+			"latest version for module",
+			"/latest-version/" + sample.ModulePath,
+			http.StatusOK,
+			[]string{`"v1.0.0"`},
+		},
+		{
+			"latest version for package",
+			fmt.Sprintf("/latest-version/%s?pkg=%s", sample.ModulePath, pkg2.Path),
+			http.StatusOK,
+			[]string{`"v1.0.0"`},
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) { // remove initial '/' for name
 			w := httptest.NewRecorder()
