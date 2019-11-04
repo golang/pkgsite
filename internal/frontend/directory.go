@@ -78,17 +78,6 @@ func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirP
 		return
 	}
 
-	isLatest := dbDir.Version == internal.LatestVersion
-	if !isLatest {
-		latestMod, err := s.ds.GetVersionInfo(ctx, dbDir.ModulePath, internal.LatestVersion)
-		if err != nil {
-			log.Errorf("serveDirectoryPage for %s@%s: %v", dirPath, version, err)
-			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
-			return
-		}
-		isLatest = (latestMod.Version == dbDir.Version)
-	}
-
 	page := &DetailsPage{
 		basePage:       newBasePage(r, fmt.Sprintf("Directory %s", dirPath)),
 		Settings:       settings,
@@ -98,7 +87,6 @@ func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirP
 		CanShowDetails: true,
 		Tabs:           directoryTabSettings,
 		Namespace:      "pkg",
-		IsLatest:       isLatest,
 	}
 	s.servePage(w, settings.TemplateName, page)
 }

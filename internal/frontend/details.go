@@ -31,7 +31,6 @@ type DetailsPage struct {
 	BreadcrumbPath template.HTML
 	Tabs           []TabSettings
 	Namespace      string
-	IsLatest       bool
 }
 
 func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
@@ -111,17 +110,6 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 		return
 	}
 
-	isLatest := version == internal.LatestVersion
-	if !isLatest {
-		latestPkg, err := s.ds.GetPackage(r.Context(), pkgPath, modulePath, internal.LatestVersion)
-		if err != nil {
-			log.Errorf("servePackagePage for %s@%s: %v", pkgPath, version, err)
-			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
-			return
-		}
-		isLatest = (latestPkg.Version == pkg.Version)
-	}
-
 	pkgHeader, err := createPackage(&pkg.Package, &pkg.VersionInfo)
 	if err != nil {
 		log.Errorf("error creating package header for %s@%s: %v", pkg.Path, pkg.Version, err)
@@ -160,7 +148,6 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 		CanShowDetails: canShowDetails,
 		Tabs:           packageTabSettings,
 		Namespace:      "pkg",
-		IsLatest:       isLatest,
 	}
 	s.servePage(w, settings.TemplateName, page)
 }
@@ -183,17 +170,6 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 	if code != http.StatusOK {
 		s.serveErrorPage(w, r, code, epage)
 		return
-	}
-
-	isLatest := version == internal.LatestVersion
-	if !isLatest {
-		latestMod, err := s.ds.GetVersionInfo(ctx, modulePath, internal.LatestVersion)
-		if err != nil {
-			log.Errorf("serveModulePage for %s@%s: %v", modulePath, version, err)
-			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
-			return
-		}
-		isLatest = (latestMod.Version == moduleVersion.Version)
 	}
 
 	// Here, moduleVersion is a valid *VersionInfo.
@@ -236,7 +212,6 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 		CanShowDetails: canShowDetails,
 		Tabs:           moduleTabSettings,
 		Namespace:      "mod",
-		IsLatest:       isLatest,
 	}
 	s.servePage(w, settings.TemplateName, page)
 }
