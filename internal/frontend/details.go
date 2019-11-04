@@ -63,15 +63,6 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 	s.servePackagePage(w, r, pkgPath, modulePath, version)
 }
 
-// legacyHandlePackageDetails redirects all redirects to "/pkg" to "/", so that
-// old url links from screenshots don't break.
-//
-// This will be deleted before launch.
-func (s *Server) legacyHandlePackageDetails(w http.ResponseWriter, r *http.Request) {
-	urlPath := strings.TrimPrefix(r.URL.Path, "/pkg")
-	http.Redirect(w, r, urlPath, http.StatusMovedPermanently)
-}
-
 // handleModuleDetails applies database data to the appropriate template.
 // Handles all endpoints that match "/mod/<module-path>[@<version>?tab=<tab>]".
 func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
