@@ -23,7 +23,7 @@ func TestGetDirectory(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	// defer ResetTestDB(testDB, t)
+	defer ResetTestDB(testDB, t)
 
 	InsertSampleDirectoryTree(ctx, t, testDB)
 
@@ -155,20 +155,9 @@ func TestGetDirectory(t *testing.T) {
 		},
 		{
 			name:            "invalid directory, incomplete last element",
-			dirPath:         "github.com/hashicorp/vault/api/builti",
-			modulePath:      internal.UnknownModulePath,
-			wantModulePath:  "github.com/hashicorp/vault",
-			version:         "v1.0.3",
-			wantVersion:     "v1.0.3",
-			wantNotFoundErr: true,
-		},
-		{
-			name:            "invalid directory, not a subpath of a module path",
-			dirPath:         "github.com/hashicorp/vault/api/builti",
+			dirPath:         "github.com/hashicorp/vault/builti",
 			modulePath:      internal.UnknownModulePath,
 			version:         "v1.0.3",
-			wantModulePath:  "github.com/hashicorp/vault",
-			wantVersion:     "v1.0.3",
 			wantNotFoundErr: true,
 		},
 		{
@@ -177,7 +166,7 @@ func TestGetDirectory(t *testing.T) {
 			modulePath:     stdlib.ModulePath,
 			version:        internal.LatestVersion,
 			wantModulePath: stdlib.ModulePath,
-			wantVersion:    "v1.13.0",
+			wantVersion:    "v1.13.4",
 			wantPkgPaths: []string{
 				"archive/zip",
 				"archive/tar",
@@ -189,17 +178,24 @@ func TestGetDirectory(t *testing.T) {
 			modulePath:     stdlib.ModulePath,
 			version:        internal.LatestVersion,
 			wantModulePath: stdlib.ModulePath,
-			wantVersion:    "v1.13.0",
+			wantVersion:    "v1.13.4",
 			wantPkgPaths: []string{
 				"archive/zip",
 			},
+		},
+		{
+			name:            "stdlib package -  incomplete last element",
+			dirPath:         "archive/zi",
+			modulePath:      stdlib.ModulePath,
+			version:         internal.LatestVersion,
+			wantNotFoundErr: true,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := testDB.GetDirectory(ctx, tc.dirPath, tc.modulePath, tc.version)
 			if tc.wantNotFoundErr {
 				if !xerrors.Is(err, derrors.NotFound) {
-					t.Fatalf("expected err; got = \n%+v, %v", got, err)
+					t.Fatalf("want %v; got = \n%+v, %v", derrors.NotFound, got, err)
 				}
 				return
 			}

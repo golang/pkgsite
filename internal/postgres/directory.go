@@ -58,14 +58,7 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version str
 		WITH parent_directories AS (
 			SELECT *
 			FROM packages
-			WHERE
-				tsv_parent_directories @@ ($1 || ':*')::tsquery
-				AND (
-					CASE WHEN module_path != 'std'
-					THEN char_length(module_path) <= char_length($1)
-					ELSE TRUE
-					END
-				)
+			WHERE tsv_parent_directories @@ $1::tsquery
 		)
 		SELECT
 			p.path,
