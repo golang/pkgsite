@@ -13,10 +13,12 @@ import (
 	"net/url"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/stdlib"
 )
 
 // OverviewDetails contains all of the data that the readme template
@@ -24,12 +26,13 @@ import (
 type OverviewDetails struct {
 	ModulePath    string
 	RepositoryURL string
+	PackageURL    string
 	ReadMe        template.HTML
 	ReadMeSource  string
 }
 
-// fetchOverviewDetails fetches data for the module version specified by path and version
-// from the database and returns a OverviewDetails.
+// fetchOverviewDetails fetches data for the given module path and version
+// from the database and returns an OverviewDetails.
 func fetchOverviewDetails(ctx context.Context, ds DataSource, vi *internal.VersionInfo) (_ *OverviewDetails, err error) {
 	return &OverviewDetails{
 		ModulePath:    vi.ModulePath,
@@ -37,6 +40,29 @@ func fetchOverviewDetails(ctx context.Context, ds DataSource, vi *internal.Versi
 		ReadMeSource:  fileSource(vi.ModulePath, vi.Version, vi.ReadmeFilePath),
 		ReadMe:        readmeHTML(vi),
 	}, nil
+}
+
+// fetchPackageOverviewDetails fetches data for the given package from the
+// database and returns an OverviewDetails.
+func fetchPackageOverviewDetails(ctx context.Context, ds DataSource, pkg *internal.VersionedPackage) (*OverviewDetails, error) {
+	od, err := fetchOverviewDetails(ctx, ds, &pkg.VersionInfo)
+	if err != nil {
+		return nil, err
+	}
+	od.PackageURL = pkg.SourceInfo.DirectoryURL(packageSubdir(pkg.Path, pkg.ModulePath))
+	return od, nil
+}
+
+// packageSubdir returns the subdirectory of the package relative to its module.
+func packageSubdir(pkgPath, modulePath string) string {
+	switch {
+	case pkgPath == modulePath:
+		return ""
+	case modulePath == stdlib.ModulePath:
+		return pkgPath
+	default:
+		return strings.TrimPrefix(pkgPath, modulePath+"/")
+	}
 }
 
 // readmeHTML sanitizes readmeContents based on bluemondy.UGCPolicy and returns

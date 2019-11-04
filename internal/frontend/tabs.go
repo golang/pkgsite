@@ -152,7 +152,7 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds
 	case "licenses":
 		return fetchPackageLicensesDetails(ctx, ds, pkg)
 	case "overview":
-		return fetchOverviewDetails(ctx, ds, &pkg.VersionInfo)
+		return fetchPackageOverviewDetails(ctx, ds, pkg)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }

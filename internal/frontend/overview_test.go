@@ -14,6 +14,7 @@ import (
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/sample"
 	"golang.org/x/discovery/internal/source"
+	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/version"
 )
 
@@ -161,5 +162,24 @@ func TestReadmeHTML(t *testing.T) {
 				t.Errorf("readmeHTML(%v) mismatch (-want +got):\n%s", tc.vi, diff)
 			}
 		})
+	}
+}
+
+func TestPackageSubdir(t *testing.T) {
+	for _, test := range []struct {
+		pkgPath, modulePath string
+		want                string
+	}{
+		// package at module root
+		{"github.com/pkg/errors", "github.com/pkg/errors", ""},
+		// package inside module
+		{"github.com/google/go-cmp/cmp", "github.com/google/go-cmp", "cmp"},
+		// stdlib package
+		{"context", stdlib.ModulePath, "context"},
+	} {
+		got := packageSubdir(test.pkgPath, test.modulePath)
+		if got != test.want {
+			t.Errorf("packageSubdir(%q, %q) = %q, want %q", test.pkgPath, test.modulePath, got, test.want)
+		}
 	}
 }
