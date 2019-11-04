@@ -117,31 +117,20 @@ func fetchDirectoryDetails(ctx context.Context, ds DataSource, dirPath string, v
 	licmetas []*license.Metadata, includeDirPath bool) (_ *Directory, err error) {
 	defer derrors.Wrap(&err, "s.ds.fetchDirectoryDetails(%q, %q, %q, %v)", dirPath, vi.ModulePath, vi.Version, licmetas)
 
-	if includeDirPath && dirPath != vi.ModulePath && dirPath != stdlib.ModulePath {
+	if includeDirPath && dirPath != vi.ModulePath {
 		return nil, xerrors.Errorf("includeDirPath can only be set to true if dirPath = modulePath: %w", derrors.InvalidArgument)
 	}
 
-	if vi.ModulePath == stdlib.ModulePath {
-		pkgs, err := ds.GetPackagesInVersion(ctx, stdlib.ModulePath, vi.Version)
-		if err != nil && xerrors.Is(err, derrors.NotFound) {
-			return nil, err
-		}
-		return createDirectory(&internal.Directory{
-			VersionInfo: *vi,
-			Path:        dirPath,
-			Packages:    pkgs,
-		}, licmetas, includeDirPath)
-	}
-
 	dbDir, err := ds.GetDirectory(ctx, dirPath, vi.ModulePath, vi.Version)
-	if xerrors.Is(err, derrors.NotFound) {
-		return createDirectory(&internal.Directory{
-			VersionInfo: *vi,
-			Path:        dirPath,
-			Packages:    nil,
-		}, licmetas, includeDirPath)
-	}
 	if err != nil {
+		if xerrors.Is(err, derrors.NotFound) {
+			return createDirectory(
+				&internal.Directory{
+					VersionInfo: *vi,
+					Path:        dirPath,
+					Packages:    nil,
+				}, licmetas, includeDirPath)
+		}
 		return nil, err
 	}
 	return createDirectory(dbDir, licmetas, includeDirPath)
