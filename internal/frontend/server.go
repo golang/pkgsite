@@ -127,14 +127,16 @@ func NewServer(ds DataSource, staticPath string, reloadTemplates bool) (*Server,
 // Install registers server routes using the given handler registration func.
 func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.Client) {
 	var (
-		modHandler    http.Handler = http.HandlerFunc(s.handleModuleDetails)
-		detailHandler http.Handler = http.HandlerFunc(s.handleDetails)
-		searchHandler http.Handler = http.HandlerFunc(s.handleSearch)
+		modHandler           http.Handler = http.HandlerFunc(s.handleModuleDetails)
+		detailHandler        http.Handler = http.HandlerFunc(s.handleDetails)
+		searchHandler        http.Handler = http.HandlerFunc(s.handleSearch)
+		latestVersionHandler http.Handler = http.HandlerFunc(s.handleLatestVersion)
 	)
 	if redisClient != nil {
 		modHandler = middleware.Cache("module-details", redisClient, moduleTTL)(modHandler)
 		detailHandler = middleware.Cache("package-details", redisClient, packageTTL)(detailHandler)
-		searchHandler = middleware.Cache("search", redisClient, middleware.TTL(1*time.Hour))(searchHandler)
+		searchHandler = middleware.Cache("search", redisClient, middleware.TTL(defaultTTL))(searchHandler)
+		latestVersionHandler = middleware.Cache("latest-version", redisClient, middleware.TTL(shortTTL))(latestVersionHandler)
 	}
 	handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(s.staticPath))))
 	handle("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -148,7 +150,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/copyright", s.staticPageHandler("copyright.tmpl", "Copyright - Go Discovery"))
 	handle("/tos", s.staticPageHandler("tos.tmpl", "Terms of Service - Go Discovery"))
 	handle("/", detailHandler)
-	handle("/latest-version/", http.HandlerFunc(s.handleLatestVersion))
+	handle("/latest-version/", latestVersionHandler)
 	handle("/robots.txt", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		http.ServeContent(w, r, "", time.Time{}, strings.NewReader(`User-agent: *
