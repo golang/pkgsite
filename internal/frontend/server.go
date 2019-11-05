@@ -185,6 +185,9 @@ func moduleTTL(r *http.Request) time.Duration {
 }
 
 func detailsTTL(urlPath, tab string) time.Duration {
+	if urlPath == "/" {
+		return defaultTTL
+	}
 	_, _, version, err := parseDetailsURLPath(urlPath)
 	if err != nil {
 		log.Errorf("falling back to default module TTL: %v", err)
