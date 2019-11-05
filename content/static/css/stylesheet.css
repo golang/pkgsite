@@ -212,6 +212,21 @@ code {
     margin-top: 200px;
   }
 }
+.Homepage {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin: 2rem auto;
+  max-width: 38rem;
+}
+.Homepage-packages {
+  padding: 0 1rem;
+}
+.Homepage-packages ul {
+  list-style: none;
+  line-height: 1.4;
+  padding: 0;
+}
 
 .Header {
   border-bottom: 0.0625rem solid var(--gray-8);

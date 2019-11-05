@@ -1,7 +1,7 @@
 <!--
-	Copyright 2019 The Go Authors. All rights reserved.
-	Use of this source code is governed by a BSD-style
-	license that can be found in the LICENSE file.
+    Copyright 2019 The Go Authors. All rights reserved.
+    Use of this source code is governed by a BSD-style
+    license that can be found in the LICENSE file.
 -->
 
 {{define "header"}}
@@ -12,8 +12,42 @@
 {{define "search_additional_attrs"}}autofocus{{end}}
 
 {{define "main_content"}}
-  <div class="Search">
-    <img class="Search-logo" src="/static/img/logo.svg" alt="Go Discovery">
-    {{template "search" .}}
+  <div class="Container">
+    <div class="Search">
+      <img class="Search-logo" src="/static/img/logo.svg" alt="Go Discovery">
+      {{template "search" .}}
+    </div>
+    <div class="Homepage">
+      <div class="Homepage-packages">
+        <h2>Popular Packages</h2>
+        <ul>
+          <li><a href="/github.com/sirupsen/logrus">github.com/sirupsen/logrus</a></li>
+          <li><a href="/github.com/gin-gonic/gin">github.com/gin-gonic/gin</a></li>
+          <li><a href="/github.com/spf13/cobra">github.com/spf13/cobra</a></li>
+          <li><a href="/github.com/spf13/viper">github.com/spf13/viper</a></li>
+          <li><a href="/github.com/jinzhu/gorm">github.com/jinzhu/gorm</a></li>
+          <li><a href="/github.com/labstack/echo">github.com/labstack/echo</a></li>
+          <li><a href="/github.com/go-kit/kit">github.com/go-kit/kit</a></li>
+          <li><a href="/github.com/urfave/cli">github.com/urfave/cli</a></li>
+          <li><a href="/github.com/gorilla/mux">github.com/gorilla/mux</a></li>
+          <li><a href="/context">context</a></li>
+        </ul>
+      </div>
+      <div class="Homepage-packages">
+        <h2>Featured Packages</h2>
+        <ul>
+          <li><a href="/database/sql">database/sql</a></li>
+          <li><a href="/google.golang.org/grpc">google.golang.org/grpc</a></li>
+          <li><a href="/github.com/esimov/caire">github.com/esimov/caire</a></li>
+          <li><a href="/github.com/gopherjs/gopherjs/js">github.com/gopherjs/gopherjs/js</a></li>
+          <li><a href="/google.golang.org/cloud/storage">google.golang.org/cloud/storage</a></li>
+          <li><a href="/go.uber.org/zap">go.uber.org/zap</a></li>
+          <li><a href="/google.golang.org/api/compute/v1">google.golang.org/api/compute/v1</a></li>
+          <li><a href="/github.com/micro/go-micro/client">github.com/micro/go-micro/client</a></li>
+          <li><a href="/github.com/grailbio/bigslice">github.com/grailbio/bigslice</a></li>
+          <li><a href="/gobot.io/x/gobot">gobot.io/x/gobot</a></li>
+        </ul>
+      </div>
+    </div>
   </div>
 {{end}}
