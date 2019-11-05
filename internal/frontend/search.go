@@ -133,7 +133,7 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	if strings.Contains(query, "/") {
 		pkg, err := s.ds.GetPackage(ctx, path.Clean(query), internal.UnknownModulePath, internal.LatestVersion)
 		if err == nil {
-			http.Redirect(w, r, fmt.Sprintf("/pkg/%s", pkg.Path), http.StatusFound)
+			http.Redirect(w, r, fmt.Sprintf("/%s", pkg.Path), http.StatusFound)
 			return
 		} else if !xerrors.Is(err, derrors.NotFound) {
 			log.Errorf("error getting package for %s: %v", path.Clean(query), err)
