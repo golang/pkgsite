@@ -63,75 +63,75 @@ var probes = []*Probe{
 	},
 	{
 		Name:        "pkg-firestore",
-		RelativeURL: "pkg/cloud.google.com/go/firestore",
+		RelativeURL: "cloud.google.com/go/firestore",
 	},
 	{
 		Name:        "pkg-firestore-nocache",
-		RelativeURL: "pkg/cloud.google.com/go/firestore",
+		RelativeURL: "cloud.google.com/go/firestore",
 		BypassCache: true,
 	},
 	{
 		Name:        "pkg-firestore-readme",
-		RelativeURL: "pkg/cloud.google.com/go/firestore?tab=readme",
+		RelativeURL: "cloud.google.com/go/firestore?tab=readme",
 	},
 	{
 		Name:        "pkg-firestore-readme-nocache",
-		RelativeURL: "pkg/cloud.google.com/go/firestore?tab=readme",
+		RelativeURL: "cloud.google.com/go/firestore?tab=readme",
 		BypassCache: true,
 	},
 	{
 		Name:        "pkg-firestore-versions",
-		RelativeURL: "pkg/cloud.google.com/go/firestore?tab=versions",
+		RelativeURL: "cloud.google.com/go/firestore?tab=versions",
 	},
 	{
 		Name:        "pkg-firestore-versions-nocache",
-		RelativeURL: "pkg/cloud.google.com/go/firestore?tab=versions",
+		RelativeURL: "cloud.google.com/go/firestore?tab=versions",
 		BypassCache: true,
 	},
 	{
 		Name:        "pkg-firestore-imports",
-		RelativeURL: "pkg/cloud.google.com/go/firestore?tab=imports",
+		RelativeURL: "cloud.google.com/go/firestore?tab=imports",
 	},
 	{
 		Name:        "pkg-firestore-imports-nocache",
-		RelativeURL: "pkg/cloud.google.com/go/firestore?tab=imports",
+		RelativeURL: "cloud.google.com/go/firestore?tab=imports",
 		BypassCache: true,
 	},
 	{
 		Name:        "pkg-firestore-importedby",
-		RelativeURL: "pkg/cloud.google.com/go/firestore?tab=importedby",
+		RelativeURL: "cloud.google.com/go/firestore?tab=importedby",
 	},
 	{
 		Name:        "pkg-firestore-importedby-nocache",
-		RelativeURL: "pkg/cloud.google.com/go/firestore?tab=importedby",
+		RelativeURL: "cloud.google.com/go/firestore?tab=importedby",
 		BypassCache: true,
 	},
 	{
 		Name:        "pkg-firestore-licenses",
-		RelativeURL: "pkg/cloud.google.com/go/firestore?tab=licenses",
+		RelativeURL: "cloud.google.com/go/firestore?tab=licenses",
 	},
 	{
 		Name:        "pkg-firestore-licenses-nocache",
-		RelativeURL: "pkg/cloud.google.com/go/firestore?tab=licenses",
+		RelativeURL: "cloud.google.com/go/firestore?tab=licenses",
 		BypassCache: true,
 	},
 	{
 		Name:        "pkg-errors-importedby",
-		RelativeURL: "pkg/github.com/pkg/errors?tab=importedby",
+		RelativeURL: "github.com/pkg/errors?tab=importedby",
 	},
 	{
 		Name:        "pkg-errors-importedby-nocache",
-		RelativeURL: "pkg/github.com/pkg/errors?tab=importedby",
+		RelativeURL: "github.com/pkg/errors?tab=importedby",
 		BypassCache: true,
 	},
 	{
 		Name:        "pkg-hortonworks-versions",
-		RelativeURL: "pkg/github.com/hortonworks/cb-cli?tab=versions",
+		RelativeURL: "github.com/hortonworks/cb-cli?tab=versions",
 		BypassCache: true,
 	},
 	{
 		Name:        "pkg-xtoolsgo-directory",
-		RelativeURL: "pkg/golang.org/x/tools/go",
+		RelativeURL: "golang.org/x/tools/go",
 		BypassCache: true,
 	},
 	{
