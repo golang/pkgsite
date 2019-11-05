@@ -27,19 +27,19 @@ var (
 	keyCacheName      = tag.MustNewKey("cache.name")
 	keyCacheOperation = tag.MustNewKey("cache.operation")
 	cacheResults      = stats.Int64(
-		"go-discovery/cache_result_count",
+		"go-discovery/cache/result_count",
 		"The result of a cache request.",
 		stats.UnitDimensionless,
 	)
 	cacheErrors = stats.Int64(
-		"go-discovery/cache_errors",
+		"go-discovery/cache/errors",
 		"Errors retrieving from cache.",
 		stats.UnitDimensionless,
 	)
 
 	// CacheResultCount is a counter of cache results, by cache name and hit success.
 	CacheResultCount = &view.View{
-		Name:        "custom.googleapis.com/go-discovery/cache/result_count",
+		Name:        "go-discovery/cache/result_count",
 		Measure:     cacheResults,
 		Aggregation: view.Count(),
 		Description: "cache results, by cache name and whether it was a hit",
@@ -47,7 +47,7 @@ var (
 	}
 	// CacheErrorCount is a counter of cache errors, by cache name.
 	CacheErrorCount = &view.View{
-		Name:        "custom.googleapis.com/go-discovery/cache/errors",
+		Name:        "go-discovery/cache/errors",
 		Measure:     cacheErrors,
 		Aggregation: view.Count(),
 		Description: "cache errors, by cache name",

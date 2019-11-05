@@ -34,7 +34,7 @@ var (
 	// SearchLatencyDistribution aggregates search request latency by search
 	// query type.
 	SearchLatencyDistribution = &view.View{
-		Name:        "custom.googleapis.com/go-discovery/search/latency",
+		Name:        "go-discovery/search/latency",
 		Measure:     SearchLatency,
 		Aggregation: ochttp.DefaultLatencyDistribution,
 		Description: "Search latency, by result source query type.",
@@ -42,7 +42,7 @@ var (
 	}
 	// SearchResponseCount counts search responses by search query type.
 	SearchResponseCount = &view.View{
-		Name:        "custom.googleapis.com/go-discovery/search/count",
+		Name:        "go-discovery/search/count",
 		Measure:     SearchLatency,
 		Aggregation: view.Count(),
 		Description: "Search count, by result source query type.",

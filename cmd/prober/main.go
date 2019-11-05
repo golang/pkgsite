@@ -186,7 +186,7 @@ var (
 	)
 
 	firstByteLatencyDistribution = &view.View{
-		Name:        "custom.googleapis.com/go-discovery/prober/first_byte_latency",
+		Name:        "go-discovery/prober/first_byte_latency",
 		Measure:     firstByteLatency,
 		Aggregation: ochttp.DefaultLatencyDistribution,
 		Description: "first-byte latency, by probe name and response status",

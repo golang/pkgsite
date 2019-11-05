@@ -28,7 +28,7 @@ var (
 	)
 	// QuotaResultCount is a counter of quota results, by whether the request was blocked or not.
 	QuotaResultCount = &view.View{
-		Name:        "custom.googleapis.com/go-discovery/quota/result_count",
+		Name:        "go-discovery/quota/result_count",
 		Measure:     quotaResults,
 		Aggregation: view.Count(),
 		Description: "quota results, by blocked or allowed",
