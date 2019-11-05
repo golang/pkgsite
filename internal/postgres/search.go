@@ -660,9 +660,12 @@ var upsertSearchStatement = fmt.Sprintf(`
 		v.commit_time,
 		(
 			SETWEIGHT(TO_TSVECTOR($2), 'A') ||
-		    -- limit to the maximum length that TO_TSVECTOR allows
-			SETWEIGHT(TO_TSVECTOR(left(p.synopsis, 1048575)), 'B') ||
-			SETWEIGHT(TO_TSVECTOR(left(v.readme_contents, 1048575)), 'C')
+			-- Try to limit to the maximum length of a tsvector.
+			-- This is just a guess, since the max length is in bytes and there
+			-- doesn't seem to be a way to determine the number of bytes in a tsvector.
+			-- Since the max is 1048575, make sure part is half that size.
+			SETWEIGHT(TO_TSVECTOR(left(p.synopsis, 1048575/2)), 'B') ||
+			SETWEIGHT(TO_TSVECTOR(left(v.readme_contents, 1048575/2)), 'C')
 		),
 		hll_hash(p.path) & (%[1]d - 1),
 		hll_zeros(hll_hash(p.path))
