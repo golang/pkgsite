@@ -336,9 +336,12 @@ func (s *Server) handleLatestVersion(w http.ResponseWriter, r *http.Request) {
 	packagePath := r.URL.Query().Get("pkg")
 	v, err := s.latestVersion(r.Context(), modulePath, packagePath)
 	if err != nil {
-		log.Errorf("handleLatestVersion(%q): %v", modulePath, err)
-		http.Error(w, `""`, http.StatusInternalServerError) // send valid json
-		return
+		// We get NotFound errors from directories; they clutter the log.
+		if !xerrors.Is(err, derrors.NotFound) {
+			log.Errorf("handleLatestVersion(%q): %v", modulePath, err)
+		}
+		// Send the empty string, without an error.
+		v = ""
 	}
 	if _, err = fmt.Fprintf(w, "%q", v); err != nil {
 		log.Errorf("handleLatestVersion: fmt.Fprintf: %v", err)

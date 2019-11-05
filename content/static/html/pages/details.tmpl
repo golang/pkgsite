@@ -121,7 +121,9 @@ async function latest() {
     return;
   }
   const latestVersion = await res.json();
-  if (latestVersion === latestBadge.getAttribute('data-version')) {
+  if (latestVersion === "") {
+     // error; do nothing
+  } else if (latestVersion === latestBadge.getAttribute('data-version')) {
     latestBadge.classList.add('DetailsHeader-latest');
     latestBadge.innerHTML = 'Latest';
   } else {
