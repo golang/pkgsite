@@ -87,10 +87,10 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 	}
 
 	var pkg *internal.VersionedPackage
-	code, epage := fetchPackageOrModule(r.Context(), s.ds, "pkg", pkgPath, version, func(ver string) error {
+	code, epage := fetchPackageOrModule(r.Context(), s.ds, "pkg", pkgPath, version, func(ver string) (string, error) {
 		var err error
 		pkg, err = s.ds.GetPackage(r.Context(), pkgPath, modulePath, ver)
-		return err
+		return modulePath, err
 	})
 	if code != http.StatusOK {
 		if code == http.StatusNotFound {
@@ -153,10 +153,10 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 
 	ctx := r.Context()
 	var moduleVersion *internal.VersionInfo
-	code, epage := fetchPackageOrModule(ctx, s.ds, "mod", modulePath, version, func(ver string) error {
+	code, epage := fetchPackageOrModule(ctx, s.ds, "mod", modulePath, version, func(ver string) (string, error) {
 		var err error
 		moduleVersion, err = s.ds.GetVersionInfo(ctx, modulePath, ver)
-		return err
+		return modulePath, err
 	})
 	if code != http.StatusOK {
 		s.serveErrorPage(w, r, code, epage)
@@ -210,15 +210,20 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 // fetchPackageOrModule handles logic common to the initial phase of
 // handling both packages and modules: fetching information about the package
 // or module.
-// It parses urlPath into an import path and version, then calls the get
-// function with those values. If get fails because the version cannot be
-// found, fetchPackageOrModule calls get again with the latest version,
-// to see if any versions of the package/module exist, in order to provide a
-// more helpful error message.
+//
+// The get argument is a function that should retrieve a package or module at a
+// given version. It returns the error from doing so, as well as the module
+// path.
+//
+// fetchPackageOrModule parses urlPath into an import path and version, then
+// calls the get function with those values. If get fails because the version
+// cannot be found, fetchPackageOrModule calls get again with the latest
+// version, to see if any versions of the package/module exist, in order to
+// provide a more helpful error message.
 //
 // fetchPackageOrModule returns the import path and version requested, an
 // HTTP status code, and possibly an error page to display.
-func fetchPackageOrModule(ctx context.Context, ds DataSource, namespace, path, version string, get func(v string) error) (code int, _ *errorPage) {
+func fetchPackageOrModule(ctx context.Context, ds DataSource, namespace, path, version string, get func(v string) (string, error)) (code int, _ *errorPage) {
 	excluded, err := ds.IsExcluded(ctx, path)
 	if err != nil {
 		log.Errorf("error checking excluded path: %v", err)
@@ -230,7 +235,7 @@ func fetchPackageOrModule(ctx context.Context, ds DataSource, namespace, path, v
 	}
 
 	// Fetch the package or module from the database.
-	err = get(version)
+	_, err = get(version)
 	if err == nil {
 		// A package or module was found for this path and version.
 		return http.StatusOK, nil
@@ -249,7 +254,8 @@ func fetchPackageOrModule(ctx context.Context, ds DataSource, namespace, path, v
 
 	// We did not find the given version, but maybe there is another version
 	// available for this package or module.
-	if err := get(internal.LatestVersion); err != nil {
+	modulePath, err := get(internal.LatestVersion)
+	if err != nil {
 		log.Errorf("error: get(%s, Latest) for %s: %v", path, namespace, err)
 		// Couldn't get the latest version, for whatever reason. Treat
 		// this like not finding the original version.
@@ -264,7 +270,8 @@ func fetchPackageOrModule(ctx context.Context, ds DataSource, namespace, path, v
 		urlPath = "/mod/" + path
 	}
 	epage := &errorPage{
-		Message: fmt.Sprintf("%s %s@%s is not available.", strings.Title(word), path, version),
+		Message: fmt.Sprintf("%s %s@%s is not available.",
+			strings.Title(word), path, formattedVersion(version, modulePath)),
 		SecondaryMessage: template.HTML(
 			fmt.Sprintf(`There are other versions of this %s that are! To view them, <a href="%s?tab=versions">click here</a>.</p>`, word, urlPath)),
 	}

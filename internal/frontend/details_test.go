@@ -147,12 +147,12 @@ func TestProcessPackageOrModulePath(t *testing.T) {
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
 			ncalls := 0
-			get := func(v string) error {
+			get := func(v string) (string, error) {
 				ncalls++
 				if ncalls == 1 {
-					return tc.getErr1
+					return "", tc.getErr1
 				}
-				return tc.getErr2
+				return "", tc.getErr2
 			}
 
 			pkgPath, _, version, err := parseDetailsURLPath(tc.urlPath)

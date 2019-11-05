@@ -97,26 +97,26 @@ func createModule(vi *internal.VersionInfo, licmetas []*license.Metadata) (_ *Mo
 	}, nil
 }
 
-func constructModuleURL(modulePath, formattedVersion string) string {
+func constructModuleURL(modulePath, linkableVersion string) string {
 	url := "/"
 	if modulePath != stdlib.ModulePath {
 		url += "mod/"
 	}
 	url += modulePath
-	if formattedVersion != internal.LatestVersion {
-		url += "@" + formattedVersion
+	if linkableVersion != internal.LatestVersion {
+		url += "@" + linkableVersion
 	}
 	return url
 }
 
-func constructPackageURL(pkgPath, modulePath, formattedVersion string) string {
-	if formattedVersion == internal.LatestVersion {
+func constructPackageURL(pkgPath, modulePath, linkableVersion string) string {
+	if linkableVersion == internal.LatestVersion {
 		return "/" + pkgPath
 	}
 	if pkgPath == modulePath || modulePath == stdlib.ModulePath {
-		return fmt.Sprintf("/%s@%s", pkgPath, formattedVersion)
+		return fmt.Sprintf("/%s@%s", pkgPath, linkableVersion)
 	}
-	return fmt.Sprintf("/%s@%s/%s", modulePath, formattedVersion, strings.TrimPrefix(pkgPath, modulePath+"/"))
+	return fmt.Sprintf("/%s@%s/%s", modulePath, linkableVersion, strings.TrimPrefix(pkgPath, modulePath+"/"))
 }
 
 // effectiveName returns either the command name or package name.

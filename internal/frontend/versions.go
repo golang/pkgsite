@@ -70,11 +70,7 @@ func fetchModuleVersionsDetails(ctx context.Context, ds DataSource, vi *internal
 		}
 	}
 	linkify := func(v *internal.VersionInfo) string {
-		var formattedVersion = v.Version
-		if v.ModulePath == stdlib.ModulePath {
-			formattedVersion = goTagForVersion(v.Version)
-		}
-		return constructModuleURL(v.ModulePath, formattedVersion)
+		return constructModuleURL(v.ModulePath, linkableVersion(v.Version, v.ModulePath))
 	}
 	return buildVersionDetails(vi.ModulePath, versions, linkify), nil
 }
@@ -110,15 +106,13 @@ func fetchPackageVersionsDetails(ctx context.Context, ds DataSource, pkg *intern
 	linkify := func(vi *internal.VersionInfo) string {
 		// Here we have only version information, but need to construct the full
 		// import path of the package corresponding to this version.
-		var versionPath, formattedVersion string
+		var versionPath string
 		if vi.ModulePath == stdlib.ModulePath {
 			versionPath = pkg.Path
-			formattedVersion = goTagForVersion(vi.Version)
 		} else {
 			versionPath = pathInVersion(pkg.V1Path, vi)
-			formattedVersion = vi.Version
 		}
-		return constructPackageURL(versionPath, vi.ModulePath, formattedVersion)
+		return constructPackageURL(versionPath, vi.ModulePath, linkableVersion(vi.Version, vi.ModulePath))
 	}
 	return buildVersionDetails(pkg.ModulePath, filteredVersions, linkify), nil
 }
@@ -194,18 +188,17 @@ func buildVersionDetails(currentModulePath string, versions []*internal.VersionI
 		majorTree.forEach(func(_ string, minorTree *versionTree) {
 			patches := []*VersionSummary{}
 			minorTree.forEach(func(_ string, patchTree *versionTree) {
-
-				version := patchTree.versionInfo.Version
-				formattedVersion := formatVersion(version)
-				if patchTree.versionInfo.ModulePath == stdlib.ModulePath {
-					formattedVersion = goTagForVersion(patchTree.versionInfo.Version)
-					version = formattedVersion
+				vi := patchTree.versionInfo
+				version := vi.Version
+				fmtVersion := formattedVersion(version, vi.ModulePath)
+				if vi.ModulePath == stdlib.ModulePath {
+					version = fmtVersion // tooltips will show the Go tag
 				}
 				patches = append(patches, &VersionSummary{
 					Version:          version,
-					Link:             linkify(patchTree.versionInfo),
-					CommitTime:       elapsedTime(patchTree.versionInfo.CommitTime),
-					FormattedVersion: formattedVersion,
+					Link:             linkify(vi),
+					CommitTime:       elapsedTime(vi.CommitTime),
+					FormattedVersion: fmtVersion,
 				})
 			})
 			mvg.Versions = append(mvg.Versions, patches)
@@ -314,6 +307,23 @@ func pseudoVersionRev(v string) string {
 	return v[j+1:]
 }
 
+// formattedVersion returns the version string, formatted for display.
+func formattedVersion(v string, modulePath string) string {
+	if modulePath == stdlib.ModulePath {
+		return goTagForVersion(v)
+	}
+	return formatVersion(v)
+}
+
+// linkableVersion returns the version string, suitable for use in
+// a link to this site.
+func linkableVersion(v string, modulePath string) string {
+	if modulePath == stdlib.ModulePath {
+		return goTagForVersion(v)
+	}
+	return v
+}
+
 // goTagForVersion returns the Go tag corresponding to a given semantic
 // version. It should only be used if we are 100% sure the version will
 // correspond to a Go tag, such as when we are fetching the version from the
@@ -321,7 +331,8 @@ func pseudoVersionRev(v string) string {
 func goTagForVersion(v string) string {
 	tag, err := stdlib.TagForVersion(v)
 	if err != nil {
-		panic(fmt.Errorf("BUG: unable to get tag for version: %q", err))
+		log.Errorf("goTagForVersion(%q): %v", v, err)
+		return "unknown"
 	}
 	return tag
 }
