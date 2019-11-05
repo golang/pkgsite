@@ -192,6 +192,14 @@ var (
 		Description: "first-byte latency, by probe name and response status",
 		TagKeys:     []tag.Key{keyName, keyStatus},
 	}
+
+	probeCount = &view.View{
+		Name:        "go-discovery/prober/probe_count",
+		Measure:     firstByteLatency,
+		Aggregation: view.Count(),
+		Description: "probe count, by probe name and response status",
+		TagKeys:     []tag.Key{keyName, keyStatus},
+	}
 )
 
 func main() {
@@ -242,7 +250,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := view.Register(firstByteLatencyDistribution); err != nil {
+	if err := view.Register(firstByteLatencyDistribution, probeCount); err != nil {
 		log.Fatalf("view.Register: %v", err)
 	}
 	metricExporter, err = dcensus.NewViewExporter()
