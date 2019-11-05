@@ -60,7 +60,7 @@ func TestEndToEndProcessing(t *testing.T) {
 	// back to ETL, rather than calling fetch itself.
 	queue := etl.NewInMemoryQueue(ctx, proxyClient, testDB, 10)
 
-	etlServer, err := etl.NewServer(testDB, indexClient, proxyClient, queue, "../../content/static")
+	etlServer, err := etl.NewServer(testDB, indexClient, proxyClient, queue, nil, "../../content/static")
 	if err != nil {
 		t.Fatal(err)
 	}

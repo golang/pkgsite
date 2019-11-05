@@ -149,7 +149,7 @@ func TestETL(t *testing.T) {
 			// Use 10 workers to have parallelism consistent with the etl binary.
 			queue := NewInMemoryQueue(ctx, proxyClient, testDB, 10)
 
-			s, err := NewServer(testDB, indexClient, proxyClient, queue, "")
+			s, err := NewServer(testDB, indexClient, proxyClient, queue, nil, "")
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -26,3 +26,11 @@ func Chain(middlewares ...Middleware) Middleware {
 		return h
 	}
 }
+
+// Identity is a middleware that does nothing. It can be used as a helper when
+// building middleware chains.
+func Identity() Middleware {
+	return func(h http.Handler) http.Handler {
+		return h
+	}
+}

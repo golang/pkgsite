@@ -17,6 +17,7 @@ import (
 	"time"
 
 	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
+	"cloud.google.com/go/errorreporting"
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/dcensus"
 	"golang.org/x/discovery/internal/etl"
@@ -68,19 +69,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	var q etl.Queue
-	if config.OnAppEngine() {
-		client, err := cloudtasks.NewClient(ctx)
-		if err != nil {
-			log.Fatal(err)
-		}
-		q = etl.NewGCPQueue(client, queueName)
-	} else {
-		q = etl.NewInMemoryQueue(ctx, proxyClient, db, *workers)
-	}
-
-	server, err := etl.NewServer(db, indexClient, proxyClient, q, *staticPath)
+	fetchQueue := queue(ctx, proxyClient, db)
+	reportingClient := reportingClient(ctx)
+	server, err := etl.NewServer(db, indexClient, proxyClient, fetchQueue, reportingClient, *staticPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -105,7 +96,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("strconv.Atoi(%q): %v", timeout, err)
 	}
-	requestLogger := getLogger(ctx)
+	requestLogger := logger(ctx)
 	mw := middleware.Chain(
 		middleware.RequestLog(requestLogger),
 		middleware.Timeout(time.Duration(handlerTimeout)*time.Minute),
@@ -117,7 +108,34 @@ func main() {
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
-func getLogger(ctx context.Context) middleware.Logger {
+func queue(ctx context.Context, proxyClient *proxy.Client, db *postgres.DB) etl.Queue {
+	if !config.OnAppEngine() {
+		return etl.NewInMemoryQueue(ctx, proxyClient, db, *workers)
+	}
+	client, err := cloudtasks.NewClient(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return etl.NewGCPQueue(client, queueName)
+}
+
+func reportingClient(ctx context.Context) *errorreporting.Client {
+	if !config.OnAppEngine() {
+		return nil
+	}
+	reporter, err := errorreporting.NewClient(ctx, config.ProjectID(), errorreporting.Config{
+		ServiceName: config.ServiceID(),
+		OnError: func(err error) {
+			log.Errorf("Error reporting failed: %v", err)
+		},
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	return reporter
+}
+
+func logger(ctx context.Context) middleware.Logger {
 	if config.OnAppEngine() {
 		logger, err := log.UseStackdriver(ctx, "etl-log")
 		if err != nil {

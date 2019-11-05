@@ -16,12 +16,14 @@ import (
 	"strings"
 	"time"
 
+	"cloud.google.com/go/errorreporting"
 	"go.opencensus.io/trace"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/log"
+	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/stdlib"
@@ -30,10 +32,11 @@ import (
 
 // Server can be installed to serve the go discovery etl.
 type Server struct {
-	indexClient *index.Client
-	proxyClient *proxy.Client
-	db          *postgres.DB
-	queue       Queue
+	indexClient     *index.Client
+	proxyClient     *proxy.Client
+	db              *postgres.DB
+	queue           Queue
+	reportingClient *errorreporting.Client
 
 	indexTemplate *template.Template
 }
@@ -43,6 +46,7 @@ func NewServer(db *postgres.DB,
 	indexClient *index.Client,
 	proxyClient *proxy.Client,
 	queue Queue,
+	reportingClient *errorreporting.Client,
 	staticPath string,
 ) (_ *Server, err error) {
 	defer derrors.Wrap(&err, "NewServer(db, ic, pc, q, %q)", staticPath)
@@ -51,31 +55,39 @@ func NewServer(db *postgres.DB,
 	if err != nil {
 		return nil, err
 	}
-	return &Server{
-		db:          db,
-		indexClient: indexClient,
-		proxyClient: proxyClient,
-		queue:       queue,
 
-		indexTemplate: indexTemplate,
+	return &Server{
+		db:              db,
+		indexClient:     indexClient,
+		proxyClient:     proxyClient,
+		queue:           queue,
+		reportingClient: reportingClient,
+		indexTemplate:   indexTemplate,
 	}, nil
 }
 
 // Install registers server routes using the given handler registration func.
 func (s *Server) Install(handle func(string, http.Handler)) {
+	// rmw wires in error reporting to the handler. It is configured here, in
+	// Install, because not every handler should have error reporting. For
+	// example, we don't want to get an error report each time a /fetch fails.
+	rmw := middleware.Identity()
+	if s.reportingClient != nil {
+		rmw = middleware.ErrorReporting(s.reportingClient.Report)
+	}
 	// cloud-scheduler: poll-and-queue polls the Module Index for new versions
 	// that have been published and inserts that metadata into
 	// module_version_states. It also inserts the version into the task-queue
 	// to to be fetched and processed.
 	// This endpoint is invoked by a Cloud Scheduler job:
 	// 	// See the note about duplicate tasks for "/requeue" below.
-	handle("/poll-and-queue", http.HandlerFunc(s.handleIndexAndQueue))
+	handle("/poll-and-queue", rmw(http.HandlerFunc(s.handleIndexAndQueue)))
 
 	// cloud-scheduler: update-imported-by-count updates the imported_by_count for packages
 	// in search_documents where imported_by_count_updated_at is null or
 	// imported_by_count_updated_at < version_updated_at.
 	// This endpoint is invoked by a Cloud Scheduler job:
-	// 	handle("/update-imported-by-count", http.HandlerFunc(s.handleUpdateImportedByCount))
+	// 	handle("/update-imported-by-count", rmw(http.HandlerFunc(s.handleUpdateImportedByCount)))
 
 	// task-queue: fetch fetches a module version from the Module Mirror, and
 	// processes the contents, and inserts it into the database. If a fetch
@@ -93,26 +105,26 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// https://cloud.google.com/tasks/docs/reference/rpc/google.cloud.tasks.v2#createtaskrequest,
 	// under "Task De-duplication"). If you cannot wait an hour, you can force
 	// duplicate tasks by providing any string as the "suffix" query parameter.
-	handle("/requeue", http.HandlerFunc(s.handleRequeue))
+	handle("/requeue", rmw(http.HandlerFunc(s.handleRequeue)))
 
 	// manual: reprocess sets status = 505 for all records in the
 	// module_version_states table that were processed by an app_version
 	// that occurred after the provided app_version param, so that they
 	// will be scheduled for reprocessing the next time a request to
 	// /requeue is made.
-	handle("/reprocess", http.HandlerFunc(s.handleReprocess))
+	handle("/reprocess", rmw(http.HandlerFunc(s.handleReprocess)))
 
 	// manual: populate-stdlib inserts all versions of the Go standard
 	// library into the tasks queue to be processed and inserted into the
 	 handlePopulateStdLib should be updated whenever a new
 	// version of Go is released.
 	// see the comments on duplicate tasks for "/requeue", above.
-	handle("/populate-stdlib", http.HandlerFunc(s.handlePopulateStdLib))
+	handle("/populate-stdlib", rmw(http.HandlerFunc(s.handlePopulateStdLib)))
 
 	// manual: populate-search-documents inserts a record into
 	// search_documents for all paths in the packages table that do not
 	// exist in search_documents.
-	handle("/populate-search-documents", http.HandlerFunc(s.handlePopulateSearchDocuments))
+	handle("/populate-search-documents", rmw(http.HandlerFunc(s.handlePopulateSearchDocuments)))
 
 	// returns the ETL homepage.
 	handle("/", http.HandlerFunc(s.handleStatusPage))
