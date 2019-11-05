@@ -804,7 +804,9 @@ func (db *DB) getSearchDocument(ctx context.Context, path string) (*searchDocume
 // by anything.
 //
 // Note: we assume that clock drift is not an issue.
-func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context, limit int) error {
+//
+// UpdateSearchDocumentsImportedByCount returns the number of rows updated.
+func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context, limit int) (int64, error) {
 	query := `
 		WITH modified_packages AS (
 			SELECT
@@ -845,10 +847,15 @@ func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context, limit in
 			GROUP BY p.package_path
 		) n
 		WHERE search_documents.package_path = n.package_path;`
-	if _, err := db.exec(ctx, query, limit); err != nil {
-		return fmt.Errorf("error updating imported_by_count and imported_by_count_updated_at for search documents: %v", err)
+	res, err := db.exec(ctx, query, limit)
+	if err != nil {
+		return 0, fmt.Errorf("error updating imported_by_count and imported_by_count_updated_at for search documents: %v", err)
 	}
-	return nil
+	n, err := res.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("RowsAffected: %v", err)
+	}
+	return n, nil
 }
 
 var (

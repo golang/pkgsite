@@ -123,10 +123,13 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 // imported_by_count_updated_at is null.
 func (s *Server) handleUpdateImportedByCount(w http.ResponseWriter, r *http.Request) {
 	limit := parseIntParam(r, "limit", 1000)
-	if err := s.db.UpdateSearchDocumentsImportedByCount(r.Context(), limit); err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		log.Errorf("db.UpdateSearchDocumentsImportedByCount(ctx, %d): %v", limit, err)
+	n, err := s.db.UpdateSearchDocumentsImportedByCount(r.Context(), limit)
+	if err != nil {
+		msg := fmt.Sprintf("%s: %v", http.StatusText(http.StatusInternalServerError), err)
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
 	}
+	fmt.Fprintf(w, "updated %d packages", n)
 }
 
 // handlePopulateSearchDocuments inserts a record into search_documents for all

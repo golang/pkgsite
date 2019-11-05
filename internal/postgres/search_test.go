@@ -290,7 +290,7 @@ func TestFastSearch(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			if err := testDB.UpdateSearchDocumentsImportedByCount(ctx, 1000); err != nil {
+			if _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx, 1000); err != nil {
 				t.Fatal(err)
 			}
 			searchers := []searcher{testDB.popularSearch, testDB.deepSearch}
@@ -530,7 +530,7 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 	}
 	mustUpdateImportedByCount := func() {
 		t.Helper()
-		if err := testDB.UpdateSearchDocumentsImportedByCount(ctx, 10); err != nil {
+		if _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx, 10); err != nil {
 			t.Fatalf("testDB.UpdateSearchDocumentsImportedByCount(ctx, 10): %v", err)
 		}
 	}
