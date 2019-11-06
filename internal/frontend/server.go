@@ -143,6 +143,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(s.staticPath)))
 	}))
 	handle("/mod/", modHandler)
+	handle("/pkg/", http.HandlerFunc(s.handlePackageDetailsRedirect))
 	handle("/search", searchHandler)
 	handle("/search-help", s.staticPageHandler("search_help.tmpl", "Search Help - Go Discovery"))
 	handle("/license-policy", s.licensePolicyHandler())

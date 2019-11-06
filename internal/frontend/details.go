@@ -63,6 +63,12 @@ func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 	s.servePackagePage(w, r, pkgPath, modulePath, version)
 }
 
+// handlePackageDetailsRedirect redirects all redirects to "/pkg" to "/".
+func (s *Server) handlePackageDetailsRedirect(w http.ResponseWriter, r *http.Request) {
+	urlPath := strings.TrimPrefix(r.URL.Path, "/pkg")
+	http.Redirect(w, r, urlPath, http.StatusMovedPermanently)
+}
+
 // handleModuleDetails applies database data to the appropriate template.
 // Handles all endpoints that match "/mod/<module-path>[@<version>?tab=<tab>]".
 func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
