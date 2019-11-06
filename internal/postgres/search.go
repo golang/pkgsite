@@ -9,6 +9,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"math"
 	"sort"
 	"strings"
 	"time"
@@ -19,6 +20,7 @@ import (
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/log"
 	"golang.org/x/xerrors"
 )
 
@@ -795,62 +797,150 @@ func (db *DB) getSearchDocument(ctx context.Context, path string) (*searchDocume
 }
 
 // UpdateSearchDocumentsImportedByCount updates imported_by_count and
-// imported_by_count_updated_at for packages where:
+// imported_by_count_updated_at.
 //
-// (1) The package is imported by a package in search_documents, whose
-// imported_by_count_updated_at < version_updated_at. For example, if package B
-// imports package A, and in search_documents B's imported_by_count_updated_at
-// < version_updated_at, imported_by_count and imported_by_count_updated_at for
-// A will be updated.
-// (2) Packages where imported_by_count_updated_at < version_updated_at. That
-// way, we won't keep updating B's importers (i.e. A), if B is never imported
-// by anything.
-//
-// Note: we assume that clock drift is not an issue.
+// It does so by completely recalculating the imported-by counts
+// from the imports_unique table.
 //
 // UpdateSearchDocumentsImportedByCount returns the number of rows updated.
-func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context, limit int) (int64, error) {
-	query := `
-		WITH modified_packages AS (
-			SELECT
-				p.path AS package_path,
-				v.updated_at
-			FROM packages p
-			INNER JOIN versions v
-			ON p.module_path=v.module_path
-			AND p.version=v.version
-			WHERE v.updated_at > (
-				SELECT COALESCE(MAX(imported_by_count_updated_at), TO_TIMESTAMP(0))
-				FROM search_documents
-			)
-			LIMIT $1
-		)
-		UPDATE search_documents
+func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context) (nUpdated int64, err error) {
+	defer derrors.Wrap(&err, "UpdateSearchDocumentsImportedByCount(ctx)")
+
+	counts, err := db.computeImportedByCounts(ctx)
+	if err != nil {
+		return 0, err
+	}
+	err = db.Transact(func(tx *sql.Tx) error {
+		if err := insertImportedByCounts(ctx, tx, counts); err != nil {
+			return err
+		}
+		if err := compareImportedByCounts(ctx, tx); err != nil {
+			return err
+		}
+		nUpdated, err = updateImportedByCounts(ctx, tx)
+		return err
+	})
+	return nUpdated, err
+}
+
+func (db *DB) computeImportedByCounts(ctx context.Context) (counts map[string]int, err error) {
+	defer derrors.Wrap(&err, "db.computeImportedByCounts(ctx)")
+
+	counts = map[string]int{}
+	seen := map[[2]string]bool{}
+	rows, err := db.query(ctx, `SELECT from_path, to_path FROM imports_unique;`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var from, to string
+		if err := rows.Scan(&from, &to); err != nil {
+			return nil, err
+		}
+		// Dedup (from_path, to_path) pairs. In other words, take distinct
+		// from_paths for each to_path.
+		key := [2]string{from, to}
+		if !seen[key] {
+			counts[to]++
+			seen[key] = true
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return counts, nil
+}
+
+func insertImportedByCounts(ctx context.Context, tx *sql.Tx, counts map[string]int) (err error) {
+	defer derrors.Wrap(&err, "insertImportedByCounts(ctx, tx, counts)")
+
+	const createTableQuery = `
+		CREATE TEMPORARY TABLE computed_imported_by_counts (
+			package_path      TEXT NOT NULL,
+			imported_by_count INTEGER DEFAULT 0 NOT NULL
+		) ON COMMIT DROP;
+    `
+	if _, err := execTx(ctx, tx, createTableQuery); err != nil {
+		return fmt.Errorf("CREATE TABLE: %v", err)
+	}
+	values := make([]interface{}, 0, 2*len(counts))
+	for p, c := range counts {
+		values = append(values, p, c)
+	}
+	columns := []string{"package_path", "imported_by_count"}
+	return bulkInsert(ctx, tx, "computed_imported_by_counts", columns, values, "")
+}
+
+func compareImportedByCounts(ctx context.Context, tx *sql.Tx) (err error) {
+	defer derrors.Wrap(&err, "compareImportedByCounts(ctx, tx)")
+
+	rows, err := tx.QueryContext(ctx, `
+		SELECT
+			s.package_path,
+			s.imported_by_count,
+			c.imported_by_count
+		FROM
+			search_documents s
+		INNER JOIN
+			computed_imported_by_counts c
+		ON
+			s.package_path = c.package_path;`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	// Compute some info about the changes to import-by counts.
+	const changeThreshold = 0.05 // count how many counts change by at least this fraction
+	var total, zero, change, diff int
+	for rows.Next() {
+		var path string
+		var old, new int
+		if err := rows.Scan(&path, &old, &new); err != nil {
+			return err
+		}
+		total++
+		if old != new {
+			change++
+		}
+		if old == 0 {
+			zero++
+			continue
+		}
+		fracDiff := math.Abs(float64(new-old)) / float64(old)
+		if fracDiff > changeThreshold {
+			diff++
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	log.Infof("%6d total rows in search_documents match computed_imported_by_counts", total)
+	log.Infof("%6d will change", change)
+	log.Infof("%6d currently have a zero imported-by count", zero)
+	log.Infof("%6d of the non-zero rows will change by more than %d%%", diff, int(changeThreshold*100))
+	return nil
+}
+
+// updateImportedByCounts updates the imported_by_count column in search_documents
+// for every package in computed_imported_by_counts.
+//
+// A row is updated even if the value doesn't change, so that the imported_by_count_updated_at
+// column is set.
+//
+// Note that if a package is never imported, its imported_by_count column will
+// be the default (0) and its imported_by_count_updated_at column will never be set.
+func updateImportedByCounts(ctx context.Context, tx *sql.Tx) (int64, error) {
+	const updateStmt = `
+		UPDATE search_documents s
 		SET
-			imported_by_count = n.imported_by_count,
-			-- Note: we assume that max(updated_at) is only
-			-- computed once for all rows updated.
-			imported_by_count_updated_at = (SELECT MAX(updated_at) FROM modified_packages)
-		FROM (
-			SELECT
-				p.package_path,
-				COUNT(DISTINCT(i.from_path)) AS imported_by_count
-			FROM (
-				SELECT package_path
-				FROM modified_packages
-				UNION (
-					SELECT i.to_path
-					FROM imports_unique i
-					INNER JOIN modified_packages m
-					ON i.from_path = m.package_path
-				)
-			) p
-			LEFT JOIN imports_unique i
-			ON p.package_path = i.to_path
-			GROUP BY p.package_path
-		) n
-		WHERE search_documents.package_path = n.package_path;`
-	res, err := db.exec(ctx, query, limit)
+			imported_by_count = c.imported_by_count,
+			imported_by_count_updated_at = CURRENT_TIMESTAMP
+		FROM computed_imported_by_counts c
+		WHERE s.package_path = c.package_path;`
+
+	res, err := execTx(ctx, tx, updateStmt)
 	if err != nil {
 		return 0, fmt.Errorf("error updating imported_by_count and imported_by_count_updated_at for search documents: %v", err)
 	}

@@ -290,7 +290,7 @@ func TestFastSearch(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			if _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx, 1000); err != nil {
+			if _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx); err != nil {
 				t.Fatal(err)
 			}
 			searchers := []searcher{testDB.popularSearch, testDB.deepSearch}
@@ -530,8 +530,8 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 	}
 	mustUpdateImportedByCount := func() {
 		t.Helper()
-		if _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx, 10); err != nil {
-			t.Fatalf("testDB.UpdateSearchDocumentsImportedByCount(ctx, 10): %v", err)
+		if _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx); err != nil {
+			t.Fatalf("testDB.UpdateSearchDocumentsImportedByCount(ctx): %v", err)
 		}
 	}
 	validateImportedByCountAndGetSearchDocument := func(path string, count int) *searchDocument {
@@ -540,8 +540,8 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		if err != nil {
 			t.Fatalf("testDB.getSearchDocument(ctx, %q): %v", path, err)
 		}
-		if sd.importedByCountUpdatedAt.IsZero() {
-			t.Fatalf("importedByCountUpdatedAt for package %q should not by empty", path)
+		if sd.importedByCount > 0 && sd.importedByCountUpdatedAt.IsZero() {
+			t.Fatalf("importedByCountUpdatedAt for package %q should not be empty if count > 0", path)
 		}
 		if count != sd.importedByCount {
 			t.Fatalf("importedByCount for package %q = %d; want = %d", path, sd.importedByCount, count)
@@ -570,36 +570,18 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 	sdA := validateImportedByCountAndGetSearchDocument(pkgA.Path, 2)
 	sdC := validateImportedByCountAndGetSearchDocument(pkgC.Path, 0)
 
-	// Test imported_by_count_updated_at for A and C are the same.
-	if sdA.importedByCountUpdatedAt != sdC.importedByCountUpdatedAt {
-		t.Fatalf("expected imported_by_count_updated_at for pkgA and pkgC to be the same; pkgA = %v, pkgC = %v", sdA.importedByCountUpdatedAt, sdC.importedByCountUpdatedAt)
+	// Nothing imports C, so it has never been updated.
+	if !sdC.importedByCountUpdatedAt.IsZero() {
+		t.Fatalf("pkgC imported_by_count_updated_at should be zero, but is %v", sdC.importedByCountUpdatedAt)
+	}
+	if sdA.importedByCountUpdatedAt.IsZero() {
+		t.Fatal("pkgA imported_by_count_updated_at should be non-zero, but is zero")
 	}
 
 	// Test imported_by_count_updated_at for B has not changed.
 	sdB = validateImportedByCountAndGetSearchDocument(pkgB.Path, 0)
 	if sdB.importedByCountUpdatedAt != wantSearchDocBUpdatedAt {
 		t.Fatalf("expected imported_by_count_updated_at for pkgB not to have changed; old = %v, new = %v", wantSearchDocBUpdatedAt, sdB.importedByCountUpdatedAt)
-	}
-
-	// Test imported_by_count_updated_at for B is before imported_by_count_updated_at for A.
-	if !sdB.importedByCountUpdatedAt.Before(sdA.importedByCountUpdatedAt) {
-		t.Fatalf("expected mported_by_count_updated_at for pkgB to be before pkgA; pkgB = %v, pkgA = %v", sdB.importedByCountUpdatedAt, sdA.importedByCountUpdatedAt)
-	}
-
-	// Test imported_by_count_updated_at for A and B have changed when a
-	// newer version of B is added.
-	mustInsertPackageVersion(pkgB, "v1.2.0")
-	mustUpdateImportedByCount()
-	sdA = validateImportedByCountAndGetSearchDocument(pkgA.Path, 2)
-	sdB = validateImportedByCountAndGetSearchDocument(pkgB.Path, 0)
-	if sdA.importedByCountUpdatedAt != sdB.importedByCountUpdatedAt {
-		t.Fatalf("expected imported_by_count_updated_at for pkgA and pkgB to be the same; pkgA = %v, pkgB = %v", sdA.importedByCountUpdatedAt, sdB.importedByCountUpdatedAt)
-	}
-
-	// Test imported_by_count_updated_at for C is before imported_by_count_updated_at for A.
-	_ = validateImportedByCountAndGetSearchDocument(pkgC.Path, 0)
-	if !sdC.importedByCountUpdatedAt.Before(sdA.importedByCountUpdatedAt) {
-		t.Fatalf("expected mported_by_count_updated_at for pkgC to be before pkgA; pkgB = %v, pkgA = %v", sdB.importedByCountUpdatedAt, sdA.importedByCountUpdatedAt)
 	}
 
 	// Test imported_by_count_updated_at for D changes when

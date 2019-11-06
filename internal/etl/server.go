@@ -130,12 +130,9 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	handle("/", http.HandlerFunc(s.handleStatusPage))
 }
 
-// handleUpdateImportedByCount updates imported_by_count for packages in
-// search_documents where imported_by_count_updated_at < version_updated_at or
-// imported_by_count_updated_at is null.
+// handleUpdateImportedByCount updates imported_by_count for all packages.
 func (s *Server) handleUpdateImportedByCount(w http.ResponseWriter, r *http.Request) {
-	limit := parseIntParam(r, "limit", 1000)
-	n, err := s.db.UpdateSearchDocumentsImportedByCount(r.Context(), limit)
+	n, err := s.db.UpdateSearchDocumentsImportedByCount(r.Context())
 	if err != nil {
 		msg := fmt.Sprintf("%s: %v", http.StatusText(http.StatusInternalServerError), err)
 		http.Error(w, msg, http.StatusInternalServerError)
