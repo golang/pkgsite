@@ -41,7 +41,11 @@ type Module struct {
 
 // createPackage returns a *Package based on the fields of the specified
 // internal package and version info.
-func createPackage(pkg *internal.Package, vi *internal.VersionInfo) (_ *Package, err error) {
+//
+// latestRequested indicates whether the user requested the latest
+// version of the package. If so, the returned Package.URL will have the
+// structure /<path> instead of /<path>@<version>.
+func createPackage(pkg *internal.Package, vi *internal.VersionInfo, latestRequested bool) (_ *Package, err error) {
 	defer derrors.Wrap(&err, "createPackage(%v, %v)", pkg, vi)
 
 	if pkg == nil || vi == nil {
@@ -60,9 +64,13 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo) (_ *Package,
 		}
 	}
 
-	m, err := createModule(vi, modLicenses)
+	m, err := createModule(vi, modLicenses, latestRequested)
 	if err != nil {
 		return nil, err
+	}
+	urlVersion := m.Version
+	if latestRequested {
+		urlVersion = internal.LatestVersion
 	}
 	return &Package{
 		Path:              pkg.Path,
@@ -71,13 +79,17 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo) (_ *Package,
 		IsRedistributable: pkg.IsRedistributable(),
 		Licenses:          transformLicenseMetadata(pkg.Licenses),
 		Module:            *m,
-		URL:               constructPackageURL(pkg.Path, vi.ModulePath, m.Version),
+		URL:               constructPackageURL(pkg.Path, vi.ModulePath, urlVersion),
 	}, nil
 }
 
 // createModule returns a *Module based on the fields of the specified
 // versionInfo.
-func createModule(vi *internal.VersionInfo, licmetas []*license.Metadata) (_ *Module, err error) {
+//
+// latestRequested indicates whether the user requested the latest
+// version of the package. If so, the returned Package.URL will have the
+// structure /<path> instead of /<path>@<version>.
+func createModule(vi *internal.VersionInfo, licmetas []*license.Metadata, latestRequested bool) (_ *Module, err error) {
 	defer derrors.Wrap(&err, "createModule(%v, %v)", vi, licmetas)
 
 	formattedVersion := vi.Version
@@ -87,13 +99,17 @@ func createModule(vi *internal.VersionInfo, licmetas []*license.Metadata) (_ *Mo
 			return nil, err
 		}
 	}
+	urlVersion := formattedVersion
+	if latestRequested {
+		urlVersion = internal.LatestVersion
+	}
 	return &Module{
 		Version:           formattedVersion,
 		Path:              vi.ModulePath,
 		CommitTime:        elapsedTime(vi.CommitTime),
 		IsRedistributable: license.AreRedistributable(licmetas),
 		Licenses:          transformLicenseMetadata(licmetas),
-		URL:               constructModuleURL(vi.ModulePath, formattedVersion),
+		URL:               constructModuleURL(vi.ModulePath, urlVersion),
 	}, nil
 }
 

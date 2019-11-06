@@ -101,7 +101,7 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 		return
 	}
 
-	pkgHeader, err := createPackage(&pkg.Package, &pkg.VersionInfo)
+	pkgHeader, err := createPackage(&pkg.Package, &pkg.VersionInfo, version == internal.LatestVersion)
 	if err != nil {
 		log.Errorf("error creating package header for %s@%s: %v", pkg.Path, pkg.Version, err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
@@ -178,7 +178,7 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 		settings = moduleTabLookup["overview"]
 	}
 
-	modHeader, err := createModule(moduleVersion, license.ToMetadatas(licenses))
+	modHeader, err := createModule(moduleVersion, license.ToMetadatas(licenses), version == internal.LatestVersion)
 	if err != nil {
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return

@@ -37,7 +37,7 @@ func TestFetchDirectoryDetails(t *testing.T) {
 		for _, path := range pkgPaths {
 			sp := sample.Package()
 			sp.Path = path
-			pkg, err := createPackage(sp, vi)
+			pkg, err := createPackage(sp, vi, false)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -48,7 +48,7 @@ func TestFetchDirectoryDetails(t *testing.T) {
 			wantPkgs = append(wantPkgs, pkg)
 		}
 
-		mod, err := createModule(vi, sample.LicenseMetadata)
+		mod, err := createModule(vi, sample.LicenseMetadata, false)
 		if err != nil {
 			t.Fatal(err)
 		}

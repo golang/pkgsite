@@ -70,6 +70,9 @@ func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirP
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return
 	}
+	if version == internal.LatestVersion {
+		header.URL = constructDirectoryURL(dbDir.Path, dbDir.ModulePath, internal.LatestVersion)
+	}
 
 	details, err := fetchDetailsForDirectory(ctx, r, tab, s.ds, dbDir, licenses)
 	if err != nil {
@@ -152,7 +155,7 @@ func createDirectory(dbDir *internal.Directory, licmetas []*license.Metadata, in
 		if !includeDirPath && pkg.Path == dbDir.Path {
 			continue
 		}
-		newPkg, err := createPackage(pkg, &dbDir.VersionInfo)
+		newPkg, err := createPackage(pkg, &dbDir.VersionInfo, false)
 		if err != nil {
 			return nil, err
 		}
@@ -166,7 +169,7 @@ func createDirectory(dbDir *internal.Directory, licmetas []*license.Metadata, in
 		packages = append(packages, newPkg)
 	}
 
-	mod, err := createModule(&dbDir.VersionInfo, licmetas)
+	mod, err := createModule(&dbDir.VersionInfo, licmetas, false)
 	if err != nil {
 		return nil, err
 	}
@@ -188,6 +191,9 @@ func createDirectory(dbDir *internal.Directory, licmetas []*license.Metadata, in
 }
 
 func constructDirectoryURL(dirPath, modulePath, formattedVersion string) string {
+	if formattedVersion == internal.LatestVersion {
+		return fmt.Sprintf("/%s", dirPath)
+	}
 	if dirPath == modulePath || modulePath == stdlib.ModulePath {
 		return fmt.Sprintf("/%s@%s", dirPath, formattedVersion)
 	}

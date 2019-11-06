@@ -141,7 +141,7 @@ func TestCreatePackageHeader(t *testing.T) {
 	} {
 
 		t.Run(tc.label, func(t *testing.T) {
-			got, err := createPackage(&tc.pkg.Package, &tc.pkg.VersionInfo)
+			got, err := createPackage(&tc.pkg.Package, &tc.pkg.VersionInfo, false)
 			if err != nil {
 				t.Fatal(err)
 			}
