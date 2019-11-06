@@ -15,8 +15,9 @@
 <title>{{if .Title}}{{.Title}} · {{end}}Go Discovery</title>
 <script nonce="{{.Nonce}}" src="https://support.google.com/inapp/api.js"></script>
 <script nonce="{{.Nonce}}" src="/static/js/feedback.js?version={{.AppVersionLabel}}"></script>
+<script nonce="{{.Nonce}}" async src="/static/js/site.js?version={{.AppVersionLabel}}"></script>
 <!-- Global site tag (gtag.js) - Google Analytics -->
-<script nonce="{{.Nonce}}" async src="https://www.googletagmanager.com/gtag/js?id={{.GoogleAnalyticsTrackingID}}"></script>
+<script nonce="{{.Nonce}}" async defer src="https://www.googletagmanager.com/gtag/js?id={{.GoogleAnalyticsTrackingID}}"></script>
 <script nonce="{{.Nonce}}">
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -25,19 +26,65 @@
   gtag('config', '{{.GoogleAnalyticsTrackingID}}');
 </script>
 <body class="Site">
-<header>
-  {{block "header" .}}
-    <div class="Header">
-      <a class="Header-logo" href="/">
-        <img class="Header-logoImg" src="/static/img/logo.svg" alt="Go Discovery">
+<header class="Site-header">
+  <div class="Header">
+    <nav class="Header-nav">
+      <a href="https://go.dev/">
+        <img class="Header-logo" src="/static/img/logo.svg" alt="Go">
       </a>
-      <div class="Header-search">
-        {{template "search" .}}
-      </div>
-      <button class="js-feedbackButton Header-feedbackButton FeedbackButton">Send Feedback</button>
-    </div>
-  {{end}}
+      {{template "header_search" .}}
+      <ul class="Header-menu">
+        <li class="Header-menuItem">
+          <a href="https://go.dev/solutions" title="Solutions">Solutions</a>
+        </li>
+        <li class="Header-menuItem">
+          <a href="https://learn.go.dev" title="Learn">Learn</a>
+        </li>
+        <li class="Header-menuItem Header-menuItem--active">
+          <a href="/" title="Explore">Explore</a>
+        </li>
+        <li class="Header-menuItem">
+          <a href="https://go.dev/about" title="">About</a>
+        </li>
+        <li class="Header-menuItem">
+          <a href="https://golang.org" title="golang.org">golang.org</a>
+        </li>
+      </ul>
+      <button class="Header-navOpen js-headerMenuButton" aria-label="Open navigation.">
+      </button>
+    </nav>
+  </div>
 </header>
+<aside class="NavigationDrawer js-header">
+  <nav class="NavigationDrawer-nav">
+    <div class="NavigationDrawer-header">
+      <a href="https://go.dev/">
+        <img class="NavigationDrawer-logo" src="/static/img/logo.svg" alt="Go.">
+      </a>
+      <button class="NavigationDrawer-close js-headerMenuButton" aria-label="Close navigation.">
+      </button>
+    </div>
+    <ul class="NavigationDrawer-list">
+      <li class="NavigationDrawer-listItem">
+        <a href="https://go.dev/solutions" title="Solutions">Solutions</a>
+      </li>
+      <li class="NavigationDrawer-listItem">
+        <a href="https://learn.go.dev" title="Learn">Learn</a>
+      </li>
+      <li class="NavigationDrawer-listItem NavigationDrawer-listItem--active">
+        <a href="/" title="Explore">Explore</a>
+      </li>
+      <li class="NavigationDrawer-listItem">
+        <a href="https://go.dev/about" title="">About</a>
+      </li>
+      <li class="NavigationDrawer-listItem">
+        <a href="https://golang.org" title="golang.org">golang.org</a>
+      </li>
+    </ul>
+  </nav>
+</aside>
+<div class="NavigationDrawer-scrim js-scrim" role="presentation">
+</div>
 <main class="Site-content">{{block "main_content" .}}{{end}}</main>
 <footer class="Site-footer">
   <div class="Footer">

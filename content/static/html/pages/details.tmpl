@@ -114,7 +114,6 @@ async function latest() {
   if (ppath) {
     url += '?pkg=' + ppath;
   }
-  console.log(url);
   const res = await fetch(url);
   if (!res.ok) {
     // server-side error; do nothing
