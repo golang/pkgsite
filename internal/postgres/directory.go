@@ -161,33 +161,27 @@ func directoryQueryWithoutModulePath(dirPath, version string) (string, []interfa
 		// github.com/hashicorp/vault/api, but
 		// github.com/hashicorp/vault/api@v1.1.5 does.
 		return fmt.Sprintf(`
-			WITH potential_packages AS (
-				SELECT *
-				FROM
-					packages
-				WHERE
-					tsv_parent_directories @@ $1::tsquery
-			),
-			latest_module AS (
-				SELECT v.*
-				FROM
-					versions v
-				INNER JOIN
-					potential_packages p
-				ON
-					p.module_path = v.module_path
-					AND p.version = v.version
-				%s
-				LIMIT 1
-			)
 			SELECT %s
 			FROM
-				potential_packages p
-			INNER JOIN
-				latest_module v
+				packages p
+			INNER JOIN (
+				SELECT *
+				FROM
+					versions
+				WHERE
+					(module_path, version) IN (
+						SELECT module_path, version
+						FROM search_documents
+						WHERE tsv_parent_directories @@ $1::tsquery
+						GROUP BY 1, 2
+					)
+				%s
+				LIMIT 1
+			) v
 			ON
 				p.module_path = v.module_path
-				AND p.version = v.version;`, orderByLatest, directoryColumns), []interface{}{dirPath}
+				AND p.version = v.version
+			WHERE tsv_parent_directories @@ $1::tsquery;`, directoryColumns, orderByLatest), []interface{}{dirPath}
 	}
 
 	// dirPath and version are specified, so get that directory version

@@ -688,7 +688,8 @@ var upsertSearchStatement = fmt.Sprintf(`
 		v.major DESC,
 		v.minor DESC,
 		v.patch DESC,
-		v.prerelease DESC
+		v.prerelease DESC,
+		v.module_path DESC
 	LIMIT 1
 	ON CONFLICT (package_path)
 	DO UPDATE SET
