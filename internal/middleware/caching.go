@@ -146,7 +146,12 @@ func (c *cache) get(ctx context.Context, key string) (io.Reader, bool) {
 		return nil, false
 	}
 	if err != nil {
-		log.Errorf("cache get: %v", err)
+		select {
+		case <-ctx.Done():
+			log.Infof("cache get: context timed out")
+		default:
+			log.Errorf("cache get: %v", err)
+		}
 		recordCacheError(ctx, c.name, "GET")
 		return nil, false
 	}
