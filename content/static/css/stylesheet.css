@@ -341,7 +341,7 @@ code {
 }
 .SearchSnippet {
   border-top: 0.0625rem solid var(--gray-8);
-  padding: 1.5rem 0;
+  padding: 1rem 0;
 }
 .SearchSnippet:only-of-type,
 .SearchSnippet:last-of-type {
@@ -350,15 +350,21 @@ code {
 }
 .SearchSnippet-header {
   margin: 0 0 0.3125rem;
+  font-size: 1.5rem;
 }
 .SearchSnippet-synopsis {
   color: var(--gray-3);
   margin: 0 0 1rem;
 }
+.SearchSnippet-infoLabel {
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+}
 .SearchResults .Pagination-nav,
 .SearchResults-help,
 .SearchResults-resultCount {
   font-size: 0.875rem;
+  flex-wrap: wrap;
 }
 
 .Pagination-nav {
@@ -383,6 +389,7 @@ code {
   .SearchResults-help,
   .SearchResults-resultCount {
     font-size: 1.125rem;
+    flex-wrap: wrap;
   }
   .Pagination-navInner {
     max-width: 400px;
