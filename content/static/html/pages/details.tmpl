@@ -128,7 +128,7 @@ async function latest() {
     latestBadge.innerHTML = 'Latest';
   } else {
     latestBadge.classList.add('DetailsHeader-goToLatest');
-    latestBadge.innerHTML = '<a href="/' + latestBadge.getAttribute('data-href') + '">Go to latest</a>';
+    latestBadge.innerHTML = '<a href="/' + latestBadge.getAttribute('data-href') + '@' + latestVersion + '">Go to latest</a>';
   }
 }
 
