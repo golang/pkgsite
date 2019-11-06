@@ -246,11 +246,9 @@ func fetchPackageOrModule(ctx context.Context, ds DataSource, namespace, path, v
 		// A package or module was found for this path and version.
 		return http.StatusOK, nil
 	}
-	log.Errorf("fetchPackageOrModule(%q, %q, %q): got error: %v",
-		namespace, path, version, err)
 	if !xerrors.Is(err, derrors.NotFound) {
 		// Something went wrong in executing the get function.
-		log.Infof("fetchPackageOrModule %s@%s: %v", path, version, err)
+		log.Errorf("fetchPackageOrModule %s@%s: %v", path, version, err)
 		return http.StatusInternalServerError, nil
 	}
 	if version == internal.LatestVersion {
