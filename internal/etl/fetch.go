@@ -49,12 +49,8 @@ var (
 	fetchTimeout = 2 * config.StatementTimeout
 )
 
-// appVersionLabel is used to mark the app version at which a module version is
-// fetched. It is mutable for testing purposes.
-var appVersionLabel = config.AppVersionLabel()
-
 // For testing
-var httpClient *http.Client = http.DefaultClient
+var httpClient = http.DefaultClient
 
 // Indicates that although we have a valid module, some packages could not be processed.
 const hasIncompletePackagesCode = 290
@@ -104,7 +100,7 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 	// code < 500 but a later action fails, we will never retry the later action.
 
 	// TODO(b/139178863): Split UpsertVersionState into InsertVersionState and UpdateVersionState.
-	if err := db.UpsertVersionState(ctx, modulePath, version, appVersionLabel, time.Time{}, code, fetchErr); err != nil {
+	if err := db.UpsertVersionState(ctx, modulePath, version, config.AppVersionLabel(), time.Time{}, code, fetchErr); err != nil {
 		log.Error(err)
 		if fetchErr != nil {
 			err = fmt.Errorf("error updating version state: %v, original error: %v", err, fetchErr)

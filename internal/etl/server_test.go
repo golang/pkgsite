@@ -59,7 +59,6 @@ func TestETL(t *testing.T) {
 
 	setupTraceDebugging(t)
 
-	appVersionLabel = "20190000t000000"
 	var (
 		start    = sample.NowTruncated()
 		fooIndex = &internal.IndexVersion{
@@ -89,7 +88,6 @@ func TestETL(t *testing.T) {
 				Status:         status,
 				TryCount:       tryCount,
 				Version:        version.Version,
-				AppVersion:     appVersionLabel,
 			}
 		}
 		fooState = func(code, tryCount int) *internal.VersionState {
