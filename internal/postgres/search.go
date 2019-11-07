@@ -828,8 +828,8 @@ func (db *DB) computeImportedByCounts(ctx context.Context) (counts map[string]in
 	defer derrors.Wrap(&err, "db.computeImportedByCounts(ctx)")
 
 	counts = map[string]int{}
-	seen := map[[2]string]bool{}
-	rows, err := db.query(ctx, `SELECT from_path, to_path FROM imports_unique;`)
+	// Get all (from_path, to_path) pairs, deduped.
+	rows, err := db.query(ctx, `SELECT from_path, to_path FROM imports_unique GROUP BY from_path, to_path`)
 	if err != nil {
 		return nil, err
 	}
@@ -839,13 +839,7 @@ func (db *DB) computeImportedByCounts(ctx context.Context) (counts map[string]in
 		if err := rows.Scan(&from, &to); err != nil {
 			return nil, err
 		}
-		// Dedup (from_path, to_path) pairs. In other words, take distinct
-		// from_paths for each to_path.
-		key := [2]string{from, to}
-		if !seen[key] {
-			counts[to]++
-			seen[key] = true
-		}
+		counts[to]++
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
