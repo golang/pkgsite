@@ -164,8 +164,12 @@ code {
   width: 100%;
   z-index: 1;
 }
+.Site-header.Site-header--blue {
+  background: var(--turq-text);
+  border: none;
+}
 :target::before {
-  content: " ";
+  content: ' ';
   display: block;
   height: 4.125rem;
   margin-top: -4.125rem; /* Move hidden anchor content for deep linking with a sticky header. */
@@ -210,6 +214,10 @@ code {
     margin: 1rem 1rem 1rem 0;
   }
 }
+.Site-header--blue .Header-menuItem a:link,
+.Site-header--blue .Header-menuItem a:visited {
+  color: var(--white);
+}
 .Header-menuItem a:link,
 .Header-menuItem a:visited {
   border-bottom: 3px solid transparent;
@@ -238,7 +246,7 @@ code {
   margin: auto 1rem;
   width: 2.5rem;
 }
-.Header-navOpen--white {
+.Site-header--blue .Header-navOpen {
   background: no-repeat center/2rem url('/static/img/menu-24px-white.svg');
 }
 .Header-searchForm {
@@ -260,10 +268,10 @@ code {
     margin: 0.6rem 1.4rem;
   }
 }
-.Header-searchFormInput--white::placeholder {
+.Site-header--blue .Header-searchFormInput::placeholder {
   color: var(--white);
 }
-.Header-searchForm-input {
+.Header-searchFormInput {
   background-color: transparent;
   border: none;
   box-sizing: border-box;
@@ -287,7 +295,7 @@ code {
   fill: var(--turq-med);
   width: 23px;
 }
-.Header-searchFormSubmitIcon--white {
+.Site-header--blue .Header-searchFormSubmitIcon {
   fill: var(--white);
 }
 .NavigationDrawer {
