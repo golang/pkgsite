@@ -85,7 +85,7 @@ func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirP
 		basePage:       newBasePage(r, fmt.Sprintf("Directory %s", dirPath)),
 		Settings:       settings,
 		Header:         header,
-		BreadcrumbPath: breadcrumbPath(dirPath, dbDir.ModulePath, dbDir.Version),
+		BreadcrumbPath: breadcrumbPath(dirPath, dbDir.ModulePath, linkableVersion(dbDir.Version, dbDir.ModulePath)),
 		Details:        details,
 		CanShowDetails: true,
 		Tabs:           directoryTabSettings,
