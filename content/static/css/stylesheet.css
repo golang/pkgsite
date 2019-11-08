@@ -156,10 +156,21 @@ code {
   max-width: 75.75rem;
 }
 .Site-header {
+  background: var(--white);
   border-bottom: 0.0625rem solid var(--gray-8);
+  -webkit-position: sticky;
+  position: sticky;
   top: 0;
   width: 100%;
   z-index: 1;
+}
+:target::before {
+  content: " ";
+  display: block;
+  height: 4.125rem;
+  margin-top: -4.125rem; /* Move hidden anchor content for deep linking with a sticky header. */
+  pointer-events: none;
+  visibility: hidden;
 }
 .Header-nav {
   display: flex;
