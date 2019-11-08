@@ -16,16 +16,17 @@
   --gray-9: #f0f1f2;
   --gray-10: #fafafa;
 
-  --turq-text: #007d9c;
-  --turq-med: #00add8;
   --turq-light: #5dc9e2;
+  --turq-med: #00add8;
+  --turq-text: #007d9c;
 
   --blue: #92e1f3;
-  --purple: #542c7d;
-  --yellow: #fddd00;
-  --pink: #ce3262;
   --green: #00a29c;
+  --pink: #ce3262;
+  --purple: #542c7d;
+  --slate: #253443; /* Footer background. */
   --white: #fff;
+  --yellow: #fddd00;
 }
 
 *,
@@ -94,84 +95,12 @@ code {
   padding: 0 1rem;
 }
 .Site-footer {
-  padding-top: 1.25rem;
+  margin-top: 5rem;
 }
 
-.Footer {
-  align-items: center;
-  display: flex;
-  justify-content: flex-start;
-  margin: 0 auto;
-  padding: 1rem 1.25rem;
-  position: relative;
-}
 .FeedbackButton {
   cursor: pointer;
 }
-.Footer-feedbackButton {
-  background: none;
-  border: none;
-  color: var(--turq-text);
-  font-size: 0.875rem;
-  padding: 0;
-}
-.Footer-feedbackButton:hover {
-  text-decoration: underline;
-}
-.Footer-gopher {
-  bottom: 0;
-  left: 1.25rem;
-  position: absolute;
-  width: 80px;
-}
-.Footer-links {
-  flex: 1;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  text-align: center;
-}
-.Footer-link {
-  font-size: 0.875rem;
-  white-space: nowrap;
-}
-.Footer-link + .Footer-link {
-  margin-top: 0.5rem;
-}
-.Footer-link--long {
-  display: none;
-}
-.Footer-googleLogo {
-  bottom: 13px;
-  position: absolute;
-  right: 1.25rem;
-}
-.Footer-googleLogoImg {
-  display: block;
-  height: 1.5rem;
-  width: 4.5rem;
-}
-@media only screen and (min-width: 825px) {
-  .Footer-links {
-    padding-left: 100px;
-    text-align: left;
-  }
-  .Footer-link {
-    display: inline;
-  }
-  .Footer-link + .Footer-link {
-    border-left: 0.0625rem solid var(--gray-2);
-    margin-left: 12px;
-    padding-left: 12px;
-  }
-  .Footer-link--long {
-    display: inline;
-  }
-  .Footer-link--short {
-    display: none;
-  }
-}
-
 .SearchForm {
   align-items: center;
   border: 0.0625rem solid var(--gray-8);
@@ -180,7 +109,7 @@ code {
   font-size: 1rem;
   justify-content: space-between;
   margin: 0 auto;
-  max-width: 612px;
+  max-width: 38.25rem;
   padding: 0.5rem 0.5rem 0.5rem 1rem;
 }
 .SearchForm-input {
@@ -207,16 +136,11 @@ code {
   margin: 0 auto 50px;
   width: 194px;
 }
-@media only screen and (min-width: 1000px) {
-  .Search {
-    margin-top: 200px;
-  }
-}
 .Homepage {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  margin: 2rem auto;
+  margin: 2rem auto 5rem;
   max-width: 38rem;
 }
 .Homepage-packages {
@@ -976,4 +900,99 @@ table.Directories {
 }
 .ImageButton:active {
   background-color: var(--gray-8);
+}
+
+.Site-footer {
+  background-color: var(--slate);
+  border-top: 0.0625rem solid var(--gray-8);
+  color: var(--white);
+  font-size: 0.875rem;
+}
+.Footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin: auto;
+  max-width: 75.75rem;
+  padding: 2rem 1.5rem 2.625rem 1.5rem;
+}
+.Footer-linkColumn {
+  flex: 0 0 9.375rem;
+}
+a.Footer-link {
+  color: var(--white);
+  display: flex;
+  flex: 1;
+  font-size: 0.875rem;
+  line-height: 2rem;
+}
+a.Footer-link--primary {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  margin-bottom: 0.5rem;
+  margin-top: 0.75rem;
+}
+.Footer-bottom {
+  align-items: center;
+  border-top: 0.0625rem solid var(--gray-8);
+  display: flex;
+  margin: 0 1.5rem;
+  min-height: 4.125rem;
+}
+.Footer-gopher {
+  align-self: flex-end;
+  width: 5rem;
+}
+.Footer-listRow {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+.Footer-listItem {
+  align-items: center;
+  display: flex;
+  flex: 1 100%;
+  justify-content: center;
+  margin: 0.4rem 0;
+  padding: 0 1rem;
+}
+.Footer-listItem a:link,
+.Footer-listItem a:visited {
+  color: var(--white);
+}
+@media only screen and (min-width: 52rem) {
+  .Footer-listItem {
+    flex: initial;
+  }
+  .Footer-listItem + .Footer-listItem {
+    border-left: 0.0625rem solid var(--gray-7);
+  }
+}
+.Footer-feedbackButton {
+  background: none;
+  border: none;
+  color: var(--white);
+  font-size: 0.875rem;
+  padding: 0;
+}
+.Footer-feedbackButton:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
+.Footer-googleLogo {
+  align-self: flex-end;
+  height: 1.5rem;
+  margin-bottom: 1.3rem;
+  text-align: right;
+}
+.Footer-googleLogoImg {
+  height: 1.5rem;
+}
+.Container--fullBleed {
+  margin: 0;
+  max-width: none;
 }

@@ -88,23 +88,107 @@
 <main class="Site-content">{{block "main_content" .}}{{end}}</main>
 <footer class="Site-footer">
   <div class="Footer">
-    <img class="Footer-gopher" src="/static/img/gopher-footer.jpg" alt="The Go Gopher">
-    <ul class="Footer-links">
-      <li class="Footer-link"><a href="/copyright">Copyright</a></li>
-      <li class="Footer-link"><a href="/tos">Terms of Service</a></li>
-      <li class="Footer-link">
-        <a href="http://www.google.com/intl/en/policies/privacy/" target="_blank">Privacy Policy</a>
-      </li>
-      <li class="Footer-link">
-        <button class="js-feedbackButton Footer-feedbackButton FeedbackButton">
-          <span class="Footer-link--long">Report a website issue</span>
-          <span class="Footer-link--short">Report issue</span>
-        </button>
-      </li>
-    </ul>
-    <a class="Footer-googleLogo" target="_blank" href="https://google.com">
-      <img class="Footer-googleLogoImg" src="/static/img/google.svg" alt="Google logo">
-    </a>
+    <div class="Footer-links">
+      <div class="Footer-linkColumn">
+        <a href="https://go.dev/solutions" class="Footer-link Footer-link--primary" title="Solutions">
+          Solutions
+        </a>
+        <a href="https://go.dev/solutions#use-cases" class="Footer-link" title="Use Cases">
+          Use Cases
+        </a>
+        <a href="https://go.dev/solutions#case-studies" class="Footer-link" title="Case Studies">
+          Case Studies
+        </a>
+      </div>
+      <div class="Footer-linkColumn">
+        <a href="https://learn.go.dev/" class="Footer-link Footer-link--primary" title="Learn">
+          Learn
+        </a>
+        <a href="https://play.golang.org" class="Footer-link" title="">
+          Playground
+        </a>
+        <a href="https://tour.golang.org" class="Footer-link" title="">
+          Tour
+        </a>
+        <a href="https://stackoverflow.com/questions/tagged/go?tab=Newest" class="Footer-link" title="">
+          Stack Overflow
+        </a>
+      </div>
+      <div class="Footer-linkColumn">
+        <a href="https://pkg.go.dev" class="Footer-link Footer-link--primary" title="Explore">
+          Explore
+        </a>
+      </div>
+      <div class="Footer-linkColumn">
+        <a href="https://go.dev/about" class="Footer-link Footer-link--primary" title="About">
+          About
+        </a>
+        <a href="https://golang.org/dl/" class="Footer-link" title="">
+          Download
+        </a>
+        <a href="https://blog.golang.org" class="Footer-link" title="">
+          Blog
+        </a>
+        <a href="https://github.com/golang/go/issues" class="Footer-link" title="">
+          Issue Tracker
+        </a>
+        <a href="https://golang.org/doc/devel/release.html" class="Footer-link" title="">
+          Release Notes
+        </a>
+        <a href="https://blog.golang.org/go-brand" class="Footer-link" title="">
+          Brand Guidelines
+        </a>
+      </div>
+      <div class="Footer-linkColumn">
+        <a href="https://www.twitter.com/golang" class="Footer-link Footer-link--primary" title="Connect">
+          Connect
+        </a>
+        <a href="https://reddit.com/r/golang" class="Footer-link" title="">
+          r/golang
+        </a>
+        <a href="https://www.twitter.com/golang" class="Footer-link" title="">
+          Twitter
+        </a>
+        <a href="https://github.com/golang" class="Footer-link" title="">
+          Github
+        </a>
+        <a href="https://invite.slack.golangbridge.org/" class="Footer-link" title="">
+          Slack
+        </a>
+        <a href="https://www.meetup.com/pro/go" class="Footer-link" title="">
+          Meetup
+        </a>
+        <a href="https://golangweekly.com/" class="Footer-link" title="">
+          Golang Weekly
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="Footer">
+    <div class="Container Container--fullBleed">
+      <div class="Footer-bottom">
+        <img class="Footer-gopher" src="/static/img/pilot-bust.svg" alt="The Go Gopher">
+        <ul class="Footer-listRow">
+          <li class="Footer-listItem"><a href="https://go.dev/copyright">Copyright</a></li>
+          <li class="Footer-listItem"><a href="https://go.dev/tos">Terms of Service</a></li>
+          <li class="Footer-listItem"><a href="http://www.google.com/intl/en/policies/privacy/" target="_blank">Privacy
+              Policy</a></li>
+          <li class="Footer-listItem">
+            <button class="js-feedbackButton Footer-feedbackButton">
+              Report an Issue
+            </button>
+          </li>
+          <li class="Footer-listItem">
+            <button class="js-feedbackButton Footer-feedbackButton">
+              Share Feedback
+            </button>
+          </li>
+        </ul>
+        <a class="Footer-googleLogo" target="_blank" href="https://google.com" rel="noopener noreferrer">
+          <img class="Footer-googleLogoImg" src="/static/img/google-white.png" alt="Google logo">
+        </a>
+      </div>
+    </div>
   </div>
 </footer>
 {{block "post_content" .}}{{end}}
