@@ -16,9 +16,13 @@
       <div class="DetailsHeader-version">{{$header.Version}}</div>
       <div class="DetailsHeader-badge"
         data-version="{{$header.Version}}"
-        {{ if eq $namespace "mod" -}}
+        {{if eq $namespace "mod" }}
           data-mpath="{{$header.Path}}"
-          data-href="mod/{{$header.Path}}">
+          {{if eq $header.Path "std" }}
+            data-href="{{$header.Path}}">
+          {{- else -}}
+            data-href="mod/{{$header.Path}}">
+          {{- end -}}
         {{- else -}}
           data-mpath="{{$header.Module.Path}}"
           data-ppath="{{$header.Path}}"
