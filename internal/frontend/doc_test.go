@@ -42,3 +42,35 @@ func TestFileSource(t *testing.T) {
 		})
 	}
 }
+
+func TestHackUpDocumentation(t *testing.T) {
+	tests := []struct {
+		body string
+		want string
+	}{
+		{"nothing burger", "nothing burger"},
+		{`<a href="/pkg/foo">foo</a>`, `<a href="/foo?tab=doc">foo</a>`},
+		{`<a href="/pkg/foo"`, `<a href="/pkg/foo"`},
+		{
+			`<a href="/pkg/foo"><a href="/pkg/bar">bar</a></a>`,
+			`<a href="/foo?tab=doc"><a href="/pkg/bar">bar</a></a>`,
+		},
+		{
+			`<a href="/pkg/foo">foo</a>
+		   <a href="/pkg/bar">bar</a>`,
+			`<a href="/foo?tab=doc">foo</a>
+		   <a href="/bar?tab=doc">bar</a>`,
+		},
+		{`<ahref="/pkg/foo">foo</a>`, `<ahref="/pkg/foo">foo</a>`},
+		{`<allhref="/pkg/foo">foo</a>`, `<allhref="/pkg/foo">foo</a>`},
+		{`<a nothref="/pkg/foo">foo</a>`, `<a nothref="/pkg/foo">foo</a>`},
+		{`<a href="/pkg/foo#identifier">foo</a>`, `<a href="/foo?tab=doc#identifier">foo</a>`},
+		{`<a href="#identifier">foo</a>`, `<a href="#identifier">foo</a>`},
+	}
+
+	for _, test := range tests {
+		if got := string(hackUpDocumentation([]byte(test.body))); got != test.want {
+			t.Errorf("hackUpDocumentation(%s) = %s, want %s", test.body, got, test.want)
+		}
+	}
+}

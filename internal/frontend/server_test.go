@@ -64,6 +64,7 @@ func TestServer(t *testing.T) {
 	pkg := sample.Package()
 	pkg2 := sample.Package()
 	pkg2.Path = sample.ModulePath + "/foo/directory/hello"
+	pkg2.DocumentationHTML = []byte(`<a href="/pkg/io#Writer">io.Writer</a>`)
 	mustInsertVersion(sample.ModulePath, "v0.9.0", []*internal.Package{pkg, pkg2})
 	mustInsertVersion(sample.ModulePath, "v1.0.0", []*internal.Package{pkg, pkg2})
 
@@ -192,109 +193,124 @@ func TestServer(t *testing.T) {
 		name string
 		// path to use in an HTTP GET request
 		urlPath string
+		// whether to mutate the identifier links in documentation.
+		doDocumentationHack bool
 		// statusCode we expect to see in the headers.
 		wantStatusCode int
 		// substrings we expect to see in the body
 		want []string
 	}{
 		{
-			"static",
-			"/static/",
-			http.StatusOK,
-			[]string{"css", "html", "img", "js"},
+			name:           "static",
+			urlPath:        "/static/",
+			wantStatusCode: http.StatusOK,
+			want:           []string{"css", "html", "img", "js"},
 		},
 		{
-			"license policy",
-			"/license-policy",
-			http.StatusOK,
-			[]string{
+			name:           "license policy",
+			urlPath:        "/license-policy",
+			wantStatusCode: http.StatusOK,
+			want: []string{
 				"The Go website displays license information",
 				"this is not legal advice",
 			},
 		},
 		{
 			// just check that it returns 200
-			"favicon",
-			"/favicon.ico",
-			http.StatusOK,
-			nil,
+			name:           "favicon",
+			urlPath:        "/favicon.ico",
+			wantStatusCode: http.StatusOK,
+			want:           nil,
 		},
 		{
-			"robots.txt",
-			"/robots.txt",
-			http.StatusOK,
-			[]string{"User-agent: *", "Disallow: /*?tab=*"},
+			name:           "robots.txt",
+			urlPath:        "/robots.txt",
+			wantStatusCode: http.StatusOK,
+			want:           []string{"User-agent: *", "Disallow: /*?tab=*"},
 		},
 		{
-			"search",
-			fmt.Sprintf("/search?q=%s", sample.PackageName),
-			http.StatusOK,
-			[]string{
+			name:           "search",
+			urlPath:        fmt.Sprintf("/search?q=%s", sample.PackageName),
+			wantStatusCode: http.StatusOK,
+			want: []string{
 				`<a href="/github.com/valid_module_name/foo">github.com/valid_module_name/foo</a>`,
 			},
 		},
 		{
-			"package default",
-			fmt.Sprintf("/%s?tab=doc", sample.PackagePath),
-			http.StatusOK,
-			append(
+			name:           "package default",
+			urlPath:        fmt.Sprintf("/%s?tab=doc", sample.PackagePath),
+			wantStatusCode: http.StatusOK,
+			want: append(
 				pkgHeader(pkgV100, true),
 				`This is the documentation HTML`,
 			),
 		},
 		{
-			"package default redirect",
-			fmt.Sprintf("/%s", sample.PackagePath),
-			http.StatusFound,
-			[]string{},
+			name:           "package default redirect",
+			urlPath:        fmt.Sprintf("/%s", sample.PackagePath),
+			wantStatusCode: http.StatusFound,
+			want:           []string{},
 		},
 		{
-			"package default nonredistributable",
+			name: "package default nonredistributable",
 			// For a non-redistributable package, the "latest" route goes to the modules tab.
-			fmt.Sprintf("/%s?tab=overview", nonRedistPkgPath),
-			http.StatusOK,
-			pkgHeader(pkgNonRedist, true),
+			urlPath:        fmt.Sprintf("/%s?tab=overview", nonRedistPkgPath),
+			wantStatusCode: http.StatusOK,
+			want:           pkgHeader(pkgNonRedist, true),
 		},
 		{
-			"package@version default",
-			fmt.Sprintf("/%s@%s/%s?tab=doc", sample.ModulePath, sample.VersionString, pkgSuffix),
-			http.StatusOK,
-			append(
+			name:           "package@version default",
+			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=doc", sample.ModulePath, sample.VersionString, pkgSuffix),
+			wantStatusCode: http.StatusOK,
+			want: append(
 				pkgHeader(pkgV100, false),
 				`This is the documentation HTML`,
 			),
 		},
 		{
-			"package@version default specific version nonredistributable",
+			name: "package@version default specific version nonredistributable",
 			// For a non-redistributable package, the name@version route goes to the modules tab.
-			fmt.Sprintf("/%s@%s/%s?tab=overview", nonRedistModulePath, sample.VersionString, nonRedistPkgSuffix),
-			http.StatusOK,
-			pkgHeader(pkgNonRedist, false),
+			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=overview", nonRedistModulePath, sample.VersionString, nonRedistPkgSuffix),
+			wantStatusCode: http.StatusOK,
+			want:           pkgHeader(pkgNonRedist, false),
 		},
 		{
-			"package@version doc tab",
-			fmt.Sprintf("/%s@%s/%s?tab=doc", sample.ModulePath, "v0.9.0", pkgSuffix),
-			http.StatusOK,
-			append(
+			name:           "package@version doc tab",
+			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=doc", sample.ModulePath, "v0.9.0", pkgSuffix),
+			wantStatusCode: http.StatusOK,
+			want: append(
 				pkgHeader(pkgV090, false),
 				`This is the documentation HTML`,
 			),
 		},
 		{
-			"package@version doc tab nonredistributable",
+			name:           "package@version doc with links",
+			urlPath:        fmt.Sprintf("/%s?tab=doc", pkg2.Path),
+			wantStatusCode: http.StatusOK,
+			want:           []string{`<a href="/pkg/io#Writer">io.Writer</a>`},
+		},
+		{
+			name:                "package@version doc with hacked up links",
+			urlPath:             fmt.Sprintf("/%s?tab=doc", pkg2.Path),
+			doDocumentationHack: true,
+			wantStatusCode:      http.StatusOK,
+			want:                []string{`<a href="/io?tab=doc#Writer">io.Writer</a>`},
+		},
+		{
+			name: "package@version doc tab nonredistributable",
 			// For a non-redistributable package, the doc tab will not show the doc.
-			fmt.Sprintf("/%s@%s/%s?tab=doc", nonRedistModulePath, sample.VersionString, nonRedistPkgSuffix),
-			http.StatusOK,
-			append(
+			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=doc", nonRedistModulePath, sample.VersionString, nonRedistPkgSuffix),
+			wantStatusCode: http.StatusOK,
+			want: append(
 				pkgHeader(pkgNonRedist, false),
 				`hidden due to license restrictions`,
 			),
 		},
 		{
-			"package@version readme tab",
-			fmt.Sprintf("/%s@%s/%s?tab=overview", sample.ModulePath, sample.VersionString, pkgSuffix),
-			http.StatusOK,
-			append(
+			name:           "package@version readme tab",
+			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=overview", sample.ModulePath, sample.VersionString, pkgSuffix),
+			wantStatusCode: http.StatusOK,
+			want: append(
 				pkgHeader(pkgV100, false),
 				`<div class="Overview-module">`,
 				`Repository: <a href="github.com/valid_module_name" target="_blank">github.com/valid_module_name</a>`,
@@ -302,29 +318,29 @@ func TestServer(t *testing.T) {
 				`<div class="Overview-readmeSource">Source: github.com/valid_module_name@v1.0.0/README.md</div>`),
 		},
 		{
-			"package@version readme tab nonredistributable",
+			name: "package@version readme tab nonredistributable",
 			// For a non-redistributable package, the readme tab will not show the readme.
-			fmt.Sprintf("/%s@%s/%s?tab=overview", nonRedistModulePath, sample.VersionString, nonRedistPkgSuffix),
-			http.StatusOK,
-			append(
+			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=overview", nonRedistModulePath, sample.VersionString, nonRedistPkgSuffix),
+			wantStatusCode: http.StatusOK,
+			want: append(
 				pkgHeader(pkgNonRedist, false),
 				`hidden due to license restrictions`,
 			),
 		},
 		{
-			"package@version subdirectories tab",
-			fmt.Sprintf("/%s@%s/%s?tab=subdirectories", sample.ModulePath, sample.VersionString, pkgSuffix),
-			http.StatusOK,
-			append(
+			name:           "package@version subdirectories tab",
+			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=subdirectories", sample.ModulePath, sample.VersionString, pkgSuffix),
+			wantStatusCode: http.StatusOK,
+			want: append(
 				pkgHeader(pkgV100, false),
 				`foo`,
 			),
 		},
 		{
-			"package@version versions tab",
-			fmt.Sprintf("/%s@%s/%s?tab=versions", sample.ModulePath, sample.VersionString, pkgSuffix),
-			http.StatusOK,
-			append(
+			name:           "package@version versions tab",
+			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=versions", sample.ModulePath, sample.VersionString, pkgSuffix),
+			wantStatusCode: http.StatusOK,
+			want: append(
 				pkgHeader(pkgV100, false),
 				`Versions`,
 				`v1`,
@@ -332,10 +348,10 @@ func TestServer(t *testing.T) {
 			),
 		},
 		{
-			"package@version imports tab",
-			fmt.Sprintf("/%s@%s/%s?tab=imports", sample.ModulePath, sample.VersionString, pkgSuffix),
-			http.StatusOK,
-			append(
+			name:           "package@version imports tab",
+			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=imports", sample.ModulePath, sample.VersionString, pkgSuffix),
+			wantStatusCode: http.StatusOK,
+			want: append(
 				pkgHeader(pkgV100, false),
 				`Imports`,
 				`Standard Library`,
@@ -343,28 +359,28 @@ func TestServer(t *testing.T) {
 				`<a href="/path/to/bar">path/to/bar</a>`),
 		},
 		{
-			"package@version imported by tab",
-			fmt.Sprintf("/%s@%s/%s?tab=importedby", sample.ModulePath, sample.VersionString, pkgSuffix),
-			http.StatusOK,
-			append(
+			name:           "package@version imported by tab",
+			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=importedby", sample.ModulePath, sample.VersionString, pkgSuffix),
+			wantStatusCode: http.StatusOK,
+			want: append(
 				pkgHeader(pkgV100, false),
 				`No known importers for this package`,
 			),
 		},
 		{
-			"package@version imported by tab second page",
-			fmt.Sprintf("/%s@%s/%s?tab=importedby&page=2", sample.ModulePath, sample.VersionString, pkgSuffix),
-			http.StatusOK,
-			append(
+			name:           "package@version imported by tab second page",
+			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=importedby&page=2", sample.ModulePath, sample.VersionString, pkgSuffix),
+			wantStatusCode: http.StatusOK,
+			want: append(
 				pkgHeader(pkgV100, false),
 				`No known importers for this package`,
 			),
 		},
 		{
-			"package@version licenses tab",
-			fmt.Sprintf("/%s@%s/%s?tab=licenses", sample.ModulePath, sample.VersionString, pkgSuffix),
-			http.StatusOK,
-			append(
+			name:           "package@version licenses tab",
+			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=licenses", sample.ModulePath, sample.VersionString, pkgSuffix),
+			wantStatusCode: http.StatusOK,
+			want: append(
 				pkgHeader(pkgV100, false),
 				`<div id="#LICENSE">MIT</div>`,
 				`This is not legal advice`,
@@ -374,20 +390,20 @@ func TestServer(t *testing.T) {
 			),
 		},
 		{
-			"directory subdirectories",
-			fmt.Sprintf("/%s", sample.PackagePath+"/directory"),
-			http.StatusOK,
-			append(
+			name:           "directory subdirectories",
+			urlPath:        fmt.Sprintf("/%s", sample.PackagePath+"/directory"),
+			wantStatusCode: http.StatusOK,
+			want: append(
 				pkgHeader(dir, true),
 				`<th>Path</th>`,
 				`<th>Synopsis</th>`,
 			),
 		},
 		{
-			"directory overview",
-			fmt.Sprintf("/%s?tab=overview", sample.PackagePath+"/directory"),
-			http.StatusOK,
-			append(
+			name:           "directory overview",
+			urlPath:        fmt.Sprintf("/%s?tab=overview", sample.PackagePath+"/directory"),
+			wantStatusCode: http.StatusOK,
+			want: append(
 				pkgHeader(dir, true),
 				`<div class="Overview-module">`,
 				`Repository: <a href="github.com/valid_module_name" target="_blank">github.com/valid_module_name</a>`,
@@ -395,10 +411,10 @@ func TestServer(t *testing.T) {
 				`<div class="Overview-readmeSource">Source: github.com/valid_module_name@v1.0.0/README.md</div>`),
 		},
 		{
-			"directory licenses",
-			fmt.Sprintf("/%s?tab=licenses", sample.PackagePath+"/directory"),
-			http.StatusOK,
-			append(
+			name:           "directory licenses",
+			urlPath:        fmt.Sprintf("/%s?tab=licenses", sample.PackagePath+"/directory"),
+			wantStatusCode: http.StatusOK,
+			want: append(
 				pkgHeader(dir, true),
 				`<div id="#LICENSE">MIT</div>`,
 				`This is not legal advice`,
@@ -407,30 +423,30 @@ func TestServer(t *testing.T) {
 				`<div class="License-source">Source: github.com/valid_module_name@v1.0.0/LICENSE</div>`),
 		},
 		{
-			"stdlib directory default",
-			fmt.Sprintf("/cmd"),
-			http.StatusOK,
-			append(
+			name:           "stdlib directory default",
+			urlPath:        fmt.Sprintf("/cmd"),
+			wantStatusCode: http.StatusOK,
+			want: append(
 				pkgHeader(dirCmd, true),
 				`<th>Path</th>`,
 				`<th>Synopsis</th>`,
 			),
 		},
 		{
-			"stdlib directory subdirectories",
-			fmt.Sprintf("/cmd@go1.13?tab=subdirectories"),
-			http.StatusOK,
-			append(
+			name:           "stdlib directory subdirectories",
+			urlPath:        fmt.Sprintf("/cmd@go1.13?tab=subdirectories"),
+			wantStatusCode: http.StatusOK,
+			want: append(
 				pkgHeader(dirCmd, false),
 				`<th>Path</th>`,
 				`<th>Synopsis</th>`,
 			),
 		},
 		{
-			"stdlib directory overview",
-			fmt.Sprintf("/cmd@go1.13?tab=overview"),
-			http.StatusOK,
-			append(
+			name:           "stdlib directory overview",
+			urlPath:        fmt.Sprintf("/cmd@go1.13?tab=overview"),
+			wantStatusCode: http.StatusOK,
+			want: append(
 				pkgHeader(dirCmd, false),
 				`<div class="Overview-module">`,
 				`Repository: <a href="github.com/valid_module_name" target="_blank">github.com/valid_module_name</a>`,
@@ -438,10 +454,10 @@ func TestServer(t *testing.T) {
 				`<div class="Overview-readmeSource">Source: go.googlesource.com/go/&#43;/refs/tags/go1.13/README.md</div>`),
 		},
 		{
-			"stdlib directory licenses",
-			fmt.Sprintf("/cmd@go1.13?tab=licenses"),
-			http.StatusOK,
-			append(
+			name:           "stdlib directory licenses",
+			urlPath:        fmt.Sprintf("/cmd@go1.13?tab=licenses"),
+			wantStatusCode: http.StatusOK,
+			want: append(
 				pkgHeader(dirCmd, false),
 				`<div id="#LICENSE">MIT</div>`,
 				`This is not legal advice`,
@@ -450,46 +466,46 @@ func TestServer(t *testing.T) {
 				`<div class="License-source">Source: go.googlesource.com/go/&#43;/refs/tags/go1.13/LICENSE</div>`),
 		},
 		{
-			"module default",
-			fmt.Sprintf("/mod/%s", sample.ModulePath),
-			http.StatusOK,
+			name:           "module default",
+			urlPath:        fmt.Sprintf("/mod/%s", sample.ModulePath),
+			wantStatusCode: http.StatusOK,
 			// Show the readme tab by default.
 			// Fall back to the latest version, show readme tab by default.
-			append(modHeader(mod, true), `readme`),
+			want: append(modHeader(mod, true), `readme`),
 		},
 		{
-			"module overview",
-			fmt.Sprintf("/mod/%s?tab=overview", sample.ModulePath),
-			http.StatusOK,
+			name:           "module overview",
+			urlPath:        fmt.Sprintf("/mod/%s?tab=overview", sample.ModulePath),
+			wantStatusCode: http.StatusOK,
 			// Show the readme tab by default.
 			// Fall back to the latest version, show readme tab by default.
-			append(modHeader(mod, true), `readme`),
+			want: append(modHeader(mod, true), `readme`),
 		},
 		// TODO(b/139498072): add a second module, so we can verify that we get the latest version.
 		{
-			"module packages tab latest version",
-			fmt.Sprintf("/mod/%s?tab=packages", sample.ModulePath),
-			http.StatusOK,
+			name:           "module packages tab latest version",
+			urlPath:        fmt.Sprintf("/mod/%s?tab=packages", sample.ModulePath),
+			wantStatusCode: http.StatusOK,
 			// Fall back to the latest version.
-			append(modHeader(mod, true), `This is a package synopsis`),
+			want: append(modHeader(mod, true), `This is a package synopsis`),
 		},
 		{
-			"module@version readme tab",
-			fmt.Sprintf("/mod/%s@%s?tab=overview", sample.ModulePath, sample.VersionString),
-			http.StatusOK,
-			append(modHeader(mod, false), `readme`),
+			name:           "module@version readme tab",
+			urlPath:        fmt.Sprintf("/mod/%s@%s?tab=overview", sample.ModulePath, sample.VersionString),
+			wantStatusCode: http.StatusOK,
+			want:           append(modHeader(mod, false), `readme`),
 		},
 		{
-			"module@version packages tab",
-			fmt.Sprintf("/mod/%s@%s?tab=packages", sample.ModulePath, sample.VersionString),
-			http.StatusOK,
-			append(modHeader(mod, false), `This is a package synopsis`),
+			name:           "module@version packages tab",
+			urlPath:        fmt.Sprintf("/mod/%s@%s?tab=packages", sample.ModulePath, sample.VersionString),
+			wantStatusCode: http.StatusOK,
+			want:           append(modHeader(mod, false), `This is a package synopsis`),
 		},
 		{
-			"module@version versions tab",
-			fmt.Sprintf("/mod/%s@%s?tab=versions", sample.ModulePath, sample.VersionString),
-			http.StatusOK,
-			append(
+			name:           "module@version versions tab",
+			urlPath:        fmt.Sprintf("/mod/%s@%s?tab=versions", sample.ModulePath, sample.VersionString),
+			wantStatusCode: http.StatusOK,
+			want: append(
 				modHeader(mod, false),
 				`Versions`,
 				`v1`,
@@ -497,10 +513,10 @@ func TestServer(t *testing.T) {
 			),
 		},
 		{
-			"module@version licenses tab",
-			fmt.Sprintf("/mod/%s@%s?tab=licenses", sample.ModulePath, sample.VersionString),
-			http.StatusOK,
-			append(
+			name:           "module@version licenses tab",
+			urlPath:        fmt.Sprintf("/mod/%s@%s?tab=licenses", sample.ModulePath, sample.VersionString),
+			wantStatusCode: http.StatusOK,
+			want: append(
 				modHeader(mod, false),
 				`<div id="#LICENSE">MIT</div>`,
 				`This is not legal advice`,
@@ -509,49 +525,51 @@ func TestServer(t *testing.T) {
 			),
 		},
 		{
-			"cmd go package page",
-			"/cmd/go?tab=doc",
-			http.StatusOK,
-			pkgHeader(cmdGo, true),
+			name:           "cmd go package page",
+			urlPath:        "/cmd/go?tab=doc",
+			wantStatusCode: http.StatusOK,
+			want:           pkgHeader(cmdGo, true),
 		},
 		{
-			"cmd go package page at version",
-			"/cmd/go@go1.13?tab=doc",
-			http.StatusOK,
-			pkgHeader(cmdGo, false),
+			name:           "cmd go package page at version",
+			urlPath:        "/cmd/go@go1.13?tab=doc",
+			wantStatusCode: http.StatusOK,
+			want:           pkgHeader(cmdGo, false),
 		},
 		{
-			"standard library module page",
-			"/std",
-			http.StatusOK,
-			modHeader(std, true),
+			name:           "standard library module page",
+			urlPath:        "/std",
+			wantStatusCode: http.StatusOK,
+			want:           modHeader(std, true),
 		},
 		{
-			"standard library module page at version",
-			"/std@go1.13",
-			http.StatusOK,
-			modHeader(std, false),
+			name:           "standard library module page at version",
+			urlPath:        "/std@go1.13",
+			wantStatusCode: http.StatusOK,
+			want:           modHeader(std, false),
 		},
 		{
-			"latest version for the standard library",
-			"/latest-version/std",
-			http.StatusOK,
-			[]string{`"go1.13"`},
+			name:           "latest version for the standard library",
+			urlPath:        "/latest-version/std",
+			wantStatusCode: http.StatusOK,
+			want:           []string{`"go1.13"`},
 		},
 		{
-			"latest version for module",
-			"/latest-version/" + sample.ModulePath,
-			http.StatusOK,
-			[]string{`"v1.0.0"`},
+			name:           "latest version for module",
+			urlPath:        "/latest-version/" + sample.ModulePath,
+			wantStatusCode: http.StatusOK,
+			want:           []string{`"v1.0.0"`},
 		},
 		{
-			"latest version for package",
-			fmt.Sprintf("/latest-version/%s?pkg=%s", sample.ModulePath, pkg2.Path),
-			http.StatusOK,
-			[]string{`"v1.0.0"`},
+			name:           "latest version for package",
+			urlPath:        fmt.Sprintf("/latest-version/%s?pkg=%s", sample.ModulePath, pkg2.Path),
+			wantStatusCode: http.StatusOK,
+			want:           []string{`"v1.0.0"`},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) { // remove initial '/' for name
+			defer func(orig bool) { doDocumentationHack = orig }(doDocumentationHack)
+			doDocumentationHack = tc.doDocumentationHack
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, httptest.NewRequest("GET", tc.urlPath, nil))
 			res := w.Result()
