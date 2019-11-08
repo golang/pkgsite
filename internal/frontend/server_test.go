@@ -235,7 +235,7 @@ func TestServer(t *testing.T) {
 		},
 		{
 			"package default",
-			fmt.Sprintf("/%s", sample.PackagePath),
+			fmt.Sprintf("/%s?tab=doc", sample.PackagePath),
 			http.StatusOK,
 			append(
 				pkgHeader(pkgV100, true),
@@ -243,15 +243,21 @@ func TestServer(t *testing.T) {
 			),
 		},
 		{
+			"package default redirect",
+			fmt.Sprintf("/%s", sample.PackagePath),
+			http.StatusFound,
+			[]string{},
+		},
+		{
 			"package default nonredistributable",
 			// For a non-redistributable package, the "latest" route goes to the modules tab.
-			fmt.Sprintf("/%s", nonRedistPkgPath),
+			fmt.Sprintf("/%s?tab=overview", nonRedistPkgPath),
 			http.StatusOK,
 			pkgHeader(pkgNonRedist, true),
 		},
 		{
 			"package@version default",
-			fmt.Sprintf("/%s@%s/%s", sample.ModulePath, sample.VersionString, pkgSuffix),
+			fmt.Sprintf("/%s@%s/%s?tab=doc", sample.ModulePath, sample.VersionString, pkgSuffix),
 			http.StatusOK,
 			append(
 				pkgHeader(pkgV100, false),
@@ -261,7 +267,7 @@ func TestServer(t *testing.T) {
 		{
 			"package@version default specific version nonredistributable",
 			// For a non-redistributable package, the name@version route goes to the modules tab.
-			fmt.Sprintf("/%s@%s/%s", nonRedistModulePath, sample.VersionString, nonRedistPkgSuffix),
+			fmt.Sprintf("/%s@%s/%s?tab=overview", nonRedistModulePath, sample.VersionString, nonRedistPkgSuffix),
 			http.StatusOK,
 			pkgHeader(pkgNonRedist, false),
 		},
@@ -504,13 +510,13 @@ func TestServer(t *testing.T) {
 		},
 		{
 			"cmd go package page",
-			"/cmd/go",
+			"/cmd/go?tab=doc",
 			http.StatusOK,
 			pkgHeader(cmdGo, true),
 		},
 		{
 			"cmd go package page at version",
-			"/cmd/go@go1.13",
+			"/cmd/go@go1.13?tab=doc",
 			http.StatusOK,
 			pkgHeader(cmdGo, false),
 		},

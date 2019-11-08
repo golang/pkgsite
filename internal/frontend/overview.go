@@ -18,38 +18,45 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/stdlib"
 )
 
 // OverviewDetails contains all of the data that the readme template
 // needs to populate.
 type OverviewDetails struct {
-	ModulePath    string
-	RepositoryURL string
-	PackageURL    string
-	ReadMe        template.HTML
-	ReadMeSource  string
+	ModulePath      string
+	RepositoryURL   string
+	PackageURL      string
+	ReadMe          template.HTML
+	ReadMeSource    string
+	Redistributable bool
 }
 
 // fetchOverviewDetails fetches data for the given module path and version
 // from the database and returns an OverviewDetails.
-func fetchOverviewDetails(ctx context.Context, ds DataSource, vi *internal.VersionInfo) (_ *OverviewDetails, err error) {
-	return &OverviewDetails{
-		ModulePath:    vi.ModulePath,
-		RepositoryURL: vi.SourceInfo.RepoURL(),
-		ReadMeSource:  fileSource(vi.ModulePath, vi.Version, vi.ReadmeFilePath),
-		ReadMe:        readmeHTML(vi),
-	}, nil
+func fetchOverviewDetails(ctx context.Context, ds DataSource,
+	vi *internal.VersionInfo, licmetas []*license.Metadata) *OverviewDetails {
+	overview := &OverviewDetails{
+		ModulePath:      vi.ModulePath,
+		RepositoryURL:   vi.SourceInfo.RepoURL(),
+		Redistributable: license.AreRedistributable(licmetas),
+	}
+	if overview.Redistributable {
+		overview.ReadMeSource = fileSource(vi.ModulePath, vi.Version, vi.ReadmeFilePath)
+		overview.ReadMe = readmeHTML(vi)
+	}
+	return overview
 }
 
 // fetchPackageOverviewDetails fetches data for the given package from the
 // database and returns an OverviewDetails.
 func fetchPackageOverviewDetails(ctx context.Context, ds DataSource, pkg *internal.VersionedPackage) (*OverviewDetails, error) {
-	od, err := fetchOverviewDetails(ctx, ds, &pkg.VersionInfo)
-	if err != nil {
-		return nil, err
-	}
+	od := fetchOverviewDetails(ctx, ds, &pkg.VersionInfo, pkg.Licenses)
 	od.PackageURL = pkg.SourceInfo.DirectoryURL(packageSubdir(pkg.Path, pkg.ModulePath))
+	if !pkg.IsRedistributable() {
+		od.Redistributable = false
+	}
 	return od, nil
 }
 

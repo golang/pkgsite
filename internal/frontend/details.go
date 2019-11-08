@@ -117,12 +117,14 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 	tab := r.FormValue("tab")
 	settings, ok := packageTabLookup[tab]
 	if !ok {
+		var tab string
 		if pkg.IsRedistributable() {
 			tab = "doc"
 		} else {
-			tab = "subdirectories"
+			tab = "overview"
 		}
-		settings = packageTabLookup[tab]
+		http.Redirect(w, r, fmt.Sprintf(r.URL.Path+"?tab=%s", tab), http.StatusFound)
+		return
 	}
 	canShowDetails := pkg.IsRedistributable() || settings.AlwaysShowDetails
 
@@ -177,17 +179,18 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 		return
 	}
 
+	modHeader, err := createModule(moduleVersion, license.ToMetadatas(licenses), version == internal.LatestVersion)
+	if err != nil {
+		log.Errorf("error creating module for %s@%s: %v", moduleVersion.ModulePath, moduleVersion.Version, err)
+		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
 	tab := r.FormValue("tab")
 	settings, ok := moduleTabLookup[tab]
 	if !ok {
 		tab = "overview"
 		settings = moduleTabLookup["overview"]
-	}
-
-	modHeader, err := createModule(moduleVersion, license.ToMetadatas(licenses), version == internal.LatestVersion)
-	if err != nil {
-		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
-		return
 	}
 	canShowDetails := modHeader.IsRedistributable || settings.AlwaysShowDetails
 	var details interface{}

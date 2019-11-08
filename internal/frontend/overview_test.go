@@ -30,10 +30,11 @@ func TestFetchOverviewDetails(t *testing.T) {
 		name:    "want expected overview details",
 		version: sample.Version(),
 		wantDetails: &OverviewDetails{
-			ModulePath:    sample.ModulePath,
-			RepositoryURL: sample.RepositoryURL,
-			ReadMe:        template.HTML("<p>readme</p>\n"),
-			ReadMeSource:  "github.com/valid_module_name@v1.0.0/README.md",
+			ModulePath:      sample.ModulePath,
+			RepositoryURL:   sample.RepositoryURL,
+			ReadMe:          template.HTML("<p>readme</p>\n"),
+			ReadMeSource:    "github.com/valid_module_name@v1.0.0/README.md",
+			Redistributable: true,
 		},
 	}
 
@@ -43,12 +44,7 @@ func TestFetchOverviewDetails(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got, err := fetchOverviewDetails(ctx, testDB, &tc.version.VersionInfo)
-	if err != nil {
-		t.Fatalf("fetchOverviewDetails(ctx, db, %q, %q) = %v err = %v, want %v",
-			tc.version.Packages[0].Path, tc.version.Version, got, err, tc.wantDetails)
-	}
-
+	got := fetchOverviewDetails(ctx, testDB, &tc.version.VersionInfo, sample.LicenseMetadata)
 	if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
 		t.Errorf("fetchOverviewDetails(ctx, %q, %q) mismatch (-want +got):\n%s", tc.version.Packages[0].Path, tc.version.Version, diff)
 	}
