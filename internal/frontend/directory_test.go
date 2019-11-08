@@ -137,6 +137,18 @@ func TestFetchDirectoryDetails(t *testing.T) {
 			wantPkgPaths: []string{
 				"archive/tar",
 				"archive/zip",
+				"cmd/go",
+			},
+		},
+		{
+			name:           "cmd",
+			dirPath:        "cmd",
+			modulePath:     stdlib.ModulePath,
+			version:        "v1.13.4",
+			wantModulePath: stdlib.ModulePath,
+			wantVersion:    "v1.13.4",
+			wantPkgPaths: []string{
+				"cmd/go",
 			},
 		},
 	} {

@@ -223,6 +223,7 @@ func InsertSampleDirectoryTree(ctx context.Context, t *testing.T, testDB *DB) {
 			[]string{
 				"archive/zip",
 				"archive/tar",
+				"cmd/go",
 			},
 		},
 		{
@@ -231,6 +232,7 @@ func InsertSampleDirectoryTree(ctx context.Context, t *testing.T, testDB *DB) {
 			[]string{
 				"archive/zip",
 				"archive/tar",
+				"cmd/go",
 			},
 		},
 		{

@@ -112,7 +112,7 @@ func fetchDirectoryDetails(ctx context.Context, ds DataSource, dirPath string, v
 		return nil, xerrors.Errorf("includeDirPath can only be set to true if dirPath = modulePath: %w", derrors.InvalidArgument)
 	}
 
-	if vi.ModulePath == stdlib.ModulePath {
+	if dirPath == stdlib.ModulePath {
 		pkgs, err := ds.GetPackagesInVersion(ctx, stdlib.ModulePath, vi.Version)
 		if err != nil {
 			return nil, err
