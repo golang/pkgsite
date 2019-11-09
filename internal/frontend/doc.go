@@ -55,7 +55,7 @@ func fetchDocumentationDetails(ctx context.Context, ds DataSource, pkg *internal
 // The packageLinkRegexp mutates these links as follows:
 //   - remove the now unnecessary '/pkg' path prefix
 //   - add an explicit ?tab=doc after the path.
-var packageLinkRegexp = regexp.MustCompile(`(<a href="/)pkg/([^?#"]+)((?:#[^"]*)?">.*</a>)`)
+var packageLinkRegexp = regexp.MustCompile(`(<a href="/)pkg/([^?#"]+)((?:#[^"]*)?">.*?</a>)`)
 
 func hackUpDocumentation(docBytes []byte) []byte {
 	return packageLinkRegexp.ReplaceAll(docBytes, []byte(`$1$2?tab=doc$3`))
