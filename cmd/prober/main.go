@@ -357,8 +357,8 @@ func runProbe(p *Probe) *ProbeStatus {
 		record("FAILED read body")
 		return status
 	}
-	if !bytes.Contains(body, []byte("Go Discovery")) {
-		status.Text = "FAILED: body does not contain 'Go Discovery'"
+	if !bytes.Contains(body, []byte("go.dev")) {
+		status.Text = "FAILED: body does not contain 'go.dev'"
 		record("FAILED wrong body")
 		return status
 	}
