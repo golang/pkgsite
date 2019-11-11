@@ -11,6 +11,7 @@ require (
 	contrib.go.opencensus.io/integrations/ocsql v0.1.4
 	github.com/GoogleCloudPlatform/cloudsql-proxy v0.0.0-20190828224159-d93c53a4824c
 	github.com/alicebob/miniredis/v2 v2.10.1
+	github.com/andybalholm/cascadia v1.1.0
 	github.com/bmizerany/perks v0.0.0-20141205001514-d9a9656a3a4b // indirect
 	github.com/dgryski/go-gk v0.0.0-20140819190930-201884a44051 // indirect
 	github.com/ghodss/yaml v1.0.0
