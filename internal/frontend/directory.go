@@ -169,24 +169,14 @@ func createDirectory(dbDir *internal.Directory, licmetas []*license.Metadata, in
 		packages = append(packages, newPkg)
 	}
 
-	mod, err := createModule(&dbDir.VersionInfo, licmetas, false)
-	if err != nil {
-		return nil, err
-	}
+	mod := createModule(&dbDir.VersionInfo, licmetas, false)
 	sort.Slice(packages, func(i, j int) bool { return packages[i].Path < packages[j].Path })
 
-	formattedVersion := dbDir.Version
-	if dbDir.ModulePath == stdlib.ModulePath {
-		formattedVersion, err = stdlib.TagForVersion(dbDir.Version)
-		if err != nil {
-			return nil, err
-		}
-	}
 	return &Directory{
 		Module:   *mod,
 		Path:     dbDir.Path,
 		Packages: packages,
-		URL:      constructDirectoryURL(dbDir.Path, dbDir.ModulePath, formattedVersion),
+		URL:      constructDirectoryURL(dbDir.Path, dbDir.ModulePath, formattedVersion(dbDir.Version, dbDir.ModulePath)),
 	}, nil
 }
 

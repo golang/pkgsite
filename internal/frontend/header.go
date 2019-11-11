@@ -64,10 +64,7 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo, latestReques
 		}
 	}
 
-	m, err := createModule(vi, modLicenses, latestRequested)
-	if err != nil {
-		return nil, err
-	}
+	m := createModule(vi, modLicenses, latestRequested)
 	urlVersion := m.Version
 	if latestRequested {
 		urlVersion = internal.LatestVersion
@@ -89,28 +86,19 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo, latestReques
 // latestRequested indicates whether the user requested the latest
 // version of the package. If so, the returned Package.URL will have the
 // structure /<path> instead of /<path>@<version>.
-func createModule(vi *internal.VersionInfo, licmetas []*license.Metadata, latestRequested bool) (_ *Module, err error) {
-	defer derrors.Wrap(&err, "createModule(%v, %v)", vi, licmetas)
-
-	formattedVersion := vi.Version
-	if vi.ModulePath == stdlib.ModulePath {
-		formattedVersion, err = stdlib.TagForVersion(vi.Version)
-		if err != nil {
-			return nil, err
-		}
-	}
-	urlVersion := formattedVersion
+func createModule(vi *internal.VersionInfo, licmetas []*license.Metadata, latestRequested bool) *Module {
+	urlVersion := formattedVersion(vi.Version, vi.ModulePath)
 	if latestRequested {
 		urlVersion = internal.LatestVersion
 	}
 	return &Module{
-		Version:           formattedVersion,
+		Version:           formattedVersion(vi.Version, vi.ModulePath),
 		Path:              vi.ModulePath,
 		CommitTime:        elapsedTime(vi.CommitTime),
 		IsRedistributable: license.AreRedistributable(licmetas),
 		Licenses:          transformLicenseMetadata(licmetas),
 		URL:               constructModuleURL(vi.ModulePath, urlVersion),
-	}, nil
+	}
 }
 
 func constructModuleURL(modulePath, linkableVersion string) string {

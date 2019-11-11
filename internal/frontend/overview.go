@@ -18,7 +18,6 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
 	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/stdlib"
 )
@@ -38,19 +37,10 @@ type OverviewDetails struct {
 // fetchOverviewDetails fetches data for the given module path and version
 // from the database and returns an OverviewDetails.
 func fetchOverviewDetails(ctx context.Context, ds DataSource,
-	vi *internal.VersionInfo, licmetas []*license.Metadata) (_ *OverviewDetails, err error) {
-	defer derrors.Wrap(&err, "s.ds.fetchOverviewDetails(%q,  %q, %v)", vi.ModulePath, vi.Version, licmetas)
-
-	formattedVersion := vi.Version
-	if vi.ModulePath == stdlib.ModulePath {
-		formattedVersion, err = stdlib.TagForVersion(vi.Version)
-		if err != nil {
-			return nil, err
-		}
-	}
+	vi *internal.VersionInfo, licmetas []*license.Metadata) *OverviewDetails {
 	overview := &OverviewDetails{
 		ModulePath:      vi.ModulePath,
-		ModuleURL:       constructModuleURL(vi.ModulePath, formattedVersion),
+		ModuleURL:       constructModuleURL(vi.ModulePath, formattedVersion(vi.Version, vi.ModulePath)),
 		RepositoryURL:   vi.SourceInfo.RepoURL(),
 		Redistributable: license.AreRedistributable(licmetas),
 	}
@@ -58,23 +48,18 @@ func fetchOverviewDetails(ctx context.Context, ds DataSource,
 		overview.ReadMeSource = fileSource(vi.ModulePath, vi.Version, vi.ReadmeFilePath)
 		overview.ReadMe = readmeHTML(vi)
 	}
-	return overview, nil
+	return overview
 }
 
 // fetchPackageOverviewDetails fetches data for the given package from the
 // database and returns an OverviewDetails.
-func fetchPackageOverviewDetails(ctx context.Context, ds DataSource, pkg *internal.VersionedPackage) (_ *OverviewDetails, err error) {
-	defer derrors.Wrap(&err, "s.ds.fetchPackageOverviewDetails(%q,  %q)", pkg.Path, pkg.Version)
-
-	od, err := fetchOverviewDetails(ctx, ds, &pkg.VersionInfo, pkg.Licenses)
-	if err != nil {
-		return nil, err
-	}
+func fetchPackageOverviewDetails(ctx context.Context, ds DataSource, pkg *internal.VersionedPackage) *OverviewDetails {
+	od := fetchOverviewDetails(ctx, ds, &pkg.VersionInfo, pkg.Licenses)
 	od.PackageSourceURL = pkg.SourceInfo.DirectoryURL(packageSubdir(pkg.Path, pkg.ModulePath))
 	if !pkg.IsRedistributable() {
 		od.Redistributable = false
 	}
-	return od, nil
+	return od
 }
 
 // packageSubdir returns the subdirectory of the package relative to its module.

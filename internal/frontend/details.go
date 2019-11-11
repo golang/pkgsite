@@ -172,13 +172,7 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 		return
 	}
 
-	modHeader, err := createModule(moduleVersion, license.ToMetadatas(licenses), version == internal.LatestVersion)
-	if err != nil {
-		log.Errorf("error creating module for %s@%s: %v", moduleVersion.ModulePath, moduleVersion.Version, err)
-		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
-		return
-	}
-
+	modHeader := createModule(moduleVersion, license.ToMetadatas(licenses), version == internal.LatestVersion)
 	tab := r.FormValue("tab")
 	settings, ok := moduleTabLookup[tab]
 	if !ok {

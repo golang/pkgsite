@@ -154,7 +154,7 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds
 	case "licenses":
 		return fetchPackageLicensesDetails(ctx, ds, pkg)
 	case "overview":
-		return fetchPackageOverviewDetails(ctx, ds, pkg)
+		return fetchPackageOverviewDetails(ctx, ds, pkg), nil
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
@@ -171,7 +171,7 @@ func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds 
 		return fetchModuleVersionsDetails(ctx, ds, vi)
 	case "overview":
 		// TODO(b/138448402): implement remaining module views.
-		return fetchOverviewDetails(ctx, ds, vi, license.ToMetadatas(licenses))
+		return fetchOverviewDetails(ctx, ds, vi, license.ToMetadatas(licenses)), nil
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
@@ -181,7 +181,7 @@ func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds 
 func fetchDetailsForDirectory(ctx context.Context, r *http.Request, tab string, ds DataSource, dir *internal.Directory, licenses []*license.License) (interface{}, error) {
 	switch tab {
 	case "overview":
-		return fetchOverviewDetails(ctx, ds, &dir.VersionInfo, license.ToMetadatas(licenses))
+		return fetchOverviewDetails(ctx, ds, &dir.VersionInfo, license.ToMetadatas(licenses)), nil
 	case "subdirectories":
 		// Ideally we would just use fetchDirectoryDetails here so that it
 		// follows the same code path as fetchDetailsForModule and

@@ -45,10 +45,7 @@ func TestFetchOverviewDetails(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got, err := fetchOverviewDetails(ctx, testDB, &tc.version.VersionInfo, sample.LicenseMetadata)
-	if err != nil {
-		t.Fatal(err)
-	}
+	got := fetchOverviewDetails(ctx, testDB, &tc.version.VersionInfo, sample.LicenseMetadata)
 	if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
 		t.Errorf("fetchOverviewDetails(ctx, %q, %q) mismatch (-want +got):\n%s", tc.version.Packages[0].Path, tc.version.Version, diff)
 	}

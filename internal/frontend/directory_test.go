@@ -48,23 +48,12 @@ func TestFetchDirectoryDetails(t *testing.T) {
 			wantPkgs = append(wantPkgs, pkg)
 		}
 
-		mod, err := createModule(vi, sample.LicenseMetadata, false)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		formattedVersion := vi.Version
-		if vi.ModulePath == stdlib.ModulePath {
-			formattedVersion, err = stdlib.TagForVersion(vi.Version)
-			if err != nil {
-				t.Fatal(err)
-			}
-		}
+		mod := createModule(vi, sample.LicenseMetadata, false)
 		want := &Directory{
 			Module:   *mod,
 			Path:     dirPath,
 			Packages: wantPkgs,
-			URL:      constructDirectoryURL(dirPath, vi.ModulePath, formattedVersion),
+			URL:      constructDirectoryURL(dirPath, vi.ModulePath, formattedVersion(vi.Version, vi.ModulePath)),
 		}
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("fetchDirectoryDetails(ctx, %q, %q, %q) mismatch (-want +got):\n%s", dirPath, modulePath, version, diff)
