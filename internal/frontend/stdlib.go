@@ -28,6 +28,13 @@ func (s *Server) handleStdLib(w http.ResponseWriter, r *http.Request) {
 		s.serveModulePage(w, r, stdlib.ModulePath, version)
 		return
 	}
+
+	// Package "C" is a special case: redirect to the Go Blog article on cgo.
+	// (This is what godoc.org does.)
+	if path == "C" {
+		http.Redirect(w, r, "https://golang.org/doc/articles/c_go_cgo.html", http.StatusMovedPermanently)
+		return
+	}
 	s.servePackagePage(w, r, path, stdlib.ModulePath, version)
 }
 
