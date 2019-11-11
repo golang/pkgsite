@@ -9,10 +9,10 @@
     <div class="Overview-module">
       {{if eq .ModulePath "std"}}
         <h2>Standard Library</h2>
-        <a href="/std">Standard Library</a>
+        <a href="{{.ModuleURL}}">Standard Library</a>
       {{else}}
         <h2>Module</h2>
-        <a href="/mod/{{.ModulePath}}">{{.ModulePath}}</a>
+        <a href="{{.ModuleURL}}">{{.ModulePath}}</a>
       {{end}}
     </div>
     <div class="Overview-sourceCode">
@@ -23,8 +23,8 @@
         {{else}}
           Source code link not available.
         {{end}}
-        {{if .PackageURL}}
-          Package: <a href="{{.PackageURL}}" target="_blank">{{.PackageURL}}</a>
+        {{if .PackageSourceURL}}
+          Package: <a href="{{.PackageSourceURL}}" target="_blank">{{.PackageSourceURL}}</a>
         {{end}}
       </p>
     </div>
