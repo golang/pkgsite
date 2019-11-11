@@ -145,10 +145,10 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/mod/", modHandler)
 	handle("/pkg/", http.HandlerFunc(s.handlePackageDetailsRedirect))
 	handle("/search", searchHandler)
-	handle("/search-help", s.staticPageHandler("search_help.tmpl", "Search Help - Go Discovery"))
+	handle("/search-help", s.staticPageHandler("search_help.tmpl", "Search Help - go.dev"))
 	handle("/license-policy", s.licensePolicyHandler())
-	handle("/copyright", s.staticPageHandler("copyright.tmpl", "Copyright - Go Discovery"))
-	handle("/tos", s.staticPageHandler("tos.tmpl", "Terms of Service - Go Discovery"))
+	handle("/copyright", s.staticPageHandler("copyright.tmpl", "Copyright - go.dev"))
+	handle("/tos", s.staticPageHandler("tos.tmpl", "Terms of Service - go.dev"))
 	handle("/", detailHandler)
 	handle("/latest-version/", latestVersionHandler)
 	handle("/robots.txt", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -252,7 +252,7 @@ func (s *Server) licensePolicyHandler() http.HandlerFunc {
 	fileNames := license.FileNames()
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		page := licensePolicyPage{
-			basePage:         newBasePage(r, "Licenses - Go Discovery"),
+			basePage:         newBasePage(r, "Licenses - go.dev"),
 			LicenseFileNames: fileNames,
 		}
 		s.servePage(w, "license_policy.tmpl", page)
