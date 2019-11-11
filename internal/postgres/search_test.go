@@ -198,25 +198,25 @@ func TestFastSearch(t *testing.T) {
 		},
 		{
 			label:       "both popular and unpopular results",
-			versions:    importGraph("foo.com/popular", "foo.com", 10),
+			versions:    importGraph("foo.com/popular", "bar.com/foo", 10),
 			resultOrder: [4]string{"popular", "estimate", "deep"},
 			wantSource:  "popular",
-			wantResults: []string{"foo.com/popular", "foo.com/importer0"},
-			wantTotal:   12, // HLL result count (actual count is 11)
+			wantResults: []string{"foo.com/popular", "bar.com/foo/importer0"},
+			wantTotal:   11, // HLL result count (happens to be right in this case)
 		},
 		{
 			label: "popular results, estimate before deep",
 			versions: append(importGraph("foo.com/popularA", "bar.com", 60),
-				importGraph("foo.com/popularB", "foo.com", 70)...),
+				importGraph("foo.com/popularB", "baz.com/foo", 70)...),
 			resultOrder: [4]string{"popular", "estimate", "deep"},
 			wantSource:  "popular",
 			wantResults: []string{"foo.com/popularB", "foo.com/popularA"},
-			wantTotal:   67, // HLL result count (actual count is 72)
+			wantTotal:   76, // HLL result count (actual count is 72)
 		},
 		{
 			label: "popular results, deep before estimate",
-			versions: append(importGraph("foo.com/popularA", "foo.com", 60),
-				importGraph("foo.com/popularB", "foo.com", 70)...),
+			versions: append(importGraph("foo.com/popularA", "bar.com/foo", 60),
+				importGraph("foo.com/popularB", "bar.com/foo", 70)...),
 			resultOrder: [4]string{"popular", "deep", "estimate"},
 			wantSource:  "deep",
 			wantResults: []string{"foo.com/popularB", "foo.com/popularA"},

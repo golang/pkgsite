@@ -12,6 +12,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/sample"
+	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/version"
 )
 
@@ -38,7 +39,7 @@ func versionSummaries(path string, versions [][]string, linkify func(path, versi
 		vs[i] = make([]*VersionSummary, len(pointVersions))
 		for j, version := range pointVersions {
 			var semver, formattedVersion string
-			if inStdLib(path) {
+			if stdlib.Contains(path) {
 				semver = version
 				formattedVersion = version
 			} else {

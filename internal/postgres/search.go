@@ -21,6 +21,7 @@ import (
 	"go.opencensus.io/tag"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/log"
+	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/xerrors"
 )
 
@@ -829,15 +830,29 @@ func (db *DB) computeImportedByCounts(ctx context.Context) (counts map[string]in
 
 	counts = map[string]int{}
 	// Get all (from_path, to_path) pairs, deduped.
-	rows, err := db.query(ctx, `SELECT from_path, to_path FROM imports_unique GROUP BY from_path, to_path`)
+	// Also get the from_path's module path.
+	rows, err := db.query(ctx, `
+		SELECT
+			from_path, from_module_path, to_path
+		FROM
+			imports_unique
+		GROUP BY
+			from_path, from_module_path, to_path;
+	`)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var from, to string
-		if err := rows.Scan(&from, &to); err != nil {
+		var from, fromMod, to string
+		if err := rows.Scan(&from, &fromMod, &to); err != nil {
 			return nil, err
+		}
+		// Don't count an importer if it's in the same module as what it's importing.
+		// Approximate that check by seeing if from_module_path is a prefix of to_path.
+		// (In some cases, e.g. when to_path is in a nested module, that is not correct.)
+		if (fromMod == stdlib.ModulePath && stdlib.Contains(to)) || strings.HasPrefix(to+"/", fromMod+"/") {
+			continue
 		}
 		counts[to]++
 	}

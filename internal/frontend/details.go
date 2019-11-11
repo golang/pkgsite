@@ -39,7 +39,7 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	parts := strings.SplitN(strings.TrimPrefix(r.URL.Path, "/"), "@", 2)
-	if inStdLib(parts[0]) {
+	if stdlib.Contains(parts[0]) {
 		s.handleStdLib(w, r)
 		return
 	}
@@ -319,7 +319,7 @@ func parseDetailsURLPath(urlPath string) (pkgPath, modulePath, version string, e
 	if err := module.CheckImportPath(pkgPath); err != nil {
 		return "", "", "", fmt.Errorf("malformed path %q: %v", pkgPath, err)
 	}
-	if inStdLib(pkgPath) {
+	if stdlib.Contains(pkgPath) {
 		modulePath = stdlib.ModulePath
 	}
 	return pkgPath, modulePath, version, nil

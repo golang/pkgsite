@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/stdlib"
 )
 
 // ImportsDetails contains information for a package's imports.
@@ -38,7 +39,7 @@ func fetchImportsDetails(ctx context.Context, ds DataSource, pkg *internal.Versi
 
 	var externalImports, moduleImports, std []string
 	for _, p := range dsImports {
-		if inStdLib(p) {
+		if stdlib.Contains(p) {
 			std = append(std, p)
 		} else if strings.HasPrefix(p+"/", pkg.VersionInfo.ModulePath+"/") {
 			moduleImports = append(moduleImports, p)

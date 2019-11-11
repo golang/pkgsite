@@ -189,3 +189,21 @@ func TestVersionForTag(t *testing.T) {
 		}
 	}
 }
+
+func TestContains(t *testing.T) {
+	for _, test := range []struct {
+		in   string
+		want bool
+	}{
+		{"fmt", true},
+		{"encoding/json", true},
+		{"something/with.dots", true},
+		{"example.com", false},
+		{"example.com/fmt", false},
+	} {
+		got := Contains(test.in)
+		if got != test.want {
+			t.Errorf("Contains(%q) = %t, want %t", test.in, got, test.want)
+		}
+	}
+}

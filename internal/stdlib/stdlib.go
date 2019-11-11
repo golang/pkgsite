@@ -357,6 +357,14 @@ func subTree(r *git.Repository, t *object.Tree, name string) (*object.Tree, erro
 	return nil, os.ErrNotExist
 }
 
+// Contains reports whether the given import path is part of the Go standard library.
+func Contains(path string) bool {
+	if i := strings.IndexByte(path, '/'); i != -1 {
+		path = path[:i]
+	}
+	return !strings.Contains(path, ".")
+}
+
 // References used for Versions during testing.
 var testRefs = []plumbing.ReferenceName{
 	"refs/changes/56/93156/13",

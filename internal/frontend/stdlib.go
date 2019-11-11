@@ -58,11 +58,3 @@ func parseStdLibURLPath(urlPath string) (path, version string, err error) {
 	}
 	return path, version, nil
 }
-
-// inStdLib reports whether the package is part of the Go standard library.
-func inStdLib(path string) bool {
-	if i := strings.IndexByte(path, '/'); i != -1 {
-		return !strings.Contains(path[:i], ".")
-	}
-	return !strings.Contains(path, ".")
-}
