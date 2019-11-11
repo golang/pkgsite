@@ -147,8 +147,6 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/search", searchHandler)
 	handle("/search-help", s.staticPageHandler("search_help.tmpl", "Search Help - go.dev"))
 	handle("/license-policy", s.licensePolicyHandler())
-	handle("/copyright", s.staticPageHandler("copyright.tmpl", "Copyright - go.dev"))
-	handle("/tos", s.staticPageHandler("tos.tmpl", "Terms of Service - go.dev"))
 	handle("/", detailHandler)
 	handle("/latest-version/", latestVersionHandler)
 	handle("/robots.txt", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -394,9 +392,7 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 		{"error.tmpl"},
 		{"search.tmpl"},
 		{"search_help.tmpl"},
-		{"copyright.tmpl"},
 		{"license_policy.tmpl"},
-		{"tos.tmpl"},
 		{"directory.tmpl"},
 		{"overview.tmpl", "details.tmpl"},
 		{"subdirectories.tmpl", "details.tmpl"},
