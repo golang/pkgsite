@@ -152,6 +152,16 @@ const orderByLatest = `
 // directory when no module path is provided.
 func directoryQueryWithoutModulePath(dirPath, version string) (string, []interface{}) {
 	if version == internal.LatestVersion {
+		// internal packages are filtered out from the search_documents table.
+		// However, for other packages, fetching from search_documents is
+		// significantly faster than fetching from packages.
+		var table string
+		if !isInternalPackage(dirPath) {
+			table = "search_documents"
+		} else {
+			table = "packages"
+		}
+
 		// Only dirPath is specified, so get the latest version of the
 		// package found in any module that contains that directory.
 		//
@@ -171,7 +181,7 @@ func directoryQueryWithoutModulePath(dirPath, version string) (string, []interfa
 				WHERE
 					(module_path, version) IN (
 						SELECT module_path, version
-						FROM search_documents
+						FROM %s
 						WHERE tsv_parent_directories @@ $1::tsquery
 						GROUP BY 1, 2
 					)
@@ -181,7 +191,7 @@ func directoryQueryWithoutModulePath(dirPath, version string) (string, []interfa
 			ON
 				p.module_path = v.module_path
 				AND p.version = v.version
-			WHERE tsv_parent_directories @@ $1::tsquery;`, directoryColumns, orderByLatest), []interface{}{dirPath}
+			WHERE tsv_parent_directories @@ $1::tsquery;`, directoryColumns, table, orderByLatest), []interface{}{dirPath}
 	}
 
 	// dirPath and version are specified, so get that directory version

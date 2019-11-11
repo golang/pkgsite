@@ -138,6 +138,9 @@ func TestFetchDirectoryDetails(t *testing.T) {
 				"archive/tar",
 				"archive/zip",
 				"cmd/go",
+				"cmd/internal/obj",
+				"cmd/internal/obj/arm",
+				"cmd/internal/obj/arm64",
 			},
 		},
 		{
@@ -149,6 +152,9 @@ func TestFetchDirectoryDetails(t *testing.T) {
 			wantVersion:    "v1.13.4",
 			wantPkgPaths: []string{
 				"cmd/go",
+				"cmd/internal/obj",
+				"cmd/internal/obj/arm",
+				"cmd/internal/obj/arm64",
 			},
 		},
 	} {

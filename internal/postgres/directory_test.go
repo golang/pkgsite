@@ -96,6 +96,7 @@ func TestGetDirectory(t *testing.T) {
 			wantVersion:    "v1.2.3",
 			wantModulePath: "github.com/hashicorp/vault",
 			wantPkgPaths: []string{
+				"github.com/hashicorp/vault/internal/foo",
 				"github.com/hashicorp/vault/builtin/audit/file",
 				"github.com/hashicorp/vault/builtin/audit/socket",
 				"github.com/hashicorp/vault/vault/replication",
@@ -175,6 +176,17 @@ func TestGetDirectory(t *testing.T) {
 			},
 		},
 		{
+			name:           "latest version of internal directory in github.com/hashicorp/vault",
+			dirPath:        "github.com/hashicorp/vault/internal",
+			modulePath:     internal.UnknownModulePath,
+			version:        internal.LatestVersion,
+			wantModulePath: "github.com/hashicorp/vault",
+			wantVersion:    "v1.2.3",
+			wantPkgPaths: []string{
+				"github.com/hashicorp/vault/internal/foo",
+			},
+		},
+		{
 			name:            "invalid directory, incomplete last element",
 			dirPath:         "github.com/hashicorp/vault/builti",
 			modulePath:      internal.UnknownModulePath,
@@ -210,6 +222,32 @@ func TestGetDirectory(t *testing.T) {
 			modulePath:      stdlib.ModulePath,
 			version:         internal.LatestVersion,
 			wantNotFoundErr: true,
+		},
+		{
+			name:           "stdlib - internal directory",
+			dirPath:        "cmd/internal",
+			modulePath:     stdlib.ModulePath,
+			version:        internal.LatestVersion,
+			wantModulePath: stdlib.ModulePath,
+			wantVersion:    "v1.13.4",
+			wantPkgPaths: []string{
+				"cmd/internal/obj",
+				"cmd/internal/obj/arm",
+				"cmd/internal/obj/arm64",
+			},
+		},
+		{
+			name:           "stdlib - directory nested within an internal directory",
+			dirPath:        "cmd/internal/obj",
+			modulePath:     stdlib.ModulePath,
+			version:        internal.LatestVersion,
+			wantModulePath: stdlib.ModulePath,
+			wantVersion:    "v1.13.4",
+			wantPkgPaths: []string{
+				"cmd/internal/obj",
+				"cmd/internal/obj/arm",
+				"cmd/internal/obj/arm64",
+			},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

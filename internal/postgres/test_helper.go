@@ -224,6 +224,9 @@ func InsertSampleDirectoryTree(ctx context.Context, t *testing.T, testDB *DB) {
 				"archive/zip",
 				"archive/tar",
 				"cmd/go",
+				"cmd/internal/obj",
+				"cmd/internal/obj/arm",
+				"cmd/internal/obj/arm64",
 			},
 		},
 		{
@@ -233,6 +236,9 @@ func InsertSampleDirectoryTree(ctx context.Context, t *testing.T, testDB *DB) {
 				"archive/zip",
 				"archive/tar",
 				"cmd/go",
+				"cmd/internal/obj",
+				"cmd/internal/obj/arm",
+				"cmd/internal/obj/arm64",
 			},
 		},
 		{
@@ -255,6 +261,7 @@ func InsertSampleDirectoryTree(ctx context.Context, t *testing.T, testDB *DB) {
 			"github.com/hashicorp/vault",
 			"v1.2.3",
 			[]string{
+				"github.com/hashicorp/vault/internal/foo",
 				"github.com/hashicorp/vault/builtin/audit/file",
 				"github.com/hashicorp/vault/builtin/audit/socket",
 				"github.com/hashicorp/vault/vault/replication",
