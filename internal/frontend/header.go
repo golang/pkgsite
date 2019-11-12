@@ -207,10 +207,22 @@ func breadcrumbPath(pkgPath, modPath, version string) template.HTML {
 	// Include the path as a breadcrumb, and also a "copy" button for the path.
 	// We need the 'path' input element to copy it to the clipboard.
 	// Setting its type="hidden" doesn't work, so we position it off screen.
+	// Inline the svg for the "copy" icon because when it was in a separate file
+	// referenced by an img tag, it was loaded asynchronously and the page jerked
+	// when it was finally loaded and its height was known.
 	f := `<div class="DetailsHeader-breadcrumb">
 %s
 <button id="DetailsHeader-copyPath" class="ImageButton" aria-label="Copy path to clipboard">
- <img id="DetailsHeader-copyPathIcon" src="/static/img/ic_copy.svg" alt="icon for copy path to clipboard">
+  <svg fill="#00add8" width="13px" height="15px" viewBox="0 0 13 15" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 58 (84663) - https://sketch.com -->
+    <title>Copy path to clipboard</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Symbols" stroke="none" stroke-width="1" fill-rule="evenodd">
+        <g id="go/header-package" transform="translate(-359.000000, -12.000000)">
+            <path d="M367,12 L361,12 C359.896,12 359,12.896 359,14 L359,22 C359,23.104 359.896,24 361,24 L361,22 L361,14 L367,14 L369,14 C369,12.896 368.104,12 367,12 L367,12 Z M370,15 L364,15 C362.896,15 362,15.896 362,17 L362,25 C362,26.104 362.896,27 364,27 L370,27 C371.104,27 372,26.104 372,25 L372,17 C372,15.896 371.104,15 370,15 L370,15 Z M364,25 L370,25 L370,17 L364,17 L364,25 Z" id="ic_copy"></path>
+        </g>
+    </g>
+  </svg>
 </button>
 <input id="DetailsHeader-path" role="presentation" tabindex="-1" value="%s"/>
 </div>`

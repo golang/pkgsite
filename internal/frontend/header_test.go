@@ -10,9 +10,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/andybalholm/cascadia"
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/sample"
+	"golang.org/x/net/html"
 )
 
 func samplePackage(mutators ...func(*Package)) *Package {
@@ -152,45 +154,82 @@ func TestCreatePackageHeader(t *testing.T) {
 	}
 }
 
+// none returns a validator that checks no elements matching selector exist.
+func none(selector string) validator {
+	sel := mustParseSelector(selector)
+	return func(n *html.Node) error {
+		if sel.Match(n) || cascadia.Query(n, sel) != nil {
+			return fmt.Errorf("%q matched one or more elements", selector)
+		}
+		return nil
+	}
+}
+
 func TestBreadcrumbPath(t *testing.T) {
 	for _, test := range []struct {
 		pkgPath, modPath, version string
-		want                      string
+		want                      validator
 	}{
 		{
 			"example.com/blob/s3blob", "example.com", internal.LatestVersion,
-			`<a href="/example.com">example.com</a><span class="DetailsHeader-breadcrumbDivider">/</span><a href="/example.com/blob">blob</a><span class="DetailsHeader-breadcrumbDivider">/</span><span class="DetailsHeader-breadcrumbCurrent">s3blob</span>`,
+			in("",
+				inAt("a", 0, href("/example.com"), text("example.com")),
+				inAt("a", 1, href("/example.com/blob"), text("blob")),
+				in("span.DetailsHeader-breadcrumbCurrent", text("s3blob"))),
 		},
 		{
 			"example.com", "example.com", internal.LatestVersion,
-			`<span class="DetailsHeader-breadcrumbCurrent">example.com</span>`,
+			in("",
+				none("a"),
+				in("span.DetailsHeader-breadcrumbCurrent", text("example.com"))),
 		},
 
 		{
 			"g/x/tools/go/a", "g/x/tools", internal.LatestVersion,
-			`<a href="/g/x/tools">g/x/tools</a><span class="DetailsHeader-breadcrumbDivider">/</span><a href="/g/x/tools/go">go</a><span class="DetailsHeader-breadcrumbDivider">/</span><span class="DetailsHeader-breadcrumbCurrent">a</span>`,
+			in("",
+				inAt("a", 0, href("/g/x/tools"), text("g/x/tools")),
+				inAt("a", 1, href("/g/x/tools/go"), text("go")),
+				in("span.DetailsHeader-breadcrumbCurrent", text("a"))),
 		},
 		{
 			"golang.org/x/tools", "golang.org/x/tools", internal.LatestVersion,
-			`<span class="DetailsHeader-breadcrumbCurrent">golang.org/x/tools</span>`,
+			in("",
+				none("a"),
+				in("span.DetailsHeader-breadcrumbCurrent", text("golang.org/x/tools"))),
 		},
 		{
 			// Special case: stdlib.
 			"encoding/json", "std", internal.LatestVersion,
-			`<a href="/encoding">encoding</a><span class="DetailsHeader-breadcrumbDivider">/</span><span class="DetailsHeader-breadcrumbCurrent">json</span>`,
+			in("",
+				in("a", href("/encoding"), text("encoding")),
+				in("span.DetailsHeader-breadcrumbCurrent", text("json"))),
 		},
 		{
 			"example.com/blob/s3blob", "example.com", "v1",
-			`<a href="/example.com@v1">example.com</a><span class="DetailsHeader-breadcrumbDivider">/</span><a href="/example.com/blob@v1">blob</a><span class="DetailsHeader-breadcrumbDivider">/</span><span class="DetailsHeader-breadcrumbCurrent">s3blob</span>`,
+			in("",
+				inAt("a", 0, href("/example.com@v1"), text("example.com")),
+				inAt("a", 1, href("/example.com/blob@v1"), text("blob")),
+				in("span.DetailsHeader-breadcrumbCurrent", text("s3blob"))),
 		},
 	} {
 		t.Run(fmt.Sprintf("%s-%s-%s", test.pkgPath, test.modPath, test.version), func(t *testing.T) {
-			got := string(breadcrumbPath(test.pkgPath, test.modPath, test.version))
-			got = strings.Replace(got, "\n", "", -1)
-			want := `<div class="DetailsHeader-breadcrumb">` + test.want +
-				fmt.Sprintf(`<button id="DetailsHeader-copyPath" class="ImageButton" aria-label="Copy path to clipboard"> <img id="DetailsHeader-copyPathIcon" src="/static/img/ic_copy.svg" alt="icon for copy path to clipboard"></button><input id="DetailsHeader-path" role="presentation" tabindex="-1" value="%s"/></div>`, test.pkgPath)
-			if got != want {
-				t.Errorf("got:\n%s\n\nwant:\n%s\n", got, want)
+			want := in("div.DetailsHeader-breadcrumb",
+				test.want,
+				in("button#DetailsHeader-copyPath",
+					attr("aria-label", "Copy path to clipboard"),
+					in("svg > title", text("Copy path to clipboard"))),
+				in("input#DetailsHeader-path",
+					attr("role", "presentation"),
+					attr("tabindex", "-1"),
+					attr("value", test.pkgPath)))
+
+			got := breadcrumbPath(test.pkgPath, test.modPath, test.version)
+			doc, err := html.Parse(strings.NewReader(string(got)))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := want(doc); err != nil {
+				t.Error(err)
 			}
 		})
 	}

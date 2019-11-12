@@ -366,6 +366,7 @@ code {
   display: inline-block;
   font-size: 1.875rem;
   margin: 0;
+  height: 2.1875rem;
 }
 .DetailsHeader-version {
   display: inline-block;
@@ -376,6 +377,8 @@ code {
   display: inline-block;
   font-size: 0.75rem;
   padding: 0.25rem 0.75rem;
+  position: relative;
+  top: 0.1875rem;
 }
 .DetailsHeader-latest {
   background: var(--blue);
