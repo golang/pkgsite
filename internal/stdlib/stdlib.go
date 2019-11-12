@@ -50,10 +50,18 @@ var (
 // VersionForTag returns the semantic version for the Go tag, or "" if
 // tag doesn't correspond to a Go release or beta tag.
 // Examples:
+//   "go1" => "v1.0.0"
 //   "go1.2" => "v1.2.0"
 //   "go1.13beta1" => "v1.13.0-beta.1"
 //   "go1.9rc2" => "v1.9.0-rc.2"
 func VersionForTag(tag string) string {
+	// Special cases for go1.
+	if tag == "go1" {
+		return "v1.0.0"
+	}
+	if tag == "go1.0" {
+		return ""
+	}
 	m := tagRegexp.FindStringSubmatch(tag)
 	if m == nil {
 		return ""
@@ -76,6 +84,10 @@ func VersionForTag(tag string) string {
 func TagForVersion(version string) (_ string, err error) {
 	defer derrors.Wrap(&err, "TagForVersion(%q)", version)
 
+	// Special case: v1.0.0 => go1.
+	if version == "v1.0.0" {
+		return "go1", nil
+	}
 	if !semver.IsValid(version) {
 		return "", derrors.FromHTTPStatus(http.StatusBadRequest, "requested version is not a valid semantic version: %q ", version)
 	}
@@ -108,11 +120,14 @@ func TagForVersion(version string) (_ string, err error) {
 // MajorVersionForVersion returns the Go major version for version.
 // E.g. "v1.13.3" => "go1".
 func MajorVersionForVersion(version string) (_ string, err error) {
-	defer derrors.Wrap(&err, "MajorTagForVersion(%q)", version)
+	defer derrors.Wrap(&err, "MajorVersionForVersion(%q)", version)
 
 	tag, err := TagForVersion(version)
 	if err != nil {
 		return "", err
+	}
+	if tag == "go1" {
+		return tag, nil
 	}
 	i := strings.IndexRune(tag, '.')
 	if i < 0 {

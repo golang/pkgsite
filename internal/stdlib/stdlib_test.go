@@ -20,6 +20,11 @@ func TestTagForVersion(t *testing.T) {
 		wantErr bool
 	}{
 		{
+			name:    "std version v1.0.0",
+			version: "v1.0.0",
+			want:    "go1",
+		},
+		{
 			name:    "std version v1.12.5",
 			version: "v1.12.5",
 			want:    "go1.12.5",
@@ -90,6 +95,7 @@ func TestMajorVersionForVersion(t *testing.T) {
 	}{
 		{"", ""},
 		{"garbage", ""},
+		{"v1.0.0", "go1"},
 		{"v1.13.3", "go1"},
 		{"v1.9.0-rc.2", "go1"},
 		{"v2.1.3", "go2"},
@@ -175,17 +181,19 @@ func TestVersionForTag(t *testing.T) {
 		in, want string
 	}{
 		{"", ""},
+		{"go1", "v1.0.0"},
 		{"go1.9beta2", "v1.9.0-beta.2"},
 		{"go1.12", "v1.12.0"},
 		{"go1.9.7", "v1.9.7"},
 		{"go2.0", "v2.0.0"},
 		{"go1.9rc2", "v1.9.0-rc.2"},
 		{"go1.1beta", ""},
+		{"go1.0", ""},
 		{"weekly.2012-02-14", ""},
 	} {
 		got := VersionForTag(tc.in)
 		if got != tc.want {
-			t.Errorf("releaseVersionForTag(%q) = %q, want %q", tc.in, got, tc.want)
+			t.Errorf("VersionForTag(%q) = %q, want %q", tc.in, got, tc.want)
 		}
 	}
 }
