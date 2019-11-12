@@ -1,7 +1,7 @@
 <!--
-	Copyright 2019 The Go Authors. All rights reserved.
-	Use of this source code is governed by a BSD-style
-	license that can be found in the LICENSE file.
+    Copyright 2019 The Go Authors. All rights reserved.
+    Use of this source code is governed by a BSD-style
+    license that can be found in the LICENSE file.
 -->
 
 {{define "details_content"}}
@@ -9,8 +9,9 @@
     <div class="Documentation">
       {{.Documentation}}
       <div class="Documentation-build">
-        <div>GOOS={{.GOOS}}</div>
-        <div>GOARCH={{.GOARCH}}</div>
+        {{if not (eq .GOOS "linux")}}
+          <div>Documentation was rendered with GOOS={{.GOOS}} and GOARCH={{.GOARCH}}.</div>
+        {{end}}
       </div>
     </div>
 
@@ -25,7 +26,7 @@
         </div>
         <div class="JumpDialog-actions">
           <button class="JumpDialog-button">Close</button>
-	</div>
+        </div>
       </form>
     </dialog>
 
