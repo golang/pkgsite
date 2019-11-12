@@ -12,7 +12,6 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -150,7 +149,6 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/license-policy", s.licensePolicyHandler())
 	handle("/", detailHandler)
 	handle("/latest-version/", latestVersionHandler)
-	handle("/serve-an-error", http.HandlerFunc(serveAnError))
 	handle("/robots.txt", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		http.ServeContent(w, r, "", time.Time{}, strings.NewReader(`User-agent: *
@@ -173,15 +171,6 @@ const (
 	// longTTL is used when details content is essentially static.
 	longTTL = 24 * time.Hour
 )
-
-func serveAnError(w http.ResponseWriter, r *http.Request) {
-	codeString := r.FormValue("code")
-	code, err := strconv.Atoi(codeString)
-	if err != nil {
-		code = http.StatusOK
-	}
-	http.Error(w, http.StatusText(code), code)
-}
 
 // packageTTL assigns the cache TTL for package detail requests.
 func packageTTL(r *http.Request) time.Duration {
