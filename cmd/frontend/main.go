@@ -78,6 +78,7 @@ func main() {
 		postgres.SearchResponseCount,
 		middleware.CacheResultCount,
 		middleware.CacheErrorCount,
+		middleware.QuotaResultCount,
 	)
 	if err := dcensus.Init(views...); err != nil {
 		log.Fatal(err)
