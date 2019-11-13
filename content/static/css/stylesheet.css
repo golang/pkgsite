@@ -378,7 +378,7 @@ code {
   font-size: 0.75rem;
   padding: 0.25rem 0.75rem;
   position: relative;
-  top: 0.1875rem;
+  top: -0.1875rem;
 }
 .DetailsHeader-latest {
   background: var(--blue);
