@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/testhelper"
+	"golang.org/x/discovery/internal/testing/testhelper"
 )
 
 // SetupTestIndex creates a module index for testing using the given version

@@ -27,7 +27,7 @@ import (
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/stdlib"
-	"golang.org/x/discovery/internal/testhelper"
+	"golang.org/x/discovery/internal/testing/testhelper"
 	"golang.org/x/discovery/internal/version"
 	"golang.org/x/xerrors"
 )

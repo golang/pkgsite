@@ -14,8 +14,8 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/sample"
 	"golang.org/x/discovery/internal/source"
+	"golang.org/x/discovery/internal/testing/sample"
 	"golang.org/x/xerrors"
 )
 

@@ -11,7 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/lib/pq"
 	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/sample"
+	"golang.org/x/discovery/internal/testing/sample"
 )
 
 func TestToTsvectorParentDirectoriesStoredProcedure(t *testing.T) {

@@ -21,7 +21,7 @@ import (
 	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
-	"golang.org/x/discovery/internal/testhelper"
+	"golang.org/x/discovery/internal/testing/testhelper"
 )
 
 var testDB *postgres.DB
@@ -60,7 +60,7 @@ func TestEndToEndProcessing(t *testing.T) {
 	// back to ETL, rather than calling fetch itself.
 	queue := etl.NewInMemoryQueue(ctx, proxyClient, testDB, 10)
 
-	etlServer, err := etl.NewServer(testDB, indexClient, proxyClient, queue, nil, "../../content/static")
+	etlServer, err := etl.NewServer(testDB, indexClient, proxyClient, queue, nil, "../../../content/static")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,7 +68,7 @@ func TestEndToEndProcessing(t *testing.T) {
 	etlServer.Install(etlMux.Handle)
 	etlHTTP := httptest.NewServer(etlMux)
 
-	frontendServer, err := frontend.NewServer(testDB, "../../content/static", false)
+	frontendServer, err := frontend.NewServer(testDB, "../../../content/static", false)
 	if err != nil {
 		t.Fatal(err)
 	}

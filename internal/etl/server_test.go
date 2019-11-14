@@ -21,7 +21,7 @@ import (
 	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
-	"golang.org/x/discovery/internal/sample"
+	"golang.org/x/discovery/internal/testing/sample"
 	"golang.org/x/xerrors"
 )
 

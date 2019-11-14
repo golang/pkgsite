@@ -14,7 +14,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/sample"
+	"golang.org/x/discovery/internal/testing/sample"
 )
 
 func TestVersionState(t *testing.T) {

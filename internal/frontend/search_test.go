@@ -13,7 +13,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/postgres"
-	"golang.org/x/discovery/internal/sample"
+	"golang.org/x/discovery/internal/testing/sample"
 	"golang.org/x/discovery/internal/version"
 )
 

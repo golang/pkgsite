@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/discovery/internal/testhelper"
+	"golang.org/x/discovery/internal/testing/testhelper"
 )
 
 func TestDetect(t *testing.T) {

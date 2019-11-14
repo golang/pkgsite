@@ -18,7 +18,7 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/discovery/internal/testhelper"
+	"golang.org/x/discovery/internal/testing/testhelper"
 	"golang.org/x/discovery/internal/thirdparty/semver"
 )
 

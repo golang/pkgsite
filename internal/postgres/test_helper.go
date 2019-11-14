@@ -18,8 +18,8 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/sample"
-	"golang.org/x/discovery/internal/testhelper"
+	"golang.org/x/discovery/internal/testing/sample"
+	"golang.org/x/discovery/internal/testing/testhelper"
 
 	// imported to register the postgres migration driver
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"

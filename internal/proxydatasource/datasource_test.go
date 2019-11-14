@@ -14,7 +14,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/proxy"
-	"golang.org/x/discovery/internal/testhelper"
+	"golang.org/x/discovery/internal/testing/testhelper"
 	"golang.org/x/discovery/internal/version"
 )
 

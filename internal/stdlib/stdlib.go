@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/testhelper"
+	"golang.org/x/discovery/internal/testing/testhelper"
 	"golang.org/x/discovery/internal/thirdparty/semver"
 
 	"gopkg.in/src-d/go-billy.v4/osfs"

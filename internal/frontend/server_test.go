@@ -16,8 +16,8 @@ import (
 	"github.com/andybalholm/cascadia"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/postgres"
-	"golang.org/x/discovery/internal/sample"
 	"golang.org/x/discovery/internal/stdlib"
+	"golang.org/x/discovery/internal/testing/sample"
 	"golang.org/x/net/html"
 )
 
