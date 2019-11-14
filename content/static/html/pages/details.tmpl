@@ -14,20 +14,22 @@
     <div class="DetailsHeader-main">
       <h1 class="DetailsHeader-title">{{.Title}}</h1>
       <div class="DetailsHeader-version">{{$header.Version}}</div>
-      <div class="DetailsHeader-badge"
-        data-version="{{$header.Version}}"
-        {{if eq $namespace "mod" }}
-          data-mpath="{{$header.Path}}"
-          {{if eq $header.Path "std" }}
-            data-href="{{$header.Path}}">
-          {{- else -}}
-            data-href="mod/{{$header.Path}}">
-          {{- end -}}
-        {{- else -}}
-          data-mpath="{{$header.Module.Path}}"
-          data-ppath="{{$header.Path}}"
-          data-href="{{$header.Path}}">
-        {{- end }}
+      
+      {{- $mpath := $header.Path -}}
+      {{- $ppath := "" -}}
+      {{- if ne $namespace "mod" -}}
+         {{- $mpath = $header.Module.Path -}}
+         {{- $ppath = $header.Path -}}
+      {{- end}}
+      <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
+      <div class="DetailsHeader-badge $$GODISCOVERY_LATESTCLASS$$"
+           data-version="{{$header.Version}}" data-mpath="{{$mpath}}" data-ppath="{{$ppath}}">
+        {{$href := $header.Path}}
+        {{if and (eq $namespace "mod") (ne $header.Path "std")}}
+          {{$href = print "mod/" $href}}
+        {{end}}
+        <span>Latest</span>
+        <a href="/{{$href}}@$$GODISCOVERY_LATESTVERSION$$">Go to latest</a>
       </div>
     </div>
     <div class="InfoLabel">
@@ -110,33 +112,6 @@ if (copyButton) {
     input.blur(); // prevents jump to focused element in some browsers
   });
 }
-
-async function latest() {
-  const latestBadge = document.querySelector('.DetailsHeader-badge');
-  let url = '/latest-version/' + latestBadge.getAttribute('data-mpath');
-  const ppath = latestBadge.getAttribute('data-ppath');
-  if (ppath) {
-    url += '?pkg=' + ppath;
-  }
-  const res = await fetch(url);
-  if (!res.ok) {
-    // server-side error; do nothing
-    return;
-  }
-  const latestVersion = await res.json();
-  if (latestVersion === "") {
-     // error; do nothing
-  } else if (latestVersion === latestBadge.getAttribute('data-version')) {
-    latestBadge.classList.add('DetailsHeader-latest');
-    latestBadge.innerHTML = 'Latest';
-  } else {
-    latestBadge.classList.add('DetailsHeader-goToLatest');
-    latestBadge.innerHTML = '<a href="/' + latestBadge.getAttribute('data-href') + '@' + latestVersion + '">Go to latest</a>';
-  }
-}
-
-latest();
-
 </script>
 
 {{block "details_post_content" .}}{{end}}

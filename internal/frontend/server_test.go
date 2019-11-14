@@ -15,6 +15,7 @@ import (
 
 	"github.com/andybalholm/cascadia"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/testing/sample"
@@ -215,12 +216,14 @@ func TestServer(t *testing.T) {
 	}
 	mux := http.NewServeMux()
 	s.Install(mux.Handle, nil)
+	handler := middleware.LatestVersion(s.LatestVersion)(mux)
 
 	type header struct {
 		// suffix is not used for the module header.
 		// the fields must be exported for use by template.Execute.
 		Version, Title, Suffix, ModulePath, LatestURL, URLPath string
 		notLatest                                              bool
+		latestVersion                                          string
 	}
 
 	licenseInfo := func(h *header, latest bool) validator {
@@ -239,31 +242,42 @@ func TestServer(t *testing.T) {
 				text("MIT")))
 	}
 
-	// pkgHeader2 constructs a validator for a package header.
-	// We need two "latest" variables because of an inconsistency
-	// on directory pages. See b/144217401.
-	pkgHeader2 := func(h *header, licenseLatest, moduleLatest bool) validator {
+	versionBadge := func(latest bool, wantHRef string) validator {
+		class := ".DetailsHeader-latest"
+		if !latest {
+			class = ".DetailsHeader-goToLatest"
+		}
+		return in("div.DetailsHeader-badge",
+			in(class), // the badge has this class too
+			in("a", href(wantHRef), text("Go to latest")))
+	}
+
+	modValidator := func(h *header, latest bool) validator {
 		modURL := "/mod/" + h.ModulePath
 		if h.ModulePath == stdlib.ModulePath {
 			modURL = "/std"
 		}
-		if !moduleLatest {
+		if !latest {
 			modURL += "@" + h.Version
 		}
-		moduleValidator := inAt("div.InfoLabel > span", 6, in("a", href(modURL), text(h.ModulePath)))
 		if h.ModulePath == stdlib.ModulePath {
-			moduleValidator = in("div.InfoLabel", inAt("a", 1, href(modURL), text("Standard library")))
+			return in("div.InfoLabel", inAt("a", 1, href(modURL), text("Standard library")))
+		}
+		return inAt("div.InfoLabel > span", 6, in("a", href(modURL), text(h.ModulePath)))
+	}
+
+	pkgHeader := func(h *header, latest bool) validator {
+		latestVersion := h.latestVersion
+		if latestVersion == "" {
+			latestVersion = h.Version
 		}
 		return in("",
 			in("span.DetailsHeader-breadcrumbCurrent", text(h.Suffix)),
 			in("h1.DetailsHeader-title", text(h.Title)),
 			in("div.DetailsHeader-version", text(h.Version)),
-			licenseInfo(h, licenseLatest),
-			moduleValidator)
-	}
-
-	pkgHeader := func(h *header, latest bool) validator {
-		return pkgHeader2(h, latest, latest)
+			versionBadge(!h.notLatest, "/"+h.LatestURL+"@"+latestVersion),
+			licenseInfo(h, latest),
+			modValidator(h, latest))
 	}
 
 	modHeader := func(h *header, latest bool) validator {
@@ -271,6 +285,18 @@ func TestServer(t *testing.T) {
 			in("h1.DetailsHeader-title", text(h.Title)),
 			in("div.DetailsHeader-version", text(h.Version)),
 			licenseInfo(h, latest))
+	}
+
+	dirHeader := func(h *header, latest bool) validator {
+		return in("",
+			in("span.DetailsHeader-breadcrumbCurrent", text(h.Suffix)),
+			in("h1.DetailsHeader-title", text(h.Title)),
+			in("div.DetailsHeader-version", text(h.Version)),
+			// directory pages don't show a header badge
+			in("div.DetailsHeader-badge", in(".DetailsHeader-unknown")),
+			licenseInfo(h, latest),
+			// directory module links are always versioned (see b/144217401)
+			modValidator(h, false))
 	}
 
 	pkgV100 := &header{
@@ -282,18 +308,21 @@ func TestServer(t *testing.T) {
 		LatestURL:  "github.com/valid_module_name/foo",
 	}
 	pkgV090 := &header{
-		Version:    "v0.9.0",
-		Suffix:     "foo",
-		Title:      "foo package",
-		ModulePath: "github.com/valid_module_name",
-		URLPath:    `github.com/valid_module_name@v0.9.0/foo`,
-		notLatest:  true,
+		Version:       "v0.9.0",
+		Suffix:        "foo",
+		Title:         "foo package",
+		ModulePath:    "github.com/valid_module_name",
+		URLPath:       `github.com/valid_module_name@v0.9.0/foo`,
+		LatestURL:     "github.com/valid_module_name/foo",
+		notLatest:     true,
+		latestVersion: "v1.0.0",
 	}
 	pkgNonRedist := &header{
 		Version:    "v1.0.0",
 		Suffix:     "bar",
 		ModulePath: nonRedistModulePath,
 		Title:      "bar package",
+		LatestURL:  nonRedistPkgPath,
 	}
 	cmdGo := &header{
 		Suffix:     "go",
@@ -407,7 +436,8 @@ func TestServer(t *testing.T) {
 			// For a non-redistributable package, the "latest" route goes to the modules tab.
 			urlPath:        fmt.Sprintf("/%s?tab=overview", nonRedistPkgPath),
 			wantStatusCode: http.StatusOK,
-			want:           pkgHeader(pkgNonRedist, true),
+			want: in("",
+				pkgHeader(pkgNonRedist, true)),
 		},
 		{
 			name:           "package@version default",
@@ -546,7 +576,7 @@ func TestServer(t *testing.T) {
 			urlPath:        fmt.Sprintf("/%s", sample.PackagePath+"/directory"),
 			wantStatusCode: http.StatusOK,
 			want: in("",
-				pkgHeader2(dir, true, false), // directory module links are always versioned (see b/144217401)
+				dirHeader(dir, true),
 				inAt("th", 0, text("Path")),
 				inAt("th", 1, text("Synopsis"))),
 		},
@@ -555,7 +585,7 @@ func TestServer(t *testing.T) {
 			urlPath:        fmt.Sprintf("/%s?tab=overview", sample.PackagePath+"/directory"),
 			wantStatusCode: http.StatusOK,
 			want: in("",
-				pkgHeader2(dir, true, false),
+				dirHeader(dir, true),
 				in(".Overview-module",
 					text("Module"),
 					in("a",
@@ -575,7 +605,7 @@ func TestServer(t *testing.T) {
 			urlPath:        fmt.Sprintf("/%s?tab=licenses", sample.PackagePath+"/directory"),
 			wantStatusCode: http.StatusOK,
 			want: in("",
-				pkgHeader2(dir, true, false),
+				dirHeader(dir, true),
 				in(".License",
 					text("MIT"),
 					text("This is not legal advice"),
@@ -585,10 +615,10 @@ func TestServer(t *testing.T) {
 		},
 		{
 			name:           "stdlib directory default",
-			urlPath:        fmt.Sprintf("/cmd"),
+			urlPath:        "/cmd",
 			wantStatusCode: http.StatusOK,
 			want: in("",
-				pkgHeader2(dirCmd, true, false),
+				dirHeader(dirCmd, true),
 				inAt("th", 0, text("Path")),
 				inAt("th", 1, text("Synopsis"))),
 		},
@@ -597,7 +627,7 @@ func TestServer(t *testing.T) {
 			urlPath:        fmt.Sprintf("/cmd@go1.13?tab=subdirectories"),
 			wantStatusCode: http.StatusOK,
 			want: in("",
-				pkgHeader(dirCmd, false),
+				dirHeader(dirCmd, false),
 				inAt("th", 0, text("Path")),
 				inAt("th", 1, text("Synopsis"))),
 		},
@@ -606,7 +636,7 @@ func TestServer(t *testing.T) {
 			urlPath:        fmt.Sprintf("/cmd@go1.13?tab=overview"),
 			wantStatusCode: http.StatusOK,
 			want: in("",
-				pkgHeader(dirCmd, false),
+				dirHeader(dirCmd, false),
 
 				in(".Overview-module",
 					text("Standard Library"),
@@ -628,7 +658,7 @@ func TestServer(t *testing.T) {
 			urlPath:        fmt.Sprintf("/cmd@go1.13?tab=licenses"),
 			wantStatusCode: http.StatusOK,
 			want: in("",
-				pkgHeader(dirCmd, false),
+				dirHeader(dirCmd, false),
 				in(".License",
 					text("MIT"),
 					text("This is not legal advice"),
@@ -756,7 +786,7 @@ func TestServer(t *testing.T) {
 			defer func(orig bool) { doDocumentationHack = orig }(doDocumentationHack)
 			doDocumentationHack = tc.doDocumentationHack
 			w := httptest.NewRecorder()
-			mux.ServeHTTP(w, httptest.NewRequest("GET", tc.urlPath, nil))
+			handler.ServeHTTP(w, httptest.NewRequest("GET", tc.urlPath, nil))
 			res := w.Result()
 			if res.StatusCode != tc.wantStatusCode {
 				t.Errorf("GET %q = %d, want %d", tc.urlPath, res.StatusCode, tc.wantStatusCode)

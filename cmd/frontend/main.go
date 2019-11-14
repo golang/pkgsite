@@ -101,7 +101,8 @@ func main() {
 	mw := middleware.Chain(
 		middleware.RequestLog(requestLogger),
 		middleware.Quota(config.Quota()),
-		middleware.SecureHeaders(), // must come before any caching middleware for nonces to work
+		middleware.SecureHeaders(),                     // must come before any caching for nonces to work
+		middleware.LatestVersion(server.LatestVersion), // must come before caching for version badge to work
 		middleware.Panic(panicHandler),
 		middleware.Timeout(1*time.Minute),
 	)

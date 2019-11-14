@@ -383,11 +383,23 @@ code {
 .DetailsHeader-latest {
   background: var(--blue);
 }
+.DetailsHeader-latest a {
+  display: none;
+}
 .DetailsHeader-goToLatest {
   background: var(--pink);
 }
 .DetailsHeader-goToLatest a {
   color: var(--white);
+}
+.DetailsHeader-goToLatest span {
+  display: none;
+}
+.DetailsHeader-unknown a {
+  display: none
+}
+.DetailsHeader-unknown span {
+  display: none
 }
 .DetailsHeader-breadcrumbCurrent {
   color: var(--gray-3);

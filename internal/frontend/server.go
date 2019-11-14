@@ -148,7 +148,12 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/search-help", s.staticPageHandler("search_help.tmpl", "Search Help - go.dev"))
 	handle("/license-policy", s.licensePolicyHandler())
 	handle("/", detailHandler)
+
+	// This endpoint is unused in the current code. It should be removed in a later release.
+	// It used to be called from some javascript that we served; we're keeping it around
+	// in case some browsers still have those pages loaded.
 	handle("/latest-version/", latestVersionHandler)
+
 	handle("/robots.txt", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		http.ServeContent(w, r, "", time.Time{}, strings.NewReader(`User-agent: *

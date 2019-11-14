@@ -334,19 +334,27 @@ func parseDetailsURLPath(urlPath string) (pkgPath, modulePath, version string, e
 func (s *Server) handleLatestVersion(w http.ResponseWriter, r *http.Request) {
 	modulePath := strings.TrimPrefix(r.URL.Path, "/latest-version/")
 	packagePath := r.URL.Query().Get("pkg")
-	v, err := s.latestVersion(r.Context(), modulePath, packagePath)
-	if err != nil {
-		// We get NotFound errors from directories; they clutter the log.
-		if !xerrors.Is(err, derrors.NotFound) {
-			log.Errorf("handleLatestVersion(%q): %v", modulePath, err)
-		}
-		// Send the empty string, without an error.
-		v = ""
-	}
-	if _, err = fmt.Fprintf(w, "%q", v); err != nil {
+	v := s.LatestVersion(r.Context(), modulePath, packagePath)
+	if _, err := fmt.Fprintf(w, "%q", v); err != nil {
 		log.Errorf("handleLatestVersion: fmt.Fprintf: %v", err)
 	}
 }
+
+// LatestVersion returns the latest version of the package or module.
+// It returns the empty string on error.
+// It is intended to be used as an argument to middleware.LatestVersion.
+func (s *Server) LatestVersion(ctx context.Context, modulePath, packagePath string) string {
+	v, err := s.latestVersion(ctx, modulePath, packagePath)
+	if err != nil {
+		// We get NotFound errors from directories; they clutter the log.
+		if !xerrors.Is(err, derrors.NotFound) {
+			log.Errorf("GetLatestVersion: %v", err)
+		}
+		return ""
+	}
+	return v
+}
+
 func (s *Server) latestVersion(ctx context.Context, modulePath, packagePath string) (_ string, err error) {
 	defer derrors.Wrap(&err, "latestVersion(ctx, %q, %q)", modulePath, packagePath)
 

@@ -112,33 +112,28 @@ func SecureHeaders() Middleware {
 			// Replace the nonce in the page body.
 			target := []byte(fmt.Sprintf("<script nonce=%q", NoncePlaceholder))
 			replacement := []byte(fmt.Sprintf("<script nonce=%q", nonce))
-			rrw := &replacingResponseWriter{
-				ResponseWriter: w,
-				target:         target,
-				replacement:    replacement,
+			// TODO(b/144509703): avoid copying if possible
+			crw := &capturingResponseWriter{ResponseWriter: w}
+			h.ServeHTTP(crw, r)
+			body := bytes.ReplaceAll(crw.bytes(), target, replacement)
+			if _, err := w.Write(body); err != nil {
+				log.Errorf("SecureHeaders, writing: %v", err)
 			}
-			h.ServeHTTP(rrw, r)
-			rrw.flush()
 		})
 	}
 }
 
-// replacingResponseWriter is an http.ResponseWriter that replaces
-// target with replacement in the response body.
-type replacingResponseWriter struct {
+// capturingResponseWriter is an http.ResponseWriter that captures
+// the body for later processing.
+type capturingResponseWriter struct {
 	http.ResponseWriter
-	target, replacement []byte
-	buf                 bytes.Buffer
+	buf bytes.Buffer
 }
 
-func (r *replacingResponseWriter) Write(b []byte) (int, error) {
-	return r.buf.Write(b)
+func (c *capturingResponseWriter) Write(b []byte) (int, error) {
+	return c.buf.Write(b)
 }
 
-func (r *replacingResponseWriter) flush() {
-	data := r.buf.Bytes()
-	data = bytes.ReplaceAll(data, r.target, r.replacement)
-	if _, err := r.ResponseWriter.Write(data); err != nil {
-		log.Errorf("replacingResponseWriter.flush: %v", err)
-	}
+func (c *capturingResponseWriter) bytes() []byte {
+	return c.buf.Bytes()
 }
