@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/andybalholm/cascadia"
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/testing/htmlcheck"
 	"golang.org/x/discovery/internal/testing/sample"
 	"golang.org/x/net/html"
 )
@@ -154,21 +154,18 @@ func TestCreatePackageHeader(t *testing.T) {
 	}
 }
 
-// none returns a validator that checks no elements matching selector exist.
-func none(selector string) validator {
-	sel := mustParseSelector(selector)
-	return func(n *html.Node) error {
-		if sel.Match(n) || cascadia.Query(n, sel) != nil {
-			return fmt.Errorf("%q matched one or more elements", selector)
-		}
-		return nil
-	}
-}
-
 func TestBreadcrumbPath(t *testing.T) {
+	var (
+		in    = htmlcheck.In
+		inAt  = htmlcheck.InAt
+		notIn = htmlcheck.NotIn
+		text  = htmlcheck.HasText
+		attr  = htmlcheck.HasAttr
+		href  = func(val string) htmlcheck.Checker { return htmlcheck.HasAttr("href", val) }
+	)
 	for _, test := range []struct {
 		pkgPath, modPath, version string
-		want                      validator
+		want                      htmlcheck.Checker
 	}{
 		{
 			"example.com/blob/s3blob", "example.com", internal.LatestVersion,
@@ -180,7 +177,7 @@ func TestBreadcrumbPath(t *testing.T) {
 		{
 			"example.com", "example.com", internal.LatestVersion,
 			in("",
-				none("a"),
+				notIn("a"),
 				in("span.DetailsHeader-breadcrumbCurrent", text("example.com"))),
 		},
 
@@ -194,7 +191,7 @@ func TestBreadcrumbPath(t *testing.T) {
 		{
 			"golang.org/x/tools", "golang.org/x/tools", internal.LatestVersion,
 			in("",
-				none("a"),
+				notIn("a"),
 				in("span.DetailsHeader-breadcrumbCurrent", text("golang.org/x/tools"))),
 		},
 		{

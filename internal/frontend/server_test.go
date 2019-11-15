@@ -9,15 +9,16 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/andybalholm/cascadia"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/stdlib"
+	"golang.org/x/discovery/internal/testing/htmlcheck"
 	"golang.org/x/discovery/internal/testing/sample"
 	"golang.org/x/net/html"
 )
@@ -44,134 +45,6 @@ func TestHTMLInjection(t *testing.T) {
 		t.Error("User input was rendered unescaped.")
 	}
 }
-
-// A validator is a function from an HTML node to an describing a failure.
-type validator func(*html.Node) error
-
-// in returns a validator that applies the given validators to the node matching
-// the selector. The empty selector denotes the entire subtree of the validator's
-// argument node.
-func in(selector string, validators ...validator) validator {
-	sel := mustParseSelector(selector)
-	return func(n *html.Node) error {
-		var m *html.Node
-		// cascadia.Query does not test against its argument node.
-		if sel.Match(n) {
-			m = n
-		} else {
-			m = cascadia.Query(n, sel)
-		}
-		if m == nil {
-			return fmt.Errorf("no element matches selector %q", selector)
-		}
-		if err := validate(m, validators); err != nil {
-			if selector == "" {
-				return err
-			}
-			return fmt.Errorf("%s: %v", selector, err)
-		}
-		return nil
-	}
-}
-
-// inAt is like in, but instead of the first node satifying the selector, it
-// applies the validators to the i'th node.
-// inAt(s, 0, m) is equivalent to (but slower than) in(s, m).
-func inAt(selector string, i int, validators ...validator) validator {
-	sel := mustParseSelector(selector)
-	if i < 0 {
-		panic("negative index")
-	}
-	return func(n *html.Node) error {
-		var els []*html.Node
-		if sel.Match(n) {
-			els = append(els, n)
-		}
-		els = append(els, cascadia.QueryAll(n, sel)...)
-		if i >= len(els) {
-			return fmt.Errorf("%q: index %d is out of range for %d elements", selector, i, len(els))
-		}
-		if err := validate(els[i], validators); err != nil {
-			return fmt.Errorf("%s[%d]: %s", selector, i, err)
-		}
-		return nil
-	}
-}
-
-// validate calls all the validators on n, returning the string of the first one to fail.
-func validate(n *html.Node, validators []validator) error {
-	for _, m := range validators {
-		if err := m(n); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func mustParseSelector(s string) cascadia.Sel {
-	if s == "" {
-		s = "*"
-	}
-	sel, err := cascadia.Parse(s)
-	if err != nil {
-		panic(fmt.Sprintf("parsing %q: %v", s, err))
-	}
-	return sel
-}
-
-// text returns a validator that checks whether the given string is contained in the node's text.
-func text(want string) validator {
-	return func(n *html.Node) error {
-		text := nodeText(n)
-		if !strings.Contains(text, want) {
-			t := text
-			if len(t) > 100 {
-				t = "<content exceeds 100 chars>"
-			}
-			return fmt.Errorf("%q not found in %q", want, t)
-		}
-		return nil
-	}
-}
-
-// nodeText returns the text of n's subtree (n itself and all the nodes under
-// it). This is the concatenated contents of all text nodes, visited
-// depth-first.
-func nodeText(n *html.Node) string {
-	if n == nil {
-		return ""
-	}
-	switch n.Type {
-	case html.TextNode:
-		return n.Data
-	case html.ElementNode, html.DocumentNode:
-		var subtexts []string
-		for c := n.FirstChild; c != nil; c = c.NextSibling {
-			subtexts = append(subtexts, nodeText(c))
-		}
-		return strings.Join(subtexts, "")
-	default:
-		return ""
-	}
-}
-
-// attr returns a validator that checks for an attribute with the given name and value.
-func attr(name, wantVal string) validator {
-	return func(n *html.Node) error {
-		for _, a := range n.Attr {
-			if a.Key == name {
-				if a.Val != wantVal {
-					return fmt.Errorf("[%q]: got %q, want %q", name, a.Val, wantVal)
-				}
-				return nil
-			}
-		}
-		return fmt.Errorf("[%q]: no such attribute", name)
-	}
-}
-
-// href is a shorthand for attr("href", ...)
-func href(v string) validator { return attr("href", v) }
 
 func TestServer(t *testing.T) {
 
@@ -226,7 +99,19 @@ func TestServer(t *testing.T) {
 		latestVersion                                          string
 	}
 
-	licenseInfo := func(h *header, latest bool) validator {
+	var (
+		in   = htmlcheck.In
+		inAt = htmlcheck.InAt
+		text = htmlcheck.HasText
+		attr = htmlcheck.HasAttr
+
+		// href checks for an exact match in an href attribute.
+		href = func(val string) htmlcheck.Checker {
+			return attr("href", "^"+regexp.QuoteMeta(val)+"$")
+		}
+	)
+
+	licenseInfo := func(h *header, latest bool) htmlcheck.Checker {
 		if h.URLPath == "" {
 			return inAt("div.InfoLabel > span", 3, text(`None detected`))
 		}
@@ -239,10 +124,10 @@ func TestServer(t *testing.T) {
 		return inAt("div.InfoLabel > span", 3,
 			in("a",
 				href(fmt.Sprintf("/%s?tab=licenses#LICENSE", path)),
-				text("MIT")))
+				text("^MIT$")))
 	}
 
-	versionBadge := func(latest bool, wantHRef string) validator {
+	versionBadge := func(latest bool, wantHRef string) htmlcheck.Checker {
 		class := ".DetailsHeader-latest"
 		if !latest {
 			class = ".DetailsHeader-goToLatest"
@@ -252,7 +137,7 @@ func TestServer(t *testing.T) {
 			in("a", href(wantHRef), text("Go to latest")))
 	}
 
-	modValidator := func(h *header, latest bool) validator {
+	modChecker := func(h *header, latest bool) htmlcheck.Checker {
 		modURL := "/mod/" + h.ModulePath
 		if h.ModulePath == stdlib.ModulePath {
 			modURL = "/std"
@@ -266,7 +151,7 @@ func TestServer(t *testing.T) {
 		return inAt("div.InfoLabel > span", 6, in("a", href(modURL), text(h.ModulePath)))
 	}
 
-	pkgHeader := func(h *header, latest bool) validator {
+	pkgHeader := func(h *header, latest bool) htmlcheck.Checker {
 		latestVersion := h.latestVersion
 		if latestVersion == "" {
 			latestVersion = h.Version
@@ -277,17 +162,17 @@ func TestServer(t *testing.T) {
 			in("div.DetailsHeader-version", text(h.Version)),
 			versionBadge(!h.notLatest, "/"+h.LatestURL+"@"+latestVersion),
 			licenseInfo(h, latest),
-			modValidator(h, latest))
+			modChecker(h, latest))
 	}
 
-	modHeader := func(h *header, latest bool) validator {
+	modHeader := func(h *header, latest bool) htmlcheck.Checker {
 		return in("",
 			in("h1.DetailsHeader-title", text(h.Title)),
 			in("div.DetailsHeader-version", text(h.Version)),
 			licenseInfo(h, latest))
 	}
 
-	dirHeader := func(h *header, latest bool) validator {
+	dirHeader := func(h *header, latest bool) htmlcheck.Checker {
 		return in("",
 			in("span.DetailsHeader-breadcrumbCurrent", text(h.Suffix)),
 			in("h1.DetailsHeader-title", text(h.Title)),
@@ -296,7 +181,7 @@ func TestServer(t *testing.T) {
 			in("div.DetailsHeader-badge", in(".DetailsHeader-unknown")),
 			licenseInfo(h, latest),
 			// directory module links are always versioned (see b/144217401)
-			modValidator(h, false))
+			modChecker(h, false))
 	}
 
 	pkgV100 := &header{
@@ -374,8 +259,8 @@ func TestServer(t *testing.T) {
 		wantStatusCode int
 		// if non-empty, contents of Location header. For testing redirects.
 		wantLocation string
-		// if non-nil, call the validator on the HTML root node
-		want validator
+		// if non-nil, call the checker on the HTML root node
+		want htmlcheck.Checker
 	}{
 		{
 			name:           "static",
@@ -404,7 +289,7 @@ func TestServer(t *testing.T) {
 			name:           "robots.txt",
 			urlPath:        "/robots.txt",
 			wantStatusCode: http.StatusOK,
-			want:           in("", text("User-agent: *"), text("Disallow: /*?tab=*")),
+			want:           in("", text("User-agent: *"), text(regexp.QuoteMeta("Disallow: /*?tab=*"))),
 		},
 		{
 			name:           "search",
@@ -651,7 +536,7 @@ func TestServer(t *testing.T) {
 						text("github.com/valid_module_name"))),
 				in(".Overview-readmeContent", text("readme")),
 				in(".Overview-readmeSource",
-					text("Source: go.googlesource.com/go/+/refs/tags/go1.13/README.md"))),
+					text(`^Source: go.googlesource.com/go/\+/refs/tags/go1.13/README.md$`))),
 		},
 		{
 			name:           "stdlib directory licenses",
@@ -664,7 +549,7 @@ func TestServer(t *testing.T) {
 					text("This is not legal advice"),
 					in("a", href("/license-policy"), text("Read disclaimer.")),
 					text("Lorem Ipsum")),
-				in(".License-source", text("Source: go.googlesource.com/go/+/refs/tags/go1.13/LICENSE"))),
+				in(".License-source", text(`^Source: go.googlesource.com/go/\+/refs/tags/go1.13/LICENSE$`))),
 		},
 		{
 			name:           "module default",
