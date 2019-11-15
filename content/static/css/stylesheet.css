@@ -896,14 +896,15 @@ table.Directories {
 }
 .JumpDialog-input {
   width: 100%;
+  font-size: 1.125rem;
 }
 .JumpDialog a {
   text-decoration: none;
-  padding: 0.25rem 0;
+  padding: 0.25rem;
 }
 .JumpDialog .JumpDialog-active {
   color: var(--white);
-  background-color: var(--turq-med);
+  background-color: var(--turq-text);
 }
 
 .ShortcutsDialog-key {
