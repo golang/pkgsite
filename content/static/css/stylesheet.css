@@ -852,18 +852,35 @@ table.Directories {
   margin-left: 1.1rem;
 }
 
-/* jump-to-identifier dialog on documentation page */
+/* dialogs, including the jump-to-identifier dialog on documentation pages */
 
-.JumpDialog {
-  width: 25rem;
+.Dialog {
   padding: 0;
   border: 0.0625rem solid rgba(0, 0, 0, 0.2);
   border-radius: 6px;
   box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.5);
 }
-.JumpDialog-title {
+.Dialog-title {
   font-size: 1.125rem;
   padding: 0 0.8rem;
+}
+.Dialog-actions {
+  text-align: right;
+  padding: 0.8rem;
+}
+.Dialog-button {
+  background: none;
+  border-radius: 0.625rem;
+  border: 0.0625rem solid var(--gray-8);
+  color: var(--turq-text);
+  font-size: 1rem;
+  max-width: 6.25rem;
+  padding: 0.625rem;
+  text-align: center;
+}
+
+.JumpDialog {
+  width: 25rem;
 }
 .JumpDialog-body {
   height: 12rem;
@@ -889,19 +906,11 @@ table.Directories {
   background-color: var(--turq-med);
 }
 
-.JumpDialog-actions {
+.ShortcutsDialog-key {
   text-align: right;
-  padding: 0.8rem;
 }
-.JumpDialog-button {
-  background: none;
-  border-radius: 0.625rem;
-  border: 0.0625rem solid var(--gray-8);
-  color: var(--turq-text);
-  font-size: 1rem;
-  max-width: 6.25rem;
-  padding: 0.625rem;
-  text-align: center;
+.ShortcutsDialog table {
+  padding: 0 1rem;
 }
 
 .ImageButton {

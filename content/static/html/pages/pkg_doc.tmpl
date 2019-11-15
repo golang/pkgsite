@@ -15,8 +15,8 @@
       </div>
     </div>
 
-    <dialog class="JumpDialog">
-      <h2 class="JumpDialog-title">Jump to identifier</h2>
+    <dialog class="JumpDialog Dialog">
+      <h2 class="Dialog-title">Jump to identifier</h2>
       <form method="dialog">
         <div class="JumpDialog-filter">
          <input class="JumpDialog-input" autocomplete="off" type="text">
@@ -24,8 +24,23 @@
         <div class="JumpDialog-body">
           <div class="JumpDialog-list"></div>
         </div>
-        <div class="JumpDialog-actions">
-          <button class="JumpDialog-button">Close</button>
+        <div class="Dialog-actions">
+          <button class="Dialog-button">Close</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="ShortcutsDialog Dialog">
+      <h2 class="Dialog-title">Keyboard shortcuts</h2>
+      <table>
+        <tbody>
+         <tr><td class="ShortcutsDialog-key"><b>?</b></td><td> : This menu</td></tr>
+         <tr><td class="ShortcutsDialog-key"><b>f</b></td><td> : Jump to identifier</td></tr>
+        </tbody>
+      </table>
+      <form method="dialog">
+        <div class="Dialog-actions">
+          <button class="Dialog-button">Close</button>
         </div>
       </form>
     </dialog>

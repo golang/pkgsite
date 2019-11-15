@@ -2,9 +2,11 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// This file implements the behavior of the "jump to identifer" dialog for
-// Go package documentation.
-// The DOM for the dialog is at the bottom of content/static/html/pages/pkg_doc.tmpl.
+// This file implements the behavior of the "jump to identifer" dialog for Go
+// package documentation, as well as the simple dialog that displays keyboard
+// shortcuts.
+
+// The DOM for the dialogs is at the bottom of content/static/html/pages/pkg_doc.tmpl.
 // The CSS is in content/static/css/stylesheet.css.
 
 // The dialog is activated by pressing the 'f' key. It presents a list
@@ -215,19 +217,33 @@ jumpFilter.addEventListener('keydown', function(event) {
   }
 });
 
-// Pressing 'f' anywhere in the document opens the dialog.
-// Ignore 'f' if the dialog is already open, or if it is pressed on a component
-// that wants to consume it.
+const shortcutsDialog = document.querySelector('.ShortcutsDialog');
+if (!shortcutsDialog.showModal) {
+  dialogPolyfill.registerDialog(shortcutsDialog);
+}
+
+
+// Keyboard shortcuts:
+// - Pressing 'f' opens the jump-to-identifier dialog.
+// - Pressing '?' opens up the shortcut dialog.
+// Ignore a keypress if a dialog is already open, or if it is pressed on a
+// component that wants to consume it.
 document.addEventListener('keypress', function (e) {
-  if (jumpDialog.open) return;
+  if (jumpDialog.open || shortcutsDialog.open) return;
   const t = e.target.tagName;
   if (t == 'INPUT' || t == 'SELECT' || t == 'TEXTAREA' ) return;
   if (e.target.contentEditable && e.target.contentEditable == 'true') return;
   if (e.metaKey || e.ctrlKey) return;
   const ch = String.fromCharCode(e.which);
-  if (ch != 'f') return;
-  e.preventDefault();
-  jumpFilter.value = '';
-  jumpDialog.showModal();
-  updateJumpList('');
+  switch (ch) {
+    case 'f':
+      e.preventDefault();
+      jumpFilter.value = '';
+      jumpDialog.showModal();
+      updateJumpList('');
+      break;
+    case '?':
+      shortcutsDialog.showModal();
+      break;
+  }
 });
