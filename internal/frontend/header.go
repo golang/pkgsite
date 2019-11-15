@@ -154,9 +154,9 @@ func effectiveName(pkg *internal.Package) string {
 // The string will appear in the <title> and <h1> element.
 func packageTitle(pkg *internal.Package) string {
 	if pkg.Name != "main" {
-		return "Package " + pkg.Name
+		return pkg.Name + " package"
 	}
-	return "Command " + effectiveName(pkg)
+	return effectiveName(pkg) + " command"
 }
 
 // breadcrumbPath builds HTML that displays pkgPath as a sequence of links
@@ -237,7 +237,7 @@ func moduleTitle(modulePath string) string {
 	if modulePath == stdlib.ModulePath {
 		return "Standard library"
 	}
-	return "Module " + modulePath
+	return modulePath + " module"
 }
 
 // elapsedTime takes a date and returns returns human-readable,

@@ -276,7 +276,7 @@ func TestServer(t *testing.T) {
 	pkgV100 := &header{
 		Version:    "v1.0.0",
 		Suffix:     "foo",
-		Title:      "Package foo",
+		Title:      "foo package",
 		ModulePath: "github.com/valid_module_name",
 		URLPath:    `github.com/valid_module_name@v1.0.0/foo`,
 		LatestURL:  "github.com/valid_module_name/foo",
@@ -284,7 +284,7 @@ func TestServer(t *testing.T) {
 	pkgV090 := &header{
 		Version:    "v0.9.0",
 		Suffix:     "foo",
-		Title:      "Package foo",
+		Title:      "foo package",
 		ModulePath: "github.com/valid_module_name",
 		URLPath:    `github.com/valid_module_name@v0.9.0/foo`,
 		notLatest:  true,
@@ -293,19 +293,19 @@ func TestServer(t *testing.T) {
 		Version:    "v1.0.0",
 		Suffix:     "bar",
 		ModulePath: nonRedistModulePath,
-		Title:      "Package bar",
+		Title:      "bar package",
 	}
 	cmdGo := &header{
 		Suffix:     "go",
 		Version:    "go1.13",
-		Title:      "Command go",
+		Title:      "go command",
 		URLPath:    `cmd/go@go1.13`,
 		ModulePath: "std",
 		LatestURL:  "cmd/go",
 	}
 	mod := &header{
 		Version:   "v1.0.0",
-		Title:     "Module github.com/valid_module_name",
+		Title:     "github.com/valid_module_name module",
 		URLPath:   `mod/github.com/valid_module_name@v1.0.0`,
 		LatestURL: "mod/github.com/valid_module_name",
 	}
@@ -318,7 +318,7 @@ func TestServer(t *testing.T) {
 	dir := &header{
 		Suffix:     "directory",
 		Version:    "v1.0.0",
-		Title:      "Directory github.com/valid_module_name/foo/directory",
+		Title:      "github.com/valid_module_name/foo/directory directory",
 		URLPath:    `github.com/valid_module_name@v1.0.0/foo/directory`,
 		ModulePath: "github.com/valid_module_name",
 		LatestURL:  `github.com/valid_module_name/foo/directory`,
@@ -326,7 +326,7 @@ func TestServer(t *testing.T) {
 	dirCmd := &header{
 		Suffix:     "cmd",
 		Version:    "go1.13",
-		Title:      "Directory cmd",
+		Title:      "cmd directory",
 		ModulePath: "std",
 		URLPath:    `cmd@go1.13`,
 		LatestURL:  `cmd`,
