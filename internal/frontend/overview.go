@@ -112,7 +112,7 @@ func readmeHTML(vi *internal.VersionInfo) template.HTML {
 
 	// blackfriday.Run() uses CommonHTMLFlags and CommonExtensions by default.
 	renderer := blackfriday.NewHTMLRenderer(blackfriday.HTMLRendererParameters{Flags: blackfriday.CommonHTMLFlags})
-	parser := blackfriday.New(blackfriday.WithExtensions(blackfriday.CommonExtensions))
+	parser := blackfriday.New(blackfriday.WithExtensions(blackfriday.CommonExtensions | blackfriday.AutoHeadingIDs))
 
 	// Render HTML similar to blackfriday.Run(), but here we implement a custom
 	// Walk function in order to modify image paths in the rendered HTML.
@@ -137,6 +137,11 @@ func readmeHTML(vi *internal.VersionInfo) template.HTML {
 func translateRelativeLink(node *blackfriday.Node, vi *internal.VersionInfo) {
 	destURL, err := url.Parse(string(node.LinkData.Destination))
 	if err != nil || destURL.IsAbs() {
+		return
+	}
+
+	if destURL.Path == "" {
+		// This is a fragment; leave it.
 		return
 	}
 	// Paths are relative to the README location.
