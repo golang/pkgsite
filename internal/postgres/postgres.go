@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"regexp"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -136,7 +137,8 @@ func logQuery(query string, args []interface{}) func(*error) {
 
 // Open creates a new DB for the given Postgres connection string.
 func Open(driverName, dbinfo string) (_ *DB, err error) {
-	defer derrors.Wrap(&err, "postgres.Open(%q, %q)", driverName, dbinfo)
+	defer derrors.Wrap(&err, "postgres.Open(%q, %q)",
+		driverName, redactPassword(dbinfo))
 
 	db, err := sql.Open(driverName, dbinfo)
 	if err != nil {
@@ -147,6 +149,12 @@ func Open(driverName, dbinfo string) (_ *DB, err error) {
 		return nil, err
 	}
 	return &DB{db}, nil
+}
+
+var passwordRegexp = regexp.MustCompile(`password=\S+`)
+
+func redactPassword(dbinfo string) string {
+	return passwordRegexp.ReplaceAllLiteralString(dbinfo, "password=REDACTED")
 }
 
 // Transact executes the given function in the context of a SQL transaction,
