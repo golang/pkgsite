@@ -118,10 +118,16 @@ func HasText(wantRegexp string) Checker {
 			if len(text) > 100 {
 				text = text[:97] + "..."
 			}
-			return fmt.Errorf("regexp `%s` does not match %q", wantRegexp, text)
+			return fmt.Errorf("\n`%s` does not match\n%q", wantRegexp, text)
 		}
 		return nil
 	}
+}
+
+// HasExactText returns a checker that checks whether the given string matches
+// the node's text exactly.
+func HasExactText(want string) Checker {
+	return HasText("^" + regexp.QuoteMeta(want) + "$")
 }
 
 // nodeText appends the text of n's subtree to b. This is the concatenated
@@ -149,11 +155,17 @@ func HasAttr(name, wantValRegexp string) Checker {
 		for _, a := range n.Attr {
 			if a.Key == name {
 				if !re.MatchString(a.Val) {
-					return fmt.Errorf("[%q]: regexp `%s` does not match %q", name, wantValRegexp, a.Val)
+					return fmt.Errorf("[%q]:\n`%s` does not match\n%q", name, wantValRegexp, a.Val)
 				}
 				return nil
 			}
 		}
 		return fmt.Errorf("[%q]: no such attribute", name)
 	}
+}
+
+// HasHref returns a Checker that checks whether the node has an "href"
+// attribute with exactly val.
+func HasHref(val string) Checker {
+	return HasAttr("href", "^"+regexp.QuoteMeta(val)+"$")
 }
