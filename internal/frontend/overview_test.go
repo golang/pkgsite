@@ -61,9 +61,9 @@ func TestReadmeHTML(t *testing.T) {
 			name: "valid markdown readme",
 			vi: &internal.VersionInfo{
 				ReadmeFilePath: "README.md",
-				ReadmeContents: []byte("This package collects pithy sayings.\n\n" +
+				ReadmeContents: "This package collects pithy sayings.\n\n" +
 					"It's part of a demonstration of\n" +
-					"[package versioning in Go](https://research.swtch.com/vgo1)."),
+					"[package versioning in Go](https://research.swtch.com/vgo1).",
 			},
 			want: template.HTML("<p>This package collects pithy sayings.</p>\n\n" +
 				"<p>It’s part of a demonstration of\n" +
@@ -73,9 +73,9 @@ func TestReadmeHTML(t *testing.T) {
 			name: "not markdown readme",
 			vi: &internal.VersionInfo{
 				ReadmeFilePath: "README.rst",
-				ReadmeContents: []byte("This package collects pithy sayings.\n\n" +
+				ReadmeContents: "This package collects pithy sayings.\n\n" +
 					"It's part of a demonstration of\n" +
-					"[package versioning in Go](https://research.swtch.com/vgo1)."),
+					"[package versioning in Go](https://research.swtch.com/vgo1).",
 			},
 			want: template.HTML("<pre class=\"readme\">This package collects pithy sayings.\n\nIt&#39;s part of a demonstration of\n[package versioning in Go](https://research.swtch.com/vgo1).</pre>"),
 		},
@@ -88,7 +88,7 @@ func TestReadmeHTML(t *testing.T) {
 			name: "sanitized readme",
 			vi: &internal.VersionInfo{
 				ReadmeFilePath: "README",
-				ReadmeContents: []byte(`<a onblur="alert(secret)" href="http://www.google.com">Google</a>`),
+				ReadmeContents: `<a onblur="alert(secret)" href="http://www.google.com">Google</a>`,
 			},
 			want: template.HTML(`<pre class="readme">&lt;a onblur=&#34;alert(secret)&#34; href=&#34;http://www.google.com&#34;&gt;Google&lt;/a&gt;</pre>`),
 		},
@@ -96,7 +96,7 @@ func TestReadmeHTML(t *testing.T) {
 			name: "relative image markdown is made absolute for GitHub",
 			vi: &internal.VersionInfo{
 				ReadmeFilePath: "README.md",
-				ReadmeContents: []byte("![Go logo](doc/logo.png)"),
+				ReadmeContents: "![Go logo](doc/logo.png)",
 				SourceInfo:     source.NewGitHubInfo("http://github.com/golang/go", "", "master"),
 			},
 			want: template.HTML("<p><img src=\"https://raw.githubusercontent.com/golang/go/master/doc/logo.png\" alt=\"Go logo\"/></p>\n"),
@@ -105,7 +105,7 @@ func TestReadmeHTML(t *testing.T) {
 			name: "relative image markdown is made absolute for GitLab",
 			vi: &internal.VersionInfo{
 				ReadmeFilePath: "README.md",
-				ReadmeContents: []byte("![Gitaly benchmark timings.](doc/img/rugged-new-timings.png)"),
+				ReadmeContents: "![Gitaly benchmark timings.](doc/img/rugged-new-timings.png)",
 				SourceInfo:     source.NewGitLabInfo("http://gitlab.com/gitlab-org/gitaly", "", "v1.0.0"),
 			},
 			want: template.HTML("<p><img src=\"http://gitlab.com/gitlab-org/gitaly/raw/v1.0.0/doc/img/rugged-new-timings.png\" alt=\"Gitaly benchmark timings.\"/></p>\n"),
@@ -114,7 +114,7 @@ func TestReadmeHTML(t *testing.T) {
 			name: "relative image markdown is left alone for unknown origins",
 			vi: &internal.VersionInfo{
 				ReadmeFilePath: "README.md",
-				ReadmeContents: []byte("![Go logo](doc/logo.png)"),
+				ReadmeContents: "![Go logo](doc/logo.png)",
 			},
 			want: template.HTML("<p><img src=\"doc/logo.png\" alt=\"Go logo\"/></p>\n"),
 		},
@@ -122,7 +122,7 @@ func TestReadmeHTML(t *testing.T) {
 			name: "module versions are referenced in relative images",
 			vi: &internal.VersionInfo{
 				ReadmeFilePath: "README.md",
-				ReadmeContents: []byte("![Hugo logo](doc/logo.png)"),
+				ReadmeContents: "![Hugo logo](doc/logo.png)",
 				Version:        "v0.56.3",
 				VersionType:    version.TypeRelease,
 				SourceInfo:     source.NewGitHubInfo("http://github.com/gohugoio/hugo", "", "v0.56.3"),
@@ -133,7 +133,7 @@ func TestReadmeHTML(t *testing.T) {
 			name: "image URLs relative to README directory",
 			vi: &internal.VersionInfo{
 				ReadmeFilePath: "dir/sub/README.md",
-				ReadmeContents: []byte("![alt](img/thing.png)"),
+				ReadmeContents: "![alt](img/thing.png)",
 				Version:        "v1.2.3",
 				VersionType:    version.TypeRelease,
 				SourceInfo:     source.NewGitHubInfo("https://github.com/some/repo", "", "v1.2.3"),
@@ -144,7 +144,7 @@ func TestReadmeHTML(t *testing.T) {
 			name: "non-image links relative to README directory",
 			vi: &internal.VersionInfo{
 				ReadmeFilePath: "dir/sub/README.md",
-				ReadmeContents: []byte("[something](doc/thing.md)"),
+				ReadmeContents: "[something](doc/thing.md)",
 				Version:        "v1.2.3",
 				VersionType:    version.TypeRelease,
 				SourceInfo:     source.NewGitHubInfo("https://github.com/some/repo", "", "v1.2.3"),

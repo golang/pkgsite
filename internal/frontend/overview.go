@@ -105,7 +105,7 @@ func readmeHTML(vi *internal.VersionInfo) template.HTML {
 	// Render HTML similar to blackfriday.Run(), but here we implement a custom
 	// Walk function in order to modify image paths in the rendered HTML.
 	b := &bytes.Buffer{}
-	rootNode := parser.Parse(vi.ReadmeContents)
+	rootNode := parser.Parse([]byte(vi.ReadmeContents))
 	rootNode.Walk(func(node *blackfriday.Node, entering bool) blackfriday.WalkStatus {
 		if node.Type == blackfriday.Image || node.Type == blackfriday.Link {
 			translateRelativeLink(node, vi)

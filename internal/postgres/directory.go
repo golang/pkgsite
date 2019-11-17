@@ -88,7 +88,7 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version str
 			&vi.Version,
 			&vi.ModulePath,
 			database.NullIsEmpty(&vi.ReadmeFilePath),
-			&vi.ReadmeContents,
+			database.NullIsEmpty(&vi.ReadmeContents),
 			&vi.CommitTime,
 			&vi.VersionType,
 			jsonbScanner{&vi.SourceInfo}); err != nil {

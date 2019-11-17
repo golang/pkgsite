@@ -475,7 +475,7 @@ func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version str
 	var vi internal.VersionInfo
 	row := db.db.QueryRow(ctx, query, args...)
 	if err := row.Scan(&vi.ModulePath, &vi.Version, &vi.CommitTime,
-		database.NullIsEmpty(&vi.ReadmeFilePath), &vi.ReadmeContents, &vi.VersionType,
+		database.NullIsEmpty(&vi.ReadmeFilePath), database.NullIsEmpty(&vi.ReadmeContents), &vi.VersionType,
 		jsonbScanner{&vi.SourceInfo}); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, xerrors.Errorf("module version %s@%s: %w", modulePath, version, derrors.NotFound)

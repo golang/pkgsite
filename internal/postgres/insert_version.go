@@ -248,7 +248,7 @@ func validateVersion(version *internal.Version) error {
 	}
 
 	var errReasons []string
-	if !utf8.Valid(version.ReadmeContents) {
+	if !utf8.ValidString(version.ReadmeContents) {
 		errReasons = append(errReasons, fmt.Sprintf("readme %q is not valid utf8", version.ReadmeFilePath))
 	}
 	for _, l := range version.Licenses {
@@ -303,7 +303,7 @@ func removeNonDistributableData(v *internal.Version) {
 	// so capturing the README contents is OK.
 	if !hasRedistributablePackage {
 		v.ReadmeFilePath = ""
-		v.ReadmeContents = nil
+		v.ReadmeContents = ""
 	}
 }
 

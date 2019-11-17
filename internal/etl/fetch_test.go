@@ -222,7 +222,7 @@ func TestReFetch(t *testing.T) {
 			Version:        version,
 			CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
 			ReadmeFilePath: "README.md",
-			ReadmeContents: []byte("This is another readme"),
+			ReadmeContents: "This is another readme",
 			VersionType:    "release",
 			SourceInfo:     source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
 		},
@@ -349,7 +349,7 @@ func TestFetchVersion(t *testing.T) {
 		Version:        "v1.0.0",
 		CommitTime:     testProxyCommitTime,
 		ReadmeFilePath: "README.md",
-		ReadmeContents: []byte("THIS IS A README"),
+		ReadmeContents: "THIS IS A README",
 		VersionType:    version.TypeRelease,
 		SourceInfo:     source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
 	}
@@ -464,7 +464,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			Version:        "v1.0.0",
 			CommitTime:     testProxyCommitTime,
 			ReadmeFilePath: "README.md",
-			ReadmeContents: []byte("README FILE FOR TESTING."),
+			ReadmeContents: "README FILE FOR TESTING.",
 			SourceInfo:     source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
 			VersionType:    "release",
 		},
@@ -512,7 +512,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					Version:        "v1.0.0",
 					CommitTime:     testProxyCommitTime,
 					ReadmeFilePath: "README.md",
-					ReadmeContents: []byte("README FILE FOR TESTING."),
+					ReadmeContents: "README FILE FOR TESTING.",
 					VersionType:    "release",
 					SourceInfo:     nil,
 				},
@@ -541,7 +541,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					Version:        "v1.0.0",
 					CommitTime:     testProxyCommitTime,
 					ReadmeFilePath: "README.md",
-					ReadmeContents: []byte("README FILE FOR TESTING."),
+					ReadmeContents: "README FILE FOR TESTING.",
 					VersionType:    "release",
 					SourceInfo:     nil,
 				},
@@ -570,7 +570,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					CommitTime:     stdlib.TestCommitTime,
 					VersionType:    "release",
 					ReadmeFilePath: "README.md",
-					ReadmeContents: []byte("# The Go Programming Language\n"),
+					ReadmeContents: "# The Go Programming Language\n",
 					SourceInfo:     source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
 				},
 				Package: internal.Package{
@@ -600,7 +600,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					CommitTime:     stdlib.TestCommitTime,
 					VersionType:    "release",
 					ReadmeFilePath: "README.md",
-					ReadmeContents: []byte("# The Go Programming Language\n"),
+					ReadmeContents: "# The Go Programming Language\n",
 					SourceInfo:     source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
 				},
 				Package: internal.Package{
@@ -625,12 +625,11 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			pkg:        "build.constraints/module/cpu",
 			want: &internal.VersionedPackage{
 				VersionInfo: internal.VersionInfo{
-					ModulePath:     "build.constraints/module",
-					Version:        "v1.0.0",
-					CommitTime:     testProxyCommitTime,
-					VersionType:    "release",
-					ReadmeContents: []uint8{},
-					SourceInfo:     nil,
+					ModulePath:  "build.constraints/module",
+					Version:     "v1.0.0",
+					CommitTime:  testProxyCommitTime,
+					VersionType: "release",
+					SourceInfo:  nil,
 				},
 				Package: internal.Package{
 					Path:              "build.constraints/module/cpu",
@@ -980,7 +979,7 @@ func TestExtractReadmeFromZip(t *testing.T) {
 
 	for _, test := range []struct {
 		name, version, file, wantPath string
-		wantContents                  []byte
+		wantContents                  string
 		err                           error
 	}{
 		{
@@ -988,7 +987,7 @@ func TestExtractReadmeFromZip(t *testing.T) {
 			version:      "v1.0.0",
 			file:         "github.com/my/module@v1.0.0/README.md",
 			wantPath:     "README.md",
-			wantContents: []byte("README FILE FOR TESTING."),
+			wantContents: "README FILE FOR TESTING.",
 		},
 		{
 			name:    "emp.ty/module",
@@ -1018,7 +1017,7 @@ func TestExtractReadmeFromZip(t *testing.T) {
 			if test.wantPath != gotPath {
 				t.Errorf("extractFile(%q, %q) path = %q, want %q", test.name, test.file, gotPath, test.wantPath)
 			}
-			if !bytes.Equal(test.wantContents, gotContents) {
+			if test.wantContents != gotContents {
 				t.Errorf("extractFile(%q, %q) contents = %q, want %q", test.name, test.file, gotContents, test.wantContents)
 			}
 		})

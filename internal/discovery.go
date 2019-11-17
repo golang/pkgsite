@@ -31,7 +31,7 @@ type VersionInfo struct {
 	Version        string
 	CommitTime     time.Time
 	ReadmeFilePath string
-	ReadmeContents []byte
+	ReadmeContents string
 	VersionType    version.Type
 	SourceInfo     *source.Info
 }

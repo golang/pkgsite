@@ -157,7 +157,7 @@ func TestFastSearch(t *testing.T) {
 		v.Packages[0].Imports = nil
 		// Try to improve the ts_rank of the 'foo' search term.
 		v.Packages[0].Synopsis = "foo"
-		v.ReadmeContents = []byte("foo")
+		v.ReadmeContents = "foo"
 		vers := []*internal.Version{v}
 		if importerCount > 0 {
 			v := sample.Version()

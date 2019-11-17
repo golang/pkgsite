@@ -27,7 +27,7 @@ func TestFetchSearchPage(t *testing.T) {
 			VersionInfo: internal.VersionInfo{
 				ModulePath:     "github.com/mod/foo",
 				Version:        "v1.0.0",
-				ReadmeContents: []byte("readme"),
+				ReadmeContents: "readme",
 				CommitTime:     now,
 				VersionType:    version.TypeRelease,
 			},
@@ -44,7 +44,7 @@ func TestFetchSearchPage(t *testing.T) {
 			VersionInfo: internal.VersionInfo{
 				ModulePath:     "github.com/mod/bar",
 				Version:        "v1.0.0",
-				ReadmeContents: []byte("readme"),
+				ReadmeContents: "readme",
 				CommitTime:     now,
 				VersionType:    version.TypeRelease,
 			},

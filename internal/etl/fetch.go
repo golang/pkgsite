@@ -243,20 +243,20 @@ func moduleVersionDir(modulePath, version string) string {
 // extractReadmeFromZip returns the file path and contents of the first file
 // from r that is a README file. errReadmeNotFound is returned if a README is
 // not found.
-func extractReadmeFromZip(modulePath, version string, r *zip.Reader) (string, []byte, error) {
+func extractReadmeFromZip(modulePath, version string, r *zip.Reader) (string, string, error) {
 	for _, zipFile := range r.File {
 		if hasFilename(zipFile.Name, "README") {
 			if zipFile.UncompressedSize64 > maxFileSize {
-				return "", nil, fmt.Errorf("file size %d exceeds max limit %d", zipFile.UncompressedSize64, maxFileSize)
+				return "", "", fmt.Errorf("file size %d exceeds max limit %d", zipFile.UncompressedSize64, maxFileSize)
 			}
 			c, err := readZipFile(zipFile)
 			if err != nil {
-				return "", nil, err
+				return "", "", err
 			}
-			return strings.TrimPrefix(zipFile.Name, moduleVersionDir(modulePath, version)+"/"), c, nil
+			return strings.TrimPrefix(zipFile.Name, moduleVersionDir(modulePath, version)+"/"), string(c), nil
 		}
 	}
-	return "", nil, errReadmeNotFound
+	return "", "", errReadmeNotFound
 }
 
 // hasFilename reports whether file is expectedFile or if the base name of file,

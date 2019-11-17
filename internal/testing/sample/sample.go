@@ -45,7 +45,7 @@ var (
 	Imports           = []string{"path/to/bar", "fmt"}
 	Synopsis          = "This is a package synopsis"
 	ReadmeFilePath    = "README.md"
-	ReadmeContents    = []byte("readme")
+	ReadmeContents    = "readme"
 	VersionType       = version.TypeRelease
 	GOOS              = "linux"
 	GOARCH            = "amd64"
