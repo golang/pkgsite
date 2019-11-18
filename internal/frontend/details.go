@@ -250,7 +250,9 @@ func fetchPackageOrModule(ctx context.Context, ds DataSource, namespace, path, v
 	// available for this package or module.
 	modulePath, err := get(internal.LatestVersion)
 	if err != nil {
-		log.Errorf("error: get(%s, Latest) for %s: %v", path, namespace, err)
+		if !xerrors.Is(err, derrors.NotFound) {
+			log.Errorf("error: get(%s, Latest) for %s: %v", path, namespace, err)
+		}
 		// Couldn't get the latest version, for whatever reason. Treat
 		// this like not finding the original version.
 		return http.StatusNotFound, nil
