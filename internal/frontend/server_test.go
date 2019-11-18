@@ -369,7 +369,7 @@ func TestServer(t *testing.T) {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pkgHeader(pkgNonRedist, false),
-				in(".DetailsContent", text(`hidden due to license restrictions`))),
+				in(".DetailsContent", text(`not displayed due to license restrictions`))),
 		},
 		{
 			name:           "package@version readme tab",
@@ -388,7 +388,7 @@ func TestServer(t *testing.T) {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pkgHeader(pkgNonRedist, false),
-				in(".DetailsContent", text(`hidden due to license restrictions`))),
+				in(".DetailsContent", text(`not displayed due to license restrictions`))),
 		},
 		{
 			name:           "package@version subdirectories tab",
