@@ -6,6 +6,7 @@ package license
 
 import (
 	"path"
+	"sort"
 
 	"github.com/google/licensecheck"
 )
@@ -32,21 +33,42 @@ type License struct {
 // considered permissive of redistribution.
 var redistributableLicenses = map[string]bool{
 	// Licenses acceptable by OSI
-	"AGPL-3.0":             true,
-	"Apache-2.0":           true,
-	"Artistic-2.0":         true,
-	"BSD-2-Clause":         true,
-	"BSD-2-Clause-FreeBSD": true,
-	"BSD-3-Clause":         true,
-	"BSL-1.0":              true,
-	"GPL2":                 true,
-	"GPL3":                 true,
-	"ISC":                  true,
-	"LGPL-2.1":             true,
-	"LGPL-3.0":             true,
-	"MIT":                  true,
-	"MPL-2.0":              true,
-	"Zlib":                 true,
+	"AGPL-3.0":     true,
+	"Apache-2.0":   true,
+	"Artistic-2.0": true,
+	"BSD-2-Clause": true,
+	"BSD-3-Clause": true,
+	"BSL-1.0":      true,
+	"GPL2":         true,
+	"GPL3":         true,
+	"ISC":          true,
+	"LGPL-2.1":     true,
+	"LGPL-3.0":     true,
+	"MIT":          true,
+	"MPL-2.0":      true,
+	"Zlib":         true,
+}
+
+// osiNameOverrides maps a licensecheck license type to the corresponding OSI
+// name, if they differ.
+var osiNameOverrides = map[string]string{
+	"GPL2": "GPL-2.0",
+	"GPL3": "GPL-3.0",
+}
+
+// AcceptedOSILicenses returns a sorted slice of license types (by OSI name)
+// that are accepted as redistributable by the discovery site.
+func AcceptedOSILicenses() []string {
+	var lics []string
+	for l := range redistributableLicenses {
+		osiName := osiNameOverrides[l]
+		if osiName == "" {
+			osiName = l
+		}
+		lics = append(lics, osiName)
+	}
+	sort.Strings(lics)
+	return lics
 }
 
 // AreRedistributable reports whether content subject to the given licenses

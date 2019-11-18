@@ -252,15 +252,17 @@ type basePage struct {
 // licensePolicyPage is used to generate the static license policy page.
 type licensePolicyPage struct {
 	basePage
-	LicenseFileNames []string
+	LicenseFileNames, LicenseTypes []string
 }
 
 func (s *Server) licensePolicyHandler() http.HandlerFunc {
 	fileNames := license.FileNames()
+	licenses := license.AcceptedOSILicenses()
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		page := licensePolicyPage{
 			basePage:         newBasePage(r, "Licenses - go.dev"),
 			LicenseFileNames: fileNames,
+			LicenseTypes:     licenses,
 		}
 		s.servePage(w, "license_policy.tmpl", page)
 	})
