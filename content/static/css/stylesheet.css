@@ -824,15 +824,15 @@ code {
 .EmptyContent-message {
   text-align: center;
 }
-.InfoLabel {
+.DetailsHeader-infoLabel {
   font-size: 0.875rem;
   line-height: 1.375rem;
   margin: 0.5rem 0;
 }
-.InfoLabel-title {
+.DetailsHeader-infoLabelTitle {
   color: var(--gray-1);
 }
-.InfoLabel-divider {
+.DetailsHeader-infoLabelDivider {
   color: var(--gray-5);
   display: inline-block;
   margin: 0 0.625rem;

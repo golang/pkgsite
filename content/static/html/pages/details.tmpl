@@ -14,7 +14,7 @@
     <div class="DetailsHeader-main">
       <h1 class="DetailsHeader-title">{{.Title}}</h1>
       <div class="DetailsHeader-version">{{$header.Version}}</div>
-      
+
       {{- $mpath := $header.Path -}}
       {{- $ppath := "" -}}
       {{- if ne $namespace "mod" -}}
@@ -32,11 +32,11 @@
         <a href="/{{$href}}@$$GODISCOVERY_LATESTVERSION$$">Go to latest</a>
       </div>
     </div>
-    <div class="InfoLabel">
-      <span class="InfoLabel-title">Published:</span>
+    <div class="DetailsHeader-infoLabel">
+      <span class="DetailsHeader-infoLabelTitle">Published:</span>
       <strong>{{$header.CommitTime}}</strong>
-      <span class="InfoLabel-divider">|</span>
-      <span class="InfoLabel-title">{{pluralize (len $header.Licenses) "License"}}: </span>
+      <span class="DetailsHeader-infoLabelDivider">|</span>
+      <span class="DetailsHeader-infoLabelTitle">{{pluralize (len $header.Licenses) "License"}}: </span>
       <span>
         {{range $i, $e := $header.Licenses -}}{{if $i}}, {{end}}
           <a href="{{$header.URL}}?tab=licenses#{{.Anchor}}">{{$e.Type}}</a>
@@ -46,11 +46,11 @@
         {{- end}}
       </span>
       {{if eq $namespace "pkg"}}
-        <span class="InfoLabel-divider">|</span>
+        <span class="DetailsHeader-infoLabelDivider">|</span>
         {{if eq $header.Module.Path "std"}}
           <a href="{{$header.Module.URL}}">Standard library</a>
         {{else}}
-          <span class="InfoLabel-title">Module: </span>
+          <span class="DetailsHeader-infoLabelTitle">Module: </span>
           <span>
             <a href="{{$header.Module.URL}}">{{$header.Module.Path}}</a>
           </span>
