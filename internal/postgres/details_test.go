@@ -442,7 +442,7 @@ func TestGetModuleLicenses(t *testing.T) {
 	for _, p := range testVersion.Packages {
 		testVersion.Licenses = append(testVersion.Licenses, &license.License{
 			Metadata: p.Licenses[0],
-			Contents: []byte(`Lorem Ipsum`),
+			Contents: `Lorem Ipsum`,
 		})
 	}
 

@@ -36,7 +36,7 @@ var (
 		},
 	}
 	Licenses = []*license.License{
-		{Metadata: LicenseMetadata[0], Contents: []byte(`Lorem Ipsum`)},
+		{Metadata: LicenseMetadata[0], Contents: `Lorem Ipsum`},
 	}
 	DocumentationHTML = []byte("This is the documentation HTML")
 	PackageName       = "foo"

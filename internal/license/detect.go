@@ -164,7 +164,7 @@ func detectFile(f *zip.File, prefix string) (_ *License, err error) {
 			FilePath: filePath,
 			Coverage: cov,
 		},
-		Contents: contents,
+		Contents: string(contents),
 	}, nil
 }
 

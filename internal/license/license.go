@@ -25,7 +25,7 @@ type Metadata struct {
 // A License is a classified license file path and its contents.
 type License struct {
 	*Metadata
-	Contents []byte
+	Contents string
 }
 
 // redistributableLicenses defines the set of (detectable) licenses that are

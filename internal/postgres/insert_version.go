@@ -249,11 +249,11 @@ func validateVersion(version *internal.Version) error {
 
 	var errReasons []string
 	if !utf8.ValidString(version.ReadmeContents) {
-		errReasons = append(errReasons, fmt.Sprintf("readme %q is not valid utf8", version.ReadmeFilePath))
+		errReasons = append(errReasons, fmt.Sprintf("readme %q is not valid UTF-8", version.ReadmeFilePath))
 	}
 	for _, l := range version.Licenses {
-		if !utf8.Valid(l.Contents) {
-			errReasons = append(errReasons, fmt.Sprintf("license %q contains invalid unicode", l.FilePath))
+		if !utf8.ValidString(l.Contents) {
+			errReasons = append(errReasons, fmt.Sprintf("license %q contains invalid UTF-8", l.FilePath))
 		}
 	}
 	if version.Version == "" {

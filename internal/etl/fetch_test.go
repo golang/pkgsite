@@ -361,7 +361,7 @@ func TestFetchVersion(t *testing.T) {
 				FilePath: "LICENSE.md",
 				Coverage: wantCoverage,
 			},
-			Contents: []byte(testhelper.MITLicense),
+			Contents: testhelper.MITLicense,
 		},
 	}
 	for _, test := range []struct {
