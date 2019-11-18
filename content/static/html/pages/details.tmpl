@@ -37,7 +37,7 @@
       <strong>{{$header.CommitTime}}</strong>
       <span class="DetailsHeader-infoLabelDivider">|</span>
       <span class="DetailsHeader-infoLabelTitle">{{pluralize (len $header.Licenses) "License"}}: </span>
-      <span>
+      <span data-test-id="DetailsHeader-infoLabelLicense">
         {{range $i, $e := $header.Licenses -}}{{if $i}}, {{end}}
           <a href="{{$header.URL}}?tab=licenses#{{.Anchor}}">{{$e.Type}}</a>
         {{- else -}}
@@ -48,11 +48,11 @@
       {{if eq $namespace "pkg"}}
         <span class="DetailsHeader-infoLabelDivider">|</span>
         {{if eq $header.Module.Path "std"}}
-          <a href="{{$header.Module.URL}}">Standard library</a>
+          <a data-test-id="DetailsHeader-infoLabelModule" href="{{$header.Module.URL}}">Standard library</a>
         {{else}}
           <span class="DetailsHeader-infoLabelTitle">Module: </span>
           <span>
-            <a href="{{$header.Module.URL}}">{{$header.Module.Path}}</a>
+            <a data-test-id="DetailsHeader-infoLabelModule" href="{{$header.Module.URL}}">{{$header.Module.Path}}</a>
           </span>
         {{end}}
       {{end}}

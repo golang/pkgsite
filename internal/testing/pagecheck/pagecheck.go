@@ -108,21 +108,21 @@ func versionBadge(p *Page) htmlcheck.Checker {
 // licenseInfo checks the license part of the info label in the header.
 func licenseInfo(p *Page, urlPath string, versionedURL bool) htmlcheck.Checker {
 	if p.LicenseType == "" {
-		return inAt("div.DetailsHeader-infoLabel > span", 3, text("None detected"))
+		return in("[data-test-id=DetailsHeader-infoLabelLicense]", text("None detected"))
 	}
-	return inAt("div.DetailsHeader-infoLabel > span", 3,
-		in("a",
-			href(fmt.Sprintf("%s?tab=licenses#LICENSE", urlPath)),
-			exactText(p.LicenseType)))
+	return in("[data-test-id=DetailsHeader-infoLabelLicense] a",
+		href(fmt.Sprintf("%s?tab=licenses#LICENSE", urlPath)),
+		exactText(p.LicenseType))
 }
 
 // moduleInHeader checks the module part of the info label in the header.
 func moduleInHeader(p *Page, versionedURL bool) htmlcheck.Checker {
 	modURL := moduleURLPath(p, versionedURL)
+	text := p.ModulePath
 	if p.ModulePath == stdlib.ModulePath {
-		return in("div.DetailsHeader-infoLabel", inAt("a", 1, href(modURL), exactText("Standard library")))
+		text = "Standard library"
 	}
-	return inAt("div.DetailsHeader-infoLabel > span", 6, in("a", href(modURL), exactText(p.ModulePath)))
+	return in("a[data-test-id=DetailsHeader-infoLabelModule]", href(modURL), exactText(text))
 }
 
 func packageURLPath(p *Page, versioned bool) string {
