@@ -41,12 +41,6 @@ var redistributableLicenses = map[string]bool{
 	"MIT":                  true,
 	"MPL-2.0":              true,
 	"Zlib":                 true,
-
-	
-	"CC-BY-4.0": true,
-	"CC0-1.0":   true,
-	"JSON":      true,
-	"Unlicense": true,
 }
 
 // AreRedistributable reports whether content subject to the given licenses
