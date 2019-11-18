@@ -117,52 +117,58 @@ func Detect(contentsDir string, r *zip.Reader) (_ []*License, err error) {
 	prefix := pathPrefix(contentsDir)
 	var licenses []*License
 	for _, f := range files {
-		rc, err := f.Open()
+		lic, err := detectFile(f, prefix)
 		if err != nil {
-			return nil, fmt.Errorf("f.Open() for %q: %v", f.Name, err)
+			return nil, err
 		}
-		defer rc.Close()
-
-		contents, err := ioutil.ReadAll(rc)
-		if err != nil {
-			return nil, fmt.Errorf("ioutil.ReadAll(rc) for %q: %v", f.Name, err)
-		}
-
-		// At this point we have a valid license candidate, and so expect a match.
-		// If we don't find one, we must return an unknown license.
-		matched := false
-		filePath := strings.TrimPrefix(f.Name, prefix)
-		cov, ok := licensecheck.Cover(contents, licensecheck.Options{})
-		if ok && cov.Percent >= coverageThreshold {
-			matchedTypes := make(map[string]bool)
-			for _, m := range cov.Match {
-				if m.Percent >= classifyThreshold {
-					matchedTypes[m.Name] = true
-				}
-			}
-			if len(matchedTypes) > 0 {
-				matched = true
-				var typs []string
-				for t := range matchedTypes {
-					typs = append(typs, t)
-				}
-				sort.Strings(typs)
-				licenses = append(licenses, &License{
-					Metadata: &Metadata{
-						Types:    typs,
-						FilePath: filePath,
-					},
-					Contents: contents,
-				})
-			}
-		}
-		if !matched {
-			licenses = append(licenses, &License{
-				Metadata: &Metadata{FilePath: filePath},
-			})
-		}
+		licenses = append(licenses, lic)
 	}
 	return licenses, nil
+}
+
+func detectFile(f *zip.File, prefix string) (_ *License, err error) {
+	defer derrors.Wrap(&err, "license.detectFile(%q, %q)", f.Name, prefix)
+
+	rc, err := f.Open()
+	if err != nil {
+		return nil, fmt.Errorf("f.Open(): %v", err)
+	}
+	defer rc.Close()
+
+	contents, err := ioutil.ReadAll(rc)
+	if err != nil {
+		return nil, fmt.Errorf("ioutil.ReadAll: %v", err)
+	}
+
+	// At this point we have a valid license candidate, and so expect a match.
+	// If we don't find one, we must return an unknown license.
+	filePath := strings.TrimPrefix(f.Name, prefix)
+	cov, ok := licensecheck.Cover(contents, licensecheck.Options{})
+	if ok && cov.Percent >= coverageThreshold {
+		matchedTypes := make(map[string]bool)
+		for _, m := range cov.Match {
+			if m.Percent >= classifyThreshold {
+				matchedTypes[m.Name] = true
+			}
+		}
+		if len(matchedTypes) > 0 {
+			var typs []string
+			for t := range matchedTypes {
+				typs = append(typs, t)
+			}
+			sort.Strings(typs)
+			return &License{
+				Metadata: &Metadata{
+					Types:    typs,
+					FilePath: filePath,
+				},
+				Contents: contents,
+			}, nil
+		}
+	}
+	return &License{
+		Metadata: &Metadata{FilePath: filePath},
+	}, nil
 }
 
 // pathPrefix is used to defermine whether or not a license file path is within

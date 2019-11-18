@@ -9,7 +9,7 @@ import "path"
 // Metadata holds information extracted from a license file: its license Type
 // and FilePath relative to the contents directory.
 type Metadata struct {
-	// Types is the license type, as determined by the licensecheck package.
+	// Types is the set of license types, as determined by the licensecheck package.
 	Types []string
 	// FilePath is the '/'-separated path to the license file in the module zip,
 	// relative to the contents directory.
