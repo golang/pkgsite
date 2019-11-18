@@ -26,20 +26,30 @@ func TestDetect(t *testing.T) {
 				"foo/LICENSE": testhelper.MITLicense,
 			},
 			want: []*Metadata{{Types: []string{"MIT"}, FilePath: "foo/LICENSE"}},
-		}, {
+		},
+		{
+			name: "valid license, british spelling",
+			contents: map[string]string{
+				"foo/LICENCE": testhelper.MITLicense,
+			},
+			want: []*Metadata{{Types: []string{"MIT"}, FilePath: "foo/LICENCE"}},
+		},
+		{
 			name: "valid license md format",
 			contents: map[string]string{
 				"foo/LICENSE.md": testhelper.MITLicense,
 			},
 			want: []*Metadata{{Types: []string{"MIT"}, FilePath: "foo/LICENSE.md"}},
-		}, {
+		},
+		{
 			name: "valid license trim prefix",
 			contents: map[string]string{
 				"rsc.io/quote@v1.4.1/LICENSE.md": testhelper.MITLicense,
 			},
 			subdir: "rsc.io/quote@v1.4.1",
 			want:   []*Metadata{{Types: []string{"MIT"}, FilePath: "LICENSE.md"}},
-		}, {
+		},
+		{
 			name: "multiple licenses",
 			contents: map[string]string{
 				"LICENSE":        testhelper.MITLicense,
@@ -51,7 +61,8 @@ func TestDetect(t *testing.T) {
 				{Types: []string{"MIT"}, FilePath: "bar/LICENSE.md"},
 				{Types: []string{"BSD-0-Clause"}, FilePath: "foo/COPYING"},
 			},
-		}, {
+		},
+		{
 			name: "multiple licenses in a single file",
 			contents: map[string]string{
 				"LICENSE": testhelper.MITLicense + "\n" + testhelper.BSD0License,
@@ -59,7 +70,8 @@ func TestDetect(t *testing.T) {
 			want: []*Metadata{
 				{Types: []string{"BSD-0-Clause", "MIT"}, FilePath: "LICENSE"},
 			},
-		}, {
+		},
+		{
 			name: "unknown license",
 			contents: map[string]string{
 				"LICENSE": testhelper.UnknownLicense,
@@ -67,7 +79,8 @@ func TestDetect(t *testing.T) {
 			want: []*Metadata{
 				{FilePath: "LICENSE"},
 			},
-		}, {
+		},
+		{
 			name: "low coverage license",
 			contents: map[string]string{
 				"LICENSE": testhelper.MITLicense + `
@@ -79,17 +92,20 @@ commodo consequat.`,
 			want: []*Metadata{
 				{FilePath: "LICENSE"},
 			},
-		}, {
+		},
+		{
 			name: "no license",
 			contents: map[string]string{
 				"foo/blah.go": "package foo\n\nconst Foo = 42",
 			},
-		}, {
+		},
+		{
 			name: "invalid license file name",
 			contents: map[string]string{
 				"MYLICENSEFILE": testhelper.MITLicense,
 			},
-		}, {
+		},
+		{
 			name: "ignores licenses in vendored packages, but not packages named vendor",
 			contents: map[string]string{
 				"pkg/vendor/LICENSE": testhelper.MITLicense,
