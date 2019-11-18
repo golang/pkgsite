@@ -53,8 +53,9 @@ func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirP
 		status := http.StatusInternalServerError
 		if xerrors.Is(err, derrors.NotFound) {
 			status = http.StatusNotFound
+		} else {
+			log.Errorf("serveDirectoryPage for %s@%s: %v", dirPath, version, err)
 		}
-		log.Errorf("serveDirectoryPage for %s@%s: %v", dirPath, version, err)
 		s.serveErrorPage(w, r, status, nil)
 		return
 	}
