@@ -28,7 +28,10 @@ import (
 
 // Server can be installed to serve the go discovery frontend.
 type Server struct {
-	ds              DataSource
+	ds DataSource
+	// cmplClient is a redis client that has access to the "completions" sorted
+	// set.
+	cmplClient      *redis.Client
 	staticPath      string
 	templateDir     string
 	reloadTemplates bool
@@ -103,7 +106,7 @@ type DataSource interface {
 // NewServer creates a new Server for the given database and template directory.
 // reloadTemplates should be used during development when it can be helpful to
 // reload templates from disk each time a page is loaded.
-func NewServer(ds DataSource, staticPath string, reloadTemplates bool) (*Server, error) {
+func NewServer(ds DataSource, cmplClient *redis.Client, staticPath string, reloadTemplates bool) (*Server, error) {
 	templateDir := filepath.Join(staticPath, "html")
 	ts, err := parsePageTemplates(templateDir)
 	if err != nil {
@@ -111,6 +114,7 @@ func NewServer(ds DataSource, staticPath string, reloadTemplates bool) (*Server,
 	}
 	s := &Server{
 		ds:              ds,
+		cmplClient:      cmplClient,
 		staticPath:      staticPath,
 		templateDir:     templateDir,
 		reloadTemplates: reloadTemplates,
@@ -153,7 +157,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	// It used to be called from some javascript that we served; we're keeping it around
 	// in case some browsers still have those pages loaded.
 	handle("/latest-version/", latestVersionHandler)
-
+	handle("/autocomplete", http.HandlerFunc(s.handleAutoCompletion))
 	handle("/robots.txt", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		http.ServeContent(w, r, "", time.Time{}, strings.NewReader(`User-agent: *

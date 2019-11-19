@@ -59,19 +59,24 @@ func main() {
 		defer db.Close()
 		ds = db
 	}
-
-	server, err := frontend.NewServer(ds, *staticPath, *reloadTemplates)
+	var haClient *redis.Client
+	if config.RedisHAHost() != "" {
+		haClient = redis.NewClient(&redis.Options{
+			Addr: config.RedisHAHost() + ":" + config.RedisHAPort(),
+		})
+	}
+	server, err := frontend.NewServer(ds, haClient, *staticPath, *reloadTemplates)
 	if err != nil {
 		log.Fatalf("frontend.NewServer: %v", err)
 	}
 	router := dcensus.NewRouter(frontend.TagRoute)
-	var redisClient *redis.Client
+	var cacheClient *redis.Client
 	if config.RedisHost() != "" {
-		redisClient = redis.NewClient(&redis.Options{
+		cacheClient = redis.NewClient(&redis.Options{
 			Addr: config.RedisHost() + ":" + config.RedisPort(),
 		})
 	}
-	server.Install(router.Handle, redisClient)
+	server.Install(router.Handle, cacheClient)
 
 	views := append(dcensus.ServerViews,
 		postgres.SearchLatencyDistribution,

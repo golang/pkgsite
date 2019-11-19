@@ -95,3 +95,33 @@ func Decode(entry string) (_ *Completion, err error) {
 	c.Importers = importers
 	return c, nil
 }
+
+// PathCompletions generates completion entries for all possible suffixes of
+// partial.PackagePath.
+func PathCompletions(partial Completion) []*Completion {
+	suffs := pathSuffixes(partial.PackagePath)
+	var cs []*Completion
+	for _, pref := range suffs {
+		var next = partial
+		next.Suffix = pref
+		cs = append(cs, &next)
+	}
+	return cs
+}
+
+// pathSuffixes returns a slice of all path suffixes of a '/'-separated path,
+// including the full path itself. i.e.
+//   pathSuffixes("foo/bar") = []string{"foo/bar", "bar"}
+func pathSuffixes(path string) []string {
+	path = strings.ToLower(path)
+	var prefs []string
+	for len(path) > 0 {
+		prefs = append(prefs, path)
+		i := strings.Index(path, "/")
+		if i < 0 {
+			break
+		}
+		path = path[i+1:]
+	}
+	return prefs
+}

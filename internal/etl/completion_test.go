@@ -6,12 +6,10 @@ package etl
 
 import (
 	"context"
-	"sort"
 	"testing"
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/go-redis/redis/v7"
-	"github.com/google/go-cmp/cmp"
 	"golang.org/x/discovery/internal/complete"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/testing/sample"
@@ -65,45 +63,5 @@ func TestUpdateRedisIndexes(t *testing.T) {
 	// There are 5 path components in github.com/something/else/oranges/bananas
 	if remCount != 5 {
 		t.Errorf("got %d remaining autocompletions, want %d", remCount, 5)
-	}
-}
-
-func TestPathCompletions(t *testing.T) {
-	partial := complete.Completion{
-		ModulePath:  "my.module/foo",
-		PackagePath: "my.module/foo/bar",
-		Version:     "v1.2.3",
-		Importers:   123,
-	}
-	completions := pathCompletions(partial)
-	sort.Slice(completions, func(i, j int) bool {
-		return len(completions[i].Suffix) < len(completions[j].Suffix)
-	})
-	wantSuffixes := []string{"bar", "foo/bar", "my.module/foo/bar"}
-	if got, want := len(completions), len(wantSuffixes); got != want {
-		t.Fatalf("len(pathCompletions(%v)) = %d, want %d", partial, got, want)
-	}
-	for i, got := range completions {
-		want := partial
-		want.Suffix = wantSuffixes[i]
-		if diff := cmp.Diff(want, *got); diff != "" {
-			t.Errorf("completions[%d] mismatch (-want +got)\n%s", i, diff)
-		}
-	}
-}
-
-func TestPathSuffixes(t *testing.T) {
-	tests := []struct {
-		path string
-		want []string
-	}{
-		{"foo/Bar/baz", []string{"foo/bar/baz", "bar/baz", "baz"}},
-		{"foo", []string{"foo"}},
-		{"BAR", []string{"bar"}},
-	}
-	for _, test := range tests {
-		if got := pathSuffixes(test.path); !cmp.Equal(got, test.want) {
-			t.Errorf("prefixes(%q) = %v, want %v", test.path, got, test.want)
-		}
 	}
 }

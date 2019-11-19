@@ -68,7 +68,7 @@ func TestEndToEndProcessing(t *testing.T) {
 	etlServer.Install(etlMux.Handle)
 	etlHTTP := httptest.NewServer(etlMux)
 
-	frontendServer, err := frontend.NewServer(testDB, "../../../content/static", false)
+	frontendServer, err := frontend.NewServer(testDB, nil, "../../../content/static", false)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -10,7 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/go-redis/redis/v7"
@@ -128,7 +127,7 @@ func updateRedisIndexes(ctx context.Context, db *sql.DB, redisClient *redis.Clie
 		if err := rows.Scan(&partial.PackagePath, &partial.ModulePath, &partial.Version, &partial.Importers); err != nil {
 			return fmt.Errorf("rows.Scan: %v", err)
 		}
-		cmpls := pathCompletions(partial)
+		cmpls := complete.PathCompletions(partial)
 		var zs []*redis.Z
 		for _, cmpl := range cmpls {
 			zs = append(zs, &redis.Z{Member: cmpl.Encode()})
@@ -150,34 +149,4 @@ func updateRedisIndexes(ctx context.Context, db *sql.DB, redisClient *redis.Clie
 		return fmt.Errorf(`redis error: Rename(%q, %q): %v`, keyRem, complete.RemainingKey, err)
 	}
 	return nil
-}
-
-// pathCompletions generates completion entries for all possible suffixes of
-// partial.PackagePath.
-func pathCompletions(partial complete.Completion) []*complete.Completion {
-	suffs := pathSuffixes(partial.PackagePath)
-	var cs []*complete.Completion
-	for _, pref := range suffs {
-		next := partial
-		next.Suffix = pref
-		cs = append(cs, &next)
-	}
-	return cs
-}
-
-// pathSuffixes returns a slice of all path suffixes of a '/'-separated path,
-// including the full path itself. i.e.
-//   pathSuffixes("foo/bar") = []string{"foo/bar", "bar"}
-func pathSuffixes(path string) []string {
-	path = strings.ToLower(path)
-	var prefs []string
-	for len(path) > 0 {
-		prefs = append(prefs, path)
-		i := strings.Index(path, "/")
-		if i < 0 {
-			break
-		}
-		path = path[i+1:]
-	}
-	return prefs
 }

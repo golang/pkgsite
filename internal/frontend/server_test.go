@@ -33,7 +33,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestHTMLInjection(t *testing.T) {
-	s, err := NewServer(testDB, "../../content/static", false)
+	s, err := NewServer(testDB, nil, "../../content/static", false)
 	if err != nil {
 		t.Fatalf("NewServer: %v", err)
 	}
@@ -90,7 +90,7 @@ func TestServer(t *testing.T) {
 	pkgCmdGo.Path = "cmd/go"
 	mustInsertVersion(stdlib.ModulePath, "v1.13.0", []*internal.Package{pkgCmdGo})
 
-	s, err := NewServer(testDB, "../../content/static", false)
+	s, err := NewServer(testDB, nil, "../../content/static", false)
 	if err != nil {
 		t.Fatalf("NewServer: %v", err)
 	}
@@ -687,7 +687,7 @@ func TestServerErrors(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	s, err := NewServer(testDB, "../../content/static", false)
+	s, err := NewServer(testDB, nil, "../../content/static", false)
 	if err != nil {
 		t.Fatalf("NewServer: %v", err)
 	}
