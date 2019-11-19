@@ -117,7 +117,7 @@ function guessKind(el) {
           return 'variable';
         case 'Documentation-constants':
           return 'constant';
-	case 'Documentation-types':
+        case 'Documentation-types':
           return 'field';
         default:
           return '';

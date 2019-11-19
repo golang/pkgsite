@@ -101,16 +101,59 @@ code {
 .FeedbackButton {
   cursor: pointer;
 }
-.SearchForm {
-  align-items: center;
-  border: 0.0625rem solid var(--gray-8);
-  border-radius: 100em;
-  display: flex;
-  font-size: 1rem;
-  justify-content: space-between;
+.AutoComplete-list {
+  margin: 0 0.5rem 0 0;
+  list-style: none;
+  padding: 0;
+}
+.AutoComplete-list li:first-child {
+  border-top: 0.0625rem solid var(--gray-8);
+  margin-top: 0.3125rem;
+}
+.AutoComplete-list li {
+  padding: 0.25rem 0;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  cursor: pointer;
+}
+.AutoComplete-list li:hover,
+.AutoComplete-list li[aria-selected='true'] {
+  background-color: var(--gray-9);
+}
+.SearchForm[aria-expanded='false'] .AutoComplete-list,
+.Header-searchForm[aria-expanded='false'] .AutoComplete-list {
+  display: none;
+}
+/* This class violates the style guide, because it set by autoComplete.js and
+ * is non-trivial to override. */
+.autoComplete_highlighted {
+  font-weight: bold;
+}
+
+.SearchForm-container {
+  position: relative;
   margin: 0 auto;
+  height: 3rem;
   max-width: 38.25rem;
+}
+.SearchForm {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border: 0.0625rem solid var(--gray-8);
+  border-radius: 1.4em;
+  background-color: white;
+  font-size: 1rem;
   padding: 0.5rem 0.5rem 0.5rem 1rem;
+}
+.SearchForm:hover,
+.SearchForm:focus-within,
+.Header-searchForm:hover,
+.Header-searchForm:focus-within {
+  box-shadow: 0 0 0.1875rem rgba(0, 0, 0, 0.3);
+}
+.SearchForm-firstRow {
+  display: flex;
 }
 .SearchForm-input {
   border: none;
@@ -176,9 +219,12 @@ code {
   pointer-events: none;
   visibility: hidden;
 }
+.Header-logoLink {
+  margin-right: auto;
+}
 .Header-nav {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
 }
 .Header-logo {
   display: block;
@@ -204,7 +250,6 @@ code {
     flex: none;
   }
   .Header-menu {
-    flex: 1;
     justify-content: flex-end;
   }
   .Header-navOpen {
@@ -249,48 +294,44 @@ code {
 .Site-header--dark .Header-navOpen {
   background: no-repeat center/2rem url('/static/img/menu-24px-white.svg');
 }
-.Header-searchForm {
-  align-items: center;
-  border: 0.0625rem solid var(--gray-8);
-  border-radius: 100rem;
-  display: flex;
+.Header-searchForm-container {
+  position: relative;
+  display: inline-flex;
+  margin: 0.6rem auto 0 0;
   flex: 1;
+}
+.Header-searchForm {
+  background-color: white;
+  display: inline-block;
+  border: 0.0625rem solid var(--gray-8);
+  border-radius: 1.4rem;
+  position: absolute;
+  left: 0;
+  right: 0;
   font-size: 1rem;
-  margin: 0.6rem 0;
   padding: 0.5rem 0.5rem 0.5rem 1rem;
 }
-@media only screen and (min-width: 48rem) {
-  .Header-searchForm {
-    margin: 0.6rem 1.4rem;
-  }
-}
-.Site-header--dark .Header-searchFormInput,
-.Site-header--dark .Header-searchFormInput::placeholder {
-  color: var(--white);
+.Header-searchFormInput input[type='text']::placeholder {
+  color: transparent;
 }
 .Header-searchFormInput {
-  background-color: transparent;
   border: none;
   box-sizing: border-box;
   flex: 1;
   font: inherit;
   outline: none;
+  width: 1rem;
 }
 .Header-searchFormSubmit {
   background-color: transparent;
   border: none;
   box-sizing: border-box;
   cursor: pointer;
-  display: flex;
 }
 .Header-searchFormSubmitIcon {
   box-sizing: border-box;
   cursor: pointer;
-  fill: var(--turq-med);
   width: 23px;
-}
-.Site-header--dark .Header-searchFormSubmitIcon {
-  fill: var(--white);
 }
 .NavigationDrawer {
   background: var(--white);
@@ -396,10 +437,10 @@ code {
   display: none;
 }
 .DetailsHeader-unknown a {
-  display: none
+  display: none;
 }
 .DetailsHeader-unknown span {
-  display: none
+  display: none;
 }
 .DetailsHeader-breadcrumbCurrent {
   color: var(--gray-3);
