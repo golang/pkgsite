@@ -67,8 +67,10 @@ func TestServer(t *testing.T) {
 	pkg2 := sample.Package()
 	pkg2.Path = sample.ModulePath + "/foo/directory/hello"
 	pkg2.DocumentationHTML = []byte(`<a href="/pkg/io#Writer">io.Writer</a>`)
+	pseudoVersion := "v0.0.0-20190101-123456789012"
 	mustInsertVersion(sample.ModulePath, "v0.9.0", []*internal.Package{pkg, pkg2})
 	mustInsertVersion(sample.ModulePath, "v1.0.0", []*internal.Package{pkg, pkg2})
+	mustInsertVersion(sample.ModulePath, pseudoVersion, []*internal.Package{pkg, pkg2})
 
 	nonRedistModulePath := "github.com/non_redistributable"
 	nonRedistPkgPath := nonRedistModulePath + "/bar"
@@ -149,6 +151,11 @@ func TestServer(t *testing.T) {
 		LicenseType: "MIT",
 		ModuleURL:   "/mod/github.com/valid_module_name",
 	}
+	mp := *mod
+	mp.Version = pseudoVersion
+	mp.FormattedVersion = "v0.0.0 (20190101-123456789012)"
+	modPseudo := &mp
+
 	std := &pagecheck.Page{
 		Title:       "Standard library",
 		ModulePath:  "std",
@@ -487,6 +494,10 @@ func TestServer(t *testing.T) {
 			// Fall back to the latest version, show readme tab by default.
 			want: in("",
 				pagecheck.ModuleHeader(mod, unversioned),
+				in(".Overview-module a",
+					// TODO(b/144217401): should be unversioned
+					href(fmt.Sprintf("/mod/%s@%s", sample.ModulePath, sample.VersionString)),
+					text("^"+sample.ModulePath+"$")),
 				in(".Overview-readmeContent", text(`readme`))),
 		},
 		// // TODO(b/139498072): add a second module, so we can verify that we get the latest version.
@@ -500,11 +511,25 @@ func TestServer(t *testing.T) {
 				in(".Directories", text(`This is a package synopsis`))),
 		},
 		{
-			name:           "module@version readme tab",
+			name:           "module@version overview tab",
 			urlPath:        fmt.Sprintf("/mod/%s@%s?tab=overview", sample.ModulePath, sample.VersionString),
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.ModuleHeader(mod, versioned),
+				in(".Overview-module a",
+					href(fmt.Sprintf("/mod/%s@%s", sample.ModulePath, sample.VersionString)),
+					text("^"+sample.ModulePath+"$")),
+				in(".Overview-readmeContent", text(`readme`))),
+		},
+		{
+			name:           "module@version overview tab, pseudoversion",
+			urlPath:        fmt.Sprintf("/mod/%s@%s?tab=overview", sample.ModulePath, pseudoVersion),
+			wantStatusCode: http.StatusOK,
+			want: in("",
+				pagecheck.ModuleHeader(modPseudo, versioned),
+				in(".Overview-module a",
+					href(fmt.Sprintf("/mod/%s@%s", sample.ModulePath, pseudoVersion)),
+					text("^"+sample.ModulePath+"$")),
 				in(".Overview-readmeContent", text(`readme`))),
 		},
 		{

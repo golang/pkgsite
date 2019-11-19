@@ -87,7 +87,7 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo, latestReques
 // version of the package. If so, the returned Package.URL will have the
 // structure /<path> instead of /<path>@<version>.
 func createModule(vi *internal.VersionInfo, licmetas []*license.Metadata, latestRequested bool) *Module {
-	urlVersion := formattedVersion(vi.Version, vi.ModulePath)
+	urlVersion := linkableVersion(vi.Version, vi.ModulePath)
 	if latestRequested {
 		urlVersion = internal.LatestVersion
 	}

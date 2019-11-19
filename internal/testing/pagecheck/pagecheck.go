@@ -21,6 +21,7 @@ type Page struct {
 	ModulePath       string
 	Suffix           string // package or directory path after module path; empty for a module
 	Version          string
+	FormattedVersion string
 	Title            string
 	LicenseType      string
 	IsLatest         bool   // is this the latest version of this module?
@@ -40,10 +41,14 @@ var (
 
 // PackageHeader checks a details page header for a package.
 func PackageHeader(p *Page, versionedURL bool) htmlcheck.Checker {
+	fv := p.FormattedVersion
+	if fv == "" {
+		fv = p.Version
+	}
 	return in("",
 		in("span.DetailsHeader-breadcrumbCurrent", exactText(path.Base(p.Suffix))),
 		in("h1.DetailsHeader-title", exactText(p.Title)),
-		in("div.DetailsHeader-version", exactText(p.Version)),
+		in("div.DetailsHeader-version", exactText(fv)),
 		versionBadge(p),
 		licenseInfo(p, packageURLPath(p, versionedURL), versionedURL),
 		moduleInHeader(p, versionedURL))
@@ -51,18 +56,26 @@ func PackageHeader(p *Page, versionedURL bool) htmlcheck.Checker {
 
 // ModuleHeader checks a details page header for a module.
 func ModuleHeader(p *Page, versionedURL bool) htmlcheck.Checker {
+	fv := p.FormattedVersion
+	if fv == "" {
+		fv = p.Version
+	}
 	return in("",
 		in("h1.DetailsHeader-title", exactText(p.Title)),
-		in("div.DetailsHeader-version", exactText(p.Version)),
+		in("div.DetailsHeader-version", exactText(fv)),
 		licenseInfo(p, moduleURLPath(p, versionedURL), versionedURL))
 }
 
 // DirectoryHeader checks a details page header for a directory.
 func DirectoryHeader(p *Page, versionedURL bool) htmlcheck.Checker {
+	fv := p.FormattedVersion
+	if fv == "" {
+		fv = p.Version
+	}
 	return in("",
 		in("span.DetailsHeader-breadcrumbCurrent", exactText(path.Base(p.Suffix))),
 		in("h1.DetailsHeader-title", exactText(p.Title)),
-		in("div.DetailsHeader-version", exactText(p.Version)),
+		in("div.DetailsHeader-version", exactText(fv)),
 		// directory pages don't show a header badge
 		in("div.DetailsHeader-badge", in(".DetailsHeader-unknown")),
 		licenseInfo(p, packageURLPath(p, versionedURL), versionedURL),

@@ -40,7 +40,7 @@ func fetchOverviewDetails(ctx context.Context, ds DataSource,
 	vi *internal.VersionInfo, licmetas []*license.Metadata) *OverviewDetails {
 	overview := &OverviewDetails{
 		ModulePath:      vi.ModulePath,
-		ModuleURL:       constructModuleURL(vi.ModulePath, formattedVersion(vi.Version, vi.ModulePath)),
+		ModuleURL:       constructModuleURL(vi.ModulePath, linkableVersion(vi.Version, vi.ModulePath)),
 		RepositoryURL:   vi.SourceInfo.RepoURL(),
 		Redistributable: license.AreRedistributable(licmetas),
 	}
