@@ -6,6 +6,7 @@ package postgres
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"testing"
@@ -368,8 +369,13 @@ func TestGetPackagesInVersion(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			// TODO(b/130367504): remove this ignore once imports are not asymmetric
-			if diff := cmp.Diff(tc.version.Packages, got, cmpopts.IgnoreFields(internal.Package{}, "Imports")); diff != "" {
+			opts := []cmp.Option{
+				// TODO(b/130367504): remove this ignore once imports are not asymmetric
+				cmpopts.IgnoreFields(internal.Package{}, "Imports"),
+				// The packages table only includes partial license information; it omits the Coverage field.
+				cmpopts.IgnoreFields(license.Metadata{}, "Coverage"),
+			}
+			if diff := cmp.Diff(tc.version.Packages, got, opts...); diff != "" {
 				t.Errorf("testDB.GetPackageInVersion(ctx, %q, %q) mismatch (-want +got):\n%s", tc.pkgPath, tc.version.Version, diff)
 			}
 		})
@@ -452,5 +458,33 @@ func TestGetModuleLicenses(t *testing.T) {
 	wantLicenses := []*license.License{testVersion.Licenses[0]}
 	if diff := cmp.Diff(wantLicenses, got); diff != "" {
 		t.Errorf("testDB.GetModuleLicenses(ctx, %q, %q) mismatch (-want +got):\n%s", modulePath, testVersion.Version, diff)
+	}
+}
+
+func TestJSONBScanner(t *testing.T) {
+	type S struct{ A int }
+
+	want := &S{1}
+	val, err := json.Marshal(want)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var got *S
+	js := jsonbScanner{&got}
+	if err := js.Scan(val); err != nil {
+		t.Fatal(err)
+	}
+	if *got != *want {
+		t.Errorf("got %+v, want %+v", *got, *want)
+	}
+
+	var got2 *S
+	js = jsonbScanner{&got2}
+	if err := js.Scan(nil); err != nil {
+		t.Fatal(err)
+	}
+	if got2 != nil {
+		t.Errorf("got %#v, want nil", got2)
 	}
 }

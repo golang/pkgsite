@@ -14,6 +14,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/testing/sample"
 	"golang.org/x/xerrors"
@@ -178,7 +179,12 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 				t.Errorf("testDB.GetPackage(ctx, %q, %q) version.version = %v, want %v", tc.wantPkgPath, tc.wantVersion, gotPkg.VersionInfo.Version, tc.version.Version)
 			}
 
-			if diff := cmp.Diff(wantPkg, &gotPkg.Package, cmpopts.IgnoreFields(internal.Package{}, "Imports")); diff != "" {
+			opts := cmp.Options{
+				cmpopts.IgnoreFields(internal.Package{}, "Imports"),
+				// The packages table only includes partial license information; it omits the Coverage field.
+				cmpopts.IgnoreFields(license.Metadata{}, "Coverage"),
+			}
+			if diff := cmp.Diff(wantPkg, &gotPkg.Package, opts...); diff != "" {
 				t.Errorf("testDB.GetPackage(%q, %q) Package mismatch (-want +got):\n%s", tc.wantPkgPath, tc.wantVersion, diff)
 			}
 		})

@@ -27,6 +27,7 @@ import (
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/stdlib"
+	"golang.org/x/discovery/internal/testing/sample"
 	"golang.org/x/discovery/internal/testing/testhelper"
 	"golang.org/x/discovery/internal/version"
 	"golang.org/x/xerrors"
@@ -352,9 +353,14 @@ func TestFetchVersion(t *testing.T) {
 		VersionType:    version.TypeRelease,
 		SourceInfo:     source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
 	}
+	wantCoverage := sample.LicenseMetadata[0].Coverage
 	wantLicenses := []*license.License{
 		{
-			Metadata: &license.Metadata{Types: []string{"MIT"}, FilePath: "LICENSE.md"},
+			Metadata: &license.Metadata{
+				Types:    []string{"MIT"},
+				FilePath: "LICENSE.md",
+				Coverage: wantCoverage,
+			},
 			Contents: []byte(testhelper.MITLicense),
 		},
 	}
@@ -378,10 +384,12 @@ func TestFetchVersion(t *testing.T) {
 						V1Path:   "github.com/my/module/foo",
 						Name:     "foo",
 						Synopsis: "package foo exports a helpful constant.",
-						Licenses: []*license.Metadata{{Types: []string{"MIT"}, FilePath: "LICENSE.md"}},
-						Imports:  []string{"net/http"},
-						GOOS:     "linux",
-						GOARCH:   "amd64",
+						Licenses: []*license.Metadata{
+							{Types: []string{"MIT"}, FilePath: "LICENSE.md", Coverage: wantCoverage},
+						},
+						Imports: []string{"net/http"},
+						GOOS:    "linux",
+						GOARCH:  "amd64",
 					},
 				},
 				Licenses: wantLicenses,
@@ -407,10 +415,12 @@ func TestFetchVersion(t *testing.T) {
 						V1Path:   "github.com/my/module/js",
 						Name:     "js",
 						Synopsis: "Package js only works with wasm.",
-						Licenses: []*license.Metadata{{Types: []string{"MIT"}, FilePath: "LICENSE.md"}},
-						Imports:  []string{},
-						GOOS:     "js",
-						GOARCH:   "wasm",
+						Licenses: []*license.Metadata{
+							{Types: []string{"MIT"}, FilePath: "LICENSE.md", Coverage: wantCoverage},
+						},
+						Imports: []string{},
+						GOOS:    "js",
+						GOARCH:  "wasm",
 					},
 				},
 				Licenses: wantLicenses,
@@ -427,7 +437,12 @@ func TestFetchVersion(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(test.want, got, cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML"), cmp.AllowUnexported(source.Info{})); diff != "" {
+			opts := []cmp.Option{
+				cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML"),
+				cmp.AllowUnexported(source.Info{}),
+			}
+			opts = append(opts, sample.LicenseCmpOpts...)
+			if diff := cmp.Diff(test.want, got, opts...); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -499,7 +514,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					ReadmeFilePath: "README.md",
 					ReadmeContents: []byte("README FILE FOR TESTING."),
 					VersionType:    "release",
-					SourceInfo:     &source.Info{},
+					SourceInfo:     nil,
 				},
 				Package: internal.Package{
 					Path:              "nonredistributable.mod/module/bar/baz",
@@ -528,7 +543,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					ReadmeFilePath: "README.md",
 					ReadmeContents: []byte("README FILE FOR TESTING."),
 					VersionType:    "release",
-					SourceInfo:     &source.Info{},
+					SourceInfo:     nil,
 				},
 				Package: internal.Package{
 					Path:              "nonredistributable.mod/module/foo",
@@ -615,7 +630,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					CommitTime:     testProxyCommitTime,
 					VersionType:    "release",
 					ReadmeContents: []uint8{},
-					SourceInfo:     &source.Info{},
+					SourceInfo:     nil,
 				},
 				Package: internal.Package{
 					Path:              "build.constraints/module/cpu",

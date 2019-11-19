@@ -11,10 +11,16 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	lc "github.com/google/licensecheck"
 	"golang.org/x/discovery/internal/testing/testhelper"
 )
 
 func TestDetect(t *testing.T) {
+	cov := lc.Coverage{
+		Percent: 98.1928,
+		Match:   []lc.Match{{Name: "MIT", Type: lc.MIT, Percent: 97.6048}},
+	}
 	testCases := []struct {
 		name, subdir string
 		contents     map[string]string
@@ -25,21 +31,21 @@ func TestDetect(t *testing.T) {
 			contents: map[string]string{
 				"foo/LICENSE": testhelper.MITLicense,
 			},
-			want: []*Metadata{{Types: []string{"MIT"}, FilePath: "foo/LICENSE"}},
+			want: []*Metadata{{Types: []string{"MIT"}, FilePath: "foo/LICENSE", Coverage: cov}},
 		},
 		{
 			name: "valid license, british spelling",
 			contents: map[string]string{
 				"foo/LICENCE": testhelper.MITLicense,
 			},
-			want: []*Metadata{{Types: []string{"MIT"}, FilePath: "foo/LICENCE"}},
+			want: []*Metadata{{Types: []string{"MIT"}, FilePath: "foo/LICENCE", Coverage: cov}},
 		},
 		{
 			name: "valid license md format",
 			contents: map[string]string{
 				"foo/LICENSE.md": testhelper.MITLicense,
 			},
-			want: []*Metadata{{Types: []string{"MIT"}, FilePath: "foo/LICENSE.md"}},
+			want: []*Metadata{{Types: []string{"MIT"}, FilePath: "foo/LICENSE.md", Coverage: cov}},
 		},
 		{
 			name: "valid license trim prefix",
@@ -47,7 +53,7 @@ func TestDetect(t *testing.T) {
 				"rsc.io/quote@v1.4.1/LICENSE.md": testhelper.MITLicense,
 			},
 			subdir: "rsc.io/quote@v1.4.1",
-			want:   []*Metadata{{Types: []string{"MIT"}, FilePath: "LICENSE.md"}},
+			want:   []*Metadata{{Types: []string{"MIT"}, FilePath: "LICENSE.md", Coverage: cov}},
 		},
 		{
 			name: "multiple licenses",
@@ -57,9 +63,12 @@ func TestDetect(t *testing.T) {
 				"foo/COPYING":    testhelper.BSD0License,
 			},
 			want: []*Metadata{
-				{Types: []string{"MIT"}, FilePath: "LICENSE"},
-				{Types: []string{"MIT"}, FilePath: "bar/LICENSE.md"},
-				{Types: []string{"BSD-0-Clause"}, FilePath: "foo/COPYING"},
+				{Types: []string{"MIT"}, FilePath: "LICENSE", Coverage: cov},
+				{Types: []string{"MIT"}, FilePath: "bar/LICENSE.md", Coverage: cov},
+				{Types: []string{"BSD-0-Clause"}, FilePath: "foo/COPYING", Coverage: lc.Coverage{
+					Percent: 97.0297,
+					Match:   []lc.Match{{Name: "BSD-0-Clause", Type: lc.BSD, Percent: 97.0297}},
+				}},
 			},
 		},
 		{
@@ -68,7 +77,13 @@ func TestDetect(t *testing.T) {
 				"LICENSE": testhelper.MITLicense + "\n" + testhelper.BSD0License,
 			},
 			want: []*Metadata{
-				{Types: []string{"BSD-0-Clause", "MIT"}, FilePath: "LICENSE"},
+				{Types: []string{"BSD-0-Clause", "MIT"}, FilePath: "LICENSE", Coverage: lc.Coverage{
+					Percent: 97.7528,
+					Match: []lc.Match{
+						{Name: "MIT", Type: lc.MIT, Percent: 97.6048},
+						{Name: "BSD-0-Clause", Type: lc.BSD, Percent: 97.0297},
+					},
+				}},
 			},
 		},
 		{
@@ -90,7 +105,13 @@ veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
 commodo consequat.`,
 			},
 			want: []*Metadata{
-				{FilePath: "LICENSE"},
+				{
+					FilePath: "LICENSE",
+					Coverage: lc.Coverage{
+						Percent: 80.6931,
+						Match:   []lc.Match{{Name: "MIT", Type: lc.MIT, Percent: 97.6048}},
+					},
+				},
 			},
 		},
 		{
@@ -112,7 +133,7 @@ commodo consequat.`,
 				"vendor/pkg/LICENSE": testhelper.MITLicense,
 			},
 			want: []*Metadata{
-				{Types: []string{"MIT"}, FilePath: "pkg/vendor/LICENSE"},
+				{Types: []string{"MIT"}, FilePath: "pkg/vendor/LICENSE", Coverage: cov},
 			},
 		},
 	}
@@ -146,7 +167,12 @@ commodo consequat.`,
 			for _, l := range got {
 				gotFiles = append(gotFiles, l.Metadata)
 			}
-			if diff := cmp.Diff(test.want, gotFiles); diff != "" {
+
+			opts := []cmp.Option{
+				cmpopts.EquateApprox(0, 1e-4), // consider two floats equal if they differ by no more than 1e-4
+				cmpopts.IgnoreFields(lc.Match{}, "Start", "End"),
+			}
+			if diff := cmp.Diff(test.want, gotFiles, opts...); diff != "" {
 				t.Errorf("detectLicense(z) mismatch (-want +got):\n%s", diff)
 			}
 		})

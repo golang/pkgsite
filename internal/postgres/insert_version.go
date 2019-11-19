@@ -129,7 +129,12 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version) error 
 
 		var licenseValues []interface{}
 		for _, l := range version.Licenses {
-			licenseValues = append(licenseValues, version.ModulePath, version.Version, l.FilePath, l.Contents, pq.Array(l.Types))
+			covJSON, err := json.Marshal(l.Coverage)
+			if err != nil {
+				return fmt.Errorf("marshalling %+v: %v", l.Coverage, err)
+			}
+			licenseValues = append(licenseValues, version.ModulePath, version.Version,
+				l.FilePath, l.Contents, pq.Array(l.Types), covJSON)
 		}
 		if len(licenseValues) > 0 {
 			licenseCols := []string{
@@ -138,6 +143,7 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version) error 
 				"file_path",
 				"contents",
 				"types",
+				"coverage",
 			}
 			if err := bulkInsert(ctx, tx, "licenses", licenseCols, licenseValues, onConflictDoNothing); err != nil {
 				return err

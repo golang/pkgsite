@@ -161,13 +161,17 @@ func detectFile(f *zip.File, prefix string) (_ *License, err error) {
 				Metadata: &Metadata{
 					Types:    typs,
 					FilePath: filePath,
+					Coverage: cov,
 				},
 				Contents: contents,
 			}, nil
 		}
 	}
 	return &License{
-		Metadata: &Metadata{FilePath: filePath},
+		Metadata: &Metadata{
+			FilePath: filePath,
+			Coverage: cov,
+		},
 	}, nil
 }
 

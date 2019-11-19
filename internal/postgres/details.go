@@ -18,14 +18,13 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/license"
-	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/version"
 	"golang.org/x/xerrors"
 )
 
 // GetPackagesInVersion returns packages contained in the module version
 // specified by modulePath and version. The returned packages will be sorted
-// their package path.
+// by their package path.
 func (db *DB) GetPackagesInVersion(ctx context.Context, modulePath, version string) (_ []*internal.Package, err error) {
 	query := `SELECT
 		path,
@@ -305,7 +304,7 @@ func (db *DB) GetModuleLicenses(ctx context.Context, modulePath, version string)
 	}
 	query := `
 	SELECT
-		types, file_path, contents
+		types, file_path, contents, coverage
 	FROM
 		licenses
 	WHERE
@@ -332,7 +331,8 @@ func (db *DB) GetPackageLicenses(ctx context.Context, pkgPath, modulePath, versi
 		SELECT
 			l.types,
 			l.file_path,
-			l.contents
+			l.contents,
+			l.coverage
 		FROM
 			licenses l
 		INNER JOIN (
@@ -363,14 +363,14 @@ func (db *DB) GetPackageLicenses(ctx context.Context, pkgPath, modulePath, versi
 // collectLicenses converts the sql rows to a list of licenses. The columns
 // must be types, file_path and contents, in that order.
 func collectLicenses(rows *sql.Rows) ([]*license.License, error) {
-	mustHaveColumns(rows, "types", "file_path", "contents")
+	mustHaveColumns(rows, "types", "file_path", "contents", "coverage")
 	var licenses []*license.License
 	for rows.Next() {
 		var (
 			lic          = &license.License{Metadata: &license.Metadata{}}
 			licenseTypes []string
 		)
-		if err := rows.Scan(pq.Array(&licenseTypes), &lic.FilePath, &lic.Contents); err != nil {
+		if err := rows.Scan(pq.Array(&licenseTypes), &lic.FilePath, &lic.Contents, jsonbScanner{&lic.Coverage}); err != nil {
 			return nil, fmt.Errorf("row.Scan(): %v", err)
 		}
 		lic.Types = licenseTypes
@@ -475,7 +475,7 @@ func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version str
 	row := db.queryRow(ctx, query, args...)
 	if err := row.Scan(&vi.ModulePath, &vi.Version, &vi.CommitTime,
 		nullIsEmpty(&vi.ReadmeFilePath), &vi.ReadmeContents, &vi.VersionType,
-		sourceInfoScanner{&vi.SourceInfo}); err != nil {
+		jsonbScanner{&vi.SourceInfo}); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, xerrors.Errorf("module version %s@%s: %w", modulePath, version, derrors.NotFound)
 		}
@@ -484,26 +484,31 @@ func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version str
 	return &vi, nil
 }
 
-// sourceInfoScanner scans a jsonb value into a *source.Info.
-type sourceInfoScanner struct {
-	ptr **source.Info
+// jsonbScanner scans a jsonb value into a Go value.
+type jsonbScanner struct {
+	ptr interface{} // a pointer to a Go struct or other JSON-serializable value
 }
 
-func (s sourceInfoScanner) Scan(value interface{}) (err error) {
-	defer derrors.Wrap(&err, "sourceInfoScanner(%+v)", value)
+func (s jsonbScanner) Scan(value interface{}) (err error) {
+	defer derrors.Wrap(&err, "jsonbScanner(%+v)", value)
 
+	vptr := reflect.ValueOf(s.ptr)
 	if value == nil {
-		*s.ptr = nil
+		// *s.ptr = nil
+		vptr.Elem().Set(reflect.Zero(vptr.Elem().Type()))
 		return nil
 	}
 	jsonBytes, ok := value.([]byte)
 	if !ok {
 		return errors.New("not a []byte")
 	}
-	var info source.Info
-	if err := json.Unmarshal(jsonBytes, &info); err != nil {
+	// v := &[type of *s.ptr]
+	v := reflect.New(vptr.Elem().Type())
+	if err := json.Unmarshal(jsonBytes, v.Interface()); err != nil {
 		return err
 	}
-	*s.ptr = &info
+
+	// *s.ptr = *v
+	vptr.Elem().Set(v.Elem())
 	return nil
 }

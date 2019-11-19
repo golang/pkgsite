@@ -42,7 +42,6 @@ import (
 // Info holds source information about a module, used to generate URLs referring
 // to directories, files and lines.
 type Info struct {
-	// TODO(b/141771951): change the DB schema of versions to include this information
 	repoURL   string       // URL of repo containing module; exported for DB schema compatibility
 	moduleDir string       // directory of module relative to repo root
 	commit    string       // tag or ID of commit corresponding to version

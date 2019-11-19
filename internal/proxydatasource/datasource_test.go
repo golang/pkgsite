@@ -14,6 +14,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/proxy"
+	"golang.org/x/discovery/internal/testing/sample"
 	"golang.org/x/discovery/internal/testing/testhelper"
 	"golang.org/x/discovery/internal/version"
 )
@@ -37,7 +38,7 @@ func setup(t *testing.T) (context.Context, *DataSource, func()) {
 }
 
 var (
-	wantLicenseMD = &license.Metadata{FilePath: "LICENSE", Types: []string{"MIT"}}
+	wantLicenseMD = sample.LicenseMetadata[0]
 	wantLicense   = &license.License{Metadata: wantLicenseMD}
 	wantPackage   = internal.Package{
 		Path:     "foo.com/bar/baz",
@@ -59,10 +60,10 @@ var (
 		VersionInfo: wantVersionInfo,
 		Package:     wantPackage,
 	}
-	ignore = []cmp.Option{
+	cmpOpts = append([]cmp.Option{
 		cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML"),
 		cmpopts.IgnoreFields(license.License{}, "Contents"),
-	}
+	}, sample.LicenseCmpOpts...)
 )
 
 func TestDataSource_GetDirectory(t *testing.T) {
@@ -77,7 +78,7 @@ func TestDataSource_GetDirectory(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(want, got, ignore...); diff != "" {
+	if diff := cmp.Diff(want, got, cmpOpts...); diff != "" {
 		t.Errorf("GetDirectory diff (-want +got):\n%s", diff)
 	}
 }
@@ -90,7 +91,7 @@ func TestDataSource_GetImports(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(want, got, ignore...); diff != "" {
+	if diff := cmp.Diff(want, got, cmpOpts...); diff != "" {
 		t.Errorf("GetImports diff (-want +got):\n%s", diff)
 	}
 }
@@ -102,7 +103,7 @@ func TestDataSource_GetPackage_Latest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(wantVersionedPackage, got, ignore...); diff != "" {
+	if diff := cmp.Diff(wantVersionedPackage, got, cmpOpts...); diff != "" {
 		t.Errorf("GetLatestPackage diff (-want +got):\n%s", diff)
 	}
 }
@@ -114,7 +115,7 @@ func TestDataSource_GetVersionInfo_Latest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(&wantVersionInfo, got, ignore...); diff != "" {
+	if diff := cmp.Diff(&wantVersionInfo, got, cmpOpts...); diff != "" {
 		t.Errorf("GetLatestVersionInfo diff (-want +got):\n%s", diff)
 	}
 }
@@ -127,7 +128,7 @@ func TestDataSource_GetModuleLicenses(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := []*license.License{wantLicense}
-	if diff := cmp.Diff(want, got, ignore...); diff != "" {
+	if diff := cmp.Diff(want, got, cmpOpts...); diff != "" {
 		t.Errorf("GetModuleLicenses diff (-want +got):\n%s", diff)
 	}
 }
@@ -139,7 +140,7 @@ func TestDataSource_GetPackage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(wantVersionedPackage, got, ignore...); diff != "" {
+	if diff := cmp.Diff(wantVersionedPackage, got, cmpOpts...); diff != "" {
 		t.Errorf("GetPackage diff (-want +got):\n%s", diff)
 	}
 }
@@ -152,7 +153,7 @@ func TestDataSource_GetPackageLicenses(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := []*license.License{wantLicense}
-	if diff := cmp.Diff(want, got, ignore...); diff != "" {
+	if diff := cmp.Diff(want, got, cmpOpts...); diff != "" {
 		t.Errorf("GetPackageLicenses diff (-want +got):\n%s", diff)
 	}
 }
@@ -165,7 +166,7 @@ func TestDataSource_GetPackagesInVersion(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := []*internal.Package{&wantPackage}
-	if diff := cmp.Diff(want, got, ignore...); diff != "" {
+	if diff := cmp.Diff(want, got, cmpOpts...); diff != "" {
 		t.Errorf("GetPackagesInVersion diff (-want +got):\n%s", diff)
 	}
 }
@@ -214,7 +215,7 @@ func TestDataSource_GetVersionInfo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(&wantVersionInfo, got, ignore...); diff != "" {
+	if diff := cmp.Diff(&wantVersionInfo, got, cmpOpts...); diff != "" {
 		t.Errorf("GetVersionInfo diff (-want +got):\n%s", diff)
 	}
 }

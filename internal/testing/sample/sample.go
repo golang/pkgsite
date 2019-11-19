@@ -10,6 +10,9 @@ import (
 	"path"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/licensecheck"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/source"
@@ -23,7 +26,14 @@ var (
 	VersionString   = "v1.0.0"
 	CommitTime      = NowTruncated()
 	LicenseMetadata = []*license.Metadata{
-		{Types: []string{"MIT"}, FilePath: "LICENSE"},
+		{
+			Types:    []string{"MIT"},
+			FilePath: "LICENSE",
+			Coverage: licensecheck.Coverage{
+				Percent: 98.1928,
+				Match:   []licensecheck.Match{{Name: "MIT", Type: licensecheck.MIT, Percent: 97.6048}},
+			},
+		},
 	}
 	Licenses = []*license.License{
 		{Metadata: LicenseMetadata[0], Contents: []byte(`Lorem Ipsum`)},
@@ -40,6 +50,12 @@ var (
 	GOOS              = "linux"
 	GOARCH            = "amd64"
 )
+
+// LicenseCmpOpts are options to use when comparing licenses with the cmp package.
+var LicenseCmpOpts = []cmp.Option{
+	cmpopts.EquateApprox(0, 1e-4), // consider two floats equal if they differ by no more than 1e-4.
+	cmpopts.IgnoreFields(licensecheck.Match{}, "Start", "End"),
+}
 
 // NowTruncated returns time.Now() truncated to Microsecond precision.
 //

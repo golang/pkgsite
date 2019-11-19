@@ -143,7 +143,7 @@ func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version strin
 		&pkg.V1Path, pq.Array(&licenseTypes), pq.Array(&licensePaths),
 		&pkg.DocumentationHTML, &pkg.GOOS, &pkg.GOARCH, &pkg.Version,
 		&pkg.CommitTime, nullIsEmpty(&pkg.ReadmeFilePath), &pkg.ReadmeContents,
-		&pkg.ModulePath, &pkg.VersionType, sourceInfoScanner{&pkg.SourceInfo})
+		&pkg.ModulePath, &pkg.VersionType, jsonbScanner{&pkg.SourceInfo})
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, xerrors.Errorf("package %s@%s: %w", pkgPath, version, derrors.NotFound)

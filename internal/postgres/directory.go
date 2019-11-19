@@ -90,7 +90,7 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version str
 			&vi.ReadmeContents,
 			&vi.CommitTime,
 			&vi.VersionType,
-			sourceInfoScanner{&vi.SourceInfo}); err != nil {
+			jsonbScanner{&vi.SourceInfo}); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
 		lics, err := zipLicenseMetadata(licenseTypes, licensePaths)

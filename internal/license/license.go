@@ -4,7 +4,11 @@
 
 package license
 
-import "path"
+import (
+	"path"
+
+	"github.com/google/licensecheck"
+)
 
 // Metadata holds information extracted from a license file: its license Type
 // and FilePath relative to the contents directory.
@@ -14,6 +18,8 @@ type Metadata struct {
 	// FilePath is the '/'-separated path to the license file in the module zip,
 	// relative to the contents directory.
 	FilePath string
+	// The output of licensecheck.Cover.
+	Coverage licensecheck.Coverage
 }
 
 // A License is a classified license file path and its contents.
