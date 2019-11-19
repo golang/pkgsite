@@ -18,6 +18,7 @@ import (
 
 	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
 	"cloud.google.com/go/errorreporting"
+	"github.com/go-redis/redis/v7"
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/dcensus"
 	"golang.org/x/discovery/internal/etl"
@@ -71,7 +72,8 @@ func main() {
 	}
 	fetchQueue := queue(ctx, proxyClient, db)
 	reportingClient := reportingClient(ctx)
-	server, err := etl.NewServer(db, indexClient, proxyClient, fetchQueue, reportingClient, *staticPath)
+	redisClient := getRedis(ctx)
+	server, err := etl.NewServer(db, indexClient, proxyClient, redisClient, fetchQueue, reportingClient, *staticPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -117,6 +119,20 @@ func queue(ctx context.Context, proxyClient *proxy.Client, db *postgres.DB) etl.
 		log.Fatal(err)
 	}
 	return etl.NewGCPQueue(client, queueName)
+}
+
+func getRedis(ctx context.Context) *redis.Client {
+	if config.RedisHAHost() != "" {
+		return redis.NewClient(&redis.Options{
+			Addr: config.RedisHAHost() + ":" + config.RedisHAPort(),
+			// We update completions with one big pipeline, so we need long write
+			// timeouts. ReadTimeout is increased only to be consistent with
+			// WriteTimeout.
+			WriteTimeout: 5 * time.Minute,
+			ReadTimeout:  5 * time.Minute,
+		})
+	}
+	return nil
 }
 
 func reportingClient(ctx context.Context) *errorreporting.Client {

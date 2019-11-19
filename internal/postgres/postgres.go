@@ -25,6 +25,12 @@ type DB struct {
 	db *sql.DB
 }
 
+// GetSQLDB returns the underlying SQL database for the postgres instance. This
+// allows the ETL to perform streaming operations on the database.
+func (db *DB) GetSQLDB() *sql.DB {
+	return db.db
+}
+
 func (db *DB) exec(ctx context.Context, query string, args ...interface{}) (res sql.Result, err error) {
 	defer logQuery(query, args)(&err)
 

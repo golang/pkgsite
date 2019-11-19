@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/errorreporting"
+	"github.com/go-redis/redis/v7"
 	"go.opencensus.io/trace"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/config"
@@ -34,6 +35,7 @@ import (
 type Server struct {
 	indexClient     *index.Client
 	proxyClient     *proxy.Client
+	redisClient     *redis.Client
 	db              *postgres.DB
 	queue           Queue
 	reportingClient *errorreporting.Client
@@ -45,6 +47,7 @@ type Server struct {
 func NewServer(db *postgres.DB,
 	indexClient *index.Client,
 	proxyClient *proxy.Client,
+	redisClient *redis.Client,
 	queue Queue,
 	reportingClient *errorreporting.Client,
 	staticPath string,
@@ -60,6 +63,7 @@ func NewServer(db *postgres.DB,
 		db:              db,
 		indexClient:     indexClient,
 		proxyClient:     proxyClient,
+		redisClient:     redisClient,
 		queue:           queue,
 		reportingClient: reportingClient,
 		indexTemplate:   indexTemplate,
@@ -88,6 +92,10 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// imported_by_count_updated_at < version_updated_at.
 	// This endpoint is invoked by a Cloud Scheduler job:
 	// 	handle("/update-imported-by-count", rmw(http.HandlerFunc(s.handleUpdateImportedByCount)))
+
+	// cloud-scheduler: download search document data and update the redis sorted
+	// set(s) used in auto-completion.
+	handle("/update-redis-indexes", rmw(http.HandlerFunc(s.handleUpdateRedisIndexes)))
 
 	// task-queue: fetch fetches a module version from the Module Mirror, and
 	// processes the contents, and inserts it into the database. If a fetch

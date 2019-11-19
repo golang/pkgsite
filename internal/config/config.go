@@ -80,14 +80,30 @@ func LocationID() string {
 	return cfg.LocationID
 }
 
-// RedisHost returns the hostname or IP address of the redis instance.
+// RedisHost returns the hostname or IP address of the redis instance to
+// be used for page caching.
+// TODO(b/143370178): rename to RedisCacheHost
 func RedisHost() string {
-	return cfg.RedisHost
+	return cfg.RedisCacheHost
 }
 
-// RedisPort returns the port of the redis instance.
+// RedisPort returns the port of the redis instance to be used for page
+// caching.
+// TODO(b/143370178): rename to RedisCachePort
 func RedisPort() string {
-	return cfg.RedisPort
+	return cfg.RedisCachePort
+}
+
+// RedisHAHost returns the hostname or IP address of the redis instance
+// to be used for auto-completion.
+func RedisHAHost() string {
+	return cfg.RedisHAHost
+}
+
+// RedisHAPort returns the port of the redis instance to be used for
+// auto-completion.
+func RedisHAPort() string {
+	return cfg.RedisHAPort
 }
 
 // Quota returns the settings for the quota middleware.
@@ -197,8 +213,12 @@ type config struct {
 	DBSecret, DBUser, DBHost, DBPort, DBName string
 	DBPassword                               string `json:"-"`
 
-	// Redis related configuration.
-	RedisHost, RedisPort string
+	// Configuration for redis page cache.
+	RedisCacheHost, RedisCachePort string
+
+	// Configuration for redis autocompletion. This is different from the page
+	// cache instance as it has different availability requirements.
+	RedisHAHost, RedisHAPort string
 
 	Quota QuotaSettings
 }
@@ -287,8 +307,10 @@ func Init(ctx context.Context) (err error) {
 		}
 	}
 
-	cfg.RedisHost = os.Getenv("GO_DISCOVERY_REDIS_HOST")
-	cfg.RedisPort = GetEnv("GO_DISCOVERY_REDIS_PORT", "6379")
+	cfg.RedisCacheHost = os.Getenv("GO_DISCOVERY_REDIS_HOST")
+	cfg.RedisCachePort = GetEnv("GO_DISCOVERY_REDIS_PORT", "6379")
+	cfg.RedisHAHost = os.Getenv("GO_DISCOVERY_REDIS_HA_HOST")
+	cfg.RedisHAPort = GetEnv("GO_DISCOVERY_REDIS_HA_PORT", "6379")
 
 	cfg.Quota = QuotaSettings{
 		QPS:        10,
