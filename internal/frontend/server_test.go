@@ -411,7 +411,7 @@ func TestServer(t *testing.T) {
 				in(".Overview-module",
 					text("Module"),
 					in("a",
-						href("/mod/github.com/valid_module_name@v1.0.0"),
+						href("/mod/github.com/valid_module_name"),
 						text("github.com/valid_module_name"))),
 				in(".Overview-sourceCodeLink",
 					text("Repository"),
@@ -495,8 +495,7 @@ func TestServer(t *testing.T) {
 			want: in("",
 				pagecheck.ModuleHeader(mod, unversioned),
 				in(".Overview-module a",
-					// TODO(b/144217401): should be unversioned
-					href(fmt.Sprintf("/mod/%s@%s", sample.ModulePath, sample.VersionString)),
+					href("/mod/"+sample.ModulePath),
 					text("^"+sample.ModulePath+"$")),
 				in(".Overview-readmeContent", text(`readme`))),
 		},

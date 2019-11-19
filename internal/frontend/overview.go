@@ -33,11 +33,18 @@ type OverviewDetails struct {
 	RepositoryURL    string
 }
 
+// versionedLinks says whether the constructed URLs should have versions.
 // constructOverviewDetails uses the given version to construct an OverviewDetails.
-func constructOverviewDetails(vi *internal.VersionInfo, licmetas []*license.Metadata) *OverviewDetails {
+func constructOverviewDetails(vi *internal.VersionInfo, licmetas []*license.Metadata, versionedLinks bool) *OverviewDetails {
+	var lv string
+	if versionedLinks {
+		lv = linkableVersion(vi.Version, vi.ModulePath)
+	} else {
+		lv = internal.LatestVersion
+	}
 	overview := &OverviewDetails{
 		ModulePath:      vi.ModulePath,
-		ModuleURL:       constructModuleURL(vi.ModulePath, linkableVersion(vi.Version, vi.ModulePath)),
+		ModuleURL:       constructModuleURL(vi.ModulePath, lv),
 		RepositoryURL:   vi.SourceInfo.RepoURL(),
 		Redistributable: license.AreRedistributable(licmetas),
 	}
@@ -49,8 +56,8 @@ func constructOverviewDetails(vi *internal.VersionInfo, licmetas []*license.Meta
 }
 
 // constructPackageOverviewDetails uses data for the given package to return an OverviewDetails.
-func constructPackageOverviewDetails(pkg *internal.VersionedPackage) *OverviewDetails {
-	od := constructOverviewDetails(&pkg.VersionInfo, pkg.Licenses)
+func constructPackageOverviewDetails(pkg *internal.VersionedPackage, versionedLinks bool) *OverviewDetails {
+	od := constructOverviewDetails(&pkg.VersionInfo, pkg.Licenses, versionedLinks)
 	od.PackageSourceURL = pkg.SourceInfo.DirectoryURL(packageSubdir(pkg.Path, pkg.ModulePath))
 	if !pkg.IsRedistributable() {
 		od.Redistributable = false

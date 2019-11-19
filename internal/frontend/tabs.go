@@ -8,6 +8,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/license"
@@ -154,9 +156,13 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds
 	case "licenses":
 		return fetchPackageLicensesDetails(ctx, ds, pkg)
 	case "overview":
-		return constructPackageOverviewDetails(pkg), nil
+		return constructPackageOverviewDetails(pkg, urlIsVersioned(r.URL)), nil
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
+}
+
+func urlIsVersioned(url *url.URL) bool {
+	return strings.ContainsRune(url.Path, '@')
 }
 
 // fetchDetailsForModule returns tab details by delegating to the correct detail
@@ -171,17 +177,17 @@ func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds 
 		return fetchModuleVersionsDetails(ctx, ds, vi)
 	case "overview":
 		// TODO(b/138448402): implement remaining module views.
-		return constructOverviewDetails(vi, license.ToMetadatas(licenses)), nil
+		return constructOverviewDetails(vi, license.ToMetadatas(licenses), urlIsVersioned(r.URL)), nil
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
 
 // constructDetailsForDirectory returns tab details by delegating to the correct
 // detail handler.
-func constructDetailsForDirectory(r *http.Request, tab string, ds DataSource, dir *internal.Directory, licenses []*license.License) (interface{}, error) {
+func constructDetailsForDirectory(r *http.Request, tab string, dir *internal.Directory, licenses []*license.License) (interface{}, error) {
 	switch tab {
 	case "overview":
-		return constructOverviewDetails(&dir.VersionInfo, license.ToMetadatas(licenses)), nil
+		return constructOverviewDetails(&dir.VersionInfo, license.ToMetadatas(licenses), urlIsVersioned(r.URL)), nil
 	case "subdirectories":
 		// Ideally we would just use fetchDirectoryDetails here so that it
 		// follows the same code path as fetchDetailsForModule and
