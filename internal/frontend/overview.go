@@ -6,7 +6,6 @@ package frontend
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"html"
 	"html/template"
@@ -34,10 +33,8 @@ type OverviewDetails struct {
 	RepositoryURL    string
 }
 
-// fetchOverviewDetails fetches data for the given module path and version
-// from the database and returns an OverviewDetails.
-func fetchOverviewDetails(ctx context.Context, ds DataSource,
-	vi *internal.VersionInfo, licmetas []*license.Metadata) *OverviewDetails {
+// constructOverviewDetails uses the given version to construct an OverviewDetails.
+func constructOverviewDetails(vi *internal.VersionInfo, licmetas []*license.Metadata) *OverviewDetails {
 	overview := &OverviewDetails{
 		ModulePath:      vi.ModulePath,
 		ModuleURL:       constructModuleURL(vi.ModulePath, linkableVersion(vi.Version, vi.ModulePath)),
@@ -51,10 +48,9 @@ func fetchOverviewDetails(ctx context.Context, ds DataSource,
 	return overview
 }
 
-// fetchPackageOverviewDetails fetches data for the given package from the
-// database and returns an OverviewDetails.
-func fetchPackageOverviewDetails(ctx context.Context, ds DataSource, pkg *internal.VersionedPackage) *OverviewDetails {
-	od := fetchOverviewDetails(ctx, ds, &pkg.VersionInfo, pkg.Licenses)
+// constructPackageOverviewDetails uses data for the given package to return an OverviewDetails.
+func constructPackageOverviewDetails(pkg *internal.VersionedPackage) *OverviewDetails {
+	od := constructOverviewDetails(&pkg.VersionInfo, pkg.Licenses)
 	od.PackageSourceURL = pkg.SourceInfo.DirectoryURL(packageSubdir(pkg.Path, pkg.ModulePath))
 	if !pkg.IsRedistributable() {
 		od.Redistributable = false

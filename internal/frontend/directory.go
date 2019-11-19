@@ -75,7 +75,7 @@ func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirP
 		header.URL = constructDirectoryURL(dbDir.Path, dbDir.ModulePath, internal.LatestVersion)
 	}
 
-	details, err := fetchDetailsForDirectory(ctx, r, tab, s.ds, dbDir, licenses)
+	details, err := constructDetailsForDirectory(r, tab, s.ds, dbDir, licenses)
 	if err != nil {
 		log.Errorf("serveDirectoryPage for %s@%s: %v", dirPath, version, err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
