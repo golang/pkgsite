@@ -24,6 +24,8 @@ type Checker func(*html.Node) error
 //
 // Calling In(selector), with no checkers, just checks for the presence of
 // a node matching the selector. (For the negation, see NotIn.)
+//
+// A nil Checker is valid and always succeeds.
 func In(selector string, checkers ...Checker) Checker {
 	sel := mustParseSelector(selector)
 	return func(n *html.Node) error {
@@ -103,6 +105,9 @@ func NotIn(selector string) Checker {
 // check calls all the Checkers on n, returning the error of the first one to fail.
 func check(n *html.Node, Checkers []Checker) error {
 	for _, m := range Checkers {
+		if m == nil {
+			continue
+		}
 		if err := m(n); err != nil {
 			return err
 		}

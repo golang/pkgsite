@@ -17,7 +17,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
-	"golang.org/x/discovery/internal/stdlib"
+	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/testing/htmlcheck"
 	"golang.org/x/discovery/internal/testing/pagecheck"
 	"golang.org/x/discovery/internal/testing/sample"
@@ -47,6 +47,18 @@ func TestHTMLInjection(t *testing.T) {
 	}
 }
 
+// TestServer checks the contents of served pages by looking for
+// strings and elements in the parsed HTML response body.
+//
+// Other than search and static content, our pages vary along five dimensions:
+//
+// 1. module / package / directory
+// 2. stdlib / other (since the standard library is a special case in several ways)
+// 3. redistributable / non-redistributable
+// 4. versioned / unversioned URL (whether the URL for the page contains "@version")
+// 5. the tab (overview / doc / imports / ...)
+//
+// We aim to test all combinations of these.
 func TestServer(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
@@ -58,6 +70,7 @@ func TestServer(t *testing.T) {
 		v.ModulePath = modulePath
 		v.Version = version
 		v.Packages = pkgs
+		v.SourceInfo = source.NewGitHubInfo(sample.RepositoryURL, "", version)
 		if err := testDB.InsertVersion(ctx, v); err != nil {
 			t.Fatal(err)
 		}
@@ -88,7 +101,7 @@ func TestServer(t *testing.T) {
 	pkgCmdGo := sample.Package()
 	pkgCmdGo.Name = "main"
 	pkgCmdGo.Path = "cmd/go"
-	mustInsertVersion(stdlib.ModulePath, "v1.13.0", []*internal.Package{pkgCmdGo})
+	mustInsertVersion("std", "v1.13.0", []*internal.Package{pkgCmdGo})
 
 	s, err := NewServer(testDB, nil, "../../content/static", false)
 	if err != nil {
@@ -338,11 +351,14 @@ func TestServer(t *testing.T) {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.PackageHeader(pkgV100, versioned),
-				in(".Overview-sourceCodeLink a",
-					href("github.com/valid_module_name"),
-					text("github.com/valid_module_name")),
-				in(".Overview-readmeContent", text("readme")),
-				in(".Overview-readmeSource", text("Source: github.com/valid_module_name@v1.0.0/README.md"))),
+				pagecheck.OverviewDetails(&pagecheck.Overview{
+					ModuleLink:     "/mod/github.com/valid_module_name@v1.0.0",
+					ModuleLinkText: pkgV100.ModulePath,
+					RepoURL:        "https://github.com/valid_module_name",
+					PackageURL:     "https://github.com/valid_module_name/tree/v1.0.0/foo",
+					ReadmeContent:  "readme",
+					ReadmeSource:   "github.com/valid_module_name@v1.0.0/README.md",
+				})),
 		},
 		{
 			name: "package@version readme tab nonredistributable",
@@ -436,19 +452,13 @@ func TestServer(t *testing.T) {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.DirectoryHeader(dir, unversioned),
-				in(".Overview-module",
-					text("Module"),
-					in("a",
-						href("/mod/github.com/valid_module_name"),
-						text("github.com/valid_module_name"))),
-				in(".Overview-sourceCodeLink",
-					text("Repository"),
-					in("a",
-						href("github.com/valid_module_name"),
-						attr("target", "_blank"),
-						text("github.com/valid_module_name"))),
-				in(".Overview-readmeContent", text("readme")),
-				in(".Overview-readmeSource", text("Source: github.com/valid_module_name@v1.0.0/README.md"))),
+				pagecheck.OverviewDetails(&pagecheck.Overview{
+					ModuleLink:     "/mod/github.com/valid_module_name",
+					ModuleLinkText: dir.ModulePath,
+					RepoURL:        "https://github.com/valid_module_name",
+					ReadmeContent:  "readme",
+					ReadmeSource:   "github.com/valid_module_name@v1.0.0/README.md",
+				})),
 		},
 		{
 			name:           "directory licenses",
@@ -481,21 +491,13 @@ func TestServer(t *testing.T) {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.DirectoryHeader(dirCmd, versioned),
-
-				in(".Overview-module",
-					text("Standard Library"),
-					in("a",
-						href("/std@go1.13"),
-						text("Standard Library"))),
-				in(".Overview-sourceCodeLink",
-					text("Repository"),
-					in("a",
-						href("github.com/valid_module_name"),
-						attr("target", "_blank"),
-						text("github.com/valid_module_name"))),
-				in(".Overview-readmeContent", text("readme")),
-				in(".Overview-readmeSource",
-					text(`^Source: go.googlesource.com/go/\+/refs/tags/go1.13/README.md$`))),
+				pagecheck.OverviewDetails(&pagecheck.Overview{
+					ModuleLink:     "/std@go1.13",
+					ModuleLinkText: "Standard Library",
+					ReadmeContent:  "readme",
+					RepoURL:        "https://github.com/valid_module_name", // wrong, but hard to change
+					ReadmeSource:   "go.googlesource.com/go/+/refs/tags/go1.13/README.md",
+				})),
 		},
 		{
 			name:           "stdlib directory licenses",
@@ -513,7 +515,13 @@ func TestServer(t *testing.T) {
 			// Fall back to the latest version, show readme tab by default.
 			want: in("",
 				pagecheck.ModuleHeader(mod, unversioned),
-				in(".Overview-readmeContent", text(`readme`))),
+				pagecheck.OverviewDetails(&pagecheck.Overview{
+					ModuleLink:     "/mod/" + sample.ModulePath,
+					ModuleLinkText: sample.ModulePath,
+					ReadmeContent:  "readme",
+					RepoURL:        "https://github.com/valid_module_name",
+					ReadmeSource:   "github.com/valid_module_name@v1.0.0/README.md",
+				})),
 		},
 		{
 			name:           "module overview",
@@ -523,10 +531,13 @@ func TestServer(t *testing.T) {
 			// Fall back to the latest version, show readme tab by default.
 			want: in("",
 				pagecheck.ModuleHeader(mod, unversioned),
-				in(".Overview-module a",
-					href("/mod/"+sample.ModulePath),
-					text("^"+sample.ModulePath+"$")),
-				in(".Overview-readmeContent", text(`readme`))),
+				pagecheck.OverviewDetails(&pagecheck.Overview{
+					ModuleLink:     "/mod/" + sample.ModulePath,
+					ModuleLinkText: sample.ModulePath,
+					ReadmeContent:  "readme",
+					RepoURL:        "https://github.com/valid_module_name",
+					ReadmeSource:   "github.com/valid_module_name@v1.0.0/README.md",
+				})),
 		},
 		{
 			name:           "module overview pseudoversion latest",
@@ -558,10 +569,13 @@ func TestServer(t *testing.T) {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.ModuleHeader(mod, versioned),
-				in(".Overview-module a",
-					href(fmt.Sprintf("/mod/%s@%s", sample.ModulePath, sample.VersionString)),
-					text("^"+sample.ModulePath+"$")),
-				in(".Overview-readmeContent", text(`readme`))),
+				pagecheck.OverviewDetails(&pagecheck.Overview{
+					ModuleLink:     fmt.Sprintf("/mod/%s@%s", sample.ModulePath, sample.VersionString),
+					ModuleLinkText: sample.ModulePath,
+					ReadmeContent:  "readme",
+					RepoURL:        "https://github.com/valid_module_name",
+					ReadmeSource:   "github.com/valid_module_name@v1.0.0/README.md",
+				})),
 		},
 		{
 			name:           "module@version overview tab, pseudoversion",
@@ -569,10 +583,13 @@ func TestServer(t *testing.T) {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.ModuleHeader(modPseudo, versioned),
-				in(".Overview-module a",
-					href(fmt.Sprintf("/mod/%s@%s", sample.ModulePath, pseudoVersion)),
-					text("^"+sample.ModulePath+"$")),
-				in(".Overview-readmeContent", text(`readme`))),
+				pagecheck.OverviewDetails(&pagecheck.Overview{
+					ModuleLink:     fmt.Sprintf("/mod/%s@%s", sample.ModulePath, pseudoVersion),
+					ModuleLinkText: sample.ModulePath,
+					ReadmeContent:  "readme",
+					RepoURL:        "https://github.com/valid_module_name",
+					ReadmeSource:   "github.com/valid_module_name@" + pseudoVersion + "/README.md",
+				})),
 		},
 		{
 			name:           "module@version packages tab",

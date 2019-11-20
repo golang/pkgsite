@@ -22,7 +22,7 @@ import (
 // These sample values can be used to construct test cases.
 var (
 	ModulePath      = "github.com/valid_module_name"
-	RepositoryURL   = "github.com/valid_module_name"
+	RepositoryURL   = "https://github.com/valid_module_name"
 	VersionString   = "v1.0.0"
 	CommitTime      = NowTruncated()
 	LicenseMetadata = []*license.Metadata{

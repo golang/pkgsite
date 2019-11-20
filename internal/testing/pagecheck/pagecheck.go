@@ -30,6 +30,16 @@ type Page struct {
 	ModuleURL        string // the relative module URL
 }
 
+// Overview describes the contents of the overview tab.
+type Overview struct {
+	ModuleLink     string // relative link to module page
+	ModuleLinkText string
+	RepoURL        string
+	PackageURL     string
+	ReadmeContent  string
+	ReadmeSource   string
+}
+
 var (
 	in        = htmlcheck.In
 	inAt      = htmlcheck.InAt
@@ -106,6 +116,26 @@ func LicenseDetails(ltype, bodySubstring, source string) htmlcheck.Checker {
 				text(regexp.QuoteMeta(bodySubstring)))),
 		in(".License-source",
 			exactText("Source: "+source)))
+}
+
+// OverviewDetails checks the details section of an overview tab.
+func OverviewDetails(ov *Overview) htmlcheck.Checker {
+	var pkg htmlcheck.Checker
+	if ov.PackageURL != "" {
+		pkg = inAt(".Overview-sourceCodeLink a", 1,
+			href(ov.PackageURL),
+			exactText(ov.PackageURL))
+	}
+	return in("",
+		in("div.Overview-module > a",
+			href(ov.ModuleLink),
+			exactText(ov.ModuleLinkText)),
+		inAt(".Overview-sourceCodeLink a", 0,
+			href(ov.RepoURL),
+			exactText(ov.RepoURL)),
+		pkg,
+		in(".Overview-readmeContent", text(ov.ReadmeContent)),
+		in(".Overview-readmeSource", exactText("Source: "+ov.ReadmeSource)))
 }
 
 // versionBadge checks the latest-version badge on a header.
