@@ -11,6 +11,7 @@ import (
 
 	"github.com/lib/pq"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/database"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/xerrors"
@@ -138,11 +139,11 @@ func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version strin
 		pkg                        internal.VersionedPackage
 		licenseTypes, licensePaths []string
 	)
-	row := db.queryRow(ctx, query, args...)
+	row := db.db.QueryRow(ctx, query, args...)
 	err = row.Scan(&pkg.Path, &pkg.Name, &pkg.Synopsis,
 		&pkg.V1Path, pq.Array(&licenseTypes), pq.Array(&licensePaths),
 		&pkg.DocumentationHTML, &pkg.GOOS, &pkg.GOARCH, &pkg.Version,
-		&pkg.CommitTime, nullIsEmpty(&pkg.ReadmeFilePath), &pkg.ReadmeContents,
+		&pkg.CommitTime, database.NullIsEmpty(&pkg.ReadmeFilePath), &pkg.ReadmeContents,
 		&pkg.ModulePath, &pkg.VersionType, jsonbScanner{&pkg.SourceInfo})
 	if err != nil {
 		if err == sql.ErrNoRows {

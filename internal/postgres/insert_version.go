@@ -16,6 +16,7 @@ import (
 
 	"github.com/lib/pq"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/database"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/thirdparty/module"
@@ -80,7 +81,7 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version) error 
 		sort.Strings(p.Imports)
 	}
 
-	err := db.Transact(func(tx *sql.Tx) error {
+	err := db.db.Transact(func(tx *sql.Tx) error {
 		majorint, minorint, patchint, prerelease, err := extractSemverParts(version.Version)
 		if err != nil {
 			return fmt.Errorf("extractSemverParts(%q): %v", version.Version, err)
@@ -96,7 +97,7 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version) error 
 		if err != nil {
 			return err
 		}
-		if _, err := execTx(ctx, tx,
+		if _, err := database.ExecTx(ctx, tx,
 			`INSERT INTO versions(
 				module_path,
 				version,
@@ -145,7 +146,8 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version) error 
 				"types",
 				"coverage",
 			}
-			if err := bulkInsert(ctx, tx, "licenses", licenseCols, licenseValues, onConflictDoNothing); err != nil {
+			if err := database.BulkInsert(ctx, tx, "licenses", licenseCols, licenseValues,
+				database.OnConflictDoNothing); err != nil {
 				return err
 			}
 		}
@@ -204,7 +206,7 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version) error 
 				"goarch",
 				"commit_time",
 			}
-			if err := bulkInsert(ctx, tx, "packages", pkgCols, pkgValues, onConflictDoNothing); err != nil {
+			if err := database.BulkInsert(ctx, tx, "packages", pkgCols, pkgValues, database.OnConflictDoNothing); err != nil {
 				return err
 			}
 		}
@@ -216,7 +218,7 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version) error 
 				"from_version",
 				"to_path",
 			}
-			if err := bulkInsert(ctx, tx, "imports", importCols, importValues, onConflictDoNothing); err != nil {
+			if err := database.BulkInsert(ctx, tx, "imports", importCols, importValues, database.OnConflictDoNothing); err != nil {
 				return err
 			}
 
@@ -225,7 +227,7 @@ func (db *DB) saveVersion(ctx context.Context, version *internal.Version) error 
 				"from_module_path",
 				"to_path",
 			}
-			if err := bulkInsert(ctx, tx, "imports_unique", importUniqueCols, importUniqueValues, onConflictDoNothing); err != nil {
+			if err := database.BulkInsert(ctx, tx, "imports_unique", importUniqueCols, importUniqueValues, database.OnConflictDoNothing); err != nil {
 				return err
 			}
 		}
@@ -436,9 +438,9 @@ func (db *DB) DeleteVersion(ctx context.Context, tx *sql.Tx, modulePath, version
 	// CASCADE constraints, that will trigger deletions from all other tables.
 	const stmt = `DELETE FROM versions WHERE module_path=$1 AND version=$2`
 	if tx == nil {
-		_, err = db.exec(ctx, stmt, modulePath, version)
+		_, err = db.db.Exec(ctx, stmt, modulePath, version)
 	} else {
-		_, err = execTx(ctx, tx, stmt, modulePath, version)
+		_, err = database.ExecTx(ctx, tx, stmt, modulePath, version)
 	}
 	return err
 }

@@ -76,7 +76,7 @@ func TestToTsvectorParentDirectoriesStoredProcedure(t *testing.T) {
 			}
 
 			var got []string
-			err := testDB.queryRow(ctx,
+			err := testDB.db.QueryRow(ctx,
 				`SELECT tsvector_to_array(tsv_parent_directories) FROM packages WHERE path = $1;`,
 				tc.path).Scan(pq.Array(&got))
 			if err != nil {
@@ -86,7 +86,7 @@ func TestToTsvectorParentDirectoriesStoredProcedure(t *testing.T) {
 				t.Errorf("tsvector_to_array FROM packages for %q mismatch (-want +got):\n%s", tc.path, diff)
 			}
 
-			err = testDB.queryRow(ctx,
+			err = testDB.db.QueryRow(ctx,
 				`SELECT tsvector_to_array(tsv_parent_directories) FROM search_documents WHERE package_path = $1;`,
 				tc.path).Scan(pq.Array(&got))
 			if err != nil {

@@ -12,6 +12,7 @@ import (
 
 	"github.com/lib/pq"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/database"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/xerrors"
@@ -86,7 +87,7 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version str
 			&pkg.GOARCH,
 			&vi.Version,
 			&vi.ModulePath,
-			nullIsEmpty(&vi.ReadmeFilePath),
+			database.NullIsEmpty(&vi.ReadmeFilePath),
 			&vi.ReadmeContents,
 			&vi.CommitTime,
 			&vi.VersionType,
@@ -101,7 +102,7 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version str
 		packages = append(packages, &pkg)
 		return nil
 	}
-	if err := db.runQuery(ctx, query, collect, args...); err != nil {
+	if err := db.db.RunQuery(ctx, query, collect, args...); err != nil {
 		return nil, err
 	}
 	if len(packages) == 0 {

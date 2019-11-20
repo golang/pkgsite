@@ -16,6 +16,7 @@ import (
 
 	"github.com/lib/pq"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/database"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/version"
@@ -62,7 +63,7 @@ func (db *DB) GetPackagesInVersion(ctx context.Context, modulePath, version stri
 		return nil
 	}
 
-	if err := db.runQuery(ctx, query, collect, modulePath, version); err != nil {
+	if err := db.db.RunQuery(ctx, query, collect, modulePath, version); err != nil {
 		return nil, xerrors.Errorf("DB.GetPackagesInVersion(ctx, %q, %q): %w", err)
 	}
 	return packages, nil
@@ -127,7 +128,7 @@ func getPackageVersions(ctx context.Context, db *DB, pkgPath string, versionType
 	}
 	query := fmt.Sprintf(baseQuery, versionTypeExpr(versionTypes), queryEnd)
 
-	rows, err := db.query(ctx, query, pkgPath)
+	rows, err := db.db.Query(ctx, query, pkgPath)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +212,7 @@ func getModuleVersions(ctx context.Context, db *DB, modulePath string, versionTy
 		vinfos = append(vinfos, &vi)
 		return nil
 	}
-	if err := db.runQuery(ctx, query, collect, internal.SeriesPathForModule(modulePath)); err != nil {
+	if err := db.db.RunQuery(ctx, query, collect, internal.SeriesPathForModule(modulePath)); err != nil {
 		return nil, err
 	}
 	return vinfos, nil
@@ -248,7 +249,7 @@ func (db *DB) GetImports(ctx context.Context, pkgPath, modulePath, version strin
 		imports = append(imports, toPath)
 		return nil
 	}
-	if err := db.runQuery(ctx, query, collect, pkgPath, version, modulePath); err != nil {
+	if err := db.db.RunQuery(ctx, query, collect, pkgPath, version, modulePath); err != nil {
 		return nil, err
 	}
 	return imports, nil
@@ -287,7 +288,7 @@ func (db *DB) GetImportedBy(ctx context.Context, pkgPath, modulePath string, lim
 		importedby = append(importedby, fromPath)
 		return nil
 	}
-	if err := db.runQuery(ctx, query, collect, pkgPath, modulePath, limit); err != nil {
+	if err := db.db.RunQuery(ctx, query, collect, pkgPath, modulePath, limit); err != nil {
 		return nil, err
 	}
 	return importedby, nil
@@ -310,7 +311,7 @@ func (db *DB) GetModuleLicenses(ctx context.Context, modulePath, version string)
 	WHERE
 		module_path = $1 AND version = $2 AND position('/' in file_path) = 0
     `
-	rows, err := db.query(ctx, query, modulePath, version)
+	rows, err := db.db.Query(ctx, query, modulePath, version)
 	if err != nil {
 		return nil, err
 	}
@@ -352,7 +353,7 @@ func (db *DB) GetPackageLicenses(ctx context.Context, pkgPath, modulePath, versi
 			AND p.version = l.version
 			AND p.license_file_path = l.file_path;`
 
-	rows, err := db.query(ctx, query, pkgPath, modulePath, version)
+	rows, err := db.db.Query(ctx, query, pkgPath, modulePath, version)
 	if err != nil {
 		return nil, err
 	}
@@ -472,9 +473,9 @@ func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version str
 	}
 
 	var vi internal.VersionInfo
-	row := db.queryRow(ctx, query, args...)
+	row := db.db.QueryRow(ctx, query, args...)
 	if err := row.Scan(&vi.ModulePath, &vi.Version, &vi.CommitTime,
-		nullIsEmpty(&vi.ReadmeFilePath), &vi.ReadmeContents, &vi.VersionType,
+		database.NullIsEmpty(&vi.ReadmeFilePath), &vi.ReadmeContents, &vi.VersionType,
 		jsonbScanner{&vi.SourceInfo}); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, xerrors.Errorf("module version %s@%s: %w", modulePath, version, derrors.NotFound)

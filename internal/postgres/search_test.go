@@ -649,7 +649,7 @@ func TestHllHash(t *testing.T) {
 		h := md5.New()
 		io.WriteString(h, test)
 		want := int64(binary.BigEndian.Uint64(h.Sum(nil)[0:8]))
-		row := testDB.queryRow(context.Background(), "SELECT hll_hash($1)", test)
+		row := testDB.db.QueryRow(context.Background(), "SELECT hll_hash($1)", test)
 		var got int64
 		if err := row.Scan(&got); err != nil {
 			t.Fatal(err)
@@ -674,7 +674,7 @@ func TestHllZeros(t *testing.T) {
 		{(1 << 63) - 1, 1},
 	}
 	for _, test := range tests {
-		row := testDB.queryRow(context.Background(), "SELECT hll_zeros($1)", test.i)
+		row := testDB.db.QueryRow(context.Background(), "SELECT hll_zeros($1)", test.i)
 		var got int
 		if err := row.Scan(&got); err != nil {
 			t.Fatal(err)

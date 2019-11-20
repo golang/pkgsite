@@ -19,6 +19,7 @@ import (
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
+	"golang.org/x/discovery/internal/database"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/stdlib"
@@ -305,7 +306,7 @@ type estimateResponse struct {
 // EstimateResultsCount uses the hyperloglog algorithm to estimate the number
 // of results for the given search term.
 func (db *DB) estimateResultsCount(ctx context.Context, q string) estimateResponse {
-	row := db.queryRow(ctx, hllQuery, q)
+	row := db.db.QueryRow(ctx, hllQuery, q)
 	var estimate sql.NullInt64
 	if err := row.Scan(&estimate); err != nil {
 		return estimateResponse{err: fmt.Errorf("row.Scan(): %v", err)}
@@ -353,7 +354,7 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit, offset int) searc
 		results = append(results, &r)
 		return nil
 	}
-	err := db.runQuery(ctx, query, collect, q, limit, offset)
+	err := db.db.RunQuery(ctx, query, collect, q, limit, offset)
 	if err != nil {
 		results = nil
 	}
@@ -384,7 +385,7 @@ func (db *DB) popularSearch(ctx context.Context, searchQuery string, limit, offs
 		results = append(results, &r)
 		return nil
 	}
-	err := db.runQuery(ctx, query, collect, searchQuery, limit, offset)
+	err := db.db.RunQuery(ctx, query, collect, searchQuery, limit, offset)
 	if err != nil {
 		results = nil
 	}
@@ -445,7 +446,7 @@ func (db *DB) popularSearcher(cutoff int) searcher {
 			results = append(results, &r)
 			return nil
 		}
-		err := db.runQuery(ctx, query, collect, searchQuery, limit, offset)
+		err := db.db.RunQuery(ctx, query, collect, searchQuery, limit, offset)
 		if err != nil {
 			results = nil
 		} else if len(results) != limit {
@@ -511,7 +512,7 @@ func (db *DB) addPackageDataToSearchResults(ctx context.Context, results []*Sear
 		}
 		return nil
 	}
-	return db.runQuery(ctx, query, collect)
+	return db.db.RunQuery(ctx, query, collect)
 }
 
 // DeepSearch executes a full scan of the search table in two steps, by first
@@ -630,7 +631,7 @@ func (db *DB) Search(ctx context.Context, q string, limit, offset int) (_ []*Sea
 		results = append(results, &sr)
 		return nil
 	}
-	if err := db.runQuery(ctx, query, collect, q, limit, offset); err != nil {
+	if err := db.db.RunQuery(ctx, query, collect, q, limit, offset); err != nil {
 		return nil, err
 	}
 	return results, nil
@@ -719,7 +720,7 @@ func (db *DB) UpsertSearchDocument(ctx context.Context, path string) (err error)
 	}
 
 	pathTokens := strings.Join(generatePathTokens(path), " ")
-	_, err = db.exec(ctx, upsertSearchStatement, path, pathTokens)
+	_, err = db.db.Exec(ctx, upsertSearchStatement, path, pathTokens)
 	return err
 }
 
@@ -748,7 +749,7 @@ func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, limit int)
 		}
 		return nil
 	}
-	if err := db.runQuery(ctx, query, collect, limit); err != nil {
+	if err := db.db.RunQuery(ctx, query, collect, limit); err != nil {
 		return nil, err
 	}
 	sort.Strings(paths)
@@ -782,7 +783,7 @@ func (db *DB) getSearchDocument(ctx context.Context, path string) (*searchDocume
 		FROM
 			search_documents
 		WHERE package_path=$1`
-	row := db.queryRow(ctx, query, path)
+	row := db.db.QueryRow(ctx, query, path)
 	var (
 		sd searchDocument
 		t  pq.NullTime
@@ -812,7 +813,7 @@ func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context) (nUpdate
 	if err != nil {
 		return 0, err
 	}
-	err = db.Transact(func(tx *sql.Tx) error {
+	err = db.db.Transact(func(tx *sql.Tx) error {
 		if err := insertImportedByCounts(ctx, tx, counts); err != nil {
 			return err
 		}
@@ -831,7 +832,7 @@ func (db *DB) computeImportedByCounts(ctx context.Context) (counts map[string]in
 	counts = map[string]int{}
 	// Get all (from_path, to_path) pairs, deduped.
 	// Also get the from_path's module path.
-	rows, err := db.query(ctx, `
+	rows, err := db.db.Query(ctx, `
 		SELECT
 			from_path, from_module_path, to_path
 		FROM
@@ -871,7 +872,7 @@ func insertImportedByCounts(ctx context.Context, tx *sql.Tx, counts map[string]i
 			imported_by_count INTEGER DEFAULT 0 NOT NULL
 		) ON COMMIT DROP;
     `
-	if _, err := execTx(ctx, tx, createTableQuery); err != nil {
+	if _, err := database.ExecTx(ctx, tx, createTableQuery); err != nil {
 		return fmt.Errorf("CREATE TABLE: %v", err)
 	}
 	values := make([]interface{}, 0, 2*len(counts))
@@ -879,7 +880,7 @@ func insertImportedByCounts(ctx context.Context, tx *sql.Tx, counts map[string]i
 		values = append(values, p, c)
 	}
 	columns := []string{"package_path", "imported_by_count"}
-	return bulkInsert(ctx, tx, "computed_imported_by_counts", columns, values, "")
+	return database.BulkInsert(ctx, tx, "computed_imported_by_counts", columns, values, "")
 }
 
 func compareImportedByCounts(ctx context.Context, tx *sql.Tx) (err error) {
@@ -950,7 +951,7 @@ func updateImportedByCounts(ctx context.Context, tx *sql.Tx) (int64, error) {
 		FROM computed_imported_by_counts c
 		WHERE s.package_path = c.package_path;`
 
-	res, err := execTx(ctx, tx, updateStmt)
+	res, err := database.ExecTx(ctx, tx, updateStmt)
 	if err != nil {
 		return 0, fmt.Errorf("error updating imported_by_count and imported_by_count_updated_at for search documents: %v", err)
 	}

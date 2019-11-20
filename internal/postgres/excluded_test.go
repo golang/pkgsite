@@ -14,7 +14,7 @@ func TestIsExcluded(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	if _, err := testDB.exec(ctx, "INSERT INTO excluded_prefixes (prefix, created_by, reason) VALUES ('bad', 'someone', 'because')"); err != nil {
+	if _, err := testDB.db.Exec(ctx, "INSERT INTO excluded_prefixes (prefix, created_by, reason) VALUES ('bad', 'someone', 'because')"); err != nil {
 		t.Fatal(err)
 	}
 

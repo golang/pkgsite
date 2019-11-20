@@ -17,7 +17,7 @@ func (db *DB) IsExcluded(ctx context.Context, path string) (_ bool, err error) {
 	defer derrors.Wrap(&err, "DB.IsExcluded(ctx, %q)", path)
 
 	const query = "SELECT prefix FROM excluded_prefixes WHERE starts_with($1, prefix);"
-	row := db.queryRow(ctx, query, path)
+	row := db.db.QueryRow(ctx, query, path)
 	var prefix string
 	err = row.Scan(&prefix)
 	switch err {
@@ -37,7 +37,7 @@ func (db *DB) IsExcluded(ctx context.Context, path string) (_ bool, err error) {
 func (db *DB) InsertExcludedPrefix(ctx context.Context, prefix, user, reason string) (err error) {
 	defer derrors.Wrap(&err, "DB.InsertExcludedPrefix(ctx, %q, %q)", prefix, reason)
 
-	_, err = db.exec(ctx, "INSERT INTO excluded_prefixes (prefix, created_by, reason) VALUES ($1, $2, $3)",
+	_, err = db.db.Exec(ctx, "INSERT INTO excluded_prefixes (prefix, created_by, reason) VALUES ($1, $2, $3)",
 		prefix, user, reason)
 	return err
 }

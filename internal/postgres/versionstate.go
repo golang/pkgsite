@@ -13,6 +13,7 @@ import (
 	"github.com/lib/pq"
 	"go.opencensus.io/trace"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/database"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/log"
 )
@@ -33,8 +34,8 @@ func (db *DB) InsertIndexVersions(ctx context.Context, versions []*internal.Inde
 		DO UPDATE SET
 			index_timestamp=excluded.index_timestamp,
 			next_processed_after=CURRENT_TIMESTAMP`
-	return db.Transact(func(tx *sql.Tx) error {
-		return bulkInsert(ctx, tx, "module_version_states", cols, vals, conflictAction)
+	return db.db.Transact(func(tx *sql.Tx) error {
+		return database.BulkInsert(ctx, tx, "module_version_states", cols, vals, conflictAction)
 	})
 }
 
@@ -70,7 +71,7 @@ func (db *DB) UpsertVersionState(ctx context.Context, modulePath, version, appVe
 	if fetchErr != nil {
 		sqlErrorMsg = sql.NullString{Valid: true, String: fetchErr.Error()}
 	}
-	result, err := db.exec(ctx, query, modulePath, version, appVersion, timestamp, status, sqlErrorMsg)
+	result, err := db.db.Exec(ctx, query, modulePath, version, appVersion, timestamp, status, sqlErrorMsg)
 	if err != nil {
 		return err
 	}
@@ -95,7 +96,7 @@ func (db *DB) LatestIndexTimestamp(ctx context.Context) (_ time.Time, err error)
 		LIMIT 1`
 
 	var ts time.Time
-	row := db.queryRow(ctx, query)
+	row := db.db.QueryRow(ctx, query)
 	switch err := row.Scan(&ts); err {
 	case sql.ErrNoRows:
 		return time.Time{}, nil
@@ -117,7 +118,7 @@ func (db *DB) UpdateVersionStatesForReprocessing(ctx context.Context, appVersion
 			last_processed_at = NULL
 		WHERE
 			app_version <= $1;`
-	result, err := db.exec(ctx, query, appVersion)
+	result, err := db.db.Exec(ctx, query, appVersion)
 	if err != nil {
 		return err
 	}
@@ -185,7 +186,7 @@ func scanVersionState(scan func(dest ...interface{}) error) (*internal.VersionSt
 // for the query columns.
 func (db *DB) queryVersionStates(ctx context.Context, queryFormat string, args ...interface{}) ([]*internal.VersionState, error) {
 	query := fmt.Sprintf(queryFormat, versionStateColumns)
-	rows, err := db.query(ctx, query, args...)
+	rows, err := db.db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -262,7 +263,7 @@ func (db *DB) GetVersionState(ctx context.Context, modulePath, version string) (
 			module_path = $1
 			AND version = $2;`, versionStateColumns)
 
-	row := db.queryRow(ctx, query, modulePath, version)
+	row := db.db.QueryRow(ctx, query, modulePath, version)
 	v, err := scanVersionState(row.Scan)
 	switch err {
 	case nil:
@@ -299,7 +300,7 @@ func (db *DB) GetVersionStats(ctx context.Context) (_ *VersionStats, err error) 
 	stats := &VersionStats{
 		VersionCounts: make(map[int]int),
 	}
-	err = db.runQuery(ctx, query, func(rows *sql.Rows) error {
+	err = db.db.RunQuery(ctx, query, func(rows *sql.Rows) error {
 		var (
 			status         sql.NullInt64
 			indexTimestamp time.Time

@@ -224,7 +224,7 @@ func TestPostgres_ReadAndWriteVersionOtherColumns(t *testing.T) {
 		versions
 	WHERE
 		module_path = $1 AND version = $2`
-	row := testDB.queryRow(ctx, query, v.ModulePath, v.Version)
+	row := testDB.db.QueryRow(ctx, query, v.ModulePath, v.Version)
 	var got other
 	if err := row.Scan(&got.major, &got.minor, &got.patch, &got.prerelease, &got.seriesPath); err != nil {
 		t.Fatal(err)
