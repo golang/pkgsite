@@ -72,6 +72,11 @@ func TestServer(t *testing.T) {
 	mustInsertVersion(sample.ModulePath, "v1.0.0", []*internal.Package{pkg, pkg2})
 	mustInsertVersion(sample.ModulePath, pseudoVersion, []*internal.Package{pkg, pkg2})
 
+	// A module whose latest version is a pseudoversion.
+	pkgm2 := sample.Package()
+	pkgm2.Path = sample.ModulePath + "2"
+	mustInsertVersion(sample.ModulePath+"2", pseudoVersion, []*internal.Package{pkgm2})
+
 	nonRedistModulePath := "github.com/non_redistributable"
 	nonRedistPkgPath := nonRedistModulePath + "/bar"
 	mustInsertVersion(nonRedistModulePath, "v1.0.0", []*internal.Package{{
@@ -155,6 +160,15 @@ func TestServer(t *testing.T) {
 	mp.Version = pseudoVersion
 	mp.FormattedVersion = "v0.0.0 (20190101-123456789012)"
 	modPseudo := &mp
+
+	mod2 := &pagecheck.Page{
+		Title:            "github.com/valid_module_name2 module",
+		ModulePath:       "github.com/valid_module_name2",
+		Version:          pseudoVersion,
+		FormattedVersion: mp.FormattedVersion,
+		LicenseType:      "MIT",
+		ModuleURL:        "/mod/github.com/valid_module_name2",
+	}
 
 	std := &pagecheck.Page{
 		Title:       "Standard library",
@@ -499,6 +513,20 @@ func TestServer(t *testing.T) {
 					text("^"+sample.ModulePath+"$")),
 				in(".Overview-readmeContent", text(`readme`))),
 		},
+		{
+			name:           "module overview pseudoversion latest",
+			urlPath:        fmt.Sprintf("/mod/%s?tab=overview", sample.ModulePath+"2"),
+			wantStatusCode: http.StatusOK,
+			// Show the readme tab by default.
+			// Fall back to the latest version, show readme tab by default.
+			want: in("",
+				pagecheck.ModuleHeader(mod2, unversioned),
+				in(".Overview-module a",
+					href("/mod/"+sample.ModulePath+"2"),
+					text("^"+sample.ModulePath+"2$")),
+				in(".Overview-readmeContent", text(`readme`))),
+		},
+
 		// // TODO(b/139498072): add a second module, so we can verify that we get the latest version.
 		{
 			name:           "module packages tab latest version",

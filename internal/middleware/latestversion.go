@@ -7,6 +7,7 @@ package middleware
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"net/http"
 	"regexp"
 
@@ -38,6 +39,8 @@ func LatestVersion(latest latestFunc) Middleware {
 				modulePath := string(matches[2])
 				packagePath := string(matches[3])
 				latestVersion := latest(r.Context(), modulePath, packagePath)
+				fmt.Printf("#### %s: version=%s, latestVersion=%s\n",
+					r.URL, version, latestVersion)
 				latestClass := "DetailsHeader-"
 				switch {
 				case latestVersion == "":

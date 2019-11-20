@@ -337,6 +337,7 @@ func (s *Server) handleLatestVersion(w http.ResponseWriter, r *http.Request) {
 }
 
 // LatestVersion returns the latest version of the package or module.
+// The linkable form of the version is returned.
 // It returns the empty string on error.
 // It is intended to be used as an argument to middleware.LatestVersion.
 func (s *Server) LatestVersion(ctx context.Context, modulePath, packagePath string) string {
@@ -367,12 +368,5 @@ func (s *Server) latestVersion(ctx context.Context, modulePath, packagePath stri
 		}
 		vi = &pkg.VersionInfo
 	}
-	v := vi.Version
-	if modulePath == stdlib.ModulePath {
-		v, err = stdlib.TagForVersion(v)
-		if err != nil {
-			return "", err
-		}
-	}
-	return v, nil
+	return linkableVersion(vi.Version, modulePath), nil
 }

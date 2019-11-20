@@ -31,7 +31,8 @@ type Package struct {
 
 // Module contains information for an individual module.
 type Module struct {
-	Version           string
+	Version           string // version for formatting
+	LinkableVersion   string // version for linksa
 	Path              string
 	CommitTime        string
 	IsRedistributable bool
@@ -93,6 +94,7 @@ func createModule(vi *internal.VersionInfo, licmetas []*license.Metadata, latest
 	}
 	return &Module{
 		Version:           formattedVersion(vi.Version, vi.ModulePath),
+		LinkableVersion:   linkableVersion(vi.Version, vi.ModulePath),
 		Path:              vi.ModulePath,
 		CommitTime:        elapsedTime(vi.CommitTime),
 		IsRedistributable: license.AreRedistributable(licmetas),

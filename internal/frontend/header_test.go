@@ -26,6 +26,7 @@ func samplePackage(mutators ...func(*Package)) *Package {
 		Licenses:          transformLicenseMetadata(sample.LicenseMetadata),
 		Module: Module{
 			Version:           sample.VersionString,
+			LinkableVersion:   sample.VersionString,
 			CommitTime:        "0 hours ago",
 			Path:              sample.ModulePath,
 			IsRedistributable: true,
