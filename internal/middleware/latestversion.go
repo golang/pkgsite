@@ -15,7 +15,7 @@ import (
 
 const (
 	latestClassPlaceholder   = "$$GODISCOVERY_LATESTCLASS$$"
-	latestVersionPlaceholder = "$$GODISCOVERY_LATESTVERSION$$"
+	LatestVersionPlaceholder = "$$GODISCOVERY_LATESTVERSION$$"
 )
 
 // latestInfoRegexp extracts values needed to determine the latest-version badge from a page's HTML.
@@ -49,7 +49,7 @@ func LatestVersion(latest latestFunc) Middleware {
 				}
 				// TODO(b/144509703): make only a single copy here, if this is slow
 				body = bytes.ReplaceAll(body, []byte(latestClassPlaceholder), []byte(latestClass))
-				body = bytes.ReplaceAll(body, []byte(latestVersionPlaceholder), []byte(latestVersion))
+				body = bytes.ReplaceAll(body, []byte(LatestVersionPlaceholder), []byte(latestVersion))
 			}
 			if _, err := w.Write(body); err != nil {
 				log.Errorf("LatestVersion, writing: %v", err)

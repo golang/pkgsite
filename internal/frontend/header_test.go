@@ -12,6 +12,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/testing/htmlcheck"
 	"golang.org/x/discovery/internal/testing/sample"
 	"golang.org/x/net/html"
@@ -37,6 +38,8 @@ func samplePackage(mutators ...func(*Package)) *Package {
 	}
 	p.URL = constructPackageURL(p.Path, p.Module.Path, p.LinkVersion)
 	p.Module.URL = constructModuleURL(p.Module.Path, p.LinkVersion)
+	p.LatestURL = constructPackageURL(p.Path, p.Module.Path, middleware.LatestVersionPlaceholder)
+	p.Module.LatestURL = constructModuleURL(p.Module.Path, middleware.LatestVersionPlaceholder)
 	return p
 }
 

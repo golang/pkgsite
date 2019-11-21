@@ -27,13 +27,13 @@ func TestLatestVersion(t *testing.T) {
                 <div class="DetailsHeader-badge $$GODISCOVERY_LATESTCLASS$$"
 					 data-version="v1.0.0" data-mpath="p1/p2" data-ppath="p1/p2/p3">
                     <span>Latest</span>
-                    <a href="p1/p2/p3@$$GODISCOVERY_LATESTVERSION$$">Go to latest</a>
+                    <a href="p1/p2@$$GODISCOVERY_LATESTVERSION$$/p3">Go to latest</a>
                 </div>`,
 			want: `
                 <div class="DetailsHeader-badge DetailsHeader-goToLatest"
 					 data-version="v1.0.0" data-mpath="p1/p2" data-ppath="p1/p2/p3">
                     <span>Latest</span>
-                    <a href="p1/p2/p3@v1.2.3">Go to latest</a>
+                    <a href="p1/p2@v1.2.3/p3">Go to latest</a>
                 </div>`,
 		},
 		{
@@ -43,13 +43,13 @@ func TestLatestVersion(t *testing.T) {
                 <div class="DetailsHeader-badge $$GODISCOVERY_LATESTCLASS$$"
 					 data-version="v1.2.3" data-mpath="p1/p2" data-ppath="p1/p2/p3">
                     <span>Latest</span>
-                    <a href="p1/p2/p3@$$GODISCOVERY_LATESTVERSION$$">Go to latest</a>
+                    <a href="p1/p2@$$GODISCOVERY_LATESTVERSION$$/p3">Go to latest</a>
                 </div>`,
 			want: `
                 <div class="DetailsHeader-badge DetailsHeader-latest"
 					 data-version="v1.2.3" data-mpath="p1/p2" data-ppath="p1/p2/p3">
                     <span>Latest</span>
-                    <a href="p1/p2/p3@v1.2.3">Go to latest</a>
+                    <a href="p1/p2@v1.2.3/p3">Go to latest</a>
                 </div>`,
 		},
 		{

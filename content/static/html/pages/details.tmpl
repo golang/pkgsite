@@ -24,12 +24,8 @@
       <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
       <div class="DetailsHeader-badge $$GODISCOVERY_LATESTCLASS$$"
            data-version="{{$header.LinkVersion}}" data-mpath="{{$mpath}}" data-ppath="{{$ppath}}">
-        {{$href := $header.Path}}
-        {{if and (eq $namespace "mod") (ne $header.Path "std")}}
-          {{$href = print "mod/" $href}}
-        {{end}}
         <span>Latest</span>
-        <a href="/{{$href}}@$$GODISCOVERY_LATESTVERSION$$">Go to latest</a>
+        <a href="{{$header.LatestURL}}">Go to latest</a>
       </div>
     </div>
     <div class="DetailsHeader-infoLabel">

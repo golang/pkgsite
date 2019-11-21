@@ -41,9 +41,9 @@ func TestFetchDirectoryDetails(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			pkg.Suffix = strings.TrimPrefix(strings.TrimPrefix(sp.Path, dirPath), "/")
-			if pkg.Suffix == "" {
-				pkg.Suffix = fmt.Sprintf("%s (root)", effectiveName(sp))
+			pkg.PathAfterDirectory = strings.TrimPrefix(strings.TrimPrefix(sp.Path, dirPath), "/")
+			if pkg.PathAfterDirectory == "" {
+				pkg.PathAfterDirectory = fmt.Sprintf("%s (root)", effectiveName(sp))
 			}
 			wantPkgs = append(wantPkgs, pkg)
 		}

@@ -14,6 +14,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/thirdparty/module"
 )
@@ -21,12 +22,13 @@ import (
 // Package contains information for an individual package.
 type Package struct {
 	Module
-	Path              string
-	Suffix            string // path after directory (used only for directory display)
-	Synopsis          string
-	IsRedistributable bool
-	URL               string
-	Licenses          []LicenseMetadata
+	Path               string // full import path
+	PathAfterDirectory string // for display only; used only for directory
+	Synopsis           string
+	IsRedistributable  bool
+	URL                string // relative to this site
+	LatestURL          string // link with latest-version placeholder, relative to this site
+	Licenses           []LicenseMetadata
 }
 
 // Module contains information for an individual module.
@@ -36,7 +38,8 @@ type Module struct {
 	Path              string
 	CommitTime        string
 	IsRedistributable bool
-	URL               string
+	URL               string // relative to this site
+	LatestURL         string // link with latest-version placeholder, relative to this site
 	Licenses          []LicenseMetadata
 }
 
@@ -72,6 +75,7 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo, latestReques
 		Licenses:          transformLicenseMetadata(pkg.Licenses),
 		Module:            *m,
 		URL:               constructPackageURL(pkg.Path, vi.ModulePath, urlVersion),
+		LatestURL:         constructPackageURL(pkg.Path, vi.ModulePath, middleware.LatestVersionPlaceholder),
 	}, nil
 }
 
@@ -79,7 +83,7 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo, latestReques
 // versionInfo.
 //
 // latestRequested indicates whether the user requested the latest
-// version of the package. If so, the returned Package.URL will have the
+// version of the package. If so, the returned Module.URL will have the
 // structure /<path> instead of /<path>@<version>.
 func createModule(vi *internal.VersionInfo, licmetas []*license.Metadata, latestRequested bool) *Module {
 	urlVersion := linkVersion(vi.Version, vi.ModulePath)
@@ -94,6 +98,7 @@ func createModule(vi *internal.VersionInfo, licmetas []*license.Metadata, latest
 		IsRedistributable: license.AreRedistributable(licmetas),
 		Licenses:          transformLicenseMetadata(licmetas),
 		URL:               constructModuleURL(vi.ModulePath, urlVersion),
+		LatestURL:         constructModuleURL(vi.ModulePath, middleware.LatestVersionPlaceholder),
 	}
 }
 

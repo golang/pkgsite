@@ -188,13 +188,12 @@ func TestServer(t *testing.T) {
 	)
 
 	pkgV100 := &pagecheck.Page{
-		Title:      "foo package",
-		ModulePath: "github.com/valid_module_name",
-		Version:    "v1.0.0",
-		Suffix:     "foo",
-		IsLatest:   true,
-		// TODO(b/144681389): should be in canonical form.
-		LatestLink:       "/github.com/valid_module_name/foo@v1.0.0",
+		Title:            "foo package",
+		ModulePath:       "github.com/valid_module_name",
+		Version:          "v1.0.0",
+		Suffix:           "foo",
+		IsLatest:         true,
+		LatestLink:       "/github.com/valid_module_name@v1.0.0/foo",
 		LicenseType:      "MIT",
 		PackageURLFormat: "/github.com/valid_module_name%s/foo",
 		ModuleURL:        "/mod/github.com/valid_module_name",
@@ -216,7 +215,7 @@ func TestServer(t *testing.T) {
 		Version:          "v1.0.0",
 		Suffix:           "bar",
 		IsLatest:         true,
-		LatestLink:       "/github.com/non_redistributable/bar@v1.0.0",
+		LatestLink:       "/github.com/non_redistributable@v1.0.0/bar",
 		LicenseType:      "",
 		PackageURLFormat: "/github.com/non_redistributable%s/bar",
 		ModuleURL:        "/mod/github.com/non_redistributable",
@@ -233,24 +232,29 @@ func TestServer(t *testing.T) {
 		ModuleURL:        "/std",
 	}
 	mod := &pagecheck.Page{
-		Title:       "github.com/valid_module_name module",
 		ModulePath:  "github.com/valid_module_name",
+		Title:       "github.com/valid_module_name module",
+		ModuleURL:   "/mod/github.com/valid_module_name",
 		Version:     "v1.0.0",
 		LicenseType: "MIT",
-		ModuleURL:   "/mod/github.com/valid_module_name",
+		IsLatest:    true,
+		LatestLink:  "/mod/github.com/valid_module_name@v1.0.0",
 	}
 	mp := *mod
 	mp.Version = pseudoVersion
 	mp.FormattedVersion = "v0.0.0 (20190101-123456789012)"
+	mp.IsLatest = false
 	modPseudo := &mp
 
 	mod2 := &pagecheck.Page{
-		Title:            "github.com/pseudo module",
 		ModulePath:       "github.com/pseudo",
+		Title:            "github.com/pseudo module",
+		ModuleURL:        "/mod/github.com/pseudo",
+		LatestLink:       "/mod/github.com/pseudo@" + pseudoVersion,
 		Version:          pseudoVersion,
 		FormattedVersion: mp.FormattedVersion,
 		LicenseType:      "MIT",
-		ModuleURL:        "/mod/github.com/pseudo",
+		IsLatest:         true,
 	}
 
 	std := &pagecheck.Page{
@@ -259,7 +263,10 @@ func TestServer(t *testing.T) {
 		Version:     "go1.13",
 		LicenseType: "MIT",
 		ModuleURL:   "/std",
+		IsLatest:    true,
+		LatestLink:  "/std@go1.13",
 	}
+
 	dir := &pagecheck.Page{
 		Title:            "github.com/valid_module_name/foo/directory directory",
 		ModulePath:       "github.com/valid_module_name",

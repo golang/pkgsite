@@ -163,9 +163,9 @@ func createDirectory(dbDir *internal.Directory, licmetas []*license.Metadata, in
 		if pkg.IsRedistributable() {
 			newPkg.Synopsis = pkg.Synopsis
 		}
-		newPkg.Suffix = strings.TrimPrefix(strings.TrimPrefix(pkg.Path, dbDir.Path), "/")
-		if newPkg.Suffix == "" {
-			newPkg.Suffix = effectiveName(pkg) + " (root)"
+		newPkg.PathAfterDirectory = strings.TrimPrefix(strings.TrimPrefix(pkg.Path, dbDir.Path), "/")
+		if newPkg.PathAfterDirectory == "" {
+			newPkg.PathAfterDirectory = effectiveName(pkg) + " (root)"
 		}
 		packages = append(packages, newPkg)
 	}
