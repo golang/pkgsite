@@ -53,7 +53,7 @@ func TestFetchDirectoryDetails(t *testing.T) {
 			Module:   *mod,
 			Path:     dirPath,
 			Packages: wantPkgs,
-			URL:      constructDirectoryURL(dirPath, vi.ModulePath, formattedVersion(vi.Version, vi.ModulePath)),
+			URL:      constructDirectoryURL(dirPath, vi.ModulePath, displayVersion(vi.Version, vi.ModulePath)),
 		}
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("fetchDirectoryDetails(ctx, %q, %q, %q) mismatch (-want +got):\n%s", dirPath, modulePath, version, diff)

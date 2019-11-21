@@ -31,15 +31,15 @@ type SearchPage struct {
 
 // SearchResult contains data needed to display a single search result.
 type SearchResult struct {
-	Name          string
-	PackagePath   string
-	ModulePath    string
-	Synopsis      string
-	Version       string
-	Licenses      []string
-	CommitTime    string
-	NumImportedBy uint64
-	Approximate   bool
+	Name           string
+	PackagePath    string
+	ModulePath     string
+	Synopsis       string
+	DisplayVersion string
+	Licenses       []string
+	CommitTime     string
+	NumImportedBy  uint64
+	Approximate    bool
 }
 
 // fetchSearchPage fetches data matching the search query from the database and
@@ -67,16 +67,15 @@ func fetchSearchPage(ctx context.Context, ds DataSource, query, method string, p
 
 	var results []*SearchResult
 	for _, r := range dbresults {
-		fmtVersion := formattedVersion(r.Version, r.ModulePath)
 		results = append(results, &SearchResult{
-			Name:          r.Name,
-			PackagePath:   r.PackagePath,
-			ModulePath:    r.ModulePath,
-			Synopsis:      r.Synopsis,
-			Version:       fmtVersion,
-			Licenses:      r.Licenses,
-			CommitTime:    elapsedTime(r.CommitTime),
-			NumImportedBy: r.NumImportedBy,
+			Name:           r.Name,
+			PackagePath:    r.PackagePath,
+			ModulePath:     r.ModulePath,
+			Synopsis:       r.Synopsis,
+			DisplayVersion: displayVersion(r.Version, r.ModulePath),
+			Licenses:       r.Licenses,
+			CommitTime:     elapsedTime(r.CommitTime),
+			NumImportedBy:  r.NumImportedBy,
 		})
 	}
 

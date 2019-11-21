@@ -15,7 +15,7 @@
       {{range $minor := $major.Versions}}
         {{range $i, $v := $minor}}
           <li class="Versions-item">
-            <a href="{{$v.Link}}" title="{{$v.Version}}">{{$v.FormattedVersion}}</a>
+            <a href="{{$v.Link}}" title="{{$v.TooltipVersion}}">{{$v.DisplayVersion}}</a>
             <span class="Versions-commitTime"> &ndash; {{$v.CommitTime}}</span>
           </li>
         {{end}}

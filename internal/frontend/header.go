@@ -31,8 +31,8 @@ type Package struct {
 
 // Module contains information for an individual module.
 type Module struct {
-	Version           string // version for formatting
-	LinkableVersion   string // version for linksa
+	DisplayVersion    string
+	LinkVersion       string
 	Path              string
 	CommitTime        string
 	IsRedistributable bool
@@ -66,7 +66,7 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo, latestReques
 	}
 
 	m := createModule(vi, modLicenses, latestRequested)
-	urlVersion := m.Version
+	urlVersion := m.LinkVersion
 	if latestRequested {
 		urlVersion = internal.LatestVersion
 	}
@@ -88,13 +88,13 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo, latestReques
 // version of the package. If so, the returned Package.URL will have the
 // structure /<path> instead of /<path>@<version>.
 func createModule(vi *internal.VersionInfo, licmetas []*license.Metadata, latestRequested bool) *Module {
-	urlVersion := linkableVersion(vi.Version, vi.ModulePath)
+	urlVersion := linkVersion(vi.Version, vi.ModulePath)
 	if latestRequested {
 		urlVersion = internal.LatestVersion
 	}
 	return &Module{
-		Version:           formattedVersion(vi.Version, vi.ModulePath),
-		LinkableVersion:   linkableVersion(vi.Version, vi.ModulePath),
+		DisplayVersion:    displayVersion(vi.Version, vi.ModulePath),
+		LinkVersion:       linkVersion(vi.Version, vi.ModulePath),
 		Path:              vi.ModulePath,
 		CommitTime:        elapsedTime(vi.CommitTime),
 		IsRedistributable: license.AreRedistributable(licmetas),
@@ -103,26 +103,26 @@ func createModule(vi *internal.VersionInfo, licmetas []*license.Metadata, latest
 	}
 }
 
-func constructModuleURL(modulePath, linkableVersion string) string {
+func constructModuleURL(modulePath, linkVersion string) string {
 	url := "/"
 	if modulePath != stdlib.ModulePath {
 		url += "mod/"
 	}
 	url += modulePath
-	if linkableVersion != internal.LatestVersion {
-		url += "@" + linkableVersion
+	if linkVersion != internal.LatestVersion {
+		url += "@" + linkVersion
 	}
 	return url
 }
 
-func constructPackageURL(pkgPath, modulePath, linkableVersion string) string {
-	if linkableVersion == internal.LatestVersion {
+func constructPackageURL(pkgPath, modulePath, linkVersion string) string {
+	if linkVersion == internal.LatestVersion {
 		return "/" + pkgPath
 	}
 	if pkgPath == modulePath || modulePath == stdlib.ModulePath {
-		return fmt.Sprintf("/%s@%s", pkgPath, linkableVersion)
+		return fmt.Sprintf("/%s@%s", pkgPath, linkVersion)
 	}
-	return fmt.Sprintf("/%s@%s/%s", modulePath, linkableVersion, strings.TrimPrefix(pkgPath, modulePath+"/"))
+	return fmt.Sprintf("/%s@%s/%s", modulePath, linkVersion, strings.TrimPrefix(pkgPath, modulePath+"/"))
 }
 
 // effectiveName returns either the command name or package name.

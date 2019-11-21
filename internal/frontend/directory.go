@@ -86,7 +86,7 @@ func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirP
 		basePage:       newBasePage(r, fmt.Sprintf("%s directory", dirPath)),
 		Settings:       settings,
 		Header:         header,
-		BreadcrumbPath: breadcrumbPath(dirPath, dbDir.ModulePath, linkableVersion(dbDir.Version, dbDir.ModulePath)),
+		BreadcrumbPath: breadcrumbPath(dirPath, dbDir.ModulePath, linkVersion(dbDir.Version, dbDir.ModulePath)),
 		Details:        details,
 		CanShowDetails: true,
 		Tabs:           directoryTabSettings,
@@ -169,7 +169,6 @@ func createDirectory(dbDir *internal.Directory, licmetas []*license.Metadata, in
 		}
 		packages = append(packages, newPkg)
 	}
-
 	mod := createModule(&dbDir.VersionInfo, licmetas, false)
 	sort.Slice(packages, func(i, j int) bool { return packages[i].Path < packages[j].Path })
 
@@ -177,7 +176,7 @@ func createDirectory(dbDir *internal.Directory, licmetas []*license.Metadata, in
 		Module:   *mod,
 		Path:     dbDir.Path,
 		Packages: packages,
-		URL:      constructDirectoryURL(dbDir.Path, dbDir.ModulePath, formattedVersion(dbDir.Version, dbDir.ModulePath)),
+		URL:      constructDirectoryURL(dbDir.Path, dbDir.ModulePath, displayVersion(dbDir.Version, dbDir.ModulePath)),
 	}, nil
 }
 

@@ -13,7 +13,7 @@
     </div>
     <div class="DetailsHeader-main">
       <h1 class="DetailsHeader-title">{{.Title}}</h1>
-      <div class="DetailsHeader-version">{{$header.Version}}</div>
+      <div class="DetailsHeader-version">{{$header.DisplayVersion}}</div>
 
       {{- $mpath := $header.Path -}}
       {{- $ppath := "" -}}
@@ -23,7 +23,7 @@
       {{- end}}
       <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
       <div class="DetailsHeader-badge $$GODISCOVERY_LATESTCLASS$$"
-           data-version="{{$header.LinkableVersion}}" data-mpath="{{$mpath}}" data-ppath="{{$ppath}}">
+           data-version="{{$header.LinkVersion}}" data-mpath="{{$mpath}}" data-ppath="{{$ppath}}">
         {{$href := $header.Path}}
         {{if and (eq $namespace "mod") (ne $header.Path "std")}}
           {{$href = print "mod/" $href}}

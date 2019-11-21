@@ -25,8 +25,8 @@ func samplePackage(mutators ...func(*Package)) *Package {
 		IsRedistributable: true,
 		Licenses:          transformLicenseMetadata(sample.LicenseMetadata),
 		Module: Module{
-			Version:           sample.VersionString,
-			LinkableVersion:   sample.VersionString,
+			DisplayVersion:    sample.VersionString,
+			LinkVersion:       sample.VersionString,
 			CommitTime:        "0 hours ago",
 			Path:              sample.ModulePath,
 			IsRedistributable: true,
@@ -36,8 +36,8 @@ func samplePackage(mutators ...func(*Package)) *Package {
 	for _, mut := range mutators {
 		mut(p)
 	}
-	p.URL = constructPackageURL(p.Path, p.Module.Path, p.Version)
-	p.Module.URL = constructModuleURL(p.Module.Path, p.Version)
+	p.URL = constructPackageURL(p.Path, p.Module.Path, p.LinkVersion)
+	p.Module.URL = constructModuleURL(p.Module.Path, p.LinkVersion)
 	return p
 }
 

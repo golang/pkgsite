@@ -56,19 +56,37 @@ func InAt(selector string, i int, checkers ...Checker) Checker {
 		panic("negative index")
 	}
 	return func(n *html.Node) error {
-		var els []*html.Node
-		if sel.Match(n) {
-			els = append(els, n)
-		}
-		els = append(els, cascadia.QueryAll(n, sel)...)
+		els := allMatching(n, sel)
 		if i >= len(els) {
 			return fmt.Errorf("%q: index %d is out of range for %d elements", selector, i, len(els))
 		}
 		if err := check(els[i], checkers); err != nil {
-			return fmt.Errorf("%s[%d]: %s", selector, i, err)
+			return fmt.Errorf("%s[%d]: %v", selector, i, err)
 		}
 		return nil
 	}
+}
+
+// InAll runs the checkers against all nodes matching selector.
+func InAll(selector string, checkers ...Checker) Checker {
+	sel := mustParseSelector(selector)
+	return func(n *html.Node) error {
+		els := allMatching(n, sel)
+		for i, el := range els {
+			if err := check(el, checkers); err != nil {
+				return fmt.Errorf("%s, #%d: %v", selector, i, err)
+			}
+		}
+		return nil
+	}
+}
+
+func allMatching(n *html.Node, sel cascadia.Sel) []*html.Node {
+	var els []*html.Node
+	if sel.Match(n) {
+		els = append(els, n)
+	}
+	return append(els, cascadia.QueryAll(n, sel)...)
 }
 
 // NotIn returns a checker that succeeds only if no nodes match selector.
@@ -168,4 +186,24 @@ func HasAttr(name, wantValRegexp string) Checker {
 // attribute with exactly val.
 func HasHref(val string) Checker {
 	return HasAttr("href", "^"+regexp.QuoteMeta(val)+"$")
+}
+
+// Dump returns a Checker that always returns nil, and as a side-effect writes a
+// human-readable description of n's subtree to standard output. It is useful
+// for debugging.
+func Dump() Checker {
+	return func(n *html.Node) error {
+		dump(n, 0)
+		return nil
+	}
+}
+
+func dump(n *html.Node, depth int) {
+	for i := 0; i < depth; i++ {
+		fmt.Print("  ")
+	}
+	fmt.Printf("type %d, data %q, attr %v\n", n.Type, n.Data, n.Attr)
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		dump(c, depth+1)
+	}
 }

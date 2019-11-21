@@ -33,6 +33,7 @@ type Page struct {
 var (
 	in        = htmlcheck.In
 	inAt      = htmlcheck.InAt
+	inAll     = htmlcheck.InAll
 	text      = htmlcheck.HasText
 	exactText = htmlcheck.HasExactText
 	attr      = htmlcheck.HasAttr
@@ -51,6 +52,7 @@ func PackageHeader(p *Page, versionedURL bool) htmlcheck.Checker {
 		in("div.DetailsHeader-version", exactText(fv)),
 		versionBadge(p),
 		licenseInfo(p, packageURLPath(p, versionedURL), versionedURL),
+		packageTabLinks(p, versionedURL),
 		moduleInHeader(p, versionedURL))
 }
 
@@ -63,7 +65,8 @@ func ModuleHeader(p *Page, versionedURL bool) htmlcheck.Checker {
 	return in("",
 		in("h1.DetailsHeader-title", exactText(p.Title)),
 		in("div.DetailsHeader-version", exactText(fv)),
-		licenseInfo(p, moduleURLPath(p, versionedURL), versionedURL))
+		licenseInfo(p, moduleURLPath(p, versionedURL), versionedURL),
+		moduleTabLinks(p, versionedURL))
 }
 
 // DirectoryHeader checks a details page header for a directory.
@@ -136,6 +139,18 @@ func moduleInHeader(p *Page, versionedURL bool) htmlcheck.Checker {
 		text = "Standard library"
 	}
 	return in("a[data-test-id=DetailsHeader-infoLabelModule]", href(modURL), exactText(text))
+}
+
+// Check that all the navigation tabs link to the same package at the same version.
+func packageTabLinks(p *Page, versionedURL bool) htmlcheck.Checker {
+	return inAll("a.DetailsNav-link[href]",
+		attr("href", "^"+regexp.QuoteMeta(packageURLPath(p, versionedURL))))
+}
+
+// Check that all the navigation tabs link to the same module at the same version.
+func moduleTabLinks(p *Page, versionedURL bool) htmlcheck.Checker {
+	return inAll("a.DetailsNav-link[href]",
+		attr("href", "^"+regexp.QuoteMeta(moduleURLPath(p, versionedURL))))
 }
 
 func packageURLPath(p *Page, versioned bool) string {

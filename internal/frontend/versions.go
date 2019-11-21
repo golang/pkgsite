@@ -47,9 +47,9 @@ type MajorVersionGroup struct {
 // VersionSummary holds data required to format the version link on the
 // versions tab.
 type VersionSummary struct {
-	Version          string
-	CommitTime       string
-	FormattedVersion string
+	TooltipVersion string
+	DisplayVersion string
+	CommitTime     string
 	// Link to this version, for use in the anchor href.
 	Link string
 }
@@ -70,7 +70,7 @@ func fetchModuleVersionsDetails(ctx context.Context, ds DataSource, vi *internal
 		}
 	}
 	linkify := func(v *internal.VersionInfo) string {
-		return constructModuleURL(v.ModulePath, linkableVersion(v.Version, v.ModulePath))
+		return constructModuleURL(v.ModulePath, linkVersion(v.Version, v.ModulePath))
 	}
 	return buildVersionDetails(vi.ModulePath, versions, linkify), nil
 }
@@ -112,7 +112,7 @@ func fetchPackageVersionsDetails(ctx context.Context, ds DataSource, pkg *intern
 		} else {
 			versionPath = pathInVersion(pkg.V1Path, vi)
 		}
-		return constructPackageURL(versionPath, vi.ModulePath, linkableVersion(vi.Version, vi.ModulePath))
+		return constructPackageURL(versionPath, vi.ModulePath, linkVersion(vi.Version, vi.ModulePath))
 	}
 	return buildVersionDetails(pkg.ModulePath, filteredVersions, linkify), nil
 }
@@ -189,16 +189,16 @@ func buildVersionDetails(currentModulePath string, versions []*internal.VersionI
 			patches := []*VersionSummary{}
 			minorTree.forEach(func(_ string, patchTree *versionTree) {
 				vi := patchTree.versionInfo
-				version := vi.Version
-				fmtVersion := formattedVersion(version, vi.ModulePath)
+				fmtVersion := displayVersion(vi.Version, vi.ModulePath)
+				ttversion := vi.Version
 				if vi.ModulePath == stdlib.ModulePath {
-					version = fmtVersion // tooltips will show the Go tag
+					ttversion = fmtVersion // tooltips will show the Go tag
 				}
 				patches = append(patches, &VersionSummary{
-					Version:          version,
-					Link:             linkify(vi),
-					CommitTime:       elapsedTime(vi.CommitTime),
-					FormattedVersion: fmtVersion,
+					TooltipVersion: ttversion,
+					Link:           linkify(vi),
+					CommitTime:     elapsedTime(vi.CommitTime),
+					DisplayVersion: fmtVersion,
 				})
 			})
 			mvg.Versions = append(mvg.Versions, patches)
@@ -307,17 +307,17 @@ func pseudoVersionRev(v string) string {
 	return v[j+1:]
 }
 
-// formattedVersion returns the version string, formatted for display.
-func formattedVersion(v string, modulePath string) string {
+// displayVersion returns the version string, formatted for display.
+func displayVersion(v string, modulePath string) string {
 	if modulePath == stdlib.ModulePath {
 		return goTagForVersion(v)
 	}
 	return formatVersion(v)
 }
 
-// linkableVersion returns the version string, suitable for use in
+// linkVersion returns the version string, suitable for use in
 // a link to this site.
-func linkableVersion(v string, modulePath string) string {
+func linkVersion(v string, modulePath string) string {
 	if modulePath == stdlib.ModulePath {
 		return goTagForVersion(v)
 	}

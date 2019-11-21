@@ -74,7 +74,7 @@ func TestServer(t *testing.T) {
 
 	// A module whose latest version is a pseudoversion.
 	pkgm2 := sample.Package()
-	pkgm2.Path = sample.ModulePath + "2"
+	pkgm2.Path = sample.ModulePath + "2/baz"
 	mustInsertVersion(sample.ModulePath+"2", pseudoVersion, []*internal.Package{pkgm2})
 
 	nonRedistModulePath := "github.com/non_redistributable"
@@ -127,6 +127,12 @@ func TestServer(t *testing.T) {
 	p9.IsLatest = false
 	pkgV090 := &p9
 
+	pp := *pkgV100
+	pp.Version = pseudoVersion
+	pp.FormattedVersion = "v0.0.0 (20190101-123456789012)"
+	pp.IsLatest = false
+	pkgPseudo := &pp
+
 	pkgNonRedist := &pagecheck.Page{
 		Title:            "bar package",
 		ModulePath:       nonRedistModulePath,
@@ -135,7 +141,7 @@ func TestServer(t *testing.T) {
 		IsLatest:         true,
 		LatestLink:       fmt.Sprintf("/%s/bar@v1.0.0", nonRedistModulePath),
 		LicenseType:      "",
-		PackageURLFormat: nonRedistModulePath + "%s/bar",
+		PackageURLFormat: "/" + nonRedistModulePath + "%s/bar",
 		ModuleURL:        "/mod/" + nonRedistModulePath,
 	}
 	cmdGo := &pagecheck.Page{
@@ -409,6 +415,14 @@ func TestServer(t *testing.T) {
 				pagecheck.LicenseDetails("MIT", "Lorem Ipsum", "github.com/valid_module_name@v1.0.0/LICENSE")),
 		},
 		{
+			name:           "package@version overview tab, pseudoversion",
+			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=overview", sample.ModulePath, pseudoVersion, pkgSuffix),
+			wantStatusCode: http.StatusOK,
+			want: in("",
+				pagecheck.PackageHeader(pkgPseudo, versioned)),
+		},
+
+		{
 			name:           "directory subdirectories",
 			urlPath:        fmt.Sprintf("/%s", sample.PackagePath+"/directory"),
 			wantStatusCode: http.StatusOK,
@@ -457,6 +471,7 @@ func TestServer(t *testing.T) {
 			urlPath:        fmt.Sprintf("/cmd@go1.13?tab=subdirectories"),
 			wantStatusCode: http.StatusOK,
 			want: in("",
+				htmlcheck.Dump(),
 				pagecheck.DirectoryHeader(dirCmd, versioned),
 				pagecheck.SubdirectoriesDetails()),
 		},

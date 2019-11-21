@@ -38,19 +38,19 @@ func versionSummaries(path string, versions [][]string, linkify func(path, versi
 	for i, pointVersions := range versions {
 		vs[i] = make([]*VersionSummary, len(pointVersions))
 		for j, version := range pointVersions {
-			var semver, formattedVersion string
+			var semver, displayVersion string
 			if stdlib.Contains(path) {
 				semver = version
-				formattedVersion = version
+				displayVersion = version
 			} else {
 				semver = version
-				formattedVersion = formatVersion(semver)
+				displayVersion = formatVersion(semver)
 			}
 			vs[i][j] = &VersionSummary{
-				Version:          semver,
-				FormattedVersion: formattedVersion,
-				Link:             linkify(path, version),
-				CommitTime:       commitTime,
+				TooltipVersion: semver,
+				DisplayVersion: displayVersion,
+				Link:           linkify(path, version),
+				CommitTime:     commitTime,
 			}
 		}
 	}

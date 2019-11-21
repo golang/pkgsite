@@ -135,7 +135,7 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 		basePage:       newBasePage(r, packageTitle(&pkg.Package)),
 		Settings:       settings,
 		Header:         pkgHeader,
-		BreadcrumbPath: breadcrumbPath(pkgHeader.Path, pkgHeader.Module.Path, pkgHeader.Module.Version),
+		BreadcrumbPath: breadcrumbPath(pkgHeader.Path, pkgHeader.Module.Path, pkgHeader.Module.DisplayVersion),
 		Details:        details,
 		CanShowDetails: canShowDetails,
 		Tabs:           packageTabSettings,
@@ -267,7 +267,7 @@ func fetchPackageOrModule(ctx context.Context, ds DataSource, namespace, path, v
 	}
 	epage := &errorPage{
 		Message: fmt.Sprintf("%s %s@%s is not available.",
-			strings.Title(word), path, formattedVersion(version, modulePath)),
+			strings.Title(word), path, displayVersion(version, modulePath)),
 		SecondaryMessage: template.HTML(
 			fmt.Sprintf(`There are other versions of this %s that are! To view them, <a href="%s?tab=versions">click here</a>.</p>`, word, urlPath)),
 	}
@@ -368,5 +368,5 @@ func (s *Server) latestVersion(ctx context.Context, modulePath, packagePath stri
 		}
 		vi = &pkg.VersionInfo
 	}
-	return linkableVersion(vi.Version, modulePath), nil
+	return linkVersion(vi.Version, modulePath), nil
 }

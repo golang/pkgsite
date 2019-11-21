@@ -38,7 +38,7 @@ type OverviewDetails struct {
 func constructOverviewDetails(vi *internal.VersionInfo, licmetas []*license.Metadata, versionedLinks bool) *OverviewDetails {
 	var lv string
 	if versionedLinks {
-		lv = linkableVersion(vi.Version, vi.ModulePath)
+		lv = linkVersion(vi.Version, vi.ModulePath)
 	} else {
 		lv = internal.LatestVersion
 	}
