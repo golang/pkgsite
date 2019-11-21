@@ -141,8 +141,10 @@ func detectFile(f *zip.File, prefix string) (_ *License, err error) {
 	}
 
 	// At this point we have a valid license candidate, and so expect a match.
-	// If we don't find one, we must return an unknown license.
+	// If we don't find one, we still return all information about the license,
+	// but with an empty list of types.
 	filePath := strings.TrimPrefix(f.Name, prefix)
+	var types []string
 	cov, ok := licensecheck.Cover(contents, licensecheck.Options{})
 	if ok && cov.Percent >= coverageThreshold {
 		matchedTypes := make(map[string]bool)
@@ -151,27 +153,18 @@ func detectFile(f *zip.File, prefix string) (_ *License, err error) {
 				matchedTypes[m.Name] = true
 			}
 		}
-		if len(matchedTypes) > 0 {
-			var typs []string
-			for t := range matchedTypes {
-				typs = append(typs, t)
-			}
-			sort.Strings(typs)
-			return &License{
-				Metadata: &Metadata{
-					Types:    typs,
-					FilePath: filePath,
-					Coverage: cov,
-				},
-				Contents: contents,
-			}, nil
+		for t := range matchedTypes {
+			types = append(types, t)
 		}
+		sort.Strings(types)
 	}
 	return &License{
 		Metadata: &Metadata{
+			Types:    types,
 			FilePath: filePath,
 			Coverage: cov,
 		},
+		Contents: contents,
 	}, nil
 }
 
