@@ -6,7 +6,6 @@ package etl
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/go-redis/redis/v7"
 	"golang.org/x/discovery/internal/complete"
+	"golang.org/x/discovery/internal/database"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/log"
 )
@@ -23,7 +23,7 @@ const popularCutoff = 50
 // handleUpdateRedisIndexes scans recently modified search documents, and
 // updates redis auto completion indexes with data from these documents.
 func (s *Server) handleUpdateRedisIndexes(w http.ResponseWriter, r *http.Request) {
-	err := updateRedisIndexes(r.Context(), s.db.GetSQLDB(), s.redisClient, popularCutoff)
+	err := updateRedisIndexes(r.Context(), s.db.Underlying(), s.redisClient, popularCutoff)
 	if err != nil {
 		log.Errorf("error updating redis indexes: %v", err)
 		code := http.StatusInternalServerError
@@ -36,7 +36,7 @@ func (s *Server) handleUpdateRedisIndexes(w http.ResponseWriter, r *http.Request
 // updateRedisIndexes updates redisClient with autocompletion data from db.
 // cutoff specifies the number of importers at which a package is considered
 // popular, and is passed-in as an argument to facilitate testing.
-func updateRedisIndexes(ctx context.Context, db *sql.DB, redisClient *redis.Client, cutoff int) (err error) {
+func updateRedisIndexes(ctx context.Context, db *database.DB, redisClient *redis.Client, cutoff int) (err error) {
 	defer derrors.Wrap(&err, "updateRedisIndexes")
 	if redisClient == nil {
 		return errors.New("redis client is nil")
@@ -85,9 +85,9 @@ func updateRedisIndexes(ctx context.Context, db *sql.DB, redisClient *redis.Clie
 	//    redis pipeline below.
 	//
 	// It seemed cleaner to expose the sql.DB here.
-	rows, err := db.QueryContext(ctx, query, args...)
+	rows, err := db.Query(ctx, query, args...)
 	if err != nil {
-		return fmt.Errorf("db.QueryContext(%q): %v", query, err)
+		return err
 	}
 	defer rows.Close()
 	pipe := redisClient.Pipeline()

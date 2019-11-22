@@ -45,7 +45,7 @@ func TestUpdateRedisIndexes(t *testing.T) {
 	if _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx); err != nil {
 		t.Fatal(err)
 	}
-	if err := updateRedisIndexes(ctx, testDB.GetSQLDB(), rc, 1); err != nil {
+	if err := updateRedisIndexes(ctx, testDB.Underlying(), rc, 1); err != nil {
 		t.Fatal(err)
 	}
 	popCount, err := rc.ZCount(complete.PopularKey, "0", "0").Result()

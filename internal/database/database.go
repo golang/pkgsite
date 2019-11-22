@@ -29,12 +29,7 @@ type DB struct {
 	db *sql.DB
 }
 
-// TODO(jba): remove
-func (db *DB) Underlying() *sql.DB {
-	return db.db
-}
-
-// Open creates a new DB for the given connection string.
+// Open creates a new DB  for the given connection string.
 func Open(driverName, dbinfo string) (_ *DB, err error) {
 	defer derrors.Wrap(&err, "database.Open(%q, %q)",
 		driverName, redactPassword(dbinfo))

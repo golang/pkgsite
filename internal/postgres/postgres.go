@@ -5,8 +5,6 @@
 package postgres
 
 import (
-	"database/sql"
-
 	"golang.org/x/discovery/internal/database"
 )
 
@@ -27,11 +25,4 @@ func (db *DB) Close() error {
 // Underlying returns the *database.DB inside db.
 func (db *DB) Underlying() *database.DB {
 	return db.db
-}
-
-// TODO(jba): remove.
-// GetSQLDB returns the underlying SQL database for the postgres instance. This
-// allows the ETL to perform streaming operations on the database.
-func (db *DB) GetSQLDB() *sql.DB {
-	return db.db.Underlying()
 }
