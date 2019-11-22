@@ -481,7 +481,6 @@ func TestServer(t *testing.T) {
 			urlPath:        fmt.Sprintf("/cmd@go1.13?tab=subdirectories"),
 			wantStatusCode: http.StatusOK,
 			want: in("",
-				htmlcheck.Dump(),
 				pagecheck.DirectoryHeader(dirCmd, versioned),
 				pagecheck.SubdirectoriesDetails()),
 		},
