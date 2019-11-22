@@ -14,14 +14,9 @@ type DB struct {
 	db *database.DB
 }
 
-// Open opens a new postgres DB.
-// TODO(jba): take a *sql.DB.
-func Open(driverName, dbinfo string) (*DB, error) {
-	db, err := database.Open(driverName, dbinfo)
-	if err != nil {
-		return nil, err
-	}
-	return &DB{db}, nil
+// New returns a new postgres DB.
+func New(db *database.DB) *DB {
+	return &DB{db}
 }
 
 // Close closes a DB.

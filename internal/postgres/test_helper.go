@@ -91,7 +91,11 @@ func SetupTestDB(dbName string) (_ *DB, err error) {
 			return nil, fmt.Errorf("unfixable error migrating database: %v.\nConsider running ./devtools/drop_test_dbs.sh", err)
 		}
 	}
-	return Open("postgres", dbtest.DBConnURI(dbName))
+	db, err := database.Open("postgres", dbtest.DBConnURI(dbName))
+	if err != nil {
+		return nil, err
+	}
+	return New(db), nil
 }
 
 // ResetTestDB truncates all data from the given test DB.  It should be called

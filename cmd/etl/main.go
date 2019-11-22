@@ -20,6 +20,7 @@ import (
 	"cloud.google.com/go/errorreporting"
 	"github.com/go-redis/redis/v7"
 	"golang.org/x/discovery/internal/config"
+	"golang.org/x/discovery/internal/database"
 	"golang.org/x/discovery/internal/dcensus"
 	"golang.org/x/discovery/internal/etl"
 	"golang.org/x/discovery/internal/index"
@@ -56,10 +57,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("unable to register the ocsql driver: %v\n", err)
 	}
-	db, err := postgres.Open(driverName, config.DBConnInfo())
+	ddb, err := database.Open(driverName, config.DBConnInfo())
 	if err != nil {
-		log.Fatalf("postgres.Open: %v", err)
+		log.Fatalf("database.Open: %v", err)
 	}
+	db := postgres.New(ddb)
 	defer db.Close()
 
 	indexClient, err := index.New(config.IndexURL())

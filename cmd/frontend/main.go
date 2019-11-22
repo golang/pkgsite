@@ -14,6 +14,7 @@ import (
 	"contrib.go.opencensus.io/integrations/ocsql"
 	"github.com/go-redis/redis/v7"
 	"golang.org/x/discovery/internal/config"
+	"golang.org/x/discovery/internal/database"
 	"golang.org/x/discovery/internal/dcensus"
 	"golang.org/x/discovery/internal/frontend"
 	"golang.org/x/discovery/internal/log"
@@ -52,10 +53,11 @@ func main() {
 		if err != nil {
 			log.Fatalf("unable to register the ocsql driver: %v\n", err)
 		}
-		db, err := postgres.Open(ocDriver, config.DBConnInfo())
+		ddb, err := database.Open(ocDriver, config.DBConnInfo())
 		if err != nil {
-			log.Fatalf("postgres.Open: %v", err)
+			log.Fatalf("database.Open: %v", err)
 		}
+		db := postgres.New(ddb)
 		defer db.Close()
 		ds = db
 	}

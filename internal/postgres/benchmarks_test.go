@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"golang.org/x/discovery/internal/config"
+	"golang.org/x/discovery/internal/database"
 )
 
 var testQueries = []string{
@@ -35,10 +36,11 @@ func BenchmarkSearch(b *testing.B) {
 	if err := config.Init(ctx); err != nil {
 		b.Fatal(err)
 	}
-	db, err := Open("pgx", config.DBConnInfo())
+	ddb, err := database.Open("pgx", config.DBConnInfo())
 	if err != nil {
 		b.Fatal(err)
 	}
+	db := New(ddb)
 	searchers := map[string]func(context.Context, string, int, int) ([]*SearchResult, error){
 		"db.Search": db.Search,
 	}
