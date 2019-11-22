@@ -59,49 +59,113 @@ func TestHTMLInjection(t *testing.T) {
 // 5. the tab (overview / doc / imports / ...)
 //
 // We aim to test all combinations of these.
+
+const pseudoVersion = "v0.0.0-20190101-123456789012"
+
+type testModule struct {
+	path            string
+	redistributable bool
+	versions        []string
+	packages        []testPackage
+}
+
+type testPackage struct {
+	name string
+	path string
+	doc  string
+}
+
+var testModules = []testModule{
+	{
+		// An ordinary module, with three versions.
+		path:            sample.ModulePath,
+		redistributable: true,
+		versions:        []string{"v1.0.0", "v0.9.0", pseudoVersion},
+		packages: []testPackage{
+			{
+				name: "foo",
+				path: sample.ModulePath + "/foo",
+			},
+			{
+				name: "hello",
+				path: sample.ModulePath + "/foo/directory/hello",
+				doc:  `<a href="/pkg/io#Writer">io.Writer</a>`,
+			},
+		},
+	},
+	{
+		// A non-redistributable module.
+		path:            "github.com/non_redistributable",
+		redistributable: false,
+		versions:        []string{"v1.0.0"},
+		packages: []testPackage{
+			{
+				name: "bar",
+				path: "github.com/non_redistributable/bar",
+			},
+		},
+	},
+	{
+		// A module whose latest version is a pseudoversion.
+		path:            "github.com/pseudo",
+		redistributable: true,
+		versions:        []string{pseudoVersion},
+		packages: []testPackage{
+			{
+				name: "baz",
+				path: "github.com/pseudo/baz",
+			},
+		},
+	},
+	{
+		// A standard library module.
+		path:            "std",
+		redistributable: true,
+		versions:        []string{"v1.13.0"},
+		packages: []testPackage{
+			{
+				name: "main",
+				path: "cmd/go",
+			},
+		},
+	},
+}
+
+func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
+	for _, mod := range mods {
+		var ps []*internal.Package
+		for _, pkg := range mod.packages {
+			p := sample.Package()
+			p.Name = pkg.name
+			p.Path = pkg.path
+			if pkg.doc != "" {
+				p.DocumentationHTML = []byte(pkg.doc)
+			}
+			if !mod.redistributable {
+				p.Licenses = nil
+			}
+			ps = append(ps, p)
+		}
+		for _, ver := range mod.versions {
+			v := sample.Version()
+			v.ModulePath = mod.path
+			v.Version = ver
+			v.SourceInfo = source.NewGitHubInfo(sample.RepositoryURL, "", ver)
+			v.Packages = ps
+			if err := testDB.InsertVersion(ctx, v); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+}
+
 func TestServer(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
 	defer postgres.ResetTestDB(testDB, t)
 
-	mustInsertVersion := func(modulePath, version string, pkgs []*internal.Package) {
-		v := sample.Version()
-		v.ModulePath = modulePath
-		v.Version = version
-		v.Packages = pkgs
-		v.SourceInfo = source.NewGitHubInfo(sample.RepositoryURL, "", version)
-		if err := testDB.InsertVersion(ctx, v); err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	pkg := sample.Package()
-	pkg2 := sample.Package()
-	pkg2.Path = sample.ModulePath + "/foo/directory/hello"
-	pkg2.DocumentationHTML = []byte(`<a href="/pkg/io#Writer">io.Writer</a>`)
-	pseudoVersion := "v0.0.0-20190101-123456789012"
-	mustInsertVersion(sample.ModulePath, "v0.9.0", []*internal.Package{pkg, pkg2})
-	mustInsertVersion(sample.ModulePath, "v1.0.0", []*internal.Package{pkg, pkg2})
-	mustInsertVersion(sample.ModulePath, pseudoVersion, []*internal.Package{pkg, pkg2})
-
-	// A module whose latest version is a pseudoversion.
-	pkgm2 := sample.Package()
-	pkgm2.Path = sample.ModulePath + "2/baz"
-	mustInsertVersion(sample.ModulePath+"2", pseudoVersion, []*internal.Package{pkgm2})
-
-	nonRedistModulePath := "github.com/non_redistributable"
-	nonRedistPkgPath := nonRedistModulePath + "/bar"
-	mustInsertVersion(nonRedistModulePath, "v1.0.0", []*internal.Package{{
-		Name:   "bar",
-		Path:   nonRedistPkgPath,
-		V1Path: nonRedistPkgPath,
-	}})
-
-	pkgCmdGo := sample.Package()
-	pkgCmdGo.Name = "main"
-	pkgCmdGo.Path = "cmd/go"
-	mustInsertVersion("std", "v1.13.0", []*internal.Package{pkgCmdGo})
+	insertTestModules(ctx, t, testModules)
 
 	s, err := NewServer(testDB, nil, "../../content/static", false)
 	if err != nil {
@@ -148,14 +212,14 @@ func TestServer(t *testing.T) {
 
 	pkgNonRedist := &pagecheck.Page{
 		Title:            "bar package",
-		ModulePath:       nonRedistModulePath,
+		ModulePath:       "github.com/non_redistributable",
 		Version:          "v1.0.0",
 		Suffix:           "bar",
 		IsLatest:         true,
-		LatestLink:       fmt.Sprintf("/%s/bar@v1.0.0", nonRedistModulePath),
+		LatestLink:       "/github.com/non_redistributable/bar@v1.0.0",
 		LicenseType:      "",
-		PackageURLFormat: "/" + nonRedistModulePath + "%s/bar",
-		ModuleURL:        "/mod/" + nonRedistModulePath,
+		PackageURLFormat: "/github.com/non_redistributable%s/bar",
+		ModuleURL:        "/mod/github.com/non_redistributable",
 	}
 	cmdGo := &pagecheck.Page{
 		Title:            "go command",
@@ -181,12 +245,12 @@ func TestServer(t *testing.T) {
 	modPseudo := &mp
 
 	mod2 := &pagecheck.Page{
-		Title:            "github.com/valid_module_name2 module",
-		ModulePath:       "github.com/valid_module_name2",
+		Title:            "github.com/pseudo module",
+		ModulePath:       "github.com/pseudo",
 		Version:          pseudoVersion,
 		FormattedVersion: mp.FormattedVersion,
 		LicenseType:      "MIT",
-		ModuleURL:        "/mod/github.com/valid_module_name2",
+		ModuleURL:        "/mod/github.com/pseudo",
 	}
 
 	std := &pagecheck.Page{
@@ -222,7 +286,6 @@ func TestServer(t *testing.T) {
 	)
 
 	pkgSuffix := strings.TrimPrefix(sample.PackagePath, sample.ModulePath+"/")
-	nonRedistPkgSuffix := strings.TrimPrefix(nonRedistPkgPath, nonRedistModulePath+"/")
 	for _, tc := range []struct {
 		// name of the test
 		name string
@@ -294,7 +357,7 @@ func TestServer(t *testing.T) {
 		{
 			name: "package default nonredistributable",
 			// For a non-redistributable package, the "latest" route goes to the overview tab.
-			urlPath:        fmt.Sprintf("/%s?tab=overview", nonRedistPkgPath),
+			urlPath:        "/github.com/non_redistributable/bar?tab=overview",
 			wantStatusCode: http.StatusOK,
 			want:           pagecheck.PackageHeader(pkgNonRedist, unversioned),
 		},
@@ -309,7 +372,7 @@ func TestServer(t *testing.T) {
 		{
 			name: "package@version default specific version nonredistributable",
 			// For a non-redistributable package, the name@version route goes to the overview tab.
-			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=overview", nonRedistModulePath, sample.VersionString, nonRedistPkgSuffix),
+			urlPath:        "/github.com/non_redistributable@v1.0.0/bar?tab=overview",
 			wantStatusCode: http.StatusOK,
 			want:           pagecheck.PackageHeader(pkgNonRedist, versioned),
 		},
@@ -323,14 +386,14 @@ func TestServer(t *testing.T) {
 		},
 		{
 			name:           "package@version doc with links",
-			urlPath:        fmt.Sprintf("/%s?tab=doc", pkg2.Path),
+			urlPath:        "/github.com/valid_module_name/foo/directory/hello?tab=doc",
 			wantStatusCode: http.StatusOK,
 			want: in(".Documentation",
 				in("a", href("/pkg/io#Writer"), text("io.Writer"))),
 		},
 		{
 			name:                "package@version doc with hacked up links",
-			urlPath:             fmt.Sprintf("/%s?tab=doc", pkg2.Path),
+			urlPath:             "/github.com/valid_module_name/foo/directory/hello?tab=doc",
 			doDocumentationHack: true,
 			wantStatusCode:      http.StatusOK,
 			want: in(".Documentation",
@@ -339,7 +402,7 @@ func TestServer(t *testing.T) {
 		{
 			name: "package@version doc tab nonredistributable",
 			// For a non-redistributable package, the doc tab will not show the doc.
-			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=doc", nonRedistModulePath, sample.VersionString, nonRedistPkgSuffix),
+			urlPath:        "/github.com/non_redistributable@v1.0.0/bar?tab=doc",
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.PackageHeader(pkgNonRedist, versioned),
@@ -363,7 +426,7 @@ func TestServer(t *testing.T) {
 		{
 			name: "package@version readme tab nonredistributable",
 			// For a non-redistributable package, the readme tab will not show the readme.
-			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=overview", nonRedistModulePath, sample.VersionString, nonRedistPkgSuffix),
+			urlPath:        "/github.com/non_redistributable@v1.0.0/bar?tab=overview",
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.PackageHeader(pkgNonRedist, versioned),
@@ -540,15 +603,15 @@ func TestServer(t *testing.T) {
 		},
 		{
 			name:           "module overview pseudoversion latest",
-			urlPath:        fmt.Sprintf("/mod/%s?tab=overview", sample.ModulePath+"2"),
+			urlPath:        "/mod/github.com/pseudo?tab=overview",
 			wantStatusCode: http.StatusOK,
 			// Show the readme tab by default.
 			// Fall back to the latest version, show readme tab by default.
 			want: in("",
 				pagecheck.ModuleHeader(mod2, unversioned),
 				in(".Overview-module a",
-					href("/mod/"+sample.ModulePath+"2"),
-					text("^"+sample.ModulePath+"2$")),
+					href("/mod/github.com/pseudo"),
+					text("^github.com/pseudo$")),
 				in(".Overview-readmeContent", text(`readme`))),
 		},
 
@@ -658,7 +721,7 @@ func TestServer(t *testing.T) {
 		},
 		{
 			name:           "latest version for package",
-			urlPath:        fmt.Sprintf("/latest-version/%s?pkg=%s", sample.ModulePath, pkg2.Path),
+			urlPath:        "/latest-version/github.com/valid_module_name?pkg=github.com/valid_module_name/foo/directory/hello",
 			wantStatusCode: http.StatusOK,
 			want:           in("", text(`"v1.0.0"`)),
 		},
@@ -677,7 +740,6 @@ func TestServer(t *testing.T) {
 					t.Errorf("Location: got %q, want %q", got, tc.wantLocation)
 				}
 			}
-
 			doc, err := html.Parse(res.Body)
 			if err != nil {
 				t.Fatal(err)
