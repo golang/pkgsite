@@ -402,7 +402,6 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 		{"search.tmpl"},
 		{"search_help.tmpl"},
 		{"license_policy.tmpl"},
-		{"directory.tmpl"},
 		{"overview.tmpl", "details.tmpl"},
 		{"subdirectories.tmpl", "details.tmpl"},
 		{"pkg_doc.tmpl", "details.tmpl"},
