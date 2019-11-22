@@ -176,16 +176,16 @@ func createDirectory(dbDir *internal.Directory, licmetas []*license.Metadata, in
 		Module:   *mod,
 		Path:     dbDir.Path,
 		Packages: packages,
-		URL:      constructDirectoryURL(dbDir.Path, dbDir.ModulePath, displayVersion(dbDir.Version, dbDir.ModulePath)),
+		URL:      constructDirectoryURL(dbDir.Path, dbDir.ModulePath, linkVersion(dbDir.Version, dbDir.ModulePath)),
 	}, nil
 }
 
-func constructDirectoryURL(dirPath, modulePath, formattedVersion string) string {
-	if formattedVersion == internal.LatestVersion {
+func constructDirectoryURL(dirPath, modulePath, linkVersion string) string {
+	if linkVersion == internal.LatestVersion {
 		return fmt.Sprintf("/%s", dirPath)
 	}
 	if dirPath == modulePath || modulePath == stdlib.ModulePath {
-		return fmt.Sprintf("/%s@%s", dirPath, formattedVersion)
+		return fmt.Sprintf("/%s@%s", dirPath, linkVersion)
 	}
-	return fmt.Sprintf("/%s@%s/%s", modulePath, formattedVersion, strings.TrimPrefix(dirPath, modulePath+"/"))
+	return fmt.Sprintf("/%s@%s/%s", modulePath, linkVersion, strings.TrimPrefix(dirPath, modulePath+"/"))
 }

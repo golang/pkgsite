@@ -98,10 +98,17 @@ func DirectoryHeader(p *Page, versionedURL bool) htmlcheck.Checker {
 }
 
 // SubdirectoriesDetails checks the detail section of a subdirectories tab.
-func SubdirectoriesDetails() htmlcheck.Checker {
+// If firstHref isn't empty, it and firstText should exactly match
+// href and text of the first link in the Directories table.
+func SubdirectoriesDetails(firstHref, firstText string) htmlcheck.Checker {
+	var link htmlcheck.Checker
+	if firstHref != "" {
+		link = in("table.Directories a", href(firstHref), exactText(firstText))
+	}
 	return in("",
 		inAt("th", 0, text("^Path$")),
-		inAt("th", 1, text("^Synopsis$")))
+		inAt("th", 1, text("^Synopsis$")),
+		link)
 }
 
 // LicenseDetails checks the details section of a license tab.

@@ -113,7 +113,7 @@ var testModules = []testModule{
 		packages: []testPackage{
 			{
 				name: "baz",
-				path: "github.com/pseudo/baz",
+				path: "github.com/pseudo/dir/baz",
 			},
 		},
 	},
@@ -255,6 +255,18 @@ func TestServer(t *testing.T) {
 		FormattedVersion: mp.FormattedVersion,
 		LicenseType:      "MIT",
 		IsLatest:         true,
+	}
+	dirPseudo := &pagecheck.Page{
+		ModulePath:       "github.com/pseudo",
+		Title:            "github.com/pseudo/dir directory",
+		ModuleURL:        "/mod/github.com/pseudo",
+		LatestLink:       "/mod/github.com/pseudo@" + pseudoVersion + "/dir",
+		Suffix:           "dir",
+		Version:          pseudoVersion,
+		FormattedVersion: mp.FormattedVersion,
+		LicenseType:      "MIT",
+		IsLatest:         true,
+		PackageURLFormat: "/github.com/pseudo%s/dir",
 	}
 
 	std := &pagecheck.Page{
@@ -514,7 +526,33 @@ func TestServer(t *testing.T) {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.DirectoryHeader(dir, unversioned),
-				pagecheck.SubdirectoriesDetails()),
+				// TODO(b/144217401) link should be unversioned.
+				pagecheck.SubdirectoriesDetails("/github.com/valid_module_name@v1.0.0/foo/directory/hello", "hello")),
+		},
+		{
+			name:           "directory@version subdirectories",
+			urlPath:        "/github.com/valid_module_name@v1.0.0/foo/directory",
+			wantStatusCode: http.StatusOK,
+			want: in("",
+				pagecheck.DirectoryHeader(dir, versioned),
+				pagecheck.SubdirectoriesDetails("/github.com/valid_module_name@v1.0.0/foo/directory/hello", "hello")),
+		},
+		{
+			name:           "directory@version subdirectories pseudoversion",
+			urlPath:        "/github.com/pseudo@" + pseudoVersion + "/dir?tab=subdirectories",
+			wantStatusCode: http.StatusOK,
+			want: in("",
+				pagecheck.DirectoryHeader(dirPseudo, versioned),
+				pagecheck.SubdirectoriesDetails("/github.com/pseudo@"+pseudoVersion+"/dir/baz", "baz")),
+		},
+		{
+			name:           "directory subdirectories pseudoversion",
+			urlPath:        "/github.com/pseudo/dir?tab=subdirectories",
+			wantStatusCode: http.StatusOK,
+			want: in("",
+				pagecheck.DirectoryHeader(dirPseudo, unversioned),
+				// TODO(b/144217401) link should be unversioned.
+				pagecheck.SubdirectoriesDetails("/github.com/pseudo@"+pseudoVersion+"/dir/baz", "baz")),
 		},
 		{
 			name:           "directory overview",
@@ -544,7 +582,7 @@ func TestServer(t *testing.T) {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.DirectoryHeader(dirCmd, unversioned),
-				pagecheck.SubdirectoriesDetails()),
+				pagecheck.SubdirectoriesDetails("", "")),
 		},
 		{
 			name:           "stdlib directory subdirectories",
@@ -552,7 +590,7 @@ func TestServer(t *testing.T) {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.DirectoryHeader(dirCmd, versioned),
-				pagecheck.SubdirectoriesDetails()),
+				pagecheck.SubdirectoriesDetails("", "")),
 		},
 		{
 			name:           "stdlib directory overview",
