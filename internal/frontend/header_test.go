@@ -20,7 +20,6 @@ import (
 func samplePackage(mutators ...func(*Package)) *Package {
 	p := &Package{
 		Path:              sample.PackagePath,
-		Suffix:            sample.PackageName,
 		Synopsis:          sample.Synopsis,
 		IsRedistributable: true,
 		Licenses:          transformLicenseMetadata(sample.LicenseMetadata),
@@ -122,7 +121,6 @@ func TestCreatePackageHeader(t *testing.T) {
 			}(),
 			wantPkg: samplePackage(func(p *Package) {
 				p.Path = "pa.th/to/foo/v2/bar"
-				p.Suffix = "bar"
 				p.Module.Path = "pa.th/to/foo/v2"
 			}),
 		},
@@ -137,7 +135,6 @@ func TestCreatePackageHeader(t *testing.T) {
 			}(),
 			wantPkg: samplePackage(func(p *Package) {
 				p.Path = "pa.th/to/foo/v1"
-				p.Suffix = "foo (root)"
 				p.Module.Path = "pa.th/to/foo/v1"
 			}),
 		},

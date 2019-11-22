@@ -22,7 +22,7 @@ import (
 type Package struct {
 	Module
 	Path              string
-	Suffix            string
+	Suffix            string // path after directory (used only for directory display)
 	Synopsis          string
 	IsRedistributable bool
 	URL               string
@@ -53,11 +53,6 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo, latestReques
 		return nil, fmt.Errorf("package and version info must not be nil")
 	}
 
-	suffix := strings.TrimPrefix(strings.TrimPrefix(pkg.Path, vi.ModulePath), "/")
-	if suffix == "" {
-		suffix = effectiveName(pkg) + " (root)"
-	}
-
 	var modLicenses []*license.Metadata
 	for _, lm := range pkg.Licenses {
 		if path.Dir(lm.FilePath) == "." {
@@ -72,7 +67,6 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo, latestReques
 	}
 	return &Package{
 		Path:              pkg.Path,
-		Suffix:            suffix,
 		Synopsis:          pkg.Synopsis,
 		IsRedistributable: pkg.IsRedistributable(),
 		Licenses:          transformLicenseMetadata(pkg.Licenses),
