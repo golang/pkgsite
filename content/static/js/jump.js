@@ -32,7 +32,31 @@ let jumpListItems; // All the identifiers in the doc; computed only once.
 
 // collectJumpListItems returns a list of items, one for each identifier in the
 // documentation on the current page.
+//
+// It uses the data-kind attribute generated in the documentation HTML to find
+// the identifiers and their id attributes.
+//
+// If there are no data-kind attributes, then we have older doc; fall back to
+// a less precise method.
 function collectJumpListItems() {
+  let items = [];
+  const doc = document.querySelector('.Documentation');
+  for (const el of doc.querySelectorAll('[data-kind]')) {
+    items.push(newJumpListItem(el));
+  }
+  if (items.length == 0) {
+    items = collectJumpListItemsFallback(doc);
+  }
+  // Clicking on any of the links closes the dialog.
+  for (const item of items) {
+    item.link.addEventListener('click', function() { jumpDialog.close(); });
+  }
+  // Sort case-insensitively by identifier name.
+  items.sort(function (a, b) { return a.lower.localeCompare(b.lower); });
+  return items;
+}
+
+function collectJumpListItemsFallback(doc) {
   const items = [];
   // A map from id to bool, to dedup DOM ids. The doc DOM has duplicate ids (b/143456059).
   // We assume the first one is the one we want.
@@ -41,7 +65,6 @@ function collectJumpListItems() {
   // .Documentation DOM that has an id attribute of a certain form.
   // TODO(b/143456714) Put a data-kind attribute on each relevant element, so this would
   // be more precise.
-  const doc = document.querySelector('.Documentation');
   for (const el of doc.querySelectorAll('*[id]')) {
     const id = el.getAttribute('id');
     if (!seen[id] && /^[^_][^-]*$/.test(id)) {
@@ -49,12 +72,6 @@ function collectJumpListItems() {
       items.push(newJumpListItem(el));
     }
   }
-  // Clicking on any of the links closes the dialog.
-  for (const item of items) {
-    item.link.addEventListener('click', function() { jumpDialog.close(); });
-  }
-  // Sort case-insensitively by identifier name.
-  items.sort(function (a, b) { return a.lower.localeCompare(b.lower); });
   return items;
 }
 
@@ -66,16 +83,20 @@ function collectJumpListItems() {
 // - link: a link ('a' tag) to the element
 // - lower: the name in lower case, just for sorting
 function newJumpListItem(el) {
-    const a = document.createElement('a');
-    const name = el.getAttribute('id');
-    a.setAttribute('href', '#' + name);
-    a.setAttribute('tabindex', '-1');
-    return {
-        link: a,
-        name: name,
-        kind: guessKind(el),
-        lower: name.toLowerCase(), // for sorting
-    };
+  const a = document.createElement('a');
+  const name = el.getAttribute('id');
+  a.setAttribute('href', '#' + name);
+  a.setAttribute('tabindex', '-1');
+  let kind = el.getAttribute('data-kind');
+  if (!kind) {
+    kind = guessKind(el);
+  }
+  return {
+    link: a,
+    name: name,
+    kind: kind,
+    lower: name.toLowerCase(), // for sorting
+  };
 }
 
 // guessKind tries to guess the kind of el by looking around the DOM.
