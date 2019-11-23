@@ -245,17 +245,16 @@ func countQuotes(s string) int {
 // formatDeclHTML formats the decl as HTML-annotated source code for the
 // provided decl. Type identifiers are linked to corresponding declarations.
 func (r *Renderer) formatDeclHTML(w io.Writer, decl ast.Decl, idr *identifierResolver) {
-	// TODO: Disable anchors for type and func declarations?
-
 	// Generate all anchor points and links for the given decl.
 	anchorPointsMap := generateAnchorPoints(decl)
 	anchorLinksMap := generateAnchorLinks(idr, decl)
 
-	// Convert the maps (keyed by *ast.Ident) to slices of IDs or URLs.
+	// Convert the maps (keyed by *ast.Ident) to slices of idKinds or URLs.
 	//
 	// This relies on the ast.Inspect and scanner.Scanner both
 	// visiting *ast.Ident and token.IDENT nodes in the same order.
-	var anchorPoints, anchorLinks []string
+	var anchorPoints []idKind
+	var anchorLinks []string
 	ast.Inspect(decl, func(node ast.Node) bool {
 		if id, ok := node.(*ast.Ident); ok {
 			anchorPoints = append(anchorPoints, anchorPointsMap[id])
@@ -281,7 +280,7 @@ func (r *Renderer) formatDeclHTML(w io.Writer, decl ast.Decl, idr *identifierRes
 	type lineType byte
 	const codeType, commentType lineType = 1 << 0, 1 << 1 // may OR together
 	numLines := bytes.Count(src, []byte("\n")) + 1
-	anchorLines := make([][]string, numLines)
+	anchorLines := make([][]idKind, numLines)
 	lineTypes := make([]lineType, numLines)
 
 	// Scan through the source code, appropriately annotating it with HTML spans
@@ -310,7 +309,7 @@ scan:
 			bb.WriteString(`</span>`)
 			lastOffset += len(lit)
 		case token.IDENT:
-			if idIdx < len(anchorPoints) && anchorPoints[idIdx] != "" {
+			if idIdx < len(anchorPoints) && anchorPoints[idIdx].id != "" {
 				anchorLines[line] = append(anchorLines[line], anchorPoints[idIdx])
 			}
 			if idIdx < len(anchorLinks) && anchorLinks[idIdx] != "" {
@@ -338,11 +337,21 @@ scan:
 		}
 	}
 
-	// For each line, emit anchor IDs for each relevant line.
-	for _, ids := range anchorLines {
-		for _, id := range ids {
-			id = template.HTMLEscapeString(id)
-			fmt.Fprintf(w, `<span id="%s"></span>`, id)
+	// Emit anchor IDs and data-kind attributes for each relevant line.
+	for _, iks := range anchorLines {
+		for _, ik := range iks {
+			// Attributes for types and functions are handled in the template
+			// that generates the full documentation HTML.
+			if ik.kind == "function" || ik.kind == "type" {
+				continue
+			}
+			// Top-level methods are handled in the template, but interface methods
+			// are handled here.
+			if fd, ok := decl.(*ast.FuncDecl); ok && fd.Recv != nil {
+				continue
+			}
+			fmt.Fprintf(w, `<span id="%s" data-kind="%s"></span>`,
+				template.HTMLEscapeString(ik.id), ik.kind)
 		}
 		b, _ := bb.ReadBytes('\n')
 		w.Write(b) // write remainder of line (contains newline)
@@ -397,50 +406,76 @@ func stringBasicLitSize(s string) string {
 	return fmt.Sprintf("/* %d byte string literal not displayed */", len(u))
 }
 
+// An idKind holds an anchor ID and the kind of the identifier being anchored.
+// The valid kinds are: "constant", "variable", "type", "function", "method" and "field".
+type idKind struct {
+	id, kind string
+}
+
 // generateAnchorPoints returns a mapping of *ast.Ident objects to the
-// qualified ID that should be set as an anchor point.
-func generateAnchorPoints(decl ast.Decl) map[*ast.Ident]string {
-	m := map[*ast.Ident]string{}
+// qualified ID that should be set as an anchor point, as well as the kind
+// of identifer, used in the data-kind attribute.
+func generateAnchorPoints(decl ast.Decl) map[*ast.Ident]idKind {
+	m := map[*ast.Ident]idKind{}
 	switch decl := decl.(type) {
 	case *ast.GenDecl:
 		for _, sp := range decl.Specs {
 			switch decl.Tok {
 			case token.CONST, token.VAR:
+				kind := "constant"
+				if decl.Tok == token.VAR {
+					kind = "variable"
+				}
 				for _, name := range sp.(*ast.ValueSpec).Names {
-					m[name] = name.Name
+					m[name] = idKind{name.Name, kind}
 				}
 			case token.TYPE:
 				ts := sp.(*ast.TypeSpec)
-				m[ts.Name] = ts.Name.Name
+				m[ts.Name] = idKind{ts.Name.Name, "type"}
 
 				var fs []*ast.Field
+				var kind string
 				switch tx := ts.Type.(type) {
 				case *ast.StructType:
 					fs = tx.Fields.List
+					kind = "field"
 				case *ast.InterfaceType:
 					fs = tx.Methods.List
+					kind = "method"
 				}
 				for _, f := range fs {
 					for _, id := range f.Names {
-						m[id] = ts.Name.String() + "." + id.String()
+						m[id] = idKind{ts.Name.String() + "." + id.String(), kind}
 					}
-					if f.Names == nil {
-						// Embedded type use the type name as the field name.
+					// if f.Names == nil, we have an embedded struct field or embedded
+					// interface.
+					//
+					// Don't generate anchor points for embedded interfaces. They
+					// aren't interesting in and of themselves; they just represent an
+					// additional list of methods added to the interface.
+					//
+					// Do generate anchor points for embedded fields: they are
+					// interesting, because their names can be used in selector
+					// expressions and struct literals.
+					if f.Names == nil && kind == "field" {
+						// The name of an embedded field is the type name.
 						typeName, id := nodeName(f.Type)
 						typeName = typeName[strings.LastIndexByte(typeName, '.')+1:]
-						m[id] = ts.Name.String() + "." + typeName
+						m[id] = idKind{ts.Name.String() + "." + typeName, kind}
 					}
 				}
 			}
 		}
 	case *ast.FuncDecl:
 		anchorID := decl.Name.Name
+		kind := "function"
 		if decl.Recv != nil && len(decl.Recv.List) > 0 {
 			recvName, _ := nodeName(decl.Recv.List[0].Type)
 			recvName = recvName[strings.LastIndexByte(recvName, '.')+1:]
 			anchorID = recvName + "." + anchorID
+			kind = "method"
 		}
-		m[decl.Name] = anchorID
+		m[decl.Name] = idKind{anchorID, kind}
 	}
 	return m
 }

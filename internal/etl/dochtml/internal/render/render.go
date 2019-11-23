@@ -110,15 +110,15 @@ func (r *Renderer) DocHTML(doc string) template.HTML {
 }
 
 // DeclHTML formats the doc and decl and returns a tuple of
-// strings corresponding with each input argument.
+// strings corresponding to each input argument.
 //
 // This formats documentation HTML according to the same rules as DocHTML.
 //
-// This format declaration HTML with:
-//	<pre>                   element wrapping the entire declaration
-//	<span id="XXX">         elements for every top-level declaration
-//	<span class="comment">  elements for every Go comment
-//	<a href="XXX">          elements for URL hyperlinks
+// This formats declaration HTML with:
+//	<pre>                       element wrapping the entire declaration
+//	<span id="X" data-kind="K"> elements for many top-level declarations
+//	<span class="comment">      elements for every Go comment
+//	<a href="XXX">              elements for URL hyperlinks
 //
 // DeclHTML is intended for top-level package declarations.
 func (r *Renderer) DeclHTML(doc string, decl ast.Decl) (out struct{ Doc, Decl template.HTML }) {

@@ -126,7 +126,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 	<section class="Documentation-functions">
 		{{- range .Funcs -}}
 		<div class="Documentation-function">
-			<h3 id="{{.Name}}" class="Documentation-functionHeader">func {{source_link .Name .Decl}} <a href="#{{.Name}}">¶</a></h3>{{"\n"}}
+			<h3 id="{{.Name}}" data-kind="function" class="Documentation-functionHeader">func {{source_link .Name .Decl}} <a href="#{{.Name}}">¶</a></h3>{{"\n"}}
 			{{- $out := render_decl .Doc .Decl -}}
 			{{- $out.Decl -}}
 			{{- $out.Doc -}}
@@ -142,7 +142,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 		{{- range .Types -}}
 		<div class="Documentation-type">
 			{{- $tname := .Name -}}
-			<h3 id="{{.Name}}" class="Documentation-typeHeader">type {{source_link .Name .Decl}} <a href="#{{.Name}}">¶</a></h3>{{"\n"}}
+			<h3 id="{{.Name}}" data-kind="type" class="Documentation-typeHeader">type {{source_link .Name .Decl}} <a href="#{{.Name}}">¶</a></h3>{{"\n"}}
 			{{- $out := render_decl .Doc .Decl -}}
 			{{- $out.Decl -}}
 			{{- $out.Doc -}}
@@ -169,7 +169,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 
 			{{- range .Funcs -}}
 			<div class="Documentation-typeFunc">
-				<h3 id="{{.Name}}" class="Documentation-typeFuncHeader">func {{source_link .Name .Decl}} <a href="#{{.Name}}">¶</a></h3>{{"\n"}}
+				<h3 id="{{.Name}}" data-kind="function" class="Documentation-typeFuncHeader">func {{source_link .Name .Decl}} <a href="#{{.Name}}">¶</a></h3>{{"\n"}}
 				{{- $out := render_decl .Doc .Decl -}}
 				{{- $out.Decl -}}
 				{{- $out.Doc -}}
@@ -181,7 +181,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 			{{- range .Methods -}}
 			<div class="Documentation-typeMethod">
 				{{- $name := (printf "%s.%s" $tname .Name) -}}
-				<h3 id="{{$name}}" class="Documentation-typeMethodHeader">func ({{.Recv}}) {{source_link .Name .Decl}} <a href="#{{$name}}">¶</a></h3>{{"\n"}}
+				<h3 id="{{$name}}" data-kind="method" class="Documentation-typeMethodHeader">func ({{.Recv}}) {{source_link .Name .Decl}} <a href="#{{$name}}">¶</a></h3>{{"\n"}}
 				{{- $out := render_decl .Doc .Decl -}}
 				{{- $out.Decl -}}
 				{{- $out.Doc -}}
