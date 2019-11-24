@@ -154,8 +154,8 @@ func TestUpdateVersionStatesForReprocessing(t *testing.T) {
 
 	code := http.StatusHTTPVersionNotSupported
 	wantVersions := []*internal.VersionState{
-		{ModulePath: "foo.com/bar", Version: "v1.0.0", IndexTimestamp: now, Status: &code},
 		{ModulePath: "baz.com/quux", Version: "v2.0.1", IndexTimestamp: now, Status: &code},
+		{ModulePath: "foo.com/bar", Version: "v1.0.0", IndexTimestamp: now, Status: &code},
 	}
 	ignore := cmpopts.IgnoreFields(internal.VersionState{}, "CreatedAt", "LastProcessedAt", "NextProcessedAfter")
 	if diff := cmp.Diff(wantVersions, gotVersions, ignore); diff != "" {

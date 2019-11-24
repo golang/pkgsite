@@ -16,6 +16,7 @@ import (
 	"golang.org/x/discovery/internal/database"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/log"
+	"golang.org/x/discovery/internal/version"
 )
 
 // InsertIndexVersions inserts new versions into the module_version_states
@@ -25,9 +26,9 @@ func (db *DB) InsertIndexVersions(ctx context.Context, versions []*internal.Inde
 
 	var vals []interface{}
 	for _, v := range versions {
-		vals = append(vals, v.Path, v.Version, v.Timestamp)
+		vals = append(vals, v.Path, v.Version, version.ForSorting(v.Version), v.Timestamp)
 	}
-	cols := []string{"module_path", "version", "index_timestamp"}
+	cols := []string{"module_path", "version", "sort_version", "index_timestamp"}
 	conflictAction := `
 		ON CONFLICT
 			(module_path, version)
@@ -41,15 +42,15 @@ func (db *DB) InsertIndexVersions(ctx context.Context, versions []*internal.Inde
 
 // UpsertVersionState inserts or updates the module_version_state table with
 // the results of a fetch operation for a given module version.
-func (db *DB) UpsertVersionState(ctx context.Context, modulePath, version, appVersion string, timestamp time.Time, status int, fetchErr error) (err error) {
+func (db *DB) UpsertVersionState(ctx context.Context, modulePath, vers, appVersion string, timestamp time.Time, status int, fetchErr error) (err error) {
 	derrors.Wrap(&err, "UpsertVersionState(ctx, %q, %q, %q, %s, %d, %v",
-		modulePath, version, appVersion, timestamp, status, fetchErr)
+		modulePath, vers, appVersion, timestamp, status, fetchErr)
 
 	ctx, span := trace.StartSpan(ctx, "UpsertVersionState")
 	defer span.End()
 	query := `
-		INSERT INTO module_version_states AS mvs (module_path, version, app_version, index_timestamp, status, error)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		INSERT INTO module_version_states AS mvs (module_path, version, sort_version, app_version, index_timestamp, status, error)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		ON CONFLICT (module_path, version) DO UPDATE
 			SET
 				app_version=excluded.app_version,
@@ -71,7 +72,8 @@ func (db *DB) UpsertVersionState(ctx context.Context, modulePath, version, appVe
 	if fetchErr != nil {
 		sqlErrorMsg = sql.NullString{Valid: true, String: fetchErr.Error()}
 	}
-	result, err := db.db.Exec(ctx, query, modulePath, version, appVersion, timestamp, status, sqlErrorMsg)
+	result, err := db.db.Exec(ctx, query,
+		modulePath, vers, version.ForSorting(vers), appVersion, timestamp, status, sqlErrorMsg)
 	if err != nil {
 		return err
 	}
@@ -206,6 +208,7 @@ func (db *DB) queryVersionStates(ctx context.Context, queryFormat string, args .
 
 // GetNextVersionsToFetch returns the next batch of versions that must be
 // processed.
+// Prefer release versions to prerelease, and higher versions to lower.
 func (db *DB) GetNextVersionsToFetch(ctx context.Context, limit int) (_ []*internal.VersionState, err error) {
 	defer derrors.Wrap(&err, "GetNextVersionsToFetch(ctx, %d)", limit)
 
@@ -217,7 +220,8 @@ func (db *DB) GetNextVersionsToFetch(ctx context.Context, limit int) (_ []*inter
 			(status IS NULL OR status >= 500)
 			AND next_processed_after < CURRENT_TIMESTAMP
 		ORDER BY
-			next_processed_after ASC, index_timestamp DESC
+			right(sort_version, 1) = '~' DESC,
+			sort_version DESC
 		LIMIT $1`
 	return db.queryVersionStates(ctx, queryFormat, limit)
 }
