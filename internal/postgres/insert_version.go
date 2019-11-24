@@ -56,12 +56,7 @@ func (db *DB) InsertVersion(ctx context.Context, v *internal.Version) (err error
 // saveVersion inserts a Version into the database along with its packages,
 // imports, and licenses.  If any of these rows already exist, the version and
 // corresponding will be deleted and reinserted.
-//
-// The version string is also parsed into major, minor, patch
-// and prerelease used solely for sorting database queries by semantic version.
-// The prerelease column will pad any number fields with zeroes on the left so
-// all number fields in the prerelease column have 20 characters. If the
-// version is malformed then insertion will fail.
+// If the version is malformed then insertion will fail.
 //
 // A derrors.InvalidArgument error will be returned if the given version and
 // licenses are invalid.

@@ -86,11 +86,8 @@ func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version strin
 				-- Order the versions by release then prerelease.
 				-- The default version should be the first release
 				-- version available, if one exists.
-				CASE WHEN v.prerelease = '~' THEN 0 ELSE 1 END,
-				v.major DESC,
-				v.minor DESC,
-				v.patch DESC,
-				v.prerelease DESC,
+				v.version_type = 'release' DESC,
+				v.sort_version DESC,
 				v.module_path DESC
 			LIMIT 1;`
 		} else {
@@ -117,11 +114,8 @@ func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version strin
 				-- Order the versions by release then prerelease.
 				-- The default version should be the first release
 				-- version available, if one exists.
-				CASE WHEN v.prerelease = '~' THEN 0 ELSE 1 END,
-				v.major DESC,
-				v.minor DESC,
-				v.patch DESC,
-				v.prerelease DESC
+				v.version_type = 'release' DESC,
+				v.sort_version DESC
 			LIMIT 1;`
 		args = append(args, modulePath)
 	} else {

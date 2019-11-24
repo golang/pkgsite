@@ -141,13 +141,9 @@ const orderByLatest = `
 				-- Order the versions by release then prerelease.
 				-- The default version should be the first release
 				-- version available, if one exists.
-				CASE WHEN
-					prerelease = '~' THEN 0 ELSE 1 END,
-					major DESC,
-					minor DESC,
-					patch DESC,
-					prerelease DESC,
-					module_path DESC`
+				version_type = 'release' DESC,
+				sort_version DESC,
+				module_path DESC`
 
 // directoryQueryWithoutModulePath returns the query and args needed to fetch a
 // directory when no module path is provided.

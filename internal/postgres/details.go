@@ -69,28 +69,23 @@ func (db *DB) GetPackagesInVersion(ctx context.Context, modulePath, version stri
 	return packages, nil
 }
 
-// GetTaggedVersionsForPackageSeries returns a list of tagged versions sorted
-// in descending order by major, minor and patch number and then lexicographically
-// in descending order by prerelease. This list includes tagged versions of
-// packages that have the same v1path.
+// GetTaggedVersionsForPackageSeries returns a list of tagged versions sorted in
+// descending semver order. This list includes tagged versions of packages that
+// have the same v1path.
 func (db *DB) GetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*internal.VersionInfo, error) {
 	return getPackageVersions(ctx, db, pkgPath, []version.Type{version.TypeRelease, version.TypePrerelease})
 }
 
 // GetPseudoVersionsForPackageSeries returns the 10 most recent from a list of
-// pseudo-versions sorted in descending order by major, minor and patch number
-// and then lexicographically in descending order by prerelease. This list includes
+// pseudo-versions sorted in descending semver order. This list includes
 // pseudo-versions of packages that have the same v1path.
 func (db *DB) GetPseudoVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*internal.VersionInfo, error) {
 	return getPackageVersions(ctx, db, pkgPath, []version.Type{version.TypePseudo})
 }
 
-// getPackageVersions returns a list of versions sorted numerically
-// in descending order by major, minor and patch number and then
-// lexicographically in descending order by prerelease. The version types
-// included in the list are specified by a list of VersionTypes. The results
-// include the type of versions of packages that are part of the same series
-// and have the same package v1path.
+// getPackageVersions returns a list of versions sorted in descending semver
+// order. The version types included in the list are specified by a list of
+// VersionTypes.
 func getPackageVersions(ctx context.Context, db *DB, pkgPath string, versionTypes []version.Type) (_ []*internal.VersionInfo, err error) {
 	defer derrors.Wrap(&err, "DB.getPackageVersions(ctx, db, %q, %v)", pkgPath, versionTypes)
 
@@ -115,11 +110,7 @@ func getPackageVersions(ctx context.Context, db *DB, pkgPath string, versionType
 			p.v1_path IN (SELECT * FROM v1paths)
 			AND version_type in (%s)
 		ORDER BY
-			v.module_path DESC,
-			v.major DESC,
-			v.minor DESC,
-			v.patch DESC,
-			v.prerelease DESC %s`
+			v.sort_version DESC %s`
 	queryEnd := `;`
 	if len(versionTypes) == 0 {
 		return nil, fmt.Errorf("error: must specify at least one version type")
@@ -160,24 +151,21 @@ func versionTypeExpr(vts []version.Type) string {
 	return strings.Join(vs, ", ")
 }
 
-// GetTaggedVersionsForModule returns a list of tagged versions sorted
-// in descending order by major, minor and patch number and then lexicographically
-// in descending order by prerelease.
+// GetTaggedVersionsForModule returns a list of tagged versions sorted in
+// descending semver order.
 func (db *DB) GetTaggedVersionsForModule(ctx context.Context, modulePath string) ([]*internal.VersionInfo, error) {
 	return getModuleVersions(ctx, db, modulePath, []version.Type{version.TypeRelease, version.TypePrerelease})
 }
 
 // GetPseudoVersionsForModule returns the 10 most recent from a list of
-// pseudo-versions sorted in descending order by major, minor and patch number
-// and then lexicographically in descending order by prerelease.
+// pseudo-versions sorted in descending semver order.
 func (db *DB) GetPseudoVersionsForModule(ctx context.Context, modulePath string) ([]*internal.VersionInfo, error) {
 	return getModuleVersions(ctx, db, modulePath, []version.Type{version.TypePseudo})
 }
 
-// getModuleVersions returns a list of versions sorted numerically
-// in descending order by major, minor and patch number and then
-// lexicographically in descending order by prerelease. The version types
-// included in the list are specified by a list of VersionTypes.
+// getModuleVersions returns a list of versions sorted in descending semver
+// order. The version types included in the list are specified by a list of
+// VersionTypes.
 func getModuleVersions(ctx context.Context, db *DB, modulePath string, versionTypes []version.Type) (_ []*internal.VersionInfo, err error) {
 	// TODO(b/139530312): get information for parent modules.
 	defer derrors.Wrap(&err, "getModuleVersions(ctx, db, %q, %v)", modulePath, versionTypes)
@@ -191,10 +179,7 @@ func getModuleVersions(ctx context.Context, db *DB, modulePath string, versionTy
 		series_path = $1
 	    AND version_type in (%s)
 	ORDER BY
-		major DESC,
-		minor DESC,
-		patch DESC,
-		prerelease DESC %s`
+		sort_version DESC %s`
 
 	queryEnd := `;`
 	if len(versionTypes) == 0 {
@@ -460,11 +445,8 @@ func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version str
 				-- Order the versions by release then prerelease.
 				-- The default version should be the first release
 				-- version available, if one exists.
-				CASE WHEN prerelease = '~' THEN 0 ELSE 1 END,
-				major DESC,
-				minor DESC,
-				patch DESC,
-				prerelease DESC
+				version_type = 'release' DESC,
+				sort_version DESC
 			LIMIT 1;`
 	} else {
 		query += `

@@ -201,8 +201,7 @@ func TestPostgres_ReadAndWriteVersionOtherColumns(t *testing.T) {
 	ctx := context.Background()
 
 	type other struct {
-		major, minor, patch    int
-		prerelease, seriesPath string
+		sortVersion, seriesPath string
 	}
 
 	v := sample.Version()
@@ -210,11 +209,8 @@ func TestPostgres_ReadAndWriteVersionOtherColumns(t *testing.T) {
 	v.Version = "v1.2.3-beta.4.a"
 
 	want := other{
-		major:      1,
-		minor:      2,
-		patch:      3,
-		prerelease: "beta.00000000000000000004.a",
-		seriesPath: "github.com/user/repo/path",
+		sortVersion: "1,2,3,~beta,4,~a",
+		seriesPath:  "github.com/user/repo/path",
 	}
 
 	if err := testDB.InsertVersion(ctx, v); err != nil {
@@ -222,14 +218,14 @@ func TestPostgres_ReadAndWriteVersionOtherColumns(t *testing.T) {
 	}
 	query := `
 	SELECT
-		major, minor, patch, prerelease, series_path
+		sort_version, series_path
 	FROM
 		versions
 	WHERE
 		module_path = $1 AND version = $2`
 	row := testDB.db.QueryRow(ctx, query, v.ModulePath, v.Version)
 	var got other
-	if err := row.Scan(&got.major, &got.minor, &got.patch, &got.prerelease, &got.seriesPath); err != nil {
+	if err := row.Scan(&got.sortVersion, &got.seriesPath); err != nil {
 		t.Fatal(err)
 	}
 	if got != want {
