@@ -44,6 +44,11 @@ func Open(driverName, dbinfo string) (_ *DB, err error) {
 	return &DB{db}, nil
 }
 
+// New creates a new DB from a sql.DB.
+func New(db *sql.DB) *DB {
+	return &DB{db}
+}
+
 var passwordRegexp = regexp.MustCompile(`password=\S+`)
 
 func redactPassword(dbinfo string) string {
