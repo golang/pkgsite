@@ -139,13 +139,23 @@ func effectiveName(pkg *internal.Package) string {
 	return base
 }
 
-// packageTitle constructs the details page title for pkg.
-// The string will appear in the <title> and <h1> element.
-func packageTitle(pkg *internal.Package) string {
+// packageHTMLTitle constructs the details page title for pkg.
+// The string will appear in the <title> element (and thus
+// the browser tab).
+func packageHTMLTitle(pkg *internal.Package) string {
 	if pkg.Name != "main" {
 		return pkg.Name + " package"
 	}
 	return effectiveName(pkg) + " command"
+}
+
+// packageTitle returns the package title as it will
+// appear in the heading at the top of the page.
+func packageTitle(pkg *internal.Package) string {
+	if pkg.Name != "main" {
+		return "package " + pkg.Name
+	}
+	return "command " + effectiveName(pkg)
 }
 
 // breadcrumbPath builds HTML that displays pkgPath as a sequence of links
@@ -221,12 +231,21 @@ func breadcrumbPath(pkgPath, modPath, version string) template.HTML {
 		pkgPath))
 }
 
-// moduleTitle constructs the details page title for pkg.
+// moduleHTMLTitle constructs the <title> contents, for tabs in the browser.
+func moduleHTMLTitle(modulePath string) string {
+	if modulePath == stdlib.ModulePath {
+		return "stdlib"
+	}
+	return modulePath + " module"
+}
+
+// moduleTitle constructs the title that will appear at the top of the module
+// page.
 func moduleTitle(modulePath string) string {
 	if modulePath == stdlib.ModulePath {
 		return "Standard library"
 	}
-	return modulePath + " module"
+	return "module " + modulePath
 }
 
 // elapsedTime takes a date and returns returns human-readable,

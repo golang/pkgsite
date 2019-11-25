@@ -188,7 +188,7 @@ func TestServer(t *testing.T) {
 	)
 
 	pkgV100 := &pagecheck.Page{
-		Title:            "foo package",
+		Title:            "package foo",
 		ModulePath:       "github.com/valid_module_name",
 		Version:          "v1.0.0",
 		Suffix:           "foo",
@@ -210,7 +210,7 @@ func TestServer(t *testing.T) {
 	pkgPseudo := &pp
 
 	pkgNonRedist := &pagecheck.Page{
-		Title:            "bar package",
+		Title:            "package bar",
 		ModulePath:       "github.com/non_redistributable",
 		Version:          "v1.0.0",
 		Suffix:           "bar",
@@ -221,7 +221,7 @@ func TestServer(t *testing.T) {
 		ModuleURL:        "/mod/github.com/non_redistributable",
 	}
 	cmdGo := &pagecheck.Page{
-		Title:            "go command",
+		Title:            "command go",
 		ModulePath:       "std",
 		Suffix:           "cmd/go",
 		Version:          "go1.13",
@@ -233,7 +233,7 @@ func TestServer(t *testing.T) {
 	}
 	mod := &pagecheck.Page{
 		ModulePath:  "github.com/valid_module_name",
-		Title:       "github.com/valid_module_name module",
+		Title:       "module github.com/valid_module_name",
 		ModuleURL:   "/mod/github.com/valid_module_name",
 		Version:     "v1.0.0",
 		LicenseType: "MIT",
@@ -248,7 +248,7 @@ func TestServer(t *testing.T) {
 
 	mod2 := &pagecheck.Page{
 		ModulePath:       "github.com/pseudo",
-		Title:            "github.com/pseudo module",
+		Title:            "module github.com/pseudo",
 		ModuleURL:        "/mod/github.com/pseudo",
 		LatestLink:       "/mod/github.com/pseudo@" + pseudoVersion,
 		Version:          pseudoVersion,
@@ -258,7 +258,7 @@ func TestServer(t *testing.T) {
 	}
 	dirPseudo := &pagecheck.Page{
 		ModulePath:       "github.com/pseudo",
-		Title:            "github.com/pseudo/dir directory",
+		Title:            "directory github.com/pseudo/dir",
 		ModuleURL:        "/mod/github.com/pseudo",
 		LatestLink:       "/mod/github.com/pseudo@" + pseudoVersion + "/dir",
 		Suffix:           "dir",
@@ -280,7 +280,7 @@ func TestServer(t *testing.T) {
 	}
 
 	dir := &pagecheck.Page{
-		Title:            "github.com/valid_module_name/foo/directory directory",
+		Title:            "directory github.com/valid_module_name/foo/directory",
 		ModulePath:       "github.com/valid_module_name",
 		Version:          "v1.0.0",
 		Suffix:           "foo/directory",
@@ -290,7 +290,7 @@ func TestServer(t *testing.T) {
 	}
 
 	dirCmd := &pagecheck.Page{
-		Title:            "cmd directory",
+		Title:            "directory cmd",
 		ModulePath:       "std",
 		Version:          "go1.13",
 		Suffix:           "cmd",

@@ -244,9 +244,9 @@ func (s *Server) staticPageHandler(templateName, title string) http.HandlerFunc 
 
 // basePage contains fields shared by all pages when rendering templates.
 type basePage struct {
-	Title string
-	Query string
-	Nonce string
+	HTMLTitle string
+	Query     string
+	Nonce     string
 }
 
 // licensePolicyPage is used to generate the static license policy page.
@@ -271,9 +271,9 @@ func (s *Server) licensePolicyHandler() http.HandlerFunc {
 // newBasePage returns a base page for the given request and title.
 func newBasePage(r *http.Request, title string) basePage {
 	return basePage{
-		Title: title,
-		Query: searchQuery(r),
-		Nonce: middleware.NoncePlaceholder,
+		HTMLTitle: title,
+		Query:     searchQuery(r),
+		Nonce:     middleware.NoncePlaceholder,
 	}
 }
 
@@ -339,16 +339,16 @@ func (s *Server) renderErrorPage(status int, page *errorPage) ([]byte, error) {
 		page = &errorPage{
 			Message: statusInfo,
 			basePage: basePage{
-				Title: statusInfo,
-				Nonce: middleware.NoncePlaceholder,
+				HTMLTitle: statusInfo,
+				Nonce:     middleware.NoncePlaceholder,
 			},
 		}
 	}
 	if page.Message == "" {
 		page.Message = statusInfo
 	}
-	if page.Title == "" {
-		page.Title = statusInfo
+	if page.HTMLTitle == "" {
+		page.HTMLTitle = statusInfo
 	}
 	return s.renderPage("error.tmpl", page)
 }
