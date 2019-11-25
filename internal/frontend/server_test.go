@@ -188,7 +188,7 @@ func TestServer(t *testing.T) {
 	)
 
 	pkgV100 := &pagecheck.Page{
-		Title:            "package foo",
+		Title:            "foo package",
 		ModulePath:       "github.com/valid_module_name",
 		Version:          "v1.0.0",
 		Suffix:           "foo",
@@ -210,7 +210,7 @@ func TestServer(t *testing.T) {
 	pkgPseudo := &pp
 
 	pkgNonRedist := &pagecheck.Page{
-		Title:            "package bar",
+		Title:            "bar package",
 		ModulePath:       "github.com/non_redistributable",
 		Version:          "v1.0.0",
 		Suffix:           "bar",
@@ -221,7 +221,7 @@ func TestServer(t *testing.T) {
 		ModuleURL:        "/mod/github.com/non_redistributable",
 	}
 	cmdGo := &pagecheck.Page{
-		Title:            "command go",
+		Title:            "go command",
 		ModulePath:       "std",
 		Suffix:           "cmd/go",
 		Version:          "go1.13",
@@ -233,7 +233,7 @@ func TestServer(t *testing.T) {
 	}
 	mod := &pagecheck.Page{
 		ModulePath:  "github.com/valid_module_name",
-		Title:       "module github.com/valid_module_name",
+		Title:       "github.com/valid_module_name module",
 		ModuleURL:   "/mod/github.com/valid_module_name",
 		Version:     "v1.0.0",
 		LicenseType: "MIT",
@@ -248,7 +248,7 @@ func TestServer(t *testing.T) {
 
 	mod2 := &pagecheck.Page{
 		ModulePath:       "github.com/pseudo",
-		Title:            "module github.com/pseudo",
+		Title:            "github.com/pseudo module",
 		ModuleURL:        "/mod/github.com/pseudo",
 		LatestLink:       "/mod/github.com/pseudo@" + pseudoVersion,
 		Version:          pseudoVersion,
@@ -280,7 +280,7 @@ func TestServer(t *testing.T) {
 	}
 
 	dir := &pagecheck.Page{
-		Title:            "directory github.com/valid_module_name/foo/directory",
+		Title:            "github.com/valid_module_name/foo/directory directory",
 		ModulePath:       "github.com/valid_module_name",
 		Version:          "v1.0.0",
 		Suffix:           "foo/directory",
@@ -290,7 +290,7 @@ func TestServer(t *testing.T) {
 	}
 
 	dirCmd := &pagecheck.Page{
-		Title:            "directory cmd",
+		Title:            "cmd directory",
 		ModulePath:       "std",
 		Version:          "go1.13",
 		Suffix:           "cmd",

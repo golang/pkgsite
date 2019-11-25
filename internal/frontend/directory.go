@@ -84,7 +84,6 @@ func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirP
 
 	page := &DetailsPage{
 		basePage:       newBasePage(r, fmt.Sprintf("%s directory", dirPath)),
-		Title:          fmt.Sprintf("directory %s", dirPath),
 		Settings:       settings,
 		Header:         header,
 		BreadcrumbPath: breadcrumbPath(dirPath, dbDir.ModulePath, linkVersion(dbDir.Version, dbDir.ModulePath)),

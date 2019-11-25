@@ -24,7 +24,6 @@ import (
 // DetailsPage contains data for a package of module details template.
 type DetailsPage struct {
 	basePage
-	Title          string
 	CanShowDetails bool
 	Settings       TabSettings
 	Details        interface{}
@@ -133,8 +132,7 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 		}
 	}
 	page := &DetailsPage{
-		basePage:       newBasePage(r, packageHTMLTitle(&pkg.Package)),
-		Title:          packageTitle(&pkg.Package),
+		basePage:       newBasePage(r, packageTitle(&pkg.Package)),
 		Settings:       settings,
 		Header:         pkgHeader,
 		BreadcrumbPath: breadcrumbPath(pkgHeader.Path, pkgHeader.Module.Path, pkgHeader.Module.DisplayVersion),
@@ -193,8 +191,7 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 		}
 	}
 	page := &DetailsPage{
-		basePage:       newBasePage(r, moduleHTMLTitle(moduleVersion.ModulePath)),
-		Title:          moduleTitle(moduleVersion.ModulePath),
+		basePage:       newBasePage(r, moduleTitle(moduleVersion.ModulePath)),
 		Settings:       settings,
 		Header:         modHeader,
 		BreadcrumbPath: breadcrumbPath(moduleVersion.ModulePath, moduleVersion.ModulePath, moduleVersion.Version),
