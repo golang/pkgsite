@@ -80,7 +80,7 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version str
 			&pkg.Name,
 			&pkg.Synopsis,
 			&pkg.V1Path,
-			&pkg.DocumentationHTML,
+			database.NullIsEmpty(&pkg.DocumentationHTML),
 			pq.Array(&licenseTypes),
 			pq.Array(&licensePaths),
 			&pkg.GOOS,

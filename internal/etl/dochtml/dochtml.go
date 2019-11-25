@@ -44,7 +44,7 @@ type RenderOptions struct {
 //
 // If the rendered documentation HTML size exceeds the specified limit,
 // an error with ErrTooLarge in its chain will be returned.
-func Render(fset *token.FileSet, p *doc.Package, opt RenderOptions) ([]byte, error) {
+func Render(fset *token.FileSet, p *doc.Package, opt RenderOptions) (string, error) {
 	if opt.Limit == 0 {
 		const megabyte = 1000 * 1000
 		opt.Limit = 10 * megabyte
@@ -109,11 +109,11 @@ func Render(fset *token.FileSet, p *doc.Package, opt RenderOptions) ([]byte, err
 		Examples: collectExamples(p),
 	})
 	if buf.Remain < 0 {
-		return nil, xerrors.Errorf("dochtml.Render: %w", ErrTooLarge)
+		return "", xerrors.Errorf("dochtml.Render: %w", ErrTooLarge)
 	} else if err != nil {
-		return nil, fmt.Errorf("dochtml.Render: %v", err)
+		return "", fmt.Errorf("dochtml.Render: %v", err)
 	}
-	return buf.B.Bytes(), nil
+	return buf.B.String(), nil
 }
 
 // examples is an internal representation of all package examples.

@@ -293,7 +293,7 @@ func removeNonDistributableData(v *internal.Version) {
 			// Not redistributable, so prune derived information
 			// that can't be stored.
 			p.Synopsis = ""
-			p.DocumentationHTML = nil
+			p.DocumentationHTML = ""
 		}
 	}
 

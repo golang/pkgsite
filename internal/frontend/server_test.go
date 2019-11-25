@@ -139,7 +139,7 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 			p.Name = pkg.name
 			p.Path = pkg.path
 			if pkg.doc != "" {
-				p.DocumentationHTML = []byte(pkg.doc)
+				p.DocumentationHTML = pkg.doc
 			}
 			if !mod.redistributable {
 				p.Licenses = nil

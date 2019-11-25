@@ -230,7 +230,7 @@ func TestReFetch(t *testing.T) {
 			Path:              "github.com/my/module/bar",
 			Name:              "bar",
 			Synopsis:          "Package bar",
-			DocumentationHTML: []byte("Bar returns the string &#34;bar&#34;."),
+			DocumentationHTML: "Bar returns the string &#34;bar&#34;.",
 			V1Path:            "github.com/my/module/bar",
 			Licenses: []*license.Metadata{
 				{Types: []string{"MIT"}, FilePath: "COPYING"},
@@ -472,7 +472,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			Path:              "github.com/my/module/bar",
 			Name:              "bar",
 			Synopsis:          "package bar",
-			DocumentationHTML: []byte("Bar returns the string &#34;bar&#34;."),
+			DocumentationHTML: "Bar returns the string &#34;bar&#34;.",
 			V1Path:            "github.com/my/module/bar",
 			Licenses: []*license.Metadata{
 				{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
@@ -520,7 +520,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					Path:              "nonredistributable.mod/module/bar/baz",
 					Name:              "baz",
 					Synopsis:          "package baz",
-					DocumentationHTML: []byte("Baz returns the string &#34;baz&#34;."),
+					DocumentationHTML: "Baz returns the string &#34;baz&#34;.",
 					V1Path:            "nonredistributable.mod/module/bar/baz",
 					Licenses: []*license.Metadata{
 						{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
@@ -546,11 +546,10 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					SourceInfo:     nil,
 				},
 				Package: internal.Package{
-					Path:              "nonredistributable.mod/module/foo",
-					Name:              "foo",
-					Synopsis:          "",
-					DocumentationHTML: nil,
-					V1Path:            "nonredistributable.mod/module/foo",
+					Path:     "nonredistributable.mod/module/foo",
+					Name:     "foo",
+					Synopsis: "",
+					V1Path:   "nonredistributable.mod/module/foo",
 					Licenses: []*license.Metadata{
 						{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
 						{Types: []string{"BSD-0-Clause"}, FilePath: "foo/LICENSE.md"},
@@ -577,7 +576,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					Path:              "context",
 					Name:              "context",
 					Synopsis:          "Package context defines the Context type, which carries deadlines, cancelation signals, and other request-scoped values across API boundaries and between processes.",
-					DocumentationHTML: []byte("This example demonstrates the use of a cancelable context to prevent a\ngoroutine leak."),
+					DocumentationHTML: "This example demonstrates the use of a cancelable context to prevent a\ngoroutine leak.",
 					V1Path:            "context",
 					Licenses: []*license.Metadata{
 						{
@@ -607,7 +606,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					Path:              "builtin",
 					Name:              "builtin",
 					Synopsis:          "Package builtin provides documentation for Go's predeclared identifiers.",
-					DocumentationHTML: []byte("int64 is the set of all signed 64-bit integers."),
+					DocumentationHTML: "int64 is the set of all signed 64-bit integers.",
 					V1Path:            "builtin",
 					Licenses: []*license.Metadata{
 						{
@@ -635,7 +634,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					Path:              "build.constraints/module/cpu",
 					Name:              "cpu",
 					Synopsis:          "Package cpu implements processor feature detection used by the Go standard library.",
-					DocumentationHTML: []byte("const CacheLinePadSize = 3"),
+					DocumentationHTML: "const CacheLinePadSize = 3",
 					V1Path:            "build.constraints/module/cpu",
 					Licenses: []*license.Metadata{
 						{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
@@ -683,11 +682,11 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			}
 			if got, want := gotPkg.DocumentationHTML, test.want.DocumentationHTML; len(want) == 0 && len(got) != 0 {
 				t.Errorf("got non-empty documentation but want empty:\ngot: %q\nwant: %q", got, want)
-			} else if !bytes.Contains(got, want) {
+			} else if !strings.Contains(got, want) {
 				t.Errorf("got documentation doesn't contain wanted documentation substring:\ngot: %q\nwant (substring): %q", got, want)
 			}
 			for _, dontWant := range test.dontWantDoc {
-				if got := gotPkg.DocumentationHTML; bytes.Contains(got, []byte(dontWant)) {
+				if got := gotPkg.DocumentationHTML; strings.Contains(got, dontWant) {
 					t.Errorf("got documentation contains unwanted documentation substring:\ngot: %q\ndontWant (substring): %q", got, dontWant)
 				}
 			}
@@ -1042,7 +1041,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					Name:              "foo",
 					Path:              "github.com/my/module/foo",
 					Synopsis:          "package foo",
-					DocumentationHTML: []byte("FooBar returns the string &#34;foo bar&#34;."),
+					DocumentationHTML: "FooBar returns the string &#34;foo bar&#34;.",
 					Imports:           []string{"fmt", "github.com/my/module/bar"},
 					V1Path:            "github.com/my/module/foo",
 					GOOS:              "linux",
@@ -1052,7 +1051,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					Name:              "bar",
 					Path:              "github.com/my/module/bar",
 					Synopsis:          "package bar",
-					DocumentationHTML: []byte("Bar returns the string &#34;bar&#34;."),
+					DocumentationHTML: "Bar returns the string &#34;bar&#34;.",
 					Imports:           []string{},
 					V1Path:            "github.com/my/module/bar",
 					GOOS:              "linux",
@@ -1068,7 +1067,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					Name:              "p",
 					Path:              "no.mod/module/p",
 					Synopsis:          "Package p is inside a module where a go.mod file hasn't been explicitly added yet.",
-					DocumentationHTML: []byte("const Year = 2009"),
+					DocumentationHTML: "const Year = 2009",
 					Imports:           []string{},
 					V1Path:            "no.mod/module/p",
 					GOOS:              "linux",
@@ -1086,14 +1085,13 @@ func TestExtractPackagesFromZip(t *testing.T) {
 			version: "v1.0.0",
 			packages: map[string]*internal.Package{
 				"main": {
-					Name:              "main",
-					Path:              "emp.ty/package",
-					Synopsis:          "",
-					DocumentationHTML: []byte{}, // Want empty documentation HTML.
-					Imports:           []string{},
-					V1Path:            "emp.ty/package",
-					GOOS:              "linux",
-					GOARCH:            "amd64",
+					Name:     "main",
+					Path:     "emp.ty/package",
+					Synopsis: "",
+					Imports:  []string{},
+					V1Path:   "emp.ty/package",
+					GOOS:     "linux",
+					GOARCH:   "amd64",
 				},
 			},
 		},
@@ -1105,7 +1103,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					Name:              "good",
 					Path:              "bad.mod/module/good",
 					Synopsis:          "Package good is inside a module that has bad packages.",
-					DocumentationHTML: []byte(`const Good = <a href="/pkg/builtin#true">true</a>`),
+					DocumentationHTML: `const Good = <a href="/pkg/builtin#true">true</a>`,
 					Imports:           []string{},
 					V1Path:            "bad.mod/module/good",
 					GOOS:              "linux",
@@ -1121,7 +1119,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					Name:              "cpu",
 					Path:              "build.constraints/module/cpu",
 					Synopsis:          "Package cpu implements processor feature detection used by the Go standard library.",
-					DocumentationHTML: []byte("const CacheLinePadSize = 3"),
+					DocumentationHTML: "const CacheLinePadSize = 3",
 					Imports:           []string{},
 					V1Path:            "build.constraints/module/cpu",
 					GOOS:              "linux",
@@ -1165,7 +1163,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 
 				if got, want := got.DocumentationHTML, want.DocumentationHTML; len(want) == 0 && len(got) != 0 {
 					t.Errorf("got non-empty documentation but want empty:\ngot: %q\nwant: %q", got, want)
-				} else if !bytes.Contains(got, want) {
+				} else if !strings.Contains(got, want) {
 					t.Errorf("got documentation doesn't contain wanted documentation substring:\ngot: %q\nwant (substring): %q", got, want)
 				}
 			}

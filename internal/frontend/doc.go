@@ -34,14 +34,14 @@ var doDocumentationHack = os.Getenv("GO_DISCOVERY_DOCUMENTATION_HACK") == "TRUE"
 // fetchDocumentationDetails fetches data for the package specified by path and version
 // from the database and returns a DocumentationDetails.
 func fetchDocumentationDetails(ctx context.Context, ds DataSource, pkg *internal.VersionedPackage) (*DocumentationDetails, error) {
-	docBytes := pkg.DocumentationHTML
+	docHTML := pkg.DocumentationHTML
 	if doDocumentationHack {
-		docBytes = hackUpDocumentation(docBytes)
+		docHTML = hackUpDocumentation(docHTML)
 	}
 	return &DocumentationDetails{
 		GOOS:          pkg.GOOS,
 		GOARCH:        pkg.GOARCH,
-		Documentation: template.HTML(docBytes),
+		Documentation: template.HTML(docHTML),
 	}, nil
 }
 
@@ -57,8 +57,8 @@ func fetchDocumentationDetails(ctx context.Context, ds DataSource, pkg *internal
 //   - add an explicit ?tab=doc after the path.
 var packageLinkRegexp = regexp.MustCompile(`(<a href="/)pkg/([^?#"]+)((?:#[^"]*)?">.*?</a>)`)
 
-func hackUpDocumentation(docBytes []byte) []byte {
-	return packageLinkRegexp.ReplaceAll(docBytes, []byte(`$1$2?tab=doc$3`))
+func hackUpDocumentation(docHTML string) string {
+	return packageLinkRegexp.ReplaceAllString(docHTML, `$1$2?tab=doc$3`)
 }
 
 // fileSource returns the original filepath in the module zip where the given

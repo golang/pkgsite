@@ -125,7 +125,7 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 					Path:              "context",
 					Synopsis:          "This is a package synopsis",
 					Licenses:          sample.LicenseMetadata,
-					DocumentationHTML: []byte("This is the documentation HTML"),
+					DocumentationHTML: "This is the documentation HTML",
 				}}
 				return v
 			}(),

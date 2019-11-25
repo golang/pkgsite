@@ -142,7 +142,7 @@ func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version strin
 	row := db.db.QueryRow(ctx, query, args...)
 	err = row.Scan(&pkg.Path, &pkg.Name, &pkg.Synopsis,
 		&pkg.V1Path, pq.Array(&licenseTypes), pq.Array(&licensePaths),
-		&pkg.DocumentationHTML, &pkg.GOOS, &pkg.GOARCH, &pkg.Version,
+		database.NullIsEmpty(&pkg.DocumentationHTML), &pkg.GOOS, &pkg.GOARCH, &pkg.Version,
 		&pkg.CommitTime, database.NullIsEmpty(&pkg.ReadmeFilePath), database.NullIsEmpty(&pkg.ReadmeContents),
 		&pkg.ModulePath, &pkg.VersionType, jsonbScanner{&pkg.SourceInfo})
 	if err != nil {

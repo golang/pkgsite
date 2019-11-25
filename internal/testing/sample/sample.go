@@ -38,7 +38,7 @@ var (
 	Licenses = []*license.License{
 		{Metadata: LicenseMetadata[0], Contents: `Lorem Ipsum`},
 	}
-	DocumentationHTML = []byte("This is the documentation HTML")
+	DocumentationHTML = "This is the documentation HTML"
 	PackageName       = "foo"
 	PackagePath       = "github.com/valid_module_name/foo"
 	V1Path            = "github.com/valid_module_name/foo"

@@ -76,7 +76,7 @@ type Package struct {
 	Synopsis          string
 	Licenses          []*license.Metadata // path to applicable version licenses
 	Imports           []string
-	DocumentationHTML []byte
+	DocumentationHTML string
 	// The values of the GOOS and GOARCH environment variables used to parse the package.
 	GOOS   string
 	GOARCH string
