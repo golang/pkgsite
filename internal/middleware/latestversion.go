@@ -9,6 +9,7 @@ import (
 	"context"
 	"net/http"
 	"regexp"
+	"strings"
 
 	"golang.org/x/discovery/internal/log"
 )
@@ -35,6 +36,10 @@ func LatestVersion(latest latestFunc) Middleware {
 			matches := latestInfoRegexp.FindSubmatch(body)
 			if matches != nil {
 				version := string(matches[1])
+				// The html/template package converts '+' to its HTML entity.
+				// Wrapping the value in the special types template.HTML and
+				// template.HTMLAttxsr did not help.
+				version = strings.Replace(version, "&#43;", "+", -1)
 				modulePath := string(matches[2])
 				packagePath := string(matches[3])
 				latestVersion := latest(r.Context(), modulePath, packagePath)

@@ -53,6 +53,22 @@ func TestLatestVersion(t *testing.T) {
                 </div>`,
 		},
 		{
+			name:   "package version with build is latest",
+			latest: func(context.Context, string, string) string { return "v1.2.3+build" },
+			in: `
+                <div class="DetailsHeader-badge $$GODISCOVERY_LATESTCLASS$$"
+					 data-version="v1.2.3&#43;build" data-mpath="p1/p2" data-ppath="p1/p2/p3">
+                    <span>Latest</span>
+                    <a href="p1/p2@$$GODISCOVERY_LATESTVERSION$$/p3">Go to latest</a>
+                </div>`,
+			want: `
+                <div class="DetailsHeader-badge DetailsHeader-latest"
+					 data-version="v1.2.3&#43;build" data-mpath="p1/p2" data-ppath="p1/p2/p3">
+                    <span>Latest</span>
+                    <a href="p1/p2@v1.2.3+build/p3">Go to latest</a>
+                </div>`,
+		},
+		{
 			name:   "module version is not latest",
 			latest: func(context.Context, string, string) string { return "v1.2.3" },
 			in: `

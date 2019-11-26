@@ -118,6 +118,18 @@ var testModules = []testModule{
 		},
 	},
 	{
+		// A module whose latest version is has "+incompatible".
+		path:            "github.com/incompatible",
+		redistributable: true,
+		versions:        []string{"v1.0.0+incompatible"},
+		packages: []testPackage{
+			{
+				name: "inc",
+				path: "github.com/incompatible/dir/inc",
+			},
+		},
+	},
+	{
 		// A standard library module.
 		path:            "std",
 		redistributable: true,
@@ -208,6 +220,18 @@ func TestServer(t *testing.T) {
 	pp.FormattedVersion = "v0.0.0 (20190101-123456789012)"
 	pp.IsLatest = false
 	pkgPseudo := &pp
+
+	pkgInc := &pagecheck.Page{
+		Title:            "package inc",
+		ModulePath:       "github.com/incompatible",
+		Version:          "v1.0.0+incompatible",
+		Suffix:           "dir/inc",
+		IsLatest:         true,
+		LatestLink:       "/github.com/incompatible@v1.0.0+incompatible/dir/inc",
+		LicenseType:      "MIT",
+		PackageURLFormat: "/github.com/incompatible%s/dir/inc",
+		ModuleURL:        "/mod/github.com/incompatible",
+	}
 
 	pkgNonRedist := &pagecheck.Page{
 		Title:            "package bar",
@@ -519,7 +543,13 @@ func TestServer(t *testing.T) {
 			want: in("",
 				pagecheck.PackageHeader(pkgPseudo, versioned)),
 		},
-
+		{
+			name:           "package@version overview tab, +incompatible",
+			urlPath:        "/github.com/incompatible@v1.0.0+incompatible/dir/inc?tab=overview",
+			wantStatusCode: http.StatusOK,
+			want: in("",
+				pagecheck.PackageHeader(pkgInc, versioned)),
+		},
 		{
 			name:           "directory subdirectories",
 			urlPath:        fmt.Sprintf("/%s", sample.PackagePath+"/directory"),
