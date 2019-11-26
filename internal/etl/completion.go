@@ -118,6 +118,13 @@ func updateRedisIndexes(ctx context.Context, db *database.DB, redisClient *redis
 		}
 	}()
 
+	// Track whether or not we have any entries in the popular or remaining
+	// indexes. This is an edge case, but if we don't insert any entries for a
+	// given index the key won't exist and we'll get an error when renaming.
+	var (
+		haveRemaining bool
+		havePopular   bool
+	)
 	// Build up a Redis pipeline as we scan the search_documents table. If needed
 	// this pipeline could be intermittently flushed, but in testing it was
 	// fastest to use one single pipeline.
@@ -134,19 +141,25 @@ func updateRedisIndexes(ctx context.Context, db *database.DB, redisClient *redis
 		}
 		switch {
 		case partial.Importers >= cutoff:
+			havePopular = true
 			pipe.ZAdd(keyPop, zs...)
 		default:
+			haveRemaining = true
 			pipe.ZAdd(keyRem, zs...)
 		}
 	}
 	if _, err := pipe.ExecContext(ctx); err != nil {
 		return fmt.Errorf("redis error: pipe.Exec: %v", err)
 	}
-	if _, err := redisClient.Rename(keyPop, complete.PopularKey).Result(); err != nil {
-		return fmt.Errorf(`redis error: Rename(%q, %q): %v`, keyPop, complete.PopularKey, err)
+	if havePopular {
+		if _, err := redisClient.Rename(keyPop, complete.PopularKey).Result(); err != nil {
+			return fmt.Errorf(`redis error: Rename(%q, %q): %v`, keyPop, complete.PopularKey, err)
+		}
 	}
-	if _, err := redisClient.Rename(keyRem, complete.RemainingKey).Result(); err != nil {
-		return fmt.Errorf(`redis error: Rename(%q, %q): %v`, keyRem, complete.RemainingKey, err)
+	if haveRemaining {
+		if _, err := redisClient.Rename(keyRem, complete.RemainingKey).Result(); err != nil {
+			return fmt.Errorf(`redis error: Rename(%q, %q): %v`, keyRem, complete.RemainingKey, err)
+		}
 	}
 	return nil
 }

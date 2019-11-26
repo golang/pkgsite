@@ -6,6 +6,7 @@ package integration
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -49,18 +50,25 @@ func TestEndToEndProcessing(t *testing.T) {
 	proxyClient, indexClient, teardownClients := setupProxyAndIndex(t, testVersions...)
 	defer teardownClients()
 
-	s, err := miniredis.Run()
+	redisCache, err := miniredis.Run()
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer s.Close()
-	redisClient := redis.NewClient(&redis.Options{Addr: s.Addr()})
+	defer redisCache.Close()
+	redisCacheClient := redis.NewClient(&redis.Options{Addr: redisCache.Addr()})
+
+	redisHA, err := miniredis.Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer redisHA.Close()
+	redisHAClient := redis.NewClient(&redis.Options{Addr: redisHA.Addr()})
 
 	// TODO(b/143760329): it would be better if InMemoryQueue made http requests
 	// back to ETL, rather than calling fetch itself.
 	queue := etl.NewInMemoryQueue(ctx, proxyClient, testDB, 10)
 
-	etlServer, err := etl.NewServer(testDB, indexClient, proxyClient, nil, queue, nil, "../../../content/static")
+	etlServer, err := etl.NewServer(testDB, indexClient, proxyClient, redisHAClient, queue, nil, "../../../content/static")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,44 +76,68 @@ func TestEndToEndProcessing(t *testing.T) {
 	etlServer.Install(etlMux.Handle)
 	etlHTTP := httptest.NewServer(etlMux)
 
-	frontendServer, err := frontend.NewServer(testDB, nil, "../../../content/static", false)
+	frontendServer, err := frontend.NewServer(testDB, redisHAClient, "../../../content/static", false)
 	if err != nil {
 		t.Fatal(err)
 	}
 	frontendMux := http.NewServeMux()
-	frontendServer.Install(frontendMux.Handle, redisClient)
+	frontendServer.Install(frontendMux.Handle, redisCacheClient)
 	frontendHTTP := httptest.NewServer(frontendMux)
 
-	etlURL := etlHTTP.URL + "/poll-and-queue"
-	etlResp, err := http.Get(etlURL)
-	if err != nil {
+	if _, err := doGet(etlHTTP.URL + "/poll-and-queue"); err != nil {
 		t.Fatal(err)
-	}
-	defer etlResp.Body.Close()
-	if etlResp.StatusCode != http.StatusOK {
-		t.Fatalf("GET %s: got status %d, want %d", etlURL, etlResp.StatusCode, http.StatusOK)
 	}
 	// TODO(b/143760329): This should really be made deterministic.
 	time.Sleep(100 * time.Millisecond)
 	queue.WaitForTesting(ctx)
 
-	frontendURL := frontendHTTP.URL + "/github.com/my/module/foo"
-	frontendResp, err := http.Get(frontendURL)
+	body, err := doGet(frontendHTTP.URL + "/github.com/my/module/foo")
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer frontendResp.Body.Close()
-	if frontendResp.StatusCode != http.StatusOK {
-		t.Fatalf("GET %s: got status %d, want %d", frontendURL, frontendResp.StatusCode, http.StatusOK)
-	}
-	bodyBytes, err := ioutil.ReadAll(frontendResp.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
-	body := string(bodyBytes)
-	if idx := strings.Index(body, "525600"); idx < 0 {
+	if idx := strings.Index(string(body), "525600"); idx < 0 {
 		t.Error("Documentation constant 525600 not found in body")
 	}
+
+	// Populate the auto-completion indexes from the search documents that should
+	// have been inserted above.
+	if _, err := doGet(etlHTTP.URL + "/update-redis-indexes"); err != nil {
+		t.Fatal(err)
+	}
+	completionBody, err := doGet(frontendHTTP.URL + "/autocomplete?q=foo")
+	if err != nil {
+		t.Fatal(err)
+	}
+	completion := "github.com/my/module/foo"
+	if idx := strings.Index(string(completionBody), completion); idx < 0 {
+		t.Errorf("Auto-completion %q not found in JSON response", completion)
+	}
+	emptyCompletion, err := doGet(frontendHTTP.URL + "/autocomplete?q=frog")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// This could be made more robust by actually parsing the JSON.
+	if got := string(emptyCompletion); got != "[]" {
+		t.Errorf("GET /autocomplete?q=frog: expected empty results, got %q", got)
+	}
+}
+
+// doGet executes an HTTP GET request for url and returns the response body, or
+// an error if anything went wrong or the response status code was not 200 OK.
+func doGet(url string) ([]byte, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("http.Get(%q): %v", url, err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("http.Get(%q): status: %d, want %d", url, resp.StatusCode, http.StatusOK)
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
+	return body, nil
 }
 
 func setupProxyAndIndex(t *testing.T, versions ...*proxy.TestVersion) (*proxy.Client, *index.Client, func()) {

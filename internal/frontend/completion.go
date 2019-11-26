@@ -30,8 +30,10 @@ func (s *Server) handleAutoCompletion(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			code := http.StatusInternalServerError
 			http.Error(w, http.StatusText(code), code)
+			return
 		}
-	} else {
+	}
+	if completions == nil {
 		// autocomplete.js complains if the JSON returned by this endpoint is null,
 		// so we initialize a non-nil empty array to serialize to an empty JSON
 		// array.
