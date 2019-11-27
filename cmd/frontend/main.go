@@ -11,6 +11,7 @@ import (
 	"os"
 	"time"
 
+	"cloud.google.com/go/profiler"
 	"contrib.go.opencensus.io/integrations/ocsql"
 	"github.com/go-redis/redis/v7"
 	"golang.org/x/discovery/internal/config"
@@ -40,6 +41,13 @@ func main() {
 		log.Fatal(err)
 	}
 	config.Dump(os.Stderr)
+
+	if config.UseProfiler() {
+		if err := profiler.Start(profiler.Config{}); err != nil {
+			log.Fatalf("profiler.Start: %v", err)
+		}
+	}
+
 	var ds frontend.DataSource
 	if *directProxy != "" {
 		proxyClient, err := proxy.New(*directProxy)

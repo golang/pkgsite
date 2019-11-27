@@ -126,6 +126,11 @@ func AppVersionID() string {
 	return cfg.VersionID
 }
 
+// UseProfiler specifies whether to enable Stackdriver Profiler.
+func UseProfiler() bool {
+	return cfg.UseProfiler
+}
+
 // AppVersionFormat is the expected format of the app version timestamp.
 const AppVersionFormat = "20060102t150405"
 
@@ -219,6 +224,9 @@ type config struct {
 	// Configuration for redis autocompletion. This is different from the page
 	// cache instance as it has different availability requirements.
 	RedisHAHost, RedisHAPort string
+
+	// UseProfiler specifies whether to enable Stackdriver Profiler.
+	UseProfiler bool
 
 	Quota QuotaSettings
 }
@@ -318,6 +326,8 @@ func Init(ctx context.Context) (err error) {
 		MaxEntries: 1000,
 		RecordOnly: func() *bool { t := true; return &t }(),
 	}
+
+	cfg.UseProfiler = os.Getenv("GO_DISCOVERY_USE_PROFILER") == "TRUE"
 
 	// If GO_DISCOVERY_CONFIG_OVERRIDE is set, it should point to a file
 	// in overrideBucket which provides overrides for selected configuration.

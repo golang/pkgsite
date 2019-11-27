@@ -18,6 +18,7 @@ import (
 
 	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
 	"cloud.google.com/go/errorreporting"
+	"cloud.google.com/go/profiler"
 	"github.com/go-redis/redis/v7"
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/database"
@@ -49,6 +50,12 @@ func main() {
 		log.Fatal(err)
 	}
 	config.Dump(os.Stderr)
+
+	if config.UseProfiler() {
+		if err := profiler.Start(profiler.Config{}); err != nil {
+			log.Fatalf("profiler.Start: %v", err)
+		}
+	}
 
 	readProxyRemoved()
 
