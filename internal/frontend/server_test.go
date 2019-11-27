@@ -380,7 +380,7 @@ func TestServer(t *testing.T) {
 				in(".SearchResults-resultCount", text("2 results")),
 				in(".SearchSnippet-header",
 					in("a",
-						href("/github.com/valid_module_name/foo?tab=overview"),
+						href("/github.com/valid_module_name/foo"),
 						text("github.com/valid_module_name/foo")))),
 		},
 		{
