@@ -119,7 +119,7 @@ func main() {
 		middleware.SecureHeaders(),                     // must come before any caching for nonces to work
 		middleware.LatestVersion(server.LatestVersion), // must come before caching for version badge to work
 		middleware.Panic(panicHandler),
-		middleware.Timeout(1*time.Minute),
+		middleware.Timeout(54*time.Second),
 	)
 
 	addr := config.HostAddr("localhost:8080")
