@@ -34,10 +34,11 @@ var testQueries = []string{
 
 func BenchmarkSearch(b *testing.B) {
 	ctx := context.Background()
-	if err := config.Init(ctx); err != nil {
+	cfg, err := config.Init(ctx)
+	if err != nil {
 		b.Fatal(err)
 	}
-	ddb, err := database.Open("pgx", config.DBConnInfo())
+	ddb, err := database.Open("pgx", cfg.DBConnInfo())
 	if err != nil {
 		b.Fatal(err)
 	}

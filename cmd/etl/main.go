@@ -46,12 +46,13 @@ func main() {
 
 	ctx := context.Background()
 
-	if err := config.Init(ctx); err != nil {
+	cfg, err := config.Init(ctx)
+	if err != nil {
 		log.Fatal(ctx, err)
 	}
-	config.Dump(os.Stderr)
+	cfg.Dump(os.Stderr)
 
-	if config.UseProfiler() {
+	if cfg.UseProfiler {
 		if err := profiler.Start(profiler.Config{}); err != nil {
 			log.Fatalf(ctx, "profiler.Start: %v", err)
 		}
@@ -64,24 +65,24 @@ func main() {
 	if err != nil {
 		log.Fatalf(ctx, "unable to register the ocsql driver: %v\n", err)
 	}
-	ddb, err := database.Open(driverName, config.DBConnInfo())
+	ddb, err := database.Open(driverName, cfg.DBConnInfo())
 	if err != nil {
 		log.Fatalf(ctx, "database.Open: %v", err)
 	}
 	db := postgres.New(ddb)
 	defer db.Close()
 
-	indexClient, err := index.New(config.IndexURL())
+	indexClient, err := index.New(cfg.IndexURL)
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
-	proxyClient, err := proxy.New(config.ProxyURL())
+	proxyClient, err := proxy.New(cfg.ProxyURL)
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
 	fetchQueue := queue(ctx, proxyClient, db)
 	reportingClient := reportingClient(ctx)
-	redisClient := getRedis(ctx)
+	redisClient := getRedis(ctx, cfg)
 	server, err := etl.NewServer(db, indexClient, proxyClient, redisClient, fetchQueue, reportingClient, *staticPath)
 	if err != nil {
 		log.Fatal(ctx, err)
@@ -130,10 +131,10 @@ func queue(ctx context.Context, proxyClient *proxy.Client, db *postgres.DB) etl.
 	return etl.NewGCPQueue(client, queueName)
 }
 
-func getRedis(ctx context.Context) *redis.Client {
-	if config.RedisHAHost() != "" {
+func getRedis(ctx context.Context, cfg *config.Config) *redis.Client {
+	if cfg.RedisHAHost != "" {
 		return redis.NewClient(&redis.Options{
-			Addr: config.RedisHAHost() + ":" + config.RedisHAPort(),
+			Addr: cfg.RedisHAHost + ":" + cfg.RedisHAPort,
 			// We update completions with one big pipeline, so we need long write
 			// timeouts. ReadTimeout is increased only to be consistent with
 			// WriteTimeout.

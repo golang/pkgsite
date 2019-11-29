@@ -41,12 +41,13 @@ func main() {
 
 	ctx := context.Background()
 
-	if err := config.Init(ctx); err != nil {
+	cfg, err := config.Init(ctx)
+	if err != nil {
 		log.Fatal(ctx, err)
 	}
-	config.Dump(os.Stderr)
+	cfg.Dump(os.Stderr)
 
-	if config.UseProfiler() {
+	if cfg.UseProfiler {
 		if err := profiler.Start(profiler.Config{}); err != nil {
 			log.Fatalf(ctx, "profiler.Start: %v", err)
 		}
@@ -69,7 +70,7 @@ func main() {
 		if err != nil {
 			log.Fatalf(ctx, "unable to register the ocsql driver: %v\n", err)
 		}
-		ddb, err := database.Open(ocDriver, config.DBConnInfo())
+		ddb, err := database.Open(ocDriver, cfg.DBConnInfo())
 		if err != nil {
 			log.Fatalf(ctx, "database.Open: %v", err)
 		}
@@ -79,9 +80,9 @@ func main() {
 		exp = db
 	}
 	var haClient *redis.Client
-	if config.RedisHAHost() != "" {
+	if cfg.RedisHAHost != "" {
 		haClient = redis.NewClient(&redis.Options{
-			Addr: config.RedisHAHost() + ":" + config.RedisHAPort(),
+			Addr: cfg.RedisHAHost + ":" + cfg.RedisHAPort,
 		})
 	}
 	server, err := frontend.NewServer(ds, haClient, *staticPath, *reloadTemplates)
@@ -90,9 +91,9 @@ func main() {
 	}
 	router := dcensus.NewRouter(frontend.TagRoute)
 	var cacheClient *redis.Client
-	if config.RedisHost() != "" {
+	if cfg.RedisCacheHost != "" {
 		cacheClient = redis.NewClient(&redis.Options{
-			Addr: config.RedisHost() + ":" + config.RedisPort(),
+			Addr: cfg.RedisCacheHost + ":" + cfg.RedisCachePort,
 		})
 	}
 	server.Install(router.Handle, cacheClient)
@@ -129,7 +130,7 @@ func main() {
 
 	mw := middleware.Chain(
 		middleware.RequestLog(requestLogger),
-		middleware.Quota(config.Quota()),
+		middleware.Quota(cfg.Quota),
 		middleware.SecureHeaders(),                     // must come before any caching for nonces to work
 		middleware.LatestVersion(server.LatestVersion), // must come before caching for version badge to work
 		middleware.Panic(panicHandler),

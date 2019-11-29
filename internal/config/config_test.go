@@ -58,7 +58,7 @@ func TestChooseOne(t *testing.T) {
 func TestProcessOverrides(t *testing.T) {
 	tr := true
 	f := false
-	cfg := config{
+	cfg := Config{
 		DBHost: "origHost",
 		DBName: "origName",
 		Quota:  QuotaSettings{QPS: 1, Burst: 2, MaxEntries: 3, RecordOnly: &tr},
@@ -71,7 +71,7 @@ func TestProcessOverrides(t *testing.T) {
     `
 	processOverrides(&cfg, []byte(ov))
 	got := cfg
-	want := config{
+	want := Config{
 		DBHost: "newHost",
 		DBName: "origName",
 		Quota:  QuotaSettings{QPS: 1, Burst: 2, MaxEntries: 17, RecordOnly: &f},

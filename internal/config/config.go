@@ -55,16 +55,6 @@ func GetEnv(key, fallback string) string {
 	return fallback
 }
 
-// IndexURL returns the URL of the Go module index.
-func IndexURL() string {
-	return cfg.IndexURL
-}
-
-// ProxyURL returns the URL of the Go module proxy.
-func ProxyURL() string {
-	return cfg.ProxyURL
-}
-
 // ServiceID returns a the name of the current application.
 func ServiceID() string {
 	return cfg.ServiceID
@@ -80,37 +70,6 @@ func LocationID() string {
 	return cfg.LocationID
 }
 
-// RedisHost returns the hostname or IP address of the redis instance to
-// be used for page caching.
-// TODO(b/143370178): rename to RedisCacheHost
-func RedisHost() string {
-	return cfg.RedisCacheHost
-}
-
-// RedisPort returns the port of the redis instance to be used for page
-// caching.
-// TODO(b/143370178): rename to RedisCachePort
-func RedisPort() string {
-	return cfg.RedisCachePort
-}
-
-// RedisHAHost returns the hostname or IP address of the redis instance
-// to be used for auto-completion.
-func RedisHAHost() string {
-	return cfg.RedisHAHost
-}
-
-// RedisHAPort returns the port of the redis instance to be used for
-// auto-completion.
-func RedisHAPort() string {
-	return cfg.RedisHAPort
-}
-
-// Quota returns the settings for the quota middleware.
-func Quota() QuotaSettings {
-	return cfg.Quota
-}
-
 // AppVersionLabel returns the version label for the current instance.  This is
 // the AppVersionID available, otherwise a string constructed using the
 // timestamp of process start.
@@ -124,11 +83,6 @@ func AppVersionLabel() string {
 // AppVersionID is the AppEngine version of the current instance.
 func AppVersionID() string {
 	return cfg.VersionID
-}
-
-// UseProfiler specifies whether to enable Stackdriver Profiler.
-func UseProfiler() bool {
-	return cfg.UseProfiler
 }
 
 // AppVersionFormat is the expected format of the app version timestamp.
@@ -185,7 +139,7 @@ const StatementTimeout = 10 * time.Minute
 
 // DBConnInfo returns a PostgreSQL connection string constructed from
 // environment variables.
-func DBConnInfo() string {
+func (c *Config) DBConnInfo() string {
 	// For the connection string syntax, see
 	// https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING.
 
@@ -193,10 +147,12 @@ func DBConnInfo() string {
 	// See https://www.postgresql.org/docs/current/runtime-config-client.html.
 	timeoutOption := fmt.Sprintf("-c statement_timeout=%d", StatementTimeout/time.Millisecond)
 	return fmt.Sprintf("user='%s' password='%s' host='%s' port=%s dbname='%s' sslmode=disable options='%s'",
-		cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName, timeoutOption)
+		c.DBUser, c.DBPassword, c.DBHost, c.DBPort, c.DBName, timeoutOption)
 }
 
-type config struct {
+// Config holds shared configuration values used in instantiating our server
+// components.
+type Config struct {
 	// Discovery environment variables
 	ProxyURL, IndexURL string
 
@@ -248,14 +204,32 @@ type QuotaSettings struct {
 	RecordOnly *bool
 }
 
-var cfg config
+var cfg Config
 
 const overrideBucket = "go-discovery"
 
 // Init resolves all configuration values provided by the config package. It
 // must be called before any configuration values are used.
-func Init(ctx context.Context) (err error) {
+func Init(ctx context.Context) (_ *Config, err error) {
 	defer derrors.Add(&err, "config.Init(ctx)")
+	cfg2, err := load(ctx)
+	if err != nil {
+		return nil, err
+	}
+	cfg = *cfg2
+	return cfg2, nil
+}
+
+// load builds a Config from the execution environment, loading some values
+// from envvars and others from remote services.
+func load(ctx context.Context) (_ *Config, err error) {
+	defer derrors.Add(&err, "config.Load(ctx)")
+
+	// TODO(b/145301722): remove this comment.
+	// This variable shadowing is temporary, as this package is being made
+	// stateless. Init is being incrementally deprecated in favor of an exported
+	// Load function.
+	cfg := &Config{}
 
 	// Resolve client/server configuration from the environment.
 	cfg.IndexURL = GetEnv("GO_MODULE_INDEX_URL", "https://index.golang.org/index")
@@ -279,7 +253,7 @@ func Init(ctx context.Context) (err error) {
 		// Zone is not available in the environment but can be queried via the metadata API.
 		zone, err := gceMetadata(ctx, "instance/zone")
 		if err != nil {
-			return err
+			return nil, err
 		}
 		cfg.ZoneID = zone
 	}
@@ -301,7 +275,7 @@ func Init(ctx context.Context) (err error) {
 	cfg.DBPassword = os.Getenv("GO_DISCOVERY_DATABASE_PASSWORD")
 	cfg.DBHost, err = chooseOne(GetEnv("GO_DISCOVERY_DATABASE_HOST", "localhost"))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	cfg.DBPort = GetEnv("GO_DISCOVERY_DATABASE_PORT", "5432")
 	cfg.DBName = GetEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-database")
@@ -311,7 +285,7 @@ func Init(ctx context.Context) (err error) {
 		var err error
 		cfg.DBPassword, err = secrets.Get(ctx, cfg.DBSecret)
 		if err != nil {
-			return fmt.Errorf("could not get database password secret: %v", err)
+			return nil, fmt.Errorf("could not get database password secret: %v", err)
 		}
 	}
 
@@ -340,10 +314,10 @@ func Init(ctx context.Context) (err error) {
 			log.Print(err)
 		} else {
 			log.Printf("processing overrides from gs://%s/%s", overrideBucket, overrideObj)
-			processOverrides(&cfg, overrideBytes)
+			processOverrides(cfg, overrideBytes)
 		}
 	}
-	return nil
+	return cfg, nil
 }
 
 func readOverrideFile(ctx context.Context, bucketName, objName string) (_ []byte, err error) {
@@ -362,7 +336,7 @@ func readOverrideFile(ctx context.Context, bucketName, objName string) (_ []byte
 	return ioutil.ReadAll(r)
 }
 
-func processOverrides(cfg *config, bytes []byte) {
+func processOverrides(cfg *Config, bytes []byte) {
 	var ov configOverride
 	if err := yaml.Unmarshal(bytes, &ov); err != nil {
 		log.Printf("processOverrides: %v", err)
@@ -398,7 +372,7 @@ func overrideBool(name string, field **bool, val *bool) {
 }
 
 // Dump outputs the current config information to the given Writer.
-func Dump(w io.Writer) error {
+func (c *Config) Dump(w io.Writer) error {
 	fmt.Fprint(w, "config: ")
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "    ")

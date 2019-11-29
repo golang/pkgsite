@@ -216,19 +216,17 @@ func main() {
 	}
 	log.Infof(ctx, "base URL %s", baseURL)
 
-	if err := config.Init(ctx); err != nil {
+	cfg, err := config.Init(ctx)
+	if err != nil {
 		log.Fatal(ctx, err)
 	}
-	config.Dump(os.Stderr)
+	cfg.Dump(os.Stderr)
 
 	if _, err := log.UseStackdriver(ctx, "prober-log"); err != nil {
 		log.Fatal(ctx, err)
 	}
 
-	var (
-		jsonCreds []byte
-		err       error
-	)
+	var jsonCreds []byte
 
 	if *credsFile != "" {
 		jsonCreds, err = ioutil.ReadFile(*credsFile)
