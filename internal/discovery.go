@@ -9,8 +9,8 @@ import (
 
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/source"
-	"golang.org/x/mod/module"
 	"golang.org/x/discovery/internal/version"
+	"golang.org/x/mod/module"
 )
 
 const (
@@ -171,6 +171,19 @@ type SearchResult struct {
 	// can be approximate if search scanned only a subset of documents, and
 	// result count is estimated using the hyperloglog algorithm.
 	Approximate bool
+}
+
+// Experiment holds data associated with an experimental feature for frontend
+// or ETL.
+type Experiment struct {
+	// Name is the name of the feature.
+	Name string
+
+	// Rollout is the percentage of requests enrolled in an experiment.
+	Rollout uint
+
+	// Description provides a description of the experiment.
+	Description string
 }
 
 // A FieldSet is a bit set of struct fields. It is used to avoid reading large

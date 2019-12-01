@@ -105,7 +105,8 @@ func ResetTestDB(db *DB, t *testing.T) {
 	if err := db.db.Transact(func(tx *sql.Tx) error {
 		if _, err := tx.Exec(`
 			TRUNCATE versions CASCADE;
-			TRUNCATE imports_unique;`); err != nil {
+			TRUNCATE imports_unique;
+			TRUNCATE experiments;`); err != nil {
 			return err
 		}
 		if _, err := tx.Exec(`TRUNCATE module_version_states;`); err != nil {
