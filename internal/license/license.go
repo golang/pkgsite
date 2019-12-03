@@ -29,9 +29,9 @@ type License struct {
 	Contents string
 }
 
-// redistributableLicenses defines the set of (detectable) licenses that are
+// RedistributableLicenses defines the set of (detectable) licenses that are
 // considered permissive of redistribution.
-var redistributableLicenses = map[string]bool{
+var RedistributableLicenses = map[string]bool{
 	// Licenses acceptable by OSI
 	"AGPL-3.0":     true,
 	"Apache-2.0":   true,
@@ -60,7 +60,7 @@ var osiNameOverrides = map[string]string{
 // that are accepted as redistributable by the discovery site.
 func AcceptedOSILicenses() []string {
 	var lics []string
-	for l := range redistributableLicenses {
+	for l := range RedistributableLicenses {
 		osiName := osiNameOverrides[l]
 		if osiName == "" {
 			osiName = l
@@ -97,7 +97,7 @@ func (lm *Metadata) IsRedistributable() bool {
 		return false
 	}
 	for _, typ := range lm.Types {
-		if !redistributableLicenses[typ] {
+		if !RedistributableLicenses[typ] {
 			return false
 		}
 	}
