@@ -782,24 +782,6 @@ func TestServer(t *testing.T) {
 			wantStatusCode: http.StatusOK,
 			want:           pagecheck.ModuleHeader(std, versioned),
 		},
-		{
-			name:           "latest version for the standard library",
-			urlPath:        "/latest-version/std",
-			wantStatusCode: http.StatusOK,
-			want:           in("", text(`"go1.13"`)),
-		},
-		{
-			name:           "latest version for module",
-			urlPath:        "/latest-version/" + sample.ModulePath,
-			wantStatusCode: http.StatusOK,
-			want:           in("", text(`"v1.0.0"`)),
-		},
-		{
-			name:           "latest version for package",
-			urlPath:        "/latest-version/github.com/valid_module_name?pkg=github.com/valid_module_name/foo/directory/hello",
-			wantStatusCode: http.StatusOK,
-			want:           in("", text(`"v1.0.0"`)),
-		},
 	} {
 		t.Run(tc.name, func(t *testing.T) { // remove initial '/' for name
 			defer func(orig bool) { doDocumentationHack = orig }(doDocumentationHack)

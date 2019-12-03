@@ -324,21 +324,6 @@ func parseDetailsURLPath(urlPath string) (pkgPath, modulePath, version string, e
 	return pkgPath, modulePath, version, nil
 }
 
-// handleLatestVersion writes a JSON string with the latest version of the package or module.
-// It expects URLs of the form
-//   /latest-version/MODULE_PATH
-// for modules, or
-//   /latest-version/MODULE_PATH?pkg=PACKAGE_PATH
-// for packages.
-func (s *Server) handleLatestVersion(w http.ResponseWriter, r *http.Request) {
-	modulePath := strings.TrimPrefix(r.URL.Path, "/latest-version/")
-	packagePath := r.URL.Query().Get("pkg")
-	v := s.LatestVersion(r.Context(), modulePath, packagePath)
-	if _, err := fmt.Fprintf(w, "%q", v); err != nil {
-		log.Errorf("handleLatestVersion: fmt.Fprintf: %v", err)
-	}
-}
-
 // LatestVersion returns the latest version of the package or module.
 // The linkable form of the version is returned.
 // It returns the empty string on error.

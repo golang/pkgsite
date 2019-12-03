@@ -131,16 +131,14 @@ func NewServer(ds DataSource, cmplClient *redis.Client, staticPath string, reloa
 // Install registers server routes using the given handler registration func.
 func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.Client) {
 	var (
-		modHandler           http.Handler = http.HandlerFunc(s.handleModuleDetails)
-		detailHandler        http.Handler = http.HandlerFunc(s.handleDetails)
-		searchHandler        http.Handler = http.HandlerFunc(s.handleSearch)
-		latestVersionHandler http.Handler = http.HandlerFunc(s.handleLatestVersion)
+		modHandler    http.Handler = http.HandlerFunc(s.handleModuleDetails)
+		detailHandler http.Handler = http.HandlerFunc(s.handleDetails)
+		searchHandler http.Handler = http.HandlerFunc(s.handleSearch)
 	)
 	if redisClient != nil {
 		modHandler = middleware.Cache("module-details", redisClient, moduleTTL)(modHandler)
 		detailHandler = middleware.Cache("package-details", redisClient, packageTTL)(detailHandler)
 		searchHandler = middleware.Cache("search", redisClient, middleware.TTL(defaultTTL))(searchHandler)
-		latestVersionHandler = middleware.Cache("latest-version", redisClient, middleware.TTL(shortTTL))(latestVersionHandler)
 	}
 	handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(s.staticPath))))
 	handle("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -152,11 +150,6 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/search-help", s.staticPageHandler("search_help.tmpl", "Search Help - go.dev"))
 	handle("/license-policy", s.licensePolicyHandler())
 	handle("/", detailHandler)
-
-	// This endpoint is unused in the current code. It should be removed in a later release.
-	// It used to be called from some javascript that we served; we're keeping it around
-	// in case some browsers still have those pages loaded.
-	handle("/latest-version/", latestVersionHandler)
 	handle("/autocomplete", http.HandlerFunc(s.handleAutoCompletion))
 	handle("/robots.txt", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -165,7 +158,6 @@ Disallow: /*?tab=*
 Disallow: /search?*
 Disallow: /mod/
 Disallow: /pkg/
-Disallow: /latest-version/
 `))
 	}))
 }
