@@ -93,7 +93,11 @@ td {
 <p>All times in America/New_York.</p>
 
 <p>
-  <a href="https://cloud.google.com/console/cloudtasks/queue/{{.ServicePrefix}}fetch-tasks?project={{.Project}}"
+  {{$resourcePrefix := .ServicePrefix}}
+  {{if eq .ServicePrefix ""}}
+    {{$resourcePrefix = "prod-"}}
+  {{end}}
+  <a href="https://cloud.google.com/console/cloudtasks/queue/{{$resourcePrefix}}fetch-tasks?project={{.Project}}"
 	target="_blank" rel="noreferrer">
      Task Queue
   </a> |
