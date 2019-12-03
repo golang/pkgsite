@@ -7,6 +7,9 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"io/ioutil"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -419,4 +422,44 @@ func TestExtractSemverParts(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMakeValidUnicode(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	defer ResetTestDB(testDB, t)
+
+	db := testDB.Underlying()
+
+	if _, err := db.Exec(ctx, `CREATE TABLE IF NOT EXISTS valid_unicode (contents text)`); err != nil {
+		t.Fatal(err)
+	}
+	defer db.Exec(ctx, `DROP TABLE valid_unicode`)
+
+	insert := func(s string) error {
+		_, err := db.Exec(ctx, `INSERT INTO valid_unicode VALUES($1)`, s)
+		return err
+	}
+
+	check := func(filename string, okRaw bool) {
+		data, err := ioutil.ReadFile(filepath.Join("testdata", filename))
+		if err != nil {
+			t.Fatal(err)
+		}
+		raw := string(data)
+		err = insert(raw)
+		if (err == nil) != okRaw {
+			t.Errorf("%s, raw: got %v, want error: %t", filename, err, okRaw)
+		}
+		if err := insert(makeValidUnicode(raw)); err != nil {
+			t.Errorf("%s, after making valid: %v", filename, err)
+		}
+		fmt.Println(filename)
+		fmt.Println(makeValidUnicode(raw))
+	}
+
+	check("final-nulls", false)
+	check("gin-gonic", true)
+	check("subchord", true)
 }

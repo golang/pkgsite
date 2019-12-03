@@ -137,9 +137,8 @@ func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
 			if err != nil {
 				return fmt.Errorf("marshalling %+v: %v", l.Coverage, err)
 			}
-			// pq doesn't like null bytes in text; remove them from license contents.
 			licenseValues = append(licenseValues, v.ModulePath, v.Version,
-				l.FilePath, removeNullBytes(l.Contents), pq.Array(l.Types), covJSON)
+				l.FilePath, makeValidUnicode(l.Contents), pq.Array(l.Types), covJSON)
 		}
 		if len(licenseValues) > 0 {
 			licenseCols := []string{
@@ -449,11 +448,12 @@ func (db *DB) DeleteVersion(ctx context.Context, tx *sql.Tx, modulePath, version
 	return err
 }
 
-func removeNullBytes(s string) string {
+// makeValidUnicode removes null runes from license contents, because pq doesn't like them.
+func makeValidUnicode(s string) string {
 	var b strings.Builder
-	for i := range s {
-		if s[i] != 0 {
-			b.WriteByte(s[i])
+	for _, r := range s {
+		if r != 0 {
+			b.WriteRune(r)
 		}
 	}
 	return b.String()
