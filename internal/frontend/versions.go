@@ -56,7 +56,7 @@ type VersionSummary struct {
 
 // fetchModuleVersionsDetails builds a version hierarchy for module versions
 // with the same series path as the given version.
-func fetchModuleVersionsDetails(ctx context.Context, ds DataSource, vi *internal.VersionInfo) (*VersionsDetails, error) {
+func fetchModuleVersionsDetails(ctx context.Context, ds internal.DataSource, vi *internal.VersionInfo) (*VersionsDetails, error) {
 	versions, err := ds.GetTaggedVersionsForModule(ctx, vi.ModulePath)
 	if err != nil {
 		return nil, err
@@ -78,7 +78,7 @@ func fetchModuleVersionsDetails(ctx context.Context, ds DataSource, vi *internal
 // fetchPackageVersionsDetails builds a version hierarchy for all module
 // versions containing a package path with v1 import path matching the v1
 // import path of pkg.
-func fetchPackageVersionsDetails(ctx context.Context, ds DataSource, pkg *internal.VersionedPackage) (*VersionsDetails, error) {
+func fetchPackageVersionsDetails(ctx context.Context, ds internal.DataSource, pkg *internal.VersionedPackage) (*VersionsDetails, error) {
 	versions, err := ds.GetTaggedVersionsForPackageSeries(ctx, pkg.Path)
 	if err != nil {
 		return nil, err

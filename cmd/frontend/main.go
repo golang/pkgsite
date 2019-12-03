@@ -14,6 +14,7 @@ import (
 	"cloud.google.com/go/profiler"
 	"contrib.go.opencensus.io/integrations/ocsql"
 	"github.com/go-redis/redis/v7"
+	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/database"
 	"golang.org/x/discovery/internal/dcensus"
@@ -48,7 +49,7 @@ func main() {
 		}
 	}
 
-	var ds frontend.DataSource
+	var ds internal.DataSource
 	if *directProxy != "" {
 		proxyClient, err := proxy.New(*directProxy)
 		if err != nil {

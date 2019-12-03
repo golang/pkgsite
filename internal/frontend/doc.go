@@ -33,7 +33,7 @@ var doDocumentationHack = os.Getenv("GO_DISCOVERY_DOCUMENTATION_HACK") == "TRUE"
 
 // fetchDocumentationDetails fetches data for the package specified by path and version
 // from the database and returns a DocumentationDetails.
-func fetchDocumentationDetails(ctx context.Context, ds DataSource, pkg *internal.VersionedPackage) (*DocumentationDetails, error) {
+func fetchDocumentationDetails(ctx context.Context, ds internal.DataSource, pkg *internal.VersionedPackage) (*DocumentationDetails, error) {
 	docHTML := pkg.DocumentationHTML
 	if doDocumentationHack {
 		docHTML = hackUpDocumentation(docHTML)

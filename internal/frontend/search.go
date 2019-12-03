@@ -43,7 +43,7 @@ type SearchResult struct {
 
 // fetchSearchPage fetches data matching the search query from the database and
 // returns a SearchPage.
-func fetchSearchPage(ctx context.Context, ds DataSource, query, method string, pageParams paginationParams) (*SearchPage, error) {
+func fetchSearchPage(ctx context.Context, ds internal.DataSource, query, method string, pageParams paginationParams) (*SearchPage, error) {
 	var (
 		dbresults []*internal.SearchResult
 		err       error

@@ -141,7 +141,7 @@ func init() {
 
 // fetchDetailsForPackage returns tab details by delegating to the correct detail
 // handler.
-func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds DataSource, pkg *internal.VersionedPackage) (interface{}, error) {
+func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds internal.DataSource, pkg *internal.VersionedPackage) (interface{}, error) {
 	switch tab {
 	case "doc":
 		return fetchDocumentationDetails(ctx, ds, pkg)
@@ -167,7 +167,7 @@ func urlIsVersioned(url *url.URL) bool {
 
 // fetchDetailsForModule returns tab details by delegating to the correct detail
 // handler.
-func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds DataSource, vi *internal.VersionInfo, licenses []*license.License) (interface{}, error) {
+func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds internal.DataSource, vi *internal.VersionInfo, licenses []*license.License) (interface{}, error) {
 	switch tab {
 	case "packages":
 		return fetchDirectoryDetails(ctx, ds, vi.ModulePath, vi, license.ToMetadatas(licenses), true)

@@ -31,7 +31,7 @@ type ImportsDetails struct {
 
 // fetchImportsDetails fetches imports for the package version specified by
 // pkgPath, modulePath and version from the database and returns a ImportsDetails.
-func fetchImportsDetails(ctx context.Context, ds DataSource, pkg *internal.VersionedPackage) (*ImportsDetails, error) {
+func fetchImportsDetails(ctx context.Context, ds internal.DataSource, pkg *internal.VersionedPackage) (*ImportsDetails, error) {
 	dsImports, err := ds.GetImports(ctx, pkg.Path, pkg.ModulePath, pkg.Version)
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ const importedByLimit = 20001
 
 // fetchImportedByDetails fetches importers for the package version specified by
 // path and version from the database and returns a ImportedByDetails.
-func fetchImportedByDetails(ctx context.Context, ds DataSource, pkg *internal.VersionedPackage) (*ImportedByDetails, error) {
+func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkg *internal.VersionedPackage) (*ImportedByDetails, error) {
 	importedBy, err := ds.GetImportedBy(ctx, pkg.Path, pkg.ModulePath, importedByLimit)
 	if err != nil {
 		return nil, err

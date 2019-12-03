@@ -222,7 +222,7 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 //
 // fetchPackageOrModule returns the import path and version requested, an
 // HTTP status code, and possibly an error page to display.
-func fetchPackageOrModule(ctx context.Context, ds DataSource, namespace, path, version string, get func(v string) (string, error)) (code int, _ *errorPage) {
+func fetchPackageOrModule(ctx context.Context, ds internal.DataSource, namespace, path, version string, get func(v string) (string, error)) (code int, _ *errorPage) {
 	excluded, err := ds.IsExcluded(ctx, path)
 	if err != nil {
 		log.Errorf("error checking excluded path: %v", err)

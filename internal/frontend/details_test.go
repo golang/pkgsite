@@ -168,7 +168,7 @@ func TestProcessPackageOrModulePath(t *testing.T) {
 }
 
 type fakeDataSource struct {
-	DataSource
+	internal.DataSource
 }
 
 func (fakeDataSource) IsExcluded(_ context.Context, path string) (bool, error) {

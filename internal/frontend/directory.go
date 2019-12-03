@@ -106,7 +106,7 @@ func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirP
 // the module path. However, on the package and directory view's
 // "Subdirectories" tab, we do not want to include packages whose import paths
 // are the same as the dirPath.
-func fetchDirectoryDetails(ctx context.Context, ds DataSource, dirPath string, vi *internal.VersionInfo,
+func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, dirPath string, vi *internal.VersionInfo,
 	licmetas []*license.Metadata, includeDirPath bool) (_ *Directory, err error) {
 	defer derrors.Wrap(&err, "s.ds.fetchDirectoryDetails(%q, %q, %q, %v)", dirPath, vi.ModulePath, vi.Version, licmetas)
 
