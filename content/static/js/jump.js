@@ -245,7 +245,7 @@ if (!shortcutsDialog.showModal) {
 
 
 // Keyboard shortcuts:
-// - Pressing 'f' opens the jump-to-identifier dialog.
+// - Pressing 'f' or 'F' opens the jump-to-identifier dialog.
 // - Pressing '?' opens up the shortcut dialog.
 // Ignore a keypress if a dialog is already open, or if it is pressed on a
 // component that wants to consume it.
@@ -258,6 +258,7 @@ document.addEventListener('keypress', function (e) {
   const ch = String.fromCharCode(e.which);
   switch (ch) {
     case 'f':
+    case 'F':
       e.preventDefault();
       jumpFilter.value = '';
       jumpDialog.showModal();
