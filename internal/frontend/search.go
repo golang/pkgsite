@@ -15,7 +15,6 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/log"
-	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/xerrors"
 )
 
@@ -46,7 +45,7 @@ type SearchResult struct {
 // returns a SearchPage.
 func fetchSearchPage(ctx context.Context, ds DataSource, query, method string, pageParams paginationParams) (*SearchPage, error) {
 	var (
-		dbresults []*postgres.SearchResult
+		dbresults []*internal.SearchResult
 		err       error
 	)
 	switch method {

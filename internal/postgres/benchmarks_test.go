@@ -8,6 +8,7 @@ import (
 	"context"
 	"testing"
 
+	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/database"
 )
@@ -41,7 +42,7 @@ func BenchmarkSearch(b *testing.B) {
 		b.Fatal(err)
 	}
 	db := New(ddb)
-	searchers := map[string]func(context.Context, string, int, int) ([]*SearchResult, error){
+	searchers := map[string]func(context.Context, string, int, int) ([]*internal.SearchResult, error){
 		"db.Search": db.Search,
 	}
 	for name, search := range searchers {

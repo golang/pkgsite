@@ -17,7 +17,6 @@ import (
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/etl"
 	"golang.org/x/discovery/internal/license"
-	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/thirdparty/semver"
 	"golang.org/x/discovery/internal/version"
@@ -212,28 +211,28 @@ func (ds *DataSource) GetVersionInfo(ctx context.Context, modulePath, version st
 }
 
 // Search is unimplemented.
-func (ds *DataSource) Search(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error) {
-	return []*postgres.SearchResult{}, nil
+func (ds *DataSource) Search(ctx context.Context, query string, limit, offset int) ([]*internal.SearchResult, error) {
+	return []*internal.SearchResult{}, nil
 }
 
 // FastSearch is unimplemented.
-func (ds *DataSource) FastSearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error) {
-	return []*postgres.SearchResult{}, nil
+func (ds *DataSource) FastSearch(ctx context.Context, query string, limit, offset int) ([]*internal.SearchResult, error) {
+	return []*internal.SearchResult{}, nil
 }
 
 // DeepSearch is unimplemented.
-func (ds *DataSource) DeepSearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error) {
-	return []*postgres.SearchResult{}, nil
+func (ds *DataSource) DeepSearch(ctx context.Context, query string, limit, offset int) ([]*internal.SearchResult, error) {
+	return []*internal.SearchResult{}, nil
 }
 
 // PartialFastSearch is unimplemented.
-func (ds *DataSource) PartialFastSearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error) {
-	return []*postgres.SearchResult{}, nil
+func (ds *DataSource) PartialFastSearch(ctx context.Context, query string, limit, offset int) ([]*internal.SearchResult, error) {
+	return []*internal.SearchResult{}, nil
 }
 
 // PopularSearch is unimplemented.
-func (ds *DataSource) PopularSearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error) {
-	return []*postgres.SearchResult{}, nil
+func (ds *DataSource) PopularSearch(ctx context.Context, query string, limit, offset int) ([]*internal.SearchResult, error) {
+	return []*internal.SearchResult{}, nil
 }
 
 // getVersion retrieves a version from the cache, or failing that queries and

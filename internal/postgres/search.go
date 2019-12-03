@@ -9,6 +9,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"golang.org/x/discovery/internal"
 	"math"
 	"sort"
 	"strings"
@@ -56,30 +57,6 @@ var (
 	errIncompleteResults = errors.New("incomplete results")
 )
 
-// SearchResult represents a single search result from SearchDocuments.
-type SearchResult struct {
-	Name        string
-	PackagePath string
-	ModulePath  string
-	Version     string
-	Synopsis    string
-	Licenses    []string
-
-	CommitTime time.Time
-	// Score is used to sort items in an array of SearchResult.
-	Score float64
-
-	// NumImportedBy is the number of packages that import Package.
-	NumImportedBy uint64
-
-	// NumResults is the total number of packages that were returned for this search.
-	NumResults uint64
-	// Approximate reports whether NumResults is an approximate count. NumResults
-	// can be approximate if search scanned only a subset of documents, and
-	// result count is estimated using the hyperloglog algorithm.
-	Approximate bool
-}
-
 // searchResponse is used for internal bookkeeping when fanning-out search
 // request to multiple different search queries.
 type searchResponse struct {
@@ -87,7 +64,7 @@ type searchResponse struct {
 	// 'popular-8'), to be used in logging and reporting.
 	source string
 	// results are partially filled out from only the search_documents table.
-	results []*SearchResult
+	results []*internal.SearchResult
 	// err indicates a technical failure of the search query, or that results are
 	// not provably complete.
 	err error
@@ -126,7 +103,7 @@ type searcher func(ctx context.Context, q string, limit, offset int) searchRespo
 // The gap in this optimization is search terms that are very frequent, but
 // rarely relevant: "int" or "package", for example. In these cases we'll pay
 // the penalty of a deep search that scans nearly every package.
-func (db *DB) FastSearch(ctx context.Context, q string, limit, offset int) (_ []*SearchResult, err error) {
+func (db *DB) FastSearch(ctx context.Context, q string, limit, offset int) (_ []*internal.SearchResult, err error) {
 	defer derrors.Wrap(&err, "DB.FastSearch(ctx, %q, %d, %d)", q, limit, offset)
 	searchers := []searcher{db.popularSearch, db.deepSearch}
 	return db.hedgedSearch(ctx, q, limit, offset, searchers, nil)
@@ -135,7 +112,7 @@ func (db *DB) FastSearch(ctx context.Context, q string, limit, offset int) (_ []
 // PartialFastSearch implements a hedged search using partial indexes of
 // popular packages.
 // TODO(b/141182438) delete this once a testing period is over.
-func (db *DB) PartialFastSearch(ctx context.Context, q string, limit, offset int) (_ []*SearchResult, err error) {
+func (db *DB) PartialFastSearch(ctx context.Context, q string, limit, offset int) (_ []*internal.SearchResult, err error) {
 	defer derrors.Wrap(&err, "DB.PartialFastSearch(ctx, %q, %d, %d)", q, limit, offset)
 	searchers := []searcher{db.popularSearcher(50), db.popularSearcher(8), db.deepSearch}
 	return db.hedgedSearch(ctx, q, limit, offset, searchers, nil)
@@ -145,7 +122,7 @@ func (db *DB) PartialFastSearch(ctx context.Context, q string, limit, offset int
 // available result.
 // The optional guardTestResult func may be used to allow tests to control the
 // order in which search results are returned.
-func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, searchers []searcher, guardTestResult func(string) func()) ([]*SearchResult, error) {
+func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, searchers []searcher, guardTestResult func(string) func()) ([]*internal.SearchResult, error) {
 	responses := make(chan searchResponse, len(searchers))
 	// cancel all unfinished searches when a result (or error) is returned. The
 	// effectiveness of this depends on the database driver.
@@ -344,9 +321,9 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit, offset int) searc
 		WHERE r.score > 0.1
 		LIMIT $2
 		OFFSET $3`
-	var results []*SearchResult
+	var results []*internal.SearchResult
 	collect := func(rows *sql.Rows) error {
-		var r SearchResult
+		var r internal.SearchResult
 		if err := rows.Scan(&r.PackagePath, &r.Version, &r.ModulePath, &r.CommitTime,
 			&r.NumImportedBy, &r.Score, &r.NumResults); err != nil {
 			return fmt.Errorf("rows.Scan(): %v", err)
@@ -375,9 +352,9 @@ func (db *DB) popularSearch(ctx context.Context, searchQuery string, limit, offs
 			imported_by_count,
 			score
 		FROM popular_search($1, $2, $3)`
-	var results []*SearchResult
+	var results []*internal.SearchResult
 	collect := func(rows *sql.Rows) error {
-		var r SearchResult
+		var r internal.SearchResult
 		if err := rows.Scan(&r.PackagePath, &r.Version, &r.ModulePath, &r.CommitTime,
 			&r.NumImportedBy, &r.Score); err != nil {
 			return fmt.Errorf("rows.Scan(): %v", err)
@@ -430,9 +407,9 @@ func (db *DB) popularSearcher(cutoff int) searcher {
 			WHERE r.score > ln(exp(1)+%[1]d)
 			LIMIT $2
 			OFFSET $3`, cutoff)
-		var results []*SearchResult
+		var results []*internal.SearchResult
 		collect := func(rows *sql.Rows) error {
-			var r SearchResult
+			var r internal.SearchResult
 			// Notably we're not recording r.NumResults here. There's no point, as
 			// we're only scanning a fraction of the total records. In the UI this
 			// should be presented as '1-10 of many'.
@@ -464,7 +441,7 @@ func (db *DB) popularSearcher(cutoff int) searcher {
 
 // addPackageDataToSearchResults adds package information to SearchResults that is not stored
 // in the search_documents table.
-func (db *DB) addPackageDataToSearchResults(ctx context.Context, results []*SearchResult) (err error) {
+func (db *DB) addPackageDataToSearchResults(ctx context.Context, results []*internal.SearchResult) (err error) {
 	defer derrors.Wrap(&err, "DB.enrichResults(results)")
 	if len(results) == 0 {
 		return nil
@@ -473,7 +450,7 @@ func (db *DB) addPackageDataToSearchResults(ctx context.Context, results []*Sear
 		keys []string
 		// resultMap tracks PackagePath->SearchResult, to allow joining with the
 		// returned package data.
-		resultMap = make(map[string]*SearchResult)
+		resultMap = make(map[string]*internal.SearchResult)
 	)
 	for _, r := range results {
 		resultMap[r.PackagePath] = r
@@ -518,7 +495,7 @@ func (db *DB) addPackageDataToSearchResults(ctx context.Context, results []*Sear
 // DeepSearch executes a full scan of the search table in two steps, by first
 // querying and then enriching.
 // TODO(b/141182438) delete this once a testing period is over.
-func (db *DB) DeepSearch(ctx context.Context, q string, limit, offset int) (_ []*SearchResult, err error) {
+func (db *DB) DeepSearch(ctx context.Context, q string, limit, offset int) (_ []*internal.SearchResult, err error) {
 	defer derrors.Wrap(&err, "DB.DeepSearch(ctx, %q, %d, %d)", q, limit, offset)
 	resp := db.deepSearch(ctx, q, limit, offset)
 
@@ -533,7 +510,7 @@ func (db *DB) DeepSearch(ctx context.Context, q string, limit, offset int) (_ []
 
 // PopularSearch executes a sequential scan of the search table in descending
 // order of popularity.
-func (db *DB) PopularSearch(ctx context.Context, q string, limit, offset int) (_ []*SearchResult, err error) {
+func (db *DB) PopularSearch(ctx context.Context, q string, limit, offset int) (_ []*internal.SearchResult, err error) {
 	defer derrors.Wrap(&err, "DB.PopularSearch(ctx, %q, %d, %d)", q, limit, offset)
 	resp := db.popularSearch(ctx, q, limit, offset)
 
@@ -550,7 +527,7 @@ func (db *DB) PopularSearch(ctx context.Context, q string, limit, offset int) (_
 // Search fetches packages from the database that match the terms
 // provided, and returns them in order of relevance.
 // TODO(b/141182438) delete this once a testing period is over.
-func (db *DB) Search(ctx context.Context, q string, limit, offset int) (_ []*SearchResult, err error) {
+func (db *DB) Search(ctx context.Context, q string, limit, offset int) (_ []*internal.SearchResult, err error) {
 	defer derrors.Wrap(&err, "DB.Search(ctx, %q, %d, %d)", q, limit, offset)
 
 	// Score:
@@ -613,10 +590,10 @@ func (db *DB) Search(ctx context.Context, q string, limit, offset int) (_ []*Sea
 		WHERE
 			r.score > 0.1;`
 
-	var results []*SearchResult
+	var results []*internal.SearchResult
 	collect := func(rows *sql.Rows) error {
 		var (
-			sr           SearchResult
+			sr           internal.SearchResult
 			licenseTypes []string
 		)
 		if err := rows.Scan(&sr.PackagePath, &sr.Version, &sr.ModulePath, &sr.Name, &sr.Synopsis,

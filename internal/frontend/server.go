@@ -23,7 +23,6 @@ import (
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/middleware"
-	"golang.org/x/discovery/internal/postgres"
 )
 
 // Server can be installed to serve the go discovery frontend.
@@ -44,7 +43,7 @@ type Server struct {
 // DataSource is the interface used by the frontend to interact with module data.
 type DataSource interface {
 	// See the internal/postgres package for further documentation of these
-	// methods, particularly as they pertain to the main postgres implementation.
+	// methods, particularly as they pertain to the main internal implementation.
 
 	// GetDirectory returns packages whose import path is in a (possibly
 	// nested) subdirectory of the given directory path. When multiple
@@ -93,14 +92,14 @@ type DataSource interface {
 	// the future this will be pruned to just one (FastSearch).
 
 	// FastSearch performs a hedged search of both popular and all packages.
-	FastSearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
+	FastSearch(ctx context.Context, query string, limit, offset int) ([]*internal.SearchResult, error)
 
 	// Alternative search types, for testing.
 	// TODO(b/141182438): remove all of these.
-	Search(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
-	DeepSearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
-	PartialFastSearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
-	PopularSearch(ctx context.Context, query string, limit, offset int) ([]*postgres.SearchResult, error)
+	Search(ctx context.Context, query string, limit, offset int) ([]*internal.SearchResult, error)
+	DeepSearch(ctx context.Context, query string, limit, offset int) ([]*internal.SearchResult, error)
+	PartialFastSearch(ctx context.Context, query string, limit, offset int) ([]*internal.SearchResult, error)
+	PopularSearch(ctx context.Context, query string, limit, offset int) ([]*internal.SearchResult, error)
 }
 
 // NewServer creates a new Server for the given database and template directory.

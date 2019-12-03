@@ -148,3 +148,27 @@ type VersionState struct {
 	// deployment time for the above timestamp might be Jul 9, 2019, 11:29:59 AM.
 	AppVersion string
 }
+
+// SearchResult represents a single search result from SearchDocuments.
+type SearchResult struct {
+	Name        string
+	PackagePath string
+	ModulePath  string
+	Version     string
+	Synopsis    string
+	Licenses    []string
+
+	CommitTime time.Time
+	// Score is used to sort items in an array of SearchResult.
+	Score float64
+
+	// NumImportedBy is the number of packages that import Package.
+	NumImportedBy uint64
+
+	// NumResults is the total number of packages that were returned for this search.
+	NumResults uint64
+	// Approximate reports whether NumResults is an approximate count. NumResults
+	// can be approximate if search scanned only a subset of documents, and
+	// result count is estimated using the hyperloglog algorithm.
+	Approximate bool
+}

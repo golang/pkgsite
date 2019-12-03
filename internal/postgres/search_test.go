@@ -334,8 +334,8 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 			Synopsis: "Package client-go implements a Go client for Kubernetes.",
 		}
 
-		kubeResult = func(score float64, numResults uint64) *SearchResult {
-			return &SearchResult{
+		kubeResult = func(score float64, numResults uint64) *internal.SearchResult {
+			return &internal.SearchResult{
 				Name:        pkgKube.Name,
 				PackagePath: pkgKube.Path,
 				Synopsis:    pkgKube.Synopsis,
@@ -348,8 +348,8 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 			}
 		}
 
-		goCdkResult = func(score float64, numResults uint64) *SearchResult {
-			return &SearchResult{
+		goCdkResult = func(score float64, numResults uint64) *internal.SearchResult {
+			return &internal.SearchResult{
 				Name:        pkgGoCDK.Name,
 				PackagePath: pkgGoCDK.Path,
 				Synopsis:    pkgGoCDK.Synopsis,
@@ -368,7 +368,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 		packages      map[string]*internal.Package
 		limit, offset int
 		searchQuery   string
-		want          []*SearchResult
+		want          []*internal.SearchResult
 	}{
 		{
 			name:        "two documents, single term search",
@@ -377,7 +377,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				modGoCDK: pkgGoCDK,
 				modKube:  pkgKube,
 			},
-			want: []*SearchResult{
+			want: []*internal.SearchResult{
 				goCdkResult(0.2431708425283432, 2),
 				kubeResult(0.2431708425283432, 2),
 			},
@@ -391,7 +391,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				modKube:  pkgKube,
 				modGoCDK: pkgGoCDK,
 			},
-			want: []*SearchResult{
+			want: []*internal.SearchResult{
 				goCdkResult(0.2431708425283432, 2),
 			},
 		},
@@ -404,7 +404,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				modGoCDK: pkgGoCDK,
 				modKube:  pkgKube,
 			},
-			want: []*SearchResult{
+			want: []*internal.SearchResult{
 				kubeResult(0.2431708425283432, 2),
 			},
 		},
@@ -415,7 +415,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				modGoCDK: pkgGoCDK,
 				modKube:  pkgKube,
 			},
-			want: []*SearchResult{
+			want: []*internal.SearchResult{
 				goCdkResult(0.733867883682251, 1),
 			},
 		},
@@ -425,12 +425,12 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 			packages: map[string]*internal.Package{
 				modGoCDK: pkgGoCDK,
 			},
-			want: []*SearchResult{
+			want: []*internal.SearchResult{
 				goCdkResult(0.7109370231628418, 1),
 			},
 		},
 	} {
-		type searchFunc func(context.Context, string, int, int) ([]*SearchResult, error)
+		type searchFunc func(context.Context, string, int, int) ([]*internal.SearchResult, error)
 		for method, search := range map[string]searchFunc{"Search": testDB.Search, "FastSearch": testDB.FastSearch} {
 			t.Run(tc.name+":"+method, func(t *testing.T) {
 				defer ResetTestDB(testDB, t)
@@ -461,7 +461,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 					t.Errorf("testDB.Search(%v, %d, %d) mismatch: len(got) = %d, want = %d\n", tc.searchQuery, tc.limit, tc.offset, len(got), len(tc.want))
 				}
 
-				if diff := cmp.Diff(tc.want, got, cmpopts.IgnoreFields(SearchResult{}, "Approximate")); diff != "" {
+				if diff := cmp.Diff(tc.want, got, cmpopts.IgnoreFields(internal.SearchResult{}, "Approximate")); diff != "" {
 					t.Errorf("testDB.Search(%v, %d, %d) mismatch (-want +got):\n%s", tc.searchQuery, tc.limit, tc.offset, diff)
 				}
 			})
