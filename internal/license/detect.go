@@ -33,15 +33,18 @@ const (
 
 // extraction.
 var licenseFileNames = map[string]bool{
-	"LICENSE":     true,
-	"LICENSE.md":  true,
-	"LICENSE.txt": true,
-	"LICENCE":     true,
-	"LICENCE.md":  true,
-	"LICENCE.txt": true,
 	"COPYING":     true,
 	"COPYING.md":  true,
 	"COPYING.txt": true,
+	"LICENCE":     true,
+	"LICENCE.md":  true,
+	"LICENCE.txt": true,
+	"LICENSE":     true,
+	"LICENSE.md":  true,
+	"LICENSE.txt": true,
+	"License":     true,
+	"License.md":  true,
+	"License.txt": true,
 }
 
 // FileNames returns the slice of file names to be considered for license
