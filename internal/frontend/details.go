@@ -184,11 +184,12 @@ func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.Respons
 		}
 	}
 	page := &DetailsPage{
-		basePage:       newBasePage(r, packageHTMLTitle(&pkg.Package)),
-		Title:          packageTitle(&pkg.Package),
-		Settings:       settings,
-		Header:         pkgHeader,
-		BreadcrumbPath: breadcrumbPath(pkgHeader.Path, pkgHeader.ModulePath, pkgHeader.Module.DisplayVersion),
+		basePage: newBasePage(r, packageHTMLTitle(&pkg.Package)),
+		Title:    packageTitle(&pkg.Package),
+		Settings: settings,
+		Header:   pkgHeader,
+		BreadcrumbPath: breadcrumbPath(pkgHeader.Path, pkgHeader.Module.ModulePath,
+			pkgHeader.Module.LinkVersion),
 		Details:        details,
 		CanShowDetails: canShowDetails,
 		Tabs:           packageTabSettings,
@@ -273,7 +274,7 @@ func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseW
 		Title:          moduleTitle(vi.ModulePath),
 		Settings:       settings,
 		Header:         modHeader,
-		BreadcrumbPath: breadcrumbPath(vi.ModulePath, vi.ModulePath, vi.Version),
+		BreadcrumbPath: breadcrumbPath(modHeader.ModulePath, modHeader.ModulePath, modHeader.LinkVersion),
 		Details:        details,
 		CanShowDetails: canShowDetails,
 		Tabs:           moduleTabSettings,
