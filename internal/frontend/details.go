@@ -79,17 +79,16 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 // servePackagePage applies database data to the appropriate template.
 // Handles all endpoints that match "/<import-path>[@<version>?tab=<tab>]".
 func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPath, modulePath, version string) {
-	if version != internal.LatestVersion && !semver.IsValid(version) {
-		epage := &errorPage{Message: fmt.Sprintf("%q is not a valid semantic version.", version)}
-		epage.SecondaryMessage = suggestedSearch(pkgPath)
-		s.serveErrorPage(w, r, http.StatusBadRequest, epage)
+	ctx := r.Context()
+	if code, epage := checkPathAndVersion(ctx, s.ds, pkgPath, version); code != http.StatusOK {
+		s.serveErrorPage(w, r, code, epage)
 		return
 	}
 
 	var pkg *internal.VersionedPackage
-	code, epage := fetchPackageOrModule(r.Context(), s.ds, "pkg", pkgPath, version, func(ver string) (string, error) {
+	code, epage := fetchPackageOrModule(ctx, "pkg", pkgPath, version, func(ver string) (string, error) {
 		var err error
-		pkg, err = s.ds.GetPackage(r.Context(), pkgPath, modulePath, ver)
+		pkg, err = s.ds.GetPackage(ctx, pkgPath, modulePath, ver)
 		return modulePath, err
 	})
 	if code != http.StatusOK {
@@ -125,7 +124,7 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = fetchDetailsForPackage(r.Context(), r, tab, s.ds, pkg)
+		details, err = fetchDetailsForPackage(ctx, r, tab, s.ds, pkg)
 		if err != nil {
 			log.Errorf("error fetching page for %q: %v", tab, err)
 			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
@@ -148,15 +147,14 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 
 // serveModulePage applies database data to the appropriate template.
 func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, modulePath, version string) {
-	if version != internal.LatestVersion && !semver.IsValid(version) {
-		epage := &errorPage{Message: fmt.Sprintf("%q is not a valid semantic version.", version)}
-		s.serveErrorPage(w, r, http.StatusBadRequest, epage)
+	ctx := r.Context()
+	if code, epage := checkPathAndVersion(ctx, s.ds, modulePath, version); code != http.StatusOK {
+		s.serveErrorPage(w, r, code, epage)
 		return
 	}
 
-	ctx := r.Context()
 	var moduleVersion *internal.VersionInfo
-	code, epage := fetchPackageOrModule(ctx, s.ds, "mod", modulePath, version, func(ver string) (string, error) {
+	code, epage := fetchPackageOrModule(ctx, "mod", modulePath, version, func(ver string) (string, error) {
 		var err error
 		moduleVersion, err = s.ds.GetVersionInfo(ctx, modulePath, ver)
 		return modulePath, err
@@ -206,6 +204,27 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 	s.servePage(w, settings.TemplateName, page)
 }
 
+// checkPathAndVersion verifies that the requested path and version are
+// acceptable. The given path may be a module or package path.
+func checkPathAndVersion(ctx context.Context, ds internal.DataSource, path, version string) (int, *errorPage) {
+	if version != internal.LatestVersion && !semver.IsValid(version) {
+		return http.StatusBadRequest, &errorPage{
+			Message:          fmt.Sprintf("%q is not a valid semantic version.", version),
+			SecondaryMessage: suggestedSearch(path),
+		}
+	}
+	excluded, err := ds.IsExcluded(ctx, path)
+	if err != nil {
+		log.Errorf("error checking excluded path: %v", err)
+		return http.StatusInternalServerError, nil
+	}
+	if excluded {
+		// Return NotFound; don't let the user know that the package was excluded.
+		return http.StatusNotFound, nil
+	}
+	return http.StatusOK, nil
+}
+
 // fetchPackageOrModule handles logic common to the initial phase of
 // handling both packages and modules: fetching information about the package
 // or module.
@@ -222,19 +241,9 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 //
 // fetchPackageOrModule returns the import path and version requested, an
 // HTTP status code, and possibly an error page to display.
-func fetchPackageOrModule(ctx context.Context, ds internal.DataSource, namespace, path, version string, get func(v string) (string, error)) (code int, _ *errorPage) {
-	excluded, err := ds.IsExcluded(ctx, path)
-	if err != nil {
-		log.Errorf("error checking excluded path: %v", err)
-		return http.StatusInternalServerError, nil
-	}
-	if excluded {
-		// Return NotFound; don't let the user know that the package was excluded.
-		return http.StatusNotFound, nil
-	}
-
+func fetchPackageOrModule(ctx context.Context, namespace, path, version string, get func(v string) (string, error)) (code int, _ *errorPage) {
 	// Fetch the package or module from the database.
-	_, err = get(version)
+	_, err := get(version)
 	if err == nil {
 		// A package or module was found for this path and version.
 		return http.StatusOK, nil

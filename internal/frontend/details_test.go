@@ -137,13 +137,6 @@ func TestProcessPackageOrModulePath(t *testing.T) {
 			wantVersion: "",
 			wantCode:    http.StatusNotFound,
 		},
-		{
-			desc:        "excluded",
-			urlPath:     "bad/path@v1.2.3",
-			wantPath:    "",
-			wantVersion: "",
-			wantCode:    http.StatusNotFound,
-		},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
 			ncalls := 0
@@ -159,11 +152,28 @@ func TestProcessPackageOrModulePath(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			gotCode, _ := fetchPackageOrModule(context.Background(), fakeDataSource{}, "pkg", pkgPath, version, get)
+			gotCode, _ := fetchPackageOrModule(context.Background(), "pkg", pkgPath, version, get)
 			if gotCode != tc.wantCode {
 				t.Fatalf("got status code %d, want %d", gotCode, tc.wantCode)
 			}
 		})
+	}
+}
+
+func TestCheckPathAndVersion(t *testing.T) {
+	tests := []struct {
+		path, version string
+		want          int
+	}{
+		{"import/path", "v1.2.3", http.StatusOK},
+		{"bad/path", "v1.2.3", http.StatusNotFound},
+		{"import/path", "v1.2.bad", http.StatusBadRequest},
+	}
+
+	for _, test := range tests {
+		if got, _ := checkPathAndVersion(context.Background(), fakeDataSource{}, test.path, test.version); got != test.want {
+			t.Errorf("checkPathAndVersion(ctx, ds, %q, %q): got code %d, want %d", test.path, test.version, got, test.want)
+		}
 	}
 }
 
