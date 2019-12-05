@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"cloud.google.com/go/logging"
-	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/log"
 )
 
@@ -61,7 +60,6 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.logger.Log(logging.Entry{
 		HTTPRequest: &logging.HTTPRequest{Request: r},
 		Payload:     "request start",
-		Resource:    config.AppMonitoredResource(),
 		Severity:    logging.Info,
 	})
 	w2 := &responseWriter{ResponseWriter: w}
@@ -73,7 +71,6 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			Latency: time.Since(start),
 		},
 		Payload:  "request end",
-		Resource: config.AppMonitoredResource(),
 		Severity: logging.Info,
 	})
 }

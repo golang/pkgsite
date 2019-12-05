@@ -293,7 +293,7 @@ func Init(ctx context.Context) (err error) {
 			"project_id": cfg.ProjectID,
 			"module_id":  cfg.ServiceID,
 			"version_id": cfg.VersionID,
-			"zone_id":    cfg.ZoneID,
+			"zone":       cfg.ZoneID,
 		},
 	}
 
