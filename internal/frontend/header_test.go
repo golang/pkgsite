@@ -28,7 +28,7 @@ func samplePackage(mutators ...func(*Package)) *Package {
 			DisplayVersion:    sample.VersionString,
 			LinkVersion:       sample.VersionString,
 			CommitTime:        "0 hours ago",
-			Path:              sample.ModulePath,
+			ModulePath:        sample.ModulePath,
 			IsRedistributable: true,
 			Licenses:          transformLicenseMetadata(sample.LicenseMetadata),
 		},
@@ -36,10 +36,10 @@ func samplePackage(mutators ...func(*Package)) *Package {
 	for _, mut := range mutators {
 		mut(p)
 	}
-	p.URL = constructPackageURL(p.Path, p.Module.Path, p.LinkVersion)
-	p.Module.URL = constructModuleURL(p.Module.Path, p.LinkVersion)
-	p.LatestURL = constructPackageURL(p.Path, p.Module.Path, middleware.LatestVersionPlaceholder)
-	p.Module.LatestURL = constructModuleURL(p.Module.Path, middleware.LatestVersionPlaceholder)
+	p.URL = constructPackageURL(p.Path, p.ModulePath, p.LinkVersion)
+	p.Module.URL = constructModuleURL(p.ModulePath, p.LinkVersion)
+	p.LatestURL = constructPackageURL(p.Path, p.ModulePath, middleware.LatestVersionPlaceholder)
+	p.Module.LatestURL = constructModuleURL(p.ModulePath, middleware.LatestVersionPlaceholder)
 	return p
 }
 
@@ -124,7 +124,7 @@ func TestCreatePackageHeader(t *testing.T) {
 			}(),
 			wantPkg: samplePackage(func(p *Package) {
 				p.Path = "pa.th/to/foo/v2/bar"
-				p.Module.Path = "pa.th/to/foo/v2"
+				p.ModulePath = "pa.th/to/foo/v2"
 			}),
 		},
 		{
@@ -138,7 +138,7 @@ func TestCreatePackageHeader(t *testing.T) {
 			}(),
 			wantPkg: samplePackage(func(p *Package) {
 				p.Path = "pa.th/to/foo/v1"
-				p.Module.Path = "pa.th/to/foo/v1"
+				p.ModulePath = "pa.th/to/foo/v1"
 			}),
 		},
 	} {

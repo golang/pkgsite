@@ -35,7 +35,7 @@ type Package struct {
 type Module struct {
 	DisplayVersion    string
 	LinkVersion       string
-	Path              string
+	ModulePath        string
 	CommitTime        string
 	IsRedistributable bool
 	URL               string // relative to this site
@@ -93,7 +93,7 @@ func createModule(vi *internal.VersionInfo, licmetas []*license.Metadata, latest
 	return &Module{
 		DisplayVersion:    displayVersion(vi.Version, vi.ModulePath),
 		LinkVersion:       linkVersion(vi.Version, vi.ModulePath),
-		Path:              vi.ModulePath,
+		ModulePath:        vi.ModulePath,
 		CommitTime:        elapsedTime(vi.CommitTime),
 		IsRedistributable: license.AreRedistributable(licmetas),
 		Licenses:          transformLicenseMetadata(licmetas),

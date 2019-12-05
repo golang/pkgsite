@@ -15,15 +15,13 @@
       <h1 class="DetailsHeader-title">{{.Title}}</h1>
       <div class="DetailsHeader-version">{{$header.DisplayVersion}}</div>
 
-      {{- $mpath := $header.Path -}}
       {{- $ppath := "" -}}
       {{- if ne $namespace "mod" -}}
-         {{- $mpath = $header.Module.Path -}}
          {{- $ppath = $header.Path -}}
       {{- end}}
       <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
       <div class="DetailsHeader-badge $$GODISCOVERY_LATESTCLASS$$"
-           data-version="{{$header.LinkVersion}}" data-mpath="{{$mpath}}" data-ppath="{{$ppath}}">
+           data-version="{{$header.LinkVersion}}" data-mpath="{{$header.ModulePath}}" data-ppath="{{$ppath}}">
         <span>Latest</span>
         <a href="{{$header.LatestURL}}">Go to latest</a>
       </div>
@@ -43,12 +41,12 @@
       </span>
       {{if eq $namespace "pkg"}}
         <span class="DetailsHeader-infoLabelDivider">|</span>
-        {{if eq $header.Module.Path "std"}}
+        {{if eq $header.ModulePath "std"}}
           <a data-test-id="DetailsHeader-infoLabelModule" href="{{$header.Module.URL}}">Standard library</a>
         {{else}}
           <span class="DetailsHeader-infoLabelTitle">Module: </span>
           <span>
-            <a data-test-id="DetailsHeader-infoLabelModule" href="{{$header.Module.URL}}">{{$header.Module.Path}}</a>
+            <a data-test-id="DetailsHeader-infoLabelModule" href="{{$header.Module.URL}}">{{$header.ModulePath}}</a>
           </span>
         {{end}}
       {{end}}

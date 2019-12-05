@@ -137,7 +137,7 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 		Title:          packageTitle(&pkg.Package),
 		Settings:       settings,
 		Header:         pkgHeader,
-		BreadcrumbPath: breadcrumbPath(pkgHeader.Path, pkgHeader.Module.Path, pkgHeader.Module.DisplayVersion),
+		BreadcrumbPath: breadcrumbPath(pkgHeader.Path, pkgHeader.ModulePath, pkgHeader.Module.DisplayVersion),
 		Details:        details,
 		CanShowDetails: canShowDetails,
 		Tabs:           packageTabSettings,
