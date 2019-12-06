@@ -47,6 +47,8 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 	s.handlePackageDetails(w, r)
 }
 
+// handlePackageDetails handles requests for package details pages. It expects
+// paths of the form "/<path>[@<version>?tab=<tab>]".
 func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 	pkgPath, modulePath, version, err := parseDetailsURLPath(r.URL.Path)
 	if err != nil {
@@ -63,8 +65,9 @@ func (s *Server) handlePackageDetailsRedirect(w http.ResponseWriter, r *http.Req
 	http.Redirect(w, r, urlPath, http.StatusMovedPermanently)
 }
 
-// handleModuleDetails applies database data to the appropriate template.
-// Handles all endpoints that match "/mod/<module-path>[@<version>?tab=<tab>]".
+// handleModuleDetails handles requests for non-stdlib module details pages. It
+// expects paths of the form "/mod/<module-path>[@<version>?tab=<tab>]".
+// stdlib module pages are handled at "/std".
 func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 	urlPath := strings.TrimPrefix(r.URL.Path, "/mod")
 	path, _, version, err := parseDetailsURLPath(urlPath)
@@ -76,8 +79,8 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 	s.serveModulePage(w, r, path, version)
 }
 
-// servePackagePage applies database data to the appropriate template.
-// Handles all endpoints that match "/<import-path>[@<version>?tab=<tab>]".
+// servePackagePage serves details pages for the package with import path
+// pkgPath, in the module specified by modulePath and version.
 func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPath, modulePath, version string) {
 	ctx := r.Context()
 	if code, epage := checkPathAndVersion(ctx, s.ds, pkgPath, version); code != http.StatusOK {
@@ -152,41 +155,58 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 	s.servePage(w, settings.TemplateName, page)
 }
 
-// serveModulePage applies database data to the appropriate template.
+// serveModulePage serves details pages for the module specified by modulePath
+// and version.
 func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, modulePath, version string) {
 	ctx := r.Context()
 	if code, epage := checkPathAndVersion(ctx, s.ds, modulePath, version); code != http.StatusOK {
 		s.serveErrorPage(w, r, code, epage)
 		return
 	}
-
-	var moduleVersion *internal.VersionInfo
-	code, epage := fetchPackageOrModule(ctx, "mod", modulePath, version, func(ver string) (string, error) {
-		var err error
-		moduleVersion, err = s.ds.GetVersionInfo(ctx, modulePath, ver)
-		return modulePath, err
-	})
-	if code != http.StatusOK {
-		// Temporary patch: StatusNotFound should not be used unless we're setting
-		// the Location header, but we can't set it earlier or we'll change the
-		// handling logic.
-		// TODO(b/144031201): remove this after refactoring.
-		if code == http.StatusSeeOther {
-			code = http.StatusNotFound
-		}
-		s.serveErrorPage(w, r, code, epage)
+	// This function handles top level behavior related to the existence of the
+	// requested modulePath@version:
+	//   1. If the module version exists, serve it.
+	//   2. else if we got any unexpected error, serve a server error
+	//   3. else, we didn't find the module so there are two cases:
+	//     a. We don't know anything about this module: just serve a 404
+	//     b. We have valid versions for this module path, but `version` isn't
+	//        one of them. Serve a 404 but recommend the other versions.
+	vi, err := s.ds.GetVersionInfo(ctx, modulePath, version)
+	if err == nil {
+		s.serveModulePageWithModule(ctx, w, r, vi, version)
 		return
 	}
+	if !xerrors.Is(err, derrors.NotFound) {
+		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+	if version != internal.LatestVersion {
+		if _, err := s.ds.GetVersionInfo(ctx, modulePath, internal.LatestVersion); err != nil {
+			log.Errorf("error checking for latest module: %v", err)
+		} else {
+			epage := &errorPage{
+				Message: fmt.Sprintf("Module %s@%s is not available.", modulePath, displayVersion(version, modulePath)),
+				SecondaryMessage: template.HTML(
+					fmt.Sprintf(`There are other versions of this module that are! To view them, `+
+						`<a href="/mod/%s?tab=versions">click here</a>.</p>`,
+						modulePath)),
+			}
+			s.serveErrorPage(w, r, http.StatusNotFound, epage)
+			return
+		}
+	}
+	s.serveErrorPage(w, r, http.StatusNotFound, nil)
+}
 
-	// Here, moduleVersion is a valid *VersionInfo.
-	licenses, err := s.ds.GetModuleLicenses(ctx, moduleVersion.ModulePath, moduleVersion.Version)
+func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseWriter, r *http.Request, vi *internal.VersionInfo, requestedVersion string) {
+	licenses, err := s.ds.GetModuleLicenses(ctx, vi.ModulePath, vi.Version)
 	if err != nil {
-		log.Errorf("error getting module licenses for %s@%s: %v", moduleVersion.ModulePath, moduleVersion.Version, err)
+		log.Errorf("error getting module licenses: %v", err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return
 	}
 
-	modHeader := createModule(moduleVersion, license.ToMetadatas(licenses), version == internal.LatestVersion)
+	modHeader := createModule(vi, license.ToMetadatas(licenses), requestedVersion == internal.LatestVersion)
 	tab := r.FormValue("tab")
 	settings, ok := moduleTabLookup[tab]
 	if !ok {
@@ -197,7 +217,7 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = fetchDetailsForModule(ctx, r, tab, s.ds, moduleVersion, licenses)
+		details, err = fetchDetailsForModule(ctx, r, tab, s.ds, vi, licenses)
 		if err != nil {
 			log.Errorf("error fetching page for %q: %v", tab, err)
 			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
@@ -205,11 +225,11 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 		}
 	}
 	page := &DetailsPage{
-		basePage:       newBasePage(r, moduleHTMLTitle(moduleVersion.ModulePath)),
-		Title:          moduleTitle(moduleVersion.ModulePath),
+		basePage:       newBasePage(r, moduleHTMLTitle(vi.ModulePath)),
+		Title:          moduleTitle(vi.ModulePath),
 		Settings:       settings,
 		Header:         modHeader,
-		BreadcrumbPath: breadcrumbPath(moduleVersion.ModulePath, moduleVersion.ModulePath, moduleVersion.Version),
+		BreadcrumbPath: breadcrumbPath(vi.ModulePath, vi.ModulePath, vi.Version),
 		Details:        details,
 		CanShowDetails: canShowDetails,
 		Tabs:           moduleTabSettings,
