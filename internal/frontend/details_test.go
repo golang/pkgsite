@@ -12,7 +12,6 @@ import (
 	"testing"
 
 	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/derrors"
 )
 
 func TestParseDetailsURLPath(t *testing.T) {
@@ -74,87 +73,6 @@ func TestParseDetailsURLPath(t *testing.T) {
 			if !tc.wantErr && (tc.wantModulePath != gotModule || tc.wantVersion != gotVersion || tc.wantPkgPath != gotPkg) {
 				t.Fatalf("parseDetailsURLPath(%q): %q, %q, %q, %v; want = %q, %q, %q, want err %t",
 					u, gotPkg, gotModule, gotVersion, err, tc.wantPkgPath, tc.wantModulePath, tc.wantVersion, tc.wantErr)
-			}
-		})
-	}
-}
-
-func TestProcessPackageOrModulePath(t *testing.T) {
-	for _, tc := range []struct {
-		desc             string
-		urlPath          string
-		getErr1, getErr2 error
-
-		wantPath, wantVersion string
-		wantCode              int
-	}{
-		{
-			desc:        "specific version found",
-			urlPath:     "import/path@v1.2.3",
-			wantPath:    "import/path",
-			wantVersion: "v1.2.3",
-			wantCode:    http.StatusOK,
-		},
-		{
-			desc:        "latest version found",
-			urlPath:     "import/path",
-			wantPath:    "import/path",
-			wantVersion: "latest",
-			wantCode:    http.StatusOK,
-		},
-		{
-			desc:        "version failed",
-			urlPath:     "import/path@v1.2.3",
-			getErr1:     context.Canceled,
-			wantPath:    "",
-			wantVersion: "",
-			wantCode:    http.StatusInternalServerError,
-		},
-		{
-			desc:        "version not found, latest found",
-			urlPath:     "import/path@v1.2.3",
-			getErr1:     derrors.NotFound,
-			getErr2:     nil,
-			wantPath:    "import/path",
-			wantVersion: "v1.2.3",
-			wantCode:    http.StatusSeeOther,
-		},
-		{
-			desc:        "version not found, latest not found",
-			urlPath:     "import/path@v1.2.3",
-			getErr1:     derrors.NotFound,
-			getErr2:     derrors.NotFound,
-			wantPath:    "",
-			wantVersion: "",
-			wantCode:    http.StatusNotFound,
-		},
-		{
-			desc:        "version not found, latest error",
-			urlPath:     "import/path@v1.2.3",
-			getErr1:     derrors.NotFound,
-			getErr2:     context.Canceled,
-			wantPath:    "",
-			wantVersion: "",
-			wantCode:    http.StatusNotFound,
-		},
-	} {
-		t.Run(tc.desc, func(t *testing.T) {
-			ncalls := 0
-			get := func(v string) (string, error) {
-				ncalls++
-				if ncalls == 1 {
-					return "", tc.getErr1
-				}
-				return "", tc.getErr2
-			}
-
-			pkgPath, _, version, err := parseDetailsURLPath(tc.urlPath)
-			if err != nil {
-				t.Fatal(err)
-			}
-			gotCode, _ := fetchPackageOrModule(context.Background(), "pkg", pkgPath, version, get)
-			if gotCode != tc.wantCode {
-				t.Fatalf("got status code %d, want %d", gotCode, tc.wantCode)
 			}
 		})
 	}
