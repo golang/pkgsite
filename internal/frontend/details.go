@@ -96,6 +96,13 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 			s.serveDirectoryPage(w, r, pkgPath, modulePath, version)
 			return
 		}
+		// Temporary patch: StatusNotFound should not be used unless we're setting
+		// the Location header, but we can't set it earlier or we'll change the
+		// handling logic.
+		// TODO(b/144031201): remove this after refactoring.
+		if code == http.StatusSeeOther {
+			code = http.StatusNotFound
+		}
 		s.serveErrorPage(w, r, code, epage)
 		return
 	}
@@ -160,6 +167,13 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 		return modulePath, err
 	})
 	if code != http.StatusOK {
+		// Temporary patch: StatusNotFound should not be used unless we're setting
+		// the Location header, but we can't set it earlier or we'll change the
+		// handling logic.
+		// TODO(b/144031201): remove this after refactoring.
+		if code == http.StatusSeeOther {
+			code = http.StatusNotFound
+		}
 		s.serveErrorPage(w, r, code, epage)
 		return
 	}

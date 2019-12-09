@@ -8,6 +8,7 @@ package htmlcheck
 
 import (
 	"fmt"
+	"io"
 	"regexp"
 	"strings"
 
@@ -17,6 +18,16 @@ import (
 
 // A Checker is a function from an HTML node to an error describing a failure.
 type Checker func(*html.Node) error
+
+// Run is a convenience function to run the checker against HTML read from
+// reader.
+func Run(reader io.Reader, checker Checker) error {
+	node, err := html.Parse(reader)
+	if err != nil {
+		return err
+	}
+	return checker(node)
+}
 
 // In returns a Checker that applies the given checkers to the first node
 // matching the CSS selector. The empty selector denotes the entire subtree of
