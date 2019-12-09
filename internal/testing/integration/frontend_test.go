@@ -101,15 +101,12 @@ func TestModulePackageDirectoryResolution(t *testing.T) {
 				in(".DetailsHeader", hasText("v1.2.3")),
 				in(".DetailsContent", hasText("321"))),
 		},
-		// This test fails, because the fetchPackageOrModule logic instead returns
-		// 404 and suggests a search for the later package.
-		// TODO(b/143814014): uncomment once this bug is fixed.
-		// {
-		// 	desc:     "dir is initially a directory",
-		// 	urlPath:  "/github.com/golang/found@v1.2.3/dir",
-		// 	wantCode: http.StatusOK,
-		// 	want:     in(".Directories", hasText("pkg")),
-		// },
+		{
+			desc:     "dir is initially a directory",
+			urlPath:  "/github.com/golang/found@v1.2.3/dir",
+			wantCode: http.StatusOK,
+			want:     in(".Directories", hasText("pkg")),
+		},
 		{
 			desc:     "dir becomes a package",
 			urlPath:  "/github.com/golang/found@v1.2.4/dir",
@@ -118,25 +115,20 @@ func TestModulePackageDirectoryResolution(t *testing.T) {
 				in(".DetailsHeader", hasText("v1.2.4")),
 				in(".DetailsContent", hasText("I'm a package"))),
 		},
-		// This test fails, because fetchPackageOrMOdule again suggests a search
-		// for the (now earlier) package.
-		// TODO(b/143814014): uncomment once this bug is fixed.
-		// {
-		// 	desc:     "dir becomes a directory again",
-		// 	urlPath:  "/github.com/golang/found@v1.2.5/dir",
-		// 	wantCode: http.StatusOK,
-		// 	want:     in(".Directories", hasText("pkg")),
-		// },
-		// This test fails, because we currently go to the latest version of
-		// found/dir, which is v1.2.4. We should instead serve the directory from
-		// the latest version of the module
-		// TODO(b/143814014): uncomment once this bug is fixed.
-		// {
-		// 	desc:     "latest directory",
-		// 	urlPath:  "/github.com/golang/found/dir",
-		// 	wantCode: http.StatusOK,
-		// 	want:     in(".Directories", hasText("pkg")),
-		// },
+		{
+			desc:     "dir becomes a directory again",
+			urlPath:  "/github.com/golang/found@v1.2.5/dir",
+			wantCode: http.StatusOK,
+			want:     in(".Directories", hasText("pkg")),
+		},
+		{
+			desc:     "latest package for /dir",
+			urlPath:  "/github.com/golang/found/dir",
+			wantCode: http.StatusOK,
+			want: in("",
+				in(".DetailsHeader", hasText("v1.2.4")),
+				in(".DetailsContent", hasText("I'm a package"))),
+		},
 	}
 	s, err := frontend.NewServer(testDB, nil, "../../../content/static", false)
 	if err != nil {

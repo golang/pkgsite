@@ -41,13 +41,6 @@ type Directory struct {
 func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirPath, modulePath, version string) {
 	var ctx = r.Context()
 
-	tab := r.FormValue("tab")
-	settings, ok := directoryTabLookup[tab]
-	if tab == "" || !ok || settings.Disabled {
-		tab = "subdirectories"
-		settings = directoryTabLookup[tab]
-	}
-
 	dbDir, err := s.ds.GetDirectory(ctx, dirPath, modulePath, version)
 	if err != nil {
 		status := http.StatusInternalServerError
@@ -59,35 +52,46 @@ func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirP
 		s.serveErrorPage(w, r, status, nil)
 		return
 	}
+	s.serveDirectoryPageWithDirectory(ctx, w, r, dbDir, version)
+}
+
+func (s *Server) serveDirectoryPageWithDirectory(ctx context.Context, w http.ResponseWriter, r *http.Request, dbDir *internal.Directory, requestedVersion string) {
+
+	tab := r.FormValue("tab")
+	settings, ok := directoryTabLookup[tab]
+	if tab == "" || !ok || settings.Disabled {
+		tab = "subdirectories"
+		settings = directoryTabLookup[tab]
+	}
 	licenses, err := s.ds.GetModuleLicenses(ctx, dbDir.ModulePath, dbDir.Version)
 	if err != nil {
-		log.Errorf("serveDirectoryPage for %s@%s: %v", dirPath, version, err)
+		log.Errorf("serveDirectoryPage for %s@%s: %v", dbDir.Path, requestedVersion, err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return
 	}
 	header, err := createDirectory(dbDir, license.ToMetadatas(licenses), false)
 	if err != nil {
-		log.Errorf("serveDirectoryPage for %s@%s: %v", dirPath, version, err)
+		log.Errorf("serveDirectoryPage for %s@%s: %v", dbDir.Path, requestedVersion, err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return
 	}
-	if version == internal.LatestVersion {
+	if requestedVersion == internal.LatestVersion {
 		header.URL = constructDirectoryURL(dbDir.Path, dbDir.ModulePath, internal.LatestVersion)
 	}
 
 	details, err := constructDetailsForDirectory(r, tab, dbDir, licenses)
 	if err != nil {
-		log.Errorf("serveDirectoryPage for %s@%s: %v", dirPath, version, err)
+		log.Errorf("serveDirectoryPage for %s@%s: %v", dbDir.Path, requestedVersion, err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return
 	}
 
 	page := &DetailsPage{
-		basePage:       newBasePage(r, fmt.Sprintf("%s directory", dirPath)),
-		Title:          fmt.Sprintf("directory %s", dirPath),
+		basePage:       newBasePage(r, fmt.Sprintf("%s directory", dbDir.Path)),
+		Title:          fmt.Sprintf("directory %s", dbDir.Path),
 		Settings:       settings,
 		Header:         header,
-		BreadcrumbPath: breadcrumbPath(dirPath, dbDir.ModulePath, linkVersion(dbDir.Version, dbDir.ModulePath)),
+		BreadcrumbPath: breadcrumbPath(dbDir.Path, dbDir.ModulePath, linkVersion(dbDir.Version, dbDir.ModulePath)),
 		Details:        details,
 		CanShowDetails: true,
 		Tabs:           directoryTabSettings,

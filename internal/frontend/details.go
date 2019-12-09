@@ -88,19 +88,14 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 		return
 	}
 	// This function handles top level behavior related to the existence of the
-	// requested pkgPath@version:
+	// requested pkgPath@version.
 	//   1. If a package exists at this version, serve it.
-	//   If we didn't find a package, and the version is not latest...
-	//     2. If we have valid versions for this package path, but `version`
-	//        isn't one of them, serve a 404 but recommend the other versions.
-	//     3. else just serve a 404.
-	//   4. else, maybe this path is a directory, so serveDirectoryPage
-	// (note that 3&4 have some bugs -- see b/143814014).
+	//   2. If there is a directory at this version, serve it.
+	//   3. If there is another version that contains this package path: serve a
+	//      404 and suggest these versions.
+	//   4. Just serve a 404
 	pkg, err := s.ds.GetPackage(ctx, pkgPath, modulePath, version)
 	if err == nil {
-		// The bulk of complexity in this function is related to handling the edge
-		// cases where the package is not found, so rather than indenting the error
-		// flow we skip ahead in the case that it *is* found.
 		s.servePackagePageWithPackage(ctx, w, r, pkg, version)
 		return
 	}
@@ -109,24 +104,47 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return
 	}
-	if version != internal.LatestVersion {
-		_, err := s.ds.GetPackage(ctx, pkgPath, modulePath, internal.LatestVersion)
-		if err == nil {
-			epage := &errorPage{
-				Message: fmt.Sprintf("Package %s@%s is not available.", pkgPath, displayVersion(version, modulePath)),
-				SecondaryMessage: template.HTML(
-					fmt.Sprintf(`There are other versions of this package that are! To view them, `+
-						`<a href="/%s?tab=versions">click here</a>.</p>`,
-						pkgPath)),
-			}
-			s.serveErrorPage(w, r, http.StatusNotFound, epage)
-			return
-		}
-		if !xerrors.Is(err, derrors.NotFound) {
-			log.Errorf("error checking for latest package: %v", err)
-		}
+	if version == internal.LatestVersion {
+		// If we've already checked the latest version, then we know that this path
+		// is not a package at any version, so just skip ahead and serve the
+		// directory page.
+		s.serveDirectoryPage(w, r, pkgPath, modulePath, version)
+		return
 	}
-	s.serveDirectoryPage(w, r, pkgPath, modulePath, version)
+	dir, err := s.ds.GetDirectory(ctx, pkgPath, modulePath, version)
+	if err == nil {
+		s.serveDirectoryPageWithDirectory(ctx, w, r, dir, version)
+		return
+	}
+	if !xerrors.Is(err, derrors.NotFound) {
+		// The only error we expect is NotFound, so serve an 500 here, otherwise
+		// whatever response we resolve below might be inconsistent or misleading.
+		log.Errorf("error checking for directory: %v", err)
+		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+	_, err = s.ds.GetPackage(ctx, pkgPath, modulePath, internal.LatestVersion)
+	if err == nil {
+		epage := &errorPage{
+			Message: fmt.Sprintf("Package %s@%s is not available.", pkgPath, displayVersion(version, modulePath)),
+			SecondaryMessage: template.HTML(
+				fmt.Sprintf(`There are other versions of this package that are! To view them, `+
+					`<a href="/%s?tab=versions">click here</a>.</p>`,
+					pkgPath)),
+		}
+		s.serveErrorPage(w, r, http.StatusNotFound, epage)
+		return
+	}
+	if !xerrors.Is(err, derrors.NotFound) {
+		// Unlike the error handling for GetDirectory above, we don't serve an
+		// InternalServerError here. The reasoning for this is that regardless of
+		// the result of GetPackage(..., "latest"), we're going to serve a NotFound
+		// response code. So the semantics of the endpoint are the same whether or
+		// not we get an unexpected error from GetPackage -- we just don't serve a
+		// more informative error response.
+		log.Errorf("error checking for latest package: %v", err)
+	}
+	s.serveErrorPage(w, r, http.StatusNotFound, nil)
 }
 
 func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.ResponseWriter, r *http.Request, pkg *internal.VersionedPackage, requestedVersion string) {
