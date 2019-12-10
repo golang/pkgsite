@@ -60,26 +60,6 @@ func In(selector string, checkers ...Checker) Checker {
 	}
 }
 
-// InAt is like In, but instead of the first node satifying the selector, it
-// applies the Checkers to the i'th node.
-// InAt(s, 0, m) is equivalent to (but slower than) In(s, m).
-func InAt(selector string, i int, checkers ...Checker) Checker {
-	sel := mustParseSelector(selector)
-	if i < 0 {
-		panic("negative index")
-	}
-	return func(n *html.Node) error {
-		els := allMatching(n, sel)
-		if i >= len(els) {
-			return fmt.Errorf("%q: index %d is out of range for %d elements", selector, i, len(els))
-		}
-		if err := check(els[i], checkers); err != nil {
-			return fmt.Errorf("%s[%d]: %v", selector, i, err)
-		}
-		return nil
-	}
-}
-
 // InAll runs the checkers against all nodes matching selector.
 func InAll(selector string, checkers ...Checker) Checker {
 	sel := mustParseSelector(selector)

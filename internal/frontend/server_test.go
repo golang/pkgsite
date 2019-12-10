@@ -189,7 +189,6 @@ func TestServer(t *testing.T) {
 
 	var (
 		in   = htmlcheck.In
-		inAt = htmlcheck.InAt
 		text = htmlcheck.HasText
 		attr = htmlcheck.HasAttr
 
@@ -509,8 +508,8 @@ func TestServer(t *testing.T) {
 				in("li.selected", text(`Imports`)),
 				in(".Imports-heading", text(`Standard Library Imports`)),
 				in(".Imports-list",
-					inAt("a", 0, href("/fmt"), text("fmt")),
-					inAt("a", 1, href("/path/to/bar"), text("path/to/bar")))),
+					in("li:nth-child(1) a", href("/fmt"), text("fmt")),
+					in("li:nth-child(2) a", href("/path/to/bar"), text("path/to/bar")))),
 		},
 		{
 			name:           "package@version imported by tab",

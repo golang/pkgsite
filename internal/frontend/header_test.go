@@ -158,7 +158,6 @@ func TestCreatePackageHeader(t *testing.T) {
 func TestBreadcrumbPath(t *testing.T) {
 	var (
 		in    = htmlcheck.In
-		inAt  = htmlcheck.InAt
 		notIn = htmlcheck.NotIn
 		text  = htmlcheck.HasText
 		attr  = htmlcheck.HasAttr
@@ -171,8 +170,8 @@ func TestBreadcrumbPath(t *testing.T) {
 		{
 			"example.com/blob/s3blob", "example.com", internal.LatestVersion,
 			in("",
-				inAt("a", 0, href("/example.com"), text("example.com")),
-				inAt("a", 1, href("/example.com/blob"), text("blob")),
+				in("a:nth-of-type(1)", href("/example.com"), text("example.com")),
+				in("a:nth-of-type(2)", href("/example.com/blob"), text("blob")),
 				in("span.DetailsHeader-breadcrumbCurrent", text("s3blob"))),
 		},
 		{
@@ -185,8 +184,8 @@ func TestBreadcrumbPath(t *testing.T) {
 		{
 			"g/x/tools/go/a", "g/x/tools", internal.LatestVersion,
 			in("",
-				inAt("a", 0, href("/g/x/tools"), text("g/x/tools")),
-				inAt("a", 1, href("/g/x/tools/go"), text("go")),
+				in("a:nth-of-type(1)", href("/g/x/tools"), text("g/x/tools")),
+				in("a:nth-of-type(2)", href("/g/x/tools/go"), text("go")),
 				in("span.DetailsHeader-breadcrumbCurrent", text("a"))),
 		},
 		{
@@ -205,8 +204,8 @@ func TestBreadcrumbPath(t *testing.T) {
 		{
 			"example.com/blob/s3blob", "example.com", "v1",
 			in("",
-				inAt("a", 0, href("/example.com@v1"), text("example.com")),
-				inAt("a", 1, href("/example.com/blob@v1"), text("blob")),
+				in("a:nth-of-type(1)", href("/example.com@v1"), text("example.com")),
+				in("a:nth-of-type(2)", href("/example.com/blob@v1"), text("blob")),
 				in("span.DetailsHeader-breadcrumbCurrent", text("s3blob"))),
 		},
 	} {

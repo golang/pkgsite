@@ -42,7 +42,6 @@ type Overview struct {
 
 var (
 	in        = htmlcheck.In
-	inAt      = htmlcheck.InAt
 	inAll     = htmlcheck.InAll
 	text      = htmlcheck.HasText
 	exactText = htmlcheck.HasExactText
@@ -106,8 +105,8 @@ func SubdirectoriesDetails(firstHref, firstText string) htmlcheck.Checker {
 		link = in("table.Directories a", href(firstHref), exactText(firstText))
 	}
 	return in("",
-		inAt("th", 0, text("^Path$")),
-		inAt("th", 1, text("^Synopsis$")),
+		in("th:nth-child(1)", text("^Path$")),
+		in("th:nth-child(2)", text("^Synopsis$")),
 		link)
 }
 
@@ -130,7 +129,7 @@ func LicenseDetails(ltype, bodySubstring, source string) htmlcheck.Checker {
 func OverviewDetails(ov *Overview) htmlcheck.Checker {
 	var pkg htmlcheck.Checker
 	if ov.PackageURL != "" {
-		pkg = inAt(".Overview-sourceCodeLink a", 1,
+		pkg = in(".Overview-sourceCodeLink a:nth-of-type(2)",
 			href(ov.PackageURL),
 			exactText(ov.PackageURL))
 	}
@@ -138,7 +137,7 @@ func OverviewDetails(ov *Overview) htmlcheck.Checker {
 		in("div.Overview-module > a",
 			href(ov.ModuleLink),
 			exactText(ov.ModuleLinkText)),
-		inAt(".Overview-sourceCodeLink a", 0,
+		in(".Overview-sourceCodeLink a:nth-of-type(1)",
 			href(ov.RepoURL),
 			exactText(ov.RepoURL)),
 		pkg,
