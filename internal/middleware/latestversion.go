@@ -20,9 +20,9 @@ const (
 )
 
 // latestInfoRegexp extracts values needed to determine the latest-version badge from a page's HTML.
-var latestInfoRegexp = regexp.MustCompile(`data-version="([^"]*)" data-mpath="([^"]*)" data-ppath="([^"]*)"`)
+var latestInfoRegexp = regexp.MustCompile(`data-version="([^"]*)" data-mpath="([^"]*)" data-ppath="([^"]*)" data-pagetype="([^"]*)"`)
 
-type latestFunc func(ctx context.Context, modulePath, packagePath string) string
+type latestFunc func(ctx context.Context, packagePath, modulePath, pageType string) string
 
 // LatestVersion supports the badge that displays whether the version of the
 // package or module being served is the latest one.
@@ -42,7 +42,8 @@ func LatestVersion(latest latestFunc) Middleware {
 				version = strings.Replace(version, "&#43;", "+", -1)
 				modulePath := string(matches[2])
 				packagePath := string(matches[3])
-				latestVersion := latest(r.Context(), modulePath, packagePath)
+				pageType := string(matches[4])
+				latestVersion := latest(r.Context(), packagePath, modulePath, pageType)
 				latestClass := "DetailsHeader-"
 				switch {
 				case latestVersion == "":

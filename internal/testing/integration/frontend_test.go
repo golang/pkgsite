@@ -69,7 +69,9 @@ func TestModulePackageDirectoryResolution(t *testing.T) {
 			desc:     "latest module",
 			urlPath:  "/mod/github.com/golang/found",
 			wantCode: http.StatusOK,
-			want:     in(".DetailsHeader", hasText("v1.2.5")),
+			want: in("",
+				in(".DetailsHeader", hasText("v1.2.5")),
+				in(".DetailsHeader-badge", in(".DetailsHeader-latest"))),
 		},
 		{
 			desc:     "versioned module",
@@ -91,7 +93,8 @@ func TestModulePackageDirectoryResolution(t *testing.T) {
 			wantCode: http.StatusOK,
 			want: in("",
 				in(".DetailsHeader", hasText("v1.2.5")),
-				in(".DetailsContent", hasText("521"))),
+				in(".DetailsContent", hasText("521")),
+				in(".DetailsHeader-badge", in(".DetailsHeader-latest"))),
 		},
 		{
 			desc:     "earlier package",
@@ -119,7 +122,9 @@ func TestModulePackageDirectoryResolution(t *testing.T) {
 			desc:     "dir becomes a directory again",
 			urlPath:  "/github.com/golang/found@v1.2.5/dir",
 			wantCode: http.StatusOK,
-			want:     in(".Directories", hasText("pkg")),
+			want: in("",
+				in(".Directories", hasText("pkg")),
+				in(".DetailsHeader-badge", in(".DetailsHeader-unknown"))),
 		},
 		{
 			desc:     "latest package for /dir",

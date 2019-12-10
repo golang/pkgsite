@@ -95,7 +95,7 @@ func (s *Server) serveDirectoryPageWithDirectory(ctx context.Context, w http.Res
 		Details:        details,
 		CanShowDetails: true,
 		Tabs:           directoryTabSettings,
-		Namespace:      "pkg",
+		PageType:       "dir",
 	}
 	s.servePage(w, settings.TemplateName, page)
 }

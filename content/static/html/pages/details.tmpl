@@ -6,7 +6,7 @@
 {{define "main_content"}}
 <div class="Container">
   {{$header := .Header}}
-  {{$namespace := .Namespace}}
+  {{$pageType := .PageType}}
   <header class="DetailsHeader">
     <div class="DetailsHeader-breadcrumb">
       {{.BreadcrumbPath}}
@@ -16,12 +16,12 @@
       <div class="DetailsHeader-version">{{$header.DisplayVersion}}</div>
 
       {{- $ppath := "" -}}
-      {{- if ne $namespace "mod" -}}
+      {{- if ne $pageType "mod" -}}
          {{- $ppath = $header.Path -}}
       {{- end}}
       <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
       <div class="DetailsHeader-badge $$GODISCOVERY_LATESTCLASS$$"
-           data-version="{{$header.LinkVersion}}" data-mpath="{{$header.ModulePath}}" data-ppath="{{$ppath}}">
+           data-version="{{$header.LinkVersion}}" data-mpath="{{$header.ModulePath}}" data-ppath="{{$ppath}}" data-pagetype="{{$pageType}}">
         <span>Latest</span>
         <a href="{{$header.LatestURL}}">Go to latest</a>
       </div>
@@ -39,7 +39,7 @@
           <a href="/license-policy" class="Disclaimer-link"><em>not legal advice</em></a>
         {{- end}}
       </span>
-      {{if eq $namespace "pkg"}}
+      {{if or (eq $pageType "pkg") (eq $pageType "dir")}}
         <span class="DetailsHeader-infoLabelDivider">|</span>
         {{if eq $header.ModulePath "std"}}
           <a data-test-id="DetailsHeader-infoLabelModule" href="{{$header.Module.URL}}">Standard library</a>

@@ -31,7 +31,10 @@ type DetailsPage struct {
 	Header         interface{}
 	BreadcrumbPath template.HTML
 	Tabs           []TabSettings
-	Namespace      string
+
+	// PageType is either "mod", "dir", or "pkg" depending on the details
+	// handler.
+	PageType string
 }
 
 func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
@@ -189,7 +192,7 @@ func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.Respons
 		Details:        details,
 		CanShowDetails: canShowDetails,
 		Tabs:           packageTabSettings,
-		Namespace:      "pkg",
+		PageType:       "pkg",
 	}
 	s.servePage(w, settings.TemplateName, page)
 }
@@ -274,7 +277,7 @@ func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseW
 		Details:        details,
 		CanShowDetails: canShowDetails,
 		Tabs:           moduleTabSettings,
-		Namespace:      "mod",
+		PageType:       "mod",
 	}
 	s.servePage(w, settings.TemplateName, page)
 }
@@ -351,8 +354,8 @@ func parseDetailsURLPath(urlPath string) (pkgPath, modulePath, version string, e
 // The linkable form of the version is returned.
 // It returns the empty string on error.
 // It is intended to be used as an argument to middleware.LatestVersion.
-func (s *Server) LatestVersion(ctx context.Context, modulePath, packagePath string) string {
-	v, err := s.latestVersion(ctx, modulePath, packagePath)
+func (s *Server) LatestVersion(ctx context.Context, packagePath, modulePath, pageType string) string {
+	v, err := s.latestVersion(ctx, packagePath, modulePath, pageType)
 	if err != nil {
 		// We get NotFound errors from directories; they clutter the log.
 		if !xerrors.Is(err, derrors.NotFound) {
@@ -363,21 +366,25 @@ func (s *Server) LatestVersion(ctx context.Context, modulePath, packagePath stri
 	return v
 }
 
-func (s *Server) latestVersion(ctx context.Context, modulePath, packagePath string) (_ string, err error) {
+func (s *Server) latestVersion(ctx context.Context, packagePath, modulePath, pageType string) (_ string, err error) {
 	defer derrors.Wrap(&err, "latestVersion(ctx, %q, %q)", modulePath, packagePath)
 
 	var vi *internal.VersionInfo
-	if packagePath == "" {
+	switch pageType {
+	case "mod":
 		vi, err = s.ds.GetVersionInfo(ctx, modulePath, internal.LatestVersion)
 		if err != nil {
 			return "", err
 		}
-	} else {
+	case "pkg":
 		pkg, err := s.ds.GetPackage(ctx, packagePath, modulePath, internal.LatestVersion)
 		if err != nil {
 			return "", err
 		}
 		vi = &pkg.VersionInfo
+	default:
+		// For directories we don't have a well-defined latest version.
+		return "", nil
 	}
 	return linkVersion(vi.Version, modulePath), nil
 }
