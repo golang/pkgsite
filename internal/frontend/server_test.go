@@ -829,10 +829,18 @@ func TestServerErrors(t *testing.T) {
 	mux := http.NewServeMux()
 	s.Install(mux.Handle, nil)
 
-	w := httptest.NewRecorder()
-	mux.ServeHTTP(w, httptest.NewRequest("GET", "/invalid-page", nil))
-	if w.Code != http.StatusNotFound {
-		t.Fatalf("status code: got = %d, want %d", w.Code, http.StatusNotFound)
+	for _, test := range []struct {
+		path     string
+		wantCode int
+	}{
+		{"/invalid-page", http.StatusNotFound},
+		{"/gocloud.dev/@latest/blob", http.StatusBadRequest},
+	} {
+		w := httptest.NewRecorder()
+		mux.ServeHTTP(w, httptest.NewRequest("GET", test.path, nil))
+		if w.Code != test.wantCode {
+			t.Errorf("%q: got status code = %d, want %d", test.path, w.Code, test.wantCode)
+		}
 	}
 }
 

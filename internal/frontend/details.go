@@ -334,7 +334,10 @@ func parseDetailsURLPath(urlPath string) (pkgPath, modulePath, version string, e
 		endParts := strings.Split(parts[1], "/")
 		suffix := strings.Join(endParts[1:], "/")
 		version = endParts[0]
-		if suffix == "" || version == internal.LatestVersion {
+		if version == internal.LatestVersion {
+			return "", "", "", fmt.Errorf("invalid version: %q", version)
+		}
+		if suffix == "" {
 			modulePath = internal.UnknownModulePath
 			pkgPath = basePath
 		} else {
