@@ -4,6 +4,6 @@
 
 BEGIN;
 
-DROP TABLE feature_flags;
+DROP TABLE experiments;
 
 END;
