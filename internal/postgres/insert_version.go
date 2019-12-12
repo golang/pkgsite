@@ -11,7 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"strconv"
 	"strings"
 	"unicode/utf8"
 
@@ -82,11 +81,6 @@ func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
 	}
 
 	err := db.db.Transact(func(tx *sql.Tx) error {
-		majorint, minorint, patchint, prerelease, err := extractSemverParts(v.Version)
-		if err != nil {
-			return fmt.Errorf("extractSemverParts(%q): %v", v.Version, err)
-		}
-
 		// If the version exists, delete it to force an overwrite. This allows us
 		// to selectively repopulate data after a code change.
 		if err := db.DeleteVersion(ctx, tx, v.ModulePath, v.Version); err != nil {
@@ -104,24 +98,16 @@ func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
 				commit_time,
 				readme_file_path,
 				readme_contents,
-				major,
-				minor,
-				patch,
-				prerelease,
 				sort_version,
 				version_type,
 				series_path,
 				source_info)
-			VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) ON CONFLICT DO NOTHING`,
+			VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT DO NOTHING`,
 			v.ModulePath,
 			v.Version,
 			v.CommitTime,
 			v.ReadmeFilePath,
 			v.ReadmeContents,
-			majorint,
-			minorint,
-			patchint,
-			prerelease,
 			version.ForSorting(v.Version),
 			v.VersionType,
 			v.SeriesPath(),
@@ -310,127 +296,6 @@ func removeNonDistributableData(v *internal.Version) {
 		v.ReadmeFilePath = ""
 		v.ReadmeContents = ""
 	}
-}
-
-// extractSemverParts extracts the major, minor, patch and prerelease from
-// version to be used for sorting versions in the database. The prerelease
-// string is padded with zeroes so that the resulting field is 20 characters
-// and returns the string "~" if it is empty.
-func extractSemverParts(version string) (majorint, minorint, patchint int, prerelease string, err error) {
-	majorint, err = major(version)
-	if err != nil {
-		return 0, 0, 0, "", fmt.Errorf("major(%q): %v", version, err)
-	}
-
-	minorint, err = minor(version)
-	if err != nil {
-		return 0, 0, 0, "", fmt.Errorf("minor(%q): %v", version, err)
-	}
-
-	patchint, err = patch(version)
-	if err != nil {
-		return 0, 0, 0, "", fmt.Errorf("patch(%q): %v", version, err)
-	}
-
-	prerelease, err = padPrerelease(version)
-	if err != nil {
-		return 0, 0, 0, "", fmt.Errorf("padPrerelease(%q): %v", version, err)
-	}
-	return majorint, minorint, patchint, prerelease, nil
-}
-
-// major returns the major version integer value of the semantic version
-// v.  For example, major("v2.1.0") == 2.
-func major(v string) (int, error) {
-	m := strings.TrimPrefix(semver.Major(v), "v")
-	major, err := strconv.Atoi(m)
-	if err != nil {
-		return 0, fmt.Errorf("strconv.Atoi(%q): %v", m, err)
-	}
-	return major, nil
-}
-
-// minor returns the minor version integer value of the semantic version For
-// example, minor("v2.1.0") == 1.
-func minor(v string) (int, error) {
-	m := strings.TrimPrefix(semver.MajorMinor(v), fmt.Sprintf("%s.", semver.Major(v)))
-	minor, err := strconv.Atoi(m)
-	if err != nil {
-		return 0, fmt.Errorf("strconv.Atoi(%q): %v", m, err)
-	}
-	return minor, nil
-}
-
-// patch returns the patch version integer value of the semantic version For
-// example, patch("v2.1.0+incompatible") == 0.
-func patch(v string) (int, error) {
-	s := strings.TrimPrefix(semver.Canonical(v), fmt.Sprintf("%s.", semver.MajorMinor(v)))
-	p := strings.TrimSuffix(s, semver.Prerelease(v))
-	patch, err := strconv.Atoi(p)
-	if err != nil {
-		return 0, fmt.Errorf("strconv.Atoi(%q): %v", p, err)
-	}
-	return patch, nil
-}
-
-// padPrerelease returns '~' if the given string is empty
-// and otherwise pads all number fields with zeroes so that
-// the resulting field is 20 characters and returns that
-// string without the '-' prefix. The '~' is returned so that
-// full releases will take greatest precedence when sorting
-// in ASCII sort order. The given string may only contain
-// lowercase letters, numbers, periods, hyphens or nothing.
-func padPrerelease(v string) (string, error) {
-	p := semver.Prerelease(v)
-	if p == "" {
-		return "~", nil
-	}
-
-	pre := strings.Split(strings.TrimPrefix(p, "-"), ".")
-	var err error
-	for i, segment := range pre {
-		if isNum(segment) {
-			pre[i], err = prefixZeroes(segment)
-			if err != nil {
-				return "", fmt.Errorf("padRelease(%v): number field %v is longer than 20 characters", p, segment)
-			}
-		}
-	}
-	return strings.Join(pre, "."), nil
-}
-
-// prefixZeroes returns a string that is padded with zeroes on the
-// left until the string is exactly 20 characters long. If the string
-// is already 20 or more characters it is returned unchanged. 20
-// characters being the length because the length of a date in the form
-// yyyymmddhhmmss has 14 characters and that is longest number that
-// is expected to be found in a prerelease number field.
-func prefixZeroes(s string) (string, error) {
-	if len(s) > 20 {
-		return "", fmt.Errorf("prefixZeroes(%v): input string is more than 20 characters", s)
-	}
-
-	if len(s) == 20 {
-		return s, nil
-	}
-
-	var padded []string
-
-	for i := 0; i < 20-len(s); i++ {
-		padded = append(padded, "0")
-	}
-
-	return strings.Join(append(padded, s), ""), nil
-}
-
-// isNum returns true if every character in a string is a number
-// and returns false otherwise.
-func isNum(v string) bool {
-	i := 0
-	for i < len(v) && '0' <= v[i] && v[i] <= '9' {
-		i++
-	}
-	return len(v) > 0 && i == len(v)
 }
 
 // DeleteVersion deletes a Version from the database.
