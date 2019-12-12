@@ -195,5 +195,7 @@
   </div>
 </footer>
 {{block "post_content" .}}{{end}}
-<script nonce="{{.Nonce}}" src="/static/thirdparty/autoComplete.js/autoComplete.min.js?version={{.AppVersionLabel}}"></script>
-<script nonce="{{.Nonce}}" src="/static/js/completion.js?version={{.AppVersionLabel}}"></script>
+{{if (.Experiments.Active "autocomplete")}}
+  <script nonce="{{.Nonce}}" src="/static/thirdparty/autoComplete.js/autoComplete.min.js?version={{.AppVersionLabel}}"></script>
+  <script nonce="{{.Nonce}}" src="/static/js/completion.js?version={{.AppVersionLabel}}"></script>
+{{end}}

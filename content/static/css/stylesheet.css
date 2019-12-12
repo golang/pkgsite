@@ -146,14 +146,16 @@ code {
   font-size: 1rem;
   padding: 0.5rem 0.5rem 0.5rem 1rem;
 }
-.SearchForm:hover,
-.SearchForm:focus-within,
-.Header-searchForm:hover,
-.Header-searchForm:focus-within {
+.Experiment-autoComplete .SearchForm:hover,
+.Experiment-autoComplete .SearchForm:focus-within,
+.Experiment-autoComplete .Header-searchForm:hover,
+.Experiment-autoComplete .Header-searchForm:focus-within {
   box-shadow: 0 0 0.1875rem rgba(0, 0, 0, 0.3);
 }
 .SearchForm-firstRow {
   display: flex;
+  flex: 1;
+  min-height: 1.72rem;
 }
 .SearchForm-input {
   border: none;
@@ -238,7 +240,7 @@ code {
 .Header-menu {
   display: flex;
   list-style: none;
-  margin: 0;
+  margin: 0 0 0 1.4rem;
   padding: 0;
 }
 @media only screen and (min-width: 57.7rem) {
@@ -297,12 +299,13 @@ code {
 .Header-searchForm-container {
   position: relative;
   display: inline-flex;
-  margin: 0.6rem auto 0 0;
+  margin: 0.6rem auto 0 1.4rem;
   flex: 1;
 }
-.Header-searchForm {
+.Experiment-autoComplete .Header-searchForm {
   background-color: white;
-  display: inline-block;
+}
+.Header-searchForm {
   border: 0.0625rem solid var(--gray-8);
   border-radius: 1.4rem;
   position: absolute;
@@ -310,11 +313,24 @@ code {
   right: 0;
   font-size: 1rem;
   padding: 0.5rem 0.5rem 0.5rem 1rem;
+  min-height: 2.863125rem;
 }
-.Header-searchFormInput input[type='text']::placeholder {
-  color: transparent;
+.Site-header--dark
+  .Experiment-autoComplete
+  input[type='text'].Header-searchFormInput {
+  color: initial;
+}
+.Site-header--dark
+  .Experiment-autoComplete
+  input[type='text'].Header-searchFormInput::placeholder {
+  color: initial;
+}
+.Site-header--dark input[type='text'].Header-searchFormInput,
+.Site-header--dark input[type='text'].Header-searchFormInput::placeholder {
+  color: var(--white);
 }
 .Header-searchFormInput {
+  background-color: transparent;
   border: none;
   box-sizing: border-box;
   flex: 1;
@@ -327,11 +343,16 @@ code {
   border: none;
   box-sizing: border-box;
   cursor: pointer;
+  display: flex;
 }
 .Header-searchFormSubmitIcon {
   box-sizing: border-box;
   cursor: pointer;
+  fill: var(--turq-med);
   width: 23px;
+}
+.Site-header--dark .Header-searchFormSubmitIcon {
+  fill: var(--white);
 }
 .NavigationDrawer {
   background: var(--white);
