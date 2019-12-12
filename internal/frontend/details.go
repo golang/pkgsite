@@ -114,7 +114,7 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 		s.serveDirectoryPage(w, r, pkgPath, modulePath, version)
 		return
 	}
-	dir, err := s.ds.GetDirectory(ctx, pkgPath, modulePath, version)
+	dir, err := s.ds.GetDirectory(ctx, pkgPath, modulePath, version, internal.AllFields)
 	if err == nil {
 		s.serveDirectoryPageWithDirectory(ctx, w, r, dir, version)
 		return

@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"strconv"
@@ -61,6 +62,9 @@ func (db *DB) InsertVersion(ctx context.Context, v *internal.Version) (err error
 // A derrors.InvalidArgument error will be returned if the given version and
 // licenses are invalid.
 func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
+	if v.ReadmeContents == internal.StringFieldMissing {
+		return errors.New("saveVersion: version missing ReadmeContents")
+	}
 	// Sort to ensure proper lock ordering, avoiding deadlocks. See
 	// b/141164828#comment8. The only deadlocks we've actually seen are on
 	// imports_unique, because they can occur when processing two versions of
@@ -152,6 +156,9 @@ func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
 
 		var pkgValues, importValues, importUniqueValues []interface{}
 		for _, p := range v.Packages {
+			if p.DocumentationHTML == internal.StringFieldMissing {
+				return errors.New("saveVersion: package missing DocumentationHTML")
+			}
 			var licenseTypes, licensePaths []string
 			for _, l := range p.Licenses {
 				if len(l.Types) == 0 {
@@ -262,7 +269,7 @@ func validateVersion(v *internal.Version) error {
 	}
 	if v.ModulePath != stdlib.ModulePath {
 		if err := module.CheckPath(v.ModulePath); err != nil {
-			errReasons = append(errReasons, "invalid module path")
+			errReasons = append(errReasons, fmt.Sprintf("invalid module path (%s)", err))
 		}
 		if !semver.IsValid(v.Version) {
 			errReasons = append(errReasons, "invalid version")

@@ -19,7 +19,7 @@ type DataSource interface {
 	// nested) subdirectory of the given directory path. When multiple
 	// package paths satisfy this query, it should prefer the module with
 	// the longest path.
-	GetDirectory(ctx context.Context, dirPath, modulePath, version string) (_ *Directory, err error)
+	GetDirectory(ctx context.Context, dirPath, modulePath, version string, fields FieldSet) (_ *Directory, err error)
 	// GetImportedBy returns a slice of import paths corresponding to packages
 	// that import the given package path (at any version).
 	GetImportedBy(ctx context.Context, pkgPath, version string, limit int) ([]string, error)

@@ -74,7 +74,7 @@ func TestDataSource_GetDirectory(t *testing.T) {
 		VersionInfo: wantVersionInfo,
 		Packages:    []*internal.Package{&wantPackage},
 	}
-	got, err := ds.GetDirectory(ctx, "foo.com/bar", internal.UnknownModulePath, "v1.2.0")
+	got, err := ds.GetDirectory(ctx, "foo.com/bar", internal.UnknownModulePath, "v1.2.0", internal.AllFields)
 	if err != nil {
 		t.Fatal(err)
 	}

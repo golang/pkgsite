@@ -25,7 +25,12 @@ import (
 // If version = internal.LatestVersion, the directory corresponding to the
 // latest matching module version will be fetched.
 //
-// If more than one module tie for a given dirPath and version pair, and
+// fields is a set of fields to read (see internal.FieldSet and related
+// definitions). If a field is not in fields, it will not be read from the DB
+// and its value will be one of the XXXFieldMissing constants. Only certain
+// large fields are treated specially in this way.
+//
+// If more than one module ties for a given dirPath and version pair, and
 // modulePath = internal.UnknownModulePath, the directory for the module with
 // the  longest module path will be fetched.
 // For example, if there are
@@ -49,7 +54,7 @@ import (
 //
 // It will not match on:
 // golang.org/x/tools/g
-func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version string) (_ *internal.Directory, err error) {
+func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version string, fields internal.FieldSet) (_ *internal.Directory, err error) {
 	defer derrors.Wrap(&err, "DB.GetDirectory(ctx, %q, %q, %q)", dirPath, modulePath, version)
 
 	if dirPath == "" || modulePath == "" || version == "" {
@@ -61,37 +66,46 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version str
 		args  []interface{}
 	)
 	if modulePath == internal.UnknownModulePath || modulePath == stdlib.ModulePath {
-		query, args = directoryQueryWithoutModulePath(dirPath, version)
+		query, args = directoryQueryWithoutModulePath(dirPath, version, fields)
 	} else {
-		query, args = directoryQueryWithModulePath(dirPath, modulePath, version)
+		query, args = directoryQueryWithModulePath(dirPath, modulePath, version, fields)
 	}
 
 	var (
 		packages []*internal.Package
-		vi       internal.VersionInfo
+		vi       = internal.VersionInfo{ReadmeContents: internal.StringFieldMissing}
 	)
 	collect := func(rows *sql.Rows) error {
 		var (
-			pkg                        internal.Package
-			licenseTypes, licensePaths []string
+			pkg          = internal.Package{DocumentationHTML: internal.StringFieldMissing}
+			licenseTypes []string
+			licensePaths []string
 		)
-		if err := rows.Scan(
+		scanArgs := []interface{}{
 			&pkg.Path,
 			&pkg.Name,
 			&pkg.Synopsis,
 			&pkg.V1Path,
-			database.NullIsEmpty(&pkg.DocumentationHTML),
+		}
+		if fields&internal.WithDocumentationHTML != 0 {
+			scanArgs = append(scanArgs, database.NullIsEmpty(&pkg.DocumentationHTML))
+		}
+		scanArgs = append(scanArgs,
 			pq.Array(&licenseTypes),
 			pq.Array(&licensePaths),
 			&pkg.GOOS,
 			&pkg.GOARCH,
 			&vi.Version,
 			&vi.ModulePath,
-			database.NullIsEmpty(&vi.ReadmeFilePath),
-			database.NullIsEmpty(&vi.ReadmeContents),
+			database.NullIsEmpty(&vi.ReadmeFilePath))
+		if fields&internal.WithReadmeContents != 0 {
+			scanArgs = append(scanArgs, database.NullIsEmpty(&vi.ReadmeContents))
+		}
+		scanArgs = append(scanArgs,
 			&vi.CommitTime,
 			&vi.VersionType,
-			jsonbScanner{&vi.SourceInfo}); err != nil {
+			jsonbScanner{&vi.SourceInfo})
+		if err := rows.Scan(scanArgs...); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
 		lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
@@ -118,12 +132,20 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version str
 	}, nil
 }
 
-const directoryColumns = `
+func directoryColumns(fields internal.FieldSet) string {
+	var doc, readme string
+	if fields&internal.WithDocumentationHTML != 0 {
+		doc = "p.documentation,"
+	}
+	if fields&internal.WithReadmeContents != 0 {
+		readme = "v.readme_contents,"
+	}
+	return `
 			p.path,
 			p.name,
 			p.synopsis,
 			p.v1_path,
-			p.documentation,
+			` + doc + `
 			p.license_types,
 			p.license_paths,
 			p.goos,
@@ -131,10 +153,11 @@ const directoryColumns = `
 			p.version,
 			p.module_path,
 			v.readme_file_path,
-			v.readme_contents,
+			` + readme + `
 			v.commit_time,
 			v.version_type,
 			v.source_info`
+}
 
 const orderByLatest = `
 			ORDER BY
@@ -147,7 +170,7 @@ const orderByLatest = `
 
 // directoryQueryWithoutModulePath returns the query and args needed to fetch a
 // directory when no module path is provided.
-func directoryQueryWithoutModulePath(dirPath, version string) (string, []interface{}) {
+func directoryQueryWithoutModulePath(dirPath, version string, fields internal.FieldSet) (string, []interface{}) {
 	if version == internal.LatestVersion {
 		// internal packages are filtered out from the search_documents table.
 		// However, for other packages, fetching from search_documents is
@@ -188,7 +211,8 @@ func directoryQueryWithoutModulePath(dirPath, version string) (string, []interfa
 			ON
 				p.module_path = v.module_path
 				AND p.version = v.version
-			WHERE tsv_parent_directories @@ $1::tsquery;`, directoryColumns, table, orderByLatest), []interface{}{dirPath}
+			WHERE tsv_parent_directories @@ $1::tsquery;`,
+			directoryColumns(fields), table, orderByLatest), []interface{}{dirPath}
 	}
 
 	// dirPath and version are specified, so get that directory version
@@ -218,12 +242,12 @@ func directoryQueryWithoutModulePath(dirPath, version string) (string, []interfa
 		INNER JOIN module_version v
 		ON
 			p.module_path = v.module_path
-			AND p.version = v.version;`, directoryColumns), []interface{}{dirPath, version}
+			AND p.version = v.version;`, directoryColumns(fields)), []interface{}{dirPath, version}
 }
 
 // directoryQueryWithoutModulePath returns the query and args needed to fetch a
 // directory when a module path is provided.
-func directoryQueryWithModulePath(dirPath, modulePath, version string) (string, []interface{}) {
+func directoryQueryWithModulePath(dirPath, modulePath, version string, fields internal.FieldSet) (string, []interface{}) {
 	if version == internal.LatestVersion {
 		// dirPath and modulePath are specified, so get the latest version of
 		// the package in the specified module.
@@ -250,7 +274,8 @@ func directoryQueryWithModulePath(dirPath, modulePath, version string) (string, 
 				AND p.version = v.version
 			WHERE
 				p.module_path = $2
-				AND tsv_parent_directories @@ $1::tsquery;`, directoryColumns, orderByLatest), []interface{}{dirPath, modulePath}
+				AND tsv_parent_directories @@ $1::tsquery;`,
+			directoryColumns(fields), orderByLatest), []interface{}{dirPath, modulePath}
 	}
 
 	// dirPath, modulePath and version were all specified. Only one
@@ -267,5 +292,5 @@ func directoryQueryWithModulePath(dirPath, modulePath, version string) (string, 
 			WHERE
 				tsv_parent_directories @@ $1::tsquery
 				AND p.module_path = $2
-				AND p.version = $3;`, directoryColumns), []interface{}{dirPath, modulePath, version}
+				AND p.version = $3;`, directoryColumns(fields)), []interface{}{dirPath, modulePath, version}
 }

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package proxydatasource implements a frontend.DataSource backed solely by a
+// Package proxydatasource implements an internal.DataSource backed solely by a
 // proxy instance.
 package proxydatasource
 
@@ -22,6 +22,8 @@ import (
 	"golang.org/x/discovery/internal/version"
 	"golang.org/x/xerrors"
 )
+
+var _ internal.DataSource = (*DataSource)(nil)
 
 // New returns a new direct proxy datasource.
 func New(proxyClient *proxy.Client) *DataSource {
@@ -60,7 +62,7 @@ type versionEntry struct {
 }
 
 // GetDirectory returns packages contained in the given subdirectory of a module version.
-func (ds *DataSource) GetDirectory(ctx context.Context, dirPath, modulePath, version string) (_ *internal.Directory, err error) {
+func (ds *DataSource) GetDirectory(ctx context.Context, dirPath, modulePath, version string, _ internal.FieldSet) (_ *internal.Directory, err error) {
 	defer derrors.Wrap(&err, "GetDirectory(%q, %q, %q)", dirPath, modulePath, version)
 
 	var info *proxy.VersionInfo

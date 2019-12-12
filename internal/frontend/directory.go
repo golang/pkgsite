@@ -41,7 +41,7 @@ type Directory struct {
 func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirPath, modulePath, version string) {
 	var ctx = r.Context()
 
-	dbDir, err := s.ds.GetDirectory(ctx, dirPath, modulePath, version)
+	dbDir, err := s.ds.GetDirectory(ctx, dirPath, modulePath, version, internal.AllFields)
 	if err != nil {
 		status := http.StatusInternalServerError
 		if xerrors.Is(err, derrors.NotFound) {
@@ -106,7 +106,7 @@ func (s *Server) serveDirectoryPageWithDirectory(ctx context.Context, w http.Res
 // includeDirPath indicates whether a package is included if its import path is
 // the same as dirPath.
 // This argument is needed because on the module "Packages" tab, we want to
-// display all packages in the mdoule, even if the import path is the same as
+// display all packages in the module, even if the import path is the same as
 // the module path. However, on the package and directory view's
 // "Subdirectories" tab, we do not want to include packages whose import paths
 // are the same as the dirPath.
@@ -130,7 +130,7 @@ func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, dirPath 
 		}, licmetas, includeDirPath)
 	}
 
-	dbDir, err := ds.GetDirectory(ctx, dirPath, vi.ModulePath, vi.Version)
+	dbDir, err := ds.GetDirectory(ctx, dirPath, vi.ModulePath, vi.Version, internal.AllFields)
 	if xerrors.Is(err, derrors.NotFound) {
 		return createDirectory(&internal.Directory{
 			VersionInfo: *vi,

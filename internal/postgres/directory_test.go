@@ -252,7 +252,7 @@ func TestGetDirectory(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := testDB.GetDirectory(ctx, tc.dirPath, tc.modulePath, tc.version)
+			got, err := testDB.GetDirectory(ctx, tc.dirPath, tc.modulePath, tc.version, internal.AllFields)
 			if tc.wantNotFoundErr {
 				if !xerrors.Is(err, derrors.NotFound) {
 					t.Fatalf("want %v; got = \n%+v, %v", derrors.NotFound, got, err)
@@ -293,5 +293,33 @@ func TestGetDirectory(t *testing.T) {
 				t.Errorf("testDB.GetDirectory(ctx, %q, %q, %q) mismatch (-want +got):\n%s", tc.dirPath, tc.modulePath, tc.version, diff)
 			}
 		})
+	}
+}
+
+func TestGetDirectoryFieldSet(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	defer ResetTestDB(testDB, t)
+
+	p := sample.Package()
+	p.Path = "m.c/d/p"
+	p.Imports = nil
+	v := sample.Version()
+	v.ModulePath = "m.c"
+	v.Packages = []*internal.Package{p}
+	if err := testDB.InsertVersion(ctx, v); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := testDB.GetDirectory(ctx, "m.c/d", "m.c", sample.VersionString, internal.MinimalFields)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if g, w := got.ReadmeContents, internal.StringFieldMissing; g != w {
+		t.Errorf("ReadmeContents = %q, want %q", g, w)
+	}
+	if g, w := got.Packages[0].DocumentationHTML, internal.StringFieldMissing; g != w {
+		t.Errorf("DocumentationHTML = %q, want %q", g, w)
 	}
 }
