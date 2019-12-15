@@ -16,8 +16,8 @@ import (
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/stdlib"
-	"golang.org/x/discovery/internal/thirdparty/module"
-	"golang.org/x/discovery/internal/thirdparty/semver"
+	"golang.org/x/mod/module"
+	"golang.org/x/mod/semver"
 	"golang.org/x/xerrors"
 )
 

@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"golang.org/x/discovery/internal/testing/testhelper"
-	"golang.org/x/discovery/internal/thirdparty/semver"
+	"golang.org/x/mod/semver"
 )
 
 // TestVersion represents a module version to host in the fake proxy.

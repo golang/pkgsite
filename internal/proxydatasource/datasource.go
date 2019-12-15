@@ -18,7 +18,7 @@ import (
 	"golang.org/x/discovery/internal/etl"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/proxy"
-	"golang.org/x/discovery/internal/thirdparty/semver"
+	"golang.org/x/mod/semver"
 	"golang.org/x/discovery/internal/version"
 	"golang.org/x/xerrors"
 )

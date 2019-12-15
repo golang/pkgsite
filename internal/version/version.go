@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	"golang.org/x/discovery/internal/thirdparty/semver"
+	"golang.org/x/mod/semver"
 )
 
 // Type defines the version types a module can have.

@@ -16,7 +16,7 @@ import (
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/stdlib"
-	"golang.org/x/discovery/internal/thirdparty/module"
+	"golang.org/x/mod/module"
 )
 
 // Package contains information for an individual package.

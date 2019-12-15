@@ -227,7 +227,7 @@ func TestEncodedURL(t *testing.T) {
 			"", // only "info" or "zip"
 		},
 	} {
-		got, err := c.encodedURL(test.path, test.version, test.suffix)
+		got, err := c.escapedURL(test.path, test.version, test.suffix)
 		if got != test.want || (err != nil) != (test.want == "") {
 			t.Errorf("%s, %s, %s: got (%q, %v), want %q", test.path, test.version, test.suffix, got, err, test.want)
 		}

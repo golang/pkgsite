@@ -14,7 +14,7 @@ import (
 
 	"github.com/google/licensecheck"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/thirdparty/module"
+	"golang.org/x/mod/module"
 )
 
 const (

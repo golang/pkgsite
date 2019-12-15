@@ -7,7 +7,7 @@ package version
 import (
 	"testing"
 
-	"golang.org/x/discovery/internal/thirdparty/semver"
+	"golang.org/x/mod/semver"
 )
 
 func TestForSorting(t *testing.T) {

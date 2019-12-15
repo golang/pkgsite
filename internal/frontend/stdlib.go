@@ -13,7 +13,7 @@ import (
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/stdlib"
-	"golang.org/x/discovery/internal/thirdparty/module"
+	"golang.org/x/mod/module"
 )
 
 // handleStdLib handles a request for a stdlib package or module.

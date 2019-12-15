@@ -23,7 +23,7 @@ import (
 
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/testing/testhelper"
-	"golang.org/x/discovery/internal/thirdparty/semver"
+	"golang.org/x/mod/semver"
 
 	"gopkg.in/src-d/go-billy.v4/osfs"
 	"gopkg.in/src-d/go-git.v4"

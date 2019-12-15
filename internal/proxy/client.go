@@ -22,7 +22,7 @@ import (
 	"go.opencensus.io/plugin/ochttp"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/thirdparty/module"
+	"golang.org/x/mod/module"
 	"golang.org/x/net/context/ctxhttp"
 	"golang.org/x/xerrors"
 )
@@ -62,7 +62,7 @@ func New(rawurl string) (_ *Client, err error) {
 // transforms that data into a *VersionInfo.
 func (c *Client) GetInfo(ctx context.Context, modulePath, version string) (_ *VersionInfo, err error) {
 	defer derrors.Wrap(&err, "proxy.Client.GetInfo(%q, %q)", modulePath, version)
-	u, err := c.encodedURL(modulePath, version, "info")
+	u, err := c.escapedURL(modulePath, version, "info")
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func (c *Client) GetZip(ctx context.Context, requestedPath, requestedVersion str
 	if err != nil {
 		return nil, err
 	}
-	u, err := c.encodedURL(requestedPath, info.Version, "zip")
+	u, err := c.escapedURL(requestedPath, info.Version, "zip")
 	if err != nil {
 		return nil, err
 	}
@@ -113,15 +113,15 @@ func (c *Client) GetZip(ctx context.Context, requestedPath, requestedVersion str
 	return zipReader, nil
 }
 
-func (c *Client) encodedURL(modulePath, version, suffix string) (_ string, err error) {
+func (c *Client) escapedURL(modulePath, version, suffix string) (_ string, err error) {
 	defer func() {
-		derrors.Wrap(&err, "Client.encodedURL(%q, %q, %q)", modulePath, version, suffix)
+		derrors.Wrap(&err, "Client.escapedURL(%q, %q, %q)", modulePath, version, suffix)
 	}()
 
 	if suffix != "info" && suffix != "zip" {
 		return "", errors.New(`suffix must be "info" or "zip"`)
 	}
-	encodedPath, err := module.EncodePath(modulePath)
+	escapedPath, err := module.EscapePath(modulePath)
 	if err != nil {
 		return "", xerrors.Errorf("path: %v: %w", err, derrors.InvalidArgument)
 	}
@@ -129,23 +129,23 @@ func (c *Client) encodedURL(modulePath, version, suffix string) (_ string, err e
 		if suffix != "info" {
 			return "", fmt.Errorf("cannot ask for latest with suffix %q", suffix)
 		}
-		return fmt.Sprintf("%s/%s/@latest", c.url, encodedPath), nil
+		return fmt.Sprintf("%s/%s/@latest", c.url, escapedPath), nil
 	}
-	encodedVersion, err := module.EncodeVersion(version)
+	escapedVersion, err := module.EscapeVersion(version)
 	if err != nil {
 		return "", xerrors.Errorf("version: %v: %w", err, derrors.InvalidArgument)
 	}
-	return fmt.Sprintf("%s/%s/@v/%s.%s", c.url, encodedPath, encodedVersion, suffix), nil
+	return fmt.Sprintf("%s/%s/@v/%s.%s", c.url, escapedPath, escapedVersion, suffix), nil
 }
 
 // ListVersions makes a request to $GOPROXY/<path>/@v/list and returns the
 // resulting version strings.
 func (c *Client) ListVersions(ctx context.Context, modulePath string) ([]string, error) {
-	encodedPath, err := module.EncodePath(modulePath)
+	escapedPath, err := module.EscapePath(modulePath)
 	if err != nil {
-		return nil, xerrors.Errorf("module.EncodePath(%q): %w", modulePath, derrors.InvalidArgument)
+		return nil, xerrors.Errorf("module.EscapePath(%q): %w", modulePath, derrors.InvalidArgument)
 	}
-	u := fmt.Sprintf("%s/%s/@v/list", c.url, encodedPath)
+	u := fmt.Sprintf("%s/%s/@v/list", c.url, escapedPath)
 	var versions []string
 	collect := func(body io.Reader) error {
 		scanner := bufio.NewScanner(body)

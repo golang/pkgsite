@@ -40,6 +40,7 @@ require (
 	github.com/yuin/gopher-lua v0.0.0-20190514113301-1cd887cd7036 // indirect
 	go.opencensus.io v0.22.1
 	golang.org/x/crypto v0.0.0-20190923035154-9ee001bba392
+	golang.org/x/mod v0.1.0
 	golang.org/x/net v0.0.0-20191007182048-72f939374954
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e

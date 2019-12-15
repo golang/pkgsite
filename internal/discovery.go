@@ -9,7 +9,7 @@ import (
 
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/source"
-	"golang.org/x/discovery/internal/thirdparty/module"
+	"golang.org/x/mod/module"
 	"golang.org/x/discovery/internal/version"
 )
 

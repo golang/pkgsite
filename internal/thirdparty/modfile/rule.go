@@ -19,8 +19,8 @@ import (
 	"strings"
 	"unicode"
 
-	"golang.org/x/discovery/internal/thirdparty/module"
-	"golang.org/x/discovery/internal/thirdparty/semver"
+	"golang.org/x/mod/module"
+	"golang.org/x/mod/semver"
 )
 
 // A File is the parsed, interpreted form of a go.mod file.
