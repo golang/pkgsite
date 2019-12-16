@@ -24,7 +24,9 @@
       license file name.
     </p>
     <p>
-      We currently look for licenses in files with the following names:
+      We currently use
+      <a href="https://pkg.go.dev/github.com/google/licensecheck">github.com/google/licensecheck</a>
+      for license detection, and look for licenses in files with the following names:
       {{commaseparate .LicenseFileNames}}.
     </p>
     <p>
@@ -37,9 +39,10 @@
       </ul>
     </p>
     <p>
-      If you believe a package license should have been detected and was not,
-      please check for discrepancies between your license and the OSI text. If
-      you still believe there is an error, please email
+      If you use a package whose license is not detected, please inform the package author.
+      If you are a package author who believes a license for one of your packages
+      should have been detected and was not, please check for discrepancies between your license
+      and the OSI text. If you still believe there is an error, please email
       <a href="mailto:go-discovery-feedback@google.com">go-discovery-feedback@google.com</a>.
     </p>
   </div>
