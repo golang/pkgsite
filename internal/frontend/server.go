@@ -20,6 +20,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/experiment"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/middleware"
@@ -176,21 +177,7 @@ type basePage struct {
 	HTMLTitle   string
 	Query       string
 	Nonce       string
-	Experiments *Experiments
-}
-
-// Experiments is a placeholder for a handle that can be used to interrogate
-// experiments. The actual experiment functionality is being implemented in
-// b/146052411.
-// TODO(b/146052411): make this real
-type Experiments struct{}
-
-// Active reports whether the experiment id is active.
-func (e *Experiments) Active(id string) bool {
-	// Return false so that all experiments are disabled. This is just a
-	// placeholder so that we can merge experiment-gated features while the
-	// experiments middleware is being implemented.
-	return false
+	Experiments *experiment.Set
 }
 
 // licensePolicyPage is used to generate the static license policy page.
@@ -215,9 +202,10 @@ func (s *Server) licensePolicyHandler() http.HandlerFunc {
 // newBasePage returns a base page for the given request and title.
 func newBasePage(r *http.Request, title string) basePage {
 	return basePage{
-		HTMLTitle: title,
-		Query:     searchQuery(r),
-		Nonce:     middleware.NoncePlaceholder,
+		HTMLTitle:   title,
+		Query:       searchQuery(r),
+		Nonce:       middleware.NoncePlaceholder,
+		Experiments: experiment.FromContext(r.Context()),
 	}
 }
 

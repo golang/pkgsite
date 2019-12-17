@@ -28,7 +28,11 @@ func NewContext(ctx context.Context, set map[string]bool) context.Context {
 
 // IsActive reports whether an experiment is active for this set.
 func IsActive(ctx context.Context, experiment string) bool {
-	s := FromContext(ctx)
+	return FromContext(ctx).IsActive(experiment)
+}
+
+// IsActive reports whether an experiment is active for this set.
+func (s *Set) IsActive(experiment string) bool {
 	if s == nil {
 		return false
 	}

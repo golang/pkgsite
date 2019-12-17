@@ -5,7 +5,7 @@
 -->
 
 {{define "search"}}
-  <div class="SearchForm-container{{if (.Experiments.Active "autocomplete")}} Experiment-autoComplete{{end}}">
+  <div class="SearchForm-container{{if (.Experiments.IsActive "experiment-autocomplete")}} Experiment-autoComplete{{end}}">
     <form class="SearchForm" action="/search" role="search" id="AutoComplete-parent" aria-owns="AutoComplete-list">
       <div class="SearchForm-firstRow">
         <input class="SearchForm-input"
@@ -34,7 +34,7 @@
 {{end}}
 
 {{define "header_search"}}
-  <div class="Header-searchForm-container{{if (.Experiments.Active "autocomplete")}} Experiment-autoComplete{{end}}">
+  <div class="Header-searchForm-container{{if (.Experiments.IsActive "experiment-autocomplete")}} Experiment-autoComplete{{end}}">
     <form class="Header-searchForm" action="/search" role="search" id="AutoComplete-parent" aria-owns="AutoComplete-list">
       <div class="SearchForm-firstRow">
         <input class="Header-searchFormInput"
