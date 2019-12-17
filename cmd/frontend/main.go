@@ -5,10 +5,13 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"flag"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/profiler"
@@ -49,13 +52,17 @@ func main() {
 		}
 	}
 
-	var ds internal.DataSource
+	var (
+		ds  internal.DataSource
+		exp internal.ExperimentSource
+	)
 	if *directProxy != "" {
 		proxyClient, err := proxy.New(*directProxy)
 		if err != nil {
 			log.Fatal(ctx, err)
 		}
 		ds = proxydatasource.New(proxyClient)
+		exp = internal.NewLocalExperimentSource(readLocalExperiments(ctx))
 	} else {
 		// Wrap the postgres driver with OpenCensus instrumentation.
 		ocDriver, err := ocsql.Register("postgres", ocsql.WithAllTraceOptions())
@@ -69,6 +76,7 @@ func main() {
 		db := postgres.New(ddb)
 		defer db.Close()
 		ds = db
+		exp = db
 	}
 	var haClient *redis.Client
 	if config.RedisHAHost() != "" {
@@ -114,6 +122,11 @@ func main() {
 		log.Fatal(ctx, err)
 	}
 	requestLogger := getLogger(ctx)
+	experimenter, err := middleware.NewExperimenter(ctx, 1*time.Minute, exp, requestLogger)
+	if err != nil {
+		log.Fatal(ctx, err)
+	}
+
 	mw := middleware.Chain(
 		middleware.RequestLog(requestLogger),
 		middleware.Quota(config.Quota()),
@@ -121,6 +134,7 @@ func main() {
 		middleware.LatestVersion(server.LatestVersion), // must come before caching for version badge to work
 		middleware.Panic(panicHandler),
 		middleware.Timeout(54*time.Second),
+		middleware.Experiment(experimenter),
 	)
 
 	addr := config.HostAddr("localhost:8080")
@@ -137,4 +151,52 @@ func getLogger(ctx context.Context) middleware.Logger {
 		return logger
 	}
 	return middleware.LocalLogger{}
+}
+
+// Read a file of experiments used to initialize the local experiment source
+// for use in direct proxy mode.
+// Format of the file: each line is
+//     name,rollout
+// For each experiment.
+func readLocalExperiments(ctx context.Context) []*internal.Experiment {
+	filename := config.GetEnv("GO_DISCOVERY_LOCAL_EXPERIMENTS", "")
+	if filename == "" {
+		return nil
+	}
+	f, err := os.Open(filename)
+	if err != nil {
+		log.Fatal(ctx, err)
+	}
+	defer f.Close()
+	scan := bufio.NewScanner(f)
+	var experiments []*internal.Experiment
+	log.Infof(ctx, "reading experiments from %q for local development", filename)
+	for scan.Scan() {
+		line := strings.TrimSpace(scan.Text())
+		parts := strings.SplitN(line, ",", 3)
+		if len(parts) != 2 {
+			log.Fatalf(ctx, "invalid experiment in file: %q", line)
+		}
+		name := parts[0]
+		if name == "" {
+			log.Fatalf(ctx, "invalid experiment in file (name cannot be empty): %q", line)
+		}
+		rollout, err := strconv.ParseUint(parts[1], 10, 0)
+		if err != nil {
+			log.Fatalf(ctx, "invalid experiment in file (invalid rollout): %v", err)
+		}
+		if rollout > 100 {
+			log.Fatalf(ctx, "invalid experiment in file (rollout must be between 0 - 100): %q", line)
+		}
+		experiments = append(experiments, &internal.Experiment{
+			Name:    name,
+			Rollout: uint(rollout),
+		})
+		log.Infof(ctx, "experiment %q: rollout = %d", name, rollout)
+	}
+	if err := scan.Err(); err != nil {
+		log.Fatalf(ctx, "scanning %s: %v", filename, err)
+	}
+	log.Infof(ctx, "found %d experiment(s)", len(experiments))
+	return experiments
 }

@@ -17,7 +17,8 @@ type Set struct {
 
 // FromContent returns the set of experiments enabled for the content.
 func FromContext(ctx context.Context) *Set {
-	return ctx.Value(contextKey{}).(*Set)
+	s, _ := ctx.Value(contextKey{}).(*Set)
+	return s
 }
 
 // NewContext stores the provided experiment set in the context.

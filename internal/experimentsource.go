@@ -15,3 +15,19 @@ type ExperimentSource interface {
 	// ExperimentSource.
 	GetActiveExperiments(ctx context.Context) ([]*Experiment, error)
 }
+
+// LocalExperimentSource is used when developing locally using the direct proxy
+// mode.
+type LocalExperimentSource struct {
+	experiments []*Experiment
+}
+
+// NewLocalExperimentSource returns a LocalExperimentSource with the provided experiments.
+func NewLocalExperimentSource(experiments []*Experiment) *LocalExperimentSource {
+	return &LocalExperimentSource{experiments: experiments}
+}
+
+// GetActiveExperiments returns the experiments for the given LocalExperimentSource.
+func (e *LocalExperimentSource) GetActiveExperiments(ctx context.Context) ([]*Experiment, error) {
+	return e.experiments, nil
+}
