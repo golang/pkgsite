@@ -49,9 +49,9 @@ func fetchMeta(ctx context.Context, client *http.Client, importPath string) (_ *
 	}
 	uri = uri + "?go-get=1"
 
-	resp, err := doURL(ctx, client, "GET", "https://"+uri)
+	resp, err := doURL(ctx, client, "GET", "https://"+uri, true)
 	if err != nil {
-		resp, err = doURL(ctx, client, "GET", "http://"+uri)
+		resp, err = doURL(ctx, client, "GET", "http://"+uri, false)
 		if err != nil {
 			return nil, err
 		}

@@ -350,7 +350,7 @@ func adjustVersionedModuleDirectory(ctx context.Context, client *http.Client, in
 	}
 	// moduleDir does have a "/vN" for N > 1. To see if that is the actual directory,
 	// fetch the go.mod file from it.
-	res, err := doURL(ctx, client, "HEAD", info.FileURL("go.mod"))
+	res, err := doURL(ctx, client, "HEAD", info.FileURL("go.mod"), true)
 	// On any failure, assume that the right directory is the one without the version.
 	if err != nil {
 		info.moduleDir = dirWithoutVersion
@@ -515,9 +515,9 @@ func commitFromVersion(vers, relativeModulePath string) string {
 }
 
 // doURL makes an HTTP request using the given url and method. It returns an
-// error if the request returns an error or if any status code other than 200 is
-// returned.
-func doURL(ctx context.Context, client *http.Client, method, url string) (_ *http.Response, err error) {
+// error if the request returns an error. If only200 is true, it also returns an
+// error if any status code other than 200 is returned.
+func doURL(ctx context.Context, client *http.Client, method, url string, only200 bool) (_ *http.Response, err error) {
 	defer derrors.Wrap(&err, "doURL(ctx, client, %q, %q)", method, url)
 
 	req, err := http.NewRequest(method, url, nil)
@@ -528,7 +528,7 @@ func doURL(ctx context.Context, client *http.Client, method, url string) (_ *htt
 	if err != nil {
 		return nil, err
 	}
-	if resp.StatusCode != 200 {
+	if only200 && resp.StatusCode != 200 {
 		resp.Body.Close()
 		return nil, fmt.Errorf("status %s", resp.Status)
 	}

@@ -249,6 +249,16 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/boltdb/bolt/blob/v1.3.0/doc.go#L1",
 			"https://raw.githubusercontent.com/boltdb/bolt/v1.3.0/doc.go",
 		},
+		{
+			"gonum.org",
+			"gonum.org/v1/gonum", "v0.6.1", "doc.go",
+
+			"https://github.com/gonum/gonum",
+			"https://github.com/gonum/gonum/tree/v0.6.1",
+			"https://github.com/gonum/gonum/blob/v0.6.1/doc.go",
+			"https://github.com/gonum/gonum/blob/v0.6.1/doc.go#L1",
+			"https://raw.githubusercontent.com/gonum/gonum/v0.6.1/doc.go",
+		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
 			info, err := ModuleInfo(context.Background(), client, test.modulePath, test.version)
