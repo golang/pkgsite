@@ -5,6 +5,7 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -34,7 +35,7 @@ func (l LocalLogger) Log(entry logging.Entry) {
 		}
 	}
 	msg.WriteString(fmt.Sprint(entry.Payload))
-	log.Info(msg.String())
+	log.Info(context.Background(), msg.String())
 }
 
 // RequestLog returns a middleware that logs each incoming requests using the
@@ -57,13 +58,15 @@ type handler struct {
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
+	traceID := r.Header.Get("X-Cloud-Trace-Context")
 	h.logger.Log(logging.Entry{
 		HTTPRequest: &logging.HTTPRequest{Request: r},
 		Payload:     "request start",
 		Severity:    logging.Info,
+		Trace:       traceID,
 	})
 	w2 := &responseWriter{ResponseWriter: w}
-	h.delegate.ServeHTTP(w2, r)
+	h.delegate.ServeHTTP(w2, r.WithContext(log.NewContextWithTraceID(r.Context(), traceID)))
 	h.logger.Log(logging.Entry{
 		HTTPRequest: &logging.HTTPRequest{
 			Request: r,
@@ -72,6 +75,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		},
 		Payload:  "request end",
 		Severity: logging.Info,
+		Trace:    traceID,
 	})
 }
 

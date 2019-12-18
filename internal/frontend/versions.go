@@ -99,7 +99,7 @@ func fetchPackageVersionsDetails(ctx context.Context, ds internal.DataSource, pk
 		if seriesPath := v.SeriesPath(); strings.HasPrefix(pkg.V1Path, seriesPath) || seriesPath == stdlib.ModulePath {
 			filteredVersions = append(filteredVersions, v)
 		} else {
-			log.Errorf("got version with mismatching series: %q", seriesPath)
+			log.Errorf(ctx, "got version with mismatching series: %q", seriesPath)
 		}
 	}
 
@@ -278,7 +278,7 @@ func (t *versionTree) forEach(f func(string, *versionTree)) {
 func formatVersion(v string) string {
 	vType, err := version.ParseType(v)
 	if err != nil {
-		log.Errorf("Error parsing version %q: %v", v, err)
+		log.Errorf(context.TODO(), "Error parsing version %q: %v", v, err)
 		return v
 	}
 	pre := semver.Prerelease(v)
@@ -331,7 +331,7 @@ func linkVersion(v string, modulePath string) string {
 func goTagForVersion(v string) string {
 	tag, err := stdlib.TagForVersion(v)
 	if err != nil {
-		log.Errorf("goTagForVersion(%q): %v", v, err)
+		log.Errorf(context.TODO(), "goTagForVersion(%q): %v", v, err)
 		return "unknown"
 	}
 	return tag

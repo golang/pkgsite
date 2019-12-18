@@ -6,6 +6,7 @@
 package dcensus
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -82,7 +83,7 @@ func Init(views ...*view.View) error {
 	if err := view.Register(views...); err != nil {
 		return fmt.Errorf("dcensus.Init(views): view.Register: %v", err)
 	}
-	exportToStackdriver()
+	exportToStackdriver(context.Background())
 	return nil
 }
 
@@ -112,9 +113,9 @@ func (r *monitoredResource) MonitoredResource() (resType string, labels map[stri
 
 // ExportToStackdriver checks to see if the process is running in a GCP
 // environment, and if so configures exporting to stackdriver.
-func exportToStackdriver() {
+func exportToStackdriver(ctx context.Context) {
 	if config.ProjectID() == "" {
-		log.Infof("Not exporting to StackDriver: GOOGLE_CLOUD_PROJECT is unset.")
+		log.Infof(ctx, "Not exporting to StackDriver: GOOGLE_CLOUD_PROJECT is unset.")
 		return
 	}
 
@@ -124,7 +125,7 @@ func exportToStackdriver() {
 
 	viewExporter, err := NewViewExporter()
 	if err != nil {
-		log.Fatalf("error creating view exporter: %v", err)
+		log.Fatalf(ctx, "error creating view exporter: %v", err)
 	}
 	view.RegisterExporter(viewExporter)
 
@@ -138,7 +139,7 @@ func exportToStackdriver() {
 		TraceSpansBufferMaxBytes: 32 * 1024 * 1024, // 32 MiB
 	})
 	if err != nil {
-		log.Fatalf("error creating trace exporter: %v", err)
+		log.Fatalf(ctx, "error creating trace exporter: %v", err)
 	}
 	trace.RegisterExporter(traceExporter)
 }

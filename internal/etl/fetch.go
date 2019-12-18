@@ -77,7 +77,7 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 		if code < 500 {
 			logf = log.Infof
 		}
-		logf("Error executing fetch: %v (code %d)", fetchErr, code)
+		logf(ctx, "Error executing fetch: %v (code %d)", fetchErr, code)
 	}
 	if hasIncompletePackages {
 		code = hasIncompletePackagesCode
@@ -87,9 +87,9 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 	
 	
 	if code == http.StatusNotFound || code == http.StatusGone {
-		log.Infof("%s@%s: proxy said 404/410, deleting", modulePath, version)
+		log.Infof(ctx, "%s@%s: proxy said 404/410, deleting", modulePath, version)
 		if err := db.DeleteVersion(ctx, nil, modulePath, version); err != nil {
-			log.Error(err)
+			log.Error(ctx, err)
 			return http.StatusInternalServerError, err
 		}
 	}
@@ -100,13 +100,13 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 
 	// TODO(b/139178863): Split UpsertVersionState into InsertVersionState and UpdateVersionState.
 	if err := db.UpsertVersionState(ctx, modulePath, version, config.AppVersionLabel(), time.Time{}, code, fetchErr); err != nil {
-		log.Error(err)
+		log.Error(ctx, err)
 		if fetchErr != nil {
 			err = fmt.Errorf("error updating version state: %v, original error: %v", err, fetchErr)
 		}
 		return http.StatusInternalServerError, err
 	}
-	log.Infof("Updated version state for %s@%s: code=%d, hasIncompletePackages=%t err=%v",
+	log.Infof(ctx, "Updated version state for %s@%s: code=%d, hasIncompletePackages=%t err=%v",
 		modulePath, version, code, hasIncompletePackages, fetchErr)
 	return code, fetchErr
 }
@@ -126,7 +126,7 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, version string
 	defer derrors.Wrap(&err, "fetchAndInsertVersion(%q, %q)", modulePath, version)
 
 	if ProxyRemoved[modulePath+"@"+version] {
-		log.Infof("not fetching %s@%s because it is on the ProxyRemoved list", modulePath, version)
+		log.Infof(parentCtx, "not fetching %s@%s because it is on the ProxyRemoved list", modulePath, version)
 		return false, derrors.Excluded
 	}
 
@@ -151,11 +151,11 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, version string
 	if err != nil {
 		return false, err
 	}
-	log.Infof("Fetched %s@%s", v.ModulePath, v.Version)
+	log.Infof(ctx, "Fetched %s@%s", v.ModulePath, v.Version)
 	if err = db.InsertVersion(ctx, v); err != nil {
 		return false, err
 	}
-	log.Infof("Inserted %s@%s", v.ModulePath, v.Version)
+	log.Infof(ctx, "Inserted %s@%s", v.ModulePath, v.Version)
 	return hasIncompletePackages, nil
 }
 
@@ -201,7 +201,7 @@ func processZipFile(ctx context.Context, modulePath string, versionType version.
 
 	sourceInfo, err := source.ModuleInfo(ctx, httpClient, modulePath, version)
 	if err != nil {
-		log.Error(err)
+		log.Error(ctx, err)
 	}
 	readmeFilePath, readmeContents, err := extractReadmeFromZip(modulePath, version, zipReader)
 	if err != nil && err != errReadmeNotFound {
@@ -209,9 +209,9 @@ func processZipFile(ctx context.Context, modulePath string, versionType version.
 	}
 	licenses, err := license.Detect(moduleVersionDir(modulePath, version), zipReader)
 	if err != nil {
-		log.Error(err)
+		log.Error(ctx, err)
 	}
-	packages, hasIncompletePackages, err := extractPackagesFromZip(modulePath, version, zipReader, license.NewMatcher(licenses), sourceInfo)
+	packages, hasIncompletePackages, err := extractPackagesFromZip(ctx, modulePath, version, zipReader, license.NewMatcher(licenses), sourceInfo)
 	if err == errModuleContainsNoPackages {
 		return nil, false, fmt.Errorf("%v: %w", errModuleContainsNoPackages.Error(), derrors.BadModule)
 	}
@@ -276,7 +276,7 @@ func hasFilename(file string, expectedFile string) bool {
 // limitations of this site. The two limitations are a maximum file size
 // (maxFileSize), and the particular set of build contexts we consider
 // (goEnvs).
-func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher license.Matcher, sourceInfo *source.Info) (_ []*internal.Package, hasIncompletePackages bool, err error) {
+func extractPackagesFromZip(ctx context.Context, modulePath, version string, r *zip.Reader, matcher license.Matcher, sourceInfo *source.Info) (_ []*internal.Package, hasIncompletePackages bool, err error) {
 
 	defer func() {
 		if e := recover(); e != nil {
@@ -343,7 +343,7 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 			continue
 		}
 		if f.UncompressedSize64 > maxFileSize {
-			log.Infof("Unable to process %s: file size %d exceeds max limit %d",
+			log.Infof(ctx, "Unable to process %s: file size %d exceeds max limit %d",
 				f.Name, f.UncompressedSize64, maxFileSize)
 			incompleteDirs[innerPath] = true
 			continue
@@ -362,16 +362,16 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 	for innerPath, goFiles := range dirs {
 		if incompleteDirs[innerPath] {
 			// Something went wrong when processing this directory, so we skip.
-			log.Infof("Skipping %q because it is incomplete", innerPath)
+			log.Infof(ctx, "Skipping %q because it is incomplete", innerPath)
 			continue
 		}
 		pkg, err := loadPackage(goFiles, innerPath, modulePath, sourceInfo)
 		if bpe := (*BadPackageError)(nil); errors.As(err, &bpe) {
 			// TODO(b/133187024): Record and display this information instead of just skipping.
-			log.Infof("Skipping %q because of *BadPackageError: %v\n", path.Join(modulePath, innerPath), err)
+			log.Infof(ctx, "Skipping %q because of *BadPackageError: %v\n", path.Join(modulePath, innerPath), err)
 			continue
 		} else if lpe := (*LargePackageError)(nil); errors.As(err, &lpe) {
-			log.Infof("Skipping %q because its rendered documentation HTML is too large", innerPath)
+			log.Infof(ctx, "Skipping %q because its rendered documentation HTML is too large", innerPath)
 			incompleteDirs[innerPath] = true
 			continue
 		} else if err != nil {

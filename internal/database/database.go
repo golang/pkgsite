@@ -62,27 +62,27 @@ func (db *DB) Close() error {
 
 // Exec executes a SQL statement.
 func (db *DB) Exec(ctx context.Context, query string, args ...interface{}) (res sql.Result, err error) {
-	defer logQuery(query, args)(&err)
+	defer logQuery(ctx, query, args)(&err)
 
 	return db.db.ExecContext(ctx, query, args...)
 }
 
 // ExecTx runs a query in a transaction.
 func ExecTx(ctx context.Context, tx *sql.Tx, query string, args ...interface{}) (res sql.Result, err error) {
-	defer logQuery(query, args)(&err)
+	defer logQuery(ctx, query, args)(&err)
 
 	return tx.ExecContext(ctx, query, args...)
 }
 
 // Query runs the DB query.
 func (db *DB) Query(ctx context.Context, query string, args ...interface{}) (_ *sql.Rows, err error) {
-	defer logQuery(query, args)(&err)
+	defer logQuery(ctx, query, args)(&err)
 	return db.db.QueryContext(ctx, query, args...)
 }
 
 // QueryRow runs the query and returns a single row.
 func (db *DB) QueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
-	defer logQuery(query, args)(nil)
+	defer logQuery(ctx, query, args)(nil)
 	return db.db.QueryRowContext(ctx, query, args...)
 }
 
@@ -224,7 +224,7 @@ type queryEndLogEntry struct {
 	Error           string `json:",omitempty"`
 }
 
-func logQuery(query string, args []interface{}) func(*error) {
+func logQuery(ctx context.Context, query string, args []interface{}) func(*error) {
 	if QueryLoggingDisabled {
 		return func(*error) {}
 	}
@@ -275,12 +275,12 @@ func logQuery(query string, args []interface{}) func(*error) {
 	}
 	argString := strings.Join(argStrings, ", ")
 
-	log.Debugf("%s %s args=%s", uid, query, argString)
+	log.Debugf(ctx, "%s %s args=%s", uid, query, argString)
 	start := time.Now()
 	return func(errp *error) {
 		dur := time.Since(start)
 		if errp == nil { // happens with queryRow
-			log.Debugf("%s done", uid)
+			log.Debugf(ctx, "%s done", uid)
 		} else {
 			derrors.Wrap(errp, "DB running query %s", uid)
 			entry := queryEndLogEntry{
@@ -290,10 +290,10 @@ func logQuery(query string, args []interface{}) func(*error) {
 				DurationSeconds: dur.Seconds(),
 			}
 			if *errp == nil {
-				log.Debug(entry)
+				log.Debug(ctx, entry)
 			} else {
 				entry.Error = (*errp).Error()
-				log.Error(entry)
+				log.Error(ctx, entry)
 			}
 		}
 	}

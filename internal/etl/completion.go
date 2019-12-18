@@ -23,9 +23,10 @@ const popularCutoff = 50
 // handleUpdateRedisIndexes scans recently modified search documents, and
 // updates redis auto completion indexes with data from these documents.
 func (s *Server) handleUpdateRedisIndexes(w http.ResponseWriter, r *http.Request) {
-	err := updateRedisIndexes(r.Context(), s.db.Underlying(), s.redisClient, popularCutoff)
+	ctx := r.Context()
+	err := updateRedisIndexes(ctx, s.db.Underlying(), s.redisClient, popularCutoff)
 	if err != nil {
-		log.Errorf("error updating redis indexes: %v", err)
+		log.Errorf(ctx, "error updating redis indexes: %v", err)
 		code := http.StatusInternalServerError
 		http.Error(w, http.StatusText(code), code)
 		return
@@ -111,10 +112,10 @@ func updateRedisIndexes(ctx context.Context, db *database.DB, redisClient *redis
 	// Always clean up: DEL succeeds even if the keys have been renamed.
 	defer func() {
 		if _, err := redisClient.Del(keyPop).Result(); err != nil {
-			log.Errorf("redisClient.Del(%q): %v", keyPop, err)
+			log.Errorf(ctx, "redisClient.Del(%q): %v", keyPop, err)
 		}
 		if _, err := redisClient.Del(keyRem).Result(); err != nil {
-			log.Errorf("redisClient.Del(%q): %v", keyRem, err)
+			log.Errorf(ctx, "redisClient.Del(%q): %v", keyRem, err)
 		}
 	}()
 

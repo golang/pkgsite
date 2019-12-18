@@ -22,7 +22,7 @@ func (db *DB) IsExcluded(ctx context.Context, path string) (_ bool, err error) {
 	err = row.Scan(&prefix)
 	switch err {
 	case nil:
-		log.Infof("path %q matched excluded prefix %q", path, prefix)
+		log.Infof(ctx, "path %q matched excluded prefix %q", path, prefix)
 		return true, nil
 	case sql.ErrNoRows:
 		return false, nil

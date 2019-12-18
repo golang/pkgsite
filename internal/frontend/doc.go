@@ -75,7 +75,7 @@ func fileSource(modulePath, version, filePath string) string {
 		// This should never happen unless there is a bug in
 		// stdlib.TagForVersion. In which case, fallback to the default
 		// zipFilePath.
-		log.Errorf("fileSource: %v", err)
+		log.Errorf(context.TODO(), "fileSource: %v", err)
 		return fmt.Sprintf("%s/+/refs/heads/master/%s", root, filePath)
 	}
 	return fmt.Sprintf("%s/+/refs/tags/%s/%s", root, tag, filePath)

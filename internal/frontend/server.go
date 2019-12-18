@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"html/template"
 	"io"
@@ -56,7 +57,7 @@ func NewServer(ds internal.DataSource, cmplClient *redis.Client, staticPath stri
 		reloadTemplates: reloadTemplates,
 		templates:       ts,
 	}
-	errorPageBytes, err := s.renderErrorPage(http.StatusInternalServerError, nil)
+	errorPageBytes, err := s.renderErrorPage(context.Background(), http.StatusInternalServerError, nil)
 	if err != nil {
 		return nil, fmt.Errorf("s.renderErrorPage(http.StatusInternalServerError, nil): %v", err)
 	}
@@ -111,22 +112,22 @@ const (
 
 // packageTTL assigns the cache TTL for package detail requests.
 func packageTTL(r *http.Request) time.Duration {
-	return detailsTTL(r.URL.Path, r.FormValue("tab"))
+	return detailsTTL(r.Context(), r.URL.Path, r.FormValue("tab"))
 }
 
 // moduleTTL assigns the cache TTL for /mod/ requests.
 func moduleTTL(r *http.Request) time.Duration {
 	urlPath := strings.TrimPrefix(r.URL.Path, "/mod")
-	return detailsTTL(urlPath, r.FormValue("tab"))
+	return detailsTTL(r.Context(), urlPath, r.FormValue("tab"))
 }
 
-func detailsTTL(urlPath, tab string) time.Duration {
+func detailsTTL(ctx context.Context, urlPath, tab string) time.Duration {
 	if urlPath == "/" {
 		return defaultTTL
 	}
 	_, _, version, err := parseDetailsURLPath(urlPath)
 	if err != nil {
-		log.Errorf("falling back to default module TTL: %v", err)
+		log.Errorf(ctx, "falling back to default module TTL: %v", err)
 		return defaultTTL
 	}
 	if version == internal.LatestVersion {
@@ -166,7 +167,7 @@ func suggestedSearch(userInput string) template.HTML {
 // content.
 func (s *Server) staticPageHandler(templateName, title string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.servePage(w, templateName, newBasePage(r, title))
+		s.servePage(r.Context(), w, templateName, newBasePage(r, title))
 	}
 }
 
@@ -207,7 +208,7 @@ func (s *Server) licensePolicyHandler() http.HandlerFunc {
 			LicenseFileNames: fileNames,
 			LicenseTypes:     licenses,
 		}
-		s.servePage(w, "license_policy.tmpl", page)
+		s.servePage(r.Context(), w, "license_policy.tmpl", page)
 	})
 }
 
@@ -244,14 +245,14 @@ type errorPage struct {
 func (s *Server) PanicHandler() (_ http.HandlerFunc, err error) {
 	defer derrors.Wrap(&err, "PanicHandler")
 	status := http.StatusInternalServerError
-	buf, err := s.renderErrorPage(status, nil)
+	buf, err := s.renderErrorPage(context.Background(), status, nil)
 	if err != nil {
 		return nil, err
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(status)
 		if _, err := io.Copy(w, bytes.NewReader(buf)); err != nil {
-			log.Errorf("Error copying panic template to ResponseWriter: %v", err)
+			log.Errorf(r.Context(), "Error copying panic template to ResponseWriter: %v", err)
 		}
 	}, nil
 }
@@ -262,21 +263,21 @@ func (s *Server) serveErrorPage(w http.ResponseWriter, r *http.Request, status i
 			basePage: newBasePage(r, ""),
 		}
 	}
-	buf, err := s.renderErrorPage(status, page)
+	buf, err := s.renderErrorPage(r.Context(), status, page)
 	if err != nil {
-		log.Errorf("s.renderErrorPage(w, %d, %v): %v", status, page, err)
+		log.Errorf(r.Context(), "s.renderErrorPage(w, %d, %v): %v", status, page, err)
 		buf = s.errorPage
 		status = http.StatusInternalServerError
 	}
 
 	w.WriteHeader(status)
 	if _, err := io.Copy(w, bytes.NewReader(buf)); err != nil {
-		log.Errorf("Error copying template %q buffer to ResponseWriter: %v", "error.tmpl", err)
+		log.Errorf(r.Context(), "Error copying template %q buffer to ResponseWriter: %v", "error.tmpl", err)
 	}
 }
 
 // renderErrorPage executes error.tmpl with the given errorPage
-func (s *Server) renderErrorPage(status int, page *errorPage) ([]byte, error) {
+func (s *Server) renderErrorPage(ctx context.Context, status int, page *errorPage) ([]byte, error) {
 	statusInfo := fmt.Sprintf("%d %s", status, http.StatusText(status))
 	if page == nil {
 		page = &errorPage{
@@ -293,25 +294,25 @@ func (s *Server) renderErrorPage(status int, page *errorPage) ([]byte, error) {
 	if page.HTMLTitle == "" {
 		page.HTMLTitle = statusInfo
 	}
-	return s.renderPage("error.tmpl", page)
+	return s.renderPage(ctx, "error.tmpl", page)
 }
 
 // servePage is used to execute all templates for a *Server.
-func (s *Server) servePage(w http.ResponseWriter, templateName string, page interface{}) {
-	buf, err := s.renderPage(templateName, page)
+func (s *Server) servePage(ctx context.Context, w http.ResponseWriter, templateName string, page interface{}) {
+	buf, err := s.renderPage(ctx, templateName, page)
 	if err != nil {
-		log.Errorf("s.renderPage(%q, %+v): %v", templateName, page, err)
+		log.Errorf(ctx, "s.renderPage(%q, %+v): %v", templateName, page, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		buf = s.errorPage
 	}
 	if _, err := io.Copy(w, bytes.NewReader(buf)); err != nil {
-		log.Errorf("Error copying template %q buffer to ResponseWriter: %v", templateName, err)
+		log.Errorf(ctx, "Error copying template %q buffer to ResponseWriter: %v", templateName, err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
 
 // renderPage executes the given templateName with page.
-func (s *Server) renderPage(templateName string, page interface{}) ([]byte, error) {
+func (s *Server) renderPage(ctx context.Context, templateName string, page interface{}) ([]byte, error) {
 	if s.reloadTemplates {
 		s.mu.Lock()
 		defer s.mu.Unlock()
@@ -328,7 +329,7 @@ func (s *Server) renderPage(templateName string, page interface{}) ([]byte, erro
 		return nil, fmt.Errorf("BUG: s.templates[%q] not found", templateName)
 	}
 	if err := tmpl.Execute(&buf, page); err != nil {
-		log.Errorf("Error executing page template %q: %v", templateName, err)
+		log.Errorf(ctx, "Error executing page template %q: %v", templateName, err)
 		return nil, err
 
 	}

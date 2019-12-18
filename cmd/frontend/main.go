@@ -39,13 +39,13 @@ func main() {
 	ctx := context.Background()
 
 	if err := config.Init(ctx); err != nil {
-		log.Fatal(err)
+		log.Fatal(ctx, err)
 	}
 	config.Dump(os.Stderr)
 
 	if config.UseProfiler() {
 		if err := profiler.Start(profiler.Config{}); err != nil {
-			log.Fatalf("profiler.Start: %v", err)
+			log.Fatalf(ctx, "profiler.Start: %v", err)
 		}
 	}
 
@@ -53,18 +53,18 @@ func main() {
 	if *directProxy != "" {
 		proxyClient, err := proxy.New(*directProxy)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal(ctx, err)
 		}
 		ds = proxydatasource.New(proxyClient)
 	} else {
 		// Wrap the postgres driver with OpenCensus instrumentation.
 		ocDriver, err := ocsql.Register("postgres", ocsql.WithAllTraceOptions())
 		if err != nil {
-			log.Fatalf("unable to register the ocsql driver: %v\n", err)
+			log.Fatalf(ctx, "unable to register the ocsql driver: %v\n", err)
 		}
 		ddb, err := database.Open(ocDriver, config.DBConnInfo())
 		if err != nil {
-			log.Fatalf("database.Open: %v", err)
+			log.Fatalf(ctx, "database.Open: %v", err)
 		}
 		db := postgres.New(ddb)
 		defer db.Close()
@@ -78,7 +78,7 @@ func main() {
 	}
 	server, err := frontend.NewServer(ds, haClient, *staticPath, *reloadTemplates)
 	if err != nil {
-		log.Fatalf("frontend.NewServer: %v", err)
+		log.Fatalf(ctx, "frontend.NewServer: %v", err)
 	}
 	router := dcensus.NewRouter(frontend.TagRoute)
 	var cacheClient *redis.Client
@@ -97,21 +97,21 @@ func main() {
 		middleware.QuotaResultCount,
 	)
 	if err := dcensus.Init(views...); err != nil {
-		log.Fatal(err)
+		log.Fatal(ctx, err)
 	}
 	// We are not currently forwarding any ports on AppEngine, so serving debug
 	// information is broken.
 	if !config.OnAppEngine() {
 		dcensusServer, err := dcensus.NewServer()
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal(ctx, err)
 		}
 		go http.ListenAndServe(config.DebugAddr("localhost:8081"), dcensusServer)
 	}
 
 	panicHandler, err := server.PanicHandler()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(ctx, err)
 	}
 	requestLogger := getLogger(ctx)
 	mw := middleware.Chain(
@@ -124,15 +124,15 @@ func main() {
 	)
 
 	addr := config.HostAddr("localhost:8080")
-	log.Infof("Listening on addr %s", addr)
-	log.Fatal(http.ListenAndServe(addr, mw(router)))
+	log.Infof(ctx, "Listening on addr %s", addr)
+	log.Fatal(ctx, http.ListenAndServe(addr, mw(router)))
 }
 
 func getLogger(ctx context.Context) middleware.Logger {
 	if config.OnAppEngine() {
 		logger, err := log.UseStackdriver(ctx, "frontend-log")
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal(ctx, err)
 		}
 		return logger
 	}

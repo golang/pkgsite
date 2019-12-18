@@ -165,7 +165,7 @@ func init() {
 	names := map[string]bool{}
 	for _, p := range probes {
 		if names[p.Name] {
-			log.Fatalf("duplicate probe name %q", p.Name)
+			log.Fatalf(context.Background(), "duplicate probe name %q", p.Name)
 		}
 		names[p.Name] = true
 	}
@@ -208,21 +208,21 @@ func main() {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
+	ctx := context.Background()
 
 	baseURL = config.GetEnv("PROBER_BASE_URL", "")
 	if baseURL == "" {
-		log.Fatal("must set PROBER_BASE_URL")
+		log.Fatal(ctx, "must set PROBER_BASE_URL")
 	}
-	log.Infof("base URL %s", baseURL)
+	log.Infof(ctx, "base URL %s", baseURL)
 
-	ctx := context.Background()
 	if err := config.Init(ctx); err != nil {
-		log.Fatal(err)
+		log.Fatal(ctx, err)
 	}
 	config.Dump(os.Stderr)
 
 	if _, err := log.UseStackdriver(ctx, "prober-log"); err != nil {
-		log.Fatal(err)
+		log.Fatal(ctx, err)
 	}
 
 	var (
@@ -233,29 +233,29 @@ func main() {
 	if *credsFile != "" {
 		jsonCreds, err = ioutil.ReadFile(*credsFile)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal(ctx, err)
 		}
 	} else {
 		// TODO(b/140948204): remove
 		const secretName = "load-test-agent-creds"
-		log.Infof("getting secret %q", secretName)
+		log.Infof(ctx, "getting secret %q", secretName)
 		s, err := secrets.Get(context.Background(), secretName)
 		if err != nil {
-			log.Fatalf("secrets.Get: %v", err)
+			log.Fatalf(ctx, "secrets.Get: %v", err)
 		}
 		jsonCreds = []byte(s)
 	}
 	client, err = auth.NewClient(jsonCreds)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(ctx, err)
 	}
 
 	if err := view.Register(firstByteLatencyDistribution, probeCount); err != nil {
-		log.Fatalf("view.Register: %v", err)
+		log.Fatalf(ctx, "view.Register: %v", err)
 	}
 	metricExporter, err = dcensus.NewViewExporter()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(ctx, err)
 	}
 
 	// To export metrics immediately, we use a metric reader.  See runProbes, below.
@@ -267,8 +267,8 @@ func main() {
 	http.HandleFunc("/", handleProbe)
 
 	addr := config.HostAddr("localhost:8080")
-	log.Infof("Listening on addr %s", addr)
-	log.Fatal(http.ListenAndServe(addr, nil))
+	log.Infof(ctx, "Listening on addr %s", addr)
+	log.Fatal(ctx, http.ListenAndServe(addr, nil))
 }
 
 // ProbeStatus records the result if a single probe attempt
@@ -279,7 +279,7 @@ type ProbeStatus struct {
 }
 
 func handleProbe(w http.ResponseWriter, r *http.Request) {
-	statuses := runProbes()
+	statuses := runProbes(r.Context())
 	var data = struct {
 		Start    time.Time
 		BaseURL  string
@@ -298,24 +298,24 @@ func handleProbe(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func runProbes() []*ProbeStatus {
+func runProbes(ctx context.Context) []*ProbeStatus {
 	var statuses []*ProbeStatus
 	for _, p := range probes {
-		s := runProbe(p)
+		s := runProbe(ctx, p)
 		statuses = append(statuses, s)
 	}
 	metricReader.ReadAndExport(metricExporter)
 	metricExporter.Flush()
-	log.Info("metrics exported to StackDriver")
+	log.Info(ctx, "metrics exported to StackDriver")
 	return statuses
 }
 
-func runProbe(p *Probe) *ProbeStatus {
+func runProbe(ctx context.Context, p *Probe) *ProbeStatus {
 	status := &ProbeStatus{Probe: p}
 	url := baseURL + "/" + p.RelativeURL
-	log.Infof("running %s = %s", p.Name, url)
+	log.Infof(ctx, "running %s = %s", p.Name, url)
 	defer func() {
-		log.Infof("%s in %dms", status.Text, status.Latency)
+		log.Infof(ctx, "%s in %dms", status.Text, status.Latency)
 	}()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)

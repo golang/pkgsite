@@ -47,65 +47,65 @@ func main() {
 	ctx := context.Background()
 
 	if err := config.Init(ctx); err != nil {
-		log.Fatal(err)
+		log.Fatal(ctx, err)
 	}
 	config.Dump(os.Stderr)
 
 	if config.UseProfiler() {
 		if err := profiler.Start(profiler.Config{}); err != nil {
-			log.Fatalf("profiler.Start: %v", err)
+			log.Fatalf(ctx, "profiler.Start: %v", err)
 		}
 	}
 
-	readProxyRemoved()
+	readProxyRemoved(ctx)
 
 	// Wrap the postgres driver with OpenCensus instrumentation.
 	driverName, err := ocsql.Register("postgres", ocsql.WithAllTraceOptions())
 	if err != nil {
-		log.Fatalf("unable to register the ocsql driver: %v\n", err)
+		log.Fatalf(ctx, "unable to register the ocsql driver: %v\n", err)
 	}
 	ddb, err := database.Open(driverName, config.DBConnInfo())
 	if err != nil {
-		log.Fatalf("database.Open: %v", err)
+		log.Fatalf(ctx, "database.Open: %v", err)
 	}
 	db := postgres.New(ddb)
 	defer db.Close()
 
 	indexClient, err := index.New(config.IndexURL())
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(ctx, err)
 	}
 	proxyClient, err := proxy.New(config.ProxyURL())
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(ctx, err)
 	}
 	fetchQueue := queue(ctx, proxyClient, db)
 	reportingClient := reportingClient(ctx)
 	redisClient := getRedis(ctx)
 	server, err := etl.NewServer(db, indexClient, proxyClient, redisClient, fetchQueue, reportingClient, *staticPath)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(ctx, err)
 	}
 	router := dcensus.NewRouter(nil)
 	server.Install(router.Handle)
 
 	views := append(dcensus.ClientViews, dcensus.ServerViews...)
 	if err := dcensus.Init(views...); err != nil {
-		log.Fatal(err)
+		log.Fatal(ctx, err)
 	}
 	// We are not currently forwarding any ports on AppEngine, so serving debug
 	// information is broken.
 	if !config.OnAppEngine() {
 		dcensusServer, err := dcensus.NewServer()
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal(ctx, err)
 		}
 		go http.ListenAndServe(config.DebugAddr("localhost:8001"), dcensusServer)
 	}
 
 	handlerTimeout, err := strconv.Atoi(timeout)
 	if err != nil {
-		log.Fatalf("strconv.Atoi(%q): %v", timeout, err)
+		log.Fatalf(ctx, "strconv.Atoi(%q): %v", timeout, err)
 	}
 	requestLogger := logger(ctx)
 	mw := middleware.Chain(
@@ -115,8 +115,8 @@ func main() {
 	http.Handle("/", mw(router))
 
 	addr := config.HostAddr("localhost:8000")
-	log.Infof("Listening on addr %s", addr)
-	log.Fatal(http.ListenAndServe(addr, nil))
+	log.Infof(ctx, "Listening on addr %s", addr)
+	log.Fatal(ctx, http.ListenAndServe(addr, nil))
 }
 
 func queue(ctx context.Context, proxyClient *proxy.Client, db *postgres.DB) etl.Queue {
@@ -125,7 +125,7 @@ func queue(ctx context.Context, proxyClient *proxy.Client, db *postgres.DB) etl.
 	}
 	client, err := cloudtasks.NewClient(ctx)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(ctx, err)
 	}
 	return etl.NewGCPQueue(client, queueName)
 }
@@ -151,11 +151,11 @@ func reportingClient(ctx context.Context) *errorreporting.Client {
 	reporter, err := errorreporting.NewClient(ctx, config.ProjectID(), errorreporting.Config{
 		ServiceName: config.ServiceID(),
 		OnError: func(err error) {
-			log.Errorf("Error reporting failed: %v", err)
+			log.Errorf(ctx, "Error reporting failed: %v", err)
 		},
 	})
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(ctx, err)
 	}
 	return reporter
 }
@@ -164,7 +164,7 @@ func logger(ctx context.Context) middleware.Logger {
 	if config.OnAppEngine() {
 		logger, err := log.UseStackdriver(ctx, "etl-log")
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal(ctx, err)
 		}
 		return logger
 	}
@@ -175,14 +175,14 @@ func logger(ctx context.Context) middleware.Logger {
 // the are in the index but not stored in the proxy.
 // Format of the file: each line is
 //     module@version
-func readProxyRemoved() {
+func readProxyRemoved(ctx context.Context) {
 	filename := config.GetEnv("GO_DISCOVERY_PROXY_REMOVED", "")
 	if filename == "" {
 		return
 	}
 	f, err := os.Open(filename)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(ctx, err)
 	}
 	defer f.Close()
 	scan := bufio.NewScanner(f)
@@ -190,7 +190,7 @@ func readProxyRemoved() {
 		etl.ProxyRemoved[strings.TrimSpace(scan.Text())] = true
 	}
 	if err := scan.Err(); err != nil {
-		log.Fatalf("scanning %s: %v", filename, err)
+		log.Fatalf(ctx, "scanning %s: %v", filename, err)
 	}
-	log.Infof("read %d excluded module versions from %s", len(etl.ProxyRemoved), filename)
+	log.Infof(ctx, "read %d excluded module versions from %s", len(etl.ProxyRemoved), filename)
 }

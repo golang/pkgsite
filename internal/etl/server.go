@@ -153,17 +153,17 @@ func (s *Server) handleUpdateImportedByCount(w http.ResponseWriter, r *http.Requ
 func (s *Server) handlePopulateSearchDocuments(w http.ResponseWriter, r *http.Request) {
 	limit := parseIntParam(r, "limit", 100)
 	ctx := r.Context()
-	log.Infof("Populating search documents for %d packages", limit)
+	log.Infof(ctx, "Populating search documents for %d packages", limit)
 	pkgPaths, err := s.db.GetPackagesForSearchDocumentUpsert(ctx, limit)
 	if err != nil {
-		log.Errorf("s.db.GetPackagesSearchDocumentUpsert(ctx): %v", err)
+		log.Errorf(ctx, "s.db.GetPackagesSearchDocumentUpsert(ctx): %v", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
 	for _, path := range pkgPaths {
 		if err := s.db.UpsertSearchDocument(ctx, path); err != nil {
-			log.Errorf("s.db.UpsertSearchDocument(ctx, %q): %v", path, err)
+			log.Errorf(ctx, "s.db.UpsertSearchDocument(ctx, %q): %v", path, err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
@@ -186,16 +186,16 @@ func (s *Server) handleFetch(w http.ResponseWriter, r *http.Request) {
 
 	msg, code := s.doFetch(r)
 	if code == http.StatusInternalServerError {
-		log.Infof("doFetch of %s returned %d; returning that code to retry task", r.URL.Path, code)
+		log.Infof(r.Context(), "doFetch of %s returned %d; returning that code to retry task", r.URL.Path, code)
 		http.Error(w, http.StatusText(code), code)
 		return
 	}
 	if code/100 != 2 {
-		log.Infof("doFetch of %s returned code %d; returning OK to avoid retry", r.URL.Path, code)
+		log.Infof(r.Context(), "doFetch of %s returned code %d; returning OK to avoid retry", r.URL.Path, code)
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	if code/100 == 2 {
-		log.Info(msg)
+		log.Info(r.Context(), msg)
 		fmt.Fprintln(w, msg)
 	}
 	fmt.Fprintln(w, http.StatusText(code))
@@ -245,24 +245,24 @@ func (s *Server) handleIndexAndQueue(w http.ResponseWriter, r *http.Request) {
 	suffixParam := r.FormValue("suffix")
 	since, err := s.db.LatestIndexTimestamp(ctx)
 	if err != nil {
-		log.Errorf("doing proxy index update: %v", err)
+		log.Errorf(ctx, "doing proxy index update: %v", err)
 		http.Error(w, "error doing proxy index update", http.StatusInternalServerError)
 		return
 	}
 	versions, err := s.indexClient.GetVersions(ctx, since, limit)
 	if err != nil {
-		log.Errorf("getting index versions: %v", err)
+		log.Errorf(ctx, "getting index versions: %v", err)
 		http.Error(w, "error getting versions", http.StatusInternalServerError)
 		return
 	}
 	if err := s.db.InsertIndexVersions(ctx, versions); err != nil {
-		log.Error(err)
+		log.Error(ctx, err)
 		http.Error(w, "error inserting versions", http.StatusInternalServerError)
 		return
 	}
 	for _, version := range versions {
 		if err := s.queue.ScheduleFetch(ctx, version.Path, version.Version, suffixParam); err != nil {
-			log.Errorf("scheduling fetch: %v", err)
+			log.Errorf(ctx, "scheduling fetch: %v", err)
 			http.Error(w, "error scheduling fetch", http.StatusInternalServerError)
 			return
 		}
@@ -284,17 +284,17 @@ func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) {
 	span.Annotate([]trace.Attribute{trace.Int64Attribute("limit", int64(limit))}, "processed limit")
 	versions, err := s.db.GetNextVersionsToFetch(ctx, limit)
 	if err != nil {
-		log.Error(err)
+		log.Error(ctx, err)
 		http.Error(w, "error getting versions to fetch", http.StatusInternalServerError)
 		return
 	}
-	log.Infof("Got %d versions to fetch", len(versions))
+	log.Infof(ctx, "Got %d versions to fetch", len(versions))
 
 	span.Annotate([]trace.Attribute{trace.Int64Attribute("versions to fetch", int64(len(versions)))}, "processed limit")
 	w.Header().Set("Content-Type", "text/plain")
 	for _, v := range versions {
 		if err := s.queue.ScheduleFetch(ctx, v.ModulePath, v.Version, suffixParam); err != nil {
-			log.Errorf("scheduling fetch: %v", err)
+			log.Errorf(ctx, "scheduling fetch: %v", err)
 			http.Error(w, "error scheduling fetch", http.StatusInternalServerError)
 			return
 		}
@@ -305,7 +305,7 @@ func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleStatusPage(w http.ResponseWriter, r *http.Request) {
 	msg, err := s.doStatusPage(w, r)
 	if err != nil {
-		log.Error(err)
+		log.Error(r.Context(), err)
 		http.Error(w, msg, http.StatusInternalServerError)
 	}
 }
@@ -350,7 +350,7 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (string, e
 	}
 	if _, err := io.Copy(w, &buf); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		log.Errorf("Error copying buffer to ResponseWriter: %v", err)
+		log.Errorf(ctx, "Error copying buffer to ResponseWriter: %v", err)
 	}
 	return "", nil
 }
@@ -359,10 +359,10 @@ func (s *Server) handlePopulateStdLib(w http.ResponseWriter, r *http.Request) {
 	msg, err := s.doPopulateStdLib(r.Context(), r.FormValue("suffix"))
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	if err != nil {
-		log.Errorf("handlePopulateStdLib: %v", err)
+		log.Errorf(r.Context(), "handlePopulateStdLib: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
-		log.Infof("handlePopulateStdLib: %s", msg)
+		log.Infof(r.Context(), "handlePopulateStdLib: %s", msg)
 		_, _ = io.WriteString(w, msg)
 	}
 }
@@ -381,19 +381,20 @@ func (s *Server) doPopulateStdLib(ctx context.Context, suffix string) (string, e
 }
 
 func (s *Server) handleReprocess(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	appVersion := r.FormValue("app_version")
 	if appVersion == "" {
-		log.Error("app_version was not specified")
+		log.Error(ctx, "app_version was not specified")
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 	if err := config.ValidateAppVersion(appVersion); err != nil {
-		log.Errorf("config.ValidateAppVersion(%q): %v", appVersion, err)
+		log.Errorf(ctx, "config.ValidateAppVersion(%q): %v", appVersion, err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 	if err := s.db.UpdateVersionStatesForReprocessing(r.Context(), appVersion); err != nil {
-		log.Error(err)
+		log.Error(ctx, err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
@@ -429,7 +430,7 @@ func init() {
 	var err error
 	locNewYork, err = time.LoadLocation("America/New_York")
 	if err != nil {
-		log.Fatalf("time.LoadLocation: %v", err)
+		log.Fatalf(context.Background(), "time.LoadLocation: %v", err)
 	}
 }
 
@@ -450,7 +451,7 @@ func parseIntParam(r *http.Request, name string, defaultValue int) int {
 	}
 	val, err := strconv.Atoi(param)
 	if err != nil {
-		log.Errorf("parsing query parameter %q: %v", name, err)
+		log.Errorf(r.Context(), "parsing query parameter %q: %v", name, err)
 		return defaultValue
 	}
 	return val

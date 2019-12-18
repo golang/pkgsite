@@ -58,7 +58,7 @@ func LatestVersion(latest latestFunc) Middleware {
 				body = bytes.ReplaceAll(body, []byte(LatestVersionPlaceholder), []byte(latestVersion))
 			}
 			if _, err := w.Write(body); err != nil {
-				log.Errorf("LatestVersion, writing: %v", err)
+				log.Errorf(r.Context(), "LatestVersion, writing: %v", err)
 			}
 		})
 	}

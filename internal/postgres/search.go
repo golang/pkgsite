@@ -901,10 +901,10 @@ func compareImportedByCounts(ctx context.Context, tx *sql.Tx) (err error) {
 	if err := rows.Err(); err != nil {
 		return err
 	}
-	log.Infof("%6d total rows in search_documents match computed_imported_by_counts", total)
-	log.Infof("%6d will change", change)
-	log.Infof("%6d currently have a zero imported-by count", zero)
-	log.Infof("%6d of the non-zero rows will change by more than %d%%", diff, int(changeThreshold*100))
+	log.Infof(ctx, "%6d total rows in search_documents match computed_imported_by_counts", total)
+	log.Infof(ctx, "%6d will change", change)
+	log.Infof(ctx, "%6d currently have a zero imported-by count", zero)
+	log.Infof(ctx, "%6d of the non-zero rows will change by more than %d%%", diff, int(changeThreshold*100))
 	return nil
 }
 

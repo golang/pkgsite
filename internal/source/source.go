@@ -111,7 +111,7 @@ func (i *Info) RawURL(pathname string) string {
 	u, err := url.Parse(i.repoURL)
 	if err != nil {
 		// This should never happen. If it does, note it and soldier on.
-		log.Errorf("repo URL %q failed to parse: %v", i.repoURL, err)
+		log.Errorf(context.TODO(), "repo URL %q failed to parse: %v", i.repoURL, err)
 		u = &url.URL{Path: "ERROR"}
 	}
 
@@ -321,7 +321,7 @@ func moduleInfoDynamic(ctx context.Context, client *http.Client, modulePath, ver
 		var repo string
 		repo, _, templates, _ = matchStatic(removeHTTPScheme(sourceMeta.dirTemplate))
 		if templates == (urlTemplates{}) {
-			log.Infof("no templates for repo URL %q from meta tag: err=%v", sourceMeta.repoURL, err)
+			log.Infof(ctx, "no templates for repo URL %q from meta tag: err=%v", sourceMeta.repoURL, err)
 		} else {
 			// Use the repo from the template, not the original one.
 			repoURL = "https://" + repo

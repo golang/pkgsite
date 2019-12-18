@@ -130,19 +130,19 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, fmt.Sprintf("/%s", pkg.Path), http.StatusFound)
 			return
 		} else if !errors.Is(err, derrors.NotFound) {
-			log.Errorf("error getting package for %s: %v", path.Clean(query), err)
+			log.Errorf(ctx, "error getting package for %s: %v", path.Clean(query), err)
 		}
 	}
 
 	searchMethod := r.FormValue("method")
 	page, err := fetchSearchPage(ctx, s.ds, query, searchMethod, newPaginationParams(r, defaultSearchLimit))
 	if err != nil {
-		log.Errorf("fetchSearchDetails(ctx, db, %q): %v", query, err)
+		log.Errorf(ctx, "fetchSearchDetails(ctx, db, %q): %v", query, err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return
 	}
 	page.basePage = newBasePage(r, query)
-	s.servePage(w, "search.tmpl", page)
+	s.servePage(ctx, w, "search.tmpl", page)
 }
 
 // searchQuery extracts a search query from the request.

@@ -87,7 +87,7 @@ func SecureHeaders() Middleware {
 
 			nonce, err := generateNonce()
 			if err != nil {
-				log.Infof("generateNonce(): %v", err)
+				log.Infof(r.Context(), "generateNonce(): %v", err)
 			}
 
 			// Because we are using the go/feedback widget, we need to
@@ -117,7 +117,7 @@ func SecureHeaders() Middleware {
 			h.ServeHTTP(crw, r)
 			body := bytes.ReplaceAll(crw.bytes(), target, replacement)
 			if _, err := w.Write(body); err != nil {
-				log.Errorf("SecureHeaders, writing: %v", err)
+				log.Errorf(r.Context(), "SecureHeaders, writing: %v", err)
 			}
 		})
 	}

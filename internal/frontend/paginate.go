@@ -77,7 +77,7 @@ func newPaginationParams(r *http.Request, defaultLimit int) paginationParams {
 		if a := r.FormValue(key); a != "" {
 			val, err = strconv.Atoi(a)
 			if err != nil {
-				log.Errorf("strconv.Atoi(%q) for page: %v", a, err)
+				log.Errorf(r.Context(), "strconv.Atoi(%q) for page: %v", a, err)
 			}
 		}
 		if val < 1 {

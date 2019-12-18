@@ -17,7 +17,7 @@ func Panic(panicHandler http.Handler) Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				if e := recover(); e != nil {
-					log.Errorf("middleware.Panic: %v", e)
+					log.Errorf(r.Context(), "middleware.Panic: %v", e)
 					panicHandler.ServeHTTP(w, r)
 				}
 			}()

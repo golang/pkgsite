@@ -128,7 +128,7 @@ func (db *DB) UpdateVersionStatesForReprocessing(ctx context.Context, appVersion
 	if err != nil {
 		return fmt.Errorf("result.RowsAffected(): %v", err)
 	}
-	log.Infof("Updated %d module version states to be reprocessed for app_version <= %q", affected, appVersion)
+	log.Infof(ctx, "Updated %d module version states to be reprocessed for app_version <= %q", affected, appVersion)
 	return nil
 }
 

@@ -55,7 +55,7 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 	pkgPath, modulePath, version, err := parseDetailsURLPath(r.URL.Path)
 	if err != nil {
-		log.Errorf("handlePackageDetails: %v", err)
+		log.Errorf(r.Context(), "handlePackageDetails: %v", err)
 		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
 		return
 	}
@@ -75,7 +75,7 @@ func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
 	urlPath := strings.TrimPrefix(r.URL.Path, "/mod")
 	path, _, version, err := parseDetailsURLPath(urlPath)
 	if err != nil {
-		log.Infof("handleModuleDetails: %v", err)
+		log.Infof(r.Context(), "handleModuleDetails: %v", err)
 		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
 		return
 	}
@@ -103,7 +103,7 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 		return
 	}
 	if !errors.Is(err, derrors.NotFound) {
-		log.Error(err)
+		log.Error(ctx, err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return
 	}
@@ -122,7 +122,7 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 	if !errors.Is(err, derrors.NotFound) {
 		// The only error we expect is NotFound, so serve an 500 here, otherwise
 		// whatever response we resolve below might be inconsistent or misleading.
-		log.Errorf("error checking for directory: %v", err)
+		log.Errorf(ctx, "error checking for directory: %v", err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return
 	}
@@ -145,7 +145,7 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 		// response code. So the semantics of the endpoint are the same whether or
 		// not we get an unexpected error from GetPackage -- we just don't serve a
 		// more informative error response.
-		log.Errorf("error checking for latest package: %v", err)
+		log.Errorf(ctx, "error checking for latest package: %v", err)
 	}
 	s.serveErrorPage(w, r, http.StatusNotFound, nil)
 }
@@ -154,7 +154,7 @@ func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.Respons
 
 	pkgHeader, err := createPackage(&pkg.Package, &pkg.VersionInfo, requestedVersion == internal.LatestVersion)
 	if err != nil {
-		log.Errorf("error creating package header for %s@%s: %v", pkg.Path, pkg.Version, err)
+		log.Errorf(ctx, "error creating package header for %s@%s: %v", pkg.Path, pkg.Version, err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return
 	}
@@ -178,7 +178,7 @@ func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.Respons
 		var err error
 		details, err = fetchDetailsForPackage(ctx, r, tab, s.ds, pkg)
 		if err != nil {
-			log.Errorf("error fetching page for %q: %v", tab, err)
+			log.Errorf(ctx, "error fetching page for %q: %v", tab, err)
 			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 			return
 		}
@@ -195,7 +195,7 @@ func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.Respons
 		Tabs:           packageTabSettings,
 		PageType:       "pkg",
 	}
-	s.servePage(w, settings.TemplateName, page)
+	s.servePage(ctx, w, settings.TemplateName, page)
 }
 
 // serveModulePage serves details pages for the module specified by modulePath
@@ -227,7 +227,7 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 	}
 	if version != internal.LatestVersion {
 		if _, err := s.ds.GetVersionInfo(ctx, modulePath, internal.LatestVersion); err != nil {
-			log.Errorf("error checking for latest module: %v", err)
+			log.Errorf(ctx, "error checking for latest module: %v", err)
 		} else {
 			epage := &errorPage{
 				Message: fmt.Sprintf("Module %s@%s is not available.", modulePath, displayVersion(version, modulePath)),
@@ -246,7 +246,7 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseWriter, r *http.Request, vi *internal.VersionInfo, requestedVersion string) {
 	licenses, err := s.ds.GetModuleLicenses(ctx, vi.ModulePath, vi.Version)
 	if err != nil {
-		log.Errorf("error getting module licenses: %v", err)
+		log.Errorf(ctx, "error getting module licenses: %v", err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return
 	}
@@ -264,7 +264,7 @@ func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseW
 		var err error
 		details, err = fetchDetailsForModule(ctx, r, tab, s.ds, vi, licenses)
 		if err != nil {
-			log.Errorf("error fetching page for %q: %v", tab, err)
+			log.Errorf(ctx, "error fetching page for %q: %v", tab, err)
 			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 			return
 		}
@@ -280,7 +280,7 @@ func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseW
 		Tabs:           moduleTabSettings,
 		PageType:       "mod",
 	}
-	s.servePage(w, settings.TemplateName, page)
+	s.servePage(ctx, w, settings.TemplateName, page)
 }
 
 // checkPathAndVersion verifies that the requested path and version are
@@ -294,7 +294,7 @@ func checkPathAndVersion(ctx context.Context, ds internal.DataSource, path, vers
 	}
 	excluded, err := ds.IsExcluded(ctx, path)
 	if err != nil {
-		log.Errorf("error checking excluded path: %v", err)
+		log.Errorf(ctx, "error checking excluded path: %v", err)
 		return http.StatusInternalServerError, nil
 	}
 	if excluded {
@@ -363,7 +363,7 @@ func (s *Server) LatestVersion(ctx context.Context, packagePath, modulePath, pag
 	if err != nil {
 		// We get NotFound errors from directories; they clutter the log.
 		if !errors.Is(err, derrors.NotFound) {
-			log.Errorf("GetLatestVersion: %v", err)
+			log.Errorf(ctx, "GetLatestVersion: %v", err)
 		}
 		return ""
 	}

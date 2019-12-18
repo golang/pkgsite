@@ -119,7 +119,7 @@ func (c *cache) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if reader, ok := c.get(ctx, key); ok {
 		recordCacheResult(ctx, c.name, true)
 		if _, err := io.Copy(w, reader); err != nil {
-			log.Errorf("error copying zip bytes: %v", err)
+			log.Errorf(ctx, "error copying zip bytes: %v", err)
 		}
 		return
 	}
@@ -148,16 +148,16 @@ func (c *cache) get(ctx context.Context, key string) (io.Reader, bool) {
 	if err != nil {
 		select {
 		case <-getCtx.Done():
-			log.Infof("cache get: context timed out")
+			log.Infof(ctx, "cache get: context timed out")
 		default:
-			log.Errorf("cache get: %v", err)
+			log.Errorf(ctx, "cache get: %v", err)
 		}
 		recordCacheError(ctx, c.name, "GET")
 		return nil, false
 	}
 	zr, err := gzip.NewReader(bytes.NewReader(val))
 	if err != nil {
-		log.Errorf("cache: gzip.NewReader: %v", err)
+		log.Errorf(ctx, "cache: gzip.NewReader: %v", err)
 		recordCacheError(ctx, c.name, "UNZIP")
 		return nil, false
 	}
@@ -166,16 +166,16 @@ func (c *cache) get(ctx context.Context, key string) (io.Reader, bool) {
 
 func (c *cache) put(ctx context.Context, key string, rec *cacheRecorder, ttl time.Duration) {
 	if err := rec.zipWriter.Close(); err != nil {
-		log.Errorf("cache: error closing zip for %q: %v", key, err)
+		log.Errorf(ctx, "cache: error closing zip for %q: %v", key, err)
 		return
 	}
-	log.Infof("caching response of length %d for %s", rec.buf.Len(), key)
+	log.Infof(ctx, "caching response of length %d for %s", rec.buf.Len(), key)
 	setCtx, cancelSet := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancelSet()
 	_, err := c.client.WithContext(setCtx).Set(key, rec.buf.Bytes(), ttl).Result()
 	if err != nil {
 		recordCacheError(ctx, c.name, "SET")
-		log.Errorf("cache set %q: %v", key, err)
+		log.Errorf(ctx, "cache set %q: %v", key, err)
 	}
 }
 

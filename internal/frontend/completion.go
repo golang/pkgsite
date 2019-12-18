@@ -22,6 +22,7 @@ import (
 // handleAutoCompletion handles requests for /autocomplete?q=<input prefix>, by
 // querying redis sorted sets indexing package paths.
 func (s *Server) handleAutoCompletion(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	var completions []*complete.Completion
 	if s.cmplClient != nil {
 		var err error
@@ -41,11 +42,11 @@ func (s *Server) handleAutoCompletion(w http.ResponseWriter, r *http.Request) {
 	}
 	response, err := json.Marshal(completions)
 	if err != nil {
-		log.Errorf("error marshalling completion: json.Marshal: %v", err)
+		log.Errorf(ctx, "error marshalling completion: json.Marshal: %v", err)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := io.Copy(w, bytes.NewReader(response)); err != nil {
-		log.Errorf("Error copying json buffer to ResponseWriter: %v", err)
+		log.Errorf(ctx, "Error copying json buffer to ResponseWriter: %v", err)
 	}
 }
 

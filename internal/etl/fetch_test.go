@@ -1137,7 +1137,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			packages, hasIncompletePackages, err := extractPackagesFromZip(test.name, test.version, reader, nil, nil)
+			packages, hasIncompletePackages, err := extractPackagesFromZip(context.Background(), test.name, test.version, reader, nil, nil)
 			if err != nil && len(test.packages) != 0 {
 				t.Fatalf("extractPackagesFromZip(%q, %q, reader, nil): %v", test.name, test.version, err)
 			}

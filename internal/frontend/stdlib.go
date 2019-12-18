@@ -20,7 +20,7 @@ import (
 func (s *Server) handleStdLib(w http.ResponseWriter, r *http.Request) {
 	path, version, err := parseStdLibURLPath(r.URL.Path)
 	if err != nil {
-		log.Errorf("handleStdLib: %v", err)
+		log.Errorf(r.Context(), "handleStdLib: %v", err)
 		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
 		return
 	}
