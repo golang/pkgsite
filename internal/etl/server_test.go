@@ -69,9 +69,11 @@ func TestETL(t *testing.T) {
 			Version:   "v0.0.1",
 		}
 		fooProxy = proxy.NewTestVersion(t, fooIndex.Path, fooIndex.Version, map[string]string{
+			"go.mod": "module foo.com/foo",
 			"foo.go": "package foo\nconst Foo = \"Foo\"",
 		})
 		barProxy = proxy.NewTestVersion(t, barIndex.Path, barIndex.Version, map[string]string{
+			"go.mod": "module foo.com/bar",
 			"bar.go": "package bar\nconst Bar = \"Bar\"",
 		})
 		state = func(version *internal.IndexVersion, code, tryCount int) *internal.VersionState {

@@ -166,6 +166,56 @@ func TestFetchAndUpdateState_Incomplete(t *testing.T) {
 	}
 }
 
+func TestFetchAndUpdateState_Mismatch(t *testing.T) {
+	// Check that an excluded module is not processed, and is marked excluded in module_version_states.
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	defer postgres.ResetTestDB(testDB, t)
+
+	const (
+		modulePath = "github.com/mis/match"
+		version    = "v1.0.0"
+	)
+	client, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
+		proxy.NewTestVersion(t, modulePath, version, map[string]string{
+			"go.mod":     "module other",
+			"foo/foo.go": "// Package foo\npackage foo\n\nconst Foo = 42",
+		}),
+	})
+	defer teardownProxy()
+
+	code, err := fetchAndUpdateState(ctx, modulePath, version, client, testDB)
+	wantErr := derrors.AlternativeModule
+	wantCode := derrors.ToHTTPStatus(wantErr)
+	if code != wantCode || !errors.Is(err, wantErr) {
+		t.Fatalf("got %d, %v; want %d, Is(err, derrors.AlternativeModule)", code, err, wantCode)
+	}
+	_, err = testDB.GetVersionInfo(ctx, modulePath, version)
+	if !errors.Is(err, derrors.NotFound) {
+		t.Fatalf("got %v, want Is(NotFound)", err)
+	}
+	vs, err := testDB.GetVersionState(ctx, modulePath, version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var gotStatus int
+	if vs.Status != nil {
+		gotStatus = *vs.Status
+	}
+	if gotStatus != wantCode {
+		t.Fatalf("testDB.GetVersionState(ctx, %q, %q): status=%v, want %d", modulePath, version, gotStatus, wantCode)
+	}
+
+	isAlt, err := testDB.IsAlternativePath(ctx, modulePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !isAlt {
+		t.Error("IsAlternativePath is false, want true")
+	}
+}
+
 type fakeTransport struct{}
 
 func (fakeTransport) RoundTrip(*http.Request) (*http.Response, error) {

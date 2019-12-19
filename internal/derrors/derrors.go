@@ -25,6 +25,10 @@ var (
 	// Excluded indicates that the module is excluded. (See internal/postgres/excluded.go.)
 	Excluded = errors.New("excluded")
 
+	// AlternativeModule indicates that the path of the module zip file differs
+	// from the path specified in the go.mod file.
+	AlternativeModule = errors.New("alternative module")
+
 	// Unknown indicates that the error has unknown semantics.
 	Unknown = errors.New("unknown")
 )
@@ -35,8 +39,10 @@ var httpCodes = []struct {
 }{
 	{NotFound, http.StatusNotFound},
 	{InvalidArgument, http.StatusBadRequest},
-	{BadModule, 490}, // since this isn't an HTTP status, pick an unused code
 	{Excluded, http.StatusForbidden},
+	// Since the following aren't HTTP statuses, pick unused codes.
+	{BadModule, 490},
+	{AlternativeModule, 491},
 }
 
 // FromHTTPStatus generates an error according to the HTTP semantics for the given

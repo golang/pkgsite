@@ -51,6 +51,7 @@ func TestToHTTPStatus(t *testing.T) {
 		{InvalidArgument, http.StatusBadRequest},
 		{NotFound, http.StatusNotFound},
 		{BadModule, 490},
+		{AlternativeModule, 491},
 		{Unknown, http.StatusInternalServerError},
 		{fmt.Errorf("wrapping: %w", NotFound), http.StatusNotFound},
 		{io.ErrUnexpectedEOF, http.StatusInternalServerError},

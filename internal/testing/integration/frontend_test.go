@@ -33,17 +33,20 @@ func TestModulePackageDirectoryResolution(t *testing.T) {
 	//  + at v1.2.5, github.com/golang/found/dir is again just a directory
 	versions := []*proxy.TestVersion{
 		proxy.NewTestVersion(t, "github.com/golang/found", "v1.2.3", map[string]string{
+			"go.mod":         "module github.com/golang/found",
 			"found.go":       "package found\nconst Value = 123",
 			"dir/pkg/pkg.go": "package pkg\nconst Value = 321",
 			"LICENSE":        testhelper.MITLicense,
 		}),
 		proxy.NewTestVersion(t, "github.com/golang/found", "v1.2.4", map[string]string{
+			"go.mod":         "module github.com/golang/found",
 			"found.go":       "package found\nconst Value = 124",
 			"dir/pkg/pkg.go": "package pkg\nconst Value = 421",
 			"dir/dir.go":     "package dir\nconst Value = \"I'm a package!\"",
 			"LICENSE":        testhelper.MITLicense,
 		}),
 		proxy.NewTestVersion(t, "github.com/golang/found", "v1.2.5", map[string]string{
+			"go.mod":         "module github.com/golang/found",
 			"found.go":       "package found\nconst Value = 125",
 			"dir/pkg/pkg.go": "package pkg\nconst Value = 521",
 			"LICENSE":        testhelper.MITLicense,

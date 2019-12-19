@@ -22,6 +22,7 @@ import (
 func setup(t *testing.T) (context.Context, *DataSource, func()) {
 	t.Helper()
 	contents := map[string]string{
+		"go.mod":     "module foo.com/bar",
 		"LICENSE":    testhelper.MITLicense,
 		"baz/baz.go": "//Package baz provides a helpful constant.\npackage baz\nimport \"net/http\"\nconst OK = http.StatusOK",
 	}

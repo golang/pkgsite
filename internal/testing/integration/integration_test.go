@@ -41,6 +41,7 @@ func TestEndToEndProcessing(t *testing.T) {
 		modulePath = "github.com/my/module"
 		version    = "v1.0.0"
 		moduleData = map[string]string{
+			"go.mod":     "module " + modulePath,
 			"foo/foo.go": "package foo\n\nconst Foo = 525600",
 			"README.md":  "This is a readme",
 			"LICENSE":    testhelper.MITLicense,

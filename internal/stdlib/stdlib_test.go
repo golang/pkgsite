@@ -5,6 +5,7 @@
 package stdlib
 
 import (
+	"io/ioutil"
 	"reflect"
 	"strings"
 	"testing"
@@ -144,6 +145,23 @@ func TestZip(t *testing.T) {
 			}
 			if len(wantFiles) > 0 {
 				t.Errorf("zip missing files: %v", reflect.ValueOf(wantFiles).MapKeys())
+			}
+			for _, f := range zr.File {
+				if f.Name == wantPrefix+"go.mod" {
+					r, err := f.Open()
+					if err != nil {
+						t.Fatal(err)
+					}
+					defer r.Close()
+					b, err := ioutil.ReadAll(r)
+					if err != nil {
+						t.Fatal(err)
+					}
+					if got, want := string(b), "module std\n"; got != want {
+						t.Errorf("go.mod: got %q, want %q", got, want)
+					}
+					break
+				}
 			}
 		})
 	}

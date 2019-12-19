@@ -304,7 +304,6 @@ func Zip(version string) (_ *zip.Reader, commitTime time.Time, err error) {
 	if err := addFiles(z, repo, libdir, prefixPath, true); err != nil {
 		return nil, time.Time{}, err
 	}
-
 	if err := z.Close(); err != nil {
 		return nil, time.Time{}, err
 	}
@@ -323,13 +322,13 @@ func addFiles(z *zip.Writer, r *git.Repository, t *object.Tree, dirpath string, 
 		if strings.HasPrefix(e.Name, ".") || strings.HasPrefix(e.Name, "_") {
 			continue
 		}
+		if e.Name == "go.mod" {
+			// ignore; we'll synthesize our own
+			continue
+		}
 		switch e.Mode {
 		case filemode.Regular, filemode.Executable:
 			blob, err := r.BlobObject(e.Hash)
-			if err != nil {
-				return err
-			}
-			dst, err := z.Create(path.Join(dirpath, e.Name))
 			if err != nil {
 				return err
 			}
@@ -337,7 +336,7 @@ func addFiles(z *zip.Writer, r *git.Repository, t *object.Tree, dirpath string, 
 			if err != nil {
 				return err
 			}
-			if _, err := io.Copy(dst, src); err != nil {
+			if err := writeZipFile(z, path.Join(dirpath, e.Name), src); err != nil {
 				_ = src.Close()
 				return err
 			}
@@ -358,6 +357,15 @@ func addFiles(z *zip.Writer, r *git.Repository, t *object.Tree, dirpath string, 
 		}
 	}
 	return nil
+}
+
+func writeZipFile(z *zip.Writer, pathname string, src io.Reader) error {
+	dst, err := z.Create(pathname)
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(dst, src)
+	return err
 }
 
 // subTree looks non-recursively for a directory with the given name in t,
