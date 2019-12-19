@@ -418,6 +418,12 @@ func packageFromVersion(pkgPath string, v *internal.Version) (_ *internal.Versio
 	return nil, fmt.Errorf("package missing from module %s: %w", v.ModulePath, derrors.NotFound)
 }
 
+// IsExcluded is unimplemented.
 func (*DataSource) IsExcluded(context.Context, string) (bool, error) {
 	return false, nil
+}
+
+// GetActiveExperiments is unimplemented.
+func (*DataSource) GetActiveExperiments(ctx context.Context) ([]*internal.Experiment, error) {
+	return nil, nil
 }
