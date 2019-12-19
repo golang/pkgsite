@@ -68,13 +68,23 @@ type searchResponse struct {
 	// err indicates a technical failure of the search query, or that results are
 	// not provably complete.
 	err error
-	// latency is recorded by the orchestrator of the search query.
-	latency time.Duration
 	// uncounted reports whether this response is missing total result counts. If
 	// uncounted is true, search will wait for either the hyperloglog count
 	// estimate, or for an alternate search method to return with
 	// uncounted=false.
 	uncounted bool
+}
+
+// searchEvent is used to log structured information about search events for
+// later analysis. A 'search event' occurs when a searcher or count estimate
+// returns.
+type searchEvent struct {
+	// Type is either the searcher name or 'estimate' (the count estimate).
+	Type string
+	// Latency is the duration that that the operation took.
+	Latency time.Duration
+	// Err is the error returned by the operation, if any.
+	Err error
 }
 
 // A searcher is used to execute a single search request.
@@ -123,6 +133,7 @@ func (db *DB) PartialFastSearch(ctx context.Context, q string, limit, offset int
 // The optional guardTestResult func may be used to allow tests to control the
 // order in which search results are returned.
 func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, searchers []searcher, guardTestResult func(string) func()) ([]*internal.SearchResult, error) {
+	searchStart := time.Now()
 	responses := make(chan searchResponse, len(searchers))
 	// cancel all unfinished searches when a result (or error) is returned. The
 	// effectiveness of this depends on the database driver.
@@ -132,7 +143,13 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, sea
 	// Asynchronously query for the estimated result count.
 	estimateChan := make(chan estimateResponse, 1)
 	go func() {
+		start := time.Now()
 		estimateResp := db.estimateResultsCount(searchCtx, q)
+		log.Info(ctx, searchEvent{
+			Type:    "estimate",
+			Latency: time.Since(start),
+			Err:     estimateResp.err,
+		})
 		if guardTestResult != nil {
 			defer guardTestResult("estimate")()
 		}
@@ -145,7 +162,11 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, sea
 		go func() {
 			start := time.Now()
 			resp := s(searchCtx, q, limit, offset)
-			resp.latency = time.Since(start)
+			log.Info(ctx, searchEvent{
+				Type:    resp.source,
+				Latency: time.Since(start),
+				Err:     resp.err,
+			})
 			if guardTestResult != nil {
 				defer guardTestResult(resp.source)()
 			}
@@ -156,7 +177,10 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, sea
 	for range searchers {
 		resp = <-responses
 		if resp.err == nil {
+			log.Infof(ctx, "initial search response from searcher %s", resp.source)
 			break
+		} else {
+			log.Errorf(ctx, "error from searcher %s: %v", resp.source, resp.err)
 		}
 	}
 	if resp.err != nil {
@@ -170,14 +194,16 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, sea
 			select {
 			case nextResp := <-responses:
 				if nextResp.err == nil && !nextResp.uncounted {
+					log.Infof(ctx, "using counted search results from searcher %s", nextResp.source)
 					// use this response since it is counted.
 					resp = nextResp
 					break loop
 				}
 			case estr := <-estimateChan:
 				if estr.err != nil {
-					return nil, fmt.Errorf("error getting estimated result count: %v", estr.err)
+					return nil, fmt.Errorf("error getting estimated count: %v", estr.err)
 				}
+				log.Info(ctx, "using count estimate")
 				for _, r := range resp.results {
 					// TODO(b/141182438): this is a hack: once search has been fully
 					// replaced with fastsearch, change the return signature of this
@@ -196,7 +222,9 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, sea
 	cancel()
 	// latency is only recorded for valid search results, as fast failures could
 	// skew the latency distribution.
-	latency := float64(resp.latency) / float64(time.Millisecond)
+	// Note that this latency measurement might differ meaningfully from the
+	// resp.Latency, if time was spent waiting for the result count estimate.
+	latency := float64(time.Since(searchStart)) / float64(time.Millisecond)
 	stats.RecordWithTags(ctx, []tag.Mutator{
 		tag.Upsert(SearchSource, resp.source),
 	}, SearchLatency.M(latency))
