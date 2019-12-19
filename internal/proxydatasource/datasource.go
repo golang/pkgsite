@@ -8,6 +8,8 @@ package proxydatasource
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"path"
 	"sort"
 	"strings"
@@ -18,9 +20,8 @@ import (
 	"golang.org/x/discovery/internal/etl"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/proxy"
-	"golang.org/x/mod/semver"
 	"golang.org/x/discovery/internal/version"
-	"golang.org/x/xerrors"
+	"golang.org/x/mod/semver"
 )
 
 var _ internal.DataSource = (*DataSource)(nil)
@@ -158,7 +159,7 @@ func (ds *DataSource) GetPackageLicenses(ctx context.Context, pkgPath, modulePat
 			return lics, nil
 		}
 	}
-	return nil, xerrors.Errorf("package %s is missing from module %s: %w", pkgPath, modulePath, derrors.NotFound)
+	return nil, fmt.Errorf("package %s is missing from module %s: %w", pkgPath, modulePath, derrors.NotFound)
 }
 
 // GetPackagesInVersion returns Packages contained in the module zip corresponding to modulePath and version.
@@ -296,7 +297,7 @@ func (ds *DataSource) findModule(ctx context.Context, pkgPath string, version st
 	pkgPath = strings.TrimLeft(pkgPath, "/")
 	for modulePath := pkgPath; modulePath != "" && modulePath != "."; modulePath = path.Dir(modulePath) {
 		info, err := ds.proxyClient.GetInfo(ctx, modulePath, version)
-		if xerrors.Is(err, derrors.NotFound) {
+		if errors.Is(err, derrors.NotFound) {
 			continue
 		}
 		if err != nil {
@@ -304,7 +305,7 @@ func (ds *DataSource) findModule(ctx context.Context, pkgPath string, version st
 		}
 		return modulePath, info, nil
 	}
-	return "", nil, xerrors.Errorf("unable to find module: %w", derrors.NotFound)
+	return "", nil, fmt.Errorf("unable to find module: %w", derrors.NotFound)
 }
 
 // listPackageVersions finds the longest module corresponding to pkgPath, and
@@ -414,7 +415,7 @@ func packageFromVersion(pkgPath string, v *internal.Version) (_ *internal.Versio
 			}, nil
 		}
 	}
-	return nil, xerrors.Errorf("package missing from module %s: %w", v.ModulePath, derrors.NotFound)
+	return nil, fmt.Errorf("package missing from module %s: %w", v.ModulePath, derrors.NotFound)
 }
 
 func (*DataSource) IsExcluded(context.Context, string) (bool, error) {

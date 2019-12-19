@@ -37,7 +37,6 @@ import (
 	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/version"
-	"golang.org/x/xerrors"
 )
 
 var (
@@ -187,7 +186,7 @@ func FetchVersion(ctx context.Context, modulePath, vers string, proxyClient *pro
 	}
 	versionType, err := version.ParseType(vers)
 	if err != nil {
-		return nil, false, xerrors.Errorf("%v: %w", err, derrors.BadModule)
+		return nil, false, fmt.Errorf("%v: %w", err, derrors.BadModule)
 	}
 
 	return processZipFile(ctx, modulePath, versionType, vers, commitTime, zipReader)
@@ -214,7 +213,7 @@ func processZipFile(ctx context.Context, modulePath string, versionType version.
 	}
 	packages, hasIncompletePackages, err := extractPackagesFromZip(modulePath, version, zipReader, license.NewMatcher(licenses), sourceInfo)
 	if err == errModuleContainsNoPackages {
-		return nil, false, xerrors.Errorf("%v: %w", errModuleContainsNoPackages.Error(), derrors.BadModule)
+		return nil, false, fmt.Errorf("%v: %w", errModuleContainsNoPackages.Error(), derrors.BadModule)
 	}
 	if err != nil {
 		return nil, false, fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, version, licenses, err)
@@ -367,11 +366,11 @@ func extractPackagesFromZip(modulePath, version string, r *zip.Reader, matcher l
 			continue
 		}
 		pkg, err := loadPackage(goFiles, innerPath, modulePath, sourceInfo)
-		if bpe := (*BadPackageError)(nil); xerrors.As(err, &bpe) {
+		if bpe := (*BadPackageError)(nil); errors.As(err, &bpe) {
 			// TODO(b/133187024): Record and display this information instead of just skipping.
 			log.Infof("Skipping %q because of *BadPackageError: %v\n", path.Join(modulePath, innerPath), err)
 			continue
-		} else if lpe := (*LargePackageError)(nil); xerrors.As(err, &lpe) {
+		} else if lpe := (*LargePackageError)(nil); errors.As(err, &lpe) {
 			log.Infof("Skipping %q because its rendered documentation HTML is too large", innerPath)
 			incompleteDirs[innerPath] = true
 			continue
@@ -585,7 +584,7 @@ func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, in
 		SourceLinkFunc: sourceLinkFunc,
 		Limit:          maxDocumentationHTML,
 	})
-	if xerrors.Is(err, dochtml.ErrTooLarge) {
+	if errors.Is(err, dochtml.ErrTooLarge) {
 		return nil, &LargePackageError{Err: err}
 	} else if err != nil {
 		return nil, fmt.Errorf("dochtml.Render: %v", err)
@@ -651,7 +650,7 @@ func matchingFiles(goos, goarch string, zipGoFiles []*zip.File) (files map[strin
 	for name := range files {
 		match, err := bctx.MatchFile(".", name) // This will access the file we just added to files map above.
 		if err != nil {
-			return nil, &BadPackageError{Err: xerrors.Errorf(`bctx.MatchFile(".", %q): %w`, name, err)}
+			return nil, &BadPackageError{Err: fmt.Errorf(`bctx.MatchFile(".", %q): %w`, name, err)}
 		}
 		if !match {
 			// Excluded by build context.

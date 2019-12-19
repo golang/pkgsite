@@ -7,6 +7,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -20,7 +21,6 @@ import (
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/testing/sample"
-	"golang.org/x/xerrors"
 )
 
 func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
@@ -142,12 +142,12 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			defer ResetTestDB(testDB, t)
 
-			if err := testDB.InsertVersion(ctx, tc.version); !xerrors.Is(err, tc.wantWriteErr) {
+			if err := testDB.InsertVersion(ctx, tc.version); !errors.Is(err, tc.wantWriteErr) {
 				t.Errorf("error: %v, want write error: %v", err, tc.wantWriteErr)
 			}
 
 			// Test that insertion of duplicate primary key won't fail.
-			if err := testDB.InsertVersion(ctx, tc.version); !xerrors.Is(err, tc.wantWriteErr) {
+			if err := testDB.InsertVersion(ctx, tc.version); !errors.Is(err, tc.wantWriteErr) {
 				t.Errorf("second insert error: %v, want write error: %v", err, tc.wantWriteErr)
 			}
 
@@ -248,7 +248,7 @@ func TestPostgres_DeleteVersion(t *testing.T) {
 	if err := testDB.DeleteVersion(ctx, nil, v.ModulePath, v.Version); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := testDB.GetVersionInfo(ctx, v.ModulePath, v.Version); !xerrors.Is(err, derrors.NotFound) {
+	if _, err := testDB.GetVersionInfo(ctx, v.ModulePath, v.Version); !errors.Is(err, derrors.NotFound) {
 		t.Errorf("got %v, want NotFound", err)
 	}
 }

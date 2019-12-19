@@ -10,8 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-
-	"golang.org/x/xerrors"
 )
 
 //lint:file-ignore ST1012 prefixing error values with Err would stutter
@@ -57,7 +55,7 @@ func FromHTTPStatus(code int, format string, args ...interface{}) error {
 			break
 		}
 	}
-	return xerrors.Errorf(format+": %w", append(args, innerErr)...)
+	return fmt.Errorf(format+": %w", append(args, innerErr)...)
 }
 
 // ToHTTPStatus returns an HTTP status code corresponding to err.
@@ -66,7 +64,7 @@ func ToHTTPStatus(err error) int {
 		return http.StatusOK
 	}
 	for _, e := range httpCodes {
-		if xerrors.Is(err, e.err) {
+		if errors.Is(err, e.err) {
 			return e.code
 		}
 	}
@@ -100,6 +98,6 @@ func Add(errp *error, format string, args ...interface{}) {
 // the result to be unwrapped.
 func Wrap(errp *error, format string, args ...interface{}) {
 	if *errp != nil {
-		*errp = xerrors.Errorf("%s: %w", fmt.Sprintf(format, args...), *errp)
+		*errp = fmt.Errorf("%s: %w", fmt.Sprintf(format, args...), *errp)
 	}
 }

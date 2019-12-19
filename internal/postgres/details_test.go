@@ -7,6 +7,7 @@ package postgres
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"testing"
@@ -19,7 +20,6 @@ import (
 	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/testing/sample"
 	"golang.org/x/discovery/internal/version"
-	"golang.org/x/xerrors"
 )
 
 func TestPostgres_GetVersionInfo_Latest(t *testing.T) {
@@ -82,7 +82,7 @@ func TestPostgres_GetVersionInfo_Latest(t *testing.T) {
 				if tc.wantErr == nil {
 					t.Fatalf("got unexpected error %v", err)
 				}
-				if !xerrors.Is(err, tc.wantErr) {
+				if !errors.Is(err, tc.wantErr) {
 					t.Fatalf("got error %v, want Is(%v)", err, tc.wantErr)
 				}
 				return

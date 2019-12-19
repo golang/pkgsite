@@ -6,11 +6,10 @@ package derrors
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"testing"
-
-	"golang.org/x/xerrors"
 )
 
 func TestFromHTTPStatus(t *testing.T) {
@@ -36,7 +35,7 @@ func TestFromHTTPStatus(t *testing.T) {
 		test := test
 		t.Run(test.label, func(t *testing.T) {
 			err := FromHTTPStatus(test.status, "error")
-			if !xerrors.Is(err, test.want) {
+			if !errors.Is(err, test.want) {
 				t.Errorf("FromHTTPStatus(%d, ...) = %v, want %v", test.status, err, test.want)
 			}
 		})
@@ -53,7 +52,7 @@ func TestToHTTPStatus(t *testing.T) {
 		{NotFound, http.StatusNotFound},
 		{BadModule, 490},
 		{Unknown, http.StatusInternalServerError},
-		{xerrors.Errorf("wrapping: %w", NotFound), http.StatusNotFound},
+		{fmt.Errorf("wrapping: %w", NotFound), http.StatusNotFound},
 		{io.ErrUnexpectedEOF, http.StatusInternalServerError},
 	} {
 		got := ToHTTPStatus(tc.in)
@@ -76,7 +75,7 @@ func TestAdd(t *testing.T) {
 	if got := err.Error(); got != want {
 		t.Errorf("got %s, want %s", got, want)
 	}
-	if got := xerrors.Unwrap(err); got != nil {
+	if got := errors.Unwrap(err); got != nil {
 		t.Errorf("Unwrap: got %v, want nil", got)
 	}
 }
@@ -95,7 +94,7 @@ func TestWrap(t *testing.T) {
 	if got := err.Error(); got != want {
 		t.Errorf("got %s, want %s", got, want)
 	}
-	if got := xerrors.Unwrap(err); got != orig {
+	if got := errors.Unwrap(err); got != orig {
 		t.Errorf("Unwrap: got %#v, want %#v", got, orig)
 	}
 }

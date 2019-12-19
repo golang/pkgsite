@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -18,7 +19,6 @@ import (
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/mod/module"
 	"golang.org/x/mod/semver"
-	"golang.org/x/xerrors"
 )
 
 // DetailsPage contains data for a package of module details template.
@@ -102,7 +102,7 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 		s.servePackagePageWithPackage(ctx, w, r, pkg, version)
 		return
 	}
-	if !xerrors.Is(err, derrors.NotFound) {
+	if !errors.Is(err, derrors.NotFound) {
 		log.Error(err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return
@@ -119,7 +119,7 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 		s.serveDirectoryPageWithDirectory(ctx, w, r, dir, version)
 		return
 	}
-	if !xerrors.Is(err, derrors.NotFound) {
+	if !errors.Is(err, derrors.NotFound) {
 		// The only error we expect is NotFound, so serve an 500 here, otherwise
 		// whatever response we resolve below might be inconsistent or misleading.
 		log.Errorf("error checking for directory: %v", err)
@@ -138,7 +138,7 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 		s.serveErrorPage(w, r, http.StatusNotFound, epage)
 		return
 	}
-	if !xerrors.Is(err, derrors.NotFound) {
+	if !errors.Is(err, derrors.NotFound) {
 		// Unlike the error handling for GetDirectory above, we don't serve an
 		// InternalServerError here. The reasoning for this is that regardless of
 		// the result of GetPackage(..., "latest"), we're going to serve a NotFound
@@ -221,7 +221,7 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 		s.serveModulePageWithModule(ctx, w, r, vi, version)
 		return
 	}
-	if !xerrors.Is(err, derrors.NotFound) {
+	if !errors.Is(err, derrors.NotFound) {
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return
 	}
@@ -362,7 +362,7 @@ func (s *Server) LatestVersion(ctx context.Context, packagePath, modulePath, pag
 	v, err := s.latestVersion(ctx, packagePath, modulePath, pageType)
 	if err != nil {
 		// We get NotFound errors from directories; they clutter the log.
-		if !xerrors.Is(err, derrors.NotFound) {
+		if !errors.Is(err, derrors.NotFound) {
 			log.Errorf("GetLatestVersion: %v", err)
 		}
 		return ""

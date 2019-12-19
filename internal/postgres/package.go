@@ -14,7 +14,6 @@ import (
 	"golang.org/x/discovery/internal/database"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/stdlib"
-	"golang.org/x/xerrors"
 )
 
 // GetPackage returns the a package from the database with the corresponding
@@ -36,16 +35,16 @@ import (
 // The latter will be returned.
 //
 // The returned error may be checked with
-// xerrors.Is(err, derrors.InvalidArgument) to determine if it was caused by an
+// errors.Is(err, derrors.InvalidArgument) to determine if it was caused by an
 // invalid pkgPath, modulePath or version.
 //
 // The returned error may be checked with
-// xerrors.Is(err, derrors.InvalidArgument) to determine if it was caused by an
+// errors.Is(err, derrors.InvalidArgument) to determine if it was caused by an
 // invalid path or version.
 func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.VersionedPackage, err error) {
 	defer derrors.Wrap(&err, "DB.GetPackage(ctx, %q, %q)", pkgPath, version)
 	if pkgPath == "" || modulePath == "" || version == "" {
-		return nil, xerrors.Errorf("none of pkgPath, modulePath, or version can be empty: %w", derrors.InvalidArgument)
+		return nil, fmt.Errorf("none of pkgPath, modulePath, or version can be empty: %w", derrors.InvalidArgument)
 	}
 
 	args := []interface{}{pkgPath}
@@ -141,7 +140,7 @@ func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version strin
 		&pkg.ModulePath, &pkg.VersionType, jsonbScanner{&pkg.SourceInfo})
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, xerrors.Errorf("package %s@%s: %w", pkgPath, version, derrors.NotFound)
+			return nil, fmt.Errorf("package %s@%s: %w", pkgPath, version, derrors.NotFound)
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}

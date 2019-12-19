@@ -6,13 +6,13 @@ package proxy
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/xerrors"
 )
 
 const testTimeout = 5 * time.Second
@@ -163,7 +163,7 @@ func TestGetZipNonExist(t *testing.T) {
 
 	path := "my.mod/nonexistmodule"
 	version := "v1.0.0"
-	if _, err := client.GetZip(ctx, path, version); !xerrors.Is(err, derrors.NotFound) {
+	if _, err := client.GetZip(ctx, path, version); !errors.Is(err, derrors.NotFound) {
 		t.Errorf("got %v, want %v", err, derrors.NotFound)
 	}
 }

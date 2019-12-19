@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"net/http"
@@ -15,7 +16,6 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/log"
-	"golang.org/x/xerrors"
 )
 
 const defaultSearchLimit = 10
@@ -129,7 +129,7 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			http.Redirect(w, r, fmt.Sprintf("/%s", pkg.Path), http.StatusFound)
 			return
-		} else if !xerrors.Is(err, derrors.NotFound) {
+		} else if !errors.Is(err, derrors.NotFound) {
 			log.Errorf("error getting package for %s: %v", path.Clean(query), err)
 		}
 	}

@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -16,7 +17,6 @@ import (
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/testing/sample"
-	"golang.org/x/xerrors"
 )
 
 func TestFetchDirectoryDetails(t *testing.T) {
@@ -207,7 +207,7 @@ func TestFetchDirectoryDetailsInvalidArguments(t *testing.T) {
 
 			got, err := fetchDirectoryDetails(ctx, testDB,
 				tc.dirPath, vi, sample.LicenseMetadata, tc.includeDirPath)
-			if !xerrors.Is(err, derrors.InvalidArgument) {
+			if !errors.Is(err, derrors.InvalidArgument) {
 				t.Fatalf("expected err; got = \n%+v, %v", got, err)
 			}
 		})

@@ -9,11 +9,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"golang.org/x/discovery/internal"
 	"math"
 	"sort"
 	"strings"
 	"time"
+
+	"golang.org/x/discovery/internal"
 
 	"github.com/lib/pq"
 	"go.opencensus.io/plugin/ochttp"
@@ -24,7 +25,6 @@ import (
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/stdlib"
-	"golang.org/x/xerrors"
 )
 
 var (
@@ -690,7 +690,7 @@ func (db *DB) UpsertSearchDocument(ctx context.Context, path string) (err error)
 	defer derrors.Wrap(&err, "UpsertSearchDocument(ctx, %q)", path)
 
 	if isInternalPackage(path) {
-		return xerrors.Errorf("cannot insert internal package %q into search documents: %w", path, derrors.InvalidArgument)
+		return fmt.Errorf("cannot insert internal package %q into search documents: %w", path, derrors.InvalidArgument)
 	}
 
 	pathTokens := strings.Join(generatePathTokens(path), " ")

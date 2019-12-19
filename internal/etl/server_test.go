@@ -22,7 +22,6 @@ import (
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/testing/sample"
-	"golang.org/x/xerrors"
 )
 
 const testTimeout = 30 * time.Second
@@ -181,7 +180,7 @@ func TestETL(t *testing.T) {
 						fooIndex.Path, fooIndex.Version, diff)
 				}
 			} else if test.wantFoo == nil {
-				if !xerrors.Is(err, derrors.NotFound) {
+				if !errors.Is(err, derrors.NotFound) {
 					t.Errorf("expected Not Found error for foo, got %v", err)
 				}
 			} else {
@@ -194,7 +193,7 @@ func TestETL(t *testing.T) {
 						barIndex.Path, barIndex.Version, diff)
 				}
 			} else if test.wantBar == nil {
-				if !xerrors.Is(err, derrors.NotFound) {
+				if !errors.Is(err, derrors.NotFound) {
 					t.Errorf("expected Not Found error for bar, got %v", err)
 				}
 			} else {

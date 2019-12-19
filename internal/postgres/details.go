@@ -20,7 +20,6 @@ import (
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/version"
-	"golang.org/x/xerrors"
 )
 
 // GetPackagesInVersion returns packages contained in the module version
@@ -64,7 +63,7 @@ func (db *DB) GetPackagesInVersion(ctx context.Context, modulePath, version stri
 	}
 
 	if err := db.db.RunQuery(ctx, query, collect, modulePath, version); err != nil {
-		return nil, xerrors.Errorf("DB.GetPackagesInVersion(ctx, %q, %q): %w", err)
+		return nil, fmt.Errorf("DB.GetPackagesInVersion(ctx, %q, %q): %w", modulePath, version, err)
 	}
 	return packages, nil
 }
@@ -212,7 +211,7 @@ func (db *DB) GetImports(ctx context.Context, pkgPath, modulePath, version strin
 	defer derrors.Wrap(&err, "DB.GetImports(ctx, %q, %q, %q)", pkgPath, modulePath, version)
 
 	if pkgPath == "" || version == "" || modulePath == "" {
-		return nil, xerrors.Errorf("pkgPath, modulePath and version must all be non-empty: %w", derrors.InvalidArgument)
+		return nil, fmt.Errorf("pkgPath, modulePath and version must all be non-empty: %w", derrors.InvalidArgument)
 	}
 
 	var toPath string
@@ -249,7 +248,7 @@ func (db *DB) GetImports(ctx context.Context, pkgPath, modulePath, version strin
 func (db *DB) GetImportedBy(ctx context.Context, pkgPath, modulePath string, limit int) (paths []string, err error) {
 	defer derrors.Wrap(&err, "GetImportedBy(ctx, %q, %q)", pkgPath, modulePath)
 	if pkgPath == "" {
-		return nil, xerrors.Errorf("pkgPath cannot be empty: %w", derrors.InvalidArgument)
+		return nil, fmt.Errorf("pkgPath cannot be empty: %w", derrors.InvalidArgument)
 	}
 	query := `
 		SELECT
@@ -286,7 +285,7 @@ func (db *DB) GetModuleLicenses(ctx context.Context, modulePath, version string)
 	defer derrors.Wrap(&err, "GetModuleLicenses(ctx, %q, %q)", modulePath, version)
 
 	if modulePath == "" || version == "" {
-		return nil, xerrors.Errorf("neither modulePath nor version can be empty: %w", derrors.InvalidArgument)
+		return nil, fmt.Errorf("neither modulePath nor version can be empty: %w", derrors.InvalidArgument)
 	}
 	query := `
 	SELECT
@@ -311,7 +310,7 @@ func (db *DB) GetPackageLicenses(ctx context.Context, pkgPath, modulePath, versi
 	defer derrors.Wrap(&err, "GetPackageLicenses(ctx, %q, %q, %q)", pkgPath, modulePath, version)
 
 	if pkgPath == "" || version == "" {
-		return nil, xerrors.Errorf("neither pkgPath nor version can be empty: %w", derrors.InvalidArgument)
+		return nil, fmt.Errorf("neither pkgPath nor version can be empty: %w", derrors.InvalidArgument)
 	}
 	query := `
 		SELECT
@@ -460,7 +459,7 @@ func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version str
 		database.NullIsEmpty(&vi.ReadmeFilePath), database.NullIsEmpty(&vi.ReadmeContents), &vi.VersionType,
 		jsonbScanner{&vi.SourceInfo}); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, xerrors.Errorf("module version %s@%s: %w", modulePath, version, derrors.NotFound)
+			return nil, fmt.Errorf("module version %s@%s: %w", modulePath, version, derrors.NotFound)
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}

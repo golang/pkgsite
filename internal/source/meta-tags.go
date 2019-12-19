@@ -13,7 +13,6 @@ import (
 	"strings"
 
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/xerrors"
 )
 
 // This code adapted from https://go.googlesource.com/gddo/+/refs/heads/master/gosrc/gosrc.go.
@@ -148,7 +147,7 @@ metaScan:
 		}
 	}
 	if sm == nil {
-		return nil, xerrors.Errorf("%s: %w", errorMessage, derrors.NotFound)
+		return nil, fmt.Errorf("%s: %w", errorMessage, derrors.NotFound)
 	}
 	return sm, nil
 }

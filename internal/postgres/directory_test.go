@@ -6,6 +6,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"sort"
 	"testing"
 
@@ -17,7 +18,6 @@ import (
 	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/testing/sample"
-	"golang.org/x/xerrors"
 )
 
 func TestGetDirectory(t *testing.T) {
@@ -254,7 +254,7 @@ func TestGetDirectory(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := testDB.GetDirectory(ctx, tc.dirPath, tc.modulePath, tc.version, internal.AllFields)
 			if tc.wantNotFoundErr {
-				if !xerrors.Is(err, derrors.NotFound) {
+				if !errors.Is(err, derrors.NotFound) {
 					t.Fatalf("want %v; got = \n%+v, %v", derrors.NotFound, got, err)
 				}
 				return

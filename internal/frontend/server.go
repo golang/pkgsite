@@ -172,9 +172,9 @@ func (s *Server) staticPageHandler(templateName, title string) http.HandlerFunc 
 
 // basePage contains fields shared by all pages when rendering templates.
 type basePage struct {
-	HTMLTitle string
-	Query     string
-	Nonce     string
+	HTMLTitle   string
+	Query       string
+	Nonce       string
 	Experiments *Experiments
 }
 
@@ -182,7 +182,7 @@ type basePage struct {
 // experiments. The actual experiment functionality is being implemented in
 // b/146052411.
 // TODO(b/146052411): make this real
-type Experiments struct {}
+type Experiments struct{}
 
 // Active reports whether the experiment id is active.
 func (e *Experiments) Active(id string) bool {

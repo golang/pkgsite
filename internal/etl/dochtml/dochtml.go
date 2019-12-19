@@ -24,7 +24,6 @@ import (
 
 	"golang.org/x/discovery/internal/etl/dochtml/internal/render"
 	"golang.org/x/discovery/internal/etl/internal/doc"
-	"golang.org/x/xerrors"
 )
 
 var (
@@ -109,7 +108,7 @@ func Render(fset *token.FileSet, p *doc.Package, opt RenderOptions) (string, err
 		Examples: collectExamples(p),
 	})
 	if buf.Remain < 0 {
-		return "", xerrors.Errorf("dochtml.Render: %w", ErrTooLarge)
+		return "", fmt.Errorf("dochtml.Render: %w", ErrTooLarge)
 	} else if err != nil {
 		return "", fmt.Errorf("dochtml.Render: %v", err)
 	}

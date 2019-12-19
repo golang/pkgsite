@@ -19,10 +19,9 @@ import (
 	"golang.org/x/discovery/internal/database"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/stdlib"
+	"golang.org/x/discovery/internal/version"
 	"golang.org/x/mod/module"
 	"golang.org/x/mod/semver"
-	"golang.org/x/discovery/internal/version"
-	"golang.org/x/xerrors"
 )
 
 // InsertVersion inserts a version into the database using
@@ -38,7 +37,7 @@ func (db *DB) InsertVersion(ctx context.Context, v *internal.Version) (err error
 	}()
 
 	if err := validateVersion(v); err != nil {
-		return xerrors.Errorf("validateVersion: %v: %w", err, derrors.InvalidArgument)
+		return fmt.Errorf("validateVersion: %v: %w", err, derrors.InvalidArgument)
 	}
 	removeNonDistributableData(v)
 
@@ -46,7 +45,7 @@ func (db *DB) InsertVersion(ctx context.Context, v *internal.Version) (err error
 		return err
 	}
 	for _, pkg := range v.Packages {
-		if err := db.UpsertSearchDocument(ctx, pkg.Path); err != nil && !xerrors.Is(err, derrors.InvalidArgument) {
+		if err := db.UpsertSearchDocument(ctx, pkg.Path); err != nil && !errors.Is(err, derrors.InvalidArgument) {
 			return err
 		}
 	}
@@ -225,7 +224,7 @@ func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("DB.saveVersion(ctx, Version(%q, %q)): %w", v.ModulePath, v.Version, err)
+		return fmt.Errorf("DB.saveVersion(ctx, Version(%q, %q)): %w", v.ModulePath, v.Version, err)
 	}
 	return nil
 }

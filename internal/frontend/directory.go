@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -17,7 +18,6 @@ import (
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/stdlib"
-	"golang.org/x/xerrors"
 )
 
 // DirectoryPage contains data needed to generate a directory template.
@@ -44,7 +44,7 @@ func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirP
 	dbDir, err := s.ds.GetDirectory(ctx, dirPath, modulePath, version, internal.AllFields)
 	if err != nil {
 		status := http.StatusInternalServerError
-		if xerrors.Is(err, derrors.NotFound) {
+		if errors.Is(err, derrors.NotFound) {
 			status = http.StatusNotFound
 		} else {
 			log.Errorf("serveDirectoryPage for %s@%s: %v", dirPath, version, err)
@@ -115,7 +115,7 @@ func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, dirPath 
 	defer derrors.Wrap(&err, "s.ds.fetchDirectoryDetails(%q, %q, %q, %v)", dirPath, vi.ModulePath, vi.Version, licmetas)
 
 	if includeDirPath && dirPath != vi.ModulePath && dirPath != stdlib.ModulePath {
-		return nil, xerrors.Errorf("includeDirPath can only be set to true if dirPath = modulePath: %w", derrors.InvalidArgument)
+		return nil, fmt.Errorf("includeDirPath can only be set to true if dirPath = modulePath: %w", derrors.InvalidArgument)
 	}
 
 	if dirPath == stdlib.ModulePath {
@@ -131,7 +131,7 @@ func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, dirPath 
 	}
 
 	dbDir, err := ds.GetDirectory(ctx, dirPath, vi.ModulePath, vi.Version, internal.AllFields)
-	if xerrors.Is(err, derrors.NotFound) {
+	if errors.Is(err, derrors.NotFound) {
 		return createDirectory(&internal.Directory{
 			VersionInfo: *vi,
 			Path:        dirPath,

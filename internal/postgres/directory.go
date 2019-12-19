@@ -15,7 +15,6 @@ import (
 	"golang.org/x/discovery/internal/database"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/stdlib"
-	"golang.org/x/xerrors"
 )
 
 // GetDirectory returns the directory corresponding to the provided dirPath,
@@ -58,7 +57,7 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version str
 	defer derrors.Wrap(&err, "DB.GetDirectory(ctx, %q, %q, %q)", dirPath, modulePath, version)
 
 	if dirPath == "" || modulePath == "" || version == "" {
-		return nil, xerrors.Errorf("none of pkgPath, modulePath, or version can be empty: %w", derrors.InvalidArgument)
+		return nil, fmt.Errorf("none of pkgPath, modulePath, or version can be empty: %w", derrors.InvalidArgument)
 	}
 
 	var (
@@ -120,7 +119,7 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version str
 		return nil, err
 	}
 	if len(packages) == 0 {
-		return nil, xerrors.Errorf("packages in directory not found: %w", derrors.NotFound)
+		return nil, fmt.Errorf("packages in directory not found: %w", derrors.NotFound)
 	}
 	sort.Slice(packages, func(i, j int) bool {
 		return packages[i].Path < packages[j].Path

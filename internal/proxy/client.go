@@ -24,7 +24,6 @@ import (
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/mod/module"
 	"golang.org/x/net/context/ctxhttp"
-	"golang.org/x/xerrors"
 )
 
 // A Client is used by the fetch service to communicate with a module
@@ -123,7 +122,7 @@ func (c *Client) escapedURL(modulePath, version, suffix string) (_ string, err e
 	}
 	escapedPath, err := module.EscapePath(modulePath)
 	if err != nil {
-		return "", xerrors.Errorf("path: %v: %w", err, derrors.InvalidArgument)
+		return "", fmt.Errorf("path: %v: %w", err, derrors.InvalidArgument)
 	}
 	if version == internal.LatestVersion {
 		if suffix != "info" {
@@ -133,7 +132,7 @@ func (c *Client) escapedURL(modulePath, version, suffix string) (_ string, err e
 	}
 	escapedVersion, err := module.EscapeVersion(version)
 	if err != nil {
-		return "", xerrors.Errorf("version: %v: %w", err, derrors.InvalidArgument)
+		return "", fmt.Errorf("version: %v: %w", err, derrors.InvalidArgument)
 	}
 	return fmt.Sprintf("%s/%s/@v/%s.%s", c.url, escapedPath, escapedVersion, suffix), nil
 }
@@ -143,7 +142,7 @@ func (c *Client) escapedURL(modulePath, version, suffix string) (_ string, err e
 func (c *Client) ListVersions(ctx context.Context, modulePath string) ([]string, error) {
 	escapedPath, err := module.EscapePath(modulePath)
 	if err != nil {
-		return nil, xerrors.Errorf("module.EscapePath(%q): %w", modulePath, derrors.InvalidArgument)
+		return nil, fmt.Errorf("module.EscapePath(%q): %w", modulePath, derrors.InvalidArgument)
 	}
 	u := fmt.Sprintf("%s/%s/@v/list", c.url, escapedPath)
 	var versions []string
@@ -175,7 +174,7 @@ func (c *Client) executeRequest(ctx context.Context, u string, bodyFunc func(bod
 		r.StatusCode == http.StatusGone:
 		// Treat both 404 Not Found and 410 Gone responses
 		// from the proxy as a "not found" error category.
-		return xerrors.Errorf("ctxhttp.Get(ctx, client, %q): %w", u, derrors.NotFound)
+		return fmt.Errorf("ctxhttp.Get(ctx, client, %q): %w", u, derrors.NotFound)
 	default:
 		return fmt.Errorf("ctxhttp.Get(ctx, client, %q): unexpected status %d %s", u, r.StatusCode, r.Status)
 	}

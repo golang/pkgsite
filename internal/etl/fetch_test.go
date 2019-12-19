@@ -30,7 +30,6 @@ import (
 	"golang.org/x/discovery/internal/testing/sample"
 	"golang.org/x/discovery/internal/testing/testhelper"
 	"golang.org/x/discovery/internal/version"
-	"golang.org/x/xerrors"
 )
 
 func TestSkipIncompletePackage(t *testing.T) {
@@ -72,7 +71,7 @@ func TestSkipIncompletePackage(t *testing.T) {
 		t.Errorf("got %v, want nil", err)
 	}
 	pkgBar := modulePath + "/bar"
-	if _, err := testDB.GetPackage(ctx, pkgBar, internal.UnknownModulePath, version); !xerrors.Is(err, derrors.NotFound) {
+	if _, err := testDB.GetPackage(ctx, pkgBar, internal.UnknownModulePath, version); !errors.Is(err, derrors.NotFound) {
 		t.Errorf("got %v, want NotFound", err)
 	}
 }
@@ -248,7 +247,7 @@ func TestReFetch(t *testing.T) {
 	}
 
 	// For good measure, verify that package foo is now NotFound.
-	if _, err := testDB.GetPackage(ctx, pkgFoo, internal.UnknownModulePath, version); !xerrors.Is(err, derrors.NotFound) {
+	if _, err := testDB.GetPackage(ctx, pkgFoo, internal.UnknownModulePath, version); !errors.Is(err, derrors.NotFound) {
 		t.Errorf("got %v, want NotFound", err)
 	}
 }
@@ -767,11 +766,11 @@ func TestFetchAndUpdateState_Excluded(t *testing.T) {
 
 	code, err := fetchAndUpdateState(ctx, modulePath, version, client, testDB)
 	wantCode := http.StatusForbidden
-	if code != wantCode || !xerrors.Is(err, derrors.Excluded) {
+	if code != wantCode || !errors.Is(err, derrors.Excluded) {
 		t.Fatalf("got %d, %v; want %d, Is(err, derrors.Excluded)", code, err, wantCode)
 	}
 	_, err = testDB.GetVersionInfo(ctx, modulePath, version)
-	if !xerrors.Is(err, derrors.NotFound) {
+	if !errors.Is(err, derrors.NotFound) {
 		t.Fatalf("got %v, want Is(NotFound)", err)
 	}
 	vs, err := testDB.GetVersionState(ctx, modulePath, version)
@@ -849,7 +848,7 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	checkStatus(http.StatusNotFound)
 
 	// The module should no longer be in the database.
-	if _, err := testDB.GetVersionInfo(ctx, modulePath, version); !xerrors.Is(err, derrors.NotFound) {
+	if _, err := testDB.GetVersionInfo(ctx, modulePath, version); !errors.Is(err, derrors.NotFound) {
 		t.Fatalf("got %v, want NotFound", err)
 	}
 }

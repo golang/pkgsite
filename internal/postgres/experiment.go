@@ -6,10 +6,10 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/xerrors"
 )
 
 // GetActiveExperiments fetches all experiments where rollout is greater than 0.
@@ -33,7 +33,7 @@ func (db *DB) GetActiveExperiments(ctx context.Context) (_ []*internal.Experimen
 func (db *DB) insertExperiment(ctx context.Context, e *internal.Experiment) (err error) {
 	defer derrors.Wrap(&err, "DB.insertExperiment(ctx, %v)", e)
 	if e.Name == "" || e.Description == "" {
-		return xerrors.Errorf("neither name nor description can be empty: %w", derrors.InvalidArgument)
+		return fmt.Errorf("neither name nor description can be empty: %w", derrors.InvalidArgument)
 	}
 
 	_, err = db.db.Exec(ctx,
@@ -47,7 +47,7 @@ func (db *DB) insertExperiment(ctx context.Context, e *internal.Experiment) (err
 func (db *DB) updateExperiment(ctx context.Context, e *internal.Experiment) (err error) {
 	defer derrors.Wrap(&err, "DB.updateExperimentRollout(ctx, %v)", e)
 	if e.Name == "" || e.Description == "" {
-		return xerrors.Errorf("neither name nor description can be empty: %w", derrors.InvalidArgument)
+		return fmt.Errorf("neither name nor description can be empty: %w", derrors.InvalidArgument)
 	}
 
 	query := `UPDATE experiments

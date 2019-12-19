@@ -28,7 +28,6 @@ import (
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/stdlib"
-	"golang.org/x/xerrors"
 )
 
 // Server can be installed to serve the go discovery etl.
@@ -375,7 +374,7 @@ func (s *Server) doPopulateStdLib(ctx context.Context, suffix string) (string, e
 	}
 	for _, v := range versions {
 		if err := s.queue.ScheduleFetch(ctx, stdlib.ModulePath, v, suffix); err != nil {
-			return "", xerrors.Errorf("Error scheduling fetch for %s: %w", v, err)
+			return "", fmt.Errorf("Error scheduling fetch for %s: %w", v, err)
 		}
 	}
 	return fmt.Sprintf("Scheduled fetches for %s.\n", strings.Join(versions, ", ")), nil
