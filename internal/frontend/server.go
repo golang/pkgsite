@@ -127,7 +127,7 @@ func detailsTTL(ctx context.Context, urlPath, tab string) time.Duration {
 	}
 	_, _, version, err := parseDetailsURLPath(urlPath)
 	if err != nil {
-		log.Errorf(ctx, "falling back to default module TTL: %v", err)
+		log.Errorf(ctx, "falling back to default TTL: %v", err)
 		return defaultTTL
 	}
 	if version == internal.LatestVersion {
