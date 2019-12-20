@@ -89,11 +89,6 @@ func getPackageVersions(ctx context.Context, db *DB, pkgPath string, versionType
 	defer derrors.Wrap(&err, "DB.getPackageVersions(ctx, db, %q, %v)", pkgPath, versionTypes)
 
 	baseQuery := `
-		WITH v1paths AS (
-			SELECT DISTINCT v1_path
-			FROM packages
-			WHERE path=$1
-		)
 		SELECT
 			p.module_path,
 			p.version,
@@ -106,7 +101,12 @@ func getPackageVersions(ctx context.Context, db *DB, pkgPath string, versionType
 			p.module_path = v.module_path
 			AND p.version = v.version
 		WHERE
-			p.v1_path IN (SELECT * FROM v1paths)
+			p.v1_path = (
+				SELECT v1_path
+				FROM packages
+				WHERE path = $1
+				LIMIT 1
+			)
 			AND version_type in (%s)
 		ORDER BY
 			v.sort_version DESC %s`
