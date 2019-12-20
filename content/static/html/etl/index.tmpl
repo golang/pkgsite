@@ -140,13 +140,13 @@ td {
 
 <div class="stats">
   <h3>Statistics</h3>
-  <p>Latest timestamp from the module index: {{.Stats.LatestTimestamp | timefmt}}</p>
+  <p>Latest timestamp from the module index: {{.LatestTimestamp | timefmt}}</p>
   <table>
     <caption>Results by status:</caption>
-    <thead><tr><th>Status</th><th>Count</th></tr></thead>
+    <thead><tr><th>Code</th><th>Status</th><th>Count</th></tr></thead>
     <tbody>
-      {{range $status, $count := .Stats.VersionCounts}}
-        <tr><td>{{$status}}</td><td>{{$count}}</td></tr>
+      {{range .Counts}}
+        <tr><td>{{.Code}}</td><td>{{.Desc}}</td><td>{{.Count}}</td></tr>
       {{end}}
     </tbody>
   </table>

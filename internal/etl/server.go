@@ -12,6 +12,7 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -331,18 +332,40 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (string, e
 	if err != nil {
 		return "error fetching stats", err
 	}
+
+	type count struct {
+		Code  int
+		Desc  string
+		Count int
+	}
+	var counts []*count
+	for code, n := range stats.VersionCounts {
+		desc := http.StatusText(code)
+		if desc == "" {
+			if e := derrors.FromHTTPStatus(code, ""); e != nil {
+				desc = e.Error()
+			} else if code == hasIncompletePackagesCode {
+				desc = hasIncompletePackagesDesc
+			}
+		}
+		counts = append(counts, &count{Code: code, Desc: desc, Count: n})
+	}
+	sort.Slice(counts, func(i, j int) bool { return counts[i].Code < counts[j].Code })
+
 	page := struct {
 		Project                      string
 		ServicePrefix                string
-		Stats                        *postgres.VersionStats
+		LatestTimestamp              *time.Time
+		Counts                       []*count
 		Next, Recent, RecentFailures []*internal.VersionState
 	}{
-		Project:        "go-discovery",
-		ServicePrefix:  strings.TrimSuffix(config.ServiceID(), "etl"),
-		Stats:          stats,
-		Next:           next,
-		Recent:         recents,
-		RecentFailures: failures,
+		Project:         "go-discovery",
+		ServicePrefix:   strings.TrimSuffix(config.ServiceID(), "etl"),
+		LatestTimestamp: &stats.LatestTimestamp,
+		Counts:          counts,
+		Next:            next,
+		Recent:          recents,
+		RecentFailures:  failures,
 	}
 	var buf bytes.Buffer
 	if err := s.indexTemplate.Execute(&buf, page); err != nil {

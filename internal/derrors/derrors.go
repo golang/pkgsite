@@ -47,7 +47,8 @@ var httpCodes = []struct {
 
 // FromHTTPStatus generates an error according to the HTTP semantics for the given
 // status code. It uses the given format string and arguments to create the
-// error string according to the fmt package.
+// error string according to the fmt package. If format is the empty string,
+// then the error corresponding to the code is returned unwrapped.
 //
 // If HTTP semantics indicate success, it returns nil.
 func FromHTTPStatus(code int, format string, args ...interface{}) error {
@@ -60,6 +61,9 @@ func FromHTTPStatus(code int, format string, args ...interface{}) error {
 			innerErr = e.err
 			break
 		}
+	}
+	if format == "" {
+		return innerErr
 	}
 	return fmt.Errorf(format+": %w", append(args, innerErr)...)
 }
