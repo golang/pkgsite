@@ -13,6 +13,15 @@
 <link href="/static/css/stylesheet.css?version={{.AppVersionLabel}}" rel="stylesheet">
 <link href="/static/thirdparty/dialog-polyfill/dialog-polyfill.css?version={{.AppVersionLabel}}" rel="stylesheet">
 <title>{{if .HTMLTitle}}{{.HTMLTitle}} · {{end}}go.dev</title>
+<!-- Google Tag Manager -->
+<script nonce="{{.Nonce}}">
+(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','{{.GoogleTagManagerContainerID}}');
+</script>
+<!-- End Google Tag Manager -->
 <script nonce="{{.Nonce}}" src="https://support.google.com/inapp/api.js"></script>
 <script nonce="{{.Nonce}}" src="/static/js/feedback.js?version={{.AppVersionLabel}}"></script>
 <script nonce="{{.Nonce}}" async src="/static/js/site.js?version={{.AppVersionLabel}}"></script>
@@ -26,6 +35,10 @@
   gtag('config', '{{.GoogleAnalyticsTrackingID}}');
 </script>
 <body class="Site">
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe nonce="{{.Nonce}}" src="https://www.googletagmanager.com/ns.html?id={{.GoogleTagManagerContainerID}}"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
 <header class="Site-header Site-header--dark">
   <div class="Header">
     <nav class="Header-nav">

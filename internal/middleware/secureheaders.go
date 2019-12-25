@@ -97,6 +97,7 @@ func SecureHeaders() Middleware {
 			p.add("script-src",
 				fmt.Sprintf("'nonce-%s'", nonce),
 				"www.gstatic.com",
+				"www.googletagmanager.com",
 				"support.google.com")
 
 			// Don't allow framing.

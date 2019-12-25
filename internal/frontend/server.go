@@ -214,6 +214,12 @@ func newBasePage(r *http.Request, title string) basePage {
 	return "UA-141356704-1"
 }
 
+// GoogleTagManagerContainerID returns the container ID from
+// https://tagmanager.google.com/#/container/accounts/6000276055/containers/30295771.
+func (b basePage) GoogleTagManagerContainerID() string {
+	return "GTM-5J9TM28"
+}
+
 // AppVersionLabel uniquely identifies the currently running binary. It can be
 // used for cache-busting query parameters.
 func (b basePage) AppVersionLabel() string {
