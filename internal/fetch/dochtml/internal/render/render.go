@@ -17,7 +17,7 @@ import (
 	"regexp"
 	"strings"
 
-	"golang.org/x/discovery/internal/etl/internal/doc"
+	"golang.org/x/discovery/internal/fetch/internal/doc"
 )
 
 // TODO: Hide slice elements and long strings to avoid overwhelming godoc.

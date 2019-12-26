@@ -17,7 +17,7 @@ import (
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/etl"
+	"golang.org/x/discovery/internal/fetch"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/version"
@@ -250,7 +250,7 @@ func (ds *DataSource) getVersion(ctx context.Context, modulePath, version string
 		return e.version, e.err
 	}
 
-	v, _, err := etl.FetchVersion(ctx, modulePath, version, ds.proxyClient)
+	v, _, err := fetch.FetchVersion(ctx, modulePath, version, ds.proxyClient)
 	ds.versionCache[key] = &versionEntry{version: v, err: err}
 	if err != nil {
 		return nil, err

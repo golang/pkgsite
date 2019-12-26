@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 
@@ -26,7 +27,10 @@ import (
 
 const testTimeout = 30 * time.Second
 
-var testDB *postgres.DB
+var (
+	testDB     *postgres.DB
+	httpClient *http.Client
+)
 
 func TestMain(m *testing.M) {
 	httpClient = &http.Client{Transport: fakeTransport{}}
@@ -217,5 +221,66 @@ func TestParseIntParam(t *testing.T) {
 		if got != test.want {
 			t.Errorf("%q: got %d, want %d", test.in, got, test.want)
 		}
+	}
+}
+
+func TestParseModulePathAndVersion(t *testing.T) {
+	testCases := []struct {
+		name    string
+		url     string
+		module  string
+		version string
+		err     error
+	}{
+		{
+			name:    "ValidFetchURL",
+			url:     "https://proxy.com/module/@v/v1.0.0",
+			module:  "module",
+			version: "v1.0.0",
+			err:     nil,
+		},
+		{
+			name: "InvalidFetchURL",
+			url:  "https://proxy.com/",
+			err:  errors.New(`invalid path: "/"`),
+		},
+		{
+			name: "InvalidFetchURLNoModule",
+			url:  "https://proxy.com/@v/version",
+			err:  errors.New(`invalid path: "/@v/version"`),
+		},
+		{
+			name: "InvalidFetchURLNoVersion",
+			url:  "https://proxy.com/module/@v/",
+			err:  errors.New(`invalid path: "/module/@v/"`),
+		},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.name, func(t *testing.T) {
+			u, err := url.Parse(test.url)
+			if err != nil {
+				t.Errorf("url.Parse(%q): %v", test.url, err)
+			}
+
+			m, v, err := parseModulePathAndVersion(u.Path)
+			if test.err != nil {
+				if err == nil {
+					t.Fatalf("parseModulePathAndVersion(%q): error = nil; want = (%v)", u.Path, test.err)
+				}
+				if test.err.Error() != err.Error() {
+					t.Fatalf("error = (%v); want = (%v)", err, test.err)
+				} else {
+					return
+				}
+			} else if err != nil {
+				t.Fatalf("error = (%v); want = (%v)", err, test.err)
+			}
+
+			if test.module != m || test.version != v {
+				t.Fatalf("parseModulePathAndVersion(%v): %q, %q, %v; want = %q, %q, %v",
+					u, m, v, err, test.module, test.version, test.err)
+			}
+		})
 	}
 }

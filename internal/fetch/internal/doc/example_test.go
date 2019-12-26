@@ -14,7 +14,7 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/discovery/internal/etl/internal/doc"
+	"golang.org/x/discovery/internal/fetch/internal/doc"
 )
 
 const exampleTestFile = `

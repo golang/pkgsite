@@ -22,8 +22,8 @@ import (
 	pathpkg "path"
 	"sort"
 
-	"golang.org/x/discovery/internal/etl/dochtml/internal/render"
-	"golang.org/x/discovery/internal/etl/internal/doc"
+	"golang.org/x/discovery/internal/fetch/dochtml/internal/render"
+	"golang.org/x/discovery/internal/fetch/internal/doc"
 )
 
 var (

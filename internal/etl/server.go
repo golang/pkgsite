@@ -374,7 +374,7 @@ func (s *Server) doPopulateStdLib(ctx context.Context, suffix string) (string, e
 	}
 	for _, v := range versions {
 		if err := s.queue.ScheduleFetch(ctx, stdlib.ModulePath, v, suffix); err != nil {
-			return "", fmt.Errorf("Error scheduling fetch for %s: %w", v, err)
+			return "", fmt.Errorf("error scheduling fetch for %s: %w", v, err)
 		}
 	}
 	return fmt.Sprintf("Scheduled fetches for %s.\n", strings.Join(versions, ", ")), nil

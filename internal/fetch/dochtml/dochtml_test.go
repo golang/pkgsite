@@ -15,7 +15,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"golang.org/x/discovery/internal/etl/internal/doc"
+	"golang.org/x/discovery/internal/fetch/internal/doc"
 	"golang.org/x/net/html"
 )
 

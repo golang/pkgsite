@@ -10,7 +10,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"golang.org/x/discovery/internal/etl"
+	"golang.org/x/discovery/internal/fetch"
 	"golang.org/x/discovery/internal/frontend"
 	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
@@ -172,7 +172,7 @@ func processVersions(ctx context.Context, t *testing.T, testVersions []*proxy.Te
 	defer teardown()
 
 	for _, tv := range testVersions {
-		v, _, err := etl.FetchVersion(ctx, tv.ModulePath, tv.Version, proxyClient)
+		v, _, err := fetch.FetchVersion(ctx, tv.ModulePath, tv.Version, proxyClient)
 		if err != nil {
 			t.Fatal(err)
 		}
