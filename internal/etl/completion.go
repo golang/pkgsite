@@ -6,6 +6,7 @@ package etl
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -71,29 +72,6 @@ func updateRedisIndexes(ctx context.Context, db *database.DB, redisClient *redis
 	// we first look for evidence of another update operation currently running,
 	// by scanning Redis for keys that match the temporary key pattern.
 
-	query := `
-		SELECT package_path, module_path, version, imported_by_count
-		FROM search_documents`
-	var args []interface{}
-
-	// Here we use the *sql.DB directly, rather than a function on postgres.DB,
-	// so that we can write to our redis pipeline while we stream results from
-	// the DB. Otherwise, we would have to:
-	//  - add a method on postgres.DB for the trivial query above
-	//  - add a type (or reuse SearchResult) to hold the subset of search
-	//    document data used here.
-	//  - hold two copies of all search results in memory while building the
-	//    redis pipeline below.
-	//
-	// It seemed cleaner to expose the sql.DB here.
-	rows, err := db.Query(ctx, query, args...)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-	pipe := redisClient.Pipeline()
-	defer pipe.Close()
-
 	// Check for an ongoing update operation, as described above.
 	tempKeyPattern := fmt.Sprintf("%s*-*", complete.KeyPrefix)
 	existing, _, err := redisClient.Scan(0, tempKeyPattern, 1).Result()
@@ -119,6 +97,23 @@ func updateRedisIndexes(ctx context.Context, db *database.DB, redisClient *redis
 		}
 	}()
 
+	// pipeSize tracks the number of ZADD statements in the pipe.
+	pipeSize := 0
+	pipe := redisClient.Pipeline()
+	defer pipe.Close()
+	// flush executes the current pipeline and resets its state.
+	flush := func() error {
+		log.Infof(ctx, "Writing completion data pipeline of size %d.", pipeSize)
+		if _, err := pipe.ExecContext(ctx); err != nil {
+			return fmt.Errorf("redis error: pipe.Exec: %v", err)
+		}
+		// As of writing this is unnecessary as ExecContext resets the pipeline
+		// commands, but since this is not documented functionality we explicitly
+		// Discard.
+		pipe.Discard()
+		pipeSize = 0
+		return nil
+	}
 	// Track whether or not we have any entries in the popular or remaining
 	// indexes. This is an edge case, but if we don't insert any entries for a
 	// given index the key won't exist and we'll get an error when renaming.
@@ -126,11 +121,12 @@ func updateRedisIndexes(ctx context.Context, db *database.DB, redisClient *redis
 		haveRemaining bool
 		havePopular   bool
 	)
-	// Build up a Redis pipeline as we scan the search_documents table. If needed
-	// this pipeline could be intermittently flushed, but in testing it was
-	// fastest to use one single pipeline.
-	for rows.Next() {
-		// partial holds everything but the completion suffix.
+	// As of writing there were around 5M entries in our index, so writing in
+	// batches of 1M should result in ~6 batches.
+	const batchSize = 1e6
+	// processRow builds up a Redis pipeline as we scan the search_documents
+	// table.
+	processRow := func(rows *sql.Rows) error {
 		var partial complete.Completion
 		if err := rows.Scan(&partial.PackagePath, &partial.ModulePath, &partial.Version, &partial.Importers); err != nil {
 			return fmt.Errorf("rows.Scan: %v", err)
@@ -148,16 +144,41 @@ func updateRedisIndexes(ctx context.Context, db *database.DB, redisClient *redis
 			haveRemaining = true
 			pipe.ZAdd(keyRem, zs...)
 		}
+		pipeSize += len(zs)
+		if pipeSize > batchSize {
+			if err := flush(); err != nil {
+				return err
+			}
+		}
+		return nil
 	}
-	if _, err := pipe.ExecContext(ctx); err != nil {
-		return fmt.Errorf("redis error: pipe.Exec: %v", err)
+
+	// Here we use the *database.DB rather than a function on postgres.DB,
+	// so that we can write to our redis pipeline while we stream results from
+	// the DB. Otherwise, we would have to:
+	//  - add a method on postgres.DB for the trivial query above
+	//  - add a type (or reuse SearchResult) to hold the subset of search
+	//    document data used here.
+	//  - hold two copies of all search results in memory while building the
+	//    redis pipeline below.
+	query := `
+		SELECT package_path, module_path, version, imported_by_count
+		FROM search_documents`
+	if err := db.RunQuery(ctx, query, processRow); err != nil {
+		return err
 	}
+	if err := flush(); err != nil {
+		return err
+	}
+	pipe.Close()
 	if havePopular {
+		log.Infof(ctx, "Renaming %q to %q", keyPop, complete.PopularKey)
 		if _, err := redisClient.Rename(keyPop, complete.PopularKey).Result(); err != nil {
 			return fmt.Errorf(`redis error: Rename(%q, %q): %v`, keyPop, complete.PopularKey, err)
 		}
 	}
 	if haveRemaining {
+		log.Infof(ctx, "Renaming %q to %q", keyRem, complete.RemainingKey)
 		if _, err := redisClient.Rename(keyRem, complete.RemainingKey).Result(); err != nil {
 			return fmt.Errorf(`redis error: Rename(%q, %q): %v`, keyRem, complete.RemainingKey, err)
 		}
