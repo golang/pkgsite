@@ -37,7 +37,7 @@ var testDB *postgres.DB
 
 func TestMain(m *testing.M) {
 	httpClient = &http.Client{Transport: fakeTransport{}}
-	postgres.RunDBTests("discovery_etl_test", m, &testDB)
+	postgres.RunDBTests("discovery_fetch_test", m, &testDB)
 }
 
 type fakeTransport struct{}
