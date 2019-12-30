@@ -19,6 +19,61 @@ import (
 	"golang.org/x/discovery/internal/proxy"
 )
 
+// fetchTimeout bounds the time allowed for fetching a single module.  It is
+// mutable for testing purposes.
+var fetchTimeout = 2 * config.StatementTimeout
+
+// Indicates that although we have a valid module, some packages could not be processed.
+const hasIncompletePackagesCode = 290
+
+// ProxyRemoved is a set of module@version that have been removed from the proxy,
+// even though they are still in the index.
+var ProxyRemoved = map[string]bool{}
+
+// FetchAndInsertVersion fetches the given module version from the module proxy
+// or (in the case of the standard library) from the Go repo and writes the
+// resulting data to the database.
+//
+// The given parentCtx is used for tracing, but fetches actually execute in a
+// detached context with fixed timeout, so that fetches are allowed to complete
+// even for short-lived requests.
+func fetchAndInsertVersion(parentCtx context.Context, modulePath, version string, proxyClient *proxy.Client, db *postgres.DB) (hasIncompletePackages bool, err error) {
+	defer derrors.Wrap(&err, "FetchAndInsertVersion(%q, %q)", modulePath, version)
+
+	if ProxyRemoved[modulePath+"@"+version] {
+		log.Infof(parentCtx, "not fetching %s@%s because it is on the ProxyRemoved list", modulePath, version)
+		return false, derrors.Excluded
+	}
+
+	exc, err := db.IsExcluded(parentCtx, modulePath)
+	if err != nil {
+		return false, err
+	}
+	if exc {
+		return false, derrors.Excluded
+	}
+
+	parentSpan := trace.FromContext(parentCtx)
+	// A fixed timeout for FetchAndInsertVersion to allow module processing to
+	// succeed even for extremely short lived requests.
+	ctx, cancel := context.WithTimeout(context.Background(), fetchTimeout)
+	defer cancel()
+
+	ctx, span := trace.StartSpanWithRemoteParent(ctx, "FetchAndInsertVersion", parentSpan.SpanContext())
+	defer span.End()
+
+	v, hasIncompletePackages, err := fetch.FetchVersion(ctx, modulePath, version, proxyClient)
+	if err != nil {
+		return false, err
+	}
+	log.Infof(ctx, "Fetched %s@%s", v.ModulePath, v.Version)
+	if err = db.InsertVersion(ctx, v); err != nil {
+		return false, err
+	}
+	log.Infof(ctx, "Inserted %s@%s", v.ModulePath, v.Version)
+	return hasIncompletePackages, nil
+}
+
 // fetchAndUpdateState fetches and processes a module version, and then updates
 // the module_version_states table according to the result. It returns an HTTP
 // status code representing the result of the fetch operation, and a non-nil
@@ -35,7 +90,7 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 		code     = http.StatusOK
 		fetchErr error
 	)
-	hasIncompletePackages, fetchErr := fetch.FetchAndInsertVersion(ctx, modulePath, version, client, db)
+	hasIncompletePackages, fetchErr := fetchAndInsertVersion(ctx, modulePath, version, client, db)
 	if fetchErr != nil {
 		code = derrors.ToHTTPStatus(fetchErr)
 		logf := log.Errorf
@@ -45,7 +100,7 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 		logf(ctx, "Error executing fetch: %v (code %d)", fetchErr, code)
 	}
 	if hasIncompletePackages {
-		code = fetch.HasIncompletePackagesCode
+		code = hasIncompletePackagesCode
 	}
 
 	

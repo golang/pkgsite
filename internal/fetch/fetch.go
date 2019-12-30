@@ -26,13 +26,11 @@ import (
 
 	"go.opencensus.io/trace"
 	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/fetch/dochtml"
 	"golang.org/x/discovery/internal/fetch/internal/doc"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/log"
-	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/stdlib"
@@ -42,65 +40,10 @@ import (
 var (
 	errModuleContainsNoPackages = errors.New("module contains 0 packages")
 	errReadmeNotFound           = errors.New("module does not contain a README")
-
-	// fetchTimeout bounds the time allowed for fetching a single module.  It is
-	// mutable for testing purposes.
-	fetchTimeout = 2 * config.StatementTimeout
 )
 
 // For testing
 var httpClient = http.DefaultClient
-
-// Indicates that although we have a valid module, some packages could not be processed.
-const HasIncompletePackagesCode = 290
-
-// ProxyRemoved is a set of module@version that have been removed from the proxy,
-// even though they are still in the index.
-var ProxyRemoved = map[string]bool{}
-
-// FetchAndInsertVersion fetches the given module version from the module proxy
-// or (in the case of the standard library) from the Go repo and writes the
-// resulting data to the database.
-//
-// The given parentCtx is used for tracing, but fetches actually execute in a
-// detached context with fixed timeout, so that fetches are allowed to complete
-// even for short-lived requests.
-func FetchAndInsertVersion(parentCtx context.Context, modulePath, version string, proxyClient *proxy.Client, db *postgres.DB) (HasIncompletePackages bool, err error) {
-	defer derrors.Wrap(&err, "FetchAndInsertVersion(%q, %q)", modulePath, version)
-
-	if ProxyRemoved[modulePath+"@"+version] {
-		log.Infof(parentCtx, "not fetching %s@%s because it is on the ProxyRemoved list", modulePath, version)
-		return false, derrors.Excluded
-	}
-
-	exc, err := db.IsExcluded(parentCtx, modulePath)
-	if err != nil {
-		return false, err
-	}
-	if exc {
-		return false, derrors.Excluded
-	}
-
-	parentSpan := trace.FromContext(parentCtx)
-	// A fixed timeout for FetchAndInsertVersion to allow module processing to
-	// succeed even for extremely short lived requests.
-	ctx, cancel := context.WithTimeout(context.Background(), fetchTimeout)
-	defer cancel()
-
-	ctx, span := trace.StartSpanWithRemoteParent(ctx, "FetchAndInsertVersion", parentSpan.SpanContext())
-	defer span.End()
-
-	v, HasIncompletePackages, err := FetchVersion(ctx, modulePath, version, proxyClient)
-	if err != nil {
-		return false, err
-	}
-	log.Infof(ctx, "Fetched %s@%s", v.ModulePath, v.Version)
-	if err = db.InsertVersion(ctx, v); err != nil {
-		return false, err
-	}
-	log.Infof(ctx, "Inserted %s@%s", v.ModulePath, v.Version)
-	return HasIncompletePackages, nil
-}
 
 // FetchVersion queries the proxy or the Go repo for the requested module
 // version, downloads the module zip, and processes the contents to return an
@@ -188,8 +131,8 @@ func moduleVersionDir(modulePath, version string) string {
 func extractReadmeFromZip(modulePath, version string, r *zip.Reader) (string, string, error) {
 	for _, zipFile := range r.File {
 		if hasFilename(zipFile.Name, "README") {
-			if zipFile.UncompressedSize64 > maxFileSize {
-				return "", "", fmt.Errorf("file size %d exceeds max limit %d", zipFile.UncompressedSize64, maxFileSize)
+			if zipFile.UncompressedSize64 > MaxFileSize {
+				return "", "", fmt.Errorf("file size %d exceeds max limit %d", zipFile.UncompressedSize64, MaxFileSize)
 			}
 			c, err := readZipFile(zipFile)
 			if err != nil {
@@ -217,7 +160,7 @@ func hasFilename(file string, expectedFile string) bool {
 // The second return value says whether any packages are "incomplete," meaning
 // that they contained .go files but couldn't be processed due to current
 // limitations of this site. The two limitations are a maximum file size
-// (maxFileSize), and the particular set of build contexts we consider
+// (MaxFileSize), and the particular set of build contexts we consider
 // (goEnvs).
 func extractPackagesFromZip(ctx context.Context, modulePath, version string, r *zip.Reader, matcher license.Matcher, sourceInfo *source.Info) (_ []*internal.Package, HasIncompletePackages bool, err error) {
 
@@ -285,9 +228,9 @@ func extractPackagesFromZip(ctx context.Context, modulePath, version string, r *
 			// We care about .go files only.
 			continue
 		}
-		if f.UncompressedSize64 > maxFileSize {
+		if f.UncompressedSize64 > MaxFileSize {
 			log.Infof(ctx, "Unable to process %s: file size %d exceeds max limit %d",
-				f.Name, f.UncompressedSize64, maxFileSize)
+				f.Name, f.UncompressedSize64, MaxFileSize)
 			incompleteDirs[innerPath] = true
 			continue
 		}
@@ -525,7 +468,7 @@ func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, in
 	}
 	docHTML, err := dochtml.Render(fset, d, dochtml.RenderOptions{
 		SourceLinkFunc: sourceLinkFunc,
-		Limit:          maxDocumentationHTML,
+		Limit:          MaxDocumentationHTML,
 	})
 	if errors.Is(err, dochtml.ErrTooLarge) {
 		return nil, &LargePackageError{Err: err}

@@ -24,7 +24,6 @@ import (
 	"golang.org/x/discovery/internal/database"
 	"golang.org/x/discovery/internal/dcensus"
 	"golang.org/x/discovery/internal/etl"
-	"golang.org/x/discovery/internal/fetch"
 	"golang.org/x/discovery/internal/index"
 
 	"golang.org/x/discovery/internal/log"
@@ -188,10 +187,10 @@ func readProxyRemoved(ctx context.Context) {
 	defer f.Close()
 	scan := bufio.NewScanner(f)
 	for scan.Scan() {
-		fetch.ProxyRemoved[strings.TrimSpace(scan.Text())] = true
+		etl.ProxyRemoved[strings.TrimSpace(scan.Text())] = true
 	}
 	if err := scan.Err(); err != nil {
 		log.Fatalf(ctx, "scanning %s: %v", filename, err)
 	}
-	log.Infof(ctx, "read %d excluded module versions from %s", len(fetch.ProxyRemoved), filename)
+	log.Infof(ctx, "read %d excluded module versions from %s", len(etl.ProxyRemoved), filename)
 }

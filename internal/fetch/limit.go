@@ -9,17 +9,17 @@ const (
 	maxPackagesPerModule = 10000
 	maxImportsPerPackage = 1000
 
-	// maxFileSize is the maximum filesize that is allowed for reading.
+	// MaxFileSize is the maximum filesize that is allowed for reading.
 	// The fetch process should fail if it encounters a file exceeding
 	// this limit.
-	maxFileSize = 30 * megabyte
+	MaxFileSize = 30 * megabyte
 
-	// maxDocumentationHTML is a limit on the rendered documentation
+	// MaxDocumentationHTML is a limit on the rendered documentation
 	// HTML size.
 	//
 	// The current limit of 10 MB was based on the largest packages that
 	// gddo has encountered. See https://github.com/golang/gddo/issues/635.
-	maxDocumentationHTML = 10 * megabyte
+	MaxDocumentationHTML = 10 * megabyte
 )
 
 const megabyte = 1000 * 1000

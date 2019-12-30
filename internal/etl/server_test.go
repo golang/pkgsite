@@ -37,12 +37,6 @@ func TestMain(m *testing.M) {
 	postgres.RunDBTests("discovery_etl_test", m, &testDB)
 }
 
-type fakeTransport struct{}
-
-func (fakeTransport) RoundTrip(*http.Request) (*http.Response, error) {
-	return nil, errors.New("bad")
-}
-
 type debugExporter struct {
 	t *testing.T
 }

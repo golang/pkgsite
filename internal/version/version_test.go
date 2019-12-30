@@ -98,3 +98,56 @@ func TestAppendNumericPrefix(t *testing.T) {
 		}
 	}
 }
+
+func TestParseVersionType(t *testing.T) {
+	testCases := []struct {
+		name, version   string
+		wantVersionType Type
+		wantErr         bool
+	}{
+		{
+			name:            "pseudo major version",
+			version:         "v1.0.0-20190311183353-d8887717615a",
+			wantVersionType: TypePseudo,
+		},
+		{
+			name:            "pseudo prerelease version",
+			version:         "v1.2.3-pre.0.20190311183353-d8887717615a",
+			wantVersionType: TypePseudo,
+		},
+		{
+			name:            "pseudo minor version",
+			version:         "v1.2.4-0.20190311183353-d8887717615a",
+			wantVersionType: TypePseudo,
+		},
+		{
+			name:            "pseudo version invalid",
+			version:         "v1.2.3-20190311183353-d8887717615a",
+			wantVersionType: TypePrerelease,
+		},
+		{
+			name:            "valid release",
+			version:         "v1.0.0",
+			wantVersionType: TypeRelease,
+		},
+		{
+			name:            "valid prerelease",
+			version:         "v1.0.0-alpha.1",
+			wantVersionType: TypePrerelease,
+		},
+		{
+			name:            "invalid version",
+			version:         "not_a_version",
+			wantVersionType: "",
+			wantErr:         true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if gotVt, err := ParseType(tc.version); (tc.wantErr == (err != nil)) && tc.wantVersionType != gotVt {
+				t.Errorf("parseVersionType(%v) = %v, want %v", tc.version, gotVt, tc.wantVersionType)
+			}
+		})
+	}
+}
