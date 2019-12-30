@@ -22,6 +22,7 @@ import (
 	"go.opencensus.io/plugin/ochttp"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/thirdparty/modfile"
 	"golang.org/x/mod/module"
 	"golang.org/x/net/context/ctxhttp"
 )
@@ -61,21 +62,26 @@ func New(rawurl string) (_ *Client, err error) {
 // transforms that data into a *VersionInfo.
 func (c *Client) GetInfo(ctx context.Context, modulePath, version string) (_ *VersionInfo, err error) {
 	defer derrors.Wrap(&err, "proxy.Client.GetInfo(%q, %q)", modulePath, version)
-	u, err := c.escapedURL(modulePath, version, "info")
+	data, err := c.readBody(ctx, modulePath, version, "info")
 	if err != nil {
 		return nil, err
 	}
 	var v VersionInfo
-	err = c.executeRequest(ctx, u, func(body io.Reader) error {
-		if err := json.NewDecoder(body).Decode(&v); err != nil {
-			return err
-		}
-		return nil
-	})
-	if err != nil {
+	if err := json.Unmarshal(data, &v); err != nil {
 		return nil, err
 	}
 	return &v, nil
+}
+
+// GetMod makes a request to $GOPROXY/<module>/@v/<version>.mod and
+// transforms that data into a *modfile.File.
+func (c *Client) GetMod(ctx context.Context, modulePath, version string) (_ *modfile.File, err error) {
+	defer derrors.Wrap(&err, "proxy.Client.GetMod(%q, %q)", modulePath, version)
+	data, err := c.readBody(ctx, modulePath, version, "mod")
+	if err != nil {
+		return nil, err
+	}
+	return modfile.Parse(modulePath+"@"+version, data, nil)
 }
 
 // GetZip makes a request to $GOPROXY/<path>/@v/<version>.zip and transforms
@@ -89,19 +95,7 @@ func (c *Client) GetZip(ctx context.Context, requestedPath, requestedVersion str
 	if err != nil {
 		return nil, err
 	}
-	u, err := c.escapedURL(requestedPath, info.Version, "zip")
-	if err != nil {
-		return nil, err
-	}
-	var bodyBytes []byte
-	err = c.executeRequest(ctx, u, func(body io.Reader) error {
-		var err error
-		bodyBytes, err = ioutil.ReadAll(body)
-		if err != nil {
-			return fmt.Errorf("ioutil.ReadAll: %v", err)
-		}
-		return nil
-	})
+	bodyBytes, err := c.readBody(ctx, requestedPath, info.Version, "zip")
 	if err != nil {
 		return nil, err
 	}
@@ -117,8 +111,8 @@ func (c *Client) escapedURL(modulePath, version, suffix string) (_ string, err e
 		derrors.Wrap(&err, "Client.escapedURL(%q, %q, %q)", modulePath, version, suffix)
 	}()
 
-	if suffix != "info" && suffix != "zip" {
-		return "", errors.New(`suffix must be "info" or "zip"`)
+	if suffix != "info" && suffix != "mod" && suffix != "zip" {
+		return "", errors.New(`suffix must be "info", "mod" or "zip"`)
 	}
 	escapedPath, err := module.EscapePath(modulePath)
 	if err != nil {
@@ -135,6 +129,25 @@ func (c *Client) escapedURL(modulePath, version, suffix string) (_ string, err e
 		return "", fmt.Errorf("version: %v: %w", err, derrors.InvalidArgument)
 	}
 	return fmt.Sprintf("%s/%s/@v/%s.%s", c.url, escapedPath, escapedVersion, suffix), nil
+}
+
+func (c *Client) readBody(ctx context.Context, modulePath, version, suffix string) (_ []byte, err error) {
+	defer derrors.Wrap(&err, "Client.readBody(%q, %q, %q)", modulePath, version, suffix)
+
+	u, err := c.escapedURL(modulePath, version, suffix)
+	if err != nil {
+		return nil, err
+	}
+	var data []byte
+	err = c.executeRequest(ctx, u, func(body io.Reader) error {
+		var err error
+		data, err = ioutil.ReadAll(body)
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
 // ListVersions makes a request to $GOPROXY/<path>/@v/list and returns the

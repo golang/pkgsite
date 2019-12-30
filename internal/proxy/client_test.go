@@ -103,6 +103,24 @@ func TestGetInfoVersionDoesNotExist(t *testing.T) {
 	}
 }
 
+func TestGetMod(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	client, teardownProxy := SetupTestProxy(t, nil)
+	defer teardownProxy()
+
+	path := "github.com/my/module"
+	version := "v1.0.0"
+	goModFile, err := client.GetMod(ctx, path, version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := goModFile.Module.Mod.Path; got != path {
+		t.Errorf("got %q, want %q", got, path)
+	}
+}
+
 func TestGetZip(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
