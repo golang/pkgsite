@@ -109,7 +109,7 @@ func ResetTestDB(db *DB, t *testing.T) {
 			TRUNCATE experiments;`); err != nil {
 			return err
 		}
-		if _, err := tx.Exec(`TRUNCATE module_version_states;`); err != nil {
+		if _, err := tx.Exec(`TRUNCATE module_version_states CASCADE;`); err != nil {
 			return err
 		}
 		if _, err := tx.Exec(`TRUNCATE excluded_prefixes;`); err != nil {
