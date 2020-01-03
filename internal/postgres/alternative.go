@@ -5,8 +5,10 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/database"
 	"golang.org/x/discovery/internal/derrors"
 )
 
@@ -23,8 +25,23 @@ func (db *DB) InsertAlternativeModulePath(ctx context.Context, alternative *inte
 // DeleteAlternatives deletes all modules with the given path.
 func (db *DB) DeleteAlternatives(ctx context.Context, alternativePath string) (err error) {
 	derrors.Wrap(&err, "DB.DeleteAlternatives(ctx)")
-	_, err = db.db.Exec(ctx, `DELETE FROM versions WHERE module_path = $1;`, alternativePath)
-	return err
+
+	return db.db.Transact(func(tx *sql.Tx) error {
+		if _, err := database.ExecTx(ctx, tx,
+			`DELETE FROM versions WHERE module_path = $1;`, alternativePath); err != nil {
+			return err
+		}
+		if _, err := database.ExecTx(ctx, tx,
+			`DELETE FROM imports_unique WHERE from_module_path = $1;`, alternativePath); err != nil {
+			return err
+		}
+		if _, err := database.ExecTx(ctx, tx,
+			`UPDATE module_version_states SET status = $1 WHERE module_path = $2;`,
+			derrors.ToHTTPStatus(derrors.AlternativeModule), alternativePath); err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 // IsAlternativePath reports whether the path represents the canonical path for a

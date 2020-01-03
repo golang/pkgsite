@@ -7,6 +7,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"net/http"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -86,6 +87,7 @@ func TestInsertAndDeleteAlternatives(t *testing.T) {
 		{"github.com/google/go-cloud/blob/aws", "github.com/google/go-cloud", true},
 		{"github.com/foo/bar", "github.com/foo", false},
 	}
+	var versionStates []*internal.IndexVersion
 	for _, data := range pkgData {
 		v := sample.Version()
 		v.ModulePath = data.modulePath
@@ -94,6 +96,28 @@ func TestInsertAndDeleteAlternatives(t *testing.T) {
 		v.Packages = []*internal.Package{p}
 		if err := testDB.InsertVersion(ctx, v); err != nil {
 			t.Fatal(err)
+		}
+		now := sample.NowTruncated()
+		versionStates = append(versionStates, &internal.IndexVersion{
+			Path:      data.modulePath,
+			Version:   sample.VersionString,
+			Timestamp: now,
+		})
+	}
+	if err := testDB.InsertIndexVersions(ctx, versionStates); err != nil {
+		t.Fatal(err)
+	}
+	gotVersionStates, err := testDB.GetNextVersionsToFetch(ctx, len(pkgData))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(gotVersionStates) != len(pkgData) {
+		t.Fatalf("testDB.GetNextVersionsToFetch(ctx, %d) returned %d version states; want = %d",
+			len(pkgData), len(gotVersionStates), len(pkgData))
+	}
+	for _, vs := range gotVersionStates {
+		if vs.Status != nil && *vs.Status != http.StatusOK {
+			t.Fatalf("version state %q has status = %d; want = %d", vs.ModulePath, *vs.Status, http.StatusOK)
 		}
 	}
 
@@ -122,6 +146,15 @@ func TestInsertAndDeleteAlternatives(t *testing.T) {
 
 			if got.Path != data.pkgPath || got.ModulePath != data.modulePath {
 				t.Errorf("testDB.GetPackage(%q, latest) = %q, %q; want = %q, %q)", data.pkgPath, got.Path, got.ModulePath, data.pkgPath, data.modulePath)
+			}
+
+			gotVersionState, err := testDB.GetVersionState(ctx, data.modulePath, sample.VersionString)
+			if err != nil {
+				t.Fatal(err)
+			}
+			wantCode := derrors.ToHTTPStatus(derrors.AlternativeModule)
+			if gotVersionState.Status != nil && *gotVersionState.Status != wantCode {
+				t.Fatalf("testDB.GetVersionState(ctx, %q, %q) returned status = %d; want = %d", data.modulePath, sample.VersionString, gotVersionState.Status, wantCode)
 			}
 		})
 	}
