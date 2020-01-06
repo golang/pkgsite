@@ -112,10 +112,13 @@ func TestFetchAndUpdateState_Excluded(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	checkModuleNotFound(t, ctx, modulePath, version, client, http.StatusForbidden, derrors.Excluded)
+}
+
+func checkModuleNotFound(t *testing.T, ctx context.Context, modulePath, version string, client *proxy.Client, wantCode int, wantErr error) {
 	code, err := fetchAndUpdateState(ctx, modulePath, version, client, testDB)
-	wantCode := http.StatusForbidden
-	if code != wantCode || !errors.Is(err, derrors.Excluded) {
-		t.Fatalf("got %d, %v; want %d, Is(err, derrors.Excluded)", code, err, wantCode)
+	if code != wantCode || !errors.Is(err, wantErr) {
+		t.Fatalf("got %d, %v; want %d, Is(err, %v)", code, err, wantCode, wantErr)
 	}
 	_, err = testDB.GetVersionInfo(ctx, modulePath, version)
 	if !errors.Is(err, derrors.NotFound) {
@@ -205,14 +208,6 @@ func TestFetchAndUpdateState_Mismatch(t *testing.T) {
 	}
 	if gotStatus != wantCode {
 		t.Fatalf("testDB.GetVersionState(ctx, %q, %q): status=%v, want %d", modulePath, version, gotStatus, wantCode)
-	}
-
-	isAlt, err := testDB.IsAlternativeModulePath(ctx, modulePath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !isAlt {
-		t.Error("IsAlternativePath is false, want true")
 	}
 }
 

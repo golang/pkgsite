@@ -11,14 +11,12 @@ import (
 	"time"
 
 	"go.opencensus.io/trace"
-	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/fetch"
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
-	"golang.org/x/discovery/internal/stdlib"
 )
 
 // fetchTimeout bounds the time allowed for fetching a single module.  It is
@@ -72,33 +70,6 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, version string
 		return false, err
 	}
 	log.Infof(ctx, "Fetched %s@%s", v.ModulePath, v.Version)
-
-	if modulePath != stdlib.ModulePath {
-		goModFile, err := proxyClient.GetMod(ctx, v.ModulePath, v.Version)
-		if err != nil {
-			return false, fmt.Errorf("%v: %w", err, derrors.BadModule)
-		}
-		canonicalPath := goModFile.Module.Mod.Path
-		if canonicalPath != v.ModulePath {
-			// The module path in the go.mod file doesn't match the path of the
-			// zip file. Don't insert the module; instead, record the mapping
-			// between the given module path and the canonical path.
-			if err := db.InsertAlternativeModulePath(ctx, &internal.AlternativeModulePath{
-				Alternative: v.ModulePath,
-				Canonical:   canonicalPath,
-			}); err != nil {
-				return false, err
-			}
-			// Delete all versions of the module with the alternative path.
-			if err := db.DeleteAlternatives(ctx, v.ModulePath); err != nil {
-				return false, err
-			}
-			// Store an AlternativeModule status in module_version_states.
-			return false, fmt.Errorf("module path=%s, go.mod path=%s: %w",
-				v.ModulePath, canonicalPath, derrors.AlternativeModule)
-		}
-	}
-
 	if err = db.InsertVersion(ctx, v); err != nil {
 		return false, err
 	}

@@ -8,6 +8,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"sort"
@@ -18,6 +19,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/source"
@@ -394,6 +396,26 @@ func TestFetchVersion(t *testing.T) {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestFetchVersion_Alternative(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	const (
+		modulePath = "github.com/my/module"
+		vers       = "v1.0.0"
+	)
+
+	client, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
+		proxy.NewTestVersion(t, modulePath, vers, map[string]string{"go.mod": "module canonical"}),
+	})
+	defer teardownProxy()
+
+	_, _, err := FetchVersion(ctx, modulePath, vers, client)
+	if !errors.Is(err, derrors.AlternativeModule) {
+		t.Errorf("got %v, want derrors.AlternativeModule", err)
 	}
 }
 

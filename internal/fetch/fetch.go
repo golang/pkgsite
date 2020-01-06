@@ -65,6 +65,20 @@ func FetchVersion(ctx context.Context, modulePath, vers string, proxyClient *pro
 		}
 		vers = info.Version
 		commitTime = info.Time
+
+		goModFile, err := proxyClient.GetMod(ctx, modulePath, vers)
+		if err != nil {
+			return nil, false, err
+		}
+		canonicalPath := goModFile.Module.Mod.Path
+		if canonicalPath != modulePath {
+			// The module path in the go.mod file doesn't match the path of the
+			// zip file. Don't insert the module. Store an AlternativeModule
+			// status in module_version_states.
+			return nil, false, fmt.Errorf("module path=%s, go.mod path=%s: %w",
+				modulePath, canonicalPath, derrors.AlternativeModule)
+		}
+
 		zipReader, err = proxyClient.GetZip(ctx, modulePath, vers)
 		if err != nil {
 			return nil, false, err
