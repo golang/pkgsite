@@ -44,15 +44,15 @@ func (db *DB) DeleteAlternatives(ctx context.Context, alternativePath string) (e
 	})
 }
 
-// IsAlternativePath reports whether the path represents the canonical path for a
-// package, module or directory.
-func (db *DB) IsAlternativePath(ctx context.Context, path string) (_ bool, err error) {
-	defer derrors.Wrap(&err, "IsAlternativePath(ctx, %q)", path)
+// IsAlternativeModulePath reports whether the path is an alternative path for a
+// module.
+func (db *DB) IsAlternativeModulePath(ctx context.Context, path string) (_ bool, err error) {
+	defer derrors.Wrap(&err, "IsAlternativeModulePath(ctx, %q)", path)
 	query := `
 		SELECT EXISTS(
 			SELECT 1
 			FROM alternative_module_paths
-			WHERE $1 LIKE alternative || '%'
+			WHERE alternative = $1
 		);`
 	row := db.db.QueryRow(ctx, query, path)
 	var isAlternative bool
@@ -61,7 +61,7 @@ func (db *DB) IsAlternativePath(ctx context.Context, path string) (_ bool, err e
 }
 
 func (db *DB) getAlternativeModulePath(ctx context.Context, alternativePath string) (_ *internal.AlternativeModulePath, err error) {
-	defer derrors.Wrap(&err, "GetAlternativeModulePath(ctx, %q)", alternativePath)
+	defer derrors.Wrap(&err, "getAlternativeModulePath(ctx, %q)", alternativePath)
 	query := `
 		SELECT alternative, canonical
 		FROM alternative_module_paths

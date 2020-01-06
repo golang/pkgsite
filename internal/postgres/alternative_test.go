@@ -43,7 +43,7 @@ func TestIsAlternativePath(t *testing.T) {
 	}
 	for _, data := range pkgData {
 		t.Run(data.pkgPath, func(t *testing.T) {
-			got, err := testDB.IsAlternativePath(ctx, data.pkgPath)
+			got, err := testDB.IsAlternativeModulePath(ctx, data.modulePath)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -123,7 +123,7 @@ func TestInsertAndDeleteAlternatives(t *testing.T) {
 
 	for _, data := range pkgData {
 		t.Run("GetPackage-"+data.pkgPath, func(t *testing.T) {
-			isAlternative, err := testDB.IsAlternativePath(ctx, data.pkgPath)
+			isAlternative, err := testDB.IsAlternativeModulePath(ctx, data.modulePath)
 			if err != nil {
 				t.Fatal(err)
 			}

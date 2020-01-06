@@ -207,7 +207,7 @@ func TestFetchAndUpdateState_Mismatch(t *testing.T) {
 		t.Fatalf("testDB.GetVersionState(ctx, %q, %q): status=%v, want %d", modulePath, version, gotStatus, wantCode)
 	}
 
-	isAlt, err := testDB.IsAlternativePath(ctx, modulePath)
+	isAlt, err := testDB.IsAlternativeModulePath(ctx, modulePath)
 	if err != nil {
 		t.Fatal(err)
 	}
