@@ -18,6 +18,8 @@ import (
 	"golang.org/x/discovery/internal/log"
 )
 
+const experimentQueryParamKey = "experiment"
+
 // An Experimenter contains information about active experiments from the
 // experiment source.
 type Experimenter struct {
@@ -110,6 +112,12 @@ func (e *Experimenter) loadNextSnapshot(ctx context.Context) (err error) {
 // All requests from the same IP will be enrolled in the same set of
 // experiments.
 func shouldSetExperiment(r *http.Request, e *internal.Experiment) bool {
+	keys := r.URL.Query()[experimentQueryParamKey]
+	for _, k := range keys {
+		if k == e.Name {
+			return true
+		}
+	}
 	if e.Rollout == 0 {
 		return false
 	}
