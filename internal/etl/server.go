@@ -357,7 +357,7 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (string, e
 		ServicePrefix                string
 		LatestTimestamp              *time.Time
 		Counts                       []*count
-		Next, Recent, RecentFailures []*internal.VersionState
+		Next, Recent, RecentFailures []*internal.ModuleVersionState
 	}{
 		Project:         "go-discovery",
 		ServicePrefix:   strings.TrimSuffix(config.ServiceID(), "etl"),
@@ -416,7 +416,7 @@ func (s *Server) handleReprocess(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
-	if err := s.db.UpdateVersionStatesForReprocessing(r.Context(), appVersion); err != nil {
+	if err := s.db.UpdateModuleVersionStatesForReprocessing(r.Context(), appVersion); err != nil {
 		log.Error(ctx, err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return

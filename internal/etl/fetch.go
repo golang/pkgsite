@@ -125,15 +125,15 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 	// module@version. This must happen last, because if it succeeds with a
 	// code < 500 but a later action fails, we will never retry the later action.
 
-	// TODO(b/139178863): Split UpsertVersionState into InsertVersionState and UpdateVersionState.
-	if err := db.UpsertVersionState(ctx, modulePath, version, config.AppVersionLabel(), time.Time{}, code, goModPath, fetchErr); err != nil {
+	// TODO(b/139178863): Split UpsertModuleVersionState into InsertModuleVersionState and UpdateModuleVersionState.
+	if err := db.UpsertModuleVersionState(ctx, modulePath, version, config.AppVersionLabel(), time.Time{}, code, goModPath, fetchErr); err != nil {
 		log.Error(ctx, err)
 		if fetchErr != nil {
-			err = fmt.Errorf("error updating version state: %v, original error: %v", err, fetchErr)
+			err = fmt.Errorf("error updating module version state: %v, original error: %v", err, fetchErr)
 		}
 		return http.StatusInternalServerError, err
 	}
-	log.Infof(ctx, "Updated version state for %s@%s: code=%d, hasIncompletePackages=%t err=%v",
+	log.Infof(ctx, "Updated module version state for %s@%s: code=%d, hasIncompletePackages=%t err=%v",
 		modulePath, version, code, hasIncompletePackages, fetchErr)
 	return code, fetchErr
 }

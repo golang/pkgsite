@@ -112,8 +112,8 @@ type IndexVersion struct {
 	Timestamp time.Time
 }
 
-// VersionState holds the ETL version state.
-type VersionState struct {
+// ModuleVersionState holds an ETL module version state.
+type ModuleVersionState struct {
 	ModulePath string
 	Version    string
 
@@ -122,7 +122,7 @@ type VersionState struct {
 	// Index.
 	IndexTimestamp time.Time
 	// CreatedAt is the time this version was originally inserted into the
-	// version state table.
+	// module version state table.
 	CreatedAt time.Time
 
 	// Status is the most recent HTTP status code received from the Fetch service

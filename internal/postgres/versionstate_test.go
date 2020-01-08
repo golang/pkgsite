@@ -17,7 +17,7 @@ import (
 	"golang.org/x/discovery/internal/testing/sample"
 )
 
-func TestVersionState(t *testing.T) {
+func TestModuleVersionState(t *testing.T) {
 	defer ResetTestDB(testDB, t)
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
@@ -62,11 +62,11 @@ func TestVersionState(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	wantVersions := []*internal.VersionState{
+	wantVersions := []*internal.ModuleVersionState{
 		{ModulePath: "baz.com/quux", Version: "v2.0.1", IndexTimestamp: bazVersion.Timestamp},
 		{ModulePath: "foo.com/bar", Version: "v1.0.0", IndexTimestamp: fooVersion.Timestamp},
 	}
-	ignore := cmpopts.IgnoreFields(internal.VersionState{}, "CreatedAt", "LastProcessedAt", "NextProcessedAfter")
+	ignore := cmpopts.IgnoreFields(internal.ModuleVersionState{}, "CreatedAt", "LastProcessedAt", "NextProcessedAfter")
 	if diff := cmp.Diff(wantVersions, gotVersions, ignore); diff != "" {
 		t.Fatalf("testDB.GetVersionsToFetch(ctx, 10) mismatch (-want +got):\n%s", diff)
 	}
@@ -76,11 +76,11 @@ func TestVersionState(t *testing.T) {
 		fetchErr   = errors.New("bad request")
 		goModPath  = "goModPath"
 	)
-	if err := testDB.UpsertVersionState(ctx, fooVersion.Path, fooVersion.Version, "", fooVersion.Timestamp, statusCode, goModPath, fetchErr); err != nil {
+	if err := testDB.UpsertModuleVersionState(ctx, fooVersion.Path, fooVersion.Version, "", fooVersion.Timestamp, statusCode, goModPath, fetchErr); err != nil {
 		t.Fatal(err)
 	}
 	errString := fetchErr.Error()
-	wantFooState := &internal.VersionState{
+	wantFooState := &internal.ModuleVersionState{
 		ModulePath:         "foo.com/bar",
 		Version:            "v1.0.0",
 		IndexTimestamp:     now,
@@ -90,12 +90,12 @@ func TestVersionState(t *testing.T) {
 		Status:             &statusCode,
 		NextProcessedAfter: gotVersions[1].CreatedAt.Add(1 * time.Minute),
 	}
-	gotFooState, err := testDB.GetVersionState(ctx, wantFooState.ModulePath, wantFooState.Version)
+	gotFooState, err := testDB.GetModuleVersionState(ctx, wantFooState.ModulePath, wantFooState.Version)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if diff := cmp.Diff(wantFooState, gotFooState, ignore); diff != "" {
-		t.Errorf("testDB.GetVersionState(ctx, %q, %q) mismatch (-want +got)\n%s", wantFooState.ModulePath, wantFooState.Version, diff)
+		t.Errorf("testDB.GetModuleVersionState(ctx, %q, %q) mismatch (-want +got)\n%s", wantFooState.ModulePath, wantFooState.Version, diff)
 	}
 
 	stats, err := testDB.GetVersionStats(ctx)
@@ -114,7 +114,7 @@ func TestVersionState(t *testing.T) {
 	}
 }
 
-func TestUpdateVersionStatesForReprocessing(t *testing.T) {
+func TestUpdateModuleVersionStatesForReprocessing(t *testing.T) {
 	defer ResetTestDB(testDB, t)
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
@@ -133,7 +133,7 @@ func TestUpdateVersionStatesForReprocessing(t *testing.T) {
 			Timestamp: now,
 		},
 	} {
-		if err := testDB.UpsertVersionState(ctx, v.Path, v.Version, "", v.Timestamp, http.StatusOK, goModPath, nil); err != nil {
+		if err := testDB.UpsertModuleVersionState(ctx, v.Path, v.Version, "", v.Timestamp, http.StatusOK, goModPath, nil); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -145,7 +145,7 @@ func TestUpdateVersionStatesForReprocessing(t *testing.T) {
 	if len(gotVersions) != 0 {
 		t.Fatalf("testDB.GetVersionsToFetch(ctx, 10) = %v; wanted 0 versions", gotVersions)
 	}
-	if err := testDB.UpdateVersionStatesForReprocessing(ctx, "20190709t112655"); err != nil {
+	if err := testDB.UpdateModuleVersionStatesForReprocessing(ctx, "20190709t112655"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -155,11 +155,11 @@ func TestUpdateVersionStatesForReprocessing(t *testing.T) {
 	}
 
 	code := http.StatusHTTPVersionNotSupported
-	wantVersions := []*internal.VersionState{
+	wantVersions := []*internal.ModuleVersionState{
 		{ModulePath: "baz.com/quux", Version: "v2.0.1", IndexTimestamp: now, GoModPath: &goModPath, Status: &code},
 		{ModulePath: "foo.com/bar", Version: "v1.0.0", IndexTimestamp: now, GoModPath: &goModPath, Status: &code},
 	}
-	ignore := cmpopts.IgnoreFields(internal.VersionState{}, "CreatedAt", "LastProcessedAt", "NextProcessedAfter")
+	ignore := cmpopts.IgnoreFields(internal.ModuleVersionState{}, "CreatedAt", "LastProcessedAt", "NextProcessedAfter")
 	if diff := cmp.Diff(wantVersions, gotVersions, ignore); diff != "" {
 		t.Fatalf("testDB.GetVersionsToFetch(ctx, 10) mismatch (-want +got):\n%s", diff)
 	}

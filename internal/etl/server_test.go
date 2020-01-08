@@ -76,7 +76,7 @@ func TestETL(t *testing.T) {
 			"go.mod": "module foo.com/bar",
 			"bar.go": "package bar\nconst Bar = \"Bar\"",
 		})
-		state = func(version *internal.IndexVersion, code, tryCount int) *internal.VersionState {
+		state = func(version *internal.IndexVersion, code, tryCount int) *internal.ModuleVersionState {
 			status := &code
 			goModPath := version.Path
 			if code == 0 {
@@ -85,7 +85,7 @@ func TestETL(t *testing.T) {
 			if code >= 300 {
 				goModPath = ""
 			}
-			return &internal.VersionState{
+			return &internal.ModuleVersionState{
 				ModulePath:     version.Path,
 				IndexTimestamp: version.Timestamp,
 				Status:         status,
@@ -94,10 +94,10 @@ func TestETL(t *testing.T) {
 				GoModPath:      &goModPath,
 			}
 		}
-		fooState = func(code, tryCount int) *internal.VersionState {
+		fooState = func(code, tryCount int) *internal.ModuleVersionState {
 			return state(fooIndex, code, tryCount)
 		}
-		barState = func(code, tryCount int) *internal.VersionState {
+		barState = func(code, tryCount int) *internal.ModuleVersionState {
 			return state(barIndex, code, tryCount)
 		}
 	)
@@ -107,8 +107,8 @@ func TestETL(t *testing.T) {
 		index    []*internal.IndexVersion
 		proxy    []*proxy.TestVersion
 		requests []*http.Request
-		wantFoo  *internal.VersionState
-		wantBar  *internal.VersionState
+		wantFoo  *internal.ModuleVersionState
+		wantBar  *internal.ModuleVersionState
 	}{
 		{
 			label: "full fetch",
@@ -175,13 +175,13 @@ func TestETL(t *testing.T) {
 
 			// To avoid being a change detector, only look at ModulePath, Version,
 			// Timestamp, and Status.
-			ignore := cmpopts.IgnoreFields(internal.VersionState{},
+			ignore := cmpopts.IgnoreFields(internal.ModuleVersionState{},
 				"CreatedAt", "NextProcessedAfter", "LastProcessedAt", "Error")
 
-			got, err := testDB.GetVersionState(ctx, fooIndex.Path, fooIndex.Version)
+			got, err := testDB.GetModuleVersionState(ctx, fooIndex.Path, fooIndex.Version)
 			if err == nil {
 				if diff := cmp.Diff(test.wantFoo, got, ignore); diff != "" {
-					t.Errorf("testDB.GetVersionState(ctx, %q, %q) mismatch (-want +got):\n%s",
+					t.Errorf("testDB.GetModuleVersionState(ctx, %q, %q) mismatch (-want +got):\n%s",
 						fooIndex.Path, fooIndex.Version, diff)
 				}
 			} else if test.wantFoo == nil {
@@ -191,10 +191,10 @@ func TestETL(t *testing.T) {
 			} else {
 				t.Fatal(err)
 			}
-			got, err = testDB.GetVersionState(ctx, barIndex.Path, barIndex.Version)
+			got, err = testDB.GetModuleVersionState(ctx, barIndex.Path, barIndex.Version)
 			if err == nil {
 				if diff := cmp.Diff(test.wantBar, got, ignore); diff != "" {
-					t.Errorf("testDB.GetVersionState(ctx, %q, %q) mismatch (-want +got):\n%s",
+					t.Errorf("testDB.GetModuleVersionState(ctx, %q, %q) mismatch (-want +got):\n%s",
 						barIndex.Path, barIndex.Version, diff)
 				}
 			} else if test.wantBar == nil {

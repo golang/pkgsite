@@ -50,12 +50,12 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 
 	checkStatus := func(want int) {
 		t.Helper()
-		vs, err := testDB.GetVersionState(ctx, modulePath, version)
+		vs, err := testDB.GetModuleVersionState(ctx, modulePath, version)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if vs.Status == nil || *vs.Status != want {
-			t.Fatalf("testDB.GetVersionState(ctx, %q, %q): status=%v, want %d", modulePath, version, vs.Status, want)
+			t.Fatalf("testDB.GetModuleVersionState(ctx, %q, %q): status=%v, want %d", modulePath, version, vs.Status, want)
 		}
 	}
 
@@ -124,7 +124,7 @@ func checkModuleNotFound(t *testing.T, ctx context.Context, modulePath, version 
 	if !errors.Is(err, derrors.NotFound) {
 		t.Fatalf("got %v, want Is(NotFound)", err)
 	}
-	vs, err := testDB.GetVersionState(ctx, modulePath, version)
+	vs, err := testDB.GetModuleVersionState(ctx, modulePath, version)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -133,7 +133,7 @@ func checkModuleNotFound(t *testing.T, ctx context.Context, modulePath, version 
 		gotStatus = *vs.Status
 	}
 	if gotStatus != wantCode {
-		t.Fatalf("testDB.GetVersionState(ctx, %q, %q): status=%v, want %d", modulePath, version, gotStatus, wantCode)
+		t.Fatalf("testDB.GetModuleVersionState(ctx, %q, %q): status=%v, want %d", modulePath, version, gotStatus, wantCode)
 	}
 }
 
@@ -160,12 +160,12 @@ func TestFetchAndUpdateState_Incomplete(t *testing.T) {
 	if code != want {
 		t.Fatalf("got code %d, want %d", code, want)
 	}
-	vs, err := testDB.GetVersionState(ctx, modulePath, version)
+	vs, err := testDB.GetModuleVersionState(ctx, modulePath, version)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if vs.Status == nil || *vs.Status != want {
-		t.Fatalf("testDB.GetVersionState(ctx, %q, %q): status=%v, want %d", modulePath, version, vs.Status, want)
+		t.Fatalf("testDB.GetModuleVersionState(ctx, %q, %q): status=%v, want %d", modulePath, version, vs.Status, want)
 	}
 }
 
@@ -199,7 +199,7 @@ func TestFetchAndUpdateState_Mismatch(t *testing.T) {
 	if !errors.Is(err, derrors.NotFound) {
 		t.Fatalf("got %v, want Is(NotFound)", err)
 	}
-	vs, err := testDB.GetVersionState(ctx, modulePath, version)
+	vs, err := testDB.GetModuleVersionState(ctx, modulePath, version)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -209,7 +209,7 @@ func TestFetchAndUpdateState_Mismatch(t *testing.T) {
 		gotStatus = *vs.Status
 	}
 	if gotStatus != wantCode {
-		t.Errorf("testDB.GetVersionState(ctx, %q, %q): status=%v, want %d", modulePath, version, gotStatus, wantCode)
+		t.Errorf("testDB.GetModuleVersionState(ctx, %q, %q): status=%v, want %d", modulePath, version, gotStatus, wantCode)
 	}
 
 	var gotGoModPath string
@@ -217,7 +217,7 @@ func TestFetchAndUpdateState_Mismatch(t *testing.T) {
 		gotGoModPath = *vs.GoModPath
 	}
 	if gotGoModPath != goModPath {
-		t.Errorf("testDB.GetVersionState(ctx, %q, %q): goModPath=%q, want %q", modulePath, version, gotGoModPath, goModPath)
+		t.Errorf("testDB.GetModuleVersionState(ctx, %q, %q): goModPath=%q, want %q", modulePath, version, gotGoModPath, goModPath)
 	}
 }
 
