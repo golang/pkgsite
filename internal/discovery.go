@@ -152,6 +152,16 @@ type ModuleVersionState struct {
 	GoModPath *string
 }
 
+// PackageVersionState holds an ETL package version state. It is associated
+// with a given module version state.
+type PackageVersionState struct {
+	PackagePath string
+	ModulePath  string
+	Version     string
+	Status      int
+	Error       string
+}
+
 // SearchResult represents a single search result from SearchDocuments.
 type SearchResult struct {
 	Name        string

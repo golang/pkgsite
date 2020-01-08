@@ -47,9 +47,9 @@ var (
 var httpClient = http.DefaultClient
 
 type FetchResult struct {
-	Version               *internal.Version
-	HasIncompletePackages bool
-	GoModPath             string
+	Version              *internal.Version
+	GoModPath            string
+	PackageVersionStates []*internal.PackageVersionState
 }
 
 // FetchVersion queries the proxy or the Go repo for the requested module
@@ -104,13 +104,13 @@ func FetchVersion(ctx context.Context, modulePath, vers string, proxyClient *pro
 		return nil, fmt.Errorf("%v: %w", err, derrors.BadModule)
 	}
 
-	fr := &FetchResult{GoModPath: goModPath}
-	fr.Version, fr.HasIncompletePackages, err = processZipFile(ctx, modulePath, versionType, vers, commitTime, zipReader)
+	fr, err := processZipFile(ctx, modulePath, versionType, vers, commitTime, zipReader)
+	fr.GoModPath = goModPath
 	return fr, err
 }
 
 // processZipFile extracts information from the module version zip.
-func processZipFile(ctx context.Context, modulePath string, versionType version.Type, version string, commitTime time.Time, zipReader *zip.Reader) (_ *internal.Version, HasIncompletePackages bool, err error) {
+func processZipFile(ctx context.Context, modulePath string, versionType version.Type, version string, commitTime time.Time, zipReader *zip.Reader) (_ *FetchResult, err error) {
 	defer derrors.Wrap(&err, "processZipFile(%q, %q)", modulePath, version)
 
 	_, span := trace.StartSpan(ctx, "processing zipFile")
@@ -122,32 +122,35 @@ func processZipFile(ctx context.Context, modulePath string, versionType version.
 	}
 	readmeFilePath, readmeContents, err := extractReadmeFromZip(modulePath, version, zipReader)
 	if err != nil && err != errReadmeNotFound {
-		return nil, false, fmt.Errorf("extractReadmeFromZip(%q, %q, zipReader): %v", modulePath, version, err)
+		return nil, fmt.Errorf("extractReadmeFromZip(%q, %q, zipReader): %v", modulePath, version, err)
 	}
 	licenses, err := license.Detect(moduleVersionDir(modulePath, version), zipReader)
 	if err != nil {
 		log.Error(ctx, err)
 	}
-	packages, HasIncompletePackages, err := extractPackagesFromZip(ctx, modulePath, version, zipReader, license.NewMatcher(licenses), sourceInfo)
+	packages, packageVersionStates, err := extractPackagesFromZip(ctx, modulePath, version, zipReader, license.NewMatcher(licenses), sourceInfo)
 	if err == errModuleContainsNoPackages {
-		return nil, false, fmt.Errorf("%v: %w", errModuleContainsNoPackages.Error(), derrors.BadModule)
+		return nil, fmt.Errorf("%v: %w", errModuleContainsNoPackages.Error(), derrors.BadModule)
 	}
 	if err != nil {
-		return nil, false, fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, version, licenses, err)
+		return nil, fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, version, licenses, err)
 	}
-	return &internal.Version{
-		VersionInfo: internal.VersionInfo{
-			ModulePath:     modulePath,
-			Version:        version,
-			CommitTime:     commitTime,
-			ReadmeFilePath: readmeFilePath,
-			ReadmeContents: readmeContents,
-			VersionType:    versionType,
-			SourceInfo:     sourceInfo,
+	return &FetchResult{
+		Version: &internal.Version{
+			VersionInfo: internal.VersionInfo{
+				ModulePath:     modulePath,
+				Version:        version,
+				CommitTime:     commitTime,
+				ReadmeFilePath: readmeFilePath,
+				ReadmeContents: readmeContents,
+				VersionType:    versionType,
+				SourceInfo:     sourceInfo,
+			},
+			Packages: packages,
+			Licenses: licenses,
 		},
-		Packages: packages,
-		Licenses: licenses,
-	}, HasIncompletePackages, nil
+		PackageVersionStates: packageVersionStates,
+	}, nil
 }
 
 // moduleVersionDir formats the content subdirectory for the given
@@ -193,7 +196,7 @@ func hasFilename(file string, expectedFile string) bool {
 // limitations of this site. The two limitations are a maximum file size
 // (MaxFileSize), and the particular set of build contexts we consider
 // (goEnvs).
-func extractPackagesFromZip(ctx context.Context, modulePath, version string, r *zip.Reader, matcher license.Matcher, sourceInfo *source.Info) (_ []*internal.Package, HasIncompletePackages bool, err error) {
+func extractPackagesFromZip(ctx context.Context, modulePath, version string, r *zip.Reader, matcher license.Matcher, sourceInfo *source.Info) (_ []*internal.Package, _ []*internal.PackageVersionState, err error) {
 
 	defer func() {
 		if e := recover(); e != nil {
@@ -230,7 +233,8 @@ func extractPackagesFromZip(ctx context.Context, modulePath, version string, r *
 		// information, due to a problem processing one of the go files contained
 		// therein. We use this so that a single unprocessable package does not
 		// prevent processing of other packages in the module.
-		incompleteDirs = make(map[string]bool)
+		incompleteDirs       = make(map[string]bool)
+		packageVersionStates = []*internal.PackageVersionState{}
 	)
 
 	// Phase 1.
@@ -240,10 +244,10 @@ func extractPackagesFromZip(ctx context.Context, modulePath, version string, r *
 	// only after we're sure this phase passed without errors.
 	for _, f := range r.File {
 		if f.Mode().IsDir() {
-			return nil, false, fmt.Errorf("expected only files, found directory %q", f.Name)
+			return nil, nil, fmt.Errorf("expected only files, found directory %q", f.Name)
 		}
 		if !strings.HasPrefix(f.Name, modulePrefix) {
-			return nil, false, fmt.Errorf("expected file to have prefix %q; got = %q", modulePrefix, f.Name)
+			return nil, nil, fmt.Errorf("expected file to have prefix %q; got = %q", modulePrefix, f.Name)
 		}
 		innerPath := path.Dir(f.Name[len(modulePrefix):])
 		if incompleteDirs[innerPath] {
@@ -260,14 +264,20 @@ func extractPackagesFromZip(ctx context.Context, modulePath, version string, r *
 			continue
 		}
 		if f.UncompressedSize64 > MaxFileSize {
-			log.Infof(ctx, "Unable to process %s: file size %d exceeds max limit %d",
-				f.Name, f.UncompressedSize64, MaxFileSize)
 			incompleteDirs[innerPath] = true
+			status := derrors.ToHTTPStatus(derrors.MaxFileSizeLimitExceeded)
+			err := fmt.Sprintf("Unable to process %s: file size %d exceeds max limit %d",
+				f.Name, f.UncompressedSize64, MaxFileSize)
+			packageVersionStates = append(packageVersionStates, &internal.PackageVersionState{
+				ModulePath: modulePath,
+				Status:     status,
+				Error:      err,
+			})
 			continue
 		}
 		dirs[innerPath] = append(dirs[innerPath], f)
 		if len(dirs) > maxPackagesPerModule {
-			return nil, false, fmt.Errorf("%d packages found in %q; exceeds limit %d for maxPackagePerModule", len(dirs), modulePath, maxPackagesPerModule)
+			return nil, nil, fmt.Errorf("%d packages found in %q; exceeds limit %d for maxPackagePerModule", len(dirs), modulePath, maxPackagesPerModule)
 		}
 	}
 
@@ -282,33 +292,54 @@ func extractPackagesFromZip(ctx context.Context, modulePath, version string, r *
 			log.Infof(ctx, "Skipping %q because it is incomplete", innerPath)
 			continue
 		}
+
+		var (
+			status error
+			errMsg string
+		)
 		pkg, err := loadPackage(goFiles, innerPath, modulePath, sourceInfo)
 		if bpe := (*BadPackageError)(nil); errors.As(err, &bpe) {
-			// TODO(b/133187024): Record and display this information instead of just skipping.
-			log.Infof(ctx, "Skipping %q because of *BadPackageError: %v\n", path.Join(modulePath, innerPath), err)
-			continue
-		} else if lpe := (*LargePackageError)(nil); errors.As(err, &lpe) {
-			log.Infof(ctx, "Skipping %q because its rendered documentation HTML is too large", innerPath)
 			incompleteDirs[innerPath] = true
-			continue
+			status = derrors.BadPackage
+			errMsg = err.Error()
+		} else if lpe := (*LargePackageError)(nil); errors.As(err, &lpe) {
+			incompleteDirs[innerPath] = true
+			status = derrors.DocumentationHTMLTooLarge
+			errMsg = err.Error()
 		} else if err != nil {
-			return nil, false, fmt.Errorf("unexpected error loading package: %v", err)
+			return nil, nil, fmt.Errorf("unexpected error loading package: %v", err)
 		}
+
+		var pkgPath string
 		if pkg == nil {
 			// No package.
 			if len(goFiles) > 0 {
 				// There were go files, but no build contexts matched them.
 				incompleteDirs[innerPath] = true
+				status = derrors.BuildContextNotSupported
 			}
-			continue
+			pkgPath = path.Join(modulePath, innerPath)
+		} else {
+			pkg.Licenses = matcher.Match(innerPath)
+			pkgs = append(pkgs, pkg)
+			pkgPath = pkg.Path
 		}
-		pkg.Licenses = matcher.Match(innerPath)
-		pkgs = append(pkgs, pkg)
+		code := http.StatusOK
+		if status != nil {
+			code = derrors.ToHTTPStatus(status)
+		}
+		packageVersionStates = append(packageVersionStates, &internal.PackageVersionState{
+			ModulePath:  modulePath,
+			PackagePath: pkgPath,
+			Version:     version,
+			Status:      code,
+			Error:       errMsg,
+		})
 	}
 	if len(pkgs) == 0 {
-		return nil, false, errModuleContainsNoPackages
+		return nil, packageVersionStates, errModuleContainsNoPackages
 	}
-	return pkgs, len(incompleteDirs) > 0, nil
+	return pkgs, packageVersionStates, nil
 }
 
 // ignoredByGoTool reports whether the given import path corresponds

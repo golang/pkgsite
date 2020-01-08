@@ -68,6 +68,11 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, version string
 	res, err := fetch.FetchVersion(ctx, modulePath, version, proxyClient)
 	if res != nil {
 		goModPath = res.GoModPath
+		for _, state := range res.PackageVersionStates {
+			if state.Status != http.StatusOK {
+				hasIncompletePackages = true
+			}
+		}
 	}
 	if err != nil {
 		return false, goModPath, err
@@ -77,7 +82,7 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, version string
 		return false, goModPath, err
 	}
 	log.Infof(ctx, "Inserted %s@%s", res.Version.ModulePath, res.Version.Version)
-	return res.HasIncompletePackages, goModPath, nil
+	return hasIncompletePackages, goModPath, nil
 }
 
 // fetchAndUpdateState fetches and processes a module version, and then updates

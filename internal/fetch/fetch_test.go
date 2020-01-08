@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -35,25 +36,15 @@ func TestExtractPackagesFromZip(t *testing.T) {
 	defer cancel()
 
 	for _, test := range []struct {
-		name                  string
-		version               string
-		packages              map[string]*internal.Package
-		hasIncompletePackages bool
+		name                 string
+		version              string
+		packages             map[string]*internal.Package
+		packageVersionStates []*internal.PackageVersionState
 	}{
 		{
 			name:    "github.com/my/module",
 			version: "v1.0.0",
 			packages: map[string]*internal.Package{
-				"foo": {
-					Name:              "foo",
-					Path:              "github.com/my/module/foo",
-					Synopsis:          "package foo",
-					DocumentationHTML: "FooBar returns the string &#34;foo bar&#34;.",
-					Imports:           []string{"fmt", "github.com/my/module/bar"},
-					V1Path:            "github.com/my/module/foo",
-					GOOS:              "linux",
-					GOARCH:            "amd64",
-				},
 				"bar": {
 					Name:              "bar",
 					Path:              "github.com/my/module/bar",
@@ -61,6 +52,16 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					DocumentationHTML: "Bar returns the string &#34;bar&#34;.",
 					Imports:           []string{},
 					V1Path:            "github.com/my/module/bar",
+					GOOS:              "linux",
+					GOARCH:            "amd64",
+				},
+				"foo": {
+					Name:              "foo",
+					Path:              "github.com/my/module/foo",
+					Synopsis:          "package foo",
+					DocumentationHTML: "FooBar returns the string &#34;foo bar&#34;.",
+					Imports:           []string{"fmt", "github.com/my/module/bar"},
+					V1Path:            "github.com/my/module/foo",
 					GOOS:              "linux",
 					GOARCH:            "amd64",
 				},
@@ -117,6 +118,26 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					GOARCH:            "amd64",
 				},
 			},
+			packageVersionStates: []*internal.PackageVersionState{
+				{
+					PackagePath: "bad.mod/module/good",
+					ModulePath:  "bad.mod/module",
+					Version:     "v1.0.0",
+					Status:      200,
+				},
+				{
+					PackagePath: "bad.mod/module/illegalchar",
+					ModulePath:  "bad.mod/module",
+					Version:     "v1.0.0",
+					Status:      600,
+				},
+				{
+					PackagePath: "bad.mod/module/multiplepkgs",
+					ModulePath:  "bad.mod/module",
+					Version:     "v1.0.0",
+					Status:      600,
+				},
+			},
 		},
 		{
 			name:    "build.constraints/module",
@@ -133,7 +154,20 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					GOARCH:            "amd64",
 				},
 			},
-			hasIncompletePackages: true,
+			packageVersionStates: []*internal.PackageVersionState{
+				{
+					ModulePath:  "build.constraints/module",
+					Version:     "v1.0.0",
+					PackagePath: "build.constraints/module/cpu",
+					Status:      http.StatusOK,
+				},
+				{
+					ModulePath:  "build.constraints/module",
+					Version:     "v1.0.0",
+					PackagePath: "build.constraints/module/ignore",
+					Status:      derrors.ToHTTPStatus(derrors.BuildContextNotSupported),
+				},
+			},
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -145,14 +179,27 @@ func TestExtractPackagesFromZip(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			packages, hasIncompletePackages, err := extractPackagesFromZip(context.Background(), test.name, test.version, reader, nil, nil)
+			packages, pvstates, err := extractPackagesFromZip(context.Background(), test.name, test.version, reader, nil, nil)
 			if err != nil && len(test.packages) != 0 {
 				t.Fatalf("extractPackagesFromZip(%q, %q, reader, nil): %v", test.name, test.version, err)
 			}
 
-			if hasIncompletePackages != test.hasIncompletePackages {
-				t.Fatalf("extractPackagesFromZip(%q, %q, reader, nil): hasIncompletePackages=%t, want %t",
-					test.name, test.version, hasIncompletePackages, test.hasIncompletePackages)
+			if test.packageVersionStates == nil {
+				for _, p := range test.packages {
+					test.packageVersionStates = append(test.packageVersionStates,
+						&internal.PackageVersionState{
+							ModulePath:  test.name,
+							Version:     test.version,
+							PackagePath: p.Path,
+							Status:      http.StatusOK,
+						})
+				}
+			}
+			sort.Slice(pvstates, func(i, j int) bool {
+				return pvstates[i].PackagePath < pvstates[j].PackagePath
+			})
+			if diff := cmp.Diff(test.packageVersionStates, pvstates, cmpopts.EquateEmpty(), cmpopts.IgnoreFields(internal.PackageVersionState{}, "Error")); diff != "" {
+				t.Fatalf("extractPackagesFromZip(%q, %q, reader, nil) mismatch for packageVersionStates (-want +got):\n%s", test.name, test.version, diff)
 			}
 
 			for _, got := range packages {

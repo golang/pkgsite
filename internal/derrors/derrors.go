@@ -31,6 +31,25 @@ var (
 
 	// Unknown indicates that the error has unknown semantics.
 	Unknown = errors.New("unknown")
+
+	// BuildContextNotSupported indicates that the build context for the
+	// package is not supported.
+	BuildContextNotSupported = errors.New("build context not supported")
+	// MaxImportsLimitExceeded indicates that the package has too many
+	// imports.
+	MaxImportsLimitExceeded = errors.New("max imports limit exceeded")
+	// MaxFileSizeLimitExceeded indicates that the package contains a file
+	// that exceeds fetch.MaxFileSize.
+	MaxFileSizeLimitExceeded = errors.New("max file size limit exceeded")
+	// DocumentationHTMLTooLarge indicates that the rendered documentation
+	// HTML size exceeded the specified limit for dochtml.RenderOptions.
+	DocumentationHTMLTooLarge = errors.New("documentation HTML is too large")
+	// BadPackage represents an error loading a package because its
+	// contents do not make up a valid package. This can happen, for
+	// example, if the .go files fail to parse or declare different package
+	// names.
+	// TODO(b/133187024): break this error up more granularly
+	BadPackage = errors.New("bad package")
 )
 
 var httpCodes = []struct {
@@ -43,6 +62,11 @@ var httpCodes = []struct {
 	// Since the following aren't HTTP statuses, pick unused codes.
 	{BadModule, 490},
 	{AlternativeModule, 491},
+	{BuildContextNotSupported, 600},
+	{MaxImportsLimitExceeded, 601},
+	{MaxFileSizeLimitExceeded, 602},
+	{DocumentationHTMLTooLarge, 603},
+	{BadPackage, 604},
 }
 
 // FromHTTPStatus generates an error according to the HTTP semantics for the given
