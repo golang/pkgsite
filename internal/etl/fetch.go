@@ -122,7 +122,7 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 	// code < 500 but a later action fails, we will never retry the later action.
 
 	// TODO(b/139178863): Split UpsertVersionState into InsertVersionState and UpdateVersionState.
-	if err := db.UpsertVersionState(ctx, modulePath, version, config.AppVersionLabel(), time.Time{}, code, fetchErr); err != nil {
+	if err := db.UpsertVersionState(ctx, modulePath, version, config.AppVersionLabel(), time.Time{}, code, "", fetchErr); err != nil {
 		log.Error(ctx, err)
 		if fetchErr != nil {
 			err = fmt.Errorf("error updating version state: %v, original error: %v", err, fetchErr)

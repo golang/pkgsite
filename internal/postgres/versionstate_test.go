@@ -58,7 +58,6 @@ func TestVersionState(t *testing.T) {
 	}
 
 	gotVersions, err := testDB.GetNextVersionsToFetch(ctx, 10)
-	t.Logf("%+v", gotVersions)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,8 +74,9 @@ func TestVersionState(t *testing.T) {
 	var (
 		statusCode = 500
 		fetchErr   = errors.New("bad request")
+		goModPath  = "goModPath"
 	)
-	if err := testDB.UpsertVersionState(ctx, fooVersion.Path, fooVersion.Version, "", fooVersion.Timestamp, statusCode, fetchErr); err != nil {
+	if err := testDB.UpsertVersionState(ctx, fooVersion.Path, fooVersion.Version, "", fooVersion.Timestamp, statusCode, goModPath, fetchErr); err != nil {
 		t.Fatal(err)
 	}
 	errString := fetchErr.Error()
@@ -85,6 +85,7 @@ func TestVersionState(t *testing.T) {
 		Version:            "v1.0.0",
 		IndexTimestamp:     now,
 		TryCount:           1,
+		GoModPath:          &goModPath,
 		Error:              &errString,
 		Status:             &statusCode,
 		NextProcessedAfter: gotVersions[1].CreatedAt.Add(1 * time.Minute),
@@ -119,6 +120,7 @@ func TestUpdateVersionStatesForReprocessing(t *testing.T) {
 	defer cancel()
 
 	now := sample.NowTruncated()
+	goModPath := "goModPath"
 	for _, v := range []*internal.IndexVersion{
 		{
 			Path:      "foo.com/bar",
@@ -131,7 +133,7 @@ func TestUpdateVersionStatesForReprocessing(t *testing.T) {
 			Timestamp: now,
 		},
 	} {
-		if err := testDB.UpsertVersionState(ctx, v.Path, v.Version, "", v.Timestamp, http.StatusOK, nil); err != nil {
+		if err := testDB.UpsertVersionState(ctx, v.Path, v.Version, "", v.Timestamp, http.StatusOK, goModPath, nil); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -154,8 +156,8 @@ func TestUpdateVersionStatesForReprocessing(t *testing.T) {
 
 	code := http.StatusHTTPVersionNotSupported
 	wantVersions := []*internal.VersionState{
-		{ModulePath: "baz.com/quux", Version: "v2.0.1", IndexTimestamp: now, Status: &code},
-		{ModulePath: "foo.com/bar", Version: "v1.0.0", IndexTimestamp: now, Status: &code},
+		{ModulePath: "baz.com/quux", Version: "v2.0.1", IndexTimestamp: now, GoModPath: &goModPath, Status: &code},
+		{ModulePath: "foo.com/bar", Version: "v1.0.0", IndexTimestamp: now, GoModPath: &goModPath, Status: &code},
 	}
 	ignore := cmpopts.IgnoreFields(internal.VersionState{}, "CreatedAt", "LastProcessedAt", "NextProcessedAfter")
 	if diff := cmp.Diff(wantVersions, gotVersions, ignore); diff != "" {

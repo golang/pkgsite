@@ -42,19 +42,20 @@ func (db *DB) InsertIndexVersions(ctx context.Context, versions []*internal.Inde
 
 // UpsertVersionState inserts or updates the module_version_state table with
 // the results of a fetch operation for a given module version.
-func (db *DB) UpsertVersionState(ctx context.Context, modulePath, vers, appVersion string, timestamp time.Time, status int, fetchErr error) (err error) {
-	derrors.Wrap(&err, "UpsertVersionState(ctx, %q, %q, %q, %s, %d, %v",
-		modulePath, vers, appVersion, timestamp, status, fetchErr)
+func (db *DB) UpsertVersionState(ctx context.Context, modulePath, vers, appVersion string, timestamp time.Time, status int, goModPath string, fetchErr error) (err error) {
+	derrors.Wrap(&err, "UpsertVersionState(ctx, %q, %q, %q, %s, %d, %q, %v",
+		modulePath, vers, appVersion, timestamp, status, goModPath, fetchErr)
 
 	ctx, span := trace.StartSpan(ctx, "UpsertVersionState")
 	defer span.End()
 	query := `
-		INSERT INTO module_version_states AS mvs (module_path, version, sort_version, app_version, index_timestamp, status, error)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO module_version_states AS mvs (module_path, version, sort_version, app_version, index_timestamp, status, go_mod_path, error)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		ON CONFLICT (module_path, version) DO UPDATE
 			SET
 				app_version=excluded.app_version,
 				status=excluded.status,
+				go_mod_path=excluded.go_mod_path,
 				error=excluded.error,
 				try_count=mvs.try_count+1,
 				last_processed_at=CURRENT_TIMESTAMP,
@@ -73,7 +74,7 @@ func (db *DB) UpsertVersionState(ctx context.Context, modulePath, vers, appVersi
 		sqlErrorMsg = sql.NullString{Valid: true, String: fetchErr.Error()}
 	}
 	result, err := db.db.Exec(ctx, query,
-		modulePath, vers, version.ForSorting(vers), appVersion, timestamp, status, sqlErrorMsg)
+		modulePath, vers, version.ForSorting(vers), appVersion, timestamp, status, goModPath, sqlErrorMsg)
 	if err != nil {
 		return err
 	}
@@ -142,7 +143,8 @@ const versionStateColumns = `
 			try_count,
 			last_processed_at,
 			next_processed_after,
-			app_version`
+			app_version,
+			go_mod_path`
 
 // scanVersionState constructs an *internal.VersionState from the given
 // scanner. It expects columns to be in the order of versionStateColumns.
@@ -152,11 +154,11 @@ func scanVersionState(scan func(dest ...interface{}) error) (*internal.VersionSt
 		indexTimestamp, createdAt, nextProcessedAfter time.Time
 		lastProcessedAt                               pq.NullTime
 		status                                        sql.NullInt64
-		errorMsg                                      sql.NullString
+		errorMsg, goModPath                           sql.NullString
 		tryCount                                      int
 	)
 	if err := scan(&modulePath, &version, &indexTimestamp, &createdAt, &status, &errorMsg,
-		&tryCount, &lastProcessedAt, &nextProcessedAfter, &appVersion); err != nil {
+		&tryCount, &lastProcessedAt, &nextProcessedAfter, &appVersion, &goModPath); err != nil {
 		return nil, err
 	}
 	v := &internal.VersionState{
@@ -175,6 +177,10 @@ func scanVersionState(scan func(dest ...interface{}) error) (*internal.VersionSt
 	if errorMsg.Valid {
 		s := errorMsg.String
 		v.Error = &s
+	}
+	if goModPath.Valid {
+		s := goModPath.String
+		v.GoModPath = &s
 	}
 	if lastProcessedAt.Valid {
 		lp := lastProcessedAt.Time

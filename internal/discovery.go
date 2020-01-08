@@ -147,6 +147,9 @@ type VersionState struct {
 	// is close to, but not the same as, the deployment time. For example, the
 	// deployment time for the above timestamp might be Jul 9, 2019, 11:29:59 AM.
 	AppVersion string
+
+	// GoModPath is the path declared in the go.mod file.
+	GoModPath *string
 }
 
 // SearchResult represents a single search result from SearchDocuments.
