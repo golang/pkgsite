@@ -250,7 +250,11 @@ func (ds *DataSource) getVersion(ctx context.Context, modulePath, version string
 		return e.version, e.err
 	}
 
-	v, _, err := fetch.FetchVersion(ctx, modulePath, version, ds.proxyClient)
+	res, err := fetch.FetchVersion(ctx, modulePath, version, ds.proxyClient)
+	var v *internal.Version
+	if res != nil {
+		v = res.Version
+	}
 	ds.versionCache[key] = &versionEntry{version: v, err: err}
 	if err != nil {
 		return nil, err

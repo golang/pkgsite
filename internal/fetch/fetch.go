@@ -45,51 +45,64 @@ var (
 // For testing
 var httpClient = http.DefaultClient
 
+type FetchResult struct {
+	Version               *internal.Version
+	HasIncompletePackages bool
+	GoModPath             string
+}
+
 // FetchVersion queries the proxy or the Go repo for the requested module
 // version, downloads the module zip, and processes the contents to return an
-// *internal.Version.
-func FetchVersion(ctx context.Context, modulePath, vers string, proxyClient *proxy.Client) (_ *internal.Version, HasIncompletePackages bool, err error) {
+// *internal.Version and related information.
+//
+// Even if err is non-nil, the result may contain useful information, like the go.mod path.
+func FetchVersion(ctx context.Context, modulePath, vers string, proxyClient *proxy.Client) (_ *FetchResult, err error) {
 	defer derrors.Wrap(&err, "fetchVersion(%q, %q)", modulePath, vers)
 
-	var commitTime time.Time
-	var zipReader *zip.Reader
+	var (
+		commitTime time.Time
+		zipReader  *zip.Reader
+		goModPath  string
+	)
 	if modulePath == stdlib.ModulePath {
 		zipReader, commitTime, err = stdlib.Zip(vers)
 		if err != nil {
-			return nil, false, err
+			return nil, err
 		}
 	} else {
 		info, err := proxyClient.GetInfo(ctx, modulePath, vers)
 		if err != nil {
-			return nil, false, err
+			return nil, err
 		}
 		vers = info.Version
 		commitTime = info.Time
 
 		goModFile, err := proxyClient.GetMod(ctx, modulePath, vers)
 		if err != nil {
-			return nil, false, err
+			return nil, err
 		}
-		canonicalPath := goModFile.Module.Mod.Path
-		if canonicalPath != modulePath {
+		goModPath := goModFile.Module.Mod.Path
+		if goModPath != modulePath {
 			// The module path in the go.mod file doesn't match the path of the
 			// zip file. Don't insert the module. Store an AlternativeModule
 			// status in module_version_states.
-			return nil, false, fmt.Errorf("module path=%s, go.mod path=%s: %w",
-				modulePath, canonicalPath, derrors.AlternativeModule)
+			return &FetchResult{GoModPath: goModPath}, fmt.Errorf("module path=%s, go.mod path=%s: %w",
+				modulePath, goModPath, derrors.AlternativeModule)
 		}
 
 		zipReader, err = proxyClient.GetZip(ctx, modulePath, vers)
 		if err != nil {
-			return nil, false, err
+			return nil, err
 		}
 	}
 	versionType, err := version.ParseType(vers)
 	if err != nil {
-		return nil, false, fmt.Errorf("%v: %w", err, derrors.BadModule)
+		return nil, fmt.Errorf("%v: %w", err, derrors.BadModule)
 	}
 
-	return processZipFile(ctx, modulePath, versionType, vers, commitTime, zipReader)
+	fr := &FetchResult{GoModPath: goModPath}
+	fr.Version, fr.HasIncompletePackages, err = processZipFile(ctx, modulePath, versionType, vers, commitTime, zipReader)
+	return fr, err
 }
 
 // processZipFile extracts information from the module version zip.

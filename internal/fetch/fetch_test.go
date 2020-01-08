@@ -383,7 +383,7 @@ func TestFetchVersion(t *testing.T) {
 			})
 			defer teardownProxy()
 
-			got, _, err := FetchVersion(ctx, modulePath, vers, client)
+			got, err := FetchVersion(ctx, modulePath, vers, client)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -392,7 +392,7 @@ func TestFetchVersion(t *testing.T) {
 				cmp.AllowUnexported(source.Info{}),
 			}
 			opts = append(opts, sample.LicenseCmpOpts...)
-			if diff := cmp.Diff(test.want, got, opts...); diff != "" {
+			if diff := cmp.Diff(test.want, got.Version, opts...); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -405,17 +405,21 @@ func TestFetchVersion_Alternative(t *testing.T) {
 
 	const (
 		modulePath = "github.com/my/module"
+		goModPath  = "canonical"
 		vers       = "v1.0.0"
 	)
 
 	client, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
-		proxy.NewTestVersion(t, modulePath, vers, map[string]string{"go.mod": "module canonical"}),
+		proxy.NewTestVersion(t, modulePath, vers, map[string]string{"go.mod": "module " + goModPath}),
 	})
 	defer teardownProxy()
 
-	_, _, err := FetchVersion(ctx, modulePath, vers, client)
+	res, err := FetchVersion(ctx, modulePath, vers, client)
 	if !errors.Is(err, derrors.AlternativeModule) {
 		t.Errorf("got %v, want derrors.AlternativeModule", err)
+	}
+	if res == nil || res.GoModPath != goModPath {
+		t.Errorf("got %+v, wanted GoModPath %q", res, goModPath)
 	}
 }
 

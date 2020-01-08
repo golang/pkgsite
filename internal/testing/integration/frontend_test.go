@@ -175,11 +175,11 @@ func processVersions(ctx context.Context, t *testing.T, testVersions []*proxy.Te
 	defer teardown()
 
 	for _, tv := range testVersions {
-		v, _, err := fetch.FetchVersion(ctx, tv.ModulePath, tv.Version, proxyClient)
+		res, err := fetch.FetchVersion(ctx, tv.ModulePath, tv.Version, proxyClient)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err := testDB.InsertVersion(ctx, v); err != nil {
+		if err := testDB.InsertVersion(ctx, res.Version); err != nil {
 			t.Fatal(err)
 		}
 	}
