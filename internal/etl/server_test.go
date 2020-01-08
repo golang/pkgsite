@@ -76,11 +76,14 @@ func TestETL(t *testing.T) {
 			"go.mod": "module foo.com/bar",
 			"bar.go": "package bar\nconst Bar = \"Bar\"",
 		})
-		emptyString = ""
-		state       = func(version *internal.IndexVersion, code, tryCount int) *internal.VersionState {
+		state = func(version *internal.IndexVersion, code, tryCount int) *internal.VersionState {
 			status := &code
+			goModPath := version.Path
 			if code == 0 {
 				status = nil
+			}
+			if code >= 300 {
+				goModPath = ""
 			}
 			return &internal.VersionState{
 				ModulePath:     version.Path,
@@ -88,7 +91,7 @@ func TestETL(t *testing.T) {
 				Status:         status,
 				TryCount:       tryCount,
 				Version:        version.Version,
-				GoModPath:      &emptyString,
+				GoModPath:      &goModPath,
 			}
 		}
 		fooState = func(code, tryCount int) *internal.VersionState {

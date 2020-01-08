@@ -395,6 +395,9 @@ func TestFetchVersion(t *testing.T) {
 			if diff := cmp.Diff(test.want, got.Version, opts...); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
+			if got.GoModPath != modulePath {
+				t.Errorf("go.mod path: got %q, want %q", got.GoModPath, modulePath)
+			}
 		})
 	}
 }

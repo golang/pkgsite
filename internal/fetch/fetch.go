@@ -81,7 +81,7 @@ func FetchVersion(ctx context.Context, modulePath, vers string, proxyClient *pro
 		if err != nil {
 			return nil, err
 		}
-		goModPath := goModFile.Module.Mod.Path
+		goModPath = goModFile.Module.Mod.Path
 		if goModPath != modulePath {
 			// The module path in the go.mod file doesn't match the path of the
 			// zip file. Don't insert the module. Store an AlternativeModule
