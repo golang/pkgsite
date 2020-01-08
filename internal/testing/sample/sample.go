@@ -30,8 +30,8 @@ var (
 			Types:    []string{"MIT"},
 			FilePath: "LICENSE",
 			Coverage: licensecheck.Coverage{
-				Percent: 98.1928,
-				Match:   []licensecheck.Match{{Name: "MIT", Type: licensecheck.MIT, Percent: 97.6048}},
+				Percent: 100,
+				Match:   []licensecheck.Match{{Name: "MIT", Type: licensecheck.MIT, Percent: 100}},
 			},
 		},
 	}

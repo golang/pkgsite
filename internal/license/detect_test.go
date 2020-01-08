@@ -18,8 +18,8 @@ import (
 
 func TestDetect(t *testing.T) {
 	cov := lc.Coverage{
-		Percent: 98.1928,
-		Match:   []lc.Match{{Name: "MIT", Type: lc.MIT, Percent: 97.6048}},
+		Percent: 100,
+		Match:   []lc.Match{{Name: "MIT", Type: lc.MIT, Percent: 100}},
 	}
 	testCases := []struct {
 		name, subdir string
@@ -66,8 +66,8 @@ func TestDetect(t *testing.T) {
 				{Types: []string{"MIT"}, FilePath: "LICENSE", Coverage: cov},
 				{Types: []string{"MIT"}, FilePath: "bar/LICENSE.md", Coverage: cov},
 				{Types: []string{"BSD-0-Clause"}, FilePath: "foo/COPYING", Coverage: lc.Coverage{
-					Percent: 97.0297,
-					Match:   []lc.Match{{Name: "BSD-0-Clause", Type: lc.BSD, Percent: 97.0297}},
+					Percent: 100,
+					Match:   []lc.Match{{Name: "BSD-0-Clause", Type: lc.BSD, Percent: 100}},
 				}},
 			},
 		},
@@ -78,10 +78,10 @@ func TestDetect(t *testing.T) {
 			},
 			want: []*Metadata{
 				{Types: []string{"BSD-0-Clause", "MIT"}, FilePath: "LICENSE", Coverage: lc.Coverage{
-					Percent: 97.7528,
+					Percent: 100,
 					Match: []lc.Match{
-						{Name: "MIT", Type: lc.MIT, Percent: 97.6048},
-						{Name: "BSD-0-Clause", Type: lc.BSD, Percent: 97.0297},
+						{Name: "MIT", Type: lc.MIT, Percent: 100},
+						{Name: "BSD-0-Clause", Type: lc.BSD, Percent: 100},
 					},
 				}},
 			},
@@ -108,8 +108,8 @@ commodo consequat.`,
 				{
 					FilePath: "LICENSE",
 					Coverage: lc.Coverage{
-						Percent: 80.6931,
-						Match:   []lc.Match{{Name: "MIT", Type: lc.MIT, Percent: 97.6048}},
+						Percent: 81.9095,
+						Match:   []lc.Match{{Name: "MIT", Type: lc.MIT, Percent: 100}},
 					},
 				},
 			},
