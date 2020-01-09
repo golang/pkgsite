@@ -22,7 +22,6 @@ import (
 	"go.opencensus.io/plugin/ochttp"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/thirdparty/modfile"
 	"golang.org/x/mod/module"
 	"golang.org/x/net/context/ctxhttp"
 )
@@ -73,15 +72,10 @@ func (c *Client) GetInfo(ctx context.Context, modulePath, version string) (_ *Ve
 	return &v, nil
 }
 
-// GetMod makes a request to $GOPROXY/<module>/@v/<version>.mod and
-// transforms that data into a *modfile.File.
-func (c *Client) GetMod(ctx context.Context, modulePath, version string) (_ *modfile.File, err error) {
+// GetMod makes a request to $GOPROXY/<module>/@v/<version>.mod and returns the raw data.
+func (c *Client) GetMod(ctx context.Context, modulePath, version string) (_ []byte, err error) {
 	defer derrors.Wrap(&err, "proxy.Client.GetMod(%q, %q)", modulePath, version)
-	data, err := c.readBody(ctx, modulePath, version, "mod")
-	if err != nil {
-		return nil, err
-	}
-	return modfile.Parse(modulePath+"@"+version, data, nil)
+	return c.readBody(ctx, modulePath, version, "mod")
 }
 
 // GetZip makes a request to $GOPROXY/<path>/@v/<version>.zip and transforms

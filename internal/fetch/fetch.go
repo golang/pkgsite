@@ -34,6 +34,7 @@ import (
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/stdlib"
+	"golang.org/x/discovery/internal/thirdparty/modfile"
 	"golang.org/x/discovery/internal/version"
 )
 
@@ -77,11 +78,14 @@ func FetchVersion(ctx context.Context, modulePath, vers string, proxyClient *pro
 		vers = info.Version
 		commitTime = info.Time
 
-		goModFile, err := proxyClient.GetMod(ctx, modulePath, vers)
+		goModBytes, err := proxyClient.GetMod(ctx, modulePath, vers)
 		if err != nil {
 			return nil, err
 		}
-		goModPath = goModFile.Module.Mod.Path
+		goModPath = modfile.ModulePath(goModBytes)
+		if goModPath == "" {
+			return nil, fmt.Errorf("go.mod has no module path: %w", derrors.BadModule)
+		}
 		if goModPath != modulePath {
 			// The module path in the go.mod file doesn't match the path of the
 			// zip file. Don't insert the module. Store an AlternativeModule

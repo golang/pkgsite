@@ -112,12 +112,14 @@ func TestGetMod(t *testing.T) {
 
 	path := "github.com/my/module"
 	version := "v1.0.0"
-	goModFile, err := client.GetMod(ctx, path, version)
+	bytes, err := client.GetMod(ctx, path, version)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := goModFile.Module.Mod.Path; got != path {
-		t.Errorf("got %q, want %q", got, path)
+	got := string(bytes)
+	want := "module github.com/my/module\n\ngo 1.12"
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
 	}
 }
 
