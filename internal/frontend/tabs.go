@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/licenses"
 )
 
 // TabSettings defines tab-specific metadata.
@@ -167,34 +167,34 @@ func urlIsVersioned(url *url.URL) bool {
 
 // fetchDetailsForModule returns tab details by delegating to the correct detail
 // handler.
-func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds internal.DataSource, vi *internal.VersionInfo, licenses []*license.License) (interface{}, error) {
+func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds internal.DataSource, vi *internal.VersionInfo, licenses []*licenses.License) (interface{}, error) {
 	switch tab {
 	case "packages":
-		return fetchDirectoryDetails(ctx, ds, vi.ModulePath, vi, license.ToMetadatas(licenses), true)
+		return fetchDirectoryDetails(ctx, ds, vi.ModulePath, vi, licensesToMetadatas(licenses), true)
 	case "licenses":
 		return &LicensesDetails{Licenses: transformLicenses(vi.ModulePath, vi.Version, licenses)}, nil
 	case "versions":
 		return fetchModuleVersionsDetails(ctx, ds, vi)
 	case "overview":
 		// TODO(b/138448402): implement remaining module views.
-		return constructOverviewDetails(vi, license.ToMetadatas(licenses), urlIsVersioned(r.URL)), nil
+		return constructOverviewDetails(vi, vi.IsRedistributable, urlIsVersioned(r.URL)), nil
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
 
 // constructDetailsForDirectory returns tab details by delegating to the correct
 // detail handler.
-func constructDetailsForDirectory(r *http.Request, tab string, dir *internal.Directory, licenses []*license.License) (interface{}, error) {
+func constructDetailsForDirectory(r *http.Request, tab string, dir *internal.Directory, licenses []*licenses.License) (interface{}, error) {
 	switch tab {
 	case "overview":
-		return constructOverviewDetails(&dir.VersionInfo, license.ToMetadatas(licenses), urlIsVersioned(r.URL)), nil
+		return constructOverviewDetails(&dir.VersionInfo, dir.VersionInfo.IsRedistributable, urlIsVersioned(r.URL)), nil
 	case "subdirectories":
 		// Ideally we would just use fetchDirectoryDetails here so that it
 		// follows the same code path as fetchDetailsForModule and
 		// fetchDetailsForPackage. However, since we already have the directory
 		// and licenses info, it doesn't make sense to call
 		// postgres.GetDirectory again.
-		return createDirectory(dir, license.ToMetadatas(licenses), false)
+		return createDirectory(dir, licensesToMetadatas(licenses), false)
 	case "licenses":
 		return &LicensesDetails{Licenses: transformLicenses(dir.ModulePath, dir.Version, licenses)}, nil
 	}

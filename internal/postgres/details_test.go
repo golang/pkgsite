@@ -16,7 +16,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/licenses"
 	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/testing/sample"
 	"golang.org/x/discovery/internal/version"
@@ -373,7 +373,7 @@ func TestGetPackagesInVersion(t *testing.T) {
 				// TODO(b/130367504): remove this ignore once imports are not asymmetric
 				cmpopts.IgnoreFields(internal.Package{}, "Imports"),
 				// The packages table only includes partial license information; it omits the Coverage field.
-				cmpopts.IgnoreFields(license.Metadata{}, "Coverage"),
+				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 			}
 			if diff := cmp.Diff(tc.version.Packages, got, opts...); diff != "" {
 				t.Errorf("testDB.GetPackageInVersion(ctx, %q, %q) mismatch (-want +got):\n%s", tc.pkgPath, tc.version.Version, diff)
@@ -392,7 +392,7 @@ func TestGetPackageLicenses(t *testing.T) {
 
 	tests := []struct {
 		label, pkgPath string
-		wantLicenses   []*license.License
+		wantLicenses   []*licenses.License
 	}{
 		{
 			label:        "package with licenses",
@@ -431,18 +431,18 @@ func TestGetModuleLicenses(t *testing.T) {
 	testVersion := sample.Version()
 	testVersion.ModulePath = modulePath
 	sample.SetSuffixes(testVersion, "", "foo", "bar")
-	testVersion.Packages[0].Licenses = []*license.Metadata{{Types: []string{"ISC"}, FilePath: "LICENSE"}}
-	testVersion.Packages[1].Licenses = []*license.Metadata{{Types: []string{"MIT"}, FilePath: "foo/LICENSE"}}
-	testVersion.Packages[2].Licenses = []*license.Metadata{{Types: []string{"GPL2"}, FilePath: "bar/LICENSE.txt"}}
+	testVersion.Packages[0].Licenses = []*licenses.Metadata{{Types: []string{"ISC"}, FilePath: "LICENSE"}}
+	testVersion.Packages[1].Licenses = []*licenses.Metadata{{Types: []string{"MIT"}, FilePath: "foo/LICENSE"}}
+	testVersion.Packages[2].Licenses = []*licenses.Metadata{{Types: []string{"GPL2"}, FilePath: "bar/LICENSE.txt"}}
 
 	defer ResetTestDB(testDB, t)
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
 	for _, p := range testVersion.Packages {
-		testVersion.Licenses = append(testVersion.Licenses, &license.License{
+		testVersion.Licenses = append(testVersion.Licenses, &licenses.License{
 			Metadata: p.Licenses[0],
-			Contents: `Lorem Ipsum`,
+			Contents: []byte(`Lorem Ipsum`),
 		})
 	}
 
@@ -455,7 +455,7 @@ func TestGetModuleLicenses(t *testing.T) {
 		t.Fatal(err)
 	}
 	// We only want the top-level license.
-	wantLicenses := []*license.License{testVersion.Licenses[0]}
+	wantLicenses := []*licenses.License{testVersion.Licenses[0]}
 	if diff := cmp.Diff(wantLicenses, got); diff != "" {
 		t.Errorf("testDB.GetModuleLicenses(ctx, %q, %q) mismatch (-want +got):\n%s", modulePath, testVersion.Version, diff)
 	}

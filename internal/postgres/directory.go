@@ -92,6 +92,7 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version str
 		scanArgs = append(scanArgs,
 			pq.Array(&licenseTypes),
 			pq.Array(&licensePaths),
+			&pkg.IsRedistributable,
 			&pkg.GOOS,
 			&pkg.GOARCH,
 			&vi.Version,
@@ -103,7 +104,8 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version str
 		scanArgs = append(scanArgs,
 			&vi.CommitTime,
 			&vi.VersionType,
-			jsonbScanner{&vi.SourceInfo})
+			jsonbScanner{&vi.SourceInfo},
+			&vi.IsRedistributable)
 		if err := rows.Scan(scanArgs...); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
@@ -147,6 +149,7 @@ func directoryColumns(fields internal.FieldSet) string {
 			` + doc + `
 			p.license_types,
 			p.license_paths,
+			p.redistributable,
 			p.goos,
 			p.goarch,
 			p.version,
@@ -155,7 +158,8 @@ func directoryColumns(fields internal.FieldSet) string {
 			` + readme + `
 			v.commit_time,
 			v.version_type,
-			v.source_info`
+			v.source_info,
+			v.redistributable`
 }
 
 const orderByLatest = `

@@ -7,7 +7,7 @@ package internal
 import (
 	"time"
 
-	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/licenses"
 	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/version"
 	"golang.org/x/mod/module"
@@ -27,13 +27,14 @@ const (
 
 // VersionInfo holds metadata associated with a version.
 type VersionInfo struct {
-	ModulePath     string
-	Version        string
-	CommitTime     time.Time
-	ReadmeFilePath string
-	ReadmeContents string
-	VersionType    version.Type
-	SourceInfo     *source.Info
+	ModulePath        string
+	Version           string
+	CommitTime        time.Time
+	ReadmeFilePath    string
+	ReadmeContents    string
+	VersionType       version.Type
+	IsRedistributable bool
+	SourceInfo        *source.Info
 }
 
 // SeriesPath returns the series path for the module.
@@ -65,7 +66,7 @@ type Version struct {
 	Packages []*Package
 	// Licenses holds all licenses within this module version, including those
 	// that may be contained in nested subdirectories.
-	Licenses []*license.License
+	Licenses []*licenses.License
 }
 
 // A Package is a group of one or more Go source files with the same package
@@ -74,7 +75,8 @@ type Package struct {
 	Path              string
 	Name              string
 	Synopsis          string
-	Licenses          []*license.Metadata // path to applicable version licenses
+	IsRedistributable bool
+	Licenses          []*licenses.Metadata // metadata of applicable version licenses
 	Imports           []string
 	DocumentationHTML string
 	// The values of the GOOS and GOARCH environment variables used to parse the package.
@@ -83,11 +85,6 @@ type Package struct {
 
 	// V1Path is the package path of a package with major version 1 in a given series.
 	V1Path string
-}
-
-// IsRedistributable reports whether the package may be redistributed.
-func (p *Package) IsRedistributable() bool {
-	return license.AreRedistributable(p.Licenses)
 }
 
 // VersionedPackage is a Package along with its corresponding version

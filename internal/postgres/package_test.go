@@ -13,7 +13,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/licenses"
 	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/testing/sample"
@@ -48,7 +48,7 @@ func TestGetPackage(t *testing.T) {
 			cmpopts.EquateEmpty(),
 			cmp.AllowUnexported(source.Info{}),
 			// The packages table only includes partial license information; it omits the Coverage field.
-			cmpopts.IgnoreFields(license.Metadata{}, "Coverage"),
+			cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 		}
 		if diff := cmp.Diff(want, got, opts...); diff != "" {
 			t.Errorf("testDB.GetPackage(ctx, %q, %q, %q) mismatch (-want +got):\n%s", pkgPath, modulePath, version, diff)

@@ -25,35 +25,39 @@ func TestFetchSearchPage(t *testing.T) {
 		now        = sample.NowTruncated()
 		versionFoo = &internal.Version{
 			VersionInfo: internal.VersionInfo{
-				ModulePath:     "github.com/mod/foo",
-				Version:        "v1.0.0",
-				ReadmeContents: "readme",
-				CommitTime:     now,
-				VersionType:    version.TypeRelease,
+				ModulePath:        "github.com/mod/foo",
+				Version:           "v1.0.0",
+				ReadmeContents:    "readme",
+				CommitTime:        now,
+				VersionType:       version.TypeRelease,
+				IsRedistributable: true,
 			},
 			Packages: []*internal.Package{
 				{
-					Name:     "foo",
-					Path:     "/path/to/foo",
-					Synopsis: "foo is a package.",
-					Licenses: sample.LicenseMetadata,
+					Name:              "foo",
+					Path:              "/path/to/foo",
+					Synopsis:          "foo is a package.",
+					Licenses:          sample.LicenseMetadata,
+					IsRedistributable: true,
 				},
 			},
 		}
 		versionBar = &internal.Version{
 			VersionInfo: internal.VersionInfo{
-				ModulePath:     "github.com/mod/bar",
-				Version:        "v1.0.0",
-				ReadmeContents: "readme",
-				CommitTime:     now,
-				VersionType:    version.TypeRelease,
+				ModulePath:        "github.com/mod/bar",
+				Version:           "v1.0.0",
+				ReadmeContents:    "readme",
+				CommitTime:        now,
+				VersionType:       version.TypeRelease,
+				IsRedistributable: true,
 			},
 			Packages: []*internal.Package{
 				{
-					Name:     "bar",
-					Path:     "/path/to/bar",
-					Synopsis: "bar is used by foo.",
-					Licenses: sample.LicenseMetadata,
+					Name:              "bar",
+					Path:              "/path/to/bar",
+					Synopsis:          "bar is used by foo.",
+					Licenses:          sample.LicenseMetadata,
+					IsRedistributable: true,
 				},
 			},
 		}

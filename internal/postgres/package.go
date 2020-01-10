@@ -56,6 +56,7 @@ func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version strin
 			p.v1_path,
 			p.license_types,
 			p.license_paths,
+			p.redistributable,
 			p.documentation,
 			p.goos,
 			p.goarch,
@@ -65,7 +66,8 @@ func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version strin
 			v.readme_contents,
 			v.module_path,
 			v.version_type,
-		    v.source_info
+		    v.source_info,
+			v.redistributable
 		FROM
 			versions v
 		INNER JOIN
@@ -134,10 +136,10 @@ func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version strin
 	)
 	row := db.db.QueryRow(ctx, query, args...)
 	err = row.Scan(&pkg.Path, &pkg.Name, &pkg.Synopsis,
-		&pkg.V1Path, pq.Array(&licenseTypes), pq.Array(&licensePaths),
+		&pkg.V1Path, pq.Array(&licenseTypes), pq.Array(&licensePaths), &pkg.Package.IsRedistributable,
 		database.NullIsEmpty(&pkg.DocumentationHTML), &pkg.GOOS, &pkg.GOARCH, &pkg.Version,
 		&pkg.CommitTime, database.NullIsEmpty(&pkg.ReadmeFilePath), database.NullIsEmpty(&pkg.ReadmeContents),
-		&pkg.ModulePath, &pkg.VersionType, jsonbScanner{&pkg.SourceInfo})
+		&pkg.ModulePath, &pkg.VersionType, jsonbScanner{&pkg.SourceInfo}, &pkg.VersionInfo.IsRedistributable)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("package %s@%s: %w", pkgPath, version, derrors.NotFound)

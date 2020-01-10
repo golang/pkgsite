@@ -15,7 +15,7 @@ import (
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/licenses"
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/stdlib"
 )
@@ -69,7 +69,7 @@ func (s *Server) serveDirectoryPageWithDirectory(ctx context.Context, w http.Res
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return
 	}
-	header, err := createDirectory(dbDir, license.ToMetadatas(licenses), false)
+	header, err := createDirectory(dbDir, licensesToMetadatas(licenses), false)
 	if err != nil {
 		log.Errorf(ctx, "serveDirectoryPage for %s@%s: %v", dbDir.Path, requestedVersion, err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
@@ -111,7 +111,7 @@ func (s *Server) serveDirectoryPageWithDirectory(ctx context.Context, w http.Res
 // "Subdirectories" tab, we do not want to include packages whose import paths
 // are the same as the dirPath.
 func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, dirPath string, vi *internal.VersionInfo,
-	licmetas []*license.Metadata, includeDirPath bool) (_ *Directory, err error) {
+	licmetas []*licenses.Metadata, includeDirPath bool) (_ *Directory, err error) {
 	defer derrors.Wrap(&err, "s.ds.fetchDirectoryDetails(%q, %q, %q, %v)", dirPath, vi.ModulePath, vi.Version, licmetas)
 
 	if includeDirPath && dirPath != vi.ModulePath && dirPath != stdlib.ModulePath {
@@ -153,7 +153,7 @@ func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, dirPath 
 // the module path. However, on the package and directory view's
 // "Subdirectories" tab, we do not want to include packages whose import paths
 // are the same as the dirPath.
-func createDirectory(dbDir *internal.Directory, licmetas []*license.Metadata, includeDirPath bool) (_ *Directory, err error) {
+func createDirectory(dbDir *internal.Directory, licmetas []*licenses.Metadata, includeDirPath bool) (_ *Directory, err error) {
 	defer derrors.Wrap(&err, "createDirectory(%q, %q, %t)", dbDir.Path, dbDir.Version, includeDirPath)
 
 	var packages []*Package
@@ -165,7 +165,7 @@ func createDirectory(dbDir *internal.Directory, licmetas []*license.Metadata, in
 		if err != nil {
 			return nil, err
 		}
-		if pkg.IsRedistributable() {
+		if pkg.IsRedistributable {
 			newPkg.Synopsis = pkg.Synopsis
 		}
 		newPkg.PathAfterDirectory = strings.TrimPrefix(strings.TrimPrefix(pkg.Path, dbDir.Path), "/")

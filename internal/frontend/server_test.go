@@ -155,6 +155,7 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 			}
 			if !mod.redistributable {
 				p.Licenses = nil
+				p.IsRedistributable = false
 			}
 			ps = append(ps, p)
 		}
@@ -163,6 +164,10 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 			v.ModulePath = mod.path
 			v.Version = ver
 			v.SourceInfo = source.NewGitHubInfo(sample.RepositoryURL, "", ver)
+			v.IsRedistributable = mod.redistributable
+			if !v.IsRedistributable {
+				v.Licenses = nil
+			}
 			v.Packages = ps
 			if err := testDB.InsertVersion(ctx, v); err != nil {
 				t.Fatal(err)

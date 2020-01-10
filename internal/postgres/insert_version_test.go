@@ -18,7 +18,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/licenses"
 	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/testing/sample"
 )
@@ -185,7 +185,7 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 			opts := cmp.Options{
 				cmpopts.IgnoreFields(internal.Package{}, "Imports"),
 				// The packages table only includes partial license information; it omits the Coverage field.
-				cmpopts.IgnoreFields(license.Metadata{}, "Coverage"),
+				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 			}
 			if diff := cmp.Diff(wantPkg, &gotPkg.Package, opts...); diff != "" {
 				t.Errorf("testDB.GetPackage(%q, %q) Package mismatch (-want +got):\n%s", tc.wantPkgPath, tc.wantVersion, diff)
@@ -281,11 +281,11 @@ func TestMakeValidUnicode(t *testing.T) {
 		if (err == nil) != okRaw {
 			t.Errorf("%s, raw: got %v, want error: %t", filename, err, okRaw)
 		}
-		if err := insert(makeValidUnicode(raw)); err != nil {
+		if err := insert(makeValidUnicode(data)); err != nil {
 			t.Errorf("%s, after making valid: %v", filename, err)
 		}
 		fmt.Println(filename)
-		fmt.Println(makeValidUnicode(raw))
+		fmt.Println(makeValidUnicode(data))
 	}
 
 	check("final-nulls", false)

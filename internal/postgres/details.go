@@ -18,7 +18,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/database"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/licenses"
 	"golang.org/x/discovery/internal/version"
 )
 
@@ -33,6 +33,7 @@ func (db *DB) GetPackagesInVersion(ctx context.Context, modulePath, version stri
 		v1_path,
 		license_types,
 		license_paths,
+		redistributable,
 		documentation,
 		goos,
 		goarch
@@ -50,7 +51,8 @@ func (db *DB) GetPackagesInVersion(ctx context.Context, modulePath, version stri
 			licenseTypes, licensePaths []string
 		)
 		if err := rows.Scan(&p.Path, &p.Name, &p.Synopsis, &p.V1Path, pq.Array(&licenseTypes),
-			pq.Array(&licensePaths), database.NullIsEmpty(&p.DocumentationHTML), &p.GOOS, &p.GOARCH); err != nil {
+			pq.Array(&licensePaths), &p.IsRedistributable, database.NullIsEmpty(&p.DocumentationHTML),
+			&p.GOOS, &p.GOARCH); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
 		lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
@@ -281,7 +283,7 @@ func (db *DB) GetImportedBy(ctx context.Context, pkgPath, modulePath string, lim
 // GetModuleLicenses returns all licenses associated with the given module path and
 // version. These are the top-level licenses in the module zip file.
 // It returns an InvalidArgument error if the module path or version is invalid.
-func (db *DB) GetModuleLicenses(ctx context.Context, modulePath, version string) (_ []*license.License, err error) {
+func (db *DB) GetModuleLicenses(ctx context.Context, modulePath, version string) (_ []*licenses.License, err error) {
 	defer derrors.Wrap(&err, "GetModuleLicenses(ctx, %q, %q)", modulePath, version)
 
 	if modulePath == "" || version == "" {
@@ -306,7 +308,7 @@ func (db *DB) GetModuleLicenses(ctx context.Context, modulePath, version string)
 // GetPackageLicenses returns all licenses associated with the given package path and
 // version.
 // It returns an InvalidArgument error if the module path or version is invalid.
-func (db *DB) GetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) (_ []*license.License, err error) {
+func (db *DB) GetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) (_ []*licenses.License, err error) {
 	defer derrors.Wrap(&err, "GetPackageLicenses(ctx, %q, %q, %q)", pkgPath, modulePath, version)
 
 	if pkgPath == "" || version == "" {
@@ -347,27 +349,27 @@ func (db *DB) GetPackageLicenses(ctx context.Context, pkgPath, modulePath, versi
 
 // collectLicenses converts the sql rows to a list of licenses. The columns
 // must be types, file_path and contents, in that order.
-func collectLicenses(rows *sql.Rows) ([]*license.License, error) {
+func collectLicenses(rows *sql.Rows) ([]*licenses.License, error) {
 	mustHaveColumns(rows, "types", "file_path", "contents", "coverage")
-	var licenses []*license.License
+	var lics []*licenses.License
 	for rows.Next() {
 		var (
-			lic          = &license.License{Metadata: &license.Metadata{}}
+			lic          = &licenses.License{Metadata: &licenses.Metadata{}}
 			licenseTypes []string
 		)
 		if err := rows.Scan(pq.Array(&licenseTypes), &lic.FilePath, &lic.Contents, jsonbScanner{&lic.Coverage}); err != nil {
 			return nil, fmt.Errorf("row.Scan(): %v", err)
 		}
 		lic.Types = licenseTypes
-		licenses = append(licenses, lic)
+		lics = append(lics, lic)
 	}
-	sort.Slice(licenses, func(i, j int) bool {
-		return compareLicenses(licenses[i].Metadata, licenses[j].Metadata)
+	sort.Slice(lics, func(i, j int) bool {
+		return compareLicenses(lics[i].Metadata, lics[j].Metadata)
 	})
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
-	return licenses, nil
+	return lics, nil
 }
 
 // mustHaveColumns panics if the columns of rows does not match wantColumns.
@@ -381,20 +383,20 @@ func mustHaveColumns(rows *sql.Rows, wantColumns ...string) {
 	}
 }
 
-// zipLicenseMetadata constructs license.Metadata from the given license types
+// zipLicenseMetadata constructs licenses.Metadata from the given license types
 // and paths, by zipping and then sorting.
-func zipLicenseMetadata(licenseTypes []string, licensePaths []string) (_ []*license.Metadata, err error) {
+func zipLicenseMetadata(licenseTypes []string, licensePaths []string) (_ []*licenses.Metadata, err error) {
 	defer derrors.Wrap(&err, "zipLicenseMetadata(%v, %v)", licenseTypes, licensePaths)
 
 	if len(licenseTypes) != len(licensePaths) {
 		return nil, fmt.Errorf("BUG: got %d license types and %d license paths", len(licenseTypes), len(licensePaths))
 	}
-	byPath := make(map[string]*license.Metadata)
-	var mds []*license.Metadata
+	byPath := make(map[string]*licenses.Metadata)
+	var mds []*licenses.Metadata
 	for i, p := range licensePaths {
 		md, ok := byPath[p]
 		if !ok {
-			md = &license.Metadata{FilePath: p}
+			md = &licenses.Metadata{FilePath: p}
 			mds = append(mds, md)
 		}
 		// By convention, we insert a license path with empty corresponding license
@@ -412,7 +414,7 @@ func zipLicenseMetadata(licenseTypes []string, licensePaths []string) (_ []*lice
 
 // compareLicenses reports whether i < j according to our license sorting
 // semantics.
-func compareLicenses(i, j *license.Metadata) bool {
+func compareLicenses(i, j *licenses.Metadata) bool {
 	if len(strings.Split(i.FilePath, "/")) > len(strings.Split(j.FilePath, "/")) {
 		return true
 	}
@@ -432,7 +434,8 @@ func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version str
 			readme_file_path,
 			readme_contents,
 			version_type,
-			source_info
+			source_info,
+			redistributable
 		FROM
 			versions`
 
@@ -457,7 +460,7 @@ func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version str
 	row := db.db.QueryRow(ctx, query, args...)
 	if err := row.Scan(&vi.ModulePath, &vi.Version, &vi.CommitTime,
 		database.NullIsEmpty(&vi.ReadmeFilePath), database.NullIsEmpty(&vi.ReadmeContents), &vi.VersionType,
-		jsonbScanner{&vi.SourceInfo}); err != nil {
+		jsonbScanner{&vi.SourceInfo}, &vi.IsRedistributable); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("module version %s@%s: %w", modulePath, version, derrors.NotFound)
 		}

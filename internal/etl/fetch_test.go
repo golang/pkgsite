@@ -19,7 +19,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/fetch"
-	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/licenses"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/source"
@@ -412,13 +412,14 @@ func TestReFetch(t *testing.T) {
 	}
 	want := &internal.VersionedPackage{
 		VersionInfo: internal.VersionInfo{
-			ModulePath:     modulePath,
-			Version:        version,
-			CommitTime:     time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
-			ReadmeFilePath: "README.md",
-			ReadmeContents: "This is another readme",
-			VersionType:    "release",
-			SourceInfo:     source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
+			ModulePath:        modulePath,
+			Version:           version,
+			CommitTime:        time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
+			ReadmeFilePath:    "README.md",
+			ReadmeContents:    "This is another readme",
+			VersionType:       "release",
+			IsRedistributable: true,
+			SourceInfo:        source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
 		},
 		Package: internal.Package{
 			Path:              "github.com/my/module/bar",
@@ -426,11 +427,12 @@ func TestReFetch(t *testing.T) {
 			Synopsis:          "Package bar",
 			DocumentationHTML: "Bar returns the string &#34;bar&#34;.",
 			V1Path:            "github.com/my/module/bar",
-			Licenses: []*license.Metadata{
+			Licenses: []*licenses.Metadata{
 				{Types: []string{"MIT"}, FilePath: "COPYING"},
 			},
-			GOOS:   "linux",
-			GOARCH: "amd64",
+			IsRedistributable: true,
+			GOOS:              "linux",
+			GOARCH:            "amd64",
 		},
 	}
 	got, err := testDB.GetPackage(ctx, pkgBar, internal.UnknownModulePath, version)
@@ -460,13 +462,14 @@ func TestFetchAndInsertVersion(t *testing.T) {
 
 	myModuleV100 := &internal.VersionedPackage{
 		VersionInfo: internal.VersionInfo{
-			ModulePath:     "github.com/my/module",
-			Version:        "v1.0.0",
-			CommitTime:     testProxyCommitTime,
-			ReadmeFilePath: "README.md",
-			ReadmeContents: "README FILE FOR TESTING.",
-			SourceInfo:     source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
-			VersionType:    "release",
+			ModulePath:        "github.com/my/module",
+			Version:           "v1.0.0",
+			CommitTime:        testProxyCommitTime,
+			ReadmeFilePath:    "README.md",
+			ReadmeContents:    "README FILE FOR TESTING.",
+			SourceInfo:        source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
+			VersionType:       "release",
+			IsRedistributable: true,
 		},
 		Package: internal.Package{
 			Path:              "github.com/my/module/bar",
@@ -474,12 +477,13 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			Synopsis:          "package bar",
 			DocumentationHTML: "Bar returns the string &#34;bar&#34;.",
 			V1Path:            "github.com/my/module/bar",
-			Licenses: []*license.Metadata{
+			Licenses: []*licenses.Metadata{
 				{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
 				{Types: []string{"MIT"}, FilePath: "bar/LICENSE"},
 			},
-			GOOS:   "linux",
-			GOARCH: "amd64",
+			IsRedistributable: true,
+			GOOS:              "linux",
+			GOARCH:            "amd64",
 		},
 	}
 
@@ -503,18 +507,21 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			want:       myModuleV100,
 		},
 		{
+			// nonredistributable.mod/module is redistributable, as are its
+			// packages bar and bar/baz. But package foo is not.
 			modulePath: "nonredistributable.mod/module",
 			version:    "v1.0.0",
 			pkg:        "nonredistributable.mod/module/bar/baz",
 			want: &internal.VersionedPackage{
 				VersionInfo: internal.VersionInfo{
-					ModulePath:     "nonredistributable.mod/module",
-					Version:        "v1.0.0",
-					CommitTime:     testProxyCommitTime,
-					ReadmeFilePath: "README.md",
-					ReadmeContents: "README FILE FOR TESTING.",
-					VersionType:    "release",
-					SourceInfo:     nil,
+					ModulePath:        "nonredistributable.mod/module",
+					Version:           "v1.0.0",
+					CommitTime:        testProxyCommitTime,
+					ReadmeFilePath:    "README.md",
+					ReadmeContents:    "README FILE FOR TESTING.",
+					VersionType:       "release",
+					SourceInfo:        nil,
+					IsRedistributable: true,
 				},
 				Package: internal.Package{
 					Path:              "nonredistributable.mod/module/bar/baz",
@@ -522,13 +529,14 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					Synopsis:          "package baz",
 					DocumentationHTML: "Baz returns the string &#34;baz&#34;.",
 					V1Path:            "nonredistributable.mod/module/bar/baz",
-					Licenses: []*license.Metadata{
+					Licenses: []*licenses.Metadata{
 						{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
 						{Types: []string{"MIT"}, FilePath: "bar/LICENSE"},
 						{Types: []string{"MIT"}, FilePath: "bar/baz/COPYING"},
 					},
-					GOOS:   "linux",
-					GOARCH: "amd64",
+					IsRedistributable: true,
+					GOOS:              "linux",
+					GOARCH:            "amd64",
 				},
 			},
 		}, {
@@ -537,25 +545,27 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			pkg:        "nonredistributable.mod/module/foo",
 			want: &internal.VersionedPackage{
 				VersionInfo: internal.VersionInfo{
-					ModulePath:     "nonredistributable.mod/module",
-					Version:        "v1.0.0",
-					CommitTime:     testProxyCommitTime,
-					ReadmeFilePath: "README.md",
-					ReadmeContents: "README FILE FOR TESTING.",
-					VersionType:    "release",
-					SourceInfo:     nil,
+					ModulePath:        "nonredistributable.mod/module",
+					Version:           "v1.0.0",
+					CommitTime:        testProxyCommitTime,
+					ReadmeFilePath:    "README.md",
+					ReadmeContents:    "README FILE FOR TESTING.",
+					VersionType:       "release",
+					SourceInfo:        nil,
+					IsRedistributable: true,
 				},
 				Package: internal.Package{
 					Path:     "nonredistributable.mod/module/foo",
 					Name:     "foo",
 					Synopsis: "",
 					V1Path:   "nonredistributable.mod/module/foo",
-					Licenses: []*license.Metadata{
+					Licenses: []*licenses.Metadata{
 						{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
 						{Types: []string{"BSD-0-Clause"}, FilePath: "foo/LICENSE.md"},
 					},
-					GOOS:   "linux",
-					GOARCH: "amd64",
+					GOOS:              "linux",
+					GOARCH:            "amd64",
+					IsRedistributable: false,
 				},
 			},
 		}, {
@@ -564,13 +574,14 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			pkg:        "context",
 			want: &internal.VersionedPackage{
 				VersionInfo: internal.VersionInfo{
-					ModulePath:     "std",
-					Version:        "v1.12.5",
-					CommitTime:     stdlib.TestCommitTime,
-					VersionType:    "release",
-					ReadmeFilePath: "README.md",
-					ReadmeContents: "# The Go Programming Language\n",
-					SourceInfo:     source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
+					ModulePath:        "std",
+					Version:           "v1.12.5",
+					CommitTime:        stdlib.TestCommitTime,
+					VersionType:       "release",
+					ReadmeFilePath:    "README.md",
+					ReadmeContents:    "# The Go Programming Language\n",
+					SourceInfo:        source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
+					IsRedistributable: true,
 				},
 				Package: internal.Package{
 					Path:              "context",
@@ -578,14 +589,15 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					Synopsis:          "Package context defines the Context type, which carries deadlines, cancelation signals, and other request-scoped values across API boundaries and between processes.",
 					DocumentationHTML: "This example demonstrates the use of a cancelable context to prevent a\ngoroutine leak.",
 					V1Path:            "context",
-					Licenses: []*license.Metadata{
+					Licenses: []*licenses.Metadata{
 						{
 							Types:    []string{"BSD-3-Clause"},
 							FilePath: "LICENSE",
 						},
 					},
-					GOOS:   "linux",
-					GOARCH: "amd64",
+					IsRedistributable: true,
+					GOOS:              "linux",
+					GOARCH:            "amd64",
 				},
 			},
 		}, {
@@ -594,13 +606,14 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			pkg:        "builtin",
 			want: &internal.VersionedPackage{
 				VersionInfo: internal.VersionInfo{
-					ModulePath:     "std",
-					Version:        "v1.12.5",
-					CommitTime:     stdlib.TestCommitTime,
-					VersionType:    "release",
-					ReadmeFilePath: "README.md",
-					ReadmeContents: "# The Go Programming Language\n",
-					SourceInfo:     source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
+					ModulePath:        "std",
+					Version:           "v1.12.5",
+					CommitTime:        stdlib.TestCommitTime,
+					VersionType:       "release",
+					ReadmeFilePath:    "README.md",
+					ReadmeContents:    "# The Go Programming Language\n",
+					SourceInfo:        source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
+					IsRedistributable: true,
 				},
 				Package: internal.Package{
 					Path:              "builtin",
@@ -608,14 +621,15 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					Synopsis:          "Package builtin provides documentation for Go's predeclared identifiers.",
 					DocumentationHTML: "int64 is the set of all signed 64-bit integers.",
 					V1Path:            "builtin",
-					Licenses: []*license.Metadata{
+					Licenses: []*licenses.Metadata{
 						{
 							Types:    []string{"BSD-3-Clause"},
 							FilePath: "LICENSE",
 						},
 					},
-					GOOS:   "linux",
-					GOARCH: "amd64",
+					IsRedistributable: true,
+					GOOS:              "linux",
+					GOARCH:            "amd64",
 				},
 			},
 		}, {
@@ -624,11 +638,12 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			pkg:        "build.constraints/module/cpu",
 			want: &internal.VersionedPackage{
 				VersionInfo: internal.VersionInfo{
-					ModulePath:  "build.constraints/module",
-					Version:     "v1.0.0",
-					CommitTime:  testProxyCommitTime,
-					VersionType: "release",
-					SourceInfo:  nil,
+					ModulePath:        "build.constraints/module",
+					Version:           "v1.0.0",
+					CommitTime:        testProxyCommitTime,
+					VersionType:       "release",
+					SourceInfo:        nil,
+					IsRedistributable: true,
 				},
 				Package: internal.Package{
 					Path:              "build.constraints/module/cpu",
@@ -636,11 +651,12 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					Synopsis:          "Package cpu implements processor feature detection used by the Go standard library.",
 					DocumentationHTML: "const CacheLinePadSize = 3",
 					V1Path:            "build.constraints/module/cpu",
-					Licenses: []*license.Metadata{
+					Licenses: []*licenses.Metadata{
 						{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
 					},
-					GOOS:   "linux",
-					GOARCH: "amd64",
+					IsRedistributable: true,
+					GOOS:              "linux",
+					GOARCH:            "amd64",
 				},
 			},
 			dontWantDoc: []string{

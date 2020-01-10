@@ -13,7 +13,7 @@ import (
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/licenses"
 	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/mod/module"
@@ -56,7 +56,7 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo, latestReques
 		return nil, fmt.Errorf("package and version info must not be nil")
 	}
 
-	var modLicenses []*license.Metadata
+	var modLicenses []*licenses.Metadata
 	for _, lm := range pkg.Licenses {
 		if path.Dir(lm.FilePath) == "." {
 			modLicenses = append(modLicenses, lm)
@@ -71,7 +71,7 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo, latestReques
 	return &Package{
 		Path:              pkg.Path,
 		Synopsis:          pkg.Synopsis,
-		IsRedistributable: pkg.IsRedistributable(),
+		IsRedistributable: pkg.IsRedistributable,
 		Licenses:          transformLicenseMetadata(pkg.Licenses),
 		Module:            *m,
 		URL:               constructPackageURL(pkg.Path, vi.ModulePath, urlVersion),
@@ -85,7 +85,7 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo, latestReques
 // latestRequested indicates whether the user requested the latest
 // version of the package. If so, the returned Module.URL will have the
 // structure /<path> instead of /<path>@<version>.
-func createModule(vi *internal.VersionInfo, licmetas []*license.Metadata, latestRequested bool) *Module {
+func createModule(vi *internal.VersionInfo, licmetas []*licenses.Metadata, latestRequested bool) *Module {
 	urlVersion := linkVersion(vi.Version, vi.ModulePath)
 	if latestRequested {
 		urlVersion = internal.LatestVersion
@@ -95,7 +95,7 @@ func createModule(vi *internal.VersionInfo, licmetas []*license.Metadata, latest
 		LinkVersion:       linkVersion(vi.Version, vi.ModulePath),
 		ModulePath:        vi.ModulePath,
 		CommitTime:        elapsedTime(vi.CommitTime),
-		IsRedistributable: license.AreRedistributable(licmetas),
+		IsRedistributable: vi.IsRedistributable,
 		Licenses:          transformLicenseMetadata(licmetas),
 		URL:               constructModuleURL(vi.ModulePath, urlVersion),
 		LatestURL:         constructModuleURL(vi.ModulePath, middleware.LatestVersionPlaceholder),

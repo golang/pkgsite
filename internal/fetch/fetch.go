@@ -29,7 +29,7 @@ import (
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/fetch/dochtml"
 	"golang.org/x/discovery/internal/fetch/internal/doc"
-	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/licenses"
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/source"
@@ -124,30 +124,34 @@ func processZipFile(ctx context.Context, modulePath string, versionType version.
 	if err != nil && err != errReadmeNotFound {
 		return nil, fmt.Errorf("extractReadmeFromZip(%q, %q, zipReader): %v", modulePath, version, err)
 	}
-	licenses, err := license.Detect(moduleVersionDir(modulePath, version), zipReader)
-	if err != nil {
-		log.Error(ctx, err)
+	logf := func(format string, args ...interface{}) {
+		log.Infof(ctx, format, args...)
 	}
-	packages, packageVersionStates, err := extractPackagesFromZip(ctx, modulePath, version, zipReader, license.NewMatcher(licenses), sourceInfo)
+	d := licenses.NewDetector(modulePath, version, zipReader, logf)
+	allLicenses := d.AllLicenses()
+	packages, packageVersionStates, err := extractPackagesFromZip(ctx, modulePath, version, zipReader, d, sourceInfo)
+
 	if err == errModuleContainsNoPackages {
 		return nil, fmt.Errorf("%v: %w", errModuleContainsNoPackages.Error(), derrors.BadModule)
 	}
 	if err != nil {
-		return nil, fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, version, licenses, err)
+
+		return nil, fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, version, allLicenses, err)
 	}
 	return &FetchResult{
 		Version: &internal.Version{
 			VersionInfo: internal.VersionInfo{
-				ModulePath:     modulePath,
-				Version:        version,
-				CommitTime:     commitTime,
-				ReadmeFilePath: readmeFilePath,
-				ReadmeContents: readmeContents,
-				VersionType:    versionType,
-				SourceInfo:     sourceInfo,
+				ModulePath:        modulePath,
+				Version:           version,
+				CommitTime:        commitTime,
+				ReadmeFilePath:    readmeFilePath,
+				ReadmeContents:    readmeContents,
+				VersionType:       versionType,
+				IsRedistributable: d.ModuleIsRedistributable(),
+				SourceInfo:        sourceInfo,
 			},
 			Packages: packages,
-			Licenses: licenses,
+			Licenses: allLicenses,
 		},
 		PackageVersionStates: packageVersionStates,
 	}, nil
@@ -196,8 +200,7 @@ func hasFilename(file string, expectedFile string) bool {
 // limitations of this site. The two limitations are a maximum file size
 // (MaxFileSize), and the particular set of build contexts we consider
 // (goEnvs).
-func extractPackagesFromZip(ctx context.Context, modulePath, version string, r *zip.Reader, matcher license.Matcher, sourceInfo *source.Info) (_ []*internal.Package, _ []*internal.PackageVersionState, err error) {
-
+func extractPackagesFromZip(ctx context.Context, modulePath, version string, r *zip.Reader, d *licenses.Detector, sourceInfo *source.Info) (_ []*internal.Package, _ []*internal.PackageVersionState, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			// The package processing code performs some sanity checks along the way.
@@ -320,7 +323,13 @@ func extractPackagesFromZip(ctx context.Context, modulePath, version string, r *
 			}
 			pkgPath = path.Join(modulePath, innerPath)
 		} else {
-			pkg.Licenses = matcher.Match(innerPath)
+			if d != nil { //  should only be nil for tests
+				isRedist, lics := d.PackageInfo(innerPath)
+				pkg.IsRedistributable = isRedist
+				for _, l := range lics {
+					pkg.Licenses = append(pkg.Licenses, l.Metadata)
+				}
+			}
 			pkgs = append(pkgs, pkg)
 			pkgPath = pkg.Path
 		}

@@ -18,7 +18,6 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/database"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/version"
 	"golang.org/x/mod/module"
@@ -80,17 +79,6 @@ func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
 		sort.Strings(p.Imports)
 	}
 
-	// Determine whether the module is redistributable by looking at the types of the
-	// licenses at the root.
-	// See createModule in internal/frontend/header.go.
-	var metas []*license.Metadata
-	for _, l := range v.Licenses {
-		if !strings.ContainsRune(l.Metadata.FilePath, '/') {
-			metas = append(metas, l.Metadata)
-		}
-	}
-	isRedist := license.AreRedistributable(metas)
-
 	err := db.db.Transact(func(tx *sql.Tx) error {
 		// If the version exists, delete it to force an overwrite. This allows us
 		// to selectively repopulate data after a code change.
@@ -124,7 +112,7 @@ func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
 			v.VersionType,
 			v.SeriesPath(),
 			sourceInfoJSON,
-			isRedist,
+			v.IsRedistributable,
 		); err != nil {
 			return fmt.Errorf("error inserting version: %v", err)
 		}
@@ -181,7 +169,7 @@ func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
 				v.Version,
 				v.ModulePath,
 				p.V1Path,
-				p.IsRedistributable(),
+				p.IsRedistributable,
 				p.DocumentationHTML,
 				pq.Array(licenseTypes),
 				pq.Array(licensePaths),
@@ -256,7 +244,7 @@ func validateVersion(v *internal.Version) error {
 		errReasons = append(errReasons, fmt.Sprintf("readme %q is not valid UTF-8", v.ReadmeFilePath))
 	}
 	for _, l := range v.Licenses {
-		if !utf8.ValidString(l.Contents) {
+		if !utf8.ValidString(string(l.Contents)) {
 			errReasons = append(errReasons, fmt.Sprintf("license %q contains invalid UTF-8", l.FilePath))
 		}
 	}
@@ -291,7 +279,7 @@ func validateVersion(v *internal.Version) error {
 func removeNonDistributableData(v *internal.Version) {
 	hasRedistributablePackage := false
 	for _, p := range v.Packages {
-		if p.IsRedistributable() {
+		if p.IsRedistributable {
 			hasRedistributablePackage = true
 		} else {
 			// Not redistributable, so prune derived information
@@ -329,7 +317,8 @@ func (db *DB) DeleteVersion(ctx context.Context, tx *sql.Tx, modulePath, version
 }
 
 // makeValidUnicode removes null runes from license contents, because pq doesn't like them.
-func makeValidUnicode(s string) string {
+func makeValidUnicode(bs []byte) string {
+	s := string(bs)
 	var b strings.Builder
 	for _, r := range s {
 		if r != 0 {

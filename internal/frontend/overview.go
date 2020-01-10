@@ -17,7 +17,6 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
 	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/stdlib"
 )
 
@@ -35,7 +34,7 @@ type OverviewDetails struct {
 
 // versionedLinks says whether the constructed URLs should have versions.
 // constructOverviewDetails uses the given version to construct an OverviewDetails.
-func constructOverviewDetails(vi *internal.VersionInfo, licmetas []*license.Metadata, versionedLinks bool) *OverviewDetails {
+func constructOverviewDetails(vi *internal.VersionInfo, isRedistributable bool, versionedLinks bool) *OverviewDetails {
 	var lv string
 	if versionedLinks {
 		lv = linkVersion(vi.Version, vi.ModulePath)
@@ -46,7 +45,7 @@ func constructOverviewDetails(vi *internal.VersionInfo, licmetas []*license.Meta
 		ModulePath:      vi.ModulePath,
 		ModuleURL:       constructModuleURL(vi.ModulePath, lv),
 		RepositoryURL:   vi.SourceInfo.RepoURL(),
-		Redistributable: license.AreRedistributable(licmetas),
+		Redistributable: isRedistributable,
 	}
 	if overview.Redistributable {
 		overview.ReadMeSource = fileSource(vi.ModulePath, vi.Version, vi.ReadmeFilePath)
@@ -57,9 +56,9 @@ func constructOverviewDetails(vi *internal.VersionInfo, licmetas []*license.Meta
 
 // constructPackageOverviewDetails uses data for the given package to return an OverviewDetails.
 func constructPackageOverviewDetails(pkg *internal.VersionedPackage, versionedLinks bool) *OverviewDetails {
-	od := constructOverviewDetails(&pkg.VersionInfo, pkg.Licenses, versionedLinks)
+	od := constructOverviewDetails(&pkg.VersionInfo, pkg.Package.IsRedistributable, versionedLinks)
 	od.PackageSourceURL = pkg.SourceInfo.DirectoryURL(packageSubdir(pkg.Path, pkg.ModulePath))
-	if !pkg.IsRedistributable() {
+	if !pkg.Package.IsRedistributable {
 		od.Redistributable = false
 	}
 	return od

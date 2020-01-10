@@ -12,7 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/licenses"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/testing/sample"
 	"golang.org/x/discovery/internal/testing/testhelper"
@@ -40,22 +40,24 @@ func setup(t *testing.T) (context.Context, *DataSource, func()) {
 
 var (
 	wantLicenseMD = sample.LicenseMetadata[0]
-	wantLicense   = &license.License{Metadata: wantLicenseMD}
+	wantLicense   = &licenses.License{Metadata: wantLicenseMD}
 	wantPackage   = internal.Package{
-		Path:     "foo.com/bar/baz",
-		Name:     "baz",
-		Imports:  []string{"net/http"},
-		Synopsis: "Package baz provides a helpful constant.",
-		V1Path:   "foo.com/bar/baz",
-		Licenses: []*license.Metadata{wantLicenseMD},
-		GOOS:     "linux",
-		GOARCH:   "amd64",
+		Path:              "foo.com/bar/baz",
+		Name:              "baz",
+		Imports:           []string{"net/http"},
+		Synopsis:          "Package baz provides a helpful constant.",
+		V1Path:            "foo.com/bar/baz",
+		Licenses:          []*licenses.Metadata{wantLicenseMD},
+		IsRedistributable: true,
+		GOOS:              "linux",
+		GOARCH:            "amd64",
 	}
 	wantVersionInfo = internal.VersionInfo{
-		ModulePath:  "foo.com/bar",
-		Version:     "v1.2.0",
-		CommitTime:  time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
-		VersionType: version.TypeRelease,
+		ModulePath:        "foo.com/bar",
+		Version:           "v1.2.0",
+		CommitTime:        time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
+		VersionType:       version.TypeRelease,
+		IsRedistributable: true,
 	}
 	wantVersionedPackage = &internal.VersionedPackage{
 		VersionInfo: wantVersionInfo,
@@ -63,7 +65,7 @@ var (
 	}
 	cmpOpts = append([]cmp.Option{
 		cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML"),
-		cmpopts.IgnoreFields(license.License{}, "Contents"),
+		cmpopts.IgnoreFields(licenses.License{}, "Contents"),
 	}, sample.LicenseCmpOpts...)
 )
 
@@ -128,7 +130,7 @@ func TestDataSource_GetModuleLicenses(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []*license.License{wantLicense}
+	want := []*licenses.License{wantLicense}
 	if diff := cmp.Diff(want, got, cmpOpts...); diff != "" {
 		t.Errorf("GetModuleLicenses diff (-want +got):\n%s", diff)
 	}
@@ -153,7 +155,7 @@ func TestDataSource_GetPackageLicenses(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []*license.License{wantLicense}
+	want := []*licenses.License{wantLicense}
 	if diff := cmp.Diff(want, got, cmpOpts...); diff != "" {
 		t.Errorf("GetPackageLicenses diff (-want +got):\n%s", diff)
 	}
@@ -182,7 +184,7 @@ func TestDataSource_GetTaggedVersionsForModule(t *testing.T) {
 	v110 := wantVersionInfo
 	v110.Version = "v1.1.0"
 	want := []*internal.VersionInfo{&wantVersionInfo, &v110}
-	ignore := cmpopts.IgnoreFields(internal.VersionInfo{}, "CommitTime", "VersionType")
+	ignore := cmpopts.IgnoreFields(internal.VersionInfo{}, "CommitTime", "VersionType", "IsRedistributable")
 	if diff := cmp.Diff(want, got, ignore); diff != "" {
 		t.Errorf("GetTaggedVersionsForPackageSeries diff (-want +got):\n%s", diff)
 	}
@@ -203,7 +205,7 @@ func TestDataSource_GetTaggedVersionsForPackageSeries(t *testing.T) {
 	v110 := wantVersionInfo
 	v110.Version = "v1.1.0"
 	want := []*internal.VersionInfo{&wantVersionInfo, &v110}
-	ignore := cmpopts.IgnoreFields(internal.VersionInfo{}, "CommitTime", "VersionType")
+	ignore := cmpopts.IgnoreFields(internal.VersionInfo{}, "CommitTime", "VersionType", "IsRedistributable")
 	if diff := cmp.Diff(want, got, ignore); diff != "" {
 		t.Errorf("GetTaggedVersionsForPackageSeries diff (-want +got):\n%s", diff)
 	}

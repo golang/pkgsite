@@ -15,7 +15,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/licensecheck"
 	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/licenses"
 	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/version"
 )
@@ -26,7 +26,7 @@ var (
 	RepositoryURL   = "https://github.com/valid_module_name"
 	VersionString   = "v1.0.0"
 	CommitTime      = NowTruncated()
-	LicenseMetadata = []*license.Metadata{
+	LicenseMetadata = []*licenses.Metadata{
 		{
 			Types:    []string{"MIT"},
 			FilePath: "LICENSE",
@@ -36,8 +36,8 @@ var (
 			},
 		},
 	}
-	Licenses = []*license.License{
-		{Metadata: LicenseMetadata[0], Contents: `Lorem Ipsum`},
+	Licenses = []*licenses.License{
+		{Metadata: LicenseMetadata[0], Contents: []byte(`Lorem Ipsum`)},
 	}
 	DocumentationHTML = "This is the documentation HTML"
 	PackageName       = "foo"
@@ -81,6 +81,7 @@ func Package() *internal.Package {
 		Name:              PackageName,
 		Synopsis:          Synopsis,
 		Path:              PackagePath,
+		IsRedistributable: true,
 		Licenses:          LicenseMetadata,
 		DocumentationHTML: DocumentationHTML,
 		V1Path:            V1Path,
@@ -92,13 +93,14 @@ func Package() *internal.Package {
 
 func VersionInfo() *internal.VersionInfo {
 	return &internal.VersionInfo{
-		ModulePath:     ModulePath,
-		Version:        VersionString,
-		ReadmeFilePath: ReadmeFilePath,
-		ReadmeContents: ReadmeContents,
-		CommitTime:     CommitTime,
-		VersionType:    VersionType,
-		SourceInfo:     source.NewGitHubInfo(RepositoryURL, "", ""),
+		ModulePath:        ModulePath,
+		Version:           VersionString,
+		ReadmeFilePath:    ReadmeFilePath,
+		ReadmeContents:    ReadmeContents,
+		CommitTime:        CommitTime,
+		VersionType:       VersionType,
+		SourceInfo:        source.NewGitHubInfo(RepositoryURL, "", ""),
+		IsRedistributable: true,
 	}
 }
 

@@ -322,16 +322,18 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 	var (
 		modGoCDK = "gocloud.dev"
 		pkgGoCDK = &internal.Package{
-			Name:     "cloud",
-			Path:     "gocloud.dev/cloud",
-			Synopsis: "Package cloud contains a library and tools for open cloud development in Go. The Go Cloud Development Kit (Go CDK)",
+			Name:              "cloud",
+			Path:              "gocloud.dev/cloud",
+			Synopsis:          "Package cloud contains a library and tools for open cloud development in Go. The Go Cloud Development Kit (Go CDK)",
+			IsRedistributable: true, // required because some test cases depend on the README contents
 		}
 
 		modKube = "k8s.io"
 		pkgKube = &internal.Package{
-			Name:     "client-go",
-			Path:     "k8s.io/client-go",
-			Synopsis: "Package client-go implements a Go client for Kubernetes.",
+			Name:              "client-go",
+			Path:              "k8s.io/client-go",
+			Synopsis:          "Package client-go implements a Go client for Kubernetes.",
+			IsRedistributable: true, // required because some test cases depend on the README contents
 		}
 
 		kubeResult = func(score float64, numResults uint64) *internal.SearchResult {

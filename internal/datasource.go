@@ -7,7 +7,7 @@ package internal
 import (
 	"context"
 
-	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/licenses"
 )
 
 // DataSource is the interface used by the frontend to interact with module data.
@@ -28,14 +28,14 @@ type DataSource interface {
 	GetImports(ctx context.Context, pkgPath, modulePath, version string) ([]string, error)
 	// GetModuleLicenses returns all top-level Licenses for the given modulePath
 	// and version. (i.e., Licenses contained in the module root directory)
-	GetModuleLicenses(ctx context.Context, modulePath, version string) ([]*license.License, error)
+	GetModuleLicenses(ctx context.Context, modulePath, version string) ([]*licenses.License, error)
 	// GetPackage returns the VersionedPackage corresponding to the given package
 	// pkgPath, modulePath, and version. When multiple package paths satisfy this query, it
 	// should prefer the module with the longest path.
 	GetPackage(ctx context.Context, pkgPath, modulePath, version string) (*VersionedPackage, error)
 	// GetPackageLicenses returns all Licenses that apply to pkgPath, within the
 	// module version specified by modulePath and version.
-	GetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) ([]*license.License, error)
+	GetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) ([]*licenses.License, error)
 	// GetPackagesInVersion returns Packages contained in the module version
 	// specified by modulePath and version.
 	GetPackagesInVersion(ctx context.Context, modulePath, version string) ([]*Package, error)

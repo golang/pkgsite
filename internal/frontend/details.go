@@ -14,7 +14,6 @@ import (
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/mod/module"
@@ -163,7 +162,7 @@ func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.Respons
 	settings, ok := packageTabLookup[tab]
 	if !ok {
 		var tab string
-		if pkg.IsRedistributable() {
+		if pkg.Package.IsRedistributable {
 			tab = "doc"
 		} else {
 			tab = "overview"
@@ -171,7 +170,7 @@ func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.Respons
 		http.Redirect(w, r, fmt.Sprintf(r.URL.Path+"?tab=%s", tab), http.StatusFound)
 		return
 	}
-	canShowDetails := pkg.IsRedistributable() || settings.AlwaysShowDetails
+	canShowDetails := pkg.Package.IsRedistributable || settings.AlwaysShowDetails
 
 	var details interface{}
 	if canShowDetails {
@@ -251,7 +250,7 @@ func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseW
 		return
 	}
 
-	modHeader := createModule(vi, license.ToMetadatas(licenses), requestedVersion == internal.LatestVersion)
+	modHeader := createModule(vi, licensesToMetadatas(licenses), requestedVersion == internal.LatestVersion)
 	tab := r.FormValue("tab")
 	settings, ok := moduleTabLookup[tab]
 	if !ok {

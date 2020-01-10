@@ -18,7 +18,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/fetch"
-	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/licenses"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/version"
 	"golang.org/x/mod/semver"
@@ -102,13 +102,13 @@ func (ds *DataSource) GetImports(ctx context.Context, pkgPath, modulePath, versi
 
 // GetModuleLicenses returns root-level licenses detected within the module zip
 // for modulePath and version.
-func (ds *DataSource) GetModuleLicenses(ctx context.Context, modulePath, version string) (_ []*license.License, err error) {
+func (ds *DataSource) GetModuleLicenses(ctx context.Context, modulePath, version string) (_ []*licenses.License, err error) {
 	defer derrors.Wrap(&err, "GetModuleLicenses(%q, %q)", modulePath, version)
 	v, err := ds.getVersion(ctx, modulePath, version)
 	if err != nil {
 		return nil, err
 	}
-	var filtered []*license.License
+	var filtered []*licenses.License
 	for _, lic := range v.Licenses {
 		if !strings.Contains(lic.FilePath, "/") {
 			filtered = append(filtered, lic)
@@ -138,7 +138,7 @@ func (ds *DataSource) GetPackage(ctx context.Context, pkgPath, modulePath, versi
 
 // GetPackageLicenses returns the Licenses that apply to pkgPath within the
 // module version specified by modulePath and version.
-func (ds *DataSource) GetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) (_ []*license.License, err error) {
+func (ds *DataSource) GetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) (_ []*licenses.License, err error) {
 	defer derrors.Wrap(&err, "GetPackageLicenses(%q, %q, %q)", pkgPath, modulePath, version)
 	v, err := ds.getVersion(ctx, modulePath, version)
 	if err != nil {
@@ -146,7 +146,7 @@ func (ds *DataSource) GetPackageLicenses(ctx context.Context, pkgPath, modulePat
 	}
 	for _, p := range v.Packages {
 		if p.Path == pkgPath {
-			var lics []*license.License
+			var lics []*licenses.License
 			for _, lmd := range p.Licenses {
 				// lmd is just license metadata, the version has the actual licenses.
 				for _, lic := range v.Licenses {

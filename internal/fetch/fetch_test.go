@@ -21,7 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/licenses"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/testing/sample"
@@ -342,23 +342,24 @@ func TestFetchVersion(t *testing.T) {
 	modulePath := "github.com/my/module"
 	vers := "v1.0.0"
 	wantVersionInfo := internal.VersionInfo{
-		ModulePath:     "github.com/my/module",
-		Version:        "v1.0.0",
-		CommitTime:     testProxyCommitTime,
-		ReadmeFilePath: "README.md",
-		ReadmeContents: "THIS IS A README",
-		VersionType:    version.TypeRelease,
-		SourceInfo:     source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
+		ModulePath:        "github.com/my/module",
+		Version:           "v1.0.0",
+		CommitTime:        testProxyCommitTime,
+		ReadmeFilePath:    "README.md",
+		ReadmeContents:    "THIS IS A README",
+		VersionType:       version.TypeRelease,
+		IsRedistributable: true,
+		SourceInfo:        source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
 	}
 	wantCoverage := sample.LicenseMetadata[0].Coverage
-	wantLicenses := []*license.License{
+	wantLicenses := []*licenses.License{
 		{
-			Metadata: &license.Metadata{
+			Metadata: &licenses.Metadata{
 				Types:    []string{"MIT"},
 				FilePath: "LICENSE.md",
 				Coverage: wantCoverage,
 			},
-			Contents: testhelper.MITLicense,
+			Contents: []byte(testhelper.MITLicense),
 		},
 	}
 	for _, test := range []struct {
@@ -377,11 +378,12 @@ func TestFetchVersion(t *testing.T) {
 				VersionInfo: wantVersionInfo,
 				Packages: []*internal.Package{
 					{
-						Path:     "github.com/my/module/foo",
-						V1Path:   "github.com/my/module/foo",
-						Name:     "foo",
-						Synopsis: "package foo exports a helpful constant.",
-						Licenses: []*license.Metadata{
+						Path:              "github.com/my/module/foo",
+						V1Path:            "github.com/my/module/foo",
+						Name:              "foo",
+						Synopsis:          "package foo exports a helpful constant.",
+						IsRedistributable: true,
+						Licenses: []*licenses.Metadata{
 							{Types: []string{"MIT"}, FilePath: "LICENSE.md", Coverage: wantCoverage},
 						},
 						Imports: []string{"net/http"},
@@ -408,11 +410,12 @@ func TestFetchVersion(t *testing.T) {
 				VersionInfo: wantVersionInfo,
 				Packages: []*internal.Package{
 					{
-						Path:     "github.com/my/module/js",
-						V1Path:   "github.com/my/module/js",
-						Name:     "js",
-						Synopsis: "Package js only works with wasm.",
-						Licenses: []*license.Metadata{
+						Path:              "github.com/my/module/js",
+						V1Path:            "github.com/my/module/js",
+						Name:              "js",
+						Synopsis:          "Package js only works with wasm.",
+						IsRedistributable: true,
+						Licenses: []*licenses.Metadata{
 							{Types: []string{"MIT"}, FilePath: "LICENSE.md", Coverage: wantCoverage},
 						},
 						Imports: []string{},

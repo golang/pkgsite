@@ -9,12 +9,12 @@ import (
 	"net/url"
 
 	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/licenses"
 )
 
 // License contains information used for a single license section.
 type License struct {
-	*license.License
+	*licenses.License
 	Anchor string
 	Source string
 }
@@ -41,9 +41,9 @@ func fetchPackageLicensesDetails(ctx context.Context, ds internal.DataSource, pk
 	return &LicensesDetails{Licenses: transformLicenses(pkg.ModulePath, pkg.Version, dsLicenses)}, nil
 }
 
-// transformLicenses transforms license.License into a License
+// transformLicenses transforms licenses.License into a License
 // by adding an anchor field.
-func transformLicenses(modulePath, version string, dbLicenses []*license.License) []License {
+func transformLicenses(modulePath, version string, dbLicenses []*licenses.License) []License {
 	licenses := make([]License, len(dbLicenses))
 	for i, l := range dbLicenses {
 		licenses[i] = License{
@@ -55,9 +55,9 @@ func transformLicenses(modulePath, version string, dbLicenses []*license.License
 	return licenses
 }
 
-// transformLicenseMetadata transforms license.Metadata into a LicenseMetadata
+// transformLicenseMetadata transforms licenses.Metadata into a LicenseMetadata
 // by adding an anchor field.
-func transformLicenseMetadata(dbLicenses []*license.Metadata) []LicenseMetadata {
+func transformLicenseMetadata(dbLicenses []*licenses.Metadata) []LicenseMetadata {
 	var mds []LicenseMetadata
 	for _, l := range dbLicenses {
 		anchor := licenseAnchor(l.FilePath)
@@ -75,4 +75,13 @@ func transformLicenseMetadata(dbLicenses []*license.Metadata) []LicenseMetadata 
 // license on the licenses page.
 func licenseAnchor(filePath string) string {
 	return url.QueryEscape(filePath)
+}
+
+// licensesToMetadatas converts a slice of Licenses to a slice of Metadatas.
+func licensesToMetadatas(lics []*licenses.License) []*licenses.Metadata {
+	var ms []*licenses.Metadata
+	for _, l := range lics {
+		ms = append(ms, l.Metadata)
+	}
+	return ms
 }
