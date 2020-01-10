@@ -18,6 +18,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/database"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/license"
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/version"
 	"golang.org/x/mod/module"
@@ -79,6 +80,17 @@ func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
 		sort.Strings(p.Imports)
 	}
 
+	// Determine whether the module is redistributable by looking at the types of the
+	// licenses at the root.
+	// See createModule in internal/frontend/header.go.
+	var metas []*license.Metadata
+	for _, l := range v.Licenses {
+		if !strings.ContainsRune(l.Metadata.FilePath, '/') {
+			metas = append(metas, l.Metadata)
+		}
+	}
+	isRedist := license.AreRedistributable(metas)
+
 	err := db.db.Transact(func(tx *sql.Tx) error {
 		// If the version exists, delete it to force an overwrite. This allows us
 		// to selectively repopulate data after a code change.
@@ -100,8 +112,9 @@ func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
 				sort_version,
 				version_type,
 				series_path,
-				source_info)
-			VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT DO NOTHING`,
+				source_info,
+				redistributable)
+			VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT DO NOTHING`,
 			v.ModulePath,
 			v.Version,
 			v.CommitTime,
@@ -111,6 +124,7 @@ func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
 			v.VersionType,
 			v.SeriesPath(),
 			sourceInfoJSON,
+			isRedist,
 		); err != nil {
 			return fmt.Errorf("error inserting version: %v", err)
 		}
