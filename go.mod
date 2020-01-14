@@ -22,7 +22,7 @@ require (
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
 	github.com/google/go-cmp v0.3.1
 	github.com/google/go-replayers/httpreplay v0.1.0
-	github.com/google/licensecheck v0.0.0-20200110003425-e43db20c1115
+	github.com/google/licensecheck v0.0.0-20190611011822-e07107a3842f
 	github.com/influxdata/tdigest v0.0.0-20181121200506-bf2b5ad3c0a9 // indirect
 	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a // indirect
 	github.com/kylelemons/godebug v1.1.0
