@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path"
 	"path/filepath"
@@ -321,7 +322,7 @@ func TestDetectFiles(t *testing.T) {
 			}
 
 			opts := []cmp.Option{
-				cmpopts.EquateApprox(0, 1e-4), // consider two floats equal if they differ by no more than 1e-4
+				cmp.Comparer(coveragePercentEqual),
 				cmpopts.IgnoreFields(lc.Match{}, "Start", "End"),
 			}
 			if diff := cmp.Diff(test.want, got, opts...); diff != "" {
@@ -499,7 +500,6 @@ func TestPackageInfo(t *testing.T) {
 				gotMetas = append(gotMetas, l.Metadata)
 			}
 			opts := []cmp.Option{
-				cmpopts.EquateApprox(0, 1e-4), // consider two floats equal if they differ by no more than 1e-4
 				cmpopts.IgnoreFields(Metadata{}, "Coverage"),
 				cmpopts.SortSlices(func(m1, m2 *Metadata) bool { return m1.FilePath < m2.FilePath }),
 			}
@@ -532,4 +532,13 @@ func newZipReader(t *testing.T, contentsDir string, contents map[string]string) 
 		t.Fatal(err)
 	}
 	return zr
+}
+
+// coveragePercentEqual considers two floats the same if they are within 4
+// percentage points, and both are on the same side of 90% (our threshold).
+func coveragePercentEqual(a, b float64) bool {
+	if (a >= 90) != (b >= 90) {
+		return false
+	}
+	return math.Abs(a-b) <= 4
 }

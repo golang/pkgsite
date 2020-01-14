@@ -7,6 +7,7 @@
 package sample
 
 import (
+	"math"
 	"path"
 	"time"
 
@@ -53,8 +54,17 @@ var (
 
 // LicenseCmpOpts are options to use when comparing licenses with the cmp package.
 var LicenseCmpOpts = []cmp.Option{
-	cmpopts.EquateApprox(0, 1e-4), // consider two floats equal if they differ by no more than 1e-4.
+	cmp.Comparer(coveragePercentEqual),
 	cmpopts.IgnoreFields(licensecheck.Match{}, "Start", "End"),
+}
+
+// coveragePercentEqual considers two floats the same if they are within 4
+// percentage points, and both are on the same side of 90% (our threshold).
+func coveragePercentEqual(a, b float64) bool {
+	if (a >= 90) != (b >= 90) {
+		return false
+	}
+	return math.Abs(a-b) <= 4
 }
 
 // NowTruncated returns time.Now() truncated to Microsecond precision.
