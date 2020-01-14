@@ -349,7 +349,7 @@ func (d *Detector) detectFiles(files []*zip.File) []*License {
 			})
 			continue
 		}
-		types, cov := d.detectFile(bytes, f.Name)
+		types, cov := DetectFile(bytes, f.Name, d.logf)
 		licenses = append(licenses, &License{
 			Metadata: &Metadata{
 				Types:    types,
@@ -362,14 +362,17 @@ func (d *Detector) detectFiles(files []*zip.File) []*License {
 	return licenses
 }
 
-// detectFile return the set of license types for the given file contents. It
+// DetectFile return the set of license types for the given file contents. It
 // also returns the licensecheck coverage information. The filename is used
 // solely for logging.
-func (d *Detector) detectFile(contents []byte, filename string) ([]string, licensecheck.Coverage) {
+func DetectFile(contents []byte, filename string, logf func(string, ...interface{})) ([]string, licensecheck.Coverage) {
+	if logf == nil {
+		logf = func(string, ...interface{}) {}
+	}
 	types := make(map[string]bool)
 	cov, ok := licensecheck.Cover(contents, licensecheck.Options{})
 	if !ok || cov.Percent < coverageThreshold {
-		d.logf("%s license coverage too low (%+v), skipping", filename, cov)
+		logf("%s license coverage too low (%+v), skipping", filename, cov)
 		types[unknownLicenseType] = true
 	} else {
 		matched := false
@@ -380,7 +383,7 @@ func (d *Detector) detectFile(contents []byte, filename string) ([]string, licen
 			}
 		}
 		if !matched {
-			d.logf("%s failed to classify license (%+v), skipping", filename, cov)
+			logf("%s failed to classify license (%+v), skipping", filename, cov)
 			types[unknownLicenseType] = true
 		}
 	}
