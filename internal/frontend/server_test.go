@@ -211,6 +211,7 @@ func TestServer(t *testing.T) {
 		IsLatest:         true,
 		LatestLink:       "/github.com/valid_module_name@v1.0.0/foo",
 		LicenseType:      "MIT",
+		LicenseFilePath:  "LICENSE",
 		PackageURLFormat: "/github.com/valid_module_name%s/foo",
 		ModuleURL:        "/mod/github.com/valid_module_name",
 	}
@@ -233,6 +234,7 @@ func TestServer(t *testing.T) {
 		IsLatest:         true,
 		LatestLink:       "/github.com/incompatible@v1.0.0+incompatible/dir/inc",
 		LicenseType:      "MIT",
+		LicenseFilePath:  "LICENSE",
 		PackageURLFormat: "/github.com/incompatible%s/dir/inc",
 		ModuleURL:        "/mod/github.com/incompatible",
 	}
@@ -254,19 +256,21 @@ func TestServer(t *testing.T) {
 		Suffix:           "cmd/go",
 		Version:          "go1.13",
 		LicenseType:      "MIT",
+		LicenseFilePath:  "LICENSE",
 		IsLatest:         true,
 		LatestLink:       "/cmd/go@go1.13",
 		PackageURLFormat: "/cmd/go%s",
 		ModuleURL:        "/std",
 	}
 	mod := &pagecheck.Page{
-		ModulePath:  "github.com/valid_module_name",
-		Title:       "module github.com/valid_module_name",
-		ModuleURL:   "/mod/github.com/valid_module_name",
-		Version:     "v1.0.0",
-		LicenseType: "MIT",
-		IsLatest:    true,
-		LatestLink:  "/mod/github.com/valid_module_name@v1.0.0",
+		ModulePath:      "github.com/valid_module_name",
+		Title:           "module github.com/valid_module_name",
+		ModuleURL:       "/mod/github.com/valid_module_name",
+		Version:         "v1.0.0",
+		LicenseType:     "MIT",
+		LicenseFilePath: "LICENSE",
+		IsLatest:        true,
+		LatestLink:      "/mod/github.com/valid_module_name@v1.0.0",
 	}
 	mp := *mod
 	mp.Version = pseudoVersion
@@ -282,6 +286,7 @@ func TestServer(t *testing.T) {
 		Version:          pseudoVersion,
 		FormattedVersion: mp.FormattedVersion,
 		LicenseType:      "MIT",
+		LicenseFilePath:  "LICENSE",
 		IsLatest:         true,
 	}
 	dirPseudo := &pagecheck.Page{
@@ -293,18 +298,20 @@ func TestServer(t *testing.T) {
 		Version:          pseudoVersion,
 		FormattedVersion: mp.FormattedVersion,
 		LicenseType:      "MIT",
+		LicenseFilePath:  "LICENSE",
 		IsLatest:         true,
 		PackageURLFormat: "/github.com/pseudo%s/dir",
 	}
 
 	std := &pagecheck.Page{
-		Title:       "Standard library",
-		ModulePath:  "std",
-		Version:     "go1.13",
-		LicenseType: "MIT",
-		ModuleURL:   "/std",
-		IsLatest:    true,
-		LatestLink:  "/std@go1.13",
+		Title:           "Standard library",
+		ModulePath:      "std",
+		Version:         "go1.13",
+		LicenseType:     "MIT",
+		LicenseFilePath: "LICENSE",
+		ModuleURL:       "/std",
+		IsLatest:        true,
+		LatestLink:      "/std@go1.13",
 	}
 
 	dir := &pagecheck.Page{
@@ -313,6 +320,7 @@ func TestServer(t *testing.T) {
 		Version:          "v1.0.0",
 		Suffix:           "foo/directory",
 		LicenseType:      "MIT",
+		LicenseFilePath:  "LICENSE",
 		ModuleURL:        "/mod/github.com/valid_module_name",
 		PackageURLFormat: "/github.com/valid_module_name%s/foo/directory",
 	}
@@ -323,6 +331,7 @@ func TestServer(t *testing.T) {
 		Version:          "go1.13",
 		Suffix:           "cmd",
 		LicenseType:      "MIT",
+		LicenseFilePath:  "LICENSE",
 		ModuleURL:        "/std",
 		PackageURLFormat: "/cmd%s",
 	}

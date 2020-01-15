@@ -24,6 +24,7 @@ type Page struct {
 	FormattedVersion string
 	Title            string
 	LicenseType      string
+	LicenseFilePath  string
 	IsLatest         bool   // is this the latest version of this module?
 	LatestLink       string // href of "Go to latest" link
 	PackageURLFormat string // the relative package URL, with one %s for "@version"; also used for dirs
@@ -55,8 +56,12 @@ func PackageHeader(p *Page, versionedURL bool) htmlcheck.Checker {
 	if fv == "" {
 		fv = p.Version
 	}
+	curBreadcrumb := path.Base(p.Suffix)
+	if p.Suffix == "" {
+		curBreadcrumb = p.ModulePath
+	}
 	return in("",
-		in("span.DetailsHeader-breadcrumbCurrent", exactText(path.Base(p.Suffix))),
+		in("span.DetailsHeader-breadcrumbCurrent", exactText(curBreadcrumb)),
 		in("h1.DetailsHeader-title", exactText(p.Title)),
 		in("div.DetailsHeader-version", exactText(fv)),
 		versionBadge(p),
@@ -164,7 +169,7 @@ func licenseInfo(p *Page, urlPath string, versionedURL bool) htmlcheck.Checker {
 		return in("[data-test-id=DetailsHeader-infoLabelLicense]", text("None detected"))
 	}
 	return in("[data-test-id=DetailsHeader-infoLabelLicense] a",
-		href(fmt.Sprintf("%s?tab=licenses#LICENSE", urlPath)),
+		href(fmt.Sprintf("%s?tab=licenses#%s", urlPath, p.LicenseFilePath)),
 		exactText(p.LicenseType))
 }
 
