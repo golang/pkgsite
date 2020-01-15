@@ -105,29 +105,12 @@ check_templates() {
     -td=content/static/html/pages | warnout
 }
 
-
 run_prettier() {
   if ! [ -x "$(command -v prettier)" ]; then
     err "prettier must be installed"
   fi
   runcmd prettier --write content/static/css/*.css
   runcmd prettier --write content/static/js/*.js
-}
-
-# run_go_mod_tidy runs `go mod tidy`.
-run_go_mod_tidy() {
-  runcmd go mod tidy
-}
-
-# run_go_test runs our main set of go tests.
-run_go_test() {
-  runcmd go test $@ ./...
-}
-
-# run_go_test_secrets runs tests on the internal/secrets package, which must
-# be tested independently in order to accept the -use_cloud flag.
-run_go_test_secrets() {
-  runcmd go test ./internal/secrets -use_cloud
 }
 
 standard_linters() {
@@ -137,21 +120,13 @@ standard_linters() {
   check_misspell
 }
 
-run_tests() {
-  run_go_test
-  run_go_test_secrets
-}
-
 usage() {
   cat <<EOUSAGE
 Usage: $0 [subcommand]
 Available subcommands:
   help        - display this help message
   (empty)     - run all standard checks and tests
-  all         - run all checks and tests, including nonstandard
   ci          - run checks and tests suitable for continuous integration
-  test        - run go tests
-  tidy        - run go mod tidy
   lint        - run all standard linters below:
   headers     - (lint) check source files for the license disclaimer
   migrations  - (lint) check migration sequence numbers
@@ -170,24 +145,16 @@ main() {
       ;;
     "")
       standard_linters
-      run_go_mod_tidy
-      run_tests
-      ;;
-    all)
-      standard_linters
-      check_templates
-      run_prettier
-      run_go_mod_tidy
-      run_tests
+      runcmd go mod tidy
+      runcmd go test ./...
+      runcmd go test ./internal/secrets -use_cloud
       ;;
     ci)
       # Similar to the no-arg mode, but omit actions that require GCP
       # permissions or that don't test the code.
       standard_linters
-      run_go_test -race -count=1
+      runcmd go test -race -count=1 ./...
       ;;
-    test) run_tests ;;
-    tidy) run_go_mod_tidy ;;
     lint) all_linters ;;
     headers) check_headers ;;
     migrations) check_migrations ;;
