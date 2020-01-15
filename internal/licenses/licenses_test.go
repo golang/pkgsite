@@ -97,6 +97,17 @@ func TestModuleIsRedistributable(t *testing.T) {
 				{Types: []string{"Unlicense"}, FilePath: "UNLICENSE"},
 			},
 		},
+		{
+			filename: "gonum",
+			module:   "gonum.org/v1/gonum",
+			version:  "v0.6.2",
+			want:     true,
+			wantMetas: []*Metadata{
+				{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
+				{Types: []string{"MIT"}, FilePath: "graph/formats/cytoscapejs/testdata/LICENSE"},
+				{Types: []string{"MIT"}, FilePath: "graph/formats/sigmajs/testdata/LICENSE.txt"},
+			},
+		},
 	} {
 		t.Run(test.filename, func(t *testing.T) {
 			f, err := os.Open(filepath.Join(testDataPath("testdata"), test.filename+".zip"))
