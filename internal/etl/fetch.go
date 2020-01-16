@@ -110,11 +110,12 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 		code = hasIncompletePackagesCode
 	}
 
+	// If there were any errors processing the module then we didn't insert it.
+	// Delete it in case we are reprocessing an existing module.
 	
 	
-	
-	if code == http.StatusNotFound || code == http.StatusGone {
-		log.Infof(ctx, "%s@%s: proxy said 404/410, deleting", modulePath, version)
+	if code > 400 {
+		log.Infof(ctx, "%s@%s: code=%d, deleting", modulePath, version, code)
 		if err := db.DeleteVersion(ctx, nil, modulePath, version); err != nil {
 			log.Error(ctx, err)
 			return http.StatusInternalServerError, err
