@@ -10,7 +10,6 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
-	"strings"
 )
 
 // ----------------------------------------------------------------------------
@@ -167,8 +166,6 @@ type reader struct {
 	// support for package-local error type declarations
 	errorDecl bool                 // if set, type "error" was declared locally
 	fixlist   []*ast.InterfaceType // list of interfaces containing anonymous field "error"
-
-	examples []*Example
 }
 
 func (r *reader) isVisible(name string) bool {
@@ -378,8 +375,8 @@ func (r *reader) isPredeclared(n string) bool {
 // readFunc processes a func or method declaration.
 //
 func (r *reader) readFunc(fun *ast.FuncDecl) {
-	// strip function body if requested and it's not an Example function.
-	if r.mode&PreserveAST == 0 && !(fun.Recv == nil && isTest(fun.Name.Name, "Example")) {
+	// strip function body if requested.
+	if r.mode&PreserveAST == 0 {
 		fun.Body = nil
 	}
 
@@ -587,18 +584,6 @@ func (r *reader) readPackage(pkg *ast.Package, mode Mode) {
 	}
 	sort.Strings(r.filenames)
 
-	// split test files from the list of files.
-	var testFiles []*ast.File
-	filenames := r.filenames
-	r.filenames = r.filenames[:0]
-	for _, filename := range filenames {
-		if strings.HasSuffix(filename, "_test.go") {
-			testFiles = append(testFiles, pkg.Files[filename])
-		} else {
-			r.filenames = append(r.filenames, filename)
-		}
-	}
-
 	// process files in sorted order
 	for _, filename := range r.filenames {
 		f := pkg.Files[filename]
@@ -609,17 +594,13 @@ func (r *reader) readPackage(pkg *ast.Package, mode Mode) {
 	}
 
 	// process functions now that we have better type information
-	for _, filename := range r.filenames {
-		f := pkg.Files[filename]
+	for _, f := range pkg.Files {
 		for _, decl := range f.Decls {
 			if d, ok := decl.(*ast.FuncDecl); ok {
 				r.readFunc(d)
 			}
 		}
 	}
-
-	// read the examples.
-	r.examples = Examples(testFiles...)
 }
 
 // ----------------------------------------------------------------------------

@@ -21,6 +21,7 @@ import (
 	"html/template"
 	pathpkg "path"
 	"sort"
+	"strings"
 
 	"golang.org/x/discovery/internal/fetch/dochtml/internal/render"
 	"golang.org/x/discovery/internal/fetch/internal/doc"
@@ -126,7 +127,7 @@ type example struct {
 	*doc.Example
 	ID       string // ID of example
 	ParentID string // ID of top-level declaration this example is attached to
-	Suffix   string // optional suffix name
+	Suffix   string // optional suffix name in title case
 }
 
 // Code returns an printer.CommentedNode if ex.Comments is non-nil,
@@ -148,11 +149,12 @@ func collectExamples(p *doc.Package) *examples {
 	}
 	for _, ex := range p.Examples {
 		id := ""
+		suffix := strings.Title(ex.Suffix)
 		ex := &example{
 			Example:  ex,
-			ID:       exampleID(id, ex.Suffix),
+			ID:       exampleID(id, suffix),
 			ParentID: id,
-			Suffix:   ex.Suffix,
+			Suffix:   suffix,
 		}
 		exs.List = append(exs.List, ex)
 		exs.Map[id] = append(exs.Map[id], ex)
@@ -160,11 +162,12 @@ func collectExamples(p *doc.Package) *examples {
 	for _, f := range p.Funcs {
 		for _, ex := range f.Examples {
 			id := f.Name
+			suffix := strings.Title(ex.Suffix)
 			ex := &example{
 				Example:  ex,
-				ID:       exampleID(id, ex.Suffix),
+				ID:       exampleID(id, suffix),
 				ParentID: id,
-				Suffix:   ex.Suffix,
+				Suffix:   suffix,
 			}
 			exs.List = append(exs.List, ex)
 			exs.Map[id] = append(exs.Map[id], ex)
@@ -173,11 +176,12 @@ func collectExamples(p *doc.Package) *examples {
 	for _, t := range p.Types {
 		for _, ex := range t.Examples {
 			id := t.Name
+			suffix := strings.Title(ex.Suffix)
 			ex := &example{
 				Example:  ex,
-				ID:       exampleID(id, ex.Suffix),
+				ID:       exampleID(id, suffix),
 				ParentID: id,
-				Suffix:   ex.Suffix,
+				Suffix:   suffix,
 			}
 			exs.List = append(exs.List, ex)
 			exs.Map[id] = append(exs.Map[id], ex)
@@ -185,11 +189,12 @@ func collectExamples(p *doc.Package) *examples {
 		for _, f := range t.Funcs {
 			for _, ex := range f.Examples {
 				id := f.Name
+				suffix := strings.Title(ex.Suffix)
 				ex := &example{
 					Example:  ex,
-					ID:       exampleID(id, ex.Suffix),
+					ID:       exampleID(id, suffix),
 					ParentID: id,
-					Suffix:   ex.Suffix,
+					Suffix:   suffix,
 				}
 				exs.List = append(exs.List, ex)
 				exs.Map[id] = append(exs.Map[id], ex)
@@ -198,11 +203,12 @@ func collectExamples(p *doc.Package) *examples {
 		for _, m := range t.Methods {
 			for _, ex := range m.Examples {
 				id := t.Name + "." + m.Name
+				suffix := strings.Title(ex.Suffix)
 				ex := &example{
 					Example:  ex,
-					ID:       exampleID(id, ex.Suffix),
+					ID:       exampleID(id, suffix),
 					ParentID: id,
-					Suffix:   ex.Suffix,
+					Suffix:   suffix,
 				}
 				exs.List = append(exs.List, ex)
 				exs.Map[id] = append(exs.Map[id], ex)

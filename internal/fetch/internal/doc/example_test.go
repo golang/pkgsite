@@ -6,6 +6,7 @@ package doc_test
 
 import (
 	"bytes"
+	"fmt"
 	"go/ast"
 	"go/format"
 	"go/parser"
@@ -461,116 +462,164 @@ func formatFile(t *testing.T, fset *token.FileSet, n *ast.File) string {
 	return buf.String()
 }
 
+// This example illustrates how to use NewFromFiles
+// to compute package documentation with examples.
+func ExampleNewFromFiles() {
+	// src and test are two source files that make up
+	// a package whose documentation will be computed.
+	const src = `
+// This is the package comment.
+package p
+
+import "fmt"
+
+// This comment is associated with the Greet function.
+func Greet(who string) {
+	fmt.Printf("Hello, %s!\n", who)
+}
+`
+	const test = `
+package p_test
+
+// This comment is associated with the ExampleGreet_world example.
+func ExampleGreet_world() {
+	Greet("world")
+}
+`
+
+	// Create the AST by parsing src and test.
+	fset := token.NewFileSet()
+	files := []*ast.File{
+		mustParse(fset, "src.go", src),
+		mustParse(fset, "src_test.go", test),
+	}
+
+	// Compute package documentation with examples.
+	p, err := doc.NewFromFiles(fset, files, "example.com/p")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("package %s - %s", p.Name, p.Doc)
+	fmt.Printf("func %s - %s", p.Funcs[0].Name, p.Funcs[0].Doc)
+	fmt.Printf(" ⤷ example with suffix %q - %s", p.Funcs[0].Examples[0].Suffix, p.Funcs[0].Examples[0].Doc)
+
+	// Output:
+	// package p - This is the package comment.
+	// func Greet - This comment is associated with the Greet function.
+	//  ⤷ example with suffix "world" - This comment is associated with the ExampleGreet_world example.
+}
+
 func TestClassifyExamples(t *testing.T) {
-	const pkgCode = `
-		package foo
+	const src = `
+package p
 
-		const Const1 = 0
-		var   Var1   = 0
+const Const1 = 0
+var   Var1   = 0
 
-		type (
-			Type1     int
-			Type1_Foo int
-			Type1_foo int
-			type2     int
+type (
+	Type1     int
+	Type1_Foo int
+	Type1_foo int
+	type2     int
 
-			Embed struct { Type1 }
-		)
+	Embed struct { Type1 }
+)
 
-		func Func1()     {}
-		func Func1_Foo() {}
-		func Func1_foo() {}
-		func func2()     {}
+func Func1()     {}
+func Func1_Foo() {}
+func Func1_foo() {}
+func func2()     {}
 
-		func (Type1) Func1() {}
-		func (Type1) Func1_Foo() {}
-		func (Type1) Func1_foo() {}
-		func (Type1) func2() {}
+func (Type1) Func1() {}
+func (Type1) Func1_Foo() {}
+func (Type1) Func1_foo() {}
+func (Type1) func2() {}
 
-		type (
-			Conflict          int
-			Conflict_Conflict int
-			Conflict_conflict int
-		)
+type (
+	Conflict          int
+	Conflict_Conflict int
+	Conflict_conflict int
+)
 
-		func (Conflict) Conflict() {}
-	`
+func (Conflict) Conflict() {}
+`
+	const test = `
+package p_test
 
-	const pkgExs = `
-		package foo_test
+func ExampleConst1() {} // invalid - no support for consts and vars
+func ExampleVar1()   {} // invalid - no support for consts and vars
 
-		func ExampleConst1() {} // invalid - no support for consts and vars
-		func ExampleVar1()   {} // invalid - no support for consts and vars
+func Example()               {}
+func Example_()              {} // invalid - suffix must start with a lower-case letter
+func Example_suffix()        {}
+func Example_suffix_xX_X_x() {}
+func Example_世界()           {} // invalid - suffix must start with a lower-case letter
+func Example_123()           {} // invalid - suffix must start with a lower-case letter
+func Example_BadSuffix()     {} // invalid - suffix must start with a lower-case letter
 
-		func Example()               {}
-		func Example_()              {} // invalid - suffix must start with lowercase
-		func Example_suffix()        {}
-		func Example_suffix_xX_X_x() {}
-		func Example_世界()           {}
-		func Example_123()           {}
-		func Example_BadSuffix()     {} // invalid - suffix must start with lowercase
+func ExampleType1()               {}
+func ExampleType1_()              {} // invalid - suffix must start with a lower-case letter
+func ExampleType1_suffix()        {}
+func ExampleType1_BadSuffix()     {} // invalid - suffix must start with a lower-case letter
+func ExampleType1_Foo()           {}
+func ExampleType1_Foo_suffix()    {}
+func ExampleType1_Foo_BadSuffix() {} // invalid - suffix must start with a lower-case letter
+func ExampleType1_foo()           {}
+func ExampleType1_foo_suffix()    {}
+func ExampleType1_foo_Suffix()    {} // matches Type1, instead of Type1_foo
+func Exampletype2()               {} // invalid - cannot match unexported
 
-		func ExampleType1()               {}
-		func ExampleType1_()              {} // invalid - suffix must start with lowercase
-		func ExampleType1_suffix()        {}
-		func ExampleType1_BadSuffix()     {} // invalid - suffix must start with lowercase
-		func ExampleType1_Foo()           {}
-		func ExampleType1_Foo_suffix()    {}
-		func ExampleType1_Foo_BadSuffix() {} // invalid - suffix must start with lowercase
-		func ExampleType1_foo()           {}
-		func ExampleType1_foo_suffix()    {}
-		func ExampleType1_foo_Suffix()    {} // matches Type1, instead of Type1_foo
-		func Exampletype2()               {} // invalid - cannot match unexported
+func ExampleFunc1()               {}
+func ExampleFunc1_()              {} // invalid - suffix must start with a lower-case letter
+func ExampleFunc1_suffix()        {}
+func ExampleFunc1_BadSuffix()     {} // invalid - suffix must start with a lower-case letter
+func ExampleFunc1_Foo()           {}
+func ExampleFunc1_Foo_suffix()    {}
+func ExampleFunc1_Foo_BadSuffix() {} // invalid - suffix must start with a lower-case letter
+func ExampleFunc1_foo()           {}
+func ExampleFunc1_foo_suffix()    {}
+func ExampleFunc1_foo_Suffix()    {} // matches Func1, instead of Func1_foo
+func Examplefunc1()               {} // invalid - cannot match unexported
 
-		func ExampleFunc1()               {}
-		func ExampleFunc1_()              {} // invalid - suffix must start with lowercase
-		func ExampleFunc1_suffix()        {}
-		func ExampleFunc1_BadSuffix()     {} // invalid - suffix must start with lowercase
-		func ExampleFunc1_Foo()           {}
-		func ExampleFunc1_Foo_suffix()    {}
-		func ExampleFunc1_Foo_BadSuffix() {} // invalid - suffix must start with lowercase
-		func ExampleFunc1_foo()           {}
-		func ExampleFunc1_foo_suffix()    {}
-		func ExampleFunc1_foo_Suffix()    {} // matches Func1, instead of Func1_foo
-		func Examplefunc1()               {} // invalid - cannot match unexported
+func ExampleType1_Func1()               {}
+func ExampleType1_Func1_()              {} // invalid - suffix must start with a lower-case letter
+func ExampleType1_Func1_suffix()        {}
+func ExampleType1_Func1_BadSuffix()     {} // invalid - suffix must start with a lower-case letter
+func ExampleType1_Func1_Foo()           {}
+func ExampleType1_Func1_Foo_suffix()    {}
+func ExampleType1_Func1_Foo_BadSuffix() {} // invalid - suffix must start with a lower-case letter
+func ExampleType1_Func1_foo()           {}
+func ExampleType1_Func1_foo_suffix()    {}
+func ExampleType1_Func1_foo_Suffix()    {} // matches Type1.Func1, instead of Type1.Func1_foo
+func ExampleType1_func2()               {} // matches Type1, instead of Type1.func2
 
-		func ExampleType1_Func1()               {}
-		func ExampleType1_Func1_()              {} // invalid - suffix must start with lowercase
-		func ExampleType1_Func1_suffix()        {}
-		func ExampleType1_Func1_BadSuffix()     {} // invalid - suffix must start with lowercase
-		func ExampleType1_Func1_Foo()           {}
-		func ExampleType1_Func1_Foo_suffix()    {}
-		func ExampleType1_Func1_Foo_BadSuffix() {} // invalid - suffix must start with lowercase
-		func ExampleType1_Func1_foo()           {}
-		func ExampleType1_Func1_foo_suffix()    {}
-		func ExampleType1_Func1_foo_Suffix()    {} // matches Type1.Func1, instead of Type1.Func1_foo
-		func ExampleType1_func2()               {} // matches Type1, instead of Type1.func2
+func ExampleEmbed_Func1() {} // invalid - no support for forwarded methods from embedding
 
-		func ExampleEmbed_Func1() {} // invalid - no support for forwarded methods from embedding
-
-		func ExampleConflict_Conflict()        {} // ambiguous with either Conflict or Conflict_Conflict type
-		func ExampleConflict_conflict()        {} // ambiguous with either Conflict or Conflict_conflict type
-		func ExampleConflict_Conflict_suffix() {} // ambiguous with either Conflict or Conflict_Conflict type
-		func ExampleConflict_conflict_suffix() {} // ambiguous with either Conflict or Conflict_conflict type
-	`
+func ExampleConflict_Conflict()        {} // ambiguous with either Conflict or Conflict_Conflict type
+func ExampleConflict_conflict()        {} // ambiguous with either Conflict or Conflict_conflict type
+func ExampleConflict_Conflict_suffix() {} // ambiguous with either Conflict or Conflict_Conflict type
+func ExampleConflict_conflict_suffix() {} // ambiguous with either Conflict or Conflict_conflict type
+`
 
 	// Parse literal source code as a *doc.Package.
 	fset := token.NewFileSet()
-	pkgFiles := make(map[string]*ast.File)
-	astFile, _ := parser.ParseFile(fset, "code.go", []byte(pkgCode), parser.ParseComments)
-	pkgFiles["code.go"] = astFile
-	astFile, _ = parser.ParseFile(fset, "example_test.go", []byte(pkgExs), parser.ParseComments)
-	pkgFiles["example_test.go"] = astFile
-	astPkg, _ := ast.NewPackage(fset, pkgFiles, simpleImporter, nil)
-	pkg := doc.New(astPkg, "foo", doc.AllDecls|doc.AllMethods)
+	files := []*ast.File{
+		mustParse(fset, "src.go", src),
+		mustParse(fset, "src_test.go", test),
+	}
+	p, err := doc.NewFromFiles(fset, files, "example.com/p")
+	if err != nil {
+		t.Fatalf("doc.NewFromFiles: %v", err)
+	}
 
-	// Collect the association of examples to which top-level identifiers.
+	// Collect the association of examples to top-level identifiers.
 	got := map[string][]string{}
-	got[""] = exampleNames(pkg.Examples)
-	for _, f := range pkg.Funcs {
+	got[""] = exampleNames(p.Examples)
+	for _, f := range p.Funcs {
 		got[f.Name] = exampleNames(f.Examples)
 	}
-	for _, t := range pkg.Types {
+	for _, t := range p.Types {
 		got[t.Name] = exampleNames(t.Examples)
 		for _, f := range t.Funcs {
 			got[f.Name] = exampleNames(f.Examples)
@@ -581,23 +630,23 @@ func TestClassifyExamples(t *testing.T) {
 	}
 
 	want := map[string][]string{
-		"": {"", "123", "Suffix", "Suffix xX X x", "世界"},
+		"": {"", "suffix", "suffix_xX_X_x"}, // Package-level examples.
 
-		"Type1":     {"", "Foo Suffix", "Func2", "Suffix"},
-		"Type1_Foo": {"", "Suffix"},
-		"Type1_foo": {"", "Suffix"},
+		"Type1":     {"", "foo_Suffix", "func2", "suffix"},
+		"Type1_Foo": {"", "suffix"},
+		"Type1_foo": {"", "suffix"},
 
-		"Func1":     {"", "Foo Suffix", "Suffix"},
-		"Func1_Foo": {"", "Suffix"},
-		"Func1_foo": {"", "Suffix"},
+		"Func1":     {"", "foo_Suffix", "suffix"},
+		"Func1_Foo": {"", "suffix"},
+		"Func1_foo": {"", "suffix"},
 
-		"Type1.Func1":     {"", "Foo Suffix", "Suffix"},
-		"Type1.Func1_Foo": {"", "Suffix"},
-		"Type1.Func1_foo": {"", "Suffix"},
+		"Type1.Func1":     {"", "foo_Suffix", "suffix"},
+		"Type1.Func1_Foo": {"", "suffix"},
+		"Type1.Func1_foo": {"", "suffix"},
 
 		// These are implementation dependent due to the ambiguous parsing.
-		"Conflict_Conflict": {"", "Suffix"},
-		"Conflict_conflict": {"", "Suffix"},
+		"Conflict_Conflict": {"", "suffix"},
+		"Conflict_conflict": {"", "suffix"},
 	}
 
 	for id := range got {
@@ -607,21 +656,17 @@ func TestClassifyExamples(t *testing.T) {
 	}
 }
 
-// simpleImporter is used by ast.NewPackage.
-func simpleImporter(imports map[string]*ast.Object, pkgPath string) (*ast.Object, error) {
-	pkg := imports[pkgPath]
-	if pkg == nil {
-		pkgName := pkgPath[strings.LastIndex(pkgPath, "/")+1:]
-		pkg = ast.NewObj(ast.Pkg, pkgName)
-		pkg.Data = ast.NewScope(nil) // required for or dot-imports
-		imports[pkgPath] = pkg
-	}
-	return pkg, nil
-}
-
 func exampleNames(exs []*doc.Example) (out []string) {
 	for _, ex := range exs {
 		out = append(out, ex.Suffix)
 	}
 	return out
+}
+
+func mustParse(fset *token.FileSet, filename, src string) *ast.File {
+	f, err := parser.ParseFile(fset, filename, src, parser.ParseComments)
+	if err != nil {
+		panic(err)
+	}
+	return f
 }

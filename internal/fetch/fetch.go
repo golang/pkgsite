@@ -499,7 +499,7 @@ func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, in
 	var (
 		fset            = token.NewFileSet()
 		goFiles         = make(map[string]*ast.File)
-		testGoFiles     = make(map[string]*ast.File)
+		allGoFiles      []*ast.File
 		packageName     string
 		packageNameFile string // Name of file where packageName came from.
 	)
@@ -511,8 +511,8 @@ func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, in
 			}
 			return nil, &BadPackageError{Err: err}
 		}
+		allGoFiles = append(allGoFiles, pf)
 		if strings.HasSuffix(name, "_test.go") {
-			testGoFiles[name] = pf
 			continue
 		}
 		goFiles[name] = pf
@@ -544,16 +544,15 @@ func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, in
 	}
 
 	// Compute package documentation.
-	apkg, _ := ast.NewPackage(fset, goFiles, simpleImporter, nil) // Ignore errors that can happen due to unresolved identifiers.
-	for name, f := range testGoFiles {                            // TODO(b/137567588): Improve upstream doc.New API design.
-		apkg.Files[name] = f
-	}
 	importPath := path.Join(modulePath, innerPath)
 	var m doc.Mode
 	if noFiltering {
 		m |= doc.AllDecls
 	}
-	d := doc.New(apkg, importPath, m)
+	d, err := doc.NewFromFiles(fset, allGoFiles, importPath, m)
+	if err != nil {
+		return nil, fmt.Errorf("doc.NewFromFiles: %v", err)
+	}
 	if d.ImportPath != importPath || d.Name != packageName {
 		panic(fmt.Errorf("internal error: *doc.Package has an unexpected import path (%q != %q) or package name (%q != %q)", d.ImportPath, importPath, d.Name, packageName))
 	}
@@ -681,19 +680,4 @@ func readZipFile(f *zip.File) (_ []byte, err error) {
 		return nil, fmt.Errorf("closing: %v", err)
 	}
 	return b, nil
-}
-
-// simpleImporter returns a (dummy) package object named by the last path
-// component of the provided package path (as is the convention for packages).
-// This is sufficient to resolve package identifiers without doing an actual
-// import. It never returns an error.
-func simpleImporter(imports map[string]*ast.Object, path string) (*ast.Object, error) {
-	pkg := imports[path]
-	if pkg == nil {
-		// note that strings.LastIndex returns -1 if there is no "/"
-		pkg = ast.NewObj(ast.Pkg, path[strings.LastIndex(path, "/")+1:])
-		pkg.Data = ast.NewScope(nil) // required by ast.NewPackage for dot-import
-		imports[path] = pkg
-	}
-	return pkg, nil
 }

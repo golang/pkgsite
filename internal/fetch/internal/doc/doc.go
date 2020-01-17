@@ -4,15 +4,17 @@
 
 // Package doc extracts source code documentation from a Go AST.
 //
-// This is a temporary copy of go/doc from standard library for
-// testing of and iteration on CL 94855 (golang.org/cl/94855).
+// This is a temporary copy of go/doc from Go 1.14 standard library
+// for testing of and validation of CL 204830 (golang.org/cl/204830).
 // It doesn't need to be updated other than as part of work on
 // b/137567588. Please /cc dmitshur@ on all changes to it.
 package doc
 
 import (
+	"fmt"
 	"go/ast"
 	"go/token"
+	"strings"
 )
 
 // Package is the documentation for an entire package.
@@ -21,7 +23,7 @@ type Package struct {
 	Name       string
 	ImportPath string
 	Imports    []string
-	Filenames  []string // excluding test files
+	Filenames  []string
 	Notes      map[string][]*Note
 
 	// Deprecated: For backward compatibility Bugs is still populated,
@@ -34,6 +36,9 @@ type Package struct {
 	Vars   []*Value
 	Funcs  []*Func
 
+	// Examples is a sorted list of examples associated with
+	// the package. Examples are extracted from _test.go files
+	// provided to NewFromFiles.
 	Examples []*Example
 }
 
@@ -58,6 +63,9 @@ type Type struct {
 	Funcs   []*Func  // sorted list of functions returning this type
 	Methods []*Func  // sorted list of methods (including embedded ones) of this type
 
+	// Examples is a sorted list of examples associated with
+	// this type. Examples are extracted from _test.go files
+	// provided to NewFromFiles.
 	Examples []*Example
 }
 
@@ -73,6 +81,9 @@ type Func struct {
 	Orig  string // original receiver "T" or "*T"
 	Level int    // embedding level; 0 means not embedded
 
+	// Examples is a sorted list of examples associated with this
+	// function or method. Examples are extracted from _test.go files
+	// provided to NewFromFiles.
 	Examples []*Example
 }
 
@@ -86,7 +97,7 @@ type Note struct {
 	Body     string    // note body text
 }
 
-// Mode values control the operation of New.
+// Mode values control the operation of New and NewFromFiles.
 type Mode int
 
 const (
@@ -106,13 +117,15 @@ const (
 
 // New computes the package documentation for the given package AST.
 // New takes ownership of the AST pkg and may edit or overwrite it.
+// To have the Examples fields populated, use NewFromFiles and include
+// the package's _test.go files.
 //
 func New(pkg *ast.Package, importPath string, mode Mode) *Package {
 	var r reader
 	r.readPackage(pkg, mode)
 	r.computeMethodSets()
 	r.cleanupTypes()
-	p := &Package{
+	return &Package{
 		Doc:        r.doc,
 		Name:       pkg.Name,
 		ImportPath: importPath,
@@ -124,8 +137,88 @@ func New(pkg *ast.Package, importPath string, mode Mode) *Package {
 		Types:      sortedTypes(r.types, mode&AllMethods != 0),
 		Vars:       sortedValues(r.values, token.VAR),
 		Funcs:      sortedFuncs(r.funcs, true),
-		Examples:   r.examples,
 	}
-	classifyExamples(p)
-	return p
+}
+
+// NewFromFiles computes documentation for a package.
+//
+// The package is specified by a list of *ast.Files and corresponding
+// file set, which must not be nil. NewFromFiles does not skip files
+// based on build constraints, so it is the caller's responsibility to
+// provide only the files that are matched by the build context.
+// The import path of the package is specified by importPath.
+//
+// Examples found in _test.go files are associated with the corresponding
+// type, function, method, or the package, based on their name.
+// If the example has a suffix in its name, it is set in the
+// Example.Suffix field. Examples with malformed names are skipped.
+//
+// Optionally, a single extra argument of type Mode can be provided to
+// control low-level aspects of the documentation extraction behavior.
+//
+// NewFromFiles takes ownership of the AST files and may edit them,
+// unless the PreserveAST Mode bit is on.
+//
+func NewFromFiles(fset *token.FileSet, files []*ast.File, importPath string, opts ...interface{}) (*Package, error) {
+	// Check for invalid API usage.
+	if fset == nil {
+		panic(fmt.Errorf("doc.NewFromFiles: no token.FileSet provided (fset == nil)"))
+	}
+	var mode Mode
+	switch len(opts) { // There can only be 0 or 1 options, so a simple switch works for now.
+	case 0:
+		// Nothing to do.
+	case 1:
+		m, ok := opts[0].(Mode)
+		if !ok {
+			panic(fmt.Errorf("doc.NewFromFiles: option argument type must be doc.Mode"))
+		}
+		mode = m
+	default:
+		panic(fmt.Errorf("doc.NewFromFiles: there must not be more than 1 option argument"))
+	}
+
+	// Collect .go and _test.go files.
+	var (
+		goFiles     = make(map[string]*ast.File)
+		testGoFiles []*ast.File
+	)
+	for i := range files {
+		f := fset.File(files[i].Pos())
+		if f == nil {
+			return nil, fmt.Errorf("file files[%d] is not found in the provided file set", i)
+		}
+		switch name := f.Name(); {
+		case strings.HasSuffix(name, ".go") && !strings.HasSuffix(name, "_test.go"):
+			goFiles[name] = files[i]
+		case strings.HasSuffix(name, "_test.go"):
+			testGoFiles = append(testGoFiles, files[i])
+		default:
+			return nil, fmt.Errorf("file files[%d] filename %q does not have a .go extension", i, name)
+		}
+	}
+
+	// TODO(dmitshur,gri): A relatively high level call to ast.NewPackage with a simpleImporter
+	// ast.Importer implementation is made below. It might be possible to short-circuit and simplify.
+
+	// Compute package documentation.
+	pkg, _ := ast.NewPackage(fset, goFiles, simpleImporter, nil) // Ignore errors that can happen due to unresolved identifiers.
+	p := New(pkg, importPath, mode)
+	classifyExamples(p, Examples(testGoFiles...))
+	return p, nil
+}
+
+// simpleImporter returns a (dummy) package object named by the last path
+// component of the provided package path (as is the convention for packages).
+// This is sufficient to resolve package identifiers without doing an actual
+// import. It never returns an error.
+func simpleImporter(imports map[string]*ast.Object, path string) (*ast.Object, error) {
+	pkg := imports[path]
+	if pkg == nil {
+		// note that strings.LastIndex returns -1 if there is no "/"
+		pkg = ast.NewObj(ast.Pkg, path[strings.LastIndex(path, "/")+1:])
+		pkg.Data = ast.NewScope(nil) // required by ast.NewPackage for dot-import
+		imports[path] = pkg
+	}
+	return pkg, nil
 }
