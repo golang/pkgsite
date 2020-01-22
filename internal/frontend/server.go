@@ -21,7 +21,7 @@ import (
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/experiment"
-	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/licenses"
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/middleware"
 )
@@ -187,8 +187,8 @@ type licensePolicyPage struct {
 }
 
 func (s *Server) licensePolicyHandler() http.HandlerFunc {
-	fileNames := license.FileNames()
-	licenses := license.AcceptedOSILicenses()
+	fileNames := licenses.FileNames()
+	licenses := licenses.AcceptedOSILicenses()
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		page := licensePolicyPage{
 			basePage:         newBasePage(r, "Licenses - go.dev"),

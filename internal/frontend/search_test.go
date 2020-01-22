@@ -11,7 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/license"
+	"golang.org/x/discovery/internal/licenses"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/testing/sample"
 	"golang.org/x/discovery/internal/version"
@@ -141,7 +141,7 @@ func TestFetchSearchPage(t *testing.T) {
 
 			opts := cmp.Options{
 				cmp.AllowUnexported(SearchPage{}, pagination{}),
-				cmpopts.IgnoreFields(license.Metadata{}, "FilePath"),
+				cmpopts.IgnoreFields(licenses.Metadata{}, "FilePath"),
 				cmpopts.IgnoreFields(pagination{}, "Approximate"),
 			}
 			if diff := cmp.Diff(tc.wantSearchPage, got, opts...); diff != "" {
