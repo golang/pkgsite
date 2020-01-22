@@ -8,7 +8,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"testing"
@@ -24,7 +23,7 @@ import (
 )
 
 func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
 	defer cancel()
 
 	testCases := []struct {
@@ -284,8 +283,6 @@ func TestMakeValidUnicode(t *testing.T) {
 		if err := insert(makeValidUnicode(data)); err != nil {
 			t.Errorf("%s, after making valid: %v", filename, err)
 		}
-		fmt.Println(filename)
-		fmt.Println(makeValidUnicode(data))
 	}
 
 	check("final-nulls", false)

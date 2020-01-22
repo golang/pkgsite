@@ -277,23 +277,14 @@ func validateVersion(v *internal.Version) error {
 // removeNonDistributableData removes any information from the version payload,
 // after checking licenses.
 func removeNonDistributableData(v *internal.Version) {
-	hasRedistributablePackage := false
 	for _, p := range v.Packages {
-		if p.IsRedistributable {
-			hasRedistributablePackage = true
-		} else {
-			// Not redistributable, so prune derived information
-			// that can't be stored.
+		if !p.IsRedistributable {
+			// Prune derived information that can't be stored.
 			p.Synopsis = ""
 			p.DocumentationHTML = ""
 		}
 	}
-
-	// If no packages are redistributable, we have no need for the readme
-	// contents, so drop them. Note that if a single package is redistributable,
-	// it must be true by definition that the module itself it redistributable,
-	// so capturing the README contents is OK.
-	if !hasRedistributablePackage {
+	if !v.IsRedistributable {
 		v.ReadmeFilePath = ""
 		v.ReadmeContents = ""
 	}
