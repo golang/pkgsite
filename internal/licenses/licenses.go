@@ -377,6 +377,10 @@ func DetectFile(contents []byte, filename string, logf func(string, ...interface
 	if logf == nil {
 		logf = func(string, ...interface{}) {}
 	}
+	if types, ok := exceptionFileTypes(contents); ok {
+		logf("%s is an exception", filename)
+		return types, licensecheck.Coverage{}
+	}
 	cov, ok := licensecheck.Cover(contents, licensecheck.Options{})
 	if !ok {
 		logf("%s licensecheck.Cover failed, skipping", filename)

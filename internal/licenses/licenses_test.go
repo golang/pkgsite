@@ -21,6 +21,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/licensecheck"
 	lc "github.com/google/licensecheck"
 )
 
@@ -511,6 +512,19 @@ func TestDetectFiles(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "file contents exception",
+			contents: map[string]string{
+				"dir/Copying": strings.ToUpper(exceptionFiles[0].contents),
+			},
+			want: []*Metadata{
+				{
+					Types:    []string{"BSD-3-Clause"},
+					FilePath: "dir/Copying",
+					Coverage: licensecheck.Coverage{},
+				},
+			},
+		},
 	}
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
@@ -573,7 +587,7 @@ func TestIsException(t *testing.T) {
 			},
 		},
 		{
-			name:   "identical contents after normalization",
+			name:   "identical normalized contents",
 			module: exceptionModule,
 			contents: map[string]string{
 				"COPYING":     strings.ToUpper(COPYING),

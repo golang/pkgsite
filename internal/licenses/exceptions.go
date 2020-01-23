@@ -170,10 +170,35 @@ var exceptions = map[string]map[string]*matchFile{
 			For more information, please refer to <https://unlicense.org/>`),
 		},
 	},
-	"gonum.org/v1/gonum": map[string]*matchFile{
-		"LICENSE": &matchFile{
-			types: []string{"BSD-3-Clause"},
-			contents: normalize(`
+}
+
+func init() {
+	for _, matchFiles := range exceptions {
+		for filename := range matchFiles {
+			if strings.ContainsRune(filename, '/') {
+				panic(fmt.Sprintf("exception filename %q not at top level", filename))
+			}
+		}
+	}
+}
+
+// exceptionFileTypes returns the license types of the file with contents if it
+// is in the list of exceptions, with a second return value of true. Otherwise
+// it returns nil,  false.
+func exceptionFileTypes(contents []byte) ([]string, bool) {
+	norm := normalize(string(contents))
+	for _, mf := range exceptionFiles {
+		if norm == mf.contents {
+			return mf.types, true
+		}
+	}
+	return nil, false
+}
+
+var exceptionFiles = []*matchFile{
+	{
+		types: []string{"BSD-3-Clause"},
+		contents: normalize(`
 			Copyright ©2013 The Gonum Authors. All rights reserved.
 
 			Redistribution and use in source and binary forms, with or without
@@ -197,16 +222,5 @@ var exceptions = map[string]map[string]*matchFile{
 			CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 			OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 			OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.`),
-		},
 	},
-}
-
-func init() {
-	for _, matchFiles := range exceptions {
-		for filename := range matchFiles {
-			if strings.ContainsRune(filename, '/') {
-				panic(fmt.Sprintf("exception filename %q not at top level", filename))
-			}
-		}
-	}
 }
