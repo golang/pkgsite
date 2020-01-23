@@ -105,8 +105,11 @@ func FetchVersion(ctx context.Context, modulePath, vers string, proxyClient *pro
 	}
 
 	fr, err := processZipFile(ctx, modulePath, versionType, vers, commitTime, zipReader)
+	if err != nil {
+		return &FetchResult{GoModPath: goModPath}, err
+	}
 	fr.GoModPath = goModPath
-	return fr, err
+	return fr, nil
 }
 
 // processZipFile extracts information from the module version zip.

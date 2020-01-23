@@ -194,6 +194,9 @@ func TestExtractPackagesFromZip(t *testing.T) {
 							Status:      http.StatusOK,
 						})
 				}
+				sort.Slice(test.packageVersionStates, func(i, j int) bool {
+					return test.packageVersionStates[i].PackagePath < test.packageVersionStates[j].PackagePath
+				})
 			}
 			sort.Slice(pvstates, func(i, j int) bool {
 				return pvstates[i].PackagePath < pvstates[j].PackagePath
