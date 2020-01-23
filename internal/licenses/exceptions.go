@@ -7,7 +7,7 @@ package licenses
 import (
 	"fmt"
 	"path"
-	"reflect"
+	"sort"
 	"strings"
 )
 
@@ -25,10 +25,7 @@ func (d *Detector) isException() (bool, []*License) {
 	if matchFiles == nil {
 		return false, nil
 	}
-	unmatched := map[string]bool{} // set of files not yet seen
-	for name := range matchFiles {
-		unmatched[name] = true
-	}
+	matchedContents := map[string][]byte{} // contents of files that match
 	for _, f := range d.zr.File {
 		pathname := strings.TrimPrefix(f.Name, prefix)
 		if mf, ok := matchFiles[pathname]; ok {
@@ -37,19 +34,24 @@ func (d *Detector) isException() (bool, []*License) {
 				d.logf("reading zip file %s: %v", f.Name, err)
 				return false, nil
 			}
-			got := strings.Fields(string(data))
-			want := strings.Fields(mf.contents)
-			if !reflect.DeepEqual(got, want) {
+			if normalize(string(data)) != mf.contents {
 				d.logf("isException(%q, %q): contents of %q do not match", d.modulePath, d.version, pathname)
 				return false, nil
 			}
-			delete(unmatched, pathname)
+			matchedContents[pathname] = data
 		}
 	}
 
+	// Check if any files were not matched.
+	var unmatched []string
+	for name := range matchFiles {
+		if matchedContents[name] == nil {
+			unmatched = append(unmatched, name)
+		}
+	}
 	if len(unmatched) > 0 {
-		d.logf("isException(%q, %q): unmatched files: %s",
-			d.modulePath, d.version, strings.Join(setToSortedSlice(unmatched), ", "))
+		sort.Strings(unmatched)
+		d.logf("isException(%q, %q): unmatched files: %s", d.modulePath, d.version, strings.Join(unmatched, ", "))
 		return false, nil
 	}
 
@@ -77,18 +79,26 @@ func (d *Detector) isException() (bool, []*License) {
 					Types:    mf.types,
 					FilePath: pathname,
 				},
-				Contents: []byte(mf.contents),
+				Contents: matchedContents[pathname],
 			})
 		}
 	}
+	sort.Slice(lics, func(i, j int) bool { return lics[i].FilePath < lics[j].FilePath })
 	return true, lics
+}
+
+// normalize produces a normalized version of s, for looser comparison.
+// It lower-cases the string and replaces all consecutive whitespace with
+// a single space.
+func normalize(s string) string {
+	return strings.Join(strings.Fields(strings.ToLower(s)), " ")
 }
 
 // A matchFile is a file whose contents must be matched in
 // order for a special-cased module to be considered redistributable.
 type matchFile struct {
 	types    []string // license types, or nil if not a license
-	contents string
+	contents string   // normalized
 }
 
 // A map of exceptions to our license policy. The keys are module paths. The
@@ -98,17 +108,17 @@ type matchFile struct {
 //
 
 
-var exceptions = map[string]map[string]matchFile{
-	"gioui.org": map[string]matchFile{
-		"COPYING": matchFile{
-			nil,
-			`This project is dual-licensed under the UNLICENSE (see UNLICENSE) or
+var exceptions = map[string]map[string]*matchFile{
+	"gioui.org": map[string]*matchFile{
+		"COPYING": &matchFile{
+			types: nil,
+			contents: normalize(`This project is dual-licensed under the UNLICENSE (see UNLICENSE) or
 			the MIT license (see LICENSE-MIT). You may use the project under the terms
-			of either license.`,
+			of either license.`),
 		},
-		"LICENSE-MIT": matchFile{
-			[]string{"MIT"},
-			`
+		"LICENSE-MIT": &matchFile{
+			types: []string{"MIT"},
+			contents: normalize(`
 			The MIT License (MIT)
 
 			Copyright (c) 2019 The Gio authors
@@ -129,11 +139,11 @@ var exceptions = map[string]map[string]matchFile{
 			AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 			LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 			OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-			THE SOFTWARE.`,
+			THE SOFTWARE.`),
 		},
-		"UNLICENSE": matchFile{
-			[]string{"Unlicense"},
-			`
+		"UNLICENSE": &matchFile{
+			types: []string{"Unlicense"},
+			contents: normalize(`
 			This is free and unencumbered software released into the public domain.
 
 			Anyone is free to copy, modify, publish, use, compile, sell, or
@@ -157,13 +167,13 @@ var exceptions = map[string]map[string]matchFile{
 			ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 			OTHER DEALINGS IN THE SOFTWARE.
 
-			For more information, please refer to <https://unlicense.org/>`,
+			For more information, please refer to <https://unlicense.org/>`),
 		},
 	},
-	"gonum.org/v1/gonum": map[string]matchFile{
-		"LICENSE": matchFile{
-			[]string{"BSD-3-Clause"},
-			`
+	"gonum.org/v1/gonum": map[string]*matchFile{
+		"LICENSE": &matchFile{
+			types: []string{"BSD-3-Clause"},
+			contents: normalize(`
 			Copyright ©2013 The Gonum Authors. All rights reserved.
 
 			Redistribution and use in source and binary forms, with or without
@@ -186,7 +196,7 @@ var exceptions = map[string]map[string]matchFile{
 			SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 			CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 			OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-			OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.`,
+			OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.`),
 		},
 	},
 }

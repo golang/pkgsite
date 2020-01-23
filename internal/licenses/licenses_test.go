@@ -348,65 +348,105 @@ func TestIsException(t *testing.T) {
 		exceptionModule = "gioui.org"
 		version         = "v1.2.3"
 	)
+	var (
+		COPYING           = exceptions[exceptionModule]["COPYING"].contents
+		UNLICENSE         = exceptions[exceptionModule]["UNLICENSE"].contents
+		modifiedUNLICENSE = strings.Replace(UNLICENSE, " ", "\t\n", -1)
+		LICENSE_MIT       = exceptions[exceptionModule]["LICENSE-MIT"].contents
+	)
 	for _, test := range []struct {
 		name     string
 		module   string
 		contents map[string]string
-		want     bool
+		want     []*License // nil => no match
 	}{
 		{
-			name:   "valid exception",
+			name:   "identical contents",
 			module: exceptionModule,
 			contents: map[string]string{
-				"COPYING":     exceptions[exceptionModule]["COPYING"].contents,
-				"UNLICENSE":   exceptions[exceptionModule]["UNLICENSE"].contents,
-				"LICENSE-MIT": exceptions[exceptionModule]["LICENSE-MIT"].contents,
+				"COPYING":     COPYING,
+				"UNLICENSE":   UNLICENSE,
+				"LICENSE-MIT": LICENSE_MIT,
 			},
-			want: true,
+			want: []*License{
+				{
+					Metadata: &Metadata{Types: []string{"MIT"}, FilePath: "LICENSE-MIT"},
+					Contents: []byte(LICENSE_MIT),
+				},
+				{
+					Metadata: &Metadata{Types: []string{"Unlicense"}, FilePath: "UNLICENSE"},
+					Contents: []byte(UNLICENSE),
+				},
+			},
+		},
+		{
+			name:   "identical contents after normalization",
+			module: exceptionModule,
+			contents: map[string]string{
+				"COPYING":     strings.ToUpper(COPYING),
+				"UNLICENSE":   modifiedUNLICENSE,
+				"LICENSE-MIT": LICENSE_MIT,
+			},
+			want: []*License{
+				{
+					Metadata: &Metadata{Types: []string{"MIT"}, FilePath: "LICENSE-MIT"},
+					Contents: []byte(LICENSE_MIT),
+				},
+				{
+					Metadata: &Metadata{Types: []string{"Unlicense"}, FilePath: "UNLICENSE"},
+					Contents: []byte(modifiedUNLICENSE),
+				},
+			},
 		},
 		{
 			name:     "not a known exception",
 			module:   "golang.org/x/tools",
 			contents: nil, // irrelevant
-			want:     false,
+			want:     nil,
 		},
 		{
 			name:   "missing a file",
 			module: exceptionModule,
 			contents: map[string]string{
-				"COPYING":   exceptions[exceptionModule]["COPYING"].contents,
-				"UNLICENSE": exceptions[exceptionModule]["UNLICENSE"].contents,
+				"COPYING":   COPYING,
+				"UNLICENSE": UNLICENSE,
 			},
-			want: false,
+			want: nil,
 		},
 		{
 			name:   "changed file contents",
 			module: exceptionModule,
 			contents: map[string]string{
-				"COPYING":     exceptions[exceptionModule]["COPYING"].contents,
-				"UNLICENSE":   exceptions[exceptionModule]["UNLICENSE"].contents,
-				"LICENSE-MIT": exceptions[exceptionModule]["LICENSE-MIT"].contents + " Amen.",
+				"COPYING":     COPYING,
+				"UNLICENSE":   UNLICENSE,
+				"LICENSE-MIT": LICENSE_MIT + " Amen.",
 			},
-			want: false,
+			want: nil,
 		},
 		{
 			name:   "extra files",
 			module: exceptionModule,
 			contents: map[string]string{
-				"COPYING":        exceptions[exceptionModule]["COPYING"].contents,
-				"UNLICENSE":      exceptions[exceptionModule]["UNLICENSE"].contents,
-				"LICENSE-MIT":    exceptions[exceptionModule]["LICENSE-MIT"].contents,
+				"COPYING":        COPYING,
+				"UNLICENSE":      UNLICENSE,
+				"LICENSE-MIT":    LICENSE_MIT,
 				"subdir/LICENSE": mitLicense,
 			},
-			want: false,
+			want: nil,
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			zr := newZipReader(t, contentsDir(test.module, version), test.contents)
 			d := NewDetector(test.module, version, zr, nil)
-			got, _ := d.isException()
-			if got != test.want {
-				t.Errorf("got %t, want %t", got, test.want)
+			gotMatch, gotLics := d.isException()
+			wantMatch := test.want != nil
+			if gotMatch != wantMatch {
+				t.Fatalf("match: got %t, want %t", gotMatch, wantMatch)
+			}
+			if gotMatch {
+				if diff := cmp.Diff(test.want, gotLics); diff != "" {
+					t.Errorf("mismatch (-want +got):\n%s", diff)
+				}
 			}
 		})
 	}
