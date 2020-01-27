@@ -87,6 +87,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/search", searchHandler)
 	handle("/search-help", s.staticPageHandler("search_help.tmpl", "Search Help - go.dev"))
 	handle("/license-policy", s.licensePolicyHandler())
+	handle("/about", http.RedirectHandler("https://go.dev/about", http.StatusFound))
 	handle("/", detailHandler)
 	handle("/autocomplete", http.HandlerFunc(s.handleAutoCompletion))
 	handle("/robots.txt", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
