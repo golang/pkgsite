@@ -226,3 +226,24 @@ func InsertSampleDirectoryTree(ctx context.Context, t *testing.T, testDB *DB) {
 	}
 
 }
+
+// GetFromSearchDocuments retrieves the module path and version for the given
+// package path from the search_documents table. If the path is not in the table,
+// the third return value is false.
+func GetFromSearchDocuments(ctx context.Context, t *testing.T, db *DB, packagePath string) (modulePath, version string, found bool) {
+	row := db.db.QueryRow(ctx, `
+			SELECT module_path, version
+			FROM search_documents
+			WHERE package_path = $1`,
+		packagePath)
+	err := row.Scan(&modulePath, &version)
+	switch err {
+	case sql.ErrNoRows:
+		return "", "", false
+	case nil:
+		return modulePath, version, true
+	default:
+		t.Fatal(err)
+	}
+	return
+}

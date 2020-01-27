@@ -687,3 +687,65 @@ func TestHllZeros(t *testing.T) {
 		}
 	}
 }
+
+func TestDeleteOlderVersionFromSearch(t *testing.T) {
+	ctx := context.Background()
+	defer ResetTestDB(testDB, t)
+
+	const (
+		modulePath = "deleteme.com"
+		version    = "v1.2.3" // delete older than this
+	)
+
+	type module struct {
+		path        string
+		version     string
+		pkg         string
+		wantDeleted bool
+	}
+	insert := func(m module) {
+		v := sample.Version()
+		v.ModulePath = m.path
+		v.Version = m.version
+		v.Packages = []*internal.Package{{Path: m.path + "/" + m.pkg, Name: m.pkg}}
+		if err := testDB.InsertVersion(ctx, v); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	check := func(m module) {
+		gotPath, gotVersion, found := GetFromSearchDocuments(ctx, t, testDB, m.path+"/"+m.pkg)
+		gotDeleted := !found
+		if gotDeleted != m.wantDeleted {
+			t.Errorf("%s: gotDeleted=%t, wantDeleted=%t", m.path, gotDeleted, m.wantDeleted)
+			return
+		}
+		if !gotDeleted {
+			if gotPath != m.path || gotVersion != m.version {
+				t.Errorf("got path, version (%q, %q), want (%q, %q)", gotPath, gotVersion, m.path, m.version)
+			}
+		}
+	}
+
+	modules := []module{
+		{modulePath, "v1.1.0", "p2", true},   // older version of same module
+		{modulePath, "v0.0.9", "p3", true},   // another older version of same module
+		{"other.org", "v1.1.2", "p4", false}, // older version of a different module
+	}
+	for _, m := range modules {
+		insert(m)
+	}
+	if err := testDB.DeleteOlderVersionFromSearchDocuments(ctx, modulePath, version); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, m := range modules {
+		check(m)
+	}
+
+	// Verify that a newer version is not deleted.
+	ResetTestDB(testDB, t)
+	mod := module{modulePath, "v1.2.4", "p5", false}
+	insert(mod)
+	check(mod)
+}

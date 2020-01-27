@@ -221,10 +221,49 @@ func TestFetchAndUpdateState_Mismatch(t *testing.T) {
 	}
 }
 
-type fakeTransport struct{}
+func TestFetchAndUpdateState_DeleteOlder(t *testing.T) {
+	// Check that fetching an alternative module deletes all older versions of that
+	// module from search_documents (but not versions).
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
 
-func (fakeTransport) RoundTrip(*http.Request) (*http.Response, error) {
-	return nil, errors.New("bad")
+	defer postgres.ResetTestDB(testDB, t)
+
+	const (
+		modulePath      = "github.com/m"
+		mismatchVersion = "v1.0.0"
+		olderVersion    = "v0.9.0"
+	)
+
+	client, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
+		// mismatched version; will cause deletion
+		proxy.NewTestVersion(t, modulePath, mismatchVersion, map[string]string{
+			"go.mod":     "module other",
+			"foo/foo.go": "package foo",
+		}),
+		// older version; should be deleted
+		proxy.NewTestVersion(t, modulePath, olderVersion, map[string]string{
+			"foo/foo.go": "package foo",
+		}),
+	})
+	defer teardownProxy()
+
+	if _, err := fetchAndUpdateState(ctx, modulePath, olderVersion, client, testDB); err != nil {
+		t.Fatal(err)
+	}
+	gotModule, gotVersion, gotFound := postgres.GetFromSearchDocuments(ctx, t, testDB, modulePath+"/foo")
+	if !gotFound || gotModule != modulePath || gotVersion != olderVersion {
+		t.Fatalf("got (%q, %q, %t), want (%q, %q, true)", gotModule, gotVersion, gotFound, modulePath, olderVersion)
+	}
+
+	code, _ := fetchAndUpdateState(ctx, modulePath, mismatchVersion, client, testDB)
+	if want := derrors.ToHTTPStatus(derrors.AlternativeModule); code != want {
+		t.Fatalf("got %d, want %d", code, want)
+	}
+
+	if _, _, gotFound := postgres.GetFromSearchDocuments(ctx, t, testDB, modulePath+"/foo"); gotFound {
+		t.Fatal("older version found in search documents")
+	}
 }
 
 func TestSkipIncompletePackage(t *testing.T) {

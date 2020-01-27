@@ -285,3 +285,9 @@ func TestParseModulePathAndVersion(t *testing.T) {
 		})
 	}
 }
+
+type fakeTransport struct{}
+
+func (fakeTransport) RoundTrip(*http.Request) (*http.Response, error) {
+	return nil, errors.New("bad")
+}

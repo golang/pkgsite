@@ -14,17 +14,17 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/discovery/internal"
-
 	"github.com/lib/pq"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
+	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/database"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/stdlib"
+	"golang.org/x/mod/semver"
 )
 
 var (
@@ -1055,4 +1055,54 @@ func isInternalPackage(path string) bool {
 		}
 	}
 	return false
+}
+
+// DeleteOlderVersionFromSearchDocuments deletes from search_documents every package with
+// the given module path whose version is older than the given version.
+// It is used when fetching a module with an alternative path. See etl/fetch.go:fetchAndUpdateState.
+func (db *DB) DeleteOlderVersionFromSearchDocuments(ctx context.Context, modulePath, version string) (err error) {
+	defer derrors.Wrap(&err, "DeleteOlderVersionFromSearchDocuments(ctx, %q, %q)", modulePath, version)
+
+	return db.db.Transact(func(tx *sql.Tx) error {
+		// Collect all package paths in search_documents with the given module path
+		// and an older version. (package_path is the primary key of search_documents.)
+		var ppaths []string
+		rows, err := tx.QueryContext(ctx, `
+				SELECT package_path, version
+				FROM search_documents
+				WHERE module_path = $1`,
+			modulePath)
+		if err != nil {
+			return err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var ppath, v string
+			if err := rows.Scan(&ppath, &v); err != nil {
+				return err
+			}
+			if semver.Compare(v, version) < 0 {
+				ppaths = append(ppaths, ppath)
+			}
+		}
+		if err := rows.Err(); err != nil {
+			return err
+		}
+		if len(ppaths) == 0 {
+			return nil
+		}
+
+		// Delete all of those paths.
+		q := fmt.Sprintf(`DELETE FROM search_documents WHERE package_path IN ('%s')`, strings.Join(ppaths, `', '`))
+		res, err := database.ExecTx(ctx, tx, q)
+		if err != nil {
+			return err
+		}
+		n, err := res.RowsAffected()
+		if err != nil {
+			return fmt.Errorf("RowsAffected: %v", err)
+		}
+		log.Infof(ctx, "deleted %d rows from search_documents", n)
+		return nil
+	})
 }
