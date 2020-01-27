@@ -83,6 +83,7 @@ p {
 }
 code {
   font-size: 1rem;
+  font-family: "Go Mono", "Source Code Pro", monospace;
 }
 
 .Site {
