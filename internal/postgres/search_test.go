@@ -228,6 +228,7 @@ func TestFastSearch(t *testing.T) {
 	}
 
 	view.Register(SearchResponseCount)
+	defer view.Unregister(SearchResponseCount)
 	responses := make(map[string]int64)
 	// responseDelta captures the change in the SearchResponseCount metric.
 	responseDelta := func() map[string]int64 {

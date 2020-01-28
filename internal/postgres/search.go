@@ -597,11 +597,11 @@ func (db *DB) Search(ctx context.Context, q string, limit, offset int) (_ []*int
 					CASE WHEN redistributable THEN 1
 					ELSE 0.5 END
 				) AS score
-                    	FROM
+			FROM
 				search_documents
-                    	WHERE
+			WHERE
 				tsv_search_tokens @@ websearch_to_tsquery($1)
-                    	ORDER BY
+			ORDER BY
 				score DESC,
 				commit_time DESC,
 				package_path
@@ -616,7 +616,11 @@ func (db *DB) Search(ctx context.Context, q string, limit, offset int) (_ []*int
 			p.module_path = r.module_path
 			AND p.version = r.version
 		WHERE
-			r.score > 0.1;`
+			r.score > 0.1
+		ORDER BY
+			r.score DESC,
+			r.commit_time DESC,
+			r.package_path;`
 
 	var results []*internal.SearchResult
 	collect := func(rows *sql.Rows) error {
