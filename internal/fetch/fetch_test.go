@@ -352,8 +352,12 @@ func TestFetchVersion(t *testing.T) {
 		ReadmeContents:    "THIS IS A README",
 		VersionType:       version.TypeRelease,
 		IsRedistributable: true,
+		HasGoMod:          false,
 		SourceInfo:        source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
 	}
+	wantVersionInfoGoMod := wantVersionInfo
+	wantVersionInfoGoMod.HasGoMod = true
+
 	wantCoverage := sample.LicenseMetadata[0].Coverage
 	wantLicenses := []*licenses.License{
 		{
@@ -424,6 +428,34 @@ func TestFetchVersion(t *testing.T) {
 						Imports: []string{},
 						GOOS:    "js",
 						GOARCH:  "wasm",
+					},
+				},
+				Licenses: wantLicenses,
+			},
+		},
+		{
+			name: "has go.mod",
+			contents: map[string]string{
+				"go.mod":     "module github.com/my/module",
+				"README.md":  "THIS IS A README",
+				"foo/foo.go": "// package foo exports a helpful constant.\npackage foo\nimport \"net/http\"\nconst OK = http.StatusOK",
+				"LICENSE.md": testhelper.MITLicense,
+			},
+			want: &internal.Version{
+				VersionInfo: wantVersionInfoGoMod,
+				Packages: []*internal.Package{
+					{
+						Path:              "github.com/my/module/foo",
+						V1Path:            "github.com/my/module/foo",
+						Name:              "foo",
+						Synopsis:          "package foo exports a helpful constant.",
+						IsRedistributable: true,
+						Licenses: []*licenses.Metadata{
+							{Types: []string{"MIT"}, FilePath: "LICENSE.md", Coverage: wantCoverage},
+						},
+						Imports: []string{"net/http"},
+						GOOS:    "linux",
+						GOARCH:  "amd64",
 					},
 				},
 				Licenses: wantLicenses,

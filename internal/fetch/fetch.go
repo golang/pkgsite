@@ -138,9 +138,9 @@ func processZipFile(ctx context.Context, modulePath string, versionType version.
 		return nil, fmt.Errorf("%v: %w", errModuleContainsNoPackages.Error(), derrors.BadModule)
 	}
 	if err != nil {
-
 		return nil, fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, version, allLicenses, err)
 	}
+	hasGoMod := zipContainsFilename(zipReader, path.Join(moduleVersionDir(modulePath, version), "go.mod"))
 	return &FetchResult{
 		Version: &internal.Version{
 			VersionInfo: internal.VersionInfo{
@@ -151,6 +151,7 @@ func processZipFile(ctx context.Context, modulePath string, versionType version.
 				ReadmeContents:    readmeContents,
 				VersionType:       versionType,
 				IsRedistributable: d.ModuleIsRedistributable(),
+				HasGoMod:          hasGoMod,
 				SourceInfo:        sourceInfo,
 			},
 			Packages: packages,
@@ -380,6 +381,16 @@ func ignoredByGoTool(importPath string) bool {
 func isVendored(importPath string) bool {
 	return strings.HasPrefix(importPath, "vendor/") ||
 		strings.Contains(importPath, "/vendor/")
+}
+
+// zipContainsFilename reports whether there is a file with the given name in the zip.
+func zipContainsFilename(r *zip.Reader, name string) bool {
+	for _, f := range r.File {
+		if f.Name == name {
+			return true
+		}
+	}
+	return false
 }
 
 // LargePackageError represents an error where the rendered

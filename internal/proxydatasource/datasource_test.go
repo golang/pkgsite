@@ -58,6 +58,7 @@ var (
 		CommitTime:        time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
 		VersionType:       version.TypeRelease,
 		IsRedistributable: true,
+		HasGoMod:          true,
 	}
 	wantVersionedPackage = &internal.VersionedPackage{
 		VersionInfo: wantVersionInfo,
@@ -184,7 +185,7 @@ func TestDataSource_GetTaggedVersionsForModule(t *testing.T) {
 	v110 := wantVersionInfo
 	v110.Version = "v1.1.0"
 	want := []*internal.VersionInfo{&wantVersionInfo, &v110}
-	ignore := cmpopts.IgnoreFields(internal.VersionInfo{}, "CommitTime", "VersionType", "IsRedistributable")
+	ignore := cmpopts.IgnoreFields(internal.VersionInfo{}, "CommitTime", "VersionType", "IsRedistributable", "HasGoMod")
 	if diff := cmp.Diff(want, got, ignore); diff != "" {
 		t.Errorf("GetTaggedVersionsForPackageSeries diff (-want +got):\n%s", diff)
 	}
@@ -205,7 +206,7 @@ func TestDataSource_GetTaggedVersionsForPackageSeries(t *testing.T) {
 	v110 := wantVersionInfo
 	v110.Version = "v1.1.0"
 	want := []*internal.VersionInfo{&wantVersionInfo, &v110}
-	ignore := cmpopts.IgnoreFields(internal.VersionInfo{}, "CommitTime", "VersionType", "IsRedistributable")
+	ignore := cmpopts.IgnoreFields(internal.VersionInfo{}, "CommitTime", "VersionType", "IsRedistributable", "HasGoMod")
 	if diff := cmp.Diff(want, got, ignore); diff != "" {
 		t.Errorf("GetTaggedVersionsForPackageSeries diff (-want +got):\n%s", diff)
 	}
