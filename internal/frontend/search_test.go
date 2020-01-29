@@ -173,3 +173,50 @@ func TestApproximateNumber(t *testing.T) {
 		}
 	}
 }
+
+func TestSearchRequestRedirectPath(t *testing.T) {
+	ctx := context.Background()
+
+	golangTools := sample.Version()
+	golangTools.ModulePath = "golang.org/x/tools"
+	lspPkg := sample.Package()
+	lspPkg.Path = "golang.org/x/tools/internal/lsp"
+	golangTools.Packages = []*internal.Package{lspPkg}
+
+	std := sample.Version()
+	std.ModulePath = "std"
+	var stdlibPackages []*internal.Package
+	for _, path := range []string{"cmd/go", "cmd/go/internal/auth", "fmt"} {
+		pkg := sample.Package()
+		pkg.Path = path
+		stdlibPackages = append(stdlibPackages, pkg)
+	}
+	std.Packages = stdlibPackages
+	versions := []*internal.Version{golangTools, std}
+
+	for _, v := range versions {
+		if err := testDB.InsertVersion(ctx, v); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, tc := range []struct {
+		name  string
+		query string
+		want  string
+	}{
+		{"module", "golang.org/x/tools", "/mod/golang.org/x/tools"},
+		{"directory", "golang.org/x/tools/internal", "/golang.org/x/tools/internal"},
+		{"package", "golang.org/x/tools/internal/lsp", "/golang.org/x/tools/internal/lsp"},
+		{"stdlib package does not redirect", "errors", ""},
+		{"stdlib package does redirect", "cmd/go", "/cmd/go"},
+		{"stdlib directory does redirect", "cmd/go/internal", "/cmd/go/internal"},
+		{"std does not redirect", "std", ""},
+		{"non-existent path does not redirect", "github.com/non-existent", ""},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := searchRequestRedirectPath(ctx, testDB, tc.query); got != tc.want {
+				t.Errorf("searchRequestRedirectPath(ctx, %q) = %q; want = %q", tc.query, got, tc.want)
+			}
+		})
+	}
+}

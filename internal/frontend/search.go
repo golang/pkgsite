@@ -110,14 +110,9 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if strings.Contains(query, "/") {
-		pkg, err := s.ds.GetPackage(ctx, path.Clean(query), internal.UnknownModulePath, internal.LatestVersion)
-		if err == nil {
-			http.Redirect(w, r, fmt.Sprintf("/%s", pkg.Path), http.StatusFound)
-			return
-		} else if !errors.Is(err, derrors.NotFound) {
-			log.Errorf(ctx, "error getting package for %s: %v", path.Clean(query), err)
-		}
+	if path := searchRequestRedirectPath(ctx, s.ds, query); path != "" {
+		http.Redirect(w, r, path, http.StatusFound)
+		return
 	}
 
 	page, err := fetchSearchPage(ctx, s.ds, query, newPaginationParams(r, defaultSearchLimit))
@@ -128,6 +123,41 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	}
 	page.basePage = newBasePage(r, query)
 	s.servePage(ctx, w, "search.tmpl", page)
+}
+
+// searchRequestRedirectPath returns the path that a search request should be
+// redirected to, or the empty string if there is no such path.  Standard
+// library packages that only contain one element (such as fmt, errors, etc.)
+// will not redirect to allow users to search by those terms.
+func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, query string) string {
+	requestedPath := path.Clean(query)
+	if !strings.Contains(requestedPath, "/") {
+		return ""
+	}
+	pkg, err := ds.GetPackage(ctx, requestedPath, internal.UnknownModulePath, internal.LatestVersion)
+	if err == nil {
+		return fmt.Sprintf("/%s", pkg.Path)
+	} else if !errors.Is(err, derrors.NotFound) {
+		log.Errorf(ctx, "error getting package for %s: %v", requestedPath, err)
+		return ""
+	}
+
+	vi, err := ds.GetVersionInfo(ctx, requestedPath, internal.LatestVersion)
+	if err == nil {
+		return fmt.Sprintf("/mod/%s", vi.ModulePath)
+	} else if !errors.Is(err, derrors.NotFound) {
+		log.Errorf(ctx, "error getting module for %s: %v", requestedPath, err)
+		return ""
+	}
+
+	dir, err := ds.GetDirectory(ctx, requestedPath, internal.UnknownModulePath, internal.LatestVersion, internal.AllFields)
+	if err == nil {
+		return fmt.Sprintf("/%s", dir.Path)
+	} else if !errors.Is(err, derrors.NotFound) {
+		log.Errorf(ctx, "error getting directory for %s: %v", requestedPath, err)
+		return ""
+	}
+	return ""
 }
 
 // searchQuery extracts a search query from the request.
