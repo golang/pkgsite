@@ -10,6 +10,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"math"
 	"sort"
 	"testing"
 	"time"
@@ -472,6 +473,63 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+func TestSearchPenalties(t *testing.T) {
+	// Verify that the penalties for non-redistributable modules and modules without
+	// go.mod files are applied correctly.
+	defer ResetTestDB(testDB, t)
+
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	// All these modules will have the same text ranking for the search term "foo",
+	// but different scores due to penalties.
+	modules := map[string]struct {
+		redist     bool
+		hasGoMod   bool
+		multiplier float64 // applied to base score
+	}{
+		"both.com/foo":      {true, true, 1},
+		"nogomod.com/foo":   {true, false, noGoModPenalty},
+		"nonredist.com/foo": {false, true, nonRedistributablePenalty},
+		"neither.com/foo":   {false, false, noGoModPenalty * nonRedistributablePenalty},
+	}
+
+	for path, m := range modules {
+		v := sample.Version()
+		v.ModulePath = path
+		v.Packages = []*internal.Package{{
+			Name:              "p",
+			Path:              path + "/p",
+			IsRedistributable: m.redist,
+			Licenses:          sample.LicenseMetadata,
+		}}
+		v.IsRedistributable = m.redist
+		v.HasGoMod = m.hasGoMod
+		if err := testDB.InsertVersion(ctx, v); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	for method, searcher := range searchers {
+		t.Run(method, func(t *testing.T) {
+			res := searcher(testDB, ctx, "foo", 10, 0)
+			if res.err != nil {
+				t.Fatal(res.err)
+			}
+			if got, want := len(res.results), len(modules); got != want {
+				t.Fatalf("got %d search results, want %d", got, want)
+			}
+			for _, r := range res.results {
+				got := r.Score
+				want := res.results[0].Score * modules[r.ModulePath].multiplier
+				if math.Abs(got-want) > 1e6 {
+					t.Errorf("%s: got %f, want %f", r.ModulePath, got, want)
+				}
+			}
+		})
 	}
 }
 

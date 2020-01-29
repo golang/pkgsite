@@ -121,6 +121,16 @@ func (db *DB) Search(ctx context.Context, q string, limit, offset int) (_ []*int
 	return db.hedgedSearch(ctx, q, limit, offset, searchers, nil)
 }
 
+// Penalties to search scores, applied as multipliers to the score.
+const (
+	// Module license is non-redistributable.
+	nonRedistributablePenalty = 0.5
+	// Module does not have a go.mod file.
+	// Start this off gently (close to 1), but consider lowering
+	// it as time goes by and more of the ecosystem converts to modules.
+	noGoModPenalty = 0.8
+)
+
 // scoreExpr is the expression that computes the search score.
 // It is the product of:
 // - The Postgres ts_rank score, based the relevance of the document to the query.
@@ -130,10 +140,12 @@ func (db *DB) Search(ctx context.Context, q string, limit, offset int) (_ []*int
 //   dramatic: being 2x as popular only has an additive effect.
 // - A penalty factor for non-redistributable modules, since a lot of
 //   details cannot be displayed.
-const scoreExpr = `
-	ts_rank(tsv_search_tokens, websearch_to_tsquery($1)) *
-	ln(exp(1)+imported_by_count) *
-	CASE WHEN redistributable THEN 1 ELSE 0.5 END`
+var scoreExpr = fmt.Sprintf(`
+		ts_rank(tsv_search_tokens, websearch_to_tsquery($1)) *
+		ln(exp(1)+imported_by_count) *
+		CASE WHEN redistributable THEN 1 ELSE %f END *
+		CASE WHEN COALESCE(has_go_mod, true) THEN 1 ELSE %f END
+	`, nonRedistributablePenalty, noGoModPenalty)
 
 // hedgedSearch executes multiple search methods and returns the first
 // available result.
@@ -380,7 +392,7 @@ func (db *DB) popularSearch(ctx context.Context, searchQuery string, limit, offs
 			commit_time,
 			imported_by_count,
 			score
-		FROM popular_search($1, $2, $3)`
+		FROM popular_search_go_mod($1, $2, $3, $4, $5)`
 	var results []*internal.SearchResult
 	collect := func(rows *sql.Rows) error {
 		var r internal.SearchResult
@@ -391,7 +403,7 @@ func (db *DB) popularSearch(ctx context.Context, searchQuery string, limit, offs
 		results = append(results, &r)
 		return nil
 	}
-	err := db.db.RunQuery(ctx, query, collect, searchQuery, limit, offset)
+	err := db.db.RunQuery(ctx, query, collect, searchQuery, limit, offset, nonRedistributablePenalty, noGoModPenalty)
 	if err != nil {
 		results = nil
 	}
