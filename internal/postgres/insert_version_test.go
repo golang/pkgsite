@@ -263,6 +263,38 @@ func TestPostgres_DeleteVersion(t *testing.T) {
 	}
 }
 
+func TestPostgres_NewerAlternative(t *testing.T) {
+	// Verify that packages are not added to search_documents if the module has a newer
+	// alternative version.
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	defer ResetTestDB(testDB, t)
+
+	const (
+		modulePath  = "example.com/Mod"
+		packagePath = modulePath + "/p"
+		altVersion  = "v1.2.0"
+		okVersion   = "v1.0.0"
+	)
+
+	err := testDB.UpsertModuleVersionState(ctx, modulePath, altVersion, "appVersion", time.Now(),
+		derrors.ToHTTPStatus(derrors.AlternativeModule), "example.com/mod", derrors.AlternativeModule)
+	if err != nil {
+		t.Fatal(err)
+	}
+	v := sample.Version()
+	v.ModulePath = modulePath
+	v.Version = okVersion
+	v.Packages[0].Name = "p"
+	v.Packages[0].Path = packagePath
+	if err := testDB.InsertVersion(ctx, v); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, found := GetFromSearchDocuments(ctx, t, testDB, packagePath); found {
+		t.Fatal("found package after inserting")
+	}
+}
+
 func TestMakeValidUnicode(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()

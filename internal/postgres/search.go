@@ -498,6 +498,7 @@ var upsertSearchStatement = fmt.Sprintf(`
 		packages p
 	INNER JOIN
 		versions v
+
 	ON
 		p.module_path = v.module_path
 		AND p.version = v.version

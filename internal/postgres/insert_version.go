@@ -18,6 +18,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/database"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/version"
 	"golang.org/x/mod/module"
@@ -44,6 +45,38 @@ func (db *DB) InsertVersion(ctx context.Context, v *internal.Version) (err error
 	if err := db.saveVersion(ctx, v); err != nil {
 		return err
 	}
+
+	// If there is a more recent version of this module that has an alternative
+	// module path, then do not insert its packages into search_documents. This
+	// happens when a module that initially does not have a go.mod file is
+	// forked or fetched via some non-canonical path (such as an alternative
+	// capitalization), and then in a later version acquires a go.mod file.
+	//
+	// To take an actual example: github.com/sirupsen/logrus@v1.1.0 has a go.mod
+	// file that establishes that path as canonical. But v1.0.6 does not have a
+	// go.mod file. So the miscapitalized path github.com/Sirupsen/logrus at
+	// v1.1.0 is marked as an alternative path (code 491) by
+	// internal/fetch.FetchVersion and is not inserted into the DB, but at
+	// v1.0.6 it is considered valid, and we end up here. We still insert
+	// github.com/Sirupsen/logrus@v1.0.6 in the versions table and friends so
+	// that users who import it can find information about it, but we don't want
+	// it showing up in search results.
+	//
+	// Note that we end up here only if we first saw the alternative version
+	// (github.com/Sirupsen/logrus@v1.1.0 in the example) and then see the valid
+	// one. The "if code == 491" section of internal/etl.fetchAndUpdateState
+	// handles the case where we fetch the versions in the other order.
+	row := db.db.QueryRow(ctx, `
+			SELECT 1 FROM module_version_states
+			WHERE module_path = $1 AND sort_version > $2 and status = 491`,
+		v.ModulePath, version.ForSorting(v.Version))
+	var x int
+	if err := row.Scan(&x); err != sql.ErrNoRows {
+		log.Infof(ctx, "%s@%s: not inserting into search documents", v.ModulePath, v.Version)
+		return err
+	}
+
+	// Insert the module's packages into search_documents.
 	for _, pkg := range v.Packages {
 		if err := db.UpsertSearchDocument(ctx, pkg.Path); err != nil && !errors.Is(err, derrors.InvalidArgument) {
 			return err
