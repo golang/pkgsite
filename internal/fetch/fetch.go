@@ -108,6 +108,9 @@ func FetchVersion(ctx context.Context, modulePath, vers string, proxyClient *pro
 	if err != nil {
 		return &FetchResult{GoModPath: goModPath}, err
 	}
+	if modulePath == stdlib.ModulePath {
+		fr.Version.HasGoMod = true
+	}
 	fr.GoModPath = goModPath
 	return fr, nil
 }

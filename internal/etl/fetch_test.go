@@ -458,7 +458,7 @@ func TestReFetch(t *testing.T) {
 			ReadmeContents:    "This is another readme",
 			VersionType:       "release",
 			IsRedistributable: true,
-			HasGoMod:          true,
+			HasGoMod:          false,
 			SourceInfo:        source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
 		},
 		Package: internal.Package{
@@ -689,7 +689,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					VersionType:       "release",
 					SourceInfo:        nil,
 					IsRedistributable: true,
-					HasGoMod:          true,
+					HasGoMod:          false,
 				},
 				Package: internal.Package{
 					Path:              "build.constraints/module/cpu",

@@ -515,6 +515,34 @@ func TestUpsertSearchDocumentVersionUpdatedAt(t *testing.T) {
 	}
 }
 
+func TestUpsertSearchDocumentVersionHasGoMod(t *testing.T) {
+	defer ResetTestDB(testDB, t)
+
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	for _, hasGoMod := range []bool{true, false} {
+		v := sample.Version()
+		v.ModulePath = fmt.Sprintf("foo.com/%t", hasGoMod)
+		v.HasGoMod = hasGoMod
+		v.Packages = []*internal.Package{{Path: v.ModulePath + "/bar", Name: "bar"}}
+		if err := testDB.InsertVersion(ctx, v); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	for _, hasGoMod := range []bool{true, false} {
+		packagePath := fmt.Sprintf("foo.com/%t/bar", hasGoMod)
+		sd, err := testDB.getSearchDocument(ctx, packagePath)
+		if err != nil {
+			t.Fatalf("testDB.getSearchDocument(ctx, %q): %v", packagePath, err)
+		}
+		if sd.hasGoMod != hasGoMod {
+			t.Errorf("got hasGoMod=%t want %t", sd.hasGoMod, hasGoMod)
+		}
+	}
+}
+
 func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 	defer ResetTestDB(testDB, t)
 

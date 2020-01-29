@@ -657,6 +657,7 @@ var upsertSearchStatement = fmt.Sprintf(`
 		redistributable,
 		version_updated_at,
 		commit_time,
+		has_go_mod,
 		tsv_search_tokens,
 		hll_register,
 		hll_leading_zeros
@@ -671,6 +672,7 @@ var upsertSearchStatement = fmt.Sprintf(`
 		p.redistributable,
 		CURRENT_TIMESTAMP,
 		v.commit_time,
+		v.has_go_mod,
 		(
 			SETWEIGHT(TO_TSVECTOR($2), 'A') ||
 			-- Try to limit to the maximum length of a tsvector.
@@ -766,6 +768,7 @@ type searchDocument struct {
 	packagePath              string
 	modulePath               string
 	redistributable          bool
+	hasGoMod                 bool
 	version                  string
 	importedByCount          int
 	commitTime               time.Time
@@ -781,6 +784,7 @@ func (db *DB) getSearchDocument(ctx context.Context, path string) (*searchDocume
 			package_path,
 			module_path,
 			redistributable,
+			has_go_mod,
 			version,
 			imported_by_count,
 			commit_time,
@@ -795,7 +799,7 @@ func (db *DB) getSearchDocument(ctx context.Context, path string) (*searchDocume
 		t  pq.NullTime
 	)
 	if err := row.Scan(&sd.packagePath, &sd.modulePath,
-		&sd.redistributable, &sd.version, &sd.importedByCount,
+		&sd.redistributable, &sd.hasGoMod, &sd.version, &sd.importedByCount,
 		&sd.commitTime, &sd.versionUpdatedAt, &t); err != nil {
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}

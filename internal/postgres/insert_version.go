@@ -101,8 +101,9 @@ func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
 				version_type,
 				series_path,
 				source_info,
-				redistributable)
-			VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT DO NOTHING`,
+				redistributable,
+				has_go_mod)
+			VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10, $11) ON CONFLICT DO NOTHING`,
 			v.ModulePath,
 			v.Version,
 			v.CommitTime,
@@ -113,6 +114,7 @@ func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
 			v.SeriesPath(),
 			sourceInfoJSON,
 			v.IsRedistributable,
+			v.HasGoMod,
 		); err != nil {
 			return fmt.Errorf("error inserting version: %v", err)
 		}

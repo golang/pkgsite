@@ -59,6 +59,17 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 			wantPkgPath:    sample.ModulePath + "/internal/foo",
 		},
 		{
+			name: "valid test with go.mod missing",
+			version: func() *internal.Version {
+				v := sample.Version()
+				v.HasGoMod = false
+				return v
+			}(),
+			wantModulePath: sample.ModulePath,
+			wantVersion:    sample.VersionString,
+			wantPkgPath:    sample.PackagePath,
+		},
+		{
 			name:           "nil version write error",
 			wantModulePath: sample.ModulePath,
 			wantVersion:    sample.VersionString,
