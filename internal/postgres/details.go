@@ -435,7 +435,8 @@ func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version str
 			readme_contents,
 			version_type,
 			source_info,
-			redistributable
+			redistributable,
+			has_go_mod
 		FROM
 			versions`
 
@@ -456,17 +457,30 @@ func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version str
 		args = append(args, version)
 	}
 
-	var vi internal.VersionInfo
+	var (
+		vi       internal.VersionInfo
+		hasGoMod sql.NullBool
+	)
 	row := db.db.QueryRow(ctx, query, args...)
 	if err := row.Scan(&vi.ModulePath, &vi.Version, &vi.CommitTime,
 		database.NullIsEmpty(&vi.ReadmeFilePath), database.NullIsEmpty(&vi.ReadmeContents), &vi.VersionType,
-		jsonbScanner{&vi.SourceInfo}, &vi.IsRedistributable); err != nil {
+		jsonbScanner{&vi.SourceInfo}, &vi.IsRedistributable, &hasGoMod); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("module version %s@%s: %w", modulePath, version, derrors.NotFound)
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
+	setHasGoMod(&vi, hasGoMod)
 	return &vi, nil
+}
+
+func setHasGoMod(vi *internal.VersionInfo, nb sql.NullBool) {
+	// The safe default value for HasGoMod is true, because search will penalize modules that don't have one.
+	// This is temporary: when has_go_mod is fully populated, we'll make it NOT NULL.
+	vi.HasGoMod = true
+	if nb.Valid {
+		vi.HasGoMod = nb.Bool
+	}
 }
 
 // jsonbScanner scans a jsonb value into a Go value.

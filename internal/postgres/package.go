@@ -67,7 +67,8 @@ func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version strin
 			v.module_path,
 			v.version_type,
 		    v.source_info,
-			v.redistributable
+			v.redistributable,
+			v.has_go_mod
 		FROM
 			versions v
 		INNER JOIN
@@ -133,19 +134,22 @@ func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version strin
 	var (
 		pkg                        internal.VersionedPackage
 		licenseTypes, licensePaths []string
+		hasGoMod                   sql.NullBool
 	)
 	row := db.db.QueryRow(ctx, query, args...)
 	err = row.Scan(&pkg.Path, &pkg.Name, &pkg.Synopsis,
 		&pkg.V1Path, pq.Array(&licenseTypes), pq.Array(&licensePaths), &pkg.Package.IsRedistributable,
 		database.NullIsEmpty(&pkg.DocumentationHTML), &pkg.GOOS, &pkg.GOARCH, &pkg.Version,
 		&pkg.CommitTime, database.NullIsEmpty(&pkg.ReadmeFilePath), database.NullIsEmpty(&pkg.ReadmeContents),
-		&pkg.ModulePath, &pkg.VersionType, jsonbScanner{&pkg.SourceInfo}, &pkg.VersionInfo.IsRedistributable)
+		&pkg.ModulePath, &pkg.VersionType, jsonbScanner{&pkg.SourceInfo}, &pkg.VersionInfo.IsRedistributable,
+		&hasGoMod)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("package %s@%s: %w", pkgPath, version, derrors.NotFound)
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
+	setHasGoMod(&pkg.VersionInfo, hasGoMod)
 	lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
 	if err != nil {
 		return nil, err

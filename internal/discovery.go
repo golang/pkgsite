@@ -34,6 +34,7 @@ type VersionInfo struct {
 	ReadmeContents    string
 	VersionType       version.Type
 	IsRedistributable bool
+	HasGoMod          bool // whether the module zip has a go.mod file
 	SourceInfo        *source.Info
 }
 

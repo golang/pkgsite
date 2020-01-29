@@ -458,6 +458,7 @@ func TestReFetch(t *testing.T) {
 			ReadmeContents:    "This is another readme",
 			VersionType:       "release",
 			IsRedistributable: true,
+			HasGoMod:          true,
 			SourceInfo:        source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
 		},
 		Package: internal.Package{
@@ -509,6 +510,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			SourceInfo:        source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
 			VersionType:       "release",
 			IsRedistributable: true,
+			HasGoMod:          true,
 		},
 		Package: internal.Package{
 			Path:              "github.com/my/module/bar",
@@ -561,6 +563,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					VersionType:       "release",
 					SourceInfo:        nil,
 					IsRedistributable: true,
+					HasGoMod:          true,
 				},
 				Package: internal.Package{
 					Path:              "nonredistributable.mod/module/bar/baz",
@@ -592,6 +595,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					VersionType:       "release",
 					SourceInfo:        nil,
 					IsRedistributable: true,
+					HasGoMod:          true,
 				},
 				Package: internal.Package{
 					Path:     "nonredistributable.mod/module/foo",
@@ -621,6 +625,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					ReadmeContents:    "# The Go Programming Language\n",
 					SourceInfo:        source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
 					IsRedistributable: true,
+					HasGoMod:          true,
 				},
 				Package: internal.Package{
 					Path:              "context",
@@ -653,6 +658,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					ReadmeContents:    "# The Go Programming Language\n",
 					SourceInfo:        source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
 					IsRedistributable: true,
+					HasGoMod:          true,
 				},
 				Package: internal.Package{
 					Path:              "builtin",
@@ -683,6 +689,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					VersionType:       "release",
 					SourceInfo:        nil,
 					IsRedistributable: true,
+					HasGoMod:          true,
 				},
 				Package: internal.Package{
 					Path:              "build.constraints/module/cpu",

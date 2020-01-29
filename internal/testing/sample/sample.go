@@ -101,6 +101,7 @@ func VersionInfo() *internal.VersionInfo {
 		VersionType:       VersionType,
 		SourceInfo:        source.NewGitHubInfo(RepositoryURL, "", ""),
 		IsRedistributable: true,
+		HasGoMod:          true,
 	}
 }
 

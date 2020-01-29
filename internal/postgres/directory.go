@@ -101,14 +101,17 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version str
 		if fields&internal.WithReadmeContents != 0 {
 			scanArgs = append(scanArgs, database.NullIsEmpty(&vi.ReadmeContents))
 		}
+		var hasGoMod sql.NullBool
 		scanArgs = append(scanArgs,
 			&vi.CommitTime,
 			&vi.VersionType,
 			jsonbScanner{&vi.SourceInfo},
-			&vi.IsRedistributable)
+			&vi.IsRedistributable,
+			&hasGoMod)
 		if err := rows.Scan(scanArgs...); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
+		setHasGoMod(&vi, hasGoMod)
 		lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
 		if err != nil {
 			return err
@@ -159,7 +162,8 @@ func directoryColumns(fields internal.FieldSet) string {
 			v.commit_time,
 			v.version_type,
 			v.source_info,
-			v.redistributable`
+			v.redistributable,
+			v.has_go_mod`
 }
 
 const orderByLatest = `
