@@ -128,6 +128,16 @@ func (db *DB) PartialFastSearch(ctx context.Context, q string, limit, offset int
 	return db.hedgedSearch(ctx, q, limit, offset, searchers, nil)
 }
 
+// scoreExpr is the expression that computes the search score.
+// It is the product of:
+// - the Postgres ts_rank score, based the similarity of the query to the document
+// - the log of the module's popularity, estimated by the number of importing packages
+// - a penalty factor for non-redistributable modules.
+const scoreExpr = `
+	ts_rank(tsv_search_tokens, websearch_to_tsquery($1)) *
+	ln(exp(1)+imported_by_count) *
+	CASE WHEN redistributable THEN 1 ELSE 0.5 END`
+
 // hedgedSearch executes multiple search methods and returns the first
 // available result.
 // The optional guardTestResult func may be used to allow tests to control the
@@ -272,9 +282,7 @@ var hllQuery = fmt.Sprintf(`
 				SELECT hll_leading_zeros
 				FROM search_documents
 				WHERE (
-					ts_rank(tsv_search_tokens, websearch_to_tsquery($1)) *
-					ln(exp(1)+imported_by_count) *
-					CASE WHEN redistributable then 1 else 0.5 end *
+					%[2]s *
 					CASE WHEN tsv_search_tokens @@ websearch_to_tsquery($1) THEN 1 ELSE 0 END
 				) > 0.1
 				AND hll_register=generate_series
@@ -301,7 +309,7 @@ var hllQuery = fmt.Sprintf(`
 			)::int AS result_count,
 			%[1]d - count(1) AS empty_register_count
 		FROM nonempty_registers
-	) d`, hllRegisterCount)
+	) d`, hllRegisterCount, scoreExpr)
 
 type estimateResponse struct {
 	estimate uint64
@@ -324,7 +332,7 @@ func (db *DB) estimateResultsCount(ctx context.Context, q string) estimateRespon
 // deepSearch searches all packages for the query. It is slower, but results
 // are always valid.
 func (db *DB) deepSearch(ctx context.Context, q string, limit, offset int) searchResponse {
-	query := `
+	query := fmt.Sprintf(`
 		SELECT *, COUNT(*) OVER() AS total
 		FROM (
 			SELECT
@@ -333,11 +341,7 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit, offset int) searc
 				module_path,
 				commit_time,
 				imported_by_count,
-				(
-					ts_rank(tsv_search_tokens, websearch_to_tsquery($1)) *
-					ln(exp(1)+imported_by_count) *
-					CASE WHEN redistributable THEN 1 ELSE 0.5 END
-				) AS score
+				(%s) AS score
 				FROM
 					search_documents
 				WHERE tsv_search_tokens @@ websearch_to_tsquery($1)
@@ -348,7 +352,7 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit, offset int) searc
 		) r
 		WHERE r.score > 0.1
 		LIMIT $2
-		OFFSET $3`
+		OFFSET $3`, scoreExpr)
 	var results []*internal.SearchResult
 	collect := func(rows *sql.Rows) error {
 		var r internal.SearchResult
@@ -418,11 +422,7 @@ func (db *DB) popularSearcher(cutoff int) searcher {
 					module_path,
 					commit_time,
 					imported_by_count,
-					(
-						ts_rank(tsv_search_tokens, websearch_to_tsquery($1)) *
-						ln(exp(1)+imported_by_count) *
-						CASE WHEN redistributable THEN 1 ELSE 0.5 END
-					) AS score
+					(%[2]s) AS score
 					FROM
 						search_documents
 					WHERE tsv_search_tokens @@ websearch_to_tsquery($1)
@@ -434,7 +434,7 @@ func (db *DB) popularSearcher(cutoff int) searcher {
 			) r
 			WHERE r.score > ln(exp(1)+%[1]d)
 			LIMIT $2
-			OFFSET $3`, cutoff)
+			OFFSET $3`, cutoff, scoreExpr)
 		var results []*internal.SearchResult
 		collect := func(rows *sql.Rows) error {
 			var r internal.SearchResult
@@ -571,7 +571,7 @@ func (db *DB) Search(ctx context.Context, q string, limit, offset int) (_ []*int
 	// Only include results whose score exceed a certain threshold. Based on
 	// experimentation, we picked a score of greater than 0.1, but this may
 	// change based on future experimentation.
-	query := `
+	query := fmt.Sprintf(`
 		SELECT
 			r.package_path,
 			r.version,
@@ -591,12 +591,7 @@ func (db *DB) Search(ctx context.Context, q string, limit, offset int) (_ []*int
 				imported_by_count,
 				commit_time,
 				COUNT(*) OVER() AS total,
-				(
-					ts_rank(tsv_search_tokens, websearch_to_tsquery($1)) *
-					ln(exp(1)+imported_by_count) *
-					CASE WHEN redistributable THEN 1
-					ELSE 0.5 END
-				) AS score
+				(%s) AS score
 			FROM
 				search_documents
 			WHERE
@@ -620,7 +615,8 @@ func (db *DB) Search(ctx context.Context, q string, limit, offset int) (_ []*int
 		ORDER BY
 			r.score DESC,
 			r.commit_time DESC,
-			r.package_path;`
+			r.package_path;`,
+		scoreExpr)
 
 	var results []*internal.SearchResult
 	collect := func(rows *sql.Rows) error {
