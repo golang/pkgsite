@@ -58,16 +58,6 @@ type DataSource interface {
 	// IsExcluded reports whether the path is excluded from processinng.
 	IsExcluded(ctx context.Context, path string) (bool, error)
 
-	// Temporarily, we support many types of search, for diagnostic purposes. In
-	// the future this will be pruned to just one (FastSearch).
-
-	// FastSearch performs a hedged search of both popular and all packages.
-	FastSearch(ctx context.Context, query string, limit, offset int) ([]*SearchResult, error)
-
-	// Alternative search types, for testing.
-	// TODO(b/141182438): remove all of these.
+	// Search searches the database with a query.
 	Search(ctx context.Context, query string, limit, offset int) ([]*SearchResult, error)
-	DeepSearch(ctx context.Context, query string, limit, offset int) ([]*SearchResult, error)
-	PartialFastSearch(ctx context.Context, query string, limit, offset int) ([]*SearchResult, error)
-	PopularSearch(ctx context.Context, query string, limit, offset int) ([]*SearchResult, error)
 }

@@ -218,26 +218,6 @@ func (ds *DataSource) Search(ctx context.Context, query string, limit, offset in
 	return []*internal.SearchResult{}, nil
 }
 
-// FastSearch is unimplemented.
-func (ds *DataSource) FastSearch(ctx context.Context, query string, limit, offset int) ([]*internal.SearchResult, error) {
-	return []*internal.SearchResult{}, nil
-}
-
-// DeepSearch is unimplemented.
-func (ds *DataSource) DeepSearch(ctx context.Context, query string, limit, offset int) ([]*internal.SearchResult, error) {
-	return []*internal.SearchResult{}, nil
-}
-
-// PartialFastSearch is unimplemented.
-func (ds *DataSource) PartialFastSearch(ctx context.Context, query string, limit, offset int) ([]*internal.SearchResult, error) {
-	return []*internal.SearchResult{}, nil
-}
-
-// PopularSearch is unimplemented.
-func (ds *DataSource) PopularSearch(ctx context.Context, query string, limit, offset int) ([]*internal.SearchResult, error) {
-	return []*internal.SearchResult{}, nil
-}
-
 // getVersion retrieves a version from the cache, or failing that queries and
 // processes the version from the proxy.
 func (ds *DataSource) getVersion(ctx context.Context, modulePath, version string) (_ *internal.Version, err error) {

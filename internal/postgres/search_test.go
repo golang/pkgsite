@@ -146,7 +146,7 @@ func TestPathTokens(t *testing.T) {
 	}
 }
 
-func TestFastSearch(t *testing.T) {
+func TestSearch(t *testing.T) {
 	// importGraph constructs a simple import graph where all importers import
 	// one popular package.  For performance purposes, all importers are added to
 	// a single importing module.
@@ -294,7 +294,6 @@ func TestFastSearch(t *testing.T) {
 			if _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx); err != nil {
 				t.Fatal(err)
 			}
-			searchers := []searcher{testDB.popularSearch, testDB.deepSearch}
 			results, err := testDB.hedgedSearch(ctx, "foo", 2, 0, searchers, guardTestResult)
 			if err != nil {
 				t.Fatal(err)
@@ -433,8 +432,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 			},
 		},
 	} {
-		type searchFunc func(context.Context, string, int, int) ([]*internal.SearchResult, error)
-		for method, search := range map[string]searchFunc{"Search": testDB.Search, "FastSearch": testDB.FastSearch} {
+		for method, searcher := range searchers {
 			t.Run(tc.name+":"+method, func(t *testing.T) {
 				defer ResetTestDB(testDB, t)
 
@@ -455,16 +453,21 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 					tc.limit = 10
 				}
 
-				got, err := search(ctx, tc.searchQuery, tc.limit, tc.offset)
-				if err != nil {
+				got := searcher(testDB, ctx, tc.searchQuery, tc.limit, tc.offset)
+				if got.err != nil {
+					t.Fatal(got.err)
+				}
+				// Normally done by hedgedSearch, but we're bypassing that.
+				if err := testDB.addPackageDataToSearchResults(ctx, got.results); err != nil {
 					t.Fatal(err)
 				}
-
-				if len(got) != len(tc.want) {
-					t.Errorf("testDB.Search(%v, %d, %d) mismatch: len(got) = %d, want = %d\n", tc.searchQuery, tc.limit, tc.offset, len(got), len(tc.want))
+				if len(got.results) != len(tc.want) {
+					t.Errorf("testDB.Search(%v, %d, %d) mismatch: len(got) = %d, want = %d\n", tc.searchQuery, tc.limit, tc.offset, len(got.results), len(tc.want))
 				}
 
-				if diff := cmp.Diff(tc.want, got, cmpopts.IgnoreFields(internal.SearchResult{}, "Approximate")); diff != "" {
+				// The searchers differ in these two fields.
+				opt := cmpopts.IgnoreFields(internal.SearchResult{}, "Approximate", "NumResults")
+				if diff := cmp.Diff(tc.want, got.results, opt); diff != "" {
 					t.Errorf("testDB.Search(%v, %d, %d) mismatch (-want +got):\n%s", tc.searchQuery, tc.limit, tc.offset, diff)
 				}
 			})

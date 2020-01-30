@@ -43,23 +43,9 @@ type SearchResult struct {
 
 // fetchSearchPage fetches data matching the search query from the database and
 // returns a SearchPage.
-func fetchSearchPage(ctx context.Context, ds internal.DataSource, query, method string, pageParams paginationParams) (*SearchPage, error) {
-	var (
-		dbresults []*internal.SearchResult
-		err       error
-	)
-	switch method {
-	case "slow":
-		dbresults, err = ds.Search(ctx, query, pageParams.limit, pageParams.offset())
-	case "deep":
-		dbresults, err = ds.DeepSearch(ctx, query, pageParams.limit, pageParams.offset())
-	case "partial-fast":
-		dbresults, err = ds.PartialFastSearch(ctx, query, pageParams.limit, pageParams.offset())
-	case "popular":
-		dbresults, err = ds.PopularSearch(ctx, query, pageParams.limit, pageParams.offset())
-	default:
-		dbresults, err = ds.FastSearch(ctx, query, pageParams.limit, pageParams.offset())
-	}
+func fetchSearchPage(ctx context.Context, ds internal.DataSource, query string, pageParams paginationParams) (*SearchPage, error) {
+
+	dbresults, err := ds.Search(ctx, query, pageParams.limit, pageParams.offset())
 	if err != nil {
 		return nil, err
 	}
@@ -134,8 +120,7 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	searchMethod := r.FormValue("method")
-	page, err := fetchSearchPage(ctx, s.ds, query, searchMethod, newPaginationParams(r, defaultSearchLimit))
+	page, err := fetchSearchPage(ctx, s.ds, query, newPaginationParams(r, defaultSearchLimit))
 	if err != nil {
 		log.Errorf(ctx, "fetchSearchDetails(ctx, db, %q): %v", query, err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
