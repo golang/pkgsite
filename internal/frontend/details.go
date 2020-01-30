@@ -71,6 +71,10 @@ func (s *Server) handlePackageDetailsRedirect(w http.ResponseWriter, r *http.Req
 // expects paths of the form "/mod/<module-path>[@<version>?tab=<tab>]".
 // stdlib module pages are handled at "/std".
 func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/mod/std" {
+		http.Redirect(w, r, "/std", http.StatusMovedPermanently)
+		return
+	}
 	urlPath := strings.TrimPrefix(r.URL.Path, "/mod")
 	path, _, version, err := parseDetailsURLPath(urlPath)
 	if err != nil {
