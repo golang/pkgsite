@@ -8,6 +8,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"io"
+	"strings"
 	"time"
 
 	"github.com/lib/pq"
@@ -214,22 +216,120 @@ func (db *DB) queryModuleVersionStates(ctx context.Context, queryFormat string, 
 
 // GetNextVersionsToFetch returns the next batch of versions that must be
 // processed.
-// Prefer release versions to prerelease, and higher versions to lower.
 func (db *DB) GetNextVersionsToFetch(ctx context.Context, limit int) (_ []*internal.ModuleVersionState, err error) {
+	// We want to prioritize the latest versions over other ones, and we want to leave time-consuming
+	// modules until the end. So we run several queries in succession, appending their results until
+	// we reach the limit: latest release versions, latest non-release versions, everything else except
+	// slow modules, and finally the slow modules.
 	defer derrors.Wrap(&err, "GetNextVersionsToFetch(ctx, %d)", limit)
 
-	queryFormat := `
-		SELECT %s
+	// Query for getting latest release or non-release versions. The first
+	// argument to Sprintf will be the columns, the second the operator./ If the
+	// operator is "=", we will select all the relase versions; if "!=", then
+	// the non-release versions.
+	//
+	// Adding the nonsensical (and never true) "OR right(sort_version, 2) = ''"
+	// generates a much faster query plan for the '=' case, and preserves the fast
+	// query plan for the "!=" case. Go fig.
+	maxQuery := `
+		WITH max_versions AS (
+			SELECT module_path, max(sort_version) AS max_sv
+			FROM module_version_states
+			-- Compare the last character of sort_version to '~'.
+			WHERE right(sort_version, 1) %[2]s '~' OR right(sort_version, 2) = ''
+			GROUP BY 1
+		)
+		SELECT
+			%[1]s
 		FROM
-			module_version_states
+			module_version_states s
+		INNER JOIN
+			max_versions m
+		ON
+			s.module_path = m.module_path
+		AND
+			s.sort_version = m.max_sv
 		WHERE
 			(status IS NULL OR status >= 500)
 			AND next_processed_after < CURRENT_TIMESTAMP
 		ORDER BY
+			s.sort_version DESC
+		LIMIT $1
+	`
+	// Query for including or excluding a list of module path patterns.
+	// The first argument to Sprintf will be the columns, the
+	// second the operator.
+	// If the operator is "NOT", then we will exclude the module_paths;
+	// it if is the empty string, we will include them.
+	// We need to double the percents in the LIKE expressions or Sprintf
+	// will try to interpret them.
+	pathQuery := `
+		SELECT
+			%[1]s
+		FROM
+			module_version_states s
+		WHERE
+			(status IS NULL OR status >= 500)
+			AND next_processed_after < CURRENT_TIMESTAMP
+			AND %[2]s (
+				module_path LIKE '%%/kubernetes'
+				OR
+				module_path LIKE '%%/aws-sdk-go'
+			)
+		ORDER BY
 			right(sort_version, 1) = '~' DESC,
 			sort_version DESC
-		LIMIT $1`
-	return db.queryModuleVersionStates(ctx, queryFormat, limit)
+		LIMIT $1
+	`
+	// Prepend "s." to columns, because in maxQuery the bare column name is
+	// ambiguous. All the queries use `s` as an alias for module_version_states.
+	columnSlice := strings.Split(versionStateColumns, ",")
+	for i, c := range columnSlice {
+		columnSlice[i] = "s." + strings.TrimSpace(c)
+	}
+	columns := strings.Join(columnSlice, ", ")
+
+	queries := []string{
+		// latest release versions
+		fmt.Sprintf(maxQuery, columns, "="),
+		// latest non-release versions
+		fmt.Sprintf(maxQuery, columns, "!="),
+		// all other versions in order, except matching module paths
+		fmt.Sprintf(pathQuery, columns, "NOT"),
+		// all the module paths previously excluded
+		fmt.Sprintf(pathQuery, columns, ""),
+	}
+
+	var mvs []*internal.ModuleVersionState
+	// Keep track of rows we've seen to dedup, because queries overlap.
+	seen := map[[2]string]bool{}
+	for i, q := range queries {
+		err := db.db.RunQuery(ctx, q, func(rows *sql.Rows) error {
+			if len(mvs) >= limit {
+				return io.EOF // signal that we're done
+			}
+			mv, err := scanModuleVersionState(rows.Scan)
+			if err != nil {
+				return err
+			}
+			key := [2]string{mv.ModulePath, mv.Version}
+			if !seen[key] {
+				mvs = append(mvs, mv)
+				seen[key] = true
+			}
+			return nil
+		}, limit) // Do not reduce the limit on each iteration, because the queries overlap.
+		switch err {
+		case io.EOF:
+			log.Infof(ctx, "GetNextVersionsToFetch: finished with query #%d", i)
+			return mvs, nil
+		case nil:
+			continue
+		default:
+			return nil, err
+		}
+	}
+	return mvs, nil
 }
 
 // GetRecentFailedVersions returns versions that have most recently failed.

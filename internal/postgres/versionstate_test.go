@@ -81,14 +81,13 @@ func TestModuleVersionState(t *testing.T) {
 	}
 	errString := fetchErr.Error()
 	wantFooState := &internal.ModuleVersionState{
-		ModulePath:         "foo.com/bar",
-		Version:            "v1.0.0",
-		IndexTimestamp:     now,
-		TryCount:           1,
-		GoModPath:          &goModPath,
-		Error:              &errString,
-		Status:             &statusCode,
-		NextProcessedAfter: gotVersions[1].CreatedAt.Add(1 * time.Minute),
+		ModulePath:     "foo.com/bar",
+		Version:        "v1.0.0",
+		IndexTimestamp: now,
+		TryCount:       1,
+		GoModPath:      &goModPath,
+		Error:          &errString,
+		Status:         &statusCode,
 	}
 	gotFooState, err := testDB.GetModuleVersionState(ctx, wantFooState.ModulePath, wantFooState.Version)
 	if err != nil {
@@ -153,7 +152,6 @@ func TestUpdateModuleVersionStatesForReprocessing(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	code := http.StatusHTTPVersionNotSupported
 	wantVersions := []*internal.ModuleVersionState{
 		{ModulePath: "baz.com/quux", Version: "v2.0.1", IndexTimestamp: now, GoModPath: &goModPath, Status: &code},
@@ -161,6 +159,45 @@ func TestUpdateModuleVersionStatesForReprocessing(t *testing.T) {
 	}
 	ignore := cmpopts.IgnoreFields(internal.ModuleVersionState{}, "CreatedAt", "LastProcessedAt", "NextProcessedAfter")
 	if diff := cmp.Diff(wantVersions, gotVersions, ignore); diff != "" {
-		t.Fatalf("testDB.GetVersionsToFetch(ctx, 10) mismatch (-want +got):\n%s", diff)
+		t.Fatalf("testDB.GetNextVersionsToFetch(ctx, 10) mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestGetNextVersionsToFetch(t *testing.T) {
+	defer ResetTestDB(testDB, t)
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	now := time.Now()
+	mods := []*internal.IndexVersion{
+		{"foo.com", "v2.0.1", now},            // latest release version
+		{"foo.com/kubernetes", "v2.0.0", now}, // latest release version, lower than above
+		{"bar.com", "v3.1.2-alpha", now},      // latest pre-release version
+		{"foo.com", "v1.9.3", now},            // next release version
+		{"bar.com", "v1.2.3-beta", now},       // next pre-release version
+		{"foo.com/kubernetes", "v1.9.0", now}, // non-latest kubernetes
+	}
+
+	if err := testDB.InsertIndexVersions(ctx, mods); err != nil {
+		t.Fatal(err)
+	}
+	// Insert a module that we don't expect to retrieve.
+	if err := testDB.UpsertModuleVersionState(ctx, "ok.com", "v1.0.0", "", now, 200, "", nil); err != nil {
+		t.Fatal(err)
+	}
+	got, err := testDB.GetNextVersionsToFetch(ctx, len(mods)+1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var want []*internal.ModuleVersionState
+	for _, iv := range mods {
+		want = append(want, &internal.ModuleVersionState{
+			ModulePath: iv.Path,
+			Version:    iv.Version,
+		})
+	}
+	ignore := cmpopts.IgnoreFields(internal.ModuleVersionState{}, "IndexTimestamp", "CreatedAt", "NextProcessedAfter")
+	if diff := cmp.Diff(want, got, ignore); diff != "" {
+		t.Errorf("mismatch (-want, +got):\n%s", diff)
 	}
 }

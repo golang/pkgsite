@@ -7,7 +7,6 @@ package postgres
 import (
 	"context"
 	"errors"
-	"net/http"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -111,14 +110,10 @@ func TestInsertAndDeleteAlternatives(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if len(gotModuleVersionStates) != len(pkgData) {
 		t.Fatalf("testDB.GetNextVersionsToFetch(ctx, %d) returned %d version states; want = %d",
 			len(pkgData), len(gotModuleVersionStates), len(pkgData))
-	}
-	for _, vs := range gotModuleVersionStates {
-		if vs.Status != nil && *vs.Status != http.StatusOK {
-			t.Fatalf("version state %q has status = %d; want = %d", vs.ModulePath, *vs.Status, http.StatusOK)
-		}
 	}
 
 	for _, data := range pkgData {
