@@ -676,15 +676,22 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		t.Fatalf("expected imported_by_count_updated_at for pkgB not to have changed; old = %v, new = %v", wantSearchDocBUpdatedAt, sdB.importedByCountUpdatedAt)
 	}
 
-	// Test imported_by_count_updated_at for D changes when
-	// an older version of A imports D.
+	// When an older version of A imports D, nothing happens to the counts,
+	// because imports_unique only records the latest version of each package.
 	pkgD := &internal.Package{Path: "D", Name: "D"}
 	mustInsertPackageVersion(pkgD, "v1.0.0")
 	pkgA.Imports = []string{"D"}
 	mustInsertPackageVersion(pkgA, "v0.9.0")
 	mustUpdateImportedByCount()
 	_ = validateImportedByCountAndGetSearchDocument(pkgA.Path, 2)
+	_ = validateImportedByCountAndGetSearchDocument(pkgD.Path, 0)
+
+	// When a newer version of A imports D, however, the counts do change.
+	mustInsertPackageVersion(pkgA, "v1.1.0")
+	mustUpdateImportedByCount()
+	_ = validateImportedByCountAndGetSearchDocument(pkgA.Path, 2)
 	_ = validateImportedByCountAndGetSearchDocument(pkgD.Path, 1)
+
 }
 
 func TestGetPackagesForSearchDocumentUpsert(t *testing.T) {

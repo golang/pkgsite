@@ -176,6 +176,20 @@ func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
 			}
 		}
 
+		// We only insert into imports_unique if this is the latest version of the module.
+		isLatest, err := isLatestVersion(ctx, tx, v.ModulePath, v.Version)
+		if err != nil {
+			return err
+		}
+		if isLatest {
+			// Remove the previous rows for this module. We'll replace them with
+			// new ones below.
+			if _, err := database.ExecTx(ctx, tx,
+				`DELETE FROM imports_unique WHERE from_module_path = $1`,
+				v.ModulePath); err != nil {
+				return err
+			}
+		}
 		var pkgValues, importValues, importUniqueValues []interface{}
 		for _, p := range v.Packages {
 			if p.DocumentationHTML == internal.StringFieldMissing {
@@ -214,7 +228,9 @@ func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
 			)
 			for _, i := range p.Imports {
 				importValues = append(importValues, p.Path, v.ModulePath, v.Version, i)
-				importUniqueValues = append(importUniqueValues, p.Path, v.ModulePath, i)
+				if isLatest {
+					importUniqueValues = append(importUniqueValues, p.Path, v.ModulePath, i)
+				}
 			}
 		}
 		if len(pkgValues) > 0 {
@@ -248,14 +264,15 @@ func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
 			if err := database.BulkInsert(ctx, tx, "imports", importCols, importValues, database.OnConflictDoNothing); err != nil {
 				return err
 			}
-
-			importUniqueCols := []string{
-				"from_path",
-				"from_module_path",
-				"to_path",
-			}
-			if err := database.BulkInsert(ctx, tx, "imports_unique", importUniqueCols, importUniqueValues, database.OnConflictDoNothing); err != nil {
-				return err
+			if len(importUniqueValues) > 0 {
+				importUniqueCols := []string{
+					"from_path",
+					"from_module_path",
+					"to_path",
+				}
+				if err := database.BulkInsert(ctx, tx, "imports_unique", importUniqueCols, importUniqueValues, database.OnConflictDoNothing); err != nil {
+					return err
+				}
 			}
 		}
 		return nil
@@ -264,6 +281,25 @@ func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
 		return fmt.Errorf("DB.saveVersion(ctx, Version(%q, %q)): %w", v.ModulePath, v.Version, err)
 	}
 	return nil
+}
+
+// isLatestVersion reports whether version is the latest version of the module.
+func isLatestVersion(ctx context.Context, tx *sql.Tx, modulePath, version string) (_ bool, err error) {
+	defer derrors.Wrap(&err, "latestVersion(ctx, tx, %q)", modulePath)
+
+	row := tx.QueryRowContext(ctx, `
+		SELECT version FROM versions WHERE module_path = $1
+		ORDER BY version_type = 'release' DESC, sort_version DESC
+		LIMIT 1`,
+		modulePath)
+	var v string
+	if err := row.Scan(&v); err != nil {
+		if err == sql.ErrNoRows {
+			return true, nil // It's the only version, so it's also the latest.
+		}
+		return false, err
+	}
+	return semver.Compare(version, v) >= 0, nil
 }
 
 // validateVersion checks that fields needed to insert a version into the
