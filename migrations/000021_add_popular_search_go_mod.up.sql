@@ -4,7 +4,7 @@
 
 BEGIN;
 
-CREATE FUNCTION popular_search_go_mod(rawquery text, lim integer, off integer) RETURNS SETOF search_result
+CREATE FUNCTION popular_search_go_mod(rawquery text, lim integer, off integer, redist_factor real, go_mod_factor real) RETURNS SETOF search_result
     LANGUAGE plpgsql
     AS $$
 	DECLARE cur CURSOR(query TSQUERY) FOR
@@ -17,8 +17,8 @@ CREATE FUNCTION popular_search_go_mod(rawquery text, lim integer, off integer) R
 			(
 				ts_rank(tsv_search_tokens, query) *
 				ln(exp(1)+imported_by_count) *
-				CASE WHEN redistributable THEN 1 ELSE 0.5 END *
-				CASE WHEN COALESCE(has_go_mod, true) THEN 1 ELSE 0.8 END *
+				CASE WHEN redistributable THEN 1 ELSE redist_factor END *
+				CASE WHEN COALESCE(has_go_mod, true) THEN 1 ELSE go_mod_factor END *
 				-- Rather than add this `tsv_search_tokens @@ query` check to a
 				-- where clause, we simply annihilate the score. Adding it to the
 				-- where clause caused the query planner to eventually decide to
