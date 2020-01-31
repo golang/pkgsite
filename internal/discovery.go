@@ -38,6 +38,15 @@ type VersionInfo struct {
 	SourceInfo        *source.Info
 }
 
+// VersionMap holds metadata associated with module queries for a version.
+type VersionMap struct {
+	ModulePath       string
+	RequestedVersion string
+	ResolvedVersion  string
+	Status           int
+	Error            string
+}
+
 // SeriesPath returns the series path for the module.
 //
 // A series is a group of modules that share the same base path and are assumed
