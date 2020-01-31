@@ -654,7 +654,11 @@ func (db *DB) getSearchDocument(ctx context.Context, path string) (*searchDocume
 func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context) (nUpdated int64, err error) {
 	defer derrors.Wrap(&err, "UpdateSearchDocumentsImportedByCount(ctx)")
 
-	counts, err := db.computeImportedByCounts(ctx)
+	searchPackages, err := db.getSearchPackages(ctx)
+	if err != nil {
+		return 0, err
+	}
+	counts, err := db.computeImportedByCounts(ctx, searchPackages)
 	if err != nil {
 		return 0, err
 	}
@@ -671,7 +675,26 @@ func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context) (nUpdate
 	return nUpdated, err
 }
 
-func (db *DB) computeImportedByCounts(ctx context.Context) (counts map[string]int, err error) {
+// getSearchPackages returns the set of package paths that are in the search_documents table.
+func (db *DB) getSearchPackages(ctx context.Context) (set map[string]bool, err error) {
+	defer derrors.Wrap(&err, "DB.getSearchPackages(ctx)")
+
+	set = map[string]bool{}
+	err = db.db.RunQuery(ctx, `SELECT package_path FROM search_documents`, func(rows *sql.Rows) error {
+		var p string
+		if err := rows.Scan(&p); err != nil {
+			return err
+		}
+		set[p] = true
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return set, nil
+}
+
+func (db *DB) computeImportedByCounts(ctx context.Context, searchDocsPackages map[string]bool) (counts map[string]int, err error) {
 	defer derrors.Wrap(&err, "db.computeImportedByCounts(ctx)")
 
 	counts = map[string]int{}
@@ -693,6 +716,10 @@ func (db *DB) computeImportedByCounts(ctx context.Context) (counts map[string]in
 		var from, fromMod, to string
 		if err := rows.Scan(&from, &fromMod, &to); err != nil {
 			return nil, err
+		}
+		// Don't count an importer if it's not in search_documents.
+		if !searchDocsPackages[from] {
+			continue
 		}
 		// Don't count an importer if it's in the same module as what it's importing.
 		// Approximate that check by seeing if from_module_path is a prefix of to_path.

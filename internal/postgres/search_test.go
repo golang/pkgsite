@@ -12,6 +12,7 @@ import (
 	"io"
 	"math"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"go.opencensus.io/stats/view"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/testing/sample"
 )
 
@@ -621,25 +623,25 @@ func TestUpsertSearchDocumentVersionHasGoMod(t *testing.T) {
 }
 
 func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
-	defer ResetTestDB(testDB, t)
-
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	insertPackageVersion := func(pkg *internal.Package, version string) {
+	insertPackageVersion := func(pkg *internal.Package, version string) string {
+		// insert pkg at version, return its module path
 		t.Helper()
 		v := sample.Version()
 		v.Packages = []*internal.Package{pkg}
 		v.ModulePath = v.ModulePath + pkg.Path
 		v.Version = version
 		if err := testDB.InsertVersion(ctx, v); err != nil {
-			t.Fatalf("testDB.InsertVersionAndSearchDocuments(%q %q): %v", v.ModulePath, v.Version, err)
+			t.Fatal(err)
 		}
+		return v.ModulePath
 	}
 	updateImportedByCount := func() {
 		t.Helper()
 		if _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx); err != nil {
-			t.Fatalf("testDB.UpdateSearchDocumentsImportedByCount(ctx): %v", err)
+			t.Fatal(err)
 		}
 	}
 	validateImportedByCountAndGetSearchDocument := func(path string, count int) *searchDocument {
@@ -657,57 +659,95 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		return sd
 	}
 
-	// Test imported_by_count = 0 when only pkgA is added.
-	pkgA := &internal.Package{Path: "A", Name: "A"}
-	insertPackageVersion(pkgA, "v1.0.0")
-	updateImportedByCount()
-	_ = validateImportedByCountAndGetSearchDocument(pkgA.Path, 0)
+	t.Run("basic", func(t *testing.T) {
+		defer ResetTestDB(testDB, t)
 
-	// Test imported_by_count = 1 for pkgA when pkgB is added.
-	pkgB := &internal.Package{Path: "B", Name: "B", Imports: []string{"A"}}
-	insertPackageVersion(pkgB, "v1.0.0")
-	updateImportedByCount()
-	_ = validateImportedByCountAndGetSearchDocument(pkgA.Path, 1)
-	sdB := validateImportedByCountAndGetSearchDocument(pkgB.Path, 0)
-	wantSearchDocBUpdatedAt := sdB.importedByCountUpdatedAt
+		// Test imported_by_count = 0 when only pkgA is added.
+		pkgA := &internal.Package{Path: "A", Name: "A"}
+		insertPackageVersion(pkgA, "v1.0.0")
+		updateImportedByCount()
+		_ = validateImportedByCountAndGetSearchDocument(pkgA.Path, 0)
 
-	// Test imported_by_count = 2 for pkgA, when C is added.
-	pkgC := &internal.Package{Path: "C", Name: "C", Imports: []string{"A"}}
-	insertPackageVersion(pkgC, "v1.0.0")
-	updateImportedByCount()
-	sdA := validateImportedByCountAndGetSearchDocument(pkgA.Path, 2)
-	sdC := validateImportedByCountAndGetSearchDocument(pkgC.Path, 0)
+		// Test imported_by_count = 1 for pkgA when pkgB is added.
+		pkgB := &internal.Package{Path: "B", Name: "B", Imports: []string{"A"}}
+		insertPackageVersion(pkgB, "v1.0.0")
+		updateImportedByCount()
+		_ = validateImportedByCountAndGetSearchDocument(pkgA.Path, 1)
+		sdB := validateImportedByCountAndGetSearchDocument(pkgB.Path, 0)
+		wantSearchDocBUpdatedAt := sdB.importedByCountUpdatedAt
 
-	// Nothing imports C, so it has never been updated.
-	if !sdC.importedByCountUpdatedAt.IsZero() {
-		t.Fatalf("pkgC imported_by_count_updated_at should be zero, but is %v", sdC.importedByCountUpdatedAt)
-	}
-	if sdA.importedByCountUpdatedAt.IsZero() {
-		t.Fatal("pkgA imported_by_count_updated_at should be non-zero, but is zero")
-	}
+		// Test imported_by_count = 2 for pkgA, when C is added.
+		pkgC := &internal.Package{Path: "C", Name: "C", Imports: []string{"A"}}
+		insertPackageVersion(pkgC, "v1.0.0")
+		updateImportedByCount()
+		sdA := validateImportedByCountAndGetSearchDocument(pkgA.Path, 2)
+		sdC := validateImportedByCountAndGetSearchDocument(pkgC.Path, 0)
 
-	// Test imported_by_count_updated_at for B has not changed.
-	sdB = validateImportedByCountAndGetSearchDocument(pkgB.Path, 0)
-	if sdB.importedByCountUpdatedAt != wantSearchDocBUpdatedAt {
-		t.Fatalf("expected imported_by_count_updated_at for pkgB not to have changed; old = %v, new = %v", wantSearchDocBUpdatedAt, sdB.importedByCountUpdatedAt)
-	}
+		// Nothing imports C, so it has never been updated.
+		if !sdC.importedByCountUpdatedAt.IsZero() {
+			t.Fatalf("pkgC imported_by_count_updated_at should be zero, but is %v", sdC.importedByCountUpdatedAt)
+		}
+		if sdA.importedByCountUpdatedAt.IsZero() {
+			t.Fatal("pkgA imported_by_count_updated_at should be non-zero, but is zero")
+		}
 
-	// When an older version of A imports D, nothing happens to the counts,
-	// because imports_unique only records the latest version of each package.
-	pkgD := &internal.Package{Path: "D", Name: "D"}
-	insertPackageVersion(pkgD, "v1.0.0")
-	pkgA.Imports = []string{"D"}
-	insertPackageVersion(pkgA, "v0.9.0")
-	updateImportedByCount()
-	_ = validateImportedByCountAndGetSearchDocument(pkgA.Path, 2)
-	_ = validateImportedByCountAndGetSearchDocument(pkgD.Path, 0)
+		// Test imported_by_count_updated_at for B has not changed.
+		sdB = validateImportedByCountAndGetSearchDocument(pkgB.Path, 0)
+		if sdB.importedByCountUpdatedAt != wantSearchDocBUpdatedAt {
+			t.Fatalf("expected imported_by_count_updated_at for pkgB not to have changed; old = %v, new = %v",
+				wantSearchDocBUpdatedAt, sdB.importedByCountUpdatedAt)
+		}
 
-	// When a newer version of A imports D, however, the counts do change.
-	insertPackageVersion(pkgA, "v1.1.0")
-	updateImportedByCount()
-	_ = validateImportedByCountAndGetSearchDocument(pkgA.Path, 2)
-	_ = validateImportedByCountAndGetSearchDocument(pkgD.Path, 1)
+		// When an older version of A imports D, nothing happens to the counts,
+		// because imports_unique only records the latest version of each package.
+		pkgD := &internal.Package{Path: "D", Name: "D"}
+		insertPackageVersion(pkgD, "v1.0.0")
+		pkgA.Imports = []string{"D"}
+		insertPackageVersion(pkgA, "v0.9.0")
+		updateImportedByCount()
+		_ = validateImportedByCountAndGetSearchDocument(pkgA.Path, 2)
+		_ = validateImportedByCountAndGetSearchDocument(pkgD.Path, 0)
 
+		// When a newer version of A imports D, however, the counts do change.
+		insertPackageVersion(pkgA, "v1.1.0")
+		updateImportedByCount()
+		_ = validateImportedByCountAndGetSearchDocument(pkgA.Path, 2)
+		_ = validateImportedByCountAndGetSearchDocument(pkgD.Path, 1)
+	})
+
+	t.Run("alternative", func(t *testing.T) {
+		// Test with alternative modules that are removed from search_documents.
+		defer ResetTestDB(testDB, t)
+
+		insertPackageVersion(&internal.Package{Path: "B", Name: "B"}, "v1.0.0")
+
+		// Insert a package with the canonical module path.
+		pkgA := &internal.Package{Path: "A", Name: "A", Imports: []string{"B"}}
+		canonicalModulePath := insertPackageVersion(pkgA, "v1.0.0")
+
+		// Image we see a package with an alternative path at v1.2.0.
+		// We add that information to module_version_states.
+		alternativeModulePath := strings.ToLower(canonicalModulePath)
+		alternativeStatus := derrors.ToHTTPStatus(derrors.AlternativeModule)
+		err := testDB.UpsertModuleVersionState(ctx, alternativeModulePath, "v1.2.0", "",
+			time.Now(), alternativeStatus, canonicalModulePath, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Now we see an earlier version of that package, without a go.mod file, so we insert it.
+		// It should not get inserted into search_documents.
+		pkga := &internal.Package{Path: "a", Name: "A", Imports: []string{"B"}}
+		mp := insertPackageVersion(pkga, "v1.0.0")
+		if mp != alternativeModulePath {
+			t.Fatal("bad alternativeModulePath")
+		}
+
+		// Although B is imported by two packages, only one is in search_documents, so its
+		// imported-by count is 1.
+		updateImportedByCount()
+		validateImportedByCountAndGetSearchDocument("B", 1)
+	})
 }
 
 func TestGetPackagesForSearchDocumentUpsert(t *testing.T) {
