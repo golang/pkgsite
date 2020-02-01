@@ -346,7 +346,7 @@ func TestFiles(t *testing.T) {
 		"LICENCE":            "",
 		"License":            "",
 		"COPYING":            "",
-		"license":            "",
+		"liCeNse":            "",
 		"foo/LICENSE":        "",
 		"foo/LICENSE.md":     "",
 		"foo/LICENCE":        "",
@@ -362,21 +362,22 @@ func TestFiles(t *testing.T) {
 	}{
 		{
 			RootFiles,
-			[]string{"m@v1/LICENSE", "m@v1/LICENCE", "m@v1/License", "m@v1/COPYING", "m@v1/LICENSE.md"},
+			[]string{"m@v1/LICENSE", "m@v1/LICENCE", "m@v1/License", "m@v1/COPYING", "m@v1/LICENSE.md",
+				"m@v1/liCeNse"},
 		},
 		{
 			NonRootFiles,
 			[]string{
-				"m@v1/foo/LICENSE", "m@v1/foo/LICENSE.md", "m@v1/foo/LICENCE", "m@v1/foo/License", "m@v1/foo/COPYING",
-				"m@v1/pkg/vendor/LICENSE",
+				"m@v1/foo/LICENSE", "m@v1/foo/LICENSE.md", "m@v1/foo/LICENCE", "m@v1/foo/License",
+				"m@v1/foo/COPYING", "m@v1/pkg/vendor/LICENSE", "m@v1/foo/license",
 			},
 		},
 		{
 			AllFiles,
 			[]string{
 				"m@v1/LICENSE", "m@v1/LICENCE", "m@v1/License", "m@v1/COPYING", "m@v1/LICENSE.md",
-				"m@v1/foo/LICENSE", "m@v1/foo/LICENSE.md", "m@v1/foo/LICENCE", "m@v1/foo/License", "m@v1/foo/COPYING",
-				"m@v1/pkg/vendor/LICENSE",
+				"m@v1/liCeNse", "m@v1/foo/LICENSE", "m@v1/foo/LICENSE.md", "m@v1/foo/LICENCE", "m@v1/foo/License",
+				"m@v1/foo/license", "m@v1/foo/COPYING", "m@v1/pkg/vendor/LICENSE",
 			},
 		},
 	} {

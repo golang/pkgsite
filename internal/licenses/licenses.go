@@ -78,25 +78,17 @@ type License struct {
 var (
 	
 	
-	licenseFileNames = map[string]bool{
-		"COPYING":     true,
-		"COPYING.md":  true,
-		"COPYING.txt": true,
-		"LICENCE":     true,
-		"LICENCE.md":  true,
-		"LICENCE.txt": true,
-		"LICENSE":     true,
-		"LICENSE.md":  true,
-		"LICENSE.txt": true,
-		"Copying":     true,
-		"Copying.md":  true,
-		"Copying.txt": true,
-		"Licence":     true,
-		"Licence.md":  true,
-		"Licence.txt": true,
-		"License":     true,
-		"License.md":  true,
-		"License.txt": true,
+	
+	FileNames = []string{
+		"COPYING",
+		"COPYING.md",
+		"COPYING.txt",
+		"LICENCE",
+		"LICENCE.md",
+		"LICENCE.txt",
+		"LICENSE",
+		"LICENSE.md",
+		"LICENSE.txt",
 	}
 
 	// redistributableLicenseTypes is the list of license types, as reported by
@@ -127,6 +119,16 @@ var osiNameOverrides = map[string]string{
 	"GPL3": "GPL-3.0",
 }
 
+// fileNamesLowercase has all the entries of FileNames, downcased and made a set
+// for fast case-insensitive matching.
+var fileNamesLowercase = map[string]bool{}
+
+func init() {
+	for _, f := range FileNames {
+		fileNamesLowercase[strings.ToLower(f)] = true
+	}
+}
+
 // AcceptedOSILicenses returns a sorted slice of license types (by OSI name)
 // that are accepted as redistributable. Its result is intended to be displayed
 // to users.
@@ -141,17 +143,6 @@ func AcceptedOSILicenses() []string {
 	}
 	sort.Strings(lics)
 	return lics
-}
-
-// FileNames returns the file names to be considered for license detection,
-// sorted. Its result is intended to be displayed to users.
-func FileNames() []string {
-	var names []string
-	for f := range licenseFileNames {
-		names = append(names, f)
-	}
-	sort.Strings(names)
-	return names
 }
 
 // A Detector detects licenses in a module and its packages.
@@ -290,7 +281,7 @@ func (d *Detector) Files(which WhichFiles) []*zip.File {
 	for _, f := range d.zr.File {
 		
 		
-		if !licenseFileNames[path.Base(f.Name)] {
+		if !fileNamesLowercase[strings.ToLower(path.Base(f.Name))] {
 			continue
 		}
 		if !strings.HasPrefix(f.Name, prefix) {

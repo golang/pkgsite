@@ -188,13 +188,12 @@ type licensePolicyPage struct {
 }
 
 func (s *Server) licensePolicyHandler() http.HandlerFunc {
-	fileNames := licenses.FileNames()
-	licenses := licenses.AcceptedOSILicenses()
+	lics := licenses.AcceptedOSILicenses()
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		page := licensePolicyPage{
 			basePage:         newBasePage(r, "Licenses - go.dev"),
-			LicenseFileNames: fileNames,
-			LicenseTypes:     licenses,
+			LicenseFileNames: licenses.FileNames,
+			LicenseTypes:     lics,
 		}
 		s.servePage(r.Context(), w, "license_policy.tmpl", page)
 	})
