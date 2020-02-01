@@ -25,7 +25,7 @@ func TestGetPackage(t *testing.T) {
 
 	defer ResetTestDB(testDB, t)
 
-	mustInsertVersion := func(pkgPath, modulePath, version string) {
+	insertVersion := func(pkgPath, modulePath, version string) {
 		t.Helper()
 		v := sample.Version()
 		v.ModulePath = modulePath
@@ -94,7 +94,7 @@ func TestGetPackage(t *testing.T) {
 			"v1.13.0",
 		},
 	} {
-		mustInsertVersion(data.pkgPath, data.modulePath, data.version)
+		insertVersion(data.pkgPath, data.modulePath, data.version)
 	}
 
 	for _, tc := range []struct {

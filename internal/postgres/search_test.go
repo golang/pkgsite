@@ -549,7 +549,7 @@ func TestUpsertSearchDocumentVersionUpdatedAt(t *testing.T) {
 	}
 
 	pkgA := &internal.Package{Path: "A", Name: "A"}
-	mustInsertVersion := func(version string) {
+	insertVersion := func(version string) {
 		v := sample.Version()
 		v.Packages = []*internal.Package{pkgA}
 		v.Version = version
@@ -558,17 +558,17 @@ func TestUpsertSearchDocumentVersionUpdatedAt(t *testing.T) {
 		}
 	}
 
-	mustInsertVersion("v1.0.0")
+	insertVersion("v1.0.0")
 	versionUpdatedAtOriginal := getVersionUpdatedAt(pkgA.Path)
 
-	mustInsertVersion("v0.5.0")
+	insertVersion("v0.5.0")
 	versionUpdatedAtNew := getVersionUpdatedAt(pkgA.Path)
 	if versionUpdatedAtOriginal != versionUpdatedAtNew {
 		t.Fatalf("expected version_updated_at to remain unchanged an older version was inserted; got versionUpdatedAtOriginal = %v; versionUpdatedAtNew = %v",
 			versionUpdatedAtOriginal, versionUpdatedAtNew)
 	}
 
-	mustInsertVersion("v1.5.2")
+	insertVersion("v1.5.2")
 	versionUpdatedAtNew2 := getVersionUpdatedAt(pkgA.Path)
 	if versionUpdatedAtOriginal == versionUpdatedAtNew2 {
 		t.Fatalf("expected version_updated_at to change since a newer version was inserted; got versionUpdatedAtNew = %v; versionUpdatedAtNew2 = %v",
@@ -610,7 +610,7 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	mustInsertPackageVersion := func(pkg *internal.Package, version string) {
+	insertPackageVersion := func(pkg *internal.Package, version string) {
 		t.Helper()
 		v := sample.Version()
 		v.Packages = []*internal.Package{pkg}
@@ -620,7 +620,7 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 			t.Fatalf("testDB.InsertVersionAndSearchDocuments(%q %q): %v", v.ModulePath, v.Version, err)
 		}
 	}
-	mustUpdateImportedByCount := func() {
+	updateImportedByCount := func() {
 		t.Helper()
 		if _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx); err != nil {
 			t.Fatalf("testDB.UpdateSearchDocumentsImportedByCount(ctx): %v", err)
@@ -643,22 +643,22 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 
 	// Test imported_by_count = 0 when only pkgA is added.
 	pkgA := &internal.Package{Path: "A", Name: "A"}
-	mustInsertPackageVersion(pkgA, "v1.0.0")
-	mustUpdateImportedByCount()
+	insertPackageVersion(pkgA, "v1.0.0")
+	updateImportedByCount()
 	_ = validateImportedByCountAndGetSearchDocument(pkgA.Path, 0)
 
 	// Test imported_by_count = 1 for pkgA when pkgB is added.
 	pkgB := &internal.Package{Path: "B", Name: "B", Imports: []string{"A"}}
-	mustInsertPackageVersion(pkgB, "v1.0.0")
-	mustUpdateImportedByCount()
+	insertPackageVersion(pkgB, "v1.0.0")
+	updateImportedByCount()
 	_ = validateImportedByCountAndGetSearchDocument(pkgA.Path, 1)
 	sdB := validateImportedByCountAndGetSearchDocument(pkgB.Path, 0)
 	wantSearchDocBUpdatedAt := sdB.importedByCountUpdatedAt
 
 	// Test imported_by_count = 2 for pkgA, when C is added.
 	pkgC := &internal.Package{Path: "C", Name: "C", Imports: []string{"A"}}
-	mustInsertPackageVersion(pkgC, "v1.0.0")
-	mustUpdateImportedByCount()
+	insertPackageVersion(pkgC, "v1.0.0")
+	updateImportedByCount()
 	sdA := validateImportedByCountAndGetSearchDocument(pkgA.Path, 2)
 	sdC := validateImportedByCountAndGetSearchDocument(pkgC.Path, 0)
 
@@ -679,16 +679,16 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 	// When an older version of A imports D, nothing happens to the counts,
 	// because imports_unique only records the latest version of each package.
 	pkgD := &internal.Package{Path: "D", Name: "D"}
-	mustInsertPackageVersion(pkgD, "v1.0.0")
+	insertPackageVersion(pkgD, "v1.0.0")
 	pkgA.Imports = []string{"D"}
-	mustInsertPackageVersion(pkgA, "v0.9.0")
-	mustUpdateImportedByCount()
+	insertPackageVersion(pkgA, "v0.9.0")
+	updateImportedByCount()
 	_ = validateImportedByCountAndGetSearchDocument(pkgA.Path, 2)
 	_ = validateImportedByCountAndGetSearchDocument(pkgD.Path, 0)
 
 	// When a newer version of A imports D, however, the counts do change.
-	mustInsertPackageVersion(pkgA, "v1.1.0")
-	mustUpdateImportedByCount()
+	insertPackageVersion(pkgA, "v1.1.0")
+	updateImportedByCount()
 	_ = validateImportedByCountAndGetSearchDocument(pkgA.Path, 2)
 	_ = validateImportedByCountAndGetSearchDocument(pkgD.Path, 1)
 
