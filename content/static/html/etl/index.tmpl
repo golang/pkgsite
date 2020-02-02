@@ -70,7 +70,7 @@ label {
 	width: 200px;
 }
 input {
-	width: 50px;
+	width: 200px;
 }
 button {
 	width: 200px;
@@ -87,17 +87,13 @@ td {
 	border-top: 1px solid #ddd;
 }
 </style>
-<title>go.dev ETL</title>
-<h1>go.dev ETL</h1>
+<title>{{.Env}} ETL</title>
+<h1>{{.Env}} ETL</h1>
 
 <p>All times in America/New_York.</p>
 
 <p>
-  {{$resourcePrefix := .ServicePrefix}}
-  {{if eq .ServicePrefix ""}}
-    {{$resourcePrefix = "prod-"}}
-  {{end}}
-  <a href="https://cloud.google.com/console/cloudtasks/queue/{{$resourcePrefix}}fetch-tasks?project={{.Project}}"
+  <a href="https://cloud.google.com/console/cloudtasks/queue/{{.ResourcePrefix}}fetch-tasks?project={{.Project}}"
 	target="_blank" rel="noreferrer">
      Task Queue
   </a> |
@@ -105,7 +101,7 @@ td {
 	target="_blank" rel="noreferrer">
      Scheduler
   </a> |
-  <a href="https://cloud.google.com/console/logs/viewer?project={{.Project}}&resource=gae_app%2Fmodule_id%2F{{.ServicePrefix}}etl"
+  <a href="https://cloud.google.com/console/logs/viewer?project={{.Project}}&resource=gae_app%2Fmodule_id%2F{{.ServiceID}}"
 	target="_blank" rel="noreferrer">
      Logs (switch to "All Logs" when you get there)
   </a>
@@ -129,7 +125,8 @@ td {
       onclick="submitForm('reprocessForm', true); return false">Reprocess Versions</button>
 		<input type="text" name="app_version">
 		<output name="result"></output>
-		<a href="">GAE Versions</a>
+		<a href=""
+		   target="_blank" rel="noreferrer">GAE Versions</a>
 	</form>
 	<form action="/populate-stdlib" method="post" name="populateStdlibForm">
 		<button title="Populates the database with all supported versions of the Go standard library."

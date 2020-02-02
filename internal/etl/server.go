@@ -340,27 +340,47 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (string, e
 	}
 	var counts []*count
 	for code, n := range stats.VersionCounts {
-		desc := http.StatusText(code)
-		if desc == "" {
-			if e := derrors.FromHTTPStatus(code, ""); e != nil {
-				desc = e.Error()
-			} else if code == hasIncompletePackagesCode {
-				desc = hasIncompletePackagesDesc
+		c := &count{Code: code, Count: n}
+		if e := derrors.FromHTTPStatus(code, ""); e != nil && e != derrors.Unknown {
+			c.Desc = e.Error()
+		} else {
+			switch code {
+			case hasIncompletePackagesCode:
+				c.Desc = hasIncompletePackagesDesc
+			case 505:
+				c.Desc = "needs reprocessing"
+			default:
+				c.Desc = http.StatusText(code)
 			}
 		}
-		counts = append(counts, &count{Code: code, Desc: desc, Count: n})
+		counts = append(counts, c)
 	}
 	sort.Slice(counts, func(i, j int) bool { return counts[i].Code < counts[j].Code })
 
+	var env string
+	switch config.ServiceID() {
+	case "":
+		env = "Local"
+	case "dev-etl":
+		env = "Dev"
+	case "staging-etl":
+		env = "Staging"
+	case "etl":
+		env = "Prod"
+	}
 	page := struct {
 		Project                      string
-		ServicePrefix                string
+		ServiceID                    string
+		Env                          string
+		ResourcePrefix               string
 		LatestTimestamp              *time.Time
 		Counts                       []*count
 		Next, Recent, RecentFailures []*internal.ModuleVersionState
 	}{
 		Project:         "go-discovery",
-		ServicePrefix:   strings.TrimSuffix(config.ServiceID(), "etl"),
+		ServiceID:       config.ServiceID(),
+		Env:             env,
+		ResourcePrefix:  strings.ToLower(env) + "-",
 		LatestTimestamp: &stats.LatestTimestamp,
 		Counts:          counts,
 		Next:            next,
