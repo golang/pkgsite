@@ -299,7 +299,7 @@ func isLatestVersion(ctx context.Context, tx *sql.Tx, modulePath, version string
 		}
 		return false, err
 	}
-	return semver.Compare(version, v) >= 0, nil
+	return version == v, nil
 }
 
 // validateVersion checks that fields needed to insert a version into the
