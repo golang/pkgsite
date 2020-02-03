@@ -45,10 +45,10 @@ func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirP
 	if err != nil {
 		status := http.StatusInternalServerError
 		if errors.Is(err, derrors.NotFound) {
-			status = http.StatusNotFound
-		} else {
-			log.Errorf(ctx, "serveDirectoryPage for %s@%s: %v", dirPath, version, err)
+			s.servePathNotFoundErrorPage(w, r, "package")
+			return
 		}
+		log.Errorf(ctx, "serveDirectoryPage for %s@%s: %v", dirPath, version, err)
 		s.serveErrorPage(w, r, status, nil)
 		return
 	}

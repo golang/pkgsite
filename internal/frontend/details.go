@@ -118,3 +118,13 @@ func checkPathAndVersion(ctx context.Context, ds internal.DataSource, path, vers
 	}
 	return http.StatusOK, nil
 }
+
+// servePathNotFoundErrorPage returns an error page with instructions on how to
+// add a package or module to the site. pathType is always either the string
+// "package" or "module".
+func (s *Server) servePathNotFoundErrorPage(w http.ResponseWriter, r *http.Request, pathType string) {
+	s.serveErrorPage(w, r, http.StatusNotFound, &errorPage{
+		Message:          "404 Not Found",
+		SecondaryMessage: template.HTML(fmt.Sprintf(`If you think this is a valid %s path, you can try fetching it following the <a href="/about#adding-a-package">instructions here</a>.`, pathType)),
+	})
+}

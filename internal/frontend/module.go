@@ -77,7 +77,7 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 			return
 		}
 	}
-	s.serveErrorPage(w, r, http.StatusNotFound, nil)
+	s.servePathNotFoundErrorPage(w, r, "module")
 }
 
 func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseWriter, r *http.Request, vi *internal.VersionInfo, requestedVersion string) {

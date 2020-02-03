@@ -39,6 +39,7 @@ func (s *Server) handlePackageDetailsRedirect(w http.ResponseWriter, r *http.Req
 // pkgPath, in the module specified by modulePath and version.
 func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPath, modulePath, version string) {
 	ctx := r.Context()
+
 	if code, epage := checkPathAndVersion(ctx, s.ds, pkgPath, version); code != http.StatusOK {
 		s.serveErrorPage(w, r, code, epage)
 		return
@@ -85,7 +86,7 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 			Message: fmt.Sprintf("Package %s@%s is not available.", pkgPath, displayVersion(version, modulePath)),
 			SecondaryMessage: template.HTML(
 				fmt.Sprintf(`There are other versions of this package that are! To view them, `+
-					`<a href="/%s?tab=versions">click here</a>.</p>`,
+					`<a href="/%s?tab=versions">click here</a>.`,
 					pkgPath)),
 		}
 		s.serveErrorPage(w, r, http.StatusNotFound, epage)
@@ -100,7 +101,7 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 		// more informative error response.
 		log.Errorf(ctx, "error checking for latest package: %v", err)
 	}
-	s.serveErrorPage(w, r, http.StatusNotFound, nil)
+	s.servePathNotFoundErrorPage(w, r, "package")
 }
 
 func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.ResponseWriter, r *http.Request, pkg *internal.VersionedPackage, requestedVersion string) {
