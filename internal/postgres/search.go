@@ -529,8 +529,14 @@ var upsertSearchStatement = fmt.Sprintf(`
 		package_path=excluded.package_path,
 		version=excluded.version,
 		module_path=excluded.module_path,
-		tsv_search_tokens=excluded.tsv_search_tokens,
+		name=excluded.name,
+		synopsis=excluded.synopsis,
+		license_types=excluded.license_types,
+		redistributable=excluded.redistributable,
 		commit_time=excluded.commit_time,
+		has_go_mod=excluded.has_go_mod,
+		tsv_search_tokens=excluded.tsv_search_tokens,
+		-- the hll fields are functions of path, so they don't change
 		version_updated_at=(
 			CASE WHEN excluded.version = search_documents.version
 			THEN search_documents.version_updated_at
@@ -590,11 +596,14 @@ func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, limit int)
 type searchDocument struct {
 	packagePath              string
 	modulePath               string
+	version                  string
+	commitTime               time.Time
+	name                     string
+	synopsis                 string
+	licenseTypes             []string
+	importedByCount          int
 	redistributable          bool
 	hasGoMod                 bool
-	version                  string
-	importedByCount          int
-	commitTime               time.Time
 	versionUpdatedAt         time.Time
 	importedByCountUpdatedAt time.Time
 }
@@ -606,11 +615,14 @@ func (db *DB) getSearchDocument(ctx context.Context, path string) (*searchDocume
 		SELECT
 			package_path,
 			module_path,
+			version,
+			commit_time,
+			name,
+			synopsis,
+			license_types,
+			imported_by_count,
 			redistributable,
 			has_go_mod,
-			version,
-			imported_by_count,
-			commit_time,
 			version_updated_at,
 			imported_by_count_updated_at
 		FROM
@@ -621,9 +633,9 @@ func (db *DB) getSearchDocument(ctx context.Context, path string) (*searchDocume
 		sd searchDocument
 		t  pq.NullTime
 	)
-	if err := row.Scan(&sd.packagePath, &sd.modulePath,
-		&sd.redistributable, &sd.hasGoMod, &sd.version, &sd.importedByCount,
-		&sd.commitTime, &sd.versionUpdatedAt, &t); err != nil {
+	if err := row.Scan(&sd.packagePath, &sd.modulePath, &sd.version, &sd.commitTime,
+		&sd.name, &sd.synopsis, pq.Array(&sd.licenseTypes), &sd.importedByCount,
+		&sd.redistributable, &sd.hasGoMod, &sd.versionUpdatedAt, &t); err != nil {
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
 	if t.Valid {

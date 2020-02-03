@@ -533,46 +533,62 @@ func TestSearchPenalties(t *testing.T) {
 	}
 }
 
-func TestUpsertSearchDocumentVersionUpdatedAt(t *testing.T) {
+func TestUpsertSearchDocument(t *testing.T) {
+	// Verify that inserting into search_documents populates all columns correctly,
+	// both with and without a conflict.
 	defer ResetTestDB(testDB, t)
-
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	getVersionUpdatedAt := func(path string) time.Time {
+	var packagePath = sample.ModulePath + "/A"
+
+	getSearchDocument := func() *searchDocument {
 		t.Helper()
-		sd, err := testDB.getSearchDocument(ctx, path)
+		sd, err := testDB.getSearchDocument(ctx, packagePath)
 		if err != nil {
-			t.Fatalf("testDB.getSearchDocument(ctx, %q): %v", path, err)
+			t.Fatal(err)
 		}
-		return sd.versionUpdatedAt
+		return sd
 	}
 
-	pkgA := &internal.Package{Path: "A", Name: "A"}
-	insertVersion := func(version string) {
+	insertVersion := func(version string, gomod bool) {
+		pkg := &internal.Package{
+			Path:              packagePath,
+			Name:              "A",
+			Synopsis:          "syn-" + version,
+			IsRedistributable: true,
+		}
 		v := sample.Version()
-		v.Packages = []*internal.Package{pkgA}
+		v.Packages = []*internal.Package{pkg}
 		v.Version = version
+		v.HasGoMod = gomod
 		if err := testDB.InsertVersion(ctx, v); err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	insertVersion("v1.0.0")
-	versionUpdatedAtOriginal := getVersionUpdatedAt(pkgA.Path)
+	insertVersion("v1.0.0", false)
+	sdOriginal := getSearchDocument()
 
-	insertVersion("v0.5.0")
-	versionUpdatedAtNew := getVersionUpdatedAt(pkgA.Path)
-	if versionUpdatedAtOriginal != versionUpdatedAtNew {
-		t.Fatalf("expected version_updated_at to remain unchanged an older version was inserted; got versionUpdatedAtOriginal = %v; versionUpdatedAtNew = %v",
-			versionUpdatedAtOriginal, versionUpdatedAtNew)
+	insertVersion("v0.5.0", true)
+	sdOlder := getSearchDocument()
+	if diff := cmp.Diff(sdOriginal, sdOlder, cmp.AllowUnexported(searchDocument{})); diff != "" {
+		t.Errorf("mismatch (-want, +got):\n%s", diff)
 	}
 
-	insertVersion("v1.5.2")
-	versionUpdatedAtNew2 := getVersionUpdatedAt(pkgA.Path)
-	if versionUpdatedAtOriginal == versionUpdatedAtNew2 {
-		t.Fatalf("expected version_updated_at to change since a newer version was inserted; got versionUpdatedAtNew = %v; versionUpdatedAtNew2 = %v",
-			versionUpdatedAtOriginal, versionUpdatedAtNew)
+	insertVersion("v1.5.2", true)
+	sdNewer := getSearchDocument()
+	if orig, newer := sdOriginal.versionUpdatedAt, sdNewer.versionUpdatedAt; orig == newer {
+		t.Fatalf("expected version_updated_at to change since a newer version was inserted; got original = %v, newer = %v",
+			orig, newer)
+	}
+	sdWant := sdOriginal
+	sdWant.version = "v1.5.2"
+	sdWant.synopsis = "syn-v1.5.2"
+	sdWant.hasGoMod = true
+	sdWant.versionUpdatedAt = sdNewer.versionUpdatedAt
+	if diff := cmp.Diff(sdWant, sdNewer, cmp.AllowUnexported(searchDocument{})); diff != "" {
+		t.Errorf("mismatch (-want, +got):\n%s", diff)
 	}
 }
 
