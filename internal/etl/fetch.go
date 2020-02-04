@@ -17,6 +17,7 @@ import (
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
+	"golang.org/x/mod/semver"
 )
 
 // fetchTimeout bounds the time allowed for fetching a single module.  It is
@@ -40,20 +41,20 @@ var ProxyRemoved = map[string]bool{}
 // The given parentCtx is used for tracing, but fetches actually execute in a
 // detached context with fixed timeout, so that fetches are allowed to complete
 // even for short-lived requests.
-func fetchAndInsertVersion(parentCtx context.Context, modulePath, version string, proxyClient *proxy.Client, db *postgres.DB) (hasIncompletePackages bool, goModPath string, err error) {
-	defer derrors.Wrap(&err, "FetchAndInsertVersion(%q, %q)", modulePath, version)
+func fetchAndInsertVersion(parentCtx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, db *postgres.DB) (_ *fetch.FetchResult, err error) {
+	defer derrors.Wrap(&err, "FetchAndInsertVersion(%q, %q)", modulePath, requestedVersion)
 
-	if ProxyRemoved[modulePath+"@"+version] {
-		log.Infof(parentCtx, "not fetching %s@%s because it is on the ProxyRemoved list", modulePath, version)
-		return false, "", derrors.Excluded
+	if ProxyRemoved[modulePath+"@"+requestedVersion] {
+		log.Infof(parentCtx, "not fetching %s@%s because it is on the ProxyRemoved list", modulePath, requestedVersion)
+		return nil, derrors.Excluded
 	}
 
 	exc, err := db.IsExcluded(parentCtx, modulePath)
 	if err != nil {
-		return false, "", err
+		return nil, err
 	}
 	if exc {
-		return false, "", derrors.Excluded
+		return nil, derrors.Excluded
 	}
 
 	parentSpan := trace.FromContext(parentCtx)
@@ -65,43 +66,35 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, version string
 	ctx, span := trace.StartSpanWithRemoteParent(ctx, "FetchAndInsertVersion", parentSpan.SpanContext())
 	defer span.End()
 
-	res, err := fetch.FetchVersion(ctx, modulePath, version, proxyClient)
-	if res != nil {
-		goModPath = res.GoModPath
-		for _, state := range res.PackageVersionStates {
-			if state.Status != http.StatusOK {
-				hasIncompletePackages = true
-			}
-		}
-	}
+	res, err := fetch.FetchVersion(ctx, modulePath, requestedVersion, proxyClient)
 	if err != nil {
-		return false, goModPath, err
+		return res, err
 	}
 	log.Infof(ctx, "Fetched %s@%s", res.Version.ModulePath, res.Version.Version)
 	if err = db.InsertVersion(ctx, res.Version); err != nil {
-		return false, goModPath, err
+		return res, err
 	}
 	log.Infof(ctx, "Inserted %s@%s", res.Version.ModulePath, res.Version.Version)
-	return hasIncompletePackages, goModPath, nil
+	return res, nil
 }
 
 // fetchAndUpdateState fetches and processes a module version, and then updates
 // the module_version_states table according to the result. It returns an HTTP
 // status code representing the result of the fetch operation, and a non-nil
 // error if this status code is not 200.
-func fetchAndUpdateState(ctx context.Context, modulePath, version string, client *proxy.Client, db *postgres.DB) (_ int, err error) {
-	defer derrors.Wrap(&err, "fetchAndUpdateState(%q, %q)", modulePath, version)
+func fetchAndUpdateState(ctx context.Context, modulePath, requestedVersion string, client *proxy.Client, db *postgres.DB) (_ int, err error) {
+	defer derrors.Wrap(&err, "fetchAndUpdateState(%q, %q)", modulePath, requestedVersion)
 
 	ctx, span := trace.StartSpan(ctx, "fetchAndUpdateState")
 	span.AddAttributes(
 		trace.StringAttribute("modulePath", modulePath),
-		trace.StringAttribute("version", version))
+		trace.StringAttribute("version", requestedVersion))
 	defer span.End()
 	var (
 		code     = http.StatusOK
 		fetchErr error
 	)
-	hasIncompletePackages, goModPath, fetchErr := fetchAndInsertVersion(ctx, modulePath, version, client, db)
+	res, fetchErr := fetchAndInsertVersion(ctx, modulePath, requestedVersion, client, db)
 	if fetchErr != nil {
 		code = derrors.ToHTTPStatus(fetchErr)
 		logf := log.Errorf
@@ -110,9 +103,22 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 		}
 		logf(ctx, "Error executing fetch: %v (code %d)", fetchErr, code)
 	}
-	// TODO(b/147348928): return this information as an error from fetchAndInsertVersion.
-	if hasIncompletePackages {
-		code = hasIncompletePackagesCode
+	var (
+		hasIncompletePackages bool
+		goModPath             string
+		resolvedVersion       = requestedVersion
+	)
+	if res != nil {
+		if code == http.StatusOK && res.HasIncompletePackages {
+			code = hasIncompletePackagesCode
+		}
+		goModPath = res.GoModPath
+		if res.Version != nil {
+			resolvedVersion = res.Version.Version
+		}
+	}
+	if !semver.IsValid(resolvedVersion) {
+		return code, fetchErr
 	}
 
 	// If there were any errors processing the module then we didn't insert it.
@@ -120,8 +126,8 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 	
 	
 	if code > 400 {
-		log.Infof(ctx, "%s@%s: code=%d, deleting", modulePath, version, code)
-		if err := db.DeleteVersion(ctx, nil, modulePath, version); err != nil {
+		log.Infof(ctx, "%s@%s: code=%d, deleting", modulePath, requestedVersion, code)
+		if err := db.DeleteVersion(ctx, nil, modulePath, requestedVersion); err != nil {
 			log.Error(ctx, err)
 			return http.StatusInternalServerError, err
 		}
@@ -136,8 +142,8 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 	// still leave their pages in the database so users of those old versions
 	// can still view documentation.
 	if code == 491 {
-		log.Infof(ctx, "%s@%s: code=491, deleting older version from search", modulePath, version)
-		if err := db.DeleteOlderVersionFromSearchDocuments(ctx, modulePath, version); err != nil {
+		log.Infof(ctx, "%s@%s: code=491, deleting older version from search", modulePath, requestedVersion)
+		if err := db.DeleteOlderVersionFromSearchDocuments(ctx, modulePath, requestedVersion); err != nil {
 			log.Error(ctx, err)
 			return http.StatusInternalServerError, err
 		}
@@ -148,7 +154,7 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 	// code < 500 but a later action fails, we will never retry the later action.
 
 	// TODO(b/139178863): Split UpsertModuleVersionState into InsertModuleVersionState and UpdateModuleVersionState.
-	if err := db.UpsertModuleVersionState(ctx, modulePath, version, config.AppVersionLabel(), time.Time{}, code, goModPath, fetchErr); err != nil {
+	if err := db.UpsertModuleVersionState(ctx, modulePath, requestedVersion, config.AppVersionLabel(), time.Time{}, code, goModPath, fetchErr); err != nil {
 		log.Error(ctx, err)
 		if fetchErr != nil {
 			err = fmt.Errorf("error updating module version state: %v, original error: %v", err, fetchErr)
@@ -156,6 +162,6 @@ func fetchAndUpdateState(ctx context.Context, modulePath, version string, client
 		return http.StatusInternalServerError, err
 	}
 	log.Infof(ctx, "Updated module version state for %s@%s: code=%d, hasIncompletePackages=%t err=%v",
-		modulePath, version, code, hasIncompletePackages, fetchErr)
+		modulePath, requestedVersion, code, hasIncompletePackages, fetchErr)
 	return code, fetchErr
 }

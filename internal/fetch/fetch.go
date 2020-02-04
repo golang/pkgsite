@@ -47,9 +47,10 @@ var (
 var httpClient = http.DefaultClient
 
 type FetchResult struct {
-	Version              *internal.Version
-	GoModPath            string
-	PackageVersionStates []*internal.PackageVersionState
+	Version               *internal.Version
+	GoModPath             string
+	PackageVersionStates  []*internal.PackageVersionState
+	HasIncompletePackages bool
 }
 
 // FetchVersion queries the proxy or the Go repo for the requested module
@@ -57,28 +58,30 @@ type FetchResult struct {
 // *internal.Version and related information.
 //
 // Even if err is non-nil, the result may contain useful information, like the go.mod path.
-func FetchVersion(ctx context.Context, modulePath, vers string, proxyClient *proxy.Client) (_ *FetchResult, err error) {
-	defer derrors.Wrap(&err, "fetchVersion(%q, %q)", modulePath, vers)
+func FetchVersion(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client) (_ *FetchResult, err error) {
+	defer derrors.Wrap(&err, "fetchVersion(%q, %q)", modulePath, requestedVersion)
 
 	var (
-		commitTime time.Time
-		zipReader  *zip.Reader
-		goModPath  string
+		commitTime      time.Time
+		zipReader       *zip.Reader
+		goModPath       string
+		resolvedVersion string
 	)
 	if modulePath == stdlib.ModulePath {
-		zipReader, commitTime, err = stdlib.Zip(vers)
+		zipReader, commitTime, err = stdlib.Zip(requestedVersion)
 		if err != nil {
 			return nil, err
 		}
+		resolvedVersion = requestedVersion
 	} else {
-		info, err := proxyClient.GetInfo(ctx, modulePath, vers)
+		info, err := proxyClient.GetInfo(ctx, modulePath, requestedVersion)
 		if err != nil {
 			return nil, err
 		}
-		vers = info.Version
+		resolvedVersion = info.Version
 		commitTime = info.Time
 
-		goModBytes, err := proxyClient.GetMod(ctx, modulePath, vers)
+		goModBytes, err := proxyClient.GetMod(ctx, modulePath, resolvedVersion)
 		if err != nil {
 			return nil, err
 		}
@@ -94,17 +97,17 @@ func FetchVersion(ctx context.Context, modulePath, vers string, proxyClient *pro
 				modulePath, goModPath, derrors.AlternativeModule)
 		}
 
-		zipReader, err = proxyClient.GetZip(ctx, modulePath, vers)
+		zipReader, err = proxyClient.GetZip(ctx, modulePath, resolvedVersion)
 		if err != nil {
 			return nil, err
 		}
 	}
-	versionType, err := version.ParseType(vers)
+	versionType, err := version.ParseType(resolvedVersion)
 	if err != nil {
 		return nil, fmt.Errorf("%v: %w", err, derrors.BadModule)
 	}
 
-	fr, err := processZipFile(ctx, modulePath, versionType, vers, commitTime, zipReader)
+	fr, err := processZipFile(ctx, modulePath, versionType, resolvedVersion, commitTime, zipReader)
 	if err != nil {
 		return &FetchResult{GoModPath: goModPath}, err
 	}
@@ -112,43 +115,48 @@ func FetchVersion(ctx context.Context, modulePath, vers string, proxyClient *pro
 		fr.Version.HasGoMod = true
 	}
 	fr.GoModPath = goModPath
+	for _, state := range fr.PackageVersionStates {
+		if state.Status != http.StatusOK {
+			fr.HasIncompletePackages = true
+		}
+	}
 	return fr, nil
 }
 
 // processZipFile extracts information from the module version zip.
-func processZipFile(ctx context.Context, modulePath string, versionType version.Type, version string, commitTime time.Time, zipReader *zip.Reader) (_ *FetchResult, err error) {
-	defer derrors.Wrap(&err, "processZipFile(%q, %q)", modulePath, version)
+func processZipFile(ctx context.Context, modulePath string, versionType version.Type, resolvedVersion string, commitTime time.Time, zipReader *zip.Reader) (_ *FetchResult, err error) {
+	defer derrors.Wrap(&err, "processZipFile(%q, %q)", modulePath, resolvedVersion)
 
 	_, span := trace.StartSpan(ctx, "processing zipFile")
 	defer span.End()
 
-	sourceInfo, err := source.ModuleInfo(ctx, httpClient, modulePath, version)
+	sourceInfo, err := source.ModuleInfo(ctx, httpClient, modulePath, resolvedVersion)
 	if err != nil {
 		log.Error(ctx, err)
 	}
-	readmeFilePath, readmeContents, err := extractReadmeFromZip(modulePath, version, zipReader)
+	readmeFilePath, readmeContents, err := extractReadmeFromZip(modulePath, resolvedVersion, zipReader)
 	if err != nil && err != errReadmeNotFound {
-		return nil, fmt.Errorf("extractReadmeFromZip(%q, %q, zipReader): %v", modulePath, version, err)
+		return nil, fmt.Errorf("extractReadmeFromZip(%q, %q, zipReader): %v", modulePath, resolvedVersion, err)
 	}
 	logf := func(format string, args ...interface{}) {
 		log.Infof(ctx, format, args...)
 	}
-	d := licenses.NewDetector(modulePath, version, zipReader, logf)
+	d := licenses.NewDetector(modulePath, resolvedVersion, zipReader, logf)
 	allLicenses := d.AllLicenses()
-	packages, packageVersionStates, err := extractPackagesFromZip(ctx, modulePath, version, zipReader, d, sourceInfo)
+	packages, packageVersionStates, err := extractPackagesFromZip(ctx, modulePath, resolvedVersion, zipReader, d, sourceInfo)
 
 	if err == errModuleContainsNoPackages {
 		return nil, fmt.Errorf("%v: %w", errModuleContainsNoPackages.Error(), derrors.BadModule)
 	}
 	if err != nil {
-		return nil, fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, version, allLicenses, err)
+		return nil, fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, resolvedVersion, allLicenses, err)
 	}
-	hasGoMod := zipContainsFilename(zipReader, path.Join(moduleVersionDir(modulePath, version), "go.mod"))
+	hasGoMod := zipContainsFilename(zipReader, path.Join(moduleVersionDir(modulePath, resolvedVersion), "go.mod"))
 	return &FetchResult{
 		Version: &internal.Version{
 			VersionInfo: internal.VersionInfo{
 				ModulePath:        modulePath,
-				Version:           version,
+				Version:           resolvedVersion,
 				CommitTime:        commitTime,
 				ReadmeFilePath:    readmeFilePath,
 				ReadmeContents:    readmeContents,
@@ -173,7 +181,7 @@ func moduleVersionDir(modulePath, version string) string {
 // extractReadmeFromZip returns the file path and contents of the first file
 // from r that is a README file. errReadmeNotFound is returned if a README is
 // not found.
-func extractReadmeFromZip(modulePath, version string, r *zip.Reader) (string, string, error) {
+func extractReadmeFromZip(modulePath, resolvedVersion string, r *zip.Reader) (string, string, error) {
 	for _, zipFile := range r.File {
 		if hasFilename(zipFile.Name, "README") {
 			if zipFile.UncompressedSize64 > MaxFileSize {
@@ -183,7 +191,7 @@ func extractReadmeFromZip(modulePath, version string, r *zip.Reader) (string, st
 			if err != nil {
 				return "", "", err
 			}
-			return strings.TrimPrefix(zipFile.Name, moduleVersionDir(modulePath, version)+"/"), string(c), nil
+			return strings.TrimPrefix(zipFile.Name, moduleVersionDir(modulePath, resolvedVersion)+"/"), string(c), nil
 		}
 	}
 	return "", "", errReadmeNotFound
@@ -207,7 +215,7 @@ func hasFilename(file string, expectedFile string) bool {
 // limitations of this site. The two limitations are a maximum file size
 // (MaxFileSize), and the particular set of build contexts we consider
 // (goEnvs).
-func extractPackagesFromZip(ctx context.Context, modulePath, version string, r *zip.Reader, d *licenses.Detector, sourceInfo *source.Info) (_ []*internal.Package, _ []*internal.PackageVersionState, err error) {
+func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion string, r *zip.Reader, d *licenses.Detector, sourceInfo *source.Info) (_ []*internal.Package, _ []*internal.PackageVersionState, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			// The package processing code performs some sanity checks along the way.
@@ -227,10 +235,10 @@ func extractPackagesFromZip(ctx context.Context, modulePath, version string, r *
 	// that contains at least one .go file.
 
 	var (
-		// modulePrefix is the "<module>@<version>/" prefix that all files
+		// modulePrefix is the "<module>@<resolvedVersion>/" prefix that all files
 		// are expected to have according to the zip archive layout specification
 		// at the bottom of https://golang.org/cmd/go/#hdr-Module_proxy_protocol.
-		modulePrefix = moduleVersionDir(modulePath, version) + "/"
+		modulePrefix = moduleVersionDir(modulePath, resolvedVersion) + "/"
 
 		// dirs is the set of directories with at least one .go file,
 		// to be populated during phase 1 and used during phase 2.
@@ -347,7 +355,7 @@ func extractPackagesFromZip(ctx context.Context, modulePath, version string, r *
 		packageVersionStates = append(packageVersionStates, &internal.PackageVersionState{
 			ModulePath:  modulePath,
 			PackagePath: pkgPath,
-			Version:     version,
+			Version:     resolvedVersion,
 			Status:      code,
 			Error:       errMsg,
 		})

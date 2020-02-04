@@ -137,6 +137,31 @@ func checkModuleNotFound(t *testing.T, ctx context.Context, modulePath, version 
 	}
 }
 
+func TestFetchAndUpdateState_BadRequestedVersion(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	defer postgres.ResetTestDB(testDB, t)
+
+	client, teardownProxy := proxy.SetupTestProxy(t, nil)
+	defer teardownProxy()
+
+	const (
+		modulePath = "build.constraints/module"
+		version    = "badversion"
+		want       = http.StatusNotFound
+	)
+
+	code, _ := fetchAndUpdateState(ctx, modulePath, version, client, testDB)
+	if code != want {
+		t.Fatalf("got code %d, want %d", code, want)
+	}
+	_, err := testDB.GetModuleVersionState(ctx, modulePath, version)
+	if !errors.Is(err, derrors.NotFound) {
+		t.Fatal(err)
+	}
+}
+
 func TestFetchAndUpdateState_Incomplete(t *testing.T) {
 	// Check that we store the special "incomplete" status in module_version_states.
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
@@ -291,11 +316,11 @@ func TestSkipIncompletePackage(t *testing.T) {
 	})
 	defer teardownProxy()
 
-	hasIncompletePackages, _, err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB)
+	res, err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB)
 	if err != nil {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
 	}
-	if !hasIncompletePackages {
+	if !res.HasIncompletePackages {
 		t.Errorf("fetchAndInsertVersion(%q, %q, %v, %v): hasIncompletePackages=false, want true",
 			modulePath, version, client, testDB)
 	}
@@ -354,11 +379,11 @@ func TestTrimLargeCode(t *testing.T) {
 	})
 	defer teardownProxy()
 
-	hasIncompletePackages, _, err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB)
+	res, err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB)
 	if err != nil {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
 	}
-	if hasIncompletePackages {
+	if res.HasIncompletePackages {
 		t.Errorf("fetchAndInsertVersion(%q, %q, %v, %v): hasIncompletePackages=true, want false",
 			modulePath, version, client, testDB)
 	}
@@ -388,7 +413,7 @@ func TestFetch_V1Path(t *testing.T) {
 		}),
 	})
 	defer tearDown()
-	if _, _, err := fetchAndInsertVersion(ctx, "my.mod/foo", "v1.0.0", client, testDB); err != nil {
+	if _, err := fetchAndInsertVersion(ctx, "my.mod/foo", "v1.0.0", client, testDB); err != nil {
 		t.Fatalf("fetchAndInsertVersion: %v", err)
 	}
 	pkg, err := testDB.GetPackage(ctx, "my.mod/foo", internal.UnknownModulePath, "v1.0.0")
@@ -432,7 +457,7 @@ func TestReFetch(t *testing.T) {
 		proxy.NewTestVersion(t, modulePath, version, foo),
 	})
 	defer teardownProxy()
-	if _, _, err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB); err != nil {
+	if _, err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB); err != nil {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
 	}
 
@@ -446,7 +471,7 @@ func TestReFetch(t *testing.T) {
 	})
 	defer teardownProxy()
 
-	if _, _, err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB); err != nil {
+	if _, err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB); err != nil {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
 	}
 	want := &internal.VersionedPackage{
@@ -719,7 +744,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			client, teardownProxy := proxy.SetupTestProxy(t, nil)
 			defer teardownProxy()
 
-			if _, _, err := fetchAndInsertVersion(ctx, test.modulePath, test.version, client, testDB); err != nil {
+			if _, err := fetchAndInsertVersion(ctx, test.modulePath, test.version, client, testDB); err != nil {
 				t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", test.modulePath, test.version, client, testDB, err)
 			}
 
@@ -770,7 +795,7 @@ func TestFetchAndInsertVersionTimeout(t *testing.T) {
 	name := "my.mod/version"
 	version := "v1.0.0"
 	wantErrString := "deadline exceeded"
-	_, _, err := fetchAndInsertVersion(context.Background(), name, version, client, testDB)
+	_, err := fetchAndInsertVersion(context.Background(), name, version, client, testDB)
 	if err == nil || !strings.Contains(err.Error(), wantErrString) {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v) returned error %v, want error containing %q",
 			name, version, client, testDB, err, wantErrString)
