@@ -36,6 +36,7 @@ import (
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/version"
 	"golang.org/x/mod/modfile"
+	"golang.org/x/mod/module"
 )
 
 var (
@@ -212,9 +213,10 @@ func hasFilename(file string, expectedFile string) bool {
 // that applies to each package.
 // The second return value says whether any packages are "incomplete," meaning
 // that they contained .go files but couldn't be processed due to current
-// limitations of this site. The two limitations are a maximum file size
-// (MaxFileSize), and the particular set of build contexts we consider
-// (goEnvs).
+// limitations of this site. The limitations are:
+// * a maximum file size (MaxFileSize)
+// * the particular set of build contexts we consider (goEnvs)
+// * whether the import path is valid.
 func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion string, r *zip.Reader, d *licenses.Detector, sourceInfo *source.Info) (_ []*internal.Package, _ []*internal.PackageVersionState, err error) {
 	defer func() {
 		if e := recover(); e != nil {
@@ -281,15 +283,33 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion str
 			// We care about .go files only.
 			continue
 		}
+		// It's possible to have a Go package in a directory that does not result in a valid import path.
+		// That package cannot be imported, but that may be fine if it's a main package, intended to built
+		// and run from that directory.
+		// Example:  https://github.com/postmannen/go-learning/blob/master/concurrency/01-sending%20numbers%20and%20receving%20numbers%20from%20a%20channel/main.go
+		// We're not set up to handle invalid import paths, so skip these packages.
+		if err := module.CheckImportPath(importPath); err != nil {
+			incompleteDirs[innerPath] = true
+			packageVersionStates = append(packageVersionStates, &internal.PackageVersionState{
+				ModulePath:  modulePath,
+				PackagePath: importPath,
+				Version:     resolvedVersion,
+				Status:      derrors.ToHTTPStatus(derrors.BadImportPath),
+				Error:       err.Error(),
+			})
+			continue
+		}
 		if f.UncompressedSize64 > MaxFileSize {
 			incompleteDirs[innerPath] = true
 			status := derrors.ToHTTPStatus(derrors.MaxFileSizeLimitExceeded)
 			err := fmt.Sprintf("Unable to process %s: file size %d exceeds max limit %d",
 				f.Name, f.UncompressedSize64, MaxFileSize)
 			packageVersionStates = append(packageVersionStates, &internal.PackageVersionState{
-				ModulePath: modulePath,
-				Status:     status,
-				Error:      err,
+				ModulePath:  modulePath,
+				PackagePath: importPath,
+				Version:     resolvedVersion,
+				Status:      status,
+				Error:       err,
 			})
 			continue
 		}

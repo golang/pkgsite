@@ -60,7 +60,7 @@ func TestProxy(versions []*TestVersion) *http.ServeMux {
 	const versionTime = "2019-01-30T00:00:00Z"
 
 	if versions == nil {
-		versions = defaultTestVersions()
+		versions = DefaultTestVersions()
 	}
 
 	defaultInfo := func(version string) string {
@@ -125,9 +125,9 @@ func defaultGoMod(modulePath string) string {
 	return fmt.Sprintf("module %s\n\ngo 1.12", modulePath)
 }
 
-// defaultTestVersions creates TestVersions for the modules contained in the
+// DefaultTestVersions creates TestVersions for the modules contained in the
 // testdata directory.
-func defaultTestVersions() []*TestVersion {
+func DefaultTestVersions() []*TestVersion {
 	proxyDataDir := testhelper.TestDataPath("testdata/modproxy")
 	absPath, err := filepath.Abs(proxyDataDir)
 	if err != nil {

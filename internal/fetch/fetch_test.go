@@ -38,6 +38,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 	for _, test := range []struct {
 		name                 string
 		version              string
+		contents             map[string]string
 		packages             map[string]*internal.Package
 		packageVersionStates []*internal.PackageVersionState
 	}{
@@ -169,9 +170,45 @@ func TestExtractPackagesFromZip(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:    "bad.import.path.com",
+			version: "v1.0.0",
+			contents: map[string]string{
+				"good/import/path/foo.go": "package foo",
+				"bad/import path/foo.go":  "package foo",
+			},
+			packages: map[string]*internal.Package{
+				"foo": {
+					Name:    "foo",
+					Path:    "bad.import.path.com/good/import/path",
+					V1Path:  "bad.import.path.com/good/import/path",
+					Imports: []string{},
+					GOOS:    "linux",
+					GOARCH:  "amd64",
+				},
+			},
+			packageVersionStates: []*internal.PackageVersionState{
+				{
+					ModulePath:  "bad.import.path.com",
+					PackagePath: "bad.import.path.com/bad/import path",
+					Version:     "v1.0.0",
+					Status:      derrors.ToHTTPStatus(derrors.BadImportPath),
+				},
+				{
+					ModulePath:  "bad.import.path.com",
+					PackagePath: "bad.import.path.com/good/import/path",
+					Version:     "v1.0.0",
+					Status:      http.StatusOK,
+				},
+			},
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			client, teardownProxy := proxy.SetupTestProxy(t, nil)
+			var versions []*proxy.TestVersion
+			if test.contents != nil {
+				versions = append(versions, proxy.NewTestVersion(t, test.name, test.version, test.contents))
+			}
+			client, teardownProxy := proxy.SetupTestProxy(t, versions)
 			defer teardownProxy()
 
 			reader, err := client.GetZip(ctx, test.name, test.version)

@@ -50,6 +50,8 @@ var (
 	// names.
 	// TODO(b/133187024): break this error up more granularly
 	BadPackage = errors.New("bad package")
+	// Go files were found in a directory, but the resulting import path is invalid.
+	BadImportPath = errors.New("bad import path")
 )
 
 var httpCodes = []struct {
@@ -67,6 +69,7 @@ var httpCodes = []struct {
 	{MaxFileSizeLimitExceeded, 602},
 	{DocumentationHTMLTooLarge, 603},
 	{BadPackage, 604},
+	{BadImportPath, 605},
 }
 
 // FromHTTPStatus generates an error according to the HTTP semantics for the given
