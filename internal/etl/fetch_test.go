@@ -558,6 +558,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 		version     string
 		pkg         string
 		want        *internal.VersionedPackage
+		moreWantDoc []string // Additional substrings we expect to see in DocumentationHTML.
 		dontWantDoc []string // Substrings we expect not to see in DocumentationHTML.
 	}{
 		{
@@ -703,6 +704,52 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				},
 			},
 		}, {
+			modulePath: "std",
+			version:    "v1.12.5",
+			pkg:        "encoding/json",
+			want: &internal.VersionedPackage{
+				VersionInfo: internal.VersionInfo{
+					ModulePath:        "std",
+					Version:           "v1.12.5",
+					CommitTime:        stdlib.TestCommitTime,
+					VersionType:       "release",
+					ReadmeFilePath:    "README.md",
+					ReadmeContents:    "# The Go Programming Language\n",
+					SourceInfo:        source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
+					IsRedistributable: true,
+					HasGoMod:          true,
+				},
+				Package: internal.Package{
+					Path:              "encoding/json",
+					Name:              "json",
+					Synopsis:          "Package json implements encoding and decoding of JSON as defined in RFC 7159.",
+					DocumentationHTML: "The mapping between JSON and Go values is described\nin the documentation for the Marshal and Unmarshal functions.",
+					V1Path:            "encoding/json",
+					Licenses: []*licenses.Metadata{
+						{
+							Types:    []string{"BSD-3-Clause"},
+							FilePath: "LICENSE",
+						},
+					},
+					IsRedistributable: true,
+					GOOS:              "linux",
+					GOARCH:            "amd64",
+				},
+			},
+			moreWantDoc: []string{
+				"Example (CustomMarshalJSON)",
+				`<summary class="Documentation-exampleDetailsHeader">Example (CustomMarshalJSON) <a href="#example-package-CustomMarshalJSON">¶</a></summary>`,
+				"Package (CustomMarshalJSON)",
+				`<li><a href="#example-package-CustomMarshalJSON">Package (CustomMarshalJSON)</a></li>`,
+				"Decoder.Decode (Stream)",
+				`<li><a href="#example-Decoder.Decode-Stream">Decoder.Decode (Stream)</a></li>`,
+			},
+			dontWantDoc: []string{
+				"Example (customMarshalJSON)",
+				"Package (customMarshalJSON)",
+				"Decoder.Decode (stream)",
+			},
+		}, {
 			modulePath: "build.constraints/module",
 			version:    "v1.0.0",
 			pkg:        "build.constraints/module/cpu",
@@ -771,6 +818,11 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				t.Errorf("got non-empty documentation but want empty:\ngot: %q\nwant: %q", got, want)
 			} else if !strings.Contains(got, want) {
 				t.Errorf("got documentation doesn't contain wanted documentation substring:\ngot: %q\nwant (substring): %q", got, want)
+			}
+			for _, want := range test.moreWantDoc {
+				if got := gotPkg.DocumentationHTML; !strings.Contains(got, want) {
+					t.Errorf("got documentation doesn't contain wanted documentation substring:\ngot: %q\nwant (substring): %q", got, want)
+				}
 			}
 			for _, dontWant := range test.dontWantDoc {
 				if got := gotPkg.DocumentationHTML; strings.Contains(got, dontWant) {
