@@ -34,8 +34,8 @@ import (
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/stdlib"
-	"golang.org/x/discovery/internal/thirdparty/modfile"
 	"golang.org/x/discovery/internal/version"
+	"golang.org/x/mod/modfile"
 )
 
 var (
