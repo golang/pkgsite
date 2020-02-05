@@ -40,6 +40,7 @@ func (p *policy) serialize() string {
 func SecureHeaders() Middleware {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			useStrictDynamic := r.FormValue("csp-strict-dynamic") == "true"
 			// These are special keywords within the CSP spec
 			// https://www.w3.org/TR/CSP3/#framework-directive-source-list
 			const (
@@ -90,15 +91,21 @@ func SecureHeaders() Middleware {
 				log.Infof(r.Context(), "generateNonce(): %v", err)
 			}
 
+			scriptSrcs := []string {
+				fmt.Sprintf("'nonce-%s'", nonce),
+				"www.gstatic.com",
+				"www.googletagmanager.com",
+				"support.google.com",
+			}
+			if useStrictDynamic {
+				scriptSrcs = append(scriptSrcs, "'strict-dynamic'")
+			}
+
 			// Because we are using the go/feedback widget, we need to
 			// allow "support.google.com" as a valid source for our script-src policy.
 			//
 			// www.google-analytics.com is needed for Google Analytics.
-			p.add("script-src",
-				fmt.Sprintf("'nonce-%s'", nonce),
-				"www.gstatic.com",
-				"www.googletagmanager.com",
-				"support.google.com")
+			p.add("script-src", scriptSrcs...)
 
 			// Don't allow framing.
 			p.add("frame-ancestors", none)
