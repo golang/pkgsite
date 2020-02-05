@@ -29,8 +29,8 @@ func (db *DB) GetActiveExperiments(ctx context.Context) (_ []*internal.Experimen
 	return experiments, nil
 }
 
-// insertExperiment inserts a row into the experiments table.
-func (db *DB) insertExperiment(ctx context.Context, e *internal.Experiment) (err error) {
+// InsertExperiment inserts a row into the experiments table.
+func (db *DB) InsertExperiment(ctx context.Context, e *internal.Experiment) (err error) {
 	defer derrors.Wrap(&err, "DB.insertExperiment(ctx, %v)", e)
 	if e.Name == "" || e.Description == "" {
 		return fmt.Errorf("neither name nor description can be empty: %w", derrors.InvalidArgument)
@@ -43,8 +43,8 @@ func (db *DB) insertExperiment(ctx context.Context, e *internal.Experiment) (err
 	return err
 }
 
-// updateExperiment updates the specified experiment with the provided rollout value.
-func (db *DB) updateExperiment(ctx context.Context, e *internal.Experiment) (err error) {
+// UpdateExperiment updates the specified experiment with the provided rollout value.
+func (db *DB) UpdateExperiment(ctx context.Context, e *internal.Experiment) (err error) {
 	defer derrors.Wrap(&err, "DB.updateExperimentRollout(ctx, %v)", e)
 	if e.Name == "" || e.Description == "" {
 		return fmt.Errorf("neither name nor description can be empty: %w", derrors.InvalidArgument)

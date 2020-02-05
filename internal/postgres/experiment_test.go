@@ -18,7 +18,7 @@ func TestGetActiveExperiments(t *testing.T) {
 	defer cancel()
 
 	experiment := &internal.Experiment{Name: "test-experiment", Description: "test-description"}
-	if err := testDB.updateExperiment(ctx, experiment); err != nil {
+	if err := testDB.UpdateExperiment(ctx, experiment); err != nil {
 		t.Fatalf("unexpected error when updating non-existent experiment: %v", err)
 	}
 	got, err := testDB.GetActiveExperiments(ctx)
@@ -28,7 +28,7 @@ func TestGetActiveExperiments(t *testing.T) {
 	if len(got) != 0 {
 		t.Fatalf("got %d active experiments; want = 0", len(got))
 	}
-	if err := testDB.insertExperiment(ctx, experiment); err != nil {
+	if err := testDB.InsertExperiment(ctx, experiment); err != nil {
 		t.Fatalf("error inserting inactive experiment: %v", err)
 	}
 	got, err = testDB.GetActiveExperiments(ctx)
@@ -40,7 +40,7 @@ func TestGetActiveExperiments(t *testing.T) {
 	}
 
 	experiment.Rollout = 50
-	if err := testDB.updateExperiment(ctx, experiment); err != nil {
+	if err := testDB.UpdateExperiment(ctx, experiment); err != nil {
 		t.Fatal(err)
 	}
 	got, err = testDB.GetActiveExperiments(ctx)
@@ -67,17 +67,17 @@ func TestCannotInsertRolloutGreaterThan100(t *testing.T) {
 		Description: "test-description",
 	}
 	// Test cannot insert feature with rollout > 100.
-	if err := testDB.insertExperiment(ctx, experiment); err == nil {
+	if err := testDB.InsertExperiment(ctx, experiment); err == nil {
 		t.Fatal(err)
 	}
 
 	experiment.Rollout = 100
-	if err := testDB.insertExperiment(ctx, experiment); err != nil {
+	if err := testDB.InsertExperiment(ctx, experiment); err != nil {
 		t.Fatal(err)
 	}
 	// Test cannot update feature rollout to > 1.
 	experiment.Rollout = 101
-	if err := testDB.updateExperiment(ctx, experiment); err == nil {
+	if err := testDB.UpdateExperiment(ctx, experiment); err == nil {
 		t.Fatal(err)
 	}
 }
