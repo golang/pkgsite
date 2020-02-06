@@ -407,7 +407,7 @@ func (*DataSource) IsExcluded(context.Context, string) (bool, error) {
 	return false, nil
 }
 
-// GetActiveExperiments is unimplemented.
-func (*DataSource) GetActiveExperiments(ctx context.Context) ([]*internal.Experiment, error) {
+// GetExperiments is unimplemented.
+func (*DataSource) GetExperiments(ctx context.Context) ([]*internal.Experiment, error) {
 	return nil, nil
 }

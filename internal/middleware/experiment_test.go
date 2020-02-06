@@ -24,7 +24,7 @@ type testExperimentSource struct {
 	experiments []*internal.Experiment
 }
 
-func (es *testExperimentSource) GetActiveExperiments(ctx context.Context) ([]*internal.Experiment, error) {
+func (es *testExperimentSource) GetExperiments(ctx context.Context) ([]*internal.Experiment, error) {
 	es.mu.Lock()
 	defer es.mu.Unlock()
 	return es.experiments, nil

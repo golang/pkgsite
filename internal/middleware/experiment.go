@@ -95,7 +95,7 @@ func (e *Experimenter) pollUpdates(ctx context.Context) {
 // experiment source.
 func (e *Experimenter) loadNextSnapshot(ctx context.Context) (err error) {
 	defer derrors.Wrap(&err, "loadNextSnapshot")
-	snapshot, err := e.es.GetActiveExperiments(ctx)
+	snapshot, err := e.es.GetExperiments(ctx)
 	if err != nil {
 		return err
 	}

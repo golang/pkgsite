@@ -21,29 +21,29 @@ func TestGetActiveExperiments(t *testing.T) {
 	if err := testDB.UpdateExperiment(ctx, experiment); err != nil {
 		t.Fatalf("unexpected error when updating non-existent experiment: %v", err)
 	}
-	got, err := testDB.GetActiveExperiments(ctx)
+	got, err := testDB.GetExperiments(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(got) != 0 {
-		t.Fatalf("got %d active experiments; want = 0", len(got))
+		t.Fatalf("got %d experiments; want = 0", len(got))
 	}
 	if err := testDB.InsertExperiment(ctx, experiment); err != nil {
 		t.Fatalf("error inserting inactive experiment: %v", err)
 	}
-	got, err = testDB.GetActiveExperiments(ctx)
+	got, err = testDB.GetExperiments(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(got) != 0 {
-		t.Fatalf("got %d active experiments; want = 0", len(got))
+	if len(got) != 1 {
+		t.Fatalf("got %d experiments; want = 1", len(got))
 	}
 
 	experiment.Rollout = 50
 	if err := testDB.UpdateExperiment(ctx, experiment); err != nil {
 		t.Fatal(err)
 	}
-	got, err = testDB.GetActiveExperiments(ctx)
+	got, err = testDB.GetExperiments(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}

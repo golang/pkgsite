@@ -11,9 +11,9 @@ import (
 // ExperimentSource is the interface used by the middleware to interact with
 // experiments data.
 type ExperimentSource interface {
-	// GetActiveExperiments fetches active experiments from the
+	// GetExperiments fetches active experiments from the
 	// ExperimentSource.
-	GetActiveExperiments(ctx context.Context) ([]*Experiment, error)
+	GetExperiments(ctx context.Context) ([]*Experiment, error)
 }
 
 // LocalExperimentSource is used when developing locally using the direct proxy
@@ -27,7 +27,7 @@ func NewLocalExperimentSource(experiments []*Experiment) *LocalExperimentSource 
 	return &LocalExperimentSource{experiments: experiments}
 }
 
-// GetActiveExperiments returns the experiments for the given LocalExperimentSource.
-func (e *LocalExperimentSource) GetActiveExperiments(ctx context.Context) ([]*Experiment, error) {
+// GetExperiments returns the experiments for the given LocalExperimentSource.
+func (e *LocalExperimentSource) GetExperiments(ctx context.Context) ([]*Experiment, error) {
 	return e.experiments, nil
 }

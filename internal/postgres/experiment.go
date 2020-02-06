@@ -12,11 +12,11 @@ import (
 	"golang.org/x/discovery/internal/derrors"
 )
 
-// GetActiveExperiments fetches all experiments where rollout is greater than 0.
-func (db *DB) GetActiveExperiments(ctx context.Context) (_ []*internal.Experiment, err error) {
-	defer derrors.Wrap(&err, "DB.GetActiveExperiments(ctx)")
+// GetExperiments fetches all experiments in the database.
+func (db *DB) GetExperiments(ctx context.Context) (_ []*internal.Experiment, err error) {
+	defer derrors.Wrap(&err, "DB.GetExperiments(ctx)")
 
-	query := "SELECT name, rollout, description FROM experiments WHERE rollout > 0;"
+	query := "SELECT name, rollout, description FROM experiments;"
 	var experiments []*internal.Experiment
 	err = db.db.RunQuery(ctx, query, func(rows *sql.Rows) error {
 		var e internal.Experiment
