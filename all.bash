@@ -155,7 +155,7 @@ main() {
       standard_linters
       runcmd go test -race -count=1 ./...
       ;;
-    lint) all_linters ;;
+    lint) standard_linters ;;
     headers) check_headers ;;
     migrations) check_migrations ;;
     misspell) check_misspell ;;

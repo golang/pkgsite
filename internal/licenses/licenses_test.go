@@ -21,7 +21,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/google/licensecheck"
 	lc "github.com/google/licensecheck"
 )
 
@@ -522,7 +521,7 @@ func TestDetectFiles(t *testing.T) {
 				{
 					Types:    []string{"BSD-3-Clause"},
 					FilePath: "dir/Copying",
-					Coverage: licensecheck.Coverage{},
+					Coverage: lc.Coverage{},
 				},
 			},
 		},

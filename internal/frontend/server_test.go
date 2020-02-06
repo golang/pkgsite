@@ -629,7 +629,7 @@ func TestServer(t *testing.T) {
 		},
 		{
 			name:           "stdlib directory subdirectories",
-			urlPath:        fmt.Sprintf("/cmd@go1.13?tab=subdirectories"),
+			urlPath:        "/cmd@go1.13?tab=subdirectories",
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.DirectoryHeader(dirCmd, versioned),
@@ -637,7 +637,7 @@ func TestServer(t *testing.T) {
 		},
 		{
 			name:           "stdlib directory overview",
-			urlPath:        fmt.Sprintf("/cmd@go1.13?tab=overview"),
+			urlPath:        "/cmd@go1.13?tab=overview",
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.DirectoryHeader(dirCmd, versioned),
@@ -651,7 +651,7 @@ func TestServer(t *testing.T) {
 		},
 		{
 			name:           "stdlib directory licenses",
-			urlPath:        fmt.Sprintf("/cmd@go1.13?tab=licenses"),
+			urlPath:        "/cmd@go1.13?tab=licenses",
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.DirectoryHeader(dirCmd, versioned),
