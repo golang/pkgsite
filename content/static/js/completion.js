@@ -176,12 +176,9 @@ document.addEventListener('DOMContentLoaded', function() {
     selector: '#AutoComplete',
     onSelection: feedback => {
       if (feedback.selection.value.PackagePath) {
-        document.querySelector('#AutoComplete').value =
-          feedback.selection.value.PackagePath;
-        // ARIA guidelines recommend merely completing the text input, but in
-        // testing it was annoying to have to hit enter twice. Similar to
-        // Google search, we submit the form when a completion is selected.
-        document.querySelector('#AutoComplete-parent').submit();
+        // Navigate directly to the package.
+        // TODO (b/149016238): update ARIA attributes to reflect this.
+        window.location.href = "/" + feedback.selection.value.PackagePath;
       }
     }
   });
