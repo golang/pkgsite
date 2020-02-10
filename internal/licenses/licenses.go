@@ -38,13 +38,12 @@ const (
 
 	// coverageThreshold is the minimum percentage of the file that must contain
 	// license text.
-	coverageThreshold = 90
+	coverageThreshold = 75
 
-	// Thresholds for the "Apache-2.0" type. This works around an issue in licensecheck
+	// Threshold for the "Apache-2.0" type. This works around an issue in licensecheck
 	// where the Apache license text includes the appendix, so licenses that omit
 	// the appendix score artificially low. See http://b/147599731.
 	apacheClassifyThreshold = 87
-	apacheCoverageThreshold = 87
 
 	apacheType = "Apache-2.0"
 
@@ -377,6 +376,10 @@ func DetectFile(contents []byte, filename string, logf func(string, ...interface
 		logf("%s licensecheck.Cover failed, skipping", filename)
 		return []string{unknownLicenseType}, cov
 	}
+	if cov.Percent < float64(coverageThreshold) {
+		logf("%s license coverage too low (%+v), skipping", filename, cov)
+		return []string{unknownLicenseType}, cov
+	}
 	types := make(map[string]bool)
 	for _, m := range cov.Match {
 		if m.Percent >= classifyThreshold || (m.Name == apacheType && m.Percent >= apacheClassifyThreshold) {
@@ -385,14 +388,6 @@ func DetectFile(contents []byte, filename string, logf func(string, ...interface
 	}
 	if len(types) == 0 {
 		logf("%s failed to classify license (%+v), skipping", filename, cov)
-		return []string{unknownLicenseType}, cov
-	}
-	cthresh := float64(coverageThreshold)
-	if types[apacheType] {
-		cthresh = apacheCoverageThreshold
-	}
-	if cov.Percent < cthresh {
-		logf("%s license coverage too low (%+v), skipping", filename, cov)
 		return []string{unknownLicenseType}, cov
 	}
 	return setToSortedSlice(types), cov
