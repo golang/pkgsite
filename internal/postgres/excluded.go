@@ -33,7 +33,9 @@ func (db *DB) IsExcluded(ctx context.Context, path string) (_ bool, err error) {
 
 // InsertExcludedPrefix inserts prefix into the excluded_prefixes table.
 //
-// This is for testing only; use devtools/cmd/dbadmin to exclude or unexclude a prefix.
+// For real-time administration (e.g. DOS prevention), use devtools/cmd/dbadmin
+// to exclude or unexclude a prefix. If the exclusion is permanent (e.g. a user
+// request), also add the prefix and reason to excludedPrefixes in cmd/etl.
 func (db *DB) InsertExcludedPrefix(ctx context.Context, prefix, user, reason string) (err error) {
 	defer derrors.Wrap(&err, "DB.InsertExcludedPrefix(ctx, %q, %q)", prefix, reason)
 

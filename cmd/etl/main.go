@@ -72,6 +72,8 @@ func main() {
 	db := postgres.New(ddb)
 	defer db.Close()
 
+	populateExcluded(ctx, db)
+
 	indexClient, err := index.New(cfg.IndexURL)
 	if err != nil {
 		log.Fatal(ctx, err)
@@ -194,4 +196,47 @@ func readProxyRemoved(ctx context.Context) {
 		log.Fatalf(ctx, "scanning %s: %v", filename, err)
 	}
 	log.Infof(ctx, "read %d excluded module versions from %s", len(etl.ProxyRemoved), filename)
+}
+
+// excludedPrefixes is a list of excluded prefixes and the reasons for exclusion.
+// This is a permanent record of exclusions, in case the DB gets wiped or corrupted.
+var excludedPrefixes = []struct {
+	prefix, reason string
+}{
+	{
+		"github.com/xvrzhao/site-monitor",
+		"author requested https://groups.google.com/a/google.com/d/msg/go-discovery-feedback/oYtPw2Ob0fY/xxGikZK1AQAJ",
+	},
+	{
+		"gioui.org/ui",
+		"author requested https://groups.google.com/a/google.com/d/msg/go-discovery-feedback/CeMEn2E1zwo/q5S8HPn6BgAJ",
+	},
+	{
+		"github.com/kortschak/unlicensable",
+		"https://groups.google.com/g/golang-dev/c/mfiPCtJ1BGU/m/HDb3--vMEwAJk",
+	},
+	{
+		"github.com/clevergo/clevergo",
+		"https://groups.google.com/a/google.com/g/go-discovery-feedback/c/IAHYXlstv-g/m/muE06-ECFgAJ",
+	},
+}
+
+// populateExcluded adds each element of excludedPrefixes to the excluded_prefixes
+// table if it isn't already present.
+func populateExcluded(ctx context.Context, db *postgres.DB) {
+	user := os.Getenv("USER")
+	if user == "" {
+		user = "etl"
+	}
+	for _, ep := range excludedPrefixes {
+		present, err := db.IsExcluded(ctx, ep.prefix)
+		if err != nil {
+			log.Fatalf(ctx, "db.IsExcluded(%q): %v", ep.prefix, err)
+		}
+		if !present {
+			if err := db.InsertExcludedPrefix(ctx, ep.prefix, user, ep.reason); err != nil {
+				log.Fatalf(ctx, "db.InsertExcludedPrefix(%q, %q, %q): %v", ep.prefix, user, ep.reason, err)
+			}
+		}
+	}
 }
