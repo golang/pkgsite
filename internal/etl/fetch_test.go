@@ -630,7 +630,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					V1Path:   "nonredistributable.mod/module/foo",
 					Licenses: []*licenses.Metadata{
 						{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
-						{Types: []string{"BSD-0-Clause"}, FilePath: "foo/LICENSE.md"},
+						{Types: []string{"JSON"}, FilePath: "foo/LICENSE.md"},
 					},
 					GOOS:              "linux",
 					GOARCH:            "amd64",

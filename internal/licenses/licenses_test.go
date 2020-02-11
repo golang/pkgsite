@@ -261,7 +261,7 @@ func TestModuleIsRedistributable(t *testing.T) {
 			filename:  "smasher",
 			module:    "github.com/smasher164/mem",
 			version:   "v0.0.0-20191114064341-4e07bd0f0d69",
-			want:      false,
+			want:      true,
 			wantMetas: []*Metadata{{Types: []string{"BSD-0-Clause"}, FilePath: "LICENSE.md"}},
 		},
 		{
@@ -328,7 +328,8 @@ func TestRedistributable(t *testing.T) {
 		{nil, false},
 		{[]string{unknownLicenseType}, false},
 		{[]string{"MIT"}, true},
-		{[]string{"MIT", "Unlicense"}, false},
+		{[]string{"MIT", "Unlicense"}, true},
+		{[]string{"MIT", "JSON"}, false},
 		{[]string{"MIT", "GPL2", "ISC"}, true},
 	} {
 		got := Redistributable(test.types)
