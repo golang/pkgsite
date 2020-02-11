@@ -730,7 +730,7 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		alternativeModulePath := strings.ToLower(canonicalModulePath)
 		alternativeStatus := derrors.ToHTTPStatus(derrors.AlternativeModule)
 		err := testDB.UpsertModuleVersionState(ctx, alternativeModulePath, "v1.2.0", "",
-			time.Now(), alternativeStatus, canonicalModulePath, nil)
+			time.Now(), alternativeStatus, canonicalModulePath, nil, nil)
 		if err != nil {
 			t.Fatal(err)
 		}

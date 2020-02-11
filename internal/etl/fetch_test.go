@@ -71,6 +71,22 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	gotStates, err := testDB.GetPackageVersionStatesForModule(ctx, modulePath, version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantStates := []*internal.PackageVersionState{
+		{
+			PackagePath: "github.com/take/down/foo",
+			ModulePath:  modulePath,
+			Version:     version,
+			Status:      http.StatusOK,
+		},
+	}
+	if diff := cmp.Diff(wantStates, gotStates); diff != "" {
+		t.Errorf("testDB.GetPackageVersionStatesForModule(ctx, %q, %q) mismatch (-want +got):\n%s", modulePath, version, diff)
+	}
+
 	teardownProxy()
 
 	// Take down the module, by having the proxy serve a 404/410 for it.
@@ -91,6 +107,14 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	// The module should no longer be in the database.
 	if _, err := testDB.GetVersionInfo(ctx, modulePath, version); !errors.Is(err, derrors.NotFound) {
 		t.Fatalf("got %v, want NotFound", err)
+	}
+
+	gotStates, err = testDB.GetPackageVersionStatesForModule(ctx, modulePath, version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotStates != nil {
+		t.Errorf("testDB.GetPackageVersionStatesForModule(%q, %q) = %v; want = nil", modulePath, version, gotStates)
 	}
 }
 
@@ -191,6 +215,27 @@ func TestFetchAndUpdateState_Incomplete(t *testing.T) {
 	}
 	if vs.Status == nil || *vs.Status != want {
 		t.Fatalf("testDB.GetModuleVersionState(ctx, %q, %q): status=%v, want %d", modulePath, version, vs.Status, want)
+	}
+	gotStates, err := testDB.GetPackageVersionStatesForModule(ctx, modulePath, version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantStates := []*internal.PackageVersionState{
+		{
+			PackagePath: "build.constraints/module/cpu",
+			ModulePath:  "build.constraints/module",
+			Version:     "v1.0.0",
+			Status:      200,
+		},
+		{
+			PackagePath: "build.constraints/module/ignore",
+			ModulePath:  "build.constraints/module",
+			Version:     "v1.0.0",
+			Status:      600,
+		},
+	}
+	if diff := cmp.Diff(wantStates, gotStates); diff != "" {
+		t.Errorf("testDB.GetPackageVersionStatesForModule(ctx, %q, %q) mismatch (-want +got):\n%s", modulePath, version, diff)
 	}
 }
 

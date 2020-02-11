@@ -44,16 +44,32 @@ func (db *DB) InsertIndexVersions(ctx context.Context, versions []*internal.Inde
 
 // UpsertModuleVersionState inserts or updates the module_version_state table with
 // the results of a fetch operation for a given module version.
-func (db *DB) UpsertModuleVersionState(ctx context.Context, modulePath, vers, appVersion string, timestamp time.Time, status int, goModPath string, fetchErr error) (err error) {
+func (db *DB) UpsertModuleVersionState(ctx context.Context, modulePath, vers, appVersion string, timestamp time.Time, status int, goModPath string, fetchErr error, packageVersionStates []*internal.PackageVersionState) (err error) {
 	derrors.Wrap(&err, "UpsertModuleVersionState(ctx, %q, %q, %q, %s, %d, %q, %v",
 		modulePath, vers, appVersion, timestamp, status, goModPath, fetchErr)
 
 	ctx, span := trace.StartSpan(ctx, "UpsertModuleVersionState")
 	defer span.End()
-	query := `
-		INSERT INTO module_version_states AS mvs (module_path, version, sort_version, app_version, index_timestamp, status, go_mod_path, error)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-		ON CONFLICT (module_path, version) DO UPDATE
+
+	return db.db.Transact(func(tx *sql.Tx) error {
+		var sqlErrorMsg sql.NullString
+		if fetchErr != nil {
+			sqlErrorMsg = sql.NullString{Valid: true, String: fetchErr.Error()}
+		}
+
+		result, err := database.ExecTx(ctx, tx, `
+			INSERT INTO module_version_states AS mvs (
+				module_path,
+				version,
+				sort_version,
+				app_version,
+				index_timestamp,
+				status,
+				go_mod_path,
+				error)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+			ON CONFLICT (module_path, version)
+			DO UPDATE
 			SET
 				app_version=excluded.app_version,
 				status=excluded.status,
@@ -69,25 +85,50 @@ func (db *DB) UpsertModuleVersionState(ctx context.Context, modulePath, vers, ap
 						CURRENT_TIMESTAMP + 2*(mvs.next_processed_after - mvs.last_processed_at)
 					ELSE
 						CURRENT_TIMESTAMP + INTERVAL '1 hour'
-					END;`
+					END;`,
+			modulePath, vers, version.ForSorting(vers),
+			appVersion, timestamp, status, goModPath, sqlErrorMsg)
+		if err != nil {
+			return err
+		}
+		affected, err := result.RowsAffected()
+		if err != nil {
+			return fmt.Errorf("result.RowsAffected(): %v", err)
+		}
+		if affected != 1 {
+			return fmt.Errorf("module version state update affected %d rows, expected exactly 1", affected)
+		}
 
-	var sqlErrorMsg sql.NullString
-	if fetchErr != nil {
-		sqlErrorMsg = sql.NullString{Valid: true, String: fetchErr.Error()}
-	}
-	result, err := db.db.Exec(ctx, query,
-		modulePath, vers, version.ForSorting(vers), appVersion, timestamp, status, goModPath, sqlErrorMsg)
-	if err != nil {
-		return err
-	}
-	affected, err := result.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("result.RowsAffected(): %v", err)
-	}
-	if affected != 1 {
-		return fmt.Errorf("module version state update affected %d rows, expected exactly 1", affected)
-	}
-	return nil
+		if _, err := database.ExecTx(ctx, tx, `DELETE FROM package_version_states WHERE module_path=$1 AND version=$2`, modulePath, vers); err != nil {
+			return fmt.Errorf("failed to delete rows from package_version_states for %q@%q", modulePath, vers)
+		}
+
+		if len(packageVersionStates) == 0 {
+			return nil
+		}
+
+		var vals []interface{}
+		for _, pvs := range packageVersionStates {
+			vals = append(vals, pvs.PackagePath, pvs.ModulePath, pvs.Version, pvs.Status, pvs.Error)
+		}
+		return database.BulkInsert(ctx, tx, "package_version_states",
+			[]string{
+				"package_path",
+				"module_path",
+				"version",
+				"status",
+				"error",
+			},
+			vals,
+			`ON CONFLICT (module_path, package_path, version)
+				DO UPDATE
+				SET
+					package_path=excluded.package_path,
+					module_path=excluded.module_path,
+					version=excluded.version,
+					status=excluded.status,
+					error=excluded.error`)
+	})
 }
 
 // LatestIndexTimestamp returns the last timestamp successfully inserted into
@@ -135,7 +176,7 @@ func (db *DB) UpdateModuleVersionStatesForReprocessing(ctx context.Context, appV
 	return nil
 }
 
-const versionStateColumns = `
+const moduleVersionStateColumns = `
 			module_path,
 			version,
 			index_timestamp,
@@ -149,7 +190,7 @@ const versionStateColumns = `
 			go_mod_path`
 
 // scanModuleVersionState constructs an *internal.ModuleModuleVersionState from the given
-// scanner. It expects columns to be in the order of versionStateColumns.
+// scanner. It expects columns to be in the order of moduleVersionStateColumns.
 func scanModuleVersionState(scan func(dest ...interface{}) error) (*internal.ModuleVersionState, error) {
 	var (
 		modulePath, version, appVersion               string
@@ -195,7 +236,7 @@ func scanModuleVersionState(scan func(dest ...interface{}) error) (*internal.Mod
 // given queryFormat be a format specifier with exactly one argument: a %s verb
 // for the query columns.
 func (db *DB) queryModuleVersionStates(ctx context.Context, queryFormat string, args ...interface{}) ([]*internal.ModuleVersionState, error) {
-	query := fmt.Sprintf(queryFormat, versionStateColumns)
+	query := fmt.Sprintf(queryFormat, moduleVersionStateColumns)
 	rows, err := db.db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
@@ -283,7 +324,7 @@ func (db *DB) GetNextVersionsToFetch(ctx context.Context, limit int) (_ []*inter
 	`
 	// Prepend "s." to columns, because in maxQuery the bare column name is
 	// ambiguous. All the queries use `s` as an alias for module_version_states.
-	columnSlice := strings.Split(versionStateColumns, ",")
+	columnSlice := strings.Split(moduleVersionStateColumns, ",")
 	for i, c := range columnSlice {
 		columnSlice[i] = "s." + strings.TrimSpace(c)
 	}
@@ -371,13 +412,80 @@ func (db *DB) GetModuleVersionState(ctx context.Context, modulePath, version str
 			module_version_states
 		WHERE
 			module_path = $1
-			AND version = $2;`, versionStateColumns)
+			AND version = $2;`, moduleVersionStateColumns)
 
 	row := db.db.QueryRow(ctx, query, modulePath, version)
 	v, err := scanModuleVersionState(row.Scan)
 	switch err {
 	case nil:
 		return v, nil
+	case sql.ErrNoRows:
+		return nil, derrors.NotFound
+	default:
+		return nil, fmt.Errorf("row.Scan(): %v", err)
+	}
+}
+
+// GetPackageVersionStatesForModule returns the current package version states
+// for modulePath and version.
+func (db *DB) GetPackageVersionStatesForModule(ctx context.Context, modulePath, version string) (_ []*internal.PackageVersionState, err error) {
+	defer derrors.Wrap(&err, "GetPackageVersionState(ctx, %q, %q)", modulePath, version)
+
+	query := `
+		SELECT
+			package_path,
+			module_path,
+			version,
+			status,
+			error
+		FROM
+			package_version_states
+		WHERE
+			module_path = $1
+			AND version = $2;`
+
+	var states []*internal.PackageVersionState
+	collect := func(rows *sql.Rows) error {
+		var s internal.PackageVersionState
+		if err := rows.Scan(&s.PackagePath, &s.ModulePath, &s.Version,
+			&s.Status, &s.Error); err != nil {
+			return fmt.Errorf("rows.Scan(): %v", err)
+		}
+		states = append(states, &s)
+		return nil
+	}
+	if err := db.db.RunQuery(ctx, query, collect, modulePath, version); err != nil {
+		return nil, err
+	}
+	return states, nil
+}
+
+// GetPackageVersionState returns the current package version state for
+// pkgPath, modulePath and version.
+func (db *DB) GetPackageVersionState(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.PackageVersionState, err error) {
+	defer derrors.Wrap(&err, "GetPackageVersionState(ctx, %q, %q, %q)", pkgPath, modulePath, version)
+
+	query := `
+		SELECT
+			package_path,
+			module_path,
+			version,
+			status,
+			error
+		FROM
+			package_version_states
+		WHERE
+			package_path = $1
+			AND module_path = $2
+			AND version = $3;`
+
+	var pvs internal.PackageVersionState
+	err = db.db.QueryRow(ctx, query, pkgPath, modulePath, version).Scan(
+		&pvs.PackagePath, &pvs.ModulePath, &pvs.Version,
+		&pvs.Status, &pvs.Error)
+	switch err {
+	case nil:
+		return &pvs, nil
 	case sql.ErrNoRows:
 		return nil, derrors.NotFound
 	default:

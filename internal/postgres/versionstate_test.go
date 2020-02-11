@@ -72,11 +72,17 @@ func TestModuleVersionState(t *testing.T) {
 	}
 
 	var (
-		statusCode = 500
-		fetchErr   = errors.New("bad request")
-		goModPath  = "goModPath"
+		statusCode      = 500
+		fetchErr        = errors.New("bad request")
+		goModPath       = "goModPath"
+		pkgVersionState = &internal.PackageVersionState{
+			ModulePath:  "foo.com/bar",
+			PackagePath: "foo.com/bar/foo",
+			Version:     "v1.0.0",
+			Status:      500,
+		}
 	)
-	if err := testDB.UpsertModuleVersionState(ctx, fooVersion.Path, fooVersion.Version, "", fooVersion.Timestamp, statusCode, goModPath, fetchErr); err != nil {
+	if err := testDB.UpsertModuleVersionState(ctx, fooVersion.Path, fooVersion.Version, "", fooVersion.Timestamp, statusCode, goModPath, fetchErr, []*internal.PackageVersionState{pkgVersionState}); err != nil {
 		t.Fatal(err)
 	}
 	errString := fetchErr.Error()
@@ -95,6 +101,23 @@ func TestModuleVersionState(t *testing.T) {
 	}
 	if diff := cmp.Diff(wantFooState, gotFooState, ignore); diff != "" {
 		t.Errorf("testDB.GetModuleVersionState(ctx, %q, %q) mismatch (-want +got)\n%s", wantFooState.ModulePath, wantFooState.Version, diff)
+	}
+
+	gotPVS, err := testDB.GetPackageVersionState(ctx, pkgVersionState.PackagePath, pkgVersionState.ModulePath, pkgVersionState.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(pkgVersionState, gotPVS); diff != "" {
+		t.Errorf("testDB.GetPackageVersionStates(ctx, %q, %q) mismatch (-want +got)\n%s", wantFooState.ModulePath, wantFooState.Version, diff)
+	}
+
+	gotPkgVersionStates, err := testDB.GetPackageVersionStatesForModule(ctx,
+		wantFooState.ModulePath, wantFooState.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff([]*internal.PackageVersionState{pkgVersionState}, gotPkgVersionStates); diff != "" {
+		t.Errorf("testDB.GetPackageVersionStates(ctx, %q, %q) mismatch (-want +got)\n%s", wantFooState.ModulePath, wantFooState.Version, diff)
 	}
 
 	stats, err := testDB.GetVersionStats(ctx)
@@ -132,7 +155,7 @@ func TestUpdateModuleVersionStatesForReprocessing(t *testing.T) {
 			Timestamp: now,
 		},
 	} {
-		if err := testDB.UpsertModuleVersionState(ctx, v.Path, v.Version, "", v.Timestamp, http.StatusOK, goModPath, nil); err != nil {
+		if err := testDB.UpsertModuleVersionState(ctx, v.Path, v.Version, "", v.Timestamp, http.StatusOK, goModPath, nil, nil); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -182,7 +205,7 @@ func TestGetNextVersionsToFetch(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Insert a module that we don't expect to retrieve.
-	if err := testDB.UpsertModuleVersionState(ctx, "ok.com", "v1.0.0", "", now, 200, "", nil); err != nil {
+	if err := testDB.UpsertModuleVersionState(ctx, "ok.com", "v1.0.0", "", now, 200, "", nil, nil); err != nil {
 		t.Fatal(err)
 	}
 	got, err := testDB.GetNextVersionsToFetch(ctx, len(mods)+1)

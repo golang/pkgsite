@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.opencensus.io/trace"
+	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/fetch"
@@ -106,6 +107,7 @@ func fetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 	var (
 		hasIncompletePackages bool
 		goModPath             string
+		packageVersionStates  []*internal.PackageVersionState
 		resolvedVersion       = requestedVersion
 	)
 	if res != nil {
@@ -116,6 +118,7 @@ func fetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 		if res.Version != nil {
 			resolvedVersion = res.Version.Version
 		}
+		packageVersionStates = res.PackageVersionStates
 	}
 	if !semver.IsValid(resolvedVersion) {
 		return code, fetchErr
@@ -126,8 +129,8 @@ func fetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 	
 	
 	if code > 400 {
-		log.Infof(ctx, "%s@%s: code=%d, deleting", modulePath, requestedVersion, code)
-		if err := db.DeleteVersion(ctx, nil, modulePath, requestedVersion); err != nil {
+		log.Infof(ctx, "%s@%s: code=%d, deleting", modulePath, resolvedVersion, code)
+		if err := db.DeleteVersion(ctx, nil, modulePath, resolvedVersion); err != nil {
 			log.Error(ctx, err)
 			return http.StatusInternalServerError, err
 		}
@@ -142,8 +145,8 @@ func fetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 	// still leave their pages in the database so users of those old versions
 	// can still view documentation.
 	if code == 491 {
-		log.Infof(ctx, "%s@%s: code=491, deleting older version from search", modulePath, requestedVersion)
-		if err := db.DeleteOlderVersionFromSearchDocuments(ctx, modulePath, requestedVersion); err != nil {
+		log.Infof(ctx, "%s@%s: code=491, deleting older version from search", modulePath, resolvedVersion)
+		if err := db.DeleteOlderVersionFromSearchDocuments(ctx, modulePath, resolvedVersion); err != nil {
 			log.Error(ctx, err)
 			return http.StatusInternalServerError, err
 		}
@@ -154,7 +157,8 @@ func fetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 	// code < 500 but a later action fails, we will never retry the later action.
 
 	// TODO(b/139178863): Split UpsertModuleVersionState into InsertModuleVersionState and UpdateModuleVersionState.
-	if err := db.UpsertModuleVersionState(ctx, modulePath, requestedVersion, config.AppVersionLabel(), time.Time{}, code, goModPath, fetchErr); err != nil {
+	if err := db.UpsertModuleVersionState(ctx, modulePath, resolvedVersion, config.AppVersionLabel(),
+		time.Time{}, code, goModPath, fetchErr, packageVersionStates); err != nil {
 		log.Error(ctx, err)
 		if fetchErr != nil {
 			err = fmt.Errorf("error updating module version state: %v, original error: %v", err, fetchErr)
@@ -162,6 +166,6 @@ func fetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 		return http.StatusInternalServerError, err
 	}
 	log.Infof(ctx, "Updated module version state for %s@%s: code=%d, hasIncompletePackages=%t err=%v",
-		modulePath, requestedVersion, code, hasIncompletePackages, fetchErr)
+		modulePath, resolvedVersion, code, hasIncompletePackages, fetchErr)
 	return code, fetchErr
 }
