@@ -1,6 +1,8 @@
-// Copyright 2019 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+/** @license
+    Copyright 2019 The Go Authors. All rights reserved.
+    Use of this source code is governed by a BSD-style
+    license that can be found in the LICENSE file.
+*/
 
 // This file implements the behavior of the "jump to identifer" dialog for Go
 // package documentation, as well as the simple dialog that displays keyboard

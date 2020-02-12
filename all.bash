@@ -29,7 +29,7 @@ verify_header() {
     do
         # Allow for the copyright header to start on either of the first two
         # lines, to accomodate conventions for CSS and HTML.
-        line="$(head -2 $FILE)"
+        line="$(head -3 $FILE)"
         if [[ ! $line == *"The Go Authors. All rights reserved."* ]] &&
          [[ ! $line == "// DO NOT EDIT. This file was copied from" ]]; then
               err "missing license header: $FILE"
@@ -105,6 +105,11 @@ check_templates() {
     -td=content/static/html/pages | warnout
 }
 
+# check_js_compiled checks that the javascript was compiled after it was modified.
+check_js_compiled() {
+  runcmd devtools/compile_js.sh -check
+}
+
 run_prettier() {
   if ! [ -x "$(command -v prettier)" ]; then
     err "prettier must be installed"
@@ -145,6 +150,7 @@ main() {
       ;;
     "")
       standard_linters
+      check_js_compiled
       runcmd go mod tidy
       runcmd go test ./...
       runcmd go test ./internal/secrets -use_cloud
