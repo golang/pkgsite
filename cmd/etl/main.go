@@ -215,10 +215,6 @@ var excludedPrefixes = []struct {
 		"github.com/kortschak/unlicensable",
 		"https://groups.google.com/g/golang-dev/c/mfiPCtJ1BGU/m/HDb3--vMEwAJk",
 	},
-	{
-		"github.com/clevergo/clevergo",
-		"https://groups.google.com/a/google.com/g/go-discovery-feedback/c/IAHYXlstv-g/m/muE06-ECFgAJ",
-	},
 }
 
 // populateExcluded adds each element of excludedPrefixes to the excluded_prefixes
