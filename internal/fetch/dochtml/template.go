@@ -36,7 +36,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 	{{- if or .Doc (index .Examples.Map "") -}}
 		<li class="Documentation-tocItem"><a href="#pkg-overview">Overview</a></li>{{"\n" -}}
 	{{- end -}}
-	{{- if or .Consts .Vars .Funcs .Types -}}
+	{{- if or .Consts .Vars .Funcs .Types .Examples.List -}}
 		<li class="Documentation-tocItem"><a href="#pkg-index">Index</a></li>{{"\n" -}}
 	{{- end -}}
 	{{- if .Examples.List -}}
@@ -46,15 +46,15 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 {{- end -}}
 
 {{- if or .Doc (index .Examples.Map "") -}}
-        <section class="Documentation-overview">
+	<section class="Documentation-overview">
 		<h2 id="pkg-overview" class="Documentation-overviewHeader">Overview <a href="#pkg-overview">¶</a></h2>{{"\n\n" -}}
 		{{render_doc .Doc}}{{"\n" -}}
 		{{- template "example" (index .Examples.Map "") -}}
 	</section>
 {{- end -}}
 
-{{- if or .Consts .Vars .Funcs .Types -}}
-        <section class="Documentation-index">
+{{- if or .Consts .Vars .Funcs .Types .Examples.List -}}
+	<section class="Documentation-index">
 		<h2 id="pkg-index" class="Documentation-indexHeader">Index <a href="#pkg-index">¶</a></h2>{{"\n\n" -}}
 		<ul class="Documentation-indexList">{{"\n" -}}
 			{{- if .Consts -}}<li class="Documentation-indexConstants"><a href="#pkg-constants">Constants</a></li>{{"\n"}}{{- end -}}
