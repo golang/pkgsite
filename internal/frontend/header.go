@@ -203,12 +203,17 @@ func breadcrumbPath(pkgPath, modPath, version string) template.HTML {
 		}
 		elems[len(elems)-i-1] = fmt.Sprintf(`<a href="%s">%s</a>`, template.HTMLEscapeString(href), template.HTMLEscapeString(el))
 	}
-	// Include the path as a breadcrumb, and also a "copy" button for the path.
-	// We need the 'path' input element to copy it to the clipboard.
-	// Setting its type="hidden" doesn't work, so we position it off screen.
+	// Include the path as a breadcrumb.
+	// We also add a "copy" button for the string `import "path"`.
+	//
+	// We need the 'DetailsHeader-path' input element to copy it to the clipboard.
+	// - Its value attribute is delimited with single quotes because the value
+	//   contains double quotes.
+	// - Setting its type="hidden" doesn't work, so we position it off screen.
+	//
 	// Inline the svg for the "copy" icon because when it was in a separate file
-	// referenced by an img tag, it was loaded asynchronously and the page jerked
-	// when it was finally loaded and its height was known.
+	// referenced by an img tag, it was loaded asynchronously and the page
+	// jerked when it was finally loaded and its height was known.
 	f := `<div class="DetailsHeader-breadcrumb">
 %s
 <button id="DetailsHeader-copyPath" class="ImageButton" aria-label="Copy path to clipboard">
@@ -223,12 +228,12 @@ func breadcrumbPath(pkgPath, modPath, version string) template.HTML {
     </g>
   </svg>
 </button>
-<input id="DetailsHeader-path" role="presentation" tabindex="-1" value="%s"/>
+<input id="DetailsHeader-path" role="presentation" tabindex="-1" value='%s'/>
 </div>`
 
 	return template.HTML(fmt.Sprintf(f,
 		strings.Join(elems, `<span class="DetailsHeader-breadcrumbDivider">/</span>`),
-		pkgPath))
+		`import "`+pkgPath+`"`))
 }
 
 // moduleHTMLTitle constructs the <title> contents, for tabs in the browser.
