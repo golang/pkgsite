@@ -40,13 +40,6 @@ const (
 	// license text.
 	coverageThreshold = 75
 
-	// Threshold for the "Apache-2.0" type. This works around an issue in licensecheck
-	// where the Apache license text includes the appendix, so licenses that omit
-	// the appendix score artificially low. See http://b/147599731.
-	apacheClassifyThreshold = 87
-
-	apacheType = "Apache-2.0"
-
 	// unknownLicenseType is for text in a license file that's not recognized.
 	unknownLicenseType = "UNKNOWN"
 )
@@ -146,6 +139,8 @@ var (
 		"CC-BY-SA-3.0":         true,
 		"CC-BY-SA-4.0":         true,
 		"Unlicense":            true,
+		"NCSA":                 true,
+		"MIT-0":                true,
 	}
 )
 
@@ -181,6 +176,8 @@ func AcceptedOSILicenses() []string {
 	sort.Strings(lics)
 	return lics
 }
+
+var checker *licensecheck.Checker = licensecheck.New(append(extraLicenses, licensecheck.BuiltinLicenses()...))
 
 // A Detector detects licenses in a module and its packages.
 type Detector struct {
@@ -409,9 +406,9 @@ func DetectFile(contents []byte, filename string, logf func(string, ...interface
 		logf("%s is an exception", filename)
 		return types, licensecheck.Coverage{}
 	}
-	cov, ok := licensecheck.Cover(contents, licensecheck.Options{})
+	cov, ok := checker.Cover(contents, licensecheck.Options{})
 	if !ok {
-		logf("%s licensecheck.Cover failed, skipping", filename)
+		logf("%s checker.Cover failed, skipping", filename)
 		return []string{unknownLicenseType}, cov
 	}
 	if cov.Percent < float64(coverageThreshold) {
@@ -420,8 +417,8 @@ func DetectFile(contents []byte, filename string, logf func(string, ...interface
 	}
 	types := make(map[string]bool)
 	for _, m := range cov.Match {
-		if m.Percent >= classifyThreshold || (m.Name == apacheType && m.Percent >= apacheClassifyThreshold) {
-			types[m.Name] = true
+		if m.Percent >= classifyThreshold {
+			types[canonicalizeName(m.Name)] = true
 		}
 	}
 	if len(types) == 0 {
@@ -443,6 +440,22 @@ func Redistributable(licenseTypes []string) bool {
 		}
 	}
 	return true
+}
+
+var canonicalNames = map[string]string{
+	"AGPL-Header":         "AGPL-3.0",
+	"GPL-Header":          "GPL2",
+	"GPL-NotLater-Header": "GPL3",
+	"LGPL-Header":         "LGPL-2.1",
+}
+
+// canonicalizeName puts a license name in a standard form.
+func canonicalizeName(name string) string {
+	if c := canonicalNames[name]; c != "" {
+		return c
+	}
+	name = strings.TrimSuffix(name, "-Short")
+	return strings.TrimSuffix(name, "-Header")
 }
 
 func types(lics []*License) []string {

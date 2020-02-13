@@ -511,7 +511,11 @@ func TestDetectFiles(t *testing.T) {
 					FilePath: "LICENSE",
 					Coverage: lc.Coverage{
 						Percent: 100,
-						Match:   []lc.Match{{Name: "Apache-2.0", Type: lc.Apache, Percent: 89}},
+						Match: []lc.Match{{
+							Name:    "Apache-2.0-Short",
+							Type:    lc.Apache,
+							Percent: 99,
+						}},
 					},
 				},
 			},
