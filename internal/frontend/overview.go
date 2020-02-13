@@ -83,7 +83,7 @@ func readmeHTML(vi *internal.VersionInfo) template.HTML {
 	if len(vi.ReadmeContents) == 0 {
 		return ""
 	}
-	if filepath.Ext(vi.ReadmeFilePath) != ".md" {
+	if !isMarkdown(vi.ReadmeFilePath) {
 		return template.HTML(fmt.Sprintf(`<pre class="readme">%s</pre>`, html.EscapeString(string(vi.ReadmeContents))))
 	}
 
@@ -112,6 +112,13 @@ func readmeHTML(vi *internal.VersionInfo) template.HTML {
 		return renderer.RenderNode(b, node, entering)
 	})
 	return template.HTML(p.SanitizeReader(b).String())
+}
+
+// isMarkdown reports whether filename says that the file contains markdown.
+func isMarkdown(filename string) bool {
+	ext := strings.ToLower(filepath.Ext(filename))
+	// https://tools.ietf.org/html/rfc7763 mentions both extensions.
+	return ext == ".md" || ext == ".markdown"
 }
 
 // translateRelativeLink modifies a blackfriday.Node to convert relative image

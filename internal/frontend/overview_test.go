@@ -70,6 +70,18 @@ func TestReadmeHTML(t *testing.T) {
 				`<a href="https://research.swtch.com/vgo1" rel="nofollow">package versioning in Go</a>.</p>` + "\n"),
 		},
 		{
+			name: "valid markdown readme with alternative case and extension",
+			vi: &internal.VersionInfo{
+				ReadmeFilePath: "README.MARKDOWN",
+				ReadmeContents: "This package collects pithy sayings.\n\n" +
+					"It's part of a demonstration of\n" +
+					"[package versioning in Go](https://research.swtch.com/vgo1).",
+			},
+			want: template.HTML("<p>This package collects pithy sayings.</p>\n\n" +
+				"<p>It’s part of a demonstration of\n" +
+				`<a href="https://research.swtch.com/vgo1" rel="nofollow">package versioning in Go</a>.</p>` + "\n"),
+		},
+		{
 			name: "not markdown readme",
 			vi: &internal.VersionInfo{
 				ReadmeFilePath: "README.rst",
