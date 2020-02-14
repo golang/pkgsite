@@ -267,14 +267,7 @@ func (d *Detector) PackageInfo(dir string) (isRedistributable bool, lics []*Lice
 
 // computeModuleInfo determines values for the moduleRedist and moduleLicenses fields of d.
 func (d *Detector) computeModuleInfo() {
-	// See if the module has a special exception to the usual rules.
-	if exception, lics := d.isException(); exception {
-		d.moduleRedist = true
-		d.moduleLicenses = lics
-		return
-	}
-	// The normal case: check that all licenses in the contents directory are
-	// redistributable.
+	// Check that all licenses in the contents directory are redistributable.
 	d.moduleLicenses = d.detectFiles(d.Files(RootFiles))
 	d.moduleRedist = Redistributable(types(d.moduleLicenses))
 }
@@ -322,7 +315,10 @@ func (d *Detector) Files(which WhichFiles) []*zip.File {
 			d.logf("potential license file %q found outside of the expected path %q", f.Name, cdir)
 			continue
 		}
-
+		// Skip files we should ignore.
+		if ignoreFiles[d.modulePath+" "+strings.TrimPrefix(f.Name, prefix)] {
+			continue
+		}
 		if which == RootFiles && path.Dir(f.Name) != cdir {
 			// Skip f since it's not at root.
 			continue
@@ -401,10 +397,6 @@ func (d *Detector) detectFiles(files []*zip.File) []*License {
 func DetectFile(contents []byte, filename string, logf func(string, ...interface{})) ([]string, licensecheck.Coverage) {
 	if logf == nil {
 		logf = func(string, ...interface{}) {}
-	}
-	if types, ok := exceptionFileTypes(contents); ok {
-		logf("%s is an exception", filename)
-		return types, licensecheck.Coverage{}
 	}
 	cov, ok := checker.Cover(contents, licensecheck.Options{})
 	if !ok {
