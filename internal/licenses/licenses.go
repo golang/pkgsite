@@ -401,7 +401,7 @@ func DetectFile(contents []byte, filename string, logf func(string, ...interface
 	cov, ok := checker.Cover(contents, licensecheck.Options{})
 	if !ok {
 		logf("%s checker.Cover failed, skipping", filename)
-		return []string{unknownLicenseType}, cov
+		return []string{unknownLicenseType}, licensecheck.Coverage{}
 	}
 	if cov.Percent < float64(coverageThreshold) {
 		logf("%s license coverage too low (%+v), skipping", filename, cov)
