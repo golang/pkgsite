@@ -503,6 +503,19 @@ code {
   display: flex;
   justify-content: flex-end;
 }
+.Error-gopher,
+.EmptyContent-gopher,
+.SearchResults-emptyContentGopher {
+  display: block;
+  margin: auto;
+  padding: 1.25rem 0;
+  width: 15rem;
+}
+.Error-message,
+.EmptyContent-message,
+.SearchResults-emptyContentMessage {
+  text-align: center;
+}
 .SearchSnippet {
   border-top: 0.0625rem solid var(--gray-8);
   padding: 1rem 0;
@@ -867,26 +880,6 @@ code {
   justify-content: flex-start;
 }
 
-.Error-gopher {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  padding: 1.25rem 0;
-  width: 240px;
-}
-.Error-message {
-  text-align: center;
-}
-
-.EmptyContent-gopher {
-  display: block;
-  margin: auto;
-  padding: 40px 0;
-  width: 240px;
-}
-.EmptyContent-message {
-  text-align: center;
-}
 .DetailsHeader-infoLabel {
   font-size: 0.875rem;
   line-height: 1.375rem;

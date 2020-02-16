@@ -13,29 +13,37 @@
         {{template "pagination_summary" .Pagination}} {{pluralize .Pagination.TotalCount "result"}}
         {{template "pagination_nav" .Pagination}}
       </div>
+        {{if eq (len .Results) 0}}
+          <div>
+            <img class="SearchResults-emptyContentGopher" src="/static/img/gopher-airplane.svg" alt="The Go Gopher">
+            <h3 class="SearchResults-emptyContentMessage">No results found.</h3>
+            <p class="SearchResults-emptyContentMessage">If you think “{{.Query}}” is a valid package, you could try downloading it following the <a href="/about#adding-a-package">instructions here</a>.</p>
+          </div>
+        {{else}}
       <div>{{/* Containing element is needed to use *-of-type selectors */}}
         {{$query := .Query}}
-        {{range .Results}}
-          <div class="SearchSnippet">
-            <h2 class="SearchSnippet-header">
-              <a href="/{{.PackagePath}}">{{.PackagePath}}</a>
-            </h2>
-            <p class="SearchSnippet-synopsis">{{.Synopsis}}</p>
-            <div class="SearchSnippet-infoLabel">
-              <b class="InfoLabel-title">Version:</b> {{.DisplayVersion}}
-              <span class="InfoLabel-divider">|</span>
-              <b class="InfoLabel-title">Published:</b> {{.CommitTime}}
-              <span class="InfoLabel-divider">|</span>
-              <b class="InfoLabel-title">Imported by:</b> {{.NumImportedBy}}
-              <span class="InfoLabel-divider">|</span>
-              <b class="InfoLabel-title">{{pluralize (len .Licenses) "License"}}:</b>
-              {{if .Licenses}}
-                {{commaseparate .Licenses}}
-              {{else}}
-                <span>N/A</span>
-              {{end}}
+          {{range .Results}}
+            <div class="SearchSnippet">
+              <h2 class="SearchSnippet-header">
+                <a href="/{{.PackagePath}}">{{.PackagePath}}</a>
+              </h2>
+              <p class="SearchSnippet-synopsis">{{.Synopsis}}</p>
+              <div class="SearchSnippet-infoLabel">
+                <b class="InfoLabel-title">Version:</b> {{.DisplayVersion}}
+                <span class="InfoLabel-divider">|</span>
+                <b class="InfoLabel-title">Published:</b> {{.CommitTime}}
+                <span class="InfoLabel-divider">|</span>
+                <b class="InfoLabel-title">Imported by:</b> {{.NumImportedBy}}
+                <span class="InfoLabel-divider">|</span>
+                <b class="InfoLabel-title">{{pluralize (len .Licenses) "License"}}:</b>
+                {{if .Licenses}}
+                  {{commaseparate .Licenses}}
+                {{else}}
+                  <span>N/A</span>
+                {{end}}
+              </div>
             </div>
-          </div>
+          {{end}}
         {{end}}
       </div>
       <div class="SearchResults-footer">
