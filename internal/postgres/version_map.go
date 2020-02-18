@@ -6,35 +6,45 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/version"
 )
 
 // UpsertVersionMap inserts a version_map entry into the database.
 func (db *DB) UpsertVersionMap(ctx context.Context, vm *internal.VersionMap) (err error) {
-	defer derrors.Wrap(&err, "DB.InsertVersionMap(ctx, tx, %q, %q, %q)",
+	defer derrors.Wrap(&err, "DB.UpsertVersionMap(ctx, tx, %q, %q, %q)",
 		vm.ModulePath, vm.RequestedVersion, vm.ResolvedVersion)
+
+	var sortVersion string
+	if vm.ResolvedVersion != "" {
+		sortVersion = version.ForSorting(vm.ResolvedVersion)
+	}
 	_, err = db.db.Exec(ctx,
 		`INSERT INTO version_map(
 				module_path,
 				requested_version,
 				resolved_version,
 				status,
-				error)
-			VALUES($1,$2,$3,$4,$5)
+				error,
+				sort_version)
+			VALUES($1,$2,$3,$4,$5,$6)
 			ON CONFLICT (module_path, requested_version)
 			DO UPDATE SET
 				module_path=excluded.module_path,
 				requested_version=excluded.requested_version,
 				resolved_version=excluded.resolved_version,
 				status=excluded.status,
-				error=excluded.error`,
+				error=excluded.error,
+				sort_version=excluded.sort_version`,
 		vm.ModulePath,
 		vm.RequestedVersion,
 		vm.ResolvedVersion,
 		vm.Status,
 		vm.Error,
+		sortVersion,
 	)
 	return err
 }
@@ -136,9 +146,13 @@ func (db *DB) GetVersionMap(ctx context.Context, path, modulePath, requestedVers
 		args = []interface{}{modulePath, requestedVersion}
 	}
 	var vm internal.VersionMap
-	if err := db.db.QueryRow(ctx, query, args...).Scan(
-		&vm.ModulePath, &vm.RequestedVersion, &vm.ResolvedVersion, &vm.Status, &vm.Error); err != nil {
+	switch db.db.QueryRow(ctx, query, args...).Scan(
+		&vm.ModulePath, &vm.RequestedVersion, &vm.ResolvedVersion, &vm.Status, &vm.Error) {
+	case nil:
+		return &vm, nil
+	case sql.ErrNoRows:
+		return nil, derrors.NotFound
+	default:
 		return nil, err
 	}
-	return &vm, nil
 }

@@ -55,7 +55,14 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 			t.Fatal(err)
 		}
 		if vs.Status != want {
-			t.Fatalf("testDB.GetModuleVersionState(ctx, %q, %q): status=%v, want %d", modulePath, version, vs.Status, want)
+			t.Fatalf("testDB.GetModuleVersionState(ctx, %q, %q): status = %v, want = %d", modulePath, version, vs.Status, want)
+		}
+		vm, err := testDB.GetVersionMap(ctx, modulePath, modulePath, version)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if vm.Status != want {
+			t.Fatalf("testDB.GetVersionMap(ctx, %q, %q, %q): status = %d, want = %d", modulePath, modulePath, version, vm.Status, want)
 		}
 	}
 
@@ -155,6 +162,13 @@ func checkModuleNotFound(t *testing.T, ctx context.Context, modulePath, version 
 	if vs.Status != wantCode {
 		t.Fatalf("testDB.GetModuleVersionState(ctx, %q, %q): status=%v, want %d", modulePath, version, vs.Status, wantCode)
 	}
+	vm, err := testDB.GetVersionMap(ctx, modulePath, modulePath, version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if vm.Status != wantCode {
+		t.Fatalf("testDB.GetVersionMap(ctx, %q, %q, %q): status=%v, want %d", modulePath, modulePath, version, vm.Status, wantCode)
+	}
 }
 
 func TestFetchAndUpdateState_BadRequestedVersion(t *testing.T) {
@@ -179,6 +193,13 @@ func TestFetchAndUpdateState_BadRequestedVersion(t *testing.T) {
 	_, err := testDB.GetModuleVersionState(ctx, modulePath, version)
 	if !errors.Is(err, derrors.NotFound) {
 		t.Fatal(err)
+	}
+	vm, err := testDB.GetVersionMap(ctx, modulePath, modulePath, version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if vm.Status != http.StatusNotFound {
+		t.Fatalf("testDB.GetVersionMap(ctx, %q, %q, %q): status=%v, want %d", modulePath, modulePath, version, vm.Status, http.StatusNotFound)
 	}
 }
 
@@ -212,6 +233,13 @@ func TestFetchAndUpdateState_Incomplete(t *testing.T) {
 	if vs.Status != want {
 		t.Fatalf("testDB.GetModuleVersionState(ctx, %q, %q): status=%v, want %d", modulePath, version, vs.Status, want)
 	}
+	vm, err := testDB.GetVersionMap(ctx, modulePath, modulePath, version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if vm.Status != want {
+		t.Fatalf("testDB.GetVersionMap(ctx, %q, %q, %q): status=%v, want %d", modulePath, modulePath, version, vm.Status, want)
+	}
 	gotStates, err := testDB.GetPackageVersionStatesForModule(ctx, modulePath, version)
 	if err != nil {
 		t.Fatal(err)
@@ -230,6 +258,9 @@ func TestFetchAndUpdateState_Incomplete(t *testing.T) {
 			Status:      600,
 		},
 	}
+	sort.Slice(gotStates, func(i, j int) bool {
+		return gotStates[i].PackagePath < gotStates[j].PackagePath
+	})
 	if diff := cmp.Diff(wantStates, gotStates); diff != "" {
 		t.Errorf("testDB.GetPackageVersionStatesForModule(ctx, %q, %q) mismatch (-want +got):\n%s", modulePath, version, diff)
 	}
@@ -280,6 +311,14 @@ func TestFetchAndUpdateState_Mismatch(t *testing.T) {
 	}
 	if gotGoModPath != goModPath {
 		t.Errorf("testDB.GetModuleVersionState(ctx, %q, %q): goModPath=%q, want %q", modulePath, version, gotGoModPath, goModPath)
+	}
+
+	vm, err := testDB.GetVersionMap(ctx, modulePath, modulePath, version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if vm.Status != wantCode {
+		t.Fatalf("testDB.GetVersionMap(ctx, %q, %q, %q): status=%v, want %d", modulePath, modulePath, version, vm.Status, wantCode)
 	}
 }
 

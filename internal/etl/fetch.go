@@ -120,7 +120,31 @@ func fetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 		}
 		packageVersionStates = res.PackageVersionStates
 	}
+
+	var errMsg string
+	if fetchErr != nil {
+		errMsg = fetchErr.Error()
+	}
+	if err := db.UpsertVersionMap(ctx, &internal.VersionMap{
+		ModulePath:       modulePath,
+		RequestedVersion: requestedVersion,
+		ResolvedVersion:  resolvedVersion,
+		Status:           code,
+		Error:            errMsg,
+	}); err != nil {
+		log.Error(ctx, err)
+		return http.StatusInternalServerError, err
+	}
+
 	if !semver.IsValid(resolvedVersion) {
+		// If the requestedVersion was not successfully resolved, at
+		// this point it will be the same as the resolvedVersion.  Only
+		// in this case, where the requestedVersion is a semantic
+		// version, is possible that the module was published in the
+		// index, and then later disappeared, so we need to updated
+		// module_version_state below to reflect these changes.
+		// Otherwise, module_version_states does not need to be
+		// modified.
 		return code, fetchErr
 	}
 
