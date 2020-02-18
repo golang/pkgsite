@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/golang/groupcache/lru"
 	"go.opencensus.io/stats"
@@ -38,12 +39,14 @@ var (
 
 // Quota implements a simple IP-based rate limiter. Each set of incoming IP
 // addresses with the same low-order byte gets qps requests per second, with the
-// given burst (
+// given burst.
 // Information is kept in an LRU cache of size maxEntries.
 //
 // If a request is disallowed, a 429 (TooManyRequests) will be served.
 func Quota(settings config.QuotaSettings) Middleware {
+	var mu sync.Mutex
 	cache := lru.New(settings.MaxEntries)
+
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			key := ipKey(r.Header.Get("X-Forwarded-For"))
@@ -51,12 +54,14 @@ func Quota(settings config.QuotaSettings) Middleware {
 			// Fail open in this case: allow serving.
 			var limiter *rate.Limiter
 			if key != "" {
+				mu.Lock()
 				if v, ok := cache.Get(key); ok {
 					limiter = v.(*rate.Limiter)
 				} else {
 					limiter = rate.NewLimiter(rate.Limit(settings.QPS), settings.Burst)
 					cache.Add(key, limiter)
 				}
+				mu.Unlock()
 			}
 			blocked := limiter != nil && !limiter.Allow()
 			recordQuotaMetric(blocked)
