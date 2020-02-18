@@ -147,8 +147,11 @@ func TestInsertAndDeleteAlternatives(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			wantCode := derrors.ToHTTPStatus(derrors.AlternativeModule)
-			if gotModuleVersionState.Status != nil && *gotModuleVersionState.Status != wantCode {
+			var wantCode int
+			if isAlternative {
+				wantCode = derrors.ToHTTPStatus(derrors.AlternativeModule)
+			}
+			if gotModuleVersionState.Status != wantCode {
 				t.Fatalf("testDB.GetModuleVersionState(ctx, %q, %q) returned status = %d; want = %d", data.modulePath, sample.VersionString, gotModuleVersionState.Status, wantCode)
 			}
 		})

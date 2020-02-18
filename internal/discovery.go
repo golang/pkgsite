@@ -134,11 +134,11 @@ type ModuleVersionState struct {
 
 	// Status is the most recent HTTP status code received from the Fetch service
 	// for this version, or nil if no request to the fetch service has been made.
-	Status *int
+	Status int
 	// Error is the most recent HTTP response body received from the Fetch
 	// service, for a response with an unsuccessful status code. It is used for
 	// debugging only, and has no semantic significance.
-	Error *string
+	Error string
 	// TryCount is the number of times a fetch of this version has been
 	// attempted.
 	TryCount int

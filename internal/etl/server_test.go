@@ -77,18 +77,14 @@ func TestETL(t *testing.T) {
 			"bar.go": "package bar\nconst Bar = \"Bar\"",
 		})
 		state = func(version *internal.IndexVersion, code, tryCount int) *internal.ModuleVersionState {
-			status := &code
 			goModPath := version.Path
-			if code == 0 {
-				status = nil
-			}
 			if code >= 300 {
 				goModPath = ""
 			}
 			return &internal.ModuleVersionState{
 				ModulePath:     version.Path,
 				IndexTimestamp: version.Timestamp,
-				Status:         status,
+				Status:         code,
 				TryCount:       tryCount,
 				Version:        version.Version,
 				GoModPath:      &goModPath,

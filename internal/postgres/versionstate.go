@@ -28,9 +28,9 @@ func (db *DB) InsertIndexVersions(ctx context.Context, versions []*internal.Inde
 
 	var vals []interface{}
 	for _, v := range versions {
-		vals = append(vals, v.Path, v.Version, version.ForSorting(v.Version), v.Timestamp)
+		vals = append(vals, v.Path, v.Version, version.ForSorting(v.Version), v.Timestamp, 0, "")
 	}
-	cols := []string{"module_path", "version", "sort_version", "index_timestamp"}
+	cols := []string{"module_path", "version", "sort_version", "index_timestamp", "status", "error"}
 	conflictAction := `
 		ON CONFLICT
 			(module_path, version)
@@ -52,9 +52,9 @@ func (db *DB) UpsertModuleVersionState(ctx context.Context, modulePath, vers, ap
 	defer span.End()
 
 	return db.db.Transact(func(tx *sql.Tx) error {
-		var sqlErrorMsg sql.NullString
+		var sqlErrorMsg string
 		if fetchErr != nil {
-			sqlErrorMsg = sql.NullString{Valid: true, String: fetchErr.Error()}
+			sqlErrorMsg = fetchErr.Error()
 		}
 
 		result, err := database.ExecTx(ctx, tx, `
@@ -193,33 +193,13 @@ const moduleVersionStateColumns = `
 // scanner. It expects columns to be in the order of moduleVersionStateColumns.
 func scanModuleVersionState(scan func(dest ...interface{}) error) (*internal.ModuleVersionState, error) {
 	var (
-		modulePath, version, appVersion               string
-		indexTimestamp, createdAt, nextProcessedAfter time.Time
-		lastProcessedAt                               pq.NullTime
-		status                                        sql.NullInt64
-		errorMsg, goModPath                           sql.NullString
-		tryCount                                      int
+		v               internal.ModuleVersionState
+		lastProcessedAt pq.NullTime
+		goModPath       sql.NullString
 	)
-	if err := scan(&modulePath, &version, &indexTimestamp, &createdAt, &status, &errorMsg,
-		&tryCount, &lastProcessedAt, &nextProcessedAfter, &appVersion, &goModPath); err != nil {
+	if err := scan(&v.ModulePath, &v.Version, &v.IndexTimestamp, &v.CreatedAt, &v.Status, &v.Error,
+		&v.TryCount, &v.LastProcessedAt, &v.NextProcessedAfter, &v.AppVersion, &goModPath); err != nil {
 		return nil, err
-	}
-	v := &internal.ModuleVersionState{
-		ModulePath:         modulePath,
-		Version:            version,
-		IndexTimestamp:     indexTimestamp,
-		CreatedAt:          createdAt,
-		TryCount:           tryCount,
-		NextProcessedAfter: nextProcessedAfter,
-		AppVersion:         appVersion,
-	}
-	if status.Valid {
-		s := int(status.Int64)
-		v.Status = &s
-	}
-	if errorMsg.Valid {
-		s := errorMsg.String
-		v.Error = &s
 	}
 	if goModPath.Valid {
 		s := goModPath.String
@@ -229,7 +209,7 @@ func scanModuleVersionState(scan func(dest ...interface{}) error) (*internal.Mod
 		lp := lastProcessedAt.Time
 		v.LastProcessedAt = &lp
 	}
-	return v, nil
+	return &v, nil
 }
 
 // queryModuleVersionStates executes a query for ModuleModuleVersionState rows. It expects the
@@ -291,7 +271,7 @@ func (db *DB) GetNextVersionsToFetch(ctx context.Context, limit int) (_ []*inter
 		AND
 			s.sort_version = m.max_sv
 		WHERE
-			(status IS NULL OR status >= 500)
+			(status=0 OR status >= 500)
 			AND next_processed_after < CURRENT_TIMESTAMP
 		ORDER BY
 			s.sort_version DESC
@@ -310,7 +290,7 @@ func (db *DB) GetNextVersionsToFetch(ctx context.Context, limit int) (_ []*inter
 		FROM
 			module_version_states s
 		WHERE
-			(status IS NULL OR status >= 500)
+			(status=0 OR status >= 500)
 			AND next_processed_after < CURRENT_TIMESTAMP
 			AND %[2]s (
 				module_path LIKE '%%/kubernetes'
