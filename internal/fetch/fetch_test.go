@@ -41,6 +41,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 		contents             map[string]string
 		packages             map[string]*internal.Package
 		packageVersionStates []*internal.PackageVersionState
+		wantErr              error
 	}{
 		{
 			name:    "github.com/my/module",
@@ -88,6 +89,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 			name:     "emp.ty/module",
 			version:  "v1.0.0",
 			packages: map[string]*internal.Package{},
+			wantErr:  errModuleContainsNoPackages,
 		},
 		{
 			name:    "emp.ty/package",
@@ -174,8 +176,8 @@ func TestExtractPackagesFromZip(t *testing.T) {
 			name:    "bad.import.path.com",
 			version: "v1.0.0",
 			contents: map[string]string{
-				"good/import/path/foo.go": "package foo",
-				"bad/import path/foo.go":  "package foo",
+				"bad.import.path.com@v1.0.0/good/import/path/foo.go": "package foo",
+				"bad.import.path.com@v1.0.0/bad/import path/foo.go":  "package foo",
 			},
 			packages: map[string]*internal.Package{
 				"foo": {
@@ -202,11 +204,26 @@ func TestExtractPackagesFromZip(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:     "file.outside.content.dir",
+			version:  "v1.0.0",
+			contents: map[string]string{"file": "foo"},
+			wantErr:  errMalformedZip,
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			var versions []*proxy.TestVersion
 			if test.contents != nil {
-				versions = append(versions, proxy.NewTestVersion(t, test.name, test.version, test.contents))
+				zip, err := testhelper.ZipContents(test.contents)
+				if err != nil {
+					t.Fatal(err)
+				}
+				versions = append(versions, &proxy.TestVersion{
+					ModulePath: test.name,
+					Version:    test.version,
+					Zip:        zip,
+					GoMod:      test.contents[fmt.Sprintf("%s@%s/go.mod", test.name, test.version)],
+				})
 			}
 			client, teardownProxy := proxy.SetupTestProxy(t, versions)
 			defer teardownProxy()
@@ -217,10 +234,12 @@ func TestExtractPackagesFromZip(t *testing.T) {
 			}
 
 			packages, pvstates, err := extractPackagesFromZip(context.Background(), test.name, test.version, reader, nil, nil)
-			if err != nil && len(test.packages) != 0 {
-				t.Fatalf("extractPackagesFromZip(%q, %q, reader, nil): %v", test.name, test.version, err)
+			if err != nil {
+				if !errors.Is(err, test.wantErr) {
+					t.Fatal(err)
+				}
+				return
 			}
-
 			if test.packageVersionStates == nil {
 				for _, p := range test.packages {
 					test.packageVersionStates = append(test.packageVersionStates,

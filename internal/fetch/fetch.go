@@ -42,6 +42,7 @@ import (
 var (
 	errModuleContainsNoPackages = errors.New("module contains 0 packages")
 	errReadmeNotFound           = errors.New("module does not contain a README")
+	errMalformedZip             = errors.New("module zip is malformed")
 )
 
 // For testing
@@ -145,9 +146,8 @@ func processZipFile(ctx context.Context, modulePath string, versionType version.
 	d := licenses.NewDetector(modulePath, resolvedVersion, zipReader, logf)
 	allLicenses := d.AllLicenses()
 	packages, packageVersionStates, err := extractPackagesFromZip(ctx, modulePath, resolvedVersion, zipReader, d, sourceInfo)
-
-	if err == errModuleContainsNoPackages {
-		return nil, fmt.Errorf("%v: %w", errModuleContainsNoPackages.Error(), derrors.BadModule)
+	if errors.Is(err, errModuleContainsNoPackages) || errors.Is(err, errMalformedZip) {
+		return nil, fmt.Errorf("%v: %w", err.Error(), derrors.BadModule)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, resolvedVersion, allLicenses, err)
@@ -264,10 +264,15 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion str
 	// only after we're sure this phase passed without errors.
 	for _, f := range r.File {
 		if f.Mode().IsDir() {
-			return nil, nil, fmt.Errorf("expected only files, found directory %q", f.Name)
+			// While "go mod download" will never put a directory in a zip, any can serve their
+			// own zips. Example: go.felesatra.moe/binpack@v0.1.0.
+			// Directory entries are harmless, so we just ignore them.
+			continue
 		}
 		if !strings.HasPrefix(f.Name, modulePrefix) {
-			return nil, nil, fmt.Errorf("expected file to have prefix %q; got = %q", modulePrefix, f.Name)
+			// Well-formed module zips have all files under modulePrefix.
+			return nil, nil, fmt.Errorf("expected file to have prefix %q; got = %q: %w",
+				modulePrefix, f.Name, errMalformedZip)
 		}
 		innerPath := path.Dir(f.Name[len(modulePrefix):])
 		if incompleteDirs[innerPath] {
