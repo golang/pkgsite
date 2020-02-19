@@ -4,6 +4,9 @@
 
 BEGIN;
 
+UPDATE module_version_states SET error = '' WHERE error IS NULL;
+UPDATE module_version_states SET status = 0 WHERE status IS NULL;
+
 ALTER TABLE module_version_states
 	ALTER COLUMN status SET DEFAULT 0,
 	ALTER COLUMN status SET NOT NULL,
