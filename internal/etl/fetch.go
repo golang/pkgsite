@@ -79,14 +79,14 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, requestedVersi
 	return res, nil
 }
 
-// fetchAndUpdateState fetches and processes a module version, and then updates
+// FetchAndUpdateState fetches and processes a module version, and then updates
 // the module_version_states table according to the result. It returns an HTTP
 // status code representing the result of the fetch operation, and a non-nil
 // error if this status code is not 200.
-func fetchAndUpdateState(ctx context.Context, modulePath, requestedVersion string, client *proxy.Client, db *postgres.DB) (_ int, err error) {
-	defer derrors.Wrap(&err, "fetchAndUpdateState(%q, %q)", modulePath, requestedVersion)
+func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion string, client *proxy.Client, db *postgres.DB) (_ int, err error) {
+	defer derrors.Wrap(&err, "FetchAndUpdateState(%q, %q)", modulePath, requestedVersion)
 
-	ctx, span := trace.StartSpan(ctx, "fetchAndUpdateState")
+	ctx, span := trace.StartSpan(ctx, "FetchAndUpdateState")
 	span.AddAttributes(
 		trace.StringAttribute("modulePath", modulePath),
 		trace.StringAttribute("version", requestedVersion))

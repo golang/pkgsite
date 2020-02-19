@@ -22,6 +22,7 @@ import (
 	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
+	"golang.org/x/discovery/internal/queue"
 	"golang.org/x/discovery/internal/testing/sample"
 )
 
@@ -145,9 +146,9 @@ func TestETL(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
 
 			// Use 10 workers to have parallelism consistent with the etl binary.
-			queue := NewInMemoryQueue(ctx, proxyClient, testDB, 10)
+			q := queue.NewInMemory(ctx, proxyClient, testDB, 10, FetchAndUpdateState)
 
-			s, err := NewServer(testDB, indexClient, proxyClient, nil, queue, nil, "")
+			s, err := NewServer(testDB, indexClient, proxyClient, nil, q, nil, "")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -167,7 +168,7 @@ func TestETL(t *testing.T) {
 			// Experimentally this was not flaky with even 10ms sleep, but we bump to
 			// 100ms to be extra careful.
 			time.Sleep(100 * time.Millisecond)
-			queue.WaitForTesting(ctx)
+			q.WaitForTesting(ctx)
 
 			// To avoid being a change detector, only look at ModulePath, Version,
 			// Timestamp, and Status.

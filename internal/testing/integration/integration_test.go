@@ -22,6 +22,7 @@ import (
 	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
+	"golang.org/x/discovery/internal/queue"
 	"golang.org/x/discovery/internal/testing/testhelper"
 )
 
@@ -65,9 +66,9 @@ func TestEndToEndProcessing(t *testing.T) {
 	defer redisHA.Close()
 	redisHAClient := redis.NewClient(&redis.Options{Addr: redisHA.Addr()})
 
-	// TODO(b/143760329): it would be better if InMemoryQueue made http requests
+	// TODO(b/143760329): it would be better if InMemory made http requests
 	// back to ETL, rather than calling fetch itself.
-	queue := etl.NewInMemoryQueue(ctx, proxyClient, testDB, 10)
+	queue := queue.NewInMemory(ctx, proxyClient, testDB, 10, etl.FetchAndUpdateState)
 
 	etlServer, err := etl.NewServer(testDB, indexClient, proxyClient, redisHAClient, queue, nil, "../../../content/static")
 	if err != nil {

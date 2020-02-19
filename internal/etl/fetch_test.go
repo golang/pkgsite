@@ -67,7 +67,7 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	}
 
 	// Fetch a module@version that the proxy serves successfully.
-	if _, err := fetchAndUpdateState(ctx, modulePath, version, client, testDB); err != nil {
+	if _, err := FetchAndUpdateState(ctx, modulePath, version, client, testDB); err != nil {
 		t.Fatal(err)
 	}
 
@@ -104,8 +104,8 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	defer teardownProxy2()
 
 	// Now fetch it again.
-	if code, _ := fetchAndUpdateState(ctx, modulePath, version, client, testDB); code != http.StatusNotFound && code != http.StatusGone {
-		t.Fatalf("fetchAndUpdateState(ctx, %q, %q, client, testDB): got code %d, want 404/410", modulePath, version, code)
+	if code, _ := FetchAndUpdateState(ctx, modulePath, version, client, testDB); code != http.StatusNotFound && code != http.StatusGone {
+		t.Fatalf("FetchAndUpdateState(ctx, %q, %q, client, testDB): got code %d, want 404/410", modulePath, version, code)
 	}
 
 	// The new state should have a status of Not Found.
@@ -147,7 +147,7 @@ func TestFetchAndUpdateState_Excluded(t *testing.T) {
 }
 
 func checkModuleNotFound(t *testing.T, ctx context.Context, modulePath, version string, client *proxy.Client, wantCode int, wantErr error) {
-	code, err := fetchAndUpdateState(ctx, modulePath, version, client, testDB)
+	code, err := FetchAndUpdateState(ctx, modulePath, version, client, testDB)
 	if code != wantCode || !errors.Is(err, wantErr) {
 		t.Fatalf("got %d, %v; want %d, Is(err, %v)", code, err, wantCode, wantErr)
 	}
@@ -186,7 +186,7 @@ func TestFetchAndUpdateState_BadRequestedVersion(t *testing.T) {
 		want       = http.StatusNotFound
 	)
 
-	code, _ := fetchAndUpdateState(ctx, modulePath, version, client, testDB)
+	code, _ := FetchAndUpdateState(ctx, modulePath, version, client, testDB)
 	if code != want {
 		t.Fatalf("got code %d, want %d", code, want)
 	}
@@ -219,7 +219,7 @@ func TestFetchAndUpdateState_Incomplete(t *testing.T) {
 		want       = hasIncompletePackagesCode
 	)
 
-	code, err := fetchAndUpdateState(ctx, modulePath, version, client, testDB)
+	code, err := FetchAndUpdateState(ctx, modulePath, version, client, testDB)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -286,7 +286,7 @@ func TestFetchAndUpdateState_Mismatch(t *testing.T) {
 	})
 	defer teardownProxy()
 
-	code, err := fetchAndUpdateState(ctx, modulePath, version, client, testDB)
+	code, err := FetchAndUpdateState(ctx, modulePath, version, client, testDB)
 	wantErr := derrors.AlternativeModule
 	wantCode := derrors.ToHTTPStatus(wantErr)
 	if code != wantCode || !errors.Is(err, wantErr) {
@@ -349,7 +349,7 @@ func TestFetchAndUpdateState_DeleteOlder(t *testing.T) {
 	})
 	defer teardownProxy()
 
-	if _, err := fetchAndUpdateState(ctx, modulePath, olderVersion, client, testDB); err != nil {
+	if _, err := FetchAndUpdateState(ctx, modulePath, olderVersion, client, testDB); err != nil {
 		t.Fatal(err)
 	}
 	gotModule, gotVersion, gotFound := postgres.GetFromSearchDocuments(ctx, t, testDB, modulePath+"/foo")
@@ -357,7 +357,7 @@ func TestFetchAndUpdateState_DeleteOlder(t *testing.T) {
 		t.Fatalf("got (%q, %q, %t), want (%q, %q, true)", gotModule, gotVersion, gotFound, modulePath, olderVersion)
 	}
 
-	code, _ := fetchAndUpdateState(ctx, modulePath, mismatchVersion, client, testDB)
+	code, _ := FetchAndUpdateState(ctx, modulePath, mismatchVersion, client, testDB)
 	if want := derrors.ToHTTPStatus(derrors.AlternativeModule); code != want {
 		t.Fatalf("got %d, want %d", code, want)
 	}

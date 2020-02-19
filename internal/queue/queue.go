@@ -2,7 +2,9 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package etl
+// Package queue provides queue implementations that can be used for
+// asynchronous scheduling of fetch actions.
+package queue
 
 import (
 	"context"
@@ -26,18 +28,18 @@ type Queue interface {
 	ScheduleFetch(ctx context.Context, modulePath, version, suffix string) error
 }
 
-// GCPQueue provides a Queue implementation backed by the Google Cloud Tasks
+// GCP provides a Queue implementation backed by the Google Cloud Tasks
 // API.
-type GCPQueue struct {
+type GCP struct {
 	client  *cloudtasks.Client
 	queueID string
 }
 
-// NewGCPQueue returns a new Queue that can be used to enqueue tasks using the
+// NewGCP returns a new Queue that can be used to enqueue tasks using the
 // cloud tasks API.  The given queueID should be the name of the queue in the
 // cloud tasks console.
-func NewGCPQueue(client *cloudtasks.Client, queueID string) *GCPQueue {
-	return &GCPQueue{
+func NewGCP(client *cloudtasks.Client, queueID string) *GCP {
+	return &GCP{
 		client:  client,
 		queueID: queueID,
 	}
@@ -46,7 +48,7 @@ func NewGCPQueue(client *cloudtasks.Client, queueID string) *GCPQueue {
 // ScheduleFetch enqueues a task on GCP to fetch the given modulePath and
 // version. It returns an error if there was an error hashing the task name, or
 // an error pushing the task to GCP.
-func (q *GCPQueue) ScheduleFetch(ctx context.Context, modulePath, version, suffix string) error {
+func (q *GCP) ScheduleFetch(ctx context.Context, modulePath, version, suffix string) error {
 	// the new taskqueue API requires a deadline of <= 30s
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
@@ -104,12 +106,12 @@ type moduleVersion struct {
 	modulePath, version string
 }
 
-// InMemoryQueue is a Queue implementation that schedules in-process fetch
+// InMemory is a Queue implementation that schedules in-process fetch
 // operations. Unlike the GCP task queue, it will not automatically retry tasks
 // on failure.
 //
 // This should only be used for local development.
-type InMemoryQueue struct {
+type InMemory struct {
 	proxyClient *proxy.Client
 	db          *postgres.DB
 
@@ -117,21 +119,22 @@ type InMemoryQueue struct {
 	sem   chan struct{}
 }
 
-// NewInMemoryQueue creates a new InMemoryQueue that asynchronously fetches
+// NewInMemory creates a new InMemory that asynchronously fetches
 // from proxyClient and stores in db. It uses workerCount parallelism to
 // execute these fetches.
-func NewInMemoryQueue(ctx context.Context, proxyClient *proxy.Client, db *postgres.DB, workerCount int) *InMemoryQueue {
-	q := &InMemoryQueue{
+func NewInMemory(ctx context.Context, proxyClient *proxy.Client, db *postgres.DB, workerCount int,
+	processFunc func(context.Context, string, string, *proxy.Client, *postgres.DB) (int, error)) *InMemory {
+	q := &InMemory{
 		proxyClient: proxyClient,
 		db:          db,
 		queue:       make(chan moduleVersion, 1000),
 		sem:         make(chan struct{}, workerCount),
 	}
-	go q.process(ctx)
+	go q.process(ctx, processFunc)
 	return q
 }
 
-func (q *InMemoryQueue) process(ctx context.Context) {
+func (q *InMemory) process(ctx context.Context, processFunc func(context.Context, string, string, *proxy.Client, *postgres.DB) (int, error)) {
 
 	for v := range q.queue {
 		select {
@@ -149,7 +152,8 @@ func (q *InMemoryQueue) process(ctx context.Context) {
 
 			fetchCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 			defer cancel()
-			if _, err := fetchAndUpdateState(fetchCtx, v.modulePath, v.version, q.proxyClient, q.db); err != nil {
+
+			if _, err := processFunc(fetchCtx, v.modulePath, v.version, q.proxyClient, q.db); err != nil {
 				log.Error(fetchCtx, err)
 			}
 		}(v)
@@ -158,14 +162,14 @@ func (q *InMemoryQueue) process(ctx context.Context) {
 
 // ScheduleFetch pushes a fetch task into the local queue to be processed
 // asynchronously.
-func (q *InMemoryQueue) ScheduleFetch(ctx context.Context, modulePath, version, suffix string) error {
+func (q *InMemory) ScheduleFetch(ctx context.Context, modulePath, version, suffix string) error {
 	q.queue <- moduleVersion{modulePath, version}
 	return nil
 }
 
 // WaitForTesting waits for all queued requests to finish. It should only be
 // used by test code.
-func (q InMemoryQueue) WaitForTesting(ctx context.Context) {
+func (q InMemory) WaitForTesting(ctx context.Context) {
 	for i := 0; i < cap(q.sem); i++ {
 		select {
 		case <-ctx.Done():
