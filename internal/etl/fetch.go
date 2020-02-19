@@ -141,8 +141,8 @@ func fetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 		// this point it will be the same as the resolvedVersion.  Only
 		// in this case, where the requestedVersion is a semantic
 		// version, is possible that the module was published in the
-		// index, and then later disappeared, so we need to updated
-		// module_version_state below to reflect these changes.
+		// index, and then later disappeared, so we need to update
+		// module_version_states below to reflect these changes.
 		// Otherwise, module_version_states does not need to be
 		// modified.
 		return code, fetchErr
