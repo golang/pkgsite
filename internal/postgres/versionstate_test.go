@@ -91,7 +91,7 @@ func TestModuleVersionState(t *testing.T) {
 		Version:        "v1.0.0",
 		IndexTimestamp: now,
 		TryCount:       1,
-		GoModPath:      &goModPath,
+		GoModPath:      goModPath,
 		Error:          errString,
 		Status:         statusCode,
 	}
@@ -177,8 +177,8 @@ func TestUpdateModuleVersionStatesForReprocessing(t *testing.T) {
 	}
 	code := http.StatusHTTPVersionNotSupported
 	wantVersions := []*internal.ModuleVersionState{
-		{ModulePath: "baz.com/quux", Version: "v2.0.1", IndexTimestamp: now, GoModPath: &goModPath, Status: code},
-		{ModulePath: "foo.com/bar", Version: "v1.0.0", IndexTimestamp: now, GoModPath: &goModPath, Status: code},
+		{ModulePath: "baz.com/quux", Version: "v2.0.1", IndexTimestamp: now, GoModPath: goModPath, Status: code},
+		{ModulePath: "foo.com/bar", Version: "v1.0.0", IndexTimestamp: now, GoModPath: goModPath, Status: code},
 	}
 	ignore := cmpopts.IgnoreFields(internal.ModuleVersionState{}, "CreatedAt", "LastProcessedAt", "NextProcessedAfter")
 	if diff := cmp.Diff(wantVersions, gotVersions, ignore); diff != "" {

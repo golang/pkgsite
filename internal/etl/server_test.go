@@ -88,7 +88,7 @@ func TestETL(t *testing.T) {
 				Status:         code,
 				TryCount:       tryCount,
 				Version:        version.Version,
-				GoModPath:      &goModPath,
+				GoModPath:      goModPath,
 			}
 		}
 		fooState = func(code, tryCount int) *internal.ModuleVersionState {

@@ -156,7 +156,7 @@ type ModuleVersionState struct {
 	AppVersion string
 
 	// GoModPath is the path declared in the go.mod file.
-	GoModPath *string
+	GoModPath string
 }
 
 // PackageVersionState holds an ETL package version state. It is associated

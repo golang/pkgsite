@@ -305,12 +305,8 @@ func TestFetchAndUpdateState_Mismatch(t *testing.T) {
 		t.Errorf("testDB.GetModuleVersionState(ctx, %q, %q): status=%v, want %d", modulePath, version, vs.Status, wantCode)
 	}
 
-	var gotGoModPath string
-	if vs.GoModPath != nil {
-		gotGoModPath = *vs.GoModPath
-	}
-	if gotGoModPath != goModPath {
-		t.Errorf("testDB.GetModuleVersionState(ctx, %q, %q): goModPath=%q, want %q", modulePath, version, gotGoModPath, goModPath)
+	if vs.GoModPath != goModPath {
+		t.Errorf("testDB.GetModuleVersionState(ctx, %q, %q): goModPath=%q, want %q", modulePath, version, vs.GoModPath, goModPath)
 	}
 
 	vm, err := testDB.GetVersionMap(ctx, modulePath, modulePath, version)

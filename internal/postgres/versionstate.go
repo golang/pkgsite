@@ -28,9 +28,9 @@ func (db *DB) InsertIndexVersions(ctx context.Context, versions []*internal.Inde
 
 	var vals []interface{}
 	for _, v := range versions {
-		vals = append(vals, v.Path, v.Version, version.ForSorting(v.Version), v.Timestamp, 0, "")
+		vals = append(vals, v.Path, v.Version, version.ForSorting(v.Version), v.Timestamp, 0, "", "")
 	}
-	cols := []string{"module_path", "version", "sort_version", "index_timestamp", "status", "error"}
+	cols := []string{"module_path", "version", "sort_version", "index_timestamp", "status", "error", "go_mod_path"}
 	conflictAction := `
 		ON CONFLICT
 			(module_path, version)
@@ -195,15 +195,10 @@ func scanModuleVersionState(scan func(dest ...interface{}) error) (*internal.Mod
 	var (
 		v               internal.ModuleVersionState
 		lastProcessedAt pq.NullTime
-		goModPath       sql.NullString
 	)
 	if err := scan(&v.ModulePath, &v.Version, &v.IndexTimestamp, &v.CreatedAt, &v.Status, &v.Error,
-		&v.TryCount, &v.LastProcessedAt, &v.NextProcessedAfter, &v.AppVersion, &goModPath); err != nil {
+		&v.TryCount, &v.LastProcessedAt, &v.NextProcessedAfter, &v.AppVersion, &v.GoModPath); err != nil {
 		return nil, err
-	}
-	if goModPath.Valid {
-		s := goModPath.String
-		v.GoModPath = &s
 	}
 	if lastProcessedAt.Valid {
 		lp := lastProcessedAt.Time
