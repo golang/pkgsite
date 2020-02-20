@@ -95,7 +95,7 @@ func DirectoryHeader(p *Page, versionedURL bool) htmlcheck.Checker {
 		in("h1.DetailsHeader-title", exactText(p.Title)),
 		in("div.DetailsHeader-version", exactText(fv)),
 		// directory pages don't show a header badge
-		in("div.DetailsHeader-badge", in(".DetailsHeader-unknown")),
+		in("div.DetailsHeader-badge", in(".DetailsHeader-badge--unknown")),
 		licenseInfo(p, packageURLPath(p, versionedURL), versionedURL),
 		// directory module links are always versioned (see b/144217401)
 		moduleInHeader(p, true))
@@ -152,11 +152,11 @@ func OverviewDetails(ov *Overview) htmlcheck.Checker {
 
 // versionBadge checks the latest-version badge on a header.
 func versionBadge(p *Page) htmlcheck.Checker {
-	class := "DetailsHeader-"
+	class := "DetailsHeader-badge"
 	if p.IsLatest {
-		class += "latest"
+		class += "--latest"
 	} else {
-		class += "goToLatest"
+		class += "--goToLatest"
 	}
 	return in("div.DetailsHeader-badge",
 		attr("class", `\b`+regexp.QuoteMeta(class)+`\b`), // the badge has this class too

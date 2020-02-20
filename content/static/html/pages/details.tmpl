@@ -97,14 +97,14 @@ if (selectedEl.offsetLeft + selectedEl.offsetWidth > navEl.offsetWidth) {
   navEl.scrollLeft = selectedEl.offsetLeft;
 }
 
-const copyButton = document.querySelector('#DetailsHeader-copyPath');
+const copyButton = document.querySelector('.js-detailsHeaderCopyPath');
 if (copyButton) {
-  copyButton.addEventListener('click', function(event) {
-    event.preventDefault();
-    const input = document.querySelector('#DetailsHeader-path');
-    input.select();
+  copyButton.addEventListener('click', e => {
+    e.preventDefault();
+    const inputEl = document.querySelector('.js-detailsHeaderPathInput');
+    inputEl.select();
     document.execCommand('copy');
-    input.blur(); // prevents jump to focused element in some browsers
+    inputEl.blur(); // prevents jump to focused element in some browsers
   });
 }
 </script>

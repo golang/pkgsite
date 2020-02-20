@@ -44,14 +44,14 @@ func LatestVersion(latest latestFunc) Middleware {
 				packagePath := string(matches[3])
 				pageType := string(matches[4])
 				latestVersion := latest(r.Context(), packagePath, modulePath, pageType)
-				latestClass := "DetailsHeader-"
+				latestClass := "DetailsHeader-badge"
 				switch {
 				case latestVersion == "":
-					latestClass += "unknown"
+					latestClass += "--unknown"
 				case latestVersion == version:
-					latestClass += "latest"
+					latestClass += "--latest"
 				default:
-					latestClass += "goToLatest"
+					latestClass += "--goToLatest"
 				}
 				// TODO(b/144509703): make only a single copy here, if this is slow
 				body = bytes.ReplaceAll(body, []byte(latestClassPlaceholder), []byte(latestClass))

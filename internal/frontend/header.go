@@ -206,7 +206,7 @@ func breadcrumbPath(pkgPath, modPath, version string) template.HTML {
 	// Include the path as a breadcrumb.
 	// We also add a "copy" button for the string `import "path"`.
 	//
-	// We need the 'DetailsHeader-path' input element to copy it to the clipboard.
+	// We need the 'DetailsHeader-pathInput' input element to copy it to the clipboard.
 	// - Its value attribute is delimited with single quotes because the value
 	//   contains double quotes.
 	// - Setting its type="hidden" doesn't work, so we position it off screen.
@@ -216,7 +216,7 @@ func breadcrumbPath(pkgPath, modPath, version string) template.HTML {
 	// jerked when it was finally loaded and its height was known.
 	f := `<div class="DetailsHeader-breadcrumb">
 %s
-<button id="DetailsHeader-copyPath" class="ImageButton" aria-label="Copy path to clipboard">
+<button class="ImageButton js-detailsHeaderCopyPath" aria-label="Copy path to clipboard">
   <svg fill="#00add8" width="13px" height="15px" viewBox="0 0 13 15" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 58 (84663) - https://sketch.com -->
     <title>Copy path to clipboard</title>
@@ -228,7 +228,7 @@ func breadcrumbPath(pkgPath, modPath, version string) template.HTML {
     </g>
   </svg>
 </button>
-<input id="DetailsHeader-path" role="presentation" tabindex="-1" value='%s'/>
+<input class="DetailsHeader-pathInput js-detailsHeaderPathInput" role="presentation" tabindex="-1" value='%s'>
 </div>`
 
 	return template.HTML(fmt.Sprintf(f,

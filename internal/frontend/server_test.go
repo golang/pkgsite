@@ -703,7 +703,7 @@ func TestServer(t *testing.T) {
 				in(".Overview-readmeContent", text(`readme`))),
 		},
 
-		// // TODO(b/139498072): add a second module, so we can verify that we get the latest version.
+		// TODO(b/139498072): add a second module, so we can verify that we get the latest version.
 		{
 			name:           "module packages tab latest version",
 			urlPath:        fmt.Sprintf("/mod/%s?tab=packages", sample.ModulePath),

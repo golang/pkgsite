@@ -212,10 +212,10 @@ func TestBreadcrumbPath(t *testing.T) {
 		t.Run(fmt.Sprintf("%s-%s-%s", test.pkgPath, test.modPath, test.version), func(t *testing.T) {
 			want := in("div.DetailsHeader-breadcrumb",
 				test.want,
-				in("button#DetailsHeader-copyPath",
+				in("button.js-detailsHeaderCopyPath",
 					attr("aria-label", "Copy path to clipboard"),
 					in("svg > title", text("Copy path to clipboard"))),
-				in("input#DetailsHeader-path",
+				in("input.DetailsHeader-pathInput",
 					attr("role", "presentation"),
 					attr("tabindex", "-1"),
 					attr("value", test.pkgPath)))

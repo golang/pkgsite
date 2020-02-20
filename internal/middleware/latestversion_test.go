@@ -30,7 +30,7 @@ func TestLatestVersion(t *testing.T) {
                     <a href="p1/p2@$$GODISCOVERY_LATESTVERSION$$/p3">Go to latest</a>
                 </div>`,
 			want: `
-                <div class="DetailsHeader-badge DetailsHeader-goToLatest"
+                <div class="DetailsHeader-badge DetailsHeader-badge--goToLatest"
 					 data-version="v1.0.0" data-mpath="p1/p2" data-ppath="p1/p2/p3" data-pagetype="pkg">
                     <span>Latest</span>
                     <a href="p1/p2@v1.2.3/p3">Go to latest</a>
@@ -46,7 +46,7 @@ func TestLatestVersion(t *testing.T) {
                     <a href="p1/p2@$$GODISCOVERY_LATESTVERSION$$/p3">Go to latest</a>
                 </div>`,
 			want: `
-                <div class="DetailsHeader-badge DetailsHeader-latest"
+                <div class="DetailsHeader-badge DetailsHeader-badge--latest"
 					 data-version="v1.2.3" data-mpath="p1/p2" data-ppath="p1/p2/p3" data-pagetype="pkg">
                     <span>Latest</span>
                     <a href="p1/p2@v1.2.3/p3">Go to latest</a>
@@ -62,7 +62,7 @@ func TestLatestVersion(t *testing.T) {
                     <a href="p1/p2@$$GODISCOVERY_LATESTVERSION$$/p3">Go to latest</a>
                 </div>`,
 			want: `
-                <div class="DetailsHeader-badge DetailsHeader-latest"
+                <div class="DetailsHeader-badge DetailsHeader-badge--latest"
 					 data-version="v1.2.3&#43;build" data-mpath="p1/p2" data-ppath="p1/p2/p3" data-pagetype="pkg">
                     <span>Latest</span>
                     <a href="p1/p2@v1.2.3+build/p3">Go to latest</a>
@@ -78,7 +78,7 @@ func TestLatestVersion(t *testing.T) {
                     <a href="mod/p1/p2@$$GODISCOVERY_LATESTVERSION$$">Go to latest</a>
                 </div>`,
 			want: `
-                <div class="DetailsHeader-badge DetailsHeader-goToLatest"
+                <div class="DetailsHeader-badge DetailsHeader-badge--goToLatest"
 					 data-version="v1.0.0" data-mpath="p1/p2" data-ppath="" data-pagetype="pkg">
                     <span>Latest</span>
                     <a href="mod/p1/p2@v1.2.3">Go to latest</a>
@@ -94,7 +94,7 @@ func TestLatestVersion(t *testing.T) {
                     <a href="mod/p1/p2@$$GODISCOVERY_LATESTVERSION$$">Go to latest</a>
                 </div>`,
 			want: `
-                <div class="DetailsHeader-badge DetailsHeader-latest"
+                <div class="DetailsHeader-badge DetailsHeader-badge--latest"
 					 data-version="v1.2.3" data-mpath="p1/p2" data-ppath="" data-pagetype="pkg">
                     <span>Latest</span>
                     <a href="mod/p1/p2@v1.2.3">Go to latest</a>
@@ -110,7 +110,7 @@ func TestLatestVersion(t *testing.T) {
                     <a href="mod/p1/p2@$$GODISCOVERY_LATESTVERSION$$">Go to latest</a>
                 </div>`,
 			want: `
-                <div class="DetailsHeader-badge DetailsHeader-unknown"
+                <div class="DetailsHeader-badge DetailsHeader-badge--unknown"
 					 data-version="v1.2.3" data-mpath="p1/p2" data-ppath="" data-pagetype="pkg">
                     <span>Latest</span>
                     <a href="mod/p1/p2@">Go to latest</a>

@@ -74,7 +74,7 @@ func TestModulePackageDirectoryResolution(t *testing.T) {
 			wantCode: http.StatusOK,
 			want: in("",
 				in(".DetailsHeader", hasText("v1.2.5")),
-				in(".DetailsHeader-badge", in(".DetailsHeader-latest"))),
+				in(".DetailsHeader-badge", in(".DetailsHeader-badge--latest"))),
 		},
 		{
 			desc:     "versioned module",
@@ -97,7 +97,7 @@ func TestModulePackageDirectoryResolution(t *testing.T) {
 			want: in("",
 				in(".DetailsHeader", hasText("v1.2.5")),
 				in(".DetailsContent", hasText("521")),
-				in(".DetailsHeader-badge", in(".DetailsHeader-latest"))),
+				in(".DetailsHeader-badge", in(".DetailsHeader-badge--latest"))),
 		},
 		{
 			desc:     "earlier package",
@@ -127,7 +127,7 @@ func TestModulePackageDirectoryResolution(t *testing.T) {
 			wantCode: http.StatusOK,
 			want: in("",
 				in(".Directories", hasText("pkg")),
-				in(".DetailsHeader-badge", in(".DetailsHeader-unknown"))),
+				in(".DetailsHeader-badge", in(".DetailsHeader-badge--unknown"))),
 		},
 		{
 			desc:     "latest package for /dir",

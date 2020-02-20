@@ -83,7 +83,7 @@ p {
 }
 code {
   font-size: 1rem;
-  font-family: "Go Mono", "Source Code Pro", monospace;
+  font-family: 'Go Mono', 'Source Code Pro', monospace;
 }
 
 .Site {
@@ -441,27 +441,27 @@ code {
   font-size: 0.75rem;
   padding: 0.25rem 0.75rem;
   position: relative;
-  top: -0.1875rem;
+  top: -0.125rem;
 }
-.DetailsHeader-latest {
+.DetailsHeader-badge--latest {
   background: var(--blue);
 }
-.DetailsHeader-latest a {
+.DetailsHeader-badge--latest a {
   display: none;
 }
-.DetailsHeader-goToLatest {
+.DetailsHeader-badge--goToLatest {
   background: var(--pink);
 }
-.DetailsHeader-goToLatest a {
+.DetailsHeader-badge--goToLatest a {
   color: var(--white);
 }
-.DetailsHeader-goToLatest span {
+.DetailsHeader-badge--goToLatest span {
   display: none;
 }
-.DetailsHeader-unknown a {
+.DetailsHeader-badge--unknown a {
   display: none;
 }
-.DetailsHeader-unknown span {
+.DetailsHeader-badge--unknown span {
   display: none;
 }
 .DetailsHeader-breadcrumbCurrent {
@@ -470,14 +470,14 @@ code {
 .DetailsHeader-breadcrumbDivider {
   color: var(--gray-3);
 }
-#DetailsHeader-path {
+.DetailsHeader-pathInput {
   /*
    * An input element that can be selected so its contents can be
    * copied to the clipboard. We can't use a hidden element, so
    * put this visible one very far off the screen.
    */
-  position: absolute;
   left: -62rem;
+  position: absolute;
   top: 62rem;
 }
 .SearchResults {
