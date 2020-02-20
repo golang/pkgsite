@@ -53,6 +53,7 @@ func Experiment(e *Experimenter) Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			r2 := e.setExperimentsForRequest(r)
 			if r2.Referer() == teeproxyURL && !experiment.IsActive(r2.Context(), "teeproxy-traffic") {
+				w.WriteHeader(http.StatusForbidden)
 				return
 			}
 			h.ServeHTTP(w, r2)
