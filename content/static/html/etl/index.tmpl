@@ -93,15 +93,15 @@ td {
 <p>All times in America/New_York.</p>
 
 <p>
-  <a href="https://cloud.google.com/console/cloudtasks/queue/{{.ResourcePrefix}}fetch-tasks?project={{.Project}}"
+  <a href="https://cloud.google.com/console/cloudtasks/queue/{{.ResourcePrefix}}fetch-tasks?project={{.Config.ProjectID}}"
 	target="_blank" rel="noreferrer">
      Task Queue
   </a> |
-  <a href="https://cloud.google.com/console/cloudscheduler?project={{.Project}}"
+  <a href="https://cloud.google.com/console/cloudscheduler?project={{.Config.ProjectID}}"
 	target="_blank" rel="noreferrer">
      Scheduler
   </a> |
-  <a href="https://cloud.google.com/console/logs/viewer?project={{.Project}}&resource=gae_app%2Fmodule_id%2F{{.ServiceID}}"
+  <a href="https://cloud.google.com/console/logs/viewer?project={{.Config.ProjectID}}&resource=gae_app%2Fmodule_id%2F{{.Config.ServiceID}}"
 	target="_blank" rel="noreferrer">
      Logs (switch to "All Logs" when you get there)
   </a>
@@ -133,6 +133,17 @@ td {
       onclick="submitForm('populateStdlibForm', false); return false">Populate Standard Library</button>
 		<output name="result"></output>
 	</form>
+</div>
+
+<div class="config">
+<h3>Config</h3>
+  <table>
+    <tr><td>App Version</td><td>{{.Config.VersionID}}</td></tr>
+    <tr><td>Zone</td><td>{{.Config.ZoneID}}</td></tr>
+    <tr><td>DB Host</td><td>{{.Config.DBHost}}</td></tr>
+    <tr><td>Redis Cache Host</td><td>{{.Config.RedisCacheHost}}</td></tr>
+    <tr><td>Redis HA Host</td><td>{{.Config.RedisHAHost}}</td></tr>
+  </table>
 </div>
 
 <div class="stats">

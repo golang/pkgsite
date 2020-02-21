@@ -373,16 +373,14 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (string, e
 		env = "Prod"
 	}
 	page := struct {
-		Project                      string
-		ServiceID                    string
+		Config                       *config.Config
 		Env                          string
 		ResourcePrefix               string
 		LatestTimestamp              *time.Time
 		Counts                       []*count
 		Next, Recent, RecentFailures []*internal.ModuleVersionState
 	}{
-		Project:         "go-discovery",
-		ServiceID:       s.cfg.ServiceID,
+		Config:          s.cfg,
 		Env:             env,
 		ResourcePrefix:  strings.ToLower(env) + "-",
 		LatestTimestamp: &stats.LatestTimestamp,
