@@ -21,6 +21,7 @@ import (
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/database"
 	"golang.org/x/discovery/internal/dcensus"
+	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/frontend"
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/middleware"
@@ -70,9 +71,9 @@ func main() {
 		if err != nil {
 			log.Fatalf(ctx, "unable to register the ocsql driver: %v\n", err)
 		}
-		ddb, err := database.Open(ocDriver, cfg.DBConnInfo())
+		ddb, err := openDB(ctx, cfg, ocDriver)
 		if err != nil {
-			log.Fatalf(ctx, "database.Open: %v", err)
+			log.Fatal(ctx, err)
 		}
 		db := postgres.New(ddb)
 		defer db.Close()
@@ -141,6 +142,28 @@ func main() {
 	addr := cfg.HostAddr("localhost:8080")
 	log.Infof(ctx, "Listening on addr %s", addr)
 	log.Fatal(ctx, http.ListenAndServe(addr, mw(router)))
+}
+
+// openDB opens a connection to a database with the given driver, using connection info from
+// the given config.
+// It first tries the main connection info (DBConnInfo), and if that fails, it uses backup
+// connection info it if exists (DBSecondaryConnInfo).
+func openDB(ctx context.Context, cfg *config.Config, driver string) (_ *database.DB, err error) {
+	derrors.Wrap(&err, "openDB(ctx, cfg, %q)", driver)
+
+	log.Infof(ctx, "opening database on host %s", cfg.DBHost)
+	ddb, err := database.Open(driver, cfg.DBConnInfo())
+	if err == nil {
+		return ddb, nil
+	}
+	ci := cfg.DBSecondaryConnInfo()
+	if ci == "" {
+		log.Infof(ctx, "no secondary DB host")
+		return nil, err
+	}
+	log.Errorf(ctx, "database.Open for primary host %s failed with %v; trying secondary host %s ",
+		cfg.DBHost, err, cfg.DBSecondaryHost)
+	return database.Open(driver, ci)
 }
 
 func getLogger(ctx context.Context, cfg *config.Config) middleware.Logger {

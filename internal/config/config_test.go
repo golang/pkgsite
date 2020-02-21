@@ -41,10 +41,7 @@ func TestChooseOne(t *testing.T) {
 		{"foo1 foo2", "^foo[12]$"},
 	}
 	for _, test := range tests {
-		got, err := chooseOne(test.configVar)
-		if err != nil {
-			t.Fatal(err)
-		}
+		got := chooseOne(test.configVar)
 		matched, err := regexp.MatchString(test.wantMatches, got)
 		if err != nil {
 			t.Fatal(err)

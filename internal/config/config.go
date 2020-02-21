@@ -93,6 +93,7 @@ type Config struct {
 	FallbackVersionLabel string
 
 	DBSecret, DBUser, DBHost, DBPort, DBName string
+	DBSecondaryHost                          string // DB host to use if first one is down
 	DBPassword                               string `json:"-"`
 
 	// Configuration for redis page cache.
@@ -131,16 +132,30 @@ func (c *Config) OnAppEngine() bool {
 const StatementTimeout = 10 * time.Minute
 
 // DBConnInfo returns a PostgreSQL connection string constructed from
-// environment variables.
+// environment variables, using the primary database host.
 func (c *Config) DBConnInfo() string {
+	return c.dbConnInfo(c.DBHost)
+}
+
+// DBSecondaryConnInfo returns a PostgreSQL connection string constructed from
+// environment variables, using the backup database host. It returns the
+// empty string if no backup is configured.
+func (c *Config) DBSecondaryConnInfo() string {
+	if c.DBSecondaryHost == "" {
+		return ""
+	}
+	return c.dbConnInfo(c.DBSecondaryHost)
+}
+
+// dbConnInfo returns a PostgresSQL connection string for the given host.
+func (c *Config) dbConnInfo(host string) string {
 	// For the connection string syntax, see
 	// https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING.
-
 	// Set the statement_timeout config parameter for this session.
 	// See https://www.postgresql.org/docs/current/runtime-config-client.html.
 	timeoutOption := fmt.Sprintf("-c statement_timeout=%d", StatementTimeout/time.Millisecond)
 	return fmt.Sprintf("user='%s' password='%s' host='%s' port=%s dbname='%s' sslmode=disable options='%s'",
-		c.DBUser, c.DBPassword, c.DBHost, c.DBPort, c.DBName, timeoutOption)
+		c.DBUser, c.DBPassword, host, c.DBPort, c.DBName, timeoutOption)
 }
 
 // HostAddr returns the network on which to serve the primary HTTP service.
@@ -162,9 +177,10 @@ func (c *Config) DebugAddr(dflt string) string {
 
 // configOverride holds selected config settings that can be dynamically overridden.
 type configOverride struct {
-	DBHost string
-	DBName string
-	Quota  QuotaSettings
+	DBHost          string
+	DBSecondaryHost string
+	DBName          string
+	Quota           QuotaSettings
 }
 
 // QuotaSettings is config for internal/middleware/quota.go
@@ -246,10 +262,11 @@ func load(ctx context.Context) (_ *Config, err error) {
 
 	cfg.DBUser = GetEnv("GO_DISCOVERY_DATABASE_USER", "postgres")
 	cfg.DBPassword = os.Getenv("GO_DISCOVERY_DATABASE_PASSWORD")
-	cfg.DBHost, err = chooseOne(GetEnv("GO_DISCOVERY_DATABASE_HOST", "localhost"))
-	if err != nil {
-		return nil, err
+	cfg.DBHost = chooseOne(GetEnv("GO_DISCOVERY_DATABASE_HOST", "localhost"))
+	if cfg.DBHost == "" {
+		panic("DBHost is empty; impossible")
 	}
+	cfg.DBSecondaryHost = chooseOne(os.Getenv("GO_DISCOVERY_DATABASE_SECONDARY_HOST"))
 	cfg.DBPort = GetEnv("GO_DISCOVERY_DATABASE_PORT", "5432")
 	cfg.DBName = GetEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-database")
 	cfg.DBSecret = os.Getenv("GO_DISCOVERY_DATABASE_SECRET")
@@ -316,6 +333,7 @@ func processOverrides(cfg *Config, bytes []byte) {
 		return
 	}
 	overrideString("DBHost", &cfg.DBHost, ov.DBHost)
+	overrideString("DBSecondaryHost", &cfg.DBSecondaryHost, ov.DBSecondaryHost)
 	overrideString("DBName", &cfg.DBName, ov.DBName)
 	overrideInt("Quota.QPS", &cfg.Quota.QPS, ov.Quota.QPS)
 	overrideInt("Quota.Burst", &cfg.Quota.Burst, ov.Quota.Burst)
@@ -353,15 +371,15 @@ func (c *Config) Dump(w io.Writer) error {
 }
 
 // chooseOne selects one entry at random from a whitespace-separated
-// configuration variable.
-func chooseOne(configVar string) (string, error) {
+// string. It returns the empty string if there are no elements.
+func chooseOne(configVar string) string {
 	fields := strings.Fields(configVar)
 	if len(fields) == 0 {
-		return "", fmt.Errorf("no valid entries in %q", configVar)
+		return ""
 	}
 	src := rand.NewSource(time.Now().UnixNano())
 	rng := rand.New(src)
-	return fields[rng.Intn(len(fields))], nil
+	return fields[rng.Intn(len(fields))]
 }
 
 // gceMetadata reads a metadata value from GCE.
