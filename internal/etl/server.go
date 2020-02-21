@@ -34,6 +34,7 @@ import (
 
 // Server can be installed to serve the go discovery etl.
 type Server struct {
+	cfg             *config.Config
 	indexClient     *index.Client
 	proxyClient     *proxy.Client
 	redisClient     *redis.Client
@@ -45,7 +46,8 @@ type Server struct {
 }
 
 // NewServer creates a new Server with the given dependencies.
-func NewServer(db *postgres.DB,
+func NewServer(cfg *config.Config,
+	db *postgres.DB,
 	indexClient *index.Client,
 	proxyClient *proxy.Client,
 	redisClient *redis.Client,
@@ -61,6 +63,7 @@ func NewServer(db *postgres.DB,
 	}
 
 	return &Server{
+		cfg:             cfg,
 		db:              db,
 		indexClient:     indexClient,
 		proxyClient:     proxyClient,
@@ -359,7 +362,7 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (string, e
 	sort.Slice(counts, func(i, j int) bool { return counts[i].Code < counts[j].Code })
 
 	var env string
-	switch config.ServiceID() {
+	switch s.cfg.ServiceID {
 	case "":
 		env = "Local"
 	case "dev-etl":
@@ -379,7 +382,7 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (string, e
 		Next, Recent, RecentFailures []*internal.ModuleVersionState
 	}{
 		Project:         "go-discovery",
-		ServiceID:       config.ServiceID(),
+		ServiceID:       s.cfg.ServiceID,
 		Env:             env,
 		ResourcePrefix:  strings.ToLower(env) + "-",
 		LatestTimestamp: &stats.LatestTimestamp,

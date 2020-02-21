@@ -105,24 +105,24 @@ func main() {
 		middleware.CacheErrorCount,
 		middleware.QuotaResultCount,
 	)
-	if err := dcensus.Init(views...); err != nil {
+	if err := dcensus.Init(cfg, views...); err != nil {
 		log.Fatal(ctx, err)
 	}
 	// We are not currently forwarding any ports on AppEngine, so serving debug
 	// information is broken.
-	if !config.OnAppEngine() {
+	if !cfg.OnAppEngine() {
 		dcensusServer, err := dcensus.NewServer()
 		if err != nil {
 			log.Fatal(ctx, err)
 		}
-		go http.ListenAndServe(config.DebugAddr("localhost:8081"), dcensusServer)
+		go http.ListenAndServe(cfg.DebugAddr("localhost:8081"), dcensusServer)
 	}
 
 	panicHandler, err := server.PanicHandler()
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
-	requestLogger := getLogger(ctx)
+	requestLogger := getLogger(ctx, cfg)
 	experimenter, err := middleware.NewExperimenter(ctx, 1*time.Minute, exp, requestLogger)
 	if err != nil {
 		log.Fatal(ctx, err)
@@ -138,14 +138,14 @@ func main() {
 		middleware.Experiment(experimenter),
 	)
 
-	addr := config.HostAddr("localhost:8080")
+	addr := cfg.HostAddr("localhost:8080")
 	log.Infof(ctx, "Listening on addr %s", addr)
 	log.Fatal(ctx, http.ListenAndServe(addr, mw(router)))
 }
 
-func getLogger(ctx context.Context) middleware.Logger {
-	if config.OnAppEngine() {
-		logger, err := log.UseStackdriver(ctx, "frontend-log")
+func getLogger(ctx context.Context, cfg *config.Config) middleware.Logger {
+	if cfg.OnAppEngine() {
+		logger, err := log.UseStackdriver(ctx, cfg, "frontend-log")
 		if err != nil {
 			log.Fatal(ctx, err)
 		}

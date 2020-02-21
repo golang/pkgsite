@@ -75,7 +75,7 @@ const debugPage = `
 
 // Init configures tracing and aggregation according to the given Views. If
 // running on GCP, Init also configures exporting to StackDriver.
-func Init(views ...*view.View) error {
+func Init(cfg *config.Config, views ...*view.View) error {
 	// The default trace sampler samples with probability 1e-4. That's too
 	// infrequent for our traffic levels. In the future we may want to decrease
 	// this sampling rate.
@@ -83,7 +83,7 @@ func Init(views ...*view.View) error {
 	if err := view.Register(views...); err != nil {
 		return fmt.Errorf("dcensus.Init(views): view.Register: %v", err)
 	}
-	exportToStackdriver(context.Background())
+	exportToStackdriver(context.Background(), cfg)
 	return nil
 }
 
@@ -113,8 +113,8 @@ func (r *monitoredResource) MonitoredResource() (resType string, labels map[stri
 
 // ExportToStackdriver checks to see if the process is running in a GCP
 // environment, and if so configures exporting to stackdriver.
-func exportToStackdriver(ctx context.Context) {
-	if config.ProjectID() == "" {
+func exportToStackdriver(ctx context.Context, cfg *config.Config) {
+	if cfg.ProjectID == "" {
 		log.Infof(ctx, "Not exporting to StackDriver: GOOGLE_CLOUD_PROJECT is unset.")
 		return
 	}
@@ -123,7 +123,7 @@ func exportToStackdriver(ctx context.Context) {
 	// https://cloud.google.com/monitoring/custom-metrics/creating-metrics#writing-ts
 	view.SetReportingPeriod(time.Minute)
 
-	viewExporter, err := NewViewExporter()
+	viewExporter, err := NewViewExporter(cfg)
 	if err != nil {
 		log.Fatalf(ctx, "error creating view exporter: %v", err)
 	}
@@ -134,8 +134,8 @@ func exportToStackdriver(ctx context.Context) {
 	// can't increase *too* much because this is still running in GAE, which is
 	// relatively memory-constrained.
 	traceExporter, err := stackdriver.NewExporter(stackdriver.Options{
-		ProjectID:                config.ProjectID(),
-		MonitoredResource:        (*monitoredResource)(config.AppMonitoredResource()),
+		ProjectID:                cfg.ProjectID,
+		MonitoredResource:        (*monitoredResource)(cfg.AppMonitoredResource),
 		TraceSpansBufferMaxBytes: 32 * 1024 * 1024, // 32 MiB
 	})
 	if err != nil {
@@ -145,26 +145,26 @@ func exportToStackdriver(ctx context.Context) {
 }
 
 // NewViewExporter creates a StackDriver exporter for stats.
-func NewViewExporter() (_ *stackdriver.Exporter, err error) {
+func NewViewExporter(cfg *config.Config) (_ *stackdriver.Exporter, err error) {
 	defer derrors.Wrap(&err, "NewViewExporter()")
 
 	labels := &stackdriver.Labels{}
-	labels.Set("version", config.AppVersionLabel(), "Version label of the running binary")
+	labels.Set("version", cfg.AppVersionLabel(), "Version label of the running binary")
 
 	// Views must be associated with the instance, else we run into overlapping
 	// timeseries problems. Note that generic_task is used because the
 	// gae_instance resource type is not supported for metrics:
 	// https://cloud.google.com/monitoring/custom-metrics/creating-metrics#which-resource
 	return stackdriver.NewExporter(stackdriver.Options{
-		ProjectID: config.ProjectID(),
+		ProjectID: cfg.ProjectID,
 		MonitoredResource: &monitoredResource{
 			Type: "generic_task",
 			Labels: map[string]string{
-				"project_id": config.ProjectID(),
-				"location":   config.LocationID(),
-				"job":        config.ServiceID(),
+				"project_id": cfg.ProjectID,
+				"location":   cfg.LocationID,
+				"job":        cfg.ServiceID,
 				"namespace":  "go-discovery",
-				"task_id":    config.InstanceID(),
+				"task_id":    cfg.InstanceID,
 			},
 		},
 		DefaultMonitoringLabels: labels,

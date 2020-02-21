@@ -83,10 +83,10 @@ func main() {
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
-	fetchQueue := newQueue(ctx, proxyClient, db)
-	reportingClient := reportingClient(ctx)
+	fetchQueue := newQueue(ctx, cfg, proxyClient, db)
+	reportingClient := reportingClient(ctx, cfg)
 	redisClient := getRedis(ctx, cfg)
-	server, err := etl.NewServer(db, indexClient, proxyClient, redisClient, fetchQueue, reportingClient, *staticPath)
+	server, err := etl.NewServer(cfg, db, indexClient, proxyClient, redisClient, fetchQueue, reportingClient, *staticPath)
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
@@ -94,44 +94,44 @@ func main() {
 	server.Install(router.Handle)
 
 	views := append(dcensus.ClientViews, dcensus.ServerViews...)
-	if err := dcensus.Init(views...); err != nil {
+	if err := dcensus.Init(cfg, views...); err != nil {
 		log.Fatal(ctx, err)
 	}
 	// We are not currently forwarding any ports on AppEngine, so serving debug
 	// information is broken.
-	if !config.OnAppEngine() {
+	if !cfg.OnAppEngine() {
 		dcensusServer, err := dcensus.NewServer()
 		if err != nil {
 			log.Fatal(ctx, err)
 		}
-		go http.ListenAndServe(config.DebugAddr("localhost:8001"), dcensusServer)
+		go http.ListenAndServe(cfg.DebugAddr("localhost:8001"), dcensusServer)
 	}
 
 	handlerTimeout, err := strconv.Atoi(timeout)
 	if err != nil {
 		log.Fatalf(ctx, "strconv.Atoi(%q): %v", timeout, err)
 	}
-	requestLogger := logger(ctx)
+	requestLogger := logger(ctx, cfg)
 	mw := middleware.Chain(
 		middleware.RequestLog(requestLogger),
 		middleware.Timeout(time.Duration(handlerTimeout)*time.Minute),
 	)
 	http.Handle("/", mw(router))
 
-	addr := config.HostAddr("localhost:8000")
+	addr := cfg.HostAddr("localhost:8000")
 	log.Infof(ctx, "Listening on addr %s", addr)
 	log.Fatal(ctx, http.ListenAndServe(addr, nil))
 }
 
-func newQueue(ctx context.Context, proxyClient *proxy.Client, db *postgres.DB) queue.Queue {
-	if !config.OnAppEngine() {
+func newQueue(ctx context.Context, cfg *config.Config, proxyClient *proxy.Client, db *postgres.DB) queue.Queue {
+	if !cfg.OnAppEngine() {
 		return queue.NewInMemory(ctx, proxyClient, db, *workers, etl.FetchAndUpdateState)
 	}
 	client, err := cloudtasks.NewClient(ctx)
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
-	return queue.NewGCP(client, queueName)
+	return queue.NewGCP(cfg, client, queueName)
 }
 
 func getRedis(ctx context.Context, cfg *config.Config) *redis.Client {
@@ -148,12 +148,12 @@ func getRedis(ctx context.Context, cfg *config.Config) *redis.Client {
 	return nil
 }
 
-func reportingClient(ctx context.Context) *errorreporting.Client {
-	if !config.OnAppEngine() {
+func reportingClient(ctx context.Context, cfg *config.Config) *errorreporting.Client {
+	if !cfg.OnAppEngine() {
 		return nil
 	}
-	reporter, err := errorreporting.NewClient(ctx, config.ProjectID(), errorreporting.Config{
-		ServiceName: config.ServiceID(),
+	reporter, err := errorreporting.NewClient(ctx, cfg.ProjectID, errorreporting.Config{
+		ServiceName: cfg.ServiceID,
 		OnError: func(err error) {
 			log.Errorf(ctx, "Error reporting failed: %v", err)
 		},
@@ -164,9 +164,9 @@ func reportingClient(ctx context.Context) *errorreporting.Client {
 	return reporter
 }
 
-func logger(ctx context.Context) middleware.Logger {
-	if config.OnAppEngine() {
-		logger, err := log.UseStackdriver(ctx, "etl-log")
+func logger(ctx context.Context, cfg *config.Config) middleware.Logger {
+	if cfg.OnAppEngine() {
+		logger, err := log.UseStackdriver(ctx, cfg, "etl-log")
 		if err != nil {
 			log.Fatal(ctx, err)
 		}

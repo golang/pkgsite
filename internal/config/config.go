@@ -29,23 +29,6 @@ import (
 	mrpb "google.golang.org/genproto/googleapis/api/monitoredres"
 )
 
-// HostAddr returns the network on which to serve the primary HTTP service.
-func HostAddr(dflt string) string {
-	if cfg.Port != "" {
-		return fmt.Sprintf(":%s", cfg.Port)
-	}
-	return dflt
-}
-
-// DebugAddr returns the network address on which to serve debugging
-// information.
-func DebugAddr(dflt string) string {
-	if cfg.DebugPort != "" {
-		return fmt.Sprintf(":%s", cfg.DebugPort)
-	}
-	return dflt
-}
-
 // GetEnv looks up the given key from the environment, returning its value if
 // it exists, and otherwise returning the given fallback value.
 func GetEnv(key, fallback string) string {
@@ -55,34 +38,12 @@ func GetEnv(key, fallback string) string {
 	return fallback
 }
 
-// ServiceID returns a the name of the current application.
-func ServiceID() string {
-	return cfg.ServiceID
-}
-
-// InstanceID returns a unique identifier for this process instance.
 func InstanceID() string {
 	return cfg.InstanceID
 }
 
-// LocationID returns the region containing our AppEngine apps.
-func LocationID() string {
-	return cfg.LocationID
-}
-
-// AppVersionLabel returns the version label for the current instance.  This is
-// the AppVersionID available, otherwise a string constructed using the
-// timestamp of process start.
 func AppVersionLabel() string {
-	if cfg.VersionID != "" {
-		return cfg.VersionID
-	}
-	return cfg.FallbackVersionLabel
-}
-
-// AppVersionID is the AppEngine version of the current instance.
-func AppVersionID() string {
-	return cfg.VersionID
+	return cfg.AppVersionLabel()
 }
 
 // AppVersionFormat is the expected format of the app version timestamp.
@@ -105,51 +66,6 @@ func ValidateAppVersion(appVersion string) error {
 	return nil
 }
 
-// ProjectID returns the GCP project ID.
-func ProjectID() string {
-	return cfg.ProjectID
-}
-
-// ZoneID returns the GAE zone.
-func ZoneID() string {
-	return cfg.ZoneID
-}
-
-// AppMonitoredResource is the resource for the current GAE app.
-// See https://cloud.google.com/monitoring/api/resources#tag_gae_app for more
-// details:
-// "An object representing a resource that can be used for monitoring, logging,
-// billing, or other purposes. Examples include virtual machine instances,
-// databases, and storage devices such as disks.""
-func AppMonitoredResource() *mrpb.MonitoredResource {
-	return cfg.AppMonitoredResource
-}
-
-// OnAppEngine reports if the current process is running in an AppEngine
-// environment.
-func OnAppEngine() bool {
-	// TODO(rfindley): verify that this works for the go1.12 runtime
-	return cfg.GaeEnv == "standard"
-}
-
-// StatementTimeout is the value of the Postgres statement_timeout parameter.
-// Statements that run longer than this are terminated.
-// 10 minutes is the App Engine standard request timeout.
-const StatementTimeout = 10 * time.Minute
-
-// DBConnInfo returns a PostgreSQL connection string constructed from
-// environment variables.
-func (c *Config) DBConnInfo() string {
-	// For the connection string syntax, see
-	// https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING.
-
-	// Set the statement_timeout config parameter for this session.
-	// See https://www.postgresql.org/docs/current/runtime-config-client.html.
-	timeoutOption := fmt.Sprintf("-c statement_timeout=%d", StatementTimeout/time.Millisecond)
-	return fmt.Sprintf("user='%s' password='%s' host='%s' port=%s dbname='%s' sslmode=disable options='%s'",
-		c.DBUser, c.DBPassword, c.DBHost, c.DBPort, c.DBName, timeoutOption)
-}
-
 // Config holds shared configuration values used in instantiating our server
 // components.
 type Config struct {
@@ -164,7 +80,12 @@ type Config struct {
 
 	GaeEnv string
 
-	// StackDriver resource identifiers
+	// AppMonitoredResource is the resource for the current GAE app.
+	// See https://cloud.google.com/monitoring/api/resources#tag_gae_app for more
+	// details:
+	// "An object representing a resource that can be used for monitoring, logging,
+	// billing, or other purposes. Examples include virtual machine instances,
+	// databases, and storage devices such as disks.""
 	AppMonitoredResource *mrpb.MonitoredResource
 
 	// FallbackVersionLabel is used as the VersionLabel when not hosting on
@@ -185,6 +106,58 @@ type Config struct {
 	UseProfiler bool
 
 	Quota QuotaSettings
+}
+
+// AppVersionLabel returns the version label for the current instance.  This is
+// the AppVersionID available, otherwise a string constructed using the
+// timestamp of process start.
+func (c *Config) AppVersionLabel() string {
+	if c.VersionID != "" {
+		return c.VersionID
+	}
+	return c.FallbackVersionLabel
+}
+
+// OnAppEngine reports if the current process is running in an AppEngine
+// environment.
+func (c *Config) OnAppEngine() bool {
+	// TODO(rfindley): verify that this works for the go1.12 runtime
+	return c.GaeEnv == "standard"
+}
+
+// StatementTimeout is the value of the Postgres statement_timeout parameter.
+// Statements that run longer than this are terminated.
+// 10 minutes is the App Engine standard request timeout.
+const StatementTimeout = 10 * time.Minute
+
+// DBConnInfo returns a PostgreSQL connection string constructed from
+// environment variables.
+func (c *Config) DBConnInfo() string {
+	// For the connection string syntax, see
+	// https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING.
+
+	// Set the statement_timeout config parameter for this session.
+	// See https://www.postgresql.org/docs/current/runtime-config-client.html.
+	timeoutOption := fmt.Sprintf("-c statement_timeout=%d", StatementTimeout/time.Millisecond)
+	return fmt.Sprintf("user='%s' password='%s' host='%s' port=%s dbname='%s' sslmode=disable options='%s'",
+		c.DBUser, c.DBPassword, c.DBHost, c.DBPort, c.DBName, timeoutOption)
+}
+
+// HostAddr returns the network on which to serve the primary HTTP service.
+func (c *Config) HostAddr(dflt string) string {
+	if c.Port != "" {
+		return fmt.Sprintf(":%s", c.Port)
+	}
+	return dflt
+}
+
+// DebugAddr returns the network address on which to serve debugging
+// information.
+func (c *Config) DebugAddr(dflt string) string {
+	if c.DebugPort != "" {
+		return fmt.Sprintf(":%s", c.DebugPort)
+	}
+	return dflt
 }
 
 // configOverride holds selected config settings that can be dynamically overridden.

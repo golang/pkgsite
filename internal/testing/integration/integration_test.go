@@ -17,6 +17,7 @@ import (
 	"github.com/alicebob/miniredis/v2"
 	"github.com/go-redis/redis/v7"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/etl"
 	"golang.org/x/discovery/internal/frontend"
 	"golang.org/x/discovery/internal/index"
@@ -70,7 +71,7 @@ func TestEndToEndProcessing(t *testing.T) {
 	// back to ETL, rather than calling fetch itself.
 	queue := queue.NewInMemory(ctx, proxyClient, testDB, 10, etl.FetchAndUpdateState)
 
-	etlServer, err := etl.NewServer(testDB, indexClient, proxyClient, redisHAClient, queue, nil, "../../../content/static")
+	etlServer, err := etl.NewServer(&config.Config{}, testDB, indexClient, proxyClient, redisHAClient, queue, nil, "../../../content/static")
 	if err != nil {
 		t.Fatal(err)
 	}

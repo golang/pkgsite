@@ -31,6 +31,7 @@ type Queue interface {
 // GCP provides a Queue implementation backed by the Google Cloud Tasks
 // API.
 type GCP struct {
+	cfg     *config.Config
 	client  *cloudtasks.Client
 	queueID string
 }
@@ -38,7 +39,7 @@ type GCP struct {
 // NewGCP returns a new Queue that can be used to enqueue tasks using the
 // cloud tasks API.  The given queueID should be the name of the queue in the
 // cloud tasks console.
-func NewGCP(client *cloudtasks.Client, queueID string) *GCP {
+func NewGCP(cfg *config.Config, client *cloudtasks.Client, queueID string) *GCP {
 	return &GCP{
 		client:  client,
 		queueID: queueID,
@@ -52,7 +53,7 @@ func (q *GCP) ScheduleFetch(ctx context.Context, modulePath, version, suffix str
 	// the new taskqueue API requires a deadline of <= 30s
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	queueName := fmt.Sprintf("projects/%s/locations/%s/queues/%s", config.ProjectID(), config.LocationID(), q.queueID)
+	queueName := fmt.Sprintf("projects/%s/locations/%s/queues/%s", q.cfg.ProjectID, q.cfg.LocationID, q.queueID)
 	u := fmt.Sprintf("/fetch/%s/@v/%s", modulePath, version)
 	taskID := newTaskID(modulePath, version, time.Now())
 	req := &taskspb.CreateTaskRequest{

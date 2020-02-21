@@ -72,10 +72,10 @@ func (stdlibLogger) log(ctx context.Context, s logging.Severity, payload interfa
 // See https://cloud.google.com/appengine/docs/standard/go/writing-application-logs.
 //
 // UseStackdriver can only be called once. If it is called a second time, it returns an error.
-func UseStackdriver(ctx context.Context, logName string) (_ *logging.Logger, err error) {
+func UseStackdriver(ctx context.Context, cfg *config.Config, logName string) (_ *logging.Logger, err error) {
 	defer derrors.Wrap(&err, "UseStackdriver(ctx, %q)", logName)
 
-	client, err := logging.NewClient(ctx, config.ProjectID())
+	client, err := logging.NewClient(ctx, cfg.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -83,8 +83,8 @@ func UseStackdriver(ctx context.Context, logName string) (_ *logging.Logger, err
 	// be better to use the gae_instance monitored resource, but that's not
 	// currently supported:
 	// https://cloud.google.com/logging/docs/api/v2/resource-list#resource-types
-	parent := client.Logger(logName, logging.CommonResource(config.AppMonitoredResource()))
-	child := client.Logger(logName+"-child", logging.CommonResource(config.AppMonitoredResource()))
+	parent := client.Logger(logName, logging.CommonResource(cfg.AppMonitoredResource))
+	child := client.Logger(logName+"-child", logging.CommonResource(cfg.AppMonitoredResource))
 	mu.Lock()
 	defer mu.Unlock()
 	if _, ok := logger.(*stackdriverLogger); ok {

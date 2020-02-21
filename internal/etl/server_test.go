@@ -18,6 +18,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"go.opencensus.io/trace"
 	"golang.org/x/discovery/internal"
+	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/postgres"
@@ -148,7 +149,7 @@ func TestETL(t *testing.T) {
 			// Use 10 workers to have parallelism consistent with the etl binary.
 			q := queue.NewInMemory(ctx, proxyClient, testDB, 10, FetchAndUpdateState)
 
-			s, err := NewServer(testDB, indexClient, proxyClient, nil, q, nil, "")
+			s, err := NewServer(&config.Config{}, testDB, indexClient, proxyClient, nil, q, nil, "")
 			if err != nil {
 				t.Fatal(err)
 			}

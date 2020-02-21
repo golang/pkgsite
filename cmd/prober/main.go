@@ -222,7 +222,7 @@ func main() {
 	}
 	cfg.Dump(os.Stderr)
 
-	if _, err := log.UseStackdriver(ctx, "prober-log"); err != nil {
+	if _, err := log.UseStackdriver(ctx, cfg, "prober-log"); err != nil {
 		log.Fatal(ctx, err)
 	}
 
@@ -251,7 +251,7 @@ func main() {
 	if err := view.Register(firstByteLatencyDistribution, probeCount); err != nil {
 		log.Fatalf(ctx, "view.Register: %v", err)
 	}
-	metricExporter, err = dcensus.NewViewExporter()
+	metricExporter, err = dcensus.NewViewExporter(cfg)
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
@@ -264,7 +264,7 @@ func main() {
 	})
 	http.HandleFunc("/", handleProbe)
 
-	addr := config.HostAddr("localhost:8080")
+	addr := cfg.HostAddr("localhost:8080")
 	log.Infof(ctx, "Listening on addr %s", addr)
 	log.Fatal(ctx, http.ListenAndServe(addr, nil))
 }
