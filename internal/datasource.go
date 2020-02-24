@@ -39,22 +39,22 @@ type DataSource interface {
 	// GetPackagesInVersion returns Packages contained in the module version
 	// specified by modulePath and version.
 	GetPackagesInVersion(ctx context.Context, modulePath, version string) ([]*Package, error)
-	// GetPseudoVersionsForModule returns VersionInfo for all known
+	// GetPseudoVersionsForModule returns ModuleInfo for all known
 	// pseudo-versions for the module corresponding to modulePath.
-	GetPseudoVersionsForModule(ctx context.Context, modulePath string) ([]*VersionInfo, error)
-	// GetPseudoVersionsForModule returns VersionInfo for all known
+	GetPseudoVersionsForModule(ctx context.Context, modulePath string) ([]*ModuleInfo, error)
+	// GetPseudoVersionsForModule returns ModuleInfo for all known
 	// pseudo-versions for any module containing a package with the given import
 	// path.
-	GetPseudoVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*VersionInfo, error)
-	// GetTaggedVersionsForModule returns VersionInfo for all known tagged
+	GetPseudoVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*ModuleInfo, error)
+	// GetTaggedVersionsForModule returns ModuleInfo for all known tagged
 	// versions for the module corresponding to modulePath.
-	GetTaggedVersionsForModule(ctx context.Context, modulePath string) ([]*VersionInfo, error)
-	// GetTaggedVersionsForModule returns VersionInfo for all known tagged
+	GetTaggedVersionsForModule(ctx context.Context, modulePath string) ([]*ModuleInfo, error)
+	// GetTaggedVersionsForModule returns ModuleInfo for all known tagged
 	// versions for any module containing a package with the given import path.
-	GetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*VersionInfo, error)
-	// GetVersionInfo returns the VersionInfo corresponding to modulePath and
+	GetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*ModuleInfo, error)
+	// GetModuleInfo returns the ModuleInfo corresponding to modulePath and
 	// version.
-	GetVersionInfo(ctx context.Context, modulePath, version string) (*VersionInfo, error)
+	GetModuleInfo(ctx context.Context, modulePath, version string) (*ModuleInfo, error)
 	// IsExcluded reports whether the path is excluded from processinng.
 	IsExcluded(ctx context.Context, path string) (bool, error)
 

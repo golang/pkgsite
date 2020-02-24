@@ -155,7 +155,7 @@ func processZipFile(ctx context.Context, modulePath string, versionType version.
 	hasGoMod := zipContainsFilename(zipReader, path.Join(moduleVersionDir(modulePath, resolvedVersion), "go.mod"))
 	return &FetchResult{
 		Version: &internal.Version{
-			VersionInfo: internal.VersionInfo{
+			ModuleInfo: internal.ModuleInfo{
 				ModulePath:        modulePath,
 				Version:           resolvedVersion,
 				CommitTime:        commitTime,

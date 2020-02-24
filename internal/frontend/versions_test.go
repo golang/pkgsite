@@ -61,11 +61,11 @@ func TestFetchModuleVersionDetails(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	info1 := sample.VersionInfo()
+	info1 := sample.ModuleInfo()
 	info1.ModulePath = modulePath1
 	info1.Version = "v1.2.1"
 
-	info2 := sample.VersionInfo()
+	info2 := sample.ModuleInfo()
 	info2.ModulePath = modulePath2
 	info2.Version = "v2.2.1-alpha.1"
 
@@ -77,7 +77,7 @@ func TestFetchModuleVersionDetails(t *testing.T) {
 
 	for _, tc := range []struct {
 		name        string
-		info        *internal.VersionInfo
+		info        *internal.ModuleInfo
 		versions    []*internal.Version
 		wantDetails *VersionsDetails
 	}{
@@ -375,11 +375,11 @@ func TestPathInVersion(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		vi := sample.VersionInfo()
-		vi.ModulePath = test.modulePath
-		if got := pathInVersion(test.v1Path, vi); got != test.want {
-			t.Errorf("pathInVersion(%q, VersionInfo{...ModulePath:%q}) = %s, want %v",
-				test.v1Path, vi.ModulePath, got, test.want)
+		mi := sample.ModuleInfo()
+		mi.ModulePath = test.modulePath
+		if got := pathInVersion(test.v1Path, mi); got != test.want {
+			t.Errorf("pathInVersion(%q, ModuleInfo{...ModulePath:%q}) = %s, want %v",
+				test.v1Path, mi.ModulePath, got, test.want)
 		}
 	}
 }

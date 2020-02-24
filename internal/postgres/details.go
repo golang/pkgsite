@@ -73,21 +73,21 @@ func (db *DB) GetPackagesInVersion(ctx context.Context, modulePath, version stri
 // GetTaggedVersionsForPackageSeries returns a list of tagged versions sorted in
 // descending semver order. This list includes tagged versions of packages that
 // have the same v1path.
-func (db *DB) GetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*internal.VersionInfo, error) {
+func (db *DB) GetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*internal.ModuleInfo, error) {
 	return getPackageVersions(ctx, db, pkgPath, []version.Type{version.TypeRelease, version.TypePrerelease})
 }
 
 // GetPseudoVersionsForPackageSeries returns the 10 most recent from a list of
 // pseudo-versions sorted in descending semver order. This list includes
 // pseudo-versions of packages that have the same v1path.
-func (db *DB) GetPseudoVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*internal.VersionInfo, error) {
+func (db *DB) GetPseudoVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*internal.ModuleInfo, error) {
 	return getPackageVersions(ctx, db, pkgPath, []version.Type{version.TypePseudo})
 }
 
 // getPackageVersions returns a list of versions sorted in descending semver
 // order. The version types included in the list are specified by a list of
 // VersionTypes.
-func getPackageVersions(ctx context.Context, db *DB, pkgPath string, versionTypes []version.Type) (_ []*internal.VersionInfo, err error) {
+func getPackageVersions(ctx context.Context, db *DB, pkgPath string, versionTypes []version.Type) (_ []*internal.ModuleInfo, err error) {
 	defer derrors.Wrap(&err, "DB.getPackageVersions(ctx, db, %q, %v)", pkgPath, versionTypes)
 
 	baseQuery := `
@@ -126,13 +126,13 @@ func getPackageVersions(ctx context.Context, db *DB, pkgPath string, versionType
 	}
 	defer rows.Close()
 
-	var versionHistory []*internal.VersionInfo
+	var versionHistory []*internal.ModuleInfo
 	for rows.Next() {
-		var vi internal.VersionInfo
-		if err := rows.Scan(&vi.ModulePath, &vi.Version, &vi.CommitTime); err != nil {
+		var mi internal.ModuleInfo
+		if err := rows.Scan(&mi.ModulePath, &mi.Version, &mi.CommitTime); err != nil {
 			return nil, fmt.Errorf("row.Scan(): %v", err)
 		}
-		versionHistory = append(versionHistory, &vi)
+		versionHistory = append(versionHistory, &mi)
 	}
 
 	if err := rows.Err(); err != nil {
@@ -154,20 +154,20 @@ func versionTypeExpr(vts []version.Type) string {
 
 // GetTaggedVersionsForModule returns a list of tagged versions sorted in
 // descending semver order.
-func (db *DB) GetTaggedVersionsForModule(ctx context.Context, modulePath string) ([]*internal.VersionInfo, error) {
+func (db *DB) GetTaggedVersionsForModule(ctx context.Context, modulePath string) ([]*internal.ModuleInfo, error) {
 	return getModuleVersions(ctx, db, modulePath, []version.Type{version.TypeRelease, version.TypePrerelease})
 }
 
 // GetPseudoVersionsForModule returns the 10 most recent from a list of
 // pseudo-versions sorted in descending semver order.
-func (db *DB) GetPseudoVersionsForModule(ctx context.Context, modulePath string) ([]*internal.VersionInfo, error) {
+func (db *DB) GetPseudoVersionsForModule(ctx context.Context, modulePath string) ([]*internal.ModuleInfo, error) {
 	return getModuleVersions(ctx, db, modulePath, []version.Type{version.TypePseudo})
 }
 
 // getModuleVersions returns a list of versions sorted in descending semver
 // order. The version types included in the list are specified by a list of
 // VersionTypes.
-func getModuleVersions(ctx context.Context, db *DB, modulePath string, versionTypes []version.Type) (_ []*internal.VersionInfo, err error) {
+func getModuleVersions(ctx context.Context, db *DB, modulePath string, versionTypes []version.Type) (_ []*internal.ModuleInfo, err error) {
 	// TODO(b/139530312): get information for parent modules.
 	defer derrors.Wrap(&err, "getModuleVersions(ctx, db, %q, %v)", modulePath, versionTypes)
 
@@ -189,13 +189,13 @@ func getModuleVersions(ctx context.Context, db *DB, modulePath string, versionTy
 		queryEnd = `LIMIT 10;`
 	}
 	query := fmt.Sprintf(baseQuery, versionTypeExpr(versionTypes), queryEnd)
-	var vinfos []*internal.VersionInfo
+	var vinfos []*internal.ModuleInfo
 	collect := func(rows *sql.Rows) error {
-		var vi internal.VersionInfo
-		if err := rows.Scan(&vi.ModulePath, &vi.Version, &vi.CommitTime); err != nil {
+		var mi internal.ModuleInfo
+		if err := rows.Scan(&mi.ModulePath, &mi.Version, &mi.CommitTime); err != nil {
 			return err
 		}
-		vinfos = append(vinfos, &vi)
+		vinfos = append(vinfos, &mi)
 		return nil
 	}
 	if err := db.db.RunQuery(ctx, query, collect, internal.SeriesPathForModule(modulePath)); err != nil {
@@ -421,10 +421,10 @@ func compareLicenses(i, j *licenses.Metadata) bool {
 	return i.FilePath < j.FilePath
 }
 
-// GetVersionInfo fetches a Version from the database with the primary key
+// GetModuleInfo fetches a Version from the database with the primary key
 // (module_path, version).
-func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version string) (_ *internal.VersionInfo, err error) {
-	defer derrors.Wrap(&err, "GetVersionInfo(ctx, %q, %q)", modulePath, version)
+func (db *DB) GetModuleInfo(ctx context.Context, modulePath string, version string) (_ *internal.ModuleInfo, err error) {
+	defer derrors.Wrap(&err, "GetModuleInfo(ctx, %q, %q)", modulePath, version)
 
 	query := `
 		SELECT
@@ -458,28 +458,28 @@ func (db *DB) GetVersionInfo(ctx context.Context, modulePath string, version str
 	}
 
 	var (
-		vi       internal.VersionInfo
+		mi       internal.ModuleInfo
 		hasGoMod sql.NullBool
 	)
 	row := db.db.QueryRow(ctx, query, args...)
-	if err := row.Scan(&vi.ModulePath, &vi.Version, &vi.CommitTime,
-		database.NullIsEmpty(&vi.ReadmeFilePath), database.NullIsEmpty(&vi.ReadmeContents), &vi.VersionType,
-		jsonbScanner{&vi.SourceInfo}, &vi.IsRedistributable, &hasGoMod); err != nil {
+	if err := row.Scan(&mi.ModulePath, &mi.Version, &mi.CommitTime,
+		database.NullIsEmpty(&mi.ReadmeFilePath), database.NullIsEmpty(&mi.ReadmeContents), &mi.VersionType,
+		jsonbScanner{&mi.SourceInfo}, &mi.IsRedistributable, &hasGoMod); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("module version %s@%s: %w", modulePath, version, derrors.NotFound)
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
-	setHasGoMod(&vi, hasGoMod)
-	return &vi, nil
+	setHasGoMod(&mi, hasGoMod)
+	return &mi, nil
 }
 
-func setHasGoMod(vi *internal.VersionInfo, nb sql.NullBool) {
+func setHasGoMod(mi *internal.ModuleInfo, nb sql.NullBool) {
 	// The safe default value for HasGoMod is true, because search will penalize modules that don't have one.
 	// This is temporary: when has_go_mod is fully populated, we'll make it NOT NULL.
-	vi.HasGoMod = true
+	mi.HasGoMod = true
 	if nb.Valid {
-		vi.HasGoMod = nb.Bool
+		mi.HasGoMod = nb.Bool
 	}
 }
 

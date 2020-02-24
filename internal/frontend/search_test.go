@@ -24,7 +24,7 @@ func TestFetchSearchPage(t *testing.T) {
 	var (
 		now        = sample.NowTruncated()
 		versionFoo = &internal.Version{
-			VersionInfo: internal.VersionInfo{
+			ModuleInfo: internal.ModuleInfo{
 				ModulePath:        "github.com/mod/foo",
 				Version:           "v1.0.0",
 				ReadmeContents:    "readme",
@@ -43,7 +43,7 @@ func TestFetchSearchPage(t *testing.T) {
 			},
 		}
 		versionBar = &internal.Version{
-			VersionInfo: internal.VersionInfo{
+			ModuleInfo: internal.ModuleInfo{
 				ModulePath:        "github.com/mod/bar",
 				Version:           "v1.0.0",
 				ReadmeContents:    "readme",

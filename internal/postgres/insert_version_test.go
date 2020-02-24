@@ -161,18 +161,18 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 				t.Errorf("second insert error: %v, want write error: %v", err, tc.wantWriteErr)
 			}
 
-			got, err := testDB.GetVersionInfo(ctx, tc.wantModulePath, tc.wantVersion)
+			got, err := testDB.GetModuleInfo(ctx, tc.wantModulePath, tc.wantVersion)
 			if tc.wantReadErr != (err != nil) {
 				t.Fatalf("error: got %v, want read error: %t", err, tc.wantReadErr)
 			}
 
 			if !tc.wantReadErr && got == nil {
-				t.Fatalf("testDB.GetVersionInfo(ctx, %q, %q) = %v, want %v", tc.wantModulePath, tc.wantVersion, got, tc.version)
+				t.Fatalf("testDB.GetModuleInfo(ctx, %q, %q) = %v, want %v", tc.wantModulePath, tc.wantVersion, got, tc.version)
 			}
 
 			if tc.version != nil {
-				if diff := cmp.Diff(&tc.version.VersionInfo, got, cmp.AllowUnexported(source.Info{})); !tc.wantReadErr && diff != "" {
-					t.Errorf("testDB.GetVersionInfo(ctx, %q, %q) mismatch (-want +got):\n%s", tc.wantModulePath, tc.wantVersion, diff)
+				if diff := cmp.Diff(&tc.version.ModuleInfo, got, cmp.AllowUnexported(source.Info{})); !tc.wantReadErr && diff != "" {
+					t.Errorf("testDB.GetModuleInfo(ctx, %q, %q) mismatch (-want +got):\n%s", tc.wantModulePath, tc.wantVersion, diff)
 				}
 			}
 
@@ -188,8 +188,8 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 			}
 
 			wantPkg := tc.version.Packages[0]
-			if gotPkg.VersionInfo.Version != tc.version.Version {
-				t.Errorf("testDB.GetPackage(ctx, %q, %q) version.version = %v, want %v", tc.wantPkgPath, tc.wantVersion, gotPkg.VersionInfo.Version, tc.version.Version)
+			if gotPkg.ModuleInfo.Version != tc.version.Version {
+				t.Errorf("testDB.GetPackage(ctx, %q, %q) version.version = %v, want %v", tc.wantPkgPath, tc.wantVersion, gotPkg.ModuleInfo.Version, tc.version.Version)
 			}
 
 			opts := cmp.Options{
@@ -206,7 +206,7 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 
 func TestPostgres_ReadAndWriteVersionOtherColumns(t *testing.T) {
 	// Verify that InsertVersion correctly populates the columns in the versions
-	// table that are not in the VersionInfo struct.
+	// table that are not in the ModuleInfo struct.
 	defer ResetTestDB(testDB, t)
 	ctx := context.Background()
 
@@ -252,13 +252,13 @@ func TestPostgres_DeleteVersion(t *testing.T) {
 	if err := testDB.InsertVersion(ctx, v); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := testDB.GetVersionInfo(ctx, v.ModulePath, v.Version); err != nil {
+	if _, err := testDB.GetModuleInfo(ctx, v.ModulePath, v.Version); err != nil {
 		t.Fatal(err)
 	}
 	if err := testDB.DeleteVersion(ctx, nil, v.ModulePath, v.Version); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := testDB.GetVersionInfo(ctx, v.ModulePath, v.Version); !errors.Is(err, derrors.NotFound) {
+	if _, err := testDB.GetModuleInfo(ctx, v.ModulePath, v.Version); !errors.Is(err, derrors.NotFound) {
 		t.Errorf("got %v, want NotFound", err)
 	}
 }

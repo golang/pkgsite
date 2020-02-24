@@ -29,15 +29,15 @@ func TestFetchDirectoryDetails(t *testing.T) {
 	checkDirectory := func(got *Directory, dirPath, modulePath, version string, pkgPaths []string) {
 		t.Helper()
 
-		vi := sample.VersionInfo()
-		vi.ModulePath = modulePath
-		vi.Version = version
+		mi := sample.ModuleInfo()
+		mi.ModulePath = modulePath
+		mi.Version = version
 
 		var wantPkgs []*Package
 		for _, path := range pkgPaths {
 			sp := sample.Package()
 			sp.Path = path
-			pkg, err := createPackage(sp, vi, false)
+			pkg, err := createPackage(sp, mi, false)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -48,12 +48,12 @@ func TestFetchDirectoryDetails(t *testing.T) {
 			wantPkgs = append(wantPkgs, pkg)
 		}
 
-		mod := createModule(vi, sample.LicenseMetadata, false)
+		mod := createModule(mi, sample.LicenseMetadata, false)
 		want := &Directory{
 			Module:   *mod,
 			Path:     dirPath,
 			Packages: wantPkgs,
-			URL:      constructDirectoryURL(dirPath, vi.ModulePath, linkVersion(vi.Version, vi.ModulePath)),
+			URL:      constructDirectoryURL(dirPath, mi.ModulePath, linkVersion(mi.Version, mi.ModulePath)),
 		}
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("fetchDirectoryDetails(ctx, %q, %q, %q) mismatch (-want +got):\n%s", dirPath, modulePath, version, diff)
@@ -148,12 +148,12 @@ func TestFetchDirectoryDetails(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			vi := sample.VersionInfo()
-			vi.ModulePath = tc.modulePath
-			vi.Version = tc.version
+			mi := sample.ModuleInfo()
+			mi.ModulePath = tc.modulePath
+			mi.Version = tc.version
 
 			got, err := fetchDirectoryDetails(ctx, testDB,
-				tc.dirPath, vi, sample.LicenseMetadata, tc.includeDirPath)
+				tc.dirPath, mi, sample.LicenseMetadata, tc.includeDirPath)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -201,12 +201,12 @@ func TestFetchDirectoryDetailsInvalidArguments(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			vi := sample.VersionInfo()
-			vi.ModulePath = tc.modulePath
-			vi.Version = tc.version
+			mi := sample.ModuleInfo()
+			mi.ModulePath = tc.modulePath
+			mi.Version = tc.version
 
 			got, err := fetchDirectoryDetails(ctx, testDB,
-				tc.dirPath, vi, sample.LicenseMetadata, tc.includeDirPath)
+				tc.dirPath, mi, sample.LicenseMetadata, tc.includeDirPath)
 			if !errors.Is(err, derrors.InvalidArgument) {
 				t.Fatalf("expected err; got = \n%+v, %v", got, err)
 			}

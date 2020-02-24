@@ -25,8 +25,8 @@ const (
 	UnknownModulePath = "unknownModulePath"
 )
 
-// VersionInfo holds metadata associated with a version.
-type VersionInfo struct {
+// ModuleInfo holds metadata associated with a module.
+type ModuleInfo struct {
 	ModulePath        string
 	Version           string
 	CommitTime        time.Time
@@ -60,7 +60,7 @@ type VersionMap struct {
 // Examples:
 // The module paths "a/b" and "a/b/v2"  both have series path "a/b".
 // The module paths "gopkg.in/yaml.v1" and "gopkg.in/yaml.v2" both have series path "gopkg.in/yaml".
-func (v *VersionInfo) SeriesPath() string {
+func (v *ModuleInfo) SeriesPath() string {
 	return SeriesPathForModule(v.ModulePath)
 }
 
@@ -72,7 +72,7 @@ func SeriesPathForModule(modulePath string) string {
 
 // A Version is a specific, reproducible build of a module.
 type Version struct {
-	VersionInfo
+	ModuleInfo
 	Packages []*Package
 	// Licenses holds all licenses within this module version, including those
 	// that may be contained in nested subdirectories.
@@ -101,13 +101,13 @@ type Package struct {
 // information.
 type VersionedPackage struct {
 	Package
-	VersionInfo
+	ModuleInfo
 }
 
 // Directory represents a folder in a module version, and all of the packages
 // inside that folder.
 type Directory struct {
-	VersionInfo
+	ModuleInfo
 	Path     string
 	Packages []*Package
 }
@@ -233,8 +233,8 @@ type AlternativeModulePath struct {
 //
 // FieldSet bits are unique across the entire project, because some types are
 // concatenations (via embedding) of others. For example, a VersionedPackage
-// contains the fields of both a VersionInfo and a Package, so we can't use the
-// same bits for both VersionInfo's ReadmeContents field and Package's
+// contains the fields of both a ModuleInfo and a Package, so we can't use the
+// same bits for both ModuleInfo's ReadmeContents field and Package's
 // DocumentationHTML field.
 type FieldSet int64
 

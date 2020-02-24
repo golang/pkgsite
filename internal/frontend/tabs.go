@@ -148,7 +148,7 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds
 	case "versions":
 		return fetchPackageVersionsDetails(ctx, ds, pkg)
 	case "subdirectories":
-		return fetchDirectoryDetails(ctx, ds, pkg.Path, &pkg.VersionInfo, pkg.Licenses, false)
+		return fetchDirectoryDetails(ctx, ds, pkg.Path, &pkg.ModuleInfo, pkg.Licenses, false)
 	case "imports":
 		return fetchImportsDetails(ctx, ds, pkg)
 	case "importedby":
@@ -167,17 +167,17 @@ func urlIsVersioned(url *url.URL) bool {
 
 // fetchDetailsForModule returns tab details by delegating to the correct detail
 // handler.
-func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds internal.DataSource, vi *internal.VersionInfo, licenses []*licenses.License) (interface{}, error) {
+func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds internal.DataSource, mi *internal.ModuleInfo, licenses []*licenses.License) (interface{}, error) {
 	switch tab {
 	case "packages":
-		return fetchDirectoryDetails(ctx, ds, vi.ModulePath, vi, licensesToMetadatas(licenses), true)
+		return fetchDirectoryDetails(ctx, ds, mi.ModulePath, mi, licensesToMetadatas(licenses), true)
 	case "licenses":
-		return &LicensesDetails{Licenses: transformLicenses(vi.ModulePath, vi.Version, licenses)}, nil
+		return &LicensesDetails{Licenses: transformLicenses(mi.ModulePath, mi.Version, licenses)}, nil
 	case "versions":
-		return fetchModuleVersionsDetails(ctx, ds, vi)
+		return fetchModuleVersionsDetails(ctx, ds, mi)
 	case "overview":
 		// TODO(b/138448402): implement remaining module views.
-		return constructOverviewDetails(vi, vi.IsRedistributable, urlIsVersioned(r.URL)), nil
+		return constructOverviewDetails(mi, mi.IsRedistributable, urlIsVersioned(r.URL)), nil
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
@@ -187,7 +187,7 @@ func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds 
 func constructDetailsForDirectory(r *http.Request, tab string, dir *internal.Directory, licenses []*licenses.License) (interface{}, error) {
 	switch tab {
 	case "overview":
-		return constructOverviewDetails(&dir.VersionInfo, dir.VersionInfo.IsRedistributable, urlIsVersioned(r.URL)), nil
+		return constructOverviewDetails(&dir.ModuleInfo, dir.ModuleInfo.IsRedistributable, urlIsVersioned(r.URL)), nil
 	case "subdirectories":
 		// Ideally we would just use fetchDirectoryDetails here so that it
 		// follows the same code path as fetchDetailsForModule and

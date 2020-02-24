@@ -41,7 +41,7 @@ func fetchImportsDetails(ctx context.Context, ds internal.DataSource, pkg *inter
 	for _, p := range dsImports {
 		if stdlib.Contains(p) {
 			std = append(std, p)
-		} else if strings.HasPrefix(p+"/", pkg.VersionInfo.ModulePath+"/") {
+		} else if strings.HasPrefix(p+"/", pkg.ModuleInfo.ModulePath+"/") {
 			moduleImports = append(moduleImports, p)
 		} else {
 			externalImports = append(externalImports, p)
@@ -49,7 +49,7 @@ func fetchImportsDetails(ctx context.Context, ds internal.DataSource, pkg *inter
 	}
 
 	return &ImportsDetails{
-		ModulePath:      pkg.VersionInfo.ModulePath,
+		ModulePath:      pkg.ModuleInfo.ModulePath,
 		ExternalImports: externalImports,
 		InternalImports: moduleImports,
 		StdLib:          std,
@@ -90,7 +90,7 @@ func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkg *in
 	}
 	sections := Sections(importedBy, nextPrefixAccount)
 	return &ImportedByDetails{
-		ModulePath:   pkg.VersionInfo.ModulePath,
+		ModulePath:   pkg.ModuleInfo.ModulePath,
 		ImportedBy:   sections,
 		Total:        len(importedBy),
 		TotalIsExact: totalIsExact,

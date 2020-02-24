@@ -79,9 +79,9 @@ func (ds *DataSource) GetDirectory(ctx context.Context, dirPath, modulePath, ver
 		return nil, err
 	}
 	return &internal.Directory{
-		Path:        dirPath,
-		VersionInfo: v.VersionInfo,
-		Packages:    v.Packages,
+		Path:       dirPath,
+		ModuleInfo: v.ModuleInfo,
+		Packages:   v.Packages,
 	}, nil
 }
 
@@ -174,7 +174,7 @@ func (ds *DataSource) GetPackagesInVersion(ctx context.Context, modulePath, vers
 
 // GetPseudoVersionsForModule returns versions from the the proxy /list
 // endpoint, if they are pseudoversions. Otherwise, it returns an empty slice.
-func (ds *DataSource) GetPseudoVersionsForModule(ctx context.Context, modulePath string) (_ []*internal.VersionInfo, err error) {
+func (ds *DataSource) GetPseudoVersionsForModule(ctx context.Context, modulePath string) (_ []*internal.ModuleInfo, err error) {
 	defer derrors.Wrap(&err, "GetPseudoVersionsForModule(%q)", modulePath)
 	return ds.listModuleVersions(ctx, modulePath, true)
 }
@@ -182,14 +182,14 @@ func (ds *DataSource) GetPseudoVersionsForModule(ctx context.Context, modulePath
 // GetPseudoVersionsForPackageSeries finds the longest module path containing
 // pkgPath, and returns its versions from the proxy /list endpoint, if they are
 // pseudoversions. Otherwise, it returns an empty slice.
-func (ds *DataSource) GetPseudoVersionsForPackageSeries(ctx context.Context, pkgPath string) (_ []*internal.VersionInfo, err error) {
+func (ds *DataSource) GetPseudoVersionsForPackageSeries(ctx context.Context, pkgPath string) (_ []*internal.ModuleInfo, err error) {
 	defer derrors.Wrap(&err, "GetPseudoVersionsForPackageSeries(%q)", pkgPath)
 	return ds.listPackageVersions(ctx, pkgPath, true)
 }
 
 // GetTaggedVersionsForModule returns versions from the the proxy /list
 // endpoint, if they are tagged versions. Otherwise, it returns an empty slice.
-func (ds *DataSource) GetTaggedVersionsForModule(ctx context.Context, modulePath string) (_ []*internal.VersionInfo, err error) {
+func (ds *DataSource) GetTaggedVersionsForModule(ctx context.Context, modulePath string) (_ []*internal.ModuleInfo, err error) {
 	defer derrors.Wrap(&err, "GetTaggedVersionsForModule(%q)", modulePath)
 	return ds.listModuleVersions(ctx, modulePath, false)
 }
@@ -197,20 +197,20 @@ func (ds *DataSource) GetTaggedVersionsForModule(ctx context.Context, modulePath
 // GetTaggedVersionsForPackageSeries finds the longest module path containing
 // pkgPath, and returns its versions from the proxy /list endpoint, if they are
 // tagged versions. Otherwise, it returns an empty slice.
-func (ds *DataSource) GetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) (_ []*internal.VersionInfo, err error) {
+func (ds *DataSource) GetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) (_ []*internal.ModuleInfo, err error) {
 	defer derrors.Wrap(&err, "GetTaggedVersionsForPackageSeries(%q)", pkgPath)
 	return ds.listPackageVersions(ctx, pkgPath, false)
 }
 
-// GetVersionInfo returns the VersionInfo as fetched from the proxy for module
+// GetModuleInfo returns the ModuleInfo as fetched from the proxy for module
 // version specified by modulePath and version.
-func (ds *DataSource) GetVersionInfo(ctx context.Context, modulePath, version string) (_ *internal.VersionInfo, err error) {
-	defer derrors.Wrap(&err, "GetVersionInfo(%q, %q)", modulePath, version)
+func (ds *DataSource) GetModuleInfo(ctx context.Context, modulePath, version string) (_ *internal.ModuleInfo, err error) {
+	defer derrors.Wrap(&err, "GetModuleInfo(%q, %q)", modulePath, version)
 	v, err := ds.getVersion(ctx, modulePath, version)
 	if err != nil {
 		return nil, err
 	}
-	return &v.VersionInfo, nil
+	return &v.ModuleInfo, nil
 }
 
 // Search is unimplemented.
@@ -296,7 +296,7 @@ func (ds *DataSource) findModule(ctx context.Context, pkgPath string, version st
 // calls the proxy /list endpoint to list its versions. If pseudo is true, it
 // filters to pseudo versions.  If pseudo is false, it filters to tagged
 // versions.
-func (ds *DataSource) listPackageVersions(ctx context.Context, pkgPath string, pseudo bool) (_ []*internal.VersionInfo, err error) {
+func (ds *DataSource) listPackageVersions(ctx context.Context, pkgPath string, pseudo bool) (_ []*internal.ModuleInfo, err error) {
 	defer derrors.Wrap(&err, "listPackageVersions(%q, %t)", pkgPath, pseudo)
 	ds.mu.RLock()
 	mods := ds.packagePathToModules[pkgPath]
@@ -318,13 +318,13 @@ func (ds *DataSource) listPackageVersions(ctx context.Context, pkgPath string, p
 // calls the proxy /list endpoint to list its versions. If pseudo is true, it
 // filters to pseudo versions.  If pseudo is false, it filters to tagged
 // versions.
-func (ds *DataSource) listModuleVersions(ctx context.Context, modulePath string, pseudo bool) (_ []*internal.VersionInfo, err error) {
+func (ds *DataSource) listModuleVersions(ctx context.Context, modulePath string, pseudo bool) (_ []*internal.ModuleInfo, err error) {
 	defer derrors.Wrap(&err, "listModuleVersions(%q, %t)", modulePath, pseudo)
 	versions, err := ds.proxyClient.ListVersions(ctx, modulePath)
 	if err != nil {
 		return nil, err
 	}
-	var vis []*internal.VersionInfo
+	var vis []*internal.ModuleInfo
 	ds.mu.RLock()
 	defer ds.mu.RUnlock()
 	for _, vers := range versions {
@@ -335,13 +335,13 @@ func (ds *DataSource) listModuleVersions(ctx context.Context, modulePath string,
 			continue
 		}
 		if v, ok := ds.versionCache[versionKey{modulePath, vers}]; ok {
-			vis = append(vis, &v.version.VersionInfo)
+			vis = append(vis, &v.version.ModuleInfo)
 		} else {
-			// In this case we can't produce s VersionInfo without fully processing
+			// In this case we can't produce s ModuleInfo without fully processing
 			// the module zip, so we instead append a stub. We could further query
 			// for this version's /info endpoint to get commit time, but that is
 			// deferred as a potential future enhancement.
-			vis = append(vis, &internal.VersionInfo{
+			vis = append(vis, &internal.ModuleInfo{
 				ModulePath: modulePath,
 				Version:    vers,
 			})
@@ -394,8 +394,8 @@ func packageFromVersion(pkgPath string, v *internal.Version) (_ *internal.Versio
 	for _, p := range v.Packages {
 		if p.Path == pkgPath {
 			return &internal.VersionedPackage{
-				Package:     *p,
-				VersionInfo: v.VersionInfo,
+				Package:    *p,
+				ModuleInfo: v.ModuleInfo,
 			}, nil
 		}
 	}

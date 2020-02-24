@@ -106,7 +106,7 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 
 func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.ResponseWriter, r *http.Request, pkg *internal.VersionedPackage, requestedVersion string) {
 
-	pkgHeader, err := createPackage(&pkg.Package, &pkg.VersionInfo, requestedVersion == internal.LatestVersion)
+	pkgHeader, err := createPackage(&pkg.Package, &pkg.ModuleInfo, requestedVersion == internal.LatestVersion)
 	if err != nil {
 		log.Errorf(ctx, "error creating package header for %s@%s: %v", pkg.Path, pkg.Version, err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)

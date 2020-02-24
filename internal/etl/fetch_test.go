@@ -74,7 +74,7 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	// Verify that the module status is recorded correctly, and that the version is in the DB.
 	checkStatus(http.StatusOK)
 
-	if _, err := testDB.GetVersionInfo(ctx, modulePath, version); err != nil {
+	if _, err := testDB.GetModuleInfo(ctx, modulePath, version); err != nil {
 		t.Fatal(err)
 	}
 
@@ -112,7 +112,7 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	checkStatus(http.StatusNotFound)
 
 	// The module should no longer be in the database.
-	if _, err := testDB.GetVersionInfo(ctx, modulePath, version); !errors.Is(err, derrors.NotFound) {
+	if _, err := testDB.GetModuleInfo(ctx, modulePath, version); !errors.Is(err, derrors.NotFound) {
 		t.Fatalf("got %v, want NotFound", err)
 	}
 
@@ -151,7 +151,7 @@ func checkModuleNotFound(t *testing.T, ctx context.Context, modulePath, version 
 	if code != wantCode || !errors.Is(err, wantErr) {
 		t.Fatalf("got %d, %v; want %d, Is(err, %v)", code, err, wantCode, wantErr)
 	}
-	_, err = testDB.GetVersionInfo(ctx, modulePath, version)
+	_, err = testDB.GetModuleInfo(ctx, modulePath, version)
 	if !errors.Is(err, derrors.NotFound) {
 		t.Fatalf("got %v, want Is(NotFound)", err)
 	}
@@ -292,7 +292,7 @@ func TestFetchAndUpdateState_Mismatch(t *testing.T) {
 	if code != wantCode || !errors.Is(err, wantErr) {
 		t.Fatalf("got %d, %v; want %d, Is(err, derrors.AlternativeModule)", code, err, wantCode)
 	}
-	_, err = testDB.GetVersionInfo(ctx, modulePath, version)
+	_, err = testDB.GetModuleInfo(ctx, modulePath, version)
 	if !errors.Is(err, derrors.NotFound) {
 		t.Fatalf("got %v, want Is(NotFound)", err)
 	}
@@ -547,7 +547,7 @@ func TestReFetch(t *testing.T) {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
 	}
 	want := &internal.VersionedPackage{
-		VersionInfo: internal.VersionInfo{
+		ModuleInfo: internal.ModuleInfo{
 			ModulePath:        modulePath,
 			Version:           version,
 			CommitTime:        time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
@@ -598,7 +598,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 	defer func() { stdlib.UseTestData = false }()
 
 	myModuleV100 := &internal.VersionedPackage{
-		VersionInfo: internal.VersionInfo{
+		ModuleInfo: internal.ModuleInfo{
 			ModulePath:        "github.com/my/module",
 			Version:           "v1.0.0",
 			CommitTime:        testProxyCommitTime,
@@ -652,7 +652,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			version:    "v1.0.0",
 			pkg:        "nonredistributable.mod/module/bar/baz",
 			want: &internal.VersionedPackage{
-				VersionInfo: internal.VersionInfo{
+				ModuleInfo: internal.ModuleInfo{
 					ModulePath:        "nonredistributable.mod/module",
 					Version:           "v1.0.0",
 					CommitTime:        testProxyCommitTime,
@@ -684,7 +684,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			version:    "v1.0.0",
 			pkg:        "nonredistributable.mod/module/foo",
 			want: &internal.VersionedPackage{
-				VersionInfo: internal.VersionInfo{
+				ModuleInfo: internal.ModuleInfo{
 					ModulePath:        "nonredistributable.mod/module",
 					Version:           "v1.0.0",
 					CommitTime:        testProxyCommitTime,
@@ -714,7 +714,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			version:    "v1.12.5",
 			pkg:        "context",
 			want: &internal.VersionedPackage{
-				VersionInfo: internal.VersionInfo{
+				ModuleInfo: internal.ModuleInfo{
 					ModulePath:        "std",
 					Version:           "v1.12.5",
 					CommitTime:        stdlib.TestCommitTime,
@@ -747,7 +747,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			version:    "v1.12.5",
 			pkg:        "builtin",
 			want: &internal.VersionedPackage{
-				VersionInfo: internal.VersionInfo{
+				ModuleInfo: internal.ModuleInfo{
 					ModulePath:        "std",
 					Version:           "v1.12.5",
 					CommitTime:        stdlib.TestCommitTime,
@@ -780,7 +780,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			version:    "v1.12.5",
 			pkg:        "encoding/json",
 			want: &internal.VersionedPackage{
-				VersionInfo: internal.VersionInfo{
+				ModuleInfo: internal.ModuleInfo{
 					ModulePath:        "std",
 					Version:           "v1.12.5",
 					CommitTime:        stdlib.TestCommitTime,
@@ -826,7 +826,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			version:    "v1.0.0",
 			pkg:        "build.constraints/module/cpu",
 			want: &internal.VersionedPackage{
-				VersionInfo: internal.VersionInfo{
+				ModuleInfo: internal.ModuleInfo{
 					ModulePath:        "build.constraints/module",
 					Version:           "v1.0.0",
 					CommitTime:        testProxyCommitTime,
@@ -867,12 +867,12 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", test.modulePath, test.version, client, testDB, err)
 			}
 
-			gotVersionInfo, err := testDB.GetVersionInfo(ctx, test.modulePath, test.version)
+			gotModuleInfo, err := testDB.GetModuleInfo(ctx, test.modulePath, test.version)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(test.want.VersionInfo, *gotVersionInfo, cmp.AllowUnexported(source.Info{})); diff != "" {
-				t.Fatalf("testDB.GetVersionInfo(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
+			if diff := cmp.Diff(test.want.ModuleInfo, *gotModuleInfo, cmp.AllowUnexported(source.Info{})); diff != "" {
+				t.Fatalf("testDB.GetModuleInfo(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
 			}
 
 			gotPkg, err := testDB.GetPackage(ctx, test.pkg, internal.UnknownModulePath, test.version)

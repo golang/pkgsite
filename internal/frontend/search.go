@@ -142,9 +142,9 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 		return ""
 	}
 
-	vi, err := ds.GetVersionInfo(ctx, requestedPath, internal.LatestVersion)
+	mi, err := ds.GetModuleInfo(ctx, requestedPath, internal.LatestVersion)
 	if err == nil {
-		return fmt.Sprintf("/mod/%s", vi.ModulePath)
+		return fmt.Sprintf("/mod/%s", mi.ModulePath)
 	} else if !errors.Is(err, derrors.NotFound) {
 		log.Errorf(ctx, "error getting module for %s: %v", requestedPath, err)
 		return ""

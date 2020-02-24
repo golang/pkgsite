@@ -49,10 +49,10 @@ type Module struct {
 // latestRequested indicates whether the user requested the latest
 // version of the package. If so, the returned Package.URL will have the
 // structure /<path> instead of /<path>@<version>.
-func createPackage(pkg *internal.Package, vi *internal.VersionInfo, latestRequested bool) (_ *Package, err error) {
-	defer derrors.Wrap(&err, "createPackage(%v, %v)", pkg, vi)
+func createPackage(pkg *internal.Package, mi *internal.ModuleInfo, latestRequested bool) (_ *Package, err error) {
+	defer derrors.Wrap(&err, "createPackage(%v, %v)", pkg, mi)
 
-	if pkg == nil || vi == nil {
+	if pkg == nil || mi == nil {
 		return nil, fmt.Errorf("package and version info must not be nil")
 	}
 
@@ -63,7 +63,7 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo, latestReques
 		}
 	}
 
-	m := createModule(vi, modLicenses, latestRequested)
+	m := createModule(mi, modLicenses, latestRequested)
 	urlVersion := m.LinkVersion
 	if latestRequested {
 		urlVersion = internal.LatestVersion
@@ -74,8 +74,8 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo, latestReques
 		IsRedistributable: pkg.IsRedistributable,
 		Licenses:          transformLicenseMetadata(pkg.Licenses),
 		Module:            *m,
-		URL:               constructPackageURL(pkg.Path, vi.ModulePath, urlVersion),
-		LatestURL:         constructPackageURL(pkg.Path, vi.ModulePath, middleware.LatestVersionPlaceholder),
+		URL:               constructPackageURL(pkg.Path, mi.ModulePath, urlVersion),
+		LatestURL:         constructPackageURL(pkg.Path, mi.ModulePath, middleware.LatestVersionPlaceholder),
 	}, nil
 }
 
@@ -85,20 +85,20 @@ func createPackage(pkg *internal.Package, vi *internal.VersionInfo, latestReques
 // latestRequested indicates whether the user requested the latest
 // version of the package. If so, the returned Module.URL will have the
 // structure /<path> instead of /<path>@<version>.
-func createModule(vi *internal.VersionInfo, licmetas []*licenses.Metadata, latestRequested bool) *Module {
-	urlVersion := linkVersion(vi.Version, vi.ModulePath)
+func createModule(mi *internal.ModuleInfo, licmetas []*licenses.Metadata, latestRequested bool) *Module {
+	urlVersion := linkVersion(mi.Version, mi.ModulePath)
 	if latestRequested {
 		urlVersion = internal.LatestVersion
 	}
 	return &Module{
-		DisplayVersion:    displayVersion(vi.Version, vi.ModulePath),
-		LinkVersion:       linkVersion(vi.Version, vi.ModulePath),
-		ModulePath:        vi.ModulePath,
-		CommitTime:        elapsedTime(vi.CommitTime),
-		IsRedistributable: vi.IsRedistributable,
+		DisplayVersion:    displayVersion(mi.Version, mi.ModulePath),
+		LinkVersion:       linkVersion(mi.Version, mi.ModulePath),
+		ModulePath:        mi.ModulePath,
+		CommitTime:        elapsedTime(mi.CommitTime),
+		IsRedistributable: mi.IsRedistributable,
 		Licenses:          transformLicenseMetadata(licmetas),
-		URL:               constructModuleURL(vi.ModulePath, urlVersion),
-		LatestURL:         constructModuleURL(vi.ModulePath, middleware.LatestVersionPlaceholder),
+		URL:               constructModuleURL(mi.ModulePath, urlVersion),
+		LatestURL:         constructModuleURL(mi.ModulePath, middleware.LatestVersionPlaceholder),
 	}
 }
 

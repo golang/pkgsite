@@ -56,23 +56,23 @@ type VersionSummary struct {
 
 // fetchModuleVersionsDetails builds a version hierarchy for module versions
 // with the same series path as the given version.
-func fetchModuleVersionsDetails(ctx context.Context, ds internal.DataSource, vi *internal.VersionInfo) (*VersionsDetails, error) {
-	versions, err := ds.GetTaggedVersionsForModule(ctx, vi.ModulePath)
+func fetchModuleVersionsDetails(ctx context.Context, ds internal.DataSource, mi *internal.ModuleInfo) (*VersionsDetails, error) {
+	versions, err := ds.GetTaggedVersionsForModule(ctx, mi.ModulePath)
 	if err != nil {
 		return nil, err
 	}
 	// If no tagged versions of the module are found, fetch pseudo-versions
 	// instead.
 	if len(versions) == 0 {
-		versions, err = ds.GetPseudoVersionsForModule(ctx, vi.ModulePath)
+		versions, err = ds.GetPseudoVersionsForModule(ctx, mi.ModulePath)
 		if err != nil {
 			return nil, err
 		}
 	}
-	linkify := func(v *internal.VersionInfo) string {
+	linkify := func(v *internal.ModuleInfo) string {
 		return constructModuleURL(v.ModulePath, linkVersion(v.Version, v.ModulePath))
 	}
-	return buildVersionDetails(vi.ModulePath, versions, linkify), nil
+	return buildVersionDetails(mi.ModulePath, versions, linkify), nil
 }
 
 // fetchPackageVersionsDetails builds a version hierarchy for all module
@@ -92,7 +92,7 @@ func fetchPackageVersionsDetails(ctx context.Context, ds internal.DataSource, pk
 		}
 	}
 
-	var filteredVersions []*internal.VersionInfo
+	var filteredVersions []*internal.ModuleInfo
 	// TODO(rfindley): remove this filtering, as it should not be necessary and
 	// is probably a relic of earlier version query implementations.
 	for _, v := range versions {
@@ -103,22 +103,22 @@ func fetchPackageVersionsDetails(ctx context.Context, ds internal.DataSource, pk
 		}
 	}
 
-	linkify := func(vi *internal.VersionInfo) string {
+	linkify := func(mi *internal.ModuleInfo) string {
 		// Here we have only version information, but need to construct the full
 		// import path of the package corresponding to this version.
 		var versionPath string
-		if vi.ModulePath == stdlib.ModulePath {
+		if mi.ModulePath == stdlib.ModulePath {
 			versionPath = pkg.Path
 		} else {
-			versionPath = pathInVersion(pkg.V1Path, vi)
+			versionPath = pathInVersion(pkg.V1Path, mi)
 		}
-		return constructPackageURL(versionPath, vi.ModulePath, linkVersion(vi.Version, vi.ModulePath))
+		return constructPackageURL(versionPath, mi.ModulePath, linkVersion(mi.Version, mi.ModulePath))
 	}
 	return buildVersionDetails(pkg.ModulePath, filteredVersions, linkify), nil
 }
 
 // pathInVersion constructs the full import path of the package corresponding
-// to vi, given its v1 path. To do this, we first compute the suffix of the
+// to mi, given its v1 path. To do this, we first compute the suffix of the
 // package path in the given module series, and then append it to the real
 // (versioned) module path.
 //
@@ -129,18 +129,18 @@ func fetchPackageVersionsDetails(ctx context.Context, ds internal.DataSource, pk
 //   3) Join with the versioned module path foo.com/bar/v2 to get
 //      foo.com/bar/v2/baz.
 // ...being careful about slashes along the way.
-func pathInVersion(v1Path string, vi *internal.VersionInfo) string {
-	suffix := strings.TrimPrefix(strings.TrimPrefix(v1Path, vi.SeriesPath()), "/")
+func pathInVersion(v1Path string, mi *internal.ModuleInfo) string {
+	suffix := strings.TrimPrefix(strings.TrimPrefix(v1Path, mi.SeriesPath()), "/")
 	if suffix == "" {
-		return vi.ModulePath
+		return mi.ModulePath
 	}
-	return path.Join(vi.ModulePath, suffix)
+	return path.Join(mi.ModulePath, suffix)
 }
 
 // buildVersionDetails constructs the version hierarchy to be rendered on the
 // versions tab, organizing major versions into those that have the same module
 // path as the package version under consideration, and those that don't.
-func buildVersionDetails(currentModulePath string, versions []*internal.VersionInfo, linkify func(v *internal.VersionInfo) string) *VersionsDetails {
+func buildVersionDetails(currentModulePath string, versions []*internal.ModuleInfo, linkify func(v *internal.ModuleInfo) string) *VersionsDetails {
 	// Pre-sort versions to ensure they are in descending semver order.
 	sort.Slice(versions, func(i, j int) bool {
 		return semver.Compare(versions[i].Version, versions[j].Version) > 0
@@ -188,16 +188,16 @@ func buildVersionDetails(currentModulePath string, versions []*internal.VersionI
 		majorTree.forEach(func(_ string, minorTree *versionTree) {
 			patches := []*VersionSummary{}
 			minorTree.forEach(func(_ string, patchTree *versionTree) {
-				vi := patchTree.versionInfo
-				fmtVersion := displayVersion(vi.Version, vi.ModulePath)
-				ttversion := vi.Version
-				if vi.ModulePath == stdlib.ModulePath {
+				mi := patchTree.versionInfo
+				fmtVersion := displayVersion(mi.Version, mi.ModulePath)
+				ttversion := mi.Version
+				if mi.ModulePath == stdlib.ModulePath {
 					ttversion = fmtVersion // tooltips will show the Go tag
 				}
 				patches = append(patches, &VersionSummary{
 					TooltipVersion: ttversion,
-					Link:           linkify(vi),
-					CommitTime:     elapsedTime(vi.CommitTime),
+					Link:           linkify(mi),
+					CommitTime:     elapsedTime(mi.CommitTime),
 					DisplayVersion: fmtVersion,
 				})
 			})
@@ -228,19 +228,19 @@ type versionTree struct {
 	// seen tracks the order in which new keys are added.
 	seen []string
 
-	// A tree can hold either a nested subtree or a VersionInfo.  When building
+	// A tree can hold either a nested subtree or a ModuleInfo.  When building
 	// VersionDetails, it has the following hierarchy
 	//	modulePath
 	//		major
 	//			majorMinor
 	//				fullVersion
 	subTrees    map[string]*versionTree
-	versionInfo *internal.VersionInfo
+	versionInfo *internal.ModuleInfo
 }
 
 // push adds a new version to the version hierarchy, if it doesn't already
 // exist.
-func (t *versionTree) push(v *internal.VersionInfo, path ...string) {
+func (t *versionTree) push(v *internal.ModuleInfo, path ...string) {
 	if len(path) == 0 {
 		t.versionInfo = v
 		return

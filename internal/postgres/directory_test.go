@@ -263,9 +263,9 @@ func TestGetDirectory(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			vi := sample.VersionInfo()
-			vi.ModulePath = tc.wantModulePath
-			vi.Version = tc.wantVersion
+			mi := sample.ModuleInfo()
+			mi.ModulePath = tc.wantModulePath
+			mi.Version = tc.wantVersion
 
 			var wantPackages []*internal.Package
 			for _, path := range tc.wantPkgPaths {
@@ -279,9 +279,9 @@ func TestGetDirectory(t *testing.T) {
 			})
 
 			wantDirectory := &internal.Directory{
-				VersionInfo: *vi,
-				Packages:    wantPackages,
-				Path:        tc.dirPath,
+				ModuleInfo: *mi,
+				Packages:   wantPackages,
+				Path:       tc.dirPath,
 			}
 			opts := []cmp.Option{
 				cmpopts.EquateEmpty(),

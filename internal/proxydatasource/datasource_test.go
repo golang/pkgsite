@@ -52,7 +52,7 @@ var (
 		GOOS:              "linux",
 		GOARCH:            "amd64",
 	}
-	wantVersionInfo = internal.VersionInfo{
+	wantModuleInfo = internal.ModuleInfo{
 		ModulePath:        "foo.com/bar",
 		Version:           "v1.2.0",
 		CommitTime:        time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
@@ -61,8 +61,8 @@ var (
 		HasGoMod:          true,
 	}
 	wantVersionedPackage = &internal.VersionedPackage{
-		VersionInfo: wantVersionInfo,
-		Package:     wantPackage,
+		ModuleInfo: wantModuleInfo,
+		Package:    wantPackage,
 	}
 	cmpOpts = append([]cmp.Option{
 		cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML"),
@@ -74,9 +74,9 @@ func TestDataSource_GetDirectory(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
 	want := &internal.Directory{
-		Path:        "foo.com/bar",
-		VersionInfo: wantVersionInfo,
-		Packages:    []*internal.Package{&wantPackage},
+		Path:       "foo.com/bar",
+		ModuleInfo: wantModuleInfo,
+		Packages:   []*internal.Package{&wantPackage},
 	}
 	got, err := ds.GetDirectory(ctx, "foo.com/bar", internal.UnknownModulePath, "v1.2.0", internal.AllFields)
 	if err != nil {
@@ -112,15 +112,15 @@ func TestDataSource_GetPackage_Latest(t *testing.T) {
 	}
 }
 
-func TestDataSource_GetVersionInfo_Latest(t *testing.T) {
+func TestDataSource_GetModuleInfo_Latest(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
-	got, err := ds.GetVersionInfo(ctx, "foo.com/bar", internal.LatestVersion)
+	got, err := ds.GetModuleInfo(ctx, "foo.com/bar", internal.LatestVersion)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(&wantVersionInfo, got, cmpOpts...); diff != "" {
-		t.Errorf("GetLatestVersionInfo diff (-want +got):\n%s", diff)
+	if diff := cmp.Diff(&wantModuleInfo, got, cmpOpts...); diff != "" {
+		t.Errorf("GetLatestModuleInfo diff (-want +got):\n%s", diff)
 	}
 }
 
@@ -182,10 +182,10 @@ func TestDataSource_GetTaggedVersionsForModule(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	v110 := wantVersionInfo
+	v110 := wantModuleInfo
 	v110.Version = "v1.1.0"
-	want := []*internal.VersionInfo{&wantVersionInfo, &v110}
-	ignore := cmpopts.IgnoreFields(internal.VersionInfo{}, "CommitTime", "VersionType", "IsRedistributable", "HasGoMod")
+	want := []*internal.ModuleInfo{&wantModuleInfo, &v110}
+	ignore := cmpopts.IgnoreFields(internal.ModuleInfo{}, "CommitTime", "VersionType", "IsRedistributable", "HasGoMod")
 	if diff := cmp.Diff(want, got, ignore); diff != "" {
 		t.Errorf("GetTaggedVersionsForPackageSeries diff (-want +got):\n%s", diff)
 	}
@@ -203,23 +203,23 @@ func TestDataSource_GetTaggedVersionsForPackageSeries(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	v110 := wantVersionInfo
+	v110 := wantModuleInfo
 	v110.Version = "v1.1.0"
-	want := []*internal.VersionInfo{&wantVersionInfo, &v110}
-	ignore := cmpopts.IgnoreFields(internal.VersionInfo{}, "CommitTime", "VersionType", "IsRedistributable", "HasGoMod")
+	want := []*internal.ModuleInfo{&wantModuleInfo, &v110}
+	ignore := cmpopts.IgnoreFields(internal.ModuleInfo{}, "CommitTime", "VersionType", "IsRedistributable", "HasGoMod")
 	if diff := cmp.Diff(want, got, ignore); diff != "" {
 		t.Errorf("GetTaggedVersionsForPackageSeries diff (-want +got):\n%s", diff)
 	}
 }
 
-func TestDataSource_GetVersionInfo(t *testing.T) {
+func TestDataSource_GetModuleInfo(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
-	got, err := ds.GetVersionInfo(ctx, "foo.com/bar", "v1.2.0")
+	got, err := ds.GetModuleInfo(ctx, "foo.com/bar", "v1.2.0")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(&wantVersionInfo, got, cmpOpts...); diff != "" {
-		t.Errorf("GetVersionInfo diff (-want +got):\n%s", diff)
+	if diff := cmp.Diff(&wantModuleInfo, got, cmpOpts...); diff != "" {
+		t.Errorf("GetModuleInfo diff (-want +got):\n%s", diff)
 	}
 }

@@ -77,7 +77,7 @@ func TestPostgres_GetVersionInfo_Latest(t *testing.T) {
 				}
 			}
 
-			gotVI, err := testDB.GetVersionInfo(ctx, tc.path, internal.LatestVersion)
+			gotVI, err := testDB.GetModuleInfo(ctx, tc.path, internal.LatestVersion)
 			if err != nil {
 				if tc.wantErr == nil {
 					t.Fatalf("got unexpected error %v", err)
@@ -90,7 +90,7 @@ func TestPostgres_GetVersionInfo_Latest(t *testing.T) {
 			if tc.wantIndex >= len(tc.versions) {
 				t.Fatal("wantIndex too large")
 			}
-			wantVI := &tc.versions[tc.wantIndex].VersionInfo
+			wantVI := &tc.versions[tc.wantIndex].ModuleInfo
 			if diff := cmp.Diff(wantVI, gotVI, cmpopts.EquateEmpty(), cmp.AllowUnexported(source.Info{})); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
@@ -227,7 +227,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 		name, path, modulePath string
 		numPseudo              int
 		versions               []*internal.Version
-		wantTaggedVersions     []*internal.VersionInfo
+		wantTaggedVersions     []*internal.ModuleInfo
 	}{
 		{
 			name:       "want_releases_and_prereleases_only",
@@ -235,7 +235,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 			modulePath: modulePath1,
 			numPseudo:  12,
 			versions:   testVersions,
-			wantTaggedVersions: []*internal.VersionInfo{
+			wantTaggedVersions: []*internal.ModuleInfo{
 				{
 					ModulePath: modulePath2,
 					Version:    "v2.1.0",
@@ -275,7 +275,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			defer ResetTestDB(testDB, t)
 
-			var wantPseudoVersions []*internal.VersionInfo
+			var wantPseudoVersions []*internal.ModuleInfo
 			for i := 0; i < tc.numPseudo; i++ {
 
 				pseudo := fmt.Sprintf("v0.0.0-201806111833%02d-d8887717615a", i+1)
@@ -290,7 +290,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 				// GetPseudoVersions should only return the 10 most recent pseudo versions,
 				// if there are more than 10 in the database
 				if i < 10 {
-					wantPseudoVersions = append(wantPseudoVersions, &internal.VersionInfo{
+					wantPseudoVersions = append(wantPseudoVersions, &internal.ModuleInfo{
 						ModulePath: modulePath1,
 						Version:    fmt.Sprintf("v0.0.0-201806111833%02d-d8887717615a", tc.numPseudo-i),
 						CommitTime: sample.CommitTime,

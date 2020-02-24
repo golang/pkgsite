@@ -400,7 +400,7 @@ func TestFetchVersion(t *testing.T) {
 
 	modulePath := "github.com/my/module"
 	vers := "v1.0.0"
-	wantVersionInfo := internal.VersionInfo{
+	wantModuleInfo := internal.ModuleInfo{
 		ModulePath:        "github.com/my/module",
 		Version:           "v1.0.0",
 		CommitTime:        testProxyCommitTime,
@@ -411,8 +411,8 @@ func TestFetchVersion(t *testing.T) {
 		HasGoMod:          false,
 		SourceInfo:        source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
 	}
-	wantVersionInfoGoMod := wantVersionInfo
-	wantVersionInfoGoMod.HasGoMod = true
+	wantModuleInfoGoMod := wantModuleInfo
+	wantModuleInfoGoMod.HasGoMod = true
 
 	wantCoverage := sample.LicenseMetadata[0].Coverage
 	wantLicenses := []*licenses.License{
@@ -438,7 +438,7 @@ func TestFetchVersion(t *testing.T) {
 				"LICENSE.md": testhelper.MITLicense,
 			},
 			want: &internal.Version{
-				VersionInfo: wantVersionInfo,
+				ModuleInfo: wantModuleInfo,
 				Packages: []*internal.Package{
 					{
 						Path:              "github.com/my/module/foo",
@@ -470,7 +470,7 @@ func TestFetchVersion(t *testing.T) {
 					type Value int`,
 			},
 			want: &internal.Version{
-				VersionInfo: wantVersionInfo,
+				ModuleInfo: wantModuleInfo,
 				Packages: []*internal.Package{
 					{
 						Path:              "github.com/my/module/js",
@@ -498,7 +498,7 @@ func TestFetchVersion(t *testing.T) {
 				"LICENSE.md": testhelper.MITLicense,
 			},
 			want: &internal.Version{
-				VersionInfo: wantVersionInfoGoMod,
+				ModuleInfo: wantModuleInfoGoMod,
 				Packages: []*internal.Package{
 					{
 						Path:              "github.com/my/module/foo",

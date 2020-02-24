@@ -110,32 +110,32 @@ func (s *Server) serveDirectoryPageWithDirectory(ctx context.Context, w http.Res
 // the module path. However, on the package and directory view's
 // "Subdirectories" tab, we do not want to include packages whose import paths
 // are the same as the dirPath.
-func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, dirPath string, vi *internal.VersionInfo,
+func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, dirPath string, mi *internal.ModuleInfo,
 	licmetas []*licenses.Metadata, includeDirPath bool) (_ *Directory, err error) {
-	defer derrors.Wrap(&err, "s.ds.fetchDirectoryDetails(%q, %q, %q, %v)", dirPath, vi.ModulePath, vi.Version, licmetas)
+	defer derrors.Wrap(&err, "s.ds.fetchDirectoryDetails(%q, %q, %q, %v)", dirPath, mi.ModulePath, mi.Version, licmetas)
 
-	if includeDirPath && dirPath != vi.ModulePath && dirPath != stdlib.ModulePath {
+	if includeDirPath && dirPath != mi.ModulePath && dirPath != stdlib.ModulePath {
 		return nil, fmt.Errorf("includeDirPath can only be set to true if dirPath = modulePath: %w", derrors.InvalidArgument)
 	}
 
 	if dirPath == stdlib.ModulePath {
-		pkgs, err := ds.GetPackagesInVersion(ctx, stdlib.ModulePath, vi.Version)
+		pkgs, err := ds.GetPackagesInVersion(ctx, stdlib.ModulePath, mi.Version)
 		if err != nil {
 			return nil, err
 		}
 		return createDirectory(&internal.Directory{
-			VersionInfo: *vi,
-			Path:        dirPath,
-			Packages:    pkgs,
+			ModuleInfo: *mi,
+			Path:       dirPath,
+			Packages:   pkgs,
 		}, licmetas, includeDirPath)
 	}
 
-	dbDir, err := ds.GetDirectory(ctx, dirPath, vi.ModulePath, vi.Version, internal.AllFields)
+	dbDir, err := ds.GetDirectory(ctx, dirPath, mi.ModulePath, mi.Version, internal.AllFields)
 	if errors.Is(err, derrors.NotFound) {
 		return createDirectory(&internal.Directory{
-			VersionInfo: *vi,
-			Path:        dirPath,
-			Packages:    nil,
+			ModuleInfo: *mi,
+			Path:       dirPath,
+			Packages:   nil,
 		}, licmetas, includeDirPath)
 	}
 	if err != nil {
@@ -161,7 +161,7 @@ func createDirectory(dbDir *internal.Directory, licmetas []*licenses.Metadata, i
 		if !includeDirPath && pkg.Path == dbDir.Path {
 			continue
 		}
-		newPkg, err := createPackage(pkg, &dbDir.VersionInfo, false)
+		newPkg, err := createPackage(pkg, &dbDir.ModuleInfo, false)
 		if err != nil {
 			return nil, err
 		}
@@ -174,7 +174,7 @@ func createDirectory(dbDir *internal.Directory, licmetas []*licenses.Metadata, i
 		}
 		packages = append(packages, newPkg)
 	}
-	mod := createModule(&dbDir.VersionInfo, licmetas, false)
+	mod := createModule(&dbDir.ModuleInfo, licmetas, false)
 	sort.Slice(packages, func(i, j int) bool { return packages[i].Path < packages[j].Path })
 
 	return &Directory{

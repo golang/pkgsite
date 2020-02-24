@@ -53,9 +53,9 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 	//     a. We don't know anything about this module: just serve a 404
 	//     b. We have valid versions for this module path, but `version` isn't
 	//        one of them. Serve a 404 but recommend the other versions.
-	vi, err := s.ds.GetVersionInfo(ctx, modulePath, version)
+	mi, err := s.ds.GetModuleInfo(ctx, modulePath, version)
 	if err == nil {
-		s.serveModulePageWithModule(ctx, w, r, vi, version)
+		s.serveModulePageWithModule(ctx, w, r, mi, version)
 		return
 	}
 	if !errors.Is(err, derrors.NotFound) {
@@ -63,7 +63,7 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 		return
 	}
 	if version != internal.LatestVersion {
-		if _, err := s.ds.GetVersionInfo(ctx, modulePath, internal.LatestVersion); err != nil {
+		if _, err := s.ds.GetModuleInfo(ctx, modulePath, internal.LatestVersion); err != nil {
 			log.Errorf(ctx, "error checking for latest module: %v", err)
 		} else {
 			epage := &errorPage{
@@ -80,15 +80,15 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 	s.servePathNotFoundErrorPage(w, r, "module")
 }
 
-func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseWriter, r *http.Request, vi *internal.VersionInfo, requestedVersion string) {
-	licenses, err := s.ds.GetModuleLicenses(ctx, vi.ModulePath, vi.Version)
+func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseWriter, r *http.Request, mi *internal.ModuleInfo, requestedVersion string) {
+	licenses, err := s.ds.GetModuleLicenses(ctx, mi.ModulePath, mi.Version)
 	if err != nil {
 		log.Errorf(ctx, "error getting module licenses: %v", err)
 		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
 		return
 	}
 
-	modHeader := createModule(vi, licensesToMetadatas(licenses), requestedVersion == internal.LatestVersion)
+	modHeader := createModule(mi, licensesToMetadatas(licenses), requestedVersion == internal.LatestVersion)
 	tab := r.FormValue("tab")
 	settings, ok := moduleTabLookup[tab]
 	if !ok {
@@ -99,7 +99,7 @@ func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseW
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = fetchDetailsForModule(ctx, r, tab, s.ds, vi, licenses)
+		details, err = fetchDetailsForModule(ctx, r, tab, s.ds, mi, licenses)
 		if err != nil {
 			log.Errorf(ctx, "error fetching page for %q: %v", tab, err)
 			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
@@ -107,8 +107,8 @@ func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseW
 		}
 	}
 	page := &DetailsPage{
-		basePage:       newBasePage(r, moduleHTMLTitle(vi.ModulePath)),
-		Title:          moduleTitle(vi.ModulePath),
+		basePage:       newBasePage(r, moduleHTMLTitle(mi.ModulePath)),
+		Title:          moduleTitle(mi.ModulePath),
 		Settings:       settings,
 		Header:         modHeader,
 		BreadcrumbPath: breadcrumbPath(modHeader.ModulePath, modHeader.ModulePath, modHeader.LinkVersion),

@@ -32,10 +32,10 @@ func (s *Server) LatestVersion(ctx context.Context, packagePath, modulePath, pag
 func (s *Server) latestVersion(ctx context.Context, packagePath, modulePath, pageType string) (_ string, err error) {
 	defer derrors.Wrap(&err, "latestVersion(ctx, %q, %q)", modulePath, packagePath)
 
-	var vi *internal.VersionInfo
+	var mi *internal.ModuleInfo
 	switch pageType {
 	case "mod":
-		vi, err = s.ds.GetVersionInfo(ctx, modulePath, internal.LatestVersion)
+		mi, err = s.ds.GetModuleInfo(ctx, modulePath, internal.LatestVersion)
 		if err != nil {
 			return "", err
 		}
@@ -44,10 +44,10 @@ func (s *Server) latestVersion(ctx context.Context, packagePath, modulePath, pag
 		if err != nil {
 			return "", err
 		}
-		vi = &pkg.VersionInfo
+		mi = &pkg.ModuleInfo
 	default:
 		// For directories we don't have a well-defined latest version.
 		return "", nil
 	}
-	return linkVersion(vi.Version, modulePath), nil
+	return linkVersion(mi.Version, modulePath), nil
 }

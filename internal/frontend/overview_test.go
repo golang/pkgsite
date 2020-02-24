@@ -45,7 +45,7 @@ func TestFetchOverviewDetails(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got := constructOverviewDetails(&tc.version.VersionInfo, true, true)
+	got := constructOverviewDetails(&tc.version.ModuleInfo, true, true)
 	if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
 		t.Errorf("constructOverviewDetails(%q, %q) mismatch (-want +got):\n%s", tc.version.Packages[0].Path, tc.version.Version, diff)
 	}
@@ -54,12 +54,12 @@ func TestFetchOverviewDetails(t *testing.T) {
 func TestReadmeHTML(t *testing.T) {
 	testCases := []struct {
 		name string
-		vi   *internal.VersionInfo
+		mi   *internal.ModuleInfo
 		want template.HTML
 	}{
 		{
 			name: "valid markdown readme",
-			vi: &internal.VersionInfo{
+			mi: &internal.ModuleInfo{
 				ReadmeFilePath: "README.md",
 				ReadmeContents: "This package collects pithy sayings.\n\n" +
 					"It's part of a demonstration of\n" +
@@ -71,7 +71,7 @@ func TestReadmeHTML(t *testing.T) {
 		},
 		{
 			name: "valid markdown readme with alternative case and extension",
-			vi: &internal.VersionInfo{
+			mi: &internal.ModuleInfo{
 				ReadmeFilePath: "README.MARKDOWN",
 				ReadmeContents: "This package collects pithy sayings.\n\n" +
 					"It's part of a demonstration of\n" +
@@ -83,7 +83,7 @@ func TestReadmeHTML(t *testing.T) {
 		},
 		{
 			name: "not markdown readme",
-			vi: &internal.VersionInfo{
+			mi: &internal.ModuleInfo{
 				ReadmeFilePath: "README.rst",
 				ReadmeContents: "This package collects pithy sayings.\n\n" +
 					"It's part of a demonstration of\n" +
@@ -93,12 +93,12 @@ func TestReadmeHTML(t *testing.T) {
 		},
 		{
 			name: "empty readme",
-			vi:   &internal.VersionInfo{},
+			mi:   &internal.ModuleInfo{},
 			want: "",
 		},
 		{
 			name: "sanitized readme",
-			vi: &internal.VersionInfo{
+			mi: &internal.ModuleInfo{
 				ReadmeFilePath: "README",
 				ReadmeContents: `<a onblur="alert(secret)" href="http://www.google.com">Google</a>`,
 			},
@@ -106,7 +106,7 @@ func TestReadmeHTML(t *testing.T) {
 		},
 		{
 			name: "relative image markdown is made absolute for GitHub",
-			vi: &internal.VersionInfo{
+			mi: &internal.ModuleInfo{
 				ReadmeFilePath: "README.md",
 				ReadmeContents: "![Go logo](doc/logo.png)",
 				SourceInfo:     source.NewGitHubInfo("http://github.com/golang/go", "", "master"),
@@ -115,7 +115,7 @@ func TestReadmeHTML(t *testing.T) {
 		},
 		{
 			name: "relative image markdown is made absolute for GitLab",
-			vi: &internal.VersionInfo{
+			mi: &internal.ModuleInfo{
 				ReadmeFilePath: "README.md",
 				ReadmeContents: "![Gitaly benchmark timings.](doc/img/rugged-new-timings.png)",
 				SourceInfo:     source.NewGitLabInfo("http://gitlab.com/gitlab-org/gitaly", "", "v1.0.0"),
@@ -124,7 +124,7 @@ func TestReadmeHTML(t *testing.T) {
 		},
 		{
 			name: "relative image markdown is left alone for unknown origins",
-			vi: &internal.VersionInfo{
+			mi: &internal.ModuleInfo{
 				ReadmeFilePath: "README.md",
 				ReadmeContents: "![Go logo](doc/logo.png)",
 			},
@@ -132,7 +132,7 @@ func TestReadmeHTML(t *testing.T) {
 		},
 		{
 			name: "module versions are referenced in relative images",
-			vi: &internal.VersionInfo{
+			mi: &internal.ModuleInfo{
 				ReadmeFilePath: "README.md",
 				ReadmeContents: "![Hugo logo](doc/logo.png)",
 				Version:        "v0.56.3",
@@ -143,7 +143,7 @@ func TestReadmeHTML(t *testing.T) {
 		},
 		{
 			name: "image URLs relative to README directory",
-			vi: &internal.VersionInfo{
+			mi: &internal.ModuleInfo{
 				ReadmeFilePath: "dir/sub/README.md",
 				ReadmeContents: "![alt](img/thing.png)",
 				Version:        "v1.2.3",
@@ -154,7 +154,7 @@ func TestReadmeHTML(t *testing.T) {
 		},
 		{
 			name: "non-image links relative to README directory",
-			vi: &internal.VersionInfo{
+			mi: &internal.ModuleInfo{
 				ReadmeFilePath: "dir/sub/README.md",
 				ReadmeContents: "[something](doc/thing.md)",
 				Version:        "v1.2.3",
@@ -166,9 +166,9 @@ func TestReadmeHTML(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := readmeHTML(tc.vi)
+			got := readmeHTML(tc.mi)
 			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("readmeHTML(%v) mismatch (-want +got):\n%s", tc.vi, diff)
+				t.Errorf("readmeHTML(%v) mismatch (-want +got):\n%s", tc.mi, diff)
 			}
 		})
 	}

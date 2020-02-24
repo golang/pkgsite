@@ -141,7 +141,7 @@ func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version strin
 		&pkg.V1Path, pq.Array(&licenseTypes), pq.Array(&licensePaths), &pkg.Package.IsRedistributable,
 		database.NullIsEmpty(&pkg.DocumentationHTML), &pkg.GOOS, &pkg.GOARCH, &pkg.Version,
 		&pkg.CommitTime, database.NullIsEmpty(&pkg.ReadmeFilePath), database.NullIsEmpty(&pkg.ReadmeContents),
-		&pkg.ModulePath, &pkg.VersionType, jsonbScanner{&pkg.SourceInfo}, &pkg.VersionInfo.IsRedistributable,
+		&pkg.ModulePath, &pkg.VersionType, jsonbScanner{&pkg.SourceInfo}, &pkg.ModuleInfo.IsRedistributable,
 		&hasGoMod)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -149,7 +149,7 @@ func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version strin
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
-	setHasGoMod(&pkg.VersionInfo, hasGoMod)
+	setHasGoMod(&pkg.ModuleInfo, hasGoMod)
 	lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
 	if err != nil {
 		return nil, err

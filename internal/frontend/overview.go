@@ -34,29 +34,29 @@ type OverviewDetails struct {
 
 // versionedLinks says whether the constructed URLs should have versions.
 // constructOverviewDetails uses the given version to construct an OverviewDetails.
-func constructOverviewDetails(vi *internal.VersionInfo, isRedistributable bool, versionedLinks bool) *OverviewDetails {
+func constructOverviewDetails(mi *internal.ModuleInfo, isRedistributable bool, versionedLinks bool) *OverviewDetails {
 	var lv string
 	if versionedLinks {
-		lv = linkVersion(vi.Version, vi.ModulePath)
+		lv = linkVersion(mi.Version, mi.ModulePath)
 	} else {
 		lv = internal.LatestVersion
 	}
 	overview := &OverviewDetails{
-		ModulePath:      vi.ModulePath,
-		ModuleURL:       constructModuleURL(vi.ModulePath, lv),
-		RepositoryURL:   vi.SourceInfo.RepoURL(),
+		ModulePath:      mi.ModulePath,
+		ModuleURL:       constructModuleURL(mi.ModulePath, lv),
+		RepositoryURL:   mi.SourceInfo.RepoURL(),
 		Redistributable: isRedistributable,
 	}
 	if overview.Redistributable {
-		overview.ReadMeSource = fileSource(vi.ModulePath, vi.Version, vi.ReadmeFilePath)
-		overview.ReadMe = readmeHTML(vi)
+		overview.ReadMeSource = fileSource(mi.ModulePath, mi.Version, mi.ReadmeFilePath)
+		overview.ReadMe = readmeHTML(mi)
 	}
 	return overview
 }
 
 // constructPackageOverviewDetails uses data for the given package to return an OverviewDetails.
 func constructPackageOverviewDetails(pkg *internal.VersionedPackage, versionedLinks bool) *OverviewDetails {
-	od := constructOverviewDetails(&pkg.VersionInfo, pkg.Package.IsRedistributable, versionedLinks)
+	od := constructOverviewDetails(&pkg.ModuleInfo, pkg.Package.IsRedistributable, versionedLinks)
 	od.PackageSourceURL = pkg.SourceInfo.DirectoryURL(packageSubdir(pkg.Path, pkg.ModulePath))
 	if !pkg.Package.IsRedistributable {
 		od.Redistributable = false
@@ -79,12 +79,12 @@ func packageSubdir(pkgPath, modulePath string) string {
 // readmeHTML sanitizes readmeContents based on bluemondy.UGCPolicy and returns
 // a template.HTML. If readmeFilePath indicates that this is a markdown file,
 // it will also render the markdown contents using blackfriday.
-func readmeHTML(vi *internal.VersionInfo) template.HTML {
-	if len(vi.ReadmeContents) == 0 {
+func readmeHTML(mi *internal.ModuleInfo) template.HTML {
+	if len(mi.ReadmeContents) == 0 {
 		return ""
 	}
-	if !isMarkdown(vi.ReadmeFilePath) {
-		return template.HTML(fmt.Sprintf(`<pre class="readme">%s</pre>`, html.EscapeString(string(vi.ReadmeContents))))
+	if !isMarkdown(mi.ReadmeFilePath) {
+		return template.HTML(fmt.Sprintf(`<pre class="readme">%s</pre>`, html.EscapeString(string(mi.ReadmeContents))))
 	}
 
 	// bluemonday.UGCPolicy allows a broad selection of HTML elements and
@@ -104,10 +104,10 @@ func readmeHTML(vi *internal.VersionInfo) template.HTML {
 	// Render HTML similar to blackfriday.Run(), but here we implement a custom
 	// Walk function in order to modify image paths in the rendered HTML.
 	b := &bytes.Buffer{}
-	rootNode := parser.Parse([]byte(vi.ReadmeContents))
+	rootNode := parser.Parse([]byte(mi.ReadmeContents))
 	rootNode.Walk(func(node *blackfriday.Node, entering bool) blackfriday.WalkStatus {
 		if node.Type == blackfriday.Image || node.Type == blackfriday.Link {
-			translateRelativeLink(node, vi)
+			translateRelativeLink(node, mi)
 		}
 		return renderer.RenderNode(b, node, entering)
 	})
@@ -128,7 +128,7 @@ func isMarkdown(filename string) bool {
 // image files inside the repository. As the discovery site doesn't host the
 // full repository content, in order for the image to render, we need to
 // convert the relative path to an absolute URL to a hosted image.
-func translateRelativeLink(node *blackfriday.Node, vi *internal.VersionInfo) {
+func translateRelativeLink(node *blackfriday.Node, mi *internal.ModuleInfo) {
 	destURL, err := url.Parse(string(node.LinkData.Destination))
 	if err != nil || destURL.IsAbs() {
 		return
@@ -139,12 +139,12 @@ func translateRelativeLink(node *blackfriday.Node, vi *internal.VersionInfo) {
 		return
 	}
 	// Paths are relative to the README location.
-	destPath := path.Join(path.Dir(vi.ReadmeFilePath), path.Clean(destURL.Path))
+	destPath := path.Join(path.Dir(mi.ReadmeFilePath), path.Clean(destURL.Path))
 	var newURL string
 	if node.Type == blackfriday.Image {
-		newURL = vi.SourceInfo.RawURL(destPath)
+		newURL = mi.SourceInfo.RawURL(destPath)
 	} else {
-		newURL = vi.SourceInfo.FileURL(destPath)
+		newURL = mi.SourceInfo.FileURL(destPath)
 	}
 	if newURL != "" {
 		node.LinkData.Destination = []byte(newURL)

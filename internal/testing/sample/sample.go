@@ -91,8 +91,8 @@ func Package() *internal.Package {
 	}
 }
 
-func VersionInfo() *internal.VersionInfo {
-	return &internal.VersionInfo{
+func ModuleInfo() *internal.ModuleInfo {
+	return &internal.ModuleInfo{
 		ModulePath:        ModulePath,
 		Version:           VersionString,
 		ReadmeFilePath:    ReadmeFilePath,
@@ -107,16 +107,16 @@ func VersionInfo() *internal.VersionInfo {
 
 func VersionedPackage() *internal.VersionedPackage {
 	return &internal.VersionedPackage{
-		VersionInfo: *VersionInfo(),
-		Package:     *Package(),
+		ModuleInfo: *ModuleInfo(),
+		Package:    *Package(),
 	}
 }
 
 func Version() *internal.Version {
 	return &internal.Version{
-		VersionInfo: *VersionInfo(),
-		Packages:    []*internal.Package{Package()},
-		Licenses:    Licenses,
+		ModuleInfo: *ModuleInfo(),
+		Packages:   []*internal.Package{Package()},
+		Licenses:   Licenses,
 	}
 }
 

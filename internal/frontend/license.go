@@ -34,7 +34,7 @@ type LicenseMetadata struct {
 // fetchPackageLicensesDetails fetches license data for the package version specified by
 // path and version from the database and returns a LicensesDetails.
 func fetchPackageLicensesDetails(ctx context.Context, ds internal.DataSource, pkg *internal.VersionedPackage) (*LicensesDetails, error) {
-	dsLicenses, err := ds.GetPackageLicenses(ctx, pkg.Path, pkg.ModulePath, pkg.VersionInfo.Version)
+	dsLicenses, err := ds.GetPackageLicenses(ctx, pkg.Path, pkg.ModulePath, pkg.ModuleInfo.Version)
 	if err != nil {
 		return nil, err
 	}
