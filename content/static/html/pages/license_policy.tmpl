@@ -16,7 +16,7 @@
       the accuracy of our license detection.
     </p>
     <p>
-      If we are not able to detect one of the OSI-approved licenses below, only
+      If we are not able to detect one of the licenses below, only
       limited package and module information will be made available. If you are
       a package author seeking to make your content available on the Go
       website, please be aware that our detection algorithms can be affected by
@@ -30,8 +30,7 @@
       {{commaseparate .LicenseFileNames}}. The match is case-insensitive.
     </p>
     <p>
-      We currently detect and recognize the following
-      <a href="https://opensource.org/licenses/category" target="_blank">OSI</a>-approved licenses:
+      We currently detect and recognize the following licenses:
       <ul>
         {{range .LicenseTypes -}}
           <li><a href="https://opensource.org/licenses/{{.}}" target="_blank">{{.}}</a></li>
@@ -42,7 +41,7 @@
       If you use a package whose license is not detected, please inform the package author.
       If you are a package author who believes a license for one of your packages
       should have been detected and was not, please check for discrepancies between your license
-      and the OSI text. If you still believe there is an error, please email
+      and the official text. If you still believe there is an error, please email
       <a href="mailto:go-discovery-feedback@google.com">go-discovery-feedback@google.com</a>.
     </p>
   </div>
