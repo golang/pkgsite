@@ -25,15 +25,15 @@ func TestGetPackage(t *testing.T) {
 
 	defer ResetTestDB(testDB, t)
 
-	insertVersion := func(pkgPath, modulePath, version string) {
+	insertModule := func(pkgPath, modulePath, version string) {
 		t.Helper()
-		v := sample.Version()
-		v.ModulePath = modulePath
-		v.Version = version
+		m := sample.Module()
+		m.ModulePath = modulePath
+		m.Version = version
 		pkg := sample.Package()
 		pkg.Path = pkgPath
-		v.Packages = []*internal.Package{pkg}
-		if err := testDB.InsertVersion(ctx, v); err != nil {
+		m.Packages = []*internal.Package{pkg}
+		if err := testDB.InsertModule(ctx, m); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -94,7 +94,7 @@ func TestGetPackage(t *testing.T) {
 			"v1.13.0",
 		},
 	} {
-		insertVersion(data.pkgPath, data.modulePath, data.version)
+		insertModule(data.pkgPath, data.modulePath, data.version)
 	}
 
 	for _, tc := range []struct {

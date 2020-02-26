@@ -66,12 +66,12 @@ func TestToTsvectorParentDirectoriesStoredProcedure(t *testing.T) {
 		},
 	} {
 		t.Run(tc.path, func(t *testing.T) {
-			v := sample.Version()
-			v.ModulePath = tc.modulePath
+			m := sample.Module()
+			m.ModulePath = tc.modulePath
 			pkg := sample.Package()
 			pkg.Path = tc.path
-			v.Packages = []*internal.Package{pkg}
-			if err := testDB.InsertVersion(ctx, v); err != nil {
+			m.Packages = []*internal.Package{pkg}
+			if err := testDB.InsertModule(ctx, m); err != nil {
 				t.Fatal(err)
 			}
 

@@ -22,14 +22,14 @@ import (
 	"golang.org/x/discovery/internal/testing/sample"
 )
 
-func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
+func TestPostgres_ReadAndWriteModuleAndPackages(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
 	defer cancel()
 
 	testCases := []struct {
 		name string
 
-		version *internal.Version
+		module *internal.Module
 
 		// identifiers to use for fetch
 		wantModulePath, wantVersion, wantPkgPath string
@@ -40,15 +40,15 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 	}{
 		{
 			name:           "valid test",
-			version:        sample.Version(),
+			module:         sample.Module(),
 			wantModulePath: sample.ModulePath,
 			wantVersion:    sample.VersionString,
 			wantPkgPath:    sample.PackagePath,
 		},
 		{
 			name: "valid test with internal package",
-			version: func() *internal.Version {
-				v := sample.Version()
+			module: func() *internal.Module {
+				v := sample.Module()
 				p := sample.Package()
 				p.Path = sample.ModulePath + "/internal/foo"
 				v.Packages = []*internal.Package{p}
@@ -60,8 +60,8 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 		},
 		{
 			name: "valid test with go.mod missing",
-			version: func() *internal.Version {
-				v := sample.Version()
+			module: func() *internal.Module {
+				v := sample.Module()
 				v.HasGoMod = false
 				return v
 			}(),
@@ -78,14 +78,14 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 		},
 		{
 			name:           "nonexistent version",
-			version:        sample.Version(),
+			module:         sample.Module(),
 			wantModulePath: sample.ModulePath,
 			wantVersion:    "v1.2.3",
 			wantReadErr:    true,
 		},
 		{
 			name:           "nonexistent module",
-			version:        sample.Version(),
+			module:         sample.Module(),
 			wantModulePath: "nonexistent_module_path",
 			wantVersion:    "v1.0.0",
 			wantPkgPath:    sample.PackagePath,
@@ -93,8 +93,8 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 		},
 		{
 			name: "missing module path",
-			version: func() *internal.Version {
-				v := sample.Version()
+			module: func() *internal.Module {
+				v := sample.Module()
 				v.ModulePath = ""
 				return v
 			}(),
@@ -105,8 +105,8 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 		},
 		{
 			name: "missing version",
-			version: func() *internal.Version {
-				v := sample.Version()
+			module: func() *internal.Module {
+				v := sample.Module()
 				v.Version = ""
 				return v
 			}(),
@@ -117,8 +117,8 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 		},
 		{
 			name: "empty commit time",
-			version: func() *internal.Version {
-				v := sample.Version()
+			module: func() *internal.Module {
+				v := sample.Module()
 				v.CommitTime = time.Time{}
 				return v
 			}(),
@@ -129,18 +129,18 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 		},
 		{
 			name: "stdlib",
-			version: func() *internal.Version {
-				v := sample.Version()
-				v.ModulePath = "std"
-				v.Version = "v1.12.5"
-				v.Packages = []*internal.Package{{
+			module: func() *internal.Module {
+				m := sample.Module()
+				m.ModulePath = "std"
+				m.Version = "v1.12.5"
+				m.Packages = []*internal.Package{{
 					Name:              "context",
 					Path:              "context",
 					Synopsis:          "This is a package synopsis",
 					Licenses:          sample.LicenseMetadata,
 					DocumentationHTML: "This is the documentation HTML",
 				}}
-				return v
+				return m
 			}(),
 			wantModulePath: "std",
 			wantVersion:    "v1.12.5",
@@ -152,12 +152,12 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			defer ResetTestDB(testDB, t)
 
-			if err := testDB.InsertVersion(ctx, tc.version); !errors.Is(err, tc.wantWriteErr) {
+			if err := testDB.InsertModule(ctx, tc.module); !errors.Is(err, tc.wantWriteErr) {
 				t.Errorf("error: %v, want write error: %v", err, tc.wantWriteErr)
 			}
 
 			// Test that insertion of duplicate primary key won't fail.
-			if err := testDB.InsertVersion(ctx, tc.version); !errors.Is(err, tc.wantWriteErr) {
+			if err := testDB.InsertModule(ctx, tc.module); !errors.Is(err, tc.wantWriteErr) {
 				t.Errorf("second insert error: %v, want write error: %v", err, tc.wantWriteErr)
 			}
 
@@ -167,17 +167,17 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 			}
 
 			if !tc.wantReadErr && got == nil {
-				t.Fatalf("testDB.GetModuleInfo(ctx, %q, %q) = %v, want %v", tc.wantModulePath, tc.wantVersion, got, tc.version)
+				t.Fatalf("testDB.GetModuleInfo(ctx, %q, %q) = %v, want %v", tc.wantModulePath, tc.wantVersion, got, tc.module)
 			}
 
-			if tc.version != nil {
-				if diff := cmp.Diff(&tc.version.ModuleInfo, got, cmp.AllowUnexported(source.Info{})); !tc.wantReadErr && diff != "" {
+			if tc.module != nil {
+				if diff := cmp.Diff(&tc.module.ModuleInfo, got, cmp.AllowUnexported(source.Info{})); !tc.wantReadErr && diff != "" {
 					t.Errorf("testDB.GetModuleInfo(ctx, %q, %q) mismatch (-want +got):\n%s", tc.wantModulePath, tc.wantVersion, diff)
 				}
 			}
 
 			gotPkg, err := testDB.GetPackage(ctx, tc.wantPkgPath, internal.UnknownModulePath, tc.wantVersion)
-			if tc.version == nil || tc.version.Packages == nil || tc.wantPkgPath == "" {
+			if tc.module == nil || tc.module.Packages == nil || tc.wantPkgPath == "" {
 				if tc.wantReadErr != (err != nil) {
 					t.Fatalf("got %v, want %v", err, sql.ErrNoRows)
 				}
@@ -187,9 +187,9 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			wantPkg := tc.version.Packages[0]
-			if gotPkg.ModuleInfo.Version != tc.version.Version {
-				t.Errorf("testDB.GetPackage(ctx, %q, %q) version.version = %v, want %v", tc.wantPkgPath, tc.wantVersion, gotPkg.ModuleInfo.Version, tc.version.Version)
+			wantPkg := tc.module.Packages[0]
+			if gotPkg.ModuleInfo.Version != tc.module.Version {
+				t.Errorf("testDB.GetPackage(ctx, %q, %q) version.version = %v, want %v", tc.wantPkgPath, tc.wantVersion, gotPkg.ModuleInfo.Version, tc.module.Version)
 			}
 
 			opts := cmp.Options{
@@ -204,7 +204,7 @@ func TestPostgres_ReadAndWriteVersionAndPackages(t *testing.T) {
 	}
 }
 
-func TestPostgres_ReadAndWriteVersionOtherColumns(t *testing.T) {
+func TestPostgres_ReadAndWriteModuleOtherColumns(t *testing.T) {
 	// Verify that InsertVersion correctly populates the columns in the versions
 	// table that are not in the ModuleInfo struct.
 	defer ResetTestDB(testDB, t)
@@ -214,7 +214,7 @@ func TestPostgres_ReadAndWriteVersionOtherColumns(t *testing.T) {
 		sortVersion, seriesPath string
 	}
 
-	v := sample.Version()
+	v := sample.Module()
 	v.ModulePath = "github.com/user/repo/path/v2"
 	v.Version = "v1.2.3-beta.4.a"
 
@@ -223,7 +223,7 @@ func TestPostgres_ReadAndWriteVersionOtherColumns(t *testing.T) {
 		seriesPath:  "github.com/user/repo/path",
 	}
 
-	if err := testDB.InsertVersion(ctx, v); err != nil {
+	if err := testDB.InsertModule(ctx, v); err != nil {
 		t.Fatal(err)
 	}
 	query := `
@@ -248,14 +248,14 @@ func TestPostgres_DeleteVersion(t *testing.T) {
 	defer cancel()
 	defer ResetTestDB(testDB, t)
 
-	v := sample.Version()
-	if err := testDB.InsertVersion(ctx, v); err != nil {
+	v := sample.Module()
+	if err := testDB.InsertModule(ctx, v); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := testDB.GetModuleInfo(ctx, v.ModulePath, v.Version); err != nil {
 		t.Fatal(err)
 	}
-	if err := testDB.DeleteVersion(ctx, nil, v.ModulePath, v.Version); err != nil {
+	if err := testDB.DeleteModule(ctx, nil, v.ModulePath, v.Version); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := testDB.GetModuleInfo(ctx, v.ModulePath, v.Version); !errors.Is(err, derrors.NotFound) {
@@ -282,12 +282,12 @@ func TestPostgres_NewerAlternative(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	v := sample.Version()
-	v.ModulePath = modulePath
-	v.Version = okVersion
-	v.Packages[0].Name = "p"
-	v.Packages[0].Path = packagePath
-	if err := testDB.InsertVersion(ctx, v); err != nil {
+	m := sample.Module()
+	m.ModulePath = modulePath
+	m.Version = okVersion
+	m.Packages[0].Name = "p"
+	m.Packages[0].Path = packagePath
+	if err := testDB.InsertModule(ctx, m); err != nil {
 		t.Fatal(err)
 	}
 	if _, _, found := GetFromSearchDocuments(ctx, t, testDB, packagePath); found {

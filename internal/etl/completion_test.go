@@ -29,17 +29,17 @@ func TestUpdateRedisIndexes(t *testing.T) {
 	// package in v2 imports the package in v1. By setting our 'popular cutoff'
 	// to 1, we can force the package in v1 to be considered popular.
 	rc := redis.NewClient(&redis.Options{Addr: mr.Addr()})
-	v1 := sample.Version()
-	v1.ModulePath = "github.com/something"
-	v1.Packages[0].Path = v1.ModulePath + "/apples/bananas"
-	v2 := sample.Version()
-	v2.ModulePath = "github.com/something/else"
-	v2.Packages[0].Path = v2.ModulePath + "/oranges/bananas"
-	v2.Packages[0].Imports = []string{v1.Packages[0].Path}
-	if err := testDB.InsertVersion(ctx, v1); err != nil {
+	m1 := sample.Module()
+	m1.ModulePath = "github.com/something"
+	m1.Packages[0].Path = m1.ModulePath + "/apples/bananas"
+	m2 := sample.Module()
+	m2.ModulePath = "github.com/something/else"
+	m2.Packages[0].Path = m2.ModulePath + "/oranges/bananas"
+	m2.Packages[0].Imports = []string{m1.Packages[0].Path}
+	if err := testDB.InsertModule(ctx, m1); err != nil {
 		t.Fatal(err)
 	}
-	if err := testDB.InsertVersion(ctx, v2); err != nil {
+	if err := testDB.InsertModule(ctx, m2); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx); err != nil {

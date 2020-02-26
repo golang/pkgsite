@@ -88,12 +88,12 @@ func TestInsertAndDeleteAlternatives(t *testing.T) {
 	}
 	var versionStates []*internal.IndexVersion
 	for _, data := range pkgData {
-		v := sample.Version()
-		v.ModulePath = data.modulePath
+		m := sample.Module()
+		m.ModulePath = data.modulePath
 		p := sample.Package()
 		p.Path = data.pkgPath
-		v.Packages = []*internal.Package{p}
-		if err := testDB.InsertVersion(ctx, v); err != nil {
+		m.Packages = []*internal.Package{p}
+		if err := testDB.InsertModule(ctx, m); err != nil {
 			t.Fatal(err)
 		}
 		now := sample.NowTruncated()

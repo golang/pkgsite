@@ -22,10 +22,10 @@ import (
 	"golang.org/x/discovery/internal/version"
 )
 
-// GetPackagesInVersion returns packages contained in the module version
+// GetPackagesInModule returns packages contained in the module version
 // specified by modulePath and version. The returned packages will be sorted
 // by their package path.
-func (db *DB) GetPackagesInVersion(ctx context.Context, modulePath, version string) (_ []*internal.Package, err error) {
+func (db *DB) GetPackagesInModule(ctx context.Context, modulePath, version string) (_ []*internal.Package, err error) {
 	query := `SELECT
 		path,
 		name,
@@ -65,7 +65,7 @@ func (db *DB) GetPackagesInVersion(ctx context.Context, modulePath, version stri
 	}
 
 	if err := db.db.RunQuery(ctx, query, collect, modulePath, version); err != nil {
-		return nil, fmt.Errorf("DB.GetPackagesInVersion(ctx, %q, %q): %w", modulePath, version, err)
+		return nil, fmt.Errorf("DB.GetPackagesInModule(ctx, %q, %q): %w", modulePath, version, err)
 	}
 	return packages, nil
 }

@@ -58,8 +58,8 @@ type versionKey struct {
 
 // versionEntry holds the result of a call to etl.FetchVersion.
 type versionEntry struct {
-	version *internal.Version
-	err     error
+	module *internal.Module
+	err    error
 }
 
 // GetDirectory returns packages contained in the given subdirectory of a module version.
@@ -74,7 +74,7 @@ func (ds *DataSource) GetDirectory(ctx context.Context, dirPath, modulePath, ver
 		}
 		version = info.Version
 	}
-	v, err := ds.getVersion(ctx, modulePath, version)
+	v, err := ds.getModule(ctx, modulePath, version)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func (ds *DataSource) GetImports(ctx context.Context, pkgPath, modulePath, versi
 // for modulePath and version.
 func (ds *DataSource) GetModuleLicenses(ctx context.Context, modulePath, version string) (_ []*licenses.License, err error) {
 	defer derrors.Wrap(&err, "GetModuleLicenses(%q, %q)", modulePath, version)
-	v, err := ds.getVersion(ctx, modulePath, version)
+	v, err := ds.getModule(ctx, modulePath, version)
 	if err != nil {
 		return nil, err
 	}
@@ -124,23 +124,23 @@ func (ds *DataSource) GetModuleLicenses(ctx context.Context, modulePath, version
 func (ds *DataSource) GetPackage(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.VersionedPackage, err error) {
 	defer derrors.Wrap(&err, "GetPackage(%q, %q)", pkgPath, version)
 
-	var v *internal.Version
+	var m *internal.Module
 	if modulePath != internal.UnknownModulePath {
-		v, err = ds.getVersion(ctx, modulePath, version)
+		m, err = ds.getModule(ctx, modulePath, version)
 	} else {
-		v, err = ds.getPackageVersion(ctx, pkgPath, version)
+		m, err = ds.getPackageVersion(ctx, pkgPath, version)
 	}
 	if err != nil {
 		return nil, err
 	}
-	return packageFromVersion(pkgPath, v)
+	return packageFromVersion(pkgPath, m)
 }
 
 // GetPackageLicenses returns the Licenses that apply to pkgPath within the
 // module version specified by modulePath and version.
 func (ds *DataSource) GetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) (_ []*licenses.License, err error) {
 	defer derrors.Wrap(&err, "GetPackageLicenses(%q, %q, %q)", pkgPath, modulePath, version)
-	v, err := ds.getVersion(ctx, modulePath, version)
+	v, err := ds.getModule(ctx, modulePath, version)
 	if err != nil {
 		return nil, err
 	}
@@ -162,10 +162,10 @@ func (ds *DataSource) GetPackageLicenses(ctx context.Context, pkgPath, modulePat
 	return nil, fmt.Errorf("package %s is missing from module %s: %w", pkgPath, modulePath, derrors.NotFound)
 }
 
-// GetPackagesInVersion returns Packages contained in the module zip corresponding to modulePath and version.
-func (ds *DataSource) GetPackagesInVersion(ctx context.Context, modulePath, version string) (_ []*internal.Package, err error) {
-	defer derrors.Wrap(&err, "GetPackagesInVersion(%q, %q)", modulePath, version)
-	v, err := ds.getVersion(ctx, modulePath, version)
+// GetPackagesInModule returns Packages contained in the module zip corresponding to modulePath and version.
+func (ds *DataSource) GetPackagesInModule(ctx context.Context, modulePath, version string) (_ []*internal.Package, err error) {
+	defer derrors.Wrap(&err, "GetPackagesInModule(%q, %q)", modulePath, version)
+	v, err := ds.getModule(ctx, modulePath, version)
 	if err != nil {
 		return nil, err
 	}
@@ -206,11 +206,11 @@ func (ds *DataSource) GetTaggedVersionsForPackageSeries(ctx context.Context, pkg
 // version specified by modulePath and version.
 func (ds *DataSource) GetModuleInfo(ctx context.Context, modulePath, version string) (_ *internal.ModuleInfo, err error) {
 	defer derrors.Wrap(&err, "GetModuleInfo(%q, %q)", modulePath, version)
-	v, err := ds.getVersion(ctx, modulePath, version)
+	m, err := ds.getModule(ctx, modulePath, version)
 	if err != nil {
 		return nil, err
 	}
-	return &v.ModuleInfo, nil
+	return &m.ModuleInfo, nil
 }
 
 // Search is unimplemented.
@@ -218,24 +218,24 @@ func (ds *DataSource) Search(ctx context.Context, query string, limit, offset in
 	return []*internal.SearchResult{}, nil
 }
 
-// getVersion retrieves a version from the cache, or failing that queries and
+// getModule retrieves a version from the cache, or failing that queries and
 // processes the version from the proxy.
-func (ds *DataSource) getVersion(ctx context.Context, modulePath, version string) (_ *internal.Version, err error) {
-	defer derrors.Wrap(&err, "getVersion(%q, %q)", modulePath, version)
+func (ds *DataSource) getModule(ctx context.Context, modulePath, version string) (_ *internal.Module, err error) {
+	defer derrors.Wrap(&err, "getModule(%q, %q)", modulePath, version)
 
 	key := versionKey{modulePath, version}
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
 	if e, ok := ds.versionCache[key]; ok {
-		return e.version, e.err
+		return e.module, e.err
 	}
 
 	res, err := fetch.FetchVersion(ctx, modulePath, version, ds.proxyClient)
-	var v *internal.Version
+	var m *internal.Module
 	if res != nil {
-		v = res.Version
+		m = res.Module
 	}
-	ds.versionCache[key] = &versionEntry{version: v, err: err}
+	ds.versionCache[key] = &versionEntry{module: m, err: err}
 	if err != nil {
 		return nil, err
 	}
@@ -254,7 +254,7 @@ func (ds *DataSource) getVersion(ctx context.Context, modulePath, version string
 	// be a bit more careful and check that it is new. To do this, we can
 	// leverage the invariant that module paths in packagePathToModules are kept
 	// sorted in descending order of length.
-	for _, pkg := range v.Packages {
+	for _, pkg := range m.Packages {
 		var (
 			i   int
 			mp  string
@@ -269,7 +269,7 @@ func (ds *DataSource) getVersion(ctx context.Context, modulePath, version string
 			ds.packagePathToModules[pkg.Path] = append(mps[:i], append([]string{modulePath}, mps[i:]...)...)
 		}
 	}
-	return v, nil
+	return m, nil
 }
 
 // findModule finds the longest module path containing the given package path,
@@ -335,7 +335,7 @@ func (ds *DataSource) listModuleVersions(ctx context.Context, modulePath string,
 			continue
 		}
 		if v, ok := ds.versionCache[versionKey{modulePath, vers}]; ok {
-			vis = append(vis, &v.version.ModuleInfo)
+			vis = append(vis, &v.module.ModuleInfo)
 		} else {
 			// In this case we can't produce s ModuleInfo without fully processing
 			// the module zip, so we instead append a stub. We could further query
@@ -356,19 +356,19 @@ func (ds *DataSource) listModuleVersions(ctx context.Context, modulePath string,
 // getPackageVersion finds a module at version that contains a package with
 // import path pkgPath. To do this, it first checks the cache for any module
 // satisfying this requirement, querying the proxy if none is found.
-func (ds *DataSource) getPackageVersion(ctx context.Context, pkgPath, version string) (_ *internal.Version, err error) {
+func (ds *DataSource) getPackageVersion(ctx context.Context, pkgPath, version string) (_ *internal.Module, err error) {
 	defer derrors.Wrap(&err, "getPackageVersion(%q, %q)", pkgPath, version)
 	// First, try to retrieve this version from the cache, using our reverse
 	// indexes.
 	if modulePath, ok := ds.findModulePathForPackage(pkgPath, version); ok {
 		// This should hit the cache.
-		return ds.getVersion(ctx, modulePath, version)
+		return ds.getModule(ctx, modulePath, version)
 	}
 	modulePath, info, err := ds.findModule(ctx, pkgPath, version)
 	if err != nil {
 		return nil, err
 	}
-	return ds.getVersion(ctx, modulePath, info.Version)
+	return ds.getModule(ctx, modulePath, info.Version)
 }
 
 // findModulePathForPackage looks for an existing instance of a module at
@@ -389,17 +389,17 @@ func (ds *DataSource) findModulePathForPackage(pkgPath, version string) (string,
 
 // packageFromVersion extracts the VersionedPackage for pkgPath from the
 // Version payload.
-func packageFromVersion(pkgPath string, v *internal.Version) (_ *internal.VersionedPackage, err error) {
+func packageFromVersion(pkgPath string, m *internal.Module) (_ *internal.VersionedPackage, err error) {
 	defer derrors.Wrap(&err, "packageFromVersion(%q, ...)", pkgPath)
-	for _, p := range v.Packages {
+	for _, p := range m.Packages {
 		if p.Path == pkgPath {
 			return &internal.VersionedPackage{
 				Package:    *p,
-				ModuleInfo: v.ModuleInfo,
+				ModuleInfo: m.ModuleInfo,
 			}, nil
 		}
 	}
-	return nil, fmt.Errorf("package missing from module %s: %w", v.ModulePath, derrors.NotFound)
+	return nil, fmt.Errorf("package missing from module %s: %w", m.ModulePath, derrors.NotFound)
 }
 
 // IsExcluded is unimplemented.

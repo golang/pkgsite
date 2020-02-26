@@ -69,8 +69,8 @@ func fetchModuleVersionsDetails(ctx context.Context, ds internal.DataSource, mi 
 			return nil, err
 		}
 	}
-	linkify := func(v *internal.ModuleInfo) string {
-		return constructModuleURL(v.ModulePath, linkVersion(v.Version, v.ModulePath))
+	linkify := func(m *internal.ModuleInfo) string {
+		return constructModuleURL(m.ModulePath, linkVersion(m.Version, m.ModulePath))
 	}
 	return buildVersionDetails(mi.ModulePath, versions, linkify), nil
 }
@@ -188,7 +188,7 @@ func buildVersionDetails(currentModulePath string, versions []*internal.ModuleIn
 		majorTree.forEach(func(_ string, minorTree *versionTree) {
 			patches := []*VersionSummary{}
 			minorTree.forEach(func(_ string, patchTree *versionTree) {
-				mi := patchTree.versionInfo
+				mi := patchTree.moduleInfo
 				fmtVersion := displayVersion(mi.Version, mi.ModulePath)
 				ttversion := mi.Version
 				if mi.ModulePath == stdlib.ModulePath {
@@ -234,15 +234,15 @@ type versionTree struct {
 	//		major
 	//			majorMinor
 	//				fullVersion
-	subTrees    map[string]*versionTree
-	versionInfo *internal.ModuleInfo
+	subTrees   map[string]*versionTree
+	moduleInfo *internal.ModuleInfo
 }
 
 // push adds a new version to the version hierarchy, if it doesn't already
 // exist.
-func (t *versionTree) push(v *internal.ModuleInfo, path ...string) {
+func (t *versionTree) push(m *internal.ModuleInfo, path ...string) {
 	if len(path) == 0 {
-		t.versionInfo = v
+		t.moduleInfo = m
 		return
 	}
 	if t.subTrees == nil {
@@ -254,7 +254,7 @@ func (t *versionTree) push(v *internal.ModuleInfo, path ...string) {
 		subTree = &versionTree{}
 		t.subTrees[path[0]] = subTree
 	}
-	subTree.push(v, path[1:]...)
+	subTree.push(m, path[1:]...)
 }
 
 // forEach iterates through sub-versionTrees in the version hierarchy, calling

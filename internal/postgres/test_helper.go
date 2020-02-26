@@ -216,11 +216,11 @@ func InsertSampleDirectoryTree(ctx context.Context, t *testing.T, testDB *DB) {
 			pkgs = append(pkgs, p)
 		}
 
-		v := sample.Version()
-		v.ModulePath = data.modulePath
-		v.Version = data.version
-		v.Packages = pkgs
-		if err := testDB.InsertVersion(ctx, v); err != nil {
+		m := sample.Module()
+		m.ModulePath = data.modulePath
+		m.Version = data.version
+		m.Packages = pkgs
+		if err := testDB.InsertModule(ctx, m); err != nil {
 			t.Fatal(err)
 		}
 	}

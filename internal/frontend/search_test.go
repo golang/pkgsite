@@ -22,8 +22,8 @@ func TestFetchSearchPage(t *testing.T) {
 	defer cancel()
 
 	var (
-		now        = sample.NowTruncated()
-		versionFoo = &internal.Version{
+		now       = sample.NowTruncated()
+		moduleFoo = &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
 				ModulePath:        "github.com/mod/foo",
 				Version:           "v1.0.0",
@@ -42,7 +42,7 @@ func TestFetchSearchPage(t *testing.T) {
 				},
 			},
 		}
-		versionBar = &internal.Version{
+		moduleBar = &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
 				ModulePath:        "github.com/mod/bar",
 				Version:           "v1.0.0",
@@ -65,13 +65,13 @@ func TestFetchSearchPage(t *testing.T) {
 
 	for _, tc := range []struct {
 		name, query    string
-		versions       []*internal.Version
+		modules        []*internal.Module
 		wantSearchPage *SearchPage
 	}{
 		{
-			name:     "want expected search page",
-			query:    "foo bar",
-			versions: []*internal.Version{versionFoo, versionBar},
+			name:    "want expected search page",
+			query:   "foo bar",
+			modules: []*internal.Module{moduleFoo, moduleBar},
 			wantSearchPage: &SearchPage{
 				Pagination: pagination{
 					TotalCount:  1,
@@ -84,22 +84,22 @@ func TestFetchSearchPage(t *testing.T) {
 				},
 				Results: []*SearchResult{
 					{
-						Name:           versionBar.Packages[0].Name,
-						PackagePath:    versionBar.Packages[0].Path,
-						ModulePath:     versionBar.ModulePath,
-						Synopsis:       versionBar.Packages[0].Synopsis,
-						DisplayVersion: versionBar.Version,
+						Name:           moduleBar.Packages[0].Name,
+						PackagePath:    moduleBar.Packages[0].Path,
+						ModulePath:     moduleBar.ModulePath,
+						Synopsis:       moduleBar.Packages[0].Synopsis,
+						DisplayVersion: moduleBar.Version,
 						Licenses:       []string{"MIT"},
-						CommitTime:     elapsedTime(versionBar.CommitTime),
+						CommitTime:     elapsedTime(moduleBar.CommitTime),
 						NumImportedBy:  0,
 					},
 				},
 			},
 		},
 		{
-			name:     "want only foo search page",
-			query:    "package",
-			versions: []*internal.Version{versionFoo, versionBar},
+			name:    "want only foo search page",
+			query:   "package",
+			modules: []*internal.Module{moduleFoo, moduleBar},
 			wantSearchPage: &SearchPage{
 				Pagination: pagination{
 					TotalCount:  1,
@@ -112,13 +112,13 @@ func TestFetchSearchPage(t *testing.T) {
 				},
 				Results: []*SearchResult{
 					{
-						Name:           versionFoo.Packages[0].Name,
-						PackagePath:    versionFoo.Packages[0].Path,
-						ModulePath:     versionFoo.ModulePath,
-						Synopsis:       versionFoo.Packages[0].Synopsis,
-						DisplayVersion: versionFoo.Version,
+						Name:           moduleFoo.Packages[0].Name,
+						PackagePath:    moduleFoo.Packages[0].Path,
+						ModulePath:     moduleFoo.ModulePath,
+						Synopsis:       moduleFoo.Packages[0].Synopsis,
+						DisplayVersion: moduleFoo.Version,
 						Licenses:       []string{"MIT"},
-						CommitTime:     elapsedTime(versionFoo.CommitTime),
+						CommitTime:     elapsedTime(moduleFoo.CommitTime),
 						NumImportedBy:  0,
 					},
 				},
@@ -128,8 +128,8 @@ func TestFetchSearchPage(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
 
-			for _, v := range tc.versions {
-				if err := testDB.InsertVersion(ctx, v); err != nil {
+			for _, v := range tc.modules {
+				if err := testDB.InsertModule(ctx, v); err != nil {
 					t.Fatal(err)
 				}
 			}
@@ -177,13 +177,13 @@ func TestApproximateNumber(t *testing.T) {
 func TestSearchRequestRedirectPath(t *testing.T) {
 	ctx := context.Background()
 
-	golangTools := sample.Version()
+	golangTools := sample.Module()
 	golangTools.ModulePath = "golang.org/x/tools"
 	lspPkg := sample.Package()
 	lspPkg.Path = "golang.org/x/tools/internal/lsp"
 	golangTools.Packages = []*internal.Package{lspPkg}
 
-	std := sample.Version()
+	std := sample.Module()
 	std.ModulePath = "std"
 	var stdlibPackages []*internal.Package
 	for _, path := range []string{"cmd/go", "cmd/go/internal/auth", "fmt"} {
@@ -192,10 +192,10 @@ func TestSearchRequestRedirectPath(t *testing.T) {
 		stdlibPackages = append(stdlibPackages, pkg)
 	}
 	std.Packages = stdlibPackages
-	versions := []*internal.Version{golangTools, std}
+	modules := []*internal.Module{golangTools, std}
 
-	for _, v := range versions {
-		if err := testDB.InsertVersion(ctx, v); err != nil {
+	for _, v := range modules {
+		if err := testDB.InsertModule(ctx, v); err != nil {
 			t.Fatal(err)
 		}
 	}

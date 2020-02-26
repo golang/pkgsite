@@ -112,8 +112,8 @@ func VersionedPackage() *internal.VersionedPackage {
 	}
 }
 
-func Version() *internal.Version {
-	return &internal.Version{
+func Module() *internal.Module {
+	return &internal.Module{
 		ModuleInfo: *ModuleInfo(),
 		Packages:   []*internal.Package{Package()},
 		Licenses:   Licenses,
@@ -122,13 +122,13 @@ func Version() *internal.Version {
 
 // SetSuffixes sets packages corresponding to the given path suffixes.  Paths
 // are constructed using the existing module path of the Version.
-func SetSuffixes(v *internal.Version, suffixes ...string) {
-	series := internal.SeriesPathForModule(v.ModulePath)
-	v.Packages = nil
+func SetSuffixes(m *internal.Module, suffixes ...string) {
+	series := internal.SeriesPathForModule(m.ModulePath)
+	m.Packages = nil
 	for _, suffix := range suffixes {
 		p := Package()
-		p.Path = path.Join(v.ModulePath, suffix)
+		p.Path = path.Join(m.ModulePath, suffix)
 		p.V1Path = path.Join(series, suffix)
-		v.Packages = append(v.Packages, p)
+		m.Packages = append(m.Packages, p)
 	}
 }

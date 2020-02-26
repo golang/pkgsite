@@ -160,16 +160,16 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 			ps = append(ps, p)
 		}
 		for _, ver := range mod.versions {
-			v := sample.Version()
-			v.ModulePath = mod.path
-			v.Version = ver
-			v.SourceInfo = source.NewGitHubInfo(sample.RepositoryURL, "", ver)
-			v.IsRedistributable = mod.redistributable
-			if !v.IsRedistributable {
-				v.Licenses = nil
+			m := sample.Module()
+			m.ModulePath = mod.path
+			m.Version = ver
+			m.SourceInfo = source.NewGitHubInfo(sample.RepositoryURL, "", ver)
+			m.IsRedistributable = mod.redistributable
+			if !m.IsRedistributable {
+				m.Licenses = nil
 			}
-			v.Packages = ps
-			if err := testDB.InsertVersion(ctx, v); err != nil {
+			m.Packages = ps
+			if err := testDB.InsertModule(ctx, m); err != nil {
 				t.Fatal(err)
 			}
 		}
@@ -830,8 +830,8 @@ func TestServerErrors(t *testing.T) {
 	defer cancel()
 
 	defer postgres.ResetTestDB(testDB, t)
-	sampleVersion := sample.Version()
-	if err := testDB.InsertVersion(ctx, sampleVersion); err != nil {
+	sampleModule := sample.Module()
+	if err := testDB.InsertModule(ctx, sampleModule); err != nil {
 		t.Fatal(err)
 	}
 

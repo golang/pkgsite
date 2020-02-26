@@ -305,10 +305,10 @@ func TestGetDirectoryFieldSet(t *testing.T) {
 	p := sample.Package()
 	p.Path = "m.c/d/p"
 	p.Imports = nil
-	v := sample.Version()
-	v.ModulePath = "m.c"
-	v.Packages = []*internal.Package{p}
-	if err := testDB.InsertVersion(ctx, v); err != nil {
+	m := sample.Module()
+	m.ModulePath = "m.c"
+	m.Packages = []*internal.Package{p}
+	if err := testDB.InsertModule(ctx, m); err != nil {
 		t.Fatal(err)
 	}
 

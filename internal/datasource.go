@@ -36,9 +36,9 @@ type DataSource interface {
 	// GetPackageLicenses returns all Licenses that apply to pkgPath, within the
 	// module version specified by modulePath and version.
 	GetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) ([]*licenses.License, error)
-	// GetPackagesInVersion returns Packages contained in the module version
+	// GetPackagesInModule returns Packages contained in the module version
 	// specified by modulePath and version.
-	GetPackagesInVersion(ctx context.Context, modulePath, version string) ([]*Package, error)
+	GetPackagesInModule(ctx context.Context, modulePath, version string) ([]*Package, error)
 	// GetPseudoVersionsForModule returns ModuleInfo for all known
 	// pseudo-versions for the module corresponding to modulePath.
 	GetPseudoVersionsForModule(ctx context.Context, modulePath string) ([]*ModuleInfo, error)

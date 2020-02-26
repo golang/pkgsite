@@ -544,11 +544,11 @@ var upsertSearchStatement = fmt.Sprintf(`
 			END)
 	;`, hllRegisterCount)
 
-// UpsertSearchDocument inserts a row for each package in the version, if that
+// UpsertSearchDocument inserts a row for each package in the module, if that
 // package is the latest version.
 //
-// The given version should have already been validated via a call to
-// validateVersion.
+// The given module should have already been validated via a call to
+// validateModule.
 func (db *DB) UpsertSearchDocument(ctx context.Context, path string) (err error) {
 	defer derrors.Wrap(&err, "UpsertSearchDocument(ctx, %q)", path)
 

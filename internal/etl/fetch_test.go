@@ -388,7 +388,7 @@ func TestSkipIncompletePackage(t *testing.T) {
 	})
 	defer teardownProxy()
 
-	res, err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB)
+	res, err := fetchAndInsertModule(ctx, modulePath, version, client, testDB)
 	if err != nil {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
 	}
@@ -451,7 +451,7 @@ func TestTrimLargeCode(t *testing.T) {
 	})
 	defer teardownProxy()
 
-	res, err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB)
+	res, err := fetchAndInsertModule(ctx, modulePath, version, client, testDB)
 	if err != nil {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
 	}
@@ -485,7 +485,7 @@ func TestFetch_V1Path(t *testing.T) {
 		}),
 	})
 	defer tearDown()
-	if _, err := fetchAndInsertVersion(ctx, "my.mod/foo", "v1.0.0", client, testDB); err != nil {
+	if _, err := fetchAndInsertModule(ctx, "my.mod/foo", "v1.0.0", client, testDB); err != nil {
 		t.Fatalf("fetchAndInsertVersion: %v", err)
 	}
 	pkg, err := testDB.GetPackage(ctx, "my.mod/foo", internal.UnknownModulePath, "v1.0.0")
@@ -529,7 +529,7 @@ func TestReFetch(t *testing.T) {
 		proxy.NewTestVersion(t, modulePath, version, foo),
 	})
 	defer teardownProxy()
-	if _, err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB); err != nil {
+	if _, err := fetchAndInsertModule(ctx, modulePath, version, client, testDB); err != nil {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
 	}
 
@@ -543,7 +543,7 @@ func TestReFetch(t *testing.T) {
 	})
 	defer teardownProxy()
 
-	if _, err := fetchAndInsertVersion(ctx, modulePath, version, client, testDB); err != nil {
+	if _, err := fetchAndInsertModule(ctx, modulePath, version, client, testDB); err != nil {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
 	}
 	want := &internal.VersionedPackage{
@@ -863,7 +863,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			client, teardownProxy := proxy.SetupTestProxy(t, nil)
 			defer teardownProxy()
 
-			if _, err := fetchAndInsertVersion(ctx, test.modulePath, test.version, client, testDB); err != nil {
+			if _, err := fetchAndInsertModule(ctx, test.modulePath, test.version, client, testDB); err != nil {
 				t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", test.modulePath, test.version, client, testDB, err)
 			}
 
@@ -919,7 +919,7 @@ func TestFetchAndInsertVersionTimeout(t *testing.T) {
 	name := "my.mod/version"
 	version := "v1.0.0"
 	wantErrString := "deadline exceeded"
-	_, err := fetchAndInsertVersion(context.Background(), name, version, client, testDB)
+	_, err := fetchAndInsertModule(context.Background(), name, version, client, testDB)
 	if err == nil || !strings.Contains(err.Error(), wantErrString) {
 		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v) returned error %v, want error containing %q",
 			name, version, client, testDB, err, wantErrString)

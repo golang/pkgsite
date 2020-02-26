@@ -22,15 +22,15 @@ var (
 	commitTime  = "0 hours ago"
 )
 
-func sampleVersion(modulePath, version string, versionType version.Type, packages ...*internal.Package) *internal.Version {
-	v := sample.Version()
-	v.ModulePath = modulePath
-	v.Version = version
-	v.VersionType = versionType
+func sampleModule(modulePath, version string, versionType version.Type, packages ...*internal.Package) *internal.Module {
+	m := sample.Module()
+	m.ModulePath = modulePath
+	m.Version = version
+	m.VersionType = versionType
 	if len(packages) > 0 {
-		v.Packages = packages
+		m.Packages = packages
 	}
-	return v
+	return m
 }
 
 func versionSummaries(path string, versions [][]string, linkify func(path, version string) string) [][]*VersionSummary {
@@ -78,19 +78,19 @@ func TestFetchModuleVersionDetails(t *testing.T) {
 	for _, tc := range []struct {
 		name        string
 		info        *internal.ModuleInfo
-		versions    []*internal.Version
+		modules     []*internal.Module
 		wantDetails *VersionsDetails
 	}{
 		{
 			name: "want v1 first",
 			info: info1,
-			versions: []*internal.Version{
-				sampleVersion(modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", version.TypePseudo),
-				sampleVersion(modulePath1, "v1.2.3", version.TypeRelease),
-				sampleVersion(modulePath2, "v2.0.0", version.TypeRelease),
-				sampleVersion(modulePath1, "v1.3.0", version.TypeRelease),
-				sampleVersion(modulePath1, "v1.2.1", version.TypeRelease),
-				sampleVersion(modulePath2, "v2.2.1-alpha.1", version.TypePrerelease),
+			modules: []*internal.Module{
+				sampleModule(modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", version.TypePseudo),
+				sampleModule(modulePath1, "v1.2.3", version.TypeRelease),
+				sampleModule(modulePath2, "v2.0.0", version.TypeRelease),
+				sampleModule(modulePath1, "v1.3.0", version.TypeRelease),
+				sampleModule(modulePath1, "v1.2.1", version.TypeRelease),
+				sampleModule(modulePath2, "v2.2.1-alpha.1", version.TypePrerelease),
 			},
 			wantDetails: &VersionsDetails{
 				ThisModule: []*MajorVersionGroup{
@@ -118,13 +118,13 @@ func TestFetchModuleVersionDetails(t *testing.T) {
 		{
 			name: "want v2 first",
 			info: info2,
-			versions: []*internal.Version{
-				sampleVersion(modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", version.TypePseudo),
-				sampleVersion(modulePath1, "v1.2.1", version.TypeRelease),
-				sampleVersion(modulePath1, "v1.2.3", version.TypeRelease),
-				sampleVersion(modulePath1, "v2.1.0+incompatible", version.TypeRelease),
-				sampleVersion(modulePath2, "v2.0.0", version.TypeRelease),
-				sampleVersion(modulePath2, "v2.2.1-alpha.1", version.TypePrerelease),
+			modules: []*internal.Module{
+				sampleModule(modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", version.TypePseudo),
+				sampleModule(modulePath1, "v1.2.1", version.TypeRelease),
+				sampleModule(modulePath1, "v1.2.3", version.TypeRelease),
+				sampleModule(modulePath1, "v2.1.0+incompatible", version.TypeRelease),
+				sampleModule(modulePath2, "v2.0.0", version.TypeRelease),
+				sampleModule(modulePath2, "v2.2.1-alpha.1", version.TypePrerelease),
 			},
 			wantDetails: &VersionsDetails{
 				ThisModule: []*MajorVersionGroup{
@@ -152,9 +152,9 @@ func TestFetchModuleVersionDetails(t *testing.T) {
 		{
 			name: "want only pseudo",
 			info: info2,
-			versions: []*internal.Version{
-				sampleVersion(modulePath1, "v0.0.0-20140414041501-3c2ca4d52544", version.TypePseudo),
-				sampleVersion(modulePath1, "v0.0.0-20140414041502-4c2ca4d52544", version.TypePseudo),
+			modules: []*internal.Module{
+				sampleModule(modulePath1, "v0.0.0-20140414041501-3c2ca4d52544", version.TypePseudo),
+				sampleModule(modulePath1, "v0.0.0-20140414041502-4c2ca4d52544", version.TypePseudo),
 			},
 			wantDetails: &VersionsDetails{
 				OtherModules: []*MajorVersionGroup{
@@ -172,8 +172,8 @@ func TestFetchModuleVersionDetails(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
 
-			for _, v := range tc.versions {
-				if err := testDB.InsertVersion(ctx, v); err != nil {
+			for _, v := range tc.modules {
+				if err := testDB.InsertModule(ctx, v); err != nil {
 					t.Fatal(err)
 				}
 			}
@@ -225,15 +225,15 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 	for _, tc := range []struct {
 		name        string
 		pkg         *internal.VersionedPackage
-		versions    []*internal.Version
+		modules     []*internal.Module
 		wantDetails *VersionsDetails
 	}{
 		{
 			name: "want stdlib versions",
 			pkg:  nethttpPkg,
-			versions: []*internal.Version{
-				sampleVersion("std", "v1.12.5", version.TypeRelease, &nethttpPkg.Package),
-				sampleVersion("std", "v1.11.6", version.TypeRelease, &nethttpPkg.Package),
+			modules: []*internal.Module{
+				sampleModule("std", "v1.12.5", version.TypeRelease, &nethttpPkg.Package),
+				sampleModule("std", "v1.11.6", version.TypeRelease, &nethttpPkg.Package),
 			},
 			wantDetails: &VersionsDetails{
 				ThisModule: []*MajorVersionGroup{
@@ -251,14 +251,14 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 		{
 			name: "want v1 first",
 			pkg:  pkg1,
-			versions: []*internal.Version{
-				sampleVersion(modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", version.TypePseudo, &pkg2.Package),
-				sampleVersion(modulePath1, "v1.2.3", version.TypeRelease, &pkg1.Package),
-				sampleVersion(modulePath2, "v2.0.0", version.TypeRelease, &pkg2.Package),
-				sampleVersion(modulePath1, "v1.3.0", version.TypeRelease, &pkg1.Package),
-				sampleVersion(modulePath1, "v1.2.1", version.TypeRelease, &pkg1.Package),
-				sampleVersion(modulePath2, "v2.2.1-alpha.1", version.TypePrerelease, &pkg2.Package),
-				sampleVersion("test.com", "v1.2.1", version.TypeRelease, &pkg1.Package),
+			modules: []*internal.Module{
+				sampleModule(modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", version.TypePseudo, &pkg2.Package),
+				sampleModule(modulePath1, "v1.2.3", version.TypeRelease, &pkg1.Package),
+				sampleModule(modulePath2, "v2.0.0", version.TypeRelease, &pkg2.Package),
+				sampleModule(modulePath1, "v1.3.0", version.TypeRelease, &pkg1.Package),
+				sampleModule(modulePath1, "v1.2.1", version.TypeRelease, &pkg1.Package),
+				sampleModule(modulePath2, "v2.2.1-alpha.1", version.TypePrerelease, &pkg2.Package),
+				sampleModule("test.com", "v1.2.1", version.TypeRelease, &pkg1.Package),
 			},
 			wantDetails: &VersionsDetails{
 				ThisModule: []*MajorVersionGroup{
@@ -293,13 +293,13 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 		{
 			name: "want v2 first",
 			pkg:  pkg2,
-			versions: []*internal.Version{
-				sampleVersion(modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", version.TypePseudo, &pkg1.Package),
-				sampleVersion(modulePath1, "v1.2.1", version.TypeRelease, &pkg1.Package),
-				sampleVersion(modulePath1, "v1.2.3", version.TypeRelease, &pkg1.Package),
-				sampleVersion(modulePath1, "v2.1.0+incompatible", version.TypeRelease, &pkg1.Package),
-				sampleVersion(modulePath2, "v2.0.0", version.TypeRelease, &pkg2.Package),
-				sampleVersion(modulePath2, "v2.2.1-alpha.1", version.TypePrerelease, &pkg2.Package),
+			modules: []*internal.Module{
+				sampleModule(modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", version.TypePseudo, &pkg1.Package),
+				sampleModule(modulePath1, "v1.2.1", version.TypeRelease, &pkg1.Package),
+				sampleModule(modulePath1, "v1.2.3", version.TypeRelease, &pkg1.Package),
+				sampleModule(modulePath1, "v2.1.0+incompatible", version.TypeRelease, &pkg1.Package),
+				sampleModule(modulePath2, "v2.0.0", version.TypeRelease, &pkg2.Package),
+				sampleModule(modulePath2, "v2.2.1-alpha.1", version.TypePrerelease, &pkg2.Package),
 			},
 			wantDetails: &VersionsDetails{
 				ThisModule: []*MajorVersionGroup{
@@ -327,9 +327,9 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 		{
 			name: "want only pseudo",
 			pkg:  pkg2,
-			versions: []*internal.Version{
-				sampleVersion(modulePath1, "v0.0.0-20140414041501-3c2ca4d52544", version.TypePseudo, &pkg2.Package),
-				sampleVersion(modulePath1, "v0.0.0-20140414041502-4c2ca4d52544", version.TypePseudo, &pkg2.Package),
+			modules: []*internal.Module{
+				sampleModule(modulePath1, "v0.0.0-20140414041501-3c2ca4d52544", version.TypePseudo, &pkg2.Package),
+				sampleModule(modulePath1, "v0.0.0-20140414041502-4c2ca4d52544", version.TypePseudo, &pkg2.Package),
 			},
 			wantDetails: &VersionsDetails{
 				OtherModules: []*MajorVersionGroup{
@@ -347,8 +347,8 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
 
-			for _, v := range tc.versions {
-				if err := testDB.InsertVersion(ctx, v); err != nil {
+			for _, v := range tc.modules {
+				if err := testDB.InsertModule(ctx, v); err != nil {
 					t.Fatal(err)
 				}
 			}

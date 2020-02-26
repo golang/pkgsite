@@ -70,8 +70,8 @@ func SeriesPathForModule(modulePath string) string {
 	return seriesPath
 }
 
-// A Version is a specific, reproducible build of a module.
-type Version struct {
+// A Module is a specific, reproducible build of a module.
+type Module struct {
 	ModuleInfo
 	Packages []*Package
 	// Licenses holds all licenses within this module version, including those

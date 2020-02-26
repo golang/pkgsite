@@ -49,7 +49,7 @@ var (
 var httpClient = http.DefaultClient
 
 type FetchResult struct {
-	Version               *internal.Version
+	Module                *internal.Module
 	GoModPath             string
 	PackageVersionStates  []*internal.PackageVersionState
 	HasIncompletePackages bool
@@ -57,7 +57,7 @@ type FetchResult struct {
 
 // FetchVersion queries the proxy or the Go repo for the requested module
 // version, downloads the module zip, and processes the contents to return an
-// *internal.Version and related information.
+// *internal.Module and related information.
 //
 // Even if err is non-nil, the result may contain useful information, like the go.mod path.
 func FetchVersion(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client) (_ *FetchResult, err error) {
@@ -114,7 +114,7 @@ func FetchVersion(ctx context.Context, modulePath, requestedVersion string, prox
 		return &FetchResult{GoModPath: goModPath}, err
 	}
 	if modulePath == stdlib.ModulePath {
-		fr.Version.HasGoMod = true
+		fr.Module.HasGoMod = true
 	}
 	fr.GoModPath = goModPath
 	for _, state := range fr.PackageVersionStates {
@@ -154,7 +154,7 @@ func processZipFile(ctx context.Context, modulePath string, versionType version.
 	}
 	hasGoMod := zipContainsFilename(zipReader, path.Join(moduleVersionDir(modulePath, resolvedVersion), "go.mod"))
 	return &FetchResult{
-		Version: &internal.Version{
+		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
 				ModulePath:        modulePath,
 				Version:           resolvedVersion,

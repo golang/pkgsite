@@ -428,7 +428,7 @@ func TestFetchVersion(t *testing.T) {
 	for _, test := range []struct {
 		name     string
 		contents map[string]string
-		want     *internal.Version
+		want     *internal.Module
 	}{
 		{
 			name: "basic",
@@ -437,7 +437,7 @@ func TestFetchVersion(t *testing.T) {
 				"foo/foo.go": "// package foo exports a helpful constant.\npackage foo\nimport \"net/http\"\nconst OK = http.StatusOK",
 				"LICENSE.md": testhelper.MITLicense,
 			},
-			want: &internal.Version{
+			want: &internal.Module{
 				ModuleInfo: wantModuleInfo,
 				Packages: []*internal.Package{
 					{
@@ -469,7 +469,7 @@ func TestFetchVersion(t *testing.T) {
 					package js
 					type Value int`,
 			},
-			want: &internal.Version{
+			want: &internal.Module{
 				ModuleInfo: wantModuleInfo,
 				Packages: []*internal.Package{
 					{
@@ -497,7 +497,7 @@ func TestFetchVersion(t *testing.T) {
 				"foo/foo.go": "// package foo exports a helpful constant.\npackage foo\nimport \"net/http\"\nconst OK = http.StatusOK",
 				"LICENSE.md": testhelper.MITLicense,
 			},
-			want: &internal.Version{
+			want: &internal.Module{
 				ModuleInfo: wantModuleInfoGoMod,
 				Packages: []*internal.Package{
 					{
@@ -533,7 +533,7 @@ func TestFetchVersion(t *testing.T) {
 				cmp.AllowUnexported(source.Info{}),
 			}
 			opts = append(opts, sample.LicenseCmpOpts...)
-			if diff := cmp.Diff(test.want, got.Version, opts...); diff != "" {
+			if diff := cmp.Diff(test.want, got.Module, opts...); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 			if got.GoModPath != modulePath {

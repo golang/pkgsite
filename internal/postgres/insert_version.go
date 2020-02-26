@@ -25,24 +25,24 @@ import (
 	"golang.org/x/mod/semver"
 )
 
-// InsertVersion inserts a version into the database using
+// InsertModule inserts a version into the database using
 // db.saveVersion, along with a search document corresponding to each of its
 // packages.
-func (db *DB) InsertVersion(ctx context.Context, v *internal.Version) (err error) {
+func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) {
 	defer func() {
-		if v == nil {
+		if m == nil {
 			derrors.Wrap(&err, "DB.InsertVersion(ctx, nil)")
 		} else {
-			derrors.Wrap(&err, "DB.InsertVersion(ctx, Version(%q, %q))", v.ModulePath, v.Version)
+			derrors.Wrap(&err, "DB.InsertVersion(ctx, Version(%q, %q))", m.ModulePath, m.Version)
 		}
 	}()
 
-	if err := validateVersion(v); err != nil {
+	if err := validateModule(m); err != nil {
 		return fmt.Errorf("validateVersion: %v: %w", err, derrors.InvalidArgument)
 	}
-	removeNonDistributableData(v)
+	removeNonDistributableData(m)
 
-	if err := db.saveVersion(ctx, v); err != nil {
+	if err := db.saveModule(ctx, m); err != nil {
 		return err
 	}
 
@@ -69,15 +69,15 @@ func (db *DB) InsertVersion(ctx context.Context, v *internal.Version) (err error
 	row := db.db.QueryRow(ctx, `
 			SELECT 1 FROM module_version_states
 			WHERE module_path = $1 AND sort_version > $2 and status = 491`,
-		v.ModulePath, version.ForSorting(v.Version))
+		m.ModulePath, version.ForSorting(m.Version))
 	var x int
 	if err := row.Scan(&x); err != sql.ErrNoRows {
-		log.Infof(ctx, "%s@%s: not inserting into search documents", v.ModulePath, v.Version)
+		log.Infof(ctx, "%s@%s: not inserting into search documents", m.ModulePath, m.Version)
 		return err
 	}
 
 	// Insert the module's packages into search_documents.
-	for _, pkg := range v.Packages {
+	for _, pkg := range m.Packages {
 		if err := db.UpsertSearchDocument(ctx, pkg.Path); err != nil && !errors.Is(err, derrors.InvalidArgument) {
 			return err
 		}
@@ -85,16 +85,16 @@ func (db *DB) InsertVersion(ctx context.Context, v *internal.Version) (err error
 	return nil
 }
 
-// saveVersion inserts a Version into the database along with its packages,
-// imports, and licenses.  If any of these rows already exist, the version and
+// saveModule inserts a Module into the database along with its packages,
+// imports, and licenses.  If any of these rows already exist, the module and
 // corresponding will be deleted and reinserted.
-// If the version is malformed then insertion will fail.
+// If the module is malformed then insertion will fail.
 //
-// A derrors.InvalidArgument error will be returned if the given version and
+// A derrors.InvalidArgument error will be returned if the given module and
 // licenses are invalid.
-func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
-	if v.ReadmeContents == internal.StringFieldMissing {
-		return errors.New("saveVersion: version missing ReadmeContents")
+func (db *DB) saveModule(ctx context.Context, m *internal.Module) error {
+	if m.ReadmeContents == internal.StringFieldMissing {
+		return errors.New("saveModule: version missing ReadmeContents")
 	}
 	// Sort to ensure proper lock ordering, avoiding deadlocks. See
 	// b/141164828#comment8. The only deadlocks we've actually seen are on
@@ -102,24 +102,24 @@ func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
 	// the same module, which happens regularly. But if we were ever to process
 	// the same module and version twice, we could see deadlocks in the other
 	// bulk inserts.
-	sort.Slice(v.Packages, func(i, j int) bool {
-		return v.Packages[i].Path < v.Packages[j].Path
+	sort.Slice(m.Packages, func(i, j int) bool {
+		return m.Packages[i].Path < m.Packages[j].Path
 	})
-	sort.Slice(v.Licenses, func(i, j int) bool {
-		return v.Licenses[i].FilePath < v.Licenses[j].FilePath
+	sort.Slice(m.Licenses, func(i, j int) bool {
+		return m.Licenses[i].FilePath < m.Licenses[j].FilePath
 	})
-	for _, p := range v.Packages {
+	for _, p := range m.Packages {
 		sort.Strings(p.Imports)
 	}
 
 	err := db.db.Transact(func(tx *sql.Tx) error {
 		// If the version exists, delete it to force an overwrite. This allows us
 		// to selectively repopulate data after a code change.
-		if err := db.DeleteVersion(ctx, tx, v.ModulePath, v.Version); err != nil {
+		if err := db.DeleteModule(ctx, tx, m.ModulePath, m.Version); err != nil {
 			return fmt.Errorf("error deleting existing versions: %v", err)
 		}
 
-		sourceInfoJSON, err := json.Marshal(v.SourceInfo)
+		sourceInfoJSON, err := json.Marshal(m.SourceInfo)
 		if err != nil {
 			return err
 		}
@@ -137,28 +137,28 @@ func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
 				redistributable,
 				has_go_mod)
 			VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10, $11) ON CONFLICT DO NOTHING`,
-			v.ModulePath,
-			v.Version,
-			v.CommitTime,
-			v.ReadmeFilePath,
-			v.ReadmeContents,
-			version.ForSorting(v.Version),
-			v.VersionType,
-			v.SeriesPath(),
+			m.ModulePath,
+			m.Version,
+			m.CommitTime,
+			m.ReadmeFilePath,
+			m.ReadmeContents,
+			version.ForSorting(m.Version),
+			m.VersionType,
+			m.SeriesPath(),
 			sourceInfoJSON,
-			v.IsRedistributable,
-			v.HasGoMod,
+			m.IsRedistributable,
+			m.HasGoMod,
 		); err != nil {
 			return fmt.Errorf("error inserting version: %v", err)
 		}
 
 		var licenseValues []interface{}
-		for _, l := range v.Licenses {
+		for _, l := range m.Licenses {
 			covJSON, err := json.Marshal(l.Coverage)
 			if err != nil {
 				return fmt.Errorf("marshalling %+v: %v", l.Coverage, err)
 			}
-			licenseValues = append(licenseValues, v.ModulePath, v.Version,
+			licenseValues = append(licenseValues, m.ModulePath, m.Version,
 				l.FilePath, makeValidUnicode(l.Contents), pq.Array(l.Types), covJSON)
 		}
 		if len(licenseValues) > 0 {
@@ -177,7 +177,7 @@ func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
 		}
 
 		// We only insert into imports_unique if this is the latest version of the module.
-		isLatest, err := isLatestVersion(ctx, tx, v.ModulePath, v.Version)
+		isLatest, err := isLatestVersion(ctx, tx, m.ModulePath, m.Version)
 		if err != nil {
 			return err
 		}
@@ -186,14 +186,14 @@ func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
 			// new ones below.
 			if _, err := database.ExecTx(ctx, tx,
 				`DELETE FROM imports_unique WHERE from_module_path = $1`,
-				v.ModulePath); err != nil {
+				m.ModulePath); err != nil {
 				return err
 			}
 		}
 		var pkgValues, importValues, importUniqueValues []interface{}
-		for _, p := range v.Packages {
+		for _, p := range m.Packages {
 			if p.DocumentationHTML == internal.StringFieldMissing {
-				return errors.New("saveVersion: package missing DocumentationHTML")
+				return errors.New("saveModule: package missing DocumentationHTML")
 			}
 			var licenseTypes, licensePaths []string
 			for _, l := range p.Licenses {
@@ -215,8 +215,8 @@ func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
 				p.Path,
 				p.Synopsis,
 				p.Name,
-				v.Version,
-				v.ModulePath,
+				m.Version,
+				m.ModulePath,
 				p.V1Path,
 				p.IsRedistributable,
 				p.DocumentationHTML,
@@ -224,12 +224,12 @@ func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
 				pq.Array(licensePaths),
 				p.GOOS,
 				p.GOARCH,
-				v.CommitTime,
+				m.CommitTime,
 			)
 			for _, i := range p.Imports {
-				importValues = append(importValues, p.Path, v.ModulePath, v.Version, i)
+				importValues = append(importValues, p.Path, m.ModulePath, m.Version, i)
 				if isLatest {
-					importUniqueValues = append(importUniqueValues, p.Path, v.ModulePath, i)
+					importUniqueValues = append(importUniqueValues, p.Path, m.ModulePath, i)
 				}
 			}
 		}
@@ -278,14 +278,14 @@ func (db *DB) saveVersion(ctx context.Context, v *internal.Version) error {
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("DB.saveVersion(ctx, Version(%q, %q)): %w", v.ModulePath, v.Version, err)
+		return fmt.Errorf("DB.saveModule(ctx, Version(%q, %q)): %w", m.ModulePath, m.Version, err)
 	}
 	return nil
 }
 
 // isLatestVersion reports whether version is the latest version of the module.
 func isLatestVersion(ctx context.Context, tx *sql.Tx, modulePath, version string) (_ bool, err error) {
-	defer derrors.Wrap(&err, "latestVersion(ctx, tx, %q)", modulePath)
+	defer derrors.Wrap(&err, "isLatestVersion(ctx, tx, %q)", modulePath)
 
 	row := tx.QueryRowContext(ctx, `
 		SELECT version FROM versions WHERE module_path = $1
@@ -302,70 +302,70 @@ func isLatestVersion(ctx context.Context, tx *sql.Tx, modulePath, version string
 	return version == v, nil
 }
 
-// validateVersion checks that fields needed to insert a version into the
+// validateModule checks that fields needed to insert a module into the
 // database are present. Otherwise, it returns an error listing the reasons the
-// version cannot be inserted.
-func validateVersion(v *internal.Version) error {
-	if v == nil {
-		return fmt.Errorf("nil version")
+// module cannot be inserted.
+func validateModule(m *internal.Module) error {
+	if m == nil {
+		return fmt.Errorf("nil module")
 	}
 
 	var errReasons []string
-	if !utf8.ValidString(v.ReadmeContents) {
-		errReasons = append(errReasons, fmt.Sprintf("readme %q is not valid UTF-8", v.ReadmeFilePath))
+	if !utf8.ValidString(m.ReadmeContents) {
+		errReasons = append(errReasons, fmt.Sprintf("readme %q is not valid UTF-8", m.ReadmeFilePath))
 	}
-	for _, l := range v.Licenses {
+	for _, l := range m.Licenses {
 		if !utf8.ValidString(string(l.Contents)) {
 			errReasons = append(errReasons, fmt.Sprintf("license %q contains invalid UTF-8", l.FilePath))
 		}
 	}
-	if v.Version == "" {
+	if m.Version == "" {
 		errReasons = append(errReasons, "no specified version")
 	}
-	if v.ModulePath == "" {
+	if m.ModulePath == "" {
 		errReasons = append(errReasons, "no module path")
 	}
-	if v.ModulePath != stdlib.ModulePath {
-		if err := module.CheckPath(v.ModulePath); err != nil {
+	if m.ModulePath != stdlib.ModulePath {
+		if err := module.CheckPath(m.ModulePath); err != nil {
 			errReasons = append(errReasons, fmt.Sprintf("invalid module path (%s)", err))
 		}
-		if !semver.IsValid(v.Version) {
+		if !semver.IsValid(m.Version) {
 			errReasons = append(errReasons, "invalid version")
 		}
 	}
-	if len(v.Packages) == 0 {
+	if len(m.Packages) == 0 {
 		errReasons = append(errReasons, "module does not have any packages")
 	}
-	if v.CommitTime.IsZero() {
+	if m.CommitTime.IsZero() {
 		errReasons = append(errReasons, "empty commit time")
 	}
 	if len(errReasons) == 0 {
 		return nil
 	}
-	return fmt.Errorf("cannot insert version %q: %s", v.Version, strings.Join(errReasons, ", "))
+	return fmt.Errorf("cannot insert module %q: %s", m.Version, strings.Join(errReasons, ", "))
 }
 
 // removeNonDistributableData removes any information from the version payload,
 // after checking licenses.
-func removeNonDistributableData(v *internal.Version) {
-	for _, p := range v.Packages {
+func removeNonDistributableData(m *internal.Module) {
+	for _, p := range m.Packages {
 		if !p.IsRedistributable {
 			// Prune derived information that can't be stored.
 			p.Synopsis = ""
 			p.DocumentationHTML = ""
 		}
 	}
-	if !v.IsRedistributable {
-		v.ReadmeFilePath = ""
-		v.ReadmeContents = ""
+	if !m.IsRedistributable {
+		m.ReadmeFilePath = ""
+		m.ReadmeContents = ""
 	}
 }
 
-// DeleteVersion deletes a Version from the database.
+// DeleteModule deletes a Version from the database.
 // If tx is non-nil, it will be used to execute the statement.
 // Otherwise the statement will be run outside of a transaction.
-func (db *DB) DeleteVersion(ctx context.Context, tx *sql.Tx, modulePath, version string) (err error) {
-	defer derrors.Wrap(&err, "DB.DeleteVersion(ctx, tx, %q, %q)", modulePath, version)
+func (db *DB) DeleteModule(ctx context.Context, tx *sql.Tx, modulePath, version string) (err error) {
+	defer derrors.Wrap(&err, "DB.DeleteModule(ctx, tx, %q, %q)", modulePath, version)
 
 	// We only need to delete from the versions table. Thanks to ON DELETE
 	// CASCADE constraints, that will trigger deletions from all other tables.

@@ -35,15 +35,15 @@ const (
 // even though they are still in the index.
 var ProxyRemoved = map[string]bool{}
 
-// fetchAndInsertVersion fetches the given module version from the module proxy
+// fetchAndInsertModule fetches the given module version from the module proxy
 // or (in the case of the standard library) from the Go repo and writes the
 // resulting data to the database.
 //
 // The given parentCtx is used for tracing, but fetches actually execute in a
 // detached context with fixed timeout, so that fetches are allowed to complete
 // even for short-lived requests.
-func fetchAndInsertVersion(parentCtx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, db *postgres.DB) (_ *fetch.FetchResult, err error) {
-	defer derrors.Wrap(&err, "FetchAndInsertVersion(%q, %q)", modulePath, requestedVersion)
+func fetchAndInsertModule(parentCtx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, db *postgres.DB) (_ *fetch.FetchResult, err error) {
+	defer derrors.Wrap(&err, "fetchAndInsertModule(%q, %q)", modulePath, requestedVersion)
 
 	if ProxyRemoved[modulePath+"@"+requestedVersion] {
 		log.Infof(parentCtx, "not fetching %s@%s because it is on the ProxyRemoved list", modulePath, requestedVersion)
@@ -71,11 +71,11 @@ func fetchAndInsertVersion(parentCtx context.Context, modulePath, requestedVersi
 	if err != nil {
 		return res, err
 	}
-	log.Infof(ctx, "Fetched %s@%s", res.Version.ModulePath, res.Version.Version)
-	if err = db.InsertVersion(ctx, res.Version); err != nil {
+	log.Infof(ctx, "Fetched %s@%s", res.Module.ModulePath, res.Module.Version)
+	if err = db.InsertModule(ctx, res.Module); err != nil {
 		return res, err
 	}
-	log.Infof(ctx, "Inserted %s@%s", res.Version.ModulePath, res.Version.Version)
+	log.Infof(ctx, "Inserted %s@%s", res.Module.ModulePath, res.Module.Version)
 	return res, nil
 }
 
@@ -95,7 +95,7 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 		code     = http.StatusOK
 		fetchErr error
 	)
-	res, fetchErr := fetchAndInsertVersion(ctx, modulePath, requestedVersion, client, db)
+	res, fetchErr := fetchAndInsertModule(ctx, modulePath, requestedVersion, client, db)
 	if fetchErr != nil {
 		code = derrors.ToHTTPStatus(fetchErr)
 		logf := log.Errorf
@@ -115,8 +115,8 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 			code = hasIncompletePackagesCode
 		}
 		goModPath = res.GoModPath
-		if res.Version != nil {
-			resolvedVersion = res.Version.Version
+		if res.Module != nil {
+			resolvedVersion = res.Module.Version
 		}
 		packageVersionStates = res.PackageVersionStates
 	}
@@ -154,7 +154,7 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 	
 	if code > 400 {
 		log.Infof(ctx, "%s@%s: code=%d, deleting", modulePath, resolvedVersion, code)
-		if err := db.DeleteVersion(ctx, nil, modulePath, resolvedVersion); err != nil {
+		if err := db.DeleteModule(ctx, nil, modulePath, resolvedVersion); err != nil {
 			log.Error(ctx, err)
 			return http.StatusInternalServerError, err
 		}

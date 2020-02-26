@@ -24,11 +24,11 @@ func TestFetchOverviewDetails(t *testing.T) {
 
 	tc := struct {
 		name        string
-		version     *internal.Version
+		module      *internal.Module
 		wantDetails *OverviewDetails
 	}{
-		name:    "want expected overview details",
-		version: sample.Version(),
+		name:   "want expected overview details",
+		module: sample.Module(),
 		wantDetails: &OverviewDetails{
 			ModulePath:      sample.ModulePath,
 			RepositoryURL:   sample.RepositoryURL,
@@ -41,13 +41,13 @@ func TestFetchOverviewDetails(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 
-	if err := testDB.InsertVersion(ctx, tc.version); err != nil {
+	if err := testDB.InsertModule(ctx, tc.module); err != nil {
 		t.Fatal(err)
 	}
 
-	got := constructOverviewDetails(&tc.version.ModuleInfo, true, true)
+	got := constructOverviewDetails(&tc.module.ModuleInfo, true, true)
 	if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
-		t.Errorf("constructOverviewDetails(%q, %q) mismatch (-want +got):\n%s", tc.version.Packages[0].Path, tc.version.Version, diff)
+		t.Errorf("constructOverviewDetails(%q, %q) mismatch (-want +got):\n%s", tc.module.Packages[0].Path, tc.module.Version, diff)
 	}
 }
 

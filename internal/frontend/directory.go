@@ -119,7 +119,7 @@ func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, dirPath 
 	}
 
 	if dirPath == stdlib.ModulePath {
-		pkgs, err := ds.GetPackagesInVersion(ctx, stdlib.ModulePath, mi.Version)
+		pkgs, err := ds.GetPackagesInModule(ctx, stdlib.ModulePath, mi.Version)
 		if err != nil {
 			return nil, err
 		}

@@ -48,24 +48,24 @@ func TestFetchImportsDetails(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 			defer cancel()
 
-			version := sample.Version()
+			module := sample.Module()
 			pkg := sample.Package()
 			pkg.Imports = tc.imports
-			version.Packages = []*internal.Package{pkg}
+			module.Packages = []*internal.Package{pkg}
 
-			if err := testDB.InsertVersion(ctx, version); err != nil {
+			if err := testDB.InsertModule(ctx, module); err != nil {
 				t.Fatal(err)
 			}
 
-			got, err := fetchImportsDetails(ctx, testDB, firstVersionedPackage(version))
+			got, err := fetchImportsDetails(ctx, testDB, firstVersionedPackage(module))
 			if err != nil {
 				t.Fatalf("fetchImportsDetails(ctx, db, %q, %q) = %v err = %v, want %v",
-					version.Packages[0].Path, version.Version, got, err, tc.wantDetails)
+					module.Packages[0].Path, module.Version, got, err, tc.wantDetails)
 			}
 
-			tc.wantDetails.ModulePath = version.ModuleInfo.ModulePath
+			tc.wantDetails.ModulePath = module.ModuleInfo.ModulePath
 			if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
-				t.Errorf("fetchImportsDetails(ctx, %q, %q) mismatch (-want +got):\n%s", version.Packages[0].Path, version.Version, diff)
+				t.Errorf("fetchImportsDetails(ctx, %q, %q) mismatch (-want +got):\n%s", module.Packages[0].Path, module.Version, diff)
 			}
 		})
 	}
@@ -74,10 +74,10 @@ func TestFetchImportsDetails(t *testing.T) {
 // firstVersionedPackage is a helper function that returns an
 // *internal.VersionedPackage corresponding to the first package in the
 // version.
-func firstVersionedPackage(v *internal.Version) *internal.VersionedPackage {
+func firstVersionedPackage(m *internal.Module) *internal.VersionedPackage {
 	return &internal.VersionedPackage{
-		Package:    *v.Packages[0],
-		ModuleInfo: v.ModuleInfo,
+		Package:    *m.Packages[0],
+		ModuleInfo: m.ModuleInfo,
 	}
 }
 
@@ -87,11 +87,11 @@ func TestFetchImportedByDetails(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	newVersion := func(modPath string, pkgs ...*internal.Package) *internal.Version {
-		v := sample.Version()
-		v.ModulePath = modPath
-		v.Packages = pkgs
-		return v
+	newModule := func(modPath string, pkgs ...*internal.Package) *internal.Module {
+		m := sample.Module()
+		m.ModulePath = modPath
+		m.Packages = pkgs
+		return m
 	}
 
 	pkg1 := sample.Package()
@@ -105,14 +105,14 @@ func TestFetchImportedByDetails(t *testing.T) {
 	pkg3.Path = "path3.to/foo/bar3"
 	pkg3.Imports = []string{pkg2.Path, pkg1.Path}
 
-	testVersions := []*internal.Version{
-		newVersion("path.to/foo", pkg1),
-		newVersion("path2.to/foo", pkg2),
-		newVersion("path3.to/foo", pkg3),
+	testModules := []*internal.Module{
+		newModule("path.to/foo", pkg1),
+		newModule("path2.to/foo", pkg2),
+		newModule("path3.to/foo", pkg3),
 	}
 
-	for _, v := range testVersions {
-		if err := testDB.InsertVersion(ctx, v); err != nil {
+	for _, m := range testModules {
+		if err := testDB.InsertModule(ctx, m); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -146,7 +146,7 @@ func TestFetchImportedByDetails(t *testing.T) {
 		},
 	} {
 		t.Run(tc.pkg.Path, func(t *testing.T) {
-			otherVersion := newVersion("path.to/foo", tc.pkg)
+			otherVersion := newModule("path.to/foo", tc.pkg)
 			otherVersion.Version = "v1.0.5"
 			vp := firstVersionedPackage(otherVersion)
 			got, err := fetchImportedByDetails(ctx, testDB, vp)

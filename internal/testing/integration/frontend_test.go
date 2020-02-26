@@ -179,7 +179,7 @@ func processVersions(ctx context.Context, t *testing.T, testVersions []*proxy.Te
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err := testDB.InsertVersion(ctx, res.Version); err != nil {
+		if err := testDB.InsertModule(ctx, res.Module); err != nil {
 			t.Fatal(err)
 		}
 	}
