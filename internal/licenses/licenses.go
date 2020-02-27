@@ -31,6 +31,9 @@ import (
 	"golang.org/x/mod/module"
 )
 
+//go:generate rm -f exceptions.gen.go
+//go:generate go run gen_exceptions.go
+
 const (
 	// classifyThreshold is the minimum confidence percentage/threshold to
 	// classify a license
@@ -186,7 +189,7 @@ func AcceptedOSILicenses() []string {
 	return lics
 }
 
-var checker *licensecheck.Checker = licensecheck.New(append(extraLicenses, licensecheck.BuiltinLicenses()...))
+var checker *licensecheck.Checker = licensecheck.New(licensecheck.BuiltinLicenses())
 
 // A Detector detects licenses in a module and its packages.
 type Detector struct {
@@ -406,6 +409,10 @@ func (d *Detector) detectFiles(files []*zip.File) []*License {
 func DetectFile(contents []byte, filename string, logf func(string, ...interface{})) ([]string, licensecheck.Coverage) {
 	if logf == nil {
 		logf = func(string, ...interface{}) {}
+	}
+	if types := exceptionFileTypes(contents); types != nil {
+		logf("%s is an exception", filename)
+		return types, licensecheck.Coverage{}
 	}
 	cov, ok := checker.Cover(contents, licensecheck.Options{})
 	if !ok {

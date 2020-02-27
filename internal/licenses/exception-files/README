@@ -1,0 +1,12 @@
+The files in this directory (except this one) are processed by gen_exceptions.go
+to produce a map of exceptions to license detection.
+
+Each file begins with a header consisting of one or more lines of the form
+	key: value
+and ending in a blank line.
+
+The only required keys are:
+	types: a space-separated list of the file types to report for the file
+	source: a URL or other indication of where the license came from 
+
+IF YOU ADD A FILE, RUN go generate. 
