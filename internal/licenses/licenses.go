@@ -135,12 +135,21 @@ var (
 		"BSD-0-Clause":         true,
 		"BSD-2-Clause-FreeBSD": true,
 		"CC0-1.0":              true,
+		"CC-BY-3.0":            true,
 		"CC-BY-4.0":            true,
 		"CC-BY-SA-3.0":         true,
 		"CC-BY-SA-4.0":         true,
 		"Unlicense":            true,
 		"NCSA":                 true,
 		"MIT-0":                true,
+		"EPL-1.0":              true,
+		"EPL-2.0":              true,
+	}
+
+	// These aren't technically licenses, but they are recognized by
+	// licensecheck and safe to ignore.
+	ignorableLicenseTypes = map[string]bool{
+		"CC-Notice": true,
 	}
 )
 
@@ -426,8 +435,8 @@ func Redistributable(licenseTypes []string) bool {
 	if len(licenseTypes) == 0 {
 		return false
 	}
-	for _, l := range licenseTypes {
-		if !redistributableLicenseTypes[l] {
+	for _, t := range licenseTypes {
+		if !redistributableLicenseTypes[t] && !ignorableLicenseTypes[t] {
 			return false
 		}
 	}

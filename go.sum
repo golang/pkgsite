@@ -166,6 +166,8 @@ github.com/google/go-replayers/httpreplay v0.1.0 h1:AX7FUb4BjrrzNvblr/OlgwrmFiep
 github.com/google/go-replayers/httpreplay v0.1.0/go.mod h1:YKZViNhiGgqdBlUbI2MwGpq4pXxNmhJLPHQ7cv2b5no=
 github.com/google/licensecheck v0.0.0-20200214050835-9580b5fd1d6c h1:OE/vS0PBJPzVIR+XoBJcVAyFHDj2ciXzTpHepJrWmh0=
 github.com/google/licensecheck v0.0.0-20200214050835-9580b5fd1d6c/go.mod h1:ORkR35t/JjW+emNKtfJDII0zlciG9JgbT7SmsohlHmY=
+github.com/google/licensecheck v0.0.0-20200226161255-fb7b516dfddc h1:AJrbV2raLzRoxa35AlQZgdbRG8COtvzfE0kM4+GyGGE=
+github.com/google/licensecheck v0.0.0-20200226161255-fb7b516dfddc/go.mod h1:ORkR35t/JjW+emNKtfJDII0zlciG9JgbT7SmsohlHmY=
 github.com/google/martian v2.1.0+incompatible h1:/CP5g8u/VJHijgedC/Legn3BAbAaWPgecwXBIDzw5no=
 github.com/google/martian v2.1.0+incompatible/go.mod h1:9I4somxYTbIHy5NJKHRl3wXiIaQGbYVAs8BPL6v8lEs=
 github.com/google/pprof v0.0.0-20181206194817-3ea8567a2e57/go.mod h1:zfwlbNMJ+OItoe0UupaVj+oy1omPYYDuagoSzA8v9mc=
