@@ -1,25 +1,43 @@
-# Contributing to Go Modules Discovery
+# Contributing to pkg.go.dev
 
-Go Modules Discovery is an open source project.
+Pkg.go.dev is part of the Go open source project.
 
-We'd love to accept your patches and contributions to this project. There are
-just a few small guidelines you need to follow.
+We would love to receive your contributions!
 
-## Contributing code
+Since we are actively working on the site, we ask that you
+[file an issue](https://golang.org/s/discovery-feedback) and claim it before
+starting to work on something. Otherwise, it is likely that we might already be
+working on a fix for your issue.
 
-Please read the [Contribution Guidelines](https://golang.org/doc/contribute.html) before sending patches.
+Please read the [Contribution Guidelines](https://golang.org/doc/contribute.html)
+before sending patches.
 
-Unless otherwise noted, the Go source files are distributed under
-the BSD-style license found in the LICENSE file.
+## Finding issues
 
-## Code reviews
+All issues are labeled with the [`go.dev` label](https://github.com/golang/go/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Ago.dev). Issues that are suitable for contributors are additionally tagged with the [`help-wanted` label](https://github.com/golang/go/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Ago.dev+label%3A%22help+wanted%22+).
 
-All submissions, including submissions by project members, require review. We
-use Gerrit for this purpose. Consult the
-[Gerrit Documentation](https://www.gerritcodereview.com/index.html) for more
-information on using pull requests.
+Before you begin working on an issue, please leave a comment that you are claiming it.
 
-## Community Guidelines
 
-This project follows
-[Google's Open Source Community Guidelines](https://opensource.google.com/conduct/).
+## Getting started
+
+1. Get the source code:
+
+` $ git clone https://go.googlesource.com/discovery`
+
+- Our canonical Git repository is located at [https://go.googlesource.com/discovery](https://go.googlesource.com/discovery). [github.com/golang/discovery](https://github.com/golang/discovery) is a mirror of that repository.
+
+2. Review the [design document](design.md).
+
+3. Download and install Cloud SDK at https://cloud.google.com/sdk/docs/
+
+4. Depending on the feature you are working on, review the contributing guides for:
+
+- [Frontend development](frontend.md)
+- [ETL development](etl.md)
+- [Database setup](database.md)
+
+## Questions
+
+You can find us in the #tools channel on the Gophers Slack, or you can send us
+an email at go-discovery-feedback@google.com.

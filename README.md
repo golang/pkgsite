@@ -1,32 +1,49 @@
-# Go Module Discovery Site
+# Pkg.go.dev
 
-## Getting Started
+[Pkg.go.dev](https://pkg.go.dev) is a website for discovering and evaluting Go packages and modules.
 
-### Requirements
+![Gopher in pilot cap.](content/static/img/pilot-bust.svg)
 
-- [PostgreSQL](https://www.postgresql.org/download/)
+Pkg.go.dev [launched](https://groups.google.com/g/golang-announce/c/OW8bHSryLIc)
+in November 2019, and is currently under active development by the Go team.
 
-### Migrations
+## Roadmap
 
-Migrations are managed with the [golang-migrate/migrate](github.com/golang-migrate/migrate) [CLI tool](https://github.com/golang-migrate/migrate/tree/master/cli).
+Our current goal is to work towards redirecting godoc.org traffic to
+pkg.go.dev, and ensure that we address users' needs in the process. Read more
+about our [plans for pkg.go.dev in 2020](https://blog.golang.org/pkg.go.dev-2020).
 
-To run all the migrations:
+We encourage everyone to begin using pkg.go.dev today for all of their needs
+and [file feedback](https://golang.org/s/discovery-feedback)! You can redirect
+all of your requests from godoc.org to pkg.go.dev, by visiting
+[godoc.org/?redirect=on](https://godoc.org/?redirect=on).
+Details at [Go issue #37099](http://golang.org/issue/37099).
 
-```
-migrate -source file:migrations -database "postgres://localhost:5432/discovery-database?sslmode=disable" up
-```
+If you are having issues with pkg.go.dev, please first check the known issues
+before following the troubleshooting guide. If that does not give you the
+information you need, reach out to us.
 
-To create a new migration:
+## Issues
 
-```
-migrate create -ext sql -dir migrations -seq <title>
-```
+You can chat with us on the #tools slack channel on
+the [Gophers slack](https://invite.slack.golangbridge.org).
 
-This creates two empty files in `/migrations`:
+If you think you have an issue that needs fixing, or a feature suggestion, then
+please make sure you follow the steps to file an issue with the right
+information to allow us to address it.
 
-```
-{version}_{title}.up.sql
-{version}_{title}.down.sql
-```
+## Contributing
 
-The two migration files are used to migrate "up" to the specified version from the previous version, and to migrate "down" to the previous version. See [golang-migrate/migrate/MIGRATIONS.md](https://github.com/golang-migrate/migrate/blob/master/MIGRATIONS.md) for details.
+We would love your help!
+
+Our canonical Git repository is located
+cat [go.googlesource.com/discovery](https://go.googlesource.com/discovery).
+There is a mirror of the repository at
+[github.com/golang/discovery](https://github.com/golang/discovery).
+
+To contribute, please read our [contributing guide](CONTRIBUTING.md).
+
+## License
+
+Unless otherwise noted, the Go source files are distributed under the BSD-style
+license found in the [LICENSE](LICENSE) file.
