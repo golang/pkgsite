@@ -135,9 +135,14 @@ func newQueue(ctx context.Context, cfg *config.Config, proxyClient *proxy.Client
 }
 
 func getRedis(ctx context.Context, cfg *config.Config) *redis.Client {
+	var dialTimeout time.Duration
+	if dl, ok := ctx.Deadline(); ok {
+		dialTimeout = dl.Sub(time.Now())
+	}
 	if cfg.RedisHAHost != "" {
 		return redis.NewClient(&redis.Options{
-			Addr: cfg.RedisHAHost + ":" + cfg.RedisHAPort,
+			Addr:        cfg.RedisHAHost + ":" + cfg.RedisHAPort,
+			DialTimeout: dialTimeout,
 			// We update completions with one big pipeline, so we need long write
 			// timeouts. ReadTimeout is increased only to be consistent with
 			// WriteTimeout.

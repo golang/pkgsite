@@ -65,7 +65,7 @@ func PackageHeader(p *Page, versionedURL bool) htmlcheck.Checker {
 		in("h1.DetailsHeader-title", exactText(p.Title)),
 		in("div.DetailsHeader-version", exactText(fv)),
 		versionBadge(p),
-		licenseInfo(p, packageURLPath(p, versionedURL), versionedURL),
+		licenseInfo(p, packageURLPath(p, versionedURL)),
 		packageTabLinks(p, versionedURL),
 		moduleInHeader(p, versionedURL))
 }
@@ -80,7 +80,7 @@ func ModuleHeader(p *Page, versionedURL bool) htmlcheck.Checker {
 		in("h1.DetailsHeader-title", exactText(p.Title)),
 		in("div.DetailsHeader-version", exactText(fv)),
 		versionBadge(p),
-		licenseInfo(p, moduleURLPath(p, versionedURL), versionedURL),
+		licenseInfo(p, moduleURLPath(p, versionedURL)),
 		moduleTabLinks(p, versionedURL))
 }
 
@@ -96,7 +96,7 @@ func DirectoryHeader(p *Page, versionedURL bool) htmlcheck.Checker {
 		in("div.DetailsHeader-version", exactText(fv)),
 		// directory pages don't show a header badge
 		in("div.DetailsHeader-badge", in(".DetailsHeader-badge--unknown")),
-		licenseInfo(p, packageURLPath(p, versionedURL), versionedURL),
+		licenseInfo(p, packageURLPath(p, versionedURL)),
 		// directory module links are always versioned (see b/144217401)
 		moduleInHeader(p, true))
 }
@@ -164,7 +164,7 @@ func versionBadge(p *Page) htmlcheck.Checker {
 }
 
 // licenseInfo checks the license part of the info label in the header.
-func licenseInfo(p *Page, urlPath string, versionedURL bool) htmlcheck.Checker {
+func licenseInfo(p *Page, urlPath string) htmlcheck.Checker {
 	if p.LicenseType == "" {
 		return in("[data-test-id=DetailsHeader-infoLabelLicense]", text("None detected"))
 	}

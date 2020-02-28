@@ -144,7 +144,7 @@ func init() {
 func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds internal.DataSource, pkg *internal.VersionedPackage) (interface{}, error) {
 	switch tab {
 	case "doc":
-		return fetchDocumentationDetails(ctx, ds, pkg)
+		return fetchDocumentationDetails(pkg), nil
 	case "versions":
 		return fetchPackageVersionsDetails(ctx, ds, pkg)
 	case "subdirectories":

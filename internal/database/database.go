@@ -159,11 +159,7 @@ func BulkInsert(ctx context.Context, tx *sql.Tx, table string, columns []string,
 			rightBound = len(values)
 		}
 		valueSlice := values[leftBound:rightBound]
-		query, err := buildInsertQuery(table, columns, valueSlice, conflictAction)
-		if err != nil {
-			return fmt.Errorf("buildInsertQuery(%q, %v, values[%d:%d], %q): %v", table, columns, leftBound, rightBound, conflictAction, err)
-		}
-
+		query := buildInsertQuery(table, columns, valueSlice, conflictAction)
 		if _, err := ExecTx(ctx, tx, query, valueSlice...); err != nil {
 			return fmt.Errorf("tx.ExecContext(ctx, [bulk insert query], values[%d:%d]): %v", leftBound, rightBound, err)
 		}
@@ -178,7 +174,7 @@ func BulkInsert(ctx context.Context, tx *sql.Tx, table string, columns []string,
 //
 // When calling buildInsertQuery, it must be true that
 //	len(values) % len(columns) == 0
-func buildInsertQuery(table string, columns []string, values []interface{}, conflictAction string) (string, error) {
+func buildInsertQuery(table string, columns []string, values []interface{}, conflictAction string) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "INSERT INTO %s", table)
 	fmt.Fprintf(&b, "(%s) VALUES", strings.Join(columns, ", "))
@@ -207,7 +203,7 @@ func buildInsertQuery(table string, columns []string, values []interface{}, conf
 		b.WriteString(" " + conflictAction)
 	}
 
-	return b.String(), nil
+	return b.String()
 }
 
 // QueryLoggingDisabled stops logging of queries when true.

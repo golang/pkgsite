@@ -31,9 +31,8 @@ type DocumentationDetails struct {
 // documentation in order to make this trivial change.
 var doDocumentationHack = os.Getenv("GO_DISCOVERY_DOCUMENTATION_HACK") == "TRUE"
 
-// fetchDocumentationDetails fetches data for the package specified by path and version
-// from the database and returns a DocumentationDetails.
-func fetchDocumentationDetails(ctx context.Context, ds internal.DataSource, pkg *internal.VersionedPackage) (*DocumentationDetails, error) {
+// fetchDocumentationDetails returns a DocumentationDetails constructed from pkg.
+func fetchDocumentationDetails(pkg *internal.VersionedPackage) *DocumentationDetails {
 	docHTML := pkg.DocumentationHTML
 	if doDocumentationHack {
 		docHTML = hackUpDocumentation(docHTML)
@@ -42,7 +41,7 @@ func fetchDocumentationDetails(ctx context.Context, ds internal.DataSource, pkg 
 		GOOS:          pkg.GOOS,
 		GOARCH:        pkg.GOARCH,
 		Documentation: template.HTML(docHTML),
-	}, nil
+	}
 }
 
 // packageLinkRegexp matches cross-package identifier links that have been

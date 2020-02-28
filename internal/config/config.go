@@ -318,7 +318,7 @@ func readOverrideFile(ctx context.Context, bucketName, objName string) (_ []byte
 		return nil, err
 	}
 	defer client.Close()
-	r, err := client.Bucket(overrideBucket).Object(objName).NewReader(ctx)
+	r, err := client.Bucket(bucketName).Object(objName).NewReader(ctx)
 	if err != nil {
 		return nil, err
 	}
