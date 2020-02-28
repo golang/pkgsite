@@ -142,7 +142,7 @@ func directoryColumns(fields internal.FieldSet) string {
 		doc = "p.documentation,"
 	}
 	if fields&internal.WithReadmeContents != 0 {
-		readme = "v.readme_contents,"
+		readme = "m.readme_contents,"
 	}
 	return `
 			p.path,
@@ -157,13 +157,13 @@ func directoryColumns(fields internal.FieldSet) string {
 			p.goarch,
 			p.version,
 			p.module_path,
-			v.readme_file_path,
+			m.readme_file_path,
 			` + readme + `
-			v.commit_time,
-			v.version_type,
-			v.source_info,
-			v.redistributable,
-			v.has_go_mod`
+			m.commit_time,
+			m.version_type,
+			m.source_info,
+			m.redistributable,
+			m.has_go_mod`
 }
 
 const orderByLatest = `
@@ -204,7 +204,7 @@ func directoryQueryWithoutModulePath(dirPath, version string, fields internal.Fi
 			INNER JOIN (
 				SELECT *
 				FROM
-					versions
+					modules
 				WHERE
 					(module_path, version) IN (
 						SELECT module_path, version
@@ -214,10 +214,10 @@ func directoryQueryWithoutModulePath(dirPath, version string, fields internal.Fi
 					)
 				%s
 				LIMIT 1
-			) v
+			) m
 			ON
-				p.module_path = v.module_path
-				AND p.version = v.version
+				p.module_path = m.module_path
+				AND p.version = m.version
 			WHERE tsv_parent_directories @@ $1::tsquery;`,
 			directoryColumns(fields), table, orderByLatest), []interface{}{dirPath}
 	}
@@ -232,12 +232,12 @@ func directoryQueryWithoutModulePath(dirPath, version string, fields internal.Fi
 			WHERE tsv_parent_directories @@ $1::tsquery
 		),
 		module_version AS (
-			SELECT v.*
-			FROM versions v
+			SELECT m.*
+			FROM modules m
 			INNER JOIN potential_packages p
 			ON
-				p.module_path = v.module_path
-				AND p.version = v.version
+				p.module_path = m.module_path
+				AND p.version = m.version
 			WHERE
 				p.version = $2
 			ORDER BY
@@ -246,10 +246,10 @@ func directoryQueryWithoutModulePath(dirPath, version string, fields internal.Fi
 		)
 		SELECT %s
 		FROM potential_packages p
-		INNER JOIN module_version v
+		INNER JOIN module_version m
 		ON
-			p.module_path = v.module_path
-			AND p.version = v.version;`, directoryColumns(fields)), []interface{}{dirPath, version}
+			p.module_path = m.module_path
+			AND p.version = m.version;`, directoryColumns(fields)), []interface{}{dirPath, version}
 }
 
 // directoryQueryWithoutModulePath returns the query and args needed to fetch a
@@ -263,7 +263,7 @@ func directoryQueryWithModulePath(dirPath, modulePath, version string, fields in
 			FROM packages p
 			INNER JOIN (
 				SELECT *
-				FROM versions
+				FROM modules
 				WHERE
 					module_path = $2
 					AND version IN (
@@ -275,10 +275,10 @@ func directoryQueryWithModulePath(dirPath, modulePath, version string, fields in
 					)
 				%s
 				LIMIT 1
-			) v
+			) m
 			ON
-				p.module_path = v.module_path
-				AND p.version = v.version
+				p.module_path = m.module_path
+				AND p.version = m.version
 			WHERE
 				p.module_path = $2
 				AND tsv_parent_directories @@ $1::tsquery;`,
@@ -292,10 +292,10 @@ func directoryQueryWithModulePath(dirPath, modulePath, version string, fields in
 			FROM
 				packages p
 			INNER JOIN
-				versions v
+				modules m
 			ON
-				p.module_path = v.module_path
-				AND p.version = v.version
+				p.module_path = m.module_path
+				AND p.version = m.version
 			WHERE
 				tsv_parent_directories @@ $1::tsquery
 				AND p.module_path = $2

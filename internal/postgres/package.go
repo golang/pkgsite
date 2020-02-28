@@ -60,22 +60,22 @@ func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version strin
 			p.documentation,
 			p.goos,
 			p.goarch,
-			v.version,
-			v.commit_time,
-			v.readme_file_path,
-			v.readme_contents,
-			v.module_path,
-			v.version_type,
-		    v.source_info,
-			v.redistributable,
-			v.has_go_mod
+			m.version,
+			m.commit_time,
+			m.readme_file_path,
+			m.readme_contents,
+			m.module_path,
+			m.version_type,
+		    m.source_info,
+			m.redistributable,
+			m.has_go_mod
 		FROM
-			versions v
+			modules m
 		INNER JOIN
 			packages p
 		ON
-			p.module_path = v.module_path
-			AND v.version = p.version`
+			p.module_path = m.module_path
+			AND m.version = p.version`
 
 	if modulePath == internal.UnknownModulePath || modulePath == stdlib.ModulePath {
 		if version == internal.LatestVersion {
@@ -88,9 +88,9 @@ func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version strin
 				-- Order the versions by release then prerelease.
 				-- The default version should be the first release
 				-- version available, if one exists.
-				v.version_type = 'release' DESC,
-				v.sort_version DESC,
-				v.module_path DESC
+				m.version_type = 'release' DESC,
+				m.sort_version DESC,
+				m.module_path DESC
 			LIMIT 1;`
 		} else {
 			// pkgPath and version are specified, so get that package version
@@ -116,8 +116,8 @@ func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version strin
 				-- Order the versions by release then prerelease.
 				-- The default version should be the first release
 				-- version available, if one exists.
-				v.version_type = 'release' DESC,
-				v.sort_version DESC
+				m.version_type = 'release' DESC,
+				m.sort_version DESC
 			LIMIT 1;`
 		args = append(args, modulePath)
 	} else {

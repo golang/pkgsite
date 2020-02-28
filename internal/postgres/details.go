@@ -94,14 +94,14 @@ func getPackageVersions(ctx context.Context, db *DB, pkgPath string, versionType
 		SELECT
 			p.module_path,
 			p.version,
-			v.commit_time
+			m.commit_time
 		FROM
 			packages p
 		INNER JOIN
-			versions v
+			modules m
 		ON
-			p.module_path = v.module_path
-			AND p.version = v.version
+			p.module_path = m.module_path
+			AND p.version = m.version
 		WHERE
 			p.v1_path = (
 				SELECT v1_path
@@ -111,7 +111,7 @@ func getPackageVersions(ctx context.Context, db *DB, pkgPath string, versionType
 			)
 			AND version_type in (%s)
 		ORDER BY
-			v.sort_version DESC %s`
+			m.sort_version DESC %s`
 	queryEnd := `;`
 	if len(versionTypes) == 0 {
 		return nil, fmt.Errorf("error: must specify at least one version type")
@@ -175,7 +175,7 @@ func getModuleVersions(ctx context.Context, db *DB, modulePath string, versionTy
 	SELECT
 		module_path, version, commit_time
     FROM
-		versions
+		modules
 	WHERE
 		series_path = $1
 	    AND version_type in (%s)
@@ -438,7 +438,7 @@ func (db *DB) GetModuleInfo(ctx context.Context, modulePath string, version stri
 			redistributable,
 			has_go_mod
 		FROM
-			versions`
+			modules`
 
 	args := []interface{}{modulePath}
 	if version == internal.LatestVersion {

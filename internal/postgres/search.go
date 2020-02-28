@@ -493,8 +493,8 @@ var upsertSearchStatement = fmt.Sprintf(`
 		p.license_types,
 		p.redistributable,
 		CURRENT_TIMESTAMP,
-		v.commit_time,
-		v.has_go_mod,
+		m.commit_time,
+		m.has_go_mod,
 		(
 			SETWEIGHT(TO_TSVECTOR($2), 'A') ||
 			-- Try to limit to the maximum length of a tsvector.
@@ -502,27 +502,27 @@ var upsertSearchStatement = fmt.Sprintf(`
 			-- doesn't seem to be a way to determine the number of bytes in a tsvector.
 			-- Since the max is 1048575, make sure part is half that size.
 			SETWEIGHT(TO_TSVECTOR(left(p.synopsis, 1048575/2)), 'B') ||
-			SETWEIGHT(TO_TSVECTOR(left(v.readme_contents, 1048575/2)), 'C')
+			SETWEIGHT(TO_TSVECTOR(left(m.readme_contents, 1048575/2)), 'C')
 		),
 		hll_hash(p.path) & (%[1]d - 1),
 		hll_zeros(hll_hash(p.path))
 	FROM
 		packages p
 	INNER JOIN
-		versions v
+		modules m
 
 	ON
-		p.module_path = v.module_path
-		AND p.version = v.version
+		p.module_path = m.module_path
+		AND p.version = m.version
 	WHERE
 		p.path = $1
 	ORDER BY
 		-- Order the versions by release then prerelease.
 		-- The default version should be the first release
 		-- version available, if one exists.
-		v.version_type = 'release' DESC,
-		v.sort_version DESC,
-		v.module_path DESC
+		m.version_type = 'release' DESC,
+		m.sort_version DESC,
+		m.module_path DESC
 	LIMIT 1
 	ON CONFLICT (package_path)
 	DO UPDATE SET
