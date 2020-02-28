@@ -41,6 +41,7 @@ type GCP struct {
 // cloud tasks console.
 func NewGCP(cfg *config.Config, client *cloudtasks.Client, queueID string) *GCP {
 	return &GCP{
+		cfg:     cfg,
 		client:  client,
 		queueID: queueID,
 	}
