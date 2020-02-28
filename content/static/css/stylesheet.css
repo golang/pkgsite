@@ -83,7 +83,7 @@ p {
 }
 code {
   font-size: 1rem;
-  font-family: 'Go Mono', 'Source Code Pro', monospace;
+  font-family: 'Source Code Pro', monospace;
 }
 
 .Site {
@@ -718,7 +718,7 @@ code {
   background-color: var(--gray-10);
   border: 0.0625rem solid var(--gray-8);
   border-radius: 3px;
-  font: 0.875rem/1.375rem 'Go Mono', 'Source Code Pro', monospace;
+  font: 0.875rem/1.375rem 'Source Code Pro', monospace;
   margin: 0;
   overflow-x: auto;
   padding: 1.5rem;
@@ -777,7 +777,7 @@ code {
   background-color: var(--gray-10);
   border-radius: 0.3em;
   border: 0.0625rem solid #ccc;
-  font: 0.875rem/1.375rem 'Go Mono', 'Source Code Pro', monospace;
+  font: 0.875rem/1.375rem 'Source Code Pro', monospace;
   margin: 0;
   overflow-x: auto;
   padding: 0.625rem;
