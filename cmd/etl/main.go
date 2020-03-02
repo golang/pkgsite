@@ -137,7 +137,7 @@ func newQueue(ctx context.Context, cfg *config.Config, proxyClient *proxy.Client
 func getRedis(ctx context.Context, cfg *config.Config) *redis.Client {
 	var dialTimeout time.Duration
 	if dl, ok := ctx.Deadline(); ok {
-		dialTimeout = dl.Sub(time.Now())
+		dialTimeout = time.Until(dl)
 	}
 	if cfg.RedisHAHost != "" {
 		return redis.NewClient(&redis.Options{
