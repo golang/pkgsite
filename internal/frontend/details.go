@@ -48,16 +48,31 @@ func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
 	s.handlePackageDetails(w, r)
 }
 
-// parseDetailsURLPath returns the modulePath (if known),
-// pkgPath and version specified by urlPath.
-// urlPath is assumed to be a valid path following the structure:
-//   /<module-path>[@<version>/<suffix>]
+// parseDetailsURLPath parses a URL path that refers (or may refer) to something
+// in the Go ecosystem.
 //
-// If <version> is not specified, internal.LatestVersion is used for the
-// version. modulePath can only be determined if <version> is specified.
+// After trimming leading and trailing slashes, the path is expected to have one
+// of three forms, and we divide it into three parts: a full path, a module
+// path, and a version.
 //
-// Leading and trailing slashes in the urlPath are trimmed.
-func parseDetailsURLPath(urlPath string) (pkgPath, modulePath, version string, err error) {
+// 1. The path has no '@', like github.com/hashicorp/vault/api.
+//    This is the full path. The module path is unknown. So is the version, so we
+//    treat it as the latest version for whatever the path denotes.
+//
+// 2. The path has "@version" at the end, like github.com/hashicorp/vault/api@v1.2.3.
+//    We split this at the '@' into a full path (github.com/hashicorp/vault/api)
+//    and version (v1.2.3); the module path is still unknown.
+//
+// 3. The path has "@version" in the middle, like github.com/hashicorp/vault@v1.2.3/api.
+//    (We call this the "canonical" form of a path.)
+//    We remove the version to get the full path, which is again
+//    github.com/hashicorp/vault/api. The version is v1.2.3, and the module path is
+//    the part before the '@', github.com/hashicorp/vault.
+//
+// In one case, we do a little more than parse the urlPath into parts: if the full path
+// could be a part of the standard library (because it has no '.'), we assume it
+// is and set the modulePath to indicate the standard library.
+func parseDetailsURLPath(urlPath string) (fullPath, modulePath, version string, err error) {
 	defer derrors.Wrap(&err, "parseDetailsURLPath(%q)", urlPath)
 
 	// This splits urlPath into either:
@@ -69,33 +84,37 @@ func parseDetailsURLPath(urlPath string) (pkgPath, modulePath, version string, e
 	// TODO(b/140191811) The last URL route should redirect.
 	parts := strings.SplitN(urlPath, "@", 2)
 	basePath := strings.TrimSuffix(strings.TrimPrefix(parts[0], "/"), "/")
-	if len(parts) == 1 {
+	if len(parts) == 1 { // no '@'
 		modulePath = internal.UnknownModulePath
 		version = internal.LatestVersion
-		pkgPath = basePath
+		fullPath = basePath
 	} else {
-		// Parse the version and suffix from parts[1].
+		// Parse the version and suffix from parts[1], the string after the '@'.
 		endParts := strings.Split(parts[1], "/")
 		suffix := strings.Join(endParts[1:], "/")
+		// The first path component after the '@' is the version.
 		version = endParts[0]
 		if version == internal.LatestVersion {
 			return "", "", "", fmt.Errorf("invalid version: %q", version)
 		}
 		if suffix == "" {
+			// "@version" occurred at the end of the path; we don't know the module path.
 			modulePath = internal.UnknownModulePath
-			pkgPath = basePath
+			fullPath = basePath
 		} else {
+			// "@version" occurred in the middle of the path; the part before it
+			// is the module path.
 			modulePath = basePath
-			pkgPath = basePath + "/" + suffix
+			fullPath = basePath + "/" + suffix
 		}
 	}
-	if err := module.CheckImportPath(pkgPath); err != nil {
-		return "", "", "", fmt.Errorf("malformed path %q: %v", pkgPath, err)
+	if err := module.CheckImportPath(fullPath); err != nil {
+		return "", "", "", fmt.Errorf("malformed path %q: %v", fullPath, err)
 	}
-	if stdlib.Contains(pkgPath) {
+	if stdlib.Contains(fullPath) {
 		modulePath = stdlib.ModulePath
 	}
-	return pkgPath, modulePath, version, nil
+	return fullPath, modulePath, version, nil
 }
 
 // checkPathAndVersion verifies that the requested path and version are
