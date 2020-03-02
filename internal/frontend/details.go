@@ -94,6 +94,7 @@ func parseDetailsURLPath(urlPath string) (fullPath, modulePath, version string, 
 		suffix := strings.Join(endParts[1:], "/")
 		// The first path component after the '@' is the version.
 		version = endParts[0]
+		// You cannot explicitly write "latest" for the version.
 		if version == internal.LatestVersion {
 			return "", "", "", fmt.Errorf("invalid version: %q", version)
 		}
@@ -108,10 +109,19 @@ func parseDetailsURLPath(urlPath string) (fullPath, modulePath, version string, 
 			fullPath = basePath + "/" + suffix
 		}
 	}
+	// The full path must be a valid import path (that is, package path), even if it denotes
+	// a module, directory or collection.
 	if err := module.CheckImportPath(fullPath); err != nil {
 		return "", "", "", fmt.Errorf("malformed path %q: %v", fullPath, err)
 	}
+
+	// If the full path is (or could be) in the standard library, change the
+	// module path to say so. But in that case, disallow versions in the middle,
+	// like "net@go1.14/http". That says that the module is "net", and it isn't.
 	if stdlib.Contains(fullPath) {
+		if modulePath != internal.UnknownModulePath {
+			return "", "", "", fmt.Errorf("non-final version in standard library path %q", urlPath)
+		}
 		modulePath = stdlib.ModulePath
 	}
 	return fullPath, modulePath, version, nil
