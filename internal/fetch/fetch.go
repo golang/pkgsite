@@ -61,7 +61,7 @@ type FetchResult struct {
 //
 // Even if err is non-nil, the result may contain useful information, like the go.mod path.
 func FetchVersion(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client) (_ *FetchResult, err error) {
-	defer derrors.Wrap(&err, "fetchVersion(%q, %q)", modulePath, requestedVersion)
+	defer derrors.Wrap(&err, "FetchVersion(%q, %q)", modulePath, requestedVersion)
 
 	var (
 		commitTime      time.Time

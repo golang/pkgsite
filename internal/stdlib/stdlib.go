@@ -265,6 +265,21 @@ func Zip(version string) (_ *zip.Reader, commitTime time.Time, err error) {
 	// https://github.com/shurcooL/play/blob/master/256/moduleproxy/std/std.go.
 	defer derrors.Wrap(&err, "stdlib.Zip(%q)", version)
 
+	knownVersions, err := Versions()
+	if err != nil {
+		return nil, time.Time{}, err
+	}
+	found := false
+	for _, v := range knownVersions {
+		if v == version {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return nil, time.Time{}, fmt.Errorf("%w: requested version unknown: %q", derrors.InvalidArgument, version)
+	}
+
 	var repo *git.Repository
 	if UseTestData {
 		repo, err = getTestGoRepo(version)
@@ -397,6 +412,7 @@ var testRefs = []plumbing.ReferenceName{
 	"refs/tags/release.r59",
 	"refs/tags/go1.9rc1",
 	"refs/tags/go1.12.1",
+	"refs/tags/go1.12.5",
 	"refs/tags/go1.12.9",
 	"refs/tags/go1.6beta1",
 	"refs/tags/go1.6",
@@ -408,4 +424,5 @@ var testRefs = []plumbing.ReferenceName{
 	"refs/tags/go1.4.2",
 	"refs/tags/go1.11",
 	"refs/tags/go1.13",
+	"refs/tags/go1.3.2",
 }
