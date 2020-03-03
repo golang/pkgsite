@@ -22,7 +22,7 @@ import (
 func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
 	pkgPath, modulePath, version, err := parseDetailsURLPath(r.URL.Path)
 	if err != nil {
-		log.Errorf(r.Context(), "handlePackageDetails: %v", err)
+		log.Infof(r.Context(), "handlePackageDetails: %v", err)
 		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
 		return
 	}
