@@ -144,6 +144,7 @@ var (
 		"CC-BY-SA-4.0":         true,
 		"Unlicense":            true,
 		"NCSA":                 true,
+		"OSL-3.0":              true,
 		"MIT-0":                true,
 		"EPL-1.0":              true,
 		"EPL-2.0":              true,
@@ -152,7 +153,8 @@ var (
 	// These aren't technically licenses, but they are recognized by
 	// licensecheck and safe to ignore.
 	ignorableLicenseTypes = map[string]bool{
-		"CC-Notice": true,
+		"CC-Notice":          true,
+		"GooglePatentClause": true,
 	}
 )
 
