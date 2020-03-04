@@ -9,9 +9,7 @@
     <div class="Documentation">
       {{.Documentation}}
       <div class="Documentation-build">
-        {{if not (eq .GOOS "linux")}}
-          <div>Documentation was rendered with GOOS={{.GOOS}} and GOARCH={{.GOARCH}}.</div>
-        {{end}}
+        <div>Documentation was rendered with GOOS={{.GOOS}} and GOARCH={{.GOARCH}}.</div>
       </div>
     </div>
 
