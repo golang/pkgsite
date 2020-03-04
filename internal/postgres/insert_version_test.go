@@ -230,7 +230,7 @@ func TestPostgres_ReadAndWriteModuleOtherColumns(t *testing.T) {
 	SELECT
 		sort_version, series_path
 	FROM
-		versions
+		modules
 	WHERE
 		module_path = $1 AND version = $2`
 	row := testDB.db.QueryRow(ctx, query, v.ModulePath, v.Version)

@@ -124,7 +124,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) error {
 			return err
 		}
 		if _, err := database.ExecTx(ctx, tx,
-			`INSERT INTO versions(
+			`INSERT INTO modules(
 				module_path,
 				version,
 				commit_time,
@@ -288,7 +288,7 @@ func isLatestVersion(ctx context.Context, tx *sql.Tx, modulePath, version string
 	defer derrors.Wrap(&err, "isLatestVersion(ctx, tx, %q)", modulePath)
 
 	row := tx.QueryRowContext(ctx, `
-		SELECT version FROM versions WHERE module_path = $1
+		SELECT version FROM modules WHERE module_path = $1
 		ORDER BY version_type = 'release' DESC, sort_version DESC
 		LIMIT 1`,
 		modulePath)
@@ -367,9 +367,9 @@ func removeNonDistributableData(m *internal.Module) {
 func (db *DB) DeleteModule(ctx context.Context, tx *sql.Tx, modulePath, version string) (err error) {
 	defer derrors.Wrap(&err, "DB.DeleteModule(ctx, tx, %q, %q)", modulePath, version)
 
-	// We only need to delete from the versions table. Thanks to ON DELETE
+	// We only need to delete from the modules table. Thanks to ON DELETE
 	// CASCADE constraints, that will trigger deletions from all other tables.
-	const stmt = `DELETE FROM versions WHERE module_path=$1 AND version=$2`
+	const stmt = `DELETE FROM modules WHERE module_path=$1 AND version=$2`
 	if tx == nil {
 		_, err = db.db.Exec(ctx, stmt, modulePath, version)
 	} else {

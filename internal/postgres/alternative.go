@@ -28,7 +28,7 @@ func (db *DB) DeleteAlternatives(ctx context.Context, alternativePath string) (e
 
 	return db.db.Transact(func(tx *sql.Tx) error {
 		if _, err := database.ExecTx(ctx, tx,
-			`DELETE FROM versions WHERE module_path = $1;`, alternativePath); err != nil {
+			`DELETE FROM modules WHERE module_path = $1;`, alternativePath); err != nil {
 			return err
 		}
 		if _, err := database.ExecTx(ctx, tx,
