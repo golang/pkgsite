@@ -12,13 +12,11 @@
       {{end}}
     </h2>
     <ul class="Versions-list">
-      {{range $minor := $major.Versions}}
-        {{range $i, $v := $minor}}
-          <li class="Versions-item">
-            <a href="{{$v.Link}}" title="{{$v.TooltipVersion}}">{{$v.DisplayVersion}}</a>
-            <span class="Versions-commitTime"> &ndash; {{$v.CommitTime}}</span>
-          </li>
-        {{end}}
+      {{range $v := $major.Versions}}
+        <li class="Versions-item">
+          <a href="{{$v.Link}}" title="{{$v.TooltipVersion}}">{{$v.DisplayVersion}}</a>
+          <span class="Versions-commitTime"> &ndash; {{$v.CommitTime}}</span>
+        </li>
       {{end}}
     </ul>
   {{end}}

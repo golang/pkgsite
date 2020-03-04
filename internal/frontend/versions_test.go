@@ -33,25 +33,22 @@ func sampleModule(modulePath, version string, versionType version.Type, packages
 	return m
 }
 
-func versionSummaries(path string, versions [][]string, linkify func(path, version string) string) [][]*VersionSummary {
-	vs := make([][]*VersionSummary, len(versions))
-	for i, pointVersions := range versions {
-		vs[i] = make([]*VersionSummary, len(pointVersions))
-		for j, version := range pointVersions {
-			var semver, displayVersion string
-			if stdlib.Contains(path) {
-				semver = version
-				displayVersion = version
-			} else {
-				semver = version
-				displayVersion = formatVersion(semver)
-			}
-			vs[i][j] = &VersionSummary{
-				TooltipVersion: semver,
-				DisplayVersion: displayVersion,
-				Link:           linkify(path, version),
-				CommitTime:     commitTime,
-			}
+func versionSummaries(path string, versions []string, linkify func(path, version string) string) []*VersionSummary {
+	vs := make([]*VersionSummary, len(versions))
+	for i, version := range versions {
+		var semver, displayVersion string
+		if stdlib.Contains(path) {
+			semver = version
+			displayVersion = version
+		} else {
+			semver = version
+			displayVersion = formatVersion(semver)
+		}
+		vs[i] = &VersionSummary{
+			TooltipVersion: semver,
+			DisplayVersion: displayVersion,
+			Link:           linkify(path, version),
+			CommitTime:     commitTime,
 		}
 	}
 	return vs
@@ -69,10 +66,13 @@ func TestFetchModuleVersionDetails(t *testing.T) {
 	info2.ModulePath = modulePath2
 	info2.Version = "v2.2.1-alpha.1"
 
-	moduleVersionSummaries := func(path string, versions [][]string) [][]*VersionSummary {
-		return versionSummaries(path, versions, func(path, version string) string {
-			return constructModuleURL(path, version)
-		})
+	makeList := func(path, major string, versions []string) *VersionList {
+		return &VersionList{
+			VersionListKey: VersionListKey{ModulePath: path, Major: major},
+			Versions: versionSummaries(path, versions, func(path, version string) string {
+				return constructModuleURL(path, version)
+			}),
+		}
 	}
 
 	for _, tc := range []struct {
@@ -93,25 +93,11 @@ func TestFetchModuleVersionDetails(t *testing.T) {
 				sampleModule(modulePath2, "v2.2.1-alpha.1", version.TypePrerelease),
 			},
 			wantDetails: &VersionsDetails{
-				ThisModule: []*MajorVersionGroup{
-					{
-						Major:      "v1",
-						ModulePath: "test.com/module",
-						Versions: moduleVersionSummaries(modulePath1, [][]string{
-							{"v1.3.0"},
-							{"v1.2.3", "v1.2.1"},
-						}),
-					},
+				ThisModule: []*VersionList{
+					makeList("test.com/module", "v1", []string{"v1.3.0", "v1.2.3", "v1.2.1"}),
 				},
-				OtherModules: []*MajorVersionGroup{
-					{
-						Major:      "v2",
-						ModulePath: "test.com/module/v2",
-						Versions: moduleVersionSummaries(modulePath2, [][]string{
-							{"v2.2.1-alpha.1"},
-							{"v2.0.0"},
-						}),
-					},
+				OtherModules: []*VersionList{
+					makeList("test.com/module/v2", "v2", []string{"v2.2.1-alpha.1", "v2.0.0"}),
 				},
 			},
 		},
@@ -127,25 +113,11 @@ func TestFetchModuleVersionDetails(t *testing.T) {
 				sampleModule(modulePath2, "v2.2.1-alpha.1", version.TypePrerelease),
 			},
 			wantDetails: &VersionsDetails{
-				ThisModule: []*MajorVersionGroup{
-					{
-						Major:      "v2",
-						ModulePath: "test.com/module/v2",
-						Versions: moduleVersionSummaries(modulePath2, [][]string{
-							{"v2.2.1-alpha.1"},
-							{"v2.0.0"},
-						}),
-					},
+				ThisModule: []*VersionList{
+					makeList("test.com/module/v2", "v2", []string{"v2.2.1-alpha.1", "v2.0.0"}),
 				},
-				OtherModules: []*MajorVersionGroup{
-					{
-						Major:      "v1",
-						ModulePath: "test.com/module",
-						Versions: moduleVersionSummaries(modulePath1, [][]string{
-							{"v2.1.0+incompatible"},
-							{"v1.2.3", "v1.2.1"},
-						}),
-					},
+				OtherModules: []*VersionList{
+					makeList("test.com/module", "v1", []string{"v2.1.0+incompatible", "v1.2.3", "v1.2.1"}),
 				},
 			},
 		},
@@ -157,14 +129,11 @@ func TestFetchModuleVersionDetails(t *testing.T) {
 				sampleModule(modulePath1, "v0.0.0-20140414041502-4c2ca4d52544", version.TypePseudo),
 			},
 			wantDetails: &VersionsDetails{
-				OtherModules: []*MajorVersionGroup{
-					{
-						Major:      "v0",
-						ModulePath: "test.com/module",
-						Versions: moduleVersionSummaries(modulePath1, [][]string{
-							{"v0.0.0-20140414041502-4c2ca4d52544", "v0.0.0-20140414041501-3c2ca4d52544"},
-						}),
-					},
+				OtherModules: []*VersionList{
+					makeList("test.com/module", "v0", []string{
+						"v0.0.0-20140414041502-4c2ca4d52544",
+						"v0.0.0-20140414041501-3c2ca4d52544"},
+					),
 				},
 			},
 		},
@@ -216,10 +185,13 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 	nethttpPkg.ModulePath = "std"
 	nethttpPkg.Version = "v1.12.5"
 
-	packageVersionSummaries := func(pkgPath, modulePath string, versions [][]string) [][]*VersionSummary {
-		return versionSummaries(pkgPath, versions, func(pkgPath, version string) string {
-			return constructPackageURL(pkgPath, modulePath, version)
-		})
+	makeList := func(pkgPath, modulePath, major string, versions []string) *VersionList {
+		return &VersionList{
+			VersionListKey: VersionListKey{ModulePath: modulePath, Major: major},
+			Versions: versionSummaries(pkgPath, versions, func(path, version string) string {
+				return constructPackageURL(pkgPath, modulePath, version)
+			}),
+		}
 	}
 
 	for _, tc := range []struct {
@@ -236,15 +208,8 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 				sampleModule("std", "v1.11.6", version.TypeRelease, &nethttpPkg.Package),
 			},
 			wantDetails: &VersionsDetails{
-				ThisModule: []*MajorVersionGroup{
-					{
-						Major:      "go1",
-						ModulePath: "std",
-						Versions: packageVersionSummaries("net/http", "std", [][]string{
-							{"go1.12.5"},
-							{"go1.11.6"},
-						}),
-					},
+				ThisModule: []*VersionList{
+					makeList("net/http", "std", "go1", []string{"go1.12.5", "go1.11.6"}),
 				},
 			},
 		},
@@ -261,32 +226,12 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 				sampleModule("test.com", "v1.2.1", version.TypeRelease, &pkg1.Package),
 			},
 			wantDetails: &VersionsDetails{
-				ThisModule: []*MajorVersionGroup{
-					{
-						Major:      "v1",
-						ModulePath: "test.com/module",
-						Versions: packageVersionSummaries(v1Path, modulePath1, [][]string{
-							{"v1.3.0"},
-							{"v1.2.3", "v1.2.1"},
-						}),
-					},
+				ThisModule: []*VersionList{
+					makeList(v1Path, modulePath1, "v1", []string{"v1.3.0", "v1.2.3", "v1.2.1"}),
 				},
-				OtherModules: []*MajorVersionGroup{
-					{
-						Major:      "v2",
-						ModulePath: "test.com/module/v2",
-						Versions: packageVersionSummaries(v2Path, modulePath2, [][]string{
-							{"v2.2.1-alpha.1"},
-							{"v2.0.0"},
-						}),
-					},
-					{
-						Major:      "v1",
-						ModulePath: "test.com",
-						Versions: packageVersionSummaries(v1Path, "test.com", [][]string{
-							{"v1.2.1"},
-						}),
-					},
+				OtherModules: []*VersionList{
+					makeList(v2Path, modulePath2, "v2", []string{"v2.2.1-alpha.1", "v2.0.0"}),
+					makeList(v1Path, "test.com", "v1", []string{"v1.2.1"}),
 				},
 			},
 		},
@@ -302,25 +247,11 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 				sampleModule(modulePath2, "v2.2.1-alpha.1", version.TypePrerelease, &pkg2.Package),
 			},
 			wantDetails: &VersionsDetails{
-				ThisModule: []*MajorVersionGroup{
-					{
-						Major:      "v2",
-						ModulePath: "test.com/module/v2",
-						Versions: packageVersionSummaries(v2Path, modulePath2, [][]string{
-							{"v2.2.1-alpha.1"},
-							{"v2.0.0"},
-						}),
-					},
+				ThisModule: []*VersionList{
+					makeList(v2Path, modulePath2, "v2", []string{"v2.2.1-alpha.1", "v2.0.0"}),
 				},
-				OtherModules: []*MajorVersionGroup{
-					{
-						Major:      "v1",
-						ModulePath: "test.com/module",
-						Versions: packageVersionSummaries(v1Path, modulePath1, [][]string{
-							{"v2.1.0+incompatible"},
-							{"v1.2.3", "v1.2.1"},
-						}),
-					},
+				OtherModules: []*VersionList{
+					makeList(v1Path, modulePath1, "v1", []string{"v2.1.0+incompatible", "v1.2.3", "v1.2.1"}),
 				},
 			},
 		},
@@ -332,14 +263,11 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 				sampleModule(modulePath1, "v0.0.0-20140414041502-4c2ca4d52544", version.TypePseudo, &pkg2.Package),
 			},
 			wantDetails: &VersionsDetails{
-				OtherModules: []*MajorVersionGroup{
-					{
-						Major:      "v0",
-						ModulePath: "test.com/module",
-						Versions: packageVersionSummaries(v1Path, modulePath1, [][]string{
-							{"v0.0.0-20140414041502-4c2ca4d52544", "v0.0.0-20140414041501-3c2ca4d52544"},
-						}),
-					},
+				OtherModules: []*VersionList{
+					makeList(v1Path, modulePath1, "v0", []string{
+						"v0.0.0-20140414041502-4c2ca4d52544",
+						"v0.0.0-20140414041501-3c2ca4d52544",
+					}),
 				},
 			},
 		},

@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"path"
-	"sort"
 	"strings"
 
 	"golang.org/x/discovery/internal"
@@ -20,28 +19,36 @@ import (
 )
 
 // VersionsDetails contains the hierarchy of version summary information used
-// to populate the version tab.
+// to populate the version tab. Version information is organized into separate
+// lists, one for each (ModulePath, Major Version) pair.
 type VersionsDetails struct {
-	// ThisModule is the slice of MajorVersionGroups with the same module path as
-	// the current package.
-	ThisModule []*MajorVersionGroup
+	// ThisModule is the slice of VersionLists with the same module path as the
+	// current package.
+	ThisModule []*VersionList
 
-	// OtherModules is the slice of MajorVersionGroups with a different module
-	// path from the current package.
-	OtherModules []*MajorVersionGroup
+	// OtherModules is the slice of VersionLists with a different module path
+	// from the current package.
+	OtherModules []*VersionList
 }
 
-// MajorVersionGroup holds all versions corresponding to a unique (module path,
-// major version) tuple in the version hierarchy. Notably v0 and v1 module
-// versions are in separate MajorVersionGroups, despite having the same module
-// path.
-type MajorVersionGroup struct {
-	// Major is the major version string (e.g. v1, v2)
-	Major      string
+// VersionListKey identifies a version list on the versions tab. We have a
+// separate VersionList for each major version of a module series. Notably we
+// have more version lists than module paths: v0 and v1 module versions are in
+// separate version lists, despite having the same module path.
+type VersionListKey struct {
+	// ModulePath is the module path of this major version.
 	ModulePath string
-	// Versions holds the nested version summaries, organized in descending minor
-	// and patch version order.
-	Versions [][]*VersionSummary
+	// Major is the major version string (e.g. v1, v2)
+	Major string
+}
+
+// VersionList holds all versions corresponding to a unique (module path,
+// major version) tuple in the version hierarchy.
+type VersionList struct {
+	VersionListKey
+	// Versions holds the nested version summaries, organized in descending
+	// semver order.
+	Versions []*VersionSummary
 }
 
 // VersionSummary holds data required to format the version link on the
@@ -139,33 +146,35 @@ func pathInVersion(v1Path string, mi *internal.ModuleInfo) string {
 
 // buildVersionDetails constructs the version hierarchy to be rendered on the
 // versions tab, organizing major versions into those that have the same module
-// path as the package version under consideration, and those that don't.
-func buildVersionDetails(currentModulePath string, versions []*internal.ModuleInfo, linkify func(v *internal.ModuleInfo) string) *VersionsDetails {
-	// Pre-sort versions to ensure they are in descending semver order.
-	sort.Slice(versions, func(i, j int) bool {
-		return semver.Compare(versions[i].Version, versions[j].Version) > 0
-	})
+// path as the package version under consideration, and those that don't.  The
+// given versions MUST be sorted first by module path and then by semver.
+func buildVersionDetails(currentModulePath string, modInfos []*internal.ModuleInfo, linkify func(v *internal.ModuleInfo) string) *VersionsDetails {
 
-	// Next, build a version tree containing each unique version path:
-	//   modulePath->major->majMin->version
-	tree := &versionTree{}
-	for _, v := range versions {
+	// lists organizes versions by VersionListKey. Note that major version isn't
+	// sufficient as a key: there are packages contained in the same major
+	// version of different modules, for example github.com/hashicorp/vault/api,
+	// which exists in v1 of both of github.com/hashicorp/vault and
+	// github.com/hashicorp/vault/api.
+	lists := make(map[VersionListKey][]*VersionSummary)
+	// seenLists tracks the order in which we encounter entries of each version
+	// list. We want to preserve this order.
+	var seenLists []VersionListKey
+	for _, mi := range modInfos {
 		// Try to resolve the most appropriate major version for this version. If
 		// we detect a +incompatible version (when the path version does not match
 		// the sematic version), we prefer the path version.
-		major := semver.Major(v.Version)
-		if v.ModulePath == stdlib.ModulePath {
+		major := semver.Major(mi.Version)
+		if mi.ModulePath == stdlib.ModulePath {
 			var err error
-			major, err = stdlib.MajorVersionForVersion(v.Version)
+			major, err = stdlib.MajorVersionForVersion(mi.Version)
 			if err != nil {
 				panic(err)
 			}
 		}
-		if _, pathMajor, ok := module.SplitPathVersion(v.ModulePath); ok {
+		if _, pathMajor, ok := module.SplitPathVersion(mi.ModulePath); ok {
 			// We prefer the path major version except for v1 import paths where the
 			// semver major version is v0. In this case, we prefer the more specific
 			// semver version.
-
 			if pathMajor != "" {
 				// Trim both '/' and '.' from the path major version to account for
 				// standard and gopkg.in module paths.
@@ -174,95 +183,37 @@ func buildVersionDetails(currentModulePath string, versions []*internal.ModuleIn
 				major = "v1"
 			}
 		}
-		majMin := semver.MajorMinor(v.Version)
-		tree.push(v, v.ModulePath, major, majMin, v.Version)
-	}
-
-	// makeMV builds a MajorVersionGroup from a major subtree of the version
-	// hierarchy.
-	makeMV := func(modulePath, major string, majorTree *versionTree) *MajorVersionGroup {
-		mvg := MajorVersionGroup{
-			Major:      major,
-			ModulePath: modulePath,
+		key := VersionListKey{ModulePath: mi.ModulePath, Major: major}
+		ttversion := mi.Version
+		fmtVersion := displayVersion(mi.Version, mi.ModulePath)
+		if mi.ModulePath == stdlib.ModulePath {
+			ttversion = fmtVersion // tooltips will show the Go tag
 		}
-		majorTree.forEach(func(_ string, minorTree *versionTree) {
-			patches := []*VersionSummary{}
-			minorTree.forEach(func(_ string, patchTree *versionTree) {
-				mi := patchTree.moduleInfo
-				fmtVersion := displayVersion(mi.Version, mi.ModulePath)
-				ttversion := mi.Version
-				if mi.ModulePath == stdlib.ModulePath {
-					ttversion = fmtVersion // tooltips will show the Go tag
-				}
-				patches = append(patches, &VersionSummary{
-					TooltipVersion: ttversion,
-					Link:           linkify(mi),
-					CommitTime:     elapsedTime(mi.CommitTime),
-					DisplayVersion: fmtVersion,
-				})
-			})
-			mvg.Versions = append(mvg.Versions, patches)
-		})
-		return &mvg
+		vs := &VersionSummary{
+			TooltipVersion: ttversion,
+			Link:           linkify(mi),
+			CommitTime:     elapsedTime(mi.CommitTime),
+			DisplayVersion: fmtVersion,
+		}
+		if _, ok := lists[key]; !ok {
+			seenLists = append(seenLists, key)
+		}
+		lists[key] = append(lists[key], vs)
 	}
 
-	// Finally, VersionDetails is built by traversing the major version
-	// hierarchy.
 	var details VersionsDetails
-	tree.forEach(func(modulePath string, moduleTree *versionTree) {
-		moduleTree.forEach(func(major string, majorTree *versionTree) {
-			mv := makeMV(modulePath, major, majorTree)
-			if modulePath == currentModulePath {
-				details.ThisModule = append(details.ThisModule, mv)
-			} else {
-				details.OtherModules = append(details.OtherModules, mv)
-			}
-		})
-	})
+	for _, key := range seenLists {
+		vl := &VersionList{
+			VersionListKey: key,
+			Versions:       lists[key],
+		}
+		if key.ModulePath == currentModulePath {
+			details.ThisModule = append(details.ThisModule, vl)
+		} else {
+			details.OtherModules = append(details.OtherModules, vl)
+		}
+	}
 	return &details
-}
-
-// versionTree represents the version hierarchy. It preserves the order in
-// which versions are added.
-type versionTree struct {
-	// seen tracks the order in which new keys are added.
-	seen []string
-
-	// A tree can hold either a nested subtree or a ModuleInfo.  When building
-	// VersionDetails, it has the following hierarchy
-	//	modulePath
-	//		major
-	//			majorMinor
-	//				fullVersion
-	subTrees   map[string]*versionTree
-	moduleInfo *internal.ModuleInfo
-}
-
-// push adds a new version to the version hierarchy, if it doesn't already
-// exist.
-func (t *versionTree) push(m *internal.ModuleInfo, path ...string) {
-	if len(path) == 0 {
-		t.moduleInfo = m
-		return
-	}
-	if t.subTrees == nil {
-		t.subTrees = make(map[string]*versionTree)
-	}
-	subTree, ok := t.subTrees[path[0]]
-	if !ok {
-		t.seen = append(t.seen, path[0])
-		subTree = &versionTree{}
-		t.subTrees[path[0]] = subTree
-	}
-	subTree.push(m, path[1:]...)
-}
-
-// forEach iterates through sub-versionTrees in the version hierarchy, calling
-// the given function for each.
-func (t *versionTree) forEach(f func(string, *versionTree)) {
-	for _, k := range t.seen {
-		f(k, t.subTrees[k])
-	}
 }
 
 // formatVersion formats a more readable representation of the given version
