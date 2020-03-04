@@ -10,6 +10,7 @@ import (
 	"bufio"
 	"context"
 	"flag"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -189,56 +190,71 @@ func readProxyRemoved(ctx context.Context) {
 	if filename == "" {
 		return
 	}
-	f, err := os.Open(filename)
+	lines, err := readFileLines(filename)
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
-	defer f.Close()
-	scan := bufio.NewScanner(f)
-	for scan.Scan() {
-		etl.ProxyRemoved[strings.TrimSpace(scan.Text())] = true
-	}
-	if err := scan.Err(); err != nil {
-		log.Fatalf(ctx, "scanning %s: %v", filename, err)
+	for _, line := range lines {
+		etl.ProxyRemoved[line] = true
 	}
 	log.Infof(ctx, "read %d excluded module versions from %s", len(etl.ProxyRemoved), filename)
-}
-
-// excludedPrefixes is a list of excluded prefixes and the reasons for exclusion.
-// This is a permanent record of exclusions, in case the DB gets wiped or corrupted.
-var excludedPrefixes = []struct {
-	prefix, reason string
-}{
-	{
-		"github.com/xvrzhao/site-monitor",
-		"author requested https://groups.google.com/a/google.com/d/msg/go-discovery-feedback/oYtPw2Ob0fY/xxGikZK1AQAJ",
-	},
-	{
-		"gioui.org/ui",
-		"author requested https://groups.google.com/a/google.com/d/msg/go-discovery-feedback/CeMEn2E1zwo/q5S8HPn6BgAJ",
-	},
-	{
-		"github.com/kortschak/unlicensable",
-		"https://groups.google.com/g/golang-dev/c/mfiPCtJ1BGU/m/HDb3--vMEwAJk",
-	},
 }
 
 // populateExcluded adds each element of excludedPrefixes to the excluded_prefixes
 // table if it isn't already present.
 func populateExcluded(ctx context.Context, db *postgres.DB) {
+	const excludedFilename = "excluded.txt"
+	lines, err := readFileLines(excludedFilename)
+	if err != nil {
+		log.Fatal(ctx, err)
+	}
 	user := os.Getenv("USER")
 	if user == "" {
 		user = "etl"
 	}
-	for _, ep := range excludedPrefixes {
-		present, err := db.IsExcluded(ctx, ep.prefix)
+	for _, line := range lines {
+		var prefix, reason string
+		i := strings.IndexAny(line, " \t")
+		if i >= 0 {
+			prefix = line[:i]
+			reason = strings.TrimSpace(line[i+1:])
+		}
+		if reason == "" {
+			log.Fatalf(ctx, "missing reason in %s, line %q", excludedFilename, line)
+		}
+		fmt.Printf("#### %q ->\n", line)
+		fmt.Printf(" prefix=%q, reason=%q\n", prefix, reason)
+		present, err := db.IsExcluded(ctx, prefix)
 		if err != nil {
-			log.Fatalf(ctx, "db.IsExcluded(%q): %v", ep.prefix, err)
+			log.Fatalf(ctx, "db.IsExcluded(%q): %v", prefix, err)
 		}
 		if !present {
-			if err := db.InsertExcludedPrefix(ctx, ep.prefix, user, ep.reason); err != nil {
-				log.Fatalf(ctx, "db.InsertExcludedPrefix(%q, %q, %q): %v", ep.prefix, user, ep.reason, err)
+			if err := db.InsertExcludedPrefix(ctx, prefix, user, reason); err != nil {
+				log.Fatalf(ctx, "db.InsertExcludedPrefix(%q, %q, %q): %v", prefix, user, reason, err)
 			}
 		}
 	}
+}
+
+// readFileLines reads filename and returns its lines, trimmed of whitespace.
+// Blank lines and lines whose first non-blank character is '#' are omitted.
+func readFileLines(filename string) ([]string, error) {
+	var lines []string
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	scan := bufio.NewScanner(f)
+	for scan.Scan() {
+		line := strings.TrimSpace(scan.Text())
+		if line == "" || line[0] == '#' {
+			continue
+		}
+		lines = append(lines, line)
+	}
+	if err := scan.Err(); err != nil {
+		return nil, err
+	}
+	return lines, nil
 }
