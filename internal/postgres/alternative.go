@@ -1,6 +1,7 @@
 // Copyright 2019 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
+
 package postgres
 
 import (
@@ -58,21 +59,4 @@ func (db *DB) IsAlternativeModulePath(ctx context.Context, path string) (_ bool,
 	var isAlternative bool
 	err = row.Scan(&isAlternative)
 	return isAlternative, err
-}
-
-func (db *DB) getAlternativeModulePath(ctx context.Context, alternativePath string) (_ *internal.AlternativeModulePath, err error) {
-	defer derrors.Wrap(&err, "getAlternativeModulePath(ctx, %q)", alternativePath)
-	query := `
-		SELECT alternative, canonical
-		FROM alternative_module_paths
-		WHERE alternative = $1;`
-	row := db.db.QueryRow(ctx, query, alternativePath)
-	var alternative, canonical string
-	if err := row.Scan(&alternative, &canonical); err != nil {
-		return nil, err
-	}
-	return &internal.AlternativeModulePath{
-		Alternative: alternative,
-		Canonical:   canonical,
-	}, nil
 }

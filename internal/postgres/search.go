@@ -593,57 +593,6 @@ func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, limit int)
 	return paths, nil
 }
 
-type searchDocument struct {
-	packagePath              string
-	modulePath               string
-	version                  string
-	commitTime               time.Time
-	name                     string
-	synopsis                 string
-	licenseTypes             []string
-	importedByCount          int
-	redistributable          bool
-	hasGoMod                 bool
-	versionUpdatedAt         time.Time
-	importedByCountUpdatedAt time.Time
-}
-
-// getSearchDocument returns the search_document for the package with the given
-// path. It is only used for testing purposes.
-func (db *DB) getSearchDocument(ctx context.Context, path string) (*searchDocument, error) {
-	query := `
-		SELECT
-			package_path,
-			module_path,
-			version,
-			commit_time,
-			name,
-			synopsis,
-			license_types,
-			imported_by_count,
-			redistributable,
-			has_go_mod,
-			version_updated_at,
-			imported_by_count_updated_at
-		FROM
-			search_documents
-		WHERE package_path=$1`
-	row := db.db.QueryRow(ctx, query, path)
-	var (
-		sd searchDocument
-		t  pq.NullTime
-	)
-	if err := row.Scan(&sd.packagePath, &sd.modulePath, &sd.version, &sd.commitTime,
-		&sd.name, &sd.synopsis, pq.Array(&sd.licenseTypes), &sd.importedByCount,
-		&sd.redistributable, &sd.hasGoMod, &sd.versionUpdatedAt, &t); err != nil {
-		return nil, fmt.Errorf("row.Scan(): %v", err)
-	}
-	if t.Valid {
-		sd.importedByCountUpdatedAt = t.Time
-	}
-	return &sd, nil
-}
-
 // UpdateSearchDocumentsImportedByCount updates imported_by_count and
 // imported_by_count_updated_at.
 //

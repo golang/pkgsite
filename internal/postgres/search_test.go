@@ -18,6 +18,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/lib/pq"
 	"go.opencensus.io/stats/view"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
@@ -535,6 +536,57 @@ func TestSearchPenalties(t *testing.T) {
 	}
 }
 
+type searchDocument struct {
+	packagePath              string
+	modulePath               string
+	version                  string
+	commitTime               time.Time
+	name                     string
+	synopsis                 string
+	licenseTypes             []string
+	importedByCount          int
+	redistributable          bool
+	hasGoMod                 bool
+	versionUpdatedAt         time.Time
+	importedByCountUpdatedAt time.Time
+}
+
+// getSearchDocument returns the search_document for the package with the given
+// path. It is only used for testing purposes.
+func getSearchDocument(ctx context.Context, db *DB, path string) (*searchDocument, error) {
+	query := `
+		SELECT
+			package_path,
+			module_path,
+			version,
+			commit_time,
+			name,
+			synopsis,
+			license_types,
+			imported_by_count,
+			redistributable,
+			has_go_mod,
+			version_updated_at,
+			imported_by_count_updated_at
+		FROM
+			search_documents
+		WHERE package_path=$1`
+	row := db.db.QueryRow(ctx, query, path)
+	var (
+		sd searchDocument
+		t  pq.NullTime
+	)
+	if err := row.Scan(&sd.packagePath, &sd.modulePath, &sd.version, &sd.commitTime,
+		&sd.name, &sd.synopsis, pq.Array(&sd.licenseTypes), &sd.importedByCount,
+		&sd.redistributable, &sd.hasGoMod, &sd.versionUpdatedAt, &t); err != nil {
+		return nil, fmt.Errorf("row.Scan(): %v", err)
+	}
+	if t.Valid {
+		sd.importedByCountUpdatedAt = t.Time
+	}
+	return &sd, nil
+}
+
 func TestUpsertSearchDocument(t *testing.T) {
 	// Verify that inserting into search_documents populates all columns correctly,
 	// both with and without a conflict.
@@ -546,7 +598,7 @@ func TestUpsertSearchDocument(t *testing.T) {
 
 	getSearchDocument := func() *searchDocument {
 		t.Helper()
-		sd, err := testDB.getSearchDocument(ctx, packagePath)
+		sd, err := getSearchDocument(ctx, testDB, packagePath)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -612,7 +664,7 @@ func TestUpsertSearchDocumentVersionHasGoMod(t *testing.T) {
 
 	for _, hasGoMod := range []bool{true, false} {
 		packagePath := fmt.Sprintf("foo.com/%t/bar", hasGoMod)
-		sd, err := testDB.getSearchDocument(ctx, packagePath)
+		sd, err := getSearchDocument(ctx, testDB, packagePath)
 		if err != nil {
 			t.Fatalf("testDB.getSearchDocument(ctx, %q): %v", packagePath, err)
 		}
@@ -646,7 +698,7 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 	}
 	validateImportedByCountAndGetSearchDocument := func(path string, count int) *searchDocument {
 		t.Helper()
-		sd, err := testDB.getSearchDocument(ctx, path)
+		sd, err := getSearchDocument(ctx, testDB, path)
 		if err != nil {
 			t.Fatalf("testDB.getSearchDocument(ctx, %q): %v", path, err)
 		}

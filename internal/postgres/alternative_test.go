@@ -51,7 +51,23 @@ func TestIsAlternativePath(t *testing.T) {
 			}
 		})
 	}
+}
 
+func getAlternativeModulePath(ctx context.Context, db *DB, alternativePath string) (_ *internal.AlternativeModulePath, err error) {
+	defer derrors.Wrap(&err, "getAlternativeModulePath(ctx, %q)", alternativePath)
+	query := `
+		SELECT alternative, canonical
+		FROM alternative_module_paths
+		WHERE alternative = $1;`
+	row := db.db.QueryRow(ctx, query, alternativePath)
+	var alternative, canonical string
+	if err := row.Scan(&alternative, &canonical); err != nil {
+		return nil, err
+	}
+	return &internal.AlternativeModulePath{
+		Alternative: alternative,
+		Canonical:   canonical,
+	}, nil
 }
 
 func TestInsertAndDeleteAlternatives(t *testing.T) {
@@ -67,7 +83,7 @@ func TestInsertAndDeleteAlternatives(t *testing.T) {
 		if err := testDB.InsertAlternativeModulePath(ctx, p); err != nil {
 			t.Fatal(err)
 		}
-		got, err := testDB.getAlternativeModulePath(ctx, p.Alternative)
+		got, err := getAlternativeModulePath(ctx, testDB, p.Alternative)
 		if err != nil {
 			t.Fatal(err)
 		}
