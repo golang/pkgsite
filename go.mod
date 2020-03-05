@@ -25,7 +25,6 @@ require (
 	github.com/google/licensecheck v0.0.0-20200226161255-fb7b516dfddc
 	github.com/influxdata/tdigest v0.0.0-20181121200506-bf2b5ad3c0a9 // indirect
 	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a // indirect
-	github.com/kylelemons/godebug v1.1.0
 	github.com/lib/pq v1.2.0
 	github.com/lunixbochs/vtclean v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.0 // indirect

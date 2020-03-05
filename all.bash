@@ -62,7 +62,8 @@ ensure_go_binary() {
 # header.
 check_headers() {
   info "Checking staged files for license header"
-  verify_header $(git diff --cached --name-only | grep -E ".go$|.sql$")
+  # Check code files that have been modified or added.
+  verify_header $(git diff --cached --name-status | grep -vE "^D" | cut -f 2- | grep -E ".go$|.sql$|.sh$")
   info "Checking internal files for license header"
   verify_header $(findcode)
 }

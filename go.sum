@@ -164,8 +164,6 @@ github.com/google/go-github v17.0.0+incompatible/go.mod h1:zLgOLi98H3fifZn+44m+u
 github.com/google/go-querystring v1.0.0/go.mod h1:odCYkC5MyYFN7vkCjXpyrEuKhc/BUO6wN/zVPAxq5ck=
 github.com/google/go-replayers/httpreplay v0.1.0 h1:AX7FUb4BjrrzNvblr/OlgwrmFiep6soj5K2QSDW7BGk=
 github.com/google/go-replayers/httpreplay v0.1.0/go.mod h1:YKZViNhiGgqdBlUbI2MwGpq4pXxNmhJLPHQ7cv2b5no=
-github.com/google/licensecheck v0.0.0-20200214050835-9580b5fd1d6c h1:OE/vS0PBJPzVIR+XoBJcVAyFHDj2ciXzTpHepJrWmh0=
-github.com/google/licensecheck v0.0.0-20200214050835-9580b5fd1d6c/go.mod h1:ORkR35t/JjW+emNKtfJDII0zlciG9JgbT7SmsohlHmY=
 github.com/google/licensecheck v0.0.0-20200226161255-fb7b516dfddc h1:AJrbV2raLzRoxa35AlQZgdbRG8COtvzfE0kM4+GyGGE=
 github.com/google/licensecheck v0.0.0-20200226161255-fb7b516dfddc/go.mod h1:ORkR35t/JjW+emNKtfJDII0zlciG9JgbT7SmsohlHmY=
 github.com/google/martian v2.1.0+incompatible h1:/CP5g8u/VJHijgedC/Legn3BAbAaWPgecwXBIDzw5no=
@@ -222,8 +220,6 @@ github.com/kr/pty v1.1.8/go.mod h1:O1sed60cT9XZ5uDucP5qwvh+TE3NnUj51EiZO/lmSfw=
 github.com/kr/text v0.1.0 h1:45sCR5RtlFHMR4UwH9sdQ5TC8v0qDQCHnXt+kaKSTVE=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
 github.com/kshvakov/clickhouse v1.3.5/go.mod h1:DMzX7FxRymoNkVgizH0DWAL8Cur7wHLgx3MUnGwJqpE=
-github.com/kylelemons/godebug v1.1.0 h1:RPNrshWIDI6G2gRW9EHilWtl7Z6Sb1BR0xunSBf0SNc=
-github.com/kylelemons/godebug v1.1.0/go.mod h1:9/0rRGxNHcop5bhtWyNeEfOS8JIWk580+fNqagV/RAw=
 github.com/lib/pq v1.0.0/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
 github.com/lib/pq v1.2.0 h1:LXpIM/LZ5xGFhOpXAQUIMM1HdyqzVYM13zNdjCEEcA0=
 github.com/lib/pq v1.2.0/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
