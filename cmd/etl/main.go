@@ -10,7 +10,6 @@ import (
 	"bufio"
 	"context"
 	"flag"
-	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -203,7 +202,7 @@ func readProxyRemoved(ctx context.Context) {
 // populateExcluded adds each element of excludedPrefixes to the excluded_prefixes
 // table if it isn't already present.
 func populateExcluded(ctx context.Context, db *postgres.DB) {
-	const excludedFilename = "excluded.txt"
+	const excludedFilename = "cmd/etl/excluded.txt"
 	lines, err := readFileLines(excludedFilename)
 	if err != nil {
 		log.Fatal(ctx, err)
@@ -222,8 +221,6 @@ func populateExcluded(ctx context.Context, db *postgres.DB) {
 		if reason == "" {
 			log.Fatalf(ctx, "missing reason in %s, line %q", excludedFilename, line)
 		}
-		fmt.Printf("#### %q ->\n", line)
-		fmt.Printf(" prefix=%q, reason=%q\n", prefix, reason)
 		present, err := db.IsExcluded(ctx, prefix)
 		if err != nil {
 			log.Fatalf(ctx, "db.IsExcluded(%q): %v", prefix, err)
