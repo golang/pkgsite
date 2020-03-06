@@ -332,7 +332,8 @@ func TestRedistributable(t *testing.T) {
 		{[]string{unknownLicenseType}, false},
 		{[]string{"MIT"}, true},
 		{[]string{"MIT", "Unlicense"}, true},
-		{[]string{"MIT", "JSON"}, false},
+		{[]string{"MIT", "JSON"}, true},
+		{[]string{"MIT", "CommonsClause"}, false},
 		{[]string{"MIT", "GPL2", "ISC"}, true},
 	} {
 		got := Redistributable(test.types)
