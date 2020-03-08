@@ -11,31 +11,30 @@ import (
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/mod/module"
 )
 
-// handleStdLib handles a request for a stdlib package or module.
-func (s *Server) handleStdLib(w http.ResponseWriter, r *http.Request) {
+// serveStdLib handles a request for a stdlib package or module.
+func (s *Server) serveStdLib(w http.ResponseWriter, r *http.Request) error {
 	path, version, err := parseStdLibURLPath(r.URL.Path)
 	if err != nil {
-		log.Errorf(r.Context(), "handleStdLib: %v", err)
-		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
-		return
+		return &serverError{
+			status: http.StatusBadRequest,
+			err:    fmt.Errorf("handleStdLib: %v", err),
+		}
 	}
 	if path == stdlib.ModulePath {
-		s.serveModulePage(w, r, stdlib.ModulePath, version)
-		return
+		return s.serveModulePage(w, r, stdlib.ModulePath, version)
 	}
 
 	// Package "C" is a special case: redirect to the Go Blog article on cgo.
 	// (This is what godoc.org does.)
 	if path == "C" {
 		http.Redirect(w, r, "https://golang.org/doc/articles/c_go_cgo.html", http.StatusMovedPermanently)
-		return
+		return nil
 	}
-	s.servePackagePage(w, r, path, stdlib.ModulePath, version)
+	return s.servePackagePage(w, r, path, stdlib.ModulePath, version)
 }
 
 func parseStdLibURLPath(urlPath string) (path, version string, err error) {

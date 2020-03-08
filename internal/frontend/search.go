@@ -99,30 +99,29 @@ func approximateNumber(estimate int, sigma float64) int {
 	return int(unit * math.Round(float64(estimate)/unit))
 }
 
-// handleSearch applies database data to the search template. Handles endpoint
+// serveSearch applies database data to the search template. Handles endpoint
 // /search?q=<query>. If <query> is an exact match for a package path, the user
 // will be redirected to the details page.
-func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
+func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request) error {
 	ctx := r.Context()
 	query := searchQuery(r)
 	if query == "" {
 		http.Redirect(w, r, "/", http.StatusFound)
-		return
+		return nil
 	}
 
 	if path := searchRequestRedirectPath(ctx, s.ds, query); path != "" {
 		http.Redirect(w, r, path, http.StatusFound)
-		return
+		return nil
 	}
 
 	page, err := fetchSearchPage(ctx, s.ds, query, newPaginationParams(r, defaultSearchLimit))
 	if err != nil {
-		log.Errorf(ctx, "fetchSearchDetails(ctx, db, %q): %v", query, err)
-		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
-		return
+		return fmt.Errorf("fetchSearchPage(ctx, db, %q): %v", query, err)
 	}
 	page.basePage = newBasePage(r, query)
 	s.servePage(ctx, w, "search.tmpl", page)
+	return nil
 }
 
 // searchRequestRedirectPath returns the path that a search request should be

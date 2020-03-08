@@ -20,28 +20,28 @@ import (
 // handleModuleDetails handles requests for non-stdlib module details pages. It
 // expects paths of the form "/mod/<module-path>[@<version>?tab=<tab>]".
 // stdlib module pages are handled at "/std".
-func (s *Server) handleModuleDetails(w http.ResponseWriter, r *http.Request) {
+func (s *Server) serveModuleDetails(w http.ResponseWriter, r *http.Request) error {
 	if r.URL.Path == "/mod/std" {
 		http.Redirect(w, r, "/std", http.StatusMovedPermanently)
-		return
+		return nil
 	}
 	urlPath := strings.TrimPrefix(r.URL.Path, "/mod")
 	path, _, version, err := parseDetailsURLPath(urlPath)
 	if err != nil {
-		log.Infof(r.Context(), "handleModuleDetails: %v", err)
-		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
-		return
+		return &serverError{
+			status: http.StatusBadRequest,
+			err:    fmt.Errorf("handleModuleDetails: %v", err),
+		}
 	}
-	s.serveModulePage(w, r, path, version)
+	return s.serveModulePage(w, r, path, version)
 }
 
 // serveModulePage serves details pages for the module specified by modulePath
 // and version.
-func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, modulePath, version string) {
+func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, modulePath, version string) error {
 	ctx := r.Context()
-	if code, epage := checkPathAndVersion(ctx, s.ds, modulePath, version); code != http.StatusOK {
-		s.serveErrorPage(w, r, code, epage)
-		return
+	if err := checkPathAndVersion(ctx, s.ds, modulePath, version); err != nil {
+		return err
 	}
 	// This function handles top level behavior related to the existence of the
 	// requested modulePath@version:
@@ -55,37 +55,34 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 	//        one of them. Serve a 404 but recommend the other versions.
 	mi, err := s.ds.GetModuleInfo(ctx, modulePath, version)
 	if err == nil {
-		s.serveModulePageWithModule(ctx, w, r, mi, version)
-		return
+		return s.serveModulePageWithModule(ctx, w, r, mi, version)
 	}
 	if !errors.Is(err, derrors.NotFound) {
-		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
-		return
+		return err
 	}
 	if version != internal.LatestVersion {
 		if _, err := s.ds.GetModuleInfo(ctx, modulePath, internal.LatestVersion); err != nil {
 			log.Errorf(ctx, "error checking for latest module: %v", err)
 		} else {
-			epage := &errorPage{
-				Message: fmt.Sprintf("Module %s@%s is not available.", modulePath, displayVersion(version, modulePath)),
-				SecondaryMessage: template.HTML(
-					fmt.Sprintf(`There are other versions of this module that are! To view them, `+
-						`<a href="/mod/%s?tab=versions">click here</a>.</p>`,
-						modulePath)),
+			return &serverError{
+				status: http.StatusNotFound,
+				epage: &errorPage{
+					Message: fmt.Sprintf("Module %s@%s is not available.", modulePath, displayVersion(version, modulePath)),
+					SecondaryMessage: template.HTML(
+						fmt.Sprintf(`There are other versions of this module that are! To view them, `+
+							`<a href="/mod/%s?tab=versions">click here</a>.</p>`,
+							modulePath)),
+				},
 			}
-			s.serveErrorPage(w, r, http.StatusNotFound, epage)
-			return
 		}
 	}
-	s.servePathNotFoundErrorPage(w, r, "module")
+	return pathNotFoundError("module")
 }
 
-func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseWriter, r *http.Request, mi *internal.ModuleInfo, requestedVersion string) {
+func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseWriter, r *http.Request, mi *internal.ModuleInfo, requestedVersion string) error {
 	licenses, err := s.ds.GetModuleLicenses(ctx, mi.ModulePath, mi.Version)
 	if err != nil {
-		log.Errorf(ctx, "error getting module licenses: %v", err)
-		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
-		return
+		return err
 	}
 
 	modHeader := createModule(mi, licensesToMetadatas(licenses), requestedVersion == internal.LatestVersion)
@@ -101,9 +98,7 @@ func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseW
 		var err error
 		details, err = fetchDetailsForModule(ctx, r, tab, s.ds, mi, licenses)
 		if err != nil {
-			log.Errorf(ctx, "error fetching page for %q: %v", tab, err)
-			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
-			return
+			return fmt.Errorf("error fetching page for %q: %v", tab, err)
 		}
 	}
 	page := &DetailsPage{
@@ -118,4 +113,5 @@ func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseW
 		PageType:       "mod",
 	}
 	s.servePage(ctx, w, settings.TemplateName, page)
+	return nil
 }

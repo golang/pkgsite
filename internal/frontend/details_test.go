@@ -113,7 +113,16 @@ func TestCheckPathAndVersion(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if got, _ := checkPathAndVersion(context.Background(), fakeDataSource{}, test.path, test.version); got != test.want {
+		err := checkPathAndVersion(context.Background(), fakeDataSource{}, test.path, test.version)
+		var got int
+		if err == nil {
+			got = 200
+		} else if serr, ok := err.(*serverError); ok {
+			got = serr.status
+		} else {
+			got = -1
+		}
+		if got != test.want {
 			t.Errorf("checkPathAndVersion(ctx, ds, %q, %q): got code %d, want %d", test.path, test.version, got, test.want)
 		}
 	}

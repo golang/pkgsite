@@ -69,9 +69,9 @@ func NewServer(ds internal.DataSource, cmplClient *redis.Client, staticPath stri
 // Install registers server routes using the given handler registration func.
 func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.Client) {
 	var (
-		modHandler    http.Handler = http.HandlerFunc(s.handleModuleDetails)
-		detailHandler http.Handler = http.HandlerFunc(s.handleDetails)
-		searchHandler http.Handler = http.HandlerFunc(s.handleSearch)
+		modHandler    http.Handler = s.errorHandler(s.serveModuleDetails)
+		detailHandler http.Handler = s.errorHandler(s.serveDetails)
+		searchHandler http.Handler = s.errorHandler(s.serveSearch)
 	)
 	if redisClient != nil {
 		modHandler = middleware.Cache("module-details", redisClient, moduleTTL)(modHandler)
@@ -249,6 +249,42 @@ func (s *Server) PanicHandler() (_ http.HandlerFunc, err error) {
 			log.Errorf(r.Context(), "Error copying panic template to ResponseWriter: %v", err)
 		}
 	}, nil
+}
+
+type serverError struct {
+	status int // HTTP status code
+	epage  *errorPage
+	err    error // wrapped error
+}
+
+func (s *serverError) Error() string {
+	return fmt.Sprintf("%d (%s): %v (epage=%v)", s.status, http.StatusText(s.status), s.err, s.epage)
+}
+
+func (s *serverError) Unwrap() error {
+	return s.err
+}
+
+func (s *Server) errorHandler(f func(w http.ResponseWriter, r *http.Request) error) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := f(w, r); err != nil {
+			s.serveError(w, r, err)
+		}
+	}
+}
+
+func (s *Server) serveError(w http.ResponseWriter, r *http.Request, err error) {
+	ctx := r.Context()
+	serr, ok := err.(*serverError)
+	if !ok {
+		serr = &serverError{status: http.StatusInternalServerError, err: err}
+	}
+	if serr.status == http.StatusInternalServerError {
+		log.Error(ctx, serr.err)
+	} else {
+		log.Infof(ctx, "returning %d (%s) for error %v", serr.status, http.StatusText(serr.status), err)
+	}
+	s.serveErrorPage(w, r, serr.status, serr.epage)
 }
 
 func (s *Server) serveErrorPage(w http.ResponseWriter, r *http.Request, status int, page *errorPage) {

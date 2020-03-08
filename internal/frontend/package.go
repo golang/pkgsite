@@ -19,14 +19,15 @@ import (
 
 // handlePackageDetails handles requests for package details pages. It expects
 // paths of the form "/<path>[@<version>?tab=<tab>]".
-func (s *Server) handlePackageDetails(w http.ResponseWriter, r *http.Request) {
+func (s *Server) servePackageDetails(w http.ResponseWriter, r *http.Request) error {
 	pkgPath, modulePath, version, err := parseDetailsURLPath(r.URL.Path)
 	if err != nil {
-		log.Infof(r.Context(), "handlePackageDetails: %v", err)
-		s.serveErrorPage(w, r, http.StatusBadRequest, nil)
-		return
+		return &serverError{
+			status: http.StatusBadRequest,
+			err:    fmt.Errorf("handlePackageDetails: %v", err),
+		}
 	}
-	s.servePackagePage(w, r, pkgPath, modulePath, version)
+	return s.servePackagePage(w, r, pkgPath, modulePath, version)
 }
 
 // handlePackageDetailsRedirect redirects all redirects to "/pkg" to "/".
@@ -37,12 +38,10 @@ func (s *Server) handlePackageDetailsRedirect(w http.ResponseWriter, r *http.Req
 
 // servePackagePage serves details pages for the package with import path
 // pkgPath, in the module specified by modulePath and version.
-func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPath, modulePath, version string) {
+func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPath, modulePath, version string) error {
 	ctx := r.Context()
-
-	if code, epage := checkPathAndVersion(ctx, s.ds, pkgPath, version); code != http.StatusOK {
-		s.serveErrorPage(w, r, code, epage)
-		return
+	if err := checkPathAndVersion(ctx, s.ds, pkgPath, version); err != nil {
+		return err
 	}
 	// This function handles top level behavior related to the existence of the
 	// requested pkgPath@version.
@@ -53,44 +52,38 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 	//   4. Just serve a 404
 	pkg, err := s.ds.GetPackage(ctx, pkgPath, modulePath, version)
 	if err == nil {
-		s.servePackagePageWithPackage(ctx, w, r, pkg, version)
-		return
+		return s.servePackagePageWithPackage(ctx, w, r, pkg, version)
 	}
 	if !errors.Is(err, derrors.NotFound) {
-		log.Error(ctx, err)
-		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
-		return
+		return err
 	}
 	if version == internal.LatestVersion {
 		// If we've already checked the latest version, then we know that this path
 		// is not a package at any version, so just skip ahead and serve the
 		// directory page.
-		s.serveDirectoryPage(w, r, pkgPath, modulePath, version)
-		return
+		return s.serveDirectoryPage(w, r, pkgPath, modulePath, version)
 	}
 	dir, err := s.ds.GetDirectory(ctx, pkgPath, modulePath, version, internal.AllFields)
 	if err == nil {
-		s.serveDirectoryPageWithDirectory(ctx, w, r, dir, version)
-		return
+		return s.serveDirectoryPageWithDirectory(ctx, w, r, dir, version)
 	}
 	if !errors.Is(err, derrors.NotFound) {
 		// The only error we expect is NotFound, so serve an 500 here, otherwise
 		// whatever response we resolve below might be inconsistent or misleading.
-		log.Errorf(ctx, "error checking for directory: %v", err)
-		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
-		return
+		return fmt.Errorf("checking for directory: %v", err)
 	}
 	_, err = s.ds.GetPackage(ctx, pkgPath, modulePath, internal.LatestVersion)
 	if err == nil {
-		epage := &errorPage{
-			Message: fmt.Sprintf("Package %s@%s is not available.", pkgPath, displayVersion(version, modulePath)),
-			SecondaryMessage: template.HTML(
-				fmt.Sprintf(`There are other versions of this package that are! To view them, `+
-					`<a href="/%s?tab=versions">click here</a>.`,
-					pkgPath)),
+		return &serverError{
+			status: http.StatusNotFound,
+			epage: &errorPage{
+				Message: fmt.Sprintf("Package %s@%s is not available.", pkgPath, displayVersion(version, modulePath)),
+				SecondaryMessage: template.HTML(
+					fmt.Sprintf(`There are other versions of this package that are! To view them, `+
+						`<a href="/%s?tab=versions">click here</a>.`,
+						pkgPath)),
+			},
 		}
-		s.serveErrorPage(w, r, http.StatusNotFound, epage)
-		return
 	}
 	if !errors.Is(err, derrors.NotFound) {
 		// Unlike the error handling for GetDirectory above, we don't serve an
@@ -100,17 +93,16 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 		// not we get an unexpected error from GetPackage -- we just don't serve a
 		// more informative error response.
 		log.Errorf(ctx, "error checking for latest package: %v", err)
+		return nil
 	}
-	s.servePathNotFoundErrorPage(w, r, "package")
+	return pathNotFoundError("package")
 }
 
-func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.ResponseWriter, r *http.Request, pkg *internal.VersionedPackage, requestedVersion string) {
+func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.ResponseWriter, r *http.Request, pkg *internal.VersionedPackage, requestedVersion string) error {
 
 	pkgHeader, err := createPackage(&pkg.Package, &pkg.ModuleInfo, requestedVersion == internal.LatestVersion)
 	if err != nil {
-		log.Errorf(ctx, "error creating package header for %s@%s: %v", pkg.Path, pkg.Version, err)
-		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
-		return
+		return fmt.Errorf("creating package header for %s@%s: %v", pkg.Path, pkg.Version, err)
 	}
 
 	tab := r.FormValue("tab")
@@ -123,7 +115,7 @@ func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.Respons
 			tab = "overview"
 		}
 		http.Redirect(w, r, fmt.Sprintf(r.URL.Path+"?tab=%s", tab), http.StatusFound)
-		return
+		return nil
 	}
 	canShowDetails := pkg.Package.IsRedistributable || settings.AlwaysShowDetails
 
@@ -132,9 +124,7 @@ func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.Respons
 		var err error
 		details, err = fetchDetailsForPackage(ctx, r, tab, s.ds, pkg)
 		if err != nil {
-			log.Errorf(ctx, "error fetching page for %q: %v", tab, err)
-			s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
-			return
+			return fmt.Errorf("fetching page for %q: %v", tab, err)
 		}
 	}
 	page := &DetailsPage{
@@ -150,4 +140,5 @@ func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.Respons
 		PageType:       "pkg",
 	}
 	s.servePage(ctx, w, settings.TemplateName, page)
+	return nil
 }

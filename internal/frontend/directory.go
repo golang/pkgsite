@@ -16,7 +16,6 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/licenses"
-	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/stdlib"
 )
 
@@ -38,24 +37,20 @@ type Directory struct {
 // serveDirectoryPage returns a directory view. It is called by
 // servePackagePage when an attempt to fetch a package path at any version
 // returns a 404.
-func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirPath, modulePath, version string) {
+func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirPath, modulePath, version string) error {
 	var ctx = r.Context()
 
 	dbDir, err := s.ds.GetDirectory(ctx, dirPath, modulePath, version, internal.AllFields)
 	if err != nil {
-		status := http.StatusInternalServerError
 		if errors.Is(err, derrors.NotFound) {
-			s.servePathNotFoundErrorPage(w, r, "package")
-			return
+			return pathNotFoundError("package")
 		}
-		log.Errorf(ctx, "serveDirectoryPage for %s@%s: %v", dirPath, version, err)
-		s.serveErrorPage(w, r, status, nil)
-		return
+		return fmt.Errorf("serveDirectoryPage for %s@%s: %v", dirPath, version, err)
 	}
-	s.serveDirectoryPageWithDirectory(ctx, w, r, dbDir, version)
+	return s.serveDirectoryPageWithDirectory(ctx, w, r, dbDir, version)
 }
 
-func (s *Server) serveDirectoryPageWithDirectory(ctx context.Context, w http.ResponseWriter, r *http.Request, dbDir *internal.Directory, requestedVersion string) {
+func (s *Server) serveDirectoryPageWithDirectory(ctx context.Context, w http.ResponseWriter, r *http.Request, dbDir *internal.Directory, requestedVersion string) error {
 
 	tab := r.FormValue("tab")
 	settings, ok := directoryTabLookup[tab]
@@ -65,15 +60,11 @@ func (s *Server) serveDirectoryPageWithDirectory(ctx context.Context, w http.Res
 	}
 	licenses, err := s.ds.GetModuleLicenses(ctx, dbDir.ModulePath, dbDir.Version)
 	if err != nil {
-		log.Errorf(ctx, "serveDirectoryPage for %s@%s: %v", dbDir.Path, requestedVersion, err)
-		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
-		return
+		return fmt.Errorf("serveDirectoryPage for %s@%s: %v", dbDir.Path, requestedVersion, err)
 	}
 	header, err := createDirectory(dbDir, licensesToMetadatas(licenses), false)
 	if err != nil {
-		log.Errorf(ctx, "serveDirectoryPage for %s@%s: %v", dbDir.Path, requestedVersion, err)
-		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
-		return
+		return fmt.Errorf("serveDirectoryPage for %s@%s: %v", dbDir.Path, requestedVersion, err)
 	}
 	if requestedVersion == internal.LatestVersion {
 		header.URL = constructDirectoryURL(dbDir.Path, dbDir.ModulePath, internal.LatestVersion)
@@ -81,9 +72,7 @@ func (s *Server) serveDirectoryPageWithDirectory(ctx context.Context, w http.Res
 
 	details, err := constructDetailsForDirectory(r, tab, dbDir, licenses)
 	if err != nil {
-		log.Errorf(ctx, "serveDirectoryPage for %s@%s: %v", dbDir.Path, requestedVersion, err)
-		s.serveErrorPage(w, r, http.StatusInternalServerError, nil)
-		return
+		return fmt.Errorf("serveDirectoryPage for %s@%s: %v", dbDir.Path, requestedVersion, err)
 	}
 
 	page := &DetailsPage{
@@ -98,6 +87,7 @@ func (s *Server) serveDirectoryPageWithDirectory(ctx context.Context, w http.Res
 		PageType:       "dir",
 	}
 	s.servePage(ctx, w, settings.TemplateName, page)
+	return nil
 }
 
 // fetchDirectoryDetails fetches data for the directory specified by path and

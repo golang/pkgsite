@@ -13,7 +13,6 @@ import (
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/mod/module"
 	"golang.org/x/mod/semver"
@@ -35,17 +34,16 @@ type DetailsPage struct {
 	PageType string
 }
 
-func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
+func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) error {
 	if r.URL.Path == "/" {
 		s.staticPageHandler("index.tmpl", "go.dev")(w, r)
-		return
+		return nil
 	}
 	parts := strings.SplitN(strings.TrimPrefix(r.URL.Path, "/"), "@", 2)
 	if stdlib.Contains(parts[0]) {
-		s.handleStdLib(w, r)
-		return
+		return s.serveStdLib(w, r)
 	}
-	s.handlePackageDetails(w, r)
+	return s.servePackageDetails(w, r)
 }
 
 // parseDetailsURLPath parses a URL path that refers (or may refer) to something
@@ -129,31 +127,36 @@ func parseDetailsURLPath(urlPath string) (fullPath, modulePath, version string, 
 
 // checkPathAndVersion verifies that the requested path and version are
 // acceptable. The given path may be a module or package path.
-func checkPathAndVersion(ctx context.Context, ds internal.DataSource, path, version string) (int, *errorPage) {
+func checkPathAndVersion(ctx context.Context, ds internal.DataSource, path, version string) error {
 	if version != internal.LatestVersion && !semver.IsValid(version) {
-		return http.StatusBadRequest, &errorPage{
-			Message:          fmt.Sprintf("%q is not a valid semantic version.", version),
-			SecondaryMessage: suggestedSearch(path),
+		return &serverError{
+			status: http.StatusBadRequest,
+			epage: &errorPage{
+				Message:          fmt.Sprintf("%q is not a valid semantic version.", version),
+				SecondaryMessage: suggestedSearch(path),
+			},
 		}
 	}
 	excluded, err := ds.IsExcluded(ctx, path)
 	if err != nil {
-		log.Errorf(ctx, "error checking excluded path: %v", err)
-		return http.StatusInternalServerError, nil
+		return err
 	}
 	if excluded {
 		// Return NotFound; don't let the user know that the package was excluded.
-		return http.StatusNotFound, nil
+		return &serverError{status: http.StatusNotFound}
 	}
-	return http.StatusOK, nil
+	return nil
 }
 
-// servePathNotFoundErrorPage returns an error page with instructions on how to
+// pathNotFoundError returns an error page with instructions on how to
 // add a package or module to the site. pathType is always either the string
 // "package" or "module".
-func (s *Server) servePathNotFoundErrorPage(w http.ResponseWriter, r *http.Request, pathType string) {
-	s.serveErrorPage(w, r, http.StatusNotFound, &errorPage{
-		Message:          "404 Not Found",
-		SecondaryMessage: template.HTML(fmt.Sprintf(`If you think this is a valid %s path, you can try fetching it following the <a href="/about#adding-a-package">instructions here</a>.`, pathType)),
-	})
+func pathNotFoundError(pathType string) error {
+	return &serverError{
+		status: http.StatusNotFound,
+		epage: &errorPage{
+			Message:          "404 Not Found",
+			SecondaryMessage: template.HTML(fmt.Sprintf(`If you think this is a valid %s path, you can try fetching it following the <a href="/about#adding-a-package">instructions here</a>.`, pathType)),
+		},
+	}
 }
