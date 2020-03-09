@@ -32,7 +32,7 @@ import (
 	"golang.org/x/discovery/internal/stdlib"
 )
 
-// Server can be installed to serve the go discovery etl.
+// Server can be installed to serve the go discovery worker.
 type Server struct {
 	cfg             *config.Config
 	indexClient     *index.Client
@@ -138,7 +138,7 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// exist in search_documents.
 	handle("/populate-search-documents", rmw(http.HandlerFunc(s.handlePopulateSearchDocuments)))
 
-	// returns the ETL homepage.
+	// returns the Worker homepage.
 	handle("/", http.HandlerFunc(s.handleStatusPage))
 }
 
@@ -306,7 +306,7 @@ func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleStatusPage serves the etl status page.
+// handleStatusPage serves the worker status page.
 func (s *Server) handleStatusPage(w http.ResponseWriter, r *http.Request) {
 	msg, err := s.doStatusPage(w, r)
 	if err != nil {
@@ -450,7 +450,7 @@ func parseTemplate(staticPath string) (*template.Template, error) {
 	if staticPath == "" {
 		return nil, nil
 	}
-	templatePath := filepath.Join(staticPath, "html/etl/index.tmpl")
+	templatePath := filepath.Join(staticPath, "html/worker/index.tmpl")
 	return template.New("index.tmpl").Funcs(template.FuncMap{
 		"truncate": truncate,
 		"timefmt":  formatTime,
