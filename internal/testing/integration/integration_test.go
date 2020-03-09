@@ -18,13 +18,13 @@ import (
 	"github.com/go-redis/redis/v7"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/config"
-	"golang.org/x/discovery/internal/etl"
 	"golang.org/x/discovery/internal/frontend"
 	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/queue"
 	"golang.org/x/discovery/internal/testing/testhelper"
+	etl "golang.org/x/discovery/internal/worker"
 )
 
 var testDB *postgres.DB

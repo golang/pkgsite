@@ -23,9 +23,9 @@ import (
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/database"
 	"golang.org/x/discovery/internal/dcensus"
-	"golang.org/x/discovery/internal/etl"
 	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/queue"
+	etl "golang.org/x/discovery/internal/worker"
 
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/middleware"
