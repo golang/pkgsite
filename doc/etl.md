@@ -7,7 +7,7 @@ version processing. Cloud tasks offers some nice features, such as built-in
 rate limiting and retries with exponential backoff.
 
 When run locally, the ETL uses an in-memory queue. This implementation has
-bounded parallelism (configurable via the `--workers` flag) but does not
+bounded parallelism (configurable via the `-workers` flag) but does not
 automatically retry failures.
 
 In order to populate local versions, you can either fetch the version explicitly
