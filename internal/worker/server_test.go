@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package etl
+package worker
 
 import (
 	"context"
@@ -36,7 +36,7 @@ var (
 
 func TestMain(m *testing.M) {
 	httpClient = &http.Client{Transport: fakeTransport{}}
-	postgres.RunDBTests("discovery_etl_test", m, &testDB)
+	postgres.RunDBTests("discovery_worker_test", m, &testDB)
 }
 
 type debugExporter struct {
@@ -52,7 +52,7 @@ func setupTraceDebugging(t *testing.T) {
 	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 }
 
-func TestETL(t *testing.T) {
+func TestWorker(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
@@ -146,7 +146,7 @@ func TestETL(t *testing.T) {
 
 			defer postgres.ResetTestDB(testDB, t)
 
-			// Use 10 workers to have parallelism consistent with the etl binary.
+			// Use 10 workers to have parallelism consistent with the worker binary.
 			q := queue.NewInMemory(ctx, proxyClient, testDB, 10, FetchAndUpdateState)
 
 			s, err := NewServer(&config.Config{}, testDB, indexClient, proxyClient, nil, q, nil, "")

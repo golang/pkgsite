@@ -24,7 +24,7 @@ import (
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/queue"
 	"golang.org/x/discovery/internal/testing/testhelper"
-	etl "golang.org/x/discovery/internal/worker"
+	"golang.org/x/discovery/internal/worker"
 )
 
 var testDB *postgres.DB
@@ -68,16 +68,16 @@ func TestEndToEndProcessing(t *testing.T) {
 	redisHAClient := redis.NewClient(&redis.Options{Addr: redisHA.Addr()})
 
 	// TODO(b/143760329): it would be better if InMemory made http requests
-	// back to ETL, rather than calling fetch itself.
-	queue := queue.NewInMemory(ctx, proxyClient, testDB, 10, etl.FetchAndUpdateState)
+	// back to worker, rather than calling fetch itself.
+	queue := queue.NewInMemory(ctx, proxyClient, testDB, 10, worker.FetchAndUpdateState)
 
-	etlServer, err := etl.NewServer(&config.Config{}, testDB, indexClient, proxyClient, redisHAClient, queue, nil, "../../../content/static")
+	workerServer, err := worker.NewServer(&config.Config{}, testDB, indexClient, proxyClient, redisHAClient, queue, nil, "../../../content/static")
 	if err != nil {
 		t.Fatal(err)
 	}
-	etlMux := http.NewServeMux()
-	etlServer.Install(etlMux.Handle)
-	etlHTTP := httptest.NewServer(etlMux)
+	workerMux := http.NewServeMux()
+	workerServer.Install(workerMux.Handle)
+	workerHTTP := httptest.NewServer(workerMux)
 
 	frontendServer, err := frontend.NewServer(testDB, redisHAClient, "../../../content/static", false)
 	if err != nil {
@@ -87,7 +87,7 @@ func TestEndToEndProcessing(t *testing.T) {
 	frontendServer.Install(frontendMux.Handle, redisCacheClient)
 	frontendHTTP := httptest.NewServer(frontendMux)
 
-	if _, err := doGet(etlHTTP.URL + "/poll-and-queue"); err != nil {
+	if _, err := doGet(workerHTTP.URL + "/poll-and-queue"); err != nil {
 		t.Fatal(err)
 	}
 	// TODO(b/143760329): This should really be made deterministic.
@@ -104,7 +104,7 @@ func TestEndToEndProcessing(t *testing.T) {
 
 	// Populate the auto-completion indexes from the search documents that should
 	// have been inserted above.
-	if _, err := doGet(etlHTTP.URL + "/update-redis-indexes"); err != nil {
+	if _, err := doGet(workerHTTP.URL + "/update-redis-indexes"); err != nil {
 		t.Fatal(err)
 	}
 	completionBody, err := doGet(frontendHTTP.URL + "/autocomplete?q=foo")

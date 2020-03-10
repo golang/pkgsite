@@ -25,7 +25,7 @@ import (
 	"golang.org/x/discovery/internal/dcensus"
 	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/queue"
-	etl "golang.org/x/discovery/internal/worker"
+	"golang.org/x/discovery/internal/worker"
 
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/middleware"
@@ -86,7 +86,7 @@ func main() {
 	fetchQueue := newQueue(ctx, cfg, proxyClient, db)
 	reportingClient := reportingClient(ctx, cfg)
 	redisClient := getRedis(ctx, cfg)
-	server, err := etl.NewServer(cfg, db, indexClient, proxyClient, redisClient, fetchQueue, reportingClient, *staticPath)
+	server, err := worker.NewServer(cfg, db, indexClient, proxyClient, redisClient, fetchQueue, reportingClient, *staticPath)
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
@@ -125,7 +125,7 @@ func main() {
 
 func newQueue(ctx context.Context, cfg *config.Config, proxyClient *proxy.Client, db *postgres.DB) queue.Queue {
 	if !cfg.OnAppEngine() {
-		return queue.NewInMemory(ctx, proxyClient, db, *workers, etl.FetchAndUpdateState)
+		return queue.NewInMemory(ctx, proxyClient, db, *workers, worker.FetchAndUpdateState)
 	}
 	client, err := cloudtasks.NewClient(ctx)
 	if err != nil {
@@ -194,9 +194,9 @@ func readProxyRemoved(ctx context.Context) {
 		log.Fatal(ctx, err)
 	}
 	for _, line := range lines {
-		etl.ProxyRemoved[line] = true
+		worker.ProxyRemoved[line] = true
 	}
-	log.Infof(ctx, "read %d excluded module versions from %s", len(etl.ProxyRemoved), filename)
+	log.Infof(ctx, "read %d excluded module versions from %s", len(worker.ProxyRemoved), filename)
 }
 
 // populateExcluded adds each element of excludedPrefixes to the excluded_prefixes
