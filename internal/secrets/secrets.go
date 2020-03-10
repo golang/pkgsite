@@ -6,8 +6,10 @@ package secrets
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
 
 	cloudkms "cloud.google.com/go/kms/apiv1"
 	"cloud.google.com/go/storage"
@@ -16,15 +18,22 @@ import (
 )
 
 var (
-	gcsBucket = "go-discovery-secrets"
+	gcsBucket = os.Getenv("GO_DISCOVERY_SECRETS_BUCKET")
 
 	// kmsKeyName is the resource name of the cryptographic key used for encrypting and decrypting secrets.
-	kmsKeyName = "projects/google.com:go-discovery-admin/locations/global/keyRings/storage/cryptoKeys/secrets_encryption_key"
+	kmsKeyName = os.Getenv("GO_DISCOVERY_KMS_KEY_NAME")
 )
 
 // Get returns the named secret value as plaintext.
 func Get(ctx context.Context, name string) (plaintext string, err error) {
 	defer derrors.Add(&err, "secrets.Get(ctx, %q)", name)
+
+	if gcsBucket == "" {
+		return "", errors.New("missing environment variable GO_DISCOVERY_SECRETS_BUCKET")
+	}
+	if kmsKeyName == "" {
+		return "", errors.New("missing environment variable GO_DISCOVERY_KMS_KEY_NAME")
+	}
 
 	client, err := storage.NewClient(ctx)
 	if err != nil {
@@ -60,6 +69,13 @@ func Get(ctx context.Context, name string) (plaintext string, err error) {
 // the same name without returning an error.
 func Set(ctx context.Context, name, plaintext string) (err error) {
 	defer derrors.Add(&err, "secrets.Set(ctx, %q, plaintext)", name)
+
+	if gcsBucket == "" {
+		return errors.New("missing environment variable GO_DISCOVERY_SECRETS_BUCKET")
+	}
+	if kmsKeyName == "" {
+		return errors.New("missing environment variable GO_DISCOVERY_KMS_KEY_NAME")
+	}
 
 	client, err := storage.NewClient(ctx)
 	if err != nil {

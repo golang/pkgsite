@@ -148,7 +148,9 @@ main() {
       standard_linters
       runcmd go mod tidy
       runcmd go test ./...
-      runcmd go test ./internal/secrets -use_cloud
+      # To test internal/secrets, set GO_DISCOVERY_SECRETS_BUCKET and GO_DISCOVERY_KMS_KEY_NAME
+      # to appropriate test values.
+      runcmd go test ./internal/secrets
       ;;
     ci)
       # Similar to the no-arg mode, but omit actions that require GCP

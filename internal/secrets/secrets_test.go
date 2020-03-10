@@ -8,22 +8,15 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
-	"flag"
 	"testing"
 
 	"cloud.google.com/go/storage"
 )
 
-var useCloud = flag.Bool("use_cloud", false, "Whether to use Google Cloud services in tests")
-
 func TestGetSet(t *testing.T) {
-	if !*useCloud {
-		return
+	if gcsBucket == "" || kmsKeyName == "" {
+		t.Skip("missing one of GO_DISCOVERY_SECRETS_BUCKET or GO_DISCOVERY_KMS_KEY_NAME env vars")
 	}
-
-	gcsBucket = "go-discovery-secrets-test"
-	kmsKeyName = "projects/go-discovery/locations/global/keyRings/testing-key-ring/cryptoKeys/key_for_testing"
-
 	name, val := "my_credential_"+randomStr(t), "🤭"
 	ctx := context.Background()
 
