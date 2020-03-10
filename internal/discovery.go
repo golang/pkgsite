@@ -119,7 +119,7 @@ type IndexVersion struct {
 	Timestamp time.Time
 }
 
-// ModuleVersionState holds an ETL module version state.
+// ModuleVersionState holds a worker module version state.
 type ModuleVersionState struct {
 	ModulePath string
 	Version    string
@@ -159,7 +159,7 @@ type ModuleVersionState struct {
 	GoModPath string
 }
 
-// PackageVersionState holds an ETL package version state. It is associated
+// PackageVersionState holds a worker package version state. It is associated
 // with a given module version state.
 type PackageVersionState struct {
 	PackagePath string
@@ -194,7 +194,7 @@ type SearchResult struct {
 }
 
 // Experiment holds data associated with an experimental feature for frontend
-// or ETL.
+// or worker.
 type Experiment struct {
 	// Name is the name of the feature.
 	Name string

@@ -4,7 +4,7 @@
 
 package fetch
 
-// Limits for discovery ETL.
+// Limits for discovery worker.
 const (
 	maxPackagesPerModule = 10000
 	maxImportsPerPackage = 1000

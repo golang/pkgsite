@@ -64,7 +64,7 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 	//
 	// Note that we end up here only if we first saw the alternative version
 	// (github.com/Sirupsen/logrus@v1.1.0 in the example) and then see the valid
-	// one. The "if code == 491" section of internal/etl.fetchAndUpdateState
+	// one. The "if code == 491" section of internal/worker.fetchAndUpdateState
 	// handles the case where we fetch the versions in the other order.
 	row := db.db.QueryRow(ctx, `
 			SELECT 1 FROM module_version_states

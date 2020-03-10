@@ -18,7 +18,7 @@ import (
 const keySep = "|"
 
 // Redis keys for completion sorted sets ("indexes"). They are in this package
-// so that they can be accessed by both ETL and frontend.
+// so that they can be accessed by both worker and frontend.
 const (
 	KeyPrefix    = "completions"
 	PopularKey   = KeyPrefix + "Popular"

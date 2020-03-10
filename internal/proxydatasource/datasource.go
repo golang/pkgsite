@@ -56,7 +56,7 @@ type versionKey struct {
 	modulePath, version string
 }
 
-// versionEntry holds the result of a call to etl.FetchVersion.
+// versionEntry holds the result of a call to worker.FetchVersion.
 type versionEntry struct {
 	module *internal.Module
 	err    error

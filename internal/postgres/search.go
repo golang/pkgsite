@@ -874,7 +874,7 @@ func isInternalPackage(path string) bool {
 
 // DeleteOlderVersionFromSearchDocuments deletes from search_documents every package with
 // the given module path whose version is older than the given version.
-// It is used when fetching a module with an alternative path. See etl/fetch.go:fetchAndUpdateState.
+// It is used when fetching a module with an alternative path. See internal/worker/fetch.go:fetchAndUpdateState.
 func (db *DB) DeleteOlderVersionFromSearchDocuments(ctx context.Context, modulePath, version string) (err error) {
 	defer derrors.Wrap(&err, "DeleteOlderVersionFromSearchDocuments(ctx, %q, %q)", modulePath, version)
 

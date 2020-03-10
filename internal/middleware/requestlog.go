@@ -44,7 +44,7 @@ func (l LocalLogger) Log(entry logging.Entry) {
 // off.
 //
 // Logs may be viewed in Pantheon by selecting the log source corresponding to
-// the AppEngine service name (e.g. 'dev-etl').
+// the AppEngine service name (e.g. 'dev-worker').
 func RequestLog(lg Logger) Middleware {
 	return func(h http.Handler) http.Handler {
 		return &handler{delegate: h, logger: lg}
