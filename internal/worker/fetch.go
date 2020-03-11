@@ -150,8 +150,6 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 
 	// If there were any errors processing the module then we didn't insert it.
 	// Delete it in case we are reprocessing an existing module.
-	
-	
 	if code > 400 {
 		log.Infof(ctx, "%s@%s: code=%d, deleting", modulePath, resolvedVersion, code)
 		if err := db.DeleteModule(ctx, nil, modulePath, resolvedVersion); err != nil {

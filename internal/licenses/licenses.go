@@ -225,19 +225,11 @@ func NewDetector(modulePath, version string, zr *zip.Reader, logf func(string, .
 }
 
 // ModuleIsRedistributable reports whether the given module is redistributable.
-
-
-
-
-
-
 func (d *Detector) ModuleIsRedistributable() bool {
 	return d.moduleRedist
 }
 
 // ModuleLicenses returns the licenses that apply to the module.
-
-
 func (d *Detector) ModuleLicenses() []*License {
 	return d.moduleLicenses
 }
@@ -322,8 +314,6 @@ func (d *Detector) Files(which WhichFiles) []*zip.File {
 	prefix := pathPrefix(cdir)
 	var files []*zip.File
 	for _, f := range d.zr.File {
-		
-		
 		if !fileNamesLowercase[strings.ToLower(path.Base(f.Name))] {
 			continue
 		}
