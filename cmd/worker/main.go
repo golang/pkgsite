@@ -202,7 +202,7 @@ func readProxyRemoved(ctx context.Context) {
 // populateExcluded adds each element of excludedPrefixes to the excluded_prefixes
 // table if it isn't already present.
 func populateExcluded(ctx context.Context, db *postgres.DB) {
-	const excludedFilename = "cmd/worker/excluded.txt"
+	const excludedFilename = "private/config/excluded.txt"
 	lines, err := readFileLines(excludedFilename)
 	if err != nil {
 		log.Fatal(ctx, err)
