@@ -6,10 +6,10 @@
 
 # Script for creating a new database locally.
 
-source devtools/lib.sh || { echo "Are you at repo root?"; exit 1; }
+source scripts/lib.sh || { echo "Are you at repo root?"; exit 1; }
 
 echo "CREATE DATABASE \"discovery-database\" \
-	OWNER = postgres \
-	TEMPLATE=template0 \
-	LC_COLLATE = 'C' \
-	LC_CTYPE = 'C';" | psql 'host=127.0.0.1 sslmode=disable user=postgres'
+        OWNER = postgres \
+        TEMPLATE=template0 \
+        LC_COLLATE = 'C' \
+        LC_CTYPE = 'C';" | psql 'host=127.0.0.1 sslmode=disable user=postgres'
