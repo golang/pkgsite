@@ -88,7 +88,7 @@ func SetupTestDB(dbName string) (_ *DB, err error) {
 			_, err = tryToMigrate(dbName)
 		}
 		if err != nil {
-			return nil, fmt.Errorf("unfixable error migrating database: %v.\nConsider running ./devtools/drop_test_dbs.sh", err)
+			return nil, fmt.Errorf("unfixable error migrating database: %v.\nConsider running ./scripts/drop_test_dbs.sh", err)
 		}
 	}
 	db, err := database.Open("postgres", dbtest.DBConnURI(dbName))
