@@ -202,8 +202,11 @@ func readProxyRemoved(ctx context.Context) {
 // populateExcluded adds each element of excludedPrefixes to the excluded_prefixes
 // table if it isn't already present.
 func populateExcluded(ctx context.Context, db *postgres.DB) {
-	const excludedFilename = "private/config/excluded.txt"
-	lines, err := readFileLines(excludedFilename)
+	filename := config.GetEnv("GO_DISCOVERY_EXCLUDED_FILENAME", "")
+	if filename == "" {
+		return
+	}
+	lines, err := readFileLines(filename)
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
@@ -219,7 +222,7 @@ func populateExcluded(ctx context.Context, db *postgres.DB) {
 			reason = strings.TrimSpace(line[i+1:])
 		}
 		if reason == "" {
-			log.Fatalf(ctx, "missing reason in %s, line %q", excludedFilename, line)
+			log.Fatalf(ctx, "missing reason in %s, line %q", filename, line)
 		}
 		present, err := db.IsExcluded(ctx, prefix)
 		if err != nil {
