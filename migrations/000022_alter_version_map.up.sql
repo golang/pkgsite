@@ -4,7 +4,7 @@
 
 BEGIN;
 
-ALTER TABLE version_map DROP CONSTRAINT version_map_module_path_resolved_version_fkey;
+ALTER TABLE version_map DROP CONSTRAINT version_map_module_path_fkey;
 ALTER TABLE version_map ADD COLUMN sort_version TEXT;
 
 END;
