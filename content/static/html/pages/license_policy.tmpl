@@ -33,7 +33,13 @@
       We currently detect and recognize the following licenses:
       <ul>
         {{range .LicenseTypes -}}
-          <li><a href="https://opensource.org/licenses/{{.}}" target="_blank">{{.}}</a></li>
+          <li>
+	    {{if .URL -}}
+              <a href="{{.URL}}" target="_blank">{{.Name}}</a>
+	    {{else}}
+	      {{.Name}}
+	    {{- end}}
+          </li>
         {{- end}}
       </ul>
     </p>

@@ -167,6 +167,20 @@ var osiNameOverrides = map[string]string{
 	"GPL3": "GPL-3.0",
 }
 
+// nonOSILicenses lists licenses that are not approved by OSI.
+var nonOSILicenses = map[string]bool{
+	"BlueOak-1.0":          true,
+	"BSD-0-Clause":         true,
+	"BSD-2-Clause-FreeBSD": true,
+	"CC-BY-3.0":            true,
+
+	"CC-BY-SA-4.0": true,
+	"CC0-1.0":      true,
+	"JSON":         true,
+	"MIT-0":        true,
+	"Unlicense":    true,
+}
+
 // fileNamesLowercase has all the entries of FileNames, downcased and made a set
 // for fast case-insensitive matching.
 var fileNamesLowercase = map[string]bool{}
@@ -177,19 +191,28 @@ func init() {
 	}
 }
 
-// AcceptedOSILicenses returns a sorted slice of license types (by OSI name)
-// that are accepted as redistributable. Its result is intended to be displayed
-// to users.
-func AcceptedOSILicenses() []string {
-	var lics []string
+// AcceptedLicenseInfo describes a license that is accepted by the discovery site.
+type AcceptedLicenseInfo struct {
+	Name string
+	URL  string
+}
+
+// AcceptedLicenses returns a sorted slice of license types that are accepted as
+// redistributable. Its result is intended to be displayed to users.
+func AcceptedLicenses() []AcceptedLicenseInfo {
+	var lics []AcceptedLicenseInfo
 	for l := range redistributableLicenseTypes {
 		osiName := osiNameOverrides[l]
 		if osiName == "" {
 			osiName = l
 		}
-		lics = append(lics, osiName)
+		var link string
+		if !nonOSILicenses[l] {
+			link = fmt.Sprintf("https://opensource.org/licenses/%s", osiName)
+		}
+		lics = append(lics, AcceptedLicenseInfo{osiName, link})
 	}
-	sort.Strings(lics)
+	sort.Slice(lics, func(i, j int) bool { return lics[i].Name < lics[j].Name })
 	return lics
 }
 
