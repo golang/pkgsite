@@ -41,7 +41,7 @@ verify_header() {
 # findcode finds source files in the repo, skipping third-party source.
 findcode() {
   find ${codedirs[@]} \
-    -not -path '*/thirdparty/*' \
+    -not -path '*/third_party/*' \
     \( -name *.go -o -name *.sql -o -name *.tmpl -o -name *.css -o -name *.js \)
 }
 
@@ -86,7 +86,7 @@ check_bad_migrations() {
 # check_staticcheck runs staticcheck on source files.
 check_staticcheck() {
   ensure_go_binary honnef.co/go/tools/cmd/staticcheck
-  runcmd staticcheck $(go list ./... | grep -v thirdparty | grep -v internal/doc | grep -v internal/render) | warnout
+  runcmd staticcheck $(go list ./... | grep -v third_party | grep -v internal/doc | grep -v internal/render) | warnout
 }
 
 # check_misspell runs misspell on source files.

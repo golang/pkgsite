@@ -11,7 +11,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link href="https://fonts.googleapis.com/css?family=Work+Sans:600|Roboto:400,700|Source+Code+Pro" rel="stylesheet">
 <link href="/static/css/stylesheet.css?version={{.AppVersionLabel}}" rel="stylesheet">
-<link href="/static/thirdparty/dialog-polyfill/dialog-polyfill.css?version={{.AppVersionLabel}}" rel="stylesheet">
+<link href="/static/third_party/dialog-polyfill/dialog-polyfill.css?version={{.AppVersionLabel}}" rel="stylesheet">
 <title>{{if .HTMLTitle}}{{.HTMLTitle}} · {{end}}go.dev</title>
 <!-- Google Tag Manager -->
 <script nonce="{{.Nonce}}">
@@ -208,6 +208,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </footer>
 {{block "post_content" .}}{{end}}
 {{if (.Experiments.IsActive "autocomplete")}}
-  <script nonce="{{.Nonce}}" src="/static/thirdparty/autoComplete.js/autoComplete.min.js?version={{.AppVersionLabel}}"></script>
+  <script nonce="{{.Nonce}}" src="/static/third_party/autoComplete.js/autoComplete.min.js?version={{.AppVersionLabel}}"></script>
   <script nonce="{{.Nonce}}" src="/static/js/completion.min.js?version={{.AppVersionLabel}}"></script>
 {{end}}
