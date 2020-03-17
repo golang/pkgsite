@@ -14,7 +14,10 @@ before sending patches.
 
 ## Finding issues
 
-All issues are labeled with the [`go.dev` label](https://github.com/golang/go/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Ago.dev). Issues that are suitable for contributors are additionally tagged with the [`help-wanted` label](https://github.com/golang/go/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Ago.dev+label%3A%22help+wanted%22+).
+All issues are labeled with the [`go.dev`
+label](https://github.com/golang/go/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Ago.dev).
+Issues that are suitable for contributors are additionally tagged with the
+[`help wanted` label](https://github.com/golang/go/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Ago.dev+label%3A%22help+wanted%22+).
 
 Before you begin working on an issue, please leave a comment that you are claiming it.
 
@@ -29,13 +32,15 @@ Before you begin working on an issue, please leave a comment that you are claimi
 
 2. Review the [design document](design.md).
 
-3. Download and install Cloud SDK at https://cloud.google.com/sdk/docs/
+3. We deploy to the [Google Cloud Platform](https://cloud.google.com). If you
+wish to set up a similar environment, you will want to
+download and install the Google Cloud SDK at https://cloud.google.com/sdk/docs/.
 
 4. Depending on the feature you are working on, review the contributing guides for:
 
-- [Frontend development](frontend.md)
-- [ETL development](etl.md)
-- [Database setup](database.md)
+- [Frontend development](doc/frontend.md)
+- [Worker development](doc/worker.md)
+- [Database setup](doc/postgres.md)
 
 ## Questions
 

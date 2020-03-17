@@ -22,7 +22,7 @@ The frontend has the following dependencies:
 - The Postgres DB, to retrieve information about modules and packages.
 - A Redis instance, as a cache.
 
-See [The Frontend](doc/frontend.md) for details.
+See [The Frontend](frontend.md) for details.
 
 ## The Worker
 
@@ -53,4 +53,4 @@ The worker has the following dependencies:
 - The proxy (proxy.golang.org by default) to fetch the module zip files.
 - The Postgres database.
 
-See [The Worker](doc/worker.md) for details.
+See [The Worker](worker.md) for details.

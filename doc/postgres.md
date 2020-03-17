@@ -1,22 +1,6 @@
 ### Databases
 
-#### Cloud SQL databases
-
 We use [PostgreSQL](https://www.postgresql.org).
-
-We currently have two databases in Cloud SQL:
-
-- Production: [discovery-db]()
-- Dev: [dev-discovery-db]()
-
-Run
-
-```
-go run devtools/cmd/dbadmin/dbadmin.go newuser <your-ldap> dev-discovery-db discovery-db
-```
-to create read-only user accounts for yourself in both databases.
-
-If the need ever arises to create a new database, use  `devtools/cmd/cloudsql/setupdb.go`.
 
 #### Local development database
 
@@ -85,9 +69,10 @@ local server, and running `CREATE DATABASE "discovery-database"` (or whatever
 name you choose).
 
 Once this database exists and these variables are correctly configured, run
-`./devtools/migrate_db.sh local up` once to initialize your local database, as
-described in 'Migrations' below. You will need to do this each time a new
-migration is added, to keep your local schema up-to-date.
+`scripts/create_local_db.sh` once to initialize your local database.
+
+Then apply migrations, as described in 'Migrations' below. You will need to do
+this each time a new migration is added, to keep your local schema up-to-date.
 
 
 ### Migrations
@@ -103,7 +88,7 @@ Migrations are managed with the [golang-migrate/migrate][] [CLI tool][].
 To create a new migration:
 
 ```
-migrate create -ext sql -dir migrations -seq <title>
+scripts/create_migration.sh <title>
 ```
 
 This creates two empty files in `/migrations`:
@@ -120,18 +105,10 @@ for details.
 
 #### Applying migrations for local development
 
-Do not use the `migrate` CLI directly to apply migrations. Use the
-`migrate_db.sh` script instead.
-
-
-To apply migrations to your local development database, run
+Use the `migrate` CLI:
 
 ```
-./devtools/migrate_db.sh local up
+migrate -source file:migrations \
+        -database "postgres://postgres@$GO_DISCOVERY_DATABASE_HOST:$GO_DISCOVERY_DATABASE_PORT/$GO_DISCOVERY_DATABASE_NAME}?sslmode=disable&password=${GO_DISCOVERY_DATABASE_PASSWORD}" \
+        up
 ```
-That assumes that your local database is running on port 5432. It will
-read the password from the `GO_DISCOVERY_DATABASE_PASSWORD` environment variable.
-
-#### Applying migrations for Cloud SQL
-
-See [the playbook page]().
