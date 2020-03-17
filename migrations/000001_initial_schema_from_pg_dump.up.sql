@@ -3,8 +3,8 @@
 -- license that can be found in the LICENSE file.
 --
 -- This schema migration is created from squashing all of our existing
--- migration files in
--- 
+-- migration files in commit 8670fb4511816244b7bb4e33912ce2cd3a1527ce.
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;

@@ -87,15 +87,15 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// that have been published and inserts that metadata into
 	// module_version_states. It also inserts the version into the task-queue
 	// to to be fetched and processed.
-	// This endpoint is invoked by a Cloud Scheduler job:
-	// 	// See the note about duplicate tasks for "/requeue" below.
+	// This endpoint is invoked by a Cloud Scheduler job.
+	// See the note about duplicate tasks for "/requeue" below.
 	handle("/poll-and-queue", rmw(http.HandlerFunc(s.handleIndexAndQueue)))
 
 	// cloud-scheduler: update-imported-by-count updates the imported_by_count for packages
 	// in search_documents where imported_by_count_updated_at is null or
 	// imported_by_count_updated_at < version_updated_at.
-	// This endpoint is invoked by a Cloud Scheduler job:
-	// 	handle("/update-imported-by-count", rmw(http.HandlerFunc(s.handleUpdateImportedByCount)))
+	// This endpoint is invoked by a Cloud Scheduler job.
+	handle("/update-imported-by-count", rmw(http.HandlerFunc(s.handleUpdateImportedByCount)))
 
 	// cloud-scheduler: download search document data and update the redis sorted
 	// set(s) used in auto-completion.
@@ -106,8 +106,8 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// request fails for any reason other than an http.StatusInternalServerError,
 	// it will return an http.StatusOK so that the task queue does not retry
 	// fetching module versions that have a terminal error.
-	// This endpoint is invoked by a Cloud Tasks queue:
-	// 	handle("/fetch/", http.StripPrefix("/fetch", http.HandlerFunc(s.handleFetch)))
+	// This endpoint is invoked by a Cloud Tasks queue.
+	handle("/fetch/", http.StripPrefix("/fetch", http.HandlerFunc(s.handleFetch)))
 
 	// manual: requeue queries the module_version_states table for the next
 	// batch of module versions to process, and enqueues them for processing.

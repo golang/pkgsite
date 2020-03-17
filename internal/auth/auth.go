@@ -15,9 +15,8 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
-// clientID is the OAuth 2.0 Client ID taken from
-// // See https://cloud.google.com/iap/docs/authentication-howto for more
-// details.
+// clientID is the OAuth 2.0 Client ID.
+// See https://cloud.google.com/iap/docs/authentication-howto for more details.
 const clientID = "117187402928-nl3u0qo5l2c2hhsuf2qj8irsfb3l6hfc.apps.googleusercontent.com"
 
 // NewClient creates an http.Client for accessing go-discovery services.

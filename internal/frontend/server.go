@@ -210,13 +210,12 @@ func newBasePage(r *http.Request, title string) basePage {
 	}
 }
 
-// GoogleAnalyticsTrackingID returns the tracking ID from
-// func (b basePage) GoogleAnalyticsTrackingID() string {
+// GoogleAnalyticsTrackingID returns the tracking ID from GoogleAnalytics.
+func (b basePage) GoogleAnalyticsTrackingID() string {
 	return "UA-141356704-1"
 }
 
-// GoogleTagManagerContainerID returns the container ID from
-// https://tagmanager.google.com/#/container/accounts/6000276055/containers/30295771.
+// GoogleTagManagerContainerID returns the container ID from GoogleTagManager.
 func (b basePage) GoogleTagManagerContainerID() string {
 	return "GTM-5J9TM28"
 }
