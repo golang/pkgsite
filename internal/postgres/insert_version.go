@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	"unicode/utf8"
 
 	"github.com/lib/pq"
 	"golang.org/x/discovery/internal"
@@ -141,7 +140,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) error {
 			m.Version,
 			m.CommitTime,
 			m.ReadmeFilePath,
-			m.ReadmeContents,
+			makeValidUnicode([]byte(m.ReadmeContents)),
 			version.ForSorting(m.Version),
 			m.VersionType,
 			m.SeriesPath(),
@@ -311,14 +310,6 @@ func validateModule(m *internal.Module) error {
 	}
 
 	var errReasons []string
-	if !utf8.ValidString(m.ReadmeContents) {
-		errReasons = append(errReasons, fmt.Sprintf("readme %q is not valid UTF-8", m.ReadmeFilePath))
-	}
-	for _, l := range m.Licenses {
-		if !utf8.ValidString(string(l.Contents)) {
-			errReasons = append(errReasons, fmt.Sprintf("license %q contains invalid UTF-8", l.FilePath))
-		}
-	}
 	if m.Version == "" {
 		errReasons = append(errReasons, "no specified version")
 	}
@@ -379,6 +370,8 @@ func (db *DB) DeleteModule(ctx context.Context, tx *sql.Tx, modulePath, version 
 }
 
 // makeValidUnicode removes null runes from license contents, because pq doesn't like them.
+// Also, replace non-unicode characters with the Unicode replacement character, which is
+// the behavior of for ... range on strings.
 func makeValidUnicode(bs []byte) string {
 	s := string(bs)
 	var b strings.Builder
