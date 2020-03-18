@@ -171,7 +171,7 @@ func reportingClient(ctx context.Context, cfg *config.Config) *errorreporting.Cl
 
 func logger(ctx context.Context, cfg *config.Config) middleware.Logger {
 	if cfg.OnAppEngine() {
-		logger, err := log.UseStackdriver(ctx, cfg, "etl-log")
+		logger, err := log.UseStackdriver(ctx, cfg, "worker-log")
 		if err != nil {
 			log.Fatal(ctx, err)
 		}
