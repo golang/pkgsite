@@ -4,7 +4,7 @@
 
 // Package render formats Go documentation as HTML.
 //
-// This is a temporary copy of CL 94855 (golang.org/cl/94855) for
+// This is a temporary copy of CL 72890 (golang.org/cl/72890) for
 // testing of and iteration on its implementation and design.
 // It doesn't need to be updated other than as part of work on
 // b/137567588. Please /cc dmitshur@ on all changes to it.
