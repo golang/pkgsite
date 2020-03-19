@@ -4,8 +4,7 @@ We use [PostgreSQL](https://www.postgresql.org).
 
 ## Local development database
 
-1. Install Postgres
-   You will want to run PostgreSQL on your machine for local development.
+1. Install PostgreSQL on your machine for local development.
    It should use the default Postgres port of 5432.
 
    If you use a Mac, the easiest way to do that is through installing
@@ -32,8 +31,7 @@ We use [PostgreSQL](https://www.postgresql.org).
    At this point you should have a Postgres server running on your local machine
    at port 5432.
 
-2. Set environment variables
-   Set the following environment variables:
+2. Set the following environment variables:
 
    - `GO_DISCOVERY_DATABASE_USER` (default: postgres)
    - `GO_DISCOVERY_DATABASE_PASSWORD`  (default: '')
@@ -43,8 +41,7 @@ We use [PostgreSQL](https://www.postgresql.org).
    See `internal/config/config.go` for details regarding construction of the
    database connection string.
 
-3. Set up local database
-   Once you have Postgres installed, you should create the `discovery-db` database
+3. Once you have Postgres installed, you should create the `discovery-db` database
    by running `scripts/create_local_db.sh`.
 
    Then apply migrations, as described in 'Migrations' below. You will need to do
