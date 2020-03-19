@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"html/template"
-	"os"
 	"regexp"
 	"strings"
 
@@ -24,17 +23,14 @@ type DocumentationDetails struct {
 	Documentation template.HTML
 }
 
-// doDocumentationHack controls whether to use a regexp replacement to append
+// addDocQueryParam controls whether to use a regexp replacement to append
 // ?tab=doc to urls linking to package identifiers within the documentation.
-//
-// This is a temporary measure so that we don't have to re-process all the
-// documentation in order to make this trivial change.
-var doDocumentationHack = os.Getenv("GO_DISCOVERY_DOCUMENTATION_HACK") == "TRUE"
+var addDocQueryParam = true
 
 // fetchDocumentationDetails returns a DocumentationDetails constructed from pkg.
 func fetchDocumentationDetails(pkg *internal.VersionedPackage) *DocumentationDetails {
 	docHTML := pkg.DocumentationHTML
-	if doDocumentationHack {
+	if addDocQueryParam {
 		docHTML = hackUpDocumentation(docHTML)
 	}
 	return &DocumentationDetails{

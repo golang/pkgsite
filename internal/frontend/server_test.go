@@ -348,7 +348,7 @@ func TestServer(t *testing.T) {
 		// path to use in an HTTP GET request
 		urlPath string
 		// whether to mutate the identifier links in documentation.
-		doDocumentationHack bool
+		addDocQueryParam bool
 		// statusCode we expect to see in the headers.
 		wantStatusCode int
 		// if non-empty, contents of Location header. For testing redirects.
@@ -448,10 +448,10 @@ func TestServer(t *testing.T) {
 				in("a", href("/pkg/io#Writer"), text("io.Writer"))),
 		},
 		{
-			name:                "package@version doc with hacked up links",
-			urlPath:             "/github.com/valid_module_name/foo/directory/hello?tab=doc",
-			doDocumentationHack: true,
-			wantStatusCode:      http.StatusOK,
+			name:             "package@version doc with hacked up links",
+			urlPath:          "/github.com/valid_module_name/foo/directory/hello?tab=doc",
+			addDocQueryParam: true,
+			wantStatusCode:   http.StatusOK,
 			want: in(".Documentation",
 				in("a", href("/io?tab=doc#Writer"), text("io.Writer"))),
 		},
@@ -797,8 +797,8 @@ func TestServer(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) { // remove initial '/' for name
-			defer func(orig bool) { doDocumentationHack = orig }(doDocumentationHack)
-			doDocumentationHack = tc.doDocumentationHack
+			defer func(orig bool) { addDocQueryParam = orig }(addDocQueryParam)
+			addDocQueryParam = tc.addDocQueryParam
 			w := httptest.NewRecorder()
 			handler.ServeHTTP(w, httptest.NewRequest("GET", tc.urlPath, nil))
 			res := w.Result()
