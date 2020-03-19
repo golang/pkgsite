@@ -30,7 +30,7 @@ Before you begin working on an issue, please leave a comment that you are claimi
 
 - Our canonical Git repository is located at [https://go.googlesource.com/discovery](https://go.googlesource.com/discovery). [github.com/golang/discovery](https://github.com/golang/discovery) is a mirror of that repository.
 
-2. Review the [design document](design.md).
+2. Review the [design document](doc/design.md).
 
 3. We deploy to the [Google Cloud Platform](https://cloud.google.com). If you
 wish to set up a similar environment, you will want to
