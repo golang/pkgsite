@@ -268,7 +268,7 @@ func load(ctx context.Context) (_ *Config, err error) {
 	}
 	cfg.DBSecondaryHost = chooseOne(os.Getenv("GO_DISCOVERY_DATABASE_SECONDARY_HOST"))
 	cfg.DBPort = GetEnv("GO_DISCOVERY_DATABASE_PORT", "5432")
-	cfg.DBName = GetEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-database")
+	cfg.DBName = GetEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-db")
 	cfg.DBSecret = os.Getenv("GO_DISCOVERY_DATABASE_SECRET")
 
 	if cfg.DBSecret != "" {

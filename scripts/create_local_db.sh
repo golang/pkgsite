@@ -8,7 +8,7 @@
 
 source scripts/lib.sh || { echo "Are you at repo root?"; exit 1; }
 
-echo "CREATE DATABASE \"discovery-database\" \
+echo "CREATE DATABASE \"discovery-db\" \
         OWNER = postgres \
         TEMPLATE=template0 \
         LC_COLLATE = 'C' \
