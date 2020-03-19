@@ -42,5 +42,3 @@ developers have installed on their system.
 If you are modifying CSS or Javascript, install prettier as described at
 https://prettier.io/docs/en/install.html, and run `./all.bash prettier` to
 format your changes before mailing your CL.
-
-To check for broken links in prod, run `devtools/find_broken_links.sh`.
