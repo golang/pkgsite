@@ -5,6 +5,7 @@
 -->
 {{define "main_content"}}
 <div class="Container">
+  {{if .GodocURL}}<a class="GodocButton" href="{{.GodocURL}}">Back to godoc.org</a>{{end}}
   {{$header := .Header}}
   {{$pageType := .PageType}}
   <header class="DetailsHeader">

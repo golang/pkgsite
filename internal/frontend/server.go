@@ -11,6 +11,7 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -183,6 +184,7 @@ type basePage struct {
 	Query       string
 	Nonce       string
 	Experiments *experiment.Set
+	GodocURL    *url.URL // the equivalent page on godoc.org. non-nil only when user is redirected from godoc.org
 }
 
 // licensePolicyPage is used to generate the static license policy page.
@@ -211,6 +213,7 @@ func newBasePage(r *http.Request, title string) basePage {
 		Query:       searchQuery(r),
 		Nonce:       middleware.NoncePlaceholder,
 		Experiments: experiment.FromContext(r.Context()),
+		GodocURL:    middleware.GodocURLFromContext(r.Context()),
 	}
 }
 

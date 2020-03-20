@@ -6,14 +6,13 @@ package middleware
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"strconv"
 	"time"
-
-	"compress/gzip"
 
 	"github.com/go-redis/redis/v7"
 	"go.opencensus.io/stats"

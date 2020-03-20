@@ -133,6 +133,7 @@ func main() {
 	mw := middleware.Chain(
 		middleware.RequestLog(requestLogger),
 		middleware.Quota(cfg.Quota),
+		middleware.GodocURL(),                          // potentially redirects so should be early in chain
 		middleware.SecureHeaders(),                     // must come before any caching for nonces to work
 		middleware.LatestVersion(server.LatestVersion), // must come before caching for version badge to work
 		middleware.Panic(panicHandler),
