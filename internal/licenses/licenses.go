@@ -173,12 +173,13 @@ var nonOSILicenses = map[string]bool{
 	"BSD-0-Clause":         true,
 	"BSD-2-Clause-FreeBSD": true,
 	"CC-BY-3.0":            true,
-
-	"CC-BY-SA-4.0": true,
-	"CC0-1.0":      true,
-	"JSON":         true,
-	"MIT-0":        true,
-	"Unlicense":    true,
+	"CC-BY-4.0":            true,
+	"CC-BY-SA-3.0":         true,
+	"CC-BY-SA-4.0":         true,
+	"CC0-1.0":              true,
+	"JSON":                 true,
+	"MIT-0":                true,
+	"Unlicense":            true,
 }
 
 // fileNamesLowercase has all the entries of FileNames, downcased and made a set
