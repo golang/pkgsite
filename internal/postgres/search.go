@@ -707,7 +707,7 @@ func insertImportedByCounts(ctx context.Context, tx *sql.Tx, counts map[string]i
 func compareImportedByCounts(ctx context.Context, tx *sql.Tx) (err error) {
 	defer derrors.Wrap(&err, "compareImportedByCounts(ctx, tx)")
 
-	rows, err := tx.QueryContext(ctx, `
+	query := `
 		SELECT
 			s.package_path,
 			s.imported_by_count,
@@ -717,16 +717,12 @@ func compareImportedByCounts(ctx context.Context, tx *sql.Tx) (err error) {
 		INNER JOIN
 			computed_imported_by_counts c
 		ON
-			s.package_path = c.package_path;`)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-
+			s.package_path = c.package_path
+	`
 	// Compute some info about the changes to import-by counts.
 	const changeThreshold = 0.05 // count how many counts change by at least this fraction
 	var total, zero, change, diff int
-	for rows.Next() {
+	err = database.RunQueryTx(ctx, tx, query, func(rows *sql.Rows) error {
 		var path string
 		var old, new int
 		if err := rows.Scan(&path, &old, &new); err != nil {
@@ -738,14 +734,15 @@ func compareImportedByCounts(ctx context.Context, tx *sql.Tx) (err error) {
 		}
 		if old == 0 {
 			zero++
-			continue
+			return nil
 		}
 		fracDiff := math.Abs(float64(new-old)) / float64(old)
 		if fracDiff > changeThreshold {
 			diff++
 		}
-	}
-	if err := rows.Err(); err != nil {
+		return nil
+	})
+	if err != nil {
 		return err
 	}
 	log.Infof(ctx, "%6d total rows in search_documents match computed_imported_by_counts", total)
@@ -882,16 +879,12 @@ func (db *DB) DeleteOlderVersionFromSearchDocuments(ctx context.Context, moduleP
 		// Collect all package paths in search_documents with the given module path
 		// and an older version. (package_path is the primary key of search_documents.)
 		var ppaths []string
-		rows, err := tx.QueryContext(ctx, `
-				SELECT package_path, version
-				FROM search_documents
-				WHERE module_path = $1`,
-			modulePath)
-		if err != nil {
-			return err
-		}
-		defer rows.Close()
-		for rows.Next() {
+		query := `
+			SELECT package_path, version
+			FROM search_documents
+			WHERE module_path = $1
+		`
+		err := database.RunQueryTx(ctx, tx, query, func(rows *sql.Rows) error {
 			var ppath, v string
 			if err := rows.Scan(&ppath, &v); err != nil {
 				return err
@@ -899,8 +892,9 @@ func (db *DB) DeleteOlderVersionFromSearchDocuments(ctx context.Context, moduleP
 			if semver.Compare(v, version) < 0 {
 				ppaths = append(ppaths, ppath)
 			}
-		}
-		if err := rows.Err(); err != nil {
+			return nil
+		}, modulePath)
+		if err != nil {
 			return err
 		}
 		if len(ppaths) == 0 {

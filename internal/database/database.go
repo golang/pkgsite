@@ -67,7 +67,7 @@ func (db *DB) Exec(ctx context.Context, query string, args ...interface{}) (res 
 	return db.db.ExecContext(ctx, query, args...)
 }
 
-// ExecTx runs a query in a transaction.
+// ExecTx runs a statement in a transaction.
 func ExecTx(ctx context.Context, tx *sql.Tx, query string, args ...interface{}) (res sql.Result, err error) {
 	defer logQuery(ctx, query, args)(&err)
 
@@ -92,8 +92,22 @@ func (db *DB) RunQuery(ctx context.Context, query string, f func(*sql.Rows) erro
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
+	return processRows(rows, f)
+}
 
+// RunQueryTx is like RunQuery, but runs the query inside a transaction.
+func RunQueryTx(ctx context.Context, tx *sql.Tx, query string, f func(*sql.Rows) error, args ...interface{}) (err error) {
+	defer logQuery(ctx, query, args)(&err)
+	rows, err := tx.QueryContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+	return processRows(rows, f)
+}
+
+// processRows iterates through rows, calling f on each row.
+func processRows(rows *sql.Rows, f func(*sql.Rows) error) error {
+	defer rows.Close()
 	for rows.Next() {
 		if err := f(rows); err != nil {
 			return err
