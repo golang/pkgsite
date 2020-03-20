@@ -1,0 +1,87 @@
+<!--
+  Copyright 2019 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+{{define "main_content"}}
+<div class="Container">
+   <div class="Content">
+      <h1 class="Content-header">About pkg.go.dev</h1>
+      <p>
+         Pkg.go.dev is a place to discover Go packages and find the information you need
+         to evaluate them.
+      </p>
+      <h2>Adding a package</h2>
+      <p>
+	 Data for the site is downloaded from proxy.golang.org. We monitor the
+	 <a href="https://index.golang.org" target="_blank">Go Module Index</a>
+	 regularly for new packages to add to pkg.go.dev. If you don’t see a
+	 package on pkg.go.dev, you can add it by doing either one of the following:
+      <ul>
+         <li>
+	   Making a request to <a href="https://proxy.golang.org" target="_blank">proxy.golang.org</a>
+	   for the module version, to any endpoint specified by the Module proxy
+	   protocol. For example:
+	</li>
+         <pre>https://proxy.golang.org/example.com/my/module/@v/v1.0.0.info</pre>
+         <li>
+	   Downloading the package via the
+	   <a href="https://golang.org/cmd/go/#hdr-Add_dependencies_to_current_module_and_install_them" target="_blank">go command</a>.
+	   For example:
+	 </li>
+         <pre>GOPROXY="https://proxy.golang.org GO111MODULE=on go get example.com/my/module@v1.0.0</pre>
+      </ul>
+      <p>
+      <h2>Removing a package</h2>
+      <p>
+	 If you would like a package removed, please
+	 <a href="https://golang.org/s/discovery-feedback" target="_blank">post on the Go Issue Tracker</a>
+	 or email <a href="mailto:go-discovery-feedback@google.com" target="_blank">go-discovery-feedback@google.com</a>
+	 with the import path or module path that you want to remove.
+      </p>
+      <p>
+	 Note that we can only remove a module entirely from the site. We
+	 cannot remove specific versions.
+      </p>
+      <h2>Documentation</h2>
+      <p>
+	 Documentation is generated based on Go source code downloaded from
+	 proxy.golang.org/&lt;module&gt;/@v/&lt;version&gt;.zip. New module
+	 versions are fetched from index.golang.org and added to pkg.go.dev
+	 site every few minutes.
+      </p>
+      <p>
+	 The <a href="https://blog.golang.org/godoc" target="_blank">guidelines for writing documentation</a> for the godoc tool apply to
+	 pkg.go.dev.
+      </p>
+      <p>
+	 It’s important to write a good summary of the package in the first
+	 sentence of the package comment. Pkg.go.dev indexes the first
+	 sentence and displays it in search results.
+      </p>
+      <p>
+	 Pkg.go.dev displays the GOOS and GOARCH for the documentation
+	 displayed at the bottom of the documentation page.
+      </p>
+      <h2>Keyboard Shortcuts</h2>
+      <p>
+	 There are keyboard shortcuts for navigating package documentation
+	 pages. Type <strong>?</strong> on a package page for help.
+      </p>
+      <h2>License policy</h2>
+      <p>
+	 Information for a given package or module may be limited if we are not
+	 able to detect a suitable license. See our
+	 <a href="https://pkg.go.dev/license-policy" target="_blank">license policy</a> for more information.
+      <p>
+      <h2>Feedback</h2>
+      <p>
+	 Share your ideas, feature requests, and bugs on the
+	 <a href="https://golang.org/s/discovery-feedback" target="_blank">Go Issue Tracker</a>.
+	 For questions, please post on the #tools slack channel on the
+	 <a href="https://invite.slack.golangbridge.org/" target="_blank">Gopher Slack</a>, or
+	 email the <a href="https://groups.google.com/forum/#!forum/golang-dev" target="_blank">golang-dev mailing list</a>.
+      </p>
+   </div>
+</div>
+{{end}}
