@@ -33,6 +33,7 @@ type Server struct {
 	// set.
 	cmplClient      *redis.Client
 	staticPath      string
+	thirdPartyPath  string
 	templateDir     string
 	reloadTemplates bool
 	errorPage       []byte
@@ -44,7 +45,7 @@ type Server struct {
 // NewServer creates a new Server for the given database and template directory.
 // reloadTemplates should be used during development when it can be helpful to
 // reload templates from disk each time a page is loaded.
-func NewServer(ds internal.DataSource, cmplClient *redis.Client, staticPath string, reloadTemplates bool) (*Server, error) {
+func NewServer(ds internal.DataSource, cmplClient *redis.Client, staticPath string, thirdPartyPath string, reloadTemplates bool) (*Server, error) {
 	templateDir := filepath.Join(staticPath, "html")
 	ts, err := parsePageTemplates(templateDir)
 	if err != nil {
@@ -54,6 +55,7 @@ func NewServer(ds internal.DataSource, cmplClient *redis.Client, staticPath stri
 		ds:              ds,
 		cmplClient:      cmplClient,
 		staticPath:      staticPath,
+		thirdPartyPath:  thirdPartyPath,
 		templateDir:     templateDir,
 		reloadTemplates: reloadTemplates,
 		templates:       ts,
@@ -79,6 +81,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 		searchHandler = middleware.Cache("search", redisClient, middleware.TTL(defaultTTL))(searchHandler)
 	}
 	handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(s.staticPath))))
+	handle("/third_party/", http.StripPrefix("/third_party", http.FileServer(http.Dir(s.thirdPartyPath))))
 	handle("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(s.staticPath)))
 	}))

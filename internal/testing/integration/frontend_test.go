@@ -138,7 +138,7 @@ func TestModulePackageDirectoryResolution(t *testing.T) {
 				in(".DetailsContent", hasText("I'm a package"))),
 		},
 	}
-	s, err := frontend.NewServer(testDB, nil, "../../../content/static", false)
+	s, err := frontend.NewServer(testDB, nil, "../../../content/static", "../../../third_party", false)
 	if err != nil {
 		t.Fatal(err)
 	}

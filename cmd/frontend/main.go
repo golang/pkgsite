@@ -32,6 +32,7 @@ import (
 
 var (
 	staticPath      = flag.String("static", "content/static", "path to folder containing static files served")
+	thirdPartyPath  = flag.String("third_party", "third_party", "path to folder containing third-party libraries")
 	reloadTemplates = flag.Bool("reload_templates", false, "reload templates on each page load (to be used during development)")
 	directProxy     = flag.String("direct_proxy", "", "if set to a valid URL, uses the module proxy referred to by this URL "+
 		"as a direct backend, bypassing the database")
@@ -86,7 +87,7 @@ func main() {
 			Addr: cfg.RedisHAHost + ":" + cfg.RedisHAPort,
 		})
 	}
-	server, err := frontend.NewServer(ds, haClient, *staticPath, *reloadTemplates)
+	server, err := frontend.NewServer(ds, haClient, *staticPath, *thirdPartyPath, *reloadTemplates)
 	if err != nil {
 		log.Fatalf(ctx, "frontend.NewServer: %v", err)
 	}
