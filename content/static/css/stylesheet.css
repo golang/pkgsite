@@ -818,6 +818,9 @@ code {
 .Documentation-exampleDetails {
   margin-top: 1rem;
 }
+.Documentation-exampleDetailsBody pre {
+  margin: 1rem 0;
+}
 .Documentation-exampleDetailsHeader {
   color: var(--turq-text);
   text-decoration: none;

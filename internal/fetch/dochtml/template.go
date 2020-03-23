@@ -223,7 +223,6 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 				<pre>{{"\n"}}{{.Output}}</pre>{{"\n" -}}
 			{{- end -}}
 		</div>{{"\n" -}}
-		<br/>{{"\n" -}}
 	</details>{{"\n" -}}
 	{{"\n"}}
 	{{- end -}}
