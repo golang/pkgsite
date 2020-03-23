@@ -77,6 +77,9 @@ func (r *Renderer) declHTML(doc string, decl ast.Decl) (out struct{ Doc, Decl te
 				id := badAnchorRx.ReplaceAllString(blk.title, "_")
 				b.WriteString(`<h3 id="hdr-` + id + `">`)
 				b.WriteString(template.HTMLEscapeString(blk.title))
+				if !r.disablePermalinks {
+					b.WriteString(` <a href="#hdr-` + id + `">¶</a>`)
+				}
 				b.WriteString("</h3>\n")
 			}
 		}

@@ -148,6 +148,7 @@ func DefaultTestVersions() []*TestVersion {
 		{"rsc.io/quote", "v1.5.2"},
 		{"rsc.io/quote/v2", "v2.0.1"},
 		{"build.constraints/module", "v1.0.0"},
+		{"doc.test", "v1.0.0"},
 	} {
 		rootDir := filepath.Join(absPath, "modules")
 		f := filepath.FromSlash(fmt.Sprintf("%s@%s", v[0], v[1]))

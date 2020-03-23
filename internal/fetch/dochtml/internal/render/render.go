@@ -39,6 +39,7 @@ type Renderer struct {
 	pids              *packageIDs
 	packageURL        func(string) string
 	disableHotlinking bool
+	disablePermalinks bool
 }
 
 type Options struct {
@@ -59,12 +60,18 @@ type Options struct {
 	//
 	// Only relevant for HTML formatting.
 	DisableHotlinking bool
+
+	// DisablePermalinks turns off inserting of '¶' permalinks in headings.
+	//
+	// Only relevant for HTML formatting.
+	DisablePermalinks bool
 }
 
 func New(fset *token.FileSet, pkg *doc.Package, opts *Options) *Renderer {
 	var others []*doc.Package
 	var packageURL func(string) string
 	var disableHotlinking bool
+	var disablePermalinks bool
 	if opts != nil {
 		if len(opts.RelatedPackages) > 0 {
 			others = opts.RelatedPackages
@@ -73,9 +80,16 @@ func New(fset *token.FileSet, pkg *doc.Package, opts *Options) *Renderer {
 			packageURL = opts.PackageURL
 		}
 		disableHotlinking = opts.DisableHotlinking
+		disablePermalinks = opts.DisablePermalinks
 	}
 	pids := newPackageIDs(pkg, others...)
-	return &Renderer{fset: fset, pids: pids, packageURL: packageURL, disableHotlinking: disableHotlinking}
+	return &Renderer{
+		fset:              fset,
+		pids:              pids,
+		packageURL:        packageURL,
+		disableHotlinking: disableHotlinking,
+		disablePermalinks: disablePermalinks,
+	}
 }
 
 // Synopsis returns a one-line summary of the given input node.

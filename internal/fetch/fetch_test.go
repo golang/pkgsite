@@ -210,6 +210,22 @@ func TestExtractPackagesFromZip(t *testing.T) {
 			contents: map[string]string{"file": "foo"},
 			wantErr:  errMalformedZip,
 		},
+		{
+			name:    "doc.test",
+			version: "v1.0.0",
+			packages: map[string]*internal.Package{
+				"permalink": {
+					Name:              "permalink",
+					Path:              "doc.test/permalink",
+					Synopsis:          "Package permalink is for testing the heading permalink documentation rendering feature.",
+					DocumentationHTML: "<h3 id=\"hdr-This_is_a_heading\">This is a heading <a href=\"#hdr-This_is_a_heading\">¶</a></h3>",
+					Imports:           []string{},
+					V1Path:            "doc.test/permalink",
+					GOOS:              "linux",
+					GOARCH:            "amd64",
+				},
+			},
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			var versions []*proxy.TestVersion
