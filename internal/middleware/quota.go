@@ -37,8 +37,6 @@ var (
 	}
 )
 
-const teeproxyURL = ""
-
 // Quota implements a simple IP-based rate limiter. Each set of incoming IP
 // addresses with the same low-order byte gets qps requests per second, with the
 // given burst.
@@ -51,28 +49,33 @@ func Quota(settings config.QuotaSettings) Middleware {
 
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.Referer() != teeproxyURL {
-				key := ipKey(r.Header.Get("X-Forwarded-For"))
-				// key is empty if we couldn't parse an IP, or there is no IP.
-				// Fail open in this case: allow serving.
-				var limiter *rate.Limiter
-				if key != "" {
-					mu.Lock()
-					if v, ok := cache.Get(key); ok {
-						limiter = v.(*rate.Limiter)
-					} else {
-						limiter = rate.NewLimiter(rate.Limit(settings.QPS), settings.Burst)
-						cache.Add(key, limiter)
-					}
-					mu.Unlock()
-				}
-				blocked := limiter != nil && !limiter.Allow()
-				recordQuotaMetric(blocked)
-				if blocked && settings.RecordOnly != nil && !*settings.RecordOnly {
-					const tmr = http.StatusTooManyRequests
-					http.Error(w, http.StatusText(tmr), tmr)
+			for _, url := range settings.AcceptedURLs {
+				if r.Referer() == url {
+					h.ServeHTTP(w, r)
 					return
 				}
+			}
+
+			key := ipKey(r.Header.Get("X-Forwarded-For"))
+			// key is empty if we couldn't parse an IP, or there is no IP.
+			// Fail open in this case: allow serving.
+			var limiter *rate.Limiter
+			if key != "" {
+				mu.Lock()
+				if v, ok := cache.Get(key); ok {
+					limiter = v.(*rate.Limiter)
+				} else {
+					limiter = rate.NewLimiter(rate.Limit(settings.QPS), settings.Burst)
+					cache.Add(key, limiter)
+				}
+				mu.Unlock()
+			}
+			blocked := limiter != nil && !limiter.Allow()
+			recordQuotaMetric(blocked)
+			if blocked && settings.RecordOnly != nil && !*settings.RecordOnly {
+				const tmr = http.StatusTooManyRequests
+				http.Error(w, http.StatusText(tmr), tmr)
+				return
 			}
 			h.ServeHTTP(w, r)
 		})

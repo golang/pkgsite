@@ -191,6 +191,9 @@ type QuotaSettings struct {
 	// Record data about blocking, but do not actually block.
 	// This is a *bool, so we can distinguish "not present" from "false" in an override
 	RecordOnly *bool
+	// AcceptedURLs is the list of URLs that will be ignored by the quota
+	// middleware.
+	AcceptedURLs []string
 }
 
 var cfg Config
@@ -283,12 +286,12 @@ func load(ctx context.Context) (_ *Config, err error) {
 	cfg.RedisCachePort = GetEnv("GO_DISCOVERY_REDIS_PORT", "6379")
 	cfg.RedisHAHost = os.Getenv("GO_DISCOVERY_REDIS_HA_HOST")
 	cfg.RedisHAPort = GetEnv("GO_DISCOVERY_REDIS_HA_PORT", "6379")
-
 	cfg.Quota = QuotaSettings{
-		QPS:        10,
-		Burst:      20,
-		MaxEntries: 1000,
-		RecordOnly: func() *bool { t := true; return &t }(),
+		QPS:          10,
+		Burst:        20,
+		MaxEntries:   1000,
+		RecordOnly:   func() *bool { t := true; return &t }(),
+		AcceptedURLs: strings.Split(GetEnv("GO_DISCOVERY_ACCEPTED_LIST", ""), ","),
 	}
 
 	cfg.UseProfiler = os.Getenv("GO_DISCOVERY_USE_PROFILER") == "TRUE"
