@@ -71,9 +71,6 @@ type License struct {
 }
 
 var (
-	
-	
-	
 	FileNames = []string{
 		"COPYING",
 		"COPYING.md",
