@@ -83,6 +83,12 @@ check_bad_migrations() {
   done
 }
 
+# check_unparam runs unparam on source files.
+check_unparam() {
+  ensure_go_binary mvdan.cc/unparam
+  runcmd unparam ./...
+}
+
 # check_staticcheck runs staticcheck on source files.
 check_staticcheck() {
   ensure_go_binary honnef.co/go/tools/cmd/staticcheck
