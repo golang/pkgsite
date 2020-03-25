@@ -56,32 +56,15 @@ func SecureHeaders() Middleware {
 			// Allow known sources for fonts.
 			p.add("font-src", self, "fonts.googleapis.com", "fonts.gstatic.com")
 
-			// Because we are using the go/feedback widget, we need
-			// to allow unsafe-inline and the following as valid
-			// sources for stylesheets:
-			// feedback.googleusercontent.com, www.gstatic.com.
-			//
 			// fonts.googleapis.com is used for fonts.
-			p.add("style-src",
-				self,
-				"'unsafe-inline'",
-				"fonts.googleapis.com",
-				"feedback.googleusercontent.com",
-				"www.gstatic.com")
+			p.add("style-src", self, "'unsafe-inline'", "fonts.googleapis.com")
 
-			// Because we are using the go/feedback widget, we need to
-			// allow the following as valid sources for our frame-src policy:
-			// www.google.com, feedback.googleusercontent.com
-			p.add("frame-src", self, "www.google.com", "feedback.googleusercontent.com")
+			p.add("frame-src", self)
 
 			// Because we are rendering user-provided README's, we allow arbitrary image
 			// sources. This could possibly be narrowed to known content hosts based on
 			// e.g. the github.com CSP, but that seemed fragile.
-			//
-			// Because we are using the go/feedback widget, we need to specify
-			// the data scheme data: to allow data: URIs to be uased as a
-			// content source.
-			p.add("img-src", self, "data:", "*")
+			p.add("img-src", self)
 
 			// Disallow plugin content: the Discovery site does not use it.
 			p.add("object-src", none)
@@ -101,10 +84,6 @@ func SecureHeaders() Middleware {
 				scriptSrcs = append(scriptSrcs, "'strict-dynamic'")
 			}
 
-			// Because we are using the go/feedback widget, we need to
-			// allow "support.google.com" as a valid source for our script-src policy.
-			//
-			// www.google-analytics.com is needed for Google Analytics.
 			p.add("script-src", scriptSrcs...)
 
 			// Don't allow framing.
