@@ -89,10 +89,9 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/mod/", modHandler)
 	handle("/pkg/", http.HandlerFunc(s.handlePackageDetailsRedirect))
 	handle("/search", searchHandler)
-	handle("/search-help",
-		s.staticPageHandler("search_help.tmpl", "Search Help - pkg.go.dev"))
+	handle("/search-help", s.staticPageHandler("search_help.tmpl", "Search Help - go.dev"))
 	handle("/license-policy", s.licensePolicyHandler())
-	handle("/about", s.staticPageHandler("about.tmpl", "About - pkg.go.dev"))
+	handle("/about", http.RedirectHandler("https://go.dev/about", http.StatusFound))
 	handle("/", detailHandler)
 	handle("/autocomplete", http.HandlerFunc(s.handleAutoCompletion))
 	handle("/robots.txt", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -381,7 +380,6 @@ func (s *Server) renderPage(ctx context.Context, templateName string, page inter
 func parsePageTemplates(base string) (map[string]*template.Template, error) {
 	htmlSets := [][]string{
 		{"index.tmpl"},
-		{"about.tmpl"},
 		{"error.tmpl"},
 		{"search.tmpl"},
 		{"search_help.tmpl"},

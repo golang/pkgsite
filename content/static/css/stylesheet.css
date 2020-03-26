@@ -741,9 +741,6 @@ code {
 .Content p {
   color: var(--gray-3);
 }
-.Content li {
-  margin: 1rem 0;
-}
 
 .License-contents {
   background-color: var(--gray-10);
@@ -803,8 +800,6 @@ code {
 .Documentation ul ul {
   padding-left: 2em;
 }
-
-.Content pre,
 .Documentation code,
 .Documentation pre {
   background-color: var(--gray-10);
