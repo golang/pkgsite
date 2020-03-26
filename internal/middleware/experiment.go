@@ -52,7 +52,6 @@ func Experiment(e *Experimenter) Middleware {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			r2 := e.setExperimentsForRequest(r)
-			w.WriteHeader(http.StatusForbidden)
 			h.ServeHTTP(w, r2)
 		})
 	}

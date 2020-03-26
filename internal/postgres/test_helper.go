@@ -123,7 +123,7 @@ func ResetTestDB(db *DB, t *testing.T) {
 
 // RunDBTests is a wrapper that runs the given testing suite in a test database
 // named dbName.  The given *DB reference will be set to the instantiated test
-
+// database.
 func RunDBTests(dbName string, m *testing.M, testDB **DB) {
 	database.QueryLoggingDisabled = true
 	db, err := SetupTestDB(dbName)

@@ -128,7 +128,7 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 
 	// manual: populate-stdlib inserts all versions of the Go standard
 	// library into the tasks queue to be processed and inserted into the
-	 handlePopulateStdLib should be updated whenever a new
+	// database. handlePopulateStdLib should be updated whenever a new
 	// version of Go is released.
 	// see the comments on duplicate tasks for "/requeue", above.
 	handle("/populate-stdlib", rmw(http.HandlerFunc(s.handlePopulateStdLib)))

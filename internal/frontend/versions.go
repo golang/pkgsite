@@ -278,7 +278,7 @@ func linkVersion(v string, modulePath string) string {
 // goTagForVersion returns the Go tag corresponding to a given semantic
 // version. It should only be used if we are 100% sure the version will
 // correspond to a Go tag, such as when we are fetching the version from the
-
+// database.
 func goTagForVersion(v string) string {
 	tag, err := stdlib.TagForVersion(v)
 	if err != nil {
