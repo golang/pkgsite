@@ -9,7 +9,12 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"io"
 	"net/http"
+	"net/http/httptest"
 	"sort"
 	"strings"
 	"testing"
@@ -20,6 +25,7 @@ import (
 	"github.com/google/licensecheck"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/fetch/internal/doc"
 	"golang.org/x/discovery/internal/licenses"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/source"
@@ -376,5 +382,63 @@ func TestMatchingFiles(t *testing.T) {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+func mustParse(fset *token.FileSet, filename, src string) *ast.File {
+	f, err := parser.ParseFile(fset, filename, src, parser.ParseComments)
+	if err != nil {
+		panic(err)
+	}
+	return f
+}
+
+func TestFetchPlayURL(t *testing.T) {
+	ex := &doc.Example{
+		Play: mustParse(token.NewFileSet(), "src.go", `
+package p
+`),
+	}
+	for _, test := range []struct {
+		desc   string
+		err    error
+		status int
+		id     string
+		url    string
+	}{
+		{
+			desc: "post returns an error",
+			err:  errors.New("post failed"),
+		},
+		{
+			desc:   "post returns failure",
+			status: http.StatusServiceUnavailable,
+		},
+		{
+			desc:   "post returns entity too large",
+			status: http.StatusRequestEntityTooLarge,
+		},
+		{
+			desc:   "post succeeds",
+			status: http.StatusOK,
+			id:     "play-id",
+			url:    "https://play.golang.org/p/play-id",
+		},
+	} {
+		url, err := fetchPlayURL(ex, func(url, contentType string, body io.Reader) (*http.Response, error) {
+			w := httptest.NewRecorder()
+			w.WriteHeader(test.status)
+			w.WriteString(test.id)
+			return w.Result(), test.err
+		})
+		if err == nil != (test.err == nil &&
+			(test.status == http.StatusOK || test.status == http.StatusRequestEntityTooLarge)) {
+			t.Errorf("fetchPlayURL failed or succeeded unexpectedly: %+v", test)
+			continue
+		}
+		if err == nil && url != test.url {
+			t.Errorf("fetchPlayURL = %q want %q: %+v", url, test.url, test)
+			continue
+		}
 	}
 }
