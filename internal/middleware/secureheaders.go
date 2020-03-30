@@ -91,7 +91,7 @@ func SecureHeaders() Middleware {
 				log.Infof(r.Context(), "generateNonce(): %v", err)
 			}
 
-			scriptSrcs := []string {
+			scriptSrcs := []string{
 				fmt.Sprintf("'nonce-%s'", nonce),
 				"www.gstatic.com",
 				"www.googletagmanager.com",
@@ -117,13 +117,10 @@ func SecureHeaders() Middleware {
 			// Prevent MIME sniffing.
 			w.Header().Set("X-Content-Type-Options", "nosniff")
 
-			// Replace the nonce in the page body.
-			target := []byte(fmt.Sprintf("<script nonce=%q", NoncePlaceholder))
-			replacement := []byte(fmt.Sprintf("<script nonce=%q", nonce))
 			// TODO(b/144509703): avoid copying if possible
 			crw := &capturingResponseWriter{ResponseWriter: w}
 			h.ServeHTTP(crw, r)
-			body := bytes.ReplaceAll(crw.bytes(), target, replacement)
+			body := bytes.ReplaceAll(crw.bytes(), []byte(NoncePlaceholder), []byte(nonce))
 			if _, err := w.Write(body); err != nil {
 				log.Errorf(r.Context(), "SecureHeaders, writing: %v", err)
 			}

@@ -29,6 +29,8 @@ func TestSecureHeaders(t *testing.T) {
     <script nonce="$$GODISCOVERYNONCE$$" async src="bar"></script>
     blah blah blah
     <script nonce="$$GODISCOVERYNONCE$$">js</script>
+    bloo bloo bloo
+    <iframe nonce="$$GODISCOVERYNONCE$$" src="baz"></iframe>
 `
 
 	const wantBodyFmt = `
@@ -36,6 +38,8 @@ func TestSecureHeaders(t *testing.T) {
     <script nonce="%[1]s" async src="bar"></script>
     blah blah blah
     <script nonce="%[1]s">js</script>
+    bloo bloo bloo
+    <iframe nonce="%[1]s" src="baz"></iframe>
 `
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
