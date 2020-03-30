@@ -9,7 +9,6 @@ import (
 	"database/sql"
 	"fmt"
 	"math"
-	"sort"
 	"strings"
 	"time"
 
@@ -140,8 +139,11 @@ const (
 //   dramatic: being 2x as popular only has an additive effect.
 // - A penalty factor for non-redistributable modules, since a lot of
 //   details cannot be displayed.
+// The first argument to ts_rank is an array of weights for the four tsvector sections,
+// in the order D, C, B, A.
+// The weights below match the defaults except for B.
 var scoreExpr = fmt.Sprintf(`
-		ts_rank(tsv_search_tokens, websearch_to_tsquery($1)) *
+		ts_rank('{0.1, 0.2, 1.0, 1.0}', tsv_search_tokens, websearch_to_tsquery($1)) *
 		ln(exp(1)+imported_by_count) *
 		CASE WHEN redistributable THEN 1 ELSE %f END *
 		CASE WHEN COALESCE(has_go_mod, true) THEN 1 ELSE %f END
@@ -392,7 +394,7 @@ func (db *DB) popularSearch(ctx context.Context, searchQuery string, limit, offs
 			commit_time,
 			imported_by_count,
 			score
-		FROM popular_search_go_mod($1, $2, $3, $4, $5)`
+		FROM popular_search($1, $2, $3, $4, $5)`
 	var results []*internal.SearchResult
 	collect := func(rows *sql.Rows) error {
 		var r internal.SearchResult
@@ -496,13 +498,10 @@ var upsertSearchStatement = fmt.Sprintf(`
 		m.commit_time,
 		m.has_go_mod,
 		(
-			SETWEIGHT(TO_TSVECTOR($2), 'A') ||
-			-- Try to limit to the maximum length of a tsvector.
-			-- This is just a guess, since the max length is in bytes and there
-			-- doesn't seem to be a way to determine the number of bytes in a tsvector.
-			-- Since the max is 1048575, make sure part is half that size.
-			SETWEIGHT(TO_TSVECTOR(left(p.synopsis, 1048575/2)), 'B') ||
-			SETWEIGHT(TO_TSVECTOR(left(m.readme_contents, 1048575/2)), 'C')
+			SETWEIGHT(TO_TSVECTOR('path_tokens', $2), 'A') ||
+			SETWEIGHT(TO_TSVECTOR($3), 'B') ||
+			SETWEIGHT(TO_TSVECTOR($4), 'C') ||
+			SETWEIGHT(TO_TSVECTOR($5), 'D')
 		),
 		hll_hash(p.path) & (%[1]d - 1),
 		hll_zeros(hll_hash(p.path))
@@ -544,52 +543,86 @@ var upsertSearchStatement = fmt.Sprintf(`
 			END)
 	;`, hllRegisterCount)
 
+// UpsertSearchDocuments adds search information for mod ot the search_documents table.
+func (db *DB) UpsertSearchDocuments(ctx context.Context, mod *internal.Module) (err error) {
+	defer derrors.Wrap(&err, "UpsertSearchDocuments(ctx, %q)", mod.ModulePath)
+
+	for _, pkg := range mod.Packages {
+		if isInternalPackage(pkg.Path) {
+			continue
+		}
+		err := db.UpsertSearchDocument(ctx, upsertSearchDocumentArgs{
+			PackagePath:    pkg.Path,
+			ModulePath:     mod.ModulePath,
+			Synopsis:       pkg.Synopsis,
+			ReadmeFilePath: mod.ReadmeFilePath,
+			ReadmeContents: mod.ReadmeContents,
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type upsertSearchDocumentArgs struct {
+	PackagePath    string
+	ModulePath     string
+	Synopsis       string
+	ReadmeFilePath string
+	ReadmeContents string
+}
+
 // UpsertSearchDocument inserts a row for each package in the module, if that
 // package is the latest version and is not internal.
 //
 // The given module should have already been validated via a call to
 // validateModule.
-func (db *DB) UpsertSearchDocument(ctx context.Context, path string) (err error) {
-	defer derrors.Wrap(&err, "UpsertSearchDocument(ctx, %q)", path)
+func (db *DB) UpsertSearchDocument(ctx context.Context, args upsertSearchDocumentArgs) (err error) {
+	defer derrors.Wrap(&err, "UpsertSearchDocument(ctx, %q, %q)", args.PackagePath, args.ModulePath)
 
-	if isInternalPackage(path) {
-		return nil
+	// Only summarize the README if the package and module have the same path.
+	if args.PackagePath != args.ModulePath {
+		args.ReadmeFilePath = ""
+		args.ReadmeContents = ""
 	}
-	pathTokens := strings.Join(GeneratePathTokens(path), " ")
-	_, err = db.db.Exec(ctx, upsertSearchStatement, path, pathTokens)
+	pathTokens := strings.Join(GeneratePathTokens(args.PackagePath), " ")
+	sectionB, sectionC, sectionD := SearchDocumentSections(args.Synopsis, args.ReadmeFilePath, args.ReadmeContents)
+	_, err = db.db.Exec(ctx, upsertSearchStatement, args.PackagePath, pathTokens, sectionB, sectionC, sectionD)
 	return err
 }
 
 // GetPackagesForSearchDocumentUpsert fetches all paths from packages that do
 // not exist in search_documents.
-func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, limit int) (paths []string, err error) {
+func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, limit int) (argsList []upsertSearchDocumentArgs, err error) {
 	defer derrors.Add(&err, "GetPackagesForSearchDocumentUpsert(ctx, %d)", limit)
 
 	query := `
-		SELECT DISTINCT(path)
+		SELECT DISTINCT ON (p.path) p.path, m.module_path, p.synopsis, m.readme_file_path, m.readme_contents
 		FROM packages p
+		INNER JOIN modules m
+		USING (module_path, version)
 		LEFT JOIN search_documents sd
 		ON p.path = sd.package_path
 		WHERE sd.package_path IS NULL
 		LIMIT $1`
 
 	collect := func(rows *sql.Rows) error {
-		var path string
-		if err := rows.Scan(&path); err != nil {
+		var a upsertSearchDocumentArgs
+		if err := rows.Scan(&a.PackagePath, &a.ModulePath, &a.Synopsis, &a.ReadmeFilePath, &a.ReadmeContents); err != nil {
 			return err
 		}
 		// Filter out packages in internal directories, since
 		// they are skipped when upserting search_documents.
-		if !isInternalPackage(path) {
-			paths = append(paths, path)
+		if !isInternalPackage(a.PackagePath) {
+			argsList = append(argsList, a)
 		}
 		return nil
 	}
 	if err := db.db.RunQuery(ctx, query, collect, limit); err != nil {
 		return nil, err
 	}
-	sort.Strings(paths)
-	return paths, nil
+	return argsList, nil
 }
 
 // UpdateSearchDocumentsImportedByCount updates imported_by_count and

@@ -163,16 +163,16 @@ func (s *Server) handlePopulateSearchDocuments(w http.ResponseWriter, r *http.Re
 	limit := parseIntParam(r, "limit", 100)
 	ctx := r.Context()
 	log.Infof(ctx, "Populating search documents for %d packages", limit)
-	pkgPaths, err := s.db.GetPackagesForSearchDocumentUpsert(ctx, limit)
+	sdargs, err := s.db.GetPackagesForSearchDocumentUpsert(ctx, limit)
 	if err != nil {
 		log.Errorf(ctx, "s.db.GetPackagesSearchDocumentUpsert(ctx): %v", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
-	for _, path := range pkgPaths {
-		if err := s.db.UpsertSearchDocument(ctx, path); err != nil {
-			log.Errorf(ctx, "s.db.UpsertSearchDocument(ctx, %q): %v", path, err)
+	for _, args := range sdargs {
+		if err := s.db.UpsertSearchDocument(ctx, args); err != nil {
+			log.Errorf(ctx, "s.db.UpsertSearchDocument(ctx, %v): %v", args, err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}

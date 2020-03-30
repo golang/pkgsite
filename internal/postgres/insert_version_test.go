@@ -323,7 +323,7 @@ func TestMakeValidUnicode(t *testing.T) {
 		if (err == nil) != okRaw {
 			t.Errorf("%s, raw: got %v, want error: %t", filename, err, okRaw)
 		}
-		if err := insert(makeValidUnicode(data)); err != nil {
+		if err := insert(makeValidUnicode(string(data))); err != nil {
 			t.Errorf("%s, after making valid: %v", filename, err)
 		}
 	}

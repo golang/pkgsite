@@ -369,6 +369,12 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 		}
 	)
 
+	const (
+		packageScore  = 0.6079270839691162
+		goAndCDKScore = 0.999817967414856
+		cloudScore    = 0.8654518127441406
+	)
+
 	for _, tc := range []struct {
 		name          string
 		packages      map[string]*internal.Package
@@ -384,8 +390,8 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				modKube:  pkgKube,
 			},
 			want: []*internal.SearchResult{
-				goCdkResult(0.2431708425283432, 2),
-				kubeResult(0.2431708425283432, 2),
+				goCdkResult(packageScore, 2),
+				kubeResult(packageScore, 2),
 			},
 		},
 		{
@@ -398,7 +404,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				modGoCDK: pkgGoCDK,
 			},
 			want: []*internal.SearchResult{
-				goCdkResult(0.2431708425283432, 2),
+				goCdkResult(packageScore, 2),
 			},
 		},
 		{
@@ -411,7 +417,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				modKube:  pkgKube,
 			},
 			want: []*internal.SearchResult{
-				kubeResult(0.2431708425283432, 2),
+				kubeResult(packageScore, 2),
 			},
 		},
 		{
@@ -422,7 +428,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				modKube:  pkgKube,
 			},
 			want: []*internal.SearchResult{
-				goCdkResult(0.733867883682251, 1),
+				goCdkResult(goAndCDKScore, 1),
 			},
 		},
 		{
@@ -432,7 +438,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				modGoCDK: pkgGoCDK,
 			},
 			want: []*internal.SearchResult{
-				goCdkResult(0.7109370231628418, 1),
+				goCdkResult(cloudScore, 1),
 			},
 		},
 	} {
@@ -820,28 +826,42 @@ func TestGetPackagesForSearchDocumentUpsert(t *testing.T) {
 	}
 	// pkgPaths should be "A", since pkg "A" exists in packages but not
 	// search_documents.
-	pkgPaths, err := testDB.GetPackagesForSearchDocumentUpsert(ctx, 10)
+	got, err := testDB.GetPackagesForSearchDocumentUpsert(ctx, 10)
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"A", "A/notinternal"}
-	if diff := cmp.Diff(want, pkgPaths); diff != "" {
+	sort.Slice(got, func(i, j int) bool { return got[i].PackagePath < got[j].PackagePath })
+	want := []upsertSearchDocumentArgs{
+		{
+			PackagePath:    "A",
+			ModulePath:     moduleA.ModulePath,
+			ReadmeFilePath: "README.md",
+			ReadmeContents: "readme",
+		},
+		{
+			PackagePath:    "A/notinternal",
+			ModulePath:     moduleA.ModulePath,
+			ReadmeFilePath: "README.md",
+			ReadmeContents: "readme",
+		},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("testDB.GetPackagesForSearchDocumentUpsert mismatch(-want +got):\n%s", diff)
 	}
 
-	for _, path := range want {
-		if err := testDB.UpsertSearchDocument(ctx, path); err != nil {
+	for _, args := range got {
+		if err := testDB.UpsertSearchDocument(ctx, args); err != nil {
 			t.Fatal(err)
 		}
 	}
 	// pkgPaths should be an empty slice, since pkg "A" and "A/notinternal"
 	// were just inserted into search_documents.
-	pkgPaths, err = testDB.GetPackagesForSearchDocumentUpsert(ctx, 10)
+	got, err = testDB.GetPackagesForSearchDocumentUpsert(ctx, 10)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(pkgPaths) != 0 {
-		t.Fatalf("expected testDB.GetPackagesForSearchDocumentUpsert to return an empty slice; got %v", pkgPaths)
+	if len(got) != 0 {
+		t.Fatalf("expected testDB.GetPackagesForSearchDocumentUpsert to return an empty slice; got %v", got)
 	}
 }
 

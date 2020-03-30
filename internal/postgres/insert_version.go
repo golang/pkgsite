@@ -75,13 +75,8 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 		return err
 	}
 
-	// Insert the module's non-internal packages into search_documents.
-	for _, pkg := range m.Packages {
-		if err := db.UpsertSearchDocument(ctx, pkg.Path); err != nil {
-			return err
-		}
-	}
-	return nil
+	// Insert the module's packages into search_documents.
+	return db.UpsertSearchDocuments(ctx, m)
 }
 
 // saveModule inserts a Module into the database along with its packages,
@@ -140,7 +135,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) error {
 			m.Version,
 			m.CommitTime,
 			m.ReadmeFilePath,
-			makeValidUnicode([]byte(m.ReadmeContents)),
+			makeValidUnicode(m.ReadmeContents),
 			version.ForSorting(m.Version),
 			m.VersionType,
 			m.SeriesPath(),
@@ -158,7 +153,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) error {
 				return fmt.Errorf("marshalling %+v: %v", l.Coverage, err)
 			}
 			licenseValues = append(licenseValues, m.ModulePath, m.Version,
-				l.FilePath, makeValidUnicode(l.Contents), pq.Array(l.Types), covJSON)
+				l.FilePath, makeValidUnicode(string(l.Contents)), pq.Array(l.Types), covJSON)
 		}
 		if len(licenseValues) > 0 {
 			licenseCols := []string{
@@ -366,11 +361,11 @@ func (db *DB) DeleteModule(ctx context.Context, ddb *database.DB, modulePath, ve
 	return err
 }
 
-// makeValidUnicode removes null runes from license contents, because pq doesn't like them.
-// Also, replace non-unicode characters with the Unicode replacement character, which is
-// the behavior of for ... range on strings.
-func makeValidUnicode(bs []byte) string {
-	s := string(bs)
+// makeValidUnicode removes null runes from a string that will be saved in a
+// column of type TEXT, because pq doesn't like them. It also replaces non-unicode
+// characters with the Unicode replacement character, which is the behavior of
+// for ... range on strings.
+func makeValidUnicode(s string) string {
 	var b strings.Builder
 	for _, r := range s {
 		if r != 0 {
