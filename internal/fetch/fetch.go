@@ -41,7 +41,6 @@ import (
 
 var (
 	errModuleContainsNoPackages = errors.New("module contains 0 packages")
-	errReadmeNotFound           = errors.New("module does not contain a README")
 	errMalformedZip             = errors.New("module zip is malformed")
 )
 
@@ -133,9 +132,9 @@ func processZipFile(ctx context.Context, modulePath string, versionType version.
 	if err != nil {
 		log.Error(ctx, err)
 	}
-	readmeFilePath, readmeContents, err := extractReadmeFromZip(modulePath, resolvedVersion, zipReader)
-	if err != nil && err != errReadmeNotFound {
-		return nil, fmt.Errorf("extractReadmeFromZip(%q, %q, zipReader): %v", modulePath, resolvedVersion, err)
+	readmes, err := extractReadmesFromZip(modulePath, resolvedVersion, zipReader)
+	if err != nil {
+		return nil, fmt.Errorf("extractReadmesFromZip(%q, %q, zipReader): %v", modulePath, resolvedVersion, err)
 	}
 	logf := func(format string, args ...interface{}) {
 		log.Infof(ctx, format, args...)
@@ -150,6 +149,12 @@ func processZipFile(ctx context.Context, modulePath string, versionType version.
 		return nil, fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, resolvedVersion, allLicenses, err)
 	}
 	hasGoMod := zipContainsFilename(zipReader, path.Join(moduleVersionDir(modulePath, resolvedVersion), "go.mod"))
+
+	var readmeFilePath, readmeContents string
+	if len(readmes) > 0 {
+		readmeFilePath = readmes[0].Filepath
+		readmeContents = readmes[0].Contents
+	}
 	return &FetchResult{
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
@@ -176,30 +181,38 @@ func moduleVersionDir(modulePath, version string) string {
 	return fmt.Sprintf("%s@%s", modulePath, version)
 }
 
-// extractReadmeFromZip returns the file path and contents of the first file
-// from r that is a README file. errReadmeNotFound is returned if a README is
-// not found.
-func extractReadmeFromZip(modulePath, resolvedVersion string, r *zip.Reader) (string, string, error) {
+// extractReadmesFromZip returns the file path and contents of all files from r
+// that are README files.
+func extractReadmesFromZip(modulePath, resolvedVersion string, r *zip.Reader) ([]*internal.Readme, error) {
+	var readmes []*internal.Readme
 	for _, zipFile := range r.File {
-		if hasFilename(zipFile.Name, "README") {
+		if isReadme(zipFile.Name) {
 			if zipFile.UncompressedSize64 > MaxFileSize {
-				return "", "", fmt.Errorf("file size %d exceeds max limit %d", zipFile.UncompressedSize64, MaxFileSize)
+				return nil, fmt.Errorf("file size %d exceeds max limit %d", zipFile.UncompressedSize64, MaxFileSize)
 			}
 			c, err := readZipFile(zipFile)
 			if err != nil {
-				return "", "", err
+				return nil, err
 			}
-			return strings.TrimPrefix(zipFile.Name, moduleVersionDir(modulePath, resolvedVersion)+"/"), string(c), nil
+			readmes = append(readmes, &internal.Readme{
+				Filepath: strings.TrimPrefix(zipFile.Name, moduleVersionDir(modulePath, resolvedVersion)+"/"),
+				Contents: string(c),
+			})
+
 		}
 	}
-	return "", "", errReadmeNotFound
+	return readmes, nil
 }
 
-// hasFilename reports whether file is expectedFile or if the base name of file,
-// with or without the extension, is equal to expectedFile. It is case
-// insensitive. It operates on '/'-separated paths.
-func hasFilename(file string, expectedFile string) bool {
+// isReadme reports whether file is README or if the base name of file, with or
+// without the extension, is equal to expectedFile. README.go files will return
+// false. It is case insensitive. It operates on '/'-separated paths.
+func isReadme(file string) bool {
 	base := path.Base(file)
+	if strings.EqualFold(base, "README.go") {
+		return false
+	}
+	const expectedFile = "README"
 	return strings.EqualFold(file, expectedFile) ||
 		strings.EqualFold(base, expectedFile) ||
 		strings.EqualFold(strings.TrimSuffix(base, path.Ext(base)), expectedFile)

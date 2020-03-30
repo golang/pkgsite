@@ -384,7 +384,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 	}
 }
 
-func TestExtractReadmeFromZip(t *testing.T) {
+func TestExtractReadmesFromZip(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
@@ -403,17 +403,18 @@ func TestExtractReadmeFromZip(t *testing.T) {
 	defer teardownProxy()
 
 	for _, test := range []struct {
-		modulePath, wantPath, wantContents string
-		err                                error
+		modulePath, wantPath string
+		wantContents         []*internal.Readme
 	}{
 		{
-			modulePath:   "github.com/my/module",
-			wantPath:     "README.md",
-			wantContents: "README FILE FOR TESTING.",
-		},
-		{
-			modulePath: "emp.ty/module",
-			err:        errReadmeNotFound,
+			modulePath: "github.com/my/module",
+			wantPath:   "README.md",
+			wantContents: []*internal.Readme{
+				{
+					Filepath: "README.md",
+					Contents: "README FILE FOR TESTING.",
+				},
+			},
 		},
 	} {
 		t.Run(test.modulePath, func(t *testing.T) {
@@ -422,76 +423,67 @@ func TestExtractReadmeFromZip(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			gotPath, gotContents, err := extractReadmeFromZip(test.modulePath, "v1.0.0", reader)
-			if !errors.Is(err, test.err) {
-				t.Fatalf("extractReadmeFromZip(%q, v1.0.0, reader):\n %v, want \n %v",
-					test.modulePath, err, test.err)
+			gotContents, err := extractReadmesFromZip(test.modulePath, "v1.0.0", reader)
+			if err != nil {
+				t.Fatal(err)
 			}
-			if test.err != nil {
-				return
-			}
-
-			if test.wantPath != gotPath {
-				t.Errorf("extractReadmeFromZip(%q, v1.0.0, reader) path = %q, want %q", test.modulePath, gotPath, test.wantPath)
-			}
-			if test.wantContents != gotContents {
-				t.Errorf("extractReadmeFromZip(%q, v1.0.0, reader) contents = %q, want %q", test.modulePath, gotContents, test.wantContents)
+			if diff := cmp.Diff(test.wantContents, gotContents); diff != "" {
+				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
 }
 
-func TestHasFilename(t *testing.T) {
+func TestIsReadme(t *testing.T) {
 	for _, test := range []struct {
-		file         string
-		expectedFile string
-		want         bool
+		name, file string
+		want       bool
 	}{
 		{
-			file:         "github.com/my/module@v1.0.0/README.md",
-			expectedFile: "README.md",
-			want:         true,
+			name: "README in nested dir returns true",
+			file: "github.com/my/module@v1.0.0/README.md",
+			want: true,
 		},
 		{
-			file:         "rEaDme",
-			expectedFile: "README",
-			want:         true,
-		}, {
-			file:         "README.FOO",
-			expectedFile: "README",
-			want:         true,
+			name: "case insensitive",
+			file: "rEaDme",
+			want: true,
 		},
 		{
-			file:         "FOO_README",
-			expectedFile: "README",
-			want:         false,
+			name: "random extension returns true",
+			file: "README.FOO",
+			want: true,
 		},
 		{
-			file:         "README_FOO",
-			expectedFile: "README",
-			want:         false,
+			name: "{prefix}readme will return false",
+			file: "FOO_README",
+			want: false,
 		},
 		{
-			file:         "README.FOO.FOO",
-			expectedFile: "README",
-			want:         false,
+			file: "README_FOO",
+			name: "readme{suffix} will return false",
+			want: false,
 		},
 		{
-			file:         "",
-			expectedFile: "README",
-			want:         false,
+			file: "README.FOO.FOO",
+			name: "README file with multiple extensions will return false",
+			want: false,
 		},
 		{
-			file:         "github.com/my/module@v1.0.0/LICENSE",
-			expectedFile: "github.com/my/module@v1.0.0/LICENSE",
-			want:         true,
+			file: "Readme.go",
+			name: ".go README file will return false",
+			want: false,
+		},
+		{
+			file: "",
+			name: "empty filename returns false",
+			want: false,
 		},
 	} {
 		{
 			t.Run(test.file, func(t *testing.T) {
-				got := hasFilename(test.file, test.expectedFile)
-				if got != test.want {
-					t.Errorf("hasFilename(%q, %q) = %t: %t", test.file, test.expectedFile, got, test.want)
+				if got := isReadme(test.file); got != test.want {
+					t.Errorf("isReadme(%q) = %t: %t", test.file, got, test.want)
 				}
 			})
 		}

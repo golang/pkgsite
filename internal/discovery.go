@@ -112,6 +112,12 @@ type Directory struct {
 	Packages []*Package
 }
 
+// A Readme represents a README at a given directory.
+type Readme struct {
+	Filepath string
+	Contents string
+}
+
 // IndexVersion holds the version information returned by the module index.
 type IndexVersion struct {
 	Path      string
