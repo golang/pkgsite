@@ -5,6 +5,8 @@
 package middleware
 
 import (
+	"bytes"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -14,11 +16,10 @@ import (
 func TestGodocURL(t *testing.T) {
 	mw := GodocURL()
 	mwh := mw(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if u := GodocURLFromContext(r.Context()); u != nil {
-			// Set in response header since we can’t access the request context.
-			w.Header().Set("x-test-godoc-url", u.String())
+		body := []byte(`<a href="$$GODISCOVERY_GODOCURL$$">godoc</a>`)
+		if _, err := w.Write(body); err != nil {
+			t.Fatalf("w.Write(%q) = %v", body, err)
 		}
-		w.WriteHeader(http.StatusOK)
 	}))
 
 	testCases := []struct {
@@ -30,12 +31,14 @@ func TestGodocURL(t *testing.T) {
 
 		// Response values
 		code    int
+		body    []byte
 		headers map[string]string
 	}{
 		{
 			desc: "Unaffected request",
 			path: "/cloud.google.com/go/storage",
 			code: http.StatusOK,
+			body: []byte(`<a href="">godoc</a>`),
 		},
 		{
 			desc: "Strip utm_source, set temporary cookie, and redirect",
@@ -53,9 +56,9 @@ func TestGodocURL(t *testing.T) {
 				"tmp-from-godoc": "1",
 			},
 			code: http.StatusOK,
+			body: []byte(`<a href="https://godoc.org/cloud.google.com/go/storage?utm_source=backtogodoc">godoc</a>`),
 			headers: map[string]string{
-				"Set-Cookie":       "tmp-from-godoc=; Max-Age=0",
-				"X-Test-Godoc-Url": "https://godoc.org/cloud.google.com/go/storage?utm_source=backtogodoc",
+				"Set-Cookie": "tmp-from-godoc=; Max-Age=0",
 			},
 		},
 	}
@@ -72,8 +75,18 @@ func TestGodocURL(t *testing.T) {
 			w := httptest.NewRecorder()
 			mwh.ServeHTTP(w, req)
 			resp := w.Result()
+			defer resp.Body.Close()
 			if got, want := resp.StatusCode, tc.code; got != want {
 				t.Errorf("Status code = %d; want %d", got, want)
+			}
+			if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+				body, err := ioutil.ReadAll(resp.Body)
+				if err != nil {
+					t.Fatalf("ioutil.ReadAll(resp.Body) = %v", err)
+				}
+				if got, want := body, tc.body; !bytes.Equal(got, want) {
+					t.Errorf("Response body = %q; want %q", got, want)
+				}
 			}
 			for k, v := range tc.headers {
 				if _, ok := resp.Header[k]; !ok {
@@ -141,7 +154,7 @@ func TestGodoc(t *testing.T) {
 			continue
 		}
 		to := godoc(u)
-		if got, want := to.String(), tc.to; got != want {
+		if got, want := to, tc.to; got != want {
 			t.Errorf("godocURL(%q) = %q; want %q", u, got, want)
 		}
 	}

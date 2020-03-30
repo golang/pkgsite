@@ -714,6 +714,11 @@ code {
 .GodocButton:hover {
   text-decoration: none;
 }
+.GodocButton[href=''],
+.GodocButton:link[href=''],
+.GodocButton:visited[href=''] {
+  display: none;
+}
 @media only screen and (min-width: 57.7rem) {
   .GodocButton,
   .GodocButton:link,
