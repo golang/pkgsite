@@ -545,7 +545,7 @@ var upsertSearchStatement = fmt.Sprintf(`
 	;`, hllRegisterCount)
 
 // UpsertSearchDocument inserts a row for each package in the module, if that
-// package is the latest version.
+// package is the latest version and is not internal.
 //
 // The given module should have already been validated via a call to
 // validateModule.
@@ -553,9 +553,8 @@ func (db *DB) UpsertSearchDocument(ctx context.Context, path string) (err error)
 	defer derrors.Wrap(&err, "UpsertSearchDocument(ctx, %q)", path)
 
 	if isInternalPackage(path) {
-		return fmt.Errorf("cannot insert internal package %q into search documents: %w", path, derrors.InvalidArgument)
+		return nil
 	}
-
 	pathTokens := strings.Join(generatePathTokens(path), " ")
 	_, err = db.db.Exec(ctx, upsertSearchStatement, path, pathTokens)
 	return err

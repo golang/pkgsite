@@ -75,9 +75,9 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 		return err
 	}
 
-	// Insert the module's packages into search_documents.
+	// Insert the module's non-internal packages into search_documents.
 	for _, pkg := range m.Packages {
-		if err := db.UpsertSearchDocument(ctx, pkg.Path); err != nil && !errors.Is(err, derrors.InvalidArgument) {
+		if err := db.UpsertSearchDocument(ctx, pkg.Path); err != nil {
 			return err
 		}
 	}
