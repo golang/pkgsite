@@ -104,7 +104,7 @@ for details.
 Use the `migrate` CLI:
 
 ```
-migrate -source file:migrations \
-        -database "postgres://postgres@$GO_DISCOVERY_DATABASE_HOST:$GO_DISCOVERY_DATABASE_PORT/$GO_DISCOVERY_DATABASE_NAME}?sslmode=disable&password=${GO_DISCOVERY_DATABASE_PASSWORD}" \
-        up
+scripts/migrate_db.sh [up|down|force|version] {#}
 ```
+
+For additional details, see [golang-migrate/migrate/GETTING_STARTED.md#run-migrations](https://github.com/golang-migrate/migrate/blob/master/GETTING_STARTED.md#run-migrations).
