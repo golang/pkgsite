@@ -2,12 +2,10 @@
 
 [Pkg.go.dev](https://pkg.go.dev) is a website for discovering and evaluting Go packages and modules.
 
-![Gopher in pilot cap.](content/static/img/pilot-bust.svg)
+## Roadmap
 
 Pkg.go.dev [launched](https://groups.google.com/g/golang-announce/c/OW8bHSryLIc)
 in November 2019, and is currently under active development by the Go team.
-
-## Roadmap
 
 Our current goal is to work towards redirecting godoc.org traffic to
 pkg.go.dev, and ensure that we address users' needs in the process. Read more
