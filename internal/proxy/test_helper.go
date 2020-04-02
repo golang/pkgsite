@@ -5,14 +5,10 @@
 package proxy
 
 import (
-	"archive/zip"
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
-	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
@@ -23,11 +19,20 @@ import (
 )
 
 // TestVersion represents a module version to host in the fake proxy.
+// This is being deprecated in favor of TestModule.
 type TestVersion struct {
 	ModulePath string
 	Version    string
 	GoMod      string
 	Zip        []byte
+}
+
+// TestModule represents a module version used to generate testdata.
+type TestModule struct {
+	ModulePath   string
+	Version      string
+	Files        map[string]string
+	ExcludeGoMod bool
 }
 
 // SetupTestProxy creates a fake module proxy for testing using the given test
@@ -38,7 +43,7 @@ type TestVersion struct {
 // and a Client for interacting with the test proxy.
 func SetupTestProxy(t *testing.T, versions []*TestVersion) (*Client, func()) {
 	t.Helper()
-	return TestProxyServer(t, TestProxy(versions))
+	return TestProxyServer(t, TestProxy(t, versions))
 }
 
 // TestProxyServer starts serving proxyMux locally. It returns a client to the
@@ -56,11 +61,14 @@ func TestProxyServer(t *testing.T, proxyMux *http.ServeMux) (*Client, func()) {
 
 // TestProxy implements a fake proxy, hosting the given versions. If versions
 // is nil, it serves the modules in the testdata directory.
-func TestProxy(versions []*TestVersion) *http.ServeMux {
+func TestProxy(t *testing.T, versions []*TestVersion) *http.ServeMux {
 	const versionTime = "2019-01-30T00:00:00Z"
 
 	if versions == nil {
-		versions = DefaultTestVersions()
+		modules := defaultTestModules()
+		for _, m := range modules {
+			versions = append(versions, NewTestVersion(t, m.ModulePath, m.Version, m.Files))
+		}
 	}
 
 	defaultInfo := func(version string) string {
@@ -123,87 +131,4 @@ func NewTestVersion(t *testing.T, modulePath, version string, contents map[strin
 // defaultGoMod creates a bare-bones go.mod contents.
 func defaultGoMod(modulePath string) string {
 	return fmt.Sprintf("module %s\n\ngo 1.12", modulePath)
-}
-
-// DefaultTestVersions creates TestVersions for the modules contained in the
-// testdata directory.
-func DefaultTestVersions() []*TestVersion {
-	proxyDataDir := testhelper.TestDataPath("testdata/modproxy")
-	absPath, err := filepath.Abs(proxyDataDir)
-	if err != nil {
-		log.Fatalf("filepath.Abs(%q): %v", proxyDataDir, err)
-	}
-
-	var versions []*TestVersion
-	for _, v := range [][]string{
-		{"bad.mod/module", "v1.0.0"},
-		{"emp.ty/module", "v1.0.0"},
-		{"emp.ty/package", "v1.0.0"},
-		{"github.com/my/module", "v1.0.0"},
-		{"no.mod/module", "v1.0.0"},
-		{"nonredistributable.mod/module", "v1.0.0"},
-		{"build.constraints/module", "v1.0.0"},
-		{"doc.test", "v1.0.0"},
-	} {
-		rootDir := filepath.Join(absPath, "modules")
-		f := filepath.FromSlash(fmt.Sprintf("%s@%s", v[0], v[1]))
-		bytes, err := zipFiles(rootDir, f)
-		if err != nil {
-			log.Fatalf("zipFiles(%q, %q): %v", rootDir, f, err)
-		}
-
-		versions = append(versions, &TestVersion{
-			ModulePath: v[0],
-			Version:    v[1],
-			Zip:        bytes,
-		})
-	}
-	return versions
-}
-
-func zipFiles(dir, moduleDir string) ([]byte, error) {
-	buf := bytes.NewBuffer(nil)
-	if err := writeZip(buf, dir, moduleDir); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
-
-func writeZip(w io.Writer, rootDir, moduleDir string) error {
-	zipWriter := zip.NewWriter(w)
-	defer zipWriter.Close()
-
-	return filepath.Walk(filepath.Join(rootDir, moduleDir), func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if info.IsDir() {
-			return nil
-		}
-
-		fileToZip, err := os.Open(path)
-		if err != nil {
-			return fmt.Errorf("os.Open(%q): %v", path, err)
-		}
-		defer fileToZip.Close()
-
-		header, err := zip.FileInfoHeader(info)
-		if err != nil {
-			return fmt.Errorf("zipFileInfoHeader(%v): %v", info.Name(), err)
-		}
-
-		// Using FileInfoHeader() above only uses the basename of the file. If we want
-		// to preserve the folder structure we can overwrite this with the full path.
-		header.Name = strings.TrimPrefix(path, filepath.ToSlash(rootDir)+"/")
-		writer, err := zipWriter.CreateHeader(header)
-		if err != nil {
-			return fmt.Errorf("zipWriter.CreateHeader(%+v): %v", header, err)
-		}
-
-		if _, err = io.Copy(writer, fileToZip); err != nil {
-			return fmt.Errorf("io.Copy(%v, %+v): %v", writer, fileToZip, err)
-		}
-		return nil
-	})
 }
