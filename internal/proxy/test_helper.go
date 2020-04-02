@@ -136,17 +136,12 @@ func DefaultTestVersions() []*TestVersion {
 
 	var versions []*TestVersion
 	for _, v := range [][]string{
-		{"go.googlesource.com/go.git", "v1.12.5"},
-		{"go.googlesource.com/go.git/src", "v1.13.0-beta.1"},
-		{"go.googlesource.com/go.git/src/cmd", "v1.13.0-beta.1"},
 		{"bad.mod/module", "v1.0.0"},
 		{"emp.ty/module", "v1.0.0"},
 		{"emp.ty/package", "v1.0.0"},
 		{"github.com/my/module", "v1.0.0"},
 		{"no.mod/module", "v1.0.0"},
 		{"nonredistributable.mod/module", "v1.0.0"},
-		{"rsc.io/quote", "v1.5.2"},
-		{"rsc.io/quote/v2", "v2.0.1"},
 		{"build.constraints/module", "v1.0.0"},
 		{"doc.test", "v1.0.0"},
 	} {
