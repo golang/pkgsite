@@ -32,6 +32,7 @@ import (
 	"strings"
 	"time"
 
+	"go.opencensus.io/plugin/ochttp"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/stdlib"
@@ -191,12 +192,48 @@ func (i *Info) UnmarshalJSON(data []byte) (err error) {
 	return nil
 }
 
+type Client struct {
+	// client used for HTTP requests. It is mutable for testing purposes.
+	httpClient *http.Client
+}
+
+// New constructs a *Client using the provided timeout.
+func NewClient(timeout time.Duration) *Client {
+	return &Client{
+		httpClient: &http.Client{
+			Transport: &ochttp.Transport{},
+			Timeout:   timeout,
+		},
+	}
+}
+
+// doURL makes an HTTP request using the given url and method. It returns an
+// error if the request returns an error. If only200 is true, it also returns an
+// error if any status code other than 200 is returned.
+func (c *Client) doURL(ctx context.Context, method, url string, only200 bool) (_ *http.Response, err error) {
+	defer derrors.Wrap(&err, "doURL(ctx, client, %q, %q)", method, url)
+
+	req, err := http.NewRequest(method, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := ctxhttp.Do(ctx, c.httpClient, req)
+	if err != nil {
+		return nil, err
+	}
+	if only200 && resp.StatusCode != 200 {
+		resp.Body.Close()
+		return nil, fmt.Errorf("status %s", resp.Status)
+	}
+	return resp, nil
+}
+
 // ModuleInfo determines the repository corresponding to the module path. It
 // returns a URL to that repo, as well as the directory of the module relative
 // to the repo root.
 //
 // ModuleInfo may fetch from arbitrary URLs, so it can be slow.
-func ModuleInfo(ctx context.Context, client *http.Client, modulePath, version string) (info *Info, err error) {
+func ModuleInfo(ctx context.Context, client *Client, modulePath, version string) (info *Info, err error) {
 	defer derrors.Wrap(&err, "source.ModuleInfo(ctx, %q, %q)", modulePath, version)
 
 	if modulePath == stdlib.ModulePath {
@@ -211,9 +248,6 @@ func ModuleInfo(ctx context.Context, client *http.Client, modulePath, version st
 			templates: githubURLTemplates,
 		}, nil
 	}
-	// Don't let requests to arbitrary URLs take too long.
-	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
-	defer cancel()
 	repo, relativeModulePath, templates, err := matchStatic(modulePath)
 	if err != nil {
 		info, err = moduleInfoDynamic(ctx, client, modulePath, version)
@@ -283,7 +317,7 @@ func matchStatic(moduleOrRepoPath string) (repo, relativeModulePath string, _ ur
 }
 
 // moduleInfoDynamic uses the go-import and go-source meta tags to construct an Info.
-func moduleInfoDynamic(ctx context.Context, client *http.Client, modulePath, version string) (_ *Info, err error) {
+func moduleInfoDynamic(ctx context.Context, client *Client, modulePath, version string) (_ *Info, err error) {
 	defer derrors.Wrap(&err, "source.moduleInfoDynamic(ctx, client, %q, %q)", modulePath, version)
 
 	sourceMeta, err := fetchMeta(ctx, client, modulePath)
@@ -343,14 +377,14 @@ func moduleInfoDynamic(ctx context.Context, client *http.Client, modulePath, ver
 // subdirectories. See https://research.swtch.com/vgo-module for a discussion of
 // the "major branch" vs. "major subdirectory" conventions for organizing a
 // repo.
-func adjustVersionedModuleDirectory(ctx context.Context, client *http.Client, info *Info) {
+func adjustVersionedModuleDirectory(ctx context.Context, client *Client, info *Info) {
 	dirWithoutVersion := removeVersionSuffix(info.moduleDir)
 	if info.moduleDir == dirWithoutVersion {
 		return
 	}
 	// moduleDir does have a "/vN" for N > 1. To see if that is the actual directory,
 	// fetch the go.mod file from it.
-	res, err := doURL(ctx, client, "HEAD", info.FileURL("go.mod"), true)
+	res, err := client.doURL(ctx, "HEAD", info.FileURL("go.mod"), true)
 	// On any failure, assume that the right directory is the one without the version.
 	if err != nil {
 		info.moduleDir = dirWithoutVersion
@@ -512,27 +546,6 @@ func commitFromVersion(vers, relativeModulePath string) string {
 		}
 		return v
 	}
-}
-
-// doURL makes an HTTP request using the given url and method. It returns an
-// error if the request returns an error. If only200 is true, it also returns an
-// error if any status code other than 200 is returned.
-func doURL(ctx context.Context, client *http.Client, method, url string, only200 bool) (_ *http.Response, err error) {
-	defer derrors.Wrap(&err, "doURL(ctx, client, %q, %q)", method, url)
-
-	req, err := http.NewRequest(method, url, nil)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := ctxhttp.Do(ctx, client, req)
-	if err != nil {
-		return nil, err
-	}
-	if only200 && resp.StatusCode != 200 {
-		resp.Body.Close()
-		return nil, fmt.Errorf("status %s", resp.Status)
-	}
-	return resp, nil
 }
 
 // The following code copied from cmd/go/internal/get:

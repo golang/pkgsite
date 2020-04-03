@@ -27,6 +27,8 @@ import (
 	"golang.org/x/discovery/internal/testing/testhelper"
 )
 
+var sourceTimeout = 1 * time.Second
+
 // Check that when the proxy says it does not have module@version,
 // we delete it from the database.
 func TestFetchAndUpdateState_NotFound(t *testing.T) {
@@ -40,13 +42,14 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 		version    = "v1.0.0"
 	)
 
-	client, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
 		proxy.NewTestVersion(t, modulePath, version, map[string]string{
 			"foo/foo.go": "// Package foo\npackage foo\n\nconst Foo = 42",
 			"README.md":  "This is a readme",
 			"LICENSE":    testhelper.MITLicense,
 		}),
 	})
+	sourceClient := source.NewClient(sourceTimeout)
 
 	checkStatus := func(want int) {
 		t.Helper()
@@ -67,7 +70,7 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	}
 
 	// Fetch a module@version that the proxy serves successfully.
-	if _, err := FetchAndUpdateState(ctx, modulePath, version, client, testDB); err != nil {
+	if _, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB); err != nil {
 		t.Fatal(err)
 	}
 
@@ -100,12 +103,12 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	proxyMux := proxy.TestProxy([]*proxy.TestVersion{}) // serve no versions, not even the defaults.
 	proxyMux.HandleFunc(fmt.Sprintf("/%s/@v/%s.info", modulePath, version),
 		func(w http.ResponseWriter, r *http.Request) { http.Error(w, "taken down", http.StatusGone) })
-	client, teardownProxy2 := proxy.TestProxyServer(t, proxyMux)
+	proxyClient, teardownProxy2 := proxy.TestProxyServer(t, proxyMux)
 	defer teardownProxy2()
 
 	// Now fetch it again.
-	if code, _ := FetchAndUpdateState(ctx, modulePath, version, client, testDB); code != http.StatusNotFound && code != http.StatusGone {
-		t.Fatalf("FetchAndUpdateState(ctx, %q, %q, client, testDB): got code %d, want 404/410", modulePath, version, code)
+	if code, _ := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB); code != http.StatusNotFound && code != http.StatusGone {
+		t.Fatalf("FetchAndUpdateState(ctx, %q, %q, proxyClient, sourceClient, testDB): got code %d, want 404/410", modulePath, version, code)
 	}
 
 	// The new state should have a status of Not Found.
@@ -132,8 +135,9 @@ func TestFetchAndUpdateState_Excluded(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 
-	client, teardownProxy := proxy.SetupTestProxy(t, nil)
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, nil)
 	defer teardownProxy()
+	sourceClient := source.NewClient(sourceTimeout)
 
 	const (
 		modulePath = "github.com/my/module"
@@ -143,11 +147,11 @@ func TestFetchAndUpdateState_Excluded(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	checkModuleNotFound(t, ctx, modulePath, version, client, http.StatusForbidden, derrors.Excluded)
+	checkModuleNotFound(t, ctx, modulePath, version, proxyClient, sourceClient, http.StatusForbidden, derrors.Excluded)
 }
 
-func checkModuleNotFound(t *testing.T, ctx context.Context, modulePath, version string, client *proxy.Client, wantCode int, wantErr error) {
-	code, err := FetchAndUpdateState(ctx, modulePath, version, client, testDB)
+func checkModuleNotFound(t *testing.T, ctx context.Context, modulePath, version string, proxyClient *proxy.Client, sourceClient *source.Client, wantCode int, wantErr error) {
+	code, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB)
 	if code != wantCode || !errors.Is(err, wantErr) {
 		t.Fatalf("got %d, %v; want %d, Is(err, %v)", code, err, wantCode, wantErr)
 	}
@@ -177,8 +181,9 @@ func TestFetchAndUpdateState_BadRequestedVersion(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 
-	client, teardownProxy := proxy.SetupTestProxy(t, nil)
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, nil)
 	defer teardownProxy()
+	sourceClient := source.NewClient(sourceTimeout)
 
 	const (
 		modulePath = "build.constraints/module"
@@ -186,7 +191,7 @@ func TestFetchAndUpdateState_BadRequestedVersion(t *testing.T) {
 		want       = http.StatusNotFound
 	)
 
-	code, _ := FetchAndUpdateState(ctx, modulePath, version, client, testDB)
+	code, _ := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB)
 	if code != want {
 		t.Fatalf("got code %d, want %d", code, want)
 	}
@@ -210,8 +215,9 @@ func TestFetchAndUpdateState_Incomplete(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 
-	client, teardownProxy := proxy.SetupTestProxy(t, nil)
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, nil)
 	defer teardownProxy()
+	sourceClient := source.NewClient(sourceTimeout)
 
 	const (
 		modulePath = "build.constraints/module"
@@ -219,7 +225,7 @@ func TestFetchAndUpdateState_Incomplete(t *testing.T) {
 		want       = hasIncompletePackagesCode
 	)
 
-	code, err := FetchAndUpdateState(ctx, modulePath, version, client, testDB)
+	code, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -278,15 +284,16 @@ func TestFetchAndUpdateState_Mismatch(t *testing.T) {
 		version    = "v1.0.0"
 		goModPath  = "other"
 	)
-	client, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
 		proxy.NewTestVersion(t, modulePath, version, map[string]string{
 			"go.mod":     "module " + goModPath,
 			"foo/foo.go": "// Package foo\npackage foo\n\nconst Foo = 42",
 		}),
 	})
 	defer teardownProxy()
+	sourceClient := source.NewClient(sourceTimeout)
 
-	code, err := FetchAndUpdateState(ctx, modulePath, version, client, testDB)
+	code, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB)
 	wantErr := derrors.AlternativeModule
 	wantCode := derrors.ToHTTPStatus(wantErr)
 	if code != wantCode || !errors.Is(err, wantErr) {
@@ -332,7 +339,7 @@ func TestFetchAndUpdateState_DeleteOlder(t *testing.T) {
 		olderVersion    = "v0.9.0"
 	)
 
-	client, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
 		// mismatched version; will cause deletion
 		proxy.NewTestVersion(t, modulePath, mismatchVersion, map[string]string{
 			"go.mod":     "module other",
@@ -344,8 +351,9 @@ func TestFetchAndUpdateState_DeleteOlder(t *testing.T) {
 		}),
 	})
 	defer teardownProxy()
+	sourceClient := source.NewClient(sourceTimeout)
 
-	if _, err := FetchAndUpdateState(ctx, modulePath, olderVersion, client, testDB); err != nil {
+	if _, err := FetchAndUpdateState(ctx, modulePath, olderVersion, proxyClient, sourceClient, testDB); err != nil {
 		t.Fatal(err)
 	}
 	gotModule, gotVersion, gotFound := postgres.GetFromSearchDocuments(ctx, t, testDB, modulePath+"/foo")
@@ -353,7 +361,7 @@ func TestFetchAndUpdateState_DeleteOlder(t *testing.T) {
 		t.Fatalf("got (%q, %q, %t), want (%q, %q, true)", gotModule, gotVersion, gotFound, modulePath, olderVersion)
 	}
 
-	code, _ := FetchAndUpdateState(ctx, modulePath, mismatchVersion, client, testDB)
+	code, _ := FetchAndUpdateState(ctx, modulePath, mismatchVersion, proxyClient, sourceClient, testDB)
 	if want := derrors.ToHTTPStatus(derrors.AlternativeModule); code != want {
 		t.Fatalf("got %d, want %d", code, want)
 	}
@@ -383,18 +391,19 @@ func TestSkipIncompletePackage(t *testing.T) {
 		modulePath = "github.com/my/module"
 		version    = "v1.0.0"
 	)
-	client, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
 		proxy.NewTestVersion(t, modulePath, version, badModule),
 	})
 	defer teardownProxy()
+	sourceClient := source.NewClient(sourceTimeout)
 
-	res, err := fetchAndInsertModule(ctx, modulePath, version, client, testDB)
+	res, err := fetchAndInsertModule(ctx, modulePath, version, proxyClient, sourceClient, testDB)
 	if err != nil {
-		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
+		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
 	}
 	if !res.HasIncompletePackages {
-		t.Errorf("fetchAndInsertVersion(%q, %q, %v, %v): hasIncompletePackages=false, want true",
-			modulePath, version, client, testDB)
+		t.Errorf("fetchAndInsertVersion(%q, %q, %v, %v, %v): hasIncompletePackages=false, want true",
+			modulePath, version, proxyClient, sourceClient, testDB)
 	}
 
 	pkgFoo := modulePath + "/foo"
@@ -446,18 +455,19 @@ func TestTrimLargeCode(t *testing.T) {
 		modulePath = "github.com/my/module"
 		version    = "v1.0.0"
 	)
-	client, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
 		proxy.NewTestVersion(t, modulePath, version, trimmedModule),
 	})
 	defer teardownProxy()
+	sourceClient := source.NewClient(sourceTimeout)
 
-	res, err := fetchAndInsertModule(ctx, modulePath, version, client, testDB)
+	res, err := fetchAndInsertModule(ctx, modulePath, version, proxyClient, sourceClient, testDB)
 	if err != nil {
-		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
+		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
 	}
 	if res.HasIncompletePackages {
-		t.Errorf("fetchAndInsertVersion(%q, %q, %v, %v): hasIncompletePackages=true, want false",
-			modulePath, version, client, testDB)
+		t.Errorf("fetchAndInsertVersion(%q, %q, %v, %v, %v): hasIncompletePackages=true, want false",
+			modulePath, version, proxyClient, sourceClient, testDB)
 	}
 
 	pkgFoo := modulePath + "/foo"
@@ -478,14 +488,15 @@ func TestFetch_V1Path(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 	defer postgres.ResetTestDB(testDB, t)
-	client, tearDown := proxy.SetupTestProxy(t, []*proxy.TestVersion{
+	proxyClient, tearDown := proxy.SetupTestProxy(t, []*proxy.TestVersion{
 		proxy.NewTestVersion(t, "my.mod/foo", "v1.0.0", map[string]string{
 			"foo.go":  "package foo\nconst Foo = 41",
 			"LICENSE": testhelper.MITLicense,
 		}),
 	})
 	defer tearDown()
-	if _, err := fetchAndInsertModule(ctx, "my.mod/foo", "v1.0.0", client, testDB); err != nil {
+	sourceClient := source.NewClient(sourceTimeout)
+	if _, err := fetchAndInsertModule(ctx, "my.mod/foo", "v1.0.0", proxyClient, sourceClient, testDB); err != nil {
 		t.Fatalf("fetchAndInsertVersion: %v", err)
 	}
 	pkg, err := testDB.GetPackage(ctx, "my.mod/foo", internal.UnknownModulePath, "v1.0.0")
@@ -525,12 +536,13 @@ func TestReFetch(t *testing.T) {
 
 	// First fetch and insert a version containing package foo, and verify that
 	// foo can be retrieved.
-	client, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
 		proxy.NewTestVersion(t, modulePath, version, foo),
 	})
 	defer teardownProxy()
-	if _, err := fetchAndInsertModule(ctx, modulePath, version, client, testDB); err != nil {
-		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
+	sourceClient := source.NewClient(sourceTimeout)
+	if _, err := fetchAndInsertModule(ctx, modulePath, version, proxyClient, sourceClient, testDB); err != nil {
+		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
 	}
 
 	if _, err := testDB.GetPackage(ctx, pkgFoo, internal.UnknownModulePath, version); err != nil {
@@ -538,13 +550,13 @@ func TestReFetch(t *testing.T) {
 	}
 
 	// Now re-fetch and verify that contents were overwritten.
-	client, teardownProxy = proxy.SetupTestProxy(t, []*proxy.TestVersion{
+	proxyClient, teardownProxy = proxy.SetupTestProxy(t, []*proxy.TestVersion{
 		proxy.NewTestVersion(t, modulePath, version, bar),
 	})
 	defer teardownProxy()
 
-	if _, err := fetchAndInsertModule(ctx, modulePath, version, client, testDB); err != nil {
-		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", modulePath, version, client, testDB, err)
+	if _, err := fetchAndInsertModule(ctx, modulePath, version, proxyClient, sourceClient, testDB); err != nil {
+		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
 	}
 	want := &internal.VersionedPackage{
 		ModuleInfo: internal.ModuleInfo{
@@ -860,11 +872,12 @@ func TestFetchAndInsertVersion(t *testing.T) {
 		t.Run(test.pkg, func(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
 
-			client, teardownProxy := proxy.SetupTestProxy(t, nil)
+			proxyClient, teardownProxy := proxy.SetupTestProxy(t, nil)
 			defer teardownProxy()
+			sourceClient := source.NewClient(sourceTimeout)
 
-			if _, err := fetchAndInsertModule(ctx, test.modulePath, test.version, client, testDB); err != nil {
-				t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v): %v", test.modulePath, test.version, client, testDB, err)
+			if _, err := fetchAndInsertModule(ctx, test.modulePath, test.version, proxyClient, sourceClient, testDB); err != nil {
+				t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v, %v): %v", test.modulePath, test.version, proxyClient, sourceClient, testDB, err)
 			}
 
 			gotModuleInfo, err := testDB.GetModuleInfo(ctx, test.modulePath, test.version)
@@ -913,15 +926,16 @@ func TestFetchAndInsertVersionTimeout(t *testing.T) {
 	}(fetchTimeout)
 	fetchTimeout = 0
 
-	client, teardownProxy := proxy.SetupTestProxy(t, nil)
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, nil)
 	defer teardownProxy()
+	sourceClient := source.NewClient(sourceTimeout)
 
 	name := "my.mod/version"
 	version := "v1.0.0"
 	wantErrString := "deadline exceeded"
-	_, err := fetchAndInsertModule(context.Background(), name, version, client, testDB)
+	_, err := fetchAndInsertModule(context.Background(), name, version, proxyClient, sourceClient, testDB)
 	if err == nil || !strings.Contains(err.Error(), wantErrString) {
-		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v) returned error %v, want error containing %q",
-			name, version, client, testDB, err, wantErrString)
+		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v, %v) returned error %v, want error containing %q",
+			name, version, proxyClient, sourceClient, testDB, err, wantErrString)
 	}
 }

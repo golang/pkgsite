@@ -18,6 +18,7 @@ import (
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
+	"golang.org/x/discovery/internal/source"
 	"golang.org/x/mod/semver"
 )
 
@@ -42,7 +43,7 @@ var ProxyRemoved = map[string]bool{}
 // The given parentCtx is used for tracing, but fetches actually execute in a
 // detached context with fixed timeout, so that fetches are allowed to complete
 // even for short-lived requests.
-func fetchAndInsertModule(parentCtx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, db *postgres.DB) (_ *fetch.FetchResult, err error) {
+func fetchAndInsertModule(parentCtx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, sourceClient *source.Client, db *postgres.DB) (_ *fetch.FetchResult, err error) {
 	defer derrors.Wrap(&err, "fetchAndInsertModule(%q, %q)", modulePath, requestedVersion)
 
 	if ProxyRemoved[modulePath+"@"+requestedVersion] {
@@ -67,7 +68,7 @@ func fetchAndInsertModule(parentCtx context.Context, modulePath, requestedVersio
 	ctx, span := trace.StartSpanWithRemoteParent(ctx, "FetchAndInsertVersion", parentSpan.SpanContext())
 	defer span.End()
 
-	res, err := fetch.FetchVersion(ctx, modulePath, requestedVersion, proxyClient)
+	res, err := fetch.FetchVersion(ctx, modulePath, requestedVersion, proxyClient, sourceClient)
 	if err != nil {
 		return res, err
 	}
@@ -83,7 +84,7 @@ func fetchAndInsertModule(parentCtx context.Context, modulePath, requestedVersio
 // the module_version_states table according to the result. It returns an HTTP
 // status code representing the result of the fetch operation, and a non-nil
 // error if this status code is not 200.
-func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion string, client *proxy.Client, db *postgres.DB) (_ int, err error) {
+func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, sourceClient *source.Client, db *postgres.DB) (_ int, err error) {
 	defer derrors.Wrap(&err, "FetchAndUpdateState(%q, %q)", modulePath, requestedVersion)
 
 	ctx, span := trace.StartSpan(ctx, "FetchAndUpdateState")
@@ -95,7 +96,7 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 		code     = http.StatusOK
 		fetchErr error
 	)
-	res, fetchErr := fetchAndInsertModule(ctx, modulePath, requestedVersion, client, db)
+	res, fetchErr := fetchAndInsertModule(ctx, modulePath, requestedVersion, proxyClient, sourceClient, db)
 	if fetchErr != nil {
 		code = derrors.ToHTTPStatus(fetchErr)
 		logf := log.Errorf

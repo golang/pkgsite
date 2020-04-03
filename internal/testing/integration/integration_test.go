@@ -23,6 +23,7 @@ import (
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/queue"
+	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/testing/testhelper"
 	"golang.org/x/discovery/internal/worker"
 )
@@ -69,7 +70,7 @@ func TestEndToEndProcessing(t *testing.T) {
 
 	// TODO(b/143760329): it would be better if InMemory made http requests
 	// back to worker, rather than calling fetch itself.
-	queue := queue.NewInMemory(ctx, proxyClient, testDB, 10, worker.FetchAndUpdateState)
+	queue := queue.NewInMemory(ctx, proxyClient, source.NewClient(1*time.Second), testDB, 10, worker.FetchAndUpdateState)
 
 	workerServer, err := worker.NewServer(&config.Config{}, testDB, indexClient, proxyClient, redisHAClient, queue, nil, "../../../content/static")
 	if err != nil {

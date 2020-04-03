@@ -29,6 +29,7 @@ import (
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/queue"
+	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/stdlib"
 )
 
@@ -37,6 +38,7 @@ type Server struct {
 	cfg             *config.Config
 	indexClient     *index.Client
 	proxyClient     *proxy.Client
+	sourceClient    *source.Client
 	redisClient     *redis.Client
 	db              *postgres.DB
 	queue           queue.Queue
@@ -213,7 +215,7 @@ func (s *Server) doFetch(r *http.Request) (string, int) {
 		return err.Error(), http.StatusBadRequest
 	}
 
-	code, err := FetchAndUpdateState(r.Context(), modulePath, version, s.proxyClient, s.db)
+	code, err := FetchAndUpdateState(r.Context(), modulePath, version, s.proxyClient, s.sourceClient, s.db)
 	if err != nil {
 		return err.Error(), code
 	}

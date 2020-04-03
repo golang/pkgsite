@@ -24,6 +24,7 @@ import (
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/queue"
+	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/testing/sample"
 )
 
@@ -143,11 +144,12 @@ func TestWorker(t *testing.T) {
 
 			proxyClient, teardownProxy := proxy.SetupTestProxy(t, test.proxy)
 			defer teardownProxy()
+			sourceClient := source.NewClient(sourceTimeout)
 
 			defer postgres.ResetTestDB(testDB, t)
 
 			// Use 10 workers to have parallelism consistent with the worker binary.
-			q := queue.NewInMemory(ctx, proxyClient, testDB, 10, FetchAndUpdateState)
+			q := queue.NewInMemory(ctx, proxyClient, sourceClient, testDB, 10, FetchAndUpdateState)
 
 			s, err := NewServer(&config.Config{}, testDB, indexClient, proxyClient, nil, q, nil, "")
 			if err != nil {

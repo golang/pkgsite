@@ -131,6 +131,10 @@ func (c *Config) OnAppEngine() bool {
 // 10 minutes is the App Engine standard request timeout.
 const StatementTimeout = 10 * time.Minute
 
+// SourceTimeout is the value of the timeout for source.Client, which is used
+// to fetch source code from third party URLs.
+const SourceTimeout = 1 * time.Minute
+
 // DBConnInfo returns a PostgreSQL connection string constructed from
 // environment variables, using the primary database host.
 func (c *Config) DBConnInfo() string {

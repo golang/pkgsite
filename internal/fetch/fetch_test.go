@@ -29,7 +29,10 @@ import (
 	"golang.org/x/discovery/internal/version"
 )
 
-const testTimeout = 30 * time.Second
+const (
+	testTimeout   = 30 * time.Second
+	sourceTimeout = 1 * time.Second
+)
 
 func TestExtractPackagesFromZip(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
@@ -241,10 +244,10 @@ func TestExtractPackagesFromZip(t *testing.T) {
 					GoMod:      test.contents[fmt.Sprintf("%s@%s/go.mod", test.name, test.version)],
 				})
 			}
-			client, teardownProxy := proxy.SetupTestProxy(t, versions)
+			proxyClient, teardownProxy := proxy.SetupTestProxy(t, versions)
 			defer teardownProxy()
 
-			reader, err := client.GetZip(ctx, test.name, test.version)
+			reader, err := proxyClient.GetZip(ctx, test.name, test.version)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -323,10 +326,10 @@ func TestExtractReadmeFromZip(t *testing.T) {
 		},
 	} {
 		t.Run(test.file, func(t *testing.T) {
-			client, teardownProxy := proxy.SetupTestProxy(t, nil)
+			proxyClient, teardownProxy := proxy.SetupTestProxy(t, nil)
 			defer teardownProxy()
 
-			reader, err := client.GetZip(ctx, test.name, test.version)
+			reader, err := proxyClient.GetZip(ctx, test.name, test.version)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -441,6 +444,7 @@ func TestFetchVersion(t *testing.T) {
 			Contents: []byte(testhelper.MITLicense),
 		},
 	}
+
 	for _, test := range []struct {
 		name     string
 		contents map[string]string
@@ -535,12 +539,12 @@ func TestFetchVersion(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			client, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
+			proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
 				proxy.NewTestVersion(t, modulePath, vers, test.contents),
 			})
 			defer teardownProxy()
-
-			got, err := FetchVersion(ctx, modulePath, vers, client)
+			sourceClient := source.NewClient(sourceTimeout)
+			got, err := FetchVersion(ctx, modulePath, vers, proxyClient, sourceClient)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -569,12 +573,12 @@ func TestFetchVersion_Alternative(t *testing.T) {
 		vers       = "v1.0.0"
 	)
 
-	client, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
 		proxy.NewTestVersion(t, modulePath, vers, map[string]string{"go.mod": "module " + goModPath}),
 	})
 	defer teardownProxy()
-
-	res, err := FetchVersion(ctx, modulePath, vers, client)
+	sourceClient := source.NewClient(sourceTimeout)
+	res, err := FetchVersion(ctx, modulePath, vers, proxyClient, sourceClient)
 	if !errors.Is(err, derrors.AlternativeModule) {
 		t.Errorf("got %v, want derrors.AlternativeModule", err)
 	}

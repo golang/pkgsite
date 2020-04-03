@@ -9,7 +9,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"net/http"
 	"strings"
 
 	"golang.org/x/discovery/internal/derrors"
@@ -38,8 +37,8 @@ type sourceMeta struct {
 // The discovery site only cares about linking to source, not fetching it (we
 // already have it in the module zip file). So we merge the go-import and
 // go-source meta tag information, preferring the latter.
-func fetchMeta(ctx context.Context, client *http.Client, importPath string) (_ *sourceMeta, err error) {
-	defer derrors.Wrap(&err, "fetchMeta(ctx, client, %q, r)", importPath)
+func fetchMeta(ctx context.Context, client *Client, importPath string) (_ *sourceMeta, err error) {
+	defer derrors.Wrap(&err, "fetchMeta(ctx, client, %q)", importPath)
 
 	uri := importPath
 	if !strings.Contains(uri, "/") {
@@ -48,9 +47,9 @@ func fetchMeta(ctx context.Context, client *http.Client, importPath string) (_ *
 	}
 	uri = uri + "?go-get=1"
 
-	resp, err := doURL(ctx, client, "GET", "https://"+uri, true)
+	resp, err := client.doURL(ctx, "GET", "https://"+uri, true)
 	if err != nil {
-		resp, err = doURL(ctx, client, "GET", "http://"+uri, false)
+		resp, err = client.doURL(ctx, "GET", "http://"+uri, false)
 		if err != nil {
 			return nil, err
 		}

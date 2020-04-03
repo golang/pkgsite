@@ -15,12 +15,16 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-replayers/httpreplay"
 )
 
-var record = flag.Bool("record", false, "record interactions with other systems, for replay")
+var (
+	testTimeout = 1 * time.Second
+	record      = flag.Bool("record", false, "record interactions with other systems, for replay")
+)
 
 func TestModuleInfo(t *testing.T) {
 	client, done := newReplayClient(t, *record)
@@ -261,7 +265,7 @@ func TestModuleInfo(t *testing.T) {
 		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
-			info, err := ModuleInfo(context.Background(), client, test.modulePath, test.version)
+			info, err := ModuleInfo(context.Background(), NewClient(testTimeout), test.modulePath, test.version)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -278,7 +282,7 @@ func TestModuleInfo(t *testing.T) {
 
 	t.Run("stdlib-raw", func(t *testing.T) {
 		// Test raw URLs from the standard library, which are a special case.
-		info, err := ModuleInfo(context.Background(), client, "std", "v1.13.3")
+		info, err := ModuleInfo(context.Background(), NewClient(testTimeout), "std", "v1.13.3")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -348,7 +352,12 @@ func TestMatchStatic(t *testing.T) {
 // This test adapted from gddo/gosrc/gosrc_test.go:TestGetDynamic.
 func TestModuleImportDynamic(t *testing.T) {
 	// For this test, fake the HTTP requests so we can cover cases that may not appear in the wild.
-	client := &http.Client{Transport: testTransport(testWeb)}
+	client := &Client{
+		httpClient: &http.Client{
+			Transport: testTransport(testWeb),
+			Timeout:   testTimeout,
+		},
+	}
 	// The version doesn't figure into the interesting work and we test versions to commits
 	// elsewhere, so use the same version throughout.
 	const version = "v1.2.3"
@@ -496,7 +505,8 @@ func TestRemoveVersionSuffix(t *testing.T) {
 
 func TestAdjustVersionedModuleDirectory(t *testing.T) {
 	ctx := context.Background()
-	client := &http.Client{Transport: testTransport(map[string]string{
+	client := NewClient(testTimeout)
+	client.httpClient.Transport = testTransport(map[string]string{
 		// Repo "branch" follows the "major branch" convention: versions 2 and higher
 		// live in the same directory as versions 0 and 1, but on a different branch (or tag).
 		"http://x.com/branch/v1.0.0/go.mod":         "", // v1 module at the root
@@ -509,7 +519,7 @@ func TestAdjustVersionedModuleDirectory(t *testing.T) {
 		"http://x.com/sub/v2.0.0/v2/go.mod":         "", // v2 module at root/v2.
 		"http://x.com/sub/dir/v1.0.0/dir/go.mod":    "", // v1 module in a subdirectory
 		"http://x.com/sub/dir/v2.0.0/dir/v2/go.mod": "", // v2 module in subdirectory/v2
-	})}
+	})
 
 	for _, test := range []struct {
 		repo, moduleDir, commit string

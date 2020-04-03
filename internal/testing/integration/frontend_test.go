@@ -9,12 +9,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"golang.org/x/discovery/internal/fetch"
 	"golang.org/x/discovery/internal/frontend"
 	"golang.org/x/discovery/internal/middleware"
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
+	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/testing/htmlcheck"
 	"golang.org/x/discovery/internal/testing/testhelper"
 )
@@ -173,9 +175,10 @@ func processVersions(ctx context.Context, t *testing.T, testVersions []*proxy.Te
 	t.Helper()
 	proxyClient, teardown := proxy.SetupTestProxy(t, testVersions)
 	defer teardown()
+	sourceClient := source.NewClient(1 * time.Second)
 
 	for _, tv := range testVersions {
-		res, err := fetch.FetchVersion(ctx, tv.ModulePath, tv.Version, proxyClient)
+		res, err := fetch.FetchVersion(ctx, tv.ModulePath, tv.Version, proxyClient, sourceClient)
 		if err != nil {
 			t.Fatal(err)
 		}

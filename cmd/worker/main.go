@@ -25,6 +25,7 @@ import (
 	"golang.org/x/discovery/internal/dcensus"
 	"golang.org/x/discovery/internal/index"
 	"golang.org/x/discovery/internal/queue"
+	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/worker"
 
 	"golang.org/x/discovery/internal/log"
@@ -83,7 +84,8 @@ func main() {
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
-	fetchQueue := newQueue(ctx, cfg, proxyClient, db)
+	sourceClient := source.NewClient(config.SourceTimeout)
+	fetchQueue := newQueue(ctx, cfg, proxyClient, sourceClient, db)
 	reportingClient := reportingClient(ctx, cfg)
 	redisClient := getRedis(ctx, cfg)
 	server, err := worker.NewServer(cfg, db, indexClient, proxyClient, redisClient, fetchQueue, reportingClient, *staticPath)
@@ -123,9 +125,9 @@ func main() {
 	log.Fatal(ctx, http.ListenAndServe(addr, nil))
 }
 
-func newQueue(ctx context.Context, cfg *config.Config, proxyClient *proxy.Client, db *postgres.DB) queue.Queue {
+func newQueue(ctx context.Context, cfg *config.Config, proxyClient *proxy.Client, sourceClient *source.Client, db *postgres.DB) queue.Queue {
 	if !cfg.OnAppEngine() {
-		return queue.NewInMemory(ctx, proxyClient, db, *workers, worker.FetchAndUpdateState)
+		return queue.NewInMemory(ctx, proxyClient, sourceClient, db, *workers, worker.FetchAndUpdateState)
 	}
 	client, err := cloudtasks.NewClient(ctx)
 	if err != nil {

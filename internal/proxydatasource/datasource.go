@@ -14,12 +14,14 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/fetch"
 	"golang.org/x/discovery/internal/licenses"
 	"golang.org/x/discovery/internal/proxy"
+	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/version"
 	"golang.org/x/mod/semver"
 )
@@ -30,6 +32,7 @@ var _ internal.DataSource = (*DataSource)(nil)
 func New(proxyClient *proxy.Client) *DataSource {
 	return &DataSource{
 		proxyClient:          proxyClient,
+		sourceClient:         source.NewClient(1 * time.Minute),
 		versionCache:         make(map[versionKey]*versionEntry),
 		modulePathToVersions: make(map[string][]string),
 		packagePathToModules: make(map[string][]string),
@@ -39,7 +42,8 @@ func New(proxyClient *proxy.Client) *DataSource {
 // DataSource implements the frontend.DataSource interface, by querying a
 // module proxy directly and caching the results in memory.
 type DataSource struct {
-	proxyClient *proxy.Client
+	proxyClient  *proxy.Client
+	sourceClient *source.Client
 
 	// Use an extremely coarse lock for now - mu guards all maps below. The
 	// assumption is that this will only be used for local development.
@@ -230,7 +234,7 @@ func (ds *DataSource) getModule(ctx context.Context, modulePath, version string)
 		return e.module, e.err
 	}
 
-	res, err := fetch.FetchVersion(ctx, modulePath, version, ds.proxyClient)
+	res, err := fetch.FetchVersion(ctx, modulePath, version, ds.proxyClient, ds.sourceClient)
 	var m *internal.Module
 	if res != nil {
 		m = res.Module

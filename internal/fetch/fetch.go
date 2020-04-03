@@ -45,9 +45,6 @@ var (
 	errMalformedZip             = errors.New("module zip is malformed")
 )
 
-// For testing
-var httpClient = http.DefaultClient
-
 type FetchResult struct {
 	Module                *internal.Module
 	GoModPath             string
@@ -60,7 +57,7 @@ type FetchResult struct {
 // *internal.Module and related information.
 //
 // Even if err is non-nil, the result may contain useful information, like the go.mod path.
-func FetchVersion(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client) (_ *FetchResult, err error) {
+func FetchVersion(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, sourceClient *source.Client) (_ *FetchResult, err error) {
 	defer derrors.Wrap(&err, "FetchVersion(%q, %q)", modulePath, requestedVersion)
 
 	var (
@@ -109,7 +106,7 @@ func FetchVersion(ctx context.Context, modulePath, requestedVersion string, prox
 		return nil, fmt.Errorf("%v: %w", err, derrors.BadModule)
 	}
 
-	fr, err := processZipFile(ctx, modulePath, versionType, resolvedVersion, commitTime, zipReader)
+	fr, err := processZipFile(ctx, modulePath, versionType, resolvedVersion, commitTime, zipReader, sourceClient)
 	if err != nil {
 		return &FetchResult{GoModPath: goModPath}, err
 	}
@@ -126,13 +123,13 @@ func FetchVersion(ctx context.Context, modulePath, requestedVersion string, prox
 }
 
 // processZipFile extracts information from the module version zip.
-func processZipFile(ctx context.Context, modulePath string, versionType version.Type, resolvedVersion string, commitTime time.Time, zipReader *zip.Reader) (_ *FetchResult, err error) {
+func processZipFile(ctx context.Context, modulePath string, versionType version.Type, resolvedVersion string, commitTime time.Time, zipReader *zip.Reader, sourceClient *source.Client) (_ *FetchResult, err error) {
 	defer derrors.Wrap(&err, "processZipFile(%q, %q)", modulePath, resolvedVersion)
 
 	_, span := trace.StartSpan(ctx, "processing zipFile")
 	defer span.End()
 
-	sourceInfo, err := source.ModuleInfo(ctx, httpClient, modulePath, resolvedVersion)
+	sourceInfo, err := source.ModuleInfo(ctx, sourceClient, modulePath, resolvedVersion)
 	if err != nil {
 		log.Error(ctx, err)
 	}
