@@ -22,12 +22,20 @@ func TestGetLatestInfo(t *testing.T) {
 	defer cancel()
 
 	modulePath := "foo.com/bar"
-	testVersions := []*TestVersion{
-		NewTestVersion(t, "foo.com/bar", "v1.1.0", map[string]string{"bar.go": "package bar\nconst Version = 1.1"}),
-		NewTestVersion(t, "foo.com/bar", "v1.2.0", map[string]string{"bar.go": "package bar\nconst Version = 1.2"}),
+	testModules := []*TestModule{
+		{
+			ModulePath: "foo.com/bar",
+			Version:    "v1.1.0",
+			Files:      map[string]string{"bar.go": "package bar\nconst Version = 1.1"},
+		},
+		{
+			ModulePath: "foo.com/bar",
+			Version:    "v1.2.0",
+			Files:      map[string]string{"bar.go": "package bar\nconst Version = 1.2"},
+		},
 	}
 
-	client, teardownProxy := SetupTestProxy(t, testVersions)
+	client, teardownProxy := SetupTestProxy(t, testModules)
 	defer teardownProxy()
 
 	info, err := client.GetInfo(ctx, modulePath, internal.LatestVersion)
@@ -45,13 +53,25 @@ func TestListVersions(t *testing.T) {
 	defer cancel()
 
 	modulePath := "foo.com/bar"
-	testVersions := []*TestVersion{
-		NewTestVersion(t, "foo.com/bar", "v1.1.0", map[string]string{"bar.go": "package bar\nconst Version = 1.1"}),
-		NewTestVersion(t, "foo.com/bar", "v1.2.0", map[string]string{"bar.go": "package bar\nconst Version = 1.2"}),
-		NewTestVersion(t, "foo.com/baz", "v1.3.0", map[string]string{"baz.go": "package bar\nconst Version = 1.3"}),
+	testModules := []*TestModule{
+		{
+			ModulePath: modulePath,
+			Version:    "v1.1.0",
+			Files:      map[string]string{"bar.go": "package bar\nconst Version = 1.1"},
+		},
+		{
+			ModulePath: modulePath,
+			Version:    "v1.2.0",
+			Files:      map[string]string{"bar.go": "package bar\nconst Version = 1.2"},
+		},
+		{
+			ModulePath: modulePath + "/bar",
+			Version:    "v1.3.0",
+			Files:      map[string]string{"bar.go": "package bar\nconst Version = 1.3"},
+		},
 	}
 
-	client, teardownProxy := SetupTestProxy(t, testVersions)
+	client, teardownProxy := SetupTestProxy(t, testModules)
 	defer teardownProxy()
 
 	want := []string{"v1.1.0", "v1.2.0"}

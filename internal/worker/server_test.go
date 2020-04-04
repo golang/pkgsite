@@ -71,14 +71,22 @@ func TestWorker(t *testing.T) {
 			Timestamp: start.Add(time.Second),
 			Version:   "v0.0.1",
 		}
-		fooProxy = proxy.NewTestVersion(t, fooIndex.Path, fooIndex.Version, map[string]string{
-			"go.mod": "module foo.com/foo",
-			"foo.go": "package foo\nconst Foo = \"Foo\"",
-		})
-		barProxy = proxy.NewTestVersion(t, barIndex.Path, barIndex.Version, map[string]string{
-			"go.mod": "module foo.com/bar",
-			"bar.go": "package bar\nconst Bar = \"Bar\"",
-		})
+		fooProxy = &proxy.TestModule{
+			ModulePath: fooIndex.Path,
+			Version:    fooIndex.Version,
+			Files: map[string]string{
+				"go.mod": "module foo.com/foo",
+				"foo.go": "package foo\nconst Foo = \"Foo\"",
+			},
+		}
+		barProxy = &proxy.TestModule{
+			ModulePath: barIndex.Path,
+			Version:    barIndex.Version,
+			Files: map[string]string{
+				"go.mod": "module foo.com/bar",
+				"bar.go": "package bar\nconst Bar = \"Bar\"",
+			},
+		}
 		state = func(version *internal.IndexVersion, code, tryCount int) *internal.ModuleVersionState {
 			goModPath := version.Path
 			if code >= 300 {
@@ -104,7 +112,7 @@ func TestWorker(t *testing.T) {
 	tests := []struct {
 		label    string
 		index    []*internal.IndexVersion
-		proxy    []*proxy.TestVersion
+		proxy    []*proxy.TestModule
 		requests []*http.Request
 		wantFoo  *internal.ModuleVersionState
 		wantBar  *internal.ModuleVersionState
@@ -112,7 +120,7 @@ func TestWorker(t *testing.T) {
 		{
 			label: "full fetch",
 			index: []*internal.IndexVersion{fooIndex, barIndex},
-			proxy: []*proxy.TestVersion{fooProxy, barProxy},
+			proxy: []*proxy.TestModule{fooProxy, barProxy},
 			requests: []*http.Request{
 				httptest.NewRequest("POST", "/poll-and-queue", nil),
 			},
@@ -121,7 +129,7 @@ func TestWorker(t *testing.T) {
 		}, {
 			label: "partial fetch",
 			index: []*internal.IndexVersion{fooIndex, barIndex},
-			proxy: []*proxy.TestVersion{fooProxy, barProxy},
+			proxy: []*proxy.TestModule{fooProxy, barProxy},
 			requests: []*http.Request{
 				httptest.NewRequest("POST", "/poll-and-queue?limit=1", nil),
 			},
@@ -129,7 +137,7 @@ func TestWorker(t *testing.T) {
 		}, {
 			label: "fetch with errors",
 			index: []*internal.IndexVersion{fooIndex, barIndex},
-			proxy: []*proxy.TestVersion{fooProxy},
+			proxy: []*proxy.TestModule{fooProxy},
 			requests: []*http.Request{
 				httptest.NewRequest("POST", "/poll-and-queue", nil),
 			},

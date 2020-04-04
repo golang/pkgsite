@@ -179,8 +179,8 @@ func TestExtractPackagesFromZip(t *testing.T) {
 			name:    "bad.import.path.com",
 			version: "v1.0.0",
 			contents: map[string]string{
-				"bad.import.path.com@v1.0.0/good/import/path/foo.go": "package foo",
-				"bad.import.path.com@v1.0.0/bad/import path/foo.go":  "package foo",
+				"good/import/path/foo.go": "package foo",
+				"bad/import path/foo.go":  "package foo",
 			},
 			packages: map[string]*internal.Package{
 				"foo": {
@@ -208,12 +208,6 @@ func TestExtractPackagesFromZip(t *testing.T) {
 			},
 		},
 		{
-			name:     "file.outside.content.dir",
-			version:  "v1.0.0",
-			contents: map[string]string{"file": "foo"},
-			wantErr:  errMalformedZip,
-		},
-		{
 			name:    "doc.test",
 			version: "v1.0.0",
 			packages: map[string]*internal.Package{
@@ -231,20 +225,17 @@ func TestExtractPackagesFromZip(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			var versions []*proxy.TestVersion
+			var modules []*proxy.TestModule
 			if test.contents != nil {
-				zip, err := testhelper.ZipContents(test.contents)
-				if err != nil {
-					t.Fatal(err)
+				modules = []*proxy.TestModule{
+					{
+						ModulePath: test.name,
+						Version:    test.version,
+						Files:      test.contents,
+					},
 				}
-				versions = append(versions, &proxy.TestVersion{
-					ModulePath: test.name,
-					Version:    test.version,
-					Zip:        zip,
-					GoMod:      test.contents[fmt.Sprintf("%s@%s/go.mod", test.name, test.version)],
-				})
 			}
-			proxyClient, teardownProxy := proxy.SetupTestProxy(t, versions)
+			proxyClient, teardownProxy := proxy.SetupTestProxy(t, modules)
 			defer teardownProxy()
 
 			reader, err := proxyClient.GetZip(ctx, test.name, test.version)
@@ -539,9 +530,17 @@ func TestFetchVersion(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
-				proxy.NewTestVersion(t, modulePath, vers, test.contents),
-			})
+			var modules []*proxy.TestModule
+			if test.contents != nil {
+				modules = []*proxy.TestModule{
+					{
+						ModulePath: modulePath,
+						Version:    vers,
+						Files:      test.contents,
+					},
+				}
+			}
+			proxyClient, teardownProxy := proxy.SetupTestProxy(t, modules)
 			defer teardownProxy()
 			sourceClient := source.NewClient(sourceTimeout)
 			got, err := FetchVersion(ctx, modulePath, vers, proxyClient, sourceClient)
@@ -573,8 +572,12 @@ func TestFetchVersion_Alternative(t *testing.T) {
 		vers       = "v1.0.0"
 	)
 
-	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestVersion{
-		proxy.NewTestVersion(t, modulePath, vers, map[string]string{"go.mod": "module " + goModPath}),
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{
+		{
+			ModulePath: modulePath,
+			Version:    vers,
+			Files:      map[string]string{"go.mod": "module " + goModPath},
+		},
 	})
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)

@@ -22,7 +22,7 @@ import (
 )
 
 var (
-	testTimeout = 1 * time.Second
+	testTimeout = 2 * time.Second
 	record      = flag.Bool("record", false, "record interactions with other systems, for replay")
 )
 

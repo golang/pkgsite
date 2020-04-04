@@ -4,7 +4,7 @@
 
 package proxy
 
-var testdata = []*TestModule{
+var defaultModules = []*TestModule{
 	{
 		ModulePath: "bad.mod/module",
 		Files: map[string]string{
@@ -41,8 +41,7 @@ var testdata = []*TestModule{
 		},
 	},
 	{
-		ModulePath:   "build.constraints/module",
-		ExcludeGoMod: true,
+		ModulePath: "build.constraints/module",
 		Files: map[string]string{
 			"LICENSE": licenseBSD3,
 			"cpu/cpu.go": `
@@ -89,6 +88,7 @@ var testdata = []*TestModule{
 	{
 		ModulePath: "github.com/my/module",
 		Files: map[string]string{
+			"go.mod":      "module github.com/my/module\n\ngo 1.12",
 			"LICENSE":     licenseBSD3,
 			"README.md":   "README FILE FOR TESTING.",
 			"bar/LICENSE": licenseMIT,
@@ -120,6 +120,7 @@ var testdata = []*TestModule{
 	{
 		ModulePath: "nonredistributable.mod/module",
 		Files: map[string]string{
+			"go.mod":          "module nonredistributable.mod/module\n\ngo 1.13",
 			"LICENSE":         licenseBSD3,
 			"README.md":       "README FILE FOR TESTING.",
 			"bar/baz/COPYING": licenseMIT,
@@ -158,27 +159,4 @@ var testdata = []*TestModule{
 				}`,
 		},
 	},
-}
-
-// defaultTestModules creates testModules for the modules in the defaultTestModules*.go
-// files.
-func defaultTestModules() []*TestModule {
-	var modules []*TestModule
-	for _, m := range testdata {
-		if m.Version == "" {
-			m.Version = "v1.0.0"
-		}
-		if !m.ExcludeGoMod {
-			if m.Files == nil {
-				m.Files = map[string]string{}
-			}
-			if m.Files != nil {
-				if _, ok := m.Files["go.mod"]; !ok {
-					m.Files["go.mod"] = defaultGoMod(m.ModulePath)
-				}
-			}
-		}
-		modules = append(modules, m)
-	}
-	return modules
 }

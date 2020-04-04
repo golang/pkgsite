@@ -26,11 +26,19 @@ func setup(t *testing.T) (context.Context, *DataSource, func()) {
 		"LICENSE":    testhelper.MITLicense,
 		"baz/baz.go": "//Package baz provides a helpful constant.\npackage baz\nimport \"net/http\"\nconst OK = http.StatusOK",
 	}
-	testVersions := []*proxy.TestVersion{
-		proxy.NewTestVersion(t, "foo.com/bar", "v1.1.0", contents),
-		proxy.NewTestVersion(t, "foo.com/bar", "v1.2.0", contents),
+	testModules := []*proxy.TestModule{
+		{
+			ModulePath: "foo.com/bar",
+			Version:    "v1.1.0",
+			Files:      contents,
+		},
+		{
+			ModulePath: "foo.com/bar",
+			Version:    "v1.2.0",
+			Files:      contents,
+		},
 	}
-	client, teardownProxy := proxy.SetupTestProxy(t, testVersions)
+	client, teardownProxy := proxy.SetupTestProxy(t, testModules)
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	return ctx, New(client), func() {
 		teardownProxy()

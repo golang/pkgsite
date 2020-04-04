@@ -33,26 +33,38 @@ func TestModulePackageDirectoryResolution(t *testing.T) {
 	//  + at v1.2.3, github.com/golang/found/dir is a directory (containing dir/pkg)
 	//  + at v1.2.4, github.com/golang/found/dir is a package
 	//  + at v1.2.5, github.com/golang/found/dir is again just a directory
-	versions := []*proxy.TestVersion{
-		proxy.NewTestVersion(t, "github.com/golang/found", "v1.2.3", map[string]string{
-			"go.mod":         "module github.com/golang/found",
-			"found.go":       "package found\nconst Value = 123",
-			"dir/pkg/pkg.go": "package pkg\nconst Value = 321",
-			"LICENSE":        testhelper.MITLicense,
-		}),
-		proxy.NewTestVersion(t, "github.com/golang/found", "v1.2.4", map[string]string{
-			"go.mod":         "module github.com/golang/found",
-			"found.go":       "package found\nconst Value = 124",
-			"dir/pkg/pkg.go": "package pkg\nconst Value = 421",
-			"dir/dir.go":     "package dir\nconst Value = \"I'm a package!\"",
-			"LICENSE":        testhelper.MITLicense,
-		}),
-		proxy.NewTestVersion(t, "github.com/golang/found", "v1.2.5", map[string]string{
-			"go.mod":         "module github.com/golang/found",
-			"found.go":       "package found\nconst Value = 125",
-			"dir/pkg/pkg.go": "package pkg\nconst Value = 521",
-			"LICENSE":        testhelper.MITLicense,
-		}),
+	versions := []*proxy.TestModule{
+		{
+			ModulePath: "github.com/golang/found",
+			Version:    "v1.2.3",
+			Files: map[string]string{
+				"go.mod":         "module github.com/golang/found",
+				"found.go":       "package found\nconst Value = 123",
+				"dir/pkg/pkg.go": "package pkg\nconst Value = 321",
+				"LICENSE":        testhelper.MITLicense,
+			},
+		},
+		{
+			ModulePath: "github.com/golang/found",
+			Version:    "v1.2.4",
+			Files: map[string]string{
+				"go.mod":         "module github.com/golang/found",
+				"found.go":       "package found\nconst Value = 124",
+				"dir/pkg/pkg.go": "package pkg\nconst Value = 421",
+				"dir/dir.go":     "package dir\nconst Value = \"I'm a package!\"",
+				"LICENSE":        testhelper.MITLicense,
+			},
+		},
+		{
+			ModulePath: "github.com/golang/found",
+			Version:    "v1.2.5",
+			Files: map[string]string{
+				"go.mod":         "module github.com/golang/found",
+				"found.go":       "package found\nconst Value = 125",
+				"dir/pkg/pkg.go": "package pkg\nconst Value = 521",
+				"LICENSE":        testhelper.MITLicense,
+			},
+		},
 	}
 
 	tests := []struct {
@@ -171,14 +183,14 @@ func TestModulePackageDirectoryResolution(t *testing.T) {
 
 }
 
-func processVersions(ctx context.Context, t *testing.T, testVersions []*proxy.TestVersion) {
+func processVersions(ctx context.Context, t *testing.T, testModules []*proxy.TestModule) {
 	t.Helper()
-	proxyClient, teardown := proxy.SetupTestProxy(t, testVersions)
+	proxyClient, teardown := proxy.SetupTestProxy(t, testModules)
 	defer teardown()
 	sourceClient := source.NewClient(1 * time.Second)
 
-	for _, tv := range testVersions {
-		res, err := fetch.FetchVersion(ctx, tv.ModulePath, tv.Version, proxyClient, sourceClient)
+	for _, tm := range testModules {
+		res, err := fetch.FetchVersion(ctx, tm.ModulePath, tm.Version, proxyClient, sourceClient)
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -50,8 +50,14 @@ func TestEndToEndProcessing(t *testing.T) {
 			"LICENSE":    testhelper.MITLicense,
 		}
 	)
-	testVersions := []*proxy.TestVersion{proxy.NewTestVersion(t, modulePath, version, moduleData)}
-	proxyClient, indexClient, teardownClients := setupProxyAndIndex(t, testVersions...)
+	testModules := []*proxy.TestModule{
+		{
+			ModulePath: modulePath,
+			Version:    version,
+			Files:      moduleData,
+		},
+	}
+	proxyClient, indexClient, teardownClients := setupProxyAndIndex(t, testModules...)
 	defer teardownClients()
 
 	redisCache, err := miniredis.Run()
@@ -144,14 +150,14 @@ func doGet(url string) ([]byte, error) {
 	return body, nil
 }
 
-func setupProxyAndIndex(t *testing.T, versions ...*proxy.TestVersion) (*proxy.Client, *index.Client, func()) {
+func setupProxyAndIndex(t *testing.T, modules ...*proxy.TestModule) (*proxy.Client, *index.Client, func()) {
 	t.Helper()
-	proxyClient, teardownProxy := proxy.SetupTestProxy(t, versions)
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, modules)
 	var indexVersions []*internal.IndexVersion
-	for _, v := range versions {
+	for _, m := range modules {
 		indexVersions = append(indexVersions, &internal.IndexVersion{
-			Path:      v.ModulePath,
-			Version:   v.Version,
+			Path:      m.ModulePath,
+			Version:   m.Version,
 			Timestamp: time.Now(),
 		})
 	}
