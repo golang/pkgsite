@@ -6,44 +6,9 @@ package proxy
 
 var defaultModules = []*TestModule{
 	{
-		ModulePath: "bad.mod/module",
-		Files: map[string]string{
-			"LICENSE": licenseBSD3,
-			"good/good.go": `
-			// Package good is inside a module that has bad packages.
-			package good
-
-			// Good is whether this package is good.
-			const Good = true`,
-
-			"illegalchar/p.go": `
-			package p
-
-			func init() {
-				var c00 uint8 = '\0';  // ERROR "oct|char"
-				var c01 uint8 = '\07';  // ERROR "oct|char"
-				var cx0 uint8 = '\x0';  // ERROR "hex|char"
-				var cx1 uint8 = '\x';  // ERROR "hex|char"
-				_, _, _, _ = c00, c01, cx0, cx1
-			}
-			`,
-			"multiplepkgs/a.go": "package a",
-			"multiplepkgs/b.go": "package b",
-		},
-	},
-	{
-		ModulePath: "emp.ty/module",
-	},
-	{
-		ModulePath: "emp.ty/package",
-		Files: map[string]string{
-			"main.go": "package main",
-		},
-	},
-	{
 		ModulePath: "build.constraints/module",
 		Files: map[string]string{
-			"LICENSE": licenseBSD3,
+			"LICENSE": LicenseBSD3,
 			"cpu/cpu.go": `
 				// Package cpu implements processor feature detection
 				// used by the Go standard library.
@@ -55,43 +20,12 @@ var defaultModules = []*TestModule{
 		},
 	},
 	{
-		ModulePath: "no.mod/module",
-		Files: map[string]string{
-			"LICENSE": licenseBSD3,
-			"p/p.go": `
-				// Package p is inside a module where a go.mod
-				// file hasn't been explicitly added yet.
-				package p
-
-				// Year is a year before go.mod files existed.
-				const Year = 2009`,
-		},
-	},
-	{
-		ModulePath: "doc.test",
-		Files: map[string]string{
-			"LICENSE": licenseBSD3,
-			"permalink/doc.go": `
-				// Package permalink is for testing the heading
-				// permalink documentation rendering feature.
-				//
-				// This is a heading
-				//
-				// This is a paragraph.
-				//
-				// This is yet another
-				// paragraph.
-				//
-				package permalink`,
-		},
-	},
-	{
 		ModulePath: "github.com/my/module",
 		Files: map[string]string{
 			"go.mod":      "module github.com/my/module\n\ngo 1.12",
-			"LICENSE":     licenseBSD3,
+			"LICENSE":     LicenseBSD3,
 			"README.md":   "README FILE FOR TESTING.",
-			"bar/LICENSE": licenseMIT,
+			"bar/LICENSE": LicenseMIT,
 			"bar/bar.go": `
 				// package bar
 				package bar
@@ -100,7 +34,7 @@ var defaultModules = []*TestModule{
 				func Bar() string {
 					return "bar"
 				}`,
-			"foo/LICENSE.md": licenseMIT,
+			"foo/LICENSE.md": LicenseMIT,
 			"foo/foo.go": `
 				// package foo
 				package foo
@@ -121,9 +55,9 @@ var defaultModules = []*TestModule{
 		ModulePath: "nonredistributable.mod/module",
 		Files: map[string]string{
 			"go.mod":          "module nonredistributable.mod/module\n\ngo 1.13",
-			"LICENSE":         licenseBSD3,
+			"LICENSE":         LicenseBSD3,
 			"README.md":       "README FILE FOR TESTING.",
-			"bar/baz/COPYING": licenseMIT,
+			"bar/baz/COPYING": LicenseMIT,
 			"bar/baz/baz.go": `
 				// package baz
 				package baz
@@ -133,7 +67,7 @@ var defaultModules = []*TestModule{
 					return "baz"
 				}
 				`,
-			"bar/LICENSE": licenseMIT,
+			"bar/LICENSE": LicenseMIT,
 			"bar/bar.go": `
 				// package bar
 				package bar
@@ -142,7 +76,7 @@ var defaultModules = []*TestModule{
 				func Bar() string {
 					return "bar"
 				}`,
-			"foo/LICENSE.md": licenseCCNC,
+			"foo/LICENSE.md": LicenseCCNC,
 			"foo/foo.go": `
 				// package foo
 				package foo

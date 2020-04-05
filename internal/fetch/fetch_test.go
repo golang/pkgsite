@@ -9,9 +9,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
-	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
@@ -75,6 +73,16 @@ func TestExtractPackagesFromZip(t *testing.T) {
 		{
 			name:    "no.mod/module",
 			version: "v1.0.0",
+			contents: map[string]string{
+				"LICENSE": proxy.LicenseBSD3,
+				"p/p.go": `
+				// Package p is inside a module where a go.mod
+				// file hasn't been explicitly added yet.
+				package p
+
+				// Year is a year before go.mod files existed.
+				const Year = 2009`,
+			},
 			packages: map[string]*internal.Package{
 				"p": {
 					Name:              "p",
@@ -91,12 +99,16 @@ func TestExtractPackagesFromZip(t *testing.T) {
 		{
 			name:     "emp.ty/module",
 			version:  "v1.0.0",
+			contents: map[string]string{},
 			packages: map[string]*internal.Package{},
 			wantErr:  errModuleContainsNoPackages,
 		},
 		{
 			name:    "emp.ty/package",
 			version: "v1.0.0",
+			contents: map[string]string{
+				"main.go": "package main",
+			},
 			packages: map[string]*internal.Package{
 				"main": {
 					Name:     "main",
@@ -112,6 +124,29 @@ func TestExtractPackagesFromZip(t *testing.T) {
 		{
 			name:    "bad.mod/module",
 			version: "v1.0.0",
+			contents: map[string]string{
+				"LICENSE": proxy.LicenseBSD3,
+				"good/good.go": `
+			// Package good is inside a module that has bad packages.
+			package good
+
+			// Good is whether this package is good.
+			const Good = true`,
+
+				"illegalchar/p.go": `
+			package p
+
+			func init() {
+				var c00 uint8 = '\0';  // ERROR "oct|char"
+				var c01 uint8 = '\07';  // ERROR "oct|char"
+				var cx0 uint8 = '\x0';  // ERROR "hex|char"
+				var cx1 uint8 = '\x';  // ERROR "hex|char"
+				_, _, _, _ = c00, c01, cx0, cx1
+			}
+			`,
+				"multiplepkgs/a.go": "package a",
+				"multiplepkgs/b.go": "package b",
+			},
 			packages: map[string]*internal.Package{
 				"good": {
 					Name:              "good",
@@ -210,6 +245,21 @@ func TestExtractPackagesFromZip(t *testing.T) {
 		{
 			name:    "doc.test",
 			version: "v1.0.0",
+			contents: map[string]string{
+				"LICENSE": proxy.LicenseBSD3,
+				"permalink/doc.go": `
+				// Package permalink is for testing the heading
+				// permalink documentation rendering feature.
+				//
+				// This is a heading
+				//
+				// This is a paragraph.
+				//
+				// This is yet another
+				// paragraph.
+				//
+				package permalink`,
+			},
 			packages: map[string]*internal.Package{
 				"permalink": {
 					Name:              "permalink",
@@ -298,48 +348,54 @@ func TestExtractReadmeFromZip(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{
+		{
+			ModulePath: "github.com/my/module",
+			Files: map[string]string{
+				"README.md": "README FILE FOR TESTING.",
+			},
+		},
+		{
+			ModulePath: "emp.ty/module",
+			Files:      map[string]string{},
+		},
+	})
+	defer teardownProxy()
+
 	for _, test := range []struct {
-		name, version, file, wantPath string
-		wantContents                  string
-		err                           error
+		modulePath, wantPath, wantContents string
+		err                                error
 	}{
 		{
-			name:         "github.com/my/module",
-			version:      "v1.0.0",
-			file:         "github.com/my/module@v1.0.0/README.md",
+			modulePath:   "github.com/my/module",
 			wantPath:     "README.md",
 			wantContents: "README FILE FOR TESTING.",
 		},
 		{
-			name:    "emp.ty/module",
-			version: "v1.0.0",
-			err:     errReadmeNotFound,
+			modulePath: "emp.ty/module",
+			err:        errReadmeNotFound,
 		},
 	} {
-		t.Run(test.file, func(t *testing.T) {
-			proxyClient, teardownProxy := proxy.SetupTestProxy(t, nil)
-			defer teardownProxy()
-
-			reader, err := proxyClient.GetZip(ctx, test.name, test.version)
+		t.Run(test.modulePath, func(t *testing.T) {
+			reader, err := proxyClient.GetZip(ctx, test.modulePath, "v1.0.0")
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			gotPath, gotContents, err := extractReadmeFromZip(test.name, test.version, reader)
-			if err != nil {
-				if test.err == nil || test.err.Error() != err.Error() {
-					t.Errorf("extractFile(%q, %q): \n %v, want \n %v",
-						fmt.Sprintf("%q %q", test.name, test.version), filepath.Base(test.file), err, test.err)
-				} else {
-					return
-				}
+			gotPath, gotContents, err := extractReadmeFromZip(test.modulePath, "v1.0.0", reader)
+			if !errors.Is(err, test.err) {
+				t.Fatalf("extractReadmeFromZip(%q, v1.0.0, reader):\n %v, want \n %v",
+					test.modulePath, err, test.err)
+			}
+			if test.err != nil {
+				return
 			}
 
 			if test.wantPath != gotPath {
-				t.Errorf("extractFile(%q, %q) path = %q, want %q", test.name, test.file, gotPath, test.wantPath)
+				t.Errorf("extractReadmeFromZip(%q, v1.0.0, reader) path = %q, want %q", test.modulePath, gotPath, test.wantPath)
 			}
 			if test.wantContents != gotContents {
-				t.Errorf("extractFile(%q, %q) contents = %q, want %q", test.name, test.file, gotContents, test.wantContents)
+				t.Errorf("extractReadmeFromZip(%q, v1.0.0, reader) contents = %q, want %q", test.modulePath, gotContents, test.wantContents)
 			}
 		})
 	}
