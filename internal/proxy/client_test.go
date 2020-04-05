@@ -17,6 +17,40 @@ import (
 
 const testTimeout = 5 * time.Second
 
+var sampleModule = &TestModule{
+	ModulePath: "github.com/my/module",
+	Version:    "v1.0.0",
+	Files: map[string]string{
+		"go.mod":      "module github.com/my/module\n\ngo 1.12",
+		"LICENSE":     LicenseBSD3,
+		"README.md":   "README FILE FOR TESTING.",
+		"bar/LICENSE": LicenseMIT,
+		"bar/bar.go": `
+						// package bar
+						package bar
+
+						// Bar returns the string "bar".
+						func Bar() string {
+							return "bar"
+						}`,
+		"foo/LICENSE.md": LicenseMIT,
+		"foo/foo.go": `
+						// package foo
+						package foo
+
+						import (
+							"fmt"
+
+							"github.com/my/module/bar"
+						)
+
+						// FooBar returns the string "foo bar".
+						func FooBar() string {
+							return fmt.Sprintf("foo %s", bar.Bar())
+						}`,
+	},
+}
+
 func TestGetLatestInfo(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
@@ -88,7 +122,7 @@ func TestGetInfo(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	client, teardownProxy := SetupTestProxy(t, nil)
+	client, teardownProxy := SetupTestProxy(t, []*TestModule{sampleModule})
 	defer teardownProxy()
 
 	path := "github.com/my/module"
@@ -112,7 +146,7 @@ func TestGetInfoVersionDoesNotExist(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	client, teardownProxy := SetupTestProxy(t, nil)
+	client, teardownProxy := SetupTestProxy(t, []*TestModule{sampleModule})
 	defer teardownProxy()
 
 	path := "github.com/my/module"
@@ -127,7 +161,7 @@ func TestGetMod(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	client, teardownProxy := SetupTestProxy(t, nil)
+	client, teardownProxy := SetupTestProxy(t, []*TestModule{sampleModule})
 	defer teardownProxy()
 
 	path := "github.com/my/module"
@@ -147,7 +181,7 @@ func TestGetZip(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	client, teardownProxy := SetupTestProxy(t, nil)
+	client, teardownProxy := SetupTestProxy(t, []*TestModule{sampleModule})
 	defer teardownProxy()
 
 	for _, tc := range []struct {

@@ -44,9 +44,6 @@ func goMod(m *TestModule) string {
 // and a Client for interacting with the test proxy.
 func SetupTestProxy(t *testing.T, modules []*TestModule) (*Client, func()) {
 	t.Helper()
-	if modules == nil {
-		modules = defaultModules
-	}
 	var cleaned []*TestModule
 	for _, m := range modules {
 		cleaned = append(cleaned, cleanTestModule(t, m))

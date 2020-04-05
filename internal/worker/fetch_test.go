@@ -29,6 +29,21 @@ import (
 
 var sourceTimeout = 1 * time.Second
 
+var buildConstraintsMod = &proxy.TestModule{
+	ModulePath: "build.constraints/module",
+	Files: map[string]string{
+		"LICENSE": proxy.LicenseBSD3,
+		"cpu/cpu.go": `
+				// Package cpu implements processor feature detection
+				// used by the Go standard library.
+				package cpu`,
+		"cpu/cpu_arm.go":   "package cpu\n\nconst CacheLinePadSize = 1",
+		"cpu/cpu_arm64.go": "package cpu\n\nconst CacheLinePadSize = 2",
+		"cpu/cpu_x86.go":   "// +build 386 amd64 amd64p32\n\npackage cpu\n\nconst CacheLinePadSize = 3",
+		"ignore/ignore.go": "// +build ignore\n\npackage ignore",
+	},
+}
+
 // Check that when the proxy says it does not have module@version,
 // we delete it from the database.
 func TestFetchAndUpdateState_NotFound(t *testing.T) {
@@ -185,7 +200,7 @@ func TestFetchAndUpdateState_BadRequestedVersion(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 
-	proxyClient, teardownProxy := proxy.SetupTestProxy(t, nil)
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{buildConstraintsMod})
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)
 
@@ -219,7 +234,7 @@ func TestFetchAndUpdateState_Incomplete(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 
-	proxyClient, teardownProxy := proxy.SetupTestProxy(t, nil)
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{buildConstraintsMod})
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)
 
@@ -645,6 +660,86 @@ func TestFetchAndInsertVersion(t *testing.T) {
 	stdlib.UseTestData = true
 	defer func() { stdlib.UseTestData = false }()
 
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{
+		buildConstraintsMod,
+		{
+			ModulePath: "github.com/my/module",
+			Files: map[string]string{
+				"go.mod":      "module github.com/my/module\n\ngo 1.12",
+				"LICENSE":     proxy.LicenseBSD3,
+				"README.md":   "README FILE FOR TESTING.",
+				"bar/LICENSE": proxy.LicenseMIT,
+				"bar/bar.go": `
+					// package bar
+					package bar
+
+					// Bar returns the string "bar".
+					func Bar() string {
+						return "bar"
+					}`,
+				"foo/LICENSE.md": proxy.LicenseMIT,
+				"foo/foo.go": `
+					// package foo
+					package foo
+
+					import (
+						"fmt"
+
+						"github.com/my/module/bar"
+					)
+
+					// FooBar returns the string "foo bar".
+					func FooBar() string {
+						return fmt.Sprintf("foo %s", bar.Bar())
+					}`,
+			},
+		},
+
+		{
+			ModulePath: "nonredistributable.mod/module",
+			Files: map[string]string{
+				"go.mod":          "module nonredistributable.mod/module\n\ngo 1.13",
+				"LICENSE":         proxy.LicenseBSD3,
+				"README.md":       "README FILE FOR TESTING.",
+				"bar/baz/COPYING": proxy.LicenseMIT,
+				"bar/baz/baz.go": `
+				// package baz
+				package baz
+
+				// Baz returns the string "baz".
+				func Baz() string {
+					return "baz"
+				}
+				`,
+				"bar/LICENSE": proxy.LicenseMIT,
+				"bar/bar.go": `
+				// package bar
+				package bar
+
+				// Bar returns the string "bar".
+				func Bar() string {
+					return "bar"
+				}`,
+				"foo/LICENSE.md": proxy.LicenseCCNC,
+				"foo/foo.go": `
+				// package foo
+				package foo
+
+				import (
+					"fmt"
+
+					"github.com/my/module/bar"
+				)
+
+				// FooBar returns the string "foo bar".
+				func FooBar() string {
+					return fmt.Sprintf("foo %s", bar.Bar())
+				}`,
+			},
+		},
+	})
+	defer teardownProxy()
+
 	myModuleV100 := &internal.VersionedPackage{
 		ModuleInfo: internal.ModuleInfo{
 			ModulePath:        "github.com/my/module",
@@ -908,8 +1003,6 @@ func TestFetchAndInsertVersion(t *testing.T) {
 		t.Run(test.pkg, func(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
 
-			proxyClient, teardownProxy := proxy.SetupTestProxy(t, nil)
-			defer teardownProxy()
 			sourceClient := source.NewClient(sourceTimeout)
 
 			if _, err := fetchAndInsertModule(ctx, test.modulePath, test.version, proxyClient, sourceClient, testDB); err != nil {

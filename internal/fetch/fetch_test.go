@@ -47,6 +47,35 @@ func TestExtractPackagesFromZip(t *testing.T) {
 		{
 			name:    "github.com/my/module",
 			version: "v1.0.0",
+			contents: map[string]string{
+				"go.mod":      "module github.com/my/module\n\ngo 1.12",
+				"LICENSE":     proxy.LicenseBSD3,
+				"README.md":   "README FILE FOR TESTING.",
+				"bar/LICENSE": proxy.LicenseMIT,
+				"bar/bar.go": `
+						// package bar
+						package bar
+
+						// Bar returns the string "bar".
+						func Bar() string {
+							return "bar"
+						}`,
+				"foo/LICENSE.md": proxy.LicenseMIT,
+				"foo/foo.go": `
+						// package foo
+						package foo
+
+						import (
+							"fmt"
+
+							"github.com/my/module/bar"
+						)
+
+						// FooBar returns the string "foo bar".
+						func FooBar() string {
+							return fmt.Sprintf("foo %s", bar.Bar())
+						}`,
+			},
 			packages: map[string]*internal.Package{
 				"bar": {
 					Name:              "bar",
@@ -183,6 +212,17 @@ func TestExtractPackagesFromZip(t *testing.T) {
 		{
 			name:    "build.constraints/module",
 			version: "v1.0.0",
+			contents: map[string]string{
+				"LICENSE": proxy.LicenseBSD3,
+				"cpu/cpu.go": `
+					// Package cpu implements processor feature detection
+					// used by the Go standard library.
+					package cpu`,
+				"cpu/cpu_arm.go":   "package cpu\n\nconst CacheLinePadSize = 1",
+				"cpu/cpu_arm64.go": "package cpu\n\nconst CacheLinePadSize = 2",
+				"cpu/cpu_x86.go":   "// +build 386 amd64 amd64p32\n\npackage cpu\n\nconst CacheLinePadSize = 3",
+				"ignore/ignore.go": "// +build ignore\n\npackage ignore",
+			},
 			packages: map[string]*internal.Package{
 				"cpu": {
 					Name:              "cpu",
