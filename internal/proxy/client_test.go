@@ -13,6 +13,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/testing/testhelper"
 )
 
 const testTimeout = 5 * time.Second
@@ -22,9 +23,9 @@ var sampleModule = &TestModule{
 	Version:    "v1.0.0",
 	Files: map[string]string{
 		"go.mod":      "module github.com/my/module\n\ngo 1.12",
-		"LICENSE":     LicenseBSD3,
+		"LICENSE":     testhelper.BSD0License,
 		"README.md":   "README FILE FOR TESTING.",
-		"bar/LICENSE": LicenseMIT,
+		"bar/LICENSE": testhelper.MITLicense,
 		"bar/bar.go": `
 						// package bar
 						package bar
@@ -33,7 +34,7 @@ var sampleModule = &TestModule{
 						func Bar() string {
 							return "bar"
 						}`,
-		"foo/LICENSE.md": LicenseMIT,
+		"foo/LICENSE.md": testhelper.MITLicense,
 		"foo/foo.go": `
 						// package foo
 						package foo

@@ -32,7 +32,7 @@ var sourceTimeout = 1 * time.Second
 var buildConstraintsMod = &proxy.TestModule{
 	ModulePath: "build.constraints/module",
 	Files: map[string]string{
-		"LICENSE": proxy.LicenseBSD3,
+		"LICENSE": testhelper.BSD0License,
 		"cpu/cpu.go": `
 				// Package cpu implements processor feature detection
 				// used by the Go standard library.
@@ -666,9 +666,9 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			ModulePath: "github.com/my/module",
 			Files: map[string]string{
 				"go.mod":      "module github.com/my/module\n\ngo 1.12",
-				"LICENSE":     proxy.LicenseBSD3,
+				"LICENSE":     testhelper.BSD0License,
 				"README.md":   "README FILE FOR TESTING.",
-				"bar/LICENSE": proxy.LicenseMIT,
+				"bar/LICENSE": testhelper.MITLicense,
 				"bar/bar.go": `
 					// package bar
 					package bar
@@ -677,7 +677,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					func Bar() string {
 						return "bar"
 					}`,
-				"foo/LICENSE.md": proxy.LicenseMIT,
+				"foo/LICENSE.md": testhelper.MITLicense,
 				"foo/foo.go": `
 					// package foo
 					package foo
@@ -699,9 +699,9 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			ModulePath: "nonredistributable.mod/module",
 			Files: map[string]string{
 				"go.mod":          "module nonredistributable.mod/module\n\ngo 1.13",
-				"LICENSE":         proxy.LicenseBSD3,
+				"LICENSE":         testhelper.BSD0License,
 				"README.md":       "README FILE FOR TESTING.",
-				"bar/baz/COPYING": proxy.LicenseMIT,
+				"bar/baz/COPYING": testhelper.MITLicense,
 				"bar/baz/baz.go": `
 				// package baz
 				package baz
@@ -711,7 +711,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					return "baz"
 				}
 				`,
-				"bar/LICENSE": proxy.LicenseMIT,
+				"bar/LICENSE": testhelper.MITLicense,
 				"bar/bar.go": `
 				// package bar
 				package bar
@@ -720,7 +720,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 				func Bar() string {
 					return "bar"
 				}`,
-				"foo/LICENSE.md": proxy.LicenseCCNC,
+				"foo/LICENSE.md": testhelper.UnknownLicense,
 				"foo/foo.go": `
 				// package foo
 				package foo
@@ -759,7 +759,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			DocumentationHTML: "Bar returns the string &#34;bar&#34;.",
 			V1Path:            "github.com/my/module/bar",
 			Licenses: []*licenses.Metadata{
-				{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
+				{Types: []string{"BSD-0-Clause"}, FilePath: "LICENSE"},
 				{Types: []string{"MIT"}, FilePath: "bar/LICENSE"},
 			},
 			IsRedistributable: true,
@@ -813,7 +813,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					DocumentationHTML: "Baz returns the string &#34;baz&#34;.",
 					V1Path:            "nonredistributable.mod/module/bar/baz",
 					Licenses: []*licenses.Metadata{
-						{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
+						{Types: []string{"BSD-0-Clause"}, FilePath: "LICENSE"},
 						{Types: []string{"MIT"}, FilePath: "bar/LICENSE"},
 						{Types: []string{"MIT"}, FilePath: "bar/baz/COPYING"},
 					},
@@ -844,8 +844,8 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					Synopsis: "",
 					V1Path:   "nonredistributable.mod/module/foo",
 					Licenses: []*licenses.Metadata{
-						{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
-						{Types: []string{"CC-BY-NC-SA-2.5"}, FilePath: "foo/LICENSE.md"},
+						{Types: []string{"BSD-0-Clause"}, FilePath: "LICENSE"},
+						{Types: []string{"UNKNOWN"}, FilePath: "foo/LICENSE.md"},
 					},
 					GOOS:              "linux",
 					GOARCH:            "amd64",
@@ -985,7 +985,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 					DocumentationHTML: "const CacheLinePadSize = 3",
 					V1Path:            "build.constraints/module/cpu",
 					Licenses: []*licenses.Metadata{
-						{Types: []string{"BSD-3-Clause"}, FilePath: "LICENSE"},
+						{Types: []string{"BSD-0-Clause"}, FilePath: "LICENSE"},
 					},
 					IsRedistributable: true,
 					GOOS:              "linux",

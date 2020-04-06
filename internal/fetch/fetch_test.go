@@ -49,9 +49,9 @@ func TestExtractPackagesFromZip(t *testing.T) {
 			version: "v1.0.0",
 			contents: map[string]string{
 				"go.mod":      "module github.com/my/module\n\ngo 1.12",
-				"LICENSE":     proxy.LicenseBSD3,
+				"LICENSE":     testhelper.BSD0License,
 				"README.md":   "README FILE FOR TESTING.",
-				"bar/LICENSE": proxy.LicenseMIT,
+				"bar/LICENSE": testhelper.MITLicense,
 				"bar/bar.go": `
 						// package bar
 						package bar
@@ -60,7 +60,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 						func Bar() string {
 							return "bar"
 						}`,
-				"foo/LICENSE.md": proxy.LicenseMIT,
+				"foo/LICENSE.md": testhelper.MITLicense,
 				"foo/foo.go": `
 						// package foo
 						package foo
@@ -103,7 +103,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 			name:    "no.mod/module",
 			version: "v1.0.0",
 			contents: map[string]string{
-				"LICENSE": proxy.LicenseBSD3,
+				"LICENSE": testhelper.BSD0License,
 				"p/p.go": `
 				// Package p is inside a module where a go.mod
 				// file hasn't been explicitly added yet.
@@ -154,7 +154,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 			name:    "bad.mod/module",
 			version: "v1.0.0",
 			contents: map[string]string{
-				"LICENSE": proxy.LicenseBSD3,
+				"LICENSE": testhelper.BSD0License,
 				"good/good.go": `
 			// Package good is inside a module that has bad packages.
 			package good
@@ -213,7 +213,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 			name:    "build.constraints/module",
 			version: "v1.0.0",
 			contents: map[string]string{
-				"LICENSE": proxy.LicenseBSD3,
+				"LICENSE": testhelper.BSD0License,
 				"cpu/cpu.go": `
 					// Package cpu implements processor feature detection
 					// used by the Go standard library.
@@ -286,7 +286,7 @@ func TestExtractPackagesFromZip(t *testing.T) {
 			name:    "doc.test",
 			version: "v1.0.0",
 			contents: map[string]string{
-				"LICENSE": proxy.LicenseBSD3,
+				"LICENSE": testhelper.BSD0License,
 				"permalink/doc.go": `
 				// Package permalink is for testing the heading
 				// permalink documentation rendering feature.
