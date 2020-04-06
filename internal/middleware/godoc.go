@@ -38,7 +38,7 @@ func GodocURL() Middleware {
 				http.SetCookie(w, &http.Cookie{
 					Name:     tmpCookieName,
 					Value:    "1",
-					SameSite: http.SameSiteStrictMode,
+					SameSite: http.SameSiteLaxMode, // request can originate from another domain via redirect
 				})
 
 				// Redirect to the same URL only without the utm_source parameter.
@@ -46,7 +46,7 @@ func GodocURL() Middleware {
 				q := u.Query()
 				q.Del("utm_source")
 				u.RawQuery = q.Encode()
-				http.Redirect(w, r, u.String(), http.StatusSeeOther)
+				http.Redirect(w, r, u.String(), http.StatusFound)
 				return
 			}
 
@@ -54,13 +54,12 @@ func GodocURL() Middleware {
 			if _, err := r.Cookie(tmpCookieName); err == http.ErrNoCookie {
 				// Cookie isn’t set, indicating user is not coming from godoc.org.
 				godocURL = ""
+			} else {
+				http.SetCookie(w, &http.Cookie{
+					Name:   tmpCookieName,
+					MaxAge: -1,
+				})
 			}
-
-			// Always attempt to delete the temporary cookie.
-			http.SetCookie(w, &http.Cookie{
-				Name:   tmpCookieName,
-				MaxAge: -1,
-			})
 
 			// TODO(b/144509703): avoid copying if possible
 			crw := &capturingResponseWriter{ResponseWriter: w}

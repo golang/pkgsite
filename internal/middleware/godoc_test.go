@@ -43,10 +43,10 @@ func TestGodocURL(t *testing.T) {
 		{
 			desc: "Strip utm_source, set temporary cookie, and redirect",
 			path: "/cloud.google.com/go/storage?tab=doc&utm_source=godoc",
-			code: http.StatusSeeOther,
+			code: http.StatusFound,
 			headers: map[string]string{
 				"Location":   "/cloud.google.com/go/storage?tab=doc",
-				"Set-Cookie": "tmp-from-godoc=1; SameSite=Strict",
+				"Set-Cookie": "tmp-from-godoc=1; SameSite=Lax",
 			},
 		},
 		{
