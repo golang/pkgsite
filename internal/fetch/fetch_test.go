@@ -17,6 +17,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/licensecheck"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/licenses"
@@ -27,357 +28,162 @@ import (
 	"golang.org/x/discovery/internal/version"
 )
 
-const (
-	testTimeout   = 30 * time.Second
-	sourceTimeout = 1 * time.Second
+var (
+	testTimeout         = 30 * time.Second
+	sourceTimeout       = 1 * time.Second
+	testProxyCommitTime = time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC)
+	defaultLicenses     = []*licenses.License{
+		{
+			Metadata: &licenses.Metadata{
+				Types:    []string{"BSD-0-Clause"},
+				FilePath: "LICENSE",
+				Coverage: licensecheck.Coverage{
+					Percent: 100,
+					Match: []licensecheck.Match{
+						{
+							Name:    "BSD-0-Clause",
+							Type:    licensecheck.BSD,
+							Percent: 100,
+						},
+					},
+				},
+			},
+			Contents: []byte(testhelper.BSD0License),
+		},
+	}
 )
 
-func TestExtractPackagesFromZip(t *testing.T) {
+func TestFetchVersion(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	for _, test := range []struct {
-		name                 string
-		version              string
-		contents             map[string]string
-		packages             map[string]*internal.Package
-		packageVersionStates []*internal.PackageVersionState
-		wantErr              error
-	}{
-		{
-			name:    "github.com/my/module",
-			version: "v1.0.0",
-			contents: map[string]string{
-				"go.mod":      "module github.com/my/module\n\ngo 1.12",
-				"LICENSE":     testhelper.BSD0License,
-				"README.md":   "README FILE FOR TESTING.",
-				"bar/LICENSE": testhelper.MITLicense,
-				"bar/bar.go": `
-						// package bar
-						package bar
-
-						// Bar returns the string "bar".
-						func Bar() string {
-							return "bar"
-						}`,
-				"foo/LICENSE.md": testhelper.MITLicense,
-				"foo/foo.go": `
-						// package foo
-						package foo
-
-						import (
-							"fmt"
-
-							"github.com/my/module/bar"
-						)
-
-						// FooBar returns the string "foo bar".
-						func FooBar() string {
-							return fmt.Sprintf("foo %s", bar.Bar())
-						}`,
-			},
-			packages: map[string]*internal.Package{
-				"bar": {
-					Name:              "bar",
-					Path:              "github.com/my/module/bar",
-					Synopsis:          "package bar",
-					DocumentationHTML: "Bar returns the string &#34;bar&#34;.",
-					Imports:           []string{},
-					V1Path:            "github.com/my/module/bar",
-					GOOS:              "linux",
-					GOARCH:            "amd64",
+	setPackageVersionStates := func(fr *FetchResult) {
+		if fr.PackageVersionStates != nil {
+			return
+		}
+		for _, p := range fr.Module.Packages {
+			fr.PackageVersionStates = append(
+				fr.PackageVersionStates, &internal.PackageVersionState{
+					PackagePath: p.Path,
+					ModulePath:  fr.Module.ModulePath,
+					Version:     "v1.0.0",
+					Status:      http.StatusOK,
 				},
-				"foo": {
-					Name:              "foo",
-					Path:              "github.com/my/module/foo",
-					Synopsis:          "package foo",
-					DocumentationHTML: "FooBar returns the string &#34;foo bar&#34;.",
-					Imports:           []string{"fmt", "github.com/my/module/bar"},
-					V1Path:            "github.com/my/module/foo",
-					GOOS:              "linux",
-					GOARCH:            "amd64",
-				},
-			},
-		},
-		{
-			name:    "no.mod/module",
-			version: "v1.0.0",
-			contents: map[string]string{
-				"LICENSE": testhelper.BSD0License,
-				"p/p.go": `
-				// Package p is inside a module where a go.mod
-				// file hasn't been explicitly added yet.
-				package p
-
-				// Year is a year before go.mod files existed.
-				const Year = 2009`,
-			},
-			packages: map[string]*internal.Package{
-				"p": {
-					Name:              "p",
-					Path:              "no.mod/module/p",
-					Synopsis:          "Package p is inside a module where a go.mod file hasn't been explicitly added yet.",
-					DocumentationHTML: "const Year = 2009",
-					Imports:           []string{},
-					V1Path:            "no.mod/module/p",
-					GOOS:              "linux",
-					GOARCH:            "amd64",
-				},
-			},
-		},
-		{
-			name:     "emp.ty/module",
-			version:  "v1.0.0",
-			contents: map[string]string{},
-			packages: map[string]*internal.Package{},
-			wantErr:  errModuleContainsNoPackages,
-		},
-		{
-			name:    "emp.ty/package",
-			version: "v1.0.0",
-			contents: map[string]string{
-				"main.go": "package main",
-			},
-			packages: map[string]*internal.Package{
-				"main": {
-					Name:     "main",
-					Path:     "emp.ty/package",
-					Synopsis: "",
-					Imports:  []string{},
-					V1Path:   "emp.ty/package",
-					GOOS:     "linux",
-					GOARCH:   "amd64",
-				},
-			},
-		},
-		{
-			name:    "bad.mod/module",
-			version: "v1.0.0",
-			contents: map[string]string{
-				"LICENSE": testhelper.BSD0License,
-				"good/good.go": `
-			// Package good is inside a module that has bad packages.
-			package good
-
-			// Good is whether this package is good.
-			const Good = true`,
-
-				"illegalchar/p.go": `
-			package p
-
-			func init() {
-				var c00 uint8 = '\0';  // ERROR "oct|char"
-				var c01 uint8 = '\07';  // ERROR "oct|char"
-				var cx0 uint8 = '\x0';  // ERROR "hex|char"
-				var cx1 uint8 = '\x';  // ERROR "hex|char"
-				_, _, _, _ = c00, c01, cx0, cx1
+			)
+		}
+	}
+	setFetchResult := func(modulePath string, fr *FetchResult) {
+		if fr.GoModPath == "" {
+			fr.GoModPath = modulePath
+		}
+		if fr.Module.Version == "" {
+			fr.Module.Version = "v1.0.0"
+		}
+		if fr.Module.VersionType == "" {
+			fr.Module.VersionType = version.TypeRelease
+		}
+		if fr.Module.CommitTime.IsZero() {
+			fr.Module.CommitTime = testProxyCommitTime
+		}
+		if fr.Module.Licenses == nil {
+			fr.Module.Licenses = defaultLicenses
+			for _, p := range fr.Module.Packages {
+				p.Licenses = []*licenses.Metadata{defaultLicenses[0].Metadata}
 			}
-			`,
-				"multiplepkgs/a.go": "package a",
-				"multiplepkgs/b.go": "package b",
-			},
-			packages: map[string]*internal.Package{
-				"good": {
-					Name:              "good",
-					Path:              "bad.mod/module/good",
-					Synopsis:          "Package good is inside a module that has bad packages.",
-					DocumentationHTML: `const Good = <a href="/pkg/builtin#true">true</a>`,
-					Imports:           []string{},
-					V1Path:            "bad.mod/module/good",
-					GOOS:              "linux",
-					GOARCH:            "amd64",
-				},
-			},
-			packageVersionStates: []*internal.PackageVersionState{
-				{
-					PackagePath: "bad.mod/module/good",
-					ModulePath:  "bad.mod/module",
-					Version:     "v1.0.0",
-					Status:      200,
-				},
-				{
-					PackagePath: "bad.mod/module/illegalchar",
-					ModulePath:  "bad.mod/module",
-					Version:     "v1.0.0",
-					Status:      600,
-				},
-				{
-					PackagePath: "bad.mod/module/multiplepkgs",
-					ModulePath:  "bad.mod/module",
-					Version:     "v1.0.0",
-					Status:      600,
-				},
-			},
-		},
-		{
-			name:    "build.constraints/module",
-			version: "v1.0.0",
-			contents: map[string]string{
-				"LICENSE": testhelper.BSD0License,
-				"cpu/cpu.go": `
-					// Package cpu implements processor feature detection
-					// used by the Go standard library.
-					package cpu`,
-				"cpu/cpu_arm.go":   "package cpu\n\nconst CacheLinePadSize = 1",
-				"cpu/cpu_arm64.go": "package cpu\n\nconst CacheLinePadSize = 2",
-				"cpu/cpu_x86.go":   "// +build 386 amd64 amd64p32\n\npackage cpu\n\nconst CacheLinePadSize = 3",
-				"ignore/ignore.go": "// +build ignore\n\npackage ignore",
-			},
-			packages: map[string]*internal.Package{
-				"cpu": {
-					Name:              "cpu",
-					Path:              "build.constraints/module/cpu",
-					Synopsis:          "Package cpu implements processor feature detection used by the Go standard library.",
-					DocumentationHTML: "const CacheLinePadSize = 3",
-					Imports:           []string{},
-					V1Path:            "build.constraints/module/cpu",
-					GOOS:              "linux",
-					GOARCH:            "amd64",
-				},
-			},
-			packageVersionStates: []*internal.PackageVersionState{
-				{
-					ModulePath:  "build.constraints/module",
-					Version:     "v1.0.0",
-					PackagePath: "build.constraints/module/cpu",
-					Status:      http.StatusOK,
-				},
-				{
-					ModulePath:  "build.constraints/module",
-					Version:     "v1.0.0",
-					PackagePath: "build.constraints/module/ignore",
-					Status:      derrors.ToHTTPStatus(derrors.BuildContextNotSupported),
-				},
-			},
-		},
-		{
-			name:    "bad.import.path.com",
-			version: "v1.0.0",
-			contents: map[string]string{
-				"good/import/path/foo.go": "package foo",
-				"bad/import path/foo.go":  "package foo",
-			},
-			packages: map[string]*internal.Package{
-				"foo": {
-					Name:    "foo",
-					Path:    "bad.import.path.com/good/import/path",
-					V1Path:  "bad.import.path.com/good/import/path",
-					Imports: []string{},
-					GOOS:    "linux",
-					GOARCH:  "amd64",
-				},
-			},
-			packageVersionStates: []*internal.PackageVersionState{
-				{
-					ModulePath:  "bad.import.path.com",
-					PackagePath: "bad.import.path.com/bad/import path",
-					Version:     "v1.0.0",
-					Status:      derrors.ToHTTPStatus(derrors.BadImportPath),
-				},
-				{
-					ModulePath:  "bad.import.path.com",
-					PackagePath: "bad.import.path.com/good/import/path",
-					Version:     "v1.0.0",
-					Status:      http.StatusOK,
-				},
-			},
-		},
-		{
-			name:    "doc.test",
-			version: "v1.0.0",
-			contents: map[string]string{
-				"LICENSE": testhelper.BSD0License,
-				"permalink/doc.go": `
-				// Package permalink is for testing the heading
-				// permalink documentation rendering feature.
-				//
-				// This is a heading
-				//
-				// This is a paragraph.
-				//
-				// This is yet another
-				// paragraph.
-				//
-				package permalink`,
-			},
-			packages: map[string]*internal.Package{
-				"permalink": {
-					Name:              "permalink",
-					Path:              "doc.test/permalink",
-					Synopsis:          "Package permalink is for testing the heading permalink documentation rendering feature.",
-					DocumentationHTML: "<h3 id=\"hdr-This_is_a_heading\">This is a heading <a href=\"#hdr-This_is_a_heading\">¶</a></h3>",
-					Imports:           []string{},
-					V1Path:            "doc.test/permalink",
-					GOOS:              "linux",
-					GOARCH:            "amd64",
-				},
-			},
-		},
+		}
+	}
+
+	sortFetchResult := func(fr *FetchResult) {
+		sort.Slice(fr.Module.Packages, func(i, j int) bool {
+			return fr.Module.Packages[i].Path < fr.Module.Packages[j].Path
+		})
+		sort.Slice(fr.Module.Licenses, func(i, j int) bool {
+			return fr.Module.Licenses[i].FilePath < fr.Module.Licenses[j].FilePath
+		})
+		sort.Slice(fr.PackageVersionStates, func(i, j int) bool {
+			return fr.PackageVersionStates[i].PackagePath < fr.PackageVersionStates[j].PackagePath
+		})
+	}
+
+	checkDocumentationHTML := func(fr *FetchResult, got *FetchResult) {
+		for i := 0; i < len(fr.Module.Packages); i++ {
+			want := fr.Module.Packages[i].DocumentationHTML
+			got := got.Module.Packages[i].DocumentationHTML
+			if len(want) != 0 && !strings.Contains(got, want) {
+				t.Errorf("got documentation doesn't contain wanted documentation substring:\ngot: %q\nwant (substring): %q", got, want)
+			}
+		}
+	}
+
+	sourceClient := source.NewClient(sourceTimeout)
+	for _, test := range []struct {
+		name string
+		mod  *testModule
+	}{
+		{name: "basic", mod: moduleNoGoMod},
+		{name: "wasm", mod: moduleWasm},
+		{name: "no go.mod file", mod: moduleOnePackage},
+		{name: "has go.mod", mod: moduleMultiPackage},
+		{name: "module with bad packages", mod: moduleBadPackages},
+		{name: "module with build constraints", mod: moduleBuildConstraints},
+		{name: "module with packages with bad import paths", mod: moduleBadImportPath},
+		{name: "module with documentation", mod: moduleDocTest},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			var modules []*proxy.TestModule
-			if test.contents != nil {
-				modules = []*proxy.TestModule{
-					{
-						ModulePath: test.name,
-						Version:    test.version,
-						Files:      test.contents,
-					},
-				}
-			}
-			proxyClient, teardownProxy := proxy.SetupTestProxy(t, modules)
+			proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{{
+				ModulePath: test.mod.mod.ModulePath,
+				Files:      test.mod.mod.Files,
+			}})
 			defer teardownProxy()
 
-			reader, err := proxyClient.GetZip(ctx, test.name, test.version)
+			got, err := FetchVersion(ctx, test.mod.mod.ModulePath, "v1.0.0", proxyClient, sourceClient)
 			if err != nil {
 				t.Fatal(err)
 			}
-
-			packages, pvstates, err := extractPackagesFromZip(context.Background(), test.name, test.version, reader, nil, nil)
-			if err != nil {
-				if !errors.Is(err, test.wantErr) {
-					t.Fatal(err)
-				}
-				return
+			setFetchResult(test.mod.mod.ModulePath, test.mod.fr)
+			setPackageVersionStates(test.mod.fr)
+			opts := []cmp.Option{
+				cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML"),
+				cmpopts.IgnoreFields(internal.PackageVersionState{}, "Error"),
+				cmp.AllowUnexported(source.Info{}),
 			}
-			if test.packageVersionStates == nil {
-				for _, p := range test.packages {
-					test.packageVersionStates = append(test.packageVersionStates,
-						&internal.PackageVersionState{
-							ModulePath:  test.name,
-							Version:     test.version,
-							PackagePath: p.Path,
-							Status:      http.StatusOK,
-						})
-				}
-				sort.Slice(test.packageVersionStates, func(i, j int) bool {
-					return test.packageVersionStates[i].PackagePath < test.packageVersionStates[j].PackagePath
-				})
+			opts = append(opts, sample.LicenseCmpOpts...)
+			sortFetchResult(test.mod.fr)
+			sortFetchResult(got)
+			checkDocumentationHTML(test.mod.fr, got)
+			if diff := cmp.Diff(test.mod.fr, got, opts...); diff != "" {
+				t.Fatalf("mismatch (-want +got):\n%s", diff)
 			}
-			sort.Slice(pvstates, func(i, j int) bool {
-				return pvstates[i].PackagePath < pvstates[j].PackagePath
-			})
-			if diff := cmp.Diff(test.packageVersionStates, pvstates, cmpopts.EquateEmpty(), cmpopts.IgnoreFields(internal.PackageVersionState{}, "Error")); diff != "" {
-				t.Fatalf("extractPackagesFromZip(%q, %q, reader, nil) mismatch for packageVersionStates (-want +got):\n%s", test.name, test.version, diff)
+		})
+	}
+}
+func TestFetchVersion_Errors(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	for _, test := range []struct {
+		name          string
+		mod           *testModule
+		wantErr       error
+		wantGoModPath string
+	}{
+		{name: "alternative", mod: moduleAlternative, wantErr: derrors.AlternativeModule, wantGoModPath: "canonical"},
+		{name: "empty module", mod: moduleEmpty, wantErr: derrors.BadModule},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{{
+				ModulePath: test.mod.mod.ModulePath,
+				Files:      test.mod.mod.Files,
+			}})
+			defer teardownProxy()
+
+			sourceClient := source.NewClient(sourceTimeout)
+			got, err := FetchVersion(ctx, test.mod.mod.ModulePath, "v1.0.0", proxyClient, sourceClient)
+			if !errors.Is(err, test.wantErr) {
+				t.Fatalf("FetchVersion(ctx, %q, v1.0.0, proxyClient, sourceClient): %v; wantErr = %v)", test.mod.mod.ModulePath, err, test.wantErr)
 			}
-
-			for _, got := range packages {
-				want, ok := test.packages[got.Name]
-				if !ok {
-					t.Errorf("extractPackagesFromZip(%q, %q, reader, nil) returned unexpected package: %q", test.name, test.version, got.Name)
-					continue
-				}
-
-				sort.Strings(got.Imports)
-
-				if diff := cmp.Diff(want, got, cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML")); diff != "" {
-					t.Errorf("extractPackagesFromZip(%q, %q, reader, nil) mismatch (-want +got):\n%s", test.name, test.version, diff)
-				}
-
-				if got, want := got.DocumentationHTML, want.DocumentationHTML; len(want) == 0 && len(got) != 0 {
-					t.Errorf("got non-empty documentation but want empty:\ngot: %q\nwant: %q", got, want)
-				} else if !strings.Contains(got, want) {
-					t.Errorf("got documentation doesn't contain wanted documentation substring:\ngot: %q\nwant (substring): %q", got, want)
+			if test.wantGoModPath != "" {
+				if got == nil || got.GoModPath != test.wantGoModPath {
+					t.Errorf("got %+v, wanted GoModPath %q", got, test.wantGoModPath)
 				}
 			}
 		})
@@ -487,194 +293,6 @@ func TestIsReadme(t *testing.T) {
 				}
 			})
 		}
-	}
-}
-
-var testProxyCommitTime = time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC)
-
-func TestFetchVersion(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
-
-	modulePath := "github.com/my/module"
-	vers := "v1.0.0"
-	wantModuleInfo := internal.ModuleInfo{
-		ModulePath:        "github.com/my/module",
-		Version:           "v1.0.0",
-		CommitTime:        testProxyCommitTime,
-		ReadmeFilePath:    "README.md",
-		ReadmeContents:    "THIS IS A README",
-		VersionType:       version.TypeRelease,
-		IsRedistributable: true,
-		HasGoMod:          false,
-		SourceInfo:        source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
-	}
-	wantModuleInfoGoMod := wantModuleInfo
-	wantModuleInfoGoMod.HasGoMod = true
-
-	wantCoverage := sample.LicenseMetadata[0].Coverage
-	wantLicenses := []*licenses.License{
-		{
-			Metadata: &licenses.Metadata{
-				Types:    []string{"MIT"},
-				FilePath: "LICENSE.md",
-				Coverage: wantCoverage,
-			},
-			Contents: []byte(testhelper.MITLicense),
-		},
-	}
-
-	for _, test := range []struct {
-		name     string
-		contents map[string]string
-		want     *internal.Module
-	}{
-		{
-			name: "basic",
-			contents: map[string]string{
-				"README.md":  "THIS IS A README",
-				"foo/foo.go": "// package foo exports a helpful constant.\npackage foo\nimport \"net/http\"\nconst OK = http.StatusOK",
-				"LICENSE.md": testhelper.MITLicense,
-			},
-			want: &internal.Module{
-				ModuleInfo: wantModuleInfo,
-				Packages: []*internal.Package{
-					{
-						Path:              "github.com/my/module/foo",
-						V1Path:            "github.com/my/module/foo",
-						Name:              "foo",
-						Synopsis:          "package foo exports a helpful constant.",
-						IsRedistributable: true,
-						Licenses: []*licenses.Metadata{
-							{Types: []string{"MIT"}, FilePath: "LICENSE.md", Coverage: wantCoverage},
-						},
-						Imports: []string{"net/http"},
-						GOOS:    "linux",
-						GOARCH:  "amd64",
-					},
-				},
-				Licenses: wantLicenses,
-			},
-		},
-		{
-			name: "wasm",
-			contents: map[string]string{
-				"README.md":  "THIS IS A README",
-				"LICENSE.md": testhelper.MITLicense,
-				"js/js.go": `
-					// +build js,wasm
-
-					// Package js only works with wasm.
-					package js
-					type Value int`,
-			},
-			want: &internal.Module{
-				ModuleInfo: wantModuleInfo,
-				Packages: []*internal.Package{
-					{
-						Path:              "github.com/my/module/js",
-						V1Path:            "github.com/my/module/js",
-						Name:              "js",
-						Synopsis:          "Package js only works with wasm.",
-						IsRedistributable: true,
-						Licenses: []*licenses.Metadata{
-							{Types: []string{"MIT"}, FilePath: "LICENSE.md", Coverage: wantCoverage},
-						},
-						Imports: []string{},
-						GOOS:    "js",
-						GOARCH:  "wasm",
-					},
-				},
-				Licenses: wantLicenses,
-			},
-		},
-		{
-			name: "has go.mod",
-			contents: map[string]string{
-				"go.mod":     "module github.com/my/module",
-				"README.md":  "THIS IS A README",
-				"foo/foo.go": "// package foo exports a helpful constant.\npackage foo\nimport \"net/http\"\nconst OK = http.StatusOK",
-				"LICENSE.md": testhelper.MITLicense,
-			},
-			want: &internal.Module{
-				ModuleInfo: wantModuleInfoGoMod,
-				Packages: []*internal.Package{
-					{
-						Path:              "github.com/my/module/foo",
-						V1Path:            "github.com/my/module/foo",
-						Name:              "foo",
-						Synopsis:          "package foo exports a helpful constant.",
-						IsRedistributable: true,
-						Licenses: []*licenses.Metadata{
-							{Types: []string{"MIT"}, FilePath: "LICENSE.md", Coverage: wantCoverage},
-						},
-						Imports: []string{"net/http"},
-						GOOS:    "linux",
-						GOARCH:  "amd64",
-					},
-				},
-				Licenses: wantLicenses,
-			},
-		},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			var modules []*proxy.TestModule
-			if test.contents != nil {
-				modules = []*proxy.TestModule{
-					{
-						ModulePath: modulePath,
-						Version:    vers,
-						Files:      test.contents,
-					},
-				}
-			}
-			proxyClient, teardownProxy := proxy.SetupTestProxy(t, modules)
-			defer teardownProxy()
-			sourceClient := source.NewClient(sourceTimeout)
-			got, err := FetchVersion(ctx, modulePath, vers, proxyClient, sourceClient)
-			if err != nil {
-				t.Fatal(err)
-			}
-			opts := []cmp.Option{
-				cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML"),
-				cmp.AllowUnexported(source.Info{}),
-			}
-			opts = append(opts, sample.LicenseCmpOpts...)
-			if diff := cmp.Diff(test.want, got.Module, opts...); diff != "" {
-				t.Errorf("mismatch (-want +got):\n%s", diff)
-			}
-			if got.GoModPath != modulePath {
-				t.Errorf("go.mod path: got %q, want %q", got.GoModPath, modulePath)
-			}
-		})
-	}
-}
-
-func TestFetchVersion_Alternative(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
-
-	const (
-		modulePath = "github.com/my/module"
-		goModPath  = "canonical"
-		vers       = "v1.0.0"
-	)
-
-	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{
-		{
-			ModulePath: modulePath,
-			Version:    vers,
-			Files:      map[string]string{"go.mod": "module " + goModPath},
-		},
-	})
-	defer teardownProxy()
-	sourceClient := source.NewClient(sourceTimeout)
-	res, err := FetchVersion(ctx, modulePath, vers, proxyClient, sourceClient)
-	if !errors.Is(err, derrors.AlternativeModule) {
-		t.Errorf("got %v, want derrors.AlternativeModule", err)
-	}
-	if res == nil || res.GoModPath != goModPath {
-		t.Errorf("got %+v, wanted GoModPath %q", res, goModPath)
 	}
 }
 
