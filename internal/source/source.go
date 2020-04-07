@@ -213,6 +213,9 @@ func NewClient(timeout time.Duration) *Client {
 func (c *Client) doURL(ctx context.Context, method, url string, only200 bool) (_ *http.Response, err error) {
 	defer derrors.Wrap(&err, "doURL(ctx, client, %q, %q)", method, url)
 
+	if c == nil || c.httpClient == nil {
+		return nil, fmt.Errorf("c.httpClient cannot be nil")
+	}
 	req, err := http.NewRequest(method, url, nil)
 	if err != nil {
 		return nil, err

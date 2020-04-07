@@ -78,7 +78,7 @@ func TestEndToEndProcessing(t *testing.T) {
 	// back to worker, rather than calling fetch itself.
 	queue := queue.NewInMemory(ctx, proxyClient, source.NewClient(1*time.Second), testDB, 10, worker.FetchAndUpdateState)
 
-	workerServer, err := worker.NewServer(&config.Config{}, testDB, indexClient, proxyClient, redisHAClient, queue, nil, "../../../content/static")
+	workerServer, err := worker.NewServer(&config.Config{}, testDB, indexClient, proxyClient, source.NewClient(1*time.Second), redisHAClient, queue, nil, "../../../content/static")
 	if err != nil {
 		t.Fatal(err)
 	}

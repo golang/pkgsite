@@ -88,7 +88,7 @@ func main() {
 	fetchQueue := newQueue(ctx, cfg, proxyClient, sourceClient, db)
 	reportingClient := reportingClient(ctx, cfg)
 	redisClient := getRedis(ctx, cfg)
-	server, err := worker.NewServer(cfg, db, indexClient, proxyClient, redisClient, fetchQueue, reportingClient, *staticPath)
+	server, err := worker.NewServer(cfg, db, indexClient, proxyClient, sourceClient, redisClient, fetchQueue, reportingClient, *staticPath)
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
