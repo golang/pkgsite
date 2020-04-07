@@ -59,12 +59,10 @@ func SecureHeaders() Middleware {
 			// fonts.googleapis.com is used for fonts.
 			p.add("style-src", self, "'unsafe-inline'", "fonts.googleapis.com")
 
-			p.add("frame-src", self)
-
 			// Because we are rendering user-provided README's, we allow arbitrary image
 			// sources. This could possibly be narrowed to known content hosts based on
 			// e.g. the github.com CSP, but that seemed fragile.
-			p.add("img-src", self)
+			p.add("img-src", self, "data:", "*")
 
 			// Disallow plugin content: the Discovery site does not use it.
 			p.add("object-src", none)
