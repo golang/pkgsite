@@ -17,7 +17,7 @@ CREATE TABLE documentation (
     goos text NOT NULL,
     goarch text NOT NULL,
     synopsis text NOT NULL,
-    html text NOT NULL
+    html text NOT NULL,
     PRIMARY KEY (path_id, goos, goarch)
 );
 COMMENT ON TABLE documentation IS
