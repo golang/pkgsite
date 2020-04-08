@@ -153,9 +153,13 @@ func processZipFile(ctx context.Context, modulePath string, versionType version.
 	hasGoMod := zipContainsFilename(zipReader, path.Join(moduleVersionDir(modulePath, resolvedVersion), "go.mod"))
 
 	var readmeFilePath, readmeContents string
-	if len(readmes) > 0 {
-		readmeFilePath = readmes[0].Filepath
-		readmeContents = readmes[0].Contents
+	for _, r := range readmes {
+		if path.Dir(r.Filepath) != "." {
+			continue
+		}
+		readmeFilePath = r.Filepath
+		readmeContents = r.Contents
+		break
 	}
 	return &FetchResult{
 		Module: &internal.Module{
@@ -170,8 +174,9 @@ func processZipFile(ctx context.Context, modulePath string, versionType version.
 				HasGoMod:          hasGoMod,
 				SourceInfo:        sourceInfo,
 			},
-			Packages: packages,
-			Licenses: allLicenses,
+			Packages:    packages,
+			Licenses:    allLicenses,
+			Directories: moduleDirectories(modulePath, packages, readmes, d),
 		},
 		PackageVersionStates: packageVersionStates,
 	}, nil

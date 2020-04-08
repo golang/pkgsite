@@ -16,110 +16,31 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"sort"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/google/licensecheck"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/discovery/internal/fetch/internal/doc"
-	"golang.org/x/discovery/internal/licenses"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/source"
+	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/testing/sample"
 	"golang.org/x/discovery/internal/testing/testhelper"
-	"golang.org/x/discovery/internal/version"
 )
 
 var (
-	testTimeout         = 30 * time.Second
-	sourceTimeout       = 1 * time.Second
-	testProxyCommitTime = time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC)
-	defaultLicenses     = []*licenses.License{
-		{
-			Metadata: &licenses.Metadata{
-				Types:    []string{"BSD-0-Clause"},
-				FilePath: "LICENSE",
-				Coverage: licensecheck.Coverage{
-					Percent: 100,
-					Match: []licensecheck.Match{
-						{
-							Name:    "BSD-0-Clause",
-							Type:    licensecheck.BSD,
-							Percent: 100,
-						},
-					},
-				},
-			},
-			Contents: []byte(testhelper.BSD0License),
-		},
-	}
+	testTimeout   = 30 * time.Second
+	sourceTimeout = 1 * time.Second
 )
 
 func TestFetchVersion(t *testing.T) {
+	stdlib.UseTestData = true
+
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-
-	setPackageVersionStates := func(fr *FetchResult) {
-		if fr.PackageVersionStates != nil {
-			return
-		}
-		for _, p := range fr.Module.Packages {
-			fr.PackageVersionStates = append(
-				fr.PackageVersionStates, &internal.PackageVersionState{
-					PackagePath: p.Path,
-					ModulePath:  fr.Module.ModulePath,
-					Version:     "v1.0.0",
-					Status:      http.StatusOK,
-				},
-			)
-		}
-	}
-	setFetchResult := func(modulePath string, fr *FetchResult) {
-		if fr.GoModPath == "" {
-			fr.GoModPath = modulePath
-		}
-		if fr.Module.Version == "" {
-			fr.Module.Version = "v1.0.0"
-		}
-		if fr.Module.VersionType == "" {
-			fr.Module.VersionType = version.TypeRelease
-		}
-		if fr.Module.CommitTime.IsZero() {
-			fr.Module.CommitTime = testProxyCommitTime
-		}
-		if fr.Module.Licenses == nil {
-			fr.Module.Licenses = defaultLicenses
-			for _, p := range fr.Module.Packages {
-				p.Licenses = []*licenses.Metadata{defaultLicenses[0].Metadata}
-			}
-		}
-	}
-
-	sortFetchResult := func(fr *FetchResult) {
-		sort.Slice(fr.Module.Packages, func(i, j int) bool {
-			return fr.Module.Packages[i].Path < fr.Module.Packages[j].Path
-		})
-		sort.Slice(fr.Module.Licenses, func(i, j int) bool {
-			return fr.Module.Licenses[i].FilePath < fr.Module.Licenses[j].FilePath
-		})
-		sort.Slice(fr.PackageVersionStates, func(i, j int) bool {
-			return fr.PackageVersionStates[i].PackagePath < fr.PackageVersionStates[j].PackagePath
-		})
-	}
-
-	checkDocumentationHTML := func(fr *FetchResult, got *FetchResult) {
-		for i := 0; i < len(fr.Module.Packages); i++ {
-			want := fr.Module.Packages[i].DocumentationHTML
-			got := got.Module.Packages[i].DocumentationHTML
-			if len(want) != 0 && !strings.Contains(got, want) {
-				t.Errorf("got documentation doesn't contain wanted documentation substring:\ngot: %q\nwant (substring): %q", got, want)
-			}
-		}
-	}
 
 	// Stub out the function used to share playground snippets
 	origPost := httpPost
@@ -131,7 +52,6 @@ func TestFetchVersion(t *testing.T) {
 	}
 	defer func() { httpPost = origPost }()
 
-	sourceClient := source.NewClient(sourceTimeout)
 	for _, test := range []struct {
 		name string
 		mod  *testModule
@@ -148,32 +68,43 @@ func TestFetchVersion(t *testing.T) {
 		{name: "module with function example", mod: moduleFuncExample},
 		{name: "module with type example", mod: moduleTypeExample},
 		{name: "module with method example", mod: moduleMethodExample},
+		{name: "module with nonredistributable packages", mod: moduleNonRedist},
+		{name: "stdlib module", mod: moduleStd},
 	} {
 		t.Run(test.name, func(t *testing.T) {
+			modulePath := test.mod.mod.ModulePath
+			version := test.mod.mod.Version
+			if version == "" {
+				version = "v1.0.0"
+			}
+			sourceClient := source.NewClient(sourceTimeout)
 			proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{{
-				ModulePath: test.mod.mod.ModulePath,
+				ModulePath: modulePath,
+				Version:    version,
 				Files:      test.mod.mod.Files,
 			}})
 			defer teardownProxy()
-
-			got, err := FetchVersion(ctx, test.mod.mod.ModulePath, "v1.0.0", proxyClient, sourceClient)
+			got, err := FetchVersion(ctx, modulePath, version, proxyClient, sourceClient)
 			if err != nil {
 				t.Fatal(err)
 			}
-			setFetchResult(test.mod.mod.ModulePath, test.mod.fr)
-			setPackageVersionStates(test.mod.fr)
+
+			d := licenseDetector(ctx, t, modulePath, version, proxyClient)
+			fr := cleanFetchResult(test.mod.fr, d)
+			sortFetchResult(fr)
+			sortFetchResult(got)
 			opts := []cmp.Option{
 				cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML"),
+				cmpopts.IgnoreFields(internal.Documentation{}, "HTML"),
 				cmpopts.IgnoreFields(internal.PackageVersionState{}, "Error"),
 				cmp.AllowUnexported(source.Info{}),
+				cmpopts.EquateEmpty(),
 			}
 			opts = append(opts, sample.LicenseCmpOpts...)
-			sortFetchResult(test.mod.fr)
-			sortFetchResult(got)
-			checkDocumentationHTML(test.mod.fr, got)
-			if diff := cmp.Diff(test.mod.fr, got, opts...); diff != "" {
+			if diff := cmp.Diff(fr, got, opts...); diff != "" {
 				t.Fatalf("mismatch (-want +got):\n%s", diff)
 			}
+			validateDocumentationHTML(t, got.Module, fr.Module)
 		})
 	}
 }
@@ -190,16 +121,21 @@ func TestFetchVersion_Errors(t *testing.T) {
 		{name: "empty module", mod: moduleEmpty, wantErr: derrors.BadModule},
 	} {
 		t.Run(test.name, func(t *testing.T) {
+			modulePath := test.mod.mod.ModulePath
+			version := test.mod.mod.Version
+			if version == "" {
+				version = "v1.0.0"
+			}
 			proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{{
-				ModulePath: test.mod.mod.ModulePath,
+				ModulePath: modulePath,
 				Files:      test.mod.mod.Files,
 			}})
 			defer teardownProxy()
 
 			sourceClient := source.NewClient(sourceTimeout)
-			got, err := FetchVersion(ctx, test.mod.mod.ModulePath, "v1.0.0", proxyClient, sourceClient)
+			got, err := FetchVersion(ctx, modulePath, "v1.0.0", proxyClient, sourceClient)
 			if !errors.Is(err, test.wantErr) {
-				t.Fatalf("FetchVersion(ctx, %q, v1.0.0, proxyClient, sourceClient): %v; wantErr = %v)", test.mod.mod.ModulePath, err, test.wantErr)
+				t.Fatalf("FetchVersion(ctx, %q, v1.0.0, proxyClient, sourceClient): %v; wantErr = %v)", modulePath, err, test.wantErr)
 			}
 			if test.wantGoModPath != "" {
 				if got == nil || got.GoModPath != test.wantGoModPath {
@@ -211,49 +147,88 @@ func TestFetchVersion_Errors(t *testing.T) {
 }
 
 func TestExtractReadmesFromZip(t *testing.T) {
+	stdlib.UseTestData = true
+
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{
+	sortReadmes := func(readmes []*internal.Readme) {
+		sort.Slice(readmes, func(i, j int) bool {
+			return readmes[i].Filepath < readmes[j].Filepath
+		})
+	}
+
+	for _, test := range []struct {
+		modulePath, version string
+		files               map[string]string
+		want                []*internal.Readme
+	}{
 		{
-			ModulePath: "github.com/my/module",
-			Files: map[string]string{
-				"README.md": "README FILE FOR TESTING.",
+			modulePath: stdlib.ModulePath,
+			version:    "v1.12.5",
+			want: []*internal.Readme{
+				{
+					Filepath: "README.md",
+					Contents: "# The Go Programming Language\n",
+				},
+				{
+					Filepath: "cmd/pprof/README",
+					Contents: "This directory is the copy of Google's pprof shipped as part of the Go distribution.\n",
+				},
 			},
 		},
 		{
-			ModulePath: "emp.ty/module",
-			Files:      map[string]string{},
-		},
-	})
-	defer teardownProxy()
-
-	for _, test := range []struct {
-		modulePath, wantPath string
-		wantContents         []*internal.Readme
-	}{
-		{
 			modulePath: "github.com/my/module",
-			wantPath:   "README.md",
-			wantContents: []*internal.Readme{
+			version:    "v1.0.0",
+			files: map[string]string{
+				"README.md":  "README FILE FOR TESTING.",
+				"foo/README": "Another README",
+			},
+			want: []*internal.Readme{
 				{
 					Filepath: "README.md",
 					Contents: "README FILE FOR TESTING.",
 				},
+				{
+					Filepath: "foo/README",
+					Contents: "Another README",
+				},
 			},
+		},
+		{
+			modulePath: "emp.ty/module",
+			version:    "v1.0.0",
+			files:      map[string]string{},
 		},
 	} {
 		t.Run(test.modulePath, func(t *testing.T) {
-			reader, err := proxyClient.GetZip(ctx, test.modulePath, "v1.0.0")
+			var (
+				reader *zip.Reader
+				err    error
+			)
+			if test.modulePath == stdlib.ModulePath {
+				reader, _, err = stdlib.Zip(test.version)
+				if err != nil {
+					t.Fatal(err)
+				}
+			} else {
+				proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{
+					{ModulePath: test.modulePath, Files: test.files}})
+				defer teardownProxy()
+				reader, err = proxyClient.GetZip(ctx, test.modulePath, "v1.0.0")
+				if err != nil {
+					t.Fatal(err)
+				}
+			}
+
+			got, err := extractReadmesFromZip(test.modulePath, test.version, reader)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			gotContents, err := extractReadmesFromZip(test.modulePath, "v1.0.0", reader)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if diff := cmp.Diff(test.wantContents, gotContents); diff != "" {
+			sortReadmes(test.want)
+			sortReadmes(got)
+			if diff := cmp.Diff(test.want, got); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})

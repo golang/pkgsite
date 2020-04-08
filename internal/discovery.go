@@ -77,6 +77,8 @@ type Module struct {
 	// Licenses holds all licenses within this module version, including those
 	// that may be contained in nested subdirectories.
 	Licenses []*licenses.License
+
+	Directories []*DirectoryNew
 }
 
 // A Package is a group of one or more Go source files with the same package
@@ -110,6 +112,37 @@ type Directory struct {
 	ModuleInfo
 	Path     string
 	Packages []*Package
+}
+
+// A DirectoryNew represents a folder in a module version, and all of the packages
+// inside that folder. It will replace Directory once everything has been migrated.
+type DirectoryNew struct {
+	Path              string
+	V1Path            string
+	IsRedistributable bool
+	Licenses          []*licenses.Metadata // metadata of applicable version licenses
+	Readme            *Readme
+	Package           *PackageNew
+}
+
+// A PackageNew is a group of one or more Go source files with the same package
+// header. A PackageNew is part of a directory.
+// It will replace Package once everything has been migrated.
+type PackageNew struct {
+	Name          string
+	Path          string
+	Documentation *Documentation
+	Imports       []string
+}
+
+// A Documentation represents the rendered documentation for a given package
+// for a specific GOOS and GOARCH.
+type Documentation struct {
+	// The values of the GOOS and GOARCH environment variables used to parse the package.
+	GOOS     string
+	GOARCH   string
+	Synopsis string
+	HTML     string
 }
 
 // A Readme represents a README at a given directory.
