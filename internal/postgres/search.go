@@ -555,7 +555,7 @@ func (db *DB) UpsertSearchDocument(ctx context.Context, path string) (err error)
 	if isInternalPackage(path) {
 		return nil
 	}
-	pathTokens := strings.Join(generatePathTokens(path), " ")
+	pathTokens := strings.Join(GeneratePathTokens(path), " ")
 	_, err = db.db.Exec(ctx, upsertSearchStatement, path, pathTokens)
 	return err
 }
@@ -803,12 +803,12 @@ var (
 	}
 )
 
-// generatePathTokens returns the subPaths and path token parts that will be
+// GeneratePathTokens returns the subPaths and path token parts that will be
 // indexed for search, which includes (1) the packagePath (2) all sub-paths of
 // the packagePath (3) all parts for a path element that is delimited by a dash
 // and (4) all parts of a path element that is delimited by a dot, except for
 // the last element.
-func generatePathTokens(packagePath string) []string {
+func GeneratePathTokens(packagePath string) []string {
 	packagePath = strings.Trim(packagePath, "/")
 
 	subPathSet := make(map[string]bool)

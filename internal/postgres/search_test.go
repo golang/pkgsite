@@ -140,7 +140,7 @@ func TestPathTokens(t *testing.T) {
 		},
 	} {
 		t.Run(tc.path, func(t *testing.T) {
-			got := generatePathTokens(tc.path)
+			got := GeneratePathTokens(tc.path)
 			sort.Strings(got)
 			sort.Strings(tc.want)
 			if diff := cmp.Diff(tc.want, got); diff != "" {
