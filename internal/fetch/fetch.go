@@ -12,9 +12,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/build"
-	"go/format"
 	"go/parser"
-	"go/printer"
 	"go/token"
 	"io"
 	"io/ioutil"
@@ -587,30 +585,6 @@ func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, in
 		return nil, fmt.Errorf("%d imports found package %q; exceeds limit %d for maxImportsPerPackage", len(d.Imports), importPath, maxImportsPerPackage)
 	}
 
-	// Fetch Go playground URLs for examples.
-	playURLs := make(map[*doc.Example]string)
-	var firstErr error
-	dochtml.WalkExamples(d, func(id string, ex *doc.Example) {
-		// TODO: make these fetches in parallel
-		url, err := fetchPlayURL(ex, http.Post)
-		if err != nil {
-			if firstErr == nil {
-				firstErr = fmt.Errorf("failed to share example to Go playground: %s", err)
-			}
-			return
-		}
-		playURLs[ex] = url
-	})
-	if firstErr != nil {
-		// TODO: instead of failing the whole package processing,
-		// allow this to continue without the playground link,
-		// but schedule the package for reprocessing later.
-		return nil, firstErr
-	}
-	playURLFunc := func(ex *doc.Example) string {
-		return playURLs[ex]
-	}
-
 	// Render documentation HTML.
 	sourceLinkFunc := func(n ast.Node) string {
 		if sourceInfo == nil {
@@ -622,10 +596,8 @@ func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, in
 		}
 		return sourceInfo.LineURL(path.Join(innerPath, p.Filename), p.Line)
 	}
-
 	docHTML, err := dochtml.Render(fset, d, dochtml.RenderOptions{
 		SourceLinkFunc: sourceLinkFunc,
-		PlayURLFunc:    playURLFunc,
 		Limit:          MaxDocumentationHTML,
 	})
 	if errors.Is(err, dochtml.ErrTooLarge) {
@@ -723,39 +695,4 @@ func readZipFile(f *zip.File) (_ []byte, err error) {
 		return nil, fmt.Errorf("closing: %v", err)
 	}
 	return b, nil
-}
-
-// fetchPlayURL returns the URL for this example's code on the Go playground.
-// It fetches this URL from play.golang.org using post,
-// which has the same signature as http.Post.
-// If ex.Play is nil or if it's too large for the Go playground, returns "".
-func fetchPlayURL(ex *doc.Example, post func(url, contentType string, body io.Reader) (*http.Response, error)) (_ string, err error) {
-	defer derrors.Wrap(&err, "fetchPlayURL(...)")
-	if ex.Play == nil {
-		return "", nil
-	}
-	n := &printer.CommentedNode{
-		Node:     ex.Play,
-		Comments: ex.Comments, // may be nil
-	}
-	var buf bytes.Buffer
-	err = format.Node(&buf, token.NewFileSet(), n)
-	if err != nil {
-		return "", err
-	}
-	resp, err := post("https://play.golang.org/share", "text/plain", &buf)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	p, err := ioutil.ReadAll(resp.Body)
-	switch {
-	case err != nil:
-		return "", err
-	case resp.StatusCode == http.StatusRequestEntityTooLarge:
-		return "", nil // example is too large for the Go playground
-	case resp.StatusCode != http.StatusOK:
-		return "", fmt.Errorf("error from play.golang.org: %s, %v", p, resp.StatusCode)
-	}
-	return fmt.Sprintf("https://play.golang.org/p/%s", p), nil
 }

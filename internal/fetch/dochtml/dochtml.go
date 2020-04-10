@@ -36,8 +36,7 @@ var (
 // RenderOptions are options for Render.
 type RenderOptions struct {
 	SourceLinkFunc func(ast.Node) string
-	PlayURLFunc    func(*doc.Example) string // If set, returns the Go playground URL for the example
-	Limit          int64                     // If zero, a default limit of 10 megabytes is used.
+	Limit          int64 // If zero, a default limit of 10 megabytes is used.
 }
 
 // Render renders package documentation HTML for the
@@ -89,12 +88,7 @@ func Render(fset *token.FileSet, p *doc.Package, opt RenderOptions) (string, err
 		}
 		return template.HTML(fmt.Sprintf(`<a class="Documentation-source" href="%s">%s</a>`, link, name))
 	}
-	playURLFunc := opt.PlayURLFunc
-	if playURLFunc == nil {
-		playURLFunc = func(*doc.Example) string {
-			return ""
-		}
-	}
+
 	buf := &limitBuffer{
 		B:      new(bytes.Buffer),
 		Remain: opt.Limit,
@@ -105,7 +99,6 @@ func Render(fset *token.FileSet, p *doc.Package, opt RenderOptions) (string, err
 		"render_decl":     r.DeclHTML,
 		"render_code":     r.CodeHTML,
 		"source_link":     sourceLink,
-		"play_url":        playURLFunc,
 	}).Execute(buf, struct {
 		RootURL string
 		*doc.Package
@@ -146,52 +139,82 @@ func (ex *example) Code() interface{} {
 	return ex.Example.Code
 }
 
-// WalkExamples calls fn for each Example in p,
-// setting id to the name of the parent structure.
-func WalkExamples(p *doc.Package, fn func(id string, ex *doc.Example)) {
-	for _, ex := range p.Examples {
-		fn("", ex)
-	}
-	for _, f := range p.Funcs {
-		for _, ex := range f.Examples {
-			fn(f.Name, ex)
-		}
-	}
-	for _, t := range p.Types {
-		for _, ex := range t.Examples {
-			fn(t.Name, ex)
-		}
-		for _, f := range t.Funcs {
-			for _, ex := range f.Examples {
-				fn(f.Name, ex)
-			}
-		}
-		for _, m := range t.Methods {
-			for _, ex := range m.Examples {
-				fn(t.Name+"."+m.Name, ex)
-			}
-		}
-	}
-}
-
 // collectExamples extracts examples from p
 // into the internal examples representation.
 func collectExamples(p *doc.Package) *examples {
+	// TODO(dmitshur): Simplify this further.
 	exs := &examples{
 		List: nil,
 		Map:  make(map[string][]*example),
 	}
-	WalkExamples(p, func(id string, ex *doc.Example) {
+	for _, ex := range p.Examples {
+		id := ""
 		suffix := strings.Title(ex.Suffix)
-		ex0 := &example{
+		ex := &example{
 			Example:  ex,
 			ID:       exampleID(id, suffix),
 			ParentID: id,
 			Suffix:   suffix,
 		}
-		exs.List = append(exs.List, ex0)
-		exs.Map[id] = append(exs.Map[id], ex0)
-	})
+		exs.List = append(exs.List, ex)
+		exs.Map[id] = append(exs.Map[id], ex)
+	}
+	for _, f := range p.Funcs {
+		for _, ex := range f.Examples {
+			id := f.Name
+			suffix := strings.Title(ex.Suffix)
+			ex := &example{
+				Example:  ex,
+				ID:       exampleID(id, suffix),
+				ParentID: id,
+				Suffix:   suffix,
+			}
+			exs.List = append(exs.List, ex)
+			exs.Map[id] = append(exs.Map[id], ex)
+		}
+	}
+	for _, t := range p.Types {
+		for _, ex := range t.Examples {
+			id := t.Name
+			suffix := strings.Title(ex.Suffix)
+			ex := &example{
+				Example:  ex,
+				ID:       exampleID(id, suffix),
+				ParentID: id,
+				Suffix:   suffix,
+			}
+			exs.List = append(exs.List, ex)
+			exs.Map[id] = append(exs.Map[id], ex)
+		}
+		for _, f := range t.Funcs {
+			for _, ex := range f.Examples {
+				id := f.Name
+				suffix := strings.Title(ex.Suffix)
+				ex := &example{
+					Example:  ex,
+					ID:       exampleID(id, suffix),
+					ParentID: id,
+					Suffix:   suffix,
+				}
+				exs.List = append(exs.List, ex)
+				exs.Map[id] = append(exs.Map[id], ex)
+			}
+		}
+		for _, m := range t.Methods {
+			for _, ex := range m.Examples {
+				id := t.Name + "." + m.Name
+				suffix := strings.Title(ex.Suffix)
+				ex := &example{
+					Example:  ex,
+					ID:       exampleID(id, suffix),
+					ParentID: id,
+					Suffix:   suffix,
+				}
+				exs.List = append(exs.List, ex)
+				exs.Map[id] = append(exs.Map[id], ex)
+			}
+		}
+	}
 	sort.SliceStable(exs.List, func(i, j int) bool {
 		// TODO: Break ties by sorting by suffix, unless
 		// not needed because of upstream slice order.
