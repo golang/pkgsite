@@ -9,7 +9,12 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"io"
 	"net/http"
+	"net/http/httptest"
 	"sort"
 	"strings"
 	"testing"
@@ -20,6 +25,7 @@ import (
 	"github.com/google/licensecheck"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/fetch/internal/doc"
 	"golang.org/x/discovery/internal/licenses"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/source"
@@ -115,6 +121,16 @@ func TestFetchVersion(t *testing.T) {
 		}
 	}
 
+	// Stub out the function used to share playground snippets
+	origPost := httpPost
+	httpPost = func(url string, contentType string, body io.Reader) (resp *http.Response, err error) {
+		w := httptest.NewRecorder()
+		w.WriteHeader(http.StatusOK)
+		w.WriteString(testPlaygroundID)
+		return w.Result(), nil
+	}
+	defer func() { httpPost = origPost }()
+
 	sourceClient := source.NewClient(sourceTimeout)
 	for _, test := range []struct {
 		name string
@@ -128,6 +144,10 @@ func TestFetchVersion(t *testing.T) {
 		{name: "module with build constraints", mod: moduleBuildConstraints},
 		{name: "module with packages with bad import paths", mod: moduleBadImportPath},
 		{name: "module with documentation", mod: moduleDocTest},
+		{name: "module with package-level example", mod: modulePackageExample},
+		{name: "module with function example", mod: moduleFuncExample},
+		{name: "module with type example", mod: moduleTypeExample},
+		{name: "module with method example", mod: moduleMethodExample},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{{
@@ -376,5 +396,63 @@ func TestMatchingFiles(t *testing.T) {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+func mustParse(fset *token.FileSet, filename, src string) *ast.File {
+	f, err := parser.ParseFile(fset, filename, src, parser.ParseComments)
+	if err != nil {
+		panic(err)
+	}
+	return f
+}
+
+func TestFetchPlayURL(t *testing.T) {
+	ex := &doc.Example{
+		Play: mustParse(token.NewFileSet(), "src.go", `
+package p
+`),
+	}
+	for _, test := range []struct {
+		desc   string
+		err    error
+		status int
+		id     string
+		url    string
+	}{
+		{
+			desc: "post returns an error",
+			err:  errors.New("post failed"),
+		},
+		{
+			desc:   "post returns failure",
+			status: http.StatusServiceUnavailable,
+		},
+		{
+			desc:   "post returns entity too large",
+			status: http.StatusRequestEntityTooLarge,
+		},
+		{
+			desc:   "post succeeds",
+			status: http.StatusOK,
+			id:     "play-id",
+			url:    "https://play.golang.org/p/play-id",
+		},
+	} {
+		url, err := fetchPlayURL(ex, func(url, contentType string, body io.Reader) (*http.Response, error) {
+			w := httptest.NewRecorder()
+			w.WriteHeader(test.status)
+			w.WriteString(test.id)
+			return w.Result(), test.err
+		})
+		if err == nil != (test.err == nil &&
+			(test.status == http.StatusOK || test.status == http.StatusRequestEntityTooLarge)) {
+			t.Errorf("fetchPlayURL failed or succeeded unexpectedly: %+v", test)
+			continue
+		}
+		if err == nil && url != test.url {
+			t.Errorf("fetchPlayURL = %q want %q: %+v", url, test.url, test)
+			continue
+		}
 	}
 }

@@ -521,3 +521,92 @@ var moduleAlternative = &testModule{
 		GoModPath: "canonical",
 	},
 }
+
+// moduleWithExamples returns a testModule that contains an example.
+// It provides the common bits for the tests for package, function,
+// type, and method examples below.
+func moduleWithExamples(path, source, test string) *testModule {
+	return &testModule{
+		mod: &proxy.TestModule{
+			ModulePath: path,
+			Files: map[string]string{
+				"LICENSE": testhelper.BSD0License,
+				"example/example.go": `
+// Package example contains examples.
+package example
+` + source,
+				"example/example_test.go": `
+package example_test
+` + test,
+			},
+		},
+		fr: &FetchResult{
+			GoModPath: path,
+			Module: &internal.Module{
+				ModuleInfo: internal.ModuleInfo{
+					ModulePath:        path,
+					IsRedistributable: true,
+					HasGoMod:          false,
+				},
+				Packages: []*internal.Package{
+					{
+						Path:              path + "/example",
+						V1Path:            path + "/example",
+						Name:              "example",
+						Synopsis:          "Package example contains examples.",
+						DocumentationHTML: testPlaygroundID,
+						Imports:           []string{},
+						GOOS:              "linux",
+						GOARCH:            "amd64",
+						IsRedistributable: true,
+					},
+				},
+			},
+		},
+	}
+}
+
+const testPlaygroundID = "playground-id"
+
+var modulePackageExample = moduleWithExamples("package.example",
+	``,
+	`import "fmt"
+
+// Example for the package.
+func Example() {
+	fmt.Println("hello")
+	// Output: hello
+}
+`)
+
+var moduleFuncExample = moduleWithExamples("func.example",
+	`func F() {}
+`, `import "func.example/example"
+
+// Example for the function.
+func ExampleF() {
+	example.F()
+}
+`)
+
+var moduleTypeExample = moduleWithExamples("type.example",
+	`type T struct{}
+`, `import "type.example/example"
+
+// Example for the type.
+func ExampleT() {
+	example.T{}
+}
+`)
+
+var moduleMethodExample = moduleWithExamples("method.example",
+	`type T struct {}
+
+func (*T) M() {}
+`, `import "method.example/example"
+
+// Example for the method.
+func ExampleT_M() {
+	new(example.T).M()
+}
+`)

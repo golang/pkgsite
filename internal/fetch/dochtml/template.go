@@ -9,6 +9,7 @@ import (
 	"reflect"
 
 	"golang.org/x/discovery/internal/fetch/dochtml/internal/render"
+	"golang.org/x/discovery/internal/fetch/internal/doc"
 )
 
 // htmlPackage is the template used to render documentation HTML.
@@ -29,6 +30,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 		"render_decl":     (*render.Renderer)(nil).DeclHTML,
 		"render_code":     (*render.Renderer)(nil).CodeHTML,
 		"source_link":     func() string { return "" },
+		"play_url":        func(*doc.Example) string { return "" },
 	},
 ).Parse(`{{- "" -}}
 {{- if or .Doc .Consts .Vars .Funcs .Types .Examples.List -}}
@@ -216,6 +218,9 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 		<summary class="Documentation-exampleDetailsHeader">Example{{with .Suffix}} ({{.}}){{end}} <a href="#{{.ID}}">¶</a></summary>{{"\n" -}}
 		<div class="Documentation-exampleDetailsBody">{{"\n" -}}
 			{{- if .Doc -}}{{render_doc .Doc}}{{"\n" -}}{{- end -}}
+			{{- with play_url .Example -}}
+			<p><a class="Documentation-examplesPlay" href="{{.}}">Open in Go playground »</a></p>{{"\n" -}}
+			{{- end -}}
 			<p>Code:</p>{{"\n" -}}
 			{{render_code .Code}}{{"\n" -}}
 			{{- if (or .Output .EmptyOutput) -}}
