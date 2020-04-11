@@ -6,9 +6,11 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -196,5 +198,80 @@ func TestDBAfterTransactFails(t *testing.T) {
 	err = tx.QueryRow(context.Background(), `SELECT 1`).Scan(&i)
 	if err == nil {
 		t.Fatal("got nil, want error")
+	}
+}
+
+func TestBuildBulkUpdateQuery(t *testing.T) {
+	q := buildBulkUpdateQuery("tab", []string{"K", "C1", "C2"}, []string{"TEXT", "INT", "BOOL"})
+	got := strings.Join(strings.Fields(q), " ")
+	w := `
+		UPDATE tab
+		SET C1 = data.C1, C2 = data.C2
+		FROM (SELECT UNNEST($1::TEXT[]) AS K, UNNEST($2::INT[]) AS C1, UNNEST($3::BOOL[]) AS C2) AS data
+		WHERE tab.K = data.K`
+	want := strings.Join(strings.Fields(w), " ")
+	if got != want {
+		t.Errorf("\ngot\n%s\nwant\n%s", got, want)
+	}
+}
+
+func TestBulkUpdate(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	defer func(old int) { maxBulkUpdateArrayLen = old }(maxBulkUpdateArrayLen)
+	maxBulkUpdateArrayLen = 5
+
+	if _, err := testDB.Exec(ctx, `CREATE TABLE bulk_update (a INT, b INT)`); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if _, err := testDB.Exec(ctx, `DROP TABLE bulk_update`); err != nil {
+			t.Fatal(err)
+		}
+	}()
+
+	cols := []string{"a", "b"}
+	var values []interface{}
+	for i := 0; i < 50; i++ {
+		values = append(values, i, i)
+	}
+	err := testDB.Transact(func(tx *DB) error {
+		return tx.BulkInsert(ctx, "bulk_update", cols, values, "")
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Update all even values of column a.
+	updateVals := make([][]interface{}, 2)
+	for i := 0; i < len(values)/2; i += 2 {
+		updateVals[0] = append(updateVals[0], i)
+		updateVals[1] = append(updateVals[1], -i)
+	}
+
+	err = testDB.Transact(func(tx *DB) error {
+		return tx.BulkUpdate(ctx, "bulk_update", cols, []string{"INT", "INT"}, updateVals)
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = testDB.RunQuery(ctx, `SELECT a, b FROM bulk_update`, func(rows *sql.Rows) error {
+		var a, b int
+		if err := rows.Scan(&a, &b); err != nil {
+			return err
+		}
+		want := a
+		if a%2 == 0 {
+			want = -a
+		}
+		if b != want {
+			t.Fatalf("a=%d: got %d, want %d", a, b, want)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 }
