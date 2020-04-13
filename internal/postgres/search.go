@@ -610,7 +610,7 @@ func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context) (nUpdate
 	if err != nil {
 		return 0, err
 	}
-	err = db.db.Transact(func(tx *sql.Tx) error {
+	err = db.db.Transact(func(tx *database.DB) error {
 		if err := insertImportedByCounts(ctx, tx, counts); err != nil {
 			return err
 		}
@@ -683,8 +683,8 @@ func (db *DB) computeImportedByCounts(ctx context.Context, searchDocsPackages ma
 	return counts, nil
 }
 
-func insertImportedByCounts(ctx context.Context, tx *sql.Tx, counts map[string]int) (err error) {
-	defer derrors.Wrap(&err, "insertImportedByCounts(ctx, tx, counts)")
+func insertImportedByCounts(ctx context.Context, db *database.DB, counts map[string]int) (err error) {
+	defer derrors.Wrap(&err, "insertImportedByCounts(ctx, db, counts)")
 
 	const createTableQuery = `
 		CREATE TEMPORARY TABLE computed_imported_by_counts (
@@ -692,7 +692,7 @@ func insertImportedByCounts(ctx context.Context, tx *sql.Tx, counts map[string]i
 			imported_by_count INTEGER DEFAULT 0 NOT NULL
 		) ON COMMIT DROP;
     `
-	if _, err := database.ExecTx(ctx, tx, createTableQuery); err != nil {
+	if _, err := db.Exec(ctx, createTableQuery); err != nil {
 		return fmt.Errorf("CREATE TABLE: %v", err)
 	}
 	values := make([]interface{}, 0, 2*len(counts))
@@ -700,10 +700,10 @@ func insertImportedByCounts(ctx context.Context, tx *sql.Tx, counts map[string]i
 		values = append(values, p, c)
 	}
 	columns := []string{"package_path", "imported_by_count"}
-	return database.BulkInsert(ctx, tx, "computed_imported_by_counts", columns, values, "")
+	return db.BulkInsert(ctx, "computed_imported_by_counts", columns, values, "")
 }
 
-func compareImportedByCounts(ctx context.Context, tx *sql.Tx) (err error) {
+func compareImportedByCounts(ctx context.Context, db *database.DB) (err error) {
 	defer derrors.Wrap(&err, "compareImportedByCounts(ctx, tx)")
 
 	query := `
@@ -721,7 +721,7 @@ func compareImportedByCounts(ctx context.Context, tx *sql.Tx) (err error) {
 	// Compute some info about the changes to import-by counts.
 	const changeThreshold = 0.05 // count how many counts change by at least this fraction
 	var total, zero, change, diff int
-	err = database.RunQueryTx(ctx, tx, query, func(rows *sql.Rows) error {
+	err = db.RunQuery(ctx, query, func(rows *sql.Rows) error {
 		var path string
 		var old, new int
 		if err := rows.Scan(&path, &old, &new); err != nil {
@@ -759,7 +759,7 @@ func compareImportedByCounts(ctx context.Context, tx *sql.Tx) (err error) {
 //
 // Note that if a package is never imported, its imported_by_count column will
 // be the default (0) and its imported_by_count_updated_at column will never be set.
-func updateImportedByCounts(ctx context.Context, tx *sql.Tx) (int64, error) {
+func updateImportedByCounts(ctx context.Context, db *database.DB) (int64, error) {
 	const updateStmt = `
 		UPDATE search_documents s
 		SET
@@ -768,7 +768,7 @@ func updateImportedByCounts(ctx context.Context, tx *sql.Tx) (int64, error) {
 		FROM computed_imported_by_counts c
 		WHERE s.package_path = c.package_path;`
 
-	res, err := database.ExecTx(ctx, tx, updateStmt)
+	res, err := db.Exec(ctx, updateStmt)
 	if err != nil {
 		return 0, fmt.Errorf("error updating imported_by_count and imported_by_count_updated_at for search documents: %v", err)
 	}
@@ -874,7 +874,7 @@ func isInternalPackage(path string) bool {
 func (db *DB) DeleteOlderVersionFromSearchDocuments(ctx context.Context, modulePath, version string) (err error) {
 	defer derrors.Wrap(&err, "DeleteOlderVersionFromSearchDocuments(ctx, %q, %q)", modulePath, version)
 
-	return db.db.Transact(func(tx *sql.Tx) error {
+	return db.db.Transact(func(tx *database.DB) error {
 		// Collect all package paths in search_documents with the given module path
 		// and an older version. (package_path is the primary key of search_documents.)
 		var ppaths []string
@@ -883,7 +883,7 @@ func (db *DB) DeleteOlderVersionFromSearchDocuments(ctx context.Context, moduleP
 			FROM search_documents
 			WHERE module_path = $1
 		`
-		err := database.RunQueryTx(ctx, tx, query, func(rows *sql.Rows) error {
+		err := tx.RunQuery(ctx, query, func(rows *sql.Rows) error {
 			var ppath, v string
 			if err := rows.Scan(&ppath, &v); err != nil {
 				return err
@@ -902,7 +902,7 @@ func (db *DB) DeleteOlderVersionFromSearchDocuments(ctx context.Context, moduleP
 
 		// Delete all of those paths.
 		q := fmt.Sprintf(`DELETE FROM search_documents WHERE package_path IN ('%s')`, strings.Join(ppaths, `', '`))
-		res, err := database.ExecTx(ctx, tx, q)
+		res, err := tx.Exec(ctx, q)
 		if err != nil {
 			return err
 		}

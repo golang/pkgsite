@@ -111,7 +111,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) error {
 		sort.Strings(p.Imports)
 	}
 
-	err := db.db.Transact(func(tx *sql.Tx) error {
+	err := db.db.Transact(func(tx *database.DB) error {
 		// If the version exists, delete it to force an overwrite. This allows us
 		// to selectively repopulate data after a code change.
 		if err := db.DeleteModule(ctx, tx, m.ModulePath, m.Version); err != nil {
@@ -122,7 +122,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) error {
 		if err != nil {
 			return err
 		}
-		if _, err := database.ExecTx(ctx, tx,
+		if _, err := tx.Exec(ctx,
 			`INSERT INTO modules(
 				module_path,
 				version,
@@ -169,7 +169,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) error {
 				"types",
 				"coverage",
 			}
-			if err := database.BulkInsert(ctx, tx, "licenses", licenseCols, licenseValues,
+			if err := tx.BulkInsert(ctx, "licenses", licenseCols, licenseValues,
 				database.OnConflictDoNothing); err != nil {
 				return err
 			}
@@ -183,7 +183,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) error {
 		if isLatest {
 			// Remove the previous rows for this module. We'll replace them with
 			// new ones below.
-			if _, err := database.ExecTx(ctx, tx,
+			if _, err := tx.Exec(ctx,
 				`DELETE FROM imports_unique WHERE from_module_path = $1`,
 				m.ModulePath); err != nil {
 				return err
@@ -248,7 +248,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) error {
 				"goarch",
 				"commit_time",
 			}
-			if err := database.BulkInsert(ctx, tx, "packages", pkgCols, pkgValues, database.OnConflictDoNothing); err != nil {
+			if err := tx.BulkInsert(ctx, "packages", pkgCols, pkgValues, database.OnConflictDoNothing); err != nil {
 				return err
 			}
 		}
@@ -260,7 +260,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) error {
 				"from_version",
 				"to_path",
 			}
-			if err := database.BulkInsert(ctx, tx, "imports", importCols, importValues, database.OnConflictDoNothing); err != nil {
+			if err := tx.BulkInsert(ctx, "imports", importCols, importValues, database.OnConflictDoNothing); err != nil {
 				return err
 			}
 			if len(importUniqueValues) > 0 {
@@ -269,7 +269,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) error {
 					"from_module_path",
 					"to_path",
 				}
-				if err := database.BulkInsert(ctx, tx, "imports_unique", importUniqueCols, importUniqueValues, database.OnConflictDoNothing); err != nil {
+				if err := tx.BulkInsert(ctx, "imports_unique", importUniqueCols, importUniqueValues, database.OnConflictDoNothing); err != nil {
 					return err
 				}
 			}
@@ -283,10 +283,10 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) error {
 }
 
 // isLatestVersion reports whether version is the latest version of the module.
-func isLatestVersion(ctx context.Context, tx *sql.Tx, modulePath, version string) (_ bool, err error) {
+func isLatestVersion(ctx context.Context, db *database.DB, modulePath, version string) (_ bool, err error) {
 	defer derrors.Wrap(&err, "isLatestVersion(ctx, tx, %q)", modulePath)
 
-	row := tx.QueryRowContext(ctx, `
+	row := db.QueryRow(ctx, `
 		SELECT version FROM modules WHERE module_path = $1
 		ORDER BY version_type = 'release' DESC, sort_version DESC
 		LIMIT 1`,
@@ -353,19 +353,16 @@ func removeNonDistributableData(m *internal.Module) {
 }
 
 // DeleteModule deletes a Version from the database.
-// If tx is non-nil, it will be used to execute the statement.
-// Otherwise the statement will be run outside of a transaction.
-func (db *DB) DeleteModule(ctx context.Context, tx *sql.Tx, modulePath, version string) (err error) {
-	defer derrors.Wrap(&err, "DB.DeleteModule(ctx, tx, %q, %q)", modulePath, version)
+func (db *DB) DeleteModule(ctx context.Context, ddb *database.DB, modulePath, version string) (err error) {
+	defer derrors.Wrap(&err, "DB.DeleteModule(ctx, ddb, %q, %q)", modulePath, version)
 
+	if ddb == nil {
+		ddb = db.db
+	}
 	// We only need to delete from the modules table. Thanks to ON DELETE
 	// CASCADE constraints, that will trigger deletions from all other tables.
 	const stmt = `DELETE FROM modules WHERE module_path=$1 AND version=$2`
-	if tx == nil {
-		_, err = db.db.Exec(ctx, stmt, modulePath, version)
-	} else {
-		_, err = database.ExecTx(ctx, tx, stmt, modulePath, version)
-	}
+	_, err = ddb.Exec(ctx, stmt, modulePath, version)
 	return err
 }
 

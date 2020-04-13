@@ -38,8 +38,8 @@ func (db *DB) InsertIndexVersions(ctx context.Context, versions []*internal.Inde
 		DO UPDATE SET
 			index_timestamp=excluded.index_timestamp,
 			next_processed_after=CURRENT_TIMESTAMP`
-	return db.db.Transact(func(tx *sql.Tx) error {
-		return database.BulkInsert(ctx, tx, "module_version_states", cols, vals, conflictAction)
+	return db.db.Transact(func(tx *database.DB) error {
+		return tx.BulkInsert(ctx, "module_version_states", cols, vals, conflictAction)
 	})
 }
 
@@ -52,13 +52,13 @@ func (db *DB) UpsertModuleVersionState(ctx context.Context, modulePath, vers, ap
 	ctx, span := trace.StartSpan(ctx, "UpsertModuleVersionState")
 	defer span.End()
 
-	return db.db.Transact(func(tx *sql.Tx) error {
+	return db.db.Transact(func(tx *database.DB) error {
 		var sqlErrorMsg string
 		if fetchErr != nil {
 			sqlErrorMsg = fetchErr.Error()
 		}
 
-		result, err := database.ExecTx(ctx, tx, `
+		result, err := tx.Exec(ctx, `
 			INSERT INTO module_version_states AS mvs (
 				module_path,
 				version,
@@ -100,7 +100,7 @@ func (db *DB) UpsertModuleVersionState(ctx context.Context, modulePath, vers, ap
 			return fmt.Errorf("module version state update affected %d rows, expected exactly 1", affected)
 		}
 
-		if _, err := database.ExecTx(ctx, tx, `DELETE FROM package_version_states WHERE module_path=$1 AND version=$2`, modulePath, vers); err != nil {
+		if _, err := tx.Exec(ctx, `DELETE FROM package_version_states WHERE module_path=$1 AND version=$2`, modulePath, vers); err != nil {
 			return fmt.Errorf("failed to delete rows from package_version_states for %q@%q", modulePath, vers)
 		}
 
@@ -112,7 +112,7 @@ func (db *DB) UpsertModuleVersionState(ctx context.Context, modulePath, vers, ap
 		for _, pvs := range packageVersionStates {
 			vals = append(vals, pvs.PackagePath, pvs.ModulePath, pvs.Version, pvs.Status, pvs.Error)
 		}
-		return database.BulkInsert(ctx, tx, "package_version_states",
+		return tx.BulkInsert(ctx, "package_version_states",
 			[]string{
 				"package_path",
 				"module_path",

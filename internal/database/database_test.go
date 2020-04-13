@@ -6,7 +6,6 @@ package database
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -127,8 +126,8 @@ func TestBulkInsert(t *testing.T) {
 				}
 			}()
 
-			if err := testDB.Transact(func(tx *sql.Tx) error {
-				return BulkInsert(ctx, tx, table, tc.columns, tc.values, tc.conflictAction)
+			if err := testDB.Transact(func(db *DB) error {
+				return db.BulkInsert(ctx, table, tc.columns, tc.values, tc.conflictAction)
 			}); tc.wantErr && err == nil || !tc.wantErr && err != nil {
 				t.Errorf("testDB.Transact: %v | wantErr = %t", err, tc.wantErr)
 			}
@@ -160,8 +159,8 @@ func TestLargeBulkInsert(t *testing.T) {
 	for i := 0; i < size; i++ {
 		vals[i] = i + 1
 	}
-	if err := testDB.Transact(func(tx *sql.Tx) error {
-		return BulkInsert(ctx, tx, "test_large_bulk", []string{"i"}, vals, "")
+	if err := testDB.Transact(func(db *DB) error {
+		return db.BulkInsert(ctx, "test_large_bulk", []string{"i"}, vals, "")
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -181,5 +180,21 @@ func TestLargeBulkInsert(t *testing.T) {
 	var want int64 = size * (size + 1) / 2
 	if sum != want {
 		t.Errorf("sum = %d, want %d", sum, want)
+	}
+}
+
+func TestDBAfterTransactFails(t *testing.T) {
+	var tx *DB
+	err := testDB.Transact(func(d *DB) error {
+		tx = d
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var i int
+	err = tx.QueryRow(context.Background(), `SELECT 1`).Scan(&i)
+	if err == nil {
+		t.Fatal("got nil, want error")
 	}
 }

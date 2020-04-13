@@ -26,14 +26,15 @@ require (
 	github.com/yuin/gopher-lua v0.0.0-20190514113301-1cd887cd7036 // indirect
 	go.opencensus.io v0.22.1
 	golang.org/x/mod v0.2.0
-	golang.org/x/net v0.0.0-20191007182048-72f939374954
+	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
-	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
 	golang.org/x/sys v0.0.0-20190922100055-0a153f010e69 // indirect
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
+	golang.org/x/tools v0.0.0-20200413161937-250b2131eb8b // indirect
 	google.golang.org/api v0.10.0 // indirect
 	google.golang.org/genproto v0.0.0-20191007204434-a023cd5227bd
 	google.golang.org/grpc v1.24.0
 	gopkg.in/src-d/go-billy.v4 v4.3.2
 	gopkg.in/src-d/go-git.v4 v4.13.1
+	honnef.co/go/tools v0.0.1-2020.1.3 // indirect
 )

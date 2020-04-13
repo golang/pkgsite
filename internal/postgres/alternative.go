@@ -6,7 +6,6 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
 
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/database"
@@ -27,16 +26,16 @@ func (db *DB) InsertAlternativeModulePath(ctx context.Context, alternative *inte
 func (db *DB) DeleteAlternatives(ctx context.Context, alternativePath string) (err error) {
 	derrors.Wrap(&err, "DB.DeleteAlternatives(ctx)")
 
-	return db.db.Transact(func(tx *sql.Tx) error {
-		if _, err := database.ExecTx(ctx, tx,
+	return db.db.Transact(func(db *database.DB) error {
+		if _, err := db.Exec(ctx,
 			`DELETE FROM modules WHERE module_path = $1;`, alternativePath); err != nil {
 			return err
 		}
-		if _, err := database.ExecTx(ctx, tx,
+		if _, err := db.Exec(ctx,
 			`DELETE FROM imports_unique WHERE from_module_path = $1;`, alternativePath); err != nil {
 			return err
 		}
-		if _, err := database.ExecTx(ctx, tx,
+		if _, err := db.Exec(ctx,
 			`UPDATE module_version_states SET status = $1 WHERE module_path = $2;`,
 			derrors.ToHTTPStatus(derrors.AlternativeModule), alternativePath); err != nil {
 			return err
