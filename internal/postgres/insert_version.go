@@ -30,9 +30,9 @@ import (
 func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) {
 	defer func() {
 		if m == nil {
-			derrors.Wrap(&err, "DB.InsertVersion(ctx, nil)")
+			derrors.Wrap(&err, "DB.InsertModule(ctx, nil)")
 		} else {
-			derrors.Wrap(&err, "DB.InsertVersion(ctx, Version(%q, %q))", m.ModulePath, m.Version)
+			derrors.Wrap(&err, "DB.InsertModule(ctx, Version(%q, %q))", m.ModulePath, m.Version)
 		}
 	}()
 
@@ -86,8 +86,10 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 //
 // A derrors.InvalidArgument error will be returned if the given module and
 // licenses are invalid.
-func (db *DB) saveModule(ctx context.Context, m *internal.Module) error {
+func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
+	derrors.Wrap(&err, "DB.saveModule(ctx, Version(%q, %q))", m.ModulePath, m.Version)
 	if m.ReadmeContents == internal.StringFieldMissing {
+		// We don't expect this to ever happen here, but checking just in case.
 		return errors.New("saveModule: version missing ReadmeContents")
 	}
 	// Sort to ensure proper lock ordering, avoiding deadlocks. See
@@ -106,173 +108,202 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) error {
 		sort.Strings(p.Imports)
 	}
 
-	err := db.db.Transact(func(tx *database.DB) error {
+	return db.db.Transact(func(tx *database.DB) error {
 		// If the version exists, delete it to force an overwrite. This allows us
 		// to selectively repopulate data after a code change.
 		if err := db.DeleteModule(ctx, tx, m.ModulePath, m.Version); err != nil {
 			return fmt.Errorf("error deleting existing versions: %v", err)
 		}
-
-		sourceInfoJSON, err := json.Marshal(m.SourceInfo)
+		moduleID, err := insertModule(ctx, tx, m)
 		if err != nil {
 			return err
 		}
-		if _, err := tx.Exec(ctx,
-			`INSERT INTO modules(
-				module_path,
-				version,
-				commit_time,
-				readme_file_path,
-				readme_contents,
-				sort_version,
-				version_type,
-				series_path,
-				source_info,
-				redistributable,
-				has_go_mod)
-			VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10, $11) ON CONFLICT DO NOTHING`,
-			m.ModulePath,
-			m.Version,
-			m.CommitTime,
-			m.ReadmeFilePath,
-			makeValidUnicode(m.ReadmeContents),
-			version.ForSorting(m.Version),
-			m.VersionType,
-			m.SeriesPath(),
-			sourceInfoJSON,
-			m.IsRedistributable,
-			m.HasGoMod,
-		); err != nil {
-			return fmt.Errorf("error inserting version: %v", err)
-		}
-
-		var licenseValues []interface{}
-		for _, l := range m.Licenses {
-			covJSON, err := json.Marshal(l.Coverage)
-			if err != nil {
-				return fmt.Errorf("marshalling %+v: %v", l.Coverage, err)
-			}
-			licenseValues = append(licenseValues, m.ModulePath, m.Version,
-				l.FilePath, makeValidUnicode(string(l.Contents)), pq.Array(l.Types), covJSON)
-		}
-		if len(licenseValues) > 0 {
-			licenseCols := []string{
-				"module_path",
-				"version",
-				"file_path",
-				"contents",
-				"types",
-				"coverage",
-			}
-			if err := tx.BulkInsert(ctx, "licenses", licenseCols, licenseValues,
-				database.OnConflictDoNothing); err != nil {
-				return err
-			}
-		}
-
-		// We only insert into imports_unique if this is the latest version of the module.
-		isLatest, err := isLatestVersion(ctx, tx, m.ModulePath, m.Version)
-		if err != nil {
+		if err := insertLicenses(ctx, tx, m, moduleID); err != nil {
 			return err
 		}
-		if isLatest {
-			// Remove the previous rows for this module. We'll replace them with
-			// new ones below.
-			if _, err := tx.Exec(ctx,
-				`DELETE FROM imports_unique WHERE from_module_path = $1`,
-				m.ModulePath); err != nil {
-				return err
-			}
-		}
-		var pkgValues, importValues, importUniqueValues []interface{}
-		for _, p := range m.Packages {
-			if p.DocumentationHTML == internal.StringFieldMissing {
-				return errors.New("saveModule: package missing DocumentationHTML")
-			}
-			var licenseTypes, licensePaths []string
-			for _, l := range p.Licenses {
-				if len(l.Types) == 0 {
-					// If a license file has no detected license types, we still need to
-					// record it as applicable to the package, because we want to fail
-					// closed (meaning if there is a LICENSE file containing unknown
-					// licenses, we assume them not to be permissive of redistribution.)
-					licenseTypes = append(licenseTypes, "")
-					licensePaths = append(licensePaths, l.FilePath)
-				} else {
-					for _, typ := range l.Types {
-						licenseTypes = append(licenseTypes, typ)
-						licensePaths = append(licensePaths, l.FilePath)
-					}
-				}
-			}
-			pkgValues = append(pkgValues,
-				p.Path,
-				p.Synopsis,
-				p.Name,
-				m.Version,
-				m.ModulePath,
-				p.V1Path,
-				p.IsRedistributable,
-				p.DocumentationHTML,
-				pq.Array(licenseTypes),
-				pq.Array(licensePaths),
-				p.GOOS,
-				p.GOARCH,
-				m.CommitTime,
-			)
-			for _, i := range p.Imports {
-				importValues = append(importValues, p.Path, m.ModulePath, m.Version, i)
-				if isLatest {
-					importUniqueValues = append(importUniqueValues, p.Path, m.ModulePath, i)
-				}
-			}
-		}
-		if len(pkgValues) > 0 {
-			pkgCols := []string{
-				"path",
-				"synopsis",
-				"name",
-				"version",
-				"module_path",
-				"v1_path",
-				"redistributable",
-				"documentation",
-				"license_types",
-				"license_paths",
-				"goos",
-				"goarch",
-				"commit_time",
-			}
-			if err := tx.BulkInsert(ctx, "packages", pkgCols, pkgValues, database.OnConflictDoNothing); err != nil {
-				return err
-			}
-		}
-
-		if len(importValues) > 0 {
-			importCols := []string{
-				"from_path",
-				"from_module_path",
-				"from_version",
-				"to_path",
-			}
-			if err := tx.BulkInsert(ctx, "imports", importCols, importValues, database.OnConflictDoNothing); err != nil {
-				return err
-			}
-			if len(importUniqueValues) > 0 {
-				importUniqueCols := []string{
-					"from_path",
-					"from_module_path",
-					"to_path",
-				}
-				if err := tx.BulkInsert(ctx, "imports_unique", importUniqueCols, importUniqueValues, database.OnConflictDoNothing); err != nil {
-					return err
-				}
-			}
+		if err := insertPackages(ctx, tx, m); err != nil {
+			return err
 		}
 		return nil
 	})
+}
+
+func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ int, err error) {
+	defer derrors.Wrap(&err, "insertModule(ctx, %q, %q)", m.ModulePath, m.Version)
+	sourceInfoJSON, err := json.Marshal(m.SourceInfo)
 	if err != nil {
-		return fmt.Errorf("DB.saveModule(ctx, Version(%q, %q)): %w", m.ModulePath, m.Version, err)
+		return 0, err
+	}
+	var moduleID int
+	err = db.QueryRow(ctx,
+		`INSERT INTO modules(
+			module_path,
+			version,
+			commit_time,
+			readme_file_path,
+			readme_contents,
+			sort_version,
+			version_type,
+			series_path,
+			source_info,
+			redistributable,
+			has_go_mod)
+		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10, $11)
+		ON CONFLICT
+			(module_path, version)
+		DO UPDATE SET
+			readme_file_path=excluded.readme_file_path,
+			readme_contents=excluded.readme_contents,
+			source_info=excluded.source_info,
+			redistributable=excluded.redistributable
+		RETURNING id`,
+		m.ModulePath,
+		m.Version,
+		m.CommitTime,
+		m.ReadmeFilePath,
+		makeValidUnicode(m.ReadmeContents),
+		version.ForSorting(m.Version),
+		m.VersionType,
+		m.SeriesPath(),
+		sourceInfoJSON,
+		m.IsRedistributable,
+		m.HasGoMod,
+	).Scan(&moduleID)
+	if err != nil {
+		return 0, err
+	}
+	return moduleID, nil
+}
+
+func insertLicenses(ctx context.Context, db *database.DB, m *internal.Module, moduleID int) (err error) {
+	defer derrors.Wrap(&err, "insertLicenses(ctx, %q, %q)", m.ModulePath, m.Version)
+	var licenseValues []interface{}
+	for _, l := range m.Licenses {
+		covJSON, err := json.Marshal(l.Coverage)
+		if err != nil {
+			return fmt.Errorf("marshalling %+v: %v", l.Coverage, err)
+		}
+		licenseValues = append(licenseValues, m.ModulePath, m.Version,
+			l.FilePath, makeValidUnicode(string(l.Contents)), pq.Array(l.Types), covJSON, moduleID)
+	}
+	if len(licenseValues) > 0 {
+		licenseCols := []string{
+			"module_path",
+			"version",
+			"file_path",
+			"contents",
+			"types",
+			"coverage",
+			"module_id",
+		}
+		return db.BulkInsert(ctx, "licenses", licenseCols, licenseValues,
+			database.OnConflictDoNothing)
+	}
+	return nil
+}
+
+func insertPackages(ctx context.Context, db *database.DB, m *internal.Module) (err error) {
+	defer derrors.Wrap(&err, "insertPackages(ctx, %q, %q)", m.ModulePath, m.Version)
+	// We only insert into imports_unique if this is the latest
+	// version of the module.
+	isLatest, err := isLatestVersion(ctx, db, m.ModulePath, m.Version)
+	if err != nil {
+		return err
+	}
+	if isLatest {
+		// Remove the previous rows for this module. We'll replace them with
+		// new ones below.
+		if _, err := db.Exec(ctx,
+			`DELETE FROM imports_unique WHERE from_module_path = $1`,
+			m.ModulePath); err != nil {
+			return err
+		}
+	}
+
+	var pkgValues, importValues, importUniqueValues []interface{}
+	for _, p := range m.Packages {
+		if p.DocumentationHTML == internal.StringFieldMissing {
+			return errors.New("saveModule: package missing DocumentationHTML")
+		}
+		var licenseTypes, licensePaths []string
+		for _, l := range p.Licenses {
+			if len(l.Types) == 0 {
+				// If a license file has no detected license types, we still need to
+				// record it as applicable to the package, because we want to fail
+				// closed (meaning if there is a LICENSE file containing unknown
+				// licenses, we assume them not to be permissive of redistribution.)
+				licenseTypes = append(licenseTypes, "")
+				licensePaths = append(licensePaths, l.FilePath)
+			} else {
+				for _, typ := range l.Types {
+					licenseTypes = append(licenseTypes, typ)
+					licensePaths = append(licensePaths, l.FilePath)
+				}
+			}
+		}
+		pkgValues = append(pkgValues,
+			p.Path,
+			p.Synopsis,
+			p.Name,
+			m.Version,
+			m.ModulePath,
+			p.V1Path,
+			p.IsRedistributable,
+			p.DocumentationHTML,
+			pq.Array(licenseTypes),
+			pq.Array(licensePaths),
+			p.GOOS,
+			p.GOARCH,
+			m.CommitTime,
+		)
+		for _, i := range p.Imports {
+			importValues = append(importValues, p.Path, m.ModulePath, m.Version, i)
+			if isLatest {
+				importUniqueValues = append(importUniqueValues, p.Path, m.ModulePath, i)
+			}
+		}
+	}
+	if len(pkgValues) > 0 {
+		pkgCols := []string{
+			"path",
+			"synopsis",
+			"name",
+			"version",
+			"module_path",
+			"v1_path",
+			"redistributable",
+			"documentation",
+			"license_types",
+			"license_paths",
+			"goos",
+			"goarch",
+			"commit_time",
+		}
+		if err := db.BulkInsert(ctx, "packages", pkgCols, pkgValues, database.OnConflictDoNothing); err != nil {
+			return err
+		}
+	}
+
+	if len(importValues) > 0 {
+		importCols := []string{
+			"from_path",
+			"from_module_path",
+			"from_version",
+			"to_path",
+		}
+		if err := db.BulkInsert(ctx, "imports", importCols, importValues, database.OnConflictDoNothing); err != nil {
+			return err
+		}
+		if len(importUniqueValues) > 0 {
+			importUniqueCols := []string{
+				"from_path",
+				"from_module_path",
+				"to_path",
+			}
+			if err := db.BulkInsert(ctx, "imports_unique", importUniqueCols, importUniqueValues, database.OnConflictDoNothing); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
