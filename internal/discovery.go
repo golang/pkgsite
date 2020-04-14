@@ -99,7 +99,7 @@ type Package struct {
 	V1Path string
 }
 
-// VersionedPackage is a Package along with its corresponding version
+// VersionedPackage is a Package along with its corresponding module
 // information.
 type VersionedPackage struct {
 	Package
@@ -114,7 +114,14 @@ type Directory struct {
 	Packages []*Package
 }
 
-// A DirectoryNew represents a folder in a module version, and all of the packages
+// VersionedDirectory is a DirectoryNew along with its corresponding module
+// information.
+type VersionedDirectory struct {
+	DirectoryNew
+	ModuleInfo
+}
+
+// DirectoryNew is a folder in a module version, and all of the packages
 // inside that folder. It will replace Directory once everything has been migrated.
 type DirectoryNew struct {
 	Path              string
@@ -125,7 +132,7 @@ type DirectoryNew struct {
 	Package           *PackageNew
 }
 
-// A PackageNew is a group of one or more Go source files with the same package
+// PackageNew is a group of one or more Go source files with the same package
 // header. A PackageNew is part of a directory.
 // It will replace Package once everything has been migrated.
 type PackageNew struct {
@@ -135,7 +142,7 @@ type PackageNew struct {
 	Imports       []string
 }
 
-// A Documentation represents the rendered documentation for a given package
+// Documentation is the rendered documentation for a given package
 // for a specific GOOS and GOARCH.
 type Documentation struct {
 	// The values of the GOOS and GOARCH environment variables used to parse the package.
@@ -145,7 +152,7 @@ type Documentation struct {
 	HTML     string
 }
 
-// A Readme represents a README at a given directory.
+// Readme is a README at a given directory.
 type Readme struct {
 	Filepath string
 	Contents string
@@ -230,19 +237,6 @@ type SearchResult struct {
 	// can be approximate if search scanned only a subset of documents, and
 	// result count is estimated using the hyperloglog algorithm.
 	Approximate bool
-}
-
-// Experiment holds data associated with an experimental feature for frontend
-// or worker.
-type Experiment struct {
-	// Name is the name of the feature.
-	Name string
-
-	// Rollout is the percentage of requests enrolled in an experiment.
-	Rollout uint
-
-	// Description provides a description of the experiment.
-	Description string
 }
 
 // AlternativeModulePath represents a module that can be:

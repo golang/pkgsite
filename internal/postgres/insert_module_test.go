@@ -6,7 +6,6 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"io/ioutil"
 	"path/filepath"
@@ -17,12 +16,131 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/experiment"
 	"golang.org/x/discovery/internal/licenses"
 	"golang.org/x/discovery/internal/source"
 	"golang.org/x/discovery/internal/testing/sample"
 )
 
-func TestPostgres_ReadAndWriteModuleAndPackages(t *testing.T) {
+func TestInsertModule(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
+	defer cancel()
+	ctx = experiment.NewContext(ctx, map[string]bool{
+		internal.ExperimentInsertDirectories: true,
+	})
+
+	for _, test := range []struct {
+		name   string
+		module *internal.Module
+	}{
+		{
+			name:   "valid test",
+			module: sample.Module(),
+		},
+		{
+			name: "valid test with internal package",
+			module: func() *internal.Module {
+				m := sample.Module()
+				p := sample.Package()
+				p.Path = sample.ModulePath + "/internal/foo"
+				m.Packages = []*internal.Package{p}
+				d1 := sample.DirectoryNewForModuleRoot(&m.ModuleInfo, p.Licenses)
+				d2 := sample.DirectoryNewEmpty(sample.ModulePath + "/internal")
+				d3 := sample.DirectoryNewForPackage(p)
+				m.Directories = []*internal.DirectoryNew{d1, d2, d3}
+				return m
+			}(),
+		},
+		{
+			name: "valid test with go.mod missing",
+			module: func() *internal.Module {
+				m := sample.Module()
+				m.HasGoMod = false
+				return m
+			}(),
+		},
+		{
+			name: "stdlib",
+			module: func() *internal.Module {
+				m := sample.Module()
+				m.ModulePath = "std"
+				m.Version = "v1.12.5"
+				p := &internal.Package{
+					Name:              "context",
+					Path:              "context",
+					Synopsis:          "This is a package synopsis",
+					Licenses:          sample.LicenseMetadata,
+					DocumentationHTML: "This is the documentation HTML",
+				}
+				m.Packages = []*internal.Package{p}
+				d1 := sample.DirectoryNewForModuleRoot(&m.ModuleInfo, p.Licenses)
+				d2 := sample.DirectoryNewForPackage(p)
+				m.Directories = []*internal.DirectoryNew{d1, d2}
+				return m
+			}(),
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			defer ResetTestDB(testDB, t)
+
+			if err := testDB.InsertModule(ctx, test.module); err != nil {
+				t.Fatal(err)
+			}
+			// Test that insertion of duplicate primary key won't fail.
+			if err := testDB.InsertModule(ctx, test.module); err != nil {
+				t.Fatal(err)
+			}
+
+			got, err := testDB.GetModuleInfo(ctx, test.module.ModulePath, test.module.Version)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := cmp.Diff(test.module.ModuleInfo, *got, cmp.AllowUnexported(source.Info{})); diff != "" {
+				t.Fatalf("testDB.GetModuleInfo(%q, %q) mismatch (-want +got):\n%s", test.module.ModulePath, test.module.Version, diff)
+			}
+
+			for _, want := range test.module.Packages {
+				got, err := testDB.GetPackage(ctx, want.Path, test.module.ModulePath, test.module.Version)
+				if err != nil {
+					t.Fatal(err)
+				}
+				opts := cmp.Options{
+					// The packages table only includes partial
+					// license information; it omits the Coverage
+					// field.
+					cmpopts.IgnoreFields(internal.Package{}, "Imports"),
+					cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
+					cmpopts.EquateEmpty(),
+				}
+				if diff := cmp.Diff(*want, got.Package, opts...); diff != "" {
+					t.Fatalf("testDB.GetPackage(%q, %q) mismatch (-want +got):\n%s", want.Path, test.module.Version, diff)
+				}
+
+			}
+
+			for _, dir := range test.module.Directories {
+				got, err := testDB.getDirectoryNew(ctx, dir.Path, test.module.ModulePath, test.module.Version)
+				if err != nil {
+					t.Fatal(err)
+				}
+				want := internal.VersionedDirectory{
+					DirectoryNew: *dir,
+					ModuleInfo:   test.module.ModuleInfo,
+				}
+				opts := cmp.Options{
+					cmpopts.IgnoreFields(internal.ModuleInfo{}, "ReadmeFilePath"),
+					cmpopts.IgnoreFields(internal.ModuleInfo{}, "ReadmeContents"),
+					cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
+					cmp.AllowUnexported(source.Info{}),
+				}
+				if diff := cmp.Diff(want, *got, opts); diff != "" {
+					t.Errorf("testDB.getDirectoryNew(%q, %q) mismatch (-want +got):\n%s", dir.Path, test.module.Version, diff)
+				}
+			}
+		})
+	}
+}
+func TestInsertModuleErrors(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
 	defer cancel()
 
@@ -39,49 +157,16 @@ func TestPostgres_ReadAndWriteModuleAndPackages(t *testing.T) {
 		wantReadErr  bool
 	}{
 		{
-			name:           "valid test",
-			module:         sample.Module(),
-			wantModulePath: sample.ModulePath,
-			wantVersion:    sample.VersionString,
-			wantPkgPath:    sample.PackagePath,
-		},
-		{
-			name: "valid test with internal package",
-			module: func() *internal.Module {
-				v := sample.Module()
-				p := sample.Package()
-				p.Path = sample.ModulePath + "/internal/foo"
-				v.Packages = []*internal.Package{p}
-				return v
-			}(),
-			wantModulePath: sample.ModulePath,
-			wantVersion:    sample.VersionString,
-			wantPkgPath:    sample.ModulePath + "/internal/foo",
-		},
-		{
-			name: "valid test with go.mod missing",
-			module: func() *internal.Module {
-				v := sample.Module()
-				v.HasGoMod = false
-				return v
-			}(),
-			wantModulePath: sample.ModulePath,
-			wantVersion:    sample.VersionString,
-			wantPkgPath:    sample.PackagePath,
-		},
-		{
 			name:           "nil version write error",
 			wantModulePath: sample.ModulePath,
 			wantVersion:    sample.VersionString,
 			wantWriteErr:   derrors.InvalidArgument,
-			wantReadErr:    true,
 		},
 		{
 			name:           "nonexistent version",
 			module:         sample.Module(),
 			wantModulePath: sample.ModulePath,
 			wantVersion:    "v1.2.3",
-			wantReadErr:    true,
 		},
 		{
 			name:           "nonexistent module",
@@ -89,7 +174,6 @@ func TestPostgres_ReadAndWriteModuleAndPackages(t *testing.T) {
 			wantModulePath: "nonexistent_module_path",
 			wantVersion:    "v1.0.0",
 			wantPkgPath:    sample.PackagePath,
-			wantReadErr:    true,
 		},
 		{
 			name: "missing module path",
@@ -101,7 +185,6 @@ func TestPostgres_ReadAndWriteModuleAndPackages(t *testing.T) {
 			wantVersion:    sample.VersionString,
 			wantModulePath: sample.ModulePath,
 			wantWriteErr:   derrors.InvalidArgument,
-			wantReadErr:    true,
 		},
 		{
 			name: "missing version",
@@ -113,7 +196,6 @@ func TestPostgres_ReadAndWriteModuleAndPackages(t *testing.T) {
 			wantVersion:    sample.VersionString,
 			wantModulePath: sample.ModulePath,
 			wantWriteErr:   derrors.InvalidArgument,
-			wantReadErr:    true,
 		},
 		{
 			name: "empty commit time",
@@ -125,80 +207,14 @@ func TestPostgres_ReadAndWriteModuleAndPackages(t *testing.T) {
 			wantVersion:    sample.VersionString,
 			wantModulePath: sample.ModulePath,
 			wantWriteErr:   derrors.InvalidArgument,
-			wantReadErr:    true,
-		},
-		{
-			name: "stdlib",
-			module: func() *internal.Module {
-				m := sample.Module()
-				m.ModulePath = "std"
-				m.Version = "v1.12.5"
-				m.Packages = []*internal.Package{{
-					Name:              "context",
-					Path:              "context",
-					Synopsis:          "This is a package synopsis",
-					Licenses:          sample.LicenseMetadata,
-					DocumentationHTML: "This is the documentation HTML",
-				}}
-				return m
-			}(),
-			wantModulePath: "std",
-			wantVersion:    "v1.12.5",
-			wantPkgPath:    "context",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			defer ResetTestDB(testDB, t)
-
 			if err := testDB.InsertModule(ctx, tc.module); !errors.Is(err, tc.wantWriteErr) {
 				t.Errorf("error: %v, want write error: %v", err, tc.wantWriteErr)
-			}
-
-			// Test that insertion of duplicate primary key won't fail.
-			if err := testDB.InsertModule(ctx, tc.module); !errors.Is(err, tc.wantWriteErr) {
-				t.Errorf("second insert error: %v, want write error: %v", err, tc.wantWriteErr)
-			}
-
-			got, err := testDB.GetModuleInfo(ctx, tc.wantModulePath, tc.wantVersion)
-			if tc.wantReadErr != (err != nil) {
-				t.Fatalf("error: got %v, want read error: %t", err, tc.wantReadErr)
-			}
-
-			if !tc.wantReadErr && got == nil {
-				t.Fatalf("testDB.GetModuleInfo(ctx, %q, %q) = %v, want %v", tc.wantModulePath, tc.wantVersion, got, tc.module)
-			}
-
-			if tc.module != nil {
-				if diff := cmp.Diff(&tc.module.ModuleInfo, got, cmp.AllowUnexported(source.Info{})); !tc.wantReadErr && diff != "" {
-					t.Errorf("testDB.GetModuleInfo(ctx, %q, %q) mismatch (-want +got):\n%s", tc.wantModulePath, tc.wantVersion, diff)
-				}
-			}
-
-			gotPkg, err := testDB.GetPackage(ctx, tc.wantPkgPath, internal.UnknownModulePath, tc.wantVersion)
-			if tc.module == nil || tc.module.Packages == nil || tc.wantPkgPath == "" {
-				if tc.wantReadErr != (err != nil) {
-					t.Fatalf("got %v, want %v", err, sql.ErrNoRows)
-				}
-				return
-			}
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			wantPkg := tc.module.Packages[0]
-			if gotPkg.ModuleInfo.Version != tc.module.Version {
-				t.Errorf("testDB.GetPackage(ctx, %q, %q) version.version = %v, want %v", tc.wantPkgPath, tc.wantVersion, gotPkg.ModuleInfo.Version, tc.module.Version)
-			}
-
-			opts := cmp.Options{
-				cmpopts.IgnoreFields(internal.Package{}, "Imports"),
-				// The packages table only includes partial license information; it omits the Coverage field.
-				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
-			}
-			if diff := cmp.Diff(wantPkg, &gotPkg.Package, opts...); diff != "" {
-				t.Errorf("testDB.GetPackage(%q, %q) Package mismatch (-want +got):\n%s", tc.wantPkgPath, tc.wantVersion, diff)
 			}
 		})
 	}

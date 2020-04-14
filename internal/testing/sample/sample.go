@@ -117,6 +117,55 @@ func Module() *internal.Module {
 		ModuleInfo: *ModuleInfo(),
 		Packages:   []*internal.Package{Package()},
 		Licenses:   Licenses,
+		Directories: []*internal.DirectoryNew{
+			DirectoryNewForModuleRoot(ModuleInfo(), LicenseMetadata),
+			DirectoryNewForPackage(Package()),
+		},
+	}
+}
+
+func DirectoryNewEmpty(path string) *internal.DirectoryNew {
+	return &internal.DirectoryNew{
+		Path:              path,
+		IsRedistributable: true,
+		Licenses:          LicenseMetadata,
+		V1Path:            path,
+	}
+}
+
+func DirectoryNewForModuleRoot(m *internal.ModuleInfo, licenses []*licenses.Metadata) *internal.DirectoryNew {
+	d := &internal.DirectoryNew{
+		Path:              m.ModulePath,
+		IsRedistributable: m.IsRedistributable,
+		Licenses:          licenses,
+		V1Path:            internal.SeriesPathForModule(m.ModulePath),
+	}
+	if m.ReadmeFilePath != "" {
+		d.Readme = &internal.Readme{
+			Filepath: m.ReadmeFilePath,
+			Contents: m.ReadmeContents,
+		}
+	}
+	return d
+}
+
+func DirectoryNewForPackage(pkg *internal.Package) *internal.DirectoryNew {
+	return &internal.DirectoryNew{
+		Path:              pkg.Path,
+		IsRedistributable: pkg.IsRedistributable,
+		Licenses:          pkg.Licenses,
+		V1Path:            pkg.V1Path,
+		Package: &internal.PackageNew{
+			Name:    pkg.Name,
+			Path:    pkg.Path,
+			Imports: pkg.Imports,
+			Documentation: &internal.Documentation{
+				Synopsis: pkg.Synopsis,
+				HTML:     pkg.DocumentationHTML,
+				GOOS:     pkg.GOOS,
+				GOARCH:   pkg.GOARCH,
+			},
+		},
 	}
 }
 

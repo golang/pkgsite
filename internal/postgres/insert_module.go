@@ -17,6 +17,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/database"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/experiment"
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/discovery/internal/version"
@@ -123,6 +124,11 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
 		}
 		if err := insertPackages(ctx, tx, m); err != nil {
 			return err
+		}
+		if experiment.IsActive(ctx, internal.ExperimentInsertDirectories) {
+			if err := insertDirectories(ctx, tx, m, moduleID); err != nil {
+				return err
+			}
 		}
 		return nil
 	})
@@ -306,6 +312,158 @@ func insertPackages(ctx context.Context, db *database.DB, m *internal.Module) (e
 		}
 	}
 	return nil
+}
+
+func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module, moduleID int) (err error) {
+	defer derrors.Wrap(&err, "upsertDirectories(ctx, tx, %q, %q)", m.ModulePath, m.Version)
+
+	var (
+		paths         []string
+		pathValues    []interface{}
+		pathToReadme  = map[string]*internal.Readme{}
+		pathToDoc     = map[string]*internal.Documentation{}
+		pathToImports = map[string][]string{}
+	)
+	for _, d := range m.Directories {
+		var licenseTypes, licensePaths []string
+		for _, l := range d.Licenses {
+			if len(l.Types) == 0 {
+				// If a license file has no detected license types, we still need to
+				// record it as applicable to the package, because we want to fail
+				// closed (meaning if there is a LICENSE file containing unknown
+				// licenses, we assume them not to be permissive of redistribution.)
+				licenseTypes = append(licenseTypes, "")
+				licensePaths = append(licensePaths, l.FilePath)
+			} else {
+				for _, typ := range l.Types {
+					licenseTypes = append(licenseTypes, typ)
+					licensePaths = append(licensePaths, l.FilePath)
+				}
+			}
+		}
+		var name string
+		if d.Package != nil {
+			name = d.Package.Name
+		}
+		pathValues = append(pathValues,
+			d.Path,
+			moduleID,
+			d.V1Path,
+			name,
+			pq.Array(licenseTypes),
+			pq.Array(licensePaths),
+			d.IsRedistributable,
+		)
+		paths = append(paths, d.Path)
+		if d.Readme != nil {
+			pathToReadme[d.Path] = d.Readme
+		}
+		if d.Package != nil {
+			if d.Package.Documentation == nil || d.Package.Documentation.HTML == internal.StringFieldMissing {
+				return errors.New("saveModule: package missing DocumentationHTML")
+			}
+			pathToDoc[d.Path] = d.Package.Documentation
+			if len(d.Package.Imports) > 0 {
+				pathToImports[d.Path] = d.Package.Imports
+			}
+		}
+	}
+	if len(pathValues) > 0 {
+		pathCols := []string{
+			"path",
+			"module_id",
+			"v1_path",
+			"name",
+			"license_types",
+			"license_paths",
+			"redistributable",
+		}
+		if err := db.BulkInsert(ctx, "paths", pathCols, pathValues, database.OnConflictDoNothing); err != nil {
+			return err
+		}
+	}
+
+	// TODO: Update BulkInsert to support RETURNING, so that id and path
+	// are returned.
+	pathToID, err := getPathIDs(ctx, db, paths)
+	if err != nil {
+		return err
+	}
+
+	if len(pathToReadme) > 0 {
+		var readmeValues []interface{}
+		for path, readme := range pathToReadme {
+			id := pathToID[path]
+			readmeValues = append(readmeValues, id, readme.Filepath, readme.Contents)
+		}
+		readmeCols := []string{
+			"path_id",
+			"file_path",
+			"contents",
+		}
+		if err := db.BulkInsert(ctx, "readmes", readmeCols, readmeValues, database.OnConflictDoNothing); err != nil {
+			return err
+		}
+	}
+
+	if len(pathToDoc) > 0 {
+		var docValues []interface{}
+		for path, doc := range pathToDoc {
+			id := pathToID[path]
+			docValues = append(docValues, id, doc.GOOS, doc.GOARCH, doc.Synopsis, doc.HTML)
+		}
+		docCols := []string{
+			"path_id",
+			"goos",
+			"goarch",
+			"synopsis",
+			"html",
+		}
+		if err := db.BulkInsert(ctx, "documentation", docCols, docValues, database.OnConflictDoNothing); err != nil {
+			return err
+		}
+	}
+
+	var importValues []interface{}
+	for pkgPath, imports := range pathToImports {
+		id := pathToID[pkgPath]
+		for _, toPath := range imports {
+			importValues = append(importValues, id, toPath)
+		}
+		importCols := []string{
+			"path_id",
+			"to_path",
+		}
+		if err := db.BulkInsert(ctx, "package_imports", importCols, importValues, database.OnConflictDoNothing); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func getPathIDs(ctx context.Context, db *database.DB, paths []string) (_ map[string]int, err error) {
+	defer derrors.Wrap(&err, "getPathIds(ctx, tx, %q)", paths)
+
+	pathToID := map[string]int{}
+	collect := func(rows *sql.Rows) error {
+		var (
+			id   int
+			path string
+		)
+		if err := rows.Scan(&path, &id); err != nil {
+			return fmt.Errorf("rows.Scan(): %v", err)
+		}
+		pathToID[path] = id
+		return nil
+	}
+
+	if err := db.RunQuery(ctx, `
+		SELECT path, id
+		FROM paths
+		WHERE path = ANY($1);`, collect, pq.Array(paths)); err != nil {
+		return nil, err
+	}
+	return pathToID, nil
 }
 
 // isLatestVersion reports whether version is the latest version of the module.

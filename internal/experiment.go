@@ -8,6 +8,21 @@ import (
 	"context"
 )
 
+const ExperimentInsertDirectories = "insert-directories"
+
+// Experiment holds data associated with an experimental feature for frontend
+// or worker.
+type Experiment struct {
+	// Name is the name of the feature.
+	Name string
+
+	// Rollout is the percentage of requests enrolled in the experiment.
+	Rollout uint
+
+	// Description provides a description of the experiment.
+	Description string
+}
+
 // ExperimentSource is the interface used by the middleware to interact with
 // experiments data.
 type ExperimentSource interface {

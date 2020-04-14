@@ -17,6 +17,120 @@ import (
 	"golang.org/x/discovery/internal/stdlib"
 )
 
+// getDirectoryNew returns a directory from the database, along with all of the
+// data associated with that directory, including the package, imports, readme,
+// documentation, and licenses.
+//
+// At the moment this function is only being used to test InsertModule. It only
+// supports fetching a directory when the modulePath is known. It will be
+// exported in a later CL once we integrate the new data model in the frontend.
+func (db *DB) getDirectoryNew(ctx context.Context, path, modulePath, version string) (_ *internal.VersionedDirectory, err error) {
+	query := `
+		SELECT
+			m.module_path,
+			m.version,
+			m.commit_time,
+			m.version_type,
+			m.redistributable,
+			m.has_go_mod,
+			m.source_info,
+			p.id,
+			p.path,
+			p.name,
+			p.v1_path,
+			p.redistributable,
+			p.license_types,
+			p.license_paths,
+			r.file_path,
+			r.contents,
+			d.goos,
+			d.goarch,
+			d.synopsis,
+			d.html
+		FROM modules m
+		INNER JOIN paths p
+		ON p.module_id = m.id
+		LEFT JOIN readmes r
+		ON r.path_id = p.id
+		LEFT JOIN documentation d
+		ON d.path_id = p.id
+		WHERE
+			p.path = $1
+			AND m.module_path = $2
+			AND m.version = $3;`
+	var (
+		mi                         internal.ModuleInfo
+		dir                        internal.DirectoryNew
+		readme                     internal.Readme
+		doc                        internal.Documentation
+		pkg                        internal.PackageNew
+		licenseTypes, licensePaths []string
+		pathID                     int
+	)
+
+	row := db.db.QueryRow(ctx, query, path, modulePath, version)
+	if err := row.Scan(
+		&mi.ModulePath,
+		&mi.Version,
+		&mi.CommitTime,
+		&mi.VersionType,
+		&mi.IsRedistributable,
+		&mi.HasGoMod,
+		jsonbScanner{&mi.SourceInfo},
+		&pathID,
+		&dir.Path,
+		database.NullIsEmpty(&pkg.Name),
+		&dir.V1Path,
+		&dir.IsRedistributable,
+		pq.Array(&licenseTypes),
+		pq.Array(&licensePaths),
+		database.NullIsEmpty(&readme.Filepath),
+		database.NullIsEmpty(&readme.Contents),
+		database.NullIsEmpty(&doc.GOOS),
+		database.NullIsEmpty(&doc.GOARCH),
+		database.NullIsEmpty(&doc.Synopsis),
+		database.NullIsEmpty(&doc.HTML),
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("directory %s@%s: %w", path, version, derrors.NotFound)
+		}
+		return nil, fmt.Errorf("row.Scan(): %v", err)
+	}
+
+	lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
+	if err != nil {
+		return nil, err
+	}
+	dir.Licenses = lics
+	if pkg.Name != "" {
+		dir.Package = &pkg
+		pkg.Path = dir.Path
+		pkg.Documentation = &doc
+		collect := func(rows *sql.Rows) error {
+			var path string
+			if err := rows.Scan(&path); err != nil {
+				return fmt.Errorf("row.Scan(): %v", err)
+			}
+			pkg.Imports = append(pkg.Imports, path)
+			return nil
+		}
+		if err := db.db.RunQuery(ctx, `
+		SELECT to_path
+		FROM package_imports
+		WHERE path_id = $1`, collect, pathID); err != nil {
+			return nil, err
+		}
+	}
+	if readme.Filepath != "" {
+		dir.Readme = &readme
+	}
+
+	return &internal.VersionedDirectory{
+		ModuleInfo:   mi,
+		DirectoryNew: dir,
+	}, nil
+}
+
 // GetDirectory returns the directory corresponding to the provided dirPath,
 // modulePath, and version. The directory will contain all packages for that
 // version, in sorted order by package path.
