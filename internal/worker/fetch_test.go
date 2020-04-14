@@ -434,10 +434,10 @@ func TestSkipIncompletePackage(t *testing.T) {
 
 	res, err := fetchAndInsertModule(ctx, modulePath, version, proxyClient, sourceClient, testDB)
 	if err != nil {
-		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
+		t.Fatalf("fetchAndInsertModule(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
 	}
 	if !res.HasIncompletePackages {
-		t.Errorf("fetchAndInsertVersion(%q, %q, %v, %v, %v): hasIncompletePackages=false, want true",
+		t.Errorf("fetchAndInsertModule(%q, %q, %v, %v, %v): hasIncompletePackages=false, want true",
 			modulePath, version, proxyClient, sourceClient, testDB)
 	}
 
@@ -502,10 +502,10 @@ func TestTrimLargeCode(t *testing.T) {
 
 	res, err := fetchAndInsertModule(ctx, modulePath, version, proxyClient, sourceClient, testDB)
 	if err != nil {
-		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
+		t.Fatalf("fetchAndInsertModule(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
 	}
 	if res.HasIncompletePackages {
-		t.Errorf("fetchAndInsertVersion(%q, %q, %v, %v, %v): hasIncompletePackages=true, want false",
+		t.Errorf("fetchAndInsertModule(%q, %q, %v, %v, %v): hasIncompletePackages=true, want false",
 			modulePath, version, proxyClient, sourceClient, testDB)
 	}
 
@@ -540,7 +540,7 @@ func TestFetch_V1Path(t *testing.T) {
 	defer tearDown()
 	sourceClient := source.NewClient(sourceTimeout)
 	if _, err := fetchAndInsertModule(ctx, "my.mod/foo", "v1.0.0", proxyClient, sourceClient, testDB); err != nil {
-		t.Fatalf("fetchAndInsertVersion: %v", err)
+		t.Fatalf("fetchAndInsertModule: %v", err)
 	}
 	pkg, err := testDB.GetPackage(ctx, "my.mod/foo", internal.UnknownModulePath, "v1.0.0")
 	if err != nil {
@@ -589,7 +589,7 @@ func TestReFetch(t *testing.T) {
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)
 	if _, err := fetchAndInsertModule(ctx, modulePath, version, proxyClient, sourceClient, testDB); err != nil {
-		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
+		t.Fatalf("fetchAndInsertModule(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
 	}
 
 	if _, err := testDB.GetPackage(ctx, pkgFoo, internal.UnknownModulePath, version); err != nil {
@@ -607,7 +607,7 @@ func TestReFetch(t *testing.T) {
 	defer teardownProxy()
 
 	if _, err := fetchAndInsertModule(ctx, modulePath, version, proxyClient, sourceClient, testDB); err != nil {
-		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
+		t.Fatalf("fetchAndInsertModule(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
 	}
 	want := &internal.VersionedPackage{
 		ModuleInfo: internal.ModuleInfo{
@@ -651,7 +651,7 @@ func TestReFetch(t *testing.T) {
 
 var testProxyCommitTime = time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC)
 
-func TestFetchAndInsertVersion(t *testing.T) {
+func TestFetchAndInsertModule(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
@@ -1006,7 +1006,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 			sourceClient := source.NewClient(sourceTimeout)
 
 			if _, err := fetchAndInsertModule(ctx, test.modulePath, test.version, proxyClient, sourceClient, testDB); err != nil {
-				t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v, %v): %v", test.modulePath, test.version, proxyClient, sourceClient, testDB, err)
+				t.Fatalf("fetchAndInsertModule(%q, %q, %v, %v, %v): %v", test.modulePath, test.version, proxyClient, sourceClient, testDB, err)
 			}
 
 			gotModuleInfo, err := testDB.GetModuleInfo(ctx, test.modulePath, test.version)
@@ -1047,7 +1047,7 @@ func TestFetchAndInsertVersion(t *testing.T) {
 	}
 }
 
-func TestFetchAndInsertVersionTimeout(t *testing.T) {
+func TestFetchAndInsertModuleTimeout(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
 
 	defer func(oldTimeout time.Duration) {
@@ -1064,7 +1064,7 @@ func TestFetchAndInsertVersionTimeout(t *testing.T) {
 	wantErrString := "deadline exceeded"
 	_, err := fetchAndInsertModule(context.Background(), name, version, proxyClient, sourceClient, testDB)
 	if err == nil || !strings.Contains(err.Error(), wantErrString) {
-		t.Fatalf("fetchAndInsertVersion(%q, %q, %v, %v, %v) returned error %v, want error containing %q",
+		t.Fatalf("fetchAndInsertModule(%q, %q, %v, %v, %v) returned error %v, want error containing %q",
 			name, version, proxyClient, sourceClient, testDB, err, wantErrString)
 	}
 }

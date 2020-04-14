@@ -60,12 +60,12 @@ func fetchAndInsertModule(parentCtx context.Context, modulePath, requestedVersio
 	}
 
 	parentSpan := trace.FromContext(parentCtx)
-	// A fixed timeout for FetchAndInsertVersion to allow module processing to
+	// A fixed timeout for FetchAndInsertModule to allow module processing to
 	// succeed even for extremely short lived requests.
 	ctx, cancel := context.WithTimeout(context.Background(), fetchTimeout)
 	defer cancel()
 
-	ctx, span := trace.StartSpanWithRemoteParent(ctx, "FetchAndInsertVersion", parentSpan.SpanContext())
+	ctx, span := trace.StartSpanWithRemoteParent(ctx, "FetchAndInsertModule", parentSpan.SpanContext())
 	defer span.End()
 
 	res, err := fetch.FetchVersion(ctx, modulePath, requestedVersion, proxyClient, sourceClient)
