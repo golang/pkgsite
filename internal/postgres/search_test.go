@@ -821,12 +821,13 @@ func TestGetPackagesForSearchDocumentUpsert(t *testing.T) {
 		{Path: "A/internal", Name: "A/internal"},
 		{Path: "A/internal/B", Name: "A/internal/B"},
 	}
-	if err := testDB.saveModule(ctx, moduleA); err != nil {
+	if err := testDB.InsertModule(ctx, moduleA); err != nil {
 		t.Fatal(err)
 	}
-	// pkgPaths should be "A", since pkg "A" exists in packages but not
-	// search_documents.
-	got, err := testDB.GetPackagesForSearchDocumentUpsert(ctx, 10)
+
+	// We are asking for all packages in search_documents updated before now, which is
+	// all the non-internal packages.
+	got, err := testDB.GetPackagesForSearchDocumentUpsert(ctx, time.Now(), 10)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -849,14 +850,8 @@ func TestGetPackagesForSearchDocumentUpsert(t *testing.T) {
 		t.Fatalf("testDB.GetPackagesForSearchDocumentUpsert mismatch(-want +got):\n%s", diff)
 	}
 
-	for _, args := range got {
-		if err := testDB.UpsertSearchDocument(ctx, args); err != nil {
-			t.Fatal(err)
-		}
-	}
-	// pkgPaths should be an empty slice, since pkg "A" and "A/notinternal"
-	// were just inserted into search_documents.
-	got, err = testDB.GetPackagesForSearchDocumentUpsert(ctx, 10)
+	// pkgPaths should be an empty slice, all packages were inserted more recently than yesterday.
+	got, err = testDB.GetPackagesForSearchDocumentUpsert(ctx, time.Now().Add(-24*time.Hour), 10)
 	if err != nil {
 		t.Fatal(err)
 	}

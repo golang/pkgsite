@@ -141,7 +141,7 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// manual: populate-search-documents inserts a record into
 	// search_documents for all paths in the packages table that do not
 	// exist in search_documents.
-	handle("/populate-search-documents", rmw(s.errorHandler(s.handlePopulateSearchDocuments)))
+	handle("/repopulate-search-documents", rmw(s.errorHandler(s.handleRepopulateSearchDocuments)))
 
 	// returns the Worker homepage.
 	handle("/", http.HandlerFunc(s.handleStatusPage))
@@ -157,13 +157,25 @@ func (s *Server) handleUpdateImportedByCount(w http.ResponseWriter, r *http.Requ
 	return nil
 }
 
-// handlePopulateSearchDocuments inserts a record into search_documents for all
-// package_paths that exist in packages but not in search_documents.
-func (s *Server) handlePopulateSearchDocuments(w http.ResponseWriter, r *http.Request) error {
+// handleRepopulateSearchDocuments repopulates every row in the search_documents table
+// that was last updated before the given time.
+func (s *Server) handleRepopulateSearchDocuments(w http.ResponseWriter, r *http.Request) error {
 	limit := parseIntParam(r, "limit", 100)
+	beforeParam := r.FormValue("before")
+	if beforeParam == "" {
+		return &serverError{
+			http.StatusBadRequest,
+			errors.New("must provide 'before' query param as an RFC3339 datetime"),
+		}
+	}
+	before, err := time.Parse(beforeParam, time.RFC3339)
+	if err != nil {
+		return &serverError{http.StatusBadRequest, err}
+	}
+
 	ctx := r.Context()
-	log.Infof(ctx, "Populating search documents for %d packages", limit)
-	sdargs, err := s.db.GetPackagesForSearchDocumentUpsert(ctx, limit)
+	log.Infof(ctx, "Repopulating search documents for %d packages", limit)
+	sdargs, err := s.db.GetPackagesForSearchDocumentUpsert(ctx, before, limit)
 	if err != nil {
 		return err
 	}

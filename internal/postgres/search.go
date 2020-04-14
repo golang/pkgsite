@@ -592,34 +592,28 @@ func (db *DB) UpsertSearchDocument(ctx context.Context, args upsertSearchDocumen
 	return err
 }
 
-// GetPackagesForSearchDocumentUpsert fetches all paths from packages that do
-// not exist in search_documents.
-func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, limit int) (argsList []upsertSearchDocumentArgs, err error) {
-	defer derrors.Add(&err, "GetPackagesForSearchDocumentUpsert(ctx, %d)", limit)
+// GetPackagesForSearchDocumentUpsert fetches search information for packages in search_documents
+// whose update time is before the given time.
+func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, before time.Time, limit int) (argsList []upsertSearchDocumentArgs, err error) {
+	defer derrors.Wrap(&err, "GetPackagesForSearchDocumentUpsert(ctx, %s, %d)", before, limit)
 
 	query := `
-		SELECT DISTINCT ON (p.path) p.path, m.module_path, p.synopsis, m.readme_file_path, m.readme_contents
-		FROM packages p
+		SELECT sd.package_path, sd.module_path, sd.synopsis, m.readme_file_path, m.readme_contents
+		FROM search_documents sd
 		INNER JOIN modules m
 		USING (module_path, version)
-		LEFT JOIN search_documents sd
-		ON p.path = sd.package_path
-		WHERE sd.package_path IS NULL
-		LIMIT $1`
+		WHERE sd.updated_at < $1
+		LIMIT $2`
 
 	collect := func(rows *sql.Rows) error {
 		var a upsertSearchDocumentArgs
 		if err := rows.Scan(&a.PackagePath, &a.ModulePath, &a.Synopsis, &a.ReadmeFilePath, &a.ReadmeContents); err != nil {
 			return err
 		}
-		// Filter out packages in internal directories, since
-		// they are skipped when upserting search_documents.
-		if !isInternalPackage(a.PackagePath) {
-			argsList = append(argsList, a)
-		}
+		argsList = append(argsList, a)
 		return nil
 	}
-	if err := db.db.RunQuery(ctx, query, collect, limit); err != nil {
+	if err := db.db.RunQuery(ctx, query, collect, before, limit); err != nil {
 		return nil, err
 	}
 	return argsList, nil
