@@ -85,7 +85,7 @@ func split(a []string, n int) ([]string, []string) {
 
 // sentenceEndIndex returns the index in s of the end of the first sentence, or
 // -1 if no end can be found. A sentence ends at a '.', '!' or '?' that is
-// followed by a space (or ends the string), and is not preceeded by an
+// followed by a space (or ends the string), and is not preceded by an
 // uppercase letter.
 func sentenceEndIndex(s string) int {
 	var prev1, prev2 rune
