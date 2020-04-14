@@ -7,6 +7,7 @@ package worker
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -93,17 +94,17 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// to to be fetched and processed.
 	// This endpoint is invoked by a Cloud Scheduler job.
 	// See the note about duplicate tasks for "/requeue" below.
-	handle("/poll-and-queue", rmw(http.HandlerFunc(s.handleIndexAndQueue)))
+	handle("/poll-and-queue", rmw(s.errorHandler(s.handleIndexAndQueue)))
 
 	// cloud-scheduler: update-imported-by-count updates the imported_by_count for packages
 	// in search_documents where imported_by_count_updated_at is null or
 	// imported_by_count_updated_at < version_updated_at.
 	// This endpoint is invoked by a Cloud Scheduler job.
-	handle("/update-imported-by-count", rmw(http.HandlerFunc(s.handleUpdateImportedByCount)))
+	handle("/update-imported-by-count", rmw(s.errorHandler(s.handleUpdateImportedByCount)))
 
 	// cloud-scheduler: download search document data and update the redis sorted
 	// set(s) used in auto-completion.
-	handle("/update-redis-indexes", rmw(http.HandlerFunc(s.handleUpdateRedisIndexes)))
+	handle("/update-redis-indexes", rmw(s.errorHandler(s.handleUpdateRedisIndexes)))
 
 	// task-queue: fetch fetches a module version from the Module Mirror, and
 	// processes the contents, and inserts it into the database. If a fetch
@@ -121,62 +122,58 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// https://cloud.google.com/tasks/docs/reference/rpc/google.cloud.tasks.v2#createtaskrequest,
 	// under "Task De-duplication"). If you cannot wait an hour, you can force
 	// duplicate tasks by providing any string as the "suffix" query parameter.
-	handle("/requeue", rmw(http.HandlerFunc(s.handleRequeue)))
+	handle("/requeue", rmw(s.errorHandler(s.handleRequeue)))
 
 	// manual: reprocess sets status = 505 for all records in the
 	// module_version_states table that were processed by an app_version
 	// that occurred after the provided app_version param, so that they
 	// will be scheduled for reprocessing the next time a request to
 	// /requeue is made.
-	handle("/reprocess", rmw(http.HandlerFunc(s.handleReprocess)))
+	handle("/reprocess", rmw(s.errorHandler(s.handleReprocess)))
 
 	// manual: populate-stdlib inserts all versions of the Go standard
 	// library into the tasks queue to be processed and inserted into the
 	// database. handlePopulateStdLib should be updated whenever a new
 	// version of Go is released.
 	// see the comments on duplicate tasks for "/requeue", above.
-	handle("/populate-stdlib", rmw(http.HandlerFunc(s.handlePopulateStdLib)))
+	handle("/populate-stdlib", rmw(s.errorHandler(s.handlePopulateStdLib)))
 
 	// manual: populate-search-documents inserts a record into
 	// search_documents for all paths in the packages table that do not
 	// exist in search_documents.
-	handle("/populate-search-documents", rmw(http.HandlerFunc(s.handlePopulateSearchDocuments)))
+	handle("/populate-search-documents", rmw(s.errorHandler(s.handlePopulateSearchDocuments)))
 
 	// returns the Worker homepage.
 	handle("/", http.HandlerFunc(s.handleStatusPage))
 }
 
 // handleUpdateImportedByCount updates imported_by_count for all packages.
-func (s *Server) handleUpdateImportedByCount(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleUpdateImportedByCount(w http.ResponseWriter, r *http.Request) error {
 	n, err := s.db.UpdateSearchDocumentsImportedByCount(r.Context())
 	if err != nil {
-		msg := fmt.Sprintf("%s: %v", http.StatusText(http.StatusInternalServerError), err)
-		http.Error(w, msg, http.StatusInternalServerError)
-		return
+		return err
 	}
 	fmt.Fprintf(w, "updated %d packages", n)
+	return nil
 }
 
 // handlePopulateSearchDocuments inserts a record into search_documents for all
 // package_paths that exist in packages but not in search_documents.
-func (s *Server) handlePopulateSearchDocuments(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handlePopulateSearchDocuments(w http.ResponseWriter, r *http.Request) error {
 	limit := parseIntParam(r, "limit", 100)
 	ctx := r.Context()
 	log.Infof(ctx, "Populating search documents for %d packages", limit)
 	sdargs, err := s.db.GetPackagesForSearchDocumentUpsert(ctx, limit)
 	if err != nil {
-		log.Errorf(ctx, "s.db.GetPackagesSearchDocumentUpsert(ctx): %v", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
+		return err
 	}
 
 	for _, args := range sdargs {
 		if err := s.db.UpsertSearchDocument(ctx, args); err != nil {
-			log.Errorf(ctx, "s.db.UpsertSearchDocument(ctx, %v): %v", args, err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
+			return err
 		}
 	}
+	return nil
 }
 
 // handleFetch executes a fetch request and returns a http.StatusOK if the
@@ -248,44 +245,37 @@ func parseModulePathAndVersion(requestPath string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func (s *Server) handleIndexAndQueue(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleIndexAndQueue(w http.ResponseWriter, r *http.Request) error {
 	ctx := r.Context()
 	limit := parseIntParam(r, "limit", 10)
 	suffixParam := r.FormValue("suffix")
 	since, err := s.db.LatestIndexTimestamp(ctx)
 	if err != nil {
-		log.Errorf(ctx, "doing proxy index update: %v", err)
-		http.Error(w, "error doing proxy index update", http.StatusInternalServerError)
-		return
+		return err
 	}
 	versions, err := s.indexClient.GetVersions(ctx, since, limit)
 	if err != nil {
-		log.Errorf(ctx, "getting index versions: %v", err)
-		http.Error(w, "error getting versions", http.StatusInternalServerError)
-		return
+		return err
 	}
 	if err := s.db.InsertIndexVersions(ctx, versions); err != nil {
-		log.Error(ctx, err)
-		http.Error(w, "error inserting versions", http.StatusInternalServerError)
-		return
+		return err
 	}
 	for _, version := range versions {
 		if err := s.queue.ScheduleFetch(ctx, version.Path, version.Version, suffixParam); err != nil {
-			log.Errorf(ctx, "scheduling fetch: %v", err)
-			http.Error(w, "error scheduling fetch", http.StatusInternalServerError)
-			return
+			return fmt.Errorf("scheduling fetch: %v", err)
 		}
 	}
 	w.Header().Set("Content-Type", "text/plain")
 	for _, v := range versions {
 		fmt.Fprintf(w, "scheduled %s@%s\n", v.Path, v.Version)
 	}
+	return nil
 }
 
 // handleRequeue queries the module_version_states table for the next
 // batch of module versions to process, and enqueues them for processing.  Note
 // that this may cause duplicate processing.
-func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) error {
 	ctx := r.Context()
 	limit := parseIntParam(r, "limit", 10)
 	suffixParam := r.FormValue("suffix") // append to task name to avoid deduplication
@@ -293,9 +283,7 @@ func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) {
 	span.Annotate([]trace.Attribute{trace.Int64Attribute("limit", int64(limit))}, "processed limit")
 	versions, err := s.db.GetNextVersionsToFetch(ctx, limit)
 	if err != nil {
-		log.Error(ctx, err)
-		http.Error(w, "error getting versions to fetch", http.StatusInternalServerError)
-		return
+		return err
 	}
 	log.Infof(ctx, "Got %d versions to fetch", len(versions))
 
@@ -303,11 +291,10 @@ func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	for _, v := range versions {
 		if err := s.queue.ScheduleFetch(ctx, v.ModulePath, v.Version, suffixParam); err != nil {
-			log.Errorf(ctx, "scheduling fetch: %v", err)
-			http.Error(w, "error scheduling fetch", http.StatusInternalServerError)
-			return
+			return fmt.Errorf("scheduling fetch: %v", err)
 		}
 	}
+	return nil
 }
 
 // handleStatusPage serves the worker status page.
@@ -404,16 +391,15 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (string, e
 	return "", nil
 }
 
-func (s *Server) handlePopulateStdLib(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handlePopulateStdLib(w http.ResponseWriter, r *http.Request) error {
 	msg, err := s.doPopulateStdLib(r.Context(), r.FormValue("suffix"))
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	if err != nil {
-		log.Errorf(r.Context(), "handlePopulateStdLib: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	} else {
-		log.Infof(r.Context(), "handlePopulateStdLib: %s", msg)
-		_, _ = io.WriteString(w, msg)
+		return fmt.Errorf("handlePopulateStdLib: %v", err)
 	}
+	log.Infof(r.Context(), "handlePopulateStdLib: %s", msg)
+	_, _ = io.WriteString(w, msg)
+	return nil
 }
 
 func (s *Server) doPopulateStdLib(ctx context.Context, suffix string) (string, error) {
@@ -429,24 +415,18 @@ func (s *Server) doPopulateStdLib(ctx context.Context, suffix string) (string, e
 	return fmt.Sprintf("Scheduled fetches for %s.\n", strings.Join(versions, ", ")), nil
 }
 
-func (s *Server) handleReprocess(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+func (s *Server) handleReprocess(w http.ResponseWriter, r *http.Request) error {
 	appVersion := r.FormValue("app_version")
 	if appVersion == "" {
-		log.Error(ctx, "app_version was not specified")
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
+		return &serverError{http.StatusBadRequest, errors.New("app_version was not specified")}
 	}
 	if err := config.ValidateAppVersion(appVersion); err != nil {
-		log.Errorf(ctx, "config.ValidateAppVersion(%q): %v", appVersion, err)
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
+		return &serverError{http.StatusBadRequest, fmt.Errorf("config.ValidateAppVersion(%q): %v", appVersion, err)}
 	}
 	if err := s.db.UpdateModuleVersionStatesForReprocessing(r.Context(), appVersion); err != nil {
-		log.Error(ctx, err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
+		return err
 	}
+	return nil
 }
 
 // Parse the template for the status page.
@@ -504,4 +484,36 @@ func parseIntParam(r *http.Request, name string, defaultValue int) int {
 		return defaultValue
 	}
 	return val
+}
+
+type serverError struct {
+	status int   // HTTP status code
+	err    error // wrapped error
+}
+
+func (s *serverError) Error() string {
+	return fmt.Sprintf("%d (%s): %v", s.status, http.StatusText(s.status), s.err)
+}
+
+// errorHandler converts a function that returns an error into an http.HandlerFunc.
+func (s *Server) errorHandler(f func(w http.ResponseWriter, r *http.Request) error) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := f(w, r); err != nil {
+			s.serveError(w, r, err)
+		}
+	}
+}
+
+func (s *Server) serveError(w http.ResponseWriter, r *http.Request, err error) {
+	ctx := r.Context()
+	serr, ok := err.(*serverError)
+	if !ok {
+		serr = &serverError{status: http.StatusInternalServerError, err: err}
+	}
+	if serr.status == http.StatusInternalServerError {
+		log.Error(ctx, serr.err)
+	} else {
+		log.Infof(ctx, "returning %d (%s) for error %v", serr.status, http.StatusText(serr.status), err)
+	}
+	http.Error(w, serr.err.Error(), serr.status)
 }

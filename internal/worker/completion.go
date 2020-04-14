@@ -23,16 +23,14 @@ const popularCutoff = 50
 
 // handleUpdateRedisIndexes scans recently modified search documents, and
 // updates redis auto completion indexes with data from these documents.
-func (s *Server) handleUpdateRedisIndexes(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleUpdateRedisIndexes(w http.ResponseWriter, r *http.Request) error {
 	ctx := r.Context()
 	err := updateRedisIndexes(ctx, s.db.Underlying(), s.redisClient, popularCutoff)
 	if err != nil {
-		log.Errorf(ctx, "error updating redis indexes: %v", err)
-		code := http.StatusInternalServerError
-		http.Error(w, http.StatusText(code), code)
-		return
+		return err
 	}
 	fmt.Fprint(w, "OK")
+	return nil
 }
 
 // updateRedisIndexes updates redisClient with autocompletion data from db.
