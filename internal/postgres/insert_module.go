@@ -109,7 +109,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
 		sort.Strings(p.Imports)
 	}
 
-	return db.db.Transact(func(tx *database.DB) error {
+	return db.db.Transact(ctx, func(tx *database.DB) error {
 		// If the version exists, delete it to force an overwrite. This allows us
 		// to selectively repopulate data after a code change.
 		if err := db.DeleteModule(ctx, tx, m.ModulePath, m.Version); err != nil {

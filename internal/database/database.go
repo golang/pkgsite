@@ -119,7 +119,7 @@ func (db *DB) RunQuery(ctx context.Context, query string, f func(*sql.Rows) erro
 // The given function is called with a DB that is associated with a transaction.
 // The DB should be used only inside the function; if it is used to access the
 // database after the function returns, the calls will return errors.
-func (db *DB) Transact(txFunc func(*DB) error) (err error) {
+func (db *DB) Transact(ctx context.Context, txFunc func(*DB) error) (err error) {
 	if db.InTransaction() {
 		return errors.New("DB.Transact called on a DB already in a transaction")
 	}
@@ -142,6 +142,7 @@ func (db *DB) Transact(txFunc func(*DB) error) (err error) {
 
 	dbtx := New(db.db)
 	dbtx.tx = tx
+	defer logTransaction(ctx)(&err)
 	if err := txFunc(dbtx); err != nil {
 		return fmt.Errorf("txFunc(tx): %v", err)
 	}
@@ -334,16 +335,7 @@ func logQuery(ctx context.Context, query string, args []interface{}) func(*error
 		query = query[:maxlen] + "..."
 	}
 
-	instanceID := config.InstanceID()
-	if instanceID == "" {
-		instanceID = "local"
-	} else {
-		// Instance IDs are long strings. The low-order part seems quite random, so
-		// shortening the ID will still likely result in something unique.
-		instanceID = instanceID[len(instanceID)-4:]
-	}
-	n := atomic.AddInt64(&queryCounter, 1)
-	uid := fmt.Sprintf("%s-%d", instanceID, n)
+	uid := generateLoggingID()
 
 	// Construct a short string of the args.
 	const (
@@ -385,6 +377,31 @@ func logQuery(ctx context.Context, query string, args []interface{}) func(*error
 			}
 		}
 	}
+}
+
+func logTransaction(ctx context.Context) func(*error) {
+	if QueryLoggingDisabled {
+		return func(*error) {}
+	}
+	uid := generateLoggingID()
+	log.Debugf(ctx, "%s transaction started", uid)
+	start := time.Now()
+	return func(errp *error) {
+		log.Debugf(ctx, "%s transaction finished in %s with error %v", uid, time.Since(start), *errp)
+	}
+}
+
+func generateLoggingID() string {
+	instanceID := config.InstanceID()
+	if instanceID == "" {
+		instanceID = "local"
+	} else {
+		// Instance IDs are long strings. The low-order part seems quite random, so
+		// shortening the ID will still likely result in something unique.
+		instanceID = instanceID[len(instanceID)-4:]
+	}
+	n := atomic.AddInt64(&queryCounter, 1)
+	return fmt.Sprintf("%s-%d", instanceID, n)
 }
 
 // emptyStringScanner wraps the functionality of sql.NullString to just write

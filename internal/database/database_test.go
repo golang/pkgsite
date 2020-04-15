@@ -128,7 +128,7 @@ func TestBulkInsert(t *testing.T) {
 				}
 			}()
 
-			if err := testDB.Transact(func(db *DB) error {
+			if err := testDB.Transact(ctx, func(db *DB) error {
 				return db.BulkInsert(ctx, table, tc.columns, tc.values, tc.conflictAction)
 			}); tc.wantErr && err == nil || !tc.wantErr && err != nil {
 				t.Errorf("testDB.Transact: %v | wantErr = %t", err, tc.wantErr)
@@ -161,7 +161,7 @@ func TestLargeBulkInsert(t *testing.T) {
 	for i := 0; i < size; i++ {
 		vals[i] = i + 1
 	}
-	if err := testDB.Transact(func(db *DB) error {
+	if err := testDB.Transact(ctx, func(db *DB) error {
 		return db.BulkInsert(ctx, "test_large_bulk", []string{"i"}, vals, "")
 	}); err != nil {
 		t.Fatal(err)
@@ -186,8 +186,9 @@ func TestLargeBulkInsert(t *testing.T) {
 }
 
 func TestDBAfterTransactFails(t *testing.T) {
+	ctx := context.Background()
 	var tx *DB
-	err := testDB.Transact(func(d *DB) error {
+	err := testDB.Transact(ctx, func(d *DB) error {
 		tx = d
 		return nil
 	})
@@ -195,7 +196,7 @@ func TestDBAfterTransactFails(t *testing.T) {
 		t.Fatal(err)
 	}
 	var i int
-	err = tx.QueryRow(context.Background(), `SELECT 1`).Scan(&i)
+	err = tx.QueryRow(ctx, `SELECT 1`).Scan(&i)
 	if err == nil {
 		t.Fatal("got nil, want error")
 	}
@@ -236,7 +237,7 @@ func TestBulkUpdate(t *testing.T) {
 	for i := 0; i < 50; i++ {
 		values = append(values, i, i)
 	}
-	err := testDB.Transact(func(tx *DB) error {
+	err := testDB.Transact(ctx, func(tx *DB) error {
 		return tx.BulkInsert(ctx, "bulk_update", cols, values, "")
 	})
 	if err != nil {
@@ -250,7 +251,7 @@ func TestBulkUpdate(t *testing.T) {
 		updateVals[1] = append(updateVals[1], -i)
 	}
 
-	err = testDB.Transact(func(tx *DB) error {
+	err = testDB.Transact(ctx, func(tx *DB) error {
 		return tx.BulkUpdate(ctx, "bulk_update", cols, []string{"INT", "INT"}, updateVals)
 	})
 	if err != nil {

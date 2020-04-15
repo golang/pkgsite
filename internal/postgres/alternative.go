@@ -26,7 +26,7 @@ func (db *DB) InsertAlternativeModulePath(ctx context.Context, alternative *inte
 func (db *DB) DeleteAlternatives(ctx context.Context, alternativePath string) (err error) {
 	derrors.Wrap(&err, "DB.DeleteAlternatives(ctx)")
 
-	return db.db.Transact(func(db *database.DB) error {
+	return db.db.Transact(ctx, func(db *database.DB) error {
 		if _, err := db.Exec(ctx,
 			`DELETE FROM modules WHERE module_path = $1;`, alternativePath); err != nil {
 			return err
