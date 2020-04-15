@@ -125,6 +125,7 @@ standard_linters() {
   check_bad_migrations
   check_staticcheck
   check_misspell
+  check_unparam
 }
 
 usage() {
@@ -139,6 +140,7 @@ Available subcommands:
   migrations  - (lint) check migration sequence numbers
   misspell    - (lint) run misspell on source files
   staticcheck - (lint) run staticcheck on source files
+  unparam     - (lint) run unparam on source files
   prettier    - (lint, nonstandard) run prettier on .js and .css files.
   templates   - (lint, nonstandard) run go-template-lint on templates
 EOUSAGE
@@ -171,6 +173,7 @@ main() {
     staticcheck) check_staticcheck ;;
     prettier) run_prettier ;;
     templates) check_templates ;;
+    unparam) check_unparam ;;
     *)
       usage
       exit 1
