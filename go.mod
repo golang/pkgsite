@@ -16,7 +16,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.6.2
 	github.com/golang/groupcache v0.0.0-20190702054246-869f871628b6
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
-	github.com/google/go-cmp v0.3.1
+	github.com/google/go-cmp v0.4.0
 	github.com/google/go-replayers/httpreplay v0.1.0
 	github.com/google/licensecheck v0.0.0-20200226161255-fb7b516dfddc
 	github.com/lib/pq v1.2.0
