@@ -114,9 +114,15 @@ func main() {
 		log.Fatalf(ctx, "strconv.Atoi(%q): %v", timeout, err)
 	}
 	requestLogger := logger(ctx, cfg)
+
+	experimenter, err := middleware.NewExperimenter(ctx, 1*time.Minute, db, requestLogger)
+	if err != nil {
+		log.Fatal(ctx, err)
+	}
 	mw := middleware.Chain(
 		middleware.RequestLog(requestLogger),
 		middleware.Timeout(time.Duration(handlerTimeout)*time.Minute),
+		middleware.Experiment(experimenter),
 	)
 	http.Handle("/", mw(router))
 
