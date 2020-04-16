@@ -53,13 +53,13 @@ type FetchResult struct {
 	HasIncompletePackages bool
 }
 
-// FetchVersion queries the proxy or the Go repo for the requested module
+// FetchModule queries the proxy or the Go repo for the requested module
 // version, downloads the module zip, and processes the contents to return an
 // *internal.Module and related information.
 //
 // Even if err is non-nil, the result may contain useful information, like the go.mod path.
-func FetchVersion(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, sourceClient *source.Client) (_ *FetchResult, err error) {
-	defer derrors.Wrap(&err, "FetchVersion(%q, %q)", modulePath, requestedVersion)
+func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, sourceClient *source.Client) (_ *FetchResult, err error) {
+	defer derrors.Wrap(&err, "FetchModule(%q, %q)", modulePath, requestedVersion)
 
 	var (
 		commitTime      time.Time

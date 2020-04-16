@@ -68,7 +68,7 @@ func fetchAndInsertModule(parentCtx context.Context, modulePath, requestedVersio
 	ctx, span := trace.StartSpanWithRemoteParent(ctx, "FetchAndInsertModule", parentSpan.SpanContext())
 	defer span.End()
 
-	res, err := fetch.FetchVersion(ctx, modulePath, requestedVersion, proxyClient, sourceClient)
+	res, err := fetch.FetchModule(ctx, modulePath, requestedVersion, proxyClient, sourceClient)
 	if err != nil {
 		return res, err
 	}

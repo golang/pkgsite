@@ -190,7 +190,7 @@ func processVersions(ctx context.Context, t *testing.T, testModules []*proxy.Tes
 	sourceClient := source.NewClient(1 * time.Second)
 
 	for _, tm := range testModules {
-		res, err := fetch.FetchVersion(ctx, tm.ModulePath, tm.Version, proxyClient, sourceClient)
+		res, err := fetch.FetchModule(ctx, tm.ModulePath, tm.Version, proxyClient, sourceClient)
 		if err != nil {
 			t.Fatal(err)
 		}

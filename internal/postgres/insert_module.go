@@ -56,7 +56,7 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 	// file that establishes that path as canonical. But v1.0.6 does not have a
 	// go.mod file. So the miscapitalized path github.com/Sirupsen/logrus at
 	// v1.1.0 is marked as an alternative path (code 491) by
-	// internal/fetch.FetchVersion and is not inserted into the DB, but at
+	// internal/fetch.FetchModule and is not inserted into the DB, but at
 	// v1.0.6 it is considered valid, and we end up here. We still insert
 	// github.com/Sirupsen/logrus@v1.0.6 in the versions table and friends so
 	// that users who import it can find information about it, but we don't want

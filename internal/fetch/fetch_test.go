@@ -36,7 +36,7 @@ var (
 	sourceTimeout = 1 * time.Second
 )
 
-func TestFetchVersion(t *testing.T) {
+func TestFetchModule(t *testing.T) {
 	stdlib.UseTestData = true
 
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
@@ -84,7 +84,7 @@ func TestFetchVersion(t *testing.T) {
 				Files:      test.mod.mod.Files,
 			}})
 			defer teardownProxy()
-			got, err := FetchVersion(ctx, modulePath, version, proxyClient, sourceClient)
+			got, err := FetchModule(ctx, modulePath, version, proxyClient, sourceClient)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -108,7 +108,7 @@ func TestFetchVersion(t *testing.T) {
 		})
 	}
 }
-func TestFetchVersion_Errors(t *testing.T) {
+func TestFetchModule_Errors(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 	for _, test := range []struct {
@@ -133,9 +133,9 @@ func TestFetchVersion_Errors(t *testing.T) {
 			defer teardownProxy()
 
 			sourceClient := source.NewClient(sourceTimeout)
-			got, err := FetchVersion(ctx, modulePath, "v1.0.0", proxyClient, sourceClient)
+			got, err := FetchModule(ctx, modulePath, "v1.0.0", proxyClient, sourceClient)
 			if !errors.Is(err, test.wantErr) {
-				t.Fatalf("FetchVersion(ctx, %q, v1.0.0, proxyClient, sourceClient): %v; wantErr = %v)", modulePath, err, test.wantErr)
+				t.Fatalf("FetchModule(ctx, %q, v1.0.0, proxyClient, sourceClient): %v; wantErr = %v)", modulePath, err, test.wantErr)
 			}
 			if test.wantGoModPath != "" {
 				if got == nil || got.GoModPath != test.wantGoModPath {

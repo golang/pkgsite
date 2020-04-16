@@ -60,7 +60,7 @@ type versionKey struct {
 	modulePath, version string
 }
 
-// versionEntry holds the result of a call to worker.FetchVersion.
+// versionEntry holds the result of a call to worker.FetchModule.
 type versionEntry struct {
 	module *internal.Module
 	err    error
@@ -234,7 +234,7 @@ func (ds *DataSource) getModule(ctx context.Context, modulePath, version string)
 		return e.module, e.err
 	}
 
-	res, err := fetch.FetchVersion(ctx, modulePath, version, ds.proxyClient, ds.sourceClient)
+	res, err := fetch.FetchModule(ctx, modulePath, version, ds.proxyClient, ds.sourceClient)
 	var m *internal.Module
 	if res != nil {
 		m = res.Module
