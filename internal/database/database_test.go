@@ -10,10 +10,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"golang.org/x/discovery/internal/testing/dbtest"
 )
 
@@ -49,6 +51,7 @@ func TestBulkInsert(t *testing.T) {
 		conflictAction string
 		wantErr        bool
 		wantCount      int
+		wantReturned   []string
 	}{
 		{
 
@@ -85,6 +88,14 @@ func TestBulkInsert(t *testing.T) {
 			values:         []interface{}{"valueA", "valueA"},
 			conflictAction: OnConflictDoNothing,
 			wantCount:      1,
+		},
+		{
+
+			name:         "insert-returning",
+			columns:      []string{"colA", "colB"},
+			values:       []interface{}{"valueA1", "valueB1", "valueA2", "valueB2"},
+			wantCount:    2,
+			wantReturned: []string{"valueA1", "valueA2"},
 		},
 		{
 
@@ -128,12 +139,27 @@ func TestBulkInsert(t *testing.T) {
 				}
 			}()
 
-			if err := testDB.Transact(ctx, func(db *DB) error {
-				return db.BulkInsert(ctx, table, tc.columns, tc.values, tc.conflictAction)
-			}); tc.wantErr && err == nil || !tc.wantErr && err != nil {
-				t.Errorf("testDB.Transact: %v | wantErr = %t", err, tc.wantErr)
+			var err error
+			var returned []string
+			if tc.wantReturned == nil {
+				err = testDB.BulkInsert(ctx, table, tc.columns, tc.values, tc.conflictAction)
+			} else {
+				err = testDB.BulkInsertReturning(ctx, table, tc.columns, tc.values, tc.conflictAction,
+					[]string{"colA"}, func(rows *sql.Rows) error {
+						var r string
+						if err := rows.Scan(&r); err != nil {
+							return err
+						}
+						returned = append(returned, r)
+						return nil
+					})
 			}
-
+			if tc.wantErr && err == nil || !tc.wantErr && err != nil {
+				t.Errorf("got error %v, wantErr %t", err, tc.wantErr)
+			}
+			if err != nil {
+				return
+			}
 			if tc.wantCount != 0 {
 				var count int
 				query := "SELECT COUNT(*) FROM " + table
@@ -146,12 +172,18 @@ func TestBulkInsert(t *testing.T) {
 					t.Errorf("testDB.queryRow(%q) = %d; want = %d", query, count, tc.wantCount)
 				}
 			}
+			if tc.wantReturned != nil {
+				sort.Strings(returned)
+				if !cmp.Equal(returned, tc.wantReturned) {
+					t.Errorf("returned: got %v, want %v", returned, tc.wantReturned)
+				}
+			}
 		})
 	}
 }
 
 func TestLargeBulkInsert(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*3)
 	defer cancel()
 	if _, err := testDB.Exec(ctx, `CREATE TEMPORARY TABLE test_large_bulk (i BIGINT);`); err != nil {
 		t.Fatal(err)
