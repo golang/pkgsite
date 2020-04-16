@@ -18,6 +18,14 @@ func (db *DB) UpsertVersionMap(ctx context.Context, vm *internal.VersionMap) (er
 	defer derrors.Wrap(&err, "DB.UpsertVersionMap(ctx, tx, %q, %q, %q)",
 		vm.ModulePath, vm.RequestedVersion, vm.ResolvedVersion)
 
+	var moduleID int
+	if vm.ResolvedVersion != "" {
+		if err := db.db.QueryRow(ctx, `SELECT id FROM modules WHERE module_path=$1 AND version=$2`,
+			vm.ModulePath, vm.ResolvedVersion).Scan(&moduleID); err != nil && err != sql.ErrNoRows {
+			return err
+		}
+	}
+
 	var sortVersion string
 	if vm.ResolvedVersion != "" {
 		sortVersion = version.ForSorting(vm.ResolvedVersion)
@@ -31,7 +39,7 @@ func (db *DB) UpsertVersionMap(ctx context.Context, vm *internal.VersionMap) (er
 				error,
 				sort_version,
 				module_id)
-			VALUES($1,$2,$3,$4,$5,$6,(SELECT id FROM modules WHERE module_path=$1 AND version=$3))
+			VALUES($1,$2,$3,$4,$5,$6,$7)
 			ON CONFLICT (module_path, requested_version)
 			DO UPDATE SET
 				module_path=excluded.module_path,
@@ -47,7 +55,7 @@ func (db *DB) UpsertVersionMap(ctx context.Context, vm *internal.VersionMap) (er
 		vm.Status,
 		vm.Error,
 		sortVersion,
-	)
+		moduleID)
 	return err
 }
 
