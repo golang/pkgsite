@@ -11,11 +11,13 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"sync"
 
 	"cloud.google.com/go/logging"
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/experiment"
 )
 
 var (
@@ -44,8 +46,14 @@ func (l *stackdriverLogger) log(ctx context.Context, s logging.Severity, payload
 		payload = err.Error()
 	}
 	traceID, _ := ctx.Value(traceIDKey{}).(string) // if not present, traceID is "", which is fine
+	var labels map[string]string
+	es := experimentString(ctx)
+	if len(es) > 0 {
+		labels = map[string]string{"experiments": es}
+	}
 	l.sdlogger.Log(logging.Entry{
 		Severity: s,
+		Labels:   labels,
 		Payload:  payload,
 		Trace:    traceID,
 	})
@@ -55,12 +63,25 @@ func (l *stackdriverLogger) log(ctx context.Context, s logging.Severity, payload
 type stdlibLogger struct{}
 
 func (stdlibLogger) log(ctx context.Context, s logging.Severity, payload interface{}) {
+	var extras []string
 	traceID, _ := ctx.Value(traceIDKey{}).(string) // if not present, traceID is ""
 	if traceID != "" {
-		log.Printf("%s (traceID %s): %+v", s, traceID, payload)
-	} else {
-		log.Printf("%s: %+v", s, payload)
+		extras = append(extras, fmt.Sprintf("traceID %s", traceID))
 	}
+	es := experimentString(ctx)
+	if len(es) > 0 {
+		extras = append(extras, fmt.Sprintf("experiments %s", es))
+	}
+	var extra string
+	if len(extras) > 0 {
+		extra = " (" + strings.Join(extras, ", ") + ")"
+	}
+	log.Printf("%s%s: %+v", s, extra, payload)
+
+}
+
+func experimentString(ctx context.Context) string {
+	return strings.Join(experiment.FromContext(ctx).Active(), ", ")
 }
 
 // UseStackdriver switches from the default stdlib logger to a Stackdriver

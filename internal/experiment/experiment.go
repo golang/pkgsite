@@ -15,6 +15,18 @@ type Set struct {
 	set map[string]bool
 }
 
+// Active returns a list of all the active experiments in s.
+func (s *Set) Active() []string {
+	if s == nil {
+		return nil
+	}
+	var es []string
+	for e := range s.set {
+		es = append(es, e)
+	}
+	return es
+}
+
 // FromContent returns the set of experiments enabled for the content.
 func FromContext(ctx context.Context) *Set {
 	s, _ := ctx.Value(contextKey{}).(*Set)
