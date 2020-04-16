@@ -72,11 +72,11 @@ func fetchAndInsertModule(parentCtx context.Context, modulePath, requestedVersio
 	if err != nil {
 		return res, err
 	}
-	log.Infof(ctx, "Fetched %s@%s", res.Module.ModulePath, res.Module.Version)
+	log.Infof(ctx, "fetch.FetchVersion succeeded for %s@%s", res.Module.ModulePath, res.Module.Version)
 	if err = db.InsertModule(ctx, res.Module); err != nil {
 		return res, err
 	}
-	log.Infof(ctx, "Inserted %s@%s", res.Module.ModulePath, res.Module.Version)
+	log.Infof(ctx, "db.InsertModule succeeded for %s@%s", res.Module.ModulePath, res.Module.Version)
 	return res, nil
 }
 
