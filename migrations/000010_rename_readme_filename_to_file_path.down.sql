@@ -4,6 +4,6 @@
 
 BEGIN;
 
-ALTER TABLE readmes RENAME COLUMN filename TO file_path;
+ALTER TABLE readmes RENAME COLUMN file_path TO filename;
 
 END;
