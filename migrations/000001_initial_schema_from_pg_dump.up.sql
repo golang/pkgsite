@@ -95,17 +95,17 @@ COMMENT ON COLUMN modules.redistributable IS
 COMMENT ON COLUMN modules.has_go_mod IS
 'COLUMN has_go_mod records whether the module zip contains a go.mod file.';
 
-CREATE INDEX idx_modules_sort_version ON modules USING btree (sort_version DESC, version_type DESC);
+CREATE INDEX idx_modules_sort_version ON modules (sort_version DESC, version_type DESC);
 COMMENT ON INDEX idx_modules_sort_version IS
 'INDEX idx_versions_semver_sort is used to sort versions in order of descending latest. It is used to get the latest version of a package/module and to fetch all versions of a package/module in semver order.';
 
 
 CREATE INDEX idx_modules_module_path_text_pattern_ops ON modules
-    USING btree (module_path text_pattern_ops);
+    (module_path text_pattern_ops);
 COMMENT ON INDEX idx_modules_module_path_text_pattern_ops IS
 'INDEX idx_versions_module_path_text_pattern_ops is used to improve performance of LIKE statements for module_path. It is used to fetch directories matching a given module_path prefix.';
 
-CREATE INDEX idx_modules_version_type ON modules USING btree (version_type);
+CREATE INDEX idx_modules_version_type ON modules (version_type);
 COMMENT ON INDEX idx_modules_version_type IS
 'INDEX idx_versions_version_type is used when fetching versions for a given version_type.';
 
@@ -141,15 +141,15 @@ COMMENT ON COLUMN packages.commit_time IS
 COMMENT ON COLUMN packages.tsv_parent_directories IS
 'tsv_parent_directories should always be NOT NULL, but it is populated by a trigger, so it will be initially NULL on insert.';
 
-CREATE INDEX idx_packages_v1_path ON packages USING btree (v1_path);
+CREATE INDEX idx_packages_v1_path ON packages (v1_path);
 COMMENT ON INDEX idx_packages_v1_path IS
 'INDEX idx_packages_v1_path is used to get all of the packages in a series.';
 
-CREATE INDEX idx_packages_module_path_text_pattern_ops ON packages USING btree (module_path text_pattern_ops);
+CREATE INDEX idx_packages_module_path_text_pattern_ops ON packages (module_path text_pattern_ops);
 COMMENT ON INDEX idx_packages_module_path_text_pattern_ops IS
 'INDEX idx_packages_module_path_text_pattern_ops is used to improve performance of LIKE statements for module_path. It is used to fetch directories matching a given module_path prefix.';
 
-CREATE INDEX idx_packages_path_text_pattern_ops ON packages USING btree (path text_pattern_ops);
+CREATE INDEX idx_packages_path_text_pattern_ops ON packages (path text_pattern_ops);
 
 CREATE INDEX idx_packages_tsv_parent_directories ON packages USING gin (tsv_parent_directories);
 COMMENT ON INDEX idx_packages_tsv_parent_directories IS
@@ -187,7 +187,7 @@ CREATE TABLE imports (
 COMMENT ON TABLE imports IS
 'TABLE imports contains the imports for a package in the packages table. Package (from_path), in module (from_module_path) at version (from_version), imports package (to_path). We do not store the version and module at which to_path is imported because it is hard to compute.';
 
-CREATE INDEX idx_imports_from_path_from_version ON imports USING btree (from_path, from_version);
+CREATE INDEX idx_imports_from_path_from_version ON imports (from_path, from_version);
 COMMENT ON INDEX idx_imports_from_path_from_version IS
 'INDEX idx_imports_from_path_from_version is used to improve performance of the imports tab.';
 
@@ -250,19 +250,19 @@ COMMENT ON COLUMN module_version_states.sort_version IS
 COMMENT ON COLUMN module_version_states.go_mod_path IS
 'COLUMN go_mod_path holds the module path from the go.mod file.';
 
-CREATE INDEX idx_module_version_states_index_timestamp ON module_version_states USING btree (index_timestamp DESC);
+CREATE INDEX idx_module_version_states_index_timestamp ON module_version_states (index_timestamp DESC);
 COMMENT ON INDEX idx_module_version_states_index_timestamp IS
 'INDEX idx_module_version_states_index_timestamp is used to get the last time a module version was fetched from the the module index.';
 
-CREATE INDEX idx_module_version_states_last_processed_at ON module_version_states USING btree (last_processed_at);
+CREATE INDEX idx_module_version_states_last_processed_at ON module_version_states (last_processed_at);
 COMMENT ON INDEX idx_module_version_states_last_processed_at IS
 'INDEX idx_module_version_states_last_processed_at is used to get the next time at which a module version should be retried for processing.';
 
-CREATE INDEX idx_module_version_states_next_processed_after ON module_version_states USING btree (next_processed_after);
+CREATE INDEX idx_module_version_states_next_processed_after ON module_version_states (next_processed_after);
 COMMENT ON INDEX idx_module_version_states_next_processed_after IS
 'INDEX idx_module_version_states_next_processed_after is used to get the next time at which a module version should be retried for processing.';
 
-CREATE INDEX idx_module_version_states_sort_version ON module_version_states USING btree (sort_version DESC);
+CREATE INDEX idx_module_version_states_sort_version ON module_version_states (sort_version DESC);
 COMMENT ON INDEX idx_module_version_states_sort_version IS
 'INDEX idx_module_version_states_sort_version is used to sort by version, to determine when a module version should be retried for processing.';
 
@@ -298,20 +298,20 @@ COMMENT ON COLUMN search_documents.hll_leading_zeros IS
 COMMENT ON COLUMN search_documents.has_go_mod IS
 'COLUMN has_go_mod records whether the module zip contains a go.mod file.';
 
-CREATE INDEX idx_imported_by_count_desc ON search_documents USING btree (imported_by_count DESC);
+CREATE INDEX idx_imported_by_count_desc ON search_documents (imported_by_count DESC);
 COMMENT ON INDEX idx_imported_by_count_desc IS
 'INDEX idx_imported_by_count_desc is used by popular_search to execute a partial scan of popular search documents.';
 
-CREATE INDEX idx_hll_register_leading_zeros ON search_documents USING btree (hll_register, hll_leading_zeros DESC);
+CREATE INDEX idx_hll_register_leading_zeros ON search_documents (hll_register, hll_leading_zeros DESC);
 COMMENT ON INDEX idx_hll_register_leading_zeros IS
 'INDEX idx_hll_register_leading_zeros allows us to quickly find the maximum number of leading zeros among search documents in each register matching a query, which is necessary for hyperloglog cardinality estimation.';
 
-CREATE INDEX idx_search_documents_imported_by_count_updated_at ON search_documents USING btree (imported_by_count_updated_at);
+CREATE INDEX idx_search_documents_imported_by_count_updated_at ON search_documents (imported_by_count_updated_at);
 COMMENT ON INDEX idx_search_documents_imported_by_count_updated_at IS
 'INDEX idx_search_documents_imported_by_count_updated_at index is used for incremental update of imported_by counts.';
 
 CREATE INDEX idx_search_documents_module_path_version_package_path ON search_documents
-    USING btree (package_path, module_path, version);
+    (package_path, module_path, version);
 COMMENT ON INDEX idx_search_documents_module_path_version_package_path IS
 'INDEX idx_search_documents_module_path_version_package_path is used for the FK reference to packages.';
 
@@ -323,7 +323,7 @@ CREATE INDEX idx_search_documents_tsv_search_tokens ON search_documents USING gi
 COMMENT ON INDEX idx_search_documents_tsv_search_tokens IS
 'INDEX idx_search_documents_tsv_search_tokens improves performance for full-text search.';
 
-CREATE INDEX idx_search_documents_version_updated_at ON search_documents USING btree (version_updated_at);
+CREATE INDEX idx_search_documents_version_updated_at ON search_documents (version_updated_at);
 COMMENT ON INDEX idx_search_documents_version_updated_at IS
 'INDEX idx_search_documents_version_updated_at is used for incremental update of imported_by counts, in order to determine when the latest version of a package was last updated.';
 
