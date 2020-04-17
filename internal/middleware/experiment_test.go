@@ -138,16 +138,6 @@ func TestShouldSetExperiment(t *testing.T) {
 	}
 }
 
-func TestShouldSetExperimentDoesNotEnrollEmptyIP(t *testing.T) {
-	req, err := http.NewRequest("GET", "http://foo", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if shouldSetExperiment(req, &internal.Experiment{Name: "test", Rollout: 100}) {
-		t.Fatalf("shouldSetExperiment = true; want = false for empty ip address")
-	}
-}
-
 func TestShouldSetExperimentWithQueryParam(t *testing.T) {
 	req, err := http.NewRequest("GET", "http://foo", nil)
 	if err != nil {

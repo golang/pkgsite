@@ -69,7 +69,7 @@ func (e *Experimenter) setExperimentsForRequest(r *http.Request) *http.Request {
 			set[exp.Name] = true
 		}
 	}
-	return r.WithContext(experiment.NewContext(r.Context(), set))
+	return r.WithContext(experiment.NewContext(r.Context(), experiment.NewSet(set)))
 }
 
 // pollUpdates polls the experiment source for updates to the snapshot, until
@@ -121,6 +121,9 @@ func shouldSetExperiment(r *http.Request, e *internal.Experiment) bool {
 	}
 	if e.Rollout == 0 {
 		return false
+	}
+	if e.Rollout == 100 {
+		return true
 	}
 	ip := ipKey(r.Header.Get("X-Forwarded-For"))
 	if ip == "" {

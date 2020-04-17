@@ -14,6 +14,7 @@ import (
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/config"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/experiment"
 	"golang.org/x/discovery/internal/fetch"
 	"golang.org/x/discovery/internal/log"
 	"golang.org/x/discovery/internal/postgres"
@@ -63,6 +64,7 @@ func fetchAndInsertModule(parentCtx context.Context, modulePath, requestedVersio
 	// A fixed timeout for FetchAndInsertModule to allow module processing to
 	// succeed even for extremely short lived requests.
 	ctx, cancel := context.WithTimeout(context.Background(), fetchTimeout)
+	ctx = experiment.NewContext(ctx, experiment.FromContext(parentCtx))
 	defer cancel()
 
 	ctx, span := trace.StartSpanWithRemoteParent(ctx, "FetchAndInsertModule", parentSpan.SpanContext())
@@ -87,7 +89,8 @@ func fetchAndInsertModule(parentCtx context.Context, modulePath, requestedVersio
 func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, sourceClient *source.Client, db *postgres.DB) (_ int, err error) {
 	defer derrors.Wrap(&err, "FetchAndUpdateState(%q, %q)", modulePath, requestedVersion)
 
-	ctx, span := trace.StartSpan(ctx, "FetchAndUpdateState")
+	tctx, span := trace.StartSpan(ctx, "FetchAndUpdateState")
+	ctx = experiment.NewContext(tctx, experiment.FromContext(ctx))
 	span.AddAttributes(
 		trace.StringAttribute("modulePath", modulePath),
 		trace.StringAttribute("version", requestedVersion))

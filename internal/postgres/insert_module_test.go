@@ -25,9 +25,9 @@ import (
 func TestInsertModule(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
 	defer cancel()
-	ctx = experiment.NewContext(ctx, map[string]bool{
-		internal.ExperimentInsertDirectories: true,
-	})
+	ctx = experiment.NewContext(ctx,
+		experiment.NewSet(map[string]bool{
+			internal.ExperimentInsertDirectories: true}))
 
 	for _, test := range []struct {
 		name   string

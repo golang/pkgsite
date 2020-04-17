@@ -6,17 +6,18 @@ package experiment
 
 import (
 	"context"
-	"reflect"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestGetAndSetExperiments(t *testing.T) {
 	const testExperiment1 = "test-experiment-1"
-	set := map[string]bool{testExperiment1: true}
-	ctx := NewContext(context.Background(), set)
-	want := &Set{set: set}
+	s := map[string]bool{testExperiment1: true}
+	ctx := NewContext(context.Background(), NewSet(s))
+	want := NewSet(s)
 	got := FromContext(ctx)
-	if !reflect.DeepEqual(got, want) {
+	if !cmp.Equal(want, got, cmp.AllowUnexported(Set{})) {
 		t.Fatalf("FromContext(ctx) = %v; want = %v", got, want)
 	}
 	if !IsActive(ctx, testExperiment1) {
