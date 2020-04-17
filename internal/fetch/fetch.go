@@ -29,6 +29,7 @@ import (
 	"go.opencensus.io/trace"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/experiment"
 	"golang.org/x/discovery/internal/fetch/dochtml"
 	"golang.org/x/discovery/internal/fetch/internal/doc"
 	"golang.org/x/discovery/internal/licenses"
@@ -357,7 +358,7 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion str
 			status error
 			errMsg string
 		)
-		pkg, err := loadPackage(goFiles, innerPath, modulePath, sourceInfo)
+		pkg, err := loadPackage(ctx, goFiles, innerPath, modulePath, sourceInfo)
 		if bpe := (*BadPackageError)(nil); errors.As(err, &bpe) {
 			incompleteDirs[innerPath] = true
 			status = derrors.BadPackage
@@ -478,9 +479,9 @@ var goEnvs = []struct{ GOOS, GOARCH string }{
 // several build contexts in turn. The first build context in the list to produce
 // a non-empty package is used. If none of them result in a package, then
 // loadPackage returns nil, nil.
-func loadPackage(zipGoFiles []*zip.File, innerPath, modulePath string, sourceInfo *source.Info) (*internal.Package, error) {
+func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath, modulePath string, sourceInfo *source.Info) (*internal.Package, error) {
 	for _, env := range goEnvs {
-		pkg, err := loadPackageWithBuildContext(env.GOOS, env.GOARCH, zipGoFiles, innerPath, modulePath, sourceInfo)
+		pkg, err := loadPackageWithBuildContext(ctx, env.GOOS, env.GOARCH, zipGoFiles, innerPath, modulePath, sourceInfo)
 		if err != nil {
 			return nil, err
 		}
@@ -511,7 +512,7 @@ var httpPost = http.Post
 // package documentation HTML exceeds a limit.
 // A *BadPackageError error is returned if the directory
 // contains .go files but do not make up a valid package.
-func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, innerPath, modulePath string, sourceInfo *source.Info) (_ *internal.Package, err error) {
+func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGoFiles []*zip.File, innerPath, modulePath string, sourceInfo *source.Info) (_ *internal.Package, err error) {
 	defer derrors.Wrap(&err, "loadPackageWithBuildContext(%q, %q, zipGoFiles, %q, %q, %+v)",
 		goos, goarch, innerPath, modulePath, sourceInfo)
 	// Apply build constraints to get a map from matching file names to their contents.
@@ -595,30 +596,6 @@ func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, in
 		return nil, fmt.Errorf("%d imports found package %q; exceeds limit %d for maxImportsPerPackage", len(d.Imports), importPath, maxImportsPerPackage)
 	}
 
-	// Fetch Go playground URLs for examples.
-	playURLs := make(map[*doc.Example]string)
-	var firstErr error
-	dochtml.WalkExamples(d, func(id string, ex *doc.Example) {
-		// TODO: make these fetches in parallel
-		url, err := fetchPlayURL(ex, httpPost)
-		if err != nil {
-			if firstErr == nil {
-				firstErr = fmt.Errorf("failed to share example to Go playground: %s", err)
-			}
-			return
-		}
-		playURLs[ex] = url
-	})
-	if firstErr != nil {
-		// TODO: instead of failing the whole package processing,
-		// allow this to continue without the playground link,
-		// but schedule the package for reprocessing later.
-		return nil, firstErr
-	}
-	playURLFunc := func(ex *doc.Example) string {
-		return playURLs[ex]
-	}
-
 	// Render documentation HTML.
 	sourceLinkFunc := func(n ast.Node) string {
 		if sourceInfo == nil {
@@ -629,6 +606,32 @@ func loadPackageWithBuildContext(goos, goarch string, zipGoFiles []*zip.File, in
 			return ""
 		}
 		return sourceInfo.LineURL(path.Join(innerPath, p.Filename), p.Line)
+	}
+
+	// Fetch Go playground URLs for examples.
+	playURLs := make(map[*doc.Example]string)
+	if experiment.IsActive(ctx, internal.ExperimentInsertPlaygroundLinks) {
+		var firstErr error
+		dochtml.WalkExamples(d, func(id string, ex *doc.Example) {
+			// TODO: make these fetches in parallel
+			url, err := fetchPlayURL(ex, httpPost)
+			if err != nil {
+				if firstErr == nil {
+					firstErr = fmt.Errorf("failed to share example to Go playground: %s", err)
+				}
+				return
+			}
+			playURLs[ex] = url
+		})
+		if firstErr != nil {
+			// TODO: instead of failing the whole package processing,
+			// allow this to continue without the playground link,
+			// but schedule the package for reprocessing later.
+			return nil, firstErr
+		}
+	}
+	playURLFunc := func(ex *doc.Example) string {
+		return playURLs[ex]
 	}
 
 	docHTML, err := dochtml.Render(fset, d, dochtml.RenderOptions{

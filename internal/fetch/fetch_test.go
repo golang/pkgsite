@@ -23,6 +23,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/discovery/internal"
 	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/discovery/internal/experiment"
 	"golang.org/x/discovery/internal/fetch/internal/doc"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/source"
@@ -40,6 +41,7 @@ func TestFetchModule(t *testing.T) {
 	stdlib.UseTestData = true
 
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx = experiment.NewContext(ctx, experiment.NewSet(map[string]bool{internal.ExperimentInsertPlaygroundLinks: true}))
 	defer cancel()
 
 	// Stub out the function used to share playground snippets

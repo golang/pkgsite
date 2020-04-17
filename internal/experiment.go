@@ -8,7 +8,10 @@ import (
 	"context"
 )
 
-const ExperimentInsertDirectories = "insert-directories"
+const (
+	ExperimentInsertDirectories     = "insert-directories"
+	ExperimentInsertPlaygroundLinks = "insert-playground-links"
+)
 
 // Experiment holds data associated with an experimental feature for frontend
 // or worker.
