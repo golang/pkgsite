@@ -108,6 +108,14 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
 	for _, p := range m.Packages {
 		sort.Strings(p.Imports)
 	}
+	sort.Slice(m.Directories, func(i, j int) bool {
+		return m.Directories[i].Path < m.Directories[j].Path
+	})
+	for _, d := range m.Directories {
+		if d.Package != nil && len(d.Package.Imports) > 1 {
+			sort.Strings(d.Package.Imports)
+		}
+	}
 
 	return db.db.Transact(ctx, func(tx *database.DB) error {
 		// If the version exists, delete it to force an overwrite. This allows us
