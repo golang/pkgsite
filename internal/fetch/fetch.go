@@ -132,7 +132,7 @@ func processZipFile(ctx context.Context, modulePath string, versionType version.
 
 	sourceInfo, err := source.ModuleInfo(ctx, sourceClient, modulePath, resolvedVersion)
 	if err != nil {
-		log.Error(ctx, err)
+		log.Infof(ctx, "error getting source info: %v", err)
 	}
 	readmes, err := extractReadmesFromZip(modulePath, resolvedVersion, zipReader)
 	if err != nil {
