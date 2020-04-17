@@ -10,13 +10,17 @@ import (
 	"time"
 )
 
+type ctxKey string
+
+var key = ctxKey("key")
+
 func TestDetach(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 	defer cancel()
-	ctx = context.WithValue(ctx, "key", "value")
+	ctx = context.WithValue(ctx, key, "value")
 	dctx := Detach(ctx)
 	// Detached context has the same values.
-	got, ok := dctx.Value("key").(string)
+	got, ok := dctx.Value(key).(string)
 	if !ok || got != "value" {
 		t.Errorf("Value: got (%v, %t), want 'value', true", got, ok)
 	}
