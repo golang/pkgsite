@@ -20,6 +20,7 @@ import (
 	"golang.org/x/discovery/internal/postgres"
 	"golang.org/x/discovery/internal/proxy"
 	"golang.org/x/discovery/internal/source"
+	"golang.org/x/discovery/internal/xcontext"
 	"golang.org/x/mod/semver"
 )
 
@@ -63,8 +64,7 @@ func fetchAndInsertModule(parentCtx context.Context, modulePath, requestedVersio
 	parentSpan := trace.FromContext(parentCtx)
 	// A fixed timeout for FetchAndInsertModule to allow module processing to
 	// succeed even for extremely short lived requests.
-	ctx, cancel := context.WithTimeout(context.Background(), fetchTimeout)
-	ctx = experiment.NewContext(ctx, experiment.FromContext(parentCtx))
+	ctx, cancel := context.WithTimeout(xcontext.Detach(parentCtx), fetchTimeout)
 	defer cancel()
 
 	ctx, span := trace.StartSpanWithRemoteParent(ctx, "FetchAndInsertModule", parentSpan.SpanContext())

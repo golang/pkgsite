@@ -83,7 +83,7 @@ func TestSetAndLoadExperiments(t *testing.T) {
 	source.updatedExperiments([]*internal.Experiment{
 		{Name: testFeature, Rollout: 0},
 	})
-	time.Sleep(10 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	makeRequest(t)
 	if featureIsOn {
 		t.Fatalf("experiment %q should not be active", testFeature)
