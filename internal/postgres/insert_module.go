@@ -89,34 +89,6 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 // licenses are invalid.
 func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
 	derrors.Wrap(&err, "DB.saveModule(ctx, Version(%q, %q))", m.ModulePath, m.Version)
-	if m.ReadmeContents == internal.StringFieldMissing {
-		// We don't expect this to ever happen here, but checking just in case.
-		return errors.New("saveModule: version missing ReadmeContents")
-	}
-	// Sort to ensure proper lock ordering, avoiding deadlocks. See
-	// b/141164828#comment8. The only deadlocks we've actually seen are on
-	// imports_unique, because they can occur when processing two versions of
-	// the same module, which happens regularly. But if we were ever to process
-	// the same module and version twice, we could see deadlocks in the other
-	// bulk inserts.
-	sort.Slice(m.Packages, func(i, j int) bool {
-		return m.Packages[i].Path < m.Packages[j].Path
-	})
-	sort.Slice(m.Licenses, func(i, j int) bool {
-		return m.Licenses[i].FilePath < m.Licenses[j].FilePath
-	})
-	for _, p := range m.Packages {
-		sort.Strings(p.Imports)
-	}
-	sort.Slice(m.Directories, func(i, j int) bool {
-		return m.Directories[i].Path < m.Directories[j].Path
-	})
-	for _, d := range m.Directories {
-		if d.Package != nil && len(d.Package.Imports) > 1 {
-			sort.Strings(d.Package.Imports)
-		}
-	}
-
 	return db.db.Transact(ctx, func(tx *database.DB) error {
 		// If the version exists, delete it to force an overwrite. This allows us
 		// to selectively repopulate data after a code change.
@@ -234,6 +206,21 @@ func insertPackages(ctx context.Context, db *database.DB, m *internal.Module) (e
 		}
 	}
 
+	// Sort to ensure proper lock ordering, avoiding deadlocks. See
+	// b/141164828#comment8. The only deadlocks we've actually seen are on
+	// imports_unique, because they can occur when processing two versions of
+	// the same module, which happens regularly. But if we were ever to process
+	// the same module and version twice, we could see deadlocks in the other
+	// bulk inserts.
+	sort.Slice(m.Packages, func(i, j int) bool {
+		return m.Packages[i].Path < m.Packages[j].Path
+	})
+	sort.Slice(m.Licenses, func(i, j int) bool {
+		return m.Licenses[i].FilePath < m.Licenses[j].FilePath
+	})
+	for _, p := range m.Packages {
+		sort.Strings(p.Imports)
+	}
 	var pkgValues, importValues, importUniqueValues []interface{}
 	for _, p := range m.Packages {
 		if p.DocumentationHTML == internal.StringFieldMissing {
@@ -325,8 +312,25 @@ func insertPackages(ctx context.Context, db *database.DB, m *internal.Module) (e
 func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module, moduleID int) (err error) {
 	defer derrors.Wrap(&err, "upsertDirectories(ctx, tx, %q, %q)", m.ModulePath, m.Version)
 
+	if m.ReadmeContents == internal.StringFieldMissing {
+		// We don't expect this to ever happen here, but checking just in case.
+		return errors.New("saveModule: version missing ReadmeContents")
+	}
+	// Sort to ensure proper lock ordering, avoiding deadlocks. See
+	// b/141164828#comment8. We have seen deadlocks on package_imports and
+	// documentation.  They can occur when processing two versions of the
+	// same module, which happens regularly.
+	sort.Slice(m.Directories, func(i, j int) bool {
+		return m.Directories[i].Path < m.Directories[j].Path
+	})
+	for _, d := range m.Directories {
+		if d.Package != nil && len(d.Package.Imports) > 1 {
+			sort.Strings(d.Package.Imports)
+		}
+	}
 	var (
 		pathValues    []interface{}
+		paths         []string
 		pathToID      = map[string]int{}
 		pathToReadme  = map[string]*internal.Readme{}
 		pathToDoc     = map[string]*internal.Documentation{}
@@ -395,31 +399,45 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 				return err
 			}
 			pathToID[path] = pathID
+			paths = append(paths, path)
 			return nil
 		}); err != nil {
 			return err
 		}
 	}
 
+	// Sort to ensure proper lock ordering, avoiding deadlocks. See
+	// b/141164828#comment8. We have seen deadlocks on package_imports and
+	// documentation.  They can occur when processing two versions of the
+	// same module, which happens regularly.
+	sort.Strings(paths)
 	if len(pathToReadme) > 0 {
 		var readmeValues []interface{}
-		for path, readme := range pathToReadme {
+		for _, path := range paths {
+			readme, ok := pathToReadme[path]
+			if !ok {
+				continue
+			}
 			id := pathToID[path]
 			readmeValues = append(readmeValues, id, readme.Filepath, makeValidUnicode(readme.Contents))
-		}
-		readmeCols := []string{
-			"path_id",
-			"file_path",
-			"contents",
-		}
-		if err := db.BulkInsert(ctx, "readmes", readmeCols, readmeValues, database.OnConflictDoNothing); err != nil {
-			return err
+			readmeCols := []string{
+				"path_id",
+				"file_path",
+				"contents",
+			}
+			if err := db.BulkInsert(ctx, "readmes", readmeCols, readmeValues, database.OnConflictDoNothing); err != nil {
+				return err
+			}
 		}
 	}
 
 	if len(pathToDoc) > 0 {
 		var docValues []interface{}
-		for path, doc := range pathToDoc {
+		for _, path := range paths {
+			doc, ok := pathToDoc[path]
+			if !ok {
+				continue
+			}
 			id := pathToID[path]
 			docValues = append(docValues, id, doc.GOOS, doc.GOARCH, doc.Synopsis, doc.HTML)
 		}
@@ -436,7 +454,11 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 	}
 
 	var importValues []interface{}
-	for pkgPath, imports := range pathToImports {
+	for _, pkgPath := range paths {
+		imports, ok := pathToImports[pkgPath]
+		if !ok {
+			continue
+		}
 		id := pathToID[pkgPath]
 		for _, toPath := range imports {
 			importValues = append(importValues, id, toPath)
