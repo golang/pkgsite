@@ -326,8 +326,8 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 	defer derrors.Wrap(&err, "upsertDirectories(ctx, tx, %q, %q)", m.ModulePath, m.Version)
 
 	var (
-		paths         []string
 		pathValues    []interface{}
+		pathToID      = map[string]int{}
 		pathToReadme  = map[string]*internal.Readme{}
 		pathToDoc     = map[string]*internal.Documentation{}
 		pathToImports = map[string][]string{}
@@ -362,7 +362,6 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 			pq.Array(licensePaths),
 			d.IsRedistributable,
 		)
-		paths = append(paths, d.Path)
 		if d.Readme != nil {
 			pathToReadme[d.Path] = d.Readme
 		}
@@ -376,6 +375,7 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 			}
 		}
 	}
+
 	if len(pathValues) > 0 {
 		pathCols := []string{
 			"path",
@@ -386,16 +386,19 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 			"license_paths",
 			"redistributable",
 		}
-		if err := db.BulkInsert(ctx, "paths", pathCols, pathValues, database.OnConflictDoNothing); err != nil {
+		if err := db.BulkInsertReturning(ctx, "paths", pathCols, pathValues, database.OnConflictDoNothing, []string{"id", "path"}, func(rows *sql.Rows) error {
+			var (
+				pathID int
+				path   string
+			)
+			if err := rows.Scan(&pathID, &path); err != nil {
+				return err
+			}
+			pathToID[path] = pathID
+			return nil
+		}); err != nil {
 			return err
 		}
-	}
-
-	// TODO: Update BulkInsert to support RETURNING, so that id and path
-	// are returned.
-	pathToID, err := getPathIDs(ctx, db, paths)
-	if err != nil {
-		return err
 	}
 
 	if len(pathToReadme) > 0 {
@@ -447,31 +450,6 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 		}
 	}
 	return nil
-}
-
-func getPathIDs(ctx context.Context, db *database.DB, paths []string) (_ map[string]int, err error) {
-	defer derrors.Wrap(&err, "getPathIds(ctx, tx, %q)", paths)
-
-	pathToID := map[string]int{}
-	collect := func(rows *sql.Rows) error {
-		var (
-			id   int
-			path string
-		)
-		if err := rows.Scan(&path, &id); err != nil {
-			return fmt.Errorf("rows.Scan(): %v", err)
-		}
-		pathToID[path] = id
-		return nil
-	}
-
-	if err := db.RunQuery(ctx, `
-		SELECT path, id
-		FROM paths
-		WHERE path = ANY($1);`, collect, pq.Array(paths)); err != nil {
-		return nil, err
-	}
-	return pathToID, nil
 }
 
 // isLatestVersion reports whether version is the latest version of the module.
