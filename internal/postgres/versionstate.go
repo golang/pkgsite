@@ -101,7 +101,7 @@ func (db *DB) UpsertModuleVersionState(ctx context.Context, modulePath, vers, ap
 		}
 
 		if _, err := tx.Exec(ctx, `DELETE FROM package_version_states WHERE module_path=$1 AND version=$2`, modulePath, vers); err != nil {
-			return fmt.Errorf("failed to delete rows from package_version_states for %q@%q", modulePath, vers)
+			return fmt.Errorf("failed to delete rows from package_version_states for %q@%q: %v", modulePath, vers, err)
 		}
 
 		if len(packageVersionStates) == 0 {
