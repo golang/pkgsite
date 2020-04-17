@@ -90,7 +90,7 @@ func (q *GCP) ScheduleFetch(ctx context.Context, modulePath, version, suffix str
 }
 
 // How often the task ID for a given module and version will change.
-const taskIDChangeInterval = 3 * time.Hour
+const taskIDChangeInterval = time.Hour
 
 // Create a task ID for the given module path and version.
 // Task IDs can contain only letters ([A-Za-z]), numbers ([0-9]), hyphens (-), or underscores (_).
