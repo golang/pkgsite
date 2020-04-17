@@ -402,7 +402,7 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 		var readmeValues []interface{}
 		for path, readme := range pathToReadme {
 			id := pathToID[path]
-			readmeValues = append(readmeValues, id, readme.Filepath, readme.Contents)
+			readmeValues = append(readmeValues, id, readme.Filepath, makeValidUnicode(readme.Contents))
 		}
 		readmeCols := []string{
 			"path_id",
