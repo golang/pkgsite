@@ -21,9 +21,9 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/testing/testhelper"
 	"golang.org/x/mod/semver"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/testing/testhelper"
 
 	"gopkg.in/src-d/go-billy.v4/osfs"
 	"gopkg.in/src-d/go-git.v4"

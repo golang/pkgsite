@@ -15,8 +15,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"golang.org/x/discovery/internal/fetch/internal/doc"
 	"golang.org/x/net/html"
+	"golang.org/x/pkgsite/internal/fetch/internal/doc"
 )
 
 func TestRender(t *testing.T) {

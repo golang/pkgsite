@@ -11,7 +11,7 @@ import (
 	"github.com/alicebob/miniredis/v2"
 	"github.com/go-redis/redis/v7"
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/discovery/internal/complete"
+	"golang.org/x/pkgsite/internal/complete"
 )
 
 func TestAutoCompletion(t *testing.T) {

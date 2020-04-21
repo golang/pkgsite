@@ -8,7 +8,7 @@ import (
 	"go/ast"
 	"testing"
 
-	"golang.org/x/discovery/internal/fetch/internal/doc"
+	"golang.org/x/pkgsite/internal/fetch/internal/doc"
 )
 
 func TestResolveIdentifier(t *testing.T) {

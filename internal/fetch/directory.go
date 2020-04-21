@@ -8,9 +8,9 @@ import (
 	"path"
 	"strings"
 
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/licenses"
-	"golang.org/x/discovery/internal/stdlib"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 // moduleDirectories returns all of the directories in a given module, along

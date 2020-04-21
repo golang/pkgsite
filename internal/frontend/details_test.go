@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/stdlib"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 func TestParseDetailsURLPath(t *testing.T) {

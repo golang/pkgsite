@@ -16,16 +16,16 @@ import (
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/go-redis/redis/v7"
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/config"
-	"golang.org/x/discovery/internal/frontend"
-	"golang.org/x/discovery/internal/index"
-	"golang.org/x/discovery/internal/postgres"
-	"golang.org/x/discovery/internal/proxy"
-	"golang.org/x/discovery/internal/queue"
-	"golang.org/x/discovery/internal/source"
-	"golang.org/x/discovery/internal/testing/testhelper"
-	"golang.org/x/discovery/internal/worker"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/frontend"
+	"golang.org/x/pkgsite/internal/index"
+	"golang.org/x/pkgsite/internal/postgres"
+	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/queue"
+	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/testing/testhelper"
+	"golang.org/x/pkgsite/internal/worker"
 )
 
 var testDB *postgres.DB

@@ -8,8 +8,8 @@ import (
 	"html/template"
 	"reflect"
 
-	"golang.org/x/discovery/internal/fetch/dochtml/internal/render"
-	"golang.org/x/discovery/internal/fetch/internal/doc"
+	"golang.org/x/pkgsite/internal/fetch/dochtml/internal/render"
+	"golang.org/x/pkgsite/internal/fetch/internal/doc"
 )
 
 // htmlPackage is the template used to render documentation HTML.

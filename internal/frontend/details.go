@@ -11,11 +11,11 @@ import (
 	"net/http"
 	"strings"
 
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/mod/module"
 	"golang.org/x/mod/semver"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 // DetailsPage contains data for a package of module details template.

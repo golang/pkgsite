@@ -14,7 +14,7 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/discovery/internal/fetch/internal/doc"
+	"golang.org/x/pkgsite/internal/fetch/internal/doc"
 )
 
 var (

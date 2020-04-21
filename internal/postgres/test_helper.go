@@ -14,12 +14,12 @@ import (
 	"testing"
 
 	"github.com/golang-migrate/migrate/v4"
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/database"
-	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/testing/dbtest"
-	"golang.org/x/discovery/internal/testing/sample"
-	"golang.org/x/discovery/internal/testing/testhelper"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/database"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/testing/dbtest"
+	"golang.org/x/pkgsite/internal/testing/sample"
+	"golang.org/x/pkgsite/internal/testing/testhelper"
 
 	// imported to register the postgres migration driver
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"

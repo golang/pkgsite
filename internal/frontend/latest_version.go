@@ -8,9 +8,9 @@ import (
 	"context"
 	"errors"
 
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/log"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/log"
 )
 
 // LatestVersion returns the latest version of the package or module.

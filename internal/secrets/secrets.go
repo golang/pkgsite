@@ -13,7 +13,7 @@ import (
 
 	cloudkms "cloud.google.com/go/kms/apiv1"
 	"cloud.google.com/go/storage"
-	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/pkgsite/internal/derrors"
 	kmspb "google.golang.org/genproto/googleapis/cloud/kms/v1"
 )
 

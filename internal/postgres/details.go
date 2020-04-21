@@ -15,11 +15,11 @@ import (
 	"strings"
 
 	"github.com/lib/pq"
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/database"
-	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/licenses"
-	"golang.org/x/discovery/internal/version"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/database"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 // GetPackagesInModule returns packages contained in the module version

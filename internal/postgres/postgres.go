@@ -5,7 +5,7 @@
 package postgres
 
 import (
-	"golang.org/x/discovery/internal/database"
+	"golang.org/x/pkgsite/internal/database"
 )
 
 type DB struct {

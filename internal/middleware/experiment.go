@@ -12,10 +12,10 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/experiment"
-	"golang.org/x/discovery/internal/log"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/log"
 )
 
 const experimentQueryParamKey = "experiment"

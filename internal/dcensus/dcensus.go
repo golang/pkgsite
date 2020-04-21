@@ -19,9 +19,9 @@ import (
 	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
 	"go.opencensus.io/zpages"
-	"golang.org/x/discovery/internal/config"
-	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/log"
+	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/log"
 	mrpb "google.golang.org/genproto/googleapis/api/monitoredres"
 )
 

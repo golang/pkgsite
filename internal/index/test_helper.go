@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"testing"
 
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/testing/testhelper"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
 // SetupTestIndex creates a module index for testing using the given version

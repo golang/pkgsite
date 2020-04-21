@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/pkgsite/internal/derrors"
 )
 
 const keySep = "|"

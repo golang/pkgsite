@@ -14,14 +14,14 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/middleware"
-	"golang.org/x/discovery/internal/postgres"
-	"golang.org/x/discovery/internal/source"
-	"golang.org/x/discovery/internal/testing/htmlcheck"
-	"golang.org/x/discovery/internal/testing/pagecheck"
-	"golang.org/x/discovery/internal/testing/sample"
 	"golang.org/x/net/html"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/postgres"
+	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/testing/htmlcheck"
+	"golang.org/x/pkgsite/internal/testing/pagecheck"
+	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
 const testTimeout = 5 * time.Second

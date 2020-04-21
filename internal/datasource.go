@@ -7,7 +7,7 @@ package internal
 import (
 	"context"
 
-	"golang.org/x/discovery/internal/licenses"
+	"golang.org/x/pkgsite/internal/licenses"
 )
 
 // DataSource is the interface used by the frontend to interact with module data.

@@ -9,9 +9,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/stdlib"
-	"golang.org/x/discovery/internal/testing/sample"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
 func TestDirectoryPaths(t *testing.T) {

@@ -11,14 +11,14 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/discovery/internal/fetch"
-	"golang.org/x/discovery/internal/frontend"
-	"golang.org/x/discovery/internal/middleware"
-	"golang.org/x/discovery/internal/postgres"
-	"golang.org/x/discovery/internal/proxy"
-	"golang.org/x/discovery/internal/source"
-	"golang.org/x/discovery/internal/testing/htmlcheck"
-	"golang.org/x/discovery/internal/testing/testhelper"
+	"golang.org/x/pkgsite/internal/fetch"
+	"golang.org/x/pkgsite/internal/frontend"
+	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/postgres"
+	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/testing/htmlcheck"
+	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
 var (

@@ -1,4 +1,4 @@
-module golang.org/x/discovery
+module golang.org/x/pkgsite
 
 go 1.13
 

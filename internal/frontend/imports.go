@@ -8,8 +8,8 @@ import (
 	"context"
 	"strings"
 
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/stdlib"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 // ImportsDetails contains information for a package's imports.

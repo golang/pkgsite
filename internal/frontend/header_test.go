@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/middleware"
-	"golang.org/x/discovery/internal/testing/htmlcheck"
-	"golang.org/x/discovery/internal/testing/sample"
 	"golang.org/x/net/html"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/testing/htmlcheck"
+	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
 func samplePackage(mutators ...func(*Package)) *Package {

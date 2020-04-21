@@ -11,9 +11,9 @@ import (
 	"regexp"
 	"strings"
 
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/log"
-	"golang.org/x/discovery/internal/stdlib"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 // DocumentationDetails contains data for the doc template.

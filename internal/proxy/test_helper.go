@@ -14,8 +14,8 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/discovery/internal/testing/testhelper"
 	"golang.org/x/mod/semver"
+	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
 // TestModule represents a module version used to generate testdata.

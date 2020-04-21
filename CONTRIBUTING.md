@@ -26,9 +26,9 @@ Before you begin working on an issue, please leave a comment that you are claimi
 
 1. Get the source code:
 
-` $ git clone https://go.googlesource.com/discovery`
+` $ git clone https://go.googlesource.com/pkgsite`
 
-- Our canonical Git repository is located at [https://go.googlesource.com/discovery](https://go.googlesource.com/discovery). [github.com/golang/discovery](https://github.com/golang/discovery) is a mirror of that repository.
+- Our canonical Git repository is located at [https://go.googlesource.com/pkgsite](https://go.googlesource.com/pkgsite). [github.com/golang/pkgsite](https://github.com/golang/pkgsite) is a mirror of that repository.
 
 2. Review the [design document](doc/design.md).
 

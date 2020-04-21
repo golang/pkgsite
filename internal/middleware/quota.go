@@ -16,7 +16,7 @@ import (
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
-	"golang.org/x/discovery/internal/config"
+	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/time/rate"
 )
 

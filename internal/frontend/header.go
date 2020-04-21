@@ -11,12 +11,12 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/licenses"
-	"golang.org/x/discovery/internal/middleware"
-	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/mod/module"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 // Package contains information for an individual package.

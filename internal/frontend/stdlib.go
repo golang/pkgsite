@@ -9,10 +9,10 @@ import (
 	"net/http"
 	"strings"
 
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/stdlib"
 	"golang.org/x/mod/module"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 // serveStdLib handles a request for a stdlib package or module.

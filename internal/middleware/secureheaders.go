@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"strings"
 
-	"golang.org/x/discovery/internal/log"
+	"golang.org/x/pkgsite/internal/log"
 )
 
 // NoncePlaceholder should be used as the value for nonces in rendered content.

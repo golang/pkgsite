@@ -7,7 +7,7 @@ package frontend
 import (
 	"testing"
 
-	"golang.org/x/discovery/internal"
+	"golang.org/x/pkgsite/internal"
 )
 
 func TestParseStdLibURLPath(t *testing.T) {

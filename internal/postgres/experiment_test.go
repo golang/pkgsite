@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/discovery/internal"
+	"golang.org/x/pkgsite/internal"
 )
 
 func TestGetActiveExperiments(t *testing.T) {

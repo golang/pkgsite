@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/discovery/internal/testing/dbtest"
+	"golang.org/x/pkgsite/internal/testing/dbtest"
 )
 
 const testTimeout = 5 * time.Second

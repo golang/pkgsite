@@ -33,11 +33,11 @@ import (
 	"time"
 
 	"go.opencensus.io/plugin/ochttp"
-	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/log"
-	"golang.org/x/discovery/internal/stdlib"
-	"golang.org/x/discovery/internal/version"
 	"golang.org/x/net/context/ctxhttp"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 // Info holds source information about a module, used to generate URLs referring

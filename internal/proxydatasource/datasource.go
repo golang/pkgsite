@@ -16,14 +16,14 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/fetch"
-	"golang.org/x/discovery/internal/licenses"
-	"golang.org/x/discovery/internal/proxy"
-	"golang.org/x/discovery/internal/source"
-	"golang.org/x/discovery/internal/version"
 	"golang.org/x/mod/semver"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/fetch"
+	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 var _ internal.DataSource = (*DataSource)(nil)

@@ -21,15 +21,15 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/experiment"
-	"golang.org/x/discovery/internal/fetch/internal/doc"
-	"golang.org/x/discovery/internal/proxy"
-	"golang.org/x/discovery/internal/source"
-	"golang.org/x/discovery/internal/stdlib"
-	"golang.org/x/discovery/internal/testing/sample"
-	"golang.org/x/discovery/internal/testing/testhelper"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/fetch/internal/doc"
+	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/testing/sample"
+	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
 var (

@@ -13,7 +13,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"go.opencensus.io/stats/view"
-	"golang.org/x/discovery/internal/config"
+	"golang.org/x/pkgsite/internal/config"
 )
 
 func TestQuota(t *testing.T) {

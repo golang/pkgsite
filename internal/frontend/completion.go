@@ -14,9 +14,9 @@ import (
 	"strings"
 
 	"github.com/go-redis/redis/v7"
-	"golang.org/x/discovery/internal/complete"
-	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/log"
+	"golang.org/x/pkgsite/internal/complete"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/log"
 )
 
 // handleAutoCompletion handles requests for /autocomplete?q=<input prefix>, by

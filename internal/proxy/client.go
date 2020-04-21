@@ -20,10 +20,10 @@ import (
 	"time"
 
 	"go.opencensus.io/plugin/ochttp"
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/mod/module"
 	"golang.org/x/net/context/ctxhttp"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
 )
 
 // A Client is used by the fetch service to communicate with a module

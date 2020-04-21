@@ -10,9 +10,9 @@ import (
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/go-redis/redis/v7"
-	"golang.org/x/discovery/internal/complete"
-	"golang.org/x/discovery/internal/postgres"
-	"golang.org/x/discovery/internal/testing/sample"
+	"golang.org/x/pkgsite/internal/complete"
+	"golang.org/x/pkgsite/internal/postgres"
+	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
 func TestUpdateRedisIndexes(t *testing.T) {

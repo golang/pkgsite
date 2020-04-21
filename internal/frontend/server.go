@@ -17,13 +17,13 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v7"
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/config"
-	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/experiment"
-	"golang.org/x/discovery/internal/licenses"
-	"golang.org/x/discovery/internal/log"
-	"golang.org/x/discovery/internal/middleware"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/middleware"
 )
 
 // Server can be installed to serve the go discovery frontend.

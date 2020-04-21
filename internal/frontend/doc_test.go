@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"golang.org/x/discovery/internal/stdlib"
-	"golang.org/x/discovery/internal/testing/sample"
+	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
 func TestFileSource(t *testing.T) {

@@ -10,11 +10,11 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/licenses"
-	"golang.org/x/discovery/internal/postgres"
-	"golang.org/x/discovery/internal/testing/sample"
-	"golang.org/x/discovery/internal/version"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/postgres"
+	"golang.org/x/pkgsite/internal/testing/sample"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 func TestFetchSearchPage(t *testing.T) {

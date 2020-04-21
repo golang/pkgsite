@@ -10,12 +10,12 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/postgres"
-	"golang.org/x/discovery/internal/source"
-	"golang.org/x/discovery/internal/stdlib"
-	"golang.org/x/discovery/internal/testing/sample"
-	"golang.org/x/discovery/internal/version"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/postgres"
+	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/testing/sample"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 func TestFetchOverviewDetails(t *testing.T) {

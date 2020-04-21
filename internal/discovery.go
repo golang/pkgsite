@@ -7,10 +7,10 @@ package internal
 import (
 	"time"
 
-	"golang.org/x/discovery/internal/licenses"
-	"golang.org/x/discovery/internal/source"
-	"golang.org/x/discovery/internal/version"
 	"golang.org/x/mod/module"
+	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 const (

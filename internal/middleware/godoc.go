@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"golang.org/x/discovery/internal/log"
+	"golang.org/x/pkgsite/internal/log"
 )
 
 // GodocURLPlaceholder should be used as the value for any godoc.org URL in rendered

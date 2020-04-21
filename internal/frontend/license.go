@@ -8,8 +8,8 @@ import (
 	"context"
 	"net/url"
 
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/licenses"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/licenses"
 )
 
 // License contains information used for a single license section.

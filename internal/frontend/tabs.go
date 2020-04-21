@@ -11,8 +11,8 @@ import (
 	"net/url"
 	"strings"
 
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/licenses"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/licenses"
 )
 
 // TabSettings defines tab-specific metadata.

@@ -14,12 +14,12 @@ import (
 
 	"github.com/lib/pq"
 	"go.opencensus.io/trace"
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/database"
-	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/log"
-	"golang.org/x/discovery/internal/version"
 	"golang.org/x/mod/semver"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/database"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 // InsertIndexVersions inserts new versions into the module_version_states

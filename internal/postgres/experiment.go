@@ -8,8 +8,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/derrors"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
 )
 
 // GetExperiments fetches all experiments in the database.

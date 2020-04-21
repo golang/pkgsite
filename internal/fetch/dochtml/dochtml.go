@@ -6,7 +6,7 @@
 //
 // This package and its API are under development (see b/137567588).
 // It currently relies on copies of external packages with active CLs applied.
-// The plan is to iterate on the development internally for x/discovery
+// The plan is to iterate on the development internally for x/pkgsite
 // needs first, before factoring it out somewhere non-internal where its
 // API can no longer be easily modified.
 package dochtml
@@ -23,8 +23,8 @@ import (
 	"sort"
 	"strings"
 
-	"golang.org/x/discovery/internal/fetch/dochtml/internal/render"
-	"golang.org/x/discovery/internal/fetch/internal/doc"
+	"golang.org/x/pkgsite/internal/fetch/dochtml/internal/render"
+	"golang.org/x/pkgsite/internal/fetch/internal/doc"
 )
 
 var (

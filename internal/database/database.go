@@ -19,9 +19,9 @@ import (
 	"unicode"
 
 	"github.com/lib/pq"
-	"golang.org/x/discovery/internal/config"
-	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/log"
+	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/log"
 )
 
 // DB wraps a sql.DB. The methods it exports correspond closely to those of

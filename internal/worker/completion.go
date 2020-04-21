@@ -13,10 +13,10 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v7"
-	"golang.org/x/discovery/internal/complete"
-	"golang.org/x/discovery/internal/database"
-	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/log"
+	"golang.org/x/pkgsite/internal/complete"
+	"golang.org/x/pkgsite/internal/database"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/log"
 )
 
 const popularCutoff = 50

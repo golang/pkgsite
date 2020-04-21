@@ -20,9 +20,9 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/lib/pq"
 	"go.opencensus.io/stats/view"
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/testing/sample"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
 func TestPathTokens(t *testing.T) {

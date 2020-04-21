@@ -10,12 +10,12 @@ import (
 	"path"
 	"strings"
 
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/log"
-	"golang.org/x/discovery/internal/stdlib"
-	"golang.org/x/discovery/internal/version"
 	"golang.org/x/mod/module"
 	"golang.org/x/mod/semver"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 // VersionsDetails contains the hierarchy of version summary information used

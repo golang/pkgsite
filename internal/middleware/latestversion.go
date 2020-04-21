@@ -11,7 +11,7 @@ import (
 	"regexp"
 	"strings"
 
-	"golang.org/x/discovery/internal/log"
+	"golang.org/x/pkgsite/internal/log"
 )
 
 const (

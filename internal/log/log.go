@@ -15,9 +15,9 @@ import (
 	"sync"
 
 	"cloud.google.com/go/logging"
-	"golang.org/x/discovery/internal/config"
-	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/experiment"
+	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 )
 
 var (

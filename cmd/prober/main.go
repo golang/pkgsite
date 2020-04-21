@@ -24,11 +24,11 @@ import (
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
-	"golang.org/x/discovery/internal/auth"
-	"golang.org/x/discovery/internal/config"
-	"golang.org/x/discovery/internal/dcensus"
-	"golang.org/x/discovery/internal/log"
-	"golang.org/x/discovery/internal/secrets"
+	"golang.org/x/pkgsite/internal/auth"
+	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/dcensus"
+	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/secrets"
 )
 
 var credsFile = flag.String("creds", "", "filename for credentials, when running locally")

@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"golang.org/x/discovery/internal/derrors"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+	"golang.org/x/pkgsite/internal/derrors"
 )
 
 // clientID is the OAuth 2.0 Client ID.

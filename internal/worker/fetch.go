@@ -11,17 +11,17 @@ import (
 	"time"
 
 	"go.opencensus.io/trace"
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/config"
-	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/experiment"
-	"golang.org/x/discovery/internal/fetch"
-	"golang.org/x/discovery/internal/log"
-	"golang.org/x/discovery/internal/postgres"
-	"golang.org/x/discovery/internal/proxy"
-	"golang.org/x/discovery/internal/source"
-	"golang.org/x/discovery/internal/xcontext"
 	"golang.org/x/mod/semver"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/fetch"
+	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/postgres"
+	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/xcontext"
 )
 
 // fetchTimeout bounds the time allowed for fetching a single module.  It is

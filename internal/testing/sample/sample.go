@@ -14,10 +14,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/licensecheck"
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/licenses"
-	"golang.org/x/discovery/internal/source"
-	"golang.org/x/discovery/internal/version"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 // These sample values can be used to construct test cases.

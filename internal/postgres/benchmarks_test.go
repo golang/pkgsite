@@ -8,9 +8,9 @@ import (
 	"context"
 	"testing"
 
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/config"
-	"golang.org/x/discovery/internal/database"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/database"
 )
 
 var testQueries = []string{

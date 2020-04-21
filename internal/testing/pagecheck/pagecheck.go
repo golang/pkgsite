@@ -12,8 +12,8 @@ import (
 	"path"
 	"regexp"
 
-	"golang.org/x/discovery/internal/stdlib"
-	"golang.org/x/discovery/internal/testing/htmlcheck"
+	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/testing/htmlcheck"
 )
 
 // Page describes a discovery site web page for a package, module or directory.

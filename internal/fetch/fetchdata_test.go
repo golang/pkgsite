@@ -7,12 +7,12 @@ package fetch
 import (
 	"net/http"
 
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/proxy"
-	"golang.org/x/discovery/internal/source"
-	"golang.org/x/discovery/internal/stdlib"
-	"golang.org/x/discovery/internal/testing/testhelper"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
 type testModule struct {

@@ -16,8 +16,8 @@ import (
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/stdlib"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 // OverviewDetails contains all of the data that the readme template

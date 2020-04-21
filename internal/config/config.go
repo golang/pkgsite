@@ -23,9 +23,9 @@ import (
 
 	"cloud.google.com/go/storage"
 	"github.com/ghodss/yaml"
-	"golang.org/x/discovery/internal/derrors"
-	"golang.org/x/discovery/internal/secrets"
 	"golang.org/x/net/context/ctxhttp"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/secrets"
 	mrpb "google.golang.org/genproto/googleapis/api/monitoredres"
 )
 

@@ -15,8 +15,8 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/experiment"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 )
 
 type testExperimentSource struct {

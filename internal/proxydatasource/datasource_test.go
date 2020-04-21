@@ -11,12 +11,12 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/licenses"
-	"golang.org/x/discovery/internal/proxy"
-	"golang.org/x/discovery/internal/testing/sample"
-	"golang.org/x/discovery/internal/testing/testhelper"
-	"golang.org/x/discovery/internal/version"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/testing/sample"
+	"golang.org/x/pkgsite/internal/testing/testhelper"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 func setup(t *testing.T) (context.Context, *DataSource, func()) {

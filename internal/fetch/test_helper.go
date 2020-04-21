@@ -14,12 +14,12 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/discovery/internal"
-	"golang.org/x/discovery/internal/licenses"
-	"golang.org/x/discovery/internal/log"
-	"golang.org/x/discovery/internal/proxy"
-	"golang.org/x/discovery/internal/stdlib"
-	"golang.org/x/discovery/internal/version"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 var testProxyCommitTime = time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC)
