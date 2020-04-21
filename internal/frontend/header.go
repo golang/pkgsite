@@ -204,7 +204,7 @@ func breadcrumbPath(pkgPath, modPath, version string) template.HTML {
 		elems[len(elems)-i-1] = fmt.Sprintf(`<a href="%s">%s</a>`, template.HTMLEscapeString(href), template.HTMLEscapeString(el))
 	}
 	// Include the path as a breadcrumb.
-	// We also add a "copy" button for the string `import "path"`.
+	// We also add a "copy" button for the path.
 	//
 	// We need the 'DetailsHeader-pathInput' input element to copy it to the clipboard.
 	// - Its value attribute is delimited with single quotes because the value
@@ -233,7 +233,7 @@ func breadcrumbPath(pkgPath, modPath, version string) template.HTML {
 
 	return template.HTML(fmt.Sprintf(f,
 		strings.Join(elems, `<span class="DetailsHeader-breadcrumbDivider">/</span>`),
-		`import "`+pkgPath+`"`))
+		pkgPath))
 }
 
 // moduleHTMLTitle constructs the <title> contents, for tabs in the browser.
