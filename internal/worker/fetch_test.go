@@ -142,8 +142,8 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if gotStates != nil {
-		t.Errorf("testDB.GetPackageVersionStatesForModule(%q, %q) = %v; want = nil", modulePath, version, gotStates)
+	if diff := cmp.Diff(wantStates, gotStates); diff != "" {
+		t.Errorf("testDB.GetPackageVersionStatesForModule(ctx, %q, %q) mismatch (-want +got):\n%s", modulePath, version, diff)
 	}
 }
 
