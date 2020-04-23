@@ -126,7 +126,7 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	defer teardownProxy2()
 
 	// Now fetch it again.
-	if code, _ := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB); code != http.StatusNotFound && code != http.StatusGone {
+	if code, _ := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB); code != http.StatusNotFound {
 		t.Fatalf("FetchAndUpdateState(ctx, %q, %q, proxyClient, sourceClient, testDB): got code %d, want 404/410", modulePath, version, code)
 	}
 
