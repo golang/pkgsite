@@ -33,12 +33,12 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 		if m == nil {
 			derrors.Wrap(&err, "DB.InsertModule(ctx, nil)")
 		} else {
-			derrors.Wrap(&err, "DB.InsertModule(ctx, Version(%q, %q))", m.ModulePath, m.Version)
+			derrors.Wrap(&err, "DB.InsertModule(ctx, Module(%q, %q))", m.ModulePath, m.Version)
 		}
 	}()
 
 	if err := validateModule(m); err != nil {
-		return fmt.Errorf("validateVersion: %v: %w", err, derrors.InvalidArgument)
+		return fmt.Errorf("validateModule: %v: %w", err, derrors.InvalidArgument)
 	}
 	removeNonDistributableData(m)
 
