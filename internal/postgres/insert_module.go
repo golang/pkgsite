@@ -42,42 +42,44 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 	}
 	removeNonDistributableData(m)
 
-	if err := db.saveModule(ctx, m); err != nil {
-		return err
-	}
+	return db.db.Transact(ctx, func(tx *database.DB) error {
+		if err := saveModule(ctx, tx, m); err != nil {
+			return err
+		}
 
-	// If there is a more recent version of this module that has an alternative
-	// module path, then do not insert its packages into search_documents. This
-	// happens when a module that initially does not have a go.mod file is
-	// forked or fetched via some non-canonical path (such as an alternative
-	// capitalization), and then in a later version acquires a go.mod file.
-	//
-	// To take an actual example: github.com/sirupsen/logrus@v1.1.0 has a go.mod
-	// file that establishes that path as canonical. But v1.0.6 does not have a
-	// go.mod file. So the miscapitalized path github.com/Sirupsen/logrus at
-	// v1.1.0 is marked as an alternative path (code 491) by
-	// internal/fetch.FetchModule and is not inserted into the DB, but at
-	// v1.0.6 it is considered valid, and we end up here. We still insert
-	// github.com/Sirupsen/logrus@v1.0.6 in the versions table and friends so
-	// that users who import it can find information about it, but we don't want
-	// it showing up in search results.
-	//
-	// Note that we end up here only if we first saw the alternative version
-	// (github.com/Sirupsen/logrus@v1.1.0 in the example) and then see the valid
-	// one. The "if code == 491" section of internal/worker.fetchAndUpdateState
-	// handles the case where we fetch the versions in the other order.
-	row := db.db.QueryRow(ctx, `
+		// If there is a more recent version of this module that has an alternative
+		// module path, then do not insert its packages into search_documents. This
+		// happens when a module that initially does not have a go.mod file is
+		// forked or fetched via some non-canonical path (such as an alternative
+		// capitalization), and then in a later version acquires a go.mod file.
+		//
+		// To take an actual example: github.com/sirupsen/logrus@v1.1.0 has a go.mod
+		// file that establishes that path as canonical. But v1.0.6 does not have a
+		// go.mod file. So the miscapitalized path github.com/Sirupsen/logrus at
+		// v1.1.0 is marked as an alternative path (code 491) by
+		// internal/fetch.FetchModule and is not inserted into the DB, but at
+		// v1.0.6 it is considered valid, and we end up here. We still insert
+		// github.com/Sirupsen/logrus@v1.0.6 in the versions table and friends so
+		// that users who import it can find information about it, but we don't want
+		// it showing up in search results.
+		//
+		// Note that we end up here only if we first saw the alternative version
+		// (github.com/Sirupsen/logrus@v1.1.0 in the example) and then see the valid
+		// one. The "if code == 491" section of internal/worker.fetchAndUpdateState
+		// handles the case where we fetch the versions in the other order.
+		row := tx.QueryRow(ctx, `
 			SELECT 1 FROM module_version_states
 			WHERE module_path = $1 AND sort_version > $2 and status = 491`,
-		m.ModulePath, version.ForSorting(m.Version))
-	var x int
-	if err := row.Scan(&x); err != sql.ErrNoRows {
-		log.Infof(ctx, "%s@%s: not inserting into search documents", m.ModulePath, m.Version)
-		return err
-	}
+			m.ModulePath, version.ForSorting(m.Version))
+		var x int
+		if err := row.Scan(&x); err != sql.ErrNoRows {
+			log.Infof(ctx, "%s@%s: not inserting into search documents", m.ModulePath, m.Version)
+			return err
+		}
 
-	// Insert the module's packages into search_documents.
-	return db.UpsertSearchDocuments(ctx, m)
+		// Insert the module's packages into search_documents.
+		return UpsertSearchDocuments(ctx, tx, m)
+	})
 }
 
 // saveModule inserts a Module into the database along with its packages,
@@ -87,31 +89,29 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 //
 // A derrors.InvalidArgument error will be returned if the given module and
 // licenses are invalid.
-func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
-	derrors.Wrap(&err, "DB.saveModule(ctx, Version(%q, %q))", m.ModulePath, m.Version)
-	return db.db.Transact(ctx, func(tx *database.DB) error {
-		// If the version exists, delete it to force an overwrite. This allows us
-		// to selectively repopulate data after a code change.
-		if err := db.DeleteModule(ctx, tx, m.ModulePath, m.Version); err != nil {
-			return fmt.Errorf("error deleting existing versions: %v", err)
-		}
-		moduleID, err := insertModule(ctx, tx, m)
-		if err != nil {
+func saveModule(ctx context.Context, tx *database.DB, m *internal.Module) (err error) {
+	derrors.Wrap(&err, "saveModule(ctx, tx, Module(%q, %q))", m.ModulePath, m.Version)
+	// If the version exists, delete it to force an overwrite. This allows us
+	// to selectively repopulate data after a code change.
+	if err := DeleteModule(ctx, tx, m.ModulePath, m.Version); err != nil {
+		return fmt.Errorf("error deleting existing versions: %v", err)
+	}
+	moduleID, err := insertModule(ctx, tx, m)
+	if err != nil {
+		return err
+	}
+	if err := insertLicenses(ctx, tx, m, moduleID); err != nil {
+		return err
+	}
+	if err := insertPackages(ctx, tx, m); err != nil {
+		return err
+	}
+	if experiment.IsActive(ctx, internal.ExperimentInsertDirectories) {
+		if err := insertDirectories(ctx, tx, m, moduleID); err != nil {
 			return err
 		}
-		if err := insertLicenses(ctx, tx, m, moduleID); err != nil {
-			return err
-		}
-		if err := insertPackages(ctx, tx, m); err != nil {
-			return err
-		}
-		if experiment.IsActive(ctx, internal.ExperimentInsertDirectories) {
-			if err := insertDirectories(ctx, tx, m, moduleID); err != nil {
-				return err
-			}
-		}
-		return nil
-	})
+	}
+	return nil
 }
 
 func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ int, err error) {
@@ -545,16 +545,12 @@ func removeNonDistributableData(m *internal.Module) {
 }
 
 // DeleteModule deletes a Version from the database.
-func (db *DB) DeleteModule(ctx context.Context, ddb *database.DB, modulePath, version string) (err error) {
-	defer derrors.Wrap(&err, "DB.DeleteModule(ctx, ddb, %q, %q)", modulePath, version)
-
-	if ddb == nil {
-		ddb = db.db
-	}
+func DeleteModule(ctx context.Context, db *database.DB, modulePath, version string) (err error) {
+	defer derrors.Wrap(&err, "DeleteModule(ctx, db, %q, %q)", modulePath, version)
 	// We only need to delete from the modules table. Thanks to ON DELETE
 	// CASCADE constraints, that will trigger deletions from all other tables.
 	const stmt = `DELETE FROM modules WHERE module_path=$1 AND version=$2`
-	_, err = ddb.Exec(ctx, stmt, modulePath, version)
+	_, err = db.Exec(ctx, stmt, modulePath, version)
 	return err
 }
 

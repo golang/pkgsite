@@ -72,7 +72,7 @@ func TestPostgres_GetVersionInfo_Latest(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			for _, v := range tc.modules {
-				if err := testDB.saveModule(ctx, v); err != nil {
+				if err := saveModule(ctx, testDB.db, v); err != nil {
 					t.Error(err)
 				}
 			}
@@ -172,7 +172,7 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 			defer cancel()
 
 			for _, v := range testModules {
-				if err := testDB.saveModule(ctx, v); err != nil {
+				if err := saveModule(ctx, testDB.db, v); err != nil {
 					t.Error(err)
 				}
 			}
@@ -283,7 +283,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 				// TODO: move this handling into SimpleVersion once ParseVersionType is
 				// factored out of fetch.go
 				m.VersionType = version.TypePseudo
-				if err := testDB.saveModule(ctx, m); err != nil {
+				if err := saveModule(ctx, testDB.db, m); err != nil {
 					t.Fatal(err)
 				}
 
@@ -299,7 +299,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 			}
 
 			for _, m := range tc.modules {
-				if err := testDB.saveModule(ctx, m); err != nil {
+				if err := saveModule(ctx, testDB.db, m); err != nil {
 					t.Fatal(err)
 				}
 			}
@@ -360,7 +360,7 @@ func TestGetPackagesInVersion(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 			defer cancel()
 
-			if err := testDB.saveModule(ctx, tc.module); err != nil {
+			if err := saveModule(ctx, testDB.db, tc.module); err != nil {
 				t.Error(err)
 			}
 
@@ -409,7 +409,7 @@ func TestGetPackageLicenses(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	if err := testDB.saveModule(ctx, testModule); err != nil {
+	if err := saveModule(ctx, testDB.db, testModule); err != nil {
 		t.Fatal(err)
 	}
 

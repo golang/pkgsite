@@ -271,7 +271,7 @@ func TestPostgres_DeleteVersion(t *testing.T) {
 	if _, err := testDB.GetModuleInfo(ctx, v.ModulePath, v.Version); err != nil {
 		t.Fatal(err)
 	}
-	if err := testDB.DeleteModule(ctx, nil, v.ModulePath, v.Version); err != nil {
+	if err := DeleteModule(ctx, testDB.db, v.ModulePath, v.Version); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := testDB.GetModuleInfo(ctx, v.ModulePath, v.Version); !errors.Is(err, derrors.NotFound) {

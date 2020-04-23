@@ -544,14 +544,14 @@ var upsertSearchStatement = fmt.Sprintf(`
 	;`, hllRegisterCount)
 
 // UpsertSearchDocuments adds search information for mod ot the search_documents table.
-func (db *DB) UpsertSearchDocuments(ctx context.Context, mod *internal.Module) (err error) {
+func UpsertSearchDocuments(ctx context.Context, db *database.DB, mod *internal.Module) (err error) {
 	defer derrors.Wrap(&err, "UpsertSearchDocuments(ctx, %q)", mod.ModulePath)
 
 	for _, pkg := range mod.Packages {
 		if isInternalPackage(pkg.Path) {
 			continue
 		}
-		err := db.UpsertSearchDocument(ctx, upsertSearchDocumentArgs{
+		err := UpsertSearchDocument(ctx, db, upsertSearchDocumentArgs{
 			PackagePath:    pkg.Path,
 			ModulePath:     mod.ModulePath,
 			Synopsis:       pkg.Synopsis,
@@ -578,8 +578,8 @@ type upsertSearchDocumentArgs struct {
 //
 // The given module should have already been validated via a call to
 // validateModule.
-func (db *DB) UpsertSearchDocument(ctx context.Context, args upsertSearchDocumentArgs) (err error) {
-	defer derrors.Wrap(&err, "UpsertSearchDocument(ctx, %q, %q)", args.PackagePath, args.ModulePath)
+func UpsertSearchDocument(ctx context.Context, db *database.DB, args upsertSearchDocumentArgs) (err error) {
+	defer derrors.Wrap(&err, "UpsertSearchDocument(ctx, db, %q, %q)", args.PackagePath, args.ModulePath)
 
 	// Only summarize the README if the package and module have the same path.
 	if args.PackagePath != args.ModulePath {
@@ -588,7 +588,7 @@ func (db *DB) UpsertSearchDocument(ctx context.Context, args upsertSearchDocumen
 	}
 	pathTokens := strings.Join(GeneratePathTokens(args.PackagePath), " ")
 	sectionB, sectionC, sectionD := SearchDocumentSections(args.Synopsis, args.ReadmeFilePath, args.ReadmeContents)
-	_, err = db.db.Exec(ctx, upsertSearchStatement, args.PackagePath, pathTokens, sectionB, sectionC, sectionD)
+	_, err = db.Exec(ctx, upsertSearchStatement, args.PackagePath, pathTokens, sectionB, sectionC, sectionD)
 	return err
 }
 

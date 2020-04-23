@@ -156,7 +156,7 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 	// Delete it in case we are reprocessing an existing module.
 	if code > 400 {
 		log.Infof(ctx, "%s@%s: code=%d, deleting", modulePath, resolvedVersion, code)
-		if err := db.DeleteModule(ctx, nil, modulePath, resolvedVersion); err != nil {
+		if err := postgres.DeleteModule(ctx, db.Underlying(), modulePath, resolvedVersion); err != nil {
 			log.Error(ctx, err)
 			return http.StatusInternalServerError, err
 		}
