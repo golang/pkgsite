@@ -319,7 +319,7 @@ var moduleBuildConstraints = &testModule{
 				ModulePath:  "build.constraints/module",
 				Version:     "v1.0.0",
 				PackagePath: "build.constraints/module/ignore",
-				Status:      derrors.ToHTTPStatus(derrors.BuildContextNotSupported),
+				Status:      derrors.ToHTTPStatus(derrors.PackageBuildContextNotSupported),
 			},
 		},
 	},
@@ -472,7 +472,7 @@ var moduleBadImportPath = &testModule{
 				ModulePath:  "bad.import.path.com",
 				PackagePath: "bad.import.path.com/bad/import path",
 				Version:     "v1.0.0",
-				Status:      derrors.ToHTTPStatus(derrors.BadImportPath),
+				Status:      derrors.ToHTTPStatus(derrors.PackageBadImportPath),
 			},
 			{
 				ModulePath:  "bad.import.path.com",

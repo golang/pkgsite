@@ -32,26 +32,29 @@ var (
 	// Unknown indicates that the error has unknown semantics.
 	Unknown = errors.New("unknown")
 
-	// BuildContextNotSupported indicates that the build context for the
+	// PackageBuildContextNotSupported indicates that the build context for the
 	// package is not supported.
-	BuildContextNotSupported = errors.New("build context not supported")
-	// MaxImportsLimitExceeded indicates that the package has too many
+	PackageBuildContextNotSupported = errors.New("package build context not supported")
+	// PackageMaxImportsLimitExceeded indicates that the package has too many
 	// imports.
-	MaxImportsLimitExceeded = errors.New("max imports limit exceeded")
-	// MaxFileSizeLimitExceeded indicates that the package contains a file
+	PackageMaxImportsLimitExceeded = errors.New("package max imports limit exceeded")
+	// PackageMaxFileSizeLimitExceeded indicates that the package contains a file
 	// that exceeds fetch.MaxFileSize.
-	MaxFileSizeLimitExceeded = errors.New("max file size limit exceeded")
-	// DocumentationHTMLTooLarge indicates that the rendered documentation
+	PackageMaxFileSizeLimitExceeded = errors.New("package max file size limit exceeded")
+	// PackageDocumentationHTMLTooLarge indicates that the rendered documentation
 	// HTML size exceeded the specified limit for dochtml.RenderOptions.
-	DocumentationHTMLTooLarge = errors.New("documentation HTML is too large")
-	// BadPackage represents an error loading a package because its
+	PackageDocumentationHTMLTooLarge = errors.New("package documentation HTML is too large")
+	// PackageBadImportPath represents an error loading a package because its
 	// contents do not make up a valid package. This can happen, for
 	// example, if the .go files fail to parse or declare different package
 	// names.
-	// TODO(b/133187024): break this error up more granularly
-	BadPackage = errors.New("bad package")
 	// Go files were found in a directory, but the resulting import path is invalid.
-	BadImportPath = errors.New("bad import path")
+	PackageBadImportPath = errors.New("package bad import path")
+	// PackageInvalidContents represents an error loading a package because
+	// its contents do not make up a valid package. This can happen, for
+	// example, if the .go files fail to parse or declare different package
+	// names.
+	PackageInvalidContents = errors.New("package invalid contents")
 )
 
 var httpCodes = []struct {
@@ -64,12 +67,15 @@ var httpCodes = []struct {
 	// Since the following aren't HTTP statuses, pick unused codes.
 	{BadModule, 490},
 	{AlternativeModule, 491},
-	{BuildContextNotSupported, 600},
-	{MaxImportsLimitExceeded, 601},
-	{MaxFileSizeLimitExceeded, 602},
-	{DocumentationHTMLTooLarge, 603},
-	{BadPackage, 604},
-	{BadImportPath, 605},
+
+	// 60x errors represents errors that occurred when processing a
+	// package.
+	{PackageBuildContextNotSupported, 600},
+	{PackageMaxImportsLimitExceeded, 601},
+	{PackageMaxFileSizeLimitExceeded, 602},
+	{PackageDocumentationHTMLTooLarge, 603},
+	{PackageInvalidContents, 604},
+	{PackageBadImportPath, 605},
 }
 
 // FromHTTPStatus generates an error according to the HTTP semantics for the given

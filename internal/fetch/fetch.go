@@ -317,14 +317,14 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion str
 				ModulePath:  modulePath,
 				PackagePath: importPath,
 				Version:     resolvedVersion,
-				Status:      derrors.ToHTTPStatus(derrors.BadImportPath),
+				Status:      derrors.ToHTTPStatus(derrors.PackageBadImportPath),
 				Error:       err.Error(),
 			})
 			continue
 		}
 		if f.UncompressedSize64 > MaxFileSize {
 			incompleteDirs[innerPath] = true
-			status := derrors.ToHTTPStatus(derrors.MaxFileSizeLimitExceeded)
+			status := derrors.ToHTTPStatus(derrors.PackageMaxFileSizeLimitExceeded)
 			err := fmt.Sprintf("Unable to process %s: file size %d exceeds max limit %d",
 				f.Name, f.UncompressedSize64, MaxFileSize)
 			packageVersionStates = append(packageVersionStates, &internal.PackageVersionState{
@@ -361,11 +361,11 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion str
 		pkg, err := loadPackage(ctx, goFiles, innerPath, modulePath, sourceInfo)
 		if bpe := (*BadPackageError)(nil); errors.As(err, &bpe) {
 			incompleteDirs[innerPath] = true
-			status = derrors.BadPackage
+			status = derrors.PackageInvalidContents
 			errMsg = err.Error()
 		} else if lpe := (*LargePackageError)(nil); errors.As(err, &lpe) {
 			incompleteDirs[innerPath] = true
-			status = derrors.DocumentationHTMLTooLarge
+			status = derrors.PackageDocumentationHTMLTooLarge
 			errMsg = err.Error()
 		} else if err != nil {
 			return nil, nil, fmt.Errorf("unexpected error loading package: %v", err)
@@ -377,7 +377,7 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion str
 			if len(goFiles) > 0 {
 				// There were go files, but no build contexts matched them.
 				incompleteDirs[innerPath] = true
-				status = derrors.BuildContextNotSupported
+				status = derrors.PackageBuildContextNotSupported
 			}
 			pkgPath = path.Join(modulePath, innerPath)
 		} else {
