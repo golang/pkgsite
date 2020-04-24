@@ -32,16 +32,28 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 	defer func() {
 		if m == nil {
 			derrors.Wrap(&err, "DB.InsertModule(ctx, nil)")
-		} else {
-			derrors.Wrap(&err, "DB.InsertModule(ctx, Module(%q, %q))", m.ModulePath, m.Version)
+			return
 		}
+		derrors.Wrap(&err, "DB.InsertModule(ctx, Module(%q, %q))", m.ModulePath, m.Version)
 	}()
 
 	if err := validateModule(m); err != nil {
-		return fmt.Errorf("validateModule: %v: %w", err, derrors.InvalidArgument)
+		return err
+	}
+	// Compare existing data from the database, and the module to be
+	// inserted. Rows that currently exist should not be missing from the
+	// new module. We want to be sure that we will overwrite every row that
+	// pertains to the module.
+	if err := db.compareLicenses(ctx, m); err != nil {
+		return err
+	}
+	if err := db.comparePackages(ctx, m); err != nil {
+		return err
+	}
+	if err := db.comparePaths(ctx, m); err != nil {
+		return err
 	}
 	removeNonDistributableData(m)
-
 	return db.db.Transact(ctx, func(tx *database.DB) error {
 		if err := saveModule(ctx, tx, m); err != nil {
 			return err
@@ -76,7 +88,6 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 			log.Infof(ctx, "%s@%s: not inserting into search documents", m.ModulePath, m.Version)
 			return err
 		}
-
 		// Insert the module's packages into search_documents.
 		return UpsertSearchDocuments(ctx, tx, m)
 	})
@@ -90,12 +101,7 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 // A derrors.InvalidArgument error will be returned if the given module and
 // licenses are invalid.
 func saveModule(ctx context.Context, tx *database.DB, m *internal.Module) (err error) {
-	derrors.Wrap(&err, "saveModule(ctx, tx, Module(%q, %q))", m.ModulePath, m.Version)
-	// If the version exists, delete it to force an overwrite. This allows us
-	// to selectively repopulate data after a code change.
-	if err := DeleteModule(ctx, tx, m.ModulePath, m.Version); err != nil {
-		return fmt.Errorf("error deleting existing versions: %v", err)
-	}
+	defer derrors.Wrap(&err, "saveModule(ctx, tx, Module(%q, %q))", m.ModulePath, m.Version)
 	moduleID, err := insertModule(ctx, tx, m)
 	if err != nil {
 		return err
@@ -496,11 +502,19 @@ func isLatestVersion(ctx context.Context, db *database.DB, modulePath, version s
 // validateModule checks that fields needed to insert a module into the
 // database are present. Otherwise, it returns an error listing the reasons the
 // module cannot be inserted.
-func validateModule(m *internal.Module) error {
+func validateModule(m *internal.Module) (err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("%v: %w", err, derrors.DBModuleInsertInvalid)
+			if m != nil {
+				derrors.Wrap(&err, "validateModule(%q, %q)", m.ModulePath, m.Version)
+			}
+		}
+	}()
+
 	if m == nil {
 		return fmt.Errorf("nil module")
 	}
-
 	var errReasons []string
 	if m.Version == "" {
 		errReasons = append(errReasons, "no specified version")
@@ -522,10 +536,74 @@ func validateModule(m *internal.Module) error {
 	if m.CommitTime.IsZero() {
 		errReasons = append(errReasons, "empty commit time")
 	}
-	if len(errReasons) == 0 {
-		return nil
+	if len(errReasons) != 0 {
+		return fmt.Errorf("cannot insert module %q: %s", m.Version, strings.Join(errReasons, ", "))
 	}
-	return fmt.Errorf("cannot insert module %q: %s", m.Version, strings.Join(errReasons, ", "))
+	return nil
+}
+
+// compareLicenses compares m.Licenses with the existing licenses for
+// m.ModulePath and m.Version in the database. It returns an error if there
+// are licenses in the licenses table that are not present in m.Licenses.
+func (db *DB) compareLicenses(ctx context.Context, m *internal.Module) (err error) {
+	defer derrors.Wrap(&err, "compareLicenses(ctx, %q, %q)", m.ModulePath, m.Version)
+	dbLicenses, err := db.GetModuleLicenses(ctx, m.ModulePath, m.Version)
+	if err != nil {
+		return err
+	}
+
+	set := map[string]bool{}
+	for _, l := range m.Licenses {
+		set[l.FilePath] = true
+	}
+	for _, l := range dbLicenses {
+		if _, ok := set[l.FilePath]; !ok {
+			return fmt.Errorf("expected license %q in module: %w", l.FilePath, derrors.DBModuleInsertInvalid)
+		}
+	}
+	return nil
+}
+
+// comparePackages compares m.Packages with the existing packages for
+// m.ModulePath and m.Version in the database. It returns an error if there
+// are packages in the packages table that are not present in m.Packages.
+func (db *DB) comparePackages(ctx context.Context, m *internal.Module) (err error) {
+	defer derrors.Wrap(&err, "comparePackages(ctx, %q, %q)", m.ModulePath, m.Version)
+	dbPackages, err := db.GetPackagesInModule(ctx, m.ModulePath, m.Version)
+	if err != nil {
+		return err
+	}
+	set := map[string]bool{}
+	for _, p := range m.Packages {
+		set[p.Path] = true
+	}
+	for _, p := range dbPackages {
+		if _, ok := set[p.Path]; !ok {
+			return fmt.Errorf("expected package %q in module: %w", p.Path, derrors.DBModuleInsertInvalid)
+		}
+	}
+	return nil
+}
+
+// comparePaths compares m.Directories with the existing directories for
+// m.ModulePath and m.Version in the database. It returns an error if there
+// are paths in the paths table that are not present in m.Directories.
+func (db *DB) comparePaths(ctx context.Context, m *internal.Module) (err error) {
+	defer derrors.Wrap(&err, "comparePaths(ctx, %q, %q)", m.ModulePath, m.Version)
+	dbPaths, err := db.getPathsInModule(ctx, m.ModulePath, m.Version)
+	if err != nil {
+		return err
+	}
+	set := map[string]bool{}
+	for _, p := range m.Directories {
+		set[p.Path] = true
+	}
+	for _, p := range dbPaths {
+		if _, ok := set[p.path]; !ok {
+			return fmt.Errorf("expected directory %q in module: %w", p.path, derrors.DBModuleInsertInvalid)
+		}
+	}
+	return nil
 }
 
 // removeNonDistributableData removes any information from the version payload,

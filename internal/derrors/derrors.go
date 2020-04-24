@@ -55,6 +55,11 @@ var (
 	// example, if the .go files fail to parse or declare different package
 	// names.
 	PackageInvalidContents = errors.New("package invalid contents")
+
+	// DBModuleInsertInvalid represents a module that was successfully
+	// fetched but could not be inserted due to invalid arguments to
+	// postgres.InsertModule.
+	DBModuleInsertInvalid = errors.New("db module insert invalid")
 )
 
 var httpCodes = []struct {
@@ -65,6 +70,7 @@ var httpCodes = []struct {
 	{InvalidArgument, http.StatusBadRequest},
 	{Excluded, http.StatusForbidden},
 	// Since the following aren't HTTP statuses, pick unused codes.
+	{DBModuleInsertInvalid, 480},
 	{BadModule, 490},
 	{AlternativeModule, 491},
 

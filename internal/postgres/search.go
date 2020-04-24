@@ -546,7 +546,6 @@ var upsertSearchStatement = fmt.Sprintf(`
 // UpsertSearchDocuments adds search information for mod ot the search_documents table.
 func UpsertSearchDocuments(ctx context.Context, db *database.DB, mod *internal.Module) (err error) {
 	defer derrors.Wrap(&err, "UpsertSearchDocuments(ctx, %q)", mod.ModulePath)
-
 	for _, pkg := range mod.Packages {
 		if isInternalPackage(pkg.Path) {
 			continue

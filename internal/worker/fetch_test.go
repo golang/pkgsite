@@ -564,16 +564,17 @@ func TestReFetch(t *testing.T) {
 		modulePath = "github.com/my/module"
 		version    = "v1.0.0"
 		pkgFoo     = "github.com/my/module/foo"
-		pkgBar     = "github.com/my/module/bar"
 		foo        = map[string]string{
 			"foo/foo.go": "// Package foo\npackage foo\n\nconst Foo = 42",
 			"README.md":  "This is a readme",
 			"LICENSE":    testhelper.MITLicense,
 		}
-		bar = map[string]string{
+		pkgBar = "github.com/my/module/bar"
+		foobar = map[string]string{
+			"foo/foo.go": "// Package foo\npackage foo\n\nconst Foo = 42",
+			"README.md":  "This is a readme",
+			"LICENSE":    testhelper.MITLicense,
 			"bar/bar.go": "// Package bar\npackage bar\n\nconst Bar = 21",
-			"README.md":  "This is another readme",
-			"COPYING":    testhelper.MITLicense,
 		}
 	)
 
@@ -588,8 +589,8 @@ func TestReFetch(t *testing.T) {
 	})
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)
-	if _, err := fetchAndInsertModule(ctx, modulePath, version, proxyClient, sourceClient, testDB); err != nil {
-		t.Fatalf("fetchAndInsertModule(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
+	if _, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB); err != nil {
+		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
 	}
 
 	if _, err := testDB.GetPackage(ctx, pkgFoo, internal.UnknownModulePath, version); err != nil {
@@ -601,13 +602,13 @@ func TestReFetch(t *testing.T) {
 		{
 			ModulePath: modulePath,
 			Version:    version,
-			Files:      bar,
+			Files:      foobar,
 		},
 	})
 	defer teardownProxy()
 
-	if _, err := fetchAndInsertModule(ctx, modulePath, version, proxyClient, sourceClient, testDB); err != nil {
-		t.Fatalf("fetchAndInsertModule(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
+	if _, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB); err != nil {
+		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
 	}
 	want := &internal.VersionedPackage{
 		ModuleInfo: internal.ModuleInfo{
@@ -615,7 +616,7 @@ func TestReFetch(t *testing.T) {
 			Version:           version,
 			CommitTime:        time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
 			ReadmeFilePath:    "README.md",
-			ReadmeContents:    "This is another readme",
+			ReadmeContents:    "This is a readme",
 			VersionType:       "release",
 			IsRedistributable: true,
 			HasGoMod:          false,
@@ -628,7 +629,7 @@ func TestReFetch(t *testing.T) {
 			DocumentationHTML: "Bar returns the string &#34;bar&#34;.",
 			V1Path:            "github.com/my/module/bar",
 			Licenses: []*licenses.Metadata{
-				{Types: []string{"MIT"}, FilePath: "COPYING"},
+				{Types: []string{"MIT"}, FilePath: "LICENSE"},
 			},
 			IsRedistributable: true,
 			GOOS:              "linux",
@@ -643,9 +644,17 @@ func TestReFetch(t *testing.T) {
 		t.Errorf("testDB.GetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", pkgBar, version, diff)
 	}
 
-	// For good measure, verify that package foo is now NotFound.
-	if _, err := testDB.GetPackage(ctx, pkgFoo, internal.UnknownModulePath, version); !errors.Is(err, derrors.NotFound) {
-		t.Errorf("got %v, want NotFound", err)
+	// Now re-fetch and verify that contents were overwritten.
+	proxyClient, teardownProxy = proxy.SetupTestProxy(t, []*proxy.TestModule{
+		{
+			ModulePath: modulePath,
+			Version:    version,
+			Files:      foo,
+		},
+	})
+	defer teardownProxy()
+	if _, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB); !errors.Is(err, derrors.DBModuleInsertInvalid) {
+		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
 	}
 }
 

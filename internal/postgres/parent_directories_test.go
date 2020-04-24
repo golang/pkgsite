@@ -18,8 +18,6 @@ func TestToTsvectorParentDirectoriesStoredProcedure(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	defer ResetTestDB(testDB, t)
-
 	for _, tc := range []struct {
 		path, modulePath string
 		want             []string
@@ -66,6 +64,8 @@ func TestToTsvectorParentDirectoriesStoredProcedure(t *testing.T) {
 		},
 	} {
 		t.Run(tc.path, func(t *testing.T) {
+			defer ResetTestDB(testDB, t)
+
 			m := sample.Module()
 			m.ModulePath = tc.modulePath
 			pkg := sample.Package()

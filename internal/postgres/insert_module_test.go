@@ -160,7 +160,7 @@ func TestInsertModuleErrors(t *testing.T) {
 			name:           "nil version write error",
 			wantModulePath: sample.ModulePath,
 			wantVersion:    sample.VersionString,
-			wantWriteErr:   derrors.InvalidArgument,
+			wantWriteErr:   derrors.DBModuleInsertInvalid,
 		},
 		{
 			name:           "nonexistent version",
@@ -184,7 +184,7 @@ func TestInsertModuleErrors(t *testing.T) {
 			}(),
 			wantVersion:    sample.VersionString,
 			wantModulePath: sample.ModulePath,
-			wantWriteErr:   derrors.InvalidArgument,
+			wantWriteErr:   derrors.DBModuleInsertInvalid,
 		},
 		{
 			name: "missing version",
@@ -195,7 +195,7 @@ func TestInsertModuleErrors(t *testing.T) {
 			}(),
 			wantVersion:    sample.VersionString,
 			wantModulePath: sample.ModulePath,
-			wantWriteErr:   derrors.InvalidArgument,
+			wantWriteErr:   derrors.DBModuleInsertInvalid,
 		},
 		{
 			name: "empty commit time",
@@ -206,7 +206,7 @@ func TestInsertModuleErrors(t *testing.T) {
 			}(),
 			wantVersion:    sample.VersionString,
 			wantModulePath: sample.ModulePath,
-			wantWriteErr:   derrors.InvalidArgument,
+			wantWriteErr:   derrors.DBModuleInsertInvalid,
 		},
 	}
 
