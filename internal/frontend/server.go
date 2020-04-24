@@ -222,7 +222,7 @@ func (b basePage) GoogleAnalyticsTrackingID() string {
 
 // GoogleTagManagerContainerID returns the container ID from GoogleTagManager.
 func (b basePage) GoogleTagManagerContainerID() string {
-	return "GTM-5J9TM28"
+	return "GTM-W8MVQXG"
 }
 
 // AppVersionLabel uniquely identifies the currently running binary. It can be
