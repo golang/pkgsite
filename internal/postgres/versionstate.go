@@ -9,6 +9,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 	"time"
 
@@ -103,6 +104,9 @@ func (db *DB) UpsertModuleVersionState(ctx context.Context, modulePath, vers, ap
 			return nil
 		}
 
+		sort.Slice(packageVersionStates, func(i, j int) bool {
+			return packageVersionStates[i].PackagePath < packageVersionStates[j].PackagePath
+		})
 		var vals []interface{}
 		for _, pvs := range packageVersionStates {
 			vals = append(vals, pvs.PackagePath, pvs.ModulePath, pvs.Version, pvs.Status, pvs.Error)
