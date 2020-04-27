@@ -44,21 +44,21 @@ func TestPostgres_GetVersionInfo_Latest(t *testing.T) {
 	}{
 		{
 			name: "largest release",
-			path: "mod1",
+			path: "mod.1",
 			modules: []*internal.Module{
-				sampleModule("mod1", "v1.1.0-alpha.1", version.TypePrerelease),
-				sampleModule("mod1", "v1.0.0", version.TypeRelease),
-				sampleModule("mod1", "v1.0.0-20190311183353-d8887717615a", version.TypePseudo),
+				sampleModule("mod.1", "v1.1.0-alpha.1", version.TypePrerelease),
+				sampleModule("mod.1", "v1.0.0", version.TypeRelease),
+				sampleModule("mod.1", "v1.0.0-20190311183353-d8887717615a", version.TypePseudo),
 			},
 			wantIndex: 1,
 		},
 		{
 			name: "largest prerelease",
-			path: "mod2",
+			path: "mod.2",
 			modules: []*internal.Module{
-				sampleModule("mod2", "v1.1.0-beta.10", version.TypePrerelease),
-				sampleModule("mod2", "v1.1.0-beta.2", version.TypePrerelease),
-				sampleModule("mod2", "v1.0.0-20190311183353-d8887717615a", version.TypePseudo),
+				sampleModule("mod.2", "v1.1.0-beta.10", version.TypePrerelease),
+				sampleModule("mod.2", "v1.1.0-beta.2", version.TypePrerelease),
+				sampleModule("mod.2", "v1.0.0-20190311183353-d8887717615a", version.TypePseudo),
 			},
 			wantIndex: 0,
 		},
@@ -72,7 +72,7 @@ func TestPostgres_GetVersionInfo_Latest(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			for _, v := range tc.modules {
-				if err := saveModule(ctx, testDB.db, v); err != nil {
+				if err := testDB.InsertModule(ctx, v); err != nil {
 					t.Error(err)
 				}
 			}
@@ -172,7 +172,7 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 			defer cancel()
 
 			for _, v := range testModules {
-				if err := saveModule(ctx, testDB.db, v); err != nil {
+				if err := testDB.InsertModule(ctx, v); err != nil {
 					t.Error(err)
 				}
 			}
@@ -283,7 +283,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 				// TODO: move this handling into SimpleVersion once ParseVersionType is
 				// factored out of fetch.go
 				m.VersionType = version.TypePseudo
-				if err := saveModule(ctx, testDB.db, m); err != nil {
+				if err := testDB.InsertModule(ctx, m); err != nil {
 					t.Fatal(err)
 				}
 
@@ -299,7 +299,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 			}
 
 			for _, m := range tc.modules {
-				if err := saveModule(ctx, testDB.db, m); err != nil {
+				if err := testDB.InsertModule(ctx, m); err != nil {
 					t.Fatal(err)
 				}
 			}
@@ -360,7 +360,7 @@ func TestGetPackagesInVersion(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 			defer cancel()
 
-			if err := saveModule(ctx, testDB.db, tc.module); err != nil {
+			if err := testDB.InsertModule(ctx, tc.module); err != nil {
 				t.Error(err)
 			}
 
@@ -409,7 +409,7 @@ func TestGetPackageLicenses(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	if err := saveModule(ctx, testDB.db, testModule); err != nil {
+	if err := testDB.InsertModule(ctx, testModule); err != nil {
 		t.Fatal(err)
 	}
 
