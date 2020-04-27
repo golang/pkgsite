@@ -87,10 +87,14 @@ func TestWorker(t *testing.T) {
 				"bar.go": "package bar\nconst Bar = \"Bar\"",
 			},
 		}
-		state = func(version *internal.IndexVersion, code, tryCount int) *internal.ModuleVersionState {
+		state = func(version *internal.IndexVersion, code, tryCount, numPackages int) *internal.ModuleVersionState {
 			goModPath := version.Path
 			if code >= 300 {
 				goModPath = ""
+			}
+			var n *int
+			if code != http.StatusNotFound {
+				n = &numPackages
 			}
 			return &internal.ModuleVersionState{
 				ModulePath:     version.Path,
@@ -99,13 +103,14 @@ func TestWorker(t *testing.T) {
 				TryCount:       tryCount,
 				Version:        version.Version,
 				GoModPath:      goModPath,
+				NumPackages:    n,
 			}
 		}
 		fooState = func(code, tryCount int) *internal.ModuleVersionState {
-			return state(fooIndex, code, tryCount)
+			return state(fooIndex, code, tryCount, 1)
 		}
 		barState = func(code, tryCount int) *internal.ModuleVersionState {
-			return state(barIndex, code, tryCount)
+			return state(barIndex, code, tryCount, 1)
 		}
 	)
 

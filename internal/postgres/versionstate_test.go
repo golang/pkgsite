@@ -86,6 +86,7 @@ func TestModuleVersionState(t *testing.T) {
 		t.Fatal(err)
 	}
 	errString := fetchErr.Error()
+	numPackages := 1
 	wantFooState := &internal.ModuleVersionState{
 		ModulePath:     "foo.com/bar",
 		Version:        "v1.0.0",
@@ -94,6 +95,7 @@ func TestModuleVersionState(t *testing.T) {
 		GoModPath:      goModPath,
 		Error:          errString,
 		Status:         statusCode,
+		NumPackages:    &numPackages,
 	}
 	gotFooState, err := testDB.GetModuleVersionState(ctx, wantFooState.ModulePath, wantFooState.Version)
 	if err != nil {
@@ -176,9 +178,10 @@ func TestUpdateModuleVersionStatesForReprocessing(t *testing.T) {
 		t.Fatal(err)
 	}
 	code := http.StatusHTTPVersionNotSupported
+	numPackages := 0
 	wantVersions := []*internal.ModuleVersionState{
-		{ModulePath: "baz.com/quux", Version: "v2.0.1", IndexTimestamp: now, GoModPath: goModPath, Status: code},
-		{ModulePath: "foo.com/bar", Version: "v1.0.0", IndexTimestamp: now, GoModPath: goModPath, Status: code},
+		{ModulePath: "baz.com/quux", Version: "v2.0.1", IndexTimestamp: now, GoModPath: goModPath, Status: code, NumPackages: &numPackages},
+		{ModulePath: "foo.com/bar", Version: "v1.0.0", IndexTimestamp: now, GoModPath: goModPath, Status: code, NumPackages: &numPackages},
 	}
 	ignore := cmpopts.IgnoreFields(internal.ModuleVersionState{}, "CreatedAt", "LastProcessedAt", "NextProcessedAfter")
 	if diff := cmp.Diff(wantVersions, gotVersions, ignore); diff != "" {

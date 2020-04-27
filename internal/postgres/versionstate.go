@@ -9,6 +9,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"net/http"
 	"sort"
 	"strings"
 	"time"
@@ -59,6 +60,14 @@ func (db *DB) UpsertModuleVersionState(ctx context.Context, modulePath, vers, ap
 			sqlErrorMsg = fetchErr.Error()
 		}
 
+		var numPackages *int
+		if !(status >= http.StatusBadRequest && status <= http.StatusNotFound) {
+			// If a module was fetched a 40x error in this range, we won't know how
+			// many packages it has.
+			n := len(packageVersionStates)
+			numPackages = &n
+		}
+
 		result, err := tx.Exec(ctx, `
 			INSERT INTO module_version_states AS mvs (
 				module_path,
@@ -68,8 +77,9 @@ func (db *DB) UpsertModuleVersionState(ctx context.Context, modulePath, vers, ap
 				index_timestamp,
 				status,
 				go_mod_path,
-				error)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+				error,
+				num_packages)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 			ON CONFLICT (module_path, version)
 			DO UPDATE
 			SET
@@ -77,6 +87,7 @@ func (db *DB) UpsertModuleVersionState(ctx context.Context, modulePath, vers, ap
 				status=excluded.status,
 				go_mod_path=excluded.go_mod_path,
 				error=excluded.error,
+				num_packages=excluded.num_packages,
 				try_count=mvs.try_count+1,
 				last_processed_at=CURRENT_TIMESTAMP,
 			    -- back off exponentially until 1 hour, then at constant 1-hour intervals
@@ -89,7 +100,7 @@ func (db *DB) UpsertModuleVersionState(ctx context.Context, modulePath, vers, ap
 						CURRENT_TIMESTAMP + INTERVAL '1 hour'
 					END;`,
 			modulePath, vers, version.ForSorting(vers),
-			appVersion, timestamp, status, goModPath, sqlErrorMsg)
+			appVersion, timestamp, status, goModPath, sqlErrorMsg, numPackages)
 		if err != nil {
 			return err
 		}
@@ -187,7 +198,8 @@ const moduleVersionStateColumns = `
 			last_processed_at,
 			next_processed_after,
 			app_version,
-			go_mod_path`
+			go_mod_path,
+			num_packages`
 
 // scanModuleVersionState constructs an *internal.ModuleModuleVersionState from the given
 // scanner. It expects columns to be in the order of moduleVersionStateColumns.
@@ -195,14 +207,19 @@ func scanModuleVersionState(scan func(dest ...interface{}) error) (*internal.Mod
 	var (
 		v               internal.ModuleVersionState
 		lastProcessedAt pq.NullTime
+		numPackages     sql.NullInt64
 	)
 	if err := scan(&v.ModulePath, &v.Version, &v.IndexTimestamp, &v.CreatedAt, &v.Status, &v.Error,
-		&v.TryCount, &v.LastProcessedAt, &v.NextProcessedAfter, &v.AppVersion, &v.GoModPath); err != nil {
+		&v.TryCount, &v.LastProcessedAt, &v.NextProcessedAfter, &v.AppVersion, &v.GoModPath, &numPackages); err != nil {
 		return nil, err
 	}
 	if lastProcessedAt.Valid {
 		lp := lastProcessedAt.Time
 		v.LastProcessedAt = &lp
+	}
+	if numPackages.Valid {
+		n := int(numPackages.Int64)
+		v.NumPackages = &n
 	}
 	return &v, nil
 }

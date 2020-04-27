@@ -203,6 +203,10 @@ type ModuleVersionState struct {
 
 	// GoModPath is the path declared in the go.mod file.
 	GoModPath string
+
+	// NumPackages it the number of packages that were processed as part of the
+	// module (regardless of whether the processing was successful).
+	NumPackages *int
 }
 
 // PackageVersionState holds a worker package version state. It is associated
