@@ -33,6 +33,7 @@ import (
 	"time"
 
 	"go.opencensus.io/plugin/ochttp"
+	"go.opencensus.io/trace"
 	"golang.org/x/net/context/ctxhttp"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
@@ -238,6 +239,8 @@ func (c *Client) doURL(ctx context.Context, method, url string, only200 bool) (_
 // ModuleInfo may fetch from arbitrary URLs, so it can be slow.
 func ModuleInfo(ctx context.Context, client *Client, modulePath, version string) (info *Info, err error) {
 	defer derrors.Wrap(&err, "source.ModuleInfo(ctx, %q, %q)", modulePath, version)
+	ctx, span := trace.StartSpan(ctx, "source.ModuleInfo")
+	defer span.End()
 
 	if modulePath == stdlib.ModulePath {
 		commit, err := stdlib.TagForVersion(version)

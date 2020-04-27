@@ -128,7 +128,7 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 func processZipFile(ctx context.Context, modulePath string, versionType version.Type, resolvedVersion string, commitTime time.Time, zipReader *zip.Reader, sourceClient *source.Client) (_ *FetchResult, err error) {
 	defer derrors.Wrap(&err, "processZipFile(%q, %q)", modulePath, resolvedVersion)
 
-	_, span := trace.StartSpan(ctx, "processing zipFile")
+	ctx, span := trace.StartSpan(ctx, "fetch.processZipFile")
 	defer span.End()
 
 	sourceInfo, err := source.ModuleInfo(ctx, sourceClient, modulePath, resolvedVersion)
@@ -236,6 +236,8 @@ func isReadme(file string) bool {
 // * the particular set of build contexts we consider (goEnvs)
 // * whether the import path is valid.
 func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion string, r *zip.Reader, d *licenses.Detector, sourceInfo *source.Info) (_ []*internal.Package, _ []*internal.PackageVersionState, err error) {
+	ctx, span := trace.StartSpan(ctx, "fetch.extractPackagesFromZip")
+	defer span.End()
 	defer func() {
 		if e := recover(); e != nil {
 			// The package processing code performs some sanity checks along the way.
@@ -480,6 +482,8 @@ var goEnvs = []struct{ GOOS, GOARCH string }{
 // a non-empty package is used. If none of them result in a package, then
 // loadPackage returns nil, nil.
 func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath, modulePath string, sourceInfo *source.Info) (*internal.Package, error) {
+	ctx, span := trace.StartSpan(ctx, "fetch.loadPackage")
+	defer span.End()
 	for _, env := range goEnvs {
 		pkg, err := loadPackageWithBuildContext(ctx, env.GOOS, env.GOARCH, zipGoFiles, innerPath, modulePath, sourceInfo)
 		if err != nil {

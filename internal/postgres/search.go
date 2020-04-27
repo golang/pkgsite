@@ -17,6 +17,7 @@ import (
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
+	"go.opencensus.io/trace"
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
@@ -546,6 +547,8 @@ var upsertSearchStatement = fmt.Sprintf(`
 // UpsertSearchDocuments adds search information for mod ot the search_documents table.
 func UpsertSearchDocuments(ctx context.Context, db *database.DB, mod *internal.Module) (err error) {
 	defer derrors.Wrap(&err, "UpsertSearchDocuments(ctx, %q)", mod.ModulePath)
+	ctx, span := trace.StartSpan(ctx, "UpsertSearchDocuments")
+	defer span.End()
 	for _, pkg := range mod.Packages {
 		if isInternalPackage(pkg.Path) {
 			continue

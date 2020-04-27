@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/lib/pq"
+	"go.opencensus.io/trace"
 	"golang.org/x/mod/module"
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
@@ -102,6 +103,8 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 // licenses are invalid.
 func saveModule(ctx context.Context, tx *database.DB, m *internal.Module) (err error) {
 	defer derrors.Wrap(&err, "saveModule(ctx, tx, Module(%q, %q))", m.ModulePath, m.Version)
+	ctx, span := trace.StartSpan(ctx, "saveModule")
+	defer span.End()
 	moduleID, err := insertModule(ctx, tx, m)
 	if err != nil {
 		return err
@@ -121,6 +124,8 @@ func saveModule(ctx context.Context, tx *database.DB, m *internal.Module) (err e
 }
 
 func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ int, err error) {
+	ctx, span := trace.StartSpan(ctx, "insertModule")
+	defer span.End()
 	defer derrors.Wrap(&err, "insertModule(ctx, %q, %q)", m.ModulePath, m.Version)
 	sourceInfoJSON, err := json.Marshal(m.SourceInfo)
 	if err != nil {
@@ -168,6 +173,8 @@ func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ i
 }
 
 func insertLicenses(ctx context.Context, db *database.DB, m *internal.Module, moduleID int) (err error) {
+	ctx, span := trace.StartSpan(ctx, "insertLicenses")
+	defer span.End()
 	defer derrors.Wrap(&err, "insertLicenses(ctx, %q, %q)", m.ModulePath, m.Version)
 	var licenseValues []interface{}
 	for _, l := range m.Licenses {
@@ -195,6 +202,8 @@ func insertLicenses(ctx context.Context, db *database.DB, m *internal.Module, mo
 }
 
 func insertPackages(ctx context.Context, db *database.DB, m *internal.Module) (err error) {
+	ctx, span := trace.StartSpan(ctx, "insertPackages")
+	defer span.End()
 	defer derrors.Wrap(&err, "insertPackages(ctx, %q, %q)", m.ModulePath, m.Version)
 	// We only insert into imports_unique if this is the latest
 	// version of the module.
@@ -317,6 +326,8 @@ func insertPackages(ctx context.Context, db *database.DB, m *internal.Module) (e
 
 func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module, moduleID int) (err error) {
 	defer derrors.Wrap(&err, "upsertDirectories(ctx, tx, %q, %q)", m.ModulePath, m.Version)
+	ctx, span := trace.StartSpan(ctx, "insertDirectories")
+	defer span.End()
 
 	if m.ReadmeContents == internal.StringFieldMissing {
 		// We don't expect this to ever happen here, but checking just in case.

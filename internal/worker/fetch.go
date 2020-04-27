@@ -67,7 +67,7 @@ func fetchAndInsertModule(parentCtx context.Context, modulePath, requestedVersio
 	ctx, cancel := context.WithTimeout(xcontext.Detach(parentCtx), fetchTimeout)
 	defer cancel()
 
-	ctx, span := trace.StartSpanWithRemoteParent(ctx, "FetchAndInsertModule", parentSpan.SpanContext())
+	ctx, span := trace.StartSpanWithRemoteParent(ctx, "worker.fetchAndInsertModule", parentSpan.SpanContext())
 	defer span.End()
 
 	res, err := fetch.FetchModule(ctx, modulePath, requestedVersion, proxyClient, sourceClient)
@@ -89,7 +89,7 @@ func fetchAndInsertModule(parentCtx context.Context, modulePath, requestedVersio
 func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, sourceClient *source.Client, db *postgres.DB) (_ int, err error) {
 	defer derrors.Wrap(&err, "FetchAndUpdateState(%q, %q)", modulePath, requestedVersion)
 
-	tctx, span := trace.StartSpan(ctx, "FetchAndUpdateState")
+	tctx, span := trace.StartSpan(ctx, "worker.FetchAndUpdateState")
 	ctx = experiment.NewContext(tctx, experiment.FromContext(ctx))
 	span.AddAttributes(
 		trace.StringAttribute("modulePath", modulePath),
