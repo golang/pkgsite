@@ -55,9 +55,41 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 		return err
 	}
 	removeNonDistributableData(m)
-	return db.db.Transact(ctx, func(tx *database.DB) error {
-		if err := saveModule(ctx, tx, m); err != nil {
+	return db.saveModule(ctx, m)
+}
+
+// saveModule inserts a Module into the database along with its packages,
+// imports, and licenses.  If any of these rows already exist, the module and
+// corresponding will be deleted and reinserted.
+// If the module is malformed then insertion will fail.
+//
+// A derrors.InvalidArgument error will be returned if the given module and
+// licenses are invalid.
+func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
+	defer derrors.Wrap(&err, "saveModule(ctx, tx, Module(%q, %q))", m.ModulePath, m.Version)
+	ctx, span := trace.StartSpan(ctx, "saveModule")
+	defer span.End()
+
+	db.db.Transact(ctx, func(tx *database.DB) error {
+		moduleID, err := insertModule(ctx, tx, m)
+		if err != nil {
 			return err
+		}
+		if err := insertLicenses(ctx, tx, m, moduleID); err != nil {
+			return err
+		}
+
+		isLatest, err := isLatestVersion(ctx, tx, m.ModulePath, m.Version)
+		if err != nil {
+			return err
+		}
+		if err := insertPackages(ctx, tx, m, isLatest); err != nil {
+			return err
+		}
+		if experiment.IsActive(ctx, internal.ExperimentInsertDirectories) {
+			if err := insertDirectories(ctx, tx, m, moduleID); err != nil {
+				return err
+			}
 		}
 
 		// If there is a more recent version of this module that has an alternative
@@ -72,7 +104,7 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 		// v1.1.0 is marked as an alternative path (code 491) by
 		// internal/fetch.FetchModule and is not inserted into the DB, but at
 		// v1.0.6 it is considered valid, and we end up here. We still insert
-		// github.com/Sirupsen/logrus@v1.0.6 in the versions table and friends so
+		// github.com/Sirupsen/logrus@v1.0.6 in the modules table and friends so
 		// that users who import it can find information about it, but we don't want
 		// it showing up in search results.
 		//
@@ -89,37 +121,12 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 			log.Infof(ctx, "%s@%s: not inserting into search documents", m.ModulePath, m.Version)
 			return err
 		}
-		// Insert the module's packages into search_documents.
-		return UpsertSearchDocuments(ctx, tx, m)
-	})
-}
-
-// saveModule inserts a Module into the database along with its packages,
-// imports, and licenses.  If any of these rows already exist, the module and
-// corresponding will be deleted and reinserted.
-// If the module is malformed then insertion will fail.
-//
-// A derrors.InvalidArgument error will be returned if the given module and
-// licenses are invalid.
-func saveModule(ctx context.Context, tx *database.DB, m *internal.Module) (err error) {
-	defer derrors.Wrap(&err, "saveModule(ctx, tx, Module(%q, %q))", m.ModulePath, m.Version)
-	ctx, span := trace.StartSpan(ctx, "saveModule")
-	defer span.End()
-	moduleID, err := insertModule(ctx, tx, m)
-	if err != nil {
-		return err
-	}
-	if err := insertLicenses(ctx, tx, m, moduleID); err != nil {
-		return err
-	}
-	if err := insertPackages(ctx, tx, m); err != nil {
-		return err
-	}
-	if experiment.IsActive(ctx, internal.ExperimentInsertDirectories) {
-		if err := insertDirectories(ctx, tx, m, moduleID); err != nil {
-			return err
+		if isLatest {
+			// Insert the module's packages into search_documents.
+			return UpsertSearchDocuments(ctx, tx, m)
 		}
-	}
+		return nil
+	})
 	return nil
 }
 
@@ -201,16 +208,12 @@ func insertLicenses(ctx context.Context, db *database.DB, m *internal.Module, mo
 	return nil
 }
 
-func insertPackages(ctx context.Context, db *database.DB, m *internal.Module) (err error) {
+func insertPackages(ctx context.Context, db *database.DB, m *internal.Module, isLatest bool) (err error) {
 	ctx, span := trace.StartSpan(ctx, "insertPackages")
 	defer span.End()
 	defer derrors.Wrap(&err, "insertPackages(ctx, %q, %q)", m.ModulePath, m.Version)
 	// We only insert into imports_unique if this is the latest
 	// version of the module.
-	isLatest, err := isLatestVersion(ctx, db, m.ModulePath, m.Version)
-	if err != nil {
-		return err
-	}
 	if isLatest {
 		// Remove the previous rows for this module. We'll replace them with
 		// new ones below.
