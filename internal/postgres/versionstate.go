@@ -48,27 +48,42 @@ func (db *DB) InsertIndexVersions(ctx context.Context, versions []*internal.Inde
 // UpsertModuleVersionState inserts or updates the module_version_state table with
 // the results of a fetch operation for a given module version.
 func (db *DB) UpsertModuleVersionState(ctx context.Context, modulePath, vers, appVersion string, timestamp time.Time, status int, goModPath string, fetchErr error, packageVersionStates []*internal.PackageVersionState) (err error) {
-	derrors.Wrap(&err, "UpsertModuleVersionState(ctx, %q, %q, %q, %s, %d, %q, %v",
+	defer derrors.Wrap(&err, "UpsertModuleVersionState(ctx, %q, %q, %q, %s, %d, %q, %v",
 		modulePath, vers, appVersion, timestamp, status, goModPath, fetchErr)
-
 	ctx, span := trace.StartSpan(ctx, "UpsertModuleVersionState")
 	defer span.End()
 
+	var numPackages *int
+	if !(status >= http.StatusBadRequest && status <= http.StatusNotFound) {
+		// If a module was fetched a 40x error in this range, we won't know how
+		// many packages it has.
+		n := len(packageVersionStates)
+		numPackages = &n
+	}
+
 	return db.db.Transact(ctx, func(tx *database.DB) error {
-		var sqlErrorMsg string
-		if fetchErr != nil {
-			sqlErrorMsg = fetchErr.Error()
+		if err := upsertModuleVersionState(ctx, tx, modulePath, vers, appVersion, numPackages, timestamp, status, goModPath, fetchErr); err != nil {
+			return err
 		}
-
-		var numPackages *int
-		if !(status >= http.StatusBadRequest && status <= http.StatusNotFound) {
-			// If a module was fetched a 40x error in this range, we won't know how
-			// many packages it has.
-			n := len(packageVersionStates)
-			numPackages = &n
+		if len(packageVersionStates) == 0 {
+			return nil
 		}
+		return upsertPackageVersionStates(ctx, tx, packageVersionStates)
+	})
+}
 
-		result, err := tx.Exec(ctx, `
+func upsertModuleVersionState(ctx context.Context, db *database.DB, modulePath, vers, appVersion string, numPackages *int, timestamp time.Time, status int, goModPath string, fetchErr error) (err error) {
+	defer derrors.Wrap(&err, "upsertModuleVersionState(ctx, %q, %q, %q, %s, %d, %q, %v",
+		modulePath, vers, appVersion, timestamp, status, goModPath, fetchErr)
+	ctx, span := trace.StartSpan(ctx, "upsertModuleVersionState")
+	defer span.End()
+
+	var sqlErrorMsg string
+	if fetchErr != nil {
+		sqlErrorMsg = fetchErr.Error()
+	}
+
+	result, err := db.Exec(ctx, `
 			INSERT INTO module_version_states AS mvs (
 				module_path,
 				version,
@@ -99,39 +114,43 @@ func (db *DB) UpsertModuleVersionState(ctx context.Context, modulePath, vers, ap
 					ELSE
 						CURRENT_TIMESTAMP + INTERVAL '1 hour'
 					END;`,
-			modulePath, vers, version.ForSorting(vers),
-			appVersion, timestamp, status, goModPath, sqlErrorMsg, numPackages)
-		if err != nil {
-			return err
-		}
-		affected, err := result.RowsAffected()
-		if err != nil {
-			return fmt.Errorf("result.RowsAffected(): %v", err)
-		}
-		if affected != 1 {
-			return fmt.Errorf("module version state update affected %d rows, expected exactly 1", affected)
-		}
-		if len(packageVersionStates) == 0 {
-			return nil
-		}
+		modulePath, vers, version.ForSorting(vers),
+		appVersion, timestamp, status, goModPath, sqlErrorMsg, numPackages)
+	if err != nil {
+		return err
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("result.RowsAffected(): %v", err)
+	}
+	if affected != 1 {
+		return fmt.Errorf("module version state update affected %d rows, expected exactly 1", affected)
+	}
+	return nil
+}
 
-		sort.Slice(packageVersionStates, func(i, j int) bool {
-			return packageVersionStates[i].PackagePath < packageVersionStates[j].PackagePath
-		})
-		var vals []interface{}
-		for _, pvs := range packageVersionStates {
-			vals = append(vals, pvs.PackagePath, pvs.ModulePath, pvs.Version, pvs.Status, pvs.Error)
-		}
-		return tx.BulkInsert(ctx, "package_version_states",
-			[]string{
-				"package_path",
-				"module_path",
-				"version",
-				"status",
-				"error",
-			},
-			vals,
-			`ON CONFLICT (module_path, package_path, version)
+func upsertPackageVersionStates(ctx context.Context, db *database.DB, packageVersionStates []*internal.PackageVersionState) (err error) {
+	defer derrors.Wrap(&err, "upsertPackageVersionStates")
+	ctx, span := trace.StartSpan(ctx, "upsertPackageVersionStates")
+	defer span.End()
+
+	sort.Slice(packageVersionStates, func(i, j int) bool {
+		return packageVersionStates[i].PackagePath < packageVersionStates[j].PackagePath
+	})
+	var vals []interface{}
+	for _, pvs := range packageVersionStates {
+		vals = append(vals, pvs.PackagePath, pvs.ModulePath, pvs.Version, pvs.Status, pvs.Error)
+	}
+	return db.BulkInsert(ctx, "package_version_states",
+		[]string{
+			"package_path",
+			"module_path",
+			"version",
+			"status",
+			"error",
+		},
+		vals,
+		`ON CONFLICT (module_path, package_path, version)
 				DO UPDATE
 				SET
 					package_path=excluded.package_path,
@@ -139,7 +158,6 @@ func (db *DB) UpsertModuleVersionState(ctx context.Context, modulePath, vers, ap
 					version=excluded.version,
 					status=excluded.status,
 					error=excluded.error`)
-	})
 }
 
 // LatestIndexTimestamp returns the last timestamp successfully inserted into
