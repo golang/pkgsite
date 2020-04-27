@@ -328,7 +328,7 @@ func insertPackages(ctx context.Context, db *database.DB, m *internal.Module, is
 }
 
 func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module, moduleID int) (err error) {
-	defer derrors.Wrap(&err, "upsertDirectories(ctx, tx, %q, %q)", m.ModulePath, m.Version)
+	defer derrors.Wrap(&err, "insertDirectories(ctx, tx, %q, %q)", m.ModulePath, m.Version)
 	ctx, span := trace.StartSpan(ctx, "insertDirectories")
 	defer span.End()
 
