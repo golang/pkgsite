@@ -299,7 +299,7 @@ func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) (err erro
 	suffixParam := r.FormValue("suffix") // append to task name to avoid deduplication
 	span := trace.FromContext(r.Context())
 	span.Annotate([]trace.Attribute{trace.Int64Attribute("limit", int64(limit))}, "processed limit")
-	versions, err := s.db.GetNextVersionsToFetch(ctx, limit)
+	versions, err := s.db.GetNextModulesToFetch(ctx, limit)
 	if err != nil {
 		return err
 	}
@@ -338,7 +338,7 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (_ string,
 	g, ctx := errgroup.WithContext(r.Context())
 	g.Go(func() error {
 		var err error
-		next, err = s.db.GetNextVersionsToFetch(ctx, pageSize)
+		next, err = s.db.GetNextModulesToFetch(ctx, pageSize)
 		if err != nil {
 			errString = "error fetching next versions"
 			return err

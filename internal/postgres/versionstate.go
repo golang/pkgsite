@@ -8,19 +8,15 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"io"
 	"net/http"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/lib/pq"
 	"go.opencensus.io/trace"
-	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -182,29 +178,6 @@ func (db *DB) LatestIndexTimestamp(ctx context.Context) (_ time.Time, err error)
 	}
 }
 
-func (db *DB) UpdateModuleVersionStatesForReprocessing(ctx context.Context, appVersion string) (err error) {
-	defer derrors.Wrap(&err, "UpdateModuleVersionStatesForReprocessing(ctx, %q)", appVersion)
-
-	query := `
-		UPDATE module_version_states
-		SET
-			status = 505,
-			next_processed_after = CURRENT_TIMESTAMP,
-			last_processed_at = NULL
-		WHERE
-			app_version <= $1;`
-	result, err := db.db.Exec(ctx, query, appVersion)
-	if err != nil {
-		return err
-	}
-	affected, err := result.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("result.RowsAffected(): %v", err)
-	}
-	log.Infof(ctx, "Updated %d module version states to be reprocessed for app_version <= %q", affected, appVersion)
-	return nil
-}
-
 const moduleVersionStateColumns = `
 			module_path,
 			version,
@@ -265,128 +238,6 @@ func (db *DB) queryModuleVersionStates(ctx context.Context, queryFormat string, 
 	return versions, nil
 }
 
-// GetNextVersionsToFetch returns the next batch of versions that must be
-// processed.
-func (db *DB) GetNextVersionsToFetch(ctx context.Context, limit int) (_ []*internal.ModuleVersionState, err error) {
-	// We want to prioritize the latest versions over other ones, and we want to
-	// leave time-consuming modules until the end.
-	// We run two queries: the first gets the latest versions of everything; the second
-	// runs through all eligible modules, organizing them by priority.
-	defer derrors.Wrap(&err, "GetNextVersionsToFetch(ctx, %d)", limit)
-
-	latestVersions, err := db.getLatestVersionsFromModuleVersionStates(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// isBig reports whether the module path refers to a big module that takes a
-	// long time to process.
-	isBig := func(path string) bool {
-		for _, s := range []string{"kubernetes", "aws-sdk-go"} {
-			if strings.HasSuffix(path, s) {
-				return true
-			}
-		}
-		return false
-	}
-
-	// Create prioritized lists of modules to process. From high to low:
-	// 0: latest version, release
-	// 1: latest version, non-release
-	// 2: not a large zip
-	// 3: the rest
-	mvs := make([][]*internal.ModuleVersionState, 4)
-
-	query := fmt.Sprintf(`
-		SELECT
-			%s
-		FROM
-			module_version_states
-		WHERE
-			(status=0 OR status >= 500)
-		AND
-			next_processed_after < CURRENT_TIMESTAMP
-		ORDER BY
-			sort_version DESC
-	`, moduleVersionStateColumns)
-
-	err = db.db.RunQuery(ctx, query, func(rows *sql.Rows) error {
-		// If the highest-priority list is full, we're done.
-		if len(mvs[0]) >= limit {
-			return io.EOF
-		}
-		mv, err := scanModuleVersionState(rows.Scan)
-		if err != nil {
-			return err
-		}
-		var prio int
-		switch {
-		case mv.Version == latestVersions[mv.ModulePath]:
-			if semver.Prerelease(mv.Version) == "" {
-				prio = 0 // latest release version
-			} else {
-				prio = 1 // latest non-release version
-			}
-		case !isBig(mv.ModulePath):
-			prio = 2
-		default:
-			prio = 3
-		}
-		mvs[prio] = append(mvs[prio], mv)
-		return nil
-	})
-	if err != nil && err != io.EOF {
-		return nil, err
-	}
-
-	// Combine the four prioritized lists into one.
-	var r []*internal.ModuleVersionState
-	for _, mv := range mvs {
-		if len(r)+len(mv) > limit {
-			return append(r, mv[:limit-len(r)]...), nil
-		}
-		r = append(r, mv...)
-	}
-	return r, nil
-}
-
-// getLatestVersions returns a map from module path to latest version in module_version_states.
-func (db *DB) getLatestVersionsFromModuleVersionStates(ctx context.Context) (map[string]string, error) {
-	m := map[string]string{}
-	// We want to prefer release to non-release versions. A sort_version will end in '~' if it
-	// is a release, and that is larger than any other character that can occur in a sort_version.
-	// So if we sort first by the last character in sort_version, then by sort_version itself,
-	// we will get releases before non-releases.
-	//   To implement that two-level ordering in a MAX, we construct an array of the two strings.
-	// Arrays are ordered lexicographically, so MAX will do just what we want.
-	err := db.db.RunQuery(ctx, `
-		SELECT
-			s.module_path, s.version
-		FROM
-			module_version_states s
-		INNER JOIN (
-			SELECT module_path,
-			MAX(ARRAY[right(sort_version, 1), sort_version]) AS mv
-			FROM module_version_states
-			GROUP BY 1) m
-		ON
-			s.module_path = m.module_path
-		AND
-			s.sort_version = m.mv[2]`,
-		func(rows *sql.Rows) error {
-			var mp, v string
-			if err := rows.Scan(&mp, &v); err != nil {
-				return err
-			}
-			m[mp] = v
-			return nil
-		})
-	if err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
 // GetRecentFailedVersions returns versions that have most recently failed.
 func (db *DB) GetRecentFailedVersions(ctx context.Context, limit int) (_ []*internal.ModuleVersionState, err error) {
 	defer derrors.Wrap(&err, "GetRecentFailedVersions(ctx, %d)", limit)
@@ -395,8 +246,7 @@ func (db *DB) GetRecentFailedVersions(ctx context.Context, limit int) (_ []*inte
 		SELECT %s
 		FROM
 			module_version_states
-		WHERE
-		  (status >= 400)
+		WHERE status=500
 		ORDER BY last_processed_at DESC
 		LIMIT $1`
 	return db.queryModuleVersionStates(ctx, queryFormat, limit)

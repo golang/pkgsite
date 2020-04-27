@@ -15,6 +15,10 @@ import (
 //lint:file-ignore ST1012 prefixing error values with Err would stutter
 
 var (
+	// HasIncompletePackages indicates a module containing packages that
+	// were processed with a 60x error code.
+	HasIncompletePackages = errors.New("has incomplete packages")
+
 	// NotFound indicates that a requested entity was not found (HTTP 404).
 	NotFound = errors.New("not found")
 	// InvalidArgument indicates that the input into the request is invalid in
@@ -60,6 +64,19 @@ var (
 	// fetched but could not be inserted due to invalid arguments to
 	// postgres.InsertModule.
 	DBModuleInsertInvalid = errors.New("db module insert invalid")
+
+	// ReprocessStatusOK indicates that the module to be reprocessed
+	// previously had a status of http.StatusOK.
+	ReprocessStatusOK = errors.New("reprocess status ok")
+	// ReprocessHasIncompletePackages indicates that the module to be reprocessed
+	// previously had a status of 290.
+	ReprocessHasIncompletePackages = errors.New("reprocess has incomplete packages")
+	// ReprocessBadModule indicates that the module to be reprocessed
+	// previously had a status of derrors.BadModule.
+	ReprocessBadModule = errors.New("reprocess bad module")
+	// ReprocessAlternativeModule indicates that the module to be reprocessed
+	// previously had a status of derrors.AlternativeModule.
+	ReprocessAlternative = errors.New("reprocess alternative module")
 )
 
 var httpCodes = []struct {
@@ -69,10 +86,20 @@ var httpCodes = []struct {
 	{NotFound, http.StatusNotFound},
 	{InvalidArgument, http.StatusBadRequest},
 	{Excluded, http.StatusForbidden},
+
 	// Since the following aren't HTTP statuses, pick unused codes.
+	{HasIncompletePackages, 290},
 	{DBModuleInsertInvalid, 480},
 	{BadModule, 490},
 	{AlternativeModule, 491},
+
+	// 52x errors represents modules that need to be reprocessed, and the
+	// previous status code the module had. Note that the status code
+	// matters for determining reprocessing order.
+	{ReprocessStatusOK, 520},
+	{ReprocessHasIncompletePackages, 521},
+	{ReprocessBadModule, 540},
+	{ReprocessAlternative, 541},
 
 	// 60x errors represents errors that occurred when processing a
 	// package.
@@ -118,6 +145,23 @@ func ToHTTPStatus(err error) int {
 		}
 	}
 	return http.StatusInternalServerError
+}
+
+// ToReprocessStatus returns the reprocess status code corresponding to the
+// provided status.
+func ToReprocessStatus(status int) int {
+	switch status {
+	case http.StatusOK:
+		return ToHTTPStatus(ReprocessStatusOK)
+	case ToHTTPStatus(HasIncompletePackages):
+		return ToHTTPStatus(ReprocessHasIncompletePackages)
+	case ToHTTPStatus(BadModule):
+		return ToHTTPStatus(ReprocessBadModule)
+	case ToHTTPStatus(AlternativeModule):
+		return ToHTTPStatus(ReprocessAlternative)
+	default:
+		return status
+	}
 }
 
 // Add adds context to the error.
