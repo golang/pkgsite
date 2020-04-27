@@ -6,6 +6,7 @@ package worker
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -133,11 +134,6 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	// The new state should have a status of Not Found.
 	checkStatus(http.StatusNotFound)
 
-	// The module should no longer be in the database.
-	if _, err := testDB.GetModuleInfo(ctx, modulePath, version); !errors.Is(err, derrors.NotFound) {
-		t.Fatalf("got %v, want NotFound", err)
-	}
-
 	gotStates, err = testDB.GetPackageVersionStatesForModule(ctx, modulePath, version)
 	if err != nil {
 		t.Fatal(err)
@@ -145,6 +141,27 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	if diff := cmp.Diff(wantStates, gotStates); diff != "" {
 		t.Errorf("testDB.GetPackageVersionStatesForModule(ctx, %q, %q) mismatch (-want +got):\n%s", modulePath, version, diff)
 	}
+
+	// The module should no longer be in the database:
+	// - It shouldn't be in the modules table. That also covers licenses, packages and paths tables
+	//   via foreign key constraints with ON DELETE CASCADE.
+	// - It shouldn't be in other tables like search_documents and the various imports tables.
+	if _, err := testDB.GetModuleInfo(ctx, modulePath, version); !errors.Is(err, derrors.NotFound) {
+		t.Fatalf("GetModuleInfo: got %v, want NotFound", err)
+	}
+
+	checkNotInTable := func(table, column string) {
+		q := fmt.Sprintf("SELECT 1 FROM %s WHERE %s = $1 LIMIT 1", table, column)
+		var x int
+		err := testDB.Underlying().QueryRow(ctx, q, modulePath).Scan(&x)
+		if err != sql.ErrNoRows {
+			t.Errorf("table %s: got %v, want ErrNoRows", table, err)
+		}
+	}
+
+	checkNotInTable("search_documents", "module_path")
+	checkNotInTable("imports_unique", "from_module_path")
+	checkNotInTable("imports", "from_module_path")
 }
 
 func TestFetchAndUpdateState_Excluded(t *testing.T) {

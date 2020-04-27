@@ -6,6 +6,7 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"io/ioutil"
 	"path/filepath"
@@ -259,7 +260,7 @@ func TestPostgres_ReadAndWriteModuleOtherColumns(t *testing.T) {
 	}
 }
 
-func TestPostgres_DeleteVersion(t *testing.T) {
+func TestPostgres_DeleteModule(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 	defer ResetTestDB(testDB, t)
@@ -277,6 +278,13 @@ func TestPostgres_DeleteVersion(t *testing.T) {
 	if _, err := testDB.GetModuleInfo(ctx, v.ModulePath, v.Version); !errors.Is(err, derrors.NotFound) {
 		t.Errorf("got %v, want NotFound", err)
 	}
+	var x int
+	err := testDB.Underlying().QueryRow(ctx, "SELECT 1 FROM imports_unique WHERE from_module_path = $1",
+		v.ModulePath).Scan(&x)
+	if err != sql.ErrNoRows {
+		t.Errorf("imports_unique: got %v, want ErrNoRows", err)
+	}
+	// TODO(b/154616892): check removal from version_map
 }
 
 func TestPostgres_NewerAlternative(t *testing.T) {
