@@ -637,12 +637,12 @@ func removeNonDistributableData(m *internal.Module) {
 }
 
 // DeleteModule deletes a Version from the database.
-func DeleteModule(ctx context.Context, db *database.DB, modulePath, version string) (err error) {
+func (db *DB) DeleteModule(ctx context.Context, modulePath, version string) (err error) {
 	defer derrors.Wrap(&err, "DeleteModule(ctx, db, %q, %q)", modulePath, version)
 	// We only need to delete from the modules table. Thanks to ON DELETE
 	// CASCADE constraints, that will trigger deletions from all other tables.
 	const stmt = `DELETE FROM modules WHERE module_path=$1 AND version=$2`
-	_, err = db.Exec(ctx, stmt, modulePath, version)
+	_, err = db.db.Exec(ctx, stmt, modulePath, version)
 	return err
 }
 

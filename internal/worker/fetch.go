@@ -8,6 +8,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sort"
+	"strings"
 	"time"
 
 	"go.opencensus.io/trace"
@@ -48,6 +50,7 @@ type fetchTask struct {
 	err                  error
 	module               *internal.Module
 	packageVersionStates []*internal.PackageVersionState
+	timings              map[string]time.Duration
 }
 
 // FetchAndUpdateState fetches and processes a module version, and then updates
@@ -81,16 +84,20 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 	// action.
 	// TODO(b/139178863): Split UpsertModuleVersionState into
 	// InsertModuleVersionState and UpdateModuleVersionState.
-	if err := db.UpsertModuleVersionState(ctx, ft.modulePath, ft.resolvedVersion, config.AppVersionLabel(),
-		time.Time{}, ft.status, ft.goModPath, ft.err, ft.packageVersionStates); err != nil {
+	start := time.Now()
+	err = db.UpsertModuleVersionState(ctx, ft.modulePath, ft.resolvedVersion, config.AppVersionLabel(),
+		time.Time{}, ft.status, ft.goModPath, ft.err, ft.packageVersionStates)
+	ft.timings["db.UpsertModuleVersionState"] = time.Since(start)
+	if err != nil {
 		log.Error(ctx, err)
 		if ft.err != nil {
-			err = fmt.Errorf("error updating module version state: %v, original error: %v", err, ft.err)
+			ft.status = http.StatusInternalServerError
+			ft.err = fmt.Errorf("db.UpsertModuleVersionState: %v, original error: %v", err, ft.err)
 		}
-		return http.StatusInternalServerError, err
+		logTaskResult(ctx, ft, "Failed to update module version state")
+		return http.StatusInternalServerError, ft.err
 	}
-	log.Infof(ctx, "Updated module version state for %s@%s: code=%d, err=%v",
-		ft.modulePath, ft.resolvedVersion, ft.status, ft.err)
+	logTaskResult(ctx, ft, "Updated module version state")
 	return ft.status, ft.err
 }
 
@@ -106,6 +113,7 @@ func fetchAndInsertModule(parentCtx context.Context, modulePath, requestedVersio
 	ft := &fetchTask{
 		modulePath:       modulePath,
 		requestedVersion: requestedVersion,
+		timings:          map[string]time.Duration{},
 	}
 	defer func() {
 		derrors.Wrap(&ft.err, "fetchAndInsertModule(%q, %q)", modulePath, requestedVersion)
@@ -140,7 +148,9 @@ func fetchAndInsertModule(parentCtx context.Context, modulePath, requestedVersio
 	ctx, span := trace.StartSpanWithRemoteParent(ctx, "worker.fetchAndInsertModule", parentSpan.SpanContext())
 	defer span.End()
 
+	start := time.Now()
 	res, err := fetch.FetchModule(ctx, modulePath, requestedVersion, proxyClient, sourceClient)
+	ft.timings["fetch.FetchModule"] = time.Since(start)
 	if err != nil {
 		ft.err = err
 		ft.status = derrors.ToHTTPStatus(ft.err)
@@ -165,7 +175,10 @@ func fetchAndInsertModule(parentCtx context.Context, modulePath, requestedVersio
 	if res.HasIncompletePackages {
 		ft.status = hasIncompletePackagesCode
 	}
-	if err = db.InsertModule(ctx, res.Module); err != nil {
+	start = time.Now()
+	err = db.InsertModule(ctx, res.Module)
+	ft.timings["db.InsertModule"] = time.Since(start)
+	if err != nil {
 		log.Error(ctx, err)
 
 		ft.status = derrors.ToHTTPStatus(err)
@@ -194,7 +207,10 @@ func updateVersionMapAndDeleteModulesWithErrors(ctx context.Context, db *postgre
 		Status:           ft.status,
 		Error:            errMsg,
 	}
-	if err := db.UpsertVersionMap(ctx, vm); err != nil {
+	start := time.Now()
+	err = db.UpsertVersionMap(ctx, vm)
+	ft.timings["db.UpsertVersionMap"] = time.Since(start)
+	if err != nil {
 		return err
 	}
 	if !semver.IsValid(vm.ResolvedVersion) {
@@ -208,7 +224,10 @@ func updateVersionMapAndDeleteModulesWithErrors(ctx context.Context, db *postgre
 	// Delete it in case we are reprocessing an existing module.
 	if vm.Status > 400 {
 		log.Infof(ctx, "%s@%s: code=%d, deleting", vm.ModulePath, vm.ResolvedVersion, vm.Status)
-		if err := postgres.DeleteModule(ctx, db.Underlying(), vm.ModulePath, vm.ResolvedVersion); err != nil {
+		start = time.Now()
+		err = db.DeleteModule(ctx, vm.ModulePath, vm.ResolvedVersion)
+		ft.timings["db.DeleteModule"] = time.Since(start)
+		if err != nil {
 			return err
 		}
 	}
@@ -223,9 +242,27 @@ func updateVersionMapAndDeleteModulesWithErrors(ctx context.Context, db *postgre
 	// can still view documentation.
 	if vm.Status == derrors.ToHTTPStatus(derrors.AlternativeModule) {
 		log.Infof(ctx, "%s@%s: code=491, deleting older version from search", vm.ModulePath, vm.ResolvedVersion)
-		if err := db.DeleteOlderVersionFromSearchDocuments(ctx, vm.ModulePath, vm.ResolvedVersion); err != nil {
+		start = time.Now()
+		err = db.DeleteOlderVersionFromSearchDocuments(ctx, vm.ModulePath, vm.ResolvedVersion)
+		ft.timings["db.DeleteOlderVersionFromSearchDocuments"] = time.Since(start)
+		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func logTaskResult(ctx context.Context, ft *fetchTask, prefix string) {
+	var times []string
+	for k, v := range ft.timings {
+		times = append(times, fmt.Sprintf("%s=%.3fs", k, v.Seconds()))
+	}
+	sort.Strings(times)
+	msg := strings.Join(times, ", ")
+	logf := log.Infof
+	if ft.status == http.StatusInternalServerError {
+		logf = log.Errorf
+	}
+	logf(ctx, "%s for %s@%s: code=%d, num_packages=%d, err=%v; timings: %s",
+		prefix, ft.modulePath, ft.resolvedVersion, ft.status, len(ft.packageVersionStates), ft.err, msg)
 }
