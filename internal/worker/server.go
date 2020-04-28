@@ -258,7 +258,8 @@ func parseModulePathAndVersion(requestPath string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func (s *Server) handleIndexAndQueue(w http.ResponseWriter, r *http.Request) error {
+func (s *Server) handleIndexAndQueue(w http.ResponseWriter, r *http.Request) (err error) {
+	defer derrors.Wrap(&err, "handleIndexAndQueue(%q)", r.URL.Path)
 	ctx := r.Context()
 	limit := parseIntParam(r, "limit", 10)
 	suffixParam := r.FormValue("suffix")
@@ -273,11 +274,14 @@ func (s *Server) handleIndexAndQueue(w http.ResponseWriter, r *http.Request) err
 	if err := s.db.InsertIndexVersions(ctx, versions); err != nil {
 		return err
 	}
+	log.Infof(ctx, "Scheduling modules to be fetched: %d new modules from index.golang.org", len(versions))
 	for _, version := range versions {
 		if err := s.queue.ScheduleFetch(ctx, version.Path, version.Version, suffixParam); err != nil {
-			return fmt.Errorf("scheduling fetch: %v", err)
+			return err
 		}
 	}
+	log.Infof(ctx, "Successfully scheduled modules to be fetched: %d new modules from index.golang.org", len(versions))
+
 	w.Header().Set("Content-Type", "text/plain")
 	for _, v := range versions {
 		fmt.Fprintf(w, "scheduled %s@%s\n", v.Path, v.Version)
@@ -288,7 +292,8 @@ func (s *Server) handleIndexAndQueue(w http.ResponseWriter, r *http.Request) err
 // handleRequeue queries the module_version_states table for the next
 // batch of module versions to process, and enqueues them for processing.  Note
 // that this may cause duplicate processing.
-func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) error {
+func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) (err error) {
+	defer derrors.Wrap(&err, "handleRequeue(%q)", r.URL.Path)
 	ctx := r.Context()
 	limit := parseIntParam(r, "limit", 10)
 	suffixParam := r.FormValue("suffix") // append to task name to avoid deduplication
@@ -298,15 +303,17 @@ func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	log.Infof(ctx, "Got %d versions to fetch", len(versions))
 
 	span.Annotate([]trace.Attribute{trace.Int64Attribute("versions to fetch", int64(len(versions)))}, "processed limit")
 	w.Header().Set("Content-Type", "text/plain")
+	log.Infof(ctx, "Scheduling modules to be fetched: requeuing %d modules", len(versions))
 	for _, v := range versions {
 		if err := s.queue.ScheduleFetch(ctx, v.ModulePath, v.Version, suffixParam); err != nil {
-			return fmt.Errorf("scheduling fetch: %v", err)
+			return err
 		}
 	}
+	log.Infof(ctx, "Successfully scheduled modules to be fetched: %d modules requeued", len(versions))
+
 	return nil
 }
 
@@ -314,14 +321,14 @@ func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) error {
 func (s *Server) handleStatusPage(w http.ResponseWriter, r *http.Request) {
 	msg, err := s.doStatusPage(w, r)
 	if err != nil {
-		log.Error(r.Context(), err)
 		http.Error(w, msg, http.StatusInternalServerError)
 	}
 }
 
 // doStatusPage writes the status page. On error it returns the error and a short
 // string to be written back to the client.
-func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (string, error) {
+func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (_ string, err error) {
+	defer derrors.Wrap(&err, "doStatusPage")
 	const pageSize = 20
 	var (
 		next, failures, recents []*internal.ModuleVersionState
@@ -453,7 +460,7 @@ func (s *Server) doPopulateStdLib(ctx context.Context, suffix string) (string, e
 			return "", fmt.Errorf("error scheduling fetch for %s: %w", v, err)
 		}
 	}
-	return fmt.Sprintf("Scheduled fetches for %s.\n", strings.Join(versions, ", ")), nil
+	return fmt.Sprintf("Scheduling modules to be fetched: %s.\n", strings.Join(versions, ", ")), nil
 }
 
 func (s *Server) handleReprocess(w http.ResponseWriter, r *http.Request) error {

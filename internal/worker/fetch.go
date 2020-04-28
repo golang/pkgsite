@@ -68,6 +68,7 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 	defer span.End()
 
 	ft := fetchAndInsertModule(ctx, modulePath, requestedVersion, proxyClient, sourceClient, db)
+	span.AddAttributes(trace.Int64Attribute("numPackages", int64(len(ft.packageVersionStates))))
 	dbErr := updateVersionMapAndDeleteModulesWithErrors(ctx, db, ft)
 	if dbErr != nil {
 		log.Error(ctx, dbErr)

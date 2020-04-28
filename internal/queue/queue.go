@@ -15,6 +15,7 @@ import (
 
 	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
 	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
@@ -51,12 +52,14 @@ func NewGCP(cfg *config.Config, client *cloudtasks.Client, queueID string) *GCP 
 // ScheduleFetch enqueues a task on GCP to fetch the given modulePath and
 // version. It returns an error if there was an error hashing the task name, or
 // an error pushing the task to GCP.
-func (q *GCP) ScheduleFetch(ctx context.Context, modulePath, version, suffix string) error {
+func (q *GCP) ScheduleFetch(ctx context.Context, modulePath, version, suffix string) (err error) {
 	// the new taskqueue API requires a deadline of <= 30s
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
+	defer derrors.Wrap(&err, "queue.ScheduleFetch(%q, %q, %q)", modulePath, version, suffix)
 	queueName := fmt.Sprintf("projects/%s/locations/%s/queues/%s", q.cfg.ProjectID, q.cfg.LocationID, q.queueID)
-	u := fmt.Sprintf("/fetch/%s/@v/%s", modulePath, version)
+	mod := fmt.Sprintf("%s/@v/%s", modulePath, version)
+	u := fmt.Sprintf("/fetch/" + mod)
 	taskID := newTaskID(modulePath, version, time.Now())
 	req := &taskspb.CreateTaskRequest{
 		Parent: queueName,
@@ -81,7 +84,7 @@ func (q *GCP) ScheduleFetch(ctx context.Context, modulePath, version, suffix str
 
 	if _, err := q.client.CreateTask(ctx, req); err != nil {
 		if status.Code(err) == codes.AlreadyExists {
-			log.Infof(ctx, "ignoring duplicate task ID %s", taskID)
+			log.Infof(ctx, "ignoring duplicate task ID %s: %q", taskID, mod)
 		} else {
 			return fmt.Errorf("q.client.CreateTask(ctx, req): %v", err)
 		}
