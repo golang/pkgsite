@@ -170,6 +170,7 @@ func TestFetchAndUpdateState_Excluded(t *testing.T) {
 }
 
 func checkModuleNotFound(t *testing.T, ctx context.Context, modulePath, version string, proxyClient *proxy.Client, sourceClient *source.Client, wantCode int, wantErr error) {
+	t.Helper()
 	code, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB)
 	if code != wantCode || !errors.Is(err, wantErr) {
 		t.Fatalf("got %d, %v; want %d, Is(err, %v)", code, err, wantCode, wantErr)
@@ -432,12 +433,12 @@ func TestSkipIncompletePackage(t *testing.T) {
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)
 
-	res, err := fetchAndInsertModule(ctx, modulePath, version, proxyClient, sourceClient, testDB)
+	code, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB)
 	if err != nil {
-		t.Fatalf("fetchAndInsertModule(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
+		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
 	}
-	if !res.HasIncompletePackages {
-		t.Errorf("fetchAndInsertModule(%q, %q, %v, %v, %v): hasIncompletePackages=false, want true",
+	if code != hasIncompletePackagesCode {
+		t.Errorf("FetchAndUpdateState(%q, %q, %v, %v, %v): hasIncompletePackages=false, want true",
 			modulePath, version, proxyClient, sourceClient, testDB)
 	}
 
@@ -500,12 +501,12 @@ func TestTrimLargeCode(t *testing.T) {
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)
 
-	res, err := fetchAndInsertModule(ctx, modulePath, version, proxyClient, sourceClient, testDB)
+	code, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB)
 	if err != nil {
-		t.Fatalf("fetchAndInsertModule(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
+		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
 	}
-	if res.HasIncompletePackages {
-		t.Errorf("fetchAndInsertModule(%q, %q, %v, %v, %v): hasIncompletePackages=true, want false",
+	if code == hasIncompletePackagesCode {
+		t.Errorf("FetchAndUpdateState(%q, %q, %v, %v, %v): hasIncompletePackages=true, want false",
 			modulePath, version, proxyClient, sourceClient, testDB)
 	}
 
@@ -539,8 +540,8 @@ func TestFetch_V1Path(t *testing.T) {
 	})
 	defer tearDown()
 	sourceClient := source.NewClient(sourceTimeout)
-	if _, err := fetchAndInsertModule(ctx, "my.mod/foo", "v1.0.0", proxyClient, sourceClient, testDB); err != nil {
-		t.Fatalf("fetchAndInsertModule: %v", err)
+	if _, err := FetchAndUpdateState(ctx, "my.mod/foo", "v1.0.0", proxyClient, sourceClient, testDB); err != nil {
+		t.Fatalf("FetchAndUpdateState: %v", err)
 	}
 	pkg, err := testDB.GetPackage(ctx, "my.mod/foo", internal.UnknownModulePath, "v1.0.0")
 	if err != nil {
@@ -1014,8 +1015,8 @@ func TestFetchAndInsertModule(t *testing.T) {
 
 			sourceClient := source.NewClient(sourceTimeout)
 
-			if _, err := fetchAndInsertModule(ctx, test.modulePath, test.version, proxyClient, sourceClient, testDB); err != nil {
-				t.Fatalf("fetchAndInsertModule(%q, %q, %v, %v, %v): %v", test.modulePath, test.version, proxyClient, sourceClient, testDB, err)
+			if _, err := FetchAndUpdateState(ctx, test.modulePath, test.version, proxyClient, sourceClient, testDB); err != nil {
+				t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", test.modulePath, test.version, proxyClient, sourceClient, testDB, err)
 			}
 
 			gotModuleInfo, err := testDB.GetModuleInfo(ctx, test.modulePath, test.version)
@@ -1071,9 +1072,9 @@ func TestFetchAndInsertModuleTimeout(t *testing.T) {
 	name := "my.mod/version"
 	version := "v1.0.0"
 	wantErrString := "deadline exceeded"
-	_, err := fetchAndInsertModule(context.Background(), name, version, proxyClient, sourceClient, testDB)
+	_, err := FetchAndUpdateState(context.Background(), name, version, proxyClient, sourceClient, testDB)
 	if err == nil || !strings.Contains(err.Error(), wantErrString) {
-		t.Fatalf("fetchAndInsertModule(%q, %q, %v, %v, %v) returned error %v, want error containing %q",
+		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v) returned error %v, want error containing %q",
 			name, version, proxyClient, sourceClient, testDB, err, wantErrString)
 	}
 }
