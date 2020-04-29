@@ -231,3 +231,58 @@ func TestDataSource_GetModuleInfo(t *testing.T) {
 		t.Errorf("GetModuleInfo diff (-want +got):\n%s", diff)
 	}
 }
+
+func TestDataSource_GetPathInfo(t *testing.T) {
+	ctx, ds, teardown := setup(t)
+	defer teardown()
+
+	for _, test := range []struct {
+		path, modulePath, version   string
+		wantModulePath, wantVersion string
+		wantIsPackage               bool
+	}{
+		{
+			path:           "foo.com/bar",
+			modulePath:     "foo.com/bar",
+			version:        "v1.1.0",
+			wantModulePath: "foo.com/bar",
+			wantVersion:    "v1.1.0",
+			wantIsPackage:  false,
+		},
+		{
+			path:           "foo.com/bar/baz",
+			modulePath:     "foo.com/bar",
+			version:        "v1.1.0",
+			wantModulePath: "foo.com/bar",
+			wantVersion:    "v1.1.0",
+			wantIsPackage:  true,
+		},
+		{
+			path:           "foo.com/bar/baz",
+			modulePath:     internal.UnknownModulePath,
+			version:        "v1.1.0",
+			wantModulePath: "foo.com/bar",
+			wantVersion:    "v1.1.0",
+			wantIsPackage:  true,
+		},
+		{
+			path:           "foo.com/bar/baz",
+			modulePath:     internal.UnknownModulePath,
+			version:        internal.LatestVersion,
+			wantModulePath: "foo.com/bar",
+			wantVersion:    "v1.2.0",
+			wantIsPackage:  true,
+		},
+	} {
+		gotModulePath, gotVersion, gotIsPackage, err := ds.GetPathInfo(ctx, test.path, test.modulePath, test.version)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if gotModulePath != test.wantModulePath || gotVersion != test.wantVersion || gotIsPackage != test.wantIsPackage {
+			t.Errorf("GetPathInfo(%q, %q, %q) = %q, %q, %t, want %q, %q, %t",
+				test.path, test.modulePath, test.version,
+				gotModulePath, gotVersion, gotIsPackage,
+				test.wantModulePath, test.wantVersion, test.wantIsPackage)
+		}
+	}
+}

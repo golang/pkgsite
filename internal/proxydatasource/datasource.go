@@ -415,3 +415,29 @@ func (*DataSource) IsExcluded(context.Context, string) (bool, error) {
 func (*DataSource) GetExperiments(ctx context.Context) ([]*internal.Experiment, error) {
 	return nil, nil
 }
+
+// GetPathInfo returns information about the given path.
+func (ds *DataSource) GetPathInfo(ctx context.Context, path, inModulePath, inVersion string) (outModulePath, outVersion string, isPackage bool, err error) {
+	defer derrors.Wrap(&err, "GetPathInfo(%q, %q, %q)", path, inModulePath, inVersion)
+
+	var info *proxy.VersionInfo
+	if inModulePath == internal.UnknownModulePath {
+		inModulePath, info, err = ds.findModule(ctx, path, inVersion)
+		if err != nil {
+			return "", "", false, err
+		}
+		inVersion = info.Version
+	}
+	m, err := ds.getModule(ctx, inModulePath, inVersion)
+	if err != nil {
+		return "", "", false, err
+	}
+	isPackage = false
+	for _, p := range m.Packages {
+		if p.Path == path {
+			isPackage = true
+			break
+		}
+	}
+	return m.ModulePath, m.Version, isPackage, nil
+}

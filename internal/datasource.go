@@ -57,7 +57,8 @@ type DataSource interface {
 	GetModuleInfo(ctx context.Context, modulePath, version string) (*ModuleInfo, error)
 	// IsExcluded reports whether the path is excluded from processinng.
 	IsExcluded(ctx context.Context, path string) (bool, error)
-
+	// GetPathInfo returns information about a path.
+	GetPathInfo(ctx context.Context, path, inModulePath, inVersion string) (outModulePath, outVersion string, isPackage bool, err error)
 	// Search searches the database with a query.
 	Search(ctx context.Context, query string, limit, offset int) ([]*SearchResult, error)
 }
