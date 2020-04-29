@@ -8,9 +8,12 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"reflect"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/lib/pq"
 )
 
 // StructScanner takes a struct and returns a function that, when called on a
@@ -41,21 +44,34 @@ func StructScanner(s interface{}) func(p interface{}) []interface{} {
 	return structScannerForType(v.Type())
 }
 
+type fieldInfo struct {
+	num     int // to pass to v.Field
+	isSlice bool
+}
+
 func structScannerForType(t reflect.Type) func(p interface{}) []interface{} {
+	if t.Kind() != reflect.Struct {
+		panic(fmt.Sprintf("%s is not a struct", t))
+	}
+
 	// Collect the numbers of the exported fields.
-	var fieldNums []int
+	var fieldInfos []fieldInfo
 	for i := 0; i < t.NumField(); i++ {
 		r, _ := utf8.DecodeRuneInString(t.Field(i).Name)
 		if unicode.IsUpper(r) {
-			fieldNums = append(fieldNums, i)
+			fieldInfos = append(fieldInfos, fieldInfo{i, t.Field(i).Type.Kind() == reflect.Slice})
 		}
 	}
 	// Return a function that gets pointers to the exported fields.
 	return func(p interface{}) []interface{} {
 		v := reflect.ValueOf(p).Elem()
 		var ps []interface{}
-		for _, i := range fieldNums {
-			ps = append(ps, v.Field(i).Addr().Interface())
+		for _, info := range fieldInfos {
+			p := v.Field(info.num).Addr().Interface()
+			if info.isSlice {
+				p = pq.Array(p)
+			}
+			ps = append(ps, p)
 		}
 		return ps
 	}
@@ -76,14 +92,26 @@ func (db *DB) CollectStructs(ctx context.Context, query string, pslice interface
 	if ve.Kind() != reflect.Slice {
 		return errors.New("collectStructs: arg is not a pointer to a slice")
 	}
+	isPointer := false
 	et := ve.Type().Elem() // slice element type
+	if et.Kind() == reflect.Ptr {
+		isPointer = true
+		et = et.Elem()
+	}
+	if et.Kind() != reflect.Struct {
+		return fmt.Errorf("slice element type is neither struct nor struct pointer: %s", ve.Type().Elem())
+	}
+
 	scanner := structScannerForType(et)
 	err := db.RunQuery(ctx, query, func(rows *sql.Rows) error {
 		e := reflect.New(et)
 		if err := rows.Scan(scanner(e.Interface())...); err != nil {
 			return err
 		}
-		ve = reflect.Append(ve, e.Elem())
+		if !isPointer {
+			e = e.Elem()
+		}
+		ve = reflect.Append(ve, e)
 		return nil
 	}, args...)
 	if err != nil {
