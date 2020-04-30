@@ -67,6 +67,11 @@ func SecureHeaders() Middleware {
 			// Disallow plugin content: the Discovery site does not use it.
 			p.add("object-src", none)
 
+			// Disallow <base> URIs, which prevents attackers from changing the
+			// locations of scripts loaded from relative URLs. The site doesn’t have
+			// a <base> tag anyway.
+			p.add("base-uri", none)
+
 			nonce, err := generateNonce()
 			if err != nil {
 				log.Infof(r.Context(), "generateNonce(): %v", err)
@@ -84,7 +89,14 @@ func SecureHeaders() Middleware {
 
 			p.add("script-src", scriptSrcs...)
 
-			// Don't allow framing.
+			// Allow GA as a valid target for XHR, WebSockets, and EventSource.
+			p.add("connect-src", "www.google-analytics.com")
+
+			// Allow iframes that have a nonce, for Google Analytics when JavaScript
+			// is disabled.
+			p.add("frame-src", fmt.Sprintf("'nonce-%s'", nonce))
+
+			// Don't allow parent framing.
 			p.add("frame-ancestors", none)
 
 			csp := p.serialize()
