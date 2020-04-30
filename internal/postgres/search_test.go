@@ -155,7 +155,7 @@ func TestSearch(t *testing.T) {
 	// one popular package.  For performance purposes, all importers are added to
 	// a single importing module.
 	importGraph := func(popularPath, importerModule string, importerCount int) []*internal.Module {
-		m := sample.Module()
+		m := sample.DefaultModule()
 		m.ModulePath = popularPath
 		m.Packages[0].Path = popularPath
 		m.Packages[0].Imports = nil
@@ -164,11 +164,11 @@ func TestSearch(t *testing.T) {
 		m.ReadmeContents = "foo"
 		mods := []*internal.Module{m}
 		if importerCount > 0 {
-			m := sample.Module()
+			m := sample.DefaultModule()
 			m.ModulePath = importerModule
 			m.Packages = nil
 			for i := 0; i < importerCount; i++ {
-				p := sample.Package()
+				p := sample.DefaultPackage()
 				p.Path = fmt.Sprintf("%s/importer%d", importerModule, i)
 				p.Imports = []string{popularPath}
 				m.Packages = append(m.Packages, p)
@@ -451,7 +451,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 
 				for modulePath, pkg := range tc.packages {
 					pkg.Licenses = sample.LicenseMetadata
-					v := sample.Module()
+					v := sample.DefaultModule()
 					v.ModulePath = modulePath
 					v.Packages = []*internal.Package{pkg}
 					if err := testDB.InsertModule(ctx, v); err != nil {
@@ -507,7 +507,7 @@ func TestSearchPenalties(t *testing.T) {
 	}
 
 	for path, m := range modules {
-		v := sample.Module()
+		v := sample.DefaultModule()
 		v.ModulePath = path
 		v.Packages = []*internal.Package{{
 			Name:              "p",
@@ -618,7 +618,7 @@ func TestUpsertSearchDocument(t *testing.T) {
 			Synopsis:          "syn-" + version,
 			IsRedistributable: true,
 		}
-		v := sample.Module()
+		v := sample.DefaultModule()
 		v.Packages = []*internal.Package{pkg}
 		v.Version = version
 		v.HasGoMod = gomod
@@ -659,7 +659,7 @@ func TestUpsertSearchDocumentVersionHasGoMod(t *testing.T) {
 	defer cancel()
 
 	for _, hasGoMod := range []bool{true, false} {
-		m := sample.Module()
+		m := sample.DefaultModule()
 		m.ModulePath = fmt.Sprintf("foo.com/%t", hasGoMod)
 		m.HasGoMod = hasGoMod
 		m.Packages = []*internal.Package{{Path: m.ModulePath + "/bar", Name: "bar"}}
@@ -687,7 +687,7 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 	insertPackageVersion := func(pkg *internal.Package, version string) string {
 		// insert pkg at version, return its module path
 		t.Helper()
-		m := sample.Module()
+		m := sample.DefaultModule()
 		m.Packages = []*internal.Package{pkg}
 		m.ModulePath = m.ModulePath + pkg.Path
 		m.Version = version
@@ -814,7 +814,7 @@ func TestGetPackagesForSearchDocumentUpsert(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	moduleA := sample.Module()
+	moduleA := sample.DefaultModule()
 	moduleA.Packages = []*internal.Package{
 		{Path: "A", Name: "A"},
 		{Path: "A/notinternal", Name: "A/notinternal"},
@@ -923,7 +923,7 @@ func TestDeleteOlderVersionFromSearch(t *testing.T) {
 		wantDeleted bool
 	}
 	insert := func(m module) {
-		sm := sample.Module()
+		sm := sample.DefaultModule()
 		sm.ModulePath = m.path
 		sm.Version = m.version
 		sm.Packages = []*internal.Package{{Path: m.path + "/" + m.pkg, Name: m.pkg}}

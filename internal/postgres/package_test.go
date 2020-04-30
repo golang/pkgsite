@@ -27,23 +27,20 @@ func TestGetPackage(t *testing.T) {
 
 	insertModule := func(pkgPath, modulePath, version string) {
 		t.Helper()
-		m := sample.Module()
-		m.ModulePath = modulePath
-		m.Version = version
-		pkg := sample.Package()
-		pkg.Path = pkgPath
-		m.Packages = []*internal.Package{pkg}
+		m := sample.AddPackage(
+			sample.Module(modulePath, version),
+			sample.Package(sample.PackageName, pkgPath, pkgPath))
 		if err := testDB.InsertModule(ctx, m); err != nil {
 			t.Fatal(err)
 		}
 	}
 	checkPackage := func(got *internal.VersionedPackage, pkgPath, modulePath, version string) {
 		t.Helper()
-		want := sample.VersionedPackage()
+		want := &internal.VersionedPackage{
+			ModuleInfo: *sample.ModuleInfo(modulePath, version),
+			Package:    *sample.Package(sample.PackageName, pkgPath, pkgPath),
+		}
 		want.Imports = nil
-		want.ModulePath = modulePath
-		want.Path = pkgPath
-		want.Version = version
 		opts := cmp.Options{
 			cmpopts.EquateEmpty(),
 			cmp.AllowUnexported(source.Info{}),

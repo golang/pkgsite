@@ -100,28 +100,27 @@ func TestCreatePackageHeader(t *testing.T) {
 		wantPkg *Package
 	}{
 		{
-			label:   "simple package",
-			pkg:     sample.VersionedPackage(),
+			label: "simple package",
+			pkg: &internal.VersionedPackage{
+				ModuleInfo: *sample.ModuleInfo(sample.ModulePath, sample.VersionString),
+				Package:    *sample.DefaultPackage(),
+			},
 			wantPkg: samplePackage(),
 		},
 		{
 			label: "command package",
-			pkg: func() *internal.VersionedPackage {
-				vp := sample.VersionedPackage()
-				vp.Name = "main"
-				return vp
-			}(),
+			pkg: &internal.VersionedPackage{
+				ModuleInfo: *sample.ModuleInfo(sample.ModulePath, sample.VersionString),
+				Package:    *sample.Package("main", sample.PackagePath, sample.V1Path),
+			},
 			wantPkg: samplePackage(),
 		},
 		{
 			label: "v2 command",
-			pkg: func() *internal.VersionedPackage {
-				vp := sample.VersionedPackage()
-				vp.Name = "main"
-				vp.Path = "pa.th/to/foo/v2/bar"
-				vp.ModulePath = "pa.th/to/foo/v2"
-				return vp
-			}(),
+			pkg: &internal.VersionedPackage{
+				ModuleInfo: *sample.ModuleInfo("pa.th/to/foo/v2", sample.VersionString),
+				Package:    *sample.Package("main", "pa.th/to/foo/v2/bar", "pa.th/to/foo/bar"),
+			},
 			wantPkg: samplePackage(func(p *Package) {
 				p.Path = "pa.th/to/foo/v2/bar"
 				p.ModulePath = "pa.th/to/foo/v2"
@@ -129,20 +128,16 @@ func TestCreatePackageHeader(t *testing.T) {
 		},
 		{
 			label: "explicit v1 command",
-			pkg: func() *internal.VersionedPackage {
-				vp := sample.VersionedPackage()
-				vp.Name = "main"
-				vp.Path = "pa.th/to/foo/v1"
-				vp.ModulePath = "pa.th/to/foo/v1"
-				return vp
-			}(),
+			pkg: &internal.VersionedPackage{
+				ModuleInfo: *sample.ModuleInfo("pa.th/to/foo/v1", sample.VersionString),
+				Package:    *sample.Package("main", "pa.th/to/foo/v1", "pa.th/to/foo/v1"),
+			},
 			wantPkg: samplePackage(func(p *Package) {
 				p.Path = "pa.th/to/foo/v1"
 				p.ModulePath = "pa.th/to/foo/v1"
 			}),
 		},
 	} {
-
 		t.Run(tc.label, func(t *testing.T) {
 			got, err := createPackage(&tc.pkg.Package, &tc.pkg.ModuleInfo, false)
 			if err != nil {

@@ -147,7 +147,7 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 	for _, mod := range mods {
 		var ps []*internal.Package
 		for _, pkg := range mod.packages {
-			p := sample.Package()
+			p := sample.DefaultPackage()
 			p.Name = pkg.name
 			p.Path = pkg.path
 			if pkg.doc != "" {
@@ -160,7 +160,7 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 			ps = append(ps, p)
 		}
 		for _, ver := range mod.versions {
-			m := sample.Module()
+			m := sample.DefaultModule()
 			m.ModulePath = mod.path
 			m.Version = ver
 			m.SourceInfo = source.NewGitHubInfo(sample.RepositoryURL, "", ver)
@@ -830,7 +830,7 @@ func TestServerErrors(t *testing.T) {
 	defer cancel()
 
 	defer postgres.ResetTestDB(testDB, t)
-	sampleModule := sample.Module()
+	sampleModule := sample.DefaultModule()
 	if err := testDB.InsertModule(ctx, sampleModule); err != nil {
 		t.Fatal(err)
 	}

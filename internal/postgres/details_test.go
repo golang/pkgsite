@@ -29,7 +29,7 @@ func TestPostgres_GetVersionInfo_Latest(t *testing.T) {
 	defer ResetTestDB(testDB, t)
 
 	sampleModule := func(path, version string, vtype version.Type) *internal.Module {
-		m := sample.Module()
+		m := sample.DefaultModule()
 		m.ModulePath = path
 		m.Version = version
 		m.VersionType = vtype
@@ -100,14 +100,14 @@ func TestPostgres_GetVersionInfo_Latest(t *testing.T) {
 
 func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 	pkg := func(path string, imports []string) *internal.Package {
-		p := sample.Package()
+		p := sample.DefaultPackage()
 		p.Path = path
 		p.Imports = imports
 		return p
 	}
 
 	sampleModule := func(mpath, version string, pkg *internal.Package) *internal.Module {
-		m := sample.Module()
+		m := sample.DefaultModule()
 		m.ModulePath = mpath
 		m.Version = version
 		m.Packages = []*internal.Package{pkg}
@@ -205,7 +205,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 
 	var (
 		sampleModule = func(modulePath, version string, suffixes ...string) *internal.Module {
-			m := sample.Module()
+			m := sample.DefaultModule()
 			m.ModulePath = modulePath
 			m.Version = version
 			sample.SetSuffixes(m, suffixes...)
@@ -341,7 +341,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 }
 
 func TestGetPackagesInVersion(t *testing.T) {
-	testVersion := sample.Module()
+	testVersion := sample.DefaultModule()
 	testVersion.ModulePath = "test.module"
 	sample.SetSuffixes(testVersion, "", "foo")
 
@@ -384,7 +384,7 @@ func TestGetPackagesInVersion(t *testing.T) {
 
 func TestGetPackageLicenses(t *testing.T) {
 	modulePath := "test.module"
-	testModule := sample.Module()
+	testModule := sample.DefaultModule()
 	testModule.ModulePath = modulePath
 	sample.SetSuffixes(testModule, "", "foo")
 	testModule.Packages[0].Licenses = nil
@@ -428,7 +428,7 @@ func TestGetPackageLicenses(t *testing.T) {
 
 func TestGetModuleLicenses(t *testing.T) {
 	modulePath := "test.module"
-	testModule := sample.Module()
+	testModule := sample.DefaultModule()
 	testModule.ModulePath = modulePath
 	sample.SetSuffixes(testModule, "", "foo", "bar")
 	testModule.Packages[0].Licenses = []*licenses.Metadata{{Types: []string{"ISC"}, FilePath: "LICENSE"}}

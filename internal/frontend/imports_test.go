@@ -48,8 +48,8 @@ func TestFetchImportsDetails(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 			defer cancel()
 
-			module := sample.Module()
-			pkg := sample.Package()
+			module := sample.DefaultModule()
+			pkg := sample.DefaultPackage()
 			pkg.Imports = tc.imports
 			module.Packages = []*internal.Package{pkg}
 
@@ -88,20 +88,20 @@ func TestFetchImportedByDetails(t *testing.T) {
 	defer cancel()
 
 	newModule := func(modPath string, pkgs ...*internal.Package) *internal.Module {
-		m := sample.Module()
+		m := sample.DefaultModule()
 		m.ModulePath = modPath
 		m.Packages = pkgs
 		return m
 	}
 
-	pkg1 := sample.Package()
+	pkg1 := sample.DefaultPackage()
 	pkg1.Path = "path.to/foo/bar"
 
-	pkg2 := sample.Package()
+	pkg2 := sample.DefaultPackage()
 	pkg2.Path = "path2.to/foo/bar2"
 	pkg2.Imports = []string{pkg1.Path}
 
-	pkg3 := sample.Package()
+	pkg3 := sample.DefaultPackage()
 	pkg3.Path = "path3.to/foo/bar3"
 	pkg3.Imports = []string{pkg2.Path, pkg1.Path}
 

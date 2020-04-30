@@ -59,7 +59,7 @@ func TestDirectoryPaths(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			var packages []*internal.Package
 			for _, path := range test.packagePaths {
-				pkg := sample.Package()
+				pkg := sample.DefaultPackage()
 				pkg.Path = path
 				packages = append(packages, pkg)
 			}

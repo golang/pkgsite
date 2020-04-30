@@ -47,7 +47,6 @@ var (
 	Synopsis          = "This is a package synopsis"
 	ReadmeFilePath    = "README.md"
 	ReadmeContents    = "readme"
-	VersionType       = version.TypeRelease
 	GOOS              = "linux"
 	GOARCH            = "amd64"
 )
@@ -76,52 +75,71 @@ func NowTruncated() time.Time {
 	return time.Now().Truncate(time.Microsecond)
 }
 
-func Package() *internal.Package {
+func DefaultPackage() *internal.Package {
+	return Package(PackageName, PackagePath, V1Path)
+}
+
+func Package(name, path, v1path string) *internal.Package {
 	return &internal.Package{
-		Name:              PackageName,
+		Name:              name,
+		Path:              path,
+		V1Path:            v1path,
 		Synopsis:          Synopsis,
-		Path:              PackagePath,
 		IsRedistributable: true,
 		Licenses:          LicenseMetadata,
 		DocumentationHTML: DocumentationHTML,
-		V1Path:            V1Path,
 		Imports:           Imports,
 		GOOS:              GOOS,
 		GOARCH:            GOARCH,
 	}
 }
 
-func ModuleInfo() *internal.ModuleInfo {
+func ModuleInfo(modulePath, versionString string) *internal.ModuleInfo {
+	vtype, err := version.ParseType(versionString)
+	if err != nil {
+		panic(err)
+	}
+	mi := ModuleInfoReleaseType(modulePath, versionString)
+	mi.VersionType = vtype
+	return mi
+}
+
+// We shouldn't need this, but some code (notably frontend/directory_test.go) creates
+// ModuleInfos with "latest" for version, which should not be valid.
+func ModuleInfoReleaseType(modulePath, versionString string) *internal.ModuleInfo {
 	return &internal.ModuleInfo{
-		ModulePath:        ModulePath,
-		Version:           VersionString,
+		ModulePath:        modulePath,
+		Version:           versionString,
 		ReadmeFilePath:    ReadmeFilePath,
 		ReadmeContents:    ReadmeContents,
 		CommitTime:        CommitTime,
-		VersionType:       VersionType,
+		VersionType:       version.TypeRelease,
 		SourceInfo:        source.NewGitHubInfo(RepositoryURL, "", ""),
 		IsRedistributable: true,
 		HasGoMod:          true,
 	}
 }
 
-func VersionedPackage() *internal.VersionedPackage {
-	return &internal.VersionedPackage{
-		ModuleInfo: *ModuleInfo(),
-		Package:    *Package(),
+func DefaultModule() *internal.Module {
+	return AddPackage(Module(ModulePath, VersionString), DefaultPackage())
+}
+
+func Module(modulePath, version string) *internal.Module {
+	mi := ModuleInfo(modulePath, version)
+	return &internal.Module{
+		ModuleInfo: *mi,
+		Packages:   nil,
+		Licenses:   Licenses,
+		Directories: []*internal.DirectoryNew{
+			DirectoryNewForModuleRoot(mi, LicenseMetadata),
+		},
 	}
 }
 
-func Module() *internal.Module {
-	return &internal.Module{
-		ModuleInfo: *ModuleInfo(),
-		Packages:   []*internal.Package{Package()},
-		Licenses:   Licenses,
-		Directories: []*internal.DirectoryNew{
-			DirectoryNewForModuleRoot(ModuleInfo(), LicenseMetadata),
-			DirectoryNewForPackage(Package()),
-		},
-	}
+func AddPackage(m *internal.Module, p *internal.Package) *internal.Module {
+	m.Packages = append(m.Packages, p)
+	m.Directories = append(m.Directories, DirectoryNewForPackage(p))
+	return m
 }
 
 func DirectoryNewEmpty(path string) *internal.DirectoryNew {
@@ -175,7 +193,7 @@ func SetSuffixes(m *internal.Module, suffixes ...string) {
 	series := internal.SeriesPathForModule(m.ModulePath)
 	m.Packages = nil
 	for _, suffix := range suffixes {
-		p := Package()
+		p := DefaultPackage()
 		p.Path = path.Join(m.ModulePath, suffix)
 		p.V1Path = path.Join(series, suffix)
 		m.Packages = append(m.Packages, p)

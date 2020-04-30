@@ -29,10 +29,10 @@ func TestUpdateRedisIndexes(t *testing.T) {
 	// package in v2 imports the package in v1. By setting our 'popular cutoff'
 	// to 1, we can force the package in v1 to be considered popular.
 	rc := redis.NewClient(&redis.Options{Addr: mr.Addr()})
-	m1 := sample.Module()
+	m1 := sample.DefaultModule()
 	m1.ModulePath = "github.com/something"
 	m1.Packages[0].Path = m1.ModulePath + "/apples/bananas"
-	m2 := sample.Module()
+	m2 := sample.DefaultModule()
 	m2.ModulePath = "github.com/something/else"
 	m2.Packages[0].Path = m2.ModulePath + "/oranges/bananas"
 	m2.Packages[0].Imports = []string{m1.Packages[0].Path}

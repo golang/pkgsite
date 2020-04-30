@@ -23,7 +23,7 @@ var (
 )
 
 func sampleModule(modulePath, version string, versionType version.Type, packages ...*internal.Package) *internal.Module {
-	m := sample.Module()
+	m := sample.DefaultModule()
 	m.ModulePath = modulePath
 	m.Version = version
 	m.VersionType = versionType
@@ -58,14 +58,8 @@ func TestFetchModuleVersionDetails(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	info1 := sample.ModuleInfo()
-	info1.ModulePath = modulePath1
-	info1.Version = "v1.2.1"
-
-	info2 := sample.ModuleInfo()
-	info2.ModulePath = modulePath2
-	info2.Version = "v2.2.1-alpha.1"
-
+	info1 := sample.ModuleInfo(modulePath1, "v1.2.1")
+	info2 := sample.ModuleInfo(modulePath2, "v2.2.1-alpha.1")
 	makeList := func(path, major string, versions []string) *VersionList {
 		return &VersionList{
 			VersionListKey: VersionListKey{ModulePath: path, Major: major},
@@ -167,24 +161,18 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 		v1Path = "test.com/module/foo"
 	)
 
-	pkg1 := sample.VersionedPackage()
-	pkg1.Path = v1Path
-	pkg1.V1Path = v1Path
-	pkg1.ModulePath = modulePath1
-	pkg1.Version = "v1.2.1"
-
-	pkg2 := sample.VersionedPackage()
-	pkg2.Path = v2Path
-	pkg2.V1Path = v1Path
-	pkg2.ModulePath = modulePath2
-	pkg2.Version = "v2.2.1-alpha.1"
-
-	nethttpPkg := sample.VersionedPackage()
-	nethttpPkg.Path = "net/http"
-	nethttpPkg.V1Path = "net/http"
-	nethttpPkg.ModulePath = "std"
-	nethttpPkg.Version = "v1.12.5"
-
+	pkg1 := &internal.VersionedPackage{
+		ModuleInfo: *sample.ModuleInfo(modulePath1, "v1.2.1"),
+		Package:    *sample.Package(sample.PackageName, v1Path, v1Path),
+	}
+	pkg2 := &internal.VersionedPackage{
+		ModuleInfo: *sample.ModuleInfo(modulePath2, "v2.2.1-alpha.1"),
+		Package:    *sample.Package(sample.PackageName, v2Path, v1Path),
+	}
+	nethttpPkg := &internal.VersionedPackage{
+		ModuleInfo: *sample.ModuleInfo("std", "v1.12.5"),
+		Package:    *sample.Package(sample.PackageName, "net/http", "net/http"),
+	}
 	makeList := func(pkgPath, modulePath, major string, versions []string) *VersionList {
 		return &VersionList{
 			VersionListKey: VersionListKey{ModulePath: modulePath, Major: major},
@@ -303,8 +291,7 @@ func TestPathInVersion(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		mi := sample.ModuleInfo()
-		mi.ModulePath = test.modulePath
+		mi := sample.ModuleInfo(test.modulePath, sample.VersionString)
 		if got := pathInVersion(test.v1Path, mi); got != test.want {
 			t.Errorf("pathInVersion(%q, ModuleInfo{...ModulePath:%q}) = %s, want %v",
 				test.v1Path, mi.ModulePath, got, test.want)

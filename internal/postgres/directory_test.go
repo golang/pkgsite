@@ -263,13 +263,10 @@ func TestGetDirectory(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			mi := sample.ModuleInfo()
-			mi.ModulePath = tc.wantModulePath
-			mi.Version = tc.wantVersion
-
+			mi := sample.ModuleInfo(tc.wantModulePath, tc.wantVersion)
 			var wantPackages []*internal.Package
 			for _, path := range tc.wantPkgPaths {
-				pkg := sample.Package()
+				pkg := sample.DefaultPackage()
 				pkg.Path = path
 				pkg.Imports = nil
 				wantPackages = append(wantPackages, pkg)
@@ -302,10 +299,10 @@ func TestGetDirectoryFieldSet(t *testing.T) {
 
 	defer ResetTestDB(testDB, t)
 
-	p := sample.Package()
+	p := sample.DefaultPackage()
 	p.Path = "m.c/d/p"
 	p.Imports = nil
-	m := sample.Module()
+	m := sample.DefaultModule()
 	m.ModulePath = "m.c"
 	m.Packages = []*internal.Package{p}
 	if err := testDB.InsertModule(ctx, m); err != nil {

@@ -66,9 +66,9 @@ func TestToTsvectorParentDirectoriesStoredProcedure(t *testing.T) {
 		t.Run(tc.path, func(t *testing.T) {
 			defer ResetTestDB(testDB, t)
 
-			m := sample.Module()
+			m := sample.DefaultModule()
 			m.ModulePath = tc.modulePath
-			pkg := sample.Package()
+			pkg := sample.DefaultPackage()
 			pkg.Path = tc.path
 			m.Packages = []*internal.Package{pkg}
 			if err := testDB.InsertModule(ctx, m); err != nil {

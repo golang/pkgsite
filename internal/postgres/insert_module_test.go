@@ -36,13 +36,13 @@ func TestInsertModule(t *testing.T) {
 	}{
 		{
 			name:   "valid test",
-			module: sample.Module(),
+			module: sample.DefaultModule(),
 		},
 		{
 			name: "valid test with internal package",
 			module: func() *internal.Module {
-				m := sample.Module()
-				p := sample.Package()
+				m := sample.DefaultModule()
+				p := sample.DefaultPackage()
 				p.Path = sample.ModulePath + "/internal/foo"
 				m.Packages = []*internal.Package{p}
 				d1 := sample.DirectoryNewForModuleRoot(&m.ModuleInfo, p.Licenses)
@@ -55,7 +55,7 @@ func TestInsertModule(t *testing.T) {
 		{
 			name: "valid test with go.mod missing",
 			module: func() *internal.Module {
-				m := sample.Module()
+				m := sample.DefaultModule()
 				m.HasGoMod = false
 				return m
 			}(),
@@ -63,7 +63,7 @@ func TestInsertModule(t *testing.T) {
 		{
 			name: "stdlib",
 			module: func() *internal.Module {
-				m := sample.Module()
+				m := sample.DefaultModule()
 				m.ModulePath = "std"
 				m.Version = "v1.12.5"
 				p := &internal.Package{
@@ -165,13 +165,13 @@ func TestInsertModuleErrors(t *testing.T) {
 		},
 		{
 			name:           "nonexistent version",
-			module:         sample.Module(),
+			module:         sample.DefaultModule(),
 			wantModulePath: sample.ModulePath,
 			wantVersion:    "v1.2.3",
 		},
 		{
 			name:           "nonexistent module",
-			module:         sample.Module(),
+			module:         sample.DefaultModule(),
 			wantModulePath: "nonexistent_module_path",
 			wantVersion:    "v1.0.0",
 			wantPkgPath:    sample.PackagePath,
@@ -179,7 +179,7 @@ func TestInsertModuleErrors(t *testing.T) {
 		{
 			name: "missing module path",
 			module: func() *internal.Module {
-				v := sample.Module()
+				v := sample.DefaultModule()
 				v.ModulePath = ""
 				return v
 			}(),
@@ -190,7 +190,7 @@ func TestInsertModuleErrors(t *testing.T) {
 		{
 			name: "missing version",
 			module: func() *internal.Module {
-				v := sample.Module()
+				v := sample.DefaultModule()
 				v.Version = ""
 				return v
 			}(),
@@ -201,7 +201,7 @@ func TestInsertModuleErrors(t *testing.T) {
 		{
 			name: "empty commit time",
 			module: func() *internal.Module {
-				v := sample.Module()
+				v := sample.DefaultModule()
 				v.CommitTime = time.Time{}
 				return v
 			}(),
@@ -231,7 +231,7 @@ func TestPostgres_ReadAndWriteModuleOtherColumns(t *testing.T) {
 		sortVersion, seriesPath string
 	}
 
-	v := sample.Module()
+	v := sample.DefaultModule()
 	v.ModulePath = "github.com/user/repo/path/v2"
 	v.Version = "v1.2.3-beta.4.a"
 
@@ -265,7 +265,7 @@ func TestPostgres_DeleteModule(t *testing.T) {
 	defer cancel()
 	defer ResetTestDB(testDB, t)
 
-	v := sample.Module()
+	v := sample.DefaultModule()
 	if err := testDB.InsertModule(ctx, v); err != nil {
 		t.Fatal(err)
 	}
@@ -306,7 +306,7 @@ func TestPostgres_NewerAlternative(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	m := sample.Module()
+	m := sample.DefaultModule()
 	m.ModulePath = modulePath
 	m.Version = okVersion
 	m.Packages[0].Name = "p"

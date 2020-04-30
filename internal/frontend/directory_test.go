@@ -29,13 +29,10 @@ func TestFetchDirectoryDetails(t *testing.T) {
 	checkDirectory := func(got *Directory, dirPath, modulePath, version string, pkgPaths []string) {
 		t.Helper()
 
-		mi := sample.ModuleInfo()
-		mi.ModulePath = modulePath
-		mi.Version = version
-
+		mi := sample.ModuleInfo(modulePath, version)
 		var wantPkgs []*Package
 		for _, path := range pkgPaths {
-			sp := sample.Package()
+			sp := sample.DefaultPackage()
 			sp.Path = path
 			pkg, err := createPackage(sp, mi, false)
 			if err != nil {
@@ -148,10 +145,7 @@ func TestFetchDirectoryDetails(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			mi := sample.ModuleInfo()
-			mi.ModulePath = tc.modulePath
-			mi.Version = tc.version
-
+			mi := sample.ModuleInfoReleaseType(tc.modulePath, tc.version)
 			got, err := fetchDirectoryDetails(ctx, testDB,
 				tc.dirPath, mi, sample.LicenseMetadata, tc.includeDirPath)
 			if err != nil {
@@ -201,10 +195,7 @@ func TestFetchDirectoryDetailsInvalidArguments(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			mi := sample.ModuleInfo()
-			mi.ModulePath = tc.modulePath
-			mi.Version = tc.version
-
+			mi := sample.ModuleInfoReleaseType(tc.modulePath, tc.version)
 			got, err := fetchDirectoryDetails(ctx, testDB,
 				tc.dirPath, mi, sample.LicenseMetadata, tc.includeDirPath)
 			if !errors.Is(err, derrors.InvalidArgument) {

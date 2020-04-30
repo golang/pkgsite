@@ -177,17 +177,17 @@ func TestApproximateNumber(t *testing.T) {
 func TestSearchRequestRedirectPath(t *testing.T) {
 	ctx := context.Background()
 
-	golangTools := sample.Module()
+	golangTools := sample.DefaultModule()
 	golangTools.ModulePath = "golang.org/x/tools"
-	lspPkg := sample.Package()
+	lspPkg := sample.DefaultPackage()
 	lspPkg.Path = "golang.org/x/tools/internal/lsp"
 	golangTools.Packages = []*internal.Package{lspPkg}
 
-	std := sample.Module()
+	std := sample.DefaultModule()
 	std.ModulePath = "std"
 	var stdlibPackages []*internal.Package
 	for _, path := range []string{"cmd/go", "cmd/go/internal/auth", "fmt"} {
-		pkg := sample.Package()
+		pkg := sample.DefaultPackage()
 		pkg.Path = path
 		stdlibPackages = append(stdlibPackages, pkg)
 	}

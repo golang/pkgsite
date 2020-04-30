@@ -211,13 +211,13 @@ func InsertSampleDirectoryTree(ctx context.Context, t *testing.T, testDB *DB) {
 	} {
 		var pkgs []*internal.Package
 		for _, path := range data.paths {
-			p := sample.Package()
+			p := sample.DefaultPackage()
 			p.Path = path
 			p.Imports = nil
 			pkgs = append(pkgs, p)
 		}
 
-		m := sample.Module()
+		m := sample.DefaultModule()
 		m.ModulePath = data.modulePath
 		m.Version = data.version
 		m.Packages = pkgs
