@@ -26,14 +26,13 @@ func TestFetchDirectoryDetails(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
 	postgres.InsertSampleDirectoryTree(ctx, t, testDB)
 
-	checkDirectory := func(got *Directory, dirPath, modulePath, version string, pkgPaths []string) {
+	checkDirectory := func(got *Directory, dirPath, modulePath, version string, suffixes []string) {
 		t.Helper()
 
 		mi := sample.ModuleInfo(modulePath, version)
 		var wantPkgs []*Package
-		for _, path := range pkgPaths {
-			sp := sample.DefaultPackage()
-			sp.Path = path
+		for _, suffix := range suffixes {
+			sp := sample.Package(modulePath, suffix)
 			pkg, err := createPackage(sp, mi, false)
 			if err != nil {
 				t.Fatal(err)
@@ -59,47 +58,45 @@ func TestFetchDirectoryDetails(t *testing.T) {
 
 	for _, tc := range []struct {
 		name, dirPath, modulePath, version, wantModulePath, wantVersion string
-		wantPkgPaths                                                    []string
+		wantPkgSuffixes                                                 []string
 		includeDirPath, wantInvalidArgumentErr                          bool
 	}{
 		{
-			name:           "dirPath is modulePath, includeDirPath = true, want longest module path",
-			includeDirPath: true,
-			dirPath:        "github.com/hashicorp/vault/api",
-			modulePath:     "github.com/hashicorp/vault/api",
-			version:        internal.LatestVersion,
-			wantModulePath: "github.com/hashicorp/vault/api",
-			wantVersion:    "v1.1.2",
-			wantPkgPaths: []string{
-				"github.com/hashicorp/vault/api",
-			},
+			name:            "dirPath is modulePath, includeDirPath = true, want longest module path",
+			includeDirPath:  true,
+			dirPath:         "github.com/hashicorp/vault/api",
+			modulePath:      "github.com/hashicorp/vault/api",
+			version:         internal.LatestVersion,
+			wantModulePath:  "github.com/hashicorp/vault/api",
+			wantVersion:     "v1.1.2",
+			wantPkgSuffixes: []string{""},
 		},
 		{
-			name:           "only dirPath provided, includeDirPath = false, want longest module path",
-			dirPath:        "github.com/hashicorp/vault/api",
-			modulePath:     internal.UnknownModulePath,
-			version:        internal.LatestVersion,
-			wantModulePath: "github.com/hashicorp/vault/api",
-			wantVersion:    "v1.1.2",
-			wantPkgPaths:   []string{},
+			name:            "only dirPath provided, includeDirPath = false, want longest module path",
+			dirPath:         "github.com/hashicorp/vault/api",
+			modulePath:      internal.UnknownModulePath,
+			version:         internal.LatestVersion,
+			wantModulePath:  "github.com/hashicorp/vault/api",
+			wantVersion:     "v1.1.2",
+			wantPkgSuffixes: []string{},
 		},
 		{
-			name:           "dirPath@version, includeDirPath = false, want longest module path",
-			dirPath:        "github.com/hashicorp/vault/api",
-			modulePath:     internal.UnknownModulePath,
-			version:        "v1.1.2",
-			wantModulePath: "github.com/hashicorp/vault/api",
-			wantVersion:    "v1.1.2",
-			wantPkgPaths:   []string{},
+			name:            "dirPath@version, includeDirPath = false, want longest module path",
+			dirPath:         "github.com/hashicorp/vault/api",
+			modulePath:      internal.UnknownModulePath,
+			version:         "v1.1.2",
+			wantModulePath:  "github.com/hashicorp/vault/api",
+			wantVersion:     "v1.1.2",
+			wantPkgSuffixes: []string{},
 		},
 		{
-			name:           "dirPath@version,  includeDirPath = false, version only exists for shorter module path",
-			dirPath:        "github.com/hashicorp/vault/api",
-			modulePath:     internal.UnknownModulePath,
-			version:        "v1.0.3",
-			wantModulePath: "github.com/hashicorp/vault",
-			wantVersion:    "v1.0.3",
-			wantPkgPaths:   []string{},
+			name:            "dirPath@version,  includeDirPath = false, version only exists for shorter module path",
+			dirPath:         "github.com/hashicorp/vault/api",
+			modulePath:      internal.UnknownModulePath,
+			version:         "v1.0.3",
+			wantModulePath:  "github.com/hashicorp/vault",
+			wantVersion:     "v1.0.3",
+			wantPkgSuffixes: []string{},
 		},
 		{
 			name:           "valid directory for modulePath@version/suffix, includeDirPath = false",
@@ -108,9 +105,9 @@ func TestFetchDirectoryDetails(t *testing.T) {
 			version:        "v1.0.3",
 			wantModulePath: "github.com/hashicorp/vault",
 			wantVersion:    "v1.0.3",
-			wantPkgPaths: []string{
-				"github.com/hashicorp/vault/builtin/audit/file",
-				"github.com/hashicorp/vault/builtin/audit/socket",
+			wantPkgSuffixes: []string{
+				"builtin/audit/file",
+				"builtin/audit/socket",
 			},
 		},
 		{
@@ -120,7 +117,7 @@ func TestFetchDirectoryDetails(t *testing.T) {
 			version:        "v1.13.4",
 			wantModulePath: stdlib.ModulePath,
 			wantVersion:    "v1.13.4",
-			wantPkgPaths: []string{
+			wantPkgSuffixes: []string{
 				"archive/tar",
 				"archive/zip",
 				"cmd/go",
@@ -136,7 +133,7 @@ func TestFetchDirectoryDetails(t *testing.T) {
 			version:        "v1.13.4",
 			wantModulePath: stdlib.ModulePath,
 			wantVersion:    "v1.13.4",
-			wantPkgPaths: []string{
+			wantPkgSuffixes: []string{
 				"cmd/go",
 				"cmd/internal/obj",
 				"cmd/internal/obj/arm",
@@ -151,7 +148,7 @@ func TestFetchDirectoryDetails(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			checkDirectory(got, tc.dirPath, tc.wantModulePath, tc.wantVersion, tc.wantPkgPaths)
+			checkDirectory(got, tc.dirPath, tc.wantModulePath, tc.wantVersion, tc.wantPkgSuffixes)
 		})
 	}
 }

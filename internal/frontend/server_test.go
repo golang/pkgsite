@@ -70,9 +70,9 @@ type testModule struct {
 }
 
 type testPackage struct {
-	name string
-	path string
-	doc  string
+	name   string
+	suffix string
+	doc    string
 }
 
 var testModules = []testModule{
@@ -83,13 +83,11 @@ var testModules = []testModule{
 		versions:        []string{"v1.0.0", "v0.9.0", pseudoVersion},
 		packages: []testPackage{
 			{
-				name: "foo",
-				path: sample.ModulePath + "/foo",
+				suffix: "foo",
 			},
 			{
-				name: "hello",
-				path: sample.ModulePath + "/foo/directory/hello",
-				doc:  `<a href="/pkg/io#Writer">io.Writer</a>`,
+				suffix: "foo/directory/hello",
+				doc:    `<a href="/pkg/io#Writer">io.Writer</a>`,
 			},
 		},
 	},
@@ -100,8 +98,7 @@ var testModules = []testModule{
 		versions:        []string{"v1.0.0"},
 		packages: []testPackage{
 			{
-				name: "bar",
-				path: "github.com/non_redistributable/bar",
+				suffix: "bar",
 			},
 		},
 	},
@@ -112,8 +109,7 @@ var testModules = []testModule{
 		versions:        []string{pseudoVersion},
 		packages: []testPackage{
 			{
-				name: "baz",
-				path: "github.com/pseudo/dir/baz",
+				suffix: "dir/baz",
 			},
 		},
 	},
@@ -124,8 +120,7 @@ var testModules = []testModule{
 		versions:        []string{"v1.0.0+incompatible"},
 		packages: []testPackage{
 			{
-				name: "inc",
-				path: "github.com/incompatible/dir/inc",
+				suffix: "dir/inc",
 			},
 		},
 	},
@@ -136,8 +131,8 @@ var testModules = []testModule{
 		versions:        []string{"v1.13.0"},
 		packages: []testPackage{
 			{
-				name: "main",
-				path: "cmd/go",
+				name:   "main",
+				suffix: "cmd/go",
 			},
 		},
 	},
@@ -147,9 +142,10 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 	for _, mod := range mods {
 		var ps []*internal.Package
 		for _, pkg := range mod.packages {
-			p := sample.DefaultPackage()
-			p.Name = pkg.name
-			p.Path = pkg.path
+			p := sample.Package(mod.path, pkg.suffix)
+			if pkg.name != "" {
+				p.Name = pkg.name
+			}
 			if pkg.doc != "" {
 				p.DocumentationHTML = pkg.doc
 			}
@@ -157,18 +153,19 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 				p.Licenses = nil
 				p.IsRedistributable = false
 			}
+			p.V1Path = sample.V1Path
 			ps = append(ps, p)
 		}
 		for _, ver := range mod.versions {
-			m := sample.DefaultModule()
-			m.ModulePath = mod.path
-			m.Version = ver
+			m := sample.Module(mod.path, ver)
 			m.SourceInfo = source.NewGitHubInfo(sample.RepositoryURL, "", ver)
 			m.IsRedistributable = mod.redistributable
 			if !m.IsRedistributable {
 				m.Licenses = nil
 			}
-			m.Packages = ps
+			for _, p := range ps {
+				sample.AddPackage(m, p)
+			}
 			if err := testDB.InsertModule(ctx, m); err != nil {
 				t.Fatal(err)
 			}

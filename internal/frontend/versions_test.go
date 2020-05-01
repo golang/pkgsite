@@ -23,12 +23,12 @@ var (
 )
 
 func sampleModule(modulePath, version string, versionType version.Type, packages ...*internal.Package) *internal.Module {
-	m := sample.DefaultModule()
-	m.ModulePath = modulePath
-	m.Version = version
-	m.VersionType = versionType
-	if len(packages) > 0 {
-		m.Packages = packages
+	if len(packages) == 0 {
+		return sample.Module(modulePath, version, sample.Suffix)
+	}
+	m := sample.Module(modulePath, version)
+	for _, p := range packages {
+		sample.AddPackage(m, p)
 	}
 	return m
 }

@@ -19,7 +19,6 @@ import (
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/testing/sample"
-	"golang.org/x/pkgsite/internal/version"
 )
 
 func TestPostgres_GetVersionInfo_Latest(t *testing.T) {
@@ -27,14 +26,6 @@ func TestPostgres_GetVersionInfo_Latest(t *testing.T) {
 	defer cancel()
 
 	defer ResetTestDB(testDB, t)
-
-	sampleModule := func(path, version string, vtype version.Type) *internal.Module {
-		m := sample.DefaultModule()
-		m.ModulePath = path
-		m.Version = version
-		m.VersionType = vtype
-		return m
-	}
 
 	testCases := []struct {
 		name, path string
@@ -46,9 +37,9 @@ func TestPostgres_GetVersionInfo_Latest(t *testing.T) {
 			name: "largest release",
 			path: "mod.1",
 			modules: []*internal.Module{
-				sampleModule("mod.1", "v1.1.0-alpha.1", version.TypePrerelease),
-				sampleModule("mod.1", "v1.0.0", version.TypeRelease),
-				sampleModule("mod.1", "v1.0.0-20190311183353-d8887717615a", version.TypePseudo),
+				sample.Module("mod.1", "v1.1.0-alpha.1", sample.Suffix),
+				sample.Module("mod.1", "v1.0.0", sample.Suffix),
+				sample.Module("mod.1", "v1.0.0-20190311183353-d8887717615a", sample.Suffix),
 			},
 			wantIndex: 1,
 		},
@@ -56,9 +47,9 @@ func TestPostgres_GetVersionInfo_Latest(t *testing.T) {
 			name: "largest prerelease",
 			path: "mod.2",
 			modules: []*internal.Module{
-				sampleModule("mod.2", "v1.1.0-beta.10", version.TypePrerelease),
-				sampleModule("mod.2", "v1.1.0-beta.2", version.TypePrerelease),
-				sampleModule("mod.2", "v1.0.0-20190311183353-d8887717615a", version.TypePseudo),
+				sample.Module("mod.2", "v1.1.0-beta.10", sample.Suffix),
+				sample.Module("mod.2", "v1.1.0-beta.2", sample.Suffix),
+				sample.Module("mod.2", "v1.0.0-20190311183353-d8887717615a", sample.Suffix),
 			},
 			wantIndex: 0,
 		},
@@ -99,37 +90,19 @@ func TestPostgres_GetVersionInfo_Latest(t *testing.T) {
 }
 
 func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
-	pkg := func(path string, imports []string) *internal.Package {
-		p := sample.DefaultPackage()
-		p.Path = path
-		p.Imports = imports
-		return p
-	}
-
-	sampleModule := func(mpath, version string, pkg *internal.Package) *internal.Module {
-		m := sample.DefaultModule()
-		m.ModulePath = mpath
-		m.Version = version
-		m.Packages = []*internal.Package{pkg}
-		return m
-	}
-
 	var (
-		modulePath1 = "path.to/foo"
-		pkgPath1    = "path.to/foo/bar"
-		modulePath2 = "path2.to/foo"
-		pkgPath2    = "path2.to/foo/bar2"
-		modulePath3 = "path3.to/foo"
-		pkgPath3    = "path3.to/foo/bar3"
-		pkg1        = pkg(pkgPath1, nil)
-		pkg2        = pkg(pkgPath2, []string{pkgPath1})
-		pkg3        = pkg(pkgPath3, []string{pkgPath2, pkgPath1})
-		testModules = []*internal.Module{
-			sampleModule(modulePath1, "v1.1.0", pkg1),
-			sampleModule(modulePath2, "v1.2.0", pkg2),
-			sampleModule(modulePath3, "v1.3.0", pkg3),
-		}
+		m1          = sample.Module("path.to/foo", "v1.1.0", "bar")
+		m2          = sample.Module("path2.to/foo", "v1.2.0", "bar2")
+		m3          = sample.Module("path3.to/foo", "v1.3.0", "bar3")
+		testModules = []*internal.Module{m1, m2, m3}
+
+		pkg1 = m1.Packages[0]
+		pkg2 = m2.Packages[0]
+		pkg3 = m3.Packages[0]
 	)
+	pkg1.Imports = nil
+	pkg2.Imports = []string{pkg1.Path}
+	pkg3.Imports = []string{pkg2.Path, pkg1.Path}
 
 	for _, tc := range []struct {
 		path, modulePath, version string
@@ -138,28 +111,28 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 	}{
 		{
 			path:           pkg3.Path,
-			modulePath:     modulePath3,
+			modulePath:     m3.ModulePath,
 			version:        "v1.3.0",
 			wantImports:    pkg3.Imports,
 			wantImportedBy: nil,
 		},
 		{
 			path:           pkg2.Path,
-			modulePath:     modulePath2,
+			modulePath:     m2.ModulePath,
 			version:        "v1.2.0",
 			wantImports:    pkg2.Imports,
 			wantImportedBy: []string{pkg3.Path},
 		},
 		{
 			path:           pkg1.Path,
-			modulePath:     modulePath1,
+			modulePath:     m1.ModulePath,
 			version:        "v1.1.0",
 			wantImports:    nil,
 			wantImportedBy: []string{pkg2.Path, pkg3.Path},
 		},
 		{
 			path:           pkg1.Path,
-			modulePath:     modulePath2, // should cause pkg2 to be excluded.
+			modulePath:     m2.ModulePath, // should cause pkg2 to be excluded.
 			version:        "v1.1.0",
 			wantImports:    nil,
 			wantImportedBy: []string{pkg3.Path},
@@ -204,22 +177,15 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 	defer cancel()
 
 	var (
-		sampleModule = func(modulePath, version string, suffixes ...string) *internal.Module {
-			m := sample.DefaultModule()
-			m.ModulePath = modulePath
-			m.Version = version
-			sample.SetSuffixes(m, suffixes...)
-			return m
-		}
 		modulePath1 = "path.to/foo"
 		modulePath2 = "path.to/foo/v2"
 		modulePath3 = "path.to/some/thing"
 		testModules = []*internal.Module{
-			sampleModule(modulePath3, "v3.0.0", "else"),
-			sampleModule(modulePath1, "v1.0.0-alpha.1", "bar"),
-			sampleModule(modulePath1, "v1.0.0", "bar"),
-			sampleModule(modulePath2, "v2.0.1-beta", "bar"),
-			sampleModule(modulePath2, "v2.1.0", "bar"),
+			sample.Module(modulePath3, "v3.0.0", "else"),
+			sample.Module(modulePath1, "v1.0.0-alpha.1", "bar"),
+			sample.Module(modulePath1, "v1.0.0", "bar"),
+			sample.Module(modulePath2, "v2.0.1-beta", "bar"),
+			sample.Module(modulePath2, "v2.1.0", "bar"),
 		}
 	)
 
@@ -279,10 +245,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 			for i := 0; i < tc.numPseudo; i++ {
 
 				pseudo := fmt.Sprintf("v0.0.0-201806111833%02d-d8887717615a", i+1)
-				m := sampleModule(modulePath1, pseudo, "bar")
-				// TODO: move this handling into SimpleVersion once ParseVersionType is
-				// factored out of fetch.go
-				m.VersionType = version.TypePseudo
+				m := sample.Module(modulePath1, pseudo, "bar")
 				if err := testDB.InsertModule(ctx, m); err != nil {
 					t.Fatal(err)
 				}
@@ -341,9 +304,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 }
 
 func TestGetPackagesInVersion(t *testing.T) {
-	testVersion := sample.DefaultModule()
-	testVersion.ModulePath = "test.module"
-	sample.SetSuffixes(testVersion, "", "foo")
+	testVersion := sample.Module("test.module", "v1.2.3", "", "foo")
 
 	for _, tc := range []struct {
 		name, pkgPath string
@@ -384,9 +345,7 @@ func TestGetPackagesInVersion(t *testing.T) {
 
 func TestGetPackageLicenses(t *testing.T) {
 	modulePath := "test.module"
-	testModule := sample.DefaultModule()
-	testModule.ModulePath = modulePath
-	sample.SetSuffixes(testModule, "", "foo")
+	testModule := sample.Module(modulePath, "v1.2.3", "", "foo")
 	testModule.Packages[0].Licenses = nil
 	testModule.Packages[1].Licenses = sample.LicenseMetadata
 
@@ -428,9 +387,7 @@ func TestGetPackageLicenses(t *testing.T) {
 
 func TestGetModuleLicenses(t *testing.T) {
 	modulePath := "test.module"
-	testModule := sample.DefaultModule()
-	testModule.ModulePath = modulePath
-	sample.SetSuffixes(testModule, "", "foo", "bar")
+	testModule := sample.Module(modulePath, "v1.2.3", "", "foo", "bar")
 	testModule.Packages[0].Licenses = []*licenses.Metadata{{Types: []string{"ISC"}, FilePath: "LICENSE"}}
 	testModule.Packages[1].Licenses = []*licenses.Metadata{{Types: []string{"MIT"}, FilePath: "foo/LICENSE"}}
 	testModule.Packages[2].Licenses = []*licenses.Metadata{{Types: []string{"GPL2"}, FilePath: "bar/LICENSE.txt"}}

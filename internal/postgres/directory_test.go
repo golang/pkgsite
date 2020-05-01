@@ -30,7 +30,7 @@ func TestGetDirectory(t *testing.T) {
 
 	for _, tc := range []struct {
 		name, dirPath, modulePath, version, wantModulePath, wantVersion string
-		wantPkgPaths                                                    []string
+		wantSuffixes                                                    []string
 		wantNotFoundErr                                                 bool
 	}{
 		{
@@ -40,9 +40,7 @@ func TestGetDirectory(t *testing.T) {
 			version:        internal.LatestVersion,
 			wantVersion:    "v1.1.2",
 			wantModulePath: "github.com/hashicorp/vault/api",
-			wantPkgPaths: []string{
-				"github.com/hashicorp/vault/api",
-			},
+			wantSuffixes:   []string{""},
 		},
 		{
 			name:           "specified version with ambigious module path, should match longest module path",
@@ -51,9 +49,7 @@ func TestGetDirectory(t *testing.T) {
 			version:        "v1.1.2",
 			wantVersion:    "v1.1.2",
 			wantModulePath: "github.com/hashicorp/vault/api",
-			wantPkgPaths: []string{
-				"github.com/hashicorp/vault/api",
-			},
+			wantSuffixes:   []string{""},
 		},
 		{
 			name:           "specified version with ambigous module path, but only shorter module path matches for specified version",
@@ -62,9 +58,7 @@ func TestGetDirectory(t *testing.T) {
 			version:        "v1.0.3",
 			wantVersion:    "v1.0.3",
 			wantModulePath: "github.com/hashicorp/vault",
-			wantPkgPaths: []string{
-				"github.com/hashicorp/vault/api",
-			},
+			wantSuffixes:   []string{"api"},
 		},
 		{
 			name:           "specified version with ambiguous module path, two module versions exist, but only shorter module path contains matching package",
@@ -73,9 +67,9 @@ func TestGetDirectory(t *testing.T) {
 			version:        "v1.1.2",
 			wantVersion:    "v1.1.2",
 			wantModulePath: "github.com/hashicorp/vault",
-			wantPkgPaths: []string{
-				"github.com/hashicorp/vault/builtin/audit/file",
-				"github.com/hashicorp/vault/builtin/audit/socket",
+			wantSuffixes: []string{
+				"builtin/audit/file",
+				"builtin/audit/socket",
 			},
 		},
 		{
@@ -85,9 +79,7 @@ func TestGetDirectory(t *testing.T) {
 			version:        "v1.0.3",
 			wantVersion:    "v1.0.3",
 			wantModulePath: "github.com/hashicorp/vault",
-			wantPkgPaths: []string{
-				"github.com/hashicorp/vault/api",
-			},
+			wantSuffixes:   []string{"api"},
 		},
 		{
 			name:           "directory path is the module path at latest",
@@ -96,12 +88,12 @@ func TestGetDirectory(t *testing.T) {
 			version:        internal.LatestVersion,
 			wantVersion:    "v1.2.3",
 			wantModulePath: "github.com/hashicorp/vault",
-			wantPkgPaths: []string{
-				"github.com/hashicorp/vault/internal/foo",
-				"github.com/hashicorp/vault/builtin/audit/file",
-				"github.com/hashicorp/vault/builtin/audit/socket",
-				"github.com/hashicorp/vault/vault/replication",
-				"github.com/hashicorp/vault/vault/seal/transit",
+			wantSuffixes: []string{
+				"internal/foo",
+				"builtin/audit/file",
+				"builtin/audit/socket",
+				"vault/replication",
+				"vault/seal/transit",
 			},
 		},
 		{
@@ -111,10 +103,10 @@ func TestGetDirectory(t *testing.T) {
 			version:        "v1.0.3",
 			wantVersion:    "v1.0.3",
 			wantModulePath: "github.com/hashicorp/vault",
-			wantPkgPaths: []string{
-				"github.com/hashicorp/vault/api",
-				"github.com/hashicorp/vault/builtin/audit/file",
-				"github.com/hashicorp/vault/builtin/audit/socket",
+			wantSuffixes: []string{
+				"api",
+				"builtin/audit/file",
+				"builtin/audit/socket",
 			},
 		},
 		{
@@ -124,10 +116,10 @@ func TestGetDirectory(t *testing.T) {
 			version:        "v1.0.3",
 			wantVersion:    "v1.0.3",
 			wantModulePath: "github.com/hashicorp/vault",
-			wantPkgPaths: []string{
-				"github.com/hashicorp/vault/api",
-				"github.com/hashicorp/vault/builtin/audit/file",
-				"github.com/hashicorp/vault/builtin/audit/socket",
+			wantSuffixes: []string{
+				"api",
+				"builtin/audit/file",
+				"builtin/audit/socket",
 			},
 		},
 		{
@@ -137,9 +129,9 @@ func TestGetDirectory(t *testing.T) {
 			wantModulePath: "github.com/hashicorp/vault",
 			version:        "v1.0.3",
 			wantVersion:    "v1.0.3",
-			wantPkgPaths: []string{
-				"github.com/hashicorp/vault/builtin/audit/file",
-				"github.com/hashicorp/vault/builtin/audit/socket",
+			wantSuffixes: []string{
+				"builtin/audit/file",
+				"builtin/audit/socket",
 			},
 		},
 		{
@@ -149,9 +141,9 @@ func TestGetDirectory(t *testing.T) {
 			wantModulePath: "github.com/hashicorp/vault",
 			version:        "v1.0.3",
 			wantVersion:    "v1.0.3",
-			wantPkgPaths: []string{
-				"github.com/hashicorp/vault/builtin/audit/file",
-				"github.com/hashicorp/vault/builtin/audit/socket",
+			wantSuffixes: []string{
+				"builtin/audit/file",
+				"builtin/audit/socket",
 			},
 		},
 		{
@@ -161,8 +153,8 @@ func TestGetDirectory(t *testing.T) {
 			version:        internal.LatestVersion,
 			wantModulePath: "github.com/hashicorp/vault",
 			wantVersion:    "v1.1.2",
-			wantPkgPaths: []string{
-				"github.com/hashicorp/vault/api",
+			wantSuffixes: []string{
+				"api",
 			},
 		},
 		{
@@ -172,9 +164,7 @@ func TestGetDirectory(t *testing.T) {
 			version:        internal.LatestVersion,
 			wantModulePath: "github.com/hashicorp/vault/api",
 			wantVersion:    "v1.1.2",
-			wantPkgPaths: []string{
-				"github.com/hashicorp/vault/api",
-			},
+			wantSuffixes:   []string{""},
 		},
 		{
 			name:           "latest version of internal directory in github.com/hashicorp/vault",
@@ -183,9 +173,7 @@ func TestGetDirectory(t *testing.T) {
 			version:        internal.LatestVersion,
 			wantModulePath: "github.com/hashicorp/vault",
 			wantVersion:    "v1.2.3",
-			wantPkgPaths: []string{
-				"github.com/hashicorp/vault/internal/foo",
-			},
+			wantSuffixes:   []string{"internal/foo"},
 		},
 		{
 			name:            "invalid directory, incomplete last element",
@@ -201,7 +189,7 @@ func TestGetDirectory(t *testing.T) {
 			version:        internal.LatestVersion,
 			wantModulePath: stdlib.ModulePath,
 			wantVersion:    "v1.13.4",
-			wantPkgPaths: []string{
+			wantSuffixes: []string{
 				"archive/zip",
 				"archive/tar",
 			},
@@ -213,7 +201,7 @@ func TestGetDirectory(t *testing.T) {
 			version:        internal.LatestVersion,
 			wantModulePath: stdlib.ModulePath,
 			wantVersion:    "v1.13.4",
-			wantPkgPaths: []string{
+			wantSuffixes: []string{
 				"archive/zip",
 			},
 		},
@@ -231,7 +219,7 @@ func TestGetDirectory(t *testing.T) {
 			version:        internal.LatestVersion,
 			wantModulePath: stdlib.ModulePath,
 			wantVersion:    "v1.13.4",
-			wantPkgPaths: []string{
+			wantSuffixes: []string{
 				"cmd/internal/obj",
 				"cmd/internal/obj/arm",
 				"cmd/internal/obj/arm64",
@@ -244,7 +232,7 @@ func TestGetDirectory(t *testing.T) {
 			version:        internal.LatestVersion,
 			wantModulePath: stdlib.ModulePath,
 			wantVersion:    "v1.13.4",
-			wantPkgPaths: []string{
+			wantSuffixes: []string{
 				"cmd/internal/obj",
 				"cmd/internal/obj/arm",
 				"cmd/internal/obj/arm64",
@@ -265,9 +253,8 @@ func TestGetDirectory(t *testing.T) {
 
 			mi := sample.ModuleInfo(tc.wantModulePath, tc.wantVersion)
 			var wantPackages []*internal.Package
-			for _, path := range tc.wantPkgPaths {
-				pkg := sample.DefaultPackage()
-				pkg.Path = path
+			for _, suffix := range tc.wantSuffixes {
+				pkg := sample.Package(tc.wantModulePath, suffix)
 				pkg.Imports = nil
 				wantPackages = append(wantPackages, pkg)
 			}
@@ -299,12 +286,8 @@ func TestGetDirectoryFieldSet(t *testing.T) {
 
 	defer ResetTestDB(testDB, t)
 
-	p := sample.DefaultPackage()
-	p.Path = "m.c/d/p"
-	p.Imports = nil
-	m := sample.DefaultModule()
-	m.ModulePath = "m.c"
-	m.Packages = []*internal.Package{p}
+	m := sample.Module("m.c", sample.VersionString, "d/p")
+	m.Packages[0].Imports = nil
 	if err := testDB.InsertModule(ctx, m); err != nil {
 		t.Fatal(err)
 	}

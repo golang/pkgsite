@@ -41,14 +41,9 @@ func TestInsertModule(t *testing.T) {
 		{
 			name: "valid test with internal package",
 			module: func() *internal.Module {
-				m := sample.DefaultModule()
-				p := sample.DefaultPackage()
-				p.Path = sample.ModulePath + "/internal/foo"
-				m.Packages = []*internal.Package{p}
-				d1 := sample.DirectoryNewForModuleRoot(&m.ModuleInfo, p.Licenses)
-				d2 := sample.DirectoryNewEmpty(sample.ModulePath + "/internal")
-				d3 := sample.DirectoryNewForPackage(p)
-				m.Directories = []*internal.DirectoryNew{d1, d2, d3}
+				m := sample.Module(sample.ModulePath, sample.VersionString, "internal/ffoo")
+				m.Directories = append(m.Directories,
+					sample.DirectoryNewEmpty(sample.ModulePath+"/internal"))
 				return m
 			}(),
 		},
@@ -63,9 +58,7 @@ func TestInsertModule(t *testing.T) {
 		{
 			name: "stdlib",
 			module: func() *internal.Module {
-				m := sample.DefaultModule()
-				m.ModulePath = "std"
-				m.Version = "v1.12.5"
+				m := sample.Module("std", "v1.12.5")
 				p := &internal.Package{
 					Name:              "context",
 					Path:              "context",
@@ -73,11 +66,7 @@ func TestInsertModule(t *testing.T) {
 					Licenses:          sample.LicenseMetadata,
 					DocumentationHTML: "This is the documentation HTML",
 				}
-				m.Packages = []*internal.Package{p}
-				d1 := sample.DirectoryNewForModuleRoot(&m.ModuleInfo, p.Licenses)
-				d2 := sample.DirectoryNewForPackage(p)
-				m.Directories = []*internal.DirectoryNew{d1, d2}
-				return m
+				return sample.AddPackage(m, p)
 			}(),
 		},
 	} {
@@ -177,12 +166,8 @@ func TestInsertModuleErrors(t *testing.T) {
 			wantPkgPath:    sample.PackagePath,
 		},
 		{
-			name: "missing module path",
-			module: func() *internal.Module {
-				v := sample.DefaultModule()
-				v.ModulePath = ""
-				return v
-			}(),
+			name:           "missing module path",
+			module:         sample.Module("", sample.VersionString),
 			wantVersion:    sample.VersionString,
 			wantModulePath: sample.ModulePath,
 			wantWriteErr:   derrors.DBModuleInsertInvalid,
@@ -190,9 +175,9 @@ func TestInsertModuleErrors(t *testing.T) {
 		{
 			name: "missing version",
 			module: func() *internal.Module {
-				v := sample.DefaultModule()
-				v.Version = ""
-				return v
+				m := sample.DefaultModule()
+				m.Version = ""
+				return m
 			}(),
 			wantVersion:    sample.VersionString,
 			wantModulePath: sample.ModulePath,
@@ -231,10 +216,7 @@ func TestPostgres_ReadAndWriteModuleOtherColumns(t *testing.T) {
 		sortVersion, seriesPath string
 	}
 
-	v := sample.DefaultModule()
-	v.ModulePath = "github.com/user/repo/path/v2"
-	v.Version = "v1.2.3-beta.4.a"
-
+	v := sample.Module("github.com/user/repo/path/v2", "v1.2.3-beta.4.a", sample.Suffix)
 	want := other{
 		sortVersion: "1,2,3,~beta,4,~a",
 		seriesPath:  "github.com/user/repo/path",
@@ -295,10 +277,9 @@ func TestPostgres_NewerAlternative(t *testing.T) {
 	defer ResetTestDB(testDB, t)
 
 	const (
-		modulePath  = "example.com/Mod"
-		packagePath = modulePath + "/p"
-		altVersion  = "v1.2.0"
-		okVersion   = "v1.0.0"
+		modulePath = "example.com/Mod"
+		altVersion = "v1.2.0"
+		okVersion  = "v1.0.0"
 	)
 
 	err := testDB.UpsertModuleVersionState(ctx, modulePath, altVersion, "appVersion", time.Now(),
@@ -306,15 +287,11 @@ func TestPostgres_NewerAlternative(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	m := sample.DefaultModule()
-	m.ModulePath = modulePath
-	m.Version = okVersion
-	m.Packages[0].Name = "p"
-	m.Packages[0].Path = packagePath
+	m := sample.Module(modulePath, okVersion, "p")
 	if err := testDB.InsertModule(ctx, m); err != nil {
 		t.Fatal(err)
 	}
-	if _, _, found := GetFromSearchDocuments(ctx, t, testDB, packagePath); found {
+	if _, _, found := GetFromSearchDocuments(ctx, t, testDB, m.Packages[0].Path); found {
 		t.Fatal("found package after inserting")
 	}
 }

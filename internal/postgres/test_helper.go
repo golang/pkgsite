@@ -14,7 +14,6 @@ import (
 	"testing"
 
 	"github.com/golang-migrate/migrate/v4"
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/testing/dbtest"
@@ -146,7 +145,7 @@ func InsertSampleDirectoryTree(ctx context.Context, t *testing.T, testDB *DB) {
 
 	for _, data := range []struct {
 		modulePath, version string
-		paths               []string
+		suffixes            []string
 	}{
 		{
 			"std",
@@ -175,52 +174,44 @@ func InsertSampleDirectoryTree(ctx context.Context, t *testing.T, testDB *DB) {
 		{
 			"github.com/hashicorp/vault/api",
 			"v1.1.2",
-			[]string{"github.com/hashicorp/vault/api"},
+			[]string{""},
 		},
 		{
 			"github.com/hashicorp/vault",
 			"v1.1.2",
 			[]string{
-				"github.com/hashicorp/vault/api",
-				"github.com/hashicorp/vault/builtin/audit/file",
-				"github.com/hashicorp/vault/builtin/audit/socket",
-				"github.com/hashicorp/vault/vault/replication",
-				"github.com/hashicorp/vault/vault/seal/transit",
+				"api",
+				"builtin/audit/file",
+				"builtin/audit/socket",
+				"vault/replication",
+				"vault/seal/transit",
 			},
 		},
 		{
 			"github.com/hashicorp/vault",
 			"v1.2.3",
 			[]string{
-				"github.com/hashicorp/vault/internal/foo",
-				"github.com/hashicorp/vault/builtin/audit/file",
-				"github.com/hashicorp/vault/builtin/audit/socket",
-				"github.com/hashicorp/vault/vault/replication",
-				"github.com/hashicorp/vault/vault/seal/transit",
+				"internal/foo",
+				"builtin/audit/file",
+				"builtin/audit/socket",
+				"vault/replication",
+				"vault/seal/transit",
 			},
 		},
 		{
 			"github.com/hashicorp/vault",
 			"v1.0.3",
 			[]string{
-				"github.com/hashicorp/vault/api",
-				"github.com/hashicorp/vault/builtin/audit/file",
-				"github.com/hashicorp/vault/builtin/audit/socket",
+				"api",
+				"builtin/audit/file",
+				"builtin/audit/socket",
 			},
 		},
 	} {
-		var pkgs []*internal.Package
-		for _, path := range data.paths {
-			p := sample.DefaultPackage()
-			p.Path = path
+		m := sample.Module(data.modulePath, data.version, data.suffixes...)
+		for _, p := range m.Packages {
 			p.Imports = nil
-			pkgs = append(pkgs, p)
 		}
-
-		m := sample.DefaultModule()
-		m.ModulePath = data.modulePath
-		m.Version = data.version
-		m.Packages = pkgs
 		if err := testDB.InsertModule(ctx, m); err != nil {
 			t.Fatal(err)
 		}

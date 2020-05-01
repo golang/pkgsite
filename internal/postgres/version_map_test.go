@@ -18,11 +18,7 @@ func TestReadAndWriteVersionMap(t *testing.T) {
 	defer cancel()
 	defer ResetTestDB(testDB, t)
 
-	m := sample.DefaultModule()
-	m.ModulePath = "golang.org/x/tools"
-	p := sample.DefaultPackage()
-	p.Path = "golang.org/x/tools/go/packages"
-	m.Packages = []*internal.Package{p}
+	m := sample.Module("golang.org/x/tools", sample.VersionString, "go/packages")
 	err := testDB.InsertModule(ctx, m)
 	if err != nil {
 		t.Fatal(err)

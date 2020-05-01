@@ -10,7 +10,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/lib/pq"
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
@@ -66,11 +65,16 @@ func TestToTsvectorParentDirectoriesStoredProcedure(t *testing.T) {
 		t.Run(tc.path, func(t *testing.T) {
 			defer ResetTestDB(testDB, t)
 
-			m := sample.DefaultModule()
-			m.ModulePath = tc.modulePath
-			pkg := sample.DefaultPackage()
-			pkg.Path = tc.path
-			m.Packages = []*internal.Package{pkg}
+			var suffix string
+			switch tc.modulePath {
+			case "std":
+				suffix = tc.path
+			case tc.path:
+				suffix = ""
+			default:
+				suffix = tc.path[len(tc.modulePath)+1:]
+			}
+			m := sample.Module(tc.modulePath, sample.VersionString, suffix)
 			if err := testDB.InsertModule(ctx, m); err != nil {
 				t.Fatal(err)
 			}

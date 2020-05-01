@@ -7,8 +7,10 @@
 package sample
 
 import (
+	"fmt"
 	"math"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
@@ -77,10 +79,6 @@ func NowTruncated() time.Time {
 	return time.Now().Truncate(time.Microsecond)
 }
 
-func DefaultPackage() *internal.Package {
-	return Package(ModulePath, "foo")
-}
-
 // Package constructs a package with the given module path and suffix.
 //
 // If modulePath is the standard library, the package path is the
@@ -134,7 +132,9 @@ func ModuleInfoReleaseType(modulePath, versionString string) *internal.ModuleInf
 }
 
 func DefaultModule() *internal.Module {
-	return AddPackage(Module(ModulePath, VersionString), DefaultPackage())
+	return AddPackage(
+		Module(ModulePath, VersionString),
+		Package(ModulePath, Suffix))
 }
 
 // Module creates a Module with the given path and version.
@@ -156,6 +156,10 @@ func Module(modulePath, version string, suffixes ...string) *internal.Module {
 }
 
 func AddPackage(m *internal.Module, p *internal.Package) *internal.Module {
+	if m.ModulePath != stdlib.ModulePath && !strings.HasPrefix(p.Path, m.ModulePath) {
+		panic(fmt.Sprintf("package path %q not a prefix of module path %q",
+			p.Path, m.ModulePath))
+	}
 	m.Packages = append(m.Packages, p)
 	m.Directories = append(m.Directories, DirectoryNewForPackage(p))
 	return m
@@ -203,18 +207,5 @@ func DirectoryNewForPackage(pkg *internal.Package) *internal.DirectoryNew {
 				GOARCH:   pkg.GOARCH,
 			},
 		},
-	}
-}
-
-// SetSuffixes sets packages corresponding to the given path suffixes.  Paths
-// are constructed using the existing module path of the Version.
-func SetSuffixes(m *internal.Module, suffixes ...string) {
-	series := internal.SeriesPathForModule(m.ModulePath)
-	m.Packages = nil
-	for _, suffix := range suffixes {
-		p := DefaultPackage()
-		p.Path = path.Join(m.ModulePath, suffix)
-		p.V1Path = path.Join(series, suffix)
-		m.Packages = append(m.Packages, p)
 	}
 }

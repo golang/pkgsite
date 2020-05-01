@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"context"
+	"path"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -48,10 +49,8 @@ func TestFetchImportsDetails(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 			defer cancel()
 
-			module := sample.DefaultModule()
-			pkg := sample.DefaultPackage()
-			pkg.Imports = tc.imports
-			module.Packages = []*internal.Package{pkg}
+			module := sample.Module(sample.ModulePath, sample.VersionString, sample.Suffix)
+			module.Packages[0].Imports = tc.imports
 
 			if err := testDB.InsertModule(ctx, module); err != nil {
 				t.Fatal(err)
@@ -88,21 +87,18 @@ func TestFetchImportedByDetails(t *testing.T) {
 	defer cancel()
 
 	newModule := func(modPath string, pkgs ...*internal.Package) *internal.Module {
-		m := sample.DefaultModule()
-		m.ModulePath = modPath
-		m.Packages = pkgs
+		m := sample.Module(modPath, sample.VersionString)
+		for _, p := range pkgs {
+			sample.AddPackage(m, p)
+		}
 		return m
 	}
 
-	pkg1 := sample.DefaultPackage()
-	pkg1.Path = "path.to/foo/bar"
-
-	pkg2 := sample.DefaultPackage()
-	pkg2.Path = "path2.to/foo/bar2"
+	pkg1 := sample.Package("path.to/foo", "bar")
+	pkg2 := sample.Package("path2.to/foo", "bar2")
 	pkg2.Imports = []string{pkg1.Path}
 
-	pkg3 := sample.DefaultPackage()
-	pkg3.Path = "path3.to/foo/bar3"
+	pkg3 := sample.Package("path3.to/foo", "bar3")
 	pkg3.Imports = []string{pkg2.Path, pkg1.Path}
 
 	testModules := []*internal.Module{
@@ -146,7 +142,7 @@ func TestFetchImportedByDetails(t *testing.T) {
 		},
 	} {
 		t.Run(tc.pkg.Path, func(t *testing.T) {
-			otherVersion := newModule("path.to/foo", tc.pkg)
+			otherVersion := newModule(path.Dir(tc.pkg.Path), tc.pkg)
 			otherVersion.Version = "v1.0.5"
 			vp := firstVersionedPackage(otherVersion)
 			got, err := fetchImportedByDetails(ctx, testDB, vp)
