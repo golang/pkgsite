@@ -94,33 +94,35 @@ func TestElapsedTime(t *testing.T) {
 }
 
 func TestCreatePackageHeader(t *testing.T) {
+	vpkg := func(modulePath, suffix, name string) *internal.VersionedPackage {
+		vp := &internal.VersionedPackage{
+			ModuleInfo: *sample.ModuleInfo(modulePath, sample.VersionString),
+			Package:    *sample.Package(modulePath, suffix),
+		}
+		if name != "" {
+			vp.Package.Name = name
+		}
+		return vp
+	}
+
 	for _, tc := range []struct {
 		label   string
 		pkg     *internal.VersionedPackage
 		wantPkg *Package
 	}{
 		{
-			label: "simple package",
-			pkg: &internal.VersionedPackage{
-				ModuleInfo: *sample.ModuleInfo(sample.ModulePath, sample.VersionString),
-				Package:    *sample.DefaultPackage(),
-			},
+			label:   "simple package",
+			pkg:     vpkg(sample.ModulePath, sample.Suffix, ""),
 			wantPkg: samplePackage(),
 		},
 		{
-			label: "command package",
-			pkg: &internal.VersionedPackage{
-				ModuleInfo: *sample.ModuleInfo(sample.ModulePath, sample.VersionString),
-				Package:    *sample.Package("main", sample.PackagePath, sample.V1Path),
-			},
+			label:   "command package",
+			pkg:     vpkg(sample.ModulePath, sample.Suffix, "main"),
 			wantPkg: samplePackage(),
 		},
 		{
 			label: "v2 command",
-			pkg: &internal.VersionedPackage{
-				ModuleInfo: *sample.ModuleInfo("pa.th/to/foo/v2", sample.VersionString),
-				Package:    *sample.Package("main", "pa.th/to/foo/v2/bar", "pa.th/to/foo/bar"),
-			},
+			pkg:   vpkg("pa.th/to/foo/v2", "bar", "main"),
 			wantPkg: samplePackage(func(p *Package) {
 				p.Path = "pa.th/to/foo/v2/bar"
 				p.ModulePath = "pa.th/to/foo/v2"
@@ -128,10 +130,7 @@ func TestCreatePackageHeader(t *testing.T) {
 		},
 		{
 			label: "explicit v1 command",
-			pkg: &internal.VersionedPackage{
-				ModuleInfo: *sample.ModuleInfo("pa.th/to/foo/v1", sample.VersionString),
-				Package:    *sample.Package("main", "pa.th/to/foo/v1", "pa.th/to/foo/v1"),
-			},
+			pkg:   vpkg("pa.th/to/foo/v1", "", "main"),
 			wantPkg: samplePackage(func(p *Package) {
 				p.Path = "pa.th/to/foo/v1"
 				p.ModulePath = "pa.th/to/foo/v1"

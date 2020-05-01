@@ -17,6 +17,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -41,8 +42,9 @@ var (
 	}
 	DocumentationHTML = "This is the documentation HTML"
 	PackageName       = "foo"
-	PackagePath       = "github.com/valid_module_name/foo"
-	V1Path            = "github.com/valid_module_name/foo"
+	Suffix            = "foo"
+	PackagePath       = path.Join(ModulePath, Suffix)
+	V1Path            = PackagePath
 	Imports           = []string{"path/to/bar", "fmt"}
 	Synopsis          = "This is a package synopsis"
 	ReadmeFilePath    = "README.md"
@@ -76,14 +78,25 @@ func NowTruncated() time.Time {
 }
 
 func DefaultPackage() *internal.Package {
-	return Package(PackageName, PackagePath, V1Path)
+	return Package(ModulePath, "foo")
 }
 
-func Package(name, path, v1path string) *internal.Package {
+// Package constructs a package with the given module path and suffix.
+//
+// If modulePath is the standard library, the package path is the
+// suffix, which must not be empty. Otherwise, the package path
+// is the concatenation of modulePath and suffix.
+//
+// The package name is last component of the package path.
+func Package(modulePath, suffix string) *internal.Package {
+	pkgPath := suffix
+	if modulePath != stdlib.ModulePath {
+		pkgPath = path.Join(modulePath, suffix)
+	}
 	return &internal.Package{
-		Name:              name,
-		Path:              path,
-		V1Path:            v1path,
+		Name:              path.Base(pkgPath),
+		Path:              pkgPath,
+		V1Path:            internal.V1Path(modulePath, suffix),
 		Synopsis:          Synopsis,
 		IsRedistributable: true,
 		Licenses:          LicenseMetadata,
@@ -124,9 +137,11 @@ func DefaultModule() *internal.Module {
 	return AddPackage(Module(ModulePath, VersionString), DefaultPackage())
 }
 
-func Module(modulePath, version string) *internal.Module {
+// Module creates a Module with the given path and version.
+// The list of suffixes is used to create Packages within the module.
+func Module(modulePath, version string, suffixes ...string) *internal.Module {
 	mi := ModuleInfo(modulePath, version)
-	return &internal.Module{
+	m := &internal.Module{
 		ModuleInfo: *mi,
 		Packages:   nil,
 		Licenses:   Licenses,
@@ -134,6 +149,10 @@ func Module(modulePath, version string) *internal.Module {
 			DirectoryNewForModuleRoot(mi, LicenseMetadata),
 		},
 	}
+	for _, s := range suffixes {
+		AddPackage(m, Package(modulePath, s))
+	}
+	return m
 }
 
 func AddPackage(m *internal.Module, p *internal.Package) *internal.Module {

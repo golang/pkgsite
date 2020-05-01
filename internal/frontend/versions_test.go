@@ -163,15 +163,15 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 
 	pkg1 := &internal.VersionedPackage{
 		ModuleInfo: *sample.ModuleInfo(modulePath1, "v1.2.1"),
-		Package:    *sample.Package(sample.PackageName, v1Path, v1Path),
+		Package:    *sample.Package(modulePath1, sample.Suffix),
 	}
 	pkg2 := &internal.VersionedPackage{
 		ModuleInfo: *sample.ModuleInfo(modulePath2, "v2.2.1-alpha.1"),
-		Package:    *sample.Package(sample.PackageName, v2Path, v1Path),
+		Package:    *sample.Package(modulePath2, sample.Suffix),
 	}
 	nethttpPkg := &internal.VersionedPackage{
 		ModuleInfo: *sample.ModuleInfo("std", "v1.12.5"),
-		Package:    *sample.Package(sample.PackageName, "net/http", "net/http"),
+		Package:    *sample.Package("std", "net/http"),
 	}
 	makeList := func(pkgPath, modulePath, major string, versions []string) *VersionList {
 		return &VersionList{

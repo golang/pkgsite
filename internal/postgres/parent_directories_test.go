@@ -15,7 +15,7 @@ import (
 )
 
 func TestToTsvectorParentDirectoriesStoredProcedure(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
 	defer cancel()
 
 	for _, tc := range []struct {

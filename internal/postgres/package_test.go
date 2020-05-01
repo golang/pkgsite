@@ -25,11 +25,19 @@ func TestGetPackage(t *testing.T) {
 
 	defer ResetTestDB(testDB, t)
 
+	suffix := func(pkgPath, modulePath string) string {
+		if modulePath == stdlib.ModulePath {
+			return pkgPath
+		}
+		if pkgPath == modulePath {
+			return ""
+		}
+		return pkgPath[len(modulePath)+1:]
+	}
+
 	insertModule := func(pkgPath, modulePath, version string) {
 		t.Helper()
-		m := sample.AddPackage(
-			sample.Module(modulePath, version),
-			sample.Package(sample.PackageName, pkgPath, pkgPath))
+		m := sample.Module(modulePath, version, suffix(pkgPath, modulePath))
 		if err := testDB.InsertModule(ctx, m); err != nil {
 			t.Fatal(err)
 		}
@@ -38,7 +46,7 @@ func TestGetPackage(t *testing.T) {
 		t.Helper()
 		want := &internal.VersionedPackage{
 			ModuleInfo: *sample.ModuleInfo(modulePath, version),
-			Package:    *sample.Package(sample.PackageName, pkgPath, pkgPath),
+			Package:    *sample.Package(modulePath, suffix(pkgPath, modulePath)),
 		}
 		want.Imports = nil
 		opts := cmp.Options{
