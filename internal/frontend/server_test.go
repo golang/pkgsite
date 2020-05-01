@@ -17,6 +17,7 @@ import (
 
 	"golang.org/x/net/html"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/source"
@@ -154,6 +155,7 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 				p.Licenses = nil
 				p.IsRedistributable = false
 			}
+			p.V1Path = sample.V1Path
 			ps = append(ps, p)
 		}
 		for _, ver := range mod.versions {
@@ -169,16 +171,34 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 			if err := testDB.InsertModule(ctx, m); err != nil {
 				t.Fatal(err)
 			}
+
 		}
 	}
 }
 
 func TestServer(t *testing.T) {
+	t.Run("no experiments", func(t *testing.T) {
+		testServer(t)
+	})
+	t.Run("insert-directories", func(t *testing.T) {
+		testServer(t, internal.ExperimentUseDirectories, internal.ExperimentInsertDirectories)
+	})
+}
+
+func testServer(t *testing.T, experimentNames ...string) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-
 	defer postgres.ResetTestDB(testDB, t)
 
+	// Experiments need to be set in the context, for DB work, and as
+	// a middleware, for request handling.
+	expmap := map[string]bool{}
+	var exps []*internal.Experiment
+	for _, n := range experimentNames {
+		expmap[n] = true
+		exps = append(exps, &internal.Experiment{Name: n, Rollout: 100})
+	}
+	ctx = experiment.NewContext(ctx, experiment.NewSet(expmap))
 	insertTestModules(ctx, t, testModules)
 
 	s, err := NewServer(testDB, nil, "../../content/static", "../../third_party", false)
@@ -187,7 +207,14 @@ func TestServer(t *testing.T) {
 	}
 	mux := http.NewServeMux()
 	s.Install(mux.Handle, nil)
+
 	handler := middleware.LatestVersion(s.LatestVersion)(mux)
+	esrc := internal.NewLocalExperimentSource(exps)
+	exp, err := middleware.NewExperimenter(ctx, time.Hour, esrc, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	handler = middleware.Experiment(exp)(handler)
 
 	var (
 		in   = htmlcheck.In

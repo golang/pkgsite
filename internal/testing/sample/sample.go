@@ -162,6 +162,22 @@ func AddPackage(m *internal.Module, p *internal.Package) *internal.Module {
 	}
 	m.Packages = append(m.Packages, p)
 	m.Directories = append(m.Directories, DirectoryNewForPackage(p))
+	minLen := len(m.ModulePath)
+	if m.ModulePath == stdlib.ModulePath {
+		minLen = 1
+	}
+	for pth := p.Path; len(pth) > minLen; pth = path.Dir(pth) {
+		found := false
+		for _, d := range m.Directories {
+			if d.Path == pth {
+				found = true
+				break
+			}
+		}
+		if !found {
+			m.Directories = append(m.Directories, DirectoryNewEmpty(pth))
+		}
+	}
 	return m
 }
 

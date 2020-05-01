@@ -10,6 +10,7 @@ import (
 
 const (
 	ExperimentInsertDirectories     = "insert-directories"
+	ExperimentUseDirectories        = "use-directories"
 	ExperimentInsertPlaygroundLinks = "insert-playground-links"
 )
 

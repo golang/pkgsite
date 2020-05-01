@@ -14,6 +14,7 @@ import (
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 )
 
@@ -43,6 +44,11 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 	if err := checkPathAndVersion(ctx, s.ds, pkgPath, version); err != nil {
 		return err
 	}
+
+	if experiment.IsActive(ctx, internal.ExperimentUseDirectories) {
+		return s.servePackagePageNew(w, r, pkgPath, modulePath, version)
+	}
+
 	// This function handles top level behavior related to the existence of the
 	// requested pkgPath@version.
 	//   1. If a package exists at this version, serve it.
@@ -141,4 +147,50 @@ func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.Respons
 	}
 	s.servePage(ctx, w, settings.TemplateName, page)
 	return nil
+}
+
+func (s *Server) servePackagePageNew(w http.ResponseWriter, r *http.Request, fullPath, inModulePath, inVersion string) (err error) {
+	defer derrors.Wrap(&err, "servePackagePageNew(w, r, %q, %q, %q)", fullPath, inModulePath, inVersion)
+
+	ctx := r.Context()
+	modulePath, version, isPackage, err := s.ds.GetPathInfo(ctx, fullPath, inModulePath, inVersion)
+	if err != nil {
+		if !errors.Is(err, derrors.NotFound) {
+			return err
+		}
+		if inVersion == internal.LatestVersion {
+			return pathNotFoundError("package")
+		}
+		// We couldn't find a path at the given version, but if there's one at the latest version
+		// we can provide a link to it.
+		modulePath, version, _, err = s.ds.GetPathInfo(ctx, fullPath, inModulePath, internal.LatestVersion)
+		if err != nil {
+			if errors.Is(err, derrors.NotFound) {
+				return pathNotFoundError("package")
+			}
+			return err
+		}
+		return &serverError{
+			status: http.StatusNotFound,
+			epage: &errorPage{
+				Message: fmt.Sprintf("Package %s@%s is not available.", fullPath, displayVersion(version, modulePath)),
+				SecondaryMessage: template.HTML(
+					fmt.Sprintf(`There are other versions of this package that are! To view them, `+
+						`<a href="/%s?tab=versions">click here</a>.`,
+						fullPath)),
+			},
+		}
+	}
+	if isPackage {
+		pkg, err := s.ds.GetPackage(ctx, fullPath, modulePath, version)
+		if err != nil {
+			return err
+		}
+		return s.servePackagePageWithPackage(ctx, w, r, pkg, inVersion)
+	}
+	dir, err := s.ds.GetDirectory(ctx, fullPath, modulePath, version, internal.AllFields)
+	if err != nil {
+		return err
+	}
+	return s.serveDirectoryPageWithDirectory(ctx, w, r, dir, inVersion)
 }
