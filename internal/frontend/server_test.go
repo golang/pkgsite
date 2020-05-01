@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -153,7 +154,6 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 				p.Licenses = nil
 				p.IsRedistributable = false
 			}
-			p.V1Path = sample.V1Path
 			ps = append(ps, p)
 		}
 		for _, ver := range mod.versions {
@@ -338,7 +338,6 @@ func TestServer(t *testing.T) {
 		unversioned = false
 	)
 
-	pkgSuffix := strings.TrimPrefix(sample.PackagePath, sample.ModulePath+"/")
 	for _, tc := range []struct {
 		// name of the test
 		name string
@@ -416,7 +415,7 @@ func TestServer(t *testing.T) {
 		},
 		{
 			name:           "package@version default",
-			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=doc", sample.ModulePath, sample.VersionString, pkgSuffix),
+			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=doc", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.PackageHeader(pkgV100, versioned),
@@ -431,7 +430,7 @@ func TestServer(t *testing.T) {
 		},
 		{
 			name:           "package@version doc tab",
-			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=doc", sample.ModulePath, "v0.9.0", pkgSuffix),
+			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=doc", sample.ModulePath, "v0.9.0", sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.PackageHeader(pkgV090, versioned),
@@ -463,7 +462,7 @@ func TestServer(t *testing.T) {
 		},
 		{
 			name:           "package@version readme tab",
-			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=overview", sample.ModulePath, sample.VersionString, pkgSuffix),
+			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=overview", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.PackageHeader(pkgV100, versioned),
@@ -487,23 +486,22 @@ func TestServer(t *testing.T) {
 		},
 		{
 			name:           "package@version subdirectories tab",
-			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=subdirectories", sample.ModulePath, sample.VersionString, pkgSuffix),
+			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=subdirectories", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.PackageHeader(pkgV100, versioned),
 				in(".Directories",
 					in("a",
-						href(fmt.Sprintf("/%s@%s/%s/directory/hello", sample.ModulePath, sample.VersionString, pkgSuffix)),
+						href(fmt.Sprintf("/%s@%s/%s/directory/hello", sample.ModulePath, sample.VersionString, sample.Suffix)),
 						text("directory/hello")))),
 		},
 		{
 			name:           "package@version versions tab",
-			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=versions", sample.ModulePath, sample.VersionString, pkgSuffix),
+			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=versions", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.PackageHeader(pkgV100, versioned),
 				in(".Versions",
-					text(`Versions`),
 					text(`v1`),
 					in("a",
 						href("/github.com/valid_module_name@v1.0.0/foo"),
@@ -512,7 +510,7 @@ func TestServer(t *testing.T) {
 		},
 		{
 			name:           "package@version imports tab",
-			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=imports", sample.ModulePath, sample.VersionString, pkgSuffix),
+			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=imports", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.PackageHeader(pkgV100, versioned),
@@ -524,7 +522,7 @@ func TestServer(t *testing.T) {
 		},
 		{
 			name:           "package@version imported by tab",
-			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=importedby", sample.ModulePath, sample.VersionString, pkgSuffix),
+			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=importedby", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.PackageHeader(pkgV100, versioned),
@@ -532,7 +530,7 @@ func TestServer(t *testing.T) {
 		},
 		{
 			name:           "package@version imported by tab second page",
-			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=importedby&page=2", sample.ModulePath, sample.VersionString, pkgSuffix),
+			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=importedby&page=2", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.PackageHeader(pkgV100, versioned),
@@ -540,7 +538,7 @@ func TestServer(t *testing.T) {
 		},
 		{
 			name:           "package@version licenses tab",
-			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=licenses", sample.ModulePath, sample.VersionString, pkgSuffix),
+			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=licenses", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.PackageHeader(pkgV100, versioned),
@@ -548,7 +546,7 @@ func TestServer(t *testing.T) {
 		},
 		{
 			name:           "package@version overview tab, pseudoversion",
-			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=overview", sample.ModulePath, pseudoVersion, pkgSuffix),
+			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=overview", sample.ModulePath, pseudoVersion, sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.PackageHeader(pkgPseudo, versioned)),
@@ -816,6 +814,9 @@ func TestServer(t *testing.T) {
 			if tc.want != nil {
 				if err := tc.want(doc); err != nil {
 					t.Error(err)
+					if testing.Verbose() {
+						html.Render(os.Stdout, doc)
+					}
 				}
 			}
 		})
