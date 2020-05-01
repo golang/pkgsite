@@ -50,7 +50,7 @@ func moduleDirectories(modulePath string,
 		}
 		dir := &internal.DirectoryNew{
 			Path:              dirPath,
-			V1Path:            v1Path(modulePath, suffix),
+			V1Path:            internal.V1Path(modulePath, suffix),
 			IsRedistributable: isRedist,
 			Licenses:          meta,
 		}
@@ -73,13 +73,6 @@ func moduleDirectories(modulePath string,
 		directories = append(directories, dir)
 	}
 	return directories
-}
-
-func v1Path(modulePath, suffix string) string {
-	if modulePath == stdlib.ModulePath {
-		return suffix
-	}
-	return path.Join(internal.SeriesPathForModule(modulePath), suffix)
 }
 
 // directoryPaths returns the directory paths in a module.

@@ -36,3 +36,20 @@ func TestSeriesPathForModule(t *testing.T) {
 		})
 	}
 }
+
+func TestV1Path(t *testing.T) {
+	for _, test := range []struct {
+		modulePath, suffix string
+		want               string
+	}{
+		{"mod.com/foo", "bar", "mod.com/foo/bar"},
+		{"mod.com/foo/v2", "bar", "mod.com/foo/bar"},
+		{"std", "bar/baz", "bar/baz"},
+	} {
+		got := V1Path(test.modulePath, test.suffix)
+		if got != test.want {
+			t.Errorf("V1Path(%q, %q) = %q, want %q",
+				test.modulePath, test.suffix, got, test.want)
+		}
+	}
+}

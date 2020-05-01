@@ -649,10 +649,9 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 		return nil, fmt.Errorf("dochtml.Render: %v", err)
 	}
 
-	v1path := path.Join(internal.SeriesPathForModule(modulePath), innerPath)
+	v1path := internal.V1Path(modulePath, innerPath)
 	if modulePath == stdlib.ModulePath {
 		importPath = innerPath
-		v1path = innerPath
 	}
 	return &internal.Package{
 		Path:              importPath,

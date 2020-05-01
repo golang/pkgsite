@@ -5,11 +5,13 @@
 package internal
 
 import (
+	"path"
 	"time"
 
 	"golang.org/x/mod/module"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -68,6 +70,16 @@ func (v *ModuleInfo) SeriesPath() string {
 func SeriesPathForModule(modulePath string) string {
 	seriesPath, _, _ := module.SplitPathVersion(modulePath)
 	return seriesPath
+}
+
+// V1Path returns the path for version 1 of the package whose path
+// is modulePath + "/" + suffix. If modulePath is the standard
+// library, then V1Path returns suffix.
+func V1Path(modulePath, suffix string) string {
+	if modulePath == stdlib.ModulePath {
+		return suffix
+	}
+	return path.Join(SeriesPathForModule(modulePath), suffix)
 }
 
 // A Module is a specific, reproducible build of a module.
