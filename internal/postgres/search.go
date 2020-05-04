@@ -9,6 +9,7 @@ import (
 	"database/sql"
 	"fmt"
 	"math"
+	"sort"
 	"strings"
 	"time"
 
@@ -884,6 +885,7 @@ func GeneratePathTokens(packagePath string) []string {
 			subPaths = append(subPaths, sp)
 		}
 	}
+	sort.Strings(subPaths)
 	return subPaths
 }
 

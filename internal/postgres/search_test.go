@@ -46,22 +46,22 @@ func TestPathTokens(t *testing.T) {
 		{
 			path: "k8s.io/client-go",
 			want: []string{
+				"client",
+				"client-go",
+				"go",
 				"k8s",
 				"k8s.io",
-				"client",
-				"go",
-				"client-go",
 				"k8s.io/client-go",
 			},
 		},
 		{
 			path: "github.com/foo/bar",
 			want: []string{
-				"github.com/foo",
-				"github.com/foo/bar",
+				"bar",
 				"foo",
 				"foo/bar",
-				"bar",
+				"github.com/foo",
+				"github.com/foo/bar",
 			},
 		},
 		{
@@ -130,8 +130,8 @@ func TestPathTokens(t *testing.T) {
 			path: "code.cloud.gitlab.google.k8s.io",
 			want: []string{
 				"cloud",
-				"k8s",
 				"code.cloud.gitlab.google.k8s.io",
+				"k8s",
 			},
 		},
 		{
@@ -141,8 +141,6 @@ func TestPathTokens(t *testing.T) {
 	} {
 		t.Run(tc.path, func(t *testing.T) {
 			got := GeneratePathTokens(tc.path)
-			sort.Strings(got)
-			sort.Strings(tc.want)
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("generatePathTokens(%q) mismatch (-want +got):\n%s", tc.path, diff)
 			}
