@@ -82,8 +82,8 @@ func structScannerForType(t reflect.Type) func(p interface{}) []interface{} {
 // Example:
 //   type Player struct { Name string; Score int }
 //   var players []Player
-//   err := db.CollectStructs(ctx, "SELECT name, score FROM players", &players)
-func (db *DB) CollectStructs(ctx context.Context, query string, pslice interface{}, args ...interface{}) error {
+//   err := db.CollectStructs(ctx, &players, "SELECT name, score FROM players")
+func (db *DB) CollectStructs(ctx context.Context, pslice interface{}, query string, args ...interface{}) error {
 	v := reflect.ValueOf(pslice)
 	if v.Kind() != reflect.Ptr {
 		return errors.New("collectStructs: arg is not a pointer")

@@ -59,7 +59,7 @@ func TestCollectStructs(t *testing.T) {
 
 	query := `SELECT name, score, slice FROM structs`
 	var got []testStruct
-	if err := testDB.CollectStructs(ctx, query, &got); err != nil {
+	if err := testDB.CollectStructs(ctx, &got, query); err != nil {
 		t.Fatal(err)
 	}
 	sort.Slice(got, func(i, j int) bool { return got[i].Name < got[j].Name })
@@ -70,7 +70,7 @@ func TestCollectStructs(t *testing.T) {
 
 	// Same, but with a slice of struct pointers.
 	var gotp []*testStruct
-	if err := testDB.CollectStructs(ctx, query, &gotp); err != nil {
+	if err := testDB.CollectStructs(ctx, &gotp, query); err != nil {
 		t.Fatal(err)
 	}
 	sort.Slice(gotp, func(i, j int) bool { return got[i].Name < got[j].Name })
