@@ -139,9 +139,9 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// see the comments on duplicate tasks for "/requeue", above.
 	handle("/populate-stdlib", rmw(s.errorHandler(s.handlePopulateStdLib)))
 
-	// manual: populate-search-documents inserts a record into
-	// search_documents for all paths in the packages table that do not
-	// exist in search_documents.
+	// manual: populate-search-documents repopulates every row in the
+	// search_documents table that was last updated before the time in the
+	// "before" query parameter.
 	handle("/repopulate-search-documents", rmw(s.errorHandler(s.handleRepopulateSearchDocuments)))
 
 	// returns the Worker homepage.
@@ -169,7 +169,7 @@ func (s *Server) handleRepopulateSearchDocuments(w http.ResponseWriter, r *http.
 			errors.New("must provide 'before' query param as an RFC3339 datetime"),
 		}
 	}
-	before, err := time.Parse(beforeParam, time.RFC3339)
+	before, err := time.Parse(time.RFC3339, beforeParam)
 	if err != nil {
 		return &serverError{http.StatusBadRequest, err}
 	}
