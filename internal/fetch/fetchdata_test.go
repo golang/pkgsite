@@ -222,7 +222,7 @@ var moduleBadPackages = &testModule{
 		},
 	},
 	fr: &FetchResult{
-		HasIncompletePackages: true,
+		Status: derrors.ToHTTPStatus(derrors.HasIncompletePackages),
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
 				ModulePath: "bad.mod/module",
@@ -284,7 +284,7 @@ var moduleBuildConstraints = &testModule{
 		},
 	},
 	fr: &FetchResult{
-		HasIncompletePackages: true,
+		Status: derrors.ToHTTPStatus(derrors.HasIncompletePackages),
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
 				ModulePath: "build.constraints/module",
@@ -370,7 +370,6 @@ var moduleNonRedist = &testModule{
 		},
 	},
 	fr: &FetchResult{
-		HasIncompletePackages: false,
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
 				ModulePath:     "nonredistributable.mod/module",
@@ -439,7 +438,7 @@ var moduleBadImportPath = &testModule{
 		},
 	},
 	fr: &FetchResult{
-		HasIncompletePackages: true,
+		Status: derrors.ToHTTPStatus(derrors.HasIncompletePackages),
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
 				ModulePath: "bad.import.path.com",

@@ -25,13 +25,18 @@ import (
 var testProxyCommitTime = time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC)
 
 func cleanFetchResult(fr *FetchResult, detector *licenses.Detector) *FetchResult {
-	modulePath := fr.Module.ModulePath
-	if fr.GoModPath == "" && modulePath != stdlib.ModulePath {
-		fr.GoModPath = modulePath
+	fr.ModulePath = fr.Module.ModulePath
+	if fr.GoModPath == "" && fr.ModulePath != stdlib.ModulePath {
+		fr.GoModPath = fr.ModulePath
+	}
+	if fr.Status == 0 {
+		fr.Status = 200
 	}
 	if fr.Module.Version == "" {
 		fr.Module.Version = "v1.0.0"
 	}
+	fr.RequestedVersion = fr.Module.Version
+	fr.ResolvedVersion = fr.Module.Version
 	if fr.Module.VersionType == "" {
 		fr.Module.VersionType = version.TypeRelease
 	}
@@ -45,7 +50,7 @@ func cleanFetchResult(fr *FetchResult, detector *licenses.Detector) *FetchResult
 		fr.Module.IsRedistributable = true
 		for _, d := range fr.Module.Directories {
 			isRedist, lics := detector.PackageInfo(
-				strings.TrimPrefix(strings.TrimPrefix(d.Path, modulePath), "/"))
+				strings.TrimPrefix(strings.TrimPrefix(d.Path, fr.ModulePath), "/"))
 			for _, l := range lics {
 				d.Licenses = append(d.Licenses, l.Metadata)
 			}

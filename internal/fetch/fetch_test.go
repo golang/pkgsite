@@ -86,9 +86,9 @@ func TestFetchModule(t *testing.T) {
 				Files:      test.mod.mod.Files,
 			}})
 			defer teardownProxy()
-			got, err := FetchModule(ctx, modulePath, version, proxyClient, sourceClient)
-			if err != nil {
-				t.Fatal(err)
+			got := FetchModule(ctx, modulePath, version, proxyClient, sourceClient)
+			if got.Error != nil {
+				t.Fatal(got.Error)
 			}
 
 			d := licenseDetector(ctx, t, modulePath, version, proxyClient)
@@ -135,9 +135,9 @@ func TestFetchModule_Errors(t *testing.T) {
 			defer teardownProxy()
 
 			sourceClient := source.NewClient(sourceTimeout)
-			got, err := FetchModule(ctx, modulePath, "v1.0.0", proxyClient, sourceClient)
-			if !errors.Is(err, test.wantErr) {
-				t.Fatalf("FetchModule(ctx, %q, v1.0.0, proxyClient, sourceClient): %v; wantErr = %v)", modulePath, err, test.wantErr)
+			got := FetchModule(ctx, modulePath, "v1.0.0", proxyClient, sourceClient)
+			if !errors.Is(got.Error, test.wantErr) {
+				t.Fatalf("FetchModule(ctx, %q, v1.0.0, proxyClient, sourceClient): %v; wantErr = %v)", modulePath, got.Error, test.wantErr)
 			}
 			if test.wantGoModPath != "" {
 				if got == nil || got.GoModPath != test.wantGoModPath {

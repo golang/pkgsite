@@ -234,14 +234,11 @@ func (ds *DataSource) getModule(ctx context.Context, modulePath, version string)
 		return e.module, e.err
 	}
 
-	res, err := fetch.FetchModule(ctx, modulePath, version, ds.proxyClient, ds.sourceClient)
-	var m *internal.Module
-	if res != nil {
-		m = res.Module
-	}
+	res := fetch.FetchModule(ctx, modulePath, version, ds.proxyClient, ds.sourceClient)
+	m := res.Module
 	ds.versionCache[key] = &versionEntry{module: m, err: err}
-	if err != nil {
-		return nil, err
+	if res.Error != nil {
+		return nil, res.Error
 	}
 
 	// Since we hold the lock and missed the cache, we can assume that we have

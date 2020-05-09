@@ -42,15 +42,8 @@ var ProxyRemoved = map[string]bool{}
 
 // fetchTask represents the result of a fetch task that was processed.
 type fetchTask struct {
-	modulePath           string
-	requestedVersion     string
-	resolvedVersion      string
-	goModPath            string
-	status               int
-	err                  error
-	module               *internal.Module
-	packageVersionStates []*internal.PackageVersionState
-	timings              map[string]time.Duration
+	fetch.FetchResult
+	timings map[string]time.Duration
 }
 
 // FetchAndUpdateState fetches and processes a module version, and then updates
@@ -68,15 +61,15 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 	defer span.End()
 
 	ft := fetchAndInsertModule(ctx, modulePath, requestedVersion, proxyClient, sourceClient, db)
-	span.AddAttributes(trace.Int64Attribute("numPackages", int64(len(ft.packageVersionStates))))
+	span.AddAttributes(trace.Int64Attribute("numPackages", int64(len(ft.PackageVersionStates))))
 	dbErr := updateVersionMapAndDeleteModulesWithErrors(ctx, db, ft)
 	if dbErr != nil {
 		log.Error(ctx, dbErr)
-		ft.err = err
-		ft.status = http.StatusInternalServerError
+		ft.Error = err
+		ft.Status = http.StatusInternalServerError
 	}
-	if !semver.IsValid(ft.resolvedVersion) {
-		return ft.status, ft.err
+	if !semver.IsValid(ft.ResolvedVersion) {
+		return ft.Status, ft.Error
 	}
 
 	// Update the module_version_states table with the new status of
@@ -86,20 +79,20 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 	// TODO(b/139178863): Split UpsertModuleVersionState into
 	// InsertModuleVersionState and UpdateModuleVersionState.
 	start := time.Now()
-	err = db.UpsertModuleVersionState(ctx, ft.modulePath, ft.resolvedVersion, config.AppVersionLabel(),
-		time.Time{}, ft.status, ft.goModPath, ft.err, ft.packageVersionStates)
+	err = db.UpsertModuleVersionState(ctx, ft.ModulePath, ft.ResolvedVersion, config.AppVersionLabel(),
+		time.Time{}, ft.Status, ft.GoModPath, ft.Error, ft.PackageVersionStates)
 	ft.timings["db.UpsertModuleVersionState"] = time.Since(start)
 	if err != nil {
 		log.Error(ctx, err)
-		if ft.err != nil {
-			ft.status = http.StatusInternalServerError
-			ft.err = fmt.Errorf("db.UpsertModuleVersionState: %v, original error: %v", err, ft.err)
+		if ft.Error != nil {
+			ft.Status = http.StatusInternalServerError
+			ft.Error = fmt.Errorf("db.UpsertModuleVersionState: %v, original error: %v", err, ft.Error)
 		}
 		logTaskResult(ctx, ft, "Failed to update module version state")
-		return http.StatusInternalServerError, ft.err
+		return http.StatusInternalServerError, ft.Error
 	}
 	logTaskResult(ctx, ft, "Updated module version state")
-	return ft.status, ft.err
+	return ft.Status, ft.Error
 }
 
 // fetchAndInsertModule fetches the given module version from the module proxy
@@ -112,31 +105,33 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 func fetchAndInsertModule(parentCtx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, sourceClient *source.Client, db *postgres.DB) *fetchTask {
 
 	ft := &fetchTask{
-		modulePath:       modulePath,
-		requestedVersion: requestedVersion,
-		timings:          map[string]time.Duration{},
+		FetchResult: fetch.FetchResult{
+			ModulePath:       modulePath,
+			RequestedVersion: requestedVersion,
+		},
+		timings: map[string]time.Duration{},
 	}
 	defer func() {
-		derrors.Wrap(&ft.err, "fetchAndInsertModule(%q, %q)", modulePath, requestedVersion)
-		if ft.err != nil {
-			ft.status = derrors.ToHTTPStatus(ft.err)
-			ft.resolvedVersion = requestedVersion
+		derrors.Wrap(&ft.Error, "fetchAndInsertModule(%q, %q)", modulePath, requestedVersion)
+		if ft.Error != nil {
+			ft.Status = derrors.ToHTTPStatus(ft.Error)
+			ft.ResolvedVersion = requestedVersion
 		}
 	}()
 
 	if ProxyRemoved[modulePath+"@"+requestedVersion] {
 		log.Infof(parentCtx, "not fetching %s@%s because it is on the ProxyRemoved list", modulePath, requestedVersion)
-		ft.err = derrors.Excluded
+		ft.Error = derrors.Excluded
 		return ft
 	}
 
 	exc, err := db.IsExcluded(parentCtx, modulePath)
 	if err != nil {
-		ft.err = err
+		ft.Error = err
 		return ft
 	}
 	if exc {
-		ft.err = derrors.Excluded
+		ft.Error = derrors.Excluded
 		return ft
 	}
 
@@ -150,62 +145,52 @@ func fetchAndInsertModule(parentCtx context.Context, modulePath, requestedVersio
 	defer span.End()
 
 	start := time.Now()
-	res, err := fetch.FetchModule(ctx, modulePath, requestedVersion, proxyClient, sourceClient)
+	fr := fetch.FetchModule(ctx, modulePath, requestedVersion, proxyClient, sourceClient)
+	if fr == nil {
+		panic("fetch.FetchModule should never return a nil FetchResult")
+	}
+	ft.FetchResult = *fr
 	ft.timings["fetch.FetchModule"] = time.Since(start)
-	if err != nil {
-		ft.err = err
-		ft.status = derrors.ToHTTPStatus(ft.err)
+	if ft.Error != nil {
 		logf := log.Errorf
-		if ft.status < 500 {
+		if ft.Status < 500 {
 			logf = log.Infof
 		}
-		logf(ctx, "Error executing fetch: %v (code %d)", ft.err, ft.status)
-		if res != nil {
-			ft.goModPath = res.GoModPath
-			ft.packageVersionStates = res.PackageVersionStates
-		}
+		logf(ctx, "Error executing fetch: %v (code %d)", ft.Error, ft.Status)
 		return ft
 	}
-	log.Infof(ctx, "fetch.FetchVersion succeeded for %s@%s", res.Module.ModulePath, res.Module.Version)
+	log.Infof(ctx, "fetch.FetchVersion succeeded for %s@%s", ft.ModulePath, ft.RequestedVersion)
 
-	ft.resolvedVersion = res.Module.Version
-	ft.goModPath = res.GoModPath
-	ft.module = res.Module
-	ft.packageVersionStates = res.PackageVersionStates
-	ft.status = http.StatusOK
-	if res.HasIncompletePackages {
-		ft.status = hasIncompletePackagesCode
-	}
 	start = time.Now()
-	err = db.InsertModule(ctx, res.Module)
+	err = db.InsertModule(ctx, ft.Module)
 	ft.timings["db.InsertModule"] = time.Since(start)
 	if err != nil {
 		log.Error(ctx, err)
 
-		ft.status = derrors.ToHTTPStatus(err)
-		ft.err = err
+		ft.Status = derrors.ToHTTPStatus(err)
+		ft.Error = err
 		return ft
 	}
-	log.Infof(ctx, "db.InsertModule succeeded for %s@%s", res.Module.ModulePath, res.Module.Version)
+	log.Infof(ctx, "db.InsertModule succeeded for %s@%s", ft.ModulePath, ft.RequestedVersion)
 	return ft
 }
 
 func updateVersionMapAndDeleteModulesWithErrors(ctx context.Context, db *postgres.DB, ft *fetchTask) (err error) {
 	defer derrors.Wrap(&err, "updateVersionMapAndDeleteModulesWithErrors(%q, %q, %q, %d, %v)",
-		ft.modulePath, ft.requestedVersion, ft.resolvedVersion, ft.status, ft.err)
+		ft.ModulePath, ft.RequestedVersion, ft.ResolvedVersion, ft.Status, ft.Error)
 
 	ctx, span := trace.StartSpan(ctx, "worker.updateFetchResult")
 	defer span.End()
 
 	var errMsg string
-	if ft.err != nil {
-		errMsg = ft.err.Error()
+	if ft.Error != nil {
+		errMsg = ft.Error.Error()
 	}
 	vm := &internal.VersionMap{
-		ModulePath:       ft.modulePath,
-		RequestedVersion: ft.requestedVersion,
-		ResolvedVersion:  ft.resolvedVersion,
-		Status:           ft.status,
+		ModulePath:       ft.ModulePath,
+		RequestedVersion: ft.RequestedVersion,
+		ResolvedVersion:  ft.ResolvedVersion,
+		Status:           ft.Status,
 		Error:            errMsg,
 	}
 	start := time.Now()
@@ -233,7 +218,7 @@ func updateVersionMapAndDeleteModulesWithErrors(ctx context.Context, db *postgre
 		}
 	}
 
-	// If this was an alternative path (ft.status == 491) and there is an older
+	// If this was an alternative path (ft.Status == 491) and there is an older
 	// version in search_documents, delete it. This is the case where a module's
 	// canonical path was changed by the addition of a go.mod file. For example,
 	// versions of logrus before it acquired a go.mod file could have the path
@@ -261,9 +246,9 @@ func logTaskResult(ctx context.Context, ft *fetchTask, prefix string) {
 	sort.Strings(times)
 	msg := strings.Join(times, ", ")
 	logf := log.Infof
-	if ft.status == http.StatusInternalServerError {
+	if ft.Status == http.StatusInternalServerError {
 		logf = log.Errorf
 	}
 	logf(ctx, "%s for %s@%s: code=%d, num_packages=%d, err=%v; timings: %s",
-		prefix, ft.modulePath, ft.resolvedVersion, ft.status, len(ft.packageVersionStates), ft.err, msg)
+		prefix, ft.ModulePath, ft.ResolvedVersion, ft.Status, len(ft.PackageVersionStates), ft.Error, msg)
 }
