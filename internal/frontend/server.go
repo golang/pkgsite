@@ -24,11 +24,13 @@ import (
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/queue"
 )
 
 // Server can be installed to serve the go discovery frontend.
 type Server struct {
-	ds internal.DataSource
+	ds    internal.DataSource
+	queue queue.Queue
 	// cmplClient is a redis client that has access to the "completions" sorted
 	// set.
 	cmplClient      *redis.Client
@@ -45,7 +47,7 @@ type Server struct {
 // NewServer creates a new Server for the given database and template directory.
 // reloadTemplates should be used during development when it can be helpful to
 // reload templates from disk each time a page is loaded.
-func NewServer(ds internal.DataSource, cmplClient *redis.Client, staticPath string, thirdPartyPath string, reloadTemplates bool) (*Server, error) {
+func NewServer(ds internal.DataSource, q queue.Queue, cmplClient *redis.Client, staticPath string, thirdPartyPath string, reloadTemplates bool) (*Server, error) {
 	templateDir := filepath.Join(staticPath, "html")
 	ts, err := parsePageTemplates(templateDir)
 	if err != nil {
@@ -53,6 +55,7 @@ func NewServer(ds internal.DataSource, cmplClient *redis.Client, staticPath stri
 	}
 	s := &Server{
 		ds:              ds,
+		queue:           q,
 		cmplClient:      cmplClient,
 		staticPath:      staticPath,
 		thirdPartyPath:  thirdPartyPath,

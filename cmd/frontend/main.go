@@ -1,7 +1,6 @@
 // Copyright 2019 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
-
 package main
 
 import (
@@ -14,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
 	"cloud.google.com/go/profiler"
 	"contrib.go.opencensus.io/integrations/ocsql"
 	"github.com/go-redis/redis/v7"
@@ -28,42 +28,44 @@ import (
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/proxydatasource"
+	"golang.org/x/pkgsite/internal/queue"
+	"golang.org/x/pkgsite/internal/source"
 )
 
 var (
+	queueName       = config.GetEnv("GO_DISCOVERY_FRONTEND_TASK_QUEUE", "")
 	staticPath      = flag.String("static", "content/static", "path to folder containing static files served")
 	thirdPartyPath  = flag.String("third_party", "third_party", "path to folder containing third-party libraries")
 	reloadTemplates = flag.Bool("reload_templates", false, "reload templates on each page load (to be used during development)")
-	directProxy     = flag.String("direct_proxy", "", "if set to a valid URL, uses the module proxy referred to by this URL "+
+	proxyURL        = flag.String("proxy_url", "https://proxy.golang.org", "Uses the module proxy referred to by this URL "+
+		"for direct proxy mode and frontend fetches")
+	directProxy = flag.Bool("direct_proxy", false, "if set to true, uses the module proxy referred to by this URL "+
 		"as a direct backend, bypassing the database")
 )
 
 func main() {
 	flag.Parse()
-
 	ctx := context.Background()
-
 	cfg, err := config.Init(ctx)
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
 	cfg.Dump(os.Stderr)
-
 	if cfg.UseProfiler {
 		if err := profiler.Start(profiler.Config{}); err != nil {
 			log.Fatalf(ctx, "profiler.Start: %v", err)
 		}
 	}
-
 	var (
-		ds  internal.DataSource
-		exp internal.ExperimentSource
+		ds         internal.DataSource
+		exp        internal.ExperimentSource
+		fetchQueue queue.Queue
 	)
-	if *directProxy != "" {
-		proxyClient, err := proxy.New(*directProxy)
-		if err != nil {
-			log.Fatal(ctx, err)
-		}
+	proxyClient, err := proxy.New(*proxyURL)
+	if err != nil {
+		log.Fatal(ctx, err)
+	}
+	if *directProxy {
 		ds = proxydatasource.New(proxyClient)
 		exp = internal.NewLocalExperimentSource(readLocalExperiments(ctx))
 	} else {
@@ -80,6 +82,8 @@ func main() {
 		defer db.Close()
 		ds = db
 		exp = db
+		sourceClient := source.NewClient(config.SourceTimeout)
+		fetchQueue = newQueue(ctx, cfg, proxyClient, sourceClient, db)
 	}
 	var haClient *redis.Client
 	if cfg.RedisHAHost != "" {
@@ -87,7 +91,7 @@ func main() {
 			Addr: cfg.RedisHAHost + ":" + cfg.RedisHAPort,
 		})
 	}
-	server, err := frontend.NewServer(ds, haClient, *staticPath, *thirdPartyPath, *reloadTemplates)
+	server, err := frontend.NewServer(ds, fetchQueue, haClient, *staticPath, *thirdPartyPath, *reloadTemplates)
 	if err != nil {
 		log.Fatalf(ctx, "frontend.NewServer: %v", err)
 	}
@@ -99,7 +103,6 @@ func main() {
 		})
 	}
 	server.Install(router.Handle, cacheClient)
-
 	views := append(dcensus.ServerViews,
 		postgres.SearchLatencyDistribution,
 		postgres.SearchResponseCount,
@@ -119,7 +122,6 @@ func main() {
 		}
 		go http.ListenAndServe(cfg.DebugAddr("localhost:8081"), dcensusServer)
 	}
-
 	panicHandler, err := server.PanicHandler()
 	if err != nil {
 		log.Fatal(ctx, err)
@@ -129,7 +131,6 @@ func main() {
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
-
 	mw := middleware.Chain(
 		middleware.RequestLog(requestLogger),
 		middleware.Quota(cfg.Quota),
@@ -140,10 +141,23 @@ func main() {
 		middleware.Timeout(54*time.Second),
 		middleware.Experiment(experimenter),
 	)
-
 	addr := cfg.HostAddr("localhost:8080")
 	log.Infof(ctx, "Listening on addr %s", addr)
 	log.Fatal(ctx, http.ListenAndServe(addr, mw(router)))
+}
+
+func newQueue(ctx context.Context, cfg *config.Config, proxyClient *proxy.Client, sourceClient *source.Client, db *postgres.DB) queue.Queue {
+	if !cfg.OnAppEngine() {
+		return queue.NewInMemory(ctx, proxyClient, sourceClient, db, 10, frontend.FetchAndUpdateState)
+	}
+	client, err := cloudtasks.NewClient(ctx)
+	if err != nil {
+		log.Fatal(ctx, err)
+	}
+	if queueName == "" {
+		log.Fatalf(ctx, "queueName cannot be empty")
+	}
+	return queue.NewGCP(cfg, client, queueName)
 }
 
 // openDB opens a connection to a database with the given driver, using connection info from
@@ -152,7 +166,6 @@ func main() {
 // connection info it if exists (DBSecondaryConnInfo).
 func openDB(ctx context.Context, cfg *config.Config, driver string) (_ *database.DB, err error) {
 	derrors.Wrap(&err, "openDB(ctx, cfg, %q)", driver)
-
 	log.Infof(ctx, "opening database on host %s", cfg.DBHost)
 	ddb, err := database.Open(driver, cfg.DBConnInfo())
 	if err == nil {
@@ -167,7 +180,6 @@ func openDB(ctx context.Context, cfg *config.Config, driver string) (_ *database
 		cfg.DBHost, err, cfg.DBSecondaryHost)
 	return database.Open(driver, ci)
 }
-
 func getLogger(ctx context.Context, cfg *config.Config) middleware.Logger {
 	if cfg.OnAppEngine() {
 		logger, err := log.UseStackdriver(ctx, cfg, "frontend-log")

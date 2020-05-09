@@ -35,7 +35,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestHTMLInjection(t *testing.T) {
-	s, err := NewServer(testDB, nil, "../../content/static", "../../third_party", false)
+	s, err := NewServer(testDB, nil, nil, "../../content/static", "../../third_party", false)
 	if err != nil {
 		t.Fatalf("NewServer: %v", err)
 	}
@@ -201,7 +201,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 	ctx = experiment.NewContext(ctx, experiment.NewSet(expmap))
 	insertTestModules(ctx, t, testModules)
 
-	s, err := NewServer(testDB, nil, "../../content/static", "../../third_party", false)
+	s, err := NewServer(testDB, nil, nil, "../../content/static", "../../third_party", false)
 	if err != nil {
 		t.Fatalf("NewServer: %v", err)
 	}
@@ -860,7 +860,7 @@ func TestServerErrors(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	s, err := NewServer(testDB, nil, "../../content/static", "../../third_party", false)
+	s, err := NewServer(testDB, nil, nil, "../../content/static", "../../third_party", false)
 	if err != nil {
 		t.Fatalf("NewServer: %v", err)
 	}
