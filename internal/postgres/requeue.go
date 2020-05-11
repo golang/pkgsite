@@ -45,9 +45,8 @@ func (db *DB) UpdateModuleVersionStatesForReprocessing(ctx context.Context, appV
 			return fmt.Errorf("result.RowsAffected(): %v", err)
 		}
 		log.Infof(ctx,
-			"Updated %d module version states with status %v to be reprocessed for app_version <= %q; new status = %v",
-			affected, status, appVersion,
-			derrors.ToReprocessStatus(status))
+			"Updated module_version_states with status=%d and app_version < %q to status=%d; %d affected",
+			status, appVersion, derrors.ToReprocessStatus(status), affected)
 	}
 	return nil
 }
