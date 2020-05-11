@@ -7,6 +7,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"reflect"
@@ -45,8 +46,8 @@ func StructScanner(s interface{}) func(p interface{}) []interface{} {
 }
 
 type fieldInfo struct {
-	num     int // to pass to v.Field
-	isSlice bool
+	num  int // to pass to v.Field
+	kind reflect.Kind
 }
 
 func structScannerForType(t reflect.Type) func(p interface{}) []interface{} {
@@ -59,7 +60,7 @@ func structScannerForType(t reflect.Type) func(p interface{}) []interface{} {
 	for i := 0; i < t.NumField(); i++ {
 		r, _ := utf8.DecodeRuneInString(t.Field(i).Name)
 		if unicode.IsUpper(r) {
-			fieldInfos = append(fieldInfos, fieldInfo{i, t.Field(i).Type.Kind() == reflect.Slice})
+			fieldInfos = append(fieldInfos, fieldInfo{i, t.Field(i).Type.Kind()})
 		}
 	}
 	// Return a function that gets pointers to the exported fields.
@@ -68,13 +69,55 @@ func structScannerForType(t reflect.Type) func(p interface{}) []interface{} {
 		var ps []interface{}
 		for _, info := range fieldInfos {
 			p := v.Field(info.num).Addr().Interface()
-			if info.isSlice {
+			switch info.kind {
+			case reflect.Slice:
 				p = pq.Array(p)
+			case reflect.Ptr:
+				p = NullPtr(p)
+			default:
 			}
 			ps = append(ps, p)
 		}
 		return ps
 	}
+}
+
+// NullPtr is for scanning nullable database columns into pointer variables or
+// fields. When given a pointer to to a pointer to some type T, it returns a
+// value that can be passed to a Scan function. If the corresponding column is
+// nil, the variable will be set to nil. Otherwise, it will be set to a newly
+// allocated pointer to the column value.
+func NullPtr(p interface{}) nullPtr {
+	v := reflect.ValueOf(p)
+	if v.Kind() != reflect.Ptr || v.Elem().Kind() != reflect.Ptr {
+		panic("NullPtr arg must be pointer to pointer")
+	}
+	return nullPtr{v}
+}
+
+type nullPtr struct {
+	// ptr is a pointer to a pointer to something: **T
+	ptr reflect.Value
+}
+
+func (n nullPtr) Scan(value interface{}) error {
+	// n.ptr is like a variable v of type **T
+	ntype := n.ptr.Elem().Type() // T
+	if value == nil {
+		n.ptr.Elem().Set(reflect.Zero(ntype)) // *v = nil
+	} else {
+		p := reflect.New(ntype.Elem())       // p := new(T)
+		p.Elem().Set(reflect.ValueOf(value)) // *p = value
+		n.ptr.Elem().Set(p)                  // *v = p
+	}
+	return nil
+}
+
+func (n nullPtr) Value() (driver.Value, error) {
+	if n.ptr.Elem().IsNil() {
+		return nil, nil
+	}
+	return n.ptr.Elem().Elem().Interface(), nil
 }
 
 // CollectStructs scans the the rows from the query into structs and appends
