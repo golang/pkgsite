@@ -61,4 +61,6 @@ type DataSource interface {
 	GetPathInfo(ctx context.Context, path, inModulePath, inVersion string) (outModulePath, outVersion string, isPackage bool, err error)
 	// Search searches the database with a query.
 	Search(ctx context.Context, query string, limit, offset int) ([]*SearchResult, error)
+	// GetVersionMap returns the VersionMap corresponding to the provided modulePath and requestedVersion.
+	GetVersionMap(ctx context.Context, modulePath, requestedVersion string) (*VersionMap, error)
 }

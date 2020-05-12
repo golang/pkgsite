@@ -438,3 +438,9 @@ func (ds *DataSource) GetPathInfo(ctx context.Context, path, inModulePath, inVer
 	}
 	return m.ModulePath, m.Version, isPackage, nil
 }
+
+// GetVersionMap is unimplemented. The proxydatasource does not have any need
+// for this method.
+func (ds *DataSource) GetVersionMap(ctx context.Context, modulePath, version string) (*internal.VersionMap, error) {
+	return nil, nil
+}
