@@ -1,0 +1,125 @@
+/*
+ * Copyright 2020 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+/*
+ * Styling for when the “sidenav” experiment is active.
+ */
+
+.Documentation {
+  column-gap: 2.8125rem;
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 3fr);
+}
+.Documentation-nav {
+  max-height: calc(100vh - 4.0625rem); /* 4.0625rem is the site header height */
+  overflow-x: hidden;
+  overflow-y: scroll;
+  padding-top: 1rem;
+  padding-left: 1.75rem;
+  position: sticky;
+  top: 4.0625rem;
+}
+.Documentation-toc {
+  margin-top: 0;
+}
+.Documentation-toc a {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.Documentation-tocItem {
+  display: block;
+  position: relative;
+}
+.Documentation-tocItem + .Documentation-tocItem {
+  margin-top: 0.5rem;
+}
+.Documentation-tocItem--selected::before {
+  border-radius: 0.375rem;
+  background-color: #377d9c;
+  content: '';
+  display: block;
+  height: 0.375rem;
+  left: -1.1875rem;
+  position: absolute;
+  top: 0.5625rem;
+  width: 0.375rem;
+}
+/* Needed for higher specificity. */
+.TypesAndFuncs .TypesAndFuncs-list,
+.TypesAndFuncs .TypesAndFuncs-list ul {
+  padding-left: 0;
+}
+.TypesAndFuncs-list {
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+.is-withSideNav .Documentation-tocItem--index,
+.is-withSideNav .Documentation-index {
+  display: none;
+}
+.Documentation-tocItem--constants,
+.Documentation-tocItem--variables,
+.Documentation-tocItem--typesAndFuncs {
+  display: block;
+}
+
+.TypesAndFuncs-list > .TypesAndFuncs-item:first-of-type {
+  margin-top: 0.5rem;
+  padding-top: 0;
+}
+.TypesAndFuncs-item {
+  border-left: 0.125rem solid #f0f1f2;
+  padding-left: 0.625rem;
+  padding-top: 0.125rem;
+  padding-bottom: 0.125rem;
+}
+.TypesAndFuncs > .TypesAndFuncs-item:first-of-type {
+  margin-top: 0.5rem;
+  padding-top: 0;
+}
+.TypesAndFuncs-item--noBorder {
+  border-left: 0;
+  padding: 0;
+}
+.TypesAndFuncs-item .TypesAndFuncs-item {
+  border-left: 0.125rem solid #f0f1f2;
+  padding-left: 1.25rem;
+}
+.TypesAndFuncs-summary {
+  cursor: pointer;
+  list-style-type: none;
+  outline: none;
+  position: relative;
+}
+.TypesAndFuncs-summary::marker {
+  display: none;
+}
+.TypesAndFuncs-summary::-webkit-details-marker {
+  display: none;
+}
+.TypesAndFuncs-summary::before {
+  border-bottom: 0.3125rem solid transparent;
+  border-left: 0.3125rem solid #606368;
+  border-right: 0;
+  border-top: 0.3125rem solid transparent;
+  content: '';
+  display: block;
+  height: 0;
+  left: -1.125rem;
+  position: absolute;
+  top: 0.4375rem;
+  width: 0;
+}
+.TypesAndFuncs[open] .TypesAndFuncs-summary::before {
+  border-bottom: 0;
+  border-left: 0.3125rem solid transparent;
+  border-right: 0.3125rem solid transparent;
+  border-top: 0.3125rem solid #606368;
+  left: -1.3125rem;
+  top: 0.625rem;
+}

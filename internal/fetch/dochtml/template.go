@@ -34,18 +34,66 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 	},
 ).Parse(`{{- "" -}}
 {{- if or .Doc .Consts .Vars .Funcs .Types .Examples.List -}}
+<nav class="Documentation-nav">
 	<ul class="Documentation-toc">{{"\n" -}}
 	{{- if or .Doc (index .Examples.Map "") -}}
-		<li class="Documentation-tocItem"><a href="#pkg-overview">Overview</a></li>{{"\n" -}}
+		<li class="Documentation-tocItem Documentation-tocItem--selected">
+			<a href="#pkg-overview">Overview</a>
+		</li>{{"\n" -}}
 	{{- end -}}
 	{{- if or .Consts .Vars .Funcs .Types .Examples.List -}}
-		<li class="Documentation-tocItem"><a href="#pkg-index">Index</a></li>{{"\n" -}}
+		<li class="Documentation-tocItem Documentation-tocItem--index"><a href="#pkg-index">Index</a></li>{{"\n" -}}
 	{{- end -}}
 	{{- if .Examples.List -}}
 		<li class="Documentation-tocItem"><a href="#pkg-examples">Examples</a></li>{{"\n" -}}
 	{{- end -}}
+	{{- if .Consts -}}
+	  <li class="Documentation-tocItem Documentation-tocItem--constants">
+			<a href="#pkg-constants">Constants</a>
+		</li>{{"\n"}}
+	{{- end -}}
+	{{- if .Vars -}}
+		<li class="Documentation-tocItem Documentation-tocItem--variables">
+			<a href="#pkg-variables">Variables</a>
+		</li>{{"\n"}}
+	{{- end -}}
+
+	<li class="Documentation-tocItem Documentation-tocItem--funcsAndTypes">
+		<details class="TypesAndFuncs" open>
+			<summary class="TypesAndFuncs-summary">types and functions</summary>
+			<ul class="TypesAndFuncs-list">
+				{{- range .Funcs -}}
+				<li class="TypesAndFuncs-item">
+					<a href="#{{.Name}}">func {{.Name}}</a>
+				</li>{{"\n"}}
+				{{- end -}}
+
+				{{- range .Types -}}
+					{{- $tname := .Name -}}
+					<li class="TypesAndFuncs-item"><a href="#{{$tname}}">type {{$tname}}</a></li>{{"\n"}}
+					{{- with .Funcs -}}
+						<li class="TypesAndFuncs-item TypesAndFuncs-item--noBorder"><ul>{{"\n" -}}
+						{{range .}}<li class="TypesAndFuncs-item"><a href="#{{.Name}}">func {{.Name}}</a></li>{{"\n"}}{{end}}
+						</ul></li>{{"\n" -}}
+					{{- end -}}
+					{{- with .Methods -}}
+						<li class="TypesAndFuncs-item TypesAndFuncs-item--noBorder"><ul>{{"\n" -}}
+						{{range .}}<li class="TypesAndFuncs-item"><a href="#{{$tname}}.{{.Name}}">func ({{.Recv}}) {{.Name}}</a></li>{{"\n"}}{{end}}
+						</ul></li>{{"\n" -}}
+					{{- end -}}
+				{{- end -}}
+			</ul>
+		</details>
+	</li>
+
+	{{- range $marker, $item := .Notes -}}
+	<li><a href="#pkg-note-{{$marker}}">{{$marker}}s</a></li>
+	{{- end -}}
 	</ul>{{"\n" -}}
+</nav>
 {{- end -}}
+
+<div> {{/* Documentation content container */}}
 
 {{- if or .Doc (index .Examples.Map "") -}}
 	<section class="Documentation-overview">
@@ -211,6 +259,8 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 	{{- end -}}
 </section>
 {{- end -}}
+
+</div> {{/* End documentation content container */}}
 
 {{- define "example" -}}
 	{{- range . -}}

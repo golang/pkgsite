@@ -1,2 +1,3 @@
 arrowParens: avoid
 singleQuote: true
+printWidth: 100

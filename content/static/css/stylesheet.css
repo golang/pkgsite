@@ -1,8 +1,8 @@
 /*
-	Copyright 2019 The Go Authors. All rights reserved.
-	Use of this source code is governed by a BSD-style
-	license that can be found in the LICENSE file.
-*/
+ * Copyright 2019 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
 
 :root {
   --gray-1: #202224;
@@ -217,8 +217,8 @@ code {
 :target::before {
   content: ' ';
   display: block;
-  height: 4.125rem;
-  margin-top: -4.125rem; /* Move hidden anchor content for deep linking with a sticky header. */
+  height: 5.125rem;
+  margin-top: -5.125rem; /* Move hidden anchor content for deep linking with a sticky header. */
   pointer-events: none;
   visibility: hidden;
 }
@@ -316,14 +316,10 @@ code {
   padding: 0.5rem 0.5rem 0.5rem 1rem;
   min-height: 2.863125rem;
 }
-.Site-header--dark
-  .Experiment-autoComplete
-  input[type='text'].Header-searchFormInput {
+.Site-header--dark .Experiment-autoComplete input[type='text'].Header-searchFormInput {
   color: initial;
 }
-.Site-header--dark
-  .Experiment-autoComplete
-  input[type='text'].Header-searchFormInput::placeholder {
+.Site-header--dark .Experiment-autoComplete input[type='text'].Header-searchFormInput::placeholder {
   color: initial;
 }
 .Site-header--dark input[type='text'].Header-searchFormInput,
@@ -829,6 +825,12 @@ code {
 .Documentation-index,
 .Documentation-examples {
   padding-bottom: 0;
+}
+
+.Documentation-tocItem--constants,
+.Documentation-tocItem--variables,
+.Documentation-tocItem--funcsAndTypes {
+  display: none;
 }
 
 .Documentation-overviewHeader,
