@@ -406,7 +406,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 			name:           "robots.txt",
 			urlPath:        "/robots.txt",
 			wantStatusCode: http.StatusOK,
-			want:           in("", text("User-agent: *"), text(regexp.QuoteMeta("Disallow: /*?tab=*"))),
+			want:           in("", text("User-agent: *"), text(regexp.QuoteMeta("Disallow: /search?*"))),
 		},
 		{
 			name:           "search",
