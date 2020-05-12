@@ -10,12 +10,16 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
 func TestReadAndWriteVersionMap(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
+	ctx = experiment.NewContext(ctx, experiment.NewSet(map[string]bool{
+		internal.ExperimentInsertDirectories: true,
+	}))
 	defer ResetTestDB(testDB, t)
 
 	m := sample.Module("golang.org/x/tools", sample.VersionString, "go/packages")
@@ -30,97 +34,16 @@ func TestReadAndWriteVersionMap(t *testing.T) {
 		ResolvedVersion:  "v1.0.0",
 		Status:           200,
 	}
-	err = testDB.UpsertVersionMap(ctx, vm)
-	if err != nil {
+	if err = testDB.UpsertVersionMap(ctx, vm); err != nil {
 		t.Fatal(err)
 	}
 
-	for _, test := range []struct {
-		name, path, modulePath, version string
-	}{
-		{
-			name:       "package path - latest version, unknown module",
-			path:       "golang.org/x/tools/go/packages",
-			modulePath: internal.UnknownModulePath,
-			version:    internal.LatestVersion,
-		},
-		{
-			name:       "package path - latest version, known module",
-			path:       "golang.org/x/tools/go/packages",
-			modulePath: "golang.org/x/tools",
-			version:    internal.LatestVersion,
-		},
-		{
-			name:       "package path - specified version, unknown module",
-			path:       "golang.org/x/tools/go/packages",
-			modulePath: internal.UnknownModulePath,
-			version:    "master",
-		},
-		{
-			name:       "package path - specified version, known module",
-			path:       "golang.org/x/tools/go/packages",
-			modulePath: "golang.org/x/tools",
-			version:    "master",
-		},
-		{
-			name:       "directory path - latest version, unknown module",
-			path:       "golang.org/x/tools/go",
-			modulePath: internal.UnknownModulePath,
-			version:    internal.LatestVersion,
-		},
-		{
-			name:       "directory path - latest version, known module",
-			path:       "golang.org/x/tools/go",
-			modulePath: "golang.org/x/tools",
-			version:    internal.LatestVersion,
-		},
-		{
-			name:       "directory path - specified version, unknown module",
-			path:       "golang.org/x/tools/go",
-			modulePath: internal.UnknownModulePath,
-			version:    "master",
-		},
-		{
-			name:       "directory path - specified version, known module",
-			path:       "golang.org/x/tools/go",
-			modulePath: "golang.org/x/tools",
-			version:    "master",
-		},
-		{
-			name:       "module path - latest version, unknown module",
-			path:       "golang.org/x/tools",
-			modulePath: internal.UnknownModulePath,
-			version:    internal.LatestVersion,
-		},
-		{
-			name:       "module path - latest version, known module",
-			path:       "golang.org/x/tools",
-			modulePath: "golang.org/x/tools",
-			version:    internal.LatestVersion,
-		},
-		{
-			name:       "module path - specified version, unknown module",
-			path:       "golang.org/x/tools",
-			modulePath: internal.UnknownModulePath,
-			version:    "master",
-		},
-		{
-			name:       "module path - specified version, known module",
-			path:       "golang.org/x/tools",
-			modulePath: "golang.org/x/tools",
-			version:    "master",
-		},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			got, err := testDB.GetVersionMap(ctx, test.path, test.modulePath, test.version)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if diff := cmp.Diff(vm, got); diff != "" {
-				t.Errorf("t.Errorf(ctx, %q, %q, %q) mismatch (-want +got):\n%s",
-					test.path, test.modulePath, test.version, diff)
-			}
-		})
+	got, err := testDB.GetVersionMap(ctx, vm.ModulePath, vm.RequestedVersion)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(vm, got); diff != "" {
+		t.Fatalf("t.Errorf(ctx, %q, %q) mismatch (-want +got):\n%s", vm.ModulePath, vm.RequestedVersion, diff)
 	}
 }
 func TestUpsertVersionMap(t *testing.T) {
@@ -133,7 +56,7 @@ func TestUpsertVersionMap(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		got, err := testDB.GetVersionMap(ctx, vm.ModulePath, vm.ModulePath, vm.RequestedVersion)
+		got, err := testDB.GetVersionMap(ctx, vm.ModulePath, vm.RequestedVersion)
 		if err != nil {
 			t.Fatal(err)
 		}
