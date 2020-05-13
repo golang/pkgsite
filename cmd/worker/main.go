@@ -37,8 +37,8 @@ import (
 )
 
 var (
-	timeout    = config.GetEnv("GO_DISCOVERY_ETL_TIMEOUT_MINUTES", "10")
-	queueName  = config.GetEnv("GO_DISCOVERY_ETL_TASK_QUEUE", "dev-fetch-tasks")
+	timeout    = config.GetEnv("GO_DISCOVERY_WORKER_TIMEOUT_MINUTES", "10")
+	queueName  = config.GetEnv("GO_DISCOVERY_WORKER_TASK_QUEUE", "")
 	workers    = flag.Int("workers", 10, "number of concurrent requests to the fetch service, when running locally")
 	staticPath = flag.String("static", "content/static", "path to folder containing static files served")
 )
@@ -134,6 +134,9 @@ func main() {
 func newQueue(ctx context.Context, cfg *config.Config, proxyClient *proxy.Client, sourceClient *source.Client, db *postgres.DB) queue.Queue {
 	if !cfg.OnAppEngine() {
 		return queue.NewInMemory(ctx, proxyClient, sourceClient, db, *workers, worker.FetchAndUpdateState)
+	}
+	if queueName == "" {
+		log.Fatal(ctx, "missing queue: must set GO_DISCOVERY_WORKER_TASK_QUEUE env var")
 	}
 	client, err := cloudtasks.NewClient(ctx)
 	if err != nil {
