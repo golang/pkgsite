@@ -109,7 +109,7 @@ func TestInsertModule(t *testing.T) {
 			}
 
 			for _, dir := range test.module.Directories {
-				got, err := testDB.getDirectoryNew(ctx, dir.Path, test.module.ModulePath, test.module.Version)
+				got, err := testDB.GetDirectoryNew(ctx, dir.Path, test.module.ModulePath, test.module.Version)
 				if err != nil {
 					t.Fatal(err)
 				}

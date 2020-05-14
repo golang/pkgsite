@@ -51,6 +51,81 @@ func TestFetchOverviewDetails(t *testing.T) {
 	}
 }
 
+func TestConstructPackageOverviewDetailsNew(t *testing.T) {
+	for _, test := range []struct {
+		name           string
+		vdir           *internal.VersionedDirectory
+		versionedLinks bool
+		want           *OverviewDetails
+	}{
+		{
+			name: "redistributable",
+			vdir: &internal.VersionedDirectory{
+				DirectoryNew: internal.DirectoryNew{
+					Path:              "github.com/u/m/p",
+					IsRedistributable: true,
+				},
+				ModuleInfo: *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
+			},
+			versionedLinks: true,
+			want: &OverviewDetails{
+				ModulePath:       "github.com/u/m",
+				ModuleURL:        "/mod/github.com/u/m@v1.2.3",
+				RepositoryURL:    "https://github.com/u/m",
+				PackageSourceURL: "https://github.com/u/m/tree/v1.2.3/p",
+				ReadMe:           template.HTML("<p>readme</p>\n"),
+				ReadMeSource:     "github.com/u/m@v1.2.3/README.md",
+				Redistributable:  true,
+			},
+		},
+		{
+			name: "unversioned",
+			vdir: &internal.VersionedDirectory{
+				DirectoryNew: internal.DirectoryNew{
+					Path:              "github.com/u/m/p",
+					IsRedistributable: true,
+				},
+				ModuleInfo: *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
+			},
+			versionedLinks: false,
+			want: &OverviewDetails{
+				ModulePath:       "github.com/u/m",
+				ModuleURL:        "/mod/github.com/u/m",
+				RepositoryURL:    "https://github.com/u/m",
+				PackageSourceURL: "https://github.com/u/m/tree/v1.2.3/p",
+				ReadMe:           template.HTML("<p>readme</p>\n"),
+				ReadMeSource:     "github.com/u/m@v1.2.3/README.md",
+				Redistributable:  true,
+			},
+		},
+		{
+			name: "non-redistributable",
+			vdir: &internal.VersionedDirectory{
+				DirectoryNew: internal.DirectoryNew{
+					Path:              "github.com/u/m/p",
+					IsRedistributable: false,
+				},
+				ModuleInfo: *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
+			},
+			versionedLinks: true,
+			want: &OverviewDetails{
+				ModulePath:       "github.com/u/m",
+				ModuleURL:        "/mod/github.com/u/m@v1.2.3",
+				RepositoryURL:    "https://github.com/u/m",
+				PackageSourceURL: "https://github.com/u/m/tree/v1.2.3/p",
+				ReadMe:           "",
+				ReadMeSource:     "",
+				Redistributable:  false,
+			},
+		},
+	} {
+		got := fetchPackageOverviewDetailsNew(test.vdir, test.versionedLinks)
+		if diff := cmp.Diff(test.want, got); diff != "" {
+			t.Errorf("%s: mismatch (-want +got):\n%s", test.name, diff)
+		}
+	}
+}
+
 func TestReadmeHTML(t *testing.T) {
 	testCases := []struct {
 		name string

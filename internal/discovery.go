@@ -154,6 +154,12 @@ type PackageNew struct {
 	Imports       []string
 }
 
+// VersionedPackageNew is a PackageNew along with associated module information.
+type VersionedPackageNew struct {
+	PackageNew
+	ModuleInfo
+}
+
 // Documentation is the rendered documentation for a given package
 // for a specific GOOS and GOARCH.
 type Documentation struct {

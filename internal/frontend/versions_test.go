@@ -269,7 +269,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 				}
 			}
 
-			got, err := fetchPackageVersionsDetails(ctx, testDB, tc.pkg)
+			got, err := fetchPackageVersionsDetails(ctx, testDB, tc.pkg.Path, tc.pkg.V1Path, tc.pkg.ModulePath)
 			if err != nil {
 				t.Fatalf("fetchPackageVersionsDetails(ctx, db, %v): %v", tc.pkg, err)
 			}

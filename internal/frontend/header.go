@@ -79,6 +79,42 @@ func createPackage(pkg *internal.Package, mi *internal.ModuleInfo, latestRequest
 	}, nil
 }
 
+// createPackageNew returns a *Package based on the fields of the specified
+// internal package and version info.
+//
+// latestRequested indicates whether the user requested the latest
+// version of the package. If so, the returned Package.URL will have the
+// structure /<path> instead of /<path>@<version>.
+func createPackageNew(vdir *internal.VersionedDirectory, latestRequested bool) (_ *Package, err error) {
+	defer derrors.Wrap(&err, "createPackageNew(%v, %t)", vdir, latestRequested)
+
+	if vdir == nil || vdir.Package == nil {
+		return nil, fmt.Errorf("package info must not be nil")
+	}
+
+	var modLicenses []*licenses.Metadata
+	for _, lm := range vdir.Licenses {
+		if path.Dir(lm.FilePath) == "." {
+			modLicenses = append(modLicenses, lm)
+		}
+	}
+
+	m := createModule(&vdir.ModuleInfo, modLicenses, latestRequested)
+	urlVersion := m.LinkVersion
+	if latestRequested {
+		urlVersion = internal.LatestVersion
+	}
+	return &Package{
+		Path:              vdir.Path,
+		Synopsis:          vdir.Package.Documentation.Synopsis,
+		IsRedistributable: vdir.DirectoryNew.IsRedistributable,
+		Licenses:          transformLicenseMetadata(vdir.Licenses),
+		Module:            *m,
+		URL:               constructPackageURL(vdir.Path, vdir.ModulePath, urlVersion),
+		LatestURL:         constructPackageURL(vdir.Path, vdir.ModulePath, middleware.LatestVersionPlaceholder),
+	}, nil
+}
+
 // createModule returns a *Module based on the fields of the specified
 // versionInfo.
 //
@@ -139,6 +175,21 @@ func effectiveName(pkg *internal.Package) string {
 	return base
 }
 
+// effectiveNameNew returns either the command name or package name.
+func effectiveNameNew(pkg *internal.PackageNew) string {
+	if pkg.Name != "main" {
+		return pkg.Name
+	}
+	var prefix string // package path without version
+	if pkg.Path[len(pkg.Path)-3:] == "/v1" {
+		prefix = pkg.Path[:len(pkg.Path)-3]
+	} else {
+		prefix, _, _ = module.SplitPathVersion(pkg.Path)
+	}
+	_, base := path.Split(prefix)
+	return base
+}
+
 // packageHTMLTitle constructs the details page title for pkg.
 // The string will appear in the <title> element (and thus
 // the browser tab).
@@ -149,6 +200,16 @@ func packageHTMLTitle(pkg *internal.Package) string {
 	return effectiveName(pkg) + " command"
 }
 
+// packageHTMLTitleNew constructs the details page title for pkg.
+// The string will appear in the <title> element (and thus
+// the browser tab).
+func packageHTMLTitleNew(pkg *internal.PackageNew) string {
+	if pkg.Name != "main" {
+		return pkg.Name + " package"
+	}
+	return effectiveNameNew(pkg) + " command"
+}
+
 // packageTitle returns the package title as it will
 // appear in the heading at the top of the page.
 func packageTitle(pkg *internal.Package) string {
@@ -156,6 +217,15 @@ func packageTitle(pkg *internal.Package) string {
 		return "package " + pkg.Name
 	}
 	return "command " + effectiveName(pkg)
+}
+
+// packageTitleNew returns the package title as it will
+// appear in the heading at the top of the page.
+func packageTitleNew(pkg *internal.PackageNew) string {
+	if pkg.Name != "main" {
+		return "package " + pkg.Name
+	}
+	return "command " + effectiveNameNew(pkg)
 }
 
 // breadcrumbPath builds HTML that displays pkgPath as a sequence of links

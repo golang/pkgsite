@@ -56,7 +56,8 @@ func TestFetchImportsDetails(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			got, err := fetchImportsDetails(ctx, testDB, firstVersionedPackage(module))
+			pkg := firstVersionedPackage(module)
+			got, err := fetchImportsDetails(ctx, testDB, pkg.Path, pkg.ModulePath, pkg.Version)
 			if err != nil {
 				t.Fatalf("fetchImportsDetails(ctx, db, %q, %q) = %v err = %v, want %v",
 					module.Packages[0].Path, module.Version, got, err, tc.wantDetails)
@@ -145,7 +146,7 @@ func TestFetchImportedByDetails(t *testing.T) {
 			otherVersion := newModule(path.Dir(tc.pkg.Path), tc.pkg)
 			otherVersion.Version = "v1.0.5"
 			vp := firstVersionedPackage(otherVersion)
-			got, err := fetchImportedByDetails(ctx, testDB, vp)
+			got, err := fetchImportedByDetails(ctx, testDB, vp.Path, vp.ModulePath)
 			if err != nil {
 				t.Fatalf("fetchImportedByDetails(ctx, db, %q) = %v err = %v, want %v",
 					tc.pkg.Path, got, err, tc.wantDetails)

@@ -17,14 +17,10 @@ import (
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
-// getDirectoryNew returns a directory from the database, along with all of the
+// GetDirectoryNew returns a directory from the database, along with all of the
 // data associated with that directory, including the package, imports, readme,
 // documentation, and licenses.
-//
-// At the moment this function is only being used to test InsertModule. It only
-// supports fetching a directory when the modulePath is known. It will be
-// exported in a later CL once we integrate the new data model in the frontend.
-func (db *DB) getDirectoryNew(ctx context.Context, path, modulePath, version string) (_ *internal.VersionedDirectory, err error) {
+func (db *DB) GetDirectoryNew(ctx context.Context, path, modulePath, version string) (_ *internal.VersionedDirectory, err error) {
 	query := `
 		SELECT
 			m.module_path,
@@ -34,6 +30,8 @@ func (db *DB) getDirectoryNew(ctx context.Context, path, modulePath, version str
 			m.redistributable,
 			m.has_go_mod,
 			m.source_info,
+			m.readme_file_path,
+			m.readme_contents,
 			p.id,
 			p.path,
 			p.name,
@@ -67,7 +65,6 @@ func (db *DB) getDirectoryNew(ctx context.Context, path, modulePath, version str
 		licenseTypes, licensePaths []string
 		pathID                     int
 	)
-
 	row := db.db.QueryRow(ctx, query, path, modulePath, version)
 	if err := row.Scan(
 		&mi.ModulePath,
@@ -77,6 +74,8 @@ func (db *DB) getDirectoryNew(ctx context.Context, path, modulePath, version str
 		&mi.IsRedistributable,
 		&mi.HasGoMod,
 		jsonbScanner{&mi.SourceInfo},
+		&mi.ReadmeFilePath,
+		&mi.ReadmeContents,
 		&pathID,
 		&dir.Path,
 		database.NullIsEmpty(&pkg.Name),

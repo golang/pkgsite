@@ -153,7 +153,7 @@ func (s *Server) servePackagePageNew(w http.ResponseWriter, r *http.Request, ful
 	defer derrors.Wrap(&err, "servePackagePageNew(w, r, %q, %q, %q)", fullPath, inModulePath, inVersion)
 
 	ctx := r.Context()
-	modulePath, version, isPackage, err := s.ds.GetPathInfo(ctx, fullPath, inModulePath, inVersion)
+	modulePath, version, _, err := s.ds.GetPathInfo(ctx, fullPath, inModulePath, inVersion)
 	if err != nil {
 		if !errors.Is(err, derrors.NotFound) {
 			return err
@@ -195,12 +195,12 @@ func (s *Server) servePackagePageNew(w http.ResponseWriter, r *http.Request, ful
 			},
 		}
 	}
-	if isPackage {
-		pkg, err := s.ds.GetPackage(ctx, fullPath, modulePath, version)
-		if err != nil {
-			return err
-		}
-		return s.servePackagePageWithPackage(ctx, w, r, pkg, inVersion)
+	vdir, err := s.ds.GetDirectoryNew(ctx, fullPath, modulePath, version)
+	if err != nil {
+		return err
+	}
+	if vdir.Package != nil {
+		return s.servePackagePageWithVersionedDirectory(ctx, w, r, vdir, inVersion)
 	}
 	dir, err := s.ds.GetDirectory(ctx, fullPath, modulePath, version, internal.AllFields)
 	if err != nil {
@@ -225,4 +225,49 @@ func (s *Server) stdlibPathForShortcut(ctx context.Context, shortcut string) (pa
 	}
 	// No matches, or ambiguous.
 	return "", nil
+}
+
+func (s *Server) servePackagePageWithVersionedDirectory(ctx context.Context, w http.ResponseWriter, r *http.Request, vdir *internal.VersionedDirectory, requestedVersion string) error {
+
+	pkgHeader, err := createPackageNew(vdir, requestedVersion == internal.LatestVersion)
+	if err != nil {
+		return fmt.Errorf("creating package header for %s@%s: %v", vdir.Path, vdir.Version, err)
+	}
+
+	tab := r.FormValue("tab")
+	settings, ok := packageTabLookup[tab]
+	if !ok {
+		var tab string
+		if vdir.DirectoryNew.IsRedistributable {
+			tab = "doc"
+		} else {
+			tab = "overview"
+		}
+		http.Redirect(w, r, fmt.Sprintf(r.URL.Path+"?tab=%s", tab), http.StatusFound)
+		return nil
+	}
+	canShowDetails := vdir.DirectoryNew.IsRedistributable || settings.AlwaysShowDetails
+
+	var details interface{}
+	if canShowDetails {
+		var err error
+		details, err = fetchDetailsForVersionedDirectory(ctx, r, tab, s.ds, vdir)
+		if err != nil {
+			return fmt.Errorf("fetching page for %q: %v", tab, err)
+		}
+	}
+	page := &DetailsPage{
+		basePage: newBasePage(r, packageHTMLTitleNew(vdir.Package)),
+		Title:    packageTitleNew(vdir.Package),
+		Settings: settings,
+		Header:   pkgHeader,
+		BreadcrumbPath: breadcrumbPath(pkgHeader.Path, pkgHeader.Module.ModulePath,
+			pkgHeader.Module.LinkVersion),
+		Details:        details,
+		CanShowDetails: canShowDetails,
+		Tabs:           packageTabSettings,
+		PageType:       "pkg",
+	}
+	s.servePage(ctx, w, settings.TemplateName, page)
+	return nil
 }

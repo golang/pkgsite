@@ -146,17 +146,39 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds
 	case "doc":
 		return fetchDocumentationDetails(pkg), nil
 	case "versions":
-		return fetchPackageVersionsDetails(ctx, ds, pkg)
+		return fetchPackageVersionsDetails(ctx, ds, pkg.Path, pkg.V1Path, pkg.ModulePath)
 	case "subdirectories":
 		return fetchDirectoryDetails(ctx, ds, pkg.Path, &pkg.ModuleInfo, pkg.Licenses, false)
 	case "imports":
-		return fetchImportsDetails(ctx, ds, pkg)
+		return fetchImportsDetails(ctx, ds, pkg.Path, pkg.ModulePath, pkg.Version)
 	case "importedby":
-		return fetchImportedByDetails(ctx, ds, pkg)
+		return fetchImportedByDetails(ctx, ds, pkg.Path, pkg.ModulePath)
 	case "licenses":
-		return fetchPackageLicensesDetails(ctx, ds, pkg)
+		return fetchPackageLicensesDetails(ctx, ds, pkg.Path, pkg.ModulePath, pkg.Version)
 	case "overview":
-		return constructPackageOverviewDetails(pkg, urlIsVersioned(r.URL)), nil
+		return fetchPackageOverviewDetails(pkg, urlIsVersioned(r.URL)), nil
+	}
+	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
+}
+
+// fetchDetailsForVersionedDirectory returns tab details by delegating to the correct detail
+// handler.
+func fetchDetailsForVersionedDirectory(ctx context.Context, r *http.Request, tab string, ds internal.DataSource, vdir *internal.VersionedDirectory) (interface{}, error) {
+	switch tab {
+	case "doc":
+		return fetchDocumentationDetailsNew(vdir.Package.Documentation), nil
+	case "versions":
+		return fetchPackageVersionsDetails(ctx, ds, vdir.Path, vdir.V1Path, vdir.ModulePath)
+	case "subdirectories":
+		return fetchDirectoryDetails(ctx, ds, vdir.Path, &vdir.ModuleInfo, vdir.Licenses, false)
+	case "imports":
+		return fetchImportsDetails(ctx, ds, vdir.Path, vdir.ModulePath, vdir.Version)
+	case "importedby":
+		return fetchImportedByDetails(ctx, ds, vdir.Path, vdir.ModulePath)
+	case "licenses":
+		return fetchPackageLicensesDetails(ctx, ds, vdir.Path, vdir.ModulePath, vdir.Version)
+	case "overview":
+		return fetchPackageOverviewDetailsNew(vdir, urlIsVersioned(r.URL)), nil
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }

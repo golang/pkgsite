@@ -31,8 +31,8 @@ type ImportsDetails struct {
 
 // fetchImportsDetails fetches imports for the package version specified by
 // pkgPath, modulePath and version from the database and returns a ImportsDetails.
-func fetchImportsDetails(ctx context.Context, ds internal.DataSource, pkg *internal.VersionedPackage) (*ImportsDetails, error) {
-	dsImports, err := ds.GetImports(ctx, pkg.Path, pkg.ModulePath, pkg.Version)
+func fetchImportsDetails(ctx context.Context, ds internal.DataSource, pkgPath, modulePath, version string) (*ImportsDetails, error) {
+	dsImports, err := ds.GetImports(ctx, pkgPath, modulePath, version)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func fetchImportsDetails(ctx context.Context, ds internal.DataSource, pkg *inter
 	for _, p := range dsImports {
 		if stdlib.Contains(p) {
 			std = append(std, p)
-		} else if strings.HasPrefix(p+"/", pkg.ModuleInfo.ModulePath+"/") {
+		} else if strings.HasPrefix(p+"/", modulePath+"/") {
 			moduleImports = append(moduleImports, p)
 		} else {
 			externalImports = append(externalImports, p)
@@ -49,7 +49,7 @@ func fetchImportsDetails(ctx context.Context, ds internal.DataSource, pkg *inter
 	}
 
 	return &ImportsDetails{
-		ModulePath:      pkg.ModuleInfo.ModulePath,
+		ModulePath:      modulePath,
 		ExternalImports: externalImports,
 		InternalImports: moduleImports,
 		StdLib:          std,
@@ -74,8 +74,8 @@ const importedByLimit = 20001
 
 // fetchImportedByDetails fetches importers for the package version specified by
 // path and version from the database and returns a ImportedByDetails.
-func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkg *internal.VersionedPackage) (*ImportedByDetails, error) {
-	importedBy, err := ds.GetImportedBy(ctx, pkg.Path, pkg.ModulePath, importedByLimit)
+func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath, modulePath string) (*ImportedByDetails, error) {
+	importedBy, err := ds.GetImportedBy(ctx, pkgPath, modulePath, importedByLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkg *in
 	}
 	sections := Sections(importedBy, nextPrefixAccount)
 	return &ImportedByDetails{
-		ModulePath:   pkg.ModuleInfo.ModulePath,
+		ModulePath:   modulePath,
 		ImportedBy:   sections,
 		Total:        len(importedBy),
 		TotalIsExact: totalIsExact,

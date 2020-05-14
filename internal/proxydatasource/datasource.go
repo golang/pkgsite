@@ -89,6 +89,21 @@ func (ds *DataSource) GetDirectory(ctx context.Context, dirPath, modulePath, ver
 	}, nil
 }
 
+// GetDirectoryNew returns information about a directory at a path.
+func (ds *DataSource) GetDirectoryNew(ctx context.Context, dirPath, modulePath, version string) (_ *internal.VersionedDirectory, err error) {
+	m, err := ds.getModule(ctx, modulePath, version)
+	if err != nil {
+		return nil, err
+	}
+	return &internal.VersionedDirectory{
+		ModuleInfo: m.ModuleInfo,
+		DirectoryNew: internal.DirectoryNew{
+			Path:   dirPath,
+			V1Path: internal.V1Path(modulePath, strings.TrimPrefix(dirPath, modulePath+"/")),
+		},
+	}, nil
+}
+
 // GetImportedBy is unimplemented.
 func (ds *DataSource) GetImportedBy(ctx context.Context, path, version string, limit int) (_ []string, err error) {
 	return nil, nil

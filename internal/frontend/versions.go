@@ -83,17 +83,16 @@ func fetchModuleVersionsDetails(ctx context.Context, ds internal.DataSource, mi 
 }
 
 // fetchPackageVersionsDetails builds a version hierarchy for all module
-// versions containing a package path with v1 import path matching the v1
-// import path of pkg.
-func fetchPackageVersionsDetails(ctx context.Context, ds internal.DataSource, pkg *internal.VersionedPackage) (*VersionsDetails, error) {
-	versions, err := ds.GetTaggedVersionsForPackageSeries(ctx, pkg.Path)
+// versions containing a package path with v1 import path matching the given v1 path.
+func fetchPackageVersionsDetails(ctx context.Context, ds internal.DataSource, pkgPath, v1Path, modulePath string) (*VersionsDetails, error) {
+	versions, err := ds.GetTaggedVersionsForPackageSeries(ctx, pkgPath)
 	if err != nil {
 		return nil, err
 	}
 	// If no tagged versions for the package series are found, fetch the
 	// pseudo-versions instead.
 	if len(versions) == 0 {
-		versions, err = ds.GetPseudoVersionsForPackageSeries(ctx, pkg.Path)
+		versions, err = ds.GetPseudoVersionsForPackageSeries(ctx, pkgPath)
 		if err != nil {
 			return nil, err
 		}
@@ -103,7 +102,7 @@ func fetchPackageVersionsDetails(ctx context.Context, ds internal.DataSource, pk
 	// TODO(rfindley): remove this filtering, as it should not be necessary and
 	// is probably a relic of earlier version query implementations.
 	for _, v := range versions {
-		if seriesPath := v.SeriesPath(); strings.HasPrefix(pkg.V1Path, seriesPath) || seriesPath == stdlib.ModulePath {
+		if seriesPath := v.SeriesPath(); strings.HasPrefix(v1Path, seriesPath) || seriesPath == stdlib.ModulePath {
 			filteredVersions = append(filteredVersions, v)
 		} else {
 			log.Errorf(ctx, "got version with mismatching series: %q", seriesPath)
@@ -115,13 +114,13 @@ func fetchPackageVersionsDetails(ctx context.Context, ds internal.DataSource, pk
 		// import path of the package corresponding to this version.
 		var versionPath string
 		if mi.ModulePath == stdlib.ModulePath {
-			versionPath = pkg.Path
+			versionPath = pkgPath
 		} else {
-			versionPath = pathInVersion(pkg.V1Path, mi)
+			versionPath = pathInVersion(v1Path, mi)
 		}
 		return constructPackageURL(versionPath, mi.ModulePath, linkVersion(mi.Version, mi.ModulePath))
 	}
-	return buildVersionDetails(pkg.ModulePath, filteredVersions, linkify), nil
+	return buildVersionDetails(modulePath, filteredVersions, linkify), nil
 }
 
 // pathInVersion constructs the full import path of the package corresponding

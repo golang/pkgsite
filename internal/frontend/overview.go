@@ -54,11 +54,21 @@ func constructOverviewDetails(mi *internal.ModuleInfo, isRedistributable bool, v
 	return overview
 }
 
-// constructPackageOverviewDetails uses data for the given package to return an OverviewDetails.
-func constructPackageOverviewDetails(pkg *internal.VersionedPackage, versionedLinks bool) *OverviewDetails {
+// fetchPackageOverviewDetails uses data for the given package to return an OverviewDetails.
+func fetchPackageOverviewDetails(pkg *internal.VersionedPackage, versionedLinks bool) *OverviewDetails {
 	od := constructOverviewDetails(&pkg.ModuleInfo, pkg.Package.IsRedistributable, versionedLinks)
 	od.PackageSourceURL = pkg.SourceInfo.DirectoryURL(packageSubdir(pkg.Path, pkg.ModulePath))
 	if !pkg.Package.IsRedistributable {
+		od.Redistributable = false
+	}
+	return od
+}
+
+// fetchPackageOverviewDetailsNew uses data for the given versioned directory to return an OverviewDetails.
+func fetchPackageOverviewDetailsNew(vdir *internal.VersionedDirectory, versionedLinks bool) *OverviewDetails {
+	od := constructOverviewDetails(&vdir.ModuleInfo, vdir.DirectoryNew.IsRedistributable, versionedLinks)
+	od.PackageSourceURL = vdir.SourceInfo.DirectoryURL(packageSubdir(vdir.Path, vdir.ModulePath))
+	if !vdir.DirectoryNew.IsRedistributable {
 		od.Redistributable = false
 	}
 	return od

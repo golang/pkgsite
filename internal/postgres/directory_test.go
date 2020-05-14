@@ -14,6 +14,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -275,6 +276,168 @@ func TestGetDirectory(t *testing.T) {
 			}
 			if diff := cmp.Diff(wantDirectory, got, opts...); diff != "" {
 				t.Errorf("testDB.GetDirectory(ctx, %q, %q, %q) mismatch (-want +got):\n%s", tc.dirPath, tc.modulePath, tc.version, diff)
+			}
+		})
+	}
+}
+
+func TestGetDirectoryNew(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	ctx = experiment.NewContext(ctx,
+		experiment.NewSet(map[string]bool{
+			internal.ExperimentInsertDirectories: true}))
+
+	defer ResetTestDB(testDB, t)
+
+	InsertSampleDirectoryTree(ctx, t, testDB)
+
+	// Add a module that has READMEs in a directory and a package.
+	m := sample.Module("a.com/m", "v1.2.3", "dir/p")
+	d := sample.DirectoryNewEmpty("a.com/m/dir")
+	d.Readme = &internal.Readme{
+		Filepath: "DIR_README.md",
+		Contents: "dir readme",
+	}
+	m.Directories = append(m.Directories, d)
+	d = sample.DirectoryNewEmpty("a.com/m/dir/p")
+	d.Readme = &internal.Readme{
+		Filepath: "PKG_README.md",
+		Contents: "pkg readme",
+	}
+	m.Directories = append(m.Directories, d)
+	if err := testDB.InsertModule(ctx, m); err != nil {
+		t.Fatal(err)
+	}
+
+	newVdir := func(path, modulePath, version string, readme *internal.Readme, pkg *internal.PackageNew) *internal.VersionedDirectory {
+		return &internal.VersionedDirectory{
+			ModuleInfo: *sample.ModuleInfo(modulePath, version),
+			DirectoryNew: internal.DirectoryNew{
+				Path:              path,
+				V1Path:            path,
+				IsRedistributable: true,
+				Licenses:          sample.LicenseMetadata,
+				Readme:            readme,
+				Package:           pkg,
+			},
+		}
+	}
+
+	newPackage := func(name, path string) *internal.PackageNew {
+		return &internal.PackageNew{
+			Name: name,
+			Path: path,
+			Documentation: &internal.Documentation{
+				Synopsis: sample.Synopsis,
+				HTML:     sample.DocumentationHTML,
+				GOOS:     sample.GOOS,
+				GOARCH:   sample.GOARCH,
+			},
+			Imports: sample.Imports,
+		}
+	}
+
+	for _, tc := range []struct {
+		name, dirPath, modulePath, version string
+		want                               *internal.VersionedDirectory
+		wantNotFoundErr                    bool
+	}{
+		{
+			name:       "module path",
+			dirPath:    "github.com/hashicorp/vault",
+			modulePath: "github.com/hashicorp/vault",
+			version:    "v1.0.3",
+			want: newVdir("github.com/hashicorp/vault", "github.com/hashicorp/vault", "v1.0.3",
+				&internal.Readme{
+					Filepath: sample.ReadmeFilePath,
+					Contents: sample.ReadmeContents,
+				}, nil),
+		},
+		{
+			name:       "package path",
+			dirPath:    "github.com/hashicorp/vault/api",
+			modulePath: "github.com/hashicorp/vault",
+			version:    "v1.0.3",
+			want: newVdir("github.com/hashicorp/vault/api", "github.com/hashicorp/vault", "v1.0.3", nil,
+				newPackage("api", "github.com/hashicorp/vault/api")),
+		},
+		{
+			name:       "directory path",
+			dirPath:    "github.com/hashicorp/vault/builtin",
+			modulePath: "github.com/hashicorp/vault",
+			version:    "v1.0.3",
+			want:       newVdir("github.com/hashicorp/vault/builtin", "github.com/hashicorp/vault", "v1.0.3", nil, nil),
+		},
+		{
+			name:       "stdlib directory",
+			dirPath:    "archive",
+			modulePath: stdlib.ModulePath,
+			version:    "v1.13.4",
+			want:       newVdir("archive", stdlib.ModulePath, "v1.13.4", nil, nil),
+		},
+		{
+			name:       "stdlib package",
+			dirPath:    "archive/zip",
+			modulePath: stdlib.ModulePath,
+			version:    "v1.13.4",
+			want:       newVdir("archive/zip", stdlib.ModulePath, "v1.13.4", nil, newPackage("zip", "archive/zip")),
+		},
+		{
+			name:            "stdlib package - incomplete last element",
+			dirPath:         "archive/zi",
+			modulePath:      stdlib.ModulePath,
+			version:         "v1.13.4",
+			wantNotFoundErr: true,
+		},
+		{
+			name:       "stdlib - internal directory",
+			dirPath:    "cmd/internal",
+			modulePath: stdlib.ModulePath,
+			version:    "v1.13.4",
+			want:       newVdir("cmd/internal", stdlib.ModulePath, "v1.13.4", nil, nil),
+		},
+		{
+			name:       "directory with readme",
+			dirPath:    "a.com/m/dir",
+			modulePath: "a.com/m",
+			version:    "v1.2.3",
+			want: newVdir("a.com/m/dir", "a.com/m", "v1.2.3", &internal.Readme{
+				Filepath: "DIR_README.md",
+				Contents: "dir readme",
+			}, nil),
+		},
+		{
+			name:       "package with readme",
+			dirPath:    "a.com/m/dir/p",
+			modulePath: "a.com/m",
+			version:    "v1.2.3",
+			want: newVdir("a.com/m/dir/p", "a.com/m", "v1.2.3",
+				&internal.Readme{
+					Filepath: "PKG_README.md",
+					Contents: "pkg readme",
+				},
+				newPackage("p", "a.com/m/dir/p")),
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := testDB.GetDirectoryNew(ctx, tc.dirPath, tc.modulePath, tc.version)
+			if tc.wantNotFoundErr {
+				if !errors.Is(err, derrors.NotFound) {
+					t.Fatalf("want %v; got = \n%+v, %v", derrors.NotFound, got, err)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			opts := []cmp.Option{
+				cmp.AllowUnexported(source.Info{}),
+				// The packages table only includes partial license information; it omits the Coverage field.
+				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
+			}
+			if diff := cmp.Diff(tc.want, got, opts...); diff != "" {
+				t.Errorf("mismatch (-want, +got):\n%s", diff)
 			}
 		})
 	}
