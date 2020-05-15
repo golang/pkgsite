@@ -395,7 +395,8 @@ func subTree(r *git.Repository, t *object.Tree, name string) (*object.Tree, erro
 	return nil, os.ErrNotExist
 }
 
-// Contains reports whether the given import path is part of the Go standard library.
+// Contains reports whether the given import path could be part of the Go standard library,
+// by reporting whether the first component lacks a '.'.
 func Contains(path string) bool {
 	if i := strings.IndexByte(path, '/'); i != -1 {
 		path = path[:i]
