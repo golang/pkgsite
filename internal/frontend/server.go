@@ -47,7 +47,9 @@ type Server struct {
 // NewServer creates a new Server for the given database and template directory.
 // reloadTemplates should be used during development when it can be helpful to
 // reload templates from disk each time a page is loaded.
-func NewServer(ds internal.DataSource, q queue.Queue, cmplClient *redis.Client, staticPath string, thirdPartyPath string, reloadTemplates bool) (*Server, error) {
+func NewServer(ds internal.DataSource, q queue.Queue, cmplClient *redis.Client, staticPath string, thirdPartyPath string, reloadTemplates bool) (_ *Server, err error) {
+	defer derrors.Wrap(&err, "NewServer(...)")
+
 	templateDir := filepath.Join(staticPath, "html")
 	ts, err := parsePageTemplates(templateDir)
 	if err != nil {

@@ -35,15 +35,9 @@ func TestMain(m *testing.M) {
 }
 
 func TestHTMLInjection(t *testing.T) {
-	s, err := NewServer(testDB, nil, nil, "../../content/static", "../../third_party", false)
-	if err != nil {
-		t.Fatalf("NewServer: %v", err)
-	}
-	mux := http.NewServeMux()
-	s.Install(mux.Handle, nil)
-
+	_, handler := newTestServer(t)
 	w := httptest.NewRecorder()
-	mux.ServeHTTP(w, httptest.NewRequest("GET", "/<em>UHOH</em>", nil))
+	handler.ServeHTTP(w, httptest.NewRequest("GET", "/<em>UHOH</em>", nil))
 	if strings.Contains(w.Body.String(), "<em>") {
 		t.Error("User input was rendered unescaped.")
 	}
@@ -192,29 +186,10 @@ func testServer(t *testing.T, experimentNames ...string) {
 
 	// Experiments need to be set in the context, for DB work, and as
 	// a middleware, for request handling.
-	expmap := map[string]bool{}
-	var exps []*internal.Experiment
-	for _, n := range experimentNames {
-		expmap[n] = true
-		exps = append(exps, &internal.Experiment{Name: n, Rollout: 100})
-	}
-	ctx = experiment.NewContext(ctx, experiment.NewSet(expmap))
+	ctx = experimentContext(ctx, experimentNames...)
 	insertTestModules(ctx, t, testModules)
 
-	s, err := NewServer(testDB, nil, nil, "../../content/static", "../../third_party", false)
-	if err != nil {
-		t.Fatalf("NewServer: %v", err)
-	}
-	mux := http.NewServeMux()
-	s.Install(mux.Handle, nil)
-
-	handler := middleware.LatestVersion(s.LatestVersion)(mux)
-	esrc := internal.NewLocalExperimentSource(exps)
-	exp, err := middleware.NewExperimenter(ctx, time.Hour, esrc, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	handler = middleware.Experiment(exp)(handler)
+	_, handler := newTestServer(t, experimentNames...)
 
 	var (
 		in   = htmlcheck.In
@@ -860,13 +835,7 @@ func TestServerErrors(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	s, err := NewServer(testDB, nil, nil, "../../content/static", "../../third_party", false)
-	if err != nil {
-		t.Fatalf("NewServer: %v", err)
-	}
-	mux := http.NewServeMux()
-	s.Install(mux.Handle, nil)
-
+	_, handler := newTestServer(t)
 	for _, test := range []struct {
 		path     string
 		wantCode int
@@ -875,7 +844,7 @@ func TestServerErrors(t *testing.T) {
 		{"/gocloud.dev/@latest/blob", http.StatusBadRequest},
 	} {
 		w := httptest.NewRecorder()
-		mux.ServeHTTP(w, httptest.NewRequest("GET", test.path, nil))
+		handler.ServeHTTP(w, httptest.NewRequest("GET", test.path, nil))
 		if w.Code != test.wantCode {
 			t.Errorf("%q: got status code = %d, want %d", test.path, w.Code, test.wantCode)
 		}
@@ -948,4 +917,35 @@ func TestTagRoute(t *testing.T) {
 			t.Errorf("TagRoute(%q, %v) = %q, want %q", test.route, test.req, got, test.want)
 		}
 	}
+}
+
+func experimentContext(ctx context.Context, experimentNames ...string) context.Context {
+	expmap := map[string]bool{}
+	for _, n := range experimentNames {
+		expmap[n] = true
+	}
+	return experiment.NewContext(ctx, experiment.NewSet(expmap))
+}
+
+func newTestServer(t *testing.T, experimentNames ...string) (*Server, http.Handler) {
+	s, err := NewServer(testDB, nil, nil, "../../content/static", "../../third_party", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	mux := http.NewServeMux()
+	s.Install(mux.Handle, nil)
+
+	var exps []*internal.Experiment
+	for _, n := range experimentNames {
+		exps = append(exps, &internal.Experiment{Name: n, Rollout: 100})
+	}
+	esrc := internal.NewLocalExperimentSource(exps)
+	exp, err := middleware.NewExperimenter(context.Background(), time.Hour, esrc, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	mw := middleware.Chain(
+		middleware.LatestVersion(s.LatestVersion),
+		middleware.Experiment(exp))
+	return s, mw(mux)
 }
