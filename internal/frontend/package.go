@@ -16,6 +16,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 // handlePackageDetails handles requests for package details pages. It expects
@@ -159,7 +160,21 @@ func (s *Server) servePackagePageNew(w http.ResponseWriter, r *http.Request, ful
 			return err
 		}
 		if inVersion == internal.LatestVersion {
-			return pathNotFoundError("package")
+			if !experiment.IsActive(ctx, internal.ExperimentUseDirectories) {
+				return pathNotFoundError("package")
+			}
+			// TODO(b/149933479) add a case for this to TestServer, after we
+			// switch over to the paths-based data model.
+			path, err := s.stdlibPathForShortcut(ctx, fullPath)
+			if path == "" {
+				if err != nil {
+					// Log the error, but prefer a "path not found" error for a better user experience.
+					log.Error(ctx, err)
+				}
+				return pathNotFoundError("package")
+			}
+			http.Redirect(w, r, path, http.StatusFound)
+			return nil
 		}
 		// We couldn't find a path at the given version, but if there's one at the latest version
 		// we can provide a link to it.
@@ -193,4 +208,22 @@ func (s *Server) servePackagePageNew(w http.ResponseWriter, r *http.Request, ful
 		return err
 	}
 	return s.serveDirectoryPageWithDirectory(ctx, w, r, dir, inVersion)
+}
+
+// stdlibPathForShortcut returns a path in the stdlib that shortcut should redirect to,
+// or the empty string if there is no such path.
+func (s *Server) stdlibPathForShortcut(ctx context.Context, shortcut string) (path string, err error) {
+	defer derrors.Wrap(&err, "stdlibPathForShortcut(ctx, %q)", shortcut)
+	if !stdlib.Contains(shortcut) {
+		return "", nil
+	}
+	matches, err := s.ds.GetStdlibPathsWithSuffix(ctx, shortcut)
+	if err != nil {
+		return "", err
+	}
+	if len(matches) == 1 {
+		return matches[0], nil
+	}
+	// No matches, or ambiguous.
+	return "", nil
 }
