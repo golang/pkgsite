@@ -13,6 +13,7 @@ import (
 	"github.com/lib/pq"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 // GetPathInfo returns information about the "best" entity (module, path or directory) with
@@ -105,6 +106,46 @@ func (db *DB) getPathsInModule(ctx context.Context, modulePath, version string) 
 		return nil
 	}
 	if err := db.db.RunQuery(ctx, query, collect, modulePath, version); err != nil {
+		return nil, err
+	}
+	return paths, nil
+}
+
+// GetStdlibPathsWithSuffix returns information about all paths in the latest version of the standard
+// library whose last component is suffix. A path that exactly match suffix is not included;
+// the path must end with "/" + suffix.
+//
+// We are only interested in actual standard library packages: not commands, which we happen to include
+// in the stdlib module, and not directories (paths that do not contain a package).
+func (db *DB) GetStdlibPathsWithSuffix(ctx context.Context, suffix string) (paths []string, err error) {
+	defer derrors.Wrap(&err, "DB.GetStdlibPaths(ctx, %q)", suffix)
+
+	q := `
+		SELECT path
+		FROM paths
+		WHERE module_id = (
+			-- latest release version of stdlib
+			SELECT id
+			FROM modules
+			WHERE module_path = $1
+			ORDER BY
+				version_type = 'release' DESC,
+				sort_version DESC
+			LIMIT 1)
+			AND name != ''
+			AND path NOT LIKE 'cmd/%'
+			AND path LIKE '%/' || $2
+		ORDER BY path
+	`
+	err = db.db.RunQuery(ctx, q, func(rows *sql.Rows) error {
+		var p string
+		if err := rows.Scan(&p); err != nil {
+			return err
+		}
+		paths = append(paths, p)
+		return nil
+	}, stdlib.ModulePath, suffix)
+	if err != nil {
 		return nil, err
 	}
 	return paths, nil

@@ -10,8 +10,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -151,5 +154,54 @@ func TestGetPathInfo(t *testing.T) {
 					test.wantModule, test.wantVersion, test.wantIsPackage)
 			}
 		})
+	}
+}
+
+func TestGetStdlibPaths(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	ctx = experiment.NewContext(ctx, experiment.NewSet(map[string]bool{
+		internal.ExperimentInsertDirectories: true,
+	}))
+	defer ResetTestDB(testDB, t)
+
+	// Insert two versions of some stdlib packages.
+	for _, data := range []struct {
+		version  string
+		suffixes []string
+	}{
+		{
+			// earlier version; should be ignored
+			"v1.1.0",
+			[]string{"bad/json"},
+		},
+		{
+			"v1.2.0",
+			[]string{
+				"encoding/json",
+				"archive/json",
+				"net/http",     // no "json"
+				"foo/json/moo", // "json" not the last component
+				"bar/xjson",    // "json" not alone
+				"baz/jsonx",    // ditto
+			},
+		},
+	} {
+		m := sample.Module(stdlib.ModulePath, data.version, data.suffixes...)
+		for _, p := range m.Packages {
+			p.Imports = nil
+		}
+		if err := testDB.InsertModule(ctx, m); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	got, err := testDB.GetStdlibPathsWithSuffix(ctx, "json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"archive/json", "encoding/json"}
+	if !cmp.Equal(got, want) {
+		t.Errorf("got %v, want %v", got, want)
 	}
 }
