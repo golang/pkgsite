@@ -444,3 +444,8 @@ func (ds *DataSource) GetPathInfo(ctx context.Context, path, inModulePath, inVer
 func (ds *DataSource) GetVersionMap(ctx context.Context, modulePath, version string) (*internal.VersionMap, error) {
 	return nil, nil
 }
+
+// GetStdlibPathsWithSuffix is unimplemented.
+func (ds *DataSource) GetStdlibPathsWithSuffix(ctx context.Context, suffix string) ([]string, error) {
+	return nil, nil
+}

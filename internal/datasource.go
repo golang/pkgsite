@@ -63,4 +63,6 @@ type DataSource interface {
 	Search(ctx context.Context, query string, limit, offset int) ([]*SearchResult, error)
 	// GetVersionMap returns the VersionMap corresponding to the provided modulePath and requestedVersion.
 	GetVersionMap(ctx context.Context, modulePath, requestedVersion string) (*VersionMap, error)
+	// GetStdlibPathsWithSuffix returns standard library paths with the given suffix.
+	GetStdlibPathsWithSuffix(ctx context.Context, suffix string) ([]string, error)
 }
