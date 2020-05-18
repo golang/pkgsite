@@ -1077,11 +1077,6 @@ func TestFetchAndInsertModule(t *testing.T) {
 func TestFetchAndInsertModuleTimeout(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
 
-	defer func(oldTimeout time.Duration) {
-		fetchTimeout = oldTimeout
-	}(fetchTimeout)
-	fetchTimeout = 0
-
 	proxyClient, teardownProxy := proxy.SetupTestProxy(t, nil)
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)
@@ -1089,7 +1084,10 @@ func TestFetchAndInsertModuleTimeout(t *testing.T) {
 	name := "my.mod/version"
 	version := "v1.0.0"
 	wantErrString := "deadline exceeded"
-	_, err := FetchAndUpdateState(context.Background(), name, version, proxyClient, sourceClient, testDB)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 0)
+	defer cancel()
+	_, err := FetchAndUpdateState(ctx, name, version, proxyClient, sourceClient, testDB)
 	if err == nil || !strings.Contains(err.Error(), wantErrString) {
 		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v) returned error %v, want error containing %q",
 			name, version, proxyClient, sourceClient, testDB, err, wantErrString)

@@ -23,12 +23,7 @@ import (
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
-	"golang.org/x/pkgsite/internal/xcontext"
 )
-
-// fetchTimeout bounds the time allowed for fetching a single module.  It is
-// mutable for testing purposes.
-var fetchTimeout = 2 * config.StatementTimeout
 
 const (
 	// Indicates that although we have a valid module, some packages could not be processed.
@@ -65,7 +60,7 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 	dbErr := updateVersionMapAndDeleteModulesWithErrors(ctx, db, ft)
 	if dbErr != nil {
 		log.Error(ctx, dbErr)
-		ft.Error = err
+		ft.Error = dbErr
 		ft.Status = http.StatusInternalServerError
 	}
 	if !semver.IsValid(ft.ResolvedVersion) {
@@ -102,8 +97,7 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 // The given parentCtx is used for tracing, but fetches actually execute in a
 // detached context with fixed timeout, so that fetches are allowed to complete
 // even for short-lived requests.
-func fetchAndInsertModule(parentCtx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, sourceClient *source.Client, db *postgres.DB) *fetchTask {
-
+func fetchAndInsertModule(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, sourceClient *source.Client, db *postgres.DB) *fetchTask {
 	ft := &fetchTask{
 		FetchResult: fetch.FetchResult{
 			ModulePath:       modulePath,
@@ -120,12 +114,12 @@ func fetchAndInsertModule(parentCtx context.Context, modulePath, requestedVersio
 	}()
 
 	if ProxyRemoved[modulePath+"@"+requestedVersion] {
-		log.Infof(parentCtx, "not fetching %s@%s because it is on the ProxyRemoved list", modulePath, requestedVersion)
+		log.Infof(ctx, "not fetching %s@%s because it is on the ProxyRemoved list", modulePath, requestedVersion)
 		ft.Error = derrors.Excluded
 		return ft
 	}
 
-	exc, err := db.IsExcluded(parentCtx, modulePath)
+	exc, err := db.IsExcluded(ctx, modulePath)
 	if err != nil {
 		ft.Error = err
 		return ft
@@ -134,15 +128,6 @@ func fetchAndInsertModule(parentCtx context.Context, modulePath, requestedVersio
 		ft.Error = derrors.Excluded
 		return ft
 	}
-
-	parentSpan := trace.FromContext(parentCtx)
-	// A fixed timeout for FetchAndInsertModule to allow module processing to
-	// succeed even for extremely short lived requests.
-	ctx, cancel := context.WithTimeout(xcontext.Detach(parentCtx), fetchTimeout)
-	defer cancel()
-
-	ctx, span := trace.StartSpanWithRemoteParent(ctx, "worker.fetchAndInsertModule", parentSpan.SpanContext())
-	defer span.End()
 
 	start := time.Now()
 	fr := fetch.FetchModule(ctx, modulePath, requestedVersion, proxyClient, sourceClient)
