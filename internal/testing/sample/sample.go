@@ -119,13 +119,14 @@ func ModuleInfo(modulePath, versionString string) *internal.ModuleInfo {
 // ModuleInfos with "latest" for version, which should not be valid.
 func ModuleInfoReleaseType(modulePath, versionString string) *internal.ModuleInfo {
 	return &internal.ModuleInfo{
-		ModulePath:        modulePath,
-		Version:           versionString,
-		ReadmeFilePath:    ReadmeFilePath,
-		ReadmeContents:    ReadmeContents,
-		CommitTime:        CommitTime,
-		VersionType:       version.TypeRelease,
-		SourceInfo:        source.NewGitHubInfo(RepositoryURL, "", ""),
+		ModulePath:     modulePath,
+		Version:        versionString,
+		ReadmeFilePath: ReadmeFilePath,
+		ReadmeContents: ReadmeContents,
+		CommitTime:     CommitTime,
+		VersionType:    version.TypeRelease,
+		// Assume the module path is a GitHub-like repo name.
+		SourceInfo:        source.NewGitHubInfo("https://"+modulePath, "", versionString),
 		IsRedistributable: true,
 		HasGoMod:          true,
 	}
