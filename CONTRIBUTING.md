@@ -9,6 +9,10 @@ Since we are actively working on the site, we ask that you
 starting to work on something. Otherwise, it is likely that we might already be
 working on a fix for your issue.
 
+Because we are currently working on a [redesign of pkg.go.dev](/README.md#roadmap), we will not be
+accepting any contributions for
+[issues with a UX label](https://github.com/golang/go/issues?q=is%3Aissue+is%3Aopen+label%3Ago.dev+label%3AUX).
+
 Please read the [Contribution Guidelines](https://golang.org/doc/contribute.html)
 before sending patches.
 
