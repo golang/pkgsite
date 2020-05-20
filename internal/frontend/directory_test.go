@@ -78,7 +78,7 @@ func TestFetchDirectoryDetails(t *testing.T) {
 			version:         internal.LatestVersion,
 			wantModulePath:  "github.com/hashicorp/vault/api",
 			wantVersion:     "v1.1.2",
-			wantPkgSuffixes: []string{},
+			wantPkgSuffixes: nil,
 		},
 		{
 			name:            "dirPath@version, includeDirPath = false, want longest module path",
@@ -87,7 +87,7 @@ func TestFetchDirectoryDetails(t *testing.T) {
 			version:         "v1.1.2",
 			wantModulePath:  "github.com/hashicorp/vault/api",
 			wantVersion:     "v1.1.2",
-			wantPkgSuffixes: []string{},
+			wantPkgSuffixes: nil,
 		},
 		{
 			name:            "dirPath@version,  includeDirPath = false, version only exists for shorter module path",
@@ -96,7 +96,7 @@ func TestFetchDirectoryDetails(t *testing.T) {
 			version:         "v1.0.3",
 			wantModulePath:  "github.com/hashicorp/vault",
 			wantVersion:     "v1.0.3",
-			wantPkgSuffixes: []string{},
+			wantPkgSuffixes: nil,
 		},
 		{
 			name:           "valid directory for modulePath@version/suffix, includeDirPath = false",

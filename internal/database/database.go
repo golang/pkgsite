@@ -235,7 +235,7 @@ func buildInsertQuery(table string, columns, returningColumns []string, values [
 		// When the end of a set is reached, write it to the query
 		// builder and reset placeholders.
 		fmt.Fprintf(&b, "(%s)", strings.Join(placeholders, ", "))
-		placeholders = []string{}
+		placeholders = nil
 
 		// Do not add a comma delimiter after the last set of values.
 		if i == len(values) {

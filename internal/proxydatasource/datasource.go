@@ -91,7 +91,7 @@ func (ds *DataSource) GetDirectory(ctx context.Context, dirPath, modulePath, ver
 
 // GetImportedBy is unimplemented.
 func (ds *DataSource) GetImportedBy(ctx context.Context, path, version string, limit int) (_ []string, err error) {
-	return []string{}, nil
+	return nil, nil
 }
 
 // GetImports returns package imports as extracted from the module zip.
