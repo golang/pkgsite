@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 	"unicode"
@@ -31,8 +32,10 @@ import (
 // A DB may represent a transaction. If so, its execution and query methods
 // operate within the transaction.
 type DB struct {
-	db *sql.DB
-	tx *sql.Tx
+	db         *sql.DB
+	tx         *sql.Tx
+	mu         sync.Mutex
+	maxRetries int // max times a single transaction was retried
 }
 
 // Open creates a new DB  for the given connection string.
@@ -114,18 +117,61 @@ func (db *DB) RunQuery(ctx context.Context, query string, f func(*sql.Rows) erro
 }
 
 // Transact executes the given function in the context of a SQL transaction,
-// rolling back the transaction if the function panics or returns an error.
-//
+// rolling back the transaction if the function panics or returns an error. It
+// uses the background context and default transaction options for the
+// transaction. The given context is used only for logging.
+
 // The given function is called with a DB that is associated with a transaction.
 // The DB should be used only inside the function; if it is used to access the
 // database after the function returns, the calls will return errors.
 func (db *DB) Transact(ctx context.Context, txFunc func(*DB) error) (err error) {
-	if db.InTransaction() {
-		return errors.New("DB.Transact called on a DB already in a transaction")
+	defer derrors.Wrap(&err, "Transact")
+	return db.transact(ctx, context.Background(), nil, txFunc)
+}
+
+// serializationFailureCode is the Postgres error code returned when a serializable
+// transaction fails because it would violate serializability.
+// See https://www.postgresql.org/docs/current/errcodes-appendix.html.
+const serializationFailureCode = "40001"
+
+// TransactSerializable executes the given function in the context of a SQL transaction,
+// rolling back the transaction if the function panics or returns an error. It uses
+// the given context and the Serializable transaction isolation level.
+//
+// The given function is called with a DB that is associated with a transaction.
+// The DB should be used only inside the function; if it is used to access the
+// database after the function returns, the calls will return errors.
+//
+// TransactSerializable will retry the transaction upon serialization failure, so txFunc
+// may be called more than once.
+func (db *DB) TransactSerializable(ctx context.Context, txFunc func(*DB) error) (err error) {
+	defer derrors.Wrap(&err, "TransactSerializable")
+	// Retry on serialization failure, up to some max.
+	// See https://www.postgresql.org/docs/11/transaction-iso.html.
+	const maxRetries = 30
+	for i := 0; i <= maxRetries; i++ {
+		err = db.transact(ctx, ctx, &sql.TxOptions{Isolation: sql.LevelSerializable}, txFunc)
+		var perr *pq.Error
+		if errors.As(err, &perr) && perr.Code == serializationFailureCode {
+			db.mu.Lock()
+			if i > db.maxRetries {
+				db.maxRetries = i
+			}
+			db.mu.Unlock()
+			continue
+		}
+		return err
 	}
-	tx, err := db.db.Begin()
+	return fmt.Errorf("reached max number of tries due to serialization failure (%d)", maxRetries)
+}
+
+func (db *DB) transact(logCtx, txCtx context.Context, opts *sql.TxOptions, txFunc func(*DB) error) (err error) {
+	if db.InTransaction() {
+		return errors.New("a DB Transact function was called on a DB already in a transaction")
+	}
+	tx, err := db.db.BeginTx(txCtx, opts)
 	if err != nil {
-		return fmt.Errorf("db.Begin(): %v", err)
+		return fmt.Errorf("db.BeginTx(): %w", err)
 	}
 	defer func() {
 		if p := recover(); p != nil {
@@ -135,18 +181,25 @@ func (db *DB) Transact(ctx context.Context, txFunc func(*DB) error) (err error) 
 			tx.Rollback()
 		} else {
 			if err = tx.Commit(); err != nil {
-				err = fmt.Errorf("tx.Commit(): %v", err)
+				err = fmt.Errorf("tx.Commit(): %w", err)
 			}
 		}
 	}()
 
 	dbtx := New(db.db)
 	dbtx.tx = tx
-	defer logTransaction(ctx)(&err)
+	defer logTransaction(logCtx)(&err)
 	if err := txFunc(dbtx); err != nil {
-		return fmt.Errorf("txFunc(tx): %v", err)
+		return fmt.Errorf("txFunc(tx): %w", err)
 	}
 	return nil
+}
+
+// MaxRetries returns the maximum number of times thata  serializable transaction was retried.
+func (db *DB) MaxRetries() int {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+	return db.maxRetries
 }
 
 const OnConflictDoNothing = "ON CONFLICT DO NOTHING"

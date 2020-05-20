@@ -308,3 +308,83 @@ func TestBulkUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestTransactSerializable(t *testing.T) {
+	// Test that serializable transactions retry until success.
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	// This test was taken from the example at https://www.postgresql.org/docs/11/transaction-iso.html,
+	// section 13.2.3.
+	for _, stmt := range []string{
+		`DROP TABLE IF EXISTS ser`,
+		`CREATE TABLE ser (id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY, class INTEGER, value INTEGER)`,
+		`INSERT INTO ser (class, value) VALUES (1, 10), (1, 20), (2, 100), (2, 200)`,
+	} {
+		if _, err := testDB.Exec(ctx, stmt); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// A transaction that sums values in class 1 and inserts that sum into class 2,
+	// or vice versa.
+	insertSum := func(tx *DB, queryClass int) error {
+		var sum int
+		err := tx.QueryRow(ctx, `SELECT SUM(value) FROM ser WHERE class = $1`, queryClass).Scan(&sum)
+		if err != nil {
+			return err
+		}
+		insertClass := 3 - queryClass
+		_, err = tx.Exec(ctx, `INSERT INTO ser (class, value) VALUES ($1, $2)`, insertClass, sum)
+		return err
+	}
+
+	// Run the following two transactions multiple times concurrently:
+	//   sum rows with class = 1 and insert as a row with class 2
+	//   sum rows with class = 2 and insert as a row with class 1
+	// We determined empirically that this number of transactions produces a serialization conflict
+	// 100 times out of 100.
+	const numTransactions = 10
+	errc := make(chan error, numTransactions)
+	for i := 0; i < numTransactions; i++ {
+		i := i
+		go func() {
+			errc <- testDB.TransactSerializable(ctx, func(tx *DB) error { return insertSum(tx, 1+i%2) })
+		}()
+	}
+	// None of the transactions should fail.
+	for i := 0; i < numTransactions; i++ {
+		if err := <-errc; err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Logf("max retries: %d", testDB.MaxRetries())
+	// If nothing got retried, this test isn't exercising some important behavior.
+	if testDB.MaxRetries() == 0 {
+		t.Fatal("did not see any retries")
+	}
+
+	// Demonstrate serializability: there should be numTransactions new rows in
+	// addition to the 4 we started with, and viewing the rows in insertion
+	// order, each of the new rows should have the sum of the other class's rows
+	// so far.
+	type row struct {
+		Class, Value int
+	}
+	var rows []row
+	if err := testDB.CollectStructs(ctx, &rows, `SELECT class, value FROM ser ORDER BY id`); err != nil {
+		t.Fatal(err)
+	}
+	const initialRows = 4
+	if got, want := len(rows), initialRows+numTransactions; got != want {
+		t.Fatalf("got %d rows, want %d", got, want)
+	}
+	sum := make([]int, 2)
+	for i, r := range rows {
+		if got, want := r.Value, sum[2-r.Class]; got != want && i >= initialRows {
+			t.Fatalf("row #%d: got %d, want %d", i, got, want)
+		}
+		sum[r.Class-1] += r.Value
+	}
+
+}
