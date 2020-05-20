@@ -12,6 +12,7 @@ const (
 	ExperimentInsertDirectories     = "insert-directories"
 	ExperimentUseDirectories        = "use-directories"
 	ExperimentInsertPlaygroundLinks = "insert-playground-links"
+	ExperimentInsertSerializable    = "insert-serializable-txn"
 )
 
 // Experiment holds data associated with an experimental feature for frontend

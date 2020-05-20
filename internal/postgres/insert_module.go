@@ -70,7 +70,14 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
 	ctx, span := trace.StartSpan(ctx, "saveModule")
 	defer span.End()
 
-	return db.db.Transact(ctx, func(tx *database.DB) error {
+	var transact func(context.Context, func(*database.DB) error) error
+	if experiment.IsActive(ctx, internal.ExperimentInsertSerializable) {
+		transact = db.db.TransactSerializable
+	} else {
+		transact = db.db.Transact
+	}
+
+	return transact(ctx, func(tx *database.DB) error {
 		moduleID, err := insertModule(ctx, tx, m)
 		if err != nil {
 			return err
