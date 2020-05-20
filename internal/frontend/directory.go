@@ -51,7 +51,6 @@ func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirP
 }
 
 func (s *Server) serveDirectoryPageWithDirectory(ctx context.Context, w http.ResponseWriter, r *http.Request, dbDir *internal.Directory, requestedVersion string) error {
-
 	tab := r.FormValue("tab")
 	settings, ok := directoryTabLookup[tab]
 	if tab == "" || !ok || settings.Disabled {
@@ -76,7 +75,7 @@ func (s *Server) serveDirectoryPageWithDirectory(ctx context.Context, w http.Res
 	}
 
 	page := &DetailsPage{
-		basePage:       newBasePage(r, fmt.Sprintf("%s directory", dbDir.Path)),
+		basePage:       s.newBasePage(r, fmt.Sprintf("%s directory", dbDir.Path)),
 		Title:          fmt.Sprintf("directory %s", dbDir.Path),
 		Settings:       settings,
 		Header:         header,

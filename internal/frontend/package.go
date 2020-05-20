@@ -106,7 +106,6 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 }
 
 func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.ResponseWriter, r *http.Request, pkg *internal.VersionedPackage, requestedVersion string) error {
-
 	pkgHeader, err := createPackage(&pkg.Package, &pkg.ModuleInfo, requestedVersion == internal.LatestVersion)
 	if err != nil {
 		return fmt.Errorf("creating package header for %s@%s: %v", pkg.Path, pkg.Version, err)
@@ -135,7 +134,7 @@ func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.Respons
 		}
 	}
 	page := &DetailsPage{
-		basePage: newBasePage(r, packageHTMLTitle(&pkg.Package)),
+		basePage: s.newBasePage(r, packageHTMLTitle(&pkg.Package)),
 		Title:    packageTitle(&pkg.Package),
 		Settings: settings,
 		Header:   pkgHeader,

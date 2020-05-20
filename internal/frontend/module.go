@@ -102,7 +102,7 @@ func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseW
 		}
 	}
 	page := &DetailsPage{
-		basePage:       newBasePage(r, moduleHTMLTitle(mi.ModulePath)),
+		basePage:       s.newBasePage(r, moduleHTMLTitle(mi.ModulePath)),
 		Title:          moduleTitle(mi.ModulePath),
 		Settings:       settings,
 		Header:         modHeader,

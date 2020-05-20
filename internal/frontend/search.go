@@ -119,7 +119,7 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return fmt.Errorf("fetchSearchPage(ctx, db, %q): %v", query, err)
 	}
-	page.basePage = newBasePage(r, query)
+	page.basePage = s.newBasePage(r, query)
 	s.servePage(ctx, w, "search.tmpl", page)
 	return nil
 }

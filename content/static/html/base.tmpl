@@ -13,30 +13,25 @@
 <link href="/static/css/stylesheet.css?version={{.AppVersionLabel}}" rel="stylesheet">
 <link href="/third_party/dialog-polyfill/dialog-polyfill.css?version={{.AppVersionLabel}}" rel="stylesheet">
 <title>{{if .HTMLTitle}}{{.HTMLTitle}} · {{end}}go.dev</title>
-<!-- Google Tag Manager -->
-<script nonce="{{.Nonce}}">
-(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','{{.GoogleTagManagerContainerID}}');
-</script>
-<!-- End Google Tag Manager -->
+{{if not .DevMode}}
+  <!-- Google Tag Manager -->
+  <script nonce="{{.Nonce}}">
+  (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','{{.GoogleTagManagerContainerID}}');
+  </script>
+  <!-- End Google Tag Manager -->
+{{end}}
 <script nonce="{{.Nonce}}" src="/static/js/base.min.js?version={{.AppVersionLabel}}"></script>
-<!-- Global site tag (gtag.js) - Google Analytics -->
-<script nonce="{{.Nonce}}" async defer src="https://www.googletagmanager.com/gtag/js?id={{.GoogleAnalyticsTrackingID}}"></script>
-<script nonce="{{.Nonce}}">
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', '{{.GoogleAnalyticsTrackingID}}');
-</script>
 <body class="Site">
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe nonce="{{.Nonce}}" src="https://www.googletagmanager.com/ns.html?id={{.GoogleTagManagerContainerID}}"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
+{{if not .DevMode}}
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe nonce="{{.Nonce}}" src="https://www.googletagmanager.com/ns.html?id={{.GoogleTagManagerContainerID}}"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+{{end}}
 <header class="Site-header Site-header--dark">
   <div class="Header">
     <nav class="Header-nav">

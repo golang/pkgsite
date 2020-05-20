@@ -57,7 +57,8 @@ func SecureHeaders() Middleware {
 			p.add("font-src", self, "fonts.googleapis.com", "fonts.gstatic.com")
 
 			// fonts.googleapis.com is used for fonts.
-			p.add("style-src", self, "'unsafe-inline'", "fonts.googleapis.com")
+			// tagmanager.google.com is used for debugging Google Tag Manager.
+			p.add("style-src", self, "'unsafe-inline'", "fonts.googleapis.com", "tagmanager.google.com")
 
 			// Because we are rendering user-provided README's, we allow arbitrary image
 			// sources. This could possibly be narrowed to known content hosts based on

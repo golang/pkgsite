@@ -171,7 +171,7 @@ func suggestedSearch(userInput string) template.HTML {
 // content.
 func (s *Server) staticPageHandler(templateName, title string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.servePage(r.Context(), w, templateName, newBasePage(r, title))
+		s.servePage(r.Context(), w, templateName, s.newBasePage(r, title))
 	}
 }
 
@@ -182,6 +182,7 @@ type basePage struct {
 	Nonce       string
 	Experiments *experiment.Set
 	GodocURL    string
+	DevMode     bool
 }
 
 // licensePolicyPage is used to generate the static license policy page.
@@ -195,7 +196,7 @@ func (s *Server) licensePolicyHandler() http.HandlerFunc {
 	lics := licenses.AcceptedLicenses()
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		page := licensePolicyPage{
-			basePage:         newBasePage(r, "Licenses - go.dev"),
+			basePage:         s.newBasePage(r, "Licenses - go.dev"),
 			LicenseFileNames: licenses.FileNames,
 			LicenseTypes:     lics,
 		}
@@ -204,19 +205,15 @@ func (s *Server) licensePolicyHandler() http.HandlerFunc {
 }
 
 // newBasePage returns a base page for the given request and title.
-func newBasePage(r *http.Request, title string) basePage {
+func (s *Server) newBasePage(r *http.Request, title string) basePage {
 	return basePage{
 		HTMLTitle:   title,
 		Query:       searchQuery(r),
 		Nonce:       middleware.NoncePlaceholder,
 		Experiments: experiment.FromContext(r.Context()),
 		GodocURL:    middleware.GodocURLPlaceholder,
+		DevMode:     s.devMode,
 	}
-}
-
-// GoogleAnalyticsTrackingID returns the tracking ID from GoogleAnalytics.
-func (b basePage) GoogleAnalyticsTrackingID() string {
-	return "UA-141356704-1"
 }
 
 // GoogleTagManagerContainerID returns the container ID from GoogleTagManager.
@@ -294,7 +291,7 @@ func (s *Server) serveError(w http.ResponseWriter, r *http.Request, err error) {
 func (s *Server) serveErrorPage(w http.ResponseWriter, r *http.Request, status int, page *errorPage) {
 	if page == nil {
 		page = &errorPage{
-			basePage: newBasePage(r, ""),
+			basePage: s.newBasePage(r, ""),
 		}
 	}
 	buf, err := s.renderErrorPage(r.Context(), status, page)
