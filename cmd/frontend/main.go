@@ -33,11 +33,11 @@ import (
 )
 
 var (
-	queueName       = config.GetEnv("GO_DISCOVERY_FRONTEND_TASK_QUEUE", "")
-	staticPath      = flag.String("static", "content/static", "path to folder containing static files served")
-	thirdPartyPath  = flag.String("third_party", "third_party", "path to folder containing third-party libraries")
-	reloadTemplates = flag.Bool("reload_templates", false, "reload templates on each page load (to be used during development)")
-	proxyURL        = flag.String("proxy_url", "https://proxy.golang.org", "Uses the module proxy referred to by this URL "+
+	queueName      = config.GetEnv("GO_DISCOVERY_FRONTEND_TASK_QUEUE", "")
+	staticPath     = flag.String("static", "content/static", "path to folder containing static files served")
+	thirdPartyPath = flag.String("third_party", "third_party", "path to folder containing third-party libraries")
+	devMode        = flag.Bool("dev", false, "enable developer mode (reload templates on each page load, serve non-minified JS/CSS, etc.)")
+	proxyURL       = flag.String("proxy_url", "https://proxy.golang.org", "Uses the module proxy referred to by this URL "+
 		"for direct proxy mode and frontend fetches")
 	directProxy = flag.Bool("direct_proxy", false, "if set to true, uses the module proxy referred to by this URL "+
 		"as a direct backend, bypassing the database")
@@ -91,7 +91,7 @@ func main() {
 			Addr: cfg.RedisHAHost + ":" + cfg.RedisHAPort,
 		})
 	}
-	server, err := frontend.NewServer(ds, fetchQueue, haClient, *staticPath, *thirdPartyPath, *reloadTemplates)
+	server, err := frontend.NewServer(ds, fetchQueue, haClient, *staticPath, *thirdPartyPath, *devMode)
 	if err != nil {
 		log.Fatalf(ctx, "frontend.NewServer: %v", err)
 	}

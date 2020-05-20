@@ -33,37 +33,34 @@ type Server struct {
 	queue queue.Queue
 	// cmplClient is a redis client that has access to the "completions" sorted
 	// set.
-	cmplClient      *redis.Client
-	staticPath      string
-	thirdPartyPath  string
-	templateDir     string
-	reloadTemplates bool
-	errorPage       []byte
+	cmplClient     *redis.Client
+	staticPath     string
+	thirdPartyPath string
+	templateDir    string
+	devMode        bool
+	errorPage      []byte
 
 	mu        sync.Mutex // Protects all fields below
 	templates map[string]*template.Template
 }
 
 // NewServer creates a new Server for the given database and template directory.
-// reloadTemplates should be used during development when it can be helpful to
-// reload templates from disk each time a page is loaded.
-func NewServer(ds internal.DataSource, q queue.Queue, cmplClient *redis.Client, staticPath string, thirdPartyPath string, reloadTemplates bool) (_ *Server, err error) {
+func NewServer(ds internal.DataSource, q queue.Queue, cmplClient *redis.Client, staticPath string, thirdPartyPath string, devMode bool) (_ *Server, err error) {
 	defer derrors.Wrap(&err, "NewServer(...)")
-
 	templateDir := filepath.Join(staticPath, "html")
 	ts, err := parsePageTemplates(templateDir)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing templates: %v", err)
 	}
 	s := &Server{
-		ds:              ds,
-		queue:           q,
-		cmplClient:      cmplClient,
-		staticPath:      staticPath,
-		thirdPartyPath:  thirdPartyPath,
-		templateDir:     templateDir,
-		reloadTemplates: reloadTemplates,
-		templates:       ts,
+		ds:             ds,
+		queue:          q,
+		cmplClient:     cmplClient,
+		staticPath:     staticPath,
+		thirdPartyPath: thirdPartyPath,
+		templateDir:    templateDir,
+		devMode:        devMode,
+		templates:      ts,
 	}
 	errorPageBytes, err := s.renderErrorPage(context.Background(), http.StatusInternalServerError, nil)
 	if err != nil {
@@ -350,7 +347,7 @@ func (s *Server) servePage(ctx context.Context, w http.ResponseWriter, templateN
 
 // renderPage executes the given templateName with page.
 func (s *Server) renderPage(ctx context.Context, templateName string, page interface{}) ([]byte, error) {
-	if s.reloadTemplates {
+	if s.devMode {
 		s.mu.Lock()
 		defer s.mu.Unlock()
 		var err error
