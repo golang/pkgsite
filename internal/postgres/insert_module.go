@@ -70,7 +70,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
 	ctx, span := trace.StartSpan(ctx, "saveModule")
 	defer span.End()
 
-	db.db.Transact(ctx, func(tx *database.DB) error {
+	return db.db.Transact(ctx, func(tx *database.DB) error {
 		moduleID, err := insertModule(ctx, tx, m)
 		if err != nil {
 			return err
@@ -127,7 +127,6 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
 		}
 		return nil
 	})
-	return nil
 }
 
 func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ int, err error) {
