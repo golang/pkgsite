@@ -48,6 +48,7 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 		ModulePath:       fr.ModulePath,
 		RequestedVersion: fr.RequestedVersion,
 		ResolvedVersion:  fr.ResolvedVersion,
+		GoModPath:        fr.GoModPath,
 		Status:           fr.Status,
 		Error:            errMsg,
 	}

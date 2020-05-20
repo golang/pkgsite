@@ -176,6 +176,7 @@ func updateVersionMapAndDeleteModulesWithErrors(ctx context.Context, db *postgre
 		RequestedVersion: ft.RequestedVersion,
 		ResolvedVersion:  ft.ResolvedVersion,
 		Status:           ft.Status,
+		GoModPath:        ft.GoModPath,
 		Error:            errMsg,
 	}
 	start := time.Now()
