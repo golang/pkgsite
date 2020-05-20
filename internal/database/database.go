@@ -187,7 +187,7 @@ func (db *DB) transact(ctx context.Context, opts *sql.TxOptions, txFunc func(*DB
 
 	dbtx := New(db.db)
 	dbtx.tx = tx
-	defer logTransaction(ctx)(&err)
+	defer logTransaction(ctx, opts)(&err)
 	if err := txFunc(dbtx); err != nil {
 		return fmt.Errorf("txFunc(tx): %w", err)
 	}
@@ -457,15 +457,20 @@ func logQuery(ctx context.Context, query string, args []interface{}) func(*error
 	}
 }
 
-func logTransaction(ctx context.Context) func(*error) {
+func logTransaction(ctx context.Context, opts *sql.TxOptions) func(*error) {
 	if QueryLoggingDisabled {
 		return func(*error) {}
 	}
 	uid := generateLoggingID()
-	log.Debugf(ctx, "%s transaction started", uid)
+	isoLevel := "default"
+	if opts != nil {
+		isoLevel = opts.Isolation.String()
+	}
+	log.Debugf(ctx, "%s transaction (isolation %s) started", uid, isoLevel)
 	start := time.Now()
 	return func(errp *error) {
-		log.Debugf(ctx, "%s transaction finished in %s with error %v", uid, time.Since(start), *errp)
+		log.Debugf(ctx, "%s transaction (isolation %s) finished in %s with error %v",
+			uid, isoLevel, time.Since(start), *errp)
 	}
 }
 
