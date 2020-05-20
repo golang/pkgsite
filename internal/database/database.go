@@ -118,15 +118,14 @@ func (db *DB) RunQuery(ctx context.Context, query string, f func(*sql.Rows) erro
 
 // Transact executes the given function in the context of a SQL transaction,
 // rolling back the transaction if the function panics or returns an error. It
-// uses the background context and default transaction options for the
-// transaction. The given context is used only for logging.
-
+// uses the default transaction options.
+//
 // The given function is called with a DB that is associated with a transaction.
 // The DB should be used only inside the function; if it is used to access the
 // database after the function returns, the calls will return errors.
 func (db *DB) Transact(ctx context.Context, txFunc func(*DB) error) (err error) {
 	defer derrors.Wrap(&err, "Transact")
-	return db.transact(ctx, context.Background(), nil, txFunc)
+	return db.transact(ctx, nil, txFunc)
 }
 
 // serializationFailureCode is the Postgres error code returned when a serializable
@@ -150,7 +149,7 @@ func (db *DB) TransactSerializable(ctx context.Context, txFunc func(*DB) error) 
 	// See https://www.postgresql.org/docs/11/transaction-iso.html.
 	const maxRetries = 30
 	for i := 0; i <= maxRetries; i++ {
-		err = db.transact(ctx, ctx, &sql.TxOptions{Isolation: sql.LevelSerializable}, txFunc)
+		err = db.transact(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable}, txFunc)
 		var perr *pq.Error
 		if errors.As(err, &perr) && perr.Code == serializationFailureCode {
 			db.mu.Lock()
@@ -165,11 +164,11 @@ func (db *DB) TransactSerializable(ctx context.Context, txFunc func(*DB) error) 
 	return fmt.Errorf("reached max number of tries due to serialization failure (%d)", maxRetries)
 }
 
-func (db *DB) transact(logCtx, txCtx context.Context, opts *sql.TxOptions, txFunc func(*DB) error) (err error) {
+func (db *DB) transact(ctx context.Context, opts *sql.TxOptions, txFunc func(*DB) error) (err error) {
 	if db.InTransaction() {
 		return errors.New("a DB Transact function was called on a DB already in a transaction")
 	}
-	tx, err := db.db.BeginTx(txCtx, opts)
+	tx, err := db.db.BeginTx(ctx, opts)
 	if err != nil {
 		return fmt.Errorf("db.BeginTx(): %w", err)
 	}
@@ -188,7 +187,7 @@ func (db *DB) transact(logCtx, txCtx context.Context, opts *sql.TxOptions, txFun
 
 	dbtx := New(db.db)
 	dbtx.tx = tx
-	defer logTransaction(logCtx)(&err)
+	defer logTransaction(ctx)(&err)
 	if err := txFunc(dbtx); err != nil {
 		return fmt.Errorf("txFunc(tx): %w", err)
 	}
