@@ -45,6 +45,7 @@ type VersionMap struct {
 	ModulePath       string
 	RequestedVersion string
 	ResolvedVersion  string
+	GoModPath        string
 	Status           int
 	Error            string
 }

@@ -36,14 +36,16 @@ func (db *DB) UpsertVersionMap(ctx context.Context, vm *internal.VersionMap) (er
 				module_path,
 				requested_version,
 				resolved_version,
+				go_mod_path,
 				status,
 				error,
 				sort_version,
 				module_id)
-			VALUES($1,$2,$3,$4,$5,$6,$7)
+			VALUES($1,$2,$3,$4,$5,$6,$7,$8)
 			ON CONFLICT (module_path, requested_version)
 			DO UPDATE SET
 				module_path=excluded.module_path,
+				go_mod_path=excluded.go_mod_path,
 				requested_version=excluded.requested_version,
 				resolved_version=excluded.resolved_version,
 				status=excluded.status,
@@ -53,6 +55,7 @@ func (db *DB) UpsertVersionMap(ctx context.Context, vm *internal.VersionMap) (er
 		vm.ModulePath,
 		vm.RequestedVersion,
 		vm.ResolvedVersion,
+		vm.GoModPath,
 		vm.Status,
 		vm.Error,
 		sortVersion,
