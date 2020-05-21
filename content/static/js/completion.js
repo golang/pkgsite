@@ -1,10 +1,11 @@
-/** @license
-    Copyright 2019 The Go Authors. All rights reserved.
-    Use of this source code is governed by a BSD-style
-    license that can be found in the LICENSE file.
-*/
+/**
+ * @license
+ * Copyright 2019-2020 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
   // To implement autocomplete we use autoComplete.js, but override the
   // navigation controller to be more accessible.
   //
@@ -78,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
         results: resultsValues.list.map(record => record.value),
         selection: resultsValues.list.find(
           value => value.index === Number(elem.getAttribute('data-id'))
-        )
+        ),
       });
       hideCompletion();
     };
@@ -87,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ENTER: 13,
         ESCAPE: 27,
         ARROW_UP: 38,
-        ARROW_DOWN: 40
+        ARROW_DOWN: 40,
       };
       let next = undefined; // the next item to highlight
       if (lis.length > 0) {
@@ -158,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // The string we're completing is stored in the 'PackagePath' field of
       // the returned JSON array elements.
       key: ['PackagePath'],
-      cache: false
+      cache: false,
     },
     threshold: 1, // minimum number of characters before rendering results
     debounce: 100, // in milliseconds
@@ -172,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
       destination: document.querySelector('#AutoComplete-parent'),
       position: 'beforeend',
       element: 'ul',
-      navigation: navigation
+      navigation: navigation,
     },
     highlight: true,
     selector: '#AutoComplete',
@@ -180,8 +181,8 @@ document.addEventListener('DOMContentLoaded', function() {
       if (feedback.selection.value.PackagePath) {
         // Navigate directly to the package.
         // TODO (b/149016238): update ARIA attributes to reflect this.
-        window.location.href = "/" + feedback.selection.value.PackagePath;
+        window.location.href = '/' + feedback.selection.value.PackagePath;
       }
-    }
+    },
   });
 });

@@ -1,8 +1,9 @@
-/** @license
-    Copyright 2019 The Go Authors. All rights reserved.
-    Use of this source code is governed by a BSD-style
-    license that can be found in the LICENSE file.
-*/
+/**
+ * @license
+ * Copyright 2019-2020 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
 
 // This file implements the behavior of the "jump to identifer" dialog for Go
 // package documentation, as well as the simple dialog that displays keyboard
@@ -51,10 +52,14 @@ function collectJumpListItems() {
   }
   // Clicking on any of the links closes the dialog.
   for (const item of items) {
-    item.link.addEventListener('click', function() { jumpDialog.close(); });
+    item.link.addEventListener('click', function () {
+      jumpDialog.close();
+    });
   }
   // Sort case-insensitively by identifier name.
-  items.sort(function (a, b) { return a.lower.localeCompare(b.lower); });
+  items.sort(function (a, b) {
+    return a.lower.localeCompare(b.lower);
+  });
   return items;
 }
 
@@ -76,7 +81,6 @@ function collectJumpListItemsFallback(doc) {
   }
   return items;
 }
-
 
 // newJumpListItem creates a new item for the DOM element el.
 // An item is an object with:
@@ -127,8 +131,8 @@ function guessKind(el) {
   }
 }
 
-let lastFilterValue;    // The last contents of the filter text box.
-let activeJumpItem = -1;     // The index of the currently active item in the list.
+let lastFilterValue; // The last contents of the filter text box.
+let activeJumpItem = -1; // The index of the currently active item in the list.
 
 // updateJumpList sets the elements of the dialog list to
 // everything whose name contains filter.
@@ -146,12 +150,17 @@ function updateJumpList(filter) {
   // Make a regexp corresponding to filter. The result will match any string
   // containing filter, case-insensitively. Escape the regexp metacharacters in
   // filter.
-  const re = new RegExp(filter.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, '\\$1'), 'gi');
+  const re = new RegExp(
+    filter.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, '\\$1'),
+    'gi'
+  );
   for (const item of jumpListItems) {
     var name = item.name;
     if (filter) {
       // Boldify the substring of name matching the filter.
-      name = name.replace(re, function (s) { return '<b>' + s + '</b>'; });
+      name = name.replace(re, function (s) {
+        return '<b>' + s + '</b>';
+      });
       if (name == item.name) {
         // We didn't change name, so it didn't match the filter.
         continue;
@@ -211,7 +220,7 @@ function incActiveJumpItem(delta) {
 }
 
 // Pressing a key in the filter updates the list (if the filter actually changed).
-jumpFilter.addEventListener('keyup', function(event) {
+jumpFilter.addEventListener('keyup', function (event) {
   if (jumpFilter.value.toUpperCase() != lastFilterValue.toUpperCase()) {
     updateJumpList(jumpFilter.value);
   }
@@ -219,7 +228,7 @@ jumpFilter.addEventListener('keyup', function(event) {
 
 // Pressing enter in the filter selects the first element in the list.
 // TODO(b/143454398) add arrow keys and track the active list element.
-jumpFilter.addEventListener('keydown', function(event) {
+jumpFilter.addEventListener('keydown', function (event) {
   const upArrow = 38;
   const downArrow = 40;
   const enterKey = 13;
@@ -245,7 +254,6 @@ if (!shortcutsDialog.showModal) {
   dialogPolyfill.registerDialog(shortcutsDialog);
 }
 
-
 // Keyboard shortcuts:
 // - Pressing 'f' or 'F' opens the jump-to-identifier dialog.
 // - Pressing '?' opens up the shortcut dialog.
@@ -254,7 +262,7 @@ if (!shortcutsDialog.showModal) {
 document.addEventListener('keypress', function (e) {
   if (jumpDialog.open || shortcutsDialog.open) return;
   const t = e.target.tagName;
-  if (t == 'INPUT' || t == 'SELECT' || t == 'TEXTAREA' ) return;
+  if (t == 'INPUT' || t == 'SELECT' || t == 'TEXTAREA') return;
   if (e.target.contentEditable && e.target.contentEditable == 'true') return;
   if (e.metaKey || e.ctrlKey) return;
   const ch = String.fromCharCode(e.which);
