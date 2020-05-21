@@ -645,20 +645,22 @@ func removeNonDistributableData(m *internal.Module) {
 // DeleteModule deletes a Version from the database.
 func (db *DB) DeleteModule(ctx context.Context, modulePath, version string) (err error) {
 	defer derrors.Wrap(&err, "DeleteModule(ctx, db, %q, %q)", modulePath, version)
-	// We only need to delete from the modules table. Thanks to ON DELETE
-	// CASCADE constraints, that will trigger deletions from all other tables.
-	const stmt = `DELETE FROM modules WHERE module_path=$1 AND version=$2`
-	if _, err := db.db.Exec(ctx, stmt, modulePath, version); err != nil {
+	return db.db.Transact(ctx, func(tx *database.DB) error {
+		// We only need to delete from the modules table. Thanks to ON DELETE
+		// CASCADE constraints, that will trigger deletions from all other tables.
+		const stmt = `DELETE FROM modules WHERE module_path=$1 AND version=$2`
+		if _, err := db.db.Exec(ctx, stmt, modulePath, version); err != nil {
+			return err
+		}
+		var x int
+		err = db.db.QueryRow(ctx, `SELECT 1 FROM modules WHERE module_path=$1 LIMIT 1`, modulePath).Scan(&x)
+		if err != sql.ErrNoRows || err == nil {
+			return err
+		}
+		// No versions of this module exist; remove it from imports_unique.
+		_, err = db.db.Exec(ctx, `DELETE FROM imports_unique WHERE from_module_path = $1`, modulePath)
 		return err
-	}
-	var x int
-	err = db.db.QueryRow(ctx, `SELECT 1 FROM modules WHERE module_path=$1 LIMIT 1`, modulePath).Scan(&x)
-	if err != sql.ErrNoRows || err == nil {
-		return err
-	}
-	// No versions of this module exist; remove it from imports_unique.
-	_, err = db.db.Exec(ctx, `DELETE FROM imports_unique WHERE from_module_path = $1`, modulePath)
-	return err
+	})
 }
 
 // makeValidUnicode removes null runes from a string that will be saved in a
