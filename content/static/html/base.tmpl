@@ -9,10 +9,11 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="Description" content="Go is an open source programming language that makes it easy to build simple, reliable, and efficient software.">
 <link href="https://fonts.googleapis.com/css?family=Work+Sans:600|Roboto:400,700|Source+Code+Pro" rel="stylesheet">
 <link href="/static/css/stylesheet.css?version={{.AppVersionLabel}}" rel="stylesheet">
 <link href="/third_party/dialog-polyfill/dialog-polyfill.css?version={{.AppVersionLabel}}" rel="stylesheet">
-<title>{{if .HTMLTitle}}{{.HTMLTitle}} · {{end}}go.dev</title>
+<title>{{if .HTMLTitle}}{{.HTMLTitle}} · {{end}}pkg.go.dev</title>
 <body class="Site">
 <header class="Site-header Site-header--dark">
   <div class="Header">
@@ -146,21 +147,21 @@
   <div class="Footer">
     <div class="Container Container--fullBleed">
       <div class="Footer-bottom">
-        <img class="Footer-gopher" src="/static/img/pilot-bust.svg" alt="The Go Gopher">
+        <img class="Footer-gopher" loading="lazy" src="/static/img/pilot-bust.svg" alt="The Go Gopher">
         <ul class="Footer-listRow">
           <li class="Footer-listItem"><a href="https://go.dev/copyright">Copyright</a></li>
           <li class="Footer-listItem"><a href="https://go.dev/tos">Terms of Service</a></li>
-          <li class="Footer-listItem"><a href="http://www.google.com/intl/en/policies/privacy/" target="_blank">Privacy
+          <li class="Footer-listItem"><a href="http://www.google.com/intl/en/policies/privacy/" target="_blank" rel="noopener">Privacy
               Policy</a></li>
           <li class="Footer-listItem">
-            <a href="https://golang.org/s/discovery-feedback" target="_blank">
+            <a href="https://golang.org/s/discovery-feedback" target="_blank" rel="noopener">
               Report an Issue
             </a>
           </li>
-          <li class="Footer-listItem"><a href="https://golang.org" target="_blank">golang.org</a></li>
+          <li class="Footer-listItem"><a href="https://golang.org" target="_blank" rel="noopener">golang.org</a></li>
         </ul>
-        <a class="Footer-googleLogo" target="_blank" href="https://google.com" rel="noopener noreferrer">
-          <img class="Footer-googleLogoImg" src="/static/img/google-white.png" alt="Google logo">
+        <a class="Footer-googleLogo" href="https://google.com" target="_blank" rel="noopener">
+          <img class="Footer-googleLogoImg" loading="lazy" src="/static/img/google-white.png" alt="Google logo">
         </a>
       </div>
     </div>

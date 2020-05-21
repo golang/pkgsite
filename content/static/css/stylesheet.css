@@ -1074,6 +1074,7 @@ a.Footer-link--primary {
 }
 .Footer-gopher {
   align-self: flex-end;
+  height: 3.147rem;
   width: 5rem;
 }
 .Footer-listRow {
@@ -1124,6 +1125,7 @@ a.Footer-link--primary {
 }
 .Footer-googleLogoImg {
   height: 1.5rem;
+  width: 4.529rem;
 }
 .Container--fullBleed {
   margin: 0;

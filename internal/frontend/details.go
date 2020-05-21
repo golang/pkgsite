@@ -36,7 +36,7 @@ type DetailsPage struct {
 
 func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) error {
 	if r.URL.Path == "/" {
-		s.staticPageHandler("index.tmpl", "go.dev")(w, r)
+		s.staticPageHandler("index.tmpl", "")(w, r)
 		return nil
 	}
 	parts := strings.SplitN(strings.TrimPrefix(r.URL.Path, "/"), "@", 2)

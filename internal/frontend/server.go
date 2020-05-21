@@ -196,7 +196,7 @@ func (s *Server) licensePolicyHandler() http.HandlerFunc {
 	lics := licenses.AcceptedLicenses()
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		page := licensePolicyPage{
-			basePage:         s.newBasePage(r, "Licenses - go.dev"),
+			basePage:         s.newBasePage(r, "Licenses"),
 			LicenseFileNames: licenses.FileNames,
 			LicenseTypes:     lics,
 		}

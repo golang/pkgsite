@@ -34,11 +34,11 @@
       <ul>
         {{range .LicenseTypes -}}
           <li>
-	    {{if .URL -}}
-              <a href="{{.URL}}" target="_blank">{{.Name}}</a>
-	    {{else}}
-	      {{.Name}}
-	    {{- end}}
+            {{if .URL -}}
+              <a href="{{.URL}}" target="_blank" rel="noopener">{{.Name}}</a>
+            {{else}}
+              {{.Name}}
+            {{- end}}
           </li>
         {{- end}}
       </ul>
