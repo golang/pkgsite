@@ -257,7 +257,7 @@ func (s *Server) servePackagePageWithVersionedDirectory(ctx context.Context, w h
 		}
 	}
 	page := &DetailsPage{
-		basePage: newBasePage(r, packageHTMLTitleNew(vdir.Package)),
+		basePage: s.newBasePage(r, packageHTMLTitleNew(vdir.Package)),
 		Title:    packageTitleNew(vdir.Package),
 		Settings: settings,
 		Header:   pkgHeader,
