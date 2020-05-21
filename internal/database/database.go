@@ -159,6 +159,9 @@ func (db *DB) TransactSerializable(ctx context.Context, txFunc func(*DB) error) 
 			db.mu.Unlock()
 			continue
 		}
+		if i > 0 {
+			log.Debugf(ctx, "retried serializable transaction %d time(s)", i)
+		}
 		return err
 	}
 	return fmt.Errorf("reached max number of tries due to serialization failure (%d)", maxRetries)
@@ -257,7 +260,7 @@ func (db *DB) bulkInsert(ctx context.Context, table string, columns, returningCo
 			err = db.RunQuery(ctx, query, scanFunc, valueSlice...)
 		}
 		if err != nil {
-			return fmt.Errorf("running bulk insert query, values[%d:%d]): %v", leftBound, rightBound, err)
+			return fmt.Errorf("running bulk insert query, values[%d:%d]): %w", leftBound, rightBound, err)
 		}
 	}
 	return nil
@@ -348,7 +351,7 @@ func (db *DB) BulkUpdate(ctx context.Context, table string, columns, types []str
 			args = append(args, pq.Array(vs[left:right]))
 		}
 		if _, err := db.Exec(ctx, query, args...); err != nil {
-			return fmt.Errorf("db.Exec(%q, values[%d:%d]): %v", query, left, right, err)
+			return fmt.Errorf("db.Exec(%q, values[%d:%d]): %w", query, left, right, err)
 		}
 	}
 	return nil
