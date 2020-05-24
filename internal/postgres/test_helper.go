@@ -105,6 +105,7 @@ func ResetTestDB(db *DB, t *testing.T) {
 	if err := db.db.Transact(ctx, func(tx *database.DB) error {
 		if _, err := tx.Exec(ctx, `
 			TRUNCATE modules CASCADE;
+			TRUNCATE version_map;
 			TRUNCATE imports_unique;
 			TRUNCATE experiments;`); err != nil {
 			return err
