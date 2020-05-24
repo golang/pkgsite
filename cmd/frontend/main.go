@@ -22,6 +22,7 @@ import (
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/dcensus"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/frontend"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
@@ -149,6 +150,17 @@ func main() {
 
 func newQueue(ctx context.Context, cfg *config.Config, proxyClient *proxy.Client, sourceClient *source.Client, db *postgres.DB) queue.Queue {
 	if !cfg.OnAppEngine() {
+		experiments, err := db.GetExperiments(ctx)
+		if err != nil {
+			log.Fatal(ctx, err)
+		}
+		set := map[string]bool{}
+		for _, e := range experiments {
+			if e.Rollout > 0 {
+				set[e.Name] = true
+			}
+		}
+		ctx = experiment.NewContext(ctx, experiment.NewSet(set))
 		return queue.NewInMemory(ctx, proxyClient, sourceClient, db, 10, frontend.FetchAndUpdateState)
 	}
 	client, err := cloudtasks.NewClient(ctx)
