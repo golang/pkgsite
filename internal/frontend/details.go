@@ -15,6 +15,7 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -128,7 +129,7 @@ func parseDetailsURLPath(urlPath string) (fullPath, modulePath, version string, 
 // checkPathAndVersion verifies that the requested path and version are
 // acceptable. The given path may be a module or package path.
 func checkPathAndVersion(ctx context.Context, ds internal.DataSource, path, version string) error {
-	if version != internal.LatestVersion && !semver.IsValid(version) {
+	if !isSupportedVersion(ctx, version) {
 		return &serverError{
 			status: http.StatusBadRequest,
 			epage: &errorPage{
@@ -146,6 +147,24 @@ func checkPathAndVersion(ctx context.Context, ds internal.DataSource, path, vers
 		return &serverError{status: http.StatusNotFound}
 	}
 	return nil
+}
+
+// isSupportedVersion reports whether the version is supported by the frontend.
+func isSupportedVersion(ctx context.Context, version string) bool {
+	if version == internal.LatestVersion || semver.IsValid(version) {
+		return true
+	}
+	if isActivePathAtMaster(ctx) {
+		return version == internal.MasterVersion
+	}
+	return false
+}
+
+func isActivePathAtMaster(ctx context.Context) bool {
+	return experiment.IsActive(ctx, internal.ExperimentFrontendPackageAtMaster) &&
+		experiment.IsActive(ctx, internal.ExperimentFrontendFetch) &&
+		experiment.IsActive(ctx, internal.ExperimentInsertDirectories) &&
+		experiment.IsActive(ctx, internal.ExperimentUseDirectories)
 }
 
 // pathNotFoundError returns an error page with instructions on how to

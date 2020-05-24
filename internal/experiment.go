@@ -10,6 +10,7 @@ import (
 
 const (
 	ExperimentFrontendFetch               = "frontend-fetch"
+	ExperimentFrontendPackageAtMaster     = "frontend-package-at-master"
 	ExperimentInsertDirectories           = "insert-directories"
 	ExperimentInsertPlaygroundLinks       = "insert-playground-links"
 	ExperimentInsertSerializable          = "insert-serializable-txn"
