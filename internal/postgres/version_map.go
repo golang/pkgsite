@@ -76,6 +76,7 @@ func (db *DB) GetVersionMap(ctx context.Context, modulePath, requestedVersion st
 			module_path,
 			requested_version,
 			resolved_version,
+			go_mod_path,
 			status,
 			error
 		FROM
@@ -85,7 +86,7 @@ func (db *DB) GetVersionMap(ctx context.Context, modulePath, requestedVersion st
 			AND requested_version=$2;`
 	var vm internal.VersionMap
 	err = db.db.QueryRow(ctx, query, modulePath, requestedVersion).Scan(
-		&vm.ModulePath, &vm.RequestedVersion, &vm.ResolvedVersion, &vm.Status, &vm.Error)
+		&vm.ModulePath, &vm.RequestedVersion, &vm.ResolvedVersion, &vm.GoModPath, &vm.Status, &vm.Error)
 	switch err {
 	case nil:
 		return &vm, nil
