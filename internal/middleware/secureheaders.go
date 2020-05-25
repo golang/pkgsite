@@ -91,7 +91,7 @@ func SecureHeaders() Middleware {
 			p.add("script-src", scriptSrcs...)
 
 			// Allow GA as a valid target for XHR, WebSockets, and EventSource.
-			p.add("connect-src", "www.google-analytics.com")
+			p.add("connect-src", self, "www.google-analytics.com")
 
 			// Allow iframes that have a nonce, for Google Analytics when JavaScript
 			// is disabled.

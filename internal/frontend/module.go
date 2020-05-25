@@ -38,9 +38,9 @@ func (s *Server) serveModuleDetails(w http.ResponseWriter, r *http.Request) erro
 
 // serveModulePage serves details pages for the module specified by modulePath
 // and version.
-func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, modulePath, version string) error {
+func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, modulePath, requestedVersion string) error {
 	ctx := r.Context()
-	if err := checkPathAndVersion(ctx, s.ds, modulePath, version); err != nil {
+	if err := checkPathAndVersion(ctx, s.ds, modulePath, requestedVersion); err != nil {
 		return err
 	}
 	// This function handles top level behavior related to the existence of the
@@ -53,21 +53,22 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 	//     a. We don't know anything about this module: just serve a 404
 	//     b. We have valid versions for this module path, but `version` isn't
 	//        one of them. Serve a 404 but recommend the other versions.
-	mi, err := s.ds.GetModuleInfo(ctx, modulePath, version)
+	mi, err := s.ds.GetModuleInfo(ctx, modulePath, requestedVersion)
 	if err == nil {
-		return s.serveModulePageWithModule(ctx, w, r, mi, version)
+		return s.serveModulePageWithModule(ctx, w, r, mi, requestedVersion)
 	}
 	if !errors.Is(err, derrors.NotFound) {
 		return err
 	}
-	if version != internal.LatestVersion {
+	if requestedVersion != internal.LatestVersion {
 		if _, err := s.ds.GetModuleInfo(ctx, modulePath, internal.LatestVersion); err != nil {
 			log.Errorf(ctx, "error checking for latest module: %v", err)
 		} else {
 			return &serverError{
 				status: http.StatusNotFound,
 				epage: &errorPage{
-					Message: fmt.Sprintf("Module %s@%s is not available.", modulePath, displayVersion(version, modulePath)),
+					Message: fmt.Sprintf("Module %s@%s is not available.",
+						modulePath, displayVersion(requestedVersion, modulePath)),
 					SecondaryMessage: template.HTML(
 						fmt.Sprintf(`There are other versions of this module that are! To view them, `+
 							`<a href="/mod/%s?tab=versions">click here</a>.</p>`,
@@ -76,7 +77,7 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 			}
 		}
 	}
-	return pathNotFoundError("module")
+	return pathNotFoundError(ctx, "module", modulePath, requestedVersion)
 }
 
 func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseWriter, r *http.Request, mi *internal.ModuleInfo, requestedVersion string) error {

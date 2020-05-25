@@ -40,12 +40,11 @@ func (s *Server) handlePackageDetailsRedirect(w http.ResponseWriter, r *http.Req
 
 // servePackagePage serves details pages for the package with import path
 // pkgPath, in the module specified by modulePath and version.
-func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPath, modulePath, version string) error {
+func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPath, modulePath, version string) (err error) {
 	ctx := r.Context()
 	if err := checkPathAndVersion(ctx, s.ds, pkgPath, version); err != nil {
 		return err
 	}
-
 	if experiment.IsActive(ctx, internal.ExperimentUseDirectories) {
 		return s.servePackagePageNew(w, r, pkgPath, modulePath, version)
 	}
@@ -102,10 +101,15 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 		log.Errorf(ctx, "error checking for latest package: %v", err)
 		return nil
 	}
-	return pathNotFoundError("package")
+	return pathNotFoundError(ctx, "package", pkgPath, version)
 }
 
-func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.ResponseWriter, r *http.Request, pkg *internal.VersionedPackage, requestedVersion string) error {
+func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.ResponseWriter, r *http.Request, pkg *internal.VersionedPackage, requestedVersion string) (err error) {
+	defer func() {
+		if _, ok := err.(*serverError); !ok {
+			derrors.Wrap(&err, "servePackagePageWithPackage(w, r, %q, %q, %q)", pkg.Path, pkg.ModulePath, requestedVersion)
+		}
+	}()
 	pkgHeader, err := createPackage(&pkg.Package, &pkg.ModuleInfo, requestedVersion == internal.LatestVersion)
 	if err != nil {
 		return fmt.Errorf("creating package header for %s@%s: %v", pkg.Path, pkg.Version, err)
@@ -150,8 +154,11 @@ func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.Respons
 }
 
 func (s *Server) servePackagePageNew(w http.ResponseWriter, r *http.Request, fullPath, inModulePath, inVersion string) (err error) {
-	defer derrors.Wrap(&err, "servePackagePageNew(w, r, %q, %q, %q)", fullPath, inModulePath, inVersion)
-
+	defer func() {
+		if _, ok := err.(*serverError); !ok {
+			derrors.Wrap(&err, "servePackagePageNew(w, r, %q, %q, %q)", fullPath, inModulePath, inVersion)
+		}
+	}()
 	ctx := r.Context()
 	modulePath, version, _, err := s.ds.GetPathInfo(ctx, fullPath, inModulePath, inVersion)
 	if err != nil {
@@ -160,7 +167,7 @@ func (s *Server) servePackagePageNew(w http.ResponseWriter, r *http.Request, ful
 		}
 		if inVersion == internal.LatestVersion {
 			if !experiment.IsActive(ctx, internal.ExperimentUseDirectories) {
-				return pathNotFoundError("package")
+				return pathNotFoundError(ctx, "package", fullPath, inVersion)
 			}
 			// TODO(b/149933479) add a case for this to TestServer, after we
 			// switch over to the paths-based data model.
@@ -170,7 +177,7 @@ func (s *Server) servePackagePageNew(w http.ResponseWriter, r *http.Request, ful
 					// Log the error, but prefer a "path not found" error for a better user experience.
 					log.Error(ctx, err)
 				}
-				return pathNotFoundError("package")
+				return pathNotFoundError(ctx, "package", fullPath, inVersion)
 			}
 			http.Redirect(w, r, path, http.StatusFound)
 			return nil
@@ -180,7 +187,7 @@ func (s *Server) servePackagePageNew(w http.ResponseWriter, r *http.Request, ful
 		modulePath, version, _, err = s.ds.GetPathInfo(ctx, fullPath, inModulePath, internal.LatestVersion)
 		if err != nil {
 			if errors.Is(err, derrors.NotFound) {
-				return pathNotFoundError("package")
+				return pathNotFoundError(ctx, "package", fullPath, inVersion)
 			}
 			return err
 		}

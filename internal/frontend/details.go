@@ -170,12 +170,29 @@ func isActivePathAtMaster(ctx context.Context) bool {
 // pathNotFoundError returns an error page with instructions on how to
 // add a package or module to the site. pathType is always either the string
 // "package" or "module".
-func pathNotFoundError(pathType string) error {
+func pathNotFoundError(ctx context.Context, pathType, fullPath, version string) error {
+	if isActiveFrontendFetch(ctx) {
+		return pathNotFoundErrorNew(fullPath, version)
+	}
 	return &serverError{
 		status: http.StatusNotFound,
 		epage: &errorPage{
 			Message:          "404 Not Found",
 			SecondaryMessage: template.HTML(fmt.Sprintf(`If you think this is a valid %s path, you can try fetching it following the <a href="/about#adding-a-package">instructions here</a>.`, pathType)),
+		},
+	}
+}
+
+// pathNotFoundErrorNew returns an error page that provides the user with an
+// option to fetch a path.
+func pathNotFoundErrorNew(fullPath, version string) error {
+	path := fmt.Sprintf("%s@%s", fullPath, version)
+	return &serverError{
+		status: http.StatusNotFound,
+		epage: &errorPage{
+			template:         "notfound.tmpl",
+			Message:          fmt.Sprintf("Oops! %q does not exist.", path),
+			SecondaryMessage: template.HTML("Check that you entered it correctly, or request to fetch it."),
 		},
 	}
 }

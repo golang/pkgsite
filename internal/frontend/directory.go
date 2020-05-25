@@ -37,17 +37,17 @@ type Directory struct {
 // serveDirectoryPage returns a directory view. It is called by
 // servePackagePage when an attempt to fetch a package path at any version
 // returns a 404.
-func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirPath, modulePath, version string) error {
+func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirPath, modulePath, requestedVersion string) error {
 	var ctx = r.Context()
 
-	dbDir, err := s.ds.GetDirectory(ctx, dirPath, modulePath, version, internal.AllFields)
+	dbDir, err := s.ds.GetDirectory(ctx, dirPath, modulePath, requestedVersion, internal.AllFields)
 	if err != nil {
 		if errors.Is(err, derrors.NotFound) {
-			return pathNotFoundError("package")
+			return pathNotFoundError(ctx, "package", dirPath, requestedVersion)
 		}
-		return fmt.Errorf("serveDirectoryPage for %s@%s: %v", dirPath, version, err)
+		return fmt.Errorf("serveDirectoryPage for %s@%s: %v", dirPath, requestedVersion, err)
 	}
-	return s.serveDirectoryPageWithDirectory(ctx, w, r, dbDir, version)
+	return s.serveDirectoryPageWithDirectory(ctx, w, r, dbDir, requestedVersion)
 }
 
 func (s *Server) serveDirectoryPageWithDirectory(ctx context.Context, w http.ResponseWriter, r *http.Request, dbDir *internal.Directory, requestedVersion string) error {

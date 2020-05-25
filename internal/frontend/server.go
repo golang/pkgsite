@@ -65,7 +65,7 @@ func NewServer(ds internal.DataSource, q queue.Queue, cmplClient *redis.Client, 
 		templates:            ts,
 		taskIDChangeInterval: taskIDChangeInterval,
 	}
-	errorPageBytes, err := s.renderErrorPage(context.Background(), http.StatusInternalServerError, nil)
+	errorPageBytes, err := s.renderErrorPage(context.Background(), http.StatusInternalServerError, "error.tmpl", nil)
 	if err != nil {
 		return nil, fmt.Errorf("s.renderErrorPage(http.StatusInternalServerError, nil): %v", err)
 	}
@@ -234,6 +234,7 @@ func (b basePage) AppVersionLabel() string {
 // errorPage contains fields for rendering a HTTP error page.
 type errorPage struct {
 	basePage
+	template         string
 	Message          string
 	SecondaryMessage template.HTML
 }
@@ -244,7 +245,7 @@ type errorPage struct {
 func (s *Server) PanicHandler() (_ http.HandlerFunc, err error) {
 	defer derrors.Wrap(&err, "PanicHandler")
 	status := http.StatusInternalServerError
-	buf, err := s.renderErrorPage(context.Background(), status, nil)
+	buf, err := s.renderErrorPage(context.Background(), status, "error.tmpl", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -293,12 +294,15 @@ func (s *Server) serveError(w http.ResponseWriter, r *http.Request, err error) {
 }
 
 func (s *Server) serveErrorPage(w http.ResponseWriter, r *http.Request, status int, page *errorPage) {
+	template := "error.tmpl"
 	if page == nil {
 		page = &errorPage{
 			basePage: s.newBasePage(r, ""),
 		}
+	} else if page.template != "" {
+		template = page.template
 	}
-	buf, err := s.renderErrorPage(r.Context(), status, page)
+	buf, err := s.renderErrorPage(r.Context(), status, template, page)
 	if err != nil {
 		log.Errorf(r.Context(), "s.renderErrorPage(w, %d, %v): %v", status, page, err)
 		buf = s.errorPage
@@ -307,12 +311,12 @@ func (s *Server) serveErrorPage(w http.ResponseWriter, r *http.Request, status i
 
 	w.WriteHeader(status)
 	if _, err := io.Copy(w, bytes.NewReader(buf)); err != nil {
-		log.Errorf(r.Context(), "Error copying template %q buffer to ResponseWriter: %v", "error.tmpl", err)
+		log.Errorf(r.Context(), "Error copying template %q buffer to ResponseWriter: %v", template, err)
 	}
 }
 
 // renderErrorPage executes error.tmpl with the given errorPage
-func (s *Server) renderErrorPage(ctx context.Context, status int, page *errorPage) ([]byte, error) {
+func (s *Server) renderErrorPage(ctx context.Context, status int, template string, page *errorPage) ([]byte, error) {
 	statusInfo := fmt.Sprintf("%d %s", status, http.StatusText(status))
 	if page == nil {
 		page = &errorPage{
@@ -323,13 +327,19 @@ func (s *Server) renderErrorPage(ctx context.Context, status int, page *errorPag
 			},
 		}
 	}
+	if page.Nonce == "" {
+		page.Nonce = middleware.NoncePlaceholder
+	}
 	if page.Message == "" {
 		page.Message = statusInfo
 	}
 	if page.HTMLTitle == "" {
 		page.HTMLTitle = statusInfo
 	}
-	return s.renderPage(ctx, "error.tmpl", page)
+	if template == "" {
+		template = "error.tmpl"
+	}
+	return s.renderPage(ctx, template, page)
 }
 
 // servePage is used to execute all templates for a *Server.
@@ -380,6 +390,7 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 	htmlSets := [][]string{
 		{"index.tmpl"},
 		{"error.tmpl"},
+		{"notfound.tmpl"},
 		{"search.tmpl"},
 		{"search_help.tmpl"},
 		{"license_policy.tmpl"},

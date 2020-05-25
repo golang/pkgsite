@@ -1,0 +1,54 @@
+<!--
+	Copyright 2019 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+
+{{define "main_content"}}
+<div class="Container">
+  <div class="Content">
+    <img class="NotFound-gopher" src="/static/img/gopher-airplane.svg" alt="The Go Gopher">
+    <h3 class="NotFound-message">{{ .Message }}</h3>
+    <p class="NotFound-message js-notFoundMessage">{{.SecondaryMessage}}</p>
+    <div class="NotFound-container">
+      <button class="NotFound-button js-notFoundButton">Fetch</button>
+    </div>
+  </div>
+</div>
+
+<script nonce="{{.Nonce}}">
+const fetchButton = document.querySelector('.js-notFoundButton');
+if (fetchButton) {
+  fetchButton.addEventListener('click', e => {
+    e.preventDefault();
+    fetchPath()
+  });
+}
+function fetchPath() {
+  httpRequest = new XMLHttpRequest();
+  var btn = document.querySelector('.js-notFoundButton');
+  btn.disabled = true;
+  btn.className = 'NotFound-button-disabled';
+
+  if (!httpRequest) {
+    alert('Giving up :( Cannot create an XMLHTTP instance');
+    return false;
+  }
+  httpRequest.onreadystatechange = function(){
+    if (httpRequest.readyState === XMLHttpRequest.DONE) {
+      if (httpRequest.status === 200) {
+      	location.reload();
+      } else {
+         document.querySelector('.js-notFoundMessage').innerHTML = httpRequest.responseText;
+         btn.innerHTML = 'Failed';
+      }
+    }
+  };
+  document.querySelector('.js-notFoundMessage').innerHTML = "Fetching... Feel free to navigate away and check back later, we'll keep working on it!";
+  btn.innerHTML = "Fetching...";
+  // TODO: update middleware.AcceptMethods so that this is POST instead of a GET request.
+  httpRequest.open('GET', "/fetch" + window.location.pathname);
+  httpRequest.send();
+}
+</script>
+{{end}}

@@ -501,6 +501,7 @@ code {
 }
 .Error-gopher,
 .EmptyContent-gopher,
+.NotFound-gopher,
 .SearchResults-emptyContentGopher {
   display: block;
   margin: auto;
@@ -509,8 +510,29 @@ code {
 }
 .Error-message,
 .EmptyContent-message,
+.NotFound-message,
 .SearchResults-emptyContentMessage {
   text-align: center;
+}
+.NotFound-container {
+  display: flex;
+  justify-content: center;
+}
+.NotFound-button {
+  height: 2.5rem;
+  font-size: 1rem;
+  border-radius: 1rem;
+  background-color: var(--turq-text);
+  color: white;
+  padding: 0rem 2rem;
+}
+.NotFound-button-disabled {
+  height: 2.5rem;
+  font-size: 1rem;
+  border-radius: 1rem;
+  background-color: var(--gray-5);
+  color: white;
+  padding: 0rem 2rem;
 }
 .SearchSnippet {
   border-top: 0.0625rem solid var(--gray-8);
