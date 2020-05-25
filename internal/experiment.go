@@ -9,10 +9,11 @@ import (
 )
 
 const (
-	ExperimentInsertDirectories     = "insert-directories"
-	ExperimentUseDirectories        = "use-directories"
-	ExperimentInsertPlaygroundLinks = "insert-playground-links"
-	ExperimentInsertSerializable    = "insert-serializable-txn"
+	ExperimentInsertDirectories           = "insert-directories"
+	ExperimentTeeProxyMakePkgGoDevRequest = "teeproxy-make-pkg-go-dev-request"
+	ExperimentUseDirectories              = "use-directories"
+	ExperimentInsertPlaygroundLinks       = "insert-playground-links"
+	ExperimentInsertSerializable          = "insert-serializable-txn"
 )
 
 // Experiment holds data associated with an experimental feature for frontend
