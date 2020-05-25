@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -17,6 +18,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 func TestGetNextModulesToFetchAndUpdateModuleVersionStatesForReprocessing(t *testing.T) {
@@ -41,6 +43,7 @@ func TestGetNextModulesToFetchAndUpdateModuleVersionStatesForReprocessing(t *tes
 			derrors.ToHTTPStatus(derrors.AlternativeModule),
 			derrors.ToHTTPStatus(derrors.BadModule),
 			http.StatusInternalServerError,
+			http.StatusBadRequest,
 		}
 		indexVersions []*internal.IndexVersion
 		now           = time.Now()
@@ -194,6 +197,83 @@ func TestGetNextModulesToFetchAndUpdateModuleVersionStatesForReprocessing(t *tes
 	checkNextToRequeue(want)
 	updateStates(want)
 
-	// At this point, everything shuold have been queued.
+	// At this point, everything should have been queued.
+	// Modules with status=500 and status=400 are not being picked up because
+	// their next_processed_at time > NOW.
 	checkNextToRequeue(nil)
+}
+
+func TestGetNextModulesToFetchOnlyPicksUpStatus0AndStatusGreaterThan500(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	defer ResetTestDB(testDB, t)
+
+	statuses := []int{
+		http.StatusOK,
+		derrors.ToHTTPStatus(derrors.HasIncompletePackages),
+		derrors.ToHTTPStatus(derrors.AlternativeModule),
+		derrors.ToHTTPStatus(derrors.BadModule),
+		http.StatusBadRequest,
+		http.StatusInternalServerError,
+		0,
+	}
+	for _, status := range statuses {
+		if _, err := testDB.db.Exec(ctx, `
+			INSERT INTO module_version_states AS mvs (
+				module_path,
+				version,
+				sort_version,
+				app_version,
+				index_timestamp,
+				status,
+				go_mod_path)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+			strconv.Itoa(status),
+			"v1.0.0",
+			version.ForSorting("v1.0.0"),
+			"app-version",
+			time.Now(),
+			status,
+			strconv.Itoa(status),
+		); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	got, err := testDB.GetNextModulesToFetch(ctx, len(statuses))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var (
+		want         []*internal.ModuleVersionState
+		wantStatuses = []int{http.StatusInternalServerError, 0}
+	)
+	for _, status := range wantStatuses {
+		m := &internal.ModuleVersionState{
+			ModulePath: strconv.Itoa(status),
+			Version:    "v1.0.0",
+			Status:     status,
+		}
+		want = append(want, m)
+	}
+	ignore := cmpopts.IgnoreFields(
+		internal.ModuleVersionState{},
+		"AppVersion",
+		"CreatedAt",
+		"Error",
+		"GoModPath",
+		"IndexTimestamp",
+		"LastProcessedAt",
+		"NextProcessedAfter",
+		"TryCount",
+	)
+	sort.Slice(got, func(i, j int) bool {
+		return got[i].ModulePath < got[j].ModulePath
+	})
+	sort.Slice(want, func(i, j int) bool {
+		return want[i].ModulePath < want[j].ModulePath
+	})
+	if diff := cmp.Diff(want, got, ignore); diff != "" {
+		t.Fatalf("mismatch (-want, +got):\n%s", diff)
+	}
 }

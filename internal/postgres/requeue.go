@@ -156,6 +156,8 @@ func constructRequeueQuery(baseQuery string, statuses []int) string {
 			}
 		}
 		where += fmt.Sprintf(" AND (%s)", s)
+	} else {
+		where += " AND (status >= 500 OR status=0)"
 	}
 	query := fmt.Sprintf(baseQuery, moduleVersionStateColumns, where)
 	return query
