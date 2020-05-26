@@ -6,7 +6,7 @@
 
 # Script for creating a new database locally.
 
-source scripts/lib.sh || { echo "Are you at repo root?"; exit 1; }
+source devtools/lib.sh || { echo "Are you at repo root?"; exit 1; }
 
 echo "CREATE DATABASE \"discovery-db\" \
         OWNER = postgres \

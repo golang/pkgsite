@@ -9,7 +9,7 @@
 # With -check, it checks that the source files are not newer
 # than the compiled ones instead.
 
-source scripts/lib.sh || { echo "Are you at repo root?"; exit 1; }
+source devtools/lib.sh || { echo "Are you at repo root?"; exit 1; }
 
 JSDIR=content/static/js
 
@@ -27,7 +27,7 @@ check() {
   shift
   for infile in $@; do
     if [[ $infile -nt $outfile ]]; then
-      echo "$infile is newer than $outfile; run scripts/compile_js.sh"
+      echo "$infile is newer than $outfile; run devtools/compile_js.sh"
       exit 1
     fi
   done

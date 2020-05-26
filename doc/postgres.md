@@ -42,7 +42,7 @@ We use [PostgreSQL](https://www.postgresql.org).
    database connection string.
 
 3. Once you have Postgres installed, you should create the `discovery-db` database
-   by running `scripts/create_local_db.sh`.
+   by running `devtools/create_local_db.sh`.
 
    Then apply migrations, as described in 'Migrations' below. You will need to do
    this each time a new migration is added, to keep your local schema up to date.
@@ -67,7 +67,7 @@ create a database for each package, with the name `discovery_{pkg}_test`. For
 example, for internal/worker, tests run on the `discovery_worker_test` database.
 
 If you ever run into issues with your test databases and need to reset them, you
-can run `scripts/drop_test_dbs.sh`.
+can run `devtools/drop_test_dbs.sh`.
 
 Run `./all.bash` to verify your setup.
 
@@ -84,7 +84,7 @@ Migrations are managed with the [golang-migrate/migrate][] [CLI tool][].
 To create a new migration:
 
 ```
-scripts/create_migration.sh <title>
+devtools/create_migration.sh <title>
 ```
 
 This creates two empty files in `/migrations`:
@@ -104,7 +104,7 @@ for details.
 Use the `migrate` CLI:
 
 ```
-scripts/migrate_db.sh [up|down|force|version] {#}
+devtools/migrate_db.sh [up|down|force|version] {#}
 ```
 
 For additional details, see [golang-migrate/migrate/GETTING_STARTED.md#run-migrations](https://github.com/golang-migrate/migrate/blob/master/GETTING_STARTED.md#run-migrations).
