@@ -17,6 +17,7 @@ import (
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
 	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/time/rate"
 )
 
@@ -51,6 +52,8 @@ func Quota(settings config.QuotaSettings) Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			for _, url := range settings.AcceptedURLs {
 				if r.Referer() == url {
+					recordQuotaMetric("accepted")
+					log.Infof(r.Context(), "Quota: accepting referer %q", r.Referer())
 					h.ServeHTTP(w, r)
 					return
 				}
@@ -71,7 +74,7 @@ func Quota(settings config.QuotaSettings) Middleware {
 				mu.Unlock()
 			}
 			blocked := limiter != nil && !limiter.Allow()
-			recordQuotaMetric(blocked)
+			recordQuotaMetric(strconv.FormatBool(blocked))
 			if blocked && settings.RecordOnly != nil && !*settings.RecordOnly {
 				const tmr = http.StatusTooManyRequests
 				http.Error(w, http.StatusText(tmr), tmr)
@@ -82,9 +85,9 @@ func Quota(settings config.QuotaSettings) Middleware {
 	}
 }
 
-func recordQuotaMetric(blocked bool) {
+func recordQuotaMetric(blocked string) {
 	stats.RecordWithTags(context.Background(), []tag.Mutator{
-		tag.Upsert(keyQuotaBlocked, strconv.FormatBool(blocked)),
+		tag.Upsert(keyQuotaBlocked, blocked),
 	}, quotaResults.M(1))
 }
 
