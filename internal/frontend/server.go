@@ -7,6 +7,7 @@ package frontend
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -276,12 +277,12 @@ func (s *Server) errorHandler(f func(w http.ResponseWriter, r *http.Request) err
 
 func (s *Server) serveError(w http.ResponseWriter, r *http.Request, err error) {
 	ctx := r.Context()
-	serr, ok := err.(*serverError)
-	if !ok {
+	var serr *serverError
+	if !errors.As(err, &serr) {
 		serr = &serverError{status: http.StatusInternalServerError, err: err}
 	}
 	if serr.status == http.StatusInternalServerError {
-		log.Error(ctx, serr.err)
+		log.Error(ctx, err)
 	} else {
 		log.Infof(ctx, "returning %d (%s) for error %v", serr.status, http.StatusText(serr.status), err)
 	}
