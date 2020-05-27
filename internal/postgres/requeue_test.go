@@ -256,6 +256,64 @@ func TestGetNextModulesToFetchOnlyPicksUpStatus0AndStatusGreaterThan500(t *testi
 		}
 		want = append(want, m)
 	}
+	compareModules(t, got, want)
+}
+
+func TestGetNextModulesToFetchLargeModulesLimit(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	defer ResetTestDB(testDB, t)
+
+	var (
+		modulePaths []string
+		status      = http.StatusInternalServerError
+		v           = "v1.0.0"
+		num500Mods  = 10
+	)
+	for i := 0; i < num500Mods; i++ {
+		mp := strconv.Itoa(status) + strconv.Itoa(i)
+		modulePaths = append(modulePaths, mp)
+		if _, err := testDB.db.Exec(ctx, `
+			INSERT INTO module_version_states AS mvs (
+				module_path,
+				version,
+				sort_version,
+				app_version,
+				index_timestamp,
+				status,
+				go_mod_path)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+			mp,
+			v,
+			version.ForSorting(v),
+			"app-version",
+			time.Now(),
+			status,
+			strconv.Itoa(status),
+		); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	largeModulesLimit = 5
+	got, err := testDB.GetNextModulesToFetch(ctx, num500Mods)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sort.Strings(modulePaths)
+	var want []*internal.ModuleVersionState
+	for _, mp := range modulePaths[:largeModulesLimit] {
+		want = append(want, &internal.ModuleVersionState{
+			ModulePath: mp,
+			Version:    v,
+			Status:     status,
+		})
+	}
+	compareModules(t, got, want)
+}
+
+func compareModules(t *testing.T, got, want []*internal.ModuleVersionState) {
+	t.Helper()
 	ignore := cmpopts.IgnoreFields(
 		internal.ModuleVersionState{},
 		"AppVersion",

@@ -51,9 +51,16 @@ func (db *DB) UpdateModuleVersionStatesForReprocessing(ctx context.Context, appV
 	return nil
 }
 
-// Modules with more than this number of packages are generally different
-// versions or forks of kubernetes, aws-sdk-go, azure-sdk-go, and bilibili.
-var isBigModulePackageThreshold = 1500
+var (
+	// largeModulePackageThresold represents the package threshold at which it
+	// becomes difficult to process packages. Modules with more than this number
+	// of packages are generally different versions or forks of kubernetes,
+	// aws-sdk-go, azure-sdk-go, and bilibili.
+	largeModulePackageThreshold = 1500
+	// largeModulesLimit represents the number of large modules that we are
+	// willing to enqueue at a given time.
+	largeModulesLimit = 100
+)
 
 // GetNextModulesToFetch returns the next batch of modules that need to be
 // processed. We prioritize modules based on (1) whether it is the latest version,
@@ -118,7 +125,10 @@ func (db *DB) GetNextModulesToFetch(ctx context.Context, limit int) (_ []*intern
 			var msg string
 			switch next.query {
 			case getModuleVersionStatesRemainder:
-				msg = fmt.Sprintf("modules with status=0 or status=500 or num_packages > %d", isBigModulePackageThreshold)
+				msg = fmt.Sprintf("modules with status=0 or status=500 or num_packages > %d", largeModulePackageThreshold)
+				if len(mvs) > largeModulesLimit {
+					mvs = mvs[:largeModulesLimit]
+				}
 			case getLatestModuleVersionStates:
 				msg = "latest version of modules"
 			default:
@@ -147,7 +157,7 @@ func (db *DB) GetNextModulesToFetch(ctx context.Context, limit int) (_ []*intern
 func constructRequeueQuery(baseQuery string, statuses []int) string {
 	where := "WHERE next_processed_after < CURRENT_TIMESTAMP"
 	if baseQuery != getModuleVersionStatesRemainder {
-		where += fmt.Sprintf(" AND COALESCE(num_packages, 0) < %d", isBigModulePackageThreshold)
+		where += fmt.Sprintf(" AND COALESCE(num_packages, 0) < %d", largeModulePackageThreshold)
 		var s string
 		for i, status := range statuses {
 			s += fmt.Sprintf("status=%d", status)
