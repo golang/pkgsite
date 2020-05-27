@@ -8,7 +8,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"html/template"
 	"net/http"
 	"strings"
 
@@ -80,16 +79,7 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 	}
 	_, err = s.ds.GetPackage(ctx, pkgPath, modulePath, internal.LatestVersion)
 	if err == nil {
-		return &serverError{
-			status: http.StatusNotFound,
-			epage: &errorPage{
-				Message: fmt.Sprintf("Package %s@%s is not available.", pkgPath, displayVersion(version, modulePath)),
-				SecondaryMessage: template.HTML(
-					fmt.Sprintf(`There are other versions of this package that are! To view them, `+
-						`<a href="/%s?tab=versions">click here</a>.`,
-						pkgPath)),
-			},
-		}
+		return pathFoundAtLatestError(ctx, "package", pkgPath, version)
 	}
 	if !errors.Is(err, derrors.NotFound) {
 		// Unlike the error handling for GetDirectory above, we don't serve an
@@ -184,23 +174,13 @@ func (s *Server) servePackagePageNew(w http.ResponseWriter, r *http.Request, ful
 		}
 		// We couldn't find a path at the given version, but if there's one at the latest version
 		// we can provide a link to it.
-		modulePath, version, _, err = s.ds.GetPathInfo(ctx, fullPath, inModulePath, internal.LatestVersion)
-		if err != nil {
+		if _, _, _, err = s.ds.GetPathInfo(ctx, fullPath, inModulePath, internal.LatestVersion); err != nil {
 			if errors.Is(err, derrors.NotFound) {
 				return pathNotFoundError(ctx, "package", fullPath, inVersion)
 			}
 			return err
 		}
-		return &serverError{
-			status: http.StatusNotFound,
-			epage: &errorPage{
-				Message: fmt.Sprintf("Package %s@%s is not available.", fullPath, displayVersion(version, modulePath)),
-				SecondaryMessage: template.HTML(
-					fmt.Sprintf(`There are other versions of this package that are! To view them, `+
-						`<a href="/%s?tab=versions">click here</a>.`,
-						fullPath)),
-			},
-		}
+		return pathFoundAtLatestError(ctx, "package", fullPath, inVersion)
 	}
 	vdir, err := s.ds.GetDirectoryNew(ctx, fullPath, modulePath, version)
 	if err != nil {

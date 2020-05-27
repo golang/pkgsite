@@ -196,3 +196,20 @@ func pathNotFoundErrorNew(fullPath, version string) error {
 		},
 	}
 }
+
+// pathFoundAtLatestError returns an error page when the fullPath exists, but
+// the version that is requested does not.
+func pathFoundAtLatestError(ctx context.Context, pathType, fullPath, version string) error {
+	if isActiveFrontendFetch(ctx) {
+		return pathNotFoundErrorNew(fullPath, version)
+	}
+	return &serverError{
+		status: http.StatusNotFound,
+		epage: &errorPage{
+			Message: fmt.Sprintf("%s %s@%s is not available.", strings.Title(pathType), fullPath, displayVersion(version, fullPath)),
+			SecondaryMessage: template.HTML(
+				fmt.Sprintf(`There are other versions of this %s that are! To view them, `+
+					`<a href="/%s?tab=versions">click here</a>.`, pathType, fullPath)),
+		},
+	}
+}

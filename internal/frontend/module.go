@@ -8,7 +8,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"html/template"
 	"net/http"
 	"strings"
 
@@ -61,20 +60,12 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 		return err
 	}
 	if requestedVersion != internal.LatestVersion {
-		if _, err := s.ds.GetModuleInfo(ctx, modulePath, internal.LatestVersion); err != nil {
+		_, err = s.ds.GetModuleInfo(ctx, modulePath, internal.LatestVersion)
+		if err == nil {
+			return pathFoundAtLatestError(ctx, "module", modulePath, displayVersion(requestedVersion, modulePath))
+		}
+		if !errors.Is(err, derrors.NotFound) {
 			log.Errorf(ctx, "error checking for latest module: %v", err)
-		} else {
-			return &serverError{
-				status: http.StatusNotFound,
-				epage: &errorPage{
-					Message: fmt.Sprintf("Module %s@%s is not available.",
-						modulePath, displayVersion(requestedVersion, modulePath)),
-					SecondaryMessage: template.HTML(
-						fmt.Sprintf(`There are other versions of this module that are! To view them, `+
-							`<a href="/mod/%s?tab=versions">click here</a>.</p>`,
-							modulePath)),
-				},
-			}
 		}
 	}
 	return pathNotFoundError(ctx, "module", modulePath, requestedVersion)
