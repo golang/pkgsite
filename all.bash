@@ -127,6 +127,7 @@ standard_linters() {
   check_staticcheck
   check_misspell
   check_unparam
+  run_prettier
 }
 
 usage() {
