@@ -125,13 +125,13 @@ func TestModuleInfo(t *testing.T) {
 		},
 		{
 			"x/tools/gopls",
-			"golang.org/x/tools/gopls", "v0.1.4", "main.go",
+			"golang.org/x/tools/gopls", "v0.4.0", "main.go",
 
 			"https://github.com/golang/tools",
-			"https://github.com/golang/tools/tree/gopls/v0.1.4/gopls",
-			"https://github.com/golang/tools/blob/gopls/v0.1.4/gopls/main.go",
-			"https://github.com/golang/tools/blob/gopls/v0.1.4/gopls/main.go#L1",
-			"https://raw.githubusercontent.com/golang/tools/gopls/v0.1.4/gopls/main.go",
+			"https://github.com/golang/tools/tree/gopls/v0.4.0/gopls",
+			"https://github.com/golang/tools/blob/gopls/v0.4.0/gopls/main.go",
+			"https://github.com/golang/tools/blob/gopls/v0.4.0/gopls/main.go#L1",
+			"https://raw.githubusercontent.com/golang/tools/gopls/v0.4.0/gopls/main.go",
 		},
 		{
 			"googlesource.com",
@@ -205,13 +205,13 @@ func TestModuleInfo(t *testing.T) {
 		},
 		{
 			"gitee.com",
-			"gitee.com/290746987/GenMysqlProject", "v1.0.0", "main.go",
+			"gitee.com/Billcoding/gotypes", "v0.1.0", "type.go",
 
-			"https://gitee.com/290746987/GenMysqlProject",
-			"https://gitee.com/290746987/GenMysqlProject/tree/v1.0.0",
-			"https://gitee.com/290746987/GenMysqlProject/blob/v1.0.0/main.go",
-			"https://gitee.com/290746987/GenMysqlProject/blob/v1.0.0/main.go#L1",
-			"https://gitee.com/290746987/GenMysqlProject/raw/v1.0.0/main.go",
+			"https://gitee.com/Billcoding/gotypes",
+			"https://gitee.com/Billcoding/gotypes/tree/v0.1.0",
+			"https://gitee.com/Billcoding/gotypes/blob/v0.1.0/type.go",
+			"https://gitee.com/Billcoding/gotypes/blob/v0.1.0/type.go#L1",
+			"https://gitee.com/Billcoding/gotypes/raw/v0.1.0/type.go",
 		},
 		{
 			"v2 as a branch",
