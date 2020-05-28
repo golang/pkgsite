@@ -22,6 +22,7 @@ the pre-push hook is called with. Make this the contents of `.git/hooks/pre-push
 #!/bin/sh
 ./all.bash
 ```
+
 and then
 
 ```
@@ -31,7 +32,7 @@ chmod +x .git/hooks/pre-push
 ### Running Linters/Formatters/Tests
 
 The `all.bash` script can be used to selectively run actions on the source (e.g.
-linters, code formatters, or tests).  Run `./all.bash help` to see a list of
+linters, code formatters, or tests). Run `./all.bash help` to see a list of
 supported actions.
 
 Some actions are not run by the default invocation of `./all.bash` that is

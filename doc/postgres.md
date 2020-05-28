@@ -19,8 +19,7 @@ We use [PostgreSQL](https://www.postgresql.org).
    docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=pick_a_secret -e LANG=C postgres
    ```
 
-   (NOTE: If you have already installed postgres on a workstation using `sudo
-   apt-get install postgres`, you may have a server already running, and the above
+   (NOTE: If you have already installed postgres on a workstation using `sudo apt-get install postgres`, you may have a server already running, and the above
    docker command will fail because it can't bind the port. At that point you can
    set `GO_DISCOVERY_DATABASE_TEST_`XXX environment variables to use your installed
    server, or stop the server using `pg_ctl stop` and use docker. The following
@@ -34,7 +33,7 @@ We use [PostgreSQL](https://www.postgresql.org).
 2. Set the following environment variables:
 
    - `GO_DISCOVERY_DATABASE_USER` (default: postgres)
-   - `GO_DISCOVERY_DATABASE_PASSWORD`  (default: '')
+   - `GO_DISCOVERY_DATABASE_PASSWORD` (default: '')
    - `GO_DISCOVERY_DATABASE_HOST` (default: localhost)
    - `GO_DISCOVERY_DATABASE_NAME` (default: discovery-db)
 
@@ -73,11 +72,9 @@ Run `./all.bash` to verify your setup.
 
 ## Migrations
 
-Migrations are managed with the [golang-migrate/migrate][] [CLI tool][].
-
-[golang-migrate/migrate]: https://github.com/golang-migrate/migrate
-[CLI tool]: https://github.com/golang-migrate/migrate/tree/master/cli
-
+Migrations are managed using
+[github.com/golang-migrate/migrate](https://github.com/golang-migrate/migrate), with the
+[CLI tool](https://github.com/golang-migrate/migrate/tree/master/cli).
 
 ### Creating a migration
 

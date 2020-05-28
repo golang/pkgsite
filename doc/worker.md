@@ -3,6 +3,7 @@
 The main program lives in `cmd/worker`.
 
 You can run the worker locally like so:
+
 ```
 go run cmd/worker/main.go
 ```
@@ -15,5 +16,5 @@ automatically retry failures.
 
 In order to populate local versions, you can either fetch the version explicitly
 (via `http://localhost:8000/fetch/path/to/package/@v/v1.2.3`), or you can visit the
-Worker dashboard, and click 'Enqueue from module index'.  This will enqueue the
+Worker dashboard, and click 'Enqueue from module index'. This will enqueue the
 next N versions from the index for processing.

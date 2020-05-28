@@ -25,20 +25,19 @@ Issues that are suitable for contributors are additionally tagged with the
 
 Before you begin working on an issue, please leave a comment that you are claiming it.
 
-
 ## Getting started
 
 1. Get the source code:
 
-` $ git clone https://go.googlesource.com/pkgsite`
+`$ git clone https://go.googlesource.com/pkgsite`
 
 - Our canonical Git repository is located at [https://go.googlesource.com/pkgsite](https://go.googlesource.com/pkgsite). [github.com/golang/pkgsite](https://github.com/golang/pkgsite) is a mirror of that repository.
 
 2. Review the [design document](doc/design.md).
 
 3. We deploy to the [Google Cloud Platform](https://cloud.google.com). If you
-wish to set up a similar environment, you will want to
-download and install the Google Cloud SDK at https://cloud.google.com/sdk/docs/.
+   wish to set up a similar environment, you will want to
+   download and install the Google Cloud SDK at https://cloud.google.com/sdk/docs/.
 
 4. Depending on the feature you are working on, review the contributing guides for:
 

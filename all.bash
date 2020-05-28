@@ -118,6 +118,7 @@ run_prettier() {
   fi
   runcmd prettier --write content/static/css/*.css
   runcmd prettier --write content/static/js/*.js
+  runcmd prettier --write **/*.md
 }
 
 standard_linters() {

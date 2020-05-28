@@ -9,7 +9,6 @@ Pkg.go.dev consists of two services backed by a common database.
 Both services are hosted on App Engine Standard and run Go 1.13. We use
 A Postgres database managed by [Google Cloud SQL](https://cloud.google.com/sql).
 
-
 ## The Frontend
 
 The frontend is a straightforward HTTP server that composes HTML pages by
@@ -43,6 +42,7 @@ Because it must be a stateless HTTP server, the worker cannot run background
 tasks. Instead, we use [Google Cloud
 Scheduler](https://cloud.google.com/scheduler) to run activities periodically.
 The activities, which typically run once a minute, are:
+
 - Poll the index to enqueue new modules.
 - Re-enqueue transient module-processing failures.
 - Update the count of importers for each package.

@@ -24,8 +24,8 @@ pkg.go.dev.
 
 We encourage everyone to begin using pkg.go.dev today for all of their needs
 and [file feedback](https://golang.org/s/discovery-feedback)! You can redirect
-all of your requests from godoc.org to pkg.go.dev, by clicking `Always use
-pkg.go.dev` at the top of any page on godoc.org.
+all of your requests from godoc.org to pkg.go.dev, by clicking
+`Always use pkg.go.dev` at the top of any page on godoc.org.
 
 If you are having issues with pkg.go.dev, please first check the known issues
 before following the troubleshooting guide. If that does not give you the
