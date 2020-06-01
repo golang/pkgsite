@@ -116,16 +116,26 @@ func (db *DB) RunQuery(ctx context.Context, query string, f func(*sql.Rows) erro
 	return rows.Err()
 }
 
-// Transact executes the given function in the context of a SQL transaction,
-// rolling back the transaction if the function panics or returns an error. It
-// uses the default transaction options.
+// Transact executes the given function in the context of a SQL transaction at
+// the given isolation level, rolling back the transaction if the function
+// panics or returns an error.
 //
 // The given function is called with a DB that is associated with a transaction.
 // The DB should be used only inside the function; if it is used to access the
 // database after the function returns, the calls will return errors.
-func (db *DB) Transact(ctx context.Context, txFunc func(*DB) error) (err error) {
-	defer derrors.Wrap(&err, "Transact")
-	return db.transact(ctx, nil, txFunc)
+//
+// If the isolation level requires it, Transact will retry the transaction upon
+// serialization failure, so txFunc may be called more than once.
+
+func (db *DB) Transact(ctx context.Context, iso sql.IsolationLevel, txFunc func(*DB) error) (err error) {
+	defer derrors.Wrap(&err, "Transact(%s)", iso)
+	// For the levels which require retry, see
+	// https://www.postgresql.org/docs/11/transaction-iso.html.
+	opts := &sql.TxOptions{Isolation: iso}
+	if iso == sql.LevelRepeatableRead || iso == sql.LevelSerializable {
+		return db.transactWithRetry(ctx, opts, txFunc)
+	}
+	return db.transact(ctx, opts, txFunc)
 }
 
 // serializationFailureCode is the Postgres error code returned when a serializable
@@ -133,23 +143,13 @@ func (db *DB) Transact(ctx context.Context, txFunc func(*DB) error) (err error) 
 // See https://www.postgresql.org/docs/current/errcodes-appendix.html.
 const serializationFailureCode = "40001"
 
-// TransactSerializable executes the given function in the context of a SQL transaction,
-// rolling back the transaction if the function panics or returns an error. It uses
-// the given context and the Serializable transaction isolation level.
-//
-// The given function is called with a DB that is associated with a transaction.
-// The DB should be used only inside the function; if it is used to access the
-// database after the function returns, the calls will return errors.
-//
-// TransactSerializable will retry the transaction upon serialization failure, so txFunc
-// may be called more than once.
-func (db *DB) TransactSerializable(ctx context.Context, txFunc func(*DB) error) (err error) {
-	defer derrors.Wrap(&err, "TransactSerializable")
+func (db *DB) transactWithRetry(ctx context.Context, opts *sql.TxOptions, txFunc func(*DB) error) (err error) {
+	defer derrors.Wrap(&err, "transactWithRetry(%v)", opts)
 	// Retry on serialization failure, up to some max.
 	// See https://www.postgresql.org/docs/11/transaction-iso.html.
 	const maxRetries = 30
 	for i := 0; i <= maxRetries; i++ {
-		err = db.transact(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable}, txFunc)
+		err = db.transact(ctx, opts, txFunc)
 		var perr *pq.Error
 		if errors.As(err, &perr) && perr.Code == serializationFailureCode {
 			db.mu.Lock()

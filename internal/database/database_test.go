@@ -193,7 +193,7 @@ func TestLargeBulkInsert(t *testing.T) {
 	for i := 0; i < size; i++ {
 		vals[i] = i + 1
 	}
-	if err := testDB.Transact(ctx, func(db *DB) error {
+	if err := testDB.Transact(ctx, sql.LevelDefault, func(db *DB) error {
 		return db.BulkInsert(ctx, "test_large_bulk", []string{"i"}, vals, "")
 	}); err != nil {
 		t.Fatal(err)
@@ -220,7 +220,7 @@ func TestLargeBulkInsert(t *testing.T) {
 func TestDBAfterTransactFails(t *testing.T) {
 	ctx := context.Background()
 	var tx *DB
-	err := testDB.Transact(ctx, func(d *DB) error {
+	err := testDB.Transact(ctx, sql.LevelDefault, func(d *DB) error {
 		tx = d
 		return nil
 	})
@@ -269,7 +269,7 @@ func TestBulkUpdate(t *testing.T) {
 	for i := 0; i < 50; i++ {
 		values = append(values, i, i)
 	}
-	err := testDB.Transact(ctx, func(tx *DB) error {
+	err := testDB.Transact(ctx, sql.LevelDefault, func(tx *DB) error {
 		return tx.BulkInsert(ctx, "bulk_update", cols, values, "")
 	})
 	if err != nil {
@@ -283,7 +283,7 @@ func TestBulkUpdate(t *testing.T) {
 		updateVals[1] = append(updateVals[1], -i)
 	}
 
-	err = testDB.Transact(ctx, func(tx *DB) error {
+	err = testDB.Transact(ctx, sql.LevelDefault, func(tx *DB) error {
 		return tx.BulkUpdate(ctx, "bulk_update", cols, []string{"INT", "INT"}, updateVals)
 	})
 	if err != nil {
@@ -349,7 +349,8 @@ func TestTransactSerializable(t *testing.T) {
 	for i := 0; i < numTransactions; i++ {
 		i := i
 		go func() {
-			errc <- testDB.TransactSerializable(ctx, func(tx *DB) error { return insertSum(tx, 1+i%2) })
+			errc <- testDB.Transact(ctx, sql.LevelSerializable,
+				func(tx *DB) error { return insertSum(tx, 1+i%2) })
 		}()
 	}
 	// None of the transactions should fail.

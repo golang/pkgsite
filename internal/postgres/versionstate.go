@@ -36,7 +36,7 @@ func (db *DB) InsertIndexVersions(ctx context.Context, versions []*internal.Inde
 		DO UPDATE SET
 			index_timestamp=excluded.index_timestamp,
 			next_processed_after=CURRENT_TIMESTAMP`
-	return db.db.Transact(ctx, func(tx *database.DB) error {
+	return db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
 		return tx.BulkInsert(ctx, "module_version_states", cols, vals, conflictAction)
 	})
 }
@@ -57,7 +57,7 @@ func (db *DB) UpsertModuleVersionState(ctx context.Context, modulePath, vers, ap
 		numPackages = &n
 	}
 
-	return db.db.Transact(ctx, func(tx *database.DB) error {
+	return db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
 		if err := upsertModuleVersionState(ctx, tx, modulePath, vers, appVersion, numPackages, timestamp, status, goModPath, fetchErr); err != nil {
 			return err
 		}

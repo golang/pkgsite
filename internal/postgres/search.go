@@ -640,7 +640,7 @@ func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context) (nUpdate
 	if err != nil {
 		return 0, err
 	}
-	err = db.db.Transact(ctx, func(tx *database.DB) error {
+	err = db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
 		if err := insertImportedByCounts(ctx, tx, counts); err != nil {
 			return err
 		}
@@ -905,7 +905,7 @@ func isInternalPackage(path string) bool {
 func (db *DB) DeleteOlderVersionFromSearchDocuments(ctx context.Context, modulePath, version string) (err error) {
 	defer derrors.Wrap(&err, "DeleteOlderVersionFromSearchDocuments(ctx, %q, %q)", modulePath, version)
 
-	return db.db.Transact(ctx, func(tx *database.DB) error {
+	return db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
 		// Collect all package paths in search_documents with the given module path
 		// and an older version. (package_path is the primary key of search_documents.)
 		var ppaths []string

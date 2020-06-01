@@ -102,7 +102,7 @@ func SetupTestDB(dbName string) (_ *DB, err error) {
 func ResetTestDB(db *DB, t *testing.T) {
 	ctx := context.Background()
 	t.Helper()
-	if err := db.db.Transact(ctx, func(tx *database.DB) error {
+	if err := db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
 		if _, err := tx.Exec(ctx, `
 			TRUNCATE modules CASCADE;
 			TRUNCATE version_map;

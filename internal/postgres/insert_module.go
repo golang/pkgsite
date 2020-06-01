@@ -70,14 +70,11 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
 	ctx, span := trace.StartSpan(ctx, "saveModule")
 	defer span.End()
 
-	var transact func(context.Context, func(*database.DB) error) error
+	iso := sql.LevelDefault
 	if experiment.IsActive(ctx, internal.ExperimentInsertSerializable) {
-		transact = db.db.TransactSerializable
-	} else {
-		transact = db.db.Transact
+		iso = sql.LevelSerializable
 	}
-
-	return transact(ctx, func(tx *database.DB) error {
+	return db.db.Transact(ctx, iso, func(tx *database.DB) error {
 		moduleID, err := insertModule(ctx, tx, m)
 		if err != nil {
 			return err
@@ -645,7 +642,7 @@ func removeNonDistributableData(m *internal.Module) {
 // DeleteModule deletes a Version from the database.
 func (db *DB) DeleteModule(ctx context.Context, modulePath, version string) (err error) {
 	defer derrors.Wrap(&err, "DeleteModule(ctx, db, %q, %q)", modulePath, version)
-	return db.db.Transact(ctx, func(tx *database.DB) error {
+	return db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
 		// We only need to delete from the modules table. Thanks to ON DELETE
 		// CASCADE constraints, that will trigger deletions from all other tables.
 		const stmt = `DELETE FROM modules WHERE module_path=$1 AND version=$2`
