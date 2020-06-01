@@ -164,7 +164,7 @@ func TestWorker(t *testing.T) {
 			// Use 10 workers to have parallelism consistent with the worker binary.
 			q := queue.NewInMemory(ctx, proxyClient, sourceClient, testDB, 10, FetchAndUpdateState)
 
-			s, err := NewServer(&config.Config{}, testDB, indexClient, proxyClient, sourceClient, nil, q, nil, "")
+			s, err := NewServer(&config.Config{}, testDB, indexClient, proxyClient, sourceClient, nil, q, nil, 10*time.Minute, "")
 			if err != nil {
 				t.Fatal(err)
 			}

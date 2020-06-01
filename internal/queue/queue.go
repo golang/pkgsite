@@ -28,7 +28,7 @@ import (
 
 // A Queue provides an interface for asynchronous scheduling of fetch actions.
 type Queue interface {
-	ScheduleFetch(ctx context.Context, modulePath, version, suffix string) error
+	ScheduleFetch(ctx context.Context, modulePath, version, suffix string, taskIDChangeInterval time.Duration) error
 }
 
 // GCP provides a Queue implementation backed by the Google Cloud Tasks
@@ -53,15 +53,15 @@ func NewGCP(cfg *config.Config, client *cloudtasks.Client, queueID string) *GCP 
 // ScheduleFetch enqueues a task on GCP to fetch the given modulePath and
 // version. It returns an error if there was an error hashing the task name, or
 // an error pushing the task to GCP.
-func (q *GCP) ScheduleFetch(ctx context.Context, modulePath, version, suffix string) (err error) {
+func (q *GCP) ScheduleFetch(ctx context.Context, modulePath, version, suffix string, taskIDChangeInterval time.Duration) (err error) {
 	// the new taskqueue API requires a deadline of <= 30s
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	defer derrors.Wrap(&err, "queue.ScheduleFetch(%q, %q, %q)", modulePath, version, suffix)
+	defer derrors.Wrap(&err, "queue.ScheduleFetch(%q, %q, %q, %d)", modulePath, version, suffix, taskIDChangeInterval)
 	queueName := fmt.Sprintf("projects/%s/locations/%s/queues/%s", q.cfg.ProjectID, q.cfg.LocationID, q.queueID)
 	mod := fmt.Sprintf("%s/@v/%s", modulePath, version)
 	u := fmt.Sprintf("/fetch/" + mod)
-	taskID := newTaskID(modulePath, version, time.Now())
+	taskID := newTaskID(modulePath, version, time.Now(), taskIDChangeInterval)
 	req := &taskspb.CreateTaskRequest{
 		Parent: queueName,
 		Task: &taskspb.Task{
@@ -93,9 +93,6 @@ func (q *GCP) ScheduleFetch(ctx context.Context, modulePath, version, suffix str
 	return nil
 }
 
-// How often the task ID for a given module and version will change.
-const taskIDChangeInterval = time.Hour
-
 // Create a task ID for the given module path and version.
 // Task IDs can contain only letters ([A-Za-z]), numbers ([0-9]), hyphens (-), or underscores (_).
 // Also include a truncated time in the hash, so it changes periodically.
@@ -104,7 +101,7 @@ const taskIDChangeInterval = time.Hour
 // for two identical tasks to appear within that time period (for example, one at 2:59
 // and the other at 3:01) -- each is part of a different taskIDChangeInterval-sized chunk
 // of time. But there will never be a third identical task in that interval.
-func newTaskID(modulePath, version string, now time.Time) string {
+func newTaskID(modulePath, version string, now time.Time, taskIDChangeInterval time.Duration) string {
 	t := now.Truncate(taskIDChangeInterval)
 	return fmt.Sprintf("%x", sha256.Sum256([]byte(modulePath+"@"+version+"-"+t.String())))
 }
@@ -174,7 +171,7 @@ func (q *InMemory) process(ctx context.Context, processFunc func(context.Context
 
 // ScheduleFetch pushes a fetch task into the local queue to be processed
 // asynchronously.
-func (q *InMemory) ScheduleFetch(ctx context.Context, modulePath, version, suffix string) error {
+func (q *InMemory) ScheduleFetch(ctx context.Context, modulePath, version, suffix string, taskIDChangeInterval time.Duration) error {
 	q.queue <- moduleVersion{modulePath, version}
 	return nil
 }

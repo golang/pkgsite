@@ -78,7 +78,7 @@ func TestEndToEndProcessing(t *testing.T) {
 	// back to worker, rather than calling fetch itself.
 	queue := queue.NewInMemory(ctx, proxyClient, source.NewClient(1*time.Second), testDB, 10, worker.FetchAndUpdateState)
 
-	workerServer, err := worker.NewServer(&config.Config{}, testDB, indexClient, proxyClient, source.NewClient(1*time.Second), redisHAClient, queue, nil, "../../../content/static")
+	workerServer, err := worker.NewServer(&config.Config{}, testDB, indexClient, proxyClient, source.NewClient(1*time.Second), redisHAClient, queue, nil, 10*time.Minute, "../../../content/static")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,7 +86,7 @@ func TestEndToEndProcessing(t *testing.T) {
 	workerServer.Install(workerMux.Handle)
 	workerHTTP := httptest.NewServer(workerMux)
 
-	frontendServer, err := frontend.NewServer(testDB, queue, redisHAClient, "../../../content/static", "../../../third_party", false)
+	frontendServer, err := frontend.NewServer(testDB, queue, redisHAClient, 10*time.Minute, "../../../content/static", "../../../third_party", false)
 	if err != nil {
 		t.Fatal(err)
 	}

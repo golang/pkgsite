@@ -12,18 +12,18 @@ import (
 func TestNewTaskID(t *testing.T) {
 	// Verify that the task ID is the same within taskIDChangeInterval and changes
 	// afterwards.
-	const (
-		module  = "mod"
-		version = "ver"
+	var (
+		module               = "mod"
+		version              = "ver"
+		taskIDChangeInterval = 3 * time.Hour
 	)
-
 	tm := time.Now().Truncate(taskIDChangeInterval)
-	id1 := newTaskID(module, version, tm)
-	id2 := newTaskID(module, version, tm.Add(taskIDChangeInterval/2))
+	id1 := newTaskID(module, version, tm, taskIDChangeInterval)
+	id2 := newTaskID(module, version, tm.Add(taskIDChangeInterval/2), taskIDChangeInterval)
 	if id1 != id2 {
 		t.Error("wanted same task ID, got different")
 	}
-	id3 := newTaskID(module, version, tm.Add(taskIDChangeInterval+1))
+	id3 := newTaskID(module, version, tm.Add(taskIDChangeInterval+1), taskIDChangeInterval)
 	if id1 == id3 {
 		t.Error("wanted different task ID, got same")
 	}

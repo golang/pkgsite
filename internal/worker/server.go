@@ -37,14 +37,15 @@ import (
 
 // Server can be installed to serve the go discovery worker.
 type Server struct {
-	cfg             *config.Config
-	indexClient     *index.Client
-	proxyClient     *proxy.Client
-	sourceClient    *source.Client
-	redisClient     *redis.Client
-	db              *postgres.DB
-	queue           queue.Queue
-	reportingClient *errorreporting.Client
+	cfg                  *config.Config
+	indexClient          *index.Client
+	proxyClient          *proxy.Client
+	sourceClient         *source.Client
+	redisClient          *redis.Client
+	db                   *postgres.DB
+	queue                queue.Queue
+	reportingClient      *errorreporting.Client
+	taskIDChangeInterval time.Duration
 
 	indexTemplate *template.Template
 }
@@ -58,6 +59,7 @@ func NewServer(cfg *config.Config,
 	redisClient *redis.Client,
 	queue queue.Queue,
 	reportingClient *errorreporting.Client,
+	taskIDChangeInterval time.Duration,
 	staticPath string,
 ) (_ *Server, err error) {
 	defer derrors.Wrap(&err, "NewServer(db, ic, pc, q, %q)", staticPath)
@@ -68,15 +70,16 @@ func NewServer(cfg *config.Config,
 	}
 
 	return &Server{
-		cfg:             cfg,
-		db:              db,
-		indexClient:     indexClient,
-		proxyClient:     proxyClient,
-		sourceClient:    sourceClient,
-		redisClient:     redisClient,
-		queue:           queue,
-		reportingClient: reportingClient,
-		indexTemplate:   indexTemplate,
+		cfg:                  cfg,
+		db:                   db,
+		indexClient:          indexClient,
+		proxyClient:          proxyClient,
+		sourceClient:         sourceClient,
+		redisClient:          redisClient,
+		queue:                queue,
+		reportingClient:      reportingClient,
+		indexTemplate:        indexTemplate,
+		taskIDChangeInterval: taskIDChangeInterval,
 	}, nil
 }
 
@@ -276,7 +279,7 @@ func (s *Server) handleIndexAndQueue(w http.ResponseWriter, r *http.Request) (er
 	}
 	log.Infof(ctx, "Scheduling modules to be fetched: %d new modules from index.golang.org", len(versions))
 	for _, version := range versions {
-		if err := s.queue.ScheduleFetch(ctx, version.Path, version.Version, suffixParam); err != nil {
+		if err := s.queue.ScheduleFetch(ctx, version.Path, version.Version, suffixParam, s.taskIDChangeInterval); err != nil {
 			return err
 		}
 	}
@@ -308,7 +311,7 @@ func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) (err erro
 	w.Header().Set("Content-Type", "text/plain")
 	log.Infof(ctx, "Scheduling modules to be fetched: requeuing %d modules", len(versions))
 	for _, v := range versions {
-		if err := s.queue.ScheduleFetch(ctx, v.ModulePath, v.Version, suffixParam); err != nil {
+		if err := s.queue.ScheduleFetch(ctx, v.ModulePath, v.Version, suffixParam, s.taskIDChangeInterval); err != nil {
 			return err
 		}
 	}
@@ -456,7 +459,7 @@ func (s *Server) doPopulateStdLib(ctx context.Context, suffix string) (string, e
 		return "", err
 	}
 	for _, v := range versions {
-		if err := s.queue.ScheduleFetch(ctx, stdlib.ModulePath, v, suffix); err != nil {
+		if err := s.queue.ScheduleFetch(ctx, stdlib.ModulePath, v, suffix, s.taskIDChangeInterval); err != nil {
 			return "", fmt.Errorf("error scheduling fetch for %s: %w", v, err)
 		}
 	}

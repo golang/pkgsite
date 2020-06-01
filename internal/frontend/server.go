@@ -34,19 +34,20 @@ type Server struct {
 	queue queue.Queue
 	// cmplClient is a redis client that has access to the "completions" sorted
 	// set.
-	cmplClient     *redis.Client
-	staticPath     string
-	thirdPartyPath string
-	templateDir    string
-	devMode        bool
-	errorPage      []byte
+	cmplClient           *redis.Client
+	taskIDChangeInterval time.Duration
+	staticPath           string
+	thirdPartyPath       string
+	templateDir          string
+	devMode              bool
+	errorPage            []byte
 
 	mu        sync.Mutex // Protects all fields below
 	templates map[string]*template.Template
 }
 
 // NewServer creates a new Server for the given database and template directory.
-func NewServer(ds internal.DataSource, q queue.Queue, cmplClient *redis.Client, staticPath string, thirdPartyPath string, devMode bool) (_ *Server, err error) {
+func NewServer(ds internal.DataSource, q queue.Queue, cmplClient *redis.Client, taskIDChangeInterval time.Duration, staticPath string, thirdPartyPath string, devMode bool) (_ *Server, err error) {
 	defer derrors.Wrap(&err, "NewServer(...)")
 	templateDir := filepath.Join(staticPath, "html")
 	ts, err := parsePageTemplates(templateDir)
@@ -54,14 +55,15 @@ func NewServer(ds internal.DataSource, q queue.Queue, cmplClient *redis.Client, 
 		return nil, fmt.Errorf("error parsing templates: %v", err)
 	}
 	s := &Server{
-		ds:             ds,
-		queue:          q,
-		cmplClient:     cmplClient,
-		staticPath:     staticPath,
-		thirdPartyPath: thirdPartyPath,
-		templateDir:    templateDir,
-		devMode:        devMode,
-		templates:      ts,
+		ds:                   ds,
+		queue:                q,
+		cmplClient:           cmplClient,
+		staticPath:           staticPath,
+		thirdPartyPath:       thirdPartyPath,
+		templateDir:          templateDir,
+		devMode:              devMode,
+		templates:            ts,
+		taskIDChangeInterval: taskIDChangeInterval,
 	}
 	errorPageBytes, err := s.renderErrorPage(context.Background(), http.StatusInternalServerError, nil)
 	if err != nil {

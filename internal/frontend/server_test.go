@@ -928,7 +928,7 @@ func experimentContext(ctx context.Context, experimentNames ...string) context.C
 }
 
 func newTestServer(t *testing.T, experimentNames ...string) (*Server, http.Handler) {
-	s, err := NewServer(testDB, nil, nil, "../../content/static", "../../third_party", false)
+	s, err := NewServer(testDB, nil, nil, 10*time.Minute, "../../content/static", "../../third_party", false)
 	if err != nil {
 		t.Fatal(err)
 	}
