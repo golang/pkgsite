@@ -274,7 +274,7 @@ func insertPackages(ctx context.Context, db *database.DB, m *internal.Module, is
 			m.ModulePath,
 			p.V1Path,
 			p.IsRedistributable,
-			p.DocumentationHTML,
+			makeValidUnicode(p.DocumentationHTML),
 			pq.Array(licenseTypes),
 			pq.Array(licensePaths),
 			p.GOOS,
@@ -465,7 +465,7 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 				continue
 			}
 			id := pathToID[path]
-			docValues = append(docValues, id, doc.GOOS, doc.GOARCH, doc.Synopsis, doc.HTML)
+			docValues = append(docValues, id, doc.GOOS, doc.GOARCH, doc.Synopsis, makeValidUnicode(doc.HTML))
 		}
 		docCols := []string{
 			"path_id",
