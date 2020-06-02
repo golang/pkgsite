@@ -10,6 +10,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"hash/fnv"
+	"io"
 	"sort"
 	"strings"
 	"unicode/utf8"
@@ -71,12 +73,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
 	ctx, span := trace.StartSpan(ctx, "saveModule")
 	defer span.End()
 
-	iso := sql.LevelDefault
-	if experiment.IsActive(ctx, internal.ExperimentInsertSerializable) {
-		iso = sql.LevelSerializable
-	}
-
-	return db.db.Transact(ctx, iso, func(tx *database.DB) error {
+	return db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
 		moduleID, err := insertModule(ctx, tx, m)
 		if err != nil {
 			return err
@@ -92,6 +89,16 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
 			if err := insertDirectories(ctx, tx, m, moduleID); err != nil {
 				return err
 			}
+		}
+
+		// Obtain a transaction-scoped exclusive advisory lock on the module
+		// path. The transaction that holds the lock is the only one that can
+		// execute the subsequent code on any module with the given path. That
+		// means that conflicts from two transactions both believing they are
+		// working on the latest version of a given module cannot happen.
+		// The lock is released automatically at the end of the transaction.
+		if err := lock(ctx, tx, m.ModulePath); err != nil {
+			return err
 		}
 
 		// We only insert into imports_unique and search_documents if this is
@@ -507,6 +514,33 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 			return err
 		}
 	}
+	return nil
+}
+
+// lock obtains an exclusive, transaction-scoped advisory lock on modulePath.
+func lock(ctx context.Context, tx *database.DB, modulePath string) (err error) {
+	defer derrors.Wrap(&err, "lock(%s)", modulePath)
+	if !tx.InTransaction() {
+		return errors.New("not in a transaction")
+	}
+	// Postgres advisory locks use a 64-bit integer key. Convert modulePath to a
+	// key by hashing.
+	//
+	// This can result in collisions (two module paths hashing to the same key),
+	// but they are unlikely and at worst will slow things down a bit.
+	//
+	// We use the FNV hash algorithm from the standard library. It fits into 64
+	// bits unlike a crypto hash, and is stable across processes, unlike
+	// hash/maphash.
+	hasher := fnv.New64()
+	io.WriteString(hasher, modulePath) // Writing to a hash.Hash never returns an error.
+	h := int64(hasher.Sum64())
+	log.Debugf(ctx, "locking %s (%d) ...", modulePath, h)
+	// See https://www.postgresql.org/docs/11/functions-admin.html#FUNCTIONS-ADVISORY-LOCKS.
+	if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock($1)`, h); err != nil {
+		return err
+	}
+	log.Debugf(ctx, "locking %s (%d) succeeded", modulePath, h)
 	return nil
 }
 

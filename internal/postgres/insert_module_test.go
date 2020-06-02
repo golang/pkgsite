@@ -10,12 +10,14 @@ import (
 	"errors"
 	"io/ioutil"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/licenses"
@@ -334,4 +336,54 @@ func TestMakeValidUnicode(t *testing.T) {
 	check("final-nulls", false)
 	check("gin-gonic", true)
 	check("subchord", true)
+}
+
+func TestLock(t *testing.T) {
+	// Verify that two transactions cannot both hold the same lock, but that every one
+	// that wants the lock eventually gets it.
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	defer ResetTestDB(testDB, t)
+
+	db := testDB.Underlying()
+
+	const n = 4
+	errc := make(chan error)
+	var (
+		mu       sync.Mutex
+		lockHeld bool
+		count    int
+	)
+
+	for i := 0; i < n; i++ {
+		go func() {
+			errc <- db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
+				if err := lock(ctx, tx, sample.ModulePath); err != nil {
+					return err
+				}
+
+				mu.Lock()
+				h := lockHeld
+				lockHeld = true
+				count++
+				mu.Unlock()
+				if h {
+					return errors.New("lock already held")
+				}
+				time.Sleep(50 * time.Millisecond)
+				mu.Lock()
+				lockHeld = false
+				mu.Unlock()
+				return nil
+			})
+		}()
+	}
+	for i := 0; i < n; i++ {
+		if err := <-errc; err != nil {
+			t.Fatal(err)
+		}
+	}
+	if count != n {
+		t.Errorf("got %d, want %d", count, n)
+	}
 }
