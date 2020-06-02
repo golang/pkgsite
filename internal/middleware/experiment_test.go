@@ -137,26 +137,3 @@ func TestShouldSetExperiment(t *testing.T) {
 		})
 	}
 }
-
-func TestShouldSetExperimentWithQueryParam(t *testing.T) {
-	req, err := http.NewRequest("GET", "http://foo", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	testExperiments := []string{
-		"experiment-test-1",
-		"experiment-test-2",
-	}
-	q := req.URL.Query()
-	for _, te := range testExperiments {
-		q.Add(experimentQueryParamKey, te)
-		q.Add(experimentQueryParamKey, te)
-	}
-	req.URL.RawQuery = q.Encode()
-
-	for _, te := range testExperiments {
-		if !shouldSetExperiment(req, &internal.Experiment{Name: te, Rollout: 0}) {
-			t.Errorf("shouldSetExperiment(%q) = false; want = true", te)
-		}
-	}
-}

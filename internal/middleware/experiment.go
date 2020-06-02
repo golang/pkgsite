@@ -69,6 +69,10 @@ func (e *Experimenter) setExperimentsForRequest(r *http.Request) *http.Request {
 			set[exp.Name] = true
 		}
 	}
+	keys := r.URL.Query()[experimentQueryParamKey]
+	for _, k := range keys {
+		set[k] = true
+	}
 	return r.WithContext(experiment.NewContext(r.Context(), experiment.NewSet(set)))
 }
 
@@ -113,12 +117,6 @@ func (e *Experimenter) loadNextSnapshot(ctx context.Context) (err error) {
 // All requests from the same IP will be enrolled in the same set of
 // experiments.
 func shouldSetExperiment(r *http.Request, e *internal.Experiment) bool {
-	keys := r.URL.Query()[experimentQueryParamKey]
-	for _, k := range keys {
-		if k == e.Name {
-			return true
-		}
-	}
 	if e.Rollout == 0 {
 		return false
 	}
