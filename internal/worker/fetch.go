@@ -50,6 +50,7 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 
 	tctx, span := trace.StartSpan(ctx, "FetchAndUpdateState")
 	ctx = experiment.NewContext(tctx, experiment.FromContext(ctx))
+	ctx = log.NewContextWithLabel(ctx, "fetch", modulePath+"@"+requestedVersion)
 	span.AddAttributes(
 		trace.StringAttribute("modulePath", modulePath),
 		trace.StringAttribute("version", requestedVersion))

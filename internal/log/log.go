@@ -27,12 +27,30 @@ var (
 	} = stdlibLogger{}
 )
 
-// traceIDKey is the type of the context key for trace IDs.
-type traceIDKey struct{}
+type (
+	// traceIDKey is the type of the context key for trace IDs.
+	traceIDKey struct{}
+
+	// labelsKey is the type of the context key for labels.
+	labelsKey struct{}
+)
 
 // NewContextWithTraceID creates a new context from ctx that adds the trace ID.
 func NewContextWithTraceID(ctx context.Context, traceID string) context.Context {
 	return context.WithValue(ctx, traceIDKey{}, traceID)
+}
+
+// NewContextWithLabel creates anew context from ctx that adds a label that will
+// appear in the log entry.
+func NewContextWithLabel(ctx context.Context, key, value string) context.Context {
+	oldLabels, _ := ctx.Value(labelsKey{}).(map[string]string)
+	// Copy the labels, to preserve immutability of contexts.
+	newLabels := map[string]string{}
+	for k, v := range oldLabels {
+		newLabels[k] = v
+	}
+	newLabels[key] = value
+	return context.WithValue(ctx, labelsKey{}, newLabels)
 }
 
 // stackdriverLogger logs to GCP Stackdriver.
@@ -46,10 +64,15 @@ func (l *stackdriverLogger) log(ctx context.Context, s logging.Severity, payload
 		payload = err.Error()
 	}
 	traceID, _ := ctx.Value(traceIDKey{}).(string) // if not present, traceID is "", which is fine
-	var labels map[string]string
+	labels, _ := ctx.Value(labelsKey{}).(map[string]string)
 	es := experimentString(ctx)
 	if len(es) > 0 {
-		labels = map[string]string{"experiments": es}
+		nl := map[string]string{}
+		for k, v := range labels {
+			nl[k] = v
+		}
+		nl["experiments"] = es
+		labels = nl
 	}
 	l.sdlogger.Log(logging.Entry{
 		Severity: s,
@@ -67,6 +90,9 @@ func (stdlibLogger) log(ctx context.Context, s logging.Severity, payload interfa
 	traceID, _ := ctx.Value(traceIDKey{}).(string) // if not present, traceID is ""
 	if traceID != "" {
 		extras = append(extras, fmt.Sprintf("traceID %s", traceID))
+	}
+	if labels, ok := ctx.Value(labelsKey{}).(map[string]string); ok {
+		extras = append(extras, fmt.Sprint(labels))
 	}
 	es := experimentString(ctx)
 	if len(es) > 0 {
