@@ -90,6 +90,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(s.staticPath)))
 	}))
+	handle("/fetch/", http.HandlerFunc(s.fetchHandler))
 	handle("/mod/", modHandler)
 	handle("/pkg/", http.HandlerFunc(s.handlePackageDetailsRedirect))
 	handle("/search", searchHandler)

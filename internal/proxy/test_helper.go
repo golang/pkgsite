@@ -84,8 +84,18 @@ func TestProxy(modules []*TestModule) *http.ServeMux {
 				http.ServeContent(w, r, path, time.Now(), content)
 			})
 		}
+		latest := func(modVersions []*TestModule) string {
+			return modVersions[len(modVersions)-1].Version
+		}
+		master := func(modVersions []*TestModule) string {
+			// TODO: master should return the most recently
+			// published version, which is not necessarily the
+			// latest version according to semver.
+			return modVersions[len(modVersions)-1].Version
+		}
 		handle(fmt.Sprintf("/%s/@v/list", modPath), strings.NewReader(versionList(modVersions)))
-		handle(fmt.Sprintf("/%s/@latest", modPath), strings.NewReader(defaultInfo(modVersions[len(modVersions)-1].Version)))
+		handle(fmt.Sprintf("/%s/@latest", modPath), strings.NewReader(defaultInfo(latest(modVersions))))
+		handle(fmt.Sprintf("/%s/@v/master.info", modPath), strings.NewReader(defaultInfo(master(modVersions))))
 		for _, m := range modVersions {
 			handle(fmt.Sprintf("/%s/@v/%s.info", m.ModulePath, m.Version), strings.NewReader(defaultInfo(m.Version)))
 			handle(fmt.Sprintf("/%s/@v/%s.mod", m.ModulePath, m.Version), strings.NewReader(goMod(m)))

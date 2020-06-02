@@ -20,6 +20,9 @@ const (
 	// proxy client.
 	LatestVersion = "latest"
 
+	// MasterVersion signifies the version at master.
+	MasterVersion = "master"
+
 	// UnknownModulePath signifies that the module path for a given package
 	// path is ambiguous or not known. This is because requests to the
 	// frontend can come in the form of <import-path>[@<version>], and it is

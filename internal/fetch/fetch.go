@@ -114,8 +114,7 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 			// The module path in the go.mod file doesn't match the path of the
 			// zip file. Don't insert the module. Store an AlternativeModule
 			// status in module_version_states.
-			fr.Error = fmt.Errorf("module path=%s, go.mod path=%s: %w",
-				modulePath, goModPath, derrors.AlternativeModule)
+			fr.Error = fmt.Errorf("module path=%s, go.mod path=%s: %w", modulePath, goModPath, derrors.AlternativeModule)
 			return fr
 		}
 		zipReader, err = proxyClient.GetZip(ctx, modulePath, fr.ResolvedVersion)

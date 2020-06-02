@@ -26,7 +26,7 @@ func TestStdlibPathForShortcut(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	s, _ := newTestServer(t)
+	s, _, _ := newTestServer(t, nil)
 	for _, test := range []struct {
 		path string
 		want string

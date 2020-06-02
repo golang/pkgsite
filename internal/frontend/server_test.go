@@ -20,6 +20,8 @@ import (
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
+	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
 	"golang.org/x/pkgsite/internal/testing/pagecheck"
@@ -35,7 +37,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestHTMLInjection(t *testing.T) {
-	_, handler := newTestServer(t)
+	_, handler, _ := newTestServer(t, nil)
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, httptest.NewRequest("GET", "/<em>UHOH</em>", nil))
 	if strings.Contains(w.Body.String(), "<em>") {
@@ -189,7 +191,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 	ctx = experimentContext(ctx, experimentNames...)
 	insertTestModules(ctx, t, testModules)
 
-	_, handler := newTestServer(t, experimentNames...)
+	_, handler, _ := newTestServer(t, nil, experimentNames...)
 
 	var (
 		in   = htmlcheck.In
@@ -835,7 +837,7 @@ func TestServerErrors(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, handler := newTestServer(t)
+	_, handler, _ := newTestServer(t, nil)
 	for _, test := range []struct {
 		path     string
 		wantCode int
@@ -927,25 +929,36 @@ func experimentContext(ctx context.Context, experimentNames ...string) context.C
 	return experiment.NewContext(ctx, experiment.NewSet(expmap))
 }
 
-func newTestServer(t *testing.T, experimentNames ...string) (*Server, http.Handler) {
-	s, err := NewServer(testDB, nil, nil, 10*time.Minute, "../../content/static", "../../third_party", false)
+func newTestServer(t *testing.T, modules []*proxy.TestModule, experimentNames ...string) (*Server, http.Handler, func()) {
+	t.Helper()
+	proxyClient, teardown := proxy.SetupTestProxy(t, modules)
+	sourceClient := source.NewClient(sourceTimeout)
+	ctx := context.Background()
+
+	var exps []*internal.Experiment
+	set := map[string]bool{}
+	for _, n := range experimentNames {
+		exps = append(exps, &internal.Experiment{Name: n, Rollout: 100})
+		set[n] = true
+	}
+	q := queue.NewInMemory(ctx, proxyClient, sourceClient, testDB, 1, FetchAndUpdateState, experiment.NewSet(set))
+	s, err := NewServer(testDB, q, nil, 10*time.Minute, "../../content/static", "../../third_party", false)
 	if err != nil {
 		t.Fatal(err)
 	}
 	mux := http.NewServeMux()
 	s.Install(mux.Handle, nil)
 
-	var exps []*internal.Experiment
-	for _, n := range experimentNames {
-		exps = append(exps, &internal.Experiment{Name: n, Rollout: 100})
-	}
 	esrc := internal.NewLocalExperimentSource(exps)
-	exp, err := middleware.NewExperimenter(context.Background(), time.Hour, esrc, nil)
+	exp, err := middleware.NewExperimenter(ctx, time.Hour, esrc, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	mw := middleware.Chain(
 		middleware.LatestVersion(s.LatestVersion),
 		middleware.Experiment(exp))
-	return s, mw(mux)
+	return s, mw(mux), func() {
+		teardown()
+		postgres.ResetTestDB(testDB, t)
+	}
 }
