@@ -39,7 +39,11 @@ Before you begin working on an issue, please leave a comment that you are claimi
    wish to set up a similar environment, you will want to
    download and install the Google Cloud SDK at https://cloud.google.com/sdk/docs/.
 
-4. Depending on the feature you are working on, review the contributing guides for:
+4. If you are planning to develop any feature that involves the database, you will need
+   to [set up](doc/postgres.md) and [populate](doc/worker.md#populating-data-locally-using-the-worker) your local database. To run 
+  the frontend and server servers locally, see the documentation for the [frontend server](doc/frontend.md) and [worker server](doc/worker.md).
+
+5. Depending on the feature you are working on, review the contributing guides for:
 
 - [Frontend development](doc/frontend.md)
 - [Worker development](doc/worker.md)
