@@ -160,8 +160,8 @@ func newQueue(ctx context.Context, cfg *config.Config, proxyClient *proxy.Client
 				set[e.Name] = true
 			}
 		}
-		ctx = experiment.NewContext(ctx, experiment.NewSet(set))
-		return queue.NewInMemory(ctx, proxyClient, sourceClient, db, 10, frontend.FetchAndUpdateState)
+		return queue.NewInMemory(ctx, proxyClient, sourceClient, db, 10,
+			frontend.FetchAndUpdateState, experiment.NewSet(set))
 	}
 	client, err := cloudtasks.NewClient(ctx)
 	if err != nil {

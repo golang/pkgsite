@@ -76,7 +76,8 @@ func TestEndToEndProcessing(t *testing.T) {
 
 	// TODO(b/143760329): it would be better if InMemory made http requests
 	// back to worker, rather than calling fetch itself.
-	queue := queue.NewInMemory(ctx, proxyClient, source.NewClient(1*time.Second), testDB, 10, worker.FetchAndUpdateState)
+	queue := queue.NewInMemory(ctx, proxyClient, source.NewClient(1*time.Second), testDB, 10,
+		worker.FetchAndUpdateState, nil)
 
 	workerServer, err := worker.NewServer(&config.Config{}, testDB, indexClient, proxyClient, source.NewClient(1*time.Second), redisHAClient, queue, nil, 10*time.Minute, "../../../content/static")
 	if err != nil {

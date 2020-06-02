@@ -129,14 +129,14 @@ type InMemory struct {
 // from proxyClient and stores in db. It uses workerCount parallelism to
 // execute these fetches.
 func NewInMemory(ctx context.Context, proxyClient *proxy.Client, sourceClient *source.Client, db *postgres.DB, workerCount int,
-	processFunc func(context.Context, string, string, *proxy.Client, *source.Client, *postgres.DB) (int, error)) *InMemory {
+	processFunc func(context.Context, string, string, *proxy.Client, *source.Client, *postgres.DB) (int, error), experiments *experiment.Set) *InMemory {
 	q := &InMemory{
 		proxyClient:  proxyClient,
 		sourceClient: sourceClient,
 		db:           db,
 		queue:        make(chan moduleVersion, 1000),
 		sem:          make(chan struct{}, workerCount),
-		experiments:  experiment.FromContext(ctx),
+		experiments:  experiments,
 	}
 	go q.process(ctx, processFunc)
 	return q
