@@ -188,16 +188,23 @@ func TestLargeBulkInsert(t *testing.T) {
 	if _, err := testDB.Exec(ctx, `CREATE TEMPORARY TABLE test_large_bulk (i BIGINT);`); err != nil {
 		t.Fatal(err)
 	}
+	defer func(q bool) {
+		QueryLoggingDisabled = q
+	}(QueryLoggingDisabled)
+	QueryLoggingDisabled = true
+
 	const size = 150000
 	vals := make([]interface{}, size)
 	for i := 0; i < size; i++ {
 		vals[i] = i + 1
 	}
+	start := time.Now()
 	if err := testDB.Transact(ctx, sql.LevelDefault, func(db *DB) error {
 		return db.BulkInsert(ctx, "test_large_bulk", []string{"i"}, vals, "")
 	}); err != nil {
 		t.Fatal(err)
 	}
+	t.Logf("large bulk insert took %s", time.Since(start))
 	rows, err := testDB.Query(ctx, `SELECT i FROM test_large_bulk;`)
 	if err != nil {
 		t.Fatal(err)
