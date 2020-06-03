@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"runtime"
 	"runtime/debug"
 	"sort"
 	"strings"
@@ -76,6 +77,7 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 		if fr.Status == 0 {
 			fr.Status = http.StatusOK
 		}
+		log.Debugf(ctx, "memory after fetch of %s@%s: %dM", modulePath, requestedVersion, allocMeg())
 	}()
 
 	var (
@@ -791,4 +793,10 @@ func fetchPlayURL(ex *doc.Example, post func(url, contentType string, body io.Re
 		return "", fmt.Errorf("error from play.golang.org: %s, %v", p, resp.StatusCode)
 	}
 	return fmt.Sprintf("https://play.golang.org/p/%s", p), nil
+}
+
+func allocMeg() int {
+	var ms runtime.MemStats
+	runtime.ReadMemStats(&ms)
+	return int(ms.Alloc / (1024 * 1024))
 }

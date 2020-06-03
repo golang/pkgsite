@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"hash/fnv"
 	"io"
+	"runtime"
 	"sort"
 	"strings"
 	"unicode/utf8"
@@ -61,6 +62,12 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 	return db.saveModule(ctx, m)
 }
 
+func allocMeg() int {
+	var ms runtime.MemStats
+	runtime.ReadMemStats(&ms)
+	return int(ms.Alloc / (1024 * 1024))
+}
+
 // saveModule inserts a Module into the database along with its packages,
 // imports, and licenses.  If any of these rows already exist, the module and
 // corresponding will be deleted and reinserted.
@@ -69,6 +76,8 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 // A derrors.InvalidArgument error will be returned if the given module and
 // licenses are invalid.
 func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
+	log.Debugf(ctx, "memory at start of saveModule: %dM", allocMeg())
+
 	defer derrors.Wrap(&err, "saveModule(ctx, tx, Module(%q, %q))", m.ModulePath, m.Version)
 	ctx, span := trace.StartSpan(ctx, "saveModule")
 	defer span.End()
@@ -78,18 +87,25 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
 		if err != nil {
 			return err
 		}
+		log.Debugf(ctx, "memory after insertModule: %dM", allocMeg())
+
 		if err := insertLicenses(ctx, tx, m, moduleID); err != nil {
 			return err
 		}
 
+		log.Debugf(ctx, "memory after insertLicenses: %dM", allocMeg())
+
 		if err := insertPackages(ctx, tx, m); err != nil {
 			return err
 		}
+		log.Debugf(ctx, "memory after insertPackages: %dM", allocMeg())
+
 		if experiment.IsActive(ctx, internal.ExperimentInsertDirectories) {
 			if err := insertDirectories(ctx, tx, m, moduleID); err != nil {
 				return err
 			}
 		}
+		log.Debugf(ctx, "memory after insertDirectories: %dM", allocMeg())
 
 		// Obtain a transaction-scoped exclusive advisory lock on the module
 		// path. The transaction that holds the lock is the only one that can
@@ -433,6 +449,8 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 			"license_paths",
 			"redistributable",
 		}
+		log.Debugf(ctx, "memory before inserting into paths: %dM", allocMeg())
+
 		if err := db.BulkInsertReturning(ctx, "paths", pathCols, pathValues, database.OnConflictDoNothing, []string{"id", "path"}, func(rows *sql.Rows) error {
 			var (
 				pathID int
@@ -468,6 +486,8 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 				"file_path",
 				"contents",
 			}
+			log.Debugf(ctx, "memory before inserting into readmes: %dM", allocMeg())
+
 			if err := db.BulkInsert(ctx, "readmes", readmeCols, readmeValues, database.OnConflictDoNothing); err != nil {
 				return err
 			}
@@ -491,6 +511,7 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 			"synopsis",
 			"html",
 		}
+		log.Debugf(ctx, "memory before inserting into documentation: %dM", allocMeg())
 		if err := db.BulkInsert(ctx, "documentation", docCols, docValues, database.OnConflictDoNothing); err != nil {
 			return err
 		}
@@ -510,6 +531,7 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 			"path_id",
 			"to_path",
 		}
+		log.Debugf(ctx, "memory before inserting into package_imports: %dM", allocMeg())
 		if err := db.BulkInsert(ctx, "package_imports", importCols, importValues, database.OnConflictDoNothing); err != nil {
 			return err
 		}
