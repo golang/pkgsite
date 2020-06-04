@@ -13,7 +13,6 @@ import (
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -44,7 +43,7 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 	if err := checkPathAndVersion(ctx, s.ds, pkgPath, version); err != nil {
 		return err
 	}
-	if experiment.IsActive(ctx, internal.ExperimentUseDirectories) {
+	if isActiveUseDirectories(ctx) {
 		return s.servePackagePageNew(w, r, pkgPath, modulePath, version)
 	}
 
@@ -156,7 +155,7 @@ func (s *Server) servePackagePageNew(w http.ResponseWriter, r *http.Request, ful
 			return err
 		}
 		if inVersion == internal.LatestVersion {
-			if !experiment.IsActive(ctx, internal.ExperimentUseDirectories) {
+			if !isActiveUseDirectories(ctx) {
 				return pathNotFoundError(ctx, "package", fullPath, inVersion)
 			}
 			// TODO(b/149933479) add a case for this to TestServer, after we

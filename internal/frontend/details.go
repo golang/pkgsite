@@ -160,11 +160,18 @@ func isSupportedVersion(ctx context.Context, version string) bool {
 	return false
 }
 
+// isActveUseDirectories reports whether the experiment for reading from the
+// paths-based data model is active.
+func isActiveUseDirectories(ctx context.Context) bool {
+	return experiment.IsActive(ctx, internal.ExperimentInsertDirectories) &&
+		experiment.IsActive(ctx, internal.ExperimentUseDirectories)
+}
+
+// isActivePathAtMaster reports whether the experiment for viewing packages at
+// master is active.
 func isActivePathAtMaster(ctx context.Context) bool {
 	return experiment.IsActive(ctx, internal.ExperimentFrontendPackageAtMaster) &&
-		experiment.IsActive(ctx, internal.ExperimentFrontendFetch) &&
-		experiment.IsActive(ctx, internal.ExperimentInsertDirectories) &&
-		experiment.IsActive(ctx, internal.ExperimentUseDirectories)
+		isActiveFrontendFetch(ctx)
 }
 
 // pathNotFoundError returns an error page with instructions on how to

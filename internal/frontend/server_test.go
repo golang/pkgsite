@@ -45,19 +45,6 @@ func TestHTMLInjection(t *testing.T) {
 	}
 }
 
-// TestServer checks the contents of served pages by looking for
-// strings and elements in the parsed HTML response body.
-//
-// Other than search and static content, our pages vary along five dimensions:
-//
-// 1. module / package / directory
-// 2. stdlib / other (since the standard library is a special case in several ways)
-// 3. redistributable / non-redistributable
-// 4. versioned / unversioned URL (whether the URL for the page contains "@version")
-// 5. the tab (overview / doc / imports / ...)
-//
-// We aim to test all combinations of these.
-
 const pseudoVersion = "v0.0.0-20190101-123456789012"
 
 type testModule struct {
@@ -172,11 +159,23 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 	}
 }
 
+// TestServer checks the contents of served pages by looking for
+// strings and elements in the parsed HTML response body.
+//
+// Other than search and static content, our pages vary along five dimensions:
+//
+// 1. module / package / directory
+// 2. stdlib / other (since the standard library is a special case in several ways)
+// 3. redistributable / non-redistributable
+// 4. versioned / unversioned URL (whether the URL for the page contains "@version")
+// 5. the tab (overview / doc / imports / ...)
+//
+// We aim to test all combinations of these.
 func TestServer(t *testing.T) {
 	t.Run("no experiments", func(t *testing.T) {
 		testServer(t)
 	})
-	t.Run("insert-directories", func(t *testing.T) {
+	t.Run("use-paths-table", func(t *testing.T) {
 		testServer(t, internal.ExperimentUseDirectories, internal.ExperimentInsertDirectories)
 	})
 }

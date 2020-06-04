@@ -131,7 +131,6 @@ func TestFetchErrors(t *testing.T) {
 
 			ctx = experiment.NewContext(ctx, experiment.NewSet(map[string]bool{
 				internal.ExperimentFrontendFetch:     true,
-				internal.ExperimentUseDirectories:    true,
 				internal.ExperimentInsertDirectories: true,
 			}))
 			s, _, teardown := newTestServer(t, testModulesForProxy, internal.ExperimentInsertDirectories)
@@ -156,7 +155,6 @@ func TestFetchPathAlreadyExists(t *testing.T) {
 			defer cancel()
 			ctx = experiment.NewContext(ctx, experiment.NewSet(map[string]bool{
 				internal.ExperimentFrontendFetch:     true,
-				internal.ExperimentUseDirectories:    true,
 				internal.ExperimentInsertDirectories: true,
 			}))
 			if err := testDB.InsertModule(ctx, sample.DefaultModule()); err != nil {
