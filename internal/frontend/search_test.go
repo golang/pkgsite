@@ -175,7 +175,22 @@ func TestApproximateNumber(t *testing.T) {
 }
 
 func TestSearchRequestRedirectPath(t *testing.T) {
-	ctx := context.Background()
+	t.Run("no experiments ", func(t *testing.T) {
+		testSearchRequestRedirectPath(t)
+	})
+	t.Run("use-paths-table", func(t *testing.T) {
+		testSearchRequestRedirectPath(t, internal.ExperimentUseDirectories, internal.ExperimentInsertDirectories)
+	})
+}
+
+func testSearchRequestRedirectPath(t *testing.T, experimentNames ...string) {
+	// Experiments need to be set in the context, for DB work, and as
+	// a middleware, for request handling.
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx = experimentContext(ctx, experimentNames...)
+
+	defer cancel()
+	defer postgres.ResetTestDB(testDB, t)
 
 	golangTools := sample.Module("golang.org/x/tools", sample.VersionString, "internal/lsp")
 	std := sample.Module("std", sample.VersionString,

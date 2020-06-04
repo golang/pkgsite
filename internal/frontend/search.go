@@ -125,14 +125,30 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request) error {
 }
 
 // searchRequestRedirectPath returns the path that a search request should be
-// redirected to, or the empty string if there is no such path.  Standard
-// library packages that only contain one element (such as fmt, errors, etc.)
-// will not redirect to allow users to search by those terms.
+// redirected to, or the empty string if there is no such path. If the user
+// types an existing package path into the search bar, we will redirect the
+// user to the details page. Standard library packages that only contain one
+// element (such as fmt, errors, etc.) will not redirect, to allow users to
+// search by those terms.
 func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, query string) string {
 	requestedPath := path.Clean(query)
 	if !strings.Contains(requestedPath, "/") {
 		return ""
 	}
+	if isActiveUseDirectories(ctx) {
+		modulePath, _, isPackage, err := ds.GetPathInfo(ctx, requestedPath, internal.UnknownModulePath, internal.LatestVersion)
+		if err != nil {
+			if !errors.Is(err, derrors.NotFound) {
+				log.Errorf(ctx, "searchRequestRedirectPath(%q): %v", requestedPath, err)
+			}
+			return ""
+		}
+		if isPackage || modulePath != requestedPath {
+			return fmt.Sprintf("/%s", requestedPath)
+		}
+		return fmt.Sprintf("/mod/%s", requestedPath)
+	}
+
 	pkg, err := ds.GetPackage(ctx, requestedPath, internal.UnknownModulePath, internal.LatestVersion)
 	if err == nil {
 		return fmt.Sprintf("/%s", pkg.Path)
@@ -140,7 +156,6 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 		log.Errorf(ctx, "error getting package for %s: %v", requestedPath, err)
 		return ""
 	}
-
 	mi, err := ds.GetModuleInfo(ctx, requestedPath, internal.LatestVersion)
 	if err == nil {
 		return fmt.Sprintf("/mod/%s", mi.ModulePath)
@@ -148,7 +163,6 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 		log.Errorf(ctx, "error getting module for %s: %v", requestedPath, err)
 		return ""
 	}
-
 	dir, err := ds.GetDirectory(ctx, requestedPath, internal.UnknownModulePath, internal.LatestVersion, internal.AllFields)
 	if err == nil {
 		return fmt.Sprintf("/%s", dir.Path)
