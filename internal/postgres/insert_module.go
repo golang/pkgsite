@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/lib/pq"
 	"go.opencensus.io/trace"
@@ -677,6 +678,18 @@ func (db *DB) DeleteModule(ctx context.Context, modulePath, version string) (err
 // characters with the Unicode replacement character, which is the behavior of
 // for ... range on strings.
 func makeValidUnicode(s string) string {
+	// If s is valid and has no zeroes, don't copy it.
+	hasZeroes := false
+	for _, r := range s {
+		if r == 0 {
+			hasZeroes = true
+			break
+		}
+	}
+	if !hasZeroes && utf8.ValidString(s) {
+		return s
+	}
+
 	var b strings.Builder
 	for _, r := range s {
 		if r != 0 {
