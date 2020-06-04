@@ -34,23 +34,8 @@ type Directory struct {
 	URL      string
 }
 
-// serveDirectoryPage returns a directory view. It is called by
-// servePackagePage when an attempt to fetch a package path at any version
-// returns a 404.
-func (s *Server) serveDirectoryPage(w http.ResponseWriter, r *http.Request, dirPath, modulePath, requestedVersion string) error {
-	var ctx = r.Context()
-
-	dbDir, err := s.ds.GetDirectory(ctx, dirPath, modulePath, requestedVersion, internal.AllFields)
-	if err != nil {
-		if errors.Is(err, derrors.NotFound) {
-			return pathNotFoundError(ctx, "package", dirPath, requestedVersion)
-		}
-		return fmt.Errorf("serveDirectoryPage for %s@%s: %v", dirPath, requestedVersion, err)
-	}
-	return s.serveDirectoryPageWithDirectory(ctx, w, r, dbDir, requestedVersion)
-}
-
-func (s *Server) serveDirectoryPageWithDirectory(ctx context.Context, w http.ResponseWriter, r *http.Request, dbDir *internal.Directory, requestedVersion string) error {
+func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, r *http.Request, dbDir *internal.Directory, requestedVersion string) (err error) {
+	defer derrors.Wrap(&err, "serveDirectoryPage for %s@%s", dbDir.Path, requestedVersion)
 	tab := r.FormValue("tab")
 	settings, ok := directoryTabLookup[tab]
 	if tab == "" || !ok || settings.Disabled {
@@ -59,11 +44,11 @@ func (s *Server) serveDirectoryPageWithDirectory(ctx context.Context, w http.Res
 	}
 	licenses, err := s.ds.GetModuleLicenses(ctx, dbDir.ModulePath, dbDir.Version)
 	if err != nil {
-		return fmt.Errorf("serveDirectoryPage for %s@%s: %v", dbDir.Path, requestedVersion, err)
+		return err
 	}
 	header, err := createDirectory(dbDir, licensesToMetadatas(licenses), false)
 	if err != nil {
-		return fmt.Errorf("serveDirectoryPage for %s@%s: %v", dbDir.Path, requestedVersion, err)
+		return err
 	}
 	if requestedVersion == internal.LatestVersion {
 		header.URL = constructDirectoryURL(dbDir.Path, dbDir.ModulePath, internal.LatestVersion)
@@ -71,9 +56,8 @@ func (s *Server) serveDirectoryPageWithDirectory(ctx context.Context, w http.Res
 
 	details, err := constructDetailsForDirectory(r, tab, dbDir, licenses)
 	if err != nil {
-		return fmt.Errorf("serveDirectoryPage for %s@%s: %v", dbDir.Path, requestedVersion, err)
+		return err
 	}
-
 	page := &DetailsPage{
 		basePage:       s.newBasePage(r, fmt.Sprintf("%s directory", dbDir.Path)),
 		Title:          fmt.Sprintf("directory %s", dbDir.Path),

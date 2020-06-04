@@ -65,11 +65,18 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 		// If we've already checked the latest version, then we know that this path
 		// is not a package at any version, so just skip ahead and serve the
 		// directory page.
-		return s.serveDirectoryPage(w, r, pkgPath, modulePath, version)
+		dbDir, err := s.ds.GetDirectory(ctx, pkgPath, modulePath, version, internal.AllFields)
+		if err != nil {
+			if errors.Is(err, derrors.NotFound) {
+				return pathNotFoundError(ctx, "package", pkgPath, version)
+			}
+			return err
+		}
+		return s.serveDirectoryPage(ctx, w, r, dbDir, version)
 	}
 	dir, err := s.ds.GetDirectory(ctx, pkgPath, modulePath, version, internal.AllFields)
 	if err == nil {
-		return s.serveDirectoryPageWithDirectory(ctx, w, r, dir, version)
+		return s.serveDirectoryPage(ctx, w, r, dir, version)
 	}
 	if !errors.Is(err, derrors.NotFound) {
 		// The only error we expect is NotFound, so serve an 500 here, otherwise
@@ -192,7 +199,7 @@ func (s *Server) servePackagePageNew(w http.ResponseWriter, r *http.Request, ful
 	if err != nil {
 		return err
 	}
-	return s.serveDirectoryPageWithDirectory(ctx, w, r, dir, inVersion)
+	return s.serveDirectoryPage(ctx, w, r, dir, inVersion)
 }
 
 // stdlibPathForShortcut returns a path in the stdlib that shortcut should redirect to,
