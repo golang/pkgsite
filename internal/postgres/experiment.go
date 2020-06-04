@@ -45,7 +45,7 @@ func (db *DB) InsertExperiment(ctx context.Context, e *internal.Experiment) (err
 
 // UpdateExperiment updates the specified experiment with the provided rollout value.
 func (db *DB) UpdateExperiment(ctx context.Context, e *internal.Experiment) (err error) {
-	defer derrors.Wrap(&err, "DB.updateExperimentRollout(ctx, %v)", e)
+	defer derrors.Wrap(&err, "DB.UpdateExperiment(ctx, %v)", e)
 	if e.Name == "" || e.Description == "" {
 		return fmt.Errorf("neither name nor description can be empty: %w", derrors.InvalidArgument)
 	}
@@ -55,4 +55,25 @@ func (db *DB) UpdateExperiment(ctx context.Context, e *internal.Experiment) (err
 		WHERE name = $1;`
 	_, err = db.db.Exec(ctx, query, e.Name, e.Rollout, e.Description)
 	return err
+}
+
+// RemoveExperiment removes the specified experiment.
+func (db *DB) RemoveExperiment(ctx context.Context, name string) (err error) {
+	defer derrors.Wrap(&err, "DB.RemoveExperiment(ctx, %q)", name)
+	res, err := db.db.Exec(ctx, `DELETE FROM experiments WHERE name = $1`, name)
+	if err != nil {
+		return err
+	}
+	return notFoundIfNoRows(res)
+}
+
+func notFoundIfNoRows(res sql.Result) error {
+	n, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("RowsAffected: %w", err)
+	}
+	if n == 0 {
+		return derrors.NotFound
+	}
+	return nil
 }

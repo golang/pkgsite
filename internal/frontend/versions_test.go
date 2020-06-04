@@ -153,7 +153,7 @@ func TestFetchModuleVersionDetails(t *testing.T) {
 }
 
 func TestFetchPackageVersionsDetails(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
 	defer cancel()
 
 	var (
