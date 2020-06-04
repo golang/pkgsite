@@ -53,8 +53,11 @@ func (db *DB) UpdateExperiment(ctx context.Context, e *internal.Experiment) (err
 	query := `UPDATE experiments
 		SET rollout = $2, description = $3
 		WHERE name = $1;`
-	_, err = db.db.Exec(ctx, query, e.Name, e.Rollout, e.Description)
-	return err
+	res, err := db.db.Exec(ctx, query, e.Name, e.Rollout, e.Description)
+	if err != nil {
+		return err
+	}
+	return notFoundIfNoRows(res)
 }
 
 // RemoveExperiment removes the specified experiment.

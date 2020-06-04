@@ -6,10 +6,12 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
 )
 
 func TestGetActiveExperiments(t *testing.T) {
@@ -18,7 +20,7 @@ func TestGetActiveExperiments(t *testing.T) {
 	defer cancel()
 
 	experiment := &internal.Experiment{Name: "test-experiment", Description: "test-description"}
-	if err := testDB.UpdateExperiment(ctx, experiment); err != nil {
+	if err := testDB.UpdateExperiment(ctx, experiment); !errors.Is(err, derrors.NotFound) {
 		t.Fatalf("unexpected error when updating non-existent experiment: %v", err)
 	}
 	got, err := testDB.GetExperiments(ctx)
