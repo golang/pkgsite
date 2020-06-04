@@ -30,8 +30,7 @@ func TestInsertModule(t *testing.T) {
 	defer cancel()
 	ctx = experiment.NewContext(ctx,
 		experiment.NewSet(map[string]bool{
-			internal.ExperimentInsertDirectories:  true,
-			internal.ExperimentInsertSerializable: true,
+			internal.ExperimentInsertDirectories: true,
 		}))
 
 	for _, test := range []struct {
