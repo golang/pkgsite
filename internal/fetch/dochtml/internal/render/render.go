@@ -92,10 +92,18 @@ func New(fset *token.FileSet, pkg *doc.Package, opts *Options) *Renderer {
 	}
 }
 
+const maxSynopsisNodeDepth = 10
+
+// ShortSynopsis returns a very short, one-line summary of the given input node.
+// It currently only supports *ast.FuncDecl nodes and will return a non-nil
+// error otherwise.
+func (r *Renderer) ShortSynopsis(n ast.Node) (string, error) {
+	return shortOneLineNodeDepth(r.fset, n, 0)
+}
+
 // Synopsis returns a one-line summary of the given input node.
 func (r *Renderer) Synopsis(n ast.Node) string {
-	const maxDepth = 10
-	return oneLineNodeDepth(r.fset, n, maxDepth)
+	return oneLineNodeDepth(r.fset, n, 0)
 }
 
 // DocHTML formats documentation text as HTML.

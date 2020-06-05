@@ -14,13 +14,14 @@ import (
 )
 
 // oneLineNodeDepth returns a one-line summary of the given input node.
-// The depth specifies the maximum depth when traversing the AST.
+// The depth specifies the current depth when traversing the AST and the
+// function will stop traversing once depth reaches maxSynopsisNodeDepth.
 func oneLineNodeDepth(fset *token.FileSet, node ast.Node, depth int) string {
 	const dotDotDot = "..."
-	if depth == 0 {
+	if depth == maxSynopsisNodeDepth {
 		return dotDotDot
 	}
-	depth--
+	depth++
 
 	switch n := node.(type) {
 	case nil:

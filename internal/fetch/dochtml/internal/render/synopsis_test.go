@@ -170,7 +170,7 @@ func TestOneLineNode(t *testing.T) {
 
 	// Print the imports from the file's AST.
 	for i, d := range f.Decls {
-		got := oneLineNodeDepth(fset, d, 10)
+		got := oneLineNodeDepth(fset, d, 0)
 		if got != want[i] {
 			t.Errorf("test %d, oneLineNode():\ngot  %s\nwant %s", i, got, want[i])
 		}

@@ -25,12 +25,13 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 			}
 			return a
 		},
-		"render_synopsis": (*render.Renderer)(nil).Synopsis,
-		"render_doc":      (*render.Renderer)(nil).DocHTML,
-		"render_decl":     (*render.Renderer)(nil).DeclHTML,
-		"render_code":     (*render.Renderer)(nil).CodeHTML,
-		"source_link":     func() string { return "" },
-		"play_url":        func(*doc.Example) string { return "" },
+		"render_short_synopsis": (*render.Renderer)(nil).ShortSynopsis,
+		"render_synopsis":       (*render.Renderer)(nil).Synopsis,
+		"render_doc":            (*render.Renderer)(nil).DocHTML,
+		"render_decl":           (*render.Renderer)(nil).DeclHTML,
+		"render_code":           (*render.Renderer)(nil).CodeHTML,
+		"source_link":           func() string { return "" },
+		"play_url":              func(*doc.Example) string { return "" },
 	},
 ).Parse(`{{- "" -}}
 {{- if or .Doc .Consts .Vars .Funcs .Types .Examples.List -}}
@@ -60,26 +61,44 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 
 	<li class="Documentation-tocItem Documentation-tocItem--funcsAndTypes">
 		<details class="TypesAndFuncs" open>
-			<summary class="TypesAndFuncs-summary">types and functions</summary>
+			<summary class="TypesAndFuncs-summary">Functions</summary>
 			<ul class="TypesAndFuncs-list">
 				{{- range .Funcs -}}
-				<li class="TypesAndFuncs-item">
-					<a href="#{{.Name}}">func {{.Name}}</a>
-				</li>{{"\n"}}
+					<li class="TypesAndFuncs-item">
+						<a href="#{{.Name}}" title="{{render_short_synopsis .Decl}}">{{render_short_synopsis .Decl}}</a>
+					</li>
 				{{- end -}}
-
+			</ul>
+		</details>
+	</li>
+	<li class="Documentation-tocItem Documentation-tocItem--funcsAndTypes">
+		<details class="TypesAndFuncs" open>
+			<summary class="TypesAndFuncs-summary">Types</summary>
+			<ul class="TypesAndFuncs-list">
 				{{- range .Types -}}
 					{{- $tname := .Name -}}
 					<li class="TypesAndFuncs-item"><a href="#{{$tname}}">type {{$tname}}</a></li>{{"\n"}}
 					{{- with .Funcs -}}
-						<li class="TypesAndFuncs-item TypesAndFuncs-item--noBorder"><ul>{{"\n" -}}
-						{{range .}}<li class="TypesAndFuncs-item"><a href="#{{.Name}}">func {{.Name}}</a></li>{{"\n"}}{{end}}
-						</ul></li>{{"\n" -}}
+						<li class="TypesAndFuncs-item TypesAndFuncs-item--noBorder">
+						  <ul>
+								{{range .}}
+									<li class="TypesAndFuncs-item">
+										<a href="#{{.Name}}" title="{{render_short_synopsis .Decl}}">{{render_short_synopsis .Decl}}</a>
+									</li>
+								{{end}}
+							</ul>
+						</li>
 					{{- end -}}
 					{{- with .Methods -}}
-						<li class="TypesAndFuncs-item TypesAndFuncs-item--noBorder"><ul>{{"\n" -}}
-						{{range .}}<li class="TypesAndFuncs-item"><a href="#{{$tname}}.{{.Name}}">func ({{.Recv}}) {{.Name}}</a></li>{{"\n"}}{{end}}
-						</ul></li>{{"\n" -}}
+						<li class="TypesAndFuncs-item TypesAndFuncs-item--noBorder">
+						  <ul>
+								{{range .}}
+									<li class="TypesAndFuncs-item">
+										<a href="#{{$tname}}.{{.Name}}" title="{{render_short_synopsis .Decl}}">{{render_short_synopsis .Decl}}</a>
+									</li>
+								{{end}}
+							</ul>
+						</li>
 					{{- end -}}
 				{{- end -}}
 			</ul>

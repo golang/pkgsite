@@ -100,12 +100,13 @@ func Render(fset *token.FileSet, p *doc.Package, opt RenderOptions) (string, err
 		Remain: opt.Limit,
 	}
 	err := template.Must(htmlPackage.Clone()).Funcs(map[string]interface{}{
-		"render_synopsis": r.Synopsis,
-		"render_doc":      r.DocHTML,
-		"render_decl":     r.DeclHTML,
-		"render_code":     r.CodeHTML,
-		"source_link":     sourceLink,
-		"play_url":        playURLFunc,
+		"render_short_synopsis": r.ShortSynopsis,
+		"render_synopsis":       r.Synopsis,
+		"render_doc":            r.DocHTML,
+		"render_decl":           r.DeclHTML,
+		"render_code":           r.CodeHTML,
+		"source_link":           sourceLink,
+		"play_url":              playURLFunc,
 	}).Execute(buf, struct {
 		RootURL string
 		*doc.Package
