@@ -265,24 +265,6 @@ type SearchResult struct {
 	Approximate bool
 }
 
-// AlternativeModulePath represents a module that can be:
-// (1) hosted under an alternative path (rsc.io/quote vs github.com/rsc/quote)
-// (2) a fork (github.com/myitcvforks/tools/gopls vs golang.org/x/tools)
-// (3) a case insensitive spelling (github.com/sirupsen/logrus vs github.com/Sirupsen/logrus).
-// Each of alternative module has a mismatch between the module path in its
-// go.mod file and the module path used to fetch it from the proxy.
-type AlternativeModulePath struct {
-	// Canonical is the path that can be found in the go.mod file of a
-	// package. For example, gocloud.dev is the canonical prefix for all
-	// packages in the modules gocloud.dev and github.com/google/go-cloud.
-	Canonical string
-	// Alternative is the path that should be filtered out from the
-	// discovery site search results. For example,
-	// github.com/google/go-cloud is the alternative prefix for all
-	// packages in the modules gocloud.dev and github.com/google/go-cloud.
-	Alternative string
-}
-
 // A FieldSet is a bit set of struct fields. It is used to avoid reading large
 // struct fields from the data store. FieldSet is also the type of the
 // individual bit values. (Think of them as singleton sets.)
