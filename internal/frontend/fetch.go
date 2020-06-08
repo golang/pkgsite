@@ -154,7 +154,11 @@ func (s *Server) fetchAndPoll(parentCtx context.Context, modulePath, fullPath, r
 			fmt.Sprintf("%q could not be found. Other versions of module %q may have it! Check them out at https://pkg.go.dev/mod/%s?tab=versions",
 				fullPath, moduleMatchingPathPrefix, moduleMatchingPathPrefix)
 	}
-	return http.StatusNotFound, fmt.Sprintf("%q could not be found.", fullPath)
+	p := fullPath
+	if requestedVersion != internal.LatestVersion {
+		p = fullPath + "@" + requestedVersion
+	}
+	return http.StatusNotFound, fmt.Sprintf("%q could not be found.", p)
 }
 
 func (s *Server) fetchModule(ctx context.Context, fullPath, modulePath, requestedVersion string) (fr *fetchResult) {
