@@ -191,8 +191,8 @@ func (r *Renderer) formatLineHTML(w io.Writer, line string, idr *identifierResol
 				nextChar = line[m1]
 			}
 
-			// Reduce false-positives by having a whitelist of
-			// valid characters preceding and succeeding an identifier.
+			// Reduce false-positives by having a list of allowed
+			// characters preceding and succeeding an identifier.
 			// Also, forbid ID linking within unbalanced quotes on same line.
 			validPrefix := strings.IndexByte("\x00 \t()[]*\n", lastChar) >= 0
 			validSuffix := strings.IndexByte("\x00 \t()[]:;,.'\n", nextChar) >= 0

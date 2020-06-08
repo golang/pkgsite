@@ -99,7 +99,7 @@ func readmeHTML(mi *internal.ModuleInfo) template.HTML {
 
 	// bluemonday.UGCPolicy allows a broad selection of HTML elements and
 	// attributes that are safe for user generated content. This policy does
-	// not whitelist iframes, object, embed, styles, script, etc.
+	// not allow iframes, object, embed, styles, script, etc.
 	p := bluemonday.UGCPolicy()
 
 	// Allow width and align attributes on img. This is used to size README
