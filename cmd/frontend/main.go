@@ -115,6 +115,8 @@ func main() {
 	views := append(dcensus.ServerViews,
 		postgres.SearchLatencyDistribution,
 		postgres.SearchResponseCount,
+		frontend.FrontendFetchLatencyDistribution,
+		frontend.FrontendFetchResponseCount,
 		middleware.CacheResultCount,
 		middleware.CacheErrorCount,
 		middleware.QuotaResultCount,

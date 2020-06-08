@@ -9,17 +9,20 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
+	"go.opencensus.io/plugin/ochttp"
+	"go.opencensus.io/stats"
+	"go.opencensus.io/stats/view"
+	"go.opencensus.io/tag"
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/fetch"
-
 	"golang.org/x/pkgsite/internal/experiment"
-
+	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
@@ -36,6 +39,33 @@ var (
 	errPathDoesNotExistInModule = errors.New("path does not exist in module")
 	fetchTimeout                = 30 * time.Second
 	pollEvery                   = 500 * time.Millisecond
+
+	// keyFrontendFetchStatus is a census tag for frontend fetch query types.
+	keyFrontendFetchStatus = tag.MustNewKey("frontend-fetch.status")
+	// keyFrontendFetchLatency holds observed latency in individual
+	// frontend fetch queries.
+	keyFrontendFetchLatency = stats.Float64(
+		"go-discovery/frontend-fetch/latency",
+		"Latency of a frontend fetch request.",
+		stats.UnitMilliseconds,
+	)
+	// FrontendFetchLatencyDistribution aggregates frontend fetch request
+	// latency by status code.
+	FrontendFetchLatencyDistribution = &view.View{
+		Name:        "go-discovery/frontend-fetch/latency",
+		Measure:     keyFrontendFetchLatency,
+		Aggregation: ochttp.DefaultLatencyDistribution,
+		Description: "FrontendFetch latency, by result source query type.",
+		TagKeys:     []tag.Key{keyFrontendFetchStatus},
+	}
+	// FrontendFetchResponseCount counts frontend fetch responses by response type.
+	FrontendFetchResponseCount = &view.View{
+		Name:        "go-discovery/frontend-fetch/count",
+		Measure:     keyFrontendFetchLatency,
+		Aggregation: view.Count(),
+		Description: "Frontend fetch request count",
+		TagKeys:     []tag.Key{keyFrontendFetchStatus},
+	}
 )
 
 // fetchHandler checks if a requested path and version exists in the database.
@@ -65,7 +95,9 @@ func (s *Server) fetchHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
+	start := time.Now()
 	status, responseText := s.fetchAndPoll(r.Context(), modulePath, fullPath, requestedVersion)
+	recordFrontendFetchMetric(status, time.Since(start))
 	if status != http.StatusOK {
 		http.Error(w, responseText, status)
 		return
@@ -426,4 +458,11 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 func isActiveFrontendFetch(ctx context.Context) bool {
 	return experiment.IsActive(ctx, internal.ExperimentFrontendFetch) &&
 		experiment.IsActive(ctx, internal.ExperimentInsertDirectories)
+}
+
+func recordFrontendFetchMetric(status int, latency time.Duration) {
+	l := float64(latency) / float64(time.Millisecond)
+	stats.RecordWithTags(context.Background(), []tag.Mutator{
+		tag.Upsert(keyFrontendFetchStatus, strconv.Itoa(status)),
+	}, keyFrontendFetchLatency.M(l))
 }
