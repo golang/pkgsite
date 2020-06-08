@@ -279,7 +279,8 @@ func (db *DB) bulkInsert(ctx context.Context, table string, columns, returningCo
 		if returningColumns == nil {
 			_, err = stmt.ExecContext(ctx, valueSlice...)
 		} else {
-			rows, err := stmt.QueryContext(ctx, valueSlice...)
+			var rows *sql.Rows
+			rows, err = stmt.QueryContext(ctx, valueSlice...)
 			if err != nil {
 				return err
 			}
