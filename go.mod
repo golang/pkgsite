@@ -30,9 +30,10 @@ require (
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
-	golang.org/x/tools v0.0.0-20200413161937-250b2131eb8b // indirect
+	golang.org/x/tools v0.0.0-20200606014950-c42cb6316fb6 // indirect
 	google.golang.org/genproto v0.0.0-20200430143042-b979b6f78d84
 	google.golang.org/grpc v1.28.0
 	gopkg.in/src-d/go-billy.v4 v4.3.2
 	gopkg.in/src-d/go-git.v4 v4.13.1
+	honnef.co/go/tools v0.0.1-2020.1.4 // indirect
 )
