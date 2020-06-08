@@ -32,10 +32,10 @@ var moduleOnePackage = &testModule{
 	fr: &FetchResult{
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath:     "github.com/basic",
-				ReadmeFilePath: "README.md",
-				ReadmeContents: "THIS IS A README",
-				HasGoMod:       false,
+				ModulePath:           "github.com/basic",
+				LegacyReadmeFilePath: "README.md",
+				LegacyReadmeContents: "THIS IS A README",
+				HasGoMod:             false,
 			},
 			Directories: []*internal.DirectoryNew{
 				{
@@ -99,11 +99,11 @@ var moduleMultiPackage = &testModule{
 	fr: &FetchResult{
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath:     "github.com/my/module",
-				HasGoMod:       true,
-				ReadmeFilePath: "README.md",
-				ReadmeContents: "README FILE FOR TESTING.",
-				SourceInfo:     source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
+				ModulePath:           "github.com/my/module",
+				HasGoMod:             true,
+				LegacyReadmeFilePath: "README.md",
+				LegacyReadmeContents: "README FILE FOR TESTING.",
+				SourceInfo:           source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
 			},
 			Directories: []*internal.DirectoryNew{
 				{
@@ -372,10 +372,10 @@ var moduleNonRedist = &testModule{
 	fr: &FetchResult{
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath:     "nonredistributable.mod/module",
-				ReadmeFilePath: "README.md",
-				ReadmeContents: "README FILE FOR TESTING.",
-				HasGoMod:       true,
+				ModulePath:           "nonredistributable.mod/module",
+				LegacyReadmeFilePath: "README.md",
+				LegacyReadmeContents: "README FILE FOR TESTING.",
+				HasGoMod:             true,
 			},
 			Directories: []*internal.DirectoryNew{
 				{
@@ -548,10 +548,10 @@ var moduleWasm = &testModule{
 	fr: &FetchResult{
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath:     "github.com/my/module/js",
-				ReadmeFilePath: "README.md",
-				ReadmeContents: "THIS IS A README",
-				SourceInfo:     source.NewGitHubInfo("https://github.com/my/module", "js", "js/v1.0.0"),
+				ModulePath:           "github.com/my/module/js",
+				LegacyReadmeFilePath: "README.md",
+				LegacyReadmeContents: "THIS IS A README",
+				SourceInfo:           source.NewGitHubInfo("https://github.com/my/module", "js", "js/v1.0.0"),
 			},
 			Directories: []*internal.DirectoryNew{
 				{
@@ -598,13 +598,13 @@ var moduleStd = &testModule{
 	fr: &FetchResult{
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath:     "std",
-				Version:        "v1.12.5",
-				CommitTime:     stdlib.TestCommitTime,
-				ReadmeFilePath: "README.md",
-				ReadmeContents: "# The Go Programming Language\n",
-				HasGoMod:       true,
-				SourceInfo:     source.NewGitHubInfo("https://github.com/golang/go", "src", "go1.12.5"),
+				ModulePath:           "std",
+				Version:              "v1.12.5",
+				CommitTime:           stdlib.TestCommitTime,
+				LegacyReadmeFilePath: "README.md",
+				LegacyReadmeContents: "# The Go Programming Language\n",
+				HasGoMod:             true,
+				SourceInfo:           source.NewGitHubInfo("https://github.com/golang/go", "src", "go1.12.5"),
 			},
 			Directories: []*internal.DirectoryNew{
 				{

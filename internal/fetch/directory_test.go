@@ -57,9 +57,9 @@ func TestDirectoryPaths(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			var packages []*internal.Package
+			var packages []*internal.LegacyPackage
 			for _, suffix := range test.packageSuffixes {
-				packages = append(packages, sample.Package(test.modulePath, suffix))
+				packages = append(packages, sample.LegacyPackage(test.modulePath, suffix))
 			}
 			got := directoryPaths(test.modulePath, packages)
 			sort.Strings(got)

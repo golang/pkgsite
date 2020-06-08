@@ -58,18 +58,18 @@ type DataSource interface {
 	// nested) subdirectory of the given directory path. When multiple
 	// package paths satisfy this query, it should prefer the module with
 	// the longest path.
-	GetDirectory(ctx context.Context, dirPath, modulePath, version string, fields FieldSet) (_ *Directory, err error)
+	GetDirectory(ctx context.Context, dirPath, modulePath, version string, fields FieldSet) (_ *LegacyDirectory, err error)
 	// GetModuleLicenses returns all top-level Licenses for the given modulePath
 	// and version. (i.e., Licenses contained in the module root directory)
 	GetModuleLicenses(ctx context.Context, modulePath, version string) ([]*licenses.License, error)
-	// GetPackage returns the VersionedPackage corresponding to the given package
+	// GetPackage returns the LegacyVersionedPackage corresponding to the given package
 	// pkgPath, modulePath, and version. When multiple package paths satisfy this query, it
 	// should prefer the module with the longest path.
-	GetPackage(ctx context.Context, pkgPath, modulePath, version string) (*VersionedPackage, error)
+	GetPackage(ctx context.Context, pkgPath, modulePath, version string) (*LegacyVersionedPackage, error)
 	// GetPackageLicenses returns all Licenses that apply to pkgPath, within the
 	// module version specified by modulePath and version.
 	GetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) ([]*licenses.License, error)
-	// GetPackagesInModule returns Packages contained in the module version
+	// GetPackagesInModule returns LegacyPackages contained in the module version
 	// specified by modulePath and version.
-	GetPackagesInModule(ctx context.Context, modulePath, version string) ([]*Package, error)
+	GetPackagesInModule(ctx context.Context, modulePath, version string) ([]*LegacyPackage, error)
 }

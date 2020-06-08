@@ -62,7 +62,7 @@ func TestInsertModule(t *testing.T) {
 			name: "stdlib",
 			module: func() *internal.Module {
 				m := sample.Module("std", "v1.12.5")
-				p := &internal.Package{
+				p := &internal.LegacyPackage{
 					Name:              "context",
 					Path:              "context",
 					Synopsis:          "This is a package synopsis",
@@ -92,7 +92,7 @@ func TestInsertModule(t *testing.T) {
 				t.Fatalf("testDB.GetModuleInfo(%q, %q) mismatch (-want +got):\n%s", test.module.ModulePath, test.module.Version, diff)
 			}
 
-			for _, want := range test.module.Packages {
+			for _, want := range test.module.LegacyPackages {
 				got, err := testDB.GetPackage(ctx, want.Path, test.module.ModulePath, test.module.Version)
 				if err != nil {
 					t.Fatal(err)
@@ -101,11 +101,11 @@ func TestInsertModule(t *testing.T) {
 					// The packages table only includes partial
 					// license information; it omits the Coverage
 					// field.
-					cmpopts.IgnoreFields(internal.Package{}, "Imports"),
+					cmpopts.IgnoreFields(internal.LegacyPackage{}, "Imports"),
 					cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 					cmpopts.EquateEmpty(),
 				}
-				if diff := cmp.Diff(*want, got.Package, opts...); diff != "" {
+				if diff := cmp.Diff(*want, got.LegacyPackage, opts...); diff != "" {
 					t.Fatalf("testDB.GetPackage(%q, %q) mismatch (-want +got):\n%s", want.Path, test.module.Version, diff)
 				}
 
@@ -121,8 +121,8 @@ func TestInsertModule(t *testing.T) {
 					ModuleInfo:   test.module.ModuleInfo,
 				}
 				opts := cmp.Options{
-					cmpopts.IgnoreFields(internal.ModuleInfo{}, "ReadmeFilePath"),
-					cmpopts.IgnoreFields(internal.ModuleInfo{}, "ReadmeContents"),
+					cmpopts.IgnoreFields(internal.ModuleInfo{}, "LegacyReadmeFilePath"),
+					cmpopts.IgnoreFields(internal.ModuleInfo{}, "LegacyReadmeContents"),
 					cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 					cmp.AllowUnexported(source.Info{}),
 				}
@@ -294,7 +294,7 @@ func TestPostgres_NewerAlternative(t *testing.T) {
 	if err := testDB.InsertModule(ctx, m); err != nil {
 		t.Fatal(err)
 	}
-	if _, _, found := GetFromSearchDocuments(ctx, t, testDB, m.Packages[0].Path); found {
+	if _, _, found := GetFromSearchDocuments(ctx, t, testDB, m.LegacyPackages[0].Path); found {
 		t.Fatal("found package after inserting")
 	}
 }

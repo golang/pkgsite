@@ -49,7 +49,7 @@ func setup(t *testing.T) (context.Context, *DataSource, func()) {
 var (
 	wantLicenseMD = sample.LicenseMetadata[0]
 	wantLicense   = &licenses.License{Metadata: wantLicenseMD}
-	wantPackage   = internal.Package{
+	wantPackage   = internal.LegacyPackage{
 		Path:              "foo.com/bar/baz",
 		Name:              "baz",
 		Imports:           []string{"net/http"},
@@ -68,12 +68,12 @@ var (
 		IsRedistributable: true,
 		HasGoMod:          true,
 	}
-	wantVersionedPackage = &internal.VersionedPackage{
-		ModuleInfo: wantModuleInfo,
-		Package:    wantPackage,
+	wantVersionedPackage = &internal.LegacyVersionedPackage{
+		ModuleInfo:    wantModuleInfo,
+		LegacyPackage: wantPackage,
 	}
 	cmpOpts = append([]cmp.Option{
-		cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML"),
+		cmpopts.IgnoreFields(internal.LegacyPackage{}, "DocumentationHTML"),
 		cmpopts.IgnoreFields(licenses.License{}, "Contents"),
 	}, sample.LicenseCmpOpts...)
 )
@@ -81,10 +81,10 @@ var (
 func TestDataSource_GetDirectory(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
-	want := &internal.Directory{
+	want := &internal.LegacyDirectory{
 		Path:       "foo.com/bar",
 		ModuleInfo: wantModuleInfo,
-		Packages:   []*internal.Package{&wantPackage},
+		Packages:   []*internal.LegacyPackage{&wantPackage},
 	}
 	got, err := ds.GetDirectory(ctx, "foo.com/bar", internal.UnknownModulePath, "v1.2.0", internal.AllFields)
 	if err != nil {
@@ -177,7 +177,7 @@ func TestDataSource_GetPackagesInVersion(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []*internal.Package{&wantPackage}
+	want := []*internal.LegacyPackage{&wantPackage}
 	if diff := cmp.Diff(want, got, cmpOpts...); diff != "" {
 		t.Errorf("GetPackagesInVersion diff (-want +got):\n%s", diff)
 	}

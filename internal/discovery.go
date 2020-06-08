@@ -32,15 +32,15 @@ const (
 
 // ModuleInfo holds metadata associated with a module.
 type ModuleInfo struct {
-	ModulePath        string
-	Version           string
-	CommitTime        time.Time
-	ReadmeFilePath    string
-	ReadmeContents    string
-	VersionType       version.Type
-	IsRedistributable bool
-	HasGoMod          bool // whether the module zip has a go.mod file
-	SourceInfo        *source.Info
+	ModulePath           string
+	Version              string
+	CommitTime           time.Time
+	VersionType          version.Type
+	IsRedistributable    bool
+	HasGoMod             bool // whether the module zip has a go.mod file
+	SourceInfo           *source.Info
+	LegacyReadmeFilePath string
+	LegacyReadmeContents string
 }
 
 // VersionMap holds metadata associated with module queries for a version.
@@ -65,7 +65,8 @@ type VersionMap struct {
 //
 // Examples:
 // The module paths "a/b" and "a/b/v2"  both have series path "a/b".
-// The module paths "gopkg.in/yaml.v1" and "gopkg.in/yaml.v2" both have series path "gopkg.in/yaml".
+// The module paths "gopkg.in/yaml.v1" and "gopkg.in/yaml.v2" both have series
+// path "gopkg.in/yaml".
 func (v *ModuleInfo) SeriesPath() string {
 	return SeriesPathForModule(v.ModulePath)
 }
@@ -89,45 +90,12 @@ func V1Path(modulePath, suffix string) string {
 // A Module is a specific, reproducible build of a module.
 type Module struct {
 	ModuleInfo
-	Packages []*Package
 	// Licenses holds all licenses within this module version, including those
 	// that may be contained in nested subdirectories.
-	Licenses []*licenses.License
-
+	Licenses    []*licenses.License
 	Directories []*DirectoryNew
-}
 
-// A Package is a group of one or more Go source files with the same package
-// header. Packages are part of a module.
-type Package struct {
-	Path              string
-	Name              string
-	Synopsis          string
-	IsRedistributable bool
-	Licenses          []*licenses.Metadata // metadata of applicable version licenses
-	Imports           []string
-	DocumentationHTML string
-	// The values of the GOOS and GOARCH environment variables used to parse the package.
-	GOOS   string
-	GOARCH string
-
-	// V1Path is the package path of a package with major version 1 in a given series.
-	V1Path string
-}
-
-// VersionedPackage is a Package along with its corresponding module
-// information.
-type VersionedPackage struct {
-	Package
-	ModuleInfo
-}
-
-// Directory represents a folder in a module version, and all of the packages
-// inside that folder.
-type Directory struct {
-	ModuleInfo
-	Path     string
-	Packages []*Package
+	LegacyPackages []*LegacyPackage
 }
 
 // VersionedDirectory is a DirectoryNew along with its corresponding module
@@ -138,19 +106,20 @@ type VersionedDirectory struct {
 }
 
 // DirectoryNew is a folder in a module version, and all of the packages
-// inside that folder. It will replace Directory once everything has been migrated.
+// inside that folder. It will replace LegacyDirectory once everything has been
+// migrated.
 type DirectoryNew struct {
 	Path              string
 	V1Path            string
 	IsRedistributable bool
-	Licenses          []*licenses.Metadata // metadata of applicable version licenses
+	Licenses          []*licenses.Metadata // metadata of applicable licenses
 	Readme            *Readme
 	Package           *PackageNew
 }
 
 // PackageNew is a group of one or more Go source files with the same package
 // header. A PackageNew is part of a directory.
-// It will replace Package once everything has been migrated.
+// It will replace LegacyPackage once everything has been migrated.
 type PackageNew struct {
 	Name          string
 	Path          string
@@ -161,7 +130,8 @@ type PackageNew struct {
 // Documentation is the rendered documentation for a given package
 // for a specific GOOS and GOARCH.
 type Documentation struct {
-	// The values of the GOOS and GOARCH environment variables used to parse the package.
+	// The values of the GOOS and GOARCH environment variables used to parse the
+	// package.
 	GOOS     string
 	GOARCH   string
 	Synopsis string
@@ -248,10 +218,11 @@ type SearchResult struct {
 	// Score is used to sort items in an array of SearchResult.
 	Score float64
 
-	// NumImportedBy is the number of packages that import Package.
+	// NumImportedBy is the number of packages that import PackagePath.
 	NumImportedBy uint64
 
-	// NumResults is the total number of packages that were returned for this search.
+	// NumResults is the total number of packages that were returned for this
+	// search.
 	NumResults uint64
 	// Approximate reports whether NumResults is an approximate count. NumResults
 	// can be approximate if search scanned only a subset of documents, and
@@ -267,10 +238,11 @@ type SearchResult struct {
 // every field.
 //
 // FieldSet bits are unique across the entire project, because some types are
-// concatenations (via embedding) of others. For example, a VersionedPackage
-// contains the fields of both a ModuleInfo and a Package, so we can't use the
-// same bits for both ModuleInfo's ReadmeContents field and Package's
-// DocumentationHTML field.
+// concatenations (via embedding) of others. For example, a
+// LegacyVersionedPackage contains the fields of both a ModuleInfo and a
+// LegacyPackage, so we can't use the
+// same bits for both ModuleInfo's LegacyReadmeContents field and
+// LegacyPackage's DocumentationHTML field.
 type FieldSet int64
 
 // MinimalFields is the empty FieldSet.
@@ -289,3 +261,38 @@ const (
 	WithReadmeContents FieldSet = 1 << iota
 	WithDocumentationHTML
 )
+
+// LegacyDirectory represents a folder in a module version, and all of the
+// packages inside that folder.
+type LegacyDirectory struct {
+	ModuleInfo
+	Path     string
+	Packages []*LegacyPackage
+}
+
+// A LegacyPackage is a group of one or more Go source files with the same
+// package header. LegacyPackages are part of a module.
+type LegacyPackage struct {
+	Path              string
+	Name              string
+	Synopsis          string
+	IsRedistributable bool
+	Licenses          []*licenses.Metadata // metadata of applicable licenses
+	Imports           []string
+	DocumentationHTML string
+	// The values of the GOOS and GOARCH environment variables used to parse the
+	// package.
+	GOOS   string
+	GOARCH string
+
+	// V1Path is the package path of a package with major version 1 in a given
+	// series.
+	V1Path string
+}
+
+// LegacyVersionedPackage is a LegacyPackage along with its corresponding module
+// information.
+type LegacyVersionedPackage struct {
+	LegacyPackage
+	ModuleInfo
+}

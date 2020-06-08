@@ -25,14 +25,14 @@ func TestFetchSearchPage(t *testing.T) {
 		now       = sample.NowTruncated()
 		moduleFoo = &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath:        "github.com/mod/foo",
-				Version:           "v1.0.0",
-				ReadmeContents:    "readme",
-				CommitTime:        now,
-				VersionType:       version.TypeRelease,
-				IsRedistributable: true,
+				ModulePath:           "github.com/mod/foo",
+				Version:              "v1.0.0",
+				LegacyReadmeContents: "readme",
+				CommitTime:           now,
+				VersionType:          version.TypeRelease,
+				IsRedistributable:    true,
 			},
-			Packages: []*internal.Package{
+			LegacyPackages: []*internal.LegacyPackage{
 				{
 					Name:              "foo",
 					Path:              "/path/to/foo",
@@ -44,14 +44,14 @@ func TestFetchSearchPage(t *testing.T) {
 		}
 		moduleBar = &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath:        "github.com/mod/bar",
-				Version:           "v1.0.0",
-				ReadmeContents:    "readme",
-				CommitTime:        now,
-				VersionType:       version.TypeRelease,
-				IsRedistributable: true,
+				ModulePath:           "github.com/mod/bar",
+				Version:              "v1.0.0",
+				LegacyReadmeContents: "readme",
+				CommitTime:           now,
+				VersionType:          version.TypeRelease,
+				IsRedistributable:    true,
 			},
-			Packages: []*internal.Package{
+			LegacyPackages: []*internal.LegacyPackage{
 				{
 					Name:              "bar",
 					Path:              "/path/to/bar",
@@ -84,10 +84,10 @@ func TestFetchSearchPage(t *testing.T) {
 				},
 				Results: []*SearchResult{
 					{
-						Name:           moduleBar.Packages[0].Name,
-						PackagePath:    moduleBar.Packages[0].Path,
+						Name:           moduleBar.LegacyPackages[0].Name,
+						PackagePath:    moduleBar.LegacyPackages[0].Path,
 						ModulePath:     moduleBar.ModulePath,
-						Synopsis:       moduleBar.Packages[0].Synopsis,
+						Synopsis:       moduleBar.LegacyPackages[0].Synopsis,
 						DisplayVersion: moduleBar.Version,
 						Licenses:       []string{"MIT"},
 						CommitTime:     elapsedTime(moduleBar.CommitTime),
@@ -112,10 +112,10 @@ func TestFetchSearchPage(t *testing.T) {
 				},
 				Results: []*SearchResult{
 					{
-						Name:           moduleFoo.Packages[0].Name,
-						PackagePath:    moduleFoo.Packages[0].Path,
+						Name:           moduleFoo.LegacyPackages[0].Name,
+						PackagePath:    moduleFoo.LegacyPackages[0].Path,
 						ModulePath:     moduleFoo.ModulePath,
-						Synopsis:       moduleFoo.Packages[0].Synopsis,
+						Synopsis:       moduleFoo.LegacyPackages[0].Synopsis,
 						DisplayVersion: moduleFoo.Version,
 						Licenses:       []string{"MIT"},
 						CommitTime:     elapsedTime(moduleFoo.CommitTime),

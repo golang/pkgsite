@@ -28,7 +28,7 @@ type DocumentationDetails struct {
 var addDocQueryParam = true
 
 // fetchDocumentationDetails returns a DocumentationDetails constructed from pkg.
-func fetchDocumentationDetails(pkg *internal.VersionedPackage) *DocumentationDetails {
+func fetchDocumentationDetails(pkg *internal.LegacyVersionedPackage) *DocumentationDetails {
 	docHTML := pkg.DocumentationHTML
 	if addDocQueryParam {
 		docHTML = hackUpDocumentation(docHTML)

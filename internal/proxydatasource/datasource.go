@@ -67,7 +67,7 @@ type versionEntry struct {
 }
 
 // GetDirectory returns packages contained in the given subdirectory of a module version.
-func (ds *DataSource) GetDirectory(ctx context.Context, dirPath, modulePath, version string, _ internal.FieldSet) (_ *internal.Directory, err error) {
+func (ds *DataSource) GetDirectory(ctx context.Context, dirPath, modulePath, version string, _ internal.FieldSet) (_ *internal.LegacyDirectory, err error) {
 	defer derrors.Wrap(&err, "GetDirectory(%q, %q, %q)", dirPath, modulePath, version)
 
 	var info *proxy.VersionInfo
@@ -82,10 +82,10 @@ func (ds *DataSource) GetDirectory(ctx context.Context, dirPath, modulePath, ver
 	if err != nil {
 		return nil, err
 	}
-	return &internal.Directory{
+	return &internal.LegacyDirectory{
 		Path:       dirPath,
 		ModuleInfo: v.ModuleInfo,
-		Packages:   v.Packages,
+		Packages:   v.LegacyPackages,
 	}, nil
 }
 
@@ -136,11 +136,11 @@ func (ds *DataSource) GetModuleLicenses(ctx context.Context, modulePath, version
 	return filtered, nil
 }
 
-// GetPackage returns a VersionedPackage for the given pkgPath and version. If
+// GetPackage returns a LegacyVersionedPackage for the given pkgPath and version. If
 // such a package exists in the cache, it will be returned without querying the
 // proxy. Otherwise, the proxy is queried to find the longest module path at
 // that version containing the package.
-func (ds *DataSource) GetPackage(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.VersionedPackage, err error) {
+func (ds *DataSource) GetPackage(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.LegacyVersionedPackage, err error) {
 	defer derrors.Wrap(&err, "GetPackage(%q, %q)", pkgPath, version)
 
 	var m *internal.Module
@@ -163,7 +163,7 @@ func (ds *DataSource) GetPackageLicenses(ctx context.Context, pkgPath, modulePat
 	if err != nil {
 		return nil, err
 	}
-	for _, p := range v.Packages {
+	for _, p := range v.LegacyPackages {
 		if p.Path == pkgPath {
 			var lics []*licenses.License
 			for _, lmd := range p.Licenses {
@@ -181,14 +181,14 @@ func (ds *DataSource) GetPackageLicenses(ctx context.Context, pkgPath, modulePat
 	return nil, fmt.Errorf("package %s is missing from module %s: %w", pkgPath, modulePath, derrors.NotFound)
 }
 
-// GetPackagesInModule returns Packages contained in the module zip corresponding to modulePath and version.
-func (ds *DataSource) GetPackagesInModule(ctx context.Context, modulePath, version string) (_ []*internal.Package, err error) {
+// GetPackagesInModule returns LegacyPackages contained in the module zip corresponding to modulePath and version.
+func (ds *DataSource) GetPackagesInModule(ctx context.Context, modulePath, version string) (_ []*internal.LegacyPackage, err error) {
 	defer derrors.Wrap(&err, "GetPackagesInModule(%q, %q)", modulePath, version)
 	v, err := ds.getModule(ctx, modulePath, version)
 	if err != nil {
 		return nil, err
 	}
-	return v.Packages, nil
+	return v.LegacyPackages, nil
 }
 
 // GetPseudoVersionsForModule returns versions from the the proxy /list
@@ -270,7 +270,7 @@ func (ds *DataSource) getModule(ctx context.Context, modulePath, version string)
 	// be a bit more careful and check that it is new. To do this, we can
 	// leverage the invariant that module paths in packagePathToModules are kept
 	// sorted in descending order of length.
-	for _, pkg := range m.Packages {
+	for _, pkg := range m.LegacyPackages {
 		var (
 			i   int
 			mp  string
@@ -403,15 +403,15 @@ func (ds *DataSource) findModulePathForPackage(pkgPath, version string) (string,
 	return "", false
 }
 
-// packageFromVersion extracts the VersionedPackage for pkgPath from the
+// packageFromVersion extracts the LegacyVersionedPackage for pkgPath from the
 // Version payload.
-func packageFromVersion(pkgPath string, m *internal.Module) (_ *internal.VersionedPackage, err error) {
+func packageFromVersion(pkgPath string, m *internal.Module) (_ *internal.LegacyVersionedPackage, err error) {
 	defer derrors.Wrap(&err, "packageFromVersion(%q, ...)", pkgPath)
-	for _, p := range m.Packages {
+	for _, p := range m.LegacyPackages {
 		if p.Path == pkgPath {
-			return &internal.VersionedPackage{
-				Package:    *p,
-				ModuleInfo: m.ModuleInfo,
+			return &internal.LegacyVersionedPackage{
+				LegacyPackage: *p,
+				ModuleInfo:    m.ModuleInfo,
 			}, nil
 		}
 	}
@@ -445,7 +445,7 @@ func (ds *DataSource) GetPathInfo(ctx context.Context, path, inModulePath, inVer
 		return "", "", false, err
 	}
 	isPackage = false
-	for _, p := range m.Packages {
+	for _, p := range m.LegacyPackages {
 		if p.Path == path {
 			isPackage = true
 			break

@@ -48,17 +48,17 @@ func constructOverviewDetails(mi *internal.ModuleInfo, isRedistributable bool, v
 		Redistributable: isRedistributable,
 	}
 	if overview.Redistributable {
-		overview.ReadMeSource = fileSource(mi.ModulePath, mi.Version, mi.ReadmeFilePath)
+		overview.ReadMeSource = fileSource(mi.ModulePath, mi.Version, mi.LegacyReadmeFilePath)
 		overview.ReadMe = readmeHTML(mi)
 	}
 	return overview
 }
 
 // fetchPackageOverviewDetails uses data for the given package to return an OverviewDetails.
-func fetchPackageOverviewDetails(pkg *internal.VersionedPackage, versionedLinks bool) *OverviewDetails {
-	od := constructOverviewDetails(&pkg.ModuleInfo, pkg.Package.IsRedistributable, versionedLinks)
+func fetchPackageOverviewDetails(pkg *internal.LegacyVersionedPackage, versionedLinks bool) *OverviewDetails {
+	od := constructOverviewDetails(&pkg.ModuleInfo, pkg.LegacyPackage.IsRedistributable, versionedLinks)
 	od.PackageSourceURL = pkg.SourceInfo.DirectoryURL(packageSubdir(pkg.Path, pkg.ModulePath))
-	if !pkg.Package.IsRedistributable {
+	if !pkg.LegacyPackage.IsRedistributable {
 		od.Redistributable = false
 	}
 	return od
@@ -90,11 +90,11 @@ func packageSubdir(pkgPath, modulePath string) string {
 // a template.HTML. If readmeFilePath indicates that this is a markdown file,
 // it will also render the markdown contents using blackfriday.
 func readmeHTML(mi *internal.ModuleInfo) template.HTML {
-	if len(mi.ReadmeContents) == 0 {
+	if len(mi.LegacyReadmeContents) == 0 {
 		return ""
 	}
-	if !isMarkdown(mi.ReadmeFilePath) {
-		return template.HTML(fmt.Sprintf(`<pre class="readme">%s</pre>`, html.EscapeString(string(mi.ReadmeContents))))
+	if !isMarkdown(mi.LegacyReadmeFilePath) {
+		return template.HTML(fmt.Sprintf(`<pre class="readme">%s</pre>`, html.EscapeString(string(mi.LegacyReadmeContents))))
 	}
 
 	// bluemonday.UGCPolicy allows a broad selection of HTML elements and
@@ -114,7 +114,7 @@ func readmeHTML(mi *internal.ModuleInfo) template.HTML {
 	// Render HTML similar to blackfriday.Run(), but here we implement a custom
 	// Walk function in order to modify image paths in the rendered HTML.
 	b := &bytes.Buffer{}
-	rootNode := parser.Parse([]byte(mi.ReadmeContents))
+	rootNode := parser.Parse([]byte(mi.LegacyReadmeContents))
 	rootNode.Walk(func(node *blackfriday.Node, entering bool) blackfriday.WalkStatus {
 		if node.Type == blackfriday.Image || node.Type == blackfriday.Link {
 			translateRelativeLink(node, mi)
@@ -149,7 +149,7 @@ func translateRelativeLink(node *blackfriday.Node, mi *internal.ModuleInfo) {
 		return
 	}
 	// Paths are relative to the README location.
-	destPath := path.Join(path.Dir(mi.ReadmeFilePath), path.Clean(destURL.Path))
+	destPath := path.Join(path.Dir(mi.LegacyReadmeFilePath), path.Clean(destURL.Path))
 	var newURL string
 	if node.Type == blackfriday.Image {
 		newURL = mi.SourceInfo.RawURL(destPath)

@@ -26,7 +26,7 @@ type DirectoryPage struct {
 	BreadcrumbPath template.HTML
 }
 
-// Directory contains information for an individual directory.
+// LegacyDirectory contains information for an individual directory.
 type Directory struct {
 	Module
 	Path     string
@@ -34,7 +34,7 @@ type Directory struct {
 	URL      string
 }
 
-func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, r *http.Request, dbDir *internal.Directory, requestedVersion string) (err error) {
+func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, r *http.Request, dbDir *internal.LegacyDirectory, requestedVersion string) (err error) {
 	defer derrors.Wrap(&err, "serveDirectoryPage for %s@%s", dbDir.Path, requestedVersion)
 	tab := r.FormValue("tab")
 	settings, ok := directoryTabLookup[tab]
@@ -74,7 +74,7 @@ func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, 
 }
 
 // fetchDirectoryDetails fetches data for the directory specified by path and
-// version from the database and returns a Directory.
+// version from the database and returns a LegacyDirectory.
 //
 // includeDirPath indicates whether a package is included if its import path is
 // the same as dirPath.
@@ -96,7 +96,7 @@ func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, dirPath 
 		if err != nil {
 			return nil, err
 		}
-		return createDirectory(&internal.Directory{
+		return createDirectory(&internal.LegacyDirectory{
 			ModuleInfo: *mi,
 			Path:       dirPath,
 			Packages:   pkgs,
@@ -105,7 +105,7 @@ func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, dirPath 
 
 	dbDir, err := ds.GetDirectory(ctx, dirPath, mi.ModulePath, mi.Version, internal.AllFields)
 	if errors.Is(err, derrors.NotFound) {
-		return createDirectory(&internal.Directory{
+		return createDirectory(&internal.LegacyDirectory{
 			ModuleInfo: *mi,
 			Path:       dirPath,
 			Packages:   nil,
@@ -117,7 +117,7 @@ func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, dirPath 
 	return createDirectory(dbDir, licmetas, includeDirPath)
 }
 
-// createDirectory constructs a *Directory from the provided dbDir and licmetas.
+// createDirectory constructs a *LegacyDirectory from the provided dbDir and licmetas.
 //
 // includeDirPath indicates whether a package is included if its import path is
 // the same as dirPath.
@@ -126,7 +126,7 @@ func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, dirPath 
 // the module path. However, on the package and directory view's
 // "Subdirectories" tab, we do not want to include packages whose import paths
 // are the same as the dirPath.
-func createDirectory(dbDir *internal.Directory, licmetas []*licenses.Metadata, includeDirPath bool) (_ *Directory, err error) {
+func createDirectory(dbDir *internal.LegacyDirectory, licmetas []*licenses.Metadata, includeDirPath bool) (_ *Directory, err error) {
 	defer derrors.Wrap(&err, "createDirectory(%q, %q, %t)", dbDir.Path, dbDir.Version, includeDirPath)
 
 	var packages []*Package

@@ -121,7 +121,7 @@ func (i *Info) RawURL(pathname string) string {
 	// Special case: the standard library's source module path is set to "src",
 	// which is correct for source file links. But the README is at the repo
 	// root, not in the src directory. In other words,
-	// VersionInfo.ReadmeFilePath is not relative to
+	// VersionInfo.LegacyReadmeFilePath is not relative to
 	// VersionInfo.SourceInfo.moduleDir, as it is for every other module.
 	// Correct for that here.
 	if i.repoURL == stdlib.GoSourceRepoURL {

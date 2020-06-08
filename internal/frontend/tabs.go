@@ -93,7 +93,7 @@ var (
 		{
 			Name:              "packages",
 			AlwaysShowDetails: true,
-			DisplayName:       "Packages",
+			DisplayName:       "LegacyPackages",
 			TemplateName:      "subdirectories.tmpl",
 		},
 		{
@@ -141,7 +141,7 @@ func init() {
 
 // fetchDetailsForPackage returns tab details by delegating to the correct detail
 // handler.
-func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds internal.DataSource, pkg *internal.VersionedPackage) (interface{}, error) {
+func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds internal.DataSource, pkg *internal.LegacyVersionedPackage) (interface{}, error) {
 	switch tab {
 	case "doc":
 		return fetchDocumentationDetails(pkg), nil
@@ -206,7 +206,7 @@ func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds 
 
 // constructDetailsForDirectory returns tab details by delegating to the correct
 // detail handler.
-func constructDetailsForDirectory(r *http.Request, tab string, dir *internal.Directory, licenses []*licenses.License) (interface{}, error) {
+func constructDetailsForDirectory(r *http.Request, tab string, dir *internal.LegacyDirectory, licenses []*licenses.License) (interface{}, error) {
 	switch tab {
 	case "overview":
 		return constructOverviewDetails(&dir.ModuleInfo, dir.ModuleInfo.IsRedistributable, urlIsVersioned(r.URL)), nil

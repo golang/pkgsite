@@ -16,11 +16,11 @@ import (
 // moduleDirectories returns all of the directories in a given module, along
 // with the contents for those directories.
 func moduleDirectories(modulePath string,
-	pkgs []*internal.Package,
+	pkgs []*internal.LegacyPackage,
 	readmes []*internal.Readme,
 	d *licenses.Detector) []*internal.DirectoryNew {
 
-	pkgLookup := map[string]*internal.Package{}
+	pkgLookup := map[string]*internal.LegacyPackage{}
 	for _, pkg := range pkgs {
 		pkgLookup[pkg.Path] = pkg
 	}
@@ -76,7 +76,7 @@ func moduleDirectories(modulePath string,
 }
 
 // directoryPaths returns the directory paths in a module.
-func directoryPaths(modulePath string, packages []*internal.Package) []string {
+func directoryPaths(modulePath string, packages []*internal.LegacyPackage) []string {
 	shouldContinue := func(p string) bool {
 		if modulePath == stdlib.ModulePath {
 			return p != "."

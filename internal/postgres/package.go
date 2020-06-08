@@ -41,7 +41,7 @@ import (
 // The returned error may be checked with
 // errors.Is(err, derrors.InvalidArgument) to determine if it was caused by an
 // invalid path or version.
-func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.VersionedPackage, err error) {
+func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.LegacyVersionedPackage, err error) {
 	defer derrors.Wrap(&err, "DB.GetPackage(ctx, %q, %q)", pkgPath, version)
 	if pkgPath == "" || modulePath == "" || version == "" {
 		return nil, fmt.Errorf("none of pkgPath, modulePath, or version can be empty: %w", derrors.InvalidArgument)
@@ -132,15 +132,15 @@ func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version strin
 	}
 
 	var (
-		pkg                        internal.VersionedPackage
+		pkg                        internal.LegacyVersionedPackage
 		licenseTypes, licensePaths []string
 		hasGoMod                   sql.NullBool
 	)
 	row := db.db.QueryRow(ctx, query, args...)
 	err = row.Scan(&pkg.Path, &pkg.Name, &pkg.Synopsis,
-		&pkg.V1Path, pq.Array(&licenseTypes), pq.Array(&licensePaths), &pkg.Package.IsRedistributable,
+		&pkg.V1Path, pq.Array(&licenseTypes), pq.Array(&licensePaths), &pkg.LegacyPackage.IsRedistributable,
 		database.NullIsEmpty(&pkg.DocumentationHTML), &pkg.GOOS, &pkg.GOARCH, &pkg.Version,
-		&pkg.CommitTime, database.NullIsEmpty(&pkg.ReadmeFilePath), database.NullIsEmpty(&pkg.ReadmeContents),
+		&pkg.CommitTime, database.NullIsEmpty(&pkg.LegacyReadmeFilePath), database.NullIsEmpty(&pkg.LegacyReadmeContents),
 		&pkg.ModulePath, &pkg.VersionType, jsonbScanner{&pkg.SourceInfo}, &pkg.ModuleInfo.IsRedistributable,
 		&hasGoMod)
 	if err != nil {

@@ -22,7 +22,7 @@ var (
 	commitTime  = "0 hours ago"
 )
 
-func sampleModule(modulePath, version string, versionType version.Type, packages ...*internal.Package) *internal.Module {
+func sampleModule(modulePath, version string, versionType version.Type, packages ...*internal.LegacyPackage) *internal.Module {
 	if len(packages) == 0 {
 		return sample.Module(modulePath, version, sample.Suffix)
 	}
@@ -161,17 +161,17 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 		v1Path = "test.com/module/foo"
 	)
 
-	pkg1 := &internal.VersionedPackage{
-		ModuleInfo: *sample.ModuleInfo(modulePath1, "v1.2.1"),
-		Package:    *sample.Package(modulePath1, sample.Suffix),
+	pkg1 := &internal.LegacyVersionedPackage{
+		ModuleInfo:    *sample.ModuleInfo(modulePath1, "v1.2.1"),
+		LegacyPackage: *sample.LegacyPackage(modulePath1, sample.Suffix),
 	}
-	pkg2 := &internal.VersionedPackage{
-		ModuleInfo: *sample.ModuleInfo(modulePath2, "v2.2.1-alpha.1"),
-		Package:    *sample.Package(modulePath2, sample.Suffix),
+	pkg2 := &internal.LegacyVersionedPackage{
+		ModuleInfo:    *sample.ModuleInfo(modulePath2, "v2.2.1-alpha.1"),
+		LegacyPackage: *sample.LegacyPackage(modulePath2, sample.Suffix),
 	}
-	nethttpPkg := &internal.VersionedPackage{
-		ModuleInfo: *sample.ModuleInfo("std", "v1.12.5"),
-		Package:    *sample.Package("std", "net/http"),
+	nethttpPkg := &internal.LegacyVersionedPackage{
+		ModuleInfo:    *sample.ModuleInfo("std", "v1.12.5"),
+		LegacyPackage: *sample.LegacyPackage("std", "net/http"),
 	}
 	makeList := func(pkgPath, modulePath, major string, versions []string) *VersionList {
 		return &VersionList{
@@ -184,7 +184,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 
 	for _, tc := range []struct {
 		name        string
-		pkg         *internal.VersionedPackage
+		pkg         *internal.LegacyVersionedPackage
 		modules     []*internal.Module
 		wantDetails *VersionsDetails
 	}{
@@ -192,8 +192,8 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			name: "want stdlib versions",
 			pkg:  nethttpPkg,
 			modules: []*internal.Module{
-				sampleModule("std", "v1.12.5", version.TypeRelease, &nethttpPkg.Package),
-				sampleModule("std", "v1.11.6", version.TypeRelease, &nethttpPkg.Package),
+				sampleModule("std", "v1.12.5", version.TypeRelease, &nethttpPkg.LegacyPackage),
+				sampleModule("std", "v1.11.6", version.TypeRelease, &nethttpPkg.LegacyPackage),
 			},
 			wantDetails: &VersionsDetails{
 				ThisModule: []*VersionList{
@@ -205,13 +205,13 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			name: "want v1 first",
 			pkg:  pkg1,
 			modules: []*internal.Module{
-				sampleModule(modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", version.TypePseudo, &pkg2.Package),
-				sampleModule(modulePath1, "v1.2.3", version.TypeRelease, &pkg1.Package),
-				sampleModule(modulePath2, "v2.0.0", version.TypeRelease, &pkg2.Package),
-				sampleModule(modulePath1, "v1.3.0", version.TypeRelease, &pkg1.Package),
-				sampleModule(modulePath1, "v1.2.1", version.TypeRelease, &pkg1.Package),
-				sampleModule(modulePath2, "v2.2.1-alpha.1", version.TypePrerelease, &pkg2.Package),
-				sampleModule("test.com", "v1.2.1", version.TypeRelease, &pkg1.Package),
+				sampleModule(modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", version.TypePseudo, &pkg2.LegacyPackage),
+				sampleModule(modulePath1, "v1.2.3", version.TypeRelease, &pkg1.LegacyPackage),
+				sampleModule(modulePath2, "v2.0.0", version.TypeRelease, &pkg2.LegacyPackage),
+				sampleModule(modulePath1, "v1.3.0", version.TypeRelease, &pkg1.LegacyPackage),
+				sampleModule(modulePath1, "v1.2.1", version.TypeRelease, &pkg1.LegacyPackage),
+				sampleModule(modulePath2, "v2.2.1-alpha.1", version.TypePrerelease, &pkg2.LegacyPackage),
+				sampleModule("test.com", "v1.2.1", version.TypeRelease, &pkg1.LegacyPackage),
 			},
 			wantDetails: &VersionsDetails{
 				ThisModule: []*VersionList{
@@ -227,12 +227,12 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			name: "want v2 first",
 			pkg:  pkg2,
 			modules: []*internal.Module{
-				sampleModule(modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", version.TypePseudo, &pkg1.Package),
-				sampleModule(modulePath1, "v1.2.1", version.TypeRelease, &pkg1.Package),
-				sampleModule(modulePath1, "v1.2.3", version.TypeRelease, &pkg1.Package),
-				sampleModule(modulePath1, "v2.1.0+incompatible", version.TypeRelease, &pkg1.Package),
-				sampleModule(modulePath2, "v2.0.0", version.TypeRelease, &pkg2.Package),
-				sampleModule(modulePath2, "v2.2.1-alpha.1", version.TypePrerelease, &pkg2.Package),
+				sampleModule(modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", version.TypePseudo, &pkg1.LegacyPackage),
+				sampleModule(modulePath1, "v1.2.1", version.TypeRelease, &pkg1.LegacyPackage),
+				sampleModule(modulePath1, "v1.2.3", version.TypeRelease, &pkg1.LegacyPackage),
+				sampleModule(modulePath1, "v2.1.0+incompatible", version.TypeRelease, &pkg1.LegacyPackage),
+				sampleModule(modulePath2, "v2.0.0", version.TypeRelease, &pkg2.LegacyPackage),
+				sampleModule(modulePath2, "v2.2.1-alpha.1", version.TypePrerelease, &pkg2.LegacyPackage),
 			},
 			wantDetails: &VersionsDetails{
 				ThisModule: []*VersionList{
@@ -247,8 +247,8 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			name: "want only pseudo",
 			pkg:  pkg2,
 			modules: []*internal.Module{
-				sampleModule(modulePath1, "v0.0.0-20140414041501-3c2ca4d52544", version.TypePseudo, &pkg2.Package),
-				sampleModule(modulePath1, "v0.0.0-20140414041502-4c2ca4d52544", version.TypePseudo, &pkg2.Package),
+				sampleModule(modulePath1, "v0.0.0-20140414041501-3c2ca4d52544", version.TypePseudo, &pkg2.LegacyPackage),
+				sampleModule(modulePath1, "v0.0.0-20140414041502-4c2ca4d52544", version.TypePseudo, &pkg2.LegacyPackage),
 			},
 			wantDetails: &VersionsDetails{
 				OtherModules: []*VersionList{

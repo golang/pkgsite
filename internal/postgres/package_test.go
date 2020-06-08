@@ -42,11 +42,11 @@ func TestGetPackage(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	checkPackage := func(got *internal.VersionedPackage, pkgPath, modulePath, version string) {
+	checkPackage := func(got *internal.LegacyVersionedPackage, pkgPath, modulePath, version string) {
 		t.Helper()
-		want := &internal.VersionedPackage{
-			ModuleInfo: *sample.ModuleInfo(modulePath, version),
-			Package:    *sample.Package(modulePath, suffix(pkgPath, modulePath)),
+		want := &internal.LegacyVersionedPackage{
+			ModuleInfo:    *sample.ModuleInfo(modulePath, version),
+			LegacyPackage: *sample.LegacyPackage(modulePath, suffix(pkgPath, modulePath)),
 		}
 		want.Imports = nil
 		opts := cmp.Options{

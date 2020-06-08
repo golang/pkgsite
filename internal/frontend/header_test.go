@@ -94,20 +94,20 @@ func TestElapsedTime(t *testing.T) {
 }
 
 func TestCreatePackageHeader(t *testing.T) {
-	vpkg := func(modulePath, suffix, name string) *internal.VersionedPackage {
-		vp := &internal.VersionedPackage{
-			ModuleInfo: *sample.ModuleInfo(modulePath, sample.VersionString),
-			Package:    *sample.Package(modulePath, suffix),
+	vpkg := func(modulePath, suffix, name string) *internal.LegacyVersionedPackage {
+		vp := &internal.LegacyVersionedPackage{
+			ModuleInfo:    *sample.ModuleInfo(modulePath, sample.VersionString),
+			LegacyPackage: *sample.LegacyPackage(modulePath, suffix),
 		}
 		if name != "" {
-			vp.Package.Name = name
+			vp.LegacyPackage.Name = name
 		}
 		return vp
 	}
 
 	for _, tc := range []struct {
 		label   string
-		pkg     *internal.VersionedPackage
+		pkg     *internal.LegacyVersionedPackage
 		wantPkg *Package
 	}{
 		{
@@ -138,7 +138,7 @@ func TestCreatePackageHeader(t *testing.T) {
 		},
 	} {
 		t.Run(tc.label, func(t *testing.T) {
-			got, err := createPackage(&tc.pkg.Package, &tc.pkg.ModuleInfo, false)
+			got, err := createPackage(&tc.pkg.LegacyPackage, &tc.pkg.ModuleInfo, false)
 			if err != nil {
 				t.Fatal(err)
 			}

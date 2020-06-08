@@ -96,7 +96,7 @@ func TestFetchModule(t *testing.T) {
 			sortFetchResult(fr)
 			sortFetchResult(got)
 			opts := []cmp.Option{
-				cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML"),
+				cmpopts.IgnoreFields(internal.LegacyPackage{}, "DocumentationHTML"),
 				cmpopts.IgnoreFields(internal.Documentation{}, "HTML"),
 				cmpopts.IgnoreFields(internal.PackageVersionState{}, "Error"),
 				cmp.AllowUnexported(source.Info{}),

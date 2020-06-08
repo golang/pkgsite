@@ -628,19 +628,19 @@ func TestReFetch(t *testing.T) {
 	if _, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB); err != nil {
 		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
 	}
-	want := &internal.VersionedPackage{
+	want := &internal.LegacyVersionedPackage{
 		ModuleInfo: internal.ModuleInfo{
-			ModulePath:        modulePath,
-			Version:           version,
-			CommitTime:        time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
-			ReadmeFilePath:    "README.md",
-			ReadmeContents:    "This is a readme",
-			VersionType:       "release",
-			IsRedistributable: true,
-			HasGoMod:          false,
-			SourceInfo:        source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
+			ModulePath:           modulePath,
+			Version:              version,
+			CommitTime:           time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
+			VersionType:          "release",
+			IsRedistributable:    true,
+			HasGoMod:             false,
+			SourceInfo:           source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
+			LegacyReadmeFilePath: "README.md",
+			LegacyReadmeContents: "This is a readme",
 		},
-		Package: internal.Package{
+		LegacyPackage: internal.LegacyPackage{
 			Path:              "github.com/my/module/bar",
 			Name:              "bar",
 			Synopsis:          "Package bar",
@@ -658,7 +658,7 @@ func TestReFetch(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(want, got, cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML"), cmp.AllowUnexported(source.Info{})); diff != "" {
+	if diff := cmp.Diff(want, got, cmpopts.IgnoreFields(internal.LegacyPackage{}, "DocumentationHTML"), cmp.AllowUnexported(source.Info{})); diff != "" {
 		t.Errorf("testDB.GetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", pkgBar, version, diff)
 	}
 
@@ -767,19 +767,19 @@ func TestFetchAndInsertModule(t *testing.T) {
 	})
 	defer teardownProxy()
 
-	myModuleV100 := &internal.VersionedPackage{
+	myModuleV100 := &internal.LegacyVersionedPackage{
 		ModuleInfo: internal.ModuleInfo{
-			ModulePath:        "github.com/my/module",
-			Version:           "v1.0.0",
-			CommitTime:        testProxyCommitTime,
-			ReadmeFilePath:    "README.md",
-			ReadmeContents:    "README FILE FOR TESTING.",
-			SourceInfo:        source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
-			VersionType:       "release",
-			IsRedistributable: true,
-			HasGoMod:          true,
+			ModulePath:           "github.com/my/module",
+			Version:              "v1.0.0",
+			CommitTime:           testProxyCommitTime,
+			LegacyReadmeFilePath: "README.md",
+			LegacyReadmeContents: "README FILE FOR TESTING.",
+			SourceInfo:           source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
+			VersionType:          "release",
+			IsRedistributable:    true,
+			HasGoMod:             true,
 		},
-		Package: internal.Package{
+		LegacyPackage: internal.LegacyPackage{
 			Path:              "github.com/my/module/bar",
 			Name:              "bar",
 			Synopsis:          "package bar",
@@ -799,7 +799,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 		modulePath  string
 		version     string
 		pkg         string
-		want        *internal.VersionedPackage
+		want        *internal.LegacyVersionedPackage
 		moreWantDoc []string // Additional substrings we expect to see in DocumentationHTML.
 		dontWantDoc []string // Substrings we expect not to see in DocumentationHTML.
 	}{
@@ -821,19 +821,19 @@ func TestFetchAndInsertModule(t *testing.T) {
 			modulePath: "nonredistributable.mod/module",
 			version:    "v1.0.0",
 			pkg:        "nonredistributable.mod/module/bar/baz",
-			want: &internal.VersionedPackage{
+			want: &internal.LegacyVersionedPackage{
 				ModuleInfo: internal.ModuleInfo{
-					ModulePath:        "nonredistributable.mod/module",
-					Version:           "v1.0.0",
-					CommitTime:        testProxyCommitTime,
-					ReadmeFilePath:    "README.md",
-					ReadmeContents:    "README FILE FOR TESTING.",
-					VersionType:       "release",
-					SourceInfo:        nil,
-					IsRedistributable: true,
-					HasGoMod:          true,
+					ModulePath:           "nonredistributable.mod/module",
+					Version:              "v1.0.0",
+					CommitTime:           testProxyCommitTime,
+					LegacyReadmeFilePath: "README.md",
+					LegacyReadmeContents: "README FILE FOR TESTING.",
+					VersionType:          "release",
+					SourceInfo:           nil,
+					IsRedistributable:    true,
+					HasGoMod:             true,
 				},
-				Package: internal.Package{
+				LegacyPackage: internal.LegacyPackage{
 					Path:              "nonredistributable.mod/module/bar/baz",
 					Name:              "baz",
 					Synopsis:          "package baz",
@@ -853,19 +853,19 @@ func TestFetchAndInsertModule(t *testing.T) {
 			modulePath: "nonredistributable.mod/module",
 			version:    "v1.0.0",
 			pkg:        "nonredistributable.mod/module/foo",
-			want: &internal.VersionedPackage{
+			want: &internal.LegacyVersionedPackage{
 				ModuleInfo: internal.ModuleInfo{
-					ModulePath:        "nonredistributable.mod/module",
-					Version:           "v1.0.0",
-					CommitTime:        testProxyCommitTime,
-					ReadmeFilePath:    "README.md",
-					ReadmeContents:    "README FILE FOR TESTING.",
-					VersionType:       "release",
-					SourceInfo:        nil,
-					IsRedistributable: true,
-					HasGoMod:          true,
+					ModulePath:           "nonredistributable.mod/module",
+					Version:              "v1.0.0",
+					CommitTime:           testProxyCommitTime,
+					LegacyReadmeFilePath: "README.md",
+					LegacyReadmeContents: "README FILE FOR TESTING.",
+					VersionType:          "release",
+					SourceInfo:           nil,
+					IsRedistributable:    true,
+					HasGoMod:             true,
 				},
-				Package: internal.Package{
+				LegacyPackage: internal.LegacyPackage{
 					Path:     "nonredistributable.mod/module/foo",
 					Name:     "foo",
 					Synopsis: "",
@@ -883,19 +883,19 @@ func TestFetchAndInsertModule(t *testing.T) {
 			modulePath: "std",
 			version:    "v1.12.5",
 			pkg:        "context",
-			want: &internal.VersionedPackage{
+			want: &internal.LegacyVersionedPackage{
 				ModuleInfo: internal.ModuleInfo{
-					ModulePath:        "std",
-					Version:           "v1.12.5",
-					CommitTime:        stdlib.TestCommitTime,
-					VersionType:       "release",
-					ReadmeFilePath:    "README.md",
-					ReadmeContents:    "# The Go Programming Language\n",
-					SourceInfo:        source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
-					IsRedistributable: true,
-					HasGoMod:          true,
+					ModulePath:           "std",
+					Version:              "v1.12.5",
+					CommitTime:           stdlib.TestCommitTime,
+					VersionType:          "release",
+					LegacyReadmeFilePath: "README.md",
+					LegacyReadmeContents: "# The Go Programming Language\n",
+					SourceInfo:           source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
+					IsRedistributable:    true,
+					HasGoMod:             true,
 				},
-				Package: internal.Package{
+				LegacyPackage: internal.LegacyPackage{
 					Path:              "context",
 					Name:              "context",
 					Synopsis:          "Package context defines the Context type, which carries deadlines, cancelation signals, and other request-scoped values across API boundaries and between processes.",
@@ -916,19 +916,19 @@ func TestFetchAndInsertModule(t *testing.T) {
 			modulePath: "std",
 			version:    "v1.12.5",
 			pkg:        "builtin",
-			want: &internal.VersionedPackage{
+			want: &internal.LegacyVersionedPackage{
 				ModuleInfo: internal.ModuleInfo{
-					ModulePath:        "std",
-					Version:           "v1.12.5",
-					CommitTime:        stdlib.TestCommitTime,
-					VersionType:       "release",
-					ReadmeFilePath:    "README.md",
-					ReadmeContents:    "# The Go Programming Language\n",
-					SourceInfo:        source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
-					IsRedistributable: true,
-					HasGoMod:          true,
+					ModulePath:           "std",
+					Version:              "v1.12.5",
+					CommitTime:           stdlib.TestCommitTime,
+					VersionType:          "release",
+					LegacyReadmeFilePath: "README.md",
+					LegacyReadmeContents: "# The Go Programming Language\n",
+					SourceInfo:           source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
+					IsRedistributable:    true,
+					HasGoMod:             true,
 				},
-				Package: internal.Package{
+				LegacyPackage: internal.LegacyPackage{
 					Path:              "builtin",
 					Name:              "builtin",
 					Synopsis:          "Package builtin provides documentation for Go's predeclared identifiers.",
@@ -949,19 +949,19 @@ func TestFetchAndInsertModule(t *testing.T) {
 			modulePath: "std",
 			version:    "v1.12.5",
 			pkg:        "encoding/json",
-			want: &internal.VersionedPackage{
+			want: &internal.LegacyVersionedPackage{
 				ModuleInfo: internal.ModuleInfo{
-					ModulePath:        "std",
-					Version:           "v1.12.5",
-					CommitTime:        stdlib.TestCommitTime,
-					VersionType:       "release",
-					ReadmeFilePath:    "README.md",
-					ReadmeContents:    "# The Go Programming Language\n",
-					SourceInfo:        source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
-					IsRedistributable: true,
-					HasGoMod:          true,
+					ModulePath:           "std",
+					Version:              "v1.12.5",
+					CommitTime:           stdlib.TestCommitTime,
+					VersionType:          "release",
+					LegacyReadmeFilePath: "README.md",
+					LegacyReadmeContents: "# The Go Programming Language\n",
+					SourceInfo:           source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
+					IsRedistributable:    true,
+					HasGoMod:             true,
 				},
-				Package: internal.Package{
+				LegacyPackage: internal.LegacyPackage{
 					Path:              "encoding/json",
 					Name:              "json",
 					Synopsis:          "Package json implements encoding and decoding of JSON as defined in RFC 7159.",
@@ -995,7 +995,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 			modulePath: "build.constraints/module",
 			version:    "v1.0.0",
 			pkg:        "build.constraints/module/cpu",
-			want: &internal.VersionedPackage{
+			want: &internal.LegacyVersionedPackage{
 				ModuleInfo: internal.ModuleInfo{
 					ModulePath:        "build.constraints/module",
 					Version:           "v1.0.0",
@@ -1005,7 +1005,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 					IsRedistributable: true,
 					HasGoMod:          false,
 				},
-				Package: internal.Package{
+				LegacyPackage: internal.LegacyPackage{
 					Path:              "build.constraints/module/cpu",
 					Name:              "cpu",
 					Synopsis:          "Package cpu implements processor feature detection used by the Go standard library.",
@@ -1052,7 +1052,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 			sort.Slice(gotPkg.Licenses, func(i, j int) bool {
 				return gotPkg.Licenses[i].FilePath < gotPkg.Licenses[j].FilePath
 			})
-			if diff := cmp.Diff(test.want, gotPkg, cmpopts.IgnoreFields(internal.Package{}, "DocumentationHTML"), cmp.AllowUnexported(source.Info{})); diff != "" {
+			if diff := cmp.Diff(test.want, gotPkg, cmpopts.IgnoreFields(internal.LegacyPackage{}, "DocumentationHTML"), cmp.AllowUnexported(source.Info{})); diff != "" {
 				t.Errorf("testDB.GetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", test.pkg, test.version, diff)
 			}
 			if got, want := gotPkg.DocumentationHTML, test.want.DocumentationHTML; len(want) == 0 && len(got) != 0 {

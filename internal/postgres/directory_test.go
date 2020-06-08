@@ -253,9 +253,9 @@ func TestGetDirectory(t *testing.T) {
 			}
 
 			mi := sample.ModuleInfo(tc.wantModulePath, tc.wantVersion)
-			var wantPackages []*internal.Package
+			var wantPackages []*internal.LegacyPackage
 			for _, suffix := range tc.wantSuffixes {
-				pkg := sample.Package(tc.wantModulePath, suffix)
+				pkg := sample.LegacyPackage(tc.wantModulePath, suffix)
 				pkg.Imports = nil
 				wantPackages = append(wantPackages, pkg)
 			}
@@ -263,7 +263,7 @@ func TestGetDirectory(t *testing.T) {
 				return wantPackages[i].Path < wantPackages[j].Path
 			})
 
-			wantDirectory := &internal.Directory{
+			wantDirectory := &internal.LegacyDirectory{
 				ModuleInfo: *mi,
 				Packages:   wantPackages,
 				Path:       tc.dirPath,
@@ -450,7 +450,7 @@ func TestGetDirectoryFieldSet(t *testing.T) {
 	defer ResetTestDB(testDB, t)
 
 	m := sample.Module("m.c", sample.VersionString, "d/p")
-	m.Packages[0].Imports = nil
+	m.LegacyPackages[0].Imports = nil
 	if err := testDB.InsertModule(ctx, m); err != nil {
 		t.Fatal(err)
 	}
@@ -459,8 +459,8 @@ func TestGetDirectoryFieldSet(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if g, w := got.ReadmeContents, internal.StringFieldMissing; g != w {
-		t.Errorf("ReadmeContents = %q, want %q", g, w)
+	if g, w := got.LegacyReadmeContents, internal.StringFieldMissing; g != w {
+		t.Errorf("LegacyReadmeContents = %q, want %q", g, w)
 	}
 	if g, w := got.Packages[0].DocumentationHTML, internal.StringFieldMissing; g != w {
 		t.Errorf("DocumentationHTML = %q, want %q", g, w)

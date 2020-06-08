@@ -49,7 +49,7 @@ type Module struct {
 // latestRequested indicates whether the user requested the latest
 // version of the package. If so, the returned Package.URL will have the
 // structure /<path> instead of /<path>@<version>.
-func createPackage(pkg *internal.Package, mi *internal.ModuleInfo, latestRequested bool) (_ *Package, err error) {
+func createPackage(pkg *internal.LegacyPackage, mi *internal.ModuleInfo, latestRequested bool) (_ *Package, err error) {
 	defer derrors.Wrap(&err, "createPackage(%v, %v)", pkg, mi)
 
 	if pkg == nil || mi == nil {
@@ -161,7 +161,7 @@ func constructPackageURL(pkgPath, modulePath, linkVersion string) string {
 }
 
 // effectiveName returns either the command name or package name.
-func effectiveName(pkg *internal.Package) string {
+func effectiveName(pkg *internal.LegacyPackage) string {
 	if pkg.Name != "main" {
 		return pkg.Name
 	}
@@ -193,7 +193,7 @@ func effectiveNameNew(pkg *internal.PackageNew) string {
 // packageHTMLTitle constructs the details page title for pkg.
 // The string will appear in the <title> element (and thus
 // the browser tab).
-func packageHTMLTitle(pkg *internal.Package) string {
+func packageHTMLTitle(pkg *internal.LegacyPackage) string {
 	if pkg.Name != "main" {
 		return pkg.Name + " package"
 	}
@@ -212,7 +212,7 @@ func packageHTMLTitleNew(pkg *internal.PackageNew) string {
 
 // packageTitle returns the package title as it will
 // appear in the heading at the top of the page.
-func packageTitle(pkg *internal.Package) string {
+func packageTitle(pkg *internal.LegacyPackage) string {
 	if pkg.Name != "main" {
 		return "package " + pkg.Name
 	}

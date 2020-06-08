@@ -50,7 +50,7 @@ func TestGetPathInfo(t *testing.T) {
 				VersionType: vtype,
 				CommitTime:  time.Now(),
 			},
-			Packages: []*internal.Package{{
+			LegacyPackages: []*internal.LegacyPackage{{
 				Name: pkgName,
 				Path: pkgPath,
 			}},
@@ -188,7 +188,7 @@ func TestGetStdlibPaths(t *testing.T) {
 		},
 	} {
 		m := sample.Module(stdlib.ModulePath, data.version, data.suffixes...)
-		for _, p := range m.Packages {
+		for _, p := range m.LegacyPackages {
 			p.Imports = nil
 		}
 		if err := testDB.InsertModule(ctx, m); err != nil {

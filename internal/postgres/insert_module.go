@@ -199,8 +199,8 @@ func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ i
 		m.ModulePath,
 		m.Version,
 		m.CommitTime,
-		m.ReadmeFilePath,
-		makeValidUnicode(m.ReadmeContents),
+		m.LegacyReadmeFilePath,
+		makeValidUnicode(m.LegacyReadmeContents),
 		version.ForSorting(m.Version),
 		m.VersionType,
 		m.SeriesPath(),
@@ -254,17 +254,17 @@ func insertPackages(ctx context.Context, db *database.DB, m *internal.Module) (e
 	// the same module, which happens regularly. But if we were ever to process
 	// the same module and version twice, we could see deadlocks in the other
 	// bulk inserts.
-	sort.Slice(m.Packages, func(i, j int) bool {
-		return m.Packages[i].Path < m.Packages[j].Path
+	sort.Slice(m.LegacyPackages, func(i, j int) bool {
+		return m.LegacyPackages[i].Path < m.LegacyPackages[j].Path
 	})
 	sort.Slice(m.Licenses, func(i, j int) bool {
 		return m.Licenses[i].FilePath < m.Licenses[j].FilePath
 	})
-	for _, p := range m.Packages {
+	for _, p := range m.LegacyPackages {
 		sort.Strings(p.Imports)
 	}
 	var pkgValues, importValues []interface{}
-	for _, p := range m.Packages {
+	for _, p := range m.LegacyPackages {
 		if p.DocumentationHTML == internal.StringFieldMissing {
 			return errors.New("saveModule: package missing DocumentationHTML")
 		}
@@ -354,7 +354,7 @@ func insertImportsUnique(ctx context.Context, tx *database.DB, m *internal.Modul
 	}
 
 	var values []interface{}
-	for _, p := range m.Packages {
+	for _, p := range m.LegacyPackages {
 		for _, i := range p.Imports {
 			values = append(values, p.Path, m.ModulePath, i)
 		}
@@ -371,9 +371,9 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 	ctx, span := trace.StartSpan(ctx, "insertDirectories")
 	defer span.End()
 
-	if m.ReadmeContents == internal.StringFieldMissing {
+	if m.LegacyReadmeContents == internal.StringFieldMissing {
 		// We don't expect this to ever happen here, but checking just in case.
-		return errors.New("saveModule: version missing ReadmeContents")
+		return errors.New("saveModule: version missing LegacyReadmeContents")
 	}
 	// Sort to ensure proper lock ordering, avoiding deadlocks. See
 	// b/141164828#comment8. We have seen deadlocks on package_imports and
@@ -616,7 +616,7 @@ func validateModule(m *internal.Module) (err error) {
 			errReasons = append(errReasons, "invalid version")
 		}
 	}
-	if len(m.Packages) == 0 {
+	if len(m.LegacyPackages) == 0 {
 		errReasons = append(errReasons, "module does not have any packages")
 	}
 	if m.CommitTime.IsZero() {
@@ -650,9 +650,9 @@ func (db *DB) compareLicenses(ctx context.Context, m *internal.Module) (err erro
 	return nil
 }
 
-// comparePackages compares m.Packages with the existing packages for
+// comparePackages compares m.LegacyPackages with the existing packages for
 // m.ModulePath and m.Version in the database. It returns an error if there
-// are packages in the packages table that are not present in m.Packages.
+// are packages in the packages table that are not present in m.LegacyPackages.
 func (db *DB) comparePackages(ctx context.Context, m *internal.Module) (err error) {
 	defer derrors.Wrap(&err, "comparePackages(ctx, %q, %q)", m.ModulePath, m.Version)
 	dbPackages, err := db.GetPackagesInModule(ctx, m.ModulePath, m.Version)
@@ -660,7 +660,7 @@ func (db *DB) comparePackages(ctx context.Context, m *internal.Module) (err erro
 		return err
 	}
 	set := map[string]bool{}
-	for _, p := range m.Packages {
+	for _, p := range m.LegacyPackages {
 		set[p.Path] = true
 	}
 	for _, p := range dbPackages {
@@ -695,7 +695,7 @@ func (db *DB) comparePaths(ctx context.Context, m *internal.Module) (err error) 
 // removeNonDistributableData removes any information from the version payload,
 // after checking licenses.
 func removeNonDistributableData(m *internal.Module) {
-	for _, p := range m.Packages {
+	for _, p := range m.LegacyPackages {
 		if !p.IsRedistributable {
 			// Prune derived information that can't be stored.
 			p.Synopsis = ""
@@ -703,8 +703,8 @@ func removeNonDistributableData(m *internal.Module) {
 		}
 	}
 	if !m.IsRedistributable {
-		m.ReadmeFilePath = ""
-		m.ReadmeContents = ""
+		m.LegacyReadmeFilePath = ""
+		m.LegacyReadmeContents = ""
 	}
 }
 

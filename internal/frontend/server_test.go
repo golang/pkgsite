@@ -125,9 +125,9 @@ var testModules = []testModule{
 
 func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 	for _, mod := range mods {
-		var ps []*internal.Package
+		var ps []*internal.LegacyPackage
 		for _, pkg := range mod.packages {
-			p := sample.Package(mod.path, pkg.suffix)
+			p := sample.LegacyPackage(mod.path, pkg.suffix)
 			if pkg.name != "" {
 				p.Name = pkg.name
 			}

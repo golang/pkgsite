@@ -79,19 +79,19 @@ func NowTruncated() time.Time {
 	return time.Now().Truncate(time.Microsecond)
 }
 
-// Package constructs a package with the given module path and suffix.
+// LegacyPackage constructs a package with the given module path and suffix.
 //
 // If modulePath is the standard library, the package path is the
 // suffix, which must not be empty. Otherwise, the package path
 // is the concatenation of modulePath and suffix.
 //
 // The package name is last component of the package path.
-func Package(modulePath, suffix string) *internal.Package {
+func LegacyPackage(modulePath, suffix string) *internal.LegacyPackage {
 	pkgPath := suffix
 	if modulePath != stdlib.ModulePath {
 		pkgPath = path.Join(modulePath, suffix)
 	}
-	return &internal.Package{
+	return &internal.LegacyPackage{
 		Name:              path.Base(pkgPath),
 		Path:              pkgPath,
 		V1Path:            internal.V1Path(modulePath, suffix),
@@ -119,12 +119,12 @@ func ModuleInfo(modulePath, versionString string) *internal.ModuleInfo {
 // ModuleInfos with "latest" for version, which should not be valid.
 func ModuleInfoReleaseType(modulePath, versionString string) *internal.ModuleInfo {
 	return &internal.ModuleInfo{
-		ModulePath:     modulePath,
-		Version:        versionString,
-		ReadmeFilePath: ReadmeFilePath,
-		ReadmeContents: ReadmeContents,
-		CommitTime:     CommitTime,
-		VersionType:    version.TypeRelease,
+		ModulePath:           modulePath,
+		Version:              versionString,
+		LegacyReadmeFilePath: ReadmeFilePath,
+		LegacyReadmeContents: ReadmeContents,
+		CommitTime:           CommitTime,
+		VersionType:          version.TypeRelease,
 		// Assume the module path is a GitHub-like repo name.
 		SourceInfo:        source.NewGitHubInfo("https://"+modulePath, "", versionString),
 		IsRedistributable: true,
@@ -135,33 +135,33 @@ func ModuleInfoReleaseType(modulePath, versionString string) *internal.ModuleInf
 func DefaultModule() *internal.Module {
 	return AddPackage(
 		Module(ModulePath, VersionString),
-		Package(ModulePath, Suffix))
+		LegacyPackage(ModulePath, Suffix))
 }
 
 // Module creates a Module with the given path and version.
-// The list of suffixes is used to create Packages within the module.
+// The list of suffixes is used to create LegacyPackages within the module.
 func Module(modulePath, version string, suffixes ...string) *internal.Module {
 	mi := ModuleInfo(modulePath, version)
 	m := &internal.Module{
-		ModuleInfo: *mi,
-		Packages:   nil,
-		Licenses:   Licenses,
+		ModuleInfo:     *mi,
+		LegacyPackages: nil,
+		Licenses:       Licenses,
 		Directories: []*internal.DirectoryNew{
 			DirectoryNewForModuleRoot(mi, LicenseMetadata),
 		},
 	}
 	for _, s := range suffixes {
-		AddPackage(m, Package(modulePath, s))
+		AddPackage(m, LegacyPackage(modulePath, s))
 	}
 	return m
 }
 
-func AddPackage(m *internal.Module, p *internal.Package) *internal.Module {
+func AddPackage(m *internal.Module, p *internal.LegacyPackage) *internal.Module {
 	if m.ModulePath != stdlib.ModulePath && !strings.HasPrefix(p.Path, m.ModulePath) {
 		panic(fmt.Sprintf("package path %q not a prefix of module path %q",
 			p.Path, m.ModulePath))
 	}
-	m.Packages = append(m.Packages, p)
+	m.LegacyPackages = append(m.LegacyPackages, p)
 	m.Directories = append(m.Directories, DirectoryNewForPackage(p))
 	minLen := len(m.ModulePath)
 	if m.ModulePath == stdlib.ModulePath {
@@ -198,16 +198,16 @@ func DirectoryNewForModuleRoot(m *internal.ModuleInfo, licenses []*licenses.Meta
 		Licenses:          licenses,
 		V1Path:            internal.SeriesPathForModule(m.ModulePath),
 	}
-	if m.ReadmeFilePath != "" {
+	if m.LegacyReadmeFilePath != "" {
 		d.Readme = &internal.Readme{
-			Filepath: m.ReadmeFilePath,
-			Contents: m.ReadmeContents,
+			Filepath: m.LegacyReadmeFilePath,
+			Contents: m.LegacyReadmeContents,
 		}
 	}
 	return d
 }
 
-func DirectoryNewForPackage(pkg *internal.Package) *internal.DirectoryNew {
+func DirectoryNewForPackage(pkg *internal.LegacyPackage) *internal.DirectoryNew {
 	return &internal.DirectoryNew{
 		Path:              pkg.Path,
 		IsRedistributable: pkg.IsRedistributable,

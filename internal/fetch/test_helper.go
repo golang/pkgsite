@@ -66,7 +66,7 @@ func cleanFetchResult(fr *FetchResult, detector *licenses.Detector) *FetchResult
 				dir.Package.Documentation.GOARCH = "amd64"
 			}
 			dir.Package.Path = dir.Path
-			fr.Module.Packages = append(fr.Module.Packages, &internal.Package{
+			fr.Module.LegacyPackages = append(fr.Module.LegacyPackages, &internal.LegacyPackage{
 				Path:              dir.Path,
 				V1Path:            dir.V1Path,
 				Licenses:          dir.Licenses,
@@ -117,8 +117,8 @@ func licenseDetector(ctx context.Context, t *testing.T, modulePath, version stri
 }
 
 func sortFetchResult(fr *FetchResult) {
-	sort.Slice(fr.Module.Packages, func(i, j int) bool {
-		return fr.Module.Packages[i].Path < fr.Module.Packages[j].Path
+	sort.Slice(fr.Module.LegacyPackages, func(i, j int) bool {
+		return fr.Module.LegacyPackages[i].Path < fr.Module.LegacyPackages[j].Path
 	})
 	sort.Slice(fr.Module.Directories, func(i, j int) bool {
 		return fr.Module.Directories[i].Path < fr.Module.Directories[j].Path
@@ -134,7 +134,7 @@ func sortFetchResult(fr *FetchResult) {
 			return dir.Licenses[i].FilePath < dir.Licenses[j].FilePath
 		})
 	}
-	for _, pkg := range fr.Module.Packages {
+	for _, pkg := range fr.Module.LegacyPackages {
 		sort.Slice(pkg.Licenses, func(i, j int) bool {
 			return pkg.Licenses[i].FilePath < pkg.Licenses[j].FilePath
 		})
@@ -148,11 +148,11 @@ func validateDocumentationHTML(t *testing.T, got, want *internal.Module) {
 			t.Fatalf("Recovered in checkDocumentationHTML: %v \n; diff = %s", r, cmp.Diff(want, got))
 		}
 	}()
-	for i := 0; i < len(want.Packages); i++ {
-		wantHTML := want.Packages[i].DocumentationHTML
-		gotHTML := got.Packages[i].DocumentationHTML
+	for i := 0; i < len(want.LegacyPackages); i++ {
+		wantHTML := want.LegacyPackages[i].DocumentationHTML
+		gotHTML := got.LegacyPackages[i].DocumentationHTML
 		if len(wantHTML) != 0 && !strings.Contains(gotHTML, wantHTML) {
-			t.Errorf("documentation for got.Module.Packages[%d].DocumentationHTML does not contain wanted documentation substring:\n want (substring): %q\n got: %q\n", i, wantHTML, gotHTML)
+			t.Errorf("documentation for got.Module.LegacyPackages[%d].DocumentationHTML does not contain wanted documentation substring:\n want (substring): %q\n got: %q\n", i, wantHTML, gotHTML)
 		}
 	}
 	for i := 0; i < len(want.Directories); i++ {

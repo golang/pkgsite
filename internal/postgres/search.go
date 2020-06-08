@@ -550,7 +550,7 @@ func UpsertSearchDocuments(ctx context.Context, db *database.DB, mod *internal.M
 	defer derrors.Wrap(&err, "UpsertSearchDocuments(ctx, %q)", mod.ModulePath)
 	ctx, span := trace.StartSpan(ctx, "UpsertSearchDocuments")
 	defer span.End()
-	for _, pkg := range mod.Packages {
+	for _, pkg := range mod.LegacyPackages {
 		if isInternalPackage(pkg.Path) {
 			continue
 		}
@@ -558,8 +558,8 @@ func UpsertSearchDocuments(ctx context.Context, db *database.DB, mod *internal.M
 			PackagePath:    pkg.Path,
 			ModulePath:     mod.ModulePath,
 			Synopsis:       pkg.Synopsis,
-			ReadmeFilePath: mod.ReadmeFilePath,
-			ReadmeContents: mod.ReadmeContents,
+			ReadmeFilePath: mod.LegacyReadmeFilePath,
+			ReadmeContents: mod.LegacyReadmeContents,
 		})
 		if err != nil {
 			return err

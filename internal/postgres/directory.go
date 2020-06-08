@@ -74,8 +74,8 @@ func (db *DB) GetDirectoryNew(ctx context.Context, path, modulePath, version str
 		&mi.IsRedistributable,
 		&mi.HasGoMod,
 		jsonbScanner{&mi.SourceInfo},
-		&mi.ReadmeFilePath,
-		&mi.ReadmeContents,
+		&mi.LegacyReadmeFilePath,
+		&mi.LegacyReadmeContents,
 		&pathID,
 		&dir.Path,
 		database.NullIsEmpty(&pkg.Name),
@@ -166,7 +166,7 @@ func (db *DB) GetDirectoryNew(ctx context.Context, path, modulePath, version str
 //
 // It will not match on:
 // golang.org/x/tools/g
-func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version string, fields internal.FieldSet) (_ *internal.Directory, err error) {
+func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version string, fields internal.FieldSet) (_ *internal.LegacyDirectory, err error) {
 	defer derrors.Wrap(&err, "DB.GetDirectory(ctx, %q, %q, %q)", dirPath, modulePath, version)
 
 	if dirPath == "" || modulePath == "" || version == "" {
@@ -184,12 +184,12 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version str
 	}
 
 	var (
-		packages []*internal.Package
-		mi       = internal.ModuleInfo{ReadmeContents: internal.StringFieldMissing}
+		packages []*internal.LegacyPackage
+		mi       = internal.ModuleInfo{LegacyReadmeContents: internal.StringFieldMissing}
 	)
 	collect := func(rows *sql.Rows) error {
 		var (
-			pkg          = internal.Package{DocumentationHTML: internal.StringFieldMissing}
+			pkg          = internal.LegacyPackage{DocumentationHTML: internal.StringFieldMissing}
 			licenseTypes []string
 			licensePaths []string
 		)
@@ -210,9 +210,9 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version str
 			&pkg.GOARCH,
 			&mi.Version,
 			&mi.ModulePath,
-			database.NullIsEmpty(&mi.ReadmeFilePath))
+			database.NullIsEmpty(&mi.LegacyReadmeFilePath))
 		if fields&internal.WithReadmeContents != 0 {
-			scanArgs = append(scanArgs, database.NullIsEmpty(&mi.ReadmeContents))
+			scanArgs = append(scanArgs, database.NullIsEmpty(&mi.LegacyReadmeContents))
 		}
 		var hasGoMod sql.NullBool
 		scanArgs = append(scanArgs,
@@ -242,7 +242,7 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version str
 	sort.Slice(packages, func(i, j int) bool {
 		return packages[i].Path < packages[j].Path
 	})
-	return &internal.Directory{
+	return &internal.LegacyDirectory{
 		Path:       dirPath,
 		ModuleInfo: mi,
 		Packages:   packages,

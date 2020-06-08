@@ -96,9 +96,9 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 		m3          = sample.Module("path3.to/foo", "v1.3.0", "bar3")
 		testModules = []*internal.Module{m1, m2, m3}
 
-		pkg1 = m1.Packages[0]
-		pkg2 = m2.Packages[0]
-		pkg3 = m3.Packages[0]
+		pkg1 = m1.LegacyPackages[0]
+		pkg2 = m2.LegacyPackages[0]
+		pkg3 = m3.LegacyPackages[0]
 	)
 	pkg1.Imports = nil
 	pkg2.Imports = []string{pkg1.Path}
@@ -332,11 +332,11 @@ func TestGetPackagesInVersion(t *testing.T) {
 
 			opts := []cmp.Option{
 				// TODO(b/130367504): remove this ignore once imports are not asymmetric
-				cmpopts.IgnoreFields(internal.Package{}, "Imports"),
+				cmpopts.IgnoreFields(internal.LegacyPackage{}, "Imports"),
 				// The packages table only includes partial license information; it omits the Coverage field.
 				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 			}
-			if diff := cmp.Diff(tc.module.Packages, got, opts...); diff != "" {
+			if diff := cmp.Diff(tc.module.LegacyPackages, got, opts...); diff != "" {
 				t.Errorf("testDB.GetPackageInVersion(ctx, %q, %q) mismatch (-want +got):\n%s", tc.pkgPath, tc.module.Version, diff)
 			}
 		})
@@ -346,8 +346,8 @@ func TestGetPackagesInVersion(t *testing.T) {
 func TestGetPackageLicenses(t *testing.T) {
 	modulePath := "test.module"
 	testModule := sample.Module(modulePath, "v1.2.3", "", "foo")
-	testModule.Packages[0].Licenses = nil
-	testModule.Packages[1].Licenses = sample.LicenseMetadata
+	testModule.LegacyPackages[0].Licenses = nil
+	testModule.LegacyPackages[1].Licenses = sample.LicenseMetadata
 
 	tests := []struct {
 		label, pkgPath string
@@ -388,15 +388,15 @@ func TestGetPackageLicenses(t *testing.T) {
 func TestGetModuleLicenses(t *testing.T) {
 	modulePath := "test.module"
 	testModule := sample.Module(modulePath, "v1.2.3", "", "foo", "bar")
-	testModule.Packages[0].Licenses = []*licenses.Metadata{{Types: []string{"ISC"}, FilePath: "LICENSE"}}
-	testModule.Packages[1].Licenses = []*licenses.Metadata{{Types: []string{"MIT"}, FilePath: "foo/LICENSE"}}
-	testModule.Packages[2].Licenses = []*licenses.Metadata{{Types: []string{"GPL2"}, FilePath: "bar/LICENSE.txt"}}
+	testModule.LegacyPackages[0].Licenses = []*licenses.Metadata{{Types: []string{"ISC"}, FilePath: "LICENSE"}}
+	testModule.LegacyPackages[1].Licenses = []*licenses.Metadata{{Types: []string{"MIT"}, FilePath: "foo/LICENSE"}}
+	testModule.LegacyPackages[2].Licenses = []*licenses.Metadata{{Types: []string{"GPL2"}, FilePath: "bar/LICENSE.txt"}}
 
 	defer ResetTestDB(testDB, t)
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	for _, p := range testModule.Packages {
+	for _, p := range testModule.LegacyPackages {
 		testModule.Licenses = append(testModule.Licenses, &licenses.License{
 			Metadata: p.Licenses[0],
 			Contents: []byte(`Lorem Ipsum`),

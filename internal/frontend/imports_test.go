@@ -50,7 +50,7 @@ func TestFetchImportsDetails(t *testing.T) {
 			defer cancel()
 
 			module := sample.Module(sample.ModulePath, sample.VersionString, sample.Suffix)
-			module.Packages[0].Imports = tc.imports
+			module.LegacyPackages[0].Imports = tc.imports
 
 			if err := testDB.InsertModule(ctx, module); err != nil {
 				t.Fatal(err)
@@ -60,24 +60,24 @@ func TestFetchImportsDetails(t *testing.T) {
 			got, err := fetchImportsDetails(ctx, testDB, pkg.Path, pkg.ModulePath, pkg.Version)
 			if err != nil {
 				t.Fatalf("fetchImportsDetails(ctx, db, %q, %q) = %v err = %v, want %v",
-					module.Packages[0].Path, module.Version, got, err, tc.wantDetails)
+					module.LegacyPackages[0].Path, module.Version, got, err, tc.wantDetails)
 			}
 
 			tc.wantDetails.ModulePath = module.ModuleInfo.ModulePath
 			if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
-				t.Errorf("fetchImportsDetails(ctx, %q, %q) mismatch (-want +got):\n%s", module.Packages[0].Path, module.Version, diff)
+				t.Errorf("fetchImportsDetails(ctx, %q, %q) mismatch (-want +got):\n%s", module.LegacyPackages[0].Path, module.Version, diff)
 			}
 		})
 	}
 }
 
 // firstVersionedPackage is a helper function that returns an
-// *internal.VersionedPackage corresponding to the first package in the
+// *internal.LegacyVersionedPackage corresponding to the first package in the
 // version.
-func firstVersionedPackage(m *internal.Module) *internal.VersionedPackage {
-	return &internal.VersionedPackage{
-		Package:    *m.Packages[0],
-		ModuleInfo: m.ModuleInfo,
+func firstVersionedPackage(m *internal.Module) *internal.LegacyVersionedPackage {
+	return &internal.LegacyVersionedPackage{
+		LegacyPackage: *m.LegacyPackages[0],
+		ModuleInfo:    m.ModuleInfo,
 	}
 }
 
@@ -87,7 +87,7 @@ func TestFetchImportedByDetails(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	newModule := func(modPath string, pkgs ...*internal.Package) *internal.Module {
+	newModule := func(modPath string, pkgs ...*internal.LegacyPackage) *internal.Module {
 		m := sample.Module(modPath, sample.VersionString)
 		for _, p := range pkgs {
 			sample.AddPackage(m, p)
@@ -95,11 +95,11 @@ func TestFetchImportedByDetails(t *testing.T) {
 		return m
 	}
 
-	pkg1 := sample.Package("path.to/foo", "bar")
-	pkg2 := sample.Package("path2.to/foo", "bar2")
+	pkg1 := sample.LegacyPackage("path.to/foo", "bar")
+	pkg2 := sample.LegacyPackage("path2.to/foo", "bar2")
 	pkg2.Imports = []string{pkg1.Path}
 
-	pkg3 := sample.Package("path3.to/foo", "bar3")
+	pkg3 := sample.LegacyPackage("path3.to/foo", "bar3")
 	pkg3.Imports = []string{pkg2.Path, pkg1.Path}
 
 	testModules := []*internal.Module{
@@ -115,7 +115,7 @@ func TestFetchImportedByDetails(t *testing.T) {
 	}
 
 	for _, tc := range []struct {
-		pkg         *internal.Package
+		pkg         *internal.LegacyPackage
 		wantDetails *ImportedByDetails
 	}{
 		{

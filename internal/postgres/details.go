@@ -25,7 +25,7 @@ import (
 // GetPackagesInModule returns packages contained in the module version
 // specified by modulePath and version. The returned packages will be sorted
 // by their package path.
-func (db *DB) GetPackagesInModule(ctx context.Context, modulePath, version string) (_ []*internal.Package, err error) {
+func (db *DB) GetPackagesInModule(ctx context.Context, modulePath, version string) (_ []*internal.LegacyPackage, err error) {
 	query := `SELECT
 		path,
 		name,
@@ -44,10 +44,10 @@ func (db *DB) GetPackagesInModule(ctx context.Context, modulePath, version strin
 		AND version = $2
 	ORDER BY path;`
 
-	var packages []*internal.Package
+	var packages []*internal.LegacyPackage
 	collect := func(rows *sql.Rows) error {
 		var (
-			p                          internal.Package
+			p                          internal.LegacyPackage
 			licenseTypes, licensePaths []string
 		)
 		if err := rows.Scan(&p.Path, &p.Name, &p.Synopsis, &p.V1Path, pq.Array(&licenseTypes),
@@ -463,7 +463,7 @@ func (db *DB) GetModuleInfo(ctx context.Context, modulePath string, version stri
 	)
 	row := db.db.QueryRow(ctx, query, args...)
 	if err := row.Scan(&mi.ModulePath, &mi.Version, &mi.CommitTime,
-		database.NullIsEmpty(&mi.ReadmeFilePath), database.NullIsEmpty(&mi.ReadmeContents), &mi.VersionType,
+		database.NullIsEmpty(&mi.LegacyReadmeFilePath), database.NullIsEmpty(&mi.LegacyReadmeContents), &mi.VersionType,
 		jsonbScanner{&mi.SourceInfo}, &mi.IsRedistributable, &hasGoMod); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("module version %s@%s: %w", modulePath, version, derrors.NotFound)

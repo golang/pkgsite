@@ -188,19 +188,19 @@ func processZipFile(ctx context.Context, modulePath string, versionType version.
 	}
 	return &internal.Module{
 		ModuleInfo: internal.ModuleInfo{
-			ModulePath:        modulePath,
-			Version:           resolvedVersion,
-			CommitTime:        commitTime,
-			ReadmeFilePath:    readmeFilePath,
-			ReadmeContents:    readmeContents,
-			VersionType:       versionType,
-			IsRedistributable: d.ModuleIsRedistributable(),
-			HasGoMod:          hasGoMod,
-			SourceInfo:        sourceInfo,
+			ModulePath:           modulePath,
+			Version:              resolvedVersion,
+			CommitTime:           commitTime,
+			LegacyReadmeFilePath: readmeFilePath,
+			LegacyReadmeContents: readmeContents,
+			VersionType:          versionType,
+			IsRedistributable:    d.ModuleIsRedistributable(),
+			HasGoMod:             hasGoMod,
+			SourceInfo:           sourceInfo,
 		},
-		Packages:    packages,
-		Licenses:    allLicenses,
-		Directories: moduleDirectories(modulePath, packages, readmes, d),
+		LegacyPackages: packages,
+		Licenses:       allLicenses,
+		Directories:    moduleDirectories(modulePath, packages, readmes, d),
 	}, packageVersionStates, nil
 }
 
@@ -256,7 +256,7 @@ func isReadme(file string) bool {
 // * a maximum file size (MaxFileSize)
 // * the particular set of build contexts we consider (goEnvs)
 // * whether the import path is valid.
-func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion string, r *zip.Reader, d *licenses.Detector, sourceInfo *source.Info) (_ []*internal.Package, _ []*internal.PackageVersionState, err error) {
+func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion string, r *zip.Reader, d *licenses.Detector, sourceInfo *source.Info) (_ []*internal.LegacyPackage, _ []*internal.PackageVersionState, err error) {
 	ctx, span := trace.StartSpan(ctx, "fetch.extractPackagesFromZip")
 	defer span.End()
 	defer func() {
@@ -369,7 +369,7 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion str
 	// If we got this far, the file metadata was okay.
 	// Start reading the file contents now to extract information
 	// about Go packages.
-	var pkgs []*internal.Package
+	var pkgs []*internal.LegacyPackage
 	for innerPath, goFiles := range dirs {
 		if incompleteDirs[innerPath] {
 			// Something went wrong when processing this directory, so we skip.
@@ -438,7 +438,7 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion str
 // The logic of the go tool for ignoring directories is documented at
 // https://golang.org/cmd/go/#hdr-Package_lists_and_patterns:
 //
-// 	Directory and file names that begin with "." or "_" are ignored
+// 	LegacyDirectory and file names that begin with "." or "_" are ignored
 // 	by the go tool, as are directories named "testdata".
 //
 func ignoredByGoTool(importPath string) bool {
@@ -502,7 +502,7 @@ var goEnvs = []struct{ GOOS, GOARCH string }{
 // several build contexts in turn. The first build context in the list to produce
 // a non-empty package is used. If none of them result in a package, then
 // loadPackage returns nil, nil.
-func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath, modulePath string, sourceInfo *source.Info) (*internal.Package, error) {
+func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath, modulePath string, sourceInfo *source.Info) (*internal.LegacyPackage, error) {
 	ctx, span := trace.StartSpan(ctx, "fetch.loadPackage")
 	defer span.End()
 	for _, env := range goEnvs {
@@ -529,15 +529,15 @@ var httpPost = http.Post
 // zipGoFiles must contain only .go files that have been verified
 // to be of reasonable size.
 //
-// The returned Package.Licenses field is not populated.
+// The returned LegacyPackage.Licenses field is not populated.
 //
-// It returns a nil Package if the directory doesn't contain a Go package
+// It returns a nil LegacyPackage if the directory doesn't contain a Go package
 // or all .go files have been excluded by constraints.
 // A *LargePackageError error is returned if the rendered
 // package documentation HTML exceeds a limit.
 // A *BadPackageError error is returned if the directory
 // contains .go files but do not make up a valid package.
-func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGoFiles []*zip.File, innerPath, modulePath string, sourceInfo *source.Info) (_ *internal.Package, err error) {
+func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGoFiles []*zip.File, innerPath, modulePath string, sourceInfo *source.Info) (_ *internal.LegacyPackage, err error) {
 	defer derrors.Wrap(&err, "loadPackageWithBuildContext(%q, %q, zipGoFiles, %q, %q, %+v)",
 		goos, goarch, innerPath, modulePath, sourceInfo)
 	// Apply build constraints to get a map from matching file names to their contents.
@@ -674,7 +674,7 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 	if modulePath == stdlib.ModulePath {
 		importPath = innerPath
 	}
-	return &internal.Package{
+	return &internal.LegacyPackage{
 		Path:              importPath,
 		Name:              packageName,
 		Synopsis:          doc.Synopsis(d.Doc),

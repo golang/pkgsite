@@ -100,13 +100,13 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 	return pathNotFoundError(ctx, "package", pkgPath, version)
 }
 
-func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.ResponseWriter, r *http.Request, pkg *internal.VersionedPackage, requestedVersion string) (err error) {
+func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.ResponseWriter, r *http.Request, pkg *internal.LegacyVersionedPackage, requestedVersion string) (err error) {
 	defer func() {
 		if _, ok := err.(*serverError); !ok {
 			derrors.Wrap(&err, "servePackagePageWithPackage(w, r, %q, %q, %q)", pkg.Path, pkg.ModulePath, requestedVersion)
 		}
 	}()
-	pkgHeader, err := createPackage(&pkg.Package, &pkg.ModuleInfo, requestedVersion == internal.LatestVersion)
+	pkgHeader, err := createPackage(&pkg.LegacyPackage, &pkg.ModuleInfo, requestedVersion == internal.LatestVersion)
 	if err != nil {
 		return fmt.Errorf("creating package header for %s@%s: %v", pkg.Path, pkg.Version, err)
 	}
@@ -115,7 +115,7 @@ func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.Respons
 	settings, ok := packageTabLookup[tab]
 	if !ok {
 		var tab string
-		if pkg.Package.IsRedistributable {
+		if pkg.LegacyPackage.IsRedistributable {
 			tab = "doc"
 		} else {
 			tab = "overview"
@@ -123,7 +123,7 @@ func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.Respons
 		http.Redirect(w, r, fmt.Sprintf(r.URL.Path+"?tab=%s", tab), http.StatusFound)
 		return nil
 	}
-	canShowDetails := pkg.Package.IsRedistributable || settings.AlwaysShowDetails
+	canShowDetails := pkg.LegacyPackage.IsRedistributable || settings.AlwaysShowDetails
 
 	var details interface{}
 	if canShowDetails {
@@ -134,8 +134,8 @@ func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.Respons
 		}
 	}
 	page := &DetailsPage{
-		basePage: s.newBasePage(r, packageHTMLTitle(&pkg.Package)),
-		Title:    packageTitle(&pkg.Package),
+		basePage: s.newBasePage(r, packageHTMLTitle(&pkg.LegacyPackage)),
+		Title:    packageTitle(&pkg.LegacyPackage),
 		Settings: settings,
 		Header:   pkgHeader,
 		BreadcrumbPath: breadcrumbPath(pkgHeader.Path, pkgHeader.Module.ModulePath,
