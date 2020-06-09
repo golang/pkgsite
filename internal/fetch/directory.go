@@ -19,7 +19,6 @@ func moduleDirectories(modulePath string,
 	pkgs []*internal.LegacyPackage,
 	readmes []*internal.Readme,
 	d *licenses.Detector) []*internal.DirectoryNew {
-
 	pkgLookup := map[string]*internal.LegacyPackage{}
 	for _, pkg := range pkgs {
 		pkgLookup[pkg.Path] = pkg

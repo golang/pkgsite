@@ -42,13 +42,8 @@ func TestInsertModule(t *testing.T) {
 			module: sample.DefaultModule(),
 		},
 		{
-			name: "valid test with internal package",
-			module: func() *internal.Module {
-				m := sample.Module(sample.ModulePath, sample.VersionString, "internal/ffoo")
-				m.Directories = append(m.Directories,
-					sample.DirectoryNewEmpty(sample.ModulePath+"/internal"))
-				return m
-			}(),
+			name:   "valid test with internal package",
+			module: sample.Module(sample.ModulePath, sample.VersionString, "internal/ffoo"),
 		},
 		{
 			name: "valid test with go.mod missing",

@@ -396,6 +396,7 @@ func TestGetModuleLicenses(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
+	testModule.Licenses = nil
 	for _, p := range testModule.LegacyPackages {
 		testModule.Licenses = append(testModule.Licenses, &licenses.License{
 			Metadata: p.Licenses[0],

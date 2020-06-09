@@ -237,8 +237,8 @@ func insertLicenses(ctx context.Context, db *database.DB, m *internal.Module, mo
 			"coverage",
 			"module_id",
 		}
-		return db.BulkInsert(ctx, "licenses", licenseCols, licenseValues,
-			database.OnConflictDoNothing)
+		return db.BulkUpsert(ctx, "licenses", licenseCols, licenseValues,
+			[]string{"module_path", "version", "file_path"})
 	}
 	return nil
 }
@@ -304,6 +304,7 @@ func insertPackages(ctx context.Context, db *database.DB, m *internal.Module) (e
 		}
 	}
 	if len(pkgValues) > 0 {
+		uniqueCols := []string{"path", "module_path", "version"}
 		pkgCols := []string{
 			"path",
 			"synopsis",
@@ -319,7 +320,7 @@ func insertPackages(ctx context.Context, db *database.DB, m *internal.Module) (e
 			"goarch",
 			"commit_time",
 		}
-		if err := db.BulkInsert(ctx, "packages", pkgCols, pkgValues, database.OnConflictDoNothing); err != nil {
+		if err := db.BulkUpsert(ctx, "packages", pkgCols, pkgValues, uniqueCols); err != nil {
 			return err
 		}
 	}
@@ -331,7 +332,7 @@ func insertPackages(ctx context.Context, db *database.DB, m *internal.Module) (e
 			"from_version",
 			"to_path",
 		}
-		if err := db.BulkInsert(ctx, "imports", importCols, importValues, database.OnConflictDoNothing); err != nil {
+		if err := db.BulkUpsert(ctx, "imports", importCols, importValues, importCols); err != nil {
 			return err
 		}
 	}
@@ -363,7 +364,7 @@ func insertImportsUnique(ctx context.Context, tx *database.DB, m *internal.Modul
 		return nil
 	}
 	cols := []string{"from_path", "from_module_path", "to_path"}
-	return tx.BulkInsert(ctx, "imports_unique", cols, values, database.OnConflictDoNothing)
+	return tx.BulkUpsert(ctx, "imports_unique", cols, values, cols)
 }
 
 func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module, moduleID int) (err error) {
@@ -451,7 +452,9 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 		}
 		log.Debugf(ctx, "memory before inserting into paths: %dM", allocMeg())
 
-		if err := db.BulkInsertReturning(ctx, "paths", pathCols, pathValues, database.OnConflictDoNothing, []string{"id", "path"}, func(rows *sql.Rows) error {
+		uniqueCols := []string{"path", "module_id"}
+		returningCols := []string{"id", "path"}
+		if err := db.BulkUpsertReturning(ctx, "paths", pathCols, pathValues, uniqueCols, returningCols, func(rows *sql.Rows) error {
 			var (
 				pathID int
 				path   string
@@ -484,7 +487,7 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 			readmeValues = append(readmeValues, id, readme.Filepath, makeValidUnicode(readme.Contents))
 		}
 		readmeCols := []string{"path_id", "file_path", "contents"}
-		if err := db.BulkInsert(ctx, "readmes", readmeCols, readmeValues, database.OnConflictDoNothing); err != nil {
+		if err := db.BulkUpsert(ctx, "readmes", readmeCols, readmeValues, []string{"path_id"}); err != nil {
 			return err
 		}
 	}
@@ -500,14 +503,9 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 			id := pathToID[path]
 			docValues = append(docValues, id, doc.GOOS, doc.GOARCH, doc.Synopsis, makeValidUnicode(doc.HTML))
 		}
-		docCols := []string{
-			"path_id",
-			"goos",
-			"goarch",
-			"synopsis",
-			"html",
-		}
-		if err := db.BulkInsert(ctx, "documentation", docCols, docValues, database.OnConflictDoNothing); err != nil {
+		uniqueCols := []string{"path_id", "goos", "goarch"}
+		docCols := append(uniqueCols, "synopsis", "html")
+		if err := db.BulkUpsert(ctx, "documentation", docCols, docValues, uniqueCols); err != nil {
 			return err
 		}
 	}
@@ -525,7 +523,7 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 		}
 	}
 	importCols := []string{"path_id", "to_path"}
-	return db.BulkInsert(ctx, "package_imports", importCols, importValues, database.OnConflictDoNothing)
+	return db.BulkUpsert(ctx, "package_imports", importCols, importValues, importCols)
 }
 
 // lock obtains an exclusive, transaction-scoped advisory lock on modulePath.

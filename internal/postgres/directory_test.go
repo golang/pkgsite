@@ -294,18 +294,16 @@ func TestGetDirectoryNew(t *testing.T) {
 
 	// Add a module that has READMEs in a directory and a package.
 	m := sample.Module("a.com/m", "v1.2.3", "dir/p")
-	d := sample.DirectoryNewEmpty("a.com/m/dir")
+	d := findDirectory(m, "a.com/m/dir")
 	d.Readme = &internal.Readme{
 		Filepath: "DIR_README.md",
 		Contents: "dir readme",
 	}
-	m.Directories = append(m.Directories, d)
-	d = sample.DirectoryNewEmpty("a.com/m/dir/p")
+	d = findDirectory(m, "a.com/m/dir/p")
 	d.Readme = &internal.Readme{
 		Filepath: "PKG_README.md",
 		Contents: "pkg readme",
 	}
-	m.Directories = append(m.Directories, d)
 	if err := testDB.InsertModule(ctx, m); err != nil {
 		t.Fatal(err)
 	}
@@ -441,6 +439,15 @@ func TestGetDirectoryNew(t *testing.T) {
 			}
 		})
 	}
+}
+
+func findDirectory(m *internal.Module, path string) *internal.DirectoryNew {
+	for _, d := range m.Directories {
+		if d.Path == path {
+			return d
+		}
+	}
+	return nil
 }
 
 func TestGetDirectoryFieldSet(t *testing.T) {
