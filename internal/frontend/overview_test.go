@@ -215,6 +215,7 @@ func TestReadmeHTML(t *testing.T) {
 		},
 		{
 			name: "relative image markdown is left alone for unknown origins",
+			mi:   &internal.ModuleInfo{},
 			readme: &internal.Readme{
 				Filepath: "README.md",
 				Contents: "![Go logo](doc/logo.png)",
@@ -259,6 +260,45 @@ func TestReadmeHTML(t *testing.T) {
 				Contents: "[something](doc/thing.md)",
 			},
 			want: template.HTML(`<p><a href="https://github.com/some/repo/blob/v1.2.3/dir/sub/doc/thing.md" rel="nofollow">something</a></p>` + "\n"),
+		},
+		{
+			name: "image link in embedded HTML",
+			mi: &internal.ModuleInfo{
+				Version:     "v0.3.3",
+				VersionType: version.TypeRelease,
+				SourceInfo:  source.NewGitHubInfo("https://github.com/pdfcpu/pdfcpu", "", "v0.3.3"),
+			},
+			readme: &internal.Readme{
+				Filepath: "README.md",
+				Contents: "<img src=\"resources/logoSmall.png\" />\n\n# Heading\n",
+			},
+			want: template.HTML("<p><img src=\"https://raw.githubusercontent.com/pdfcpu/pdfcpu/v0.3.3/resources/logoSmall.png\"/></p>\n\n<h1 id=\"heading\">Heading</h1>\n"),
+		},
+		{
+			name: "image link in embedded HTML with surrounding p tag",
+			mi: &internal.ModuleInfo{
+				Version:     "v1.2.3",
+				VersionType: version.TypeRelease,
+				SourceInfo:  source.NewGitHubInfo("https://github.com/some/repo", "", "v1.2.3"),
+			},
+			readme: &internal.Readme{
+				Filepath: "README.md",
+				Contents: "<p align=\"center\"><img src=\"foo.png\" /></p>\n\n# Heading",
+			},
+			want: template.HTML("<p align=\"center\"><img src=\"https://raw.githubusercontent.com/some/repo/v1.2.3/foo.png\"/></p>\n\n<h1 id=\"heading\">Heading</h1>\n"),
+		},
+		{
+			name: "image link in embedded HTML with surrounding div",
+			mi: &internal.ModuleInfo{
+				Version:     "v1.2.3",
+				VersionType: version.TypeRelease,
+				SourceInfo:  source.NewGitHubInfo("https://github.com/some/repo", "", "v1.2.3"),
+			},
+			readme: &internal.Readme{
+				Filepath: "README.md",
+				Contents: "<div align=\"center\"><img src=\"foo.png\" /></div>\n\n# Heading",
+			},
+			want: template.HTML("<div align=\"center\"><img src=\"https://raw.githubusercontent.com/some/repo/v1.2.3/foo.png\"/></div>\n\n<h1 id=\"heading\">Heading</h1>\n"),
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

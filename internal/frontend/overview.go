@@ -6,8 +6,8 @@ package frontend
 
 import (
 	"bytes"
+	"context"
 	"fmt"
-	"html"
 	"html/template"
 	"net/url"
 	"path"
@@ -16,7 +16,10 @@ import (
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
+	"golang.org/x/net/html"
+	"golang.org/x/net/html/atom"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -115,10 +118,13 @@ func readmeHTML(mi *internal.ModuleInfo, readme *internal.Readme) template.HTML 
 	// not allow iframes, object, embed, styles, script, etc.
 	p := bluemonday.UGCPolicy()
 
-	// Allow width and align attributes on img. This is used to size README
+	// Allow width and align attributes on img, div, and p tags.
+	// This is used to center elements in a readme as well as to size it
 	// images appropriately where used, like the gin-gonic/logo/color.png
 	// image in the github.com/gin-gonic/gin README.
 	p.AllowAttrs("width", "align").OnElements("img")
+	p.AllowAttrs("width", "align").OnElements("div")
+	p.AllowAttrs("width", "align").OnElements("p")
 
 	// blackfriday.Run() uses CommonHTMLFlags and CommonExtensions by default.
 	renderer := blackfriday.NewHTMLRenderer(blackfriday.HTMLRendererParameters{Flags: blackfriday.CommonHTMLFlags})
@@ -129,8 +135,19 @@ func readmeHTML(mi *internal.ModuleInfo, readme *internal.Readme) template.HTML 
 	b := &bytes.Buffer{}
 	rootNode := parser.Parse([]byte(readme.Contents))
 	rootNode.Walk(func(node *blackfriday.Node, entering bool) blackfriday.WalkStatus {
-		if node.Type == blackfriday.Image || node.Type == blackfriday.Link {
-			translateRelativeLink(node, mi, readme)
+		switch node.Type {
+		case blackfriday.Image, blackfriday.Link:
+			useRaw := node.Type == blackfriday.Image
+			if d := translateRelativeLink(string(node.LinkData.Destination), mi, useRaw, readme); d != "" {
+				node.LinkData.Destination = []byte(d)
+			}
+		case blackfriday.HTMLBlock, blackfriday.HTMLSpan:
+			d, err := translateHTML(node.Literal, mi, readme)
+			if err != nil {
+				log.Errorf(context.Background(), "couldn't transform html block(%s): %v", node.Literal, err)
+			} else {
+				node.Literal = d
+			}
 		}
 		return renderer.RenderNode(b, node, entering)
 	})
@@ -144,34 +161,80 @@ func isMarkdown(filename string) bool {
 	return ext == ".md" || ext == ".markdown"
 }
 
-// translateRelativeLink modifies a blackfriday.Node to convert relative image
-// paths to absolute paths.
+// translateRelativeLink converts relative image paths to absolute paths.
 //
-// Markdown files, such as the Go README, sometimes use relative image paths to
-// image files inside the repository. As the discovery site doesn't host the
-// full repository content, in order for the image to render, we need to
-// convert the relative path to an absolute URL to a hosted image.
-func translateRelativeLink(node *blackfriday.Node, mi *internal.ModuleInfo, readme *internal.Readme) {
-	destURL, err := url.Parse(string(node.LinkData.Destination))
+// README files sometimes use relative image paths to image files inside the
+// repository. As the discovery site doesn't host the full repository content,
+// in order for the image to render, we need to convert the relative path to an
+// absolute URL to a hosted image.
+func translateRelativeLink(dest string, mi *internal.ModuleInfo, useRaw bool, readme *internal.Readme) string {
+	destURL, err := url.Parse(dest)
 	if err != nil || destURL.IsAbs() {
-		return
+		return ""
 	}
 	if destURL.Path == "" {
 		// This is a fragment; leave it.
-		return
-	}
-	if mi == nil {
-		return
+		return ""
 	}
 	// Paths are relative to the README location.
 	destPath := path.Join(path.Dir(readme.Filepath), path.Clean(destURL.Path))
-	var newURL string
-	if node.Type == blackfriday.Image {
-		newURL = mi.SourceInfo.RawURL(destPath)
-	} else {
-		newURL = mi.SourceInfo.FileURL(destPath)
+	if useRaw {
+		return mi.SourceInfo.RawURL(destPath)
 	}
-	if newURL != "" {
-		node.LinkData.Destination = []byte(newURL)
+	return mi.SourceInfo.FileURL(destPath)
+}
+
+// translateHTML parses html text into parsed html nodes. It then
+// iterate through the nodes and replaces the src key with a value
+// that properly represents the source of the image from the repo.
+func translateHTML(htmlText []byte, mi *internal.ModuleInfo, readme *internal.Readme) ([]byte, error) {
+	r := bytes.NewReader(htmlText)
+	nodes, err := html.ParseFragment(r, nil)
+	if err != nil {
+		return nil, err
+	}
+	var buf bytes.Buffer
+	for _, n := range nodes {
+		// Every parsed node begins with <html><head></head><body>. Ignore that.
+		if n.DataAtom != atom.Html {
+			return htmlText, nil
+		}
+		// When the parsed html nodes don't have a valid structure
+		// (i.e: an html comment), then just return the original text.
+		if n.FirstChild == nil || n.FirstChild.NextSibling == nil || n.FirstChild.NextSibling.DataAtom != atom.Body {
+			return htmlText, nil
+		}
+		n = n.FirstChild.NextSibling.FirstChild
+		// If <html><head><body> </body>... has no children (empty content),
+		// then just return the original text.
+		if n == nil {
+			return htmlText, nil
+		}
+		walkHTML(n, mi, readme)
+		if err := html.Render(&buf, n); err != nil {
+			return nil, err
+		}
+	}
+	return buf.Bytes(), nil
+}
+
+// walkHTML crawls through an html node and replaces the src
+// tag link with a link that properly represents the image
+// from the repo source.
+func walkHTML(n *html.Node, mi *internal.ModuleInfo, readme *internal.Readme) {
+	if n.Type == html.ElementNode && n.DataAtom == atom.Img {
+		var attrs []html.Attribute
+		for _, a := range n.Attr {
+			if a.Key == "src" {
+				if v := translateRelativeLink(a.Val, mi, true, readme); v != "" {
+					a.Val = v
+				}
+			}
+			attrs = append(attrs, a)
+		}
+		n.Attr = attrs
+	}
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		walkHTML(c, mi, readme)
 	}
 }
