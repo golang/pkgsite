@@ -219,10 +219,11 @@ func (db *DB) MaxRetries() int {
 const OnConflictDoNothing = "ON CONFLICT DO NOTHING"
 
 // BulkInsert constructs and executes a multi-value insert statement. The
-// query is constructed using the format: INSERT TO <table> (<columns>) VALUES
-// (<placeholders-for-each-item-in-values>) If conflictNoAction is true, it
-// append ON CONFLICT DO NOTHING to the end of the query. The query is executed
-// using a PREPARE statement with the provided values.
+// query is constructed using the format:
+//   INSERT INTO <table> (<columns>) VALUES (<placeholders-for-each-item-in-values>)
+// If conflictAction is not empty, it is appended to the statement.
+//
+// The query is executed using a PREPARE statement with the provided values.
 func (db *DB) BulkInsert(ctx context.Context, table string, columns []string, values []interface{}, conflictAction string) (err error) {
 	defer derrors.Wrap(&err, "DB.BulkInsert(ctx, %q, %v, [%d values], %q)",
 		table, columns, len(values), conflictAction)
@@ -242,6 +243,21 @@ func (db *DB) BulkInsertReturning(ctx context.Context, table string, columns []s
 		return errors.New("need returningColumns and scan function")
 	}
 	return db.bulkInsert(ctx, table, columns, returningColumns, values, conflictAction, scanFunc)
+}
+
+// BulkUpsert is like BulkInsert, but instead of a conflict action, a list of
+// conflicting columns is provided. An "ON CONFLICT (conflict_columns) DO
+// UPDATE" clause is added to the statement, with assignments "c=excluded.c" for
+// every column c.
+func (db *DB) BulkUpsert(ctx context.Context, table string, columns []string, values []interface{}, conflictColumns []string) error {
+	conflictAction := buildUpsertConflictAction(columns, conflictColumns)
+	return db.BulkInsert(ctx, table, columns, values, conflictAction)
+}
+
+// BulkUpsertReturning is like BulkInsertReturning, but performs an upsert like BulkUpsert.
+func (db *DB) BulkUpsertReturning(ctx context.Context, table string, columns []string, values []interface{}, conflictColumns, returningColumns []string, scanFunc func(*sql.Rows) error) error {
+	conflictAction := buildUpsertConflictAction(columns, conflictColumns)
+	return db.BulkInsertReturning(ctx, table, columns, values, conflictAction, returningColumns, scanFunc)
 }
 
 func (db *DB) bulkInsert(ctx context.Context, table string, columns, returningColumns []string, values []interface{}, conflictAction string, scanFunc func(*sql.Rows) error) (err error) {
@@ -336,6 +352,16 @@ func buildInsertQuery(table string, columns, returningColumns []string, nvalues 
 		fmt.Fprintf(&b, " RETURNING %s", strings.Join(returningColumns, ", "))
 	}
 	return b.String()
+}
+
+func buildUpsertConflictAction(columns, conflictColumns []string) string {
+	var sets []string
+	for _, c := range columns {
+		sets = append(sets, fmt.Sprintf("%s=excluded.%[1]s", c))
+	}
+	return fmt.Sprintf("ON CONFLICT (%s) DO UPDATE SET %s",
+		strings.Join(conflictColumns, ", "),
+		strings.Join(sets, ", "))
 }
 
 // maxBulkUpdateArrayLen is the maximum size of an array that BulkUpdate will send to

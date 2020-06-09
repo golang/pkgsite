@@ -83,14 +83,6 @@ func TestBulkInsert(t *testing.T) {
 		},
 		{
 
-			name:           "test-conflict-no-action-true",
-			columns:        []string{"colA"},
-			values:         []interface{}{"valueA", "valueA"},
-			conflictAction: OnConflictDoNothing,
-			wantCount:      1,
-		},
-		{
-
 			name:         "insert-returning",
 			columns:      []string{"colA", "colB"},
 			values:       []interface{}{"valueA1", "valueB1", "valueA2", "valueB2"},
@@ -99,10 +91,18 @@ func TestBulkInsert(t *testing.T) {
 		},
 		{
 
-			name:    "test-conflict-no-action-false",
+			name:    "test-conflict",
 			columns: []string{"colA"},
 			values:  []interface{}{"valueA", "valueA"},
 			wantErr: true,
+		},
+		{
+
+			name:           "test-conflict-do-nothing",
+			columns:        []string{"colA"},
+			values:         []interface{}{"valueA", "valueA"},
+			conflictAction: OnConflictDoNothing,
+			wantCount:      1,
 		},
 		{
 
@@ -216,6 +216,48 @@ func TestLargeBulkInsert(t *testing.T) {
 	var want int64 = size * (size + 1) / 2
 	if sum != want {
 		t.Errorf("sum = %d, want %d", sum, want)
+	}
+}
+
+func TestBulkUpsert(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*3)
+	defer cancel()
+	if _, err := testDB.Exec(ctx, `CREATE TEMPORARY TABLE test_replace (C1 int PRIMARY KEY, C2 int);`); err != nil {
+		t.Fatal(err)
+	}
+	for _, values := range [][]interface{}{
+		{2, 4, 4, 8},                 // First, insert some rows.
+		{1, -1, 2, -2, 3, -3, 4, -4}, // Then replace those rows while inserting others.
+	} {
+		err := testDB.Transact(ctx, sql.LevelDefault, func(tx *DB) error {
+			return tx.BulkUpsert(ctx, "test_replace", []string{"C1", "C2"}, values, []string{"C1"})
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		var got []interface{}
+		err = testDB.RunQuery(ctx, `SELECT C1, C2 FROM test_replace ORDER BY C1`, func(rows *sql.Rows) error {
+			var a, b int
+			if err := rows.Scan(&a, &b); err != nil {
+				return err
+			}
+			got = append(got, a, b)
+			return nil
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !cmp.Equal(got, values) {
+			t.Errorf("%v: got %v, want %v", values, got, values)
+		}
+	}
+}
+
+func TestBuildUpsertConflictAction(t *testing.T) {
+	got := buildUpsertConflictAction([]string{"a", "b"}, []string{"c", "d"})
+	want := "ON CONFLICT (c, d) DO UPDATE SET a=excluded.a, b=excluded.b"
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
 	}
 }
 
