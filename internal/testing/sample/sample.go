@@ -105,7 +105,7 @@ func LegacyPackage(modulePath, suffix string) *internal.LegacyPackage {
 	}
 }
 
-func ModuleInfo(modulePath, versionString string) *internal.ModuleInfo {
+func LegacyModuleInfo(modulePath, versionString string) *internal.LegacyModuleInfo {
 	vtype, err := version.ParseType(versionString)
 	if err != nil {
 		panic(err)
@@ -117,8 +117,8 @@ func ModuleInfo(modulePath, versionString string) *internal.ModuleInfo {
 
 // We shouldn't need this, but some code (notably frontend/directory_test.go) creates
 // ModuleInfos with "latest" for version, which should not be valid.
-func ModuleInfoReleaseType(modulePath, versionString string) *internal.ModuleInfo {
-	return &internal.ModuleInfo{
+func ModuleInfoReleaseType(modulePath, versionString string) *internal.LegacyModuleInfo {
+	return &internal.LegacyModuleInfo{
 		ModulePath:           modulePath,
 		Version:              versionString,
 		LegacyReadmeFilePath: ReadmeFilePath,
@@ -141,11 +141,11 @@ func DefaultModule() *internal.Module {
 // Module creates a Module with the given path and version.
 // The list of suffixes is used to create LegacyPackages within the module.
 func Module(modulePath, version string, suffixes ...string) *internal.Module {
-	mi := ModuleInfo(modulePath, version)
+	mi := LegacyModuleInfo(modulePath, version)
 	m := &internal.Module{
-		ModuleInfo:     *mi,
-		LegacyPackages: nil,
-		Licenses:       Licenses,
+		LegacyModuleInfo: *mi,
+		LegacyPackages:   nil,
+		Licenses:         Licenses,
 		Directories: []*internal.DirectoryNew{
 			DirectoryNewForModuleRoot(mi, LicenseMetadata),
 		},
@@ -191,7 +191,7 @@ func DirectoryNewEmpty(path string) *internal.DirectoryNew {
 	}
 }
 
-func DirectoryNewForModuleRoot(m *internal.ModuleInfo, licenses []*licenses.Metadata) *internal.DirectoryNew {
+func DirectoryNewForModuleRoot(m *internal.LegacyModuleInfo, licenses []*licenses.Metadata) *internal.DirectoryNew {
 	d := &internal.DirectoryNew{
 		Path:              m.ModulePath,
 		IsRedistributable: m.IsRedistributable,

@@ -60,7 +60,7 @@ var (
 		GOOS:              "linux",
 		GOARCH:            "amd64",
 	}
-	wantModuleInfo = internal.ModuleInfo{
+	wantModuleInfo = internal.LegacyModuleInfo{
 		ModulePath:        "foo.com/bar",
 		Version:           "v1.2.0",
 		CommitTime:        time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
@@ -69,8 +69,8 @@ var (
 		HasGoMod:          true,
 	}
 	wantVersionedPackage = &internal.LegacyVersionedPackage{
-		ModuleInfo:    wantModuleInfo,
-		LegacyPackage: wantPackage,
+		LegacyModuleInfo: wantModuleInfo,
+		LegacyPackage:    wantPackage,
 	}
 	cmpOpts = append([]cmp.Option{
 		cmpopts.IgnoreFields(internal.LegacyPackage{}, "DocumentationHTML"),
@@ -82,9 +82,9 @@ func TestDataSource_GetDirectory(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
 	want := &internal.LegacyDirectory{
-		Path:       "foo.com/bar",
-		ModuleInfo: wantModuleInfo,
-		Packages:   []*internal.LegacyPackage{&wantPackage},
+		Path:             "foo.com/bar",
+		LegacyModuleInfo: wantModuleInfo,
+		Packages:         []*internal.LegacyPackage{&wantPackage},
 	}
 	got, err := ds.GetDirectory(ctx, "foo.com/bar", internal.UnknownModulePath, "v1.2.0", internal.AllFields)
 	if err != nil {
@@ -192,8 +192,8 @@ func TestDataSource_GetTaggedVersionsForModule(t *testing.T) {
 	}
 	v110 := wantModuleInfo
 	v110.Version = "v1.1.0"
-	want := []*internal.ModuleInfo{&wantModuleInfo, &v110}
-	ignore := cmpopts.IgnoreFields(internal.ModuleInfo{}, "CommitTime", "VersionType", "IsRedistributable", "HasGoMod")
+	want := []*internal.LegacyModuleInfo{&wantModuleInfo, &v110}
+	ignore := cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "CommitTime", "VersionType", "IsRedistributable", "HasGoMod")
 	if diff := cmp.Diff(want, got, ignore); diff != "" {
 		t.Errorf("GetTaggedVersionsForPackageSeries diff (-want +got):\n%s", diff)
 	}
@@ -213,8 +213,8 @@ func TestDataSource_GetTaggedVersionsForPackageSeries(t *testing.T) {
 	}
 	v110 := wantModuleInfo
 	v110.Version = "v1.1.0"
-	want := []*internal.ModuleInfo{&wantModuleInfo, &v110}
-	ignore := cmpopts.IgnoreFields(internal.ModuleInfo{}, "CommitTime", "VersionType", "IsRedistributable", "HasGoMod")
+	want := []*internal.LegacyModuleInfo{&wantModuleInfo, &v110}
+	ignore := cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "CommitTime", "VersionType", "IsRedistributable", "HasGoMod")
 	if diff := cmp.Diff(want, got, ignore); diff != "" {
 		t.Errorf("GetTaggedVersionsForPackageSeries diff (-want +got):\n%s", diff)
 	}

@@ -31,7 +31,7 @@ var moduleOnePackage = &testModule{
 	},
 	fr: &FetchResult{
 		Module: &internal.Module{
-			ModuleInfo: internal.ModuleInfo{
+			LegacyModuleInfo: internal.LegacyModuleInfo{
 				ModulePath:           "github.com/basic",
 				LegacyReadmeFilePath: "README.md",
 				LegacyReadmeContents: "THIS IS A README",
@@ -98,7 +98,7 @@ var moduleMultiPackage = &testModule{
 	},
 	fr: &FetchResult{
 		Module: &internal.Module{
-			ModuleInfo: internal.ModuleInfo{
+			LegacyModuleInfo: internal.LegacyModuleInfo{
 				ModulePath:           "github.com/my/module",
 				HasGoMod:             true,
 				LegacyReadmeFilePath: "README.md",
@@ -162,7 +162,7 @@ var moduleNoGoMod = &testModule{
 	},
 	fr: &FetchResult{
 		Module: &internal.Module{
-			ModuleInfo: internal.ModuleInfo{
+			LegacyModuleInfo: internal.LegacyModuleInfo{
 				ModulePath: "no.mod/module",
 				HasGoMod:   false,
 			},
@@ -224,7 +224,7 @@ var moduleBadPackages = &testModule{
 	fr: &FetchResult{
 		Status: derrors.ToHTTPStatus(derrors.HasIncompletePackages),
 		Module: &internal.Module{
-			ModuleInfo: internal.ModuleInfo{
+			LegacyModuleInfo: internal.LegacyModuleInfo{
 				ModulePath: "bad.mod/module",
 			},
 			Directories: []*internal.DirectoryNew{
@@ -286,7 +286,7 @@ var moduleBuildConstraints = &testModule{
 	fr: &FetchResult{
 		Status: derrors.ToHTTPStatus(derrors.HasIncompletePackages),
 		Module: &internal.Module{
-			ModuleInfo: internal.ModuleInfo{
+			LegacyModuleInfo: internal.LegacyModuleInfo{
 				ModulePath: "build.constraints/module",
 				HasGoMod:   false,
 			},
@@ -371,7 +371,7 @@ var moduleNonRedist = &testModule{
 	},
 	fr: &FetchResult{
 		Module: &internal.Module{
-			ModuleInfo: internal.ModuleInfo{
+			LegacyModuleInfo: internal.LegacyModuleInfo{
 				ModulePath:           "nonredistributable.mod/module",
 				LegacyReadmeFilePath: "README.md",
 				LegacyReadmeContents: "README FILE FOR TESTING.",
@@ -440,7 +440,7 @@ var moduleBadImportPath = &testModule{
 	fr: &FetchResult{
 		Status: derrors.ToHTTPStatus(derrors.HasIncompletePackages),
 		Module: &internal.Module{
-			ModuleInfo: internal.ModuleInfo{
+			LegacyModuleInfo: internal.LegacyModuleInfo{
 				ModulePath: "bad.import.path.com",
 			},
 			Directories: []*internal.DirectoryNew{
@@ -505,7 +505,7 @@ var moduleDocTest = &testModule{
 	fr: &FetchResult{
 		GoModPath: "doc.test",
 		Module: &internal.Module{
-			ModuleInfo: internal.ModuleInfo{
+			LegacyModuleInfo: internal.LegacyModuleInfo{
 				ModulePath: "doc.test",
 				HasGoMod:   false,
 			},
@@ -547,7 +547,7 @@ var moduleWasm = &testModule{
 	},
 	fr: &FetchResult{
 		Module: &internal.Module{
-			ModuleInfo: internal.ModuleInfo{
+			LegacyModuleInfo: internal.LegacyModuleInfo{
 				ModulePath:           "github.com/my/module/js",
 				LegacyReadmeFilePath: "README.md",
 				LegacyReadmeContents: "THIS IS A README",
@@ -597,7 +597,7 @@ var moduleStd = &testModule{
 	},
 	fr: &FetchResult{
 		Module: &internal.Module{
-			ModuleInfo: internal.ModuleInfo{
+			LegacyModuleInfo: internal.LegacyModuleInfo{
 				ModulePath:           "std",
 				Version:              "v1.12.5",
 				CommitTime:           stdlib.TestCommitTime,
@@ -752,7 +752,7 @@ package example_test
 		fr: &FetchResult{
 			GoModPath: path,
 			Module: &internal.Module{
-				ModuleInfo: internal.ModuleInfo{
+				LegacyModuleInfo: internal.LegacyModuleInfo{
 					ModulePath: path,
 					HasGoMod:   false,
 				},

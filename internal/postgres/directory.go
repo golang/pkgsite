@@ -57,7 +57,7 @@ func (db *DB) GetDirectoryNew(ctx context.Context, path, modulePath, version str
 			AND m.module_path = $2
 			AND m.version = $3;`
 	var (
-		mi                         internal.ModuleInfo
+		mi                         internal.LegacyModuleInfo
 		dir                        internal.DirectoryNew
 		readme                     internal.Readme
 		doc                        internal.Documentation
@@ -125,8 +125,8 @@ func (db *DB) GetDirectoryNew(ctx context.Context, path, modulePath, version str
 	}
 
 	return &internal.VersionedDirectory{
-		ModuleInfo:   mi,
-		DirectoryNew: dir,
+		LegacyModuleInfo: mi,
+		DirectoryNew:     dir,
 	}, nil
 }
 
@@ -185,7 +185,7 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version str
 
 	var (
 		packages []*internal.LegacyPackage
-		mi       = internal.ModuleInfo{LegacyReadmeContents: internal.StringFieldMissing}
+		mi       = internal.LegacyModuleInfo{LegacyReadmeContents: internal.StringFieldMissing}
 	)
 	collect := func(rows *sql.Rows) error {
 		var (
@@ -243,9 +243,9 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version str
 		return packages[i].Path < packages[j].Path
 	})
 	return &internal.LegacyDirectory{
-		Path:       dirPath,
-		ModuleInfo: mi,
-		Packages:   packages,
+		Path:             dirPath,
+		LegacyModuleInfo: mi,
+		Packages:         packages,
 	}, nil
 }
 

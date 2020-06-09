@@ -63,7 +63,7 @@ type VersionSummary struct {
 
 // fetchModuleVersionsDetails builds a version hierarchy for module versions
 // with the same series path as the given version.
-func fetchModuleVersionsDetails(ctx context.Context, ds internal.DataSource, mi *internal.ModuleInfo) (*VersionsDetails, error) {
+func fetchModuleVersionsDetails(ctx context.Context, ds internal.DataSource, mi *internal.LegacyModuleInfo) (*VersionsDetails, error) {
 	versions, err := ds.GetTaggedVersionsForModule(ctx, mi.ModulePath)
 	if err != nil {
 		return nil, err
@@ -76,7 +76,7 @@ func fetchModuleVersionsDetails(ctx context.Context, ds internal.DataSource, mi 
 			return nil, err
 		}
 	}
-	linkify := func(m *internal.ModuleInfo) string {
+	linkify := func(m *internal.LegacyModuleInfo) string {
 		return constructModuleURL(m.ModulePath, linkVersion(m.Version, m.ModulePath))
 	}
 	return buildVersionDetails(mi.ModulePath, versions, linkify), nil
@@ -98,7 +98,7 @@ func fetchPackageVersionsDetails(ctx context.Context, ds internal.DataSource, pk
 		}
 	}
 
-	var filteredVersions []*internal.ModuleInfo
+	var filteredVersions []*internal.LegacyModuleInfo
 	// TODO(rfindley): remove this filtering, as it should not be necessary and
 	// is probably a relic of earlier version query implementations.
 	for _, v := range versions {
@@ -109,7 +109,7 @@ func fetchPackageVersionsDetails(ctx context.Context, ds internal.DataSource, pk
 		}
 	}
 
-	linkify := func(mi *internal.ModuleInfo) string {
+	linkify := func(mi *internal.LegacyModuleInfo) string {
 		// Here we have only version information, but need to construct the full
 		// import path of the package corresponding to this version.
 		var versionPath string
@@ -135,7 +135,7 @@ func fetchPackageVersionsDetails(ctx context.Context, ds internal.DataSource, pk
 //   3) Join with the versioned module path foo.com/bar/v2 to get
 //      foo.com/bar/v2/baz.
 // ...being careful about slashes along the way.
-func pathInVersion(v1Path string, mi *internal.ModuleInfo) string {
+func pathInVersion(v1Path string, mi *internal.LegacyModuleInfo) string {
 	suffix := strings.TrimPrefix(strings.TrimPrefix(v1Path, mi.SeriesPath()), "/")
 	if suffix == "" {
 		return mi.ModulePath
@@ -147,7 +147,7 @@ func pathInVersion(v1Path string, mi *internal.ModuleInfo) string {
 // versions tab, organizing major versions into those that have the same module
 // path as the package version under consideration, and those that don't.  The
 // given versions MUST be sorted first by module path and then by semver.
-func buildVersionDetails(currentModulePath string, modInfos []*internal.ModuleInfo, linkify func(v *internal.ModuleInfo) string) *VersionsDetails {
+func buildVersionDetails(currentModulePath string, modInfos []*internal.LegacyModuleInfo, linkify func(v *internal.LegacyModuleInfo) string) *VersionsDetails {
 
 	// lists organizes versions by VersionListKey. Note that major version isn't
 	// sufficient as a key: there are packages contained in the same major

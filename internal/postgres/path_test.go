@@ -44,7 +44,7 @@ func TestGetPathInfo(t *testing.T) {
 		pkgName := path.Base(testModule.packageSuffix)
 		pkgPath := path.Join(testModule.module, testModule.packageSuffix)
 		m := &internal.Module{
-			ModuleInfo: internal.ModuleInfo{
+			LegacyModuleInfo: internal.LegacyModuleInfo{
 				ModulePath:  testModule.module,
 				Version:     testModule.version,
 				VersionType: vtype,

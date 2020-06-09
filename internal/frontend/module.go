@@ -71,7 +71,7 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 	return pathNotFoundError(ctx, "module", modulePath, requestedVersion)
 }
 
-func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseWriter, r *http.Request, mi *internal.ModuleInfo, requestedVersion string) error {
+func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseWriter, r *http.Request, mi *internal.LegacyModuleInfo, requestedVersion string) error {
 	licenses, err := s.ds.GetModuleLicenses(ctx, mi.ModulePath, mi.Version)
 	if err != nil {
 		return err

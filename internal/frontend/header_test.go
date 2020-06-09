@@ -96,8 +96,8 @@ func TestElapsedTime(t *testing.T) {
 func TestCreatePackageHeader(t *testing.T) {
 	vpkg := func(modulePath, suffix, name string) *internal.LegacyVersionedPackage {
 		vp := &internal.LegacyVersionedPackage{
-			ModuleInfo:    *sample.ModuleInfo(modulePath, sample.VersionString),
-			LegacyPackage: *sample.LegacyPackage(modulePath, suffix),
+			LegacyModuleInfo: *sample.LegacyModuleInfo(modulePath, sample.VersionString),
+			LegacyPackage:    *sample.LegacyPackage(modulePath, suffix),
 		}
 		if name != "" {
 			vp.LegacyPackage.Name = name
@@ -138,7 +138,7 @@ func TestCreatePackageHeader(t *testing.T) {
 		},
 	} {
 		t.Run(tc.label, func(t *testing.T) {
-			got, err := createPackage(&tc.pkg.LegacyPackage, &tc.pkg.ModuleInfo, false)
+			got, err := createPackage(&tc.pkg.LegacyPackage, &tc.pkg.LegacyModuleInfo, false)
 			if err != nil {
 				t.Fatal(err)
 			}

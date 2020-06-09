@@ -34,7 +34,7 @@ type OverviewDetails struct {
 
 // versionedLinks says whether the constructed URLs should have versions.
 // constructOverviewDetails uses the given version to construct an OverviewDetails.
-func constructOverviewDetails(mi *internal.ModuleInfo, isRedistributable bool, versionedLinks bool) *OverviewDetails {
+func constructOverviewDetails(mi *internal.LegacyModuleInfo, isRedistributable bool, versionedLinks bool) *OverviewDetails {
 	var lv string
 	if versionedLinks {
 		lv = linkVersion(mi.Version, mi.ModulePath)
@@ -56,7 +56,7 @@ func constructOverviewDetails(mi *internal.ModuleInfo, isRedistributable bool, v
 
 // fetchPackageOverviewDetails uses data for the given package to return an OverviewDetails.
 func fetchPackageOverviewDetails(pkg *internal.LegacyVersionedPackage, versionedLinks bool) *OverviewDetails {
-	od := constructOverviewDetails(&pkg.ModuleInfo, pkg.LegacyPackage.IsRedistributable, versionedLinks)
+	od := constructOverviewDetails(&pkg.LegacyModuleInfo, pkg.LegacyPackage.IsRedistributable, versionedLinks)
 	od.PackageSourceURL = pkg.SourceInfo.DirectoryURL(packageSubdir(pkg.Path, pkg.ModulePath))
 	if !pkg.LegacyPackage.IsRedistributable {
 		od.Redistributable = false
@@ -66,7 +66,7 @@ func fetchPackageOverviewDetails(pkg *internal.LegacyVersionedPackage, versioned
 
 // fetchPackageOverviewDetailsNew uses data for the given versioned directory to return an OverviewDetails.
 func fetchPackageOverviewDetailsNew(vdir *internal.VersionedDirectory, versionedLinks bool) *OverviewDetails {
-	od := constructOverviewDetails(&vdir.ModuleInfo, vdir.DirectoryNew.IsRedistributable, versionedLinks)
+	od := constructOverviewDetails(&vdir.LegacyModuleInfo, vdir.DirectoryNew.IsRedistributable, versionedLinks)
 	od.PackageSourceURL = vdir.SourceInfo.DirectoryURL(packageSubdir(vdir.Path, vdir.ModulePath))
 	if !vdir.DirectoryNew.IsRedistributable {
 		od.Redistributable = false
@@ -89,7 +89,7 @@ func packageSubdir(pkgPath, modulePath string) string {
 // readmeHTML sanitizes readmeContents based on bluemondy.UGCPolicy and returns
 // a template.HTML. If readmeFilePath indicates that this is a markdown file,
 // it will also render the markdown contents using blackfriday.
-func readmeHTML(mi *internal.ModuleInfo) template.HTML {
+func readmeHTML(mi *internal.LegacyModuleInfo) template.HTML {
 	if len(mi.LegacyReadmeContents) == 0 {
 		return ""
 	}
@@ -138,7 +138,7 @@ func isMarkdown(filename string) bool {
 // image files inside the repository. As the discovery site doesn't host the
 // full repository content, in order for the image to render, we need to
 // convert the relative path to an absolute URL to a hosted image.
-func translateRelativeLink(node *blackfriday.Node, mi *internal.ModuleInfo) {
+func translateRelativeLink(node *blackfriday.Node, mi *internal.LegacyModuleInfo) {
 	destURL, err := url.Parse(string(node.LinkData.Destination))
 	if err != nil || destURL.IsAbs() {
 		return

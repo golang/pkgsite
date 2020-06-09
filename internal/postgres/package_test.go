@@ -45,8 +45,8 @@ func TestGetPackage(t *testing.T) {
 	checkPackage := func(got *internal.LegacyVersionedPackage, pkgPath, modulePath, version string) {
 		t.Helper()
 		want := &internal.LegacyVersionedPackage{
-			ModuleInfo:    *sample.ModuleInfo(modulePath, version),
-			LegacyPackage: *sample.LegacyPackage(modulePath, suffix(pkgPath, modulePath)),
+			LegacyModuleInfo: *sample.LegacyModuleInfo(modulePath, version),
+			LegacyPackage:    *sample.LegacyPackage(modulePath, suffix(pkgPath, modulePath)),
 		}
 		want.Imports = nil
 		opts := cmp.Options{

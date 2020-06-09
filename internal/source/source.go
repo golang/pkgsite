@@ -232,14 +232,14 @@ func (c *Client) doURL(ctx context.Context, method, url string, only200 bool) (_
 	return resp, nil
 }
 
-// ModuleInfo determines the repository corresponding to the module path. It
+// LegacyModuleInfo determines the repository corresponding to the module path. It
 // returns a URL to that repo, as well as the directory of the module relative
 // to the repo root.
 //
-// ModuleInfo may fetch from arbitrary URLs, so it can be slow.
+// LegacyModuleInfo may fetch from arbitrary URLs, so it can be slow.
 func ModuleInfo(ctx context.Context, client *Client, modulePath, version string) (info *Info, err error) {
-	defer derrors.Wrap(&err, "source.ModuleInfo(ctx, %q, %q)", modulePath, version)
-	ctx, span := trace.StartSpan(ctx, "source.ModuleInfo")
+	defer derrors.Wrap(&err, "source.LegacyModuleInfo(ctx, %q, %q)", modulePath, version)
+	ctx, span := trace.StartSpan(ctx, "source.LegacyModuleInfo")
 	defer span.End()
 
 	if modulePath == stdlib.ModulePath {

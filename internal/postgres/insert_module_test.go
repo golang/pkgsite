@@ -88,7 +88,7 @@ func TestInsertModule(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(test.module.ModuleInfo, *got, cmp.AllowUnexported(source.Info{})); diff != "" {
+			if diff := cmp.Diff(test.module.LegacyModuleInfo, *got, cmp.AllowUnexported(source.Info{})); diff != "" {
 				t.Fatalf("testDB.GetModuleInfo(%q, %q) mismatch (-want +got):\n%s", test.module.ModulePath, test.module.Version, diff)
 			}
 
@@ -117,12 +117,12 @@ func TestInsertModule(t *testing.T) {
 					t.Fatal(err)
 				}
 				want := internal.VersionedDirectory{
-					DirectoryNew: *dir,
-					ModuleInfo:   test.module.ModuleInfo,
+					DirectoryNew:     *dir,
+					LegacyModuleInfo: test.module.LegacyModuleInfo,
 				}
 				opts := cmp.Options{
-					cmpopts.IgnoreFields(internal.ModuleInfo{}, "LegacyReadmeFilePath"),
-					cmpopts.IgnoreFields(internal.ModuleInfo{}, "LegacyReadmeContents"),
+					cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeFilePath"),
+					cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeContents"),
 					cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 					cmp.AllowUnexported(source.Info{}),
 				}
@@ -211,7 +211,7 @@ func TestInsertModuleErrors(t *testing.T) {
 
 func TestPostgres_ReadAndWriteModuleOtherColumns(t *testing.T) {
 	// Verify that InsertModule correctly populates the columns in the versions
-	// table that are not in the ModuleInfo struct.
+	// table that are not in the LegacyModuleInfo struct.
 	defer ResetTestDB(testDB, t)
 	ctx := context.Background()
 

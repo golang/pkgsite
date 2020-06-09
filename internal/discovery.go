@@ -30,8 +30,8 @@ const (
 	UnknownModulePath = "unknownModulePath"
 )
 
-// ModuleInfo holds metadata associated with a module.
-type ModuleInfo struct {
+// LegacyModuleInfo holds metadata associated with a module.
+type LegacyModuleInfo struct {
 	ModulePath           string
 	Version              string
 	CommitTime           time.Time
@@ -67,7 +67,7 @@ type VersionMap struct {
 // The module paths "a/b" and "a/b/v2"  both have series path "a/b".
 // The module paths "gopkg.in/yaml.v1" and "gopkg.in/yaml.v2" both have series
 // path "gopkg.in/yaml".
-func (v *ModuleInfo) SeriesPath() string {
+func (v *LegacyModuleInfo) SeriesPath() string {
 	return SeriesPathForModule(v.ModulePath)
 }
 
@@ -89,7 +89,7 @@ func V1Path(modulePath, suffix string) string {
 
 // A Module is a specific, reproducible build of a module.
 type Module struct {
-	ModuleInfo
+	LegacyModuleInfo
 	// Licenses holds all licenses within this module version, including those
 	// that may be contained in nested subdirectories.
 	Licenses    []*licenses.License
@@ -102,7 +102,7 @@ type Module struct {
 // information.
 type VersionedDirectory struct {
 	DirectoryNew
-	ModuleInfo
+	LegacyModuleInfo
 }
 
 // DirectoryNew is a folder in a module version, and all of the packages
@@ -239,9 +239,9 @@ type SearchResult struct {
 //
 // FieldSet bits are unique across the entire project, because some types are
 // concatenations (via embedding) of others. For example, a
-// LegacyVersionedPackage contains the fields of both a ModuleInfo and a
+// LegacyVersionedPackage contains the fields of both a LegacyModuleInfo and a
 // LegacyPackage, so we can't use the
-// same bits for both ModuleInfo's LegacyReadmeContents field and
+// same bits for both LegacyModuleInfo's LegacyReadmeContents field and
 // LegacyPackage's DocumentationHTML field.
 type FieldSet int64
 
@@ -265,7 +265,7 @@ const (
 // LegacyDirectory represents a folder in a module version, and all of the
 // packages inside that folder.
 type LegacyDirectory struct {
-	ModuleInfo
+	LegacyModuleInfo
 	Path     string
 	Packages []*LegacyPackage
 }
@@ -294,5 +294,5 @@ type LegacyPackage struct {
 // information.
 type LegacyVersionedPackage struct {
 	LegacyPackage
-	ModuleInfo
+	LegacyModuleInfo
 }

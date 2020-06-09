@@ -252,7 +252,7 @@ func TestGetDirectory(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			mi := sample.ModuleInfo(tc.wantModulePath, tc.wantVersion)
+			mi := sample.LegacyModuleInfo(tc.wantModulePath, tc.wantVersion)
 			var wantPackages []*internal.LegacyPackage
 			for _, suffix := range tc.wantSuffixes {
 				pkg := sample.LegacyPackage(tc.wantModulePath, suffix)
@@ -264,9 +264,9 @@ func TestGetDirectory(t *testing.T) {
 			})
 
 			wantDirectory := &internal.LegacyDirectory{
-				ModuleInfo: *mi,
-				Packages:   wantPackages,
-				Path:       tc.dirPath,
+				LegacyModuleInfo: *mi,
+				Packages:         wantPackages,
+				Path:             tc.dirPath,
 			}
 			opts := []cmp.Option{
 				cmpopts.EquateEmpty(),
@@ -312,7 +312,7 @@ func TestGetDirectoryNew(t *testing.T) {
 
 	newVdir := func(path, modulePath, version string, readme *internal.Readme, pkg *internal.PackageNew) *internal.VersionedDirectory {
 		return &internal.VersionedDirectory{
-			ModuleInfo: *sample.ModuleInfo(modulePath, version),
+			LegacyModuleInfo: *sample.LegacyModuleInfo(modulePath, version),
 			DirectoryNew: internal.DirectoryNew{
 				Path:              path,
 				V1Path:            path,

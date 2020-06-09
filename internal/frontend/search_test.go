@@ -24,7 +24,7 @@ func TestFetchSearchPage(t *testing.T) {
 	var (
 		now       = sample.NowTruncated()
 		moduleFoo = &internal.Module{
-			ModuleInfo: internal.ModuleInfo{
+			LegacyModuleInfo: internal.LegacyModuleInfo{
 				ModulePath:           "github.com/mod/foo",
 				Version:              "v1.0.0",
 				LegacyReadmeContents: "readme",
@@ -43,7 +43,7 @@ func TestFetchSearchPage(t *testing.T) {
 			},
 		}
 		moduleBar = &internal.Module{
-			ModuleInfo: internal.ModuleInfo{
+			LegacyModuleInfo: internal.LegacyModuleInfo{
 				ModulePath:           "github.com/mod/bar",
 				Version:              "v1.0.0",
 				LegacyReadmeContents: "readme",

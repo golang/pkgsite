@@ -148,7 +148,7 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds
 	case "versions":
 		return fetchPackageVersionsDetails(ctx, ds, pkg.Path, pkg.V1Path, pkg.ModulePath)
 	case "subdirectories":
-		return fetchDirectoryDetails(ctx, ds, pkg.Path, &pkg.ModuleInfo, pkg.Licenses, false)
+		return fetchDirectoryDetails(ctx, ds, pkg.Path, &pkg.LegacyModuleInfo, pkg.Licenses, false)
 	case "imports":
 		return fetchImportsDetails(ctx, ds, pkg.Path, pkg.ModulePath, pkg.Version)
 	case "importedby":
@@ -170,7 +170,7 @@ func fetchDetailsForVersionedDirectory(ctx context.Context, r *http.Request, tab
 	case "versions":
 		return fetchPackageVersionsDetails(ctx, ds, vdir.Path, vdir.V1Path, vdir.ModulePath)
 	case "subdirectories":
-		return fetchDirectoryDetails(ctx, ds, vdir.Path, &vdir.ModuleInfo, vdir.Licenses, false)
+		return fetchDirectoryDetails(ctx, ds, vdir.Path, &vdir.LegacyModuleInfo, vdir.Licenses, false)
 	case "imports":
 		return fetchImportsDetails(ctx, ds, vdir.Path, vdir.ModulePath, vdir.Version)
 	case "importedby":
@@ -189,7 +189,7 @@ func urlIsVersioned(url *url.URL) bool {
 
 // fetchDetailsForModule returns tab details by delegating to the correct detail
 // handler.
-func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds internal.DataSource, mi *internal.ModuleInfo, licenses []*licenses.License) (interface{}, error) {
+func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds internal.DataSource, mi *internal.LegacyModuleInfo, licenses []*licenses.License) (interface{}, error) {
 	switch tab {
 	case "packages":
 		return fetchDirectoryDetails(ctx, ds, mi.ModulePath, mi, licensesToMetadatas(licenses), true)
@@ -209,7 +209,7 @@ func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds 
 func constructDetailsForDirectory(r *http.Request, tab string, dir *internal.LegacyDirectory, licenses []*licenses.License) (interface{}, error) {
 	switch tab {
 	case "overview":
-		return constructOverviewDetails(&dir.ModuleInfo, dir.ModuleInfo.IsRedistributable, urlIsVersioned(r.URL)), nil
+		return constructOverviewDetails(&dir.LegacyModuleInfo, dir.LegacyModuleInfo.IsRedistributable, urlIsVersioned(r.URL)), nil
 	case "subdirectories":
 		// Ideally we would just use fetchDirectoryDetails here so that it
 		// follows the same code path as fetchDetailsForModule and

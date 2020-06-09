@@ -629,7 +629,7 @@ func TestReFetch(t *testing.T) {
 		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
 	}
 	want := &internal.LegacyVersionedPackage{
-		ModuleInfo: internal.ModuleInfo{
+		LegacyModuleInfo: internal.LegacyModuleInfo{
 			ModulePath:           modulePath,
 			Version:              version,
 			CommitTime:           time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
@@ -768,7 +768,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 	defer teardownProxy()
 
 	myModuleV100 := &internal.LegacyVersionedPackage{
-		ModuleInfo: internal.ModuleInfo{
+		LegacyModuleInfo: internal.LegacyModuleInfo{
 			ModulePath:           "github.com/my/module",
 			Version:              "v1.0.0",
 			CommitTime:           testProxyCommitTime,
@@ -822,7 +822,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 			version:    "v1.0.0",
 			pkg:        "nonredistributable.mod/module/bar/baz",
 			want: &internal.LegacyVersionedPackage{
-				ModuleInfo: internal.ModuleInfo{
+				LegacyModuleInfo: internal.LegacyModuleInfo{
 					ModulePath:           "nonredistributable.mod/module",
 					Version:              "v1.0.0",
 					CommitTime:           testProxyCommitTime,
@@ -854,7 +854,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 			version:    "v1.0.0",
 			pkg:        "nonredistributable.mod/module/foo",
 			want: &internal.LegacyVersionedPackage{
-				ModuleInfo: internal.ModuleInfo{
+				LegacyModuleInfo: internal.LegacyModuleInfo{
 					ModulePath:           "nonredistributable.mod/module",
 					Version:              "v1.0.0",
 					CommitTime:           testProxyCommitTime,
@@ -884,7 +884,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 			version:    "v1.12.5",
 			pkg:        "context",
 			want: &internal.LegacyVersionedPackage{
-				ModuleInfo: internal.ModuleInfo{
+				LegacyModuleInfo: internal.LegacyModuleInfo{
 					ModulePath:           "std",
 					Version:              "v1.12.5",
 					CommitTime:           stdlib.TestCommitTime,
@@ -917,7 +917,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 			version:    "v1.12.5",
 			pkg:        "builtin",
 			want: &internal.LegacyVersionedPackage{
-				ModuleInfo: internal.ModuleInfo{
+				LegacyModuleInfo: internal.LegacyModuleInfo{
 					ModulePath:           "std",
 					Version:              "v1.12.5",
 					CommitTime:           stdlib.TestCommitTime,
@@ -950,7 +950,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 			version:    "v1.12.5",
 			pkg:        "encoding/json",
 			want: &internal.LegacyVersionedPackage{
-				ModuleInfo: internal.ModuleInfo{
+				LegacyModuleInfo: internal.LegacyModuleInfo{
 					ModulePath:           "std",
 					Version:              "v1.12.5",
 					CommitTime:           stdlib.TestCommitTime,
@@ -996,7 +996,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 			version:    "v1.0.0",
 			pkg:        "build.constraints/module/cpu",
 			want: &internal.LegacyVersionedPackage{
-				ModuleInfo: internal.ModuleInfo{
+				LegacyModuleInfo: internal.LegacyModuleInfo{
 					ModulePath:        "build.constraints/module",
 					Version:           "v1.0.0",
 					CommitTime:        testProxyCommitTime,
@@ -1040,7 +1040,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(test.want.ModuleInfo, *gotModuleInfo, cmp.AllowUnexported(source.Info{})); diff != "" {
+			if diff := cmp.Diff(test.want.LegacyModuleInfo, *gotModuleInfo, cmp.AllowUnexported(source.Info{})); diff != "" {
 				t.Fatalf("testDB.GetModuleInfo(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
 			}
 

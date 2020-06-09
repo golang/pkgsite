@@ -187,7 +187,7 @@ func processZipFile(ctx context.Context, modulePath string, versionType version.
 		break
 	}
 	return &internal.Module{
-		ModuleInfo: internal.ModuleInfo{
+		LegacyModuleInfo: internal.LegacyModuleInfo{
 			ModulePath:           modulePath,
 			Version:              resolvedVersion,
 			CommitTime:           commitTime,

@@ -81,7 +81,7 @@ func TestPostgres_GetVersionInfo_Latest(t *testing.T) {
 			if tc.wantIndex >= len(tc.modules) {
 				t.Fatal("wantIndex too large")
 			}
-			wantVI := &tc.modules[tc.wantIndex].ModuleInfo
+			wantVI := &tc.modules[tc.wantIndex].LegacyModuleInfo
 			if diff := cmp.Diff(wantVI, gotVI, cmpopts.EquateEmpty(), cmp.AllowUnexported(source.Info{})); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
@@ -193,7 +193,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 		name, path, modulePath string
 		numPseudo              int
 		modules                []*internal.Module
-		wantTaggedVersions     []*internal.ModuleInfo
+		wantTaggedVersions     []*internal.LegacyModuleInfo
 	}{
 		{
 			name:       "want_releases_and_prereleases_only",
@@ -201,7 +201,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 			modulePath: modulePath1,
 			numPseudo:  12,
 			modules:    testModules,
-			wantTaggedVersions: []*internal.ModuleInfo{
+			wantTaggedVersions: []*internal.LegacyModuleInfo{
 				{
 					ModulePath: modulePath2,
 					Version:    "v2.1.0",
@@ -241,7 +241,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			defer ResetTestDB(testDB, t)
 
-			var wantPseudoVersions []*internal.ModuleInfo
+			var wantPseudoVersions []*internal.LegacyModuleInfo
 			for i := 0; i < tc.numPseudo; i++ {
 
 				pseudo := fmt.Sprintf("v0.0.0-201806111833%02d-d8887717615a", i+1)
@@ -253,7 +253,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 				// GetPseudoVersions should only return the 10 most recent pseudo versions,
 				// if there are more than 10 in the database
 				if i < 10 {
-					wantPseudoVersions = append(wantPseudoVersions, &internal.ModuleInfo{
+					wantPseudoVersions = append(wantPseudoVersions, &internal.LegacyModuleInfo{
 						ModulePath: modulePath1,
 						Version:    fmt.Sprintf("v0.0.0-201806111833%02d-d8887717615a", tc.numPseudo-i),
 						CommitTime: sample.CommitTime,

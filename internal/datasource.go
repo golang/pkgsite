@@ -29,24 +29,24 @@ type DataSource interface {
 	// GetImports returns a slice of import paths imported by the package
 	// specified by path and version.
 	GetImports(ctx context.Context, pkgPath, modulePath, version string) ([]string, error)
-	// GetModuleInfo returns the ModuleInfo corresponding to modulePath and
+	// GetModuleInfo returns the LegacyModuleInfo corresponding to modulePath and
 	// version.
-	GetModuleInfo(ctx context.Context, modulePath, version string) (*ModuleInfo, error)
+	GetModuleInfo(ctx context.Context, modulePath, version string) (*LegacyModuleInfo, error)
 	// GetPathInfo returns information about a path.
 	GetPathInfo(ctx context.Context, path, inModulePath, inVersion string) (outModulePath, outVersion string, isPackage bool, err error)
-	// GetPseudoVersionsForModule returns ModuleInfo for all known
+	// GetPseudoVersionsForModule returns LegacyModuleInfo for all known
 	// pseudo-versions for the module corresponding to modulePath.
-	GetPseudoVersionsForModule(ctx context.Context, modulePath string) ([]*ModuleInfo, error)
-	// GetPseudoVersionsForModule returns ModuleInfo for all known
+	GetPseudoVersionsForModule(ctx context.Context, modulePath string) ([]*LegacyModuleInfo, error)
+	// GetPseudoVersionsForModule returns LegacyModuleInfo for all known
 	// pseudo-versions for any module containing a package with the given import
 	// path.
-	GetPseudoVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*ModuleInfo, error)
-	// GetTaggedVersionsForModule returns ModuleInfo for all known tagged
+	GetPseudoVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*LegacyModuleInfo, error)
+	// GetTaggedVersionsForModule returns LegacyModuleInfo for all known tagged
 	// versions for the module corresponding to modulePath.
-	GetTaggedVersionsForModule(ctx context.Context, modulePath string) ([]*ModuleInfo, error)
-	// GetTaggedVersionsForModule returns ModuleInfo for all known tagged
+	GetTaggedVersionsForModule(ctx context.Context, modulePath string) ([]*LegacyModuleInfo, error)
+	// GetTaggedVersionsForModule returns LegacyModuleInfo for all known tagged
 	// versions for any module containing a package with the given import path.
-	GetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*ModuleInfo, error)
+	GetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*LegacyModuleInfo, error)
 	// GetVersionMap returns the VersionMap corresponding to the provided modulePath and requestedVersion.
 	GetVersionMap(ctx context.Context, modulePath, requestedVersion string) (*VersionMap, error)
 	// GetStdlibPathsWithSuffix returns standard library paths with the given suffix.

@@ -63,7 +63,7 @@ func TestFetchImportsDetails(t *testing.T) {
 					module.LegacyPackages[0].Path, module.Version, got, err, tc.wantDetails)
 			}
 
-			tc.wantDetails.ModulePath = module.ModuleInfo.ModulePath
+			tc.wantDetails.ModulePath = module.LegacyModuleInfo.ModulePath
 			if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
 				t.Errorf("fetchImportsDetails(ctx, %q, %q) mismatch (-want +got):\n%s", module.LegacyPackages[0].Path, module.Version, diff)
 			}
@@ -76,8 +76,8 @@ func TestFetchImportsDetails(t *testing.T) {
 // version.
 func firstVersionedPackage(m *internal.Module) *internal.LegacyVersionedPackage {
 	return &internal.LegacyVersionedPackage{
-		LegacyPackage: *m.LegacyPackages[0],
-		ModuleInfo:    m.ModuleInfo,
+		LegacyPackage:    *m.LegacyPackages[0],
+		LegacyModuleInfo: m.LegacyModuleInfo,
 	}
 }
 
@@ -152,7 +152,7 @@ func TestFetchImportedByDetails(t *testing.T) {
 					tc.pkg.Path, got, err, tc.wantDetails)
 			}
 
-			tc.wantDetails.ModulePath = vp.ModuleInfo.ModulePath
+			tc.wantDetails.ModulePath = vp.LegacyModuleInfo.ModulePath
 			if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
 				t.Errorf("fetchImportedByDetails(ctx, db, %q) mismatch (-want +got):\n%s", tc.pkg.Path, diff)
 			}
