@@ -188,12 +188,7 @@ func TestLargeBulkInsert(t *testing.T) {
 	if _, err := testDB.Exec(ctx, `CREATE TEMPORARY TABLE test_large_bulk (i BIGINT);`); err != nil {
 		t.Fatal(err)
 	}
-	defer func(q bool) {
-		QueryLoggingDisabled = q
-	}(QueryLoggingDisabled)
-	QueryLoggingDisabled = true
-
-	const size = 150000
+	const size = 150001
 	vals := make([]interface{}, size)
 	for i := 0; i < size; i++ {
 		vals[i] = i + 1

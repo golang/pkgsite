@@ -258,17 +258,23 @@ func (db *DB) bulkInsert(ctx context.Context, table string, columns, returningCo
 		// handle it cautiously.
 		return fmt.Errorf("too many columns to insert: %d", len(columns))
 	}
-	fullQuery := buildInsertQuery(table, columns, returningColumns, stride, conflictAction)
-	stmt, err := db.Prepare(ctx, fullQuery)
-	if err != nil {
-		return err
+
+	prepare := func(n int) (*sql.Stmt, error) {
+		return db.Prepare(ctx, buildInsertQuery(table, columns, returningColumns, n, conflictAction))
 	}
-	defer stmt.Close()
+
+	var stmt *sql.Stmt
 	for leftBound := 0; leftBound < len(values); leftBound += stride {
 		rightBound := leftBound + stride
-		if rightBound > len(values) {
+		if rightBound <= len(values) && stmt == nil {
+			stmt, err = prepare(stride)
+			if err != nil {
+				return err
+			}
+			defer stmt.Close()
+		} else if rightBound > len(values) {
 			rightBound = len(values)
-			stmt, err = db.Prepare(ctx, buildInsertQuery(table, columns, returningColumns, rightBound-leftBound, conflictAction))
+			stmt, err = prepare(rightBound - leftBound)
 			if err != nil {
 				return err
 			}
