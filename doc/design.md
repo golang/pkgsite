@@ -6,8 +6,8 @@ Pkg.go.dev consists of two services backed by a common database.
 
 - A _worker_ that populates the database with information about new modules.
 
-Both services are hosted on App Engine Standard and run Go 1.13. We use
-A Postgres database managed by [Google Cloud SQL](https://cloud.google.com/sql).
+Both services are hosted on App Engine Standard and run Go 1.13. We use a
+Postgres database managed by [Google Cloud SQL](https://cloud.google.com/sql).
 
 ## The Frontend
 
@@ -33,8 +33,8 @@ database. It also writes data relevant for search to its own table
 the module zip, it also computes the number of importers of each package.
 
 To smooth out the work of processing new modules and to take advantage of its
-rate-limiting and retry features, the worker uses a [Google Cloud
-Tasks](https://cloud.google.com/tasks) queue to manage the list of modules to be
+rate-limiting and retry features, the worker uses a
+[Google Cloud Tasks](https://cloud.google.com/tasks) queue to manage the list of modules to be
 processed. The worker adds tasks to the queue when it finds new modules in the index.
 The queue pushes tasks to the worker at a fixed maximum rate.
 

@@ -1,14 +1,15 @@
 # Frontend Development
 
-The main program lives in `cmd/frontend`.
+The main program lives in `cmd/frontend`. The bulk of the code lives in
+`internal/frontend`.
 
 You can run the frontend locally like so:
 
 ```
-go run cmd/frontend/main.go [-reload_templates] [-direct_proxy]
+go run cmd/frontend/main.go [-dev] [-direct_proxy]
 ```
 
-- The `-reload_templates` flag reloads templates on each page load.
+- The `-dev` flag reloads templates on each page load.
 
 The frontend can use one of two datasources:
 
@@ -17,7 +18,13 @@ The frontend can use one of two datasources:
 
 The `Datasource` interface implementation is available at internal/datasource.go.
 
-The `-direct_proxy` flag can be used to run the frontend with its datasource as
-the proxy service.
+You can use the `-direct_proxy` flag to run the frontend with its datasource as
+the proxy service. This allows you to run the frontend without setting up a
+postgres database.
 
-The bulk of the code lives in `internal/frontend`.
+Alternatively, you can run pkg.go.dev with a local database. See instructions
+on how to [set up](doc/postgres.md) and
+[populate](doc/worker.md#populating-data-locally-using-the-worker)
+your local database with packages of your choice.
+
+You can then run the frontend with: `go run cmd/frontend/main.go`

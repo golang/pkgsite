@@ -1,53 +1,65 @@
 # Pkg.go.dev
 
-[Pkg.go.dev](https://pkg.go.dev) is a website for discovering and evaluting Go
-packages and modules.
+## A site for discovering Go packages
+
+Pkg.go.dev is a website for discovering and evaluating Go packages and modules.
+
+You can check it out at [https://pkg.go.dev](https://pkg.go.dev).
 
 ## Roadmap
 
 Pkg.go.dev [launched](https://groups.google.com/g/golang-announce/c/OW8bHSryLIc)
 in November 2019, and is currently under active development by the Go team.
 
-Our current goal is to work on addressing the
-[UX feedback](https://github.com/golang/go/issues?q=is%3Aissue+is%3Aopen+label%3Ago.dev+label%3AUX)
-we have received. You can expect pkg.go.dev to be slated for some design
-changes coming soon. We plan to share these designs for feedback with everyone
-once they are ready.
+Here's what we are currently working on:
 
-Longer term, we are working towards redirecting godoc.org traffic to
-pkg.go.dev. We want to ensure that we address users' needs in the process. Read more
-about our [next steps for pkg.go.dev](https://blog.golang.org/pkg.go.dev-2020).
-Issues related to redirecting godoc.org traffic are being tracked
-in [Go issue #39144](https://golang.org/issue/39144).
-We plan to address these issues before redirecting traffic from godoc.org to
-pkg.go.dev.
+- Design updates: We have some design changes planned for pkg.go.dev,
+  to address
+  [UX feedback](https://github.com/golang/go/issues?q=is%3Aissue+is%3Aopen+label%3Ago.dev+label%3AUX)
+  that we have received.
+  You can expect a more cohesive search and navigation experience coming soon.
+  We plan to share these designs for feedback once they are ready.
 
-We encourage everyone to begin using pkg.go.dev today for all of their needs
-and [file feedback](https://golang.org/s/discovery-feedback)! You can redirect
+- Godoc.org redirect: Longer term, we are working towards
+  [redirecting godoc.org traffic](https://blog.golang.org/pkg.go.dev-2020) to
+  pkg.go.dev. We know that there are features available on godoc.org that users
+  want to see on pkg.go.dev, and we want to ensure that we address these. We’ve
+  been keeping track of issues related to redirecting godoc.org traffic on
+  [Go issue #39144](https://golang.org/issue/39144).
+  These issues will be prioritized in the next few months. We also plan to
+  continue improving our license detection algorithm.
+
+- Search improvements: We’ll be improving our search experience based on
+  feedback in [Go issue #37810](https://golang.org/issue/37810),
+  to make it easier for users to find the dependencies they are looking for and
+  make better decisions around which ones to import.
+
+We encourage everyone to begin using [pkg.go.dev](https://pkg.go.dev) today for
+all of their needs and to
+[file feedback](https://golang.org/s/discovery-feedback)! You can redirect
 all of your requests from godoc.org to pkg.go.dev, by clicking
-`Always use pkg.go.dev` at the top of any page on godoc.org.
-
-If you are having issues with pkg.go.dev, please first check the known issues
-before following the troubleshooting guide. If that does not give you the
-information you need, reach out to us.
+`Always use pkg.go.dev` at the top of any page on [godoc.org](https://godoc.org).
 
 ## Issues
 
-You can chat with us on the #tools slack channel on
-the [Gophers slack](https://invite.slack.golangbridge.org).
+If you want to report a bug or have a feature suggestion, please first check
+the [known issues](https://github.com/golang/go/labels/go.dev) to see if your
+issue is already being discussed. If an issue does not already exist, feel free
+to [file an issue](https://golang.org/s/discovery-feedback).
 
-If you think you have an issue that needs fixing, or a feature suggestion, then
-please make sure you follow the steps to file an issue with the right
-information to allow us to address it.
+For answers to freqently asked questions, see [go.dev](https://go.dev/about).
+
+You can also chat with us on the #tools slack channel on the
+[Gophers slack](https://invite.slack.golangbridge.org).
 
 ## Contributing
 
 We would love your help!
 
-Our canonical Git repository is located
-cat [go.googlesource.com/discovery](https://go.googlesource.com/discovery).
+Our canonical Git repository is located at
+[go.googlesource.com/pkgsite](https://go.googlesource.com/pkgsite).
 There is a mirror of the repository at
-[github.com/golang/discovery](https://github.com/golang/discovery).
+[github.com/golang/pkgsite](https://github.com/golang/pkgsite).
 
 To contribute, please read our [contributing guide](CONTRIBUTING.md).
 

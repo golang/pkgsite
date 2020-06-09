@@ -1,25 +1,22 @@
 # Contributing to pkg.go.dev
 
-Pkg.go.dev is part of the Go open source project.
-
-We would love to receive your contributions!
+Pkg.go.dev is part of the Go open source project. We would love to receive your
+contributions!
 
 Since we are actively working on the site, we ask that you
 [file an issue](https://golang.org/s/discovery-feedback) and claim it before
 starting to work on something. Otherwise, it is likely that we might already be
 working on a fix for your issue.
 
-Because we are currently working on a [redesign of pkg.go.dev](/README.md#roadmap), we will not be
-accepting any contributions for
+Because we are currently working on
+[design updates to pkg.go.dev](/README.md#roadmap), we will not be accepting
+any contributions for
 [issues with a UX label](https://github.com/golang/go/issues?q=is%3Aissue+is%3Aopen+label%3Ago.dev+label%3AUX).
-
-Please read the [Contribution Guidelines](https://golang.org/doc/contribute.html)
-before sending patches.
 
 ## Finding issues
 
-All issues are labeled with the [`go.dev`
-label](https://github.com/golang/go/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Ago.dev).
+All issues are labeled with the
+[`go.dev` label](https://github.com/golang/go/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Ago.dev).
 Issues that are suitable for contributors are additionally tagged with the
 [`help wanted` label](https://github.com/golang/go/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Ago.dev+label%3A%22help+wanted%22+).
 
@@ -27,29 +24,24 @@ Before you begin working on an issue, please leave a comment that you are claimi
 
 ## Getting started
 
-1. Get the source code:
+1. Complete the steps in the
+[Go Contribution Guide](https://golang.org/doc/contribute.html).
 
-`$ git clone https://go.googlesource.com/pkgsite`
+2. Download the source code for x/pkgsite:
+`git clone https://go.googlesource.com/pkgsite`
 
-- Our canonical Git repository is located at [https://go.googlesource.com/pkgsite](https://go.googlesource.com/pkgsite). [github.com/golang/pkgsite](https://github.com/golang/pkgsite) is a mirror of that repository.
+3. Review the [design document](doc/design.md).
 
-2. Review the [design document](doc/design.md).
+### Running pkg.go.dev locally
 
-3. We deploy to the [Google Cloud Platform](https://cloud.google.com). If you
-   wish to set up a similar environment, you will want to
-   download and install the Google Cloud SDK at https://cloud.google.com/sdk/docs/.
+There are two ways to run pkg.go.dev locally.
 
-4. If you are planning to develop any feature that involves the database, you will need
-   to [set up](doc/postgres.md) and [populate](doc/worker.md#populating-data-locally-using-the-worker) your local database. To run 
-  the frontend and server servers locally, see the documentation for the [frontend server](doc/frontend.md) and [worker server](doc/worker.md).
+1. Use a proxy service as a datasource.
 
-5. Depending on the feature you are working on, review the contributing guides for:
+2. Use postgres as the datasource.
 
-- [Frontend development](doc/frontend.md)
-- [Worker development](doc/worker.md)
-- [Database setup](doc/postgres.md)
+See [doc/frontend.md](doc/frontend.md) for details.
 
 ## Questions
 
-You can find us in the #tools channel on the Gophers Slack, or you can send us
-an email at go-discovery-feedback@google.com.
+You can find us in the #tools channel on the Gophers Slack.
