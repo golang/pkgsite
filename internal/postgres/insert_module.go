@@ -473,6 +473,7 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 	// same module, which happens regularly.
 	sort.Strings(paths)
 	if len(pathToReadme) > 0 {
+		log.Debugf(ctx, "memory before inserting into readmes: %dM", allocMeg())
 		var readmeValues []interface{}
 		for _, path := range paths {
 			readme, ok := pathToReadme[path]
@@ -481,20 +482,15 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 			}
 			id := pathToID[path]
 			readmeValues = append(readmeValues, id, readme.Filepath, makeValidUnicode(readme.Contents))
-			readmeCols := []string{
-				"path_id",
-				"file_path",
-				"contents",
-			}
-			log.Debugf(ctx, "memory before inserting into readmes: %dM", allocMeg())
-
-			if err := db.BulkInsert(ctx, "readmes", readmeCols, readmeValues, database.OnConflictDoNothing); err != nil {
-				return err
-			}
+		}
+		readmeCols := []string{"path_id", "file_path", "contents"}
+		if err := db.BulkInsert(ctx, "readmes", readmeCols, readmeValues, database.OnConflictDoNothing); err != nil {
+			return err
 		}
 	}
 
 	if len(pathToDoc) > 0 {
+		log.Debugf(ctx, "memory before inserting into documentation: %dM", allocMeg())
 		var docValues []interface{}
 		for _, path := range paths {
 			doc, ok := pathToDoc[path]
@@ -511,12 +507,12 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 			"synopsis",
 			"html",
 		}
-		log.Debugf(ctx, "memory before inserting into documentation: %dM", allocMeg())
 		if err := db.BulkInsert(ctx, "documentation", docCols, docValues, database.OnConflictDoNothing); err != nil {
 			return err
 		}
 	}
 
+	log.Debugf(ctx, "memory before inserting into package_imports: %dM", allocMeg())
 	var importValues []interface{}
 	for _, pkgPath := range paths {
 		imports, ok := pathToImports[pkgPath]
@@ -527,16 +523,9 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 		for _, toPath := range imports {
 			importValues = append(importValues, id, toPath)
 		}
-		importCols := []string{
-			"path_id",
-			"to_path",
-		}
-		log.Debugf(ctx, "memory before inserting into package_imports: %dM", allocMeg())
-		if err := db.BulkInsert(ctx, "package_imports", importCols, importValues, database.OnConflictDoNothing); err != nil {
-			return err
-		}
 	}
-	return nil
+	importCols := []string{"path_id", "to_path"}
+	return db.BulkInsert(ctx, "package_imports", importCols, importValues, database.OnConflictDoNothing)
 }
 
 // lock obtains an exclusive, transaction-scoped advisory lock on modulePath.
