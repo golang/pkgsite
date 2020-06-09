@@ -17,10 +17,7 @@
     button.addEventListener('click', e => {
       e.preventDefault();
       header.classList.toggle('is-active');
-      button.setAttribute(
-        'aria-expanded',
-        header.classList.contains('is-active')
-      );
+      button.setAttribute('aria-expanded', header.classList.contains('is-active'));
     });
   });
 
@@ -30,10 +27,7 @@
       e.preventDefault();
       header.classList.remove('is-active');
       menuButtons.forEach(button => {
-        button.setAttribute(
-          'aria-expanded',
-          header.classList.contains('is-active')
-        );
+        button.setAttribute('aria-expanded', header.classList.contains('is-active'));
       });
     });
   }

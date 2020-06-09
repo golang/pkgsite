@@ -150,10 +150,7 @@ function updateJumpList(filter) {
   // Make a regexp corresponding to filter. The result will match any string
   // containing filter, case-insensitively. Escape the regexp metacharacters in
   // filter.
-  const re = new RegExp(
-    filter.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, '\\$1'),
-    'gi'
-  );
+  const re = new RegExp(filter.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, '\\$1'), 'gi');
   for (const item of jumpListItems) {
     var name = item.name;
     if (filter) {
