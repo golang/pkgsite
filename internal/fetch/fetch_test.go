@@ -54,6 +54,9 @@ func TestFetchModule(t *testing.T) {
 	}
 	defer func() { httpPost = origPost }()
 
+	defer func(oldmax int) { MaxDocumentationHTML = oldmax }(MaxDocumentationHTML)
+	MaxDocumentationHTML = 1 * megabyte
+
 	for _, test := range []struct {
 		name string
 		mod  *testModule
@@ -66,6 +69,7 @@ func TestFetchModule(t *testing.T) {
 		{name: "module with build constraints", mod: moduleBuildConstraints},
 		{name: "module with packages with bad import paths", mod: moduleBadImportPath},
 		{name: "module with documentation", mod: moduleDocTest},
+		{name: "documentation too large", mod: moduleDocTooLarge},
 		{name: "module with package-level example", mod: modulePackageExample},
 		{name: "module with function example", mod: moduleFuncExample},
 		{name: "module with type example", mod: moduleTypeExample},
@@ -90,7 +94,6 @@ func TestFetchModule(t *testing.T) {
 			if got.Error != nil {
 				t.Fatal(got.Error)
 			}
-
 			d := licenseDetector(ctx, t, modulePath, version, proxyClient)
 			fr := cleanFetchResult(test.mod.fr, d)
 			sortFetchResult(fr)

@@ -13,13 +13,14 @@ const (
 	// The fetch process should fail if it encounters a file exceeding
 	// this limit.
 	MaxFileSize = 30 * megabyte
-
-	// MaxDocumentationHTML is a limit on the rendered documentation
-	// HTML size.
-	//
-	// The current limit of 10 MB was based on the largest packages that
-	// gddo has encountered. See https://github.com/golang/gddo/issues/635.
-	MaxDocumentationHTML = 10 * megabyte
 )
+
+// MaxDocumentationHTML is a limit on the rendered documentation HTML size.
+//
+// The current limit of is based on the largest packages that
+// gddo has encountered. See https://github.com/golang/gddo/issues/635.
+//
+// It is a variable for testing.
+var MaxDocumentationHTML = 10 * megabyte
 
 const megabyte = 1000 * 1000

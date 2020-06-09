@@ -388,8 +388,7 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion str
 			incompleteDirs[innerPath] = true
 			status = derrors.PackageInvalidContents
 			errMsg = err.Error()
-		} else if lpe := (*LargePackageError)(nil); errors.As(err, &lpe) {
-			incompleteDirs[innerPath] = true
+		} else if errors.Is(err, dochtml.ErrTooLarge) {
 			status = derrors.PackageDocumentationHTMLTooLarge
 			errMsg = err.Error()
 		} else if err != nil {
@@ -472,14 +471,6 @@ func zipContainsFilename(r *zip.Reader, name string) bool {
 	return false
 }
 
-// LargePackageError represents an error where the rendered
-// documentation HTML for a package is excessively large.
-type LargePackageError struct {
-	Err error // Not nil.
-}
-
-func (lpe *LargePackageError) Error() string { return lpe.Err.Error() }
-
 // BadPackageError represents an error loading a package
 // because its contents do not make up a valid package.
 //
@@ -504,16 +495,19 @@ var goEnvs = []struct{ GOOS, GOARCH string }{
 // several build contexts in turn. The first build context in the list to produce
 // a non-empty package is used. If none of them result in a package, then
 // loadPackage returns nil, nil.
+//
+// If the package is fine except that its documentation is too large, loadPackage
+// returns both a package and a non-nil error with dochtml.ErrTooLarge in its chain.
 func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath, modulePath string, sourceInfo *source.Info) (*internal.LegacyPackage, error) {
 	ctx, span := trace.StartSpan(ctx, "fetch.loadPackage")
 	defer span.End()
 	for _, env := range goEnvs {
 		pkg, err := loadPackageWithBuildContext(ctx, env.GOOS, env.GOARCH, zipGoFiles, innerPath, modulePath, sourceInfo)
-		if err != nil {
+		if err != nil && !errors.Is(err, dochtml.ErrTooLarge) {
 			return nil, err
 		}
 		if pkg != nil {
-			return pkg, nil
+			return pkg, err
 		}
 	}
 	return nil, nil
@@ -521,6 +515,8 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath, moduleP
 
 // httpPost allows package fetch tests to stub out playground URL fetches.
 var httpPost = http.Post
+
+const docTooLargeReplacement = `<p>Documentation is too large to display.</p>`
 
 // loadPackageWithBuildContext loads a Go package made of .go files in zipGoFiles
 // using a build context constructed from the given GOOS and GOARCH values.
@@ -535,8 +531,6 @@ var httpPost = http.Post
 //
 // It returns a nil LegacyPackage if the directory doesn't contain a Go package
 // or all .go files have been excluded by constraints.
-// A *LargePackageError error is returned if the rendered
-// package documentation HTML exceeds a limit.
 // A *BadPackageError error is returned if the directory
 // contains .go files but do not make up a valid package.
 func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGoFiles []*zip.File, innerPath, modulePath string, sourceInfo *source.Info) (_ *internal.LegacyPackage, err error) {
@@ -664,10 +658,10 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 	docHTML, err := dochtml.Render(fset, d, dochtml.RenderOptions{
 		SourceLinkFunc: sourceLinkFunc,
 		PlayURLFunc:    playURLFunc,
-		Limit:          MaxDocumentationHTML,
+		Limit:          int64(MaxDocumentationHTML),
 	})
 	if errors.Is(err, dochtml.ErrTooLarge) {
-		return nil, &LargePackageError{Err: err}
+		docHTML = docTooLargeReplacement
 	} else if err != nil {
 		return nil, fmt.Errorf("dochtml.Render: %v", err)
 	}
@@ -685,7 +679,7 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 		DocumentationHTML: docHTML,
 		GOOS:              goos,
 		GOARCH:            goarch,
-	}, nil
+	}, err
 }
 
 // matchingFiles returns a map from file names to their contents, read from zipGoFiles.

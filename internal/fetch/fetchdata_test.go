@@ -6,6 +6,7 @@ package fetch
 
 import (
 	"net/http"
+	"strings"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -541,6 +542,51 @@ var moduleDocTest = &testModule{
 						},
 					},
 				},
+			},
+		},
+	},
+}
+
+var moduleDocTooLarge = &testModule{
+	mod: &proxy.TestModule{
+		ModulePath: "bigdoc.test",
+		Files: map[string]string{
+			"LICENSE": testhelper.BSD0License,
+			"doc.go": "// This documentation is big.\n" +
+				strings.Repeat("// Too big.\n", 200_000) +
+				"package bigdoc",
+		},
+	},
+	fr: &FetchResult{
+		Status:    derrors.ToHTTPStatus(derrors.HasIncompletePackages),
+		GoModPath: "bigdoc.test",
+		Module: &internal.Module{
+			LegacyModuleInfo: internal.LegacyModuleInfo{
+				ModuleInfo: internal.ModuleInfo{
+					ModulePath: "bigdoc.test",
+					HasGoMod:   false,
+				},
+			},
+			Directories: []*internal.DirectoryNew{
+				{
+					Path:   "bigdoc.test",
+					V1Path: "bigdoc.test",
+					Package: &internal.PackageNew{
+						Name: "bigdoc",
+						Documentation: &internal.Documentation{
+							Synopsis: "This documentation is big.",
+							HTML:     docTooLargeReplacement,
+						},
+					},
+				},
+			},
+		},
+		PackageVersionStates: []*internal.PackageVersionState{
+			{
+				PackagePath: "bigdoc.test",
+				ModulePath:  "bigdoc.test",
+				Version:     "v1.0.0",
+				Status:      derrors.ToHTTPStatus(derrors.PackageDocumentationHTMLTooLarge),
 			},
 		},
 	},
