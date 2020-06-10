@@ -630,13 +630,15 @@ func TestReFetch(t *testing.T) {
 	}
 	want := &internal.LegacyVersionedPackage{
 		LegacyModuleInfo: internal.LegacyModuleInfo{
-			ModulePath:           modulePath,
-			Version:              version,
-			CommitTime:           time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
-			VersionType:          "release",
-			IsRedistributable:    true,
-			HasGoMod:             false,
-			SourceInfo:           source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath:        modulePath,
+				Version:           version,
+				CommitTime:        time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
+				VersionType:       "release",
+				IsRedistributable: true,
+				HasGoMod:          false,
+				SourceInfo:        source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
+			},
 			LegacyReadmeFilePath: "README.md",
 			LegacyReadmeContents: "This is a readme",
 		},
@@ -769,15 +771,17 @@ func TestFetchAndInsertModule(t *testing.T) {
 
 	myModuleV100 := &internal.LegacyVersionedPackage{
 		LegacyModuleInfo: internal.LegacyModuleInfo{
-			ModulePath:           "github.com/my/module",
-			Version:              "v1.0.0",
-			CommitTime:           testProxyCommitTime,
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath:        "github.com/my/module",
+				Version:           "v1.0.0",
+				CommitTime:        testProxyCommitTime,
+				SourceInfo:        source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
+				VersionType:       "release",
+				IsRedistributable: true,
+				HasGoMod:          true,
+			},
 			LegacyReadmeFilePath: "README.md",
 			LegacyReadmeContents: "README FILE FOR TESTING.",
-			SourceInfo:           source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
-			VersionType:          "release",
-			IsRedistributable:    true,
-			HasGoMod:             true,
 		},
 		LegacyPackage: internal.LegacyPackage{
 			Path:              "github.com/my/module/bar",
@@ -823,15 +827,17 @@ func TestFetchAndInsertModule(t *testing.T) {
 			pkg:        "nonredistributable.mod/module/bar/baz",
 			want: &internal.LegacyVersionedPackage{
 				LegacyModuleInfo: internal.LegacyModuleInfo{
-					ModulePath:           "nonredistributable.mod/module",
-					Version:              "v1.0.0",
-					CommitTime:           testProxyCommitTime,
+					ModuleInfo: internal.ModuleInfo{
+						ModulePath:        "nonredistributable.mod/module",
+						Version:           "v1.0.0",
+						CommitTime:        testProxyCommitTime,
+						VersionType:       "release",
+						SourceInfo:        nil,
+						IsRedistributable: true,
+						HasGoMod:          true,
+					},
 					LegacyReadmeFilePath: "README.md",
 					LegacyReadmeContents: "README FILE FOR TESTING.",
-					VersionType:          "release",
-					SourceInfo:           nil,
-					IsRedistributable:    true,
-					HasGoMod:             true,
 				},
 				LegacyPackage: internal.LegacyPackage{
 					Path:              "nonredistributable.mod/module/bar/baz",
@@ -855,15 +861,17 @@ func TestFetchAndInsertModule(t *testing.T) {
 			pkg:        "nonredistributable.mod/module/foo",
 			want: &internal.LegacyVersionedPackage{
 				LegacyModuleInfo: internal.LegacyModuleInfo{
-					ModulePath:           "nonredistributable.mod/module",
-					Version:              "v1.0.0",
-					CommitTime:           testProxyCommitTime,
+					ModuleInfo: internal.ModuleInfo{
+						ModulePath:        "nonredistributable.mod/module",
+						Version:           "v1.0.0",
+						CommitTime:        testProxyCommitTime,
+						VersionType:       "release",
+						SourceInfo:        nil,
+						IsRedistributable: true,
+						HasGoMod:          true,
+					},
 					LegacyReadmeFilePath: "README.md",
 					LegacyReadmeContents: "README FILE FOR TESTING.",
-					VersionType:          "release",
-					SourceInfo:           nil,
-					IsRedistributable:    true,
-					HasGoMod:             true,
 				},
 				LegacyPackage: internal.LegacyPackage{
 					Path:     "nonredistributable.mod/module/foo",
@@ -885,15 +893,17 @@ func TestFetchAndInsertModule(t *testing.T) {
 			pkg:        "context",
 			want: &internal.LegacyVersionedPackage{
 				LegacyModuleInfo: internal.LegacyModuleInfo{
-					ModulePath:           "std",
-					Version:              "v1.12.5",
-					CommitTime:           stdlib.TestCommitTime,
-					VersionType:          "release",
+					ModuleInfo: internal.ModuleInfo{
+						ModulePath:        "std",
+						Version:           "v1.12.5",
+						CommitTime:        stdlib.TestCommitTime,
+						VersionType:       "release",
+						SourceInfo:        source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
+						IsRedistributable: true,
+						HasGoMod:          true,
+					},
 					LegacyReadmeFilePath: "README.md",
 					LegacyReadmeContents: "# The Go Programming Language\n",
-					SourceInfo:           source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
-					IsRedistributable:    true,
-					HasGoMod:             true,
 				},
 				LegacyPackage: internal.LegacyPackage{
 					Path:              "context",
@@ -918,15 +928,18 @@ func TestFetchAndInsertModule(t *testing.T) {
 			pkg:        "builtin",
 			want: &internal.LegacyVersionedPackage{
 				LegacyModuleInfo: internal.LegacyModuleInfo{
-					ModulePath:           "std",
-					Version:              "v1.12.5",
-					CommitTime:           stdlib.TestCommitTime,
-					VersionType:          "release",
+					ModuleInfo: internal.ModuleInfo{
+						ModulePath:        "std",
+						Version:           "v1.12.5",
+						CommitTime:        stdlib.TestCommitTime,
+						VersionType:       "release",
+						SourceInfo:        source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
+						IsRedistributable: true,
+						HasGoMod:          true,
+					},
+
 					LegacyReadmeFilePath: "README.md",
 					LegacyReadmeContents: "# The Go Programming Language\n",
-					SourceInfo:           source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
-					IsRedistributable:    true,
-					HasGoMod:             true,
 				},
 				LegacyPackage: internal.LegacyPackage{
 					Path:              "builtin",
@@ -951,15 +964,17 @@ func TestFetchAndInsertModule(t *testing.T) {
 			pkg:        "encoding/json",
 			want: &internal.LegacyVersionedPackage{
 				LegacyModuleInfo: internal.LegacyModuleInfo{
-					ModulePath:           "std",
-					Version:              "v1.12.5",
-					CommitTime:           stdlib.TestCommitTime,
-					VersionType:          "release",
+					ModuleInfo: internal.ModuleInfo{
+						ModulePath:        "std",
+						Version:           "v1.12.5",
+						CommitTime:        stdlib.TestCommitTime,
+						VersionType:       "release",
+						SourceInfo:        source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
+						IsRedistributable: true,
+						HasGoMod:          true,
+					},
 					LegacyReadmeFilePath: "README.md",
 					LegacyReadmeContents: "# The Go Programming Language\n",
-					SourceInfo:           source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
-					IsRedistributable:    true,
-					HasGoMod:             true,
 				},
 				LegacyPackage: internal.LegacyPackage{
 					Path:              "encoding/json",
@@ -997,13 +1012,15 @@ func TestFetchAndInsertModule(t *testing.T) {
 			pkg:        "build.constraints/module/cpu",
 			want: &internal.LegacyVersionedPackage{
 				LegacyModuleInfo: internal.LegacyModuleInfo{
-					ModulePath:        "build.constraints/module",
-					Version:           "v1.0.0",
-					CommitTime:        testProxyCommitTime,
-					VersionType:       "release",
-					SourceInfo:        nil,
-					IsRedistributable: true,
-					HasGoMod:          false,
+					ModuleInfo: internal.ModuleInfo{
+						ModulePath:        "build.constraints/module",
+						Version:           "v1.0.0",
+						CommitTime:        testProxyCommitTime,
+						VersionType:       "release",
+						SourceInfo:        nil,
+						IsRedistributable: true,
+						HasGoMod:          false,
+					},
 				},
 				LegacyPackage: internal.LegacyPackage{
 					Path:              "build.constraints/module/cpu",

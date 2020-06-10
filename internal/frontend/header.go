@@ -49,7 +49,7 @@ type Module struct {
 // latestRequested indicates whether the user requested the latest
 // version of the package. If so, the returned Package.URL will have the
 // structure /<path> instead of /<path>@<version>.
-func createPackage(pkg *internal.LegacyPackage, mi *internal.LegacyModuleInfo, latestRequested bool) (_ *Package, err error) {
+func createPackage(pkg *internal.LegacyPackage, mi *internal.ModuleInfo, latestRequested bool) (_ *Package, err error) {
 	defer derrors.Wrap(&err, "createPackage(%v, %v)", pkg, mi)
 
 	if pkg == nil || mi == nil {
@@ -99,7 +99,7 @@ func createPackageNew(vdir *internal.VersionedDirectory, latestRequested bool) (
 		}
 	}
 
-	m := createModule(&vdir.LegacyModuleInfo, modLicenses, latestRequested)
+	m := createModule(&vdir.ModuleInfo, modLicenses, latestRequested)
 	urlVersion := m.LinkVersion
 	if latestRequested {
 		urlVersion = internal.LatestVersion
@@ -121,7 +121,7 @@ func createPackageNew(vdir *internal.VersionedDirectory, latestRequested bool) (
 // latestRequested indicates whether the user requested the latest
 // version of the package. If so, the returned Module.URL will have the
 // structure /<path> instead of /<path>@<version>.
-func createModule(mi *internal.LegacyModuleInfo, licmetas []*licenses.Metadata, latestRequested bool) *Module {
+func createModule(mi *internal.ModuleInfo, licmetas []*licenses.Metadata, latestRequested bool) *Module {
 	urlVersion := linkVersion(mi.Version, mi.ModulePath)
 	if latestRequested {
 		urlVersion = internal.LatestVersion

@@ -18,6 +18,7 @@ import (
 	"golang.org/x/net/html"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
@@ -151,6 +152,7 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 			for _, p := range ps {
 				sample.AddPackage(m, p)
 			}
+			log.Info(ctx, m.ModulePath)
 			if err := testDB.InsertModule(ctx, m); err != nil {
 				t.Fatal(err)
 			}
@@ -185,11 +187,10 @@ func testServer(t *testing.T, experimentNames ...string) {
 	defer cancel()
 	defer postgres.ResetTestDB(testDB, t)
 
-	// Experiments need to be set in the context, for DB work, and as
-	// a middleware, for request handling.
+	// Experiments need to be set in the context, for DB work, and as a
+	// middleware, for request handling.
 	ctx = experimentContext(ctx, experimentNames...)
 	insertTestModules(ctx, t, testModules)
-
 	_, handler, _ := newTestServer(t, nil, experimentNames...)
 
 	var (
@@ -340,7 +341,6 @@ func testServer(t *testing.T, experimentNames ...string) {
 		versioned   = true
 		unversioned = false
 	)
-
 	for _, tc := range []struct {
 		// name of the test
 		name string
@@ -417,7 +417,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 			want:           pagecheck.PackageHeader(pkgNonRedist, unversioned),
 		},
 		{
-			name:           "package@version default",
+			name:           "package at version default",
 			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=doc", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
@@ -425,14 +425,14 @@ func testServer(t *testing.T, experimentNames ...string) {
 				in(".Documentation", text(`This is the documentation HTML`))),
 		},
 		{
-			name: "package@version default specific version nonredistributable",
+			name: "package at version default specific version nonredistributable",
 			// For a non-redistributable package, the name@version route goes to the overview tab.
 			urlPath:        "/github.com/non_redistributable@v1.0.0/bar?tab=overview",
 			wantStatusCode: http.StatusOK,
 			want:           pagecheck.PackageHeader(pkgNonRedist, versioned),
 		},
 		{
-			name:           "package@version doc tab",
+			name:           "package at version doc tab",
 			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=doc", sample.ModulePath, "v0.9.0", sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
@@ -440,14 +440,14 @@ func testServer(t *testing.T, experimentNames ...string) {
 				in(".Documentation", text(`This is the documentation HTML`))),
 		},
 		{
-			name:           "package@version doc with links",
+			name:           "package at version doc with links",
 			urlPath:        "/github.com/valid_module_name/foo/directory/hello?tab=doc",
 			wantStatusCode: http.StatusOK,
 			want: in(".Documentation",
 				in("a", href("/pkg/io#Writer"), text("io.Writer"))),
 		},
 		{
-			name:             "package@version doc with hacked up links",
+			name:             "package at version doc with hacked up links",
 			urlPath:          "/github.com/valid_module_name/foo/directory/hello?tab=doc",
 			addDocQueryParam: true,
 			wantStatusCode:   http.StatusOK,
@@ -455,7 +455,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 				in("a", href("/io?tab=doc#Writer"), text("io.Writer"))),
 		},
 		{
-			name: "package@version doc tab nonredistributable",
+			name: "package at version doc tab nonredistributable",
 			// For a non-redistributable package, the doc tab will not show the doc.
 			urlPath:        "/github.com/non_redistributable@v1.0.0/bar?tab=doc",
 			wantStatusCode: http.StatusOK,
@@ -464,7 +464,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 				in(".DetailsContent", text(`not displayed due to license restrictions`))),
 		},
 		{
-			name:           "package@version readme tab",
+			name:           "package at version readme tab redistributable",
 			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=overview", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
@@ -479,7 +479,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 				})),
 		},
 		{
-			name: "package@version readme tab nonredistributable",
+			name: "package at version readme tab nonredistributable",
 			// For a non-redistributable package, the readme tab will not show the readme.
 			urlPath:        "/github.com/non_redistributable@v1.0.0/bar?tab=overview",
 			wantStatusCode: http.StatusOK,
@@ -488,7 +488,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 				in(".DetailsContent", text(`not displayed due to license restrictions`))),
 		},
 		{
-			name:           "package@version subdirectories tab",
+			name:           "package at version subdirectories tab",
 			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=subdirectories", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
@@ -499,7 +499,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 						text("directory/hello")))),
 		},
 		{
-			name:           "package@version versions tab",
+			name:           "package at version versions tab",
 			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=versions", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
@@ -512,7 +512,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 						text("v1.0.0")))),
 		},
 		{
-			name:           "package@version imports tab",
+			name:           "package at version imports tab",
 			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=imports", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
@@ -524,7 +524,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 					in("li:nth-child(2) a", href("/path/to/bar"), text("path/to/bar")))),
 		},
 		{
-			name:           "package@version imported by tab",
+			name:           "package at version imported by tab",
 			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=importedby", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
@@ -532,7 +532,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 				in(".EmptyContent-message", text(`No known importers for this package`))),
 		},
 		{
-			name:           "package@version imported by tab second page",
+			name:           "package at version imported by tab second page",
 			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=importedby&page=2", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
@@ -540,7 +540,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 				in(".EmptyContent-message", text(`No known importers for this package`))),
 		},
 		{
-			name:           "package@version licenses tab",
+			name:           "package at version licenses tab",
 			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=licenses", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
@@ -548,14 +548,14 @@ func testServer(t *testing.T, experimentNames ...string) {
 				pagecheck.LicenseDetails("MIT", "Lorem Ipsum", "github.com/valid_module_name@v1.0.0/LICENSE")),
 		},
 		{
-			name:           "package@version overview tab, pseudoversion",
+			name:           "package at version overview tab, pseudoversion",
 			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=overview", sample.ModulePath, pseudoVersion, sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.PackageHeader(pkgPseudo, versioned)),
 		},
 		{
-			name:           "package@version overview tab, +incompatible",
+			name:           "package at version overview tab, +incompatible",
 			urlPath:        "/github.com/incompatible@v1.0.0+incompatible/dir/inc?tab=overview",
 			wantStatusCode: http.StatusOK,
 			want: in("",
@@ -816,10 +816,10 @@ func testServer(t *testing.T, experimentNames ...string) {
 
 			if tc.want != nil {
 				if err := tc.want(doc); err != nil {
-					t.Error(err)
 					if testing.Verbose() {
 						html.Render(os.Stdout, doc)
 					}
+					t.Error(err)
 				}
 			}
 		})
@@ -835,20 +835,22 @@ func TestServerErrors(t *testing.T) {
 	if err := testDB.InsertModule(ctx, sampleModule); err != nil {
 		t.Fatal(err)
 	}
-
 	_, handler, _ := newTestServer(t, nil)
+
 	for _, test := range []struct {
-		path     string
-		wantCode int
+		name, path string
+		wantCode   int
 	}{
-		{"/invalid-page", http.StatusNotFound},
-		{"/gocloud.dev/@latest/blob", http.StatusBadRequest},
+		{"not found", "/invalid-page", http.StatusNotFound},
+		{"bad request", "/gocloud.dev/@latest/blob", http.StatusBadRequest},
 	} {
-		w := httptest.NewRecorder()
-		handler.ServeHTTP(w, httptest.NewRequest("GET", test.path, nil))
-		if w.Code != test.wantCode {
-			t.Errorf("%q: got status code = %d, want %d", test.path, w.Code, test.wantCode)
-		}
+		t.Run(test.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			handler.ServeHTTP(w, httptest.NewRequest("GET", test.path, nil))
+			if w.Code != test.wantCode {
+				t.Errorf("%q: got status code = %d, want %d", test.path, w.Code, test.wantCode)
+			}
+		})
 	}
 }
 
@@ -914,9 +916,11 @@ func TestTagRoute(t *testing.T) {
 		{"/", mustRequest("http://localhost/foo?tab=imports"), "imports"},
 	}
 	for _, test := range tests {
-		if got := TagRoute(test.route, test.req); got != test.want {
-			t.Errorf("TagRoute(%q, %v) = %q, want %q", test.route, test.req, got, test.want)
-		}
+		t.Run(test.want, func(t *testing.T) {
+			if got := TagRoute(test.route, test.req); got != test.want {
+				t.Errorf("TagRoute(%q, %v) = %q, want %q", test.route, test.req, got, test.want)
+			}
+		})
 	}
 }
 
@@ -928,9 +932,9 @@ func experimentContext(ctx context.Context, experimentNames ...string) context.C
 	return experiment.NewContext(ctx, experiment.NewSet(expmap))
 }
 
-func newTestServer(t *testing.T, modules []*proxy.TestModule, experimentNames ...string) (*Server, http.Handler, func()) {
+func newTestServer(t *testing.T, proxyModules []*proxy.TestModule, experimentNames ...string) (*Server, http.Handler, func()) {
 	t.Helper()
-	proxyClient, teardown := proxy.SetupTestProxy(t, modules)
+	proxyClient, teardown := proxy.SetupTestProxy(t, proxyModules)
 	sourceClient := source.NewClient(sourceTimeout)
 	ctx := context.Background()
 

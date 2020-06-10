@@ -112,19 +112,31 @@ func LegacyModuleInfo(modulePath, versionString string) *internal.LegacyModuleIn
 	}
 	mi := ModuleInfoReleaseType(modulePath, versionString)
 	mi.VersionType = vtype
+	return &internal.LegacyModuleInfo{
+		ModuleInfo:           *mi,
+		LegacyReadmeFilePath: ReadmeFilePath,
+		LegacyReadmeContents: ReadmeContents,
+	}
+}
+
+func ModuleInfo(modulePath, versionString string) *internal.ModuleInfo {
+	vtype, err := version.ParseType(versionString)
+	if err != nil {
+		panic(err)
+	}
+	mi := ModuleInfoReleaseType(modulePath, versionString)
+	mi.VersionType = vtype
 	return mi
 }
 
 // We shouldn't need this, but some code (notably frontend/directory_test.go) creates
 // ModuleInfos with "latest" for version, which should not be valid.
-func ModuleInfoReleaseType(modulePath, versionString string) *internal.LegacyModuleInfo {
-	return &internal.LegacyModuleInfo{
-		ModulePath:           modulePath,
-		Version:              versionString,
-		LegacyReadmeFilePath: ReadmeFilePath,
-		LegacyReadmeContents: ReadmeContents,
-		CommitTime:           CommitTime,
-		VersionType:          version.TypeRelease,
+func ModuleInfoReleaseType(modulePath, versionString string) *internal.ModuleInfo {
+	return &internal.ModuleInfo{
+		ModulePath:  modulePath,
+		Version:     versionString,
+		CommitTime:  CommitTime,
+		VersionType: version.TypeRelease,
 		// Assume the module path is a GitHub-like repo name.
 		SourceInfo:        source.NewGitHubInfo("https://"+modulePath, "", versionString),
 		IsRedistributable: true,

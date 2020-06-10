@@ -193,7 +193,10 @@ func pathNotFoundError(ctx context.Context, pathType, fullPath, version string) 
 // pathNotFoundErrorNew returns an error page that provides the user with an
 // option to fetch a path.
 func pathNotFoundErrorNew(fullPath, version string) error {
-	path := fmt.Sprintf("%s@%s", fullPath, version)
+	path := fullPath
+	if version != internal.LatestVersion {
+		path = fmt.Sprintf("%s@%s", fullPath, version)
+	}
 	return &serverError{
 		status: http.StatusNotFound,
 		epage: &errorPage{

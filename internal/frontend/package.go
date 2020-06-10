@@ -106,7 +106,7 @@ func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.Respons
 			derrors.Wrap(&err, "servePackagePageWithPackage(w, r, %q, %q, %q)", pkg.Path, pkg.ModulePath, requestedVersion)
 		}
 	}()
-	pkgHeader, err := createPackage(&pkg.LegacyPackage, &pkg.LegacyModuleInfo, requestedVersion == internal.LatestVersion)
+	pkgHeader, err := createPackage(&pkg.LegacyPackage, &pkg.ModuleInfo, requestedVersion == internal.LatestVersion)
 	if err != nil {
 		return fmt.Errorf("creating package header for %s@%s: %v", pkg.Path, pkg.Version, err)
 	}
@@ -220,8 +220,8 @@ func (s *Server) stdlibPathForShortcut(ctx context.Context, shortcut string) (pa
 	return "", nil
 }
 
-func (s *Server) servePackagePageWithVersionedDirectory(ctx context.Context, w http.ResponseWriter, r *http.Request, vdir *internal.VersionedDirectory, requestedVersion string) error {
-
+func (s *Server) servePackagePageWithVersionedDirectory(ctx context.Context,
+	w http.ResponseWriter, r *http.Request, vdir *internal.VersionedDirectory, requestedVersion string) error {
 	pkgHeader, err := createPackageNew(vdir, requestedVersion == internal.LatestVersion)
 	if err != nil {
 		return fmt.Errorf("creating package header for %s@%s: %v", vdir.Path, vdir.Version, err)

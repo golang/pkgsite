@@ -289,7 +289,6 @@ func TestGetDirectoryNew(t *testing.T) {
 			internal.ExperimentInsertDirectories: true}))
 
 	defer ResetTestDB(testDB, t)
-
 	InsertSampleDirectoryTree(ctx, t, testDB)
 
 	// Add a module that has READMEs in a directory and a package.
@@ -310,7 +309,7 @@ func TestGetDirectoryNew(t *testing.T) {
 
 	newVdir := func(path, modulePath, version string, readme *internal.Readme, pkg *internal.PackageNew) *internal.VersionedDirectory {
 		return &internal.VersionedDirectory{
-			LegacyModuleInfo: *sample.LegacyModuleInfo(modulePath, version),
+			ModuleInfo: *sample.ModuleInfo(modulePath, version),
 			DirectoryNew: internal.DirectoryNew{
 				Path:              path,
 				V1Path:            path,
@@ -434,6 +433,12 @@ func TestGetDirectoryNew(t *testing.T) {
 				// The packages table only includes partial license information; it omits the Coverage field.
 				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 			}
+			// TODO(golang/go#38513): remove once we start displaying
+			// READMEs for directories instead of the top-level module.
+			tc.want.Readme = &internal.Readme{
+				Filepath: sample.ReadmeFilePath,
+				Contents: sample.ReadmeContents,
+			}
 			if diff := cmp.Diff(tc.want, got, opts...); diff != "" {
 				t.Errorf("mismatch (-want, +got):\n%s", diff)
 			}
@@ -465,9 +470,6 @@ func TestGetDirectoryFieldSet(t *testing.T) {
 	got, err := testDB.GetDirectory(ctx, "m.c/d", "m.c", sample.VersionString, internal.MinimalFields)
 	if err != nil {
 		t.Fatal(err)
-	}
-	if g, w := got.LegacyReadmeContents, internal.StringFieldMissing; g != w {
-		t.Errorf("LegacyReadmeContents = %q, want %q", g, w)
 	}
 	if g, w := got.Packages[0].DocumentationHTML, internal.StringFieldMissing; g != w {
 		t.Errorf("DocumentationHTML = %q, want %q", g, w)

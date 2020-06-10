@@ -77,7 +77,7 @@ func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseW
 		return err
 	}
 
-	modHeader := createModule(mi, licensesToMetadatas(licenses), requestedVersion == internal.LatestVersion)
+	modHeader := createModule(&mi.ModuleInfo, licensesToMetadatas(licenses), requestedVersion == internal.LatestVersion)
 	tab := r.FormValue("tab")
 	settings, ok := moduleTabLookup[tab]
 	if !ok {

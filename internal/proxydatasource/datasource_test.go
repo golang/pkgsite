@@ -60,7 +60,7 @@ var (
 		GOOS:              "linux",
 		GOARCH:            "amd64",
 	}
-	wantModuleInfo = internal.LegacyModuleInfo{
+	wantModuleInfo = internal.ModuleInfo{
 		ModulePath:        "foo.com/bar",
 		Version:           "v1.2.0",
 		CommitTime:        time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
@@ -69,7 +69,7 @@ var (
 		HasGoMod:          true,
 	}
 	wantVersionedPackage = &internal.LegacyVersionedPackage{
-		LegacyModuleInfo: wantModuleInfo,
+		LegacyModuleInfo: internal.LegacyModuleInfo{ModuleInfo: wantModuleInfo},
 		LegacyPackage:    wantPackage,
 	}
 	cmpOpts = append([]cmp.Option{
@@ -82,8 +82,8 @@ func TestDataSource_GetDirectory(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
 	want := &internal.LegacyDirectory{
+		LegacyModuleInfo: internal.LegacyModuleInfo{ModuleInfo: wantModuleInfo},
 		Path:             "foo.com/bar",
-		LegacyModuleInfo: wantModuleInfo,
 		Packages:         []*internal.LegacyPackage{&wantPackage},
 	}
 	got, err := ds.GetDirectory(ctx, "foo.com/bar", internal.UnknownModulePath, "v1.2.0", internal.AllFields)
@@ -127,7 +127,7 @@ func TestDataSource_GetModuleInfo_Latest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(&wantModuleInfo, got, cmpOpts...); diff != "" {
+	if diff := cmp.Diff(wantModuleInfo, got.ModuleInfo, cmpOpts...); diff != "" {
 		t.Errorf("GetLatestModuleInfo diff (-want +got):\n%s", diff)
 	}
 }
@@ -192,7 +192,10 @@ func TestDataSource_GetTaggedVersionsForModule(t *testing.T) {
 	}
 	v110 := wantModuleInfo
 	v110.Version = "v1.1.0"
-	want := []*internal.LegacyModuleInfo{&wantModuleInfo, &v110}
+	want := []*internal.LegacyModuleInfo{
+		{ModuleInfo: wantModuleInfo},
+		{ModuleInfo: v110},
+	}
 	ignore := cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "CommitTime", "VersionType", "IsRedistributable", "HasGoMod")
 	if diff := cmp.Diff(want, got, ignore); diff != "" {
 		t.Errorf("GetTaggedVersionsForPackageSeries diff (-want +got):\n%s", diff)
@@ -213,7 +216,10 @@ func TestDataSource_GetTaggedVersionsForPackageSeries(t *testing.T) {
 	}
 	v110 := wantModuleInfo
 	v110.Version = "v1.1.0"
-	want := []*internal.LegacyModuleInfo{&wantModuleInfo, &v110}
+	want := []*internal.LegacyModuleInfo{
+		{ModuleInfo: wantModuleInfo},
+		{ModuleInfo: v110},
+	}
 	ignore := cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "CommitTime", "VersionType", "IsRedistributable", "HasGoMod")
 	if diff := cmp.Diff(want, got, ignore); diff != "" {
 		t.Errorf("GetTaggedVersionsForPackageSeries diff (-want +got):\n%s", diff)
@@ -227,7 +233,7 @@ func TestDataSource_GetModuleInfo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(&wantModuleInfo, got, cmpOpts...); diff != "" {
+	if diff := cmp.Diff(wantModuleInfo, got.ModuleInfo, cmpOpts...); diff != "" {
 		t.Errorf("GetModuleInfo diff (-want +got):\n%s", diff)
 	}
 }

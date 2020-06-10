@@ -25,12 +25,14 @@ func TestFetchSearchPage(t *testing.T) {
 		now       = sample.NowTruncated()
 		moduleFoo = &internal.Module{
 			LegacyModuleInfo: internal.LegacyModuleInfo{
-				ModulePath:           "github.com/mod/foo",
-				Version:              "v1.0.0",
+				ModuleInfo: internal.ModuleInfo{
+					ModulePath:        "github.com/mod/foo",
+					Version:           "v1.0.0",
+					CommitTime:        now,
+					VersionType:       version.TypeRelease,
+					IsRedistributable: true,
+				},
 				LegacyReadmeContents: "readme",
-				CommitTime:           now,
-				VersionType:          version.TypeRelease,
-				IsRedistributable:    true,
 			},
 			LegacyPackages: []*internal.LegacyPackage{
 				{
@@ -44,12 +46,14 @@ func TestFetchSearchPage(t *testing.T) {
 		}
 		moduleBar = &internal.Module{
 			LegacyModuleInfo: internal.LegacyModuleInfo{
-				ModulePath:           "github.com/mod/bar",
-				Version:              "v1.0.0",
+				ModuleInfo: internal.ModuleInfo{
+					ModulePath:        "github.com/mod/bar",
+					Version:           "v1.0.0",
+					CommitTime:        now,
+					VersionType:       version.TypeRelease,
+					IsRedistributable: true,
+				},
 				LegacyReadmeContents: "readme",
-				CommitTime:           now,
-				VersionType:          version.TypeRelease,
-				IsRedistributable:    true,
 			},
 			LegacyPackages: []*internal.LegacyPackage{
 				{

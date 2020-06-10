@@ -470,11 +470,11 @@ func (db *DB) GetModuleInfo(ctx context.Context, modulePath string, version stri
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
-	setHasGoMod(&mi, hasGoMod)
+	setHasGoMod(&mi.ModuleInfo, hasGoMod)
 	return &mi, nil
 }
 
-func setHasGoMod(mi *internal.LegacyModuleInfo, nb sql.NullBool) {
+func setHasGoMod(mi *internal.ModuleInfo, nb sql.NullBool) {
 	// The safe default value for HasGoMod is true, because search will penalize modules that don't have one.
 	// This is temporary: when has_go_mod is fully populated, we'll make it NOT NULL.
 	mi.HasGoMod = true

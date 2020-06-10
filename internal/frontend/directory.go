@@ -83,7 +83,7 @@ func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, 
 // the module path. However, on the package and directory view's
 // "Subdirectories" tab, we do not want to include packages whose import paths
 // are the same as the dirPath.
-func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, dirPath string, mi *internal.LegacyModuleInfo,
+func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, dirPath string, mi *internal.ModuleInfo,
 	licmetas []*licenses.Metadata, includeDirPath bool) (_ *Directory, err error) {
 	defer derrors.Wrap(&err, "s.ds.fetchDirectoryDetails(%q, %q, %q, %v)", dirPath, mi.ModulePath, mi.Version, licmetas)
 
@@ -97,7 +97,7 @@ func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, dirPath 
 			return nil, err
 		}
 		return createDirectory(&internal.LegacyDirectory{
-			LegacyModuleInfo: *mi,
+			LegacyModuleInfo: internal.LegacyModuleInfo{ModuleInfo: *mi},
 			Path:             dirPath,
 			Packages:         pkgs,
 		}, licmetas, includeDirPath)
@@ -106,7 +106,7 @@ func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, dirPath 
 	dbDir, err := ds.GetDirectory(ctx, dirPath, mi.ModulePath, mi.Version, internal.AllFields)
 	if errors.Is(err, derrors.NotFound) {
 		return createDirectory(&internal.LegacyDirectory{
-			LegacyModuleInfo: *mi,
+			LegacyModuleInfo: internal.LegacyModuleInfo{ModuleInfo: *mi},
 			Path:             dirPath,
 			Packages:         nil,
 		}, licmetas, includeDirPath)
@@ -134,7 +134,7 @@ func createDirectory(dbDir *internal.LegacyDirectory, licmetas []*licenses.Metad
 		if !includeDirPath && pkg.Path == dbDir.Path {
 			continue
 		}
-		newPkg, err := createPackage(pkg, &dbDir.LegacyModuleInfo, false)
+		newPkg, err := createPackage(pkg, &dbDir.ModuleInfo, false)
 		if err != nil {
 			return nil, err
 		}
@@ -147,7 +147,7 @@ func createDirectory(dbDir *internal.LegacyDirectory, licmetas []*licenses.Metad
 		}
 		packages = append(packages, newPkg)
 	}
-	mod := createModule(&dbDir.LegacyModuleInfo, licmetas, false)
+	mod := createModule(&dbDir.ModuleInfo, licmetas, false)
 	sort.Slice(packages, func(i, j int) bool { return packages[i].Path < packages[j].Path })
 
 	return &Directory{

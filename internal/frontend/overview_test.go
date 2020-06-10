@@ -45,7 +45,8 @@ func TestFetchOverviewDetails(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got := constructOverviewDetails(&tc.module.LegacyModuleInfo, true, true)
+	readme := &internal.Readme{Filepath: tc.module.LegacyReadmeFilePath, Contents: tc.module.LegacyReadmeContents}
+	got := constructOverviewDetails(&tc.module.ModuleInfo, readme, true, true)
 	if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
 		t.Errorf("constructOverviewDetails(%q, %q) mismatch (-want +got):\n%s", tc.module.LegacyPackages[0].Path, tc.module.Version, diff)
 	}
@@ -64,8 +65,12 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 				DirectoryNew: internal.DirectoryNew{
 					Path:              "github.com/u/m/p",
 					IsRedistributable: true,
+					Readme: &internal.Readme{
+						Filepath: "README.md",
+						Contents: "readme",
+					},
 				},
-				LegacyModuleInfo: *sample.LegacyModuleInfo("github.com/u/m", "v1.2.3"),
+				ModuleInfo: *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
 			},
 			versionedLinks: true,
 			want: &OverviewDetails{
@@ -84,8 +89,12 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 				DirectoryNew: internal.DirectoryNew{
 					Path:              "github.com/u/m/p",
 					IsRedistributable: true,
+					Readme: &internal.Readme{
+						Filepath: "README.md",
+						Contents: "readme",
+					},
 				},
-				LegacyModuleInfo: *sample.LegacyModuleInfo("github.com/u/m", "v1.2.3"),
+				ModuleInfo: *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
 			},
 			versionedLinks: false,
 			want: &OverviewDetails{
@@ -105,7 +114,7 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 					Path:              "github.com/u/m/p",
 					IsRedistributable: false,
 				},
-				LegacyModuleInfo: *sample.LegacyModuleInfo("github.com/u/m", "v1.2.3"),
+				ModuleInfo: *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
 			},
 			versionedLinks: true,
 			want: &OverviewDetails{
@@ -119,24 +128,27 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 			},
 		},
 	} {
-		got := fetchPackageOverviewDetailsNew(test.vdir, test.versionedLinks)
-		if diff := cmp.Diff(test.want, got); diff != "" {
-			t.Errorf("%s: mismatch (-want +got):\n%s", test.name, diff)
-		}
+		t.Run(test.name, func(t *testing.T) {
+			got := fetchPackageOverviewDetailsNew(test.vdir, test.versionedLinks)
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("mismatch (-want +got):\n%s", diff)
+			}
+		})
 	}
 }
 
 func TestReadmeHTML(t *testing.T) {
-	testCases := []struct {
-		name string
-		mi   *internal.LegacyModuleInfo
-		want template.HTML
+	for _, tc := range []struct {
+		name   string
+		mi     *internal.ModuleInfo
+		readme *internal.Readme
+		want   template.HTML
 	}{
 		{
 			name: "valid markdown readme",
-			mi: &internal.LegacyModuleInfo{
-				LegacyReadmeFilePath: "README.md",
-				LegacyReadmeContents: "This package collects pithy sayings.\n\n" +
+			readme: &internal.Readme{
+				Filepath: "README.md",
+				Contents: "This package collects pithy sayings.\n\n" +
 					"It's part of a demonstration of\n" +
 					"[package versioning in Go](https://research.swtch.com/vgo1).",
 			},
@@ -146,9 +158,9 @@ func TestReadmeHTML(t *testing.T) {
 		},
 		{
 			name: "valid markdown readme with alternative case and extension",
-			mi: &internal.LegacyModuleInfo{
-				LegacyReadmeFilePath: "README.MARKDOWN",
-				LegacyReadmeContents: "This package collects pithy sayings.\n\n" +
+			readme: &internal.Readme{
+				Filepath: "README.MARKDOWN",
+				Contents: "This package collects pithy sayings.\n\n" +
 					"It's part of a demonstration of\n" +
 					"[package versioning in Go](https://research.swtch.com/vgo1).",
 			},
@@ -158,9 +170,9 @@ func TestReadmeHTML(t *testing.T) {
 		},
 		{
 			name: "not markdown readme",
-			mi: &internal.LegacyModuleInfo{
-				LegacyReadmeFilePath: "README.rst",
-				LegacyReadmeContents: "This package collects pithy sayings.\n\n" +
+			readme: &internal.Readme{
+				Filepath: "README.rst",
+				Contents: "This package collects pithy sayings.\n\n" +
 					"It's part of a demonstration of\n" +
 					"[package versioning in Go](https://research.swtch.com/vgo1).",
 			},
@@ -168,80 +180,89 @@ func TestReadmeHTML(t *testing.T) {
 		},
 		{
 			name: "empty readme",
-			mi:   &internal.LegacyModuleInfo{},
+			mi:   &internal.ModuleInfo{},
 			want: "",
 		},
 		{
 			name: "sanitized readme",
-			mi: &internal.LegacyModuleInfo{
-				LegacyReadmeFilePath: "README",
-				LegacyReadmeContents: `<a onblur="alert(secret)" href="http://www.google.com">Google</a>`,
+			readme: &internal.Readme{
+				Filepath: "README",
+				Contents: `<a onblur="alert(secret)" href="http://www.google.com">Google</a>`,
 			},
 			want: template.HTML(`<pre class="readme">&lt;a onblur=&#34;alert(secret)&#34; href=&#34;http://www.google.com&#34;&gt;Google&lt;/a&gt;</pre>`),
 		},
 		{
 			name: "relative image markdown is made absolute for GitHub",
-			mi: &internal.LegacyModuleInfo{
-				LegacyReadmeFilePath: "README.md",
-				LegacyReadmeContents: "![Go logo](doc/logo.png)",
-				SourceInfo:           source.NewGitHubInfo("http://github.com/golang/go", "", "master"),
+			mi: &internal.ModuleInfo{
+				SourceInfo: source.NewGitHubInfo("http://github.com/golang/go", "", "master"),
+			},
+			readme: &internal.Readme{
+				Filepath: "README.md",
+				Contents: "![Go logo](doc/logo.png)",
 			},
 			want: template.HTML("<p><img src=\"https://raw.githubusercontent.com/golang/go/master/doc/logo.png\" alt=\"Go logo\"/></p>\n"),
 		},
 		{
 			name: "relative image markdown is made absolute for GitLab",
-			mi: &internal.LegacyModuleInfo{
-				LegacyReadmeFilePath: "README.md",
-				LegacyReadmeContents: "![Gitaly benchmark timings.](doc/img/rugged-new-timings.png)",
-				SourceInfo:           source.NewGitLabInfo("http://gitlab.com/gitlab-org/gitaly", "", "v1.0.0"),
+			mi: &internal.ModuleInfo{
+				SourceInfo: source.NewGitLabInfo("http://gitlab.com/gitlab-org/gitaly", "", "v1.0.0"),
+			},
+			readme: &internal.Readme{
+				Filepath: "README.md",
+				Contents: "![Gitaly benchmark timings.](doc/img/rugged-new-timings.png)",
 			},
 			want: template.HTML("<p><img src=\"http://gitlab.com/gitlab-org/gitaly/raw/v1.0.0/doc/img/rugged-new-timings.png\" alt=\"Gitaly benchmark timings.\"/></p>\n"),
 		},
 		{
 			name: "relative image markdown is left alone for unknown origins",
-			mi: &internal.LegacyModuleInfo{
-				LegacyReadmeFilePath: "README.md",
-				LegacyReadmeContents: "![Go logo](doc/logo.png)",
+			readme: &internal.Readme{
+				Filepath: "README.md",
+				Contents: "![Go logo](doc/logo.png)",
 			},
 			want: template.HTML("<p><img src=\"doc/logo.png\" alt=\"Go logo\"/></p>\n"),
 		},
 		{
 			name: "module versions are referenced in relative images",
-			mi: &internal.LegacyModuleInfo{
-				LegacyReadmeFilePath: "README.md",
-				LegacyReadmeContents: "![Hugo logo](doc/logo.png)",
-				Version:              "v0.56.3",
-				VersionType:          version.TypeRelease,
-				SourceInfo:           source.NewGitHubInfo("http://github.com/gohugoio/hugo", "", "v0.56.3"),
+			mi: &internal.ModuleInfo{
+				Version:     "v0.56.3",
+				VersionType: version.TypeRelease,
+				SourceInfo:  source.NewGitHubInfo("http://github.com/gohugoio/hugo", "", "v0.56.3"),
+			},
+			readme: &internal.Readme{
+				Filepath: "README.md",
+				Contents: "![Hugo logo](doc/logo.png)",
 			},
 			want: template.HTML("<p><img src=\"https://raw.githubusercontent.com/gohugoio/hugo/v0.56.3/doc/logo.png\" alt=\"Hugo logo\"/></p>\n"),
 		},
 		{
 			name: "image URLs relative to README directory",
-			mi: &internal.LegacyModuleInfo{
-				LegacyReadmeFilePath: "dir/sub/README.md",
-				LegacyReadmeContents: "![alt](img/thing.png)",
-				Version:              "v1.2.3",
-				VersionType:          version.TypeRelease,
-				SourceInfo:           source.NewGitHubInfo("https://github.com/some/repo", "", "v1.2.3"),
+			mi: &internal.ModuleInfo{
+				Version:     "v1.2.3",
+				VersionType: version.TypeRelease,
+				SourceInfo:  source.NewGitHubInfo("https://github.com/some/repo", "", "v1.2.3"),
+			},
+			readme: &internal.Readme{
+				Filepath: "dir/sub/README.md",
+				Contents: "![alt](img/thing.png)",
 			},
 			want: template.HTML(`<p><img src="https://raw.githubusercontent.com/some/repo/v1.2.3/dir/sub/img/thing.png" alt="alt"/></p>` + "\n"),
 		},
 		{
 			name: "non-image links relative to README directory",
-			mi: &internal.LegacyModuleInfo{
-				LegacyReadmeFilePath: "dir/sub/README.md",
-				LegacyReadmeContents: "[something](doc/thing.md)",
-				Version:              "v1.2.3",
-				VersionType:          version.TypeRelease,
-				SourceInfo:           source.NewGitHubInfo("https://github.com/some/repo", "", "v1.2.3"),
+			mi: &internal.ModuleInfo{
+				Version:     "v1.2.3",
+				VersionType: version.TypeRelease,
+				SourceInfo:  source.NewGitHubInfo("https://github.com/some/repo", "", "v1.2.3"),
+			},
+			readme: &internal.Readme{
+				Filepath: "dir/sub/README.md",
+				Contents: "[something](doc/thing.md)",
 			},
 			want: template.HTML(`<p><a href="https://github.com/some/repo/blob/v1.2.3/dir/sub/doc/thing.md" rel="nofollow">something</a></p>` + "\n"),
 		},
-	}
-	for _, tc := range testCases {
+	} {
 		t.Run(tc.name, func(t *testing.T) {
-			got := readmeHTML(tc.mi)
+			got := readmeHTML(tc.mi, tc.readme)
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("readmeHTML(%v) mismatch (-want +got):\n%s", tc.mi, diff)
 			}

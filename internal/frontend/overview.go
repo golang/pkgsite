@@ -34,7 +34,7 @@ type OverviewDetails struct {
 
 // versionedLinks says whether the constructed URLs should have versions.
 // constructOverviewDetails uses the given version to construct an OverviewDetails.
-func constructOverviewDetails(mi *internal.LegacyModuleInfo, isRedistributable bool, versionedLinks bool) *OverviewDetails {
+func constructOverviewDetails(mi *internal.ModuleInfo, readme *internal.Readme, isRedistributable bool, versionedLinks bool) *OverviewDetails {
 	var lv string
 	if versionedLinks {
 		lv = linkVersion(mi.Version, mi.ModulePath)
@@ -47,16 +47,17 @@ func constructOverviewDetails(mi *internal.LegacyModuleInfo, isRedistributable b
 		RepositoryURL:   mi.SourceInfo.RepoURL(),
 		Redistributable: isRedistributable,
 	}
-	if overview.Redistributable {
-		overview.ReadMeSource = fileSource(mi.ModulePath, mi.Version, mi.LegacyReadmeFilePath)
-		overview.ReadMe = readmeHTML(mi)
+	if overview.Redistributable && readme != nil {
+		overview.ReadMeSource = fileSource(mi.ModulePath, mi.Version, readme.Filepath)
+		overview.ReadMe = readmeHTML(mi, readme)
 	}
 	return overview
 }
 
 // fetchPackageOverviewDetails uses data for the given package to return an OverviewDetails.
 func fetchPackageOverviewDetails(pkg *internal.LegacyVersionedPackage, versionedLinks bool) *OverviewDetails {
-	od := constructOverviewDetails(&pkg.LegacyModuleInfo, pkg.LegacyPackage.IsRedistributable, versionedLinks)
+	od := constructOverviewDetails(&pkg.ModuleInfo, &internal.Readme{Filepath: pkg.LegacyReadmeFilePath, Contents: pkg.LegacyReadmeContents},
+		pkg.LegacyPackage.IsRedistributable, versionedLinks)
 	od.PackageSourceURL = pkg.SourceInfo.DirectoryURL(packageSubdir(pkg.Path, pkg.ModulePath))
 	if !pkg.LegacyPackage.IsRedistributable {
 		od.Redistributable = false
@@ -66,12 +67,24 @@ func fetchPackageOverviewDetails(pkg *internal.LegacyVersionedPackage, versioned
 
 // fetchPackageOverviewDetailsNew uses data for the given versioned directory to return an OverviewDetails.
 func fetchPackageOverviewDetailsNew(vdir *internal.VersionedDirectory, versionedLinks bool) *OverviewDetails {
-	od := constructOverviewDetails(&vdir.LegacyModuleInfo, vdir.DirectoryNew.IsRedistributable, versionedLinks)
-	od.PackageSourceURL = vdir.SourceInfo.DirectoryURL(packageSubdir(vdir.Path, vdir.ModulePath))
-	if !vdir.DirectoryNew.IsRedistributable {
-		od.Redistributable = false
+	var lv string
+	if versionedLinks {
+		lv = linkVersion(vdir.Version, vdir.ModulePath)
+	} else {
+		lv = internal.LatestVersion
 	}
-	return od
+	overview := &OverviewDetails{
+		ModulePath:       vdir.ModulePath,
+		ModuleURL:        constructModuleURL(vdir.ModulePath, lv),
+		RepositoryURL:    vdir.SourceInfo.RepoURL(),
+		Redistributable:  vdir.DirectoryNew.IsRedistributable,
+		PackageSourceURL: vdir.SourceInfo.DirectoryURL(packageSubdir(vdir.Path, vdir.ModulePath)),
+	}
+	if overview.Redistributable && vdir.Readme != nil {
+		overview.ReadMeSource = fileSource(vdir.ModulePath, vdir.Version, vdir.Readme.Filepath)
+		overview.ReadMe = readmeHTML(&vdir.ModuleInfo, vdir.Readme)
+	}
+	return overview
 }
 
 // packageSubdir returns the subdirectory of the package relative to its module.
@@ -89,12 +102,12 @@ func packageSubdir(pkgPath, modulePath string) string {
 // readmeHTML sanitizes readmeContents based on bluemondy.UGCPolicy and returns
 // a template.HTML. If readmeFilePath indicates that this is a markdown file,
 // it will also render the markdown contents using blackfriday.
-func readmeHTML(mi *internal.LegacyModuleInfo) template.HTML {
-	if len(mi.LegacyReadmeContents) == 0 {
+func readmeHTML(mi *internal.ModuleInfo, readme *internal.Readme) template.HTML {
+	if readme == nil {
 		return ""
 	}
-	if !isMarkdown(mi.LegacyReadmeFilePath) {
-		return template.HTML(fmt.Sprintf(`<pre class="readme">%s</pre>`, html.EscapeString(string(mi.LegacyReadmeContents))))
+	if !isMarkdown(readme.Filepath) {
+		return template.HTML(fmt.Sprintf(`<pre class="readme">%s</pre>`, html.EscapeString(string(readme.Contents))))
 	}
 
 	// bluemonday.UGCPolicy allows a broad selection of HTML elements and
@@ -114,10 +127,10 @@ func readmeHTML(mi *internal.LegacyModuleInfo) template.HTML {
 	// Render HTML similar to blackfriday.Run(), but here we implement a custom
 	// Walk function in order to modify image paths in the rendered HTML.
 	b := &bytes.Buffer{}
-	rootNode := parser.Parse([]byte(mi.LegacyReadmeContents))
+	rootNode := parser.Parse([]byte(readme.Contents))
 	rootNode.Walk(func(node *blackfriday.Node, entering bool) blackfriday.WalkStatus {
 		if node.Type == blackfriday.Image || node.Type == blackfriday.Link {
-			translateRelativeLink(node, mi)
+			translateRelativeLink(node, mi, readme)
 		}
 		return renderer.RenderNode(b, node, entering)
 	})
@@ -138,18 +151,20 @@ func isMarkdown(filename string) bool {
 // image files inside the repository. As the discovery site doesn't host the
 // full repository content, in order for the image to render, we need to
 // convert the relative path to an absolute URL to a hosted image.
-func translateRelativeLink(node *blackfriday.Node, mi *internal.LegacyModuleInfo) {
+func translateRelativeLink(node *blackfriday.Node, mi *internal.ModuleInfo, readme *internal.Readme) {
 	destURL, err := url.Parse(string(node.LinkData.Destination))
 	if err != nil || destURL.IsAbs() {
 		return
 	}
-
 	if destURL.Path == "" {
 		// This is a fragment; leave it.
 		return
 	}
+	if mi == nil {
+		return
+	}
 	// Paths are relative to the README location.
-	destPath := path.Join(path.Dir(mi.LegacyReadmeFilePath), path.Clean(destURL.Path))
+	destPath := path.Join(path.Dir(readme.Filepath), path.Clean(destURL.Path))
 	var newURL string
 	if node.Type == blackfriday.Image {
 		newURL = mi.SourceInfo.RawURL(destPath)

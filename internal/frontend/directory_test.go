@@ -29,7 +29,7 @@ func TestFetchDirectoryDetails(t *testing.T) {
 	checkDirectory := func(got *Directory, dirPath, modulePath, version string, suffixes []string) {
 		t.Helper()
 
-		mi := sample.LegacyModuleInfo(modulePath, version)
+		mi := sample.ModuleInfo(modulePath, version)
 		var wantPkgs []*Package
 		for _, suffix := range suffixes {
 			sp := sample.LegacyPackage(modulePath, suffix)

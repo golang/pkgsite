@@ -30,8 +30,6 @@ func (db *DB) GetDirectoryNew(ctx context.Context, path, modulePath, version str
 			m.redistributable,
 			m.has_go_mod,
 			m.source_info,
-			m.readme_file_path,
-			m.readme_contents,
 			p.id,
 			p.path,
 			p.name,
@@ -39,8 +37,6 @@ func (db *DB) GetDirectoryNew(ctx context.Context, path, modulePath, version str
 			p.redistributable,
 			p.license_types,
 			p.license_paths,
-			r.file_path,
-			r.contents,
 			d.goos,
 			d.goarch,
 			d.synopsis,
@@ -48,8 +44,6 @@ func (db *DB) GetDirectoryNew(ctx context.Context, path, modulePath, version str
 		FROM modules m
 		INNER JOIN paths p
 		ON p.module_id = m.id
-		LEFT JOIN readmes r
-		ON r.path_id = p.id
 		LEFT JOIN documentation d
 		ON d.path_id = p.id
 		WHERE
@@ -57,9 +51,8 @@ func (db *DB) GetDirectoryNew(ctx context.Context, path, modulePath, version str
 			AND m.module_path = $2
 			AND m.version = $3;`
 	var (
-		mi                         internal.LegacyModuleInfo
+		mi                         internal.ModuleInfo
 		dir                        internal.DirectoryNew
-		readme                     internal.Readme
 		doc                        internal.Documentation
 		pkg                        internal.PackageNew
 		licenseTypes, licensePaths []string
@@ -74,8 +67,6 @@ func (db *DB) GetDirectoryNew(ctx context.Context, path, modulePath, version str
 		&mi.IsRedistributable,
 		&mi.HasGoMod,
 		jsonbScanner{&mi.SourceInfo},
-		&mi.LegacyReadmeFilePath,
-		&mi.LegacyReadmeContents,
 		&pathID,
 		&dir.Path,
 		database.NullIsEmpty(&pkg.Name),
@@ -83,8 +74,6 @@ func (db *DB) GetDirectoryNew(ctx context.Context, path, modulePath, version str
 		&dir.IsRedistributable,
 		pq.Array(&licenseTypes),
 		pq.Array(&licensePaths),
-		database.NullIsEmpty(&readme.Filepath),
-		database.NullIsEmpty(&readme.Contents),
 		database.NullIsEmpty(&doc.GOOS),
 		database.NullIsEmpty(&doc.GOARCH),
 		database.NullIsEmpty(&doc.Synopsis),
@@ -120,13 +109,31 @@ func (db *DB) GetDirectoryNew(ctx context.Context, path, modulePath, version str
 			return nil, err
 		}
 	}
+
+	// TODO(golang/go#38513): remove and query the readmes table directly once
+	// we start displaying READMEs for directories instead of the top-level
+	// module.
+	var readme internal.Readme
+	row = db.db.QueryRow(ctx, `
+		SELECT file_path, contents
+		FROM modules m
+		INNER JOIN paths p
+		ON p.module_id = m.id
+		INNER JOIN readmes r
+		ON p.id = r.path_id
+		WHERE
+		    module_path=$1
+			AND m.version=$2
+			AND m.module_path=p.path`, modulePath, version)
+	if err := row.Scan(&readme.Filepath, &readme.Contents); err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
 	if readme.Filepath != "" {
 		dir.Readme = &readme
 	}
-
 	return &internal.VersionedDirectory{
-		LegacyModuleInfo: mi,
-		DirectoryNew:     dir,
+		ModuleInfo:   mi,
+		DirectoryNew: dir,
 	}, nil
 }
 
@@ -224,7 +231,7 @@ func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version str
 		if err := rows.Scan(scanArgs...); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
-		setHasGoMod(&mi, hasGoMod)
+		setHasGoMod(&mi.ModuleInfo, hasGoMod)
 		lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
 		if err != nil {
 			return err

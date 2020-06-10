@@ -30,15 +30,20 @@ const (
 	UnknownModulePath = "unknownModulePath"
 )
 
+// ModuleInfo holds metadata associated with a module.
+type ModuleInfo struct {
+	ModulePath        string
+	Version           string
+	CommitTime        time.Time
+	VersionType       version.Type
+	IsRedistributable bool
+	HasGoMod          bool // whether the module zip has a go.mod file
+	SourceInfo        *source.Info
+}
+
 // LegacyModuleInfo holds metadata associated with a module.
 type LegacyModuleInfo struct {
-	ModulePath           string
-	Version              string
-	CommitTime           time.Time
-	VersionType          version.Type
-	IsRedistributable    bool
-	HasGoMod             bool // whether the module zip has a go.mod file
-	SourceInfo           *source.Info
+	ModuleInfo
 	LegacyReadmeFilePath string
 	LegacyReadmeContents string
 }
@@ -67,7 +72,7 @@ type VersionMap struct {
 // The module paths "a/b" and "a/b/v2"  both have series path "a/b".
 // The module paths "gopkg.in/yaml.v1" and "gopkg.in/yaml.v2" both have series
 // path "gopkg.in/yaml".
-func (v *LegacyModuleInfo) SeriesPath() string {
+func (v *ModuleInfo) SeriesPath() string {
 	return SeriesPathForModule(v.ModulePath)
 }
 
@@ -102,7 +107,7 @@ type Module struct {
 // information.
 type VersionedDirectory struct {
 	DirectoryNew
-	LegacyModuleInfo
+	ModuleInfo
 }
 
 // DirectoryNew is a folder in a module version, and all of the packages

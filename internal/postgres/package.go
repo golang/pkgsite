@@ -149,7 +149,7 @@ func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version strin
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
-	setHasGoMod(&pkg.LegacyModuleInfo, hasGoMod)
+	setHasGoMod(&pkg.ModuleInfo, hasGoMod)
 	lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
 	if err != nil {
 		return nil, err

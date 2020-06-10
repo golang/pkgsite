@@ -115,9 +115,15 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		// TODO(golang/go#38513): remove once we start displaying
+		// READMEs for directories instead of the top-level module.
+		dir.Readme = &internal.Readme{
+			Filepath: sample.ReadmeFilePath,
+			Contents: sample.ReadmeContents,
+		}
 		wantd := internal.VersionedDirectory{
-			DirectoryNew:     *dir,
-			LegacyModuleInfo: want.LegacyModuleInfo,
+			DirectoryNew: *dir,
+			ModuleInfo:   want.ModuleInfo,
 		}
 		opts := cmp.Options{
 			cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeFilePath"),
@@ -155,7 +161,9 @@ func TestUpsertModule(t *testing.T) {
 	// Change the module, and re-insert.
 	m.IsRedistributable = !m.IsRedistributable
 	m.Licenses[0].Contents = append(m.Licenses[0].Contents, " and more"...)
-	m.Directories[0].Readme.Contents += " and more"
+	// TODO(golang/go#38513): uncomment line below once we start displaying
+	// READMEs for directories instead of the top-level module.
+	// m.Directories[0].Readme.Contents += " and more"
 	m.LegacyPackages[0].Synopsis = "New synopsis"
 	if err := testDB.InsertModule(ctx, m); err != nil {
 		t.Fatal(err)

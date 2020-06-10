@@ -148,7 +148,7 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds
 	case "versions":
 		return fetchPackageVersionsDetails(ctx, ds, pkg.Path, pkg.V1Path, pkg.ModulePath)
 	case "subdirectories":
-		return fetchDirectoryDetails(ctx, ds, pkg.Path, &pkg.LegacyModuleInfo, pkg.Licenses, false)
+		return fetchDirectoryDetails(ctx, ds, pkg.Path, &pkg.ModuleInfo, pkg.Licenses, false)
 	case "imports":
 		return fetchImportsDetails(ctx, ds, pkg.Path, pkg.ModulePath, pkg.Version)
 	case "importedby":
@@ -163,14 +163,15 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds
 
 // fetchDetailsForVersionedDirectory returns tab details by delegating to the correct detail
 // handler.
-func fetchDetailsForVersionedDirectory(ctx context.Context, r *http.Request, tab string, ds internal.DataSource, vdir *internal.VersionedDirectory) (interface{}, error) {
+func fetchDetailsForVersionedDirectory(ctx context.Context, r *http.Request, tab string,
+	ds internal.DataSource, vdir *internal.VersionedDirectory) (interface{}, error) {
 	switch tab {
 	case "doc":
 		return fetchDocumentationDetailsNew(vdir.Package.Documentation), nil
 	case "versions":
 		return fetchPackageVersionsDetails(ctx, ds, vdir.Path, vdir.V1Path, vdir.ModulePath)
 	case "subdirectories":
-		return fetchDirectoryDetails(ctx, ds, vdir.Path, &vdir.LegacyModuleInfo, vdir.Licenses, false)
+		return fetchDirectoryDetails(ctx, ds, vdir.Path, &vdir.ModuleInfo, vdir.Licenses, false)
 	case "imports":
 		return fetchImportsDetails(ctx, ds, vdir.Path, vdir.ModulePath, vdir.Version)
 	case "importedby":
@@ -192,14 +193,15 @@ func urlIsVersioned(url *url.URL) bool {
 func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds internal.DataSource, mi *internal.LegacyModuleInfo, licenses []*licenses.License) (interface{}, error) {
 	switch tab {
 	case "packages":
-		return fetchDirectoryDetails(ctx, ds, mi.ModulePath, mi, licensesToMetadatas(licenses), true)
+		return fetchDirectoryDetails(ctx, ds, mi.ModulePath, &mi.ModuleInfo, licensesToMetadatas(licenses), true)
 	case "licenses":
 		return &LicensesDetails{Licenses: transformLicenses(mi.ModulePath, mi.Version, licenses)}, nil
 	case "versions":
 		return fetchModuleVersionsDetails(ctx, ds, mi)
 	case "overview":
 		// TODO(b/138448402): implement remaining module views.
-		return constructOverviewDetails(mi, mi.IsRedistributable, urlIsVersioned(r.URL)), nil
+		readme := &internal.Readme{Filepath: mi.LegacyReadmeFilePath, Contents: mi.LegacyReadmeContents}
+		return constructOverviewDetails(&mi.ModuleInfo, readme, mi.IsRedistributable, urlIsVersioned(r.URL)), nil
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
@@ -209,7 +211,8 @@ func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds 
 func constructDetailsForDirectory(r *http.Request, tab string, dir *internal.LegacyDirectory, licenses []*licenses.License) (interface{}, error) {
 	switch tab {
 	case "overview":
-		return constructOverviewDetails(&dir.LegacyModuleInfo, dir.LegacyModuleInfo.IsRedistributable, urlIsVersioned(r.URL)), nil
+		readme := &internal.Readme{Filepath: dir.LegacyReadmeFilePath, Contents: dir.LegacyReadmeContents}
+		return constructOverviewDetails(&dir.ModuleInfo, readme, dir.LegacyModuleInfo.IsRedistributable, urlIsVersioned(r.URL)), nil
 	case "subdirectories":
 		// Ideally we would just use fetchDirectoryDetails here so that it
 		// follows the same code path as fetchDetailsForModule and

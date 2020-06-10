@@ -83,8 +83,8 @@ func (ds *DataSource) GetDirectory(ctx context.Context, dirPath, modulePath, ver
 		return nil, err
 	}
 	return &internal.LegacyDirectory{
+		LegacyModuleInfo: internal.LegacyModuleInfo{ModuleInfo: v.ModuleInfo},
 		Path:             dirPath,
-		LegacyModuleInfo: v.LegacyModuleInfo,
 		Packages:         v.LegacyPackages,
 	}, nil
 }
@@ -96,7 +96,7 @@ func (ds *DataSource) GetDirectoryNew(ctx context.Context, dirPath, modulePath, 
 		return nil, err
 	}
 	return &internal.VersionedDirectory{
-		LegacyModuleInfo: m.LegacyModuleInfo,
+		ModuleInfo: m.ModuleInfo,
 		DirectoryNew: internal.DirectoryNew{
 			Path:   dirPath,
 			V1Path: internal.V1Path(modulePath, strings.TrimPrefix(dirPath, modulePath+"/")),
@@ -358,8 +358,10 @@ func (ds *DataSource) listModuleVersions(ctx context.Context, modulePath string,
 			// for this version's /info endpoint to get commit time, but that is
 			// deferred as a potential future enhancement.
 			vis = append(vis, &internal.LegacyModuleInfo{
-				ModulePath: modulePath,
-				Version:    vers,
+				ModuleInfo: internal.ModuleInfo{
+					ModulePath: modulePath,
+					Version:    vers,
+				},
 			})
 		}
 	}
