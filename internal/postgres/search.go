@@ -59,7 +59,7 @@ var (
 // request to multiple different search queries.
 type searchResponse struct {
 	// source is a unique identifier for the search query type (e.g. 'deep',
-	// 'popular-8'), to be used in logging and reporting.
+	// 'popular'), to be used in logging and reporting.
 	source string
 	// results are partially filled out from only the search_documents table.
 	results []*internal.SearchResult
@@ -119,7 +119,11 @@ var searchers = map[string]searcher{
 // the penalty of a deep search that scans nearly every package.
 func (db *DB) Search(ctx context.Context, q string, limit, offset int) (_ []*internal.SearchResult, err error) {
 	defer derrors.Wrap(&err, "DB.Search(ctx, %q, %d, %d)", q, limit, offset)
-	return db.hedgedSearch(ctx, q, limit, offset, searchers, nil)
+	resp, err := db.hedgedSearch(ctx, q, limit, offset, searchers, nil)
+	if err != nil {
+		return nil, err
+	}
+	return resp.results, nil
 }
 
 // Penalties to search scores, applied as multipliers to the score.
@@ -155,7 +159,7 @@ var scoreExpr = fmt.Sprintf(`
 // available result.
 // The optional guardTestResult func may be used to allow tests to control the
 // order in which search results are returned.
-func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, searchers map[string]searcher, guardTestResult func(string) func()) ([]*internal.SearchResult, error) {
+func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, searchers map[string]searcher, guardTestResult func(string) func()) (*searchResponse, error) {
 	searchStart := time.Now()
 	responses := make(chan searchResponse, len(searchers))
 	// cancel all unfinished searches when a result (or error) is returned. The
@@ -196,18 +200,12 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, sea
 			responses <- resp
 		}()
 	}
-	var resp searchResponse
-	for range searchers {
-		resp = <-responses
-		if resp.err == nil {
-			log.Debugf(ctx, "initial search response from searcher %s", resp.source)
-			break
-		} else {
-			log.Errorf(ctx, "error from searcher %s: %v", resp.source, resp.err)
-		}
-	}
+	// Note for future readers: in previous iterations of this code we kept
+	// reading responses if the first one had an error, with the goal to minimize
+	// error ratio. That didn't behave well if Postgres was overloaded.
+	resp := <-responses
 	if resp.err != nil {
-		return nil, fmt.Errorf("all searchers failed: %v", resp.err)
+		return nil, fmt.Errorf("%q search failed: %v", resp.source, resp.err)
 	}
 	if resp.uncounted {
 		// Since the response is uncounted, we should wait for either the count
@@ -216,8 +214,14 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, sea
 		for {
 			select {
 			case nextResp := <-responses:
-				if nextResp.err == nil && !nextResp.uncounted {
-					log.Debugf(ctx, "using counted search results from searcher %s", nextResp.source)
+				switch {
+				case nextResp.err != nil:
+					// There are alternatives here: we could continue waiting for the
+					// estimate. But on the principle that errors are most likely to be
+					// caused by Postgres overload, we exit early to cancel the estimate.
+					return nil, fmt.Errorf("while waiting for count, got error from searcher %q: %v", nextResp.source, nextResp.err)
+				case !nextResp.uncounted:
+					log.Infof(ctx, "using counted search results from searcher %s", nextResp.source)
 					// use this response since it is counted.
 					resp = nextResp
 					break loop
@@ -228,14 +232,12 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, sea
 				}
 				log.Debug(ctx, "using count estimate")
 				for _, r := range resp.results {
-					// TODO(b/141182438): this is a hack: once search has been fully
-					// replaced with fastsearch, change the return signature of this
-					// function to separate result-level data from this metadata.
+					// TODO: change the return signature of search to separate
+					// result-level data from this query-level metadata.
 					r.NumResults = estr.estimate
 					r.Approximate = true
 				}
 				break loop
-			//case <-responses:
 			case <-ctx.Done():
 				return nil, fmt.Errorf("context deadline exceeded while waiting for estimated result count")
 			}
@@ -258,7 +260,7 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, sea
 	if err := db.addPackageDataToSearchResults(ctx, resp.results); err != nil {
 		return nil, err
 	}
-	return resp.results, nil
+	return &resp, nil
 }
 
 const hllRegisterCount = 128

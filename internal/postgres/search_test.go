@@ -8,6 +8,7 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -148,32 +149,70 @@ func TestPathTokens(t *testing.T) {
 	}
 }
 
-func TestSearch(t *testing.T) {
-	// importGraph constructs a simple import graph where all importers import
-	// one popular package.  For performance purposes, all importers are added to
-	// a single importing module.
-	importGraph := func(popularPath, importerModule string, importerCount int) []*internal.Module {
-		m := sample.Module(popularPath, "v1.2.3", "")
-		m.LegacyPackages[0].Imports = nil
-		// Try to improve the ts_rank of the 'foo' search term.
-		m.LegacyPackages[0].Synopsis = "foo"
-		m.LegacyReadmeContents = "foo"
-		mods := []*internal.Module{m}
-		if importerCount > 0 {
-			m := sample.Module(importerModule, "v1.2.3")
-			for i := 0; i < importerCount; i++ {
-				p := sample.LegacyPackage(importerModule, fmt.Sprintf("importer%d", i))
-				p.Imports = []string{popularPath}
-				sample.AddPackage(m, p)
-			}
-			mods = append(mods, m)
+// importGraph constructs a simple import graph where all importers import
+// one popular package.  For performance purposes, all importers are added to
+// a single importing module.
+func importGraph(popularPath, importerModule string, importerCount int) []*internal.Module {
+	m := sample.Module(popularPath, "v1.2.3", "")
+	m.LegacyPackages[0].Imports = nil
+	// Try to improve the ts_rank of the 'foo' search term.
+	m.LegacyPackages[0].Synopsis = "foo"
+	m.LegacyReadmeContents = "foo"
+	mods := []*internal.Module{m}
+	if importerCount > 0 {
+		m := sample.Module(importerModule, "v1.2.3")
+		for i := 0; i < importerCount; i++ {
+			p := sample.LegacyPackage(importerModule, fmt.Sprintf("importer%d", i))
+			p.Imports = []string{popularPath}
+			sample.AddPackage(m, p)
 		}
-		return mods
+		mods = append(mods, m)
 	}
+	return mods
+}
+
+// resultGuard returns a 'guard' func for the search result ordering specified
+// by resultOrder. When called with a searcher name, this func blocks until
+// that result may be processed, then returns a callback to release the next
+// result in the series.
+//
+// This is used to control the order of search results in hedgedSearch.
+func resultGuard(resultOrder []string) func(string) func() {
+	done := make(map[string](chan struct{}))
+	// waitFor maps [search type] -> [the search type is should wait for]
+	waitFor := make(map[string]string)
+	for i := 0; i < len(resultOrder); i++ {
+		done[resultOrder[i]] = make(chan struct{})
+		if i > 0 {
+			waitFor[resultOrder[i]] = resultOrder[i-1]
+		}
+	}
+	guardTestResult := func(source string) func() {
+		// This test is inherently racy as 'estimate' results are are on a
+		// separate channel, and therefore even after guarding still race to
+		// the select statement.
+		//
+		// Since this is a concern only for testing, and since this test is
+		// rather slow anyway, just wait for a healthy amount of time in order
+		// to de-flake the test. If the test still proves flaky, we can either
+		// increase this sleep or refactor so that all asynchronous results
+		// arrive on the same channel.
+		if source == "estimate" {
+			time.Sleep(100 * time.Millisecond)
+		}
+		if await, ok := waitFor[source]; ok {
+			<-done[await]
+		}
+		return func() { close(done[source]) }
+	}
+	return guardTestResult
+}
+
+func TestSearch(t *testing.T) {
 	tests := []struct {
 		label       string
 		modules     []*internal.Module
-		resultOrder [4]string
+		resultOrder []string
 		wantSource  string
 		wantResults []string
 		wantTotal   uint64
@@ -181,7 +220,7 @@ func TestSearch(t *testing.T) {
 		{
 			label:       "single package",
 			modules:     importGraph("foo.com/A", "", 0),
-			resultOrder: [4]string{"popular", "estimate", "deep"},
+			resultOrder: []string{"popular", "estimate", "deep"},
 			wantSource:  "popular",
 			wantResults: []string{"foo.com/A"},
 			wantTotal:   1,
@@ -189,14 +228,14 @@ func TestSearch(t *testing.T) {
 		{
 			label:       "empty results",
 			modules:     []*internal.Module{},
-			resultOrder: [4]string{"deep", "estimate", "popular"},
+			resultOrder: []string{"deep", "estimate", "popular"},
 			wantSource:  "deep",
 			wantResults: nil,
 		},
 		{
 			label:       "both popular and unpopular results",
 			modules:     importGraph("foo.com/popular", "bar.com/foo", 10),
-			resultOrder: [4]string{"popular", "estimate", "deep"},
+			resultOrder: []string{"popular", "estimate", "deep"},
 			wantSource:  "popular",
 			wantResults: []string{"foo.com/popular", "bar.com/foo/importer0"},
 			wantTotal:   11, // HLL result count (happens to be right in this case)
@@ -205,7 +244,7 @@ func TestSearch(t *testing.T) {
 			label: "popular results, estimate before deep",
 			modules: append(importGraph("foo.com/popularA", "bar.com", 60),
 				importGraph("foo.com/popularB", "baz.com/foo", 70)...),
-			resultOrder: [4]string{"popular", "estimate", "deep"},
+			resultOrder: []string{"popular", "estimate", "deep"},
 			wantSource:  "popular",
 			wantResults: []string{"foo.com/popularB", "foo.com/popularA"},
 			wantTotal:   76, // HLL result count (actual count is 72)
@@ -214,7 +253,7 @@ func TestSearch(t *testing.T) {
 			label: "popular results, deep before estimate",
 			modules: append(importGraph("foo.com/popularA", "bar.com/foo", 60),
 				importGraph("foo.com/popularB", "bar.com/foo", 70)...),
-			resultOrder: [4]string{"popular", "deep", "estimate"},
+			resultOrder: []string{"popular", "deep", "estimate"},
 			wantSource:  "deep",
 			wantResults: []string{"foo.com/popularB", "foo.com/popularA"},
 			wantTotal:   72,
@@ -248,38 +287,6 @@ func TestSearch(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.label, func(t *testing.T) {
-			// use guardTestResult to simulate a scenario where search queries return
-			// in the order: popular-50, popular-8, deep. In practice this should
-			// usually be the order in which they return as these searches represent
-			// progressively larger scans, but in our small test database this need
-			// not be the case.
-			done := make(map[string](chan struct{}))
-			// waitFor maps [search type] -> [the search type is should wait for]
-			waitFor := make(map[string]string)
-			for i := 0; i < len(test.resultOrder); i++ {
-				done[test.resultOrder[i]] = make(chan struct{})
-				if i > 0 {
-					waitFor[test.resultOrder[i]] = test.resultOrder[i-1]
-				}
-			}
-			guardTestResult := func(source string) func() {
-				// This test is inherently racy as 'estimate' results are are on a
-				// separate channel, and therefore even after guarding still race to
-				// the select statement.
-				//
-				// Since this is a concern only for testing, and since this test is
-				// rather slow anyway, just wait for a healthy amount of time in order
-				// to de-flake the test. If the test still proves flaky, we can either
-				// increase this sleep or refactor so that all asynchronous results
-				// arrive on the same channel.
-				if source == "estimate" {
-					time.Sleep(100 * time.Millisecond)
-				}
-				if await, ok := waitFor[source]; ok {
-					<-done[await]
-				}
-				return func() { close(done[source]) }
-			}
 			defer ResetTestDB(testDB, t)
 			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
@@ -291,25 +298,111 @@ func TestSearch(t *testing.T) {
 			if _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx); err != nil {
 				t.Fatal(err)
 			}
-			results, err := testDB.hedgedSearch(ctx, "foo", 2, 0, searchers, guardTestResult)
+			guardTestResult := resultGuard(test.resultOrder)
+			resp, err := testDB.hedgedSearch(ctx, "foo", 2, 0, searchers, guardTestResult)
 			if err != nil {
 				t.Fatal(err)
 			}
+			if resp.source != test.wantSource {
+				t.Errorf("hedgedSearch(): got source %q, want %q", resp.source, test.wantSource)
+			}
 			var got []string
-			for _, r := range results {
+			for _, r := range resp.results {
 				got = append(got, r.PackagePath)
 			}
 			if diff := cmp.Diff(test.wantResults, got); diff != "" {
-				t.Errorf("FastSearch(\"foo\") mismatch (-want +got)\n%s", diff)
+				t.Errorf("hedgedSearch() mismatch (-want +got)\n%s", diff)
 			}
-			if len(results) > 0 && results[0].NumResults != test.wantTotal {
-				t.Errorf("NumResults = %d, want %d", results[0].NumResults, test.wantTotal)
+			if len(resp.results) > 0 && resp.results[0].NumResults != test.wantTotal {
+				t.Errorf("NumResults = %d, want %d", resp.results[0].NumResults, test.wantTotal)
 			}
 			// Finally, validate that metrics are updated correctly
 			gotDelta := responseDelta()
 			wantDelta := map[string]int64{test.wantSource: 1}
 			if diff := cmp.Diff(wantDelta, gotDelta); diff != "" {
 				t.Errorf("SearchResponseCount: unexpected delta (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestSearchErrors(t *testing.T) {
+	// errorIn returns a copy of searchers for which searcherName returns an
+	// error.
+	errorIn := func(searcherName string) map[string]searcher {
+		newSearchers := make(map[string]searcher)
+		for name, search := range searchers {
+			if name == searcherName {
+				name := name
+				newSearchers[name] = func(*DB, context.Context, string, int, int) searchResponse {
+					return searchResponse{
+						source: name,
+						err:    errors.New("bad"),
+					}
+				}
+			} else {
+				newSearchers[name] = search
+			}
+		}
+		return newSearchers
+	}
+
+	tests := []struct {
+		label       string
+		searchers   map[string]searcher // allows injecting errors.
+		resultOrder []string
+		wantSource  string
+		wantErr     bool
+	}{
+		{
+			label:       "error in first result",
+			searchers:   errorIn("popular"),
+			resultOrder: []string{"popular", "estimate", "deep"},
+			wantErr:     true,
+		},
+		{
+			label:       "return before error",
+			searchers:   errorIn("deep"),
+			resultOrder: []string{"popular", "estimate", "deep"},
+			wantSource:  "popular",
+		},
+		{
+			label:       "error waiting for count",
+			searchers:   errorIn("deep"),
+			resultOrder: []string{"popular", "deep", "estimate"},
+			wantErr:     true,
+		},
+		{
+			label:       "counted result before error",
+			searchers:   errorIn("popular"),
+			resultOrder: []string{"deep", "popular", "estimate"},
+			wantSource:  "deep",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.label, func(t *testing.T) {
+			defer ResetTestDB(testDB, t)
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			modules := importGraph("foo.com/A", "", 0)
+			for _, v := range modules {
+				if err := testDB.InsertModule(ctx, v); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx); err != nil {
+				t.Fatal(err)
+			}
+			guardTestResult := resultGuard(test.resultOrder)
+			resp, err := testDB.hedgedSearch(ctx, "foo", 2, 0, test.searchers, guardTestResult)
+			if (err != nil) != test.wantErr {
+				t.Fatalf("hedgedSearch(): got error %v, want error: %t", err, test.wantErr)
+			}
+			if test.wantErr {
+				return
+			}
+			if resp.source != test.wantSource {
+				t.Errorf("hedgedSearch(): got source %q, want %q", resp.source, test.wantSource)
 			}
 		})
 	}
