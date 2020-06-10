@@ -168,7 +168,7 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, sea
 	go func() {
 		start := time.Now()
 		estimateResp := db.estimateResultsCount(searchCtx, q)
-		log.Info(ctx, searchEvent{
+		log.Debug(ctx, searchEvent{
 			Type:    "estimate",
 			Latency: time.Since(start),
 			Err:     estimateResp.err,
@@ -185,7 +185,7 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, sea
 		go func() {
 			start := time.Now()
 			resp := s(db, searchCtx, q, limit, offset)
-			log.Info(ctx, searchEvent{
+			log.Debug(ctx, searchEvent{
 				Type:    resp.source,
 				Latency: time.Since(start),
 				Err:     resp.err,
@@ -200,7 +200,7 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, sea
 	for range searchers {
 		resp = <-responses
 		if resp.err == nil {
-			log.Infof(ctx, "initial search response from searcher %s", resp.source)
+			log.Debugf(ctx, "initial search response from searcher %s", resp.source)
 			break
 		} else {
 			log.Errorf(ctx, "error from searcher %s: %v", resp.source, resp.err)
@@ -217,7 +217,7 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, sea
 			select {
 			case nextResp := <-responses:
 				if nextResp.err == nil && !nextResp.uncounted {
-					log.Infof(ctx, "using counted search results from searcher %s", nextResp.source)
+					log.Debugf(ctx, "using counted search results from searcher %s", nextResp.source)
 					// use this response since it is counted.
 					resp = nextResp
 					break loop
@@ -226,7 +226,7 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, sea
 				if estr.err != nil {
 					return nil, fmt.Errorf("error getting estimated count: %v", estr.err)
 				}
-				log.Info(ctx, "using count estimate")
+				log.Debug(ctx, "using count estimate")
 				for _, r := range resp.results {
 					// TODO(b/141182438): this is a hack: once search has been fully
 					// replaced with fastsearch, change the return signature of this
