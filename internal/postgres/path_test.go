@@ -64,7 +64,7 @@ func TestGetPathInfo(t *testing.T) {
 					Documentation: &internal.Documentation{},
 				}
 			}
-			m.Directories = append(m.Directories, dir)
+			sample.AddDirectory(m, dir)
 		}
 		if err := testDB.InsertModule(ctx, m); err != nil {
 			t.Fatal(err)

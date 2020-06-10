@@ -79,55 +79,92 @@ func TestInsertModule(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			got, err := testDB.GetModuleInfo(ctx, test.module.ModulePath, test.module.Version)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if diff := cmp.Diff(test.module.LegacyModuleInfo, *got, cmp.AllowUnexported(source.Info{})); diff != "" {
-				t.Fatalf("testDB.GetModuleInfo(%q, %q) mismatch (-want +got):\n%s", test.module.ModulePath, test.module.Version, diff)
-			}
-
-			for _, want := range test.module.LegacyPackages {
-				got, err := testDB.GetPackage(ctx, want.Path, test.module.ModulePath, test.module.Version)
-				if err != nil {
-					t.Fatal(err)
-				}
-				opts := cmp.Options{
-					// The packages table only includes partial
-					// license information; it omits the Coverage
-					// field.
-					cmpopts.IgnoreFields(internal.LegacyPackage{}, "Imports"),
-					cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
-					cmpopts.EquateEmpty(),
-				}
-				if diff := cmp.Diff(*want, got.LegacyPackage, opts...); diff != "" {
-					t.Fatalf("testDB.GetPackage(%q, %q) mismatch (-want +got):\n%s", want.Path, test.module.Version, diff)
-				}
-
-			}
-
-			for _, dir := range test.module.Directories {
-				got, err := testDB.GetDirectoryNew(ctx, dir.Path, test.module.ModulePath, test.module.Version)
-				if err != nil {
-					t.Fatal(err)
-				}
-				want := internal.VersionedDirectory{
-					DirectoryNew:     *dir,
-					LegacyModuleInfo: test.module.LegacyModuleInfo,
-				}
-				opts := cmp.Options{
-					cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeFilePath"),
-					cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeContents"),
-					cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
-					cmp.AllowUnexported(source.Info{}),
-				}
-				if diff := cmp.Diff(want, *got, opts); diff != "" {
-					t.Errorf("testDB.getDirectoryNew(%q, %q) mismatch (-want +got):\n%s", dir.Path, test.module.Version, diff)
-				}
-			}
+			checkModule(ctx, t, test.module)
 		})
 	}
 }
+
+func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
+	got, err := testDB.GetModuleInfo(ctx, want.ModulePath, want.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(want.LegacyModuleInfo, *got, cmp.AllowUnexported(source.Info{})); diff != "" {
+		t.Fatalf("testDB.GetModuleInfo(%q, %q) mismatch (-want +got):\n%s", want.ModulePath, want.Version, diff)
+	}
+
+	for _, wantp := range want.LegacyPackages {
+		got, err := testDB.GetPackage(ctx, wantp.Path, want.ModulePath, want.Version)
+		if err != nil {
+			t.Fatal(err)
+		}
+		opts := cmp.Options{
+			// The packages table only includes partial license information; it
+			// omits the Coverage field.
+			cmpopts.IgnoreFields(internal.LegacyPackage{}, "Imports"),
+			cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
+			cmpopts.EquateEmpty(),
+		}
+		if diff := cmp.Diff(*wantp, got.LegacyPackage, opts...); diff != "" {
+			t.Fatalf("testDB.GetPackage(%q, %q) mismatch (-want +got):\n%s", wantp.Path, want.Version, diff)
+		}
+	}
+
+	for _, dir := range want.Directories {
+		got, err := testDB.GetDirectoryNew(ctx, dir.Path, want.ModulePath, want.Version)
+		if err != nil {
+			t.Fatal(err)
+		}
+		wantd := internal.VersionedDirectory{
+			DirectoryNew:     *dir,
+			LegacyModuleInfo: want.LegacyModuleInfo,
+		}
+		opts := cmp.Options{
+			cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeFilePath"),
+			cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeContents"),
+			cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
+			cmp.AllowUnexported(source.Info{}),
+		}
+		if diff := cmp.Diff(wantd, *got, opts); diff != "" {
+			t.Errorf("testDB.getDirectoryNew(%q, %q) mismatch (-want +got):\n%s", dir.Path, want.Version, diff)
+		}
+	}
+}
+
+func TestUpsertModule(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	ctx = experiment.NewContext(ctx,
+		experiment.NewSet(map[string]bool{
+			internal.ExperimentInsertDirectories: true,
+		}))
+	m := sample.Module("upsert.org", "v1.2.3")
+	p := &internal.LegacyPackage{
+		Name:              "p",
+		Path:              "upsert.org/dir/p",
+		Synopsis:          "This is a package synopsis",
+		Licenses:          sample.LicenseMetadata,
+		DocumentationHTML: "This is the documentation HTML",
+	}
+	sample.AddPackage(m, p)
+
+	// Insert the module.
+	if err := testDB.InsertModule(ctx, m); err != nil {
+		t.Fatal(err)
+	}
+	// Change the module, and re-insert.
+	m.IsRedistributable = !m.IsRedistributable
+	m.Licenses[0].Contents = append(m.Licenses[0].Contents, " and more"...)
+	m.Directories[0].Readme.Contents += " and more"
+	m.LegacyPackages[0].Synopsis = "New synopsis"
+	if err := testDB.InsertModule(ctx, m); err != nil {
+		t.Fatal(err)
+	}
+
+	// The changes should have been saved.
+	checkModule(ctx, t, m)
+}
+
 func TestInsertModuleErrors(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
 	defer cancel()

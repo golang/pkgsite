@@ -173,7 +173,7 @@ func AddPackage(m *internal.Module, p *internal.LegacyPackage) *internal.Module 
 			p.Path, m.ModulePath))
 	}
 	m.LegacyPackages = append(m.LegacyPackages, p)
-	m.Directories = append(m.Directories, DirectoryNewForPackage(p))
+	AddDirectory(m, DirectoryNewForPackage(p))
 	minLen := len(m.ModulePath)
 	if m.ModulePath == stdlib.ModulePath {
 		minLen = 1
@@ -187,10 +187,19 @@ func AddPackage(m *internal.Module, p *internal.LegacyPackage) *internal.Module 
 			}
 		}
 		if !found {
-			m.Directories = append(m.Directories, DirectoryNewEmpty(pth))
+			AddDirectory(m, DirectoryNewEmpty(pth))
 		}
 	}
 	return m
+}
+
+func AddDirectory(m *internal.Module, d *internal.DirectoryNew) {
+	for _, e := range m.Directories {
+		if e.Path == d.Path {
+			panic(fmt.Sprintf("module already has path %q", e.Path))
+		}
+	}
+	m.Directories = append(m.Directories, d)
 }
 
 func DirectoryNewEmpty(path string) *internal.DirectoryNew {
