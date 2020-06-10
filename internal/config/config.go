@@ -303,9 +303,8 @@ func load(ctx context.Context) (_ *Config, err error) {
 		Burst:        20,
 		MaxEntries:   1000,
 		RecordOnly:   func() *bool { t := true; return &t }(),
-		AcceptedURLs: strings.Split(GetEnv("GO_DISCOVERY_ACCEPTED_LIST", ""), ","),
+		AcceptedURLs: parseCommaList(GetEnv("GO_DISCOVERY_ACCEPTED_LIST", "")),
 	}
-
 	cfg.UseProfiler = os.Getenv("GO_DISCOVERY_USE_PROFILER") == "TRUE"
 
 	// If GO_DISCOVERY_CONFIG_OVERRIDE is set, it should point to a file
@@ -422,4 +421,15 @@ func gceMetadata(ctx context.Context, name string) (_ string, err error) {
 		return "", fmt.Errorf("ioutil.ReadAll: %v", err)
 	}
 	return string(bytes), nil
+}
+
+func parseCommaList(s string) []string {
+	var a []string
+	for _, p := range strings.Split(s, ",") {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			a = append(a, p)
+		}
+	}
+	return a
 }

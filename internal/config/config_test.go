@@ -77,3 +77,21 @@ func TestProcessOverrides(t *testing.T) {
 		t.Errorf("mismatch (-want, +got):\n%s", diff)
 	}
 }
+
+func TestParseCommaList(t *testing.T) {
+	for _, test := range []struct {
+		in   string
+		want []string
+	}{
+		{"", nil},
+		{"foo", []string{"foo"}},
+		{"foo,bar", []string{"foo", "bar"}},
+		{" foo, bar ", []string{"foo", "bar"}},
+		{",, ,foo ,  , bar,,,", []string{"foo", "bar"}},
+	} {
+		got := parseCommaList(test.in)
+		if !cmp.Equal(got, test.want) {
+			t.Errorf("%q: got %#v, want %#v", test.in, got, test.want)
+		}
+	}
+}
