@@ -14,13 +14,13 @@
   grid-template-columns: 1fr minmax(0, 3fr);
 }
 .Documentation-nav {
-  max-height: calc(100vh - 4.0625rem); /* 4.0625rem is the site header height */
+  max-height: calc(100vh - 6.511rem); /* 6.511rem is the site header height */
   overflow-x: hidden;
   overflow-y: scroll;
   padding-top: 1rem;
   padding-left: 1.75rem;
   position: sticky;
-  top: 4.0625rem;
+  top: 6.511rem;
 }
 .Documentation-toc {
   margin-top: 0;

@@ -121,6 +121,40 @@ code {
 .AutoComplete-list li[aria-selected='true'] {
   background-color: var(--gray-9);
 }
+
+.Banner {
+  /**
+   * Only show on wide viewports so the
+   * text never wraps or gets cut off.
+   */
+  display: none;
+  background-color: #000;
+}
+.Banner-inner {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin: 0 auto;
+  max-width: 75.75rem;
+  min-height: 2.5rem;
+  padding: 0.5rem 1.5rem;
+}
+.Banner-message {
+  color: #fff;
+  margin-right: 1.25rem;
+}
+.Banner-action:link,
+.Banner-action:visited {
+  color: #fff;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+@media only screen and (min-width: 52rem) {
+  .Banner {
+    display: block;
+  }
+}
+
 .SearchForm[aria-expanded='false'] .AutoComplete-list,
 .Header-searchForm[aria-expanded='false'] .AutoComplete-list {
   display: none;
@@ -221,6 +255,12 @@ code {
   margin-top: -5.125rem; /* Move hidden anchor content for deep linking with a sticky header. */
   pointer-events: none;
   visibility: hidden;
+}
+@media only screen and (min-width: 52rem) {
+  :target::before {
+    height: calc(5.125rem + 2.5rem);
+    margin-top: calc(-5.125rem - 2.5rem); /* Account for added height of banner. */
+  }
 }
 .Header-logoLink {
   margin-right: auto;
