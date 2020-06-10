@@ -93,7 +93,7 @@ var (
 		{
 			Name:              "packages",
 			AlwaysShowDetails: true,
-			DisplayName:       "LegacyPackages",
+			DisplayName:       "Packages",
 			TemplateName:      "subdirectories.tmpl",
 		},
 		{
