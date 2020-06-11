@@ -51,38 +51,41 @@ type Server struct {
 	indexTemplate *template.Template
 }
 
-// NewServer creates a new Server with the given dependencies.
-func NewServer(cfg *config.Config,
-	db *postgres.DB,
-	indexClient *index.Client,
-	proxyClient *proxy.Client,
-	sourceClient *source.Client,
-	redisHAClient *redis.Client,
-	redisCacheClient *redis.Client,
-	queue queue.Queue,
-	reportingClient *errorreporting.Client,
-	taskIDChangeInterval time.Duration,
-	staticPath string,
-) (_ *Server, err error) {
-	defer derrors.Wrap(&err, "NewServer(db, ic, pc, q, %q)", staticPath)
+// ServerConfig contains everything needed by a Server.
+type ServerConfig struct {
+	DB                   *postgres.DB
+	IndexClient          *index.Client
+	ProxyClient          *proxy.Client
+	SourceClient         *source.Client
+	RedisHAClient        *redis.Client
+	RedisCacheClient     *redis.Client
+	Queue                queue.Queue
+	ReportingClient      *errorreporting.Client
+	TaskIDChangeInterval time.Duration
+	StaticPath           string
+}
 
-	indexTemplate, err := parseTemplate(staticPath)
+// NewServer creates a new Server with the given dependencies.
+func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
+	defer derrors.Wrap(&err, "NewServer(db, %+v)", scfg)
+
+	indexTemplate, err := parseTemplate(scfg.StaticPath)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Server{
 		cfg:                  cfg,
-		db:                   db,
-		indexClient:          indexClient,
-		proxyClient:          proxyClient,
-		sourceClient:         sourceClient,
-		redisHAClient:        redisHAClient,
-		redisCacheClient:     redisCacheClient,
-		queue:                queue,
-		reportingClient:      reportingClient,
+		db:                   scfg.DB,
+		indexClient:          scfg.IndexClient,
+		proxyClient:          scfg.ProxyClient,
+		sourceClient:         scfg.SourceClient,
+		redisHAClient:        scfg.RedisHAClient,
+		redisCacheClient:     scfg.RedisCacheClient,
+		queue:                scfg.Queue,
+		reportingClient:      scfg.ReportingClient,
 		indexTemplate:        indexTemplate,
-		taskIDChangeInterval: taskIDChangeInterval,
+		taskIDChangeInterval: scfg.TaskIDChangeInterval,
 	}, nil
 }
 

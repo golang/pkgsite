@@ -90,9 +90,18 @@ func main() {
 	reportingClient := reportingClient(ctx, cfg)
 	redisHAClient := getHARedis(ctx, cfg)
 	redisCacheClient := getCacheRedis(ctx, cfg)
-	server, err := worker.NewServer(cfg, db, indexClient, proxyClient, sourceClient,
-		redisHAClient, redisCacheClient, fetchQueue, reportingClient,
-		config.TaskIDChangeIntervalWorker, *staticPath)
+	server, err := worker.NewServer(cfg, worker.ServerConfig{
+		DB:                   db,
+		IndexClient:          indexClient,
+		ProxyClient:          proxyClient,
+		SourceClient:         sourceClient,
+		RedisHAClient:        redisHAClient,
+		RedisCacheClient:     redisCacheClient,
+		Queue:                fetchQueue,
+		ReportingClient:      reportingClient,
+		TaskIDChangeInterval: config.TaskIDChangeIntervalWorker,
+		StaticPath:           *staticPath,
+	})
 	if err != nil {
 		log.Fatal(ctx, err)
 	}

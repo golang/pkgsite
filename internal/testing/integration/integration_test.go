@@ -79,7 +79,17 @@ func TestEndToEndProcessing(t *testing.T) {
 	queue := queue.NewInMemory(ctx, proxyClient, source.NewClient(1*time.Second), testDB, 10,
 		worker.FetchAndUpdateState, nil)
 
-	workerServer, err := worker.NewServer(&config.Config{}, testDB, indexClient, proxyClient, source.NewClient(1*time.Second), redisHAClient, redisCacheClient, queue, nil, 10*time.Minute, "../../../content/static")
+	workerServer, err := worker.NewServer(&config.Config{}, worker.ServerConfig{
+		DB:                   testDB,
+		IndexClient:          indexClient,
+		ProxyClient:          proxyClient,
+		SourceClient:         source.NewClient(1 * time.Second),
+		RedisHAClient:        redisHAClient,
+		RedisCacheClient:     redisCacheClient,
+		Queue:                queue,
+		TaskIDChangeInterval: 10 * time.Minute,
+		StaticPath:           "../../../content/static",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
