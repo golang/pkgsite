@@ -42,6 +42,14 @@ There are two ways to run pkg.go.dev locally.
 
 See [doc/frontend.md](doc/frontend.md) for details.
 
+## Before sending a CL for review
+
+1. Run `./all.bash` and fix all resulting errors. See
+  [doc/precommit.md](doc/precommit.md) for instructions on setting up a
+  pre-commit hook.
+2. Ensure your commit message is formatted according to
+  [Go conventions](http://golang.org/wiki/CommitMessage).
+
 ## Questions
 
 You can find us in the #tools channel on the Gophers Slack.
