@@ -488,7 +488,7 @@ func (s *Server) handleReprocess(w http.ResponseWriter, r *http.Request) error {
 
 func (s *Server) clearCache(w http.ResponseWriter, r *http.Request) error {
 	if s.redisCacheClient == nil {
-		return errors.New("Redis cache client is not configured")
+		return errors.New("redis cache client is not configured")
 	}
 	status := s.redisCacheClient.FlushAll()
 	if status.Err() != nil {
