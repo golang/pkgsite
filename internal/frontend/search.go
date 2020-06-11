@@ -16,6 +16,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/postgres"
 )
 
 const defaultSearchLimit = 10
@@ -43,9 +44,8 @@ type SearchResult struct {
 
 // fetchSearchPage fetches data matching the search query from the database and
 // returns a SearchPage.
-func fetchSearchPage(ctx context.Context, ds internal.DataSource, query string, pageParams paginationParams) (*SearchPage, error) {
-
-	dbresults, err := ds.Search(ctx, query, pageParams.limit, pageParams.offset())
+func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pageParams paginationParams) (*SearchPage, error) {
+	dbresults, err := db.Search(ctx, query, pageParams.limit, pageParams.offset())
 	if err != nil {
 		return nil, err
 	}
@@ -103,6 +103,12 @@ func approximateNumber(estimate int, sigma float64) int {
 // /search?q=<query>. If <query> is an exact match for a package path, the user
 // will be redirected to the details page.
 func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request) error {
+	db, ok := s.ds.(*postgres.DB)
+	if !ok {
+		// The proxydatasource does not support the imported by page.
+		return &serverError{status: http.StatusFailedDependency}
+	}
+
 	ctx := r.Context()
 	query := searchQuery(r)
 	if query == "" {
@@ -114,8 +120,7 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request) error {
 		http.Redirect(w, r, path, http.StatusFound)
 		return nil
 	}
-
-	page, err := fetchSearchPage(ctx, s.ds, query, newPaginationParams(r, defaultSearchLimit))
+	page, err := fetchSearchPage(ctx, db, query, newPaginationParams(r, defaultSearchLimit))
 	if err != nil {
 		return fmt.Errorf("fetchSearchPage(ctx, db, %q): %v", query, err)
 	}

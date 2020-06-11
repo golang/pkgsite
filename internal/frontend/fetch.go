@@ -47,6 +47,11 @@ var (
 // TODO(golang/go#37002): This should be a POST request, since it is causing a change in state.
 // update middleware.AcceptMethods so that this can be a POST instead of a GET.
 func (s *Server) fetchHandler(w http.ResponseWriter, r *http.Request) {
+	if _, ok := s.ds.(*postgres.DB); !ok {
+		// There's no reason for the proxydatasource to need this codepath.
+		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+		return
+	}
 	if !isActiveFrontendFetch(r.Context()) {
 		// If the experiment flag is not on, treat this as a request for the
 		// "fetch" package, which does not exist.
@@ -93,7 +98,8 @@ func (s *Server) fetchAndPoll(parentCtx context.Context, modulePath, fullPath, r
 	}
 
 	// Generate all possible module paths for the fullPath.
-	modulePaths, err := modulePathsToFetch(parentCtx, s.ds, fullPath, modulePath)
+	db := s.ds.(*postgres.DB)
+	modulePaths, err := modulePathsToFetch(parentCtx, db, fullPath, modulePath)
 	if err != nil {
 		return derrors.ToHTTPStatus(err), err.Error()
 	}
@@ -165,7 +171,8 @@ func (s *Server) fetchModule(ctx context.Context, fullPath, modulePath, requeste
 	// Before enqueuing the module version to be fetched, check if we have
 	// already attempted to fetch it in the past. If so, just return the result
 	// from that fetch process.
-	fr = checkForPath(ctx, s.ds, fullPath, modulePath, requestedVersion)
+	db := s.ds.(*postgres.DB)
+	fr = checkForPath(ctx, db, fullPath, modulePath, requestedVersion)
 	if fr.status == http.StatusOK {
 		return fr
 	}
@@ -184,11 +191,11 @@ func (s *Server) fetchModule(ctx context.Context, fullPath, modulePath, requeste
 	}
 	// After the fetch request is enqueued, poll the database until it has been
 	// inserted or the request times out.
-	return pollForPath(ctx, s.ds, pollEvery, fullPath, modulePath, requestedVersion)
+	return pollForPath(ctx, db, pollEvery, fullPath, modulePath, requestedVersion)
 }
 
 // pollForPath polls the database until a row for fullPath is found.
-func pollForPath(ctx context.Context, ds internal.DataSource, pollEvery time.Duration,
+func pollForPath(ctx context.Context, db *postgres.DB, pollEvery time.Duration,
 	fullPath, modulePath, requestedVersion string) *fetchResult {
 	fr := &fetchResult{modulePath: modulePath}
 	defer derrors.Wrap(&fr.err, "pollForRedirectURL(%q, %q, %q)", modulePath, fullPath, requestedVersion)
@@ -204,7 +211,7 @@ func pollForPath(ctx context.Context, ds internal.DataSource, pollEvery time.Dur
 		case <-ticker.C:
 			ctx2, cancel := context.WithTimeout(ctx, pollEvery)
 			defer cancel()
-			fr = checkForPath(ctx2, ds, fullPath, modulePath, requestedVersion)
+			fr = checkForPath(ctx2, db, fullPath, modulePath, requestedVersion)
 			if fr.status != http.StatusProcessing {
 				return fr
 			}
@@ -218,7 +225,7 @@ func pollForPath(ctx context.Context, ds internal.DataSource, pollEvery time.Dur
 // process that was initiated is not yet complete.  If the row exists version_map
 // but not paths, it means that a module was found at the requestedVersion, but
 // not the fullPath, so errPathDoesNotExistInModule is returned.
-func checkForPath(ctx context.Context, ds internal.DataSource, fullPath, modulePath, requestedVersion string) (fr *fetchResult) {
+func checkForPath(ctx context.Context, db *postgres.DB, fullPath, modulePath, requestedVersion string) (fr *fetchResult) {
 	defer func() {
 		// Based on
 		// https://github.com/lib/pq/issues/577#issuecomment-298341053, it seems
@@ -235,7 +242,7 @@ func checkForPath(ctx context.Context, ds internal.DataSource, fullPath, moduleP
 
 	// Check the version_map table to see if a row exists for modulePath and
 	// requestedVersion.
-	vm, err := ds.GetVersionMap(ctx, modulePath, requestedVersion)
+	vm, err := db.GetVersionMap(ctx, modulePath, requestedVersion)
 	if err != nil {
 		// If an error is returned, there are two possibilities:
 		// (1) A row for this modulePath and version does not exist.
@@ -296,7 +303,7 @@ func checkForPath(ctx context.Context, ds internal.DataSource, fullPath, moduleP
 	// was 200 or 290).  Now check the paths table to see if the fullPath exists.
 	// vm.status for the module version was either a 200 or 290. Now determine if
 	// the fullPath exists in that module.
-	if _, _, _, err := ds.GetPathInfo(ctx, fullPath, modulePath, vm.ResolvedVersion); err != nil {
+	if _, _, _, err := db.GetPathInfo(ctx, fullPath, modulePath, vm.ResolvedVersion); err != nil {
 		if errors.Is(err, derrors.NotFound) {
 			// The module version exists, but the fullPath does not exist in
 			// that module version.

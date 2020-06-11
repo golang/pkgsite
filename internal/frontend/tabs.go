@@ -13,6 +13,7 @@ import (
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/postgres"
 )
 
 // TabSettings defines tab-specific metadata.
@@ -152,7 +153,12 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds
 	case "imports":
 		return fetchImportsDetails(ctx, ds, pkg.Path, pkg.ModulePath, pkg.Version)
 	case "importedby":
-		return fetchImportedByDetails(ctx, ds, pkg.Path, pkg.ModulePath)
+		db, ok := ds.(*postgres.DB)
+		if !ok {
+			// The proxydatasource does not support the imported by page.
+			return nil, &serverError{status: http.StatusFailedDependency}
+		}
+		return fetchImportedByDetails(ctx, db, pkg.Path, pkg.ModulePath)
 	case "licenses":
 		return fetchPackageLicensesDetails(ctx, ds, pkg.Path, pkg.ModulePath, pkg.Version)
 	case "overview":
@@ -175,7 +181,12 @@ func fetchDetailsForVersionedDirectory(ctx context.Context, r *http.Request, tab
 	case "imports":
 		return fetchImportsDetails(ctx, ds, vdir.Path, vdir.ModulePath, vdir.Version)
 	case "importedby":
-		return fetchImportedByDetails(ctx, ds, vdir.Path, vdir.ModulePath)
+		db, ok := ds.(*postgres.DB)
+		if !ok {
+			// The proxydatasource does not support the imported by page.
+			return nil, &serverError{status: http.StatusFailedDependency}
+		}
+		return fetchImportedByDetails(ctx, db, vdir.Path, vdir.ModulePath)
 	case "licenses":
 		return fetchPackageLicensesDetails(ctx, ds, vdir.Path, vdir.ModulePath, vdir.Version)
 	case "overview":

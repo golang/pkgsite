@@ -104,11 +104,6 @@ func (ds *DataSource) GetDirectoryNew(ctx context.Context, dirPath, modulePath, 
 	}, nil
 }
 
-// GetImportedBy is unimplemented.
-func (ds *DataSource) GetImportedBy(ctx context.Context, path, version string, limit int) (_ []string, err error) {
-	return nil, nil
-}
-
 // GetImports returns package imports as extracted from the module zip.
 func (ds *DataSource) GetImports(ctx context.Context, pkgPath, modulePath, version string) (_ []string, err error) {
 	defer derrors.Wrap(&err, "GetImports(%q, %q, %q)", pkgPath, modulePath, version)
@@ -230,11 +225,6 @@ func (ds *DataSource) GetModuleInfo(ctx context.Context, modulePath, version str
 		return nil, err
 	}
 	return &m.LegacyModuleInfo, nil
-}
-
-// Search is unimplemented.
-func (ds *DataSource) Search(ctx context.Context, query string, limit, offset int) ([]*internal.SearchResult, error) {
-	return []*internal.SearchResult{}, nil
 }
 
 // getModule retrieves a version from the cache, or failing that queries and
@@ -420,11 +410,6 @@ func packageFromVersion(pkgPath string, m *internal.Module) (_ *internal.LegacyV
 	return nil, fmt.Errorf("package missing from module %s: %w", m.ModulePath, derrors.NotFound)
 }
 
-// IsExcluded is unimplemented.
-func (*DataSource) IsExcluded(context.Context, string) (bool, error) {
-	return false, nil
-}
-
 // GetExperiments is unimplemented.
 func (*DataSource) GetExperiments(ctx context.Context) ([]*internal.Experiment, error) {
 	return nil, nil
@@ -454,15 +439,4 @@ func (ds *DataSource) GetPathInfo(ctx context.Context, path, inModulePath, inVer
 		}
 	}
 	return m.ModulePath, m.Version, isPackage, nil
-}
-
-// GetVersionMap is unimplemented. The proxydatasource does not have any need
-// for this method.
-func (ds *DataSource) GetVersionMap(ctx context.Context, modulePath, version string) (*internal.VersionMap, error) {
-	return nil, nil
-}
-
-// GetStdlibPathsWithSuffix is unimplemented.
-func (ds *DataSource) GetStdlibPathsWithSuffix(ctx context.Context, suffix string) ([]string, error) {
-	return nil, nil
 }

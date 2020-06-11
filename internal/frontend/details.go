@@ -16,6 +16,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -138,7 +139,11 @@ func checkPathAndVersion(ctx context.Context, ds internal.DataSource, path, vers
 			},
 		}
 	}
-	excluded, err := ds.IsExcluded(ctx, path)
+	db, ok := ds.(*postgres.DB)
+	if !ok {
+		return nil
+	}
+	excluded, err := db.IsExcluded(ctx, path)
 	if err != nil {
 		return err
 	}

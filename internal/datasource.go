@@ -15,17 +15,9 @@ type DataSource interface {
 	// See the internal/postgres package for further documentation of these
 	// methods, particularly as they pertain to the main postgres implementation.
 
-	// IsExcluded reports whether the path is excluded from processinng.
-	IsExcluded(ctx context.Context, path string) (bool, error)
-	// Search searches the database with a query.
-	Search(ctx context.Context, query string, limit, offset int) ([]*SearchResult, error)
-
 	// GetDirectoryNew returns information about a directory, which may also be a module and/or package.
 	// The module and version must both be known.
 	GetDirectoryNew(ctx context.Context, dirPath, modulePath, version string) (_ *VersionedDirectory, err error)
-	// GetImportedBy returns a slice of import paths corresponding to packages
-	// that import the given package path (at any version).
-	GetImportedBy(ctx context.Context, pkgPath, version string, limit int) ([]string, error)
 	// GetImports returns a slice of import paths imported by the package
 	// specified by path and version.
 	GetImports(ctx context.Context, pkgPath, modulePath, version string) ([]string, error)
@@ -47,10 +39,6 @@ type DataSource interface {
 	// GetTaggedVersionsForModule returns LegacyModuleInfo for all known tagged
 	// versions for any module containing a package with the given import path.
 	GetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*LegacyModuleInfo, error)
-	// GetVersionMap returns the VersionMap corresponding to the provided modulePath and requestedVersion.
-	GetVersionMap(ctx context.Context, modulePath, requestedVersion string) (*VersionMap, error)
-	// GetStdlibPathsWithSuffix returns standard library paths with the given suffix.
-	GetStdlibPathsWithSuffix(ctx context.Context, suffix string) ([]string, error)
 
 	// TODO(b/155474770): Deprecate these methods.
 	//

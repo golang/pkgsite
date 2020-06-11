@@ -8,7 +8,6 @@ import (
 	"context"
 	"net/http"
 	"net/url"
-	"strings"
 	"testing"
 
 	"golang.org/x/pkgsite/internal"
@@ -108,7 +107,6 @@ func TestCheckPathAndVersion(t *testing.T) {
 		want          int
 	}{
 		{"import/path", "v1.2.3", http.StatusOK},
-		{"bad/path", "v1.2.3", http.StatusNotFound},
 		{"import/path", "v1.2.bad", http.StatusBadRequest},
 	}
 
@@ -130,8 +128,4 @@ func TestCheckPathAndVersion(t *testing.T) {
 
 type fakeDataSource struct {
 	internal.DataSource
-}
-
-func (fakeDataSource) IsExcluded(_ context.Context, path string) (bool, error) {
-	return strings.HasPrefix(path, "bad"), nil
 }

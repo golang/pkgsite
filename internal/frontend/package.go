@@ -14,6 +14,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -209,7 +210,11 @@ func (s *Server) stdlibPathForShortcut(ctx context.Context, shortcut string) (pa
 	if !stdlib.Contains(shortcut) {
 		return "", nil
 	}
-	matches, err := s.ds.GetStdlibPathsWithSuffix(ctx, shortcut)
+	db, ok := s.ds.(*postgres.DB)
+	if !ok {
+		return "", &serverError{status: http.StatusFailedDependency}
+	}
+	matches, err := db.GetStdlibPathsWithSuffix(ctx, shortcut)
 	if err != nil {
 		return "", err
 	}

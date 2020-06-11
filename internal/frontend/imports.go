@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -72,10 +73,10 @@ type ImportedByDetails struct {
 
 const importedByLimit = 20001
 
-// fetchImportedByDetails fetches importers for the package version specified by
+// etchImportedByDetails fetches importers for the package version specified by
 // path and version from the database and returns a ImportedByDetails.
-func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath, modulePath string) (*ImportedByDetails, error) {
-	importedBy, err := ds.GetImportedBy(ctx, pkgPath, modulePath, importedByLimit)
+func fetchImportedByDetails(ctx context.Context, db *postgres.DB, pkgPath, modulePath string) (*ImportedByDetails, error) {
+	importedBy, err := db.GetImportedBy(ctx, pkgPath, modulePath, importedByLimit)
 	if err != nil {
 		return nil, err
 	}
