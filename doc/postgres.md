@@ -1,6 +1,10 @@
-# Databases
+# Postgres
 
-We use [PostgreSQL](https://www.postgresql.org).
+We use [PostgreSQL](https://www.postgresql.org) to store data served on
+pkg.go.dev.
+
+For additional information on our architecture, see the
+[design document](design.md).
 
 ## Local development database
 
@@ -73,12 +77,14 @@ Run `./all.bash` to verify your setup.
 ## Migrations
 
 Migrations are managed using
-[github.com/golang-migrate/migrate](https://github.com/golang-migrate/migrate), with the
-[CLI tool](https://github.com/golang-migrate/migrate/tree/master/cli).
+[github.com/golang-migrate/migrate](https://github.com/golang-migrate/migrate),
+with the [CLI tool](https://github.com/golang-migrate/migrate/tree/master/cli).
 
-If this is your first time using golang-migrate, check out the [Getting Started guide](https://github.com/golang-migrate/migrate/blob/master/GETTING_STARTED.md).
+If this is your first time using golang-migrate, check out the
+[Getting Started guide](https://github.com/golang-migrate/migrate/blob/master/GETTING_STARTED.md).
 
-To install the golang-migrate CLI, follow the instructions in the [migrate CLI README](https://github.com/golang-migrate/migrate/blob/master/cmd/migrate/README.md).
+To install the golang-migrate CLI, follow the instructions in the
+[migrate CLI README](https://github.com/golang-migrate/migrate/blob/master/cmd/migrate/README.md).
 
 ### Creating a migration
 
@@ -110,4 +116,5 @@ devtools/migrate_db.sh [up|down|force|version] {#}
 
 If you are migrating for the first time, choose the "up" command.
 
-For additional details, see [golang-migrate/migrate/GETTING_STARTED.md#run-migrations](https://github.com/golang-migrate/migrate/blob/master/GETTING_STARTED.md#run-migrations).
+For additional details, see
+[golang-migrate/migrate/GETTING_STARTED.md#run-migrations](https://github.com/golang-migrate/migrate/blob/master/GETTING_STARTED.md#run-migrations).
