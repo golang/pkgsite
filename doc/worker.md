@@ -1,5 +1,12 @@
 # Worker
 
+The _worker_ populates the database with information about new modules.
+
+For additional information on functionality of the worker, see the
+[design document](design.md).
+
+## Development
+
 The main program lives in `cmd/worker`.
 
 You can run the worker locally like so:

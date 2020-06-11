@@ -1,4 +1,11 @@
-# Frontend Development
+# Frontend
+
+The _frontend_ presents user-facing web pages on pkg.go.dev.
+
+For additional information on functionality of the frontend, see the
+[design document](design.md).
+
+## Development
 
 The main program lives in `cmd/frontend`. The bulk of the code lives in
 `internal/frontend`.
