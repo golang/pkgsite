@@ -92,7 +92,15 @@ func main() {
 			Addr: cfg.RedisHAHost + ":" + cfg.RedisHAPort,
 		})
 	}
-	server, err := frontend.NewServer(ds, fetchQueue, haClient, config.TaskIDChangeIntervalWorker, *staticPath, *thirdPartyPath, *devMode)
+	server, err := frontend.NewServer(frontend.ServerConfig{
+		DataSource:           ds,
+		Queue:                fetchQueue,
+		CompletionClient:     haClient,
+		TaskIDChangeInterval: config.TaskIDChangeIntervalFrontend,
+		StaticPath:           *staticPath,
+		ThirdPartyPath:       *thirdPartyPath,
+		DevMode:              *devMode,
+	})
 	if err != nil {
 		log.Fatalf(ctx, "frontend.NewServer: %v", err)
 	}

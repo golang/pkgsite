@@ -97,7 +97,14 @@ func TestEndToEndProcessing(t *testing.T) {
 	workerServer.Install(workerMux.Handle)
 	workerHTTP := httptest.NewServer(workerMux)
 
-	frontendServer, err := frontend.NewServer(testDB, queue, redisHAClient, 10*time.Minute, "../../../content/static", "../../../third_party", false)
+	frontendServer, err := frontend.NewServer(frontend.ServerConfig{
+		DataSource:           testDB,
+		Queue:                queue,
+		CompletionClient:     redisHAClient,
+		TaskIDChangeInterval: 10 * time.Minute,
+		StaticPath:           "../../../content/static",
+		ThirdPartyPath:       "../../../third_party",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

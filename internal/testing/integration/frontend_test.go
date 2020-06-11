@@ -152,7 +152,12 @@ func TestModulePackageDirectoryResolution(t *testing.T) {
 				in(".DetailsContent", hasText("I'm a package"))),
 		},
 	}
-	s, err := frontend.NewServer(testDB, nil, nil, 10*time.Minute, "../../../content/static", "../../../third_party", false)
+	s, err := frontend.NewServer(frontend.ServerConfig{
+		DataSource:           testDB,
+		TaskIDChangeInterval: 10 * time.Minute,
+		StaticPath:           "../../../content/static",
+		ThirdPartyPath:       "../../../third_party",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

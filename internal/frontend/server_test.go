@@ -945,7 +945,13 @@ func newTestServer(t *testing.T, proxyModules []*proxy.TestModule, experimentNam
 		set[n] = true
 	}
 	q := queue.NewInMemory(ctx, proxyClient, sourceClient, testDB, 1, FetchAndUpdateState, experiment.NewSet(set))
-	s, err := NewServer(testDB, q, nil, 10*time.Minute, "../../content/static", "../../third_party", false)
+	s, err := NewServer(ServerConfig{
+		DataSource:           testDB,
+		Queue:                q,
+		TaskIDChangeInterval: 10 * time.Minute,
+		StaticPath:           "../../content/static",
+		ThirdPartyPath:       "../../third_party",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

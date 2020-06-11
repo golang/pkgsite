@@ -46,24 +46,35 @@ type Server struct {
 	templates map[string]*template.Template
 }
 
+// ServerConfig contains everything needed by a Server.
+type ServerConfig struct {
+	DataSource           internal.DataSource
+	Queue                queue.Queue
+	CompletionClient     *redis.Client
+	TaskIDChangeInterval time.Duration
+	StaticPath           string
+	ThirdPartyPath       string
+	DevMode              bool
+}
+
 // NewServer creates a new Server for the given database and template directory.
-func NewServer(ds internal.DataSource, q queue.Queue, cmplClient *redis.Client, taskIDChangeInterval time.Duration, staticPath string, thirdPartyPath string, devMode bool) (_ *Server, err error) {
+func NewServer(scfg ServerConfig) (_ *Server, err error) {
 	defer derrors.Wrap(&err, "NewServer(...)")
-	templateDir := filepath.Join(staticPath, "html")
+	templateDir := filepath.Join(scfg.StaticPath, "html")
 	ts, err := parsePageTemplates(templateDir)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing templates: %v", err)
 	}
 	s := &Server{
-		ds:                   ds,
-		queue:                q,
-		cmplClient:           cmplClient,
-		staticPath:           staticPath,
-		thirdPartyPath:       thirdPartyPath,
+		ds:                   scfg.DataSource,
+		queue:                scfg.Queue,
+		cmplClient:           scfg.CompletionClient,
+		staticPath:           scfg.StaticPath,
+		thirdPartyPath:       scfg.ThirdPartyPath,
 		templateDir:          templateDir,
-		devMode:              devMode,
+		devMode:              scfg.DevMode,
 		templates:            ts,
-		taskIDChangeInterval: taskIDChangeInterval,
+		taskIDChangeInterval: scfg.TaskIDChangeInterval,
 	}
 	errorPageBytes, err := s.renderErrorPage(context.Background(), http.StatusInternalServerError, "error.tmpl", nil)
 	if err != nil {
