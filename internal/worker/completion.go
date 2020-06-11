@@ -25,7 +25,7 @@ const popularCutoff = 50
 // updates redis auto completion indexes with data from these documents.
 func (s *Server) handleUpdateRedisIndexes(w http.ResponseWriter, r *http.Request) error {
 	ctx := r.Context()
-	err := updateRedisIndexes(ctx, s.db.Underlying(), s.redisClient, popularCutoff)
+	err := updateRedisIndexes(ctx, s.db.Underlying(), s.redisHAClient, popularCutoff)
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func (s *Server) handleUpdateRedisIndexes(w http.ResponseWriter, r *http.Request
 func updateRedisIndexes(ctx context.Context, db *database.DB, redisClient *redis.Client, cutoff int) (err error) {
 	defer derrors.Wrap(&err, "updateRedisIndexes")
 	if redisClient == nil {
-		return errors.New("redis client is nil")
+		return errors.New("redis HA client is nil")
 	}
 
 	// For autocompletion, we track two separate "indexes" (sorted sets of

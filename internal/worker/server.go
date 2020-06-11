@@ -41,7 +41,8 @@ type Server struct {
 	indexClient          *index.Client
 	proxyClient          *proxy.Client
 	sourceClient         *source.Client
-	redisClient          *redis.Client
+	redisHAClient        *redis.Client
+	redisCacheClient     *redis.Client
 	db                   *postgres.DB
 	queue                queue.Queue
 	reportingClient      *errorreporting.Client
@@ -56,7 +57,8 @@ func NewServer(cfg *config.Config,
 	indexClient *index.Client,
 	proxyClient *proxy.Client,
 	sourceClient *source.Client,
-	redisClient *redis.Client,
+	redisHAClient *redis.Client,
+	redisCacheClient *redis.Client,
 	queue queue.Queue,
 	reportingClient *errorreporting.Client,
 	taskIDChangeInterval time.Duration,
@@ -75,7 +77,8 @@ func NewServer(cfg *config.Config,
 		indexClient:          indexClient,
 		proxyClient:          proxyClient,
 		sourceClient:         sourceClient,
-		redisClient:          redisClient,
+		redisHAClient:        redisHAClient,
+		redisCacheClient:     redisCacheClient,
 		queue:                queue,
 		reportingClient:      reportingClient,
 		indexTemplate:        indexTemplate,
@@ -146,6 +149,9 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// search_documents table that was last updated before the time in the
 	// "before" query parameter.
 	handle("/repopulate-search-documents", rmw(s.errorHandler(s.handleRepopulateSearchDocuments)))
+
+	// manual: clear-cache clears the redis cache.
+	handle("/clear-cache", rmw(s.errorHandler(s.clearCache)))
 
 	// returns the Worker homepage.
 	handle("/", http.HandlerFunc(s.handleStatusPage))
@@ -477,6 +483,18 @@ func (s *Server) handleReprocess(w http.ResponseWriter, r *http.Request) error {
 	if err := s.db.UpdateModuleVersionStatesForReprocessing(r.Context(), appVersion); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (s *Server) clearCache(w http.ResponseWriter, r *http.Request) error {
+	if s.redisCacheClient == nil {
+		return errors.New("Redis cache client is not configured")
+	}
+	status := s.redisCacheClient.FlushAll()
+	if status.Err() != nil {
+		return status.Err()
+	}
+	fmt.Fprint(w, "Cache cleared.")
 	return nil
 }
 
