@@ -28,30 +28,30 @@ import (
 )
 
 var (
-	// SearchLatency holds observed latency in individual search queries.
-	SearchLatency = stats.Float64(
+	// keySearchLatency holds observed latency in individual search queries.
+	keySearchLatency = stats.Float64(
 		"go-discovery/search/latency",
 		"Latency of a search query.",
 		stats.UnitMilliseconds,
 	)
-	// SearchSource is a census tag for search query types.
-	SearchSource = tag.MustNewKey("search.source")
+	// keySearchSource is a census tag for search query types.
+	keySearchSource = tag.MustNewKey("search.source")
 	// SearchLatencyDistribution aggregates search request latency by search
 	// query type.
 	SearchLatencyDistribution = &view.View{
 		Name:        "go-discovery/search/latency",
-		Measure:     SearchLatency,
+		Measure:     keySearchLatency,
 		Aggregation: ochttp.DefaultLatencyDistribution,
 		Description: "Search latency, by result source query type.",
-		TagKeys:     []tag.Key{SearchSource},
+		TagKeys:     []tag.Key{keySearchSource},
 	}
 	// SearchResponseCount counts search responses by search query type.
 	SearchResponseCount = &view.View{
 		Name:        "go-discovery/search/count",
-		Measure:     SearchLatency,
+		Measure:     keySearchLatency,
 		Aggregation: view.Count(),
 		Description: "Search count, by result source query type.",
-		TagKeys:     []tag.Key{SearchSource},
+		TagKeys:     []tag.Key{keySearchSource},
 	}
 )
 
@@ -250,9 +250,9 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, sea
 	// Note that this latency measurement might differ meaningfully from the
 	// resp.Latency, if time was spent waiting for the result count estimate.
 	latency := float64(time.Since(searchStart)) / float64(time.Millisecond)
-	stats.RecordWithTags(ctx, []tag.Mutator{
-		tag.Upsert(SearchSource, resp.source),
-	}, SearchLatency.M(latency))
+	stats.RecordWithTags(ctx,
+		[]tag.Mutator{tag.Upsert(keySearchSource, resp.source)},
+		keySearchLatency.M(latency))
 	// To avoid fighting with the query planner, our searches only hit the
 	// search_documents table and we enrich after getting the results. In the
 	// future, we may want to fully denormalize and put all search data in the
