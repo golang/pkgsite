@@ -9,39 +9,15 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
 )
 
-// handleModuleDetails handles requests for non-stdlib module details pages. It
-// expects paths of the form "/mod/<module-path>[@<version>?tab=<tab>]".
-// stdlib module pages are handled at "/std".
-func (s *Server) serveModuleDetails(w http.ResponseWriter, r *http.Request) error {
-	if r.URL.Path == "/mod/std" {
-		http.Redirect(w, r, "/std", http.StatusMovedPermanently)
-		return nil
-	}
-	urlPath := strings.TrimPrefix(r.URL.Path, "/mod")
-	path, _, version, err := parseDetailsURLPath(urlPath)
-	if err != nil {
-		return &serverError{
-			status: http.StatusBadRequest,
-			err:    fmt.Errorf("handleModuleDetails: %v", err),
-		}
-	}
-	return s.serveModulePage(w, r, path, version)
-}
-
 // serveModulePage serves details pages for the module specified by modulePath
 // and version.
 func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, modulePath, requestedVersion string) error {
-	ctx := r.Context()
-	if err := checkPathAndVersion(ctx, s.ds, modulePath, requestedVersion); err != nil {
-		return err
-	}
 	// This function handles top level behavior related to the existence of the
 	// requested modulePath@version:
 	// TODO: fix
@@ -52,6 +28,7 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 	//     a. We don't know anything about this module: just serve a 404
 	//     b. We have valid versions for this module path, but `version` isn't
 	//        one of them. Serve a 404 but recommend the other versions.
+	ctx := r.Context()
 	mi, err := s.ds.GetModuleInfo(ctx, modulePath, requestedVersion)
 	if err == nil {
 		return s.serveModulePageWithModule(ctx, w, r, mi, requestedVersion)

@@ -177,7 +177,7 @@ func TestServer(t *testing.T) {
 	t.Run("no experiments", func(t *testing.T) {
 		testServer(t)
 	})
-	t.Run("use-paths-table", func(t *testing.T) {
+	t.Run("use directories", func(t *testing.T) {
 		testServer(t, internal.ExperimentUseDirectories, internal.ExperimentInsertDirectories)
 	})
 }
@@ -712,7 +712,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 				in(".Directories", text(`This is a package synopsis`))),
 		},
 		{
-			name:           "module@version overview tab",
+			name:           "module at version overview tab",
 			urlPath:        fmt.Sprintf("/mod/%s@%s?tab=overview", sample.ModulePath, sample.VersionString),
 			wantStatusCode: http.StatusOK,
 			want: in("",
@@ -726,7 +726,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 				})),
 		},
 		{
-			name:           "module@version overview tab, pseudoversion",
+			name:           "module at version overview tab, pseudoversion",
 			urlPath:        fmt.Sprintf("/mod/%s@%s?tab=overview", sample.ModulePath, pseudoVersion),
 			wantStatusCode: http.StatusOK,
 			want: in("",
@@ -740,7 +740,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 				})),
 		},
 		{
-			name:           "module@version packages tab",
+			name:           "module at version packages tab",
 			urlPath:        fmt.Sprintf("/mod/%s@%s?tab=packages", sample.ModulePath, sample.VersionString),
 			wantStatusCode: http.StatusOK,
 			want: in("",
@@ -748,7 +748,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 				in(".Directories", text(`This is a package synopsis`))),
 		},
 		{
-			name:           "module@version versions tab",
+			name:           "module at version versions tab",
 			urlPath:        fmt.Sprintf("/mod/%s@%s?tab=versions", sample.ModulePath, sample.VersionString),
 			wantStatusCode: http.StatusOK,
 			want: in("",
@@ -762,7 +762,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 						text("v1.0.0")))),
 		},
 		{
-			name:           "module@version licenses tab",
+			name:           "module at version licenses tab",
 			urlPath:        fmt.Sprintf("/mod/%s@%s?tab=licenses", sample.ModulePath, sample.VersionString),
 			wantStatusCode: http.StatusOK,
 			want: in("",
@@ -863,7 +863,7 @@ func mustRequest(urlPath string, t *testing.T) *http.Request {
 	return r
 }
 
-func TestPackageTTL(t *testing.T) {
+func TestDetailsTTL(t *testing.T) {
 	tests := []struct {
 		r    *http.Request
 		want time.Duration
@@ -873,19 +873,6 @@ func TestPackageTTL(t *testing.T) {
 		{mustRequest("/host.com/module@v1.2.3/suffix?tab=overview", t), longTTL},
 		{mustRequest("/host.com/module@v1.2.3/suffix?tab=versions", t), defaultTTL},
 		{mustRequest("/host.com/module@v1.2.3/suffix?tab=importedby", t), defaultTTL},
-	}
-	for _, test := range tests {
-		if got := packageTTL(test.r); got != test.want {
-			t.Errorf("packageTTL(%v) = %v, want %v", test.r, got, test.want)
-		}
-	}
-}
-
-func TestModuleTTL(t *testing.T) {
-	tests := []struct {
-		r    *http.Request
-		want time.Duration
-	}{
 		{mustRequest("/mod/host.com/module@v1.2.3/suffix", t), longTTL},
 		{mustRequest("/mod/host.com/module/suffix", t), shortTTL},
 		{mustRequest("/mod/host.com/module@v1.2.3/suffix?tab=overview", t), longTTL},
@@ -893,8 +880,8 @@ func TestModuleTTL(t *testing.T) {
 		{mustRequest("/mod/host.com/module@v1.2.3/suffix?tab=importedby", t), defaultTTL},
 	}
 	for _, test := range tests {
-		if got := moduleTTL(test.r); got != test.want {
-			t.Errorf("packageTTL(%v) = %v, want %v", test.r, got, test.want)
+		if got := detailsTTL(test.r); got != test.want {
+			t.Errorf("detailsTTL(%v) = %v, want %v", test.r, got, test.want)
 		}
 	}
 }

@@ -36,16 +36,66 @@ type DetailsPage struct {
 	PageType string
 }
 
-func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) error {
+// serveDetails handles requests for package/directory/module details pages. It
+// expects paths of the form "[/mod]/<module-path>[@<version>?tab=<tab>]".
+// stdlib module pages are handled at "/std", and requests to "/mod/std" will
+// be redirected to that path.
+func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) (err error) {
 	if r.URL.Path == "/" {
 		s.staticPageHandler("index.tmpl", "")(w, r)
 		return nil
 	}
-	parts := strings.SplitN(strings.TrimPrefix(r.URL.Path, "/"), "@", 2)
-	if stdlib.Contains(parts[0]) {
-		return s.serveStdLib(w, r)
+	if r.URL.Path == "/C" {
+		// Package "C" is a special case: redirect to the Go Blog article on cgo.
+		// (This is what godoc.org does.)
+		http.Redirect(w, r, "https://golang.org/doc/articles/c_go_cgo.html", http.StatusMovedPermanently)
+		return nil
 	}
-	return s.servePackageDetails(w, r)
+	if r.URL.Path == "/mod/std" {
+		// The stdlib module page is hosted at "/std".
+		http.Redirect(w, r, "/std", http.StatusMovedPermanently)
+		return nil
+	}
+
+	var (
+		fullPath, modulePath, requestedVersion string
+		isModule                               bool
+		urlPath                                = r.URL.Path
+	)
+	if strings.HasPrefix(r.URL.Path, "/mod") {
+		urlPath = strings.TrimPrefix(r.URL.Path, "/mod")
+		isModule = true
+	}
+
+	// Parse the fullPath, modulePath and requestedVersion, based on whether
+	// the path is in the stdlib. If unable to parse these elements, return
+	// http.StatusBadRequest.
+	if parts := strings.SplitN(strings.TrimPrefix(urlPath, "/"), "@", 2); stdlib.Contains(parts[0]) {
+		fullPath, requestedVersion, err = parseStdLibURLPath(urlPath)
+		modulePath = stdlib.ModulePath
+	} else {
+		fullPath, modulePath, requestedVersion, err = parseDetailsURLPath(urlPath)
+	}
+	if err != nil {
+		return &serverError{
+			status: http.StatusBadRequest,
+			err:    err,
+		}
+	}
+
+	ctx := r.Context()
+	// Validate the fullPath and requestedVersion that were parsed.
+	if err := checkPathAndVersion(ctx, s.ds, fullPath, requestedVersion); err != nil {
+		return err
+	}
+	// Depending on what the request was for, return the module or package page.
+	if isModule || fullPath == stdlib.ModulePath {
+		return s.serveModulePage(w, r, fullPath, requestedVersion)
+	}
+	if isActiveUseDirectories(ctx) {
+		return s.servePackagePageNew(w, r, fullPath, modulePath, requestedVersion)
+	}
+	return s.servePackagePage(w, r, fullPath, modulePath, requestedVersion)
 }
 
 // parseDetailsURLPath parses a URL path that refers (or may refer) to something
@@ -129,13 +179,13 @@ func parseDetailsURLPath(urlPath string) (fullPath, modulePath, version string, 
 
 // checkPathAndVersion verifies that the requested path and version are
 // acceptable. The given path may be a module or package path.
-func checkPathAndVersion(ctx context.Context, ds internal.DataSource, path, version string) error {
-	if !isSupportedVersion(ctx, version) {
+func checkPathAndVersion(ctx context.Context, ds internal.DataSource, fullPath, requestedVersion string) error {
+	if !isSupportedVersion(ctx, requestedVersion) {
 		return &serverError{
 			status: http.StatusBadRequest,
 			epage: &errorPage{
-				Message:          fmt.Sprintf("%q is not a valid semantic version.", version),
-				SecondaryMessage: suggestedSearch(path),
+				Message:          fmt.Sprintf("%q is not a valid semantic version.", requestedVersion),
+				SecondaryMessage: suggestedSearch(fullPath),
 			},
 		}
 	}
@@ -143,7 +193,7 @@ func checkPathAndVersion(ctx context.Context, ds internal.DataSource, path, vers
 	if !ok {
 		return nil
 	}
-	excluded, err := db.IsExcluded(ctx, path)
+	excluded, err := db.IsExcluded(ctx, fullPath)
 	if err != nil {
 		return err
 	}
@@ -227,4 +277,25 @@ func pathFoundAtLatestError(ctx context.Context, pathType, fullPath, version str
 					`<a href="/%s?tab=versions">click here</a>.`, pathType, fullPath)),
 		},
 	}
+}
+
+func parseStdLibURLPath(urlPath string) (path, version string, err error) {
+	defer derrors.Wrap(&err, "parseStdLibURLPath(%q)", urlPath)
+
+	// This splits urlPath into either:
+	//   /<path>@<tag> or /<path>
+	parts := strings.SplitN(urlPath, "@", 2)
+	path = strings.TrimSuffix(strings.TrimPrefix(parts[0], "/"), "/")
+	if err := module.CheckImportPath(path); err != nil {
+		return "", "", err
+	}
+
+	if len(parts) == 1 {
+		return path, internal.LatestVersion, nil
+	}
+	version = stdlib.VersionForTag(parts[1])
+	if version == "" {
+		return "", "", fmt.Errorf("invalid Go tag for url: %q", urlPath)
+	}
+	return path, version, nil
 }

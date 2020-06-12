@@ -18,19 +18,6 @@ import (
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
-// handlePackageDetails handles requests for package details pages. It expects
-// paths of the form "/<path>[@<version>?tab=<tab>]".
-func (s *Server) servePackageDetails(w http.ResponseWriter, r *http.Request) error {
-	pkgPath, modulePath, version, err := parseDetailsURLPath(r.URL.Path)
-	if err != nil {
-		return &serverError{
-			status: http.StatusBadRequest,
-			err:    fmt.Errorf("handlePackageDetails: %v", err),
-		}
-	}
-	return s.servePackagePage(w, r, pkgPath, modulePath, version)
-}
-
 // handlePackageDetailsRedirect redirects all redirects to "/pkg" to "/".
 func (s *Server) handlePackageDetailsRedirect(w http.ResponseWriter, r *http.Request) {
 	urlPath := strings.TrimPrefix(r.URL.Path, "/pkg")
@@ -41,12 +28,6 @@ func (s *Server) handlePackageDetailsRedirect(w http.ResponseWriter, r *http.Req
 // pkgPath, in the module specified by modulePath and version.
 func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPath, modulePath, version string) (err error) {
 	ctx := r.Context()
-	if err := checkPathAndVersion(ctx, s.ds, pkgPath, version); err != nil {
-		return err
-	}
-	if isActiveUseDirectories(ctx) {
-		return s.servePackagePageNew(w, r, pkgPath, modulePath, version)
-	}
 
 	// This function handles top level behavior related to the existence of the
 	// requested pkgPath@version.

@@ -87,13 +87,11 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 // Install registers server routes using the given handler registration func.
 func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.Client) {
 	var (
-		modHandler    http.Handler = s.errorHandler(s.serveModuleDetails)
 		detailHandler http.Handler = s.errorHandler(s.serveDetails)
 		searchHandler http.Handler = s.errorHandler(s.serveSearch)
 	)
 	if redisClient != nil {
-		modHandler = middleware.Cache("module-details", redisClient, moduleTTL)(modHandler)
-		detailHandler = middleware.Cache("package-details", redisClient, packageTTL)(detailHandler)
+		detailHandler = middleware.Cache("details", redisClient, detailsTTL)(detailHandler)
 		searchHandler = middleware.Cache("search", redisClient, middleware.TTL(defaultTTL))(searchHandler)
 	}
 	handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(s.staticPath))))
@@ -102,7 +100,6 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(s.staticPath)))
 	}))
 	handle("/fetch/", http.HandlerFunc(s.fetchHandler))
-	handle("/mod/", modHandler)
 	handle("/pkg/", http.HandlerFunc(s.handlePackageDetailsRedirect))
 	handle("/search", searchHandler)
 	handle("/search-help", s.staticPageHandler("search_help.tmpl", "Search Help - go.dev"))
@@ -129,20 +126,17 @@ const (
 	longTTL = 24 * time.Hour
 )
 
-// packageTTL assigns the cache TTL for package detail requests.
-func packageTTL(r *http.Request) time.Duration {
-	return detailsTTL(r.Context(), r.URL.Path, r.FormValue("tab"))
+// detailsTTL assigns the cache TTL for package detail requests.
+func detailsTTL(r *http.Request) time.Duration {
+	return detailsTTLForPath(r.Context(), r.URL.Path, r.FormValue("tab"))
 }
 
-// moduleTTL assigns the cache TTL for /mod/ requests.
-func moduleTTL(r *http.Request) time.Duration {
-	urlPath := strings.TrimPrefix(r.URL.Path, "/mod")
-	return detailsTTL(r.Context(), urlPath, r.FormValue("tab"))
-}
-
-func detailsTTL(ctx context.Context, urlPath, tab string) time.Duration {
+func detailsTTLForPath(ctx context.Context, urlPath, tab string) time.Duration {
 	if urlPath == "/" {
 		return defaultTTL
+	}
+	if strings.HasPrefix(urlPath, "/mod") {
+		urlPath = strings.TrimPrefix(urlPath, "/mod")
 	}
 	_, _, version, err := parseDetailsURLPath(urlPath)
 	if err != nil {
