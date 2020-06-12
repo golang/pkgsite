@@ -123,7 +123,18 @@ func (db *DB) Search(ctx context.Context, q string, limit, offset int) (_ []*int
 	if err != nil {
 		return nil, err
 	}
-	return resp.results, nil
+	// Filter out excluded paths.
+	var results []*internal.SearchResult
+	for _, r := range resp.results {
+		ex, err := db.IsExcluded(ctx, r.PackagePath)
+		if err != nil {
+			return nil, err
+		}
+		if !ex {
+			results = append(results, r)
+		}
+	}
+	return results, nil
 }
 
 // Penalties to search scores, applied as multipliers to the score.

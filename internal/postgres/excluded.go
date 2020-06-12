@@ -46,9 +46,7 @@ func (db *DB) InsertExcludedPrefix(ctx context.Context, prefix, user, reason str
 		prefix, user, reason)
 	if err != nil {
 		// Arrange to re-read the excluded_prefixes table on the next call to IsExcluded.
-		excludedPrefixes.mu.Lock()
-		excludedPrefixes.lastFetched = time.Time{}
-		excludedPrefixes.mu.Unlock()
+		setExcludedPrefixesLastFetched(time.Time{})
 	}
 	return err
 }
@@ -61,9 +59,15 @@ var excludedPrefixes struct {
 	lastFetched time.Time
 }
 
+func setExcludedPrefixesLastFetched(t time.Time) {
+	excludedPrefixes.mu.Lock()
+	excludedPrefixes.lastFetched = t
+	excludedPrefixes.mu.Unlock()
+}
+
 const excludedPrefixesExpiration = time.Minute
 
-// refreshExcludedPrefixes makes sure the in-memory copy of the
+// ensureExcludedPrefixes makes sure the in-memory copy of the
 // excluded_prefixes table is up to date.
 func (db *DB) ensureExcludedPrefixes(ctx context.Context) {
 	excludedPrefixes.mu.Lock()
@@ -96,5 +100,6 @@ func (db *DB) readExcludedPrefixes(ctx context.Context) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	setExcludedPrefixesLastFetched(time.Now())
 	return eps, nil
 }

@@ -621,6 +621,37 @@ func TestSearchPenalties(t *testing.T) {
 	}
 }
 
+func TestExcludedFromSearch(t *testing.T) {
+	// Verify that excluded paths are omitted from search results.
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	defer ResetTestDB(testDB, t)
+
+	// Insert a module with two packages.
+	const domain = "exclude.com"
+	sm := sample.Module(domain, "v1.2.3", "pkg", "exclude")
+	if err := testDB.InsertModule(ctx, sm); err != nil {
+		t.Fatal(err)
+	}
+	// Exclude a prefix that matches one of the packages.
+	if err := testDB.InsertExcludedPrefix(ctx, domain+"/ex", "no user", "no reason"); err != nil {
+		t.Fatal(err)
+	}
+	// Search for both packages.
+	gotResults, err := testDB.Search(ctx, domain, 10, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got []string
+	for _, g := range gotResults {
+		got = append(got, g.Name)
+	}
+	want := []string{"pkg"}
+	if !cmp.Equal(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}
+
 type searchDocument struct {
 	packagePath              string
 	modulePath               string
