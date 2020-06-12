@@ -265,7 +265,7 @@ func TestModuleInfo(t *testing.T) {
 		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
-			info, err := ModuleInfo(context.Background(), NewClient(testTimeout), test.modulePath, test.version)
+			info, err := ModuleInfo(context.Background(), &Client{client}, test.modulePath, test.version)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -282,7 +282,7 @@ func TestModuleInfo(t *testing.T) {
 
 	t.Run("stdlib-raw", func(t *testing.T) {
 		// Test raw URLs from the standard library, which are a special case.
-		info, err := ModuleInfo(context.Background(), NewClient(testTimeout), "std", "v1.13.3")
+		info, err := ModuleInfo(context.Background(), &Client{client}, "std", "v1.13.3")
 		if err != nil {
 			t.Fatal(err)
 		}
