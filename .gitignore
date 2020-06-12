@@ -21,7 +21,6 @@ crash.log
 
 ### Discovery Project ###
 private
-*.zip
 internal/**/go.sum
 cmd/*/*.yaml
 
