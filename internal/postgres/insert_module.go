@@ -62,12 +62,6 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 	return db.saveModule(ctx, m)
 }
 
-func allocMeg() int {
-	var ms runtime.MemStats
-	runtime.ReadMemStats(&ms)
-	return int(ms.Alloc / (1024 * 1024))
-}
-
 // saveModule inserts a Module into the database along with its packages,
 // imports, and licenses.  If any of these rows already exist, the module and
 // corresponding will be deleted and reinserted.
@@ -76,36 +70,34 @@ func allocMeg() int {
 // A derrors.InvalidArgument error will be returned if the given module and
 // licenses are invalid.
 func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
-	log.Debugf(ctx, "memory at start of saveModule: %dM", allocMeg())
-
 	defer derrors.Wrap(&err, "saveModule(ctx, tx, Module(%q, %q))", m.ModulePath, m.Version)
 	ctx, span := trace.StartSpan(ctx, "saveModule")
 	defer span.End()
 
+	logMemory(ctx, "at start of saveModule")
 	return db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
 		moduleID, err := insertModule(ctx, tx, m)
 		if err != nil {
 			return err
 		}
-		log.Debugf(ctx, "memory after insertModule: %dM", allocMeg())
+		logMemory(ctx, "after insertModule")
 
 		if err := insertLicenses(ctx, tx, m, moduleID); err != nil {
 			return err
 		}
 
-		log.Debugf(ctx, "memory after insertLicenses: %dM", allocMeg())
-
+		logMemory(ctx, "after insertLicenses")
 		if err := insertPackages(ctx, tx, m); err != nil {
 			return err
 		}
-		log.Debugf(ctx, "memory after insertPackages: %dM", allocMeg())
+		logMemory(ctx, "after insertPackages")
 
 		if experiment.IsActive(ctx, internal.ExperimentInsertDirectories) {
 			if err := insertDirectories(ctx, tx, m, moduleID); err != nil {
 				return err
 			}
 		}
-		log.Debugf(ctx, "memory after insertDirectories: %dM", allocMeg())
+		logMemory(ctx, "after insertDirectories")
 
 		// Obtain a transaction-scoped exclusive advisory lock on the module
 		// path. The transaction that holds the lock is the only one that can
@@ -450,7 +442,7 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 			"license_paths",
 			"redistributable",
 		}
-		log.Debugf(ctx, "memory before inserting into paths: %dM", allocMeg())
+		logMemory(ctx, "before inserting into paths")
 
 		uniqueCols := []string{"path", "module_id"}
 		returningCols := []string{"id", "path"}
@@ -476,7 +468,7 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 	// same module, which happens regularly.
 	sort.Strings(paths)
 	if len(pathToReadme) > 0 {
-		log.Debugf(ctx, "memory before inserting into readmes: %dM", allocMeg())
+		logMemory(ctx, "before inserting into readmes")
 		var readmeValues []interface{}
 		for _, path := range paths {
 			readme, ok := pathToReadme[path]
@@ -493,7 +485,7 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 	}
 
 	if len(pathToDoc) > 0 {
-		log.Debugf(ctx, "memory before inserting into documentation: %dM", allocMeg())
+		logMemory(ctx, "before inserting into documentation")
 		var docValues []interface{}
 		for _, path := range paths {
 			doc, ok := pathToDoc[path]
@@ -510,7 +502,7 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 		}
 	}
 
-	log.Debugf(ctx, "memory before inserting into package_imports: %dM", allocMeg())
+	logMemory(ctx, "before inserting into package_imports")
 	var importValues []interface{}
 	for _, pkgPath := range paths {
 		imports, ok := pathToImports[pkgPath]
@@ -740,4 +732,18 @@ func makeValidUnicode(s string) string {
 		}
 	}
 	return b.String()
+}
+
+var MemoryLoggingDisabled = true
+
+func logMemory(ctx context.Context, msg string) {
+	if !MemoryLoggingDisabled {
+		log.Debugf(ctx, "memory %s: %dM", msg, allocMeg())
+	}
+}
+
+func allocMeg() int {
+	var ms runtime.MemStats
+	runtime.ReadMemStats(&ms)
+	return int(ms.Alloc / (1024 * 1024))
 }
