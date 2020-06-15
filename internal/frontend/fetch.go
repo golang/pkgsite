@@ -40,7 +40,9 @@ var (
 	fetchTimeout                = 30 * time.Second
 	pollEvery                   = 500 * time.Millisecond
 
-	// keyFrontendFetchStatus is a census tag for frontend fetch query types.
+	// keyFrontendFetchVersion is a census tag for frontend fetch version types.
+	keyFrontendFetchVersion = tag.MustNewKey("frontend-fetch.version")
+	// keyFrontendFetchStatus is a census tag for frontend fetch status types.
 	keyFrontendFetchStatus = tag.MustNewKey("frontend-fetch.status")
 	// keyFrontendFetchLatency holds observed latency in individual
 	// frontend fetch queries.
@@ -82,7 +84,8 @@ func (s *Server) fetchHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 		return
 	}
-	if !isActiveFrontendFetch(r.Context()) {
+	ctx := r.Context()
+	if !isActiveFrontendFetch(ctx) {
 		// If the experiment flag is not on, treat this as a request for the
 		// "fetch" package, which does not exist.
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
@@ -95,9 +98,11 @@ func (s *Server) fetchHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
-	start := time.Now()
+	if !isActivePathAtMaster(ctx) && requestedVersion != internal.MasterVersion {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
 	status, responseText := s.fetchAndPoll(r.Context(), modulePath, fullPath, requestedVersion)
-	recordFrontendFetchMetric(status, time.Since(start))
 	if status != http.StatusOK {
 		http.Error(w, responseText, status)
 		return
@@ -118,9 +123,11 @@ var statusToResponseText = map[int]string{
 }
 
 func (s *Server) fetchAndPoll(parentCtx context.Context, modulePath, fullPath, requestedVersion string) (status int, responseText string) {
+	start := time.Now()
 	defer func() {
 		log.Infof(parentCtx, "fetchAndPoll(ctx, ds, q, %q, %q, %q): status=%d, responseText=%q",
 			modulePath, fullPath, requestedVersion, status, responseText)
+		recordFrontendFetchMetric(status, requestedVersion, time.Since(start))
 	}()
 
 	if !semver.IsValid(requestedVersion) &&
@@ -274,6 +281,8 @@ func checkForPath(ctx context.Context, db *postgres.DB, fullPath, modulePath, re
 
 	// Check the version_map table to see if a row exists for modulePath and
 	// requestedVersion.
+	// TODO(golang/go#37002): update db.GetVersionMap to return updated_at,
+	// so that we can determine if a module version is stale.
 	vm, err := db.GetVersionMap(ctx, modulePath, requestedVersion)
 	if err != nil {
 		// If an error is returned, there are two possibilities:
@@ -460,9 +469,16 @@ func isActiveFrontendFetch(ctx context.Context) bool {
 		experiment.IsActive(ctx, internal.ExperimentInsertDirectories)
 }
 
-func recordFrontendFetchMetric(status int, latency time.Duration) {
+func recordFrontendFetchMetric(status int, version string, latency time.Duration) {
 	l := float64(latency) / float64(time.Millisecond)
+
+	// Tag versions based on latest, master and semver.
+	v := version
+	if semver.IsValid(v) {
+		v = "semver"
+	}
 	stats.RecordWithTags(context.Background(), []tag.Mutator{
 		tag.Upsert(keyFrontendFetchStatus, strconv.Itoa(status)),
+		tag.Upsert(keyFrontendFetchVersion, v),
 	}, keyFrontendFetchLatency.M(l))
 }

@@ -16,6 +16,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -87,6 +88,21 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) (err error
 	// Validate the fullPath and requestedVersion that were parsed.
 	if err := checkPathAndVersion(ctx, s.ds, fullPath, requestedVersion); err != nil {
 		return err
+	}
+	if isActivePathAtMaster(ctx) && requestedVersion == internal.MasterVersion {
+		// Since path@master is a moving target, we don't want it to be stale.
+		// As a result, we enqueue every request of path@master to the frontend
+		// task queue, which will initiate a fetch request depending on the
+		// last time we tried to fetch this module version.
+		go func() {
+			status, responseText := s.fetchAndPoll(r.Context(), modulePath, fullPath, requestedVersion)
+			logf := log.Infof
+			if status == http.StatusInternalServerError {
+				logf = log.Errorf
+			}
+			logf(ctx, "fetchAndPoll(%q, %q, %q) result from serveDetails(%q): %d %q",
+				modulePath, fullPath, requestedVersion, r.URL.Path, status, responseText)
+		}()
 	}
 	// Depending on what the request was for, return the module or package page.
 	if isModule || fullPath == stdlib.ModulePath {
