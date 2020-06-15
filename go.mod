@@ -1,6 +1,6 @@
 module golang.org/x/pkgsite
 
-go 1.13
+go 1.14
 
 require (
 	cloud.google.com/go v0.56.0
@@ -12,6 +12,8 @@ require (
 	github.com/alicebob/miniredis/v2 v2.10.1
 	github.com/andybalholm/cascadia v1.1.0
 	github.com/ghodss/yaml v1.0.0
+	github.com/go-git/go-billy/v5 v5.0.0
+	github.com/go-git/go-git/v5 v5.1.0
 	github.com/go-redis/redis/v7 v7.0.0-beta.4
 	github.com/golang-migrate/migrate/v4 v4.6.2
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
@@ -33,7 +35,5 @@ require (
 	golang.org/x/tools v0.0.0-20200606014950-c42cb6316fb6 // indirect
 	google.golang.org/genproto v0.0.0-20200430143042-b979b6f78d84
 	google.golang.org/grpc v1.28.0
-	gopkg.in/src-d/go-billy.v4 v4.3.2
-	gopkg.in/src-d/go-git.v4 v4.13.1
 	honnef.co/go/tools v0.0.1-2020.1.4 // indirect
 )
