@@ -114,7 +114,7 @@ check_templates() {
 
 run_prettier() {
   if ! [ -x "$(command -v prettier)" ]; then
-    err "prettier must be installed"
+    err "prettier must be installed: see https://prettier.io/docs/en/install.html"
   fi
   runcmd prettier --write content/static/css/*.css
   runcmd prettier --write content/static/js/*.js
