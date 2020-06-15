@@ -19,6 +19,7 @@ import (
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -37,7 +38,7 @@ type OverviewDetails struct {
 
 // versionedLinks says whether the constructed URLs should have versions.
 // constructOverviewDetails uses the given version to construct an OverviewDetails.
-func constructOverviewDetails(mi *internal.ModuleInfo, readme *internal.Readme, isRedistributable bool, versionedLinks bool) *OverviewDetails {
+func constructOverviewDetails(ctx context.Context, mi *internal.ModuleInfo, readme *internal.Readme, isRedistributable bool, versionedLinks bool) *OverviewDetails {
 	var lv string
 	if versionedLinks {
 		lv = linkVersion(mi.Version, mi.ModulePath)
@@ -52,14 +53,14 @@ func constructOverviewDetails(mi *internal.ModuleInfo, readme *internal.Readme, 
 	}
 	if overview.Redistributable && readme != nil {
 		overview.ReadMeSource = fileSource(mi.ModulePath, mi.Version, readme.Filepath)
-		overview.ReadMe = readmeHTML(mi, readme)
+		overview.ReadMe = readmeHTML(ctx, mi, readme)
 	}
 	return overview
 }
 
 // fetchPackageOverviewDetails uses data for the given package to return an OverviewDetails.
-func fetchPackageOverviewDetails(pkg *internal.LegacyVersionedPackage, versionedLinks bool) *OverviewDetails {
-	od := constructOverviewDetails(&pkg.ModuleInfo, &internal.Readme{Filepath: pkg.LegacyReadmeFilePath, Contents: pkg.LegacyReadmeContents},
+func fetchPackageOverviewDetails(ctx context.Context, pkg *internal.LegacyVersionedPackage, versionedLinks bool) *OverviewDetails {
+	od := constructOverviewDetails(ctx, &pkg.ModuleInfo, &internal.Readme{Filepath: pkg.LegacyReadmeFilePath, Contents: pkg.LegacyReadmeContents},
 		pkg.LegacyPackage.IsRedistributable, versionedLinks)
 	od.PackageSourceURL = pkg.SourceInfo.DirectoryURL(packageSubdir(pkg.Path, pkg.ModulePath))
 	if !pkg.LegacyPackage.IsRedistributable {
@@ -69,7 +70,7 @@ func fetchPackageOverviewDetails(pkg *internal.LegacyVersionedPackage, versioned
 }
 
 // fetchPackageOverviewDetailsNew uses data for the given versioned directory to return an OverviewDetails.
-func fetchPackageOverviewDetailsNew(vdir *internal.VersionedDirectory, versionedLinks bool) *OverviewDetails {
+func fetchPackageOverviewDetailsNew(ctx context.Context, vdir *internal.VersionedDirectory, versionedLinks bool) *OverviewDetails {
 	var lv string
 	if versionedLinks {
 		lv = linkVersion(vdir.Version, vdir.ModulePath)
@@ -85,7 +86,7 @@ func fetchPackageOverviewDetailsNew(vdir *internal.VersionedDirectory, versioned
 	}
 	if overview.Redistributable && vdir.Readme != nil {
 		overview.ReadMeSource = fileSource(vdir.ModulePath, vdir.Version, vdir.Readme.Filepath)
-		overview.ReadMe = readmeHTML(&vdir.ModuleInfo, vdir.Readme)
+		overview.ReadMe = readmeHTML(ctx, &vdir.ModuleInfo, vdir.Readme)
 	}
 	return overview
 }
@@ -105,7 +106,7 @@ func packageSubdir(pkgPath, modulePath string) string {
 // readmeHTML sanitizes readmeContents based on bluemondy.UGCPolicy and returns
 // a template.HTML. If readmeFilePath indicates that this is a markdown file,
 // it will also render the markdown contents using blackfriday.
-func readmeHTML(mi *internal.ModuleInfo, readme *internal.Readme) template.HTML {
+func readmeHTML(ctx context.Context, mi *internal.ModuleInfo, readme *internal.Readme) template.HTML {
 	if readme == nil {
 		return ""
 	}
@@ -142,11 +143,13 @@ func readmeHTML(mi *internal.ModuleInfo, readme *internal.Readme) template.HTML 
 				node.LinkData.Destination = []byte(d)
 			}
 		case blackfriday.HTMLBlock, blackfriday.HTMLSpan:
-			d, err := translateHTML(node.Literal, mi, readme)
-			if err != nil {
-				log.Errorf(context.Background(), "couldn't transform html block(%s): %v", node.Literal, err)
-			} else {
-				node.Literal = d
+			if experiment.IsActive(ctx, internal.ExperimentTranslateHTML) {
+				d, err := translateHTML(node.Literal, mi, readme)
+				if err != nil {
+					log.Errorf(context.Background(), "couldn't transform html block(%s): %v", node.Literal, err)
+				} else {
+					node.Literal = d
+				}
 			}
 		}
 		return renderer.RenderNode(b, node, entering)
@@ -185,7 +188,7 @@ func translateRelativeLink(dest string, mi *internal.ModuleInfo, useRaw bool, re
 }
 
 // translateHTML parses html text into parsed html nodes. It then
-// iterate through the nodes and replaces the src key with a value
+// iterates through the nodes and replaces the src key with a value
 // that properly represents the source of the image from the repo.
 func translateHTML(htmlText []byte, mi *internal.ModuleInfo, readme *internal.Readme) ([]byte, error) {
 	r := bytes.NewReader(htmlText)

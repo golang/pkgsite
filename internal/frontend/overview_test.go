@@ -46,7 +46,7 @@ func TestFetchOverviewDetails(t *testing.T) {
 	}
 
 	readme := &internal.Readme{Filepath: tc.module.LegacyReadmeFilePath, Contents: tc.module.LegacyReadmeContents}
-	got := constructOverviewDetails(&tc.module.ModuleInfo, readme, true, true)
+	got := constructOverviewDetails(ctx, &tc.module.ModuleInfo, readme, true, true)
 	if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
 		t.Errorf("constructOverviewDetails(%q, %q) mismatch (-want +got):\n%s", tc.module.LegacyPackages[0].Path, tc.module.Version, diff)
 	}
@@ -129,7 +129,7 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			got := fetchPackageOverviewDetailsNew(test.vdir, test.versionedLinks)
+			got := fetchPackageOverviewDetailsNew(context.Background(), test.vdir, test.versionedLinks)
 			if diff := cmp.Diff(test.want, got); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
@@ -138,6 +138,7 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 }
 
 func TestReadmeHTML(t *testing.T) {
+	ctx := experimentContext(context.Background(), internal.ExperimentTranslateHTML)
 	for _, tc := range []struct {
 		name   string
 		mi     *internal.ModuleInfo
@@ -302,7 +303,7 @@ func TestReadmeHTML(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			got := readmeHTML(tc.mi, tc.readme)
+			got := readmeHTML(ctx, tc.mi, tc.readme)
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("readmeHTML(%v) mismatch (-want +got):\n%s", tc.mi, diff)
 			}
