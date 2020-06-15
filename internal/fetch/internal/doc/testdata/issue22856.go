@@ -8,11 +8,11 @@ type T struct{}
 
 func New() T                   { return T{} }
 func NewPointer() *T           { return &T{} }
-func NewPointerSlice() []*T    { return []*T{&T{}} }
-func NewSlice() []T            { return []T{T{}} }
+func NewPointerSlice() []*T    { return []*T{{}} }
+func NewSlice() []T            { return []T{{}} }
 func NewPointerOfPointer() **T { x := &T{}; return &x }
-func NewArray() [1]T           { return [1]T{T{}} }
-func NewPointerArray() [1]*T   { return [1]*T{&T{}} }
+func NewArray() [1]T           { return [1]T{{}} }
+func NewPointerArray() [1]*T   { return [1]*T{{}} }
 
 // NewSliceOfSlice is not a factory function because slices of a slice of
 // type *T are not factory functions of type T.

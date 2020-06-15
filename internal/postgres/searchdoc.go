@@ -124,16 +124,16 @@ func processWords(s string) []string {
 //   "rand": []string{"random"}			 // replace "rand" with "random"
 //   "utf-8": []string{"utf-8", "utf8"}  // add "utf8" whenever "utf-8" is seen
 var summaryReplacements = map[string][]string{
-	"postgres":   []string{"postgres", "postgresql"},
-	"postgresql": []string{"postgres", "postgresql"},
-	"rand":       []string{"random"},
-	"mongo":      []string{"mongo", "mongodb"},
-	"mongodb":    []string{"mongo", "mongodb"},
-	"redis":      []string{"redis", "redisdb"},
-	"redisdb":    []string{"redis", "redisdb"},
-	"logger":     []string{"logger", "log"}, // Postgres stemmer does not handle -er
-	"parser":     []string{"parser", "parse"},
-	"utf-8":      []string{"utf-8", "utf8"},
+	"postgres":   {"postgres", "postgresql"},
+	"postgresql": {"postgres", "postgresql"},
+	"rand":       {"random"},
+	"mongo":      {"mongo", "mongodb"},
+	"mongodb":    {"mongo", "mongodb"},
+	"redis":      {"redis", "redisdb"},
+	"redisdb":    {"redis", "redisdb"},
+	"logger":     {"logger", "log"}, // Postgres stemmer does not handle -er
+	"parser":     {"parser", "parse"},
+	"utf-8":      {"utf-8", "utf8"},
 }
 
 // processWord performs processing on s, returning zero or more words.
