@@ -30,8 +30,8 @@ the proxy service. This allows you to run the frontend without setting up a
 postgres database.
 
 Alternatively, you can run pkg.go.dev with a local database. See instructions
-on how to [set up](doc/postgres.md) and
-[populate](doc/worker.md#populating-data-locally-using-the-worker)
+on how to [set up](postgres.md) and
+[populate](worker.md#populating-data-locally-using-the-worker)
 your local database with packages of your choice.
 
 You can then run the frontend with: `go run cmd/frontend/main.go`
