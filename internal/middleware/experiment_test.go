@@ -6,6 +6,7 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -108,7 +109,7 @@ func TestShouldSetExperiment(t *testing.T) {
 	}
 
 	for _, rollout := range []uint{0, 33, 50, 100} {
-		t.Run(string(rollout), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%d", rollout), func(t *testing.T) {
 			test := &internal.Experiment{
 				Name:    "test",
 				Rollout: rollout,
