@@ -36,79 +36,98 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 ).Parse(`{{- "" -}}
 {{- if or .Doc .Consts .Vars .Funcs .Types .Examples.List -}}
 <nav class="Documentation-nav">
-	<ul class="Documentation-toc">{{"\n" -}}
-	{{- if or .Doc (index .Examples.Map "") -}}
-		<li class="Documentation-tocItem Documentation-tocItem--selected">
-			<a href="#pkg-overview">Overview</a>
-		</li>{{"\n" -}}
-	{{- end -}}
-	{{- if or .Consts .Vars .Funcs .Types .Examples.List -}}
-		<li class="Documentation-tocItem Documentation-tocItem--index"><a href="#pkg-index">Index</a></li>{{"\n" -}}
-	{{- end -}}
-	{{- if .Examples.List -}}
-		<li class="Documentation-tocItem"><a href="#pkg-examples">Examples</a></li>{{"\n" -}}
-	{{- end -}}
-	{{- if .Consts -}}
-	  <li class="Documentation-tocItem Documentation-tocItem--constants">
-			<a href="#pkg-constants">Constants</a>
-		</li>{{"\n"}}
-	{{- end -}}
-	{{- if .Vars -}}
-		<li class="Documentation-tocItem Documentation-tocItem--variables">
-			<a href="#pkg-variables">Variables</a>
-		</li>{{"\n"}}
-	{{- end -}}
+	<ul class="Documentation-toc DocNav">
+		{{- if or .Doc (index .Examples.Map "") -}}
+			<li class="Documentation-tocItem DocNav-node DocNav-node--selected">
+				<a href="#pkg-overview">Overview</a>
+			</li>
+		{{- end -}}
+		{{- if or .Consts .Vars .Funcs .Types .Examples.List -}}
+			<li class="Documentation-tocItem Documentation-tocItem--index DocNav-node">
+				<a href="#pkg-index">Index</a>
+		  </li>
+		{{- end -}}
+		{{- if .Examples.List -}}
+			<li class="Documentation-tocItem DocNav-node">
+				<a href="#pkg-examples">Examples</a>
+			</li>
+		{{- end -}}
+		{{- if .Consts -}}
+			<li class="Documentation-tocItem Documentation-tocItem--constants DocNav-node">
+				<a href="#pkg-constants">Constants</a>
+			</li>{{"\n"}}
+		{{- end -}}
+		{{- if .Vars -}}
+			<li class="Documentation-tocItem Documentation-tocItem--variables DocNav-node">
+				<a href="#pkg-variables">Variables</a>
+			</li>{{"\n"}}
+		{{- end -}}
 
-	<li class="Documentation-tocItem Documentation-tocItem--funcsAndTypes">
-		<details class="TypesAndFuncs" open>
-			<summary class="TypesAndFuncs-summary">Functions</summary>
-			<ul class="TypesAndFuncs-list">
-				{{- range .Funcs -}}
-					<li class="TypesAndFuncs-item">
-						<a href="#{{.Name}}" title="{{render_short_synopsis .Decl}}">{{render_short_synopsis .Decl}}</a>
-					</li>
-				{{- end -}}
-			</ul>
-		</details>
-	</li>
-	<li class="Documentation-tocItem Documentation-tocItem--funcsAndTypes">
-		<details class="TypesAndFuncs" open>
-			<summary class="TypesAndFuncs-summary">Types</summary>
-			<ul class="TypesAndFuncs-list">
-				{{- range .Types -}}
-					{{- $tname := .Name -}}
-					<li class="TypesAndFuncs-item"><a href="#{{$tname}}">type {{$tname}}</a></li>{{"\n"}}
-					{{- with .Funcs -}}
-						<li class="TypesAndFuncs-item TypesAndFuncs-item--noBorder">
-						  <ul>
-								{{range .}}
-									<li class="TypesAndFuncs-item">
-										<a href="#{{.Name}}" title="{{render_short_synopsis .Decl}}">{{render_short_synopsis .Decl}}</a>
-									</li>
-								{{end}}
-							</ul>
-						</li>
-					{{- end -}}
-					{{- with .Methods -}}
-						<li class="TypesAndFuncs-item TypesAndFuncs-item--noBorder">
-						  <ul>
-								{{range .}}
-									<li class="TypesAndFuncs-item">
-										<a href="#{{$tname}}.{{.Name}}" title="{{render_short_synopsis .Decl}}">{{render_short_synopsis .Decl}}</a>
-									</li>
-								{{end}}
-							</ul>
-						</li>
-					{{- end -}}
-				{{- end -}}
-			</ul>
-		</details>
-	</li>
+		{{if .Funcs}}
+			<li class="Documentation-tocItem Documentation-tocItem--functions DocNav-node DocNav-node--expandable">
+				<details open>
+					<summary>Functions</summary>
+					<ul>
+						{{- range .Funcs -}}
+							<li class="DocNav-node">
+								<a href="#{{.Name}}" title="{{render_short_synopsis .Decl}}">{{render_short_synopsis .Decl}}</a>
+							</li>
+						{{- end -}}
+					</ul>
+				</details>
+			</li>
+		{{end}}
+		{{if .Types}}
+			<li class="Documentation-tocItem Documentation-tocItem--types DocNav-node DocNav-node--expandable">
+				<details open>
+					<summary>Types</summary>
+					<ul>
+						{{range .Types}}
+							{{$tname := .Name}}
+							<li class="DocNav-node DocNav-node--expandable">
+								{{if or .Funcs .Methods}}
+									<details open>
+										<summary>
+											<a href="#{{$tname}}">type {{$tname}}</a>
+										</summary>
+										<ul>
+											{{range .Funcs}}
+												<li class="DocNav-node">
+													<a href="#{{.Name}}" title="{{render_short_synopsis .Decl}}">{{render_short_synopsis .Decl}}</a>
+												</li>
+											{{end}}
+											{{range .Methods}}
+												<li class="DocNav-node">
+													<a href="#{{$tname}}.{{.Name}}" title="{{render_short_synopsis .Decl}}">{{render_short_synopsis .Decl}}</a>
+												</li>
+											{{end}}
+										</ul>
+									</details>
+								{{else}}
+									<a href="#{{$tname}}">type {{$tname}}</a>
+								{{end}} {{/* if or .Funcs .Methods */}}
+							</li>
+						{{end}} {{/* range .Types */}}
+					</ul>
+				</details>
+			</li>
+		{{end}}
 
-	{{- range $marker, $item := .Notes -}}
-	<li><a href="#pkg-note-{{$marker}}">{{$marker}}s</a></li>
-	{{- end -}}
-	</ul>{{"\n" -}}
+		{{if .Notes}}
+			<li class="Documentation-tocItem Documentation-tocItem--notes DocNav-node DocNav-node--expandable">
+				<details open>
+					<summary>Notes</summary>
+					<ul>
+						{{range $marker, $item := .Notes}}
+							<li class="DocNav-node">
+								<a href="#pkg-note-{{$marker}}">{{$marker}}s</a>
+							</li>
+						{{end}}
+					</ul>
+				</details>
+			</li>
+		{{end}}
+	</ul>
 </nav>
 {{- end -}}
 

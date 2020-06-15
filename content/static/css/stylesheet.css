@@ -18,7 +18,7 @@
 
   --turq-light: #5dc9e2;
   --turq-med: #00add8;
-  --turq-text: #007d9c;
+  --turq-dark: #007d9c;
 
   --blue: #92e1f3;
   --green: #00a29c;
@@ -45,7 +45,7 @@ body {
 a,
 a:link,
 a:visited {
-  color: var(--turq-text);
+  color: var(--turq-dark);
   text-decoration: none;
 }
 a:hover {
@@ -245,7 +245,7 @@ code {
   z-index: 1;
 }
 .Site-header--dark {
-  background: var(--turq-text);
+  background: var(--turq-dark);
   border: none;
 }
 :target::before {
@@ -562,7 +562,7 @@ code {
   height: 2.5rem;
   font-size: 1rem;
   border-radius: 1rem;
-  background-color: var(--turq-text);
+  background-color: var(--turq-dark);
   color: white;
   padding: 0rem 2rem;
 }
@@ -832,7 +832,7 @@ code {
   font-size: 1.5rem;
 }
 .Documentation a {
-  color: var(--turq-text);
+  color: var(--turq-dark);
   text-decoration: none;
 }
 .Documentation a:hover {
@@ -891,7 +891,9 @@ code {
 
 .Documentation-tocItem--constants,
 .Documentation-tocItem--variables,
-.Documentation-tocItem--funcsAndTypes {
+.Documentation-tocItem--functions,
+.Documentation-tocItem--types,
+.Documentation-tocItem--notes {
   display: none;
 }
 
@@ -915,13 +917,13 @@ code {
   margin: 1rem 0;
 }
 .Documentation-exampleDetailsHeader {
-  color: var(--turq-text);
+  color: var(--turq-dark);
   text-decoration: none;
   outline: none;
   margin-bottom: 2rem;
 }
 .Documentation .example-header {
-  color: var(--turq-text);
+  color: var(--turq-dark);
   font-size: 1rem;
   outline: none;
   padding-top: 0.5rem;
@@ -1041,7 +1043,7 @@ table.Directories {
   background: none;
   border-radius: 0.625rem;
   border: 0.0625rem solid var(--gray-8);
-  color: var(--turq-text);
+  color: var(--turq-dark);
   font-size: 1rem;
   max-width: 6.25rem;
   padding: 0.625rem;
@@ -1073,7 +1075,7 @@ table.Directories {
 }
 .JumpDialog .JumpDialog-active {
   color: var(--white);
-  background-color: var(--turq-text);
+  background-color: var(--turq-dark);
 }
 
 .ShortcutsDialog-key {

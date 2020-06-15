@@ -18,18 +18,12 @@
   overflow-x: hidden;
   overflow-y: scroll;
   padding-top: 1rem;
-  padding-left: 1.75rem;
+  padding-left: 0.25rem;
   position: sticky;
   top: 6.511rem;
 }
 .Documentation-toc {
   margin-top: 0;
-}
-.Documentation-toc a {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .Documentation-tocItem {
   display: block;
@@ -38,88 +32,129 @@
 .Documentation-tocItem + .Documentation-tocItem {
   margin-top: 0.5rem;
 }
-.Documentation-tocItem--selected::before {
-  border-radius: 0.375rem;
-  background-color: #377d9c;
-  content: '';
-  display: block;
-  height: 0.375rem;
-  left: -1.1875rem;
-  position: absolute;
-  top: 0.5625rem;
-  width: 0.375rem;
-}
-/* Needed for higher specificity. */
-.TypesAndFuncs .TypesAndFuncs-list,
-.TypesAndFuncs .TypesAndFuncs-list ul {
-  padding-left: 0;
-}
-.TypesAndFuncs-list {
-  font-size: 0.875rem;
-  margin-top: 0.5rem;
-}
 .is-withSideNav .Documentation-tocItem--index,
 .is-withSideNav .Documentation-index {
   display: none;
 }
 .Documentation-tocItem--constants,
 .Documentation-tocItem--variables,
-.Documentation-tocItem--typesAndFuncs {
+.Documentation-tocItem--functions,
+.Documentation-tocItem--types,
+.Documentation-tocItem--notes {
   display: block;
 }
-
-.TypesAndFuncs-list > .TypesAndFuncs-item:first-of-type {
-  margin-top: 0.5rem;
-  padding-top: 0;
+.Documentation-build {
+  grid-column: span 2;
 }
-.TypesAndFuncs-item {
-  border-left: 0.125rem solid #f0f1f2;
-  padding-left: 0.625rem;
+/* Needed for higher specificity since ul elements rendered within documentation
+   don’t have classes. */
+.DocNav .DocNav-node ul {
+  padding-left: 0;
+}
+.DocNav-node {
+  padding-left: 1.25rem;
   padding-top: 0.125rem;
   padding-bottom: 0.125rem;
+  position: relative;
+  user-select: none;
 }
-.TypesAndFuncs > .TypesAndFuncs-item:first-of-type {
-  margin-top: 0.5rem;
-  padding-top: 0;
+.DocNav-node--selected {
+  color: var(--gray-1);
+  font-weight: 500;
 }
-.TypesAndFuncs-item--noBorder {
-  border-left: 0;
-  padding: 0;
+.DocNav-node--selected .DocNav-node:not(.DocNav-node--selected) {
+  color: var(--gray-2);
+  font-weight: 400;
 }
-.TypesAndFuncs-item .TypesAndFuncs-item {
-  border-left: 0.125rem solid #f0f1f2;
-  padding-left: 1.25rem;
+.DocNav-node--selected::before {
+  border-radius: 50%;
+  background-color: var(--turq-dark);
+  content: '';
+  display: block;
+  height: 0.3125rem;
+  left: 0.4688rem;
+  position: absolute;
+  top: 0.6875rem;
+  width: 0.3125rem;
 }
-.TypesAndFuncs-summary {
+.DocNav-node .DocNav-node--selected::before {
+  left: 0.3125rem;
+  top: 0.75rem;
+}
+.DocNav-node--expandable.DocNav-node--selected::before {
+  display: none;
+}
+.DocNav-node .DocNav-node {
+  font-size: 0.875rem;
+}
+.DocNav-node .DocNav-node .DocNav-node {
+  border-left: 2px solid var(--gray-9);
+  padding-left: 0.5rem;
+}
+.DocNav-node .DocNav-node .DocNav-node--selected::before {
+  display: none;
+}
+.DocNav-node .DocNav-node .DocNav-node--selected {
+  border-left: 2px solid var(--turq-dark);
+}
+.DocNav a,
+.DocNav a:link,
+.DocNav a:visited {
+  color: var(--gray-2);
+  display: block;
+  opacity: 1;
+  overflow: hidden;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.DocNav a:hover {
+  color: var(--gray-1);
+}
+.DocNav summary {
   cursor: pointer;
   list-style-type: none;
   outline: none;
   position: relative;
 }
-.TypesAndFuncs-summary::marker {
+.DocNav summary::marker {
   display: none;
 }
-.TypesAndFuncs-summary::-webkit-details-marker {
+.DocNav summary::-webkit-details-marker {
   display: none;
 }
-.TypesAndFuncs-summary::before {
-  border-bottom: 0.3125rem solid transparent;
-  border-left: 0.3125rem solid #606368;
+.DocNav summary::before {
+  border-bottom: 0.25rem solid transparent;
+  border-left: 0.25rem solid #606368;
   border-right: 0;
-  border-top: 0.3125rem solid transparent;
+  border-top: 0.25rem solid transparent;
   content: '';
   display: block;
   height: 0;
-  left: -1.125rem;
+  left: -0.75rem;
   position: absolute;
-  top: 0.4375rem;
+  top: 0.5rem;
+  transition: transform 0.1s linear;
   width: 0;
 }
-.TypesAndFuncs[open] .TypesAndFuncs-summary::before {
-  border-bottom: 0;
-  border-left: 0.3125rem solid transparent;
-  border-right: 0.3125rem solid transparent;
-  border-top: 0.3125rem solid #606368;
-  left: -1.3125rem;
-  top: 0.625rem;
+/* Expandable nodes at this level have smaller text, so adjust for that. */
+.DocNav details details summary::before {
+  left: -0.875rem;
+  top: 0.5625rem;
+}
+.DocNav details[open] > summary {
+  margin-bottom: 0.375em;
+}
+.DocNav details[open] > summary::before {
+  transform: rotate(90deg);
+}
+/* Added to increase hit target on triangle above. */
+.DocNav summary::after {
+  content: '';
+  display: block;
+  height: 100%;
+  left: -1.875rem;
+  position: absolute;
+  top: 0;
+  width: 2rem;
 }
