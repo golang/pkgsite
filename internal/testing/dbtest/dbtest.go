@@ -13,6 +13,7 @@ import (
 	"os"
 	"strings"
 
+	"golang.org/x/pkgsite/internal/derrors"
 	// imported to register the postgres migration driver
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	// imported to register the file source migration driver
@@ -61,10 +62,14 @@ func (m MultiErr) Error() string {
 
 // ConnectAndExecute connects to the postgres database specified by uri and
 // executes dbFunc, then cleans up the database connection.
+// It returns an error that Is derrors.NotFound if no connection could be made.
 func ConnectAndExecute(uri string, dbFunc func(*sql.DB) error) (outerErr error) {
 	pg, err := sql.Open("postgres", uri)
+	if err == nil {
+		err = pg.Ping()
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %v", derrors.NotFound, err)
 	}
 	defer func() {
 		if err := pg.Close(); err != nil {

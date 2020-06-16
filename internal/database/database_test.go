@@ -7,6 +7,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -16,6 +17,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/testing/dbtest"
 )
 
@@ -27,12 +29,16 @@ func TestMain(m *testing.M) {
 	const dbName = "discovery_postgres_test"
 
 	if err := dbtest.CreateDBIfNotExists(dbName); err != nil {
+		if errors.Is(err, derrors.NotFound) {
+			log.Printf("SKIPPING: could not connect to DB: %v", err)
+			return
+		}
 		log.Fatal(err)
 	}
 	var err error
 	testDB, err = Open("postgres", dbtest.DBConnURI(dbName))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Open: %v %[1]T", err)
 	}
 	code := m.Run()
 	if err := testDB.Close(); err != nil {

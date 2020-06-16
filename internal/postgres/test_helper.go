@@ -7,6 +7,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -76,7 +77,7 @@ func SetupTestDB(dbName string) (_ *DB, err error) {
 	defer derrors.Wrap(&err, "SetupTestDB(%q)", dbName)
 
 	if err := dbtest.CreateDBIfNotExists(dbName); err != nil {
-		return nil, fmt.Errorf("createDBIfNotExists(%q): %v", dbName, err)
+		return nil, fmt.Errorf("CreateDBIfNotExists(%q): %w", dbName, err)
 	}
 	if isMigrationError, err := tryToMigrate(dbName); err != nil {
 		if isMigrationError {
@@ -131,6 +132,10 @@ func RunDBTests(dbName string, m *testing.M, testDB **DB) {
 	database.QueryLoggingDisabled = true
 	db, err := SetupTestDB(dbName)
 	if err != nil {
+		if errors.Is(err, derrors.NotFound) {
+			log.Printf("SKIPPING: could not connect to DB: %v", err)
+			return
+		}
 		log.Fatal(err)
 	}
 	*testDB = db
