@@ -137,7 +137,7 @@ func getGddoEvent(r *http.Request) (gddoEvent *RequestEvent, err error) {
 		return nil, err
 	}
 	gddoEvent = &RequestEvent{}
-	if err = json.Unmarshal(body, gddoEvent); err != nil {
+	if err := json.Unmarshal(body, gddoEvent); err != nil {
 		return nil, err
 	}
 	return gddoEvent, nil

@@ -360,7 +360,7 @@ func after() {
 			fmt.Fprintf(os.Stderr, "testing: %s", err)
 			return
 		}
-		if err = pprof.WriteHeapProfile(f); err != nil {
+		if err := pprof.WriteHeapProfile(f); err != nil {
 			fmt.Fprintf(os.Stderr, "testing: can't write %s: %s", *memProfile, err)
 		}
 		f.Close()

@@ -162,7 +162,7 @@ func (s *Server) servePackagePageNew(w http.ResponseWriter, r *http.Request, ful
 		}
 		// We couldn't find a path at the given version, but if there's one at the latest version
 		// we can provide a link to it.
-		if _, _, _, err = s.ds.GetPathInfo(ctx, fullPath, inModulePath, internal.LatestVersion); err != nil {
+		if _, _, _, err := s.ds.GetPathInfo(ctx, fullPath, inModulePath, internal.LatestVersion); err != nil {
 			if errors.Is(err, derrors.NotFound) {
 				return pathNotFoundError(ctx, "package", fullPath, inVersion)
 			}

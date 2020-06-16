@@ -47,7 +47,7 @@ func Open(driverName, dbinfo string) (_ *DB, err error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = db.Ping(); err != nil {
+	if err := db.Ping(); err != nil {
 		return nil, err
 	}
 	return New(db), nil
@@ -194,7 +194,7 @@ func (db *DB) transact(ctx context.Context, opts *sql.TxOptions, txFunc func(*DB
 		} else if err != nil {
 			tx.Rollback()
 		} else {
-			if err = tx.Commit(); err != nil {
+			if err := tx.Commit(); err != nil {
 				err = fmt.Errorf("tx.Commit(): %w", err)
 			}
 		}

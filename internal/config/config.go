@@ -58,7 +58,7 @@ func ValidateAppVersion(appVersion string) error {
 		if len(appVersion) > len(altDateFormat) {
 			appVersion = appVersion[:len(altDateFormat)]
 		}
-		if _, err = time.Parse(altDateFormat, appVersion); err != nil {
+		if _, err := time.Parse(altDateFormat, appVersion); err != nil {
 			return fmt.Errorf("app version %q does not match time formats %q or %q: %v",
 				appVersion, AppVersionFormat, altDateFormat, err)
 		}

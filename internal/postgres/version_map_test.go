@@ -34,7 +34,7 @@ func TestReadAndWriteVersionMap(t *testing.T) {
 		ResolvedVersion:  "v1.0.0",
 		Status:           200,
 	}
-	if err = testDB.UpsertVersionMap(ctx, vm); err != nil {
+	if err := testDB.UpsertVersionMap(ctx, vm); err != nil {
 		t.Fatal(err)
 	}
 
