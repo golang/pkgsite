@@ -345,15 +345,17 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (_ string,
 	var (
 		next, failures, recents []*internal.ModuleVersionState
 		stats                   *postgres.VersionStats
-		errString               string
 	)
+	type annotation struct {
+		error
+		msg string
+	}
 	g, ctx := errgroup.WithContext(r.Context())
 	g.Go(func() error {
 		var err error
 		next, err = s.db.GetNextModulesToFetch(ctx, pageSize)
 		if err != nil {
-			errString = "error fetching next versions"
-			return err
+			return annotation{err, "error fetching next versions"}
 		}
 		return nil
 	})
@@ -361,8 +363,7 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (_ string,
 		var err error
 		failures, err = s.db.GetRecentFailedVersions(ctx, pageSize)
 		if err != nil {
-			errString = "error fetching recent failures"
-			return err
+			return annotation{err, "error fetching recent failures"}
 		}
 		return nil
 	})
@@ -370,8 +371,7 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (_ string,
 		var err error
 		recents, err = s.db.GetRecentVersions(ctx, pageSize)
 		if err != nil {
-			errString = "error fetching recent versions"
-			return err
+			return annotation{err, "error fetching recent versions"}
 		}
 		return nil
 	})
@@ -379,13 +379,16 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (_ string,
 		var err error
 		stats, err = s.db.GetVersionStats(ctx)
 		if err != nil {
-			errString = "error fetching stats"
-			return err
+			return annotation{err, "error fetching stats"}
 		}
 		return nil
 	})
 	if err := g.Wait(); err != nil {
-		return errString, err
+		var e annotation
+		if errors.As(err, &e) {
+			return e.msg, err
+		}
+		return "", err
 	}
 
 	type count struct {
