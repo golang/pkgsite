@@ -194,8 +194,8 @@ func (db *DB) transact(ctx context.Context, opts *sql.TxOptions, txFunc func(*DB
 		} else if err != nil {
 			tx.Rollback()
 		} else {
-			if err := tx.Commit(); err != nil {
-				err = fmt.Errorf("tx.Commit(): %w", err)
+			if txErr := tx.Commit(); txErr != nil {
+				err = fmt.Errorf("tx.Commit(): %w", txErr)
 			}
 		}
 	}()
