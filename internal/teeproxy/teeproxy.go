@@ -14,11 +14,29 @@ import (
 
 	"golang.org/x/net/context/ctxhttp"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/breaker"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/time/rate"
 )
 
+// Server receives requests from godoc.org and tees them to pkg.go.dev.
+type Server struct {
+	limiter *rate.Limiter
+	breaker *breaker.Breaker
+}
+
+// Config contains configuration values for Server.
+type Config struct {
+	// Rate is the rate at which requests are rate limited.
+	Rate float64
+	// Burst is the maximum burst of requests permitted.
+	Burst         int
+	BreakerConfig breaker.Config
+}
+
+// RequestEvent stores information about a godoc.org or pkg.go.dev request.
 type RequestEvent struct {
 	Host    string
 	Path    string
@@ -59,19 +77,58 @@ var gddoToPkgGoDevRequest = map[string]string{
 	"/third_party/jquery.timeago.js": "/404",
 }
 
-func HandleGddoEvent(w http.ResponseWriter, r *http.Request) {
-	if status, err := doRequest(r); err != nil {
-		log.Infof(r.Context(), "teeproxy.HandleGddoEvent: %v", err)
+// NewServer returns a new Server struct with preconfigured settings.
+//
+// The server is rate limited and allows events up to a rate of "Rate" and
+// a burst of "Burst".
+//
+// The server also implements the circuit breaker pattern and can be in one of
+// three states: green, yellow, or red.
+//
+// In the green state, the server remains green until it encounters an time
+// window of length "GreenInterval" where there are more than of "FailsToRed"
+// failures and a failureRatio of more than "FailureThreshold", in which case
+// the state becomes red.
+//
+// In the red state, the server halts all requests and waits for a timeout
+// period before shifting to the yellow state.
+//
+// In the yellow state, the server allows the first "SuccsToGreen" requests.
+// If any of these fail, the state reverts to red.
+// Otherwise, the state becomes green again.
+//
+// The timeout period is initially set to "MinTimeout" when the breaker shifts
+// from green to yellow. By default, the timeout period is doubled each time
+// the breaker fails to shift from the yellow state to the green state and is
+// capped at "MaxTimeout".
+func NewServer(config Config) (_ *Server, err error) {
+	defer derrors.Wrap(&err, "NewServer")
+	b, err := breaker.New(config.BreakerConfig)
+	if err != nil {
+		return nil, err
+	}
+	return &Server{
+		limiter: rate.NewLimiter(rate.Limit(config.Rate), config.Burst),
+		breaker: b,
+	}, nil
+}
+
+// ServeHTTP receives requests from godoc.org and forwards them to pkg.go.dev.
+// These requests are validated and rate limited before being forwarded. Too
+// many error responses returned by pkg.go.dev will cause the server to back
+// off temporarily before trying to forward requests to pkg.go.dev again.
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if status, err := s.doRequest(r); err != nil {
+		log.Infof(r.Context(), "teeproxy.Server.ServeHTTP: %v", err)
 		http.Error(w, http.StatusText(status), status)
 		return
 	}
 }
 
-func doRequest(r *http.Request) (_ int, err error) {
+func (s *Server) doRequest(r *http.Request) (status int, err error) {
 	defer derrors.Wrap(&err, "doRequest(%q): referer=%q", r.URL.Path, r.Referer())
 	ctx := r.Context()
-	status, err := validateTeeProxyRequest(r)
-	if err != nil {
+	if status, err = validateTeeProxyRequest(r); err != nil {
 		return status, err
 	}
 	gddoEvent, err := getGddoEvent(r)
@@ -80,19 +137,36 @@ func doRequest(r *http.Request) (_ int, err error) {
 	}
 
 	var pkgGoDevEvent *RequestEvent
+	defer func() {
+		log.Info(ctx, map[string]interface{}{
+			"godoc.org":  gddoEvent,
+			"pkg.go.dev": pkgGoDevEvent,
+			"error":      err,
+		})
+	}()
 	if experiment.IsActive(r.Context(), internal.ExperimentTeeProxyMakePkgGoDevRequest) {
+		if gddoEvent.RedirectHost == "" {
+			return http.StatusBadRequest, fmt.Errorf("redirectHost cannot be empty")
+		}
+
+		if !s.limiter.Allow() {
+			return http.StatusTooManyRequests, fmt.Errorf("rate limit exceeded")
+		}
+
+		if !s.breaker.Allow() {
+			return http.StatusTooManyRequests, fmt.Errorf("breaker is red")
+		}
 		pkgGoDevEvent, err = makePkgGoDevRequest(ctx, gddoEvent.RedirectHost, pkgGoDevPath(gddoEvent.Path))
 		if err != nil {
-			log.Info(ctx, map[string]*RequestEvent{
-				"godoc.org": gddoEvent,
-			})
 			return http.StatusInternalServerError, err
 		}
+		success := pkgGoDevEvent.Status < http.StatusInternalServerError
+		s.breaker.Record(success)
+		if !success {
+			// Use StatusBadGateway to indicate the upstream error.
+			return http.StatusBadGateway, fmt.Errorf("%d server error", pkgGoDevEvent.Status)
+		}
 	}
-	log.Info(ctx, map[string]*RequestEvent{
-		"godoc.org":  gddoEvent,
-		"pkg.go.dev": pkgGoDevEvent,
-	})
 	return http.StatusOK, nil
 }
 
@@ -147,9 +221,6 @@ func getGddoEvent(r *http.Request) (gddoEvent *RequestEvent, err error) {
 // and returns a requestEvent based on the output.
 func makePkgGoDevRequest(ctx context.Context, redirectHost, redirectPath string) (_ *RequestEvent, err error) {
 	defer derrors.Wrap(&err, "makePkgGoDevRequest(%q, %q)", redirectHost, redirectPath)
-	if redirectHost == "" {
-		return nil, fmt.Errorf("redirectHost cannot be empty")
-	}
 	redirectURL := redirectHost + redirectPath
 	req, err := http.NewRequest("GET", redirectURL, nil)
 	if err != nil {
