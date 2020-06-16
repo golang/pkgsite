@@ -216,19 +216,23 @@ func AddDirectory(m *internal.Module, d *internal.DirectoryNew) {
 
 func DirectoryNewEmpty(path string) *internal.DirectoryNew {
 	return &internal.DirectoryNew{
-		Path:              path,
-		IsRedistributable: true,
-		Licenses:          LicenseMetadata,
-		V1Path:            path,
+		DirectoryMeta: internal.DirectoryMeta{
+			Path:              path,
+			IsRedistributable: true,
+			Licenses:          LicenseMetadata,
+			V1Path:            path,
+		},
 	}
 }
 
 func DirectoryNewForModuleRoot(m *internal.LegacyModuleInfo, licenses []*licenses.Metadata) *internal.DirectoryNew {
 	d := &internal.DirectoryNew{
-		Path:              m.ModulePath,
-		IsRedistributable: m.IsRedistributable,
-		Licenses:          licenses,
-		V1Path:            internal.SeriesPathForModule(m.ModulePath),
+		DirectoryMeta: internal.DirectoryMeta{
+			Path:              m.ModulePath,
+			IsRedistributable: m.IsRedistributable,
+			Licenses:          licenses,
+			V1Path:            internal.SeriesPathForModule(m.ModulePath),
+		},
 	}
 	if m.LegacyReadmeFilePath != "" {
 		d.Readme = &internal.Readme{
@@ -241,10 +245,12 @@ func DirectoryNewForModuleRoot(m *internal.LegacyModuleInfo, licenses []*license
 
 func DirectoryNewForPackage(pkg *internal.LegacyPackage) *internal.DirectoryNew {
 	return &internal.DirectoryNew{
-		Path:              pkg.Path,
-		IsRedistributable: pkg.IsRedistributable,
-		Licenses:          pkg.Licenses,
-		V1Path:            pkg.V1Path,
+		DirectoryMeta: internal.DirectoryMeta{
+			Path:              pkg.Path,
+			IsRedistributable: pkg.IsRedistributable,
+			Licenses:          pkg.Licenses,
+			V1Path:            pkg.V1Path,
+		},
 		Package: &internal.PackageNew{
 			Name:    pkg.Name,
 			Path:    pkg.Path,

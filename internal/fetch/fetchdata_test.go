@@ -42,16 +42,20 @@ var moduleOnePackage = &testModule{
 			},
 			Directories: []*internal.DirectoryNew{
 				{
-					Path:   "github.com/basic",
-					V1Path: "github.com/basic",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "github.com/basic",
+						V1Path: "github.com/basic",
+					},
 					Readme: &internal.Readme{
 						Filepath: "README.md",
 						Contents: "THIS IS A README",
 					},
 				},
 				{
-					Path:   "github.com/basic/foo",
-					V1Path: "github.com/basic/foo",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "github.com/basic/foo",
+						V1Path: "github.com/basic/foo",
+					},
 					Package: &internal.PackageNew{
 						Name: "foo",
 						Documentation: &internal.Documentation{
@@ -112,16 +116,20 @@ var moduleMultiPackage = &testModule{
 			},
 			Directories: []*internal.DirectoryNew{
 				{
-					Path:   "github.com/my/module",
-					V1Path: "github.com/my/module",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "github.com/my/module",
+						V1Path: "github.com/my/module",
+					},
 					Readme: &internal.Readme{
 						Filepath: "README.md",
 						Contents: "README FILE FOR TESTING.",
 					},
 				},
 				{
-					Path:   "github.com/my/module/bar",
-					V1Path: "github.com/my/module/bar",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "github.com/my/module/bar",
+						V1Path: "github.com/my/module/bar",
+					},
 					Readme: &internal.Readme{
 						Filepath: "bar/README.md",
 						Contents: "Another README FILE FOR TESTING.",
@@ -135,8 +143,10 @@ var moduleMultiPackage = &testModule{
 					},
 				},
 				{
-					Path:   "github.com/my/module/foo",
-					V1Path: "github.com/my/module/foo",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "github.com/my/module/foo",
+						V1Path: "github.com/my/module/foo",
+					},
 					Package: &internal.PackageNew{
 						Name: "foo",
 						Documentation: &internal.Documentation{
@@ -175,12 +185,16 @@ var moduleNoGoMod = &testModule{
 			},
 			Directories: []*internal.DirectoryNew{
 				{
-					Path:   "no.mod/module",
-					V1Path: "no.mod/module",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "no.mod/module",
+						V1Path: "no.mod/module",
+					},
 				},
 				{
-					Path:   "no.mod/module/p",
-					V1Path: "no.mod/module/p",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "no.mod/module/p",
+						V1Path: "no.mod/module/p",
+					},
 					Package: &internal.PackageNew{
 						Name: "p",
 						Documentation: &internal.Documentation{
@@ -238,12 +252,16 @@ var moduleBadPackages = &testModule{
 			},
 			Directories: []*internal.DirectoryNew{
 				{
-					Path:   "bad.mod/module",
-					V1Path: "bad.mod/module",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "bad.mod/module",
+						V1Path: "bad.mod/module",
+					},
 				},
 				{
-					Path:   "bad.mod/module/good",
-					V1Path: "bad.mod/module/good",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "bad.mod/module/good",
+						V1Path: "bad.mod/module/good",
+					},
 					Package: &internal.PackageNew{
 						Name: "good",
 						Documentation: &internal.Documentation{
@@ -303,12 +321,16 @@ var moduleBuildConstraints = &testModule{
 			},
 			Directories: []*internal.DirectoryNew{
 				{
-					Path:   "build.constraints/module",
-					V1Path: "build.constraints/module",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "build.constraints/module",
+						V1Path: "build.constraints/module",
+					},
 				},
 				{
-					Path:   "build.constraints/module/cpu",
-					V1Path: "build.constraints/module/cpu",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "build.constraints/module/cpu",
+						V1Path: "build.constraints/module/cpu",
+					},
 					Package: &internal.PackageNew{
 						Name: "cpu",
 						Documentation: &internal.Documentation{
@@ -392,16 +414,20 @@ var moduleNonRedist = &testModule{
 			},
 			Directories: []*internal.DirectoryNew{
 				{
-					Path:   "nonredistributable.mod/module",
-					V1Path: "nonredistributable.mod/module",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "nonredistributable.mod/module",
+						V1Path: "nonredistributable.mod/module",
+					},
 					Readme: &internal.Readme{
 						Filepath: "README.md",
 						Contents: "README FILE FOR TESTING.",
 					},
 				},
 				{
-					Path:   "nonredistributable.mod/module/bar",
-					V1Path: "nonredistributable.mod/module/bar",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "nonredistributable.mod/module/bar",
+						V1Path: "nonredistributable.mod/module/bar",
+					},
 					Package: &internal.PackageNew{
 						Name: "bar",
 						Documentation: &internal.Documentation{
@@ -411,8 +437,10 @@ var moduleNonRedist = &testModule{
 					},
 				},
 				{
-					Path:   "nonredistributable.mod/module/bar/baz",
-					V1Path: "nonredistributable.mod/module/bar/baz",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "nonredistributable.mod/module/bar/baz",
+						V1Path: "nonredistributable.mod/module/bar/baz",
+					},
 					Package: &internal.PackageNew{
 						Name: "baz",
 						Documentation: &internal.Documentation{
@@ -422,8 +450,10 @@ var moduleNonRedist = &testModule{
 					},
 				},
 				{
-					Path:   "nonredistributable.mod/module/foo",
-					V1Path: "nonredistributable.mod/module/foo",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "nonredistributable.mod/module/foo",
+						V1Path: "nonredistributable.mod/module/foo",
+					},
 					Readme: &internal.Readme{
 						Filepath: "foo/README.md",
 						Contents: "README FILE SHOW UP HERE BUT WILL BE REMOVED BEFORE DB INSERT",
@@ -460,20 +490,28 @@ var moduleBadImportPath = &testModule{
 			},
 			Directories: []*internal.DirectoryNew{
 				{
-					Path:   "bad.import.path.com",
-					V1Path: "bad.import.path.com",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "bad.import.path.com",
+						V1Path: "bad.import.path.com",
+					},
 				},
 				{
-					Path:   "bad.import.path.com/good",
-					V1Path: "bad.import.path.com/good",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "bad.import.path.com/good",
+						V1Path: "bad.import.path.com/good",
+					},
 				},
 				{
-					Path:   "bad.import.path.com/good/import",
-					V1Path: "bad.import.path.com/good/import",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "bad.import.path.com/good/import",
+						V1Path: "bad.import.path.com/good/import",
+					},
 				},
 				{
-					Path:   "bad.import.path.com/good/import/path",
-					V1Path: "bad.import.path.com/good/import/path",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "bad.import.path.com/good/import/path",
+						V1Path: "bad.import.path.com/good/import/path",
+					},
 					Package: &internal.PackageNew{
 						Name:          "foo",
 						Documentation: &internal.Documentation{},
@@ -528,12 +566,16 @@ var moduleDocTest = &testModule{
 			},
 			Directories: []*internal.DirectoryNew{
 				{
-					Path:   "doc.test",
-					V1Path: "doc.test",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "doc.test",
+						V1Path: "doc.test",
+					},
 				},
 				{
-					Path:   "doc.test/permalink",
-					V1Path: "doc.test/permalink",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "doc.test/permalink",
+						V1Path: "doc.test/permalink",
+					},
 					Package: &internal.PackageNew{
 						Name: "permalink",
 						Documentation: &internal.Documentation{
@@ -569,8 +611,10 @@ var moduleDocTooLarge = &testModule{
 			},
 			Directories: []*internal.DirectoryNew{
 				{
-					Path:   "bigdoc.test",
-					V1Path: "bigdoc.test",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "bigdoc.test",
+						V1Path: "bigdoc.test",
+					},
 					Package: &internal.PackageNew{
 						Name: "bigdoc",
 						Documentation: &internal.Documentation{
@@ -619,17 +663,20 @@ var moduleWasm = &testModule{
 			},
 			Directories: []*internal.DirectoryNew{
 				{
-					Path:   "github.com/my/module/js",
-					V1Path: "github.com/my/module/js",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "github.com/my/module/js",
+						V1Path: "github.com/my/module/js",
+					},
 					Readme: &internal.Readme{
 						Filepath: "README.md",
 						Contents: "THIS IS A README",
 					},
 				},
 				{
-
-					Path:   "github.com/my/module/js/js",
-					V1Path: "github.com/my/module/js/js",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "github.com/my/module/js/js",
+						V1Path: "github.com/my/module/js/js",
+					},
 					Package: &internal.PackageNew{
 						Name: "js",
 						Documentation: &internal.Documentation{
@@ -674,17 +721,21 @@ var moduleStd = &testModule{
 			},
 			Directories: []*internal.DirectoryNew{
 				{
-					Path:              "std",
-					V1Path:            "std",
-					IsRedistributable: true,
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:              "std",
+						V1Path:            "std",
+						IsRedistributable: true,
+					},
 					Readme: &internal.Readme{
 						Filepath: "README.md",
 						Contents: "# The Go Programming Language\n",
 					},
 				},
 				{
-					Path:   "builtin",
-					V1Path: "builtin",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "builtin",
+						V1Path: "builtin",
+					},
 					Package: &internal.PackageNew{
 						Name: "builtin",
 						Documentation: &internal.Documentation{
@@ -693,12 +744,16 @@ var moduleStd = &testModule{
 					},
 				},
 				{
-					Path:   "cmd",
-					V1Path: "cmd",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "cmd",
+						V1Path: "cmd",
+					},
 				},
 				{
-					Path:   "cmd/pprof",
-					V1Path: "cmd/pprof",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "cmd/pprof",
+						V1Path: "cmd/pprof",
+					},
 					Readme: &internal.Readme{
 						Filepath: "cmd/pprof/README",
 						Contents: "This directory is the copy of Google's pprof shipped as part of the Go distribution.\n",
@@ -730,8 +785,10 @@ var moduleStd = &testModule{
 					},
 				},
 				{
-					Path:   "context",
-					V1Path: "context",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "context",
+						V1Path: "context",
+					},
 					Package: &internal.PackageNew{
 						Name: "context",
 						Documentation: &internal.Documentation{
@@ -741,12 +798,16 @@ var moduleStd = &testModule{
 					},
 				},
 				{
-					Path:   "encoding",
-					V1Path: "encoding",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "encoding",
+						V1Path: "encoding",
+					},
 				},
 				{
-					Path:   "encoding/json",
-					V1Path: "encoding/json",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "encoding/json",
+						V1Path: "encoding/json",
+					},
 					Package: &internal.PackageNew{
 						Name: "json",
 						Documentation: &internal.Documentation{
@@ -772,8 +833,10 @@ var moduleStd = &testModule{
 					},
 				},
 				{
-					Path:   "errors",
-					V1Path: "errors",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "errors",
+						V1Path: "errors",
+					},
 					Package: &internal.PackageNew{
 						Name: "errors",
 						Documentation: &internal.Documentation{
@@ -782,8 +845,10 @@ var moduleStd = &testModule{
 					},
 				},
 				{
-					Path:   "flag",
-					V1Path: "flag",
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "flag",
+						V1Path: "flag",
+					},
 					Package: &internal.PackageNew{
 						Name: "flag",
 						Documentation: &internal.Documentation{
@@ -826,12 +891,16 @@ package example_test
 				},
 				Directories: []*internal.DirectoryNew{
 					{
-						Path:   path,
-						V1Path: path,
+						DirectoryMeta: internal.DirectoryMeta{
+							Path:   path,
+							V1Path: path,
+						},
 					},
 					{
-						Path:   path + "/example",
-						V1Path: path + "/example",
+						DirectoryMeta: internal.DirectoryMeta{
+							Path:   path + "/example",
+							V1Path: path + "/example",
+						},
 						Package: &internal.PackageNew{
 							Name: "example",
 							Documentation: &internal.Documentation{

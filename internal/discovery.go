@@ -110,16 +110,21 @@ type VersionedDirectory struct {
 	ModuleInfo
 }
 
-// DirectoryNew is a folder in a module version, and all of the packages
-// inside that folder. It will replace LegacyDirectory once everything has been
-// migrated.
-type DirectoryNew struct {
+// DirectoryMeta represents a folder in a module version, and the metadata
+// associated with that folder.
+type DirectoryMeta struct {
 	Path              string
 	V1Path            string
 	IsRedistributable bool
 	Licenses          []*licenses.Metadata // metadata of applicable licenses
-	Readme            *Readme
-	Package           *PackageNew
+}
+
+// DirectoryNew represents a folder in a module version, and the contents of that folder.
+// It will replace LegacyDirectory once everything has been migrated.
+type DirectoryNew struct {
+	DirectoryMeta
+	Readme  *Readme
+	Package *PackageNew
 }
 
 // PackageNew is a group of one or more Go source files with the same package

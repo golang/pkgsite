@@ -58,7 +58,11 @@ func TestGetPathInfo(t *testing.T) {
 			}},
 		}
 		for d := pkgPath; d != "." && len(d) >= len(testModule.module); d = path.Dir(d) {
-			dir := &internal.DirectoryNew{Path: d}
+			dir := &internal.DirectoryNew{
+				DirectoryMeta: internal.DirectoryMeta{
+					Path: d,
+				},
+			}
 			if d == pkgPath {
 				dir.Package = &internal.PackageNew{
 					Path:          pkgPath,

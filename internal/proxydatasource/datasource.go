@@ -98,8 +98,10 @@ func (ds *DataSource) GetDirectoryNew(ctx context.Context, dirPath, modulePath, 
 	return &internal.VersionedDirectory{
 		ModuleInfo: m.ModuleInfo,
 		DirectoryNew: internal.DirectoryNew{
-			Path:   dirPath,
-			V1Path: internal.V1Path(modulePath, strings.TrimPrefix(dirPath, modulePath+"/")),
+			DirectoryMeta: internal.DirectoryMeta{
+				Path:   dirPath,
+				V1Path: internal.V1Path(modulePath, strings.TrimPrefix(dirPath, modulePath+"/")),
+			},
 		},
 	}, nil
 }

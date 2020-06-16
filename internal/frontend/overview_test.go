@@ -63,8 +63,10 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 			name: "redistributable",
 			vdir: &internal.VersionedDirectory{
 				DirectoryNew: internal.DirectoryNew{
-					Path:              "github.com/u/m/p",
-					IsRedistributable: true,
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:              "github.com/u/m/p",
+						IsRedistributable: true,
+					},
 					Readme: &internal.Readme{
 						Filepath: "README.md",
 						Contents: "readme",
@@ -87,8 +89,10 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 			name: "unversioned",
 			vdir: &internal.VersionedDirectory{
 				DirectoryNew: internal.DirectoryNew{
-					Path:              "github.com/u/m/p",
-					IsRedistributable: true,
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:              "github.com/u/m/p",
+						IsRedistributable: true,
+					},
 					Readme: &internal.Readme{
 						Filepath: "README.md",
 						Contents: "readme",
@@ -111,8 +115,10 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 			name: "non-redistributable",
 			vdir: &internal.VersionedDirectory{
 				DirectoryNew: internal.DirectoryNew{
-					Path:              "github.com/u/m/p",
-					IsRedistributable: false,
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:              "github.com/u/m/p",
+						IsRedistributable: false,
+					},
 				},
 				ModuleInfo: *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
 			},

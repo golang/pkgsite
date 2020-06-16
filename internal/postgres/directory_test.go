@@ -311,12 +311,14 @@ func TestGetDirectoryNew(t *testing.T) {
 		return &internal.VersionedDirectory{
 			ModuleInfo: *sample.ModuleInfo(modulePath, version),
 			DirectoryNew: internal.DirectoryNew{
-				Path:              path,
-				V1Path:            path,
-				IsRedistributable: true,
-				Licenses:          sample.LicenseMetadata,
-				Readme:            readme,
-				Package:           pkg,
+				DirectoryMeta: internal.DirectoryMeta{
+					Path:              path,
+					V1Path:            path,
+					IsRedistributable: true,
+					Licenses:          sample.LicenseMetadata,
+				},
+				Readme:  readme,
+				Package: pkg,
 			},
 		}
 	}

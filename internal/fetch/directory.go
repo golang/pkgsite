@@ -48,10 +48,12 @@ func moduleDirectories(modulePath string,
 			meta = append(meta, l.Metadata)
 		}
 		dir := &internal.DirectoryNew{
-			Path:              dirPath,
-			V1Path:            internal.V1Path(modulePath, suffix),
-			IsRedistributable: isRedist,
-			Licenses:          meta,
+			DirectoryMeta: internal.DirectoryMeta{
+				Path:              dirPath,
+				V1Path:            internal.V1Path(modulePath, suffix),
+				IsRedistributable: isRedist,
+				Licenses:          meta,
+			},
 		}
 		if r, ok := readmeLookup[dirPath]; ok {
 			dir.Readme = r
