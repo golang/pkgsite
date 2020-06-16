@@ -111,7 +111,7 @@ func readmeHTML(ctx context.Context, mi *internal.ModuleInfo, readme *internal.R
 		return ""
 	}
 	if !isMarkdown(readme.Filepath) {
-		return template.HTML(fmt.Sprintf(`<pre class="readme">%s</pre>`, html.EscapeString(string(readme.Contents))))
+		return template.HTML(fmt.Sprintf(`<pre class="readme">%s</pre>`, html.EscapeString(readme.Contents)))
 	}
 
 	// bluemonday.UGCPolicy allows a broad selection of HTML elements and

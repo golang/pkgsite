@@ -71,7 +71,7 @@ func TestHackUpDocumentation(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if got := string(hackUpDocumentation(test.body)); got != test.want {
+		if got := hackUpDocumentation(test.body); got != test.want {
 			t.Errorf("hackUpDocumentation(%s) = %s, want %s", test.body, got, test.want)
 		}
 	}
