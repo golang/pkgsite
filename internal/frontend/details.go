@@ -106,12 +106,12 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) (err error
 	}
 	// Depending on what the request was for, return the module or package page.
 	if isModule || fullPath == stdlib.ModulePath {
-		return s.serveModulePage(w, r, fullPath, requestedVersion)
+		return s.legacyServeModulePage(w, r, fullPath, requestedVersion)
 	}
 	if isActiveUseDirectories(ctx) {
 		return s.servePackagePageNew(w, r, fullPath, modulePath, requestedVersion)
 	}
-	return s.servePackagePage(w, r, fullPath, modulePath, requestedVersion)
+	return s.legacyServePackagePage(w, r, fullPath, modulePath, requestedVersion)
 }
 
 // parseDetailsURLPath parses a URL path that refers (or may refer) to something

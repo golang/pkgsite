@@ -15,9 +15,9 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 )
 
-// serveModulePage serves details pages for the module specified by modulePath
+// legacyServeModulePage serves details pages for the module specified by modulePath
 // and version.
-func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, modulePath, requestedVersion string) error {
+func (s *Server) legacyServeModulePage(w http.ResponseWriter, r *http.Request, modulePath, requestedVersion string) error {
 	// This function handles top level behavior related to the existence of the
 	// requested modulePath@version:
 	// TODO: fix
@@ -31,7 +31,7 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 	ctx := r.Context()
 	mi, err := s.ds.GetModuleInfo(ctx, modulePath, requestedVersion)
 	if err == nil {
-		return s.serveModulePageWithModule(ctx, w, r, mi, requestedVersion)
+		return s.legacyServeModulePageWithModule(ctx, w, r, mi, requestedVersion)
 	}
 	if !errors.Is(err, derrors.NotFound) {
 		return err
@@ -48,7 +48,7 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 	return pathNotFoundError(ctx, "module", modulePath, requestedVersion)
 }
 
-func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseWriter, r *http.Request, mi *internal.LegacyModuleInfo, requestedVersion string) error {
+func (s *Server) legacyServeModulePageWithModule(ctx context.Context, w http.ResponseWriter, r *http.Request, mi *internal.LegacyModuleInfo, requestedVersion string) error {
 	licenses, err := s.ds.LegacyGetModuleLicenses(ctx, mi.ModulePath, mi.Version)
 	if err != nil {
 		return err

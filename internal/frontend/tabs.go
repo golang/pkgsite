@@ -230,7 +230,7 @@ func constructDetailsForDirectory(r *http.Request, tab string, dir *internal.Leg
 		// fetchDetailsForPackage. However, since we already have the directory
 		// and licenses info, it doesn't make sense to call
 		// postgres.GetDirectory again.
-		return createDirectory(dir, licensesToMetadatas(licenses), false)
+		return legacyCreateDirectory(dir, licensesToMetadatas(licenses), false)
 	case "licenses":
 		return &LicensesDetails{Licenses: transformLicenses(dir.ModulePath, dir.Version, licenses)}, nil
 	}

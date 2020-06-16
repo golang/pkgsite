@@ -24,9 +24,9 @@ func (s *Server) handlePackageDetailsRedirect(w http.ResponseWriter, r *http.Req
 	http.Redirect(w, r, urlPath, http.StatusMovedPermanently)
 }
 
-// servePackagePage serves details pages for the package with import path
+// legacyServePackagePage serves details pages for the package with import path
 // pkgPath, in the module specified by modulePath and version.
-func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPath, modulePath, version string) (err error) {
+func (s *Server) legacyServePackagePage(w http.ResponseWriter, r *http.Request, pkgPath, modulePath, version string) (err error) {
 	ctx := r.Context()
 
 	// This function handles top level behavior related to the existence of the
@@ -38,7 +38,7 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 	//   4. Just serve a 404
 	pkg, err := s.ds.LegacyGetPackage(ctx, pkgPath, modulePath, version)
 	if err == nil {
-		return s.servePackagePageWithPackage(ctx, w, r, pkg, version)
+		return s.legacyServePackagePageWithPackage(ctx, w, r, pkg, version)
 	}
 	if !errors.Is(err, derrors.NotFound) {
 		return err
@@ -54,11 +54,11 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 			}
 			return err
 		}
-		return s.serveDirectoryPage(ctx, w, r, dbDir, version)
+		return s.legacyServeDirectoryPage(ctx, w, r, dbDir, version)
 	}
 	dir, err := s.ds.LegacyGetDirectory(ctx, pkgPath, modulePath, version, internal.AllFields)
 	if err == nil {
-		return s.serveDirectoryPage(ctx, w, r, dir, version)
+		return s.legacyServeDirectoryPage(ctx, w, r, dir, version)
 	}
 	if !errors.Is(err, derrors.NotFound) {
 		// The only error we expect is NotFound, so serve an 500 here, otherwise
@@ -82,13 +82,13 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 	return pathNotFoundError(ctx, "package", pkgPath, version)
 }
 
-func (s *Server) servePackagePageWithPackage(ctx context.Context, w http.ResponseWriter, r *http.Request, pkg *internal.LegacyVersionedPackage, requestedVersion string) (err error) {
+func (s *Server) legacyServePackagePageWithPackage(ctx context.Context, w http.ResponseWriter, r *http.Request, pkg *internal.LegacyVersionedPackage, requestedVersion string) (err error) {
 	defer func() {
 		if _, ok := err.(*serverError); !ok {
-			derrors.Wrap(&err, "servePackagePageWithPackage(w, r, %q, %q, %q)", pkg.Path, pkg.ModulePath, requestedVersion)
+			derrors.Wrap(&err, "legacyServePackagePageWithPackage(w, r, %q, %q, %q)", pkg.Path, pkg.ModulePath, requestedVersion)
 		}
 	}()
-	pkgHeader, err := createPackage(&pkg.LegacyPackage, &pkg.ModuleInfo, requestedVersion == internal.LatestVersion)
+	pkgHeader, err := legacyCreatePackage(&pkg.LegacyPackage, &pkg.ModuleInfo, requestedVersion == internal.LatestVersion)
 	if err != nil {
 		return fmt.Errorf("creating package header for %s@%s: %v", pkg.Path, pkg.Version, err)
 	}
@@ -181,7 +181,7 @@ func (s *Server) servePackagePageNew(w http.ResponseWriter, r *http.Request, ful
 	if err != nil {
 		return err
 	}
-	return s.serveDirectoryPage(ctx, w, r, dir, inVersion)
+	return s.legacyServeDirectoryPage(ctx, w, r, dir, inVersion)
 }
 
 // stdlibPathForShortcut returns a path in the stdlib that shortcut should redirect to,

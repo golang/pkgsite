@@ -43,14 +43,14 @@ type Module struct {
 	Licenses          []LicenseMetadata
 }
 
-// createPackage returns a *Package based on the fields of the specified
+// legacyCreatePackage returns a *Package based on the fields of the specified
 // internal package and version info.
 //
 // latestRequested indicates whether the user requested the latest
 // version of the package. If so, the returned Package.URL will have the
 // structure /<path> instead of /<path>@<version>.
-func createPackage(pkg *internal.LegacyPackage, mi *internal.ModuleInfo, latestRequested bool) (_ *Package, err error) {
-	defer derrors.Wrap(&err, "createPackage(%v, %v)", pkg, mi)
+func legacyCreatePackage(pkg *internal.LegacyPackage, mi *internal.ModuleInfo, latestRequested bool) (_ *Package, err error) {
+	defer derrors.Wrap(&err, "legacyCreatePackage(%v, %v)", pkg, mi)
 
 	if pkg == nil || mi == nil {
 		return nil, fmt.Errorf("package and version info must not be nil")

@@ -138,12 +138,12 @@ func TestCreatePackageHeader(t *testing.T) {
 		},
 	} {
 		t.Run(tc.label, func(t *testing.T) {
-			got, err := createPackage(&tc.pkg.LegacyPackage, &tc.pkg.ModuleInfo, false)
+			got, err := legacyCreatePackage(&tc.pkg.LegacyPackage, &tc.pkg.ModuleInfo, false)
 			if err != nil {
 				t.Fatal(err)
 			}
 			if diff := cmp.Diff(tc.wantPkg, got); diff != "" {
-				t.Errorf("createPackage(%v) mismatch (-want +got):\n%s", tc.pkg, diff)
+				t.Errorf("legacyCreatePackage(%v) mismatch (-want +got):\n%s", tc.pkg, diff)
 			}
 		})
 	}
