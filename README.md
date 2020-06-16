@@ -47,7 +47,7 @@ the [known issues](https://github.com/golang/go/labels/go.dev) to see if your
 issue is already being discussed. If an issue does not already exist, feel free
 to [file an issue](https://golang.org/s/discovery-feedback).
 
-For answers to freqently asked questions, see [go.dev](https://go.dev/about).
+For answers to frequently asked questions, see [go.dev](https://go.dev/about).
 
 You can also chat with us on the #tools slack channel on the
 [Gophers slack](https://invite.slack.golangbridge.org).
