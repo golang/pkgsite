@@ -216,10 +216,10 @@ func (ds *DataSource) GetTaggedVersionsForPackageSeries(ctx context.Context, pkg
 	return ds.listPackageVersions(ctx, pkgPath, false)
 }
 
-// GetModuleInfo returns the LegacyModuleInfo as fetched from the proxy for module
+// LegacyGetModuleInfo returns the LegacyModuleInfo as fetched from the proxy for module
 // version specified by modulePath and version.
-func (ds *DataSource) GetModuleInfo(ctx context.Context, modulePath, version string) (_ *internal.LegacyModuleInfo, err error) {
-	defer derrors.Wrap(&err, "GetModuleInfo(%q, %q)", modulePath, version)
+func (ds *DataSource) LegacyGetModuleInfo(ctx context.Context, modulePath, version string) (_ *internal.LegacyModuleInfo, err error) {
+	defer derrors.Wrap(&err, "LegacyGetModuleInfo(%q, %q)", modulePath, version)
 	m, err := ds.getModule(ctx, modulePath, version)
 	if err != nil {
 		return nil, err

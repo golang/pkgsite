@@ -278,10 +278,10 @@ func (db *DB) GetImportedBy(ctx context.Context, pkgPath, modulePath string, lim
 	return importedby, nil
 }
 
-// GetModuleInfo fetches a Version from the database with the primary key
+// LegacyGetModuleInfo fetches a Version from the database with the primary key
 // (module_path, version).
-func (db *DB) GetModuleInfo(ctx context.Context, modulePath string, version string) (_ *internal.LegacyModuleInfo, err error) {
-	defer derrors.Wrap(&err, "GetModuleInfo(ctx, %q, %q)", modulePath, version)
+func (db *DB) LegacyGetModuleInfo(ctx context.Context, modulePath string, version string) (_ *internal.LegacyModuleInfo, err error) {
+	defer derrors.Wrap(&err, "LegacyGetModuleInfo(ctx, %q, %q)", modulePath, version)
 
 	query := `
 		SELECT

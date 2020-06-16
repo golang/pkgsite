@@ -120,10 +120,10 @@ func TestDataSource_GetPackage_Latest(t *testing.T) {
 	}
 }
 
-func TestDataSource_GetModuleInfo_Latest(t *testing.T) {
+func TestDataSource_LegacyGetModuleInfo_Latest(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
-	got, err := ds.GetModuleInfo(ctx, "foo.com/bar", internal.LatestVersion)
+	got, err := ds.LegacyGetModuleInfo(ctx, "foo.com/bar", internal.LatestVersion)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -226,15 +226,15 @@ func TestDataSource_GetTaggedVersionsForPackageSeries(t *testing.T) {
 	}
 }
 
-func TestDataSource_GetModuleInfo(t *testing.T) {
+func TestDataSource_LegacyGetModuleInfo(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
-	got, err := ds.GetModuleInfo(ctx, "foo.com/bar", "v1.2.0")
+	got, err := ds.LegacyGetModuleInfo(ctx, "foo.com/bar", "v1.2.0")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if diff := cmp.Diff(wantModuleInfo, got.ModuleInfo, cmpOpts...); diff != "" {
-		t.Errorf("GetModuleInfo diff (-want +got):\n%s", diff)
+		t.Errorf("LegacyGetModuleInfo diff (-want +got):\n%s", diff)
 	}
 }
 

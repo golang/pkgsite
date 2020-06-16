@@ -35,7 +35,7 @@ func (s *Server) latestVersion(ctx context.Context, packagePath, modulePath, pag
 	var mi *internal.LegacyModuleInfo
 	switch pageType {
 	case "mod":
-		mi, err = s.ds.GetModuleInfo(ctx, modulePath, internal.LatestVersion)
+		mi, err = s.ds.LegacyGetModuleInfo(ctx, modulePath, internal.LatestVersion)
 		if err != nil {
 			return "", err
 		}

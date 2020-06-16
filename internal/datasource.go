@@ -21,9 +21,6 @@ type DataSource interface {
 	// GetImports returns a slice of import paths imported by the package
 	// specified by path and version.
 	GetImports(ctx context.Context, pkgPath, modulePath, version string) ([]string, error)
-	// GetModuleInfo returns the LegacyModuleInfo corresponding to modulePath and
-	// version.
-	GetModuleInfo(ctx context.Context, modulePath, version string) (*LegacyModuleInfo, error)
 	// GetPathInfo returns information about a path.
 	GetPathInfo(ctx context.Context, path, inModulePath, inVersion string) (outModulePath, outVersion string, isPackage bool, err error)
 	// GetPseudoVersionsForModule returns LegacyModuleInfo for all known
@@ -60,4 +57,7 @@ type DataSource interface {
 	// GetPackagesInModule returns LegacyPackages contained in the module version
 	// specified by modulePath and version.
 	LegacyGetPackagesInModule(ctx context.Context, modulePath, version string) ([]*LegacyPackage, error)
+	// LegacyGetModuleInfo returns the LegacyModuleInfo corresponding to modulePath and
+	// version.
+	LegacyGetModuleInfo(ctx context.Context, modulePath, version string) (*LegacyModuleInfo, error)
 }

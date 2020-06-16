@@ -68,7 +68,7 @@ func TestPostgres_GetVersionInfo_Latest(t *testing.T) {
 				}
 			}
 
-			gotVI, err := testDB.GetModuleInfo(ctx, tc.path, internal.LatestVersion)
+			gotVI, err := testDB.LegacyGetModuleInfo(ctx, tc.path, internal.LatestVersion)
 			if err != nil {
 				if tc.wantErr == nil {
 					t.Fatalf("got unexpected error %v", err)

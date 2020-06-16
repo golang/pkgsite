@@ -29,7 +29,7 @@ func (s *Server) legacyServeModulePage(w http.ResponseWriter, r *http.Request, m
 	//     b. We have valid versions for this module path, but `version` isn't
 	//        one of them. Serve a 404 but recommend the other versions.
 	ctx := r.Context()
-	mi, err := s.ds.GetModuleInfo(ctx, modulePath, requestedVersion)
+	mi, err := s.ds.LegacyGetModuleInfo(ctx, modulePath, requestedVersion)
 	if err == nil {
 		return s.legacyServeModulePageWithModule(ctx, w, r, mi, requestedVersion)
 	}
@@ -37,7 +37,7 @@ func (s *Server) legacyServeModulePage(w http.ResponseWriter, r *http.Request, m
 		return err
 	}
 	if requestedVersion != internal.LatestVersion {
-		_, err = s.ds.GetModuleInfo(ctx, modulePath, internal.LatestVersion)
+		_, err = s.ds.LegacyGetModuleInfo(ctx, modulePath, internal.LatestVersion)
 		if err == nil {
 			return pathFoundAtLatestError(ctx, "module", modulePath, displayVersion(requestedVersion, modulePath))
 		}
