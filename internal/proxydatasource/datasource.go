@@ -176,9 +176,9 @@ func (ds *DataSource) LegacyGetPackageLicenses(ctx context.Context, pkgPath, mod
 	return nil, fmt.Errorf("package %s is missing from module %s: %w", pkgPath, modulePath, derrors.NotFound)
 }
 
-// GetPackagesInModule returns LegacyPackages contained in the module zip corresponding to modulePath and version.
-func (ds *DataSource) GetPackagesInModule(ctx context.Context, modulePath, version string) (_ []*internal.LegacyPackage, err error) {
-	defer derrors.Wrap(&err, "GetPackagesInModule(%q, %q)", modulePath, version)
+// LegacyGetPackagesInModule returns LegacyPackages contained in the module zip corresponding to modulePath and version.
+func (ds *DataSource) LegacyGetPackagesInModule(ctx context.Context, modulePath, version string) (_ []*internal.LegacyPackage, err error) {
+	defer derrors.Wrap(&err, "LegacyGetPackagesInModule(%q, %q)", modulePath, version)
 	v, err := ds.getModule(ctx, modulePath, version)
 	if err != nil {
 		return nil, err

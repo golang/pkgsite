@@ -59,5 +59,5 @@ type DataSource interface {
 	LegacyGetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) ([]*licenses.License, error)
 	// GetPackagesInModule returns LegacyPackages contained in the module version
 	// specified by modulePath and version.
-	GetPackagesInModule(ctx context.Context, modulePath, version string) ([]*LegacyPackage, error)
+	LegacyGetPackagesInModule(ctx context.Context, modulePath, version string) ([]*LegacyPackage, error)
 }

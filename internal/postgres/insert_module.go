@@ -634,7 +634,7 @@ func (db *DB) compareLicenses(ctx context.Context, m *internal.Module) (err erro
 // are packages in the packages table that are not present in m.LegacyPackages.
 func (db *DB) comparePackages(ctx context.Context, m *internal.Module) (err error) {
 	defer derrors.Wrap(&err, "comparePackages(ctx, %q, %q)", m.ModulePath, m.Version)
-	dbPackages, err := db.GetPackagesInModule(ctx, m.ModulePath, m.Version)
+	dbPackages, err := db.LegacyGetPackagesInModule(ctx, m.ModulePath, m.Version)
 	if err != nil {
 		return err
 	}

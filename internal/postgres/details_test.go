@@ -335,7 +335,7 @@ func TestGetPackagesInVersion(t *testing.T) {
 				t.Error(err)
 			}
 
-			got, err := testDB.GetPackagesInModule(ctx, tc.pkgPath, tc.module.Version)
+			got, err := testDB.LegacyGetPackagesInModule(ctx, tc.pkgPath, tc.module.Version)
 			if err != nil {
 				t.Fatal(err)
 			}

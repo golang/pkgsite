@@ -173,7 +173,7 @@ func TestDataSource_LegacyGetPackageLicenses(t *testing.T) {
 func TestDataSource_GetPackagesInVersion(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
-	got, err := ds.GetPackagesInModule(ctx, "foo.com/bar", "v1.2.0")
+	got, err := ds.LegacyGetPackagesInModule(ctx, "foo.com/bar", "v1.2.0")
 	if err != nil {
 		t.Fatal(err)
 	}

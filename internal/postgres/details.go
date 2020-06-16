@@ -20,10 +20,10 @@ import (
 	"golang.org/x/pkgsite/internal/version"
 )
 
-// GetPackagesInModule returns packages contained in the module version
+// LegacyGetPackagesInModule returns packages contained in the module version
 // specified by modulePath and version. The returned packages will be sorted
 // by their package path.
-func (db *DB) GetPackagesInModule(ctx context.Context, modulePath, version string) (_ []*internal.LegacyPackage, err error) {
+func (db *DB) LegacyGetPackagesInModule(ctx context.Context, modulePath, version string) (_ []*internal.LegacyPackage, err error) {
 	query := `SELECT
 		path,
 		name,
@@ -63,7 +63,7 @@ func (db *DB) GetPackagesInModule(ctx context.Context, modulePath, version strin
 	}
 
 	if err := db.db.RunQuery(ctx, query, collect, modulePath, version); err != nil {
-		return nil, fmt.Errorf("DB.GetPackagesInModule(ctx, %q, %q): %w", modulePath, version, err)
+		return nil, fmt.Errorf("DB.LegacyGetPackagesInModule(ctx, %q, %q): %w", modulePath, version, err)
 	}
 	return packages, nil
 }
