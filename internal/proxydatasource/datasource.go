@@ -66,9 +66,9 @@ type versionEntry struct {
 	err    error
 }
 
-// GetDirectory returns packages contained in the given subdirectory of a module version.
-func (ds *DataSource) GetDirectory(ctx context.Context, dirPath, modulePath, version string, _ internal.FieldSet) (_ *internal.LegacyDirectory, err error) {
-	defer derrors.Wrap(&err, "GetDirectory(%q, %q, %q)", dirPath, modulePath, version)
+// LegacyGetDirectory returns packages contained in the given subdirectory of a module version.
+func (ds *DataSource) LegacyGetDirectory(ctx context.Context, dirPath, modulePath, version string, _ internal.FieldSet) (_ *internal.LegacyDirectory, err error) {
+	defer derrors.Wrap(&err, "LegacyGetDirectory(%q, %q, %q)", dirPath, modulePath, version)
 
 	var info *proxy.VersionInfo
 	if modulePath == internal.UnknownModulePath {

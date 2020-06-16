@@ -137,7 +137,7 @@ func (db *DB) GetDirectoryNew(ctx context.Context, path, modulePath, version str
 	}, nil
 }
 
-// GetDirectory returns the directory corresponding to the provided dirPath,
+// LegacyGetDirectory returns the directory corresponding to the provided dirPath,
 // modulePath, and version. The directory will contain all packages for that
 // version, in sorted order by package path.
 //
@@ -173,8 +173,8 @@ func (db *DB) GetDirectoryNew(ctx context.Context, path, modulePath, version str
 //
 // It will not match on:
 // golang.org/x/tools/g
-func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version string, fields internal.FieldSet) (_ *internal.LegacyDirectory, err error) {
-	defer derrors.Wrap(&err, "DB.GetDirectory(ctx, %q, %q, %q)", dirPath, modulePath, version)
+func (db *DB) LegacyGetDirectory(ctx context.Context, dirPath, modulePath, version string, fields internal.FieldSet) (_ *internal.LegacyDirectory, err error) {
+	defer derrors.Wrap(&err, "DB.LegacyGetDirectory(ctx, %q, %q, %q)", dirPath, modulePath, version)
 
 	if dirPath == "" || modulePath == "" || version == "" {
 		return nil, fmt.Errorf("none of pkgPath, modulePath, or version can be empty: %w", derrors.InvalidArgument)

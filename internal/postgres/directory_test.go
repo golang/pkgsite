@@ -21,7 +21,7 @@ import (
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
-func TestGetDirectory(t *testing.T) {
+func TestLegacyGetDirectory(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
@@ -241,7 +241,7 @@ func TestGetDirectory(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := testDB.GetDirectory(ctx, tc.dirPath, tc.modulePath, tc.version, internal.AllFields)
+			got, err := testDB.LegacyGetDirectory(ctx, tc.dirPath, tc.modulePath, tc.version, internal.AllFields)
 			if tc.wantNotFoundErr {
 				if !errors.Is(err, derrors.NotFound) {
 					t.Fatalf("want %v; got = \n%+v, %v", derrors.NotFound, got, err)
@@ -275,7 +275,7 @@ func TestGetDirectory(t *testing.T) {
 				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 			}
 			if diff := cmp.Diff(wantDirectory, got, opts...); diff != "" {
-				t.Errorf("testDB.GetDirectory(ctx, %q, %q, %q) mismatch (-want +got):\n%s", tc.dirPath, tc.modulePath, tc.version, diff)
+				t.Errorf("testDB.LegacyGetDirectory(ctx, %q, %q, %q) mismatch (-want +got):\n%s", tc.dirPath, tc.modulePath, tc.version, diff)
 			}
 		})
 	}
@@ -455,7 +455,7 @@ func findDirectory(m *internal.Module, path string) *internal.DirectoryNew {
 	return nil
 }
 
-func TestGetDirectoryFieldSet(t *testing.T) {
+func TestLegacyGetDirectoryFieldSet(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
@@ -467,7 +467,7 @@ func TestGetDirectoryFieldSet(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got, err := testDB.GetDirectory(ctx, "m.c/d", "m.c", sample.VersionString, internal.MinimalFields)
+	got, err := testDB.LegacyGetDirectory(ctx, "m.c/d", "m.c", sample.VersionString, internal.MinimalFields)
 	if err != nil {
 		t.Fatal(err)
 	}

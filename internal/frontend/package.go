@@ -47,7 +47,7 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 		// If we've already checked the latest version, then we know that this path
 		// is not a package at any version, so just skip ahead and serve the
 		// directory page.
-		dbDir, err := s.ds.GetDirectory(ctx, pkgPath, modulePath, version, internal.AllFields)
+		dbDir, err := s.ds.LegacyGetDirectory(ctx, pkgPath, modulePath, version, internal.AllFields)
 		if err != nil {
 			if errors.Is(err, derrors.NotFound) {
 				return pathNotFoundError(ctx, "package", pkgPath, version)
@@ -56,7 +56,7 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 		}
 		return s.serveDirectoryPage(ctx, w, r, dbDir, version)
 	}
-	dir, err := s.ds.GetDirectory(ctx, pkgPath, modulePath, version, internal.AllFields)
+	dir, err := s.ds.LegacyGetDirectory(ctx, pkgPath, modulePath, version, internal.AllFields)
 	if err == nil {
 		return s.serveDirectoryPage(ctx, w, r, dir, version)
 	}
@@ -70,7 +70,7 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 		return pathFoundAtLatestError(ctx, "package", pkgPath, version)
 	}
 	if !errors.Is(err, derrors.NotFound) {
-		// Unlike the error handling for GetDirectory above, we don't serve an
+		// Unlike the error handling for LegacyGetDirectory above, we don't serve an
 		// InternalServerError here. The reasoning for this is that regardless of
 		// the result of GetPackage(..., "latest"), we're going to serve a NotFound
 		// response code. So the semantics of the endpoint are the same whether or
@@ -177,7 +177,7 @@ func (s *Server) servePackagePageNew(w http.ResponseWriter, r *http.Request, ful
 	if vdir.Package != nil {
 		return s.servePackagePageWithVersionedDirectory(ctx, w, r, vdir, inVersion)
 	}
-	dir, err := s.ds.GetDirectory(ctx, fullPath, modulePath, version, internal.AllFields)
+	dir, err := s.ds.LegacyGetDirectory(ctx, fullPath, modulePath, version, internal.AllFields)
 	if err != nil {
 		return err
 	}

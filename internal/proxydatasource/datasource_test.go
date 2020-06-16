@@ -78,7 +78,7 @@ var (
 	}, sample.LicenseCmpOpts...)
 )
 
-func TestDataSource_GetDirectory(t *testing.T) {
+func TestDataSource_LegacyGetDirectory(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
 	want := &internal.LegacyDirectory{
@@ -86,12 +86,12 @@ func TestDataSource_GetDirectory(t *testing.T) {
 		Path:             "foo.com/bar",
 		Packages:         []*internal.LegacyPackage{&wantPackage},
 	}
-	got, err := ds.GetDirectory(ctx, "foo.com/bar", internal.UnknownModulePath, "v1.2.0", internal.AllFields)
+	got, err := ds.LegacyGetDirectory(ctx, "foo.com/bar", internal.UnknownModulePath, "v1.2.0", internal.AllFields)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if diff := cmp.Diff(want, got, cmpOpts...); diff != "" {
-		t.Errorf("GetDirectory diff (-want +got):\n%s", diff)
+		t.Errorf("LegacyGetDirectory diff (-want +got):\n%s", diff)
 	}
 }
 

@@ -42,11 +42,11 @@ type DataSource interface {
 
 	// TODO(b/155474770): Deprecate these methods.
 	//
-	// GetDirectory returns packages whose import path is in a (possibly
+	// LegacyGetDirectory returns packages whose import path is in a (possibly
 	// nested) subdirectory of the given directory path. When multiple
 	// package paths satisfy this query, it should prefer the module with
 	// the longest path.
-	GetDirectory(ctx context.Context, dirPath, modulePath, version string, fields FieldSet) (_ *LegacyDirectory, err error)
+	LegacyGetDirectory(ctx context.Context, dirPath, modulePath, version string, fields FieldSet) (_ *LegacyDirectory, err error)
 	// LegacyGetModuleLicenses returns all top-level Licenses for the given modulePath
 	// and version. (i.e., Licenses contained in the module root directory)
 	LegacyGetModuleLicenses(ctx context.Context, modulePath, version string) ([]*licenses.License, error)

@@ -168,7 +168,7 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 		log.Errorf(ctx, "error getting module for %s: %v", requestedPath, err)
 		return ""
 	}
-	dir, err := ds.GetDirectory(ctx, requestedPath, internal.UnknownModulePath, internal.LatestVersion, internal.AllFields)
+	dir, err := ds.LegacyGetDirectory(ctx, requestedPath, internal.UnknownModulePath, internal.LatestVersion, internal.AllFields)
 	if err == nil {
 		return fmt.Sprintf("/%s", dir.Path)
 	} else if !errors.Is(err, derrors.NotFound) {

@@ -103,7 +103,7 @@ func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, dirPath 
 		}, licmetas, includeDirPath)
 	}
 
-	dbDir, err := ds.GetDirectory(ctx, dirPath, mi.ModulePath, mi.Version, internal.AllFields)
+	dbDir, err := ds.LegacyGetDirectory(ctx, dirPath, mi.ModulePath, mi.Version, internal.AllFields)
 	if errors.Is(err, derrors.NotFound) {
 		return createDirectory(&internal.LegacyDirectory{
 			LegacyModuleInfo: internal.LegacyModuleInfo{ModuleInfo: *mi},
