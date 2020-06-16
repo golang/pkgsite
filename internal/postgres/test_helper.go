@@ -133,7 +133,7 @@ func RunDBTests(dbName string, m *testing.M, testDB **DB) {
 	db, err := SetupTestDB(dbName)
 	if err != nil {
 		if errors.Is(err, derrors.NotFound) {
-			log.Printf("SKIPPING: could not connect to DB: %v", err)
+			log.Printf("SKIPPING: could not connect to DB (see doc/postgres.md to set up): %v", err)
 			return
 		}
 		log.Fatal(err)

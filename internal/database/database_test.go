@@ -30,7 +30,7 @@ func TestMain(m *testing.M) {
 
 	if err := dbtest.CreateDBIfNotExists(dbName); err != nil {
 		if errors.Is(err, derrors.NotFound) {
-			log.Printf("SKIPPING: could not connect to DB: %v", err)
+			log.Printf("SKIPPING: could not connect to DB (see doc/postgres.md to set up): %v", err)
 			return
 		}
 		log.Fatal(err)
