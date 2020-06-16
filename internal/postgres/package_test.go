@@ -19,7 +19,7 @@ import (
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
-func TestGetPackage(t *testing.T) {
+func TestLegacyGetPackage(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
@@ -56,7 +56,7 @@ func TestGetPackage(t *testing.T) {
 			cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 		}
 		if diff := cmp.Diff(want, got, opts...); diff != "" {
-			t.Errorf("testDB.GetPackage(ctx, %q, %q, %q) mismatch (-want +got):\n%s", pkgPath, modulePath, version, diff)
+			t.Errorf("testDB.LegacyGetPackage(ctx, %q, %q, %q) mismatch (-want +got):\n%s", pkgPath, modulePath, version, diff)
 		}
 	}
 
@@ -188,7 +188,7 @@ func TestGetPackage(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := testDB.GetPackage(ctx, tc.pkgPath, tc.modulePath, tc.version)
+			got, err := testDB.LegacyGetPackage(ctx, tc.pkgPath, tc.modulePath, tc.version)
 			if tc.wantNotFoundErr {
 				if !errors.Is(err, derrors.NotFound) {
 					t.Fatalf("want derrors.NotFound; got = %v", err)
@@ -203,7 +203,7 @@ func TestGetPackage(t *testing.T) {
 	}
 }
 
-func TestGetPackageInvalidArguments(t *testing.T) {
+func TestLegacyGetPackageInvalidArguments(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
@@ -227,7 +227,7 @@ func TestGetPackageInvalidArguments(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := testDB.GetPackage(ctx, tc.modulePath+"/package", tc.modulePath, tc.version)
+			got, err := testDB.LegacyGetPackage(ctx, tc.modulePath+"/package", tc.modulePath, tc.version)
 			if !errors.Is(err, derrors.InvalidArgument) {
 				t.Fatalf("want %v; got = \n%+v, %v", derrors.InvalidArgument, got, err)
 			}

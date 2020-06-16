@@ -16,7 +16,7 @@ import (
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
-// GetPackage returns the a package from the database with the corresponding
+// LegacyGetPackage returns the a package from the database with the corresponding
 // pkgPath, modulePath and version.
 //
 // If version = internal.LatestVersion, the package corresponding to
@@ -41,8 +41,8 @@ import (
 // The returned error may be checked with
 // errors.Is(err, derrors.InvalidArgument) to determine if it was caused by an
 // invalid path or version.
-func (db *DB) GetPackage(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.LegacyVersionedPackage, err error) {
-	defer derrors.Wrap(&err, "DB.GetPackage(ctx, %q, %q)", pkgPath, version)
+func (db *DB) LegacyGetPackage(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.LegacyVersionedPackage, err error) {
+	defer derrors.Wrap(&err, "DB.LegacyGetPackage(ctx, %q, %q)", pkgPath, version)
 	if pkgPath == "" || modulePath == "" || version == "" {
 		return nil, fmt.Errorf("none of pkgPath, modulePath, or version can be empty: %w", derrors.InvalidArgument)
 	}

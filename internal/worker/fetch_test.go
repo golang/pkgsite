@@ -460,11 +460,11 @@ func TestSkipIncompletePackage(t *testing.T) {
 	}
 
 	pkgFoo := modulePath + "/foo"
-	if _, err := testDB.GetPackage(ctx, pkgFoo, internal.UnknownModulePath, version); err != nil {
+	if _, err := testDB.LegacyGetPackage(ctx, pkgFoo, internal.UnknownModulePath, version); err != nil {
 		t.Errorf("got %v, want nil", err)
 	}
 	pkgBar := modulePath + "/bar"
-	if _, err := testDB.GetPackage(ctx, pkgBar, internal.UnknownModulePath, version); !errors.Is(err, derrors.NotFound) {
+	if _, err := testDB.LegacyGetPackage(ctx, pkgBar, internal.UnknownModulePath, version); !errors.Is(err, derrors.NotFound) {
 		t.Errorf("got %v, want NotFound", err)
 	}
 }
@@ -528,15 +528,15 @@ func TestTrimLargeCode(t *testing.T) {
 	}
 
 	pkgFoo := modulePath + "/foo"
-	if _, err := testDB.GetPackage(ctx, pkgFoo, internal.UnknownModulePath, version); err != nil {
+	if _, err := testDB.LegacyGetPackage(ctx, pkgFoo, internal.UnknownModulePath, version); err != nil {
 		t.Errorf("got %v, want nil", err)
 	}
 	pkgBar := modulePath + "/bar"
-	if _, err := testDB.GetPackage(ctx, pkgBar, internal.UnknownModulePath, version); err != nil {
+	if _, err := testDB.LegacyGetPackage(ctx, pkgBar, internal.UnknownModulePath, version); err != nil {
 		t.Errorf("got %v, want nil", err)
 	}
 	pkgBaz := modulePath + "/baz"
-	if _, err := testDB.GetPackage(ctx, pkgBaz, internal.UnknownModulePath, version); err != nil {
+	if _, err := testDB.LegacyGetPackage(ctx, pkgBaz, internal.UnknownModulePath, version); err != nil {
 		t.Errorf("got %v, want nil", err)
 	}
 }
@@ -560,7 +560,7 @@ func TestFetch_V1Path(t *testing.T) {
 	if _, err := FetchAndUpdateState(ctx, "my.mod/foo", "v1.0.0", proxyClient, sourceClient, testDB); err != nil {
 		t.Fatalf("FetchAndUpdateState: %v", err)
 	}
-	pkg, err := testDB.GetPackage(ctx, "my.mod/foo", internal.UnknownModulePath, "v1.0.0")
+	pkg, err := testDB.LegacyGetPackage(ctx, "my.mod/foo", internal.UnknownModulePath, "v1.0.0")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -611,7 +611,7 @@ func TestReFetch(t *testing.T) {
 		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
 	}
 
-	if _, err := testDB.GetPackage(ctx, pkgFoo, internal.UnknownModulePath, version); err != nil {
+	if _, err := testDB.LegacyGetPackage(ctx, pkgFoo, internal.UnknownModulePath, version); err != nil {
 		t.Error(err)
 	}
 
@@ -656,12 +656,12 @@ func TestReFetch(t *testing.T) {
 			GOARCH:            "amd64",
 		},
 	}
-	got, err := testDB.GetPackage(ctx, pkgBar, internal.UnknownModulePath, version)
+	got, err := testDB.LegacyGetPackage(ctx, pkgBar, internal.UnknownModulePath, version)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if diff := cmp.Diff(want, got, cmpopts.IgnoreFields(internal.LegacyPackage{}, "DocumentationHTML"), cmp.AllowUnexported(source.Info{})); diff != "" {
-		t.Errorf("testDB.GetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", pkgBar, version, diff)
+		t.Errorf("testDB.LegacyGetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", pkgBar, version, diff)
 	}
 
 	// Now re-fetch and verify that contents were overwritten.
@@ -1061,7 +1061,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 				t.Fatalf("testDB.GetModuleInfo(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
 			}
 
-			gotPkg, err := testDB.GetPackage(ctx, test.pkg, internal.UnknownModulePath, test.version)
+			gotPkg, err := testDB.LegacyGetPackage(ctx, test.pkg, internal.UnknownModulePath, test.version)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1070,7 +1070,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 				return gotPkg.Licenses[i].FilePath < gotPkg.Licenses[j].FilePath
 			})
 			if diff := cmp.Diff(test.want, gotPkg, cmpopts.IgnoreFields(internal.LegacyPackage{}, "DocumentationHTML"), cmp.AllowUnexported(source.Info{})); diff != "" {
-				t.Errorf("testDB.GetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", test.pkg, test.version, diff)
+				t.Errorf("testDB.LegacyGetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", test.pkg, test.version, diff)
 			}
 			if got, want := gotPkg.DocumentationHTML, test.want.DocumentationHTML; len(want) == 0 && len(got) != 0 {
 				t.Errorf("got non-empty documentation but want empty:\ngot: %q\nwant: %q", got, want)

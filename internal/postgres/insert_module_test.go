@@ -94,7 +94,7 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 	}
 
 	for _, wantp := range want.LegacyPackages {
-		got, err := testDB.GetPackage(ctx, wantp.Path, want.ModulePath, want.Version)
+		got, err := testDB.LegacyGetPackage(ctx, wantp.Path, want.ModulePath, want.Version)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -106,7 +106,7 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 			cmpopts.EquateEmpty(),
 		}
 		if diff := cmp.Diff(*wantp, got.LegacyPackage, opts...); diff != "" {
-			t.Fatalf("testDB.GetPackage(%q, %q) mismatch (-want +got):\n%s", wantp.Path, want.Version, diff)
+			t.Fatalf("testDB.LegacyGetPackage(%q, %q) mismatch (-want +got):\n%s", wantp.Path, want.Version, diff)
 		}
 	}
 

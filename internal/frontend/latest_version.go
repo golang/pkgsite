@@ -40,7 +40,7 @@ func (s *Server) latestVersion(ctx context.Context, packagePath, modulePath, pag
 			return "", err
 		}
 	case "pkg":
-		pkg, err := s.ds.GetPackage(ctx, packagePath, modulePath, internal.LatestVersion)
+		pkg, err := s.ds.LegacyGetPackage(ctx, packagePath, modulePath, internal.LatestVersion)
 		if err != nil {
 			return "", err
 		}

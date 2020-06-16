@@ -36,7 +36,7 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 	//   3. If there is another version that contains this package path: serve a
 	//      404 and suggest these versions.
 	//   4. Just serve a 404
-	pkg, err := s.ds.GetPackage(ctx, pkgPath, modulePath, version)
+	pkg, err := s.ds.LegacyGetPackage(ctx, pkgPath, modulePath, version)
 	if err == nil {
 		return s.servePackagePageWithPackage(ctx, w, r, pkg, version)
 	}
@@ -65,14 +65,14 @@ func (s *Server) servePackagePage(w http.ResponseWriter, r *http.Request, pkgPat
 		// whatever response we resolve below might be inconsistent or misleading.
 		return fmt.Errorf("checking for directory: %v", err)
 	}
-	_, err = s.ds.GetPackage(ctx, pkgPath, modulePath, internal.LatestVersion)
+	_, err = s.ds.LegacyGetPackage(ctx, pkgPath, modulePath, internal.LatestVersion)
 	if err == nil {
 		return pathFoundAtLatestError(ctx, "package", pkgPath, version)
 	}
 	if !errors.Is(err, derrors.NotFound) {
 		// Unlike the error handling for LegacyGetDirectory above, we don't serve an
 		// InternalServerError here. The reasoning for this is that regardless of
-		// the result of GetPackage(..., "latest"), we're going to serve a NotFound
+		// the result of LegacyGetPackage(..., "latest"), we're going to serve a NotFound
 		// response code. So the semantics of the endpoint are the same whether or
 		// not we get an unexpected error from GetPackage -- we just don't serve a
 		// more informative error response.

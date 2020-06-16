@@ -50,10 +50,10 @@ type DataSource interface {
 	// LegacyGetModuleLicenses returns all top-level Licenses for the given modulePath
 	// and version. (i.e., Licenses contained in the module root directory)
 	LegacyGetModuleLicenses(ctx context.Context, modulePath, version string) ([]*licenses.License, error)
-	// GetPackage returns the LegacyVersionedPackage corresponding to the given package
+	// LegacyGetPackage returns the LegacyVersionedPackage corresponding to the given package
 	// pkgPath, modulePath, and version. When multiple package paths satisfy this query, it
 	// should prefer the module with the longest path.
-	GetPackage(ctx context.Context, pkgPath, modulePath, version string) (*LegacyVersionedPackage, error)
+	LegacyGetPackage(ctx context.Context, pkgPath, modulePath, version string) (*LegacyVersionedPackage, error)
 	// LegacyGetPackageLicenses returns all Licenses that apply to pkgPath, within the
 	// module version specified by modulePath and version.
 	LegacyGetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) ([]*licenses.License, error)

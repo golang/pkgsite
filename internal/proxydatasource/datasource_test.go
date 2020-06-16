@@ -111,7 +111,7 @@ func TestDataSource_GetImports(t *testing.T) {
 func TestDataSource_GetPackage_Latest(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
-	got, err := ds.GetPackage(ctx, "foo.com/bar/baz", internal.UnknownModulePath, internal.LatestVersion)
+	got, err := ds.LegacyGetPackage(ctx, "foo.com/bar/baz", internal.UnknownModulePath, internal.LatestVersion)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -145,10 +145,10 @@ func TestDataSource_LegacyGetModuleLicenses(t *testing.T) {
 	}
 }
 
-func TestDataSource_GetPackage(t *testing.T) {
+func TestDataSource_LegacyGetPackage(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
-	got, err := ds.GetPackage(ctx, "foo.com/bar/baz", internal.UnknownModulePath, "v1.2.0")
+	got, err := ds.LegacyGetPackage(ctx, "foo.com/bar/baz", internal.UnknownModulePath, "v1.2.0")
 	if err != nil {
 		t.Fatal(err)
 	}

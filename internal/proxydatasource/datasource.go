@@ -107,7 +107,7 @@ func (ds *DataSource) GetDirectoryNew(ctx context.Context, dirPath, modulePath, 
 // GetImports returns package imports as extracted from the module zip.
 func (ds *DataSource) GetImports(ctx context.Context, pkgPath, modulePath, version string) (_ []string, err error) {
 	defer derrors.Wrap(&err, "GetImports(%q, %q, %q)", pkgPath, modulePath, version)
-	vp, err := ds.GetPackage(ctx, pkgPath, modulePath, version)
+	vp, err := ds.LegacyGetPackage(ctx, pkgPath, modulePath, version)
 	if err != nil {
 		return nil, err
 	}
@@ -131,12 +131,12 @@ func (ds *DataSource) LegacyGetModuleLicenses(ctx context.Context, modulePath, v
 	return filtered, nil
 }
 
-// GetPackage returns a LegacyVersionedPackage for the given pkgPath and version. If
+// LegacyGetPackage returns a LegacyVersionedPackage for the given pkgPath and version. If
 // such a package exists in the cache, it will be returned without querying the
 // proxy. Otherwise, the proxy is queried to find the longest module path at
 // that version containing the package.
-func (ds *DataSource) GetPackage(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.LegacyVersionedPackage, err error) {
-	defer derrors.Wrap(&err, "GetPackage(%q, %q)", pkgPath, version)
+func (ds *DataSource) LegacyGetPackage(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.LegacyVersionedPackage, err error) {
+	defer derrors.Wrap(&err, "LegacyGetPackage(%q, %q)", pkgPath, version)
 
 	var m *internal.Module
 	if modulePath != internal.UnknownModulePath {

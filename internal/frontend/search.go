@@ -154,7 +154,7 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 		return fmt.Sprintf("/mod/%s", requestedPath)
 	}
 
-	pkg, err := ds.GetPackage(ctx, requestedPath, internal.UnknownModulePath, internal.LatestVersion)
+	pkg, err := ds.LegacyGetPackage(ctx, requestedPath, internal.UnknownModulePath, internal.LatestVersion)
 	if err == nil {
 		return fmt.Sprintf("/%s", pkg.Path)
 	} else if !errors.Is(err, derrors.NotFound) {
