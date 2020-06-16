@@ -150,10 +150,10 @@ func (ds *DataSource) GetPackage(ctx context.Context, pkgPath, modulePath, versi
 	return packageFromVersion(pkgPath, m)
 }
 
-// GetPackageLicenses returns the Licenses that apply to pkgPath within the
+// LegacyGetPackageLicenses returns the Licenses that apply to pkgPath within the
 // module version specified by modulePath and version.
-func (ds *DataSource) GetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) (_ []*licenses.License, err error) {
-	defer derrors.Wrap(&err, "GetPackageLicenses(%q, %q, %q)", pkgPath, modulePath, version)
+func (ds *DataSource) LegacyGetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) (_ []*licenses.License, err error) {
+	defer derrors.Wrap(&err, "LegacyGetPackageLicenses(%q, %q, %q)", pkgPath, modulePath, version)
 	v, err := ds.getModule(ctx, modulePath, version)
 	if err != nil {
 		return nil, err

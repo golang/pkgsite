@@ -47,7 +47,7 @@ func TestLegacyGetModuleLicenses(t *testing.T) {
 	}
 }
 
-func TestGetPackageLicenses(t *testing.T) {
+func TestLegacyGetPackageLicenses(t *testing.T) {
 	modulePath := "test.module"
 	testModule := sample.Module(modulePath, "v1.2.3", "", "foo")
 	testModule.LegacyPackages[0].Licenses = nil
@@ -78,7 +78,7 @@ func TestGetPackageLicenses(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.label, func(t *testing.T) {
-			got, err := testDB.GetPackageLicenses(ctx, test.pkgPath, modulePath, testModule.Version)
+			got, err := testDB.LegacyGetPackageLicenses(ctx, test.pkgPath, modulePath, testModule.Version)
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -157,16 +157,16 @@ func TestDataSource_GetPackage(t *testing.T) {
 	}
 }
 
-func TestDataSource_GetPackageLicenses(t *testing.T) {
+func TestDataSource_LegacyGetPackageLicenses(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
-	got, err := ds.GetPackageLicenses(ctx, "foo.com/bar/baz", "foo.com/bar", "v1.2.0")
+	got, err := ds.LegacyGetPackageLicenses(ctx, "foo.com/bar/baz", "foo.com/bar", "v1.2.0")
 	if err != nil {
 		t.Fatal(err)
 	}
 	want := []*licenses.License{wantLicense}
 	if diff := cmp.Diff(want, got, cmpOpts...); diff != "" {
-		t.Errorf("GetPackageLicenses diff (-want +got):\n%s", diff)
+		t.Errorf("LegacyGetPackageLicenses diff (-want +got):\n%s", diff)
 	}
 }
 

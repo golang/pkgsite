@@ -42,11 +42,11 @@ func (db *DB) LegacyGetModuleLicenses(ctx context.Context, modulePath, version s
 	return collectLicenses(rows)
 }
 
-// GetPackageLicenses returns all licenses associated with the given package path and
+// LegacyGetPackageLicenses returns all licenses associated with the given package path and
 // version.
 // It returns an InvalidArgument error if the module path or version is invalid.
-func (db *DB) GetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) (_ []*licenses.License, err error) {
-	defer derrors.Wrap(&err, "GetPackageLicenses(ctx, %q, %q, %q)", pkgPath, modulePath, version)
+func (db *DB) LegacyGetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) (_ []*licenses.License, err error) {
+	defer derrors.Wrap(&err, "LegacyGetPackageLicenses(ctx, %q, %q, %q)", pkgPath, modulePath, version)
 
 	if pkgPath == "" || version == "" {
 		return nil, fmt.Errorf("neither pkgPath nor version can be empty: %w", derrors.InvalidArgument)

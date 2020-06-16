@@ -54,9 +54,9 @@ type DataSource interface {
 	// pkgPath, modulePath, and version. When multiple package paths satisfy this query, it
 	// should prefer the module with the longest path.
 	GetPackage(ctx context.Context, pkgPath, modulePath, version string) (*LegacyVersionedPackage, error)
-	// GetPackageLicenses returns all Licenses that apply to pkgPath, within the
+	// LegacyGetPackageLicenses returns all Licenses that apply to pkgPath, within the
 	// module version specified by modulePath and version.
-	GetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) ([]*licenses.License, error)
+	LegacyGetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) ([]*licenses.License, error)
 	// GetPackagesInModule returns LegacyPackages contained in the module version
 	// specified by modulePath and version.
 	GetPackagesInModule(ctx context.Context, modulePath, version string) ([]*LegacyPackage, error)
