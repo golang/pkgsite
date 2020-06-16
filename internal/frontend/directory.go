@@ -42,7 +42,7 @@ func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, 
 		tab = "subdirectories"
 		settings = directoryTabLookup[tab]
 	}
-	licenses, err := s.ds.GetModuleLicenses(ctx, dbDir.ModulePath, dbDir.Version)
+	licenses, err := s.ds.LegacyGetModuleLicenses(ctx, dbDir.ModulePath, dbDir.Version)
 	if err != nil {
 		return err
 	}

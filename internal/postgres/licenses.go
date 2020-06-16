@@ -17,11 +17,11 @@ import (
 	"golang.org/x/pkgsite/internal/licenses"
 )
 
-// GetModuleLicenses returns all licenses associated with the given module path and
+// LegacyGetModuleLicenses returns all licenses associated with the given module path and
 // version. These are the top-level licenses in the module zip file.
 // It returns an InvalidArgument error if the module path or version is invalid.
-func (db *DB) GetModuleLicenses(ctx context.Context, modulePath, version string) (_ []*licenses.License, err error) {
-	defer derrors.Wrap(&err, "GetModuleLicenses(ctx, %q, %q)", modulePath, version)
+func (db *DB) LegacyGetModuleLicenses(ctx context.Context, modulePath, version string) (_ []*licenses.License, err error) {
+	defer derrors.Wrap(&err, "LegacyGetModuleLicenses(ctx, %q, %q)", modulePath, version)
 
 	if modulePath == "" || version == "" {
 		return nil, fmt.Errorf("neither modulePath nor version can be empty: %w", derrors.InvalidArgument)

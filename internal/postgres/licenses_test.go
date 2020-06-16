@@ -13,7 +13,7 @@ import (
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
-func TestGetModuleLicenses(t *testing.T) {
+func TestLegacyGetModuleLicenses(t *testing.T) {
 	modulePath := "test.module"
 	testModule := sample.Module(modulePath, "v1.2.3", "", "foo", "bar")
 	testModule.LegacyPackages[0].Licenses = []*licenses.Metadata{{Types: []string{"ISC"}, FilePath: "LICENSE"}}
@@ -36,14 +36,14 @@ func TestGetModuleLicenses(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got, err := testDB.GetModuleLicenses(ctx, modulePath, testModule.Version)
+	got, err := testDB.LegacyGetModuleLicenses(ctx, modulePath, testModule.Version)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// We only want the top-level license.
 	wantLicenses := []*licenses.License{testModule.Licenses[0]}
 	if diff := cmp.Diff(wantLicenses, got); diff != "" {
-		t.Errorf("testDB.GetModuleLicenses(ctx, %q, %q) mismatch (-want +got):\n%s", modulePath, testModule.Version, diff)
+		t.Errorf("testDB.LegacyGetModuleLicenses(ctx, %q, %q) mismatch (-want +got):\n%s", modulePath, testModule.Version, diff)
 	}
 }
 

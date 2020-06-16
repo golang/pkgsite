@@ -49,7 +49,7 @@ func (s *Server) serveModulePage(w http.ResponseWriter, r *http.Request, moduleP
 }
 
 func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseWriter, r *http.Request, mi *internal.LegacyModuleInfo, requestedVersion string) error {
-	licenses, err := s.ds.GetModuleLicenses(ctx, mi.ModulePath, mi.Version)
+	licenses, err := s.ds.LegacyGetModuleLicenses(ctx, mi.ModulePath, mi.Version)
 	if err != nil {
 		return err
 	}

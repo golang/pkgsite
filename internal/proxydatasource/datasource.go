@@ -114,10 +114,10 @@ func (ds *DataSource) GetImports(ctx context.Context, pkgPath, modulePath, versi
 	return vp.Imports, nil
 }
 
-// GetModuleLicenses returns root-level licenses detected within the module zip
+// LegacyGetModuleLicenses returns root-level licenses detected within the module zip
 // for modulePath and version.
-func (ds *DataSource) GetModuleLicenses(ctx context.Context, modulePath, version string) (_ []*licenses.License, err error) {
-	defer derrors.Wrap(&err, "GetModuleLicenses(%q, %q)", modulePath, version)
+func (ds *DataSource) LegacyGetModuleLicenses(ctx context.Context, modulePath, version string) (_ []*licenses.License, err error) {
+	defer derrors.Wrap(&err, "LegacyGetModuleLicenses(%q, %q)", modulePath, version)
 	v, err := ds.getModule(ctx, modulePath, version)
 	if err != nil {
 		return nil, err

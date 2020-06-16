@@ -612,7 +612,7 @@ func validateModule(m *internal.Module) (err error) {
 // are licenses in the licenses table that are not present in m.Licenses.
 func (db *DB) compareLicenses(ctx context.Context, m *internal.Module) (err error) {
 	defer derrors.Wrap(&err, "compareLicenses(ctx, %q, %q)", m.ModulePath, m.Version)
-	dbLicenses, err := db.GetModuleLicenses(ctx, m.ModulePath, m.Version)
+	dbLicenses, err := db.LegacyGetModuleLicenses(ctx, m.ModulePath, m.Version)
 	if err != nil {
 		return err
 	}
