@@ -208,7 +208,7 @@ func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds 
 	case "licenses":
 		return &LicensesDetails{Licenses: transformLicenses(mi.ModulePath, mi.Version, licenses)}, nil
 	case "versions":
-		return fetchModuleVersionsDetails(ctx, ds, mi)
+		return fetchModuleVersionsDetails(ctx, ds, &mi.ModuleInfo)
 	case "overview":
 		// TODO(b/138448402): implement remaining module views.
 		readme := &internal.Readme{Filepath: mi.LegacyReadmeFilePath, Contents: mi.LegacyReadmeContents}

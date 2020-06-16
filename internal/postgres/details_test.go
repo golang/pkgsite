@@ -193,7 +193,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 		name, path, modulePath string
 		numPseudo              int
 		modules                []*internal.Module
-		wantTaggedVersions     []*internal.LegacyModuleInfo
+		wantTaggedVersions     []*internal.ModuleInfo
 	}{
 		{
 			name:       "want_releases_and_prereleases_only",
@@ -201,34 +201,26 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 			modulePath: modulePath1,
 			numPseudo:  12,
 			modules:    testModules,
-			wantTaggedVersions: []*internal.LegacyModuleInfo{
+			wantTaggedVersions: []*internal.ModuleInfo{
 				{
-					ModuleInfo: internal.ModuleInfo{
-						ModulePath: modulePath2,
-						Version:    "v2.1.0",
-						CommitTime: sample.CommitTime,
-					},
+					ModulePath: modulePath2,
+					Version:    "v2.1.0",
+					CommitTime: sample.CommitTime,
 				},
 				{
-					ModuleInfo: internal.ModuleInfo{
-						ModulePath: modulePath2,
-						Version:    "v2.0.1-beta",
-						CommitTime: sample.CommitTime,
-					},
+					ModulePath: modulePath2,
+					Version:    "v2.0.1-beta",
+					CommitTime: sample.CommitTime,
 				},
 				{
-					ModuleInfo: internal.ModuleInfo{
-						ModulePath: modulePath1,
-						Version:    "v1.0.0",
-						CommitTime: sample.CommitTime,
-					},
+					ModulePath: modulePath1,
+					Version:    "v1.0.0",
+					CommitTime: sample.CommitTime,
 				},
 				{
-					ModuleInfo: internal.ModuleInfo{
-						ModulePath: modulePath1,
-						Version:    "v1.0.0-alpha.1",
-						CommitTime: sample.CommitTime,
-					},
+					ModulePath: modulePath1,
+					Version:    "v1.0.0-alpha.1",
+					CommitTime: sample.CommitTime,
 				},
 			},
 		},
@@ -249,7 +241,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			defer ResetTestDB(testDB, t)
 
-			var wantPseudoVersions []*internal.LegacyModuleInfo
+			var wantPseudoVersions []*internal.ModuleInfo
 			for i := 0; i < tc.numPseudo; i++ {
 
 				pseudo := fmt.Sprintf("v0.0.0-201806111833%02d-d8887717615a", i+1)
@@ -261,12 +253,10 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 				// GetPseudoVersions should only return the 10 most recent pseudo versions,
 				// if there are more than 10 in the database
 				if i < 10 {
-					wantPseudoVersions = append(wantPseudoVersions, &internal.LegacyModuleInfo{
-						ModuleInfo: internal.ModuleInfo{
-							ModulePath: modulePath1,
-							Version:    fmt.Sprintf("v0.0.0-201806111833%02d-d8887717615a", tc.numPseudo-i),
-							CommitTime: sample.CommitTime,
-						},
+					wantPseudoVersions = append(wantPseudoVersions, &internal.ModuleInfo{
+						ModulePath: modulePath1,
+						Version:    fmt.Sprintf("v0.0.0-201806111833%02d-d8887717615a", tc.numPseudo-i),
+						CommitTime: sample.CommitTime,
 					})
 				}
 			}
@@ -308,7 +298,6 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 			if diff := cmp.Diff(tc.wantTaggedVersions, got, cmp.AllowUnexported(source.Info{})); diff != "" {
 				t.Errorf("testDB.GetTaggedVersionsForModule(%q) mismatch (-want +got):\n%s", tc.path, diff)
 			}
-
 		})
 	}
 }

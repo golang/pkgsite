@@ -25,17 +25,17 @@ type DataSource interface {
 	GetPathInfo(ctx context.Context, path, inModulePath, inVersion string) (outModulePath, outVersion string, isPackage bool, err error)
 	// GetPseudoVersionsForModule returns LegacyModuleInfo for all known
 	// pseudo-versions for the module corresponding to modulePath.
-	GetPseudoVersionsForModule(ctx context.Context, modulePath string) ([]*LegacyModuleInfo, error)
+	GetPseudoVersionsForModule(ctx context.Context, modulePath string) ([]*ModuleInfo, error)
 	// GetPseudoVersionsForModule returns LegacyModuleInfo for all known
 	// pseudo-versions for any module containing a package with the given import
 	// path.
-	GetPseudoVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*LegacyModuleInfo, error)
+	GetPseudoVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*ModuleInfo, error)
 	// GetTaggedVersionsForModule returns LegacyModuleInfo for all known tagged
 	// versions for the module corresponding to modulePath.
-	GetTaggedVersionsForModule(ctx context.Context, modulePath string) ([]*LegacyModuleInfo, error)
+	GetTaggedVersionsForModule(ctx context.Context, modulePath string) ([]*ModuleInfo, error)
 	// GetTaggedVersionsForModule returns LegacyModuleInfo for all known tagged
 	// versions for any module containing a package with the given import path.
-	GetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*LegacyModuleInfo, error)
+	GetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*ModuleInfo, error)
 
 	// TODO(b/155474770): Deprecate these methods.
 	//

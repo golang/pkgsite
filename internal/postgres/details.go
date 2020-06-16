@@ -71,21 +71,21 @@ func (db *DB) LegacyGetPackagesInModule(ctx context.Context, modulePath, version
 // GetTaggedVersionsForPackageSeries returns a list of tagged versions sorted in
 // descending semver order. This list includes tagged versions of packages that
 // have the same v1path.
-func (db *DB) GetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*internal.LegacyModuleInfo, error) {
+func (db *DB) GetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*internal.ModuleInfo, error) {
 	return getPackageVersions(ctx, db, pkgPath, []version.Type{version.TypeRelease, version.TypePrerelease})
 }
 
 // GetPseudoVersionsForPackageSeries returns the 10 most recent from a list of
 // pseudo-versions sorted in descending semver order. This list includes
 // pseudo-versions of packages that have the same v1path.
-func (db *DB) GetPseudoVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*internal.LegacyModuleInfo, error) {
+func (db *DB) GetPseudoVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*internal.ModuleInfo, error) {
 	return getPackageVersions(ctx, db, pkgPath, []version.Type{version.TypePseudo})
 }
 
 // getPackageVersions returns a list of versions sorted in descending semver
 // order. The version types included in the list are specified by a list of
 // VersionTypes.
-func getPackageVersions(ctx context.Context, db *DB, pkgPath string, versionTypes []version.Type) (_ []*internal.LegacyModuleInfo, err error) {
+func getPackageVersions(ctx context.Context, db *DB, pkgPath string, versionTypes []version.Type) (_ []*internal.ModuleInfo, err error) {
 	defer derrors.Wrap(&err, "DB.getPackageVersions(ctx, db, %q, %v)", pkgPath, versionTypes)
 
 	baseQuery := `
@@ -124,9 +124,9 @@ func getPackageVersions(ctx context.Context, db *DB, pkgPath string, versionType
 	}
 	defer rows.Close()
 
-	var versionHistory []*internal.LegacyModuleInfo
+	var versionHistory []*internal.ModuleInfo
 	for rows.Next() {
-		var mi internal.LegacyModuleInfo
+		var mi internal.ModuleInfo
 		if err := rows.Scan(&mi.ModulePath, &mi.Version, &mi.CommitTime); err != nil {
 			return nil, fmt.Errorf("row.Scan(): %v", err)
 		}
@@ -152,20 +152,20 @@ func versionTypeExpr(vts []version.Type) string {
 
 // GetTaggedVersionsForModule returns a list of tagged versions sorted in
 // descending semver order.
-func (db *DB) GetTaggedVersionsForModule(ctx context.Context, modulePath string) ([]*internal.LegacyModuleInfo, error) {
+func (db *DB) GetTaggedVersionsForModule(ctx context.Context, modulePath string) ([]*internal.ModuleInfo, error) {
 	return getModuleVersions(ctx, db, modulePath, []version.Type{version.TypeRelease, version.TypePrerelease})
 }
 
 // GetPseudoVersionsForModule returns the 10 most recent from a list of
 // pseudo-versions sorted in descending semver order.
-func (db *DB) GetPseudoVersionsForModule(ctx context.Context, modulePath string) ([]*internal.LegacyModuleInfo, error) {
+func (db *DB) GetPseudoVersionsForModule(ctx context.Context, modulePath string) ([]*internal.ModuleInfo, error) {
 	return getModuleVersions(ctx, db, modulePath, []version.Type{version.TypePseudo})
 }
 
 // getModuleVersions returns a list of versions sorted in descending semver
 // order. The version types included in the list are specified by a list of
 // VersionTypes.
-func getModuleVersions(ctx context.Context, db *DB, modulePath string, versionTypes []version.Type) (_ []*internal.LegacyModuleInfo, err error) {
+func getModuleVersions(ctx context.Context, db *DB, modulePath string, versionTypes []version.Type) (_ []*internal.ModuleInfo, err error) {
 	// TODO(b/139530312): get information for parent modules.
 	defer derrors.Wrap(&err, "getModuleVersions(ctx, db, %q, %v)", modulePath, versionTypes)
 
@@ -187,9 +187,9 @@ func getModuleVersions(ctx context.Context, db *DB, modulePath string, versionTy
 		queryEnd = `LIMIT 10;`
 	}
 	query := fmt.Sprintf(baseQuery, versionTypeExpr(versionTypes), queryEnd)
-	var vinfos []*internal.LegacyModuleInfo
+	var vinfos []*internal.ModuleInfo
 	collect := func(rows *sql.Rows) error {
-		var mi internal.LegacyModuleInfo
+		var mi internal.ModuleInfo
 		if err := rows.Scan(&mi.ModulePath, &mi.Version, &mi.CommitTime); err != nil {
 			return err
 		}

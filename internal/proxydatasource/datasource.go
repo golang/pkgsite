@@ -188,7 +188,7 @@ func (ds *DataSource) LegacyGetPackagesInModule(ctx context.Context, modulePath,
 
 // GetPseudoVersionsForModule returns versions from the the proxy /list
 // endpoint, if they are pseudoversions. Otherwise, it returns an empty slice.
-func (ds *DataSource) GetPseudoVersionsForModule(ctx context.Context, modulePath string) (_ []*internal.LegacyModuleInfo, err error) {
+func (ds *DataSource) GetPseudoVersionsForModule(ctx context.Context, modulePath string) (_ []*internal.ModuleInfo, err error) {
 	defer derrors.Wrap(&err, "GetPseudoVersionsForModule(%q)", modulePath)
 	return ds.listModuleVersions(ctx, modulePath, true)
 }
@@ -196,14 +196,14 @@ func (ds *DataSource) GetPseudoVersionsForModule(ctx context.Context, modulePath
 // GetPseudoVersionsForPackageSeries finds the longest module path containing
 // pkgPath, and returns its versions from the proxy /list endpoint, if they are
 // pseudoversions. Otherwise, it returns an empty slice.
-func (ds *DataSource) GetPseudoVersionsForPackageSeries(ctx context.Context, pkgPath string) (_ []*internal.LegacyModuleInfo, err error) {
+func (ds *DataSource) GetPseudoVersionsForPackageSeries(ctx context.Context, pkgPath string) (_ []*internal.ModuleInfo, err error) {
 	defer derrors.Wrap(&err, "GetPseudoVersionsForPackageSeries(%q)", pkgPath)
 	return ds.listPackageVersions(ctx, pkgPath, true)
 }
 
 // GetTaggedVersionsForModule returns versions from the the proxy /list
 // endpoint, if they are tagged versions. Otherwise, it returns an empty slice.
-func (ds *DataSource) GetTaggedVersionsForModule(ctx context.Context, modulePath string) (_ []*internal.LegacyModuleInfo, err error) {
+func (ds *DataSource) GetTaggedVersionsForModule(ctx context.Context, modulePath string) (_ []*internal.ModuleInfo, err error) {
 	defer derrors.Wrap(&err, "GetTaggedVersionsForModule(%q)", modulePath)
 	return ds.listModuleVersions(ctx, modulePath, false)
 }
@@ -211,7 +211,7 @@ func (ds *DataSource) GetTaggedVersionsForModule(ctx context.Context, modulePath
 // GetTaggedVersionsForPackageSeries finds the longest module path containing
 // pkgPath, and returns its versions from the proxy /list endpoint, if they are
 // tagged versions. Otherwise, it returns an empty slice.
-func (ds *DataSource) GetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) (_ []*internal.LegacyModuleInfo, err error) {
+func (ds *DataSource) GetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) (_ []*internal.ModuleInfo, err error) {
 	defer derrors.Wrap(&err, "GetTaggedVersionsForPackageSeries(%q)", pkgPath)
 	return ds.listPackageVersions(ctx, pkgPath, false)
 }
@@ -302,7 +302,7 @@ func (ds *DataSource) findModule(ctx context.Context, pkgPath string, version st
 // calls the proxy /list endpoint to list its versions. If pseudo is true, it
 // filters to pseudo versions.  If pseudo is false, it filters to tagged
 // versions.
-func (ds *DataSource) listPackageVersions(ctx context.Context, pkgPath string, pseudo bool) (_ []*internal.LegacyModuleInfo, err error) {
+func (ds *DataSource) listPackageVersions(ctx context.Context, pkgPath string, pseudo bool) (_ []*internal.ModuleInfo, err error) {
 	defer derrors.Wrap(&err, "listPackageVersions(%q, %t)", pkgPath, pseudo)
 	ds.mu.RLock()
 	mods := ds.packagePathToModules[pkgPath]
@@ -324,13 +324,13 @@ func (ds *DataSource) listPackageVersions(ctx context.Context, pkgPath string, p
 // calls the proxy /list endpoint to list its versions. If pseudo is true, it
 // filters to pseudo versions.  If pseudo is false, it filters to tagged
 // versions.
-func (ds *DataSource) listModuleVersions(ctx context.Context, modulePath string, pseudo bool) (_ []*internal.LegacyModuleInfo, err error) {
+func (ds *DataSource) listModuleVersions(ctx context.Context, modulePath string, pseudo bool) (_ []*internal.ModuleInfo, err error) {
 	defer derrors.Wrap(&err, "listModuleVersions(%q, %t)", modulePath, pseudo)
 	versions, err := ds.proxyClient.ListVersions(ctx, modulePath)
 	if err != nil {
 		return nil, err
 	}
-	var vis []*internal.LegacyModuleInfo
+	var vis []*internal.ModuleInfo
 	ds.mu.RLock()
 	defer ds.mu.RUnlock()
 	for _, vers := range versions {
@@ -341,17 +341,15 @@ func (ds *DataSource) listModuleVersions(ctx context.Context, modulePath string,
 			continue
 		}
 		if v, ok := ds.versionCache[versionKey{modulePath, vers}]; ok {
-			vis = append(vis, &v.module.LegacyModuleInfo)
+			vis = append(vis, &v.module.ModuleInfo)
 		} else {
-			// In this case we can't produce s LegacyModuleInfo without fully processing
+			// In this case we can't produce ModuleInfo without fully processing
 			// the module zip, so we instead append a stub. We could further query
 			// for this version's /info endpoint to get commit time, but that is
 			// deferred as a potential future enhancement.
-			vis = append(vis, &internal.LegacyModuleInfo{
-				ModuleInfo: internal.ModuleInfo{
-					ModulePath: modulePath,
-					Version:    vers,
-				},
+			vis = append(vis, &internal.ModuleInfo{
+				ModulePath: modulePath,
+				Version:    vers,
 			})
 		}
 	}

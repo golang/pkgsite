@@ -192,11 +192,11 @@ func TestDataSource_GetTaggedVersionsForModule(t *testing.T) {
 	}
 	v110 := wantModuleInfo
 	v110.Version = "v1.1.0"
-	want := []*internal.LegacyModuleInfo{
-		{ModuleInfo: wantModuleInfo},
-		{ModuleInfo: v110},
+	want := []*internal.ModuleInfo{
+		&wantModuleInfo,
+		&v110,
 	}
-	ignore := cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "CommitTime", "VersionType", "IsRedistributable", "HasGoMod")
+	ignore := cmpopts.IgnoreFields(internal.ModuleInfo{}, "CommitTime", "VersionType", "IsRedistributable", "HasGoMod")
 	if diff := cmp.Diff(want, got, ignore); diff != "" {
 		t.Errorf("GetTaggedVersionsForPackageSeries diff (-want +got):\n%s", diff)
 	}
@@ -216,11 +216,11 @@ func TestDataSource_GetTaggedVersionsForPackageSeries(t *testing.T) {
 	}
 	v110 := wantModuleInfo
 	v110.Version = "v1.1.0"
-	want := []*internal.LegacyModuleInfo{
-		{ModuleInfo: wantModuleInfo},
-		{ModuleInfo: v110},
+	want := []*internal.ModuleInfo{
+		&wantModuleInfo,
+		&v110,
 	}
-	ignore := cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "CommitTime", "VersionType", "IsRedistributable", "HasGoMod")
+	ignore := cmpopts.IgnoreFields(internal.ModuleInfo{}, "CommitTime", "VersionType", "IsRedistributable", "HasGoMod")
 	if diff := cmp.Diff(want, got, ignore); diff != "" {
 		t.Errorf("GetTaggedVersionsForPackageSeries diff (-want +got):\n%s", diff)
 	}
