@@ -32,9 +32,5 @@ go-discovery*.json
 *credentials.yaml
 *.gcloudignore
 
-#### Editor Related Files ####
-tags
-env*.sh
-
 #### Loadtest Related Files ####
 results.bin
