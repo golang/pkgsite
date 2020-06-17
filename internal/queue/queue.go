@@ -120,29 +120,31 @@ type InMemory struct {
 	sourceClient *source.Client
 	db           *postgres.DB
 
-	queue       chan moduleVersion
-	sem         chan struct{}
-	experiments *experiment.Set
+	queue           chan moduleVersion
+	sem             chan struct{}
+	experiments     *experiment.Set
+	appVersionLabel string
 }
 
 // NewInMemory creates a new InMemory that asynchronously fetches
 // from proxyClient and stores in db. It uses workerCount parallelism to
 // execute these fetches.
 func NewInMemory(ctx context.Context, proxyClient *proxy.Client, sourceClient *source.Client, db *postgres.DB, workerCount int,
-	processFunc func(context.Context, string, string, *proxy.Client, *source.Client, *postgres.DB) (int, error), experiments *experiment.Set) *InMemory {
+	processFunc func(context.Context, string, string, *proxy.Client, *source.Client, *postgres.DB, string) (int, error), experiments *experiment.Set, appVersionLabel string) *InMemory {
 	q := &InMemory{
-		proxyClient:  proxyClient,
-		sourceClient: sourceClient,
-		db:           db,
-		queue:        make(chan moduleVersion, 1000),
-		sem:          make(chan struct{}, workerCount),
-		experiments:  experiments,
+		proxyClient:     proxyClient,
+		sourceClient:    sourceClient,
+		db:              db,
+		queue:           make(chan moduleVersion, 1000),
+		sem:             make(chan struct{}, workerCount),
+		experiments:     experiments,
+		appVersionLabel: appVersionLabel,
 	}
 	go q.process(ctx, processFunc)
 	return q
 }
 
-func (q *InMemory) process(ctx context.Context, processFunc func(context.Context, string, string, *proxy.Client, *source.Client, *postgres.DB) (int, error)) {
+func (q *InMemory) process(ctx context.Context, processFunc func(context.Context, string, string, *proxy.Client, *source.Client, *postgres.DB, string) (int, error)) {
 
 	for v := range q.queue {
 		select {
@@ -162,7 +164,7 @@ func (q *InMemory) process(ctx context.Context, processFunc func(context.Context
 			fetchCtx = experiment.NewContext(fetchCtx, q.experiments)
 			defer cancel()
 
-			if _, err := processFunc(fetchCtx, v.modulePath, v.version, q.proxyClient, q.sourceClient, q.db); err != nil {
+			if _, err := processFunc(fetchCtx, v.modulePath, v.version, q.proxyClient, q.sourceClient, q.db, q.appVersionLabel); err != nil {
 				log.Error(fetchCtx, err)
 			}
 		}(v)

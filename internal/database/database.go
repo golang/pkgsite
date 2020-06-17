@@ -20,7 +20,6 @@ import (
 	"unicode"
 
 	"github.com/lib/pq"
-	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
 )
@@ -33,13 +32,14 @@ import (
 // operate within the transaction.
 type DB struct {
 	db         *sql.DB
+	instanceID string
 	tx         *sql.Tx
 	mu         sync.Mutex
 	maxRetries int // max times a single transaction was retried
 }
 
 // Open creates a new DB  for the given connection string.
-func Open(driverName, dbinfo string) (_ *DB, err error) {
+func Open(driverName, dbinfo, instanceID string) (_ *DB, err error) {
 	defer derrors.Wrap(&err, "database.Open(%q, %q)",
 		driverName, redactPassword(dbinfo))
 
@@ -50,12 +50,12 @@ func Open(driverName, dbinfo string) (_ *DB, err error) {
 	if err := db.Ping(); err != nil {
 		return nil, err
 	}
-	return New(db), nil
+	return New(db, instanceID), nil
 }
 
 // New creates a new DB from a sql.DB.
-func New(db *sql.DB) *DB {
-	return &DB{db: db}
+func New(db *sql.DB, instanceID string) *DB {
+	return &DB{db: db, instanceID: instanceID}
 }
 
 func (db *DB) InTransaction() bool {
@@ -75,7 +75,7 @@ func (db *DB) Close() error {
 
 // Exec executes a SQL statement.
 func (db *DB) Exec(ctx context.Context, query string, args ...interface{}) (res sql.Result, err error) {
-	defer logQuery(ctx, query, args)(&err)
+	defer logQuery(ctx, query, args, db.instanceID)(&err)
 
 	if db.tx != nil {
 		return db.tx.ExecContext(ctx, query, args...)
@@ -85,7 +85,7 @@ func (db *DB) Exec(ctx context.Context, query string, args ...interface{}) (res 
 
 // Query runs the DB query.
 func (db *DB) Query(ctx context.Context, query string, args ...interface{}) (_ *sql.Rows, err error) {
-	defer logQuery(ctx, query, args)(&err)
+	defer logQuery(ctx, query, args, db.instanceID)(&err)
 	if db.tx != nil {
 		return db.tx.QueryContext(ctx, query, args...)
 	}
@@ -94,7 +94,7 @@ func (db *DB) Query(ctx context.Context, query string, args ...interface{}) (_ *
 
 // QueryRow runs the query and returns a single row.
 func (db *DB) QueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
-	defer logQuery(ctx, query, args)(nil)
+	defer logQuery(ctx, query, args, db.instanceID)(nil)
 	if db.tx != nil {
 		return db.tx.QueryRowContext(ctx, query, args...)
 	}
@@ -102,7 +102,7 @@ func (db *DB) QueryRow(ctx context.Context, query string, args ...interface{}) *
 }
 
 func (db *DB) Prepare(ctx context.Context, query string) (*sql.Stmt, error) {
-	defer logQuery(ctx, "preparing "+query, nil)
+	defer logQuery(ctx, "preparing "+query, nil, db.instanceID)
 	if db.tx != nil {
 		return db.tx.PrepareContext(ctx, query)
 	}
@@ -200,9 +200,9 @@ func (db *DB) transact(ctx context.Context, opts *sql.TxOptions, txFunc func(*DB
 		}
 	}()
 
-	dbtx := New(db.db)
+	dbtx := New(db.db, db.instanceID)
 	dbtx.tx = tx
-	defer logTransaction(ctx, opts)(&err)
+	defer dbtx.logTransaction(ctx, opts)(&err)
 	if err := txFunc(dbtx); err != nil {
 		return fmt.Errorf("txFunc(tx): %w", err)
 	}
@@ -451,7 +451,7 @@ type queryEndLogEntry struct {
 	Error           string `json:",omitempty"`
 }
 
-func logQuery(ctx context.Context, query string, args []interface{}) func(*error) {
+func logQuery(ctx context.Context, query string, args []interface{}, instanceID string) func(*error) {
 	if QueryLoggingDisabled {
 		return func(*error) {}
 	}
@@ -473,7 +473,7 @@ func logQuery(ctx context.Context, query string, args []interface{}) func(*error
 		query = query[:maxlen] + "..."
 	}
 
-	uid := generateLoggingID()
+	uid := generateLoggingID(instanceID)
 
 	// Construct a short string of the args.
 	const (
@@ -517,11 +517,11 @@ func logQuery(ctx context.Context, query string, args []interface{}) func(*error
 	}
 }
 
-func logTransaction(ctx context.Context, opts *sql.TxOptions) func(*error) {
+func (db *DB) logTransaction(ctx context.Context, opts *sql.TxOptions) func(*error) {
 	if QueryLoggingDisabled {
 		return func(*error) {}
 	}
-	uid := generateLoggingID()
+	uid := generateLoggingID(db.instanceID)
 	isoLevel := "default"
 	if opts != nil {
 		isoLevel = opts.Isolation.String()
@@ -534,8 +534,7 @@ func logTransaction(ctx context.Context, opts *sql.TxOptions) func(*error) {
 	}
 }
 
-func generateLoggingID() string {
-	instanceID := config.InstanceID()
+func generateLoggingID(instanceID string) string {
 	if instanceID == "" {
 		instanceID = "local"
 	} else {

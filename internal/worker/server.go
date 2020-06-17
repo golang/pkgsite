@@ -239,7 +239,7 @@ func (s *Server) doFetch(r *http.Request) (string, int) {
 		return err.Error(), http.StatusBadRequest
 	}
 
-	code, err := FetchAndUpdateState(r.Context(), modulePath, version, s.proxyClient, s.sourceClient, s.db)
+	code, err := FetchAndUpdateState(r.Context(), modulePath, version, s.proxyClient, s.sourceClient, s.db, s.cfg.AppVersionLabel())
 	if err != nil {
 		return err.Error(), code
 	}

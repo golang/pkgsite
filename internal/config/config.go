@@ -38,14 +38,6 @@ func GetEnv(key, fallback string) string {
 	return fallback
 }
 
-func InstanceID() string {
-	return cfg.InstanceID
-}
-
-func AppVersionLabel() string {
-	return cfg.AppVersionLabel()
-}
-
 // AppVersionFormat is the expected format of the app version timestamp.
 const AppVersionFormat = "20060102t150405"
 
@@ -122,7 +114,6 @@ func (c *Config) AppVersionLabel() string {
 // OnAppEngine reports if the current process is running in an AppEngine
 // environment.
 func (c *Config) OnAppEngine() bool {
-	// TODO(rfindley): verify that this works for the go1.12 runtime
 	return c.GaeEnv == "standard"
 }
 
@@ -208,63 +199,51 @@ type QuotaSettings struct {
 	AcceptedURLs []string
 }
 
-var cfg Config
-
 const overrideBucket = "go-discovery"
 
 // Init resolves all configuration values provided by the config package. It
 // must be called before any configuration values are used.
 func Init(ctx context.Context) (_ *Config, err error) {
 	defer derrors.Add(&err, "config.Init(ctx)")
-	cfg2, err := load(ctx)
-	if err != nil {
-		return nil, err
+	// Build a Config from the execution environment, loading some values
+	// from envvars and others from remote services.
+	cfg := &Config{
+		IndexURL:  GetEnv("GO_MODULE_INDEX_URL", "https://index.golang.org/index"),
+		ProxyURL:  GetEnv("GO_MODULE_PROXY_URL", "https://proxy.golang.org"),
+		Port:      os.Getenv("PORT"),
+		DebugPort: os.Getenv("DEBUG_PORT"),
+		// Resolve AppEngine identifiers
+		ProjectID:  os.Getenv("GOOGLE_CLOUD_PROJECT"),
+		ServiceID:  os.Getenv("GAE_SERVICE"),
+		VersionID:  os.Getenv("GAE_VERSION"),
+		InstanceID: os.Getenv("GAE_INSTANCE"),
+		GaeEnv:     os.Getenv("GAE_ENV"),
+		// LocationID is essentially hard-coded until we figure out a good way to
+		// determine it programmatically, but we check an environment variable in
+		// case it needs to be overridden.
+		LocationID: GetEnv("GO_DISCOVERY_GAE_LOCATION_ID", "us-central1"),
+		// This fallback should only be used when developing locally.
+		FallbackVersionLabel: time.Now().Format(AppVersionFormat),
+		DBHost:               chooseOne(GetEnv("GO_DISCOVERY_DATABASE_HOST", "localhost")),
+		DBUser:               GetEnv("GO_DISCOVERY_DATABASE_USER", "postgres"),
+		DBPassword:           os.Getenv("GO_DISCOVERY_DATABASE_PASSWORD"),
+		DBSecondaryHost:      chooseOne(os.Getenv("GO_DISCOVERY_DATABASE_SECONDARY_HOST")),
+		DBPort:               GetEnv("GO_DISCOVERY_DATABASE_PORT", "5432"),
+		DBName:               GetEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-db"),
+		DBSecret:             os.Getenv("GO_DISCOVERY_DATABASE_SECRET"),
+		RedisCacheHost:       os.Getenv("GO_DISCOVERY_REDIS_HOST"),
+		RedisCachePort:       GetEnv("GO_DISCOVERY_REDIS_PORT", "6379"),
+		RedisHAHost:          os.Getenv("GO_DISCOVERY_REDIS_HA_HOST"),
+		RedisHAPort:          GetEnv("GO_DISCOVERY_REDIS_HA_PORT", "6379"),
+		Quota: QuotaSettings{
+			QPS:          10,
+			Burst:        20,
+			MaxEntries:   1000,
+			RecordOnly:   func() *bool { t := true; return &t }(),
+			AcceptedURLs: parseCommaList(GetEnv("GO_DISCOVERY_ACCEPTED_LIST", "")),
+		},
+		UseProfiler: os.Getenv("GO_DISCOVERY_USE_PROFILER") == "TRUE",
 	}
-	cfg = *cfg2
-	return cfg2, nil
-}
-
-// load builds a Config from the execution environment, loading some values
-// from envvars and others from remote services.
-func load(ctx context.Context) (_ *Config, err error) {
-	defer derrors.Add(&err, "config.Load(ctx)")
-
-	// TODO(b/145301722): remove this comment.
-	// This variable shadowing is temporary, as this package is being made
-	// stateless. Init is being incrementally deprecated in favor of an exported
-	// Load function.
-	cfg := &Config{}
-
-	// Resolve client/server configuration from the environment.
-	cfg.IndexURL = GetEnv("GO_MODULE_INDEX_URL", "https://index.golang.org/index")
-	cfg.ProxyURL = GetEnv("GO_MODULE_PROXY_URL", "https://proxy.golang.org")
-	cfg.Port = os.Getenv("PORT")
-	cfg.DebugPort = os.Getenv("DEBUG_PORT")
-
-	// Resolve AppEngine identifiers
-	cfg.ProjectID = os.Getenv("GOOGLE_CLOUD_PROJECT")
-	cfg.ServiceID = os.Getenv("GAE_SERVICE")
-	cfg.VersionID = os.Getenv("GAE_VERSION")
-	cfg.InstanceID = os.Getenv("GAE_INSTANCE")
-	cfg.GaeEnv = os.Getenv("GAE_ENV")
-
-	// locationID is essentially hard-coded until we figure out a good way to
-	// determine it programmatically, but we check an environment variable in
-	// case it needs to be overridden.
-	cfg.LocationID = GetEnv("GO_DISCOVERY_GAE_LOCATION_ID", "us-central1")
-
-	if cfg.GaeEnv != "" {
-		// Zone is not available in the environment but can be queried via the metadata API.
-		zone, err := gceMetadata(ctx, "instance/zone")
-		if err != nil {
-			return nil, err
-		}
-		cfg.ZoneID = zone
-	}
-
-	// this fallback should only be used when developing locally.
-	cfg.FallbackVersionLabel = time.Now().Format(AppVersionFormat)
-
 	cfg.AppMonitoredResource = &mrpb.MonitoredResource{
 		Type: "gae_app",
 		Labels: map[string]string{
@@ -275,17 +254,17 @@ func load(ctx context.Context) (_ *Config, err error) {
 		},
 	}
 
-	cfg.DBUser = GetEnv("GO_DISCOVERY_DATABASE_USER", "postgres")
-	cfg.DBPassword = os.Getenv("GO_DISCOVERY_DATABASE_PASSWORD")
-	cfg.DBHost = chooseOne(GetEnv("GO_DISCOVERY_DATABASE_HOST", "localhost"))
+	if cfg.GaeEnv != "" {
+		// Zone is not available in the environment but can be queried via the metadata API.
+		zone, err := gceMetadata(ctx, "instance/zone")
+		if err != nil {
+			return nil, err
+		}
+		cfg.ZoneID = zone
+	}
 	if cfg.DBHost == "" {
 		panic("DBHost is empty; impossible")
 	}
-	cfg.DBSecondaryHost = chooseOne(os.Getenv("GO_DISCOVERY_DATABASE_SECONDARY_HOST"))
-	cfg.DBPort = GetEnv("GO_DISCOVERY_DATABASE_PORT", "5432")
-	cfg.DBName = GetEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-db")
-	cfg.DBSecret = os.Getenv("GO_DISCOVERY_DATABASE_SECRET")
-
 	if cfg.DBSecret != "" {
 		var err error
 		cfg.DBPassword, err = secrets.Get(ctx, cfg.DBSecret)
@@ -293,19 +272,6 @@ func load(ctx context.Context) (_ *Config, err error) {
 			return nil, fmt.Errorf("could not get database password secret: %v", err)
 		}
 	}
-
-	cfg.RedisCacheHost = os.Getenv("GO_DISCOVERY_REDIS_HOST")
-	cfg.RedisCachePort = GetEnv("GO_DISCOVERY_REDIS_PORT", "6379")
-	cfg.RedisHAHost = os.Getenv("GO_DISCOVERY_REDIS_HA_HOST")
-	cfg.RedisHAPort = GetEnv("GO_DISCOVERY_REDIS_HA_PORT", "6379")
-	cfg.Quota = QuotaSettings{
-		QPS:          10,
-		Burst:        20,
-		MaxEntries:   1000,
-		RecordOnly:   func() *bool { t := true; return &t }(),
-		AcceptedURLs: parseCommaList(GetEnv("GO_DISCOVERY_ACCEPTED_LIST", "")),
-	}
-	cfg.UseProfiler = os.Getenv("GO_DISCOVERY_USE_PROFILER") == "TRUE"
 
 	// If GO_DISCOVERY_CONFIG_OVERRIDE is set, it should point to a file
 	// in overrideBucket which provides overrides for selected configuration.
@@ -381,7 +347,7 @@ func (c *Config) Dump(w io.Writer) error {
 	fmt.Fprint(w, "config: ")
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "    ")
-	return enc.Encode(cfg)
+	return enc.Encode(c)
 }
 
 // chooseOne selects one entry at random from a whitespace-separated

@@ -38,7 +38,7 @@ func BenchmarkSearch(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	ddb, err := database.Open("pgx", cfg.DBConnInfo())
+	ddb, err := database.Open("pgx", cfg.DBConnInfo(), "bench")
 	if err != nil {
 		b.Fatal(err)
 	}

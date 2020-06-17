@@ -68,7 +68,7 @@ func main() {
 	if err != nil {
 		log.Fatalf(ctx, "unable to register the ocsql driver: %v\n", err)
 	}
-	ddb, err := database.Open(driverName, cfg.DBConnInfo())
+	ddb, err := database.Open(driverName, cfg.DBConnInfo(), cfg.InstanceID)
 	if err != nil {
 		log.Fatalf(ctx, "database.Open: %v", err)
 	}
@@ -157,7 +157,7 @@ func newQueue(ctx context.Context, cfg *config.Config, proxyClient *proxy.Client
 			}
 		}
 		return queue.NewInMemory(ctx, proxyClient, sourceClient, db, *workers,
-			worker.FetchAndUpdateState, experiment.NewSet(set))
+			worker.FetchAndUpdateState, experiment.NewSet(set), cfg.AppVersionLabel())
 	}
 	if queueName == "" {
 		log.Fatal(ctx, "missing queue: must set GO_DISCOVERY_WORKER_TASK_QUEUE env var")

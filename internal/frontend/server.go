@@ -19,7 +19,6 @@ import (
 
 	"github.com/go-redis/redis/v7"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/licenses"
@@ -41,6 +40,7 @@ type Server struct {
 	templateDir          string
 	devMode              bool
 	errorPage            []byte
+	appVersionLabel      string
 
 	mu        sync.Mutex // Protects all fields below
 	templates map[string]*template.Template
@@ -55,6 +55,7 @@ type ServerConfig struct {
 	StaticPath           string
 	ThirdPartyPath       string
 	DevMode              bool
+	AppVersionLabel      string
 }
 
 // NewServer creates a new Server for the given database and template directory.
@@ -75,6 +76,7 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 		devMode:              scfg.DevMode,
 		templates:            ts,
 		taskIDChangeInterval: scfg.TaskIDChangeInterval,
+		appVersionLabel:      scfg.AppVersionLabel,
 	}
 	errorPageBytes, err := s.renderErrorPage(context.Background(), http.StatusInternalServerError, "error.tmpl", nil)
 	if err != nil {
@@ -186,12 +188,13 @@ func (s *Server) staticPageHandler(templateName, title string) http.HandlerFunc 
 
 // basePage contains fields shared by all pages when rendering templates.
 type basePage struct {
-	HTMLTitle   string
-	Query       string
-	Nonce       string
-	Experiments *experiment.Set
-	GodocURL    string
-	DevMode     bool
+	HTMLTitle       string
+	Query           string
+	Nonce           string
+	Experiments     *experiment.Set
+	GodocURL        string
+	DevMode         bool
+	AppVersionLabel string
 }
 
 // licensePolicyPage is used to generate the static license policy page.
@@ -216,24 +219,19 @@ func (s *Server) licensePolicyHandler() http.HandlerFunc {
 // newBasePage returns a base page for the given request and title.
 func (s *Server) newBasePage(r *http.Request, title string) basePage {
 	return basePage{
-		HTMLTitle:   title,
-		Query:       searchQuery(r),
-		Nonce:       middleware.NoncePlaceholder,
-		Experiments: experiment.FromContext(r.Context()),
-		GodocURL:    middleware.GodocURLPlaceholder,
-		DevMode:     s.devMode,
+		HTMLTitle:       title,
+		Query:           searchQuery(r),
+		Nonce:           middleware.NoncePlaceholder,
+		Experiments:     experiment.FromContext(r.Context()),
+		GodocURL:        middleware.GodocURLPlaceholder,
+		DevMode:         s.devMode,
+		AppVersionLabel: s.appVersionLabel,
 	}
 }
 
 // GoogleTagManagerContainerID returns the container ID from GoogleTagManager.
 func (b basePage) GoogleTagManagerContainerID() string {
 	return "GTM-W8MVQXG"
-}
-
-// AppVersionLabel uniquely identifies the currently running binary. It can be
-// used for cache-busting query parameters.
-func (b basePage) AppVersionLabel() string {
-	return config.AppVersionLabel()
 }
 
 // errorPage contains fields for rendering a HTTP error page.

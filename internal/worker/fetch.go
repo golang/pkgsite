@@ -15,7 +15,6 @@ import (
 	"go.opencensus.io/trace"
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch"
@@ -45,7 +44,7 @@ type fetchTask struct {
 // the module_version_states table according to the result. It returns an HTTP
 // status code representing the result of the fetch operation, and a non-nil
 // error if this status code is not 200.
-func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, sourceClient *source.Client, db *postgres.DB) (_ int, err error) {
+func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, sourceClient *source.Client, db *postgres.DB, appVersionLabel string) (_ int, err error) {
 	defer derrors.Wrap(&err, "FetchAndUpdateState(%q, %q)", modulePath, requestedVersion)
 
 	tctx, span := trace.StartSpan(ctx, "FetchAndUpdateState")
@@ -75,7 +74,7 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 	// TODO(golang/go#39628): Split UpsertModuleVersionState into
 	// InsertModuleVersionState and UpdateModuleVersionState.
 	start := time.Now()
-	err = db.UpsertModuleVersionState(ctx, ft.ModulePath, ft.ResolvedVersion, config.AppVersionLabel(),
+	err = db.UpsertModuleVersionState(ctx, ft.ModulePath, ft.ResolvedVersion, appVersionLabel,
 		time.Time{}, ft.Status, ft.GoModPath, ft.Error, ft.PackageVersionStates)
 	ft.timings["db.UpsertModuleVersionState"] = time.Since(start)
 	if err != nil {

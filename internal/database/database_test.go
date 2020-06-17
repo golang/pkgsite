@@ -36,7 +36,7 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 	var err error
-	testDB, err = Open("postgres", dbtest.DBConnURI(dbName))
+	testDB, err = Open("postgres", dbtest.DBConnURI(dbName), "test")
 	if err != nil {
 		log.Fatalf("Open: %v %[1]T", err)
 	}

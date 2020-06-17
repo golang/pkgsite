@@ -424,7 +424,7 @@ func candidateModulePaths(fullPath string) (_ []string, err error) {
 // worker.FetchAndUpdateState that does not update module_version_states, so that
 // we don't have to import internal/worker here. It is not meant to be used
 // when running on AppEngine.
-func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, sourceClient *source.Client, db *postgres.DB) (_ int, err error) {
+func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, sourceClient *source.Client, db *postgres.DB, _ string) (_ int, err error) {
 	defer func() {
 		if err != nil {
 			log.Infof(ctx, "FetchAndUpdateState(%q, %q) completed with err: %v. ", modulePath, requestedVersion, err)

@@ -157,6 +157,7 @@ func TestModulePackageDirectoryResolution(t *testing.T) {
 		TaskIDChangeInterval: 10 * time.Minute,
 		StaticPath:           "../../../content/static",
 		ThirdPartyPath:       "../../../third_party",
+		AppVersionLabel:      "",
 	})
 	if err != nil {
 		t.Fatal(err)

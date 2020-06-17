@@ -100,6 +100,7 @@ func main() {
 		StaticPath:           *staticPath,
 		ThirdPartyPath:       *thirdPartyPath,
 		DevMode:              *devMode,
+		AppVersionLabel:      cfg.AppVersionLabel(),
 	})
 	if err != nil {
 		log.Fatalf(ctx, "frontend.NewServer: %v", err)
@@ -171,7 +172,7 @@ func newQueue(ctx context.Context, cfg *config.Config, proxyClient *proxy.Client
 			}
 		}
 		return queue.NewInMemory(ctx, proxyClient, sourceClient, db, 10,
-			frontend.FetchAndUpdateState, experiment.NewSet(set))
+			frontend.FetchAndUpdateState, experiment.NewSet(set), cfg.AppVersionLabel())
 	}
 	client, err := cloudtasks.NewClient(ctx)
 	if err != nil {
@@ -190,7 +191,7 @@ func newQueue(ctx context.Context, cfg *config.Config, proxyClient *proxy.Client
 func openDB(ctx context.Context, cfg *config.Config, driver string) (_ *database.DB, err error) {
 	derrors.Wrap(&err, "openDB(ctx, cfg, %q)", driver)
 	log.Infof(ctx, "opening database on host %s", cfg.DBHost)
-	ddb, err := database.Open(driver, cfg.DBConnInfo())
+	ddb, err := database.Open(driver, cfg.DBConnInfo(), cfg.InstanceID)
 	if err == nil {
 		return ddb, nil
 	}
@@ -201,7 +202,7 @@ func openDB(ctx context.Context, cfg *config.Config, driver string) (_ *database
 	}
 	log.Errorf(ctx, "database.Open for primary host %s failed with %v; trying secondary host %s ",
 		cfg.DBHost, err, cfg.DBSecondaryHost)
-	return database.Open(driver, ci)
+	return database.Open(driver, ci, cfg.InstanceID)
 }
 func getLogger(ctx context.Context, cfg *config.Config) middleware.Logger {
 	if cfg.OnAppEngine() {
