@@ -13,7 +13,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -89,7 +88,7 @@ func TagForVersion(version string) (_ string, err error) {
 		return "go1", nil
 	}
 	if !semver.IsValid(version) {
-		return "", derrors.FromHTTPStatus(http.StatusBadRequest, "requested version is not a valid semantic version: %q ", version)
+		return "", fmt.Errorf("%w: requested version is not a valid semantic version: %q ", derrors.InvalidArgument, version)
 	}
 	goVersion := semver.Canonical(version)
 	prerelease := semver.Prerelease(goVersion)
@@ -107,7 +106,7 @@ func TagForVersion(version string) (_ string, err error) {
 		i := finalDigitsIndex(prerelease)
 		if i >= 1 {
 			if prerelease[i-1] != '.' {
-				return "", derrors.FromHTTPStatus(http.StatusBadRequest, "final digits in a prerelease must follow a period")
+				return "", fmt.Errorf("%w: final digits in a prerelease must follow a period", derrors.InvalidArgument)
 			}
 			// Remove the dot.
 			prerelease = prerelease[:i-1] + prerelease[i:]
