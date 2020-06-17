@@ -171,8 +171,10 @@ func newQueue(ctx context.Context, cfg *config.Config, proxyClient *proxy.Client
 				set[e.Name] = true
 			}
 		}
-		return queue.NewInMemory(ctx, proxyClient, sourceClient, db, 10,
-			frontend.FetchAndUpdateState, experiment.NewSet(set), cfg.AppVersionLabel())
+		return queue.NewInMemory(ctx, 10, experiment.NewSet(set),
+			func(ctx context.Context, modulePath, version string) (int, error) {
+				return frontend.FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, db)
+			})
 	}
 	client, err := cloudtasks.NewClient(ctx)
 	if err != nil {

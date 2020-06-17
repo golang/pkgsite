@@ -156,8 +156,10 @@ func newQueue(ctx context.Context, cfg *config.Config, proxyClient *proxy.Client
 				set[e.Name] = true
 			}
 		}
-		return queue.NewInMemory(ctx, proxyClient, sourceClient, db, *workers,
-			worker.FetchAndUpdateState, experiment.NewSet(set), cfg.AppVersionLabel())
+		return queue.NewInMemory(ctx, *workers, experiment.NewSet(set),
+			func(ctx context.Context, modulePath, version string) (int, error) {
+				return worker.FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, db, cfg.AppVersionLabel())
+			})
 	}
 	if queueName == "" {
 		log.Fatal(ctx, "missing queue: must set GO_DISCOVERY_WORKER_TASK_QUEUE env var")

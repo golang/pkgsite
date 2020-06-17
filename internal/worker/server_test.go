@@ -175,7 +175,9 @@ func TestWorker(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
 
 			// Use 10 workers to have parallelism consistent with the worker binary.
-			q := queue.NewInMemory(ctx, proxyClient, sourceClient, testDB, 10, FetchAndUpdateState, nil, "")
+			q := queue.NewInMemory(ctx, 10, nil, func(ctx context.Context, mpath, version string) (int, error) {
+				return FetchAndUpdateState(ctx, mpath, version, proxyClient, sourceClient, testDB, "")
+			})
 
 			s, err := NewServer(&config.Config{}, ServerConfig{
 				DB:                   testDB,

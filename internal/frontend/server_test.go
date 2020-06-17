@@ -957,7 +957,11 @@ func newTestServer(t *testing.T, proxyModules []*proxy.TestModule, experimentNam
 		exps = append(exps, &internal.Experiment{Name: n, Rollout: 100})
 		set[n] = true
 	}
-	q := queue.NewInMemory(ctx, proxyClient, sourceClient, testDB, 1, FetchAndUpdateState, experiment.NewSet(set), "appVersionLabel")
+	q := queue.NewInMemory(ctx, 1, experiment.NewSet(set),
+		func(ctx context.Context, mpath, version string) (int, error) {
+			return FetchAndUpdateState(ctx, mpath, version, proxyClient, sourceClient, testDB)
+		})
+
 	s, err := NewServer(ServerConfig{
 		DataSource:           testDB,
 		Queue:                q,
