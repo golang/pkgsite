@@ -221,11 +221,11 @@ func (s *Server) handleFetch(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(code), code)
 		return
 	}
-	if code/100 != 2 {
+	if code < 200 || code >= 300 {
 		log.Infof(r.Context(), "doFetch of %s returned code %d; returning OK to avoid retry", r.URL.Path, code)
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	if code/100 == 2 {
+	if code >= 200 && code < 300 {
 		log.Info(r.Context(), msg)
 		fmt.Fprintln(w, msg)
 	}
