@@ -98,17 +98,6 @@ func fetchPackageVersionsDetails(ctx context.Context, ds internal.DataSource, pk
 		}
 	}
 
-	var filteredVersions []*internal.ModuleInfo
-	// TODO(rfindley): remove this filtering, as it should not be necessary and
-	// is probably a relic of earlier version query implementations.
-	for _, v := range versions {
-		if seriesPath := v.SeriesPath(); strings.HasPrefix(v1Path, seriesPath) || seriesPath == stdlib.ModulePath {
-			filteredVersions = append(filteredVersions, v)
-		} else {
-			log.Errorf(ctx, "got version with mismatching series: %q", seriesPath)
-		}
-	}
-
 	linkify := func(mi *internal.ModuleInfo) string {
 		// Here we have only version information, but need to construct the full
 		// import path of the package corresponding to this version.
@@ -120,7 +109,7 @@ func fetchPackageVersionsDetails(ctx context.Context, ds internal.DataSource, pk
 		}
 		return constructPackageURL(versionPath, mi.ModulePath, linkVersion(mi.Version, mi.ModulePath))
 	}
-	return buildVersionDetails(modulePath, filteredVersions, linkify), nil
+	return buildVersionDetails(modulePath, versions, linkify), nil
 }
 
 // pathInVersion constructs the full import path of the package corresponding
