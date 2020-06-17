@@ -116,9 +116,9 @@ var httpCodes = []struct {
 // error string according to the fmt package. If format is the empty string,
 // then the error corresponding to the code is returned unwrapped.
 //
-// If HTTP semantics indicate success, it returns nil.
+// If code is http.StatusOK, it returns nil.
 func FromHTTPStatus(code int, format string, args ...interface{}) error {
-	if code >= 200 && code < 300 {
+	if code == http.StatusOK {
 		return nil
 	}
 	var innerErr = Unknown

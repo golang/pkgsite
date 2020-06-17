@@ -134,11 +134,10 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// duplicate tasks by providing any string as the "suffix" query parameter.
 	handle("/requeue", rmw(s.errorHandler(s.handleRequeue)))
 
-	// manual: reprocess sets status = 505 for all records in the
-	// module_version_states table that were processed by an app_version
-	// that occurred after the provided app_version param, so that they
-	// will be scheduled for reprocessing the next time a request to
-	// /requeue is made.
+	// manual: reprocess sets a reprocess status for all records in the
+	// module_version_states table that were processed by an app_version that
+	// occurred after the provided app_version param, so that they will be
+	// scheduled for reprocessing the next time a request to /requeue is made.
 	handle("/reprocess", rmw(s.errorHandler(s.handleReprocess)))
 
 	// manual: populate-stdlib inserts all versions of the Go standard
@@ -401,15 +400,6 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (_ string,
 		c := &count{Code: code, Count: n}
 		if e := derrors.FromHTTPStatus(code, ""); e != nil && e != derrors.Unknown {
 			c.Desc = e.Error()
-		} else {
-			switch code {
-			case hasIncompletePackagesCode:
-				c.Desc = hasIncompletePackagesDesc
-			case 505:
-				c.Desc = "needs reprocessing"
-			default:
-				c.Desc = http.StatusText(code)
-			}
 		}
 		counts = append(counts, c)
 	}
