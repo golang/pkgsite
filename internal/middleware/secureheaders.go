@@ -107,7 +107,6 @@ func SecureHeaders() Middleware {
 			// Prevent MIME sniffing.
 			w.Header().Set("X-Content-Type-Options", "nosniff")
 
-			// TODO(b/144509703): avoid copying if possible
 			crw := &capturingResponseWriter{ResponseWriter: w}
 			h.ServeHTTP(crw, r)
 			body := bytes.ReplaceAll(crw.bytes(), []byte(NoncePlaceholder), []byte(nonce))

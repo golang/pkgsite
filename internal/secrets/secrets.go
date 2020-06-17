@@ -19,8 +19,8 @@ import (
 func Get(ctx context.Context, name string) (plaintext string, err error) {
 	defer derrors.Add(&err, "secrets.Get(ctx, %q)", name)
 
-	// Support old names temporarily, until the transition to Secrets Manager is complete.
-	// TODO(b/155682352): remove
+	// Support old names temporarily, until the transition to Secrets Manager
+	// is complete.
 	switch name {
 	case "go_discovery_database_password_frontend":
 		name = "frontend-database-password"

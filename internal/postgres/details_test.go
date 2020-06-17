@@ -330,7 +330,6 @@ func TestGetPackagesInVersion(t *testing.T) {
 			}
 
 			opts := []cmp.Option{
-				// TODO(b/130367504): remove this ignore once imports are not asymmetric
 				cmpopts.IgnoreFields(internal.LegacyPackage{}, "Imports"),
 				// The packages table only includes partial license information; it omits the Coverage field.
 				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),

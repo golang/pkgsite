@@ -29,7 +29,6 @@ type latestFunc func(ctx context.Context, packagePath, modulePath, pageType stri
 func LatestVersion(latest latestFunc) Middleware {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// TODO(b/144509703): avoid copying if possible
 			crw := &capturingResponseWriter{ResponseWriter: w}
 			h.ServeHTTP(crw, r)
 			body := crw.bytes()
@@ -53,7 +52,6 @@ func LatestVersion(latest latestFunc) Middleware {
 				default:
 					latestClass += "--goToLatest"
 				}
-				// TODO(b/144509703): make only a single copy here, if this is slow
 				body = bytes.ReplaceAll(body, []byte(latestClassPlaceholder), []byte(latestClass))
 				body = bytes.ReplaceAll(body, []byte(LatestVersionPlaceholder), []byte(latestVersion))
 			}

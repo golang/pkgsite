@@ -70,8 +70,6 @@ function collectJumpListItemsFallback(doc) {
   const seen = {};
   // Attempt to find the relevant elements by looking through every element in the
   // .Documentation DOM that has an id attribute of a certain form.
-  // TODO(b/143456714) Put a data-kind attribute on each relevant element, so this would
-  // be more precise.
   for (const el of doc.querySelectorAll('*[id]')) {
     const id = el.getAttribute('id');
     if (!seen[id] && /^[^_][^-]*$/.test(id)) {
@@ -224,7 +222,6 @@ jumpFilter.addEventListener('keyup', function (event) {
 });
 
 // Pressing enter in the filter selects the first element in the list.
-// TODO(b/143454398) add arrow keys and track the active list element.
 jumpFilter.addEventListener('keydown', function (event) {
   const upArrow = 38;
   const downArrow = 40;

@@ -234,7 +234,6 @@ func main() {
 			log.Fatal(ctx, err)
 		}
 	} else {
-		// TODO(b/140948204): remove
 		const secretName = "load-test-agent-creds"
 		log.Infof(ctx, "getting secret %q", secretName)
 		s, err := secrets.Get(context.Background(), secretName)

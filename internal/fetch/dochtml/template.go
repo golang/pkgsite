@@ -13,7 +13,7 @@ import (
 )
 
 // htmlPackage is the template used to render documentation HTML.
-// TODO(b/142795082): finalize URL scheme and design for notes, then factor out
+// TODO: finalize URL scheme and design for notes, then factor out
 // inline CSS style.
 var htmlPackage = template.Must(template.New("package").Funcs(
 	map[string]interface{}{

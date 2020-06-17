@@ -147,7 +147,7 @@ func (s *Server) servePackagePageNew(w http.ResponseWriter, r *http.Request, ful
 			if !isActiveUseDirectories(ctx) {
 				return pathNotFoundError(ctx, "package", fullPath, inVersion)
 			}
-			// TODO(b/149933479) add a case for this to TestServer, after we
+			// TODO(golang/go#39663) add a case for this to TestServer, after we
 			// switch over to the paths-based data model.
 			path, err := s.stdlibPathForShortcut(ctx, fullPath)
 			if path == "" {

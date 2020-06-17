@@ -61,7 +61,6 @@ func GodocURL() Middleware {
 				})
 			}
 
-			// TODO(b/144509703): avoid copying if possible
 			crw := &capturingResponseWriter{ResponseWriter: w}
 			h.ServeHTTP(crw, r)
 			body := crw.bytes()
