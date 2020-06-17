@@ -37,7 +37,7 @@ type DataSource interface {
 	// versions for any module containing a package with the given import path.
 	GetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*ModuleInfo, error)
 
-	// TODO(b/155474770): Deprecate these methods.
+	// TODO(golang/go#39629): Deprecate these methods.
 	//
 	// LegacyGetDirectory returns packages whose import path is in a (possibly
 	// nested) subdirectory of the given directory path. When multiple

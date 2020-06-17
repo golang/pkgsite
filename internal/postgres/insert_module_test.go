@@ -285,7 +285,7 @@ func TestPostgres_ReadAndWriteModuleOtherColumns(t *testing.T) {
 	}
 }
 
-func TestPostgres_DeleteModule(t *testing.T) {
+func TestDeleteModule(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 	defer ResetTestDB(testDB, t)
@@ -309,7 +309,7 @@ func TestPostgres_DeleteModule(t *testing.T) {
 	if err != sql.ErrNoRows {
 		t.Errorf("imports_unique: got %v, want ErrNoRows", err)
 	}
-	// TODO(b/154616892): check removal from version_map
+	// TODO(golang/go#39633): check removal from version_map
 }
 
 func TestPostgres_NewerAlternative(t *testing.T) {

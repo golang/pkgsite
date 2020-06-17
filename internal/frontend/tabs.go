@@ -210,7 +210,6 @@ func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds 
 	case "versions":
 		return fetchModuleVersionsDetails(ctx, ds, &mi.ModuleInfo)
 	case "overview":
-		// TODO(b/138448402): implement remaining module views.
 		readme := &internal.Readme{Filepath: mi.LegacyReadmeFilePath, Contents: mi.LegacyReadmeContents}
 		return constructOverviewDetails(ctx, &mi.ModuleInfo, readme, mi.IsRedistributable, urlIsVersioned(r.URL)), nil
 	}

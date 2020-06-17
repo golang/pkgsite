@@ -72,7 +72,7 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 	// module@version. This must happen last, because if it succeeds with a
 	// code < 500 but a later action fails, we will never retry the later
 	// action.
-	// TODO(b/139178863): Split UpsertModuleVersionState into
+	// TODO(golang/go#39628): Split UpsertModuleVersionState into
 	// InsertModuleVersionState and UpdateModuleVersionState.
 	start := time.Now()
 	err = db.UpsertModuleVersionState(ctx, ft.ModulePath, ft.ResolvedVersion, config.AppVersionLabel(),

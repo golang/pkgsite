@@ -567,7 +567,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.DirectoryHeader(dir, unversioned),
-				// TODO(b/144217401) link should be unversioned.
+				// TODO(golang/go#39630) link should be unversioned.
 				pagecheck.SubdirectoriesDetails("/github.com/valid_module_name@v1.0.0/foo/directory/hello", "hello")),
 		},
 		{
@@ -592,7 +592,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.DirectoryHeader(dirPseudo, unversioned),
-				// TODO(b/144217401) link should be unversioned.
+				// TODO(golang/go#39630) link should be unversioned.
 				pagecheck.SubdirectoriesDetails("/github.com/pseudo@"+pseudoVersion+"/dir/baz", "baz")),
 		},
 		{
@@ -701,7 +701,8 @@ func testServer(t *testing.T, experimentNames ...string) {
 				in(".Overview-readmeContent", text(`readme`))),
 		},
 
-		// TODO(b/139498072): add a second module, so we can verify that we get the latest version.
+		// TODO(golang/go#39631): add a second module, so we can verify that we get
+		// the latest version.
 		{
 			name:           "module packages tab latest version",
 			urlPath:        fmt.Sprintf("/mod/%s?tab=packages", sample.ModulePath),

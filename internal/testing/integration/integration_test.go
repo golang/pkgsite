@@ -74,7 +74,7 @@ func TestEndToEndProcessing(t *testing.T) {
 	defer redisHA.Close()
 	redisHAClient := redis.NewClient(&redis.Options{Addr: redisHA.Addr()})
 
-	// TODO(b/143760329): it would be better if InMemory made http requests
+	// TODO: it would be better if InMemory made http requests
 	// back to worker, rather than calling fetch itself.
 	queue := queue.NewInMemory(ctx, proxyClient, source.NewClient(1*time.Second), testDB, 10,
 		worker.FetchAndUpdateState, nil)
@@ -115,7 +115,7 @@ func TestEndToEndProcessing(t *testing.T) {
 	if _, err := doGet(workerHTTP.URL + "/poll-and-queue"); err != nil {
 		t.Fatal(err)
 	}
-	// TODO(b/143760329): This should really be made deterministic.
+	// TODO: This should really be made deterministic.
 	time.Sleep(100 * time.Millisecond)
 	queue.WaitForTesting(ctx)
 

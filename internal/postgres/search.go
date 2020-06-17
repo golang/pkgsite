@@ -873,10 +873,6 @@ func GeneratePathTokens(packagePath string) []string {
 			continue
 		}
 		// Only index host names if they are not part of commonHostnames.
-		// Note that because "SELECT to_tsvector('github.com/foo/bar')"
-		// will return "github.com" as one of its tokens, the common host
-		// name will still be indexed until we change the pg search_config.
-		// TODO(b/141318673).
 		subPathSet[part] = true
 		dotParts := strings.Split(part, ".")
 		if len(dotParts) > 1 {

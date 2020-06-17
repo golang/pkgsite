@@ -270,7 +270,8 @@ func ModuleInfo(ctx context.Context, client *Client, modulePath, version string)
 	}
 	adjustVersionedModuleDirectory(ctx, client, info)
 	return info, nil
-	// TODO(b/141770842): support launchpad.net, including the special case in cmd/go/internal/get/vcs.go.
+	// TODO(golang/go#39627): support launchpad.net, including the special case
+	// in cmd/go/internal/get/vcs.go.
 }
 
 // matchStatic matches the given module or repo path against a list of known
@@ -350,10 +351,7 @@ func moduleInfoDynamic(ctx context.Context, client *Client, modulePath, version 
 	//    in the URL templates, like "https://github.com/go-yaml/yaml/tree/v2.2.3{/dir}". We can observe
 	//    that that template begins with a known pattern--a GitHub repo, ignore the rest of it, and use the
 	//    GitHub URL templates that we know.
-	// 3. TODO(b/141847689): heuristically determine how to construct a URL template with a commit from the
-	//    existing go-source template. For example, by replacing "master" with "{commit}".
-	// We could also consider using the repo in the go-import tag instead of the one in the go-source tag,
-	// if the former matches a known pattern but the latter does not.
+	// 3. TODO(golang/go#39559): implement go-source-v2 meta tag
 	repoURL := sourceMeta.repoURL
 	_, _, templates, _ := matchStatic(removeHTTPScheme(repoURL))
 	// If err != nil, templates will the zero value, so we can ignore it (same just below).

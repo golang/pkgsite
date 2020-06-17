@@ -166,7 +166,6 @@ func (db *DB) GetPseudoVersionsForModule(ctx context.Context, modulePath string)
 // order. The version types included in the list are specified by a list of
 // VersionTypes.
 func getModuleVersions(ctx context.Context, db *DB, modulePath string, versionTypes []version.Type) (_ []*internal.ModuleInfo, err error) {
-	// TODO(b/139530312): get information for parent modules.
 	defer derrors.Wrap(&err, "getModuleVersions(ctx, db, %q, %v)", modulePath, versionTypes)
 
 	baseQuery := `

@@ -147,7 +147,6 @@ func parseDetailsURLPath(urlPath string) (fullPath, modulePath, version string, 
 	//   /<module-path>, @<version>/<suffix>
 	// or
 	//  /<module-path>/<suffix>, @<version>
-	// TODO(b/140191811) The last URL route should redirect.
 	parts := strings.SplitN(urlPath, "@", 2)
 	basePath := strings.TrimSuffix(strings.TrimPrefix(parts[0], "/"), "/")
 	if len(parts) == 1 { // no '@'
