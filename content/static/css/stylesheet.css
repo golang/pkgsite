@@ -512,7 +512,7 @@ code {
    * copied to the clipboard. We can't use a hidden element, so
    * put this visible one very far off the screen.
    */
-  left: -62rem;
+  left: -50vw;
   position: absolute;
   top: 62rem;
 }
