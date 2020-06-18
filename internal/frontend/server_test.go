@@ -794,6 +794,31 @@ func testServer(t *testing.T, experimentNames ...string) {
 			wantStatusCode: http.StatusOK,
 			want:           pagecheck.ModuleHeader(std, versioned),
 		},
+		{
+			name:           "bad version",
+			urlPath:        fmt.Sprintf("/%s@%s/%s", sample.ModulePath, "v1-2", sample.Suffix),
+			wantStatusCode: http.StatusBadRequest,
+			want: in("",
+				in("h3.Error-message", text("v1-2 is not a valid semantic version.")),
+				in("p.Error-message a", href(`/search?q=github.com%2fvalid_module_name%2ffoo`))),
+		},
+		{
+			name:           "unknown version",
+			urlPath:        fmt.Sprintf("/%s@%s/%s", sample.ModulePath, "v99.99.0", sample.Suffix),
+			wantStatusCode: http.StatusNotFound,
+			want: in("",
+				in("h3.Error-message", text("Package github.com/valid_module_name/foo@v99.99.0 is not available.")),
+				in("p.Error-message a", href("/github.com/valid_module_name/foo?tab=versions"))),
+		},
+		{
+			name:           "path not found",
+			urlPath:        "/example.com/unknown",
+			wantStatusCode: http.StatusNotFound,
+			want: in("",
+				in("h3.Error-message", text("404 Not Found")),
+				in("p.Error-message", text("a valid package path"))),
+		},
+		// TODO(golang/go#39759): test pathNotFoundErrorNew
 	} {
 		t.Run(tc.name, func(t *testing.T) { // remove initial '/' for name
 			defer func(orig bool) { addDocQueryParam = orig }(addDocQueryParam)

@@ -173,11 +173,6 @@ func TagRoute(route string, r *http.Request) string {
 	return tag
 }
 
-func suggestedSearch(userInput string) template.HTML {
-	safe := template.HTMLEscapeString(userInput)
-	return template.HTML(fmt.Sprintf(`To search for packages like %q, <a href="/search?q=%s">click here</a>.</p>`, safe, safe))
-}
-
 // staticPageHandler handles requests to a template that contains no dynamic
 // content.
 func (s *Server) staticPageHandler(templateName, title string) http.HandlerFunc {
@@ -237,9 +232,9 @@ func (b basePage) GoogleTagManagerContainerID() string {
 // errorPage contains fields for rendering a HTTP error page.
 type errorPage struct {
 	basePage
-	template         string
-	Message          string
-	SecondaryMessage template.HTML
+	templateName    string
+	messageTemplate string
+	MessageData     interface{}
 }
 
 // PanicHandler returns an http.HandlerFunc that can be used in HTTP
@@ -302,8 +297,8 @@ func (s *Server) serveErrorPage(w http.ResponseWriter, r *http.Request, status i
 		page = &errorPage{
 			basePage: s.newBasePage(r, ""),
 		}
-	} else if page.template != "" {
-		template = page.template
+	} else if page.templateName != "" {
+		template = page.templateName
 	}
 	buf, err := s.renderErrorPage(r.Context(), status, template, page)
 	if err != nil {
@@ -319,30 +314,41 @@ func (s *Server) serveErrorPage(w http.ResponseWriter, r *http.Request, status i
 }
 
 // renderErrorPage executes error.tmpl with the given errorPage
-func (s *Server) renderErrorPage(ctx context.Context, status int, template string, page *errorPage) ([]byte, error) {
+func (s *Server) renderErrorPage(ctx context.Context, status int, templateName string, page *errorPage) ([]byte, error) {
 	statusInfo := fmt.Sprintf("%d %s", status, http.StatusText(status))
 	if page == nil {
-		page = &errorPage{
-			Message: statusInfo,
-			basePage: basePage{
-				HTMLTitle: statusInfo,
-				Nonce:     middleware.NoncePlaceholder,
-			},
-		}
+		page = &errorPage{}
 	}
 	if page.Nonce == "" {
 		page.Nonce = middleware.NoncePlaceholder
 	}
-	if page.Message == "" {
-		page.Message = statusInfo
+	if page.messageTemplate == "" {
+		page.messageTemplate = `<h3 class="Error-message">{{.}}</h3>`
+	}
+	if page.MessageData == nil {
+		page.MessageData = statusInfo
 	}
 	if page.HTMLTitle == "" {
 		page.HTMLTitle = statusInfo
 	}
-	if template == "" {
-		template = "error.tmpl"
+	if templateName == "" {
+		templateName = "error.tmpl"
 	}
-	return s.renderPage(ctx, template, page)
+
+	etmpl, err := s.findTemplate(templateName)
+	if err != nil {
+		return nil, err
+	}
+	tmpl, err := etmpl.Clone()
+	if err != nil {
+		return nil, err
+	}
+	_, err = tmpl.New("message").Parse(page.messageTemplate)
+	if err != nil {
+		return nil, err
+	}
+
+	return executeTemplate(ctx, templateName, tmpl, page)
 }
 
 // servePage is used to execute all templates for a *Server.
@@ -361,6 +367,14 @@ func (s *Server) servePage(ctx context.Context, w http.ResponseWriter, templateN
 
 // renderPage executes the given templateName with page.
 func (s *Server) renderPage(ctx context.Context, templateName string, page interface{}) ([]byte, error) {
+	tmpl, err := s.findTemplate(templateName)
+	if err != nil {
+		return nil, err
+	}
+	return executeTemplate(ctx, templateName, tmpl, page)
+}
+
+func (s *Server) findTemplate(templateName string) (*template.Template, error) {
 	if s.devMode {
 		s.mu.Lock()
 		defer s.mu.Unlock()
@@ -370,16 +384,18 @@ func (s *Server) renderPage(ctx context.Context, templateName string, page inter
 			return nil, fmt.Errorf("error parsing templates: %v", err)
 		}
 	}
-
-	var buf bytes.Buffer
 	tmpl := s.templates[templateName]
 	if tmpl == nil {
 		return nil, fmt.Errorf("BUG: s.templates[%q] not found", templateName)
 	}
-	if err := tmpl.Execute(&buf, page); err != nil {
+	return tmpl, nil
+}
+
+func executeTemplate(ctx context.Context, templateName string, tmpl *template.Template, data interface{}) ([]byte, error) {
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
 		log.Errorf(ctx, "Error executing page template %q: %v", templateName, err)
 		return nil, err
-
 	}
 	return buf.Bytes(), nil
 }

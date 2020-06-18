@@ -303,7 +303,7 @@ func breadcrumbPath(pkgPath, modPath, version string) template.HTML {
 
 	return template.HTML(fmt.Sprintf(f,
 		strings.Join(elems, `<span class="DetailsHeader-breadcrumbDivider">/</span>`),
-		pkgPath))
+		template.HTMLEscapeString(pkgPath)))
 }
 
 // moduleHTMLTitle constructs the <title> contents, for tabs in the browser.

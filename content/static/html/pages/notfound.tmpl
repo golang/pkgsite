@@ -8,8 +8,7 @@
 <div class="Container">
   <div class="Content">
     <img class="NotFound-gopher" src="/static/img/gopher-airplane.svg" alt="The Go Gopher">
-    <h3 class="NotFound-message">{{ .Message }}</h3>
-    <p class="NotFound-message js-notFoundMessage">{{.SecondaryMessage}}</p>
+    {{template "message" .MessageData}}
     <div class="NotFound-container">
       <button class="NotFound-button js-notFoundButton">Fetch</button>
     </div>

@@ -336,6 +336,7 @@ func TestMatchStatic(t *testing.T) {
 		{"git.com/repo.git/dir", "git.com/repo", "dir"},
 		{"mercurial.com/repo.hg", "mercurial.com/repo", ""},
 		{"mercurial.com/repo.hg/dir", "mercurial.com/repo", "dir"},
+		{"github.com/a/b/c/>$", "github.com/a/b", "c/&gt;$"},
 	} {
 		t.Run(test.in, func(t *testing.T) {
 			gotRepo, gotSuffix, _, err := matchStatic(test.in)
@@ -350,7 +351,7 @@ func TestMatchStatic(t *testing.T) {
 }
 
 // This test adapted from gddo/gosrc/gosrc_test.go:TestGetDynamic.
-func TestModuleImportDynamic(t *testing.T) {
+func TestModuleInfoDynamic(t *testing.T) {
 	// For this test, fake the HTTP requests so we can cover cases that may not appear in the wild.
 	client := &Client{
 		httpClient: &http.Client{
@@ -465,6 +466,25 @@ func TestModuleImportDynamic(t *testing.T) {
 				templates: githubURLTemplates,
 			},
 		},
+		{
+			"bob.com/bad/github",
+			&Info{
+				repoURL:   "https://github.com/bob/bad/&#34;&gt;$",
+				moduleDir: "",
+				commit:    "v1.2.3",
+				templates: githubURLTemplates,
+			},
+		},
+		{
+
+			"bob.com/bad/apache",
+			&Info{
+				repoURL:   "https://git.apache.org/&gt;$",
+				moduleDir: "",
+				commit:    "v1.2.3",
+				templates: githubURLTemplates,
+			},
+		},
 	} {
 		t.Run(test.modulePath, func(t *testing.T) {
 			got, err := moduleInfoDynamic(context.Background(), client, test.modulePath, version)
@@ -474,7 +494,7 @@ func TestModuleImportDynamic(t *testing.T) {
 				}
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(got, test.want, cmp.AllowUnexported(Info{}, urlTemplates{})); diff != "" {
+			if diff := cmp.Diff(test.want, got, cmp.AllowUnexported(Info{}, urlTemplates{})); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -696,7 +716,11 @@ var testWeb = map[string]string{
 	"https://bob.com/pkg": `<head> <meta name="go-import" content="bob.com/pkg git https://vcs.net/bob/pkg.git">`,
 	// Package at in sub-directory of a Git repo.
 	"https://bob.com/pkg/sub": `<head> <meta name="go-import" content="bob.com/pkg git https://vcs.net/bob/pkg.git">`,
-
+	// Bad repo URLs.
+	"https://bob.com/bad/github": `
+		<head><meta name="go-import" content="bob.com/bad/github git https://github.com/bob/bad/&quot;&gt;$">`,
+	"https://bob.com/bad/apache": `
+		<head><meta name="go-import" content="bob.com/bad/apache git https://git.apache.org/&gt;$">`,
 	// Package with go-source meta tag, where {file} appears on the right of '#' in the file field URL template.
 	"https://azul3d.org/examples/abs": `<!DOCTYPE html><html><head>` +
 		`<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>` +

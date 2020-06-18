@@ -199,8 +199,12 @@ func checkPathAndVersion(ctx context.Context, ds internal.DataSource, fullPath, 
 		return &serverError{
 			status: http.StatusBadRequest,
 			epage: &errorPage{
-				Message:          fmt.Sprintf("%q is not a valid semantic version.", requestedVersion),
-				SecondaryMessage: suggestedSearch(fullPath),
+				messageTemplate: `
+					<h3 class="Error-message">{{.Version}} is not a valid semantic version.</h3>
+					<p class="Error-message">
+					  To search for packages like {{.Path}}, <a href="/search?q={{.Path}}">click here</a>.
+					</p>`,
+				MessageData: struct{ Path, Version string }{fullPath, requestedVersion},
 			},
 		}
 	}
@@ -254,8 +258,12 @@ func pathNotFoundError(ctx context.Context, pathType, fullPath, version string) 
 	return &serverError{
 		status: http.StatusNotFound,
 		epage: &errorPage{
-			Message:          "404 Not Found",
-			SecondaryMessage: template.HTML(fmt.Sprintf(`If you think this is a valid %s path, you can try fetching it following the <a href="/about#adding-a-package">instructions here</a>.`, pathType)),
+			messageTemplate: `<h3 class="Error-message">404 Not Found</h3>
+				 <p class="Error-message">
+				   If you think this is a valid {{.}} path, you can try fetching it following
+				   the <a href="/about#adding-a-package">instructions here</a>.
+				</p>`,
+			MessageData: pathType,
 		},
 	}
 }
@@ -270,9 +278,13 @@ func pathNotFoundErrorNew(fullPath, version string) error {
 	return &serverError{
 		status: http.StatusNotFound,
 		epage: &errorPage{
-			template:         "notfound.tmpl",
-			Message:          fmt.Sprintf("Oops! %q does not exist.", path),
-			SecondaryMessage: template.HTML("Check that you entered it correctly, or request to fetch it."),
+			templateName: "notfound.tmpl",
+			messageTemplate: `
+				<h3 class="NotFound-message">Oops! {{.}} does not exist.</h3>
+				<p class="NotFound-message js-notFoundMessage">
+					Check that you entered it correctly, or request to fetch it.
+				</p>`,
+			MessageData: path,
 		},
 	}
 }
@@ -286,10 +298,14 @@ func pathFoundAtLatestError(ctx context.Context, pathType, fullPath, version str
 	return &serverError{
 		status: http.StatusNotFound,
 		epage: &errorPage{
-			Message: fmt.Sprintf("%s %s@%s is not available.", strings.Title(pathType), fullPath, displayVersion(version, fullPath)),
-			SecondaryMessage: template.HTML(
-				fmt.Sprintf(`There are other versions of this %s that are! To view them, `+
-					`<a href="/%s?tab=versions">click here</a>.`, pathType, fullPath)),
+			messageTemplate: `
+				<h3 class="Error-message">{{.TType}} {{.Path}}@{{.Version}} is not available.</h3>
+				<p class="Error-message">
+				  There are other versions of this {{.Type}} that are! To view them,
+				  <a href="/{{.Path}}?tab=versions">click here</a>.
+				</p>`,
+			MessageData: struct{ TType, Type, Path, Version string }{
+				strings.Title(pathType), pathType, fullPath, displayVersion(version, fullPath)},
 		},
 	}
 }
@@ -298,7 +314,7 @@ func proxydatasourceNotSupportedErr() error {
 	return &serverError{
 		status: http.StatusFailedDependency,
 		epage: &errorPage{
-			Message: "This page is not supported by the proxydatasource.",
+			messageTemplate: `<h3 class="Error-message">This page is not supported by the proxydatasource.</h3>`,
 		},
 	}
 }
