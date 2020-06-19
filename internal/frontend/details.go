@@ -294,6 +294,15 @@ func pathFoundAtLatestError(ctx context.Context, pathType, fullPath, version str
 	}
 }
 
+func proxydatasourceNotSupportedErr() error {
+	return &serverError{
+		status: http.StatusFailedDependency,
+		epage: &errorPage{
+			Message: "This page is not supported by the proxydatasource.",
+		},
+	}
+}
+
 func parseStdLibURLPath(urlPath string) (path, version string, err error) {
 	defer derrors.Wrap(&err, "parseStdLibURLPath(%q)", urlPath)
 

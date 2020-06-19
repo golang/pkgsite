@@ -156,7 +156,7 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds
 		db, ok := ds.(*postgres.DB)
 		if !ok {
 			// The proxydatasource does not support the imported by page.
-			return nil, &serverError{status: http.StatusFailedDependency}
+			return nil, proxydatasourceNotSupportedErr()
 		}
 		return fetchImportedByDetails(ctx, db, pkg.Path, pkg.ModulePath)
 	case "licenses":
@@ -184,7 +184,7 @@ func fetchDetailsForVersionedDirectory(ctx context.Context, r *http.Request, tab
 		db, ok := ds.(*postgres.DB)
 		if !ok {
 			// The proxydatasource does not support the imported by page.
-			return nil, &serverError{status: http.StatusFailedDependency}
+			return nil, proxydatasourceNotSupportedErr()
 		}
 		return fetchImportedByDetails(ctx, db, vdir.Path, vdir.ModulePath)
 	case "licenses":

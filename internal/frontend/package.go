@@ -193,7 +193,7 @@ func (s *Server) stdlibPathForShortcut(ctx context.Context, shortcut string) (pa
 	}
 	db, ok := s.ds.(*postgres.DB)
 	if !ok {
-		return "", &serverError{status: http.StatusFailedDependency}
+		return "", proxydatasourceNotSupportedErr()
 	}
 	matches, err := db.GetStdlibPathsWithSuffix(ctx, shortcut)
 	if err != nil {
