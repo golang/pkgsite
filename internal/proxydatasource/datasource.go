@@ -23,6 +23,7 @@ import (
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -240,8 +241,18 @@ func (ds *DataSource) getModule(ctx context.Context, modulePath, version string)
 	if e, ok := ds.versionCache[key]; ok {
 		return e.module, e.err
 	}
-
-	res := fetch.FetchModule(ctx, modulePath, version, ds.proxyClient, ds.sourceClient)
+	v := version
+	if modulePath == stdlib.ModulePath {
+		if version == internal.LatestVersion {
+			// fetch.FetchModule does not support the latest endpoint for the
+			// standard library, but it is useful to look at these packages when
+			// developing with the proxydatasource. A hardcoded value is used here,
+			// so that the request won't fail.
+			v = "go1.14.4"
+		}
+		v = stdlib.VersionForTag(v)
+	}
+	res := fetch.FetchModule(ctx, modulePath, v, ds.proxyClient, ds.sourceClient)
 	m := res.Module
 	ds.versionCache[key] = &versionEntry{module: m, err: err}
 	if res.Error != nil {
