@@ -9,6 +9,7 @@ package sample
 import (
 	"fmt"
 	"math"
+	"net/http"
 	"path"
 	"strings"
 	"time"
@@ -148,6 +149,17 @@ func DefaultModule() *internal.Module {
 	return AddPackage(
 		Module(ModulePath, VersionString),
 		LegacyPackage(ModulePath, Suffix))
+}
+
+func DefaultVersionMap() *internal.VersionMap {
+	return &internal.VersionMap{
+		ModulePath:       ModulePath,
+		RequestedVersion: VersionString,
+		ResolvedVersion:  VersionString,
+		Status:           http.StatusOK,
+		GoModPath:        "",
+		Error:            "",
+	}
 }
 
 // Module creates a Module with the given path and version.

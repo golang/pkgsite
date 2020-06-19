@@ -291,25 +291,42 @@ func TestDeleteModule(t *testing.T) {
 	defer ResetTestDB(testDB, t)
 
 	v := sample.DefaultModule()
+
 	if err := testDB.InsertModule(ctx, v); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := testDB.LegacyGetModuleInfo(ctx, v.ModulePath, v.Version); err != nil {
 		t.Fatal(err)
 	}
+
+	vm := sample.DefaultVersionMap()
+	if err := testDB.UpsertVersionMap(ctx, vm); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := testDB.GetVersionMap(ctx, v.ModulePath, v.Version); err != nil {
+		t.Fatal(err)
+	}
+
 	if err := testDB.DeleteModule(ctx, v.ModulePath, v.Version); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := testDB.LegacyGetModuleInfo(ctx, v.ModulePath, v.Version); !errors.Is(err, derrors.NotFound) {
 		t.Errorf("got %v, want NotFound", err)
 	}
+
 	var x int
 	err := testDB.Underlying().QueryRow(ctx, "SELECT 1 FROM imports_unique WHERE from_module_path = $1",
 		v.ModulePath).Scan(&x)
 	if err != sql.ErrNoRows {
 		t.Errorf("imports_unique: got %v, want ErrNoRows", err)
 	}
-	// TODO(golang/go#39633): check removal from version_map
+	err = testDB.Underlying().QueryRow(
+		ctx,
+		"SELECT 1 FROM version_map WHERE module_path = $1 AND resolved_version = $2",
+		v.ModulePath, v.Version).Scan(&x)
+	if err != sql.ErrNoRows {
+		t.Errorf("version_map: got %v, want ErrNoRows", err)
+	}
 }
 
 func TestPostgres_NewerAlternative(t *testing.T) {

@@ -697,6 +697,11 @@ func (db *DB) DeleteModule(ctx context.Context, modulePath, version string) (err
 		if _, err := db.db.Exec(ctx, stmt, modulePath, version); err != nil {
 			return err
 		}
+
+		if _, err = db.db.Exec(ctx, `DELETE FROM version_map WHERE module_path = $1 AND resolved_version = $2`, modulePath, version); err != nil {
+			return err
+		}
+
 		var x int
 		err = db.db.QueryRow(ctx, `SELECT 1 FROM modules WHERE module_path=$1 LIMIT 1`, modulePath).Scan(&x)
 		if err != sql.ErrNoRows || err == nil {
