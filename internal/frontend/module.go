@@ -87,6 +87,10 @@ func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *
 		CanShowDetails: canShowDetails,
 		Tabs:           moduleTabSettings,
 		PageType:       pageType,
+		CanonicalURLPath: constructModuleURL(
+			mi.ModulePath,
+			linkVersion(mi.Version, mi.ModulePath),
+		),
 	}
 	s.servePage(ctx, w, settings.TemplateName, page)
 	return nil

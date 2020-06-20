@@ -105,6 +105,11 @@ func (s *Server) legacyServeDirectoryPage(ctx context.Context, w http.ResponseWr
 		CanShowDetails: true,
 		Tabs:           directoryTabSettings,
 		PageType:       pageTypeDirectory,
+		CanonicalURLPath: constructPackageURL(
+			dbDir.Path,
+			dbDir.ModulePath,
+			linkVersion(dbDir.Version, dbDir.ModulePath),
+		),
 	}
 	s.servePage(ctx, w, settings.TemplateName, page)
 	return nil

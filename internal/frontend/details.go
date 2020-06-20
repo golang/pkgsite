@@ -55,6 +55,12 @@ type DetailsPage struct {
 
 	// Tabs contains data to render the varioius tabs on each details page.
 	Tabs []TabSettings
+
+	// CanonicalURLPath is the representation of the URL path for the details
+	// page, after the requested version and module path have been resolved.
+	// For example, if the latest version of /my.module/pkg is version v1.5.2,
+	// the canonical url for that path would be /my.module@v1.5.2/pkg
+	CanonicalURLPath string
 }
 
 const (

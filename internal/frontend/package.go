@@ -138,6 +138,11 @@ func (s *Server) legacyServePackagePageWithPackage(w http.ResponseWriter, r *htt
 		CanShowDetails: canShowDetails,
 		Tabs:           packageTabSettings,
 		PageType:       pageType,
+		CanonicalURLPath: constructPackageURL(
+			pkg.Path,
+			pkg.ModulePath,
+			linkVersion(pkg.Version, pkg.ModulePath),
+		),
 	}
 	s.servePage(r.Context(), w, settings.TemplateName, page)
 	return nil

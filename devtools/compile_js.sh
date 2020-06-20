@@ -45,7 +45,7 @@ main() {
     cmd=check
   fi
   $cmd $JSDIR/base.min.js               $JSDIR/{site,analytics}.js
-  $cmd $JSDIR/details.min.js  -advanced $JSDIR/{clipboard,fixed_header,overflowing_tab_list,details}.js
+  $cmd $JSDIR/details.min.js  -advanced $JSDIR/{clipboard,fixed_header,overflowing_tab_list,details,keyboard}.js
   $cmd $JSDIR/fetch.min.js              $JSDIR/fetch.js
   $cmd $JSDIR/playground.min.js         $JSDIR/playground.js
   $cmd $JSDIR/badge.min.js              $JSDIR/badge.js
