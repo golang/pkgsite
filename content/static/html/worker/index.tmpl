@@ -1,90 +1,91 @@
 <!--
-	Copyright 2019 The Go Authors. All rights reserved.
-	Use of this source code is governed by a BSD-style
-	license that can be found in the LICENSE file.
+  Copyright 2019 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
 -->
 
 {{define "versionTable"}}
-	<table>
-	<thead>
-	{{if .}}
-		<tr>
-			<th>Module Version</th>
-			<th>Index Timestamp</th>
-			<th>Status</th>
-			<th>Error</th>
-			<th>Attempts</th>
-			<th>LastAttempt</th>
-			<th>NextAttempt</th>
-		</tr>
-		</thead>
-		<tbody>
-		{{range .}}
-		<tr>
-			<td>{{.ModulePath}}/@v/{{.Version}}</td>
-			<td>{{.IndexTimestamp | timefmt}}</td>
-			<td>{{.Status}}</td>
-			<td>{{.Error | truncate 500}}</td>
-			<td>{{.TryCount}}</td>
-			<td>{{.LastProcessedAt | timefmt}}</td>
-			<td>{{.NextProcessedAfter | timefmt}}</td>
-		</tr>
-		{{end}}
-	{{else}}
-	<p>No versions.</p>
-	{{end}}
-	</tbody>
-	</table>
+  {{if .}}
+    <table>
+      <thead>
+        <tr>
+          <th>Module Version</th>
+          <th>Index Timestamp</th>
+          <th>Status</th>
+          <th>Error</th>
+          <th>Attempts</th>
+          <th>LastAttempt</th>
+          <th>NextAttempt</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .}}
+          <tr>
+            <td>{{.ModulePath}}/@v/{{.Version}}</td>
+            <td>{{.IndexTimestamp | timefmt}}</td>
+            <td>{{.Status}}</td>
+            <td>{{.Error | truncate 500}}</td>
+            <td>{{.TryCount}}</td>
+            <td>{{.LastProcessedAt | timefmt}}</td>
+            <td>{{.NextProcessedAfter | timefmt}}</td>
+          </tr>
+        {{end}}
+      </tbody>
+    </table>
+  {{else}}
+    <p>No versions.</p>
+  {{end}}
 {{end -}}
 
 <!DOCTYPE html>
 <script>
 function submitForm(formName, reload) {
-	let form = document[formName];
-	form.result.value = "request pending...";
-	let xhr = new XMLHttpRequest();
-	xhr.onreadystatechange = function() {
-	  if (this.readyState == 4) {
-			if (this.status >= 200 && this.status < 300) {
-        if (reload) {
-          location.reload();
-        } else {
-          form.result.value = "Success."
-        }
-			} else {
-				form.result.value = "ERROR: " + this.responseText;
-			}
-		}
-	}
-	xhr.open(form.method, form.action);
-	xhr.send(new FormData(form));
+  let form = document[formName];
+  form.result.value = "request pending...";
+  let xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = function() {
+    if (this.readyState == 4) {
+      if (this.status >= 200 && this.status < 300) {
+    if (reload) {
+      location.reload();
+    } else {
+      form.result.value = "Success."
+    }
+      } else {
+        form.result.value = "ERROR: " + this.responseText;
+      }
+    }
+  }
+  xhr.open(form.method, form.action);
+  xhr.send(new FormData(form));
 }
 </script>
 <style>
 body {
-	font-family: Verdana, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+  "Roboto", "Oxygen", "Ubuntu", "Helvetica Neue", Arial, sans-serif;
 }
 label {
-	display: inline-block;
-	text-align: right;
-	width: 200px;
+  display: inline-block;
+  text-align: right;
+  width: 12.5rem;
 }
 input {
-	width: 200px;
+  width: 12.5rem;
 }
 button {
-	width: 200px;
-	background-color: #eee;
-	border-radius: 2px;
-	border: 1px solid #ccc;
+  width: 12.5rem;
+  background-color: #eee;
+  border-radius: 0.125rem;
+  border: 0.0625rem solid #ccc;
 }
 table {
-	border-spacing: 10px 2px;
-	padding: 3px 0 2px 0;
-	font-size: 12px;
+  border-spacing: 0.625rem 0.125rem;
+  padding: 0.1875rem 0 0.125rem 0;
+  font-size: 0.75rem;
 }
 td {
-	border-top: 1px solid #ddd;
+  border-top: 0.0625rem solid #ddd;
 }
 </style>
 <title>{{.Env}} Worker</title>
@@ -94,67 +95,93 @@ td {
 
 <p>
   <a href="https://cloud.google.com/console/cloudtasks/queue/{{.ResourcePrefix}}fetch-tasks?project={{.Config.ProjectID}}"
-	target="_blank" rel="noreferrer">
-     Task Queue
+  target="_blank" rel="noreferrer">
+   Task Queue
   </a> |
   <a href="https://cloud.google.com/console/cloudscheduler?project={{.Config.ProjectID}}"
-	target="_blank" rel="noreferrer">
-     Scheduler
+  target="_blank" rel="noreferrer">
+   Scheduler
   </a> |
   <a href="https://cloud.google.com/console/logs/viewer?project={{.Config.ProjectID}}&resource=gae_app%2Fmodule_id%2F{{.Config.ServiceID}}"
-	target="_blank" rel="noreferrer">
-     Logs (switch to "All Logs" when you get there)
+  target="_blank" rel="noreferrer">
+   Logs (switch to "All Logs" when you get there)
   </a>
 </p>
 
 <div class="actions">
-	<form action="/poll-and-queue" method="post" name="queueForm">
-		<button title="Poll the module index for up to 2000 new versions, and enqueue them for processing."
-      onclick="submitForm('queueForm', false); return false">Enqueue From Module Index</button>
-		<input type="number" name="limit" value="10"></input>
-		<output name="result"></output>
-	</form>
-	<form action="/requeue" method="post" name="requeueForm">
-		<button title="Query the discovery database for failed versions, and re-queue them for processing."
-      onclick="submitForm('requeueForm', true); return false">Requeue Failed Versions</button>
-		<input type="number" name="limit" value="10">
-		<output name="result"></output>
-	</form>
-	<form action="/reprocess" method="post" name="reprocessForm">
-		<button title="Mark all versions created before the specified app_version to be reprocessed."
-      onclick="submitForm('reprocessForm', true); return false">Reprocess Versions</button>
-		<input type="text" name="app_version">
-		<output name="result"></output>
-	</form>
-	<form action="/populate-stdlib" method="post" name="populateStdlibForm">
-		<button title="Populates the database with all supported versions of the Go standard library."
-      onclick="submitForm('populateStdlibForm', false); return false">Populate Standard Library</button>
-		<output name="result"></output>
-	</form>
+  <form action="/poll-and-queue" method="post" name="queueForm">
+    <button title="Poll the module index for up to 2000 new versions, and enqueue them for processing."
+    onclick="submitForm('queueForm', false); return false">Enqueue From Module Index</button>
+    <input type="number" name="limit" value="10"></input>
+    <output name="result"></output>
+  </form>
+  <form action="/requeue" method="post" name="requeueForm">
+    <button title="Query the discovery database for failed versions, and re-queue them for processing."
+    onclick="submitForm('requeueForm', true); return false">Requeue Failed Versions</button>
+    <input type="number" name="limit" value="10">
+    <output name="result"></output>
+  </form>
+  <form action="/reprocess" method="post" name="reprocessForm">
+    <button title="Mark all versions created before the specified app_version to be reprocessed."
+    onclick="submitForm('reprocessForm', true); return false">Reprocess Versions</button>
+    <input type="text" name="app_version">
+    <output name="result"></output>
+  </form>
+  <form action="/populate-stdlib" method="post" name="populateStdlibForm">
+    <button title="Populates the database with all supported versions of the Go standard library."
+    onclick="submitForm('populateStdlibForm', false); return false">Populate Standard Library</button>
+    <output name="result"></output>
+  </form>
 </div>
 
 <div class="config">
 <h3>Config</h3>
   <table>
-    <tr><td>App Version</td><td>{{.Config.VersionID}}</td></tr>
-    <tr><td>Zone</td><td>{{.Config.ZoneID}}</td></tr>
-    <tr><td>DB Host</td><td>{{.Config.DBHost}}</td></tr>
-    <tr><td>Redis Cache Host</td><td>{{.Config.RedisCacheHost}}</td></tr>
-    <tr><td>Redis HA Host</td><td>{{.Config.RedisHAHost}}</td></tr>
+  <tr><td>App Version</td><td>{{.Config.VersionID}}</td></tr>
+  <tr><td>Zone</td><td>{{.Config.ZoneID}}</td></tr>
+  <tr><td>DB Host</td><td>{{.Config.DBHost}}</td></tr>
+  <tr><td>Redis Cache Host</td><td>{{.Config.RedisCacheHost}}</td></tr>
+  <tr><td>Redis HA Host</td><td>{{.Config.RedisHAHost}}</td></tr>
   </table>
+</div>
+
+<div>
+  <h3>Experiments</h3>
+  {{if .Experiments}}
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Rollout</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+      {{range .Experiments}}
+        <tr>
+          <td>{{.Name}}</td>
+          <td>{{.Rollout}}</td>
+          <td>{{.Description}}</td>
+        </tr>
+      {{end}}
+      </tbody>
+    </table>
+  {{else}}
+    <p>No experiments.</p>
+  {{end}}
 </div>
 
 <div class="stats">
   <h3>Statistics</h3>
   <p>Latest timestamp from the module index: {{.LatestTimestamp | timefmt}}</p>
   <table>
-    <caption>Results by status:</caption>
-    <thead><tr><th>Code</th><th>Status</th><th>Count</th></tr></thead>
-    <tbody>
-      {{range .Counts}}
-        <tr><td>{{.Code}}</td><td>{{.Desc}}</td><td>{{.Count}}</td></tr>
-      {{end}}
-    </tbody>
+  <caption>Results by status:</caption>
+  <thead><tr><th>Code</th><th>Status</th><th>Count</th></tr></thead>
+  <tbody>
+    {{range .Counts}}
+    <tr><td>{{.Code}}</td><td>{{.Desc}}</td><td>{{.Count}}</td></tr>
+    {{end}}
+  </tbody>
   </table>
 </div>
 
@@ -166,3 +193,21 @@ td {
 
 <h3>Recent failed attempts:</h3>
 {{template "versionTable" .RecentFailures}}
+
+<div>
+  <h3>Excluded Prefixes</h3>
+  {{if .Excluded}}
+    <table>
+      <thead>
+        <tr><th>Prefix</th></tr>
+      </thead>
+      <tbody>
+      {{range .Excluded}}
+        <tr><td>{{.}}</td></tr>
+      {{end}}
+      </tbody>
+    </table>
+  {{else}}
+    <p>No excluded prefixes.</p>
+  {{end}}
+</div>

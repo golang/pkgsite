@@ -69,7 +69,7 @@ type ServerConfig struct {
 func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 	defer derrors.Wrap(&err, "NewServer(db, %+v)", scfg)
 
-	indexTemplate, err := parseTemplate(scfg.StaticPath)
+	indexTemplate, err := parseTemplate(scfg.StaticPath, "index.tmpl")
 	if err != nil {
 		return nil, err
 	}
@@ -84,8 +84,8 @@ func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 		redisCacheClient:     scfg.RedisCacheClient,
 		queue:                scfg.Queue,
 		reportingClient:      scfg.ReportingClient,
-		indexTemplate:        indexTemplate,
 		taskIDChangeInterval: scfg.TaskIDChangeInterval,
+		indexTemplate:        indexTemplate,
 	}, nil
 }
 
@@ -347,6 +347,8 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (_ string,
 	var (
 		next, failures, recents []*internal.ModuleVersionState
 		stats                   *postgres.VersionStats
+		experiments             []*internal.Experiment
+		excluded                []string
 	)
 	type annotation struct {
 		error
@@ -382,6 +384,22 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (_ string,
 		stats, err = s.db.GetVersionStats(ctx)
 		if err != nil {
 			return annotation{err, "error fetching stats"}
+		}
+		return nil
+	})
+	g.Go(func() error {
+		var err error
+		experiments, err = s.db.GetExperiments(ctx)
+		if err != nil {
+			return annotation{err, "error fetching experiments"}
+		}
+		return nil
+	})
+	g.Go(func() error {
+		var err error
+		excluded, err = s.db.GetExcludedPrefixes(ctx)
+		if err != nil {
+			return annotation{err, "error fetching excluded"}
 		}
 		return nil
 	})
@@ -426,6 +444,8 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (_ string,
 		LatestTimestamp              *time.Time
 		Counts                       []*count
 		Next, Recent, RecentFailures []*internal.ModuleVersionState
+		Experiments                  []*internal.Experiment
+		Excluded                     []string
 	}{
 		Config:          s.cfg,
 		Env:             env,
@@ -435,14 +455,16 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (_ string,
 		Next:            next,
 		Recent:          recents,
 		RecentFailures:  failures,
+		Experiments:     experiments,
+		Excluded:        excluded,
 	}
 	var buf bytes.Buffer
 	if err := s.indexTemplate.Execute(&buf, page); err != nil {
 		return "error rendering template", err
 	}
 	if _, err := io.Copy(w, &buf); err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		log.Errorf(ctx, "Error copying buffer to ResponseWriter: %v", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 	return "", nil
 }
@@ -511,12 +533,12 @@ func (s *Server) handleDelete(w http.ResponseWriter, r *http.Request) error {
 }
 
 // Parse the template for the status page.
-func parseTemplate(staticPath string) (*template.Template, error) {
+func parseTemplate(staticPath, filename string) (*template.Template, error) {
 	if staticPath == "" {
 		return nil, nil
 	}
-	templatePath := filepath.Join(staticPath, "html/worker/index.tmpl")
-	return template.New("index.tmpl").Funcs(template.FuncMap{
+	templatePath := filepath.Join(staticPath, "html/worker/"+filename)
+	return template.New(filename).Funcs(template.FuncMap{
 		"truncate": truncate,
 		"timefmt":  formatTime,
 	}).ParseFiles(templatePath)

@@ -76,9 +76,10 @@ func (db *DB) ensureExcludedPrefixes(ctx context.Context) {
 	if time.Since(lastFetched) < excludedPrefixesExpiration {
 		return
 	}
-	prefixes, err := db.readExcludedPrefixes(ctx)
+	prefixes, err := db.GetExcludedPrefixes(ctx)
 	excludedPrefixes.mu.Lock()
 	defer excludedPrefixes.mu.Unlock()
+	excludedPrefixes.lastFetched = time.Now()
 	excludedPrefixes.prefixes = prefixes
 	excludedPrefixes.err = err
 	if err != nil {
@@ -86,8 +87,8 @@ func (db *DB) ensureExcludedPrefixes(ctx context.Context) {
 	}
 }
 
-// readExcludedPrefixes reads all the excluded prefixes from the database.
-func (db *DB) readExcludedPrefixes(ctx context.Context) ([]string, error) {
+// GetExcludedPrefixes reads all the excluded prefixes from the database.
+func (db *DB) GetExcludedPrefixes(ctx context.Context) ([]string, error) {
 	var eps []string
 	err := db.db.RunQuery(ctx, `SELECT prefix FROM excluded_prefixes`, func(rows *sql.Rows) error {
 		var ep string
@@ -100,6 +101,5 @@ func (db *DB) readExcludedPrefixes(ctx context.Context) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	setExcludedPrefixesLastFetched(time.Now())
 	return eps, nil
 }
