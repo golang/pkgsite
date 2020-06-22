@@ -138,7 +138,6 @@ func processRows(rows *sql.Rows, f func(*sql.Rows) error) error {
 //
 // If the isolation level requires it, Transact will retry the transaction upon
 // serialization failure, so txFunc may be called more than once.
-
 func (db *DB) Transact(ctx context.Context, iso sql.IsolationLevel, txFunc func(*DB) error) (err error) {
 	defer derrors.Wrap(&err, "Transact(%s)", iso)
 	// For the levels which require retry, see

@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 	const dbName = "discovery_postgres_test"
 
 	if err := dbtest.CreateDBIfNotExists(dbName); err != nil {
-		if errors.Is(err, derrors.NotFound) {
+		if errors.Is(err, derrors.NotFound) && os.Getenv("GO_DISCOVERY_TESTDB") != "true" {
 			log.Printf("SKIPPING: could not connect to DB (see doc/postgres.md to set up): %v", err)
 			return
 		}

@@ -157,7 +157,7 @@ main() {
     "")
       standard_linters
       runcmd go mod tidy
-      runcmd go test ./...
+      runcmd env GO_DISCOVERY_TESTDB=true go test ./...
       # To test internal/secrets, set GO_DISCOVERY_SECRETS_BUCKET and GO_DISCOVERY_KMS_KEY_NAME
       # to appropriate test values.
       runcmd go test ./internal/secrets
@@ -166,7 +166,7 @@ main() {
       # Similar to the no-arg mode, but omit actions that require GCP
       # permissions or that don't test the code.
       standard_linters
-      runcmd go test -race -count=1 ./...
+      runcmd env GO_DISCOVERY_TESTDB=true go test -race -count=1 ./...
       ;;
     lint) standard_linters ;;
     headers) check_headers ;;

@@ -132,7 +132,7 @@ func RunDBTests(dbName string, m *testing.M, testDB **DB) {
 	database.QueryLoggingDisabled = true
 	db, err := SetupTestDB(dbName)
 	if err != nil {
-		if errors.Is(err, derrors.NotFound) {
+		if errors.Is(err, derrors.NotFound) && os.Getenv("GO_DISCOVERY_TESTDB") != "true" {
 			log.Printf("SKIPPING: could not connect to DB (see doc/postgres.md to set up): %v", err)
 			return
 		}
