@@ -74,42 +74,44 @@ func (db *DB) GetNextModulesToFetch(ctx context.Context, limit int) (_ []*intern
 
 	var mvs []*internal.ModuleVersionState
 	for _, next := range []struct {
-		query    string
-		statuses []int
+		message string
+		query   string
+		limit   int
 	}{
 		{
-			query: getLatestModuleVersionStates,
-			statuses: []int{
-				derrors.ToHTTPStatus(derrors.ReprocessStatusOK),
-				derrors.ToHTTPStatus(derrors.ReprocessHasIncompletePackages),
-			},
+			message: "latest version of modules with ReprocessStatusOK or ReprocessHasIncompletePackages",
+			query: constructRequeueQuery(getLatestModuleVersionStates, []error{
+				derrors.ReprocessStatusOK, derrors.ReprocessHasIncompletePackages,
+			}),
 		},
 		{
-			query: getLatestModuleVersionStates,
-			statuses: []int{
-				derrors.ToHTTPStatus(derrors.ReprocessBadModule),
-				derrors.ToHTTPStatus(derrors.ReprocessAlternative),
-			},
+			message: "latest version of modules with ReprocessBadModule or ReprocessAlternative",
+			query: constructRequeueQuery(getLatestModuleVersionStates, []error{
+				derrors.ReprocessBadModule, derrors.ReprocessAlternative,
+			}),
 		},
 		{
-			query: getModuleVersionStates,
-			statuses: []int{
-				derrors.ToHTTPStatus(derrors.ReprocessStatusOK),
-				derrors.ToHTTPStatus(derrors.ReprocessHasIncompletePackages),
-			},
+			message: "non-latest version of modules with ReprocessStatusOK or ReprocessHasIncompletePackages",
+			query: constructRequeueQuery(getModuleVersionStates, []error{
+				derrors.ReprocessStatusOK, derrors.ReprocessHasIncompletePackages,
+			}),
 		},
 		{
-			query: getModuleVersionStates,
-			statuses: []int{
-				derrors.ToHTTPStatus(derrors.ReprocessBadModule),
-				derrors.ToHTTPStatus(derrors.ReprocessAlternative),
-			},
+			message: "non-latest version of modules with ReprocessBadModule or ReprocessAlternative",
+			query: constructRequeueQuery(getModuleVersionStates, []error{
+				derrors.ReprocessBadModule, derrors.ReprocessAlternative,
+			}),
 		},
 		{
-			query: getModuleVersionStatesRemainder,
+			message: fmt.Sprintf("modules with status=0 or status=500 or num_packages > %d",
+				largeModulePackageThreshold),
+			query: fmt.Sprintf(getModuleVersionStatesRemainder, moduleVersionStateColumns),
+			limit: largeModulesLimit,
 		},
 	} {
-		query := constructRequeueQuery(next.query, next.statuses)
+		if next.limit == 0 {
+			next.limit = limit
+		}
 		collect := func(rows *sql.Rows) error {
 			mv, err := scanModuleVersionState(rows.Scan)
 			if err != nil {
@@ -118,22 +120,10 @@ func (db *DB) GetNextModulesToFetch(ctx context.Context, limit int) (_ []*intern
 			mvs = append(mvs, mv)
 			return nil
 		}
-		if err := db.db.RunQuery(ctx, query, collect, limit); err != nil {
+		if err := db.db.RunQuery(ctx, next.query, collect, next.limit); err != nil {
 			return nil, err
 		}
 		if len(mvs) > 0 {
-			var msg string
-			switch next.query {
-			case getModuleVersionStatesRemainder:
-				msg = fmt.Sprintf("modules with status=0 or status=500 or num_packages > %d", largeModulePackageThreshold)
-				if len(mvs) > largeModulesLimit {
-					mvs = mvs[:largeModulesLimit]
-				}
-			case getLatestModuleVersionStates:
-				msg = "latest version of modules"
-			default:
-				msg = "non-latest version of modules"
-			}
 			fmtIntp := func(p *int) string {
 				if p == nil {
 					return "NULL"
@@ -143,8 +133,8 @@ func (db *DB) GetNextModulesToFetch(ctx context.Context, limit int) (_ []*intern
 			start := mvs[0]
 			end := mvs[len(mvs)-1]
 			pkgRange := fmt.Sprintf("%s <= num_packages <= %s", fmtIntp(start.NumPackages), fmtIntp(end.NumPackages))
-			log.Infof(ctx, fmt.Sprintf("GetNextModulesToFetch (%s): num_modules=%d; statuses=%v; %s; start_module=%q; end_module=%q",
-				msg, len(mvs), next.statuses, pkgRange,
+			log.Infof(ctx, fmt.Sprintf("GetNextModulesToFetch (%s): num_modules=%d; %s; start_module=%q; end_module=%q",
+				next.message, len(mvs), pkgRange,
 				fmt.Sprintf("%s/@v/%s", start.ModulePath, start.Version),
 				fmt.Sprintf("%s/@v/%s", end.ModulePath, end.Version)))
 			return mvs, nil
@@ -154,23 +144,18 @@ func (db *DB) GetNextModulesToFetch(ctx context.Context, limit int) (_ []*intern
 	return mvs, nil
 }
 
-func constructRequeueQuery(baseQuery string, statuses []int) string {
+func constructRequeueQuery(baseQuery string, statusErrors []error) string {
 	where := "WHERE next_processed_after < CURRENT_TIMESTAMP"
-	if baseQuery != getModuleVersionStatesRemainder {
-		where += fmt.Sprintf(" AND COALESCE(num_packages, 0) < %d", largeModulePackageThreshold)
-		var s string
-		for i, status := range statuses {
-			s += fmt.Sprintf("status=%d", status)
-			if i < len(statuses)-1 {
-				s += " OR "
-			}
+	where += fmt.Sprintf(" AND COALESCE(num_packages, 0) < %d", largeModulePackageThreshold)
+	var s string
+	for i, serr := range statusErrors {
+		s += fmt.Sprintf("status=%d", derrors.ToHTTPStatus(serr))
+		if i < len(statusErrors)-1 {
+			s += " OR "
 		}
-		where += fmt.Sprintf(" AND (%s)", s)
-	} else {
-		where += " AND (status >= 500 OR status=0)"
 	}
-	query := fmt.Sprintf(baseQuery, moduleVersionStateColumns, where)
-	return query
+	where += fmt.Sprintf(" AND (%s)", s)
+	return fmt.Sprintf(baseQuery, moduleVersionStateColumns, where)
 }
 
 // Get the latest versions of modules that previously
@@ -232,10 +217,8 @@ LIMIT $1`
 const getModuleVersionStatesRemainder = `
 SELECT %s
 FROM module_version_states
-
--- WHERE clause
-%s
-
+WHERE next_processed_after < CURRENT_TIMESTAMP
+AND (status >= 500 OR status=0)
 ORDER BY
     CASE WHEN status=0 THEN 0
          WHEN (status=520 OR status=521) THEN 1
