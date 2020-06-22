@@ -45,7 +45,7 @@ type VersionInfo struct {
 // New constructs a *Client using the provided rawurl, which is expected to
 // be an absolute URI that can be directly passed to http.Get.
 func New(rawurl string) (_ *Client, err error) {
-	derrors.Wrap(&err, "proxy.New(%q)", rawurl)
+	defer derrors.Wrap(&err, "proxy.New(%q)", rawurl)
 	url, err := url.Parse(rawurl)
 	if err != nil {
 		return nil, fmt.Errorf("url.Parse: %v", err)
