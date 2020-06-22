@@ -23,11 +23,12 @@ For additional information on our architecture, see the
    docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=pick_a_secret -e LANG=C postgres
    ```
 
-   (NOTE: If you have already installed postgres on a workstation using `sudo apt-get install postgres`, you may have a server already running, and the above
-   docker command will fail because it can't bind the port. At that point you can
-   set `GO_DISCOVERY_DATABASE_TEST_`XXX environment variables to use your installed
-   server, or stop the server using `pg_ctl stop` and use docker. The following
-   assumes docker.)
+   (NOTE: If you have already installed postgres on a workstation using
+   `sudo apt-get install postgres`, you may have a server already running, and
+   the above docker command will fail because it can't bind the port. At that
+   point you can set `GO_DISCOVERY_DATABASE_TEST_`XXX environment variables to
+   use your installed server, or stop the server using `pg_ctl stop` and use
+   docker. The following assumes docker.)
 
    You must also install a postgres client (for example `psql`).
 
@@ -44,6 +45,10 @@ For additional information on our architecture, see the
    See `internal/config/config.go` for details regarding construction of the
    database connection string.
 
+   If you set up using docker in step 1, you will also need to set
+   `GO_DISCOVERY_DATABASE_PASSWORD`. See
+   [setting up for tests](postgres.md#setting-up-for-tests) below.
+
 3. Once you have Postgres installed, you should create the `discovery-db` database
    by running `devtools/create_local_db.sh`.
 
@@ -52,8 +57,13 @@ For additional information on our architecture, see the
 
 ## Setting up for tests
 
-Tests require a Postgres instance. If you followed step 1 in "Local development
-database" above, then you have one.
+Tests require a Postgres instance. If you followed the docker setup in step 1 in
+[local development database](postgres.md#local-development-database) above,
+then you have one.
+
+When running `go test ./...`, database tests will not run if you don't have
+postgres running. To run these tests, set `GO_DISCOVERY_RUN_TESTDB=true`.
+Alternatively, you can run `./all.bash`, which will run the database tests.
 
 Tests use the following environment variables:
 
@@ -62,15 +72,17 @@ Tests use the following environment variables:
 - `GO_DISCOVERY_DATABASE_TEST_HOST` (default: localhost)
 - `GO_DISCOVERY_DATABASE_TEST_PORT` (default: 5432)
 
-If you followed the instructions in step 1 of "Local development database", then
-you only need to set the password variable.
+If you followed the instructions for setting up with docker in step 1 of
+[local development database](postgres.md#local-development-database) above,
+then you only need to set `GO_DISCOVERY_DATABASE_TEST_PASSWORD`.
 
 You don't need to create a database for testing; the tests will automatically
 create a database for each package, with the name `discovery_{pkg}_test`. For
-example, for internal/worker, tests run on the `discovery_worker_test` database.
+example, for internal/worker, tests run on the `discovery_worker_test`
+database.
 
-If you ever run into issues with your test databases and need to reset them, you
-can run `devtools/drop_test_dbs.sh`.
+If you ever run into issues with your test databases and need to reset them,
+you can run `devtools/drop_test_dbs.sh`.
 
 Run `./all.bash` to verify your setup.
 
