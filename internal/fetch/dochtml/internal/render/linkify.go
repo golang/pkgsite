@@ -16,6 +16,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"golang.org/x/pkgsite/internal/fetch/internal/doc"
 )
@@ -45,10 +46,13 @@ const (
 	// Regexp for Go identifiers.
 	identRx     = `[\pL_][\pL_0-9]*`
 	qualIdentRx = identRx + `(\.` + identRx + `)*`
+
+	// Regexp for RFCs.
+	rfcRx = `RFC\s+(\d{3,5})(,?\s+[Ss]ection\s+(\d+(\.\d+)*))?`
 )
 
 var (
-	matchRx     = regexp.MustCompile(urlRx + `|` + qualIdentRx)
+	matchRx     = regexp.MustCompile(urlRx + `|` + rfcRx + `|` + qualIdentRx)
 	badAnchorRx = regexp.MustCompile(`[^a-zA-Z0-9]`)
 )
 
@@ -226,6 +230,23 @@ func (r *Renderer) formatLineHTML(w io.Writer, line string, idr *identifierResol
 
 				word := template.HTMLEscapeString(word)
 				fmt.Fprintf(w, `<a href="%s">%s</a>`, word, word)
+			// Match "RFC ..." to link RFCs.
+			case strings.HasPrefix(word, "RFC") && len(word) > 3 && unicode.IsSpace(rune(word[3])):
+				// Strip all characters except for letters, numbers, and '.' to
+				// obtain RFC fields.
+				rfcFields := strings.FieldsFunc(word, func(c rune) bool {
+					return !unicode.IsLetter(c) && !unicode.IsNumber(c) && c != '.'
+				})
+				word := template.HTMLEscapeString(word)
+				if len(rfcFields) >= 4 {
+					// RFC x Section y
+					fmt.Fprintf(w, `<a href="https://rfc-editor.org/rfc/rfc%s.html#section-%s">%s</a>`,
+						rfcFields[1], rfcFields[3], word)
+				} else if len(rfcFields) >= 2 {
+					// RFC x
+					fmt.Fprintf(w, `<a href="https://rfc-editor.org/rfc/rfc%s.html">%s</a>`,
+						rfcFields[1], word)
+				}
 			case !forbidLinking && !r.disableHotlinking && idr != nil: // && numQuotes%2 == 0:
 				io.WriteString(w, idr.toHTML(word))
 			default:
