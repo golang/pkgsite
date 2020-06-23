@@ -51,180 +51,138 @@ func (db *DB) UpdateModuleVersionStatesForReprocessing(ctx context.Context, appV
 	return nil
 }
 
-var (
-	// largeModulePackageThresold represents the package threshold at which it
-	// becomes difficult to process packages. Modules with more than this number
-	// of packages are generally different versions or forks of kubernetes,
-	// aws-sdk-go, azure-sdk-go, and bilibili.
-	largeModulePackageThreshold = 1500
-	// largeModulesLimit represents the number of large modules that we are
-	// willing to enqueue at a given time.
-	largeModulesLimit = 100
-)
+// largeModulePackageThresold represents the package threshold at which it
+// becomes difficult to process packages. Modules with more than this number
+// of packages are generally different versions or forks of kubernetes,
+// aws-sdk-go, azure-sdk-go, and bilibili.
+const largeModulePackageThreshold = 1500
+
+// largeModulesLimit represents the number of large modules that we are
+// willing to enqueue at a given time.
+// var for testing.
+var largeModulesLimit = 100
 
 // GetNextModulesToFetch returns the next batch of modules that need to be
-// processed. We prioritize modules based on (1) whether it is the latest version,
-// (2) if it is an alternative module, and (3) the number of packages it has.
-// We want to leave time-consuming modules until the end and process them at
-// a slower rate to reduce database load and timeouts. We also want to leave
-// alternative modules towards the end, since these will incur unnecessary
-// deletes otherwise.
+// processed. We prioritize modules based on (1) whether it has status zero
+// (never processed), (2) whether it is the latest version, (3) if it is an
+// alternative module, and (4) the number of packages it has. We want to leave
+// time-consuming modules until the end and process them at a slower rate to
+// reduce database load and timeouts. We also want to leave alternative modules
+// towards the end, since these will incur unnecessary deletes otherwise.
 func (db *DB) GetNextModulesToFetch(ctx context.Context, limit int) (_ []*internal.ModuleVersionState, err error) {
 	defer derrors.Wrap(&err, "GetNextModulesToFetch(ctx, %d)", limit)
 
 	var mvs []*internal.ModuleVersionState
-	for _, next := range []struct {
-		message string
-		query   string
-		limit   int
-	}{
-		{
-			message: "latest version of modules with ReprocessStatusOK or ReprocessHasIncompletePackages",
-			query: constructRequeueQuery(getLatestModuleVersionStates, []error{
-				derrors.ReprocessStatusOK, derrors.ReprocessHasIncompletePackages,
-			}),
-		},
-		{
-			message: "latest version of modules with ReprocessBadModule or ReprocessAlternative",
-			query: constructRequeueQuery(getLatestModuleVersionStates, []error{
-				derrors.ReprocessBadModule, derrors.ReprocessAlternative,
-			}),
-		},
-		{
-			message: "non-latest version of modules with ReprocessStatusOK or ReprocessHasIncompletePackages",
-			query: constructRequeueQuery(getModuleVersionStates, []error{
-				derrors.ReprocessStatusOK, derrors.ReprocessHasIncompletePackages,
-			}),
-		},
-		{
-			message: "non-latest version of modules with ReprocessBadModule or ReprocessAlternative",
-			query: constructRequeueQuery(getModuleVersionStates, []error{
-				derrors.ReprocessBadModule, derrors.ReprocessAlternative,
-			}),
-		},
-		{
-			message: fmt.Sprintf("modules with status=0 or status=500 or num_packages > %d",
-				largeModulePackageThreshold),
-			query: fmt.Sprintf(getModuleVersionStatesRemainder, moduleVersionStateColumns),
-			limit: largeModulesLimit,
-		},
-	} {
-		if next.limit == 0 {
-			next.limit = limit
+	query := fmt.Sprintf(nextModulesToProcessQuery, moduleVersionStateColumns)
+
+	collect := func(rows *sql.Rows) error {
+		// Scan the last two columns separately; they are in the query only for sorting.
+		scan := func(dests ...interface{}) error {
+			var latest bool
+			var npkg int
+			return rows.Scan(append(dests, &latest, &npkg)...)
 		}
-		collect := func(rows *sql.Rows) error {
-			mv, err := scanModuleVersionState(rows.Scan)
-			if err != nil {
-				return err
+		mv, err := scanModuleVersionState(scan)
+		if err != nil {
+			return err
+		}
+		mvs = append(mvs, mv)
+		return nil
+	}
+	if err := db.db.RunQuery(ctx, query, collect, largeModulePackageThreshold, limit); err != nil {
+		return nil, err
+	}
+	if len(mvs) == 0 {
+		log.Infof(ctx, "No modules to requeue")
+	} else {
+		fmtIntp := func(p *int) string {
+			if p == nil {
+				return "NULL"
 			}
-			mvs = append(mvs, mv)
-			return nil
+			return strconv.Itoa(*p)
 		}
-		if err := db.db.RunQuery(ctx, next.query, collect, next.limit); err != nil {
-			return nil, err
+		start := mvs[0]
+		end := mvs[len(mvs)-1]
+		pkgRange := fmt.Sprintf("%s <= num_packages <= %s", fmtIntp(start.NumPackages), fmtIntp(end.NumPackages))
+		log.Infof(ctx, "GetNextModulesToFetch: num_modules=%d; %s; start_module=%q; end_module=%q",
+			len(mvs), pkgRange,
+			fmt.Sprintf("%s/@v/%s", start.ModulePath, start.Version),
+			fmt.Sprintf("%s/@v/%s", end.ModulePath, end.Version))
+	}
+
+	// Don't return more than largeModulesLimit of modules that have more than
+	// largeModulePackageThreshold packages.
+	nLarge := 0
+	for i, m := range mvs {
+		if m.NumPackages != nil && *m.NumPackages >= largeModulePackageThreshold {
+			nLarge++
 		}
-		if len(mvs) > 0 {
-			fmtIntp := func(p *int) string {
-				if p == nil {
-					return "NULL"
-				}
-				return strconv.Itoa(*p)
-			}
-			start := mvs[0]
-			end := mvs[len(mvs)-1]
-			pkgRange := fmt.Sprintf("%s <= num_packages <= %s", fmtIntp(start.NumPackages), fmtIntp(end.NumPackages))
-			log.Infof(ctx, fmt.Sprintf("GetNextModulesToFetch (%s): num_modules=%d; %s; start_module=%q; end_module=%q",
-				next.message, len(mvs), pkgRange,
-				fmt.Sprintf("%s/@v/%s", start.ModulePath, start.Version),
-				fmt.Sprintf("%s/@v/%s", end.ModulePath, end.Version)))
-			return mvs, nil
+		if nLarge > largeModulesLimit {
+			return mvs[:i], nil
 		}
 	}
-	log.Infof(ctx, "No modules to requeue")
 	return mvs, nil
 }
 
-func constructRequeueQuery(baseQuery string, statusErrors []error) string {
-	where := "WHERE next_processed_after < CURRENT_TIMESTAMP"
-	where += fmt.Sprintf(" AND COALESCE(num_packages, 0) < %d", largeModulePackageThreshold)
-	var s string
-	for i, serr := range statusErrors {
-		s += fmt.Sprintf("status=%d", derrors.ToHTTPStatus(serr))
-		if i < len(statusErrors)-1 {
-			s += " OR "
-		}
-	}
-	where += fmt.Sprintf(" AND (%s)", s)
-	return fmt.Sprintf(baseQuery, moduleVersionStateColumns, where)
-}
-
-// Get the latest versions of modules that previously
-// returned a 20x status; process them in order of
-// number of packages.
-//
-// We also want to prefer release to non-release
-// versions. A sort_version will end in '~' if it is a
-// release, and that is larger than any other character
-// that can occur in a sort_version.
-// So if we sort first by the last character in
-// sort_version, then by sort_version itself, we will
-// get releases before non-releases.  To implement that
-// two-level ordering in a MAX, we construct an array
-// of the two strings.
-// Arrays are ordered lexicographically, so MAX will do
-// just what we want.
-const getLatestModuleVersionStates = `
-SELECT %s
-FROM (
-    SELECT s.*
-    FROM module_version_states s
-    INNER JOIN (
-        SELECT module_path,
-        MAX(ARRAY[right(sort_version, 1), sort_version]) AS mv
-        FROM module_version_states
-        GROUP BY 1
-    ) m
-    ON
-        s.module_path = m.module_path
-        AND s.sort_version = m.mv[2]
-
-    -- WHERE clause
-    %s
-
-    ORDER BY
-        num_packages,
-        sort_version DESC,
-        module_path
-    LIMIT $1
-) foo`
-
-// Get non-latest versions to be reprocessed.
-// Start with modules that previously succeeded, then
-// move onto alternative modules.
-const getModuleVersionStates = `
-SELECT %s
-FROM module_version_states
-
--- WHERE clause
-%s
-
-ORDER BY
-    num_packages,
-    sort_version DESC,
-    module_path
-LIMIT $1`
-
-const getModuleVersionStatesRemainder = `
-SELECT %s
-FROM module_version_states
-WHERE next_processed_after < CURRENT_TIMESTAMP
-AND (status >= 500 OR status=0)
-ORDER BY
-    CASE WHEN status=0 THEN 0
-         WHEN (status=520 OR status=521) THEN 1
-         WHEN (status=540 OR status=541) THEN 2
-         ELSE 3 END,
-    COALESCE(num_packages, 0),
-    sort_version DESC,
-    module_path
-LIMIT $1`
+const nextModulesToProcessQuery = `
+    -- Make a table of the latest versions of each module.
+	WITH latest_versions AS (
+		SELECT DISTINCT ON (module_path) module_path, version
+		FROM module_version_states
+		ORDER BY
+			module_path,
+			right(sort_version, 1) = '~' DESC, -- prefer release versions
+			sort_version DESC
+	)
+	SELECT %s, latest, npkg
+	FROM (
+		SELECT
+			%[1]s,
+			((module_path, version) IN (SELECT * FROM latest_versions)) AS latest,
+			COALESCE(num_packages, 0) AS npkg
+		FROM module_version_states
+	) s
+	WHERE next_processed_after < CURRENT_TIMESTAMP
+		AND (status = 0 OR status >= 500)
+	ORDER BY
+		CASE
+			 -- new modules
+			 WHEN status = 0 THEN 0
+			 WHEN npkg < $1 THEN		-- non-large modules
+				CASE
+					WHEN latest THEN	-- latest version
+						CASE
+							-- with ReprocessStatusOK or ReprocessHasIncompletePackages
+							WHEN status = 520 OR status = 521 THEN 1
+							-- with ReprocessBadModule or ReprocessAlternative
+							WHEN status = 540 OR status = 541 THEN 2
+							ELSE 9
+						END
+					ELSE				-- non-latest version
+						CASE
+							WHEN status = 520 OR status = 521 THEN 3
+							WHEN status = 540 OR status = 541 THEN 4
+							ELSE 9
+						END
+				END
+			ELSE						-- large modules
+				CASE
+					WHEN latest THEN	-- latest version
+						CASE
+							WHEN status = 520 OR status = 521 THEN 5
+							WHEN status = 540 OR status = 541 THEN 6
+							ELSE 9
+						END
+					ELSE				-- non-latest version
+						CASE
+							WHEN status = 520 OR status = 521 THEN 7
+							WHEN status = 540 OR status = 541 THEN 8
+							ELSE 9
+						END
+				END
+		END,
+		npkg,  -- prefer fewer packages
+		module_path,
+		version -- for reproducibility
+	LIMIT $2
+`

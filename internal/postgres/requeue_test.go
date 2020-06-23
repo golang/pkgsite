@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
@@ -48,26 +47,25 @@ func TestGetNextModulesToFetchAndUpdateModuleVersionStatesForReprocessing(t *tes
 		indexVersions []*internal.IndexVersion
 		now           = time.Now()
 	)
-	testPath := func(m *testData) string {
-		return strings.ReplaceAll(fmt.Sprintf("%d/%d", m.numPackages, m.status), " ", "/")
-	}
-	generateMods := func(versions []string, sizes []int, statuses []int) []*testData {
+	generateMods := func(versions []string, sizes, statuses []int) []*testData {
 		var mods []*testData
 		for _, status := range statuses {
 			for _, size := range sizes {
 				for _, version := range versions {
-					m := &testData{
+					mods = append(mods, &testData{
+						modulePath:  fmt.Sprintf("%d/%d", size, status),
 						version:     version,
 						numPackages: size,
 						status:      status,
-					}
-					m.modulePath = testPath(m)
-					mods = append(mods, m)
+					})
 				}
 			}
 		}
 		sort.Slice(mods, func(i, j int) bool {
-			return mods[i].modulePath < mods[j].modulePath
+			if mods[i].modulePath != mods[j].modulePath {
+				return mods[i].modulePath < mods[j].modulePath
+			}
+			return mods[i].version < mods[j].version
 		})
 		return mods
 	}
@@ -79,9 +77,9 @@ func TestGetNextModulesToFetchAndUpdateModuleVersionStatesForReprocessing(t *tes
 		t.Fatal(err)
 	}
 
-	checkNextToRequeue := func(wantData []*testData) {
+	checkNextToRequeue := func(wantData []*testData, limit int) {
 		t.Helper()
-		got, err := testDB.GetNextModulesToFetch(ctx, len(mods)+1)
+		got, err := testDB.GetNextModulesToFetch(ctx, limit)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -97,9 +95,6 @@ func TestGetNextModulesToFetchAndUpdateModuleVersionStatesForReprocessing(t *tes
 				m.NumPackages = &data.numPackages
 			}
 			want = append(want, m)
-		}
-		if len(want) != len(got) {
-			t.Errorf("mismatch got = %d modules; want = %d", len(got), len(want))
 		}
 		ignore := cmpopts.IgnoreFields(
 			internal.ModuleVersionState{},
@@ -128,22 +123,12 @@ func TestGetNextModulesToFetchAndUpdateModuleVersionStatesForReprocessing(t *tes
 	// All of the modules should have status = 0, so they should all be
 	// returned. At this point, we don't know the number of packages in each
 	// module.
-	want := generateMods([]string{latest}, []int{small, big}, statuses)
-	sort.Slice(want, func(i, j int) bool {
-		return want[i].modulePath < want[j].modulePath
-	})
-	want2 := generateMods([]string{notLatest}, []int{small, big}, statuses)
-	sort.Slice(want2, func(i, j int) bool {
-		return want2[i].modulePath < want2[j].modulePath
-	})
-	want = append(want, want2...)
-
+	want := generateMods(versions, sizes, statuses)
 	for _, w := range want {
 		w.status = 0
 		w.numPackages = 0
 	}
-	checkNextToRequeue(want)
-
+	checkNextToRequeue(want, len(mods))
 	// Mark all modules for reprocessing.
 	for _, m := range mods {
 		if err := upsertModuleVersionState(ctx, testDB.db, m.modulePath, m.version, "2020-04-29t14", &m.numPackages, now, m.status, m.modulePath, derrors.FromHTTPStatus(m.status, "test string")); err != nil {
@@ -153,54 +138,47 @@ func TestGetNextModulesToFetchAndUpdateModuleVersionStatesForReprocessing(t *tes
 	if err := testDB.UpdateModuleVersionStatesForReprocessing(ctx, "2020-04-30t14"); err != nil {
 		t.Fatal(err)
 	}
+	// Set the next-processed time for everything to now. UpdateModuleVersionStatesForReprocessing does
+	// that for some modules, but we need to do it for all of them so that they all are candidates
+	// for GetNextModulesToFetch.
+	if _, err := testDB.db.Exec(ctx, `
+		UPDATE module_version_states
+		SET next_processed_after = CURRENT_TIMESTAMP
+	`); err != nil {
+		t.Fatal(err)
+	}
 
-	// The next modules to requeue should be only the latest version of
-	// not-large modules with errors derorrs.ReprocessStatusOK and
-	// derrors.ReprocessHasIncompletePackages.
-	want = generateMods([]string{latest}, []int{small}, []int{200, 290})
-	checkNextToRequeue(want)
-	updateStates(want)
+	// The first modules to requeue should be the latest version of not-large modules with errors
+	// ReprocessStatusOK ReprocessHasIncompletePackages, ReprocessAlternative, and ReprocessBadModule.
+	statuses = []int{200, 290, 490, 491}
+	want = generateMods([]string{latest}, []int{small}, statuses)
 
-	// The next modules to requeue should be only the small latest version of
-	// not-large modules with errors derorrs.ReprocessAlternative and
-	// derrors.ReprocessBadModule.
-	want = generateMods([]string{latest}, []int{small}, []int{490, 491})
-	checkNextToRequeue(want)
-	updateStates(want)
+	// The next modules to requeue should be the small non-latest versions.
+	want = append(want, generateMods([]string{notLatest}, []int{small}, statuses)...)
+	// Next, latest large modules.
+	want = append(want, generateMods([]string{latest}, []int{big}, statuses)...)
+	// Lastly, not-latest large modules.
+	want = append(want, generateMods([]string{notLatest}, []int{big}, statuses)...)
 
-	// The next modules to requeue should be only the small non-latest
-	// version of modules with errors derorrs.ReprocessStatusOK and
-	// derrors.ReprocessHasIncompletePackages.
-	want = generateMods([]string{notLatest}, []int{small}, []int{200, 290})
-	checkNextToRequeue(want)
-	updateStates(want)
+	want = append(want, generateMods([]string{latest, notLatest}, []int{small, big}, []int{500})...)
+	checkNextToRequeue(want, len(mods))
 
-	// The next modules to requeue should be only the small non-latest
-	// version of modules with errors derorrs.ReprocessAlternative and //
-	// derrors.ReprocessBadModule.
-	want = generateMods([]string{notLatest}, []int{small}, []int{490, 491})
-	checkNextToRequeue(want)
-	updateStates(want)
+	// Take modules in groups by passing a limit.
+	const limit = 5
+	for i := 0; i < len(mods); i += limit {
+		end := i + limit
+		if end > len(want) {
+			end = len(want)
+		}
+		w := want[i:end]
+		checkNextToRequeue(w, limit)
+		updateStates(w)
+	}
 
-	// Pick up all large modules. Modules with 520 > status >= 500
-	// have already been processsed.
-	tmp := generateMods(versions, []int{big}, []int{200, 290})
-	sort.Slice(tmp, func(i, j int) bool {
-		return tmp[i].version > tmp[j].version
-	})
-	want = tmp
-	tmp = generateMods(versions, []int{big}, []int{490, 491})
-	sort.Slice(tmp, func(i, j int) bool {
-		return tmp[i].version > tmp[j].version
-	})
-	want = append(want, tmp...)
-	checkNextToRequeue(want)
-	updateStates(want)
-
-	// At this point, everything should have been queued.
-	// Modules with status=500 and status=400 are not being picked up because
-	// their next_processed_at time > NOW.
-	checkNextToRequeue(nil)
+	// At this point, everything should have been queued except modules with
+	// status=400 and >= 500, and the latter have a next_processed_after time
+	// that is in the future.
+	checkNextToRequeue(nil, 5)
 }
 
 func TestGetNextModulesToFetchOnlyPicksUpStatus0AndStatusGreaterThan500(t *testing.T) {
@@ -269,6 +247,7 @@ func TestGetNextModulesToFetchLargeModulesLimit(t *testing.T) {
 		status      = http.StatusInternalServerError
 		v           = "v1.0.0"
 		num500Mods  = 10
+		numPackages = largeModulePackageThreshold + 1
 	)
 	for i := 0; i < num500Mods; i++ {
 		mp := strconv.Itoa(status) + strconv.Itoa(i)
@@ -281,7 +260,7 @@ func TestGetNextModulesToFetchLargeModulesLimit(t *testing.T) {
 				app_version,
 				index_timestamp,
 				status,
-				go_mod_path)
+				num_packages)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 			mp,
 			v,
@@ -289,13 +268,13 @@ func TestGetNextModulesToFetchLargeModulesLimit(t *testing.T) {
 			"app-version",
 			time.Now(),
 			status,
-			strconv.Itoa(status),
+			numPackages,
 		); err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	largeModulesLimit = 5
+	largeModulesLimit = num500Mods / 2
 	got, err := testDB.GetNextModulesToFetch(ctx, num500Mods)
 	if err != nil {
 		t.Fatal(err)
@@ -304,9 +283,10 @@ func TestGetNextModulesToFetchLargeModulesLimit(t *testing.T) {
 	var want []*internal.ModuleVersionState
 	for _, mp := range modulePaths[:largeModulesLimit] {
 		want = append(want, &internal.ModuleVersionState{
-			ModulePath: mp,
-			Version:    v,
-			Status:     status,
+			ModulePath:  mp,
+			Version:     v,
+			Status:      status,
+			NumPackages: &numPackages,
 		})
 	}
 	compareModules(t, got, want)
