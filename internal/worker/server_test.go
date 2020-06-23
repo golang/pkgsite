@@ -89,11 +89,11 @@ func TestWorker(t *testing.T) {
 		}
 		state = func(version *internal.IndexVersion, code, tryCount, numPackages int) *internal.ModuleVersionState {
 			goModPath := version.Path
-			if code >= 300 {
+			if code == 0 || code >= 300 {
 				goModPath = ""
 			}
 			var n *int
-			if code != http.StatusNotFound {
+			if code != 0 && code != http.StatusNotFound {
 				n = &numPackages
 			}
 			return &internal.ModuleVersionState{
@@ -123,11 +123,22 @@ func TestWorker(t *testing.T) {
 		wantBar  *internal.ModuleVersionState
 	}{
 		{
+			label: "poll only",
+			index: []*internal.IndexVersion{fooIndex, barIndex},
+			proxy: []*proxy.TestModule{fooProxy, barProxy},
+			requests: []*http.Request{
+				httptest.NewRequest("POST", "/poll", nil),
+			},
+			wantFoo: fooState(0, 0),
+			wantBar: barState(0, 0),
+		},
+		{
 			label: "full fetch",
 			index: []*internal.IndexVersion{fooIndex, barIndex},
 			proxy: []*proxy.TestModule{fooProxy, barProxy},
 			requests: []*http.Request{
-				httptest.NewRequest("POST", "/poll-and-queue", nil),
+				httptest.NewRequest("POST", "/poll", nil),
+				httptest.NewRequest("POST", "/enqueue", nil),
 			},
 			wantFoo: fooState(http.StatusOK, 1),
 			wantBar: barState(http.StatusOK, 1),
@@ -136,7 +147,8 @@ func TestWorker(t *testing.T) {
 			index: []*internal.IndexVersion{fooIndex, barIndex},
 			proxy: []*proxy.TestModule{fooProxy, barProxy},
 			requests: []*http.Request{
-				httptest.NewRequest("POST", "/poll-and-queue?limit=1", nil),
+				httptest.NewRequest("POST", "/poll?limit=1", nil),
+				httptest.NewRequest("POST", "/enqueue", nil),
 			},
 			wantFoo: fooState(http.StatusOK, 1),
 		}, {
@@ -144,7 +156,8 @@ func TestWorker(t *testing.T) {
 			index: []*internal.IndexVersion{fooIndex, barIndex},
 			proxy: []*proxy.TestModule{fooProxy},
 			requests: []*http.Request{
-				httptest.NewRequest("POST", "/poll-and-queue", nil),
+				httptest.NewRequest("POST", "/poll", nil),
+				httptest.NewRequest("POST", "/enqueue", nil),
 			},
 			wantFoo: fooState(http.StatusOK, 1),
 			wantBar: barState(http.StatusNotFound, 1),
@@ -238,7 +251,7 @@ func TestParseIntParam(t *testing.T) {
 		{"312", 312},
 		{"bad", -1},
 	} {
-		got := parseIntParam(httptest.NewRequest("GET", fmt.Sprintf("/foo?x=%s", test.in), nil), "x", -1)
+		got := parseLimitParam(httptest.NewRequest("GET", fmt.Sprintf("/foo?limit=%s", test.in), nil), -1)
 		if got != test.want {
 			t.Errorf("%q: got %d, want %d", test.in, got, test.want)
 		}

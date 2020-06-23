@@ -98,21 +98,30 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	if s.reportingClient != nil {
 		rmw = middleware.ErrorReporting(s.reportingClient.Report)
 	}
-	// cloud-scheduler: poll-and-queue polls the Module Index for new versions
+
+	// scheduled: poll polls the Module Index for new versions
+	// that have been published and inserts that metadata into
+	// module_version_states.
+	// This endpoint is intended to be invoked periodically by a scheduler.
+	// See the note about duplicate tasks for "/enqueue" below.
+	handle("/poll", rmw(s.errorHandler(s.handlePollIndex)))
+
+	// TODO: remove after /poll is in production and the scheduler jobs have been changed.
+	// scheduled: poll-and-queue polls the Module Index for new versions
 	// that have been published and inserts that metadata into
 	// module_version_states. It also inserts the version into the task-queue
 	// to to be fetched and processed.
-	// This endpoint is invoked by a Cloud Scheduler job.
+	// This endpoint is intended to be invoked periodically by a scheduler.
 	// See the note about duplicate tasks for "/requeue" below.
 	handle("/poll-and-queue", rmw(s.errorHandler(s.handleIndexAndQueue)))
 
-	// cloud-scheduler: update-imported-by-count updates the imported_by_count for packages
-	// in search_documents where imported_by_count_updated_at is null or
-	// imported_by_count_updated_at < version_updated_at.
-	// This endpoint is invoked by a Cloud Scheduler job.
+	// scheduled: update-imported-by-count update the imported_by_count for
+	// packages in search_documents where imported_by_count_updated_at is null
+	// or imported_by_count_updated_at < version_updated_at.
+	// This endpoint is intended to be invoked periodically by a scheduler.
 	handle("/update-imported-by-count", rmw(s.errorHandler(s.handleUpdateImportedByCount)))
 
-	// cloud-scheduler: download search document data and update the redis sorted
+	// scheduled: download search document data and update the redis sorted
 	// set(s) used in auto-completion.
 	handle("/update-redis-indexes", rmw(s.errorHandler(s.handleUpdateRedisIndexes)))
 
@@ -121,18 +130,30 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// request fails for any reason other than an http.StatusInternalServerError,
 	// it will return an http.StatusOK so that the task queue does not retry
 	// fetching module versions that have a terminal error.
-	// This endpoint is invoked by a Cloud Tasks queue.
+	// This endpoint is intended to be invoked by a task queue with semantics like
+	// Google Cloud Task Queues.
 	handle("/fetch/", http.StripPrefix("/fetch", http.HandlerFunc(s.handleFetch)))
 
-	// manual: requeue queries the module_version_states table for the next
+	// scheduled: enqueue queries the module_version_states table for the next
 	// batch of module versions to process, and enqueues them for processing.
 	// Normally this will not cause duplicate processing, because Cloud Tasks
 	// are de-duplicated. That does not apply after a task has been finished or
-	// deleted for one hour (see
+	// deleted for Server.taskIDChangeInterval (see
 	// https://cloud.google.com/tasks/docs/reference/rpc/google.cloud.tasks.v2#createtaskrequest,
-	// under "Task De-duplication"). If you cannot wait an hour, you can force
+	// under "Task De-duplication"). If you cannot wait, you can force
 	// duplicate tasks by providing any string as the "suffix" query parameter.
-	handle("/requeue", rmw(s.errorHandler(s.handleRequeue)))
+	handle("/enqueue", rmw(s.errorHandler(s.handleEnqueue)))
+
+	// TODO: remove after /queue is in production and the scheduler jobs have been changed.
+	// scheduled: requeue queries the module_version_states table for the next
+	// batch of module versions to process, and enqueues them for processing.
+	// Normally this will not cause duplicate processing, because Cloud Tasks
+	// are de-duplicated. That does not apply after a task has been finished or
+	// deleted for Server.taskIDChangeInterval (see
+	// https://cloud.google.com/tasks/docs/reference/rpc/google.cloud.tasks.v2#createtaskrequest,
+	// under "Task De-duplication"). If you cannot wait, you can force
+	// duplicate tasks by providing any string as the "suffix" query parameter.
+	handle("/requeue", rmw(s.errorHandler(s.handleEnqueue)))
 
 	// manual: reprocess sets a reprocess status for all records in the
 	// module_version_states table that were processed by an app_version that
@@ -175,7 +196,7 @@ func (s *Server) handleUpdateImportedByCount(w http.ResponseWriter, r *http.Requ
 // handleRepopulateSearchDocuments repopulates every row in the search_documents table
 // that was last updated before the given time.
 func (s *Server) handleRepopulateSearchDocuments(w http.ResponseWriter, r *http.Request) error {
-	limit := parseIntParam(r, "limit", 100)
+	limit := parseLimitParam(r, 100)
 	beforeParam := r.FormValue("before")
 	if beforeParam == "" {
 		return &serverError{
@@ -272,10 +293,29 @@ func parseModulePathAndVersion(requestPath string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
+func (s *Server) handlePollIndex(w http.ResponseWriter, r *http.Request) (err error) {
+	defer derrors.Wrap(&err, "handlePollIndex(%q)", r.URL.Path)
+	ctx := r.Context()
+	limit := parseLimitParam(r, 10)
+	since, err := s.db.LatestIndexTimestamp(ctx)
+	if err != nil {
+		return err
+	}
+	versions, err := s.indexClient.GetVersions(ctx, since, limit)
+	if err != nil {
+		return err
+	}
+	if err := s.db.InsertIndexVersions(ctx, versions); err != nil {
+		return err
+	}
+	log.Infof(ctx, "Inserted %d modules from the index", len(versions))
+	return nil
+}
+
 func (s *Server) handleIndexAndQueue(w http.ResponseWriter, r *http.Request) (err error) {
 	defer derrors.Wrap(&err, "handleIndexAndQueue(%q)", r.URL.Path)
 	ctx := r.Context()
-	limit := parseIntParam(r, "limit", 10)
+	limit := parseLimitParam(r, 10)
 	suffixParam := r.FormValue("suffix")
 	since, err := s.db.LatestIndexTimestamp(ctx)
 	if err != nil {
@@ -303,13 +343,13 @@ func (s *Server) handleIndexAndQueue(w http.ResponseWriter, r *http.Request) (er
 	return nil
 }
 
-// handleRequeue queries the module_version_states table for the next
-// batch of module versions to process, and enqueues them for processing.  Note
-// that this may cause duplicate processing.
-func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) (err error) {
-	defer derrors.Wrap(&err, "handleRequeue(%q)", r.URL.Path)
+// handleEnqueue queries the module_version_states table for the next batch of
+// module versions to process, and enqueues them for processing. Note that this
+// may cause duplicate processing.
+func (s *Server) handleEnqueue(w http.ResponseWriter, r *http.Request) (err error) {
+	defer derrors.Wrap(&err, "handleEnqueue(%q)", r.URL.Path)
 	ctx := r.Context()
-	limit := parseIntParam(r, "limit", 10)
+	limit := parseLimitParam(r, 10)
 	suffixParam := r.FormValue("suffix") // append to task name to avoid deduplication
 	span := trace.FromContext(r.Context())
 	span.Annotate([]trace.Attribute{trace.Int64Attribute("limit", int64(limit))}, "processed limit")
@@ -320,13 +360,13 @@ func (s *Server) handleRequeue(w http.ResponseWriter, r *http.Request) (err erro
 
 	span.Annotate([]trace.Attribute{trace.Int64Attribute("versions to fetch", int64(len(versions)))}, "processed limit")
 	w.Header().Set("Content-Type", "text/plain")
-	log.Infof(ctx, "Scheduling modules to be fetched: requeuing %d modules", len(versions))
+	log.Infof(ctx, "Scheduling modules to be fetched: queuing %d modules", len(versions))
 	for _, v := range versions {
 		if err := s.queue.ScheduleFetch(ctx, v.ModulePath, v.Version, suffixParam, s.taskIDChangeInterval); err != nil {
 			return err
 		}
 	}
-	log.Infof(ctx, "Successfully scheduled modules to be fetched: %d modules requeued", len(versions))
+	log.Infof(ctx, "Successfully scheduled modules to be fetched: %d modules queued", len(versions))
 
 	return nil
 }
@@ -573,10 +613,11 @@ func formatTime(t *time.Time) string {
 	return t.In(locNewYork).Format("2006-01-02 15:04:05")
 }
 
-// parseIntParam parses the query parameter with name as in integer. If the
+// parseLimitParam parses the query parameter with name as in integer. If the
 // parameter is missing or there is a parse error, it is logged and the default
 // value is returned.
-func parseIntParam(r *http.Request, name string, defaultValue int) int {
+func parseLimitParam(r *http.Request, defaultValue int) int {
+	const name = "limit"
 	param := r.FormValue(name)
 	if param == "" {
 		return defaultValue

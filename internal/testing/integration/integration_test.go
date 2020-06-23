@@ -113,7 +113,12 @@ func TestEndToEndProcessing(t *testing.T) {
 	frontendServer.Install(frontendMux.Handle, redisCacheClient)
 	frontendHTTP := httptest.NewServer(frontendMux)
 
-	if _, err := doGet(workerHTTP.URL + "/poll-and-queue"); err != nil {
+	if _, err := doGet(workerHTTP.URL + "/poll"); err != nil {
+		t.Fatal(err)
+	}
+	// TODO: This should really be made deterministic.
+	time.Sleep(100 * time.Millisecond)
+	if _, err := doGet(workerHTTP.URL + "/enqueue"); err != nil {
 		t.Fatal(err)
 	}
 	// TODO: This should really be made deterministic.

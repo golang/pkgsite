@@ -109,29 +109,29 @@ td {
 </p>
 
 <div class="actions">
-  <form action="/poll-and-queue" method="post" name="queueForm">
-    <button title="Poll the module index for up to 2000 new versions, and enqueue them for processing."
-    onclick="submitForm('queueForm', false); return false">Enqueue From Module Index</button>
-    <input type="number" name="limit" value="10"></input>
-    <output name="result"></output>
-  </form>
-  <form action="/requeue" method="post" name="requeueForm">
-    <button title="Query the discovery database for failed versions, and re-queue them for processing."
-    onclick="submitForm('requeueForm', true); return false">Requeue Failed Versions</button>
-    <input type="number" name="limit" value="10">
-    <output name="result"></output>
-  </form>
-  <form action="/reprocess" method="post" name="reprocessForm">
-    <button title="Mark all versions created before the specified app_version to be reprocessed."
-    onclick="submitForm('reprocessForm', true); return false">Reprocess Versions</button>
-    <input type="text" name="app_version">
-    <output name="result"></output>
-  </form>
-  <form action="/populate-stdlib" method="post" name="populateStdlibForm">
-    <button title="Populates the database with all supported versions of the Go standard library."
-    onclick="submitForm('populateStdlibForm', false); return false">Populate Standard Library</button>
-    <output name="result"></output>
-  </form>
+	<form action="/poll" method="post" name="pollForm">
+		<button title="Poll the module index for up to 2000 new versions."
+      onclick="submitForm('pollForm', false); return false">Poll Module Index</button>
+		<input type="number" name="limit" value="10"></input>
+		<output name="result"></output>
+	</form>
+	<form action="/enqueue" method="post" name="enqueueForm">
+		<button title="Query the discovery database for new or failed versions, and enqueue them for processing."
+      onclick="submitForm('enqueueForm', true); return false">Enqueue New and Failed Versions</button>
+		<input type="number" name="limit" value="10">
+		<output name="result"></output>
+	</form>
+	<form action="/reprocess" method="post" name="reprocessForm">
+		<button title="Mark all versions created before the specified app_version to be reprocessed."
+      onclick="submitForm('reprocessForm', true); return false">Reprocess Versions</button>
+		<input type="text" name="app_version">
+		<output name="result"></output>
+	</form>
+	<form action="/populate-stdlib" method="post" name="populateStdlibForm">
+		<button title="Populates the database with all supported versions of the Go standard library."
+      onclick="submitForm('populateStdlibForm', false); return false">Populate Standard Library</button>
+		<output name="result"></output>
+	</form>
 </div>
 
 <div class="config">

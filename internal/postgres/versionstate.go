@@ -21,7 +21,7 @@ import (
 )
 
 // InsertIndexVersions inserts new versions into the module_version_states
-// table.
+// table with a status of zero.
 func (db *DB) InsertIndexVersions(ctx context.Context, versions []*internal.IndexVersion) (err error) {
 	defer derrors.Wrap(&err, "InsertIndexVersions(ctx, %v)", versions)
 
