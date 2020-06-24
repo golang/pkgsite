@@ -13,16 +13,6 @@ import (
 	"testing"
 )
 
-func TestPolicySerialization(t *testing.T) {
-	var p policy
-	p.add("default-src", "'self'", "example.com")
-	p.add("img-src", "*")
-	want := "default-src 'self' example.com; img-src *"
-	if got := p.serialize(); got != want {
-		t.Errorf("p.serialize() = %s, want %s", got, want)
-	}
-}
-
 func TestSecureHeaders(t *testing.T) {
 	const origBody = `
     <link foo>

@@ -17,91 +17,27 @@ import (
 // It is substituted for the actual nonce value by the SecureHeaders middleware.
 const NoncePlaceholder = "$$GODISCOVERYNONCE$$"
 
-// policy is a helper for constructing content security policies.
-type policy struct {
-	directives []string
-}
-
-// add appends a new directive to the policy. Neither name nor values are
-// validated, and no checking is performed that the new directive is unique.
-func (p *policy) add(name string, values ...string) {
-	d := name + " " + strings.Join(values, " ")
-	p.directives = append(p.directives, d)
-}
-
-// serialize serializes the policy for use in the Content-Security-Policy
-// header.
-func (p *policy) serialize() string {
-	return strings.Join(p.directives, "; ")
-}
-
 // SecureHeaders adds a content-security-policy and other security-related
 // headers to all responses.
 func SecureHeaders() Middleware {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			useStrictDynamic := r.FormValue("csp-strict-dynamic") == "true"
-			// These are special keywords within the CSP spec
-			// https://www.w3.org/TR/CSP3/#framework-directive-source-list
-			const (
-				self = "'self'"
-				none = "'none'"
-			)
-
-			var p policy
-
-			// Set a strict fallback for content sources.
-			p.add("default-src", self)
-
-			// Allow known sources for fonts.
-			p.add("font-src", self, "fonts.googleapis.com", "fonts.gstatic.com")
-
-			// fonts.googleapis.com is used for fonts.
-			// tagmanager.google.com is used for debugging Google Tag Manager.
-			p.add("style-src", self, "'unsafe-inline'", "fonts.googleapis.com", "tagmanager.google.com")
-
-			// Because we are rendering user-provided README's, we allow arbitrary image
-			// sources. This could possibly be narrowed to known content hosts based on
-			// e.g. the github.com CSP, but that seemed fragile.
-			p.add("img-src", self, "data:", "*")
-
-			// Disallow plugin content: the Discovery site does not use it.
-			p.add("object-src", none)
-
-			// Disallow <base> URIs, which prevents attackers from changing the
-			// locations of scripts loaded from relative URLs. The site doesn’t have
-			// a <base> tag anyway.
-			p.add("base-uri", none)
-
 			nonce, err := generateNonce()
 			if err != nil {
 				log.Infof(r.Context(), "generateNonce(): %v", err)
 			}
+			csp := []string{
+				// Disallow plugin content: pkg.go.dev does not use it.
+				"object-src 'none'",
+				// Disallow <base> URIs, which prevents attackers from changing the
+				// locations of scripts loaded from relative URLs. The site doesn’t have
+				// a <base> tag anyway.
+				"base-uri 'none'",
 
-			scriptSrcs := []string{
-				fmt.Sprintf("'nonce-%s'", nonce),
-				"www.gstatic.com",
-				"www.googletagmanager.com",
-				"support.google.com",
+				fmt.Sprintf("script-src 'nonce-%s' 'unsafe-inline' 'strict-dynamic' https: http:",
+					nonce),
 			}
-			if useStrictDynamic {
-				scriptSrcs = append(scriptSrcs, "'strict-dynamic'")
-			}
-
-			p.add("script-src", scriptSrcs...)
-
-			// Allow GA as a valid target for XHR, WebSockets, and EventSource.
-			p.add("connect-src", self, "www.google-analytics.com")
-
-			// Allow iframes that have a nonce, for Google Analytics when JavaScript
-			// is disabled.
-			p.add("frame-src", fmt.Sprintf("'nonce-%s'", nonce))
-
-			// Don't allow parent framing.
-			p.add("frame-ancestors", none)
-
-			csp := p.serialize()
-			w.Header().Set("Content-Security-Policy", csp)
+			w.Header().Set("Content-Security-Policy", strings.Join(csp, "; "))
 			// Don't allow frame embedding.
 			w.Header().Set("X-Frame-Options", "deny")
 			// Prevent MIME sniffing.
