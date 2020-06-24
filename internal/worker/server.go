@@ -155,6 +155,9 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// manual: clear-cache clears the redis cache.
 	handle("/clear-cache", rmw(s.errorHandler(s.clearCache)))
 
+	// manual: delete the specified module version.
+	handle("/delete/", http.StripPrefix("/delete", rmw(s.errorHandler(s.handleDelete))))
+
 	// returns the Worker homepage.
 	handle("/", http.HandlerFunc(s.handleStatusPage))
 }
@@ -491,6 +494,19 @@ func (s *Server) clearCache(w http.ResponseWriter, r *http.Request) error {
 		return status.Err()
 	}
 	fmt.Fprint(w, "Cache cleared.")
+	return nil
+}
+
+// handleDelete deletes the specified module version.
+func (s *Server) handleDelete(w http.ResponseWriter, r *http.Request) error {
+	modulePath, version, err := parseModulePathAndVersion(r.URL.Path)
+	if err != nil {
+		return &serverError{http.StatusBadRequest, err}
+	}
+	if err := s.db.DeleteModule(r.Context(), modulePath, version); err != nil {
+		return &serverError{http.StatusInternalServerError, err}
+	}
+	fmt.Fprintf(w, "Deleted %s@%s", modulePath, version)
 	return nil
 }
 
