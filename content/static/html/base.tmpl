@@ -179,14 +179,38 @@
     </div>
   </div>
 </footer>
+
+<script>
+  function loadScript(src) {
+      let s = document.createElement("script");
+      s.src = src;
+      document.head.appendChild(s);
+  }
+
+  loadScript("/static/js/base.min.js");
+</script>
+
 {{block "post_content" .}}{{end}}
+
 {{if not .DevMode}}
-  <script nonce="{{.Nonce}}" async src="https://www.googletagmanager.com/gtm.js?id={{.GoogleTagManagerContainerID}}"></script>
-  <noscript><iframe nonce="{{.Nonce}}" src="https://www.googletagmanager.com/ns.html?id={{.GoogleTagManagerContainerID}}"
-  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<script async>
+  var gtmURL = "https://www.googletagmanager.com/gtm.js?id=GTM-W8MVQXG";
+  loadScript(gtmURL);
+
+  f = document.createElement("iframe")
+  f.src = gtmURL;
+  f.height = "0";
+  f.width = "0";
+  f.style = "display:none;visibility:hidden"
+  s = document.createElement("noscript");
+  s.appendChild(f);
+  document.head.appendChild(s);
+</script>
 {{end}}
-<script nonce="{{.Nonce}}" src="/static/js/base.min.js?version={{.AppVersionLabel}}"></script>
+
 {{if (.Experiments.IsActive "autocomplete")}}
-  <script nonce="{{.Nonce}}" src="/third_party/autoComplete.js/autoComplete.min.js?version={{.AppVersionLabel}}"></script>
-  <script nonce="{{.Nonce}}" src="/static/js/completion.min.js?version={{.AppVersionLabel}}"></script>
+<script>
+  loadScript("/third_party/autoComplete.js/autoComplete.min.js");
+  loadScript("/static/js/completion.min.js");
+</script>
 {{end}}

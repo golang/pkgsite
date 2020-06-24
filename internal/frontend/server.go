@@ -186,7 +186,6 @@ func (s *Server) staticPageHandler(templateName, title string) http.HandlerFunc 
 type basePage struct {
 	HTMLTitle       string
 	Query           string
-	Nonce           string
 	Experiments     *experiment.Set
 	GodocURL        string
 	DevMode         bool
@@ -217,17 +216,11 @@ func (s *Server) newBasePage(r *http.Request, title string) basePage {
 	return basePage{
 		HTMLTitle:       title,
 		Query:           searchQuery(r),
-		Nonce:           middleware.NoncePlaceholder,
 		Experiments:     experiment.FromContext(r.Context()),
 		GodocURL:        middleware.GodocURLPlaceholder,
 		DevMode:         s.devMode,
 		AppVersionLabel: s.appVersionLabel,
 	}
-}
-
-// GoogleTagManagerContainerID returns the container ID from GoogleTagManager.
-func (b basePage) GoogleTagManagerContainerID() string {
-	return "GTM-W8MVQXG"
 }
 
 // errorPage contains fields for rendering a HTTP error page.
@@ -319,9 +312,6 @@ func (s *Server) renderErrorPage(ctx context.Context, status int, templateName s
 	statusInfo := fmt.Sprintf("%d %s", status, http.StatusText(status))
 	if page == nil {
 		page = &errorPage{}
-	}
-	if page.Nonce == "" {
-		page.Nonce = middleware.NoncePlaceholder
 	}
 	if page.messageTemplate == "" {
 		page.messageTemplate = `<h3 class="Error-message">{{.}}</h3>`

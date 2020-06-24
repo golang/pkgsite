@@ -49,5 +49,7 @@
 {{end}}
 
 {{define "details_post_content"}}
-  <script nonce="{{.Nonce}}" src="/static/js/jump.min.js?version={{.AppVersionLabel}}"></script>
+<script>
+loadScript("/static/js/jump.min.js");
+</script>
 {{end}}

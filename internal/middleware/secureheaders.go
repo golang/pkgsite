@@ -5,27 +5,29 @@
 package middleware
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
 	"strings"
-
-	"golang.org/x/pkgsite/internal/log"
 )
 
-// NoncePlaceholder should be used as the value for nonces in rendered content.
-// It is substituted for the actual nonce value by the SecureHeaders middleware.
-const NoncePlaceholder = "$$GODISCOVERYNONCE$$"
+var scriptHashes = []string{
+	// From content/static/html/pages/base.tmpl
+	"'sha256-d6W7MwuGWbguTHRzQhf5QN1jXmNo9Ao218saZkWLWZI='",
+	"'sha256-CCu0fuIQFBHSCEpfR6ZRzzcczJIS/VGMGrez8LR49WY='",
+	"'sha256-qPGTOKPn+niRiNKQIEX0Ktwuj+D+iPQWIxnlhPicw58='",
+	// From content/static/html/pages/notfound.tmpl
+	"'sha256-h5L4TV5GzTaBQYCnA8tDw9+9/AIdK9dwgkwlqFjVqEI='",
+	// From content/static/html/pages/details.tmpl
+	"'sha256-s16e7aT7Gsajq5UH1DbaEFEnNx2VjvS5Xixcxwm4+F8='",
+	// From content/static/html/pages/pkg_doc.tmpl
+	"'sha256-AvMTqQ+22BA0Nsht+ajju4EQseFQsoG1RxW3Nh6M+wc='",
+}
 
 // SecureHeaders adds a content-security-policy and other security-related
 // headers to all responses.
 func SecureHeaders() Middleware {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			nonce, err := generateNonce()
-			if err != nil {
-				log.Infof(r.Context(), "generateNonce(): %v", err)
-			}
 			csp := []string{
 				// Disallow plugin content: pkg.go.dev does not use it.
 				"object-src 'none'",
@@ -33,9 +35,8 @@ func SecureHeaders() Middleware {
 				// locations of scripts loaded from relative URLs. The site doesn’t have
 				// a <base> tag anyway.
 				"base-uri 'none'",
-
-				fmt.Sprintf("script-src 'nonce-%s' 'unsafe-inline' 'strict-dynamic' https: http:",
-					nonce),
+				fmt.Sprintf("script-src 'unsafe-inline' 'strict-dynamic' https: http: %s",
+					strings.Join(scriptHashes, " ")),
 			}
 			w.Header().Set("Content-Security-Policy", strings.Join(csp, "; "))
 			// Don't allow frame embedding.
@@ -43,27 +44,7 @@ func SecureHeaders() Middleware {
 			// Prevent MIME sniffing.
 			w.Header().Set("X-Content-Type-Options", "nosniff")
 
-			crw := &capturingResponseWriter{ResponseWriter: w}
-			h.ServeHTTP(crw, r)
-			body := bytes.ReplaceAll(crw.bytes(), []byte(NoncePlaceholder), []byte(nonce))
-			if _, err := w.Write(body); err != nil {
-				log.Errorf(r.Context(), "SecureHeaders, writing: %v", err)
-			}
+			h.ServeHTTP(w, r)
 		})
 	}
-}
-
-// capturingResponseWriter is an http.ResponseWriter that captures
-// the body for later processing.
-type capturingResponseWriter struct {
-	http.ResponseWriter
-	buf bytes.Buffer
-}
-
-func (c *capturingResponseWriter) Write(b []byte) (int, error) {
-	return c.buf.Write(b)
-}
-
-func (c *capturingResponseWriter) bytes() []byte {
-	return c.buf.Bytes()
 }

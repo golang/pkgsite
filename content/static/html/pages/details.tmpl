@@ -120,7 +120,12 @@
 {{end}}
 
 {{define "post_content"}}
-<script nonce="{{.Nonce}}">
+
+<!-- inputEl.blur() below prevents a jump to the focused element in some browsers.
+     Do not add comments to the script below: they are stripped by html/template
+     (https://golang.org/issue/28628), which messes up the CSP hash.
+-->     
+<script>
 const navEl = document.querySelector('.js-modulesNav');
 const selectedEl = navEl.querySelector(`[aria-selected='true']`);
 if (selectedEl.offsetLeft + selectedEl.offsetWidth > navEl.offsetWidth) {
@@ -134,7 +139,7 @@ if (copyButton) {
     const inputEl = document.querySelector('.js-detailsHeaderPathInput');
     inputEl.select();
     document.execCommand('copy');
-    inputEl.blur(); // prevents jump to focused element in some browsers
+    inputEl.blur();
   });
 }
 </script>

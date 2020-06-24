@@ -15,7 +15,12 @@
   </div>
 </div>
 
-<script nonce="{{.Nonce}}">
+<!--  TODO: update middleware.AcceptMethods so that the GET at the end of the
+      script can be a POST instead.
+     Do not add comments to the script below: they are stripped by html/template
+     (https://golang.org/issue/28628), which messes up the CSP hash.
+-->     
+<script>
 const fetchButton = document.querySelector('.js-notFoundButton');
 if (fetchButton) {
   fetchButton.addEventListener('click', e => {
@@ -45,7 +50,6 @@ function fetchPath() {
   };
   document.querySelector('.js-notFoundMessage').innerHTML = "Fetching... Feel free to navigate away and check back later, we'll keep working on it!";
   btn.innerHTML = "Fetching...";
-  // TODO: update middleware.AcceptMethods so that this is POST instead of a GET request.
   httpRequest.open('GET', "/fetch" + window.location.pathname);
   httpRequest.send();
 }

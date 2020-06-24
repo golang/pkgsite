@@ -5,36 +5,13 @@
 package middleware
 
 import (
-	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"regexp"
 	"testing"
 )
 
 func TestSecureHeaders(t *testing.T) {
-	const origBody = `
-    <link foo>
-    <script nonce="$$GODISCOVERYNONCE$$" async src="bar"></script>
-    blah blah blah
-    <script nonce="$$GODISCOVERYNONCE$$">js</script>
-    bloo bloo bloo
-    <iframe nonce="$$GODISCOVERYNONCE$$" src="baz"></iframe>
-`
-
-	const wantBodyFmt = `
-    <link foo>
-    <script nonce="%[1]s" async src="bar"></script>
-    blah blah blah
-    <script nonce="%[1]s">js</script>
-    bloo bloo bloo
-    <iframe nonce="%[1]s" src="baz"></iframe>
-`
-
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, origBody)
-	})
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
 	mw := SecureHeaders()
 	ts := httptest.NewServer(mw(handler))
 	defer ts.Close()
@@ -43,7 +20,7 @@ func TestSecureHeaders(t *testing.T) {
 		t.Errorf("GET returned error %v", err)
 	}
 	defer resp.Body.Close()
-	// Simply test that the expected headers are set.
+	// Test that the expected headers are set.
 	expectedHeaders := []string{
 		"content-security-policy",
 		"x-frame-options",
@@ -53,22 +30,5 @@ func TestSecureHeaders(t *testing.T) {
 		if got := resp.Header.Get(header); got == "" {
 			t.Errorf("GET returned empty %s", header)
 		}
-	}
-
-	// Check that the nonce was substituted correctly.
-	// We need to extract it from the header.
-	nonceRE := regexp.MustCompile(`'nonce-([^']+)'`)
-	matches := nonceRE.FindStringSubmatch(resp.Header.Get("content-security-policy"))
-	if matches == nil {
-		t.Fatal("cannot extract nonce")
-	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
-	gotBody := string(body)
-	wantBody := fmt.Sprintf(wantBodyFmt, matches[1])
-	if gotBody != wantBody {
-		t.Errorf("got  body %s\nwant body %s", gotBody, wantBody)
 	}
 }
