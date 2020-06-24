@@ -8,7 +8,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"html/template"
 	"net/http"
 	"sort"
 	"strings"
@@ -23,7 +22,6 @@ import (
 type DirectoryPage struct {
 	basePage
 	*Directory
-	BreadcrumbPath template.HTML
 }
 
 // LegacyDirectory contains information for an individual directory.

@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/google/safehtml/template"
 	"golang.org/x/mod/module"
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
@@ -231,11 +232,11 @@ func validatePathAndVersion(ctx context.Context, ds internal.DataSource, fullPat
 		return &serverError{
 			status: http.StatusBadRequest,
 			epage: &errorPage{
-				messageTemplate: `
+				messageTemplate: template.MakeTrustedTemplate(`
 					<h3 class="Error-message">{{.Version}} is not a valid semantic version.</h3>
 					<p class="Error-message">
 					  To search for packages like {{.Path}}, <a href="/search?q={{.Path}}">click here</a>.
-					</p>`,
+					</p>`),
 				MessageData: struct{ Path, Version string }{fullPath, requestedVersion},
 			},
 		}
@@ -293,11 +294,11 @@ func pathNotFoundError(ctx context.Context, pathType, fullPath, requestedVersion
 	return &serverError{
 		status: http.StatusNotFound,
 		epage: &errorPage{
-			messageTemplate: `<h3 class="Error-message">404 Not Found</h3>
+			messageTemplate: template.MakeTrustedTemplate(`<h3 class="Error-message">404 Not Found</h3>
 				 <p class="Error-message">
 				   If you think this is a valid {{.}} path, you can try fetching it following
 				   the <a href="/about#adding-a-package">instructions here</a>.
-				</p>`,
+				</p>`),
 			MessageData: pathType,
 		},
 	}
@@ -314,11 +315,11 @@ func pathNotFoundErrorNew(fullPath, requestedVersion string) error {
 		status: http.StatusNotFound,
 		epage: &errorPage{
 			templateName: "fetch.tmpl",
-			messageTemplate: `
+			messageTemplate: template.MakeTrustedTemplate(`
 				<h3 class="NotFound-message">Oops! {{.}} does not exist.</h3>
 				<p class="NotFound-message js-notFoundMessage">
 					Check that you entered it correctly, or request to fetch it.
-				</p>`,
+				</p>`),
 			MessageData: path,
 		},
 	}
@@ -333,12 +334,12 @@ func pathFoundAtLatestError(ctx context.Context, pathType, fullPath, requestedVe
 	return &serverError{
 		status: http.StatusNotFound,
 		epage: &errorPage{
-			messageTemplate: `
+			messageTemplate: template.MakeTrustedTemplate(`
 				<h3 class="Error-message">{{.TType}} {{.Path}}@{{.Version}} is not available.</h3>
 				<p class="Error-message">
 				  There are other versions of this {{.Type}} that are! To view them,
 				  <a href="/{{.Path}}?tab=versions">click here</a>.
-				</p>`,
+				</p>`),
 			MessageData: struct{ TType, Type, Path, Version string }{
 				strings.Title(pathType), pathType, fullPath, displayVersion(requestedVersion, fullPath)},
 		},
@@ -349,7 +350,8 @@ func proxydatasourceNotSupportedErr() error {
 	return &serverError{
 		status: http.StatusFailedDependency,
 		epage: &errorPage{
-			messageTemplate: `<h3 class="Error-message">This page is not supported by the proxydatasource.</h3>`,
+			messageTemplate: template.MakeTrustedTemplate(
+				`<h3 class="Error-message">This page is not supported by the proxydatasource.</h3>`),
 		},
 	}
 }

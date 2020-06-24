@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/frontend"
 	"golang.org/x/pkgsite/internal/middleware"
@@ -155,7 +156,7 @@ func TestModulePackageDirectoryResolution(t *testing.T) {
 	s, err := frontend.NewServer(frontend.ServerConfig{
 		DataSource:           testDB,
 		TaskIDChangeInterval: 10 * time.Minute,
-		StaticPath:           "../../../content/static",
+		StaticPath:           template.TrustedSourceFromConstant("../../../content/static"),
 		ThirdPartyPath:       "../../../third_party",
 		AppVersionLabel:      "",
 	})

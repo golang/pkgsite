@@ -8,6 +8,8 @@ import (
 	"context"
 	"net/url"
 
+	"github.com/google/safehtml"
+	"github.com/google/safehtml/legacyconversions"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/licenses"
 )
@@ -15,7 +17,7 @@ import (
 // License contains information used for a single license section.
 type License struct {
 	*licenses.License
-	Anchor string
+	Anchor safehtml.Identifier
 	Source string
 }
 
@@ -28,7 +30,7 @@ type LicensesDetails struct {
 // header.
 type LicenseMetadata struct {
 	Type   string
-	Anchor string
+	Anchor safehtml.Identifier
 }
 
 // fetchPackageLicensesDetails fetches license data for the package version specified by
@@ -73,8 +75,8 @@ func transformLicenseMetadata(dbLicenses []*licenses.Metadata) []LicenseMetadata
 
 // licenseAnchor returns the anchor that should be used to jump to the specific
 // license on the licenses page.
-func licenseAnchor(filePath string) string {
-	return url.QueryEscape(filePath)
+func licenseAnchor(filePath string) safehtml.Identifier {
+	return legacyconversions.RiskilyAssumeIdentifier(url.QueryEscape(filePath))
 }
 
 // licensesToMetadatas converts a slice of Licenses to a slice of Metadatas.

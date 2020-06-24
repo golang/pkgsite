@@ -203,7 +203,7 @@ func (s *Server) fetchAndPoll(parentCtx context.Context, modulePath, fullPath, r
 	}
 	if moduleMatchingPathPrefix != "" {
 		return http.StatusNotFound,
-			// TODO(golang/go#37002): return as template.HTML so that link is clickable.
+			// TODO(golang/go#37002): return as safehtml.HTML so that link is clickable.
 			fmt.Sprintf("%q could not be found. Other versions of module %q may have it! Check them out at https://pkg.go.dev/mod/%s?tab=versions",
 				fullPath, moduleMatchingPathPrefix, moduleMatchingPathPrefix)
 	}

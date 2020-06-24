@@ -6,10 +6,11 @@ package frontend
 
 import (
 	"context"
-	"html/template"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/safehtml"
+	"github.com/google/safehtml/testconversions"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres"
@@ -33,7 +34,7 @@ func TestFetchOverviewDetails(t *testing.T) {
 		wantDetails: &OverviewDetails{
 			ModulePath:      sample.ModulePath,
 			RepositoryURL:   sample.RepositoryURL,
-			ReadMe:          template.HTML("<p>readme</p>\n"),
+			ReadMe:          testconversions.MakeHTMLForTest("<p>readme</p>\n"),
 			ReadMeSource:    sample.ModulePath + "@v1.0.0/README.md",
 			ModuleURL:       "/mod/" + sample.ModulePath + "@v1.0.0",
 			Redistributable: true,
@@ -47,8 +48,11 @@ func TestFetchOverviewDetails(t *testing.T) {
 	}
 
 	readme := &internal.Readme{Filepath: tc.module.LegacyReadmeFilePath, Contents: tc.module.LegacyReadmeContents}
-	got := constructOverviewDetails(ctx, &tc.module.ModuleInfo, readme, true, true)
-	if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
+	got, err := constructOverviewDetails(ctx, &tc.module.ModuleInfo, readme, true, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(tc.wantDetails, got, cmp.AllowUnexported(safehtml.HTML{})); diff != "" {
 		t.Errorf("constructOverviewDetails(%q, %q) mismatch (-want +got):\n%s",
 			tc.module.LegacyPackages[0].Path, tc.module.Version, diff)
 	}
@@ -82,7 +86,7 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 				ModuleURL:        "/mod/github.com/u/m@v1.2.3",
 				RepositoryURL:    "https://github.com/u/m",
 				PackageSourceURL: "https://github.com/u/m/tree/v1.2.3/p",
-				ReadMe:           template.HTML("<p>readme</p>\n"),
+				ReadMe:           testconversions.MakeHTMLForTest("<p>readme</p>\n"),
 				ReadMeSource:     "github.com/u/m@v1.2.3/README.md",
 				Redistributable:  true,
 			},
@@ -108,7 +112,7 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 				ModuleURL:        "/mod/github.com/u/m",
 				RepositoryURL:    "https://github.com/u/m",
 				PackageSourceURL: "https://github.com/u/m/tree/v1.2.3/p",
-				ReadMe:           template.HTML("<p>readme</p>\n"),
+				ReadMe:           testconversions.MakeHTMLForTest("<p>readme</p>\n"),
 				ReadMeSource:     "github.com/u/m@v1.2.3/README.md",
 				Redistributable:  true,
 			},
@@ -130,15 +134,18 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 				ModuleURL:        "/mod/github.com/u/m@v1.2.3",
 				RepositoryURL:    "https://github.com/u/m",
 				PackageSourceURL: "https://github.com/u/m/tree/v1.2.3/p",
-				ReadMe:           "",
+				ReadMe:           safehtml.HTML{},
 				ReadMeSource:     "",
 				Redistributable:  false,
 			},
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			got := fetchPackageOverviewDetailsNew(context.Background(), test.vdir, test.versionedLinks)
-			if diff := cmp.Diff(test.want, got); diff != "" {
+			got, err := fetchPackageOverviewDetailsNew(context.Background(), test.vdir, test.versionedLinks)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := cmp.Diff(test.want, got, cmp.AllowUnexported(safehtml.HTML{})); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -151,41 +158,44 @@ func TestReadmeHTML(t *testing.T) {
 		name   string
 		mi     *internal.ModuleInfo
 		readme *internal.Readme
-		want   template.HTML
+		want   string
 	}{
 		{
 			name: "valid markdown readme",
+			mi:   &internal.ModuleInfo{},
 			readme: &internal.Readme{
 				Filepath: "README.md",
 				Contents: "This package collects pithy sayings.\n\n" +
 					"It's part of a demonstration of\n" +
 					"[package versioning in Go](https://research.swtch.com/vgo1).",
 			},
-			want: template.HTML("<p>This package collects pithy sayings.</p>\n\n" +
+			want: "<p>This package collects pithy sayings.</p>\n\n" +
 				"<p>It’s part of a demonstration of\n" +
-				`<a href="https://research.swtch.com/vgo1" rel="nofollow">package versioning in Go</a>.</p>` + "\n"),
+				`<a href="https://research.swtch.com/vgo1" rel="nofollow">package versioning in Go</a>.</p>` + "\n",
 		},
 		{
 			name: "valid markdown readme with alternative case and extension",
+			mi:   &internal.ModuleInfo{},
 			readme: &internal.Readme{
 				Filepath: "README.MARKDOWN",
 				Contents: "This package collects pithy sayings.\n\n" +
 					"It's part of a demonstration of\n" +
 					"[package versioning in Go](https://research.swtch.com/vgo1).",
 			},
-			want: template.HTML("<p>This package collects pithy sayings.</p>\n\n" +
+			want: "<p>This package collects pithy sayings.</p>\n\n" +
 				"<p>It’s part of a demonstration of\n" +
-				`<a href="https://research.swtch.com/vgo1" rel="nofollow">package versioning in Go</a>.</p>` + "\n"),
+				`<a href="https://research.swtch.com/vgo1" rel="nofollow">package versioning in Go</a>.</p>` + "\n",
 		},
 		{
 			name: "not markdown readme",
+			mi:   &internal.ModuleInfo{},
 			readme: &internal.Readme{
 				Filepath: "README.rst",
 				Contents: "This package collects pithy sayings.\n\n" +
 					"It's part of a demonstration of\n" +
 					"[package versioning in Go](https://research.swtch.com/vgo1).",
 			},
-			want: template.HTML("<pre class=\"readme\">This package collects pithy sayings.\n\nIt&#39;s part of a demonstration of\n[package versioning in Go](https://research.swtch.com/vgo1).</pre>"),
+			want: "<pre class=\"readme\">This package collects pithy sayings.\n\nIt&#39;s part of a demonstration of\n[package versioning in Go](https://research.swtch.com/vgo1).</pre>",
 		},
 		{
 			name: "empty readme",
@@ -194,11 +204,12 @@ func TestReadmeHTML(t *testing.T) {
 		},
 		{
 			name: "sanitized readme",
+			mi:   &internal.ModuleInfo{},
 			readme: &internal.Readme{
 				Filepath: "README",
 				Contents: `<a onblur="alert(secret)" href="http://www.google.com">Google</a>`,
 			},
-			want: template.HTML(`<pre class="readme">&lt;a onblur=&#34;alert(secret)&#34; href=&#34;http://www.google.com&#34;&gt;Google&lt;/a&gt;</pre>`),
+			want: `<pre class="readme">&lt;a onblur=&#34;alert(secret)&#34; href=&#34;http://www.google.com&#34;&gt;Google&lt;/a&gt;</pre>`,
 		},
 		{
 			name: "relative image markdown is made absolute for GitHub",
@@ -209,7 +220,7 @@ func TestReadmeHTML(t *testing.T) {
 				Filepath: "README.md",
 				Contents: "![Go logo](doc/logo.png)",
 			},
-			want: template.HTML("<p><img src=\"https://raw.githubusercontent.com/golang/go/master/doc/logo.png\" alt=\"Go logo\"/></p>\n"),
+			want: "<p><img src=\"https://raw.githubusercontent.com/golang/go/master/doc/logo.png\" alt=\"Go logo\"/></p>\n",
 		},
 		{
 			name: "relative image markdown is made absolute for GitLab",
@@ -220,7 +231,7 @@ func TestReadmeHTML(t *testing.T) {
 				Filepath: "README.md",
 				Contents: "![Gitaly benchmark timings.](doc/img/rugged-new-timings.png)",
 			},
-			want: template.HTML("<p><img src=\"http://gitlab.com/gitlab-org/gitaly/raw/v1.0.0/doc/img/rugged-new-timings.png\" alt=\"Gitaly benchmark timings.\"/></p>\n"),
+			want: "<p><img src=\"http://gitlab.com/gitlab-org/gitaly/raw/v1.0.0/doc/img/rugged-new-timings.png\" alt=\"Gitaly benchmark timings.\"/></p>\n",
 		},
 		{
 			name: "relative image markdown is left alone for unknown origins",
@@ -229,7 +240,7 @@ func TestReadmeHTML(t *testing.T) {
 				Filepath: "README.md",
 				Contents: "![Go logo](doc/logo.png)",
 			},
-			want: template.HTML("<p><img src=\"doc/logo.png\" alt=\"Go logo\"/></p>\n"),
+			want: "<p><img src=\"doc/logo.png\" alt=\"Go logo\"/></p>\n",
 		},
 		{
 			name: "module versions are referenced in relative images",
@@ -242,7 +253,7 @@ func TestReadmeHTML(t *testing.T) {
 				Filepath: "README.md",
 				Contents: "![Hugo logo](doc/logo.png)",
 			},
-			want: template.HTML("<p><img src=\"https://raw.githubusercontent.com/gohugoio/hugo/v0.56.3/doc/logo.png\" alt=\"Hugo logo\"/></p>\n"),
+			want: "<p><img src=\"https://raw.githubusercontent.com/gohugoio/hugo/v0.56.3/doc/logo.png\" alt=\"Hugo logo\"/></p>\n",
 		},
 		{
 			name: "image URLs relative to README directory",
@@ -255,7 +266,7 @@ func TestReadmeHTML(t *testing.T) {
 				Filepath: "dir/sub/README.md",
 				Contents: "![alt](img/thing.png)",
 			},
-			want: template.HTML(`<p><img src="https://raw.githubusercontent.com/some/repo/v1.2.3/dir/sub/img/thing.png" alt="alt"/></p>` + "\n"),
+			want: `<p><img src="https://raw.githubusercontent.com/some/repo/v1.2.3/dir/sub/img/thing.png" alt="alt"/></p>` + "\n",
 		},
 		{
 			name: "non-image links relative to README directory",
@@ -268,7 +279,7 @@ func TestReadmeHTML(t *testing.T) {
 				Filepath: "dir/sub/README.md",
 				Contents: "[something](doc/thing.md)",
 			},
-			want: template.HTML(`<p><a href="https://github.com/some/repo/blob/v1.2.3/dir/sub/doc/thing.md" rel="nofollow">something</a></p>` + "\n"),
+			want: `<p><a href="https://github.com/some/repo/blob/v1.2.3/dir/sub/doc/thing.md" rel="nofollow">something</a></p>` + "\n",
 		},
 		{
 			name: "image link in embedded HTML",
@@ -281,7 +292,7 @@ func TestReadmeHTML(t *testing.T) {
 				Filepath: "README.md",
 				Contents: "<img src=\"resources/logoSmall.png\" />\n\n# Heading\n",
 			},
-			want: template.HTML("<p><img src=\"https://raw.githubusercontent.com/pdfcpu/pdfcpu/v0.3.3/resources/logoSmall.png\"/></p>\n\n<h1 id=\"heading\">Heading</h1>\n"),
+			want: "<p><img src=\"https://raw.githubusercontent.com/pdfcpu/pdfcpu/v0.3.3/resources/logoSmall.png\"/></p>\n\n<h1 id=\"heading\">Heading</h1>\n",
 		},
 		{
 			name: "image link in embedded HTML with surrounding p tag",
@@ -294,7 +305,7 @@ func TestReadmeHTML(t *testing.T) {
 				Filepath: "README.md",
 				Contents: "<p align=\"center\"><img src=\"foo.png\" /></p>\n\n# Heading",
 			},
-			want: template.HTML("<p align=\"center\"><img src=\"https://raw.githubusercontent.com/some/repo/v1.2.3/foo.png\"/></p>\n\n<h1 id=\"heading\">Heading</h1>\n"),
+			want: "<p align=\"center\"><img src=\"https://raw.githubusercontent.com/some/repo/v1.2.3/foo.png\"/></p>\n\n<h1 id=\"heading\">Heading</h1>\n",
 		},
 		{
 			name: "image link in embedded HTML with surrounding div",
@@ -307,12 +318,15 @@ func TestReadmeHTML(t *testing.T) {
 				Filepath: "README.md",
 				Contents: "<div align=\"center\"><img src=\"foo.png\" /></div>\n\n# Heading",
 			},
-			want: template.HTML("<div align=\"center\"><img src=\"https://raw.githubusercontent.com/some/repo/v1.2.3/foo.png\"/></div>\n\n<h1 id=\"heading\">Heading</h1>\n"),
+			want: "<div align=\"center\"><img src=\"https://raw.githubusercontent.com/some/repo/v1.2.3/foo.png\"/></div>\n\n<h1 id=\"heading\">Heading</h1>\n",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			got := readmeHTML(ctx, tc.mi, tc.readme)
-			if diff := cmp.Diff(tc.want, got); diff != "" {
+			got, err := readmeHTML(ctx, tc.mi, tc.readme)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := cmp.Diff(tc.want, got.String()); diff != "" {
 				t.Errorf("readmeHTML(%v) mismatch (-want +got):\n%s", tc.mi, diff)
 			}
 		})

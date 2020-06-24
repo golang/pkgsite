@@ -31,7 +31,7 @@
     <div class="Overview-readme">
       <h2>README</h2>
       <div class="Overview-readmeContainer">
-      {{if .ReadMe}}
+      {{if .ReadMe.String}}
           <div class="Overview-readmeContent">{{.ReadMe}}</div>
           <div class="Overview-readmeSource">Source: {{.ReadMeSource}}</div>
       {{else if not .Redistributable}}

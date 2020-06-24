@@ -17,6 +17,7 @@ import (
 	"cloud.google.com/go/profiler"
 	"contrib.go.opencensus.io/integrations/ocsql"
 	"github.com/go-redis/redis/v7"
+	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/database"
@@ -34,7 +35,7 @@ import (
 
 var (
 	queueName      = config.GetEnv("GO_DISCOVERY_FRONTEND_TASK_QUEUE", "")
-	staticPath     = flag.String("static", "content/static", "path to folder containing static files served")
+	_              = flag.String("static", "content/static", "path to folder containing static files served")
 	thirdPartyPath = flag.String("third_party", "third_party", "path to folder containing third-party libraries")
 	devMode        = flag.Bool("dev", false, "enable developer mode (reload templates on each page load, serve non-minified JS/CSS, etc.)")
 	proxyURL       = flag.String("proxy_url", "https://proxy.golang.org", "Uses the module proxy referred to by this URL "+
@@ -96,7 +97,7 @@ func main() {
 		Queue:                fetchQueue,
 		CompletionClient:     haClient,
 		TaskIDChangeInterval: config.TaskIDChangeIntervalFrontend,
-		StaticPath:           *staticPath,
+		StaticPath:           template.TrustedSourceFromFlag(flag.Lookup("static").Value),
 		ThirdPartyPath:       *thirdPartyPath,
 		DevMode:              *devMode,
 		AppVersionLabel:      cfg.AppVersionLabel(),

@@ -162,7 +162,7 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds
 	case "licenses":
 		return fetchPackageLicensesDetails(ctx, ds, pkg.Path, pkg.ModulePath, pkg.Version)
 	case "overview":
-		return fetchPackageOverviewDetails(ctx, pkg, urlIsVersioned(r.URL)), nil
+		return fetchPackageOverviewDetails(ctx, pkg, urlIsVersioned(r.URL))
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
@@ -190,7 +190,7 @@ func fetchDetailsForVersionedDirectory(ctx context.Context, r *http.Request, tab
 	case "licenses":
 		return fetchPackageLicensesDetails(ctx, ds, vdir.Path, vdir.ModulePath, vdir.Version)
 	case "overview":
-		return fetchPackageOverviewDetailsNew(ctx, vdir, urlIsVersioned(r.URL)), nil
+		return fetchPackageOverviewDetailsNew(ctx, vdir, urlIsVersioned(r.URL))
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
@@ -211,7 +211,7 @@ func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds 
 		return fetchModuleVersionsDetails(ctx, ds, &mi.ModuleInfo)
 	case "overview":
 		readme := &internal.Readme{Filepath: mi.LegacyReadmeFilePath, Contents: mi.LegacyReadmeContents}
-		return constructOverviewDetails(ctx, &mi.ModuleInfo, readme, mi.IsRedistributable, urlIsVersioned(r.URL)), nil
+		return constructOverviewDetails(ctx, &mi.ModuleInfo, readme, mi.IsRedistributable, urlIsVersioned(r.URL))
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
@@ -222,7 +222,7 @@ func constructDetailsForDirectory(r *http.Request, tab string, dir *internal.Leg
 	switch tab {
 	case "overview":
 		readme := &internal.Readme{Filepath: dir.LegacyReadmeFilePath, Contents: dir.LegacyReadmeContents}
-		return constructOverviewDetails(r.Context(), &dir.ModuleInfo, readme, dir.LegacyModuleInfo.IsRedistributable, urlIsVersioned(r.URL)), nil
+		return constructOverviewDetails(r.Context(), &dir.ModuleInfo, readme, dir.LegacyModuleInfo.IsRedistributable, urlIsVersioned(r.URL))
 	case "subdirectories":
 		// Ideally we would just use fetchDirectoryDetails here so that it
 		// follows the same code path as fetchDetailsForModule and

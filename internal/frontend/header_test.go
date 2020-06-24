@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -139,7 +140,7 @@ func TestCreatePackageHeader(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(tc.wantPkg, got); diff != "" {
+			if diff := cmp.Diff(tc.wantPkg, got, cmp.AllowUnexported(safehtml.Identifier{})); diff != "" {
 				t.Errorf("legacyCreatePackage(%v) mismatch (-want +got):\n%s", tc.pkg, diff)
 			}
 		})

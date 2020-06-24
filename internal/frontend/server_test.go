@@ -15,6 +15,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/safehtml/template"
 	"golang.org/x/net/html"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/experiment"
@@ -85,6 +86,7 @@ var testModules = []testModule{
 		packages: []testPackage{
 			{
 				suffix: "foo",
+				doc:    sample.DocumentationHTML,
 			},
 			{
 				suffix: "foo/directory/hello",
@@ -144,6 +146,7 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 		var ps []*internal.LegacyPackage
 		for _, pkg := range mod.packages {
 			p := sample.LegacyPackage(mod.path, pkg.suffix)
+			p.DocumentationHTML = ""
 			if pkg.name != "" {
 				p.Name = pkg.name
 			}
@@ -438,6 +441,12 @@ func serverTestCases() ([]serverTestCase, []serverTestCase, []serverTestCase) {
 			want: in("",
 				pagecheck.PackageHeader(pkgNonRedist, versioned),
 				in(".DetailsContent", text(`not displayed due to license restrictions`))),
+		},
+		{
+			name:           "package at version doc tab, no doc",
+			urlPath:        "/github.com/pseudo@" + pseudoVersion + "/dir/baz?tab=doc",
+			wantStatusCode: http.StatusOK,
+			want:           in("", text("No documentation available")),
 		},
 		{
 			name:           "package at version readme tab redistributable",
@@ -1000,7 +1009,7 @@ func newTestServer(t *testing.T, proxyModules []*proxy.TestModule, experimentNam
 		DataSource:           testDB,
 		Queue:                q,
 		TaskIDChangeInterval: 10 * time.Minute,
-		StaticPath:           "../../content/static",
+		StaticPath:           template.TrustedSourceFromConstant("../../content/static"),
 		ThirdPartyPath:       "../../third_party",
 		AppVersionLabel:      "",
 	})

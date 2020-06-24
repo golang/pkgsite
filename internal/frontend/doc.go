@@ -7,10 +7,11 @@ package frontend
 import (
 	"context"
 	"fmt"
-	"html/template"
 	"regexp"
 	"strings"
 
+	"github.com/google/safehtml"
+	"github.com/google/safehtml/legacyconversions"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -20,7 +21,7 @@ import (
 type DocumentationDetails struct {
 	GOOS          string
 	GOARCH        string
-	Documentation template.HTML
+	Documentation safehtml.HTML
 }
 
 // addDocQueryParam controls whether to use a regexp replacement to append
@@ -36,7 +37,7 @@ func fetchDocumentationDetails(pkg *internal.LegacyVersionedPackage) *Documentat
 	return &DocumentationDetails{
 		GOOS:          pkg.GOOS,
 		GOARCH:        pkg.GOARCH,
-		Documentation: template.HTML(docHTML),
+		Documentation: legacyconversions.RiskilyAssumeHTML(docHTML),
 	}
 }
 
@@ -49,7 +50,7 @@ func fetchDocumentationDetailsNew(doc *internal.Documentation) *DocumentationDet
 	return &DocumentationDetails{
 		GOOS:          doc.GOOS,
 		GOARCH:        doc.GOARCH,
-		Documentation: template.HTML(docHTML),
+		Documentation: legacyconversions.RiskilyAssumeHTML(docHTML),
 	}
 }
 

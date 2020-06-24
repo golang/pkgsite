@@ -9,15 +9,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"html/template"
 	"io"
 	"net/http"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/go-redis/redis/v7"
+	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
@@ -35,9 +34,9 @@ type Server struct {
 	// set.
 	cmplClient           *redis.Client
 	taskIDChangeInterval time.Duration
-	staticPath           string
+	staticPath           template.TrustedSource
 	thirdPartyPath       string
-	templateDir          string
+	templateDir          template.TrustedSource
 	devMode              bool
 	errorPage            []byte
 	appVersionLabel      string
@@ -52,7 +51,7 @@ type ServerConfig struct {
 	Queue                queue.Queue
 	CompletionClient     *redis.Client
 	TaskIDChangeInterval time.Duration
-	StaticPath           string
+	StaticPath           template.TrustedSource
 	ThirdPartyPath       string
 	DevMode              bool
 	AppVersionLabel      string
@@ -61,7 +60,7 @@ type ServerConfig struct {
 // NewServer creates a new Server for the given database and template directory.
 func NewServer(scfg ServerConfig) (_ *Server, err error) {
 	defer derrors.Wrap(&err, "NewServer(...)")
-	templateDir := filepath.Join(scfg.StaticPath, "html")
+	templateDir := template.TrustedSourceJoin(scfg.StaticPath, template.TrustedSourceFromConstant("html"))
 	ts, err := parsePageTemplates(templateDir)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing templates: %v", err)
@@ -96,10 +95,10 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 		detailHandler = middleware.Cache("details", redisClient, detailsTTL)(detailHandler)
 		searchHandler = middleware.Cache("search", redisClient, middleware.TTL(defaultTTL))(searchHandler)
 	}
-	handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(s.staticPath))))
+	handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(s.staticPath.String()))))
 	handle("/third_party/", http.StripPrefix("/third_party", http.FileServer(http.Dir(s.thirdPartyPath))))
 	handle("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(s.staticPath)))
+		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(s.staticPath.String())))
 	}))
 	handle("/fetch/", http.HandlerFunc(s.fetchHandler))
 	handle("/pkg/", http.HandlerFunc(s.handlePackageDetailsRedirect))
@@ -227,7 +226,7 @@ func (s *Server) newBasePage(r *http.Request, title string) basePage {
 type errorPage struct {
 	basePage
 	templateName    string
-	messageTemplate string
+	messageTemplate template.TrustedTemplate
 	MessageData     interface{}
 }
 
@@ -313,8 +312,8 @@ func (s *Server) renderErrorPage(ctx context.Context, status int, templateName s
 	if page == nil {
 		page = &errorPage{}
 	}
-	if page.messageTemplate == "" {
-		page.messageTemplate = `<h3 class="Error-message">{{.}}</h3>`
+	if page.messageTemplate.String() == "" {
+		page.messageTemplate = template.MakeTrustedTemplate(`<h3 class="Error-message">{{.}}</h3>`)
 	}
 	if page.MessageData == nil {
 		page.MessageData = statusInfo
@@ -334,7 +333,7 @@ func (s *Server) renderErrorPage(ctx context.Context, status int, templateName s
 	if err != nil {
 		return nil, err
 	}
-	_, err = tmpl.New("message").Parse(page.messageTemplate)
+	_, err = tmpl.New("message").ParseFromTrustedTemplate(page.messageTemplate)
 	if err != nil {
 		return nil, err
 	}
@@ -396,22 +395,25 @@ func executeTemplate(ctx context.Context, templateName string, tmpl *template.Te
 //
 // Separate templates are used so that certain contextual functions (e.g.
 // templateName) can be bound independently for each page.
-func parsePageTemplates(base string) (map[string]*template.Template, error) {
-	htmlSets := [][]string{
-		{"index.tmpl"},
-		{"error.tmpl"},
-		{"fetch.tmpl"},
-		{"search.tmpl"},
-		{"search_help.tmpl"},
-		{"license_policy.tmpl"},
-		{"overview.tmpl", "details.tmpl"},
-		{"subdirectories.tmpl", "details.tmpl"},
-		{"pkg_doc.tmpl", "details.tmpl"},
-		{"pkg_importedby.tmpl", "details.tmpl"},
-		{"pkg_imports.tmpl", "details.tmpl"},
-		{"licenses.tmpl", "details.tmpl"},
-		{"versions.tmpl", "details.tmpl"},
-		{"not_implemented.tmpl", "details.tmpl"},
+func parsePageTemplates(base template.TrustedSource) (map[string]*template.Template, error) {
+	tsc := template.TrustedSourceFromConstant
+	join := template.TrustedSourceJoin
+
+	htmlSets := [][]template.TrustedSource{
+		{tsc("index.tmpl")},
+		{tsc("error.tmpl")},
+		{tsc("fetch.tmpl")},
+		{tsc("search.tmpl")},
+		{tsc("search_help.tmpl")},
+		{tsc("license_policy.tmpl")},
+		{tsc("overview.tmpl"), tsc("details.tmpl")},
+		{tsc("subdirectories.tmpl"), tsc("details.tmpl")},
+		{tsc("pkg_doc.tmpl"), tsc("details.tmpl")},
+		{tsc("pkg_importedby.tmpl"), tsc("details.tmpl")},
+		{tsc("pkg_imports.tmpl"), tsc("details.tmpl")},
+		{tsc("licenses.tmpl"), tsc("details.tmpl")},
+		{tsc("versions.tmpl"), tsc("details.tmpl")},
+		{tsc("not_implemented.tmpl"), tsc("details.tmpl")},
 	}
 
 	templates := make(map[string]*template.Template)
@@ -427,23 +429,23 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 			"commaseparate": func(s []string) string {
 				return strings.Join(s, ", ")
 			},
-		}).ParseFiles(filepath.Join(base, "base.tmpl"))
+		}).ParseFilesFromTrustedSources(join(base, tsc("base.tmpl")))
 		if err != nil {
 			return nil, fmt.Errorf("ParseFiles: %v", err)
 		}
-		helperGlob := filepath.Join(base, "helpers", "*.tmpl")
-		if _, err := t.ParseGlob(helperGlob); err != nil {
+		helperGlob := join(base, tsc("helpers"), tsc("*.tmpl"))
+		if _, err := t.ParseGlobFromTrustedSource(helperGlob); err != nil {
 			return nil, fmt.Errorf("ParseGlob(%q): %v", helperGlob, err)
 		}
 
-		var files []string
+		var files []template.TrustedSource
 		for _, f := range set {
-			files = append(files, filepath.Join(base, "pages", f))
+			files = append(files, join(base, tsc("pages"), f))
 		}
-		if _, err := t.ParseFiles(files...); err != nil {
-			return nil, fmt.Errorf("ParseFiles(%v): %v", files, err)
+		if _, err := t.ParseFilesFromTrustedSources(files...); err != nil {
+			return nil, fmt.Errorf("ParseFilesFromTrustedSources(%v): %v", files, err)
 		}
-		templates[set[0]] = t
+		templates[set[0].String()] = t
 	}
 	return templates, nil
 }

@@ -16,6 +16,7 @@ import (
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/go-redis/redis/v7"
+	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/frontend"
@@ -103,7 +104,7 @@ func TestEndToEndProcessing(t *testing.T) {
 		Queue:                queue,
 		CompletionClient:     redisHAClient,
 		TaskIDChangeInterval: 10 * time.Minute,
-		StaticPath:           "../../../content/static",
+		StaticPath:           template.TrustedSourceFromConstant("../../../content/static"),
 		ThirdPartyPath:       "../../../third_party",
 		AppVersionLabel:      "",
 	})

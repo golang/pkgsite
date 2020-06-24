@@ -8,19 +8,21 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"html/template"
 	"net/url"
 	"path"
 	"path/filepath"
 	"strings"
 
+	"github.com/google/safehtml"
+	"github.com/google/safehtml/legacyconversions"
+	"github.com/google/safehtml/template"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
-	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -30,7 +32,7 @@ type OverviewDetails struct {
 	ModulePath       string
 	ModuleURL        string
 	PackageSourceURL string
-	ReadMe           template.HTML
+	ReadMe           safehtml.HTML
 	ReadMeSource     string
 	Redistributable  bool
 	RepositoryURL    string
@@ -38,7 +40,7 @@ type OverviewDetails struct {
 
 // versionedLinks says whether the constructed URLs should have versions.
 // constructOverviewDetails uses the given version to construct an OverviewDetails.
-func constructOverviewDetails(ctx context.Context, mi *internal.ModuleInfo, readme *internal.Readme, isRedistributable bool, versionedLinks bool) *OverviewDetails {
+func constructOverviewDetails(ctx context.Context, mi *internal.ModuleInfo, readme *internal.Readme, isRedistributable bool, versionedLinks bool) (*OverviewDetails, error) {
 	var lv string
 	if versionedLinks {
 		lv = linkVersion(mi.Version, mi.ModulePath)
@@ -53,24 +55,31 @@ func constructOverviewDetails(ctx context.Context, mi *internal.ModuleInfo, read
 	}
 	if overview.Redistributable && readme != nil {
 		overview.ReadMeSource = fileSource(mi.ModulePath, mi.Version, readme.Filepath)
-		overview.ReadMe = readmeHTML(ctx, mi, readme)
+		r, err := readmeHTML(ctx, mi, readme)
+		if err != nil {
+			return nil, err
+		}
+		overview.ReadMe = r
 	}
-	return overview
+	return overview, nil
 }
 
 // fetchPackageOverviewDetails uses data for the given package to return an OverviewDetails.
-func fetchPackageOverviewDetails(ctx context.Context, pkg *internal.LegacyVersionedPackage, versionedLinks bool) *OverviewDetails {
-	od := constructOverviewDetails(ctx, &pkg.ModuleInfo, &internal.Readme{Filepath: pkg.LegacyReadmeFilePath, Contents: pkg.LegacyReadmeContents},
+func fetchPackageOverviewDetails(ctx context.Context, pkg *internal.LegacyVersionedPackage, versionedLinks bool) (*OverviewDetails, error) {
+	od, err := constructOverviewDetails(ctx, &pkg.ModuleInfo, &internal.Readme{Filepath: pkg.LegacyReadmeFilePath, Contents: pkg.LegacyReadmeContents},
 		pkg.LegacyPackage.IsRedistributable, versionedLinks)
+	if err != nil {
+		return nil, err
+	}
 	od.PackageSourceURL = pkg.SourceInfo.DirectoryURL(packageSubdir(pkg.Path, pkg.ModulePath))
 	if !pkg.LegacyPackage.IsRedistributable {
 		od.Redistributable = false
 	}
-	return od
+	return od, nil
 }
 
 // fetchPackageOverviewDetailsNew uses data for the given versioned directory to return an OverviewDetails.
-func fetchPackageOverviewDetailsNew(ctx context.Context, vdir *internal.VersionedDirectory, versionedLinks bool) *OverviewDetails {
+func fetchPackageOverviewDetailsNew(ctx context.Context, vdir *internal.VersionedDirectory, versionedLinks bool) (*OverviewDetails, error) {
 	var lv string
 	if versionedLinks {
 		lv = linkVersion(vdir.Version, vdir.ModulePath)
@@ -86,9 +95,13 @@ func fetchPackageOverviewDetailsNew(ctx context.Context, vdir *internal.Versione
 	}
 	if overview.Redistributable && vdir.Readme != nil {
 		overview.ReadMeSource = fileSource(vdir.ModulePath, vdir.Version, vdir.Readme.Filepath)
-		overview.ReadMe = readmeHTML(ctx, &vdir.ModuleInfo, vdir.Readme)
+		r, err := readmeHTML(ctx, &vdir.ModuleInfo, vdir.Readme)
+		if err != nil {
+			return nil, err
+		}
+		overview.ReadMe = r
 	}
-	return overview
+	return overview, nil
 }
 
 // packageSubdir returns the subdirectory of the package relative to its module.
@@ -104,14 +117,20 @@ func packageSubdir(pkgPath, modulePath string) string {
 }
 
 // readmeHTML sanitizes readmeContents based on bluemondy.UGCPolicy and returns
-// a template.HTML. If readmeFilePath indicates that this is a markdown file,
+// a safehtml.HTML. If readmeFilePath indicates that this is a markdown file,
 // it will also render the markdown contents using blackfriday.
-func readmeHTML(ctx context.Context, mi *internal.ModuleInfo, readme *internal.Readme) template.HTML {
+func readmeHTML(ctx context.Context, mi *internal.ModuleInfo, readme *internal.Readme) (_ safehtml.HTML, err error) {
+	defer derrors.Wrap(&err, "readmeHTML(%s@%s)", mi.ModulePath, mi.Version)
 	if readme == nil {
-		return ""
+		return safehtml.HTML{}, nil
 	}
 	if !isMarkdown(readme.Filepath) {
-		return template.HTML(fmt.Sprintf(`<pre class="readme">%s</pre>`, template.HTMLEscapeString(readme.Contents)))
+		t := template.Must(template.New("").Parse(`<pre class="readme">{{.}}</pre>`))
+		h, err := t.ExecuteToHTML(readme.Contents)
+		if err != nil {
+			return safehtml.HTML{}, err
+		}
+		return h, nil
 	}
 
 	// bluemonday.UGCPolicy allows a broad selection of HTML elements and
@@ -135,6 +154,7 @@ func readmeHTML(ctx context.Context, mi *internal.ModuleInfo, readme *internal.R
 	// Walk function in order to modify image paths in the rendered HTML.
 	b := &bytes.Buffer{}
 	rootNode := parser.Parse([]byte(readme.Contents))
+	var walkErr error
 	rootNode.Walk(func(node *blackfriday.Node, entering bool) blackfriday.WalkStatus {
 		switch node.Type {
 		case blackfriday.Image, blackfriday.Link:
@@ -146,15 +166,18 @@ func readmeHTML(ctx context.Context, mi *internal.ModuleInfo, readme *internal.R
 			if experiment.IsActive(ctx, internal.ExperimentTranslateHTML) {
 				d, err := translateHTML(node.Literal, mi, readme)
 				if err != nil {
-					log.Errorf(context.Background(), "couldn't transform html block(%s): %v", node.Literal, err)
-				} else {
-					node.Literal = d
+					walkErr = fmt.Errorf("couldn't transform html block(%s): %w", node.Literal, err)
+					return blackfriday.Terminate
 				}
+				node.Literal = d
 			}
 		}
 		return renderer.RenderNode(b, node, entering)
 	})
-	return template.HTML(p.SanitizeReader(b).String())
+	if walkErr != nil {
+		return safehtml.HTML{}, walkErr
+	}
+	return legacyconversions.RiskilyAssumeHTML(p.SanitizeReader(b).String()), nil
 }
 
 // isMarkdown reports whether filename says that the file contains markdown.
