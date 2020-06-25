@@ -5,6 +5,9 @@
 
 source devtools/lib.sh || { echo "Are you at repo root?"; exit 1; }
 
+# Support ** in globs, for check_script_hashes.
+shopt -s globstar
+
 warnout() {
   while read line; do
     warn "$line"
@@ -112,6 +115,13 @@ check_templates() {
     -td=content/static/html/pages | warnout
 }
 
+
+# check_script_hashes checks that our CSP hashes match the ones
+# for our HTML scripts.
+check_script_hashes() {
+  runcmd go run ./devtools/cmd/csphash content/static/html/**/*.tmpl
+}
+
 run_prettier() {
   if ! [ -x "$(command -v prettier)" ]; then
     err "prettier must be installed: see https://prettier.io/docs/en/install.html"
@@ -127,6 +137,7 @@ standard_linters() {
   check_staticcheck
   check_misspell
   check_unparam
+  check_script_hashes
   run_prettier
 }
 
@@ -145,6 +156,7 @@ Available subcommands:
   unparam     - (lint) run unparam on source files
   prettier    - (lint, nonstandard) run prettier on .js and .css files.
   templates   - (lint, nonstandard) run go-template-lint on templates
+  script_hashses - (lint) check script hashes
 EOUSAGE
 }
 
@@ -176,6 +188,7 @@ main() {
     prettier) run_prettier ;;
     templates) check_templates ;;
     unparam) check_unparam ;;
+    script_hashes) check_script_hashes ;;
     *)
       usage
       exit 1

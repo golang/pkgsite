@@ -35,3 +35,7 @@ on how to [set up](postgres.md) and
 your local database with packages of your choice.
 
 You can then run the frontend with: `go run cmd/frontend/main.go`
+
+If you add, change or remove any inline scripts in templates, run
+`devtools/cmd/csphash` to update the hashes. Running `all.bash`
+will do that as well.

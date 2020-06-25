@@ -25,10 +25,10 @@ Before you begin working on an issue, please leave a comment that you are claimi
 ## Getting started
 
 1. Complete the steps in the
-[Go Contribution Guide](https://golang.org/doc/contribute.html).
+   [Go Contribution Guide](https://golang.org/doc/contribute.html).
 
 2. Download the source code for x/pkgsite:
-`git clone https://go.googlesource.com/pkgsite`
+   `git clone https://go.googlesource.com/pkgsite`
 
 3. Review the [design document](doc/design.md).
 
@@ -45,10 +45,10 @@ See [doc/frontend.md](doc/frontend.md) for details.
 ## Before sending a CL for review
 
 1. Run `./all.bash` and fix all resulting errors. See
-  [doc/precommit.md](doc/precommit.md) for instructions on setting up a
-  pre-commit hook.
+   [doc/precommit.md](doc/precommit.md) for instructions on setting up a
+   pre-commit hook.
 2. Ensure your commit message is formatted according to
-  [Go conventions](http://golang.org/wiki/CommitMessage).
+   [Go conventions](http://golang.org/wiki/CommitMessage).
 
 ## Questions
 

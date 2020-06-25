@@ -21,6 +21,8 @@ var scriptHashes = []string{
 	"'sha256-s16e7aT7Gsajq5UH1DbaEFEnNx2VjvS5Xixcxwm4+F8='",
 	// From content/static/html/pages/pkg_doc.tmpl
 	"'sha256-AvMTqQ+22BA0Nsht+ajju4EQseFQsoG1RxW3Nh6M+wc='",
+	// From content/static/html/worker/index.tmpl
+	"'sha256-5EpitFYSzGNQNUsqi5gAaLqnI3ZWfcRo/6gLTO0oCoE='",
 }
 
 // SecureHeaders adds a content-security-policy and other security-related
