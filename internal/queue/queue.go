@@ -10,7 +10,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
-	"os"
 	"time"
 
 	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
@@ -71,7 +70,7 @@ func (q *GCP) ScheduleFetch(ctx context.Context, modulePath, version, suffix str
 					HttpMethod:  taskspb.HttpMethod_POST,
 					RelativeUri: u,
 					AppEngineRouting: &taskspb.AppEngineRouting{
-						Service: os.Getenv("GAE_SERVICE"),
+						Service: q.cfg.QueueService,
 					},
 				},
 			},

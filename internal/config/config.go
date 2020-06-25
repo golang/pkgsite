@@ -70,6 +70,10 @@ type Config struct {
 	// AppEngine identifiers
 	ProjectID, ServiceID, VersionID, ZoneID, InstanceID, LocationID string
 
+	// QueueService is used to identify which service Cloud Tasks queue
+	// should send requests to.
+	QueueService string
+
 	GaeEnv string
 
 	// AppMonitoredResource is the resource for the current GAE app.
@@ -213,11 +217,12 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		Port:      os.Getenv("PORT"),
 		DebugPort: os.Getenv("DEBUG_PORT"),
 		// Resolve AppEngine identifiers
-		ProjectID:  os.Getenv("GOOGLE_CLOUD_PROJECT"),
-		ServiceID:  os.Getenv("GAE_SERVICE"),
-		VersionID:  os.Getenv("GAE_VERSION"),
-		InstanceID: os.Getenv("GAE_INSTANCE"),
-		GaeEnv:     os.Getenv("GAE_ENV"),
+		ProjectID:    os.Getenv("GOOGLE_CLOUD_PROJECT"),
+		ServiceID:    os.Getenv("GAE_SERVICE"),
+		VersionID:    os.Getenv("GAE_VERSION"),
+		InstanceID:   os.Getenv("GAE_INSTANCE"),
+		GaeEnv:       os.Getenv("GAE_ENV"),
+		QueueService: os.Getenv("GO_DISCOVERY_QUEUE_SERVICE"),
 		// LocationID is essentially hard-coded until we figure out a good way to
 		// determine it programmatically, but we check an environment variable in
 		// case it needs to be overridden.
