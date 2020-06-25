@@ -10,8 +10,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"time"
 
+	"go.opencensus.io/plugin/ochttp"
+	"go.opencensus.io/stats"
+	"go.opencensus.io/stats/view"
+	"go.opencensus.io/tag"
 	"golang.org/x/net/context/ctxhttp"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/breaker"
@@ -76,6 +81,64 @@ var gddoToPkgGoDevRequest = map[string]string{
 	"/site.js":                       "/404",
 	"/third_party/jquery.timeago.js": "/404",
 }
+
+// statusRedBreaker is a custom HTTP status code that denotes that a request
+// cannot be handled because the circuit breaker is in the red state.
+const statusRedBreaker = 530
+
+var (
+	// keyTeeproxyStatus is a census tag for teeproxy response status codes.
+	keyTeeproxyStatus = tag.MustNewKey("teeproxy.status")
+	// teeproxyGddoLatency holds observed latency in individual teeproxy
+	// requests from godoc.org.
+	teeproxyGddoLatency = stats.Float64(
+		"go-discovery/teeproxy/gddo-latency",
+		"Latency of a teeproxy request from godoc.org.",
+		stats.UnitMilliseconds,
+	)
+	// teeproxyPkgGoDevLatency holds observed latency in individual teeproxy
+	// requests to pkg.go.dev.
+	teeproxyPkgGoDevLatency = stats.Float64(
+		"go-discovery/teeproxy/pkgGoDev-latency",
+		"Latency of a teeproxy request to pkg.go.dev.",
+		stats.UnitMilliseconds,
+	)
+
+	// TeeproxyGddoRequestLatencyDistribution aggregates the latency of
+	// teeproxy requests from godoc.org by status code.
+	TeeproxyGddoRequestLatencyDistribution = &view.View{
+		Name:        "go-discovery/teeproxy/gddo-latency",
+		Measure:     teeproxyGddoLatency,
+		Aggregation: ochttp.DefaultLatencyDistribution,
+		Description: "Teeproxy latency from godoc.org, by response status code",
+		TagKeys:     []tag.Key{keyTeeproxyStatus},
+	}
+	// TeeproxyPkgGoDevRequestLatencyDistribution aggregates the latency of
+	// teeproxy requests to pkg.go.dev by status code.
+	TeeproxyPkgGoDevRequestLatencyDistribution = &view.View{
+		Name:        "go-discovery/teeproxy/pkgGoDev-latency",
+		Measure:     teeproxyPkgGoDevLatency,
+		Aggregation: ochttp.DefaultLatencyDistribution,
+		Description: "Teeproxy latency to pkg.go.dev, by response status code",
+		TagKeys:     []tag.Key{keyTeeproxyStatus},
+	}
+	// TeeproxyGddoRequestCount counts teeproxy requests from godoc.org.
+	TeeproxyGddoRequestCount = &view.View{
+		Name:        "go-discovery/teeproxy/gddo-count",
+		Measure:     teeproxyGddoLatency,
+		Aggregation: view.Count(),
+		Description: "Count of teeproxy requests from godoc.org",
+		TagKeys:     []tag.Key{keyTeeproxyStatus},
+	}
+	// TeeproxyPkgGoDevRequestCount counts teeproxy requests to pkg.go.dev.
+	TeeproxyPkgGoDevRequestCount = &view.View{
+		Name:        "go-discovery/teeproxy/pkgGoDev-count",
+		Measure:     teeproxyPkgGoDevLatency,
+		Aggregation: view.Count(),
+		Description: "Count of teeproxy requests to pkg.go.dev",
+		TagKeys:     []tag.Key{keyTeeproxyStatus},
+	}
+)
 
 // NewServer returns a new Server struct with preconfigured settings.
 //
@@ -143,6 +206,12 @@ func (s *Server) doRequest(r *http.Request) (status int, err error) {
 			"pkg.go.dev": pkgGoDevEvent,
 			"error":      err,
 		})
+
+		var pkgGoDevLatency time.Duration
+		if pkgGoDevEvent != nil {
+			pkgGoDevLatency = pkgGoDevEvent.Latency
+		}
+		recordTeeProxyMetric(status, gddoEvent.Latency, pkgGoDevLatency)
 	}()
 	if experiment.IsActive(r.Context(), internal.ExperimentTeeProxyMakePkgGoDevRequest) {
 		if gddoEvent.RedirectHost == "" {
@@ -154,7 +223,7 @@ func (s *Server) doRequest(r *http.Request) (status int, err error) {
 		}
 
 		if !s.breaker.Allow() {
-			return http.StatusTooManyRequests, fmt.Errorf("breaker is red")
+			return statusRedBreaker, fmt.Errorf("breaker is red")
 		}
 		pkgGoDevEvent, err = makePkgGoDevRequest(ctx, gddoEvent.RedirectHost, pkgGoDevPath(gddoEvent.Path))
 		if err != nil {
@@ -238,4 +307,18 @@ func makePkgGoDevRequest(ctx context.Context, redirectHost, redirectPath string)
 		Status:  resp.StatusCode,
 		Latency: time.Since(start),
 	}, nil
+}
+
+// recordTeeProxyMetric records the latencies and counts of requests from
+// godoc.org and to pkg.go.dev, tagged with the response status code.
+func recordTeeProxyMetric(status int, gddoLatency, pkgGoDevLatency time.Duration) {
+	gddoL := gddoLatency.Seconds() / 1000
+	pkgGoDevL := gddoLatency.Seconds() / 1000
+
+	stats.RecordWithTags(context.Background(), []tag.Mutator{
+		tag.Upsert(keyTeeproxyStatus, strconv.Itoa(status)),
+	},
+		teeproxyGddoLatency.M(gddoL),
+		teeproxyPkgGoDevLatency.M(pkgGoDevL),
+	)
 }

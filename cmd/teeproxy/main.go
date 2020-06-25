@@ -13,6 +13,7 @@ import (
 
 	"golang.org/x/pkgsite/internal/breaker"
 	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/dcensus"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/teeproxy"
 )
@@ -31,6 +32,14 @@ func main() {
 			log.Fatal(ctx, err)
 		}
 	}
+
+	views := append(dcensus.ServerViews,
+		teeproxy.TeeproxyGddoRequestCount,
+		teeproxy.TeeproxyPkgGoDevRequestCount,
+		teeproxy.TeeproxyGddoRequestLatencyDistribution,
+		teeproxy.TeeproxyPkgGoDevRequestLatencyDistribution,
+	)
+	dcensus.Init(cfg, views...)
 
 	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "content/static/img/favicon.ico")
