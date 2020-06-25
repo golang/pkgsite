@@ -44,9 +44,9 @@ var (
 	keyFrontendFetchVersion = tag.MustNewKey("frontend-fetch.version")
 	// keyFrontendFetchStatus is a census tag for frontend fetch status types.
 	keyFrontendFetchStatus = tag.MustNewKey("frontend-fetch.status")
-	// keyFrontendFetchLatency holds observed latency in individual
+	// frontendFetchLatency holds observed latency in individual
 	// frontend fetch queries.
-	keyFrontendFetchLatency = stats.Float64(
+	frontendFetchLatency = stats.Float64(
 		"go-discovery/frontend-fetch/latency",
 		"Latency of a frontend fetch request.",
 		stats.UnitMilliseconds,
@@ -55,7 +55,7 @@ var (
 	// latency by status code.
 	FrontendFetchLatencyDistribution = &view.View{
 		Name:        "go-discovery/frontend-fetch/latency",
-		Measure:     keyFrontendFetchLatency,
+		Measure:     frontendFetchLatency,
 		Aggregation: ochttp.DefaultLatencyDistribution,
 		Description: "FrontendFetch latency, by result source query type.",
 		TagKeys:     []tag.Key{keyFrontendFetchStatus},
@@ -63,7 +63,7 @@ var (
 	// FrontendFetchResponseCount counts frontend fetch responses by response type.
 	FrontendFetchResponseCount = &view.View{
 		Name:        "go-discovery/frontend-fetch/count",
-		Measure:     keyFrontendFetchLatency,
+		Measure:     frontendFetchLatency,
 		Aggregation: view.Count(),
 		Description: "Frontend fetch request count",
 		TagKeys:     []tag.Key{keyFrontendFetchStatus},
@@ -480,5 +480,5 @@ func recordFrontendFetchMetric(status int, version string, latency time.Duration
 	stats.RecordWithTags(context.Background(), []tag.Mutator{
 		tag.Upsert(keyFrontendFetchStatus, strconv.Itoa(status)),
 		tag.Upsert(keyFrontendFetchVersion, v),
-	}, keyFrontendFetchLatency.M(l))
+	}, frontendFetchLatency.M(l))
 }

@@ -28,8 +28,8 @@ import (
 )
 
 var (
-	// keySearchLatency holds observed latency in individual search queries.
-	keySearchLatency = stats.Float64(
+	// searchLatency holds observed latency in individual search queries.
+	searchLatency = stats.Float64(
 		"go-discovery/search/latency",
 		"Latency of a search query.",
 		stats.UnitMilliseconds,
@@ -40,7 +40,7 @@ var (
 	// query type.
 	SearchLatencyDistribution = &view.View{
 		Name:        "go-discovery/search/latency",
-		Measure:     keySearchLatency,
+		Measure:     searchLatency,
 		Aggregation: ochttp.DefaultLatencyDistribution,
 		Description: "Search latency, by result source query type.",
 		TagKeys:     []tag.Key{keySearchSource},
@@ -48,7 +48,7 @@ var (
 	// SearchResponseCount counts search responses by search query type.
 	SearchResponseCount = &view.View{
 		Name:        "go-discovery/search/count",
-		Measure:     keySearchLatency,
+		Measure:     searchLatency,
 		Aggregation: view.Count(),
 		Description: "Search count, by result source query type.",
 		TagKeys:     []tag.Key{keySearchSource},
@@ -263,7 +263,7 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, sea
 	latency := float64(time.Since(searchStart)) / float64(time.Millisecond)
 	stats.RecordWithTags(ctx,
 		[]tag.Mutator{tag.Upsert(keySearchSource, resp.source)},
-		keySearchLatency.M(latency))
+		searchLatency.M(latency))
 	// To avoid fighting with the query planner, our searches only hit the
 	// search_documents table and we enrich after getting the results. In the
 	// future, we may want to fully denormalize and put all search data in the
