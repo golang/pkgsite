@@ -966,6 +966,7 @@ code {
 .Documentation-variablesHeader,
 .Documentation-examplesHeader,
 .Documentation-examplesPlay,
+.Documentation-filesHeader,
 .Documentation-functionHeader,
 .Documentation-typeHeader,
 .Documentation-typeMethodHeader,
@@ -991,6 +992,13 @@ code {
   outline: none;
   padding-top: 0.5rem;
   text-decoration: none;
+}
+.Documentation-files {
+  display: none;
+}
+.Documentation-filesList {
+  column-count: 3;
+  column-width: 12.5rem;
 }
 .Documentation-build {
   color: var(--gray-3);

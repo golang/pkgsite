@@ -30,6 +30,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 		"render_doc":            (*render.Renderer)(nil).DocHTML,
 		"render_decl":           (*render.Renderer)(nil).DeclHTML,
 		"render_code":           (*render.Renderer)(nil).CodeHTML,
+		"file_link":             func() string { return "" },
 		"source_link":           func() string { return "" },
 		"play_url":              func(*doc.Example) string { return "" },
 	},
@@ -185,6 +186,15 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 		</ul>{{"\n" -}}
 	</section>
 	{{- end -}}
+
+	<section class="Documentation-files">
+		<h3 id="pkg-files" class="Documentation-filesHeader">Package Files <a href="#pkg-files">¶</a></h3>
+		<ul class="Documentation-filesList">
+			{{- range .Filenames -}}
+				<li>{{file_link .}}</li>
+			{{- end -}}
+		</ul>
+	</section>
 
 	{{- if .Consts -}}
 	<section class="Documentation-constants">

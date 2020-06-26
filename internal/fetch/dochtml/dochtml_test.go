@@ -8,6 +8,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"html/template"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
@@ -23,6 +24,7 @@ func TestRender(t *testing.T) {
 	fset, d := mustLoadPackage("everydecl")
 
 	rawDoc, err := Render(fset, d, RenderOptions{
+		FileLinkFunc:   func(string) string { return "file" },
 		SourceLinkFunc: func(ast.Node) string { return "src" },
 	})
 	if err != nil {
@@ -40,6 +42,54 @@ func TestRender(t *testing.T) {
 		// Check that the id and data-kind labels are right.
 		testIDsAndKinds(t, htmlDoc)
 	})
+}
+
+func TestFileLinkHTML(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		file string
+		link string
+		want template.HTML
+	}{
+		{
+			name: "file name is escaped",
+			file: `"File & name" <'file@name.com>`,
+			link: "",
+			want: `&#34;File &amp; name&#34; &lt;&#39;file@name.com&gt;`,
+		},
+		{
+			name: "link is escaped",
+			file: "file.go",
+			link: `"abc@go's.com"`,
+			want: `<a class="Documentation-file" href="&#34;abc@go&#39;s.com&#34;">file.go</a>`,
+		},
+		{
+			name: "file name and link are escaped",
+			file: `"a's.com@/`,
+			link: `"x@go's.com"`,
+			want: `<a class="Documentation-file" href="&#34;x@go&#39;s.com&#34;">&#34;a&#39;s.com@/</a>`,
+		},
+		{
+			name: "HTML injection escaped",
+			file: `<a href="gfr.con"></a>`,
+			link: `a.com`,
+			want: `<a class="Documentation-file" href="a.com">&lt;a href=&#34;gfr.con&#34;&gt;&lt;/a&gt;</a>`,
+		},
+		{
+			name: "regular file name and link are rendered",
+			file: `escape.go`,
+			link: `https://golang.org/src/html/escape.go`,
+			want: `<a class="Documentation-file" href="https://golang.org/src/html/escape.go">escape.go</a>`,
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			got := fileLinkHTML(test.file, test.link)
+			diff := cmp.Diff(test.want, got)
+			if diff != "" {
+				t.Errorf("mismatch (-want, +got):\n%s", diff)
+			}
+		})
+	}
 }
 
 func testDuplicateIDs(t *testing.T, htmlDoc *html.Node) {

@@ -628,6 +628,12 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 		}
 		return sourceInfo.LineURL(path.Join(innerPath, p.Filename), p.Line)
 	}
+	fileLinkFunc := func(filename string) string {
+		if sourceInfo == nil {
+			return ""
+		}
+		return sourceInfo.FileURL(path.Join(innerPath, filename))
+	}
 
 	// Fetch Go playground URLs for examples.
 	playURLs := make(map[*doc.Example]string)
@@ -656,6 +662,7 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 	}
 
 	docHTML, err := dochtml.Render(fset, d, dochtml.RenderOptions{
+		FileLinkFunc:   fileLinkFunc,
 		SourceLinkFunc: sourceLinkFunc,
 		PlayURLFunc:    playURLFunc,
 		Limit:          int64(MaxDocumentationHTML),

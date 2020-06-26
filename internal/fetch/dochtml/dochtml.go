@@ -17,6 +17,7 @@ import (
 	"go/ast"
 	"go/printer"
 	"go/token"
+	"html"
 	"html/template"
 	pathpkg "path"
 	"sort"
@@ -34,6 +35,13 @@ var (
 
 // RenderOptions are options for Render.
 type RenderOptions struct {
+	// FileLinkFunc optionally specifies a function that
+	// returns a URL where file should be linked to.
+	// file is the name component of a .go file in the package,
+	// including the .go qualifier.
+	// As a special case, FileLinkFunc may return the empty
+	// string to indicate that a given file should not be linked.
+	FileLinkFunc   func(file string) (url string)
 	SourceLinkFunc func(ast.Node) string
 	PlayURLFunc    func(*doc.Example) string // If set, returns the Go playground URL for the example
 	Limit          int64                     // If zero, a default limit of 10 megabytes is used.
@@ -81,6 +89,9 @@ func Render(fset *token.FileSet, p *doc.Package, opt RenderOptions) (string, err
 		DisableHotlinking: true,
 	})
 
+	fileLink := func(name string) template.HTML {
+		return fileLinkHTML(name, opt.FileLinkFunc(name))
+	}
 	sourceLink := func(name string, node ast.Node) template.HTML {
 		link := opt.SourceLinkFunc(node)
 		if link == "" {
@@ -104,6 +115,7 @@ func Render(fset *token.FileSet, p *doc.Package, opt RenderOptions) (string, err
 		"render_doc":            r.DocHTML,
 		"render_decl":           r.DeclHTML,
 		"render_code":           r.CodeHTML,
+		"file_link":             fileLink,
 		"source_link":           sourceLink,
 		"play_url":              playURLFunc,
 	}).Execute(buf, struct {
@@ -121,6 +133,17 @@ func Render(fset *token.FileSet, p *doc.Package, opt RenderOptions) (string, err
 		return "", fmt.Errorf("dochtml.Render: %v", err)
 	}
 	return buf.B.String(), nil
+}
+
+// fileLinkHTML returns an HTML-formatted file name linked to the source URL.
+// If link is the empty string, the file name is not linked.
+func fileLinkHTML(name, link string) template.HTML {
+	name = html.EscapeString(name)
+	if link == "" {
+		return template.HTML(name)
+	}
+	link = html.EscapeString(link)
+	return template.HTML(fmt.Sprintf(`<a class="Documentation-file" href="%s">%s</a>`, link, name))
 }
 
 // examples is an internal representation of all package examples.
