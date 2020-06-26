@@ -172,7 +172,7 @@ func (b *Breaker) Record(success bool) {
 }
 
 // succeeded signals that an allowed request has succeeded. The breaker state is
-// changed if necesary.
+// changed if necessary.
 func (b *Breaker) succeeded() {
 	b.buckets[b.cur].successes++
 	b.consecutiveSuccs++
