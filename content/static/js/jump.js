@@ -26,6 +26,7 @@ const jumpDialog = document.querySelector('.JumpDialog');
 const jumpBody = jumpDialog.querySelector('.JumpDialog-body');
 const jumpList = jumpDialog.querySelector('.JumpDialog-list');
 const jumpFilter = jumpDialog.querySelector('.JumpDialog-input');
+const searchInput = document.querySelector('.js-autoComplete');
 
 if (!jumpDialog.showModal) {
   dialogPolyfill.registerDialog(jumpDialog);
@@ -249,16 +250,25 @@ if (!shortcutsDialog.showModal) {
 }
 
 // Keyboard shortcuts:
+// - Pressing '/' focuses the search box
 // - Pressing 'f' or 'F' opens the jump-to-identifier dialog.
 // - Pressing '?' opens up the shortcut dialog.
 // Ignore a keypress if a dialog is already open, or if it is pressed on a
 // component that wants to consume it.
 document.addEventListener('keypress', function (e) {
-  if (jumpDialog.open || shortcutsDialog.open) return;
+  if (jumpDialog.open || shortcutsDialog.open) {
+    return;
+  }
   const t = e.target.tagName;
-  if (t == 'INPUT' || t == 'SELECT' || t == 'TEXTAREA') return;
-  if (e.target.contentEditable && e.target.contentEditable == 'true') return;
-  if (e.metaKey || e.ctrlKey) return;
+  if (t == 'INPUT' || t == 'SELECT' || t == 'TEXTAREA') {
+    return;
+  }
+  if (e.target.contentEditable && e.target.contentEditable == 'true') {
+    return;
+  }
+  if (e.metaKey || e.ctrlKey) {
+    return;
+  }
   const ch = String.fromCharCode(e.which);
   switch (ch) {
     case 'f':
@@ -270,6 +280,10 @@ document.addEventListener('keypress', function (e) {
       break;
     case '?':
       shortcutsDialog.showModal();
+      break;
+    case '/':
+      e.preventDefault();
+      searchInput.focus();
       break;
   }
 });

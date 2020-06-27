@@ -8,7 +8,7 @@
   <div class="SearchForm-container{{if (.Experiments.IsActive "autocomplete")}} Experiment-autoComplete{{end}}">
     <form class="SearchForm" action="/search" role="search" id="AutoComplete-parent" aria-owns="AutoComplete-list">
       <div class="SearchForm-firstRow">
-        <input class="SearchForm-input"
+        <input class="SearchForm-input js-autoComplete"
           id="AutoComplete"
           role="textbox"
           aria-controls="AutoComplete-list"
@@ -37,7 +37,7 @@
   <div class="Header-searchForm-container{{if (.Experiments.IsActive "autocomplete")}} Experiment-autoComplete{{end}}">
     <form class="Header-searchForm" action="/search" role="search" id="AutoComplete-parent" aria-owns="AutoComplete-list">
       <div class="SearchForm-firstRow">
-        <input class="Header-searchFormInput"
+        <input class="Header-searchFormInput js-autoComplete"
           id="AutoComplete"
           role="textbox"
           aria-controls="AutoComplete-list"
