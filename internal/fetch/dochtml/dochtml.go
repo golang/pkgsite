@@ -4,8 +4,7 @@
 
 // Package dochtml renders Go package documentation into HTML.
 //
-// This package and its API are under development (see b/137567588).
-// It currently relies on copies of external packages with active CLs applied.
+// This package and its API are under development (see golang.org/issue/39883).
 // The plan is to iterate on the development internally for x/pkgsite
 // needs first, before factoring it out somewhere non-internal where its
 // API can no longer be easily modified.

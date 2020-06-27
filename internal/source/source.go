@@ -473,7 +473,7 @@ var patterns = []struct {
 			Directory: "{repo}/+/{commit}/{dir}",
 			File:      "{repo}/+/{commit}/{file}",
 			Line:      "{repo}/+/{commit}/{file}#{line}",
-			// no raw support (b/13912564)
+			// Gitiles has no support for serving raw content at this time.
 		},
 	},
 	{

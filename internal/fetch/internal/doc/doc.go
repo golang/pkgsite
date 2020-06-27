@@ -6,8 +6,11 @@
 //
 // This is a temporary copy of go/doc from Go 1.14 standard library
 // for testing of and validation of CL 204830 (golang.org/cl/204830).
-// It doesn't need to be updated other than as part of work on
-// b/137567588. Please /cc dmitshur@ on all changes to it.
+// Go 1.14 has been released, so go/doc can be used in its place as
+// soon as Go 1.14 is used for deployment.
+//
+// This package shouldn't be modified unless it's a part of a plan to
+// make an upstream change in go/doc package in the standard library.
 package doc
 
 import (

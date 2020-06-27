@@ -27,8 +27,8 @@ var (
 )
 
 func TestModulePackageDirectoryResolution(t *testing.T) {
-	// The shared test state sets up the following scenario to exercise the types
-	// of problems discussed in b/143814014: a directory that becomes a package,
+	// The shared test state sets up the following scenario to exercise
+	// what happens when a directory becomes a package,
 	// and then becomes a directory again. Specifically:
 	//  + at v1.2.3, github.com/golang/found/dir is a directory (containing dir/pkg)
 	//  + at v1.2.4, github.com/golang/found/dir is a package

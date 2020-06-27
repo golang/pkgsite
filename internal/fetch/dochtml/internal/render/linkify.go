@@ -26,7 +26,7 @@ into formatted HTML. This relies on identifierResolver.toHTML to do the work
 of converting words into links.
 */
 
-// TODO: Support hiding deprecated declarations (https:/golang.org/issue/17056).
+// TODO(golang.org/issue/17056): Support hiding deprecated declarations.
 
 const (
 	// Regexp for URLs.

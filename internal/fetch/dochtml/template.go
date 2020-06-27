@@ -13,8 +13,8 @@ import (
 )
 
 // htmlPackage is the template used to render documentation HTML.
-// TODO: finalize URL scheme and design for notes, then factor out
-// inline CSS style.
+// TODO(golang.org/issue/5060): finalize URL scheme and design for notes,
+// then it becomes more viable to factor out inline CSS style.
 var htmlPackage = template.Must(template.New("package").Funcs(
 	map[string]interface{}{
 		"ternary": func(q, a, b interface{}) interface{} {
