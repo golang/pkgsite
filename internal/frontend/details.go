@@ -277,7 +277,7 @@ func pathNotFoundErrorNew(fullPath, version string) error {
 	return &serverError{
 		status: http.StatusNotFound,
 		epage: &errorPage{
-			templateName: "notfound.tmpl",
+			templateName: "fetch.tmpl",
 			messageTemplate: `
 				<h3 class="NotFound-message">Oops! {{.}} does not exist.</h3>
 				<p class="NotFound-message js-notFoundMessage">

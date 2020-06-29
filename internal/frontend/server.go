@@ -400,7 +400,7 @@ func parsePageTemplates(base string) (map[string]*template.Template, error) {
 	htmlSets := [][]string{
 		{"index.tmpl"},
 		{"error.tmpl"},
-		{"notfound.tmpl"},
+		{"fetch.tmpl"},
 		{"search.tmpl"},
 		{"search_help.tmpl"},
 		{"license_policy.tmpl"},
