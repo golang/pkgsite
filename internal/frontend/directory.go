@@ -63,7 +63,7 @@ func (s *Server) legacyServeDirectoryPage(ctx context.Context, w http.ResponseWr
 		Title:          fmt.Sprintf("directory %s", dbDir.Path),
 		Settings:       settings,
 		Header:         header,
-		BreadcrumbPath: breadcrumbPath(dbDir.Path, dbDir.ModulePath, linkVersion(dbDir.Version, dbDir.ModulePath)),
+		Breadcrumb:     breadcrumbPath(dbDir.Path, dbDir.ModulePath, linkVersion(dbDir.Version, dbDir.ModulePath)),
 		Details:        details,
 		CanShowDetails: true,
 		Tabs:           directoryTabSettings,

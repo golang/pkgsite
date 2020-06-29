@@ -6,7 +6,6 @@ package frontend
 
 import (
 	"fmt"
-	"html/template"
 	"path"
 	"strings"
 	"time"
@@ -228,6 +227,16 @@ func packageTitleNew(pkg *internal.PackageNew) string {
 	return "command " + effectiveNameNew(pkg)
 }
 
+type breadcrumb struct {
+	Links    []link
+	Current  string
+	CopyData string
+}
+
+type link struct {
+	Href, Body string
+}
+
 // breadcrumbPath builds HTML that displays pkgPath as a sequence of links
 // to its parents.
 // pkgPath is a slash-separated path, and may be a package import path or a directory.
@@ -236,11 +245,10 @@ func packageTitleNew(pkg *internal.PackageNew) string {
 // version is the version for the module, or LatestVersion.
 //
 // See TestBreadcrumbPath for examples.
-func breadcrumbPath(pkgPath, modPath, version string) template.HTML {
+func breadcrumbPath(pkgPath, modPath, version string) breadcrumb {
 	if pkgPath == stdlib.ModulePath {
-		return template.HTML(`<div class="DetailsHeader-breadcrumb"><span class="DetailsHeader-breadcrumbCurrent">Standard library</span></div>`)
+		return breadcrumb{Current: "Standard library"}
 	}
-
 	// Obtain successive prefixes of pkgPath, stopping at modPath,
 	// or for the stdlib, at the end.
 	minLen := len(modPath) - 1
@@ -253,15 +261,15 @@ func breadcrumbPath(pkgPath, modPath, version string) template.HTML {
 	}
 	// Construct the path elements of the result.
 	// They will be in reverse order of dirs.
-	elems := make([]string, len(dirs))
 	// The first dir is the current page. If it is the only one, leave it
 	// as is. Otherwise, use its base. In neither case does it get a link.
 	d := dirs[0]
 	if len(dirs) > 1 {
 		d = path.Base(d)
 	}
-	elems[len(elems)-1] = fmt.Sprintf(`<span class="DetailsHeader-breadcrumbCurrent">%s</span>`, template.HTMLEscapeString(d))
+	b := breadcrumb{Current: d}
 	// Make all the other parts into links.
+	b.Links = make([]link, len(dirs)-1)
 	for i := 1; i < len(dirs); i++ {
 		href := "/" + dirs[i]
 		if version != internal.LatestVersion {
@@ -271,39 +279,11 @@ func breadcrumbPath(pkgPath, modPath, version string) template.HTML {
 		if i != len(dirs)-1 {
 			el = path.Base(el)
 		}
-		elems[len(elems)-i-1] = fmt.Sprintf(`<a href="%s">%s</a>`, template.HTMLEscapeString(href), template.HTMLEscapeString(el))
+		b.Links[len(b.Links)-i] = link{href, el}
 	}
-	// Include the path as a breadcrumb.
-	// We also add a "copy" button for the path.
-	//
-	// We need the 'DetailsHeader-pathInput' input element to copy it to the clipboard.
-	// - Its value attribute is delimited with single quotes because the value
-	//   contains double quotes.
-	// - Setting its type="hidden" doesn't work, so we position it off screen.
-	//
-	// Inline the svg for the "copy" icon because when it was in a separate file
-	// referenced by an img tag, it was loaded asynchronously and the page
-	// jerked when it was finally loaded and its height was known.
-	f := `<div class="DetailsHeader-breadcrumb">
-%s
-<button class="ImageButton js-detailsHeaderCopyPath" aria-label="Copy path to clipboard">
-  <svg fill="#00add8" width="13px" height="15px" viewBox="0 0 13 15" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 58 (84663) - https://sketch.com -->
-    <title>Copy path to clipboard</title>
-    <desc>Created with Sketch.</desc>
-    <g id="Symbols" stroke="none" stroke-width="1" fill-rule="evenodd">
-        <g id="go/header-package" transform="translate(-359.000000, -12.000000)">
-            <path d="M367,12 L361,12 C359.896,12 359,12.896 359,14 L359,22 C359,23.104 359.896,24 361,24 L361,22 L361,14 L367,14 L369,14 C369,12.896 368.104,12 367,12 L367,12 Z M370,15 L364,15 C362.896,15 362,15.896 362,17 L362,25 C362,26.104 362.896,27 364,27 L370,27 C371.104,27 372,26.104 372,25 L372,17 C372,15.896 371.104,15 370,15 L370,15 Z M364,25 L370,25 L370,17 L364,17 L364,25 Z" id="ic_copy"></path>
-        </g>
-    </g>
-  </svg>
-</button>
-<input class="DetailsHeader-pathInput js-detailsHeaderPathInput" role="presentation" tabindex="-1" value='%s'>
-</div>`
-
-	return template.HTML(fmt.Sprintf(f,
-		strings.Join(elems, `<span class="DetailsHeader-breadcrumbDivider">/</span>`),
-		template.HTMLEscapeString(pkgPath)))
+	// Add a "copy" button for the path.
+	b.CopyData = pkgPath
+	return b
 }
 
 // moduleHTMLTitle constructs the <title> contents, for tabs in the browser.

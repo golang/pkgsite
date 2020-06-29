@@ -7,7 +7,6 @@ package frontend
 import (
 	"context"
 	"fmt"
-	"html/template"
 	"net/http"
 	"strings"
 
@@ -29,7 +28,7 @@ type DetailsPage struct {
 	Settings       TabSettings
 	Details        interface{}
 	Header         interface{}
-	BreadcrumbPath template.HTML
+	Breadcrumb     breadcrumb
 	Tabs           []TabSettings
 
 	// PageType is either "mod", "dir", or "pkg" depending on the details

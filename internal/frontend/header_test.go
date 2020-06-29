@@ -6,15 +6,12 @@ package frontend
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/net/html"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/middleware"
-	"golang.org/x/pkgsite/internal/testing/htmlcheck"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
@@ -150,77 +147,81 @@ func TestCreatePackageHeader(t *testing.T) {
 }
 
 func TestBreadcrumbPath(t *testing.T) {
-	var (
-		in    = htmlcheck.In
-		notIn = htmlcheck.NotIn
-		text  = htmlcheck.HasText
-		attr  = htmlcheck.HasAttr
-		href  = func(val string) htmlcheck.Checker { return htmlcheck.HasAttr("href", val) }
-	)
 	for _, test := range []struct {
 		pkgPath, modPath, version string
-		want                      htmlcheck.Checker
+		want                      breadcrumb
 	}{
 		{
 			"example.com/blob/s3blob", "example.com", internal.LatestVersion,
-			in("",
-				in("a:nth-of-type(1)", href("/example.com"), text("example.com")),
-				in("a:nth-of-type(2)", href("/example.com/blob"), text("blob")),
-				in("span.DetailsHeader-breadcrumbCurrent", text("s3blob"))),
+			breadcrumb{
+				Current: "s3blob",
+				Links: []link{
+					{"/example.com", "example.com"},
+					{"/example.com/blob", "blob"},
+				},
+				CopyData: "example.com/blob/s3blob",
+			},
 		},
 		{
 			"example.com", "example.com", internal.LatestVersion,
-			in("",
-				notIn("a"),
-				in("span.DetailsHeader-breadcrumbCurrent", text("example.com"))),
+			breadcrumb{
+				Current:  "example.com",
+				Links:    []link{},
+				CopyData: "example.com",
+			},
 		},
-
 		{
 			"g/x/tools/go/a", "g/x/tools", internal.LatestVersion,
-			in("",
-				in("a:nth-of-type(1)", href("/g/x/tools"), text("g/x/tools")),
-				in("a:nth-of-type(2)", href("/g/x/tools/go"), text("go")),
-				in("span.DetailsHeader-breadcrumbCurrent", text("a"))),
+			breadcrumb{
+				Current: "a",
+				Links: []link{
+					{"/g/x/tools", "g/x/tools"},
+					{"/g/x/tools/go", "go"},
+				},
+				CopyData: "g/x/tools/go/a",
+			},
 		},
 		{
 			"golang.org/x/tools", "golang.org/x/tools", internal.LatestVersion,
-			in("",
-				notIn("a"),
-				in("span.DetailsHeader-breadcrumbCurrent", text("golang.org/x/tools"))),
+			breadcrumb{
+				Current:  "golang.org/x/tools",
+				Links:    []link{},
+				CopyData: "golang.org/x/tools",
+			},
 		},
 		{
-			// Special case: stdlib.
+			// Special case: stdlib package.
 			"encoding/json", "std", internal.LatestVersion,
-			in("",
-				in("a", href("/encoding"), text("encoding")),
-				in("span.DetailsHeader-breadcrumbCurrent", text("json"))),
+			breadcrumb{
+				Current:  "json",
+				Links:    []link{{"/encoding", "encoding"}},
+				CopyData: "encoding/json",
+			},
+		},
+		{
+			// Special case: stdlib module.
+			"std", "std", internal.LatestVersion,
+			breadcrumb{
+				Current: "Standard library",
+				Links:   nil,
+			},
 		},
 		{
 			"example.com/blob/s3blob", "example.com", "v1",
-			in("",
-				in("a:nth-of-type(1)", href("/example.com@v1"), text("example.com")),
-				in("a:nth-of-type(2)", href("/example.com/blob@v1"), text("blob")),
-				in("span.DetailsHeader-breadcrumbCurrent", text("s3blob"))),
+			breadcrumb{
+				Current: "s3blob",
+				Links: []link{
+					{"/example.com@v1", "example.com"},
+					{"/example.com/blob@v1", "blob"},
+				},
+				CopyData: "example.com/blob/s3blob",
+			},
 		},
 	} {
 		t.Run(fmt.Sprintf("%s-%s-%s", test.pkgPath, test.modPath, test.version), func(t *testing.T) {
-			want := in("div.DetailsHeader-breadcrumb",
-				test.want,
-				in("button.js-detailsHeaderCopyPath",
-					attr("aria-label", "Copy path to clipboard"),
-					in("svg > title", text("Copy path to clipboard"))),
-				in("input.DetailsHeader-pathInput",
-					attr("role", "presentation"),
-					attr("tabindex", "-1"),
-					attr("value", test.pkgPath)))
-
 			got := breadcrumbPath(test.pkgPath, test.modPath, test.version)
-			doc, err := html.Parse(strings.NewReader(string(got)))
-			if err != nil {
-				t.Fatal(err)
-			}
-			if err := want(doc); err != nil {
-				t.Error(err)
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("mismatch (-want, +got):\n%s", diff)
 			}
 		})
 	}

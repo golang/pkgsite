@@ -76,7 +76,12 @@ func ModuleHeader(p *Page, versionedURL bool) htmlcheck.Checker {
 	if fv == "" {
 		fv = p.Version
 	}
+	curBreadcrumb := p.ModulePath
+	if p.ModulePath == stdlib.ModulePath {
+		curBreadcrumb = "Standard library"
+	}
 	return in("",
+		in("span.DetailsHeader-breadcrumbCurrent", exactText(curBreadcrumb)),
 		in("h1.DetailsHeader-title", exactText(p.Title)),
 		in("div.DetailsHeader-version", exactText(fv)),
 		versionBadge(p),

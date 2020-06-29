@@ -75,7 +75,7 @@ func (s *Server) legacyServeModulePageWithModule(ctx context.Context, w http.Res
 		Title:          moduleTitle(mi.ModulePath),
 		Settings:       settings,
 		Header:         modHeader,
-		BreadcrumbPath: breadcrumbPath(modHeader.ModulePath, modHeader.ModulePath, modHeader.LinkVersion),
+		Breadcrumb:     breadcrumbPath(modHeader.ModulePath, modHeader.ModulePath, modHeader.LinkVersion),
 		Details:        details,
 		CanShowDetails: canShowDetails,
 		Tabs:           moduleTabSettings,
