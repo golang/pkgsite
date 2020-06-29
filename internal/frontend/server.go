@@ -113,6 +113,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		http.ServeContent(w, r, "", time.Time{}, strings.NewReader(`User-agent: *
 Disallow: /search?*
+Disallow: /fetch/*
 `))
 	}))
 }
