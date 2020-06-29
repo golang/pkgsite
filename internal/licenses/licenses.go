@@ -284,11 +284,11 @@ func (d *Detector) PackageInfo(dir string) (isRedistributable bool, lics []*Lice
 			lics = append(lics, plics...)
 		}
 	}
-	// A package is redistributable if its module is, and if other licenses on the path
-	// to the root are redistributable.
-	// Note that this is not the same as asking if the module licenses plus the
-	// package licenses are redistributable. A module that is granted an
-	// exception (see Detector.isException) may licenses that are non-redistributable.
+	// A package is redistributable if its module is, and if other licenses on
+	// the path to the root are redistributable. Note that this is not the same
+	// as asking if the module licenses plus the package licenses are
+	// redistributable. A module that is granted an exception (see DetectFiles)
+	// may have licenses that are non-redistributable.
 	ltypes := types(lics)
 	isRedistributable = d.ModuleIsRedistributable() && (len(ltypes) == 0 || Redistributable(ltypes))
 	// A package's licenses include the ones we've already computed, as well
@@ -389,7 +389,7 @@ func isVendoredFile(name string) bool {
 	return strings.Contains(name[vendorOffset:], "/")
 }
 
-// detectFiles runs detectFile on each of the given files.
+// detectFiles runs DetectFile on each of the given files.
 // If a file cannot be read, the error is logged and a license
 // of type unknown is added.
 func (d *Detector) detectFiles(files []*zip.File) []*License {
