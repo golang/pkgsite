@@ -174,7 +174,7 @@ func licenseInfo(p *Page, urlPath string) htmlcheck.Checker {
 		return in("[data-test-id=DetailsHeader-infoLabelLicense]", text("None detected"))
 	}
 	return in("[data-test-id=DetailsHeader-infoLabelLicense] a",
-		href(fmt.Sprintf("%s?tab=licenses#%s", urlPath, p.LicenseFilePath)),
+		href(fmt.Sprintf("%s?tab=licenses#lic-0", urlPath)),
 		exactText(p.LicenseType))
 }
 

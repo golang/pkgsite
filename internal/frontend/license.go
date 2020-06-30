@@ -6,10 +6,10 @@ package frontend
 
 import (
 	"context"
-	"net/url"
+	"sort"
+	"strconv"
 
 	"github.com/google/safehtml"
-	"github.com/google/safehtml/legacyconversions"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/licenses"
 )
@@ -47,9 +47,14 @@ func fetchPackageLicensesDetails(ctx context.Context, ds internal.DataSource, pk
 // by adding an anchor field.
 func transformLicenses(modulePath, requestedVersion string, dbLicenses []*licenses.License) []License {
 	licenses := make([]License, len(dbLicenses))
+	var filePaths []string
+	for _, l := range dbLicenses {
+		filePaths = append(filePaths, l.FilePath)
+	}
+	anchors := licenseAnchors(filePaths)
 	for i, l := range dbLicenses {
 		licenses[i] = License{
-			Anchor:  licenseAnchor(l.FilePath),
+			Anchor:  anchors[i],
 			License: l,
 			Source:  fileSource(modulePath, requestedVersion, l.FilePath),
 		}
@@ -61,8 +66,13 @@ func transformLicenses(modulePath, requestedVersion string, dbLicenses []*licens
 // by adding an anchor field.
 func transformLicenseMetadata(dbLicenses []*licenses.Metadata) []LicenseMetadata {
 	var mds []LicenseMetadata
+	var filePaths []string
 	for _, l := range dbLicenses {
-		anchor := licenseAnchor(l.FilePath)
+		filePaths = append(filePaths, l.FilePath)
+	}
+	anchors := licenseAnchors(filePaths)
+	for i, l := range dbLicenses {
+		anchor := anchors[i]
 		for _, typ := range l.Types {
 			mds = append(mds, LicenseMetadata{
 				Type:   typ,
@@ -73,10 +83,23 @@ func transformLicenseMetadata(dbLicenses []*licenses.Metadata) []LicenseMetadata
 	return mds
 }
 
-// licenseAnchor returns the anchor that should be used to jump to the specific
-// license on the licenses page.
-func licenseAnchor(filePath string) safehtml.Identifier {
-	return legacyconversions.RiskilyAssumeIdentifier(url.QueryEscape(filePath))
+// licenseAnchors returns anchors (HTML identifiers) for all the paths, in the
+// same order. If the paths are unique, it ensures that the resulting anchors
+// are unique. The argument is modified.
+func licenseAnchors(paths []string) []safehtml.Identifier {
+	// Remember the original index of each path.
+	index := map[string]int{}
+	for i, p := range paths {
+		index[p] = i
+	}
+	// Pick a canonical order for the paths, so we assign the same anchors
+	// the same set of paths regardless of the order they're given to use.
+	sort.Strings(paths)
+	ids := make([]safehtml.Identifier, len(paths))
+	for i, p := range paths {
+		ids[index[p]] = safehtml.IdentifierFromConstantPrefix("lic", strconv.Itoa(i))
+	}
+	return ids
 }
 
 // licensesToMetadatas converts a slice of Licenses to a slice of Metadatas.
