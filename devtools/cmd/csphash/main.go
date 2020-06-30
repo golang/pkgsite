@@ -55,6 +55,12 @@ func main() {
 				fmt.Printf("%s: has script with src attribute: %s\n", file, s.tag)
 				ok = false
 			}
+			if bytes.Contains(s.body, []byte("{{")) {
+				fmt.Printf("%s: has script with template expansion:\n%s\n", file, s.body)
+				fmt.Printf("Scripts must be static so they have a constant hash.\n")
+				ok = false
+				continue
+			}
 			hash := cspHash(s.body)
 			if !cspHashMap[hash] {
 				fmt.Printf("missing hash: add the lines below to %s:\n", *hashFile)
