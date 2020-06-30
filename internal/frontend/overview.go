@@ -8,14 +8,15 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"net/url"
 	"path"
 	"path/filepath"
 	"strings"
 
 	"github.com/google/safehtml"
-	"github.com/google/safehtml/legacyconversions"
 	"github.com/google/safehtml/template"
+	"github.com/google/safehtml/uncheckedconversions"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
 	"golang.org/x/net/html"
@@ -133,19 +134,6 @@ func readmeHTML(ctx context.Context, mi *internal.ModuleInfo, readme *internal.R
 		return h, nil
 	}
 
-	// bluemonday.UGCPolicy allows a broad selection of HTML elements and
-	// attributes that are safe for user generated content. This policy does
-	// not allow iframes, object, embed, styles, script, etc.
-	p := bluemonday.UGCPolicy()
-
-	// Allow width and align attributes on img, div, and p tags.
-	// This is used to center elements in a readme as well as to size it
-	// images appropriately where used, like the gin-gonic/logo/color.png
-	// image in the github.com/gin-gonic/gin README.
-	p.AllowAttrs("width", "align").OnElements("img")
-	p.AllowAttrs("width", "align").OnElements("div")
-	p.AllowAttrs("width", "align").OnElements("p")
-
 	// blackfriday.Run() uses CommonHTMLFlags and CommonExtensions by default.
 	renderer := blackfriday.NewHTMLRenderer(blackfriday.HTMLRendererParameters{Flags: blackfriday.CommonHTMLFlags})
 	parser := blackfriday.New(blackfriday.WithExtensions(blackfriday.CommonExtensions | blackfriday.AutoHeadingIDs))
@@ -177,7 +165,26 @@ func readmeHTML(ctx context.Context, mi *internal.ModuleInfo, readme *internal.R
 	if walkErr != nil {
 		return safehtml.HTML{}, walkErr
 	}
-	return legacyconversions.RiskilyAssumeHTML(p.SanitizeReader(b).String()), nil
+	return sanitizeHTML(b), nil
+}
+
+// sanitizeHTML reads HTML from r and sanitizes it to ensure it is safe.
+func sanitizeHTML(r io.Reader) safehtml.HTML {
+	// bluemonday.UGCPolicy allows a broad selection of HTML elements and
+	// attributes that are safe for user generated content. This policy does
+	// not allow iframes, object, embed, styles, script, etc.
+	p := bluemonday.UGCPolicy()
+
+	// Allow width and align attributes on img, div, and p tags.
+	// This is used to center elements in a readme as well as to size it
+	// images appropriately where used, like the gin-gonic/logo/color.png
+	// image in the github.com/gin-gonic/gin README.
+	p.AllowAttrs("width", "align").OnElements("img")
+	p.AllowAttrs("width", "align").OnElements("div")
+	p.AllowAttrs("width", "align").OnElements("p")
+	s := p.SanitizeReader(r).String()
+	// Trust that bluemonday properly sanitizes the HTML.
+	return uncheckedconversions.HTMLFromStringKnownToSatisfyTypeContract(s)
 }
 
 // isMarkdown reports whether filename says that the file contains markdown.
