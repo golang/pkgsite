@@ -29,12 +29,13 @@ func TestGetPathInfo(t *testing.T) {
 
 	for _, testModule := range []struct {
 		module, version, packageSuffix string
+		isMaster                       bool
 	}{
-		{"m.com", "v1.0.0", "a"},
-		{"m.com", "v1.0.1", "dir/a"},
-		{"m.com", "v1.1.0", "a/b"},
-		{"m.com", "v1.2.0-pre", "a"},
-		{"m.com/a", "v1.1.0", "b"},
+		{"m.com", "v1.0.0", "a", false},
+		{"m.com", "v1.0.1", "dir/a", false},
+		{"m.com", "v1.1.0", "a/b", false},
+		{"m.com", "v1.2.0-pre", "a", true},
+		{"m.com/a", "v1.1.0", "b", false},
 	} {
 		vtype, err := version.ParseType(testModule.version)
 		if err != nil {
@@ -73,6 +74,17 @@ func TestGetPathInfo(t *testing.T) {
 			sample.AddDirectory(m, dir)
 		}
 		if err := testDB.InsertModule(ctx, m); err != nil {
+			t.Fatal(err)
+		}
+		requested := m.Version
+		if testModule.isMaster {
+			requested = internal.MasterVersion
+		}
+		if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
+			ModulePath:       m.ModulePath,
+			RequestedVersion: requested,
+			ResolvedVersion:  m.Version,
+		}); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -141,6 +153,22 @@ func TestGetPathInfo(t *testing.T) {
 			wantModule:    "m.com",
 			wantVersion:   "v1.0.1",
 			wantIsPackage: false, //  m/dir is a directory
+		},
+		{
+			name:          "module at master version",
+			path:          "m.com",
+			version:       "master",
+			wantModule:    "m.com",
+			wantVersion:   "v1.2.0-pre",
+			wantIsPackage: false,
+		},
+		{
+			name:          "package at master version",
+			path:          "m.com/a",
+			version:       "master",
+			wantModule:    "m.com",
+			wantVersion:   "v1.2.0-pre",
+			wantIsPackage: true,
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {

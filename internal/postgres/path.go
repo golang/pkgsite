@@ -28,13 +28,21 @@ import (
 func (db *DB) GetPathInfo(ctx context.Context, path, inModulePath, inVersion string) (outModulePath, outVersion string, isPackage bool, err error) {
 	defer derrors.Wrap(&err, "DB.GetPathInfo(ctx, %q, %q, %q)", path, inModulePath, inVersion)
 
-	var constraints []string
+	var (
+		constraints []string
+		joinStmt    string
+	)
 	args := []interface{}{path}
 	if inModulePath != internal.UnknownModulePath {
 		constraints = append(constraints, fmt.Sprintf("AND m.module_path = $%d", len(args)+1))
 		args = append(args, inModulePath)
 	}
-	if inVersion != internal.LatestVersion {
+	switch inVersion {
+	case internal.LatestVersion:
+	case internal.MasterVersion:
+		joinStmt = "INNER JOIN version_map vm ON (vm.module_id = m.id)"
+		constraints = append(constraints, "AND vm.requested_version = 'master'")
+	default:
 		constraints = append(constraints, fmt.Sprintf("AND m.version = $%d", len(args)+1))
 		args = append(args, inVersion)
 	}
@@ -42,6 +50,7 @@ func (db *DB) GetPathInfo(ctx context.Context, path, inModulePath, inVersion str
 		SELECT m.module_path, m.version, p.name != ''
 		FROM paths p
 		INNER JOIN modules m ON (p.module_id = m.id)
+		%s
 		WHERE p.path = $1
 		%s
 		ORDER BY
@@ -49,7 +58,7 @@ func (db *DB) GetPathInfo(ctx context.Context, path, inModulePath, inVersion str
 			m.sort_version DESC,
 			m.module_path DESC
 		LIMIT 1
-	`, strings.Join(constraints, " "))
+	`, joinStmt, strings.Join(constraints, " "))
 	err = db.db.QueryRow(ctx, query, args...).Scan(&outModulePath, &outVersion, &isPackage)
 	switch err {
 	case sql.ErrNoRows:
