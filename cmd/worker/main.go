@@ -128,7 +128,7 @@ func main() {
 	}
 	requestLogger := logger(ctx, cfg)
 
-	experimenter, err := middleware.NewExperimenter(ctx, 1*time.Minute, db, requestLogger)
+	experimenter, err := middleware.NewExperimenter(ctx, 1*time.Minute, db)
 	if err != nil {
 		log.Fatal(ctx, err)
 	}

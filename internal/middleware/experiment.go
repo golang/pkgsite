@@ -24,7 +24,6 @@ const experimentQueryParamKey = "experiment"
 // experiment source.
 type Experimenter struct {
 	es        internal.ExperimentSource
-	logger    Logger
 	pollEvery time.Duration
 	mu        sync.Mutex
 	snapshot  []*internal.Experiment
@@ -32,11 +31,10 @@ type Experimenter struct {
 
 // NewExperimenter returns an Experimenter for use in the middleware. The
 // experimenter regularly polls for updates to the snapshot in the background.
-func NewExperimenter(ctx context.Context, pollEvery time.Duration, es internal.ExperimentSource, lg Logger) (_ *Experimenter, err error) {
+func NewExperimenter(ctx context.Context, pollEvery time.Duration, es internal.ExperimentSource) (_ *Experimenter, err error) {
 	defer derrors.Wrap(&err, "middleware.NewExperimenter")
 	e := &Experimenter{
 		es:        es,
-		logger:    lg,
 		pollEvery: pollEvery,
 	}
 	if err := e.loadNextSnapshot(ctx); err != nil {
