@@ -8,6 +8,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/google/safehtml"
 	"golang.org/x/mod/module"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
@@ -145,7 +146,7 @@ type Documentation struct {
 	GOOS     string
 	GOARCH   string
 	Synopsis string
-	HTML     string
+	HTML     safehtml.HTML
 }
 
 // Readme is a README at a given directory.
@@ -289,7 +290,7 @@ type LegacyPackage struct {
 	IsRedistributable bool
 	Licenses          []*licenses.Metadata // metadata of applicable licenses
 	Imports           []string
-	DocumentationHTML string
+	DocumentationHTML safehtml.HTML
 	// The values of the GOOS and GOARCH environment variables used to parse the
 	// package.
 	GOOS   string

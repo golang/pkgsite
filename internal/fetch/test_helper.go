@@ -151,7 +151,7 @@ func validateDocumentationHTML(t *testing.T, got, want *internal.Module) {
 	for i := 0; i < len(want.LegacyPackages); i++ {
 		wantHTML := want.LegacyPackages[i].DocumentationHTML
 		gotHTML := got.LegacyPackages[i].DocumentationHTML
-		if len(wantHTML) != 0 && !strings.Contains(gotHTML, wantHTML) {
+		if len(wantHTML.String()) != 0 && !strings.Contains(gotHTML.String(), wantHTML.String()) {
 			t.Errorf("documentation for got.Module.LegacyPackages[%d].DocumentationHTML does not contain wanted documentation substring:\n want (substring): %q\n got: %q\n", i, wantHTML, gotHTML)
 		}
 	}
@@ -161,7 +161,7 @@ func validateDocumentationHTML(t *testing.T, got, want *internal.Module) {
 		}
 		wantHTML := want.Directories[i].Package.Documentation.HTML
 		gotHTML := got.Directories[i].Package.Documentation.HTML
-		if len(wantHTML) != 0 && !strings.Contains(gotHTML, wantHTML) {
+		if len(wantHTML.String()) != 0 && !strings.Contains(gotHTML.String(), wantHTML.String()) {
 			t.Errorf("documentation for got.Module.Directories[%d].DocumentationHTML does not contain wanted documentation substring:\n want (substring): %q\n got: %q\n", i, wantHTML, gotHTML)
 		}
 	}

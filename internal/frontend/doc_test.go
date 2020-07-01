@@ -42,37 +42,3 @@ func TestFileSource(t *testing.T) {
 		})
 	}
 }
-
-func TestHackUpDocumentation(t *testing.T) {
-	tests := []struct {
-		body string
-		want string
-	}{
-		{"nothing burger", "nothing burger"},
-		{`<a href="/pkg/foo">foo</a>`, `<a href="/foo?tab=doc">foo</a>`},
-		{`<a href="/pkg/foo"`, `<a href="/pkg/foo"`},
-		{
-			`<a href="/pkg/foo"><a href="/pkg/bar">bar</a></a>`,
-			`<a href="/foo?tab=doc"><a href="/pkg/bar">bar</a></a>`,
-		},
-		{
-			`<a href="/pkg/foo">foo</a>
-		   <a href="/pkg/bar">bar</a>`,
-			`<a href="/foo?tab=doc">foo</a>
-		   <a href="/bar?tab=doc">bar</a>`,
-		},
-		{`<ahref="/pkg/foo">foo</a>`, `<ahref="/pkg/foo">foo</a>`},
-		{`<allhref="/pkg/foo">foo</a>`, `<allhref="/pkg/foo">foo</a>`},
-		{`<a nothref="/pkg/foo">foo</a>`, `<a nothref="/pkg/foo">foo</a>`},
-		{`<a href="/pkg/foo#identifier">foo</a>`, `<a href="/foo?tab=doc#identifier">foo</a>`},
-		{`<a href="#identifier">foo</a>`, `<a href="#identifier">foo</a>`},
-		{`<span id="Indirect.Type"></span>func (in <a href="#Indirect">Indirect</a>) Type() <a href="/pkg/reflect">reflect</a>.<a href="/pkg/reflect#Type">Type</a>`,
-			`<span id="Indirect.Type"></span>func (in <a href="#Indirect">Indirect</a>) Type() <a href="/reflect?tab=doc">reflect</a>.<a href="/reflect?tab=doc#Type">Type</a>`},
-	}
-
-	for _, test := range tests {
-		if got := hackUpDocumentation(test.body); got != test.want {
-			t.Errorf("hackUpDocumentation(%s) = %s, want %s", test.body, got, test.want)
-		}
-	}
-}

@@ -54,6 +54,7 @@ func (db *DB) GetDirectoryNew(ctx context.Context, path, modulePath, version str
 		mi                         internal.ModuleInfo
 		dir                        internal.DirectoryNew
 		doc                        internal.Documentation
+		docHTML                    string
 		pkg                        internal.PackageNew
 		licenseTypes, licensePaths []string
 		pathID                     int
@@ -77,7 +78,7 @@ func (db *DB) GetDirectoryNew(ctx context.Context, path, modulePath, version str
 		database.NullIsEmpty(&doc.GOOS),
 		database.NullIsEmpty(&doc.GOARCH),
 		database.NullIsEmpty(&doc.Synopsis),
-		database.NullIsEmpty(&doc.HTML),
+		database.NullIsEmpty(&docHTML),
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("directory %s@%s: %w", path, version, derrors.NotFound)
@@ -93,6 +94,7 @@ func (db *DB) GetDirectoryNew(ctx context.Context, path, modulePath, version str
 	if pkg.Name != "" {
 		dir.Package = &pkg
 		pkg.Path = dir.Path
+		doc.HTML = convertDocumentation(docHTML)
 		pkg.Documentation = &doc
 		collect := func(rows *sql.Rows) error {
 			var path string
@@ -196,9 +198,10 @@ func (db *DB) LegacyGetDirectory(ctx context.Context, dirPath, modulePath, versi
 	)
 	collect := func(rows *sql.Rows) error {
 		var (
-			pkg          = internal.LegacyPackage{DocumentationHTML: internal.StringFieldMissing}
+			pkg          internal.LegacyPackage
 			licenseTypes []string
 			licensePaths []string
+			docHTML      string = internal.StringFieldMissing
 		)
 		scanArgs := []interface{}{
 			&pkg.Path,
@@ -207,7 +210,7 @@ func (db *DB) LegacyGetDirectory(ctx context.Context, dirPath, modulePath, versi
 			&pkg.V1Path,
 		}
 		if fields&internal.WithDocumentationHTML != 0 {
-			scanArgs = append(scanArgs, database.NullIsEmpty(&pkg.DocumentationHTML))
+			scanArgs = append(scanArgs, database.NullIsEmpty(&docHTML))
 		}
 		scanArgs = append(scanArgs,
 			pq.Array(&licenseTypes),
@@ -235,6 +238,7 @@ func (db *DB) LegacyGetDirectory(ctx context.Context, dirPath, modulePath, versi
 			return err
 		}
 		pkg.Licenses = lics
+		pkg.DocumentationHTML = convertDocumentation(docHTML)
 		packages = append(packages, &pkg)
 		return nil
 	}

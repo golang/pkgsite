@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/proxy"
@@ -68,6 +69,8 @@ var moduleOnePackage = &testModule{
 		},
 	},
 }
+
+var html = template.MustParseAndExecuteToHTML
 
 var moduleMultiPackage = &testModule{
 	mod: &proxy.TestModule{
@@ -138,7 +141,7 @@ var moduleMultiPackage = &testModule{
 						Name: "bar",
 						Documentation: &internal.Documentation{
 							Synopsis: "package bar",
-							HTML:     "Bar returns the string &#34;bar&#34;.",
+							HTML:     html("Bar returns the string &#34;bar&#34;."),
 						},
 					},
 				},
@@ -151,7 +154,7 @@ var moduleMultiPackage = &testModule{
 						Name: "foo",
 						Documentation: &internal.Documentation{
 							Synopsis: "package foo",
-							HTML:     "FooBar returns the string &#34;foo bar&#34;.",
+							HTML:     html("FooBar returns the string &#34;foo bar&#34;."),
 						},
 						Imports: []string{"fmt", "github.com/my/module/bar"},
 					},
@@ -199,7 +202,7 @@ var moduleNoGoMod = &testModule{
 						Name: "p",
 						Documentation: &internal.Documentation{
 							Synopsis: "Package p is inside a module where a go.mod file hasn't been explicitly added yet.",
-							HTML:     "const Year = 2009",
+							HTML:     html("const Year = 2009"),
 						},
 					},
 				},
@@ -266,7 +269,7 @@ var moduleBadPackages = &testModule{
 						Name: "good",
 						Documentation: &internal.Documentation{
 							Synopsis: "Package good is inside a module that has bad packages.",
-							HTML:     `const Good = <a href="/pkg/builtin#true">true</a>`,
+							HTML:     html(`const Good = <a href="/pkg/builtin#true">true</a>`),
 						},
 					},
 				},
@@ -335,7 +338,7 @@ var moduleBuildConstraints = &testModule{
 						Name: "cpu",
 						Documentation: &internal.Documentation{
 							Synopsis: "Package cpu implements processor feature detection used by the Go standard library.",
-							HTML:     "const CacheLinePadSize = 3",
+							HTML:     html("const CacheLinePadSize = 3"),
 						},
 					},
 				},
@@ -432,7 +435,7 @@ var moduleNonRedist = &testModule{
 						Name: "bar",
 						Documentation: &internal.Documentation{
 							Synopsis: "package bar",
-							HTML:     "Bar returns the string",
+							HTML:     html("Bar returns the string"),
 						},
 					},
 				},
@@ -445,7 +448,7 @@ var moduleNonRedist = &testModule{
 						Name: "baz",
 						Documentation: &internal.Documentation{
 							Synopsis: "package baz",
-							HTML:     "Baz returns the string",
+							HTML:     html("Baz returns the string"),
 						},
 					},
 				},
@@ -462,7 +465,7 @@ var moduleNonRedist = &testModule{
 						Name: "foo",
 						Documentation: &internal.Documentation{
 							Synopsis: "package foo",
-							HTML:     "FooBar returns the string",
+							HTML:     html("FooBar returns the string"),
 						},
 						Imports: []string{"fmt", "github.com/my/module/bar"},
 					},
@@ -580,7 +583,7 @@ var moduleDocTest = &testModule{
 						Name: "permalink",
 						Documentation: &internal.Documentation{
 							Synopsis: "Package permalink is for testing the heading permalink documentation rendering feature.",
-							HTML:     "<h3 id=\"hdr-This_is_a_heading\">This is a heading <a href=\"#hdr-This_is_a_heading\">¶</a></h3>",
+							HTML:     html("<h3 id=\"hdr-This_is_a_heading\">This is a heading <a href=\"#hdr-This_is_a_heading\">¶</a></h3>"),
 						},
 					},
 				},
@@ -619,7 +622,7 @@ var moduleDocTooLarge = &testModule{
 						Name: "bigdoc",
 						Documentation: &internal.Documentation{
 							Synopsis: "This documentation is big.",
-							HTML:     docTooLargeReplacement,
+							HTML:     html(docTooLargeReplacement),
 						},
 					},
 				},
@@ -905,7 +908,7 @@ package example_test
 							Name: "example",
 							Documentation: &internal.Documentation{
 								Synopsis: "Package example contains examples.",
-								HTML:     testPlaygroundID,
+								HTML:     html(testPlaygroundID),
 							},
 						},
 					},

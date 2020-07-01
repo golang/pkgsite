@@ -17,6 +17,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/licensecheck"
+	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
@@ -43,7 +44,7 @@ var (
 	Licenses = []*licenses.License{
 		{Metadata: LicenseMetadata[0], Contents: []byte(`Lorem Ipsum`)},
 	}
-	DocumentationHTML = "This is the documentation HTML"
+	DocumentationHTML = template.MustParseAndExecuteToHTML("This is the documentation HTML")
 	PackageName       = "foo"
 	Suffix            = "foo"
 	PackagePath       = path.Join(ModulePath, Suffix)

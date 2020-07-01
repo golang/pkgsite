@@ -134,11 +134,12 @@ func (db *DB) LegacyGetPackage(ctx context.Context, pkgPath, modulePath, version
 	var (
 		pkg                        internal.LegacyVersionedPackage
 		licenseTypes, licensePaths []string
+		docHTML                    string
 	)
 	row := db.db.QueryRow(ctx, query, args...)
 	err = row.Scan(&pkg.Path, &pkg.Name, &pkg.Synopsis,
 		&pkg.V1Path, pq.Array(&licenseTypes), pq.Array(&licensePaths), &pkg.LegacyPackage.IsRedistributable,
-		database.NullIsEmpty(&pkg.DocumentationHTML), &pkg.GOOS, &pkg.GOARCH, &pkg.Version,
+		database.NullIsEmpty(&docHTML), &pkg.GOOS, &pkg.GOARCH, &pkg.Version,
 		&pkg.CommitTime, database.NullIsEmpty(&pkg.LegacyReadmeFilePath), database.NullIsEmpty(&pkg.LegacyReadmeContents),
 		&pkg.ModulePath, &pkg.VersionType, jsonbScanner{&pkg.SourceInfo}, &pkg.LegacyModuleInfo.IsRedistributable,
 		&pkg.HasGoMod)
@@ -153,5 +154,6 @@ func (db *DB) LegacyGetPackage(ctx context.Context, pkgPath, modulePath, version
 		return nil, err
 	}
 	pkg.Licenses = lics
+	pkg.DocumentationHTML = convertDocumentation(docHTML)
 	return &pkg, nil
 }

@@ -12,6 +12,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
@@ -270,7 +271,7 @@ func TestLegacyGetDirectory(t *testing.T) {
 			}
 			opts := []cmp.Option{
 				cmpopts.EquateEmpty(),
-				cmp.AllowUnexported(source.Info{}),
+				cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
 				// The packages table only includes partial license information; it omits the Coverage field.
 				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 			}
@@ -429,7 +430,7 @@ func TestGetDirectoryNew(t *testing.T) {
 				t.Fatal(err)
 			}
 			opts := []cmp.Option{
-				cmp.AllowUnexported(source.Info{}),
+				cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
 				// The packages table only includes partial license information; it omits the Coverage field.
 				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 			}
@@ -471,7 +472,7 @@ func TestLegacyGetDirectoryFieldSet(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if g, w := got.Packages[0].DocumentationHTML, internal.StringFieldMissing; g != w {
+	if g, w := got.Packages[0].DocumentationHTML.String(), internal.StringFieldMissing; g != w {
 		t.Errorf("DocumentationHTML = %q, want %q", g, w)
 	}
 }

@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/licenses"
@@ -51,7 +52,7 @@ func TestLegacyGetPackage(t *testing.T) {
 		want.Imports = nil
 		opts := cmp.Options{
 			cmpopts.EquateEmpty(),
-			cmp.AllowUnexported(source.Info{}),
+			cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
 			// The packages table only includes partial license information; it omits the Coverage field.
 			cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 		}

@@ -17,6 +17,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/safehtml/testconversions"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/fetch"
@@ -44,6 +45,8 @@ var buildConstraintsMod = &proxy.TestModule{
 		"ignore/ignore.go": "// +build ignore\n\npackage ignore",
 	},
 }
+
+var html = testconversions.MakeHTMLForTest
 
 // Check that when the proxy says it does not have module@version,
 // we delete it from the database.
@@ -642,7 +645,7 @@ func TestReFetch(t *testing.T) {
 			Path:              "github.com/my/module/bar",
 			Name:              "bar",
 			Synopsis:          "Package bar",
-			DocumentationHTML: "Bar returns the string &#34;bar&#34;.",
+			DocumentationHTML: html("Bar returns the string &#34;bar&#34;."),
 			V1Path:            "github.com/my/module/bar",
 			Licenses: []*licenses.Metadata{
 				{Types: []string{"MIT"}, FilePath: "LICENSE"},
@@ -783,7 +786,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 			Path:              "github.com/my/module/bar",
 			Name:              "bar",
 			Synopsis:          "package bar",
-			DocumentationHTML: "Bar returns the string &#34;bar&#34;.",
+			DocumentationHTML: html("Bar returns the string &#34;bar&#34;."),
 			V1Path:            "github.com/my/module/bar",
 			Licenses: []*licenses.Metadata{
 				{Types: []string{"BSD-0-Clause"}, FilePath: "LICENSE"},
@@ -839,7 +842,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 					Path:              "nonredistributable.mod/module/bar/baz",
 					Name:              "baz",
 					Synopsis:          "package baz",
-					DocumentationHTML: "Baz returns the string &#34;baz&#34;.",
+					DocumentationHTML: html("Baz returns the string &#34;baz&#34;."),
 					V1Path:            "nonredistributable.mod/module/bar/baz",
 					Licenses: []*licenses.Metadata{
 						{Types: []string{"BSD-0-Clause"}, FilePath: "LICENSE"},
@@ -905,7 +908,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 					Path:              "context",
 					Name:              "context",
 					Synopsis:          "Package context defines the Context type, which carries deadlines, cancelation signals, and other request-scoped values across API boundaries and between processes.",
-					DocumentationHTML: "This example demonstrates the use of a cancelable context to prevent a\ngoroutine leak.",
+					DocumentationHTML: html("This example demonstrates the use of a cancelable context to prevent a\ngoroutine leak."),
 					V1Path:            "context",
 					Licenses: []*licenses.Metadata{
 						{
@@ -941,7 +944,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 					Path:              "builtin",
 					Name:              "builtin",
 					Synopsis:          "Package builtin provides documentation for Go's predeclared identifiers.",
-					DocumentationHTML: "int64 is the set of all signed 64-bit integers.",
+					DocumentationHTML: html("int64 is the set of all signed 64-bit integers."),
 					V1Path:            "builtin",
 					Licenses: []*licenses.Metadata{
 						{
@@ -976,7 +979,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 					Path:              "encoding/json",
 					Name:              "json",
 					Synopsis:          "Package json implements encoding and decoding of JSON as defined in RFC 7159.",
-					DocumentationHTML: "The mapping between JSON and Go values is described\nin the documentation for the Marshal and Unmarshal functions.",
+					DocumentationHTML: html("The mapping between JSON and Go values is described\nin the documentation for the Marshal and Unmarshal functions."),
 					V1Path:            "encoding/json",
 					Licenses: []*licenses.Metadata{
 						{
@@ -1022,7 +1025,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 					Path:              "build.constraints/module/cpu",
 					Name:              "cpu",
 					Synopsis:          "Package cpu implements processor feature detection used by the Go standard library.",
-					DocumentationHTML: "const CacheLinePadSize = 3",
+					DocumentationHTML: html("const CacheLinePadSize = 3"),
 					V1Path:            "build.constraints/module/cpu",
 					Licenses: []*licenses.Metadata{
 						{Types: []string{"BSD-0-Clause"}, FilePath: "LICENSE"},
@@ -1068,18 +1071,18 @@ func TestFetchAndInsertModule(t *testing.T) {
 			if diff := cmp.Diff(test.want, gotPkg, cmpopts.IgnoreFields(internal.LegacyPackage{}, "DocumentationHTML"), cmp.AllowUnexported(source.Info{})); diff != "" {
 				t.Errorf("testDB.LegacyGetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", test.pkg, test.version, diff)
 			}
-			if got, want := gotPkg.DocumentationHTML, test.want.DocumentationHTML; len(want) == 0 && len(got) != 0 {
+			if got, want := gotPkg.DocumentationHTML.String(), test.want.DocumentationHTML.String(); len(want) == 0 && len(got) != 0 {
 				t.Errorf("got non-empty documentation but want empty:\ngot: %q\nwant: %q", got, want)
 			} else if !strings.Contains(got, want) {
 				t.Errorf("got documentation doesn't contain wanted documentation substring:\ngot: %q\nwant (substring): %q", got, want)
 			}
 			for _, want := range test.moreWantDoc {
-				if got := gotPkg.DocumentationHTML; !strings.Contains(got, want) {
+				if got := gotPkg.DocumentationHTML.String(); !strings.Contains(got, want) {
 					t.Errorf("got documentation doesn't contain wanted documentation substring:\ngot: %q\nwant (substring): %q", got, want)
 				}
 			}
 			for _, dontWant := range test.dontWantDoc {
-				if got := gotPkg.DocumentationHTML; strings.Contains(got, dontWant) {
+				if got := gotPkg.DocumentationHTML.String(); strings.Contains(got, dontWant) {
 					t.Errorf("got documentation contains unwanted documentation substring:\ngot: %q\ndontWant (substring): %q", got, dontWant)
 				}
 			}

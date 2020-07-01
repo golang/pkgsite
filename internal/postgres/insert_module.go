@@ -17,6 +17,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/google/safehtml"
 	"github.com/lib/pq"
 	"go.opencensus.io/trace"
 	"golang.org/x/mod/module"
@@ -257,7 +258,7 @@ func insertPackages(ctx context.Context, db *database.DB, m *internal.Module) (e
 	}
 	var pkgValues, importValues []interface{}
 	for _, p := range m.LegacyPackages {
-		if p.DocumentationHTML == internal.StringFieldMissing {
+		if p.DocumentationHTML.String() == internal.StringFieldMissing {
 			return errors.New("saveModule: package missing DocumentationHTML")
 		}
 		var licenseTypes, licensePaths []string
@@ -284,7 +285,7 @@ func insertPackages(ctx context.Context, db *database.DB, m *internal.Module) (e
 			m.ModulePath,
 			p.V1Path,
 			p.IsRedistributable,
-			makeValidUnicode(p.DocumentationHTML),
+			makeValidUnicode(p.DocumentationHTML.String()),
 			pq.Array(licenseTypes),
 			pq.Array(licensePaths),
 			p.GOOS,
@@ -422,7 +423,7 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 			pathToReadme[d.Path] = d.Readme
 		}
 		if d.Package != nil {
-			if d.Package.Documentation == nil || d.Package.Documentation.HTML == internal.StringFieldMissing {
+			if d.Package.Documentation == nil || d.Package.Documentation.HTML.String() == internal.StringFieldMissing {
 				return errors.New("saveModule: package missing DocumentationHTML")
 			}
 			pathToDoc[d.Path] = d.Package.Documentation
@@ -493,7 +494,7 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 				continue
 			}
 			id := pathToID[path]
-			docValues = append(docValues, id, doc.GOOS, doc.GOARCH, doc.Synopsis, makeValidUnicode(doc.HTML))
+			docValues = append(docValues, id, doc.GOOS, doc.GOARCH, doc.Synopsis, makeValidUnicode(doc.HTML.String()))
 		}
 		uniqueCols := []string{"path_id", "goos", "goarch"}
 		docCols := append(uniqueCols, "synopsis", "html")
@@ -678,7 +679,7 @@ func removeNonDistributableData(m *internal.Module) {
 		if !p.IsRedistributable {
 			// Prune derived information that can't be stored.
 			p.Synopsis = ""
-			p.DocumentationHTML = ""
+			p.DocumentationHTML = safehtml.HTML{}
 		}
 	}
 	if !m.IsRedistributable {

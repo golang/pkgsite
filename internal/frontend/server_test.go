@@ -15,11 +15,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
+	"github.com/google/safehtml/testconversions"
 	"golang.org/x/net/html"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/experiment"
-	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
@@ -86,7 +87,7 @@ var testModules = []testModule{
 		packages: []testPackage{
 			{
 				suffix: "foo",
-				doc:    sample.DocumentationHTML,
+				doc:    sample.DocumentationHTML.String(),
 			},
 			{
 				suffix: "foo/directory/hello",
@@ -146,12 +147,12 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 		var ps []*internal.LegacyPackage
 		for _, pkg := range mod.packages {
 			p := sample.LegacyPackage(mod.path, pkg.suffix)
-			p.DocumentationHTML = ""
+			p.DocumentationHTML = safehtml.HTML{}
 			if pkg.name != "" {
 				p.Name = pkg.name
 			}
 			if pkg.doc != "" {
-				p.DocumentationHTML = pkg.doc
+				p.DocumentationHTML = testconversions.MakeHTMLForTest(pkg.doc)
 			}
 			if !mod.redistributable {
 				p.Licenses = nil
@@ -170,7 +171,6 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 			for _, p := range ps {
 				sample.AddPackage(m, p)
 			}
-			log.Info(ctx, m.ModulePath)
 			if err := testDB.InsertModule(ctx, m); err != nil {
 				t.Fatal(err)
 			}
@@ -419,17 +419,9 @@ func serverTestCases() ([]serverTestCase, []serverTestCase, []serverTestCase) {
 				in(".Documentation", text(`This is the documentation HTML`))),
 		},
 		{
-			name:           "package at version doc with links",
+			name:           "package at version doc with hacked up links",
 			urlPath:        "/" + sample.ModulePath + "/foo/directory/hello?tab=doc",
 			wantStatusCode: http.StatusOK,
-			want: in(".Documentation",
-				in("a", href("/pkg/io#Writer"), text("io.Writer"))),
-		},
-		{
-			name:             "package at version doc with hacked up links",
-			urlPath:          "/" + sample.ModulePath + "/foo/directory/hello?tab=doc",
-			addDocQueryParam: true,
-			wantStatusCode:   http.StatusOK,
 			want: in(".Documentation",
 				in("a", href("/io?tab=doc#Writer"), text("io.Writer"))),
 		},
@@ -878,8 +870,6 @@ func testServer(t *testing.T, testCases []serverTestCase, experimentNames ...str
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) { // remove initial '/' for name
-			defer func(orig bool) { addDocQueryParam = orig }(addDocQueryParam)
-			addDocQueryParam = tc.addDocQueryParam
 			w := httptest.NewRecorder()
 			handler.ServeHTTP(w, httptest.NewRequest("GET", tc.urlPath, nil))
 			res := w.Result()

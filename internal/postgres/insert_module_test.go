@@ -16,6 +16,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/safehtml"
+	"github.com/google/safehtml/testconversions"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -59,7 +61,7 @@ func TestInsertModule(t *testing.T) {
 					Path:              "context",
 					Synopsis:          "This is a package synopsis",
 					Licenses:          sample.LicenseMetadata,
-					DocumentationHTML: "This is the documentation HTML",
+					DocumentationHTML: testconversions.MakeHTMLForTest("This is the documentation HTML"),
 				}
 				return sample.AddPackage(m, p)
 			}(),
@@ -101,6 +103,7 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 			cmpopts.IgnoreFields(internal.LegacyPackage{}, "Imports"),
 			cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 			cmpopts.EquateEmpty(),
+			cmp.AllowUnexported(safehtml.HTML{}),
 		}
 		if diff := cmp.Diff(*wantp, got.LegacyPackage, opts...); diff != "" {
 			t.Fatalf("testDB.LegacyGetPackage(%q, %q) mismatch (-want +got):\n%s", wantp.Path, want.Version, diff)
@@ -126,7 +129,7 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 			cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeFilePath"),
 			cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeContents"),
 			cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
-			cmp.AllowUnexported(source.Info{}),
+			cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
 		}
 		if diff := cmp.Diff(wantd, *got, opts); diff != "" {
 			t.Errorf("testDB.getDirectoryNew(%q, %q) mismatch (-want +got):\n%s", dir.Path, want.Version, diff)
@@ -144,7 +147,7 @@ func TestUpsertModule(t *testing.T) {
 		Path:              "upsert.org/dir/p",
 		Synopsis:          "This is a package synopsis",
 		Licenses:          sample.LicenseMetadata,
-		DocumentationHTML: "This is the documentation HTML",
+		DocumentationHTML: testconversions.MakeHTMLForTest("This is the documentation HTML"),
 	}
 	sample.AddPackage(m, p)
 
