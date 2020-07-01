@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -85,8 +86,33 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) (err error
 
 	ctx := r.Context()
 	// Validate the fullPath and requestedVersion that were parsed.
-	if err := checkPathAndVersion(ctx, s.ds, fullPath, requestedVersion); err != nil {
+	if err := validatePathAndVersion(ctx, s.ds, fullPath, requestedVersion); err != nil {
 		return err
+	}
+	var resolvedModulePath string
+	if experiment.IsActive(ctx, internal.ExperimentUsePathInfoToCheckExistence) {
+		resolvedModulePath, _, _, err = s.ds.GetPathInfo(ctx, fullPath, modulePath, requestedVersion)
+		if err != nil {
+			if !errors.Is(err, derrors.NotFound) {
+				return err
+			}
+			// TODO(golang/go#39663) add a case for this to TestServer
+			path, err := s.stdlibPathForShortcut(ctx, fullPath)
+			if err != nil {
+				// Log the error, but prefer a "path not found" error for a
+				// better user experience.
+				log.Error(ctx, err)
+			}
+			if path != "" {
+				http.Redirect(w, r, path, http.StatusFound)
+				return nil
+			}
+			pathType := "package"
+			if isModule || fullPath == stdlib.ModulePath {
+				pathType = "module"
+			}
+			return pathNotFoundError(ctx, pathType, fullPath, requestedVersion)
+		}
 	}
 	if isActivePathAtMaster(ctx) && requestedVersion == internal.MasterVersion {
 		// Since path@master is a moving target, we don't want it to be stale.
@@ -94,13 +120,9 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) (err error
 		// task queue, which will initiate a fetch request depending on the
 		// last time we tried to fetch this module version.
 		go func() {
-			status, responseText := s.fetchAndPoll(r.Context(), modulePath, fullPath, requestedVersion)
-			logf := log.Infof
-			if status == http.StatusInternalServerError {
-				logf = log.Errorf
+			if err := s.queue.ScheduleFetch(ctx, resolvedModulePath, internal.MasterVersion, "", s.taskIDChangeInterval); err != nil {
+				log.Errorf(ctx, "serveDetails(%q): %v", r.URL.Path, err)
 			}
-			logf(ctx, "fetchAndPoll(%q, %q, %q) result from serveDetails(%q): %d %q",
-				modulePath, fullPath, requestedVersion, r.URL.Path, status, responseText)
 		}()
 	}
 	// Depending on what the request was for, return the module or package page.
@@ -191,9 +213,9 @@ func parseDetailsURLPath(urlPath string) (fullPath, modulePath, version string, 
 	return fullPath, modulePath, version, nil
 }
 
-// checkPathAndVersion verifies that the requested path and version are
+// validatePathAndVersion verifies that the requested path and version are
 // acceptable. The given path may be a module or package path.
-func checkPathAndVersion(ctx context.Context, ds internal.DataSource, fullPath, requestedVersion string) error {
+func validatePathAndVersion(ctx context.Context, ds internal.DataSource, fullPath, requestedVersion string) error {
 	if !isSupportedVersion(ctx, requestedVersion) {
 		return &serverError{
 			status: http.StatusBadRequest,

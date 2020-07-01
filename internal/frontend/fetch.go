@@ -466,7 +466,8 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 
 func isActiveFrontendFetch(ctx context.Context) bool {
 	return experiment.IsActive(ctx, internal.ExperimentFrontendFetch) &&
-		experiment.IsActive(ctx, internal.ExperimentInsertDirectories)
+		experiment.IsActive(ctx, internal.ExperimentInsertDirectories) &&
+		experiment.IsActive(ctx, internal.ExperimentUsePathInfoToCheckExistence)
 }
 
 func recordFrontendFetchMetric(status int, version string, latency time.Duration) {

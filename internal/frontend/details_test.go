@@ -101,7 +101,7 @@ func TestParseDetailsURLPath(t *testing.T) {
 	}
 }
 
-func TestCheckPathAndVersion(t *testing.T) {
+func TestValidatePathAndVersion(t *testing.T) {
 	tests := []struct {
 		path, version string
 		want          int
@@ -111,7 +111,7 @@ func TestCheckPathAndVersion(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		err := checkPathAndVersion(context.Background(), fakeDataSource{}, test.path, test.version)
+		err := validatePathAndVersion(context.Background(), fakeDataSource{}, test.path, test.version)
 		var got int
 		if err == nil {
 			got = 200
@@ -121,7 +121,7 @@ func TestCheckPathAndVersion(t *testing.T) {
 			got = -1
 		}
 		if got != test.want {
-			t.Errorf("checkPathAndVersion(ctx, ds, %q, %q): got code %d, want %d", test.path, test.version, got, test.want)
+			t.Errorf("validatePathAndVersion(ctx, ds, %q, %q): got code %d, want %d", test.path, test.version, got, test.want)
 		}
 	}
 }

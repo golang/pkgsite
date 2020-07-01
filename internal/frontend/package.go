@@ -147,18 +147,6 @@ func (s *Server) servePackagePageNew(w http.ResponseWriter, r *http.Request, ful
 			if !isActiveUseDirectories(ctx) {
 				return pathNotFoundError(ctx, "package", fullPath, inVersion)
 			}
-			// TODO(golang/go#39663) add a case for this to TestServer, after we
-			// switch over to the paths-based data model.
-			path, err := s.stdlibPathForShortcut(ctx, fullPath)
-			if path == "" {
-				if err != nil {
-					// Log the error, but prefer a "path not found" error for a better user experience.
-					log.Error(ctx, err)
-				}
-				return pathNotFoundError(ctx, "package", fullPath, inVersion)
-			}
-			http.Redirect(w, r, path, http.StatusFound)
-			return nil
 		}
 		// We couldn't find a path at the given version, but if there's one at the latest version
 		// we can provide a link to it.

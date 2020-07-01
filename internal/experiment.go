@@ -16,6 +16,7 @@ const (
 	ExperimentInsertSerializable          = "insert-serializable-txn"
 	ExperimentTeeProxyMakePkgGoDevRequest = "teeproxy-make-pkg-go-dev-request"
 	ExperimentUseDirectories              = "use-directories"
+	ExperimentUsePathInfoToCheckExistence = "use-path-info-to-check-existence"
 	ExperimentTranslateHTML               = "translate-html"
 )
 
