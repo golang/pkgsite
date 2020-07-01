@@ -162,7 +162,7 @@ b := 1
 		},
 	} {
 		out := codeHTML(test.in)
-		got := strings.TrimSpace(string(out))
+		got := strings.TrimSpace(string(out.String()))
 		want := strings.TrimSpace(test.want)
 		if got != want {
 			t.Errorf("%s:\ngot:\n%s\nwant:\n%s", test.name, got, want)

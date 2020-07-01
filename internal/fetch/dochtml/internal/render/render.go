@@ -158,7 +158,7 @@ func (r *Renderer) DeclHTML(doc string, decl ast.Decl) (out struct{ Doc, Decl te
 //
 // CodeHTML is intended for use with example code snippets.
 func (r *Renderer) CodeHTML(code interface{}) template.HTML {
-	return r.codeHTML(code)
+	return template.HTML(r.codeHTML(code).String())
 }
 
 // block is (*heading | *paragraph | *preformat).

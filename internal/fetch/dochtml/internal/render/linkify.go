@@ -18,6 +18,8 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/google/safehtml"
+	safetemplate "github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal/fetch/internal/doc"
 )
 
@@ -99,10 +101,10 @@ func (r *Renderer) declHTML(doc string, decl ast.Decl) (out struct{ Doc, Decl te
 	return out
 }
 
-func (r *Renderer) codeHTML(code interface{}) template.HTML {
+func (r *Renderer) codeHTML(code interface{}) safehtml.HTML {
 	// TODO: Should we perform hotlinking for comments and code?
 	if code == nil {
-		return ""
+		return safehtml.HTML{}
 	}
 
 	var b bytes.Buffer
@@ -111,7 +113,25 @@ func (r *Renderer) codeHTML(code interface{}) template.HTML {
 	return codeHTML(b.String())
 }
 
-func codeHTML(src string) template.HTML {
+type codeElement struct {
+	Text    string
+	Comment bool
+}
+
+var codeTmpl = safetemplate.Must(safetemplate.New("").Parse(`
+<pre>
+{{range .}}
+  {{- if .Comment -}}
+    <span class="comment">{{.Text}}</span>
+  {{- else -}}
+    {{.Text}}
+  {{- end -}}
+{{end}}
+</pre>
+`))
+
+func codeHTML(src string) safehtml.HTML {
+	var els []codeElement
 	// If code is an *ast.BlockStmt, then trim the braces.
 	var indent string
 	if len(src) >= 4 && strings.HasPrefix(src, "{\n") && strings.HasSuffix(src, "\n}") {
@@ -124,14 +144,12 @@ func codeHTML(src string) template.HTML {
 
 	// Scan through the source code, adding comment spans for comments,
 	// and stripping the trailing example output.
-	var bb bytes.Buffer
-	var lastOffset int   // last src offset copied to output buffer
-	var outputOffset int // index in output buffer of output comment
+	var lastOffset int        // last src offset copied to output buffer
+	var outputOffset int = -1 // index in els of last output comment
 	var s scanner.Scanner
 	fset := token.NewFileSet()
 	file := fset.AddFile("", fset.Base(), len(src))
 	s.Init(file, []byte(src), nil, scanner.ScanComments)
-	bb.WriteString("<pre>\n")
 	indent = "\n" + indent // prepend newline for easier search-and-replace.
 scan:
 	for {
@@ -139,39 +157,40 @@ scan:
 		offset := file.Offset(p) // current offset into source file
 		prev := src[lastOffset:offset]
 		prev = strings.Replace(prev, indent, "\n", -1)
-		bb.WriteString(template.HTMLEscapeString(prev))
+		els = append(els, codeElement{prev, false})
 		lastOffset = offset
 		switch tok {
 		case token.EOF:
 			break scan
 		case token.COMMENT:
-			if exampleOutputRx.MatchString(lit) && outputOffset == 0 {
-				outputOffset = bb.Len()
+			if exampleOutputRx.MatchString(lit) && outputOffset == -1 {
+				outputOffset = len(els)
 			}
-			bb.WriteString(`<span class="comment">`)
 			lit = strings.Replace(lit, indent, "\n", -1)
-			bb.WriteString(template.HTMLEscapeString(lit))
-			bb.WriteString(`</span>`)
+			els = append(els, codeElement{lit, true})
 			lastOffset += len(lit)
 		case token.STRING:
 			// Avoid replacing indents in multi-line string literals.
-			outputOffset = 0
-			bb.WriteString(template.HTMLEscapeString(lit))
+			outputOffset = -1
+			els = append(els, codeElement{lit, false})
 			lastOffset += len(lit)
 		default:
-			outputOffset = 0
+			outputOffset = -1
 		}
 	}
 
-	if outputOffset > 0 {
-		bb.Truncate(outputOffset)
+	if outputOffset >= 0 {
+		els = els[:outputOffset]
 	}
-	for bb.Len() > 0 && bb.Bytes()[bb.Len()-1] == '\n' {
-		bb.Truncate(bb.Len() - 1) // trim trailing newlines
+	// Trim trailing newlines.
+	if len(els) > 0 {
+		els[len(els)-1].Text = strings.TrimRight(els[len(els)-1].Text, "\n")
 	}
-	bb.WriteByte('\n')
-	bb.WriteString("</pre>\n")
-	return template.HTML(bb.String())
+	h, err := codeTmpl.ExecuteToHTML(els)
+	if err != nil {
+		h = safehtml.HTMLEscaped("[" + err.Error() + "]")
+	}
+	return h
 }
 
 // formatLineHTML formats the line as HTML-annotated text.
