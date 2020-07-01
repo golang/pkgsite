@@ -5,14 +5,14 @@
 package render
 
 import (
-	"fmt"
 	"go/ast"
 	"go/token"
-	"html/template"
 	"strings"
 	"unicode"
 	"unicode/utf8"
 
+	"github.com/google/safehtml"
+	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal/fetch/internal/doc"
 )
 
@@ -216,15 +216,15 @@ func (r identifierResolver) toURL(pkgPath, id string) (url string) {
 
 // toHTML formats a dot-delimited word as HTML with each ID segment converted
 // to be a link to the relevant declaration.
-func (r identifierResolver) toHTML(word string) string {
+func (r identifierResolver) toHTML(word string) safehtml.HTML {
 	// extraSuffix is extra identifier segments that can't be matched
 	// probably because we lack type information.
-	var extraSuffix string // E.g., ".Get" for an unknown Get method
+	var extraSuffix safehtml.HTML // E.g., ".Get" for an unknown Get method
 	origIDs := strings.Split(word, ".")
 
 	// Skip any standalone unexported identifier.
 	if !isExported(word) && len(origIDs) == 1 {
-		return template.HTMLEscapeString(word)
+		return safehtml.HTMLEscaped(word)
 	}
 
 	// Generate variations on the original word.
@@ -258,14 +258,14 @@ func (r identifierResolver) toHTML(word string) string {
 			if _, _, ok := r.lookup(s[:i]); ok && allowPartial {
 				altWord = s[:i]
 				origIDs = strings.Split(word[:j], ".")
-				extraSuffix = word[j:]
+				extraSuffix = safehtml.HTMLEscaped(word[j:])
 				goto linkify
 			}
 			i = strings.LastIndexByte(s[:i], '.')
 			j = strings.LastIndexByte(word[:j], '.')
 		}
 	}
-	return template.HTMLEscapeString(word) // no match found
+	return safehtml.HTMLEscaped(word) // no match found
 
 linkify:
 	// altWord contains a modified dot-separated identifier.
@@ -281,7 +281,7 @@ linkify:
 		i += strings.IndexByte(altWord[i:], '.') + 1
 	}
 
-	var outs []string
+	var outs []safehtml.HTML
 	for _, s := range origIDs {
 		// Advance to the next segment in altWord.
 		// E.g., i=9,  altWord[:i]="io.Reader",      s="r"
@@ -294,12 +294,26 @@ linkify:
 
 		path, name, _ := r.lookup(altWord[:i])
 		u := r.toURL(path, name)
-		u = template.HTMLEscapeString(u)
-		s = template.HTMLEscapeString(s)
-		outs = append(outs, fmt.Sprintf(`<a href="%s">%s</a>`, u, s))
+		html, err := linkTemplate.ExecuteToHTML(link{u, s})
+		if err != nil {
+			html = safehtml.HTMLEscaped("[" + err.Error() + "]")
+		}
+		outs = append(outs, html)
+		outs = append(outs, safehtml.HTMLEscaped("."))
 	}
-	return strings.Join(outs, ".") + extraSuffix
+	if len(outs) == 0 {
+		return extraSuffix
+	}
+	// Replace final dot with extraSuffix.
+	outs[len(outs)-1] = extraSuffix
+	return safehtml.HTMLConcat(outs...)
 }
+
+type link struct {
+	Href, Text string
+}
+
+var linkTemplate = template.Must(template.New("").Parse(`<a href="{{.Href}}">{{.Text}}</a>`))
 
 // lookup looks up a dot-separated identifier.
 // E.g., "pkg", "pkg.Var", "Recv.Method", "Struct.Field", "pkg.Struct.Field"

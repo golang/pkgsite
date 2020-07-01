@@ -248,7 +248,7 @@ func (r *Renderer) formatLineHTML(w io.Writer, line string, idr *identifierResol
 						rfcFields[1], word)
 				}
 			case !forbidLinking && !r.disableHotlinking && idr != nil: // && numQuotes%2 == 0:
-				io.WriteString(w, idr.toHTML(word))
+				io.WriteString(w, idr.toHTML(word).String())
 			default:
 				io.WriteString(w, template.HTMLEscapeString(word))
 			}

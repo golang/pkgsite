@@ -98,7 +98,7 @@ func TestResolveIdentifier(t *testing.T) {
 					idr := &identifierResolver{pids, dids, nil}
 					for i, rt := range dt.tests {
 						got := idr.toHTML(rt.in)
-						if got != rt.want {
+						if got.String() != rt.want {
 							t.Errorf("test %d, identifierResolver.toHTML():\ngot  `%s`\nwant `%s`", i, got, rt.want)
 						}
 					}
