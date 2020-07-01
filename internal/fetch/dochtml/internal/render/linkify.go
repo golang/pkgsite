@@ -108,8 +108,10 @@ func (r *Renderer) codeHTML(code interface{}) template.HTML {
 	var b bytes.Buffer
 	p := printer.Config{Mode: printer.UseSpaces | printer.TabIndent, Tabwidth: 4}
 	p.Fprint(&b, r.fset, code)
-	src := b.String()
+	return codeHTML(b.String())
+}
 
+func codeHTML(src string) template.HTML {
 	// If code is an *ast.BlockStmt, then trim the braces.
 	var indent string
 	if len(src) >= 4 && strings.HasPrefix(src, "{\n") && strings.HasSuffix(src, "\n}") {

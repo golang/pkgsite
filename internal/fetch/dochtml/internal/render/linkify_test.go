@@ -1,4 +1,4 @@
-// Copyright 2017 The Go Authors. All rights reserved.
+// Copyright 2020 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -6,6 +6,7 @@ package render
 
 import (
 	"html/template"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -94,5 +95,77 @@ TLSUnique contains the tls-unique channel binding value (see RFC
 				t.Errorf("r.declHTML() mismatch (-want +got)\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestCodeHTML(t *testing.T) {
+	for _, test := range []struct {
+		name, in, want string
+	}{
+		{
+			"basic",
+			`a := 1
+// a comment
+b := 2 /* another comment */
+`,
+			`
+<pre>
+a := 1
+<span class="comment">// a comment</span>
+b := 2 <span class="comment">/* another comment */</span>
+</pre>`,
+		},
+		{
+			"trailing newlines",
+			`a := 1
+
+
+`,
+			`
+<pre>
+a := 1
+</pre>`,
+		},
+		{
+			"stripped output comment",
+			`a := 1
+// Output:
+b := 1
+// Output:
+// removed
+`,
+			`
+<pre>
+a := 1
+<span class="comment">// Output:</span>
+b := 1
+</pre>
+`,
+		},
+		{
+			"stripped output comment and trailing newlines",
+			`a := 1
+// Output:
+b := 1
+
+
+// Output:
+// removed
+`,
+			`
+<pre>
+a := 1
+<span class="comment">// Output:</span>
+b := 1
+</pre>
+`,
+		},
+	} {
+		out := codeHTML(test.in)
+		got := strings.TrimSpace(string(out))
+		want := strings.TrimSpace(test.want)
+		if got != want {
+			t.Errorf("%s:\ngot:\n%s\nwant:\n%s", test.name, got, want)
+		}
 	}
 }
