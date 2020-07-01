@@ -74,7 +74,10 @@ func TestFetch(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testFetchTimeout)
 			defer cancel()
 			ctx = experiment.NewContext(ctx, experiment.NewSet(map[string]bool{
-				internal.ExperimentInsertDirectories: true,
+				internal.ExperimentFrontendFetch:               true,
+				internal.ExperimentFrontendPackageAtMaster:     true,
+				internal.ExperimentInsertDirectories:           true,
+				internal.ExperimentUsePathInfoToCheckExistence: true,
 			}))
 
 			status, responseText := s.fetchAndPoll(ctx, testModulePath, test.fullPath, test.version)

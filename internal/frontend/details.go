@@ -216,7 +216,7 @@ func parseDetailsURLPath(urlPath string) (fullPath, modulePath, version string, 
 // validatePathAndVersion verifies that the requested path and version are
 // acceptable. The given path may be a module or package path.
 func validatePathAndVersion(ctx context.Context, ds internal.DataSource, fullPath, requestedVersion string) error {
-	if !isSupportedVersion(ctx, requestedVersion) {
+	if !isSupportedVersion(ctx, fullPath, requestedVersion) {
 		return &serverError{
 			status: http.StatusBadRequest,
 			epage: &errorPage{
@@ -245,7 +245,10 @@ func validatePathAndVersion(ctx context.Context, ds internal.DataSource, fullPat
 }
 
 // isSupportedVersion reports whether the version is supported by the frontend.
-func isSupportedVersion(ctx context.Context, version string) bool {
+func isSupportedVersion(ctx context.Context, fullPath, version string) bool {
+	if stdlib.Contains(fullPath) && version == internal.MasterVersion {
+		return false
+	}
 	if version == internal.LatestVersion || semver.IsValid(version) {
 		return true
 	}

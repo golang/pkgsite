@@ -27,6 +27,7 @@ import (
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 var (
@@ -76,8 +77,9 @@ var (
 // Meanwhile, the request will poll the database until a row is found, or a
 // timeout occurs. A status and responseText will be returned based on the
 // result of the request.
-// TODO(golang/go#37002): This should be a POST request, since it is causing a change in state.
-// update middleware.AcceptMethods so that this can be a POST instead of a GET.
+// TODO(https://golang.org/issue/39979): This should be a POST request, since it is causing a change
+// in state. Update middleware.AcceptMethods so that this can be a POST instead of a
+// GET.
 func (s *Server) fetchHandler(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.ds.(*postgres.DB); !ok {
 		// There's no reason for the proxydatasource to need this codepath.
@@ -130,9 +132,10 @@ func (s *Server) fetchAndPoll(parentCtx context.Context, modulePath, fullPath, r
 		recordFrontendFetchMetric(status, requestedVersion, time.Since(start))
 	}()
 
-	if !semver.IsValid(requestedVersion) &&
-		requestedVersion != internal.MasterVersion &&
-		requestedVersion != internal.LatestVersion {
+	if !isSupportedVersion(parentCtx, fullPath, requestedVersion) ||
+		// TODO(https://golang.org/issue/39973): add support for fetching the
+		// latest and master versions of the standard library
+		(stdlib.Contains(fullPath) && requestedVersion == internal.LatestVersion) {
 		return http.StatusBadRequest, http.StatusText(http.StatusBadRequest)
 	}
 
