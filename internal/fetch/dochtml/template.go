@@ -36,10 +36,10 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 	},
 ).Parse(`{{- "" -}}
 {{- if or .Doc .Consts .Vars .Funcs .Types .Examples.List -}}
-<nav class="Documentation-nav">
+<nav class="Documentation-nav js-sideNav">
 	<ul class="Documentation-toc DocNav">
 		{{- if or .Doc (index .Examples.Map "") -}}
-			<li class="Documentation-tocItem DocNav-node DocNav-node--selected">
+			<li class="Documentation-tocItem DocNav-node">
 				<a href="#pkg-overview">Overview</a>
 			</li>
 		{{- end -}}
@@ -132,7 +132,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 </nav>
 {{- end -}}
 
-<div> {{/* Documentation content container */}}
+<div class="js-docContent"> {{/* Documentation content container */}}
 
 {{- if or .Doc (index .Examples.Map "") -}}
 	<section class="Documentation-overview">

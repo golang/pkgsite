@@ -50,7 +50,12 @@
 {{end}}
 
 {{define "details_post_content"}}
-<script>
-loadScript("/static/js/jump.min.js");
-</script>
+  <script>
+    loadScript("/static/js/jump.min.js");
+  </script>
+  {{if (.Experiments.IsActive "sidenav")}}
+    <script>
+      loadScript('/static/js/sidenav.js');
+    </script>
+  {{end}}
 {{end}}
