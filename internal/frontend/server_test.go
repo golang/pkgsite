@@ -156,7 +156,6 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 			if err := testDB.InsertModule(ctx, m); err != nil {
 				t.Fatal(err)
 			}
-
 		}
 	}
 }
@@ -206,15 +205,15 @@ func testServer(t *testing.T, experimentNames ...string) {
 
 	pkgV100 := &pagecheck.Page{
 		Title:            "package foo",
-		ModulePath:       "github.com/valid_module_name",
+		ModulePath:       sample.ModulePath,
 		Version:          "v1.0.0",
 		Suffix:           "foo",
 		IsLatest:         true,
-		LatestLink:       "/github.com/valid_module_name@v1.0.0/foo",
+		LatestLink:       "/" + sample.ModulePath + "@v1.0.0/foo",
 		LicenseType:      "MIT",
 		LicenseFilePath:  "LICENSE",
-		PackageURLFormat: "/github.com/valid_module_name%s/foo",
-		ModuleURL:        "/mod/github.com/valid_module_name",
+		PackageURLFormat: "/" + sample.ModulePath + "%s/foo",
+		ModuleURL:        "/mod/" + sample.ModulePath,
 	}
 	p9 := *pkgV100
 	p9.Version = "v0.9.0"
@@ -264,14 +263,14 @@ func testServer(t *testing.T, experimentNames ...string) {
 		ModuleURL:        "/std",
 	}
 	mod := &pagecheck.Page{
-		ModulePath:      "github.com/valid_module_name",
-		Title:           "module github.com/valid_module_name",
-		ModuleURL:       "/mod/github.com/valid_module_name",
+		ModulePath:      sample.ModulePath,
+		Title:           "module " + sample.ModulePath,
+		ModuleURL:       "/mod/" + sample.ModulePath,
 		Version:         "v1.0.0",
 		LicenseType:     "MIT",
 		LicenseFilePath: "LICENSE",
 		IsLatest:        true,
-		LatestLink:      "/mod/github.com/valid_module_name@v1.0.0",
+		LatestLink:      "/mod/" + sample.ModulePath + "@v1.0.0",
 	}
 	mp := *mod
 	mp.Version = pseudoVersion
@@ -316,14 +315,14 @@ func testServer(t *testing.T, experimentNames ...string) {
 	}
 
 	dir := &pagecheck.Page{
-		Title:            "directory github.com/valid_module_name/foo/directory",
-		ModulePath:       "github.com/valid_module_name",
+		Title:            "directory " + sample.ModulePath + "/foo/directory",
+		ModulePath:       sample.ModulePath,
 		Version:          "v1.0.0",
 		Suffix:           "foo/directory",
 		LicenseType:      "MIT",
 		LicenseFilePath:  "LICENSE",
-		ModuleURL:        "/mod/github.com/valid_module_name",
-		PackageURLFormat: "/github.com/valid_module_name%s/foo/directory",
+		ModuleURL:        "/mod/" + sample.ModulePath,
+		PackageURLFormat: "/" + sample.ModulePath + "%s/foo/directory",
 	}
 
 	dirCmd := &pagecheck.Page{
@@ -392,8 +391,8 @@ func testServer(t *testing.T, experimentNames ...string) {
 				in(".SearchResults-resultCount", text("2 results")),
 				in(".SearchSnippet-header",
 					in("a",
-						href("/github.com/valid_module_name/foo"),
-						text("github.com/valid_module_name/foo")))),
+						href("/"+sample.ModulePath+"/foo"),
+						text(sample.ModulePath+"/foo")))),
 		},
 		{
 			name:           "package default",
@@ -403,15 +402,15 @@ func testServer(t *testing.T, experimentNames ...string) {
 				pagecheck.PackageHeader(pkgV100, unversioned),
 				in("div.DetailsHeader-breadcrumb",
 					in("a",
-						href("/github.com/valid_module_name@v1.0.0"),
-						text("github.com/valid_module_name"))),
+						href("/"+sample.ModulePath+"@v1.0.0"),
+						text(sample.ModulePath))),
 				in(".Documentation", text(`This is the documentation HTML`))),
 		},
 		{
 			name:           "package default redirect",
 			urlPath:        fmt.Sprintf("/%s", sample.PackagePath),
 			wantStatusCode: http.StatusFound,
-			wantLocation:   "/github.com/valid_module_name/foo?tab=doc",
+			wantLocation:   "/" + sample.ModulePath + "/foo?tab=doc",
 		},
 		{
 			name: "package default nonredistributable",
@@ -445,14 +444,14 @@ func testServer(t *testing.T, experimentNames ...string) {
 		},
 		{
 			name:           "package at version doc with links",
-			urlPath:        "/github.com/valid_module_name/foo/directory/hello?tab=doc",
+			urlPath:        "/" + sample.ModulePath + "/foo/directory/hello?tab=doc",
 			wantStatusCode: http.StatusOK,
 			want: in(".Documentation",
 				in("a", href("/pkg/io#Writer"), text("io.Writer"))),
 		},
 		{
 			name:             "package at version doc with hacked up links",
-			urlPath:          "/github.com/valid_module_name/foo/directory/hello?tab=doc",
+			urlPath:          "/" + sample.ModulePath + "/foo/directory/hello?tab=doc",
 			addDocQueryParam: true,
 			wantStatusCode:   http.StatusOK,
 			want: in(".Documentation",
@@ -474,12 +473,12 @@ func testServer(t *testing.T, experimentNames ...string) {
 			want: in("",
 				pagecheck.PackageHeader(pkgV100, versioned),
 				pagecheck.OverviewDetails(&pagecheck.Overview{
-					ModuleLink:     "/mod/github.com/valid_module_name@v1.0.0",
+					ModuleLink:     "/mod/" + sample.ModulePath + "@v1.0.0",
 					ModuleLinkText: pkgV100.ModulePath,
-					RepoURL:        "https://github.com/valid_module_name",
-					PackageURL:     "https://github.com/valid_module_name/tree/v1.0.0/foo",
+					RepoURL:        "https://" + sample.ModulePath,
+					PackageURL:     "https://" + sample.ModulePath + "/tree/v1.0.0/foo",
 					ReadmeContent:  "readme",
-					ReadmeSource:   "github.com/valid_module_name@v1.0.0/README.md",
+					ReadmeSource:   sample.ModulePath + "@v1.0.0/README.md",
 				})),
 		},
 		{
@@ -511,7 +510,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 				in(".Versions",
 					text(`v1`),
 					in("a",
-						href("/github.com/valid_module_name@v1.0.0/foo"),
+						href("/"+sample.ModulePath+"@v1.0.0/foo"),
 						attr("title", "v1.0.0"),
 						text("v1.0.0")))),
 		},
@@ -549,7 +548,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.PackageHeader(pkgV100, versioned),
-				pagecheck.LicenseDetails("MIT", "Lorem Ipsum", "github.com/valid_module_name@v1.0.0/LICENSE")),
+				pagecheck.LicenseDetails("MIT", "Lorem Ipsum", sample.ModulePath+"@v1.0.0/LICENSE")),
 		},
 		{
 			name:           "package at version overview tab, pseudoversion",
@@ -573,21 +572,21 @@ func testServer(t *testing.T, experimentNames ...string) {
 				pagecheck.DirectoryHeader(dir, unversioned),
 				in("div.DetailsHeader-breadcrumb",
 					in("a:nth-of-type(1)",
-						href("/github.com/valid_module_name@v1.0.0"),
-						text("github.com/valid_module_name")),
+						href("/"+sample.ModulePath+"@v1.0.0"),
+						text(sample.ModulePath)),
 					in("a:nth-of-type(2)",
-						href("/github.com/valid_module_name/foo@v1.0.0"),
+						href("/"+sample.ModulePath+"/foo@v1.0.0"),
 						text("foo"))),
 				// TODO(golang/go#39630) link should be unversioned.
-				pagecheck.SubdirectoriesDetails("/github.com/valid_module_name@v1.0.0/foo/directory/hello", "hello")),
+				pagecheck.SubdirectoriesDetails("/"+sample.ModulePath+"@v1.0.0/foo/directory/hello", "hello")),
 		},
 		{
 			name:           "directory@version subdirectories",
-			urlPath:        "/github.com/valid_module_name@v1.0.0/foo/directory",
+			urlPath:        "/" + sample.ModulePath + "@v1.0.0/foo/directory",
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.DirectoryHeader(dir, versioned),
-				pagecheck.SubdirectoriesDetails("/github.com/valid_module_name@v1.0.0/foo/directory/hello", "hello")),
+				pagecheck.SubdirectoriesDetails("/"+sample.ModulePath+"@v1.0.0/foo/directory/hello", "hello")),
 		},
 		{
 			name:           "directory@version subdirectories pseudoversion",
@@ -613,11 +612,11 @@ func testServer(t *testing.T, experimentNames ...string) {
 			want: in("",
 				pagecheck.DirectoryHeader(dir, unversioned),
 				pagecheck.OverviewDetails(&pagecheck.Overview{
-					ModuleLink:     "/mod/github.com/valid_module_name",
+					ModuleLink:     "/mod/" + sample.ModulePath,
 					ModuleLinkText: dir.ModulePath,
-					RepoURL:        "https://github.com/valid_module_name",
+					RepoURL:        "https://" + sample.ModulePath,
 					ReadmeContent:  "readme",
-					ReadmeSource:   "github.com/valid_module_name@v1.0.0/README.md",
+					ReadmeSource:   sample.ModulePath + "@v1.0.0/README.md",
 				})),
 		},
 		{
@@ -626,7 +625,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.DirectoryHeader(dir, unversioned),
-				pagecheck.LicenseDetails("MIT", "Lorem Ipsum", "github.com/valid_module_name@v1.0.0/LICENSE")),
+				pagecheck.LicenseDetails("MIT", "Lorem Ipsum", sample.ModulePath+"@v1.0.0/LICENSE")),
 		},
 		{
 			name:           "stdlib directory default",
@@ -654,7 +653,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 					ModuleLink:     "/std@go1.13",
 					ModuleLinkText: "Standard Library",
 					ReadmeContent:  "readme",
-					RepoURL:        "https://github.com/valid_module_name", // wrong, but hard to change
+					RepoURL:        "https://" + sample.ModulePath, // wrong, but hard to change
 					ReadmeSource:   "go.googlesource.com/go/+/refs/tags/go1.13/README.md",
 				})),
 		},
@@ -678,8 +677,8 @@ func testServer(t *testing.T, experimentNames ...string) {
 					ModuleLink:     "/mod/" + sample.ModulePath,
 					ModuleLinkText: sample.ModulePath,
 					ReadmeContent:  "readme",
-					RepoURL:        "https://github.com/valid_module_name",
-					ReadmeSource:   "github.com/valid_module_name@v1.0.0/README.md",
+					RepoURL:        "https://" + sample.ModulePath,
+					ReadmeSource:   sample.ModulePath + "@v1.0.0/README.md",
 				})),
 		},
 		{
@@ -694,8 +693,8 @@ func testServer(t *testing.T, experimentNames ...string) {
 					ModuleLink:     "/mod/" + sample.ModulePath,
 					ModuleLinkText: sample.ModulePath,
 					ReadmeContent:  "readme",
-					RepoURL:        "https://github.com/valid_module_name",
-					ReadmeSource:   "github.com/valid_module_name@v1.0.0/README.md",
+					RepoURL:        "https://" + sample.ModulePath,
+					ReadmeSource:   sample.ModulePath + "@v1.0.0/README.md",
 				})),
 		},
 		{
@@ -733,8 +732,8 @@ func testServer(t *testing.T, experimentNames ...string) {
 					ModuleLink:     fmt.Sprintf("/mod/%s@%s", sample.ModulePath, sample.VersionString),
 					ModuleLinkText: sample.ModulePath,
 					ReadmeContent:  "readme",
-					RepoURL:        "https://github.com/valid_module_name",
-					ReadmeSource:   "github.com/valid_module_name@v1.0.0/README.md",
+					RepoURL:        "https://" + sample.ModulePath,
+					ReadmeSource:   sample.ModulePath + "@v1.0.0/README.md",
 				})),
 		},
 		{
@@ -747,8 +746,8 @@ func testServer(t *testing.T, experimentNames ...string) {
 					ModuleLink:     fmt.Sprintf("/mod/%s@%s", sample.ModulePath, pseudoVersion),
 					ModuleLinkText: sample.ModulePath,
 					ReadmeContent:  "readme",
-					RepoURL:        "https://github.com/valid_module_name",
-					ReadmeSource:   "github.com/valid_module_name@" + pseudoVersion + "/README.md",
+					RepoURL:        "https://" + sample.ModulePath,
+					ReadmeSource:   sample.ModulePath + "@" + pseudoVersion + "/README.md",
 				})),
 		},
 		{
@@ -769,7 +768,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 				in("div.Versions", text("v1")),
 				in("li.Versions-item",
 					in("a",
-						href("/mod/github.com/valid_module_name@v1.0.0"),
+						href("/mod/"+sample.ModulePath+"@v1.0.0"),
 						attr("title", "v1.0.0"),
 						text("v1.0.0")))),
 		},
@@ -779,7 +778,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.ModuleHeader(mod, versioned),
-				pagecheck.LicenseDetails("MIT", "Lorem Ipsum", "github.com/valid_module_name@v1.0.0/LICENSE")),
+				pagecheck.LicenseDetails("MIT", "Lorem Ipsum", sample.ModulePath+"@v1.0.0/LICENSE")),
 		},
 		{
 			name:           "cmd go package page",
@@ -811,15 +810,15 @@ func testServer(t *testing.T, experimentNames ...string) {
 			wantStatusCode: http.StatusBadRequest,
 			want: in("",
 				in("h3.Error-message", text("v1-2 is not a valid semantic version.")),
-				in("p.Error-message a", href(`/search?q=github.com%2fvalid_module_name%2ffoo`))),
+				in("p.Error-message a", href(`/search?q=github.com%2fvalid%2fmodule_name%2ffoo`))),
 		},
 		{
 			name:           "unknown version",
 			urlPath:        fmt.Sprintf("/%s@%s/%s", sample.ModulePath, "v99.99.0", sample.Suffix),
 			wantStatusCode: http.StatusNotFound,
 			want: in("",
-				in("h3.Error-message", text("Package github.com/valid_module_name/foo@v99.99.0 is not available.")),
-				in("p.Error-message a", href("/github.com/valid_module_name/foo?tab=versions"))),
+				in("h3.Error-message", text("Package "+sample.ModulePath+"/foo@v99.99.0 is not available.")),
+				in("p.Error-message a", href("/"+sample.ModulePath+"/foo?tab=versions"))),
 		},
 		{
 			name:           "path not found",

@@ -34,8 +34,8 @@ func TestFetchOverviewDetails(t *testing.T) {
 			ModulePath:      sample.ModulePath,
 			RepositoryURL:   sample.RepositoryURL,
 			ReadMe:          template.HTML("<p>readme</p>\n"),
-			ReadMeSource:    "github.com/valid_module_name@v1.0.0/README.md",
-			ModuleURL:       "/mod/github.com/valid_module_name@v1.0.0",
+			ReadMeSource:    sample.ModulePath + "@v1.0.0/README.md",
+			ModuleURL:       "/mod/" + sample.ModulePath + "@v1.0.0",
 			Redistributable: true,
 		},
 	}
@@ -49,7 +49,8 @@ func TestFetchOverviewDetails(t *testing.T) {
 	readme := &internal.Readme{Filepath: tc.module.LegacyReadmeFilePath, Contents: tc.module.LegacyReadmeContents}
 	got := constructOverviewDetails(ctx, &tc.module.ModuleInfo, readme, true, true)
 	if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
-		t.Errorf("constructOverviewDetails(%q, %q) mismatch (-want +got):\n%s", tc.module.LegacyPackages[0].Path, tc.module.Version, diff)
+		t.Errorf("constructOverviewDetails(%q, %q) mismatch (-want +got):\n%s",
+			tc.module.LegacyPackages[0].Path, tc.module.Version, diff)
 	}
 }
 
