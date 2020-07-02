@@ -88,8 +88,8 @@ func TestProxy(modules []*TestModule) *http.ServeMux {
 			return modVersions[len(modVersions)-1].Version
 		}
 		master := func(modVersions []*TestModule) string {
-			// TODO: master should return the most recently
-			// published version, which is not necessarily the
+			// TODO(https://golang.org/issue/39985): master should return the
+			// most recently published version, which is not necessarily the
 			// latest version according to semver.
 			return modVersions[len(modVersions)-1].Version
 		}
