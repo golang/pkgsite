@@ -143,7 +143,12 @@ func (s *Server) fetchAndPoll(parentCtx context.Context, modulePath, fullPath, r
 	db := s.ds.(*postgres.DB)
 	modulePaths, err := modulePathsToFetch(parentCtx, db, fullPath, modulePath)
 	if err != nil {
-		return derrors.ToHTTPStatus(err), err.Error()
+		log.Errorf(parentCtx, "fetchAndPoll: %v", err)
+		var serr *serverError
+		if errors.As(err, &serr) {
+			return serr.status, http.StatusText(serr.status)
+		}
+		return http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError)
 	}
 
 	// Fetch all possible module paths concurrently.
@@ -371,17 +376,15 @@ func checkForPath(ctx context.Context, db *postgres.DB, fullPath, modulePath, re
 // possible module paths based on the elements for the fullPath.
 // Resulting paths are returned in reverse length order.
 func modulePathsToFetch(ctx context.Context, ds internal.DataSource, fullPath, modulePath string) (_ []string, err error) {
-
 	defer derrors.Wrap(&err, "modulePathsToFetch(ctx, ds, %q, %q)", fullPath, modulePath)
 	if modulePath != internal.UnknownModulePath {
 		return []string{modulePath}, nil
 	}
-
 	modulePath, _, _, err = ds.GetPathInfo(ctx, fullPath, modulePath, internal.LatestVersion)
 	if err != nil && !errors.Is(err, derrors.NotFound) {
 		return nil, &serverError{
 			status: http.StatusInternalServerError,
-			err:    fmt.Errorf("fetchModuleForPath: %v", err),
+			err:    err,
 		}
 	}
 	if err == nil {
@@ -408,7 +411,7 @@ func candidateModulePaths(fullPath string) (_ []string, err error) {
 		if len(parts) < 3 {
 			return nil, &serverError{
 				status: http.StatusBadRequest,
-				err:    fmt.Errorf("invalid path"),
+				err:    fmt.Errorf("invalid path: %q", fullPath),
 			}
 		}
 		path = strings.Join(parts[0:2], "/") + "/"
