@@ -245,7 +245,7 @@ type link struct {
 // version is the version for the module, or LatestVersion.
 //
 // See TestBreadcrumbPath for examples.
-func breadcrumbPath(pkgPath, modPath, version string) breadcrumb {
+func breadcrumbPath(pkgPath, modPath, requestedVersion string) breadcrumb {
 	if pkgPath == stdlib.ModulePath {
 		return breadcrumb{Current: "Standard library"}
 	}
@@ -272,8 +272,8 @@ func breadcrumbPath(pkgPath, modPath, version string) breadcrumb {
 	b.Links = make([]link, len(dirs)-1)
 	for i := 1; i < len(dirs); i++ {
 		href := "/" + dirs[i]
-		if version != internal.LatestVersion {
-			href += "@" + version
+		if requestedVersion != internal.LatestVersion {
+			href += "@" + requestedVersion
 		}
 		el := dirs[i]
 		if i != len(dirs)-1 {

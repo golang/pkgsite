@@ -476,11 +476,11 @@ func isActiveFrontendFetch(ctx context.Context) bool {
 		experiment.IsActive(ctx, internal.ExperimentUsePathInfoToCheckExistence)
 }
 
-func recordFrontendFetchMetric(status int, version string, latency time.Duration) {
+func recordFrontendFetchMetric(status int, requestedVersion string, latency time.Duration) {
 	l := float64(latency) / float64(time.Millisecond)
 
 	// Tag versions based on latest, master and semver.
-	v := version
+	v := requestedVersion
 	if semver.IsValid(v) {
 		v = "semver"
 	}

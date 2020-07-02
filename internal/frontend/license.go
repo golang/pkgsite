@@ -33,23 +33,23 @@ type LicenseMetadata struct {
 
 // fetchPackageLicensesDetails fetches license data for the package version specified by
 // path and version from the database and returns a LicensesDetails.
-func fetchPackageLicensesDetails(ctx context.Context, ds internal.DataSource, pkgPath, modulePath, version string) (*LicensesDetails, error) {
-	dsLicenses, err := ds.LegacyGetPackageLicenses(ctx, pkgPath, modulePath, version)
+func fetchPackageLicensesDetails(ctx context.Context, ds internal.DataSource, pkgPath, modulePath, resolvedVersion string) (*LicensesDetails, error) {
+	dsLicenses, err := ds.LegacyGetPackageLicenses(ctx, pkgPath, modulePath, resolvedVersion)
 	if err != nil {
 		return nil, err
 	}
-	return &LicensesDetails{Licenses: transformLicenses(modulePath, version, dsLicenses)}, nil
+	return &LicensesDetails{Licenses: transformLicenses(modulePath, resolvedVersion, dsLicenses)}, nil
 }
 
 // transformLicenses transforms licenses.License into a License
 // by adding an anchor field.
-func transformLicenses(modulePath, version string, dbLicenses []*licenses.License) []License {
+func transformLicenses(modulePath, requestedVersion string, dbLicenses []*licenses.License) []License {
 	licenses := make([]License, len(dbLicenses))
 	for i, l := range dbLicenses {
 		licenses[i] = License{
 			Anchor:  licenseAnchor(l.FilePath),
 			License: l,
-			Source:  fileSource(modulePath, version, l.FilePath),
+			Source:  fileSource(modulePath, requestedVersion, l.FilePath),
 		}
 	}
 	return licenses

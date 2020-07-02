@@ -159,7 +159,7 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) (err error
 // In one case, we do a little more than parse the urlPath into parts: if the full path
 // could be a part of the standard library (because it has no '.'), we assume it
 // is and set the modulePath to indicate the standard library.
-func parseDetailsURLPath(urlPath string) (fullPath, modulePath, version string, err error) {
+func parseDetailsURLPath(urlPath string) (fullPath, modulePath, requestedVersion string, err error) {
 	defer derrors.Wrap(&err, "parseDetailsURLPath(%q)", urlPath)
 
 	// This splits urlPath into either:
@@ -172,17 +172,17 @@ func parseDetailsURLPath(urlPath string) (fullPath, modulePath, version string, 
 	basePath := strings.TrimSuffix(strings.TrimPrefix(parts[0], "/"), "/")
 	if len(parts) == 1 { // no '@'
 		modulePath = internal.UnknownModulePath
-		version = internal.LatestVersion
+		requestedVersion = internal.LatestVersion
 		fullPath = basePath
 	} else {
 		// Parse the version and suffix from parts[1], the string after the '@'.
 		endParts := strings.Split(parts[1], "/")
 		suffix := strings.Join(endParts[1:], "/")
 		// The first path component after the '@' is the version.
-		version = endParts[0]
+		requestedVersion = endParts[0]
 		// You cannot explicitly write "latest" for the version.
-		if version == internal.LatestVersion {
-			return "", "", "", fmt.Errorf("invalid version: %q", version)
+		if requestedVersion == internal.LatestVersion {
+			return "", "", "", fmt.Errorf("invalid version: %q", requestedVersion)
 		}
 		if suffix == "" {
 			// "@version" occurred at the end of the path; we don't know the module path.
@@ -210,7 +210,7 @@ func parseDetailsURLPath(urlPath string) (fullPath, modulePath, version string, 
 		}
 		modulePath = stdlib.ModulePath
 	}
-	return fullPath, modulePath, version, nil
+	return fullPath, modulePath, requestedVersion, nil
 }
 
 // validatePathAndVersion verifies that the requested path and version are
@@ -245,15 +245,15 @@ func validatePathAndVersion(ctx context.Context, ds internal.DataSource, fullPat
 }
 
 // isSupportedVersion reports whether the version is supported by the frontend.
-func isSupportedVersion(ctx context.Context, fullPath, version string) bool {
-	if stdlib.Contains(fullPath) && version == internal.MasterVersion {
+func isSupportedVersion(ctx context.Context, fullPath, requestedVersion string) bool {
+	if stdlib.Contains(fullPath) && requestedVersion == internal.MasterVersion {
 		return false
 	}
-	if version == internal.LatestVersion || semver.IsValid(version) {
+	if requestedVersion == internal.LatestVersion || semver.IsValid(requestedVersion) {
 		return true
 	}
 	if isActivePathAtMaster(ctx) {
-		return version == internal.MasterVersion
+		return requestedVersion == internal.MasterVersion
 	}
 	return false
 }
@@ -275,9 +275,9 @@ func isActivePathAtMaster(ctx context.Context) bool {
 // pathNotFoundError returns an error page with instructions on how to
 // add a package or module to the site. pathType is always either the string
 // "package" or "module".
-func pathNotFoundError(ctx context.Context, pathType, fullPath, version string) error {
+func pathNotFoundError(ctx context.Context, pathType, fullPath, requestedVersion string) error {
 	if isActiveFrontendFetch(ctx) {
-		return pathNotFoundErrorNew(fullPath, version)
+		return pathNotFoundErrorNew(fullPath, requestedVersion)
 	}
 	return &serverError{
 		status: http.StatusNotFound,
@@ -294,10 +294,10 @@ func pathNotFoundError(ctx context.Context, pathType, fullPath, version string) 
 
 // pathNotFoundErrorNew returns an error page that provides the user with an
 // option to fetch a path.
-func pathNotFoundErrorNew(fullPath, version string) error {
+func pathNotFoundErrorNew(fullPath, requestedVersion string) error {
 	path := fullPath
-	if version != internal.LatestVersion {
-		path = fmt.Sprintf("%s@%s", fullPath, version)
+	if requestedVersion != internal.LatestVersion {
+		path = fmt.Sprintf("%s@%s", fullPath, requestedVersion)
 	}
 	return &serverError{
 		status: http.StatusNotFound,
@@ -315,9 +315,9 @@ func pathNotFoundErrorNew(fullPath, version string) error {
 
 // pathFoundAtLatestError returns an error page when the fullPath exists, but
 // the version that is requested does not.
-func pathFoundAtLatestError(ctx context.Context, pathType, fullPath, version string) error {
+func pathFoundAtLatestError(ctx context.Context, pathType, fullPath, requestedVersion string) error {
 	if isActiveFrontendFetch(ctx) {
-		return pathNotFoundErrorNew(fullPath, version)
+		return pathNotFoundErrorNew(fullPath, requestedVersion)
 	}
 	return &serverError{
 		status: http.StatusNotFound,
@@ -329,7 +329,7 @@ func pathFoundAtLatestError(ctx context.Context, pathType, fullPath, version str
 				  <a href="/{{.Path}}?tab=versions">click here</a>.
 				</p>`,
 			MessageData: struct{ TType, Type, Path, Version string }{
-				strings.Title(pathType), pathType, fullPath, displayVersion(version, fullPath)},
+				strings.Title(pathType), pathType, fullPath, displayVersion(requestedVersion, fullPath)},
 		},
 	}
 }
@@ -343,7 +343,7 @@ func proxydatasourceNotSupportedErr() error {
 	}
 }
 
-func parseStdLibURLPath(urlPath string) (path, version string, err error) {
+func parseStdLibURLPath(urlPath string) (path, requestedVersion string, err error) {
 	defer derrors.Wrap(&err, "parseStdLibURLPath(%q)", urlPath)
 
 	// This splits urlPath into either:
@@ -357,9 +357,9 @@ func parseStdLibURLPath(urlPath string) (path, version string, err error) {
 	if len(parts) == 1 {
 		return path, internal.LatestVersion, nil
 	}
-	version = stdlib.VersionForTag(parts[1])
-	if version == "" {
+	requestedVersion = stdlib.VersionForTag(parts[1])
+	if requestedVersion == "" {
 		return "", "", fmt.Errorf("invalid Go tag for url: %q", urlPath)
 	}
-	return path, version, nil
+	return path, requestedVersion, nil
 }

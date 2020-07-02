@@ -26,7 +26,7 @@ func (s *Server) handlePackageDetailsRedirect(w http.ResponseWriter, r *http.Req
 
 // legacyServePackagePage serves details pages for the package with import path
 // pkgPath, in the module specified by modulePath and version.
-func (s *Server) legacyServePackagePage(w http.ResponseWriter, r *http.Request, pkgPath, modulePath, version string) (err error) {
+func (s *Server) legacyServePackagePage(w http.ResponseWriter, r *http.Request, pkgPath, modulePath, requestedVersion string) (err error) {
 	ctx := r.Context()
 
 	// This function handles top level behavior related to the existence of the
@@ -36,29 +36,29 @@ func (s *Server) legacyServePackagePage(w http.ResponseWriter, r *http.Request, 
 	//   3. If there is another version that contains this package path: serve a
 	//      404 and suggest these versions.
 	//   4. Just serve a 404
-	pkg, err := s.ds.LegacyGetPackage(ctx, pkgPath, modulePath, version)
+	pkg, err := s.ds.LegacyGetPackage(ctx, pkgPath, modulePath, requestedVersion)
 	if err == nil {
-		return s.legacyServePackagePageWithPackage(ctx, w, r, pkg, version)
+		return s.legacyServePackagePageWithPackage(ctx, w, r, pkg, requestedVersion)
 	}
 	if !errors.Is(err, derrors.NotFound) {
 		return err
 	}
-	if version == internal.LatestVersion {
+	if requestedVersion == internal.LatestVersion {
 		// If we've already checked the latest version, then we know that this path
 		// is not a package at any version, so just skip ahead and serve the
 		// directory page.
-		dbDir, err := s.ds.LegacyGetDirectory(ctx, pkgPath, modulePath, version, internal.AllFields)
+		dbDir, err := s.ds.LegacyGetDirectory(ctx, pkgPath, modulePath, requestedVersion, internal.AllFields)
 		if err != nil {
 			if errors.Is(err, derrors.NotFound) {
-				return pathNotFoundError(ctx, "package", pkgPath, version)
+				return pathNotFoundError(ctx, "package", pkgPath, requestedVersion)
 			}
 			return err
 		}
-		return s.legacyServeDirectoryPage(ctx, w, r, dbDir, version)
+		return s.legacyServeDirectoryPage(ctx, w, r, dbDir, requestedVersion)
 	}
-	dir, err := s.ds.LegacyGetDirectory(ctx, pkgPath, modulePath, version, internal.AllFields)
+	dir, err := s.ds.LegacyGetDirectory(ctx, pkgPath, modulePath, requestedVersion, internal.AllFields)
 	if err == nil {
-		return s.legacyServeDirectoryPage(ctx, w, r, dir, version)
+		return s.legacyServeDirectoryPage(ctx, w, r, dir, requestedVersion)
 	}
 	if !errors.Is(err, derrors.NotFound) {
 		// The only error we expect is NotFound, so serve an 500 here, otherwise
@@ -67,7 +67,7 @@ func (s *Server) legacyServePackagePage(w http.ResponseWriter, r *http.Request, 
 	}
 	_, err = s.ds.LegacyGetPackage(ctx, pkgPath, modulePath, internal.LatestVersion)
 	if err == nil {
-		return pathFoundAtLatestError(ctx, "package", pkgPath, version)
+		return pathFoundAtLatestError(ctx, "package", pkgPath, requestedVersion)
 	}
 	if !errors.Is(err, derrors.NotFound) {
 		// Unlike the error handling for LegacyGetDirectory above, we don't serve an
@@ -79,7 +79,7 @@ func (s *Server) legacyServePackagePage(w http.ResponseWriter, r *http.Request, 
 		log.Errorf(ctx, "error checking for latest package: %v", err)
 		return nil
 	}
-	return pathNotFoundError(ctx, "package", pkgPath, version)
+	return pathNotFoundError(ctx, "package", pkgPath, requestedVersion)
 }
 
 func (s *Server) legacyServePackagePageWithPackage(ctx context.Context, w http.ResponseWriter, r *http.Request, pkg *internal.LegacyVersionedPackage, requestedVersion string) (err error) {
