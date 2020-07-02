@@ -28,10 +28,7 @@ import (
 func TestInsertModule(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
 	defer cancel()
-	ctx = experiment.NewContext(ctx,
-		experiment.NewSet(map[string]bool{
-			internal.ExperimentInsertDirectories: true,
-		}))
+	ctx = experiment.NewContext(ctx, internal.ExperimentInsertDirectories)
 
 	for _, test := range []struct {
 		name   string
@@ -140,10 +137,7 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 func TestUpsertModule(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	ctx = experiment.NewContext(ctx,
-		experiment.NewSet(map[string]bool{
-			internal.ExperimentInsertDirectories: true,
-		}))
+	ctx = experiment.NewContext(ctx, internal.ExperimentInsertDirectories)
 	m := sample.Module("upsert.org", "v1.2.3")
 	p := &internal.LegacyPackage{
 		Name:              "p",

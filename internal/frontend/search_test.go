@@ -11,6 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -191,7 +192,7 @@ func testSearchRequestRedirectPath(t *testing.T, experimentNames ...string) {
 	// Experiments need to be set in the context, for DB work, and as
 	// a middleware, for request handling.
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	ctx = experimentContext(ctx, experimentNames...)
+	ctx = experiment.NewContext(ctx, experimentNames...)
 
 	defer cancel()
 	defer postgres.ResetTestDB(testDB, t)

@@ -41,7 +41,7 @@ func TestFetchModule(t *testing.T) {
 	stdlib.UseTestData = true
 
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	ctx = experiment.NewContext(ctx, experiment.NewSet(map[string]bool{internal.ExperimentInsertPlaygroundLinks: true}))
+	ctx = experiment.NewContext(ctx, internal.ExperimentInsertPlaygroundLinks)
 	defer cancel()
 
 	// Stub out the function used to share playground snippets

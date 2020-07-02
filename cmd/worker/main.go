@@ -23,7 +23,6 @@ import (
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/dcensus"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/index"
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/source"
@@ -150,13 +149,13 @@ func newQueue(ctx context.Context, cfg *config.Config, proxyClient *proxy.Client
 		if err != nil {
 			log.Fatal(ctx, err)
 		}
-		set := map[string]bool{}
+		var names []string
 		for _, e := range experiments {
 			if e.Rollout > 0 {
-				set[e.Name] = true
+				names = append(names, e.Name)
 			}
 		}
-		return queue.NewInMemory(ctx, *workers, experiment.NewSet(set),
+		return queue.NewInMemory(ctx, *workers, names,
 			func(ctx context.Context, modulePath, version string) (int, error) {
 				return worker.FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, db, cfg.AppVersionLabel())
 			})

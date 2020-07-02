@@ -189,7 +189,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 
 	// Experiments need to be set in the context, for DB work, and as a
 	// middleware, for request handling.
-	ctx = experimentContext(ctx, experimentNames...)
+	ctx = experiment.NewContext(ctx, experimentNames...)
 	insertTestModules(ctx, t, testModules)
 	_, handler, _ := newTestServer(t, nil, experimentNames...)
 
@@ -948,27 +948,13 @@ func TestTagRoute(t *testing.T) {
 	}
 }
 
-func experimentContext(ctx context.Context, experimentNames ...string) context.Context {
-	expmap := map[string]bool{}
-	for _, n := range experimentNames {
-		expmap[n] = true
-	}
-	return experiment.NewContext(ctx, experiment.NewSet(expmap))
-}
-
 func newTestServer(t *testing.T, proxyModules []*proxy.TestModule, experimentNames ...string) (*Server, http.Handler, func()) {
 	t.Helper()
 	proxyClient, teardown := proxy.SetupTestProxy(t, proxyModules)
 	sourceClient := source.NewClient(sourceTimeout)
 	ctx := context.Background()
 
-	var exps []*internal.Experiment
-	set := map[string]bool{}
-	for _, n := range experimentNames {
-		exps = append(exps, &internal.Experiment{Name: n, Rollout: 100})
-		set[n] = true
-	}
-	q := queue.NewInMemory(ctx, 1, experiment.NewSet(set),
+	q := queue.NewInMemory(ctx, 1, experimentNames,
 		func(ctx context.Context, mpath, version string) (int, error) {
 			return FetchAndUpdateState(ctx, mpath, version, proxyClient, sourceClient, testDB)
 		})
@@ -987,6 +973,10 @@ func newTestServer(t *testing.T, proxyModules []*proxy.TestModule, experimentNam
 	mux := http.NewServeMux()
 	s.Install(mux.Handle, nil)
 
+	var exps []*internal.Experiment
+	for _, n := range experimentNames {
+		exps = append(exps, &internal.Experiment{Name: n, Rollout: 100})
+	}
 	esrc := internal.NewLocalExperimentSource(exps)
 	exp, err := middleware.NewExperimenter(ctx, time.Hour, esrc, nil)
 	if err != nil {

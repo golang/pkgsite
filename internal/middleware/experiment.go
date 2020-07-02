@@ -61,17 +61,14 @@ func (e *Experimenter) setExperimentsForRequest(r *http.Request) *http.Request {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	set := map[string]bool{}
+	var exps []string
 	for _, exp := range e.snapshot {
 		if shouldSetExperiment(r, exp) {
-			set[exp.Name] = true
+			exps = append(exps, exp.Name)
 		}
 	}
-	keys := r.URL.Query()[experimentQueryParamKey]
-	for _, k := range keys {
-		set[k] = true
-	}
-	return r.WithContext(experiment.NewContext(r.Context(), experiment.NewSet(set)))
+	exps = append(exps, r.URL.Query()[experimentQueryParamKey]...)
+	return r.WithContext(experiment.NewContext(r.Context(), exps...))
 }
 
 // pollUpdates polls the experiment source for updates to the snapshot, until

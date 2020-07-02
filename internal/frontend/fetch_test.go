@@ -73,12 +73,11 @@ func TestFetch(t *testing.T) {
 
 			ctx, cancel := context.WithTimeout(context.Background(), testFetchTimeout)
 			defer cancel()
-			ctx = experiment.NewContext(ctx, experiment.NewSet(map[string]bool{
-				internal.ExperimentFrontendFetch:               true,
-				internal.ExperimentFrontendPackageAtMaster:     true,
-				internal.ExperimentInsertDirectories:           true,
-				internal.ExperimentUsePathInfoToCheckExistence: true,
-			}))
+			ctx = experiment.NewContext(ctx,
+				internal.ExperimentFrontendFetch,
+				internal.ExperimentFrontendPackageAtMaster,
+				internal.ExperimentInsertDirectories,
+				internal.ExperimentUsePathInfoToCheckExistence)
 
 			status, responseText := s.fetchAndPoll(ctx, testModulePath, test.fullPath, test.version)
 			if status != http.StatusOK {
@@ -132,10 +131,9 @@ func TestFetchErrors(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), test.fetchTimeout)
 			defer cancel()
 
-			ctx = experiment.NewContext(ctx, experiment.NewSet(map[string]bool{
-				internal.ExperimentFrontendFetch:     true,
-				internal.ExperimentInsertDirectories: true,
-			}))
+			ctx = experiment.NewContext(ctx,
+				internal.ExperimentFrontendFetch,
+				internal.ExperimentInsertDirectories)
 			s, _, teardown := newTestServer(t, testModulesForProxy, internal.ExperimentInsertDirectories)
 			defer teardown()
 			got, _ := s.fetchAndPoll(ctx, test.modulePath, test.fullPath, test.version)
@@ -156,10 +154,10 @@ func TestFetchPathAlreadyExists(t *testing.T) {
 		t.Run(strconv.Itoa(status), func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testFetchTimeout)
 			defer cancel()
-			ctx = experiment.NewContext(ctx, experiment.NewSet(map[string]bool{
-				internal.ExperimentFrontendFetch:     true,
-				internal.ExperimentInsertDirectories: true,
-			}))
+			ctx = experiment.NewContext(ctx,
+				internal.ExperimentFrontendFetch,
+				internal.ExperimentInsertDirectories,
+			)
 			if err := testDB.InsertModule(ctx, sample.DefaultModule()); err != nil {
 				t.Fatal(err)
 			}

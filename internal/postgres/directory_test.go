@@ -284,9 +284,7 @@ func TestLegacyGetDirectory(t *testing.T) {
 func TestGetDirectoryNew(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	ctx = experiment.NewContext(ctx,
-		experiment.NewSet(map[string]bool{
-			internal.ExperimentInsertDirectories: true}))
+	ctx = experiment.NewContext(ctx, internal.ExperimentInsertDirectories)
 
 	defer ResetTestDB(testDB, t)
 	InsertSampleDirectoryTree(ctx, t, testDB)

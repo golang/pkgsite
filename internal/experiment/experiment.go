@@ -34,13 +34,17 @@ func FromContext(ctx context.Context) *Set {
 }
 
 // NewSet creates a new experiment.Set with the data provided.
-func NewSet(set map[string]bool) *Set {
+func NewSet(experimentNames ...string) *Set {
+	set := map[string]bool{}
+	for _, e := range experimentNames {
+		set[e] = true
+	}
 	return &Set{set: set}
 }
 
 // NewContext stores the provided experiment set in the context.
-func NewContext(ctx context.Context, set *Set) context.Context {
-	return context.WithValue(ctx, contextKey{}, set)
+func NewContext(ctx context.Context, experimentNames ...string) context.Context {
+	return context.WithValue(ctx, contextKey{}, NewSet(experimentNames...))
 }
 
 // IsActive reports whether an experiment is active for this set.

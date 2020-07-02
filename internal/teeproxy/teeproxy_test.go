@@ -344,9 +344,7 @@ func makePostRequest(t *testing.T, server *Server, pkgGoDevURL string) *http.Res
 	}
 	r := httptest.NewRequest("POST", "/", bytes.NewBuffer(requestBody))
 	r.Header.Set("Content-Type", "application/json; charset=utf-8")
-	r = r.WithContext(experiment.NewContext(r.Context(), experiment.NewSet(map[string]bool{
-		internal.ExperimentTeeProxyMakePkgGoDevRequest: true,
-	})))
+	r = r.WithContext(experiment.NewContext(r.Context(), internal.ExperimentTeeProxyMakePkgGoDevRequest))
 	w := httptest.NewRecorder()
 	server.ServeHTTP(w, r)
 	return w.Result()

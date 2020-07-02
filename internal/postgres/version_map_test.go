@@ -17,9 +17,7 @@ import (
 func TestReadAndWriteVersionMap(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	ctx = experiment.NewContext(ctx, experiment.NewSet(map[string]bool{
-		internal.ExperimentInsertDirectories: true,
-	}))
+	ctx = experiment.NewContext(ctx, internal.ExperimentInsertDirectories)
 	defer ResetTestDB(testDB, t)
 
 	m := sample.Module("golang.org/x/tools", sample.VersionString, "go/packages")

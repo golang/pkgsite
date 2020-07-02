@@ -114,13 +114,13 @@ type moduleVersion struct {
 type InMemory struct {
 	queue       chan moduleVersion
 	sem         chan struct{}
-	experiments *experiment.Set
+	experiments []string
 }
 
 // NewInMemory creates a new InMemory that asynchronously fetches
 // from proxyClient and stores in db. It uses workerCount parallelism to
 // execute these fetches.
-func NewInMemory(ctx context.Context, workerCount int, experiments *experiment.Set, processFunc func(context.Context, string, string) (int, error)) *InMemory {
+func NewInMemory(ctx context.Context, workerCount int, experiments []string, processFunc func(context.Context, string, string) (int, error)) *InMemory {
 	q := &InMemory{
 		queue:       make(chan moduleVersion, 1000),
 		sem:         make(chan struct{}, workerCount),
@@ -142,7 +142,7 @@ func NewInMemory(ctx context.Context, workerCount int, experiments *experiment.S
 				log.Infof(ctx, "Fetch requested: %q %q (workerCount = %d)", v.modulePath, v.version, cap(q.sem))
 
 				fetchCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
-				fetchCtx = experiment.NewContext(fetchCtx, q.experiments)
+				fetchCtx = experiment.NewContext(fetchCtx, experiments...)
 				defer cancel()
 
 				if _, err := processFunc(fetchCtx, v.modulePath, v.version); err != nil {

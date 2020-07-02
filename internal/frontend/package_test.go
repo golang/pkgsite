@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -21,7 +22,7 @@ func TestStdlibPathForShortcut(t *testing.T) {
 		"encoding/json",                  // one match for "json"
 		"text/template", "html/template", // two matches for "template"
 	)
-	ctx := experimentContext(context.Background(), internal.ExperimentInsertDirectories)
+	ctx := experiment.NewContext(context.Background(), internal.ExperimentInsertDirectories)
 	if err := testDB.InsertModule(ctx, m); err != nil {
 		t.Fatal(err)
 	}

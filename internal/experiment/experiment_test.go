@@ -13,9 +13,8 @@ import (
 
 func TestGetAndSetExperiments(t *testing.T) {
 	const testExperiment1 = "test-experiment-1"
-	s := map[string]bool{testExperiment1: true}
-	ctx := NewContext(context.Background(), NewSet(s))
-	want := NewSet(s)
+	ctx := NewContext(context.Background(), testExperiment1)
+	want := NewSet(testExperiment1)
 	got := FromContext(ctx)
 	if !cmp.Equal(want, got, cmp.AllowUnexported(Set{})) {
 		t.Fatalf("FromContext(ctx) = %v; want = %v", got, want)

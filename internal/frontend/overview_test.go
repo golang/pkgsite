@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -144,7 +145,7 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 }
 
 func TestReadmeHTML(t *testing.T) {
-	ctx := experimentContext(context.Background(), internal.ExperimentTranslateHTML)
+	ctx := experiment.NewContext(context.Background(), internal.ExperimentTranslateHTML)
 	for _, tc := range []struct {
 		name   string
 		mi     *internal.ModuleInfo
