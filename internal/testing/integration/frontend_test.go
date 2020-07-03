@@ -17,6 +17,7 @@ import (
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
@@ -153,55 +154,96 @@ func TestModulePackageDirectoryResolution(t *testing.T) {
 				in(".DetailsContent", hasText("I'm a package"))),
 		},
 	}
+	ctx := context.Background()
+	ts := setupFrontend(ctx, t, nil)
+	processVersions(ctx, t, versions)
+	defer postgres.ResetTestDB(testDB, t)
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			validateResponse(t, ts.URL+test.urlPath, test.wantCode, test.want)
+		})
+	}
+}
+
+// TODO(https://github.com/golang/go/issues/40096): factor out this code reduce
+// duplication
+func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue) *httptest.Server {
+	t.Helper()
 	s, err := frontend.NewServer(frontend.ServerConfig{
 		DataSource:           testDB,
 		TaskIDChangeInterval: 10 * time.Minute,
 		StaticPath:           template.TrustedSourceFromConstant("../../../content/static"),
 		ThirdPartyPath:       "../../../third_party",
 		AppVersionLabel:      "",
+		Queue:                q,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	mux := http.NewServeMux()
 	s.Install(mux.Handle, nil)
-	handler := middleware.LatestVersion(s.LatestVersion)(mux)
-	ts := httptest.NewServer(handler)
-	processVersions(context.Background(), t, versions)
-	defer postgres.ResetTestDB(testDB, t)
 
-	for _, test := range tests {
-		t.Run(test.desc, func(t *testing.T) {
-			resp, err := http.Get(ts.URL + test.urlPath)
-			if err != nil {
-				t.Fatal(err)
-			}
-			defer resp.Body.Close()
-			if resp.StatusCode != test.wantCode {
-				t.Errorf("GET %s returned status %d, want %d", test.urlPath, resp.StatusCode, test.wantCode)
-			}
-			if test.want != nil {
-				if err := htmlcheck.Run(resp.Body, test.want); err != nil {
-					t.Error(err)
-				}
-			}
-		})
+	experimenter, err := middleware.NewExperimenter(ctx, 1*time.Minute, testDB)
+	if err != nil {
+		t.Fatal(err)
 	}
+	mw := middleware.Chain(
+		middleware.AcceptMethods(http.MethodGet),
+		middleware.SecureHeaders(),
+		middleware.LatestVersion(s.LatestVersion),
+		middleware.Experiment(experimenter),
+	)
+	return httptest.NewServer(mw(mux))
+}
 
+// TODO(https://github.com/golang/go/issues/40098): factor out this code reduce
+// duplication
+func setupQueue(ctx context.Context, t *testing.T, proxyModules []*proxy.TestModule, experimentNames ...string) (queue.Queue, func()) {
+	proxyClient, teardown := proxy.SetupTestProxy(t, proxyModules)
+	sourceClient := source.NewClient(1 * time.Second)
+	q := queue.NewInMemory(ctx, 1, experimentNames,
+		func(ctx context.Context, mpath, version string) (int, error) {
+			return frontend.FetchAndUpdateState(ctx, mpath, version, proxyClient, sourceClient, testDB)
+		})
+	return q, func() {
+		teardown()
+	}
 }
 
 func processVersions(ctx context.Context, t *testing.T, testModules []*proxy.TestModule) {
 	t.Helper()
 	proxyClient, teardown := proxy.SetupTestProxy(t, testModules)
 	defer teardown()
-	sourceClient := source.NewClient(1 * time.Second)
 
 	for _, tm := range testModules {
-		res := fetch.FetchModule(ctx, tm.ModulePath, tm.Version, proxyClient, sourceClient)
-		if res.Error != nil {
-			t.Fatal(res.Error)
-		}
-		if err := testDB.InsertModule(ctx, res.Module); err != nil {
+		fetchAndInsertModule(ctx, t, tm, proxyClient)
+	}
+}
+
+func fetchAndInsertModule(ctx context.Context, t *testing.T, tm *proxy.TestModule, proxyClient *proxy.Client) {
+	sourceClient := source.NewClient(1 * time.Second)
+	res := fetch.FetchModule(ctx, tm.ModulePath, tm.Version, proxyClient, sourceClient)
+	if res.Error != nil {
+		t.Fatal(res.Error)
+	}
+	if err := testDB.InsertModule(ctx, res.Module); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func validateResponse(t *testing.T, testURL string, wantCode int, wantHTML htmlcheck.Checker) {
+	t.Helper()
+	resp, err := http.Get(testURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != wantCode {
+		t.Fatalf("GET %q returned status %d, want %d", testURL, resp.StatusCode, wantCode)
+	}
+	if wantHTML != nil {
+		if err := htmlcheck.Run(resp.Body, wantHTML); err != nil {
 			t.Fatal(err)
 		}
 	}

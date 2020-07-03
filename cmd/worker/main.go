@@ -143,6 +143,8 @@ func main() {
 	log.Fatal(ctx, http.ListenAndServe(addr, nil))
 }
 
+// TODO(https://github.com/golang/go/issues/40097): factor out to reduce
+// duplication with cmd/frontend/main.go.
 func newQueue(ctx context.Context, cfg *config.Config, proxyClient *proxy.Client, sourceClient *source.Client, db *postgres.DB) queue.Queue {
 	if !cfg.OnAppEngine() {
 		experiments, err := db.GetExperiments(ctx)
