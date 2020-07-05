@@ -36,6 +36,9 @@ type DataSource interface {
 	// GetTaggedVersionsForModule returns LegacyModuleInfo for all known tagged
 	// versions for any module containing a package with the given import path.
 	GetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*ModuleInfo, error)
+	// GetModuleInfo returns the ModuleInfo corresponding to modulePath and
+	// version.
+	GetModuleInfo(ctx context.Context, modulePath, version string) (*ModuleInfo, error)
 
 	// TODO(golang/go#39629): Deprecate these methods.
 	//

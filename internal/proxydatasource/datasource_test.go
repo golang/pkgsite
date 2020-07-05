@@ -132,6 +132,18 @@ func TestDataSource_LegacyGetModuleInfo_Latest(t *testing.T) {
 	}
 }
 
+func TestDataSource_GetModuleInfo(t *testing.T) {
+	ctx, ds, teardown := setup(t)
+	defer teardown()
+	got, err := ds.GetModuleInfo(ctx, "foo.com/bar", "v1.2.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(&wantModuleInfo, got, cmpOpts...); diff != "" {
+		t.Errorf("GetModuleInfo diff (-want +got):\n%s", diff)
+	}
+}
+
 func TestDataSource_LegacyGetModuleLicenses(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()

@@ -277,6 +277,44 @@ func (db *DB) GetImportedBy(ctx context.Context, pkgPath, modulePath string, lim
 	return importedby, nil
 }
 
+// GetModuleInfo fetches a Version from the database with the primary key
+// (module_path, version).
+func (db *DB) GetModuleInfo(ctx context.Context, modulePath string, version string) (_ *internal.ModuleInfo, err error) {
+	defer derrors.Wrap(&err, "GetModuleInfo(ctx, %q, %q)", modulePath, version)
+
+	query := `
+		SELECT
+			module_path,
+			version,
+			commit_time,
+			version_type,
+			source_info,
+			redistributable,
+			has_go_mod
+		FROM
+			modules
+		WHERE
+			module_path = $1
+			AND version = $2;`
+
+	args := []interface{}{modulePath, version}
+
+	var (
+		mi       internal.ModuleInfo
+		hasGoMod sql.NullBool
+	)
+	row := db.db.QueryRow(ctx, query, args...)
+	if err := row.Scan(&mi.ModulePath, &mi.Version, &mi.CommitTime, &mi.VersionType,
+		jsonbScanner{&mi.SourceInfo}, &mi.IsRedistributable, &hasGoMod); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("module version %s@%s: %w", modulePath, version, derrors.NotFound)
+		}
+		return nil, fmt.Errorf("row.Scan(): %v", err)
+	}
+	setHasGoMod(&mi, hasGoMod)
+	return &mi, nil
+}
+
 // LegacyGetModuleInfo fetches a Version from the database with the primary key
 // (module_path, version).
 func (db *DB) LegacyGetModuleInfo(ctx context.Context, modulePath string, version string) (_ *internal.LegacyModuleInfo, err error) {
