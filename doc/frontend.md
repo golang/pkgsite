@@ -12,9 +12,7 @@ The main program lives in `cmd/frontend`. The bulk of the code lives in
 
 You can run the frontend locally like so:
 
-```
-go run cmd/frontend/main.go [-dev] [-direct_proxy]
-```
+	go run ./cmd/frontend [-dev] [-direct_proxy]
 
 - The `-dev` flag reloads templates on each page load.
 
@@ -34,7 +32,7 @@ on how to [set up](postgres.md) and
 [populate](worker.md#populating-data-locally-using-the-worker)
 your local database with packages of your choice.
 
-You can then run the frontend with: `go run cmd/frontend/main.go`
+You can then run the frontend with: `go run ./cmd/frontend`
 
 If you add, change or remove any inline scripts in templates, run
 `devtools/cmd/csphash` to update the hashes. Running `all.bash`

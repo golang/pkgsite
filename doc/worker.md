@@ -11,9 +11,7 @@ The main program lives in `cmd/worker`.
 
 You can run the worker locally like so:
 
-```
-go run cmd/worker/main.go
-```
+	go run ./cmd/worker
 
 ### Populating data locally using the worker
 
