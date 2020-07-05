@@ -61,6 +61,21 @@ type testPackage struct {
 	doc    string
 }
 
+type serverTestCase struct {
+	// name of the test
+	name string
+	// path to use in an HTTP GET request
+	urlPath string
+	// whether to mutate the identifier links in documentation.
+	addDocQueryParam bool
+	// statusCode we expect to see in the headers.
+	wantStatusCode int
+	// if non-empty, contents of Location header. For testing redirects.
+	wantLocation string
+	// if non-nil, call the checker on the HTML root node
+	want htmlcheck.Checker
+}
+
 var testModules = []testModule{
 	{
 		// An ordinary module, with three versions.
@@ -160,37 +175,12 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 	}
 }
 
-// TestServer checks the contents of served pages by looking for
-// strings and elements in the parsed HTML response body.
-//
-// Other than search and static content, our pages vary along five dimensions:
-//
-// 1. module / package / directory
-// 2. stdlib / other (since the standard library is a special case in several ways)
-// 3. redistributable / non-redistributable
-// 4. versioned / unversioned URL (whether the URL for the page contains "@version")
-// 5. the tab (overview / doc / imports / ...)
-//
-// We aim to test all combinations of these.
-func TestServer(t *testing.T) {
-	t.Run("no experiments", func(t *testing.T) {
-		testServer(t)
-	})
-	t.Run("use directories", func(t *testing.T) {
-		testServer(t, internal.ExperimentUseDirectories, internal.ExperimentInsertDirectories)
-	})
-}
-
-func testServer(t *testing.T, experimentNames ...string) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
-	defer postgres.ResetTestDB(testDB, t)
-
-	// Experiments need to be set in the context, for DB work, and as a
-	// middleware, for request handling.
-	ctx = experiment.NewContext(ctx, experimentNames...)
-	insertTestModules(ctx, t, testModules)
-	_, handler, _ := newTestServer(t, nil, experimentNames...)
+// serverTestCases are the test cases valid for any experiment
+func serverTestCases() ([]serverTestCase, []serverTestCase, []serverTestCase) {
+	const (
+		versioned   = true
+		unversioned = false
+	)
 
 	var (
 		in   = htmlcheck.In
@@ -336,24 +326,7 @@ func testServer(t *testing.T, experimentNames ...string) {
 		PackageURLFormat: "/cmd%s",
 	}
 
-	const (
-		versioned   = true
-		unversioned = false
-	)
-	for _, tc := range []struct {
-		// name of the test
-		name string
-		// path to use in an HTTP GET request
-		urlPath string
-		// whether to mutate the identifier links in documentation.
-		addDocQueryParam bool
-		// statusCode we expect to see in the headers.
-		wantStatusCode int
-		// if non-empty, contents of Location header. For testing redirects.
-		wantLocation string
-		// if non-nil, call the checker on the HTML root node
-		want htmlcheck.Checker
-	}{
+	testCases := []serverTestCase{
 		{
 			name:           "static",
 			urlPath:        "/static/",
@@ -812,6 +785,9 @@ func testServer(t *testing.T, experimentNames ...string) {
 				in("h3.Error-message", text("v1-2 is not a valid semantic version.")),
 				in("p.Error-message a", href(`/search?q=github.com%2fvalid%2fmodule_name%2ffoo`))),
 		},
+	}
+
+	noExpUserDirTCs := []serverTestCase{
 		{
 			name:           "unknown version",
 			urlPath:        fmt.Sprintf("/%s@%s/%s", sample.ModulePath, "v99.99.0", sample.Suffix),
@@ -828,8 +804,72 @@ func testServer(t *testing.T, experimentNames ...string) {
 				in("h3.Error-message", text("404 Not Found")),
 				in("p.Error-message", text("a valid package path"))),
 		},
-		// TODO(golang/go#39759): test pathNotFoundErrorNew
-	} {
+	}
+
+	frontendFetchTCs := []serverTestCase{
+		{
+			name:           "unknown version",
+			urlPath:        fmt.Sprintf("/%s@%s/%s", sample.ModulePath, "v99.99.0", sample.Suffix),
+			wantStatusCode: http.StatusNotFound,
+			want: in("",
+				in("h3.Fetch-message.js-fetchMessage", text("Oops! "+sample.ModulePath+"/foo@v99.99.0 does not exist."))),
+		},
+		{
+			name:           "path not found",
+			urlPath:        "/example.com/unknown",
+			wantStatusCode: http.StatusNotFound,
+			want: in("",
+				in("h3.Fetch-message.js-fetchMessage", text("Oops! example.com/unknown does not exist."))),
+		},
+	}
+	return testCases, noExpUserDirTCs, frontendFetchTCs
+}
+
+// TestServer checks the contents of served pages by looking for
+// strings and elements in the parsed HTML response body.
+//
+// Other than search and static content, our pages vary along five dimensions:
+//
+// 1. module / package / directory
+// 2. stdlib / other (since the standard library is a special case in several ways)
+// 3. redistributable / non-redistributable
+// 4. versioned / unversioned URL (whether the URL for the page contains "@version")
+// 5. the tab (overview / doc / imports / ...)
+//
+// We aim to test all combinations of these.
+func TestServer(t *testing.T) {
+	testCases, noExpUserDirTCs, frontendFetchTCs := serverTestCases()
+
+	t.Run("no experiments", func(t *testing.T) {
+		testServer(t, append(testCases, noExpUserDirTCs...))
+	})
+	t.Run("use directories", func(t *testing.T) {
+		testServer(t,
+			append(testCases, noExpUserDirTCs...),
+			internal.ExperimentUseDirectories, internal.ExperimentInsertDirectories)
+
+	})
+	t.Run("frontend fetch", func(t *testing.T) {
+		testServer(t,
+			append(testCases, frontendFetchTCs...),
+			internal.ExperimentFrontendFetch,
+			internal.ExperimentInsertDirectories,
+			internal.ExperimentUsePathInfoToCheckExistence)
+	})
+}
+
+func testServer(t *testing.T, testCases []serverTestCase, experimentNames ...string) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	defer postgres.ResetTestDB(testDB, t)
+
+	// Experiments need to be set in the context, for DB work, and as a
+	// middleware, for request handling.
+	ctx = experiment.NewContext(ctx, experimentNames...)
+	insertTestModules(ctx, t, testModules)
+	_, handler, _ := newTestServer(t, nil, experimentNames...)
+
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) { // remove initial '/' for name
 			defer func(orig bool) { addDocQueryParam = orig }(addDocQueryParam)
 			addDocQueryParam = tc.addDocQueryParam
