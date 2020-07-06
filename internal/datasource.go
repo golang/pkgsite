@@ -21,6 +21,9 @@ type DataSource interface {
 	// GetImports returns a slice of import paths imported by the package
 	// specified by path and version.
 	GetImports(ctx context.Context, pkgPath, modulePath, version string) ([]string, error)
+	// GetModuleInfo returns the ModuleInfo corresponding to modulePath and
+	// version.
+	GetModuleInfo(ctx context.Context, modulePath, version string) (*ModuleInfo, error)
 	// GetPathInfo returns information about a path.
 	GetPathInfo(ctx context.Context, path, inModulePath, inVersion string) (outModulePath, outVersion string, isPackage bool, err error)
 	// GetPseudoVersionsForModule returns LegacyModuleInfo for all known
@@ -36,9 +39,6 @@ type DataSource interface {
 	// GetTaggedVersionsForModule returns LegacyModuleInfo for all known tagged
 	// versions for any module containing a package with the given import path.
 	GetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*ModuleInfo, error)
-	// GetModuleInfo returns the ModuleInfo corresponding to modulePath and
-	// version.
-	GetModuleInfo(ctx context.Context, modulePath, version string) (*ModuleInfo, error)
 
 	// TODO(golang/go#39629): Deprecate these methods.
 	//
