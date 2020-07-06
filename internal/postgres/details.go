@@ -279,7 +279,7 @@ func (db *DB) GetImportedBy(ctx context.Context, pkgPath, modulePath string, lim
 
 // GetModuleInfo fetches a module version from the database with the primary key
 // (module_path, version).
-func (db *DB) GetModuleInfo(ctx context.Context, modulePath string, version string) (_ *internal.ModuleInfo, err error) {
+func (db *DB) GetModuleInfo(ctx context.Context, modulePath, version string) (_ *internal.ModuleInfo, err error) {
 	defer derrors.Wrap(&err, "GetModuleInfo(ctx, %q, %q)", modulePath, version)
 
 	query := `
@@ -297,17 +297,15 @@ func (db *DB) GetModuleInfo(ctx context.Context, modulePath string, version stri
 			module_path = $1
 			AND version = $2;`
 
-	args := []interface{}{modulePath, version}
-
 	var (
 		mi       internal.ModuleInfo
 		hasGoMod sql.NullBool
 	)
-	row := db.db.QueryRow(ctx, query, args...)
+	row := db.db.QueryRow(ctx, query, modulePath, version)
 	if err := row.Scan(&mi.ModulePath, &mi.Version, &mi.CommitTime, &mi.VersionType,
 		jsonbScanner{&mi.SourceInfo}, &mi.IsRedistributable, &hasGoMod); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("module version %s@%s: %w", modulePath, version, derrors.NotFound)
+			return nil, derrors.NotFound
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
