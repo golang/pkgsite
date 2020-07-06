@@ -134,7 +134,6 @@ func (db *DB) LegacyGetPackage(ctx context.Context, pkgPath, modulePath, version
 	var (
 		pkg                        internal.LegacyVersionedPackage
 		licenseTypes, licensePaths []string
-		hasGoMod                   sql.NullBool
 	)
 	row := db.db.QueryRow(ctx, query, args...)
 	err = row.Scan(&pkg.Path, &pkg.Name, &pkg.Synopsis,
@@ -142,14 +141,13 @@ func (db *DB) LegacyGetPackage(ctx context.Context, pkgPath, modulePath, version
 		database.NullIsEmpty(&pkg.DocumentationHTML), &pkg.GOOS, &pkg.GOARCH, &pkg.Version,
 		&pkg.CommitTime, database.NullIsEmpty(&pkg.LegacyReadmeFilePath), database.NullIsEmpty(&pkg.LegacyReadmeContents),
 		&pkg.ModulePath, &pkg.VersionType, jsonbScanner{&pkg.SourceInfo}, &pkg.LegacyModuleInfo.IsRedistributable,
-		&hasGoMod)
+		&pkg.HasGoMod)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("package %s@%s: %w", pkgPath, version, derrors.NotFound)
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
-	setHasGoMod(&pkg.ModuleInfo, hasGoMod)
 	lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
 	if err != nil {
 		return nil, err

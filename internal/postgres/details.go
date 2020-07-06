@@ -297,19 +297,15 @@ func (db *DB) GetModuleInfo(ctx context.Context, modulePath, version string) (_ 
 			module_path = $1
 			AND version = $2;`
 
-	var (
-		mi       internal.ModuleInfo
-		hasGoMod sql.NullBool
-	)
+	var mi internal.ModuleInfo
 	row := db.db.QueryRow(ctx, query, modulePath, version)
 	if err := row.Scan(&mi.ModulePath, &mi.Version, &mi.CommitTime, &mi.VersionType,
-		jsonbScanner{&mi.SourceInfo}, &mi.IsRedistributable, &hasGoMod); err != nil {
+		jsonbScanner{&mi.SourceInfo}, &mi.IsRedistributable, &mi.HasGoMod); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, derrors.NotFound
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
-	setHasGoMod(&mi, hasGoMod)
 	return &mi, nil
 }
 
@@ -349,30 +345,17 @@ func (db *DB) LegacyGetModuleInfo(ctx context.Context, modulePath string, versio
 		args = append(args, version)
 	}
 
-	var (
-		mi       internal.LegacyModuleInfo
-		hasGoMod sql.NullBool
-	)
+	var mi internal.LegacyModuleInfo
 	row := db.db.QueryRow(ctx, query, args...)
 	if err := row.Scan(&mi.ModulePath, &mi.Version, &mi.CommitTime,
 		database.NullIsEmpty(&mi.LegacyReadmeFilePath), database.NullIsEmpty(&mi.LegacyReadmeContents), &mi.VersionType,
-		jsonbScanner{&mi.SourceInfo}, &mi.IsRedistributable, &hasGoMod); err != nil {
+		jsonbScanner{&mi.SourceInfo}, &mi.IsRedistributable, &mi.HasGoMod); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("module version %s@%s: %w", modulePath, version, derrors.NotFound)
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
-	setHasGoMod(&mi.ModuleInfo, hasGoMod)
 	return &mi, nil
-}
-
-func setHasGoMod(mi *internal.ModuleInfo, nb sql.NullBool) {
-	// The safe default value for HasGoMod is true, because search will penalize modules that don't have one.
-	// This is temporary: when has_go_mod is fully populated, we'll make it NOT NULL.
-	mi.HasGoMod = true
-	if nb.Valid {
-		mi.HasGoMod = nb.Bool
-	}
 }
 
 // jsonbScanner scans a jsonb value into a Go value.

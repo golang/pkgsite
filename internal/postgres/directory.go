@@ -221,17 +221,15 @@ func (db *DB) LegacyGetDirectory(ctx context.Context, dirPath, modulePath, versi
 		if fields&internal.WithReadmeContents != 0 {
 			scanArgs = append(scanArgs, database.NullIsEmpty(&mi.LegacyReadmeContents))
 		}
-		var hasGoMod sql.NullBool
 		scanArgs = append(scanArgs,
 			&mi.CommitTime,
 			&mi.VersionType,
 			jsonbScanner{&mi.SourceInfo},
 			&mi.IsRedistributable,
-			&hasGoMod)
+			&mi.HasGoMod)
 		if err := rows.Scan(scanArgs...); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
-		setHasGoMod(&mi.ModuleInfo, hasGoMod)
 		lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
 		if err != nil {
 			return err
