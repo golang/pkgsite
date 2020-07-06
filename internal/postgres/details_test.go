@@ -21,6 +21,77 @@ import (
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
+func TestPostgres_GetModuleInfo(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	defer ResetTestDB(testDB, t)
+
+	testCases := []struct {
+		name, path, version string
+		modules             []*internal.Module
+		wantIndex           int // index into versions
+		wantErr             error
+	}{
+		{
+			name:    "version present",
+			path:    "mod.1",
+			version: "v1.0.2",
+			modules: []*internal.Module{
+				sample.Module("mod.1", "v1.1.0", sample.Suffix),
+				sample.Module("mod.1", "v1.0.2", sample.Suffix),
+				sample.Module("mod.1", "v1.0.0", sample.Suffix),
+			},
+			wantIndex: 1,
+		},
+		{
+			name:    "version not present",
+			path:    "mod.2",
+			version: "v1.0.3",
+			modules: []*internal.Module{
+				sample.Module("mod.2", "v1.1.0", sample.Suffix),
+				sample.Module("mod.2", "v1.0.2", sample.Suffix),
+				sample.Module("mod.2", "v1.0.0", sample.Suffix),
+			},
+			wantErr: derrors.NotFound,
+		},
+		{
+			name:    "no versions",
+			path:    "mod3",
+			version: "v1.2.3",
+			wantErr: derrors.NotFound,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			for _, v := range tc.modules {
+				if err := testDB.InsertModule(ctx, v); err != nil {
+					t.Error(err)
+				}
+			}
+
+			gotVI, err := testDB.GetModuleInfo(ctx, tc.path, tc.version)
+			if err != nil {
+				if tc.wantErr == nil {
+					t.Fatalf("got unexpected error %v", err)
+				}
+				if !errors.Is(err, tc.wantErr) {
+					t.Fatalf("got error %v, want Is(%v)", err, tc.wantErr)
+				}
+				return
+			}
+			if tc.wantIndex >= len(tc.modules) {
+				t.Fatal("wantIndex too large")
+			}
+			wantVI := &tc.modules[tc.wantIndex].ModuleInfo
+			if diff := cmp.Diff(wantVI, gotVI, cmpopts.EquateEmpty(), cmp.AllowUnexported(source.Info{})); diff != "" {
+				t.Errorf("mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
 func TestPostgres_GetVersionInfo_Latest(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
