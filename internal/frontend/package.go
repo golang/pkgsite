@@ -26,7 +26,7 @@ func (s *Server) handlePackageDetailsRedirect(w http.ResponseWriter, r *http.Req
 
 // legacyServePackagePage serves details pages for the package with import path
 // pkgPath, in the module specified by modulePath and version.
-func (s *Server) legacyServePackagePage(w http.ResponseWriter, r *http.Request, pkgPath, modulePath, requestedVersion string) (err error) {
+func (s *Server) legacyServePackagePage(w http.ResponseWriter, r *http.Request, pkgPath, modulePath, requestedVersion, resolvedVersion string) (err error) {
 	ctx := r.Context()
 
 	// This function handles top level behavior related to the existence of the
@@ -36,7 +36,7 @@ func (s *Server) legacyServePackagePage(w http.ResponseWriter, r *http.Request, 
 	//   3. If there is another version that contains this package path: serve a
 	//      404 and suggest these versions.
 	//   4. Just serve a 404
-	pkg, err := s.ds.LegacyGetPackage(ctx, pkgPath, modulePath, requestedVersion)
+	pkg, err := s.ds.LegacyGetPackage(ctx, pkgPath, modulePath, resolvedVersion)
 	if err == nil {
 		return s.legacyServePackagePageWithPackage(ctx, w, r, pkg, requestedVersion)
 	}
@@ -47,7 +47,7 @@ func (s *Server) legacyServePackagePage(w http.ResponseWriter, r *http.Request, 
 		// If we've already checked the latest version, then we know that this path
 		// is not a package at any version, so just skip ahead and serve the
 		// directory page.
-		dbDir, err := s.ds.LegacyGetDirectory(ctx, pkgPath, modulePath, requestedVersion, internal.AllFields)
+		dbDir, err := s.ds.LegacyGetDirectory(ctx, pkgPath, modulePath, resolvedVersion, internal.AllFields)
 		if err != nil {
 			if errors.Is(err, derrors.NotFound) {
 				return pathNotFoundError(ctx, "package", pkgPath, requestedVersion)
@@ -56,7 +56,7 @@ func (s *Server) legacyServePackagePage(w http.ResponseWriter, r *http.Request, 
 		}
 		return s.legacyServeDirectoryPage(ctx, w, r, dbDir, requestedVersion)
 	}
-	dir, err := s.ds.LegacyGetDirectory(ctx, pkgPath, modulePath, requestedVersion, internal.AllFields)
+	dir, err := s.ds.LegacyGetDirectory(ctx, pkgPath, modulePath, resolvedVersion, internal.AllFields)
 	if err == nil {
 		return s.legacyServeDirectoryPage(ctx, w, r, dir, requestedVersion)
 	}
@@ -131,45 +131,25 @@ func (s *Server) legacyServePackagePageWithPackage(ctx context.Context, w http.R
 	return nil
 }
 
-func (s *Server) servePackagePageNew(w http.ResponseWriter, r *http.Request, fullPath, inModulePath, inVersion string) (err error) {
+func (s *Server) servePackagePageNew(w http.ResponseWriter, r *http.Request, fullPath, modulePath, requestedVersion, resolvedVersion string) (err error) {
 	defer func() {
 		if _, ok := err.(*serverError); !ok {
-			derrors.Wrap(&err, "servePackagePageNew(w, r, %q, %q, %q)", fullPath, inModulePath, inVersion)
+			derrors.Wrap(&err, "servePackagePageNew(w, r, %q, %q, %q)", fullPath, modulePath, requestedVersion)
 		}
 	}()
 	ctx := r.Context()
-	modulePath, version, _, err := s.ds.GetPathInfo(ctx, fullPath, inModulePath, inVersion)
-	if err != nil {
-		if !errors.Is(err, derrors.NotFound) {
-			return err
-		}
-		if inVersion == internal.LatestVersion {
-			if !isActiveUseDirectories(ctx) {
-				return pathNotFoundError(ctx, "package", fullPath, inVersion)
-			}
-		}
-		// We couldn't find a path at the given version, but if there's one at the latest version
-		// we can provide a link to it.
-		if _, _, _, err := s.ds.GetPathInfo(ctx, fullPath, inModulePath, internal.LatestVersion); err != nil {
-			if errors.Is(err, derrors.NotFound) {
-				return pathNotFoundError(ctx, "package", fullPath, inVersion)
-			}
-			return err
-		}
-		return pathFoundAtLatestError(ctx, "package", fullPath, inVersion)
-	}
-	vdir, err := s.ds.GetDirectoryNew(ctx, fullPath, modulePath, version)
+	vdir, err := s.ds.GetDirectoryNew(ctx, fullPath, modulePath, resolvedVersion)
 	if err != nil {
 		return err
 	}
 	if vdir.Package != nil {
-		return s.servePackagePageWithVersionedDirectory(ctx, w, r, vdir, inVersion)
+		return s.servePackagePageWithVersionedDirectory(ctx, w, r, vdir, requestedVersion)
 	}
-	dir, err := s.ds.LegacyGetDirectory(ctx, fullPath, modulePath, version, internal.AllFields)
+	dir, err := s.ds.LegacyGetDirectory(ctx, fullPath, modulePath, resolvedVersion, internal.AllFields)
 	if err != nil {
 		return err
 	}
-	return s.legacyServeDirectoryPage(ctx, w, r, dir, inVersion)
+	return s.legacyServeDirectoryPage(ctx, w, r, dir, requestedVersion)
 }
 
 // stdlibPathForShortcut returns a path in the stdlib that shortcut should redirect to,

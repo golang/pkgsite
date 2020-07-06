@@ -43,17 +43,16 @@ type DetailsPage struct {
 // stdlib module pages are handled at "/std", and requests to "/mod/std" will
 // be redirected to that path.
 func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) (err error) {
-	if r.URL.Path == "/" {
+	switch r.URL.Path {
+	case "/":
 		s.staticPageHandler("index.tmpl", "")(w, r)
 		return nil
-	}
-	if r.URL.Path == "/C" {
+	case "/C":
 		// Package "C" is a special case: redirect to the Go Blog article on cgo.
 		// (This is what godoc.org does.)
 		http.Redirect(w, r, "https://golang.org/doc/articles/c_go_cgo.html", http.StatusMovedPermanently)
 		return nil
-	}
-	if r.URL.Path == "/mod/std" {
+	case "/mod/std":
 		// The stdlib module page is hosted at "/std".
 		http.Redirect(w, r, "/std", http.StatusMovedPermanently)
 		return nil
@@ -66,35 +65,26 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) (err error
 			err:    err,
 		}
 	}
-
 	ctx := r.Context()
 	// Validate the fullPath and requestedVersion that were parsed.
 	if err := validatePathAndVersion(ctx, s.ds, urlInfo.fullPath, urlInfo.requestedVersion); err != nil {
 		return err
 	}
-	var resolvedModulePath string
+	var (
+		resolvedModulePath = urlInfo.modulePath
+		resolvedVersion    = urlInfo.requestedVersion
+	)
 	if experiment.IsActive(ctx, internal.ExperimentUsePathInfo) {
-		resolvedModulePath, _, _, err = s.ds.GetPathInfo(ctx, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion)
+		resolvedModulePath, resolvedVersion, _, err = s.ds.GetPathInfo(ctx, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion)
 		if err != nil {
 			if !errors.Is(err, derrors.NotFound) {
 				return err
 			}
-			// TODO(golang/go#39663) add a case for this to TestServer
-			path, err := s.stdlibPathForShortcut(ctx, urlInfo.fullPath)
-			if err != nil {
-				// Log the error, but prefer a "path not found" error for a
-				// better user experience.
-				log.Error(ctx, err)
-			}
-			if path != "" {
-				http.Redirect(w, r, path, http.StatusFound)
-				return nil
-			}
 			pathType := "package"
-			if urlInfo.isModule || urlInfo.fullPath == stdlib.ModulePath {
+			if urlInfo.isModule {
 				pathType = "module"
 			}
-			return pathNotFoundError(ctx, pathType, urlInfo.fullPath, urlInfo.requestedVersion)
+			return s.servePathNotFoundPage(w, r, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion, pathType)
 		}
 	}
 	if isActivePathAtMaster(ctx) && urlInfo.requestedVersion == internal.MasterVersion {
@@ -110,12 +100,12 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) (err error
 	}
 	// Depending on what the request was for, return the module or package page.
 	if urlInfo.isModule || urlInfo.fullPath == stdlib.ModulePath {
-		return s.legacyServeModulePage(w, r, urlInfo.fullPath, urlInfo.requestedVersion)
+		return s.legacyServeModulePage(w, r, urlInfo.fullPath, urlInfo.requestedVersion, resolvedVersion)
 	}
 	if isActiveUseDirectories(ctx) {
-		return s.servePackagePageNew(w, r, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion)
+		return s.servePackagePageNew(w, r, urlInfo.fullPath, resolvedModulePath, urlInfo.requestedVersion, resolvedVersion)
 	}
-	return s.legacyServePackagePage(w, r, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion)
+	return s.legacyServePackagePage(w, r, urlInfo.fullPath, resolvedModulePath, urlInfo.requestedVersion, resolvedVersion)
 }
 
 type urlPathInfo struct {
@@ -375,4 +365,39 @@ func parseStdLibURLPath(urlPath string) (path, requestedVersion string, err erro
 		return "", "", fmt.Errorf("invalid Go tag for url: %q", urlPath)
 	}
 	return path, requestedVersion, nil
+}
+
+func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, fullPath, modulePath, requestedVersion, pathType string) (err error) {
+	defer derrors.Wrap(&err, "servePathNotFoundPage(w, r, %q, %q)", fullPath, requestedVersion)
+
+	ctx := r.Context()
+	path, err := s.stdlibPathForShortcut(ctx, fullPath)
+	if err != nil {
+		// Log the error, but prefer a "path not found" error for a
+		// better user experience.
+		log.Error(ctx, err)
+	}
+	if path != "" {
+		// TODO(https://golang.org/issue#39663) add a case for this to TestServer
+		http.Redirect(w, r, path, http.StatusFound)
+		return
+	}
+
+	if requestedVersion == internal.LatestVersion || isActiveFrontendFetch(ctx) {
+		// We already know that the fullPath does not exist at any version.
+		//
+		// If frontend fetch is enabled always show the 404 page so that the
+		// user can request the version that they want.
+		return pathNotFoundError(ctx, pathType, fullPath, requestedVersion)
+	}
+	// If frontend fetch is not enabled and we couldn't find a path at the
+	// given version, but if there's one at the latest version we can provide a
+	// link to it.
+	if _, _, _, err := s.ds.GetPathInfo(ctx, fullPath, modulePath, internal.LatestVersion); err != nil {
+		if errors.Is(err, derrors.NotFound) {
+			return pathNotFoundError(ctx, pathType, fullPath, requestedVersion)
+		}
+		return err
+	}
+	return pathFoundAtLatestError(ctx, pathType, fullPath, requestedVersion)
 }

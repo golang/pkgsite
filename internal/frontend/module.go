@@ -17,7 +17,7 @@ import (
 
 // legacyServeModulePage serves details pages for the module specified by modulePath
 // and version.
-func (s *Server) legacyServeModulePage(w http.ResponseWriter, r *http.Request, modulePath, requestedVersion string) error {
+func (s *Server) legacyServeModulePage(w http.ResponseWriter, r *http.Request, modulePath, requestedVersion, resolvedVersion string) error {
 	// This function handles top level behavior related to the existence of the
 	// requested modulePath@version:
 	// TODO: fix
@@ -29,7 +29,7 @@ func (s *Server) legacyServeModulePage(w http.ResponseWriter, r *http.Request, m
 	//     b. We have valid versions for this module path, but `version` isn't
 	//        one of them. Serve a 404 but recommend the other versions.
 	ctx := r.Context()
-	mi, err := s.ds.LegacyGetModuleInfo(ctx, modulePath, requestedVersion)
+	mi, err := s.ds.LegacyGetModuleInfo(ctx, modulePath, resolvedVersion)
 	if err == nil {
 		return s.legacyServeModulePageWithModule(ctx, w, r, mi, requestedVersion)
 	}
