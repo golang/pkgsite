@@ -17,7 +17,7 @@ async function fetchPath() {
   const fetchMessageEl = document.querySelector('.js-fetchMessage');
   fetchMessageEl.textContent = `Fetching ${fetchMessageEl.dataset.path}`;
   document.querySelector('.js-fetchMessageSecondary').textContent =
-    "Feel free to navigate away and check back later, we’ll keep working on it!";
+    'Feel free to navigate away and check back later, we’ll keep working on it!';
   document.querySelector('.js-fetchButton').style.display = 'none';
   document.querySelector('.js-fetchLoading').style.display = 'block';
 
