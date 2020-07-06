@@ -58,25 +58,7 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) (err error
 		return nil
 	}
 
-	var (
-		fullPath, modulePath, requestedVersion string
-		isModule                               bool
-		urlPath                                = r.URL.Path
-	)
-	if strings.HasPrefix(r.URL.Path, "/mod") {
-		urlPath = strings.TrimPrefix(r.URL.Path, "/mod")
-		isModule = true
-	}
-
-	// Parse the fullPath, modulePath and requestedVersion, based on whether
-	// the path is in the stdlib. If unable to parse these elements, return
-	// http.StatusBadRequest.
-	if parts := strings.SplitN(strings.TrimPrefix(urlPath, "/"), "@", 2); stdlib.Contains(parts[0]) {
-		fullPath, requestedVersion, err = parseStdLibURLPath(urlPath)
-		modulePath = stdlib.ModulePath
-	} else {
-		fullPath, modulePath, requestedVersion, err = parseDetailsURLPath(urlPath)
-	}
+	urlInfo, err := extractURLPathInfo(r.URL.Path)
 	if err != nil {
 		return &serverError{
 			status: http.StatusBadRequest,
@@ -86,18 +68,18 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) (err error
 
 	ctx := r.Context()
 	// Validate the fullPath and requestedVersion that were parsed.
-	if err := validatePathAndVersion(ctx, s.ds, fullPath, requestedVersion); err != nil {
+	if err := validatePathAndVersion(ctx, s.ds, urlInfo.fullPath, urlInfo.requestedVersion); err != nil {
 		return err
 	}
 	var resolvedModulePath string
 	if experiment.IsActive(ctx, internal.ExperimentUsePathInfoToCheckExistence) {
-		resolvedModulePath, _, _, err = s.ds.GetPathInfo(ctx, fullPath, modulePath, requestedVersion)
+		resolvedModulePath, _, _, err = s.ds.GetPathInfo(ctx, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion)
 		if err != nil {
 			if !errors.Is(err, derrors.NotFound) {
 				return err
 			}
 			// TODO(golang/go#39663) add a case for this to TestServer
-			path, err := s.stdlibPathForShortcut(ctx, fullPath)
+			path, err := s.stdlibPathForShortcut(ctx, urlInfo.fullPath)
 			if err != nil {
 				// Log the error, but prefer a "path not found" error for a
 				// better user experience.
@@ -108,13 +90,13 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) (err error
 				return nil
 			}
 			pathType := "package"
-			if isModule || fullPath == stdlib.ModulePath {
+			if urlInfo.isModule || urlInfo.fullPath == stdlib.ModulePath {
 				pathType = "module"
 			}
-			return pathNotFoundError(ctx, pathType, fullPath, requestedVersion)
+			return pathNotFoundError(ctx, pathType, urlInfo.fullPath, urlInfo.requestedVersion)
 		}
 	}
-	if isActivePathAtMaster(ctx) && requestedVersion == internal.MasterVersion {
+	if isActivePathAtMaster(ctx) && urlInfo.requestedVersion == internal.MasterVersion {
 		// Since path@master is a moving target, we don't want it to be stale.
 		// As a result, we enqueue every request of path@master to the frontend
 		// task queue, which will initiate a fetch request depending on the
@@ -126,13 +108,42 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) (err error
 		}()
 	}
 	// Depending on what the request was for, return the module or package page.
-	if isModule || fullPath == stdlib.ModulePath {
-		return s.legacyServeModulePage(w, r, fullPath, requestedVersion)
+	if urlInfo.isModule || urlInfo.fullPath == stdlib.ModulePath {
+		return s.legacyServeModulePage(w, r, urlInfo.fullPath, urlInfo.requestedVersion)
 	}
 	if isActiveUseDirectories(ctx) {
-		return s.servePackagePageNew(w, r, fullPath, modulePath, requestedVersion)
+		return s.servePackagePageNew(w, r, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion)
 	}
-	return s.legacyServePackagePage(w, r, fullPath, modulePath, requestedVersion)
+	return s.legacyServePackagePage(w, r, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion)
+}
+
+type urlPathInfo struct {
+	fullPath, modulePath, requestedVersion string
+	isModule                               bool
+	urlPath                                string
+}
+
+func extractURLPathInfo(urlPath string) (_ *urlPathInfo, err error) {
+	defer derrors.Wrap(&err, "extractURLPathInfo(%q)", urlPath)
+
+	info := &urlPathInfo{urlPath: urlPath}
+	if strings.HasPrefix(urlPath, "/mod") {
+		info.urlPath = strings.TrimPrefix(urlPath, "/mod")
+		info.isModule = true
+	}
+	// Parse the fullPath, modulePath and requestedVersion, based on whether
+	// the path is in the stdlib. If unable to parse these elements, return
+	// http.StatusBadRequest.
+	if parts := strings.SplitN(strings.TrimPrefix(info.urlPath, "/"), "@", 2); stdlib.Contains(parts[0]) {
+		info.fullPath, info.requestedVersion, err = parseStdLibURLPath(info.urlPath)
+		info.modulePath = stdlib.ModulePath
+	} else {
+		info.fullPath, info.modulePath, info.requestedVersion, err = parseDetailsURLPath(info.urlPath)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return info, nil
 }
 
 // parseDetailsURLPath parses a URL path that refers (or may refer) to something

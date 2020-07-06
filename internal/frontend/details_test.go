@@ -10,9 +10,104 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
+
+func TestExtractURLPathInfo(t *testing.T) {
+	for _, test := range []struct {
+		in   string
+		want *urlPathInfo // nil => want non-nil error
+	}{
+		{"", nil},
+		{
+			"/a.com",
+			&urlPathInfo{
+				fullPath:         "a.com",
+				modulePath:       internal.UnknownModulePath,
+				requestedVersion: internal.LatestVersion,
+				isModule:         false,
+				urlPath:          "/a.com",
+			},
+		},
+		{
+			"/a.com@v1.2.3",
+			&urlPathInfo{
+				fullPath:         "a.com",
+				modulePath:       internal.UnknownModulePath,
+				requestedVersion: "v1.2.3",
+				isModule:         false,
+				urlPath:          "/a.com@v1.2.3",
+			},
+		},
+		{
+			"/a.com@v1.2.3/b",
+			&urlPathInfo{
+				fullPath:         "a.com/b",
+				modulePath:       "a.com",
+				requestedVersion: "v1.2.3",
+				isModule:         false,
+				urlPath:          "/a.com@v1.2.3/b",
+			},
+		},
+		{
+			"/encoding/json",
+			&urlPathInfo{
+				fullPath:         "encoding/json",
+				modulePath:       "std",
+				requestedVersion: internal.LatestVersion,
+				isModule:         false,
+				urlPath:          "/encoding/json",
+			},
+		},
+		{
+			"/encoding/json@go1.12",
+			&urlPathInfo{
+				fullPath:         "encoding/json",
+				modulePath:       "std",
+				requestedVersion: "v1.12.0",
+				isModule:         false,
+				urlPath:          "/encoding/json@go1.12",
+			},
+		},
+		{
+			"/mod/a.com",
+			&urlPathInfo{
+				fullPath:         "a.com",
+				modulePath:       internal.UnknownModulePath,
+				requestedVersion: internal.LatestVersion,
+				isModule:         true,
+				urlPath:          "/a.com",
+			},
+		},
+		{
+			"/mod/a.com@v1.2.3",
+			&urlPathInfo{
+				fullPath:         "a.com",
+				modulePath:       internal.UnknownModulePath,
+				requestedVersion: "v1.2.3",
+				isModule:         true,
+				urlPath:          "/a.com@v1.2.3",
+			},
+		},
+	} {
+		got, err := extractURLPathInfo(test.in)
+		if err != nil {
+			if test.want != nil {
+				t.Errorf("%q: got error %v", test.in, err)
+			}
+			continue
+		}
+		if test.want == nil {
+			t.Errorf("%q: got no error, wanted one", test.in)
+			continue
+		}
+		if diff := cmp.Diff(test.want, got, cmp.AllowUnexported(urlPathInfo{})); diff != "" {
+			t.Errorf("%q: mismatch (-want, +got):\n%s", test.in, diff)
+		}
+	}
+}
 
 func TestParseDetailsURLPath(t *testing.T) {
 	testCases := []struct {
