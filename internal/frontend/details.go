@@ -127,7 +127,7 @@ func extractURLPathInfo(urlPath string) (_ *urlPathInfo, err error) {
 	defer derrors.Wrap(&err, "extractURLPathInfo(%q)", urlPath)
 
 	info := &urlPathInfo{urlPath: urlPath}
-	if strings.HasPrefix(urlPath, "/mod") {
+	if strings.HasPrefix(urlPath, "/mod/") {
 		info.urlPath = strings.TrimPrefix(urlPath, "/mod")
 		info.isModule = true
 	}

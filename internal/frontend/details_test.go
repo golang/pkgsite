@@ -91,6 +91,16 @@ func TestExtractURLPathInfo(t *testing.T) {
 				urlPath:          "/a.com@v1.2.3",
 			},
 		},
+		{
+			"/moda.com",
+			&urlPathInfo{
+				fullPath:         "moda.com",
+				modulePath:       internal.UnknownModulePath,
+				requestedVersion: internal.LatestVersion,
+				isModule:         false,
+				urlPath:          "/moda.com",
+			},
+		},
 	} {
 		got, err := extractURLPathInfo(test.in)
 		if err != nil {
