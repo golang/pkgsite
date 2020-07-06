@@ -320,7 +320,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 			<p><a class="Documentation-examplesPlay" href="{{.}}">Open in Go playground »</a></p>{{"\n" -}}
 			{{- end -}}
 			<p>Code:</p>{{"\n" -}}
-			{{render_code .Code}}{{"\n" -}}
+			{{render_code .Example}}{{"\n" -}}
 			{{- if (or .Output .EmptyOutput) -}}
 				<p>{{ternary .Unordered "Unordered output:" "Output:"}}</p>{{"\n" -}}
 				<pre>{{"\n"}}{{.Output}}</pre>{{"\n" -}}

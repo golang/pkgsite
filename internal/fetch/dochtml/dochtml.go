@@ -12,6 +12,7 @@ package dochtml
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"go/ast"
@@ -64,7 +65,7 @@ type RenderOptions struct {
 //
 // If the rendered documentation HTML size exceeds the specified limit,
 // an error with ErrTooLarge in its chain will be returned.
-func Render(fset *token.FileSet, p *doc.Package, opt RenderOptions) (string, error) {
+func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt RenderOptions) (string, error) {
 	if opt.Limit == 0 {
 		const megabyte = 1000 * 1000
 		opt.Limit = 10 * megabyte
@@ -94,7 +95,7 @@ func Render(fset *token.FileSet, p *doc.Package, opt RenderOptions) (string, err
 		delete(p.Notes, k)
 	}
 
-	r := render.New(fset, p, &render.Options{
+	r := render.New(ctx, fset, p, &render.Options{
 		PackageURL: func(path string) string {
 			// Use the same module version for imported packages that belong to
 			// the same module.

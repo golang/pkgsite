@@ -678,7 +678,7 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 		return playURLs[ex]
 	}
 
-	docHTML, err := dochtml.Render(fset, d, dochtml.RenderOptions{
+	docHTML, err := dochtml.Render(ctx, fset, d, dochtml.RenderOptions{
 		FileLinkFunc:   fileLinkFunc,
 		SourceLinkFunc: sourceLinkFunc,
 		PlayURLFunc:    playURLFunc,

@@ -5,6 +5,7 @@
 package dochtml
 
 import (
+	"context"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -23,7 +24,7 @@ import (
 func TestRender(t *testing.T) {
 	fset, d := mustLoadPackage("everydecl")
 
-	rawDoc, err := Render(fset, d, RenderOptions{
+	rawDoc, err := Render(context.Background(), fset, d, RenderOptions{
 		FileLinkFunc:   func(string) string { return "file" },
 		SourceLinkFunc: func(ast.Node) string { return "src" },
 	})

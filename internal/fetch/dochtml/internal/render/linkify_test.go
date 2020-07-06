@@ -5,7 +5,10 @@
 package render
 
 import (
+	"context"
 	"go/ast"
+	"go/parser"
+	"go/token"
 	"html/template"
 	"strings"
 	"testing"
@@ -13,6 +16,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/testconversions"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch/internal/doc"
 )
 
@@ -83,7 +88,7 @@ TLSUnique contains the tls-unique channel binding value (see RFC
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			r := New(nil, pkgTime, nil)
+			r := New(context.Background(), nil, pkgTime, nil)
 			got := r.declHTML(test.doc, nil).Doc
 			want := testconversions.MakeHTMLForTest(test.want)
 			if diff := cmp.Diff(want, got, cmp.AllowUnexported(safehtml.HTML{})); diff != "" {
@@ -147,7 +152,7 @@ func After(d <a href="#Duration">Duration</a>) &lt;-chan <a href="#Time">Time</a
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			decl := declForName(t, pkgTime, test.symbol)
-			r := New(fsetTime, pkgTime, nil)
+			r := New(context.Background(), fsetTime, pkgTime, nil)
 			got := r.declHTML("", decl).Decl
 			want := template.HTML(test.want)
 			if diff := cmp.Diff(want, got); diff != "" {
@@ -265,5 +270,135 @@ b := 1
 		if got != want {
 			t.Errorf("%s:\ngot:\n%s\nwant:\n%s", test.name, got, want)
 		}
+	}
+}
+
+func mustParse(t *testing.T, fset *token.FileSet, filename, src string) *ast.File {
+	t.Helper()
+	f, err := parser.ParseFile(fset, filename, src, parser.ParseComments)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return f
+}
+
+func TestExampleCode(t *testing.T) {
+	fset := token.NewFileSet()
+	for _, tc := range []struct {
+		name    string
+		example doc.Example
+		want    string
+	}{
+		{
+			name: "formats example code by fixing new lines and spacing",
+			example: doc.Example{
+				Code: mustParse(t, fset, "example_test.go", "package main"),
+				Play: mustParse(t, fset, "example_hook_test.go", `package main
+import    "fmt"
+func main()    {
+	fmt.Println("hello world")
+	} `),
+			},
+			want: `package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("hello world")
+}
+`,
+		},
+		{
+			name: "converts playable playground example to string",
+			example: doc.Example{
+				Code: mustParse(t, fset, "example_hook_test.go", "package main"),
+				Play: mustParse(t, fset, "example_hook_test.go", `package main
+import (
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+)
+
+func main() {
+	// Replacing a Logger's core can alter fundamental behaviors.
+	// For example, it can convert a Logger to a no-op.
+	nop := zap.WrapCore(func(zapcore.Core) zapcore.Core {
+		return zapcore.NewNopCore()
+	})
+
+	logger := zap.NewExample()
+	defer logger.Sync()
+
+	logger.Info("working")
+	logger.WithOptions(nop).Info("no-op")
+	logger.Info("original logger still works")
+}`),
+			},
+			want: `package main
+
+import (
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+)
+
+func main() {
+	// Replacing a Logger's core can alter fundamental behaviors.
+	// For example, it can convert a Logger to a no-op.
+	nop := zap.WrapCore(func(zapcore.Core) zapcore.Core {
+		return zapcore.NewNopCore()
+	})
+
+	logger := zap.NewExample()
+	defer logger.Sync()
+
+	logger.Info("working")
+	logger.WithOptions(nop).Info("no-op")
+	logger.Info("original logger still works")
+}
+`,
+		},
+		{
+			name: "converts non playable playground example to string",
+			example: doc.Example{
+				Code: mustParse(t, fset, "example_hook_test.go", `package main
+
+import (
+	"fmt"
+	"strings"
+)
+
+func main() {
+	fmt.Println(strings.Compare("a", "b"))
+	fmt.Println(strings.Compare("a", "a"))
+	fmt.Println(strings.Compare("b", "a"))
+}
+`),
+				Play: nil,
+			},
+			want: `package main
+
+import (
+	"fmt"
+	"strings"
+)
+
+func main() {
+	fmt.Println(strings.Compare("a", "b"))
+	fmt.Println(strings.Compare("a", "a"))
+	fmt.Println(strings.Compare("b", "a"))
+}
+`,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := experiment.NewContext(context.Background(), internal.ExperimentExecutableExamples)
+			r := New(ctx, fset, pkgTime, nil)
+			got, err := r.codeString(&tc.example)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("mismatch (-want +got):%s", diff)
+			}
+		})
 	}
 }

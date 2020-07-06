@@ -6,8 +6,10 @@ package render
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"go/ast"
+	"go/format"
 	"go/printer"
 	"go/scanner"
 	"go/token"
@@ -21,7 +23,10 @@ import (
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/legacyconversions"
 	safetemplate "github.com/google/safehtml/template"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch/internal/doc"
+	"golang.org/x/pkgsite/internal/log"
 )
 
 /*
@@ -134,16 +139,30 @@ func (r *Renderer) linesToHTML(lines []string, idr *identifierResolver) safehtml
 	return safehtml.HTMLConcat(htmls...)
 }
 
-func (r *Renderer) codeHTML(code interface{}) safehtml.HTML {
-	// TODO: Should we perform hotlinking for comments and code?
-	if code == nil {
-		return safehtml.HTML{}
+func (r *Renderer) codeString(ex *doc.Example) (string, error) {
+	if ex == nil || ex.Code == nil {
+		return "", errors.New("Please include an example with code")
+	}
+	var buf bytes.Buffer
+
+	if experiment.IsActive(r.ctx, internal.ExperimentExecutableExamples) && ex.Play != nil {
+		if err := format.Node(&buf, r.fset, ex.Play); err != nil {
+			return "", err
+		}
+	} else {
+		p := printer.Config{Mode: printer.UseSpaces | printer.TabIndent, Tabwidth: 4}
+		p.Fprint(&buf, r.fset, ex.Code)
 	}
 
-	var b bytes.Buffer
-	p := printer.Config{Mode: printer.UseSpaces | printer.TabIndent, Tabwidth: 4}
-	p.Fprint(&b, r.fset, code)
-	return codeHTML(b.String())
+	return buf.String(), nil
+}
+
+func (r *Renderer) codeHTML(ex *doc.Example) safehtml.HTML {
+	codeStr, err := r.codeString(ex)
+	if err != nil {
+		log.Errorf(r.ctx, "Error converting *doc.Example into string: %v", err)
+	}
+	return codeHTML(codeStr)
 }
 
 type codeElement struct {

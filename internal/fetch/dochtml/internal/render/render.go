@@ -7,6 +7,7 @@
 package render
 
 import (
+	"context"
 	"go/ast"
 	"go/token"
 	"html/template"
@@ -36,6 +37,7 @@ type Renderer struct {
 	packageURL        func(string) string
 	disableHotlinking bool
 	disablePermalinks bool
+	ctx               context.Context
 }
 
 type Options struct {
@@ -63,7 +65,7 @@ type Options struct {
 	DisablePermalinks bool
 }
 
-func New(fset *token.FileSet, pkg *doc.Package, opts *Options) *Renderer {
+func New(ctx context.Context, fset *token.FileSet, pkg *doc.Package, opts *Options) *Renderer {
 	var others []*doc.Package
 	var packageURL func(string) string
 	var disableHotlinking bool
@@ -85,6 +87,7 @@ func New(fset *token.FileSet, pkg *doc.Package, opts *Options) *Renderer {
 		packageURL:        packageURL,
 		disableHotlinking: disableHotlinking,
 		disablePermalinks: disablePermalinks,
+		ctx:               ctx,
 	}
 }
 
@@ -160,8 +163,8 @@ func (r *Renderer) DeclHTML(doc string, decl ast.Decl) (out struct{ Doc, Decl te
 //	<span class="comment">  elements for every Go comment
 //
 // CodeHTML is intended for use with example code snippets.
-func (r *Renderer) CodeHTML(code interface{}) template.HTML {
-	return template.HTML(r.codeHTML(code).String())
+func (r *Renderer) CodeHTML(ex *doc.Example) template.HTML {
+	return template.HTML(r.codeHTML(ex).String())
 }
 
 // block is (*heading | *paragraph | *preformat).
