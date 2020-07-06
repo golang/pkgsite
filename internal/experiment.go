@@ -9,16 +9,32 @@ import (
 )
 
 const (
+	ExperimentAutocomplete                = "autocomplete"
 	ExperimentFrontendFetch               = "frontend-fetch"
-	ExperimentFrontendPackageAtMaster     = "frontend-package-at-master"
 	ExperimentInsertDirectories           = "insert-directories"
 	ExperimentInsertPlaygroundLinks       = "insert-playground-links"
-	ExperimentInsertSerializable          = "insert-serializable-txn"
+	ExperimentMasterVersion               = "master-version"
+	ExperimentSidenav                     = "sidenav"
 	ExperimentTeeProxyMakePkgGoDevRequest = "teeproxy-make-pkg-go-dev-request"
-	ExperimentUseDirectories              = "use-directories"
-	ExperimentUsePathInfoToCheckExistence = "use-path-info-to-check-existence"
 	ExperimentTranslateHTML               = "translate-html"
+	ExperimentUseDirectories              = "use-directories"
+	ExperimentUsePathInfo                 = "use-path-info"
 )
+
+// Experiments represents all of the active experiments in the codebase and
+// a description of each experiment.
+var Experiments = map[string]string{
+	ExperimentAutocomplete:                "Enable autocomplete with search.",
+	ExperimentFrontendFetch:               "Enable ability to fetch a package that doesn't exist on pkg.go.dev.",
+	ExperimentInsertDirectories:           "Insert data into paths, documentation, readmes, and package_imports tables.",
+	ExperimentInsertPlaygroundLinks:       "Insert Go playground links for examples.",
+	ExperimentMasterVersion:               "Enable viewing path@master.",
+	ExperimentSidenav:                     "Display documentation index on the left sidenav.",
+	ExperimentTeeProxyMakePkgGoDevRequest: "Enable teeproxy to make requests to pkg.go.dev.",
+	ExperimentTranslateHTML:               "Parse HTML text in READMEs, to properly display images.",
+	ExperimentUseDirectories:              "Read from paths, documentation, readmes, and package_imports tables.",
+	ExperimentUsePathInfo:                 "Check the paths table if a path exists, as opposed to the packages or modules table.",
+}
 
 // Experiment holds data associated with an experimental feature for frontend
 // or worker.

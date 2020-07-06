@@ -23,10 +23,10 @@ List experiments:
     experiments [flags...] list
 
 Create a new experiment:
-    experiments [flags...] create <name> <description>
+    experiments [flags...] create <name>
 
 Update an experiment:
-    experiments [flags...] update <name> <description>
+    experiments [flags...] update <name>
 `
 
 var rollout = flag.Uint("rollout", 100, "experiment rollout percentage")
@@ -68,14 +68,14 @@ func main() {
 			fmt.Println(flag.NArg())
 			exitUsage()
 		}
-		if err := createExperiment(ctx, db, flag.Arg(1), flag.Arg(2), *rollout); err != nil {
+		if err := createExperiment(ctx, db, flag.Arg(1), *rollout); err != nil {
 			log.Fatalf("creating experiment: %v", err)
 		}
 	case "update":
 		if flag.NArg() < 2 {
 			exitUsage()
 		}
-		if err := updateExperiment(ctx, db, flag.Arg(1), flag.Arg(2), *rollout); err != nil {
+		if err := updateExperiment(ctx, db, flag.Arg(1), *rollout); err != nil {
 			log.Fatalf("updating experiment: %v", err)
 		}
 	default:
@@ -94,10 +94,10 @@ func listExperiments(ctx context.Context, db *postgres.DB) error {
 	return nil
 }
 
-func createExperiment(ctx context.Context, db *postgres.DB, name, description string, rollout uint) error {
+func createExperiment(ctx context.Context, db *postgres.DB, name string, rollout uint) error {
 	exp := &internal.Experiment{
 		Name:        name,
-		Description: description,
+		Description: description(name),
 		Rollout:     rollout,
 	}
 	if err := db.InsertExperiment(ctx, exp); err != nil {
@@ -107,10 +107,10 @@ func createExperiment(ctx context.Context, db *postgres.DB, name, description st
 	return nil
 }
 
-func updateExperiment(ctx context.Context, db *postgres.DB, name, description string, rollout uint) error {
+func updateExperiment(ctx context.Context, db *postgres.DB, name string, rollout uint) error {
 	exp := &internal.Experiment{
 		Name:        name,
-		Description: description,
+		Description: description(name),
 		Rollout:     rollout,
 	}
 	if err := db.UpdateExperiment(ctx, exp); err != nil {
@@ -118,4 +118,12 @@ func updateExperiment(ctx context.Context, db *postgres.DB, name, description st
 	}
 	fmt.Printf("\nUpdated experiment %q; rollout=%d.\n", name, rollout)
 	return nil
+}
+
+func description(name string) string {
+	d, ok := internal.Experiments[name]
+	if !ok {
+		log.Fatalf("Experiment %q does not exist.", name)
+	}
+	return d
 }

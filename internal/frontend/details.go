@@ -72,7 +72,7 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) (err error
 		return err
 	}
 	var resolvedModulePath string
-	if experiment.IsActive(ctx, internal.ExperimentUsePathInfoToCheckExistence) {
+	if experiment.IsActive(ctx, internal.ExperimentUsePathInfo) {
 		resolvedModulePath, _, _, err = s.ds.GetPathInfo(ctx, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion)
 		if err != nil {
 			if !errors.Is(err, derrors.NotFound) {
@@ -279,7 +279,7 @@ func isActiveUseDirectories(ctx context.Context) bool {
 // isActivePathAtMaster reports whether the experiment for viewing packages at
 // master is active.
 func isActivePathAtMaster(ctx context.Context) bool {
-	return experiment.IsActive(ctx, internal.ExperimentFrontendPackageAtMaster) &&
+	return experiment.IsActive(ctx, internal.ExperimentMasterVersion) &&
 		isActiveFrontendFetch(ctx)
 }
 

@@ -75,9 +75,9 @@ func TestFetch(t *testing.T) {
 			defer cancel()
 			ctx = experiment.NewContext(ctx,
 				internal.ExperimentFrontendFetch,
-				internal.ExperimentFrontendPackageAtMaster,
+				internal.ExperimentMasterVersion,
 				internal.ExperimentInsertDirectories,
-				internal.ExperimentUsePathInfoToCheckExistence)
+				internal.ExperimentUsePathInfo)
 
 			status, responseText := s.fetchAndPoll(ctx, testModulePath, test.fullPath, test.version)
 			if status != http.StatusOK {
