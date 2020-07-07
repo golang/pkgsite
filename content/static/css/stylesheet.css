@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 The Go Authors. All rights reserved.
+ * Copyright 2019-2020 The Go Authors. All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the LICENSE file.
  */
@@ -1093,6 +1093,64 @@ table.Directories {
 }
 .Details-indent {
   margin-left: 1.1rem;
+}
+
+.Badge-formElement {
+  display: block;
+  font-size: 1rem;
+  margin-top: 1rem;
+}
+.Badge-badgeIcon {
+  height: 20px;
+  width: 90px;
+}
+.Badge-previewLink,
+.Badge-formElement > input {
+  display: block;
+  margin-top: 1rem;
+  max-width: 50.25rem;
+}
+.Badge-formElement > input {
+  border: 0.0625rem solid var(--gray-8);
+  border-radius: 0.25rem;
+  color: var(--gray-4);
+  font-family: inherit;
+  height: 3rem;
+  padding: 0 2rem 0 0.75rem;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+.Badge-formElement > input:focus::placeholder {
+  color: transparent;
+}
+.Badge-clickToCopy {
+  background: var(--gray-10) url('/static/img/copy-click.svg') right no-repeat;
+  background-position: right 0.75rem center;
+}
+.Badge-submitButton {
+  border: none;
+  border-radius: 0.25rem;
+  background-color: var(--turq-dark);
+  color: var(--white);
+  cursor: pointer;
+  font-family: inherit;
+  height: 2.75rem;
+  width: 7.125rem;
+}
+.Badge-snippetContainer {
+  background-color: var(--gray-10);
+  display: block;
+  margin-top: 1rem;
+  max-width: 50.25rem;
+  padding: 1rem;
+}
+.Badge-gopherLanding {
+  height: 12.25rem;
+  text-align: center;
+}
+.Badge-gopherLanding img {
+  height: 125px;
+  width: auto;
 }
 
 /* dialogs, including the jump-to-identifier dialog on documentation pages */

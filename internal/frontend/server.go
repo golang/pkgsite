@@ -111,6 +111,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/search-help", s.staticPageHandler("search_help.tmpl", "Search Help - go.dev"))
 	handle("/license-policy", s.licensePolicyHandler())
 	handle("/about", http.RedirectHandler("https://go.dev/about", http.StatusFound))
+	handle("/badge/", http.HandlerFunc(s.badgeHandler))
 	handle("/", detailHandler)
 	handle("/autocomplete", http.HandlerFunc(s.handleAutoCompletion))
 	handle("/robots.txt", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -415,12 +416,13 @@ func parsePageTemplates(base template.TrustedSource) (map[string]*template.Templ
 	join := template.TrustedSourceJoin
 
 	htmlSets := [][]template.TrustedSource{
-		{tsc("index.tmpl")},
+		{tsc("badge.tmpl")},
 		{tsc("error.tmpl")},
 		{tsc("fetch.tmpl")},
+		{tsc("index.tmpl")},
+		{tsc("license_policy.tmpl")},
 		{tsc("search.tmpl")},
 		{tsc("search_help.tmpl")},
-		{tsc("license_policy.tmpl")},
 		{tsc("overview.tmpl"), tsc("details.tmpl")},
 		{tsc("subdirectories.tmpl"), tsc("details.tmpl")},
 		{tsc("pkg_doc.tmpl"), tsc("details.tmpl")},

@@ -1,0 +1,57 @@
+<!--
+  Copyright 2020 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "main_content"}}
+  <div class="Container">
+    <div class="Content">
+      <h1 class="Content-header">Create a badge</h1>
+      <p>Create a badge to link to pkg.go.dev from your project website or README file.</p>
+      <label class="Badge-formElement">
+        Badge
+        <div class="Badge-previewLink">
+          <a class="js-badgeExampleButton" href="{{.SiteURL}}/{{.Path}}">
+            <img class="Badge-badgeIcon" src="/static/img/badge.svg" alt="PkgGoDev">
+          </a>
+        </div>
+      </label>
+      <form action="/badge/">
+        <label class="Badge-formElement">
+          URL
+          <input name="path" class="js-toolsPathInput" 
+              value="{{if .Path}}{{.SiteURL}}/{{.Path}}{{end}}" placeholder="e.g., https://pkg.go.dev/golang.org/x/pkgsite">
+        </label>
+        <label class="Badge-formElement">
+          <button type="submit" class="Badge-submitButton">Create</button>
+        </label>
+      </form>
+      <div class="Badge-snippetContainer">
+        {{if .Path}}
+          <label class="Badge-formElement">
+            HTML
+            <input title="Click to copy HTML" name="html" class="Badge-clickToCopy js-toolsCopySnippet" type="text"
+                value='<a href="{{.SiteURL}}/{{.Path}}"><img src="{{.SiteURL}}/badge/{{.Path}}" alt="PkgGoDev"></a>' readonly>
+          </label>
+          <label class="Badge-formElement">
+            Markdown
+            <input title="Click to copy markdown" name="markdown" class="Badge-clickToCopy js-toolsCopySnippet" type="text"
+                value="[![PkgGoDev]({{.SiteURL}}/{{.Path}})]({{.SiteURL}}/badge/{{.Path}})" readonly>
+          </label>
+        {{else}}
+          <div class="Badge-gopherLanding">
+            <img src="/static/img/gopher-airplane.svg" alt="The Go Gopher"/>
+            <p>Type a pkg.go.dev URL above to create a badge link.</p>
+          </div>
+        {{end}}
+      </div>
+    </div>
+  </div>
+{{end}}
+
+{{define "post_content"}}
+<script>
+  loadScript("/static/js/badge.min.js");
+</script>
+{{end}}

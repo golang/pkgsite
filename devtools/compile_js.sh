@@ -43,6 +43,7 @@ main() {
   # TODO: once this is not an experiment, add it to the line above.
   $cmd $JSDIR/completion.min.js $JSDIR/completion.js
   $cmd $JSDIR/fetch.min.js      $JSDIR/fetch.js
+  $cmd $JSDIR/badge.min.js      $JSDIR/badge.js
   $cmd $JSDIR/jump.min.js       third_party/dialog-polyfill/dialog-polyfill.js $JSDIR/jump.js
 }
 
