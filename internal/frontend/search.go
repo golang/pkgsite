@@ -15,6 +15,7 @@ import (
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 )
@@ -140,7 +141,7 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 	if !strings.Contains(requestedPath, "/") {
 		return ""
 	}
-	if isActiveUseDirectories(ctx) {
+	if experiment.IsActive(ctx, internal.ExperimentUsePathInfo) {
 		modulePath, _, isPackage, err := ds.GetPathInfo(ctx, requestedPath, internal.UnknownModulePath, internal.LatestVersion)
 		if err != nil {
 			if !errors.Is(err, derrors.NotFound) {
