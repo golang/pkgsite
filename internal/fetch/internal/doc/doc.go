@@ -18,6 +18,8 @@ import (
 	"go/ast"
 	"go/token"
 	"strings"
+
+	"golang.org/x/mod/module"
 )
 
 // Package is the documentation for an entire package.
@@ -218,10 +220,17 @@ func NewFromFiles(fset *token.FileSet, files []*ast.File, importPath string, opt
 func simpleImporter(imports map[string]*ast.Object, path string) (*ast.Object, error) {
 	pkg := imports[path]
 	if pkg == nil {
-		// note that strings.LastIndex returns -1 if there is no "/"
-		pkg = ast.NewObj(ast.Pkg, path[strings.LastIndex(path, "/")+1:])
+		pkg = ast.NewObj(ast.Pkg, packageName(path))
 		pkg.Data = ast.NewScope(nil) // required by ast.NewPackage for dot-import
 		imports[path] = pkg
 	}
 	return pkg, nil
+}
+
+// packageName returns the last path component of the provided package,
+// stripping the major version component, if any.
+func packageName(path string) string {
+	pathPrefix, _, _ := module.SplitPathVersion(path)
+	// Note that strings.LastIndex returns -1 if there is no "/".
+	return pathPrefix[strings.LastIndex(pathPrefix, "/")+1:]
 }
