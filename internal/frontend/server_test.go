@@ -854,7 +854,7 @@ func TestServer(t *testing.T) {
 			append(testCases, frontendFetchTCs...),
 			internal.ExperimentFrontendFetch,
 			internal.ExperimentInsertDirectories,
-			internal.ExperimentUsePathInfoToCheckExistence)
+			internal.ExperimentUsePathInfo)
 	})
 }
 
