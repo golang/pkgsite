@@ -68,7 +68,7 @@ func TestFetch(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			s, _, teardown := newTestServer(t, testModulesForProxy, internal.ExperimentInsertDirectories)
+			s, _, teardown := newTestServer(t, testModulesForProxy)
 			defer teardown()
 
 			ctx, cancel := context.WithTimeout(context.Background(), testFetchTimeout)
@@ -76,7 +76,6 @@ func TestFetch(t *testing.T) {
 			ctx = experiment.NewContext(ctx,
 				internal.ExperimentFrontendFetch,
 				internal.ExperimentMasterVersion,
-				internal.ExperimentInsertDirectories,
 				internal.ExperimentUsePathInfo)
 
 			status, responseText := s.fetchAndPoll(ctx, testModulePath, test.fullPath, test.version)
@@ -131,10 +130,8 @@ func TestFetchErrors(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), test.fetchTimeout)
 			defer cancel()
 
-			ctx = experiment.NewContext(ctx,
-				internal.ExperimentFrontendFetch,
-				internal.ExperimentInsertDirectories)
-			s, _, teardown := newTestServer(t, testModulesForProxy, internal.ExperimentInsertDirectories)
+			ctx = experiment.NewContext(ctx, internal.ExperimentFrontendFetch)
+			s, _, teardown := newTestServer(t, testModulesForProxy)
 			defer teardown()
 			got, _ := s.fetchAndPoll(ctx, test.modulePath, test.fullPath, test.version)
 			if got != test.want {
@@ -156,7 +153,6 @@ func TestFetchPathAlreadyExists(t *testing.T) {
 			defer cancel()
 			ctx = experiment.NewContext(ctx,
 				internal.ExperimentFrontendFetch,
-				internal.ExperimentInsertDirectories,
 			)
 			if err := testDB.InsertModule(ctx, sample.DefaultModule()); err != nil {
 				t.Fatal(err)
@@ -170,7 +166,7 @@ func TestFetchPathAlreadyExists(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			s, _, teardown := newTestServer(t, testModulesForProxy, internal.ExperimentInsertDirectories)
+			s, _, teardown := newTestServer(t, testModulesForProxy)
 			defer teardown()
 			got, _ := s.fetchAndPoll(ctx, sample.ModulePath, sample.PackagePath, sample.VersionString)
 			if got != status {

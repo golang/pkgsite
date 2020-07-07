@@ -10,14 +10,12 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
 func TestReadAndWriteVersionMap(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	ctx = experiment.NewContext(ctx, internal.ExperimentInsertDirectories)
 	defer ResetTestDB(testDB, t)
 
 	m := sample.Module("golang.org/x/tools", sample.VersionString, "go/packages")

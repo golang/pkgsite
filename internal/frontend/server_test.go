@@ -843,7 +843,6 @@ func TestServer(t *testing.T) {
 	t.Run("use directories", func(t *testing.T) {
 		testServer(t,
 			append(testCases, noExpUserDirTCs...),
-			internal.ExperimentInsertDirectories,
 			internal.ExperimentUseDirectories,
 			internal.ExperimentUsePathInfo,
 		)
@@ -853,7 +852,6 @@ func TestServer(t *testing.T) {
 		testServer(t,
 			append(testCases, frontendFetchTCs...),
 			internal.ExperimentFrontendFetch,
-			internal.ExperimentInsertDirectories,
 			internal.ExperimentUsePathInfo,
 		)
 	})

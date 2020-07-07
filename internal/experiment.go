@@ -11,7 +11,6 @@ import (
 const (
 	ExperimentAutocomplete                = "autocomplete"
 	ExperimentFrontendFetch               = "frontend-fetch"
-	ExperimentInsertDirectories           = "insert-directories"
 	ExperimentInsertPlaygroundLinks       = "insert-playground-links"
 	ExperimentMasterVersion               = "master-version"
 	ExperimentSidenav                     = "sidenav"
@@ -27,7 +26,6 @@ const (
 var Experiments = map[string]string{
 	ExperimentAutocomplete:                "Enable autocomplete with search.",
 	ExperimentFrontendFetch:               "Enable ability to fetch a package that doesn't exist on pkg.go.dev.",
-	ExperimentInsertDirectories:           "Insert data into paths, documentation, readmes, and package_imports tables.",
 	ExperimentInsertPlaygroundLinks:       "Insert Go playground links for examples.",
 	ExperimentMasterVersion:               "Enable viewing path@master.",
 	ExperimentSidenav:                     "Display documentation index on the left sidenav.",

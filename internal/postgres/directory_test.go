@@ -15,7 +15,6 @@ import (
 	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -285,7 +284,6 @@ func TestLegacyGetDirectory(t *testing.T) {
 func TestGetDirectoryNew(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	ctx = experiment.NewContext(ctx, internal.ExperimentInsertDirectories)
 
 	defer ResetTestDB(testDB, t)
 	InsertSampleDirectoryTree(ctx, t, testDB)

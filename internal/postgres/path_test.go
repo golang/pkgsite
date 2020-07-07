@@ -12,7 +12,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/version"
@@ -21,7 +20,6 @@ import (
 func TestGetPathInfo(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	ctx = experiment.NewContext(ctx, internal.ExperimentInsertDirectories)
 
 	defer ResetTestDB(testDB, t)
 
@@ -192,7 +190,6 @@ func TestGetPathInfo(t *testing.T) {
 func TestGetStdlibPaths(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	ctx = experiment.NewContext(ctx, internal.ExperimentInsertDirectories)
 	defer ResetTestDB(testDB, t)
 
 	// Insert two versions of some stdlib packages.

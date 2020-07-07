@@ -24,7 +24,6 @@ func TestFrontendFetchForMasterVersion(t *testing.T) {
 	experiments := []string{
 		internal.ExperimentFrontendFetch,
 		internal.ExperimentMasterVersion,
-		internal.ExperimentInsertDirectories,
 		internal.ExperimentUsePathInfo,
 	}
 	ctx := experiment.NewContext(context.Background(), experiments...)

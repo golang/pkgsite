@@ -224,7 +224,6 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 			defer cancel()
-			ctx = experiment.NewContext(ctx, internal.ExperimentInsertDirectories)
 
 			for _, v := range testModules {
 				if err := testDB.InsertModule(ctx, v); err != nil {

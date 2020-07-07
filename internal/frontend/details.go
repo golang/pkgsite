@@ -263,8 +263,7 @@ func isSupportedVersion(ctx context.Context, fullPath, requestedVersion string) 
 // isActveUseDirectories reports whether the experiment for reading from the
 // paths-based data model is active.
 func isActiveUseDirectories(ctx context.Context) bool {
-	return experiment.IsActive(ctx, internal.ExperimentInsertDirectories) &&
-		experiment.IsActive(ctx, internal.ExperimentUseDirectories)
+	return experiment.IsActive(ctx, internal.ExperimentUseDirectories)
 }
 
 // isActivePathAtMaster reports whether the experiment for viewing packages at

@@ -25,7 +25,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
@@ -93,10 +92,8 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
 		}
 		logMemory(ctx, "after insertPackages")
 
-		if experiment.IsActive(ctx, internal.ExperimentInsertDirectories) {
-			if err := insertDirectories(ctx, tx, m, moduleID); err != nil {
-				return err
-			}
+		if err := insertDirectories(ctx, tx, m, moduleID); err != nil {
+			return err
 		}
 		logMemory(ctx, "after insertDirectories")
 
