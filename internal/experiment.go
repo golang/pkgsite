@@ -18,6 +18,7 @@ const (
 	ExperimentTeeProxyMakePkgGoDevRequest = "teeproxy-make-pkg-go-dev-request"
 	ExperimentTranslateHTML               = "translate-html"
 	ExperimentUseDirectories              = "use-directories"
+	ExperimentUsePackageImports           = "use-package-imports"
 	ExperimentUsePathInfo                 = "use-path-info"
 )
 
@@ -34,6 +35,7 @@ var Experiments = map[string]string{
 	ExperimentTranslateHTML:               "Parse HTML text in READMEs, to properly display images.",
 	ExperimentUseDirectories:              "Read from paths, documentation, readmes, and package_imports tables.",
 	ExperimentUsePathInfo:                 "Check the paths table if a path exists, as opposed to the packages or modules table.",
+	ExperimentUsePackageImports:           "Read imports from the package_imports table.",
 }
 
 // Experiment holds data associated with an experimental feature for frontend

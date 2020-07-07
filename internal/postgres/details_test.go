@@ -17,6 +17,7 @@ import (
 	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -172,16 +173,21 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 		pkg2 = m2.LegacyPackages[0]
 		pkg3 = m3.LegacyPackages[0]
 	)
+
 	pkg1.Imports = nil
 	pkg2.Imports = []string{pkg1.Path}
 	pkg3.Imports = []string{pkg2.Path, pkg1.Path}
+	m1.Directories[1].Package.Imports = pkg1.Imports
+	m2.Directories[1].Package.Imports = pkg2.Imports
+	m3.Directories[1].Package.Imports = pkg3.Imports
 
 	for _, tc := range []struct {
-		path, modulePath, version string
-		wantImports               []string
-		wantImportedBy            []string
+		name, path, modulePath, version string
+		wantImports                     []string
+		wantImportedBy                  []string
 	}{
 		{
+			name:           "multiple imports no imported by",
 			path:           pkg3.Path,
 			modulePath:     m3.ModulePath,
 			version:        "v1.3.0",
@@ -189,6 +195,7 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 			wantImportedBy: nil,
 		},
 		{
+			name:           "one import one imported by",
 			path:           pkg2.Path,
 			modulePath:     m2.ModulePath,
 			version:        "v1.2.0",
@@ -196,6 +203,7 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 			wantImportedBy: []string{pkg3.Path},
 		},
 		{
+			name:           "no imports two imported by",
 			path:           pkg1.Path,
 			modulePath:     m1.ModulePath,
 			version:        "v1.1.0",
@@ -203,6 +211,7 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 			wantImportedBy: []string{pkg2.Path, pkg3.Path},
 		},
 		{
+			name:           "no imports one imported by",
 			path:           pkg1.Path,
 			modulePath:     m2.ModulePath, // should cause pkg2 to be excluded.
 			version:        "v1.1.0",
@@ -210,28 +219,24 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 			wantImportedBy: []string{pkg3.Path},
 		},
 	} {
-		t.Run(tc.path, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			defer ResetTestDB(testDB, t)
 
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 			defer cancel()
+			ctx = experiment.NewContext(ctx, internal.ExperimentInsertDirectories)
 
 			for _, v := range testModules {
 				if err := testDB.InsertModule(ctx, v); err != nil {
 					t.Error(err)
 				}
 			}
-
-			got, err := testDB.GetImports(ctx, tc.path, tc.modulePath, tc.version)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			sort.Strings(got)
-			sort.Strings(tc.wantImports)
-			if diff := cmp.Diff(tc.wantImports, got); diff != "" {
-				t.Errorf("testDB.GetImports(%q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
-			}
+			t.Run("use-package-imports", func(t *testing.T) {
+				testGetImports(ctx, t, tc.path, tc.modulePath, tc.version, tc.wantImports, internal.ExperimentUsePackageImports)
+			})
+			t.Run("use-imports", func(t *testing.T) {
+				testGetImports(ctx, t, tc.path, tc.modulePath, tc.version, tc.wantImports)
+			})
 
 			gotImportedBy, err := testDB.GetImportedBy(ctx, tc.path, tc.modulePath, 100)
 			if err != nil {
@@ -241,6 +246,20 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 				t.Errorf("testDB.GetImportedBy(%q, %q) mismatch (-want +got):\n%s", tc.path, tc.modulePath, diff)
 			}
 		})
+	}
+}
+
+func testGetImports(ctx context.Context, t *testing.T, path, modulePath, version string, wantImports []string, experimentNames ...string) {
+	t.Helper()
+	ctx = experiment.NewContext(ctx, experimentNames...)
+	got, err := testDB.GetImports(ctx, path, modulePath, version)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sort.Strings(wantImports)
+	if diff := cmp.Diff(wantImports, got); diff != "" {
+		t.Errorf("testDB.GetImports(%q, %q) mismatch (-want +got):\n%s", path, version, diff)
 	}
 }
 

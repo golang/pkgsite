@@ -20,6 +20,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -218,8 +219,23 @@ func (db *DB) GetImports(ctx context.Context, pkgPath, modulePath, version strin
 		return nil, fmt.Errorf("pkgPath, modulePath and version must all be non-empty: %w", derrors.InvalidArgument)
 	}
 
-	var toPath string
-	query := `
+	var query string
+	if experiment.IsActive(ctx, internal.ExperimentUsePackageImports) {
+		query = `
+		SELECT to_path
+		FROM package_imports i
+		INNER JOIN paths p
+		ON p.id = i.path_id
+		INNER JOIN modules m
+		ON m.id = p.module_id
+		WHERE
+			p.path = $1
+			AND m.version = $2
+			AND m.module_path = $3
+		ORDER BY
+			to_path;`
+	} else {
+		query = `
 		SELECT to_path
 		FROM imports
 		WHERE
@@ -228,8 +244,12 @@ func (db *DB) GetImports(ctx context.Context, pkgPath, modulePath, version strin
 			AND from_module_path = $3
 		ORDER BY
 			to_path;`
+	}
 
-	var imports []string
+	var (
+		toPath  string
+		imports []string
+	)
 	collect := func(rows *sql.Rows) error {
 		if err := rows.Scan(&toPath); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
