@@ -222,7 +222,7 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		VersionID:    os.Getenv("GAE_VERSION"),
 		InstanceID:   os.Getenv("GAE_INSTANCE"),
 		GaeEnv:       os.Getenv("GAE_ENV"),
-		QueueService: os.Getenv("GO_DISCOVERY_QUEUE_SERVICE"),
+		QueueService: GetEnv("GO_DISCOVERY_QUEUE_SERVICE", os.Getenv("GAE_SERVICE")),
 		// LocationID is essentially hard-coded until we figure out a good way to
 		// determine it programmatically, but we check an environment variable in
 		// case it needs to be overridden.

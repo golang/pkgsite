@@ -54,6 +54,19 @@ func (q *GCP) ScheduleFetch(ctx context.Context, modulePath, version, suffix str
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 	defer derrors.Wrap(&err, "queue.ScheduleFetch(%q, %q, %q, %d)", modulePath, version, suffix, taskIDChangeInterval)
+
+	req := q.newTaskRequest(modulePath, version, suffix, taskIDChangeInterval)
+	if _, err := q.client.CreateTask(ctx, req); err != nil {
+		if status.Code(err) == codes.AlreadyExists {
+			log.Infof(ctx, "ignoring duplicate task ID %s: %s@%s", req.Task.Name, modulePath, version)
+		} else {
+			return fmt.Errorf("q.client.CreateTask(ctx, req): %v", err)
+		}
+	}
+	return nil
+}
+
+func (q *GCP) newTaskRequest(modulePath, version, suffix string, taskIDChangeInterval time.Duration) *taskspb.CreateTaskRequest {
 	queueName := fmt.Sprintf("projects/%s/locations/%s/queues/%s", q.cfg.ProjectID, q.cfg.LocationID, q.queueID)
 	mod := fmt.Sprintf("%s/@v/%s", modulePath, version)
 	u := fmt.Sprintf("/fetch/" + mod)
@@ -78,15 +91,7 @@ func (q *GCP) ScheduleFetch(ctx context.Context, modulePath, version, suffix str
 	if suffix != "" {
 		req.Task.Name += "-" + suffix
 	}
-
-	if _, err := q.client.CreateTask(ctx, req); err != nil {
-		if status.Code(err) == codes.AlreadyExists {
-			log.Infof(ctx, "ignoring duplicate task ID %s: %q", taskID, mod)
-		} else {
-			return fmt.Errorf("q.client.CreateTask(ctx, req): %v", err)
-		}
-	}
-	return nil
+	return req
 }
 
 // Create a task ID for the given module path and version.
