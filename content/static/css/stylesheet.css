@@ -74,6 +74,18 @@ h2 {
 h3 {
   font-size: 1rem;
 }
+/**
+  * As header elements are not interactive, it’s okay to remove the visual
+  * indicator. https://css-tricks.com/focus-styles-non-interactive-elements/
+  */
+h1:focus,
+h2:focus,
+h3:focus,
+h4:focus,
+h5:focus,
+h6:focus {
+  outline: 0;
+}
 p {
   font-size: 1rem;
   line-height: 1.5rem;
@@ -888,6 +900,20 @@ code {
 }
 .Disclaimer-link {
   font-style: italic;
+}
+
+.DocNav,
+.DocNavMobile {
+  display: none;
+}
+/**
+ * Some versions of the doc template have DocNav also on elements with these
+ * classes, which we don’t want to hide unless the sidenav experiment is active.
+ * TODO: Remove once HTML has been transitioned to use new markup.
+ */
+.Documentation-nav.DocNav,
+.Documentation-toc.DocNav {
+  display: block;
 }
 
 .Documentation {

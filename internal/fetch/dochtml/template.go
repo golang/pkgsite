@@ -37,107 +37,171 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 	},
 ).Parse(`{{- "" -}}
 {{- if or .Doc .Consts .Vars .Funcs .Types .Examples.List -}}
-<nav class="Documentation-nav js-sideNav">
-	<ul class="Documentation-toc DocNav">
+<nav class="Documentation-nav">
+	<ul class="Documentation-toc">
 		{{- if or .Doc (index .Examples.Map "") -}}
-			<li class="Documentation-tocItem DocNav-node">
+			<li class="Documentation-tocItem">
 				<a href="#pkg-overview">Overview</a>
 			</li>
 		{{- end -}}
 		{{- if or .Consts .Vars .Funcs .Types .Examples.List -}}
-			<li class="Documentation-tocItem Documentation-tocItem--index DocNav-node">
+			<li class="Documentation-tocItem">
 				<a href="#pkg-index">Index</a>
 		  </li>
 		{{- end -}}
 		{{- if .Examples.List -}}
-			<li class="Documentation-tocItem DocNav-node">
+			<li class="Documentation-tocItem">
 				<a href="#pkg-examples">Examples</a>
 			</li>
 		{{- end -}}
-		{{- if .Consts -}}
-			<li class="Documentation-tocItem Documentation-tocItem--constants DocNav-node">
-				<a href="#pkg-constants">Constants</a>
-			</li>{{"\n"}}
-		{{- end -}}
-		{{- if .Vars -}}
-			<li class="Documentation-tocItem Documentation-tocItem--variables DocNav-node">
-				<a href="#pkg-variables">Variables</a>
-			</li>{{"\n"}}
-		{{- end -}}
+	</ul>
+</nav>
+{{- end -}}
 
-		{{if .Funcs}}
-			<li class="Documentation-tocItem Documentation-tocItem--functions DocNav-node DocNav-node--expandable">
-				<details open>
-					<summary>Functions</summary>
-					<ul>
-						{{- range .Funcs -}}
-							<li class="DocNav-node">
-								<a href="#{{.Name}}" title="{{render_short_synopsis .Decl}}">{{render_short_synopsis .Decl}}</a>
+{{if or .Doc .Consts .Vars .Funcs .Types .Examples.List}}
+	<nav class="DocNav js-sideNav">
+		<ul role="tree" aria-label="Outline">
+			{{if or .Doc (index .Examples.Map "")}}
+				<li role="none">
+					<a href="#pkg-overview" role="treeitem" aria-level="1" tabindex="0">Overview</a>
+				</li>
+			{{end}}
+			{{if .Examples.List}}
+				<li role="none">
+					<a href="#pkg-examples" role="treeitem" aria-level="1" tabindex="-1">Examples</a>
+				</li>
+			{{end}}
+			{{if .Consts}}
+				<li role="none">
+					<a href="#pkg-constants" role="treeitem" aria-level="1" tabindex="-1">Constants</a>
+				</li>
+			{{end}}
+			{{if .Vars}}
+				<li role="none">
+					<a href="#pkg-variables" role="treeitem" aria-level="1" tabindex="-1">Variables</a>
+				</li>
+			{{end}}
+
+			{{if .Funcs}}
+				<li role="none">
+					<span class="DocNav-groupLabel" role="treeitem" aria-expanded="false" aria-level="1" aria-owns="nav-group-functions" tabindex="-1">Functions</span>
+					<ul role="group" id="nav-group-functions">
+						{{range .Funcs}}
+							<li role="none">
+								<a href="#{{.Name}}" title="{{render_short_synopsis .Decl}}" role="treeitem" aria-level="2" tabindex="-1">{{render_short_synopsis .Decl}}</a>
 							</li>
-						{{- end -}}
+						{{end}}
 					</ul>
-				</details>
-			</li>
-		{{end}}
-		{{if .Types}}
-			<li class="Documentation-tocItem Documentation-tocItem--types DocNav-node DocNav-node--expandable">
-				<details open>
-					<summary>Types</summary>
-					<ul>
+				</li>
+			{{end}}
+
+			{{if .Types}}
+				<li role="none">
+					<span class="DocNav-groupLabel" role="treeitem" aria-expanded="false" aria-level="1" aria-owns="nav-group-types" tabindex="-1">Types</span>
+					<ul role="group" id="nav-group-types">
 						{{range .Types}}
 							{{$tname := .Name}}
-							<li class="DocNav-node DocNav-node--expandable">
+							<li role="none">
 								{{if or .Funcs .Methods}}
-									<details open>
-										<summary>
-											<a href="#{{$tname}}">type {{$tname}}</a>
-										</summary>
-										<ul>
-											{{range .Funcs}}
-												<li class="DocNav-node">
-													<a href="#{{.Name}}" title="{{render_short_synopsis .Decl}}">{{render_short_synopsis .Decl}}</a>
-												</li>
-											{{end}}
-											{{range .Methods}}
-												<li class="DocNav-node">
-													<a href="#{{$tname}}.{{.Name}}" title="{{render_short_synopsis .Decl}}">{{render_short_synopsis .Decl}}</a>
-												</li>
-											{{end}}
-										</ul>
-									</details>
+									{{$navgroupname := (printf "nav.group.%s" $tname)}}
+									{{$navgroupid := (safe_id $navgroupname)}}
+									<a class="DocNav-groupLabel" href="#{{$tname}}" role="treeitem" aria-expanded="false" aria-level="2" data-aria-owns="{{$navgroupid}}" tabindex="-1">type {{$tname}}</a>
+									<ul role="group" id="{{$navgroupid}}">
+										{{range .Funcs}}
+											<li role="none">
+												<a href="#{{.Name}}" title="{{render_short_synopsis .Decl}}" role="treeitem" aria-level="3" tabindex="-1">{{render_short_synopsis .Decl}}</a>
+											</li>
+										{{end}}
+										{{range .Methods}}
+											<li role="none">
+												<a href="#{{$tname}}.{{.Name}}" title="{{render_short_synopsis .Decl}}" role="treeitem" aria-level="3" tabindex="-1">{{render_short_synopsis .Decl}}</a>
+											</li>
+										{{end}}
+									</ul>
 								{{else}}
-									<a href="#{{$tname}}">type {{$tname}}</a>
+									<a href="#{{$tname}}" role="treeitem" aria-level="2" tabindex="-1">type {{$tname}}</a>
 								{{end}} {{/* if or .Funcs .Methods */}}
 							</li>
 						{{end}} {{/* range .Types */}}
 					</ul>
-				</details>
-			</li>
-		{{end}}
+				</li>
+			{{end}}
 
-		{{if .Notes}}
-			<li class="Documentation-tocItem Documentation-tocItem--notes DocNav-node DocNav-node--expandable">
-				<details open>
-					<summary>Notes</summary>
-					<ul>
+			{{if .Notes}}
+				<li role="none">
+					<span class="DocNav-groupLabel" role="treeitem" aria-expanded="true" aria-level="1" aria-owns="nav-group-notes" tabindex="-1">Notes</span>
+					<ul role="group" id="nav-group-notes">
 						{{range $marker, $item := .Notes}}
-							<li class="DocNav-node">
-								<a href="#pkg-note-{{$marker}}">{{$marker}}s</a>
+							<li role="none">
+								<a href="#pkg-note-{{$marker}}" role="treeitem" aria-level="2" tabindex="-1">{{$marker}}s</a>
 							</li>
 						{{end}}
 					</ul>
-				</details>
-			</li>
-		{{end}}
-	</ul>
-</nav>
-{{- end -}}
+				</li>
+			{{end}}
+		</ul>
+	</nav>
+	<nav class="DocNavMobile js-mobileNav">
+		<label for="DocNavMobile-select" class="DocNavMobile-label">
+			<svg class="DocNavMobile-selectIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black" width="18px" height="18px">
+				<path d="M0 0h24v24H0z" fill="none"/><path d="M3 9h14V7H3v2zm0 4h14v-2H3v2zm0 4h14v-2H3v2zm16 0h2v-2h-2v2zm0-10v2h2V7h-2zm0 6h2v-2h-2v2z"/>
+			</svg>
+			<span class="DocNavMobile-selectText js-mobileNavSelectText">Outline</span>
+		</label>
+		<select id="DocNavMobile-select" class="DocNavMobile-select">
+		  <option value="">Outline</option>
+			{{if or .Doc (index .Examples.Map "")}}
+				<option value="pkg-overview">Overview</option>
+			{{end}}
+			{{if .Examples.List}}
+				<option value="pkg-examples">Examples</option>
+			{{end}}
+			{{if .Consts}}
+				<option value="pkg-constants">Constants</option>
+			{{end}}
+			{{if .Vars}}
+				<option value="pkg-variables">Variables</option>
+			{{end}}
+
+			{{if .Funcs}}
+				<optgroup label="Functions">
+					{{range .Funcs}}
+						<option value="{{.Name}}">{{render_short_synopsis .Decl}}</option>
+					{{end}}
+				</optgroup>
+			{{end}}
+
+			{{if .Types}}
+				<optgroup label="Types">
+					{{range .Types}}
+						{{$tname := .Name}}
+						<option value="{{$tname}}">type {{$tname}}</option>
+						{{range .Funcs}}
+							<option value="{{.Name}}">{{render_short_synopsis .Decl}}</option>
+						{{end}}
+						{{range .Methods}}
+							<option value="{{$tname}}.{{.Name}}">{{render_short_synopsis .Decl}}</option>
+						{{end}}
+					{{end}} {{/* range .Types */}}
+				</optgroup>
+			{{end}}
+
+			{{if .Notes}}
+				<optgroup label="Notes">
+					{{range $marker, $item := .Notes}}
+						<option value="pkg-note-{{$marker}}">{{$marker}}s</option>
+					{{end}}
+				</optgroup>
+			{{end}}
+		</select>
+	</nav>
+{{end}}
 
 <div class="js-docContent"> {{/* Documentation content container */}}
 
 {{- if or .Doc (index .Examples.Map "") -}}
 	<section class="Documentation-overview">
-		<h2 id="pkg-overview" class="Documentation-overviewHeader">Overview <a href="#pkg-overview">¶</a></h2>{{"\n\n" -}}
+		<h2 tabindex="-1" id="pkg-overview" class="Documentation-overviewHeader">Overview <a href="#pkg-overview">¶</a></h2>{{"\n\n" -}}
 		{{render_doc .Doc}}{{"\n" -}}
 		{{- template "example" (index .Examples.Map "") -}}
 	</section>
@@ -179,7 +243,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 
 	{{- if .Examples.List -}}
 	<section class="Documentation-examples">
-		<h3 id="pkg-examples" class="Documentation-examplesHeader">Examples <a href="#pkg-examples">¶</a></h3>{{"\n" -}}
+		<h3 tabindex="-1" id="pkg-examples" class="Documentation-examplesHeader">Examples <a href="#pkg-examples">¶</a></h3>{{"\n" -}}
 		<ul class="Documentation-examplesList">{{"\n" -}}
 			{{- range .Examples.List -}}
 				<li><a href="#{{.ID}}">{{or .ParentID "Package"}}{{with .Suffix}} ({{.}}){{end}}</a></li>{{"\n" -}}
@@ -189,7 +253,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 	{{- end -}}
 
 	<section class="Documentation-files">
-		<h3 id="pkg-files" class="Documentation-filesHeader">Package Files <a href="#pkg-files">¶</a></h3>
+		<h3 tabindex="-1" id="pkg-files" class="Documentation-filesHeader">Package Files <a href="#pkg-files">¶</a></h3>
 		<ul class="Documentation-filesList">
 			{{- range .Filenames -}}
 				<li>{{file_link .}}</li>
@@ -199,7 +263,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 
 	{{- if .Consts -}}
 	<section class="Documentation-constants">
-		<h3 id="pkg-constants" class="Documentation-constantsHeader">Constants <a href="#pkg-constants">¶</a></h3>{{"\n"}}
+		<h3 tabindex="-1" id="pkg-constants" class="Documentation-constantsHeader">Constants <a href="#pkg-constants">¶</a></h3>{{"\n"}}
 		{{- range .Consts -}}
 			{{- $out := render_decl .Doc .Decl -}}
 			{{- $out.Decl -}}
@@ -211,7 +275,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 
 	{{- if .Vars -}}
 	<section class="Documentation-variables">
-		<h3 id="pkg-variables" class="Documentation-variablesHeader">Variables <a href="#pkg-variables">¶</a></h3>{{"\n"}}
+		<h3 tabindex="-1" id="pkg-variables" class="Documentation-variablesHeader">Variables <a href="#pkg-variables">¶</a></h3>{{"\n"}}
 		{{- range .Vars -}}
 			{{- $out := render_decl .Doc .Decl -}}
 			{{- $out.Decl -}}
@@ -226,7 +290,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 		{{- range .Funcs -}}
 		<div class="Documentation-function">
 			{{- $id := safe_id .Name -}}
-			<h3 id="{{$id}}" data-kind="function" class="Documentation-functionHeader">func {{source_link .Name .Decl}} <a href="#{{$id}}">¶</a></h3>{{"\n"}}
+			<h3 tabindex="-1" id="{{$id}}" data-kind="function" class="Documentation-functionHeader">func {{source_link .Name .Decl}} <a href="#{{$id}}">¶</a></h3>{{"\n"}}
 			{{- $out := render_decl .Doc .Decl -}}
 			{{- $out.Decl -}}
 			{{- $out.Doc -}}
@@ -243,7 +307,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 		<div class="Documentation-type">
 			{{- $tname := .Name -}}
 			{{- $id := safe_id .Name -}}
-			<h3 id="{{$id}}" data-kind="type" class="Documentation-typeHeader">type {{source_link .Name .Decl}} <a href="#{{$id}}">¶</a></h3>{{"\n"}}
+			<h3 tabindex="-1" id="{{$id}}" data-kind="type" class="Documentation-typeHeader">type {{source_link .Name .Decl}} <a href="#{{$id}}">¶</a></h3>{{"\n"}}
 			{{- $out := render_decl .Doc .Decl -}}
 			{{- $out.Decl -}}
 			{{- $out.Doc -}}
@@ -271,7 +335,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 			{{- range .Funcs -}}
 			<div class="Documentation-typeFunc">
 				{{- $id := safe_id .Name -}}
-				<h3 id="{{$id}}" data-kind="function" class="Documentation-typeFuncHeader">func {{source_link .Name .Decl}} <a href="#{{$id}}">¶</a></h3>{{"\n"}}
+				<h3 tabindex="-1" id="{{$id}}" data-kind="function" class="Documentation-typeFuncHeader">func {{source_link .Name .Decl}} <a href="#{{$id}}">¶</a></h3>{{"\n"}}
 				{{- $out := render_decl .Doc .Decl -}}
 				{{- $out.Decl -}}
 				{{- $out.Doc -}}
@@ -284,7 +348,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 			<div class="Documentation-typeMethod">
 				{{- $name := (printf "%s.%s" $tname .Name) -}}
 				{{- $id := (safe_id $name) -}}
-				<h3 id="{{$id}}" data-kind="method" class="Documentation-typeMethodHeader">func ({{.Recv}}) {{source_link .Name .Decl}} <a href="#{{$id}}">¶</a></h3>{{"\n"}}
+				<h3 tabindex="-1" id="{{$id}}" data-kind="method" class="Documentation-typeMethodHeader">func ({{.Recv}}) {{source_link .Name .Decl}} <a href="#{{$id}}">¶</a></h3>{{"\n"}}
 				{{- $out := render_decl .Doc .Decl -}}
 				{{- $out.Decl -}}
 				{{- $out.Doc -}}
@@ -302,7 +366,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 <section class="Documentation-notes">
 	{{- range $marker, $content := .Notes -}}
 	<div class="Documentation-note">
-		<h2 id="{{index $.NoteIDs $marker}}" class="Documentation-noteHeader">{{$marker}}s <a href="#pkg-note-{{$marker}}">¶</a></h2>
+		<h2 tabindex="-1" id="{{index $.NoteIDs $marker}}" class="Documentation-noteHeader">{{$marker}}s <a href="#pkg-note-{{$marker}}">¶</a></h2>
 		<ul class="Documentation-noteList" style="padding-left: 20px; list-style: initial;">{{"\n" -}}
 		{{- range $v := $content -}}
 			<li style="margin: 6px 0 6px 0;">{{render_doc $v.Body}}</li>
@@ -317,7 +381,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 
 {{- define "example" -}}
 	{{- range . -}}
-	<details id="{{.ID}}" class="Documentation-exampleDetails">{{"\n" -}}
+	<details tabindex="-1" id="{{.ID}}" class="Documentation-exampleDetails">{{"\n" -}}
 		<summary class="Documentation-exampleDetailsHeader">Example{{with .Suffix}} ({{.}}){{end}} <a href="#{{.ID}}">¶</a></summary>{{"\n" -}}
 		<div class="Documentation-exampleDetailsBody">{{"\n" -}}
 			{{- if .Doc -}}{{render_doc .Doc}}{{"\n" -}}{{- end -}}
