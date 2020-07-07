@@ -683,9 +683,6 @@ func serverTestCases() ([]serverTestCase, []serverTestCase, []serverTestCase) {
 					text("^github.com/pseudo$")),
 				in(".Overview-readmeContent", text(`readme`))),
 		},
-
-		// TODO(golang/go#39631): add a second module, so we can verify that we get
-		// the latest version.
 		{
 			name:           "module packages tab latest version",
 			urlPath:        fmt.Sprintf("/mod/%s?tab=packages", sample.ModulePath),
@@ -693,7 +690,8 @@ func serverTestCases() ([]serverTestCase, []serverTestCase, []serverTestCase) {
 			// Fall back to the latest version.
 			want: in("",
 				pagecheck.ModuleHeader(mod, unversioned),
-				in(".Directories", text(`This is a package synopsis`))),
+				in(".Directories", text(`This is a package synopsis`)),
+				in("div.DetailsHeader-version", text("v1.0.0"))),
 		},
 		{
 			name:           "module at version overview tab",
