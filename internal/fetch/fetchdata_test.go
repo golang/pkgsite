@@ -923,8 +923,6 @@ package example_test
 	}
 }
 
-const testPlaygroundID = "playground-id"
-
 var modulePackageExample = moduleWithExamples("package.example",
 	``,
 	`import "fmt"
@@ -934,7 +932,7 @@ func Example() {
 	fmt.Println("hello")
 	// Output: hello
 }
-`, testPlaygroundID, `fmt.Println(&#34;hello&#34;)`)
+`, "Documentation-exampleButtonsContainer")
 
 var moduleFuncExample = moduleWithExamples("func.example",
 	`func F() {}
@@ -944,7 +942,7 @@ var moduleFuncExample = moduleWithExamples("func.example",
 func ExampleF() {
 	example.F()
 }
-`, testPlaygroundID)
+`, "Documentation-exampleButtonsContainer")
 
 var moduleTypeExample = moduleWithExamples("type.example",
 	`type T struct{}
@@ -954,7 +952,7 @@ var moduleTypeExample = moduleWithExamples("type.example",
 func ExampleT() {
 	example.T{}
 }
-`, testPlaygroundID)
+`, "Documentation-exampleButtonsContainer")
 
 var moduleMethodExample = moduleWithExamples("method.example",
 	`type T struct {}
@@ -966,4 +964,4 @@ func (*T) M() {}
 func ExampleT_M() {
 	new(example.T).M()
 }
-`, testPlaygroundID)
+`, "Documentation-exampleButtonsContainer")

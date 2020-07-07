@@ -12,9 +12,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/build"
-	"go/format"
 	"go/parser"
-	"go/printer"
 	"go/token"
 	"io"
 	"io/ioutil"
@@ -33,7 +31,6 @@ import (
 	"golang.org/x/mod/module"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch/dochtml"
 	"golang.org/x/pkgsite/internal/fetch/internal/doc"
 	"golang.org/x/pkgsite/internal/licenses"
@@ -650,36 +647,9 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 		return sourceInfo.FileURL(path.Join(innerPath, filename))
 	}
 
-	// Fetch Go playground URLs for examples.
-	playURLs := make(map[*doc.Example]string)
-	if experiment.IsActive(ctx, internal.ExperimentInsertPlaygroundLinks) {
-		var firstErr error
-		dochtml.WalkExamples(d, func(id string, ex *doc.Example) {
-			// TODO: make these fetches in parallel
-			url, err := fetchPlayURL(ex, httpPost)
-			if err != nil {
-				if firstErr == nil {
-					firstErr = fmt.Errorf("failed to share example to Go playground: %s", err)
-				}
-				return
-			}
-			playURLs[ex] = url
-		})
-		if firstErr != nil {
-			// TODO: instead of failing the whole package processing,
-			// allow this to continue without the playground link,
-			// but schedule the package for reprocessing later.
-			return nil, firstErr
-		}
-	}
-	playURLFunc := func(ex *doc.Example) string {
-		return playURLs[ex]
-	}
-
 	docHTML, err := dochtml.Render(ctx, fset, d, dochtml.RenderOptions{
 		FileLinkFunc:   fileLinkFunc,
 		SourceLinkFunc: sourceLinkFunc,
-		PlayURLFunc:    playURLFunc,
 		ModInfo:        modInfo,
 		Limit:          int64(MaxDocumentationHTML),
 	})
@@ -776,41 +746,6 @@ func readZipFile(f *zip.File) (_ []byte, err error) {
 		return nil, fmt.Errorf("closing: %v", err)
 	}
 	return b, nil
-}
-
-// fetchPlayURL returns the URL for this example's code on the Go playground.
-// It fetches this URL from play.golang.org using post,
-// which has the same signature as http.Post.
-// If ex.Play is nil or if it's too large for the Go playground, returns "".
-func fetchPlayURL(ex *doc.Example, post func(url, contentType string, body io.Reader) (*http.Response, error)) (_ string, err error) {
-	defer derrors.Wrap(&err, "fetchPlayURL(...)")
-	if ex.Play == nil {
-		return "", nil
-	}
-	n := &printer.CommentedNode{
-		Node:     ex.Play,
-		Comments: ex.Comments, // may be nil
-	}
-	var buf bytes.Buffer
-	err = format.Node(&buf, token.NewFileSet(), n)
-	if err != nil {
-		return "", err
-	}
-	resp, err := post("https://play.golang.org/share", "text/plain", &buf)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	p, err := ioutil.ReadAll(resp.Body)
-	switch {
-	case err != nil:
-		return "", err
-	case resp.StatusCode == http.StatusRequestEntityTooLarge:
-		return "", nil // example is too large for the Go playground
-	case resp.StatusCode != http.StatusOK:
-		return "", fmt.Errorf("error from play.golang.org: %s, %v", p, resp.StatusCode)
-	}
-	return fmt.Sprintf("https://play.golang.org/p/%s", p), nil
 }
 
 func allocMeg() int {

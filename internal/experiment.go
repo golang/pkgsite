@@ -9,31 +9,29 @@ import (
 )
 
 const (
-	ExperimentAutocomplete          = "autocomplete"
-	ExperimentFrontendFetch         = "frontend-fetch"
-	ExperimentInsertPlaygroundLinks = "insert-playground-links"
-	ExperimentMasterVersion         = "master-version"
-	ExperimentExecutableExamples    = "executable-examples"
-	ExperimentNewHomepage           = "new-homepage"
-	ExperimentSidenav               = "sidenav"
-	ExperimentUseDirectories        = "use-directories"
-	ExperimentUsePackageImports     = "use-package-imports"
-	ExperimentUsePathInfo           = "use-path-info"
+	ExperimentAutocomplete       = "autocomplete"
+	ExperimentFrontendFetch      = "frontend-fetch"
+	ExperimentMasterVersion      = "master-version"
+	ExperimentExecutableExamples = "executable-examples"
+	ExperimentSidenav            = "sidenav"
+	ExperimentTranslateHTML      = "translate-html"
+	ExperimentUseDirectories     = "use-directories"
+	ExperimentUsePackageImports  = "use-package-imports"
+	ExperimentUsePathInfo        = "use-path-info"
 )
 
 // Experiments represents all of the active experiments in the codebase and
 // a description of each experiment.
 var Experiments = map[string]string{
-	ExperimentAutocomplete:          "Enable autocomplete with search.",
-	ExperimentFrontendFetch:         "Enable ability to fetch a package that doesn't exist on pkg.go.dev.",
-	ExperimentInsertPlaygroundLinks: "Insert Go playground links for examples.",
-	ExperimentMasterVersion:         "Enable viewing path@master.",
-	ExperimentNewHomepage:           "Enable the new hompage.",
-	ExperimentExecutableExamples:    "Display executable examples with their import statements, so that they are runnable via the Go playground.",
-	ExperimentSidenav:               "Display documentation index on the left sidenav.",
-	ExperimentUseDirectories:        "Read from paths, documentation, readmes, and package_imports tables.",
-	ExperimentUsePathInfo:           "Check the paths table if a path exists, as opposed to the packages or modules table.",
-	ExperimentUsePackageImports:     "Read imports from the package_imports table.",
+	ExperimentAutocomplete:       "Enable autocomplete with search.",
+	ExperimentFrontendFetch:      "Enable ability to fetch a package that doesn't exist on pkg.go.dev.",
+	ExperimentMasterVersion:      "Enable viewing path@master.",
+	ExperimentExecutableExamples: "Display executable examples with their import statements, so that they are runnable via the Go playground.",
+	ExperimentSidenav:            "Display documentation index on the left sidenav.",
+	ExperimentTranslateHTML:      "Parse HTML text in READMEs, to properly display images.",
+	ExperimentUseDirectories:     "Read from paths, documentation, readmes, and package_imports tables.",
+	ExperimentUsePathInfo:        "Check the paths table if a path exists, as opposed to the packages or modules table.",
+	ExperimentUsePackageImports:  "Read imports from the package_imports table.",
 }
 
 // Experiment holds data associated with an experimental feature for frontend

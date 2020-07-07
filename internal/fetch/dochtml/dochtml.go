@@ -55,7 +55,6 @@ type RenderOptions struct {
 	// string to indicate that a given file should not be linked.
 	FileLinkFunc   func(file string) (url string)
 	SourceLinkFunc func(ast.Node) string
-	PlayURLFunc    func(*doc.Example) string // If set, returns the Go playground URL for the example
 	// ModInfo optionally specifies information about the module the package
 	// belongs to in order to render module-related documentation.
 	ModInfo *ModuleInfo
@@ -116,12 +115,6 @@ func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Render
 	sourceLink := func(name string, node ast.Node) safehtml.HTML {
 		return linkHTML(name, opt.SourceLinkFunc(node), "Documentation-source")
 	}
-	playURLFunc := opt.PlayURLFunc
-	if playURLFunc == nil {
-		playURLFunc = func(*doc.Example) string {
-			return ""
-		}
-	}
 
 	tmpl := template.Must(htmlPackage.Clone()).Funcs(map[string]interface{}{
 		"render_short_synopsis": r.ShortSynopsis,
@@ -131,7 +124,6 @@ func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Render
 		"render_code":           r.CodeHTML,
 		"file_link":             fileLink,
 		"source_link":           sourceLink,
-		"play_url":              playURLFunc,
 	})
 	data := struct {
 		RootURL string
