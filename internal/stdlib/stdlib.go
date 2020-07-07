@@ -243,7 +243,7 @@ func Versions() (_ []string, err error) {
 // Directory returns the directory of the standard library relative to the repo root.
 func Directory(version string) string {
 	// For versions older than v1.4.0-beta.1, the stdlib is in src/pkg.
-	if semver.Compare(version, "v1.4.0-beta.1") == -1 {
+	if semver.Compare(version, "v1.4.0-beta.1") < 0 {
 		return "src/pkg"
 	}
 	return "src"
