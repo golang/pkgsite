@@ -102,7 +102,7 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	// Verify that the module status is recorded correctly, and that the version is in the DB.
 	checkStatus(http.StatusOK)
 
-	if _, err := testDB.LegacyGetModuleInfo(ctx, modulePath, version); err != nil {
+	if _, err := testDB.GetModuleInfo(ctx, modulePath, version); err != nil {
 		t.Fatal(err)
 	}
 
@@ -151,8 +151,8 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	// - It shouldn't be in the modules table. That also covers licenses, packages and paths tables
 	//   via foreign key constraints with ON DELETE CASCADE.
 	// - It shouldn't be in other tables like search_documents and the various imports tables.
-	if _, err := testDB.LegacyGetModuleInfo(ctx, modulePath, version); !errors.Is(err, derrors.NotFound) {
-		t.Fatalf("LegacyGetModuleInfo: got %v, want NotFound", err)
+	if _, err := testDB.GetModuleInfo(ctx, modulePath, version); !errors.Is(err, derrors.NotFound) {
+		t.Fatalf("GetModuleInfo: got %v, want NotFound", err)
 	}
 
 	checkNotInTable := func(table, column string) {
@@ -197,7 +197,7 @@ func checkModuleNotFound(t *testing.T, ctx context.Context, modulePath, version 
 	if code != wantCode || !errors.Is(err, wantErr) {
 		t.Fatalf("got %d, %v; want %d, Is(err, %v)", code, err, wantCode, wantErr)
 	}
-	_, err = testDB.LegacyGetModuleInfo(ctx, modulePath, version)
+	_, err = testDB.GetModuleInfo(ctx, modulePath, version)
 	if !errors.Is(err, derrors.NotFound) {
 		t.Fatalf("got %v, want Is(NotFound)", err)
 	}
@@ -342,7 +342,7 @@ func TestFetchAndUpdateState_Mismatch(t *testing.T) {
 	if code != wantCode || !errors.Is(err, wantErr) {
 		t.Fatalf("got %d, %v; want %d, Is(err, derrors.AlternativeModule)", code, err, wantCode)
 	}
-	_, err = testDB.LegacyGetModuleInfo(ctx, modulePath, version)
+	_, err = testDB.GetModuleInfo(ctx, modulePath, version)
 	if !errors.Is(err, derrors.NotFound) {
 		t.Fatalf("got %v, want Is(NotFound)", err)
 	}
@@ -1052,12 +1052,12 @@ func TestFetchAndInsertModule(t *testing.T) {
 				t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", test.modulePath, test.version, proxyClient, sourceClient, testDB, err)
 			}
 
-			gotModuleInfo, err := testDB.LegacyGetModuleInfo(ctx, test.modulePath, test.version)
+			gotModuleInfo, err := testDB.GetModuleInfo(ctx, test.modulePath, test.want.Version)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(test.want.LegacyModuleInfo, *gotModuleInfo, cmp.AllowUnexported(source.Info{})); diff != "" {
-				t.Fatalf("testDB.LegacyGetModuleInfo(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
+			if diff := cmp.Diff(test.want.ModuleInfo, *gotModuleInfo, cmp.AllowUnexported(source.Info{})); diff != "" {
+				t.Fatalf("testDB.GetModuleInfo(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
 			}
 
 			gotPkg, err := testDB.LegacyGetPackage(ctx, test.pkg, internal.UnknownModulePath, test.version)
