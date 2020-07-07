@@ -68,8 +68,6 @@ type serverTestCase struct {
 	name string
 	// path to use in an HTTP GET request
 	urlPath string
-	// whether to mutate the identifier links in documentation.
-	addDocQueryParam bool
 	// statusCode we expect to see in the headers.
 	wantStatusCode int
 	// if non-empty, contents of Location header. For testing redirects.
