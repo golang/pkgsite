@@ -10,6 +10,7 @@ import (
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 )
 
@@ -29,8 +30,21 @@ func (s *Server) LatestVersion(ctx context.Context, packagePath, modulePath, pag
 	return v
 }
 
+// TODO(https://github.com/golang/go/issues/40107): this is currently tested in server_test.go, but
+// we should add tests for this function.
 func (s *Server) latestVersion(ctx context.Context, packagePath, modulePath, pageType string) (_ string, err error) {
 	defer derrors.Wrap(&err, "latestVersion(ctx, %q, %q)", modulePath, packagePath)
+	if experiment.IsActive(ctx, internal.ExperimentUsePathInfo) {
+		fullPath := packagePath
+		if pageType == "mod" {
+			fullPath = modulePath
+		}
+		modulePath, version, _, err := s.ds.GetPathInfo(ctx, fullPath, modulePath, internal.LatestVersion)
+		if err != nil {
+			return "", err
+		}
+		return linkVersion(version, modulePath), nil
+	}
 
 	var mi *internal.LegacyModuleInfo
 	switch pageType {
