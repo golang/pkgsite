@@ -12,7 +12,7 @@ The main program lives in `cmd/frontend`. The bulk of the code lives in
 
 You can run the frontend locally like so:
 
-	go run ./cmd/frontend [-dev] [-direct_proxy]
+    go run ./cmd/frontend [-dev] [-direct_proxy]
 
 - The `-dev` flag reloads templates on each page load.
 
