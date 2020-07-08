@@ -166,8 +166,7 @@ func TestModulePackageDirectoryResolution(t *testing.T) {
 	}
 }
 
-// TODO(https://github.com/golang/go/issues/40096): factor out this code reduce
-// duplication
+
 func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue) *httptest.Server {
 	t.Helper()
 	config := frontend.ServerConfig{
