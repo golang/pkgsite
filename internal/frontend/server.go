@@ -449,3 +449,18 @@ func parsePageTemplates(base template.TrustedSource) (map[string]*template.Templ
 	}
 	return templates, nil
 }
+
+// CreateAndInstallServer creates a new server object, and installs and registers the routes given to it.
+func CreateAndInstallServer(config ServerConfig, handle func(string, http.Handler), redisClient *redis.Client)(*Server, error){
+	server, err := NewServer(config)
+	if err != nil{
+		return nil, err
+	}
+	if redisClient != nil{
+		server.Install(handle, redisClient)
+	}else{
+		server.Install(handle, nil)
+	}
+
+	return server, nil
+}
