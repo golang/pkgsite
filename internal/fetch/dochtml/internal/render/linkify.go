@@ -19,6 +19,7 @@ import (
 	"unicode"
 
 	"github.com/google/safehtml"
+	"github.com/google/safehtml/legacyconversions"
 	safetemplate "github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal/fetch/internal/doc"
 )
@@ -58,39 +59,60 @@ var (
 	badAnchorRx = regexp.MustCompile(`[^a-zA-Z0-9]`)
 )
 
-func (r *Renderer) declHTML(doc string, decl ast.Decl) (out struct{ Doc, Decl template.HTML }) {
+type docData struct {
+	Elements          []docElement
+	DisablePermalinks bool
+}
+
+type docElement struct {
+	IsHeading   bool
+	IsPreformat bool
+	// for paragraph and preformat
+	Body safehtml.HTML
+	// for heading
+	Title string
+	ID    safehtml.Identifier
+}
+
+// docTmpl renders documentation. It expects a docData.
+var docTmpl = safetemplate.Must(safetemplate.New("").Parse(`
+{{- range .Elements -}}
+  {{- if .IsHeading -}}
+    <h3 id="{{.ID}}">{{.Title}}
+    {{- if not $.DisablePermalinks}}<a href="#{{.ID}}">¶</a>{{end -}}
+    </h3>
+  {{else if .IsPreformat -}}
+    <pre>{{.Body}}</pre>
+  {{- else -}}
+    <p>{{.Body}}</p>
+  {{- end -}}
+{{end}}`))
+
+func (r *Renderer) declHTML(doc string, decl ast.Decl) (out struct {
+	Doc  safehtml.HTML
+	Decl template.HTML
+}) {
 	dids := newDeclIDs(decl)
 	idr := &identifierResolver{r.pids, dids, r.packageURL}
 	if doc != "" {
-		var b bytes.Buffer
+		var els []docElement
 		for _, blk := range docToBlocks(doc) {
+			var el docElement
 			switch blk := blk.(type) {
 			case *paragraph:
-				b.WriteString("<p>\n")
-				for _, line := range blk.lines {
-					r.formatLineHTML(&b, line, idr)
-					b.WriteString("\n")
-				}
-				b.WriteString("</p>\n")
+				el.Body = r.linesToHTML(blk.lines, idr)
 			case *preformat:
-				b.WriteString("<pre>\n")
-				for _, line := range blk.lines {
-					r.formatLineHTML(&b, line, nil)
-					b.WriteString("\n")
-				}
-				b.WriteString("</pre>\n")
+				el.IsPreformat = true
+				el.Body = r.linesToHTML(blk.lines, nil)
 			case *heading:
+				el.IsHeading = true
+				el.Title = blk.title
 				id := badAnchorRx.ReplaceAllString(blk.title, "_")
-				sid := safehtml.IdentifierFromConstantPrefix("hdr", id)
-				b.WriteString(`<h3 id="` + sid.String() + `">`)
-				b.WriteString(template.HTMLEscapeString(blk.title))
-				if !r.disablePermalinks {
-					b.WriteString(` <a href="#` + sid.String() + `">¶</a>`)
-				}
-				b.WriteString("</h3>\n")
+				el.ID = safehtml.IdentifierFromConstantPrefix("hdr", id)
 			}
+			els = append(els, el)
 		}
-		out.Doc = template.HTML(b.String())
+		out.Doc = executeToHTML(docTmpl, docData{Elements: els, DisablePermalinks: r.disablePermalinks})
 	}
 	if decl != nil {
 		var b bytes.Buffer
@@ -100,6 +122,16 @@ func (r *Renderer) declHTML(doc string, decl ast.Decl) (out struct{ Doc, Decl te
 		out.Decl = template.HTML(b.String())
 	}
 	return out
+}
+
+func (r *Renderer) linesToHTML(lines []string, idr *identifierResolver) safehtml.HTML {
+	newline := safehtml.HTMLEscaped("\n")
+	htmls := make([]safehtml.HTML, 0, 2*len(lines))
+	for _, l := range lines {
+		htmls = append(htmls, r.formatLineHTML(l, idr))
+		htmls = append(htmls, newline)
+	}
+	return safehtml.HTMLConcat(htmls...)
 }
 
 func (r *Renderer) codeHTML(code interface{}) safehtml.HTML {
@@ -187,16 +219,13 @@ scan:
 	if len(els) > 0 {
 		els[len(els)-1].Text = strings.TrimRight(els[len(els)-1].Text, "\n")
 	}
-	h, err := codeTmpl.ExecuteToHTML(els)
-	if err != nil {
-		h = safehtml.HTMLEscaped("[" + err.Error() + "]")
-	}
-	return h
+	return executeToHTML(codeTmpl, els)
 }
 
 // formatLineHTML formats the line as HTML-annotated text.
 // URLs and Go identifiers are linked to corresponding declarations.
-func (r *Renderer) formatLineHTML(w io.Writer, line string, idr *identifierResolver) {
+func (r *Renderer) formatLineHTML(line string, idr *identifierResolver) safehtml.HTML {
+	var buf bytes.Buffer
 	var lastChar, nextChar byte
 	var numQuotes int
 	for len(line) > 0 {
@@ -206,7 +235,7 @@ func (r *Renderer) formatLineHTML(w io.Writer, line string, idr *identifierResol
 		}
 		if m0 > 0 {
 			nonWord := line[:m0]
-			io.WriteString(w, template.HTMLEscapeString(nonWord))
+			io.WriteString(&buf, template.HTMLEscapeString(nonWord))
 			lastChar = nonWord[len(nonWord)-1]
 			numQuotes += countQuotes(nonWord)
 		}
@@ -251,7 +280,7 @@ func (r *Renderer) formatLineHTML(w io.Writer, line string, idr *identifierResol
 				}
 
 				word := template.HTMLEscapeString(word)
-				fmt.Fprintf(w, `<a href="%s">%s</a>`, word, word)
+				fmt.Fprintf(&buf, `<a href="%s">%s</a>`, word, word)
 			// Match "RFC ..." to link RFCs.
 			case strings.HasPrefix(word, "RFC") && len(word) > 3 && unicode.IsSpace(rune(word[3])):
 				// Strip all characters except for letters, numbers, and '.' to
@@ -262,22 +291,31 @@ func (r *Renderer) formatLineHTML(w io.Writer, line string, idr *identifierResol
 				word := template.HTMLEscapeString(word)
 				if len(rfcFields) >= 4 {
 					// RFC x Section y
-					fmt.Fprintf(w, `<a href="https://rfc-editor.org/rfc/rfc%s.html#section-%s">%s</a>`,
+					fmt.Fprintf(&buf, `<a href="https://rfc-editor.org/rfc/rfc%s.html#section-%s">%s</a>`,
 						rfcFields[1], rfcFields[3], word)
 				} else if len(rfcFields) >= 2 {
 					// RFC x
-					fmt.Fprintf(w, `<a href="https://rfc-editor.org/rfc/rfc%s.html">%s</a>`,
+					fmt.Fprintf(&buf, `<a href="https://rfc-editor.org/rfc/rfc%s.html">%s</a>`,
 						rfcFields[1], word)
 				}
 			case !forbidLinking && !r.disableHotlinking && idr != nil: // && numQuotes%2 == 0:
-				io.WriteString(w, idr.toHTML(word).String())
+				io.WriteString(&buf, idr.toHTML(word).String())
 			default:
-				io.WriteString(w, template.HTMLEscapeString(word))
+				io.WriteString(&buf, template.HTMLEscapeString(word))
 			}
 			numQuotes += countQuotes(word)
 		}
 		line = line[m1:]
 	}
+	return legacyconversions.RiskilyAssumeHTML(buf.String())
+}
+
+func executeToHTML(tmpl *safetemplate.Template, data interface{}) safehtml.HTML {
+	h, err := tmpl.ExecuteToHTML(data)
+	if err != nil {
+		return safehtml.HTMLEscaped("[" + err.Error() + "]")
+	}
+	return h
 }
 
 func countQuotes(s string) int {
@@ -351,7 +389,7 @@ scan:
 		case token.COMMENT:
 			tokType = commentType
 			bb.WriteString(`<span class="comment">`)
-			r.formatLineHTML(&bb, lit, idr)
+			bb.WriteString(r.formatLineHTML(lit, idr).String())
 			bb.WriteString(`</span>`)
 			lastOffset += len(lit)
 		case token.IDENT:

@@ -124,7 +124,7 @@ func (r *Renderer) Synopsis(n ast.Node) string {
 //
 // DocHTML is intended for documentation for the package and examples.
 func (r *Renderer) DocHTML(doc string) template.HTML {
-	return r.declHTML(doc, nil).Doc
+	return template.HTML(r.declHTML(doc, nil).Doc.String())
 }
 
 // DeclHTML formats the doc and decl and returns a tuple of
@@ -142,7 +142,10 @@ func (r *Renderer) DocHTML(doc string) template.HTML {
 func (r *Renderer) DeclHTML(doc string, decl ast.Decl) (out struct{ Doc, Decl template.HTML }) {
 	// This returns an anonymous struct instead of multiple return values since
 	// the template package only allows single return values.
-	return r.declHTML(doc, decl)
+	d := r.declHTML(doc, decl)
+	out.Doc = template.HTML(d.Doc.String())
+	out.Decl = d.Decl
+	return out
 }
 
 // CodeHTML formats example code. If the code is a single block statement,

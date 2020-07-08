@@ -583,7 +583,7 @@ var moduleDocTest = &testModule{
 						Name: "permalink",
 						Documentation: &internal.Documentation{
 							Synopsis: "Package permalink is for testing the heading permalink documentation rendering feature.",
-							HTML:     html("<h3 id=\"hdr-This_is_a_heading\">This is a heading <a href=\"#hdr-This_is_a_heading\">¶</a></h3>"),
+							HTML:     html("<h3 id=\"hdr-This_is_a_heading\">This is a heading<a href=\"#hdr-This_is_a_heading\">¶</a></h3>"),
 						},
 					},
 				},
