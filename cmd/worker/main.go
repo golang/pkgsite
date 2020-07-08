@@ -16,7 +16,6 @@ import (
 	"strings"
 	"time"
 
-	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
 	"cloud.google.com/go/errorreporting"
 	"cloud.google.com/go/profiler"
 	"github.com/go-redis/redis/v7"
@@ -85,7 +84,14 @@ func main() {
 		log.Fatal(ctx, err)
 	}
 	sourceClient := source.NewClient(config.SourceTimeout)
-	fetchQueue := newQueue(ctx, cfg, proxyClient, sourceClient, db)
+	fetchQueue, err := queue.New(ctx, cfg, queueName, *workers, db,
+		func(ctx context.Context, modulePath, version string) (int, error) {
+			return worker.FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, db, cfg.AppVersionLabel())
+		})
+	if err != nil {
+		log.Fatalf(ctx, "queue.New: %v", err)
+	}
+
 	reportingClient := reportingClient(ctx, cfg)
 	redisHAClient := getHARedis(ctx, cfg)
 	redisCacheClient := getCacheRedis(ctx, cfg)
@@ -141,35 +147,6 @@ func main() {
 	addr := cfg.HostAddr("localhost:8000")
 	log.Infof(ctx, "Listening on addr %s", addr)
 	log.Fatal(ctx, http.ListenAndServe(addr, nil))
-}
-
-// TODO(https://github.com/golang/go/issues/40097): factor out to reduce
-// duplication with cmd/frontend/main.go.
-func newQueue(ctx context.Context, cfg *config.Config, proxyClient *proxy.Client, sourceClient *source.Client, db *postgres.DB) queue.Queue {
-	if !cfg.OnAppEngine() {
-		experiments, err := db.GetExperiments(ctx)
-		if err != nil {
-			log.Fatal(ctx, err)
-		}
-		var names []string
-		for _, e := range experiments {
-			if e.Rollout > 0 {
-				names = append(names, e.Name)
-			}
-		}
-		return queue.NewInMemory(ctx, *workers, names,
-			func(ctx context.Context, modulePath, version string) (int, error) {
-				return worker.FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, db, cfg.AppVersionLabel())
-			})
-	}
-	if queueName == "" {
-		log.Fatal(ctx, "missing queue: must set GO_DISCOVERY_WORKER_TASK_QUEUE env var")
-	}
-	client, err := cloudtasks.NewClient(ctx)
-	if err != nil {
-		log.Fatal(ctx, err)
-	}
-	return queue.NewGCP(cfg, client, queueName)
 }
 
 func getHARedis(ctx context.Context, cfg *config.Config) *redis.Client {

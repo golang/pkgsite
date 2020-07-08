@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
 	"cloud.google.com/go/profiler"
 	"contrib.go.opencensus.io/integrations/ocsql"
 	"github.com/go-redis/redis/v7"
@@ -35,6 +34,7 @@ import (
 
 var (
 	queueName      = config.GetEnv("GO_DISCOVERY_FRONTEND_TASK_QUEUE", "")
+	workers        = flag.Int("workers", 10, "number of concurrent requests to the fetch service, when running locally")
 	_              = flag.String("static", "content/static", "path to folder containing static files served")
 	thirdPartyPath = flag.String("third_party", "third_party", "path to folder containing third-party libraries")
 	devMode        = flag.Bool("dev", false, "enable developer mode (reload templates on each page load, serve non-minified JS/CSS, etc.)")
@@ -84,7 +84,13 @@ func main() {
 		ds = db
 		exp = db
 		sourceClient := source.NewClient(config.SourceTimeout)
-		fetchQueue = newQueue(ctx, cfg, proxyClient, sourceClient, db)
+		fetchQueue, err = queue.New(ctx, cfg, queueName, *workers, db,
+			func(ctx context.Context, modulePath, version string) (int, error) {
+				return frontend.FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, db)
+			})
+		if err != nil {
+			log.Fatalf(ctx, "queue.New: %v", err)
+		}
 	}
 	var haClient *redis.Client
 	if cfg.RedisHAHost != "" {
@@ -161,32 +167,6 @@ func main() {
 
 // TODO(https://github.com/golang/go/issues/40097): factor out to reduce
 // duplication with cmd/worker/main.go.
-func newQueue(ctx context.Context, cfg *config.Config, proxyClient *proxy.Client, sourceClient *source.Client, db *postgres.DB) queue.Queue {
-	if !cfg.OnAppEngine() {
-		experiments, err := db.GetExperiments(ctx)
-		if err != nil {
-			log.Fatal(ctx, err)
-		}
-		var names []string
-		for _, e := range experiments {
-			if e.Rollout > 0 {
-				names = append(names, e.Name)
-			}
-		}
-		return queue.NewInMemory(ctx, 10, names,
-			func(ctx context.Context, modulePath, version string) (int, error) {
-				return frontend.FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, db)
-			})
-	}
-	client, err := cloudtasks.NewClient(ctx)
-	if err != nil {
-		log.Fatal(ctx, err)
-	}
-	if queueName == "" {
-		log.Fatalf(ctx, "queueName cannot be empty")
-	}
-	return queue.NewGCP(cfg, client, queueName)
-}
 
 // openDB opens a connection to a database with the given driver, using connection info from
 // the given config.

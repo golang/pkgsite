@@ -52,7 +52,7 @@ func TestNewTaskRequest(t *testing.T) {
 		t.Fatal(err)
 	}
 	const queueID = "queueID"
-	gcp := NewGCP(cfg, nil, queueID)
+	gcp := newGCP(cfg, nil, queueID)
 	got := gcp.newTaskRequest("mod", "v1.2.3", "suf", time.Minute)
 	want := &taskspb.CreateTaskRequest{
 		Parent: "projects/Project/locations/us-central1/queues/" + queueID,
