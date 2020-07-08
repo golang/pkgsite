@@ -28,7 +28,6 @@ func TestExtractURLPathInfo(t *testing.T) {
 				modulePath:       internal.UnknownModulePath,
 				requestedVersion: internal.LatestVersion,
 				isModule:         false,
-				urlPath:          "/a.com",
 			},
 		},
 		{
@@ -38,7 +37,6 @@ func TestExtractURLPathInfo(t *testing.T) {
 				modulePath:       internal.UnknownModulePath,
 				requestedVersion: "v1.2.3",
 				isModule:         false,
-				urlPath:          "/a.com@v1.2.3",
 			},
 		},
 		{
@@ -48,7 +46,6 @@ func TestExtractURLPathInfo(t *testing.T) {
 				modulePath:       "a.com",
 				requestedVersion: "v1.2.3",
 				isModule:         false,
-				urlPath:          "/a.com@v1.2.3/b",
 			},
 		},
 		{
@@ -58,7 +55,6 @@ func TestExtractURLPathInfo(t *testing.T) {
 				modulePath:       "std",
 				requestedVersion: internal.LatestVersion,
 				isModule:         false,
-				urlPath:          "/encoding/json",
 			},
 		},
 		{
@@ -68,7 +64,6 @@ func TestExtractURLPathInfo(t *testing.T) {
 				modulePath:       "std",
 				requestedVersion: "v1.12.0",
 				isModule:         false,
-				urlPath:          "/encoding/json@go1.12",
 			},
 		},
 		{
@@ -78,7 +73,6 @@ func TestExtractURLPathInfo(t *testing.T) {
 				modulePath:       internal.UnknownModulePath,
 				requestedVersion: internal.LatestVersion,
 				isModule:         true,
-				urlPath:          "/a.com",
 			},
 		},
 		{
@@ -88,7 +82,6 @@ func TestExtractURLPathInfo(t *testing.T) {
 				modulePath:       internal.UnknownModulePath,
 				requestedVersion: "v1.2.3",
 				isModule:         true,
-				urlPath:          "/a.com@v1.2.3",
 			},
 		},
 		{
@@ -98,7 +91,6 @@ func TestExtractURLPathInfo(t *testing.T) {
 				modulePath:       internal.UnknownModulePath,
 				requestedVersion: internal.LatestVersion,
 				isModule:         false,
-				urlPath:          "/moda.com",
 			},
 		},
 	} {

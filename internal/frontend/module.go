@@ -31,7 +31,8 @@ func (s *Server) legacyServeModulePage(w http.ResponseWriter, r *http.Request, m
 	ctx := r.Context()
 	mi, err := s.ds.LegacyGetModuleInfo(ctx, modulePath, resolvedVersion)
 	if err == nil {
-		return s.legacyServeModulePageWithModule(ctx, w, r, mi, requestedVersion)
+		readme := &internal.Readme{Filepath: mi.LegacyReadmeFilePath, Contents: mi.LegacyReadmeContents}
+		return s.serveModulePageWithModule(ctx, w, r, &mi.ModuleInfo, readme, requestedVersion)
 	}
 	if !errors.Is(err, derrors.NotFound) {
 		return err
@@ -48,13 +49,15 @@ func (s *Server) legacyServeModulePage(w http.ResponseWriter, r *http.Request, m
 	return pathNotFoundError(ctx, "module", modulePath, requestedVersion)
 }
 
-func (s *Server) legacyServeModulePageWithModule(ctx context.Context, w http.ResponseWriter, r *http.Request, mi *internal.LegacyModuleInfo, requestedVersion string) error {
+func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseWriter, r *http.Request,
+	mi *internal.ModuleInfo, readme *internal.Readme, requestedVersion string) error {
+	// TODO(https://github.com/golang/go/issues/40027): read licenses using
+	// GetLicenses, instead of LegacyGetModuleLicenses.
 	licenses, err := s.ds.LegacyGetModuleLicenses(ctx, mi.ModulePath, mi.Version)
 	if err != nil {
 		return err
 	}
-
-	modHeader := createModule(&mi.ModuleInfo, licensesToMetadatas(licenses), requestedVersion == internal.LatestVersion)
+	modHeader := createModule(mi, licensesToMetadatas(licenses), requestedVersion == internal.LatestVersion)
 	tab := r.FormValue("tab")
 	settings, ok := moduleTabLookup[tab]
 	if !ok {
@@ -65,7 +68,7 @@ func (s *Server) legacyServeModulePageWithModule(ctx context.Context, w http.Res
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = fetchDetailsForModule(ctx, r, tab, s.ds, mi, licenses)
+		details, err = fetchDetailsForModule(ctx, r, tab, s.ds, mi, licenses, readme)
 		if err != nil {
 			return fmt.Errorf("error fetching page for %q: %v", tab, err)
 		}

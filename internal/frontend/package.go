@@ -131,27 +131,6 @@ func (s *Server) legacyServePackagePageWithPackage(ctx context.Context, w http.R
 	return nil
 }
 
-func (s *Server) servePackagePageNew(w http.ResponseWriter, r *http.Request, fullPath, modulePath, requestedVersion, resolvedVersion string) (err error) {
-	defer func() {
-		if _, ok := err.(*serverError); !ok {
-			derrors.Wrap(&err, "servePackagePageNew(w, r, %q, %q, %q)", fullPath, modulePath, requestedVersion)
-		}
-	}()
-	ctx := r.Context()
-	vdir, err := s.ds.GetDirectoryNew(ctx, fullPath, modulePath, resolvedVersion)
-	if err != nil {
-		return err
-	}
-	if vdir.Package != nil {
-		return s.servePackagePageWithVersionedDirectory(ctx, w, r, vdir, requestedVersion)
-	}
-	dir, err := s.ds.LegacyGetDirectory(ctx, fullPath, modulePath, resolvedVersion, internal.AllFields)
-	if err != nil {
-		return err
-	}
-	return s.legacyServeDirectoryPage(ctx, w, r, dir, requestedVersion)
-}
-
 // stdlibPathForShortcut returns a path in the stdlib that shortcut should redirect to,
 // or the empty string if there is no such path.
 func (s *Server) stdlibPathForShortcut(ctx context.Context, shortcut string) (path string, err error) {

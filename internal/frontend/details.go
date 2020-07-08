@@ -74,12 +74,10 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) (err error
 	if err := validatePathAndVersion(ctx, s.ds, urlInfo.fullPath, urlInfo.requestedVersion); err != nil {
 		return err
 	}
-	var (
-		resolvedModulePath = urlInfo.modulePath
-		resolvedVersion    = urlInfo.requestedVersion
-	)
+
+	urlInfo.resolvedVersion = urlInfo.requestedVersion
 	if experiment.IsActive(ctx, internal.ExperimentUsePathInfo) {
-		resolvedModulePath, resolvedVersion, _, err = s.ds.GetPathInfo(ctx, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion)
+		resolvedModulePath, resolvedVersion, _, err := s.ds.GetPathInfo(ctx, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion)
 		if err != nil {
 			if !errors.Is(err, derrors.NotFound) {
 				return err
@@ -90,50 +88,102 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) (err error
 			}
 			return s.servePathNotFoundPage(w, r, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion, pathType)
 		}
-	}
-	if isActivePathAtMaster(ctx) && urlInfo.requestedVersion == internal.MasterVersion {
-		// Since path@master is a moving target, we don't want it to be stale.
-		// As a result, we enqueue every request of path@master to the frontend
-		// task queue, which will initiate a fetch request depending on the
-		// last time we tried to fetch this module version.
-		go func() {
-			if err := s.queue.ScheduleFetch(ctx, resolvedModulePath, internal.MasterVersion, "", s.taskIDChangeInterval); err != nil {
-				log.Errorf(ctx, "serveDetails(%q): %v", r.URL.Path, err)
-			}
-		}()
-	}
-	// Depending on what the request was for, return the module or package page.
-	if urlInfo.isModule || urlInfo.fullPath == stdlib.ModulePath {
-		return s.legacyServeModulePage(w, r, urlInfo.fullPath, urlInfo.requestedVersion, resolvedVersion)
+		urlInfo.modulePath = resolvedModulePath
+		urlInfo.resolvedVersion = resolvedVersion
+
+		if isActivePathAtMaster(ctx) && urlInfo.requestedVersion == internal.MasterVersion {
+			// Since path@master is a moving target, we don't want it to be stale.
+			// As a result, we enqueue every request of path@master to the frontend
+			// task queue, which will initiate a fetch request depending on the
+			// last time we tried to fetch this module version.
+			go func() {
+				if err := s.queue.ScheduleFetch(ctx, urlInfo.modulePath, internal.MasterVersion, "", s.taskIDChangeInterval); err != nil {
+					log.Errorf(ctx, "serveDetails(%q): %v", r.URL.Path, err)
+				}
+			}()
+		}
 	}
 	if isActiveUseDirectories(ctx) {
-		return s.servePackagePageNew(w, r, urlInfo.fullPath, resolvedModulePath, urlInfo.requestedVersion, resolvedVersion)
+		return s.serveDetailsPage(w, r, urlInfo)
 	}
-	return s.legacyServePackagePage(w, r, urlInfo.fullPath, resolvedModulePath, urlInfo.requestedVersion, resolvedVersion)
+	return s.legacyServeDetailsPage(w, r, urlInfo)
+}
+
+// serveDetailsPage serves a details page for a path using the paths,
+// modules, documentation, readmes, licenses, and package_imports tables.
+func (s *Server) serveDetailsPage(w http.ResponseWriter, r *http.Request, info *urlPathInfo) (err error) {
+	defer derrors.Wrap(&err, "serveDetailsPage(w, r, %v)", info)
+	ctx := r.Context()
+	vdir, err := s.ds.GetDirectoryNew(ctx, info.fullPath, info.modulePath, info.resolvedVersion)
+	if err != nil {
+		return err
+	}
+	switch {
+	case info.isModule:
+		var readme *internal.Readme
+		if vdir.Readme != nil {
+			readme = &internal.Readme{Filepath: vdir.Readme.Filepath, Contents: vdir.Readme.Contents}
+		}
+		return s.serveModulePageWithModule(ctx, w, r, &vdir.ModuleInfo, readme, info.requestedVersion)
+	case vdir.Package != nil:
+		return s.servePackagePageWithVersionedDirectory(ctx, w, r, vdir, info.requestedVersion)
+	default:
+		// TODO(https://golang.org/issue/39629): add function to get
+		// subdirectories from the paths table, and deprecate LegacyGetDirectory.
+		dir, err := s.ds.LegacyGetDirectory(ctx, info.fullPath, info.modulePath, info.resolvedVersion, internal.AllFields)
+		if err != nil {
+			return err
+		}
+		return s.legacyServeDirectoryPage(ctx, w, r, dir, info.requestedVersion)
+	}
+}
+
+// legacyServeDetailsPage serves a details page for a path using the packages,
+// modules, licenses and imports tables.
+func (s *Server) legacyServeDetailsPage(w http.ResponseWriter, r *http.Request, info *urlPathInfo) (err error) {
+	defer derrors.Wrap(&err, "legacyServeDetailsPage(w, r, %v)", info)
+	if info.isModule {
+		return s.legacyServeModulePage(w, r, info.fullPath, info.requestedVersion, info.resolvedVersion)
+	}
+	return s.legacyServePackagePage(w, r, info.fullPath, info.modulePath, info.requestedVersion, info.resolvedVersion)
 }
 
 type urlPathInfo struct {
-	fullPath, modulePath, requestedVersion string
-	isModule                               bool
-	urlPath                                string
+	// fullPath is the full import path corresponding to the requested
+	// package/module/directory page.
+	fullPath string
+	// isModule indicates whether the /mod page should be shown.
+	isModule bool
+	// modulePath is the path of the module corresponding to the fullPath and
+	// resolvedVersion. If unknown, it is set to internal.UnknownModulePath.
+	modulePath string
+	// requestedVersion is the version requested by the user, which will be one
+	// of the following: "latest", "master", a Go version tag, or a semantic
+	// version.
+	requestedVersion string
+	// resolvedVersion is the semantic version stored in the database.
+	resolvedVersion string
 }
 
 func extractURLPathInfo(urlPath string) (_ *urlPathInfo, err error) {
 	defer derrors.Wrap(&err, "extractURLPathInfo(%q)", urlPath)
 
-	info := &urlPathInfo{urlPath: urlPath}
+	info := &urlPathInfo{}
 	if strings.HasPrefix(urlPath, "/mod/") {
-		info.urlPath = strings.TrimPrefix(urlPath, "/mod")
+		urlPath = strings.TrimPrefix(urlPath, "/mod")
 		info.isModule = true
 	}
 	// Parse the fullPath, modulePath and requestedVersion, based on whether
 	// the path is in the stdlib. If unable to parse these elements, return
 	// http.StatusBadRequest.
-	if parts := strings.SplitN(strings.TrimPrefix(info.urlPath, "/"), "@", 2); stdlib.Contains(parts[0]) {
-		info.fullPath, info.requestedVersion, err = parseStdLibURLPath(info.urlPath)
+	if parts := strings.SplitN(strings.TrimPrefix(urlPath, "/"), "@", 2); stdlib.Contains(parts[0]) {
+		info.fullPath, info.requestedVersion, err = parseStdLibURLPath(urlPath)
 		info.modulePath = stdlib.ModulePath
+		if info.fullPath == stdlib.ModulePath {
+			info.isModule = true
+		}
 	} else {
-		info.fullPath, info.modulePath, info.requestedVersion, err = parseDetailsURLPath(info.urlPath)
+		info.fullPath, info.modulePath, info.requestedVersion, err = parseDetailsURLPath(urlPath)
 	}
 	if err != nil {
 		return nil, err
