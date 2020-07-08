@@ -89,6 +89,7 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.Client) {
 	var (
 		detailHandler http.Handler = s.errorHandler(s.serveDetails)
+		fetchHandler  http.Handler = s.errorHandler(s.serveFetch)
 		searchHandler http.Handler = s.errorHandler(s.serveSearch)
 	)
 	if redisClient != nil {
@@ -100,7 +101,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(s.staticPath.String())))
 	}))
-	handle("/fetch/", http.HandlerFunc(s.fetchHandler))
+	handle("/fetch/", fetchHandler)
 	handle("/pkg/", http.HandlerFunc(s.handlePackageDetailsRedirect))
 	handle("/search", searchHandler)
 	handle("/search-help", s.staticPageHandler("search_help.tmpl", "Search Help - go.dev"))
@@ -249,9 +250,10 @@ func (s *Server) PanicHandler() (_ http.HandlerFunc, err error) {
 }
 
 type serverError struct {
-	status int // HTTP status code
-	epage  *errorPage
-	err    error // wrapped error
+	status       int    // HTTP status code
+	responseText string // Response text to the user
+	epage        *errorPage
+	err          error // wrapped error
 }
 
 func (s *serverError) Error() string {
@@ -280,6 +282,13 @@ func (s *Server) serveError(w http.ResponseWriter, r *http.Request, err error) {
 		log.Error(ctx, err)
 	} else {
 		log.Infof(ctx, "returning %d (%s) for error %v", serr.status, http.StatusText(serr.status), err)
+	}
+	if serr.responseText == "" {
+		serr.responseText = http.StatusText(serr.status)
+	}
+	if r.Method == http.MethodPost {
+		http.Error(w, serr.responseText, serr.status)
+		return
 	}
 	s.serveErrorPage(w, r, serr.status, serr.epage)
 }

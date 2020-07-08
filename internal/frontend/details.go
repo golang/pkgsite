@@ -43,6 +43,10 @@ type DetailsPage struct {
 // stdlib module pages are handled at "/std", and requests to "/mod/std" will
 // be redirected to that path.
 func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) (err error) {
+	if r.Method != http.MethodGet {
+		return &serverError{status: http.StatusMethodNotAllowed}
+	}
+
 	switch r.URL.Path {
 	case "/":
 		s.staticPageHandler("index.tmpl", "")(w, r)
@@ -296,6 +300,9 @@ func pathNotFoundError(ctx context.Context, pathType, fullPath, requestedVersion
 // pathNotFoundErrorNew returns an error page that provides the user with an
 // option to fetch a path.
 func pathNotFoundErrorNew(fullPath, requestedVersion string) error {
+	if stdlib.Contains(fullPath) {
+		return &serverError{status: http.StatusNotFound}
+	}
 	path := fullPath
 	if requestedVersion != internal.LatestVersion {
 		path = fmt.Sprintf("%s@%s", fullPath, requestedVersion)

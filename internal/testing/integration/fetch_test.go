@@ -53,25 +53,26 @@ func TestFrontendFetchForMasterVersion(t *testing.T) {
 	ts := setupFrontend(ctx, t, q)
 
 	for _, req := range []struct {
-		urlPath string
-		status  int
+		method, urlPath string
+		status          int
 	}{
 		// Validate that the sample.ModulePath does not exist in the database.
-		{sample.ModulePath, http.StatusNotFound},
+		{http.MethodGet, sample.ModulePath, http.StatusNotFound},
 		// Insert the latest version of the module using the frontend fetch
 		// endpoint.
-		{fmt.Sprintf("fetch/%s", sample.ModulePath), http.StatusOK},
+		{http.MethodPost, fmt.Sprintf("fetch/%s", sample.ModulePath), http.StatusOK},
 		// Validate that sample.ModulePath@master does not exist in the
 		// database. GET /sample.ModulePath@master should return a 404.
-		{fmt.Sprintf("%s@master", sample.ModulePath), http.StatusNotFound},
+		{http.MethodGet, fmt.Sprintf("%s@master", sample.ModulePath), http.StatusNotFound},
 		// Insert the master version of the module using the frontend fetch
 		// endpoint.
-		{fmt.Sprintf("fetch/%s@master", sample.ModulePath), http.StatusOK},
+		{http.MethodPost, fmt.Sprintf("fetch/%s@master", sample.ModulePath), http.StatusOK},
 		// Check that GET /sample.ModulePath@master now returns a 200.
-		{fmt.Sprintf("%s@master", sample.ModulePath), http.StatusOK},
+		{http.MethodGet, fmt.Sprintf("%s@master", sample.ModulePath), http.StatusOK},
 		// Check that GET /mod/sample.ModulePath@master also returns a 200.
-		{fmt.Sprintf("mod/%s@master", sample.ModulePath), http.StatusOK},
+		{http.MethodGet, fmt.Sprintf("mod/%s@master", sample.ModulePath), http.StatusOK},
 	} {
-		validateResponse(t, ts.URL+"/"+req.urlPath, req.status, nil)
+		testURL := ts.URL + "/" + req.urlPath
+		validateResponse(t, req.method, testURL, req.status, nil)
 	}
 }

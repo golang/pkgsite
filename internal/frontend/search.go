@@ -104,6 +104,9 @@ func approximateNumber(estimate int, sigma float64) int {
 // /search?q=<query>. If <query> is an exact match for a package path, the user
 // will be redirected to the details page.
 func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request) error {
+	if r.Method != http.MethodGet {
+		return &serverError{status: http.StatusMethodNotAllowed}
+	}
 	db, ok := s.ds.(*postgres.DB)
 	if !ok {
 		// The proxydatasource does not support the imported by page.

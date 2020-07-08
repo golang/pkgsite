@@ -161,7 +161,8 @@ func TestModulePackageDirectoryResolution(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
-			validateResponse(t, ts.URL+test.urlPath, test.wantCode, test.want)
+			testURL := ts.URL + test.urlPath
+			validateResponse(t, http.MethodGet, testURL, test.wantCode, test.want)
 		})
 	}
 }
@@ -189,7 +190,7 @@ func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue) *httptest.S
 		t.Fatal(err)
 	}
 	mw := middleware.Chain(
-		middleware.AcceptMethods(http.MethodGet),
+		middleware.AcceptMethods(http.MethodGet, http.MethodPost),
 		middleware.SecureHeaders(),
 		middleware.LatestVersion(s.LatestVersion),
 		middleware.Experiment(experimenter),
@@ -232,15 +233,25 @@ func fetchAndInsertModule(ctx context.Context, t *testing.T, tm *proxy.TestModul
 	}
 }
 
-func validateResponse(t *testing.T, testURL string, wantCode int, wantHTML htmlcheck.Checker) {
+func validateResponse(t *testing.T, method, testURL string, wantCode int, wantHTML htmlcheck.Checker) {
 	t.Helper()
-	resp, err := http.Get(testURL)
+
+	var (
+		resp *http.Response
+		err  error
+	)
+	if method == http.MethodPost {
+		resp, err = http.Post(testURL, "text/plain", nil)
+	} else {
+		resp, err = http.Get(testURL)
+	}
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer resp.Body.Close()
+
 	if resp.StatusCode != wantCode {
-		t.Fatalf("GET %q returned status %d, want %d", testURL, resp.StatusCode, wantCode)
+		t.Fatalf("%q request to %q returned status %d, want %d", method, testURL, resp.StatusCode, wantCode)
 	}
 	if wantHTML != nil {
 		if err := htmlcheck.Run(resp.Body, wantHTML); err != nil {

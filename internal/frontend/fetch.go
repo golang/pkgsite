@@ -71,44 +71,45 @@ var (
 	}
 )
 
-// fetchHandler checks if a requested path and version exists in the database.
+// serveFetch checks if a requested path and version exists in the database.
 // If not, it will enqueuing potential module versions that could contain
 // the requested path and version to a task queue, to be fetched by the worker.
 // Meanwhile, the request will poll the database until a row is found, or a
 // timeout occurs. A status and responseText will be returned based on the
 // result of the request.
-// TODO(https://golang.org/issue/39979): This should be a POST request, since it is causing a change
-// in state. Update middleware.AcceptMethods so that this can be a POST instead of a
-// GET.
-func (s *Server) fetchHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) serveFetch(w http.ResponseWriter, r *http.Request) (err error) {
+	defer derrors.Wrap(&err, "serveFetch(%q)", r.URL.Path)
 	if _, ok := s.ds.(*postgres.DB); !ok {
 		// There's no reason for the proxydatasource to need this codepath.
-		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
-		return
+		return proxydatasourceNotSupportedErr()
 	}
 	ctx := r.Context()
-	if !isActiveFrontendFetch(ctx) {
-		// If the experiment flag is not on, treat this as a request for the
-		// "fetch" package, which does not exist.
-		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-		return
+	if !isActiveFrontendFetch(ctx) || r.Method != http.MethodPost {
+		// If the experiment flag is not on, or the user makes a GET request,
+		// treat this as a request for the "fetch" package, which does not
+		// exist.
+		return &serverError{status: http.StatusNotFound}
 	}
 	// fetchHander accepts a requests following the same URL format as the
 	// detailsHandler.
-	fullPath, modulePath, requestedVersion, err := parseDetailsURLPath(strings.TrimPrefix(r.URL.Path, "/fetch"))
+	urlInfo, err := extractURLPathInfo(strings.TrimPrefix(r.URL.Path, "/fetch"))
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
+		return &serverError{status: http.StatusBadRequest}
 	}
-	if !isActivePathAtMaster(ctx) && requestedVersion != internal.MasterVersion {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
+	if !isActivePathAtMaster(ctx) && urlInfo.requestedVersion != internal.MasterVersion {
+		return &serverError{status: http.StatusBadRequest}
 	}
-	status, responseText := s.fetchAndPoll(r.Context(), modulePath, fullPath, requestedVersion)
+	if !isSupportedVersion(ctx, urlInfo.fullPath, urlInfo.requestedVersion) ||
+		// TODO(https://golang.org/issue/39973): add support for fetching the
+		// latest and master versions of the standard library
+		(stdlib.Contains(urlInfo.fullPath) && urlInfo.requestedVersion == internal.LatestVersion) {
+		return &serverError{status: http.StatusBadRequest}
+	}
+	status, responseText := s.fetchAndPoll(r.Context(), urlInfo.modulePath, urlInfo.fullPath, urlInfo.requestedVersion)
 	if status != http.StatusOK {
-		http.Error(w, responseText, status)
-		return
+		return &serverError{status: status, responseText: responseText}
 	}
+	return nil
 }
 
 type fetchResult struct {

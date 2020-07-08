@@ -21,7 +21,7 @@ async function fetchPath() {
   document.querySelector('.js-fetchButton').style.display = 'none';
   document.querySelector('.js-fetchLoading').style.display = 'block';
 
-  const response = await fetch(`/fetch${window.location.pathname}`);
+  const response = await fetch(`/fetch${window.location.pathname}`, { method: 'POST' });
   if (response.ok) {
     window.location.reload();
     return;
