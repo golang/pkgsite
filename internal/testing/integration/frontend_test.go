@@ -166,7 +166,6 @@ func TestModulePackageDirectoryResolution(t *testing.T) {
 	}
 }
 
-
 func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue) *httptest.Server {
 	t.Helper()
 	config := frontend.ServerConfig{
@@ -176,7 +175,7 @@ func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue) *httptest.S
 		ThirdPartyPath:       "../../../third_party",
 		AppVersionLabel:      "",
 		Queue:                q,
-	})
+	}
 
 	mux := http.NewServeMux()
 	s, err := frontend.CreateAndInstallServer(config, mux.Handle, nil)
