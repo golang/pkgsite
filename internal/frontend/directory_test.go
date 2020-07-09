@@ -34,13 +34,19 @@ func TestFetchDirectoryDetails(t *testing.T) {
 		var wantPkgs []*Package
 		for _, suffix := range suffixes {
 			sp := sample.LegacyPackage(modulePath, suffix)
-			pkg, err := legacyCreatePackage(sp, mi, false)
+			pm := internal.PackageMetaFromLegacyPackage(sp)
+			pkg, err := createPackage(pm, mi, false)
 			if err != nil {
 				t.Fatal(err)
 			}
+			pkg.PathAfterDirectory = strings.TrimPrefix(strings.TrimPrefix(pm.Path, dirPath), "/")
+			if pkg.PathAfterDirectory == "" {
+				pkg.PathAfterDirectory = effectiveName(pm.Path, pm.Name) + " (root)"
+			}
+			pkg.Synopsis = sp.Synopsis
 			pkg.PathAfterDirectory = strings.TrimPrefix(strings.TrimPrefix(sp.Path, dirPath), "/")
 			if pkg.PathAfterDirectory == "" {
-				pkg.PathAfterDirectory = fmt.Sprintf("%s (root)", effectiveName(sp))
+				pkg.PathAfterDirectory = fmt.Sprintf("%s (root)", effectiveName(sp.Path, sp.Name))
 			}
 			wantPkgs = append(wantPkgs, pkg)
 		}

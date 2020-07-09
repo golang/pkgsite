@@ -22,12 +22,12 @@ import (
 type Package struct {
 	Module
 	Path               string // full import path
-	PathAfterDirectory string // for display only; used only for directory
-	Synopsis           string
-	IsRedistributable  bool
 	URL                string // relative to this site
 	LatestURL          string // link with latest-version placeholder, relative to this site
+	IsRedistributable  bool
 	Licenses           []LicenseMetadata
+	PathAfterDirectory string // for display on the directories tab; used by Directory
+	Synopsis           string // for display on the directories tab; used by Directory
 }
 
 // Module contains information for an individual module.
@@ -42,18 +42,14 @@ type Module struct {
 	Licenses          []LicenseMetadata
 }
 
-// legacyCreatePackage returns a *Package based on the fields of the specified
+// createPackage returns a *Package based on the fields of the specified
 // internal package and version info.
 //
 // latestRequested indicates whether the user requested the latest
 // version of the package. If so, the returned Package.URL will have the
 // structure /<path> instead of /<path>@<version>.
-func legacyCreatePackage(pkg *internal.LegacyPackage, mi *internal.ModuleInfo, latestRequested bool) (_ *Package, err error) {
-	defer derrors.Wrap(&err, "legacyCreatePackage(%v, %v)", pkg, mi)
-
-	if pkg == nil || mi == nil {
-		return nil, fmt.Errorf("package and version info must not be nil")
-	}
+func createPackage(pkg *internal.PackageMeta, mi *internal.ModuleInfo, latestRequested bool) (_ *Package, err error) {
+	defer derrors.Wrap(&err, "createPackage(%v, %v, %t)", pkg, mi, latestRequested)
 
 	var modLicenses []*licenses.Metadata
 	for _, lm := range pkg.Licenses {
@@ -69,48 +65,12 @@ func legacyCreatePackage(pkg *internal.LegacyPackage, mi *internal.ModuleInfo, l
 	}
 	return &Package{
 		Path:              pkg.Path,
-		Synopsis:          pkg.Synopsis,
 		IsRedistributable: pkg.IsRedistributable,
 		Licenses:          transformLicenseMetadata(pkg.Licenses),
 		Module:            *m,
 		URL:               constructPackageURL(pkg.Path, mi.ModulePath, urlVersion),
 		LatestURL:         constructPackageURL(pkg.Path, mi.ModulePath, middleware.LatestVersionPlaceholder),
-	}, nil
-}
-
-// createPackageNew returns a *Package based on the fields of the specified
-// internal package and version info.
-//
-// latestRequested indicates whether the user requested the latest
-// version of the package. If so, the returned Package.URL will have the
-// structure /<path> instead of /<path>@<version>.
-func createPackageNew(vdir *internal.VersionedDirectory, latestRequested bool) (_ *Package, err error) {
-	defer derrors.Wrap(&err, "createPackageNew(%v, %t)", vdir, latestRequested)
-
-	if vdir == nil || vdir.Package == nil {
-		return nil, fmt.Errorf("package info must not be nil")
-	}
-
-	var modLicenses []*licenses.Metadata
-	for _, lm := range vdir.Licenses {
-		if path.Dir(lm.FilePath) == "." {
-			modLicenses = append(modLicenses, lm)
-		}
-	}
-
-	m := createModule(&vdir.ModuleInfo, modLicenses, latestRequested)
-	urlVersion := m.LinkVersion
-	if latestRequested {
-		urlVersion = internal.LatestVersion
-	}
-	return &Package{
-		Path:              vdir.Path,
-		Synopsis:          vdir.Package.Documentation.Synopsis,
-		IsRedistributable: vdir.DirectoryNew.IsRedistributable,
-		Licenses:          transformLicenseMetadata(vdir.Licenses),
-		Module:            *m,
-		URL:               constructPackageURL(vdir.Path, vdir.ModulePath, urlVersion),
-		LatestURL:         constructPackageURL(vdir.Path, vdir.ModulePath, middleware.LatestVersionPlaceholder),
+		Synopsis:          pkg.Synopsis,
 	}, nil
 }
 
@@ -160,15 +120,15 @@ func constructPackageURL(pkgPath, modulePath, linkVersion string) string {
 }
 
 // effectiveName returns either the command name or package name.
-func effectiveName(pkg *internal.LegacyPackage) string {
-	if pkg.Name != "main" {
-		return pkg.Name
+func effectiveName(pkgPath, pkgName string) string {
+	if pkgName != "main" {
+		return pkgName
 	}
 	var prefix string // package path without version
-	if pkg.Path[len(pkg.Path)-3:] == "/v1" {
-		prefix = pkg.Path[:len(pkg.Path)-3]
+	if pkgPath[len(pkgPath)-3:] == "/v1" {
+		prefix = pkgPath[:len(pkgPath)-3]
 	} else {
-		prefix, _, _ = module.SplitPathVersion(pkg.Path)
+		prefix, _, _ = module.SplitPathVersion(pkgPath)
 	}
 	_, base := path.Split(prefix)
 	return base
@@ -196,7 +156,7 @@ func packageHTMLTitle(pkg *internal.LegacyPackage) string {
 	if pkg.Name != "main" {
 		return pkg.Name + " package"
 	}
-	return effectiveName(pkg) + " command"
+	return effectiveName(pkg.Path, pkg.Name) + " command"
 }
 
 // packageHTMLTitleNew constructs the details page title for pkg.
@@ -215,7 +175,7 @@ func packageTitle(pkg *internal.LegacyPackage) string {
 	if pkg.Name != "main" {
 		return "package " + pkg.Name
 	}
-	return "command " + effectiveName(pkg)
+	return "command " + effectiveName(pkg.Path, pkg.Name)
 }
 
 // packageTitleNew returns the package title as it will

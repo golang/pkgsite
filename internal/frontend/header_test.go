@@ -19,9 +19,9 @@ import (
 func samplePackage(mutators ...func(*Package)) *Package {
 	p := &Package{
 		Path:              sample.PackagePath,
-		Synopsis:          sample.Synopsis,
 		IsRedistributable: true,
 		Licenses:          transformLicenseMetadata(sample.LicenseMetadata),
+		Synopsis:          sample.Synopsis,
 		Module: Module{
 			DisplayVersion:    sample.VersionString,
 			LinkVersion:       sample.VersionString,
@@ -91,7 +91,7 @@ func TestElapsedTime(t *testing.T) {
 	}
 }
 
-func TestCreatePackageHeader(t *testing.T) {
+func TestCreatePackage(t *testing.T) {
 	vpkg := func(modulePath, suffix, name string) *internal.LegacyVersionedPackage {
 		vp := &internal.LegacyVersionedPackage{
 			LegacyModuleInfo: *sample.LegacyModuleInfo(modulePath, sample.VersionString),
@@ -136,12 +136,13 @@ func TestCreatePackageHeader(t *testing.T) {
 		},
 	} {
 		t.Run(tc.label, func(t *testing.T) {
-			got, err := legacyCreatePackage(&tc.pkg.LegacyPackage, &tc.pkg.ModuleInfo, false)
+			pm := internal.PackageMetaFromLegacyPackage(&tc.pkg.LegacyPackage)
+			got, err := createPackage(pm, &tc.pkg.ModuleInfo, false)
 			if err != nil {
 				t.Fatal(err)
 			}
 			if diff := cmp.Diff(tc.wantPkg, got, cmp.AllowUnexported(safehtml.Identifier{})); diff != "" {
-				t.Errorf("legacyCreatePackage(%v) mismatch (-want +got):\n%s", tc.pkg, diff)
+				t.Errorf("createPackage(%v) mismatch (-want +got):\n%s", tc.pkg, diff)
 			}
 		})
 	}

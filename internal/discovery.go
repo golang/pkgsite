@@ -111,8 +111,7 @@ type VersionedDirectory struct {
 	ModuleInfo
 }
 
-// DirectoryMeta represents a folder in a module version, and the metadata
-// associated with that folder.
+// DirectoryMeta represents the metadata of a directory in a module version.
 type DirectoryMeta struct {
 	Path              string
 	V1Path            string
@@ -120,12 +119,34 @@ type DirectoryMeta struct {
 	Licenses          []*licenses.Metadata // metadata of applicable licenses
 }
 
-// DirectoryNew represents a folder in a module version, and the contents of that folder.
+// DirectoryNew represents a directory in a module version, and the contents of that directory.
 // It will replace LegacyDirectory once everything has been migrated.
 type DirectoryNew struct {
 	DirectoryMeta
 	Readme  *Readme
 	Package *PackageNew
+}
+
+// PackageMeta represents the metadata of a package in a module version.
+type PackageMeta struct {
+	DirectoryMeta
+	Name     string
+	Synopsis string
+}
+
+// PackageMetaFromLegacyPackage returns a PackageMeta based on data from a
+// LegacyPackage.
+func PackageMetaFromLegacyPackage(pkg *LegacyPackage) *PackageMeta {
+	return &PackageMeta{
+		DirectoryMeta: DirectoryMeta{
+			Path:              pkg.Path,
+			V1Path:            pkg.V1Path,
+			Licenses:          pkg.Licenses,
+			IsRedistributable: pkg.IsRedistributable,
+		},
+		Name:     pkg.Name,
+		Synopsis: pkg.Synopsis,
+	}
 }
 
 // PackageNew is a group of one or more Go source files with the same package
@@ -273,8 +294,8 @@ const (
 	WithDocumentationHTML
 )
 
-// LegacyDirectory represents a folder in a module version, and all of the
-// packages inside that folder.
+// LegacyDirectory represents a directory in a module version, and all of the
+// packages inside that directory.
 type LegacyDirectory struct {
 	LegacyModuleInfo
 	Path     string

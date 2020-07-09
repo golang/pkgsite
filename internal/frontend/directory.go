@@ -132,16 +132,14 @@ func legacyCreateDirectory(dbDir *internal.LegacyDirectory, licmetas []*licenses
 		if !includeDirPath && pkg.Path == dbDir.Path {
 			continue
 		}
-		newPkg, err := legacyCreatePackage(pkg, &dbDir.ModuleInfo, false)
+		pm := internal.PackageMetaFromLegacyPackage(pkg)
+		newPkg, err := createPackage(pm, &dbDir.ModuleInfo, false)
 		if err != nil {
 			return nil, err
 		}
-		if pkg.IsRedistributable {
-			newPkg.Synopsis = pkg.Synopsis
-		}
-		newPkg.PathAfterDirectory = strings.TrimPrefix(strings.TrimPrefix(pkg.Path, dbDir.Path), "/")
+		newPkg.PathAfterDirectory = strings.TrimPrefix(strings.TrimPrefix(pm.Path, dbDir.Path), "/")
 		if newPkg.PathAfterDirectory == "" {
-			newPkg.PathAfterDirectory = effectiveName(pkg) + " (root)"
+			newPkg.PathAfterDirectory = effectiveName(pm.Path, pm.Name) + " (root)"
 		}
 		packages = append(packages, newPkg)
 	}
