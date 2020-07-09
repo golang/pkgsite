@@ -38,7 +38,7 @@ func (s *Server) legacyServePackagePage(w http.ResponseWriter, r *http.Request, 
 	//   4. Just serve a 404
 	pkg, err := s.ds.LegacyGetPackage(ctx, pkgPath, modulePath, resolvedVersion)
 	if err == nil {
-		return s.legacyServePackagePageWithPackage(ctx, w, r, pkg, requestedVersion)
+		return s.legacyServePackagePageWithPackage(w, r, pkg, requestedVersion)
 	}
 	if !errors.Is(err, derrors.NotFound) {
 		return err
@@ -82,7 +82,7 @@ func (s *Server) legacyServePackagePage(w http.ResponseWriter, r *http.Request, 
 	return pathNotFoundError(ctx, "package", pkgPath, requestedVersion)
 }
 
-func (s *Server) legacyServePackagePageWithPackage(ctx context.Context, w http.ResponseWriter, r *http.Request, pkg *internal.LegacyVersionedPackage, requestedVersion string) (err error) {
+func (s *Server) legacyServePackagePageWithPackage(w http.ResponseWriter, r *http.Request, pkg *internal.LegacyVersionedPackage, requestedVersion string) (err error) {
 	defer func() {
 		if _, ok := err.(*serverError); !ok {
 			derrors.Wrap(&err, "legacyServePackagePageWithPackage(w, r, %q, %q, %q)", pkg.Path, pkg.ModulePath, requestedVersion)
@@ -113,7 +113,7 @@ func (s *Server) legacyServePackagePageWithPackage(ctx context.Context, w http.R
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = legacyFetchDetailsForPackage(ctx, r, tab, s.ds, pkg)
+		details, err = legacyFetchDetailsForPackage(r, tab, s.ds, pkg)
 		if err != nil {
 			return fmt.Errorf("fetching page for %q: %v", tab, err)
 		}
@@ -130,7 +130,7 @@ func (s *Server) legacyServePackagePageWithPackage(ctx context.Context, w http.R
 		Tabs:           packageTabSettings,
 		PageType:       "pkg",
 	}
-	s.servePage(ctx, w, settings.TemplateName, page)
+	s.servePage(r.Context(), w, settings.TemplateName, page)
 	return nil
 }
 
@@ -188,7 +188,7 @@ func (s *Server) servePackagePage(ctx context.Context,
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = fetchDetailsForPackage(ctx, r, tab, s.ds, vdir)
+		details, err = fetchDetailsForPackage(r, tab, s.ds, vdir)
 		if err != nil {
 			return fmt.Errorf("fetching page for %q: %v", tab, err)
 		}

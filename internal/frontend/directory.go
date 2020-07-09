@@ -15,6 +15,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -24,12 +25,50 @@ type DirectoryPage struct {
 	*Directory
 }
 
-// LegacyDirectory contains information for an individual directory.
-type Directory struct {
+// DirectoryHeader contains information for the header on a directory page.
+type DirectoryHeader struct {
 	Module
-	Path     string
+	Path string
+	URL  string
+}
+
+// Directory contains information for an individual directory.
+type Directory struct {
+	DirectoryHeader
 	Packages []*Package
-	URL      string
+}
+
+// serveDirectoryPage serves a directory view for a directory in a module
+// verison.
+func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, r *http.Request, vdir *internal.VersionedDirectory, requestedVersion string) (err error) {
+	defer derrors.Wrap(&err, "serveDirectoryPage for %s@%s", vdir.Path, requestedVersion)
+	tab := r.FormValue("tab")
+	settings, ok := directoryTabLookup[tab]
+	if tab == "" || !ok || settings.Disabled {
+		tab = "subdirectories"
+		settings = directoryTabLookup[tab]
+	}
+	header := createDirectoryHeader(vdir.Path, &vdir.ModuleInfo, vdir.Licenses)
+	if requestedVersion == internal.LatestVersion {
+		header.URL = constructDirectoryURL(vdir.Path, vdir.ModulePath, internal.LatestVersion)
+	}
+	details, err := fetchDetailsForDirectory(r, tab, s.ds, vdir)
+	if err != nil {
+		return err
+	}
+	page := &DetailsPage{
+		basePage:       s.newBasePage(r, fmt.Sprintf("%s directory", vdir.Path)),
+		Title:          fmt.Sprintf("directory %s", vdir.Path),
+		Settings:       settings,
+		Header:         header,
+		Breadcrumb:     breadcrumbPath(vdir.Path, vdir.ModulePath, linkVersion(vdir.Version, vdir.ModulePath)),
+		Details:        details,
+		CanShowDetails: true,
+		Tabs:           directoryTabSettings,
+		PageType:       "dir",
+	}
+	s.servePage(ctx, w, settings.TemplateName, page)
+	return nil
 }
 
 func (s *Server) legacyServeDirectoryPage(ctx context.Context, w http.ResponseWriter, r *http.Request, dbDir *internal.LegacyDirectory, requestedVersion string) (err error) {
@@ -69,6 +108,38 @@ func (s *Server) legacyServeDirectoryPage(ctx context.Context, w http.ResponseWr
 	}
 	s.servePage(ctx, w, settings.TemplateName, page)
 	return nil
+}
+
+// fetchDirectoryDetails fetches data for the directory specified by path and
+// version from the database and returns a Directory.
+//
+// includeDirPath indicates whether a package is included if its import path is
+// the same as dirPath.
+// This argument is needed because on the module "Packages" tab, we want to
+// display all packages in the module, even if the import path is the same as
+// the module path. However, on the package and directory view's
+// "Subdirectories" tab, we do not want to include packages whose import paths
+// are the same as the dirPath.
+func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, vdir *internal.VersionedDirectory, includeDirPath bool) (_ *Directory, err error) {
+	defer derrors.Wrap(&err, "fetchDirectoryDetails(%q, %q, %q, %v)",
+		vdir.Path, vdir.ModulePath, vdir.Version, vdir.Licenses)
+
+	db, ok := ds.(*postgres.DB)
+	if !ok {
+		return nil, proxydatasourceNotSupportedErr()
+	}
+	if includeDirPath && vdir.Path != vdir.ModulePath && vdir.Path != stdlib.ModulePath {
+		return nil, fmt.Errorf("includeDirPath can only be set to true if dirPath = modulePath: %w", derrors.InvalidArgument)
+	}
+	packages, err := db.GetPackagesInDirectory(ctx, vdir.Path, vdir.ModulePath, vdir.Version)
+	if err != nil {
+		if !errors.Is(err, derrors.NotFound) {
+			return nil, err
+		}
+		header := createDirectoryHeader(vdir.Path, &vdir.ModuleInfo, vdir.Licenses)
+		return &Directory{DirectoryHeader: *header}, nil
+	}
+	return createDirectory(vdir.Path, &vdir.ModuleInfo, packages, vdir.Licenses, includeDirPath)
 }
 
 // legacyFetchDirectoryDetails fetches data for the directory specified by path and
@@ -115,7 +186,18 @@ func legacyFetchDirectoryDetails(ctx context.Context, ds internal.DataSource, di
 	return legacyCreateDirectory(dbDir, licmetas, includeDirPath)
 }
 
-// legacyCreateDirectory constructs a *LegacyDirectory from the provided dbDir and licmetas.
+// legacyCreateDirectory constructs a *Directory for the given dirPath.
+func legacyCreateDirectory(dbDir *internal.LegacyDirectory, licmetas []*licenses.Metadata, includeDirPath bool) (_ *Directory, err error) {
+	defer derrors.Wrap(&err, "legacyCreateDirectory(%q, %q, %t)", dbDir.Path, dbDir.Version, includeDirPath)
+	var packages []*internal.PackageMeta
+	for _, pkg := range dbDir.Packages {
+		newPkg := internal.PackageMetaFromLegacyPackage(pkg)
+		packages = append(packages, newPkg)
+	}
+	return createDirectory(dbDir.Path, &dbDir.ModuleInfo, packages, licmetas, includeDirPath)
+}
+
+// createDirectory constructs a *Directory for the given dirPath.
 //
 // includeDirPath indicates whether a package is included if its import path is
 // the same as dirPath.
@@ -124,34 +206,39 @@ func legacyFetchDirectoryDetails(ctx context.Context, ds internal.DataSource, di
 // the module path. However, on the package and directory view's
 // "Subdirectories" tab, we do not want to include packages whose import paths
 // are the same as the dirPath.
-func legacyCreateDirectory(dbDir *internal.LegacyDirectory, licmetas []*licenses.Metadata, includeDirPath bool) (_ *Directory, err error) {
-	defer derrors.Wrap(&err, "legacyCreateDirectory(%q, %q, %t)", dbDir.Path, dbDir.Version, includeDirPath)
-
+func createDirectory(dirPath string, mi *internal.ModuleInfo, pkgMetas []*internal.PackageMeta,
+	licmetas []*licenses.Metadata, includeDirPath bool) (_ *Directory, err error) {
 	var packages []*Package
-	for _, pkg := range dbDir.Packages {
-		if !includeDirPath && pkg.Path == dbDir.Path {
+	for _, pm := range pkgMetas {
+		if !includeDirPath && pm.Path == dirPath {
 			continue
 		}
-		pm := internal.PackageMetaFromLegacyPackage(pkg)
-		newPkg, err := createPackage(pm, &dbDir.ModuleInfo, false)
+		newPkg, err := createPackage(pm, mi, false)
 		if err != nil {
 			return nil, err
 		}
-		newPkg.PathAfterDirectory = strings.TrimPrefix(strings.TrimPrefix(pm.Path, dbDir.Path), "/")
+		newPkg.PathAfterDirectory = strings.TrimPrefix(strings.TrimPrefix(pm.Path, dirPath), "/")
 		if newPkg.PathAfterDirectory == "" {
 			newPkg.PathAfterDirectory = effectiveName(pm.Path, pm.Name) + " (root)"
 		}
 		packages = append(packages, newPkg)
 	}
-	mod := createModule(&dbDir.ModuleInfo, licmetas, false)
 	sort.Slice(packages, func(i, j int) bool { return packages[i].Path < packages[j].Path })
+	header := createDirectoryHeader(dirPath, mi, licmetas)
 
 	return &Directory{
-		Module:   *mod,
-		Path:     dbDir.Path,
-		Packages: packages,
-		URL:      constructDirectoryURL(dbDir.Path, dbDir.ModulePath, linkVersion(dbDir.Version, dbDir.ModulePath)),
+		DirectoryHeader: *header,
+		Packages:        packages,
 	}, nil
+}
+
+func createDirectoryHeader(dirPath string, mi *internal.ModuleInfo, licmetas []*licenses.Metadata) (_ *DirectoryHeader) {
+	mod := createModule(mi, licmetas, false)
+	return &DirectoryHeader{
+		Module: *mod,
+		Path:   dirPath,
+		URL:    constructDirectoryURL(dirPath, mi.ModulePath, linkVersion(mi.Version, mi.ModulePath)),
+	}
 }
 
 func constructDirectoryURL(dirPath, modulePath, linkVersion string) string {

@@ -68,7 +68,7 @@ func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = fetchDetailsForModule(ctx, r, tab, s.ds, mi, licenses, readme)
+		details, err = fetchDetailsForModule(r, tab, s.ds, mi, licenses, readme)
 		if err != nil {
 			return fmt.Errorf("error fetching page for %q: %v", tab, err)
 		}

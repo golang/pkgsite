@@ -128,13 +128,7 @@ func (s *Server) serveDetailsPage(w http.ResponseWriter, r *http.Request, info *
 	case vdir.Package != nil:
 		return s.servePackagePage(ctx, w, r, vdir, info.requestedVersion)
 	default:
-		// TODO(https://golang.org/issue/39629): add function to get
-		// subdirectories from the paths table, and deprecate LegacyGetDirectory.
-		dir, err := s.ds.LegacyGetDirectory(ctx, info.fullPath, info.modulePath, info.resolvedVersion, internal.AllFields)
-		if err != nil {
-			return err
-		}
-		return s.legacyServeDirectoryPage(ctx, w, r, dir, info.requestedVersion)
+		return s.serveDirectoryPage(ctx, w, r, vdir, info.requestedVersion)
 	}
 }
 
