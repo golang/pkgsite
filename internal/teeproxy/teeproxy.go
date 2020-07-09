@@ -313,7 +313,7 @@ func makePkgGoDevRequest(ctx context.Context, redirectHost, redirectPath string)
 // godoc.org and to pkg.go.dev, tagged with the response status code.
 func recordTeeProxyMetric(status int, gddoLatency, pkgGoDevLatency time.Duration) {
 	gddoL := gddoLatency.Seconds() / 1000
-	pkgGoDevL := gddoLatency.Seconds() / 1000
+	pkgGoDevL := pkgGoDevLatency.Seconds() / 1000
 
 	stats.RecordWithTags(context.Background(), []tag.Mutator{
 		tag.Upsert(keyTeeproxyStatus, strconv.Itoa(status)),
