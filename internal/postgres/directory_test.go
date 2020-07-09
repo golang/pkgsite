@@ -7,7 +7,6 @@ package postgres
 import (
 	"context"
 	"errors"
-	"sort"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -20,6 +19,161 @@ import (
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
+
+func TestGetPackagesInDirectory(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	defer ResetTestDB(testDB, t)
+
+	InsertSampleDirectoryTree(ctx, t, testDB)
+
+	for _, tc := range []struct {
+		name, dirPath, modulePath, version, wantModulePath, wantVersion string
+		wantSuffixes                                                    []string
+		wantNotFoundErr                                                 bool
+	}{
+		{
+			name:           "directory path is the module path",
+			dirPath:        "github.com/hashicorp/vault",
+			modulePath:     "github.com/hashicorp/vault",
+			version:        "v1.2.3",
+			wantVersion:    "v1.2.3",
+			wantModulePath: "github.com/hashicorp/vault",
+			wantSuffixes: []string{
+				"builtin/audit/file",
+				"builtin/audit/socket",
+				"internal/foo",
+				"vault/replication",
+				"vault/seal/transit",
+			},
+		},
+		{
+			name:           "directory path is a package path",
+			dirPath:        "github.com/hashicorp/vault",
+			modulePath:     "github.com/hashicorp/vault",
+			version:        "v1.0.3",
+			wantVersion:    "v1.0.3",
+			wantModulePath: "github.com/hashicorp/vault",
+			wantSuffixes: []string{
+				"api",
+				"builtin/audit/file",
+				"builtin/audit/socket",
+			},
+		},
+		{
+			name:           "directory path is not a package or module",
+			dirPath:        "github.com/hashicorp/vault/builtin",
+			modulePath:     "github.com/hashicorp/vault",
+			wantModulePath: "github.com/hashicorp/vault",
+			version:        "v1.0.3",
+			wantVersion:    "v1.0.3",
+			wantSuffixes: []string{
+				"builtin/audit/file",
+				"builtin/audit/socket",
+			},
+		},
+		{
+			name:           "stdlib module",
+			dirPath:        stdlib.ModulePath,
+			modulePath:     stdlib.ModulePath,
+			version:        "v1.13.4",
+			wantModulePath: stdlib.ModulePath,
+			wantVersion:    "v1.13.4",
+			wantSuffixes: []string{
+				"archive/tar",
+				"archive/zip",
+				"cmd/go",
+				"cmd/internal/obj",
+				"cmd/internal/obj/arm",
+				"cmd/internal/obj/arm64",
+			},
+		},
+		{
+			name:           "stdlib directory",
+			dirPath:        "archive",
+			modulePath:     stdlib.ModulePath,
+			version:        "v1.13.4",
+			wantModulePath: stdlib.ModulePath,
+			wantVersion:    "v1.13.4",
+			wantSuffixes: []string{
+				"archive/tar",
+				"archive/zip",
+			},
+		},
+		{
+			name:           "stdlib package",
+			dirPath:        "archive/zip",
+			modulePath:     stdlib.ModulePath,
+			version:        "v1.13.4",
+			wantModulePath: stdlib.ModulePath,
+			wantVersion:    "v1.13.4",
+			wantSuffixes: []string{
+				"archive/zip",
+			},
+		},
+		{
+			name:            "stdlib package -  incomplete last element",
+			dirPath:         "archive/zi",
+			modulePath:      stdlib.ModulePath,
+			version:         "v1.13.4",
+			wantNotFoundErr: true,
+		},
+		{
+			name:           "stdlib - internal directory",
+			dirPath:        "cmd/internal",
+			modulePath:     stdlib.ModulePath,
+			version:        "v1.13.4",
+			wantModulePath: stdlib.ModulePath,
+			wantVersion:    "v1.13.4",
+			wantSuffixes: []string{
+				"cmd/internal/obj",
+				"cmd/internal/obj/arm",
+				"cmd/internal/obj/arm64",
+			},
+		},
+		{
+			name:           "stdlib - directory nested within an internal directory",
+			dirPath:        "cmd/internal/obj",
+			modulePath:     stdlib.ModulePath,
+			version:        "v1.13.4",
+			wantModulePath: stdlib.ModulePath,
+			wantVersion:    "v1.13.4",
+			wantSuffixes: []string{
+				"cmd/internal/obj",
+				"cmd/internal/obj/arm",
+				"cmd/internal/obj/arm64",
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := testDB.GetPackagesInDirectory(ctx, tc.dirPath, tc.modulePath, tc.version)
+			if tc.wantNotFoundErr {
+				if !errors.Is(err, derrors.NotFound) {
+					t.Fatalf("got error %v; want %v", err, derrors.NotFound)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			var wantPackages []*internal.PackageMeta
+			for _, suffix := range tc.wantSuffixes {
+				pkg := sample.PackageMeta(tc.wantModulePath, suffix)
+				wantPackages = append(wantPackages, pkg)
+			}
+
+			opts := []cmp.Option{
+				// The packages table only includes partial license information; it omits the Coverage field.
+				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
+			}
+			if diff := cmp.Diff(wantPackages, got, opts...); diff != "" {
+				t.Errorf("mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
 
 func TestLegacyGetDirectory(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
@@ -90,9 +244,9 @@ func TestLegacyGetDirectory(t *testing.T) {
 			wantVersion:    "v1.2.3",
 			wantModulePath: "github.com/hashicorp/vault",
 			wantSuffixes: []string{
-				"internal/foo",
 				"builtin/audit/file",
 				"builtin/audit/socket",
+				"internal/foo",
 				"vault/replication",
 				"vault/seal/transit",
 			},
@@ -191,8 +345,8 @@ func TestLegacyGetDirectory(t *testing.T) {
 			wantModulePath: stdlib.ModulePath,
 			wantVersion:    "v1.13.4",
 			wantSuffixes: []string{
-				"archive/zip",
 				"archive/tar",
+				"archive/zip",
 			},
 		},
 		{
@@ -244,7 +398,7 @@ func TestLegacyGetDirectory(t *testing.T) {
 			got, err := testDB.LegacyGetDirectory(ctx, tc.dirPath, tc.modulePath, tc.version, internal.AllFields)
 			if tc.wantNotFoundErr {
 				if !errors.Is(err, derrors.NotFound) {
-					t.Fatalf("want %v; got = \n%+v, %v", derrors.NotFound, got, err)
+					t.Fatalf("got error %v; want %v", err, derrors.NotFound)
 				}
 				return
 			}
@@ -259,9 +413,6 @@ func TestLegacyGetDirectory(t *testing.T) {
 				pkg.Imports = nil
 				wantPackages = append(wantPackages, pkg)
 			}
-			sort.Slice(wantPackages, func(i, j int) bool {
-				return wantPackages[i].Path < wantPackages[j].Path
-			})
 
 			wantDirectory := &internal.LegacyDirectory{
 				LegacyModuleInfo: *mi,
@@ -269,7 +420,6 @@ func TestLegacyGetDirectory(t *testing.T) {
 				Path:             tc.dirPath,
 			}
 			opts := []cmp.Option{
-				cmpopts.EquateEmpty(),
 				cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
 				// The packages table only includes partial license information; it omits the Coverage field.
 				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),

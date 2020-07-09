@@ -9,6 +9,7 @@ import (
 	"database/sql"
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/lib/pq"
 	"golang.org/x/pkgsite/internal"
@@ -16,6 +17,66 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
+
+// GetPackagesInDirectory returns all of the packages in a directory from a
+// module version, including the package that lives at dirPath, if present.
+func (db *DB) GetPackagesInDirectory(ctx context.Context, dirPath, modulePath, resolvedVersion string) (_ []*internal.PackageMeta, err error) {
+	defer derrors.Wrap(&err, "DB.GetPackagesInDirectory(ctx, %q, %q, %q)", dirPath, modulePath, resolvedVersion)
+
+	query := `
+		SELECT
+			p.path,
+			p.name,
+			p.v1_path,
+			p.redistributable,
+			d.synopsis,
+			p.license_types,
+			p.license_paths
+		FROM modules m
+		INNER JOIN paths p
+		ON p.module_id = m.id
+		INNER JOIN documentation d
+		ON d.path_id = p.id
+		WHERE
+			m.module_path = $1
+			AND m.version = $2
+		ORDER BY path;`
+	var packages []*internal.PackageMeta
+	collect := func(rows *sql.Rows) error {
+		var (
+			pkg          internal.PackageMeta
+			licenseTypes []string
+			licensePaths []string
+		)
+		if err := rows.Scan(
+			&pkg.Path,
+			&pkg.Name,
+			&pkg.V1Path,
+			&pkg.IsRedistributable,
+			&pkg.Synopsis,
+			pq.Array(&licenseTypes),
+			pq.Array(&licensePaths),
+		); err != nil {
+			return fmt.Errorf("row.Scan(): %v", err)
+		}
+		if dirPath == stdlib.ModulePath || pkg.Path == dirPath || strings.HasPrefix(pkg.Path, dirPath+"/") {
+			lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
+			if err != nil {
+				return err
+			}
+			pkg.Licenses = lics
+			packages = append(packages, &pkg)
+		}
+		return nil
+	}
+	if err := db.db.RunQuery(ctx, query, collect, modulePath, resolvedVersion); err != nil {
+		return nil, err
+	}
+	if len(packages) == 0 {
+		return nil, fmt.Errorf("directory does not contain any packages: %w", derrors.NotFound)
+	}
+	return packages, nil
+}
 
 // GetDirectoryNew returns a directory from the database, along with all of the
 // data associated with that directory, including the package, imports, readme,

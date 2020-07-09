@@ -107,6 +107,23 @@ func LegacyPackage(modulePath, suffix string) *internal.LegacyPackage {
 	}
 }
 
+func PackageMeta(modulePath, suffix string) *internal.PackageMeta {
+	pkgPath := suffix
+	if modulePath != stdlib.ModulePath {
+		pkgPath = path.Join(modulePath, suffix)
+	}
+	return &internal.PackageMeta{
+		DirectoryMeta: internal.DirectoryMeta{
+			Path:              pkgPath,
+			V1Path:            internal.V1Path(modulePath, suffix),
+			IsRedistributable: true,
+			Licenses:          LicenseMetadata,
+		},
+		Name:     path.Base(pkgPath),
+		Synopsis: Synopsis,
+	}
+}
+
 func LegacyModuleInfo(modulePath, versionString string) *internal.LegacyModuleInfo {
 	vtype, err := version.ParseType(versionString)
 	if err != nil {
