@@ -33,6 +33,15 @@ var (
 	ErrTooLarge = errors.New("rendered documentation HTML size exceeded the specified limit")
 )
 
+// ModuleInfo contains all the information a package needs about the module it
+// belongs to in order to render its documentation.
+type ModuleInfo struct {
+	ModulePath      string
+	ResolvedVersion string
+	// ModulePackages is the set of all full package paths in the module.
+	ModulePackages map[string]bool
+}
+
 // RenderOptions are options for Render.
 type RenderOptions struct {
 	// FileLinkFunc optionally specifies a function that
@@ -44,7 +53,10 @@ type RenderOptions struct {
 	FileLinkFunc   func(file string) (url string)
 	SourceLinkFunc func(ast.Node) string
 	PlayURLFunc    func(*doc.Example) string // If set, returns the Go playground URL for the example
-	Limit          int64                     // If zero, a default limit of 10 megabytes is used.
+	// ModInfo optionally specifies information about the module the package
+	// belongs to in order to render module-related documentation.
+	ModInfo *ModuleInfo
+	Limit   int64 // If zero, a default limit of 10 megabytes is used.
 }
 
 // Render renders package documentation HTML for the
@@ -83,8 +95,14 @@ func Render(fset *token.FileSet, p *doc.Package, opt RenderOptions) (string, err
 	}
 
 	r := render.New(fset, p, &render.Options{
-		PackageURL: func(path string) (url string) {
-			return pathpkg.Join("/pkg", path)
+		PackageURL: func(path string) string {
+			// Use the same module version for imported packages that belong to
+			// the same module.
+			versionedPath := path
+			if opt.ModInfo != nil {
+				versionedPath = versionedPkgPath(path, opt.ModInfo)
+			}
+			return pathpkg.Join("/pkg", versionedPath)
 		},
 		DisableHotlinking: true,
 	})
@@ -236,4 +254,18 @@ func exampleID(id, suffix string) string {
 	default:
 		panic("unreachable")
 	}
+}
+
+// versionedPkgPath transforms package paths to contain the same version as the
+// current module if the package belongs to the module. As a special case,
+// versionedPkgPath will not add versions to standard library packages.
+func versionedPkgPath(pkgPath string, modInfo *ModuleInfo) string {
+	if modInfo == nil || !modInfo.ModulePackages[pkgPath] {
+		return pkgPath
+	}
+	// We don't need to do anything special here for standard library packages
+	// since pkgPath will never contain the "std/" module prefix, and
+	// modInfo.ModulePackages contains this prefix for standard library packages.
+	innerPkgPath := pkgPath[len(modInfo.ModulePath):]
+	return fmt.Sprintf("%s@%s%s", modInfo.ModulePath, modInfo.ResolvedVersion, innerPkgPath)
 }

@@ -92,6 +92,123 @@ func TestFileLinkHTML(t *testing.T) {
 	}
 }
 
+func TestVersionedPkgPath(t *testing.T) {
+	for _, test := range []struct {
+		name    string
+		pkgPath string
+		modInfo *ModuleInfo
+		want    string
+	}{
+		{
+			name:    "builtin package is not versioned",
+			pkgPath: "builtin",
+			modInfo: &ModuleInfo{
+				ModulePath:      "std",
+				ResolvedVersion: "v1.14.4",
+				ModulePackages:  map[string]bool{"std/builtin": true, "std/net/http": true},
+			},
+			want: "builtin",
+		},
+		{
+			name:    "std packages are not versioned",
+			pkgPath: "net/http",
+			modInfo: &ModuleInfo{
+				ModulePath:      "std",
+				ResolvedVersion: "v1.14.4",
+				ModulePackages:  map[string]bool{"std/builtin": true, "std/net/http": true},
+			},
+			want: "net/http",
+		},
+		{
+			name:    "imports from other modules are not versioned",
+			pkgPath: "golang.org/x/pkgsite",
+			modInfo: &ModuleInfo{
+				ModulePath:      "cloud.google.com/go",
+				ResolvedVersion: "v0.60.0",
+				ModulePackages:  map[string]bool{"cloud.google.com/go/civil": true},
+			},
+			want: "golang.org/x/pkgsite",
+		},
+		{
+			name:    "imports from other modules with shared prefixes are not versioned",
+			pkgPath: "golang.org/x/pkgsite",
+			modInfo: &ModuleInfo{
+				ModulePath:      "golang.org/x/time",
+				ResolvedVersion: "v1.2.3",
+				ModulePackages:  map[string]bool{"golang.org/x/time/rate": true},
+			},
+			want: "golang.org/x/pkgsite",
+		},
+		{
+			name:    "imports from same module are versioned",
+			pkgPath: "golang.org/x/pkgsite/internal/log",
+			modInfo: &ModuleInfo{
+				ModulePath:      "golang.org/x/pkgsite",
+				ResolvedVersion: "v1.1.2",
+				ModulePackages:  map[string]bool{"golang.org/x/pkgsite/internal/log": true},
+			},
+			want: "golang.org/x/pkgsite@v1.1.2/internal/log",
+		},
+		{
+			name:    "imports from same module with pseudo version are versioned",
+			pkgPath: "golang.org/x/pkgsite/internal/log",
+			modInfo: &ModuleInfo{
+				ModulePath:      "golang.org/x/pkgsite",
+				ResolvedVersion: "v0.0.0-20200709011933-a59b4ce778c4",
+				ModulePackages:  map[string]bool{"golang.org/x/pkgsite/internal/log": true},
+			},
+			want: "golang.org/x/pkgsite@v0.0.0-20200709011933-a59b4ce778c4/internal/log",
+		},
+		{
+			name:    "imports from same v2 module are versioned",
+			pkgPath: "k8s.io/klog/v2/klogr",
+			modInfo: &ModuleInfo{
+				ModulePath:      "k8s.io/klog/v2",
+				ResolvedVersion: "v2.3.0",
+				ModulePackages:  map[string]bool{"k8s.io/klog/v2": true, "k8s.io/klog/v2/klogr": true},
+			},
+			want: "k8s.io/klog/v2@v2.3.0/klogr",
+		},
+		{
+			name:    "imports from older major module version are not versioned",
+			pkgPath: "rsc.io/quote",
+			modInfo: &ModuleInfo{
+				ModulePath:      "rsc.io/quote/v3",
+				ResolvedVersion: "v3.1.0",
+				ModulePackages:  map[string]bool{"rsc.io/quote/v3": true},
+			},
+			want: "rsc.io/quote",
+		},
+		{
+			name:    "imports from newer major module version are not versioned",
+			pkgPath: "rsc.io/quote/v3",
+			modInfo: &ModuleInfo{
+				ModulePath:      "rsc.io/quote",
+				ResolvedVersion: "v1.5.3",
+				ModulePackages:  map[string]bool{"rsc.io/quote": true},
+			},
+			want: "rsc.io/quote/v3",
+		},
+		{
+			name:    "imports from nested module are not versioned",
+			pkgPath: "A/B/C/D",
+			modInfo: &ModuleInfo{
+				ModulePath:      "A",
+				ResolvedVersion: "v1.0.0",
+				ModulePackages:  map[string]bool{"A/B": true, "A/B/C": true},
+			},
+			want: "A/B/C/D",
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			got := versionedPkgPath(test.pkgPath, test.modInfo)
+			if got != test.want {
+				t.Errorf("versionedPkgPath(%q) = %q, want %q", test.pkgPath, got, test.want)
+			}
+		})
+	}
+}
+
 func testDuplicateIDs(t *testing.T, htmlDoc *html.Node) {
 	idCounts := map[string]int{}
 	walk(htmlDoc, func(n *html.Node) {
