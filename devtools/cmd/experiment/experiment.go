@@ -20,13 +20,16 @@ import (
 
 const usage = `
 List experiments:
-    experiments [flags...] list
+    experiments [flags...] ls
 
 Create a new experiment:
     experiments [flags...] create <name>
 
 Update an experiment:
     experiments [flags...] update <name>
+
+Remove an experiment:
+    experiments [flags...] rm <name>
 `
 
 var rollout = flag.Uint("rollout", 100, "experiment rollout percentage")
@@ -59,7 +62,7 @@ func main() {
 	defer ddb.Close()
 	db := postgres.New(ddb)
 	switch flag.Arg(0) {
-	case "ls":
+	case "ls", "list":
 		if err := listExperiments(ctx, db); err != nil {
 			log.Fatalf("listing experiments: %v", err)
 		}
@@ -77,6 +80,13 @@ func main() {
 		}
 		if err := updateExperiment(ctx, db, flag.Arg(1), *rollout); err != nil {
 			log.Fatalf("updating experiment: %v", err)
+		}
+	case "rm", "remove":
+		if flag.NArg() < 1 {
+			exitUsage()
+		}
+		if err := removeExperiment(ctx, db, flag.Arg(1)); err != nil {
+			log.Fatalf("removing experiment: %v", err)
 		}
 	default:
 		exitUsage()
@@ -117,6 +127,14 @@ func updateExperiment(ctx context.Context, db *postgres.DB, name string, rollout
 		return err
 	}
 	fmt.Printf("\nUpdated experiment %q; rollout=%d.\n", name, rollout)
+	return nil
+}
+
+func removeExperiment(ctx context.Context, db *postgres.DB, name string) error {
+	if err := db.RemoveExperiment(ctx, name); err != nil {
+		return err
+	}
+	fmt.Printf("\nRemoved experiment %q.\n", name)
 	return nil
 }
 
