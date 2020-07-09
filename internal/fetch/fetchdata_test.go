@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/google/safehtml/template"
+	"github.com/google/safehtml/testconversions"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/proxy"
@@ -70,7 +70,7 @@ var moduleOnePackage = &testModule{
 	},
 }
 
-var html = template.MustParseAndExecuteToHTML
+var html = testconversions.MakeHTMLForTest
 
 var moduleMultiPackage = &testModule{
 	mod: &proxy.TestModule{
@@ -868,7 +868,12 @@ var moduleStd = &testModule{
 // moduleWithExamples returns a testModule that contains an example.
 // It provides the common bits for the tests for package, function,
 // type, and method examples below.
-func moduleWithExamples(path, source, test string) *testModule {
+//
+// The fetch result's documentation HTML is treated as a set
+// of substrings that should appear in the generated documentation.
+// The substrings are separated by a '~' character.
+func moduleWithExamples(path, source, test string, docSubstrings ...string) *testModule {
+	docHTML := html(strings.Join(docSubstrings, " ~ "))
 	return &testModule{
 		mod: &proxy.TestModule{
 			ModulePath: path,
@@ -908,7 +913,7 @@ package example_test
 							Name: "example",
 							Documentation: &internal.Documentation{
 								Synopsis: "Package example contains examples.",
-								HTML:     html(testPlaygroundID),
+								HTML:     docHTML,
 							},
 						},
 					},
@@ -929,7 +934,7 @@ func Example() {
 	fmt.Println("hello")
 	// Output: hello
 }
-`)
+`, testPlaygroundID, `fmt.Println(&#34;hello&#34;)`)
 
 var moduleFuncExample = moduleWithExamples("func.example",
 	`func F() {}
@@ -939,7 +944,7 @@ var moduleFuncExample = moduleWithExamples("func.example",
 func ExampleF() {
 	example.F()
 }
-`)
+`, testPlaygroundID)
 
 var moduleTypeExample = moduleWithExamples("type.example",
 	`type T struct{}
@@ -949,7 +954,7 @@ var moduleTypeExample = moduleWithExamples("type.example",
 func ExampleT() {
 	example.T{}
 }
-`)
+`, testPlaygroundID)
 
 var moduleMethodExample = moduleWithExamples("method.example",
 	`type T struct {}
@@ -961,4 +966,4 @@ func (*T) M() {}
 func ExampleT_M() {
 	new(example.T).M()
 }
-`)
+`, testPlaygroundID)

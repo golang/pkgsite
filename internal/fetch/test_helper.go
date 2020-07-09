@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
@@ -141,6 +142,9 @@ func sortFetchResult(fr *FetchResult) {
 	}
 }
 
+// validateDocumentationHTML checks that the doc HTML contains a set of
+// substrings. The desired strings consist of the "want" module's documentation
+// fields, with multiple substrings separated by '~'.
 func validateDocumentationHTML(t *testing.T, got, want *internal.Module) {
 	t.Helper()
 	defer func() {
@@ -148,21 +152,26 @@ func validateDocumentationHTML(t *testing.T, got, want *internal.Module) {
 			t.Fatalf("Recovered in checkDocumentationHTML: %v \n; diff = %s", r, cmp.Diff(want, got))
 		}
 	}()
-	for i := 0; i < len(want.LegacyPackages); i++ {
-		wantHTML := want.LegacyPackages[i].DocumentationHTML
-		gotHTML := got.LegacyPackages[i].DocumentationHTML
-		if len(wantHTML.String()) != 0 && !strings.Contains(gotHTML.String(), wantHTML.String()) {
-			t.Errorf("documentation for got.Module.LegacyPackages[%d].DocumentationHTML does not contain wanted documentation substring:\n want (substring): %q\n got: %q\n", i, wantHTML, gotHTML)
+
+	checkHTML := func(msg string, i int, hGot, hWant safehtml.HTML) {
+		t.Helper()
+		got := hGot.String()
+		// Treat the wanted DocumentationHTML as a set of substrings to look for, separated by ~.
+		for _, want := range strings.Split(hWant.String(), "~") {
+			want = strings.TrimSpace(want)
+			if !strings.Contains(got, want) {
+				t.Errorf("doc for %s[%d]:\nmissing %q; got\n%q", msg, i, want, got)
+			}
 		}
+	}
+
+	for i := 0; i < len(want.LegacyPackages); i++ {
+		checkHTML("LegacyPackages", i, got.LegacyPackages[i].DocumentationHTML, want.LegacyPackages[i].DocumentationHTML)
 	}
 	for i := 0; i < len(want.Directories); i++ {
 		if want.Directories[i].Package == nil {
 			continue
 		}
-		wantHTML := want.Directories[i].Package.Documentation.HTML
-		gotHTML := got.Directories[i].Package.Documentation.HTML
-		if len(wantHTML.String()) != 0 && !strings.Contains(gotHTML.String(), wantHTML.String()) {
-			t.Errorf("documentation for got.Module.Directories[%d].DocumentationHTML does not contain wanted documentation substring:\n want (substring): %q\n got: %q\n", i, wantHTML, gotHTML)
-		}
+		checkHTML("Directories", i, got.Directories[i].Package.Documentation.HTML, want.Directories[i].Package.Documentation.HTML)
 	}
 }
