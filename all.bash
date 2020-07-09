@@ -92,6 +92,11 @@ check_unparam() {
   runcmd unparam ./...
 }
 
+# check_vet runs go vet on source files.
+check_vet() {
+  runcmd go vet -all ./...
+}
+
 # check_staticcheck runs staticcheck on source files.
 check_staticcheck() {
   ensure_go_binary honnef.co/go/tools/cmd/staticcheck
@@ -134,6 +139,7 @@ run_prettier() {
 standard_linters() {
   check_headers
   check_bad_migrations
+  check_vet
   check_staticcheck
   check_misspell
   check_unparam
