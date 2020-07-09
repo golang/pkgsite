@@ -40,6 +40,7 @@ type Server struct {
 	devMode              bool
 	errorPage            []byte
 	appVersionLabel      string
+	googleTagManagerID   string
 
 	mu        sync.Mutex // Protects all fields below
 	templates map[string]*template.Template
@@ -55,6 +56,7 @@ type ServerConfig struct {
 	ThirdPartyPath       string
 	DevMode              bool
 	AppVersionLabel      string
+	GoogleTagManagerID   string
 }
 
 // NewServer creates a new Server for the given database and template directory.
@@ -76,6 +78,7 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 		templates:            ts,
 		taskIDChangeInterval: scfg.TaskIDChangeInterval,
 		appVersionLabel:      scfg.AppVersionLabel,
+		googleTagManagerID:   scfg.GoogleTagManagerID,
 	}
 	errorPageBytes, err := s.renderErrorPage(context.Background(), http.StatusInternalServerError, "error.tmpl", nil)
 	if err != nil {
@@ -185,12 +188,13 @@ func (s *Server) staticPageHandler(templateName, title string) http.HandlerFunc 
 
 // basePage contains fields shared by all pages when rendering templates.
 type basePage struct {
-	HTMLTitle       string
-	Query           string
-	Experiments     *experiment.Set
-	GodocURL        string
-	DevMode         bool
-	AppVersionLabel string
+	HTMLTitle          string
+	Query              string
+	Experiments        *experiment.Set
+	GodocURL           string
+	DevMode            bool
+	AppVersionLabel    string
+	GoogleTagManagerID string
 }
 
 // licensePolicyPage is used to generate the static license policy page.
@@ -215,12 +219,13 @@ func (s *Server) licensePolicyHandler() http.HandlerFunc {
 // newBasePage returns a base page for the given request and title.
 func (s *Server) newBasePage(r *http.Request, title string) basePage {
 	return basePage{
-		HTMLTitle:       title,
-		Query:           searchQuery(r),
-		Experiments:     experiment.FromContext(r.Context()),
-		GodocURL:        middleware.GodocURLPlaceholder,
-		DevMode:         s.devMode,
-		AppVersionLabel: s.appVersionLabel,
+		HTMLTitle:          title,
+		Query:              searchQuery(r),
+		Experiments:        experiment.FromContext(r.Context()),
+		GodocURL:           middleware.GodocURLPlaceholder,
+		DevMode:            s.devMode,
+		AppVersionLabel:    s.appVersionLabel,
+		GoogleTagManagerID: s.googleTagManagerID,
 	}
 }
 

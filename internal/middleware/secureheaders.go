@@ -11,19 +11,19 @@ import (
 )
 
 var scriptHashes = []string{
-	// From content/static/html/pages/base.tmpl
+	// From content/static/html/base.tmpl
+	"'sha256-Ajmr6RIM6VV5w/AraBIyO4/XRyuqJlFVukc7TL6feog='",
 	"'sha256-d6W7MwuGWbguTHRzQhf5QN1jXmNo9Ao218saZkWLWZI='",
-	"'sha256-CCu0fuIQFBHSCEpfR6ZRzzcczJIS/VGMGrez8LR49WY='",
 	"'sha256-qPGTOKPn+niRiNKQIEX0Ktwuj+D+iPQWIxnlhPicw58='",
 	// From content/static/html/pages/details.tmpl
 	"'sha256-s16e7aT7Gsajq5UH1DbaEFEnNx2VjvS5Xixcxwm4+F8='",
+	// From content/static/html/pages/fetch.tmpl
+	"'sha256-1J6DWwTWs/QDZ2+ORDuUQCibmFnXXaNXYOtc0Jk6VU4='",
 	// From content/static/html/pages/pkg_doc.tmpl
 	"'sha256-gBtJYPzfgw/0FIACORDIAD08i5rxTQ5J0rhIU656A2U='",
 	"'sha256-91GG/273d2LdEV//lJMbTodGN501OuKZKYYphui+wDQ='",
 	// From content/static/html/worker/index.tmpl
 	"'sha256-5EpitFYSzGNQNUsqi5gAaLqnI3ZWfcRo/6gLTO0oCoE='",
-	// From content/static/html/pages/fetch.tmpl
-	"'sha256-1J6DWwTWs/QDZ2+ORDuUQCibmFnXXaNXYOtc0Jk6VU4='",
 }
 
 // SecureHeaders adds a content-security-policy and other security-related

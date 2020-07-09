@@ -76,6 +76,10 @@ type Config struct {
 
 	GaeEnv string
 
+	// GoogleTagManagerID is the ID used for GoogleTagManager. It has the
+	// structure GTM-XXXX.
+	GoogleTagManagerID string
+
 	// AppMonitoredResource is the resource for the current GAE app.
 	// See https://cloud.google.com/monitoring/api/resources#tag_gae_app for more
 	// details:
@@ -221,12 +225,13 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		Port:      os.Getenv("PORT"),
 		DebugPort: os.Getenv("DEBUG_PORT"),
 		// Resolve AppEngine identifiers
-		ProjectID:    os.Getenv("GOOGLE_CLOUD_PROJECT"),
-		ServiceID:    os.Getenv("GAE_SERVICE"),
-		VersionID:    os.Getenv("GAE_VERSION"),
-		InstanceID:   os.Getenv("GAE_INSTANCE"),
-		GaeEnv:       os.Getenv("GAE_ENV"),
-		QueueService: GetEnv("GO_DISCOVERY_QUEUE_SERVICE", os.Getenv("GAE_SERVICE")),
+		ProjectID:          os.Getenv("GOOGLE_CLOUD_PROJECT"),
+		ServiceID:          os.Getenv("GAE_SERVICE"),
+		VersionID:          os.Getenv("GAE_VERSION"),
+		InstanceID:         os.Getenv("GAE_INSTANCE"),
+		GaeEnv:             os.Getenv("GAE_ENV"),
+		GoogleTagManagerID: os.Getenv("GO_DISCOVERY_GOOGLE_TAG_MANAGER_ID"),
+		QueueService:       GetEnv("GO_DISCOVERY_QUEUE_SERVICE", os.Getenv("GAE_SERVICE")),
 		// LocationID is essentially hard-coded until we figure out a good way to
 		// determine it programmatically, but we check an environment variable in
 		// case it needs to be overridden.
