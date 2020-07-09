@@ -138,7 +138,6 @@ standard_linters() {
   check_misspell
   check_unparam
   check_script_hashes
-  run_prettier
 }
 
 usage() {
@@ -168,6 +167,7 @@ main() {
       ;;
     "")
       standard_linters
+      run_prettier
       runcmd go mod tidy
       runcmd env GO_DISCOVERY_TESTDB=true go test ./...
       # To test internal/secrets, set GO_DISCOVERY_SECRETS_BUCKET and GO_DISCOVERY_KMS_KEY_NAME
