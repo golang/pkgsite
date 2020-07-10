@@ -150,7 +150,7 @@ func TestFetchDirectoryDetails(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			mi := sample.ModuleInfoReleaseType(tc.modulePath, tc.version)
-			got, err := fetchDirectoryDetails(ctx, testDB,
+			got, err := legacyFetchDirectoryDetails(ctx, testDB,
 				tc.dirPath, mi, sample.LicenseMetadata, tc.includeDirPath)
 			if err != nil {
 				t.Fatal(err)
@@ -200,7 +200,7 @@ func TestFetchDirectoryDetailsInvalidArguments(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			mi := sample.ModuleInfoReleaseType(tc.modulePath, tc.version)
-			got, err := fetchDirectoryDetails(ctx, testDB,
+			got, err := legacyFetchDirectoryDetails(ctx, testDB,
 				tc.dirPath, mi, sample.LicenseMetadata, tc.includeDirPath)
 			if !errors.Is(err, derrors.InvalidArgument) {
 				t.Fatalf("expected err; got = \n%+v, %v", got, err)

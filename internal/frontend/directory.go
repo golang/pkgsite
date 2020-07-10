@@ -52,7 +52,7 @@ func (s *Server) legacyServeDirectoryPage(ctx context.Context, w http.ResponseWr
 		header.URL = constructDirectoryURL(dbDir.Path, dbDir.ModulePath, internal.LatestVersion)
 	}
 
-	details, err := constructDetailsForDirectory(r, tab, dbDir, licenses)
+	details, err := legacyFetchDetailsForDirectory(r, tab, dbDir, licenses)
 	if err != nil {
 		return err
 	}
@@ -71,8 +71,8 @@ func (s *Server) legacyServeDirectoryPage(ctx context.Context, w http.ResponseWr
 	return nil
 }
 
-// fetchDirectoryDetails fetches data for the directory specified by path and
-// version from the database and returns a LegacyDirectory.
+// legacyFetchDirectoryDetails fetches data for the directory specified by path and
+// version from the database and returns a Directory.
 //
 // includeDirPath indicates whether a package is included if its import path is
 // the same as dirPath.
@@ -81,9 +81,9 @@ func (s *Server) legacyServeDirectoryPage(ctx context.Context, w http.ResponseWr
 // the module path. However, on the package and directory view's
 // "Subdirectories" tab, we do not want to include packages whose import paths
 // are the same as the dirPath.
-func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, dirPath string, mi *internal.ModuleInfo,
+func legacyFetchDirectoryDetails(ctx context.Context, ds internal.DataSource, dirPath string, mi *internal.ModuleInfo,
 	licmetas []*licenses.Metadata, includeDirPath bool) (_ *Directory, err error) {
-	defer derrors.Wrap(&err, "s.ds.fetchDirectoryDetails(%q, %q, %q, %v)", dirPath, mi.ModulePath, mi.Version, licmetas)
+	defer derrors.Wrap(&err, "legacyfetchDirectoryDetails(%q, %q, %q, %v)", dirPath, mi.ModulePath, mi.Version, licmetas)
 
 	if includeDirPath && dirPath != mi.ModulePath && dirPath != stdlib.ModulePath {
 		return nil, fmt.Errorf("includeDirPath can only be set to true if dirPath = modulePath: %w", derrors.InvalidArgument)

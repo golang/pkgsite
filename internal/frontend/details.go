@@ -124,9 +124,9 @@ func (s *Server) serveDetailsPage(w http.ResponseWriter, r *http.Request, info *
 		if vdir.Readme != nil {
 			readme = &internal.Readme{Filepath: vdir.Readme.Filepath, Contents: vdir.Readme.Contents}
 		}
-		return s.serveModulePageWithModule(ctx, w, r, &vdir.ModuleInfo, readme, info.requestedVersion)
+		return s.serveModulePage(ctx, w, r, &vdir.ModuleInfo, readme, info.requestedVersion)
 	case vdir.Package != nil:
-		return s.servePackagePageWithVersionedDirectory(ctx, w, r, vdir, info.requestedVersion)
+		return s.servePackagePage(ctx, w, r, vdir, info.requestedVersion)
 	default:
 		// TODO(https://golang.org/issue/39629): add function to get
 		// subdirectories from the paths table, and deprecate LegacyGetDirectory.

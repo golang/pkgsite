@@ -140,16 +140,16 @@ func init() {
 	}
 }
 
-// fetchDetailsForPackage returns tab details by delegating to the correct detail
+// legacyFetchDetailsForPackage returns tab details by delegating to the correct detail
 // handler.
-func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds internal.DataSource, pkg *internal.LegacyVersionedPackage) (interface{}, error) {
+func legacyFetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds internal.DataSource, pkg *internal.LegacyVersionedPackage) (interface{}, error) {
 	switch tab {
 	case "doc":
-		return fetchDocumentationDetails(pkg), nil
+		return legacyFetchDocumentationDetails(pkg), nil
 	case "versions":
 		return fetchPackageVersionsDetails(ctx, ds, pkg.Path, pkg.V1Path, pkg.ModulePath)
 	case "subdirectories":
-		return fetchDirectoryDetails(ctx, ds, pkg.Path, &pkg.ModuleInfo, pkg.Licenses, false)
+		return legacyFetchDirectoryDetails(ctx, ds, pkg.Path, &pkg.ModuleInfo, pkg.Licenses, false)
 	case "imports":
 		return fetchImportsDetails(ctx, ds, pkg.Path, pkg.ModulePath, pkg.Version)
 	case "importedby":
@@ -160,24 +160,26 @@ func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string, ds
 		}
 		return fetchImportedByDetails(ctx, db, pkg.Path, pkg.ModulePath)
 	case "licenses":
-		return fetchPackageLicensesDetails(ctx, ds, pkg.Path, pkg.ModulePath, pkg.Version)
+		return legacyFetchPackageLicensesDetails(ctx, ds, pkg.Path, pkg.ModulePath, pkg.Version)
 	case "overview":
-		return fetchPackageOverviewDetails(ctx, pkg, urlIsVersioned(r.URL))
+		return legacyFetchPackageOverviewDetails(ctx, pkg, urlIsVersioned(r.URL))
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
 
-// fetchDetailsForVersionedDirectory returns tab details by delegating to the correct detail
+// fetchDetailsForPackage returns tab details by delegating to the correct detail
 // handler.
-func fetchDetailsForVersionedDirectory(ctx context.Context, r *http.Request, tab string,
+func fetchDetailsForPackage(ctx context.Context, r *http.Request, tab string,
 	ds internal.DataSource, vdir *internal.VersionedDirectory) (interface{}, error) {
 	switch tab {
 	case "doc":
-		return fetchDocumentationDetailsNew(vdir.Package.Documentation), nil
+		return fetchDocumentationDetails(vdir.Package.Documentation), nil
+	case "overview":
+		return fetchPackageOverviewDetails(ctx, vdir, urlIsVersioned(r.URL))
+	case "subdirectories":
+		return legacyFetchDirectoryDetails(ctx, ds, vdir.Path, &vdir.ModuleInfo, vdir.Licenses, false)
 	case "versions":
 		return fetchPackageVersionsDetails(ctx, ds, vdir.Path, vdir.V1Path, vdir.ModulePath)
-	case "subdirectories":
-		return fetchDirectoryDetails(ctx, ds, vdir.Path, &vdir.ModuleInfo, vdir.Licenses, false)
 	case "imports":
 		return fetchImportsDetails(ctx, ds, vdir.Path, vdir.ModulePath, vdir.Version)
 	case "importedby":
@@ -188,9 +190,7 @@ func fetchDetailsForVersionedDirectory(ctx context.Context, r *http.Request, tab
 		}
 		return fetchImportedByDetails(ctx, db, vdir.Path, vdir.ModulePath)
 	case "licenses":
-		return fetchPackageLicensesDetails(ctx, ds, vdir.Path, vdir.ModulePath, vdir.Version)
-	case "overview":
-		return fetchPackageOverviewDetailsNew(ctx, vdir, urlIsVersioned(r.URL))
+		return legacyFetchPackageLicensesDetails(ctx, ds, vdir.Path, vdir.ModulePath, vdir.Version)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
@@ -204,7 +204,7 @@ func urlIsVersioned(url *url.URL) bool {
 func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds internal.DataSource, mi *internal.ModuleInfo, licenses []*licenses.License, readme *internal.Readme) (interface{}, error) {
 	switch tab {
 	case "packages":
-		return fetchDirectoryDetails(ctx, ds, mi.ModulePath, mi, licensesToMetadatas(licenses), true)
+		return legacyFetchDirectoryDetails(ctx, ds, mi.ModulePath, mi, licensesToMetadatas(licenses), true)
 	case "licenses":
 		return &LicensesDetails{Licenses: transformLicenses(mi.ModulePath, mi.Version, licenses)}, nil
 	case "versions":
@@ -215,9 +215,9 @@ func fetchDetailsForModule(ctx context.Context, r *http.Request, tab string, ds 
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
 
-// constructDetailsForDirectory returns tab details by delegating to the correct
+// legacyFetchDetailsForDirectory returns tab details by delegating to the correct
 // detail handler.
-func constructDetailsForDirectory(r *http.Request, tab string, dir *internal.LegacyDirectory, licenses []*licenses.License) (interface{}, error) {
+func legacyFetchDetailsForDirectory(r *http.Request, tab string, dir *internal.LegacyDirectory, licenses []*licenses.License) (interface{}, error) {
 	switch tab {
 	case "overview":
 		readme := &internal.Readme{Filepath: dir.LegacyReadmeFilePath, Contents: dir.LegacyReadmeContents}

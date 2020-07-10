@@ -32,7 +32,7 @@ func (s *Server) legacyServeModulePage(w http.ResponseWriter, r *http.Request, m
 	mi, err := s.ds.LegacyGetModuleInfo(ctx, modulePath, resolvedVersion)
 	if err == nil {
 		readme := &internal.Readme{Filepath: mi.LegacyReadmeFilePath, Contents: mi.LegacyReadmeContents}
-		return s.serveModulePageWithModule(ctx, w, r, &mi.ModuleInfo, readme, requestedVersion)
+		return s.serveModulePage(ctx, w, r, &mi.ModuleInfo, readme, requestedVersion)
 	}
 	if !errors.Is(err, derrors.NotFound) {
 		return err
@@ -49,7 +49,7 @@ func (s *Server) legacyServeModulePage(w http.ResponseWriter, r *http.Request, m
 	return pathNotFoundError(ctx, "module", modulePath, requestedVersion)
 }
 
-func (s *Server) serveModulePageWithModule(ctx context.Context, w http.ResponseWriter, r *http.Request,
+func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *http.Request,
 	mi *internal.ModuleInfo, readme *internal.Readme, requestedVersion string) error {
 	// TODO(https://github.com/golang/go/issues/40027): read licenses using
 	// GetLicenses, instead of LegacyGetModuleLicenses.

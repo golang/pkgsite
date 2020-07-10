@@ -65,8 +65,9 @@ func constructOverviewDetails(ctx context.Context, mi *internal.ModuleInfo, read
 	return overview, nil
 }
 
-// fetchPackageOverviewDetails uses data for the given package to return an OverviewDetails.
-func fetchPackageOverviewDetails(ctx context.Context, pkg *internal.LegacyVersionedPackage, versionedLinks bool) (*OverviewDetails, error) {
+// legacyFetchPackageOverviewDetails uses data for the given package to return
+// an OverviewDetails.
+func legacyFetchPackageOverviewDetails(ctx context.Context, pkg *internal.LegacyVersionedPackage, versionedLinks bool) (*OverviewDetails, error) {
 	od, err := constructOverviewDetails(ctx, &pkg.ModuleInfo, &internal.Readme{Filepath: pkg.LegacyReadmeFilePath, Contents: pkg.LegacyReadmeContents},
 		pkg.LegacyPackage.IsRedistributable, versionedLinks)
 	if err != nil {
@@ -80,7 +81,7 @@ func fetchPackageOverviewDetails(ctx context.Context, pkg *internal.LegacyVersio
 }
 
 // fetchPackageOverviewDetailsNew uses data for the given versioned directory to return an OverviewDetails.
-func fetchPackageOverviewDetailsNew(ctx context.Context, vdir *internal.VersionedDirectory, versionedLinks bool) (*OverviewDetails, error) {
+func fetchPackageOverviewDetails(ctx context.Context, vdir *internal.VersionedDirectory, versionedLinks bool) (*OverviewDetails, error) {
 	var lv string
 	if versionedLinks {
 		lv = linkVersion(vdir.Version, vdir.ModulePath)

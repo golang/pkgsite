@@ -141,7 +141,7 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := fetchPackageOverviewDetailsNew(context.Background(), test.vdir, test.versionedLinks)
+			got, err := fetchPackageOverviewDetails(context.Background(), test.vdir, test.versionedLinks)
 			if err != nil {
 				t.Fatal(err)
 			}

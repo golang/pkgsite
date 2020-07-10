@@ -113,7 +113,7 @@ func (s *Server) legacyServePackagePageWithPackage(ctx context.Context, w http.R
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = fetchDetailsForPackage(ctx, r, tab, s.ds, pkg)
+		details, err = legacyFetchDetailsForPackage(ctx, r, tab, s.ds, pkg)
 		if err != nil {
 			return fmt.Errorf("fetching page for %q: %v", tab, err)
 		}
@@ -156,7 +156,7 @@ func (s *Server) stdlibPathForShortcut(ctx context.Context, shortcut string) (pa
 	return "", nil
 }
 
-func (s *Server) servePackagePageWithVersionedDirectory(ctx context.Context,
+func (s *Server) servePackagePage(ctx context.Context,
 	w http.ResponseWriter, r *http.Request, vdir *internal.VersionedDirectory, requestedVersion string) error {
 	pkgHeader, err := createPackage(&internal.PackageMeta{
 		DirectoryMeta: internal.DirectoryMeta{
@@ -188,7 +188,7 @@ func (s *Server) servePackagePageWithVersionedDirectory(ctx context.Context,
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = fetchDetailsForVersionedDirectory(ctx, r, tab, s.ds, vdir)
+		details, err = fetchDetailsForPackage(ctx, r, tab, s.ds, vdir)
 		if err != nil {
 			return fmt.Errorf("fetching page for %q: %v", tab, err)
 		}
