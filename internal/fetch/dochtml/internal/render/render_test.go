@@ -18,13 +18,13 @@ import (
 )
 
 var (
-	pkgIO   = mustLoadPackage("io")
-	pkgOS   = mustLoadPackage("os")
-	pkgTime = mustLoadPackage("time")
-	pkgTar  = mustLoadPackage("archive/tar")
+	pkgIO, _          = mustLoadPackage("io")
+	pkgOS, _          = mustLoadPackage("os")
+	pkgTime, fsetTime = mustLoadPackage("time")
+	pkgTar, _         = mustLoadPackage("archive/tar")
 )
 
-func mustLoadPackage(path string) *doc.Package {
+func mustLoadPackage(path string) (*doc.Package, *token.FileSet) {
 	// simpleImporter is used by ast.NewPackage.
 	simpleImporter := func(imports map[string]*ast.Object, pkgPath string) (*ast.Object, error) {
 		pkg := imports[pkgPath]
@@ -48,7 +48,7 @@ func mustLoadPackage(path string) *doc.Package {
 	astFile, _ := parser.ParseFile(fset, srcName, code, parser.ParseComments)
 	pkgFiles[srcName] = astFile
 	astPkg, _ := ast.NewPackage(fset, pkgFiles, simpleImporter, nil)
-	return doc.New(astPkg, path, 0)
+	return doc.New(astPkg, path, 0), fset
 }
 
 func TestDocToBlocks(t *testing.T) {

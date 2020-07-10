@@ -5,12 +5,15 @@
 package render
 
 import (
+	"go/ast"
+	"html/template"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/testconversions"
+	"golang.org/x/pkgsite/internal/fetch/internal/doc"
 )
 
 func TestDocHTML(t *testing.T) {
@@ -88,6 +91,109 @@ TLSUnique contains the tls-unique channel binding value (see RFC
 			}
 		})
 	}
+}
+
+func TestDeclHTML(t *testing.T) {
+	for _, test := range []struct {
+		name   string
+		symbol string
+		want   string
+	}{
+		{
+			name:   "const",
+			symbol: "Nanosecond",
+			want: `<pre>
+const (
+<span id="Nanosecond" data-kind="constant"></span>	Nanosecond  <a href="#Duration">Duration</a> = 1
+<span id="Microsecond" data-kind="constant"></span>	Microsecond          = 1000 * <a href="#Nanosecond">Nanosecond</a>
+<span id="Millisecond" data-kind="constant"></span>	Millisecond          = 1000 * <a href="#Microsecond">Microsecond</a>
+<span id="Second" data-kind="constant"></span>	Second               = 1000 * <a href="#Millisecond">Millisecond</a>
+<span id="Minute" data-kind="constant"></span>	Minute               = 60 * <a href="#Second">Second</a>
+<span id="Hour" data-kind="constant"></span>	Hour                 = 60 * <a href="#Minute">Minute</a>
+)</pre>
+`,
+		},
+		{
+			name:   "var",
+			symbol: "UTC",
+			want: `<pre>
+<span id="UTC" data-kind="variable"></span>var UTC *<a href="#Location">Location</a> = &amp;utcLoc</pre>
+`,
+		},
+		{
+			name:   "type",
+			symbol: "Ticker",
+			want: `<pre>
+type Ticker struct {
+<span id="Ticker.C" data-kind="field"></span>	C &lt;-chan <a href="#Time">Time</a> <span class="comment">// The channel on which the ticks are delivered.</span>
+	<span class="comment">// contains filtered or unexported fields</span>
+}</pre>
+`,
+		},
+		{
+			name:   "func",
+			symbol: "Sleep",
+			want: `<pre>
+func Sleep(d <a href="#Duration">Duration</a>)</pre>
+`,
+		},
+		{
+			name:   "method",
+			symbol: "After",
+			want: `<pre>
+func After(d <a href="#Duration">Duration</a>) &lt;-chan <a href="#Time">Time</a></pre>
+`,
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			decl := declForName(t, pkgTime, test.symbol)
+			r := New(fsetTime, pkgTime, nil)
+			got := r.declHTML("", decl).Decl
+			want := template.HTML(test.want)
+			if diff := cmp.Diff(want, got); diff != "" {
+				t.Errorf("mismatch (-want +got)\n%s", diff)
+			}
+		})
+	}
+}
+
+func declForName(t *testing.T, pkg *doc.Package, symbol string) ast.Decl {
+
+	inVals := func(vals []*doc.Value) ast.Decl {
+		for _, v := range vals {
+			for _, n := range v.Names {
+				if n == symbol {
+					return v.Decl
+				}
+			}
+		}
+		return nil
+	}
+
+	if d := inVals(pkg.Consts); d != nil {
+		return d
+	}
+	if d := inVals(pkg.Vars); d != nil {
+		return d
+	}
+	for _, t := range pkg.Types {
+		if t.Name == symbol {
+			return t.Decl
+		}
+		if d := inVals(t.Consts); d != nil {
+			return d
+		}
+		if d := inVals(t.Vars); d != nil {
+			return d
+		}
+	}
+	for _, f := range pkg.Funcs {
+		if f.Name == symbol {
+			return f.Decl
+		}
+	}
+	t.Fatalf("no symbol %q in package %s", symbol, pkg.Name)
+	return nil
 }
 
 func TestCodeHTML(t *testing.T) {
