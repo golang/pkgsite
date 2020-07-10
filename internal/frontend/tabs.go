@@ -203,7 +203,7 @@ func fetchDetailsForModule(r *http.Request, tab string, ds internal.DataSource, 
 		if isActiveUseDirectories(ctx) {
 			vdir := &internal.VersionedDirectory{
 				ModuleInfo: *mi,
-				DirectoryNew: internal.DirectoryNew{
+				Directory: internal.Directory{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:              mi.ModulePath,
 						V1Path:            mi.SeriesPath(),

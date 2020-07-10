@@ -135,7 +135,7 @@ func effectiveName(pkgPath, pkgName string) string {
 }
 
 // effectiveNameNew returns either the command name or package name.
-func effectiveNameNew(pkg *internal.PackageNew) string {
+func effectiveNameNew(pkg *internal.Package) string {
 	if pkg.Name != "main" {
 		return pkg.Name
 	}
@@ -162,7 +162,7 @@ func packageHTMLTitle(pkg *internal.LegacyPackage) string {
 // packageHTMLTitleNew constructs the details page title for pkg.
 // The string will appear in the <title> element (and thus
 // the browser tab).
-func packageHTMLTitleNew(pkg *internal.PackageNew) string {
+func packageHTMLTitleNew(pkg *internal.Package) string {
 	if pkg.Name != "main" {
 		return pkg.Name + " package"
 	}
@@ -180,7 +180,7 @@ func packageTitle(pkg *internal.LegacyPackage) string {
 
 // packageTitleNew returns the package title as it will
 // appear in the heading at the top of the page.
-func packageTitleNew(pkg *internal.PackageNew) string {
+func packageTitleNew(pkg *internal.Package) string {
 	if pkg.Name != "main" {
 		return "package " + pkg.Name
 	}

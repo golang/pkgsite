@@ -114,7 +114,7 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) (err error
 func (s *Server) serveDetailsPage(w http.ResponseWriter, r *http.Request, info *urlPathInfo) (err error) {
 	defer derrors.Wrap(&err, "serveDetailsPage(w, r, %v)", info)
 	ctx := r.Context()
-	vdir, err := s.ds.GetDirectoryNew(ctx, info.fullPath, info.modulePath, info.resolvedVersion)
+	vdir, err := s.ds.GetDirectory(ctx, info.fullPath, info.modulePath, info.resolvedVersion)
 	if err != nil {
 		return err
 	}

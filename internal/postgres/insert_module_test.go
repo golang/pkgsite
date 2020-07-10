@@ -109,7 +109,7 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 	}
 
 	for _, dir := range want.Directories {
-		got, err := testDB.GetDirectoryNew(ctx, dir.Path, want.ModulePath, want.Version)
+		got, err := testDB.GetDirectory(ctx, dir.Path, want.ModulePath, want.Version)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -120,8 +120,8 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 			Contents: sample.ReadmeContents,
 		}
 		wantd := internal.VersionedDirectory{
-			DirectoryNew: *dir,
-			ModuleInfo:   want.ModuleInfo,
+			Directory:  *dir,
+			ModuleInfo: want.ModuleInfo,
 		}
 		opts := cmp.Options{
 			cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeFilePath"),
@@ -130,7 +130,7 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 			cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
 		}
 		if diff := cmp.Diff(wantd, *got, opts); diff != "" {
-			t.Errorf("testDB.getDirectoryNew(%q, %q) mismatch (-want +got):\n%s", dir.Path, want.Version, diff)
+			t.Errorf("testDB.getDirectory(%q, %q) mismatch (-want +got):\n%s", dir.Path, want.Version, diff)
 		}
 	}
 }

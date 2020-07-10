@@ -92,7 +92,7 @@ func fetchPackageOverviewDetails(ctx context.Context, vdir *internal.VersionedDi
 		ModulePath:       vdir.ModulePath,
 		ModuleURL:        constructModuleURL(vdir.ModulePath, lv),
 		RepositoryURL:    vdir.SourceInfo.RepoURL(),
-		Redistributable:  vdir.DirectoryNew.IsRedistributable,
+		Redistributable:  vdir.Directory.IsRedistributable,
 		PackageSourceURL: vdir.SourceInfo.DirectoryURL(packageSubdir(vdir.Path, vdir.ModulePath)),
 	}
 	if overview.Redistributable && vdir.Readme != nil {

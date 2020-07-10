@@ -431,7 +431,7 @@ func TestLegacyGetDirectory(t *testing.T) {
 	}
 }
 
-func TestGetDirectoryNew(t *testing.T) {
+func TestGetDirectory(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
@@ -454,10 +454,10 @@ func TestGetDirectoryNew(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	newVdir := func(path, modulePath, version string, readme *internal.Readme, pkg *internal.PackageNew) *internal.VersionedDirectory {
+	newVdir := func(path, modulePath, version string, readme *internal.Readme, pkg *internal.Package) *internal.VersionedDirectory {
 		return &internal.VersionedDirectory{
 			ModuleInfo: *sample.ModuleInfo(modulePath, version),
-			DirectoryNew: internal.DirectoryNew{
+			Directory: internal.Directory{
 				DirectoryMeta: internal.DirectoryMeta{
 					Path:              path,
 					V1Path:            path,
@@ -470,8 +470,8 @@ func TestGetDirectoryNew(t *testing.T) {
 		}
 	}
 
-	newPackage := func(name, path string) *internal.PackageNew {
-		return &internal.PackageNew{
+	newPackage := func(name, path string) *internal.Package {
+		return &internal.Package{
 			Name: name,
 			Path: path,
 			Documentation: &internal.Documentation{
@@ -567,7 +567,7 @@ func TestGetDirectoryNew(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := testDB.GetDirectoryNew(ctx, tc.dirPath, tc.modulePath, tc.version)
+			got, err := testDB.GetDirectory(ctx, tc.dirPath, tc.modulePath, tc.version)
 			if tc.wantNotFoundErr {
 				if !errors.Is(err, derrors.NotFound) {
 					t.Fatalf("want %v; got = \n%+v, %v", derrors.NotFound, got, err)
@@ -595,7 +595,7 @@ func TestGetDirectoryNew(t *testing.T) {
 	}
 }
 
-func findDirectory(m *internal.Module, path string) *internal.DirectoryNew {
+func findDirectory(m *internal.Module, path string) *internal.Directory {
 	for _, d := range m.Directories {
 		if d.Path == path {
 			return d

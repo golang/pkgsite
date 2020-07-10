@@ -15,9 +15,9 @@ type DataSource interface {
 	// See the internal/postgres package for further documentation of these
 	// methods, particularly as they pertain to the main postgres implementation.
 
-	// GetDirectoryNew returns information about a directory, which may also be a module and/or package.
+	// GetDirectory returns information about a directory, which may also be a module and/or package.
 	// The module and version must both be known.
-	GetDirectoryNew(ctx context.Context, dirPath, modulePath, version string) (_ *VersionedDirectory, err error)
+	GetDirectory(ctx context.Context, dirPath, modulePath, version string) (_ *VersionedDirectory, err error)
 	// GetImports returns a slice of import paths imported by the package
 	// specified by path and version.
 	GetImports(ctx context.Context, pkgPath, modulePath, version string) ([]string, error)

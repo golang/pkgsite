@@ -68,7 +68,7 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 		{
 			name: "redistributable",
 			vdir: &internal.VersionedDirectory{
-				DirectoryNew: internal.DirectoryNew{
+				Directory: internal.Directory{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:              "github.com/u/m/p",
 						IsRedistributable: true,
@@ -94,7 +94,7 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 		{
 			name: "unversioned",
 			vdir: &internal.VersionedDirectory{
-				DirectoryNew: internal.DirectoryNew{
+				Directory: internal.Directory{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:              "github.com/u/m/p",
 						IsRedistributable: true,
@@ -120,7 +120,7 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 		{
 			name: "non-redistributable",
 			vdir: &internal.VersionedDirectory{
-				DirectoryNew: internal.DirectoryNew{
+				Directory: internal.Directory{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:              "github.com/u/m/p",
 						IsRedistributable: false,

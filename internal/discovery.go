@@ -99,15 +99,15 @@ type Module struct {
 	// Licenses holds all licenses within this module version, including those
 	// that may be contained in nested subdirectories.
 	Licenses    []*licenses.License
-	Directories []*DirectoryNew
+	Directories []*Directory
 
 	LegacyPackages []*LegacyPackage
 }
 
-// VersionedDirectory is a DirectoryNew along with its corresponding module
+// VersionedDirectory is a Directory along with its corresponding module
 // information.
 type VersionedDirectory struct {
-	DirectoryNew
+	Directory
 	ModuleInfo
 }
 
@@ -119,12 +119,12 @@ type DirectoryMeta struct {
 	Licenses          []*licenses.Metadata // metadata of applicable licenses
 }
 
-// DirectoryNew represents a directory in a module version, and the contents of that directory.
+// Directory represents a directory in a module version, and the contents of that directory.
 // It will replace LegacyDirectory once everything has been migrated.
-type DirectoryNew struct {
+type Directory struct {
 	DirectoryMeta
 	Readme  *Readme
-	Package *PackageNew
+	Package *Package
 }
 
 // PackageMeta represents the metadata of a package in a module version.
@@ -149,10 +149,10 @@ func PackageMetaFromLegacyPackage(pkg *LegacyPackage) *PackageMeta {
 	}
 }
 
-// PackageNew is a group of one or more Go source files with the same package
-// header. A PackageNew is part of a directory.
+// Package is a group of one or more Go source files with the same package
+// header. A Package is part of a directory.
 // It will replace LegacyPackage once everything has been migrated.
-type PackageNew struct {
+type Package struct {
 	Name          string
 	Path          string
 	Documentation *Documentation

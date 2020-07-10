@@ -157,10 +157,10 @@ func TestFetchDirectoryDetails(t *testing.T) {
 				err error
 			)
 			t.Run("use-directories", func(t *testing.T) {
-				d := sample.DirectoryNewEmpty(tc.dirPath)
+				d := sample.DirectoryEmpty(tc.dirPath)
 				vdir := &internal.VersionedDirectory{
-					ModuleInfo:   *mi,
-					DirectoryNew: *d,
+					ModuleInfo: *mi,
+					Directory:  *d,
 				}
 				got, err = fetchDirectoryDetails(ctx, testDB, vdir, tc.includeDirPath)
 			})

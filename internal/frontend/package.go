@@ -175,7 +175,7 @@ func (s *Server) servePackagePage(ctx context.Context,
 	settings, ok := packageTabLookup[tab]
 	if !ok {
 		var tab string
-		if vdir.DirectoryNew.IsRedistributable {
+		if vdir.Directory.IsRedistributable {
 			tab = "doc"
 		} else {
 			tab = "overview"
@@ -183,7 +183,7 @@ func (s *Server) servePackagePage(ctx context.Context,
 		http.Redirect(w, r, fmt.Sprintf(r.URL.Path+"?tab=%s", tab), http.StatusFound)
 		return nil
 	}
-	canShowDetails := vdir.DirectoryNew.IsRedistributable || settings.AlwaysShowDetails
+	canShowDetails := vdir.Directory.IsRedistributable || settings.AlwaysShowDetails
 
 	var details interface{}
 	if canShowDetails {

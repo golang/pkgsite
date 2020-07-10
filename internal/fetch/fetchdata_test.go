@@ -41,7 +41,7 @@ var moduleOnePackage = &testModule{
 				LegacyReadmeFilePath: "README.md",
 				LegacyReadmeContents: "THIS IS A README",
 			},
-			Directories: []*internal.DirectoryNew{
+			Directories: []*internal.Directory{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:   "github.com/basic",
@@ -57,7 +57,7 @@ var moduleOnePackage = &testModule{
 						Path:   "github.com/basic/foo",
 						V1Path: "github.com/basic/foo",
 					},
-					Package: &internal.PackageNew{
+					Package: &internal.Package{
 						Name: "foo",
 						Documentation: &internal.Documentation{
 							Synopsis: "package foo exports a helpful constant.",
@@ -117,7 +117,7 @@ var moduleMultiPackage = &testModule{
 				LegacyReadmeFilePath: "README.md",
 				LegacyReadmeContents: "README FILE FOR TESTING.",
 			},
-			Directories: []*internal.DirectoryNew{
+			Directories: []*internal.Directory{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:   "github.com/my/module",
@@ -137,7 +137,7 @@ var moduleMultiPackage = &testModule{
 						Filepath: "bar/README.md",
 						Contents: "Another README FILE FOR TESTING.",
 					},
-					Package: &internal.PackageNew{
+					Package: &internal.Package{
 						Name: "bar",
 						Documentation: &internal.Documentation{
 							Synopsis: "package bar",
@@ -150,7 +150,7 @@ var moduleMultiPackage = &testModule{
 						Path:   "github.com/my/module/foo",
 						V1Path: "github.com/my/module/foo",
 					},
-					Package: &internal.PackageNew{
+					Package: &internal.Package{
 						Name: "foo",
 						Documentation: &internal.Documentation{
 							Synopsis: "package foo",
@@ -186,7 +186,7 @@ var moduleNoGoMod = &testModule{
 					HasGoMod:   false,
 				},
 			},
-			Directories: []*internal.DirectoryNew{
+			Directories: []*internal.Directory{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:   "no.mod/module",
@@ -198,7 +198,7 @@ var moduleNoGoMod = &testModule{
 						Path:   "no.mod/module/p",
 						V1Path: "no.mod/module/p",
 					},
-					Package: &internal.PackageNew{
+					Package: &internal.Package{
 						Name: "p",
 						Documentation: &internal.Documentation{
 							Synopsis: "Package p is inside a module where a go.mod file hasn't been explicitly added yet.",
@@ -253,7 +253,7 @@ var moduleBadPackages = &testModule{
 					ModulePath: "bad.mod/module",
 				},
 			},
-			Directories: []*internal.DirectoryNew{
+			Directories: []*internal.Directory{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:   "bad.mod/module",
@@ -265,7 +265,7 @@ var moduleBadPackages = &testModule{
 						Path:   "bad.mod/module/good",
 						V1Path: "bad.mod/module/good",
 					},
-					Package: &internal.PackageNew{
+					Package: &internal.Package{
 						Name: "good",
 						Documentation: &internal.Documentation{
 							Synopsis: "Package good is inside a module that has bad packages.",
@@ -322,7 +322,7 @@ var moduleBuildConstraints = &testModule{
 					HasGoMod:   false,
 				},
 			},
-			Directories: []*internal.DirectoryNew{
+			Directories: []*internal.Directory{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:   "build.constraints/module",
@@ -334,7 +334,7 @@ var moduleBuildConstraints = &testModule{
 						Path:   "build.constraints/module/cpu",
 						V1Path: "build.constraints/module/cpu",
 					},
-					Package: &internal.PackageNew{
+					Package: &internal.Package{
 						Name: "cpu",
 						Documentation: &internal.Documentation{
 							Synopsis: "Package cpu implements processor feature detection used by the Go standard library.",
@@ -415,7 +415,7 @@ var moduleNonRedist = &testModule{
 				LegacyReadmeFilePath: "README.md",
 				LegacyReadmeContents: "README FILE FOR TESTING.",
 			},
-			Directories: []*internal.DirectoryNew{
+			Directories: []*internal.Directory{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:   "nonredistributable.mod/module",
@@ -431,7 +431,7 @@ var moduleNonRedist = &testModule{
 						Path:   "nonredistributable.mod/module/bar",
 						V1Path: "nonredistributable.mod/module/bar",
 					},
-					Package: &internal.PackageNew{
+					Package: &internal.Package{
 						Name: "bar",
 						Documentation: &internal.Documentation{
 							Synopsis: "package bar",
@@ -444,7 +444,7 @@ var moduleNonRedist = &testModule{
 						Path:   "nonredistributable.mod/module/bar/baz",
 						V1Path: "nonredistributable.mod/module/bar/baz",
 					},
-					Package: &internal.PackageNew{
+					Package: &internal.Package{
 						Name: "baz",
 						Documentation: &internal.Documentation{
 							Synopsis: "package baz",
@@ -461,7 +461,7 @@ var moduleNonRedist = &testModule{
 						Filepath: "foo/README.md",
 						Contents: "README FILE SHOW UP HERE BUT WILL BE REMOVED BEFORE DB INSERT",
 					},
-					Package: &internal.PackageNew{
+					Package: &internal.Package{
 						Name: "foo",
 						Documentation: &internal.Documentation{
 							Synopsis: "package foo",
@@ -491,7 +491,7 @@ var moduleBadImportPath = &testModule{
 					ModulePath: "bad.import.path.com",
 				},
 			},
-			Directories: []*internal.DirectoryNew{
+			Directories: []*internal.Directory{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:   "bad.import.path.com",
@@ -515,7 +515,7 @@ var moduleBadImportPath = &testModule{
 						Path:   "bad.import.path.com/good/import/path",
 						V1Path: "bad.import.path.com/good/import/path",
 					},
-					Package: &internal.PackageNew{
+					Package: &internal.Package{
 						Name:          "foo",
 						Documentation: &internal.Documentation{},
 					},
@@ -567,7 +567,7 @@ var moduleDocTest = &testModule{
 					HasGoMod:   false,
 				},
 			},
-			Directories: []*internal.DirectoryNew{
+			Directories: []*internal.Directory{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:   "doc.test",
@@ -579,7 +579,7 @@ var moduleDocTest = &testModule{
 						Path:   "doc.test/permalink",
 						V1Path: "doc.test/permalink",
 					},
-					Package: &internal.PackageNew{
+					Package: &internal.Package{
 						Name: "permalink",
 						Documentation: &internal.Documentation{
 							Synopsis: "Package permalink is for testing the heading permalink documentation rendering feature.",
@@ -612,13 +612,13 @@ var moduleDocTooLarge = &testModule{
 					HasGoMod:   false,
 				},
 			},
-			Directories: []*internal.DirectoryNew{
+			Directories: []*internal.Directory{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:   "bigdoc.test",
 						V1Path: "bigdoc.test",
 					},
-					Package: &internal.PackageNew{
+					Package: &internal.Package{
 						Name: "bigdoc",
 						Documentation: &internal.Documentation{
 							Synopsis: "This documentation is big.",
@@ -664,7 +664,7 @@ var moduleWasm = &testModule{
 				LegacyReadmeFilePath: "README.md",
 				LegacyReadmeContents: "THIS IS A README",
 			},
-			Directories: []*internal.DirectoryNew{
+			Directories: []*internal.Directory{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:   "github.com/my/module/js",
@@ -680,7 +680,7 @@ var moduleWasm = &testModule{
 						Path:   "github.com/my/module/js/js",
 						V1Path: "github.com/my/module/js/js",
 					},
-					Package: &internal.PackageNew{
+					Package: &internal.Package{
 						Name: "js",
 						Documentation: &internal.Documentation{
 							Synopsis: "Package js only works with wasm.",
@@ -722,7 +722,7 @@ var moduleStd = &testModule{
 				LegacyReadmeFilePath: "README.md",
 				LegacyReadmeContents: "# The Go Programming Language\n",
 			},
-			Directories: []*internal.DirectoryNew{
+			Directories: []*internal.Directory{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:              "std",
@@ -739,7 +739,7 @@ var moduleStd = &testModule{
 						Path:   "builtin",
 						V1Path: "builtin",
 					},
-					Package: &internal.PackageNew{
+					Package: &internal.Package{
 						Name: "builtin",
 						Documentation: &internal.Documentation{
 							Synopsis: "Package builtin provides documentation for Go's predeclared identifiers.",
@@ -761,7 +761,7 @@ var moduleStd = &testModule{
 						Filepath: "cmd/pprof/README",
 						Contents: "This directory is the copy of Google's pprof shipped as part of the Go distribution.\n",
 					},
-					Package: &internal.PackageNew{
+					Package: &internal.Package{
 						Name: "main",
 						Documentation: &internal.Documentation{
 							Synopsis: "Pprof interprets and displays profiles of Go programs.",
@@ -792,7 +792,7 @@ var moduleStd = &testModule{
 						Path:   "context",
 						V1Path: "context",
 					},
-					Package: &internal.PackageNew{
+					Package: &internal.Package{
 						Name: "context",
 						Documentation: &internal.Documentation{
 							Synopsis: "Package context defines the Context type, which carries deadlines, cancelation signals, and other request-scoped values across API boundaries and between processes.",
@@ -811,7 +811,7 @@ var moduleStd = &testModule{
 						Path:   "encoding/json",
 						V1Path: "encoding/json",
 					},
-					Package: &internal.PackageNew{
+					Package: &internal.Package{
 						Name: "json",
 						Documentation: &internal.Documentation{
 							Synopsis: "Package json implements encoding and decoding of JSON as defined in RFC 7159.",
@@ -840,7 +840,7 @@ var moduleStd = &testModule{
 						Path:   "errors",
 						V1Path: "errors",
 					},
-					Package: &internal.PackageNew{
+					Package: &internal.Package{
 						Name: "errors",
 						Documentation: &internal.Documentation{
 							Synopsis: "Package errors implements functions to manipulate errors.",
@@ -852,7 +852,7 @@ var moduleStd = &testModule{
 						Path:   "flag",
 						V1Path: "flag",
 					},
-					Package: &internal.PackageNew{
+					Package: &internal.Package{
 						Name: "flag",
 						Documentation: &internal.Documentation{
 							Synopsis: "Package flag implements command-line flag parsing.",
@@ -897,7 +897,7 @@ package example_test
 						HasGoMod:   false,
 					},
 				},
-				Directories: []*internal.DirectoryNew{
+				Directories: []*internal.Directory{
 					{
 						DirectoryMeta: internal.DirectoryMeta{
 							Path:   path,
@@ -909,7 +909,7 @@ package example_test
 							Path:   path + "/example",
 							V1Path: path + "/example",
 						},
-						Package: &internal.PackageNew{
+						Package: &internal.Package{
 							Name: "example",
 							Documentation: &internal.Documentation{
 								Synopsis: "Package example contains examples.",
