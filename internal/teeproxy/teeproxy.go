@@ -18,18 +18,17 @@ import (
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
 	"golang.org/x/net/context/ctxhttp"
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/breaker"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/time/rate"
 )
 
 // Server receives requests from godoc.org and tees them to pkg.go.dev.
 type Server struct {
-	limiter *rate.Limiter
-	breaker *breaker.Breaker
+	limiter       *rate.Limiter
+	breaker       *breaker.Breaker
+	shouldForward bool
 }
 
 // Config contains configuration values for Server.
@@ -39,6 +38,8 @@ type Config struct {
 	// Burst is the maximum burst of requests permitted.
 	Burst         int
 	BreakerConfig breaker.Config
+	// ShouldForward determines whether to forward requests to pkg.go.dev.
+	ShouldForward bool
 }
 
 // RequestEvent stores information about a godoc.org or pkg.go.dev request.
@@ -171,8 +172,9 @@ func NewServer(config Config) (_ *Server, err error) {
 		return nil, err
 	}
 	return &Server{
-		limiter: rate.NewLimiter(rate.Limit(config.Rate), config.Burst),
-		breaker: b,
+		limiter:       rate.NewLimiter(rate.Limit(config.Rate), config.Burst),
+		breaker:       b,
+		shouldForward: config.ShouldForward,
 	}, nil
 }
 
@@ -213,7 +215,7 @@ func (s *Server) doRequest(r *http.Request) (status int, err error) {
 		}
 		recordTeeProxyMetric(status, gddoEvent.Latency, pkgGoDevLatency)
 	}()
-	if experiment.IsActive(r.Context(), internal.ExperimentTeeProxyMakePkgGoDevRequest) {
+	if s.shouldForward {
 		if gddoEvent.RedirectHost == "" {
 			return http.StatusBadRequest, fmt.Errorf("redirectHost cannot be empty")
 		}

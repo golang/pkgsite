@@ -15,9 +15,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/breaker"
-	"golang.org/x/pkgsite/internal/experiment"
 )
 
 func TestPkgGoDevPath(t *testing.T) {
@@ -274,6 +272,7 @@ func TestServerHandler(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
+			test.serverConfig.ShouldForward = true
 			server := newTestServer(test.serverConfig)
 			mockPkgGoDevServer := httptest.NewServer(test.handler)
 			defer mockPkgGoDevServer.Close()
@@ -344,7 +343,6 @@ func makePostRequest(t *testing.T, server *Server, pkgGoDevURL string) *http.Res
 	}
 	r := httptest.NewRequest("POST", "/", bytes.NewBuffer(requestBody))
 	r.Header.Set("Content-Type", "application/json; charset=utf-8")
-	r = r.WithContext(experiment.NewContext(r.Context(), internal.ExperimentTeeProxyMakePkgGoDevRequest))
 	w := httptest.NewRecorder()
 	server.ServeHTTP(w, r)
 	return w.Result()

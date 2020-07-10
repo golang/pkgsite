@@ -103,6 +103,10 @@ type Config struct {
 	UseProfiler bool
 
 	Quota QuotaSettings
+
+	// TeeproxyForwarding is used to determine whether the teeproxy should
+	// forward requests to pkg.go.dev.
+	TeexproxyForwarding bool
 }
 
 // AppVersionLabel returns the version label for the current instance.  This is
@@ -247,7 +251,8 @@ func Init(ctx context.Context) (_ *Config, err error) {
 			RecordOnly:   func() *bool { t := true; return &t }(),
 			AcceptedURLs: parseCommaList(GetEnv("GO_DISCOVERY_ACCEPTED_LIST", "")),
 		},
-		UseProfiler: os.Getenv("GO_DISCOVERY_USE_PROFILER") == "TRUE",
+		UseProfiler:         os.Getenv("GO_DISCOVERY_USE_PROFILER") == "TRUE",
+		TeexproxyForwarding: os.Getenv("GO_DISCOVERY_TEEPROXY_FORWARDING") == "TRUE",
 	}
 	cfg.AppMonitoredResource = &mrpb.MonitoredResource{
 		Type: "gae_app",

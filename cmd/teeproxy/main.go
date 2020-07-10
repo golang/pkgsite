@@ -55,6 +55,7 @@ func main() {
 			MaxTimeout:       4 * time.Minute,
 			SuccsToGreen:     20,
 		},
+		ShouldForward: cfg.TeexproxyForwarding,
 	})
 	if err != nil {
 		log.Fatal(ctx, err)
