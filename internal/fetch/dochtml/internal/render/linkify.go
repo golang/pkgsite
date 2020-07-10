@@ -94,10 +94,7 @@ var docTmpl = safetemplate.Must(safetemplate.New("").Parse(`
   {{- end -}}
 {{end}}`))
 
-func (r *Renderer) declHTML(doc string, decl ast.Decl) (out struct {
-	Doc  safehtml.HTML
-	Decl template.HTML
-}) {
+func (r *Renderer) declHTML(doc string, decl ast.Decl) (out struct{ Doc, Decl safehtml.HTML }) {
 	dids := newDeclIDs(decl)
 	idr := &identifierResolver{r.pids, dids, r.packageURL}
 	if doc != "" {
@@ -121,11 +118,10 @@ func (r *Renderer) declHTML(doc string, decl ast.Decl) (out struct {
 		out.Doc = executeToHTML(docTmpl, docData{Elements: els, DisablePermalinks: r.disablePermalinks})
 	}
 	if decl != nil {
-		var b bytes.Buffer
-		b.WriteString("<pre>\n")
-		r.formatDeclHTML(&b, decl, idr)
-		b.WriteString("</pre>\n")
-		out.Decl = template.HTML(b.String())
+		out.Decl = safehtml.HTMLConcat(
+			safetemplate.MustParseAndExecuteToHTML("<pre>\n"),
+			r.formatDeclHTML(decl, idr),
+			safetemplate.MustParseAndExecuteToHTML("</pre>\n"))
 	}
 	return out
 }
@@ -348,7 +344,7 @@ func countQuotes(s string) int {
 
 // formatDeclHTML formats the decl as HTML-annotated source code for the
 // provided decl. Type identifiers are linked to corresponding declarations.
-func (r *Renderer) formatDeclHTML(w io.Writer, decl ast.Decl, idr *identifierResolver) {
+func (r *Renderer) formatDeclHTML(decl ast.Decl, idr *identifierResolver) safehtml.HTML {
 	// Generate all anchor points and links for the given decl.
 	anchorPointsMap := generateAnchorPoints(decl)
 	anchorLinksMap := generateAnchorLinks(idr, decl)
@@ -386,12 +382,12 @@ func (r *Renderer) formatDeclHTML(w io.Writer, decl ast.Decl, idr *identifierRes
 	numLines := bytes.Count(src, []byte("\n")) + 1
 	anchorLines := make([][]idKind, numLines)
 	lineTypes := make([]lineType, numLines)
+	htmlLines := make([][]safehtml.HTML, numLines)
 
 	// Scan through the source code, appropriately annotating it with HTML spans
 	// for comments, and HTML links and anchors for relevant identifiers.
-	var bb bytes.Buffer // temporary output buffer
-	var idIdx int       // current index in anchorPoints and anchorLinks
-	var lastOffset int  // last src offset copied to output buffer
+	var idIdx int      // current index in anchorPoints and anchorLinks
+	var lastOffset int // last src offset copied to output buffer
 	var s scanner.Scanner
 	s.Init(file, src, nil, scanner.ScanComments)
 scan:
@@ -401,25 +397,33 @@ scan:
 		offset := file.Offset(p) // current offset into source file
 		tokType := codeType      // current token type (assume source code)
 
-		template.HTMLEscape(&bb, src[lastOffset:offset])
+		// Add traversed bytes from src to the appropriate line.
+		prevLines := strings.SplitAfter(string(src[lastOffset:offset]), "\n")
+		for i, ln := range prevLines {
+			n := line - len(prevLines) + i + 1
+			if n < 0 { // possible at EOF
+				n = 0
+			}
+			htmlLines[n] = append(htmlLines[n], safehtml.HTMLEscaped(ln))
+		}
+
 		lastOffset = offset
 		switch tok {
 		case token.EOF:
 			break scan
 		case token.COMMENT:
 			tokType = commentType
-			bb.WriteString(`<span class="comment">`)
-			bb.WriteString(r.formatLineHTML(lit, idr).String())
-			bb.WriteString(`</span>`)
+			htmlLines[line] = append(htmlLines[line],
+				safetemplate.MustParseAndExecuteToHTML(`<span class="comment">`),
+				r.formatLineHTML(lit, idr),
+				safetemplate.MustParseAndExecuteToHTML(`</span>`))
 			lastOffset += len(lit)
 		case token.IDENT:
-			if idIdx < len(anchorPoints) && anchorPoints[idIdx].id.String() != "" {
+			if idIdx < len(anchorPoints) && anchorPoints[idIdx].ID.String() != "" {
 				anchorLines[line] = append(anchorLines[line], anchorPoints[idIdx])
 			}
 			if idIdx < len(anchorLinks) && anchorLinks[idIdx] != "" {
-				u := template.HTMLEscapeString(anchorLinks[idIdx])
-				s := template.HTMLEscapeString(lit)
-				fmt.Fprintf(&bb, `<a href="%s">%s</a>`, u, s)
+				htmlLines[line] = append(htmlLines[line], executeToHTML(linkTemplate, link{Href: anchorLinks[idIdx], Text: lit}))
 				lastOffset += len(lit)
 			}
 			idIdx++
@@ -442,11 +446,12 @@ scan:
 	}
 
 	// Emit anchor IDs and data-kind attributes for each relevant line.
-	for _, iks := range anchorLines {
+	var htmls []safehtml.HTML
+	for line, iks := range anchorLines {
 		for _, ik := range iks {
 			// Attributes for types and functions are handled in the template
 			// that generates the full documentation HTML.
-			if ik.kind == "function" || ik.kind == "type" {
+			if ik.Kind == "function" || ik.Kind == "type" {
 				continue
 			}
 			// Top-level methods are handled in the template, but interface methods
@@ -454,13 +459,14 @@ scan:
 			if fd, ok := decl.(*ast.FuncDecl); ok && fd.Recv != nil {
 				continue
 			}
-			fmt.Fprintf(w, `<span id="%s" data-kind="%s"></span>`,
-				template.HTMLEscapeString(ik.id.String()), ik.kind)
+			htmls = append(htmls, executeToHTML(anchorTemplate, ik))
 		}
-		b, _ := bb.ReadBytes('\n')
-		w.Write(b) // write remainder of line (contains newline)
+		htmls = append(htmls, htmlLines[line]...)
 	}
+	return safehtml.HTMLConcat(htmls...)
 }
+
+var anchorTemplate = safetemplate.Must(safetemplate.New("anchor").Parse(`<span id="{{.ID}}" data-kind="{{.Kind}}"></span>`))
 
 // declVisitor is used to walk over the AST and trim large string
 // literals and arrays before package documentation is rendered.
@@ -513,8 +519,8 @@ func stringBasicLitSize(s string) string {
 // An idKind holds an anchor ID and the kind of the identifier being anchored.
 // The valid kinds are: "constant", "variable", "type", "function", "method" and "field".
 type idKind struct {
-	id   safehtml.Identifier
-	kind string
+	ID   safehtml.Identifier
+	Kind string
 }
 
 // safeGoID constructs a safe identifier from a Go symbol or dotted concatenation of symbols

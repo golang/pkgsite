@@ -111,10 +111,12 @@ func TestDeclHTML(t *testing.T) {
 const (
 <span id="Nanosecond" data-kind="constant"></span>	Nanosecond  <a href="#Duration">Duration</a> = 1
 <span id="Microsecond" data-kind="constant"></span>	Microsecond          = 1000 * <a href="#Nanosecond">Nanosecond</a>
-<span id="Millisecond" data-kind="constant"></span>	Millisecond          = 1000 * <a href="#Microsecond">Microsecond</a>
-<span id="Second" data-kind="constant"></span>	Second               = 1000 * <a href="#Millisecond">Millisecond</a>
-<span id="Minute" data-kind="constant"></span>	Minute               = 60 * <a href="#Second">Second</a>
-<span id="Hour" data-kind="constant"></span>	Hour                 = 60 * <a href="#Minute">Minute</a>
+<span id="Millisecond" data-kind="constant"></span>	Millisecond          = 1000 * <a href="#Microsecond">Microsecond</a> <span class="comment">// comment</span>
+<span id="Second" data-kind="constant"></span>	Second               = 1000 * <a href="#Millisecond">Millisecond</a> <span class="comment">/* multi
+	line
+	comment */</span>
+<span id="Minute" data-kind="constant"></span>	Minute = 60 * <a href="#Second">Second</a>
+<span id="Hour" data-kind="constant"></span>	Hour   = 60 * <a href="#Minute">Minute</a>
 )</pre>
 `,
 		},
@@ -153,7 +155,7 @@ func After(d <a href="#Duration">Duration</a>) &lt;-chan <a href="#Time">Time</a
 		t.Run(test.name, func(t *testing.T) {
 			decl := declForName(t, pkgTime, test.symbol)
 			r := New(context.Background(), fsetTime, pkgTime, nil)
-			got := r.declHTML("", decl).Decl
+			got := r.DeclHTML("", decl).Decl
 			want := template.HTML(test.want)
 			if diff := cmp.Diff(want, got); diff != "" {
 				t.Errorf("mismatch (-want +got)\n%s", diff)

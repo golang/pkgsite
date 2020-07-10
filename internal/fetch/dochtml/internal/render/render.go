@@ -147,7 +147,7 @@ func (r *Renderer) DeclHTML(doc string, decl ast.Decl) (out struct{ Doc, Decl te
 	// the template package only allows single return values.
 	d := r.declHTML(doc, decl)
 	out.Doc = template.HTML(d.Doc.String())
-	out.Decl = d.Decl
+	out.Decl = template.HTML(d.Decl.String())
 	return out
 }
 
