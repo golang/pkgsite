@@ -119,8 +119,8 @@ func (s *Server) legacyServePackagePageWithPackage(w http.ResponseWriter, r *htt
 		}
 	}
 	page := &DetailsPage{
-		basePage: s.newBasePage(r, packageHTMLTitle(&pkg.LegacyPackage)),
-		Title:    packageTitle(&pkg.LegacyPackage),
+		basePage: s.newBasePage(r, packageHTMLTitle(pkg.Path, pkg.Name)),
+		Title:    packageTitle(pkg.Path, pkg.Name),
 		Settings: settings,
 		Header:   pkgHeader,
 		Breadcrumb: breadcrumbPath(pkgHeader.Path, pkgHeader.Module.ModulePath,
@@ -156,6 +156,7 @@ func (s *Server) stdlibPathForShortcut(ctx context.Context, shortcut string) (pa
 	return "", nil
 }
 
+// servePackagePage serves a package details page.
 func (s *Server) servePackagePage(ctx context.Context,
 	w http.ResponseWriter, r *http.Request, vdir *internal.VersionedDirectory, requestedVersion string) error {
 	pkgHeader, err := createPackage(&internal.PackageMeta{
@@ -194,8 +195,8 @@ func (s *Server) servePackagePage(ctx context.Context,
 		}
 	}
 	page := &DetailsPage{
-		basePage: s.newBasePage(r, packageHTMLTitleNew(vdir.Package)),
-		Title:    packageTitleNew(vdir.Package),
+		basePage: s.newBasePage(r, packageHTMLTitle(vdir.Path, vdir.Package.Name)),
+		Title:    packageTitle(vdir.Path, vdir.Package.Name),
 		Settings: settings,
 		Header:   pkgHeader,
 		Breadcrumb: breadcrumbPath(pkgHeader.Path, pkgHeader.Module.ModulePath,

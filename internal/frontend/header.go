@@ -134,57 +134,23 @@ func effectiveName(pkgPath, pkgName string) string {
 	return base
 }
 
-// effectiveNameNew returns either the command name or package name.
-func effectiveNameNew(pkg *internal.Package) string {
-	if pkg.Name != "main" {
-		return pkg.Name
-	}
-	var prefix string // package path without version
-	if pkg.Path[len(pkg.Path)-3:] == "/v1" {
-		prefix = pkg.Path[:len(pkg.Path)-3]
-	} else {
-		prefix, _, _ = module.SplitPathVersion(pkg.Path)
-	}
-	_, base := path.Split(prefix)
-	return base
-}
-
 // packageHTMLTitle constructs the details page title for pkg.
 // The string will appear in the <title> element (and thus
 // the browser tab).
-func packageHTMLTitle(pkg *internal.LegacyPackage) string {
-	if pkg.Name != "main" {
-		return pkg.Name + " package"
+func packageHTMLTitle(pkgPath, pkgName string) string {
+	if pkgName != "main" {
+		return pkgName + " package"
 	}
-	return effectiveName(pkg.Path, pkg.Name) + " command"
-}
-
-// packageHTMLTitleNew constructs the details page title for pkg.
-// The string will appear in the <title> element (and thus
-// the browser tab).
-func packageHTMLTitleNew(pkg *internal.Package) string {
-	if pkg.Name != "main" {
-		return pkg.Name + " package"
-	}
-	return effectiveNameNew(pkg) + " command"
+	return effectiveName(pkgPath, pkgName) + " command"
 }
 
 // packageTitle returns the package title as it will
 // appear in the heading at the top of the page.
-func packageTitle(pkg *internal.LegacyPackage) string {
-	if pkg.Name != "main" {
-		return "package " + pkg.Name
+func packageTitle(pkgPath, pkgName string) string {
+	if pkgName != "main" {
+		return "package " + pkgName
 	}
-	return "command " + effectiveName(pkg.Path, pkg.Name)
-}
-
-// packageTitleNew returns the package title as it will
-// appear in the heading at the top of the page.
-func packageTitleNew(pkg *internal.Package) string {
-	if pkg.Name != "main" {
-		return "package " + pkg.Name
-	}
-	return "command " + effectiveNameNew(pkg)
+	return "command " + effectiveName(pkgPath, pkgName)
 }
 
 type breadcrumb struct {
