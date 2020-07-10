@@ -64,14 +64,14 @@ type VersionSummary struct {
 // fetchModuleVersionsDetails builds a version hierarchy for module versions
 // with the same series path as the given version.
 func fetchModuleVersionsDetails(ctx context.Context, ds internal.DataSource, mi *internal.ModuleInfo) (*VersionsDetails, error) {
-	versions, err := ds.GetTaggedVersionsForModule(ctx, mi.ModulePath)
+	versions, err := ds.LegacyGetTaggedVersionsForModule(ctx, mi.ModulePath)
 	if err != nil {
 		return nil, err
 	}
 	// If no tagged versions of the module are found, fetch pseudo-versions
 	// instead.
 	if len(versions) == 0 {
-		versions, err = ds.GetPseudoVersionsForModule(ctx, mi.ModulePath)
+		versions, err = ds.LegacyGetPsuedoVersionsForModule(ctx, mi.ModulePath)
 		if err != nil {
 			return nil, err
 		}
@@ -85,14 +85,14 @@ func fetchModuleVersionsDetails(ctx context.Context, ds internal.DataSource, mi 
 // fetchPackageVersionsDetails builds a version hierarchy for all module
 // versions containing a package path with v1 import path matching the given v1 path.
 func fetchPackageVersionsDetails(ctx context.Context, ds internal.DataSource, pkgPath, v1Path, modulePath string) (*VersionsDetails, error) {
-	versions, err := ds.GetTaggedVersionsForPackageSeries(ctx, pkgPath)
+	versions, err := ds.LegacyGetTaggedVersionsForPackageSeries(ctx, pkgPath)
 	if err != nil {
 		return nil, err
 	}
 	// If no tagged versions for the package series are found, fetch the
 	// pseudo-versions instead.
 	if len(versions) == 0 {
-		versions, err = ds.GetPseudoVersionsForPackageSeries(ctx, pkgPath)
+		versions, err = ds.LegacyGetPsuedoVersionsForPackageSeries(ctx, pkgPath)
 		if err != nil {
 			return nil, err
 		}

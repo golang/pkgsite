@@ -195,10 +195,10 @@ func TestDataSource_GetPackagesInVersion(t *testing.T) {
 	}
 }
 
-func TestDataSource_GetTaggedVersionsForModule(t *testing.T) {
+func TestDataSource_LegacyGetTaggedVersionsForModule(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
-	got, err := ds.GetTaggedVersionsForModule(ctx, "foo.com/bar")
+	got, err := ds.LegacyGetTaggedVersionsForModule(ctx, "foo.com/bar")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -210,11 +210,11 @@ func TestDataSource_GetTaggedVersionsForModule(t *testing.T) {
 	}
 	ignore := cmpopts.IgnoreFields(internal.ModuleInfo{}, "CommitTime", "VersionType", "IsRedistributable", "HasGoMod")
 	if diff := cmp.Diff(want, got, ignore); diff != "" {
-		t.Errorf("GetTaggedVersionsForPackageSeries diff (-want +got):\n%s", diff)
+		t.Errorf("LegacyGetTaggedVersionsForPackageSeries diff (-want +got):\n%s", diff)
 	}
 }
 
-func TestDataSource_GetTaggedVersionsForPackageSeries(t *testing.T) {
+func TestDataSource_LegacyGetTaggedVersionsForPackageSeries(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
 	// // TODO (rFindley): this shouldn't be necessary.
@@ -222,7 +222,7 @@ func TestDataSource_GetTaggedVersionsForPackageSeries(t *testing.T) {
 	// if err != nil {
 	// 	t.Fatal(err)
 	// }
-	got, err := ds.GetTaggedVersionsForPackageSeries(ctx, "foo.com/bar/baz")
+	got, err := ds.LegacyGetTaggedVersionsForPackageSeries(ctx, "foo.com/bar/baz")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -234,7 +234,7 @@ func TestDataSource_GetTaggedVersionsForPackageSeries(t *testing.T) {
 	}
 	ignore := cmpopts.IgnoreFields(internal.ModuleInfo{}, "CommitTime", "VersionType", "IsRedistributable", "HasGoMod")
 	if diff := cmp.Diff(want, got, ignore); diff != "" {
-		t.Errorf("GetTaggedVersionsForPackageSeries diff (-want +got):\n%s", diff)
+		t.Errorf("LegacyGetTaggedVersionsForPackageSeries diff (-want +got):\n%s", diff)
 	}
 }
 

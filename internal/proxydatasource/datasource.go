@@ -189,33 +189,33 @@ func (ds *DataSource) LegacyGetPackagesInModule(ctx context.Context, modulePath,
 	return v.LegacyPackages, nil
 }
 
-// GetPseudoVersionsForModule returns versions from the the proxy /list
+// LegacyGetPsuedoVersionsForModule returns versions from the the proxy /list
 // endpoint, if they are pseudoversions. Otherwise, it returns an empty slice.
-func (ds *DataSource) GetPseudoVersionsForModule(ctx context.Context, modulePath string) (_ []*internal.ModuleInfo, err error) {
-	defer derrors.Wrap(&err, "GetPseudoVersionsForModule(%q)", modulePath)
+func (ds *DataSource) LegacyGetPsuedoVersionsForModule(ctx context.Context, modulePath string) (_ []*internal.ModuleInfo, err error) {
+	defer derrors.Wrap(&err, "LegacyGetPsuedoVersionsForModule(%q)", modulePath)
 	return ds.listModuleVersions(ctx, modulePath, true)
 }
 
-// GetPseudoVersionsForPackageSeries finds the longest module path containing
+// LegacyGetPsuedoVersionsForPackageSeries finds the longest module path containing
 // pkgPath, and returns its versions from the proxy /list endpoint, if they are
 // pseudoversions. Otherwise, it returns an empty slice.
-func (ds *DataSource) GetPseudoVersionsForPackageSeries(ctx context.Context, pkgPath string) (_ []*internal.ModuleInfo, err error) {
-	defer derrors.Wrap(&err, "GetPseudoVersionsForPackageSeries(%q)", pkgPath)
+func (ds *DataSource) LegacyGetPsuedoVersionsForPackageSeries(ctx context.Context, pkgPath string) (_ []*internal.ModuleInfo, err error) {
+	defer derrors.Wrap(&err, "LegacyGetPsuedoVersionsForPackageSeries(%q)", pkgPath)
 	return ds.listPackageVersions(ctx, pkgPath, true)
 }
 
-// GetTaggedVersionsForModule returns versions from the the proxy /list
+// LegacyGetTaggedVersionsForModule returns versions from the the proxy /list
 // endpoint, if they are tagged versions. Otherwise, it returns an empty slice.
-func (ds *DataSource) GetTaggedVersionsForModule(ctx context.Context, modulePath string) (_ []*internal.ModuleInfo, err error) {
-	defer derrors.Wrap(&err, "GetTaggedVersionsForModule(%q)", modulePath)
+func (ds *DataSource) LegacyGetTaggedVersionsForModule(ctx context.Context, modulePath string) (_ []*internal.ModuleInfo, err error) {
+	defer derrors.Wrap(&err, "LegacyGetTaggedVersionsForModule(%q)", modulePath)
 	return ds.listModuleVersions(ctx, modulePath, false)
 }
 
-// GetTaggedVersionsForPackageSeries finds the longest module path containing
+// LegacyGetTaggedVersionsForPackageSeries finds the longest module path containing
 // pkgPath, and returns its versions from the proxy /list endpoint, if they are
 // tagged versions. Otherwise, it returns an empty slice.
-func (ds *DataSource) GetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) (_ []*internal.ModuleInfo, err error) {
-	defer derrors.Wrap(&err, "GetTaggedVersionsForPackageSeries(%q)", pkgPath)
+func (ds *DataSource) LegacyGetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) (_ []*internal.ModuleInfo, err error) {
+	defer derrors.Wrap(&err, "LegacyGetTaggedVersionsForPackageSeries(%q)", pkgPath)
 	return ds.listPackageVersions(ctx, pkgPath, false)
 }
 

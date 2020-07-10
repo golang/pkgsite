@@ -74,17 +74,17 @@ func (db *DB) LegacyGetPackagesInModule(ctx context.Context, modulePath, version
 	return packages, nil
 }
 
-// GetTaggedVersionsForPackageSeries returns a list of tagged versions sorted in
+// LegacyGetTaggedVersionsForPackageSeries returns a list of tagged versions sorted in
 // descending semver order. This list includes tagged versions of packages that
 // have the same v1path.
-func (db *DB) GetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*internal.ModuleInfo, error) {
+func (db *DB) LegacyGetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*internal.ModuleInfo, error) {
 	return getPackageVersions(ctx, db, pkgPath, []version.Type{version.TypeRelease, version.TypePrerelease})
 }
 
-// GetPseudoVersionsForPackageSeries returns the 10 most recent from a list of
+// LegacyGetPsuedoVersionsForPackageSeries returns the 10 most recent from a list of
 // pseudo-versions sorted in descending semver order. This list includes
 // pseudo-versions of packages that have the same v1path.
-func (db *DB) GetPseudoVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*internal.ModuleInfo, error) {
+func (db *DB) LegacyGetPsuedoVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*internal.ModuleInfo, error) {
 	return getPackageVersions(ctx, db, pkgPath, []version.Type{version.TypePseudo})
 }
 
@@ -156,15 +156,15 @@ func versionTypeExpr(vts []version.Type) string {
 	return strings.Join(vs, ", ")
 }
 
-// GetTaggedVersionsForModule returns a list of tagged versions sorted in
+// LegacyGetTaggedVersionsForModule returns a list of tagged versions sorted in
 // descending semver order.
-func (db *DB) GetTaggedVersionsForModule(ctx context.Context, modulePath string) ([]*internal.ModuleInfo, error) {
+func (db *DB) LegacyGetTaggedVersionsForModule(ctx context.Context, modulePath string) ([]*internal.ModuleInfo, error) {
 	return getModuleVersions(ctx, db, modulePath, []version.Type{version.TypeRelease, version.TypePrerelease})
 }
 
-// GetPseudoVersionsForModule returns the 10 most recent from a list of
+// LegacyGetPsuedoVersionsForModule returns the 10 most recent from a list of
 // pseudo-versions sorted in descending semver order.
-func (db *DB) GetPseudoVersionsForModule(ctx context.Context, modulePath string) ([]*internal.ModuleInfo, error) {
+func (db *DB) LegacyGetPsuedoVersionsForModule(ctx context.Context, modulePath string) ([]*internal.ModuleInfo, error) {
 	return getModuleVersions(ctx, db, modulePath, []version.Type{version.TypePseudo})
 }
 

@@ -340,7 +340,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 					t.Fatal(err)
 				}
 
-				// GetPseudoVersions should only return the 10 most recent pseudo versions,
+				// LegacyGetPsuedoVersions should only return the 10 most recent pseudo versions,
 				// if there are more than 10 in the database
 				if i < 10 {
 					wantPseudoVersions = append(wantPseudoVersions, &internal.ModuleInfo{
@@ -357,36 +357,36 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 				}
 			}
 
-			got, err := testDB.GetPseudoVersionsForPackageSeries(ctx, tc.path)
+			got, err := testDB.LegacyGetPsuedoVersionsForPackageSeries(ctx, tc.path)
 			if err != nil {
 				t.Fatal(err)
 			}
 			if diff := cmp.Diff(wantPseudoVersions, got, cmp.AllowUnexported(source.Info{})); diff != "" {
-				t.Errorf("testDB.GetPseudoVersionsForPackageSeries(%q) mismatch (-want +got):\n%s", tc.path, diff)
+				t.Errorf("testDB.LegacyGetPsuedoVersionsForPackageSeries(%q) mismatch (-want +got):\n%s", tc.path, diff)
 			}
 
-			got, err = testDB.GetTaggedVersionsForPackageSeries(ctx, tc.path)
+			got, err = testDB.LegacyGetTaggedVersionsForPackageSeries(ctx, tc.path)
 			if err != nil {
 				t.Fatal(err)
 			}
 			if diff := cmp.Diff(tc.wantTaggedVersions, got, cmp.AllowUnexported(source.Info{})); diff != "" {
-				t.Errorf("testDB.GetTaggedVersionsForPackageSeries(%q) mismatch (-want +got):\n%s", tc.path, diff)
+				t.Errorf("testDB.LegacyGetTaggedVersionsForPackageSeries(%q) mismatch (-want +got):\n%s", tc.path, diff)
 			}
 
-			got, err = testDB.GetPseudoVersionsForModule(ctx, tc.modulePath)
+			got, err = testDB.LegacyGetPsuedoVersionsForModule(ctx, tc.modulePath)
 			if err != nil {
 				t.Fatal(err)
 			}
 			if diff := cmp.Diff(wantPseudoVersions, got, cmp.AllowUnexported(source.Info{})); diff != "" {
-				t.Errorf("testDB.GetPseudoVersionsForModule(%q) mismatch (-want +got):\n%s", tc.path, diff)
+				t.Errorf("testDB.LegacyGetPsuedoVersionsForModule(%q) mismatch (-want +got):\n%s", tc.path, diff)
 			}
 
-			got, err = testDB.GetTaggedVersionsForModule(ctx, tc.modulePath)
+			got, err = testDB.LegacyGetTaggedVersionsForModule(ctx, tc.modulePath)
 			if err != nil {
 				t.Fatal(err)
 			}
 			if diff := cmp.Diff(tc.wantTaggedVersions, got, cmp.AllowUnexported(source.Info{})); diff != "" {
-				t.Errorf("testDB.GetTaggedVersionsForModule(%q) mismatch (-want +got):\n%s", tc.path, diff)
+				t.Errorf("testDB.LegacyGetTaggedVersionsForModule(%q) mismatch (-want +got):\n%s", tc.path, diff)
 			}
 		})
 	}

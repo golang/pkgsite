@@ -26,19 +26,6 @@ type DataSource interface {
 	GetModuleInfo(ctx context.Context, modulePath, version string) (*ModuleInfo, error)
 	// GetPathInfo returns information about a path.
 	GetPathInfo(ctx context.Context, path, inModulePath, inVersion string) (outModulePath, outVersion string, isPackage bool, err error)
-	// GetPseudoVersionsForModule returns LegacyModuleInfo for all known
-	// pseudo-versions for the module corresponding to modulePath.
-	GetPseudoVersionsForModule(ctx context.Context, modulePath string) ([]*ModuleInfo, error)
-	// GetPseudoVersionsForModule returns LegacyModuleInfo for all known
-	// pseudo-versions for any module containing a package with the given import
-	// path.
-	GetPseudoVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*ModuleInfo, error)
-	// GetTaggedVersionsForModule returns LegacyModuleInfo for all known tagged
-	// versions for the module corresponding to modulePath.
-	GetTaggedVersionsForModule(ctx context.Context, modulePath string) ([]*ModuleInfo, error)
-	// GetTaggedVersionsForModule returns LegacyModuleInfo for all known tagged
-	// versions for any module containing a package with the given import path.
-	GetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*ModuleInfo, error)
 
 	// TODO(golang/go#39629): Deprecate these methods.
 	//
@@ -47,6 +34,9 @@ type DataSource interface {
 	// package paths satisfy this query, it should prefer the module with
 	// the longest path.
 	LegacyGetDirectory(ctx context.Context, dirPath, modulePath, version string, fields FieldSet) (_ *LegacyDirectory, err error)
+	// LegacyGetModuleInfo returns the LegacyModuleInfo corresponding to modulePath and
+	// version.
+	LegacyGetModuleInfo(ctx context.Context, modulePath, version string) (*LegacyModuleInfo, error)
 	// LegacyGetModuleLicenses returns all top-level Licenses for the given modulePath
 	// and version. (i.e., Licenses contained in the module root directory)
 	LegacyGetModuleLicenses(ctx context.Context, modulePath, version string) ([]*licenses.License, error)
@@ -54,13 +44,23 @@ type DataSource interface {
 	// pkgPath, modulePath, and version. When multiple package paths satisfy this query, it
 	// should prefer the module with the longest path.
 	LegacyGetPackage(ctx context.Context, pkgPath, modulePath, version string) (*LegacyVersionedPackage, error)
+	// LegacyGetPackagesInModule returns LegacyPackages contained in the module version
+	// specified by modulePath and version.
+	LegacyGetPackagesInModule(ctx context.Context, modulePath, version string) ([]*LegacyPackage, error)
 	// LegacyGetPackageLicenses returns all Licenses that apply to pkgPath, within the
 	// module version specified by modulePath and version.
 	LegacyGetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) ([]*licenses.License, error)
-	// GetPackagesInModule returns LegacyPackages contained in the module version
-	// specified by modulePath and version.
-	LegacyGetPackagesInModule(ctx context.Context, modulePath, version string) ([]*LegacyPackage, error)
-	// LegacyGetModuleInfo returns the LegacyModuleInfo corresponding to modulePath and
-	// version.
-	LegacyGetModuleInfo(ctx context.Context, modulePath, version string) (*LegacyModuleInfo, error)
+	// LegacyGetPsuedoVersionsForModule returns ModuleInfo for all known
+	// pseudo-versions for the module corresponding to modulePath.
+	LegacyGetPsuedoVersionsForModule(ctx context.Context, modulePath string) ([]*ModuleInfo, error)
+	// LegacyGetPsuedoVersionsForModule returns ModuleInfo for all known
+	// pseudo-versions for any module containing a package with the given import
+	// path.
+	LegacyGetPsuedoVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*ModuleInfo, error)
+	// LegacyGetTaggedVersionsForModule returns ModuleInfo for all known tagged
+	// versions for the module corresponding to modulePath.
+	LegacyGetTaggedVersionsForModule(ctx context.Context, modulePath string) ([]*ModuleInfo, error)
+	// LegacyGetTaggedVersionsForModule returns ModuleInfo for all known tagged
+	// versions for any module containing a package with the given import path.
+	LegacyGetTaggedVersionsForPackageSeries(ctx context.Context, pkgPath string) ([]*ModuleInfo, error)
 }
