@@ -7,6 +7,7 @@ package teeproxy
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -24,22 +25,26 @@ import (
 	"golang.org/x/time/rate"
 )
 
-// Server receives requests from godoc.org and tees them to pkg.go.dev.
+// Server receives requests from godoc.org and tees them to specified hosts.
 type Server struct {
-	limiter       *rate.Limiter
-	breaker       *breaker.Breaker
-	shouldForward bool
+	hosts    []string
+	client   *http.Client
+	limiter  *rate.Limiter
+	breakers map[string]*breaker.Breaker
 }
 
 // Config contains configuration values for Server.
 type Config struct {
+	// Hosts is the list of hosts that the teeproxy forwards requests to.
+	Hosts []string
+	// Client is the HTTP client used by the teeproxy to forward requests
+	// to the hosts.
+	Client *http.Client
 	// Rate is the rate at which requests are rate limited.
 	Rate float64
 	// Burst is the maximum burst of requests permitted.
 	Burst         int
 	BreakerConfig breaker.Config
-	// ShouldForward determines whether to forward requests to pkg.go.dev.
-	ShouldForward bool
 }
 
 // RequestEvent stores information about a godoc.org or pkg.go.dev request.
@@ -50,12 +55,7 @@ type RequestEvent struct {
 	Header  http.Header
 	Latency time.Duration
 	Status  int
-	Error   string
-
-	// RedirectHost indicates where a request should be redirected to. It is
-	// used for testing when redirecting requests to somewhere other than
-	// pkg.go.dev.
-	RedirectHost string
+	Error   error
 	// IsRobot reports whether this request came from a robot.
 	// https://github.com/golang/gddo/blob/a4ebd2f/gddo-server/main.go#L152
 	IsRobot bool
@@ -90,6 +90,8 @@ const statusRedBreaker = 530
 var (
 	// keyTeeproxyStatus is a census tag for teeproxy response status codes.
 	keyTeeproxyStatus = tag.MustNewKey("teeproxy.status")
+	// keyTeeproxyHost is a census tag for hosts that teeproxy forward requests to.
+	keyTeeProxyHost = tag.MustNewKey("teeproxy.host")
 	// teeproxyGddoLatency holds observed latency in individual teeproxy
 	// requests from godoc.org.
 	teeproxyGddoLatency = stats.Float64(
@@ -106,22 +108,22 @@ var (
 	)
 
 	// TeeproxyGddoRequestLatencyDistribution aggregates the latency of
-	// teeproxy requests from godoc.org by status code.
+	// teeproxy requests from godoc.org by status code and host.
 	TeeproxyGddoRequestLatencyDistribution = &view.View{
 		Name:        "go-discovery/teeproxy/gddo-latency",
 		Measure:     teeproxyGddoLatency,
 		Aggregation: ochttp.DefaultLatencyDistribution,
 		Description: "Teeproxy latency from godoc.org, by response status code",
-		TagKeys:     []tag.Key{keyTeeproxyStatus},
+		TagKeys:     []tag.Key{keyTeeproxyStatus, keyTeeProxyHost},
 	}
 	// TeeproxyPkgGoDevRequestLatencyDistribution aggregates the latency of
-	// teeproxy requests to pkg.go.dev by status code.
+	// teeproxy requests to pkg.go.dev by status code and host.
 	TeeproxyPkgGoDevRequestLatencyDistribution = &view.View{
 		Name:        "go-discovery/teeproxy/pkgGoDev-latency",
 		Measure:     teeproxyPkgGoDevLatency,
 		Aggregation: ochttp.DefaultLatencyDistribution,
 		Description: "Teeproxy latency to pkg.go.dev, by response status code",
-		TagKeys:     []tag.Key{keyTeeproxyStatus},
+		TagKeys:     []tag.Key{keyTeeproxyStatus, keyTeeProxyHost},
 	}
 	// TeeproxyGddoRequestCount counts teeproxy requests from godoc.org.
 	TeeproxyGddoRequestCount = &view.View{
@@ -129,7 +131,7 @@ var (
 		Measure:     teeproxyGddoLatency,
 		Aggregation: view.Count(),
 		Description: "Count of teeproxy requests from godoc.org",
-		TagKeys:     []tag.Key{keyTeeproxyStatus},
+		TagKeys:     []tag.Key{keyTeeproxyStatus, keyTeeProxyHost},
 	}
 	// TeeproxyPkgGoDevRequestCount counts teeproxy requests to pkg.go.dev.
 	TeeproxyPkgGoDevRequestCount = &view.View{
@@ -137,7 +139,7 @@ var (
 		Measure:     teeproxyPkgGoDevLatency,
 		Aggregation: view.Count(),
 		Description: "Count of teeproxy requests to pkg.go.dev",
-		TagKeys:     []tag.Key{keyTeeproxyStatus},
+		TagKeys:     []tag.Key{keyTeeproxyStatus, keyTeeProxyHost},
 	}
 )
 
@@ -146,18 +148,19 @@ var (
 // The server is rate limited and allows events up to a rate of "Rate" and
 // a burst of "Burst".
 //
-// The server also implements the circuit breaker pattern and can be in one of
-// three states: green, yellow, or red.
+// The server also implements the circuit breaker pattern and maintains a
+// breaker for each host. Each breaker can be in one of three states: green,
+// yellow, or red.
 //
-// In the green state, the server remains green until it encounters an time
+// In the green state, the breaker remains green until it encounters a time
 // window of length "GreenInterval" where there are more than of "FailsToRed"
 // failures and a failureRatio of more than "FailureThreshold", in which case
 // the state becomes red.
 //
-// In the red state, the server halts all requests and waits for a timeout
+// In the red state, the breaker halts all requests and waits for a timeout
 // period before shifting to the yellow state.
 //
-// In the yellow state, the server allows the first "SuccsToGreen" requests.
+// In the yellow state, the breaker allows the first "SuccsToGreen" requests.
 // If any of these fail, the state reverts to red.
 // Otherwise, the state becomes green again.
 //
@@ -167,78 +170,113 @@ var (
 // capped at "MaxTimeout".
 func NewServer(config Config) (_ *Server, err error) {
 	defer derrors.Wrap(&err, "NewServer")
-	b, err := breaker.New(config.BreakerConfig)
-	if err != nil {
-		return nil, err
+	var breakers = make(map[string]*breaker.Breaker)
+	for _, host := range config.Hosts {
+		if host == "" {
+			return nil, errors.New("host cannot be empty")
+		}
+		b, err := breaker.New(config.BreakerConfig)
+		if err != nil {
+			return nil, err
+		}
+		breakers[host] = b
+	}
+	var client = http.DefaultClient
+	if config.Client != nil {
+		client = config.Client
 	}
 	return &Server{
-		limiter:       rate.NewLimiter(rate.Limit(config.Rate), config.Burst),
-		breaker:       b,
-		shouldForward: config.ShouldForward,
+		hosts:    config.Hosts,
+		client:   client,
+		limiter:  rate.NewLimiter(rate.Limit(config.Rate), config.Burst),
+		breakers: breakers,
 	}, nil
 }
 
-// ServeHTTP receives requests from godoc.org and forwards them to pkg.go.dev.
+// ServeHTTP receives requests from godoc.org and forwards them to the
+// specified hosts.
 // These requests are validated and rate limited before being forwarded. Too
 // many error responses returned by pkg.go.dev will cause the server to back
-// off temporarily before trying to forward requests to pkg.go.dev again.
+// off temporarily before trying to forward requests to the hosts again.
+// ServeHTTP will always reply with StatusOK as long as the request is a valid
+// godoc.org request, even if the request could not be processed by the hosts.
+// Instead, problems with processing the request by the hosts will logged.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if status, err := s.doRequest(r); err != nil {
+	results, status, err := s.doRequest(r)
+	if err != nil {
 		log.Infof(r.Context(), "teeproxy.Server.ServeHTTP: %v", err)
 		http.Error(w, http.StatusText(status), status)
 		return
 	}
+	log.Info(r.Context(), results)
 }
 
-func (s *Server) doRequest(r *http.Request) (status int, err error) {
+func (s *Server) doRequest(r *http.Request) (results map[string]*RequestEvent, status int, err error) {
 	defer derrors.Wrap(&err, "doRequest(%q): referer=%q", r.URL.Path, r.Referer())
 	ctx := r.Context()
 	if status, err = validateTeeProxyRequest(r); err != nil {
-		return status, err
+		return results, status, err
 	}
 	gddoEvent, err := getGddoEvent(r)
 	if err != nil {
-		return http.StatusBadRequest, err
+		return results, http.StatusBadRequest, err
 	}
 
-	var pkgGoDevEvent *RequestEvent
-	defer func() {
-		log.Info(ctx, map[string]interface{}{
-			"godoc.org":  gddoEvent,
-			"pkg.go.dev": pkgGoDevEvent,
-			"error":      err,
-		})
+	results = map[string]*RequestEvent{
+		"godoc.org": gddoEvent,
+	}
+	if len(s.hosts) > 0 {
+		rateLimited := !s.limiter.Allow()
+		for _, host := range s.hosts {
+			event := &RequestEvent{
+				Host: host,
+			}
 
-		var pkgGoDevLatency time.Duration
-		if pkgGoDevEvent != nil {
-			pkgGoDevLatency = pkgGoDevEvent.Latency
-		}
-		recordTeeProxyMetric(status, gddoEvent.Latency, pkgGoDevLatency)
-	}()
-	if s.shouldForward {
-		if gddoEvent.RedirectHost == "" {
-			return http.StatusBadRequest, fmt.Errorf("redirectHost cannot be empty")
-		}
+			if rateLimited {
+				event.Status = http.StatusTooManyRequests
+				event.Error = errors.New("rate limit exceeded")
+			} else {
+				event = s.doRequestOnHost(ctx, gddoEvent, host)
+			}
 
-		if !s.limiter.Allow() {
-			return http.StatusTooManyRequests, fmt.Errorf("rate limit exceeded")
-		}
-
-		if !s.breaker.Allow() {
-			return statusRedBreaker, fmt.Errorf("breaker is red")
-		}
-		pkgGoDevEvent, err = makePkgGoDevRequest(ctx, gddoEvent.RedirectHost, pkgGoDevPath(gddoEvent.Path))
-		if err != nil {
-			return http.StatusInternalServerError, err
-		}
-		success := pkgGoDevEvent.Status < http.StatusInternalServerError
-		s.breaker.Record(success)
-		if !success {
-			// Use StatusBadGateway to indicate the upstream error.
-			return http.StatusBadGateway, fmt.Errorf("%d server error", pkgGoDevEvent.Status)
+			if event.Error != nil {
+				log.Errorf(r.Context(), "teeproxy.Server.doRequest(%q): %s", host, event.Error)
+			}
+			results[host] = event
+			recordTeeProxyMetric(event.Status, host, gddoEvent.Latency, event.Latency)
 		}
 	}
-	return http.StatusOK, nil
+	return results, http.StatusOK, nil
+}
+
+func (s *Server) doRequestOnHost(ctx context.Context, gddoEvent *RequestEvent, host string) *RequestEvent {
+	redirectPath := pkgGoDevPath(gddoEvent.Path)
+	event := &RequestEvent{
+		Host: host,
+		Path: redirectPath,
+	}
+
+	breaker := s.breakers[host]
+	if breaker == nil {
+		// This case should never be reached.
+		event.Status = http.StatusInternalServerError
+		event.Error = errors.New("breaker is nil")
+		return event
+	}
+
+	if !breaker.Allow() {
+		event.Status = statusRedBreaker
+		event.Error = errors.New("breaker is red")
+		return event
+	}
+
+	event = s.makePkgGoDevRequest(ctx, host, pkgGoDevPath(gddoEvent.Path))
+	if event.Error != nil {
+		return event
+	}
+	success := event.Status < http.StatusInternalServerError
+	breaker.Record(success)
+	return event
 }
 
 // validateTeeProxyRequest validates that a request to the teeproxy is allowed.
@@ -290,35 +328,45 @@ func getGddoEvent(r *http.Request) (gddoEvent *RequestEvent, err error) {
 
 // makePkgGoDevRequest makes a request to the redirectHost and redirectPath,
 // and returns a requestEvent based on the output.
-func makePkgGoDevRequest(ctx context.Context, redirectHost, redirectPath string) (_ *RequestEvent, err error) {
+func (s *Server) makePkgGoDevRequest(ctx context.Context, redirectHost, redirectPath string) *RequestEvent {
+	var err error
 	defer derrors.Wrap(&err, "makePkgGoDevRequest(%q, %q)", redirectHost, redirectPath)
 	redirectURL := redirectHost + redirectPath
+	event := &RequestEvent{
+		Host: redirectHost,
+		Path: redirectPath,
+		URL:  redirectURL,
+	}
+
 	req, err := http.NewRequest("GET", redirectURL, nil)
 	if err != nil {
-		return nil, err
+		event.Status = http.StatusInternalServerError
+		event.Error = err
+		return event
 	}
 	start := time.Now()
-	resp, err := ctxhttp.Do(ctx, http.DefaultClient, req)
+	resp, err := ctxhttp.Do(ctx, s.client, req)
 	if err != nil {
-		return nil, err
+		// Use StatusBadGateway to indicate the upstream error.
+		event.Status = http.StatusBadGateway
+		event.Error = err
+		return event
 	}
-	return &RequestEvent{
-		Host:    redirectHost,
-		Path:    redirectPath,
-		URL:     redirectURL,
-		Status:  resp.StatusCode,
-		Latency: time.Since(start),
-	}, nil
+
+	event.Status = resp.StatusCode
+	event.Latency = time.Since(start)
+	return event
 }
 
 // recordTeeProxyMetric records the latencies and counts of requests from
 // godoc.org and to pkg.go.dev, tagged with the response status code.
-func recordTeeProxyMetric(status int, gddoLatency, pkgGoDevLatency time.Duration) {
+func recordTeeProxyMetric(status int, host string, gddoLatency, pkgGoDevLatency time.Duration) {
 	gddoL := gddoLatency.Seconds() / 1000
 	pkgGoDevL := pkgGoDevLatency.Seconds() / 1000
 
 	stats.RecordWithTags(context.Background(), []tag.Mutator{
 		tag.Upsert(keyTeeproxyStatus, strconv.Itoa(status)),
+		tag.Upsert(keyTeeProxyHost, host),
 	},
 		teeproxyGddoLatency.M(gddoL),
 		teeproxyPkgGoDevLatency.M(pkgGoDevL),

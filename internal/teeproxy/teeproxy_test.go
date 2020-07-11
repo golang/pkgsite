@@ -52,10 +52,11 @@ func TestPkgGoDevRequest(t *testing.T) {
 	defer ts.Close()
 
 	ctx := context.Background()
+	s := newTestServer(Config{})
 
-	got, err := makePkgGoDevRequest(ctx, ts.URL, "")
-	if err != nil {
-		t.Fatal(err)
+	got := s.makePkgGoDevRequest(ctx, ts.URL, "")
+	if got.Error != nil {
+		t.Fatal(got.Error)
 	}
 
 	want := &RequestEvent{
@@ -75,11 +76,10 @@ func TestGetGddoEvent(t *testing.T) {
 		{
 
 			&RequestEvent{
-				RedirectHost: "localhost:8080",
-				Host:         "godoc.org",
-				URL:          "https://godoc.org/net/http",
-				Latency:      100,
-				Status:       200,
+				Host:    "godoc.org",
+				URL:     "https://godoc.org/net/http",
+				Latency: 100,
+				Status:  200,
 			},
 		},
 	} {
@@ -163,13 +163,13 @@ func TestServerHandler(t *testing.T) {
 			handler: alwaysHandler{http.StatusServiceUnavailable},
 			steps: []interface{}{
 				checkState{breaker.Green},
-				request{5, http.StatusBadGateway},
+				request{5, http.StatusServiceUnavailable},
 				checkState{breaker.Green},
 				wait{150 * time.Millisecond},
 				checkState{breaker.Green},
-				request{5, http.StatusBadGateway},
+				request{5, http.StatusServiceUnavailable},
 				checkState{breaker.Green},
-				request{1, http.StatusBadGateway},
+				request{1, http.StatusServiceUnavailable},
 				checkState{breaker.Red},
 			},
 		},
@@ -182,7 +182,7 @@ func TestServerHandler(t *testing.T) {
 			handler: alwaysHandler{http.StatusServiceUnavailable},
 			steps: []interface{}{
 				checkState{breaker.Green},
-				request{6, http.StatusBadGateway},
+				request{6, http.StatusServiceUnavailable},
 				checkState{breaker.Red},
 				request{20, statusRedBreaker},
 				checkState{breaker.Red},
@@ -199,7 +199,7 @@ func TestServerHandler(t *testing.T) {
 			}},
 			handler: &handler{6, http.StatusServiceUnavailable, alwaysHandler{http.StatusOK}},
 			steps: []interface{}{
-				request{6, http.StatusBadGateway},
+				request{6, http.StatusServiceUnavailable},
 				checkState{breaker.Red},
 				request{20, statusRedBreaker},
 				checkState{breaker.Red},
@@ -218,7 +218,7 @@ func TestServerHandler(t *testing.T) {
 			}},
 			handler: &handler{6, http.StatusServiceUnavailable, alwaysHandler{http.StatusOK}},
 			steps: []interface{}{
-				request{6, http.StatusBadGateway},
+				request{6, http.StatusServiceUnavailable},
 				request{20, statusRedBreaker},
 				wait{150 * time.Millisecond},
 				request{9, http.StatusOK},
@@ -237,17 +237,17 @@ func TestServerHandler(t *testing.T) {
 			}},
 			handler: alwaysHandler{http.StatusServiceUnavailable},
 			steps: []interface{}{
-				request{6, http.StatusBadGateway},
+				request{6, http.StatusServiceUnavailable},
 				checkState{breaker.Red},
 				wait{100 * time.Millisecond},
 				checkState{breaker.Yellow},
-				request{1, http.StatusBadGateway},
+				request{1, http.StatusServiceUnavailable},
 				checkState{breaker.Red},
 				wait{100 * time.Millisecond},
 				checkState{breaker.Red},
 				wait{100 * time.Millisecond},
 				checkState{breaker.Yellow},
-				request{1, http.StatusBadGateway},
+				request{1, http.StatusServiceUnavailable},
 				checkState{breaker.Red},
 			},
 		},
@@ -260,11 +260,11 @@ func TestServerHandler(t *testing.T) {
 			}},
 			handler: alwaysHandler{http.StatusServiceUnavailable},
 			steps: []interface{}{
-				request{6, http.StatusBadGateway},
+				request{6, http.StatusServiceUnavailable},
 				checkState{breaker.Red},
 				wait{100 * time.Millisecond},
 				checkState{breaker.Yellow},
-				request{1, http.StatusBadGateway},
+				request{1, http.StatusServiceUnavailable},
 				checkState{breaker.Red},
 				wait{100 * time.Millisecond},
 				checkState{breaker.Yellow},
@@ -272,10 +272,10 @@ func TestServerHandler(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			test.serverConfig.ShouldForward = true
-			server := newTestServer(test.serverConfig)
 			mockPkgGoDevServer := httptest.NewServer(test.handler)
 			defer mockPkgGoDevServer.Close()
+			test.serverConfig.Hosts = []string{mockPkgGoDevServer.URL}
+			server := newTestServer(test.serverConfig)
 			executeSteps(t, server, mockPkgGoDevServer.URL, test.steps)
 		})
 	}
@@ -286,16 +286,16 @@ func executeSteps(t *testing.T, server *Server, pkgGoDevURL string, steps []inte
 		switch step := step.(type) {
 		case request:
 			for i := 0; i < step.repeat; i++ {
-				resp := makePostRequest(t, server, pkgGoDevURL)
-				if resp.StatusCode != step.expectedStatus {
-					t.Errorf("step %d request %d: got status %d, want %d", s, i, resp.StatusCode, step.expectedStatus)
+				event := makePostRequest(t, server, pkgGoDevURL)
+				if event.Status != step.expectedStatus {
+					t.Errorf("step %d request %d: got status %d, want %d", s, i, event.Status, step.expectedStatus)
 				}
 			}
 		case wait:
 			time.Sleep(step.wait)
 		case checkState:
-			if server.breaker.State() != step.expectedState {
-				t.Errorf("step %d: got %s, want %s", s, server.breaker.State().String(), step.expectedState.String())
+			if server.breakers[pkgGoDevURL].State() != step.expectedState {
+				t.Errorf("step %d: got %s, want %s", s, server.breakers[pkgGoDevURL].State().String(), step.expectedState.String())
 			}
 		default:
 			panic("invalid step type")
@@ -331,11 +331,10 @@ func TestHandler(t *testing.T) {
 	}
 }
 
-func makePostRequest(t *testing.T, server *Server, pkgGoDevURL string) *http.Response {
+func makePostRequest(t *testing.T, server *Server, pkgGoDevURL string) *RequestEvent {
 	gddoEvent := &RequestEvent{
-		RedirectHost: pkgGoDevURL,
-		Host:         "godoc.org",
-		URL:          "https://godoc.org/net/http",
+		Host: "godoc.org",
+		URL:  "https://godoc.org/net/http",
 	}
 	requestBody, err := json.Marshal(gddoEvent)
 	if err != nil {
@@ -343,9 +342,15 @@ func makePostRequest(t *testing.T, server *Server, pkgGoDevURL string) *http.Res
 	}
 	r := httptest.NewRequest("POST", "/", bytes.NewBuffer(requestBody))
 	r.Header.Set("Content-Type", "application/json; charset=utf-8")
-	w := httptest.NewRecorder()
-	server.ServeHTTP(w, r)
-	return w.Result()
+	results, _, err := server.doRequest(r)
+	if err != nil || results == nil {
+		t.Fatalf("doRequest = %v: %v", results, err)
+	}
+	event := results[pkgGoDevURL]
+	if event == nil {
+		t.Fatalf("results[%q] = %v", pkgGoDevURL, event)
+	}
+	return event
 }
 
 // newTestServer is like NewServer, but with default values for easier testing.
