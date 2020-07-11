@@ -428,7 +428,6 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, f
 		log.Error(ctx, err)
 	}
 	if path != "" {
-		// TODO(https://golang.org/issue#39663) add a case for this to TestServer
 		http.Redirect(w, r, path, http.StatusFound)
 		return
 	}
