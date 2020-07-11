@@ -851,6 +851,18 @@ func serverTestCases() ([]serverTestCase, []serverTestCase, []serverTestCase, []
 			wantStatusCode: http.StatusFound,
 			wantLocation:   "/net/http",
 		},
+		{
+			name:           "stdlib shortcut with trailing slash",
+			urlPath:        "/http/",
+			wantStatusCode: http.StatusFound,
+			wantLocation:   "/net/http",
+		},
+		{
+			name:           "stdlib shortcut with args and trailing slash",
+			urlPath:        "/http@go1.13/?tab=doc",
+			wantStatusCode: http.StatusFound,
+			wantLocation:   "/net/http",
+		},
 	}
 	return testCases, noExpUserDirTCs, frontendFetchTCs, withPathTCs
 }

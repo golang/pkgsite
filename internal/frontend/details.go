@@ -410,7 +410,7 @@ func parseStdLibURLPath(urlPath string) (path, requestedVersion string, err erro
 	if len(parts) == 1 {
 		return path, internal.LatestVersion, nil
 	}
-	requestedVersion = stdlib.VersionForTag(parts[1])
+	requestedVersion = stdlib.VersionForTag(strings.TrimSuffix(parts[1], "/"))
 	if requestedVersion == "" {
 		return "", "", fmt.Errorf("invalid Go tag for url: %q", urlPath)
 	}
@@ -428,7 +428,7 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, f
 		log.Error(ctx, err)
 	}
 	if path != "" {
-		http.Redirect(w, r, path, http.StatusFound)
+		http.Redirect(w, r, fmt.Sprintf("/%s", path), http.StatusFound)
 		return
 	}
 
