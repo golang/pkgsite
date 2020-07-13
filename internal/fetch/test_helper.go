@@ -27,7 +27,7 @@ var testProxyCommitTime = time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC)
 
 func cleanFetchResult(fr *FetchResult, detector *licenses.Detector) *FetchResult {
 	fr.ModulePath = fr.Module.ModulePath
-	if fr.GoModPath == "" && fr.ModulePath != stdlib.ModulePath {
+	if fr.GoModPath == "" {
 		fr.GoModPath = fr.ModulePath
 	}
 	if fr.Status == 0 {
