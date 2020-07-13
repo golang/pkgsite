@@ -995,19 +995,19 @@ func newTestServer(t *testing.T, proxyModules []*proxy.TestModule, experimentNam
 			return FetchAndUpdateState(ctx, mpath, version, proxyClient, sourceClient, testDB)
 		})
 
-	s, err := NewServer(ServerConfig{
+	config := ServerConfig{
 		DataSource:           testDB,
 		Queue:                q,
 		TaskIDChangeInterval: 10 * time.Minute,
 		StaticPath:           template.TrustedSourceFromConstant("../../content/static"),
 		ThirdPartyPath:       "../../third_party",
 		AppVersionLabel:      "",
-	})
+	}
+	mux := http.NewServeMux()
+	s, err := CreateAndInstallServer(config, mux.Handle, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	mux := http.NewServeMux()
-	s.Install(mux.Handle, nil)
 
 	var exps []*internal.Experiment
 	for _, n := range experimentNames {

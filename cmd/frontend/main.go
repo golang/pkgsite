@@ -98,7 +98,7 @@ func main() {
 			Addr: cfg.RedisHAHost + ":" + cfg.RedisHAPort,
 		})
 	}
-	server, err := frontend.NewServer(frontend.ServerConfig{
+	config := frontend.ServerConfig{
 		DataSource:           ds,
 		Queue:                fetchQueue,
 		CompletionClient:     haClient,
@@ -107,9 +107,6 @@ func main() {
 		ThirdPartyPath:       *thirdPartyPath,
 		DevMode:              *devMode,
 		AppVersionLabel:      cfg.AppVersionLabel(),
-	})
-	if err != nil {
-		log.Fatalf(ctx, "frontend.NewServer: %v", err)
 	}
 	router := dcensus.NewRouter(frontend.TagRoute)
 	var cacheClient *redis.Client
@@ -118,7 +115,10 @@ func main() {
 			Addr: cfg.RedisCacheHost + ":" + cfg.RedisCachePort,
 		})
 	}
-	server.Install(router.Handle, cacheClient)
+	server, err := frontend.CreateAndInstallServer(config, router.Handle, cacheClient)
+	if err != nil {
+		log.Fatalf(ctx, "frontend.NewServer: %v", err)
+	}
 	views := append(dcensus.ServerViews,
 		postgres.SearchLatencyDistribution,
 		postgres.SearchResponseCount,

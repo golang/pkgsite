@@ -167,23 +167,22 @@ func TestModulePackageDirectoryResolution(t *testing.T) {
 	}
 }
 
-// TODO(https://github.com/golang/go/issues/40096): factor out this code reduce
-// duplication
 func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue) *httptest.Server {
 	t.Helper()
-	s, err := frontend.NewServer(frontend.ServerConfig{
+	config := frontend.ServerConfig{
 		DataSource:           testDB,
 		TaskIDChangeInterval: 10 * time.Minute,
 		StaticPath:           template.TrustedSourceFromConstant("../../../content/static"),
 		ThirdPartyPath:       "../../../third_party",
 		AppVersionLabel:      "",
 		Queue:                q,
-	})
+	}
+
+	mux := http.NewServeMux()
+	s, err := frontend.CreateAndInstallServer(config, mux.Handle, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	mux := http.NewServeMux()
-	s.Install(mux.Handle, nil)
 
 	experimenter, err := middleware.NewExperimenter(ctx, 1*time.Minute, testDB)
 	if err != nil {
