@@ -104,7 +104,7 @@ func newPackageIDs(pkg *doc.Package, related ...*doc.Package) *packageIDs {
 		pids.pkgIDs[pkg.Name] = make(map[string]bool)
 		forEachPackageDecl(pkg, func(decl ast.Decl) {
 			for _, idk := range generateAnchorPoints(decl) {
-				pids.pkgIDs[pkg.Name][idk.id] = true // E.g., ["io"]["Reader.Read"]
+				pids.pkgIDs[pkg.Name][idk.id.String()] = true // E.g., ["io"]["Reader.Read"]
 			}
 		})
 	}

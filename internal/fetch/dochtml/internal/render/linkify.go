@@ -62,6 +62,7 @@ const (
 var (
 	matchRx     = regexp.MustCompile(urlRx + `|` + rfcRx + `|` + qualIdentRx)
 	badAnchorRx = regexp.MustCompile(`[^a-zA-Z0-9]`)
+	badIDRx     = regexp.MustCompile(`[^_a-zA-Z0-9.]`)
 )
 
 type docData struct {
@@ -412,7 +413,7 @@ scan:
 			bb.WriteString(`</span>`)
 			lastOffset += len(lit)
 		case token.IDENT:
-			if idIdx < len(anchorPoints) && anchorPoints[idIdx].id != "" {
+			if idIdx < len(anchorPoints) && anchorPoints[idIdx].id.String() != "" {
 				anchorLines[line] = append(anchorLines[line], anchorPoints[idIdx])
 			}
 			if idIdx < len(anchorLinks) && anchorLinks[idIdx] != "" {
@@ -454,7 +455,7 @@ scan:
 				continue
 			}
 			fmt.Fprintf(w, `<span id="%s" data-kind="%s"></span>`,
-				template.HTMLEscapeString(ik.id), ik.kind)
+				template.HTMLEscapeString(ik.id.String()), ik.kind)
 		}
 		b, _ := bb.ReadBytes('\n')
 		w.Write(b) // write remainder of line (contains newline)
@@ -512,7 +513,17 @@ func stringBasicLitSize(s string) string {
 // An idKind holds an anchor ID and the kind of the identifier being anchored.
 // The valid kinds are: "constant", "variable", "type", "function", "method" and "field".
 type idKind struct {
-	id, kind string
+	id   safehtml.Identifier
+	kind string
+}
+
+// safeGoID constructs a safe identifier from a Go symbol or dotted concatenation of symbols
+// (e.g. "Time.Equal").
+func safeGoID(s string) safehtml.Identifier {
+	if badIDRx.MatchString(s) {
+		panic(fmt.Sprintf("identifier contains invalid characters: %q", s))
+	}
+	return legacyconversions.RiskilyAssumeIdentifier(s)
 }
 
 // generateAnchorPoints returns a mapping of *ast.Ident objects to the
@@ -530,11 +541,11 @@ func generateAnchorPoints(decl ast.Decl) map[*ast.Ident]idKind {
 					kind = "variable"
 				}
 				for _, name := range sp.(*ast.ValueSpec).Names {
-					m[name] = idKind{name.Name, kind}
+					m[name] = idKind{safeGoID(name.Name), kind}
 				}
 			case token.TYPE:
 				ts := sp.(*ast.TypeSpec)
-				m[ts.Name] = idKind{ts.Name.Name, "type"}
+				m[ts.Name] = idKind{safeGoID(ts.Name.Name), "type"}
 
 				var fs []*ast.Field
 				var kind string
@@ -548,7 +559,7 @@ func generateAnchorPoints(decl ast.Decl) map[*ast.Ident]idKind {
 				}
 				for _, f := range fs {
 					for _, id := range f.Names {
-						m[id] = idKind{ts.Name.String() + "." + id.String(), kind}
+						m[id] = idKind{safeGoID(ts.Name.String() + "." + id.String()), kind}
 					}
 					// if f.Names == nil, we have an embedded struct field or embedded
 					// interface.
@@ -564,7 +575,7 @@ func generateAnchorPoints(decl ast.Decl) map[*ast.Ident]idKind {
 						// The name of an embedded field is the type name.
 						typeName, id := nodeName(f.Type)
 						typeName = typeName[strings.LastIndexByte(typeName, '.')+1:]
-						m[id] = idKind{ts.Name.String() + "." + typeName, kind}
+						m[id] = idKind{safeGoID(ts.Name.String() + "." + typeName), kind}
 					}
 				}
 			}
@@ -578,7 +589,7 @@ func generateAnchorPoints(decl ast.Decl) map[*ast.Ident]idKind {
 			anchorID = recvName + "." + anchorID
 			kind = "method"
 		}
-		m[decl.Name] = idKind{anchorID, kind}
+		m[decl.Name] = idKind{safeGoID(anchorID), kind}
 	}
 	return m
 }
