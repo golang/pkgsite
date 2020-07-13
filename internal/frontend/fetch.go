@@ -96,7 +96,7 @@ func (s *Server) serveFetch(w http.ResponseWriter, r *http.Request) (err error) 
 	if err != nil {
 		return &serverError{status: http.StatusBadRequest}
 	}
-	if !isActivePathAtMaster(ctx) && urlInfo.requestedVersion != internal.MasterVersion {
+	if !isActivePathAtMaster(ctx) && urlInfo.requestedVersion == internal.MasterVersion {
 		return &serverError{status: http.StatusBadRequest}
 	}
 	if !isSupportedVersion(ctx, urlInfo.fullPath, urlInfo.requestedVersion) ||
