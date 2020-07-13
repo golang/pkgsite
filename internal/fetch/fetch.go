@@ -94,6 +94,7 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 			fr.Error = err
 			return fr
 		}
+		fr.GoModPath = stdlib.ModulePath
 		fr.ResolvedVersion = requestedVersion
 	} else {
 		info, err := proxyClient.GetInfo(ctx, modulePath, requestedVersion)
