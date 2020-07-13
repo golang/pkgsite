@@ -39,7 +39,7 @@ type Directory struct {
 }
 
 // serveDirectoryPage serves a directory view for a directory in a module
-// verison.
+// version.
 func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, r *http.Request, vdir *internal.VersionedDirectory, requestedVersion string) (err error) {
 	defer derrors.Wrap(&err, "serveDirectoryPage for %s@%s", vdir.Path, requestedVersion)
 	tab := r.FormValue("tab")
