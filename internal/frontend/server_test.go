@@ -483,7 +483,6 @@ func serverTestCases() ([]serverTestCase, []serverTestCase, []serverTestCase) {
 					text(`v1`),
 					in("a",
 						href("/"+sample.ModulePath+"@v1.0.0/foo"),
-						attr("title", "v1.0.0"),
 						text("v1.0.0")))),
 		},
 		{
@@ -739,7 +738,6 @@ func serverTestCases() ([]serverTestCase, []serverTestCase, []serverTestCase) {
 				in("li.Versions-item",
 					in("a",
 						href("/mod/"+sample.ModulePath+"@v1.0.0"),
-						attr("title", "v1.0.0"),
 						text("v1.0.0")))),
 		},
 		{

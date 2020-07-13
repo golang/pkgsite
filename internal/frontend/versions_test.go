@@ -11,7 +11,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/postgres"
-	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/version"
 )
@@ -36,19 +35,10 @@ func sampleModule(modulePath, version string, versionType version.Type, packages
 func versionSummaries(path string, versions []string, linkify func(path, version string) string) []*VersionSummary {
 	vs := make([]*VersionSummary, len(versions))
 	for i, version := range versions {
-		var semver, displayVersion string
-		if stdlib.Contains(path) {
-			semver = version
-			displayVersion = version
-		} else {
-			semver = version
-			displayVersion = formatVersion(semver)
-		}
 		vs[i] = &VersionSummary{
-			TooltipVersion: semver,
-			DisplayVersion: displayVersion,
-			Link:           linkify(path, version),
-			CommitTime:     commitTime,
+			Version:    version,
+			Link:       linkify(path, version),
+			CommitTime: commitTime,
 		}
 	}
 	return vs

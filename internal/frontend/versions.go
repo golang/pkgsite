@@ -54,11 +54,10 @@ type VersionList struct {
 // VersionSummary holds data required to format the version link on the
 // versions tab.
 type VersionSummary struct {
-	TooltipVersion string
-	DisplayVersion string
-	CommitTime     string
+	CommitTime string
 	// Link to this version, for use in the anchor href.
-	Link string
+	Link    string
+	Version string
 }
 
 // fetchModuleVersionsDetails builds a version hierarchy for module versions
@@ -172,16 +171,10 @@ func buildVersionDetails(currentModulePath string, modInfos []*internal.ModuleIn
 			}
 		}
 		key := VersionListKey{ModulePath: mi.ModulePath, Major: major}
-		ttversion := mi.Version
-		fmtVersion := displayVersion(mi.Version, mi.ModulePath)
-		if mi.ModulePath == stdlib.ModulePath {
-			ttversion = fmtVersion // tooltips will show the Go tag
-		}
 		vs := &VersionSummary{
-			TooltipVersion: ttversion,
-			Link:           linkify(mi),
-			CommitTime:     elapsedTime(mi.CommitTime),
-			DisplayVersion: fmtVersion,
+			Link:       linkify(mi),
+			CommitTime: elapsedTime(mi.CommitTime),
+			Version:    linkVersion(mi.Version, mi.ModulePath),
 		}
 		if _, ok := lists[key]; !ok {
 			seenLists = append(seenLists, key)
