@@ -13,8 +13,6 @@ import (
 	"go/printer"
 	"go/scanner"
 	"go/token"
-	"html/template"
-	"io"
 	"regexp"
 	"strconv"
 	"strings"
@@ -241,9 +239,14 @@ scan:
 // formatLineHTML formats the line as HTML-annotated text.
 // URLs and Go identifiers are linked to corresponding declarations.
 func (r *Renderer) formatLineHTML(line string, idr *identifierResolver) safehtml.HTML {
-	var buf bytes.Buffer
+	var htmls []safehtml.HTML
 	var lastChar, nextChar byte
 	var numQuotes int
+
+	addLink := func(href, text string) {
+		htmls = append(htmls, executeToHTML(linkTemplate, link{href, text}))
+	}
+
 	for len(line) > 0 {
 		m0, m1 := len(line), len(line)
 		if m := matchRx.FindStringIndex(line); m != nil {
@@ -251,7 +254,7 @@ func (r *Renderer) formatLineHTML(line string, idr *identifierResolver) safehtml
 		}
 		if m0 > 0 {
 			nonWord := line[:m0]
-			io.WriteString(&buf, template.HTMLEscapeString(nonWord))
+			htmls = append(htmls, safehtml.HTMLEscaped(nonWord))
 			lastChar = nonWord[len(nonWord)-1]
 			numQuotes += countQuotes(nonWord)
 		}
@@ -295,8 +298,7 @@ func (r *Renderer) formatLineHTML(line string, idr *identifierResolver) safehtml
 					word = line[m0:m1]
 				}
 
-				word := template.HTMLEscapeString(word)
-				fmt.Fprintf(&buf, `<a href="%s">%s</a>`, word, word)
+				addLink(word, word)
 			// Match "RFC ..." to link RFCs.
 			case strings.HasPrefix(word, "RFC") && len(word) > 3 && unicode.IsSpace(rune(word[3])):
 				// Strip all characters except for letters, numbers, and '.' to
@@ -304,26 +306,23 @@ func (r *Renderer) formatLineHTML(line string, idr *identifierResolver) safehtml
 				rfcFields := strings.FieldsFunc(word, func(c rune) bool {
 					return !unicode.IsLetter(c) && !unicode.IsNumber(c) && c != '.'
 				})
-				word := template.HTMLEscapeString(word)
 				if len(rfcFields) >= 4 {
 					// RFC x Section y
-					fmt.Fprintf(&buf, `<a href="https://rfc-editor.org/rfc/rfc%s.html#section-%s">%s</a>`,
-						rfcFields[1], rfcFields[3], word)
+					addLink(fmt.Sprintf("https://rfc-editor.org/rfc/rfc%s.html#section-%s", rfcFields[1], rfcFields[3]), word)
 				} else if len(rfcFields) >= 2 {
 					// RFC x
-					fmt.Fprintf(&buf, `<a href="https://rfc-editor.org/rfc/rfc%s.html">%s</a>`,
-						rfcFields[1], word)
+					addLink(fmt.Sprintf("https://rfc-editor.org/rfc/rfc%s.html", rfcFields[1]), word)
 				}
 			case !forbidLinking && !r.disableHotlinking && idr != nil: // && numQuotes%2 == 0:
-				io.WriteString(&buf, idr.toHTML(word).String())
+				htmls = append(htmls, idr.toHTML(word))
 			default:
-				io.WriteString(&buf, template.HTMLEscapeString(word))
+				htmls = append(htmls, safehtml.HTMLEscaped(word))
 			}
 			numQuotes += countQuotes(word)
 		}
 		line = line[m1:]
 	}
-	return legacyconversions.RiskilyAssumeHTML(buf.String())
+	return safehtml.HTMLConcat(htmls...)
 }
 
 func executeToHTML(tmpl *safetemplate.Template, data interface{}) safehtml.HTML {

@@ -86,6 +86,12 @@ TLSUnique contains the tls-unique channel binding value (see RFC
 			want: `<p>Bar returns the string &#34;bar&#34;.
 </p>`,
 		},
+		{
+			name: "text is escaped",
+			doc:  `link http://foo"><script>evil</script>`,
+			want: `<p>link <a href="http://foo">http://foo</a>&#34;&gt;&lt;script&gt;evil&lt;/script&gt;
+</p>`,
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			r := New(context.Background(), nil, pkgTime, nil)
