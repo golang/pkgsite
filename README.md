@@ -15,7 +15,7 @@ Here's what we are currently working on:
 
 - Design updates: We have some design changes planned for pkg.go.dev,
   to address
-  [UX feedback](https://github.com/golang/go/issues?q=is%3Aissue+is%3Aopen+label%3Ago.dev+label%3AUX)
+  [UX feedback](https://github.com/golang/go/issues?q=is%3Aissue+is%3Aopen+label%3Apkgsite+label%3AUX)
   that we have received.
   You can expect a more cohesive search and navigation experience coming soon.
   We plan to share these designs for feedback once they are ready.
@@ -47,7 +47,7 @@ the [known issues](https://github.com/golang/go/labels/go.dev) to see if your
 issue is already being discussed. If an issue does not already exist, feel free
 to [file an issue](https://golang.org/s/discovery-feedback).
 
-For answers to frequently asked questions, see [go.dev](https://go.dev/about).
+For answers to frequently asked questions, see [go.dev/about](https://go.dev/about).
 
 You can also chat with us on the #tools slack channel on the
 [Gophers slack](https://invite.slack.golangbridge.org).

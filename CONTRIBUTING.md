@@ -16,10 +16,10 @@ any contributions for
 ## Finding issues
 
 All issues related to x/pkgsite are labeled with the
-[`go.dev` label](https://github.com/golang/go/issues/labels/go.dev).
+[`pkgsite` label](https://github.com/golang/go/issues/labels/pkgsite).
 
 In particular, we would love your help on issues tagged with the
-[`help wanted` label](https://github.com/golang/go/issues?q=is%3Aissue+is%3Aopen+label%3Ago.dev+label%3A%22help+wanted%22+).
+[`help wanted` label](https://github.com/golang/go/issues?q=is%3Aissue+is%3Aopen+label%3Apkgsite+label%3A%22help+wanted%22+).
 
 Before you begin working on an issue, please leave a comment that you are claiming it.
 
