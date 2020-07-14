@@ -187,7 +187,7 @@ func (s *Server) fetchAndPoll(parentCtx context.Context, modulePath, fullPath, r
 		// Results are in order of longest module path first. Once an
 		// appropriate result is found, return. Otherwise, look at the next path.
 		if fr.status == derrors.ToHTTPStatus(derrors.AlternativeModule) {
-			return fr.status, fmt.Sprintf("%q is not a supported package path. Were you looking for %q?", fullPath, fr.goModPath)
+			return http.StatusSeeOther, fmt.Sprintf("%q is not a supported package path. Were you looking for %q?", fullPath, fr.goModPath)
 		}
 		if responseText, ok := statusToResponseText[fr.status]; ok {
 			return fr.status, responseText
@@ -204,8 +204,8 @@ func (s *Server) fetchAndPoll(parentCtx context.Context, modulePath, fullPath, r
 	}
 	if moduleMatchingPathPrefix != "" {
 		return http.StatusNotFound,
-			// TODO(golang/go#37002): return as safehtml.HTML so that link is clickable.
-			fmt.Sprintf("%q could not be found. Other versions of module %q may have it! Check them out at https://pkg.go.dev/mod/%s?tab=versions",
+			// TODO(https://golang.org/issue/#37002): return as safehtml.HTML so that link is clickable.
+			fmt.Sprintf("%q could not be found. However, module %q does exist. You can see the module page at https://pkg.go.dev/mod/%s",
 				fullPath, moduleMatchingPathPrefix, moduleMatchingPathPrefix)
 	}
 	p := fullPath
