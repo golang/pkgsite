@@ -143,12 +143,14 @@ func TestFetchErrors(t *testing.T) {
 }
 
 func TestFetchPathAlreadyExists(t *testing.T) {
-	for _, status := range []int{
-		http.StatusOK,
-		http.StatusNotFound,
-		derrors.ToHTTPStatus(derrors.AlternativeModule),
+	for _, test := range []struct {
+		status, want int
+	}{
+		{http.StatusOK, http.StatusOK},
+		{http.StatusNotFound, http.StatusNotFound},
+		{derrors.ToHTTPStatus(derrors.AlternativeModule), http.StatusSeeOther},
 	} {
-		t.Run(strconv.Itoa(status), func(t *testing.T) {
+		t.Run(strconv.Itoa(test.status), func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testFetchTimeout)
 			defer cancel()
 			ctx = experiment.NewContext(ctx,
@@ -161,7 +163,7 @@ func TestFetchPathAlreadyExists(t *testing.T) {
 				ModulePath:       sample.ModulePath,
 				RequestedVersion: sample.VersionString,
 				ResolvedVersion:  sample.VersionString,
-				Status:           status,
+				Status:           test.status,
 			}); err != nil {
 				t.Fatal(err)
 			}
@@ -169,8 +171,8 @@ func TestFetchPathAlreadyExists(t *testing.T) {
 			s, _, teardown := newTestServer(t, testModulesForProxy)
 			defer teardown()
 			got, _ := s.fetchAndPoll(ctx, sample.ModulePath, sample.PackagePath, sample.VersionString)
-			if got != status {
-				t.Fatalf("fetchAndPoll for status %d: %d; want = %d)", status, got, status)
+			if got != test.want {
+				t.Fatalf("fetchAndPoll for status %d: %d; want = %d)", test.status, got, test.want)
 			}
 		})
 	}
