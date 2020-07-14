@@ -959,6 +959,8 @@ func testServer(t *testing.T, testCases []serverTestCase, experimentNames ...str
 			}
 			_ = res.Body.Close()
 
+			checkIDs(t, doc)
+
 			if tc.want != nil {
 				if err := tc.want(doc); err != nil {
 					if testing.Verbose() {
@@ -979,6 +981,19 @@ func isSubset(subset, set *experiment.Set) bool {
 	}
 
 	return true
+}
+
+var badIDRegexp = regexp.MustCompile(`^[a-zA-Z0-9_.]*$`)
+
+func checkIDs(t *testing.T, n *html.Node) {
+	for _, a := range n.Attr {
+		if strings.EqualFold(a.Key, "id") && badIDRegexp.MatchString(a.Val) {
+			t.Errorf("HTML id %q must not be a valid Go identifier or dotted expression (add a hyphen)", a.Val)
+		}
+	}
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		checkIDs(t, c)
+	}
 }
 
 func TestServerErrors(t *testing.T) {

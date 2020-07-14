@@ -6,10 +6,10 @@
 
 {{define "search"}}
   <div class="SearchForm-container{{if (.Experiments.IsActive "autocomplete")}} Experiment-autoComplete{{end}}">
-    <form class="SearchForm" action="/search" role="search" id="AutoComplete-parent" aria-owns="AutoComplete-list">
+    <form class="SearchForm" action="/search" role="search" id="js-AutoComplete-parent" aria-owns="AutoComplete-list">
       <div class="SearchForm-firstRow">
         <input class="SearchForm-input js-autoComplete"
-          id="AutoComplete"
+          id="js-AutoComplete-input"
           role="textbox"
           aria-controls="AutoComplete-list"
           aria-autocomplete="list"

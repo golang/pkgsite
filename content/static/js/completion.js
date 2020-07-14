@@ -18,8 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // selector, unfortunately, so we can't express our autocompletion behavior
   // in terms of classes rather than IDs. See also
   // https://github.com/TarekRaafat/autoComplete.js/issues/82
-  const completeInput = document.querySelector('#AutoComplete');
-  const parentForm = document.querySelector('#AutoComplete-parent');
+  const completeInput = document.querySelector('#js-AutoComplete-input');
+  const parentForm = document.querySelector('#js-AutoComplete-parent');
   const hideCompletion = () => {
     parentForm.setAttribute('aria-expanded', false);
     // Without removing aria-activedescendant screenreaders will get confused.
@@ -170,13 +170,13 @@ document.addEventListener('DOMContentLoaded', () => {
         source.classList.add('AutoComplete-list');
         source.setAttribute('role', 'listbox');
       },
-      destination: document.querySelector('#AutoComplete-parent'),
+      destination: document.querySelector('#js-AutoComplete-parent'),
       position: 'beforeend',
       element: 'ul',
       navigation: navigation,
     },
     highlight: true,
-    selector: '#AutoComplete',
+    selector: '#js-AutoComplete-input',
     onSelection: feedback => {
       if (feedback.selection.value.PackagePath) {
         // Navigate directly to the package.
