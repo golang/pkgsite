@@ -48,19 +48,19 @@ func TestBadgeHandler_ServeBadgeTool(t *testing.T) {
 		},
 		{
 			"/badge/?path=github.com/google/uuid",
-			"[![PkgGoDev](https://example.com/github.com/google/uuid)](https://example.com/badge/github.com/google/uuid)",
+			"[![PkgGoDev](https://example.com/badge/github.com/google/uuid)](https://example.com/github.com/google/uuid)",
 		},
 		{
 			"/badge/?path=github.com/google/uuid?tab=imports",
-			"[![PkgGoDev](https://example.com/github.com/google/uuid?tab=imports)](https://example.com/badge/github.com/google/uuid?tab=imports)",
+			"[![PkgGoDev](https://example.com/badge/github.com/google/uuid?tab=imports)](https://example.com/github.com/google/uuid?tab=imports)",
 		},
 		{
 			"/badge/?path=https://pkg.go.dev/github.com/google/uuid",
-			"[![PkgGoDev](https://example.com/github.com/google/uuid)](https://example.com/badge/github.com/google/uuid)",
+			"[![PkgGoDev](https://example.com/badge/github.com/google/uuid)](https://example.com/github.com/google/uuid)",
 		},
 		{
 			"/badge/?path=https://pkg.go.dev/github.com/google/uuid?tab=imports",
-			"[![PkgGoDev](https://example.com/github.com/google/uuid?tab=imports)](https://example.com/badge/github.com/google/uuid?tab=imports)",
+			"[![PkgGoDev](https://example.com/badge/github.com/google/uuid?tab=imports)](https://example.com/github.com/google/uuid?tab=imports)",
 		},
 		{
 			"/badge/?path=https://google.com",
@@ -68,7 +68,7 @@ func TestBadgeHandler_ServeBadgeTool(t *testing.T) {
 		},
 		{
 			"/badge/?path=https://google.com/github.com/google/uuid",
-			"[![PkgGoDev](https://example.com/github.com/google/uuid)](https://example.com/badge/github.com/google/uuid)",
+			"[![PkgGoDev](https://example.com/badge/github.com/google/uuid)](https://example.com/github.com/google/uuid)",
 		},
 	}
 
