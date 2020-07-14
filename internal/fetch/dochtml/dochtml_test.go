@@ -9,7 +9,6 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"html/template"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
@@ -31,7 +30,7 @@ func TestRender(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	htmlDoc, err := html.Parse(strings.NewReader(rawDoc))
+	htmlDoc, err := html.Parse(strings.NewReader(rawDoc.String()))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -45,47 +44,47 @@ func TestRender(t *testing.T) {
 	})
 }
 
-func TestFileLinkHTML(t *testing.T) {
+func TestLinkHTML(t *testing.T) {
 	for _, test := range []struct {
 		name string
-		file string
+		in   string
 		link string
-		want template.HTML
+		want string
 	}{
 		{
-			name: "file name is escaped",
-			file: `"File & name" <'file@name.com>`,
+			name: "regular string and link are rendered",
+			in:   `escape.go`,
+			link: `https://golang.org/src/html/escape.go`,
+			want: `<a class="class" href="https://golang.org/src/html/escape.go">escape.go</a>`,
+		},
+		{
+			name: "name is escaped",
+			in:   `"File & name" <'file@name.com>`,
 			link: "",
 			want: `&#34;File &amp; name&#34; &lt;&#39;file@name.com&gt;`,
 		},
 		{
 			name: "link is escaped",
-			file: "file.go",
+			in:   "file.go",
 			link: `"abc@go's.com"`,
-			want: `<a class="Documentation-file" href="&#34;abc@go&#39;s.com&#34;">file.go</a>`,
+			want: `<a class="class" href="%22abc@go%27s.com%22">file.go</a>`,
 		},
 		{
 			name: "file name and link are escaped",
-			file: `"a's.com@/`,
+			in:   `"a's.com@/`,
 			link: `"x@go's.com"`,
-			want: `<a class="Documentation-file" href="&#34;x@go&#39;s.com&#34;">&#34;a&#39;s.com@/</a>`,
+			want: `<a class="class" href="%22x@go%27s.com%22">&#34;a&#39;s.com@/</a>`,
 		},
 		{
 			name: "HTML injection escaped",
-			file: `<a href="gfr.con"></a>`,
-			link: `a.com`,
-			want: `<a class="Documentation-file" href="a.com">&lt;a href=&#34;gfr.con&#34;&gt;&lt;/a&gt;</a>`,
-		},
-		{
-			name: "regular file name and link are rendered",
-			file: `escape.go`,
-			link: `https://golang.org/src/html/escape.go`,
-			want: `<a class="Documentation-file" href="https://golang.org/src/html/escape.go">escape.go</a>`,
+			in:   `<a href="gfr.con"></a>`,
+			link: `"><script>bad</script>`,
+			want: `<a class="class" href="%22%3e%3cscript%3ebad%3c/script%3e">&lt;a href=&#34;gfr.con&#34;&gt;&lt;/a&gt;</a>`,
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			got := fileLinkHTML(test.file, test.link)
-			diff := cmp.Diff(test.want, got)
+			got := linkHTML(test.in, test.link, "class")
+			diff := cmp.Diff(test.want, got.String())
 			if diff != "" {
 				t.Errorf("mismatch (-want, +got):\n%s", diff)
 			}

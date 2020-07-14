@@ -294,7 +294,7 @@ linkify:
 
 		path, name, _ := r.lookup(altWord[:i])
 		u := r.toURL(path, name)
-		html, err := linkTemplate.ExecuteToHTML(link{u, s})
+		html, err := LinkTemplate.ExecuteToHTML(Link{Href: u, Text: s})
 		if err != nil {
 			html = safehtml.HTMLEscaped("[" + err.Error() + "]")
 		}
@@ -309,11 +309,14 @@ linkify:
 	return safehtml.HTMLConcat(outs...)
 }
 
-type link struct {
+// Link is the data passed to LinkTemplate.
+type Link struct {
 	Href, Text string
+	Class      string // class for "a" tag; optional
 }
 
-var linkTemplate = template.Must(template.New("").Parse(`<a href="{{.Href}}">{{.Text}}</a>`))
+var LinkTemplate = template.Must(template.New("link").Parse(
+	`<a {{with .Class}}class="{{.}}" {{end}}href="{{.Href}}">{{.Text}}</a>`))
 
 // lookup looks up a dot-separated identifier.
 // E.g., "pkg", "pkg.Var", "Recv.Method", "Struct.Field", "pkg.Struct.Field"

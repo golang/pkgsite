@@ -27,8 +27,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/safehtml"
-	"github.com/google/safehtml/legacyconversions"
 	"github.com/google/safehtml/template"
 	"go.opencensus.io/trace"
 	"golang.org/x/mod/modfile"
@@ -685,13 +683,10 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 		ModInfo:        modInfo,
 		Limit:          int64(MaxDocumentationHTML),
 	})
-	var safeDocHTML safehtml.HTML
 	if errors.Is(err, dochtml.ErrTooLarge) {
-		safeDocHTML = template.MustParseAndExecuteToHTML(docTooLargeReplacement)
+		docHTML = template.MustParseAndExecuteToHTML(docTooLargeReplacement)
 	} else if err != nil {
 		return nil, fmt.Errorf("dochtml.Render: %v", err)
-	} else {
-		safeDocHTML = legacyconversions.RiskilyAssumeHTML(docHTML)
 	}
 	v1path := internal.V1Path(modulePath, innerPath)
 	if modulePath == stdlib.ModulePath {
@@ -703,7 +698,7 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 		Synopsis:          doc.Synopsis(d.Doc),
 		V1Path:            v1path,
 		Imports:           d.Imports,
-		DocumentationHTML: safeDocHTML,
+		DocumentationHTML: docHTML,
 		GOOS:              goos,
 		GOARCH:            goarch,
 	}, err

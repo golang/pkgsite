@@ -60,7 +60,6 @@ const (
 var (
 	matchRx     = regexp.MustCompile(urlRx + `|` + rfcRx + `|` + qualIdentRx)
 	badAnchorRx = regexp.MustCompile(`[^a-zA-Z0-9]`)
-	badIDRx     = regexp.MustCompile(`[^_a-zA-Z0-9.]`)
 )
 
 type docData struct {
@@ -113,7 +112,7 @@ func (r *Renderer) declHTML(doc string, decl ast.Decl) (out struct{ Doc, Decl sa
 			}
 			els = append(els, el)
 		}
-		out.Doc = executeToHTML(docTmpl, docData{Elements: els, DisablePermalinks: r.disablePermalinks})
+		out.Doc = ExecuteToHTML(docTmpl, docData{Elements: els, DisablePermalinks: r.disablePermalinks})
 	}
 	if decl != nil {
 		out.Decl = safehtml.HTMLConcat(
@@ -233,7 +232,7 @@ scan:
 	if len(els) > 0 {
 		els[len(els)-1].Text = strings.TrimRight(els[len(els)-1].Text, "\n")
 	}
-	return executeToHTML(codeTmpl, els)
+	return ExecuteToHTML(codeTmpl, els)
 }
 
 // formatLineHTML formats the line as HTML-annotated text.
@@ -244,7 +243,7 @@ func (r *Renderer) formatLineHTML(line string, idr *identifierResolver) safehtml
 	var numQuotes int
 
 	addLink := func(href, text string) {
-		htmls = append(htmls, executeToHTML(linkTemplate, link{href, text}))
+		htmls = append(htmls, ExecuteToHTML(LinkTemplate, Link{Href: href, Text: text}))
 	}
 
 	for len(line) > 0 {
@@ -325,7 +324,7 @@ func (r *Renderer) formatLineHTML(line string, idr *identifierResolver) safehtml
 	return safehtml.HTMLConcat(htmls...)
 }
 
-func executeToHTML(tmpl *safetemplate.Template, data interface{}) safehtml.HTML {
+func ExecuteToHTML(tmpl *safetemplate.Template, data interface{}) safehtml.HTML {
 	h, err := tmpl.ExecuteToHTML(data)
 	if err != nil {
 		return safehtml.HTMLEscaped("[" + err.Error() + "]")
@@ -422,7 +421,7 @@ scan:
 				anchorLines[line] = append(anchorLines[line], anchorPoints[idIdx])
 			}
 			if idIdx < len(anchorLinks) && anchorLinks[idIdx] != "" {
-				htmlLines[line] = append(htmlLines[line], executeToHTML(linkTemplate, link{Href: anchorLinks[idIdx], Text: lit}))
+				htmlLines[line] = append(htmlLines[line], ExecuteToHTML(LinkTemplate, Link{Href: anchorLinks[idIdx], Text: lit}))
 				lastOffset += len(lit)
 			}
 			idIdx++
@@ -458,7 +457,7 @@ scan:
 			if fd, ok := decl.(*ast.FuncDecl); ok && fd.Recv != nil {
 				continue
 			}
-			htmls = append(htmls, executeToHTML(anchorTemplate, ik))
+			htmls = append(htmls, ExecuteToHTML(anchorTemplate, ik))
 		}
 		htmls = append(htmls, htmlLines[line]...)
 	}
@@ -522,13 +521,20 @@ type idKind struct {
 	Kind string
 }
 
-// safeGoID constructs a safe identifier from a Go symbol or dotted concatenation of symbols
+// SafeGoID constructs a safe identifier from a Go symbol or dotted concatenation of symbols
 // (e.g. "Time.Equal").
-func safeGoID(s string) safehtml.Identifier {
-	if badIDRx.MatchString(s) {
-		panic(fmt.Sprintf("identifier contains invalid characters: %q", s))
-	}
+func SafeGoID(s string) safehtml.Identifier {
+	ValidateGoDottedExpr(s)
 	return legacyconversions.RiskilyAssumeIdentifier(s)
+}
+
+var badIDRx = regexp.MustCompile(`[^_\pL\pN.]`)
+
+// ValidateGoDottedExpr panics if s contains characters other than '.' plus the valid Go identifier characters.
+func ValidateGoDottedExpr(s string) {
+	if badIDRx.MatchString(s) {
+		panic(fmt.Sprintf("invalid identifier characters: %q", s))
+	}
 }
 
 // generateAnchorPoints returns a mapping of *ast.Ident objects to the
@@ -546,11 +552,11 @@ func generateAnchorPoints(decl ast.Decl) map[*ast.Ident]idKind {
 					kind = "variable"
 				}
 				for _, name := range sp.(*ast.ValueSpec).Names {
-					m[name] = idKind{safeGoID(name.Name), kind}
+					m[name] = idKind{SafeGoID(name.Name), kind}
 				}
 			case token.TYPE:
 				ts := sp.(*ast.TypeSpec)
-				m[ts.Name] = idKind{safeGoID(ts.Name.Name), "type"}
+				m[ts.Name] = idKind{SafeGoID(ts.Name.Name), "type"}
 
 				var fs []*ast.Field
 				var kind string
@@ -564,7 +570,7 @@ func generateAnchorPoints(decl ast.Decl) map[*ast.Ident]idKind {
 				}
 				for _, f := range fs {
 					for _, id := range f.Names {
-						m[id] = idKind{safeGoID(ts.Name.String() + "." + id.String()), kind}
+						m[id] = idKind{SafeGoID(ts.Name.String() + "." + id.String()), kind}
 					}
 					// if f.Names == nil, we have an embedded struct field or embedded
 					// interface.
@@ -580,7 +586,7 @@ func generateAnchorPoints(decl ast.Decl) map[*ast.Ident]idKind {
 						// The name of an embedded field is the type name.
 						typeName, id := nodeName(f.Type)
 						typeName = typeName[strings.LastIndexByte(typeName, '.')+1:]
-						m[id] = idKind{safeGoID(ts.Name.String() + "." + typeName), kind}
+						m[id] = idKind{SafeGoID(ts.Name.String() + "." + typeName), kind}
 					}
 				}
 			}
@@ -594,7 +600,7 @@ func generateAnchorPoints(decl ast.Decl) map[*ast.Ident]idKind {
 			anchorID = recvName + "." + anchorID
 			kind = "method"
 		}
-		m[decl.Name] = idKind{safeGoID(anchorID), kind}
+		m[decl.Name] = idKind{SafeGoID(anchorID), kind}
 	}
 	return m
 }

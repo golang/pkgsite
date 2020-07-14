@@ -9,7 +9,6 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"html/template"
 	"strings"
 	"testing"
 
@@ -161,9 +160,8 @@ func After(d <a href="#Duration">Duration</a>) &lt;-chan <a href="#Time">Time</a
 		t.Run(test.name, func(t *testing.T) {
 			decl := declForName(t, pkgTime, test.symbol)
 			r := New(context.Background(), fsetTime, pkgTime, nil)
-			got := r.DeclHTML("", decl).Decl
-			want := template.HTML(test.want)
-			if diff := cmp.Diff(want, got); diff != "" {
+			got := r.DeclHTML("", decl).Decl.String()
+			if diff := cmp.Diff(test.want, got); diff != "" {
 				t.Errorf("mismatch (-want +got)\n%s", diff)
 			}
 		})

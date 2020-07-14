@@ -10,10 +10,10 @@ import (
 	"context"
 	"go/ast"
 	"go/token"
-	"html/template"
 	"regexp"
 	"strings"
 
+	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal/fetch/internal/doc"
 )
 
@@ -126,8 +126,8 @@ func (r *Renderer) Synopsis(n ast.Node) string {
 //	<a href="XXX">     elements for URL hyperlinks
 //
 // DocHTML is intended for documentation for the package and examples.
-func (r *Renderer) DocHTML(doc string) template.HTML {
-	return template.HTML(r.declHTML(doc, nil).Doc.String())
+func (r *Renderer) DocHTML(doc string) safehtml.HTML {
+	return r.declHTML(doc, nil).Doc
 }
 
 // DeclHTML formats the doc and decl and returns a tuple of
@@ -142,13 +142,10 @@ func (r *Renderer) DocHTML(doc string) template.HTML {
 //	<a href="XXX">              elements for URL hyperlinks
 //
 // DeclHTML is intended for top-level package declarations.
-func (r *Renderer) DeclHTML(doc string, decl ast.Decl) (out struct{ Doc, Decl template.HTML }) {
+func (r *Renderer) DeclHTML(doc string, decl ast.Decl) (out struct{ Doc, Decl safehtml.HTML }) {
 	// This returns an anonymous struct instead of multiple return values since
 	// the template package only allows single return values.
-	d := r.declHTML(doc, decl)
-	out.Doc = template.HTML(d.Doc.String())
-	out.Decl = template.HTML(d.Decl.String())
-	return out
+	return r.declHTML(doc, decl)
 }
 
 // CodeHTML formats example code. If the code is a single block statement,
@@ -163,8 +160,8 @@ func (r *Renderer) DeclHTML(doc string, decl ast.Decl) (out struct{ Doc, Decl te
 //	<span class="comment">  elements for every Go comment
 //
 // CodeHTML is intended for use with example code snippets.
-func (r *Renderer) CodeHTML(ex *doc.Example) template.HTML {
-	return template.HTML(r.codeHTML(ex).String())
+func (r *Renderer) CodeHTML(ex *doc.Example) safehtml.HTML {
+	return r.codeHTML(ex)
 }
 
 // block is (*heading | *paragraph | *preformat).
