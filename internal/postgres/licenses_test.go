@@ -14,11 +14,13 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
 func TestGetLicenses(t *testing.T) {
 	testModule := sample.Module(sample.ModulePath, "v1.2.3", "A/B")
+	stdlibModule := sample.Module(stdlib.ModulePath, "v1.13.0", "cmd/go")
 	mit := &licenses.Metadata{Types: []string{"MIT"}, FilePath: "LICENSE"}
 	bsd := &licenses.Metadata{Types: []string{"BSD-3-Clause"}, FilePath: "A/B/LICENSE"}
 
@@ -36,32 +38,72 @@ func TestGetLicenses(t *testing.T) {
 	// github.com/valid/module_name/A/B
 	testModule.Directories[2].Licenses = []*licenses.Metadata{mit, bsd}
 
-	tests := []struct {
-		err      error
-		name     string
-		fullPath string
-		want     []*licenses.License
-	}{
-		{name: "empty path", err: derrors.InvalidArgument},
-		{name: "module root", fullPath: sample.ModulePath, want: []*licenses.License{testModule.Licenses[1]}},
-		{name: "package without license", fullPath: sample.ModulePath + "/A", want: []*licenses.License{testModule.Licenses[1]}},
-		{name: "package with additional license", fullPath: sample.ModulePath + "/A/B", want: testModule.Licenses},
-	}
-
 	defer ResetTestDB(testDB, t)
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*5)
 	defer cancel()
 	if err := testDB.InsertModule(ctx, testModule); err != nil {
 		t.Fatal(err)
 	}
-
-	for _, test := range tests {
+	if err := testDB.InsertModule(ctx, stdlibModule); err != nil {
+		t.Fatal(err)
+	}
+	for _, test := range []struct {
+		err                                 error
+		name, fullPath, modulePath, version string
+		want                                []*licenses.License
+	}{
+		{
+			name: "empty path",
+			err:  derrors.InvalidArgument,
+		},
+		{
+			name:       "module root",
+			fullPath:   sample.ModulePath,
+			modulePath: sample.ModulePath,
+			version:    testModule.Version,
+			want:       []*licenses.License{testModule.Licenses[1]},
+		},
+		{
+			name:       "package without license",
+			fullPath:   sample.ModulePath + "/A",
+			modulePath: sample.ModulePath,
+			version:    testModule.Version,
+			want:       []*licenses.License{testModule.Licenses[1]},
+		},
+		{
+			name:       "package with additional license",
+			fullPath:   sample.ModulePath + "/A/B",
+			modulePath: sample.ModulePath,
+			version:    testModule.Version,
+			want:       testModule.Licenses,
+		},
+		{
+			name:       "stdlib directory",
+			fullPath:   "cmd",
+			modulePath: stdlib.ModulePath,
+			version:    stdlibModule.Version,
+			want:       stdlibModule.Licenses,
+		},
+		{
+			name:       "stdlib package",
+			fullPath:   "cmd/go",
+			modulePath: stdlib.ModulePath,
+			version:    stdlibModule.Version,
+			want:       stdlibModule.Licenses,
+		},
+		{
+			name:       "stdlib module",
+			fullPath:   stdlib.ModulePath,
+			modulePath: stdlib.ModulePath,
+			version:    stdlibModule.Version,
+			want:       stdlibModule.Licenses,
+		},
+	} {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := testDB.GetLicenses(ctx, test.fullPath, sample.ModulePath, testModule.Version)
+			got, err := testDB.GetLicenses(ctx, test.fullPath, test.modulePath, test.version)
 			if !errors.Is(err, test.err) {
 				t.Fatal(err)
 			}
-
 			sort.Slice(got, func(i, j int) bool {
 				return got[i].FilePath < got[j].FilePath
 			})
@@ -74,7 +116,6 @@ func TestGetLicenses(t *testing.T) {
 			for i := range test.want {
 				sort.Strings(test.want[i].Types)
 			}
-
 			cmpopt := cmpopts.IgnoreFields(licenses.License{}, "Contents")
 			if diff := cmp.Diff(test.want, got, cmpopt); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)

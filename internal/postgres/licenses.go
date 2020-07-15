@@ -16,6 +16,7 @@ import (
 	"github.com/lib/pq"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 // GetLicenses returns the licenses that applies to the fullPath for the given module version.
@@ -58,16 +59,19 @@ func (db *DB) GetLicenses(ctx context.Context, fullPath, modulePath, resolvedVer
 		return nil, err
 	}
 
-	var lics []*licenses.License
-
 	// The `query` returns all licenses for the module version. We need to
 	// filter the licenses that applies to the specified fullPath, i.e.
 	// A license in the current or any parent directory of the specified
 	// fullPath applies to it.
-	for _, license := range moduleLicenses {
-		licensePath := path.Join(modulePath, path.Dir(license.FilePath))
-		if strings.HasPrefix(fullPath, licensePath) {
-			lics = append(lics, license)
+	var lics []*licenses.License
+	for _, l := range moduleLicenses {
+		if modulePath == stdlib.ModulePath {
+			lics = append(lics, l)
+		} else {
+			licensePath := path.Join(modulePath, path.Dir(l.FilePath))
+			if strings.HasPrefix(fullPath, licensePath) {
+				lics = append(lics, l)
+			}
 		}
 	}
 	return lics, nil
