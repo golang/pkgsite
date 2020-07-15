@@ -147,3 +147,83 @@ func getModuleVersions(ctx context.Context, db *DB, modulePath string, versionTy
 	}
 	return vinfos, nil
 }
+
+// GetVersionsForPath returns a list of tagged versions sorted in
+// descending semver order if any exist. If none, it returns the 10 most
+// recent from a list of pseudo-versions sorted in descending semver order.
+func (db *DB) GetVersionsForPath(ctx context.Context, path string) (_ []*internal.ModuleInfo, err error) {
+	defer derrors.Wrap(&err, "GetVersionsForPath(ctx, %q)", path)
+
+	versions, err := getPathVersions(ctx, db, path, version.TypeRelease, version.TypePrerelease)
+	if err != nil {
+		return nil, err
+	}
+	if len(versions) != 0 {
+		return versions, nil
+	}
+	versions, err = getPathVersions(ctx, db, path, version.TypePseudo)
+	if err != nil {
+		return nil, err
+	}
+	return versions, nil
+}
+
+// getPathVersions returns a list of versions sorted in descending semver
+// order. The version types included in the list are specified by a list of
+// VersionTypes.
+func getPathVersions(ctx context.Context, db *DB, path string, versionTypes ...version.Type) (_ []*internal.ModuleInfo, err error) {
+	defer derrors.Wrap(&err, "getPathVersions(ctx, db, %q, %v)", path, versionTypes)
+
+	baseQuery := `
+	SELECT
+		m.module_path,
+		m.version,
+		m.commit_time,
+		m.version_type,
+		m.redistributable,
+		m.has_go_mod,
+		m.source_info
+	FROM modules m
+	INNER JOIN paths p
+	ON p.module_id = m.id
+	WHERE
+		p.v1_path = (
+			SELECT p2.v1_path
+			FROM paths as p2
+			WHERE p2.path = $1
+			LIMIT 1
+		)
+		AND version_type in (%s)
+	ORDER BY
+		m.module_path DESC,
+		m.sort_version DESC %s`
+
+	queryEnd := `;`
+	if len(versionTypes) == 0 {
+		return nil, fmt.Errorf("error: must specify at least one version type")
+	} else if len(versionTypes) == 1 && versionTypes[0] == version.TypePseudo {
+		queryEnd = `LIMIT 10;`
+	}
+	query := fmt.Sprintf(baseQuery, versionTypeExpr(versionTypes), queryEnd)
+	var versions []*internal.ModuleInfo
+	collect := func(rows *sql.Rows) error {
+		var mi internal.ModuleInfo
+		if err := rows.Scan(
+			&mi.ModulePath,
+			&mi.Version,
+			&mi.CommitTime,
+			&mi.VersionType,
+			&mi.IsRedistributable,
+			&mi.HasGoMod,
+			jsonbScanner{&mi.SourceInfo},
+		); err != nil {
+			return fmt.Errorf("row.Scan(): %v", err)
+		}
+		versions = append(versions, &mi)
+		return nil
+	}
+	if err := db.db.RunQuery(ctx, query, collect, path); err != nil {
+		return nil, err
+	}
+	return versions, nil
+}
