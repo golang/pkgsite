@@ -117,6 +117,33 @@ func (ds *DataSource) GetImports(ctx context.Context, pkgPath, modulePath, versi
 	return vp.Imports, nil
 }
 
+// GetLicenses return licenses at path for the given module path and version.
+func (ds *DataSource) GetLicenses(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ []*licenses.License, err error) {
+	defer derrors.Wrap(&err, "GetLicenses(%q, %q, %q)", fullPath, modulePath, resolvedVersion)
+	v, err := ds.getModule(ctx, modulePath, resolvedVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	var lics []*licenses.License
+
+	// ds.getModule() returns all licenses for the module version. We need to
+	// filter the licenses that applies to the specified fullPath, i.e.
+	// A license in the current or any parent directory of the specified
+	// fullPath applies to it.
+	for _, license := range v.Licenses {
+		licensePath := path.Join(modulePath, path.Dir(license.FilePath))
+		if strings.HasPrefix(fullPath, licensePath) {
+			lics = append(lics, license)
+		}
+	}
+
+	if len(lics) == 0 {
+		return nil, fmt.Errorf("path %s is missing from module %s: %w", fullPath, modulePath, derrors.NotFound)
+	}
+	return lics, nil
+}
+
 // LegacyGetModuleLicenses returns root-level licenses detected within the module zip
 // for modulePath and version.
 func (ds *DataSource) LegacyGetModuleLicenses(ctx context.Context, modulePath, version string) (_ []*licenses.License, err error) {

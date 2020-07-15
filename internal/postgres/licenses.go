@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"path"
 	"reflect"
 	"sort"
 	"strings"
@@ -16,6 +17,61 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/licenses"
 )
+
+// GetLicenses returns the licenses that applies to the fullPath for the given module version.
+// It returns an InvalidArgument error if the module path or version is invalid.
+func (db *DB) GetLicenses(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ []*licenses.License, err error) {
+	defer derrors.Wrap(&err, "GetLicenses(ctx, %q, %q, %q)", fullPath, modulePath, resolvedVersion)
+
+	if fullPath == "" || resolvedVersion == "" {
+		return nil, fmt.Errorf("neither fullpath nor resolvedVersion can be empty: %w", derrors.InvalidArgument)
+	}
+	query := `
+		SELECT
+			l.types,
+			l.file_path,
+			l.contents,
+			l.coverage
+		FROM
+			licenses l
+		INNER JOIN
+			paths p
+		ON
+			p.module_id=l.module_id
+		INNER JOIN
+			modules m
+		ON
+			p.module_id=m.id
+		WHERE
+			p.path = $1
+			AND m.module_path = $2
+			AND m.version = $3;`
+
+	rows, err := db.db.Query(ctx, query, fullPath, modulePath, resolvedVersion)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	moduleLicenses, err := collectLicenses(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	var lics []*licenses.License
+
+	// The `query` returns all licenses for the module version. We need to
+	// filter the licenses that applies to the specified fullPath, i.e.
+	// A license in the current or any parent directory of the specified
+	// fullPath applies to it.
+	for _, license := range moduleLicenses {
+		licensePath := path.Join(modulePath, path.Dir(license.FilePath))
+		if strings.HasPrefix(fullPath, licensePath) {
+			lics = append(lics, license)
+		}
+	}
+	return lics, nil
+}
 
 // LegacyGetModuleLicenses returns all licenses associated with the given module path and
 // version. These are the top-level licenses in the module zip file.
