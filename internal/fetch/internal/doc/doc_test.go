@@ -154,15 +154,6 @@ func Test(t *testing.T) {
 	test(t, AllMethods)
 }
 
-func TestAnchorID(t *testing.T) {
-	const in = "Important Things 2 Know & Stuff"
-	const want = "hdr-Important_Things_2_Know___Stuff"
-	got := anchorID(in)
-	if got != want {
-		t.Errorf("anchorID(%q) = %q; want %q", in, got, want)
-	}
-}
-
 func TestPackageName(t *testing.T) {
 	for _, test := range []struct {
 		path string
