@@ -51,9 +51,7 @@ func (s *Server) legacyServeModulePage(w http.ResponseWriter, r *http.Request, m
 
 func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *http.Request,
 	mi *internal.ModuleInfo, readme *internal.Readme, requestedVersion string) error {
-	// TODO(https://github.com/golang/go/issues/40027): read licenses using
-	// GetLicenses, instead of LegacyGetModuleLicenses.
-	licenses, err := s.ds.LegacyGetModuleLicenses(ctx, mi.ModulePath, mi.Version)
+	licenses, err := s.ds.GetLicenses(ctx, mi.ModulePath, mi.ModulePath, mi.Version)
 	if err != nil {
 		return err
 	}

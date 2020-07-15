@@ -33,6 +33,16 @@ type LicenseMetadata struct {
 	Anchor safehtml.Identifier
 }
 
+// fetchLicensesDetails fetches license data for the package version specified by
+// path and version from the database and returns a LicensesDetails.
+func fetchLicensesDetails(ctx context.Context, ds internal.DataSource, fullPath, modulePath, resolvedVersion string) (*LicensesDetails, error) {
+	dsLicenses, err := ds.GetLicenses(ctx, fullPath, modulePath, resolvedVersion)
+	if err != nil {
+		return nil, err
+	}
+	return &LicensesDetails{Licenses: transformLicenses(modulePath, resolvedVersion, dsLicenses)}, nil
+}
+
 // legacyFetchPackageLicensesDetails fetches license data for the package version specified by
 // path and version from the database and returns a LicensesDetails.
 func legacyFetchPackageLicensesDetails(ctx context.Context, ds internal.DataSource, pkgPath, modulePath, resolvedVersion string) (*LicensesDetails, error) {

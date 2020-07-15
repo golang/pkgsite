@@ -157,7 +157,7 @@ func fetchDetailsForPackage(r *http.Request, tab string, ds internal.DataSource,
 	case "importedby":
 		return fetchImportedByDetails(ctx, ds, vdir.Path, vdir.ModulePath)
 	case "licenses":
-		return legacyFetchPackageLicensesDetails(ctx, ds, vdir.Path, vdir.ModulePath, vdir.Version)
+		return fetchLicensesDetails(ctx, ds, vdir.Path, vdir.ModulePath, vdir.Version)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
@@ -204,13 +204,7 @@ func fetchDetailsForDirectory(r *http.Request, tab string, ds internal.DataSourc
 	case "subdirectories":
 		return fetchDirectoryDetails(ctx, ds, vdir, false)
 	case "licenses":
-		// TODO(https://golang.org/issue/40027): replace logic below with
-		// GetLicenses.
-		licenses, err := ds.LegacyGetModuleLicenses(ctx, vdir.ModulePath, vdir.Version)
-		if err != nil {
-			return nil, err
-		}
-		return &LicensesDetails{Licenses: transformLicenses(vdir.ModulePath, vdir.Version, licenses)}, nil
+		return fetchLicensesDetails(ctx, ds, vdir.Path, vdir.ModulePath, vdir.Version)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
