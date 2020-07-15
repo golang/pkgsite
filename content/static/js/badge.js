@@ -24,7 +24,7 @@ if (pathEl && htmlEl && markdownEl && badgeEl) {
     const href = `${origin}/${e.target.value}`;
     const imgSrc = `${origin}/badge/${e.target.value}`;
     htmlEl.value = `<a href="${href}"><img src="${imgSrc}" alt="PkgGoDev"></a>`;
-    markdownEl.value = `[![PkgGoDev](${href})](${imgSrc})`;
+    markdownEl.value = `[![PkgGoDev](${imgSrc})](${href})`;
     badgeEl.href = href;
   });
 }

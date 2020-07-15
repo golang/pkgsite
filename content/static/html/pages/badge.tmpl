@@ -20,8 +20,8 @@
       <form action="/badge/">
         <label class="Badge-formElement">
           URL
-          <input name="path" class="js-toolsPathInput" 
-              value="{{if .Path}}{{.SiteURL}}/{{.Path}}{{end}}" placeholder="e.g., https://pkg.go.dev/golang.org/x/pkgsite">
+          <input name="path" class="js-toolsPathInput"
+              value="{{.Path}}" placeholder="e.g., https://pkg.go.dev/golang.org/x/pkgsite">
         </label>
         <label class="Badge-formElement">
           <button type="submit" class="Badge-submitButton">Create</button>
