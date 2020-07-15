@@ -60,9 +60,9 @@ type VersionSummary struct {
 	Version string
 }
 
-// fetchModuleVersionsDetails builds a version hierarchy for module versions
+// legacyFetchModuleVersionsDetails builds a version hierarchy for module versions
 // with the same series path as the given version.
-func fetchModuleVersionsDetails(ctx context.Context, ds internal.DataSource, mi *internal.ModuleInfo) (*VersionsDetails, error) {
+func legacyFetchModuleVersionsDetails(ctx context.Context, ds internal.DataSource, mi *internal.ModuleInfo) (*VersionsDetails, error) {
 	versions, err := ds.LegacyGetTaggedVersionsForModule(ctx, mi.ModulePath)
 	if err != nil {
 		return nil, err
@@ -81,9 +81,9 @@ func fetchModuleVersionsDetails(ctx context.Context, ds internal.DataSource, mi 
 	return buildVersionDetails(mi.ModulePath, versions, linkify), nil
 }
 
-// fetchPackageVersionsDetails builds a version hierarchy for all module
+// legacyFetchPackageVersionsDetails builds a version hierarchy for all module
 // versions containing a package path with v1 import path matching the given v1 path.
-func fetchPackageVersionsDetails(ctx context.Context, ds internal.DataSource, pkgPath, v1Path, modulePath string) (*VersionsDetails, error) {
+func legacyFetchPackageVersionsDetails(ctx context.Context, ds internal.DataSource, pkgPath, v1Path, modulePath string) (*VersionsDetails, error) {
 	versions, err := ds.LegacyGetTaggedVersionsForPackageSeries(ctx, pkgPath)
 	if err != nil {
 		return nil, err
