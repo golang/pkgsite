@@ -139,34 +139,6 @@ func init() {
 	}
 }
 
-// legacyFetchDetailsForPackage returns tab details by delegating to the correct detail
-// handler.
-func legacyFetchDetailsForPackage(r *http.Request, tab string, ds internal.DataSource, pkg *internal.LegacyVersionedPackage) (interface{}, error) {
-	ctx := r.Context()
-	switch tab {
-	case "doc":
-		return legacyFetchDocumentationDetails(pkg), nil
-	case "versions":
-		return legacyFetchPackageVersionsDetails(ctx, ds, pkg.Path, pkg.V1Path, pkg.ModulePath)
-	case "subdirectories":
-		return legacyFetchDirectoryDetails(ctx, ds, pkg.Path, &pkg.ModuleInfo, pkg.Licenses, false)
-	case "imports":
-		return fetchImportsDetails(ctx, ds, pkg.Path, pkg.ModulePath, pkg.Version)
-	case "importedby":
-		db, ok := ds.(*postgres.DB)
-		if !ok {
-			// The proxydatasource does not support the imported by page.
-			return nil, proxydatasourceNotSupportedErr()
-		}
-		return fetchImportedByDetails(ctx, db, pkg.Path, pkg.ModulePath)
-	case "licenses":
-		return legacyFetchPackageLicensesDetails(ctx, ds, pkg.Path, pkg.ModulePath, pkg.Version)
-	case "overview":
-		return legacyFetchPackageOverviewDetails(ctx, pkg, urlIsVersioned(r.URL))
-	}
-	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
-}
-
 // fetchDetailsForPackage returns tab details by delegating to the correct detail
 // handler.
 func fetchDetailsForPackage(r *http.Request, tab string, ds internal.DataSource, vdir *internal.VersionedDirectory) (interface{}, error) {
@@ -188,10 +160,6 @@ func fetchDetailsForPackage(r *http.Request, tab string, ds internal.DataSource,
 		return legacyFetchPackageLicensesDetails(ctx, ds, vdir.Path, vdir.ModulePath, vdir.Version)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
-}
-
-func urlIsVersioned(url *url.URL) bool {
-	return strings.ContainsRune(url.Path, '@')
 }
 
 // fetchDetailsForModule returns tab details by delegating to the correct detail
@@ -265,4 +233,36 @@ func legacyFetchDetailsForDirectory(r *http.Request, tab string, dir *internal.L
 		return &LicensesDetails{Licenses: transformLicenses(dir.ModulePath, dir.Version, licenses)}, nil
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
+}
+
+// legacyFetchDetailsForPackage returns tab details by delegating to the correct detail
+// handler.
+func legacyFetchDetailsForPackage(r *http.Request, tab string, ds internal.DataSource, pkg *internal.LegacyVersionedPackage) (interface{}, error) {
+	ctx := r.Context()
+	switch tab {
+	case "doc":
+		return legacyFetchDocumentationDetails(pkg), nil
+	case "versions":
+		return legacyFetchPackageVersionsDetails(ctx, ds, pkg.Path, pkg.V1Path, pkg.ModulePath)
+	case "subdirectories":
+		return legacyFetchDirectoryDetails(ctx, ds, pkg.Path, &pkg.ModuleInfo, pkg.Licenses, false)
+	case "imports":
+		return fetchImportsDetails(ctx, ds, pkg.Path, pkg.ModulePath, pkg.Version)
+	case "importedby":
+		db, ok := ds.(*postgres.DB)
+		if !ok {
+			// The proxydatasource does not support the imported by page.
+			return nil, proxydatasourceNotSupportedErr()
+		}
+		return fetchImportedByDetails(ctx, db, pkg.Path, pkg.ModulePath)
+	case "licenses":
+		return legacyFetchPackageLicensesDetails(ctx, ds, pkg.Path, pkg.ModulePath, pkg.Version)
+	case "overview":
+		return legacyFetchPackageOverviewDetails(ctx, pkg, urlIsVersioned(r.URL))
+	}
+	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
+}
+
+func urlIsVersioned(url *url.URL) bool {
+	return strings.ContainsRune(url.Path, '@')
 }
