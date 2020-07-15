@@ -8,8 +8,7 @@ it with
 ln -s -f ../../all.bash .git/hooks/pre-commit
 ```
 
-Google workstations start with a small shell script as a pre-commit hook. To
-add `all.bash` to it, edit `.git/hooks/pre-commit` and add the line
+To add `all.bash` to an existing pre-commit hook, edit `.git/hooks/pre-commit` and add the line
 
 ```
 ./all.bash
