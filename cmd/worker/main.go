@@ -19,6 +19,7 @@ import (
 	"cloud.google.com/go/errorreporting"
 	"cloud.google.com/go/profiler"
 	"github.com/go-redis/redis/v7"
+	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/dcensus"
@@ -105,7 +106,7 @@ func main() {
 		Queue:                fetchQueue,
 		ReportingClient:      reportingClient,
 		TaskIDChangeInterval: config.TaskIDChangeIntervalWorker,
-		StaticPath:           *staticPath,
+		StaticPath:           template.TrustedSourceFromFlag(flag.Lookup("static").Value),
 	})
 	if err != nil {
 		log.Fatal(ctx, err)

@@ -90,7 +90,7 @@ func TestEndToEndProcessing(t *testing.T) {
 		RedisCacheClient:     redisCacheClient,
 		Queue:                queue,
 		TaskIDChangeInterval: 10 * time.Minute,
-		StaticPath:           "../../../content/static",
+		StaticPath:           template.TrustedSourceFromConstant("../../../content/static"),
 	})
 	if err != nil {
 		t.Fatal(err)
