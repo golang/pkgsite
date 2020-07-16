@@ -79,7 +79,7 @@ var (
 	ReprocessAlternative = errors.New("reprocess alternative module")
 )
 
-var httpCodes = []struct {
+var codes = []struct {
 	err  error
 	code int
 }{
@@ -122,7 +122,7 @@ func FromStatus(code int, format string, args ...interface{}) error {
 		return nil
 	}
 	var innerErr = Unknown
-	for _, e := range httpCodes {
+	for _, e := range codes {
 		if e.code == code {
 			innerErr = e.err
 			break
@@ -139,7 +139,7 @@ func ToStatus(err error) int {
 	if err == nil {
 		return http.StatusOK
 	}
-	for _, e := range httpCodes {
+	for _, e := range codes {
 		if errors.Is(err, e.err) {
 			return e.code
 		}
