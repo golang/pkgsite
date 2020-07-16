@@ -231,6 +231,7 @@ func translateHTML(htmlText []byte, info *source.Info, readme *internal.Readme) 
 		return nil, err
 	}
 	var buf bytes.Buffer
+	changed := false
 	for _, n := range nodes {
 		// Every parsed node begins with <html><head></head><body>. Ignore that.
 		if n.DataAtom != atom.Html {
@@ -247,24 +248,34 @@ func translateHTML(htmlText []byte, info *source.Info, readme *internal.Readme) 
 		if n == nil {
 			return htmlText, nil
 		}
-		walkHTML(n, info, readme)
+		if walkHTML(n, info, readme) {
+			changed = true
+		}
 		if err := html.Render(&buf, n); err != nil {
 			return nil, err
 		}
 	}
-	return buf.Bytes(), nil
+	if changed {
+		return buf.Bytes(), nil
+	}
+	// If there were no changes, return the original.
+	return htmlText, nil
 }
 
 // walkHTML crawls through an html node and replaces the src
 // tag link with a link that properly represents the image
 // from the repo source.
-func walkHTML(n *html.Node, info *source.Info, readme *internal.Readme) {
+// It reports whether it made a change.
+func walkHTML(n *html.Node, info *source.Info, readme *internal.Readme) bool {
+	changed := false
 	if n.Type == html.ElementNode && n.DataAtom == atom.Img {
 		var attrs []html.Attribute
 		for _, a := range n.Attr {
 			if a.Key == "src" {
 				if v := translateRelativeLink(a.Val, info, true, readme); v != "" {
+					fmt.Printf("#### translated relative image link %q to %q\n", a.Val, v)
 					a.Val = v
+					changed = true
 				}
 			}
 			attrs = append(attrs, a)
@@ -272,6 +283,9 @@ func walkHTML(n *html.Node, info *source.Info, readme *internal.Readme) {
 		n.Attr = attrs
 	}
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		walkHTML(c, info, readme)
+		if walkHTML(c, info, readme) {
+			changed = true
+		}
 	}
+	return changed
 }
