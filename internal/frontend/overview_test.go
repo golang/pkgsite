@@ -335,7 +335,7 @@ func TestReadmeHTML(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := readmeHTML(ctx, tc.mi, tc.readme)
+			got, err := ReadmeHTML(ctx, tc.mi, tc.readme)
 			if err != nil {
 				t.Fatal(err)
 			}

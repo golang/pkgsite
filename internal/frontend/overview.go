@@ -57,7 +57,7 @@ func constructOverviewDetails(ctx context.Context, mi *internal.ModuleInfo, read
 	}
 	if overview.Redistributable && readme != nil {
 		overview.ReadMeSource = fileSource(mi.ModulePath, mi.Version, readme.Filepath)
-		r, err := readmeHTML(ctx, mi, readme)
+		r, err := ReadmeHTML(ctx, mi, readme)
 		if err != nil {
 			return nil, err
 		}
@@ -98,7 +98,7 @@ func fetchPackageOverviewDetails(ctx context.Context, vdir *internal.VersionedDi
 	}
 	if overview.Redistributable && vdir.Readme != nil {
 		overview.ReadMeSource = fileSource(vdir.ModulePath, vdir.Version, vdir.Readme.Filepath)
-		r, err := readmeHTML(ctx, &vdir.ModuleInfo, vdir.Readme)
+		r, err := ReadmeHTML(ctx, &vdir.ModuleInfo, vdir.Readme)
 		if err != nil {
 			return nil, err
 		}
@@ -119,10 +119,12 @@ func packageSubdir(pkgPath, modulePath string) string {
 	}
 }
 
-// readmeHTML sanitizes readmeContents based on bluemondy.UGCPolicy and returns
+// ReadmeHTML sanitizes readmeContents based on bluemondy.UGCPolicy and returns
 // a safehtml.HTML. If readmeFilePath indicates that this is a markdown file,
 // it will also render the markdown contents using blackfriday.
-func readmeHTML(ctx context.Context, mi *internal.ModuleInfo, readme *internal.Readme) (_ safehtml.HTML, err error) {
+//
+// It is exported to support external testing.
+func ReadmeHTML(ctx context.Context, mi *internal.ModuleInfo, readme *internal.Readme) (_ safehtml.HTML, err error) {
 	defer derrors.Wrap(&err, "readmeHTML(%s@%s)", mi.ModulePath, mi.Version)
 	if readme == nil {
 		return safehtml.HTML{}, nil
