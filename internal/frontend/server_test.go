@@ -74,6 +74,8 @@ type serverTestCase struct {
 	wantLocation string
 	// if non-nil, call the checker on the HTML root node
 	want htmlcheck.Checker
+	// list of experiments that must be enabled for this test to run
+	requiredExperiments *experiment.Set
 }
 
 var testModules = []testModule{
@@ -180,8 +182,11 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 	}
 }
 
-// serverTestCases are the test cases valid for any experiment
-func serverTestCases() ([]serverTestCase, []serverTestCase, []serverTestCase, []serverTestCase) {
+// serverTestCases are the test cases valid for any experiment. For experiments
+// that modify any part of the behaviour covered by the test cases in
+// serverTestCase(), a new test generator should be created and added to
+// TestServer().
+func serverTestCases() []serverTestCase {
 	const (
 		versioned   = true
 		unversioned = false
@@ -801,10 +806,8 @@ func serverTestCases() ([]serverTestCase, []serverTestCase, []serverTestCase, []
 			wantStatusCode: http.StatusOK,
 			want:           pagecheck.ModuleHeader(netHttp, unversioned),
 		},
-	}
-	noExpUserDirTCs := []serverTestCase{
 		{
-			name:           "unknown version",
+			name:           "unknown version, no experiments",
 			urlPath:        fmt.Sprintf("/%s@%s/%s", sample.ModulePath, "v99.99.0", sample.Suffix),
 			wantStatusCode: http.StatusNotFound,
 			want: in("",
@@ -812,59 +815,73 @@ func serverTestCases() ([]serverTestCase, []serverTestCase, []serverTestCase, []
 				in("p.Error-message a", href("/"+sample.ModulePath+"/foo?tab=versions"))),
 		},
 		{
-			name:           "path not found",
+
+			name:           "path not found, no experiments",
 			urlPath:        "/example.com/unknown",
 			wantStatusCode: http.StatusNotFound,
 			want: in("",
 				in("h3.Error-message", text("404 Not Found")),
 				in("p.Error-message", text("a valid package path"))),
 		},
+		{
+			name:                "stdlib shortcut (net/http)",
+			urlPath:             "/http",
+			wantStatusCode:      http.StatusFound,
+			wantLocation:        "/net/http",
+			requiredExperiments: experiment.NewSet(internal.ExperimentUsePathInfo),
+		},
+		{
+			name:                "stdlib shortcut (net/http) strip args",
+			urlPath:             "/http@go1.13?tab=doc",
+			wantStatusCode:      http.StatusFound,
+			wantLocation:        "/net/http",
+			requiredExperiments: experiment.NewSet(internal.ExperimentUsePathInfo),
+		},
+		{
+			name:                "stdlib shortcut with trailing slash",
+			urlPath:             "/http/",
+			wantStatusCode:      http.StatusFound,
+			wantLocation:        "/net/http",
+			requiredExperiments: experiment.NewSet(internal.ExperimentUsePathInfo),
+		},
+		{
+			name:                "stdlib shortcut with args and trailing slash",
+			urlPath:             "/http@go1.13/?tab=doc",
+			wantStatusCode:      http.StatusFound,
+			wantLocation:        "/net/http",
+			requiredExperiments: experiment.NewSet(internal.ExperimentUsePathInfo),
+		},
 	}
 
-	frontendFetchTCs := []serverTestCase{
+	return testCases
+}
+
+// frontendFetchTestCases() returns test cases that are valid if
+// internal.ExperimentFrontendFetch is active.
+func frontendFetchTestCases() []serverTestCase {
+	var (
+		in   = htmlcheck.In
+		text = htmlcheck.HasText
+	)
+
+	return []serverTestCase{
 		{
-			name:           "unknown version",
+			name:           "unknown version, frontend experiment",
 			urlPath:        fmt.Sprintf("/%s@%s/%s", sample.ModulePath, "v99.99.0", sample.Suffix),
 			wantStatusCode: http.StatusNotFound,
 			want: in("",
 				in("h3.Fetch-message.js-fetchMessage", text("Oops! "+sample.ModulePath+"/foo@v99.99.0 does not exist."))),
+			requiredExperiments: experiment.NewSet(internal.ExperimentFrontendFetch),
 		},
 		{
-			name:           "path not found",
+			name:           "path not found, frontend experiment",
 			urlPath:        "/example.com/unknown",
 			wantStatusCode: http.StatusNotFound,
 			want: in("",
 				in("h3.Fetch-message.js-fetchMessage", text("Oops! example.com/unknown does not exist."))),
+			requiredExperiments: experiment.NewSet(internal.ExperimentFrontendFetch),
 		},
 	}
-
-	withPathTCs := []serverTestCase{
-		{
-			name:           "stdlib shortcut (net/http)",
-			urlPath:        "/http",
-			wantStatusCode: http.StatusFound,
-			wantLocation:   "/net/http",
-		},
-		{
-			name:           "stdlib shortcut (net/http) strip args",
-			urlPath:        "/http@go1.13?tab=doc",
-			wantStatusCode: http.StatusFound,
-			wantLocation:   "/net/http",
-		},
-		{
-			name:           "stdlib shortcut with trailing slash",
-			urlPath:        "/http/",
-			wantStatusCode: http.StatusFound,
-			wantLocation:   "/net/http",
-		},
-		{
-			name:           "stdlib shortcut with args and trailing slash",
-			urlPath:        "/http@go1.13/?tab=doc",
-			wantStatusCode: http.StatusFound,
-			wantLocation:   "/net/http",
-		},
-	}
-	return testCases, noExpUserDirTCs, frontendFetchTCs, withPathTCs
 }
 
 // TestServer checks the contents of served pages by looking for
@@ -880,26 +897,30 @@ func serverTestCases() ([]serverTestCase, []serverTestCase, []serverTestCase, []
 //
 // We aim to test all combinations of these.
 func TestServer(t *testing.T) {
-	testCases, noExpUserDirTCs, frontendFetchTCs, withPathTCs := serverTestCases()
-
-	t.Run("no experiments", func(t *testing.T) {
-		testServer(t, append(testCases, noExpUserDirTCs...))
-	})
-	t.Run("use directories", func(t *testing.T) {
-		testServer(t,
-			append(testCases, append(noExpUserDirTCs, withPathTCs...)...),
-			internal.ExperimentUseDirectories,
-			internal.ExperimentUsePathInfo,
-		)
-
-	})
-	t.Run("frontend fetch", func(t *testing.T) {
-		testServer(t,
-			append(testCases, append(frontendFetchTCs, withPathTCs...)...),
-			internal.ExperimentFrontendFetch,
-			internal.ExperimentUsePathInfo,
-		)
-	})
+	for _, test := range []struct {
+		name          string
+		testCasesFunc func() []serverTestCase
+		experiments   []string
+	}{
+		{
+			name:          "no experiments",
+			testCasesFunc: serverTestCases,
+		},
+		{
+			name:          "use directories",
+			testCasesFunc: serverTestCases,
+			experiments:   []string{internal.ExperimentUseDirectories, internal.ExperimentUsePathInfo},
+		},
+		{
+			name:          "frontend fetch",
+			testCasesFunc: frontendFetchTestCases,
+			experiments:   []string{internal.ExperimentFrontendFetch, internal.ExperimentUsePathInfo},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			testServer(t, test.testCasesFunc(), test.experiments...)
+		})
+	}
 }
 
 func testServer(t *testing.T, testCases []serverTestCase, experimentNames ...string) {
@@ -913,7 +934,13 @@ func testServer(t *testing.T, testCases []serverTestCase, experimentNames ...str
 	insertTestModules(ctx, t, testModules)
 	_, handler, _ := newTestServer(t, nil, experimentNames...)
 
+	experimentsSet := experiment.NewSet(experimentNames...)
+
 	for _, tc := range testCases {
+		if !isSubset(tc.requiredExperiments, experimentsSet) {
+			continue
+		}
+
 		t.Run(tc.name, func(t *testing.T) { // remove initial '/' for name
 			w := httptest.NewRecorder()
 			handler.ServeHTTP(w, httptest.NewRequest("GET", tc.urlPath, nil))
@@ -942,6 +969,16 @@ func testServer(t *testing.T, testCases []serverTestCase, experimentNames ...str
 			}
 		})
 	}
+}
+
+func isSubset(subset, set *experiment.Set) bool {
+	for _, e := range subset.Active() {
+		if !set.IsActive(e) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func TestServerErrors(t *testing.T) {
