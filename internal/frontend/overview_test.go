@@ -320,6 +320,19 @@ func TestReadmeHTML(t *testing.T) {
 			},
 			want: "<div align=\"center\"><img src=\"https://raw.githubusercontent.com/some/repo/v1.2.3/foo.png\"/></div>\n\n<h1 id=\"heading\">Heading</h1>\n",
 		},
+		{
+			name: "image link with bad URL",
+			mi: &internal.ModuleInfo{
+				Version:     "v1.2.3",
+				VersionType: version.TypeRelease,
+				SourceInfo:  source.NewGitHubInfo("https://github.com/some/<script>", "", "v1.2.3"),
+			},
+			readme: &internal.Readme{
+				Filepath: "README.md",
+				Contents: "<div align=\"center\"><img src=\"foo.png\" /></div>\n\n# Heading",
+			},
+			want: "<div align=\"center\"><img src=\"https://raw.githubusercontent.com/some/%3Cscript%3E/v1.2.3/foo.png\"/></div>\n\n<h1 id=\"heading\">Heading</h1>\n",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := readmeHTML(ctx, tc.mi, tc.readme)
