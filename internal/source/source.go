@@ -26,7 +26,6 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"net/url"
 	"path"
 	"regexp"
 	"strconv"
@@ -101,8 +100,7 @@ func (i *Info) LineURL(pathname string, line int) string {
 }
 
 // RawURL returns a URL referring to the raw contents of a file relative to the
-// module's home directory. In addition to the usual variables, it supports
-// {repoPath}, which is the repo URL's path.
+// module's home directory.
 func (i *Info) RawURL(pathname string) string {
 	if i == nil {
 		return ""
@@ -111,13 +109,6 @@ func (i *Info) RawURL(pathname string) string {
 	if i.templates.Raw == "" {
 		return ""
 	}
-	u, err := url.Parse(i.repoURL)
-	if err != nil {
-		// This should never happen. If it does, note it and soldier on.
-		log.Errorf(context.TODO(), "repo URL %q failed to parse: %v", i.repoURL, err)
-		u = &url.URL{Path: "ERROR"}
-	}
-
 	moduleDir := i.moduleDir
 	// Special case: the standard library's source module path is set to "src",
 	// which is correct for source file links. But the README is at the repo
@@ -129,17 +120,16 @@ func (i *Info) RawURL(pathname string) string {
 		moduleDir = ""
 	}
 	return expand(i.templates.Raw, map[string]string{
-		"repo":     i.repoURL,
-		"repoPath": strings.TrimPrefix(u.Path, "/"),
-		"commit":   i.commit,
-		"file":     path.Join(moduleDir, pathname),
+		"repo":   i.repoURL,
+		"commit": i.commit,
+		"file":   path.Join(moduleDir, pathname),
 	})
 }
 
 // map of common urlTemplates
 var urlTemplatesByKind = map[string]urlTemplates{
 	"github":    githubURLTemplates,
-	"gitlab":    gitlabURLTemplates,
+	"gitlab":    githubURLTemplates, // preserved for backwards compatibility (DB still has source_info->Kind = "gitlab")
 	"bitbucket": bitbucketURLTemplates,
 }
 
@@ -169,6 +159,12 @@ func (i *Info) MarshalJSON() (_ []byte, err error) {
 			ji.Kind = kind
 			break
 		}
+	}
+	// We used to use different templates for GitHub and GitLab. Now that
+	// they're the same, prefer "github" for consistency (map random iteration
+	// order means we could get either here).
+	if ji.Kind == "gitlab" {
+		ji.Kind = "github"
 	}
 	if ji.Kind == "" && i.templates != (urlTemplates{}) {
 		ji.Templates = &i.templates
@@ -452,16 +448,16 @@ var patterns = []struct {
 	// Patterns that are not (yet) part of the go command.
 	{
 		regexp.MustCompile(`^(?P<repo>gitlab\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)`),
-		gitlabURLTemplates,
+		githubURLTemplates,
 	},
 	{
 		// Assume that any site beginning "gitlab." works like gitlab.com.
 		regexp.MustCompile(`^(?P<repo>gitlab\.[a-z0-9A-Z.-]+/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`),
-		gitlabURLTemplates,
+		githubURLTemplates,
 	},
 	{
 		regexp.MustCompile(`^(?P<repo>gitee\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`),
-		gitlabURLTemplates,
+		githubURLTemplates,
 	},
 
 	// Patterns that match the general go command pattern, where they must have
@@ -518,13 +514,6 @@ var (
 		Directory: "{repo}/tree/{commit}/{dir}",
 		File:      "{repo}/blob/{commit}/{file}",
 		Line:      "{repo}/blob/{commit}/{file}#L{line}",
-		Raw:       "https://raw.githubusercontent.com/{repoPath}/{commit}/{file}",
-	}
-
-	gitlabURLTemplates = urlTemplates{
-		Directory: "{repo}/tree/{commit}/{dir}",
-		File:      "{repo}/blob/{commit}/{file}",
-		Line:      "{repo}/blob/{commit}/{file}#L{line}",
 		Raw:       "{repo}/raw/{commit}/{file}",
 	}
 
@@ -578,16 +567,5 @@ func NewGitHubInfo(repoURL, moduleDir, commit string) *Info {
 		moduleDir: moduleDir,
 		commit:    commit,
 		templates: githubURLTemplates,
-	}
-}
-
-// NewGitLabInfo creates a source.Info with GitHub URL templates.
-// It is for testing only.
-func NewGitLabInfo(repoURL, moduleDir, commit string) *Info {
-	return &Info{
-		repoURL:   repoURL,
-		moduleDir: moduleDir,
-		commit:    commit,
-		templates: gitlabURLTemplates,
 	}
 }

@@ -220,18 +220,7 @@ func TestReadmeHTML(t *testing.T) {
 				Filepath: "README.md",
 				Contents: "![Go logo](doc/logo.png)",
 			},
-			want: "<p><img src=\"https://raw.githubusercontent.com/golang/go/master/doc/logo.png\" alt=\"Go logo\"/></p>\n",
-		},
-		{
-			name: "relative image markdown is made absolute for GitLab",
-			mi: &internal.ModuleInfo{
-				SourceInfo: source.NewGitLabInfo("http://gitlab.com/gitlab-org/gitaly", "", "v1.0.0"),
-			},
-			readme: &internal.Readme{
-				Filepath: "README.md",
-				Contents: "![Gitaly benchmark timings.](doc/img/rugged-new-timings.png)",
-			},
-			want: "<p><img src=\"http://gitlab.com/gitlab-org/gitaly/raw/v1.0.0/doc/img/rugged-new-timings.png\" alt=\"Gitaly benchmark timings.\"/></p>\n",
+			want: "<p><img src=\"http://github.com/golang/go/raw/master/doc/logo.png\" alt=\"Go logo\"/></p>\n",
 		},
 		{
 			name: "relative image markdown is left alone for unknown origins",
@@ -253,7 +242,7 @@ func TestReadmeHTML(t *testing.T) {
 				Filepath: "README.md",
 				Contents: "![Hugo logo](doc/logo.png)",
 			},
-			want: "<p><img src=\"https://raw.githubusercontent.com/gohugoio/hugo/v0.56.3/doc/logo.png\" alt=\"Hugo logo\"/></p>\n",
+			want: "<p><img src=\"http://github.com/gohugoio/hugo/raw/v0.56.3/doc/logo.png\" alt=\"Hugo logo\"/></p>\n",
 		},
 		{
 			name: "image URLs relative to README directory",
@@ -266,7 +255,7 @@ func TestReadmeHTML(t *testing.T) {
 				Filepath: "dir/sub/README.md",
 				Contents: "![alt](img/thing.png)",
 			},
-			want: `<p><img src="https://raw.githubusercontent.com/some/repo/v1.2.3/dir/sub/img/thing.png" alt="alt"/></p>` + "\n",
+			want: `<p><img src="https://github.com/some/repo/raw/v1.2.3/dir/sub/img/thing.png" alt="alt"/></p>` + "\n",
 		},
 		{
 			name: "non-image links relative to README directory",
@@ -292,7 +281,7 @@ func TestReadmeHTML(t *testing.T) {
 				Filepath: "README.md",
 				Contents: "<img src=\"resources/logoSmall.png\" />\n\n# Heading\n",
 			},
-			want: "<p><img src=\"https://raw.githubusercontent.com/pdfcpu/pdfcpu/v0.3.3/resources/logoSmall.png\"/></p>\n\n<h1 id=\"heading\">Heading</h1>\n",
+			want: "<p><img src=\"https://github.com/pdfcpu/pdfcpu/raw/v0.3.3/resources/logoSmall.png\"/></p>\n\n<h1 id=\"heading\">Heading</h1>\n",
 		},
 		{
 			name: "image link in embedded HTML with surrounding p tag",
@@ -305,7 +294,7 @@ func TestReadmeHTML(t *testing.T) {
 				Filepath: "README.md",
 				Contents: "<p align=\"center\"><img src=\"foo.png\" /></p>\n\n# Heading",
 			},
-			want: "<p align=\"center\"><img src=\"https://raw.githubusercontent.com/some/repo/v1.2.3/foo.png\"/></p>\n\n<h1 id=\"heading\">Heading</h1>\n",
+			want: "<p align=\"center\"><img src=\"https://github.com/some/repo/raw/v1.2.3/foo.png\"/></p>\n\n<h1 id=\"heading\">Heading</h1>\n",
 		},
 		{
 			name: "image link in embedded HTML with surrounding div",
@@ -318,7 +307,7 @@ func TestReadmeHTML(t *testing.T) {
 				Filepath: "README.md",
 				Contents: "<div align=\"center\"><img src=\"foo.png\" /></div>\n\n# Heading",
 			},
-			want: "<div align=\"center\"><img src=\"https://raw.githubusercontent.com/some/repo/v1.2.3/foo.png\"/></div>\n\n<h1 id=\"heading\">Heading</h1>\n",
+			want: "<div align=\"center\"><img src=\"https://github.com/some/repo/raw/v1.2.3/foo.png\"/></div>\n\n<h1 id=\"heading\">Heading</h1>\n",
 		},
 		{
 			name: "image link with bad URL",
@@ -331,7 +320,7 @@ func TestReadmeHTML(t *testing.T) {
 				Filepath: "README.md",
 				Contents: "<div align=\"center\"><img src=\"foo.png\" /></div>\n\n# Heading",
 			},
-			want: "<div align=\"center\"><img src=\"https://raw.githubusercontent.com/some/%3Cscript%3E/v1.2.3/foo.png\"/></div>\n\n<h1 id=\"heading\">Heading</h1>\n",
+			want: "<div align=\"center\"><img src=\"https://github.com/some/%3Cscript%3E/raw/v1.2.3/foo.png\"/></div>\n\n<h1 id=\"heading\">Heading</h1>\n",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

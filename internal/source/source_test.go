@@ -81,7 +81,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/pkg/errors/tree/v0.8.1",
 			"https://github.com/pkg/errors/blob/v0.8.1/errors.go",
 			"https://github.com/pkg/errors/blob/v0.8.1/errors.go#L1",
-			"https://raw.githubusercontent.com/pkg/errors/v0.8.1/errors.go",
+			"https://github.com/pkg/errors/raw/v0.8.1/errors.go",
 		},
 		{
 			"github module not at repo root",
@@ -91,7 +91,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/hashicorp/consul/tree/sdk/v0.2.0/sdk",
 			"https://github.com/hashicorp/consul/blob/sdk/v0.2.0/sdk/freeport/freeport.go",
 			"https://github.com/hashicorp/consul/blob/sdk/v0.2.0/sdk/freeport/freeport.go#L1",
-			"https://raw.githubusercontent.com/hashicorp/consul/sdk/v0.2.0/sdk/freeport/freeport.go",
+			"https://github.com/hashicorp/consul/raw/sdk/v0.2.0/sdk/freeport/freeport.go",
 		},
 		{
 			"bitbucket",
@@ -111,7 +111,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/airbrake/gobrake/tree/v3.5.1",
 			"https://github.com/airbrake/gobrake/blob/v3.5.1/gobrake.go",
 			"https://github.com/airbrake/gobrake/blob/v3.5.1/gobrake.go#L1",
-			"https://raw.githubusercontent.com/airbrake/gobrake/v3.5.1/gobrake.go",
+			"https://github.com/airbrake/gobrake/raw/v3.5.1/gobrake.go",
 		},
 		{
 			"x/tools",
@@ -121,7 +121,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/golang/tools/tree/030b2cf1153e",
 			"https://github.com/golang/tools/blob/030b2cf1153e/README.md",
 			"https://github.com/golang/tools/blob/030b2cf1153e/README.md#L1",
-			"https://raw.githubusercontent.com/golang/tools/030b2cf1153e/README.md",
+			"https://github.com/golang/tools/raw/030b2cf1153e/README.md",
 		},
 		{
 			"x/tools/gopls",
@@ -131,7 +131,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/golang/tools/tree/gopls/v0.4.0/gopls",
 			"https://github.com/golang/tools/blob/gopls/v0.4.0/gopls/main.go",
 			"https://github.com/golang/tools/blob/gopls/v0.4.0/gopls/main.go#L1",
-			"https://raw.githubusercontent.com/golang/tools/gopls/v0.4.0/gopls/main.go",
+			"https://github.com/golang/tools/raw/gopls/v0.4.0/gopls/main.go",
 		},
 		{
 			"googlesource.com",
@@ -151,7 +151,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/apache/thrift/tree/v0.12.0",
 			"https://github.com/apache/thrift/blob/v0.12.0/lib/go/thrift/client.go",
 			"https://github.com/apache/thrift/blob/v0.12.0/lib/go/thrift/client.go#L1",
-			"https://raw.githubusercontent.com/apache/thrift/v0.12.0/lib/go/thrift/client.go",
+			"https://github.com/apache/thrift/raw/v0.12.0/lib/go/thrift/client.go",
 		},
 		{
 			"vanity for github",
@@ -161,7 +161,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/googleapis/google-cloud-go/tree/spanner/v1.0.0/spanner",
 			"https://github.com/googleapis/google-cloud-go/blob/spanner/v1.0.0/spanner/doc.go",
 			"https://github.com/googleapis/google-cloud-go/blob/spanner/v1.0.0/spanner/doc.go#L1",
-			"https://raw.githubusercontent.com/googleapis/google-cloud-go/spanner/v1.0.0/spanner/doc.go",
+			"https://github.com/googleapis/google-cloud-go/raw/spanner/v1.0.0/spanner/doc.go",
 		},
 		{
 			"vanity for bitbucket",
@@ -221,7 +221,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/jrick/wsrpc/tree/v2.1.1",
 			"https://github.com/jrick/wsrpc/blob/v2.1.1/rpc.go",
 			"https://github.com/jrick/wsrpc/blob/v2.1.1/rpc.go#L1",
-			"https://raw.githubusercontent.com/jrick/wsrpc/v2.1.1/rpc.go",
+			"https://github.com/jrick/wsrpc/raw/v2.1.1/rpc.go",
 		},
 		{
 			"v2 as subdirectory",
@@ -241,7 +241,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/go-yaml/yaml/tree/v2.2.2",
 			"https://github.com/go-yaml/yaml/blob/v2.2.2/yaml.go",
 			"https://github.com/go-yaml/yaml/blob/v2.2.2/yaml.go#L1",
-			"https://raw.githubusercontent.com/go-yaml/yaml/v2.2.2/yaml.go",
+			"https://github.com/go-yaml/yaml/raw/v2.2.2/yaml.go",
 		},
 		{
 			"gopkg.in, two elements",
@@ -251,7 +251,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/boltdb/bolt/tree/v1.3.0",
 			"https://github.com/boltdb/bolt/blob/v1.3.0/doc.go",
 			"https://github.com/boltdb/bolt/blob/v1.3.0/doc.go#L1",
-			"https://raw.githubusercontent.com/boltdb/bolt/v1.3.0/doc.go",
+			"https://github.com/boltdb/bolt/raw/v1.3.0/doc.go",
 		},
 		{
 			"gonum.org",
@@ -261,7 +261,7 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/gonum/gonum/tree/v0.6.1",
 			"https://github.com/gonum/gonum/blob/v0.6.1/doc.go",
 			"https://github.com/gonum/gonum/blob/v0.6.1/doc.go#L1",
-			"https://raw.githubusercontent.com/gonum/gonum/v0.6.1/doc.go",
+			"https://github.com/gonum/gonum/raw/v0.6.1/doc.go",
 		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
@@ -288,7 +288,7 @@ func TestModuleInfo(t *testing.T) {
 		}
 		const (
 			file = "doc/gopher/fiveyears.jpg"
-			want = "https://raw.githubusercontent.com/golang/go/go1.13.3/doc/gopher/fiveyears.jpg"
+			want = "https://github.com/golang/go/raw/go1.13.3/doc/gopher/fiveyears.jpg"
 		)
 		check(t, "raw", info.RawURL(file), want)
 	})
