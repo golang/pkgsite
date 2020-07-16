@@ -24,6 +24,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -148,12 +149,12 @@ func readmeHTML(ctx context.Context, mi *internal.ModuleInfo, readme *internal.R
 		switch node.Type {
 		case blackfriday.Image, blackfriday.Link:
 			useRaw := node.Type == blackfriday.Image
-			if d := translateRelativeLink(string(node.LinkData.Destination), mi, useRaw, readme); d != "" {
+			if d := translateRelativeLink(string(node.LinkData.Destination), mi.SourceInfo, useRaw, readme); d != "" {
 				node.LinkData.Destination = []byte(d)
 			}
 		case blackfriday.HTMLBlock, blackfriday.HTMLSpan:
 			if experiment.IsActive(ctx, internal.ExperimentTranslateHTML) {
-				d, err := translateHTML(node.Literal, mi, readme)
+				d, err := translateHTML(node.Literal, mi.SourceInfo, readme)
 				if err != nil {
 					walkErr = fmt.Errorf("couldn't transform html block(%s): %w", node.Literal, err)
 					return blackfriday.Terminate
@@ -201,7 +202,7 @@ func isMarkdown(filename string) bool {
 // repository. As the discovery site doesn't host the full repository content,
 // in order for the image to render, we need to convert the relative path to an
 // absolute URL to a hosted image.
-func translateRelativeLink(dest string, mi *internal.ModuleInfo, useRaw bool, readme *internal.Readme) string {
+func translateRelativeLink(dest string, info *source.Info, useRaw bool, readme *internal.Readme) string {
 	destURL, err := url.Parse(dest)
 	if err != nil || destURL.IsAbs() {
 		return ""
@@ -213,15 +214,15 @@ func translateRelativeLink(dest string, mi *internal.ModuleInfo, useRaw bool, re
 	// Paths are relative to the README location.
 	destPath := path.Join(path.Dir(readme.Filepath), path.Clean(destURL.Path))
 	if useRaw {
-		return mi.SourceInfo.RawURL(destPath)
+		return info.RawURL(destPath)
 	}
-	return mi.SourceInfo.FileURL(destPath)
+	return info.FileURL(destPath)
 }
 
 // translateHTML parses html text into parsed html nodes. It then
 // iterates through the nodes and replaces the src key with a value
 // that properly represents the source of the image from the repo.
-func translateHTML(htmlText []byte, mi *internal.ModuleInfo, readme *internal.Readme) ([]byte, error) {
+func translateHTML(htmlText []byte, info *source.Info, readme *internal.Readme) ([]byte, error) {
 	r := bytes.NewReader(htmlText)
 	nodes, err := html.ParseFragment(r, nil)
 	if err != nil {
@@ -244,7 +245,7 @@ func translateHTML(htmlText []byte, mi *internal.ModuleInfo, readme *internal.Re
 		if n == nil {
 			return htmlText, nil
 		}
-		walkHTML(n, mi, readme)
+		walkHTML(n, info, readme)
 		if err := html.Render(&buf, n); err != nil {
 			return nil, err
 		}
@@ -255,12 +256,12 @@ func translateHTML(htmlText []byte, mi *internal.ModuleInfo, readme *internal.Re
 // walkHTML crawls through an html node and replaces the src
 // tag link with a link that properly represents the image
 // from the repo source.
-func walkHTML(n *html.Node, mi *internal.ModuleInfo, readme *internal.Readme) {
+func walkHTML(n *html.Node, info *source.Info, readme *internal.Readme) {
 	if n.Type == html.ElementNode && n.DataAtom == atom.Img {
 		var attrs []html.Attribute
 		for _, a := range n.Attr {
 			if a.Key == "src" {
-				if v := translateRelativeLink(a.Val, mi, true, readme); v != "" {
+				if v := translateRelativeLink(a.Val, info, true, readme); v != "" {
 					a.Val = v
 				}
 			}
@@ -269,6 +270,6 @@ func walkHTML(n *html.Node, mi *internal.ModuleInfo, readme *internal.Readme) {
 		n.Attr = attrs
 	}
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		walkHTML(c, mi, readme)
+		walkHTML(c, info, readme)
 	}
 }
