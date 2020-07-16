@@ -186,7 +186,7 @@ func (s *Server) fetchAndPoll(parentCtx context.Context, modulePath, fullPath, r
 	for _, fr := range results {
 		// Results are in order of longest module path first. Once an
 		// appropriate result is found, return. Otherwise, look at the next path.
-		if fr.status == derrors.ToHTTPStatus(derrors.AlternativeModule) {
+		if fr.status == derrors.ToStatus(derrors.AlternativeModule) {
 			return http.StatusSeeOther, fmt.Sprintf("%q is not a supported package path. Were you looking for %q?", fullPath, fr.goModPath)
 		}
 		if responseText, ok := statusToResponseText[fr.status]; ok {
@@ -302,7 +302,7 @@ func checkForPath(ctx context.Context, db *postgres.DB, fullPath, modulePath, re
 		// (2) Something went wrong, so return that error.
 		fr = &fetchResult{
 			modulePath: modulePath,
-			status:     derrors.ToHTTPStatus(err),
+			status:     derrors.ToStatus(err),
 			err:        err,
 		}
 		if errors.Is(err, derrors.NotFound) {
@@ -324,7 +324,7 @@ func checkForPath(ctx context.Context, db *postgres.DB, fullPath, modulePath, re
 		// The version_map indicates that the proxy returned a 404/410.
 		fr.err = errModuleDoesNotExist
 		return fr
-	case derrors.ToHTTPStatus(derrors.AlternativeModule):
+	case derrors.ToStatus(derrors.AlternativeModule):
 		// The row indicates that the provided module path did not match the
 		// module path returned by a request to
 		// /<modulePath>/@v/<requestedPath>.mod.
@@ -337,7 +337,7 @@ func checkForPath(ctx context.Context, db *postgres.DB, fullPath, modulePath, re
 		// that is complete.
 		// TODO(golang/go#37002): mark versions for reprocessing in version_map
 		// inside postgres.UpdateModuleVersionStatesForReprocessing.
-		if fr.status >= derrors.ToHTTPStatus(derrors.ReprocessStatusOK) {
+		if fr.status >= derrors.ToStatus(derrors.ReprocessStatusOK) {
 			fr.status = http.StatusProcessing
 		}
 		// All remaining non-200 statuses will be in the 40x range.

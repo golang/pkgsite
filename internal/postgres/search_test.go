@@ -885,7 +885,7 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		// Imagine we see a package with an alternative path at v1.2.0.
 		// We add that information to module_version_states.
 		alternativeModulePath := strings.ToLower(canonicalModule.ModulePath)
-		alternativeStatus := derrors.ToHTTPStatus(derrors.AlternativeModule)
+		alternativeStatus := derrors.ToStatus(derrors.AlternativeModule)
 		err := testDB.UpsertModuleVersionState(ctx, alternativeModulePath, "v1.2.0", "",
 			time.Now(), alternativeStatus, canonicalModule.ModulePath, nil, nil)
 		if err != nil {

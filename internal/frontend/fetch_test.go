@@ -148,7 +148,7 @@ func TestFetchPathAlreadyExists(t *testing.T) {
 	}{
 		{http.StatusOK, http.StatusOK},
 		{http.StatusNotFound, http.StatusNotFound},
-		{derrors.ToHTTPStatus(derrors.AlternativeModule), http.StatusSeeOther},
+		{derrors.ToStatus(derrors.AlternativeModule), http.StatusSeeOther},
 	} {
 		t.Run(strconv.Itoa(test.status), func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testFetchTimeout)

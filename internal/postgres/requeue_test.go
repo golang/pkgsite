@@ -38,9 +38,9 @@ func TestGetNextModulesToFetchAndUpdateModuleVersionStatesForReprocessing(t *tes
 		sizes     = []int{small, big}
 		statuses  = []int{
 			http.StatusOK,
-			derrors.ToHTTPStatus(derrors.HasIncompletePackages),
-			derrors.ToHTTPStatus(derrors.AlternativeModule),
-			derrors.ToHTTPStatus(derrors.BadModule),
+			derrors.ToStatus(derrors.HasIncompletePackages),
+			derrors.ToStatus(derrors.AlternativeModule),
+			derrors.ToStatus(derrors.BadModule),
 			http.StatusInternalServerError,
 			http.StatusBadRequest,
 		}
@@ -188,9 +188,9 @@ func TestGetNextModulesToFetchOnlyPicksUpStatus0AndStatusGreaterThan500(t *testi
 
 	statuses := []int{
 		http.StatusOK,
-		derrors.ToHTTPStatus(derrors.HasIncompletePackages),
-		derrors.ToHTTPStatus(derrors.AlternativeModule),
-		derrors.ToHTTPStatus(derrors.BadModule),
+		derrors.ToStatus(derrors.HasIncompletePackages),
+		derrors.ToStatus(derrors.AlternativeModule),
+		derrors.ToStatus(derrors.BadModule),
 		http.StatusBadRequest,
 		http.StatusInternalServerError,
 		0,

@@ -75,7 +75,7 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 	defer func() {
 		if fr.Error != nil {
 			derrors.Wrap(&fr.Error, "FetchModule(%q, %q)", modulePath, requestedVersion)
-			fr.Status = derrors.ToHTTPStatus(fr.Error)
+			fr.Status = derrors.ToStatus(fr.Error)
 		}
 		if fr.Status == 0 {
 			fr.Status = http.StatusOK
@@ -146,7 +146,7 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 	}
 	for _, state := range fr.PackageVersionStates {
 		if state.Status != http.StatusOK {
-			fr.Status = derrors.ToHTTPStatus(derrors.HasIncompletePackages)
+			fr.Status = derrors.ToStatus(derrors.HasIncompletePackages)
 		}
 	}
 	return fr
@@ -355,14 +355,14 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion str
 				ModulePath:  modulePath,
 				PackagePath: importPath,
 				Version:     resolvedVersion,
-				Status:      derrors.ToHTTPStatus(derrors.PackageBadImportPath),
+				Status:      derrors.ToStatus(derrors.PackageBadImportPath),
 				Error:       err.Error(),
 			})
 			continue
 		}
 		if f.UncompressedSize64 > MaxFileSize {
 			incompleteDirs[innerPath] = true
-			status := derrors.ToHTTPStatus(derrors.PackageMaxFileSizeLimitExceeded)
+			status := derrors.ToStatus(derrors.PackageMaxFileSizeLimitExceeded)
 			err := fmt.Sprintf("Unable to process %s: file size %d exceeds max limit %d",
 				f.Name, f.UncompressedSize64, MaxFileSize)
 			packageVersionStates = append(packageVersionStates, &internal.PackageVersionState{
@@ -433,7 +433,7 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion str
 		}
 		code := http.StatusOK
 		if status != nil {
-			code = derrors.ToHTTPStatus(status)
+			code = derrors.ToStatus(status)
 		}
 		packageVersionStates = append(packageVersionStates, &internal.PackageVersionState{
 			ModulePath:  modulePath,

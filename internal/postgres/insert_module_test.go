@@ -337,7 +337,7 @@ func TestPostgres_NewerAlternative(t *testing.T) {
 	)
 
 	err := testDB.UpsertModuleVersionState(ctx, modulePath, altVersion, "appVersion", time.Now(),
-		derrors.ToHTTPStatus(derrors.AlternativeModule), "example.com/mod", derrors.AlternativeModule, nil)
+		derrors.ToStatus(derrors.AlternativeModule), "example.com/mod", derrors.AlternativeModule, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

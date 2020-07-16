@@ -108,7 +108,7 @@ func fetchAndInsertModule(ctx context.Context, modulePath, requestedVersion stri
 	defer func() {
 		derrors.Wrap(&ft.Error, "fetchAndInsertModule(%q, %q)", modulePath, requestedVersion)
 		if ft.Error != nil {
-			ft.Status = derrors.ToHTTPStatus(ft.Error)
+			ft.Status = derrors.ToStatus(ft.Error)
 			ft.ResolvedVersion = requestedVersion
 		}
 	}()
@@ -152,7 +152,7 @@ func fetchAndInsertModule(ctx context.Context, modulePath, requestedVersion stri
 	if err != nil {
 		log.Error(ctx, err)
 
-		ft.Status = derrors.ToHTTPStatus(err)
+		ft.Status = derrors.ToStatus(err)
 		ft.Error = err
 		return ft
 	}
@@ -212,7 +212,7 @@ func updateVersionMapAndDeleteModulesWithErrors(ctx context.Context, db *postgre
 	// path is all lower-case, the old versions should not show up in search. We
 	// still leave their pages in the database so users of those old versions
 	// can still view documentation.
-	if vm.Status == derrors.ToHTTPStatus(derrors.AlternativeModule) {
+	if vm.Status == derrors.ToStatus(derrors.AlternativeModule) {
 		log.Infof(ctx, "%s@%s: code=491, deleting older version from search", vm.ModulePath, vm.ResolvedVersion)
 		start = time.Now()
 		err = db.DeleteOlderVersionFromSearchDocuments(ctx, vm.ModulePath, vm.ResolvedVersion)

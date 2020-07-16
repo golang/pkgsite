@@ -23,9 +23,9 @@ func (db *DB) UpdateModuleVersionStatesForReprocessing(ctx context.Context, appV
 
 	for _, status := range []int{
 		http.StatusOK,
-		derrors.ToHTTPStatus(derrors.HasIncompletePackages),
-		derrors.ToHTTPStatus(derrors.BadModule),
-		derrors.ToHTTPStatus(derrors.AlternativeModule),
+		derrors.ToStatus(derrors.HasIncompletePackages),
+		derrors.ToStatus(derrors.BadModule),
+		derrors.ToStatus(derrors.AlternativeModule),
 	} {
 		query := `UPDATE module_version_states
 			SET

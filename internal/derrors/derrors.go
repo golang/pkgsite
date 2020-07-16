@@ -134,8 +134,8 @@ func FromHTTPStatus(code int, format string, args ...interface{}) error {
 	return fmt.Errorf(format+": %w", append(args, innerErr)...)
 }
 
-// ToHTTPStatus returns an HTTP status code corresponding to err.
-func ToHTTPStatus(err error) int {
+// ToStatus returns a status code corresponding to err.
+func ToStatus(err error) int {
 	if err == nil {
 		return http.StatusOK
 	}
@@ -152,13 +152,13 @@ func ToHTTPStatus(err error) int {
 func ToReprocessStatus(status int) int {
 	switch status {
 	case http.StatusOK:
-		return ToHTTPStatus(ReprocessStatusOK)
-	case ToHTTPStatus(HasIncompletePackages):
-		return ToHTTPStatus(ReprocessHasIncompletePackages)
-	case ToHTTPStatus(BadModule):
-		return ToHTTPStatus(ReprocessBadModule)
-	case ToHTTPStatus(AlternativeModule):
-		return ToHTTPStatus(ReprocessAlternative)
+		return ToStatus(ReprocessStatusOK)
+	case ToStatus(HasIncompletePackages):
+		return ToStatus(ReprocessHasIncompletePackages)
+	case ToStatus(BadModule):
+		return ToStatus(ReprocessBadModule)
+	case ToStatus(AlternativeModule):
+		return ToStatus(ReprocessAlternative)
 	default:
 		return status
 	}

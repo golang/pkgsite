@@ -338,7 +338,7 @@ func TestFetchAndUpdateState_Mismatch(t *testing.T) {
 
 	code, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB, "appVersionLabel")
 	wantErr := derrors.AlternativeModule
-	wantCode := derrors.ToHTTPStatus(wantErr)
+	wantCode := derrors.ToStatus(wantErr)
 	if code != wantCode || !errors.Is(err, wantErr) {
 		t.Fatalf("got %d, %v; want %d, Is(err, derrors.AlternativeModule)", code, err, wantCode)
 	}
@@ -410,7 +410,7 @@ func TestFetchAndUpdateState_DeleteOlder(t *testing.T) {
 	}
 
 	code, _ := FetchAndUpdateState(ctx, modulePath, mismatchVersion, proxyClient, sourceClient, testDB, "appVersionLabel")
-	if want := derrors.ToHTTPStatus(derrors.AlternativeModule); code != want {
+	if want := derrors.ToStatus(derrors.AlternativeModule); code != want {
 		t.Fatalf("got %d, want %d", code, want)
 	}
 

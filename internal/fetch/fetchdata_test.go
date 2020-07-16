@@ -246,7 +246,7 @@ var moduleBadPackages = &testModule{
 		},
 	},
 	fr: &FetchResult{
-		Status: derrors.ToHTTPStatus(derrors.HasIncompletePackages),
+		Status: derrors.ToStatus(derrors.HasIncompletePackages),
 		Module: &internal.Module{
 			LegacyModuleInfo: internal.LegacyModuleInfo{
 				ModuleInfo: internal.ModuleInfo{
@@ -314,7 +314,7 @@ var moduleBuildConstraints = &testModule{
 		},
 	},
 	fr: &FetchResult{
-		Status: derrors.ToHTTPStatus(derrors.HasIncompletePackages),
+		Status: derrors.ToStatus(derrors.HasIncompletePackages),
 		Module: &internal.Module{
 			LegacyModuleInfo: internal.LegacyModuleInfo{
 				ModuleInfo: internal.ModuleInfo{
@@ -355,7 +355,7 @@ var moduleBuildConstraints = &testModule{
 				ModulePath:  "build.constraints/module",
 				Version:     "v1.0.0",
 				PackagePath: "build.constraints/module/ignore",
-				Status:      derrors.ToHTTPStatus(derrors.PackageBuildContextNotSupported),
+				Status:      derrors.ToStatus(derrors.PackageBuildContextNotSupported),
 			},
 		},
 	},
@@ -484,7 +484,7 @@ var moduleBadImportPath = &testModule{
 		},
 	},
 	fr: &FetchResult{
-		Status: derrors.ToHTTPStatus(derrors.HasIncompletePackages),
+		Status: derrors.ToStatus(derrors.HasIncompletePackages),
 		Module: &internal.Module{
 			LegacyModuleInfo: internal.LegacyModuleInfo{
 				ModuleInfo: internal.ModuleInfo{
@@ -527,7 +527,7 @@ var moduleBadImportPath = &testModule{
 				ModulePath:  "bad.import.path.com",
 				PackagePath: "bad.import.path.com/bad/import path",
 				Version:     "v1.0.0",
-				Status:      derrors.ToHTTPStatus(derrors.PackageBadImportPath),
+				Status:      derrors.ToStatus(derrors.PackageBadImportPath),
 			},
 			{
 				ModulePath:  "bad.import.path.com",
@@ -603,7 +603,7 @@ var moduleDocTooLarge = &testModule{
 		},
 	},
 	fr: &FetchResult{
-		Status:    derrors.ToHTTPStatus(derrors.HasIncompletePackages),
+		Status:    derrors.ToStatus(derrors.HasIncompletePackages),
 		GoModPath: "bigdoc.test",
 		Module: &internal.Module{
 			LegacyModuleInfo: internal.LegacyModuleInfo{
@@ -633,7 +633,7 @@ var moduleDocTooLarge = &testModule{
 				PackagePath: "bigdoc.test",
 				ModulePath:  "bigdoc.test",
 				Version:     "v1.0.0",
-				Status:      derrors.ToHTTPStatus(derrors.PackageDocumentationHTMLTooLarge),
+				Status:      derrors.ToStatus(derrors.PackageDocumentationHTMLTooLarge),
 			},
 		},
 	},
