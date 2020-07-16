@@ -458,7 +458,7 @@ func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (_ string,
 	var counts []*count
 	for code, n := range stats.VersionCounts {
 		c := &count{Code: code, Count: n}
-		if e := derrors.FromHTTPStatus(code, ""); e != nil && e != derrors.Unknown {
+		if e := derrors.FromStatus(code, ""); e != nil && e != derrors.Unknown {
 			c.Desc = e.Error()
 		}
 		counts = append(counts, c)

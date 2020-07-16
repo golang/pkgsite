@@ -114,7 +114,7 @@ func TestGetNextModulesToFetchAndUpdateModuleVersionStatesForReprocessing(t *tes
 	updateStates := func(wantData []*testData) {
 		for _, m := range wantData {
 			if err := upsertModuleVersionState(ctx, testDB.db, m.modulePath, m.version, "2020-04-29t14", &m.numPackages, now, m.status,
-				m.modulePath, derrors.FromHTTPStatus(m.status, "test string")); err != nil {
+				m.modulePath, derrors.FromStatus(m.status, "test string")); err != nil {
 				t.Fatal(err)
 			}
 		}
@@ -131,7 +131,7 @@ func TestGetNextModulesToFetchAndUpdateModuleVersionStatesForReprocessing(t *tes
 	checkNextToRequeue(want, len(mods))
 	// Mark all modules for reprocessing.
 	for _, m := range mods {
-		if err := upsertModuleVersionState(ctx, testDB.db, m.modulePath, m.version, "2020-04-29t14", &m.numPackages, now, m.status, m.modulePath, derrors.FromHTTPStatus(m.status, "test string")); err != nil {
+		if err := upsertModuleVersionState(ctx, testDB.db, m.modulePath, m.version, "2020-04-29t14", &m.numPackages, now, m.status, m.modulePath, derrors.FromStatus(m.status, "test string")); err != nil {
 			t.Fatal(err)
 		}
 	}
