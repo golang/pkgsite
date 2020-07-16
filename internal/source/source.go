@@ -24,7 +24,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"net/http"
 	"path"
 	"regexp"
@@ -317,7 +316,7 @@ func matchStatic(moduleOrRepoPath string) (repo, relativeModulePath string, _ ur
 		}
 		relativeModulePath = strings.TrimPrefix(moduleOrRepoPath, matches[0])
 		relativeModulePath = strings.TrimPrefix(relativeModulePath, "/")
-		return template.HTMLEscapeString(repo), template.HTMLEscapeString(relativeModulePath), pat.templates, nil
+		return repo, relativeModulePath, pat.templates, nil
 	}
 	return "", "", urlTemplates{}, derrors.NotFound
 }
@@ -365,9 +364,8 @@ func moduleInfoDynamic(ctx context.Context, client *Client, modulePath, version 
 		}
 	}
 	dir := strings.TrimPrefix(strings.TrimPrefix(modulePath, sourceMeta.repoRootPrefix), "/")
-	dir = template.HTMLEscapeString(dir)
 	return &Info{
-		repoURL:   template.HTMLEscapeString(strings.TrimSuffix(repoURL, "/")),
+		repoURL:   strings.TrimSuffix(repoURL, "/"),
 		moduleDir: dir,
 		commit:    commitFromVersion(version, dir),
 		templates: templates,

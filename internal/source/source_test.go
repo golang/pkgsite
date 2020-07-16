@@ -336,7 +336,6 @@ func TestMatchStatic(t *testing.T) {
 		{"git.com/repo.git/dir", "git.com/repo", "dir"},
 		{"mercurial.com/repo.hg", "mercurial.com/repo", ""},
 		{"mercurial.com/repo.hg/dir", "mercurial.com/repo", "dir"},
-		{"github.com/a/b/c/>$", "github.com/a/b", "c/&gt;$"},
 	} {
 		t.Run(test.in, func(t *testing.T) {
 			gotRepo, gotSuffix, _, err := matchStatic(test.in)
@@ -467,9 +466,10 @@ func TestModuleInfoDynamic(t *testing.T) {
 			},
 		},
 		{
+			// Bad repo URLs. These are not escaped here, but they are whenever we render a template.
 			"bob.com/bad/github",
 			&Info{
-				repoURL:   "https://github.com/bob/bad/&#34;&gt;$",
+				repoURL:   `https://github.com/bob/bad/">$`,
 				moduleDir: "",
 				commit:    "v1.2.3",
 				templates: githubURLTemplates,
@@ -479,7 +479,7 @@ func TestModuleInfoDynamic(t *testing.T) {
 
 			"bob.com/bad/apache",
 			&Info{
-				repoURL:   "https://git.apache.org/&gt;$",
+				repoURL:   "https://git.apache.org/>$",
 				moduleDir: "",
 				commit:    "v1.2.3",
 				templates: githubURLTemplates,
@@ -716,7 +716,6 @@ var testWeb = map[string]string{
 	"https://bob.com/pkg": `<head> <meta name="go-import" content="bob.com/pkg git https://vcs.net/bob/pkg.git">`,
 	// Package at in sub-directory of a Git repo.
 	"https://bob.com/pkg/sub": `<head> <meta name="go-import" content="bob.com/pkg git https://vcs.net/bob/pkg.git">`,
-	// Bad repo URLs.
 	"https://bob.com/bad/github": `
 		<head><meta name="go-import" content="bob.com/bad/github git https://github.com/bob/bad/&quot;&gt;$">`,
 	"https://bob.com/bad/apache": `
