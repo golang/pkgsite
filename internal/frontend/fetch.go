@@ -39,7 +39,7 @@ var (
 	// exists, but within that module version, this fullPath could not be found.
 	errPathDoesNotExistInModule = errors.New("path does not exist in module")
 	fetchTimeout                = 30 * time.Second
-	pollEvery                   = 500 * time.Millisecond
+	pollEvery                   = 1 * time.Second
 
 	// keyFrontendFetchVersion is a census tag for frontend fetch version types.
 	keyFrontendFetchVersion = tag.MustNewKey("frontend-fetch.version")
