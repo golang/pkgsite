@@ -37,10 +37,11 @@ import (
 )
 
 var (
-	timeout    = config.GetEnv("GO_DISCOVERY_WORKER_TIMEOUT_MINUTES", "10")
-	queueName  = config.GetEnv("GO_DISCOVERY_WORKER_TASK_QUEUE", "")
-	workers    = flag.Int("workers", 10, "number of concurrent requests to the fetch service, when running locally")
-	staticPath = flag.String("static", "content/static", "path to folder containing static files served")
+	timeout   = config.GetEnv("GO_DISCOVERY_WORKER_TIMEOUT_MINUTES", "10")
+	queueName = config.GetEnv("GO_DISCOVERY_WORKER_TASK_QUEUE", "")
+	workers   = flag.Int("workers", 10, "number of concurrent requests to the fetch service, when running locally")
+	// flag used in call to safehtml/template.TrustedSourceFromFlag
+	_ = flag.String("static", "content/static", "path to folder containing static files served")
 )
 
 func main() {
