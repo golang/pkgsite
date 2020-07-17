@@ -322,6 +322,22 @@ func TestReadmeHTML(t *testing.T) {
 			},
 			want: "<div align=\"center\"><img src=\"https://github.com/some/%3Cscript%3E/raw/v1.2.3/foo.png\"/></div>\n\n<h1 id=\"heading\">Heading</h1>\n",
 		},
+		{
+			name: "body has more than one child",
+			mi: &internal.ModuleInfo{
+				Version:     "v1.2.3",
+				VersionType: version.TypeRelease,
+				SourceInfo:  source.NewGitHubInfo("https://github.com/some/repo", "", "v1.2.3"),
+			},
+			readme: &internal.Readme{
+				Filepath: "dir/sub/README.md",
+				// The final newline here is important for creating the right markdown tree; do not remove it.
+				Contents: `<p><img src="./foo.png"></p><p><img src="../bar.png"</p>
+`,
+			},
+			want: `<p><img src="https://github.com/some/repo/raw/v1.2.3/dir/sub/foo.png"/></p><p><img src="https://github.com/some/repo/raw/v1.2.3/dir/bar.png"/></p>
+`,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := ReadmeHTML(ctx, tc.mi, tc.readme)

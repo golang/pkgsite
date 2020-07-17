@@ -224,7 +224,9 @@ func translateRelativeLink(dest string, info *source.Info, useRaw bool, readme *
 // translateHTML parses html text into parsed html nodes. It then
 // iterates through the nodes and replaces the src key with a value
 // that properly represents the source of the image from the repo.
-func translateHTML(htmlText []byte, info *source.Info, readme *internal.Readme) ([]byte, error) {
+func translateHTML(htmlText []byte, info *source.Info, readme *internal.Readme) (_ []byte, err error) {
+	defer derrors.Wrap(&err, "translateHTML(readme.Filepath=%s)", readme.Filepath)
+
 	r := bytes.NewReader(htmlText)
 	nodes, err := html.ParseFragment(r, nil)
 	if err != nil {
@@ -233,26 +235,24 @@ func translateHTML(htmlText []byte, info *source.Info, readme *internal.Readme) 
 	var buf bytes.Buffer
 	changed := false
 	for _, n := range nodes {
-		// Every parsed node begins with <html><head></head><body>. Ignore that.
+		// We expect every parsed node to begin with <html><head></head><body>.
 		if n.DataAtom != atom.Html {
-			return htmlText, nil
+			return nil, fmt.Errorf("top-level node is %q, expected 'html'", n.DataAtom)
 		}
 		// When the parsed html nodes don't have a valid structure
 		// (i.e: an html comment), then just return the original text.
 		if n.FirstChild == nil || n.FirstChild.NextSibling == nil || n.FirstChild.NextSibling.DataAtom != atom.Body {
 			return htmlText, nil
 		}
-		n = n.FirstChild.NextSibling.FirstChild
-		// If <html><head><body> </body>... has no children (empty content),
-		// then just return the original text.
-		if n == nil {
-			return htmlText, nil
-		}
-		if walkHTML(n, info, readme) {
-			changed = true
-		}
-		if err := html.Render(&buf, n); err != nil {
-			return nil, err
+		n = n.FirstChild.NextSibling
+		// n is now the body node. Walk all its children.
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			if walkHTML(c, info, readme) {
+				changed = true
+			}
+			if err := html.Render(&buf, c); err != nil {
+				return nil, err
+			}
 		}
 	}
 	if changed {
@@ -273,7 +273,6 @@ func walkHTML(n *html.Node, info *source.Info, readme *internal.Readme) bool {
 		for _, a := range n.Attr {
 			if a.Key == "src" {
 				if v := translateRelativeLink(a.Val, info, true, readme); v != "" {
-					fmt.Printf("#### translated relative image link %q to %q\n", a.Val, v)
 					a.Val = v
 					changed = true
 				}
