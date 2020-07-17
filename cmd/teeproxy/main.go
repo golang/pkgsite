@@ -76,8 +76,10 @@ func main() {
 		http.ServeFile(w, r, "content/static/img/favicon.ico")
 	})
 	server, err := teeproxy.NewServer(teeproxy.Config{
-		Rate:  20,
-		Burst: 20,
+		AuthKey:   cfg.AuthHeader,
+		AuthValue: cfg.TeeproxyAuthValue,
+		Rate:      20,
+		Burst:     20,
 		BreakerConfig: breaker.Config{
 			FailsToRed:       10,
 			FailureThreshold: 0.5,

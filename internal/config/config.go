@@ -61,6 +61,10 @@ func ValidateAppVersion(appVersion string) error {
 // Config holds shared configuration values used in instantiating our server
 // components.
 type Config struct {
+	// AuthHeader is the header key used by the frontend server to know that a
+	// request is coming from a known source.
+	AuthHeader string
+
 	// Discovery environment variables
 	ProxyURL, IndexURL string
 
@@ -107,6 +111,10 @@ type Config struct {
 	UseProfiler bool
 
 	Quota QuotaSettings
+
+	// TeeproxyAuthValue is the value set by the teeproxy header, so that
+	// the frontend server knows the source of those requests.
+	TeeproxyAuthValue string
 
 	// TeeproxyTargetHosts is a list of hosts that teeproxy will forward
 	// requests to.
@@ -206,9 +214,12 @@ type QuotaSettings struct {
 	// Record data about blocking, but do not actually block.
 	// This is a *bool, so we can distinguish "not present" from "false" in an override
 	RecordOnly *bool
-	// AcceptedURLs is the list of URLs that will be ignored by the quota
-	// middleware.
-	AcceptedURLs []string
+	// AuthHeader is the name of the header used by the frontend server to
+	// determine if a request is coming from a known source.
+	AuthHeader string
+	// AuthValues is the set of values that could be set on the AuthHeader, in
+	// order to bypass checks by the quota server.
+	AuthValues []string
 }
 
 const overrideBucket = "go-discovery"
@@ -250,13 +261,15 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		RedisHAHost:          os.Getenv("GO_DISCOVERY_REDIS_HA_HOST"),
 		RedisHAPort:          GetEnv("GO_DISCOVERY_REDIS_HA_PORT", "6379"),
 		Quota: QuotaSettings{
-			QPS:          10,
-			Burst:        20,
-			MaxEntries:   1000,
-			RecordOnly:   func() *bool { t := true; return &t }(),
-			AcceptedURLs: parseCommaList(GetEnv("GO_DISCOVERY_ACCEPTED_LIST", "")),
+			QPS:        10,
+			Burst:      20,
+			MaxEntries: 1000,
+			RecordOnly: func() *bool { t := true; return &t }(),
+			AuthHeader: os.Getenv("GO_DISCOVERY_AUTH_HEADER"),
+			AuthValues: parseCommaList(os.Getenv("GO_DISCOVERY_AUTH_VALUES")),
 		},
 		UseProfiler:            os.Getenv("GO_DISCOVERY_USE_PROFILER") == "TRUE",
+		TeeproxyAuthValue:      os.Getenv("GO_DISCOVERY_TEEPROXY_AUTH_VALUE"),
 		TeeproxyForwardedHosts: parseCommaList(os.Getenv("GO_DISCOVERY_TEEPROXY_FORWARDED_HOSTS")),
 	}
 	cfg.AppMonitoredResource = &mrpb.MonitoredResource{

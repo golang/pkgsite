@@ -31,10 +31,19 @@ type Server struct {
 	client   *http.Client
 	limiter  *rate.Limiter
 	breakers map[string]*breaker.Breaker
+	// authKey and authValue are used to indicate to pkg.go.dev that the
+	// request is coming from the teeproxy.
+	authKey, authValue string
 }
 
 // Config contains configuration values for Server.
 type Config struct {
+	// AuthKey is the name of the header that is used by pkg.go.dev to
+	// determine if a request is coming from a trusted source.
+	AuthKey string
+	// AuthValue is the value of the header that is used by pkg.go.dev to
+	// determine that the request is coming from the teeproxy.
+	AuthValue string
 	// Hosts is the list of hosts that the teeproxy forwards requests to.
 	Hosts []string
 	// Client is the HTTP client used by the teeproxy to forward requests
@@ -185,11 +194,18 @@ func NewServer(config Config) (_ *Server, err error) {
 	if config.Client != nil {
 		client = config.Client
 	}
+
+	authKey := config.AuthKey
+	if authKey == "" {
+		authKey = "auth-key-for-testing"
+	}
 	return &Server{
-		hosts:    config.Hosts,
-		client:   client,
-		limiter:  rate.NewLimiter(rate.Limit(config.Rate), config.Burst),
-		breakers: breakers,
+		hosts:     config.Hosts,
+		client:    client,
+		limiter:   rate.NewLimiter(rate.Limit(config.Rate), config.Burst),
+		breakers:  breakers,
+		authKey:   authKey,
+		authValue: config.AuthValue,
 	}, nil
 }
 
@@ -345,6 +361,7 @@ func (s *Server) makePkgGoDevRequest(ctx context.Context, redirectHost, redirect
 		return event
 	}
 	start := time.Now()
+	req.Header.Set(s.authKey, s.authValue)
 	resp, err := ctxhttp.Do(ctx, s.client, req)
 	if err != nil {
 		// Use StatusBadGateway to indicate the upstream error.

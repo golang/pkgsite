@@ -50,10 +50,11 @@ func Quota(settings config.QuotaSettings) Middleware {
 
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			for _, url := range settings.AcceptedURLs {
-				if r.Referer() == url {
+			authVal := r.Header.Get(settings.AuthHeader)
+			for _, wantVal := range settings.AuthValues {
+				if authVal == wantVal {
 					recordQuotaMetric("accepted")
-					log.Infof(r.Context(), "Quota: accepting referer %q", r.Referer())
+					log.Infof(r.Context(), "Quota: accepting %q", authVal)
 					h.ServeHTTP(w, r)
 					return
 				}
