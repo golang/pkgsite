@@ -157,7 +157,9 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// manual: reprocess sets a reprocess status for all records in the
 	// module_version_states table that were processed by an app_version that
 	// occurred after the provided app_version param, so that they will be
-	// scheduled for reprocessing the next time a request to /requeue is made.
+	// scheduled for reprocessing the next time a request to /enqueue is made.
+	// If a status param is provided only module versions with that status will
+	// be reprocessed.
 	handle("/reprocess", rmw(s.errorHandler(s.handleReprocess)))
 
 	// manual: populate-stdlib inserts all versions of the Go standard
@@ -540,8 +542,24 @@ func (s *Server) handleReprocess(w http.ResponseWriter, r *http.Request) error {
 	if err := config.ValidateAppVersion(appVersion); err != nil {
 		return &serverError{http.StatusBadRequest, fmt.Errorf("config.ValidateAppVersion(%q): %v", appVersion, err)}
 	}
+	status := r.FormValue("status")
+	if status != "" {
+		code, err := strconv.Atoi(status)
+		if err != nil {
+			return &serverError{http.StatusBadRequest, fmt.Errorf("status is invalid: %q", status)}
+		}
+		if err := s.db.UpdateModuleVersionStatesWithStatus(r.Context(), code, appVersion); err != nil {
+			return err
+		}
+	}
 	if err := s.db.UpdateModuleVersionStatesForReprocessing(r.Context(), appVersion); err != nil {
 		return err
+	}
+	msg := fmt.Sprintf("Scheduled modules to be reprocessed for appVersion > %q", appVersion)
+	if status != "" {
+		fmt.Fprintf(w, "%s and status=%q", msg, status)
+	} else {
+		fmt.Fprint(w, msg)
 	}
 	return nil
 }

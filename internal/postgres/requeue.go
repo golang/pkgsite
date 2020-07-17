@@ -26,8 +26,17 @@ func (db *DB) UpdateModuleVersionStatesForReprocessing(ctx context.Context, appV
 		derrors.ToStatus(derrors.HasIncompletePackages),
 		derrors.ToStatus(derrors.BadModule),
 		derrors.ToStatus(derrors.AlternativeModule),
+		derrors.ToStatus(derrors.DBModuleInsertInvalid),
 	} {
-		query := `UPDATE module_version_states
+		if err := db.UpdateModuleVersionStatesWithStatus(ctx, status, appVersion); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (db *DB) UpdateModuleVersionStatesWithStatus(ctx context.Context, status int, appVersion string) (err error) {
+	query := `UPDATE module_version_states
 			SET
 				status = $2,
 				next_processed_after = CURRENT_TIMESTAMP,
@@ -35,19 +44,18 @@ func (db *DB) UpdateModuleVersionStatesForReprocessing(ctx context.Context, appV
 			WHERE
 				app_version < $1
 				AND status = $3;`
-		result, err := db.db.Exec(ctx, query, appVersion,
-			derrors.ToReprocessStatus(status), status)
-		if err != nil {
-			return err
-		}
-		affected, err := result.RowsAffected()
-		if err != nil {
-			return fmt.Errorf("result.RowsAffected(): %v", err)
-		}
-		log.Infof(ctx,
-			"Updated module_version_states with status=%d and app_version < %q to status=%d; %d affected",
-			status, appVersion, derrors.ToReprocessStatus(status), affected)
+	result, err := db.db.Exec(ctx, query, appVersion,
+		derrors.ToReprocessStatus(status), status)
+	if err != nil {
+		return err
 	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("result.RowsAffected(): %v", err)
+	}
+	log.Infof(ctx,
+		"Updated module_version_states with status=%d and app_version < %q to status=%d; %d affected",
+		status, appVersion, derrors.ToReprocessStatus(status), affected)
 	return nil
 }
 
@@ -154,14 +162,14 @@ const nextModulesToProcessQuery = `
 						CASE
 							-- with ReprocessStatusOK or ReprocessHasIncompletePackages
 							WHEN status = 520 OR status = 521 THEN 1
-							-- with ReprocessBadModule or ReprocessAlternative
-							WHEN status = 540 OR status = 541 THEN 2
+							-- with ReprocessBadModule or ReprocessAlternative or ReprocessDBModuleInsertInvalid
+							WHEN status = 540 OR status = 541 OR status = 542 THEN 2
 							ELSE 9
 						END
 					ELSE				-- non-latest version
 						CASE
 							WHEN status = 520 OR status = 521 THEN 3
-							WHEN status = 540 OR status = 541 THEN 4
+							WHEN status = 540 OR status = 541 OR status = 542 THEN 4
 							ELSE 9
 						END
 				END
@@ -170,13 +178,13 @@ const nextModulesToProcessQuery = `
 					WHEN latest THEN	-- latest version
 						CASE
 							WHEN status = 520 OR status = 521 THEN 5
-							WHEN status = 540 OR status = 541 THEN 6
+							WHEN status = 540 OR status = 541 OR status = 542 THEN 6
 							ELSE 9
 						END
 					ELSE				-- non-latest version
 						CASE
 							WHEN status = 520 OR status = 521 THEN 7
-							WHEN status = 540 OR status = 541 THEN 8
+							WHEN status = 540 OR status = 541 OR status = 542 THEN 8
 							ELSE 9
 						END
 				END

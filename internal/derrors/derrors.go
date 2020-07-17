@@ -77,6 +77,10 @@ var (
 	// ReprocessAlternativeModule indicates that the module to be reprocessed
 	// previously had a status of derrors.AlternativeModule.
 	ReprocessAlternative = errors.New("reprocess alternative module")
+	// ReprocessDBModuleInsertInvalid represents a module to be reprocessed
+	// that was successfully fetched but could not be inserted due to invalid
+	// arguments to postgres.InsertModule.
+	ReprocessDBModuleInsertInvalid = errors.New("reprocess db module insert invalid")
 )
 
 var codes = []struct {
@@ -93,13 +97,14 @@ var codes = []struct {
 	{BadModule, 490},
 	{AlternativeModule, 491},
 
-	// 52x errors represents modules that need to be reprocessed, and the
+	// 52x and 54x errors represents modules that need to be reprocessed, and the
 	// previous status code the module had. Note that the status code
 	// matters for determining reprocessing order.
 	{ReprocessStatusOK, 520},
 	{ReprocessHasIncompletePackages, 521},
 	{ReprocessBadModule, 540},
 	{ReprocessAlternative, 541},
+	{ReprocessDBModuleInsertInvalid, 542},
 
 	// 60x errors represents errors that occurred when processing a
 	// package.
@@ -159,6 +164,8 @@ func ToReprocessStatus(status int) int {
 		return ToStatus(ReprocessBadModule)
 	case ToStatus(AlternativeModule):
 		return ToStatus(ReprocessAlternative)
+	case ToStatus(DBModuleInsertInvalid):
+		return ToStatus(ReprocessDBModuleInsertInvalid)
 	default:
 		return status
 	}
