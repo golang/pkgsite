@@ -101,7 +101,7 @@ func (s *Server) serveFetch(w http.ResponseWriter, r *http.Request) (err error) 
 	}
 	if !isSupportedVersion(ctx, urlInfo.fullPath, urlInfo.requestedVersion) ||
 		// TODO(https://golang.org/issue/39973): add support for fetching the
-		// latest and master versions of the standard library
+		// latest and master versions of the standard library.
 		(stdlib.Contains(urlInfo.fullPath) && urlInfo.requestedVersion == internal.LatestVersion) {
 		return &serverError{status: http.StatusBadRequest}
 	}
@@ -187,7 +187,10 @@ func (s *Server) fetchAndPoll(parentCtx context.Context, modulePath, fullPath, r
 		// Results are in order of longest module path first. Once an
 		// appropriate result is found, return. Otherwise, look at the next path.
 		if fr.status == derrors.ToStatus(derrors.AlternativeModule) {
-			return http.StatusSeeOther, fmt.Sprintf("%q is not a supported package path. Were you looking for %q?", fullPath, fr.goModPath)
+			return http.StatusSeeOther,
+				// TODO(https://golang.org/issue/40306): Make the canonical module path a clickable link.
+				fmt.Sprintf("“%s” is not a valid path. Were you looking for “%s”?",
+					displayPath(fullPath, requestedVersion), fr.goModPath)
 		}
 		if responseText, ok := statusToResponseText[fr.status]; ok {
 			return fr.status, responseText
@@ -204,15 +207,25 @@ func (s *Server) fetchAndPoll(parentCtx context.Context, modulePath, fullPath, r
 	}
 	if moduleMatchingPathPrefix != "" {
 		return http.StatusNotFound,
-			// TODO(https://golang.org/issue/#37002): return as safehtml.HTML so that link is clickable.
-			fmt.Sprintf("%q could not be found. However, module %q does exist. You can see the module page at https://pkg.go.dev/mod/%s",
-				fullPath, moduleMatchingPathPrefix, moduleMatchingPathPrefix)
+			// TODO(https://golang.org/issue/40306): Make the link clickable.
+			fmt.Sprintf("Package “%s” could not be found, but you can view module “%s” at https://pkg.go.dev/mod/%s.",
+				displayPath(fullPath, requestedVersion),
+				displayPath(moduleMatchingPathPrefix, requestedVersion),
+				displayPath(moduleMatchingPathPrefix, requestedVersion),
+			)
 	}
 	p := fullPath
 	if requestedVersion != internal.LatestVersion {
 		p = fullPath + "@" + requestedVersion
 	}
 	return http.StatusNotFound, fmt.Sprintf("%q could not be found.", p)
+}
+
+func displayPath(path, version string) string {
+	if version == internal.LatestVersion {
+		return path
+	}
+	return fmt.Sprintf("%s@%s", path, version)
 }
 
 func (s *Server) fetchModule(ctx context.Context, fullPath, modulePath, requestedVersion string) (fr *fetchResult) {
@@ -290,8 +303,6 @@ func checkForPath(ctx context.Context, db *postgres.DB, fullPath, modulePath, re
 
 	// Check the version_map table to see if a row exists for modulePath and
 	// requestedVersion.
-	// TODO(golang/go#37002): update db.GetVersionMap to return updated_at,
-	// so that we can determine if a module version is stale.
 	vm, err := db.GetVersionMap(ctx, modulePath, requestedVersion)
 	if err != nil {
 		// If an error is returned, there are two possibilities:
@@ -335,8 +346,6 @@ func checkForPath(ctx context.Context, db *postgres.DB, fullPath, modulePath, re
 		// Return http.StatusProcessing here, so that the tasks gets enqueued
 		// to frontend tasks, and we don't return a result to the user until
 		// that is complete.
-		// TODO(golang/go#37002): mark versions for reprocessing in version_map
-		// inside postgres.UpdateModuleVersionStatesForReprocessing.
 		if fr.status >= derrors.ToStatus(derrors.ReprocessStatusOK) {
 			fr.status = http.StatusProcessing
 		}
