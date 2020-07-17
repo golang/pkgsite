@@ -975,6 +975,9 @@ code {
   margin-bottom: 0.5rem;
 }
 
+.is-withExampleButtons {
+  display: none;
+}
 .Documentation-exampleDetails {
   margin-top: 1rem;
 }

@@ -5,6 +5,7 @@
 package dochtml
 
 import (
+	"bytes"
 	"context"
 	"go/ast"
 	"go/parser"
@@ -17,6 +18,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/net/html"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch/internal/doc"
 )
 
@@ -42,6 +45,115 @@ func TestRender(t *testing.T) {
 		// Check that the id and data-kind labels are right.
 		testIDsAndKinds(t, htmlDoc)
 	})
+}
+
+func TestExampleRender(t *testing.T) {
+	ctx := experiment.NewContext(context.Background(), internal.ExperimentExecutableExamples)
+	fset, d := mustLoadPackage("example_test")
+
+	rawDoc, err := Render(ctx, fset, d, RenderOptions{
+		FileLinkFunc:   func(string) string { return "file" },
+		SourceLinkFunc: func(ast.Node) string { return "src" },
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	htmlDoc, err := html.Parse(strings.NewReader(rawDoc.String()))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := make(map[string]string)
+	walk(htmlDoc, func(n *html.Node) {
+		if attr(n, "class") == "Documentation-exampleDetails" {
+			var b bytes.Buffer
+			err := html.Render(&b, n)
+			if err != nil {
+				t.Fatal(err)
+			}
+			got[attr(n, "id")] = b.String()
+		}
+	})
+
+	for _, test := range []struct {
+		name   string
+		htmlID string
+		want   string
+	}{
+		{
+			name:   "Non executable example (no play buttons)",
+			htmlID: "example-package-AppRunNoAction",
+			want: `<details id="example-package-AppRunNoAction" class="Documentation-exampleDetails">
+<summary class="Documentation-exampleDetailsHeader">Example (AppRunNoAction) <a href="#example-package-AppRunNoAction">¶</a></summary>
+<div class="Documentation-exampleDetailsBody">
+<p>non-executable example taken from <a href="https://github.com/urfave/cli/blob/master/app_test.go#L184">https://github.com/urfave/cli/blob/master/app_test.go#L184</a>
+</p>
+<p>Code:</p>
+
+<pre class="Documentation-exampleCode">app := App{}
+app.Name = &#34;greet&#34;
+_ = app.Run([]string{&#34;greet&#34;})
+</pre>
+
+<pre class="Documentation-exampleOutput">NAME:
+   greet - A new cli application
+
+USAGE:
+   greet [global options] command [command options] [arguments...]
+
+COMMANDS:
+   help, h  Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   --help, -h  show help (default: false)
+</pre>
+</div>
+</details>`,
+		},
+		{
+			name:   "Executable examples (with play buttons)",
+			htmlID: "example-package-StringsCompare",
+			want: `<details id="example-package-StringsCompare" class="Documentation-exampleDetails">
+<summary class="Documentation-exampleDetailsHeader">Example (StringsCompare) <a href="#example-package-StringsCompare">¶</a></summary>
+<div class="Documentation-exampleDetailsBody">
+<p>executable example
+</p>
+<p>Code:</p>
+
+<pre class="Documentation-exampleCode">package main
+
+import (
+	&#34;fmt&#34;
+	&#34;strings&#34;
+)
+
+func main() {
+	fmt.Println(strings.Compare(&#34;a&#34;, &#34;b&#34;))
+	fmt.Println(strings.Compare(&#34;a&#34;, &#34;a&#34;))
+	fmt.Println(strings.Compare(&#34;b&#34;, &#34;a&#34;))
+
+}
+</pre>
+
+<pre class="Documentation-exampleOutput">-1
+0
+1
+</pre>
+</div>
+<div class="Documentation-exampleButtonsContainer">
+				<p class="Documentation-exampleError" role="alert" aria-atomic="true"></p>
+				<button class="Documentation-examplePlayButton" aria-label="Play Code">Play</button>
+			</div></details>`,
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			diff := cmp.Diff(test.want, got[test.htmlID])
+			if diff != "" {
+				t.Errorf("mismatch (-want, +got):\n%s", diff)
+			}
+		})
+	}
 }
 
 func TestLinkHTML(t *testing.T) {
@@ -287,18 +399,6 @@ func attr(n *html.Node, key string) string {
 
 // Copied from internal/render/render_test.go, with the slight modification of returning the fset.
 func mustLoadPackage(path string) (*token.FileSet, *doc.Package) {
-	// simpleImporter is used by ast.NewPackage.
-	simpleImporter := func(imports map[string]*ast.Object, pkgPath string) (*ast.Object, error) {
-		pkg := imports[pkgPath]
-		if pkg == nil {
-			pkgName := pkgPath[strings.LastIndex(pkgPath, "/")+1:]
-			pkg = ast.NewObj(ast.Pkg, pkgName)
-			pkg.Data = ast.NewScope(nil) // required for or dot-imports
-			imports[pkgPath] = pkg
-		}
-		return pkg, nil
-	}
-
 	srcName := filepath.Base(path) + ".go"
 	code, err := ioutil.ReadFile(filepath.Join("testdata", srcName))
 	if err != nil {
@@ -306,9 +406,13 @@ func mustLoadPackage(path string) (*token.FileSet, *doc.Package) {
 	}
 
 	fset := token.NewFileSet()
-	pkgFiles := make(map[string]*ast.File)
 	astFile, _ := parser.ParseFile(fset, srcName, code, parser.ParseComments)
-	pkgFiles[srcName] = astFile
-	astPkg, _ := ast.NewPackage(fset, pkgFiles, simpleImporter, nil)
-	return fset, doc.New(astPkg, path, 0)
+	files := []*ast.File{astFile}
+
+	astPackage, err := doc.NewFromFiles(fset, files, path, doc.AllDecls)
+	if err != nil {
+		panic(err)
+	}
+
+	return fset, astPackage
 }

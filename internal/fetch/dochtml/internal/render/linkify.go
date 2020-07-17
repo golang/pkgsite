@@ -165,7 +165,7 @@ type codeElement struct {
 }
 
 var codeTmpl = safetemplate.Must(safetemplate.New("").Parse(`
-<pre>
+<pre class="Documentation-exampleCode">
 {{range .}}
   {{- if .Comment -}}
     <span class="comment">{{.Text}}</span>

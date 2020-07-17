@@ -327,10 +327,15 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 			<p>Code:</p>{{"\n" -}}
 			{{render_code .Example}}{{"\n" -}}
 			{{- if (or .Output .EmptyOutput) -}}
-				<p>{{ternary .Unordered "Unordered output:" "Output:"}}</p>{{"\n" -}}
-				<pre>{{"\n"}}{{.Output}}</pre>{{"\n" -}}
+				<pre class="Documentation-exampleOutput">{{"\n"}}{{.Output}}</pre>{{"\n" -}}
 			{{- end -}}
 		</div>{{"\n" -}}
+		{{- if .Play -}}
+			<div class="Documentation-exampleButtonsContainer{{if .HideButtons}} is-withExampleButtons{{end}}">
+				<p class="Documentation-exampleError" role="alert" aria-atomic="true"></p>
+				<button class="Documentation-examplePlayButton" aria-label="Play Code">Play</button>
+			</div>
+		{{- end -}}
 	</details>{{"\n" -}}
 	{{"\n"}}
 	{{- end -}}

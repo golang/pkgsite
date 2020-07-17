@@ -218,7 +218,7 @@ func TestCodeHTML(t *testing.T) {
 b := 2 /* another comment */
 `,
 			`
-<pre>
+<pre class="Documentation-exampleCode">
 a := 1
 <span class="comment">// a comment</span>
 b := 2 <span class="comment">/* another comment */</span>
@@ -231,7 +231,7 @@ b := 2 <span class="comment">/* another comment */</span>
 
 `,
 			`
-<pre>
+<pre class="Documentation-exampleCode">
 a := 1
 </pre>`,
 		},
@@ -244,7 +244,7 @@ b := 1
 // removed
 `,
 			`
-<pre>
+<pre class="Documentation-exampleCode">
 a := 1
 <span class="comment">// Output:</span>
 b := 1
@@ -262,7 +262,7 @@ b := 1
 // removed
 `,
 			`
-<pre>
+<pre class="Documentation-exampleCode">
 a := 1
 <span class="comment">// Output:</span>
 b := 1
