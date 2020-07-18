@@ -5,6 +5,7 @@
 package frontend
 
 import (
+	"bytes"
 	"context"
 	"sort"
 	"strconv"
@@ -63,6 +64,7 @@ func transformLicenses(modulePath, requestedVersion string, dbLicenses []*licens
 	}
 	anchors := licenseAnchors(filePaths)
 	for i, l := range dbLicenses {
+		l.Contents = bytes.ReplaceAll(l.Contents, []byte("\r"), nil)
 		licenses[i] = License{
 			Anchor:  anchors[i],
 			License: l,

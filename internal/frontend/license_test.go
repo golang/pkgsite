@@ -5,17 +5,19 @@
 package frontend
 
 import (
+	"bytes"
 	"context"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
+	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
 func TestLicenseAnchors(t *testing.T) {
@@ -43,12 +45,27 @@ func TestLicenseAnchors(t *testing.T) {
 func TestFetchLicensesDetails(t *testing.T) {
 	testModule := sample.Module(sample.ModulePath, "v1.2.3", "A/B")
 	stdlibModule := sample.Module(stdlib.ModulePath, "v1.13.0", "cmd/go")
+	crlfPath := "github.com/crlf/module_name"
+	crlfModule := sample.Module(crlfPath, "v1.2.3", "A")
+
 	mit := &licenses.Metadata{Types: []string{"MIT"}, FilePath: "LICENSE"}
 	bsd := &licenses.Metadata{Types: []string{"BSD-3-Clause"}, FilePath: "A/B/LICENSE"}
 
-	mitLicense := &licenses.License{Metadata: mit}
-	bsdLicense := &licenses.License{Metadata: bsd}
+	mitLicense := &licenses.License{
+		Metadata: mit,
+		Contents: []byte(testhelper.MITLicense),
+	}
+	mitLicenseCRLF := &licenses.License{
+		Metadata: mit,
+		Contents: []byte(strings.ReplaceAll(testhelper.MITLicense, "\n", "\r\n")),
+	}
+	bsdLicense := &licenses.License{
+		Metadata: bsd,
+		Contents: []byte(testhelper.BSD0License),
+	}
+
 	testModule.Licenses = []*licenses.License{bsdLicense, mitLicense}
+	crlfModule.Licenses = []*licenses.License{mitLicenseCRLF}
 	sort.Slice(testModule.Directories, func(i, j int) bool {
 		return testModule.Directories[i].Path < testModule.Directories[j].Path
 	})
@@ -66,6 +83,9 @@ func TestFetchLicensesDetails(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := testDB.InsertModule(ctx, stdlibModule); err != nil {
+		t.Fatal(err)
+	}
+	if err := testDB.InsertModule(ctx, crlfModule); err != nil {
 		t.Fatal(err)
 	}
 	for _, test := range []struct {
@@ -115,6 +135,13 @@ func TestFetchLicensesDetails(t *testing.T) {
 			version:    stdlibModule.Version,
 			want:       stdlibModule.Licenses,
 		},
+		{
+			name:       "module with CRLF line terminators",
+			fullPath:   crlfPath,
+			modulePath: crlfPath,
+			version:    crlfModule.Version,
+			want:       crlfModule.Licenses,
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			wantDetails := &LicensesDetails{Licenses: transformLicenses(
@@ -124,10 +151,14 @@ func TestFetchLicensesDetails(t *testing.T) {
 				t.Fatal(err)
 			}
 			if diff := cmp.Diff(wantDetails, got,
-				cmpopts.IgnoreFields(licenses.License{}, "Contents"),
 				cmp.AllowUnexported(safehtml.HTML{}, safehtml.Identifier{}),
 			); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
+			}
+			for _, l := range got.Licenses {
+				if bytes.Contains(l.Contents, []byte("\r")) {
+					t.Errorf("license %s contains \\r line terminators", l.Metadata.FilePath)
+				}
 			}
 		})
 	}

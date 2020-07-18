@@ -193,6 +193,21 @@ func TestReadmeHTML(t *testing.T) {
 				`<a href="https://research.swtch.com/vgo1" rel="nofollow">package versioning in Go</a>.</p>`,
 		},
 		{
+			name: "valid markdown readme with CRLF",
+			mi:   &internal.ModuleInfo{},
+			readme: &internal.Readme{
+				Filepath: "README.md",
+				Contents: "This package collects pithy sayings.\r\n\r\n" +
+					"- It's part of a demonstration of\r\n" +
+					"- [package versioning in Go](https://research.swtch.com/vgo1).",
+			},
+			want: "<p>This package collects pithy sayings.</p>\n\n" +
+				"<ul>\n" +
+				"<li>It’s part of a demonstration of</li>\n" +
+				`<li><a href="https://research.swtch.com/vgo1" rel="nofollow">package versioning in Go</a>.</li>` + "\n" +
+				"</ul>\n",
+		},
+		{
 			name: "not markdown readme",
 			mi:   &internal.ModuleInfo{},
 			readme: &internal.Readme{

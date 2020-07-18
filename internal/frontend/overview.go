@@ -145,7 +145,8 @@ func ReadmeHTML(ctx context.Context, mi *internal.ModuleInfo, readme *internal.R
 	// Render HTML similar to blackfriday.Run(), but here we implement a custom
 	// Walk function in order to modify image paths in the rendered HTML.
 	b := &bytes.Buffer{}
-	rootNode := parser.Parse([]byte(readme.Contents))
+	contents := bytes.ReplaceAll([]byte(readme.Contents), []byte("\r"), nil)
+	rootNode := parser.Parse(contents)
 	var walkErr error
 	rootNode.Walk(func(node *blackfriday.Node, entering bool) blackfriday.WalkStatus {
 		switch node.Type {
