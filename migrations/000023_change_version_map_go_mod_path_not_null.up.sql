@@ -4,6 +4,6 @@
 
 BEGIN;
 
-ALTER TABLE version_map ALTER COLUMN go_mod_path SET NOT NULL DEFAULT '';
+ALTER TABLE version_map ALTER COLUMN go_mod_path SET NOT NULL;
 
 END;
