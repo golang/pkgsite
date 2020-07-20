@@ -115,7 +115,7 @@ func shouldSetExperiment(r *http.Request, e *internal.Experiment) bool {
 	if e.Rollout == 0 {
 		return false
 	}
-	if e.Rollout == 100 {
+	if e.Rollout >= 100 {
 		return true
 	}
 	ip := ipKey(r.Header.Get("X-Forwarded-For"))
@@ -124,5 +124,5 @@ func shouldSetExperiment(r *http.Request, e *internal.Experiment) bool {
 	}
 	h := fnv.New32a()
 	fmt.Fprintf(h, "%s %s", ip, e.Name)
-	return uint(h.Sum32())%(100/e.Rollout) == 0
+	return uint(h.Sum32())%100 < e.Rollout
 }

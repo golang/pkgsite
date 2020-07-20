@@ -108,7 +108,7 @@ func TestShouldSetExperiment(t *testing.T) {
 		ipAddresses = append(ipAddresses, ip)
 	}
 
-	for _, rollout := range []uint{0, 33, 50, 100} {
+	for _, rollout := range []uint{0, 33, 47, 50, 53, 75, 100} {
 		t.Run(fmt.Sprintf("%d", rollout), func(t *testing.T) {
 			test := &internal.Experiment{
 				Name:    "test",
