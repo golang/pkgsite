@@ -155,6 +155,7 @@ code {
   }
 }
 
+/* TODO: Remove deprecated Homepage styles after "new-hompage" launch */
 .SearchForm[aria-expanded='false'] .AutoComplete-list,
 .Header-searchForm[aria-expanded='false'] .AutoComplete-list {
   display: none;
@@ -231,6 +232,8 @@ code {
   line-height: 1.4;
   padding: 0;
 }
+/* Deprecated homepage styles end here. */
+
 .Header {
   margin: 0 auto;
   max-width: 75.75rem;

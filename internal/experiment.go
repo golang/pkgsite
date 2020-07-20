@@ -14,6 +14,7 @@ const (
 	ExperimentInsertPlaygroundLinks = "insert-playground-links"
 	ExperimentMasterVersion         = "master-version"
 	ExperimentExecutableExamples    = "executable-examples"
+	ExperimentNewHomepage           = "new-homepage"
 	ExperimentSidenav               = "sidenav"
 	ExperimentUseDirectories        = "use-directories"
 	ExperimentUsePackageImports     = "use-package-imports"
@@ -27,6 +28,7 @@ var Experiments = map[string]string{
 	ExperimentFrontendFetch:         "Enable ability to fetch a package that doesn't exist on pkg.go.dev.",
 	ExperimentInsertPlaygroundLinks: "Insert Go playground links for examples.",
 	ExperimentMasterVersion:         "Enable viewing path@master.",
+	ExperimentNewHomepage:           "Enable the new hompage.",
 	ExperimentExecutableExamples:    "Display executable examples with their import statements, so that they are runnable via the Go playground.",
 	ExperimentSidenav:               "Display documentation index on the left sidenav.",
 	ExperimentUseDirectories:        "Read from paths, documentation, readmes, and package_imports tables.",

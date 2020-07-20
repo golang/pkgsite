@@ -1,0 +1,111 @@
+/*
+ * Copyright 2020 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+/*
+ * Styling for when the new-homepage experiment is active.
+ */
+
+.HomepageNew {
+  display: flex;
+  flex-direction: column;
+  margin: 2rem auto;
+  max-width: 38rem;
+}
+.HomepageNew-logo {
+  display: block;
+  height: 15.25rem;
+  margin: 3.125rem auto;
+  width: 22.8125rem;
+}
+.HomepageNew-searchForm input {
+  background: url('/static/img/icon-search.svg') right no-repeat;
+  background-position: left 0.75rem center;
+  background-size: 1.5rem;
+  border: 0.0625rem solid var(--gray-8);
+  border-radius: 0.5rem;
+  color: var(--gray-4);
+  font-family: inherit;
+  font-size: 1rem;
+  height: 3rem;
+  padding-left: 2.75rem;
+  width: 100%;
+}
+.HomepageNew-buttonGroup {
+  display: flex;
+  justify-content: center;
+  margin: 2.5rem auto auto 0;
+}
+.HomepageNew-searchButton {
+  border: none;
+  border-radius: 0.25rem;
+  background-color: var(--turq-dark);
+  color: var(--white);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1em;
+  height: 2.5rem;
+  margin-right: 0.5rem;
+  padding: 0 1.375rem;
+}
+a.HomepageNew-helpButton {
+  align-items: center;
+  display: flex;
+  border: 0.0625rem solid var(--gray-4);
+  border-radius: 0.25rem;
+  background: var(--white);
+  color: var(--gray-4);
+  font-size: 1em;
+  height: 2.5rem;
+  margin-left: 0.5rem;
+  padding: 0 1.375rem;
+}
+.HomepageNew-helpButton img {
+  height: 1rem;
+  margin-left: 0.25rem;
+  position: relative;
+  top: 0.1875rem;
+  width: 1rem;
+}
+.HomepageNew-popularSearches {
+  color: var(--gray-2);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.75rem;
+  margin: 1.5rem auto;
+  text-align: center;
+}
+.HomepageNew-popularSearches a {
+  color: var(--turq-dark);
+  font-size: 1rem;
+  font-weight: initial;
+  padding: 0 0.625rem;
+}
+@media only screen and (max-width: 30rem) {
+  .HomepageNew-popularSearches > span {
+    display: block;
+  }
+}
+.Questions {
+  background: var(--gray-9);
+  color: var(--gray-2);
+  display: flex;
+  padding: 0.5rem 0;
+  width: 100vw;
+}
+.Questions-content {
+  flex-grow: 1;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  max-width: 75.75rem;
+}
+.Questions-content ul {
+  list-style: none;
+  padding-inline-start: 0;
+}
+.Questions-content ul > li {
+  line-height: 1.75rem;
+  font-size: 0.875rem;
+}

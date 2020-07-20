@@ -16,6 +16,9 @@
 {{if (.Experiments.IsActive "sidenav")}}
   <link href="/static/css/sidenav.css?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
+{{if (.Experiments.IsActive "new-homepage")}}
+  <link href="/static/css/homepage.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{end}}
 <link href="/third_party/dialog-polyfill/dialog-polyfill.css?version={{.AppVersionLabel}}" rel="stylesheet">
 <title>{{if .HTMLTitle}}{{.HTMLTitle}} · {{end}}pkg.go.dev</title>
 <body class="Site{{if (.Experiments.IsActive "sidenav")}} is-withSideNav{{end}}">
@@ -86,6 +89,7 @@
 </div>
 <main class="Site-content">{{block "main_content" .}}{{end}}</main>
 <footer class="Site-footer">
+  {{block "pre_footer" .}}{{end}}
   <div class="Footer">
     <div class="Footer-links">
       <div class="Footer-linkColumn">
