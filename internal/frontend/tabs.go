@@ -151,7 +151,7 @@ func fetchDetailsForPackage(r *http.Request, tab string, ds internal.DataSource,
 	case "subdirectories":
 		return fetchDirectoryDetails(ctx, ds, vdir, false)
 	case "versions":
-		return legacyFetchPackageVersionsDetails(ctx, ds, vdir.Path, vdir.V1Path, vdir.ModulePath)
+		return fetchVersionsDetails(ctx, ds, vdir.Path, vdir.V1Path, vdir.ModulePath)
 	case "imports":
 		return fetchImportsDetails(ctx, ds, vdir.Path, vdir.ModulePath, vdir.Version)
 	case "importedby":
@@ -187,7 +187,7 @@ func fetchDetailsForModule(r *http.Request, tab string, ds internal.DataSource, 
 	case "licenses":
 		return &LicensesDetails{Licenses: transformLicenses(mi.ModulePath, mi.Version, licenses)}, nil
 	case "versions":
-		return legacyFetchModuleVersionsDetails(ctx, ds, mi)
+		return fetchModuleVersionsDetails(ctx, ds, mi.ModulePath)
 	case "overview":
 		return constructOverviewDetails(ctx, mi, readme, mi.IsRedistributable, urlIsVersioned(r.URL))
 	}

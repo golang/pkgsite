@@ -14,6 +14,7 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 )
@@ -58,6 +59,46 @@ type VersionSummary struct {
 	// Link to this version, for use in the anchor href.
 	Link    string
 	Version string
+}
+
+func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, fullPath, v1Path, modulePath string) (*VersionsDetails, error) {
+	db, ok := ds.(*postgres.DB)
+	if !ok {
+		// The proxydatasource does not support the imported by page.
+		return nil, proxydatasourceNotSupportedErr()
+	}
+	versions, err := db.GetVersionsForPath(ctx, fullPath)
+	if err != nil {
+		return nil, err
+	}
+	linkify := func(mi *internal.ModuleInfo) string {
+		// Here we have only version information, but need to construct the full
+		// import path of the package corresponding to this version.
+		var versionPath string
+		if mi.ModulePath == stdlib.ModulePath {
+			versionPath = fullPath
+		} else {
+			versionPath = pathInVersion(v1Path, mi)
+		}
+		return constructPackageURL(versionPath, mi.ModulePath, linkVersion(mi.Version, mi.ModulePath))
+	}
+	return buildVersionDetails(modulePath, versions, linkify), nil
+}
+
+func fetchModuleVersionsDetails(ctx context.Context, ds internal.DataSource, modulePath string) (*VersionsDetails, error) {
+	db, ok := ds.(*postgres.DB)
+	if !ok {
+		// The proxydatasource does not support the imported by page.
+		return nil, proxydatasourceNotSupportedErr()
+	}
+	versions, err := db.GetVersionsForPath(ctx, modulePath)
+	if err != nil {
+		return nil, err
+	}
+	linkify := func(m *internal.ModuleInfo) string {
+		return constructModuleURL(m.ModulePath, linkVersion(m.Version, m.ModulePath))
+	}
+	return buildVersionDetails(modulePath, versions, linkify), nil
 }
 
 // legacyFetchModuleVersionsDetails builds a version hierarchy for module versions
