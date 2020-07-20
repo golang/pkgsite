@@ -74,7 +74,7 @@ func TestExampleRender(t *testing.T) {
 
 	got := make(map[string]string)
 	walk(htmlDoc, func(n *html.Node) {
-		if attr(n, "class") == "Documentation-exampleDetails" {
+		if attr(n, "class") == "Documentation-exampleDetails js-exampleContainer" {
 			var b bytes.Buffer
 			err := html.Render(&b, n)
 			if err != nil {
@@ -92,7 +92,7 @@ func TestExampleRender(t *testing.T) {
 		{
 			name:   "Non executable example (no play buttons)",
 			htmlID: "example-package-AppRunNoAction",
-			want: `<details tabindex="-1" id="example-package-AppRunNoAction" class="Documentation-exampleDetails">
+			want: `<details tabindex="-1" id="example-package-AppRunNoAction" class="Documentation-exampleDetails js-exampleContainer">
 <summary class="Documentation-exampleDetailsHeader">Example (AppRunNoAction) <a href="#example-package-AppRunNoAction">¶</a></summary>
 <div class="Documentation-exampleDetailsBody">
 <p>non-executable example taken from <a href="https://github.com/urfave/cli/blob/master/app_test.go#L184">https://github.com/urfave/cli/blob/master/app_test.go#L184</a>
@@ -122,7 +122,7 @@ GLOBAL OPTIONS:
 		{
 			name:   "Executable examples (with play buttons)",
 			htmlID: "example-package-StringsCompare",
-			want: `<details tabindex="-1" id="example-package-StringsCompare" class="Documentation-exampleDetails">
+			want: `<details tabindex="-1" id="example-package-StringsCompare" class="Documentation-exampleDetails js-exampleContainer">
 <summary class="Documentation-exampleDetailsHeader">Example (StringsCompare) <a href="#example-package-StringsCompare">¶</a></summary>
 <div class="Documentation-exampleDetailsBody">
 <p>executable example

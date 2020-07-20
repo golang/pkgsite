@@ -381,7 +381,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 
 {{- define "example" -}}
 	{{- range . -}}
-	<details tabindex="-1" id="{{.ID}}" class="Documentation-exampleDetails">{{"\n" -}}
+	<details tabindex="-1" id="{{.ID}}" class="Documentation-exampleDetails js-exampleContainer">{{"\n" -}}
 		<summary class="Documentation-exampleDetailsHeader">Example{{with .Suffix}} ({{.}}){{end}} <a href="#{{.ID}}">¶</a></summary>{{"\n" -}}
 		<div class="Documentation-exampleDetailsBody">{{"\n" -}}
 			{{- if .Doc -}}{{render_doc .Doc}}{{"\n" -}}{{- end -}}
