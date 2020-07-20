@@ -205,7 +205,7 @@ func TestReadmeHTML(t *testing.T) {
 				"<ul>\n" +
 				"<li>It’s part of a demonstration of</li>\n" +
 				`<li><a href="https://research.swtch.com/vgo1" rel="nofollow">package versioning in Go</a>.</li>` + "\n" +
-				"</ul>\n",
+				"</ul>",
 		},
 		{
 			name: "not markdown readme",
