@@ -154,6 +154,11 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 
 func TestReadmeHTML(t *testing.T) {
 	ctx := experiment.NewContext(context.Background(), internal.ExperimentTranslateHTML)
+	aModule := &internal.ModuleInfo{
+		Version:     "v1.2.3",
+		VersionType: version.TypeRelease,
+		SourceInfo:  source.NewGitHubInfo("https://github.com/some/repo", "", "v1.2.3"),
+	}
 	for _, tc := range []struct {
 		name   string
 		mi     *internal.ModuleInfo
@@ -233,24 +238,16 @@ func TestReadmeHTML(t *testing.T) {
 		},
 		{
 			name: "module versions are referenced in relative images",
-			mi: &internal.ModuleInfo{
-				Version:     "v0.56.3",
-				VersionType: version.TypeRelease,
-				SourceInfo:  source.NewGitHubInfo("http://github.com/gohugoio/hugo", "", "v0.56.3"),
-			},
+			mi:   aModule,
 			readme: &internal.Readme{
 				Filepath: "README.md",
 				Contents: "![Hugo logo](doc/logo.png)",
 			},
-			want: "<p><img src=\"http://github.com/gohugoio/hugo/raw/v0.56.3/doc/logo.png\" alt=\"Hugo logo\"/></p>\n",
+			want: `<p><img src="https://github.com/some/repo/raw/v1.2.3/doc/logo.png" alt="Hugo logo"/></p>` + "\n",
 		},
 		{
 			name: "image URLs relative to README directory",
-			mi: &internal.ModuleInfo{
-				Version:     "v1.2.3",
-				VersionType: version.TypeRelease,
-				SourceInfo:  source.NewGitHubInfo("https://github.com/some/repo", "", "v1.2.3"),
-			},
+			mi:   aModule,
 			readme: &internal.Readme{
 				Filepath: "dir/sub/README.md",
 				Contents: "![alt](img/thing.png)",
@@ -259,11 +256,7 @@ func TestReadmeHTML(t *testing.T) {
 		},
 		{
 			name: "non-image links relative to README directory",
-			mi: &internal.ModuleInfo{
-				Version:     "v1.2.3",
-				VersionType: version.TypeRelease,
-				SourceInfo:  source.NewGitHubInfo("https://github.com/some/repo", "", "v1.2.3"),
-			},
+			mi:   aModule,
 			readme: &internal.Readme{
 				Filepath: "dir/sub/README.md",
 				Contents: "[something](doc/thing.md)",
@@ -272,24 +265,16 @@ func TestReadmeHTML(t *testing.T) {
 		},
 		{
 			name: "image link in embedded HTML",
-			mi: &internal.ModuleInfo{
-				Version:     "v0.3.3",
-				VersionType: version.TypeRelease,
-				SourceInfo:  source.NewGitHubInfo("https://github.com/pdfcpu/pdfcpu", "", "v0.3.3"),
-			},
+			mi:   aModule,
 			readme: &internal.Readme{
 				Filepath: "README.md",
 				Contents: "<img src=\"resources/logoSmall.png\" />\n\n# Heading\n",
 			},
-			want: "<p><img src=\"https://github.com/pdfcpu/pdfcpu/raw/v0.3.3/resources/logoSmall.png\"/></p>\n\n<h1 id=\"heading\">Heading</h1>\n",
+			want: "<p><img src=\"https://github.com/some/repo/raw/v1.2.3/resources/logoSmall.png\"/></p>\n\n<h1 id=\"heading\">Heading</h1>\n",
 		},
 		{
 			name: "image link in embedded HTML with surrounding p tag",
-			mi: &internal.ModuleInfo{
-				Version:     "v1.2.3",
-				VersionType: version.TypeRelease,
-				SourceInfo:  source.NewGitHubInfo("https://github.com/some/repo", "", "v1.2.3"),
-			},
+			mi:   aModule,
 			readme: &internal.Readme{
 				Filepath: "README.md",
 				Contents: "<p align=\"center\"><img src=\"foo.png\" /></p>\n\n# Heading",
@@ -298,11 +283,7 @@ func TestReadmeHTML(t *testing.T) {
 		},
 		{
 			name: "image link in embedded HTML with surrounding div",
-			mi: &internal.ModuleInfo{
-				Version:     "v1.2.3",
-				VersionType: version.TypeRelease,
-				SourceInfo:  source.NewGitHubInfo("https://github.com/some/repo", "", "v1.2.3"),
-			},
+			mi:   aModule,
 			readme: &internal.Readme{
 				Filepath: "README.md",
 				Contents: "<div align=\"center\"><img src=\"foo.png\" /></div>\n\n# Heading",
@@ -324,11 +305,7 @@ func TestReadmeHTML(t *testing.T) {
 		},
 		{
 			name: "body has more than one child",
-			mi: &internal.ModuleInfo{
-				Version:     "v1.2.3",
-				VersionType: version.TypeRelease,
-				SourceInfo:  source.NewGitHubInfo("https://github.com/some/repo", "", "v1.2.3"),
-			},
+			mi:   aModule,
 			readme: &internal.Readme{
 				Filepath: "dir/sub/README.md",
 				// The final newline here is important for creating the right markdown tree; do not remove it.
