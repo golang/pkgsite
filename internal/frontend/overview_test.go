@@ -14,7 +14,6 @@ import (
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/testconversions"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -155,7 +154,7 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 }
 
 func TestReadmeHTML(t *testing.T) {
-	ctx := experiment.NewContext(context.Background(), internal.ExperimentTranslateHTML)
+	ctx := context.Background()
 	aModule := &internal.ModuleInfo{
 		Version:     "v1.2.3",
 		VersionType: version.TypeRelease,

@@ -23,7 +23,6 @@ import (
 	"golang.org/x/net/html/atom"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -156,14 +155,12 @@ func ReadmeHTML(ctx context.Context, mi *internal.ModuleInfo, readme *internal.R
 				node.LinkData.Destination = []byte(d)
 			}
 		case blackfriday.HTMLBlock, blackfriday.HTMLSpan:
-			if experiment.IsActive(ctx, internal.ExperimentTranslateHTML) {
-				d, err := translateHTML(node.Literal, mi.SourceInfo, readme)
-				if err != nil {
-					walkErr = fmt.Errorf("couldn't transform html block(%s): %w", node.Literal, err)
-					return blackfriday.Terminate
-				}
-				node.Literal = d
+			d, err := translateHTML(node.Literal, mi.SourceInfo, readme)
+			if err != nil {
+				walkErr = fmt.Errorf("couldn't transform html block(%s): %w", node.Literal, err)
+				return blackfriday.Terminate
 			}
+			node.Literal = d
 		}
 		return renderer.RenderNode(b, node, entering)
 	})
