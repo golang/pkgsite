@@ -309,11 +309,19 @@ func TestReadmeHTML(t *testing.T) {
 			readme: &internal.Readme{
 				Filepath: "dir/sub/README.md",
 				// The final newline here is important for creating the right markdown tree; do not remove it.
-				Contents: `<p><img src="./foo.png"></p><p><img src="../bar.png"</p>
-`,
+				Contents: `<p><img src="./foo.png"></p><p><img src="../bar.png"</p>` + "\n",
 			},
 			want: `<p><img src="https://github.com/some/repo/raw/v1.2.3/dir/sub/foo.png"/></p><p><img src="https://github.com/some/repo/raw/v1.2.3/dir/bar.png"/></p>
 `,
+		},
+		{
+			name: "escaped image source",
+			mi:   aModule,
+			readme: &internal.Readme{
+				Filepath: "README.md",
+				Contents: `<img src="./images/Jupyter%20Notebook_sparkline.svg">`,
+			},
+			want: `<p><img src="https://github.com/some/repo/raw/v1.2.3/images/Jupyter%20Notebook_sparkline.svg"/></p>` + "\n",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

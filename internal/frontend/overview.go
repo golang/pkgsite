@@ -214,7 +214,7 @@ func translateRelativeLink(dest string, info *source.Info, useRaw bool, readme *
 		return ""
 	}
 	// Paths are relative to the README location.
-	destPath := path.Join(path.Dir(readme.Filepath), path.Clean(destURL.Path))
+	destPath := path.Join(path.Dir(readme.Filepath), path.Clean(destURL.EscapedPath()))
 	if useRaw {
 		return info.RawURL(destPath)
 	}
