@@ -981,11 +981,43 @@ code {
 .is-withExampleButtons {
   display: none;
 }
-.Documentation-exampleDetails {
-  margin-top: 1rem;
+.Documentation-build {
+  color: var(--gray-3);
+  font-size: 0.875rem;
+  padding-top: 1.5rem;
+  text-align: right;
+}
+.Documentation-exampleButtonsContainer {
+  align-items: center;
+  display: flex;
+  justify-content: flex-end;
+}
+.Documentation-exampleButtonsContainer button {
+  background-color: var(--white);
+  border: 0.15rem solid var(--turq-med);
+  color: var(--turq-med);
+  cursor: pointer;
+  flex-shrink: 0;
+  height: 2.5rem;
+  width: 4.125rem;
 }
 .Documentation-exampleDetailsBody pre {
   margin: 1rem 0;
+}
+/**
+ * We add another selector here to these two classes to increase CSS specificity,
+ * the selector .Documentation pre + pre overrides .Documentation-exampleCode
+ * and .Documentation-exampleOutput by itself and would replace the styles.
+ */
+.Documentation-exampleDetailsBody .Documentation-exampleCode {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  margin: 0;
+}
+.Documentation-exampleDetailsBody .Documentation-exampleOutput {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  margin: 0 0 0.5rem;
 }
 .Documentation-exampleDetailsHeader {
   color: var(--turq-dark);
@@ -994,12 +1026,10 @@ code {
   outline: none;
   text-decoration: none;
 }
-.Documentation .example-header {
-  color: var(--turq-dark);
-  font-size: 1rem;
-  outline: none;
-  padding-top: 0.5rem;
-  text-decoration: none;
+.Documentation-exampleError {
+  color: var(--pink);
+  margin-right: 0.4rem;
+  padding-right: 0.5rem;
 }
 .Documentation-files {
   display: none;
@@ -1007,12 +1037,6 @@ code {
 .Documentation-filesList {
   column-count: 3;
   column-width: 12.5rem;
-}
-.Documentation-build {
-  color: var(--gray-3);
-  font-size: 0.875rem;
-  padding-top: 1.5rem;
-  text-align: right;
 }
 
 .Versions-list {
