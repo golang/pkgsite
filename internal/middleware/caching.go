@@ -103,16 +103,7 @@ func Cache(name string, client *redis.Client, expirer Expirer) Middleware {
 	}
 }
 
-const cacheBypassHeader = "x-go-discovery-bypass-cache"
-
 func (c *cache) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// To facilitate load testing and debugging, we check for a magic header that
-	// bypasses the cache. This completely avoids the cached serving path, and
-	// does not write to the cache after success.
-	if bypass := r.Header.Get(cacheBypassHeader); bypass != "" {
-		c.delegate.ServeHTTP(w, r)
-		return
-	}
 	ctx := r.Context()
 	key := r.URL.String()
 	if reader, ok := c.get(ctx, key); ok {
