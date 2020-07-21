@@ -197,15 +197,6 @@
 <script async>
   const gtmID = document.querySelector('.js-gtmID');
   loadScript(`https://www.googletagmanager.com/gtm.js?id=${gtmID.dataset.path}`);
-
-  f = document.createElement("iframe")
-  f.src = gtmURL;
-  f.height = "0";
-  f.width = "0";
-  f.style = "display:none;visibility:hidden"
-  s = document.createElement("noscript");
-  s.appendChild(f);
-  document.head.appendChild(s);
 </script>
 {{end}}
 

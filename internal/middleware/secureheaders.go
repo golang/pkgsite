@@ -12,7 +12,7 @@ import (
 
 var scriptHashes = []string{
 	// From content/static/html/base.tmpl
-	"'sha256-Ajmr6RIM6VV5w/AraBIyO4/XRyuqJlFVukc7TL6feog='",
+	"'sha256-iEbKJcIzY7lnwWkedu4oGZk8DtJ5h8hIfrKUNxw0+a8='",
 	"'sha256-d6W7MwuGWbguTHRzQhf5QN1jXmNo9Ao218saZkWLWZI='",
 	"'sha256-qPGTOKPn+niRiNKQIEX0Ktwuj+D+iPQWIxnlhPicw58='",
 	// From content/static/html/pages/badge.tmpl
