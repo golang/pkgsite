@@ -132,6 +132,11 @@ td {
       onclick="submitForm('populateStdlibForm', false); return false">Populate Standard Library</button>
 		<output name="result"></output>
 	</form>
+	<form action="/clear-cache" method="get" name="clearCacheForm">
+		<button title="Clears the Redis cache."
+      onclick="submitForm('clearCacheForm', false); return false">Clear Cache</button>
+		<output name="result"></output>
+	</form>
 </div>
 
 <div class="config">
