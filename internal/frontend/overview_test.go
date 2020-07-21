@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"context"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -349,6 +350,27 @@ func TestReadmeHTML(t *testing.T) {
 				t.Errorf("readmeHTML(%v) mismatch (-want +got):\n%s", tc.mi, diff)
 			}
 		})
+	}
+}
+
+func TestTrimmedEscapedPath(t *testing.T) {
+	for _, test := range []struct {
+		in, want string
+	}{
+		{"a.png", "a.png"},
+		{" a.png   ", "a.png"},
+		{"a b.png", "a%20b.png"},
+		{" a b.png ", "a%20b.png"},
+		{".a/b.gif", ".a/b.gif"},
+	} {
+		u, err := url.Parse(test.in)
+		if err != nil {
+			t.Fatal(err)
+		}
+		got := trimmedEscapedPath(u)
+		if got != test.want {
+			t.Errorf("escapePath(%q) = %q, want %q", test.in, got, test.want)
+		}
 	}
 }
 

@@ -215,11 +215,17 @@ func translateRelativeLink(dest string, info *source.Info, useRaw bool, readme *
 		return ""
 	}
 	// Paths are relative to the README location.
-	destPath := path.Join(path.Dir(readme.Filepath), path.Clean(destURL.EscapedPath()))
+	destPath := path.Join(path.Dir(readme.Filepath), path.Clean(trimmedEscapedPath(destURL)))
 	if useRaw {
 		return info.RawURL(destPath)
 	}
 	return info.FileURL(destPath)
+}
+
+// trimmedEscapedPath trims surrounding whitespace from u's path, then returns it escaped.
+func trimmedEscapedPath(u *url.URL) string {
+	u.Path = strings.TrimSpace(u.Path)
+	return u.EscapedPath()
 }
 
 // translateHTML parses html text into parsed html nodes. It then
