@@ -115,8 +115,7 @@ func main() {
 	router := dcensus.NewRouter(nil)
 	server.Install(router.Handle)
 
-	views := append(dcensus.ClientViews, dcensus.ServerViews...)
-	if err := dcensus.Init(cfg, views...); err != nil {
+	if err := dcensus.Init(cfg, dcensus.ServerViews...); err != nil {
 		log.Fatal(ctx, err)
 	}
 	// We are not currently forwarding any ports on AppEngine, so serving debug

@@ -178,28 +178,6 @@ func NewViewExporter(cfg *config.Config) (_ *stackdriver.Exporter, err error) {
 //  + Method tags are removed. We don't have any routes that accept more than
 //    one HTTP method.
 var (
-	ClientCompletedCount = &view.View{
-		Name:        "go-discovery/http/client/completed_count",
-		Measure:     ochttp.ClientRoundtripLatency,
-		Aggregation: view.Count(),
-		Description: "Count of completed requests, by HTTP method and response status",
-		TagKeys:     []tag.Key{ochttp.KeyClientHost, ochttp.KeyClientStatus},
-	}
-	ClientRoundtripLatencyDistribution = &view.View{
-		Name:        "go-discovery/http/client/roundtrip_latency",
-		Measure:     ochttp.ClientRoundtripLatency,
-		Aggregation: ochttp.DefaultLatencyDistribution,
-		Description: "End-to-end latency, by ClientHost and ClientStatus",
-		TagKeys:     []tag.Key{ochttp.KeyClientHost, ochttp.KeyClientStatus},
-	}
-	ClientReceivedBytesDistribution = &view.View{
-		Name:        "go-discovery/http/client/received_bytes",
-		Measure:     ochttp.ClientReceivedBytes,
-		Aggregation: ochttp.DefaultSizeDistribution,
-		Description: "Total bytes received in response bodies (not including headers but including " +
-			"error responses with bodies), by ClientHost and ClientStatus",
-		TagKeys: []tag.Key{ochttp.KeyClientHost, ochttp.KeyClientStatus},
-	}
 	ServerRequestCount = &view.View{
 		Name:        "go-discovery/http/server/request_count",
 		Description: "Count of HTTP requests started by Method",
@@ -227,11 +205,6 @@ var (
 		TagKeys:     []tag.Key{ochttp.KeyServerRoute},
 		Measure:     ochttp.ServerResponseBytes,
 		Aggregation: ochttp.DefaultSizeDistribution,
-	}
-	ClientViews = []*view.View{
-		ClientCompletedCount,
-		ClientRoundtripLatencyDistribution,
-		ClientReceivedBytesDistribution,
 	}
 	ServerViews = []*view.View{
 		ServerRequestCount,
