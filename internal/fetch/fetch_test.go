@@ -40,10 +40,6 @@ var (
 func TestFetchModule(t *testing.T) {
 	stdlib.UseTestData = true
 
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	ctx = experiment.NewContext(ctx, internal.ExperimentInsertPlaygroundLinks)
-	defer cancel()
-
 	// Stub out the function used to share playground snippets
 	origPost := httpPost
 	httpPost = func(url string, contentType string, body io.Reader) (resp *http.Response, err error) {
@@ -78,6 +74,10 @@ func TestFetchModule(t *testing.T) {
 		{name: "stdlib module", mod: moduleStd},
 	} {
 		t.Run(test.name, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+			ctx = experiment.NewContext(ctx, internal.ExperimentInsertPlaygroundLinks)
+			defer cancel()
+
 			modulePath := test.mod.mod.ModulePath
 			version := test.mod.mod.Version
 			if version == "" {
