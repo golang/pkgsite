@@ -202,8 +202,8 @@ var (
 	}
 	ServerRequestCount = &view.View{
 		Name:        "go-discovery/http/server/request_count",
-		Description: "Count of HTTP requests started by ServerRoute",
-		TagKeys:     []tag.Key{ochttp.KeyServerRoute},
+		Description: "Count of HTTP requests started by Method",
+		TagKeys:     []tag.Key{ochttp.Method},
 		Measure:     ochttp.ServerRequestCount,
 		Aggregation: view.Count(),
 	}
