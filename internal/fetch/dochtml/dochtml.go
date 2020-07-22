@@ -139,10 +139,12 @@ func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Render
 		RootURL string
 		*doc.Package
 		Examples *examples
+		NoteIDs  map[string]safehtml.Identifier
 	}{
 		RootURL:  "/pkg",
 		Package:  p,
 		Examples: collectExamples(ctx, p),
+		NoteIDs:  buildNoteIDs(p.Notes),
 	}
 	return executeToHTMLWithLimit(tmpl, data, opt.Limit)
 }
@@ -269,6 +271,16 @@ func exampleID(id, suffix string) safehtml.Identifier {
 	default:
 		panic("unreachable")
 	}
+}
+
+// buildNoteIDs constructs safehtml identifiers from note markers.
+// It returns a map from each marker to its corresponding safehtml ID.
+func buildNoteIDs(notes map[string][]*doc.Note) map[string]safehtml.Identifier {
+	ids := map[string]safehtml.Identifier{}
+	for marker := range notes {
+		ids[marker] = safehtml.IdentifierFromConstantPrefix("pkg-note", marker)
+	}
+	return ids
 }
 
 // versionedPkgPath transforms package paths to contain the same version as the

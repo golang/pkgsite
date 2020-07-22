@@ -29,6 +29,7 @@ var VT T
 func TF() T { return T(0) }
 
 // method
+// BUG(uid): this verifies that notes are rendered
 func (T) M() {}
 
 type S1 struct {

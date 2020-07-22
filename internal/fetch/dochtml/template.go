@@ -302,7 +302,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 <section class="Documentation-notes">
 	{{- range $marker, $content := .Notes -}}
 	<div class="Documentation-note">
-		<h2 id="pkg-note-{{$marker}}" class="Documentation-noteHeader">{{$marker}}s <a href="#pkg-note-{{$marker}}">¶</a></h2>
+		<h2 id="{{index $.NoteIDs $marker}}" class="Documentation-noteHeader">{{$marker}}s <a href="#pkg-note-{{$marker}}">¶</a></h2>
 		<ul class="Documentation-noteList" style="padding-left: 20px; list-style: initial;">{{"\n" -}}
 		{{- range $v := $content -}}
 			<li style="margin: 6px 0 6px 0;">{{render_doc $v.Body}}</li>

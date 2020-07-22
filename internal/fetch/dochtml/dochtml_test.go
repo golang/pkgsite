@@ -21,6 +21,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch/internal/doc"
+	"golang.org/x/pkgsite/internal/testing/htmlcheck"
 )
 
 func TestRender(t *testing.T) {
@@ -45,6 +46,13 @@ func TestRender(t *testing.T) {
 		// Check that the id and data-kind labels are right.
 		testIDsAndKinds(t, htmlDoc)
 	})
+
+	checker := htmlcheck.In(".Documentation-note",
+		htmlcheck.In("h2", htmlcheck.HasAttr("id", "pkg-note-BUG")),
+		htmlcheck.In("a", htmlcheck.HasHref("#pkg-note-BUG")))
+	if err := checker(htmlDoc); err != nil {
+		t.Errorf("note check: %v", err)
+	}
 }
 
 func TestExampleRender(t *testing.T) {
