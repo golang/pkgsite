@@ -1078,7 +1078,7 @@ func newTestServer(t *testing.T, proxyModules []*proxy.TestModule, experimentNam
 		})
 
 	s, err := NewServer(ServerConfig{
-		DataSource:           testDB,
+		DataSourceGetter:     func(context.Context) internal.DataSource { return testDB },
 		Queue:                q,
 		TaskIDChangeInterval: 10 * time.Minute,
 		StaticPath:           template.TrustedSourceFromConstant("../../content/static"),

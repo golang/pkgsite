@@ -77,9 +77,9 @@ var (
 // Meanwhile, the request will poll the database until a row is found, or a
 // timeout occurs. A status and responseText will be returned based on the
 // result of the request.
-func (s *Server) serveFetch(w http.ResponseWriter, r *http.Request) (err error) {
+func (s *Server) serveFetch(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "serveFetch(%q)", r.URL.Path)
-	if _, ok := s.ds.(*postgres.DB); !ok {
+	if _, ok := ds.(*postgres.DB); !ok {
 		// There's no reason for the proxydatasource to need this codepath.
 		return proxydatasourceNotSupportedErr()
 	}
@@ -105,7 +105,7 @@ func (s *Server) serveFetch(w http.ResponseWriter, r *http.Request) (err error) 
 		(stdlib.Contains(urlInfo.fullPath) && urlInfo.requestedVersion == internal.LatestVersion) {
 		return &serverError{status: http.StatusBadRequest}
 	}
-	status, responseText := s.fetchAndPoll(r.Context(), urlInfo.modulePath, urlInfo.fullPath, urlInfo.requestedVersion)
+	status, responseText := s.fetchAndPoll(r.Context(), ds, urlInfo.modulePath, urlInfo.fullPath, urlInfo.requestedVersion)
 	if status != http.StatusOK {
 		return &serverError{status: status, responseText: responseText}
 	}
@@ -125,7 +125,7 @@ var statusToResponseText = map[int]string{
 	http.StatusInternalServerError: "Something went wrong. We'll keep working on it - try again in a few minutes!",
 }
 
-func (s *Server) fetchAndPoll(ctx context.Context, modulePath, fullPath, requestedVersion string) (status int, responseText string) {
+func (s *Server) fetchAndPoll(ctx context.Context, ds internal.DataSource, modulePath, fullPath, requestedVersion string) (status int, responseText string) {
 	start := time.Now()
 	defer func() {
 		log.Infof(ctx, "fetchAndPoll(ctx, ds, q, %q, %q, %q): status=%d, responseText=%q",
@@ -141,7 +141,7 @@ func (s *Server) fetchAndPoll(ctx context.Context, modulePath, fullPath, request
 	}
 
 	// Generate all possible module paths for the fullPath.
-	db := s.ds.(*postgres.DB)
+	db := ds.(*postgres.DB)
 	modulePaths, err := modulePathsToFetch(ctx, db, fullPath, modulePath)
 	if err != nil {
 		var serr *serverError
@@ -180,7 +180,7 @@ func (s *Server) checkPossibleModulePaths(ctx context.Context, db *postgres.DB,
 		go func() {
 			defer wg.Done()
 			start := time.Now()
-			fr := s.fetchModule(ctx, fullPath, modulePath, requestedVersion)
+			fr := s.fetchModule(ctx, db, fullPath, modulePath, requestedVersion)
 			if fr.status == http.StatusNoContent && shouldQueue {
 				// A row for this modulePath and requestedVersion combination does not
 				// exist in version_map. Enqueue the module version to be fetched.
@@ -259,11 +259,11 @@ func displayPath(path, version string) string {
 	return fmt.Sprintf("%s@%s", path, version)
 }
 
-func (s *Server) fetchModule(ctx context.Context, fullPath, modulePath, requestedVersion string) (fr *fetchResult) {
+func (s *Server) fetchModule(ctx context.Context, ds internal.DataSource, fullPath, modulePath, requestedVersion string) (fr *fetchResult) {
 	// Before enqueuing the module version to be fetched, check if we have
 	// already attempted to fetch it in the past. If so, just return the result
 	// from that fetch process.
-	db := s.ds.(*postgres.DB)
+	db := ds.(*postgres.DB)
 	fr = checkForPath(ctx, db, fullPath, modulePath, requestedVersion)
 	if fr.status == http.StatusOK {
 		return fr

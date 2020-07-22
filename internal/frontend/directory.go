@@ -40,7 +40,7 @@ type Directory struct {
 
 // serveDirectoryPage serves a directory view for a directory in a module
 // version.
-func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, r *http.Request, vdir *internal.VersionedDirectory, requestedVersion string) (err error) {
+func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, r *http.Request, ds internal.DataSource, vdir *internal.VersionedDirectory, requestedVersion string) (err error) {
 	defer derrors.Wrap(&err, "serveDirectoryPage for %s@%s", vdir.Path, requestedVersion)
 	tab := r.FormValue("tab")
 	settings, ok := directoryTabLookup[tab]
@@ -52,7 +52,7 @@ func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, 
 	if requestedVersion == internal.LatestVersion {
 		header.URL = constructDirectoryURL(vdir.Path, vdir.ModulePath, internal.LatestVersion)
 	}
-	details, err := fetchDetailsForDirectory(r, tab, s.ds, vdir)
+	details, err := fetchDetailsForDirectory(r, tab, ds, vdir)
 	if err != nil {
 		return err
 	}
@@ -71,7 +71,7 @@ func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, 
 	return nil
 }
 
-func (s *Server) legacyServeDirectoryPage(ctx context.Context, w http.ResponseWriter, r *http.Request, dbDir *internal.LegacyDirectory, requestedVersion string) (err error) {
+func (s *Server) legacyServeDirectoryPage(ctx context.Context, w http.ResponseWriter, r *http.Request, ds internal.DataSource, dbDir *internal.LegacyDirectory, requestedVersion string) (err error) {
 	defer derrors.Wrap(&err, "legacyServeDirectoryPage for %s@%s", dbDir.Path, requestedVersion)
 	tab := r.FormValue("tab")
 	settings, ok := directoryTabLookup[tab]
@@ -79,7 +79,7 @@ func (s *Server) legacyServeDirectoryPage(ctx context.Context, w http.ResponseWr
 		tab = "subdirectories"
 		settings = directoryTabLookup[tab]
 	}
-	licenses, err := s.ds.LegacyGetModuleLicenses(ctx, dbDir.ModulePath, dbDir.Version)
+	licenses, err := ds.LegacyGetModuleLicenses(ctx, dbDir.ModulePath, dbDir.Version)
 	if err != nil {
 		return err
 	}

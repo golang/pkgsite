@@ -58,7 +58,7 @@ func main() {
 		}
 	}
 	var (
-		ds         internal.DataSource
+		dsg        func(context.Context) internal.DataSource
 		exp        internal.ExperimentSource
 		fetchQueue queue.Queue
 	)
@@ -67,7 +67,8 @@ func main() {
 		log.Fatal(ctx, err)
 	}
 	if *directProxy {
-		ds = proxydatasource.New(proxyClient)
+		pds := proxydatasource.New(proxyClient)
+		dsg = func(context.Context) internal.DataSource { return pds }
 		exp = internal.NewLocalExperimentSource(readLocalExperiments(ctx))
 	} else {
 		// Wrap the postgres driver with OpenCensus instrumentation.
@@ -81,9 +82,12 @@ func main() {
 		}
 		db := postgres.New(ddb)
 		defer db.Close()
-		ds = db
+		dsg = func(context.Context) internal.DataSource { return db }
 		exp = db
 		sourceClient := source.NewClient(config.SourceTimeout)
+		// queue.New uses the db argument only while it is constructing the queue.Queue.
+		// The closure passed to it is only used for testing and local execution, not in production.
+		// So it's okay that in neither case do we use a per-request connection.
 		fetchQueue, err = queue.New(ctx, cfg, queueName, *workers, db,
 			func(ctx context.Context, modulePath, version string) (int, error) {
 				return frontend.FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, db)
@@ -99,7 +103,7 @@ func main() {
 		})
 	}
 	server, err := frontend.NewServer(frontend.ServerConfig{
-		DataSource:           ds,
+		DataSourceGetter:     dsg,
 		Queue:                fetchQueue,
 		CompletionClient:     haClient,
 		TaskIDChangeInterval: config.TaskIDChangeIntervalFrontend,

@@ -42,7 +42,7 @@ type DetailsPage struct {
 // expects paths of the form "[/mod]/<module-path>[@<version>?tab=<tab>]".
 // stdlib module pages are handled at "/std", and requests to "/mod/std" will
 // be redirected to that path.
-func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) (err error) {
+func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	if r.Method != http.MethodGet {
 		return &serverError{status: http.StatusMethodNotAllowed}
 	}
@@ -71,13 +71,13 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) (err error
 	}
 	ctx := r.Context()
 	// Validate the fullPath and requestedVersion that were parsed.
-	if err := validatePathAndVersion(ctx, s.ds, urlInfo.fullPath, urlInfo.requestedVersion); err != nil {
+	if err := validatePathAndVersion(ctx, ds, urlInfo.fullPath, urlInfo.requestedVersion); err != nil {
 		return err
 	}
 
 	urlInfo.resolvedVersion = urlInfo.requestedVersion
 	if experiment.IsActive(ctx, internal.ExperimentUsePathInfo) {
-		resolvedModulePath, resolvedVersion, _, err := s.ds.GetPathInfo(ctx, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion)
+		resolvedModulePath, resolvedVersion, _, err := ds.GetPathInfo(ctx, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion)
 		if err != nil {
 			if !errors.Is(err, derrors.NotFound) {
 				return err
@@ -86,7 +86,7 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) (err error
 			if urlInfo.isModule {
 				pathType = "module"
 			}
-			return s.servePathNotFoundPage(w, r, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion, pathType)
+			return s.servePathNotFoundPage(w, r, ds, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion, pathType)
 		}
 		urlInfo.modulePath = resolvedModulePath
 		urlInfo.resolvedVersion = resolvedVersion
@@ -104,17 +104,17 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request) (err error
 		}
 	}
 	if isActiveUseDirectories(ctx) {
-		return s.serveDetailsPage(w, r, urlInfo)
+		return s.serveDetailsPage(w, r, ds, urlInfo)
 	}
-	return s.legacyServeDetailsPage(w, r, urlInfo)
+	return s.legacyServeDetailsPage(w, r, ds, urlInfo)
 }
 
 // serveDetailsPage serves a details page for a path using the paths,
 // modules, documentation, readmes, licenses, and package_imports tables.
-func (s *Server) serveDetailsPage(w http.ResponseWriter, r *http.Request, info *urlPathInfo) (err error) {
+func (s *Server) serveDetailsPage(w http.ResponseWriter, r *http.Request, ds internal.DataSource, info *urlPathInfo) (err error) {
 	defer derrors.Wrap(&err, "serveDetailsPage(w, r, %v)", info)
 	ctx := r.Context()
-	vdir, err := s.ds.GetDirectory(ctx, info.fullPath, info.modulePath, info.resolvedVersion)
+	vdir, err := ds.GetDirectory(ctx, info.fullPath, info.modulePath, info.resolvedVersion)
 	if err != nil {
 		return err
 	}
@@ -124,22 +124,22 @@ func (s *Server) serveDetailsPage(w http.ResponseWriter, r *http.Request, info *
 		if vdir.Readme != nil {
 			readme = &internal.Readme{Filepath: vdir.Readme.Filepath, Contents: vdir.Readme.Contents}
 		}
-		return s.serveModulePage(ctx, w, r, &vdir.ModuleInfo, readme, info.requestedVersion)
+		return s.serveModulePage(ctx, w, r, ds, &vdir.ModuleInfo, readme, info.requestedVersion)
 	case vdir.Package != nil:
-		return s.servePackagePage(ctx, w, r, vdir, info.requestedVersion)
+		return s.servePackagePage(ctx, w, r, ds, vdir, info.requestedVersion)
 	default:
-		return s.serveDirectoryPage(ctx, w, r, vdir, info.requestedVersion)
+		return s.serveDirectoryPage(ctx, w, r, ds, vdir, info.requestedVersion)
 	}
 }
 
 // legacyServeDetailsPage serves a details page for a path using the packages,
 // modules, licenses and imports tables.
-func (s *Server) legacyServeDetailsPage(w http.ResponseWriter, r *http.Request, info *urlPathInfo) (err error) {
+func (s *Server) legacyServeDetailsPage(w http.ResponseWriter, r *http.Request, ds internal.DataSource, info *urlPathInfo) (err error) {
 	defer derrors.Wrap(&err, "legacyServeDetailsPage(w, r, %v)", info)
 	if info.isModule {
-		return s.legacyServeModulePage(w, r, info.fullPath, info.requestedVersion, info.resolvedVersion)
+		return s.legacyServeModulePage(w, r, ds, info.fullPath, info.requestedVersion, info.resolvedVersion)
 	}
-	return s.legacyServePackagePage(w, r, info.fullPath, info.modulePath, info.requestedVersion, info.resolvedVersion)
+	return s.legacyServePackagePage(w, r, ds, info.fullPath, info.modulePath, info.requestedVersion, info.resolvedVersion)
 }
 
 type urlPathInfo struct {
@@ -417,11 +417,11 @@ func parseStdLibURLPath(urlPath string) (path, requestedVersion string, err erro
 	return path, requestedVersion, nil
 }
 
-func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, fullPath, modulePath, requestedVersion, pathType string) (err error) {
+func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, ds internal.DataSource, fullPath, modulePath, requestedVersion, pathType string) (err error) {
 	defer derrors.Wrap(&err, "servePathNotFoundPage(w, r, %q, %q)", fullPath, requestedVersion)
 
 	ctx := r.Context()
-	path, err := s.stdlibPathForShortcut(ctx, fullPath)
+	path, err := stdlibPathForShortcut(ctx, ds, fullPath)
 	if err != nil {
 		// Log the error, but prefer a "path not found" error for a
 		// better user experience.
@@ -433,7 +433,7 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, f
 	}
 
 	if isActiveFrontendFetch(ctx) {
-		db, ok := s.ds.(*postgres.DB)
+		db, ok := ds.(*postgres.DB)
 		if !ok {
 			return pathNotFoundError(ctx, pathType, fullPath, requestedVersion)
 		}
@@ -472,7 +472,7 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, f
 	// If frontend fetch is not enabled and we couldn't find a path at the
 	// given version, but if there's one at the latest version we can provide a
 	// link to it.
-	if _, _, _, err := s.ds.GetPathInfo(ctx, fullPath, modulePath, internal.LatestVersion); err != nil {
+	if _, _, _, err := ds.GetPathInfo(ctx, fullPath, modulePath, internal.LatestVersion); err != nil {
 		if errors.Is(err, derrors.NotFound) {
 			return pathNotFoundError(ctx, pathType, fullPath, requestedVersion)
 		}

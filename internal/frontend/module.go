@@ -17,7 +17,7 @@ import (
 
 // legacyServeModulePage serves details pages for the module specified by modulePath
 // and version.
-func (s *Server) legacyServeModulePage(w http.ResponseWriter, r *http.Request, modulePath, requestedVersion, resolvedVersion string) error {
+func (s *Server) legacyServeModulePage(w http.ResponseWriter, r *http.Request, ds internal.DataSource, modulePath, requestedVersion, resolvedVersion string) error {
 	// This function handles top level behavior related to the existence of the
 	// requested modulePath@version:
 	// TODO: fix
@@ -29,16 +29,16 @@ func (s *Server) legacyServeModulePage(w http.ResponseWriter, r *http.Request, m
 	//     b. We have valid versions for this module path, but `version` isn't
 	//        one of them. Serve a 404 but recommend the other versions.
 	ctx := r.Context()
-	mi, err := s.ds.LegacyGetModuleInfo(ctx, modulePath, resolvedVersion)
+	mi, err := ds.LegacyGetModuleInfo(ctx, modulePath, resolvedVersion)
 	if err == nil {
 		readme := &internal.Readme{Filepath: mi.LegacyReadmeFilePath, Contents: mi.LegacyReadmeContents}
-		return s.serveModulePage(ctx, w, r, &mi.ModuleInfo, readme, requestedVersion)
+		return s.serveModulePage(ctx, w, r, ds, &mi.ModuleInfo, readme, requestedVersion)
 	}
 	if !errors.Is(err, derrors.NotFound) {
 		return err
 	}
 	if requestedVersion != internal.LatestVersion {
-		_, err = s.ds.LegacyGetModuleInfo(ctx, modulePath, internal.LatestVersion)
+		_, err = ds.LegacyGetModuleInfo(ctx, modulePath, internal.LatestVersion)
 		if err == nil {
 			return pathFoundAtLatestError(ctx, "module", modulePath, displayVersion(requestedVersion, modulePath))
 		}
@@ -49,9 +49,9 @@ func (s *Server) legacyServeModulePage(w http.ResponseWriter, r *http.Request, m
 	return pathNotFoundError(ctx, "module", modulePath, requestedVersion)
 }
 
-func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *http.Request,
+func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *http.Request, ds internal.DataSource,
 	mi *internal.ModuleInfo, readme *internal.Readme, requestedVersion string) error {
-	licenses, err := s.ds.GetLicenses(ctx, mi.ModulePath, mi.ModulePath, mi.Version)
+	licenses, err := ds.GetLicenses(ctx, mi.ModulePath, mi.ModulePath, mi.Version)
 	if err != nil {
 		return err
 	}
@@ -66,7 +66,7 @@ func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = fetchDetailsForModule(r, tab, s.ds, mi, licenses, readme)
+		details, err = fetchDetailsForModule(r, tab, ds, mi, licenses, readme)
 		if err != nil {
 			return fmt.Errorf("error fetching page for %q: %v", tab, err)
 		}

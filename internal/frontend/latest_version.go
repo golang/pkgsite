@@ -19,7 +19,9 @@ import (
 // It returns the empty string on error.
 // It is intended to be used as an argument to middleware.LatestVersion.
 func (s *Server) LatestVersion(ctx context.Context, packagePath, modulePath, pageType string) string {
-	v, err := s.latestVersion(ctx, packagePath, modulePath, pageType)
+	// It is okay to use a different DataSource (DB connection) than the rest of the
+	// request, because this makes a self-contained call on the DB.
+	v, err := latestVersion(ctx, s.getDataSource(ctx), packagePath, modulePath, pageType)
 	if err != nil {
 		// We get NotFound errors from directories; they clutter the log.
 		if !errors.Is(err, derrors.NotFound) {
@@ -32,14 +34,14 @@ func (s *Server) LatestVersion(ctx context.Context, packagePath, modulePath, pag
 
 // TODO(https://github.com/golang/go/issues/40107): this is currently tested in server_test.go, but
 // we should add tests for this function.
-func (s *Server) latestVersion(ctx context.Context, packagePath, modulePath, pageType string) (_ string, err error) {
+func latestVersion(ctx context.Context, ds internal.DataSource, packagePath, modulePath, pageType string) (_ string, err error) {
 	defer derrors.Wrap(&err, "latestVersion(ctx, %q, %q)", modulePath, packagePath)
 	if experiment.IsActive(ctx, internal.ExperimentUsePathInfo) {
 		fullPath := packagePath
 		if pageType == "mod" {
 			fullPath = modulePath
 		}
-		modulePath, version, _, err := s.ds.GetPathInfo(ctx, fullPath, modulePath, internal.LatestVersion)
+		modulePath, version, _, err := ds.GetPathInfo(ctx, fullPath, modulePath, internal.LatestVersion)
 		if err != nil {
 			return "", err
 		}
@@ -49,12 +51,12 @@ func (s *Server) latestVersion(ctx context.Context, packagePath, modulePath, pag
 	var mi *internal.LegacyModuleInfo
 	switch pageType {
 	case "mod":
-		mi, err = s.ds.LegacyGetModuleInfo(ctx, modulePath, internal.LatestVersion)
+		mi, err = ds.LegacyGetModuleInfo(ctx, modulePath, internal.LatestVersion)
 		if err != nil {
 			return "", err
 		}
 	case "pkg":
-		pkg, err := s.ds.LegacyGetPackage(ctx, packagePath, modulePath, internal.LatestVersion)
+		pkg, err := ds.LegacyGetPackage(ctx, packagePath, modulePath, internal.LatestVersion)
 		if err != nil {
 			return "", err
 		}

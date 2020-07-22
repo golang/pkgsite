@@ -34,7 +34,7 @@ func TestStdlibPathForShortcut(t *testing.T) {
 		{"json", "encoding/json"},
 		{"template", ""},
 	} {
-		got, err := s.stdlibPathForShortcut(ctx, test.path)
+		got, err := stdlibPathForShortcut(ctx, s.getDataSource(ctx), test.path)
 		if err != nil {
 			t.Fatalf("%q: %v", test.path, err)
 		}

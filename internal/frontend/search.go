@@ -103,11 +103,11 @@ func approximateNumber(estimate int, sigma float64) int {
 // serveSearch applies database data to the search template. Handles endpoint
 // /search?q=<query>. If <query> is an exact match for a package path, the user
 // will be redirected to the details page.
-func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request) error {
+func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource) error {
 	if r.Method != http.MethodGet {
 		return &serverError{status: http.StatusMethodNotAllowed}
 	}
-	db, ok := s.ds.(*postgres.DB)
+	db, ok := ds.(*postgres.DB)
 	if !ok {
 		// The proxydatasource does not support the imported by page.
 		return proxydatasourceNotSupportedErr()
@@ -120,7 +120,7 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
-	if path := searchRequestRedirectPath(ctx, s.ds, query); path != "" {
+	if path := searchRequestRedirectPath(ctx, ds, query); path != "" {
 		http.Redirect(w, r, path, http.StatusFound)
 		return nil
 	}

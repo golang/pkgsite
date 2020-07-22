@@ -100,7 +100,7 @@ func TestEndToEndProcessing(t *testing.T) {
 	workerHTTP := httptest.NewServer(workerMux)
 
 	frontendServer, err := frontend.NewServer(frontend.ServerConfig{
-		DataSource:           testDB,
+		DataSourceGetter:     func(context.Context) internal.DataSource { return testDB },
 		Queue:                queue,
 		CompletionClient:     redisHAClient,
 		TaskIDChangeInterval: 10 * time.Minute,
