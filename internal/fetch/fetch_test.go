@@ -74,7 +74,7 @@ func TestFetchModule(t *testing.T) {
 		{name: "stdlib module", mod: moduleStd},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+			ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 			ctx = experiment.NewContext(ctx, internal.ExperimentInsertPlaygroundLinks)
 			defer cancel()
 
