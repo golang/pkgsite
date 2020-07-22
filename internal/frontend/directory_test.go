@@ -8,7 +8,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -39,12 +38,12 @@ func TestFetchDirectoryDetails(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			pkg.PathAfterDirectory = strings.TrimPrefix(strings.TrimPrefix(pm.Path, dirPath), "/")
+			pkg.PathAfterDirectory = internal.Suffix(pm.Path, dirPath)
 			if pkg.PathAfterDirectory == "" {
 				pkg.PathAfterDirectory = effectiveName(pm.Path, pm.Name) + " (root)"
 			}
 			pkg.Synopsis = sp.Synopsis
-			pkg.PathAfterDirectory = strings.TrimPrefix(strings.TrimPrefix(sp.Path, dirPath), "/")
+			pkg.PathAfterDirectory = internal.Suffix(sp.Path, dirPath)
 			if pkg.PathAfterDirectory == "" {
 				pkg.PathAfterDirectory = fmt.Sprintf("%s (root)", effectiveName(sp.Path, sp.Name))
 			}

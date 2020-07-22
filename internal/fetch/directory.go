@@ -6,7 +6,6 @@ package fetch
 
 import (
 	"path"
-	"strings"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/licenses"
@@ -38,7 +37,7 @@ func moduleDirectories(modulePath string,
 
 	var directories []*internal.Directory
 	for _, dirPath := range dirPaths {
-		suffix := strings.TrimPrefix(strings.TrimPrefix(dirPath, modulePath), "/")
+		suffix := internal.Suffix(dirPath, modulePath)
 		if modulePath == stdlib.ModulePath {
 			suffix = dirPath
 		}

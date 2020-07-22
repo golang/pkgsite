@@ -165,7 +165,7 @@ func legacyFetchPackageVersionsDetails(ctx context.Context, ds internal.DataSour
 //      foo.com/bar/v2/baz.
 // ...being careful about slashes along the way.
 func pathInVersion(v1Path string, mi *internal.ModuleInfo) string {
-	suffix := strings.TrimPrefix(strings.TrimPrefix(v1Path, mi.SeriesPath()), "/")
+	suffix := internal.Suffix(v1Path, mi.SeriesPath())
 	if suffix == "" {
 		return mi.ModulePath
 	}

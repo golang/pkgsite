@@ -50,8 +50,7 @@ func cleanFetchResult(fr *FetchResult, detector *licenses.Detector) *FetchResult
 		fr.Module.Licenses = allLicenses
 		fr.Module.IsRedistributable = true
 		for _, d := range fr.Module.Directories {
-			isRedist, lics := detector.PackageInfo(
-				strings.TrimPrefix(strings.TrimPrefix(d.Path, fr.ModulePath), "/"))
+			isRedist, lics := detector.PackageInfo(internal.Suffix(d.Path, fr.ModulePath))
 			for _, l := range lics {
 				d.Licenses = append(d.Licenses, l.Metadata)
 			}

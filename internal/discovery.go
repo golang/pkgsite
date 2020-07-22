@@ -6,6 +6,7 @@ package internal
 
 import (
 	"path"
+	"strings"
 	"time"
 
 	"github.com/google/safehtml"
@@ -82,6 +83,13 @@ func (v *ModuleInfo) SeriesPath() string {
 func SeriesPathForModule(modulePath string) string {
 	seriesPath, _, _ := module.SplitPathVersion(modulePath)
 	return seriesPath
+}
+
+// Suffix returns the suffix of the fullPath. It assumes that basePath is a
+// prefix of fullPath. If fullPath and basePath are the same, the empty string
+// is returned.
+func Suffix(fullPath, basePath string) string {
+	return strings.TrimPrefix(strings.TrimPrefix(fullPath, basePath), "/")
 }
 
 // V1Path returns the path for version 1 of the package whose path
