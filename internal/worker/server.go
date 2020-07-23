@@ -551,16 +551,14 @@ func (s *Server) handleReprocess(w http.ResponseWriter, r *http.Request) error {
 		if err := s.db.UpdateModuleVersionStatesWithStatus(r.Context(), code, appVersion); err != nil {
 			return err
 		}
+		fmt.Fprintf(w, "Scheduled modules to be reprocessed for appVersion > %q and status = %d.", appVersion, code)
+		return nil
 	}
+
 	if err := s.db.UpdateModuleVersionStatesForReprocessing(r.Context(), appVersion); err != nil {
 		return err
 	}
-	msg := fmt.Sprintf("Scheduled modules to be reprocessed for appVersion > %q", appVersion)
-	if status != "" {
-		fmt.Fprintf(w, "%s and status=%q", msg, status)
-	} else {
-		fmt.Fprint(w, msg)
-	}
+	fmt.Fprintf(w, "Scheduled modules to be reprocessed for appVersion > %q.", appVersion)
 	return nil
 }
 
