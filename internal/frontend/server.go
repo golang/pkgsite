@@ -302,12 +302,19 @@ func (s *Server) serveError(w http.ResponseWriter, r *http.Request, err error) {
 
 func (s *Server) serveErrorPage(w http.ResponseWriter, r *http.Request, status int, page *errorPage) {
 	template := "error.tmpl"
-	if page == nil {
+	if page != nil {
+		if page.AppVersionLabel == "" || page.GoogleTagManagerID == "" {
+			// If the basePage was properly created using newBasePage, both
+			// AppVersionLabel and GoogleTagManagerID should always be set.
+			page.basePage = s.newBasePage(r, "")
+		}
+		if page.templateName != "" {
+			template = page.templateName
+		}
+	} else {
 		page = &errorPage{
 			basePage: s.newBasePage(r, ""),
 		}
-	} else if page.templateName != "" {
-		template = page.templateName
 	}
 	buf, err := s.renderErrorPage(r.Context(), status, template, page)
 	if err != nil {
