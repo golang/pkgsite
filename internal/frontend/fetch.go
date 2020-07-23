@@ -121,7 +121,7 @@ type fetchResult struct {
 
 var statusToResponseText = map[int]string{
 	http.StatusOK:                  "",
-	http.StatusRequestTimeout:      "This request is taking a little longer than usual. We'll keep working on it - come back in a few minutes!",
+	http.StatusRequestTimeout:      "We're still working on your request - come back in a few minutes!",
 	http.StatusInternalServerError: "Something went wrong. We'll keep working on it - try again in a few minutes!",
 }
 
