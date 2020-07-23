@@ -79,24 +79,61 @@ func ConnectAndExecute(uri string, dbFunc func(*sql.DB) error) (outerErr error) 
 	return dbFunc(pg)
 }
 
+// CreateDB creates a new database dbName.
+func CreateDB(dbName string) error {
+	return ConnectAndExecute(DBConnURI(""), func(pg *sql.DB) error {
+		if _, err := pg.Exec(fmt.Sprintf(`
+			CREATE DATABASE %q
+				TEMPLATE=template0
+				LC_COLLATE='C'
+				LC_CTYPE='C';`, dbName)); err != nil {
+			return fmt.Errorf("error creating %q: %v", dbName, err)
+		}
+
+		return nil
+	})
+}
+
+// DropDB drops the database named dbName.
+func DropDB(dbName string) error {
+	return ConnectAndExecute(DBConnURI(""), func(pg *sql.DB) error {
+		if _, err := pg.Exec(fmt.Sprintf("DROP DATABASE %q;", dbName)); err != nil {
+			return fmt.Errorf("error dropping %q: %v", dbName, err)
+		}
+		return nil
+	})
+}
+
 // CreateDBIfNotExists checks whether the given dbName is an existing database,
 // and creates one if not.
 func CreateDBIfNotExists(dbName string) error {
-	return ConnectAndExecute(DBConnURI(""), func(pg *sql.DB) error {
+	exists, err := checkIfDBExists(dbName)
+	if err != nil || exists {
+		return err
+	}
+
+	log.Printf("Test database %q does not exist, creating.", dbName)
+	return CreateDB(dbName)
+}
+
+// checkIfDBExists check if dbName exists.
+func checkIfDBExists(dbName string) (bool, error) {
+	var exists bool
+
+	err := ConnectAndExecute(DBConnURI(""), func(pg *sql.DB) error {
 		rows, err := pg.Query("SELECT 1 from pg_database WHERE datname = $1 LIMIT 1", dbName)
 		if err != nil {
 			return err
 		}
 		defer rows.Close()
-		if !rows.Next() {
-			if err := rows.Err(); err != nil {
-				return err
-			}
-			log.Printf("Test database %q does not exist, creating.", dbName)
-			if _, err := pg.Exec(fmt.Sprintf("CREATE DATABASE %q;", dbName)); err != nil {
-				return fmt.Errorf("error creating %q: %v", dbName, err)
-			}
+
+		if rows.Next() {
+			exists = true
+			return nil
 		}
-		return nil
+
+		return rows.Err()
 	})
+
+	return exists, err
 }

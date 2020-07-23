@@ -32,15 +32,12 @@ import (
 
 // recreateDB drops and recreates the database named dbName.
 func recreateDB(dbName string) error {
-	return dbtest.ConnectAndExecute(dbtest.DBConnURI(""), func(pg *sql.DB) error {
-		if _, err := pg.Exec(fmt.Sprintf("DROP DATABASE %q;", dbName)); err != nil {
-			return fmt.Errorf("error dropping %q: %v", dbName, err)
-		}
-		if _, err := pg.Exec(fmt.Sprintf("CREATE DATABASE %q;", dbName)); err != nil {
-			return fmt.Errorf("error creating %q: %v", dbName, err)
-		}
-		return nil
-	})
+	err := dbtest.DropDB(dbName)
+	if err != nil {
+		return err
+	}
+
+	return dbtest.CreateDB(dbName)
 }
 
 // migrationsSource returns a uri pointing to the migrations directory.  It
