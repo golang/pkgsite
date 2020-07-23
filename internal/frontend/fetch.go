@@ -41,10 +41,10 @@ var (
 	fetchTimeout                = 30 * time.Second
 	pollEvery                   = 1 * time.Second
 
-	// keyFrontendFetchVersion is a census tag for frontend fetch version types.
-	keyFrontendFetchVersion = tag.MustNewKey("frontend-fetch.version")
-	// keyFrontendFetchStatus is a census tag for frontend fetch status types.
-	keyFrontendFetchStatus = tag.MustNewKey("frontend-fetch.status")
+	// keyFetchVersion is a census tag for frontend fetch version types.
+	keyFetchVersion = tag.MustNewKey("frontend-fetch.version")
+	// keyFetchStatus is a census tag for frontend fetch status types.
+	keyFetchStatus = tag.MustNewKey("frontend-fetch.status")
 	// frontendFetchLatency holds observed latency in individual
 	// frontend fetch queries.
 	frontendFetchLatency = stats.Float64(
@@ -52,22 +52,22 @@ var (
 		"Latency of a frontend fetch request.",
 		stats.UnitMilliseconds,
 	)
-	// FrontendFetchLatencyDistribution aggregates frontend fetch request
+	// FetchLatencyDistribution aggregates frontend fetch request
 	// latency by status code.
-	FrontendFetchLatencyDistribution = &view.View{
+	FetchLatencyDistribution = &view.View{
 		Name:        "go-discovery/frontend-fetch/latency",
 		Measure:     frontendFetchLatency,
 		Aggregation: ochttp.DefaultLatencyDistribution,
 		Description: "FrontendFetch latency, by result source query type.",
-		TagKeys:     []tag.Key{keyFrontendFetchStatus},
+		TagKeys:     []tag.Key{keyFetchStatus},
 	}
-	// FrontendFetchResponseCount counts frontend fetch responses by response type.
-	FrontendFetchResponseCount = &view.View{
+	// FetchResponseCount counts frontend fetch responses by response type.
+	FetchResponseCount = &view.View{
 		Name:        "go-discovery/frontend-fetch/count",
 		Measure:     frontendFetchLatency,
 		Aggregation: view.Count(),
 		Description: "Frontend fetch request count",
-		TagKeys:     []tag.Key{keyFrontendFetchStatus},
+		TagKeys:     []tag.Key{keyFetchStatus},
 	}
 )
 
@@ -494,7 +494,7 @@ func recordFrontendFetchMetric(status int, requestedVersion string, latency time
 		v = "semver"
 	}
 	stats.RecordWithTags(context.Background(), []tag.Mutator{
-		tag.Upsert(keyFrontendFetchStatus, strconv.Itoa(status)),
-		tag.Upsert(keyFrontendFetchVersion, v),
+		tag.Upsert(keyFetchStatus, strconv.Itoa(status)),
+		tag.Upsert(keyFetchVersion, v),
 	}, frontendFetchLatency.M(l))
 }
