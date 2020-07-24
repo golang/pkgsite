@@ -473,8 +473,15 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 			if !ok {
 				continue
 			}
+
+			// Do not add a readme with empty or zero contents.
+			readmeContents := makeValidUnicode(readme.Contents)
+			if len(readmeContents) == 0 {
+				continue
+			}
+
 			id := pathToID[path]
-			readmeValues = append(readmeValues, id, readme.Filepath, makeValidUnicode(readme.Contents))
+			readmeValues = append(readmeValues, id, readme.Filepath, readmeContents)
 		}
 		readmeCols := []string{"path_id", "file_path", "contents"}
 		if err := db.BulkUpsert(ctx, "readmes", readmeCols, readmeValues, []string{"path_id"}); err != nil {
