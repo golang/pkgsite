@@ -18,7 +18,12 @@ compile() {
   local outfile=$1
   shift
   rm -f $outfile
-  docker run --rm -i femtopixel/google-closure-compiler-app:v20200112 < <(cat $@) > $outfile
+  local args
+  if [[ $1 = '-advanced' ]]; then
+    shift
+    args='--compilation_level=ADVANCED_OPTIMIZATIONS'
+  fi
+  docker run --rm -i femtopixel/google-closure-compiler-app:closure-compiler-parent-v20200719 $args < <(cat $@) > $outfile
   echo "wrote $outfile"
 }
 
@@ -39,13 +44,15 @@ main() {
   if [[ $1 = "-check" ]]; then
     cmd=check
   fi
-  $cmd $JSDIR/base.min.js       $JSDIR/{site,analytics}.js
-  # TODO: once this is not an experiment, add it to the line above.
-  $cmd $JSDIR/completion.min.js $JSDIR/completion.js
-  $cmd $JSDIR/fetch.min.js      $JSDIR/fetch.js
-  $cmd $JSDIR/playground.min.js $JSDIR/playground.js
-  $cmd $JSDIR/badge.min.js      $JSDIR/badge.js
-  $cmd $JSDIR/jump.min.js       third_party/dialog-polyfill/dialog-polyfill.js $JSDIR/jump.js
+  $cmd $JSDIR/base.min.js               $JSDIR/{site,analytics}.js
+  $cmd $JSDIR/details.min.js  -advanced $JSDIR/{clipboard,fixed_header,overflowing_tab_list,details}.js
+  $cmd $JSDIR/fetch.min.js              $JSDIR/fetch.js
+  $cmd $JSDIR/playground.min.js         $JSDIR/playground.js
+  $cmd $JSDIR/badge.min.js              $JSDIR/badge.js
+  $cmd $JSDIR/jump.min.js               third_party/dialog-polyfill/dialog-polyfill.js $JSDIR/jump.js
+
+  # TODO: once this is not an experiment, add it to the relevant line above.
+  $cmd $JSDIR/completion.min.js         $JSDIR/completion.js
 }
 
 main $@

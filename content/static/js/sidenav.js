@@ -183,7 +183,7 @@ class DocNavTreeController {
    * @private
    */
   scrollElementIntoView(el) {
-    const STICKY_HEADER_HEIGHT_PX = 105;
+    const STICKY_HEADER_HEIGHT_PX = 55;
     const viewportHeightPx = document.documentElement.clientHeight;
     const elRect = el.getBoundingClientRect();
     const verticalCenterPointPx = (viewportHeightPx - STICKY_HEADER_HEIGHT_PX) / 2;
@@ -545,7 +545,7 @@ class MobileNavController {
     // the bottom of the site header. The root viewport of an IntersectionObserver
     // is inset by the header height plus one pixel to ensure that the container is
     // considered “out of view” when in a fixed position and can be styled appropriately.
-    const ROOT_TOP_MARGIN = '-65px';
+    const ROOT_TOP_MARGIN = '-57px';
 
     this._intersectionObserver = new IntersectionObserver(
       (entries, observer) => this.intersectionObserverCallback(entries, observer),

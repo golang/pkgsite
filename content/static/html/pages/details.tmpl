@@ -17,27 +17,12 @@
       {{end}}
       <span class="DetailsHeader-breadcrumbCurrent">{{.Current}}</span>
       {{if .CopyData}}
-        <button class="ImageButton js-detailsHeaderCopyPath" aria-label="Copy path to clipboard">
-          <!-- Inline the svg for the "copy" icon because when it was in a separate file
-               referenced by an img tag, it was loaded asynchronously and the page
-               jittered when it was finally loaded and its height was known. -->
-          <svg fill="#00add8" width="13px" height="15px" viewBox="0 0 13 15" version="1.1"
-               xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-            <!-- Generator: Sketch 58 (84663) - https://sketch.com -->
-            <title>Copy path to clipboard</title>
-            <desc>Created with Sketch.</desc>
-            <g id="Symbols" stroke="none" stroke-width="1" fill-rule="evenodd">
-                <g id="go/header-package" transform="translate(-359.000000, -12.000000)">
-                    <path d="M367,12 L361,12 C359.896,12 359,12.896 359,14 L359,22 C359,23.104 359.896,24 361,24 L361,22 L361,14 L367,14 L369,14 C369,12.896 368.104,12 367,12 L367,12 Z M370,15 L364,15 C362.896,15 362,15.896 362,17 L362,25 C362,26.104 362.896,27 364,27 L370,27 C371.104,27 372,26.104 372,25 L372,17 C372,15.896 371.104,15 370,15 L370,15 Z M364,25 L370,25 L370,17 L364,17 L364,25 Z" id="ic_copy"></path>
-                </g>
-            </g>
-          </svg>
+        <button class="CopyToClipboardButton js-copyToClipboard"
+            title="Copy path to clipboard"
+            aria-label="Copy path to clipboard"
+            data-to-copy="{{.CopyData}}">
+          <img class="CopyToClipboardButton-image" src="/static/img/copy-click.svg" alt="">
         </button>
-        <!--  We need this input element to copy to the clipboard.
-              Consider using the Clipboard API instead (see
-              https://github.com/golang/go/issues/38162#issuecomment-645362803). -->
-        <input class="DetailsHeader-pathInput js-detailsHeaderPathInput" role="presentation" tabindex="-1"
-               value="{{.CopyData}}">
       {{end}}
     {{end}}
     </div>
@@ -45,10 +30,10 @@
       <h1 class="DetailsHeader-title">{{.Title}}</h1>
       <div class="DetailsHeader-version">{{$header.DisplayVersion}}</div>
 
-      {{- $ppath := "" -}}
-      {{- if ne $pageType "mod" -}}
-         {{- $ppath = $header.Path -}}
-      {{- end}}
+      {{$ppath := ""}}
+      {{if ne $pageType "mod"}}
+         {{$ppath = $header.Path}}
+      {{end}}
       <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
       <div class="DetailsHeader-badge $$GODISCOVERY_LATESTCLASS$$"
            data-version="{{$header.LinkVersion}}" data-mpath="{{$header.ModulePath}}" data-ppath="{{$ppath}}" data-pagetype="{{$pageType}}">
@@ -62,12 +47,12 @@
       <span class="DetailsHeader-infoLabelDivider">|</span>
       <span class="DetailsHeader-infoLabelTitle">{{pluralize (len $header.Licenses) "License"}}: </span>
       <span data-test-id="DetailsHeader-infoLabelLicense">
-        {{range $i, $e := $header.Licenses -}}{{if $i}}, {{end}}
+        {{range $i, $e := $header.Licenses}}{{if $i}}, {{end}}
           <a href="{{$header.URL}}?tab=licenses#{{.Anchor}}">{{$e.Type}}</a>
-        {{- else -}}
+        {{else}}
           <span>None detected</span>
           <a href="/license-policy" class="Disclaimer-link"><em>not legal advice</em></a>
-        {{- end}}
+        {{end}}
       </span>
       {{if or (eq $pageType "pkg") (eq $pageType "dir")}}
         <span class="DetailsHeader-infoLabelDivider">|</span>
@@ -83,35 +68,93 @@
     </div>
   </header>
 
-  <nav class="DetailsNav js-modulesNav">
-    <ul class="DetailsNav-list" role="tablist">
+  <nav class="DetailsNav js-fixedHeaderSentinel js-overflowingTabList">
+    <div role="tablist">
       {{range .Tabs}}
-        <li class="{{if .Disabled}}DetailsNav-tabDisabled {{end}}DetailsNav-tab{{if eq .Name $.Settings.Name}} selected{{end}}" role="presentation">
-          {{if .Disabled}}
-            <a class="DetailsNav-link"
-               role="tab"
-               aria-selected="false">
-          {{else if eq .Name $.Settings.Name}}
-            <a class="DetailsNav-link"
-               role="tab"
-               aria-selected="true">
+        <a role="tab" href="{{$header.URL}}?tab={{.Name}}"
+          {{if .Disabled}}aria-disabled="true"{{end}}
+          {{if eq .Name $.Settings.Name}}
+            aria-selected="true"
           {{else}}
-            <a class="DetailsNav-link"
-               href="{{$header.URL}}?tab={{.Name}}"
-               role="tab"
-               aria-selected="false">
+            aria-selected="false"
           {{end}}
-          {{.DisplayName}}
-          </a>
-        </li>
+        >{{.DisplayName}}</a>
       {{end}}
-    </ul>
+    </div>
+    <div class="DetailsNav-overflowContainer">
+      <svg class="DetailsNav-overflowImage" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+        <path d="M0 0h24v24H0z" fill="none"/>
+        <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+      </svg>
+      <select class="DetailsNav-overflowSelect" aria-label="More">
+        {{range .Tabs}}
+          <option
+            value="{{$header.URL}}?tab={{.Name}}"
+            {{if .Disabled}}disabled{{end}}
+            {{if eq .Name $.Settings.Name}}selected{{end}}
+          >{{.DisplayName}}</option>
+        {{end}}
+      </select>
+    </div>
   </nav>
 
+  <div class="DetailsNavFixed js-fixedHeader" aria-hidden="true">
+    <div class="DetailsNavFixed-container">
+      <a href="https://go.dev/" class="DetailsNavFixed-logoLink">
+        <img class="DetailsNavFixed-logo" src="/static/img/go-logo-blue.svg" alt="Go">
+      </a>
+      <div class="DetailsNavFixed-moduleInfo">
+        <span class="DetailsNavFixed-title">
+          {{.Title}}
+        </span>
+        {{with .Breadcrumb}}
+          {{if .CopyData}}
+            <button class="CopyToClipboardButton js-copyToClipboard"
+                title="Copy path to clipboard"
+                aria-label="Copy path to clipboard"
+                data-to-copy="{{.CopyData}}">
+              <img class="CopyToClipboardButton-image" src="/static/img/copy-click.svg" alt="">
+            </button>
+          {{end}}
+        {{end}}
+        <div class="DetailsNavFixed-version">{{$header.DisplayVersion}}</div>
+      </div>
+      <div class="DetailsNavFixed-overflowingTabList js-overflowingTabList">
+        <div role="tablist">
+          {{range .Tabs}}
+            <a role="tab" href="{{$header.URL}}?tab={{.Name}}"
+              {{if .Disabled}}aria-disabled="true"{{end}}
+              {{if eq .Name $.Settings.Name}}
+                aria-selected="true"
+              {{else}}
+                aria-selected="false"
+              {{end}}
+            >{{.DisplayName}}</a>
+          {{end}}
+        </div>
+        <div class="DetailsNavFixed-overflowContainer">
+          <svg class="DetailsNavFixed-overflowImage" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+            <path d="M0 0h24v24H0z" fill="none"/>
+            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+          </svg>
+          <select class="DetailsNavFixed-overflowSelect" aria-label="More">
+            {{range .Tabs}}
+              <option
+                value="{{$header.URL}}?tab={{.Name}}"
+                {{if .Disabled}}disabled{{end}}
+                {{if eq .Name $.Settings.Name}}selected{{end}}
+              >{{.DisplayName}}</option>
+            {{end}}
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="DetailsContent">
-    {{if .CanShowDetails -}}
+    {{if .CanShowDetails}}
       {{template "details_content" .Details}}
-    {{- else}}
+    {{else}}
       <h2>“{{.Settings.DisplayName}}” not displayed due to license restrictions.</h2>
       See our <a href="/license-policy">license policy</a>.
     {{end}}
@@ -120,29 +163,8 @@
 {{end}}
 
 {{define "post_content"}}
-
-<!-- inputEl.blur() below prevents a jump to the focused element in some browsers.
-     Do not add comments to the script below: they are stripped by html/template
-     (https://golang.org/issue/28628), which messes up the CSP hash.
--->     
-<script>
-const navEl = document.querySelector('.js-modulesNav');
-const selectedEl = navEl.querySelector(`[aria-selected='true']`);
-if (selectedEl.offsetLeft + selectedEl.offsetWidth > navEl.offsetWidth) {
-  navEl.scrollLeft = selectedEl.offsetLeft;
-}
-
-const copyButton = document.querySelector('.js-detailsHeaderCopyPath');
-if (copyButton) {
-  copyButton.addEventListener('click', e => {
-    e.preventDefault();
-    const inputEl = document.querySelector('.js-detailsHeaderPathInput');
-    inputEl.select();
-    document.execCommand('copy');
-    inputEl.blur();
-  });
-}
-</script>
-
-{{block "details_post_content" .}}{{end}}
+  <script>
+    loadScript('/static/js/details.min.js');
+  </script>
+  {{block "details_post_content" .}}{{end}}
 {{end}}

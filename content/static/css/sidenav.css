@@ -23,8 +23,9 @@
   height: 3rem;
   margin: 0 -1rem;
   position: sticky;
-  top: 4rem; /* The site header height on mobile */
+  top: var(--header-height);
   transition: box-shadow 0.2s linear;
+  z-index: 1000;
 }
 .DocNavMobile--withShadow {
   box-shadow: 0 0.1875rem 0.1875rem rgba(0, 0, 0, 0.2);
@@ -106,13 +107,13 @@
   }
   .DocNav {
     display: block;
-    max-height: calc(100vh - 6.511rem); /* 6.511rem is the site header height */
+    max-height: calc(100vh - var(--header-height));
     overflow-x: hidden;
     overflow-y: scroll;
     padding-top: 1rem;
     padding-left: 0.25rem;
     position: sticky;
-    top: 6.511rem;
+    top: var(--header-height);
   }
   .DocNavMobile {
     display: none;
