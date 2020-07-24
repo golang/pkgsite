@@ -125,15 +125,15 @@ var statusToResponseText = map[int]string{
 	http.StatusInternalServerError: "Something went wrong. We'll keep working on it - try again in a few minutes!",
 }
 
-func (s *Server) fetchAndPoll(parentCtx context.Context, modulePath, fullPath, requestedVersion string) (status int, responseText string) {
+func (s *Server) fetchAndPoll(ctx context.Context, modulePath, fullPath, requestedVersion string) (status int, responseText string) {
 	start := time.Now()
 	defer func() {
-		log.Infof(parentCtx, "fetchAndPoll(ctx, ds, q, %q, %q, %q): status=%d, responseText=%q",
+		log.Infof(ctx, "fetchAndPoll(ctx, ds, q, %q, %q, %q): status=%d, responseText=%q",
 			modulePath, fullPath, requestedVersion, status, responseText)
 		recordFrontendFetchMetric(status, requestedVersion, time.Since(start))
 	}()
 
-	if !isSupportedVersion(parentCtx, fullPath, requestedVersion) ||
+	if !isSupportedVersion(ctx, fullPath, requestedVersion) ||
 		// TODO(https://golang.org/issue/39973): add support for fetching the
 		// latest and master versions of the standard library
 		(stdlib.Contains(fullPath) && requestedVersion == internal.LatestVersion) {
@@ -142,20 +142,36 @@ func (s *Server) fetchAndPoll(parentCtx context.Context, modulePath, fullPath, r
 
 	// Generate all possible module paths for the fullPath.
 	db := s.ds.(*postgres.DB)
-	modulePaths, err := modulePathsToFetch(parentCtx, db, fullPath, modulePath)
+	modulePaths, err := modulePathsToFetch(ctx, db, fullPath, modulePath)
 	if err != nil {
-		log.Errorf(parentCtx, "fetchAndPoll: %v", err)
 		var serr *serverError
 		if errors.As(err, &serr) {
 			return serr.status, http.StatusText(serr.status)
 		}
 		return http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError)
 	}
+	results := s.checkPossibleModulePaths(ctx, db, fullPath, requestedVersion, modulePaths, true)
+	// If the context timed out or was canceled before all of the requests
+	// finished, return an error letting the user to check back later. The
+	// worker will still be processing the modules in the background.
+	if ctx.Err() != nil {
+		return http.StatusRequestTimeout, statusToResponseText[http.StatusRequestTimeout]
+	}
+	return fetchRequestStatusAndResponseText(results, fullPath, requestedVersion)
+}
 
-	// Fetch all possible module paths concurrently.
-	ctx, cancel := context.WithTimeout(parentCtx, fetchTimeout)
-	defer cancel()
+// checkPossibleModulePaths checks all modulePaths at the requestedVersion, to see
+// if the fullPath exists. For each module path, it first checks version_map to
+// see if we already attempted to fetch the module. If not, and shouldQueue is
+// true, it will enqueue the module to the frontend task queue to be fetched.
+// checkPossibleModulePaths will then poll the database for each module path,
+// until a result is returned or the request times out. If shouldQueue is false,
+// it will return the fetchResult, regardless of what the status is.
+func (s *Server) checkPossibleModulePaths(ctx context.Context, db *postgres.DB,
+	fullPath, requestedVersion string, modulePaths []string, shouldQueue bool) []*fetchResult {
 	var wg sync.WaitGroup
+	ctx, cancel := context.WithTimeout(ctx, fetchTimeout)
+	defer cancel()
 	results := make([]*fetchResult, len(modulePaths))
 	for i, modulePath := range modulePaths {
 		wg.Add(1)
@@ -165,6 +181,17 @@ func (s *Server) fetchAndPoll(parentCtx context.Context, modulePath, fullPath, r
 			defer wg.Done()
 			start := time.Now()
 			fr := s.fetchModule(ctx, fullPath, modulePath, requestedVersion)
+			if fr.status == http.StatusNoContent && shouldQueue {
+				// A row for this modulePath and requestedVersion combination does not
+				// exist in version_map. Enqueue the module version to be fetched.
+				if err := s.queue.ScheduleFetch(ctx, modulePath, requestedVersion, "", s.taskIDChangeInterval); err != nil {
+					fr.err = err
+					fr.status = http.StatusInternalServerError
+				}
+				// After the fetch request is enqueued, poll the database until it has been
+				// inserted or the request times out.
+				fr = pollForPath(ctx, db, pollEvery, fullPath, modulePath, requestedVersion)
+			}
 			logf := log.Infof
 			if fr.status == http.StatusInternalServerError {
 				logf = log.Errorf
@@ -174,14 +201,18 @@ func (s *Server) fetchAndPoll(parentCtx context.Context, modulePath, fullPath, r
 		}()
 	}
 	wg.Wait()
-	// If the context timed out before all of the requests finished, return an
-	// error letting the user to check back later. The worker will still be
-	// processing the modules in the background.
-	if ctx.Err() != nil {
-		log.Infof(ctx, "fetchAndPoll(ctx, ds, q, %q, %q, %q): %v", fullPath, modulePath, requestedVersion, ctx.Err())
-		return http.StatusRequestTimeout, statusToResponseText[http.StatusRequestTimeout]
-	}
+	return results
+}
 
+// fetchRequestStatusAndResponseText returns the HTTP status code and response
+// text from the results of fetching possible module paths for fullPath at the
+// requestedVersion. It is assumed the results are sorted in order of
+// decreasing modulePath length, so the first result that is not a
+// StatusNotFound is returned. If all of the results are 404, but a module
+// path was found that shares the path prefix of fullPath, the responseText will
+// contain that information. The status and responseText will be displayed to the
+// user.
+func fetchRequestStatusAndResponseText(results []*fetchResult, fullPath, requestedVersion string) (int, string) {
 	var moduleMatchingPathPrefix string
 	for _, fr := range results {
 		// Results are in order of longest module path first. Once an
@@ -237,22 +268,10 @@ func (s *Server) fetchModule(ctx context.Context, fullPath, modulePath, requeste
 	if fr.status == http.StatusOK {
 		return fr
 	}
-	if fr.status != http.StatusProcessing {
-		if fr.status != http.StatusRequestTimeout && fr.status != http.StatusInternalServerError {
-			fr.err = fmt.Errorf("already attempted to fetch %q in the past and was unsuccessful: %w", fmt.Sprintf("%s@%s", modulePath, requestedVersion), fr.err)
-		}
-		return fr
+	if fr.status != http.StatusRequestTimeout && fr.status != http.StatusInternalServerError {
+		fr.err = fmt.Errorf("already attempted to fetch %q in the past and was unsuccessful: %w", fmt.Sprintf("%s@%s", modulePath, requestedVersion), fr.err)
 	}
-	// A row for this modulePath and requestedVersion combination does not
-	// exist in version_map. Enqueue the module version to be fetched.
-	if err := s.queue.ScheduleFetch(ctx, modulePath, requestedVersion, "", s.taskIDChangeInterval); err != nil {
-		fr.err = err
-		fr.status = http.StatusInternalServerError
-		return fr
-	}
-	// After the fetch request is enqueued, poll the database until it has been
-	// inserted or the request times out.
-	return pollForPath(ctx, db, pollEvery, fullPath, modulePath, requestedVersion)
+	return fr
 }
 
 // pollForPath polls the database until a row for fullPath is found.
@@ -273,7 +292,7 @@ func pollForPath(ctx context.Context, db *postgres.DB, pollEvery time.Duration,
 			ctx2, cancel := context.WithTimeout(ctx, pollEvery)
 			defer cancel()
 			fr = checkForPath(ctx2, db, fullPath, modulePath, requestedVersion)
-			if fr.status != http.StatusProcessing {
+			if fr.status != http.StatusNoContent {
 				return fr
 			}
 		}
@@ -308,7 +327,7 @@ func checkForPath(ctx context.Context, db *postgres.DB, fullPath, modulePath, re
 		// If an error is returned, there are two possibilities:
 		// (1) A row for this modulePath and version does not exist.
 		// This means that the fetch request is not done yet, so return
-		// http.StatusProcessing so the fetchHandler will call checkForPath
+		// http.StatusNoContent so the fetchHandler will call checkForPath
 		// again in a few seconds.
 		// (2) Something went wrong, so return that error.
 		fr = &fetchResult{
@@ -317,7 +336,7 @@ func checkForPath(ctx context.Context, db *postgres.DB, fullPath, modulePath, re
 			err:        err,
 		}
 		if errors.Is(err, derrors.NotFound) {
-			fr.status = http.StatusProcessing
+			fr.status = http.StatusNoContent
 		}
 		return fr
 	}
@@ -343,11 +362,11 @@ func checkForPath(ctx context.Context, db *postgres.DB, fullPath, modulePath, re
 		return fr
 	default:
 		// The module was marked for reprocessing by the worker.
-		// Return http.StatusProcessing here, so that the tasks gets enqueued
+		// Return http.StatusNoContent here, so that the tasks gets enqueued
 		// to frontend tasks, and we don't return a result to the user until
 		// that is complete.
 		if fr.status >= derrors.ToStatus(derrors.ReprocessStatusOK) {
-			fr.status = http.StatusProcessing
+			fr.status = http.StatusNoContent
 		}
 		// All remaining non-200 statuses will be in the 40x range.
 		// In that case, just return a not found error.

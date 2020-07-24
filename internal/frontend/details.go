@@ -432,6 +432,36 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, f
 		return
 	}
 
+	if isActiveFrontendFetch(ctx) {
+		db, ok := s.ds.(*postgres.DB)
+		if !ok {
+			return pathNotFoundError(ctx, pathType, fullPath, requestedVersion)
+		}
+		modulePaths, err := modulePathsToFetch(ctx, db, fullPath, modulePath)
+		if err != nil {
+			return pathNotFoundError(ctx, pathType, fullPath, requestedVersion)
+		}
+		results := s.checkPossibleModulePaths(ctx, db, fullPath, requestedVersion, modulePaths, false)
+		for _, fr := range results {
+			if fr.status == http.StatusNoContent {
+				// If the result is StatusNoContent, it means that we
+				// haven't attempted to fetch this path before. Return an error
+				// page giving the user the option to fetch the path.
+				return pathNotFoundErrorNew(fullPath, requestedVersion)
+			}
+		}
+		status, responseText := fetchRequestStatusAndResponseText(results, fullPath, requestedVersion)
+		return &serverError{
+			status: status,
+			epage: &errorPage{
+				messageTemplate: template.MakeTrustedTemplate(`
+					<h3 class="Error-message">{{.StatusText}}</h3>
+					<p class="Error-message">{{.Response}}</p>`),
+				MessageData: struct{ StatusText, Response string }{http.StatusText(status), responseText},
+			},
+		}
+	}
+
 	if requestedVersion == internal.LatestVersion || isActiveFrontendFetch(ctx) {
 		// We already know that the fullPath does not exist at any version.
 		//
