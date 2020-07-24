@@ -26,8 +26,6 @@ import (
 	"github.com/google/safehtml/legacyconversions"
 	"github.com/google/safehtml/template"
 	"github.com/google/safehtml/uncheckedconversions"
-	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch/dochtml/internal/render"
 	"golang.org/x/pkgsite/internal/fetch/internal/doc"
 )
@@ -143,7 +141,7 @@ func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Render
 	}{
 		RootURL:  "/pkg",
 		Package:  p,
-		Examples: collectExamples(ctx, p),
+		Examples: collectExamples(p),
 		NoteIDs:  buildNoteIDs(p.Notes),
 	}
 	return executeToHTMLWithLimit(tmpl, data, opt.Limit)
@@ -184,10 +182,9 @@ type examples struct {
 // example is an internal representation of a single example.
 type example struct {
 	*doc.Example
-	ID          safehtml.Identifier // ID of example
-	ParentID    string              // ID of top-level declaration this example is attached to
-	Suffix      string              // optional suffix name in title case
-	HideButtons bool                // Feature flag to enable display: none; of playground buttons
+	ID       safehtml.Identifier // ID of example
+	ParentID string              // ID of top-level declaration this example is attached to
+	Suffix   string              // optional suffix name in title case
 }
 
 // Code returns an printer.CommentedNode if ex.Comments is non-nil,
@@ -229,7 +226,7 @@ func WalkExamples(p *doc.Package, fn func(id string, ex *doc.Example)) {
 
 // collectExamples extracts examples from p
 // into the internal examples representation.
-func collectExamples(ctx context.Context, p *doc.Package) *examples {
+func collectExamples(p *doc.Package) *examples {
 	exs := &examples{
 		List: nil,
 		Map:  make(map[string][]*example),
@@ -237,11 +234,10 @@ func collectExamples(ctx context.Context, p *doc.Package) *examples {
 	WalkExamples(p, func(id string, ex *doc.Example) {
 		suffix := strings.Title(ex.Suffix)
 		ex0 := &example{
-			Example:     ex,
-			ID:          exampleID(id, suffix),
-			ParentID:    id,
-			Suffix:      suffix,
-			HideButtons: !experiment.IsActive(ctx, internal.ExperimentExecutableExamples),
+			Example:  ex,
+			ID:       exampleID(id, suffix),
+			ParentID: id,
+			Suffix:   suffix,
 		}
 		exs.List = append(exs.List, ex0)
 		exs.Map[id] = append(exs.Map[id], ex0)

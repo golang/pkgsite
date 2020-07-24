@@ -978,9 +978,6 @@ code {
   margin-bottom: 0.5rem;
 }
 
-.is-withExampleButtons {
-  display: none;
-}
 .Documentation-build {
   color: var(--gray-3);
   font-size: 0.875rem;
@@ -989,7 +986,8 @@ code {
 }
 .Documentation-exampleButtonsContainer {
   align-items: center;
-  display: flex;
+  /* This will change back to display: flex; when we enable playground buttons */
+  display: none;
   justify-content: flex-end;
 }
 .Documentation-exampleButtonsContainer button {

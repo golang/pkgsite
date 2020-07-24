@@ -331,7 +331,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 			{{- end -}}
 		</div>{{"\n" -}}
 		{{- if .Play -}}
-			<div class="Documentation-exampleButtonsContainer{{if .HideButtons}} is-withExampleButtons{{end}}">
+			<div class="Documentation-exampleButtonsContainer">
 				<p class="Documentation-exampleError" role="alert" aria-atomic="true"></p>
 				<button class="Documentation-examplePlayButton" aria-label="Play Code">Play</button>
 			</div>
