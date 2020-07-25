@@ -340,6 +340,17 @@ func addFiles(z *zip.Writer, r *git.Repository, t *object.Tree, dirpath string, 
 			// ignore; we'll synthesize our own
 			continue
 		}
+		if e.Name == "README.vendor" && !strings.Contains(dirpath, "/") {
+			// For versions newer than v1.4.0-beta.1, the stdlib is in src/pkg.
+			// This means that our construction of the zip files will return
+			// two READMEs at the root:
+			// https://golang.org/README.md and
+			// https://golang.org/src/README.vendor
+			// We only want to display the README.md, so ignore README.vendor.
+			// However, we do want to store the README.vendor in
+			// std@<version>/cmd.
+			continue
+		}
 		switch e.Mode {
 		case filemode.Regular, filemode.Executable:
 			blob, err := r.BlobObject(e.Hash)
@@ -423,6 +434,7 @@ var testRefs = []plumbing.ReferenceName{
 	"refs/tags/go1.12.9",
 	"refs/tags/go1.13",
 	"refs/tags/go1.13beta1",
+	"refs/tags/go1.14.6",
 	// other tags
 	"refs/changes/56/93156/13",
 	"refs/tags/release.r59",

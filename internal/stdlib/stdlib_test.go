@@ -115,7 +115,7 @@ func TestZip(t *testing.T) {
 	UseTestData = true
 	defer func() { UseTestData = false }()
 
-	for _, version := range []string{"v1.12.5", "v1.3.2"} {
+	for _, version := range []string{"v1.14.6", "v1.12.5", "v1.3.2"} {
 		t.Run(version, func(t *testing.T) {
 			zr, gotTime, err := Zip(version)
 			if err != nil {
@@ -134,9 +134,16 @@ func TestZip(t *testing.T) {
 			} else {
 				wantFiles["README"] = true
 			}
+			if semver.Compare(version, "v1.13.0") > 0 {
+				wantFiles["cmd/README.vendor"] = true
+			}
 
 			wantPrefix := "std@" + version + "/"
+			readmeVendorFile := wantPrefix + "README.vendor"
 			for _, f := range zr.File {
+				if f.Name == readmeVendorFile {
+					t.Fatalf("got %q; want file to be removed", readmeVendorFile)
+				}
 				if !strings.HasPrefix(f.Name, wantPrefix) {
 					t.Errorf("filename %q missing prefix %q", f.Name, wantPrefix)
 					continue
