@@ -59,7 +59,7 @@ func main() {
 	}
 	var (
 		dsg        func(context.Context) internal.DataSource
-		exp        internal.ExperimentSource
+		expg       func(context.Context) internal.ExperimentSource
 		fetchQueue queue.Queue
 	)
 	proxyClient, err := proxy.New(*proxyURL)
@@ -69,7 +69,9 @@ func main() {
 	if *directProxy {
 		pds := proxydatasource.New(proxyClient)
 		dsg = func(context.Context) internal.DataSource { return pds }
-		exp = internal.NewLocalExperimentSource(readLocalExperiments(ctx))
+		expg = func(context.Context) internal.ExperimentSource {
+			return internal.NewLocalExperimentSource(readLocalExperiments(ctx))
+		}
 	} else {
 		// Wrap the postgres driver with OpenCensus instrumentation.
 		ocDriver, err := ocsql.Register("postgres", ocsql.WithAllTraceOptions())
@@ -83,7 +85,7 @@ func main() {
 		db := postgres.New(ddb)
 		defer db.Close()
 		dsg = func(context.Context) internal.DataSource { return db }
-		exp = db
+		expg = func(context.Context) internal.ExperimentSource { return db }
 		sourceClient := source.NewClient(config.SourceTimeout)
 		// queue.New uses the db argument only while it is constructing the queue.Queue.
 		// The closure passed to it is only used for testing and local execution, not in production.
@@ -150,7 +152,7 @@ func main() {
 		log.Fatal(ctx, err)
 	}
 	requestLogger := getLogger(ctx, cfg)
-	experimenter, err := middleware.NewExperimenter(ctx, 1*time.Minute, exp)
+	experimenter, err := middleware.NewExperimenter(ctx, 1*time.Minute, expg)
 	if err != nil {
 		log.Fatal(ctx, err)
 	}

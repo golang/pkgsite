@@ -6,6 +6,7 @@ package middleware
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"hash/fnv"
 	"net/http"
@@ -23,19 +24,19 @@ const experimentQueryParamKey = "experiment"
 // An Experimenter contains information about active experiments from the
 // experiment source.
 type Experimenter struct {
-	es        internal.ExperimentSource
-	pollEvery time.Duration
-	mu        sync.Mutex
-	snapshot  []*internal.Experiment
+	getExperimentSource func(context.Context) internal.ExperimentSource
+	pollEvery           time.Duration
+	mu                  sync.Mutex
+	snapshot            []*internal.Experiment
 }
 
 // NewExperimenter returns an Experimenter for use in the middleware. The
 // experimenter regularly polls for updates to the snapshot in the background.
-func NewExperimenter(ctx context.Context, pollEvery time.Duration, es internal.ExperimentSource) (_ *Experimenter, err error) {
+func NewExperimenter(ctx context.Context, pollEvery time.Duration, esf func(context.Context) internal.ExperimentSource) (_ *Experimenter, err error) {
 	defer derrors.Wrap(&err, "middleware.NewExperimenter")
 	e := &Experimenter{
-		es:        es,
-		pollEvery: pollEvery,
+		getExperimentSource: esf,
+		pollEvery:           pollEvery,
 	}
 	if err := e.loadNextSnapshot(ctx); err != nil {
 		return nil, err
@@ -95,7 +96,11 @@ func (e *Experimenter) pollUpdates(ctx context.Context) {
 // experiment source.
 func (e *Experimenter) loadNextSnapshot(ctx context.Context) (err error) {
 	defer derrors.Wrap(&err, "loadNextSnapshot")
-	snapshot, err := e.es.GetExperiments(ctx)
+	es := e.getExperimentSource(ctx)
+	if es == nil {
+		return errors.New("no ExperimentSource available")
+	}
+	snapshot, err := es.GetExperiments(ctx)
 	if err != nil {
 		return err
 	}

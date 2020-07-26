@@ -1096,7 +1096,7 @@ func newTestServer(t *testing.T, proxyModules []*proxy.TestModule, experimentNam
 		exps = append(exps, &internal.Experiment{Name: n, Rollout: 100})
 	}
 	esrc := internal.NewLocalExperimentSource(exps)
-	exp, err := middleware.NewExperimenter(ctx, time.Hour, esrc)
+	exp, err := middleware.NewExperimenter(ctx, time.Hour, func(context.Context) internal.ExperimentSource { return esrc })
 	if err != nil {
 		t.Fatal(err)
 	}

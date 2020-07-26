@@ -20,6 +20,7 @@ import (
 	"cloud.google.com/go/profiler"
 	"github.com/go-redis/redis/v7"
 	"github.com/google/safehtml/template"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/dcensus"
@@ -135,7 +136,7 @@ func main() {
 	}
 	requestLogger := logger(ctx, cfg)
 
-	experimenter, err := middleware.NewExperimenter(ctx, 1*time.Minute, db)
+	experimenter, err := middleware.NewExperimenter(ctx, 1*time.Minute, func(context.Context) internal.ExperimentSource { return db })
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
