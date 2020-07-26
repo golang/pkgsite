@@ -57,6 +57,7 @@ type VersionMap struct {
 	GoModPath        string
 	Status           int
 	Error            string
+	UpdatedAt        time.Time
 }
 
 // SeriesPath returns the series path for the module.

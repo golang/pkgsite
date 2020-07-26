@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
@@ -38,7 +39,7 @@ func TestReadAndWriteVersionMap(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(vm, got); diff != "" {
+	if diff := cmp.Diff(vm, got, cmpopts.IgnoreFields(internal.VersionMap{}, "UpdatedAt")); diff != "" {
 		t.Fatalf("t.Errorf(ctx, %q, %q) mismatch (-want +got):\n%s", vm.ModulePath, vm.RequestedVersion, diff)
 	}
 }
@@ -56,7 +57,7 @@ func TestUpsertVersionMap(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if diff := cmp.Diff(vm, got); diff != "" {
+		if diff := cmp.Diff(vm, got, cmpopts.IgnoreFields(internal.VersionMap{}, "UpdatedAt")); diff != "" {
 			t.Fatalf("t.Errorf(ctx, %q, %q) mismatch (-want +got):\n%s",
 				vm.ModulePath, vm.RequestedVersion, diff)
 		}
