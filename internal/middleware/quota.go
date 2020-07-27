@@ -53,7 +53,7 @@ func Quota(settings config.QuotaSettings) Middleware {
 			authVal := r.Header.Get(settings.AuthHeader)
 			for _, wantVal := range settings.AuthValues {
 				if authVal == wantVal {
-					recordQuotaMetric("accepted")
+					recordQuotaMetric(r.Context(), "accepted")
 					log.Infof(r.Context(), "Quota: accepting %q", authVal)
 					h.ServeHTTP(w, r)
 					return
@@ -75,7 +75,7 @@ func Quota(settings config.QuotaSettings) Middleware {
 				mu.Unlock()
 			}
 			blocked := limiter != nil && !limiter.Allow()
-			recordQuotaMetric(strconv.FormatBool(blocked))
+			recordQuotaMetric(r.Context(), strconv.FormatBool(blocked))
 			if blocked && settings.RecordOnly != nil && !*settings.RecordOnly {
 				const tmr = http.StatusTooManyRequests
 				http.Error(w, http.StatusText(tmr), tmr)
@@ -86,8 +86,8 @@ func Quota(settings config.QuotaSettings) Middleware {
 	}
 }
 
-func recordQuotaMetric(blocked string) {
-	stats.RecordWithTags(context.Background(), []tag.Mutator{
+func recordQuotaMetric(ctx context.Context, blocked string) {
+	stats.RecordWithTags(ctx, []tag.Mutator{
 		tag.Upsert(keyQuotaBlocked, blocked),
 	}, quotaResults.M(1))
 }
