@@ -73,6 +73,7 @@ func main() {
 		teeproxy.TeeproxyPkgGoDevRequestCount,
 		teeproxy.TeeproxyGddoRequestLatencyDistribution,
 		teeproxy.TeeproxyPkgGoDevRequestLatencyDistribution,
+		teeproxy.TeeproxyPkgGoDevBrokenPathCount,
 	)
 	dcensus.Init(cfg, views...)
 

@@ -100,7 +100,10 @@ var (
 	// keyTeeproxyStatus is a census tag for teeproxy response status codes.
 	keyTeeproxyStatus = tag.MustNewKey("teeproxy.status")
 	// keyTeeproxyHost is a census tag for hosts that teeproxy forward requests to.
-	keyTeeProxyHost = tag.MustNewKey("teeproxy.host")
+	keyTeeproxyHost = tag.MustNewKey("teeproxy.host")
+	// keyTeeproxyPath is a census tag for godoc.org paths that don't work in
+	// pkg.go.dev.
+	keyTeeproxyPath = tag.MustNewKey("teeproxy.path")
 	// teeproxyGddoLatency holds observed latency in individual teeproxy
 	// requests from godoc.org.
 	teeproxyGddoLatency = stats.Float64(
@@ -115,6 +118,13 @@ var (
 		"Latency of a teeproxy request to pkg.go.dev.",
 		stats.UnitMilliseconds,
 	)
+	// teeproxyPkgGoDevBrokenPaths counts broken paths in pkg.go.dev that work
+	// in godoc.org
+	teeproxyPkgGoDevBrokenPaths = stats.Int64(
+		"go-discovery/teeproxy/pkgGoDev-brokenPaths",
+		"Count of paths that error in pkg.go.dev but 200 in godoc.org.",
+		stats.UnitDimensionless,
+	)
 
 	// TeeproxyGddoRequestLatencyDistribution aggregates the latency of
 	// teeproxy requests from godoc.org by status code and host.
@@ -123,7 +133,7 @@ var (
 		Measure:     teeproxyGddoLatency,
 		Aggregation: ochttp.DefaultLatencyDistribution,
 		Description: "Teeproxy latency from godoc.org, by response status code",
-		TagKeys:     []tag.Key{keyTeeproxyStatus, keyTeeProxyHost},
+		TagKeys:     []tag.Key{keyTeeproxyStatus, keyTeeproxyHost},
 	}
 	// TeeproxyPkgGoDevRequestLatencyDistribution aggregates the latency of
 	// teeproxy requests to pkg.go.dev by status code and host.
@@ -132,7 +142,7 @@ var (
 		Measure:     teeproxyPkgGoDevLatency,
 		Aggregation: ochttp.DefaultLatencyDistribution,
 		Description: "Teeproxy latency to pkg.go.dev, by response status code",
-		TagKeys:     []tag.Key{keyTeeproxyStatus, keyTeeProxyHost},
+		TagKeys:     []tag.Key{keyTeeproxyStatus, keyTeeproxyHost},
 	}
 	// TeeproxyGddoRequestCount counts teeproxy requests from godoc.org.
 	TeeproxyGddoRequestCount = &view.View{
@@ -140,7 +150,7 @@ var (
 		Measure:     teeproxyGddoLatency,
 		Aggregation: view.Count(),
 		Description: "Count of teeproxy requests from godoc.org",
-		TagKeys:     []tag.Key{keyTeeproxyStatus, keyTeeProxyHost},
+		TagKeys:     []tag.Key{keyTeeproxyStatus, keyTeeproxyHost},
 	}
 	// TeeproxyPkgGoDevRequestCount counts teeproxy requests to pkg.go.dev.
 	TeeproxyPkgGoDevRequestCount = &view.View{
@@ -148,7 +158,16 @@ var (
 		Measure:     teeproxyPkgGoDevLatency,
 		Aggregation: view.Count(),
 		Description: "Count of teeproxy requests to pkg.go.dev",
-		TagKeys:     []tag.Key{keyTeeproxyStatus, keyTeeProxyHost},
+		TagKeys:     []tag.Key{keyTeeproxyStatus, keyTeeproxyHost},
+	}
+	// TeeproxyPkgGoDevBrokenPathCount counts teeproxy requests to pkg.go.dev
+	// that return 4xx or 5xx but return 2xx or 3xx on godoc.org.
+	TeeproxyPkgGoDevBrokenPathCount = &view.View{
+		Name:        "go-discovery/teeproxy/pkgGoDev-brokenPath",
+		Measure:     teeproxyPkgGoDevBrokenPaths,
+		Aggregation: view.Count(),
+		Description: "Count of broken paths in pkg.go.dev",
+		TagKeys:     []tag.Key{keyTeeproxyStatus, keyTeeproxyHost, keyTeeproxyPath},
 	}
 )
 
@@ -259,7 +278,7 @@ func (s *Server) doRequest(r *http.Request) (results map[string]*RequestEvent, s
 				log.Errorf(r.Context(), "teeproxy.Server.doRequest(%q): %s", host, event.Error)
 			}
 			results[host] = event
-			recordTeeProxyMetric(event.Status, host, gddoEvent.Latency, event.Latency)
+			recordTeeProxyMetric(r.Context(), host, gddoEvent.Path, gddoEvent.Status, event.Status, gddoEvent.Latency, event.Latency)
 		}
 	}
 	return results, http.StatusOK, nil
@@ -376,16 +395,31 @@ func (s *Server) makePkgGoDevRequest(ctx context.Context, redirectHost, redirect
 }
 
 // recordTeeProxyMetric records the latencies and counts of requests from
-// godoc.org and to pkg.go.dev, tagged with the response status code.
-func recordTeeProxyMetric(status int, host string, gddoLatency, pkgGoDevLatency time.Duration) {
+// godoc.org and to pkg.go.dev, tagged with the response status code, as well
+// as any path that errors on pkg.go.dev but not on godoc.org.
+func recordTeeProxyMetric(ctx context.Context, host, path string, gddoStatus, pkgGoDevStatus int, gddoLatency, pkgGoDevLatency time.Duration) {
 	gddoL := gddoLatency.Seconds() * 1000
 	pkgGoDevL := pkgGoDevLatency.Seconds() * 1000
 
-	stats.RecordWithTags(context.Background(), []tag.Mutator{
-		tag.Upsert(keyTeeproxyStatus, strconv.Itoa(status)),
-		tag.Upsert(keyTeeProxyHost, host),
+	// Record latency.
+	stats.RecordWithTags(ctx, []tag.Mutator{
+		tag.Upsert(keyTeeproxyStatus, strconv.Itoa(pkgGoDevStatus)),
+		tag.Upsert(keyTeeproxyHost, host),
 	},
 		teeproxyGddoLatency.M(gddoL),
 		teeproxyPkgGoDevLatency.M(pkgGoDevL),
 	)
+
+	// Record path that returns 4xx or 5xx on pkg.go.dev but returns 2xx or 3xx
+	// on godoc.org, excluding rate limiter and circuit breaker errors.
+	if pkgGoDevStatus >= 400 && gddoStatus < 400 &&
+		pkgGoDevStatus != http.StatusTooManyRequests && pkgGoDevStatus != statusRedBreaker {
+		stats.RecordWithTags(ctx, []tag.Mutator{
+			tag.Upsert(keyTeeproxyStatus, strconv.Itoa(pkgGoDevStatus)),
+			tag.Upsert(keyTeeproxyHost, host),
+			tag.Upsert(keyTeeproxyPath, path),
+		},
+			teeproxyPkgGoDevBrokenPaths.M(1),
+		)
+	}
 }
