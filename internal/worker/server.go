@@ -98,7 +98,7 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 		rmw = middleware.ErrorReporting(s.reportingClient.Report)
 	}
 
-	// scheduled: poll polls the Module Index for new versions
+	// scheduled: poll polls the Module Index for new modules
 	// that have been published and inserts that metadata into
 	// module_version_states.
 	// This endpoint is intended to be invoked periodically by a scheduler.
@@ -106,7 +106,7 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	handle("/poll", rmw(s.errorHandler(s.handlePollIndex)))
 
 	// TODO: remove after /poll is in production and the scheduler jobs have been changed.
-	// scheduled: poll-and-queue polls the Module Index for new versions
+	// scheduled: poll-and-queue polls the Module Index for new modules
 	// that have been published and inserts that metadata into
 	// module_version_states. It also inserts the version into the task-queue
 	// to to be fetched and processed.
@@ -162,7 +162,7 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// be reprocessed.
 	handle("/reprocess", rmw(s.errorHandler(s.handleReprocess)))
 
-	// manual: populate-stdlib inserts all versions of the Go standard
+	// manual: populate-stdlib inserts all modules of the Go standard
 	// library into the tasks queue to be processed and inserted into the
 	// database. handlePopulateStdLib should be updated whenever a new
 	// version of Go is released.
@@ -302,14 +302,14 @@ func (s *Server) handlePollIndex(w http.ResponseWriter, r *http.Request) (err er
 	if err != nil {
 		return err
 	}
-	versions, err := s.indexClient.GetVersions(ctx, since, limit)
+	modules, err := s.indexClient.GetVersions(ctx, since, limit)
 	if err != nil {
 		return err
 	}
-	if err := s.db.InsertIndexVersions(ctx, versions); err != nil {
+	if err := s.db.InsertIndexVersions(ctx, modules); err != nil {
 		return err
 	}
-	log.Infof(ctx, "Inserted %d modules from the index", len(versions))
+	log.Infof(ctx, "Inserted %d modules from the index", len(modules))
 	return nil
 }
 
@@ -322,23 +322,23 @@ func (s *Server) handleIndexAndQueue(w http.ResponseWriter, r *http.Request) (er
 	if err != nil {
 		return err
 	}
-	versions, err := s.indexClient.GetVersions(ctx, since, limit)
+	modules, err := s.indexClient.GetVersions(ctx, since, limit)
 	if err != nil {
 		return err
 	}
-	if err := s.db.InsertIndexVersions(ctx, versions); err != nil {
+	if err := s.db.InsertIndexVersions(ctx, modules); err != nil {
 		return err
 	}
-	log.Infof(ctx, "Scheduling modules to be fetched: %d new modules from index.golang.org", len(versions))
-	for _, version := range versions {
+	log.Infof(ctx, "Scheduling modules to be fetched: %d new modules from index.golang.org", len(modules))
+	for _, version := range modules {
 		if err := s.queue.ScheduleFetch(ctx, version.Path, version.Version, suffixParam, s.taskIDChangeInterval); err != nil {
 			return err
 		}
 	}
-	log.Infof(ctx, "Successfully scheduled modules to be fetched: %d new modules from index.golang.org", len(versions))
+	log.Infof(ctx, "Successfully scheduled modules to be fetched: %d new modules from index.golang.org", len(modules))
 
 	w.Header().Set("Content-Type", "text/plain")
-	for _, v := range versions {
+	for _, v := range modules {
 		fmt.Fprintf(w, "scheduled %s@%s\n", v.Path, v.Version)
 	}
 	return nil
@@ -354,20 +354,20 @@ func (s *Server) handleEnqueue(w http.ResponseWriter, r *http.Request) (err erro
 	suffixParam := r.FormValue("suffix") // append to task name to avoid deduplication
 	span := trace.FromContext(r.Context())
 	span.Annotate([]trace.Attribute{trace.Int64Attribute("limit", int64(limit))}, "processed limit")
-	versions, err := s.db.GetNextModulesToFetch(ctx, limit)
+	modules, err := s.db.GetNextModulesToFetch(ctx, limit)
 	if err != nil {
 		return err
 	}
 
-	span.Annotate([]trace.Attribute{trace.Int64Attribute("versions to fetch", int64(len(versions)))}, "processed limit")
+	span.Annotate([]trace.Attribute{trace.Int64Attribute("modules to fetch", int64(len(modules)))}, "processed limit")
 	w.Header().Set("Content-Type", "text/plain")
-	log.Infof(ctx, "Scheduling modules to be fetched: queuing %d modules", len(versions))
-	for _, v := range versions {
-		if err := s.queue.ScheduleFetch(ctx, v.ModulePath, v.Version, suffixParam, s.taskIDChangeInterval); err != nil {
+	log.Infof(ctx, "Scheduling modules to be fetched: queuing %d modules", len(modules))
+	for _, m := range modules {
+		if err := s.queue.ScheduleFetch(ctx, m.ModulePath, m.Version, suffixParam, s.taskIDChangeInterval); err != nil {
 			return err
 		}
 	}
-	log.Infof(ctx, "Successfully scheduled modules to be fetched: %d modules queued", len(versions))
+	log.Infof(ctx, "Successfully scheduled modules to be fetched: %d modules queued", len(modules))
 
 	return nil
 }
