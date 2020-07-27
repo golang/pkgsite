@@ -195,7 +195,7 @@
 
 {{block "post_content" .}}{{end}}
 
-{{if not .DevMode}}
+{{if .GoogleTagManagerID}}
 <script async>
   const gtmId = document.querySelector('.js-gtmID').dataset.gtmid; // this will throw if the querySelector can’t find the element
   if (!gtmId) {
@@ -203,6 +203,11 @@
   }
   loadScript(`https://www.googletagmanager.com/gtm.js?id=${gtmId}`);
 </script>
+<noscript>
+  <iframe src="https://www.googletagmanager.com/ns.html?id={{.GoogleTagManagerID}}"
+          height="0" width="0" style="display:none;visibility:hidden">
+  </iframe>
+</noscript>
 {{end}}
 
 {{if (.Experiments.IsActive "autocomplete")}}
