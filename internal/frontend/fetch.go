@@ -300,11 +300,11 @@ func checkForPath(ctx context.Context, db *postgres.DB, fullPath, modulePath, re
 	defer func() {
 		// Based on
 		// https://github.com/lib/pq/issues/577#issuecomment-298341053, it seems
-		// that ctx.Error() will return nil because this error is coming from
+		// that ctx.Err() will return nil because this error is coming from
 		// postgres. This is also how github.com/lib/pq currently handles the
 		// error in their tests:
 		// https://github.com/lib/pq/blob/e53edc9b26000fec4c4e357122d56b0f66ace6ea/go18_test.go#L89
-		if fr.err != nil && strings.Contains(fr.err.Error(), "pq: canceling statement due to user request") {
+		if ctx.Err() != nil || (fr.err != nil && strings.Contains(fr.err.Error(), "pq: canceling statement due to user request")) {
 			fr.err = fmt.Errorf("%v: %w", fr.err, context.DeadlineExceeded)
 			fr.status = http.StatusRequestTimeout
 		}
