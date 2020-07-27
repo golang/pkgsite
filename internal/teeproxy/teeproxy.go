@@ -378,8 +378,8 @@ func (s *Server) makePkgGoDevRequest(ctx context.Context, redirectHost, redirect
 // recordTeeProxyMetric records the latencies and counts of requests from
 // godoc.org and to pkg.go.dev, tagged with the response status code.
 func recordTeeProxyMetric(status int, host string, gddoLatency, pkgGoDevLatency time.Duration) {
-	gddoL := gddoLatency.Seconds() / 1000
-	pkgGoDevL := pkgGoDevLatency.Seconds() / 1000
+	gddoL := gddoLatency.Seconds() * 1000
+	pkgGoDevL := pkgGoDevLatency.Seconds() * 1000
 
 	stats.RecordWithTags(context.Background(), []tag.Mutator{
 		tag.Upsert(keyTeeproxyStatus, strconv.Itoa(status)),
