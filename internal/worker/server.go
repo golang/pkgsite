@@ -385,7 +385,7 @@ func (s *Server) handleEnqueue(w http.ResponseWriter, r *http.Request) (err erro
 	w.Header().Set("Content-Type", "text/plain")
 	log.Infof(ctx, "Scheduling modules to be fetched: queuing %d modules", len(modules))
 	for _, m := range modules {
-		stats.RecordWithTags(context.Background(),
+		stats.RecordWithTags(r.Context(),
 			[]tag.Mutator{tag.Upsert(keyEnqueueStatus, strconv.Itoa(m.Status))},
 			enqueueStatus.M(int64(m.Status)))
 		if err := s.queue.ScheduleFetch(ctx, m.ModulePath, m.Version, suffixParam, s.taskIDChangeInterval); err != nil {
