@@ -180,18 +180,24 @@ func (s *Server) checkPossibleModulePaths(ctx context.Context, db *postgres.DB,
 		go func() {
 			defer wg.Done()
 			start := time.Now()
-			fr := s.fetchModule(ctx, db, fullPath, modulePath, requestedVersion)
-			if fr.status == http.StatusNoContent && shouldQueue {
-				// A row for this modulePath and requestedVersion combination does not
-				// exist in version_map. Enqueue the module version to be fetched.
-				if err := s.queue.ScheduleFetch(ctx, modulePath, requestedVersion, "", s.taskIDChangeInterval); err != nil {
-					fr.err = err
-					fr.status = http.StatusInternalServerError
-				}
-				// After the fetch request is enqueued, poll the database until it has been
-				// inserted or the request times out.
-				fr = pollForPath(ctx, db, pollEvery, fullPath, modulePath, requestedVersion)
+
+			// Before enqueuing the module version to be fetched, check if we
+			// have already attempted to fetch it in the past. If so, just
+			// return the result from that fetch process.
+			fr := checkForPath(ctx, db, fullPath, modulePath, requestedVersion)
+			if !shouldQueue || fr.status != http.StatusNoContent {
+				results[i] = fr
+				return
 			}
+			// A row for this modulePath and requestedVersion combination does not
+			// exist in version_map. Enqueue the module version to be fetched.
+			if err := s.queue.ScheduleFetch(ctx, modulePath, requestedVersion, "", s.taskIDChangeInterval); err != nil {
+				fr.err = err
+				fr.status = http.StatusInternalServerError
+			}
+			// After the fetch request is enqueued, poll the database until it has been
+			// inserted or the request times out.
+			fr = pollForPath(ctx, db, pollEvery, fullPath, modulePath, requestedVersion)
 			logf := log.Infof
 			if fr.status == http.StatusInternalServerError {
 				logf = log.Errorf
@@ -257,21 +263,6 @@ func displayPath(path, version string) string {
 		return path
 	}
 	return fmt.Sprintf("%s@%s", path, version)
-}
-
-func (s *Server) fetchModule(ctx context.Context, ds internal.DataSource, fullPath, modulePath, requestedVersion string) (fr *fetchResult) {
-	// Before enqueuing the module version to be fetched, check if we have
-	// already attempted to fetch it in the past. If so, just return the result
-	// from that fetch process.
-	db := ds.(*postgres.DB)
-	fr = checkForPath(ctx, db, fullPath, modulePath, requestedVersion)
-	if fr.status == http.StatusOK {
-		return fr
-	}
-	if fr.status != http.StatusRequestTimeout && fr.status != http.StatusInternalServerError {
-		fr.err = fmt.Errorf("already attempted to fetch %q in the past and was unsuccessful: %w", fmt.Sprintf("%s@%s", modulePath, requestedVersion), fr.err)
-	}
-	return fr
 }
 
 // pollForPath polls the database until a row for fullPath is found.
