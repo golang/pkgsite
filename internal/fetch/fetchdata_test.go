@@ -18,12 +18,12 @@ import (
 )
 
 type testModule struct {
-	mod *proxy.TestModule
+	mod *proxy.Module
 	fr  *FetchResult
 }
 
 var moduleOnePackage = &testModule{
-	mod: &proxy.TestModule{
+	mod: &proxy.Module{
 		ModulePath: "github.com/basic",
 		Files: map[string]string{
 			"README.md":  "THIS IS A README",
@@ -73,7 +73,7 @@ var moduleOnePackage = &testModule{
 var html = testconversions.MakeHTMLForTest
 
 var moduleMultiPackage = &testModule{
-	mod: &proxy.TestModule{
+	mod: &proxy.Module{
 		ModulePath: "github.com/my/module",
 		Files: map[string]string{
 			"go.mod":        "module github.com/my/module\n\ngo 1.12",
@@ -165,7 +165,7 @@ var moduleMultiPackage = &testModule{
 }
 
 var moduleNoGoMod = &testModule{
-	mod: &proxy.TestModule{
+	mod: &proxy.Module{
 		ModulePath: "no.mod/module",
 		Files: map[string]string{
 			"LICENSE": testhelper.BSD0License,
@@ -212,14 +212,14 @@ var moduleNoGoMod = &testModule{
 }
 
 var moduleEmpty = &testModule{
-	mod: &proxy.TestModule{
+	mod: &proxy.Module{
 		ModulePath: "emp.ty/module",
 	},
 	fr: &FetchResult{Module: &internal.Module{}},
 }
 
 var moduleBadPackages = &testModule{
-	mod: &proxy.TestModule{
+	mod: &proxy.Module{
 		ModulePath: "bad.mod/module",
 		Files: map[string]string{
 			"LICENSE": testhelper.BSD0License,
@@ -299,7 +299,7 @@ var moduleBadPackages = &testModule{
 }
 
 var moduleBuildConstraints = &testModule{
-	mod: &proxy.TestModule{
+	mod: &proxy.Module{
 		ModulePath: "build.constraints/module",
 		Files: map[string]string{
 			"LICENSE": testhelper.BSD0License,
@@ -362,7 +362,7 @@ var moduleBuildConstraints = &testModule{
 }
 
 var moduleNonRedist = &testModule{
-	mod: &proxy.TestModule{
+	mod: &proxy.Module{
 		ModulePath: "nonredistributable.mod/module",
 		Files: map[string]string{
 			"go.mod":          "module nonredistributable.mod/module\n\ngo 1.13",
@@ -476,7 +476,7 @@ var moduleNonRedist = &testModule{
 }
 
 var moduleBadImportPath = &testModule{
-	mod: &proxy.TestModule{
+	mod: &proxy.Module{
 		ModulePath: "bad.import.path.com",
 		Files: map[string]string{
 			"good/import/path/foo.go": "package foo",
@@ -540,7 +540,7 @@ var moduleBadImportPath = &testModule{
 }
 
 var moduleDocTest = &testModule{
-	mod: &proxy.TestModule{
+	mod: &proxy.Module{
 		ModulePath: "doc.test",
 		Files: map[string]string{
 			"LICENSE": testhelper.BSD0License,
@@ -593,7 +593,7 @@ var moduleDocTest = &testModule{
 }
 
 var moduleDocTooLarge = &testModule{
-	mod: &proxy.TestModule{
+	mod: &proxy.Module{
 		ModulePath: "bigdoc.test",
 		Files: map[string]string{
 			"LICENSE": testhelper.BSD0License,
@@ -640,7 +640,7 @@ var moduleDocTooLarge = &testModule{
 }
 
 var moduleWasm = &testModule{
-	mod: &proxy.TestModule{
+	mod: &proxy.Module{
 		ModulePath: "github.com/my/module/js",
 		Files: map[string]string{
 
@@ -695,7 +695,7 @@ var moduleWasm = &testModule{
 }
 
 var moduleAlternative = &testModule{
-	mod: &proxy.TestModule{
+	mod: &proxy.Module{
 		ModulePath: "github.com/my/module",
 		Files:      map[string]string{"go.mod": "module canonical"},
 	},
@@ -705,7 +705,7 @@ var moduleAlternative = &testModule{
 }
 
 var moduleStd = &testModule{
-	mod: &proxy.TestModule{
+	mod: &proxy.Module{
 		ModulePath: stdlib.ModulePath,
 		Version:    "v1.12.5",
 	},
@@ -875,7 +875,7 @@ var moduleStd = &testModule{
 func moduleWithExamples(path, source, test string, docSubstrings ...string) *testModule {
 	docHTML := html(strings.Join(docSubstrings, " ~ "))
 	return &testModule{
-		mod: &proxy.TestModule{
+		mod: &proxy.Module{
 			ModulePath: path,
 			Files: map[string]string{
 				"LICENSE": testhelper.BSD0License,

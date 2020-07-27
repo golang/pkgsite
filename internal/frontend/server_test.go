@@ -1066,7 +1066,7 @@ func TestTagRoute(t *testing.T) {
 	}
 }
 
-func newTestServer(t *testing.T, proxyModules []*proxy.TestModule, experimentNames ...string) (*Server, http.Handler, func()) {
+func newTestServer(t *testing.T, proxyModules []*proxy.Module, experimentNames ...string) (*Server, http.Handler, func()) {
 	t.Helper()
 	proxyClient, teardown := proxy.SetupTestProxy(t, proxyModules)
 	sourceClient := source.NewClient(sourceTimeout)

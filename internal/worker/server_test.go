@@ -71,7 +71,7 @@ func TestWorker(t *testing.T) {
 			Timestamp: start.Add(time.Second),
 			Version:   "v0.0.1",
 		}
-		fooProxy = &proxy.TestModule{
+		fooProxy = &proxy.Module{
 			ModulePath: fooIndex.Path,
 			Version:    fooIndex.Version,
 			Files: map[string]string{
@@ -79,7 +79,7 @@ func TestWorker(t *testing.T) {
 				"foo.go": "package foo\nconst Foo = \"Foo\"",
 			},
 		}
-		barProxy = &proxy.TestModule{
+		barProxy = &proxy.Module{
 			ModulePath: barIndex.Path,
 			Version:    barIndex.Version,
 			Files: map[string]string{
@@ -117,7 +117,7 @@ func TestWorker(t *testing.T) {
 	tests := []struct {
 		label    string
 		index    []*internal.IndexVersion
-		proxy    []*proxy.TestModule
+		proxy    []*proxy.Module
 		requests []*http.Request
 		wantFoo  *internal.ModuleVersionState
 		wantBar  *internal.ModuleVersionState
@@ -125,7 +125,7 @@ func TestWorker(t *testing.T) {
 		{
 			label: "poll only",
 			index: []*internal.IndexVersion{fooIndex, barIndex},
-			proxy: []*proxy.TestModule{fooProxy, barProxy},
+			proxy: []*proxy.Module{fooProxy, barProxy},
 			requests: []*http.Request{
 				httptest.NewRequest("POST", "/poll", nil),
 			},
@@ -135,7 +135,7 @@ func TestWorker(t *testing.T) {
 		{
 			label: "full fetch",
 			index: []*internal.IndexVersion{fooIndex, barIndex},
-			proxy: []*proxy.TestModule{fooProxy, barProxy},
+			proxy: []*proxy.Module{fooProxy, barProxy},
 			requests: []*http.Request{
 				httptest.NewRequest("POST", "/poll", nil),
 				httptest.NewRequest("POST", "/enqueue", nil),
@@ -145,7 +145,7 @@ func TestWorker(t *testing.T) {
 		}, {
 			label: "partial fetch",
 			index: []*internal.IndexVersion{fooIndex, barIndex},
-			proxy: []*proxy.TestModule{fooProxy, barProxy},
+			proxy: []*proxy.Module{fooProxy, barProxy},
 			requests: []*http.Request{
 				httptest.NewRequest("POST", "/poll?limit=1", nil),
 				httptest.NewRequest("POST", "/enqueue", nil),
@@ -154,7 +154,7 @@ func TestWorker(t *testing.T) {
 		}, {
 			label: "fetch with errors",
 			index: []*internal.IndexVersion{fooIndex, barIndex},
-			proxy: []*proxy.TestModule{fooProxy},
+			proxy: []*proxy.Module{fooProxy},
 			requests: []*http.Request{
 				httptest.NewRequest("POST", "/poll", nil),
 				httptest.NewRequest("POST", "/enqueue", nil),

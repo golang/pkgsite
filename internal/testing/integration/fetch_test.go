@@ -39,7 +39,7 @@ func TestFrontendFetchForMasterVersion(t *testing.T) {
 
 	// Add sample.ModulePath@sample.VersionString to the database.
 	// Check that GET /sample.ModulePath returns a 200.
-	testModule := &proxy.TestModule{
+	testModule := &proxy.Module{
 		ModulePath: sample.ModulePath,
 		Version:    "v1.0.0",
 		Files: map[string]string{
@@ -48,7 +48,7 @@ func TestFrontendFetchForMasterVersion(t *testing.T) {
 			"LICENSE":        testhelper.MITLicense,
 		},
 	}
-	q, teardown := setupQueue(ctx, t, []*proxy.TestModule{testModule}, experiments...)
+	q, teardown := setupQueue(ctx, t, []*proxy.Module{testModule}, experiments...)
 	defer teardown()
 	ts := setupFrontend(ctx, t, q)
 

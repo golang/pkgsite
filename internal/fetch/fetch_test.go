@@ -79,7 +79,7 @@ func TestFetchModule(t *testing.T) {
 				version = "v1.0.0"
 			}
 			sourceClient := source.NewClient(sourceTimeout)
-			proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{{
+			proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.Module{{
 				ModulePath: modulePath,
 				Version:    version,
 				Files:      test.mod.mod.Files,
@@ -126,7 +126,7 @@ func TestFetchModule_Errors(t *testing.T) {
 			if version == "" {
 				version = "v1.0.0"
 			}
-			proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{{
+			proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.Module{{
 				ModulePath: modulePath,
 				Files:      test.mod.mod.Files,
 			}})
@@ -212,7 +212,7 @@ func TestExtractReadmesFromZip(t *testing.T) {
 					t.Fatal(err)
 				}
 			} else {
-				proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{
+				proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.Module{
 					{ModulePath: test.modulePath, Files: test.files}})
 				defer teardownProxy()
 				reader, err = proxyClient.GetZip(ctx, test.modulePath, "v1.0.0")

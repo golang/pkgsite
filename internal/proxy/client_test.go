@@ -18,7 +18,7 @@ import (
 
 const testTimeout = 5 * time.Second
 
-var sampleModule = &TestModule{
+var sampleModule = &Module{
 	ModulePath: "github.com/my/module",
 	Version:    "v1.0.0",
 	Files: map[string]string{
@@ -57,7 +57,7 @@ func TestGetLatestInfo(t *testing.T) {
 	defer cancel()
 
 	modulePath := "foo.com/bar"
-	testModules := []*TestModule{
+	testModules := []*Module{
 		{
 			ModulePath: "foo.com/bar",
 			Version:    "v1.1.0",
@@ -88,7 +88,7 @@ func TestListVersions(t *testing.T) {
 	defer cancel()
 
 	modulePath := "foo.com/bar"
-	testModules := []*TestModule{
+	testModules := []*Module{
 		{
 			ModulePath: modulePath,
 			Version:    "v1.1.0",
@@ -123,7 +123,7 @@ func TestGetInfo(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	client, teardownProxy := SetupTestProxy(t, []*TestModule{sampleModule})
+	client, teardownProxy := SetupTestProxy(t, []*Module{sampleModule})
 	defer teardownProxy()
 
 	path := "github.com/my/module"
@@ -147,7 +147,7 @@ func TestGetInfoVersionDoesNotExist(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	client, teardownProxy := SetupTestProxy(t, []*TestModule{sampleModule})
+	client, teardownProxy := SetupTestProxy(t, []*Module{sampleModule})
 	defer teardownProxy()
 
 	path := "github.com/my/module"
@@ -162,7 +162,7 @@ func TestGetMod(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	client, teardownProxy := SetupTestProxy(t, []*TestModule{sampleModule})
+	client, teardownProxy := SetupTestProxy(t, []*Module{sampleModule})
 	defer teardownProxy()
 
 	path := "github.com/my/module"
@@ -182,7 +182,7 @@ func TestGetZip(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	client, teardownProxy := SetupTestProxy(t, []*TestModule{sampleModule})
+	client, teardownProxy := SetupTestProxy(t, []*Module{sampleModule})
 	defer teardownProxy()
 
 	for _, tc := range []struct {

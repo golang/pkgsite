@@ -24,7 +24,7 @@ var (
 	testModulePath      = "github.com/module"
 	testSemver          = "v1.5.2"
 	testFetchTimeout    = 100 * time.Second
-	testModulesForProxy = []*proxy.TestModule{
+	testModulesForProxy = []*proxy.Module{
 		{
 			ModulePath: testModulePath,
 			Version:    testSemver,

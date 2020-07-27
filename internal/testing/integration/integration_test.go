@@ -51,7 +51,7 @@ func TestEndToEndProcessing(t *testing.T) {
 			"LICENSE":    testhelper.MITLicense,
 		}
 	)
-	testModules := []*proxy.TestModule{
+	testModules := []*proxy.Module{
 		{
 			ModulePath: modulePath,
 			Version:    version,
@@ -176,7 +176,7 @@ func doGet(url string) ([]byte, error) {
 	return body, nil
 }
 
-func setupProxyAndIndex(t *testing.T, modules ...*proxy.TestModule) (*proxy.Client, *index.Client, func()) {
+func setupProxyAndIndex(t *testing.T, modules ...*proxy.Module) (*proxy.Client, *index.Client, func()) {
 	t.Helper()
 	proxyClient, teardownProxy := proxy.SetupTestProxy(t, modules)
 	var indexVersions []*internal.IndexVersion

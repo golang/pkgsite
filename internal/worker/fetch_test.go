@@ -31,7 +31,7 @@ import (
 
 var sourceTimeout = 1 * time.Second
 
-var buildConstraintsMod = &proxy.TestModule{
+var buildConstraintsMod = &proxy.Module{
 	ModulePath: "build.constraints/module",
 	Files: map[string]string{
 		"LICENSE": testhelper.BSD0License,
@@ -61,7 +61,7 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 		version    = "v1.0.0"
 	)
 
-	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.Module{
 		{
 			ModulePath: modulePath,
 			Version:    version,
@@ -125,7 +125,7 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	teardownProxy()
 
 	// Take down the module, by having the proxy serve a 404/410 for it.
-	proxyMux := proxy.TestProxy([]*proxy.TestModule{}) // serve no versions, not even the defaults.
+	proxyMux := proxy.TestProxy([]*proxy.Module{}) // serve no versions, not even the defaults.
 	proxyMux.HandleFunc(fmt.Sprintf("/%s/@v/%s.info", modulePath, version),
 		func(w http.ResponseWriter, r *http.Request) { http.Error(w, "taken down", http.StatusGone) })
 	proxyClient, teardownProxy2 := proxy.TestProxyServer(t, proxyMux)
@@ -220,7 +220,7 @@ func TestFetchAndUpdateState_BadRequestedVersion(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 
-	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{buildConstraintsMod})
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.Module{buildConstraintsMod})
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)
 
@@ -254,7 +254,7 @@ func TestFetchAndUpdateState_Incomplete(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 
-	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{buildConstraintsMod})
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.Module{buildConstraintsMod})
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)
 
@@ -323,7 +323,7 @@ func TestFetchAndUpdateState_Mismatch(t *testing.T) {
 		version    = "v1.0.0"
 		goModPath  = "other"
 	)
-	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.Module{
 		{
 			ModulePath: modulePath,
 			Version:    version,
@@ -379,7 +379,7 @@ func TestFetchAndUpdateState_DeleteOlder(t *testing.T) {
 		olderVersion    = "v0.9.0"
 	)
 
-	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.Module{
 		{
 			// mismatched version; will cause deletion
 			ModulePath: modulePath,
@@ -439,7 +439,7 @@ func TestSkipIncompletePackage(t *testing.T) {
 		modulePath = "github.com/my/module"
 		version    = "v1.0.0"
 	)
-	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.Module{
 		{
 			ModulePath: modulePath,
 			Version:    version,
@@ -507,7 +507,7 @@ func TestTrimLargeCode(t *testing.T) {
 		modulePath = "github.com/my/module"
 		version    = "v1.0.0"
 	)
-	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.Module{
 		{
 			ModulePath: modulePath,
 			Version:    version,
@@ -544,7 +544,7 @@ func TestFetch_V1Path(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 	defer postgres.ResetTestDB(testDB, t)
-	proxyClient, tearDown := proxy.SetupTestProxy(t, []*proxy.TestModule{
+	proxyClient, tearDown := proxy.SetupTestProxy(t, []*proxy.Module{
 		{
 			ModulePath: "my.mod/foo",
 			Version:    "v1.0.0",
@@ -597,7 +597,7 @@ func TestReFetch(t *testing.T) {
 
 	// First fetch and insert a version containing package foo, and verify that
 	// foo can be retrieved.
-	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.Module{
 		{
 			ModulePath: modulePath,
 			Version:    version,
@@ -615,7 +615,7 @@ func TestReFetch(t *testing.T) {
 	}
 
 	// Now re-fetch and verify that contents were overwritten.
-	proxyClient, teardownProxy = proxy.SetupTestProxy(t, []*proxy.TestModule{
+	proxyClient, teardownProxy = proxy.SetupTestProxy(t, []*proxy.Module{
 		{
 			ModulePath: modulePath,
 			Version:    version,
@@ -664,7 +664,7 @@ func TestReFetch(t *testing.T) {
 	}
 
 	// Now re-fetch and verify that contents were overwritten.
-	proxyClient, teardownProxy = proxy.SetupTestProxy(t, []*proxy.TestModule{
+	proxyClient, teardownProxy = proxy.SetupTestProxy(t, []*proxy.Module{
 		{
 			ModulePath: modulePath,
 			Version:    version,
@@ -688,7 +688,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 	stdlib.UseTestData = true
 	defer func() { stdlib.UseTestData = false }()
 
-	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.TestModule{
+	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.Module{
 		buildConstraintsMod,
 		{
 			ModulePath: "github.com/my/module",

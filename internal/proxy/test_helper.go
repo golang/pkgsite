@@ -18,15 +18,15 @@ import (
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
-// TestModule represents a module version used to generate testdata.
-type TestModule struct {
+// Module represents a module version used to generate testdata.
+type Module struct {
 	ModulePath string
 	Version    string
 	Files      map[string]string
 	zip        []byte
 }
 
-func goMod(m *TestModule) string {
+func goMod(m *Module) string {
 	if m.Files == nil {
 		return defaultGoMod(m.ModulePath)
 	}
@@ -42,9 +42,9 @@ func goMod(m *TestModule) string {
 //
 // It returns a function for tearing down the proxy after the test is completed
 // and a Client for interacting with the test proxy.
-func SetupTestProxy(t *testing.T, modules []*TestModule) (*Client, func()) {
+func SetupTestProxy(t *testing.T, modules []*Module) (*Client, func()) {
 	t.Helper()
-	var cleaned []*TestModule
+	var cleaned []*Module
 	for _, m := range modules {
 		cleaned = append(cleaned, cleanTestModule(t, m))
 	}
@@ -66,10 +66,10 @@ func TestProxyServer(t *testing.T, proxyMux *http.ServeMux) (*Client, func()) {
 
 // TestProxy implements a fake proxy, hosting the given modules. If modules
 // is nil, it serves the modules in the testdata directory.
-func TestProxy(modules []*TestModule) *http.ServeMux {
+func TestProxy(modules []*Module) *http.ServeMux {
 	// Group different modules of a module together, so that we can get
 	// the latest modules and create the list endpoint.
-	byModule := make(map[string][]*TestModule)
+	byModule := make(map[string][]*Module)
 	for _, m := range modules {
 		byModule[m.ModulePath] = append(byModule[m.ModulePath], m)
 	}
@@ -84,10 +84,10 @@ func TestProxy(modules []*TestModule) *http.ServeMux {
 				http.ServeContent(w, r, path, time.Now(), content)
 			})
 		}
-		latest := func(modVersions []*TestModule) string {
+		latest := func(modVersions []*Module) string {
 			return modVersions[len(modVersions)-1].Version
 		}
-		master := func(modVersions []*TestModule) string {
+		master := func(modVersions []*Module) string {
 			// TODO(https://golang.org/issue/39985): master should return the
 			// most recently published version, which is not necessarily the
 			// latest version according to semver.
@@ -111,7 +111,7 @@ func defaultInfo(version string) string {
 	return fmt.Sprintf("{\n\t\"Version\": %q,\n\t\"Time\": %q\n}", version, versionTime)
 }
 
-func versionList(modVersions []*TestModule) string {
+func versionList(modVersions []*Module) string {
 	var vList []string
 	for _, v := range modVersions {
 		vList = append(vList, v.Version)
@@ -124,7 +124,7 @@ func defaultGoMod(modulePath string) string {
 	return fmt.Sprintf("module %s\n\ngo 1.12", modulePath)
 }
 
-func cleanTestModule(t *testing.T, m *TestModule) *TestModule {
+func cleanTestModule(t *testing.T, m *Module) *Module {
 	t.Helper()
 	if m.Version == "" {
 		m.Version = "v1.0.0"

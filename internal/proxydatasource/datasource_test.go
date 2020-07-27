@@ -30,7 +30,7 @@ func setup(t *testing.T) (context.Context, *DataSource, func()) {
 		"LICENSE":    testhelper.MITLicense,
 		"baz/baz.go": "//Package baz provides a helpful constant.\npackage baz\nimport \"net/http\"\nconst OK = http.StatusOK",
 	}
-	testModules := []*proxy.TestModule{
+	testModules := []*proxy.Module{
 		{
 			ModulePath: "foo.com/bar",
 			Version:    "v1.1.0",
@@ -172,7 +172,7 @@ func TestDataSource_GetModuleInfo(t *testing.T) {
 
 func TestDataSource_GetLicenses(t *testing.T) {
 	t.Helper()
-	testModules := []*proxy.TestModule{
+	testModules := []*proxy.Module{
 		{
 			ModulePath: "foo.com/bar",
 			Version:    "v1.1.0",
