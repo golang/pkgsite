@@ -214,6 +214,26 @@ func TestModuleInfo(t *testing.T) {
 			"https://gitee.com/Billcoding/gotypes/raw/v0.1.0/type.go",
 		},
 		{
+			"sourcehut",
+			"gioui.org", "v0.0.0-20200726090130-3b95e2918359", "op/op.go",
+
+			"https://git.sr.ht/~eliasnaur/gio",
+			"https://git.sr.ht/~eliasnaur/gio/tree/3b95e2918359",
+			"https://git.sr.ht/~eliasnaur/gio/tree/3b95e2918359/op/op.go",
+			"https://git.sr.ht/~eliasnaur/gio/tree/3b95e2918359/op/op.go#L1",
+			"https://git.sr.ht/~eliasnaur/gio/blob/3b95e2918359/op/op.go",
+		},
+		{
+			"sourcehut nested",
+			"gioui.org/app", "v0.0.0-20200726090130-3b95e2918359", "app.go",
+
+			"https://git.sr.ht/~eliasnaur/gio",
+			"https://git.sr.ht/~eliasnaur/gio/tree/3b95e2918359/app",
+			"https://git.sr.ht/~eliasnaur/gio/tree/3b95e2918359/app/app.go",
+			"https://git.sr.ht/~eliasnaur/gio/tree/3b95e2918359/app/app.go#L1",
+			"https://git.sr.ht/~eliasnaur/gio/blob/3b95e2918359/app/app.go",
+		},
+		{
 			"v2 as a branch",
 			"github.com/jrick/wsrpc/v2", "v2.1.1", "rpc.go",
 
