@@ -69,6 +69,9 @@ var (
 		Description: "Frontend fetch request count",
 		TagKeys:     []tag.Key{keyFetchStatus},
 	}
+	// statusNotFoundInVersionMap indicates that a row does not exist in
+	// version_map for the module_path and requested_version.
+	statusNotFoundInVersionMap = 470
 )
 
 // serveFetch checks if a requested path and version exists in the database.
@@ -185,7 +188,7 @@ func (s *Server) checkPossibleModulePaths(ctx context.Context, db *postgres.DB,
 			// have already attempted to fetch it in the past. If so, just
 			// return the result from that fetch process.
 			fr := checkForPath(ctx, db, fullPath, modulePath, requestedVersion)
-			if !shouldQueue || fr.status != http.StatusNoContent {
+			if !shouldQueue || fr.status != statusNotFoundInVersionMap {
 				results[i] = fr
 				return
 			}
@@ -283,7 +286,7 @@ func pollForPath(ctx context.Context, db *postgres.DB, pollEvery time.Duration,
 			ctx2, cancel := context.WithTimeout(ctx, pollEvery)
 			defer cancel()
 			fr = checkForPath(ctx2, db, fullPath, modulePath, requestedVersion)
-			if fr.status != http.StatusNoContent {
+			if fr.status != statusNotFoundInVersionMap {
 				return fr
 			}
 		}
@@ -318,7 +321,7 @@ func checkForPath(ctx context.Context, db *postgres.DB, fullPath, modulePath, re
 		// If an error is returned, there are two possibilities:
 		// (1) A row for this modulePath and version does not exist.
 		// This means that the fetch request is not done yet, so return
-		// http.StatusNoContent so the fetchHandler will call checkForPath
+		// statusNotFoundInVersionMap so the fetchHandler will call checkForPath
 		// again in a few seconds.
 		// (2) Something went wrong, so return that error.
 		fr = &fetchResult{
@@ -327,7 +330,7 @@ func checkForPath(ctx context.Context, db *postgres.DB, fullPath, modulePath, re
 			err:        err,
 		}
 		if errors.Is(err, derrors.NotFound) {
-			fr.status = http.StatusNoContent
+			fr.status = statusNotFoundInVersionMap
 		}
 		return fr
 	}
@@ -353,11 +356,11 @@ func checkForPath(ctx context.Context, db *postgres.DB, fullPath, modulePath, re
 		return fr
 	default:
 		// The module was marked for reprocessing by the worker.
-		// Return http.StatusNoContent here, so that the tasks gets enqueued
+		// Return statusNotFoundInVersionMap here, so that the tasks gets enqueued
 		// to frontend tasks, and we don't return a result to the user until
 		// that is complete.
 		if fr.status >= derrors.ToStatus(derrors.ReprocessStatusOK) {
-			fr.status = http.StatusNoContent
+			fr.status = statusNotFoundInVersionMap
 		}
 		// All remaining non-200 statuses will be in the 40x range.
 		// In that case, just return a not found error.
