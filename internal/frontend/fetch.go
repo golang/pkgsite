@@ -130,7 +130,7 @@ func (s *Server) fetchAndPoll(ctx context.Context, ds internal.DataSource, modul
 	defer func() {
 		log.Infof(ctx, "fetchAndPoll(ctx, ds, q, %q, %q, %q): status=%d, responseText=%q",
 			modulePath, fullPath, requestedVersion, status, responseText)
-		recordFrontendFetchMetric(status, requestedVersion, time.Since(start))
+		recordFrontendFetchMetric(ctx, status, requestedVersion, time.Since(start))
 	}()
 
 	if !isSupportedVersion(ctx, fullPath, requestedVersion) ||
@@ -504,7 +504,7 @@ func isActiveFrontendFetch(ctx context.Context) bool {
 		experiment.IsActive(ctx, internal.ExperimentUsePathInfo)
 }
 
-func recordFrontendFetchMetric(status int, requestedVersion string, latency time.Duration) {
+func recordFrontendFetchMetric(ctx context.Context, status int, requestedVersion string, latency time.Duration) {
 	l := float64(latency) / float64(time.Millisecond)
 
 	// Tag versions based on latest, master and semver.
@@ -512,7 +512,7 @@ func recordFrontendFetchMetric(status int, requestedVersion string, latency time
 	if semver.IsValid(v) {
 		v = "semver"
 	}
-	stats.RecordWithTags(context.Background(), []tag.Mutator{
+	stats.RecordWithTags(ctx, []tag.Mutator{
 		tag.Upsert(keyFetchStatus, strconv.Itoa(status)),
 		tag.Upsert(keyFetchVersion, v),
 	}, frontendFetchLatency.M(l))
