@@ -425,33 +425,34 @@ func removeVersionSuffix(s string) string {
 // URLs. Each regexp must match a prefix of the target string, and must have a
 // group named "repo".
 var patterns = []struct {
-	re        *regexp.Regexp
+	pattern   string // uncompiled regexp
 	templates urlTemplates
+	re        *regexp.Regexp
 }{
 	{
-		regexp.MustCompile(`^(?P<repo>github\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)`),
-		githubURLTemplates,
+		pattern:   `^(?P<repo>github\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)`,
+		templates: githubURLTemplates,
 	},
 	{
-		regexp.MustCompile(`^(?P<repo>bitbucket\.org/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)`),
-		bitbucketURLTemplates,
+		pattern:   `^(?P<repo>bitbucket\.org/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)`,
+		templates: bitbucketURLTemplates,
 	},
 	{
-		regexp.MustCompile(`^(?P<repo>gitlab\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)`),
-		githubURLTemplates,
+		pattern:   `^(?P<repo>gitlab\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)`,
+		templates: githubURLTemplates,
 	},
 	{
 		// Assume that any site beginning "gitlab." works like gitlab.com.
-		regexp.MustCompile(`^(?P<repo>gitlab\.[a-z0-9A-Z.-]+/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`),
-		githubURLTemplates,
+		pattern:   `^(?P<repo>gitlab\.[a-z0-9A-Z.-]+/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`,
+		templates: githubURLTemplates,
 	},
 	{
-		regexp.MustCompile(`^(?P<repo>gitee\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`),
-		githubURLTemplates,
+		pattern:   `^(?P<repo>gitee\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`,
+		templates: githubURLTemplates,
 	},
 	{
-		regexp.MustCompile(`^(?P<repo>git\.sr\.ht/~[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)`),
-		urlTemplates{
+		pattern: `^(?P<repo>git\.sr\.ht/~[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)`,
+		templates: urlTemplates{
 			Directory: "{repo}/tree/{commit}/{dir}",
 			File:      "{repo}/tree/{commit}/{file}",
 			Line:      "{repo}/tree/{commit}/{file}#L{line}",
@@ -462,8 +463,8 @@ var patterns = []struct {
 	// a ".git" repo suffix in an import path. If matching a repo URL from a meta tag,
 	// there is no ".git".
 	{
-		regexp.MustCompile(`^(?P<repo>[^.]+\.googlesource\.com/[^.]+)(\.git|$)`),
-		urlTemplates{
+		pattern: `^(?P<repo>[^.]+\.googlesource\.com/[^.]+)(\.git|$)`,
+		templates: urlTemplates{
 			Directory: "{repo}/+/{commit}/{dir}",
 			File:      "{repo}/+/{commit}/{file}",
 			Line:      "{repo}/+/{commit}/{file}#{line}",
@@ -471,30 +472,32 @@ var patterns = []struct {
 		},
 	},
 	{
-		regexp.MustCompile(`^(?P<repo>git\.apache\.org/[^.]+)(\.git|$)`),
-		githubURLTemplates,
+		pattern:   `^(?P<repo>git\.apache\.org/[^.]+)(\.git|$)`,
+		templates: githubURLTemplates,
 	},
 	// General syntax for the go command. We can extract the repo and directory, but
 	// we don't know the URL templates.
 	// Must be last in this list.
 	{
-		regexp.MustCompile(`(?P<repo>([a-z0-9.\-]+\.)+[a-z0-9.\-]+(:[0-9]+)?(/~?[A-Za-z0-9_.\-]+)+?)\.(bzr|fossil|git|hg|svn)`),
-		urlTemplates{},
+		pattern:   `(?P<repo>([a-z0-9.\-]+\.)+[a-z0-9.\-]+(:[0-9]+)?(/~?[A-Za-z0-9_.\-]+)+?)\.(bzr|fossil|git|hg|svn)`,
+		templates: urlTemplates{},
 	},
 }
 
 func init() {
-	for _, p := range patterns {
+	for i := range patterns {
+		re := regexp.MustCompile(patterns[i].pattern)
 		found := false
-		for _, n := range p.re.SubexpNames() {
+		for _, n := range re.SubexpNames() {
 			if n == "repo" {
 				found = true
 				break
 			}
 		}
 		if !found {
-			panic(fmt.Sprintf("pattern %s missing <repo> group", p.re))
+			panic(fmt.Sprintf("pattern %s missing <repo> group", patterns[i].pattern))
 		}
+		patterns[i].re = re
 	}
 }
 
