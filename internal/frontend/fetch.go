@@ -187,7 +187,7 @@ func (s *Server) checkPossibleModulePaths(ctx context.Context, db *postgres.DB,
 			// Before enqueuing the module version to be fetched, check if we
 			// have already attempted to fetch it in the past. If so, just
 			// return the result from that fetch process.
-			fr := checkForPath(ctx, db, fullPath, modulePath, requestedVersion)
+			fr := checkForPath(ctx, db, fullPath, modulePath, requestedVersion, s.taskIDChangeInterval)
 			if !shouldQueue || fr.status != statusNotFoundInVersionMap {
 				results[i] = fr
 				return
@@ -200,7 +200,7 @@ func (s *Server) checkPossibleModulePaths(ctx context.Context, db *postgres.DB,
 			}
 			// After the fetch request is enqueued, poll the database until it has been
 			// inserted or the request times out.
-			fr = pollForPath(ctx, db, pollEvery, fullPath, modulePath, requestedVersion)
+			fr = pollForPath(ctx, db, pollEvery, fullPath, modulePath, requestedVersion, s.taskIDChangeInterval)
 			logf := log.Infof
 			if fr.status == http.StatusInternalServerError {
 				logf = log.Errorf
@@ -270,7 +270,7 @@ func displayPath(path, version string) string {
 
 // pollForPath polls the database until a row for fullPath is found.
 func pollForPath(ctx context.Context, db *postgres.DB, pollEvery time.Duration,
-	fullPath, modulePath, requestedVersion string) *fetchResult {
+	fullPath, modulePath, requestedVersion string, taskIDChangeInterval time.Duration) *fetchResult {
 	fr := &fetchResult{modulePath: modulePath}
 	defer derrors.Wrap(&fr.err, "pollForRedirectURL(%q, %q, %q)", modulePath, fullPath, requestedVersion)
 	ticker := time.NewTicker(pollEvery)
@@ -285,7 +285,7 @@ func pollForPath(ctx context.Context, db *postgres.DB, pollEvery time.Duration,
 		case <-ticker.C:
 			ctx2, cancel := context.WithTimeout(ctx, pollEvery)
 			defer cancel()
-			fr = checkForPath(ctx2, db, fullPath, modulePath, requestedVersion)
+			fr = checkForPath(ctx2, db, fullPath, modulePath, requestedVersion, taskIDChangeInterval)
 			if fr.status != statusNotFoundInVersionMap {
 				return fr
 			}
@@ -299,7 +299,8 @@ func pollForPath(ctx context.Context, db *postgres.DB, pollEvery time.Duration,
 // process that was initiated is not yet complete.  If the row exists version_map
 // but not paths, it means that a module was found at the requestedVersion, but
 // not the fullPath, so errPathDoesNotExistInModule is returned.
-func checkForPath(ctx context.Context, db *postgres.DB, fullPath, modulePath, requestedVersion string) (fr *fetchResult) {
+func checkForPath(ctx context.Context, db *postgres.DB,
+	fullPath, modulePath, requestedVersion string, taskIDChangeInterval time.Duration) (fr *fetchResult) {
 	defer func() {
 		// Based on
 		// https://github.com/lib/pq/issues/577#issuecomment-298341053, it seems
@@ -344,7 +345,26 @@ func checkForPath(ctx context.Context, db *postgres.DB, fullPath, modulePath, re
 		goModPath:  vm.GoModPath,
 	}
 	switch fr.status {
-	case http.StatusNotFound:
+	case http.StatusNotFound,
+		derrors.ToStatus(derrors.DBModuleInsertInvalid),
+		http.StatusInternalServerError:
+		if time.Since(vm.UpdatedAt) > taskIDChangeInterval {
+			// If the duration of taskIDChangeInterval has passed since
+			// a module_path was last inserted into version_map with a failed status,
+			// treat that data as expired.
+			//
+			// It is possible that the module has appeared in the Go Module
+			// Mirror during that time, the failure was transient, or the
+			// error has been fixed but the module version has not yet been
+			// reprocessed.
+			//
+			// Return statusNotFoundInVersionMap here, so that the fetch
+			// request will try to fetch this module version again.
+			// Since the taskIDChangeInterval has passed, it is now possible to
+			// enqueue that module version to the frontend task queue again.
+			fr.status = statusNotFoundInVersionMap
+			return fr
+		}
 		// The version_map indicates that the proxy returned a 404/410.
 		fr.err = errModuleDoesNotExist
 		return fr
