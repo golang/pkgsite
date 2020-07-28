@@ -234,6 +234,46 @@ func TestModuleInfo(t *testing.T) {
 			"https://git.sr.ht/~eliasnaur/gio/blob/3b95e2918359/app/app.go",
 		},
 		{
+			"git.fd.io tag",
+			"git.fd.io/govpp", "v0.3.5", "doc.go",
+
+			"https://git.fd.io/govpp",
+			"https://git.fd.io/govpp/tree/?h=v0.3.5",
+			"https://git.fd.io/govpp/tree/doc.go?h=v0.3.5",
+			"https://git.fd.io/govpp/tree/doc.go?h=v0.3.5#n1",
+			"https://git.fd.io/govpp/plain/doc.go?h=v0.3.5",
+		},
+		{
+			"git.fd.io hash",
+			"git.fd.io/govpp", "v0.0.0-20200726090130-f04939006063", "doc.go",
+
+			"https://git.fd.io/govpp",
+			"https://git.fd.io/govpp/tree/?id=f04939006063",
+			"https://git.fd.io/govpp/tree/doc.go?id=f04939006063",
+			"https://git.fd.io/govpp/tree/doc.go?id=f04939006063#n1",
+			"https://git.fd.io/govpp/plain/doc.go?id=f04939006063",
+		},
+		{
+			"git.pirl.io",
+			"git.pirl.io/community/pirl", "1.8.27-damocles", "rpc/doc.go",
+
+			"https://git.pirl.io/community/pirl",
+			"https://git.pirl.io/community/pirl/-/tree/1.8.27-damocles",
+			"https://git.pirl.io/community/pirl/-/blob/1.8.27-damocles/rpc/doc.go",
+			"https://git.pirl.io/community/pirl/-/blob/1.8.27-damocles/rpc/doc.go#L1",
+			"https://git.pirl.io/community/pirl/-/raw/1.8.27-damocles/rpc/doc.go",
+		},
+		{
+			"gitea",
+			"gitea.com/azhai/xorm", "v1.0.3", "log/logger.go",
+
+			"https://gitea.com/azhai/xorm",
+			"https://gitea.com/azhai/xorm/src/tag/v1.0.3",
+			"https://gitea.com/azhai/xorm/src/tag/v1.0.3/log/logger.go",
+			"https://gitea.com/azhai/xorm/src/tag/v1.0.3/log/logger.go#L1",
+			"https://gitea.com/azhai/xorm/raw/tag/v1.0.3/log/logger.go",
+		},
+		{
 			"v2 as a branch",
 			"github.com/jrick/wsrpc/v2", "v2.1.1", "rpc.go",
 
@@ -358,7 +398,7 @@ func TestMatchStatic(t *testing.T) {
 		{"mercurial.com/repo.hg/dir", "mercurial.com/repo", "dir"},
 	} {
 		t.Run(test.in, func(t *testing.T) {
-			gotRepo, gotSuffix, _, err := matchStatic(test.in)
+			gotRepo, gotSuffix, _, _, err := matchStatic(test.in)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -625,49 +665,59 @@ func TestAdjustVersionedModuleDirectory(t *testing.T) {
 func TestCommitFromVersion(t *testing.T) {
 	for _, test := range []struct {
 		version, dir string
-		want         string
+		wantCommit   string
+		wantIsHash   bool
 	}{
 		{
 			"v1.2.3", "",
-			"v1.2.3",
+			"v1.2.3", false,
 		},
 		{
 			"v1.2.3", "foo",
-			"foo/v1.2.3",
+			"foo/v1.2.3", false,
 		},
 		{
 			"v1.2.3", "foo/v1",
 			"foo/v1/v1.2.3", // don't remove "/vN" if N = 1
+			false,
 		},
 		{
 			"v1.2.3", "v1", // ditto
-			"v1/v1.2.3",
+			"v1/v1.2.3", false,
 		},
 		{
 			"v3.1.0", "foo/v3",
 			"foo/v3.1.0", // do remove "/v2" and higher
+			false,
 		},
 		{
 			"v3.1.0", "v3",
 			"v3.1.0", // ditto
+			false,
 		},
 		{
 			"v6.1.1-0.20190615154606-3a9541ec9974", "",
-			"3a9541ec9974",
+			"3a9541ec9974", true,
 		},
 		{
 			"v6.1.1-0.20190615154606-3a9541ec9974", "foo",
-			"3a9541ec9974",
+			"3a9541ec9974", true,
 		},
 	} {
 		t.Run(fmt.Sprintf("%s,%s", test.version, test.dir), func(t *testing.T) {
-			if got := commitFromVersion(test.version, test.dir); got != test.want {
-				t.Errorf("got %s, want %s", got, test.want)
+			check := func(v string) {
+				gotCommit, gotIsHash := commitFromVersion(v, test.dir)
+				if gotCommit != test.wantCommit {
+					t.Errorf("%s commit: got %s, want %s", v, gotCommit, test.wantCommit)
+				}
+				if gotIsHash != test.wantIsHash {
+					t.Errorf("%s isHash: got %t, want %t", v, gotIsHash, test.wantIsHash)
+				}
 			}
+
+			check(test.version)
 			// Adding "+incompatible" shouldn't make a difference.
-			if got := commitFromVersion(test.version+"+incompatible", test.dir); got != test.want {
-				t.Errorf("+incompatible: got %s, want %s", got, test.want)
-			}
+			check(test.version + "+incompatible")
 		})
 	}
 }

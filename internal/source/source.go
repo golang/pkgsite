@@ -250,17 +250,21 @@ func ModuleInfo(ctx context.Context, client *Client, modulePath, version string)
 			templates: githubURLTemplates,
 		}, nil
 	}
-	repo, relativeModulePath, templates, err := matchStatic(modulePath)
+	repo, relativeModulePath, templates, transformCommit, err := matchStatic(modulePath)
 	if err != nil {
 		info, err = moduleInfoDynamic(ctx, client, modulePath, version)
 		if err != nil {
 			return nil, err
 		}
 	} else {
+		commit, isHash := commitFromVersion(version, relativeModulePath)
+		if transformCommit != nil {
+			commit = transformCommit(commit, isHash)
+		}
 		info = &Info{
 			repoURL:   "https://" + repo,
 			moduleDir: relativeModulePath,
-			commit:    commitFromVersion(version, relativeModulePath),
+			commit:    commit,
 			templates: templates,
 		}
 	}
@@ -292,7 +296,7 @@ func ModuleInfo(ctx context.Context, client *Client, modulePath, version string)
 //   example.com/a/b.git/c
 // then repo="example.com/a/b" and relativeModulePath="c"; the ".git" is omitted, since it is neither
 // part of the repo nor part of the relative path to the module within the repo.
-func matchStatic(moduleOrRepoPath string) (repo, relativeModulePath string, _ urlTemplates, _ error) {
+func matchStatic(moduleOrRepoPath string) (repo, relativeModulePath string, _ urlTemplates, transformCommit func(string, bool) string, _ error) {
 	for _, pat := range patterns {
 		matches := pat.re.FindStringSubmatch(moduleOrRepoPath)
 		if matches == nil {
@@ -314,9 +318,9 @@ func matchStatic(moduleOrRepoPath string) (repo, relativeModulePath string, _ ur
 		}
 		relativeModulePath = strings.TrimPrefix(moduleOrRepoPath, matches[0])
 		relativeModulePath = strings.TrimPrefix(relativeModulePath, "/")
-		return repo, relativeModulePath, pat.templates, nil
+		return repo, relativeModulePath, pat.templates, pat.transformCommit, nil
 	}
-	return "", "", urlTemplates{}, derrors.NotFound
+	return "", "", urlTemplates{}, nil, derrors.NotFound
 }
 
 // moduleInfoDynamic uses the go-import and go-source meta tags to construct an Info.
@@ -348,11 +352,11 @@ func moduleInfoDynamic(ctx context.Context, client *Client, modulePath, version 
 	//    that that template begins with a known pattern--a GitHub repo, ignore the rest of it, and use the
 	//    GitHub URL templates that we know.
 	repoURL := sourceMeta.repoURL
-	_, _, templates, _ := matchStatic(removeHTTPScheme(repoURL))
+	_, _, templates, transformCommit, _ := matchStatic(removeHTTPScheme(repoURL))
 	// If err != nil, templates will be the zero value, so we can ignore it (same just below).
 	if templates == (urlTemplates{}) {
 		var repo string
-		repo, _, templates, _ = matchStatic(removeHTTPScheme(sourceMeta.dirTemplate))
+		repo, _, templates, transformCommit, _ = matchStatic(removeHTTPScheme(sourceMeta.dirTemplate))
 		if templates == (urlTemplates{}) {
 			log.Infof(ctx, "no templates for repo URL %q from meta tag: err=%v", sourceMeta.repoURL, err)
 		} else {
@@ -361,10 +365,14 @@ func moduleInfoDynamic(ctx context.Context, client *Client, modulePath, version 
 		}
 	}
 	dir := strings.TrimPrefix(strings.TrimPrefix(modulePath, sourceMeta.repoRootPrefix), "/")
+	commit, isHash := commitFromVersion(version, dir)
+	if transformCommit != nil {
+		commit = transformCommit(commit, isHash)
+	}
 	return &Info{
 		repoURL:   strings.TrimSuffix(repoURL, "/"),
 		moduleDir: dir,
-		commit:    commitFromVersion(version, dir),
+		commit:    commit,
 		templates: templates,
 	}, nil
 }
@@ -425,6 +433,8 @@ var patterns = []struct {
 	pattern   string // uncompiled regexp
 	templates urlTemplates
 	re        *regexp.Regexp
+	// transformCommit may alter the commit before substitution
+	transformCommit func(commit string, isHash bool) string
 }{
 	{
 		pattern:   `^(?P<repo>github\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)`,
@@ -456,6 +466,51 @@ var patterns = []struct {
 			Raw:       "{repo}/blob/{commit}/{file}",
 		},
 	},
+	{
+		pattern: `^(?P<repo>git\.fd\.io/[a-z0-9A-Z_.\-]+)`,
+		templates: urlTemplates{
+			Directory: "{repo}/tree/{dir}?{commit}",
+			File:      "{repo}/tree/{file}?{commit}",
+			Line:      "{repo}/tree/{file}?{commit}#n{line}",
+			Raw:       "{repo}/plain/{file}?{commit}",
+		},
+		transformCommit: func(commit string, isHash bool) string {
+			// hashes use "?id=", tags use "?h="
+			p := "h"
+			if isHash {
+				p = "id"
+			}
+			return fmt.Sprintf("%s=%s", p, commit)
+		},
+	},
+	{
+		pattern: `^(?P<repo>git\.pirl\.io/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)`,
+		templates: urlTemplates{
+			Directory: "{repo}/-/tree/{commit}/{dir}",
+			File:      "{repo}/-/blob/{commit}/{file}",
+			Line:      "{repo}/-/blob/{commit}/{file}#L1",
+			Raw:       "{repo}/-/raw/{commit}/{file}",
+		},
+	},
+	{
+		pattern: `^(?P<repo>gitea\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`,
+		templates: urlTemplates{
+			Directory: "{repo}/src/{commit}/{dir}",
+			File:      "{repo}/src/{commit}/{file}",
+			Line:      "{repo}/src/{commit}/{file}#L1",
+			Raw:       "{repo}/raw/{commit}/{file}",
+		},
+		transformCommit: func(commit string, isHash bool) string {
+			// Hashes use "commit", tags use "tag".
+			// Short hashes aren't currently supported, but we build the URL
+			// anyway in the hope that someday they will be.
+			if isHash {
+				return "commit/" + commit
+			}
+			return "tag/" + commit
+		},
+	},
+
 	// Patterns that match the general go command pattern, where they must have
 	// a ".git" repo suffix in an import path. If matching a repo URL from a meta tag,
 	// there is no ".git".
@@ -524,22 +579,23 @@ var (
 )
 
 // commitFromVersion returns a string that refers to a commit corresponding to version.
+// It also reports whether the returned value is a commit hash.
 // The string may be a tag, or it may be the hash or similar unique identifier of a commit.
 // The second argument is the module path relative to the repo root.
-func commitFromVersion(vers, relativeModulePath string) string {
+func commitFromVersion(vers, relativeModulePath string) (commit string, isHash bool) {
 	// Commit for the module: either a sha for pseudoversions, or a tag.
 	v := strings.TrimSuffix(vers, "+incompatible")
 	if version.IsPseudo(v) {
 		// Use the commit hash at the end.
-		return v[strings.LastIndex(v, "-")+1:]
+		return v[strings.LastIndex(v, "-")+1:], true
 	} else {
 		// The tags for a nested module begin with the relative module path of the module,
 		// removing a "/vN" suffix if N > 1.
 		prefix := removeVersionSuffix(relativeModulePath)
 		if prefix != "" {
-			return prefix + "/" + v
+			return prefix + "/" + v, false
 		}
-		return v
+		return v, false
 	}
 }
 
