@@ -292,8 +292,6 @@ func ModuleInfo(ctx context.Context, client *Client, modulePath, version string)
 //   example.com/a/b.git/c
 // then repo="example.com/a/b" and relativeModulePath="c"; the ".git" is omitted, since it is neither
 // part of the repo nor part of the relative path to the module within the repo.
-//
-// The repo and relativeModulePath returned by matchStatic have been HTML-escaped.
 func matchStatic(moduleOrRepoPath string) (repo, relativeModulePath string, _ urlTemplates, _ error) {
 	for _, pat := range patterns {
 		matches := pat.re.FindStringSubmatch(moduleOrRepoPath)
@@ -349,7 +347,6 @@ func moduleInfoDynamic(ctx context.Context, client *Client, modulePath, version 
 	//    in the URL templates, like "https://github.com/go-yaml/yaml/tree/v2.2.3{/dir}". We can observe
 	//    that that template begins with a known pattern--a GitHub repo, ignore the rest of it, and use the
 	//    GitHub URL templates that we know.
-	// 3. TODO(golang/go#39559): implement go-source-v2 meta tag
 	repoURL := sourceMeta.repoURL
 	_, _, templates, _ := matchStatic(removeHTTPScheme(repoURL))
 	// If err != nil, templates will be the zero value, so we can ignore it (same just below).
