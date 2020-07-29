@@ -449,7 +449,7 @@ var patterns = []struct {
 		templates: githubURLTemplates,
 	},
 	{
-		// Assume that any site beginning "gitlab." works like gitlab.com.
+		// Assume that any site beginning with "gitlab." works like gitlab.com.
 		pattern:   `^(?P<repo>gitlab\.[a-z0-9A-Z.-]+/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`,
 		templates: githubURLTemplates,
 	},
@@ -498,7 +498,7 @@ var patterns = []struct {
 		transformCommit: giteaTransformCommit,
 	},
 	{
-		// Assume that any site beginning "gitea." works like gitea.com.
+		// Assume that any site beginning with "gitea." works like gitea.com.
 		pattern:         `^(?P<repo>gitea\.[a-z0-9A-Z.-]+/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`,
 		templates:       giteaURLTemplates,
 		transformCommit: giteaTransformCommit,
