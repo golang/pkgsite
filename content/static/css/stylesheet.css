@@ -546,6 +546,17 @@ code {
 .SearchResults-emptyContentMessage {
   text-align: center;
 }
+.Fetch-button {
+  background-color: var(--gray-10);
+  border-radius: 0.5rem;
+  border: 0.0625rem solid var(--gray-8);
+  color: var(--turq-dark);
+  font-size: 1rem;
+  height: 2.5rem;
+  margin: 1rem 0;
+  padding: 0rem 1rem;
+  width: 5rem;
+}
 .Fetch-container {
   align-items: center;
   display: flex;
@@ -562,9 +573,6 @@ code {
     opacity: 0.2;
   }
 }
-.Fetch-loading {
-  display: none;
-}
 .Fetch-dot {
   animation-duration: 1.4s;
   animation-fill-mode: both;
@@ -576,22 +584,14 @@ code {
   height: 0.5rem;
   width: 0.5rem;
 }
+.Fetch-loading {
+  display: none;
+}
 .Fetch-loading:nth-child(2) {
   animation-delay: 0.2s;
 }
 .Fetch-loading:nth-child(3) {
   animation-delay: 0.4s;
-}
-.Fetch-button {
-  background-color: var(--gray-10);
-  border-radius: 0.5rem;
-  border: 0.0625rem solid var(--gray-8);
-  color: var(--turq-dark);
-  font-size: 1rem;
-  height: 2.5rem;
-  margin: 1rem 0;
-  padding: 0rem 1rem;
-  width: 5rem;
 }
 
 .SearchResults {
