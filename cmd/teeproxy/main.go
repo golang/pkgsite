@@ -43,7 +43,7 @@ func main() {
 			log.Fatal(ctx, err)
 		}
 	}
-	var client *http.Client
+	client := &http.Client{}
 	var jsonCreds []byte
 	if *credsFile != "" {
 		jsonCreds, err = ioutil.ReadFile(*credsFile)
@@ -55,13 +55,17 @@ func main() {
 		log.Infof(ctx, "getting secret %q", secretName)
 		s, err := secrets.Get(context.Background(), secretName)
 		if err != nil {
+			log.Infof(ctx, "secret %q not found", secretName)
+		} else {
+			jsonCreds = []byte(s)
+		}
+	}
+
+	if jsonCreds != nil {
+		client, err = auth.NewClient(jsonCreds)
+		if err != nil {
 			log.Fatal(ctx, err)
 		}
-		jsonCreds = []byte(s)
-	}
-	client, err = auth.NewClient(jsonCreds)
-	if err != nil {
-		log.Fatal(ctx, err)
 	}
 
 	views := append(dcensus.ServerViews,
