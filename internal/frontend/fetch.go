@@ -122,12 +122,6 @@ type fetchResult struct {
 	err        error
 }
 
-var statusToResponseText = map[int]string{
-	http.StatusOK:                  "",
-	http.StatusRequestTimeout:      "We're still working on your request - come back in a few minutes!",
-	http.StatusInternalServerError: "Something went wrong. We'll keep working on it - try again in a few minutes!",
-}
-
 func (s *Server) fetchAndPoll(ctx context.Context, ds internal.DataSource, modulePath, fullPath, requestedVersion string) (status int, responseText string) {
 	start := time.Now()
 	defer func() {
@@ -158,7 +152,8 @@ func (s *Server) fetchAndPoll(ctx context.Context, ds internal.DataSource, modul
 	// finished, return an error letting the user to check back later. The
 	// worker will still be processing the modules in the background.
 	if ctx.Err() != nil {
-		return http.StatusRequestTimeout, statusToResponseText[http.StatusRequestTimeout]
+		return http.StatusRequestTimeout,
+			fmt.Sprintf("We're still working on “%s”. Come back in a few minutes!", displayPath(fullPath, requestedVersion))
 	}
 	return fetchRequestStatusAndResponseText(results, fullPath, requestedVersion)
 }
@@ -224,30 +219,35 @@ func (s *Server) checkPossibleModulePaths(ctx context.Context, db *postgres.DB,
 func fetchRequestStatusAndResponseText(results []*fetchResult, fullPath, requestedVersion string) (int, string) {
 	var moduleMatchingPathPrefix string
 	for _, fr := range results {
+		switch fr.status {
 		// Results are in order of longest module path first. Once an
-		// appropriate result is found, return. Otherwise, look at the next path.
-		if fr.status == derrors.ToStatus(derrors.AlternativeModule) {
+		// appropriate result is found, return. Otherwise, look at the next
+		// path.
+		case http.StatusOK:
+			return fr.status, ""
+		case http.StatusInternalServerError:
+			return fr.status, "Oops! Something went wrong."
+		case derrors.ToStatus(derrors.AlternativeModule):
+			// TODO(https://golang.org/issue/40306): Make the canonical module
+			// path a clickable link.
 			return http.StatusSeeOther,
-				// TODO(https://golang.org/issue/40306): Make the canonical module path a clickable link.
-				fmt.Sprintf("“%s” is not a valid path. Were you looking for “%s”?",
+				fmt.Sprintf("“%s” is not a valid package or module. Were you looking for “%s”?",
 					displayPath(fullPath, requestedVersion), fr.goModPath)
 		}
-		if responseText, ok := statusToResponseText[fr.status]; ok {
-			return fr.status, responseText
-		}
+
+		// A module was found for a prefix of the path, but the path did not exist
+		// in that module. Note the longest possible modulePath in this case, and
+		// let the user know that it exists. For example, if the request was for
+		// github.com/hashicorp/vault/@master/api, github.com/hashicorp/vault/api
+		// does not exist at master, but it does in older versions of
+		// github.com/hashicorp/vault.
 		if errors.Is(fr.err, errPathDoesNotExistInModule) && moduleMatchingPathPrefix == "" {
-			// A module was found for a prefix of the path, but the path did
-			// not exist in that module. Note the longest possible modulePath in
-			// this case, and let the user know that it exists. For example, if
-			// the request was for github.com/hashicorp/vault/@master/api,
-			// github.com/hashicorp/vault/api does not exist at master, but it
-			// does in older versions of github.com/hashicorp/vault.
 			moduleMatchingPathPrefix = fr.modulePath
 		}
 	}
 	if moduleMatchingPathPrefix != "" {
+		// TODO(https://golang.org/issue/40306): Make the link clickable.
 		return http.StatusNotFound,
-			// TODO(https://golang.org/issue/40306): Make the link clickable.
 			fmt.Sprintf("Package “%s” could not be found, but you can view module “%s” at https://pkg.go.dev/mod/%s.",
 				displayPath(fullPath, requestedVersion),
 				displayPath(moduleMatchingPathPrefix, requestedVersion),
