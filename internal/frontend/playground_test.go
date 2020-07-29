@@ -5,6 +5,7 @@
 package frontend
 
 import (
+	"flag"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -13,33 +14,44 @@ import (
 	"testing"
 )
 
-const shareID = "arbitraryShareID"
+var playground = flag.Bool("playground", false, "Make a request to https://play.golang.org/")
+
+const testShareID = "arbitraryShareID"
 
 func TestPlaygroundShare(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, "Expected a POST", http.StatusMethodNotAllowed)
-		}
-		_, err := io.WriteString(w, shareID)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}))
-	defer ts.Close()
+	pgURL := playgroundURL
+	if !*playground {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodPost {
+				http.Error(w, "Expected a POST", http.StatusMethodNotAllowed)
+			}
+
+			if _, err := io.WriteString(w, testShareID); err != nil {
+				t.Fatal(err)
+			}
+		}))
+		defer ts.Close()
+		pgURL = ts.URL
+	}
 
 	testCases := []struct {
-		pgURL   string
-		method  string
-		desc    string
-		body    string
-		code    int
+		pgURL  string
+		method string
+		desc   string
+		body   string
+		code   int
+		// shareID is a hash returned by play.golang.org when the body is POSTed to
+		// play.golang.org/share. We expect play.golang.org to always return the
+		// same hash for a given unique body. If the request is made to the mock
+		// server, shareID will be set to testShareID when running the tests below.
 		shareID string
 	}{
 		{
-			pgURL:  ts.URL,
+			pgURL:  pgURL,
 			method: http.MethodPost,
 			desc:   "Share endpoint: for Hello World func",
 			body: `package main
+
 import (
 	"fmt"
 )
@@ -47,20 +59,20 @@ import (
 func main() {
 	fmt.Println("Hello, playground")
 }`,
-			code: http.StatusOK,
+			code:    http.StatusOK,
+			shareID: "BpXrY1MHLkk",
 		},
 		{
-			pgURL:  ts.URL,
-			method: http.MethodGet,
-			desc:   "Share endpoint: Failed GET Request, Accept POST only",
-			body:   "",
-			code:   http.StatusMethodNotAllowed,
+			pgURL:   pgURL,
+			method:  http.MethodGet,
+			desc:    "Share endpoint: Failed GET Request, Accept POST only",
+			code:    http.StatusMethodNotAllowed,
+			shareID: "UCPdVNrl0-P",
 		},
 		{
 			pgURL:  "/*?",
 			method: http.MethodPost,
 			desc:   "Share endpoint: Malformed URL returns internal server error",
-			body:   "",
 			code:   http.StatusInternalServerError,
 		},
 	}
@@ -77,7 +89,6 @@ func main() {
 			makeFetchPlayRequest(w, req, tc.pgURL)
 
 			res := w.Result()
-
 			if got, want := res.StatusCode, tc.code; got != want {
 				t.Errorf("Status Code = %d; want %d", got, want)
 			}
@@ -87,9 +98,12 @@ func main() {
 				if err != nil {
 					t.Fatal(err)
 				}
-
-				if string(body) != shareID {
-					t.Errorf("body = %s; want %s", body, shareID)
+				wantID := tc.shareID
+				if !*playground {
+					wantID = testShareID
+				}
+				if string(body) != wantID {
+					t.Errorf("body = %s; want %s", body, wantID)
 				}
 			}
 		})
