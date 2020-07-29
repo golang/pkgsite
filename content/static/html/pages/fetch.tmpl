@@ -10,7 +10,7 @@
     <div class="Fetch-container">
       <img class="Fetch-gopher" src="/static/img/gopher-airplane.svg" alt="The Go Gopher">
       <h3 class="Fetch-message js-fetchMessage" aria-live="polite" data-path="{{.MessageData}}">
-        Oops! {{.MessageData}} does not exist.
+        Oops! We couldn't find “{{.MessageData}}”.
       </h3>
       <div class="Fetch-loading js-fetchLoading" aria-live="polite">
         <i class="Fetch-dot"></i>
@@ -18,7 +18,7 @@
         <i class="Fetch-dot"></i>
       </div>
       <p class="Fetch-messageSecondary js-fetchMessageSecondary" aria-live="polite">
-        Check that you entered it correctly, or request to fetch it.
+        Check that you entered the URL correctly, or request to fetch “{{.MessageData}}”.
       </p>
       <button class="Fetch-button js-fetchButton" aria-live="polite">Fetch</button>
     </div>
