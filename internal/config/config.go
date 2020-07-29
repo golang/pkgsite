@@ -231,10 +231,11 @@ func Init(ctx context.Context) (_ *Config, err error) {
 	// Build a Config from the execution environment, loading some values
 	// from envvars and others from remote services.
 	cfg := &Config{
-		IndexURL:  GetEnv("GO_MODULE_INDEX_URL", "https://index.golang.org/index"),
-		ProxyURL:  GetEnv("GO_MODULE_PROXY_URL", "https://proxy.golang.org"),
-		Port:      os.Getenv("PORT"),
-		DebugPort: os.Getenv("DEBUG_PORT"),
+		AuthHeader: os.Getenv("GO_DISCOVERY_AUTH_HEADER"),
+		IndexURL:   GetEnv("GO_MODULE_INDEX_URL", "https://index.golang.org/index"),
+		ProxyURL:   GetEnv("GO_MODULE_PROXY_URL", "https://proxy.golang.org"),
+		Port:       os.Getenv("PORT"),
+		DebugPort:  os.Getenv("DEBUG_PORT"),
 		// Resolve AppEngine identifiers
 		ProjectID:          os.Getenv("GOOGLE_CLOUD_PROJECT"),
 		ServiceID:          os.Getenv("GAE_SERVICE"),
