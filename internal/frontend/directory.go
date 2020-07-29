@@ -58,14 +58,14 @@ func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, 
 	}
 	page := &DetailsPage{
 		basePage:       s.newBasePage(r, fmt.Sprintf("%s directory", vdir.Path)),
-		Title:          fmt.Sprintf("directory %s", vdir.Path),
+		Name:           vdir.Path,
 		Settings:       settings,
 		Header:         header,
 		Breadcrumb:     breadcrumbPath(vdir.Path, vdir.ModulePath, linkVersion(vdir.Version, vdir.ModulePath)),
 		Details:        details,
 		CanShowDetails: true,
 		Tabs:           directoryTabSettings,
-		PageType:       "dir",
+		PageType:       pageTypeDirectory,
 	}
 	s.servePage(ctx, w, settings.TemplateName, page)
 	return nil
@@ -97,14 +97,14 @@ func (s *Server) legacyServeDirectoryPage(ctx context.Context, w http.ResponseWr
 	}
 	page := &DetailsPage{
 		basePage:       s.newBasePage(r, fmt.Sprintf("%s directory", dbDir.Path)),
-		Title:          fmt.Sprintf("directory %s", dbDir.Path),
+		Name:           dbDir.Path,
 		Settings:       settings,
 		Header:         header,
 		Breadcrumb:     breadcrumbPath(dbDir.Path, dbDir.ModulePath, linkVersion(dbDir.Version, dbDir.ModulePath)),
 		Details:        details,
 		CanShowDetails: true,
 		Tabs:           directoryTabSettings,
-		PageType:       "dir",
+		PageType:       pageTypeDirectory,
 	}
 	s.servePage(ctx, w, settings.TemplateName, page)
 	return nil

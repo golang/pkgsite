@@ -144,6 +144,14 @@ func HasExactText(want string) Checker {
 	return HasText("^" + regexp.QuoteMeta(want) + "$")
 }
 
+// HasExactTextCollapsed returns a checker that checks whether the given string
+// matches the node's text with its leading, trailing, and redundant whitespace
+// trimmed.
+func HasExactTextCollapsed(want string) Checker {
+	re := strings.Join(strings.Fields(strings.TrimSpace(regexp.QuoteMeta(want))), `\s*`)
+	return HasText(`^\s*` + re + `\s*$`)
+}
+
 // nodeText appends the text of n's subtree to b. This is the concatenated
 // contents of all text nodes, visited depth-first.
 func nodeText(n *html.Node, b *strings.Builder) {

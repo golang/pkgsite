@@ -16,7 +16,13 @@ func Test(t *testing.T) {
 		<html>
 			<div id="ID" class="CLASS1 CLASS2">
 			    BEFORE <a href="HREF">DURING</a> AFTER
-		    </div>
+				</div>
+				<div class="WHITESPACE">lots
+
+				of
+
+				whitespace
+				</div>
 		</html>`
 
 	doc, err := html.Parse(strings.NewReader(data))
@@ -32,7 +38,8 @@ func Test(t *testing.T) {
 			In("div.CLASS1",
 				HasText(`^\s*BEFORE DURING AFTER\s*$`),
 				HasAttr("id", "ID"),
-				HasAttr("class", `\bCLASS2\b`)),
+				HasAttr("class", `\bCLASS2\b`),
+			),
 		},
 		{
 			"a",
@@ -41,6 +48,10 @@ func Test(t *testing.T) {
 		{
 			"NotIn",
 			NotIn("#foo"),
+		},
+		{
+			"Redundant whitespace",
+			In("div.WHITESPACE", HasExactTextCollapsed("lots of whitespace")),
 		},
 	} {
 		got := test.checker(doc)

@@ -27,11 +27,26 @@
     {{end}}
     </div>
     <div class="DetailsHeader-main">
-      <h1 class="DetailsHeader-title">{{.Title}}</h1>
+      <h1 class="DetailsHeader-title">
+        {{if eq .PageType "std"}}
+          Standard library
+        {{else}}
+          {{if eq $pageType "mod"}}
+            Module
+          {{else if eq $pageType "dir"}}
+            Directory
+          {{else if eq $pageType "pkg"}}
+            Package
+          {{else if eq $pageType "cmd"}}
+            Command
+          {{end}}
+          {{.Name}}
+        {{end}}
+      </h1>
       <div class="DetailsHeader-version">{{$header.DisplayVersion}}</div>
 
       {{$ppath := ""}}
-      {{if ne $pageType "mod"}}
+      {{if and (ne $pageType "mod") (ne $pageType "std")}}
          {{$ppath = $header.Path}}
       {{end}}
       <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
@@ -54,7 +69,7 @@
           <a href="/license-policy" class="Disclaimer-link"><em>not legal advice</em></a>
         {{end}}
       </span>
-      {{if or (eq $pageType "pkg") (eq $pageType "dir")}}
+      {{if or (eq $pageType "pkg") (eq $pageType "dir") (eq $pageType "cmd")}}
         <span class="DetailsHeader-infoLabelDivider">|</span>
         {{if eq $header.ModulePath "std"}}
           <a data-test-id="DetailsHeader-infoLabelModule" href="{{$header.Module.URL}}">Standard library</a>
@@ -105,7 +120,23 @@
       </a>
       <div class="DetailsNavFixed-moduleInfo">
         <span class="DetailsNavFixed-title">
-          {{.Title}}
+          {{if ne $pageType "std"}}
+            <span class="DetailsNavFixed-titleType">
+              {{if eq $pageType "mod"}}
+                Module
+              {{else if eq $pageType "dir"}}
+                Directory
+              {{else if eq $pageType "pkg"}}
+                Package
+              {{else if eq $pageType "cmd"}}
+                Command
+              {{end}}
+            </span>
+            <span class="DetailsNavFixed-titleName">{{.Name}}</span>
+          {{else}}
+            <span class="DetailsNavFixed-titleType">Standard library</span>
+            <span class="DetailsNavFixed-titleType DetailsNavFixed-titleType--small">StdLib</span>
+          {{end}}
         </span>
         {{with .Breadcrumb}}
           {{if .CopyData}}

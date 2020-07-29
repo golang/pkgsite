@@ -38,7 +38,7 @@ func latestVersion(ctx context.Context, ds internal.DataSource, packagePath, mod
 	defer derrors.Wrap(&err, "latestVersion(ctx, %q, %q)", modulePath, packagePath)
 	if experiment.IsActive(ctx, internal.ExperimentUsePathInfo) {
 		fullPath := packagePath
-		if pageType == "mod" {
+		if pageType == pageTypeModule || pageType == pageTypeStdLib {
 			fullPath = modulePath
 		}
 		modulePath, version, _, err := ds.GetPathInfo(ctx, fullPath, modulePath, internal.LatestVersion)
@@ -50,12 +50,12 @@ func latestVersion(ctx context.Context, ds internal.DataSource, packagePath, mod
 
 	var mi *internal.LegacyModuleInfo
 	switch pageType {
-	case "mod":
+	case pageTypeModule, pageTypeStdLib:
 		mi, err = ds.LegacyGetModuleInfo(ctx, modulePath, internal.LatestVersion)
 		if err != nil {
 			return "", err
 		}
-	case "pkg":
+	case pageTypePackage, pageTypeCommand:
 		pkg, err := ds.LegacyGetPackage(ctx, packagePath, modulePath, internal.LatestVersion)
 		if err != nil {
 			return "", err

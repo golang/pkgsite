@@ -204,7 +204,7 @@ func serverTestCases() []serverTestCase {
 	)
 
 	pkgV100 := &pagecheck.Page{
-		Title:            "package foo",
+		Title:            "Package foo",
 		ModulePath:       sample.ModulePath,
 		Version:          "v1.0.0",
 		Suffix:           "foo",
@@ -227,7 +227,7 @@ func serverTestCases() []serverTestCase {
 	pkgPseudo := &pp
 
 	pkgInc := &pagecheck.Page{
-		Title:            "package inc",
+		Title:            "Package inc",
 		ModulePath:       "github.com/incompatible",
 		Version:          "v1.0.0+incompatible",
 		Suffix:           "dir/inc",
@@ -240,7 +240,7 @@ func serverTestCases() []serverTestCase {
 	}
 
 	pkgNonRedist := &pagecheck.Page{
-		Title:            "package bar",
+		Title:            "Package bar",
 		ModulePath:       "github.com/non_redistributable",
 		Version:          "v1.0.0",
 		Suffix:           "bar",
@@ -251,7 +251,7 @@ func serverTestCases() []serverTestCase {
 		ModuleURL:        "/mod/github.com/non_redistributable",
 	}
 	cmdGo := &pagecheck.Page{
-		Title:            "command go",
+		Title:            "Command go",
 		ModulePath:       "std",
 		Suffix:           "cmd/go",
 		Version:          "go1.13",
@@ -264,7 +264,7 @@ func serverTestCases() []serverTestCase {
 	}
 	mod := &pagecheck.Page{
 		ModulePath:      sample.ModulePath,
-		Title:           "module " + sample.ModulePath,
+		Title:           "Module " + sample.ModulePath,
 		ModuleURL:       "/mod/" + sample.ModulePath,
 		Version:         "v1.0.0",
 		LicenseType:     "MIT",
@@ -280,7 +280,7 @@ func serverTestCases() []serverTestCase {
 
 	mod2 := &pagecheck.Page{
 		ModulePath:       "github.com/pseudo",
-		Title:            "module github.com/pseudo",
+		Title:            "Module github.com/pseudo",
 		ModuleURL:        "/mod/github.com/pseudo",
 		LatestLink:       "/mod/github.com/pseudo@" + pseudoVersion,
 		Version:          pseudoVersion,
@@ -291,7 +291,7 @@ func serverTestCases() []serverTestCase {
 	}
 	dirPseudo := &pagecheck.Page{
 		ModulePath:       "github.com/pseudo",
-		Title:            "directory github.com/pseudo/dir",
+		Title:            "Directory github.com/pseudo/dir",
 		ModuleURL:        "/mod/github.com/pseudo",
 		LatestLink:       "/mod/github.com/pseudo@" + pseudoVersion + "/dir",
 		Suffix:           "dir",
@@ -315,7 +315,7 @@ func serverTestCases() []serverTestCase {
 	}
 
 	netHttp := &pagecheck.Page{
-		Title:           "package http",
+		Title:           "Package http",
 		ModulePath:      "http",
 		Version:         "go1.13",
 		LicenseType:     "MIT",
@@ -326,7 +326,7 @@ func serverTestCases() []serverTestCase {
 	}
 
 	dir := &pagecheck.Page{
-		Title:            "directory " + sample.ModulePath + "/foo/directory",
+		Title:            "Directory " + sample.ModulePath + "/foo/directory",
 		ModulePath:       sample.ModulePath,
 		Version:          "v1.0.0",
 		Suffix:           "foo/directory",
@@ -337,7 +337,7 @@ func serverTestCases() []serverTestCase {
 	}
 
 	dirCmd := &pagecheck.Page{
-		Title:            "directory cmd",
+		Title:            "Directory cmd",
 		ModulePath:       "std",
 		Version:          "go1.13",
 		Suffix:           "cmd",

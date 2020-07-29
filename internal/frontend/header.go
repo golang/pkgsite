@@ -144,15 +144,6 @@ func packageHTMLTitle(pkgPath, pkgName string) string {
 	return effectiveName(pkgPath, pkgName) + " command"
 }
 
-// packageTitle returns the package title as it will
-// appear in the heading at the top of the page.
-func packageTitle(pkgPath, pkgName string) string {
-	if pkgName != "main" {
-		return "package " + pkgName
-	}
-	return "command " + effectiveName(pkgPath, pkgName)
-}
-
 type breadcrumb struct {
 	Links    []link
 	Current  string
@@ -218,15 +209,6 @@ func moduleHTMLTitle(modulePath string) string {
 		return "stdlib"
 	}
 	return modulePath + " module"
-}
-
-// moduleTitle constructs the title that will appear at the top of the module
-// page.
-func moduleTitle(modulePath string) string {
-	if modulePath == stdlib.ModulePath {
-		return "Standard library"
-	}
-	return "module " + modulePath
 }
 
 // elapsedTime takes a date and returns returns human-readable,

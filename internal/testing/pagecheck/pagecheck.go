@@ -42,12 +42,13 @@ type Overview struct {
 }
 
 var (
-	in        = htmlcheck.In
-	inAll     = htmlcheck.InAll
-	text      = htmlcheck.HasText
-	exactText = htmlcheck.HasExactText
-	attr      = htmlcheck.HasAttr
-	href      = htmlcheck.HasHref
+	in                 = htmlcheck.In
+	inAll              = htmlcheck.InAll
+	text               = htmlcheck.HasText
+	exactText          = htmlcheck.HasExactText
+	exactTextCollapsed = htmlcheck.HasExactTextCollapsed
+	attr               = htmlcheck.HasAttr
+	href               = htmlcheck.HasHref
 )
 
 // PackageHeader checks a details page header for a package.
@@ -62,7 +63,7 @@ func PackageHeader(p *Page, versionedURL bool) htmlcheck.Checker {
 	}
 	return in("",
 		in("span.DetailsHeader-breadcrumbCurrent", exactText(curBreadcrumb)),
-		in("h1.DetailsHeader-title", exactText(p.Title)),
+		in("h1.DetailsHeader-title", exactTextCollapsed(p.Title)),
 		in("div.DetailsHeader-version", exactText(fv)),
 		versionBadge(p),
 		licenseInfo(p, packageURLPath(p, versionedURL)),
@@ -82,7 +83,7 @@ func ModuleHeader(p *Page, versionedURL bool) htmlcheck.Checker {
 	}
 	return in("",
 		in("span.DetailsHeader-breadcrumbCurrent", exactText(curBreadcrumb)),
-		in("h1.DetailsHeader-title", exactText(p.Title)),
+		in("h1.DetailsHeader-title", exactTextCollapsed(p.Title)),
 		in("div.DetailsHeader-version", exactText(fv)),
 		versionBadge(p),
 		licenseInfo(p, moduleURLPath(p, versionedURL)),
@@ -97,7 +98,7 @@ func DirectoryHeader(p *Page, versionedURL bool) htmlcheck.Checker {
 	}
 	return in("",
 		in("span.DetailsHeader-breadcrumbCurrent", exactText(path.Base(p.Suffix))),
-		in("h1.DetailsHeader-title", exactText(p.Title)),
+		in("h1.DetailsHeader-title", exactTextCollapsed(p.Title)),
 		in("div.DetailsHeader-version", exactText(fv)),
 		// directory pages don't show a header badge
 		in("div.DetailsHeader-badge", in(".DetailsHeader-badge--unknown")),

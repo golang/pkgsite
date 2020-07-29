@@ -13,6 +13,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 // legacyServeModulePage serves details pages for the module specified by modulePath
@@ -71,16 +72,21 @@ func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *
 			return fmt.Errorf("error fetching page for %q: %v", tab, err)
 		}
 	}
+	pageType := pageTypeModule
+	if mi.ModulePath == stdlib.ModulePath {
+		pageType = pageTypeStdLib
+	}
+
 	page := &DetailsPage{
 		basePage:       s.newBasePage(r, moduleHTMLTitle(mi.ModulePath)),
-		Title:          moduleTitle(mi.ModulePath),
+		Name:           mi.ModulePath,
 		Settings:       settings,
 		Header:         modHeader,
 		Breadcrumb:     breadcrumbPath(modHeader.ModulePath, modHeader.ModulePath, modHeader.LinkVersion),
 		Details:        details,
 		CanShowDetails: canShowDetails,
 		Tabs:           moduleTabSettings,
-		PageType:       "mod",
+		PageType:       pageType,
 	}
 	s.servePage(ctx, w, settings.TemplateName, page)
 	return nil

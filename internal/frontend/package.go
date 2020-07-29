@@ -118,9 +118,18 @@ func (s *Server) legacyServePackagePageWithPackage(w http.ResponseWriter, r *htt
 			return fmt.Errorf("fetching page for %q: %v", tab, err)
 		}
 	}
+
+	var (
+		pageType = pageTypePackage
+		pageName = pkg.Name
+	)
+	if pkg.Name == "main" {
+		pageName = effectiveName(pkg.Path, pkg.Name)
+		pageType = pageTypeCommand
+	}
 	page := &DetailsPage{
 		basePage: s.newBasePage(r, packageHTMLTitle(pkg.Path, pkg.Name)),
-		Title:    packageTitle(pkg.Path, pkg.Name),
+		Name:     pageName,
 		Settings: settings,
 		Header:   pkgHeader,
 		Breadcrumb: breadcrumbPath(pkgHeader.Path, pkgHeader.Module.ModulePath,
@@ -128,7 +137,7 @@ func (s *Server) legacyServePackagePageWithPackage(w http.ResponseWriter, r *htt
 		Details:        details,
 		CanShowDetails: canShowDetails,
 		Tabs:           packageTabSettings,
-		PageType:       "pkg",
+		PageType:       pageType,
 	}
 	s.servePage(r.Context(), w, settings.TemplateName, page)
 	return nil
@@ -194,9 +203,17 @@ func (s *Server) servePackagePage(ctx context.Context,
 			return fmt.Errorf("fetching page for %q: %v", tab, err)
 		}
 	}
+	var (
+		pageType = pageTypePackage
+		pageName = vdir.Package.Name
+	)
+	if pageName == "main" {
+		pageName = effectiveName(vdir.Path, vdir.Package.Name)
+		pageType = pageTypeCommand
+	}
 	page := &DetailsPage{
 		basePage: s.newBasePage(r, packageHTMLTitle(vdir.Path, vdir.Package.Name)),
-		Title:    packageTitle(vdir.Path, vdir.Package.Name),
+		Name:     pageName,
 		Settings: settings,
 		Header:   pkgHeader,
 		Breadcrumb: breadcrumbPath(pkgHeader.Path, pkgHeader.Module.ModulePath,
@@ -204,7 +221,7 @@ func (s *Server) servePackagePage(ctx context.Context,
 		Details:        details,
 		CanShowDetails: canShowDetails,
 		Tabs:           packageTabSettings,
-		PageType:       "pkg",
+		PageType:       pageType,
 	}
 	s.servePage(ctx, w, settings.TemplateName, page)
 	return nil

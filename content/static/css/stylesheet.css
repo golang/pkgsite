@@ -972,6 +972,20 @@ code {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.DetailsNavFixed-titleType {
+  display: none;
+}
+.DetailsNavFixed-titleType--small {
+  display: inline;
+}
+@media only screen and (min-width: 25rem) {
+  .DetailsNavFixed-titleType {
+    display: inline;
+  }
+  .DetailsNavFixed-titleType--small {
+    display: none;
+  }
+}
 .DetailsNavFixed .CopyToClipboardButton {
   top: 0.1875rem;
 }
