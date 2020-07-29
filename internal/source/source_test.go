@@ -274,6 +274,16 @@ func TestModuleInfo(t *testing.T) {
 			"https://gitea.com/azhai/xorm/raw/tag/v1.0.3/log/logger.go",
 		},
 		{
+			"gogs",
+			"gogs.doschain.org/doschain/slog", "v1.0.0", "doc.go",
+
+			"https://gogs.doschain.org/doschain/slog",
+			"https://gogs.doschain.org/doschain/slog/src/v1.0.0",
+			"https://gogs.doschain.org/doschain/slog/src/v1.0.0/doc.go",
+			"https://gogs.doschain.org/doschain/slog/src/v1.0.0/doc.go#L1",
+			"https://gogs.doschain.org/doschain/slog/raw/v1.0.0/doc.go",
+		},
+		{
 			"v2 as a branch",
 			"github.com/jrick/wsrpc/v2", "v2.1.1", "rpc.go",
 

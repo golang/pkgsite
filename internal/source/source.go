@@ -503,7 +503,24 @@ var patterns = []struct {
 		templates:       giteaURLTemplates,
 		transformCommit: giteaTransformCommit,
 	},
-
+	{
+		pattern:         `^(?P<repo>go\.isomorphicgo\.org/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`,
+		templates:       giteaURLTemplates,
+		transformCommit: giteaTransformCommit,
+	},
+	{
+		pattern:         `^(?P<repo>git\.openprivacy\.ca/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`,
+		templates:       giteaURLTemplates,
+		transformCommit: giteaTransformCommit,
+	},
+	{
+		pattern: `^(?P<repo>gogs\.[a-z0-9A-Z.-]+/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`,
+		// Gogs uses the same basic structure as Gitea, but omits the type of
+		// commit ("tag" or "commit"), so we don't need a transformCommit
+		// function. Gogs does not support short hashes, but we create those
+		// URLs anyway. See gogs/gogs#6242.
+		templates: giteaURLTemplates,
+	},
 	// Patterns that match the general go command pattern, where they must have
 	// a ".git" repo suffix in an import path. If matching a repo URL from a meta tag,
 	// there is no ".git".
