@@ -15,7 +15,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
@@ -42,19 +41,14 @@ type VersionInfo struct {
 	Time    time.Time
 }
 
-// New constructs a *Client using the provided rawurl, which is expected to
+// New constructs a *Client using the provided url, which is expected to
 // be an absolute URI that can be directly passed to http.Get.
-func New(rawurl string) (_ *Client, err error) {
-	defer derrors.Wrap(&err, "proxy.New(%q)", rawurl)
-	url, err := url.Parse(rawurl)
-	if err != nil {
-		return nil, fmt.Errorf("url.Parse: %v", err)
-	}
-	if url.Scheme != "https" {
-		return nil, fmt.Errorf("scheme must be https (got %s)", url.Scheme)
-	}
-	cleanURL := strings.TrimRight(rawurl, "/")
-	return &Client{url: cleanURL, httpClient: &http.Client{Transport: &ochttp.Transport{}}}, nil
+func New(u string) (_ *Client, err error) {
+	defer derrors.Wrap(&err, "proxy.New(%q)", u)
+	return &Client{
+		url:        strings.TrimRight(u, "/"),
+		httpClient: &http.Client{Transport: &ochttp.Transport{}},
+	}, nil
 }
 
 // GetInfo makes a request to $GOPROXY/<module>/@v/<requestedVersion>.info and
