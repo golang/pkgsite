@@ -57,13 +57,35 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 
 	ft := fetchAndInsertModule(ctx, modulePath, requestedVersion, proxyClient, sourceClient, db)
 	span.AddAttributes(trace.Int64Attribute("numPackages", int64(len(ft.PackageVersionStates))))
-	dbErr := updateVersionMapAndDeleteModulesWithErrors(ctx, db, ft)
-	if dbErr != nil {
-		log.Error(ctx, dbErr)
-		ft.Error = dbErr
-		ft.Status = http.StatusInternalServerError
+
+	// If there were any errors processing the module then we didn't insert it.
+	// Delete it in case we are reprocessing an existing module.
+	if ft.Status >= 400 {
+		if err := deleteModule(ctx, db, ft); err != nil {
+			log.Error(ctx, err)
+			ft.Error = err
+			ft.Status = http.StatusInternalServerError
+		}
+		// Do not return an error here, because we want to insert into
+		// module_version_states below.
+	}
+	// Regardless of what the status code is, insert the result into
+	// version_map, so that a response can be returned for frontend_fetch.
+	if err := updateVersionMap(ctx, db, ft); err != nil {
+		log.Error(ctx, err)
+		if ft.Status != http.StatusInternalServerError {
+			ft.Error = err
+			ft.Status = http.StatusInternalServerError
+		}
+		// Do not return an error here, because we want to insert into
+		// module_version_states below.
 	}
 	if !semver.IsValid(ft.ResolvedVersion) {
+		// If the requestedVersion was not successfully resolved to a semantic
+		// version, then at this point it will be the same as the
+		// resolvedVersion. This fetch request does not need to be recorded in
+		// module_version_states, since that table is only used to track
+		// modules that have been published to index.golang.org.
 		return ft.Status, ft.Error
 	}
 
@@ -160,11 +182,14 @@ func fetchAndInsertModule(ctx context.Context, modulePath, requestedVersion stri
 	return ft
 }
 
-func updateVersionMapAndDeleteModulesWithErrors(ctx context.Context, db *postgres.DB, ft *fetchTask) (err error) {
-	defer derrors.Wrap(&err, "updateVersionMapAndDeleteModulesWithErrors(%q, %q, %q, %d, %v)",
-		ft.ModulePath, ft.RequestedVersion, ft.ResolvedVersion, ft.Status, ft.Error)
-
-	ctx, span := trace.StartSpan(ctx, "worker.updateFetchResult")
+func updateVersionMap(ctx context.Context, db *postgres.DB, ft *fetchTask) (err error) {
+	start := time.Now()
+	defer func() {
+		ft.timings["worker.updatedVersionMap"] = time.Since(start)
+		derrors.Wrap(&err, "updateVersionMap(%q, %q, %q, %d, %v)",
+			ft.ModulePath, ft.RequestedVersion, ft.ResolvedVersion, ft.Status, ft.Error)
+	}()
+	ctx, span := trace.StartSpan(ctx, "worker.updateVersionMap")
 	defer span.End()
 
 	var errMsg string
@@ -179,31 +204,26 @@ func updateVersionMapAndDeleteModulesWithErrors(ctx context.Context, db *postgre
 		GoModPath:        ft.GoModPath,
 		Error:            errMsg,
 	}
-	start := time.Now()
-	err = db.UpsertVersionMap(ctx, vm)
-	ft.timings["db.UpsertVersionMap"] = time.Since(start)
-	if err != nil {
+	if err := db.UpsertVersionMap(ctx, vm); err != nil {
 		return err
 	}
-	if !semver.IsValid(vm.ResolvedVersion) {
-		// If the requestedVersion was not successfully resolved, at
-		// this point it will be the same as the resolvedVersion.
-		// No additional tables need to be updated.
-		return nil
-	}
+	return nil
+}
 
-	// If there were any errors processing the module then we didn't insert it.
-	// Delete it in case we are reprocessing an existing module.
-	if vm.Status > 400 {
-		log.Infof(ctx, "%s@%s: code=%d, deleting", vm.ModulePath, vm.ResolvedVersion, vm.Status)
-		start = time.Now()
-		err = db.DeleteModule(ctx, vm.ModulePath, vm.ResolvedVersion)
-		ft.timings["db.DeleteModule"] = time.Since(start)
-		if err != nil {
-			return err
-		}
-	}
+func deleteModule(ctx context.Context, db *postgres.DB, ft *fetchTask) (err error) {
+	start := time.Now()
+	defer func() {
+		ft.timings["worker.deleteModule"] = time.Since(start)
+		derrors.Wrap(&err, "deleteModule(%q, %q, %q, %d, %v)",
+			ft.ModulePath, ft.RequestedVersion, ft.ResolvedVersion, ft.Status, ft.Error)
+	}()
+	ctx, span := trace.StartSpan(ctx, "worker.deleteModule")
+	defer span.End()
 
+	log.Infof(ctx, "%s@%s: code=%d, deleting", ft.ModulePath, ft.ResolvedVersion, ft.Status)
+	if err := db.DeleteModule(ctx, ft.ModulePath, ft.ResolvedVersion); err != nil {
+		return err
+	}
 	// If this was an alternative path (ft.Status == 491) and there is an older
 	// version in search_documents, delete it. This is the case where a module's
 	// canonical path was changed by the addition of a go.mod file. For example,
@@ -212,12 +232,9 @@ func updateVersionMapAndDeleteModulesWithErrors(ctx context.Context, db *postgre
 	// path is all lower-case, the old versions should not show up in search. We
 	// still leave their pages in the database so users of those old versions
 	// can still view documentation.
-	if vm.Status == derrors.ToStatus(derrors.AlternativeModule) {
-		log.Infof(ctx, "%s@%s: code=491, deleting older version from search", vm.ModulePath, vm.ResolvedVersion)
-		start = time.Now()
-		err = db.DeleteOlderVersionFromSearchDocuments(ctx, vm.ModulePath, vm.ResolvedVersion)
-		ft.timings["db.DeleteOlderVersionFromSearchDocuments"] = time.Since(start)
-		if err != nil {
+	if ft.Status == derrors.ToStatus(derrors.AlternativeModule) {
+		log.Infof(ctx, "%s@%s: code=491, deleting older version from search", ft.ModulePath, ft.ResolvedVersion)
+		if err := db.DeleteOlderVersionFromSearchDocuments(ctx, ft.ModulePath, ft.ResolvedVersion); err != nil {
 			return err
 		}
 	}

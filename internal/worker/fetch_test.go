@@ -208,9 +208,12 @@ func checkModuleNotFound(t *testing.T, ctx context.Context, modulePath, version 
 	if vs.Status != wantCode {
 		t.Fatalf("testDB.GetModuleVersionState(ctx, %q, %q): status=%v, want %d", modulePath, version, vs.Status, wantCode)
 	}
-	_, err = testDB.GetVersionMap(ctx, modulePath, version)
-	if !errors.Is(err, derrors.NotFound) {
-		t.Fatalf("got %v, want Is(NotFound)", err)
+	vm, err := testDB.GetVersionMap(ctx, modulePath, version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if vm.Status != wantCode {
+		t.Fatalf("testDB.GetVersionMap(ctx, %q, %q): status=%d; want %d", modulePath, version, vm.Status, wantCode)
 	}
 }
 
@@ -350,18 +353,18 @@ func TestFetchAndUpdateState_Mismatch(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	if vs.Status != wantCode {
 		t.Errorf("testDB.GetModuleVersionState(ctx, %q, %q): status=%v, want %d", modulePath, version, vs.Status, wantCode)
 	}
-
 	if vs.GoModPath != goModPath {
 		t.Errorf("testDB.GetModuleVersionState(ctx, %q, %q): goModPath=%q, want %q", modulePath, version, vs.GoModPath, goModPath)
 	}
-
-	_, err = testDB.GetVersionMap(ctx, modulePath, version)
-	if !errors.Is(err, derrors.NotFound) {
-		t.Fatalf("got %v, want Is(NotFound)", err)
+	vm, err := testDB.GetVersionMap(ctx, modulePath, version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if vm.Status != wantCode {
+		t.Fatalf("testDB.GetVersionMap(ctx, %q, %q): status=%d, want %d", modulePath, version, vm.Status, wantCode)
 	}
 }
 
