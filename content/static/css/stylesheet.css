@@ -593,6 +593,9 @@ code {
 .Fetch-loading:nth-child(3) {
   animation-delay: 0.4s;
 }
+.Fetch-message {
+  text-align: center;
+}
 
 .SearchResults {
   margin: 0 auto;
