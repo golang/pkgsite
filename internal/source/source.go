@@ -488,27 +488,20 @@ var patterns = []struct {
 		templates: urlTemplates{
 			Directory: "{repo}/-/tree/{commit}/{dir}",
 			File:      "{repo}/-/blob/{commit}/{file}",
-			Line:      "{repo}/-/blob/{commit}/{file}#L1",
+			Line:      "{repo}/-/blob/{commit}/{file}#L{line}",
 			Raw:       "{repo}/-/raw/{commit}/{file}",
 		},
 	},
 	{
-		pattern: `^(?P<repo>gitea\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`,
-		templates: urlTemplates{
-			Directory: "{repo}/src/{commit}/{dir}",
-			File:      "{repo}/src/{commit}/{file}",
-			Line:      "{repo}/src/{commit}/{file}#L1",
-			Raw:       "{repo}/raw/{commit}/{file}",
-		},
-		transformCommit: func(commit string, isHash bool) string {
-			// Hashes use "commit", tags use "tag".
-			// Short hashes aren't currently supported, but we build the URL
-			// anyway in the hope that someday they will be.
-			if isHash {
-				return "commit/" + commit
-			}
-			return "tag/" + commit
-		},
+		pattern:         `^(?P<repo>gitea\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`,
+		templates:       giteaURLTemplates,
+		transformCommit: giteaTransformCommit,
+	},
+	{
+		// Assume that any site beginning "gitea." works like gitea.com.
+		pattern:         `^(?P<repo>gitea\.[a-z0-9A-Z.-]+/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`,
+		templates:       giteaURLTemplates,
+		transformCommit: giteaTransformCommit,
 	},
 
 	// Patterns that match the general go command pattern, where they must have
@@ -539,6 +532,7 @@ var patterns = []struct {
 func init() {
 	for i := range patterns {
 		re := regexp.MustCompile(patterns[i].pattern)
+		// The pattern regexp must contain a group named "repo".
 		found := false
 		for _, n := range re.SubexpNames() {
 			if n == "repo" {
@@ -551,6 +545,17 @@ func init() {
 		}
 		patterns[i].re = re
 	}
+}
+
+// giteaTransformCommit transforms commits for the Gitea code hosting system.
+func giteaTransformCommit(commit string, isHash bool) string {
+	// Hashes use "commit", tags use "tag".
+	// Short hashes aren't currently supported, but we build the URL
+	// anyway in the hope that someday they will be.
+	if isHash {
+		return "commit/" + commit
+	}
+	return "tag/" + commit
 }
 
 // urlTemplates describes how to build URLs from bits of source information.
@@ -574,6 +579,12 @@ var (
 		Directory: "{repo}/src/{commit}/{dir}",
 		File:      "{repo}/src/{commit}/{file}",
 		Line:      "{repo}/src/{commit}/{file}#lines-{line}",
+		Raw:       "{repo}/raw/{commit}/{file}",
+	}
+	giteaURLTemplates = urlTemplates{
+		Directory: "{repo}/src/{commit}/{dir}",
+		File:      "{repo}/src/{commit}/{file}",
+		Line:      "{repo}/src/{commit}/{file}#L{line}",
 		Raw:       "{repo}/raw/{commit}/{file}",
 	}
 )

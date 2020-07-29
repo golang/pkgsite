@@ -850,3 +850,26 @@ func TestJSON(t *testing.T) {
 		}
 	}
 }
+
+func TestURLTemplates(t *testing.T) {
+	// Check that templates contain the right variables.
+
+	for _, p := range patterns {
+		check := func(tmpl string, vars ...string) {
+			if tmpl == "" {
+				return
+			}
+			for _, v := range vars {
+				w := "{" + v + "}"
+				if !strings.Contains(tmpl, w) {
+					t.Errorf("in pattern %s, template %q is missing %s", p.pattern, tmpl, w)
+				}
+			}
+		}
+
+		check(p.templates.Directory, "commit", "dir")
+		check(p.templates.File, "commit", "file")
+		check(p.templates.Line, "commit", "file", "line")
+		check(p.templates.Raw, "commit", "file")
+	}
+}
