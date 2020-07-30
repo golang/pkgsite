@@ -7,12 +7,33 @@ package frontend
 import (
 	"io"
 	"net/http"
+	"strconv"
 
+	"go.opencensus.io/stats"
+	"go.opencensus.io/stats/view"
+	"go.opencensus.io/tag"
 	"golang.org/x/pkgsite/internal/log"
 )
 
 // playgroundURL is the playground endpoint used for share links.
 const playgroundURL = "https://play.golang.org"
+
+var (
+	keyPlaygroundShareStatus = tag.MustNewKey("playground.share.status")
+	playgroundShareStatus    = stats.Int64(
+		"go-discovery/playground_share_count",
+		"The status of a request to play.golang.org/share",
+		stats.UnitDimensionless,
+	)
+
+	PlaygroundShareRequestCount = &view.View{
+		Name:        "go-discovery/playground/share_count",
+		Measure:     playgroundShareStatus,
+		Aggregation: view.Count(),
+		Description: "Playground share request count",
+		TagKeys:     []tag.Key{keyPlaygroundShareStatus},
+	}
+)
 
 // handlePlay handles requests that mirror play.golang.org/share.
 func (s *Server) handlePlay(w http.ResponseWriter, r *http.Request) {
@@ -43,6 +64,10 @@ func makeFetchPlayRequest(w http.ResponseWriter, r *http.Request, pgURL string) 
 		httpErrorStatus(w, http.StatusInternalServerError)
 		return
 	}
+	stats.RecordWithTags(r.Context(),
+		[]tag.Mutator{tag.Upsert(keyPlaygroundShareStatus, strconv.Itoa(resp.StatusCode))},
+		playgroundShareStatus.M(int64(resp.StatusCode)),
+	)
 	copyHeader := func(k string) {
 		if v := resp.Header.Get(k); v != "" {
 			w.Header().Set(k, v)

@@ -131,6 +131,7 @@ func main() {
 		postgres.SearchResponseCount,
 		frontend.FetchLatencyDistribution,
 		frontend.FetchResponseCount,
+		frontend.PlaygroundShareRequestCount,
 		middleware.CacheResultCount,
 		middleware.CacheErrorCount,
 		middleware.QuotaResultCount,
