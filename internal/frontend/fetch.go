@@ -18,6 +18,7 @@ import (
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
+	"golang.org/x/mod/module"
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -438,8 +439,11 @@ func modulePathsToFetch(ctx context.Context, ds internal.DataSource, fullPath, m
 
 var vcsHostsWithThreeElementRepoName = map[string]bool{
 	"bitbucket.org": true,
+	"gitea.com":     true,
+	"gitee.com":     true,
 	"github.com":    true,
 	"gitlab.com":    true,
+	"golang.org":    true,
 }
 
 // candidateModulePaths returns the potential module paths that could contain
@@ -462,6 +466,9 @@ func candidateModulePaths(fullPath string) (_ []string, err error) {
 	}
 	for _, part := range parts {
 		path += part
+		if err := module.CheckImportPath(path); err != nil {
+			continue
+		}
 		modulePaths = append([]string{path}, modulePaths...)
 		path += "/"
 	}

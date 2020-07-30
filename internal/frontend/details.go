@@ -460,7 +460,7 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, d
 		if !ok {
 			return pathNotFoundError(ctx, pathType, fullPath, requestedVersion)
 		}
-		modulePaths, err := modulePathsToFetch(ctx, db, fullPath, modulePath)
+		modulePaths, err := candidateModulePaths(fullPath)
 		if err != nil {
 			return pathNotFoundError(ctx, pathType, fullPath, requestedVersion)
 		}
