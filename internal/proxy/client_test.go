@@ -7,6 +7,8 @@ package proxy
 import (
 	"context"
 	"errors"
+	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
@@ -138,16 +140,33 @@ func TestGetInfo(t *testing.T) {
 	}
 }
 
-func TestGetInfoVersionDoesNotExist(t *testing.T) {
+func TestGetInfo_Errors(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	client, teardownProxy := SetupTestProxy(t, []*Module{})
+	proxyServer := NewServer(nil)
+	proxyServer.AddRoute(
+		fmt.Sprintf("/%s/@v/%s.info", "module.com/timeout", sample.VersionString),
+		func(w http.ResponseWriter, r *http.Request) { http.Error(w, "fetch timed out", http.StatusNotFound) })
+	client, teardownProxy := TestProxyServer(t, proxyServer)
 	defer teardownProxy()
 
-	info, _ := client.GetInfo(ctx, sample.ModulePath, sample.VersionString)
-	if info != nil {
-		t.Errorf("GetInfo(ctx, %q, %q) = %v, want %v", sample.ModulePath, sample.VersionString, info, nil)
+	for _, test := range []struct {
+		modulePath string
+		want       error
+	}{
+		{
+			modulePath: sample.ModulePath,
+			want:       derrors.NotFound,
+		},
+		{
+			modulePath: "module.com/timeout",
+			want:       derrors.ProxyTimedOut,
+		},
+	} {
+		if _, err := client.GetInfo(ctx, test.modulePath, sample.VersionString); !errors.Is(err, test.want) {
+			t.Errorf("GetInfo(ctx, %q, %q): %v, want %v", test.modulePath, sample.VersionString, err, test.want)
+		}
 	}
 }
 

@@ -75,7 +75,7 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	fetchAndCheckStatus(ctx, t, proxyClient, sample.ModulePath, sample.VersionString, http.StatusOK)
 
 	// Take down the module, by having the proxy serve a 404/410 for it.
-	proxyServer := proxy.NewServer([]*proxy.Module{}) // serve no versions, not even the defaults.
+	proxyServer := proxy.NewServer([]*proxy.Module{})
 	proxyServer.AddRoute(
 		fmt.Sprintf("/%s/@v/%s.info", sample.ModulePath, sample.VersionString),
 		func(w http.ResponseWriter, r *http.Request) { http.Error(w, "taken down", http.StatusGone) })
@@ -877,6 +877,25 @@ func TestFetchAndUpdateState_Timeout(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 0)
 	defer cancel()
 	fetchAndCheckStatus(ctx, t, proxyClient, sample.ModulePath, sample.VersionString, http.StatusInternalServerError)
+}
+
+// Check that when the proxy says fetch timed out, we return a 5xx error so
+// that we automatically try to fetch it again later.
+func TestFetchAndUpdateState_ProxyTimedOut(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	defer postgres.ResetTestDB(testDB, t)
+
+	proxyServer := proxy.NewServer(nil)
+	proxyServer.AddRoute(
+		fmt.Sprintf("/%s/@v/%s.info", sample.ModulePath, sample.VersionString),
+		func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, "not found: fetch timed out", http.StatusNotFound)
+		})
+	proxyClient, teardownProxy := proxy.TestProxyServer(t, proxyServer)
+	defer teardownProxy()
+
+	fetchAndCheckStatus(ctx, t, proxyClient, sample.ModulePath, sample.VersionString, derrors.ToStatus(derrors.ProxyTimedOut))
 }
 
 func fetchAndCheckStatus(ctx context.Context, t *testing.T, proxyClient *proxy.Client, modulePath, version string, wantCode int) {

@@ -162,7 +162,8 @@ func (c *Client) ListVersions(ctx context.Context, modulePath string) ([]string,
 
 // executeRequest executes an HTTP GET request for u, then calls the bodyFunc
 // on the response body, if no error occurred.
-func (c *Client) executeRequest(ctx context.Context, u string, bodyFunc func(body io.Reader) error) error {
+func (c *Client) executeRequest(ctx context.Context, u string, bodyFunc func(body io.Reader) error) (err error) {
+	defer derrors.Wrap(&err, "executeRequest(ctx, %q)", u)
 	r, err := ctxhttp.Get(ctx, c.httpClient, u)
 	if err != nil {
 		return fmt.Errorf("ctxhttp.Get(ctx, client, %q): %v", u, err)
@@ -175,9 +176,20 @@ func (c *Client) executeRequest(ctx context.Context, u string, bodyFunc func(bod
 		r.StatusCode == http.StatusGone:
 		// Treat both 404 Not Found and 410 Gone responses
 		// from the proxy as a "not found" error category.
-		return fmt.Errorf("ctxhttp.Get(ctx, client, %q): %w", u, derrors.NotFound)
+		// If the response body contains "fetch timed out", treat this
+		// as a 504 response so that we retry fetching the module version again
+		// later.
+		data, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			return fmt.Errorf("ioutil.readall: %v", err)
+		}
+		d := string(data)
+		if strings.Contains(d, "fetch timed out") {
+			return fmt.Errorf("%q: %w", d, derrors.ProxyTimedOut)
+		}
+		return fmt.Errorf("%q: %w", d, derrors.NotFound)
 	default:
-		return fmt.Errorf("ctxhttp.Get(ctx, client, %q): unexpected status %d %s", u, r.StatusCode, r.Status)
+		return fmt.Errorf("unexpected status %d %s", r.StatusCode, r.Status)
 	}
 	return bodyFunc(r.Body)
 }

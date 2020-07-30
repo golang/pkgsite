@@ -36,6 +36,9 @@ var (
 	// Unknown indicates that the error has unknown semantics.
 	Unknown = errors.New("unknown")
 
+	// ProxyTimedOut indicates that a request timed out when fetching from the Module Mirror.
+	ProxyTimedOut = errors.New("proxy timed out")
+
 	// PackageBuildContextNotSupported indicates that the build context for the
 	// package is not supported.
 	PackageBuildContextNotSupported = errors.New("package build context not supported")
@@ -97,6 +100,7 @@ var codes = []struct {
 	{BadModule, 490},
 	{AlternativeModule, 491},
 
+	{ProxyTimedOut, http.StatusGatewayTimeout},
 	// 52x and 54x errors represents modules that need to be reprocessed, and the
 	// previous status code the module had. Note that the status code
 	// matters for determining reprocessing order.
