@@ -57,6 +57,9 @@ func main() {
 			log.Fatalf(ctx, "profiler.Start: %v", err)
 		}
 	}
+
+	log.SetLevel(cfg.LogLevel)
+
 	var (
 		dsg        func(context.Context) internal.DataSource
 		expg       func(context.Context) internal.ExperimentSource

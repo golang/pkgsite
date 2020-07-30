@@ -123,6 +123,11 @@ type Config struct {
 	// TeeproxyTargetHosts is a list of hosts that teeproxy will forward
 	// requests to.
 	TeeproxyForwardedHosts []string
+
+	// Minimum log level below which no logs will be printed.
+	// Possible values are [debug, info, error, fatal].
+	// In case of invalid/empty value, all logs will be printed.
+	LogLevel string
 }
 
 // AppVersionLabel returns the version label for the current instance.  This is
@@ -272,6 +277,7 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		UseProfiler:            os.Getenv("GO_DISCOVERY_USE_PROFILER") == "TRUE",
 		TeeproxyAuthValue:      os.Getenv("GO_DISCOVERY_TEEPROXY_AUTH_VALUE"),
 		TeeproxyForwardedHosts: parseCommaList(os.Getenv("GO_DISCOVERY_TEEPROXY_FORWARDED_HOSTS")),
+		LogLevel:               os.Getenv("GO_DISCOVERY_LOG_LEVEL"),
 	}
 	cfg.AppMonitoredResource = &mrpb.MonitoredResource{
 		Type: "gae_app",

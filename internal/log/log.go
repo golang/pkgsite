@@ -25,6 +25,10 @@ var (
 	logger interface {
 		log(context.Context, logging.Severity, interface{})
 	} = stdlibLogger{}
+
+	// currentLevel holds current log level.
+	// No logs will be printed below currentLevel.
+	currentLevel = logging.Default
 )
 
 type (
@@ -34,6 +38,19 @@ type (
 	// labelsKey is the type of the context key for labels.
 	labelsKey struct{}
 )
+
+// Set the log level
+func SetLevel(v string) {
+	mu.Lock()
+	defer mu.Unlock()
+	currentLevel = toLevel(v)
+}
+
+func getLevel() logging.Severity {
+	mu.Lock()
+	defer mu.Unlock()
+	return currentLevel
+}
 
 // NewContextWithTraceID creates a new context from ctx that adds the trace ID.
 func NewContextWithTraceID(ctx context.Context, traceID string) context.Context {
@@ -156,9 +173,9 @@ func Debugf(ctx context.Context, format string, args ...interface{}) {
 	logf(ctx, logging.Debug, format, args)
 }
 
-// Fatalf is equivalent to Errorf followed by exiting the program.
+// Fatalf logs formatted string at the Critical level followed by exiting the program.
 func Fatalf(ctx context.Context, format string, args ...interface{}) {
-	Errorf(ctx, format, args...)
+	logf(ctx, logging.Critical, format, args)
 	die()
 }
 
@@ -175,13 +192,16 @@ func Error(ctx context.Context, arg interface{}) { doLog(ctx, logging.Error, arg
 // Debug logs arg, which can be a string or a struct, at the Debug level.
 func Debug(ctx context.Context, arg interface{}) { doLog(ctx, logging.Debug, arg) }
 
-// Fatal is equivalent to Error followed by exiting the program.
+// Fatal logs arg, which can be a string or a struct, at the Critical level followed by exiting the program.
 func Fatal(ctx context.Context, arg interface{}) {
-	Error(ctx, arg)
+	doLog(ctx, logging.Critical, arg)
 	die()
 }
 
 func doLog(ctx context.Context, s logging.Severity, payload interface{}) {
+	if getLevel() > s {
+		return
+	}
 	mu.Lock()
 	l := logger
 	mu.Unlock()
@@ -195,4 +215,29 @@ func die() {
 	}
 	mu.Unlock()
 	os.Exit(1)
+}
+
+// toLevel returns the logging.Severity for a given string.
+// Possible input values are "", "debug", "info", "error", "fatal".
+// In case of invalid string input, it maps to DefaultLevel.
+func toLevel(v string) logging.Severity {
+	v = strings.ToLower(v)
+
+	switch v {
+	case "":
+		// default log level will print everything.
+		return logging.Default
+	case "debug":
+		return logging.Debug
+	case "info":
+		return logging.Info
+	case "error":
+		return logging.Error
+	case "fatal":
+		return logging.Critical
+	}
+
+	// Default log level in case of invalid input.
+	log.Printf("Error: %s is invalid LogLevel. Possible values are [debug, info, error, fatal]", v)
+	return logging.Default
 }

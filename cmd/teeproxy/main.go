@@ -37,6 +37,8 @@ func main() {
 		log.Fatal(ctx, err)
 	}
 	cfg.Dump(os.Stderr)
+
+	log.SetLevel(cfg.LogLevel)
 	if cfg.OnAppEngine() {
 		_, err := log.UseStackdriver(ctx, cfg, "teeproxy-log")
 		if err != nil {

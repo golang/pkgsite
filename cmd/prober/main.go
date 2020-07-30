@@ -222,6 +222,7 @@ func main() {
 	}
 	cfg.Dump(os.Stderr)
 
+	log.SetLevel(cfg.LogLevel)
 	if _, err := log.UseStackdriver(ctx, cfg, "prober-log"); err != nil {
 		log.Fatal(ctx, err)
 	}

@@ -56,6 +56,8 @@ func main() {
 	}
 	cfg.Dump(os.Stderr)
 
+	log.SetLevel(cfg.LogLevel)
+
 	if cfg.UseProfiler {
 		if err := profiler.Start(profiler.Config{}); err != nil {
 			log.Fatalf(ctx, "profiler.Start: %v", err)
