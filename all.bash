@@ -176,8 +176,6 @@ main() {
       run_prettier
       runcmd go mod tidy
       runcmd env GO_DISCOVERY_TESTDB=true go test ./...
-      # To test internal/secrets, set GO_DISCOVERY_SECRETS_BUCKET and GO_DISCOVERY_KMS_KEY_NAME
-      # to appropriate test values.
       runcmd go test ./internal/secrets
       ;;
     ci)
