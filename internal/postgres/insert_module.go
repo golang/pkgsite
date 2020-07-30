@@ -45,6 +45,10 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 	if err := validateModule(m); err != nil {
 		return err
 	}
+	// The proxy accepts modules with zero commit times, but they are bad.
+	if m.CommitTime.IsZero() {
+		return fmt.Errorf("empty commit time: %w", derrors.BadModule)
+	}
 	// Compare existing data from the database, and the module to be
 	// inserted. Rows that currently exist should not be missing from the
 	// new module. We want to be sure that we will overwrite every row that
@@ -569,9 +573,11 @@ func isLatestVersion(ctx context.Context, db *database.DB, modulePath, version s
 	return version == v, nil
 }
 
-// validateModule checks that fields needed to insert a module into the
-// database are present. Otherwise, it returns an error listing the reasons the
-// module cannot be inserted.
+// validateModule checks that fields needed to insert a module into the database
+// are present. Otherwise, it returns an error listing the reasons the module
+// cannot be inserted. Since the problems it looks for are most likely on our
+// end, the underlying error it returns is always DBModuleInsertInvalid, meaning
+// that this module should be reprocessed.
 func validateModule(m *internal.Module) (err error) {
 	defer func() {
 		if err != nil {
@@ -602,9 +608,6 @@ func validateModule(m *internal.Module) (err error) {
 	}
 	if len(m.LegacyPackages) == 0 {
 		errReasons = append(errReasons, "module does not have any packages")
-	}
-	if m.CommitTime.IsZero() {
-		errReasons = append(errReasons, "empty commit time")
 	}
 	if len(errReasons) != 0 {
 		return fmt.Errorf("cannot insert module %q: %s", m.Version, strings.Join(errReasons, ", "))

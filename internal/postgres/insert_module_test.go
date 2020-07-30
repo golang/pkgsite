@@ -229,7 +229,7 @@ func TestInsertModuleErrors(t *testing.T) {
 			}(),
 			wantVersion:    sample.VersionString,
 			wantModulePath: sample.ModulePath,
-			wantWriteErr:   derrors.DBModuleInsertInvalid,
+			wantWriteErr:   derrors.BadModule,
 		},
 	}
 
