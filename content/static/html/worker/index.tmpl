@@ -87,6 +87,26 @@ table {
 td {
   border-top: 0.0625rem solid #ddd;
 }
+
+.Experiments input:invalid {
+  border: 0.0625rem dotted red;
+  border-radius: .25rem;
+}
+.Experiments input:valid {
+  border: 0.0625rem solid grey;
+  border-radius: .25rem;
+}
+.Experiments button {
+  width: auto;
+}
+.Experiments input {
+  width: auto;
+}
+.Experiments-updateResult {
+  border: none;
+  height: 2rem;
+  width: 100%;
+}
 </style>
 <title>{{.Env}} Worker</title>
 <h1>{{.Env}} Worker</h1>
@@ -150,30 +170,36 @@ td {
   </table>
 </div>
 
-<div>
+<div class="Experiments">
   <h3>Experiments</h3>
   {{if .Experiments}}
     <table>
       <thead>
         <tr>
           <th>Name</th>
-          <th>Rollout</th>
           <th>Description</th>
+          <th>Rollout</th>
+          <th></th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
       {{range .Experiments}}
-        <tr>
-          <td>{{.Name}}</td>
-          <td>{{.Rollout}}</td>
-          <td>{{.Description}}</td>
-        </tr>
+        <form action="/update-experiment" method="post" target="experimentUpdateResult">
+          <tr>
+            <td>{{.Name}}<input name="name" value="{{.Name}}" readonly hidden></td>
+            <td>{{.Description}}<input name="description" value="{{.Description}}" readonly hidden></td>
+            <td><input name="rollout" size="1rem" type="number" min="0" max="100" step="1" pattern="[0-9]{0,3}" value="{{.Rollout}}" required></td>
+            <td><button>Update</button></td>
+          </tr>
+        </form>
       {{end}}
       </tbody>
     </table>
   {{else}}
     <p>No experiments.</p>
   {{end}}
+  <iframe class="Experiments-updateResult" name="experimentUpdateResult" id="experimentUpdateResult"></iframe>
 </div>
 
 <div class="stats">

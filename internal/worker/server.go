@@ -180,6 +180,9 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// manual: clear-cache clears the redis cache.
 	handle("/clear-cache", rmw(s.errorHandler(s.clearCache)))
 
+	// manual: update-experiment updates a given experiment.
+	handle("/update-experiment", rmw(s.errorHandler(s.updateExperiment)))
+
 	// manual: delete the specified module version.
 	handle("/delete/", http.StripPrefix("/delete", rmw(s.errorHandler(s.handleDelete))))
 
@@ -609,6 +612,22 @@ func (s *Server) handleDelete(w http.ResponseWriter, r *http.Request) error {
 		return &serverError{http.StatusInternalServerError, err}
 	}
 	fmt.Fprintf(w, "Deleted %s@%s", modulePath, version)
+	return nil
+}
+
+func (s *Server) updateExperiment(w http.ResponseWriter, r *http.Request) error {
+	name := r.FormValue("name")
+	description := r.FormValue("description")
+	rollout, err := strconv.Atoi(r.FormValue("rollout"))
+	if err != nil || rollout < 0 || rollout > 100 {
+		return &serverError{http.StatusBadRequest, fmt.Errorf("rollout is invalid: %q", rollout)}
+	}
+
+	if err := s.db.UpdateExperiment(r.Context(), &internal.Experiment{Name: name, Description: description, Rollout: uint(rollout)}); err != nil {
+		return &serverError{http.StatusInternalServerError, err}
+	}
+
+	fmt.Fprintf(w, "Updated %q experiment rollout to %d percent", name, rollout)
 	return nil
 }
 
