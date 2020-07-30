@@ -119,13 +119,13 @@ func (db *DB) GetNextModulesToFetch(ctx context.Context, limit int) (_ []*intern
 	}
 
 	// Don't return more than largeModulesLimit of modules that have more than
-	// largeModulePackageThreshold packages.
-	nLarge := 0
+	// largeModulePackageThreshold packages, or of modules with status zero.
+	nLargeOrZero := 0
 	for i, m := range mvs {
-		if m.NumPackages != nil && *m.NumPackages >= largeModulePackageThreshold {
-			nLarge++
+		if m.Status == 0 || (m.NumPackages != nil && *m.NumPackages >= largeModulePackageThreshold) {
+			nLargeOrZero++
 		}
-		if nLarge > largeModulesLimit {
+		if nLargeOrZero > largeModulesLimit {
 			return mvs[:i], nil
 		}
 	}
