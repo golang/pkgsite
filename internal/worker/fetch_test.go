@@ -125,10 +125,11 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	teardownProxy()
 
 	// Take down the module, by having the proxy serve a 404/410 for it.
-	proxyMux := proxy.TestProxy([]*proxy.Module{}) // serve no versions, not even the defaults.
-	proxyMux.HandleFunc(fmt.Sprintf("/%s/@v/%s.info", modulePath, version),
+	proxyServer := proxy.NewServer([]*proxy.Module{}) // serve no versions, not even the defaults.
+	proxyServer.AddRoute(
+		fmt.Sprintf("/%s/@v/%s.info", modulePath, version),
 		func(w http.ResponseWriter, r *http.Request) { http.Error(w, "taken down", http.StatusGone) })
-	proxyClient, teardownProxy2 := proxy.TestProxyServer(t, proxyMux)
+	proxyClient, teardownProxy2 := proxy.TestProxyServer(t, proxyServer)
 	defer teardownProxy2()
 
 	// Now fetch it again.
