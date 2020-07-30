@@ -870,7 +870,7 @@ func frontendFetchTestCases() []serverTestCase {
 			urlPath:        fmt.Sprintf("/%s@%s/%s", sample.ModulePath, "v99.99.0", sample.Suffix),
 			wantStatusCode: http.StatusNotFound,
 			want: in("",
-				in("h3.Fetch-message.js-fetchMessage", text("Oops! "+sample.ModulePath+"/foo@v99.99.0 does not exist."))),
+				in("h3.Fetch-message.js-fetchMessage", text(sample.ModulePath+"/foo@v99.99.0"))),
 			requiredExperiments: experiment.NewSet(internal.ExperimentFrontendFetch),
 		},
 		{
@@ -878,7 +878,7 @@ func frontendFetchTestCases() []serverTestCase {
 			urlPath:        "/example.com/unknown",
 			wantStatusCode: http.StatusNotFound,
 			want: in("",
-				in("h3.Fetch-message.js-fetchMessage", text("Oops! example.com/unknown does not exist."))),
+				in("h3.Fetch-message.js-fetchMessage", text("example.com/unknown"))),
 			requiredExperiments: experiment.NewSet(internal.ExperimentFrontendFetch),
 		},
 	}

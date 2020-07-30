@@ -538,8 +538,8 @@ code {
 .SearchResults-emptyContentGopher {
   display: block;
   margin: auto;
-  padding: 1.25rem 0;
   max-width: 15rem;
+  padding: 1.25rem 0;
 }
 .Error-message,
 .EmptyContent-message,
@@ -554,8 +554,8 @@ code {
   font-size: 1rem;
   height: 2.5rem;
   margin: 1rem 0;
+  min-width: 5rem;
   padding: 0rem 1rem;
-  width: 5rem;
 }
 .Fetch-container {
   align-items: center;
@@ -593,7 +593,8 @@ code {
 .Fetch-loading:nth-child(3) {
   animation-delay: 0.4s;
 }
-.Fetch-message {
+.Fetch-message,
+.Fetch-messageSecondary {
   text-align: center;
 }
 
