@@ -469,6 +469,12 @@ func candidateModulePaths(fullPath string) (_ []string, err error) {
 		modulePaths = append([]string{path}, modulePaths...)
 		path += "/"
 	}
+	if len(modulePaths) == 0 {
+		return nil, &serverError{
+			status: http.StatusBadRequest,
+			err:    fmt.Errorf("invalid path: %q", fullPath),
+		}
+	}
 	return modulePaths, nil
 }
 

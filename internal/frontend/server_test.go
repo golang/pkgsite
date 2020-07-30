@@ -881,6 +881,12 @@ func frontendFetchTestCases() []serverTestCase {
 				in("h3.Fetch-message.js-fetchMessage", text("example.com/unknown"))),
 			requiredExperiments: experiment.NewSet(internal.ExperimentFrontendFetch),
 		},
+		{
+			name:                "bad request, invalid github module path, frontend experiment",
+			urlPath:             "/github.com/foo",
+			wantStatusCode:      http.StatusBadRequest,
+			requiredExperiments: experiment.NewSet(internal.ExperimentFrontendFetch),
+		},
 	}
 }
 

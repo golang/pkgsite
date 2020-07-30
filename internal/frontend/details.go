@@ -488,7 +488,7 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, d
 		}
 		modulePaths, err := candidateModulePaths(fullPath)
 		if err != nil {
-			return pathNotFoundError(ctx, pathType, fullPath, requestedVersion)
+			return err
 		}
 		results := s.checkPossibleModulePaths(ctx, db, fullPath, requestedVersion, modulePaths, false)
 		for _, fr := range results {
