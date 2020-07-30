@@ -432,7 +432,7 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, d
 		return
 	}
 
-	if isActiveFrontendFetch(ctx) {
+	if isActiveFrontendFetch(ctx) && !stdlib.Contains(fullPath) {
 		db, ok := ds.(*postgres.DB)
 		if !ok {
 			return pathNotFoundError(ctx, pathType, fullPath, requestedVersion)
