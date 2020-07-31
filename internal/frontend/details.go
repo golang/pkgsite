@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/google/safehtml/template"
 	"golang.org/x/mod/module"
@@ -119,7 +120,12 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 			// As a result, we enqueue every request of path@master to the frontend
 			// task queue, which will initiate a fetch request depending on the
 			// last time we tried to fetch this module version.
+			//
+			// Use a separate context here to prevent the context from being canceled
+			// elsewhere before a task is enqueued.
 			go func() {
+				ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+				defer cancel()
 				if err := s.queue.ScheduleFetch(ctx, urlInfo.modulePath, internal.MasterVersion, "", s.taskIDChangeInterval); err != nil {
 					log.Errorf(ctx, "serveDetails(%q): %v", r.URL.Path, err)
 				}
