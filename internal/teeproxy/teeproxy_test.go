@@ -123,11 +123,11 @@ func TestServerHandler(t *testing.T) {
 		},
 		{
 			name:         "rate limiter drops requests over cap",
-			serverConfig: Config{Rate: 25, Burst: 25},
+			serverConfig: Config{Rate: 5, Burst: 5},
 			handler:      alwaysHandler{http.StatusOK},
 			steps: []interface{}{
-				request{25, http.StatusOK},
-				request{25, http.StatusTooManyRequests},
+				request{5, http.StatusOK},
+				request{6, http.StatusTooManyRequests},
 			},
 		},
 		{
