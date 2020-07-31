@@ -92,15 +92,17 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 }
 
 // Install registers server routes using the given handler registration func.
-func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.Client) {
+// authValues is the set of values that can be set on authHeader to bypass the
+// cache.
+func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.Client, authValues []string) {
 	var (
 		detailHandler http.Handler = s.errorHandler(s.serveDetails)
 		fetchHandler  http.Handler = s.errorHandler(s.serveFetch)
 		searchHandler http.Handler = s.errorHandler(s.serveSearch)
 	)
 	if redisClient != nil {
-		detailHandler = middleware.Cache("details", redisClient, detailsTTL)(detailHandler)
-		searchHandler = middleware.Cache("search", redisClient, middleware.TTL(defaultTTL))(searchHandler)
+		detailHandler = middleware.Cache("details", redisClient, detailsTTL, authValues)(detailHandler)
+		searchHandler = middleware.Cache("search", redisClient, middleware.TTL(defaultTTL), authValues)(searchHandler)
 	}
 	handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(s.staticPath.String()))))
 	handle("/third_party/", http.StripPrefix("/third_party", http.FileServer(http.Dir(s.thirdPartyPath))))

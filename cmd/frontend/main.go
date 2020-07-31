@@ -125,7 +125,7 @@ func main() {
 			Addr: cfg.RedisCacheHost + ":" + cfg.RedisCachePort,
 		})
 	}
-	server.Install(router.Handle, cacheClient)
+	server.Install(router.Handle, cacheClient, cfg.AuthValues)
 	views := append(dcensus.ServerViews,
 		postgres.SearchLatencyDistribution,
 		postgres.SearchResponseCount,

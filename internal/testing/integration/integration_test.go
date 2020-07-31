@@ -112,7 +112,7 @@ func TestEndToEndProcessing(t *testing.T) {
 		t.Fatal(err)
 	}
 	frontendMux := http.NewServeMux()
-	frontendServer.Install(frontendMux.Handle, redisCacheClient)
+	frontendServer.Install(frontendMux.Handle, redisCacheClient, nil)
 	frontendHTTP := httptest.NewServer(frontendMux)
 
 	if _, err := doGet(workerHTTP.URL + "/poll"); err != nil {

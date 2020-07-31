@@ -18,6 +18,7 @@ import (
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
+	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/log"
 )
 
@@ -73,10 +74,11 @@ func recordCacheError(ctx context.Context, name, operation string) {
 }
 
 type cache struct {
-	name     string
-	client   *redis.Client
-	delegate http.Handler
-	expirer  Expirer
+	name       string
+	authValues []string
+	client     *redis.Client
+	delegate   http.Handler
+	expirer    Expirer
 }
 
 // An Expirer computes the TTL that should be used when caching a page.
@@ -92,18 +94,31 @@ func TTL(ttl time.Duration) Expirer {
 // Cache returns a new Middleware that caches every request.
 // The name of the cache is used only for metrics.
 // The expirer is a func that is used to map a new request to its TTL.
-func Cache(name string, client *redis.Client, expirer Expirer) Middleware {
+// authHeader is the header key used by the cache to know that a
+// request should bypass the cache.
+// authValues is the set of values that could be set on the authHeader in
+// order to bypass the cache.
+func Cache(name string, client *redis.Client, expirer Expirer, authValues []string) Middleware {
 	return func(h http.Handler) http.Handler {
 		return &cache{
-			name:     name,
-			client:   client,
-			delegate: h,
-			expirer:  expirer,
+			name:       name,
+			authValues: authValues,
+			client:     client,
+			delegate:   h,
+			expirer:    expirer,
 		}
 	}
 }
 
 func (c *cache) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// Check auth header to see if request should bypass cache.
+	authVal := r.Header.Get(config.AuthHeader)
+	for _, wantVal := range c.authValues {
+		if authVal == wantVal {
+			c.delegate.ServeHTTP(w, r)
+			return
+		}
+	}
 	ctx := r.Context()
 	key := r.URL.String()
 	if reader, ok := c.get(ctx, key); ok {

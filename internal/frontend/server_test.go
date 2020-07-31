@@ -1089,7 +1089,7 @@ func newTestServer(t *testing.T, proxyModules []*proxy.Module, experimentNames .
 		t.Fatal(err)
 	}
 	mux := http.NewServeMux()
-	s.Install(mux.Handle, nil)
+	s.Install(mux.Handle, nil, nil)
 
 	var exps []*internal.Experiment
 	for _, n := range experimentNames {

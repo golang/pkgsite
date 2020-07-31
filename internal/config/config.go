@@ -58,12 +58,16 @@ func ValidateAppVersion(appVersion string) error {
 	return nil
 }
 
+// AuthHeader is the header key used by the frontend server to know that a
+// request is coming from a known source.
+const AuthHeader = "X-Go-Discovery-Auth"
+
 // Config holds shared configuration values used in instantiating our server
 // components.
 type Config struct {
-	// AuthHeader is the header key used by the frontend server to know that a
-	// request is coming from a known source.
-	AuthHeader string
+	// AuthValues is the set of values that could be set on the AuthHeader, in
+	// order to bypass checks by the cache.
+	AuthValues []string
 
 	// Discovery environment variables
 	ProxyURL, IndexURL string
@@ -214,9 +218,6 @@ type QuotaSettings struct {
 	// Record data about blocking, but do not actually block.
 	// This is a *bool, so we can distinguish "not present" from "false" in an override
 	RecordOnly *bool
-	// AuthHeader is the name of the header used by the frontend server to
-	// determine if a request is coming from a known source.
-	AuthHeader string
 	// AuthValues is the set of values that could be set on the AuthHeader, in
 	// order to bypass checks by the quota server.
 	AuthValues []string
@@ -231,7 +232,7 @@ func Init(ctx context.Context) (_ *Config, err error) {
 	// Build a Config from the execution environment, loading some values
 	// from envvars and others from remote services.
 	cfg := &Config{
-		AuthHeader: os.Getenv("GO_DISCOVERY_AUTH_HEADER"),
+		AuthValues: parseCommaList(os.Getenv("GO_DISCOVERY_AUTH_VALUES")),
 		IndexURL:   GetEnv("GO_MODULE_INDEX_URL", "https://index.golang.org/index"),
 		ProxyURL:   GetEnv("GO_MODULE_PROXY_URL", "https://proxy.golang.org"),
 		Port:       os.Getenv("PORT"),
@@ -266,7 +267,6 @@ func Init(ctx context.Context) (_ *Config, err error) {
 			Burst:      20,
 			MaxEntries: 1000,
 			RecordOnly: func() *bool { t := true; return &t }(),
-			AuthHeader: os.Getenv("GO_DISCOVERY_AUTH_HEADER"),
 			AuthValues: parseCommaList(os.Getenv("GO_DISCOVERY_AUTH_VALUES")),
 		},
 		UseProfiler:            os.Getenv("GO_DISCOVERY_USE_PROFILER") == "TRUE",

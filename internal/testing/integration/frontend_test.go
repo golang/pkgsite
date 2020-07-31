@@ -184,7 +184,7 @@ func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue) *httptest.S
 		t.Fatal(err)
 	}
 	mux := http.NewServeMux()
-	s.Install(mux.Handle, nil)
+	s.Install(mux.Handle, nil, nil)
 
 	experimenter, err := middleware.NewExperimenter(ctx, 1*time.Minute, func(context.Context) internal.ExperimentSource { return testDB })
 	if err != nil {
