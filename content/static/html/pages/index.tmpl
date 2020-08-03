@@ -9,95 +9,54 @@
   <wbr>
 {{end}}
 
-{{define "search_additional_attrs"}}{{if not (.Experiments.IsActive "new-homepage")}}autofocus{{end}}{{end}}
+{{define "main_content_stylesheet"}}
+  <link href="/static/css/homepage.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{end}}
 
 {{define "main_content"}}
-  {{if (.Experiments.IsActive "new-homepage")}}
-    <div class="Container">
-      <div class="HomepageNew">
-        <img class="HomepageNew-logo" src="/static/img/gopher-homepage.jpg" alt="go.dev">
-        <form class="HomepageNew-searchForm" action="/search" role="search">
-          <input
-            id="AutoComplete"
-            role="textbox"
-            aria-label="Search for Go packages"
-            type="text"
-            name="q"
-            placeholder="Search for Go packages"
-            autocapitalize="off"
-            autocomplete="off"
-            autocorrect="off"
-            spellcheck="false"
-            title="Search for Go packages"
-            autofocus="true">
-          <div class="HomepageNew-buttonGroup">
-            <button type="submit" class="HomepageNew-searchButton">Search</button>
-            <a href="/search-help" target="_blank" class="HomepageNew-helpButton">
-              Search help <span><img src="/static/img/icon-launch.svg"></span>
-            </a>
-          </div>
-        </form>
-        <div class="HomepageNew-popularSearches">
-          <span>EXAMPLE SEARCHES:</span>
-          <a href="/search?q=logrus">"logrus"</a>
-          <a href="/search?q=yaml+OR+json">"yaml OR json"</a>
-          <a href="/search?q=go%2Fpackages">"go/packages"</a>
+  <div class="Container">
+    <div class="Homepage">
+      <img class="Homepage-logo" src="/static/img/gopher-homepage.jpg" alt="go.dev">
+      <form class="Homepage-searchForm" action="/search" role="search">
+        <input
+          id="AutoComplete"
+          role="textbox"
+          aria-label="Search for Go packages"
+          type="text"
+          name="q"
+          placeholder="Search for Go packages"
+          autocapitalize="off"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+          title="Search for Go packages"
+          autofocus="true">
+        <div class="Homepage-buttonGroup">
+          <button type="submit" class="Homepage-searchButton">Search</button>
+          <a href="/search-help" target="_blank" class="Homepage-helpButton">
+            Search help <span><img src="/static/img/icon-launch.svg"></span>
+          </a>
         </div>
+      </form>
+      <div class="Homepage-exampleSearches">
+        <span>EXAMPLE SEARCHES:</span>
+        <a href="/search?q=logrus">"logrus"</a>
+        <a href="/search?q=yaml+OR+json">"yaml OR json"</a>
+        <a href="/search?q=go%2Fpackages">"go/packages"</a>
       </div>
     </div>
-  {{else}}
-    <div class="Container">
-      <div class="Search">
-        <img class="Search-logo" src="/static/img/go-logo-blue.svg" alt="go.dev">
-        {{template "search" .}}
-      </div>
-      <div class="Homepage">
-        <div class="Homepage-packages">
-          <h1>Popular Packages</h2>
-          <ul>
-            <li><a href="/github.com/sirupsen/logrus">github.com/sirupsen/logrus</a></li>
-            <li><a href="/github.com/gin-gonic/gin">github.com/gin-gonic/gin</a></li>
-            <li><a href="/github.com/spf13/cobra">github.com/spf13/cobra</a></li>
-            <li><a href="/github.com/spf13/viper">github.com/spf13/viper</a></li>
-            <li><a href="/github.com/golang/glog">github.com/golang/glog</a></li>
-            <li><a href="/github.com/labstack/echo">github.com/labstack/echo</a></li>
-            <li><a href="/github.com/urfave/cli">github.com/urfave/cli</a></li>
-            <li><a href="/github.com/gorilla/mux">github.com/gorilla/mux</a></li>
-            <li><a href="/net/http">net/http</a></li>
-            <li><a href="/encoding/json">encoding/json</a></li>
-          </ul>
-        </div>
-        <div class="Homepage-packages">
-          <h1>Featured Packages</h2>
-          <ul>
-            <li><a href="/database/sql">database/sql</a></li>
-            <li><a href="/google.golang.org/grpc">google.golang.org/grpc</a></li>
-            <li><a href="/github.com/esimov/caire">github.com/esimov/caire</a></li>
-            <li><a href="/github.com/gopherjs/gopherjs/js">github.com/gopherjs/gopherjs/js</a></li>
-            <li><a href="/cloud.google.com/go">cloud.google.com/go</a></li>
-            <li><a href="/go.uber.org/zap">go.uber.org/zap</a></li>
-            <li><a href="/github.com/lileio/lile">github.com/lileio/lile</a></li>
-            <li><a href="/github.com/micro/go-micro">github.com/micro/go-micro</a></li>
-            <li><a href="/github.com/grailbio/bigslice">github.com/grailbio/bigslice</a></li>
-            <li><a href="/gobot.io/x/gobot">gobot.io/x/gobot</a></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  {{end}}
+  </div>
 {{end}}
 
 {{define "pre_footer"}}
-  {{if (.Experiments.IsActive "new-homepage")}}
-    <div class="Questions">
-      <div class="Questions-content">
-        <h3>Frequently asked questions:</h2>
-        <ul>
-          <li><a href="https://go.dev/about#adding-a-package">How can I add a package?</a></li>
-          <li><a href="https://go.dev/about#removing-a-package">How can I remove a package?</a></li>
-          <li><a href="https://go.dev/about#creating-a-badge">How can I add a go badge in my README file?</a></li>
-        </ul>
-      </div>
+  <div class="Questions">
+    <div class="Questions-content">
+      <h3>Frequently asked questions:</h2>
+      <ul>
+        <li><a href="https://go.dev/about#adding-a-package">How can I add a package?</a></li>
+        <li><a href="https://go.dev/about#removing-a-package">How can I remove a package?</a></li>
+        <li><a href="https://go.dev/about#creating-a-badge">How can I add a go badge in my README file?</a></li>
+      </ul>
     </div>
-  {{end}}
+  </div>
 {{end}}

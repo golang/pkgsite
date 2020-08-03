@@ -4,23 +4,19 @@
  * license that can be found in the LICENSE file.
  */
 
-/*
- * Styling for when the new-homepage experiment is active.
- */
-
-.HomepageNew {
+.Homepage {
   display: flex;
   flex-direction: column;
   margin: 2rem auto;
   max-width: 38rem;
 }
-.HomepageNew-logo {
+.Homepage-logo {
   display: block;
   height: 15.25rem;
   margin: 3.125rem auto;
   width: 22.8125rem;
 }
-.HomepageNew-searchForm input {
+.Homepage-searchForm input {
   background: url('/static/img/icon-search.svg') right no-repeat;
   background-position: left 0.75rem center;
   background-size: 1.5rem;
@@ -33,12 +29,12 @@
   padding-left: 2.75rem;
   width: 100%;
 }
-.HomepageNew-buttonGroup {
+.Homepage-buttonGroup {
   display: flex;
   justify-content: center;
   margin: 2.5rem auto auto 0;
 }
-.HomepageNew-searchButton {
+.Homepage-searchButton {
   border: none;
   border-radius: 0.25rem;
   background-color: var(--turq-dark);
@@ -50,7 +46,7 @@
   margin-right: 0.5rem;
   padding: 0 1.375rem;
 }
-a.HomepageNew-helpButton {
+a.Homepage-helpButton {
   align-items: center;
   display: flex;
   border: 0.0625rem solid var(--gray-4);
@@ -62,14 +58,14 @@ a.HomepageNew-helpButton {
   margin-left: 0.5rem;
   padding: 0 1.375rem;
 }
-.HomepageNew-helpButton img {
+.Homepage-helpButton img {
   height: 1rem;
   margin-left: 0.25rem;
   position: relative;
   top: 0.1875rem;
   width: 1rem;
 }
-.HomepageNew-popularSearches {
+.Homepage-exampleSearches {
   color: var(--gray-2);
   font-size: 0.875rem;
   font-weight: 500;
@@ -77,14 +73,14 @@ a.HomepageNew-helpButton {
   margin: 1.5rem auto;
   text-align: center;
 }
-.HomepageNew-popularSearches a {
+.Homepage-exampleSearches a {
   color: var(--turq-dark);
   font-size: 1rem;
   font-weight: initial;
   padding: 0 0.625rem;
 }
 @media only screen and (max-width: 30rem) {
-  .HomepageNew-popularSearches > span {
+  .Homepage-exampleSearches > span {
     display: block;
   }
 }

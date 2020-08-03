@@ -16,9 +16,7 @@
 {{if (.Experiments.IsActive "sidenav")}}
   <link href="/static/css/sidenav.css?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
-{{if (.Experiments.IsActive "new-homepage")}}
-  <link href="/static/css/homepage.css?version={{.AppVersionLabel}}" rel="stylesheet">
-{{end}}
+{{block "main_content_stylesheet" .}}{{end}}
 <link href="/third_party/dialog-polyfill/dialog-polyfill.css?version={{.AppVersionLabel}}" rel="stylesheet">
 <title>{{if .HTMLTitle}}{{.HTMLTitle}} · {{end}}pkg.go.dev</title>
 <body class="Site">

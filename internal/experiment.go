@@ -13,7 +13,6 @@ const (
 	ExperimentFrontendFetch      = "frontend-fetch"
 	ExperimentMasterVersion      = "master-version"
 	ExperimentExecutableExamples = "executable-examples"
-	ExperimentNewHomepage        = "new-homepage"
 	ExperimentSidenav            = "sidenav"
 	ExperimentTranslateHTML      = "translate-html"
 	ExperimentUseDirectories     = "use-directories"
@@ -27,7 +26,6 @@ var Experiments = map[string]string{
 	ExperimentAutocomplete:       "Enable autocomplete with search.",
 	ExperimentFrontendFetch:      "Enable ability to fetch a package that doesn't exist on pkg.go.dev.",
 	ExperimentMasterVersion:      "Enable viewing path@master.",
-	ExperimentNewHomepage:        "Enable the new hompage.",
 	ExperimentExecutableExamples: "Display executable examples with their import statements, so that they are runnable via the Go playground.",
 	ExperimentSidenav:            "Display documentation index on the left sidenav.",
 	ExperimentTranslateHTML:      "Parse HTML text in READMEs, to properly display images.",
