@@ -19,7 +19,6 @@ import (
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
 	"golang.org/x/mod/module"
-	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
@@ -42,8 +41,6 @@ var (
 	fetchTimeout                = 30 * time.Second
 	pollEvery                   = 1 * time.Second
 
-	// keyFetchVersion is a census tag for frontend fetch version types.
-	keyFetchVersion = tag.MustNewKey("frontend-fetch.version")
 	// keyFetchStatus is a census tag for frontend fetch status types.
 	keyFetchStatus = tag.MustNewKey("frontend-fetch.status")
 	// frontendFetchLatency holds observed latency in individual
@@ -128,7 +125,7 @@ func (s *Server) fetchAndPoll(ctx context.Context, ds internal.DataSource, modul
 	defer func() {
 		log.Infof(ctx, "fetchAndPoll(ctx, ds, q, %q, %q, %q): status=%d, responseText=%q",
 			modulePath, fullPath, requestedVersion, status, responseText)
-		recordFrontendFetchMetric(ctx, status, requestedVersion, time.Since(start))
+		recordFrontendFetchMetric(ctx, status, time.Since(start))
 	}()
 
 	if !isSupportedVersion(ctx, fullPath, requestedVersion) ||
@@ -525,16 +522,10 @@ func isActiveFrontendFetch(ctx context.Context) bool {
 		experiment.IsActive(ctx, internal.ExperimentUsePathInfo)
 }
 
-func recordFrontendFetchMetric(ctx context.Context, status int, requestedVersion string, latency time.Duration) {
+func recordFrontendFetchMetric(ctx context.Context, status int, latency time.Duration) {
 	l := float64(latency) / float64(time.Millisecond)
 
-	// Tag versions based on latest, master and semver.
-	v := requestedVersion
-	if semver.IsValid(v) {
-		v = "semver"
-	}
 	stats.RecordWithTags(ctx, []tag.Mutator{
 		tag.Upsert(keyFetchStatus, strconv.Itoa(status)),
-		tag.Upsert(keyFetchVersion, v),
 	}, frontendFetchLatency.M(l))
 }

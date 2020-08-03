@@ -13,6 +13,9 @@ import (
 	"time"
 
 	"github.com/google/safehtml/template"
+	"go.opencensus.io/stats"
+	"go.opencensus.io/stats/view"
+	"go.opencensus.io/tag"
 	"golang.org/x/mod/module"
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
@@ -60,6 +63,22 @@ const (
 	pageTypePackage   = "pkg"
 	pageTypeCommand   = "cmd"
 	pageTypeStdLib    = stdlib.ModulePath
+)
+
+var (
+	keyVersionType     = tag.MustNewKey("frontend.version_type")
+	versionTypeResults = stats.Int64(
+		"go-discovery/frontend_version_type_count",
+		"The version type of a request to package, module, or directory page.",
+		stats.UnitDimensionless,
+	)
+	VersionTypeCount = &view.View{
+		Name:        "go-discovery/frontend_version_type/result_count",
+		Measure:     versionTypeResults,
+		Aggregation: view.Count(),
+		Description: "version type results, by latest, master, or semver",
+		TagKeys:     []tag.Key{keyVersionType},
+	}
 )
 
 // serveDetails handles requests for package/directory/module details pages. It
@@ -132,6 +151,7 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 			}()
 		}
 	}
+	recordVersionTypeMetric(ctx, urlInfo.requestedVersion)
 	if isActiveUseDirectories(ctx) {
 		return s.serveDetailsPage(w, r, ds, urlInfo)
 	}
@@ -508,4 +528,15 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, d
 		return err
 	}
 	return pathFoundAtLatestError(ctx, pathType, fullPath, requestedVersion)
+}
+
+func recordVersionTypeMetric(ctx context.Context, requestedVersion string) {
+	// Tag versions based on latest, master and semver.
+	v := requestedVersion
+	if semver.IsValid(v) {
+		v = "semver"
+	}
+	stats.RecordWithTags(ctx, []tag.Mutator{
+		tag.Upsert(keyVersionType, v),
+	}, versionTypeResults.M(1))
 }

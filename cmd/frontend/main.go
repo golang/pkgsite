@@ -132,6 +132,7 @@ func main() {
 		frontend.FetchLatencyDistribution,
 		frontend.FetchResponseCount,
 		frontend.PlaygroundShareRequestCount,
+		frontend.VersionTypeCount,
 		middleware.CacheResultCount,
 		middleware.CacheErrorCount,
 		middleware.QuotaResultCount,
