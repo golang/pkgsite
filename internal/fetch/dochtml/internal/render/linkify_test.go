@@ -252,14 +252,14 @@ b := 1
 `,
 		},
 		{
-			"stripped output comment and trailing newlines",
+			"stripped output comment and trailing code",
 			`a := 1
 // Output:
 b := 1
 
-
 // Output:
 // removed
+cleanup()
 `,
 			`
 <pre class="Documentation-exampleCode">

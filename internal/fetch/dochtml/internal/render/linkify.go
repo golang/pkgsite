@@ -209,7 +209,7 @@ scan:
 		case token.EOF:
 			break scan
 		case token.COMMENT:
-			if exampleOutputRx.MatchString(lit) && outputOffset == -1 {
+			if exampleOutputRx.MatchString(lit) {
 				outputOffset = len(els)
 			}
 			lit = strings.Replace(lit, indent, "\n", -1)
@@ -217,11 +217,8 @@ scan:
 			lastOffset += len(lit)
 		case token.STRING:
 			// Avoid replacing indents in multi-line string literals.
-			outputOffset = -1
 			els = append(els, codeElement{lit, false})
 			lastOffset += len(lit)
-		default:
-			outputOffset = -1
 		}
 	}
 
