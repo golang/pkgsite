@@ -39,11 +39,12 @@
 html,
 body {
   /**
-   * Prevent jitter when focusing within fixed elements on iOS.
+   * This is used to programatically detect whether overflow needs to be altered
+   * to prevent jitter when focusing within fixed elements on iOS.
+   * It also must be set to 'touch' for the fix to work.
    */
   -webkit-overflow-scrolling: touch;
   height: 100%;
-  overflow: auto;
 }
 body {
   color: var(--gray-1);

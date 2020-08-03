@@ -43,6 +43,16 @@ class FixedHeaderController {
       }
     );
     this._intersectionObserver.observe(this._el);
+
+    // Fixed positioning on Safari iOS is very broken, and without this hack,
+    // focusing on the overflow menu will cause all content to scroll.
+    // The -webkit-overflow-scroll CSS property is only available on mobile
+    // Safari, so check for it and set the appropriate style to fix this.
+    if (window.getComputedStyle(document.body)['-webkit-overflow-scrolling'] !== undefined) {
+      [document.documentElement, document.body].forEach(el => {
+        el.style.overflow = 'auto';
+      });
+    }
   }
 
   /**
