@@ -333,6 +333,26 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/gonum/gonum/blob/v0.6.1/doc.go#L1",
 			"https://github.com/gonum/gonum/raw/v0.6.1/doc.go",
 		},
+		{
+			"custom with gotools at repo root",
+			"dmitri.shuralyov.com/gpu/mtl", "v0.0.0-20191203043605-d42048ed14fd", "mtl.go",
+
+			"https://dmitri.shuralyov.com/gpu/mtl/...",
+			"https://gotools.org/dmitri.shuralyov.com/gpu/mtl?rev=d42048ed14fd",
+			"https://gotools.org/dmitri.shuralyov.com/gpu/mtl?rev=d42048ed14fd#mtl.go",
+			"https://gotools.org/dmitri.shuralyov.com/gpu/mtl?rev=d42048ed14fd#mtl.go-L1",
+			"",
+		},
+		{
+			"custom with gotools in subdir",
+			"dmitri.shuralyov.com/gpu/mtl", "v0.0.0-20191203043605-d42048ed14fd", "example/movingtriangle/internal/coreanim/coreanim.go",
+
+			"https://dmitri.shuralyov.com/gpu/mtl/...",
+			"https://gotools.org/dmitri.shuralyov.com/gpu/mtl?rev=d42048ed14fd",
+			"https://gotools.org/dmitri.shuralyov.com/gpu/mtl/example/movingtriangle/internal/coreanim?rev=d42048ed14fd#coreanim.go",
+			"https://gotools.org/dmitri.shuralyov.com/gpu/mtl/example/movingtriangle/internal/coreanim?rev=d42048ed14fd#coreanim.go-L1",
+			"",
+		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
 			info, err := ModuleInfo(context.Background(), &Client{client}, test.modulePath, test.version)
@@ -340,7 +360,7 @@ func TestModuleInfo(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			check(t, "repo", info.repoURL, test.wantRepo)
+			check(t, "repo", info.RepoURL(), test.wantRepo)
 			check(t, "module", info.ModuleURL(), test.wantModule)
 			check(t, "file", info.FileURL(test.file), test.wantFile)
 			check(t, "line", info.LineURL(test.file, 1), test.wantLine)
@@ -837,6 +857,10 @@ func TestJSON(t *testing.T) {
 			&Info{repoURL: "r", moduleDir: "m", commit: "c", templates: urlTemplates{File: "f"}},
 			`{"RepoURL":"r","ModuleDir":"m","Commit":"c","Templates":{"Directory":"","File":"f","Line":"","Raw":""}}`,
 		},
+		{
+			&Info{repoURL: "r", moduleDir: "m", commit: "c", templates: urlTemplates{Repo: "r", File: "f"}},
+			`{"RepoURL":"r","ModuleDir":"m","Commit":"c","Templates":{"Repo":"r","Directory":"","File":"f","Line":"","Raw":""}}`,
+		},
 	} {
 		bytes, err := json.Marshal(&test.in)
 		if err != nil {
@@ -877,9 +901,9 @@ func TestURLTemplates(t *testing.T) {
 			}
 		}
 
-		check(p.templates.Directory, "commit", "dir")
-		check(p.templates.File, "commit", "file")
-		check(p.templates.Line, "commit", "file", "line")
+		check(p.templates.Directory, "commit")
+		check(p.templates.File, "commit")
+		check(p.templates.Line, "commit", "line")
 		check(p.templates.Raw, "commit", "file")
 	}
 }

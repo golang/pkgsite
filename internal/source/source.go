@@ -49,11 +49,18 @@ type Info struct {
 	templates urlTemplates // for building URLs
 }
 
+// RepoURL returns a URL for the home page of the repository.
 func (i *Info) RepoURL() string {
 	if i == nil {
 		return ""
 	}
-	return i.repoURL
+	if i.templates.Repo == "" {
+		// The default repo template is just "{repo}".
+		return i.repoURL
+	}
+	return expand(i.templates.Repo, map[string]string{
+		"repo": i.repoURL,
+	})
 }
 
 // ModuleURL returns a URL for the home page of the module.
@@ -67,9 +74,10 @@ func (i *Info) DirectoryURL(dir string) string {
 		return ""
 	}
 	return strings.TrimSuffix(expand(i.templates.Directory, map[string]string{
-		"repo":   i.repoURL,
-		"commit": i.commit,
-		"dir":    path.Join(i.moduleDir, dir),
+		"repo":       i.repoURL,
+		"importPath": path.Join(strings.TrimPrefix(i.repoURL, "https://"), dir),
+		"commit":     i.commit,
+		"dir":        path.Join(i.moduleDir, dir),
 	}), "/")
 }
 
@@ -78,10 +86,13 @@ func (i *Info) FileURL(pathname string) string {
 	if i == nil {
 		return ""
 	}
+	dir, base := path.Split(pathname)
 	return expand(i.templates.File, map[string]string{
-		"repo":   i.repoURL,
-		"commit": i.commit,
-		"file":   path.Join(i.moduleDir, pathname),
+		"repo":       i.repoURL,
+		"importPath": path.Join(strings.TrimPrefix(i.repoURL, "https://"), dir),
+		"commit":     i.commit,
+		"file":       path.Join(i.moduleDir, pathname),
+		"base":       base,
 	})
 }
 
@@ -90,11 +101,14 @@ func (i *Info) LineURL(pathname string, line int) string {
 	if i == nil {
 		return ""
 	}
+	dir, base := path.Split(pathname)
 	return expand(i.templates.Line, map[string]string{
-		"repo":   i.repoURL,
-		"commit": i.commit,
-		"file":   path.Join(i.moduleDir, pathname),
-		"line":   strconv.Itoa(line),
+		"repo":       i.repoURL,
+		"importPath": path.Join(strings.TrimPrefix(i.repoURL, "https://"), dir),
+		"commit":     i.commit,
+		"file":       path.Join(i.moduleDir, pathname),
+		"base":       base,
+		"line":       strconv.Itoa(line),
 	})
 }
 
@@ -521,6 +535,17 @@ var patterns = []struct {
 		// URLs anyway. See gogs/gogs#6242.
 		templates: giteaURLTemplates,
 	},
+
+	{
+		pattern: `^(?P<repo>dmitri\.shuralyov\.com\/.+)$`,
+		templates: urlTemplates{
+			Repo:      "{repo}/...",
+			Directory: "https://gotools.org/{importPath}?rev={commit}",
+			File:      "https://gotools.org/{importPath}?rev={commit}#{base}",
+			Line:      "https://gotools.org/{importPath}?rev={commit}#{base}-L{line}",
+		},
+	},
+
 	// Patterns that match the general go command pattern, where they must have
 	// a ".git" repo suffix in an import path. If matching a repo URL from a meta tag,
 	// there is no ".git".
@@ -577,11 +602,23 @@ func giteaTransformCommit(commit string, isHash bool) string {
 
 // urlTemplates describes how to build URLs from bits of source information.
 // The fields are exported for JSON encoding.
+//
+// The template variables are:
+//
+// 	• {repo}       - Repository URL with "https://" prefix ("https://example.com/myrepo").
+// 	• {importPath} - Package import path ("example.com/myrepo/mypkg").
+// 	• {commit}     - Tag name or commit hash corresponding to version ("v0.1.0" or "1234567890ab").
+// 	• {dir}        - Path to directory of the package, relative to repo root ("mypkg").
+// 	• {file}       - Path to file containing the identifier, relative to repo root ("mypkg/file.go").
+// 	• {base}       - Base name of file containing the identifier, including file extension ("file.go").
+// 	• {line}       - Line number for the identifier ("41").
+//
 type urlTemplates struct {
-	Directory string // URL template for a directory, with {repo}, {commit} and {dir}
-	File      string // URL template for a file, with {repo}, {commit} and {file}
-	Line      string // URL template for a line, with {repo}, {commit}, {file} and {line}
-	Raw       string // URL template for the raw contents of a file, with {repo}, {repoPath}, {commit} and {file}
+	Repo      string `json:",omitempty"` // Optional URL template for the repository home page, with {repo}. If left empty, a default template "{repo}" is used.
+	Directory string // URL template for a directory, with {repo}, {importPath}, {commit}, {dir}.
+	File      string // URL template for a file, with {repo}, {importPath}, {commit}, {file}, {base}.
+	Line      string // URL template for a line, with {repo}, {importPath}, {commit}, {file}, {base}, {line}.
+	Raw       string // Optional URL template for the raw contents of a file, with {repo}, {commit}, {file}.
 }
 
 var (
