@@ -1172,6 +1172,11 @@ code {
 .DocNavMobile {
   display: none;
 }
+.DocNav-files {
+  /* This property will be removed once the documentation has been reprocessed
+     and "Package Files" is listed in the left side nav.*/
+  display: none;
+}
 /**
  * Some versions of the doc template have DocNav also on elements with these
  * classes, which we don’t want to hide unless the sidenav experiment is active.
