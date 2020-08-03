@@ -174,7 +174,7 @@ main() {
     "")
       standard_linters
       run_prettier
-      #runcmd go mod tidy
+      runcmd go mod tidy
       runcmd env GO_DISCOVERY_TESTDB=true go test ./...
       runcmd go test ./internal/secrets
       ;;
