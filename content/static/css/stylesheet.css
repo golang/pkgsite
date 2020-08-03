@@ -1320,9 +1320,6 @@ code {
   margin-right: 0.4rem;
   padding-right: 0.5rem;
 }
-.Documentation-files {
-  display: none;
-}
 .Documentation-filesList {
   column-count: 3;
   column-width: 12.5rem;
