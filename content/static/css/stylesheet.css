@@ -1001,7 +1001,6 @@ code {
   color: var(--gray-2);
   font-size: 0.6875rem;
   position: relative;
-  text-transform: uppercase;
 }
 @media only screen and (min-width: 37.5rem) {
   .DetailsNavFixed-container {
