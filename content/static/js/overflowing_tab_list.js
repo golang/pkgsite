@@ -94,7 +94,7 @@ class OverflowingTabListController {
       });
       this.setOverflowMenuHidden(hiddenEls.length === 0);
       this._selectEl.querySelectorAll('option').forEach((el, i) => {
-        el.disabled = !hiddenEls.includes(i);
+        el.disabled = !hiddenEls.includes(i) || el.getAttribute('data-always-disabled') === 'true';
       });
     });
   }

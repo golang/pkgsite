@@ -785,11 +785,6 @@ code {
 .DetailsNav [role='tab'] + [role='tab'] {
   margin-left: 1rem;
 }
-.DetailsNav [role='tab'][aria-disabled='true'],
-.DetailsNav [role='tab'][aria-disabled='true']:hover {
-  border-bottom: 2px solid var(--white);
-  color: var(--gray-5);
-}
 .DetailsNav [role='tab'],
 .DetailsNav [role='tab']:link,
 .DetailsNav [role='tab']:visited {
@@ -801,6 +796,12 @@ code {
 .DetailsNav [role='tab']:hover {
   border-bottom-color: var(--purple);
   text-decoration: none;
+}
+.DetailsNav [role='tab'][aria-disabled='true'],
+.DetailsNav [role='tab'][aria-disabled='true']:hover {
+  border-bottom-color: transparent;
+  color: var(--gray-5);
+  cursor: not-allowed;
 }
 .DetailsNav [role='tab'][aria-selected='true'] {
   border-bottom: 2px solid var(--turq-med);
@@ -978,6 +979,12 @@ code {
 }
 .DetailsNavFixed [role='tab'][aria-hidden='true'] {
   display: none;
+}
+.DetailsNavFixed [role='tab'][aria-disabled='true'],
+.DetailsNavFixed [role='tab'][aria-disabled='true']:hover {
+  border-bottom-color: transparent;
+  color: var(--gray-5);
+  cursor: not-allowed;
 }
 .DetailsNavFixed-overflowContainer {
   display: none;

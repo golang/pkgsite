@@ -86,8 +86,12 @@
   <nav class="DetailsNav js-fixedHeaderSentinel js-overflowingTabList">
     <div role="tablist">
       {{range .Tabs}}
-        <a role="tab" href="{{$header.URL}}?tab={{.Name}}"
-          {{if .Disabled}}aria-disabled="true"{{end}}
+        <a role="tab"
+          {{if .Disabled}}
+            aria-disabled="true"
+          {{else}}
+            href="{{$header.URL}}?tab={{.Name}}"
+          {{end}}
           {{if eq .Name $.Settings.Name}}
             aria-selected="true"
           {{else}}
@@ -105,7 +109,10 @@
         {{range .Tabs}}
           <option
             value="{{$header.URL}}?tab={{.Name}}"
-            {{if .Disabled}}disabled{{end}}
+            {{if .Disabled}}
+              disabled
+              data-always-disabled="true"
+            {{end}}
             {{if eq .Name $.Settings.Name}}selected{{end}}
           >{{.DisplayName}}</option>
         {{end}}
@@ -153,8 +160,12 @@
       <div class="DetailsNavFixed-overflowingTabList js-overflowingTabList">
         <div role="tablist">
           {{range .Tabs}}
-            <a role="tab" href="{{$header.URL}}?tab={{.Name}}"
-              {{if .Disabled}}aria-disabled="true"{{end}}
+            <a role="tab"
+              {{if .Disabled}}
+                aria-disabled="true"
+              {{else}}
+                href="{{$header.URL}}?tab={{.Name}}"
+              {{end}}
               {{if eq .Name $.Settings.Name}}
                 aria-selected="true"
               {{else}}
@@ -172,7 +183,10 @@
             {{range .Tabs}}
               <option
                 value="{{$header.URL}}?tab={{.Name}}"
-                {{if .Disabled}}disabled{{end}}
+                {{if .Disabled}}
+                  disabled
+                  data-always-disabled="true"
+                {{end}}
                 {{if eq .Name $.Settings.Name}}selected{{end}}
               >{{.DisplayName}}</option>
             {{end}}
