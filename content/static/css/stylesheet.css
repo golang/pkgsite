@@ -265,14 +265,6 @@ code {
   width: 100%;
   z-index: 1;
 }
-:target::before {
-  content: ' ';
-  display: block;
-  height: 5.125rem;
-  margin-top: -5.125rem; /* Move hidden anchor content for deep linking with a sticky header. */
-  pointer-events: none;
-  visibility: hidden;
-}
 .Header-logoLink {
   margin-right: auto;
 }
@@ -781,6 +773,16 @@ code {
   min-height: 32rem;
   margin: 0 auto;
   max-width: 60em;
+}
+.DetailsContent :target::before {
+  content: ' ';
+  display: block;
+  height: calc(var(--header-height) + 0.75rem);
+  margin-top: calc(
+    -1 * (var(--header-height) + 0.75rem)
+  ); /* Move hidden anchor content for deep linking with a sticky header. */
+  pointer-events: none;
+  visibility: hidden;
 }
 
 .CopyToClipboardButton {

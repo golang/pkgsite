@@ -8,9 +8,11 @@
  * Styling for when the “sidenav” experiment is active.
  */
 
-:target::before {
-  height: 8rem;
-  margin-top: -8rem; /* Move hidden anchor content for deep linking with a sticky header. */
+.DetailsContent :target::before {
+  height: calc(var(--header-height) + 3.75rem);
+  margin-top: calc(
+    -1 * (var(--header-height) + 3.75rem)
+  ); /* Move hidden anchor content for deep linking with a sticky header. */
 }
 .Documentation-nav,
 .Documentation-index,
@@ -93,9 +95,11 @@
   color: var(--gray-3);
 }
 @media only screen and (min-width: 52rem) {
-  :target::before {
-    height: calc(5.125rem + 2.5rem);
-    margin-top: calc(-5.125rem - 2.5rem); /* Account for added height of banner. */
+  .DetailsContent :target::before {
+    height: calc(var(--header-height) + 0.75rem);
+    margin-top: calc(
+      -1 * (var(--header-height) + 0.75rem)
+    ); /* Move hidden anchor content for deep linking with a sticky header. */
   }
   .Documentation {
     column-gap: 2.8125rem;
