@@ -18,9 +18,9 @@ const (
 // MaxDocumentationHTML is a limit on the rendered documentation HTML size.
 //
 // The current limit of is based on the largest packages that
-// gddo has encountered. See https://github.com/golang/gddo/issues/635.
+// pkg.go.dev has encountered. See https://golang.org/issue/40576.
 //
 // It is a variable for testing.
-var MaxDocumentationHTML = 10 * megabyte
+var MaxDocumentationHTML = 20 * megabyte
 
 const megabyte = 1000 * 1000
