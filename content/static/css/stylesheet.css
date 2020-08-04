@@ -220,7 +220,6 @@ code {
   font: inherit;
   outline: none;
   background-color: var(--white);
-  color: var(--black);
 }
 .SearchForm-input::placeholder {
   color: var(--gray-5);
@@ -363,6 +362,7 @@ code {
   background-color: transparent;
   border: none;
   box-sizing: border-box;
+  color: transparent;
   flex: 1;
   font: inherit;
   height: 100%;
@@ -374,6 +374,7 @@ code {
   color: transparent;
 }
 .Header-searchForm:focus-within .Header-searchFormInput {
+  color: var(--gray-1);
   height: auto;
   position: relative;
   width: auto;
@@ -413,6 +414,7 @@ code {
     fill: var(--gray-4);
   }
   .Header-searchFormInput {
+    color: var(--gray-1);
     height: auto;
     position: relative;
     width: auto;
