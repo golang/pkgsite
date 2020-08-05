@@ -62,7 +62,10 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 	if err := db.comparePaths(ctx, m); err != nil {
 		return err
 	}
-	removeNonDistributableData(m)
+	if !db.bypassLicenseCheck {
+		// If we are bypassing license checking, remove data for non-redistributable modules.
+		removeNonDistributableData(m)
+	}
 	return db.saveModule(ctx, m)
 }
 
@@ -692,6 +695,15 @@ func removeNonDistributableData(m *internal.Module) {
 	if !m.IsRedistributable {
 		m.LegacyReadmeFilePath = ""
 		m.LegacyReadmeContents = ""
+	}
+	for _, d := range m.Directories {
+		if !d.IsRedistributable {
+			d.Readme = nil
+			if d.Package != nil && d.Package.Documentation != nil {
+				d.Package.Documentation.Synopsis = ""
+				d.Package.Documentation.HTML = safehtml.HTML{}
+			}
+		}
 	}
 }
 

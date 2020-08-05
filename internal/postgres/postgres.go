@@ -9,12 +9,20 @@ import (
 )
 
 type DB struct {
-	db *database.DB
+	db                 *database.DB
+	bypassLicenseCheck bool
 }
 
 // New returns a new postgres DB.
 func New(db *database.DB) *DB {
-	return &DB{db}
+	return &DB{db, false}
+}
+
+// NewBypassingLicenseCheck returns a new postgres DB that bypasses license
+// checks on insertion. That means all data will be inserted for
+// non-redistributable modules and packages.
+func NewBypassingLicenseCheck(db *database.DB) *DB {
+	return &DB{db, true}
 }
 
 // Close closes a DB.

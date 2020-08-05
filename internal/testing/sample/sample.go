@@ -189,21 +189,14 @@ func Module(modulePath, version string, suffixes ...string) *internal.Module {
 		LegacyPackages:   nil,
 		Licenses:         Licenses,
 	}
-	emptySuffix := false
+	m.Directories = []*internal.Directory{DirectoryForModuleRoot(mi, LicenseMetadata)}
 	for _, s := range suffixes {
-		if s == "" {
-			emptySuffix = true
-			break
-		}
-	}
-	if emptySuffix {
-		AddPackage(m, LegacyPackage(modulePath, ""))
-	} else {
-		m.Directories = []*internal.Directory{DirectoryForModuleRoot(mi, LicenseMetadata)}
-	}
-	for _, s := range suffixes {
+		lp := LegacyPackage(modulePath, s)
 		if s != "" {
-			AddPackage(m, LegacyPackage(modulePath, s))
+			AddPackage(m, lp)
+		} else {
+			m.LegacyPackages = append(m.LegacyPackages, lp)
+			m.Directories[0].Package = DirectoryForPackage(lp).Package
 		}
 	}
 	return m

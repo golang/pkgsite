@@ -23,3 +23,10 @@ In order to populate local versions, you can either fetch the version explicitly
 (via `http://localhost:8000/fetch/path/to/package/@v/v1.2.3`), or you can visit the
 Worker dashboard, and click 'Enqueue from module index'. This will enqueue the
 next N versions from the index for processing.
+
+## Bypassing license checks
+
+By default, the worker does not insert readme contents or documentation into the
+database if we determine that the module or package is not redistributable,
+based on the licenses it finds in the module zip. To bypass the license check,
+pass the flag `-bypass_license_check`.

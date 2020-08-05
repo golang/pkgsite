@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"sync"
@@ -132,6 +133,69 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 		if diff := cmp.Diff(wantd, *got, opts); diff != "" {
 			t.Errorf("testDB.getDirectory(%q, %q) mismatch (-want +got):\n%s", dir.Path, want.Version, diff)
 		}
+	}
+}
+
+func TestInsertModuleLicenseCheck(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	for _, bypass := range []bool{false, true} {
+		t.Run(fmt.Sprintf("bypass=%t", bypass), func(t *testing.T) {
+			defer ResetTestDB(testDB, t)
+			var db *DB
+			if bypass {
+				db = NewBypassingLicenseCheck(testDB.db)
+			} else {
+				db = testDB
+			}
+			checkHasRedistData := func(readme string, doc safehtml.HTML, want bool) {
+				t.Helper()
+				if got := readme != ""; got != want {
+					t.Errorf("readme: got %t, want %t", got, want)
+				}
+				if got := doc.String() != ""; got != want {
+					t.Errorf("doc: got %t, want %t", got, want)
+				}
+			}
+
+			mod := sample.Module(sample.ModulePath, sample.VersionString, "")
+			checkHasRedistData(mod.LegacyReadmeContents, mod.LegacyPackages[0].DocumentationHTML, true)
+			checkHasRedistData(mod.Directories[0].Readme.Contents, mod.Directories[0].Package.Documentation.HTML, true)
+			mod.IsRedistributable = false
+			mod.LegacyPackages[0].IsRedistributable = false
+			mod.Directories[0].IsRedistributable = false
+
+			if err := db.InsertModule(ctx, mod); err != nil {
+				t.Fatal(err)
+			}
+
+			// Legacy model
+			mi, err := db.LegacyGetModuleInfo(ctx, mod.ModulePath, mod.Version)
+			if err != nil {
+				t.Fatal(err)
+			}
+			pkg, err := db.LegacyGetPackage(ctx, mod.ModulePath, mod.ModulePath, mod.Version)
+			if err != nil {
+				t.Fatal(err)
+			}
+			checkHasRedistData(mi.LegacyReadmeContents, pkg.DocumentationHTML, bypass)
+
+			// New model
+			dir, err := db.GetDirectory(ctx, mod.ModulePath, mod.ModulePath, mod.Version)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var readme string
+			if dir.Readme != nil {
+				readme = dir.Readme.Contents
+			}
+			var doc safehtml.HTML
+			if dir.Package != nil && dir.Package.Documentation != nil {
+				doc = dir.Package.Documentation.HTML
+			}
+			checkHasRedistData(readme, doc, bypass)
+		})
 	}
 }
 
