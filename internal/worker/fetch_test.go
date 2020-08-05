@@ -30,6 +30,8 @@ import (
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
+const testAppVersion = "appVersionLabel"
+
 var sourceTimeout = 1 * time.Second
 
 var buildConstraintsMod = &proxy.Module{
@@ -92,7 +94,7 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	}
 
 	// Fetch a module@version that the proxy serves successfully.
-	if _, err := FetchAndUpdateState(ctx, sample.ModulePath, sample.VersionString, proxyClient, sourceClient, testDB, "appVersionLabel"); err != nil {
+	if _, err := FetchAndUpdateState(ctx, sample.ModulePath, sample.VersionString, proxyClient, sourceClient, testDB, testAppVersion); err != nil {
 		t.Fatal(err)
 	}
 
@@ -130,7 +132,7 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	defer teardownProxy2()
 
 	// Now fetch it again.
-	if code, _ := FetchAndUpdateState(ctx, sample.ModulePath, sample.VersionString, proxyClient, sourceClient, testDB, "appVersionLabel"); code != http.StatusNotFound {
+	if code, _ := FetchAndUpdateState(ctx, sample.ModulePath, sample.VersionString, proxyClient, sourceClient, testDB, testAppVersion); code != http.StatusNotFound {
 		t.Fatalf("FetchAndUpdateState(ctx, %q, %q, proxyClient, sourceClient, testDB): got code %d, want 404/410", sample.ModulePath, sample.VersionString, code)
 	}
 
@@ -225,7 +227,7 @@ func TestFetchAndUpdateState_BadRequestedVersion(t *testing.T) {
 	sourceClient := source.NewClient(sourceTimeout)
 
 	want := http.StatusNotFound
-	code, _ := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB, "appVersionLabel")
+	code, _ := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB, testAppVersion)
 	if code != want {
 		t.Fatalf("got code %d, want %d", code, want)
 	}
@@ -259,7 +261,7 @@ func TestFetchAndUpdateState_Incomplete(t *testing.T) {
 		want       = hasIncompletePackagesCode
 	)
 
-	code, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB, "appVersionLabel")
+	code, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB, testAppVersion)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -327,7 +329,7 @@ func TestFetchAndUpdateState_Mismatch(t *testing.T) {
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)
 
-	code, err := FetchAndUpdateState(ctx, sample.ModulePath, sample.VersionString, proxyClient, sourceClient, testDB, "appVersionLabel")
+	code, err := FetchAndUpdateState(ctx, sample.ModulePath, sample.VersionString, proxyClient, sourceClient, testDB, testAppVersion)
 	wantErr := derrors.AlternativeModule
 	wantCode := derrors.ToStatus(wantErr)
 	if code != wantCode || !errors.Is(err, wantErr) {
@@ -391,7 +393,7 @@ func TestFetchAndUpdateState_DeleteOlder(t *testing.T) {
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)
 
-	if _, err := FetchAndUpdateState(ctx, sample.ModulePath, olderVersion, proxyClient, sourceClient, testDB, "appVersionLabel"); err != nil {
+	if _, err := FetchAndUpdateState(ctx, sample.ModulePath, olderVersion, proxyClient, sourceClient, testDB, testAppVersion); err != nil {
 		t.Fatal(err)
 	}
 	gotModule, gotVersion, gotFound := postgres.GetFromSearchDocuments(ctx, t, testDB, sample.ModulePath+"/foo")
@@ -399,7 +401,7 @@ func TestFetchAndUpdateState_DeleteOlder(t *testing.T) {
 		t.Fatalf("got (%q, %q, %t), want (%q, %q, true)", gotModule, gotVersion, gotFound, sample.ModulePath, olderVersion)
 	}
 
-	code, _ := FetchAndUpdateState(ctx, sample.ModulePath, mismatchVersion, proxyClient, sourceClient, testDB, "appVersionLabel")
+	code, _ := FetchAndUpdateState(ctx, sample.ModulePath, mismatchVersion, proxyClient, sourceClient, testDB, testAppVersion)
 	if want := derrors.ToStatus(derrors.AlternativeModule); code != want {
 		t.Fatalf("got %d, want %d", code, want)
 	}
@@ -439,7 +441,7 @@ func TestSkipIncompletePackage(t *testing.T) {
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)
 
-	code, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB, "appVersionLabel")
+	code, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB, testAppVersion)
 	if err != nil {
 		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
 	}
@@ -503,7 +505,7 @@ func TestTrimLargeCode(t *testing.T) {
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)
 
-	code, err := FetchAndUpdateState(ctx, sample.ModulePath, sample.VersionString, proxyClient, sourceClient, testDB, "appVersionLabel")
+	code, err := FetchAndUpdateState(ctx, sample.ModulePath, sample.VersionString, proxyClient, sourceClient, testDB, testAppVersion)
 	if err != nil {
 		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", sample.ModulePath, sample.VersionString, proxyClient, sourceClient, testDB, err)
 	}
@@ -542,7 +544,7 @@ func TestFetch_V1Path(t *testing.T) {
 	})
 	defer tearDown()
 	sourceClient := source.NewClient(sourceTimeout)
-	if _, err := FetchAndUpdateState(ctx, sample.ModulePath, sample.VersionString, proxyClient, sourceClient, testDB, "appVersionLabel"); err != nil {
+	if _, err := FetchAndUpdateState(ctx, sample.ModulePath, sample.VersionString, proxyClient, sourceClient, testDB, testAppVersion); err != nil {
 		t.Fatalf("FetchAndUpdateState: %v", err)
 	}
 	pkg, err := testDB.LegacyGetPackage(ctx, sample.ModulePath, internal.UnknownModulePath, sample.VersionString)
@@ -592,7 +594,7 @@ func TestReFetch(t *testing.T) {
 	})
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)
-	if _, err := FetchAndUpdateState(ctx, sample.ModulePath, version, proxyClient, sourceClient, testDB, "appVersionLabel"); err != nil {
+	if _, err := FetchAndUpdateState(ctx, sample.ModulePath, version, proxyClient, sourceClient, testDB, testAppVersion); err != nil {
 		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", sample.ModulePath, version, proxyClient, sourceClient, testDB, err)
 	}
 
@@ -610,7 +612,7 @@ func TestReFetch(t *testing.T) {
 	})
 	defer teardownProxy()
 
-	if _, err := FetchAndUpdateState(ctx, sample.ModulePath, version, proxyClient, sourceClient, testDB, "appVersionLabel"); err != nil {
+	if _, err := FetchAndUpdateState(ctx, sample.ModulePath, version, proxyClient, sourceClient, testDB, testAppVersion); err != nil {
 		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
 	}
 	want := &internal.LegacyVersionedPackage{
@@ -658,7 +660,7 @@ func TestReFetch(t *testing.T) {
 		},
 	})
 	defer teardownProxy()
-	if _, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB, "appVersionLabel"); !errors.Is(err, derrors.DBModuleInsertInvalid) {
+	if _, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB, testAppVersion); !errors.Is(err, derrors.DBModuleInsertInvalid) {
 		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
 	}
 }
@@ -1033,7 +1035,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 
 			sourceClient := source.NewClient(sourceTimeout)
 
-			if _, err := FetchAndUpdateState(ctx, test.modulePath, test.version, proxyClient, sourceClient, testDB, "appVersionLabel"); err != nil {
+			if _, err := FetchAndUpdateState(ctx, test.modulePath, test.version, proxyClient, sourceClient, testDB, testAppVersion); err != nil {
 				t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", test.modulePath, test.version, proxyClient, sourceClient, testDB, err)
 			}
 
