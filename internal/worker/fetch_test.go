@@ -26,6 +26,7 @@ import (
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
@@ -33,6 +34,7 @@ var sourceTimeout = 1 * time.Second
 
 var buildConstraintsMod = &proxy.Module{
 	ModulePath: "build.constraints/module",
+	Version:    sample.VersionString,
 	Files: map[string]string{
 		"LICENSE": testhelper.BSD0License,
 		"cpu/cpu.go": `
@@ -56,15 +58,10 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 
-	const (
-		modulePath = "github.com/take/down"
-		version    = "v1.0.0"
-	)
-
 	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.Module{
 		{
-			ModulePath: modulePath,
-			Version:    version,
+			ModulePath: sample.ModulePath,
+			Version:    sample.VersionString,
 			Files: map[string]string{
 				"foo/foo.go": "// Package foo\npackage foo\n\nconst Foo = 42",
 				"README.md":  "This is a readme",
@@ -76,50 +73,50 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 
 	checkStatus := func(want int) {
 		t.Helper()
-		vs, err := testDB.GetModuleVersionState(ctx, modulePath, version)
+		vs, err := testDB.GetModuleVersionState(ctx, sample.ModulePath, sample.VersionString)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if vs.Status != want {
-			t.Fatalf("testDB.GetModuleVersionState(ctx, %q, %q): status = %v, want = %d", modulePath, version, vs.Status, want)
+			t.Fatalf("testDB.GetModuleVersionState(ctx, %q, %q): status = %v, want = %d", sample.ModulePath, sample.VersionString, vs.Status, want)
 		}
 		if want != http.StatusNotFound {
-			vm, err := testDB.GetVersionMap(ctx, modulePath, version)
+			vm, err := testDB.GetVersionMap(ctx, sample.ModulePath, sample.VersionString)
 			if err != nil {
 				t.Fatal(err)
 			}
 			if vm.Status != want {
-				t.Fatalf("testDB.GetVersionMap(ctx, %q, %q): status = %d, want = %d", modulePath, version, vm.Status, want)
+				t.Fatalf("testDB.GetVersionMap(ctx, %q, %q): status = %d, want = %d", sample.ModulePath, sample.VersionString, vm.Status, want)
 			}
 		}
 	}
 
 	// Fetch a module@version that the proxy serves successfully.
-	if _, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB, "appVersionLabel"); err != nil {
+	if _, err := FetchAndUpdateState(ctx, sample.ModulePath, sample.VersionString, proxyClient, sourceClient, testDB, "appVersionLabel"); err != nil {
 		t.Fatal(err)
 	}
 
 	// Verify that the module status is recorded correctly, and that the version is in the DB.
 	checkStatus(http.StatusOK)
 
-	if _, err := testDB.GetModuleInfo(ctx, modulePath, version); err != nil {
+	if _, err := testDB.GetModuleInfo(ctx, sample.ModulePath, sample.VersionString); err != nil {
 		t.Fatal(err)
 	}
 
-	gotStates, err := testDB.GetPackageVersionStatesForModule(ctx, modulePath, version)
+	gotStates, err := testDB.GetPackageVersionStatesForModule(ctx, sample.ModulePath, sample.VersionString)
 	if err != nil {
 		t.Fatal(err)
 	}
 	wantStates := []*internal.PackageVersionState{
 		{
-			PackagePath: "github.com/take/down/foo",
-			ModulePath:  modulePath,
-			Version:     version,
+			PackagePath: sample.ModulePath + "/foo",
+			ModulePath:  sample.ModulePath,
+			Version:     sample.VersionString,
 			Status:      http.StatusOK,
 		},
 	}
 	if diff := cmp.Diff(wantStates, gotStates); diff != "" {
-		t.Errorf("testDB.GetPackageVersionStatesForModule(ctx, %q, %q) mismatch (-want +got):\n%s", modulePath, version, diff)
+		t.Errorf("testDB.GetPackageVersionStatesForModule(ctx, %q, %q) mismatch (-want +got):\n%s", sample.ModulePath, sample.VersionString, diff)
 	}
 
 	teardownProxy()
@@ -127,39 +124,39 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	// Take down the module, by having the proxy serve a 404/410 for it.
 	proxyServer := proxy.NewServer([]*proxy.Module{}) // serve no versions, not even the defaults.
 	proxyServer.AddRoute(
-		fmt.Sprintf("/%s/@v/%s.info", modulePath, version),
+		fmt.Sprintf("/%s/@v/%s.info", sample.ModulePath, sample.VersionString),
 		func(w http.ResponseWriter, r *http.Request) { http.Error(w, "taken down", http.StatusGone) })
 	proxyClient, teardownProxy2 := proxy.TestProxyServer(t, proxyServer)
 	defer teardownProxy2()
 
 	// Now fetch it again.
-	if code, _ := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB, "appVersionLabel"); code != http.StatusNotFound {
-		t.Fatalf("FetchAndUpdateState(ctx, %q, %q, proxyClient, sourceClient, testDB): got code %d, want 404/410", modulePath, version, code)
+	if code, _ := FetchAndUpdateState(ctx, sample.ModulePath, sample.VersionString, proxyClient, sourceClient, testDB, "appVersionLabel"); code != http.StatusNotFound {
+		t.Fatalf("FetchAndUpdateState(ctx, %q, %q, proxyClient, sourceClient, testDB): got code %d, want 404/410", sample.ModulePath, sample.VersionString, code)
 	}
 
 	// The new state should have a status of Not Found.
 	checkStatus(http.StatusNotFound)
 
-	gotStates, err = testDB.GetPackageVersionStatesForModule(ctx, modulePath, version)
+	gotStates, err = testDB.GetPackageVersionStatesForModule(ctx, sample.ModulePath, sample.VersionString)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if diff := cmp.Diff(wantStates, gotStates); diff != "" {
-		t.Errorf("testDB.GetPackageVersionStatesForModule(ctx, %q, %q) mismatch (-want +got):\n%s", modulePath, version, diff)
+		t.Errorf("testDB.GetPackageVersionStatesForModule(ctx, %q, %q) mismatch (-want +got):\n%s", sample.ModulePath, sample.VersionString, diff)
 	}
 
 	// The module should no longer be in the database:
 	// - It shouldn't be in the modules table. That also covers licenses, packages and paths tables
 	//   via foreign key constraints with ON DELETE CASCADE.
 	// - It shouldn't be in other tables like search_documents and the various imports tables.
-	if _, err := testDB.GetModuleInfo(ctx, modulePath, version); !errors.Is(err, derrors.NotFound) {
+	if _, err := testDB.GetModuleInfo(ctx, sample.ModulePath, sample.VersionString); !errors.Is(err, derrors.NotFound) {
 		t.Fatalf("GetModuleInfo: got %v, want NotFound", err)
 	}
 
 	checkNotInTable := func(table, column string) {
 		q := fmt.Sprintf("SELECT 1 FROM %s WHERE %s = $1 LIMIT 1", table, column)
 		var x int
-		err := testDB.Underlying().QueryRow(ctx, q, modulePath).Scan(&x)
+		err := testDB.Underlying().QueryRow(ctx, q, sample.ModulePath).Scan(&x)
 		if err != sql.ErrNoRows {
 			t.Errorf("table %s: got %v, want ErrNoRows", table, err)
 		}
@@ -181,15 +178,11 @@ func TestFetchAndUpdateState_Excluded(t *testing.T) {
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)
 
-	const (
-		modulePath = "github.com/my/module"
-		version    = "v1.0.0"
-	)
-	if err := testDB.InsertExcludedPrefix(ctx, "github.com/my/m", "user", "for testing"); err != nil {
+	if err := testDB.InsertExcludedPrefix(ctx, sample.ModulePath, "user", "for testing"); err != nil {
 		t.Fatal(err)
 	}
 
-	checkModuleNotFound(t, ctx, modulePath, version, proxyClient, sourceClient, http.StatusForbidden, derrors.Excluded)
+	checkModuleNotFound(t, ctx, sample.ModulePath, sample.VersionString, proxyClient, sourceClient, http.StatusForbidden, derrors.Excluded)
 }
 
 func checkModuleNotFound(t *testing.T, ctx context.Context, modulePath, version string, proxyClient *proxy.Client, sourceClient *source.Client, wantCode int, wantErr error) {
@@ -223,17 +216,15 @@ func TestFetchAndUpdateState_BadRequestedVersion(t *testing.T) {
 	defer cancel()
 
 	defer postgres.ResetTestDB(testDB, t)
-
+	var (
+		modulePath = buildConstraintsMod.ModulePath
+		version    = "badversion"
+	)
 	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.Module{buildConstraintsMod})
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)
 
-	const (
-		modulePath = "build.constraints/module"
-		version    = "badversion"
-		want       = http.StatusNotFound
-	)
-
+	want := http.StatusNotFound
 	code, _ := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB, "appVersionLabel")
 	if code != want {
 		t.Fatalf("got code %d, want %d", code, want)
@@ -247,7 +238,7 @@ func TestFetchAndUpdateState_BadRequestedVersion(t *testing.T) {
 		t.Fatal(err)
 	}
 	if vm.Status != http.StatusNotFound {
-		t.Fatalf("testDB.GetVersionMap(ctx, %q, %q): status=%v, want %d", modulePath, version, vm.Status, http.StatusNotFound)
+		t.Fatalf("testDB.GetVersionMap(ctx, %q, %q): status=%v, want %d", modulePath, version, code, want)
 	}
 }
 
@@ -262,9 +253,9 @@ func TestFetchAndUpdateState_Incomplete(t *testing.T) {
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)
 
-	const (
-		modulePath = "build.constraints/module"
-		version    = "v1.0.0"
+	var (
+		modulePath = buildConstraintsMod.ModulePath
+		version    = buildConstraintsMod.Version
 		want       = hasIncompletePackagesCode
 	)
 
@@ -295,15 +286,15 @@ func TestFetchAndUpdateState_Incomplete(t *testing.T) {
 	}
 	wantStates := []*internal.PackageVersionState{
 		{
-			PackagePath: "build.constraints/module/cpu",
-			ModulePath:  "build.constraints/module",
-			Version:     "v1.0.0",
+			PackagePath: modulePath + "/cpu",
+			ModulePath:  modulePath,
+			Version:     version,
 			Status:      200,
 		},
 		{
-			PackagePath: "build.constraints/module/ignore",
-			ModulePath:  "build.constraints/module",
-			Version:     "v1.0.0",
+			PackagePath: modulePath + "/ignore",
+			ModulePath:  modulePath,
+			Version:     version,
 			Status:      600,
 		},
 	}
@@ -322,15 +313,11 @@ func TestFetchAndUpdateState_Mismatch(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 
-	const (
-		modulePath = "github.com/mis/match"
-		version    = "v1.0.0"
-		goModPath  = "other"
-	)
+	const goModPath = "other"
 	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.Module{
 		{
-			ModulePath: modulePath,
-			Version:    version,
+			ModulePath: sample.ModulePath,
+			Version:    sample.VersionString,
 			Files: map[string]string{
 				"go.mod":     "module " + goModPath,
 				"foo/foo.go": "// Package foo\npackage foo\n\nconst Foo = 42",
@@ -340,32 +327,32 @@ func TestFetchAndUpdateState_Mismatch(t *testing.T) {
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)
 
-	code, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB, "appVersionLabel")
+	code, err := FetchAndUpdateState(ctx, sample.ModulePath, sample.VersionString, proxyClient, sourceClient, testDB, "appVersionLabel")
 	wantErr := derrors.AlternativeModule
 	wantCode := derrors.ToStatus(wantErr)
 	if code != wantCode || !errors.Is(err, wantErr) {
 		t.Fatalf("got %d, %v; want %d, Is(err, derrors.AlternativeModule)", code, err, wantCode)
 	}
-	_, err = testDB.GetModuleInfo(ctx, modulePath, version)
+	_, err = testDB.GetModuleInfo(ctx, sample.ModulePath, sample.VersionString)
 	if !errors.Is(err, derrors.NotFound) {
 		t.Fatalf("got %v, want Is(NotFound)", err)
 	}
-	vs, err := testDB.GetModuleVersionState(ctx, modulePath, version)
+	vs, err := testDB.GetModuleVersionState(ctx, sample.ModulePath, sample.VersionString)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if vs.Status != wantCode {
-		t.Errorf("testDB.GetModuleVersionState(ctx, %q, %q): status=%v, want %d", modulePath, version, vs.Status, wantCode)
+		t.Errorf("testDB.GetModuleVersionState(ctx, %q, %q): status=%v, want %d", sample.ModulePath, sample.VersionString, vs.Status, wantCode)
 	}
 	if vs.GoModPath != goModPath {
-		t.Errorf("testDB.GetModuleVersionState(ctx, %q, %q): goModPath=%q, want %q", modulePath, version, vs.GoModPath, goModPath)
+		t.Errorf("testDB.GetModuleVersionState(ctx, %q, %q): goModPath=%q, want %q", sample.ModulePath, sample.VersionString, vs.GoModPath, goModPath)
 	}
-	vm, err := testDB.GetVersionMap(ctx, modulePath, version)
+	vm, err := testDB.GetVersionMap(ctx, sample.ModulePath, sample.VersionString)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if vm.Status != wantCode {
-		t.Fatalf("testDB.GetVersionMap(ctx, %q, %q): status=%d, want %d", modulePath, version, vm.Status, wantCode)
+		t.Fatalf("testDB.GetVersionMap(ctx, %q, %q): status=%d, want %d", sample.ModulePath, sample.VersionString, vm.Status, wantCode)
 	}
 }
 
@@ -378,7 +365,6 @@ func TestFetchAndUpdateState_DeleteOlder(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
 
 	const (
-		modulePath      = "github.com/m"
 		mismatchVersion = "v1.0.0"
 		olderVersion    = "v0.9.0"
 	)
@@ -386,7 +372,7 @@ func TestFetchAndUpdateState_DeleteOlder(t *testing.T) {
 	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.Module{
 		{
 			// mismatched version; will cause deletion
-			ModulePath: modulePath,
+			ModulePath: sample.ModulePath,
 			Version:    mismatchVersion,
 			Files: map[string]string{
 				"go.mod":     "module other",
@@ -395,7 +381,7 @@ func TestFetchAndUpdateState_DeleteOlder(t *testing.T) {
 		},
 		{
 			// older version; should be deleted
-			ModulePath: modulePath,
+			ModulePath: sample.ModulePath,
 			Version:    olderVersion,
 			Files: map[string]string{
 				"foo/foo.go": "package foo",
@@ -405,20 +391,20 @@ func TestFetchAndUpdateState_DeleteOlder(t *testing.T) {
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)
 
-	if _, err := FetchAndUpdateState(ctx, modulePath, olderVersion, proxyClient, sourceClient, testDB, "appVersionLabel"); err != nil {
+	if _, err := FetchAndUpdateState(ctx, sample.ModulePath, olderVersion, proxyClient, sourceClient, testDB, "appVersionLabel"); err != nil {
 		t.Fatal(err)
 	}
-	gotModule, gotVersion, gotFound := postgres.GetFromSearchDocuments(ctx, t, testDB, modulePath+"/foo")
-	if !gotFound || gotModule != modulePath || gotVersion != olderVersion {
-		t.Fatalf("got (%q, %q, %t), want (%q, %q, true)", gotModule, gotVersion, gotFound, modulePath, olderVersion)
+	gotModule, gotVersion, gotFound := postgres.GetFromSearchDocuments(ctx, t, testDB, sample.ModulePath+"/foo")
+	if !gotFound || gotModule != sample.ModulePath || gotVersion != olderVersion {
+		t.Fatalf("got (%q, %q, %t), want (%q, %q, true)", gotModule, gotVersion, gotFound, sample.ModulePath, olderVersion)
 	}
 
-	code, _ := FetchAndUpdateState(ctx, modulePath, mismatchVersion, proxyClient, sourceClient, testDB, "appVersionLabel")
+	code, _ := FetchAndUpdateState(ctx, sample.ModulePath, mismatchVersion, proxyClient, sourceClient, testDB, "appVersionLabel")
 	if want := derrors.ToStatus(derrors.AlternativeModule); code != want {
 		t.Fatalf("got %d, want %d", code, want)
 	}
 
-	if _, _, gotFound := postgres.GetFromSearchDocuments(ctx, t, testDB, modulePath+"/foo"); gotFound {
+	if _, _, gotFound := postgres.GetFromSearchDocuments(ctx, t, testDB, sample.ModulePath+"/foo"); gotFound {
 		t.Fatal("older version found in search documents")
 	}
 }
@@ -507,39 +493,35 @@ func TestTrimLargeCode(t *testing.T) {
 		b.WriteString("}\n")
 		trimmedModule["baz/baz.go"] = b.String()
 	}
-	var (
-		modulePath = "github.com/my/module"
-		version    = "v1.0.0"
-	)
 	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.Module{
 		{
-			ModulePath: modulePath,
-			Version:    version,
+			ModulePath: sample.ModulePath,
+			Version:    sample.VersionString,
 			Files:      trimmedModule,
 		},
 	})
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)
 
-	code, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB, "appVersionLabel")
+	code, err := FetchAndUpdateState(ctx, sample.ModulePath, sample.VersionString, proxyClient, sourceClient, testDB, "appVersionLabel")
 	if err != nil {
-		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
+		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", sample.ModulePath, sample.VersionString, proxyClient, sourceClient, testDB, err)
 	}
 	if code == hasIncompletePackagesCode {
 		t.Errorf("FetchAndUpdateState(%q, %q, %v, %v, %v): hasIncompletePackages=true, want false",
-			modulePath, version, proxyClient, sourceClient, testDB)
+			sample.ModulePath, sample.VersionString, proxyClient, sourceClient, testDB)
 	}
 
-	pkgFoo := modulePath + "/foo"
-	if _, err := testDB.LegacyGetPackage(ctx, pkgFoo, internal.UnknownModulePath, version); err != nil {
+	pkgFoo := sample.ModulePath + "/foo"
+	if _, err := testDB.LegacyGetPackage(ctx, pkgFoo, internal.UnknownModulePath, sample.VersionString); err != nil {
 		t.Errorf("got %v, want nil", err)
 	}
-	pkgBar := modulePath + "/bar"
-	if _, err := testDB.LegacyGetPackage(ctx, pkgBar, internal.UnknownModulePath, version); err != nil {
+	pkgBar := sample.ModulePath + "/bar"
+	if _, err := testDB.LegacyGetPackage(ctx, pkgBar, internal.UnknownModulePath, sample.VersionString); err != nil {
 		t.Errorf("got %v, want nil", err)
 	}
-	pkgBaz := modulePath + "/baz"
-	if _, err := testDB.LegacyGetPackage(ctx, pkgBaz, internal.UnknownModulePath, version); err != nil {
+	pkgBaz := sample.ModulePath + "/baz"
+	if _, err := testDB.LegacyGetPackage(ctx, pkgBaz, internal.UnknownModulePath, sample.VersionString); err != nil {
 		t.Errorf("got %v, want nil", err)
 	}
 }
@@ -550,8 +532,8 @@ func TestFetch_V1Path(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
 	proxyClient, tearDown := proxy.SetupTestProxy(t, []*proxy.Module{
 		{
-			ModulePath: "my.mod/foo",
-			Version:    "v1.0.0",
+			ModulePath: sample.ModulePath,
+			Version:    sample.VersionString,
 			Files: map[string]string{
 				"foo.go":  "package foo\nconst Foo = 41",
 				"LICENSE": testhelper.MITLicense,
@@ -560,14 +542,14 @@ func TestFetch_V1Path(t *testing.T) {
 	})
 	defer tearDown()
 	sourceClient := source.NewClient(sourceTimeout)
-	if _, err := FetchAndUpdateState(ctx, "my.mod/foo", "v1.0.0", proxyClient, sourceClient, testDB, "appVersionLabel"); err != nil {
+	if _, err := FetchAndUpdateState(ctx, sample.ModulePath, sample.VersionString, proxyClient, sourceClient, testDB, "appVersionLabel"); err != nil {
 		t.Fatalf("FetchAndUpdateState: %v", err)
 	}
-	pkg, err := testDB.LegacyGetPackage(ctx, "my.mod/foo", internal.UnknownModulePath, "v1.0.0")
+	pkg, err := testDB.LegacyGetPackage(ctx, sample.ModulePath, internal.UnknownModulePath, sample.VersionString)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := pkg.V1Path, "my.mod/foo"; got != want {
+	if got, want := pkg.V1Path, sample.ModulePath; got != want {
 		t.Errorf("V1Path = %q, want %q", got, want)
 	}
 }
@@ -582,15 +564,15 @@ func TestReFetch(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
 
 	var (
-		modulePath = "github.com/my/module"
-		version    = "v1.0.0"
-		pkgFoo     = "github.com/my/module/foo"
+		modulePath = sample.ModulePath
+		version    = sample.VersionString
+		pkgFoo     = sample.ModulePath + "/foo"
 		foo        = map[string]string{
 			"foo/foo.go": "// Package foo\npackage foo\n\nconst Foo = 42",
 			"README.md":  "This is a readme",
 			"LICENSE":    testhelper.MITLicense,
 		}
-		pkgBar = "github.com/my/module/bar"
+		pkgBar = sample.ModulePath + "/bar"
 		foobar = map[string]string{
 			"foo/foo.go": "// Package foo\npackage foo\n\nconst Foo = 42",
 			"README.md":  "This is a readme",
@@ -610,8 +592,8 @@ func TestReFetch(t *testing.T) {
 	})
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)
-	if _, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB, "appVersionLabel"); err != nil {
-		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
+	if _, err := FetchAndUpdateState(ctx, sample.ModulePath, version, proxyClient, sourceClient, testDB, "appVersionLabel"); err != nil {
+		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", sample.ModulePath, version, proxyClient, sourceClient, testDB, err)
 	}
 
 	if _, err := testDB.LegacyGetPackage(ctx, pkgFoo, internal.UnknownModulePath, version); err != nil {
@@ -621,36 +603,36 @@ func TestReFetch(t *testing.T) {
 	// Now re-fetch and verify that contents were overwritten.
 	proxyClient, teardownProxy = proxy.SetupTestProxy(t, []*proxy.Module{
 		{
-			ModulePath: modulePath,
+			ModulePath: sample.ModulePath,
 			Version:    version,
 			Files:      foobar,
 		},
 	})
 	defer teardownProxy()
 
-	if _, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB, "appVersionLabel"); err != nil {
+	if _, err := FetchAndUpdateState(ctx, sample.ModulePath, version, proxyClient, sourceClient, testDB, "appVersionLabel"); err != nil {
 		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
 	}
 	want := &internal.LegacyVersionedPackage{
 		LegacyModuleInfo: internal.LegacyModuleInfo{
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath:        modulePath,
+				ModulePath:        sample.ModulePath,
 				Version:           version,
 				CommitTime:        time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
 				VersionType:       "release",
 				IsRedistributable: true,
 				HasGoMod:          false,
-				SourceInfo:        source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
+				SourceInfo:        source.NewGitHubInfo("https://"+sample.ModulePath, "", sample.VersionString),
 			},
 			LegacyReadmeFilePath: "README.md",
 			LegacyReadmeContents: "This is a readme",
 		},
 		LegacyPackage: internal.LegacyPackage{
-			Path:              "github.com/my/module/bar",
+			Path:              sample.ModulePath + "/bar",
 			Name:              "bar",
 			Synopsis:          "Package bar",
 			DocumentationHTML: html("Bar returns the string &#34;bar&#34;."),
-			V1Path:            "github.com/my/module/bar",
+			V1Path:            sample.ModulePath + "/bar",
 			Licenses: []*licenses.Metadata{
 				{Types: []string{"MIT"}, FilePath: "LICENSE"},
 			},
@@ -776,9 +758,9 @@ func TestFetchAndInsertModule(t *testing.T) {
 		LegacyModuleInfo: internal.LegacyModuleInfo{
 			ModuleInfo: internal.ModuleInfo{
 				ModulePath:        "github.com/my/module",
-				Version:           "v1.0.0",
+				Version:           sample.VersionString,
 				CommitTime:        testProxyCommitTime,
-				SourceInfo:        source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
+				SourceInfo:        source.NewGitHubInfo("https://github.com/my/module", "", sample.VersionString),
 				VersionType:       "release",
 				IsRedistributable: true,
 				HasGoMod:          true,
@@ -812,7 +794,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 	}{
 		{
 			modulePath: "github.com/my/module",
-			version:    "v1.0.0",
+			version:    sample.VersionString,
 			pkg:        "github.com/my/module/bar",
 			want:       myModuleV100,
 		},
@@ -826,7 +808,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 			// nonredistributable.mod/module is redistributable, as are its
 			// packages bar and bar/baz. But package foo is not.
 			modulePath: "nonredistributable.mod/module",
-			version:    "v1.0.0",
+			version:    sample.VersionString,
 			pkg:        "nonredistributable.mod/module/bar/baz",
 			want: &internal.LegacyVersionedPackage{
 				LegacyModuleInfo: internal.LegacyModuleInfo{
@@ -860,7 +842,7 @@ func TestFetchAndInsertModule(t *testing.T) {
 			},
 		}, {
 			modulePath: "nonredistributable.mod/module",
-			version:    "v1.0.0",
+			version:    sample.VersionString,
 			pkg:        "nonredistributable.mod/module/foo",
 			want: &internal.LegacyVersionedPackage{
 				LegacyModuleInfo: internal.LegacyModuleInfo{
@@ -1010,27 +992,26 @@ func TestFetchAndInsertModule(t *testing.T) {
 				"Decoder.Decode (stream)",
 			},
 		}, {
-			modulePath: "build.constraints/module",
-			version:    "v1.0.0",
-			pkg:        "build.constraints/module/cpu",
+			modulePath: buildConstraintsMod.ModulePath,
+			version:    buildConstraintsMod.Version,
+			pkg:        buildConstraintsMod.ModulePath + "/cpu",
 			want: &internal.LegacyVersionedPackage{
 				LegacyModuleInfo: internal.LegacyModuleInfo{
 					ModuleInfo: internal.ModuleInfo{
-						ModulePath:        "build.constraints/module",
-						Version:           "v1.0.0",
+						ModulePath:        buildConstraintsMod.ModulePath,
+						Version:           buildConstraintsMod.Version,
 						CommitTime:        testProxyCommitTime,
 						VersionType:       "release",
-						SourceInfo:        nil,
 						IsRedistributable: true,
 						HasGoMod:          false,
 					},
 				},
 				LegacyPackage: internal.LegacyPackage{
-					Path:              "build.constraints/module/cpu",
+					Path:              buildConstraintsMod.ModulePath + "/cpu",
 					Name:              "cpu",
 					Synopsis:          "Package cpu implements processor feature detection used by the Go standard library.",
 					DocumentationHTML: html("const CacheLinePadSize = 3"),
-					V1Path:            "build.constraints/module/cpu",
+					V1Path:            buildConstraintsMod.ModulePath + "/cpu",
 					Licenses: []*licenses.Metadata{
 						{Types: []string{"BSD-0-Clause"}, FilePath: "LICENSE"},
 					},
@@ -1101,15 +1082,12 @@ func TestFetchAndInsertModuleTimeout(t *testing.T) {
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)
 
-	name := "my.mod/version"
-	version := "v1.0.0"
 	wantErrString := "deadline exceeded"
-
 	ctx, cancel := context.WithTimeout(context.Background(), 0)
 	defer cancel()
-	_, err := FetchAndUpdateState(ctx, name, version, proxyClient, sourceClient, testDB, "appVersionLabel")
+	_, err := FetchAndUpdateState(ctx, sample.ModulePath, sample.VersionString, proxyClient, sourceClient, testDB, "appVersionLabel")
 	if err == nil || !strings.Contains(err.Error(), wantErrString) {
 		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v) returned error %v, want error containing %q",
-			name, version, proxyClient, sourceClient, testDB, err, wantErrString)
+			sample.ModulePath, sample.VersionString, proxyClient, sourceClient, testDB, err, wantErrString)
 	}
 }
