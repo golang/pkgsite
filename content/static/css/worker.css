@@ -1,0 +1,52 @@
+/*
+ * Copyright 2019-2020 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
+    'Helvetica Neue', Arial, sans-serif;
+}
+label {
+  display: inline-block;
+  text-align: right;
+  width: 12.5rem;
+}
+input {
+  width: 12.5rem;
+}
+button {
+  width: 16rem;
+  background-color: #eee;
+  border-radius: 0.125rem;
+  border: 0.0625rem solid #ccc;
+}
+table {
+  border-spacing: 0.625rem 0.125rem;
+  padding: 0.1875rem 0 0.125rem 0;
+  font-size: 0.75rem;
+}
+td {
+  border-top: 0.0625rem solid #ddd;
+}
+
+.Experiments input:invalid {
+  border: 0.0625rem dotted red;
+  border-radius: 0.25rem;
+}
+.Experiments input:valid {
+  border: 0.0625rem solid grey;
+  border-radius: 0.25rem;
+}
+.Experiments button {
+  width: auto;
+}
+.Experiments input {
+  width: auto;
+}
+.Experiments-updateResult {
+  border: none;
+  height: 2rem;
+  width: 100%;
+}

@@ -5,13 +5,11 @@
 package worker
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -34,7 +32,6 @@ import (
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
-	"golang.org/x/sync/errgroup"
 )
 
 // Server can be installed to serve the go discovery worker.
@@ -49,8 +46,8 @@ type Server struct {
 	queue                queue.Queue
 	reportingClient      *errorreporting.Client
 	taskIDChangeInterval time.Duration
-
-	indexTemplate *template.Template
+	templates            map[string]*template.Template
+	staticPath           template.TrustedSource
 }
 
 // ServerConfig contains everything needed by a Server.
@@ -67,13 +64,25 @@ type ServerConfig struct {
 	StaticPath           template.TrustedSource
 }
 
+const (
+	indexTemplate    = "index.tmpl"
+	versionsTemplate = "versions.tmpl"
+)
+
 // NewServer creates a new Server with the given dependencies.
 func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 	defer derrors.Wrap(&err, "NewServer(db, %+v)", scfg)
-
-	indexTemplate, err := parseTemplate(scfg.StaticPath, template.TrustedSourceFromConstant("index.tmpl"))
+	t1, err := parseTemplate(scfg.StaticPath, template.TrustedSourceFromConstant(indexTemplate))
 	if err != nil {
 		return nil, err
+	}
+	t2, err := parseTemplate(scfg.StaticPath, template.TrustedSourceFromConstant(versionsTemplate))
+	if err != nil {
+		return nil, err
+	}
+	templates := map[string]*template.Template{
+		indexTemplate:    t1,
+		versionsTemplate: t2,
 	}
 
 	return &Server{
@@ -87,7 +96,8 @@ func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 		queue:                scfg.Queue,
 		reportingClient:      scfg.ReportingClient,
 		taskIDChangeInterval: scfg.TaskIDChangeInterval,
-		indexTemplate:        indexTemplate,
+		templates:            templates,
+		staticPath:           scfg.StaticPath,
 	}, nil
 }
 
@@ -186,8 +196,13 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// manual: delete the specified module version.
 	handle("/delete/", http.StripPrefix("/delete", rmw(s.errorHandler(s.handleDelete))))
 
-	// returns the Worker homepage.
-	handle("/", http.HandlerFunc(s.handleStatusPage))
+	handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(s.staticPath.String()))))
+
+	// returns an HTML page displaying information about recent versions that were processed.
+	handle("/versions", http.HandlerFunc(s.handleHTMLPage(s.doVersionsPage)))
+
+	// returns an HTML page displaying the homepage.
+	handle("/", http.HandlerFunc(s.handleHTMLPage(s.doIndexPage)))
 }
 
 // handleUpdateImportedByCount updates imported_by_count for all packages.
@@ -400,142 +415,14 @@ func (s *Server) handleEnqueue(w http.ResponseWriter, r *http.Request) (err erro
 	return nil
 }
 
-// handleStatusPage serves the worker status page.
-func (s *Server) handleStatusPage(w http.ResponseWriter, r *http.Request) {
-	msg, err := s.doStatusPage(w, r)
-	if err != nil {
-		http.Error(w, msg, http.StatusInternalServerError)
-	}
-}
-
-// doStatusPage writes the status page. On error it returns the error and a short
-// string to be written back to the client.
-func (s *Server) doStatusPage(w http.ResponseWriter, r *http.Request) (_ string, err error) {
-	defer derrors.Wrap(&err, "doStatusPage")
-	const pageSize = 20
-	var (
-		next, failures, recents []*internal.ModuleVersionState
-		stats                   *postgres.VersionStats
-		experiments             []*internal.Experiment
-		excluded                []string
-	)
-	type annotation struct {
-		error
-		msg string
-	}
-	g, ctx := errgroup.WithContext(r.Context())
-	g.Go(func() error {
-		var err error
-		next, err = s.db.GetNextModulesToFetch(ctx, pageSize)
-		if err != nil {
-			return annotation{err, "error fetching next versions"}
+// handleHTMLPage returns an HTML page using a template from s.templates.
+func (s *Server) handleHTMLPage(f func(w http.ResponseWriter, r *http.Request) error) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := f(w, r); err != nil {
+			log.Errorf(r.Context(), "handleHTMLPage", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
-		return nil
-	})
-	g.Go(func() error {
-		var err error
-		failures, err = s.db.GetRecentFailedVersions(ctx, pageSize)
-		if err != nil {
-			return annotation{err, "error fetching recent failures"}
-		}
-		return nil
-	})
-	g.Go(func() error {
-		var err error
-		recents, err = s.db.GetRecentVersions(ctx, pageSize)
-		if err != nil {
-			return annotation{err, "error fetching recent versions"}
-		}
-		return nil
-	})
-	g.Go(func() error {
-		var err error
-		stats, err = s.db.GetVersionStats(ctx)
-		if err != nil {
-			return annotation{err, "error fetching stats"}
-		}
-		return nil
-	})
-	g.Go(func() error {
-		var err error
-		experiments, err = s.db.GetExperiments(ctx)
-		if err != nil {
-			return annotation{err, "error fetching experiments"}
-		}
-		return nil
-	})
-	g.Go(func() error {
-		var err error
-		excluded, err = s.db.GetExcludedPrefixes(ctx)
-		if err != nil {
-			return annotation{err, "error fetching excluded"}
-		}
-		return nil
-	})
-	if err := g.Wait(); err != nil {
-		var e annotation
-		if errors.As(err, &e) {
-			return e.msg, err
-		}
-		return "", err
 	}
-
-	type count struct {
-		Code  int
-		Desc  string
-		Count int
-	}
-	var counts []*count
-	for code, n := range stats.VersionCounts {
-		c := &count{Code: code, Count: n}
-		if e := derrors.FromStatus(code, ""); e != nil && e != derrors.Unknown {
-			c.Desc = e.Error()
-		}
-		counts = append(counts, c)
-	}
-	sort.Slice(counts, func(i, j int) bool { return counts[i].Code < counts[j].Code })
-
-	var env string
-	switch s.cfg.ServiceID {
-	case "":
-		env = "Local"
-	case "dev-etl":
-		env = "Dev"
-	case "staging-etl":
-		env = "Staging"
-	case "etl":
-		env = "Prod"
-	}
-	page := struct {
-		Config                       *config.Config
-		Env                          string
-		ResourcePrefix               string
-		LatestTimestamp              *time.Time
-		Counts                       []*count
-		Next, Recent, RecentFailures []*internal.ModuleVersionState
-		Experiments                  []*internal.Experiment
-		Excluded                     []string
-	}{
-		Config:          s.cfg,
-		Env:             env,
-		ResourcePrefix:  strings.ToLower(env) + "-",
-		LatestTimestamp: &stats.LatestTimestamp,
-		Counts:          counts,
-		Next:            next,
-		Recent:          recents,
-		RecentFailures:  failures,
-		Experiments:     experiments,
-		Excluded:        excluded,
-	}
-	var buf bytes.Buffer
-	if err := s.indexTemplate.Execute(&buf, page); err != nil {
-		return "error rendering template", err
-	}
-	if _, err := io.Copy(w, &buf); err != nil {
-		log.Errorf(ctx, "Error copying buffer to ResponseWriter: %v", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-	}
-	return "", nil
 }
 
 func (s *Server) handlePopulateStdLib(w http.ResponseWriter, r *http.Request) error {

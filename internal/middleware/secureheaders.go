@@ -26,7 +26,7 @@ var scriptHashes = []string{
 	"'sha256-Y1vZzPZ448awUtFwK5f2nES8NyyeM5dgiQ/E3klx4GM='",
 	"'sha256-gBtJYPzfgw/0FIACORDIAD08i5rxTQ5J0rhIU656A2U='",
 	// From content/static/html/worker/index.tmpl
-	"'sha256-5EpitFYSzGNQNUsqi5gAaLqnI3ZWfcRo/6gLTO0oCoE='",
+	"'sha256-y5EX2GR3tCwSK0/kmqZnsWVeBROA8tA75L+I+woljOE='",
 }
 
 // SecureHeaders adds a content-security-policy and other security-related
