@@ -510,7 +510,24 @@ func logQuery(ctx context.Context, query string, args []interface{}, instanceID 
 				log.Debug(ctx, entry)
 			} else {
 				entry.Error = (*errp).Error()
-				log.Error(ctx, entry)
+				// There are many places in our logs when a query will be
+				// canceled, because all unfinished search queries for a  given
+				// request are canceled:
+				// https://github.com/golang/pkgsite/blob/03662129627796aa387a26b8f4f9251caf5d57fd/internal/postgres/search.go#L178
+				//
+				// We don't want to log these as errors, because it makes the logs
+				// very noisy. Based on
+				// https://github.com/lib/pq/issues/577#issuecomment-298341053
+				// it seems that ctx.Err() could return nil because this error
+				// is coming from postgres. github.com/lib/pq currently handles
+				// errors like these in their tests by hardcoding the string:
+				// https://github.com/lib/pq/blob/e53edc9b26000fec4c4e357122d56b0f66ace6ea/go18_test.go#L89
+				logf := log.Error
+				if errors.Is(ctx.Err(), context.Canceled) ||
+					strings.Contains(entry.Error, "pq: canceling statement due to user request") {
+					logf = log.Debug
+				}
+				logf(ctx, entry)
 			}
 		}
 	}
