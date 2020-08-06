@@ -46,6 +46,16 @@ There are two ways to run pkg.go.dev locally.
 
 See [doc/frontend.md](doc/frontend.md) for details.
 
+### Changing the log level
+
+You can use the `GO_DISCOVERY_LOG_LEVEL` environment variable to set the log level. All logs below the level that is set will not be printed.
+
+For example, setting `GO_DISCOVERY_LOG_LEVEL=info` will not print `Debug` logs, but it will print `Info`, `Error` and `Fatal` logs.
+
+The supported levels are `Debug`, `Info`, `Error` and `Fatal`.
+
+By default, logs for all levels will be printed.
+
 ## Before sending a CL for review
 
 1. Run `./all.bash` and fix all resulting errors. See
