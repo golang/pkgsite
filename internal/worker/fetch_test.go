@@ -241,7 +241,7 @@ func TestFetchAndUpdateState_DeleteOlder(t *testing.T) {
 	}
 }
 
-func TestSkipIncompletePackage(t *testing.T) {
+func TestFetchAndUpdateState_SkipIncompletePackage(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 	defer postgres.ResetTestDB(testDB, t)
@@ -257,26 +257,17 @@ func TestSkipIncompletePackage(t *testing.T) {
 		bigFile.WriteString("// All work and no play makes Jack a dull boy.\n")
 	}
 	badModule["bar/bar.go"] = bigFile.String()
-	var (
-		modulePath = "github.com/my/module"
-		version    = "v1.0.0"
-	)
 	proxyClient, teardownProxy := proxy.SetupTestProxy(t, []*proxy.Module{
 		{
-			ModulePath: modulePath,
-			Version:    version,
+			ModulePath: sample.ModulePath,
+			Version:    sample.VersionString,
 			Files:      badModule,
 		},
 	})
 	defer teardownProxy()
-	fetchAndCheckStatus(ctx, t, proxyClient, modulePath, version, hasIncompletePackagesCode)
-
-	pkgFoo := modulePath + "/foo"
-	if _, err := testDB.LegacyGetPackage(ctx, pkgFoo, internal.UnknownModulePath, version); err != nil {
-		t.Errorf("got %v, want nil", err)
-	}
-	pkgBar := modulePath + "/bar"
-	if _, err := testDB.LegacyGetPackage(ctx, pkgBar, internal.UnknownModulePath, version); !errors.Is(err, derrors.NotFound) {
+	fetchAndCheckStatus(ctx, t, proxyClient, sample.ModulePath, sample.VersionString, hasIncompletePackagesCode)
+	checkPackage(ctx, t, sample.ModulePath+"/foo")
+	if _, err := testDB.LegacyGetPackage(ctx, sample.ModulePath+"/bar", internal.UnknownModulePath, sample.VersionString); !errors.Is(err, derrors.NotFound) {
 		t.Errorf("got %v, want NotFound", err)
 	}
 }
@@ -326,19 +317,9 @@ func TestTrimLargeCode(t *testing.T) {
 	defer teardownProxy()
 
 	fetchAndCheckStatus(ctx, t, proxyClient, sample.ModulePath, sample.VersionString, http.StatusOK)
-
-	pkgFoo := sample.ModulePath + "/foo"
-	if _, err := testDB.LegacyGetPackage(ctx, pkgFoo, internal.UnknownModulePath, sample.VersionString); err != nil {
-		t.Errorf("got %v, want nil", err)
-	}
-	pkgBar := sample.ModulePath + "/bar"
-	if _, err := testDB.LegacyGetPackage(ctx, pkgBar, internal.UnknownModulePath, sample.VersionString); err != nil {
-		t.Errorf("got %v, want nil", err)
-	}
-	pkgBaz := sample.ModulePath + "/baz"
-	if _, err := testDB.LegacyGetPackage(ctx, pkgBaz, internal.UnknownModulePath, sample.VersionString); err != nil {
-		t.Errorf("got %v, want nil", err)
-	}
+	checkPackage(ctx, t, sample.ModulePath+"/foo")
+	checkPackage(ctx, t, sample.ModulePath+"/bar")
+	checkPackage(ctx, t, sample.ModulePath+"/baz")
 }
 
 func TestFetch_V1Path(t *testing.T) {
@@ -969,5 +950,28 @@ func checkPackageVersionStates(ctx context.Context, t *testing.T, modulePath, ve
 	if diff := cmp.Diff(wantStates, gotStates); diff != "" {
 		t.Errorf("testDB.GetPackageVersionStatesForModule(ctx, %q, %q) mismatch (-want +got):\n%s",
 			modulePath, version, diff)
+	}
+}
+
+func checkPackage(ctx context.Context, t *testing.T, pkgPath string) {
+	t.Helper()
+	if _, err := testDB.LegacyGetPackage(ctx, pkgPath, internal.UnknownModulePath, sample.VersionString); err != nil {
+		t.Fatal(err)
+	}
+	modulePath, version, isPackage, err := testDB.GetPathInfo(ctx, pkgPath, internal.UnknownModulePath, sample.VersionString)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !isPackage {
+		t.Fatalf("testDB.GetPathInfo(%q, %q, %q): isPackage = false; want = true",
+			pkgPath, internal.UnknownModulePath, sample.VersionString)
+	}
+	vdir, err := testDB.GetDirectory(ctx, pkgPath, modulePath, version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if vdir.Package == nil || vdir.Package.Documentation == nil {
+		t.Fatalf("testDB.GetDirectory(%q, %q, %q): documentation should not be nil",
+			pkgPath, modulePath, version)
 	}
 }
