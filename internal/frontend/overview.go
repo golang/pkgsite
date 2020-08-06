@@ -39,8 +39,8 @@ type OverviewDetails struct {
 	RepositoryURL    string
 }
 
-// versionedLinks says whether the constructed URLs should have versions.
 // constructOverviewDetails uses the given version to construct an OverviewDetails.
+// versionedLinks says whether the constructed URLs should have versions.
 func constructOverviewDetails(ctx context.Context, mi *internal.ModuleInfo, readme *internal.Readme, isRedistributable bool, versionedLinks bool) (*OverviewDetails, error) {
 	var lv string
 	if versionedLinks {
@@ -80,30 +80,14 @@ func legacyFetchPackageOverviewDetails(ctx context.Context, pkg *internal.Legacy
 	return od, nil
 }
 
-// fetchPackageOverviewDetailsNew uses data for the given versioned directory to return an OverviewDetails.
+// fetchPackageOverviewDetails uses data for the given versioned directory to return an OverviewDetails.
 func fetchPackageOverviewDetails(ctx context.Context, vdir *internal.VersionedDirectory, versionedLinks bool) (*OverviewDetails, error) {
-	var lv string
-	if versionedLinks {
-		lv = linkVersion(vdir.Version, vdir.ModulePath)
-	} else {
-		lv = internal.LatestVersion
+	od, err := constructOverviewDetails(ctx, &vdir.ModuleInfo, vdir.Readme, vdir.Directory.IsRedistributable, versionedLinks)
+	if err != nil {
+		return nil, err
 	}
-	overview := &OverviewDetails{
-		ModulePath:       vdir.ModulePath,
-		ModuleURL:        constructModuleURL(vdir.ModulePath, lv),
-		RepositoryURL:    vdir.SourceInfo.RepoURL(),
-		Redistributable:  vdir.Directory.IsRedistributable,
-		PackageSourceURL: vdir.SourceInfo.DirectoryURL(packageSubdir(vdir.Path, vdir.ModulePath)),
-	}
-	if overview.Redistributable && vdir.Readme != nil {
-		overview.ReadMeSource = fileSource(vdir.ModulePath, vdir.Version, vdir.Readme.Filepath)
-		r, err := ReadmeHTML(ctx, &vdir.ModuleInfo, vdir.Readme)
-		if err != nil {
-			return nil, err
-		}
-		overview.ReadMe = r
-	}
-	return overview, nil
+	od.PackageSourceURL = vdir.SourceInfo.DirectoryURL(packageSubdir(vdir.Path, vdir.ModulePath))
+	return od, nil
 }
 
 // packageSubdir returns the subdirectory of the package relative to its module.
