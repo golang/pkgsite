@@ -5,9 +5,9 @@ Pkg.go.dev consists of the following high-level pieces:
 - A _frontend_ that presents user-facing web pages on pkg.go.dev.
 
 - A _worker_ that populates the database with information about new modules.
-  Data about new modules come from the [Go Module Index](index.golang.org),
+  Data about new modules come from the [Go Module Index](https://index.golang.org),
   and the contents of these modules are downloaded from the
-  [Go Module Mirror](proxy.golang.org).
+  [Go Module Mirror](https://proxy.golang.org).
 
 - A _database_ that stores all information served on the site.
 
