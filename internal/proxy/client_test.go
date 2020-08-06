@@ -176,47 +176,35 @@ func TestGetZip(t *testing.T) {
 	client, teardownProxy := SetupTestProxy(t, []*Module{testModule})
 	defer teardownProxy()
 
-	for _, tc := range []struct {
-		path, version string
-		wantFiles     []string
-	}{
-		{
-			path:    sample.ModulePath,
-			version: sample.VersionString,
-			wantFiles: []string{
-				sample.ModulePath + "@" + sample.VersionString + "/LICENSE",
-				sample.ModulePath + "@" + sample.VersionString + "/README.md",
-				sample.ModulePath + "@" + sample.VersionString + "/go.mod",
-				sample.ModulePath + "@" + sample.VersionString + "/foo/foo.go",
-				sample.ModulePath + "@" + sample.VersionString + "/foo/LICENSE.md",
-				sample.ModulePath + "@" + sample.VersionString + "/bar/bar.go",
-				sample.ModulePath + "@" + sample.VersionString + "/bar/LICENSE",
-			},
-		},
-	} {
-		t.Run(tc.path, func(t *testing.T) {
-			zipReader, err := client.GetZip(ctx, tc.path, tc.version)
-			if err != nil {
-				t.Fatal(err)
-			}
+	zipReader, err := client.GetZip(ctx, sample.ModulePath, sample.VersionString)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-			if len(zipReader.File) != len(tc.wantFiles) {
-				t.Errorf("GetZip(ctx, %q, %q) returned number of files: got %d, want %d",
-					tc.path, tc.version, len(zipReader.File), len(tc.wantFiles))
-			}
+	wantFiles := []string{
+		sample.ModulePath + "@" + sample.VersionString + "/LICENSE",
+		sample.ModulePath + "@" + sample.VersionString + "/README.md",
+		sample.ModulePath + "@" + sample.VersionString + "/go.mod",
+		sample.ModulePath + "@" + sample.VersionString + "/foo/foo.go",
+		sample.ModulePath + "@" + sample.VersionString + "/foo/LICENSE.md",
+		sample.ModulePath + "@" + sample.VersionString + "/bar/bar.go",
+		sample.ModulePath + "@" + sample.VersionString + "/bar/LICENSE",
+	}
+	if len(zipReader.File) != len(wantFiles) {
+		t.Errorf("GetZip(ctx, %q, %q) returned number of files: got %d, want %d",
+			sample.ModulePath, sample.VersionString, len(zipReader.File), len(wantFiles))
+	}
 
-			expectedFileSet := map[string]bool{}
-			for _, ef := range tc.wantFiles {
-				expectedFileSet[ef] = true
-			}
-			for _, zipFile := range zipReader.File {
-				if !expectedFileSet[zipFile.Name] {
-					t.Errorf("GetZip(ctx, %q, %q) returned unexpected file: %q", tc.path,
-						tc.version, zipFile.Name)
-				}
-				expectedFileSet[zipFile.Name] = false
-			}
-		})
+	expectedFileSet := map[string]bool{}
+	for _, ef := range wantFiles {
+		expectedFileSet[ef] = true
+	}
+	for _, zipFile := range zipReader.File {
+		if !expectedFileSet[zipFile.Name] {
+			t.Errorf("GetZip(ctx, %q, %q) returned unexpected file: %q", sample.ModulePath,
+				sample.VersionString, zipFile.Name)
+		}
+		expectedFileSet[zipFile.Name] = false
 	}
 }
 
