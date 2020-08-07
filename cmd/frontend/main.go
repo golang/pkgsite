@@ -138,6 +138,7 @@ func main() {
 		frontend.VersionTypeCount,
 		middleware.CacheResultCount,
 		middleware.CacheErrorCount,
+		middleware.CacheLatency,
 		middleware.QuotaResultCount,
 	)
 	if err := dcensus.Init(cfg, views...); err != nil {

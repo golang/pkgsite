@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v7"
+	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
@@ -31,13 +32,17 @@ var (
 		"The result of a cache request.",
 		stats.UnitDimensionless,
 	)
+	cacheLatency = stats.Float64(
+		"go-discovery/cache/result_latency",
+		"Cache serving latency latency",
+		stats.UnitMilliseconds,
+	)
 	cacheErrors = stats.Int64(
 		"go-discovery/cache/errors",
 		"Errors retrieving from cache.",
 		stats.UnitDimensionless,
 	)
 
-	// CacheResultCount is a counter of cache results, by cache name and hit success.
 	CacheResultCount = &view.View{
 		Name:        "go-discovery/cache/result_count",
 		Measure:     cacheResults,
@@ -45,7 +50,13 @@ var (
 		Description: "cache results, by cache name and whether it was a hit",
 		TagKeys:     []tag.Key{keyCacheName, keyCacheHit},
 	}
-	// CacheErrorCount is a counter of cache errors, by cache name.
+	CacheLatency = &view.View{
+		Name:        "go-discovery/cache/result_latency",
+		Measure:     cacheLatency,
+		Description: "cache result latency, by cache name and whether it was a hit",
+		Aggregation: ochttp.DefaultLatencyDistribution,
+		TagKeys:     []tag.Key{keyCacheName, keyCacheHit},
+	}
 	CacheErrorCount = &view.View{
 		Name:        "go-discovery/cache/errors",
 		Measure:     cacheErrors,
@@ -59,11 +70,12 @@ var (
 	testMode = false
 )
 
-func recordCacheResult(ctx context.Context, name string, hit bool) {
+func recordCacheResult(ctx context.Context, name string, hit bool, latency time.Duration) {
+	ms := float64(latency) / float64(time.Millisecond)
 	stats.RecordWithTags(ctx, []tag.Mutator{
 		tag.Upsert(keyCacheName, name),
 		tag.Upsert(keyCacheHit, strconv.FormatBool(hit)),
-	}, cacheResults.M(1))
+	}, cacheResults.M(1), cacheLatency.M(ms))
 }
 
 func recordCacheError(ctx context.Context, name, operation string) {
@@ -111,6 +123,7 @@ func Cache(name string, client *redis.Client, expirer Expirer, authValues []stri
 }
 
 func (c *cache) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
 	// Check auth header to see if request should bypass cache.
 	authVal := r.Header.Get(config.AuthHeader)
 	for _, wantVal := range c.authValues {
@@ -122,13 +135,13 @@ func (c *cache) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	key := r.URL.String()
 	if reader, ok := c.get(ctx, key); ok {
-		recordCacheResult(ctx, c.name, true)
+		recordCacheResult(ctx, c.name, true, time.Since(start))
 		if _, err := io.Copy(w, reader); err != nil {
 			log.Errorf(ctx, "error copying zip bytes: %v", err)
 		}
 		return
 	}
-	recordCacheResult(ctx, c.name, false)
+	recordCacheResult(ctx, c.name, false, time.Since(start))
 	rec := newRecorder(w)
 	c.delegate.ServeHTTP(rec, r)
 	if rec.bufErr == nil && (rec.statusCode == 0 || rec.statusCode == http.StatusOK) {
