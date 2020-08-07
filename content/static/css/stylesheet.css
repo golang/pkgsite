@@ -1218,6 +1218,7 @@ code {
   /* This will change back to display: flex; when we enable playground buttons */
   display: none;
   justify-content: flex-end;
+  margin-top: 0.5rem;
 }
 .Documentation-exampleButtonsContainer button {
   background-color: var(--white);
@@ -1227,6 +1228,9 @@ code {
   flex-shrink: 0;
   height: 2.5rem;
   width: 4.125rem;
+}
+.Documentation-exampleDetails {
+  margin-top: 1rem;
 }
 .Documentation-exampleDetailsBody pre {
   margin: 1rem 0;
