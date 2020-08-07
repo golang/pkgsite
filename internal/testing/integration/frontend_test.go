@@ -202,7 +202,7 @@ func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue) *httptest.S
 // TODO(https://github.com/golang/go/issues/40098): factor out this code reduce
 // duplication
 func setupQueue(ctx context.Context, t *testing.T, proxyModules []*proxy.Module, experimentNames ...string) (queue.Queue, func()) {
-	proxyClient, teardown := proxy.SetupTestProxy(t, proxyModules)
+	proxyClient, teardown := proxy.SetupTestClient(t, proxyModules)
 	sourceClient := source.NewClient(1 * time.Second)
 	q := queue.NewInMemory(ctx, 1, experimentNames,
 		func(ctx context.Context, mpath, version string) (int, error) {
@@ -215,7 +215,7 @@ func setupQueue(ctx context.Context, t *testing.T, proxyModules []*proxy.Module,
 
 func processVersions(ctx context.Context, t *testing.T, testModules []*proxy.Module) {
 	t.Helper()
-	proxyClient, teardown := proxy.SetupTestProxy(t, testModules)
+	proxyClient, teardown := proxy.SetupTestClient(t, testModules)
 	defer teardown()
 
 	for _, tm := range testModules {

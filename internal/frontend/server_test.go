@@ -1083,7 +1083,7 @@ func TestTagRoute(t *testing.T) {
 
 func newTestServer(t *testing.T, proxyModules []*proxy.Module, experimentNames ...string) (*Server, http.Handler, func()) {
 	t.Helper()
-	proxyClient, teardown := proxy.SetupTestProxy(t, proxyModules)
+	proxyClient, teardown := proxy.SetupTestClient(t, proxyModules)
 	sourceClient := source.NewClient(sourceTimeout)
 	ctx := context.Background()
 

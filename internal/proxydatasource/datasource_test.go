@@ -42,7 +42,7 @@ func setup(t *testing.T) (context.Context, *DataSource, func()) {
 			Files:      contents,
 		},
 	}
-	client, teardownProxy := proxy.SetupTestProxy(t, testModules)
+	client, teardownProxy := proxy.SetupTestClient(t, testModules)
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	return ctx, New(client), func() {
 		teardownProxy()
@@ -188,7 +188,7 @@ func TestDataSource_GetLicenses(t *testing.T) {
 			},
 		},
 	}
-	client, teardownProxy := proxy.SetupTestProxy(t, testModules)
+	client, teardownProxy := proxy.SetupTestClient(t, testModules)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	ds := New(client)
 	teardown := func() {

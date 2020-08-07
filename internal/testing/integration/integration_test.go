@@ -178,7 +178,7 @@ func doGet(url string) ([]byte, error) {
 
 func setupProxyAndIndex(t *testing.T, modules ...*proxy.Module) (*proxy.Client, *index.Client, func()) {
 	t.Helper()
-	proxyClient, teardownProxy := proxy.SetupTestProxy(t, modules)
+	proxyClient, teardownProxy := proxy.SetupTestClient(t, modules)
 	var indexVersions []*internal.IndexVersion
 	for _, m := range modules {
 		indexVersions = append(indexVersions, &internal.IndexVersion{

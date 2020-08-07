@@ -71,7 +71,7 @@ func TestGetLatestInfo(t *testing.T) {
 			Files:      map[string]string{"bar.go": "package bar\nconst Version = 1.2"},
 		},
 	}
-	client, teardownProxy := SetupTestProxy(t, testModules)
+	client, teardownProxy := SetupTestClient(t, testModules)
 	defer teardownProxy()
 
 	info, err := client.GetInfo(ctx, sample.ModulePath, internal.LatestVersion)
@@ -105,7 +105,7 @@ func TestListVersions(t *testing.T) {
 			Files:      map[string]string{"bar.go": "package bar\nconst Version = 1.3"},
 		},
 	}
-	client, teardownProxy := SetupTestProxy(t, testModules)
+	client, teardownProxy := SetupTestClient(t, testModules)
 	defer teardownProxy()
 
 	want := []string{"v1.1.0", "v1.2.0"}
@@ -122,7 +122,7 @@ func TestGetInfo(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	client, teardownProxy := SetupTestProxy(t, []*Module{testModule})
+	client, teardownProxy := SetupTestClient(t, []*Module{testModule})
 	defer teardownProxy()
 
 	info, err := client.GetInfo(ctx, sample.ModulePath, sample.VersionString)
@@ -148,7 +148,10 @@ func TestGetInfo_Errors(t *testing.T) {
 	proxyServer.AddRoute(
 		fmt.Sprintf("/%s/@v/%s.info", "module.com/timeout", sample.VersionString),
 		func(w http.ResponseWriter, r *http.Request) { http.Error(w, "fetch timed out", http.StatusNotFound) })
-	client, teardownProxy := TestProxyServer(t, proxyServer)
+	client, teardownProxy, err := NewClientForServer(proxyServer)
+	if err != nil {
+		t.Fatal(err)
+	}
 	defer teardownProxy()
 
 	for _, test := range []struct {
@@ -174,7 +177,7 @@ func TestGetMod(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	client, teardownProxy := SetupTestProxy(t, []*Module{testModule})
+	client, teardownProxy := SetupTestClient(t, []*Module{testModule})
 	defer teardownProxy()
 
 	bytes, err := client.GetMod(ctx, sample.ModulePath, sample.VersionString)
@@ -192,7 +195,7 @@ func TestGetZip(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	client, teardownProxy := SetupTestProxy(t, []*Module{testModule})
+	client, teardownProxy := SetupTestClient(t, []*Module{testModule})
 	defer teardownProxy()
 
 	zipReader, err := client.GetZip(ctx, sample.ModulePath, sample.VersionString)
@@ -231,7 +234,7 @@ func TestGetZipNonExist(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	client, teardownProxy := SetupTestProxy(t, nil)
+	client, teardownProxy := SetupTestClient(t, nil)
 	defer teardownProxy()
 
 	if _, err := client.GetZip(ctx, sample.ModulePath, sample.VersionString); !errors.Is(err, derrors.NotFound) {

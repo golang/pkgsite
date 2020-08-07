@@ -168,7 +168,7 @@ func TestWorker(t *testing.T) {
 			indexClient, teardownIndex := index.SetupTestIndex(t, test.index)
 			defer teardownIndex()
 
-			proxyClient, teardownProxy := proxy.SetupTestProxy(t, test.proxy)
+			proxyClient, teardownProxy := proxy.SetupTestClient(t, test.proxy)
 			defer teardownProxy()
 			sourceClient := source.NewClient(sourceTimeout)
 

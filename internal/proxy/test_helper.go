@@ -10,27 +10,31 @@ import (
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
-// SetupTestProxy creates a fake module proxy for testing using the given test
+// SetupTestClient creates a fake module proxy for testing using the given test
 // version information. If modules is nil, it will default to hosting the
 // modules in the testdata directory.
 //
 // It returns a function for tearing down the proxy after the test is completed
 // and a Client for interacting with the test proxy.
-func SetupTestProxy(t *testing.T, modules []*Module) (*Client, func()) {
+func SetupTestClient(t *testing.T, modules []*Module) (*Client, func()) {
 	t.Helper()
 	s := NewServer(modules)
-	return TestProxyServer(t, s)
+	client, serverClose, err := NewClientForServer(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return client, serverClose
 }
 
-// TestProxyServer starts serving proxyMux locally. It returns a client to the
+// NewClientForServer starts serving proxyMux locally. It returns a client to the
 // server and a function to shut down the server.
-func TestProxyServer(t *testing.T, s *Server) (*Client, func()) {
+func NewClientForServer(s *Server) (*Client, func(), error) {
 	// override client.httpClient to skip TLS verification
 	httpClient, proxy, serverClose := testhelper.SetupTestClientAndServer(s.mux)
 	client, err := New(proxy.URL)
 	if err != nil {
-		t.Fatal(err)
+		return nil, nil, err
 	}
 	client.httpClient = httpClient
-	return client, serverClose
+	return client, serverClose, nil
 }
