@@ -23,6 +23,7 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
+	"golang.org/x/pkgsite/internal/version"
 
 	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/go-git/go-git/v5"
@@ -60,6 +61,10 @@ func VersionForTag(tag string) string {
 	}
 	if tag == "go1.0" {
 		return ""
+	}
+	// Special case for latest.
+	if tag == "latest" {
+		return "latest"
 	}
 	m := tagRegexp.FindStringSubmatch(tag)
 	if m == nil {
@@ -165,6 +170,8 @@ var TestCommitTime = time.Date(2019, 9, 4, 1, 2, 3, 0, time.UTC)
 
 // getGoRepo returns a repo object for the Go repo at version.
 func getGoRepo(version string) (_ *git.Repository, err error) {
+	defer derrors.Wrap(&err, "getGoRepo(%q)", version)
+
 	tag, err := TagForVersion(version)
 	if err != nil {
 		return nil, err
@@ -180,6 +187,8 @@ func getGoRepo(version string) (_ *git.Repository, err error) {
 
 // getTestGoRepo gets a Go repo for testing.
 func getTestGoRepo(version string) (_ *git.Repository, err error) {
+	defer derrors.Wrap(&err, "getTestGoRepo(%q)", version)
+
 	fs := osfs.New(filepath.Join(testhelper.TestDataPath("testdata"), version))
 	repo, err := git.Init(memory.NewStorage(), fs)
 	if err != nil {
@@ -252,86 +261,109 @@ func Directory(version string) string {
 // Zip creates a module zip representing the entire Go standard library at the
 // given version and returns a reader to it. It also returns the time of the
 // commit for that version. The zip file is in module form, with each path
-// prefixed by ModuleName + "@" + version.
+// prefixed by ModuleName + "@" + version. It also returns the resolved version.
 //
 // Zip reads the standard library at the Go repository tag corresponding to to
 // the given semantic version.
 //
 // Zip ignores go.mod files in the standard library, treating it as if it were a
 // single module named "std" at the given version.
-func Zip(version string) (_ *zip.Reader, commitTime time.Time, err error) {
+func Zip(requestedVersion string) (_ *zip.Reader, commitTime time.Time, _ string, err error) {
 	// This code taken, with modifications, from
 	// https://github.com/shurcooL/play/blob/master/256/moduleproxy/std/std.go.
-	defer derrors.Wrap(&err, "stdlib.Zip(%q)", version)
+	defer derrors.Wrap(&err, "stdlib.Zip(%q)", requestedVersion)
 
 	knownVersions, err := Versions()
 	if err != nil {
-		return nil, time.Time{}, err
+		return nil, time.Time{}, "", err
 	}
-	found := false
-	for _, v := range knownVersions {
-		if v == version {
-			found = true
-			break
+
+	var resolvedVersion string
+	switch requestedVersion {
+	case "latest":
+		var latestVersion string
+		for _, v := range knownVersions {
+			versionType, err := version.ParseType(v)
+			if err != nil {
+				return nil, time.Time{}, "", err
+			}
+			if versionType != version.TypeRelease {
+				// We expect there to always be at least 1 release version.
+				continue
+			}
+			if semver.Compare(v, latestVersion) > 0 {
+				latestVersion = v
+			}
+		}
+		resolvedVersion = latestVersion
+	default:
+		for _, v := range knownVersions {
+			if v == requestedVersion {
+				resolvedVersion = requestedVersion
+				break
+			}
 		}
 	}
-	if !found {
-		return nil, time.Time{}, fmt.Errorf("%w: requested version unknown: %q", derrors.InvalidArgument, version)
+
+	if resolvedVersion == "" {
+		return nil, time.Time{}, "", fmt.Errorf("%w: requested version unknown: %q", derrors.InvalidArgument, requestedVersion)
 	}
 
 	var repo *git.Repository
 	if UseTestData {
-		repo, err = getTestGoRepo(version)
+		repo, err = getTestGoRepo(resolvedVersion)
 	} else {
-		repo, err = getGoRepo(version)
+		repo, err = getGoRepo(resolvedVersion)
 	}
 	if err != nil {
-		return nil, time.Time{}, err
+		return nil, time.Time{}, "", err
 	}
 	var buf bytes.Buffer
 	z := zip.NewWriter(&buf)
 	head, err := repo.Head()
 	if err != nil {
-		return nil, time.Time{}, err
+		return nil, time.Time{}, "", err
 	}
 	commit, err := repo.CommitObject(head.Hash())
 	if err != nil {
-		return nil, time.Time{}, err
+		return nil, time.Time{}, "", err
 	}
 	root, err := repo.TreeObject(commit.TreeHash)
 	if err != nil {
-		return nil, time.Time{}, err
+		return nil, time.Time{}, "", err
 	}
-	prefixPath := ModulePath + "@" + version
+	prefixPath := ModulePath + "@" + resolvedVersion
 	// Add top-level files.
 	if err := addFiles(z, repo, root, prefixPath, false); err != nil {
-		return nil, time.Time{}, err
+		return nil, time.Time{}, "", err
 	}
 	// Add files from the stdlib directory.
 	libdir := root
-	for _, d := range strings.Split(Directory(version), "/") {
+	for _, d := range strings.Split(Directory(resolvedVersion), "/") {
 		libdir, err = subTree(repo, libdir, d)
 		if err != nil {
-			return nil, time.Time{}, err
+			return nil, time.Time{}, "", err
 		}
 	}
 	if err := addFiles(z, repo, libdir, prefixPath, true); err != nil {
-		return nil, time.Time{}, err
+		return nil, time.Time{}, "", err
 	}
 	if err := z.Close(); err != nil {
-		return nil, time.Time{}, err
+		return nil, time.Time{}, "", err
 	}
 	br := bytes.NewReader(buf.Bytes())
 	zr, err := zip.NewReader(br, int64(br.Len()))
 	if err != nil {
-		return nil, time.Time{}, err
+		return nil, time.Time{}, "", err
 	}
-	return zr, commit.Committer.When, nil
+	return zr, commit.Committer.When, resolvedVersion, nil
 }
 
 // addFiles adds the files in t to z, using dirpath as the path prefix.
 // If recursive is true, it also adds the files in all subdirectories.
-func addFiles(z *zip.Writer, r *git.Repository, t *object.Tree, dirpath string, recursive bool) error {
+func addFiles(z *zip.Writer, r *git.Repository, t *object.Tree, dirpath string, recursive bool) (err error) {
+	defer derrors.Wrap(&err, "addFiles(zip, repository, tree, %q, %t)", dirpath, recursive)
+
 	for _, e := range t.Entries {
 		if strings.HasPrefix(e.Name, ".") || strings.HasPrefix(e.Name, "_") {
 			continue
@@ -384,7 +416,9 @@ func addFiles(z *zip.Writer, r *git.Repository, t *object.Tree, dirpath string, 
 	return nil
 }
 
-func writeZipFile(z *zip.Writer, pathname string, src io.Reader) error {
+func writeZipFile(z *zip.Writer, pathname string, src io.Reader) (err error) {
+	defer derrors.Wrap(&err, "writeZipFile(zip, %q, src)", pathname)
+
 	dst, err := z.Create(pathname)
 	if err != nil {
 		return err
@@ -396,7 +430,9 @@ func writeZipFile(z *zip.Writer, pathname string, src io.Reader) error {
 // subTree looks non-recursively for a directory with the given name in t,
 // and returns the corresponding tree.
 // If a directory with such name doesn't exist in t, it returns os.ErrNotExist.
-func subTree(r *git.Repository, t *object.Tree, name string) (*object.Tree, error) {
+func subTree(r *git.Repository, t *object.Tree, name string) (_ *object.Tree, err error) {
+	defer derrors.Wrap(&err, "subTree(repository, tree, %q)", name)
+
 	for _, e := range t.Entries {
 		if e.Name == name {
 			return r.TreeObject(e.Hash)

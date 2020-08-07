@@ -115,9 +115,9 @@ func TestZip(t *testing.T) {
 	UseTestData = true
 	defer func() { UseTestData = false }()
 
-	for _, version := range []string{"v1.14.6", "v1.12.5", "v1.3.2"} {
+	for _, version := range []string{"v1.14.6", "v1.12.5", "v1.3.2", "latest"} {
 		t.Run(version, func(t *testing.T) {
-			zr, gotTime, err := Zip(version)
+			zr, gotTime, resolvedVersion, err := Zip(version)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -129,16 +129,16 @@ func TestZip(t *testing.T) {
 				"errors/errors.go":      true,
 				"errors/errors_test.go": true,
 			}
-			if semver.Compare(version, "v1.4.0") > 0 {
+			if semver.Compare(resolvedVersion, "v1.4.0") > 0 {
 				wantFiles["README.md"] = true
 			} else {
 				wantFiles["README"] = true
 			}
-			if semver.Compare(version, "v1.13.0") > 0 {
+			if semver.Compare(resolvedVersion, "v1.13.0") > 0 {
 				wantFiles["cmd/README.vendor"] = true
 			}
 
-			wantPrefix := "std@" + version + "/"
+			wantPrefix := "std@" + resolvedVersion + "/"
 			readmeVendorFile := wantPrefix + "README.vendor"
 			for _, f := range zr.File {
 				if f.Name == readmeVendorFile {
@@ -190,8 +190,6 @@ func TestVersions(t *testing.T) {
 		"v1.4.2",
 		"v1.9.0-rc.1",
 		"v1.11.0",
-		"v1.12.9",
-		"v1.13.0",
 		"v1.13.0-beta.1",
 	}
 	for _, w := range wants {
@@ -215,6 +213,7 @@ func TestVersionForTag(t *testing.T) {
 		{"go1.1beta", ""},
 		{"go1.0", ""},
 		{"weekly.2012-02-14", ""},
+		{"latest", "latest"},
 	} {
 		got := VersionForTag(tc.in)
 		if got != tc.want {

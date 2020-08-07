@@ -100,7 +100,7 @@ func licenseDetector(ctx context.Context, t *testing.T, modulePath, version stri
 		err       error
 	)
 	if modulePath == stdlib.ModulePath {
-		zipReader, _, err = stdlib.Zip(version)
+		zipReader, _, _, err = stdlib.Zip(version)
 		if err != nil {
 			t.Fatal(err)
 		}

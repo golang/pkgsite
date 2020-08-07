@@ -279,18 +279,7 @@ func (ds *DataSource) getModule(ctx context.Context, modulePath, version string)
 	if e, ok := ds.versionCache[key]; ok {
 		return e.module, e.err
 	}
-	v := version
-	if modulePath == stdlib.ModulePath {
-		if version == internal.LatestVersion {
-			// fetch.FetchModule does not support the latest endpoint for the
-			// standard library, but it is useful to look at these packages when
-			// developing with the proxydatasource. A hardcoded value is used here,
-			// so that the request won't fail.
-			v = "go1.14.4"
-		}
-		v = stdlib.VersionForTag(v)
-	}
-	res := fetch.FetchModule(ctx, modulePath, v, ds.proxyClient, ds.sourceClient)
+	res := fetch.FetchModule(ctx, modulePath, version, ds.proxyClient, ds.sourceClient)
 	m := res.Module
 	ds.versionCache[key] = &versionEntry{module: m, err: err}
 	if res.Error != nil {
@@ -377,7 +366,12 @@ func (ds *DataSource) listPackageVersions(ctx context.Context, pkgPath string, p
 // versions.
 func (ds *DataSource) listModuleVersions(ctx context.Context, modulePath string, pseudo bool) (_ []*internal.ModuleInfo, err error) {
 	defer derrors.Wrap(&err, "listModuleVersions(%q, %t)", modulePath, pseudo)
-	versions, err := ds.proxyClient.ListVersions(ctx, modulePath)
+	var versions []string
+	if modulePath == stdlib.ModulePath {
+		versions, err = stdlib.Versions()
+	} else {
+		versions, err = ds.proxyClient.ListVersions(ctx, modulePath)
+	}
 	if err != nil {
 		return nil, err
 	}

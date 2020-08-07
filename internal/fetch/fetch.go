@@ -79,18 +79,19 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 	}()
 
 	var (
-		commitTime time.Time
-		zipReader  *zip.Reader
-		err        error
+		commitTime      time.Time
+		zipReader       *zip.Reader
+		resolvedVersion string
+		err             error
 	)
 	if modulePath == stdlib.ModulePath {
-		zipReader, commitTime, err = stdlib.Zip(requestedVersion)
+		zipReader, commitTime, resolvedVersion, err = stdlib.Zip(requestedVersion)
 		if err != nil {
 			fr.Error = err
 			return fr
 		}
 		fr.GoModPath = stdlib.ModulePath
-		fr.ResolvedVersion = requestedVersion
+		fr.ResolvedVersion = resolvedVersion
 	} else {
 		info, err := proxyClient.GetInfo(ctx, modulePath, requestedVersion)
 		if err != nil {
