@@ -20,6 +20,7 @@ import (
 	"go.opencensus.io/tag"
 	"golang.org/x/mod/module"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/dcensus"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch"
@@ -586,9 +587,7 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 }
 
 func recordFrontendFetchMetric(ctx context.Context, status int, latency time.Duration) {
-	l := float64(latency) / float64(time.Millisecond)
-
 	stats.RecordWithTags(ctx, []tag.Mutator{
 		tag.Upsert(keyFetchStatus, strconv.Itoa(status)),
-	}, frontendFetchLatency.M(l))
+	}, dcensus.MDur(frontendFetchLatency, latency))
 }

@@ -22,6 +22,7 @@ import (
 	icache "golang.org/x/pkgsite/internal/cache"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/cookie"
+	"golang.org/x/pkgsite/internal/dcensus"
 	"golang.org/x/pkgsite/internal/log"
 )
 
@@ -73,11 +74,10 @@ var (
 )
 
 func recordCacheResult(ctx context.Context, name string, hit bool, latency time.Duration) {
-	ms := float64(latency) / float64(time.Millisecond)
 	stats.RecordWithTags(ctx, []tag.Mutator{
 		tag.Upsert(keyCacheName, name),
 		tag.Upsert(keyCacheHit, strconv.FormatBool(hit)),
-	}, cacheResults.M(1), cacheLatency.M(ms))
+	}, cacheResults.M(1), dcensus.MDur(cacheLatency, latency))
 }
 
 func recordCacheError(ctx context.Context, name, operation string) {

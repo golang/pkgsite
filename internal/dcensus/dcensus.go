@@ -191,6 +191,21 @@ func stackdriverLabels(cfg *config.Config) *stackdriver.Labels {
 	return labels
 }
 
+// MDur returns the latency value used for recording a measurement with
+// opencensus.
+func MDur(m *stats.Float64Measure, d time.Duration) stats.Measurement {
+	var v float64
+	switch m.Unit() {
+	case stats.UnitMilliseconds:
+		v = float64(d.Milliseconds())
+	case stats.UnitSeconds:
+		v = d.Seconds()
+	default:
+		panic(fmt.Sprintf("MDur: unsupported unit: %v", m))
+	}
+	return m.M(v)
+}
+
 // Customizations of ochttp views. Views are updated as follows:
 //  + ClientHost and ServerRoute are added to resp. client and server metrics.
 //    Since these are bounded cardinality in our metrics, they are useful to

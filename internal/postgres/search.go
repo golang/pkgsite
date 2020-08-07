@@ -22,6 +22,7 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
+	"golang.org/x/pkgsite/internal/dcensus"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
@@ -231,10 +232,9 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset, maxResu
 	// skew the latency distribution.
 	// Note that this latency measurement might differ meaningfully from the
 	// resp.Latency, if time was spent waiting for the result count estimate.
-	latency := float64(time.Since(searchStart)) / float64(time.Millisecond)
 	stats.RecordWithTags(ctx,
 		[]tag.Mutator{tag.Upsert(keySearchSource, resp.source)},
-		searchLatency.M(latency))
+		dcensus.MDur(searchLatency, time.Since(searchStart)))
 	// To avoid fighting with the query planner, our searches only hit the
 	// search_documents table and we enrich after getting the results. In the
 	// future, we may want to fully denormalize and put all search data in the
