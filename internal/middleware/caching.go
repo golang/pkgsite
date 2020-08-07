@@ -157,7 +157,7 @@ func (c *cache) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (c *cache) get(ctx context.Context, key string) (io.Reader, bool) {
 	// Set a short timeout for redis requests, so that we can quickly
 	// fall back to un-cached serving if redis is unavailable.
-	getCtx, cancelGet := context.WithTimeout(ctx, 50*time.Millisecond)
+	getCtx, cancelGet := context.WithTimeout(ctx, 100*time.Millisecond)
 	defer cancelGet()
 	val, err := c.client.WithContext(getCtx).Get(key).Bytes()
 	if err == redis.Nil {
