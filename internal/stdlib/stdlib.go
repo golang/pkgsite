@@ -273,40 +273,9 @@ func Zip(requestedVersion string) (_ *zip.Reader, commitTime time.Time, _ string
 	// https://github.com/shurcooL/play/blob/master/256/moduleproxy/std/std.go.
 	defer derrors.Wrap(&err, "stdlib.Zip(%q)", requestedVersion)
 
-	knownVersions, err := Versions()
+	resolvedVersion, err := semanticVersion(requestedVersion)
 	if err != nil {
 		return nil, time.Time{}, "", err
-	}
-
-	var resolvedVersion string
-	switch requestedVersion {
-	case "latest":
-		var latestVersion string
-		for _, v := range knownVersions {
-			versionType, err := version.ParseType(v)
-			if err != nil {
-				return nil, time.Time{}, "", err
-			}
-			if versionType != version.TypeRelease {
-				// We expect there to always be at least 1 release version.
-				continue
-			}
-			if semver.Compare(v, latestVersion) > 0 {
-				latestVersion = v
-			}
-		}
-		resolvedVersion = latestVersion
-	default:
-		for _, v := range knownVersions {
-			if v == requestedVersion {
-				resolvedVersion = requestedVersion
-				break
-			}
-		}
-	}
-
-	if resolvedVersion == "" {
-		return nil, time.Time{}, "", fmt.Errorf("%w: requested version unknown: %q", derrors.InvalidArgument, requestedVersion)
 	}
 
 	var repo *git.Repository
@@ -357,6 +326,41 @@ func Zip(requestedVersion string) (_ *zip.Reader, commitTime time.Time, _ string
 		return nil, time.Time{}, "", err
 	}
 	return zr, commit.Committer.When, resolvedVersion, nil
+}
+
+// semanticVersion returns the semantic version corresponding to the
+// requestedVersion.
+func semanticVersion(requestedVersion string) (_ string, err error) {
+	defer derrors.Wrap(&err, "semanticVersion(%q)", requestedVersion)
+
+	knownVersions, err := Versions()
+	if err != nil {
+		return "", err
+	}
+	if requestedVersion == "latest" {
+		var latestVersion string
+		for _, v := range knownVersions {
+			versionType, err := version.ParseType(v)
+			if err != nil {
+				return "", err
+			}
+			if versionType != version.TypeRelease {
+				// We expect there to always be at least 1 release version.
+				continue
+			}
+			if semver.Compare(v, latestVersion) > 0 {
+				latestVersion = v
+			}
+		}
+		return latestVersion, nil
+	}
+
+	for _, v := range knownVersions {
+		if v == requestedVersion {
+			return requestedVersion, nil
+		}
+	}
+	return "", fmt.Errorf("%w: requested version unknown: %q", derrors.InvalidArgument, requestedVersion)
 }
 
 // addFiles adds the files in t to z, using dirpath as the path prefix.
