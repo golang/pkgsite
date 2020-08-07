@@ -123,7 +123,6 @@ func Cache(name string, client *redis.Client, expirer Expirer, authValues []stri
 }
 
 func (c *cache) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	start := time.Now()
 	// Check auth header to see if request should bypass cache.
 	authVal := r.Header.Get(config.AuthHeader)
 	for _, wantVal := range c.authValues {
@@ -134,14 +133,15 @@ func (c *cache) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx := r.Context()
 	key := r.URL.String()
-	if reader, ok := c.get(ctx, key); ok {
-		recordCacheResult(ctx, c.name, true, time.Since(start))
+	start := time.Now()
+	reader, hit := c.get(ctx, key)
+	recordCacheResult(ctx, c.name, hit, time.Since(start))
+	if hit {
 		if _, err := io.Copy(w, reader); err != nil {
 			log.Errorf(ctx, "error copying zip bytes: %v", err)
 		}
 		return
 	}
-	recordCacheResult(ctx, c.name, false, time.Since(start))
 	rec := newRecorder(w)
 	c.delegate.ServeHTTP(rec, r)
 	if rec.bufErr == nil && (rec.statusCode == 0 || rec.statusCode == http.StatusOK) {
