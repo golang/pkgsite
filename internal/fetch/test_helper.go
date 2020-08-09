@@ -36,7 +36,9 @@ func cleanFetchResult(fr *FetchResult, detector *licenses.Detector) *FetchResult
 	if fr.Module.Version == "" {
 		fr.Module.Version = "v1.0.0"
 	}
-	fr.RequestedVersion = fr.Module.Version
+	if fr.RequestedVersion == "" {
+		fr.RequestedVersion = fr.Module.Version
+	}
 	fr.ResolvedVersion = fr.Module.Version
 	if fr.Module.VersionType == "" {
 		fr.Module.VersionType = version.TypeRelease

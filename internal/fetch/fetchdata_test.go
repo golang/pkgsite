@@ -865,6 +865,91 @@ var moduleStd = &testModule{
 	},
 }
 
+var moduleMaster = &testModule{
+	mod: &proxy.Module{
+		ModulePath: "github.com/my/module",
+		Files: map[string]string{
+			"foo/foo.go": "// package foo exports a helpful constant.\npackage foo\nconst Bar = 1",
+		},
+		Version: "v0.0.0-20200706064627-355bc3f705ed",
+	},
+	fr: &FetchResult{
+		RequestedVersion: "master",
+		Module: &internal.Module{
+			LegacyModuleInfo: internal.LegacyModuleInfo{
+				ModuleInfo: internal.ModuleInfo{
+					ModulePath:  "github.com/my/module",
+					Version:     "v0.0.0-20200706064627-355bc3f705ed",
+					VersionType: "pseudo",
+					SourceInfo:  source.NewGitHubInfo("https://github.com/my/module", "", "355bc3f705ed"),
+				},
+			},
+			Directories: []*internal.Directory{
+				{
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "github.com/my/module",
+						V1Path: "github.com/my/module",
+					},
+				},
+				{
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "github.com/my/module/foo",
+						V1Path: "github.com/my/module/foo",
+					},
+					Package: &internal.Package{
+						Name: "foo",
+						Documentation: &internal.Documentation{
+							Synopsis: "package foo exports a helpful constant.",
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
+var moduleLatest = &testModule{
+	mod: &proxy.Module{
+		ModulePath: "github.com/my/module",
+		Files: map[string]string{
+			"foo/foo.go": "// package foo exports a helpful constant.\npackage foo\nconst Bar = 1",
+		},
+		Version: "v1.2.4",
+	},
+	fr: &FetchResult{
+		RequestedVersion: "latest",
+		Module: &internal.Module{
+			LegacyModuleInfo: internal.LegacyModuleInfo{
+				ModuleInfo: internal.ModuleInfo{
+					ModulePath: "github.com/my/module",
+					Version:    "v1.2.4",
+					SourceInfo: source.NewGitHubInfo("https://github.com/my/module", "", "v1.2.4"),
+				},
+			},
+			Directories: []*internal.Directory{
+				{
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "github.com/my/module",
+						V1Path: "github.com/my/module",
+					},
+				},
+				{
+					DirectoryMeta: internal.DirectoryMeta{
+						Path:   "github.com/my/module/foo",
+						V1Path: "github.com/my/module/foo",
+					},
+					Package: &internal.Package{
+						Name: "foo",
+						Documentation: &internal.Documentation{
+							Synopsis: "package foo exports a helpful constant.",
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
 // moduleWithExamples returns a testModule that contains an example.
 // It provides the common bits for the tests for package, function,
 // type, and method examples below.

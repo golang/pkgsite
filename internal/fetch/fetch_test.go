@@ -49,8 +49,9 @@ func TestFetchModule(t *testing.T) {
 	MaxDocumentationHTML = 1 * megabyte
 
 	for _, test := range []struct {
-		name string
-		mod  *testModule
+		name         string
+		mod          *testModule
+		fetchVersion string
 	}{
 		{name: "basic", mod: moduleNoGoMod},
 		{name: "wasm", mod: moduleWasm},
@@ -67,6 +68,8 @@ func TestFetchModule(t *testing.T) {
 		{name: "module with method example", mod: moduleMethodExample},
 		{name: "module with nonredistributable packages", mod: moduleNonRedist},
 		{name: "stdlib module", mod: moduleStd},
+		{name: "master version of module", mod: moduleMaster, fetchVersion: "master"},
+		{name: "latest version of module", mod: moduleLatest, fetchVersion: "latest"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			ctx := experiment.NewContext(context.Background(), internal.ExperimentExecutableExamples)
@@ -75,8 +78,12 @@ func TestFetchModule(t *testing.T) {
 
 			modulePath := test.mod.mod.ModulePath
 			version := test.mod.mod.Version
+			fetchVersion := test.fetchVersion
 			if version == "" {
 				version = "v1.0.0"
+			}
+			if fetchVersion == "" {
+				fetchVersion = version
 			}
 			sourceClient := source.NewClient(sourceTimeout)
 			proxyClient, teardownProxy := proxy.SetupTestClient(t, []*proxy.Module{{
@@ -85,11 +92,11 @@ func TestFetchModule(t *testing.T) {
 				Files:      test.mod.mod.Files,
 			}})
 			defer teardownProxy()
-			got := FetchModule(ctx, modulePath, version, proxyClient, sourceClient)
+			got := FetchModule(ctx, modulePath, fetchVersion, proxyClient, sourceClient)
 			if got.Error != nil {
 				t.Fatal(got.Error)
 			}
-			d := licenseDetector(ctx, t, modulePath, version, proxyClient)
+			d := licenseDetector(ctx, t, modulePath, fetchVersion, proxyClient)
 			fr := cleanFetchResult(test.mod.fr, d)
 			sortFetchResult(fr)
 			sortFetchResult(got)
