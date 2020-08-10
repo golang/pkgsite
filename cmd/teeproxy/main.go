@@ -12,7 +12,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"time"
 
 	"golang.org/x/pkgsite/internal/auth"
 	"golang.org/x/pkgsite/internal/breaker"
@@ -83,19 +82,19 @@ func main() {
 		http.ServeFile(w, r, "content/static/img/favicon.ico")
 	})
 	server, err := teeproxy.NewServer(teeproxy.Config{
-		AuthKey:   config.AuthHeader,
-		AuthValue: cfg.TeeproxyAuthValue,
-		Rate:      20,
-		Burst:     20,
+		AuthKey:   cfg.Teeproxy.AuthKey,
+		AuthValue: cfg.Teeproxy.AuthValue,
+		Rate:      cfg.Teeproxy.Rate,
+		Burst:     cfg.Teeproxy.Burst,
 		BreakerConfig: breaker.Config{
-			FailsToRed:       10,
-			FailureThreshold: 0.5,
-			GreenInterval:    10 * time.Second,
-			MinTimeout:       30 * time.Second,
-			MaxTimeout:       4 * time.Minute,
-			SuccsToGreen:     20,
+			FailsToRed:       cfg.Teeproxy.FailsToRed,
+			FailureThreshold: cfg.Teeproxy.FailureThreshold,
+			GreenInterval:    cfg.Teeproxy.GreenInterval,
+			MinTimeout:       cfg.Teeproxy.MinTimeout,
+			MaxTimeout:       cfg.Teeproxy.MaxTimeout,
+			SuccsToGreen:     cfg.Teeproxy.SuccsToGreen,
 		},
-		Hosts:  cfg.TeeproxyForwardedHosts,
+		Hosts:  cfg.Teeproxy.Hosts,
 		Client: client,
 	})
 	if err != nil {

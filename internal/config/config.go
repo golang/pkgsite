@@ -18,6 +18,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -34,6 +35,30 @@ import (
 func GetEnv(key, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok {
 		return value
+	}
+	return fallback
+}
+
+// GetEnvInt looks up the given key from the environment and expects an integer,
+// returning the integer value if it exists, and otherwise returning the given
+// fallback value.
+func GetEnvInt(key string, fallback int) int {
+	if valueStr, ok := os.LookupEnv(key); ok {
+		if value, err := strconv.Atoi(valueStr); err != nil {
+			return value
+		}
+	}
+	return fallback
+}
+
+// GetEnvFloat64 looks up the given key from the environment and expects a
+// float64, returning the float64 value if it exists, and otherwise returning
+// the given fallback value.
+func GetEnvFloat64(key string, fallback float64) float64 {
+	if valueStr, ok := os.LookupEnv(key); ok {
+		if value, err := strconv.ParseFloat(valueStr, 64); err != nil {
+			return value
+		}
 	}
 	return fallback
 }
@@ -116,13 +141,8 @@ type Config struct {
 
 	Quota QuotaSettings
 
-	// TeeproxyAuthValue is the value set by the teeproxy header, so that
-	// the frontend server knows the source of those requests.
-	TeeproxyAuthValue string
-
-	// TeeproxyTargetHosts is a list of hosts that teeproxy will forward
-	// requests to.
-	TeeproxyForwardedHosts []string
+	// Teeproxy sepcifies the configuration values for the teeproxy.
+	Teeproxy TeeproxySettings
 
 	// Minimum log level below which no logs will be printed.
 	// Possible values are [debug, info, error, fatal].
@@ -228,6 +248,22 @@ type QuotaSettings struct {
 	AuthValues []string
 }
 
+// TeeproxySettings contains the configuration values for the teeproxy. See
+// internal/teeproxy.Config to see what these values mean.
+type TeeproxySettings struct {
+	AuthKey          string
+	AuthValue        string
+	Hosts            []string
+	Rate             float64
+	Burst            int
+	FailsToRed       int
+	FailureThreshold float64
+	GreenInterval    time.Duration
+	MinTimeout       time.Duration
+	MaxTimeout       time.Duration
+	SuccsToGreen     int
+}
+
 const overrideBucket = "go-discovery"
 
 // Init resolves all configuration values provided by the config package. It
@@ -274,10 +310,21 @@ func Init(ctx context.Context) (_ *Config, err error) {
 			RecordOnly: func() *bool { t := true; return &t }(),
 			AuthValues: parseCommaList(os.Getenv("GO_DISCOVERY_AUTH_VALUES")),
 		},
-		UseProfiler:            os.Getenv("GO_DISCOVERY_USE_PROFILER") == "TRUE",
-		TeeproxyAuthValue:      os.Getenv("GO_DISCOVERY_TEEPROXY_AUTH_VALUE"),
-		TeeproxyForwardedHosts: parseCommaList(os.Getenv("GO_DISCOVERY_TEEPROXY_FORWARDED_HOSTS")),
-		LogLevel:               os.Getenv("GO_DISCOVERY_LOG_LEVEL"),
+		UseProfiler: os.Getenv("GO_DISCOVERY_USE_PROFILER") == "TRUE",
+		Teeproxy: TeeproxySettings{
+			AuthKey:          AuthHeader,
+			AuthValue:        os.Getenv("GO_DISCOVERY_TEEPROXY_AUTH_VALUE"),
+			Hosts:            parseCommaList(os.Getenv("GO_DISCOVERY_TEEPROXY_FORWARDED_HOSTS")),
+			Rate:             GetEnvFloat64("GO_DISCOVERY_TEEPROXY_RATE", 50),
+			Burst:            GetEnvInt("GO_DISCOVERY_TEEPROXY_BURST", 50),
+			FailsToRed:       GetEnvInt("GO_DISCOVERY_TEEPROXY_FAILS_TO_RED", 10),
+			FailureThreshold: GetEnvFloat64("GO_DISCOVERY_TEEPROXY_FAILURE_THRESHOLD", 0.5),
+			GreenInterval:    time.Duration(GetEnvInt("GO_DISCOVERY_TEEPROXY_GREEN_INTERVAL_SECONDS", 10)) * time.Second,
+			MinTimeout:       time.Duration(GetEnvInt("GO_DISCOVERY_TEEPROXY_MIN_TIMEOUT_SECONDS", 30)) * time.Second,
+			MaxTimeout:       time.Duration(GetEnvInt("GO_DISCOVERY_TEEPROXY_MAX_TIMEOUT_SECONDS", 240)) * time.Second,
+			SuccsToGreen:     GetEnvInt("GO_DISCOVERY_TEEPROXY_SUCCS_TO_GREEN", 20),
+		},
+		LogLevel: os.Getenv("GO_DISCOVERY_LOG_LEVEL"),
 	}
 	cfg.AppMonitoredResource = &mrpb.MonitoredResource{
 		Type: "gae_app",
