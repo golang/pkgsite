@@ -67,6 +67,10 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	})
 	w2 := &responseWriter{ResponseWriter: w}
 	h.delegate.ServeHTTP(w2, r.WithContext(log.NewContextWithTraceID(r.Context(), traceID)))
+	s := logging.Info
+	if w2.status >= 500 {
+		s = logging.Error
+	}
 	h.logger.Log(logging.Entry{
 		HTTPRequest: &logging.HTTPRequest{
 			Request: r,
@@ -74,7 +78,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			Latency: time.Since(start),
 		},
 		Payload:  "request end",
-		Severity: logging.Info,
+		Severity: s,
 		Trace:    traceID,
 	})
 }
