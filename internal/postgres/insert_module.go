@@ -183,8 +183,9 @@ func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ i
 			series_path,
 			source_info,
 			redistributable,
-			has_go_mod)
-		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10, $11)
+			has_go_mod,
+			incompatible)
+		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
 		ON CONFLICT
 			(module_path, version)
 		DO UPDATE SET
@@ -204,6 +205,7 @@ func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ i
 		sourceInfoJSON,
 		m.IsRedistributable,
 		m.HasGoMod,
+		isIncompatible(m.Version),
 	).Scan(&moduleID)
 	if err != nil {
 		return 0, err
@@ -557,13 +559,19 @@ func lock(ctx context.Context, tx *database.DB, modulePath string) (err error) {
 	return nil
 }
 
+// isIncompatible reports whether the build metadata of the version is
+// "+incompatible", https://semver.org clause 10.
+func isIncompatible(version string) bool {
+	return strings.HasSuffix(version, "+incompatible")
+}
+
 // isLatestVersion reports whether version is the latest version of the module.
 func isLatestVersion(ctx context.Context, db *database.DB, modulePath, version string) (_ bool, err error) {
 	defer derrors.Wrap(&err, "isLatestVersion(ctx, tx, %q)", modulePath)
 
 	row := db.QueryRow(ctx, `
 		SELECT version FROM modules WHERE module_path = $1
-		ORDER BY version_type = 'release' DESC, sort_version DESC
+		ORDER BY incompatible, version_type = 'release' DESC, sort_version DESC
 		LIMIT 1`,
 		modulePath)
 	var v string

@@ -343,6 +343,67 @@ func TestPostgres_ReadAndWriteModuleOtherColumns(t *testing.T) {
 	}
 }
 
+func TestLatestVersion(t *testing.T) {
+	// Verify that finding the latest version of a module prefers
+	// non-incompatible versions first.
+	defer ResetTestDB(testDB, t)
+	ctx := context.Background()
+
+	for _, mod := range []struct {
+		version      string
+		modulePath   string
+		Incompatible bool
+	}{
+		{
+			version:    "v1.5.2",
+			modulePath: sample.ModulePath,
+		},
+		{
+			version:    "v2.0.0+incompatible",
+			modulePath: sample.ModulePath,
+		},
+		{
+			version:    "v2.0.1",
+			modulePath: sample.ModulePath + "/v2",
+		},
+	} {
+		m := sample.DefaultModule()
+		m.Version = mod.version
+		m.ModulePath = mod.modulePath
+
+		if err := testDB.InsertModule(ctx, m); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	for _, tc := range []struct {
+		name        string
+		modulePath  string
+		wantVersion string
+	}{
+		{
+			name:        "test v1 version",
+			modulePath:  sample.ModulePath,
+			wantVersion: "v1.5.2",
+		},
+		{
+			name:        "test v2 version",
+			modulePath:  sample.ModulePath + "/v2",
+			wantVersion: "v2.0.1",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			isLatest, err := isLatestVersion(ctx, testDB.db, tc.modulePath, tc.wantVersion)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !isLatest {
+				t.Errorf("\n%+v is not the Latest version: %+v", tc.modulePath, tc.wantVersion)
+			}
+		})
+	}
+}
+
 func TestDeleteModule(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
