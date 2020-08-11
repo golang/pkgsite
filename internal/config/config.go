@@ -44,7 +44,7 @@ func GetEnv(key, fallback string) string {
 // fallback value.
 func GetEnvInt(key string, fallback int) int {
 	if valueStr, ok := os.LookupEnv(key); ok {
-		if value, err := strconv.Atoi(valueStr); err != nil {
+		if value, err := strconv.Atoi(valueStr); err == nil {
 			return value
 		}
 	}
@@ -56,7 +56,7 @@ func GetEnvInt(key string, fallback int) int {
 // the given fallback value.
 func GetEnvFloat64(key string, fallback float64) float64 {
 	if valueStr, ok := os.LookupEnv(key); ok {
-		if value, err := strconv.ParseFloat(valueStr, 64); err != nil {
+		if value, err := strconv.ParseFloat(valueStr, 64); err == nil {
 			return value
 		}
 	}
