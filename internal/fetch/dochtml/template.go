@@ -89,7 +89,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 
 			{{if .Funcs}}
 				<li class="DocNav-functions" role="none">
-					<span class="DocNav-groupLabel" role="treeitem" aria-expanded="false" aria-level="1" aria-owns="nav-group-functions" tabindex="-1">Functions</span>
+					<span class="DocNav-groupLabel" role="treeitem" aria-expanded="true" aria-level="1" aria-owns="nav-group-functions" tabindex="-1">Functions</span>
 					<ul role="group" id="nav-group-functions">
 						{{range .Funcs}}
 							<li role="none">
@@ -102,7 +102,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 
 			{{if .Types}}
 				<li class="DocNav-types" role="none">
-					<span class="DocNav-groupLabel" role="treeitem" aria-expanded="false" aria-level="1" aria-owns="nav-group-types" tabindex="-1">Types</span>
+					<span class="DocNav-groupLabel" role="treeitem" aria-expanded="true" aria-level="1" aria-owns="nav-group-types" tabindex="-1">Types</span>
 					<ul role="group" id="nav-group-types">
 						{{range .Types}}
 							{{$tname := .Name}}
@@ -110,7 +110,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 								{{if or .Funcs .Methods}}
 									{{$navgroupname := (printf "nav.group.%s" $tname)}}
 									{{$navgroupid := (safe_id $navgroupname)}}
-									<a class="DocNav-groupLabel" href="#{{$tname}}" role="treeitem" aria-expanded="false" aria-level="2" data-aria-owns="{{$navgroupid}}" tabindex="-1">type {{$tname}}</a>
+									<a class="DocNav-groupLabel" href="#{{$tname}}" role="treeitem" aria-expanded="true" aria-level="2" data-aria-owns="{{$navgroupid}}" tabindex="-1">type {{$tname}}</a>
 									<ul role="group" id="{{$navgroupid}}">
 										{{range .Funcs}}
 											<li role="none">
