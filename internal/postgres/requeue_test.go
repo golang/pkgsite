@@ -30,8 +30,8 @@ func TestGetNextModulesToFetchAndUpdateModuleVersionStatesForReprocessing(t *tes
 		numPackages, status int
 	}
 	var (
-		latest    = "v1.2.0"
-		notLatest = "v1.0.0"
+		latest    = "v1.5.2"
+		notLatest = "v2.0.0+incompatible"
 		big       = 2000
 		small     = 100
 		versions  = []string{notLatest, latest}
@@ -205,8 +205,9 @@ func TestGetNextModulesToFetchOnlyPicksUpStatus0AndStatusGreaterThan500(t *testi
 				app_version,
 				index_timestamp,
 				status,
-				go_mod_path)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+				go_mod_path,
+				incompatible)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
 			strconv.Itoa(status),
 			"v1.0.0",
 			version.ForSorting("v1.0.0"),
@@ -214,6 +215,7 @@ func TestGetNextModulesToFetchOnlyPicksUpStatus0AndStatusGreaterThan500(t *testi
 			time.Now(),
 			status,
 			strconv.Itoa(status),
+			false,
 		); err != nil {
 			t.Fatal(err)
 		}
@@ -261,8 +263,9 @@ func TestGetNextModulesToFetchLargeModulesLimit(t *testing.T) {
 				app_version,
 				index_timestamp,
 				status,
-				num_packages)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+				num_packages,
+				incompatible)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
 			mp,
 			v,
 			version.ForSorting(v),
@@ -270,6 +273,7 @@ func TestGetNextModulesToFetchLargeModulesLimit(t *testing.T) {
 			time.Now(),
 			status,
 			numPackages,
+			isIncompatible(v),
 		); err != nil {
 			t.Fatal(err)
 		}

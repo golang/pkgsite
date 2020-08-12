@@ -27,9 +27,9 @@ func (db *DB) InsertIndexVersions(ctx context.Context, versions []*internal.Inde
 
 	var vals []interface{}
 	for _, v := range versions {
-		vals = append(vals, v.Path, v.Version, version.ForSorting(v.Version), v.Timestamp, 0, "", "")
+		vals = append(vals, v.Path, v.Version, version.ForSorting(v.Version), v.Timestamp, 0, "", "", isIncompatible(v.Version))
 	}
-	cols := []string{"module_path", "version", "sort_version", "index_timestamp", "status", "error", "go_mod_path"}
+	cols := []string{"module_path", "version", "sort_version", "index_timestamp", "status", "error", "go_mod_path", "incompatible"}
 	conflictAction := `
 		ON CONFLICT
 			(module_path, version)
@@ -89,8 +89,9 @@ func upsertModuleVersionState(ctx context.Context, db *database.DB, modulePath, 
 				status,
 				go_mod_path,
 				error,
-				num_packages)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+				num_packages,
+				incompatible)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 			ON CONFLICT (module_path, version)
 			DO UPDATE
 			SET
@@ -111,7 +112,7 @@ func upsertModuleVersionState(ctx context.Context, db *database.DB, modulePath, 
 						CURRENT_TIMESTAMP + INTERVAL '1 hour'
 					END;`,
 		modulePath, vers, version.ForSorting(vers),
-		appVersion, timestamp, status, goModPath, sqlErrorMsg, numPackages)
+		appVersion, timestamp, status, goModPath, sqlErrorMsg, numPackages, isIncompatible(vers))
 	if err != nil {
 		return err
 	}
@@ -190,7 +191,8 @@ const moduleVersionStateColumns = `
 			next_processed_after,
 			app_version,
 			go_mod_path,
-			num_packages`
+			num_packages,
+			incompatible`
 
 // scanModuleVersionState constructs an *internal.ModuleModuleVersionState from the given
 // scanner. It expects columns to be in the order of moduleVersionStateColumns.
@@ -279,7 +281,12 @@ func (db *DB) GetModuleVersionState(ctx context.Context, modulePath, version str
 			AND version = $2;`, moduleVersionStateColumns)
 
 	row := db.db.QueryRow(ctx, query, modulePath, version)
-	v, err := scanModuleVersionState(row.Scan)
+	// Ignore the incompatible column, it is only used for sorting.
+	scan := func(dests ...interface{}) error {
+		var incompatible bool
+		return row.Scan(append(dests, &incompatible)...)
+	}
+	v, err := scanModuleVersionState(scan)
 	switch err {
 	case nil:
 		return v, nil
