@@ -16,7 +16,7 @@
 {{define "main_content"}}
   <div class="Container">
     <div class="Homepage">
-      <img class="Homepage-logo" src="/static/img/gopher-homepage.jpg" alt="go.dev">
+      <img class="Homepage-logo" src="/static/img/gopher-homepage.jpg" alt="">
       <form class="Homepage-searchForm" action="/search" role="search">
         <input
           id="AutoComplete"
@@ -33,16 +33,16 @@
           autofocus="true">
         <div class="Homepage-buttonGroup">
           <button type="submit" class="Homepage-searchButton">Search</button>
-          <a href="/search-help" target="_blank" class="Homepage-helpButton">
-            Search help <span><img src="/static/img/icon-launch.svg"></span>
+          <a href="/search-help" target="_blank" rel="noopener" class="Homepage-helpButton">
+            Search help <span><img src="/static/img/icon-launch.svg" alt=""></span>
           </a>
         </div>
       </form>
       <div class="Homepage-exampleSearches">
-        <span>EXAMPLE SEARCHES:</span>
-        <a href="/search?q=logrus">"logrus"</a>
-        <a href="/search?q=yaml+OR+json">"yaml OR json"</a>
-        <a href="/search?q=go%2Fpackages">"go/packages"</a>
+        <span class="Homepage-exampleSearchesLabel">Example searches:</span>
+        <a class="Homepage-exampleSearch" href="/search?q=logrus">“logrus”</a>
+        <a class="Homepage-exampleSearch" href="/search?q=yaml+OR+json">“yaml OR json”</a>
+        <a class="Homepage-exampleSearch" href="/search?q=go%2Fpackages">“go/packages”</a>
       </div>
     </div>
   </div>

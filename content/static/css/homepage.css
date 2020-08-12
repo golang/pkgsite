@@ -7,14 +7,22 @@
 .Homepage {
   display: flex;
   flex-direction: column;
-  margin: 2rem auto;
+  margin: 0 auto;
   max-width: 38rem;
 }
 .Homepage-logo {
   display: block;
-  height: 15.25rem;
-  margin: 3.125rem auto;
+  height: 14.6rem;
+  margin: 0 auto 3.125rem;
   width: 22.8125rem;
+}
+@media only screen and (min-width: 52rem) {
+  .Homepage {
+    margin: 2rem auto;
+  }
+  .Homepage-logo {
+    margin: 3.125rem auto;
+  }
 }
 .Homepage-searchForm input {
   background: url('/static/img/icon-search.svg') right no-repeat;
@@ -73,19 +81,23 @@ a.Homepage-helpButton {
   margin: 1.5rem auto;
   text-align: center;
 }
-.Homepage-exampleSearches a {
+.Homepage-exampleSearchesLabel {
+  display: block;
+  text-transform: uppercase;
+}
+.Homepage-exampleSearch {
   color: var(--turq-dark);
   font-size: 1rem;
   font-weight: initial;
   padding: 0 0.625rem;
 }
-@media only screen and (max-width: 30rem) {
-  .Homepage-exampleSearches > span {
-    display: block;
+@media only screen and (min-width: 30rem) {
+  .Homepage-exampleSearchesLabel {
+    display: inline;
   }
 }
 .Questions {
-  background: var(--gray-9);
+  background: var(--gray-10);
   color: var(--gray-2);
   display: flex;
   padding: 0.5rem 0;
