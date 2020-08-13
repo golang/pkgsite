@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
@@ -173,6 +174,39 @@ func TestFetchPathAlreadyExists(t *testing.T) {
 			got, _ := s.fetchAndPoll(ctx, s.getDataSource(ctx), sample.ModulePath, sample.PackagePath, sample.VersionString)
 			if got != test.want {
 				t.Fatalf("fetchAndPoll for status %d: %d; want = %d)", test.status, got, test.want)
+			}
+		})
+	}
+}
+
+func TestCandidateModulePaths(t *testing.T) {
+	maxPathsToFetch = 7
+	for _, test := range []struct {
+		name, fullPath string
+		want           []string
+	}{
+		{"custom path", "my.module/foo", []string{
+			"my.module/foo",
+			"my.module",
+		}},
+		{"github.com module path", sample.ModulePath, []string{sample.ModulePath}},
+		{"more than 7 possible paths", sample.ModulePath + "/1/2/3/4/5/6/7/8/9", []string{
+			sample.ModulePath + "/1/2/3/4/5/6",
+			sample.ModulePath + "/1/2/3/4/5",
+			sample.ModulePath + "/1/2/3/4",
+			sample.ModulePath + "/1/2/3",
+			sample.ModulePath + "/1/2",
+			sample.ModulePath + "/1",
+			sample.ModulePath,
+		}},
+	} {
+		t.Run(test.fullPath, func(t *testing.T) {
+			got, err := candidateModulePaths(test.fullPath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Fatalf("mismatch (-want, +got):\n%s", diff)
 			}
 		})
 	}

@@ -443,6 +443,11 @@ var vcsHostsWithThreeElementRepoName = map[string]bool{
 	"golang.org":    true,
 }
 
+// maxPathsToFetch is the number of modulePaths that are fetched from a single
+// fetch request. The longest module path we've seen in our database had 7 path
+// elements. maxPathsToFetch is set to 10 as a buffer.
+var maxPathsToFetch = 10
+
 // candidateModulePaths returns the potential module paths that could contain
 // the fullPath. The paths are returned in reverse length order.
 func candidateModulePaths(fullPath string) (_ []string, err error) {
@@ -462,6 +467,9 @@ func candidateModulePaths(fullPath string) (_ []string, err error) {
 		parts = parts[2:]
 	}
 	for _, part := range parts {
+		if len(modulePaths) == maxPathsToFetch {
+			return modulePaths, nil
+		}
 		path += part
 		if err := module.CheckImportPath(path); err != nil {
 			continue
