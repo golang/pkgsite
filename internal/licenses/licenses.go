@@ -21,6 +21,7 @@ package licenses
 import (
 	"archive/zip"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"path"
 	"path/filepath"
@@ -29,6 +30,7 @@ import (
 
 	"github.com/google/licensecheck"
 	"golang.org/x/mod/module"
+	modzip "golang.org/x/mod/zip"
 )
 
 //go:generate rm -f exceptions.gen.go
@@ -51,7 +53,7 @@ const (
 // There are some license files larger than 1 million bytes: https://github.com/vmware/vic/LICENSE
 // and github.com/goharbor/harbor/LICENSE, for example.
 // var for testing
-var maxLicenseSize uint64 = 1e7
+var maxLicenseSize uint64 = modzip.MaxLICENSE
 
 // Metadata holds information extracted from a license file.
 type Metadata struct {
@@ -509,7 +511,7 @@ func readZipFile(f *zip.File) ([]byte, error) {
 		return nil, err
 	}
 	defer rc.Close()
-	return ioutil.ReadAll(rc)
+	return ioutil.ReadAll(io.LimitReader(rc, int64(maxLicenseSize)))
 }
 
 func contentsDir(modulePath, version string) string {

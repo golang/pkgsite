@@ -221,7 +221,7 @@ func extractReadmesFromZip(modulePath, resolvedVersion string, r *zip.Reader) ([
 			if zipFile.UncompressedSize64 > MaxFileSize {
 				return nil, fmt.Errorf("file size %d exceeds max limit %d", zipFile.UncompressedSize64, MaxFileSize)
 			}
-			c, err := readZipFile(zipFile)
+			c, err := readZipFile(zipFile, MaxFileSize)
 			if err != nil {
 				return nil, err
 			}
@@ -683,7 +683,7 @@ func matchingFiles(goos, goarch string, zipGoFiles []*zip.File) (files map[strin
 	files = make(map[string][]byte)
 	for _, f := range zipGoFiles {
 		_, name := path.Split(f.Name)
-		b, err := readZipFile(f)
+		b, err := readZipFile(f, MaxFileSize)
 		if err != nil {
 			return nil, err
 		}
@@ -731,14 +731,16 @@ func matchingFiles(goos, goarch string, zipGoFiles []*zip.File) (files map[strin
 // readZipFile decompresses zip file f and returns its uncompressed contents.
 // The caller can check f.UncompressedSize64 before calling readZipFile to
 // get the expected uncompressed size of f.
-func readZipFile(f *zip.File) (_ []byte, err error) {
+//
+// limit is the maximum number of bytes to read.
+func readZipFile(f *zip.File, limit int64) (_ []byte, err error) {
 	defer derrors.Add(&err, "readZipFile(%q)", f.Name)
 
 	r, err := f.Open()
 	if err != nil {
 		return nil, fmt.Errorf("f.Open(): %v", err)
 	}
-	b, err := ioutil.ReadAll(r)
+	b, err := ioutil.ReadAll(io.LimitReader(r, limit))
 	if err != nil {
 		r.Close()
 		return nil, fmt.Errorf("ioutil.ReadAll(r): %v", err)
