@@ -191,7 +191,7 @@ func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue) *httptest.S
 		t.Fatal(err)
 	}
 	mw := middleware.Chain(
-		middleware.AcceptMethods(http.MethodGet, http.MethodPost),
+		middleware.AcceptRequests(http.MethodGet, http.MethodPost),
 		middleware.SecureHeaders(),
 		middleware.LatestVersion(s.LatestVersion),
 		middleware.Experiment(experimenter),

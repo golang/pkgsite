@@ -164,7 +164,7 @@ func main() {
 	}
 	mw := middleware.Chain(
 		middleware.RequestLog(requestLogger),
-		middleware.AcceptMethods(http.MethodGet, http.MethodPost), // accept only GETs and POSTs
+		middleware.AcceptRequests(http.MethodGet, http.MethodPost), // accept only GETs and POSTs
 		middleware.Quota(cfg.Quota),
 		middleware.GodocURL(),                          // potentially redirects so should be early in chain
 		middleware.SecureHeaders(),                     // must come before any caching for nonces to work
