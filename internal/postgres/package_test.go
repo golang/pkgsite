@@ -90,6 +90,11 @@ func TestLegacyGetPackage(t *testing.T) {
 			"v1.0.0-20190311183353-d8887717615a",
 		},
 		{
+			"github.com/hashicorp/vault/api",
+			"github.com/hashicorp/vault",
+			"v2.0.0+incompatible",
+		},
+		{
 			"archive/zip",
 			stdlib.ModulePath,
 			"v1.13.1",

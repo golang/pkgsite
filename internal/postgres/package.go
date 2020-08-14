@@ -81,17 +81,11 @@ func (db *DB) LegacyGetPackage(ctx context.Context, pkgPath, modulePath, version
 		if version == internal.LatestVersion {
 			// Only pkgPath is specified, so get the latest version of the
 			// package found in any module.
-			query += `
+			query += fmt.Sprintf(`
 			WHERE
 				p.path = $1
-			ORDER BY
-				-- Order the versions by release then prerelease.
-				-- The default version should be the first release
-				-- version available, if one exists.
-				m.version_type = 'release' DESC,
-				m.sort_version DESC,
-				m.module_path DESC
-			LIMIT 1;`
+			%s
+			LIMIT 1;`, orderByLatest)
 		} else {
 			// pkgPath and version are specified, so get that package version
 			// from any module.  If it exists in multiple modules, return the
@@ -108,17 +102,12 @@ func (db *DB) LegacyGetPackage(ctx context.Context, pkgPath, modulePath, version
 	} else if version == internal.LatestVersion {
 		// pkgPath and modulePath are specified, so get the latest version of
 		// the package in the specified module.
-		query += `
+		query += fmt.Sprintf(`
 			WHERE
 				p.path = $1
 				AND p.module_path = $2
-			ORDER BY
-				-- Order the versions by release then prerelease.
-				-- The default version should be the first release
-				-- version available, if one exists.
-				m.version_type = 'release' DESC,
-				m.sort_version DESC
-			LIMIT 1;`
+			%s
+			LIMIT 1;`, orderByLatest)
 		args = append(args, modulePath)
 	} else {
 		// pkgPath, modulePath and version were all specified. Only one
