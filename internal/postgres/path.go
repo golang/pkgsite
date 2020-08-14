@@ -16,6 +16,16 @@ import (
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
+const orderByLatest = `
+			ORDER BY
+				-- Order the versions by release then prerelease.
+				-- The default version should be the first release
+				-- version available, if one exists.
+				m.incompatible,
+				m.version_type = 'release' DESC,
+				m.sort_version DESC,
+				m.module_path DESC`
+
 // GetPathInfo returns information about the "best" entity (module, path or directory) with
 // the given path. The module and version arguments provide additional constraints.
 // If the module is unknown, pass internal.UnknownModulePath; if the version is unknown, pass

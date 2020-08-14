@@ -349,15 +349,6 @@ func directoryColumns(fields internal.FieldSet) string {
 			m.has_go_mod`
 }
 
-const orderByLatest = `
-			ORDER BY
-				-- Order the versions by release then prerelease.
-				-- The default version should be the first release
-				-- version available, if one exists.
-				version_type = 'release' DESC,
-				sort_version DESC,
-				module_path DESC`
-
 // directoryQueryWithoutModulePath returns the query and args needed to fetch a
 // directory when no module path is provided.
 func directoryQueryWithoutModulePath(dirPath, version string, fields internal.FieldSet) (string, []interface{}) {
@@ -387,9 +378,9 @@ func directoryQueryWithoutModulePath(dirPath, version string, fields internal.Fi
 			INNER JOIN (
 				SELECT *
 				FROM
-					modules
+					modules m
 				WHERE
-					(module_path, version) IN (
+					(m.module_path, m.version) IN (
 						SELECT module_path, version
 						FROM %s
 						WHERE tsv_parent_directories @@ $1::tsquery
@@ -446,10 +437,10 @@ func directoryQueryWithModulePath(dirPath, modulePath, version string, fields in
 			FROM packages p
 			INNER JOIN (
 				SELECT *
-				FROM modules
+				FROM modules m
 				WHERE
-					module_path = $2
-					AND version IN (
+					m.module_path = $2
+					AND m.version IN (
 						SELECT version
 						FROM packages
 						WHERE

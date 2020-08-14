@@ -570,11 +570,12 @@ func isIncompatible(version string) bool {
 func isLatestVersion(ctx context.Context, db *database.DB, modulePath, version string) (_ bool, err error) {
 	defer derrors.Wrap(&err, "isLatestVersion(ctx, tx, %q)", modulePath)
 
-	row := db.QueryRow(ctx, `
-		SELECT version FROM modules WHERE module_path = $1
-		ORDER BY incompatible, version_type = 'release' DESC, sort_version DESC
-		LIMIT 1`,
-		modulePath)
+	query := fmt.Sprintf(`
+		SELECT version FROM modules m WHERE m.module_path = $1
+		%s
+		LIMIT 1`, orderByLatest)
+
+	row := db.QueryRow(ctx, query, modulePath)
 	var v string
 	if err := row.Scan(&v); err != nil {
 		if err == sql.ErrNoRows {
