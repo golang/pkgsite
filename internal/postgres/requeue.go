@@ -12,30 +12,48 @@ import (
 	"strconv"
 
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
 )
 
-// UpdateModuleVersionStatesForReprocessing marks modules to be reprocessed
-// that were processed prior to the provided appVersion.
-func (db *DB) UpdateModuleVersionStatesForReprocessing(ctx context.Context, appVersion string) (err error) {
-	defer derrors.Wrap(&err, "UpdateModuleVersionStatesForReprocessing(ctx, %q)", appVersion)
+// statesToReprocess contains all the status codes of modules that the worker
+// needs to reprocess when the reprocess endpoint is hit.
+var statesToReprocess = []int{
+	http.StatusOK,
+	derrors.ToStatus(derrors.HasIncompletePackages),
+	derrors.ToStatus(derrors.BadModule),
+	derrors.ToStatus(derrors.AlternativeModule),
+	derrors.ToStatus(derrors.DBModuleInsertInvalid),
+}
 
-	for _, status := range []int{
-		http.StatusOK,
-		derrors.ToStatus(derrors.HasIncompletePackages),
-		derrors.ToStatus(derrors.BadModule),
-		derrors.ToStatus(derrors.AlternativeModule),
-		derrors.ToStatus(derrors.DBModuleInsertInvalid),
-	} {
-		if err := db.UpdateModuleVersionStatesWithStatus(ctx, status, appVersion); err != nil {
+// UpdateModulesForReprocessing marks modules to be reprocessed
+// that were processed prior to the provided appVersion.
+func (db *DB) UpdateModulesForReprocessing(ctx context.Context, appVersion string) (err error) {
+	defer derrors.Wrap(&err, "UpdateModuleVersionStatesForReprocessing(ctx, %q)", appVersion)
+	for _, status := range statesToReprocess {
+		if err := db.UpdateModulesWithStatusForReprocessing(ctx, status, appVersion); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (db *DB) UpdateModuleVersionStatesWithStatus(ctx context.Context, status int, appVersion string) (err error) {
+// UpdateModulesWithStatusForReprocessing marks modules with the given statuses
+// that were processed prior to the provided appVersion for reprocessing.
+func (db *DB) UpdateModulesWithStatusForReprocessing(ctx context.Context, status int, appVersion string) (err error) {
+	return db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
+		if err := updateModuleVersionStatesWithStatus(ctx, tx, status, appVersion); err != nil {
+			return err
+		}
+		if err := updateVersionMapWithStatus(ctx, tx, status, appVersion); err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func updateModuleVersionStatesWithStatus(ctx context.Context, db *database.DB, status int, appVersion string) error {
 	query := `UPDATE module_version_states
 			SET
 				status = $2,
@@ -44,7 +62,7 @@ func (db *DB) UpdateModuleVersionStatesWithStatus(ctx context.Context, status in
 			WHERE
 				app_version < $1
 				AND status = $3;`
-	result, err := db.db.Exec(ctx, query, appVersion,
+	result, err := db.Exec(ctx, query, appVersion,
 		derrors.ToReprocessStatus(status), status)
 	if err != nil {
 		return err
@@ -55,6 +73,31 @@ func (db *DB) UpdateModuleVersionStatesWithStatus(ctx context.Context, status in
 	}
 	log.Infof(ctx,
 		"Updated module_version_states with status=%d and app_version < %q to status=%d; %d affected",
+		status, appVersion, derrors.ToReprocessStatus(status), affected)
+	return nil
+}
+
+func updateVersionMapWithStatus(ctx context.Context, db *database.DB, status int, appVersion string) error {
+	query := `UPDATE version_map AS vm
+			SET
+				status = $2
+			FROM
+				module_version_states AS mvs
+			WHERE
+				vm.module_path = mvs.module_path
+				AND vm.resolved_version = mvs.version
+				AND mvs.app_version < $1
+				AND vm.status = $3;`
+	result, err := db.Exec(ctx, query, appVersion, derrors.ToReprocessStatus(status), status)
+	if err != nil {
+		return err
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("result.RowsAffected(): %v", err)
+	}
+	log.Infof(ctx,
+		"Updated version_map with status=%d and app_version < %q to status=%d; %d affected",
 		status, appVersion, derrors.ToReprocessStatus(status), affected)
 	return nil
 }
