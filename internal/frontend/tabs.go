@@ -38,42 +38,42 @@ type TabSettings struct {
 var (
 	packageTabSettings = []TabSettings{
 		{
-			Name:         "doc",
+			Name:         tabDoc,
 			DisplayName:  "Doc",
 			TemplateName: "pkg_doc.tmpl",
 		},
 		{
-			Name:              "overview",
+			Name:              tabOverview,
 			AlwaysShowDetails: true,
 			DisplayName:       "Overview",
 			TemplateName:      "overview.tmpl",
 		},
 		{
-			Name:              "subdirectories",
+			Name:              tabSubdirectories,
 			AlwaysShowDetails: true,
 			DisplayName:       "Subdirectories",
 			TemplateName:      "subdirectories.tmpl",
 		},
 		{
-			Name:              "versions",
+			Name:              tabVersions,
 			AlwaysShowDetails: true,
 			DisplayName:       "Versions",
 			TemplateName:      "versions.tmpl",
 		},
 		{
-			Name:              "imports",
+			Name:              tabImports,
 			DisplayName:       "Imports",
 			AlwaysShowDetails: true,
 			TemplateName:      "pkg_imports.tmpl",
 		},
 		{
-			Name:              "importedby",
+			Name:              tabImportedBy,
 			DisplayName:       "Imported By",
 			AlwaysShowDetails: true,
 			TemplateName:      "pkg_importedby.tmpl",
 		},
 		{
-			Name:         "licenses",
+			Name:         tabLicenses,
 			DisplayName:  "Licenses",
 			TemplateName: "licenses.tmpl",
 		},
@@ -85,7 +85,7 @@ var (
 
 	moduleTabSettings = []TabSettings{
 		{
-			Name:              "overview",
+			Name:              tabOverview,
 			AlwaysShowDetails: true,
 			DisplayName:       "Overview",
 			TemplateName:      "overview.tmpl",
@@ -97,13 +97,13 @@ var (
 			TemplateName:      "subdirectories.tmpl",
 		},
 		{
-			Name:              "versions",
+			Name:              tabVersions,
 			AlwaysShowDetails: true,
 			DisplayName:       "Versions",
 			TemplateName:      "versions.tmpl",
 		},
 		{
-			Name:         "licenses",
+			Name:         tabLicenses,
 			DisplayName:  "Licenses",
 			TemplateName: "licenses.tmpl",
 		},
@@ -113,9 +113,9 @@ var (
 
 // validDirectoryTabs indicates if a tab is enabled in the directory view.
 var validDirectoryTabs = map[string]bool{
-	"licenses":       true,
-	"overview":       true,
-	"subdirectories": true,
+	tabLicenses:       true,
+	tabOverview:       true,
+	tabSubdirectories: true,
 }
 
 func init() {
@@ -139,24 +139,34 @@ func init() {
 	}
 }
 
+const (
+	tabDoc            = "doc"
+	tabOverview       = "overview"
+	tabSubdirectories = "subdirectories"
+	tabVersions       = "versions"
+	tabImports        = "imports"
+	tabImportedBy     = "importedby"
+	tabLicenses       = "licenses"
+)
+
 // fetchDetailsForPackage returns tab details by delegating to the correct detail
 // handler.
 func fetchDetailsForPackage(r *http.Request, tab string, ds internal.DataSource, vdir *internal.VersionedDirectory) (interface{}, error) {
 	ctx := r.Context()
 	switch tab {
-	case "doc":
+	case tabDoc:
 		return fetchDocumentationDetails(vdir.Package.Documentation), nil
-	case "overview":
+	case tabOverview:
 		return fetchPackageOverviewDetails(ctx, vdir, urlIsVersioned(r.URL))
-	case "subdirectories":
+	case tabSubdirectories:
 		return fetchDirectoryDetails(ctx, ds, vdir, false)
-	case "versions":
+	case tabVersions:
 		return fetchVersionsDetails(ctx, ds, vdir.Path, vdir.V1Path, vdir.ModulePath)
-	case "imports":
+	case tabImports:
 		return fetchImportsDetails(ctx, ds, vdir.Path, vdir.ModulePath, vdir.Version)
-	case "importedby":
+	case tabImportedBy:
 		return fetchImportedByDetails(ctx, ds, vdir.Path, vdir.ModulePath)
-	case "licenses":
+	case tabLicenses:
 		return fetchLicensesDetails(ctx, ds, vdir.Path, vdir.ModulePath, vdir.Version)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
@@ -184,11 +194,11 @@ func fetchDetailsForModule(r *http.Request, tab string, ds internal.DataSource, 
 			return fetchDirectoryDetails(ctx, ds, vdir, true)
 		}
 		return legacyFetchDirectoryDetails(ctx, ds, mi.ModulePath, mi, licensesToMetadatas(licenses), true)
-	case "licenses":
+	case tabLicenses:
 		return &LicensesDetails{Licenses: transformLicenses(mi.ModulePath, mi.Version, licenses)}, nil
-	case "versions":
+	case tabVersions:
 		return fetchModuleVersionsDetails(ctx, ds, mi.ModulePath)
-	case "overview":
+	case tabOverview:
 		return constructOverviewDetails(ctx, mi, readme, mi.IsRedistributable, urlIsVersioned(r.URL))
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
@@ -199,11 +209,11 @@ func fetchDetailsForModule(r *http.Request, tab string, ds internal.DataSource, 
 func fetchDetailsForDirectory(r *http.Request, tab string, ds internal.DataSource, vdir *internal.VersionedDirectory) (interface{}, error) {
 	ctx := r.Context()
 	switch tab {
-	case "overview":
+	case tabOverview:
 		return constructOverviewDetails(ctx, &vdir.ModuleInfo, vdir.Readme, vdir.IsRedistributable, urlIsVersioned(r.URL))
-	case "subdirectories":
+	case tabSubdirectories:
 		return fetchDirectoryDetails(ctx, ds, vdir, false)
-	case "licenses":
+	case tabLicenses:
 		return fetchLicensesDetails(ctx, ds, vdir.Path, vdir.ModulePath, vdir.Version)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
@@ -213,17 +223,17 @@ func fetchDetailsForDirectory(r *http.Request, tab string, ds internal.DataSourc
 // detail handler.
 func legacyFetchDetailsForDirectory(r *http.Request, tab string, dir *internal.LegacyDirectory, licenses []*licenses.License) (interface{}, error) {
 	switch tab {
-	case "overview":
+	case tabOverview:
 		readme := &internal.Readme{Filepath: dir.LegacyReadmeFilePath, Contents: dir.LegacyReadmeContents}
 		return constructOverviewDetails(r.Context(), &dir.ModuleInfo, readme, dir.LegacyModuleInfo.IsRedistributable, urlIsVersioned(r.URL))
-	case "subdirectories":
+	case tabSubdirectories:
 		// Ideally we would just use fetchDirectoryDetails here so that it
 		// follows the same code path as fetchDetailsForModule and
 		// fetchDetailsForPackage. However, since we already have the directory
 		// and licenses info, it doesn't make sense to call
 		// postgres.GetDirectory again.
 		return legacyCreateDirectory(dir, licensesToMetadatas(licenses), false)
-	case "licenses":
+	case tabLicenses:
 		return &LicensesDetails{Licenses: transformLicenses(dir.ModulePath, dir.Version, licenses)}, nil
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
@@ -234,24 +244,24 @@ func legacyFetchDetailsForDirectory(r *http.Request, tab string, dir *internal.L
 func legacyFetchDetailsForPackage(r *http.Request, tab string, ds internal.DataSource, pkg *internal.LegacyVersionedPackage) (interface{}, error) {
 	ctx := r.Context()
 	switch tab {
-	case "doc":
+	case tabDoc:
 		return legacyFetchDocumentationDetails(pkg), nil
-	case "versions":
+	case tabVersions:
 		return legacyFetchPackageVersionsDetails(ctx, ds, pkg.Path, pkg.V1Path, pkg.ModulePath)
-	case "subdirectories":
+	case tabSubdirectories:
 		return legacyFetchDirectoryDetails(ctx, ds, pkg.Path, &pkg.ModuleInfo, pkg.Licenses, false)
-	case "imports":
+	case tabImports:
 		return fetchImportsDetails(ctx, ds, pkg.Path, pkg.ModulePath, pkg.Version)
-	case "importedby":
+	case tabImportedBy:
 		db, ok := ds.(*postgres.DB)
 		if !ok {
 			// The proxydatasource does not support the imported by page.
 			return nil, proxydatasourceNotSupportedErr()
 		}
 		return fetchImportedByDetails(ctx, db, pkg.Path, pkg.ModulePath)
-	case "licenses":
+	case tabLicenses:
 		return legacyFetchPackageLicensesDetails(ctx, ds, pkg.Path, pkg.ModulePath, pkg.Version)
-	case "overview":
+	case tabOverview:
 		return legacyFetchPackageOverviewDetails(ctx, pkg, urlIsVersioned(r.URL))
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)

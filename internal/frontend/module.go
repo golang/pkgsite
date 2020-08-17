@@ -60,8 +60,8 @@ func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *
 	tab := r.FormValue("tab")
 	settings, ok := moduleTabLookup[tab]
 	if !ok {
-		tab = "overview"
-		settings = moduleTabLookup["overview"]
+		tab = tabOverview
+		settings = moduleTabLookup[tabOverview]
 	}
 	canShowDetails := modHeader.IsRedistributable || settings.AlwaysShowDetails
 	var details interface{}

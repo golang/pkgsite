@@ -119,6 +119,11 @@ code {
 .Site-footer {
   margin-top: 5rem;
 }
+@media only screen and (min-width: 57.7rem) {
+  .Site-content {
+    padding: 0 1.5rem;
+  }
+}
 
 .FeedbackButton {
   cursor: pointer;
@@ -160,6 +165,9 @@ code {
   min-height: 2.5rem;
   padding: 0.5rem 1.5rem;
 }
+.Site--wide .Banner-inner {
+  max-width: none;
+}
 .Banner-message {
   color: #fff;
   margin-right: 1.25rem;
@@ -179,6 +187,9 @@ code {
 .Header {
   margin: 0 auto;
   max-width: 75.75rem;
+}
+.Site--wide .Header {
+  max-width: none;
 }
 .Site-header {
   background: var(--turq-dark);
@@ -698,6 +709,9 @@ code {
   margin: 0 auto;
   max-width: 60em;
 }
+.Site--wide .DetailsContent {
+  max-width: none;
+}
 .DetailsContent :target::before {
   content: ' ';
   display: block;
@@ -879,6 +893,9 @@ code {
   padding: 0 0.5rem;
   position: relative;
 }
+.Site--wide .DetailsNavFixed-container {
+  max-width: none;
+}
 .DetailsNavFixed-logoLink {
   margin-right: 1rem;
 }
@@ -929,7 +946,7 @@ code {
 }
 @media only screen and (min-width: 37.5rem) {
   .DetailsNavFixed-container {
-    padding: 0 0.5rem;
+    padding: 0 1rem 0 1.5rem;
   }
   .DetailsNavFixed-logo {
     height: 1.9541rem;
@@ -1032,6 +1049,9 @@ code {
   margin: 0 auto;
   max-width: 60em;
   position: relative;
+}
+.Site--wide .Container {
+  max-width: none;
 }
 .GodocButton,
 .GodocButton:link,

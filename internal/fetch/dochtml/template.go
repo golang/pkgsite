@@ -202,7 +202,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 	</nav>
 {{end}}
 
-<div class="js-docContent"> {{/* Documentation content container */}}
+<div class="Documentation-content js-docContent"> {{/* Documentation content container */}}
 
 {{- if or .Doc (index .Examples.Map "") -}}
 	<section class="Documentation-overview">

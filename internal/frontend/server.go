@@ -194,13 +194,30 @@ func (s *Server) staticPageHandler(templateName, title string) http.HandlerFunc 
 
 // basePage contains fields shared by all pages when rendering templates.
 type basePage struct {
-	HTMLTitle          string
-	Query              string
-	Experiments        *experiment.Set
-	GodocURL           string
-	DevMode            bool
-	AppVersionLabel    string
+	// HTMLTitle is the value to use in the page’s <title> tag.
+	HTMLTitle string
+
+	// Query is the current search query (if applicable).
+	Query string
+
+	// Experiments contains the experiments currently active.
+	Experiments *experiment.Set
+
+	// GodocURL is the URL of the corresponding page on godoc.org (if applicable).
+	GodocURL string
+
+	// DevMode indicates whether the server is running in development mode.
+	DevMode bool
+
+	// AppVersionLabel contains the current version of the app.
+	AppVersionLabel string
+
+	// GoogleTagManagerID is the ID used to load Google Tag Manager.
 	GoogleTagManagerID string
+
+	// AllowWideContent indicates whether the content should be displayed in a
+	// way that’s amenable to wider viewports.
+	AllowWideContent bool
 }
 
 // licensePolicyPage is used to generate the static license policy page.

@@ -101,9 +101,9 @@ func (s *Server) legacyServePackagePageWithPackage(w http.ResponseWriter, r *htt
 	if !ok {
 		var tab string
 		if pkg.LegacyPackage.IsRedistributable {
-			tab = "doc"
+			tab = tabDoc
 		} else {
-			tab = "overview"
+			tab = tabOverview
 		}
 		http.Redirect(w, r, fmt.Sprintf(r.URL.Path+"?tab=%s", tab), http.StatusFound)
 		return nil
@@ -144,6 +144,7 @@ func (s *Server) legacyServePackagePageWithPackage(w http.ResponseWriter, r *htt
 			linkVersion(pkg.Version, pkg.ModulePath),
 		),
 	}
+	page.basePage.AllowWideContent = tab == tabDoc
 	s.servePage(r.Context(), w, settings.TemplateName, page)
 	return nil
 }
@@ -191,9 +192,9 @@ func (s *Server) servePackagePage(ctx context.Context,
 	if !ok {
 		var tab string
 		if vdir.Directory.IsRedistributable {
-			tab = "doc"
+			tab = tabDoc
 		} else {
-			tab = "overview"
+			tab = tabOverview
 		}
 		http.Redirect(w, r, fmt.Sprintf(r.URL.Path+"?tab=%s", tab), http.StatusFound)
 		return nil
@@ -228,6 +229,7 @@ func (s *Server) servePackagePage(ctx context.Context,
 		Tabs:           packageTabSettings,
 		PageType:       pageType,
 	}
+	page.basePage.AllowWideContent = tab == tabDoc
 	s.servePage(ctx, w, settings.TemplateName, page)
 	return nil
 }

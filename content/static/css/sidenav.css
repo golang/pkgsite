@@ -102,12 +102,23 @@
     ); /* Move hidden anchor content for deep linking with a sticky header. */
   }
   .Documentation {
-    column-gap: 2.8125rem;
+    column-gap: 2rem;
     display: grid;
-    grid-template-columns: 1fr minmax(0, 3fr);
+    grid-template-columns: 17.5rem minmax(0, auto);
+  }
+  /**
+   * Remove once Doc HTML is fully rolled out, as js-* styles should NEVER be
+   * styled per https://golang.org/wiki/CSSStyleGuide.
+   */
+  .js-docContent,
+  .Documentation-content {
+    max-width: 60rem;
+    min-width: 0;
+    width: 100%;
   }
   .Documentation-build {
     grid-column: span 2;
+    text-align: center;
   }
   .DocNav {
     display: block;
@@ -236,5 +247,15 @@
   }
   .DocNav [aria-expanded='false'] + [role='group'] {
     display: none;
+  }
+}
+@media only screen and (min-width: 100rem) {
+  .Documentation {
+    grid-template-columns: 22rem minmax(0, auto);
+  }
+}
+@media only screen and (min-width: 130rem) {
+  .Documentation {
+    grid-template-columns: 35rem minmax(0, auto);
   }
 }

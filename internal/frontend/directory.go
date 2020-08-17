@@ -45,7 +45,7 @@ func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, 
 	tab := r.FormValue("tab")
 	settings, ok := directoryTabLookup[tab]
 	if tab == "" || !ok || settings.Disabled {
-		tab = "subdirectories"
+		tab = tabSubdirectories
 		settings = directoryTabLookup[tab]
 	}
 	header := createDirectoryHeader(vdir.Path, &vdir.ModuleInfo, vdir.Licenses)
@@ -76,7 +76,7 @@ func (s *Server) legacyServeDirectoryPage(ctx context.Context, w http.ResponseWr
 	tab := r.FormValue("tab")
 	settings, ok := directoryTabLookup[tab]
 	if tab == "" || !ok || settings.Disabled {
-		tab = "subdirectories"
+		tab = tabSubdirectories
 		settings = directoryTabLookup[tab]
 	}
 	licenses, err := ds.LegacyGetModuleLicenses(ctx, dbDir.ModulePath, dbDir.Version)
