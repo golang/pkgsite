@@ -350,9 +350,8 @@ func TestLatestVersion(t *testing.T) {
 	ctx := context.Background()
 
 	for _, mod := range []struct {
-		version      string
-		modulePath   string
-		Incompatible bool
+		version    string
+		modulePath string
 	}{
 		{
 			version:    "v1.5.2",
@@ -398,7 +397,7 @@ func TestLatestVersion(t *testing.T) {
 				t.Fatal(err)
 			}
 			if !isLatest {
-				t.Errorf("\n%+v is not the Latest version: %+v", tc.modulePath, tc.wantVersion)
+				t.Errorf("%s is not the latest version", tc.wantVersion)
 			}
 		})
 	}
