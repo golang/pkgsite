@@ -56,6 +56,7 @@ func getPackageVersions(ctx context.Context, db *DB, pkgPath string, versionType
 			)
 			AND version_type in (%s)
 		ORDER BY
+			m.incompatible,
 			m.sort_version DESC %s`
 	queryEnd := `;`
 	if len(versionTypes) == 0 {
@@ -124,6 +125,7 @@ func getModuleVersions(ctx context.Context, db *DB, modulePath string, versionTy
 		series_path = $1
 	    AND version_type in (%s)
 	ORDER BY
+		incompatible,
 		sort_version DESC %s`
 
 	queryEnd := `;`
@@ -195,6 +197,7 @@ func getPathVersions(ctx context.Context, db *DB, path string, versionTypes ...v
 		)
 		AND version_type in (%s)
 	ORDER BY
+		m.incompatible,
 		m.module_path DESC,
 		m.sort_version DESC %s`
 

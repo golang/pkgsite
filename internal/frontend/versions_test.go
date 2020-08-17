@@ -101,7 +101,7 @@ func TestFetchModuleVersionDetails(t *testing.T) {
 					makeList("test.com/module/v2", "v2", []string{"v2.2.1-alpha.1", "v2.0.0"}),
 				},
 				OtherModules: []*VersionList{
-					makeList("test.com/module", "v1", []string{"v2.1.0+incompatible", "v1.2.3", "v1.2.1"}),
+					makeList("test.com/module", "v1", []string{"v1.2.3", "v1.2.1", "v2.1.0+incompatible"}),
 				},
 			},
 		},
@@ -246,7 +246,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 					makeList(v2Path, modulePath2, "v2", []string{"v2.2.1-alpha.1", "v2.0.0"}),
 				},
 				OtherModules: []*VersionList{
-					makeList(v1Path, modulePath1, "v1", []string{"v2.1.0+incompatible", "v1.2.3", "v1.2.1"}),
+					makeList(v1Path, modulePath1, "v1", []string{"v1.2.3", "v1.2.1", "v2.1.0+incompatible"}),
 				},
 			},
 		},

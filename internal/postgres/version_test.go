@@ -26,6 +26,7 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 		modulePath3 = "path.to/some/thing"
 		testModules = []*internal.Module{
 			sample.Module(modulePath3, "v3.0.0", "else"),
+			sample.Module(modulePath1, "v2.0.0+incompatible", "bar"),
 			sample.Module(modulePath1, "v1.0.0-alpha.1", "bar"),
 			sample.Module(modulePath1, "v1.0.0", "bar"),
 			sample.Module(modulePath2, "v2.0.1-beta", "bar"),
@@ -64,6 +65,11 @@ func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
 				{
 					ModulePath: modulePath1,
 					Version:    "v1.0.0-alpha.1",
+					CommitTime: sample.CommitTime,
+				},
+				{
+					ModulePath: modulePath1,
+					Version:    "v2.0.0+incompatible",
 					CommitTime: sample.CommitTime,
 				},
 			},
@@ -290,11 +296,11 @@ func TestGetVersions(t *testing.T) {
 			want: []*internal.ModuleInfo{
 				{
 					ModulePath: incompatibleModule,
-					Version:    "v2.0.0+incompatible",
+					Version:    "v0.0.0",
 				},
 				{
 					ModulePath: incompatibleModule,
-					Version:    "v0.0.0",
+					Version:    "v2.0.0+incompatible",
 				},
 			},
 		},
