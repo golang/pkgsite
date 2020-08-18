@@ -99,7 +99,8 @@ func TestExampleRender(t *testing.T) {
 </p>
 <p>Code:</p>
 
-<pre class="Documentation-exampleCode">app := App{}
+<pre class="Documentation-exampleCode"><span class="comment">// example comment</span>
+app := App{}
 app.Name = &#34;greet&#34;
 _ = app.Run([]string{&#34;greet&#34;})
 </pre>
@@ -137,6 +138,7 @@ import (
 )
 
 func main() {
+	<span class="comment">// example comment</span>
 	fmt.Println(strings.Compare(&#34;a&#34;, &#34;b&#34;))
 	fmt.Println(strings.Compare(&#34;a&#34;, &#34;a&#34;))
 	fmt.Println(strings.Compare(&#34;b&#34;, &#34;a&#34;))

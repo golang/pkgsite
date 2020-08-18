@@ -144,8 +144,11 @@ func (r *Renderer) codeString(ex *doc.Example) (string, error) {
 			return "", err
 		}
 	} else {
-		p := printer.Config{Mode: printer.UseSpaces | printer.TabIndent, Tabwidth: 4}
-		p.Fprint(&buf, r.fset, ex.Code)
+		n := &printer.CommentedNode{
+			Node:     ex.Code,
+			Comments: ex.Comments,
+		}
+		format.Node(&buf, r.fset, n)
 	}
 
 	return buf.String(), nil

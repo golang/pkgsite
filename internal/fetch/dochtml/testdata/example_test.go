@@ -15,6 +15,7 @@ import (
 
 // non-executable example taken from https://github.com/urfave/cli/blob/master/app_test.go#L184
 func Example_appRunNoAction() {
+	// example comment
 	app := App{}
 	app.Name = "greet"
 	_ = app.Run([]string{"greet"})
@@ -35,6 +36,7 @@ func Example_appRunNoAction() {
 
 // executable example
 func Example_stringsCompare() {
+	// example comment
 	fmt.Println(strings.Compare("a", "b"))
 	fmt.Println(strings.Compare("a", "a"))
 	fmt.Println(strings.Compare("b", "a"))
