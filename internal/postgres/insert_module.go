@@ -25,6 +25,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
@@ -711,6 +712,11 @@ func removeNonDistributableData(m *internal.Module) {
 				d.Package.Documentation.Synopsis = ""
 				d.Package.Documentation.HTML = safehtml.HTML{}
 			}
+		}
+	}
+	for _, l := range m.Licenses {
+		if !licenses.Redistributable(l.Types) {
+			l.Contents = nil
 		}
 	}
 }
