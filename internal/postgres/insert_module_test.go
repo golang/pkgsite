@@ -60,6 +60,7 @@ func TestInsertModule(t *testing.T) {
 					Path:              "context",
 					Synopsis:          "This is a package synopsis",
 					Licenses:          sample.LicenseMetadata,
+					IsRedistributable: true,
 					DocumentationHTML: testconversions.MakeHTMLForTest("This is the documentation HTML"),
 				}
 				return sample.AddPackage(m, p)
@@ -208,6 +209,7 @@ func TestUpsertModule(t *testing.T) {
 		Path:              "upsert.org/dir/p",
 		Synopsis:          "This is a package synopsis",
 		Licenses:          sample.LicenseMetadata,
+		IsRedistributable: true,
 		DocumentationHTML: testconversions.MakeHTMLForTest("This is the documentation HTML"),
 	}
 	sample.AddPackage(m, p)

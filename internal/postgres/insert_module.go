@@ -430,8 +430,8 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 			pathToReadme[d.Path] = d.Readme
 		}
 		if d.Package != nil {
-			if d.Package.Documentation == nil || d.Package.Documentation.HTML.String() == internal.StringFieldMissing {
-				return errors.New("saveModule: package missing DocumentationHTML")
+			if d.Package.Documentation != nil && d.Package.Documentation.HTML.String() == internal.StringFieldMissing {
+				return errors.New("saveModule: package missing Documentation.HTML")
 			}
 			pathToDoc[d.Path] = d.Package.Documentation
 			if len(d.Package.Imports) > 0 {
@@ -503,8 +503,8 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 		logMemory(ctx, "before inserting into documentation")
 		var docValues []interface{}
 		for _, path := range paths {
-			doc, ok := pathToDoc[path]
-			if !ok {
+			doc := pathToDoc[path]
+			if doc == nil {
 				continue
 			}
 			id := pathToID[path]
@@ -692,8 +692,8 @@ func (db *DB) comparePaths(ctx context.Context, m *internal.Module) (err error) 
 	return nil
 }
 
-// removeNonDistributableData removes any information from the version payload,
-// after checking licenses.
+// removeNonDistributableData removes information from the module
+// if it is not redistributable.
 func removeNonDistributableData(m *internal.Module) {
 	for _, p := range m.LegacyPackages {
 		if !p.IsRedistributable {
@@ -709,9 +709,8 @@ func removeNonDistributableData(m *internal.Module) {
 	for _, d := range m.Directories {
 		if !d.IsRedistributable {
 			d.Readme = nil
-			if d.Package != nil && d.Package.Documentation != nil {
-				d.Package.Documentation.Synopsis = ""
-				d.Package.Documentation.HTML = safehtml.HTML{}
+			if d.Package != nil {
+				d.Package.Documentation = nil
 			}
 		}
 	}
