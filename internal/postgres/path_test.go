@@ -31,7 +31,9 @@ func TestGetPathInfo(t *testing.T) {
 		{"m.com", "v1.0.1", "dir/a", false},
 		{"m.com", "v1.1.0", "a/b", false},
 		{"m.com", "v1.2.0-pre", "a", true},
+		{"m.com", "v2.0.0+incompatible", "a", false},
 		{"m.com/a", "v1.1.0", "b", false},
+		{"m.com/b", "v2.0.0+incompatible", "a", true},
 	} {
 		vtype, err := version.ParseType(testModule.version)
 		if err != nil {
@@ -165,6 +167,14 @@ func TestGetPathInfo(t *testing.T) {
 			wantModule:    "m.com",
 			wantVersion:   "v1.2.0-pre",
 			wantIsPackage: true,
+		},
+		{
+			name:          "incompatible module",
+			path:          "m.com/b",
+			version:       "master",
+			wantModule:    "m.com/b",
+			wantVersion:   "v2.0.0+incompatible",
+			wantIsPackage: false,
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {

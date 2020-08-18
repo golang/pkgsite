@@ -63,12 +63,9 @@ func (db *DB) GetPathInfo(ctx context.Context, path, inModulePath, inVersion str
 		%s
 		WHERE p.path = $1
 		%s
-		ORDER BY
-			m.version_type = 'release' DESC,
-			m.sort_version DESC,
-			m.module_path DESC
+		%s
 		LIMIT 1
-	`, joinStmt, strings.Join(constraints, " "))
+	`, joinStmt, strings.Join(constraints, " "), orderByLatest)
 	err = db.db.QueryRow(ctx, query, args...).Scan(&outModulePath, &outVersion, &isPackage)
 	switch err {
 	case sql.ErrNoRows:
