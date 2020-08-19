@@ -191,8 +191,7 @@ const moduleVersionStateColumns = `
 			next_processed_after,
 			app_version,
 			go_mod_path,
-			num_packages,
-			incompatible`
+			num_packages`
 
 // scanModuleVersionState constructs an *internal.ModuleModuleVersionState from the given
 // scanner. It expects columns to be in the order of moduleVersionStateColumns.
@@ -281,12 +280,7 @@ func (db *DB) GetModuleVersionState(ctx context.Context, modulePath, version str
 			AND version = $2;`, moduleVersionStateColumns)
 
 	row := db.db.QueryRow(ctx, query, modulePath, version)
-	// Ignore the incompatible column, it is only used for sorting.
-	scan := func(dests ...interface{}) error {
-		var incompatible bool
-		return row.Scan(append(dests, &incompatible)...)
-	}
-	v, err := scanModuleVersionState(scan)
+	v, err := scanModuleVersionState(row.Scan)
 	switch err {
 	case nil:
 		return v, nil

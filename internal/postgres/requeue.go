@@ -127,13 +127,13 @@ func (db *DB) GetNextModulesToFetch(ctx context.Context, limit int) (_ []*intern
 	query := fmt.Sprintf(nextModulesToProcessQuery, moduleVersionStateColumns)
 
 	collect := func(rows *sql.Rows) error {
-		// Scan the last three columns separately; they are in the query only for sorting.
+		// Scan the last two columns separately; they are in the query only for sorting.
 		scan := func(dests ...interface{}) error {
 			var (
-				incompatible, latest bool
-				npkg                 int
+				latest bool
+				npkg   int
 			)
-			return rows.Scan(append(dests, &incompatible, &latest, &npkg)...)
+			return rows.Scan(append(dests, &latest, &npkg)...)
 		}
 		mv, err := scanModuleVersionState(scan)
 		if err != nil {

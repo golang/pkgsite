@@ -135,4 +135,8 @@ func TestModuleVersionState(t *testing.T) {
 	if diff := cmp.Diff(wantStats, stats); diff != "" {
 		t.Errorf("testDB.GetVersionStats(ctx) mismatch (-want +got):\n%s", diff)
 	}
+
+	if _, err := testDB.GetRecentFailedVersions(ctx, 10); err != nil {
+		t.Fatal(err)
+	}
 }
