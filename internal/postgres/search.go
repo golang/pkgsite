@@ -530,13 +530,7 @@ var upsertSearchStatement = fmt.Sprintf(`
 		AND p.version = m.version
 	WHERE
 		p.path = $1
-	ORDER BY
-		-- Order the versions by release then prerelease.
-		-- The default version should be the first release
-		-- version available, if one exists.
-		m.version_type = 'release' DESC,
-		m.sort_version DESC,
-		m.module_path DESC
+	%s
 	LIMIT 1
 	ON CONFLICT (package_path)
 	DO UPDATE SET
@@ -556,7 +550,7 @@ var upsertSearchStatement = fmt.Sprintf(`
 			THEN search_documents.version_updated_at
 			ELSE CURRENT_TIMESTAMP
 			END)
-	;`, hllRegisterCount)
+	;`, hllRegisterCount, orderByLatest)
 
 // UpsertSearchDocuments adds search information for mod ot the search_documents table.
 func UpsertSearchDocuments(ctx context.Context, db *database.DB, mod *internal.Module) (err error) {

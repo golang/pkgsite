@@ -731,6 +731,11 @@ func TestUpsertSearchDocument(t *testing.T) {
 	}
 
 	insertModule("v1.0.0", false)
+
+	// Ensures the row updated in the search_document table for a given module
+	// is updated with a version that prefers non-incompatible modules. (The
+	// latest version after this insertion should remain v1.0.0)
+	insertModule("v2.0.0+incompatible", false)
 	sdOriginal := getSearchDocument()
 
 	insertModule("v0.5.0", true)
