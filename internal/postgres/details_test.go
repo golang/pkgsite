@@ -112,6 +112,7 @@ func TestPostgres_GetVersionInfo_Latest(t *testing.T) {
 				sample.Module("mod.1", "v1.1.0-alpha.1", sample.Suffix),
 				sample.Module("mod.1", "v1.0.0", sample.Suffix),
 				sample.Module("mod.1", "v1.0.0-20190311183353-d8887717615a", sample.Suffix),
+				sample.Module("mod.1", "v2.0.0+incompatible", sample.Suffix),
 			},
 			wantIndex: 1,
 		},

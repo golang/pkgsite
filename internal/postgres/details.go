@@ -216,22 +216,15 @@ func (db *DB) LegacyGetModuleInfo(ctx context.Context, modulePath string, versio
 			redistributable,
 			has_go_mod
 		FROM
-			modules`
+			modules m`
 
 	args := []interface{}{modulePath}
 	if version == internal.LatestVersion {
-		query += `
-			WHERE module_path = $1
-			ORDER BY
-				-- Order the versions by release then prerelease.
-				-- The default version should be the first release
-				-- version available, if one exists.
-				version_type = 'release' DESC,
-				sort_version DESC
-			LIMIT 1;`
+		query += fmt.Sprintf(`
+			WHERE m.module_path = $1 %s LIMIT 1;`, orderByLatest)
 	} else {
 		query += `
-			WHERE module_path = $1 AND version = $2;`
+			WHERE m.module_path = $1 AND m.version = $2;`
 		args = append(args, version)
 	}
 
