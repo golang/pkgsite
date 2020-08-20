@@ -20,7 +20,7 @@ require (
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
 	github.com/google/go-cmp v0.4.0
 	github.com/google/go-replayers/httpreplay v0.1.0
-	github.com/google/licensecheck v0.0.0-20200226161255-fb7b516dfddc
+	github.com/google/licensecheck v0.0.0-20200805042302-c54f297c3b57
 	github.com/google/safehtml v0.0.1
 	github.com/lib/pq v1.2.0
 	github.com/microcosm-cc/bluemonday v1.0.2
