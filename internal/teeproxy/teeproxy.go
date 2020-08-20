@@ -370,14 +370,13 @@ func getGddoEvent(r *http.Request) (gddoEvent *RequestEvent, err error) {
 // makePkgGoDevRequest makes a request to the redirectHost and redirectPath,
 // and returns a requestEvent based on the output.
 func (s *Server) makePkgGoDevRequest(ctx context.Context, redirectHost, redirectPath string) *RequestEvent {
-	var err error
-	defer derrors.Wrap(&err, "makePkgGoDevRequest(%q, %q)", redirectHost, redirectPath)
 	redirectURL := redirectHost + redirectPath
 	event := &RequestEvent{
 		Host: redirectHost,
 		Path: redirectPath,
 		URL:  redirectURL,
 	}
+	defer derrors.Wrap(&event.Error, "makePkgGoDevRequest(%q, %q)", redirectHost, redirectPath)
 
 	req, err := http.NewRequest("GET", redirectURL, nil)
 	if err != nil {
