@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"go.opencensus.io/plugin/ochttp"
@@ -237,6 +238,11 @@ func NewServer(config Config) (_ *Server, err error) {
 // godoc.org request, even if the request could not be processed by the hosts.
 // Instead, problems with processing the request by the hosts will logged.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// Ignore internal App Engine requests.
+	if strings.HasPrefix(r.URL.Path, "/_ah/") {
+		// Don't log requests.
+		return
+	}
 	results, status, err := s.doRequest(r)
 	if err != nil {
 		log.Infof(r.Context(), "teeproxy.Server.ServeHTTP: %v", err)
