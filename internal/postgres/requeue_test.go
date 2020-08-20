@@ -136,7 +136,7 @@ func TestGetNextModulesToFetchAndUpdateModuleVersionStatesForReprocessing(t *tes
 			t.Fatal(err)
 		}
 	}
-	if err := testDB.UpdateModulesForReprocessing(ctx, "2020-04-30t14"); err != nil {
+	if err := testDB.UpdateModuleVersionStatesForReprocessing(ctx, "2020-04-30t14"); err != nil {
 		t.Fatal(err)
 	}
 	// Set the next-processed time for everything to now. UpdateModuleVersionStatesForReprocessing does

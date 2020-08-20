@@ -463,14 +463,14 @@ func (s *Server) handleReprocess(w http.ResponseWriter, r *http.Request) error {
 		if err != nil {
 			return &serverError{http.StatusBadRequest, fmt.Errorf("status is invalid: %q", status)}
 		}
-		if err := s.db.UpdateModulesWithStatusForReprocessing(r.Context(), code, appVersion); err != nil {
+		if err := s.db.UpdateModuleVersionStatesWithStatus(r.Context(), code, appVersion); err != nil {
 			return err
 		}
 		fmt.Fprintf(w, "Scheduled modules to be reprocessed for appVersion > %q and status = %d.", appVersion, code)
 		return nil
 	}
 
-	if err := s.db.UpdateModulesForReprocessing(r.Context(), appVersion); err != nil {
+	if err := s.db.UpdateModuleVersionStatesForReprocessing(r.Context(), appVersion); err != nil {
 		return err
 	}
 	fmt.Fprintf(w, "Scheduled modules to be reprocessed for appVersion > %q.", appVersion)
