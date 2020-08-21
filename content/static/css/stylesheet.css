@@ -1354,8 +1354,9 @@ table.Directories {
   max-width: 800px;
 }
 .Directories td {
-  padding: 0.75rem 0;
   border-bottom: 0.0625rem solid var(--gray-8);
+  max-width: 30rem;
+  padding: 0.75rem 0;
   padding-right: 1rem;
 }
 .Directories th {
