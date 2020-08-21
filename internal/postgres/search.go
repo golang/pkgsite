@@ -456,7 +456,8 @@ func (db *DB) addPackageDataToSearchResults(ctx context.Context, results []*inte
 			path,
 			name,
 			synopsis,
-			license_types
+			license_types,
+			redistributable
 		FROM
 			packages
 		WHERE
@@ -465,8 +466,9 @@ func (db *DB) addPackageDataToSearchResults(ctx context.Context, results []*inte
 		var (
 			path, name, synopsis string
 			licenseTypes         []string
+			redist               bool
 		)
-		if err := rows.Scan(&path, &name, &synopsis, pq.Array(&licenseTypes)); err != nil {
+		if err := rows.Scan(&path, &name, &synopsis, pq.Array(&licenseTypes), &redist); err != nil {
 			return fmt.Errorf("rows.Scan(): %v", err)
 		}
 		r, ok := resultMap[path]
@@ -474,7 +476,9 @@ func (db *DB) addPackageDataToSearchResults(ctx context.Context, results []*inte
 			return fmt.Errorf("BUG: unexpected package path: %q", path)
 		}
 		r.Name = name
-		r.Synopsis = synopsis
+		if redist || db.bypassLicenseCheck {
+			r.Synopsis = synopsis
+		}
 		for _, l := range licenseTypes {
 			if l != "" {
 				r.Licenses = append(r.Licenses, l)
@@ -561,6 +565,8 @@ func UpsertSearchDocuments(ctx context.Context, db *database.DB, mod *internal.M
 		if isInternalPackage(pkg.Path) {
 			continue
 		}
+		// TODO(golang/go#40971): don't store synopsis unless the package is redistributable or
+		// we are bypassing license checks.
 		err := UpsertSearchDocument(ctx, db, upsertSearchDocumentArgs{
 			PackagePath:    pkg.Path,
 			ModulePath:     mod.ModulePath,

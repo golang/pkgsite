@@ -175,6 +175,38 @@ func TestGetPackagesInDirectory(t *testing.T) {
 	}
 }
 
+func TestGetPackagesInDirectoryBypass(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	defer ResetTestDB(testDB, t)
+	bypassDB := NewBypassingLicenseCheck(testDB.db)
+
+	// Insert a non-redistributable module.
+	m := nonRedistributableModule()
+	if err := bypassDB.InsertModule(ctx, m); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, test := range []struct {
+		db   *DB
+		want string
+	}{
+		{bypassDB, sample.Synopsis}, // Reading with license bypass returns the synopsis.
+		{testDB, ""},                // Without bypass, the synopsis is empty.
+	} {
+		pkgs, err := test.db.GetPackagesInDirectory(ctx, m.ModulePath, m.ModulePath, m.Version)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(pkgs) != 1 {
+			t.Fatal("len(pkgs) != 1")
+		}
+		if got := pkgs[0].Synopsis; got != test.want {
+			t.Errorf("bypass %t: got %q, want %q", test.db == bypassDB, got, test.want)
+		}
+	}
+}
+
 func TestLegacyGetDirectory(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
@@ -592,6 +624,51 @@ func TestGetDirectory(t *testing.T) {
 				t.Errorf("mismatch (-want, +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestGetDirectoryBypass(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	defer ResetTestDB(testDB, t)
+	bypassDB := NewBypassingLicenseCheck(testDB.db)
+
+	m := nonRedistributableModule()
+	if err := bypassDB.InsertModule(ctx, m); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, test := range []struct {
+		db        *DB
+		wantEmpty bool
+	}{
+		{testDB, true},
+		{bypassDB, false},
+	} {
+		d, err := test.db.GetDirectory(ctx, m.ModulePath, m.ModulePath, m.Version)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := (d.Readme == nil); got != test.wantEmpty {
+			t.Errorf("readme empty: got %t, want %t", got, test.wantEmpty)
+		}
+		if got := (d.Package.Documentation.Synopsis == ""); got != test.wantEmpty {
+			t.Errorf("synopsis empty: got %t, want %t", got, test.wantEmpty)
+		}
+		if got := (d.Package.Documentation.HTML == safehtml.HTML{}); got != test.wantEmpty {
+			t.Errorf("doc empty: got %t, want %t", got, test.wantEmpty)
+		}
+
+		ld, err := test.db.LegacyGetDirectory(ctx, m.ModulePath, m.ModulePath, m.Version, internal.AllFields)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := (ld.Packages[0].Synopsis == ""); got != test.wantEmpty {
+			t.Errorf("legacy synopsis empty: got %t, want %t", got, test.wantEmpty)
+		}
+		if got := (ld.Packages[0].DocumentationHTML == safehtml.HTML{}); got != test.wantEmpty {
+			t.Errorf("legacy doc empty: got %t, want %t", got, test.wantEmpty)
+		}
 	}
 }
 

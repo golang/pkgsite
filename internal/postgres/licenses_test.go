@@ -12,6 +12,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -198,4 +199,64 @@ func TestLegacyGetPackageLicenses(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetLicensesBypass(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	defer ResetTestDB(testDB, t)
+
+	const version = "v1.2.3"
+
+	bypassDB := NewBypassingLicenseCheck(testDB.db)
+
+	// Insert with non-redistributable license contents.
+	m := nonRedistributableModule()
+	if err := bypassDB.InsertModule(ctx, m); err != nil {
+		t.Fatal(err)
+	}
+
+	// check reads and the second license in the module and compares it with want.
+	check := func(bypass, legacy bool, want *licenses.License) {
+		t.Helper()
+		db := testDB
+		if bypass {
+			db = bypassDB
+		}
+		var lics []*licenses.License
+		var err error
+		if legacy {
+			lics, err = db.LegacyGetModuleLicenses(ctx, sample.ModulePath, m.Version)
+		} else {
+			lics, err = db.GetLicenses(ctx, sample.ModulePath, sample.ModulePath, m.Version)
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(lics) != 2 {
+			t.Fatal("did not read two licenses")
+		}
+		if diff := cmp.Diff(want, lics[1]); diff != "" {
+			t.Errorf("mismatch (-want, +got):\n%s", diff)
+		}
+	}
+
+	// Read with license bypass includes non-redistributable license contents.
+	check(true, false, sample.NonRedistributableLicense)
+	check(true, true, sample.NonRedistributableLicense)
+
+	// Read without license bypass does not include non-redistributable license contents.
+	nonRedist := *sample.NonRedistributableLicense
+	nonRedist.Contents = nil
+	check(false, false, &nonRedist)
+	check(false, true, &nonRedist)
+}
+
+func nonRedistributableModule() *internal.Module {
+	m := sample.Module(sample.ModulePath, "v1.2.3", "")
+	sample.AddLicense(m, sample.NonRedistributableLicense)
+	m.IsRedistributable = false
+	m.LegacyPackages[0].IsRedistributable = false
+	m.Directories[0].IsRedistributable = false
+	return m
 }

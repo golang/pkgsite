@@ -54,7 +54,7 @@ func (db *DB) GetLicenses(ctx context.Context, fullPath, modulePath, resolvedVer
 	}
 	defer rows.Close()
 
-	moduleLicenses, err := collectLicenses(rows)
+	moduleLicenses, err := collectLicenses(rows, db.bypassLicenseCheck)
 	if err != nil {
 		return nil, err
 	}
@@ -72,6 +72,11 @@ func (db *DB) GetLicenses(ctx context.Context, fullPath, modulePath, resolvedVer
 			if strings.HasPrefix(fullPath, licensePath) {
 				lics = append(lics, l)
 			}
+		}
+	}
+	if !db.bypassLicenseCheck {
+		for _, l := range lics {
+			l.RemoveNonRedistributableData()
 		}
 	}
 	return lics, nil
@@ -99,7 +104,7 @@ func (db *DB) LegacyGetModuleLicenses(ctx context.Context, modulePath, version s
 		return nil, err
 	}
 	defer rows.Close()
-	return collectLicenses(rows)
+	return collectLicenses(rows, db.bypassLicenseCheck)
 }
 
 // LegacyGetPackageLicenses returns all licenses associated with the given package path and
@@ -141,12 +146,12 @@ func (db *DB) LegacyGetPackageLicenses(ctx context.Context, pkgPath, modulePath,
 		return nil, err
 	}
 	defer rows.Close()
-	return collectLicenses(rows)
+	return collectLicenses(rows, db.bypassLicenseCheck)
 }
 
 // collectLicenses converts the sql rows to a list of licenses. The columns
 // must be types, file_path and contents, in that order.
-func collectLicenses(rows *sql.Rows) ([]*licenses.License, error) {
+func collectLicenses(rows *sql.Rows, bypassLicenseCheck bool) ([]*licenses.License, error) {
 	mustHaveColumns(rows, "types", "file_path", "contents", "coverage")
 	var lics []*licenses.License
 	for rows.Next() {
@@ -158,6 +163,9 @@ func collectLicenses(rows *sql.Rows) ([]*licenses.License, error) {
 			return nil, fmt.Errorf("row.Scan(): %v", err)
 		}
 		lic.Types = licenseTypes
+		if !bypassLicenseCheck {
+			lic.RemoveNonRedistributableData()
+		}
 		lics = append(lics, lic)
 	}
 	sort.Slice(lics, func(i, j int) bool {

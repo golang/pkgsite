@@ -69,6 +69,11 @@ func (db *DB) LegacyGetPackagesInModule(ctx context.Context, modulePath, version
 	if err := db.db.RunQuery(ctx, query, collect, modulePath, version); err != nil {
 		return nil, fmt.Errorf("DB.LegacyGetPackagesInModule(ctx, %q, %q): %w", modulePath, version, err)
 	}
+	if !db.bypassLicenseCheck {
+		for _, p := range packages {
+			p.RemoveNonRedistributableData()
+		}
+	}
 	return packages, nil
 }
 
@@ -237,6 +242,9 @@ func (db *DB) LegacyGetModuleInfo(ctx context.Context, modulePath string, versio
 			return nil, fmt.Errorf("module version %s@%s: %w", modulePath, version, derrors.NotFound)
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
+	}
+	if !db.bypassLicenseCheck {
+		mi.RemoveNonRedistributableData()
 	}
 	return &mi, nil
 }

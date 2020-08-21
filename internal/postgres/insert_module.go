@@ -17,7 +17,6 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/google/safehtml"
 	"github.com/lib/pq"
 	"go.opencensus.io/trace"
 	"golang.org/x/mod/module"
@@ -25,7 +24,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
@@ -64,8 +62,8 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 		return err
 	}
 	if !db.bypassLicenseCheck {
-		// If we are bypassing license checking, remove data for non-redistributable modules.
-		removeNonDistributableData(m)
+		// If we are not bypassing license checking, remove data for non-redistributable modules.
+		m.RemoveNonRedistributableData()
 	}
 	return db.saveModule(ctx, m)
 }
@@ -690,35 +688,6 @@ func (db *DB) comparePaths(ctx context.Context, m *internal.Module) (err error) 
 		}
 	}
 	return nil
-}
-
-// removeNonDistributableData removes information from the module
-// if it is not redistributable.
-func removeNonDistributableData(m *internal.Module) {
-	for _, p := range m.LegacyPackages {
-		if !p.IsRedistributable {
-			// Prune derived information that can't be stored.
-			p.Synopsis = ""
-			p.DocumentationHTML = safehtml.HTML{}
-		}
-	}
-	if !m.IsRedistributable {
-		m.LegacyReadmeFilePath = ""
-		m.LegacyReadmeContents = ""
-	}
-	for _, d := range m.Directories {
-		if !d.IsRedistributable {
-			d.Readme = nil
-			if d.Package != nil {
-				d.Package.Documentation = nil
-			}
-		}
-	}
-	for _, l := range m.Licenses {
-		if !licenses.Redistributable(l.Types) {
-			l.Contents = nil
-		}
-	}
 }
 
 // DeleteModule deletes a Version from the database.

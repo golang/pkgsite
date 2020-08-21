@@ -652,6 +652,34 @@ func TestExcludedFromSearch(t *testing.T) {
 	}
 }
 
+func TestSearchBypass(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	defer ResetTestDB(testDB, t)
+	bypassDB := NewBypassingLicenseCheck(testDB.db)
+
+	m := nonRedistributableModule()
+	if err := bypassDB.InsertModule(ctx, m); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, test := range []struct {
+		db        *DB
+		wantEmpty bool
+	}{
+		{testDB, true},
+		{bypassDB, false},
+	} {
+		rs, err := test.db.Search(ctx, m.ModulePath, 10, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := (rs[0].Synopsis == ""); got != test.wantEmpty {
+			t.Errorf("bypass %t: got empty %t, want %t", test.db == bypassDB, got, test.wantEmpty)
+		}
+	}
+}
+
 type searchDocument struct {
 	packagePath              string
 	modulePath               string

@@ -240,3 +240,38 @@ func TestLegacyGetPackageInvalidArguments(t *testing.T) {
 		})
 	}
 }
+
+func TestLegacyGetPackageBypass(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	defer ResetTestDB(testDB, t)
+	bypassDB := NewBypassingLicenseCheck(testDB.db)
+
+	m := nonRedistributableModule()
+	if err := bypassDB.InsertModule(ctx, m); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, test := range []struct {
+		db        *DB
+		wantEmpty bool
+	}{
+		{testDB, true},
+		{bypassDB, false},
+	} {
+		pkg, err := test.db.LegacyGetPackage(ctx, m.ModulePath, m.ModulePath, m.Version)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, got := range []string{
+			pkg.LegacyPackage.Synopsis,
+			pkg.LegacyPackage.DocumentationHTML.String(),
+			pkg.LegacyModuleInfo.LegacyReadmeFilePath,
+			pkg.LegacyModuleInfo.LegacyReadmeContents,
+		} {
+			if (got == "") != test.wantEmpty {
+				t.Errorf("got %q, want empty %t", got, test.wantEmpty)
+			}
+		}
+	}
+}

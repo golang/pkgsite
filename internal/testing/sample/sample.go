@@ -44,6 +44,13 @@ var (
 	Licenses = []*licenses.License{
 		{Metadata: LicenseMetadata[0], Contents: []byte(`Lorem Ipsum`)},
 	}
+	NonRedistributableLicense = &licenses.License{
+		Metadata: &licenses.Metadata{
+			FilePath: "NONREDIST_LICENSE",
+			Types:    []string{"UNKNOWN"},
+		},
+		Contents: []byte(`unknown`),
+	}
 	DocumentationHTML = template.MustParseAndExecuteToHTML("This is the documentation HTML")
 	PackageName       = "foo"
 	Suffix            = "foo"
@@ -235,6 +242,19 @@ func AddDirectory(m *internal.Module, d *internal.Directory) {
 		}
 	}
 	m.Directories = append(m.Directories, d)
+}
+
+func AddLicense(m *internal.Module, lic *licenses.License) {
+	m.Licenses = append(m.Licenses, lic)
+	dir := path.Dir(lic.FilePath)
+	if dir == "." {
+		dir = ""
+	}
+	for _, d := range m.Directories {
+		if strings.TrimPrefix(d.Path, m.ModulePath+"/") == dir {
+			d.Licenses = append(d.Licenses, lic.Metadata)
+		}
+	}
 }
 
 func DirectoryEmpty(path string) *internal.Directory {

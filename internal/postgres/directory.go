@@ -75,6 +75,11 @@ func (db *DB) GetPackagesInDirectory(ctx context.Context, dirPath, modulePath, r
 	if len(packages) == 0 {
 		return nil, fmt.Errorf("directory does not contain any packages: %w", derrors.NotFound)
 	}
+	if !db.bypassLicenseCheck {
+		for _, p := range packages {
+			p.RemoveNonRedistributableData()
+		}
+	}
 	return packages, nil
 }
 
@@ -194,6 +199,9 @@ func (db *DB) GetDirectory(ctx context.Context, path, modulePath, version string
 		dir.Readme = &readme
 	}
 	dir.ModuleInfo = mi
+	if !db.bypassLicenseCheck {
+		dir.RemoveNonRedistributableData()
+	}
 	return &dir, nil
 }
 
@@ -309,11 +317,15 @@ func (db *DB) LegacyGetDirectory(ctx context.Context, dirPath, modulePath, versi
 	sort.Slice(packages, func(i, j int) bool {
 		return packages[i].Path < packages[j].Path
 	})
-	return &internal.LegacyDirectory{
+	ld := &internal.LegacyDirectory{
 		Path:             dirPath,
 		LegacyModuleInfo: mi,
 		Packages:         packages,
-	}, nil
+	}
+	if !db.bypassLicenseCheck {
+		ld.RemoveNonRedistributableData()
+	}
+	return ld, nil
 }
 
 func directoryColumns(fields internal.FieldSet) string {

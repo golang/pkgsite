@@ -19,8 +19,8 @@ func New(db *database.DB) *DB {
 }
 
 // NewBypassingLicenseCheck returns a new postgres DB that bypasses license
-// checks on insertion. That means all data will be inserted for
-// non-redistributable modules and packages.
+// checks. That means all data will be inserted and returned for
+// non-redistributable modules, packages and directories.
 func NewBypassingLicenseCheck(db *database.DB) *DB {
 	return &DB{db, true}
 }

@@ -72,6 +72,14 @@ type License struct {
 	Contents []byte
 }
 
+// RemoveNonRedistributableData methods removes the license contents
+// if the license is non-redistributable.
+func (l *License) RemoveNonRedistributableData() {
+	if !Redistributable(l.Types) {
+		l.Contents = nil
+	}
+}
+
 var (
 	FileNames = []string{
 		"COPYING",

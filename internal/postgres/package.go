@@ -144,5 +144,8 @@ func (db *DB) LegacyGetPackage(ctx context.Context, pkgPath, modulePath, version
 	}
 	pkg.Licenses = lics
 	pkg.DocumentationHTML = convertDocumentation(docHTML)
+	if !db.bypassLicenseCheck {
+		pkg.RemoveNonRedistributableData()
+	}
 	return &pkg, nil
 }
