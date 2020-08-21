@@ -145,6 +145,7 @@ var (
 		"MIT":                  true,
 		"MIT-0":                true,
 		"MPL-2.0":              true,
+		"NIST":                 true,
 		"NCSA":                 true,
 		"OpenSSL":              true,
 		"OSL-3.0":              true,
@@ -179,6 +180,7 @@ var nonOSILicenses = map[string]bool{
 	"CC0-1.0":              true,
 	"JSON":                 true,
 	"MIT-0":                true,
+	"NIST":                 true,
 	"OpenSSL":              true,
 	"Unlicense":            true,
 }
