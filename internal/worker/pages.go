@@ -159,11 +159,11 @@ func (s *Server) doVersionsPage(w http.ResponseWriter, r *http.Request) (err err
 
 func env(serviceID string) string {
 	switch serviceID {
-	case "dev-etl":
+	case "dev-etl", "dev-worker":
 		return "Dev"
-	case "staging-etl":
+	case "staging-etl", "staging-worker":
 		return "Staging"
-	case "etl":
+	case "etl", "worker":
 		return "Prod"
 	default:
 		return "Local"

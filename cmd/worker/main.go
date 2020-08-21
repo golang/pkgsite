@@ -246,7 +246,7 @@ func populateExcluded(ctx context.Context, db *postgres.DB) {
 	}
 	user := os.Getenv("USER")
 	if user == "" {
-		user = "etl"
+		user = "worker"
 	}
 	for _, line := range lines {
 		var prefix, reason string
