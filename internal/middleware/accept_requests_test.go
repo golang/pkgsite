@@ -63,14 +63,18 @@ func TestAcceptRequests_URILength(t *testing.T) {
 	c := ts.Client()
 
 	var longURL string
-	for i := 0; i < 500; i++ {
+	// Create a URL with 990 characters.
+	numParts := maxURILength/2 - 5
+	for i := 0; i < numParts; i++ {
 		longURL += "/a"
 	}
+	// Without this query param, the length of longURL will be < maxURILength.
+	longURL += "?q=randomstring"
 	for _, test := range []struct {
 		name, urlPath string
 		want          bool
 	}{
-		{"short URL", "/shortURLPath", true},
+		{"short URL", "/shorturlpath", true},
 		{"long URL", longURL, false},
 	} {
 		called = false

@@ -16,7 +16,7 @@ const maxURILength = 1000
 func AcceptRequests(methods ...string) Middleware {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if len(r.URL.Path) >= maxURILength {
+			if len(r.URL.String()) >= maxURILength {
 				http.Error(w, http.StatusText(http.StatusRequestURITooLong), http.StatusRequestURITooLong)
 				return
 			}
