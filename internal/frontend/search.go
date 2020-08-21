@@ -13,6 +13,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
@@ -100,6 +101,13 @@ func approximateNumber(estimate int, sigma float64) int {
 	return int(unit * math.Round(float64(estimate)/unit))
 }
 
+// maxSearchQueryLength represents the max number of characters that a search
+// query can be. For PostgreSQL 11, there is a max length of 2K bytes:
+// https://www.postgresql.org/docs/11/textsearch-limitations.html.
+// No valid searches on pkg.go.dev will need more than the
+// maxSearchQueryLength.
+const maxSearchQueryLength = 500
+
 // serveSearch applies database data to the search template. Handles endpoint
 // /search?q=<query>. If <query> is an exact match for a package path, the user
 // will be redirected to the details page.
@@ -115,11 +123,19 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 
 	ctx := r.Context()
 	query := searchQuery(r)
+	if len(query) > maxSearchQueryLength {
+		return &serverError{
+			status: http.StatusBadRequest,
+			epage: &errorPage{
+				messageTemplate: template.MakeTrustedTemplate(
+					`<h3 class="Error-message">Search query too long.</h3>`),
+			},
+		}
+	}
 	if query == "" {
 		http.Redirect(w, r, "/", http.StatusFound)
 		return nil
 	}
-
 	if path := searchRequestRedirectPath(ctx, ds, query); path != "" {
 		http.Redirect(w, r, path, http.StatusFound)
 		return nil
