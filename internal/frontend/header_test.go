@@ -37,6 +37,7 @@ func samplePackage(mutators ...func(*Package)) *Package {
 	p.Module.URL = constructModuleURL(p.ModulePath, p.LinkVersion)
 	p.LatestURL = constructPackageURL(p.Path, p.ModulePath, middleware.LatestVersionPlaceholder)
 	p.Module.LatestURL = constructModuleURL(p.ModulePath, middleware.LatestVersionPlaceholder)
+	p.Module.LinkVersion = linkVersion(sample.VersionString, sample.ModulePath)
 	return p
 }
 
@@ -103,31 +104,44 @@ func TestCreatePackage(t *testing.T) {
 	}
 
 	for _, tc := range []struct {
-		label   string
-		pkg     *internal.LegacyVersionedPackage
-		wantPkg *Package
+		label       string
+		pkg         *internal.LegacyVersionedPackage
+		linkVersion bool
+		wantPkg     *Package
 	}{
 		{
-			label:   "simple package",
-			pkg:     vpkg(sample.ModulePath, sample.Suffix, ""),
-			wantPkg: samplePackage(),
+			label:       "simple package",
+			pkg:         vpkg(sample.ModulePath, sample.Suffix, ""),
+			linkVersion: false,
+			wantPkg:     samplePackage(),
 		},
 		{
-			label:   "command package",
-			pkg:     vpkg(sample.ModulePath, sample.Suffix, "main"),
-			wantPkg: samplePackage(),
+			label:       "simple package, latest",
+			pkg:         vpkg(sample.ModulePath, sample.Suffix, ""),
+			linkVersion: true,
+			wantPkg: samplePackage(func(p *Package) {
+				p.LinkVersion = internal.LatestVersion
+			}),
 		},
 		{
-			label: "v2 command",
-			pkg:   vpkg("pa.th/to/foo/v2", "bar", "main"),
+			label:       "command package",
+			pkg:         vpkg(sample.ModulePath, sample.Suffix, "main"),
+			linkVersion: false,
+			wantPkg:     samplePackage(),
+		},
+		{
+			label:       "v2 command",
+			pkg:         vpkg("pa.th/to/foo/v2", "bar", "main"),
+			linkVersion: false,
 			wantPkg: samplePackage(func(p *Package) {
 				p.Path = "pa.th/to/foo/v2/bar"
 				p.ModulePath = "pa.th/to/foo/v2"
 			}),
 		},
 		{
-			label: "explicit v1 command",
-			pkg:   vpkg("pa.th/to/foo/v1", "", "main"),
+			label:       "explicit v1 command",
+			pkg:         vpkg("pa.th/to/foo/v1", "", "main"),
+			linkVersion: false,
 			wantPkg: samplePackage(func(p *Package) {
 				p.Path = "pa.th/to/foo/v1"
 				p.ModulePath = "pa.th/to/foo/v1"
@@ -136,7 +150,7 @@ func TestCreatePackage(t *testing.T) {
 	} {
 		t.Run(tc.label, func(t *testing.T) {
 			pm := internal.PackageMetaFromLegacyPackage(&tc.pkg.LegacyPackage)
-			got, err := createPackage(pm, &tc.pkg.ModuleInfo, false)
+			got, err := createPackage(pm, &tc.pkg.ModuleInfo, tc.linkVersion)
 			if err != nil {
 				t.Fatal(err)
 			}
