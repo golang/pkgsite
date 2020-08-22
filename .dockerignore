@@ -1,0 +1,6 @@
+# Exclude all git directories.
+**/.git
+# Exclude the private sub-repo...
+private
+# ...except for the config directory.
+!private/config
