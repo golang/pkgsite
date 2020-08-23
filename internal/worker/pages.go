@@ -85,20 +85,21 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 	}
 	sort.Slice(counts, func(i, j int) bool { return counts[i].Code < counts[j].Code })
 	page := struct {
-		Config                       *config.Config
-		Env                          string
-		ResourcePrefix               string
-		LatestTimestamp              *time.Time
-		Counts                       []*count
-		Next, Recent, RecentFailures []*internal.ModuleVersionState
-		Experiments                  []*internal.Experiment
-		Excluded                     []string
+		Config          *config.Config
+		Env             string
+		ResourcePrefix  string
+		LatestTimestamp *time.Time
+		Counts          []*count
+		LocationID      string
+		Experiments     []*internal.Experiment
+		Excluded        []string
 	}{
 		Config:          s.cfg,
 		Env:             env(s.cfg.ServiceID),
 		ResourcePrefix:  strings.ToLower(env(s.cfg.ServiceID)) + "-",
 		LatestTimestamp: &stats.LatestTimestamp,
 		Counts:          counts,
+		LocationID:      s.cfg.LocationID,
 		Experiments:     experiments,
 		Excluded:        excluded,
 	}
@@ -158,16 +159,14 @@ func (s *Server) doVersionsPage(w http.ResponseWriter, r *http.Request) (err err
 }
 
 func env(serviceID string) string {
-	switch serviceID {
-	case "dev-etl", "dev-worker":
-		return "Dev"
-	case "staging-etl", "staging-worker":
-		return "Staging"
-	case "etl", "worker":
-		return "Prod"
-	default:
+	if serviceID == "" {
 		return "Local"
 	}
+	parts := strings.Split(serviceID, "-")
+	if len(parts) == 1 {
+		return "Prod"
+	}
+	return strings.ToUpper(parts[0][:1]) + parts[0][1:]
 }
 
 func renderPage(ctx context.Context, w http.ResponseWriter, page interface{}, tmpl *template.Template) (err error) {
