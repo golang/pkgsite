@@ -85,8 +85,8 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 			want: &OverviewDetails{
 				ModulePath:       "github.com/u/m",
 				ModuleURL:        "/mod/github.com/u/m@v1.2.3",
-				RepositoryURL:    "https://github.com/u/m",
-				PackageSourceURL: "https://github.com/u/m/tree/v1.2.3/p",
+				RepositoryURL:    "github.com/u/m",
+				PackageSourceURL: "github.com/u/m/tree/v1.2.3/p",
 				ReadMe:           testconversions.MakeHTMLForTest("<p>readme</p>\n"),
 				ReadMeSource:     "github.com/u/m@v1.2.3/README.md",
 				Redistributable:  true,
@@ -111,8 +111,8 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 			want: &OverviewDetails{
 				ModulePath:       "github.com/u/m",
 				ModuleURL:        "/mod/github.com/u/m",
-				RepositoryURL:    "https://github.com/u/m",
-				PackageSourceURL: "https://github.com/u/m/tree/v1.2.3/p",
+				RepositoryURL:    "github.com/u/m",
+				PackageSourceURL: "github.com/u/m/tree/v1.2.3/p",
 				ReadMe:           testconversions.MakeHTMLForTest("<p>readme</p>\n"),
 				ReadMeSource:     "github.com/u/m@v1.2.3/README.md",
 				Redistributable:  true,
@@ -133,8 +133,8 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 			want: &OverviewDetails{
 				ModulePath:       "github.com/u/m",
 				ModuleURL:        "/mod/github.com/u/m@v1.2.3",
-				RepositoryURL:    "https://github.com/u/m",
-				PackageSourceURL: "https://github.com/u/m/tree/v1.2.3/p",
+				RepositoryURL:    "github.com/u/m",
+				PackageSourceURL: "github.com/u/m/tree/v1.2.3/p",
 				ReadMe:           safehtml.HTML{},
 				ReadMeSource:     "",
 				Redistributable:  false,

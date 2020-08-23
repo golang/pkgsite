@@ -39,6 +39,16 @@ type OverviewDetails struct {
 	RepositoryURL    string
 }
 
+//stripHttpOrHttpsFromUrl strips http or https scheme from a URL
+func stripHTTPOrHTTPSFromURL(url string) string {
+	if url[:8] == "https://" {
+		url = url[8:]
+	} else if url[:7] == "http://" {
+		url = url[7:]
+	}
+	return url
+}
+
 // constructOverviewDetails uses the given version to construct an OverviewDetails.
 // versionedLinks says whether the constructed URLs should have versions.
 func constructOverviewDetails(ctx context.Context, mi *internal.ModuleInfo, readme *internal.Readme, isRedistributable bool, versionedLinks bool) (*OverviewDetails, error) {
@@ -51,7 +61,7 @@ func constructOverviewDetails(ctx context.Context, mi *internal.ModuleInfo, read
 	overview := &OverviewDetails{
 		ModulePath:      mi.ModulePath,
 		ModuleURL:       constructModuleURL(mi.ModulePath, lv),
-		RepositoryURL:   mi.SourceInfo.RepoURL(),
+		RepositoryURL:   stripHTTPOrHTTPSFromURL(mi.SourceInfo.RepoURL()),
 		Redistributable: isRedistributable,
 	}
 	if overview.Redistributable && readme != nil {
@@ -73,7 +83,7 @@ func legacyFetchPackageOverviewDetails(ctx context.Context, pkg *internal.Legacy
 	if err != nil {
 		return nil, err
 	}
-	od.PackageSourceURL = pkg.SourceInfo.DirectoryURL(packageSubdir(pkg.Path, pkg.ModulePath))
+	od.PackageSourceURL = stripHTTPOrHTTPSFromURL(pkg.SourceInfo.DirectoryURL(packageSubdir(pkg.Path, pkg.ModulePath)))
 	if !pkg.LegacyPackage.IsRedistributable {
 		od.Redistributable = false
 	}
@@ -86,7 +96,7 @@ func fetchPackageOverviewDetails(ctx context.Context, vdir *internal.VersionedDi
 	if err != nil {
 		return nil, err
 	}
-	od.PackageSourceURL = vdir.SourceInfo.DirectoryURL(packageSubdir(vdir.Path, vdir.ModulePath))
+	od.PackageSourceURL = stripHTTPOrHTTPSFromURL(vdir.SourceInfo.DirectoryURL(packageSubdir(vdir.Path, vdir.ModulePath)))
 	return od, nil
 }
 
