@@ -283,7 +283,7 @@ func (s *Server) doRequest(r *http.Request) (results map[string]*RequestEvent, s
 			if event.Error != nil {
 				log.Errorf(r.Context(), "teeproxy.Server.doRequest(%q): %s", host, event.Error)
 			}
-			results[host] = event
+			results[strings.TrimPrefix(host, "https://")] = event
 			recordTeeProxyMetric(r.Context(), host, gddoEvent.Path, gddoEvent.Status, event.Status, gddoEvent.Latency, event.Latency)
 		}
 	}
