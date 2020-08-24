@@ -89,7 +89,7 @@ func (c *Client) GetZip(ctx context.Context, requestedPath, requestedVersion str
 	}
 	zipReader, err := zip.NewReader(bytes.NewReader(bodyBytes), int64(len(bodyBytes)))
 	if err != nil {
-		return nil, fmt.Errorf("zip.NewReader: %v", err)
+		return nil, fmt.Errorf("zip.NewReader: %v: %w", err, derrors.BadModule)
 	}
 	return zipReader, nil
 }
