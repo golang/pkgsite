@@ -456,17 +456,15 @@ func TestGetDirectory(t *testing.T) {
 
 	newVdir := func(path, modulePath, version string, readme *internal.Readme, pkg *internal.Package) *internal.VersionedDirectory {
 		return &internal.VersionedDirectory{
-			Directory: internal.Directory{
-				DirectoryMeta: internal.DirectoryMeta{
-					ModuleInfo:        *sample.ModuleInfo(modulePath, version),
-					Path:              path,
-					V1Path:            path,
-					IsRedistributable: true,
-					Licenses:          sample.LicenseMetadata,
-				},
-				Readme:  readme,
-				Package: pkg,
+			DirectoryMeta: internal.DirectoryMeta{
+				ModuleInfo:        *sample.ModuleInfo(modulePath, version),
+				Path:              path,
+				V1Path:            path,
+				IsRedistributable: true,
+				Licenses:          sample.LicenseMetadata,
 			},
+			Readme:  readme,
+			Package: pkg,
 		}
 	}
 
@@ -595,7 +593,7 @@ func TestGetDirectory(t *testing.T) {
 	}
 }
 
-func findDirectory(m *internal.Module, path string) *internal.Directory {
+func findDirectory(m *internal.Module, path string) *internal.VersionedDirectory {
 	for _, d := range m.Directories {
 		if d.Path == path {
 			return d

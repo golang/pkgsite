@@ -189,7 +189,7 @@ func Module(modulePath, version string, suffixes ...string) *internal.Module {
 		LegacyPackages:   nil,
 		Licenses:         Licenses,
 	}
-	m.Directories = []*internal.Directory{DirectoryForModuleRoot(mi, LicenseMetadata)}
+	m.Directories = []*internal.VersionedDirectory{DirectoryForModuleRoot(mi, LicenseMetadata)}
 	for _, s := range suffixes {
 		lp := LegacyPackage(modulePath, s)
 		if s != "" {
@@ -228,7 +228,7 @@ func AddPackage(m *internal.Module, p *internal.LegacyPackage) *internal.Module 
 	return m
 }
 
-func AddDirectory(m *internal.Module, d *internal.Directory) {
+func AddDirectory(m *internal.Module, d *internal.VersionedDirectory) {
 	for _, e := range m.Directories {
 		if e.Path == d.Path {
 			panic(fmt.Sprintf("module already has path %q", e.Path))
@@ -237,8 +237,8 @@ func AddDirectory(m *internal.Module, d *internal.Directory) {
 	m.Directories = append(m.Directories, d)
 }
 
-func DirectoryEmpty(path string) *internal.Directory {
-	return &internal.Directory{
+func DirectoryEmpty(path string) *internal.VersionedDirectory {
+	return &internal.VersionedDirectory{
 		DirectoryMeta: internal.DirectoryMeta{
 			Path:              path,
 			IsRedistributable: true,
@@ -248,8 +248,8 @@ func DirectoryEmpty(path string) *internal.Directory {
 	}
 }
 
-func DirectoryForModuleRoot(m *internal.LegacyModuleInfo, licenses []*licenses.Metadata) *internal.Directory {
-	d := &internal.Directory{
+func DirectoryForModuleRoot(m *internal.LegacyModuleInfo, licenses []*licenses.Metadata) *internal.VersionedDirectory {
+	d := &internal.VersionedDirectory{
 		DirectoryMeta: internal.DirectoryMeta{
 			Path:              m.ModulePath,
 			IsRedistributable: m.IsRedistributable,
@@ -266,8 +266,8 @@ func DirectoryForModuleRoot(m *internal.LegacyModuleInfo, licenses []*licenses.M
 	return d
 }
 
-func DirectoryForPackage(pkg *internal.LegacyPackage) *internal.Directory {
-	return &internal.Directory{
+func DirectoryForPackage(pkg *internal.LegacyPackage) *internal.VersionedDirectory {
+	return &internal.VersionedDirectory{
 		DirectoryMeta: internal.DirectoryMeta{
 			Path:              pkg.Path,
 			IsRedistributable: pkg.IsRedistributable,

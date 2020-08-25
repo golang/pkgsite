@@ -122,16 +122,14 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 			Contents: sample.ReadmeContents,
 		}
 		dir.ModuleInfo = want.ModuleInfo
-		wantd := internal.VersionedDirectory{
-			Directory: *dir,
-		}
+		wantd := dir
 		opts := cmp.Options{
 			cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeFilePath"),
 			cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeContents"),
 			cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 			cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
 		}
-		if diff := cmp.Diff(wantd, *got, opts); diff != "" {
+		if diff := cmp.Diff(wantd, got, opts); diff != "" {
 			t.Errorf("testDB.getDirectory(%q, %q) mismatch (-want +got):\n%s", dir.Path, want.Version, diff)
 		}
 	}

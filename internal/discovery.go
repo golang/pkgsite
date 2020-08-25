@@ -108,15 +108,9 @@ type Module struct {
 	// Licenses holds all licenses within this module version, including those
 	// that may be contained in nested subdirectories.
 	Licenses    []*licenses.License
-	Directories []*Directory
+	Directories []*VersionedDirectory
 
 	LegacyPackages []*LegacyPackage
-}
-
-// VersionedDirectory is a Directory along with its corresponding module
-// information.
-type VersionedDirectory struct {
-	Directory
 }
 
 // DirectoryMeta represents the metadata of a directory in a module version.
@@ -128,9 +122,9 @@ type DirectoryMeta struct {
 	Licenses          []*licenses.Metadata // metadata of applicable licenses
 }
 
-// Directory represents a directory in a module version, and the contents of that directory.
+// VersionedDirectory represents a directory in a module version, and the contents of that directory.
 // It will replace LegacyDirectory once everything has been migrated.
-type Directory struct {
+type VersionedDirectory struct {
 	DirectoryMeta
 	Readme  *Readme
 	Package *Package

@@ -113,7 +113,7 @@ func (db *DB) GetDirectory(ctx context.Context, path, modulePath, version string
 			AND m.version = $3;`
 	var (
 		mi                         internal.ModuleInfo
-		dir                        internal.Directory
+		dir                        internal.VersionedDirectory
 		doc                        internal.Documentation
 		docHTML                    string
 		pkg                        internal.Package
@@ -195,7 +195,7 @@ func (db *DB) GetDirectory(ctx context.Context, path, modulePath, version string
 		dir.Readme = &readme
 	}
 	dir.ModuleInfo = mi
-	return &internal.VersionedDirectory{Directory: dir}, nil
+	return &dir, nil
 }
 
 // LegacyGetDirectory returns the directory corresponding to the provided dirPath,

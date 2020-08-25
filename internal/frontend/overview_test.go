@@ -69,16 +69,14 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 		{
 			name: "redistributable",
 			vdir: &internal.VersionedDirectory{
-				Directory: internal.Directory{
-					DirectoryMeta: internal.DirectoryMeta{
-						ModuleInfo:        *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
-						Path:              "github.com/u/m/p",
-						IsRedistributable: true,
-					},
-					Readme: &internal.Readme{
-						Filepath: "README.md",
-						Contents: "readme",
-					},
+				DirectoryMeta: internal.DirectoryMeta{
+					ModuleInfo:        *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
+					Path:              "github.com/u/m/p",
+					IsRedistributable: true,
+				},
+				Readme: &internal.Readme{
+					Filepath: "README.md",
+					Contents: "readme",
 				},
 			},
 			versionedLinks: true,
@@ -95,16 +93,14 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 		{
 			name: "unversioned",
 			vdir: &internal.VersionedDirectory{
-				Directory: internal.Directory{
-					DirectoryMeta: internal.DirectoryMeta{
-						ModuleInfo:        *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
-						Path:              "github.com/u/m/p",
-						IsRedistributable: true,
-					},
-					Readme: &internal.Readme{
-						Filepath: "README.md",
-						Contents: "readme",
-					},
+				DirectoryMeta: internal.DirectoryMeta{
+					ModuleInfo:        *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
+					Path:              "github.com/u/m/p",
+					IsRedistributable: true,
+				},
+				Readme: &internal.Readme{
+					Filepath: "README.md",
+					Contents: "readme",
 				},
 			},
 			versionedLinks: false,
@@ -121,12 +117,10 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 		{
 			name: "non-redistributable",
 			vdir: &internal.VersionedDirectory{
-				Directory: internal.Directory{
-					DirectoryMeta: internal.DirectoryMeta{
-						ModuleInfo:        *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
-						Path:              "github.com/u/m/p",
-						IsRedistributable: false,
-					},
+				DirectoryMeta: internal.DirectoryMeta{
+					ModuleInfo:        *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
+					Path:              "github.com/u/m/p",
+					IsRedistributable: false,
 				},
 			},
 			versionedLinks: true,

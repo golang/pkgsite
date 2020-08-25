@@ -77,7 +77,7 @@ func constructOverviewDetails(ctx context.Context, mi *internal.ModuleInfo, read
 
 // fetchPackageOverviewDetails uses data for the given versioned directory to return an OverviewDetails.
 func fetchPackageOverviewDetails(ctx context.Context, vdir *internal.VersionedDirectory, versionedLinks bool) (*OverviewDetails, error) {
-	od, err := constructOverviewDetails(ctx, &vdir.ModuleInfo, vdir.Readme, vdir.Directory.IsRedistributable, versionedLinks)
+	od, err := constructOverviewDetails(ctx, &vdir.ModuleInfo, vdir.Readme, vdir.IsRedistributable, versionedLinks)
 	if err != nil {
 		return nil, err
 	}
