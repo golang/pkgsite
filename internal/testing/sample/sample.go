@@ -114,6 +114,7 @@ func DirectoryMeta(modulePath, suffix string) *internal.DirectoryMeta {
 	return &internal.DirectoryMeta{
 		ModuleInfo:        *ModuleInfo(modulePath, VersionString),
 		Path:              fullPath(modulePath, suffix),
+		Name:              path.Base(fullPath(modulePath, suffix)),
 		V1Path:            internal.V1Path(modulePath, suffix),
 		IsRedistributable: true,
 		Licenses:          LicenseMetadata,

@@ -620,6 +620,9 @@ func TestGetDirectory(t *testing.T) {
 				Filepath: sample.ReadmeFilePath,
 				Contents: sample.ReadmeContents,
 			}
+			if tc.want.Package != nil {
+				tc.want.Name = tc.want.Package.Name
+			}
 			if diff := cmp.Diff(tc.want, got, opts...); diff != "" {
 				t.Errorf("mismatch (-want, +got):\n%s", diff)
 			}

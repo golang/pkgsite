@@ -155,6 +155,7 @@ func (db *DB) GetDirectory(ctx context.Context, path, modulePath, version string
 	}
 	dir.Licenses = lics
 	if pkg.Name != "" {
+		dir.Name = pkg.Name
 		dir.Package = &pkg
 		pkg.Path = dir.Path
 		doc.HTML = convertDocumentation(docHTML)

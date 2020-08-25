@@ -122,6 +122,9 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 			Contents: sample.ReadmeContents,
 		}
 		dir.ModuleInfo = want.ModuleInfo
+		if dir.Package != nil {
+			dir.Name = dir.Package.Name
+		}
 		wantd := dir
 		opts := cmp.Options{
 			cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeFilePath"),
