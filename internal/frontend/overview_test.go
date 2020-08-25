@@ -62,13 +62,13 @@ func TestFetchOverviewDetails(t *testing.T) {
 func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 	for _, test := range []struct {
 		name           string
-		vdir           *internal.Directory
+		dir            *internal.Directory
 		versionedLinks bool
 		want           *OverviewDetails
 	}{
 		{
 			name: "redistributable",
-			vdir: &internal.Directory{
+			dir: &internal.Directory{
 				DirectoryMeta: internal.DirectoryMeta{
 					ModuleInfo:        *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
 					Path:              "github.com/u/m/p",
@@ -92,7 +92,7 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 		},
 		{
 			name: "unversioned",
-			vdir: &internal.Directory{
+			dir: &internal.Directory{
 				DirectoryMeta: internal.DirectoryMeta{
 					ModuleInfo:        *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
 					Path:              "github.com/u/m/p",
@@ -116,7 +116,7 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 		},
 		{
 			name: "non-redistributable",
-			vdir: &internal.Directory{
+			dir: &internal.Directory{
 				DirectoryMeta: internal.DirectoryMeta{
 					ModuleInfo:        *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
 					Path:              "github.com/u/m/p",
@@ -136,7 +136,7 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := fetchPackageOverviewDetails(context.Background(), test.vdir, test.versionedLinks)
+			got, err := fetchPackageOverviewDetails(context.Background(), test.dir, test.versionedLinks)
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -169,17 +169,17 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 func (s *Server) serveDetailsPage(w http.ResponseWriter, r *http.Request, ds internal.DataSource, info *urlPathInfo) (err error) {
 	defer derrors.Wrap(&err, "serveDetailsPage(w, r, %v)", info)
 	ctx := r.Context()
-	vdir, err := ds.GetDirectory(ctx, info.fullPath, info.modulePath, info.resolvedVersion)
+	dir, err := ds.GetDirectory(ctx, info.fullPath, info.modulePath, info.resolvedVersion)
 	if err != nil {
 		return err
 	}
 	switch {
 	case info.isModule:
-		return s.serveModulePage(ctx, w, r, ds, vdir, info.requestedVersion)
-	case vdir.Package != nil:
-		return s.servePackagePage(ctx, w, r, ds, vdir, info.requestedVersion)
+		return s.serveModulePage(ctx, w, r, ds, dir, info.requestedVersion)
+	case dir.Package != nil:
+		return s.servePackagePage(ctx, w, r, ds, dir, info.requestedVersion)
 	default:
-		return s.serveDirectoryPage(ctx, w, r, ds, vdir, info.requestedVersion)
+		return s.serveDirectoryPage(ctx, w, r, ds, dir, info.requestedVersion)
 	}
 }
 

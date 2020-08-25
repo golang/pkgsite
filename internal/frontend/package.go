@@ -46,25 +46,25 @@ func stdlibPathForShortcut(ctx context.Context, ds internal.DataSource, shortcut
 
 // servePackagePage serves a package details page.
 func (s *Server) servePackagePage(ctx context.Context,
-	w http.ResponseWriter, r *http.Request, ds internal.DataSource, vdir *internal.Directory, requestedVersion string) error {
+	w http.ResponseWriter, r *http.Request, ds internal.DataSource, dir *internal.Directory, requestedVersion string) error {
 	pkgHeader, err := createPackage(&internal.PackageMeta{
 		DirectoryMeta: internal.DirectoryMeta{
-			Path:              vdir.Path,
-			V1Path:            vdir.V1Path,
-			Licenses:          vdir.Licenses,
-			IsRedistributable: vdir.IsRedistributable,
+			Path:              dir.Path,
+			V1Path:            dir.V1Path,
+			Licenses:          dir.Licenses,
+			IsRedistributable: dir.IsRedistributable,
 		},
-		Name:     vdir.Package.Name,
-		Synopsis: vdir.Package.Documentation.Synopsis}, &vdir.ModuleInfo, requestedVersion == internal.LatestVersion)
+		Name:     dir.Package.Name,
+		Synopsis: dir.Package.Documentation.Synopsis}, &dir.ModuleInfo, requestedVersion == internal.LatestVersion)
 	if err != nil {
-		return fmt.Errorf("creating package header for %s@%s: %v", vdir.Path, vdir.Version, err)
+		return fmt.Errorf("creating package header for %s@%s: %v", dir.Path, dir.Version, err)
 	}
 
 	tab := r.FormValue("tab")
 	settings, ok := packageTabLookup[tab]
 	if !ok {
 		var tab string
-		if vdir.IsRedistributable {
+		if dir.IsRedistributable {
 			tab = tabDoc
 		} else {
 			tab = tabOverview
@@ -72,26 +72,26 @@ func (s *Server) servePackagePage(ctx context.Context,
 		http.Redirect(w, r, fmt.Sprintf(r.URL.Path+"?tab=%s", tab), http.StatusFound)
 		return nil
 	}
-	canShowDetails := vdir.IsRedistributable || settings.AlwaysShowDetails
+	canShowDetails := dir.IsRedistributable || settings.AlwaysShowDetails
 
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = fetchDetailsForPackage(r, tab, ds, vdir)
+		details, err = fetchDetailsForPackage(r, tab, ds, dir)
 		if err != nil {
 			return fmt.Errorf("fetching page for %q: %v", tab, err)
 		}
 	}
 	var (
 		pageType = pageTypePackage
-		pageName = vdir.Package.Name
+		pageName = dir.Package.Name
 	)
 	if pageName == "main" {
-		pageName = effectiveName(vdir.Path, vdir.Package.Name)
+		pageName = effectiveName(dir.Path, dir.Package.Name)
 		pageType = pageTypeCommand
 	}
 	page := &DetailsPage{
-		basePage: s.newBasePage(r, packageHTMLTitle(vdir.Path, vdir.Package.Name)),
+		basePage: s.newBasePage(r, packageHTMLTitle(dir.Path, dir.Package.Name)),
 		Name:     pageName,
 		Settings: settings,
 		Header:   pkgHeader,

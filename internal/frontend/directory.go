@@ -40,28 +40,28 @@ type Directory struct {
 
 // serveDirectoryPage serves a directory view for a directory in a module
 // version.
-func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, r *http.Request, ds internal.DataSource, vdir *internal.Directory, requestedVersion string) (err error) {
-	defer derrors.Wrap(&err, "serveDirectoryPage for %s@%s", vdir.Path, requestedVersion)
+func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, r *http.Request, ds internal.DataSource, dir *internal.Directory, requestedVersion string) (err error) {
+	defer derrors.Wrap(&err, "serveDirectoryPage for %s@%s", dir.Path, requestedVersion)
 	tab := r.FormValue("tab")
 	settings, ok := directoryTabLookup[tab]
 	if tab == "" || !ok || settings.Disabled {
 		tab = tabSubdirectories
 		settings = directoryTabLookup[tab]
 	}
-	header := createDirectoryHeader(vdir.Path, &vdir.ModuleInfo, vdir.Licenses)
+	header := createDirectoryHeader(dir.Path, &dir.ModuleInfo, dir.Licenses)
 	if requestedVersion == internal.LatestVersion {
-		header.URL = constructDirectoryURL(vdir.Path, vdir.ModulePath, internal.LatestVersion)
+		header.URL = constructDirectoryURL(dir.Path, dir.ModulePath, internal.LatestVersion)
 	}
-	details, err := fetchDetailsForDirectory(r, tab, ds, vdir)
+	details, err := fetchDetailsForDirectory(r, tab, ds, dir)
 	if err != nil {
 		return err
 	}
 	page := &DetailsPage{
-		basePage:       s.newBasePage(r, fmt.Sprintf("%s directory", vdir.Path)),
-		Name:           vdir.Path,
+		basePage:       s.newBasePage(r, fmt.Sprintf("%s directory", dir.Path)),
+		Name:           dir.Path,
 		Settings:       settings,
 		Header:         header,
-		Breadcrumb:     breadcrumbPath(vdir.Path, vdir.ModulePath, linkVersion(vdir.Version, vdir.ModulePath)),
+		Breadcrumb:     breadcrumbPath(dir.Path, dir.ModulePath, linkVersion(dir.Version, dir.ModulePath)),
 		Details:        details,
 		CanShowDetails: true,
 		Tabs:           directoryTabSettings,
@@ -81,26 +81,26 @@ func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, 
 // the module path. However, on the package and directory view's
 // "Subdirectories" tab, we do not want to include packages whose import paths
 // are the same as the dirPath.
-func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, vdir *internal.Directory, includeDirPath bool) (_ *Directory, err error) {
+func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, dir *internal.Directory, includeDirPath bool) (_ *Directory, err error) {
 	defer derrors.Wrap(&err, "fetchDirectoryDetails(%q, %q, %q, %v)",
-		vdir.Path, vdir.ModulePath, vdir.Version, vdir.Licenses)
+		dir.Path, dir.ModulePath, dir.Version, dir.Licenses)
 
 	db, ok := ds.(*postgres.DB)
 	if !ok {
 		return nil, proxydatasourceNotSupportedErr()
 	}
-	if includeDirPath && vdir.Path != vdir.ModulePath && vdir.Path != stdlib.ModulePath {
+	if includeDirPath && dir.Path != dir.ModulePath && dir.Path != stdlib.ModulePath {
 		return nil, fmt.Errorf("includeDirPath can only be set to true if dirPath = modulePath: %w", derrors.InvalidArgument)
 	}
-	packages, err := db.GetPackagesInDirectory(ctx, vdir.Path, vdir.ModulePath, vdir.Version)
+	packages, err := db.GetPackagesInDirectory(ctx, dir.Path, dir.ModulePath, dir.Version)
 	if err != nil {
 		if !errors.Is(err, derrors.NotFound) {
 			return nil, err
 		}
-		header := createDirectoryHeader(vdir.Path, &vdir.ModuleInfo, vdir.Licenses)
+		header := createDirectoryHeader(dir.Path, &dir.ModuleInfo, dir.Licenses)
 		return &Directory{DirectoryHeader: *header}, nil
 	}
-	return createDirectory(vdir.Path, &vdir.ModuleInfo, packages, vdir.Licenses, includeDirPath)
+	return createDirectory(dir.Path, &dir.ModuleInfo, packages, dir.Licenses, includeDirPath)
 }
 
 // createDirectory constructs a *Directory for the given dirPath.
