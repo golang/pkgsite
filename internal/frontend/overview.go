@@ -39,8 +39,18 @@ type OverviewDetails struct {
 	RepositoryURL    string
 }
 
-// constructOverviewDetails uses the given version to construct an OverviewDetails.
+// fetchOverviewDetails uses the given version to fetch an OverviewDetails.
 // versionedLinks says whether the constructed URLs should have versions.
+func fetchOverviewDetails(ctx context.Context, vdir *internal.VersionedDirectory, versionedLinks bool) (*OverviewDetails, error) {
+	var readme *internal.Readme
+	if vdir.Readme != nil {
+		readme = &internal.Readme{Filepath: vdir.Readme.Filepath, Contents: vdir.Readme.Contents}
+	}
+	return constructOverviewDetails(ctx, &vdir.ModuleInfo, readme, vdir.IsRedistributable, versionedLinks)
+}
+
+// constructOverviewDetails uses the given module version and readme to
+// construct an OverviewDetails. versionedLinks says whether the constructed URLs should have versions.
 func constructOverviewDetails(ctx context.Context, mi *internal.ModuleInfo, readme *internal.Readme, isRedistributable bool, versionedLinks bool) (*OverviewDetails, error) {
 	var lv string
 	if versionedLinks {

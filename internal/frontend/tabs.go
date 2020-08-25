@@ -182,11 +182,7 @@ func fetchDetailsForModule(r *http.Request, tab string, ds internal.DataSource, 
 	case tabVersions:
 		return fetchModuleVersionsDetails(ctx, ds, vdir.ModulePath)
 	case tabOverview:
-		var readme *internal.Readme
-		if vdir.Readme != nil {
-			readme = &internal.Readme{Filepath: vdir.Readme.Filepath, Contents: vdir.Readme.Contents}
-		}
-		return constructOverviewDetails(ctx, &vdir.ModuleInfo, readme, vdir.IsRedistributable, urlIsVersioned(r.URL))
+		return fetchOverviewDetails(ctx, vdir, urlIsVersioned(r.URL))
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
@@ -197,7 +193,7 @@ func fetchDetailsForDirectory(r *http.Request, tab string, ds internal.DataSourc
 	ctx := r.Context()
 	switch tab {
 	case tabOverview:
-		return constructOverviewDetails(ctx, &vdir.ModuleInfo, vdir.Readme, vdir.IsRedistributable, urlIsVersioned(r.URL))
+		return fetchOverviewDetails(ctx, vdir, urlIsVersioned(r.URL))
 	case tabSubdirectories:
 		return fetchDirectoryDetails(ctx, ds, vdir, false)
 	case tabLicenses:
