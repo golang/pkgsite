@@ -136,25 +136,13 @@ func TestFetchModuleVersionDetails(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-
-			t.Run("use-directories", func(t *testing.T) {
-				got, err := fetchModuleVersionsDetails(ctx, testDB, tc.info.ModulePath)
-				if err != nil {
-					t.Fatalf("fetchModuleVersionsDetails(ctx, db, %q): %v", tc.info.ModulePath, err)
-				}
-				if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
-					t.Errorf("mismatch (-want +got):\n%s", diff)
-				}
-			})
-			t.Run("no-experiments", func(t *testing.T) {
-				got, err := legacyFetchModuleVersionsDetails(ctx, testDB, tc.info)
-				if err != nil {
-					t.Fatalf("legacyFetchModuleVersionsDetails(ctx, db, %v): %v", tc.info, err)
-				}
-				if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
-					t.Errorf("mismatch (-want +got):\n%s", diff)
-				}
-			})
+			got, err := fetchModuleVersionsDetails(ctx, testDB, tc.info.ModulePath)
+			if err != nil {
+				t.Fatalf("fetchModuleVersionsDetails(ctx, db, %q): %v", tc.info.ModulePath, err)
+			}
+			if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
+				t.Errorf("mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }
