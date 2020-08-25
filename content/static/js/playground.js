@@ -16,6 +16,8 @@
  * @private @enum {string}
  */
 const PlayExampleClassName = {
+  PLAY_HREF: '.js-exampleHref',
+  PLAY_CONTAINER: '.js-exampleContainer',
   EXAMPLE_INPUT: '.Documentation-exampleCode',
   EXAMPLE_OUTPUT: '.Documentation-exampleOutput',
   EXAMPLE_ERROR: '.Documentation-exampleError',
@@ -23,7 +25,8 @@ const PlayExampleClassName = {
 };
 
 /**
- * This controller enables generating shareable Go Playground URLs
+ * This controller enables playground examples to expand their dropdown or
+ * generate shareable Go Playground URLs.
  */
 class PlaygroundExampleController {
   /**
@@ -37,6 +40,23 @@ class PlaygroundExampleController {
       console.warn('Must provide playground example element');
       hasError = true;
     }
+    /**
+     * The example container
+     * @private {Element}
+     */
+    this._exampleEl = /** @type {!Element} */ (exampleEl);
+
+    /**
+     * The anchor tag used to identify the container with an example href.
+     * There is only one in an example container div.
+     * @private {Element}
+     */
+    const anchorEl = exampleEl.querySelector('a');
+    if (!anchorEl) {
+      console.warn('anchor tag is not detected');
+      hasError = true;
+    }
+    this._anchorEl = /** @type {!Element} */ (anchorEl);
 
     /**
      * The error element
@@ -87,6 +107,21 @@ class PlaygroundExampleController {
   }
 
   /**
+   * Retrieve the hash value of the anchor element.
+   * @returns {string}
+   */
+  getAnchorHash() {
+    return this._anchorEl.hash;
+  }
+
+  /**
+   * Expands the current playground example.
+   */
+  expand() {
+    this._exampleEl.open = true;
+  }
+
+  /**
    * Changes the text of the example's output box.
    * @param {string} output
    */
@@ -131,6 +166,38 @@ class PlaygroundExampleController {
   }
 }
 
-document.querySelectorAll('.js-exampleContainer').forEach(el => {
-  new PlaygroundExampleController(el);
+const exampleHashRegex = location.hash.match(/^#(example-.*)$/);
+if (exampleHashRegex) {
+  const exampleHashEl = document.getElementById(exampleHashRegex[1]);
+  if (exampleHashEl) {
+    exampleHashEl.open = true;
+  }
+}
+
+// We use a spread operator to convert a nodelist into an array of elements.
+const /** @type {Array<Element>} */ exampleHrefs = [
+    ...document.querySelectorAll(PlayExampleClassName.PLAY_HREF),
+  ];
+
+/**
+ * Sometimes exampleHrefs and playContainers are in different order, so we
+ * find an exampleHref from a common hash.
+ * @param {PlaygroundExampleController} playContainer - playground container
+ */
+const findExampleHash = playContainer =>
+  exampleHrefs.find(ex => {
+    return ex.hash === playContainer.getAnchorHash();
+  });
+
+document.querySelectorAll(PlayExampleClassName.PLAY_CONTAINER).forEach(el => {
+  // There should be the same amount of hrefs referencing examples as example containers.
+  const playContainer = new PlaygroundExampleController(el);
+  const exampleHref = findExampleHash(playContainer);
+  if (exampleHref) {
+    exampleHref.addEventListener('click', () => {
+      playContainer.expand();
+    });
+  } else {
+    console.warn('example href not found');
+  }
 });

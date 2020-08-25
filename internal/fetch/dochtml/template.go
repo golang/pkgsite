@@ -251,7 +251,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 		<h3 tabindex="-1" id="pkg-examples" class="Documentation-examplesHeader">Examples <a href="#pkg-examples">¶</a></h3>{{"\n" -}}
 		<ul class="Documentation-examplesList">{{"\n" -}}
 			{{- range .Examples.List -}}
-				<li><a href="#{{.ID}}">{{or .ParentID "Package"}}{{with .Suffix}} ({{.}}){{end}}</a></li>{{"\n" -}}
+				<li><a href="#{{.ID}}" class="js-exampleHref">{{or .ParentID "Package"}}{{with .Suffix}} ({{.}}){{end}}</a></li>{{"\n" -}}
 			{{- end -}}
 		</ul>{{"\n" -}}
 	</section>

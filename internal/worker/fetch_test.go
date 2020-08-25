@@ -778,9 +778,9 @@ func TestFetchAndUpdateState(t *testing.T) {
 				"Example (CustomMarshalJSON)",
 				`<summary class="Documentation-exampleDetailsHeader">Example (CustomMarshalJSON) <a href="#example-package-CustomMarshalJSON">¶</a></summary>`,
 				"Package (CustomMarshalJSON)",
-				`<li><a href="#example-package-CustomMarshalJSON">Package (CustomMarshalJSON)</a></li>`,
+				`<li><a href="#example-package-CustomMarshalJSON" class="js-exampleHref">Package (CustomMarshalJSON)</a></li>`,
 				"Decoder.Decode (Stream)",
-				`<li><a href="#example-Decoder.Decode-Stream">Decoder.Decode (Stream)</a></li>`,
+				`<li><a href="#example-Decoder.Decode-Stream" class="js-exampleHref">Decoder.Decode (Stream)</a></li>`,
 			},
 			dontWantDoc: []string{
 				"Example (customMarshalJSON)",
