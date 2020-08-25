@@ -71,11 +71,6 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 					<a href="#pkg-examples" role="treeitem" aria-level="1" tabindex="-1">Examples</a>
 				</li>
 			{{end}}
-			{{if .Filenames}}
-				<li class="DocNav-files" role="none">
-					<a href="#pkg-files" role="treeitem" aria-level="1" tabindex="-1">Package Files</a>
-				</li>
-			{{end}}
 			{{if .Consts}}
 				<li class="DocNav-constants" role="none">
 					<a href="#pkg-constants" role="treeitem" aria-level="1" tabindex="-1">Constants</a>
@@ -142,6 +137,12 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 							</li>
 						{{end}}
 					</ul>
+				</li>
+			{{end}}
+
+			{{if .Filenames}}
+				<li class="DocNav-files" role="none">
+					<a href="#pkg-files" role="treeitem" aria-level="1" tabindex="-1">Package Files</a>
 				</li>
 			{{end}}
 		</ul>
@@ -257,15 +258,6 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 	</section>
 	{{- end -}}
 
-	<section class="Documentation-files">
-		<h3 tabindex="-1" id="pkg-files" class="Documentation-filesHeader">Package Files <a href="#pkg-files">¶</a></h3>
-		<ul class="Documentation-filesList">
-			{{- range .Filenames -}}
-				<li>{{file_link .}}</li>
-			{{- end -}}
-		</ul>
-	</section>
-
 	{{- if .Consts -}}
 	<section class="Documentation-constants">
 		<h3 tabindex="-1" id="pkg-constants" class="Documentation-constantsHeader">Constants <a href="#pkg-constants">¶</a></h3>{{"\n"}}
@@ -363,6 +355,15 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 			{{- end -}}
 		</div>
 		{{- end -}}
+	</section>
+
+	<section class="Documentation-files">
+		<h3 tabindex="-1" id="pkg-files" class="Documentation-filesHeader">Package Files <a href="#pkg-files">¶</a></h3>
+		<ul class="Documentation-filesList">
+			{{- range .Filenames -}}
+				<li>{{file_link .}}</li>
+			{{- end -}}
+		</ul>
 	</section>
 	{{- end -}}
 {{- end -}}
