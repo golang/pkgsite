@@ -117,11 +117,11 @@ type Module struct {
 // information.
 type VersionedDirectory struct {
 	Directory
-	ModuleInfo
 }
 
 // DirectoryMeta represents the metadata of a directory in a module version.
 type DirectoryMeta struct {
+	ModuleInfo
 	Path              string
 	V1Path            string
 	IsRedistributable bool

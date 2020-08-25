@@ -71,6 +71,7 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 			vdir: &internal.VersionedDirectory{
 				Directory: internal.Directory{
 					DirectoryMeta: internal.DirectoryMeta{
+						ModuleInfo:        *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
 						Path:              "github.com/u/m/p",
 						IsRedistributable: true,
 					},
@@ -79,7 +80,6 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 						Contents: "readme",
 					},
 				},
-				ModuleInfo: *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
 			},
 			versionedLinks: true,
 			want: &OverviewDetails{
@@ -97,6 +97,7 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 			vdir: &internal.VersionedDirectory{
 				Directory: internal.Directory{
 					DirectoryMeta: internal.DirectoryMeta{
+						ModuleInfo:        *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
 						Path:              "github.com/u/m/p",
 						IsRedistributable: true,
 					},
@@ -105,7 +106,6 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 						Contents: "readme",
 					},
 				},
-				ModuleInfo: *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
 			},
 			versionedLinks: false,
 			want: &OverviewDetails{
@@ -123,11 +123,11 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 			vdir: &internal.VersionedDirectory{
 				Directory: internal.Directory{
 					DirectoryMeta: internal.DirectoryMeta{
+						ModuleInfo:        *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
 						Path:              "github.com/u/m/p",
 						IsRedistributable: false,
 					},
 				},
-				ModuleInfo: *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
 			},
 			versionedLinks: true,
 			want: &OverviewDetails{

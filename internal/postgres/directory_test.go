@@ -456,9 +456,9 @@ func TestGetDirectory(t *testing.T) {
 
 	newVdir := func(path, modulePath, version string, readme *internal.Readme, pkg *internal.Package) *internal.VersionedDirectory {
 		return &internal.VersionedDirectory{
-			ModuleInfo: *sample.ModuleInfo(modulePath, version),
 			Directory: internal.Directory{
 				DirectoryMeta: internal.DirectoryMeta{
+					ModuleInfo:        *sample.ModuleInfo(modulePath, version),
 					Path:              path,
 					V1Path:            path,
 					IsRedistributable: true,

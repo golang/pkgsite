@@ -194,10 +194,8 @@ func (db *DB) GetDirectory(ctx context.Context, path, modulePath, version string
 	if readme.Filepath != "" {
 		dir.Readme = &readme
 	}
-	return &internal.VersionedDirectory{
-		ModuleInfo: mi,
-		Directory:  dir,
-	}, nil
+	dir.ModuleInfo = mi
+	return &internal.VersionedDirectory{Directory: dir}, nil
 }
 
 // LegacyGetDirectory returns the directory corresponding to the provided dirPath,
