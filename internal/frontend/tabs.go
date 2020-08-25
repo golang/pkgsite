@@ -175,14 +175,14 @@ func fetchDetailsForPackage(r *http.Request, tab string, ds internal.DataSource,
 func fetchDetailsForModule(r *http.Request, tab string, ds internal.DataSource, vdir *internal.VersionedDirectory) (interface{}, error) {
 	ctx := r.Context()
 	switch tab {
-	case "packages":
-		return fetchDirectoryDetails(ctx, ds, vdir, true)
-	case tabLicenses:
-		return fetchLicensesDetails(ctx, ds, vdir.Path, vdir.ModulePath, vdir.Version)
-	case tabVersions:
-		return fetchModuleVersionsDetails(ctx, ds, vdir.ModulePath)
 	case tabOverview:
 		return fetchOverviewDetails(ctx, vdir, urlIsVersioned(r.URL))
+	case "packages":
+		return fetchDirectoryDetails(ctx, ds, vdir, true)
+	case tabVersions:
+		return fetchModuleVersionsDetails(ctx, ds, vdir.ModulePath)
+	case tabLicenses:
+		return fetchLicensesDetails(ctx, ds, vdir.Path, vdir.ModulePath, vdir.Version)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
