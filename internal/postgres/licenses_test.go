@@ -206,8 +206,6 @@ func TestGetLicensesBypass(t *testing.T) {
 	defer cancel()
 	defer ResetTestDB(testDB, t)
 
-	const version = "v1.2.3"
-
 	bypassDB := NewBypassingLicenseCheck(testDB.db)
 
 	// Insert with non-redistributable license contents.
