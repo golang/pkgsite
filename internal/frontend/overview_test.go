@@ -59,7 +59,7 @@ func TestFetchOverviewDetails(t *testing.T) {
 	}
 }
 
-func TestConstructPackageOverviewDetailsNew(t *testing.T) {
+func TestPackageOverviewDetails(t *testing.T) {
 	for _, test := range []struct {
 		name           string
 		dir            *internal.Directory
@@ -136,7 +136,18 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := fetchPackageOverviewDetails(context.Background(), test.dir, test.versionedLinks)
+			defer postgres.ResetTestDB(testDB, t)
+			m := sample.Module(
+				test.dir.ModulePath,
+				test.dir.Version,
+				internal.Suffix(test.dir.Path, test.dir.ModulePath))
+			m.Directories[1].IsRedistributable = test.dir.IsRedistributable
+
+			ctx := context.Background()
+			if err := testDB.InsertModule(ctx, m); err != nil {
+				t.Fatal(err)
+			}
+			got, err := fetchPackageOverviewDetails(ctx, testDB, &test.dir.DirectoryMeta, test.versionedLinks)
 			if err != nil {
 				t.Fatal(err)
 			}

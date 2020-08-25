@@ -23,12 +23,17 @@ type DocumentationDetails struct {
 }
 
 // fetchDocumentationDetails returns a DocumentationDetails constructed from doc.
-func fetchDocumentationDetails(doc *internal.Documentation) *DocumentationDetails {
+func fetchDocumentationDetails(ctx context.Context, ds internal.DataSource, dmeta *internal.DirectoryMeta) (_ *DocumentationDetails, err error) {
+	dir, err := ds.GetDirectory(ctx, dmeta.Path, dmeta.ModulePath, dmeta.Version)
+	if err != nil {
+		return nil, err
+	}
+	doc := dir.Package.Documentation
 	return &DocumentationDetails{
 		GOOS:          doc.GOOS,
 		GOARCH:        doc.GOARCH,
 		Documentation: doc.HTML,
-	}
+	}, nil
 }
 
 // fileSource returns the original filepath in the module zip where the given

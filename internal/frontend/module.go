@@ -14,8 +14,8 @@ import (
 )
 
 func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *http.Request, ds internal.DataSource,
-	dir *internal.Directory, requestedVersion string) error {
-	modHeader := createModule(&dir.ModuleInfo, dir.Licenses, requestedVersion == internal.LatestVersion)
+	dmeta *internal.DirectoryMeta, requestedVersion string) error {
+	modHeader := createModule(&dmeta.ModuleInfo, dmeta.Licenses, requestedVersion == internal.LatestVersion)
 	tab := r.FormValue("tab")
 	settings, ok := moduleTabLookup[tab]
 	if !ok {
@@ -26,19 +26,19 @@ func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = fetchDetailsForModule(r, tab, ds, dir)
+		details, err = fetchDetailsForModule(r, tab, ds, dmeta)
 		if err != nil {
 			return fmt.Errorf("error fetching page for %q: %v", tab, err)
 		}
 	}
 	pageType := pageTypeModule
-	if dir.ModulePath == stdlib.ModulePath {
+	if dmeta.ModulePath == stdlib.ModulePath {
 		pageType = pageTypeStdLib
 	}
 
 	page := &DetailsPage{
-		basePage:       s.newBasePage(r, moduleHTMLTitle(dir.ModulePath)),
-		Name:           dir.ModulePath,
+		basePage:       s.newBasePage(r, moduleHTMLTitle(dmeta.ModulePath)),
+		Name:           dmeta.ModulePath,
 		Settings:       settings,
 		Header:         modHeader,
 		Breadcrumb:     breadcrumbPath(modHeader.ModulePath, modHeader.ModulePath, modHeader.LinkVersion),
@@ -47,8 +47,8 @@ func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *
 		Tabs:           moduleTabSettings,
 		PageType:       pageType,
 		CanonicalURLPath: constructModuleURL(
-			dir.ModulePath,
-			linkVersion(dir.Version, dir.ModulePath),
+			dmeta.ModulePath,
+			linkVersion(dmeta.Version, dmeta.ModulePath),
 		),
 	}
 	s.servePage(ctx, w, settings.TemplateName, page)

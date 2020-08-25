@@ -41,7 +41,11 @@ type OverviewDetails struct {
 
 // fetchOverviewDetails uses the given version to fetch an OverviewDetails.
 // versionedLinks says whether the constructed URLs should have versions.
-func fetchOverviewDetails(ctx context.Context, dir *internal.Directory, versionedLinks bool) (*OverviewDetails, error) {
+func fetchOverviewDetails(ctx context.Context, ds internal.DataSource, dmeta *internal.DirectoryMeta, versionedLinks bool) (*OverviewDetails, error) {
+	dir, err := ds.GetDirectory(ctx, dmeta.Path, dmeta.ModulePath, dmeta.Version)
+	if err != nil {
+		return nil, err
+	}
 	var readme *internal.Readme
 	if dir.Readme != nil {
 		readme = &internal.Readme{Filepath: dir.Readme.Filepath, Contents: dir.Readme.Contents}
@@ -76,12 +80,12 @@ func constructOverviewDetails(ctx context.Context, mi *internal.ModuleInfo, read
 }
 
 // fetchPackageOverviewDetails uses data for the given versioned directory to return an OverviewDetails.
-func fetchPackageOverviewDetails(ctx context.Context, dir *internal.Directory, versionedLinks bool) (*OverviewDetails, error) {
-	od, err := constructOverviewDetails(ctx, &dir.ModuleInfo, dir.Readme, dir.IsRedistributable, versionedLinks)
+func fetchPackageOverviewDetails(ctx context.Context, ds internal.DataSource, dmeta *internal.DirectoryMeta, versionedLinks bool) (*OverviewDetails, error) {
+	od, err := fetchOverviewDetails(ctx, ds, dmeta, versionedLinks)
 	if err != nil {
 		return nil, err
 	}
-	od.PackageSourceURL = dir.SourceInfo.DirectoryURL(packageSubdir(dir.Path, dir.ModulePath))
+	od.PackageSourceURL = dmeta.SourceInfo.DirectoryURL(packageSubdir(dmeta.Path, dmeta.ModulePath))
 	return od, nil
 }
 

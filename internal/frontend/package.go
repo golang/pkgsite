@@ -46,12 +46,12 @@ func stdlibPathForShortcut(ctx context.Context, ds internal.DataSource, shortcut
 
 // servePackagePage serves a package details page.
 func (s *Server) servePackagePage(ctx context.Context,
-	w http.ResponseWriter, r *http.Request, ds internal.DataSource, dir *internal.Directory, requestedVersion string) error {
+	w http.ResponseWriter, r *http.Request, ds internal.DataSource, dir *internal.DirectoryMeta, requestedVersion string) error {
 	pkgHeader, err := createPackage(&internal.PackageMeta{
 		Path:              dir.Path,
 		Licenses:          dir.Licenses,
 		IsRedistributable: dir.IsRedistributable,
-		Name:              dir.Package.Name,
+		Name:              dir.Name,
 	}, &dir.ModuleInfo, requestedVersion == internal.LatestVersion)
 	if err != nil {
 		return fmt.Errorf("creating package header for %s@%s: %v", dir.Path, dir.Version, err)
@@ -81,14 +81,14 @@ func (s *Server) servePackagePage(ctx context.Context,
 	}
 	var (
 		pageType = pageTypePackage
-		pageName = dir.Package.Name
+		pageName = dir.Name
 	)
 	if pageName == "main" {
-		pageName = effectiveName(dir.Path, dir.Package.Name)
+		pageName = effectiveName(dir.Path, dir.Name)
 		pageType = pageTypeCommand
 	}
 	page := &DetailsPage{
-		basePage: s.newBasePage(r, packageHTMLTitle(dir.Path, dir.Package.Name)),
+		basePage: s.newBasePage(r, packageHTMLTitle(dir.Path, dir.Name)),
 		Name:     pageName,
 		Settings: settings,
 		Header:   pkgHeader,
