@@ -126,6 +126,7 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 		opts := cmp.Options{
 			cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeFilePath"),
 			cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeContents"),
+			cmpopts.IgnoreFields(internal.DirectoryMeta{}, "PathID"),
 			cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 			cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
 		}

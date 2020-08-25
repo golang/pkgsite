@@ -118,7 +118,6 @@ func (db *DB) GetDirectory(ctx context.Context, path, modulePath, version string
 		docHTML                    string
 		pkg                        internal.Package
 		licenseTypes, licensePaths []string
-		pathID                     int
 	)
 	row := db.db.QueryRow(ctx, query, path, modulePath, version)
 	if err := row.Scan(
@@ -129,7 +128,7 @@ func (db *DB) GetDirectory(ctx context.Context, path, modulePath, version string
 		&mi.IsRedistributable,
 		&mi.HasGoMod,
 		jsonbScanner{&mi.SourceInfo},
-		&pathID,
+		&dir.PathID,
 		&dir.Path,
 		database.NullIsEmpty(&pkg.Name),
 		&dir.V1Path,
@@ -168,7 +167,7 @@ func (db *DB) GetDirectory(ctx context.Context, path, modulePath, version string
 		if err := db.db.RunQuery(ctx, `
 		SELECT to_path
 		FROM package_imports
-		WHERE path_id = $1`, collect, pathID); err != nil {
+		WHERE path_id = $1`, collect, dir.PathID); err != nil {
 			return nil, err
 		}
 	}

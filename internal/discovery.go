@@ -120,6 +120,7 @@ type DirectoryMeta struct {
 	V1Path            string
 	IsRedistributable bool
 	Licenses          []*licenses.Metadata // metadata of applicable licenses
+	PathID            int                  // only used by internal/postgres
 }
 
 // Directory represents a directory in a module version, and the contents of that directory.
