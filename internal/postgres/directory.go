@@ -81,7 +81,7 @@ func (db *DB) GetPackagesInDirectory(ctx context.Context, dirPath, modulePath, r
 // GetDirectory returns a directory from the database, along with all of the
 // data associated with that directory, including the package, imports, readme,
 // documentation, and licenses.
-func (db *DB) GetDirectory(ctx context.Context, path, modulePath, version string) (_ *internal.VersionedDirectory, err error) {
+func (db *DB) GetDirectory(ctx context.Context, path, modulePath, version string) (_ *internal.Directory, err error) {
 	query := `
 		SELECT
 			m.module_path,
@@ -113,7 +113,7 @@ func (db *DB) GetDirectory(ctx context.Context, path, modulePath, version string
 			AND m.version = $3;`
 	var (
 		mi                         internal.ModuleInfo
-		dir                        internal.VersionedDirectory
+		dir                        internal.Directory
 		doc                        internal.Documentation
 		docHTML                    string
 		pkg                        internal.Package

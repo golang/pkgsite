@@ -454,8 +454,8 @@ func TestGetDirectory(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	newVdir := func(path, modulePath, version string, readme *internal.Readme, pkg *internal.Package) *internal.VersionedDirectory {
-		return &internal.VersionedDirectory{
+	newVdir := func(path, modulePath, version string, readme *internal.Readme, pkg *internal.Package) *internal.Directory {
+		return &internal.Directory{
 			DirectoryMeta: internal.DirectoryMeta{
 				ModuleInfo:        *sample.ModuleInfo(modulePath, version),
 				Path:              path,
@@ -484,7 +484,7 @@ func TestGetDirectory(t *testing.T) {
 
 	for _, tc := range []struct {
 		name, dirPath, modulePath, version string
-		want                               *internal.VersionedDirectory
+		want                               *internal.Directory
 		wantNotFoundErr                    bool
 	}{
 		{
@@ -593,7 +593,7 @@ func TestGetDirectory(t *testing.T) {
 	}
 }
 
-func findDirectory(m *internal.Module, path string) *internal.VersionedDirectory {
+func findDirectory(m *internal.Module, path string) *internal.Directory {
 	for _, d := range m.Directories {
 		if d.Path == path {
 			return d

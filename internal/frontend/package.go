@@ -46,7 +46,7 @@ func stdlibPathForShortcut(ctx context.Context, ds internal.DataSource, shortcut
 
 // servePackagePage serves a package details page.
 func (s *Server) servePackagePage(ctx context.Context,
-	w http.ResponseWriter, r *http.Request, ds internal.DataSource, vdir *internal.VersionedDirectory, requestedVersion string) error {
+	w http.ResponseWriter, r *http.Request, ds internal.DataSource, vdir *internal.Directory, requestedVersion string) error {
 	pkgHeader, err := createPackage(&internal.PackageMeta{
 		DirectoryMeta: internal.DirectoryMeta{
 			Path:              vdir.Path,

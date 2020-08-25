@@ -91,12 +91,12 @@ func (ds *DataSource) LegacyGetDirectory(ctx context.Context, dirPath, modulePat
 }
 
 // GetDirectory returns information about a directory at a path.
-func (ds *DataSource) GetDirectory(ctx context.Context, dirPath, modulePath, version string) (_ *internal.VersionedDirectory, err error) {
+func (ds *DataSource) GetDirectory(ctx context.Context, dirPath, modulePath, version string) (_ *internal.Directory, err error) {
 	m, err := ds.getModule(ctx, modulePath, version)
 	if err != nil {
 		return nil, err
 	}
-	return &internal.VersionedDirectory{
+	return &internal.Directory{
 		DirectoryMeta: internal.DirectoryMeta{
 			ModuleInfo: m.ModuleInfo,
 			Path:       dirPath,

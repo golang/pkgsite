@@ -62,13 +62,13 @@ func TestFetchOverviewDetails(t *testing.T) {
 func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 	for _, test := range []struct {
 		name           string
-		vdir           *internal.VersionedDirectory
+		vdir           *internal.Directory
 		versionedLinks bool
 		want           *OverviewDetails
 	}{
 		{
 			name: "redistributable",
-			vdir: &internal.VersionedDirectory{
+			vdir: &internal.Directory{
 				DirectoryMeta: internal.DirectoryMeta{
 					ModuleInfo:        *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
 					Path:              "github.com/u/m/p",
@@ -92,7 +92,7 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 		},
 		{
 			name: "unversioned",
-			vdir: &internal.VersionedDirectory{
+			vdir: &internal.Directory{
 				DirectoryMeta: internal.DirectoryMeta{
 					ModuleInfo:        *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
 					Path:              "github.com/u/m/p",
@@ -116,7 +116,7 @@ func TestConstructPackageOverviewDetailsNew(t *testing.T) {
 		},
 		{
 			name: "non-redistributable",
-			vdir: &internal.VersionedDirectory{
+			vdir: &internal.Directory{
 				DirectoryMeta: internal.DirectoryMeta{
 					ModuleInfo:        *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
 					Path:              "github.com/u/m/p",

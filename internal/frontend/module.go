@@ -14,7 +14,7 @@ import (
 )
 
 func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *http.Request, ds internal.DataSource,
-	vdir *internal.VersionedDirectory, requestedVersion string) error {
+	vdir *internal.Directory, requestedVersion string) error {
 	modHeader := createModule(&vdir.ModuleInfo, vdir.Licenses, requestedVersion == internal.LatestVersion)
 	tab := r.FormValue("tab")
 	settings, ok := moduleTabLookup[tab]
