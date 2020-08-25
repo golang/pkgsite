@@ -54,8 +54,8 @@ func (s *Server) servePackagePage(ctx context.Context,
 			Licenses:          dir.Licenses,
 			IsRedistributable: dir.IsRedistributable,
 		},
-		Name:     dir.Package.Name,
-		Synopsis: dir.Package.Documentation.Synopsis}, &dir.ModuleInfo, requestedVersion == internal.LatestVersion)
+		Name: dir.Package.Name,
+	}, &dir.ModuleInfo, requestedVersion == internal.LatestVersion)
 	if err != nil {
 		return fmt.Errorf("creating package header for %s@%s: %v", dir.Path, dir.Version, err)
 	}

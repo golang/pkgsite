@@ -21,7 +21,6 @@ func samplePackage(mutators ...func(*Package)) *Package {
 		Path:              sample.PackagePath,
 		IsRedistributable: true,
 		Licenses:          transformLicenseMetadata(sample.LicenseMetadata),
-		Synopsis:          sample.Synopsis,
 		Module: Module{
 			DisplayVersion:    sample.VersionString,
 			LinkVersion:       sample.VersionString,

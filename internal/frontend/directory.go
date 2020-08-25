@@ -124,6 +124,7 @@ func createDirectory(dirPath string, mi *internal.ModuleInfo, pkgMetas []*intern
 			return nil, err
 		}
 		newPkg.PathAfterDirectory = internal.Suffix(pm.Path, dirPath)
+		newPkg.Synopsis = pm.Synopsis
 		if newPkg.PathAfterDirectory == "" {
 			newPkg.PathAfterDirectory = effectiveName(pm.Path, pm.Name) + " (root)"
 		}

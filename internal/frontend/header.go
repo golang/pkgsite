@@ -70,7 +70,6 @@ func createPackage(pkg *internal.PackageMeta, mi *internal.ModuleInfo, latestReq
 		Module:            *m,
 		URL:               constructPackageURL(pkg.Path, mi.ModulePath, urlVersion),
 		LatestURL:         constructPackageURL(pkg.Path, mi.ModulePath, middleware.LatestVersionPlaceholder),
-		Synopsis:          pkg.Synopsis,
 	}, nil
 }
 
