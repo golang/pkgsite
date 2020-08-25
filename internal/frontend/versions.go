@@ -101,57 +101,6 @@ func fetchModuleVersionsDetails(ctx context.Context, ds internal.DataSource, mod
 	return buildVersionDetails(modulePath, versions, linkify), nil
 }
 
-// legacyFetchModuleVersionsDetails builds a version hierarchy for module versions
-// with the same series path as the given version.
-func legacyFetchModuleVersionsDetails(ctx context.Context, ds internal.DataSource, mi *internal.ModuleInfo) (*VersionsDetails, error) {
-	versions, err := ds.LegacyGetTaggedVersionsForModule(ctx, mi.ModulePath)
-	if err != nil {
-		return nil, err
-	}
-	// If no tagged versions of the module are found, fetch pseudo-versions
-	// instead.
-	if len(versions) == 0 {
-		versions, err = ds.LegacyGetPsuedoVersionsForModule(ctx, mi.ModulePath)
-		if err != nil {
-			return nil, err
-		}
-	}
-	linkify := func(m *internal.ModuleInfo) string {
-		return constructModuleURL(m.ModulePath, linkVersion(m.Version, m.ModulePath))
-	}
-	return buildVersionDetails(mi.ModulePath, versions, linkify), nil
-}
-
-// legacyFetchPackageVersionsDetails builds a version hierarchy for all module
-// versions containing a package path with v1 import path matching the given v1 path.
-func legacyFetchPackageVersionsDetails(ctx context.Context, ds internal.DataSource, pkgPath, v1Path, modulePath string) (*VersionsDetails, error) {
-	versions, err := ds.LegacyGetTaggedVersionsForPackageSeries(ctx, pkgPath)
-	if err != nil {
-		return nil, err
-	}
-	// If no tagged versions for the package series are found, fetch the
-	// pseudo-versions instead.
-	if len(versions) == 0 {
-		versions, err = ds.LegacyGetPsuedoVersionsForPackageSeries(ctx, pkgPath)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	linkify := func(mi *internal.ModuleInfo) string {
-		// Here we have only version information, but need to construct the full
-		// import path of the package corresponding to this version.
-		var versionPath string
-		if mi.ModulePath == stdlib.ModulePath {
-			versionPath = pkgPath
-		} else {
-			versionPath = pathInVersion(v1Path, mi)
-		}
-		return constructPackageURL(versionPath, mi.ModulePath, linkVersion(mi.Version, mi.ModulePath))
-	}
-	return buildVersionDetails(modulePath, versions, linkify), nil
-}
-
 // pathInVersion constructs the full import path of the package corresponding
 // to mi, given its v1 path. To do this, we first compute the suffix of the
 // package path in the given module series, and then append it to the real

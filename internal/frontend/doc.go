@@ -22,16 +22,6 @@ type DocumentationDetails struct {
 	Documentation safehtml.HTML
 }
 
-// legacyFetchDocumentationDetails returns a DocumentationDetails constructed
-// from pkg.
-func legacyFetchDocumentationDetails(pkg *internal.LegacyVersionedPackage) *DocumentationDetails {
-	return &DocumentationDetails{
-		GOOS:          pkg.GOOS,
-		GOARCH:        pkg.GOARCH,
-		Documentation: pkg.DocumentationHTML,
-	}
-}
-
 // fetchDocumentationDetails returns a DocumentationDetails constructed from doc.
 func fetchDocumentationDetails(doc *internal.Documentation) *DocumentationDetails {
 	return &DocumentationDetails{
