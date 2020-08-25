@@ -14,12 +14,8 @@ import (
 )
 
 func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *http.Request, ds internal.DataSource,
-	mi *internal.ModuleInfo, readme *internal.Readme, requestedVersion string) error {
-	licenses, err := ds.GetLicenses(ctx, mi.ModulePath, mi.ModulePath, mi.Version)
-	if err != nil {
-		return err
-	}
-	modHeader := createModule(mi, licensesToMetadatas(licenses), requestedVersion == internal.LatestVersion)
+	vdir *internal.VersionedDirectory, requestedVersion string) error {
+	modHeader := createModule(&vdir.ModuleInfo, vdir.Licenses, requestedVersion == internal.LatestVersion)
 	tab := r.FormValue("tab")
 	settings, ok := moduleTabLookup[tab]
 	if !ok {
@@ -30,19 +26,19 @@ func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = fetchDetailsForModule(r, tab, ds, mi, licenses, readme)
+		details, err = fetchDetailsForModule(r, tab, ds, vdir)
 		if err != nil {
 			return fmt.Errorf("error fetching page for %q: %v", tab, err)
 		}
 	}
 	pageType := pageTypeModule
-	if mi.ModulePath == stdlib.ModulePath {
+	if vdir.ModulePath == stdlib.ModulePath {
 		pageType = pageTypeStdLib
 	}
 
 	page := &DetailsPage{
-		basePage:       s.newBasePage(r, moduleHTMLTitle(mi.ModulePath)),
-		Name:           mi.ModulePath,
+		basePage:       s.newBasePage(r, moduleHTMLTitle(vdir.ModulePath)),
+		Name:           vdir.ModulePath,
 		Settings:       settings,
 		Header:         modHeader,
 		Breadcrumb:     breadcrumbPath(modHeader.ModulePath, modHeader.ModulePath, modHeader.LinkVersion),
@@ -51,8 +47,8 @@ func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *
 		Tabs:           moduleTabSettings,
 		PageType:       pageType,
 		CanonicalURLPath: constructModuleURL(
-			mi.ModulePath,
-			linkVersion(mi.Version, mi.ModulePath),
+			vdir.ModulePath,
+			linkVersion(vdir.Version, vdir.ModulePath),
 		),
 	}
 	s.servePage(ctx, w, settings.TemplateName, page)

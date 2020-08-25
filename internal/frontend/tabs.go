@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/licenses"
 )
 
 // TabSettings defines tab-specific metadata.
@@ -173,29 +172,21 @@ func fetchDetailsForPackage(r *http.Request, tab string, ds internal.DataSource,
 
 // fetchDetailsForModule returns tab details by delegating to the correct detail
 // handler.
-func fetchDetailsForModule(r *http.Request, tab string, ds internal.DataSource, mi *internal.ModuleInfo, licenses []*licenses.License, readme *internal.Readme) (interface{}, error) {
+func fetchDetailsForModule(r *http.Request, tab string, ds internal.DataSource, vdir *internal.VersionedDirectory) (interface{}, error) {
 	ctx := r.Context()
 	switch tab {
 	case "packages":
-		vdir := &internal.VersionedDirectory{
-			ModuleInfo: *mi,
-			Directory: internal.Directory{
-				DirectoryMeta: internal.DirectoryMeta{
-					Path:              mi.ModulePath,
-					V1Path:            mi.SeriesPath(),
-					IsRedistributable: mi.IsRedistributable,
-					Licenses:          licensesToMetadatas(licenses),
-				},
-				Readme: readme,
-			},
-		}
 		return fetchDirectoryDetails(ctx, ds, vdir, true)
 	case tabLicenses:
-		return &LicensesDetails{Licenses: transformLicenses(mi.ModulePath, mi.Version, licenses)}, nil
+		return fetchLicensesDetails(ctx, ds, vdir.Path, vdir.ModulePath, vdir.Version)
 	case tabVersions:
-		return fetchModuleVersionsDetails(ctx, ds, mi.ModulePath)
+		return fetchModuleVersionsDetails(ctx, ds, vdir.ModulePath)
 	case tabOverview:
-		return constructOverviewDetails(ctx, mi, readme, mi.IsRedistributable, urlIsVersioned(r.URL))
+		var readme *internal.Readme
+		if vdir.Readme != nil {
+			readme = &internal.Readme{Filepath: vdir.Readme.Filepath, Contents: vdir.Readme.Contents}
+		}
+		return constructOverviewDetails(ctx, &vdir.ModuleInfo, readme, vdir.IsRedistributable, urlIsVersioned(r.URL))
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }

@@ -175,11 +175,7 @@ func (s *Server) serveDetailsPage(w http.ResponseWriter, r *http.Request, ds int
 	}
 	switch {
 	case info.isModule:
-		var readme *internal.Readme
-		if vdir.Readme != nil {
-			readme = &internal.Readme{Filepath: vdir.Readme.Filepath, Contents: vdir.Readme.Contents}
-		}
-		return s.serveModulePage(ctx, w, r, ds, &vdir.ModuleInfo, readme, info.requestedVersion)
+		return s.serveModulePage(ctx, w, r, ds, vdir, info.requestedVersion)
 	case vdir.Package != nil:
 		return s.servePackagePage(ctx, w, r, ds, vdir, info.requestedVersion)
 	default:
