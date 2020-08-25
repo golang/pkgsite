@@ -947,8 +947,12 @@ func TestGetPackagesForSearchDocumentUpsert(t *testing.T) {
 
 	moduleA := sample.Module("mod.com", "v1.2.3",
 		"A", "A/notinternal", "A/internal", "A/internal/B")
-	if err := testDB.InsertModule(ctx, moduleA); err != nil {
-		t.Fatal(err)
+	moduleN := nonRedistributableModule()
+	bypassDB := NewBypassingLicenseCheck(testDB.db)
+	for _, m := range []*internal.Module{moduleA, moduleN} {
+		if err := bypassDB.InsertModule(ctx, m); err != nil {
+			t.Fatal(err)
+		}
 	}
 
 	// We are asking for all packages in search_documents updated before now, which is
@@ -959,6 +963,13 @@ func TestGetPackagesForSearchDocumentUpsert(t *testing.T) {
 	}
 	sort.Slice(got, func(i, j int) bool { return got[i].PackagePath < got[j].PackagePath })
 	want := []upsertSearchDocumentArgs{
+		{
+			PackagePath:    moduleN.ModulePath,
+			ModulePath:     moduleN.ModulePath,
+			ReadmeFilePath: "",
+			ReadmeContents: "",
+			Synopsis:       "",
+		},
 		{
 			PackagePath:    "mod.com/A",
 			ModulePath:     "mod.com",
@@ -976,6 +987,22 @@ func TestGetPackagesForSearchDocumentUpsert(t *testing.T) {
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("testDB.GetPackagesForSearchDocumentUpsert mismatch(-want +got):\n%s", diff)
+	}
+
+	// Reading with license bypass should return the non-redistributable fields.
+	got, err = bypassDB.GetPackagesForSearchDocumentUpsert(ctx, time.Now(), 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) == 0 {
+		t.Fatal("len(got)==0")
+	}
+	sort.Slice(got, func(i, j int) bool { return got[i].PackagePath < got[j].PackagePath })
+	gm := got[0]
+	for _, got := range []string{gm.ReadmeFilePath, gm.ReadmeContents, gm.Synopsis} {
+		if got == "" {
+			t.Errorf("got empty field, want non-empty")
+		}
 	}
 
 	// pkgPaths should be an empty slice, all packages were inserted more recently than yesterday.

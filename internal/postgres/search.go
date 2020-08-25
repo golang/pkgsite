@@ -556,8 +556,9 @@ var upsertSearchStatement = fmt.Sprintf(`
 			END)
 	;`, hllRegisterCount, orderByLatest)
 
-// UpsertSearchDocuments adds search information for mod ot the search_documents table.
-func UpsertSearchDocuments(ctx context.Context, db *database.DB, mod *internal.Module) (err error) {
+// upsertSearchDocuments adds search information for mod ot the search_documents table.
+// It assumes that all non-redistributable data has been removed from mod.
+func upsertSearchDocuments(ctx context.Context, db *database.DB, mod *internal.Module) (err error) {
 	defer derrors.Wrap(&err, "UpsertSearchDocuments(ctx, %q)", mod.ModulePath)
 	ctx, span := trace.StartSpan(ctx, "UpsertSearchDocuments")
 	defer span.End()
@@ -565,8 +566,6 @@ func UpsertSearchDocuments(ctx context.Context, db *database.DB, mod *internal.M
 		if isInternalPackage(pkg.Path) {
 			continue
 		}
-		// TODO(golang/go#40971): don't store synopsis unless the package is redistributable or
-		// we are bypassing license checks.
 		err := UpsertSearchDocument(ctx, db, upsertSearchDocumentArgs{
 			PackagePath:    pkg.Path,
 			ModulePath:     mod.ModulePath,
@@ -614,7 +613,13 @@ func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, before tim
 	defer derrors.Wrap(&err, "GetPackagesForSearchDocumentUpsert(ctx, %s, %d)", before, limit)
 
 	query := `
-		SELECT sd.package_path, sd.module_path, sd.synopsis, m.readme_file_path, m.readme_contents
+		SELECT
+			sd.package_path,
+			sd.module_path,
+			sd.synopsis,
+			sd.redistributable,
+			m.readme_file_path,
+			m.readme_contents
 		FROM search_documents sd
 		INNER JOIN modules m
 		USING (module_path, version)
@@ -622,9 +627,17 @@ func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, before tim
 		LIMIT $2`
 
 	collect := func(rows *sql.Rows) error {
-		var a upsertSearchDocumentArgs
-		if err := rows.Scan(&a.PackagePath, &a.ModulePath, &a.Synopsis, &a.ReadmeFilePath, &a.ReadmeContents); err != nil {
+		var (
+			a      upsertSearchDocumentArgs
+			redist bool
+		)
+		if err := rows.Scan(&a.PackagePath, &a.ModulePath, &a.Synopsis, &redist, &a.ReadmeFilePath, &a.ReadmeContents); err != nil {
 			return err
+		}
+		if !redist && !db.bypassLicenseCheck {
+			a.Synopsis = ""
+			a.ReadmeFilePath = ""
+			a.ReadmeContents = ""
 		}
 		argsList = append(argsList, a)
 		return nil

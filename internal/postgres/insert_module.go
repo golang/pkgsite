@@ -157,7 +157,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
 			return err
 		}
 		// Insert the module's packages into search_documents.
-		return UpsertSearchDocuments(ctx, tx, m)
+		return upsertSearchDocuments(ctx, tx, m)
 	})
 }
 
