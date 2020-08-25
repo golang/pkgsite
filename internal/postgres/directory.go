@@ -7,6 +7,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -85,6 +86,45 @@ func (db *DB) GetPackagesInDirectory(ctx context.Context, dirPath, modulePath, r
 // data associated with that directory, including the package, imports, readme,
 // documentation, and licenses.
 func (db *DB) GetDirectory(ctx context.Context, path, modulePath, version string) (_ *internal.Directory, err error) {
+	defer derrors.Wrap(&err, "GetDirectory(ctx, %q, %q, %q)", path, modulePath, version)
+	dmeta, err := db.getDirectoryMeta(ctx, path, modulePath, version)
+	if err != nil {
+		return nil, err
+	}
+	dir := &internal.Directory{DirectoryMeta: *dmeta}
+
+	if dir.IsRedistributable || db.bypassLicenseCheck {
+		readme, err := db.getReadme(ctx, dir.ModulePath, dir.Version)
+		if err != nil && !errors.Is(err, derrors.NotFound) {
+			return nil, err
+		}
+		dir.Readme = readme
+	}
+	if dir.Name != "" {
+		pkg := &internal.Package{
+			Path: dir.Path,
+			Name: dir.Name,
+		}
+		if dir.IsRedistributable || db.bypassLicenseCheck {
+			doc, err := db.getDocumentation(ctx, dir.PathID)
+			if err != nil && !(db.bypassLicenseCheck && err == sql.ErrNoRows) {
+				return nil, err
+			}
+			pkg.Documentation = doc
+		}
+		imports, err := db.getImports(ctx, dir.PathID)
+		if err != nil {
+			return nil, err
+		}
+		pkg.Imports = imports
+		dir.Package = pkg
+	}
+	return dir, nil
+}
+
+// getDirectoryMeta information about a directory from the database.
+func (db *DB) getDirectoryMeta(ctx context.Context, path, modulePath, version string) (_ *internal.DirectoryMeta, err error) {
+	defer derrors.Wrap(&err, "getDirectoryMeta(ctx, %q, %q, %q)", path, modulePath, version)
 	query := `
 		SELECT
 			m.module_path,
@@ -100,26 +140,17 @@ func (db *DB) GetDirectory(ctx context.Context, path, modulePath, version string
 			p.v1_path,
 			p.redistributable,
 			p.license_types,
-			p.license_paths,
-			d.goos,
-			d.goarch,
-			d.synopsis,
-			d.html
+			p.license_paths
 		FROM modules m
 		INNER JOIN paths p
 		ON p.module_id = m.id
-		LEFT JOIN documentation d
-		ON d.path_id = p.id
 		WHERE
 			p.path = $1
 			AND m.module_path = $2
 			AND m.version = $3;`
 	var (
 		mi                         internal.ModuleInfo
-		dir                        internal.Directory
-		doc                        internal.Documentation
-		docHTML                    string
-		pkg                        internal.Package
+		dir                        internal.DirectoryMeta
 		licenseTypes, licensePaths []string
 	)
 	row := db.db.QueryRow(ctx, query, path, modulePath, version)
@@ -133,54 +164,66 @@ func (db *DB) GetDirectory(ctx context.Context, path, modulePath, version string
 		jsonbScanner{&mi.SourceInfo},
 		&dir.PathID,
 		&dir.Path,
-		database.NullIsEmpty(&pkg.Name),
+		database.NullIsEmpty(&dir.Name),
 		&dir.V1Path,
 		&dir.IsRedistributable,
 		pq.Array(&licenseTypes),
 		pq.Array(&licensePaths),
-		database.NullIsEmpty(&doc.GOOS),
-		database.NullIsEmpty(&doc.GOARCH),
-		database.NullIsEmpty(&doc.Synopsis),
-		database.NullIsEmpty(&docHTML),
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("directory %s@%s: %w", path, version, derrors.NotFound)
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
-
 	lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
 	if err != nil {
 		return nil, err
 	}
+	dir.ModuleInfo = mi
 	dir.Licenses = lics
-	if pkg.Name != "" {
-		dir.Name = pkg.Name
-		dir.Package = &pkg
-		pkg.Path = dir.Path
-		doc.HTML = convertDocumentation(docHTML)
-		pkg.Documentation = &doc
-		collect := func(rows *sql.Rows) error {
-			var path string
-			if err := rows.Scan(&path); err != nil {
-				return fmt.Errorf("row.Scan(): %v", err)
-			}
-			pkg.Imports = append(pkg.Imports, path)
-			return nil
-		}
-		if err := db.db.RunQuery(ctx, `
-		SELECT to_path
-		FROM package_imports
-		WHERE path_id = $1`, collect, dir.PathID); err != nil {
-			return nil, err
-		}
-	}
+	return &dir, err
+}
 
-	// TODO(golang/go#38513): remove and query the readmes table directly once
-	// we start displaying READMEs for directories instead of the top-level
-	// module.
+// getDocumentation returns the documentation corresponding to pathID.
+func (db *DB) getDocumentation(ctx context.Context, pathID int) (_ *internal.Documentation, err error) {
+	defer derrors.Wrap(&err, "getDocumentation(ctx, %d)", pathID)
+	var (
+		doc     internal.Documentation
+		docHTML string
+	)
+	err = db.db.QueryRow(ctx, `
+		SELECT
+			d.goos,
+			d.goarch,
+			d.synopsis,
+			d.html
+		FROM documentation d
+		WHERE
+		    d.path_id=$1;`, pathID).Scan(
+		database.NullIsEmpty(&doc.GOOS),
+		database.NullIsEmpty(&doc.GOARCH),
+		database.NullIsEmpty(&doc.Synopsis),
+		database.NullIsEmpty(&docHTML),
+	)
+	switch err {
+	case sql.ErrNoRows:
+		return nil, derrors.NotFound
+	case nil:
+		doc.HTML = convertDocumentation(docHTML)
+		return &doc, nil
+	default:
+		return nil, err
+	}
+}
+
+// getReadme returns the README corresponding to the modulePath and version.
+func (db *DB) getReadme(ctx context.Context, modulePath, version string) (_ *internal.Readme, err error) {
+	defer derrors.Wrap(&err, "getReadme(ctx, %q, %q)", modulePath, version)
+	// TODO(golang/go#38513): update to query on PathID and query the readmes
+	// table directly once we start displaying READMEs for directories instead
+	// of the top-level module.
 	var readme internal.Readme
-	row = db.db.QueryRow(ctx, `
+	err = db.db.QueryRow(ctx, `
 		SELECT file_path, contents
 		FROM modules m
 		INNER JOIN paths p
@@ -188,20 +231,38 @@ func (db *DB) GetDirectory(ctx context.Context, path, modulePath, version string
 		INNER JOIN readmes r
 		ON p.id = r.path_id
 		WHERE
-		    module_path=$1
+		    m.module_path=$1
 			AND m.version=$2
-			AND m.module_path=p.path`, modulePath, version)
-	if err := row.Scan(&readme.Filepath, &readme.Contents); err != nil && err != sql.ErrNoRows {
+			AND m.module_path=p.path`, modulePath, version).Scan(&readme.Filepath, &readme.Contents)
+	switch err {
+	case sql.ErrNoRows:
+		return nil, derrors.NotFound
+	case nil:
+		return &readme, nil
+	default:
 		return nil, err
 	}
-	if readme.Filepath != "" {
-		dir.Readme = &readme
+}
+
+// getImports returns the imports corresponding to pathID.
+func (db *DB) getImports(ctx context.Context, pathID int) (_ []string, err error) {
+	defer derrors.Wrap(&err, "getImports(ctx, %d)", pathID)
+	var imports []string
+	collect := func(rows *sql.Rows) error {
+		var path string
+		if err := rows.Scan(&path); err != nil {
+			return fmt.Errorf("row.Scan(): %v", err)
+		}
+		imports = append(imports, path)
+		return nil
 	}
-	dir.ModuleInfo = mi
-	if !db.bypassLicenseCheck {
-		dir.RemoveNonRedistributableData()
+	if err := db.db.RunQuery(ctx, `
+		SELECT to_path
+		FROM package_imports
+		WHERE path_id = $1`, collect, pathID); err != nil {
+		return nil, err
 	}
-	return &dir, nil
+	return imports, nil
 }
 
 // LegacyGetDirectory returns the directory corresponding to the provided dirPath,

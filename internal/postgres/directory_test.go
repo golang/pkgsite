@@ -655,10 +655,10 @@ func TestGetDirectoryBypass(t *testing.T) {
 		if got := (d.Readme == nil); got != test.wantEmpty {
 			t.Errorf("readme empty: got %t, want %t", got, test.wantEmpty)
 		}
-		if got := (d.Package.Documentation.Synopsis == ""); got != test.wantEmpty {
+		if got := (d.Package.Documentation == nil); got != test.wantEmpty {
 			t.Errorf("synopsis empty: got %t, want %t", got, test.wantEmpty)
 		}
-		if got := (d.Package.Documentation.HTML == safehtml.HTML{}); got != test.wantEmpty {
+		if got := (d.Package.Documentation == nil); got != test.wantEmpty {
 			t.Errorf("doc empty: got %t, want %t", got, test.wantEmpty)
 		}
 
