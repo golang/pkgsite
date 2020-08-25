@@ -133,23 +133,22 @@ type Directory struct {
 
 // PackageMeta represents the metadata of a package in a module version.
 type PackageMeta struct {
-	DirectoryMeta
-	Name     string
-	Synopsis string
+	Path              string
+	Name              string
+	Synopsis          string
+	IsRedistributable bool
+	Licenses          []*licenses.Metadata // metadata of applicable licenses
 }
 
 // PackageMetaFromLegacyPackage returns a PackageMeta based on data from a
 // LegacyPackage.
 func PackageMetaFromLegacyPackage(pkg *LegacyPackage) *PackageMeta {
 	return &PackageMeta{
-		DirectoryMeta: DirectoryMeta{
-			Path:              pkg.Path,
-			V1Path:            pkg.V1Path,
-			Licenses:          pkg.Licenses,
-			IsRedistributable: pkg.IsRedistributable,
-		},
-		Name:     pkg.Name,
-		Synopsis: pkg.Synopsis,
+		Path:              pkg.Path,
+		IsRedistributable: pkg.IsRedistributable,
+		Name:              pkg.Name,
+		Synopsis:          pkg.Synopsis,
+		Licenses:          pkg.Licenses,
 	}
 }
 

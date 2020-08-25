@@ -48,13 +48,10 @@ func stdlibPathForShortcut(ctx context.Context, ds internal.DataSource, shortcut
 func (s *Server) servePackagePage(ctx context.Context,
 	w http.ResponseWriter, r *http.Request, ds internal.DataSource, dir *internal.Directory, requestedVersion string) error {
 	pkgHeader, err := createPackage(&internal.PackageMeta{
-		DirectoryMeta: internal.DirectoryMeta{
-			Path:              dir.Path,
-			V1Path:            dir.V1Path,
-			Licenses:          dir.Licenses,
-			IsRedistributable: dir.IsRedistributable,
-		},
-		Name: dir.Package.Name,
+		Path:              dir.Path,
+		Licenses:          dir.Licenses,
+		IsRedistributable: dir.IsRedistributable,
+		Name:              dir.Package.Name,
 	}, &dir.ModuleInfo, requestedVersion == internal.LatestVersion)
 	if err != nil {
 		return fmt.Errorf("creating package header for %s@%s: %v", dir.Path, dir.Version, err)

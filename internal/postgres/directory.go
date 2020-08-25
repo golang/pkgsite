@@ -27,7 +27,6 @@ func (db *DB) GetPackagesInDirectory(ctx context.Context, dirPath, modulePath, r
 		SELECT
 			p.path,
 			p.name,
-			p.v1_path,
 			p.redistributable,
 			d.synopsis,
 			p.license_types,
@@ -51,7 +50,6 @@ func (db *DB) GetPackagesInDirectory(ctx context.Context, dirPath, modulePath, r
 		if err := rows.Scan(
 			&pkg.Path,
 			&pkg.Name,
-			&pkg.V1Path,
 			&pkg.IsRedistributable,
 			&pkg.Synopsis,
 			pq.Array(&licenseTypes),

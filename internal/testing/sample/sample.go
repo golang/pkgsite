@@ -120,14 +120,11 @@ func PackageMeta(modulePath, suffix string) *internal.PackageMeta {
 		pkgPath = path.Join(modulePath, suffix)
 	}
 	return &internal.PackageMeta{
-		DirectoryMeta: internal.DirectoryMeta{
-			Path:              pkgPath,
-			V1Path:            internal.V1Path(modulePath, suffix),
-			IsRedistributable: true,
-			Licenses:          LicenseMetadata,
-		},
-		Name:     path.Base(pkgPath),
-		Synopsis: Synopsis,
+		Path:              pkgPath,
+		IsRedistributable: true,
+		Licenses:          LicenseMetadata,
+		Name:              path.Base(pkgPath),
+		Synopsis:          Synopsis,
 	}
 }
 
