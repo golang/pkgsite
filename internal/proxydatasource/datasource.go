@@ -79,18 +79,9 @@ type versionEntry struct {
 }
 
 // GetDirectory returns information about a directory at a path.
-func (ds *DataSource) GetDirectory(ctx context.Context, dirPath, modulePath, version string) (_ *internal.Directory, err error) {
-	m, err := ds.getModule(ctx, modulePath, version)
-	if err != nil {
-		return nil, err
-	}
-	return &internal.Directory{
-		DirectoryMeta: internal.DirectoryMeta{
-			ModuleInfo: m.ModuleInfo,
-			Path:       dirPath,
-			V1Path:     internal.V1Path(modulePath, strings.TrimPrefix(dirPath, modulePath+"/")),
-		},
-	}, nil
+func (ds *DataSource) GetDirectory(ctx context.Context, fullPath, modulePath, version string) (_ *internal.Directory, err error) {
+	defer derrors.Wrap(&err, "GetDirectory(%q, %q, %q)", fullPath, modulePath, version)
+	return ds.directoryFromVersion(ctx, fullPath, modulePath, version)
 }
 
 // GetImports returns package imports as extracted from the module zip.
@@ -358,4 +349,29 @@ func (ds *DataSource) GetPathInfo(ctx context.Context, path, inModulePath, inVer
 		}
 	}
 	return m.ModulePath, m.Version, isPackage, nil
+}
+
+// GetDirectoryMeta returns information about a directory at a path.
+func (ds *DataSource) GetDirectoryMeta(ctx context.Context, fullPath, modulePath, version string) (_ *internal.DirectoryMeta, err error) {
+	defer derrors.Wrap(&err, "GetDirectoryMeta(%q, %q, %q)", fullPath, modulePath, version)
+	d, err := ds.directoryFromVersion(ctx, fullPath, modulePath, version)
+	if err != nil {
+		return nil, err
+	}
+	return &d.DirectoryMeta, nil
+}
+
+// directoryFromVersion returns information about a directory at a path.
+func (ds *DataSource) directoryFromVersion(ctx context.Context, fullPath, modulePath, version string) (_ *internal.Directory, err error) {
+	var m *internal.Module
+	m, err = ds.getModule(ctx, modulePath, version)
+	if err != nil {
+		return nil, err
+	}
+	for _, d := range m.Directories {
+		if d.Path == fullPath {
+			return d, nil
+		}
+	}
+	return nil, fmt.Errorf("%q missing from module %s: %w", fullPath, m.ModulePath, derrors.NotFound)
 }

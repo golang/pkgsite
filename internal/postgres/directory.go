@@ -87,7 +87,7 @@ func (db *DB) GetPackagesInDirectory(ctx context.Context, dirPath, modulePath, r
 // documentation, and licenses.
 func (db *DB) GetDirectory(ctx context.Context, path, modulePath, version string) (_ *internal.Directory, err error) {
 	defer derrors.Wrap(&err, "GetDirectory(ctx, %q, %q, %q)", path, modulePath, version)
-	dmeta, err := db.getDirectoryMeta(ctx, path, modulePath, version)
+	dmeta, err := db.GetDirectoryMeta(ctx, path, modulePath, version)
 	if err != nil {
 		return nil, err
 	}
@@ -122,9 +122,9 @@ func (db *DB) GetDirectory(ctx context.Context, path, modulePath, version string
 	return dir, nil
 }
 
-// getDirectoryMeta information about a directory from the database.
-func (db *DB) getDirectoryMeta(ctx context.Context, path, modulePath, version string) (_ *internal.DirectoryMeta, err error) {
-	defer derrors.Wrap(&err, "getDirectoryMeta(ctx, %q, %q, %q)", path, modulePath, version)
+// GetDirectoryMeta information about a directory from the database.
+func (db *DB) GetDirectoryMeta(ctx context.Context, path, modulePath, version string) (_ *internal.DirectoryMeta, err error) {
+	defer derrors.Wrap(&err, "GetDirectoryMeta(ctx, %q, %q, %q)", path, modulePath, version)
 	query := `
 		SELECT
 			m.module_path,
