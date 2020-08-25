@@ -177,22 +177,19 @@ func fetchDetailsForModule(r *http.Request, tab string, ds internal.DataSource, 
 	ctx := r.Context()
 	switch tab {
 	case "packages":
-		if isActiveUseDirectories(ctx) {
-			vdir := &internal.VersionedDirectory{
-				ModuleInfo: *mi,
-				Directory: internal.Directory{
-					DirectoryMeta: internal.DirectoryMeta{
-						Path:              mi.ModulePath,
-						V1Path:            mi.SeriesPath(),
-						IsRedistributable: mi.IsRedistributable,
-						Licenses:          licensesToMetadatas(licenses),
-					},
-					Readme: readme,
+		vdir := &internal.VersionedDirectory{
+			ModuleInfo: *mi,
+			Directory: internal.Directory{
+				DirectoryMeta: internal.DirectoryMeta{
+					Path:              mi.ModulePath,
+					V1Path:            mi.SeriesPath(),
+					IsRedistributable: mi.IsRedistributable,
+					Licenses:          licensesToMetadatas(licenses),
 				},
-			}
-			return fetchDirectoryDetails(ctx, ds, vdir, true)
+				Readme: readme,
+			},
 		}
-		return legacyFetchDirectoryDetails(ctx, ds, mi.ModulePath, mi, licensesToMetadatas(licenses), true)
+		return fetchDirectoryDetails(ctx, ds, vdir, true)
 	case tabLicenses:
 		return &LicensesDetails{Licenses: transformLicenses(mi.ModulePath, mi.Version, licenses)}, nil
 	case tabVersions:

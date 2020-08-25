@@ -13,6 +13,23 @@ import (
 	"golang.org/x/pkgsite/internal/postgres"
 )
 
+// legacyFetchDetailsForModule returns tab details by delegating to the correct detail
+// handler.
+func legacyFetchDetailsForModule(r *http.Request, tab string, ds internal.DataSource, mi *internal.ModuleInfo, licenses []*licenses.License, readme *internal.Readme) (interface{}, error) {
+	ctx := r.Context()
+	switch tab {
+	case "packages":
+		return legacyFetchDirectoryDetails(ctx, ds, mi.ModulePath, mi, licensesToMetadatas(licenses), true)
+	case tabLicenses:
+		return &LicensesDetails{Licenses: transformLicenses(mi.ModulePath, mi.Version, licenses)}, nil
+	case tabVersions:
+		return fetchModuleVersionsDetails(ctx, ds, mi.ModulePath)
+	case tabOverview:
+		return constructOverviewDetails(ctx, mi, readme, mi.IsRedistributable, urlIsVersioned(r.URL))
+	}
+	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
+}
+
 // legacyFetchDetailsForDirectory returns tab details by delegating to the correct
 // detail handler.
 func legacyFetchDetailsForDirectory(r *http.Request, tab string, dir *internal.LegacyDirectory, licenses []*licenses.License) (interface{}, error) {

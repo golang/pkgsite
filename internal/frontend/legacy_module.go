@@ -67,7 +67,7 @@ func (s *Server) legacyServeModulePageWithModule(ctx context.Context, w http.Res
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = fetchDetailsForModule(r, tab, ds, mi, licenses, readme)
+		details, err = legacyFetchDetailsForModule(r, tab, ds, mi, licenses, readme)
 		if err != nil {
 			return fmt.Errorf("error fetching page for %q: %v", tab, err)
 		}
