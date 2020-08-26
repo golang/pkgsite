@@ -99,7 +99,7 @@ func (db *DB) LegacyGetDirectory(ctx context.Context, dirPath, modulePath, versi
 			&mi.Version,
 			&mi.ModulePath,
 			database.NullIsEmpty(&mi.LegacyReadmeFilePath))
-		if fields&internal.WithReadmeContents != 0 {
+		if fields&internal.WithReadme != 0 {
 			scanArgs = append(scanArgs, database.NullIsEmpty(&mi.LegacyReadmeContents))
 		}
 		scanArgs = append(scanArgs,
@@ -145,7 +145,7 @@ func directoryColumns(fields internal.FieldSet) string {
 	if fields&internal.WithDocumentationHTML != 0 {
 		doc = "p.documentation,"
 	}
-	if fields&internal.WithReadmeContents != 0 {
+	if fields&internal.WithReadme != 0 {
 		readme = "m.readme_contents,"
 	}
 	return `

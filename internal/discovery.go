@@ -294,7 +294,7 @@ const StringFieldMissing = "!MISSING"
 
 // FieldSet bits for fields that can be conditionally read from the data store.
 const (
-	WithReadmeContents FieldSet = 1 << iota
+	WithReadme FieldSet = 1 << iota
 	WithDocumentationHTML
 )
 
