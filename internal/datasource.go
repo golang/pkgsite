@@ -27,6 +27,8 @@ type DataSource interface {
 	GetLicenses(ctx context.Context, fullPath, modulePath, resolvedVersion string) ([]*licenses.License, error)
 	// GetPathInfo returns information about a path.
 	GetPathInfo(ctx context.Context, path, inModulePath, inVersion string) (outModulePath, outVersion string, isPackage bool, err error)
+	// GetLatestMajorVersion returns the latest major version of a module path.
+	GetLatestMajorVersion(ctx context.Context, seriesPath string) (_ string, err error)
 
 	// TODO(golang/go#39629): Deprecate these methods.
 	//

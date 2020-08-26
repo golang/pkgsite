@@ -432,3 +432,58 @@ func TestDataSource_Bypass(t *testing.T) {
 		})
 	}
 }
+
+func TestDataSource_GetLatestMajorVersion(t *testing.T) {
+	t.Helper()
+	testModules := []*proxy.Module{
+		{
+			ModulePath: "foo.com/bar",
+		},
+		{
+			ModulePath: "foo.com/bar/v2",
+		},
+		{
+			ModulePath: "foo.com/bar/v3",
+		},
+		{
+			ModulePath: "bar.com/foo",
+		},
+	}
+	client, teardownProxy := proxy.SetupTestClient(t, testModules)
+	defer teardownProxy()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ds := New(client)
+
+	for _, test := range []struct {
+		seriesPath  string
+		wantVersion string
+		wantErr     error
+	}{
+		{
+			seriesPath:  "foo.com/bar",
+			wantVersion: "/v3",
+		},
+		{
+			seriesPath:  "bar.com/foo",
+			wantVersion: "",
+		},
+		{
+			seriesPath: "boo.com/far",
+			wantErr:    derrors.NotFound,
+		},
+	} {
+		gotVersion, err := ds.GetLatestMajorVersion(ctx, test.seriesPath)
+		if err != nil {
+			if test.wantErr == nil {
+				t.Fatalf("got unexpected error %v", err)
+			}
+			if !errors.Is(err, test.wantErr) {
+				t.Errorf("got err = %v, want Is(%v)", err, test.wantErr)
+			}
+		}
+		if gotVersion != test.wantVersion {
+			t.Errorf("GetLatestMajorVersion(%v) = %v, want %v", test.seriesPath, gotVersion, test.wantVersion)
+		}
+	}
+}

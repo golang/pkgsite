@@ -279,3 +279,30 @@ func (ds *DataSource) directoryFromVersion(ctx context.Context, fullPath, module
 	}
 	return nil, fmt.Errorf("%q missing from module %s: %w", fullPath, m.ModulePath, derrors.NotFound)
 }
+
+// GetLatestMajorVersion finds the latest major version of a modulePath that
+// is found in the proxy by iterating through vN versions.
+func (ds *DataSource) GetLatestMajorVersion(ctx context.Context, seriesPath string) (_ string, err error) {
+	// We are checking if the series path is valid so that we can forward the error if not.
+	_, err = ds.proxyClient.GetInfo(ctx, seriesPath, internal.LatestVersion)
+	if err != nil {
+		return "", err
+	}
+	const startVersion = 2
+	// We start checking versions from "/v2", since v1 and v0 versions don't
+	// have a major version at the end of the modulepath.
+	for v := startVersion; ; v++ {
+		query := fmt.Sprintf("%s/v%d", seriesPath, v)
+
+		_, err := ds.proxyClient.GetInfo(ctx, query, internal.LatestVersion)
+		if errors.Is(err, derrors.NotFound) {
+			if v == 2 {
+				return "", nil
+			}
+			return fmt.Sprintf("/v%d", v-1), nil
+		}
+		if err != nil {
+			return "", err
+		}
+	}
+}
