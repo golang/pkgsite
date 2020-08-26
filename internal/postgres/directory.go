@@ -81,10 +81,14 @@ func (db *DB) GetPackagesInDirectory(ctx context.Context, dirPath, modulePath, r
 	return packages, nil
 }
 
-// GetDirectory returns a directory from the database, along with all of the
+func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version string, pathID int, fields ...internal.FieldSet) (_ *internal.Directory, err error) {
+	return db.getDirectory(ctx, dirPath, modulePath, version)
+}
+
+// getDirectory returns a directory from the database, along with all of the
 // data associated with that directory, including the package, imports, readme,
 // documentation, and licenses.
-func (db *DB) GetDirectory(ctx context.Context, path, modulePath, version string) (_ *internal.Directory, err error) {
+func (db *DB) getDirectory(ctx context.Context, path, modulePath, version string) (_ *internal.Directory, err error) {
 	defer derrors.Wrap(&err, "GetDirectory(ctx, %q, %q, %q)", path, modulePath, version)
 	dmeta, err := db.GetDirectoryMeta(ctx, path, modulePath, version)
 	if err != nil {

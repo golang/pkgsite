@@ -598,7 +598,7 @@ func TestGetDirectory(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := testDB.GetDirectory(ctx, tc.dirPath, tc.modulePath, tc.version)
+			got, err := testDB.getDirectory(ctx, tc.dirPath, tc.modulePath, tc.version)
 			if tc.wantNotFoundErr {
 				if !errors.Is(err, derrors.NotFound) {
 					t.Fatalf("want %v; got = \n%+v, %v", derrors.NotFound, got, err)
@@ -648,7 +648,7 @@ func TestGetDirectoryBypass(t *testing.T) {
 		{testDB, true},
 		{bypassDB, false},
 	} {
-		d, err := test.db.GetDirectory(ctx, m.ModulePath, m.ModulePath, m.Version)
+		d, err := test.db.getDirectory(ctx, m.ModulePath, m.ModulePath, m.Version)
 		if err != nil {
 			t.Fatal(err)
 		}

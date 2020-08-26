@@ -991,7 +991,7 @@ func checkPackage(ctx context.Context, t *testing.T, pkgPath string) {
 		t.Fatalf("testDB.GetPathInfo(%q, %q, %q): isPackage = false; want = true",
 			pkgPath, internal.UnknownModulePath, sample.VersionString)
 	}
-	dir, err := testDB.GetDirectory(ctx, pkgPath, modulePath, version)
+	dir, err := testDB.GetDirectory(ctx, pkgPath, modulePath, version, 0, internal.WithDocumentationHTML)
 	if err != nil {
 		t.Fatal(err)
 	}
