@@ -280,9 +280,9 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		DebugPort:  os.Getenv("DEBUG_PORT"),
 		// Resolve AppEngine identifiers
 		ProjectID:          os.Getenv("GOOGLE_CLOUD_PROJECT"),
-		ServiceID:          os.Getenv("GAE_SERVICE"),
-		VersionID:          os.Getenv("GAE_VERSION"),
-		InstanceID:         os.Getenv("GAE_INSTANCE"),
+		ServiceID:          GetEnv("GAE_SERVICE", os.Getenv("GO_DISCOVERY_SERVICE")),
+		VersionID:          GetEnv("GAE_VERSION", os.Getenv("GO_DISCOVERY_VERSION")),
+		InstanceID:         GetEnv("GAE_INSTANCE", os.Getenv("GO_DISCOVERY_INSTANCE")),
 		GaeEnv:             os.Getenv("GAE_ENV"),
 		GoogleTagManagerID: os.Getenv("GO_DISCOVERY_GOOGLE_TAG_MANAGER_ID"),
 		QueueService:       GetEnv("GO_DISCOVERY_QUEUE_SERVICE", os.Getenv("GAE_SERVICE")),
