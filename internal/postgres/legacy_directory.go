@@ -87,7 +87,7 @@ func (db *DB) LegacyGetDirectory(ctx context.Context, dirPath, modulePath, versi
 			&pkg.Synopsis,
 			&pkg.V1Path,
 		}
-		if fields&internal.WithDocumentationHTML != 0 {
+		if fields&internal.WithDocumentation != 0 {
 			scanArgs = append(scanArgs, database.NullIsEmpty(&docHTML))
 		}
 		scanArgs = append(scanArgs,
@@ -142,7 +142,7 @@ func (db *DB) LegacyGetDirectory(ctx context.Context, dirPath, modulePath, versi
 
 func directoryColumns(fields internal.FieldSet) string {
 	var doc, readme string
-	if fields&internal.WithDocumentationHTML != 0 {
+	if fields&internal.WithDocumentation != 0 {
 		doc = "p.documentation,"
 	}
 	if fields&internal.WithReadme != 0 {

@@ -24,7 +24,7 @@ type DocumentationDetails struct {
 
 // fetchDocumentationDetails returns a DocumentationDetails constructed from doc.
 func fetchDocumentationDetails(ctx context.Context, ds internal.DataSource, dmeta *internal.DirectoryMeta) (_ *DocumentationDetails, err error) {
-	dir, err := ds.GetDirectory(ctx, dmeta.Path, dmeta.ModulePath, dmeta.Version, dmeta.PathID, internal.WithDocumentationHTML)
+	dir, err := ds.GetDirectory(ctx, dmeta.Path, dmeta.ModulePath, dmeta.Version, dmeta.PathID, internal.WithDocumentation)
 	if err != nil {
 		return nil, err
 	}

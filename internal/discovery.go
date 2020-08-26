@@ -295,7 +295,7 @@ const StringFieldMissing = "!MISSING"
 // FieldSet bits for fields that can be conditionally read from the data store.
 const (
 	WithReadme FieldSet = 1 << iota
-	WithDocumentationHTML
+	WithDocumentation
 )
 
 // LegacyDirectory represents a directory in a module version, and all of the
