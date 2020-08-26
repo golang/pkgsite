@@ -25,9 +25,6 @@ type DataSource interface {
 	GetImports(ctx context.Context, pkgPath, modulePath, version string) ([]string, error)
 	// GetLicenses returns licenses at the given path for given modulePath and version.
 	GetLicenses(ctx context.Context, fullPath, modulePath, resolvedVersion string) ([]*licenses.License, error)
-	// GetModuleInfo returns the ModuleInfo corresponding to modulePath and
-	// version.
-	GetModuleInfo(ctx context.Context, modulePath, version string) (*ModuleInfo, error)
 	// GetPathInfo returns information about a path.
 	GetPathInfo(ctx context.Context, path, inModulePath, inVersion string) (outModulePath, outVersion string, isPackage bool, err error)
 
