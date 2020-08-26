@@ -7,7 +7,9 @@ package proxydatasource
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -30,6 +32,13 @@ func setup(t *testing.T) (context.Context, *DataSource, func()) {
 		"LICENSE":    testhelper.MITLicense,
 		"baz/baz.go": "//Package baz provides a helpful constant.\npackage baz\nimport \"net/http\"\nconst OK = http.StatusOK",
 	}
+	// nrContents is the same as contents, except the license is non-redistributable.
+	nrContents := map[string]string{
+		"go.mod":     "module foo.com/nr",
+		"LICENSE":    "unknown",
+		"baz/baz.go": "//Package baz provides a helpful constant.\npackage baz\nimport \"net/http\"\nconst OK = http.StatusOK",
+	}
+
 	testModules := []*proxy.Module{
 		{
 			ModulePath: "foo.com/bar",
@@ -40,6 +49,11 @@ func setup(t *testing.T) (context.Context, *DataSource, func()) {
 			ModulePath: "foo.com/bar",
 			Version:    "v1.2.0",
 			Files:      contents,
+		},
+		{
+			ModulePath: "foo.com/nr",
+			Version:    "v1.1.0",
+			Files:      nrContents,
 		},
 	}
 	client, teardownProxy := proxy.SetupTestClient(t, testModules)
@@ -95,8 +109,10 @@ var (
 		HasGoMod:          true,
 	}
 	wantVersionedPackage = &internal.LegacyVersionedPackage{
-		LegacyModuleInfo: internal.LegacyModuleInfo{ModuleInfo: wantModuleInfo},
-		LegacyPackage:    wantPackage,
+		LegacyModuleInfo: internal.LegacyModuleInfo{
+			ModuleInfo: wantModuleInfo,
+		},
+		LegacyPackage: wantPackage,
 	}
 	cmpOpts = append([]cmp.Option{
 		cmpopts.IgnoreFields(internal.LegacyPackage{}, "DocumentationHTML"),
@@ -390,5 +406,29 @@ func TestDataSource_GetPathInfo(t *testing.T) {
 				gotModulePath, gotVersion, gotIsPackage,
 				test.wantModulePath, test.wantVersion, test.wantIsPackage)
 		}
+	}
+}
+
+func TestDataSource_Bypass(t *testing.T) {
+	for _, bypass := range []bool{false, true} {
+		t.Run(fmt.Sprintf("bypass=%t", bypass), func(t *testing.T) {
+			// re-create the data source to get around caching
+			ctx, ds, teardown := setup(t)
+			defer teardown()
+			ds.bypassLicenseCheck = bypass
+			for _, mpath := range []string{"foo.com/bar", "foo.com/nr"} {
+				wantEmpty := !bypass && strings.HasSuffix(mpath, "/nr")
+
+				got, err := ds.getModule(ctx, mpath, "v1.1.0")
+				if err != nil {
+					t.Fatal(err)
+				}
+				// Assume internal.Module.RemoveNonRedistributableData is correct; we just
+				// need to check one value to confirm that it was called.
+				if gotEmpty := (got.Licenses[0].Contents == nil); gotEmpty != wantEmpty {
+					t.Errorf("bypass %t for %q: got empty %t, want %t", bypass, mpath, gotEmpty, wantEmpty)
+				}
+			}
+		})
 	}
 }

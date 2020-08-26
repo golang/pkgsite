@@ -37,7 +37,17 @@ func New(proxyClient *proxy.Client) *DataSource {
 		versionCache:         make(map[versionKey]*versionEntry),
 		modulePathToVersions: make(map[string][]string),
 		packagePathToModules: make(map[string][]string),
+		bypassLicenseCheck:   false,
 	}
+}
+
+// NewBypassingLicenseCheck returns a new direct proxy datasource that bypasses
+// license checks. That means all data will be returned for non-redistributable
+// modules, packages and directories.
+func NewBypassingLicenseCheck(c *proxy.Client) *DataSource {
+	ds := New(c)
+	ds.bypassLicenseCheck = true
+	return ds
 }
 
 // DataSource implements the frontend.DataSource interface, by querying a
@@ -55,6 +65,7 @@ type DataSource struct {
 	// map of package path -> modules paths containing it, with module paths
 	// sorted by descending length
 	packagePathToModules map[string][]string
+	bypassLicenseCheck   bool
 }
 
 type versionKey struct {
@@ -143,6 +154,9 @@ func (ds *DataSource) getModule(ctx context.Context, modulePath, version string)
 	}
 	res := fetch.FetchModule(ctx, modulePath, version, ds.proxyClient, ds.sourceClient)
 	m := res.Module
+	if m != nil && !ds.bypassLicenseCheck {
+		m.RemoveNonRedistributableData()
+	}
 	ds.versionCache[key] = &versionEntry{module: m, err: err}
 	if res.Error != nil {
 		return nil, res.Error
