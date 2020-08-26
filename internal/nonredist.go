@@ -35,7 +35,7 @@ func (d *Directory) RemoveNonRedistributableData() {
 	if !d.IsRedistributable {
 		d.Readme = nil
 		if d.Package != nil {
-			d.Package.Documentation = &Documentation{}
+			d.Package.Documentation = nil
 		}
 	}
 }

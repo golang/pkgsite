@@ -487,34 +487,6 @@ func TestGetDirectory(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	newVdir := func(path, modulePath, version string, readme *internal.Readme, pkg *internal.Package) *internal.Directory {
-		return &internal.Directory{
-			DirectoryMeta: internal.DirectoryMeta{
-				ModuleInfo:        *sample.ModuleInfo(modulePath, version),
-				Path:              path,
-				V1Path:            path,
-				IsRedistributable: true,
-				Licenses:          sample.LicenseMetadata,
-			},
-			Readme:  readme,
-			Package: pkg,
-		}
-	}
-
-	newPackage := func(name, path string) *internal.Package {
-		return &internal.Package{
-			Name: name,
-			Path: path,
-			Documentation: &internal.Documentation{
-				Synopsis: sample.Synopsis,
-				HTML:     sample.DocumentationHTML,
-				GOOS:     sample.GOOS,
-				GOARCH:   sample.GOARCH,
-			},
-			Imports: sample.Imports,
-		}
-	}
-
 	for _, tc := range []struct {
 		name, dirPath, modulePath, version string
 		want                               *internal.Directory
@@ -598,7 +570,7 @@ func TestGetDirectory(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := testDB.getDirectory(ctx, tc.dirPath, tc.modulePath, tc.version)
+			got, err := testDB.GetDirectory(ctx, tc.dirPath, tc.modulePath, tc.version, 0, internal.AllFields)
 			if tc.wantNotFoundErr {
 				if !errors.Is(err, derrors.NotFound) {
 					t.Fatalf("want %v; got = \n%+v, %v", derrors.NotFound, got, err)
@@ -630,6 +602,103 @@ func TestGetDirectory(t *testing.T) {
 	}
 }
 
+func TestGetDirectoryFieldSet(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	defer ResetTestDB(testDB, t)
+
+	// Add a module that has READMEs in a directory and a package.
+	m := sample.Module("a.com/m", "v1.2.3", "dir/p")
+	dir := findDirectory(m, "a.com/m/dir/p")
+	if err := testDB.InsertModule(ctx, m); err != nil {
+		t.Fatal(err)
+	}
+
+	cleanFields := func(dir *internal.Directory) {
+		// Remove fields based on the FieldSet specified.
+		dir.DirectoryMeta = internal.DirectoryMeta{
+			Path:              dir.Path,
+			IsRedistributable: true,
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath: dir.ModulePath,
+				Version:    dir.Version,
+			},
+		}
+		if dir.Package != nil {
+			dir.Package.Imports = nil
+			dir.Package.Name = ""
+		}
+	}
+
+	for _, test := range []struct {
+		name  string
+		field internal.FieldSet
+		want  *internal.Directory
+	}{
+		{
+			name:  "WithDocumentation",
+			field: internal.WithDocumentation,
+			want: newVdir("a.com/m/dir/p", "a.com/m", "v1.2.3",
+				nil, newPackage("p", "a.com/m/dir/p")),
+		},
+		{
+			name:  "WithReadme",
+			field: internal.WithReadme,
+			want: newVdir("a.com/m/dir/p", "a.com/m", "v1.2.3",
+				&internal.Readme{
+					Filepath: "README.md",
+					Contents: "readme",
+				}, nil),
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			got, err := testDB.GetDirectory(ctx, dir.Path, dir.ModulePath, dir.Version, 0, test.field)
+			if err != nil {
+				t.Fatal(err)
+			}
+			opts := []cmp.Option{
+				cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
+				// The packages table only includes partial license information; it omits the Coverage field.
+				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
+				cmpopts.IgnoreFields(internal.DirectoryMeta{}, "PathID"),
+			}
+			cleanFields(test.want)
+			if diff := cmp.Diff(test.want, got, opts...); diff != "" {
+				t.Errorf("mismatch (-want, +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func newVdir(path, modulePath, version string, readme *internal.Readme, pkg *internal.Package) *internal.Directory {
+	return &internal.Directory{
+		DirectoryMeta: internal.DirectoryMeta{
+			ModuleInfo:        *sample.ModuleInfo(modulePath, version),
+			Path:              path,
+			V1Path:            path,
+			IsRedistributable: true,
+			Licenses:          sample.LicenseMetadata,
+		},
+		Readme:  readme,
+		Package: pkg,
+	}
+}
+
+func newPackage(name, path string) *internal.Package {
+	return &internal.Package{
+		Name: name,
+		Path: path,
+		Documentation: &internal.Documentation{
+			Synopsis: sample.Synopsis,
+			HTML:     sample.DocumentationHTML,
+			GOOS:     sample.GOOS,
+			GOARCH:   sample.GOARCH,
+		},
+		Imports: sample.Imports,
+	}
+}
+
 func TestGetDirectoryBypass(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
@@ -648,7 +717,7 @@ func TestGetDirectoryBypass(t *testing.T) {
 		{testDB, true},
 		{bypassDB, false},
 	} {
-		d, err := test.db.getDirectory(ctx, m.ModulePath, m.ModulePath, m.Version)
+		d, err := test.db.GetDirectory(ctx, m.ModulePath, m.ModulePath, m.Version, 0, internal.AllFields)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -677,6 +746,7 @@ func TestGetDirectoryBypass(t *testing.T) {
 
 func findDirectory(m *internal.Module, path string) *internal.Directory {
 	for _, d := range m.Directories {
+		d.ModuleInfo = m.ModuleInfo
 		if d.Path == path {
 			return d
 		}

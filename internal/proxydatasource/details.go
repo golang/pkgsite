@@ -19,7 +19,7 @@ import (
 )
 
 // GetDirectory returns information about a directory at a path.
-func (ds *DataSource) GetDirectory(ctx context.Context, fullPath, modulePath, version string, pathID int, fields ...internal.FieldSet) (_ *internal.Directory, err error) {
+func (ds *DataSource) GetDirectory(ctx context.Context, fullPath, modulePath, version string, pathID int, field internal.FieldSet) (_ *internal.Directory, err error) {
 	defer derrors.Wrap(&err, "GetDirectory(%q, %q, %q)", fullPath, modulePath, version)
 	return ds.directoryFromVersion(ctx, fullPath, modulePath, version)
 }

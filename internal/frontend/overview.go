@@ -46,6 +46,7 @@ func fetchOverviewDetails(ctx context.Context, ds internal.DataSource, dmeta *in
 	if err != nil {
 		return nil, err
 	}
+	dir.DirectoryMeta = *dmeta
 	var readme *internal.Readme
 	if dir.Readme != nil {
 		readme = &internal.Readme{Filepath: dir.Readme.Filepath, Contents: dir.Readme.Contents}

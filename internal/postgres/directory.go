@@ -81,48 +81,96 @@ func (db *DB) GetPackagesInDirectory(ctx context.Context, dirPath, modulePath, r
 	return packages, nil
 }
 
-func (db *DB) GetDirectory(ctx context.Context, dirPath, modulePath, version string, pathID int, fields ...internal.FieldSet) (_ *internal.Directory, err error) {
-	return db.getDirectory(ctx, dirPath, modulePath, version)
-}
-
-// getDirectory returns a directory from the database, along with all of the
-// data associated with that directory, including the package, imports, readme,
-// documentation, and licenses.
-func (db *DB) getDirectory(ctx context.Context, path, modulePath, version string) (_ *internal.Directory, err error) {
-	defer derrors.Wrap(&err, "GetDirectory(ctx, %q, %q, %q)", path, modulePath, version)
-	dmeta, err := db.GetDirectoryMeta(ctx, path, modulePath, version)
+// GetDirectory returns a directory from the database, along with all of the
+// data associated with that directory.
+// TODO(golang/go#39629): remove pID.
+func (db *DB) GetDirectory(ctx context.Context, fullPath, modulePath, version string, pID int, field internal.FieldSet) (_ *internal.Directory, err error) {
+	defer derrors.Wrap(&err, "GetDirectory(ctx, %q, %q, %q)", fullPath, modulePath, version)
+	pathID, isRedistributable, err := db.getPathIDAndIsRedistributable(ctx, fullPath, modulePath, version)
 	if err != nil {
 		return nil, err
 	}
-	dir := &internal.Directory{DirectoryMeta: *dmeta}
 
-	if dir.IsRedistributable || db.bypassLicenseCheck {
+	dir := &internal.Directory{
+		DirectoryMeta: internal.DirectoryMeta{
+			Path:              fullPath,
+			PathID:            pathID,
+			IsRedistributable: isRedistributable,
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath: modulePath,
+				Version:    version,
+			},
+		},
+	}
+	if field&internal.WithReadme != 0 {
 		readme, err := db.getReadme(ctx, dir.ModulePath, dir.Version)
 		if err != nil && !errors.Is(err, derrors.NotFound) {
 			return nil, err
 		}
 		dir.Readme = readme
 	}
-	if dir.Name != "" {
-		pkg := &internal.Package{
-			Path: dir.Path,
-			Name: dir.Name,
+
+	if field&internal.WithDocumentation != 0 {
+		doc, err := db.getDocumentation(ctx, dir.PathID)
+		if err != nil && !errors.Is(err, derrors.NotFound) {
+			return nil, err
 		}
-		if dir.IsRedistributable || db.bypassLicenseCheck {
-			doc, err := db.getDocumentation(ctx, dir.PathID)
-			if err != nil && !(db.bypassLicenseCheck && err == sql.ErrNoRows) {
-				return nil, err
+		if doc != nil {
+			dir.Package = &internal.Package{
+				Path:          dir.Path,
+				Documentation: doc,
 			}
-			pkg.Documentation = doc
+		}
+	}
+	if field == internal.AllFields {
+		dmeta, err := db.GetDirectoryMeta(ctx, fullPath, modulePath, version)
+		if err != nil {
+			return nil, err
+		}
+		dir.DirectoryMeta = *dmeta
+		if dir.Name != "" {
+			if dir.Package == nil {
+				dir.Package = &internal.Package{Path: dir.Path}
+			}
+			dir.Package.Name = dmeta.Name
 		}
 		imports, err := db.getImports(ctx, dir.PathID)
 		if err != nil {
 			return nil, err
 		}
-		pkg.Imports = imports
-		dir.Package = pkg
+		if len(imports) > 0 {
+			dir.Package.Imports = imports
+		}
+	}
+	if !db.bypassLicenseCheck {
+		dir.RemoveNonRedistributableData()
 	}
 	return dir, nil
+}
+
+func (db *DB) getPathIDAndIsRedistributable(ctx context.Context, fullPath, modulePath, version string) (_ int, _ bool, err error) {
+	defer derrors.Wrap(&err, "getPathID(ctx, %q, %q, %q)", fullPath, modulePath, version)
+	var (
+		pathID            int
+		isRedistributable bool
+	)
+	query := `
+		SELECT p.id, p.redistributable
+		FROM paths p
+		INNER JOIN modules m ON (p.module_id = m.id)
+		WHERE
+		    p.path = $1
+		    AND m.module_path = $2
+		    AND m.version = $3;`
+	err = db.db.QueryRow(ctx, query, fullPath, modulePath, version).Scan(&pathID, &isRedistributable)
+	switch err {
+	case sql.ErrNoRows:
+		return 0, false, derrors.NotFound
+	case nil:
+		return pathID, isRedistributable, nil
+	default:
+		return 0, false, err
+	}
 }
 
 // GetDirectoryMeta information about a directory from the database.
