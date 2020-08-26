@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"strings"
 
+	"golang.org/x/mod/module"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/version"
@@ -229,4 +230,33 @@ func getPathVersions(ctx context.Context, db *DB, path string, versionTypes ...v
 		return nil, err
 	}
 	return versions, nil
+}
+
+// GetLatestMajorVersion returns the latest major version string of a module
+// path. For example, in the module path "github.com/casbin/casbin", there
+// is another path with a greater major version
+// "github.com/casbin/casbin/v3". This function will return "/v3" or an
+// empty string if there is no major version string at the end.
+func (db *DB) GetLatestMajorVersion(ctx context.Context, seriesPath string) (_ string, err error) {
+	defer derrors.Wrap(&err, "DB.GetLatestMajorVersion(ctx, %q)", seriesPath)
+
+	var latestPath string
+	latestModulePathQuery := fmt.Sprintf(`
+		SELECT
+			m.module_path
+		FROM
+			modules m
+		WHERE
+			m.series_path = $1
+		%s
+		LIMIT 1;`, orderByLatest)
+	row := db.db.QueryRow(ctx, latestModulePathQuery, seriesPath)
+	if err := row.Scan(&latestPath); err != nil {
+		return "", err
+	}
+	_, majorPath, ok := module.SplitPathVersion(latestPath)
+	if !ok {
+		return "", fmt.Errorf("module.SplitPathVersion(%q): %v", latestPath, majorPath)
+	}
+	return majorPath, nil
 }

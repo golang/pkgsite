@@ -6,6 +6,8 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -362,5 +364,54 @@ func TestGetVersions(t *testing.T) {
 				t.Errorf("testDB.GetVersionsForPath(%q) mismatch (-want +got):\n%s", tc.path, diff)
 			}
 		})
+	}
+}
+func TestGetLatestMajorVersion(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	defer ResetTestDB(testDB, t)
+	for _, modulePath := range []string{
+		"foo.com/bar",
+		"foo.com/bar/v2",
+		"foo.com/bar/v3",
+		"bar.com/foo",
+	} {
+		m := sample.Module(modulePath, sample.VersionString, sample.Suffix)
+		if err := testDB.InsertModule(ctx, m); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	for _, tc := range []struct {
+		seriesPath  string
+		wantVersion string
+		wantErr     error
+	}{
+		{
+			seriesPath:  "foo.com/bar",
+			wantVersion: "/v3",
+		},
+		{
+			seriesPath:  "bar.com/foo",
+			wantVersion: "",
+		},
+		{
+			seriesPath: "boo.com/far",
+			wantErr:    sql.ErrNoRows,
+		},
+	} {
+		gotVersion, err := testDB.GetLatestMajorVersion(ctx, tc.seriesPath)
+		if err != nil {
+			if tc.wantErr == nil {
+				t.Fatalf("got unexpected error %v", err)
+			}
+			if !errors.Is(err, tc.wantErr) {
+				t.Errorf("got err = %v, want Is(%v)", err, tc.wantErr)
+			}
+		}
+		if gotVersion != tc.wantVersion {
+			t.Errorf("testDB.GetLatestMajorVersion(%v) = %v, want = %v", tc.seriesPath, gotVersion, tc.wantVersion)
+		}
 	}
 }
