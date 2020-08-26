@@ -107,7 +107,7 @@ type Config struct {
 	// should send requests to.
 	QueueService string
 
-	GaeEnv string
+	gaeEnv string // the AppEngine environment: "standard", "flex", or "" if not on AppEngine
 
 	// GoogleTagManagerID is the ID used for GoogleTagManager. It has the
 	// structure GTM-XXXX.
@@ -163,7 +163,7 @@ func (c *Config) AppVersionLabel() string {
 // OnAppEngine reports if the current process is running in an AppEngine
 // environment.
 func (c *Config) OnAppEngine() bool {
-	return c.GaeEnv == "standard"
+	return c.gaeEnv == "standard"
 }
 
 // StatementTimeout is the value of the Postgres statement_timeout parameter.
@@ -283,7 +283,7 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		ServiceID:          GetEnv("GAE_SERVICE", os.Getenv("GO_DISCOVERY_SERVICE")),
 		VersionID:          GetEnv("GAE_VERSION", os.Getenv("GO_DISCOVERY_VERSION")),
 		InstanceID:         GetEnv("GAE_INSTANCE", os.Getenv("GO_DISCOVERY_INSTANCE")),
-		GaeEnv:             os.Getenv("GAE_ENV"),
+		gaeEnv:             os.Getenv("GAE_ENV"),
 		GoogleTagManagerID: os.Getenv("GO_DISCOVERY_GOOGLE_TAG_MANAGER_ID"),
 		QueueService:       GetEnv("GO_DISCOVERY_QUEUE_SERVICE", os.Getenv("GAE_SERVICE")),
 		// LocationID is essentially hard-coded until we figure out a good way to
@@ -336,7 +336,7 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		},
 	}
 
-	if cfg.GaeEnv != "" {
+	if cfg.gaeEnv != "" {
 		// Zone is not available in the environment but can be queried via the metadata API.
 		zone, err := gceMetadata(ctx, "instance/zone")
 		if err != nil {
