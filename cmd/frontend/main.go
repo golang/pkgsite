@@ -42,6 +42,7 @@ var (
 		"for direct proxy mode and frontend fetches")
 	directProxy = flag.Bool("direct_proxy", false, "if set to true, uses the module proxy referred to by this URL "+
 		"as a direct backend, bypassing the database")
+	bypassLicenseCheck = flag.Bool("bypass_license_check", false, "display all information, even for non-redistributable paths")
 )
 
 func main() {
@@ -69,8 +70,16 @@ func main() {
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
+	if *bypassLicenseCheck {
+		log.Info(ctx, "BYPASSING LICENSE CHECKING: DISPLAYING NON-REDISTRIBUTABLE INFORMATION")
+	}
 	if *directProxy {
-		pds := proxydatasource.New(proxyClient)
+		var pds *proxydatasource.DataSource
+		if *bypassLicenseCheck {
+			pds = proxydatasource.NewBypassingLicenseCheck(proxyClient)
+		} else {
+			pds = proxydatasource.New(proxyClient)
+		}
 		dsg = func(context.Context) internal.DataSource { return pds }
 		expg = func(context.Context) internal.ExperimentSource {
 			return internal.NewLocalExperimentSource(readLocalExperiments(ctx))
@@ -85,7 +94,12 @@ func main() {
 		if err != nil {
 			log.Fatal(ctx, err)
 		}
-		db := postgres.New(ddb)
+		var db *postgres.DB
+		if *bypassLicenseCheck {
+			db = postgres.NewBypassingLicenseCheck(ddb)
+		} else {
+			db = postgres.New(ddb)
+		}
 		defer db.Close()
 		dsg = func(context.Context) internal.DataSource { return db }
 		expg = func(context.Context) internal.ExperimentSource { return db }
