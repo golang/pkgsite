@@ -42,7 +42,7 @@ func legacyFetchDetailsForDirectory(r *http.Request, tab string, dir *internal.L
 		// follows the same code path as fetchDetailsForModule and
 		// fetchDetailsForPackage. However, since we already have the directory
 		// and licenses info, it doesn't make sense to call
-		// postgres.GetDirectory again.
+		// postgres.GetUnit again.
 		return legacyCreateDirectory(dir, licensesToMetadatas(licenses), false)
 	case tabLicenses:
 		return &LicensesDetails{Licenses: transformLicenses(dir.ModulePath, dir.Version, licenses)}, nil

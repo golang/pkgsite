@@ -111,7 +111,7 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 	}
 
 	for _, dir := range want.Directories {
-		got, err := testDB.GetDirectory(ctx, dir.Path, want.ModulePath, want.Version, 0, internal.AllFields)
+		got, err := testDB.GetUnit(ctx, dir.Path, want.ModulePath, want.Version, 0, internal.AllFields)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -185,7 +185,7 @@ func TestInsertModuleLicenseCheck(t *testing.T) {
 			checkHasRedistData(mi.LegacyReadmeContents, pkg.DocumentationHTML, bypass)
 
 			// New model
-			dir, err := db.GetDirectory(ctx, mod.ModulePath, mod.ModulePath, mod.Version, 0, internal.AllFields)
+			dir, err := db.GetUnit(ctx, mod.ModulePath, mod.ModulePath, mod.Version, 0, internal.AllFields)
 			if err != nil {
 				t.Fatal(err)
 			}

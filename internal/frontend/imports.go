@@ -36,7 +36,7 @@ type ImportsDetails struct {
 func fetchImportsDetails(ctx context.Context, ds internal.DataSource, pkgPath, modulePath, resolvedVersion string) (_ *ImportsDetails, err error) {
 	var dsImports []string
 	if isActiveUseDirectories(ctx) && experiment.IsActive(ctx, internal.ExperimentUsePackageImports) {
-		dir, err := ds.GetDirectory(ctx, pkgPath, modulePath, resolvedVersion, 0, internal.WithImports)
+		dir, err := ds.GetUnit(ctx, pkgPath, modulePath, resolvedVersion, 0, internal.WithImports)
 		if err != nil {
 			return nil, err
 		}

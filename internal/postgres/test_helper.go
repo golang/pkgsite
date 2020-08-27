@@ -144,7 +144,7 @@ func RunDBTests(dbName string, m *testing.M, testDB **DB) {
 }
 
 // InsertSampleDirectory tree inserts a set of packages for testing
-// GetDirectory and frontend.FetchDirectoryDetails.
+// GetUnit and frontend.FetchDirectoryDetails.
 func InsertSampleDirectoryTree(ctx context.Context, t *testing.T, testDB *DB) {
 	t.Helper()
 

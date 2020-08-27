@@ -18,9 +18,9 @@ import (
 	"golang.org/x/pkgsite/internal/proxy"
 )
 
-// GetDirectory returns information about a directory at a path.
-func (ds *DataSource) GetDirectory(ctx context.Context, fullPath, modulePath, version string, pathID int, field internal.FieldSet) (_ *internal.Unit, err error) {
-	defer derrors.Wrap(&err, "GetDirectory(%q, %q, %q)", fullPath, modulePath, version)
+// GetUnit returns information about a directory at a path.
+func (ds *DataSource) GetUnit(ctx context.Context, fullPath, modulePath, version string, pathID int, field internal.FieldSet) (_ *internal.Unit, err error) {
+	defer derrors.Wrap(&err, "GetUnit(%q, %q, %q)", fullPath, modulePath, version)
 	return ds.directoryFromVersion(ctx, fullPath, modulePath, version)
 }
 

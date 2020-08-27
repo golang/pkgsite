@@ -464,7 +464,7 @@ func TestLegacyGetDirectory(t *testing.T) {
 	}
 }
 
-func TestGetDirectory(t *testing.T) {
+func TestGetUnit(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
@@ -570,7 +570,7 @@ func TestGetDirectory(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := testDB.GetDirectory(ctx, tc.dirPath, tc.modulePath, tc.version, 0, internal.AllFields)
+			got, err := testDB.GetUnit(ctx, tc.dirPath, tc.modulePath, tc.version, 0, internal.AllFields)
 			if tc.wantNotFoundErr {
 				if !errors.Is(err, derrors.NotFound) {
 					t.Fatalf("want %v; got = \n%+v, %v", derrors.NotFound, got, err)
@@ -603,7 +603,7 @@ func TestGetDirectory(t *testing.T) {
 	}
 }
 
-func TestGetDirectoryFieldSet(t *testing.T) {
+func TestGetUnitFieldSet(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
@@ -662,7 +662,7 @@ func TestGetDirectoryFieldSet(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := testDB.GetDirectory(ctx, dir.Path, dir.ModulePath, dir.Version, 0, test.fields)
+			got, err := testDB.GetUnit(ctx, dir.Path, dir.ModulePath, dir.Version, 0, test.fields)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -708,7 +708,7 @@ func newPackage(name, path string) *internal.Package {
 	}
 }
 
-func TestGetDirectoryBypass(t *testing.T) {
+func TestGetUnitBypass(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 	defer ResetTestDB(testDB, t)
@@ -726,7 +726,7 @@ func TestGetDirectoryBypass(t *testing.T) {
 		{testDB, true},
 		{bypassDB, false},
 	} {
-		d, err := test.db.GetDirectory(ctx, m.ModulePath, m.ModulePath, m.Version, 0, internal.AllFields)
+		d, err := test.db.GetUnit(ctx, m.ModulePath, m.ModulePath, m.Version, 0, internal.AllFields)
 		if err != nil {
 			t.Fatal(err)
 		}
