@@ -124,15 +124,6 @@ type DirectoryMeta struct {
 	PathID            int                  // only used by internal/postgres
 }
 
-// Unit represents a directory in a module version, and the contents of that directory.
-// It will replace LegacyDirectory once everything has been migrated.
-type Unit struct {
-	DirectoryMeta
-	Readme  *Readme
-	Package *Package
-	Imports []string
-}
-
 // PackageMeta represents the metadata of a package in a module version.
 type PackageMeta struct {
 	Path              string
@@ -161,23 +152,6 @@ type Package struct {
 	Name          string
 	Path          string
 	Documentation *Documentation
-}
-
-// Documentation is the rendered documentation for a given package
-// for a specific GOOS and GOARCH.
-type Documentation struct {
-	// The values of the GOOS and GOARCH environment variables used to parse the
-	// package.
-	GOOS     string
-	GOARCH   string
-	Synopsis string
-	HTML     safehtml.HTML
-}
-
-// Readme is a README at a given directory.
-type Readme struct {
-	Filepath string
-	Contents string
 }
 
 // IndexVersion holds the version information returned by the module index.
