@@ -272,7 +272,7 @@ func (ds *DataSource) directoryFromVersion(ctx context.Context, fullPath, module
 	if err != nil {
 		return nil, err
 	}
-	for _, d := range m.Directories {
+	for _, d := range m.Units {
 		if d.Path == fullPath {
 			return d, nil
 		}

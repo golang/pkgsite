@@ -66,16 +66,16 @@ func TestFetchLicensesDetails(t *testing.T) {
 
 	testModule.Licenses = []*licenses.License{bsdLicense, mitLicense}
 	crlfModule.Licenses = []*licenses.License{mitLicenseCRLF}
-	sort.Slice(testModule.Directories, func(i, j int) bool {
-		return testModule.Directories[i].Path < testModule.Directories[j].Path
+	sort.Slice(testModule.Units, func(i, j int) bool {
+		return testModule.Units[i].Path < testModule.Units[j].Path
 	})
 
 	// github.com/valid/module_name
-	testModule.Directories[0].Licenses = []*licenses.Metadata{mit}
+	testModule.Units[0].Licenses = []*licenses.Metadata{mit}
 	// github.com/valid/module_name/A
-	testModule.Directories[1].Licenses = []*licenses.Metadata{mit}
+	testModule.Units[1].Licenses = []*licenses.Metadata{mit}
 	// github.com/valid/module_name/A/B
-	testModule.Directories[2].Licenses = []*licenses.Metadata{mit, bsd}
+	testModule.Units[2].Licenses = []*licenses.Metadata{mit, bsd}
 
 	defer postgres.ResetTestDB(testDB, t)
 	ctx := context.Background()

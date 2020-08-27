@@ -196,14 +196,14 @@ func Module(modulePath, version string, suffixes ...string) *internal.Module {
 		LegacyPackages:   nil,
 		Licenses:         Licenses,
 	}
-	m.Directories = []*internal.Unit{DirectoryForModuleRoot(mi, LicenseMetadata)}
+	m.Units = []*internal.Unit{DirectoryForModuleRoot(mi, LicenseMetadata)}
 	for _, s := range suffixes {
 		lp := LegacyPackage(modulePath, s)
 		if s != "" {
 			AddPackage(m, lp)
 		} else {
 			m.LegacyPackages = append(m.LegacyPackages, lp)
-			m.Directories[0].Package = DirectoryForPackage(lp).Package
+			m.Units[0].Package = DirectoryForPackage(lp).Package
 		}
 	}
 	return m
@@ -222,7 +222,7 @@ func AddPackage(m *internal.Module, p *internal.LegacyPackage) *internal.Module 
 	}
 	for pth := p.Path; len(pth) > minLen; pth = path.Dir(pth) {
 		found := false
-		for _, d := range m.Directories {
+		for _, d := range m.Units {
 			if d.Path == pth {
 				found = true
 				break
@@ -236,12 +236,12 @@ func AddPackage(m *internal.Module, p *internal.LegacyPackage) *internal.Module 
 }
 
 func AddDirectory(m *internal.Module, d *internal.Unit) {
-	for _, e := range m.Directories {
+	for _, e := range m.Units {
 		if e.Path == d.Path {
 			panic(fmt.Sprintf("module already has path %q", e.Path))
 		}
 	}
-	m.Directories = append(m.Directories, d)
+	m.Units = append(m.Units, d)
 }
 
 func AddLicense(m *internal.Module, lic *licenses.License) {
@@ -250,7 +250,7 @@ func AddLicense(m *internal.Module, lic *licenses.License) {
 	if dir == "." {
 		dir = ""
 	}
-	for _, d := range m.Directories {
+	for _, d := range m.Units {
 		if strings.TrimPrefix(d.Path, m.ModulePath+"/") == dir {
 			d.Licenses = append(d.Licenses, lic.Metadata)
 		}

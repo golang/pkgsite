@@ -754,7 +754,7 @@ func TestGetUnitBypass(t *testing.T) {
 }
 
 func findDirectory(m *internal.Module, path string) *internal.Unit {
-	for _, d := range m.Directories {
+	for _, d := range m.Units {
 		d.ModuleInfo = m.ModuleInfo
 		if d.Path == path {
 			return d

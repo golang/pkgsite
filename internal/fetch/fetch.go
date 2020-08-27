@@ -202,7 +202,7 @@ func processZipFile(ctx context.Context, modulePath string, versionType version.
 		},
 		LegacyPackages: packages,
 		Licenses:       allLicenses,
-		Directories:    moduleDirectories(modulePath, packages, readmes, d),
+		Units:          moduleDirectories(modulePath, packages, readmes, d),
 	}, packageVersionStates, nil
 }
 

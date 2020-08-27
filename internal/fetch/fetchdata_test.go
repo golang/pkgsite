@@ -41,7 +41,7 @@ var moduleOnePackage = &testModule{
 				LegacyReadmeFilePath: "README.md",
 				LegacyReadmeContents: "THIS IS A README",
 			},
-			Directories: []*internal.Unit{
+			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:   "github.com/basic",
@@ -117,7 +117,7 @@ var moduleMultiPackage = &testModule{
 				LegacyReadmeFilePath: "README.md",
 				LegacyReadmeContents: "README FILE FOR TESTING.",
 			},
-			Directories: []*internal.Unit{
+			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:   "github.com/my/module",
@@ -186,7 +186,7 @@ var moduleNoGoMod = &testModule{
 					HasGoMod:   false,
 				},
 			},
-			Directories: []*internal.Unit{
+			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:   "no.mod/module",
@@ -253,7 +253,7 @@ var moduleBadPackages = &testModule{
 					ModulePath: "bad.mod/module",
 				},
 			},
-			Directories: []*internal.Unit{
+			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:   "bad.mod/module",
@@ -322,7 +322,7 @@ var moduleBuildConstraints = &testModule{
 					HasGoMod:   false,
 				},
 			},
-			Directories: []*internal.Unit{
+			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:   "build.constraints/module",
@@ -415,7 +415,7 @@ var moduleNonRedist = &testModule{
 				LegacyReadmeFilePath: "README.md",
 				LegacyReadmeContents: "README FILE FOR TESTING.",
 			},
-			Directories: []*internal.Unit{
+			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:   "nonredistributable.mod/module",
@@ -491,7 +491,7 @@ var moduleBadImportPath = &testModule{
 					ModulePath: "bad.import.path.com",
 				},
 			},
-			Directories: []*internal.Unit{
+			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:   "bad.import.path.com",
@@ -567,7 +567,7 @@ var moduleDocTest = &testModule{
 					HasGoMod:   false,
 				},
 			},
-			Directories: []*internal.Unit{
+			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:   "doc.test",
@@ -612,7 +612,7 @@ var moduleDocTooLarge = &testModule{
 					HasGoMod:   false,
 				},
 			},
-			Directories: []*internal.Unit{
+			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:   "bigdoc.test",
@@ -664,7 +664,7 @@ var moduleWasm = &testModule{
 				LegacyReadmeFilePath: "README.md",
 				LegacyReadmeContents: "THIS IS A README",
 			},
-			Directories: []*internal.Unit{
+			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:   "github.com/my/module/js",
@@ -722,7 +722,7 @@ var moduleStd = &testModule{
 				LegacyReadmeFilePath: "README.md",
 				LegacyReadmeContents: "# The Go Programming Language\n",
 			},
-			Directories: []*internal.Unit{
+			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:              "std",
@@ -884,7 +884,7 @@ var moduleMaster = &testModule{
 					SourceInfo:  source.NewGitHubInfo("https://github.com/my/module", "", "355bc3f705ed"),
 				},
 			},
-			Directories: []*internal.Unit{
+			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:   "github.com/my/module",
@@ -926,7 +926,7 @@ var moduleLatest = &testModule{
 					SourceInfo: source.NewGitHubInfo("https://github.com/my/module", "", "v1.2.4"),
 				},
 			},
-			Directories: []*internal.Unit{
+			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
 						Path:   "github.com/my/module",
@@ -982,7 +982,7 @@ package example_test
 						HasGoMod:   false,
 					},
 				},
-				Directories: []*internal.Unit{
+				Units: []*internal.Unit{
 					{
 						DirectoryMeta: internal.DirectoryMeta{
 							Path:   path,

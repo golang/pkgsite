@@ -141,7 +141,7 @@ func TestPackageOverviewDetails(t *testing.T) {
 				test.dir.ModulePath,
 				test.dir.Version,
 				internal.Suffix(test.dir.Path, test.dir.ModulePath))
-			m.Directories[1].IsRedistributable = test.dir.IsRedistributable
+			m.Units[1].IsRedistributable = test.dir.IsRedistributable
 
 			ctx := context.Background()
 			if err := testDB.InsertModule(ctx, m); err != nil {

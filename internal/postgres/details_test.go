@@ -177,9 +177,9 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 	pkg1.Imports = nil
 	pkg2.Imports = []string{pkg1.Path}
 	pkg3.Imports = []string{pkg2.Path, pkg1.Path}
-	m1.Directories[1].Imports = pkg1.Imports
-	m2.Directories[1].Imports = pkg2.Imports
-	m3.Directories[1].Imports = pkg3.Imports
+	m1.Units[1].Imports = pkg1.Imports
+	m2.Units[1].Imports = pkg2.Imports
+	m3.Units[1].Imports = pkg3.Imports
 
 	for _, tc := range []struct {
 		name, path, modulePath, version string

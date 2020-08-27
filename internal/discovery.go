@@ -107,8 +107,8 @@ type Module struct {
 	LegacyModuleInfo
 	// Licenses holds all licenses within this module version, including those
 	// that may be contained in nested subdirectories.
-	Licenses    []*licenses.License
-	Directories []*Unit
+	Licenses []*licenses.License
+	Units    []*Unit
 
 	LegacyPackages []*LegacyPackage
 }

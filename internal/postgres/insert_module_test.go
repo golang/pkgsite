@@ -110,7 +110,7 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 		}
 	}
 
-	for _, dir := range want.Directories {
+	for _, dir := range want.Units {
 		got, err := testDB.GetUnit(ctx, dir.Path, want.ModulePath, want.Version, 0, internal.AllFields)
 		if err != nil {
 			t.Fatal(err)
@@ -164,10 +164,10 @@ func TestInsertModuleLicenseCheck(t *testing.T) {
 
 			mod := sample.Module(sample.ModulePath, sample.VersionString, "")
 			checkHasRedistData(mod.LegacyReadmeContents, mod.LegacyPackages[0].DocumentationHTML, true)
-			checkHasRedistData(mod.Directories[0].Readme.Contents, mod.Directories[0].Package.Documentation.HTML, true)
+			checkHasRedistData(mod.Units[0].Readme.Contents, mod.Units[0].Package.Documentation.HTML, true)
 			mod.IsRedistributable = false
 			mod.LegacyPackages[0].IsRedistributable = false
-			mod.Directories[0].IsRedistributable = false
+			mod.Units[0].IsRedistributable = false
 
 			if err := db.InsertModule(ctx, mod); err != nil {
 				t.Fatal(err)
@@ -225,7 +225,7 @@ func TestUpsertModule(t *testing.T) {
 	m.Licenses[0].Contents = append(m.Licenses[0].Contents, " and more"...)
 	// TODO(golang/go#38513): uncomment line below once we start displaying
 	// READMEs for directories instead of the top-level module.
-	// m.Directories[0].Readme.Contents += " and more"
+	// m.Units[0].Readme.Contents += " and more"
 	m.LegacyPackages[0].Synopsis = "New synopsis"
 	if err := testDB.InsertModule(ctx, m); err != nil {
 		t.Fatal(err)

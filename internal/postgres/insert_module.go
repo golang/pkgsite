@@ -378,10 +378,10 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 	// b/141164828#comment8. We have seen deadlocks on package_imports and
 	// documentation.  They can occur when processing two versions of the
 	// same module, which happens regularly.
-	sort.Slice(m.Directories, func(i, j int) bool {
-		return m.Directories[i].Path < m.Directories[j].Path
+	sort.Slice(m.Units, func(i, j int) bool {
+		return m.Units[i].Path < m.Units[j].Path
 	})
-	for _, d := range m.Directories {
+	for _, d := range m.Units {
 		if d.Package != nil && len(d.Imports) > 1 {
 			sort.Strings(d.Imports)
 		}
@@ -394,7 +394,7 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 		pathToDoc     = map[string]*internal.Documentation{}
 		pathToImports = map[string][]string{}
 	)
-	for _, d := range m.Directories {
+	for _, d := range m.Units {
 		var licenseTypes, licensePaths []string
 		for _, l := range d.Licenses {
 			if len(l.Types) == 0 {
@@ -679,7 +679,7 @@ func (db *DB) comparePaths(ctx context.Context, m *internal.Module) (err error) 
 		return err
 	}
 	set := map[string]bool{}
-	for _, p := range m.Directories {
+	for _, p := range m.Units {
 		set[p.Path] = true
 	}
 	for _, p := range dbPaths {

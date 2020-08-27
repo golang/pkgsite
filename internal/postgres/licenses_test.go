@@ -28,16 +28,16 @@ func TestGetLicenses(t *testing.T) {
 	mitLicense := &licenses.License{Metadata: mit}
 	bsdLicense := &licenses.License{Metadata: bsd}
 	testModule.Licenses = []*licenses.License{bsdLicense, mitLicense}
-	sort.Slice(testModule.Directories, func(i, j int) bool {
-		return testModule.Directories[i].Path < testModule.Directories[j].Path
+	sort.Slice(testModule.Units, func(i, j int) bool {
+		return testModule.Units[i].Path < testModule.Units[j].Path
 	})
 
 	// github.com/valid/module_name
-	testModule.Directories[0].Licenses = []*licenses.Metadata{mit}
+	testModule.Units[0].Licenses = []*licenses.Metadata{mit}
 	// github.com/valid/module_name/A
-	testModule.Directories[1].Licenses = []*licenses.Metadata{mit}
+	testModule.Units[1].Licenses = []*licenses.Metadata{mit}
 	// github.com/valid/module_name/A/B
-	testModule.Directories[2].Licenses = []*licenses.Metadata{mit, bsd}
+	testModule.Units[2].Licenses = []*licenses.Metadata{mit, bsd}
 
 	defer ResetTestDB(testDB, t)
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*5)
@@ -255,6 +255,6 @@ func nonRedistributableModule() *internal.Module {
 	sample.AddLicense(m, sample.NonRedistributableLicense)
 	m.IsRedistributable = false
 	m.LegacyPackages[0].IsRedistributable = false
-	m.Directories[0].IsRedistributable = false
+	m.Units[0].IsRedistributable = false
 	return m
 }

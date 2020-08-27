@@ -23,7 +23,7 @@ func (m *Module) RemoveNonRedistributableData() {
 	for _, l := range m.Licenses {
 		l.RemoveNonRedistributableData()
 	}
-	for _, d := range m.Directories {
+	for _, d := range m.Units {
 		d.RemoveNonRedistributableData()
 	}
 	for _, p := range m.LegacyPackages {

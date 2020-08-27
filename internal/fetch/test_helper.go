@@ -51,7 +51,7 @@ func cleanFetchResult(fr *FetchResult, detector *licenses.Detector) *FetchResult
 	if len(allLicenses) > 0 {
 		fr.Module.Licenses = allLicenses
 		fr.Module.IsRedistributable = true
-		for _, d := range fr.Module.Directories {
+		for _, d := range fr.Module.Units {
 			isRedist, lics := detector.PackageInfo(internal.Suffix(d.Path, fr.ModulePath))
 			for _, l := range lics {
 				d.Licenses = append(d.Licenses, l.Metadata)
@@ -61,7 +61,7 @@ func cleanFetchResult(fr *FetchResult, detector *licenses.Detector) *FetchResult
 	}
 
 	shouldSetPVS := (fr.PackageVersionStates == nil)
-	for _, dir := range fr.Module.Directories {
+	for _, dir := range fr.Module.Units {
 		if dir.Package != nil {
 			if dir.Package.Documentation.GOOS == "" {
 				dir.Package.Documentation.GOOS = "linux"
@@ -122,8 +122,8 @@ func sortFetchResult(fr *FetchResult) {
 	sort.Slice(fr.Module.LegacyPackages, func(i, j int) bool {
 		return fr.Module.LegacyPackages[i].Path < fr.Module.LegacyPackages[j].Path
 	})
-	sort.Slice(fr.Module.Directories, func(i, j int) bool {
-		return fr.Module.Directories[i].Path < fr.Module.Directories[j].Path
+	sort.Slice(fr.Module.Units, func(i, j int) bool {
+		return fr.Module.Units[i].Path < fr.Module.Units[j].Path
 	})
 	sort.Slice(fr.Module.Licenses, func(i, j int) bool {
 		return fr.Module.Licenses[i].FilePath < fr.Module.Licenses[j].FilePath
@@ -131,7 +131,7 @@ func sortFetchResult(fr *FetchResult) {
 	sort.Slice(fr.PackageVersionStates, func(i, j int) bool {
 		return fr.PackageVersionStates[i].PackagePath < fr.PackageVersionStates[j].PackagePath
 	})
-	for _, dir := range fr.Module.Directories {
+	for _, dir := range fr.Module.Units {
 		sort.Slice(dir.Licenses, func(i, j int) bool {
 			return dir.Licenses[i].FilePath < dir.Licenses[j].FilePath
 		})
@@ -169,10 +169,10 @@ func validateDocumentationHTML(t *testing.T, got, want *internal.Module) {
 	for i := 0; i < len(want.LegacyPackages); i++ {
 		checkHTML("LegacyPackages", i, got.LegacyPackages[i].DocumentationHTML, want.LegacyPackages[i].DocumentationHTML)
 	}
-	for i := 0; i < len(want.Directories); i++ {
-		if want.Directories[i].Package == nil {
+	for i := 0; i < len(want.Units); i++ {
+		if want.Units[i].Package == nil {
 			continue
 		}
-		checkHTML("Directories", i, got.Directories[i].Package.Documentation.HTML, want.Directories[i].Package.Documentation.HTML)
+		checkHTML("Directories", i, got.Units[i].Package.Documentation.HTML, want.Units[i].Package.Documentation.HTML)
 	}
 }
