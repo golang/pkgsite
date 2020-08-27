@@ -94,7 +94,7 @@ func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, dmeta *i
 	if includeDirPath && dmeta.Path != dmeta.ModulePath && dmeta.Path != stdlib.ModulePath {
 		return nil, fmt.Errorf("includeDirPath can only be set to true if dirPath = modulePath: %w", derrors.InvalidArgument)
 	}
-	packages, err := db.GetPackagesInDirectory(ctx, dmeta.Path, dmeta.ModulePath, dmeta.Version)
+	packages, err := db.GetPackagesInUnit(ctx, dmeta.Path, dmeta.ModulePath, dmeta.Version)
 	if err != nil {
 		if !errors.Is(err, derrors.NotFound) {
 			return nil, err

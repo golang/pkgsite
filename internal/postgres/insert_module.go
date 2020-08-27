@@ -684,7 +684,7 @@ func (db *DB) comparePaths(ctx context.Context, m *internal.Module) (err error) 
 	}
 	for _, p := range dbPaths {
 		if _, ok := set[p.path]; !ok {
-			return fmt.Errorf("expected directory %q in module: %w", p.path, derrors.DBModuleInsertInvalid)
+			return fmt.Errorf("expected unit %q in module: %w", p.path, derrors.DBModuleInsertInvalid)
 		}
 	}
 	return nil

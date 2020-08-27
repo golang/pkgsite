@@ -18,10 +18,10 @@ import (
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
-// GetPackagesInDirectory returns all of the packages in a directory from a
+// GetPackagesInUnit returns all of the packages in a unit from a
 // module version, including the package that lives at dirPath, if present.
-func (db *DB) GetPackagesInDirectory(ctx context.Context, dirPath, modulePath, resolvedVersion string) (_ []*internal.PackageMeta, err error) {
-	defer derrors.Wrap(&err, "DB.GetPackagesInDirectory(ctx, %q, %q, %q)", dirPath, modulePath, resolvedVersion)
+func (db *DB) GetPackagesInUnit(ctx context.Context, dirPath, modulePath, resolvedVersion string) (_ []*internal.PackageMeta, err error) {
+	defer derrors.Wrap(&err, "DB.GetPackagesInUnit(ctx, %q, %q, %q)", dirPath, modulePath, resolvedVersion)
 
 	query := `
 		SELECT
@@ -71,7 +71,7 @@ func (db *DB) GetPackagesInDirectory(ctx context.Context, dirPath, modulePath, r
 		return nil, err
 	}
 	if len(packages) == 0 {
-		return nil, fmt.Errorf("directory does not contain any packages: %w", derrors.NotFound)
+		return nil, fmt.Errorf("unit does not contain any packages: %w", derrors.NotFound)
 	}
 	if !db.bypassLicenseCheck {
 		for _, p := range packages {
@@ -223,7 +223,7 @@ func (db *DB) GetDirectoryMeta(ctx context.Context, path, modulePath, version st
 		pq.Array(&licensePaths),
 	); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("directory %s@%s: %w", path, version, derrors.NotFound)
+			return nil, fmt.Errorf("unit %s@%s: %w", path, version, derrors.NotFound)
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}

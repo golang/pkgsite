@@ -20,7 +20,7 @@ import (
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
-func TestGetPackagesInDirectory(t *testing.T) {
+func TestGetPackagesInUnit(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
@@ -147,7 +147,7 @@ func TestGetPackagesInDirectory(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := testDB.GetPackagesInDirectory(ctx, tc.dirPath, tc.modulePath, tc.version)
+			got, err := testDB.GetPackagesInUnit(ctx, tc.dirPath, tc.modulePath, tc.version)
 			if tc.wantNotFoundErr {
 				if !errors.Is(err, derrors.NotFound) {
 					t.Fatalf("got error %v; want %v", err, derrors.NotFound)
@@ -175,7 +175,7 @@ func TestGetPackagesInDirectory(t *testing.T) {
 	}
 }
 
-func TestGetPackagesInDirectoryBypass(t *testing.T) {
+func TestGetPackagesInUnitBypass(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 	defer ResetTestDB(testDB, t)
@@ -194,7 +194,7 @@ func TestGetPackagesInDirectoryBypass(t *testing.T) {
 		{bypassDB, sample.Synopsis}, // Reading with license bypass returns the synopsis.
 		{testDB, ""},                // Without bypass, the synopsis is empty.
 	} {
-		pkgs, err := test.db.GetPackagesInDirectory(ctx, m.ModulePath, m.ModulePath, m.Version)
+		pkgs, err := test.db.GetPackagesInUnit(ctx, m.ModulePath, m.ModulePath, m.Version)
 		if err != nil {
 			t.Fatal(err)
 		}
