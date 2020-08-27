@@ -32,7 +32,7 @@ type Queue interface {
 // New creates a new Queue with name queueName based on the configuration
 // in cfg. When running locally, Queue uses numWorkers concurrent workers.
 func New(ctx context.Context, cfg *config.Config, queueName string, numWorkers int, db *postgres.DB, processFunc inMemoryProcessFunc) (Queue, error) {
-	if !cfg.OnAppEngine() {
+	if !cfg.OnGCP() {
 		experiments, err := db.GetExperiments(ctx)
 		if err != nil {
 			return nil, err

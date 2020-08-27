@@ -216,7 +216,7 @@ func openDB(ctx context.Context, cfg *config.Config, driver string) (_ *database
 	return database.Open(driver, ci, cfg.InstanceID)
 }
 func getLogger(ctx context.Context, cfg *config.Config) middleware.Logger {
-	if cfg.OnAppEngine() {
+	if cfg.OnGCP() {
 		logger, err := log.UseStackdriver(ctx, cfg, "frontend-log")
 		if err != nil {
 			log.Fatal(ctx, err)

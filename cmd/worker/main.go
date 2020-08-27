@@ -188,7 +188,7 @@ func getRedis(ctx context.Context, host, port string, writeTimeout, readTimeout 
 }
 
 func reportingClient(ctx context.Context, cfg *config.Config) *errorreporting.Client {
-	if !cfg.OnAppEngine() {
+	if !cfg.OnGCP() {
 		return nil
 	}
 	reporter, err := errorreporting.NewClient(ctx, cfg.ProjectID, errorreporting.Config{
@@ -204,7 +204,7 @@ func reportingClient(ctx context.Context, cfg *config.Config) *errorreporting.Cl
 }
 
 func logger(ctx context.Context, cfg *config.Config) middleware.Logger {
-	if cfg.OnAppEngine() {
+	if cfg.OnGCP() {
 		logger, err := log.UseStackdriver(ctx, cfg, "worker-log")
 		if err != nil {
 			log.Fatal(ctx, err)
