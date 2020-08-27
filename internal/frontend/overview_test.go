@@ -34,7 +34,7 @@ func TestFetchOverviewDetails(t *testing.T) {
 		module: sample.DefaultModule(),
 		wantDetails: &OverviewDetails{
 			ModulePath:      sample.ModulePath,
-			RepositoryURL:   sample.RepositoryURL,
+			RepositoryURL:   "https://" + sample.RepositoryURL,
 			ReadMe:          testconversions.MakeHTMLForTest("<p>readme</p>\n"),
 			ReadMeSource:    sample.ModulePath + "@v1.0.0/README.md",
 			ModuleURL:       "/mod/" + sample.ModulePath + "@v1.0.0",

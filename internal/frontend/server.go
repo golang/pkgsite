@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -437,6 +438,19 @@ func executeTemplate(ctx context.Context, templateName string, tmpl *template.Te
 	return buf.Bytes(), nil
 }
 
+// removeURLScheme removes schemes from the URL
+func removeURLScheme(urlString string) (string, error) {
+	baseURL, err := url.Parse(urlString)
+	if err != nil {
+		return baseURL.String(), fmt.Errorf("Error parsing URL: %q", baseURL.String())
+	}
+	scheme := baseURL.Scheme
+	if len(scheme) > 0 {
+		return baseURL.String()[len(scheme)+3:], nil
+	}
+	return baseURL.String(), nil
+}
+
 // parsePageTemplates parses html templates contained in the given base
 // directory in order to generate a map of Name->*template.Template.
 //
@@ -477,6 +491,7 @@ func parsePageTemplates(base template.TrustedSource) (map[string]*template.Templ
 			"commaseparate": func(s []string) string {
 				return strings.Join(s, ", ")
 			},
+			"removeURLScheme": removeURLScheme,
 		}).ParseFilesFromTrustedSources(join(base, tsc("base.tmpl")))
 		if err != nil {
 			return nil, fmt.Errorf("ParseFiles: %v", err)
