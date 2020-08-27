@@ -14,11 +14,25 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 )
 
-// LatestVersion returns the latest version of the package or module.
-// The linkable form of the version is returned.
-// It returns the empty string on error.
-// It is intended to be used as an argument to middleware.LatestVersion.
-func (s *Server) LatestVersion(ctx context.Context, packagePath, modulePath, pageType string) string {
+// GetLatestMajorVersion returns the major version of a package or module.
+// If a module isn't found from the series path or an error ocurs, an empty string is returned
+// It is intended to be used as an argument to middleware.LatestVersions.
+func (s *Server) GetLatestMajorVersion(ctx context.Context, seriesPath string) string {
+	mv, err := s.getDataSource(ctx).GetLatestMajorVersion(ctx, seriesPath)
+	if err != nil {
+		if !errors.Is(err, derrors.NotFound) {
+			log.Errorf(ctx, "GetLatestMajorVersion: %v", err)
+		}
+		return ""
+	}
+
+	return mv
+}
+
+// GetLatestMinorVersion returns the latest minor version of the package or module.
+// The linkable form of the minor version is returned and is an empty string on error.
+// It is intended to be used as an argument to middleware.LatestVersions.
+func (s *Server) GetLatestMinorVersion(ctx context.Context, packagePath, modulePath, pageType string) string {
 	// It is okay to use a different DataSource (DB connection) than the rest of the
 	// request, because this makes a self-contained call on the DB.
 	v, err := latestMinorVersion(ctx, s.getDataSource(ctx), packagePath, modulePath, pageType)
@@ -29,6 +43,7 @@ func (s *Server) LatestVersion(ctx context.Context, packagePath, modulePath, pag
 		}
 		return ""
 	}
+
 	return v
 }
 

@@ -1125,7 +1125,7 @@ func newTestServer(t *testing.T, proxyModules []*proxy.Module, experimentNames .
 		t.Fatal(err)
 	}
 	mw := middleware.Chain(
-		middleware.LatestVersion(s.LatestVersion),
+		middleware.LatestVersions(s.GetLatestMinorVersion, s.GetLatestMajorVersion),
 		middleware.Experiment(exp))
 	return s, mw(mux), func() {
 		teardown()

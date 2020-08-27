@@ -13,10 +13,10 @@ import (
 	"testing"
 )
 
-func TestLatestVersion(t *testing.T) {
+func TestLatestMinorVersion(t *testing.T) {
 	for _, test := range []struct {
 		name   string
-		latest latestFunc
+		latest latestMinorFunc
 		in     string
 		want   string
 	}{
@@ -135,7 +135,86 @@ func TestLatestVersion(t *testing.T) {
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprint(w, test.in)
 			})
-			ts := httptest.NewServer(LatestVersion(test.latest)(handler))
+			latestMajor := func(context.Context, string) string { return "" }
+			ts := httptest.NewServer(LatestVersions(test.latest, latestMajor)(handler))
+			defer ts.Close()
+			resp, err := ts.Client().Get(ts.URL)
+			if err != nil {
+				t.Fatal(err)
+			}
+			got, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatal(err)
+			}
+			_ = resp.Body.Close()
+			if string(got) != test.want {
+				t.Errorf("\ngot  %s\nwant %s", got, test.want)
+			}
+		})
+	}
+}
+
+func TestLatestMajorVersion(t *testing.T) {
+	for _, test := range []struct {
+		name        string
+		latest      latestMajorFunc
+		modulePaths []string
+		in          string
+		want        string
+	}{
+		{
+			name:   "module path is not at latest",
+			latest: func(context.Context, string) string { return "/v3" },
+			modulePaths: []string{
+				"foo.com/bar",
+				"foo.com/bar/v2",
+				"foo.com/bar/v3",
+			},
+			in: `
+				<div class="DetailsHeader-banner$$GODISCOVERY_LATESTMAJORCLASS$$">
+					 data-version="v1.0.0" data-mpath="foo.com/bar" data-ppath="foo.com/bar/far" data-pagetype="pkg">
+					<p>
+						The latest major version is available at <a href="/$$GODISCOVERY_LATESTMAJORVERSIONURL$$">$$GODISCOVERY_LATESTMAJORVERSIONURL$$</a>
+					</p>
+				</div>`,
+			want: `
+				<div class="DetailsHeader-banner">
+					 data-version="v1.0.0" data-mpath="foo.com/bar" data-ppath="foo.com/bar/far" data-pagetype="pkg">
+					<p>
+						The latest major version is available at <a href="/foo.com/bar/v3">foo.com/bar/v3</a>
+					</p>
+				</div>`,
+		},
+		{
+			name:   "module path is at latest",
+			latest: func(context.Context, string) string { return "/v3" },
+			modulePaths: []string{
+				"foo.com/bar",
+				"foo.com/bar/v2",
+				"foo.com/bar/v3",
+			},
+			in: `
+				<div class="DetailsHeader-banner$$GODISCOVERY_LATESTMAJORCLASS$$">
+					 data-version="v3.0.0" data-mpath="foo.com/bar/v3" data-ppath="foo.com/bar/far" data-pagetype="pkg">
+					<p>
+						The latest major version is available at <a href="/$$GODISCOVERY_LATESTMAJORVERSIONURL$$">$$GODISCOVERY_LATESTMAJORVERSIONURL$$</a>
+					</p>
+				</div>`,
+			want: `
+				<div class="DetailsHeader-banner DetailsHeader-banner--latest">
+					 data-version="v3.0.0" data-mpath="foo.com/bar/v3" data-ppath="foo.com/bar/far" data-pagetype="pkg">
+					<p>
+						The latest major version is available at <a href="/foo.com/bar/v3">foo.com/bar/v3</a>
+					</p>
+				</div>`,
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				fmt.Fprint(w, test.in)
+			})
+			latestMinor := func(context.Context, string, string, string) string { return "" }
+			ts := httptest.NewServer(LatestVersions(latestMinor, test.latest)(handler))
 			defer ts.Close()
 			resp, err := ts.Client().Get(ts.URL)
 			if err != nil {
