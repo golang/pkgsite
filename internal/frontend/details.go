@@ -158,7 +158,7 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 		}
 	}
 	recordVersionTypeMetric(ctx, urlInfo.requestedVersion)
-	if isActiveUseDirectories(ctx) {
+	if isActiveUseUnits(ctx) {
 		return s.serveDetailsPage(w, r, ds, urlInfo)
 	}
 	return s.legacyServeDetailsPage(w, r, ds, urlInfo)
@@ -359,10 +359,10 @@ func isSupportedVersion(ctx context.Context, fullPath, requestedVersion string) 
 	return false
 }
 
-// isActveUseDirectories reports whether the experiment for reading from the
+// isActveUseUnits reports whether the experiment for reading from the
 // paths-based data model is active.
-func isActiveUseDirectories(ctx context.Context) bool {
-	return experiment.IsActive(ctx, internal.ExperimentUseDirectories) &&
+func isActiveUseUnits(ctx context.Context) bool {
+	return experiment.IsActive(ctx, internal.ExperimentUseUnits) &&
 		experiment.IsActive(ctx, internal.ExperimentUsePathInfo)
 }
 

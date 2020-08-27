@@ -918,7 +918,7 @@ func TestServer(t *testing.T) {
 		{
 			name:          "use directories",
 			testCasesFunc: serverTestCases,
-			experiments:   []string{internal.ExperimentUseDirectories, internal.ExperimentUsePathInfo},
+			experiments:   []string{internal.ExperimentUseUnits, internal.ExperimentUsePathInfo},
 		},
 		{
 			name:          "frontend fetch",

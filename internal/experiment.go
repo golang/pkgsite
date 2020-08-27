@@ -15,7 +15,7 @@ const (
 	ExperimentExecutableExamples = "executable-examples"
 	ExperimentSidenav            = "sidenav"
 	ExperimentTranslateHTML      = "translate-html"
-	ExperimentUseDirectories     = "use-directories"
+	ExperimentUseUnits           = "use-units"
 	ExperimentUsePackageImports  = "use-package-imports"
 	ExperimentUsePathInfo        = "use-path-info"
 )
@@ -29,7 +29,7 @@ var Experiments = map[string]string{
 	ExperimentExecutableExamples: "Display executable examples with their import statements, so that they are runnable via the Go playground.",
 	ExperimentSidenav:            "Display documentation index on the left sidenav.",
 	ExperimentTranslateHTML:      "Parse HTML text in READMEs, to properly display images.",
-	ExperimentUseDirectories:     "Read from paths, documentation, readmes, and package_imports tables.",
+	ExperimentUseUnits:           "Read from paths, documentation, readmes, and package_imports tables.",
 	ExperimentUsePathInfo:        "Check the paths table if a path exists, as opposed to the packages or modules table.",
 	ExperimentUsePackageImports:  "Read imports from the package_imports table.",
 }

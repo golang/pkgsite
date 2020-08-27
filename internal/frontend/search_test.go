@@ -184,7 +184,7 @@ func TestSearchRequestRedirectPath(t *testing.T) {
 		testSearchRequestRedirectPath(t)
 	})
 	t.Run("use-paths-table", func(t *testing.T) {
-		testSearchRequestRedirectPath(t, internal.ExperimentUseDirectories)
+		testSearchRequestRedirectPath(t, internal.ExperimentUseUnits)
 	})
 }
 
