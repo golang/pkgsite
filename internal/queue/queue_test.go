@@ -37,38 +37,72 @@ func TestNewTaskID(t *testing.T) {
 }
 
 func TestNewTaskRequest(t *testing.T) {
-	for vari, val := range map[string]string{
-		"GOOGLE_CLOUD_PROJECT": "Project",
-		"GAE_SERVICE":          "Service",
-	} {
-		vari := vari
-		prev := os.Getenv(vari)
-		os.Setenv(vari, val)
-		defer func() { os.Setenv(vari, prev) }()
-	}
-
-	cfg, err := config.Init(context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
-	const queueID = "queueID"
-	gcp := newGCP(cfg, nil, queueID)
-	got := gcp.newTaskRequest("mod", "v1.2.3", "suf", time.Minute)
-	want := &taskspb.CreateTaskRequest{
-		Parent: "projects/Project/locations/us-central1/queues/" + queueID,
-		Task: &taskspb.Task{
-			MessageType: &taskspb.Task_AppEngineHttpRequest{
-				AppEngineHttpRequest: &taskspb.AppEngineHttpRequest{
-					HttpMethod:  taskspb.HttpMethod_POST,
-					RelativeUri: "/fetch/mod/@v/v1.2.3",
-					AppEngineRouting: &taskspb.AppEngineRouting{
-						Service: "Service",
+	for _, test := range []struct {
+		name string
+		env  map[string]string
+		want *taskspb.CreateTaskRequest
+	}{
+		{
+			"AppEngine",
+			map[string]string{
+				"GOOGLE_CLOUD_PROJECT": "Project",
+				"GAE_SERVICE":          "Service",
+				"GAE_ENV":              "standard",
+			},
+			&taskspb.CreateTaskRequest{
+				Parent: "projects/Project/locations/us-central1/queues/queueID",
+				Task: &taskspb.Task{
+					MessageType: &taskspb.Task_AppEngineHttpRequest{
+						AppEngineHttpRequest: &taskspb.AppEngineHttpRequest{
+							HttpMethod:  taskspb.HttpMethod_POST,
+							RelativeUri: "/fetch/mod/@v/v1.2.3",
+							AppEngineRouting: &taskspb.AppEngineRouting{
+								Service: "Service",
+							},
+						},
 					},
 				},
 			},
 		},
-	}
-	if diff := cmp.Diff(want, got, cmpopts.IgnoreFields(taskspb.Task{}, "Name")); diff != "" {
-		t.Errorf("mismatch (-want, +got):\n%s", diff)
+		{
+			"non-AppEngine",
+			map[string]string{
+				"GOOGLE_CLOUD_PROJECT":   "Project",
+				"GO_DISCOVERY_QUEUE_URL": "http://1.2.3.4:8000",
+			},
+			&taskspb.CreateTaskRequest{
+				Parent: "projects/Project/locations/us-central1/queues/queueID",
+				Task: &taskspb.Task{
+					MessageType: &taskspb.Task_HttpRequest{
+						HttpRequest: &taskspb.HttpRequest{
+							HttpMethod: taskspb.HttpMethod_POST,
+							Url:        "http://1.2.3.4:8000/fetch/mod/@v/v1.2.3",
+						},
+					},
+				},
+			},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			for vari, val := range test.env {
+				vari := vari
+				prev := os.Getenv(vari)
+				os.Setenv(vari, val)
+				defer func() { os.Setenv(vari, prev) }()
+			}
+
+			cfg, err := config.Init(context.Background())
+			if err != nil {
+				t.Fatal(err)
+			}
+			gcp, err := newGCP(cfg, nil, "queueID")
+			if err != nil {
+				t.Fatal(err)
+			}
+			got := gcp.newTaskRequest("mod", "v1.2.3", "suf", time.Minute)
+			if diff := cmp.Diff(test.want, got, cmpopts.IgnoreFields(taskspb.Task{}, "Name")); diff != "" {
+				t.Errorf("mismatch (-want, +got):\n%s", diff)
+			}
+		})
 	}
 }

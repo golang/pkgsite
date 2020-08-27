@@ -50,30 +50,52 @@ func New(ctx context.Context, cfg *config.Config, queueName string, numWorkers i
 	if err != nil {
 		return nil, err
 	}
-
-	if queueName == "" {
-		return nil, errors.New("missing queue name: queueName cannot be empty")
+	g, err := newGCP(cfg, client, queueName)
+	if err != nil {
+		return nil, err
 	}
-	return newGCP(cfg, client, queueName), nil
+	log.Infof(ctx, "enqueuing at %s with queueService=%q, queueURL=%q", g.queueName, g.queueService, g.queueURL)
+	return g, nil
 }
 
 // GCP provides a Queue implementation backed by the Google Cloud Tasks
 // API.
 type GCP struct {
-	cfg     *config.Config
-	client  *cloudtasks.Client
-	queueID string
+	client       *cloudtasks.Client
+	queueName    string // full GCP name of the queue
+	queueService string // AppEngine service to post tasks to
+	queueURL     string // non-AppEngine URL to post tasks to
 }
 
 // NewGCP returns a new Queue that can be used to enqueue tasks using the
 // cloud tasks API.  The given queueID should be the name of the queue in the
 // cloud tasks console.
-func newGCP(cfg *config.Config, client *cloudtasks.Client, queueID string) *GCP {
-	return &GCP{
-		cfg:     cfg,
-		client:  client,
-		queueID: queueID,
+func newGCP(cfg *config.Config, client *cloudtasks.Client, queueID string) (_ *GCP, err error) {
+	defer derrors.Wrap(&err, "newGCP(cfg, client, %q)", queueID)
+	if queueID == "" {
+		return nil, errors.New("empty queueID")
 	}
+	if cfg.ProjectID == "" {
+		return nil, errors.New("empty ProjectID")
+	}
+	if cfg.LocationID == "" {
+		return nil, errors.New("empty LocationID")
+	}
+	if cfg.QueueService == "" && cfg.QueueURL == "" {
+		return nil, errors.New("both QueueService and QueueURL are empty")
+	}
+	if cfg.QueueService != "" && cfg.QueueURL != "" {
+		return nil, errors.New("both  QueueService and QueueURL are non-empty")
+	}
+	if cfg.OnAppEngine() && cfg.QueueService == "" {
+		return nil, errors.New("on AppEngine, but QueueService is empty")
+	}
+	return &GCP{
+		client:       client,
+		queueName:    fmt.Sprintf("projects/%s/locations/%s/queues/%s", cfg.ProjectID, cfg.LocationID, queueID),
+		queueService: cfg.QueueService,
+		queueURL:     cfg.QueueURL,
+	}, nil
 }
 
 // ScheduleFetch enqueues a task on GCP to fetch the given modulePath and
@@ -97,24 +119,30 @@ func (q *GCP) ScheduleFetch(ctx context.Context, modulePath, version, suffix str
 }
 
 func (q *GCP) newTaskRequest(modulePath, version, suffix string, taskIDChangeInterval time.Duration) *taskspb.CreateTaskRequest {
-	queueName := fmt.Sprintf("projects/%s/locations/%s/queues/%s", q.cfg.ProjectID, q.cfg.LocationID, q.queueID)
-	mod := fmt.Sprintf("%s/@v/%s", modulePath, version)
-	u := fmt.Sprintf("/fetch/" + mod)
 	taskID := newTaskID(modulePath, version, time.Now(), taskIDChangeInterval)
-	req := &taskspb.CreateTaskRequest{
-		Parent: queueName,
-		Task: &taskspb.Task{
-			Name: fmt.Sprintf("%s/tasks/%s", queueName, taskID),
-			MessageType: &taskspb.Task_AppEngineHttpRequest{
-				AppEngineHttpRequest: &taskspb.AppEngineHttpRequest{
-					HttpMethod:  taskspb.HttpMethod_POST,
-					RelativeUri: u,
-					AppEngineRouting: &taskspb.AppEngineRouting{
-						Service: q.cfg.QueueService,
-					},
+	relativeURI := fmt.Sprintf("/fetch/%s/@v/%s", modulePath, version)
+	task := &taskspb.Task{Name: fmt.Sprintf("%s/tasks/%s", q.queueName, taskID)}
+	if q.queueService != "" {
+		task.MessageType = &taskspb.Task_AppEngineHttpRequest{
+			AppEngineHttpRequest: &taskspb.AppEngineHttpRequest{
+				HttpMethod:  taskspb.HttpMethod_POST,
+				RelativeUri: relativeURI,
+				AppEngineRouting: &taskspb.AppEngineRouting{
+					Service: q.queueService,
 				},
 			},
-		},
+		}
+	} else {
+		task.MessageType = &taskspb.Task_HttpRequest{
+			HttpRequest: &taskspb.HttpRequest{
+				HttpMethod: taskspb.HttpMethod_POST,
+				Url:        q.queueURL + relativeURI,
+			},
+		}
+	}
+	req := &taskspb.CreateTaskRequest{
+		Parent: q.queueName,
+		Task:   task,
 	}
 	// If suffix is non-empty, append it to the task name. This lets us force reprocessing
 	// of tasks that would normally be de-duplicated.

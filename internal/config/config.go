@@ -103,9 +103,13 @@ type Config struct {
 	// AppEngine identifiers
 	ProjectID, ServiceID, VersionID, ZoneID, InstanceID, LocationID string
 
-	// QueueService is used to identify which service Cloud Tasks queue
-	// should send requests to.
+	// QueueService is the AppEngine service that the Cloud Tasks queue should
+	// send requests to.
 	QueueService string
+
+	// QueueURL is the URL that the Cloud Tasks queue should send requests to.
+	// It should be used when the worker is not on AppEngine.
+	QueueURL string
 
 	// GoogleTagManagerID is the ID used for GoogleTagManager. It has the
 	// structure GTM-XXXX.
@@ -288,7 +292,8 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		VersionID:          GetEnv("GAE_VERSION", os.Getenv("GO_DISCOVERY_VERSION")),
 		InstanceID:         GetEnv("GAE_INSTANCE", os.Getenv("GO_DISCOVERY_INSTANCE")),
 		GoogleTagManagerID: os.Getenv("GO_DISCOVERY_GOOGLE_TAG_MANAGER_ID"),
-		QueueService:       GetEnv("GO_DISCOVERY_QUEUE_SERVICE", os.Getenv("GAE_SERVICE")),
+		QueueService:       os.Getenv("GAE_SERVICE"),
+		QueueURL:           os.Getenv("GO_DISCOVERY_QUEUE_URL"),
 		// LocationID is essentially hard-coded until we figure out a good way to
 		// determine it programmatically, but we check an environment variable in
 		// case it needs to be overridden.
