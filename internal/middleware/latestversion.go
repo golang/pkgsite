@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	latestClassPlaceholder   = "$$GODISCOVERY_LATESTCLASS$$"
-	LatestVersionPlaceholder = "$$GODISCOVERY_LATESTVERSION$$"
+	latestMinorClassPlaceholder   = "$$GODISCOVERY_LATESTMINORCLASS$$"
+	LatestMinorVersionPlaceholder = "$$GODISCOVERY_LATESTMINORVERSION$$"
 )
 
 // latestInfoRegexp extracts values needed to determine the latest-version badge from a page's HTML.
@@ -40,18 +40,18 @@ func LatestVersion(latest latestFunc) Middleware {
 				modulePath := string(matches[2])
 				packagePath := string(matches[3])
 				pageType := string(matches[4])
-				latestVersion := latest(r.Context(), packagePath, modulePath, pageType)
-				latestClass := "DetailsHeader-badge"
+				latestMinorVersion := latest(r.Context(), packagePath, modulePath, pageType)
+				latestMinorClass := "DetailsHeader-badge"
 				switch {
-				case latestVersion == "":
-					latestClass += "--unknown"
-				case latestVersion == version:
-					latestClass += "--latest"
+				case latestMinorVersion == "":
+					latestMinorClass += "--unknown"
+				case latestMinorVersion == version:
+					latestMinorClass += "--latest"
 				default:
-					latestClass += "--goToLatest"
+					latestMinorClass += "--goToLatest"
 				}
-				body = bytes.ReplaceAll(body, []byte(latestClassPlaceholder), []byte(latestClass))
-				body = bytes.ReplaceAll(body, []byte(LatestVersionPlaceholder), []byte(latestVersion))
+				body = bytes.ReplaceAll(body, []byte(latestMinorClassPlaceholder), []byte(latestMinorClass))
+				body = bytes.ReplaceAll(body, []byte(LatestMinorVersionPlaceholder), []byte(latestMinorVersion))
 			}
 			if _, err := w.Write(body); err != nil {
 				log.Errorf(r.Context(), "LatestVersion, writing: %v", err)

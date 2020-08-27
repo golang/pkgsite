@@ -69,7 +69,7 @@ func createPackage(pkg *internal.PackageMeta, mi *internal.ModuleInfo, latestReq
 		Licenses:          transformLicenseMetadata(pkg.Licenses),
 		Module:            *m,
 		URL:               constructPackageURL(pkg.Path, mi.ModulePath, urlVersion),
-		LatestURL:         constructPackageURL(pkg.Path, mi.ModulePath, middleware.LatestVersionPlaceholder),
+		LatestURL:         constructPackageURL(pkg.Path, mi.ModulePath, middleware.LatestMinorVersionPlaceholder),
 	}, nil
 }
 
@@ -92,7 +92,7 @@ func createModule(mi *internal.ModuleInfo, licmetas []*licenses.Metadata, latest
 		IsRedistributable: mi.IsRedistributable,
 		Licenses:          transformLicenseMetadata(licmetas),
 		URL:               constructModuleURL(mi.ModulePath, urlVersion),
-		LatestURL:         constructModuleURL(mi.ModulePath, middleware.LatestVersionPlaceholder),
+		LatestURL:         constructModuleURL(mi.ModulePath, middleware.LatestMinorVersionPlaceholder),
 	}
 }
 

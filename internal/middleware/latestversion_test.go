@@ -24,10 +24,10 @@ func TestLatestVersion(t *testing.T) {
 			name:   "package version is not latest",
 			latest: func(context.Context, string, string, string) string { return "v1.2.3" },
 			in: `
-                <div class="DetailsHeader-badge $$GODISCOVERY_LATESTCLASS$$"
+                <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
 					 data-version="v1.0.0" data-mpath="p1/p2" data-ppath="p1/p2/p3" data-pagetype="pkg">
                     <span>Latest</span>
-                    <a href="p1/p2@$$GODISCOVERY_LATESTVERSION$$/p3">Go to latest</a>
+                    <a href="p1/p2@$$GODISCOVERY_LATESTMINORVERSION$$/p3">Go to latest</a>
                 </div>`,
 			want: `
                 <div class="DetailsHeader-badge DetailsHeader-badge--goToLatest"
@@ -40,10 +40,10 @@ func TestLatestVersion(t *testing.T) {
 			name:   "package version is latest",
 			latest: func(context.Context, string, string, string) string { return "v1.2.3" },
 			in: `
-                <div class="DetailsHeader-badge $$GODISCOVERY_LATESTCLASS$$"
+                <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
 					 data-version="v1.2.3" data-mpath="p1/p2" data-ppath="p1/p2/p3" data-pagetype="pkg">
                     <span>Latest</span>
-                    <a href="p1/p2@$$GODISCOVERY_LATESTVERSION$$/p3">Go to latest</a>
+                    <a href="p1/p2@$$GODISCOVERY_LATESTMINORVERSION$$/p3">Go to latest</a>
                 </div>`,
 			want: `
                 <div class="DetailsHeader-badge DetailsHeader-badge--latest"
@@ -56,10 +56,10 @@ func TestLatestVersion(t *testing.T) {
 			name:   "package version with build is latest",
 			latest: func(context.Context, string, string, string) string { return "v1.2.3+build" },
 			in: `
-                <div class="DetailsHeader-badge $$GODISCOVERY_LATESTCLASS$$"
+                <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
 					 data-version="v1.2.3&#43;build" data-mpath="p1/p2" data-ppath="p1/p2/p3" data-pagetype="pkg">
                     <span>Latest</span>
-                    <a href="p1/p2@$$GODISCOVERY_LATESTVERSION$$/p3">Go to latest</a>
+                    <a href="p1/p2@$$GODISCOVERY_LATESTMINORVERSION$$/p3">Go to latest</a>
                 </div>`,
 			want: `
                 <div class="DetailsHeader-badge DetailsHeader-badge--latest"
@@ -72,10 +72,10 @@ func TestLatestVersion(t *testing.T) {
 			name:   "module version is not latest",
 			latest: func(context.Context, string, string, string) string { return "v1.2.3" },
 			in: `
-                <div class="DetailsHeader-badge $$GODISCOVERY_LATESTCLASS$$"
+                <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
 					 data-version="v1.0.0" data-mpath="p1/p2" data-ppath="" data-pagetype="pkg">
                     <span>Latest</span>
-                    <a href="mod/p1/p2@$$GODISCOVERY_LATESTVERSION$$">Go to latest</a>
+                    <a href="mod/p1/p2@$$GODISCOVERY_LATESTMINORVERSION$$">Go to latest</a>
                 </div>`,
 			want: `
                 <div class="DetailsHeader-badge DetailsHeader-badge--goToLatest"
@@ -88,10 +88,10 @@ func TestLatestVersion(t *testing.T) {
 			name:   "module version is latest",
 			latest: func(context.Context, string, string, string) string { return "v1.2.3" },
 			in: `
-                <div class="DetailsHeader-badge $$GODISCOVERY_LATESTCLASS$$"
+                <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
 					 data-version="v1.2.3" data-mpath="p1/p2" data-ppath="" data-pagetype="pkg">
                     <span>Latest</span>
-                    <a href="mod/p1/p2@$$GODISCOVERY_LATESTVERSION$$">Go to latest</a>
+                    <a href="mod/p1/p2@$$GODISCOVERY_LATESTMINORVERSION$$">Go to latest</a>
                 </div>`,
 			want: `
                 <div class="DetailsHeader-badge DetailsHeader-badge--latest"
@@ -104,10 +104,10 @@ func TestLatestVersion(t *testing.T) {
 			name:   "latest func returns empty string",
 			latest: func(context.Context, string, string, string) string { return "" },
 			in: `
-                <div class="DetailsHeader-badge $$GODISCOVERY_LATESTCLASS$$"
+                <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
 					 data-version="v1.2.3" data-mpath="p1/p2" data-ppath="" data-pagetype="pkg">
                     <span>Latest</span>
-                    <a href="mod/p1/p2@$$GODISCOVERY_LATESTVERSION$$">Go to latest</a>
+                    <a href="mod/p1/p2@$$GODISCOVERY_LATESTMINORVERSION$$">Go to latest</a>
                 </div>`,
 			want: `
                 <div class="DetailsHeader-badge DetailsHeader-badge--unknown"
@@ -120,14 +120,14 @@ func TestLatestVersion(t *testing.T) {
 			name:   "no regexp match",
 			latest: func(context.Context, string, string, string) string { return "v1.2.3" },
 			in: `
-                <div class="DetailsHeader-badge $$GODISCOVERY_LATESTCLASS$$">
+                <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$">
                     <span>Latest</span>
-                    <a href="mod/p1/p2@$$GODISCOVERY_LATESTVERSION$$">Go to latest</a>
+                    <a href="mod/p1/p2@$$GODISCOVERY_LATESTMINORVERSION$$">Go to latest</a>
                 </div>`,
 			want: `
-                <div class="DetailsHeader-badge $$GODISCOVERY_LATESTCLASS$$">
+                <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$">
                     <span>Latest</span>
-                    <a href="mod/p1/p2@$$GODISCOVERY_LATESTVERSION$$">Go to latest</a>
+                    <a href="mod/p1/p2@$$GODISCOVERY_LATESTMINORVERSION$$">Go to latest</a>
                 </div>`,
 		},
 	} {

@@ -21,11 +21,11 @@ import (
 func (s *Server) LatestVersion(ctx context.Context, packagePath, modulePath, pageType string) string {
 	// It is okay to use a different DataSource (DB connection) than the rest of the
 	// request, because this makes a self-contained call on the DB.
-	v, err := latestVersion(ctx, s.getDataSource(ctx), packagePath, modulePath, pageType)
+	v, err := latestMinorVersion(ctx, s.getDataSource(ctx), packagePath, modulePath, pageType)
 	if err != nil {
 		// We get NotFound errors from directories; they clutter the log.
 		if !errors.Is(err, derrors.NotFound) {
-			log.Errorf(ctx, "GetLatestVersion: %v", err)
+			log.Errorf(ctx, "GetLatestMinorVersion: %v", err)
 		}
 		return ""
 	}
@@ -34,8 +34,8 @@ func (s *Server) LatestVersion(ctx context.Context, packagePath, modulePath, pag
 
 // TODO(https://github.com/golang/go/issues/40107): this is currently tested in server_test.go, but
 // we should add tests for this function.
-func latestVersion(ctx context.Context, ds internal.DataSource, packagePath, modulePath, pageType string) (_ string, err error) {
-	defer derrors.Wrap(&err, "latestVersion(ctx, %q, %q)", modulePath, packagePath)
+func latestMinorVersion(ctx context.Context, ds internal.DataSource, packagePath, modulePath, pageType string) (_ string, err error) {
+	defer derrors.Wrap(&err, "latestMinorVersion(ctx, %q, %q)", modulePath, packagePath)
 	if experiment.IsActive(ctx, internal.ExperimentUsePathInfo) {
 		fullPath := packagePath
 		if pageType == pageTypeModule || pageType == pageTypeStdLib {

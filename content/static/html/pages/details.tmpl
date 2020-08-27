@@ -50,7 +50,7 @@
          {{$ppath = $header.Path}}
       {{end}}
       <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
-      <div class="DetailsHeader-badge $$GODISCOVERY_LATESTCLASS$$"
+      <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
            data-version="{{$header.LinkVersion}}" data-mpath="{{$header.ModulePath}}" data-ppath="{{$ppath}}" data-pagetype="{{$pageType}}">
         <span>Latest</span>
         <a href="{{$header.LatestURL}}">Go to latest</a>

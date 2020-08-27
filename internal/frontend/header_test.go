@@ -35,8 +35,8 @@ func samplePackage(mutators ...func(*Package)) *Package {
 	}
 	p.URL = constructPackageURL(p.Path, p.ModulePath, p.LinkVersion)
 	p.Module.URL = constructModuleURL(p.ModulePath, p.LinkVersion)
-	p.LatestURL = constructPackageURL(p.Path, p.ModulePath, middleware.LatestVersionPlaceholder)
-	p.Module.LatestURL = constructModuleURL(p.ModulePath, middleware.LatestVersionPlaceholder)
+	p.LatestURL = constructPackageURL(p.Path, p.ModulePath, middleware.LatestMinorVersionPlaceholder)
+	p.Module.LatestURL = constructModuleURL(p.ModulePath, middleware.LatestMinorVersionPlaceholder)
 	p.Module.LinkVersion = linkVersion(sample.VersionString, sample.ModulePath)
 	return p
 }
