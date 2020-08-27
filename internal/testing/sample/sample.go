@@ -196,14 +196,14 @@ func Module(modulePath, version string, suffixes ...string) *internal.Module {
 		LegacyPackages:   nil,
 		Licenses:         Licenses,
 	}
-	m.Units = []*internal.Unit{DirectoryForModuleRoot(mi, LicenseMetadata)}
+	m.Units = []*internal.Unit{UnitForModuleRoot(mi, LicenseMetadata)}
 	for _, s := range suffixes {
 		lp := LegacyPackage(modulePath, s)
 		if s != "" {
 			AddPackage(m, lp)
 		} else {
 			m.LegacyPackages = append(m.LegacyPackages, lp)
-			m.Units[0].Package = DirectoryForPackage(lp).Package
+			m.Units[0].Package = UnitForPackage(lp).Package
 		}
 	}
 	return m
@@ -215,7 +215,7 @@ func AddPackage(m *internal.Module, p *internal.LegacyPackage) *internal.Module 
 			p.Path, m.ModulePath))
 	}
 	m.LegacyPackages = append(m.LegacyPackages, p)
-	AddDirectory(m, DirectoryForPackage(p))
+	AddUnit(m, UnitForPackage(p))
 	minLen := len(m.ModulePath)
 	if m.ModulePath == stdlib.ModulePath {
 		minLen = 1
@@ -229,13 +229,13 @@ func AddPackage(m *internal.Module, p *internal.LegacyPackage) *internal.Module 
 			}
 		}
 		if !found {
-			AddDirectory(m, DirectoryEmpty(pth))
+			AddUnit(m, UnitEmpty(pth))
 		}
 	}
 	return m
 }
 
-func AddDirectory(m *internal.Module, d *internal.Unit) {
+func AddUnit(m *internal.Module, d *internal.Unit) {
 	for _, e := range m.Units {
 		if e.Path == d.Path {
 			panic(fmt.Sprintf("module already has path %q", e.Path))
@@ -257,7 +257,7 @@ func AddLicense(m *internal.Module, lic *licenses.License) {
 	}
 }
 
-func DirectoryEmpty(path string) *internal.Unit {
+func UnitEmpty(path string) *internal.Unit {
 	return &internal.Unit{
 		DirectoryMeta: internal.DirectoryMeta{
 			Path:              path,
@@ -268,7 +268,7 @@ func DirectoryEmpty(path string) *internal.Unit {
 	}
 }
 
-func DirectoryForModuleRoot(m *internal.LegacyModuleInfo, licenses []*licenses.Metadata) *internal.Unit {
+func UnitForModuleRoot(m *internal.LegacyModuleInfo, licenses []*licenses.Metadata) *internal.Unit {
 	d := &internal.Unit{
 		DirectoryMeta: internal.DirectoryMeta{
 			Path:              m.ModulePath,
@@ -286,7 +286,7 @@ func DirectoryForModuleRoot(m *internal.LegacyModuleInfo, licenses []*licenses.M
 	return d
 }
 
-func DirectoryForPackage(pkg *internal.LegacyPackage) *internal.Unit {
+func UnitForPackage(pkg *internal.LegacyPackage) *internal.Unit {
 	return &internal.Unit{
 		DirectoryMeta: internal.DirectoryMeta{
 			Path:              pkg.Path,

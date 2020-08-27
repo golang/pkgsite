@@ -69,7 +69,7 @@ func TestGetPathInfo(t *testing.T) {
 					Documentation: &internal.Documentation{},
 				}
 			}
-			sample.AddDirectory(m, dir)
+			sample.AddUnit(m, dir)
 		}
 		if err := testDB.InsertModule(ctx, m); err != nil {
 			t.Fatal(err)
