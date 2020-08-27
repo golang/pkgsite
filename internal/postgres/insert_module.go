@@ -98,10 +98,10 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
 		}
 		logMemory(ctx, "after insertPackages")
 
-		if err := insertDirectories(ctx, tx, m, moduleID); err != nil {
+		if err := insertUnits(ctx, tx, m, moduleID); err != nil {
 			return err
 		}
-		logMemory(ctx, "after insertDirectories")
+		logMemory(ctx, "after insertUnits")
 
 		// Obtain a transaction-scoped exclusive advisory lock on the module
 		// path. The transaction that holds the lock is the only one that can
@@ -365,9 +365,9 @@ func insertImportsUnique(ctx context.Context, tx *database.DB, m *internal.Modul
 	return tx.BulkUpsert(ctx, "imports_unique", cols, values, cols)
 }
 
-func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module, moduleID int) (err error) {
-	defer derrors.Wrap(&err, "insertDirectories(ctx, tx, %q, %q)", m.ModulePath, m.Version)
-	ctx, span := trace.StartSpan(ctx, "insertDirectories")
+func insertUnits(ctx context.Context, db *database.DB, m *internal.Module, moduleID int) (err error) {
+	defer derrors.Wrap(&err, "insertUnits(ctx, tx, %q, %q)", m.ModulePath, m.Version)
+	ctx, span := trace.StartSpan(ctx, "insertUnits")
 	defer span.End()
 
 	if m.LegacyReadmeContents == internal.StringFieldMissing {
