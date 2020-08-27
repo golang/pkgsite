@@ -12,9 +12,9 @@ import (
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
-// moduleDirectories returns all of the directories in a given module, along
-// with the contents for those directories.
-func moduleDirectories(modulePath string,
+// moduleUnits returns all of the units in a given module, along
+// with the contents for those units.
+func moduleUnits(modulePath string,
 	pkgs []*internal.LegacyPackage,
 	readmes []*internal.Readme,
 	d *licenses.Detector) []*internal.Unit {
@@ -22,7 +22,7 @@ func moduleDirectories(modulePath string,
 	for _, pkg := range pkgs {
 		pkgLookup[pkg.Path] = pkg
 	}
-	dirPaths := directoryPaths(modulePath, pkgs)
+	dirPaths := unitPaths(modulePath, pkgs)
 
 	readmeLookup := map[string]*internal.Readme{}
 	for _, readme := range readmes {
@@ -35,7 +35,7 @@ func moduleDirectories(modulePath string,
 		}
 	}
 
-	var directories []*internal.Unit
+	var units []*internal.Unit
 	for _, dirPath := range dirPaths {
 		suffix := internal.Suffix(dirPath, modulePath)
 		if modulePath == stdlib.ModulePath {
@@ -70,13 +70,13 @@ func moduleDirectories(modulePath string,
 			}
 			dir.Imports = pkg.Imports
 		}
-		directories = append(directories, dir)
+		units = append(units, dir)
 	}
-	return directories
+	return units
 }
 
-// directoryPaths returns the directory paths in a module.
-func directoryPaths(modulePath string, packages []*internal.LegacyPackage) []string {
+// unitPaths returns the paths for all the units in a module.
+func unitPaths(modulePath string, packages []*internal.LegacyPackage) []string {
 	shouldContinue := func(p string) bool {
 		if modulePath == stdlib.ModulePath {
 			return p != "."

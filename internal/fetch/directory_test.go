@@ -61,10 +61,10 @@ func TestDirectoryPaths(t *testing.T) {
 			for _, suffix := range test.packageSuffixes {
 				packages = append(packages, sample.LegacyPackage(test.modulePath, suffix))
 			}
-			got := directoryPaths(test.modulePath, packages)
+			got := unitPaths(test.modulePath, packages)
 			sort.Strings(got)
 			if diff := cmp.Diff(test.want, got); diff != "" {
-				t.Errorf("directoryPaths(%q, %q)  mismatch (-want +got):\n%s",
+				t.Errorf("unitPaths(%q, %q)  mismatch (-want +got):\n%s",
 					test.modulePath, test.packageSuffixes, diff)
 			}
 		})
