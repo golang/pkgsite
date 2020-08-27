@@ -31,7 +31,7 @@ func (m *Module) RemoveNonRedistributableData() {
 	}
 }
 
-func (d *Directory) RemoveNonRedistributableData() {
+func (d *Unit) RemoveNonRedistributableData() {
 	if !d.IsRedistributable {
 		d.Readme = nil
 		if d.Package != nil {

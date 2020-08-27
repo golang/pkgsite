@@ -17,7 +17,7 @@ import (
 func moduleDirectories(modulePath string,
 	pkgs []*internal.LegacyPackage,
 	readmes []*internal.Readme,
-	d *licenses.Detector) []*internal.Directory {
+	d *licenses.Detector) []*internal.Unit {
 	pkgLookup := map[string]*internal.LegacyPackage{}
 	for _, pkg := range pkgs {
 		pkgLookup[pkg.Path] = pkg
@@ -35,7 +35,7 @@ func moduleDirectories(modulePath string,
 		}
 	}
 
-	var directories []*internal.Directory
+	var directories []*internal.Unit
 	for _, dirPath := range dirPaths {
 		suffix := internal.Suffix(dirPath, modulePath)
 		if modulePath == stdlib.ModulePath {
@@ -46,7 +46,7 @@ func moduleDirectories(modulePath string,
 		for _, l := range lics {
 			meta = append(meta, l.Metadata)
 		}
-		dir := &internal.Directory{
+		dir := &internal.Unit{
 			DirectoryMeta: internal.DirectoryMeta{
 				Path:              dirPath,
 				V1Path:            internal.V1Path(modulePath, suffix),

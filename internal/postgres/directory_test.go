@@ -489,7 +489,7 @@ func TestGetDirectory(t *testing.T) {
 
 	for _, tc := range []struct {
 		name, dirPath, modulePath, version string
-		want                               *internal.Directory
+		want                               *internal.Unit
 		wantNotFoundErr                    bool
 	}{
 		{
@@ -616,7 +616,7 @@ func TestGetDirectoryFieldSet(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cleanFields := func(dir *internal.Directory, fields internal.FieldSet) {
+	cleanFields := func(dir *internal.Unit, fields internal.FieldSet) {
 		// Remove fields based on the FieldSet specified.
 		dir.DirectoryMeta = internal.DirectoryMeta{
 			Path:              dir.Path,
@@ -637,7 +637,7 @@ func TestGetDirectoryFieldSet(t *testing.T) {
 	for _, test := range []struct {
 		name   string
 		fields internal.FieldSet
-		want   *internal.Directory
+		want   *internal.Unit
 	}{
 		{
 			name:   "WithDocumentation",
@@ -680,8 +680,8 @@ func TestGetDirectoryFieldSet(t *testing.T) {
 	}
 }
 
-func newVdir(path, modulePath, version string, readme *internal.Readme, pkg *internal.Package) *internal.Directory {
-	dir := &internal.Directory{
+func newVdir(path, modulePath, version string, readme *internal.Readme, pkg *internal.Package) *internal.Unit {
+	dir := &internal.Unit{
 		DirectoryMeta: internal.DirectoryMeta{
 			ModuleInfo:        *sample.ModuleInfo(modulePath, version),
 			Path:              path,
@@ -753,7 +753,7 @@ func TestGetDirectoryBypass(t *testing.T) {
 	}
 }
 
-func findDirectory(m *internal.Module, path string) *internal.Directory {
+func findDirectory(m *internal.Module, path string) *internal.Unit {
 	for _, d := range m.Directories {
 		d.ModuleInfo = m.ModuleInfo
 		if d.Path == path {

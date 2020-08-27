@@ -266,7 +266,7 @@ func packageFromVersion(pkgPath string, m *internal.Module) (_ *internal.LegacyV
 }
 
 // directoryFromVersion returns information about a directory at a path.
-func (ds *DataSource) directoryFromVersion(ctx context.Context, fullPath, modulePath, version string) (_ *internal.Directory, err error) {
+func (ds *DataSource) directoryFromVersion(ctx context.Context, fullPath, modulePath, version string) (_ *internal.Unit, err error) {
 	var m *internal.Module
 	m, err = ds.getModule(ctx, modulePath, version)
 	if err != nil {

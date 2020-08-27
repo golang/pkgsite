@@ -108,7 +108,7 @@ type Module struct {
 	// Licenses holds all licenses within this module version, including those
 	// that may be contained in nested subdirectories.
 	Licenses    []*licenses.License
-	Directories []*Directory
+	Directories []*Unit
 
 	LegacyPackages []*LegacyPackage
 }
@@ -124,9 +124,9 @@ type DirectoryMeta struct {
 	PathID            int                  // only used by internal/postgres
 }
 
-// Directory represents a directory in a module version, and the contents of that directory.
+// Unit represents a directory in a module version, and the contents of that directory.
 // It will replace LegacyDirectory once everything has been migrated.
-type Directory struct {
+type Unit struct {
 	DirectoryMeta
 	Readme  *Readme
 	Package *Package
