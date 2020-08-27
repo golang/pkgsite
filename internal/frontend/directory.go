@@ -56,16 +56,18 @@ func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, 
 	if err != nil {
 		return err
 	}
+	linkver := linkVersion(dmeta.Version, dmeta.ModulePath)
 	page := &DetailsPage{
-		basePage:       s.newBasePage(r, fmt.Sprintf("%s directory", dmeta.Path)),
-		Name:           dmeta.Path,
-		Settings:       settings,
-		Header:         header,
-		Breadcrumb:     breadcrumbPath(dmeta.Path, dmeta.ModulePath, linkVersion(dmeta.Version, dmeta.ModulePath)),
-		Details:        details,
-		CanShowDetails: true,
-		Tabs:           directoryTabSettings,
-		PageType:       pageTypeDirectory,
+		basePage:         s.newBasePage(r, fmt.Sprintf("%s directory", dmeta.Path)),
+		Name:             dmeta.Path,
+		Settings:         settings,
+		Header:           header,
+		Breadcrumb:       breadcrumbPath(dmeta.Path, dmeta.ModulePath, linkver),
+		Details:          details,
+		CanShowDetails:   true,
+		Tabs:             directoryTabSettings,
+		PageType:         pageTypeDirectory,
+		CanonicalURLPath: constructPackageURL(dmeta.Path, dmeta.ModulePath, linkver),
 	}
 	s.servePage(ctx, w, settings.TemplateName, page)
 	return nil

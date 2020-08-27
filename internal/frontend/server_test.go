@@ -419,7 +419,8 @@ func serverTestCases() []serverTestCase {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.PackageHeader(pkgV100, versioned),
-				in(".Documentation", text(`This is the documentation HTML`))),
+				in(".Documentation", text(`This is the documentation HTML`)),
+				in(".js-canonicalURLPath", attr("data-canonical-url-path", "/github.com/valid/module_name@v1.0.0/foo"))),
 		},
 		{
 			name: "package at version default specific version nonredistributable",
@@ -608,7 +609,8 @@ func serverTestCases() []serverTestCase {
 					RepoURL:        "https://" + sample.ModulePath,
 					ReadmeContent:  "readme",
 					ReadmeSource:   sample.ModulePath + "@v1.0.0/README.md",
-				})),
+				}),
+				in(".js-canonicalURLPath", attr("data-canonical-url-path", "/github.com/valid/module_name@v1.0.0/foo"))),
 		},
 		{
 			name:           "directory licenses",
@@ -670,7 +672,8 @@ func serverTestCases() []serverTestCase {
 					ReadmeContent:  "readme",
 					RepoURL:        "https://" + sample.ModulePath,
 					ReadmeSource:   sample.ModulePath + "@v1.0.0/README.md",
-				})),
+				}),
+				in(".js-canonicalURLPath", attr("data-canonical-url-path", "/mod/github.com/valid/module_name@v1.0.0"))),
 		},
 		{
 			name:           "module overview",

@@ -98,6 +98,10 @@ func (s *Server) servePackagePage(ctx context.Context,
 		CanShowDetails: canShowDetails,
 		Tabs:           packageTabSettings,
 		PageType:       pageType,
+		CanonicalURLPath: constructPackageURL(
+			pkgHeader.Path,
+			pkgHeader.Module.ModulePath,
+			pkgHeader.Module.LinkVersion),
 	}
 	page.basePage.AllowWideContent = tab == tabDoc
 	s.servePage(ctx, w, settings.TemplateName, page)
