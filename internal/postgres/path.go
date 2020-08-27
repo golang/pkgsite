@@ -35,29 +35,31 @@ const orderByLatest = `
 // 1. Match the module path and or version, if they are provided;
 // 2. Prefer newer module versions to older, and release to pre-release;
 // 3. In the unlikely event of two paths at the same version, pick the longer module path.
-func (db *DB) GetPathInfo(ctx context.Context, path, inModulePath, inVersion string) (outModulePath, outVersion string, isPackage bool, err error) {
-	defer derrors.Wrap(&err, "DB.GetPathInfo(ctx, %q, %q, %q)", path, inModulePath, inVersion)
+func (db *DB) GetPathInfo(ctx context.Context, path, requestedModulePath, requestedVersion string) (_ *internal.PathInfo, err error) {
+	defer derrors.Wrap(&err, "DB.GetPathInfo(ctx, %q, %q, %q)", path, requestedModulePath, requestedVersion)
 
 	var (
 		constraints []string
 		joinStmt    string
 	)
 	args := []interface{}{path}
-	if inModulePath != internal.UnknownModulePath {
+	if requestedModulePath != internal.UnknownModulePath {
 		constraints = append(constraints, fmt.Sprintf("AND m.module_path = $%d", len(args)+1))
-		args = append(args, inModulePath)
+		args = append(args, requestedModulePath)
 	}
-	switch inVersion {
+	switch requestedVersion {
 	case internal.LatestVersion:
 	case internal.MasterVersion:
 		joinStmt = "INNER JOIN version_map vm ON (vm.module_id = m.id)"
 		constraints = append(constraints, "AND vm.requested_version = 'master'")
 	default:
 		constraints = append(constraints, fmt.Sprintf("AND m.version = $%d", len(args)+1))
-		args = append(args, inVersion)
+		args = append(args, requestedVersion)
 	}
+
+	pi := internal.PathInfo{Path: path}
 	query := fmt.Sprintf(`
-		SELECT m.module_path, m.version, p.name != ''
+		SELECT m.module_path, m.version, p.name, p.redistributable
 		FROM paths p
 		INNER JOIN modules m ON (p.module_id = m.id)
 		%s
@@ -66,14 +68,14 @@ func (db *DB) GetPathInfo(ctx context.Context, path, inModulePath, inVersion str
 		%s
 		LIMIT 1
 	`, joinStmt, strings.Join(constraints, " "), orderByLatest)
-	err = db.db.QueryRow(ctx, query, args...).Scan(&outModulePath, &outVersion, &isPackage)
+	err = db.db.QueryRow(ctx, query, args...).Scan(&pi.ModulePath, &pi.Version, &pi.Name, &pi.IsRedistributable)
 	switch err {
 	case sql.ErrNoRows:
-		return "", "", false, derrors.NotFound
+		return nil, derrors.NotFound
 	case nil:
-		return outModulePath, outVersion, isPackage, nil
+		return &pi, nil
 	default:
-		return "", "", false, err
+		return nil, err
 	}
 }
 

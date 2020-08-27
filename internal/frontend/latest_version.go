@@ -41,11 +41,11 @@ func latestMinorVersion(ctx context.Context, ds internal.DataSource, packagePath
 		if pageType == pageTypeModule || pageType == pageTypeStdLib {
 			fullPath = modulePath
 		}
-		modulePath, version, _, err := ds.GetPathInfo(ctx, fullPath, modulePath, internal.LatestVersion)
+		pi, err := ds.GetPathInfo(ctx, fullPath, modulePath, internal.LatestVersion)
 		if err != nil {
 			return "", err
 		}
-		return linkVersion(version, modulePath), nil
+		return linkVersion(pi.Version, pi.ModulePath), nil
 	}
 
 	var mi *internal.LegacyModuleInfo

@@ -126,7 +126,7 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 
 	urlInfo.resolvedVersion = urlInfo.requestedVersion
 	if experiment.IsActive(ctx, internal.ExperimentUsePathInfo) {
-		resolvedModulePath, resolvedVersion, _, err := ds.GetPathInfo(ctx, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion)
+		pi, err := ds.GetPathInfo(ctx, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion)
 		if err != nil {
 			if !errors.Is(err, derrors.NotFound) {
 				return err
@@ -137,8 +137,8 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 			}
 			return s.servePathNotFoundPage(w, r, ds, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion, pathType)
 		}
-		urlInfo.modulePath = resolvedModulePath
-		urlInfo.resolvedVersion = resolvedVersion
+		urlInfo.modulePath = pi.ModulePath
+		urlInfo.resolvedVersion = pi.Version
 
 		if isActivePathAtMaster(ctx) && urlInfo.requestedVersion == internal.MasterVersion {
 			// Since path@master is a moving target, we don't want it to be stale.
@@ -524,7 +524,7 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, d
 	// If frontend fetch is not enabled and we couldn't find a path at the
 	// given version, but if there's one at the latest version we can provide a
 	// link to it.
-	if _, _, _, err := ds.GetPathInfo(ctx, fullPath, modulePath, internal.LatestVersion); err != nil {
+	if _, err := ds.GetPathInfo(ctx, fullPath, modulePath, internal.LatestVersion); err != nil {
 		if errors.Is(err, derrors.NotFound) {
 			return pathNotFoundError(ctx, pathType, fullPath, requestedVersion)
 		}

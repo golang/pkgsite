@@ -8,6 +8,25 @@ import (
 	"github.com/google/safehtml"
 )
 
+// PathInfo represents information about a path.
+type PathInfo struct {
+	Path              string
+	ModulePath        string
+	Version           string
+	Name              string
+	IsRedistributable bool
+}
+
+// IsPackage reports whether the path represents a package path.
+func (pi *PathInfo) IsPackage() bool {
+	return pi.Name != ""
+}
+
+// IsModule reports whether the path represents a module path.
+func (pi *PathInfo) IsModule() bool {
+	return pi.ModulePath == pi.Path
+}
+
 // Unit represents the contents of some path in the Go package/module
 // namespace. It might be a module, a package, both a module and a package, or
 // none of the above: a directory within a module that has no .go files, but

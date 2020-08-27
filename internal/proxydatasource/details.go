@@ -73,29 +73,34 @@ func (ds *DataSource) GetModuleInfo(ctx context.Context, modulePath, version str
 }
 
 // GetPathInfo returns information about the given path.
-func (ds *DataSource) GetPathInfo(ctx context.Context, path, inModulePath, inVersion string) (outModulePath, outVersion string, isPackage bool, err error) {
+func (ds *DataSource) GetPathInfo(ctx context.Context, path, inModulePath, inVersion string) (_ *internal.PathInfo, err error) {
 	defer derrors.Wrap(&err, "GetPathInfo(%q, %q, %q)", path, inModulePath, inVersion)
 
 	var info *proxy.VersionInfo
 	if inModulePath == internal.UnknownModulePath {
 		inModulePath, info, err = ds.findModule(ctx, path, inVersion)
 		if err != nil {
-			return "", "", false, err
+			return nil, err
 		}
 		inVersion = info.Version
 	}
 	m, err := ds.getModule(ctx, inModulePath, inVersion)
 	if err != nil {
-		return "", "", false, err
+		return nil, err
 	}
-	isPackage = false
-	for _, p := range m.LegacyPackages {
-		if p.Path == path {
-			isPackage = true
+	pi := &internal.PathInfo{
+		Path:       path,
+		ModulePath: inModulePath,
+		Version:    inVersion,
+	}
+	for _, d := range m.Units {
+		if d.Path == path {
+			pi.Name = d.Name
+			pi.IsRedistributable = d.IsRedistributable
 			break
 		}
 	}
-	return m.ModulePath, m.Version, isPackage, nil
+	return pi, nil
 }
 
 // GetExperiments is unimplemented.

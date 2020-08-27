@@ -393,7 +393,7 @@ func checkForPath(ctx context.Context, db *postgres.DB,
 	// was 200 or 290).  Now check the paths table to see if the fullPath exists.
 	// vm.status for the module version was either a 200 or 290. Now determine if
 	// the fullPath exists in that module.
-	if _, _, _, err := db.GetPathInfo(ctx, fullPath, modulePath, vm.ResolvedVersion); err != nil {
+	if _, err := db.GetPathInfo(ctx, fullPath, modulePath, vm.ResolvedVersion); err != nil {
 		if errors.Is(err, derrors.NotFound) {
 			// The module version exists, but the fullPath does not exist in
 			// that module version.
@@ -421,7 +421,7 @@ func modulePathsToFetch(ctx context.Context, ds internal.DataSource, fullPath, m
 	if modulePath != internal.UnknownModulePath {
 		return []string{modulePath}, nil
 	}
-	modulePath, _, _, err = ds.GetPathInfo(ctx, fullPath, modulePath, internal.LatestVersion)
+	pi, err := ds.GetPathInfo(ctx, fullPath, modulePath, internal.LatestVersion)
 	if err != nil && !errors.Is(err, derrors.NotFound) {
 		return nil, &serverError{
 			status: http.StatusInternalServerError,
@@ -429,7 +429,7 @@ func modulePathsToFetch(ctx context.Context, ds internal.DataSource, fullPath, m
 		}
 	}
 	if err == nil {
-		return []string{modulePath}, nil
+		return []string{pi.ModulePath}, nil
 	}
 	return candidateModulePaths(fullPath)
 }
