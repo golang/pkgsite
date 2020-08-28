@@ -594,6 +594,7 @@ func TestGetDirectory(t *testing.T) {
 			}
 			if tc.want.Package != nil {
 				tc.want.Name = tc.want.Package.Name
+				tc.want.Imports = sample.Imports
 			}
 			if diff := cmp.Diff(tc.want, got, opts...); diff != "" {
 				t.Errorf("mismatch (-want, +got):\n%s", diff)
@@ -615,7 +616,7 @@ func TestGetDirectoryFieldSet(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cleanFields := func(dir *internal.Directory, field internal.FieldSet) {
+	cleanFields := func(dir *internal.Directory, fields internal.FieldSet) {
 		// Remove fields based on the FieldSet specified.
 		dir.DirectoryMeta = internal.DirectoryMeta{
 			Path:              dir.Path,
@@ -625,8 +626,8 @@ func TestGetDirectoryFieldSet(t *testing.T) {
 				Version:    dir.Version,
 			},
 		}
-		if field != internal.WithImports {
-			dir.Imports = nil
+		if fields&internal.WithImports != 0 {
+			dir.Imports = sample.Imports
 		}
 		if dir.Package != nil {
 			dir.Package.Name = ""
@@ -634,19 +635,25 @@ func TestGetDirectoryFieldSet(t *testing.T) {
 	}
 
 	for _, test := range []struct {
-		name  string
-		field internal.FieldSet
-		want  *internal.Directory
+		name   string
+		fields internal.FieldSet
+		want   *internal.Directory
 	}{
 		{
-			name:  "WithDocumentation",
-			field: internal.WithDocumentation,
+			name:   "WithDocumentation",
+			fields: internal.WithDocumentation,
 			want: newVdir("a.com/m/dir/p", "a.com/m", "v1.2.3",
 				nil, newPackage("p", "a.com/m/dir/p")),
 		},
 		{
-			name:  "WithReadme",
-			field: internal.WithReadme,
+			name:   "WithImports",
+			fields: internal.WithImports,
+			want: newVdir("a.com/m/dir/p", "a.com/m", "v1.2.3",
+				nil, nil),
+		},
+		{
+			name:   "WithReadme",
+			fields: internal.WithReadme,
 			want: newVdir("a.com/m/dir/p", "a.com/m", "v1.2.3",
 				&internal.Readme{
 					Filepath: "README.md",
@@ -655,7 +662,7 @@ func TestGetDirectoryFieldSet(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := testDB.GetDirectory(ctx, dir.Path, dir.ModulePath, dir.Version, 0, test.field)
+			got, err := testDB.GetDirectory(ctx, dir.Path, dir.ModulePath, dir.Version, 0, test.fields)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -665,7 +672,7 @@ func TestGetDirectoryFieldSet(t *testing.T) {
 				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 				cmpopts.IgnoreFields(internal.DirectoryMeta{}, "PathID"),
 			}
-			cleanFields(test.want, test.field)
+			cleanFields(test.want, test.fields)
 			if diff := cmp.Diff(test.want, got, opts...); diff != "" {
 				t.Errorf("mismatch (-want, +got):\n%s", diff)
 			}
@@ -684,9 +691,6 @@ func newVdir(path, modulePath, version string, readme *internal.Readme, pkg *int
 		},
 		Readme:  readme,
 		Package: pkg,
-	}
-	if pkg != nil {
-		dir.Imports = sample.Imports
 	}
 	return dir
 }
