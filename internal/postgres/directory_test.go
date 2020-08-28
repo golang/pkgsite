@@ -711,14 +711,9 @@ func newVdir(path, modulePath, version string, readme *internal.Readme, pkg *int
 
 func newPackage(name, path string) *internal.Package {
 	return &internal.Package{
-		Name: name,
-		Path: path,
-		Documentation: &internal.Documentation{
-			Synopsis: sample.Synopsis,
-			HTML:     sample.DocumentationHTML,
-			GOOS:     sample.GOOS,
-			GOARCH:   sample.GOARCH,
-		},
+		Name:          name,
+		Path:          path,
+		Documentation: sample.Documentation,
 	}
 }
 

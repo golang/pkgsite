@@ -62,6 +62,12 @@ var (
 	ReadmeContents    = "readme"
 	GOOS              = "linux"
 	GOARCH            = "amd64"
+	Documentation     = &internal.Documentation{
+		Synopsis: Synopsis,
+		HTML:     DocumentationHTML,
+		GOOS:     GOOS,
+		GOARCH:   GOARCH,
+	}
 )
 
 // LicenseCmpOpts are options to use when comparing licenses with the cmp package.
