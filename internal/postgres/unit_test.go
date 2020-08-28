@@ -240,7 +240,7 @@ func TestGetUnit(t *testing.T) {
 			path:       "github.com/hashicorp/vault",
 			modulePath: "github.com/hashicorp/vault",
 			version:    "v1.0.3",
-			want: newVdir("github.com/hashicorp/vault", "github.com/hashicorp/vault", "v1.0.3",
+			want: unit("github.com/hashicorp/vault", "github.com/hashicorp/vault", "v1.0.3",
 				&internal.Readme{
 					Filepath: sample.ReadmeFilePath,
 					Contents: sample.ReadmeContents,
@@ -251,7 +251,7 @@ func TestGetUnit(t *testing.T) {
 			path:       "github.com/hashicorp/vault/api",
 			modulePath: "github.com/hashicorp/vault",
 			version:    "v1.0.3",
-			want: newVdir("github.com/hashicorp/vault/api", "github.com/hashicorp/vault", "v1.0.3", nil,
+			want: unit("github.com/hashicorp/vault/api", "github.com/hashicorp/vault", "v1.0.3", nil,
 				newPackage("api", "github.com/hashicorp/vault/api")),
 		},
 		{
@@ -259,21 +259,21 @@ func TestGetUnit(t *testing.T) {
 			path:       "github.com/hashicorp/vault/builtin",
 			modulePath: "github.com/hashicorp/vault",
 			version:    "v1.0.3",
-			want:       newVdir("github.com/hashicorp/vault/builtin", "github.com/hashicorp/vault", "v1.0.3", nil, nil),
+			want:       unit("github.com/hashicorp/vault/builtin", "github.com/hashicorp/vault", "v1.0.3", nil, nil),
 		},
 		{
 			name:       "stdlib directory",
 			path:       "archive",
 			modulePath: stdlib.ModulePath,
 			version:    "v1.13.4",
-			want:       newVdir("archive", stdlib.ModulePath, "v1.13.4", nil, nil),
+			want:       unit("archive", stdlib.ModulePath, "v1.13.4", nil, nil),
 		},
 		{
 			name:       "stdlib package",
 			path:       "archive/zip",
 			modulePath: stdlib.ModulePath,
 			version:    "v1.13.4",
-			want:       newVdir("archive/zip", stdlib.ModulePath, "v1.13.4", nil, newPackage("zip", "archive/zip")),
+			want:       unit("archive/zip", stdlib.ModulePath, "v1.13.4", nil, newPackage("zip", "archive/zip")),
 		},
 		{
 			name:            "stdlib package - incomplete last element",
@@ -287,14 +287,14 @@ func TestGetUnit(t *testing.T) {
 			path:       "cmd/internal",
 			modulePath: stdlib.ModulePath,
 			version:    "v1.13.4",
-			want:       newVdir("cmd/internal", stdlib.ModulePath, "v1.13.4", nil, nil),
+			want:       unit("cmd/internal", stdlib.ModulePath, "v1.13.4", nil, nil),
 		},
 		{
 			name:       "directory with readme",
 			path:       "a.com/m/dir",
 			modulePath: "a.com/m",
 			version:    "v1.2.3",
-			want: newVdir("a.com/m/dir", "a.com/m", "v1.2.3", &internal.Readme{
+			want: unit("a.com/m/dir", "a.com/m", "v1.2.3", &internal.Readme{
 				Filepath: "DIR_README.md",
 				Contents: "dir readme",
 			}, nil),
@@ -304,7 +304,7 @@ func TestGetUnit(t *testing.T) {
 			path:       "a.com/m/dir/p",
 			modulePath: "a.com/m",
 			version:    "v1.2.3",
-			want: newVdir("a.com/m/dir/p", "a.com/m", "v1.2.3",
+			want: unit("a.com/m/dir/p", "a.com/m", "v1.2.3",
 				&internal.Readme{
 					Filepath: "PKG_README.md",
 					Contents: "pkg readme",
@@ -391,19 +391,19 @@ func TestGetUnitFieldSet(t *testing.T) {
 		{
 			name:   "WithDocumentation",
 			fields: internal.WithDocumentation,
-			want: newVdir("a.com/m/dir/p", "a.com/m", "v1.2.3",
+			want: unit("a.com/m/dir/p", "a.com/m", "v1.2.3",
 				nil, newPackage("p", "a.com/m/dir/p")),
 		},
 		{
 			name:   "WithImports",
 			fields: internal.WithImports,
-			want: newVdir("a.com/m/dir/p", "a.com/m", "v1.2.3",
+			want: unit("a.com/m/dir/p", "a.com/m", "v1.2.3",
 				nil, nil),
 		},
 		{
 			name:   "WithReadme",
 			fields: internal.WithReadme,
-			want: newVdir("a.com/m/dir/p", "a.com/m", "v1.2.3",
+			want: unit("a.com/m/dir/p", "a.com/m", "v1.2.3",
 				&internal.Readme{
 					Filepath: "README.md",
 					Contents: "readme",
@@ -434,7 +434,7 @@ func TestGetUnitFieldSet(t *testing.T) {
 	}
 }
 
-func newVdir(path, modulePath, version string, readme *internal.Readme, pkg *internal.Package) *internal.Unit {
+func unit(path, modulePath, version string, readme *internal.Readme, pkg *internal.Package) *internal.Unit {
 	u := &internal.Unit{
 		DirectoryMeta: internal.DirectoryMeta{
 			ModuleInfo:        *sample.ModuleInfo(modulePath, version),
