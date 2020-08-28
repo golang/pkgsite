@@ -5,8 +5,6 @@
 package queue
 
 import (
-	"context"
-	"os"
 	"testing"
 	"time"
 
@@ -39,15 +37,15 @@ func TestNewTaskID(t *testing.T) {
 func TestNewTaskRequest(t *testing.T) {
 	for _, test := range []struct {
 		name string
-		env  map[string]string
+		cfg  config.Config
 		want *taskspb.CreateTaskRequest
 	}{
 		{
 			"AppEngine",
-			map[string]string{
-				"GOOGLE_CLOUD_PROJECT": "Project",
-				"GAE_SERVICE":          "Service",
-				"GAE_ENV":              "standard",
+			config.Config{
+				ProjectID:    "Project",
+				LocationID:   "us-central1",
+				QueueService: "Service",
 			},
 			&taskspb.CreateTaskRequest{
 				Parent: "projects/Project/locations/us-central1/queues/queueID",
@@ -66,9 +64,10 @@ func TestNewTaskRequest(t *testing.T) {
 		},
 		{
 			"non-AppEngine",
-			map[string]string{
-				"GOOGLE_CLOUD_PROJECT":   "Project",
-				"GO_DISCOVERY_QUEUE_URL": "http://1.2.3.4:8000",
+			config.Config{
+				ProjectID:  "Project",
+				LocationID: "us-central1",
+				QueueURL:   "http://1.2.3.4:8000",
 			},
 			&taskspb.CreateTaskRequest{
 				Parent: "projects/Project/locations/us-central1/queues/queueID",
@@ -84,18 +83,7 @@ func TestNewTaskRequest(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			for vari, val := range test.env {
-				vari := vari
-				prev := os.Getenv(vari)
-				os.Setenv(vari, val)
-				defer func() { os.Setenv(vari, prev) }()
-			}
-
-			cfg, err := config.Init(context.Background())
-			if err != nil {
-				t.Fatal(err)
-			}
-			gcp, err := newGCP(cfg, nil, "queueID")
+			gcp, err := newGCP(&test.cfg, nil, "queueID")
 			if err != nil {
 				t.Fatal(err)
 			}
