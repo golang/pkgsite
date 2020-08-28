@@ -84,21 +84,21 @@ func (db *DB) GetPackagesInUnit(ctx context.Context, dirPath, modulePath, resolv
 // GetUnit returns a unit from the database, along with all of the
 // data associated with that unit.
 // TODO(golang/go#39629): remove pID.
-func (db *DB) GetUnit(ctx context.Context, fullPath, modulePath, version string, pID int, fields internal.FieldSet) (_ *internal.Unit, err error) {
-	defer derrors.Wrap(&err, "GetUnit(ctx, %q, %q, %q)", fullPath, modulePath, version)
-	pathID, isRedistributable, err := db.getPathIDAndIsRedistributable(ctx, fullPath, modulePath, version)
+func (db *DB) GetUnit(ctx context.Context, pi *internal.PathInfo, fields internal.FieldSet) (_ *internal.Unit, err error) {
+	defer derrors.Wrap(&err, "GetUnit(ctx, %q, %q, %q)", pi.Path, pi.ModulePath, pi.Version)
+	pathID, isRedistributable, err := db.getPathIDAndIsRedistributable(ctx, pi.Path, pi.ModulePath, pi.Version)
 	if err != nil {
 		return nil, err
 	}
 
 	dir := &internal.Unit{
 		DirectoryMeta: internal.DirectoryMeta{
-			Path:              fullPath,
+			Path:              pi.Path,
 			PathID:            pathID,
 			IsRedistributable: isRedistributable,
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath: modulePath,
-				Version:    version,
+				ModulePath: pi.ModulePath,
+				Version:    pi.Version,
 			},
 		},
 	}
@@ -131,7 +131,7 @@ func (db *DB) GetUnit(ctx context.Context, fullPath, modulePath, version string,
 		}
 	}
 	if fields == internal.AllFields {
-		dmeta, err := db.GetDirectoryMeta(ctx, fullPath, modulePath, version)
+		dmeta, err := db.GetDirectoryMeta(ctx, pi.Path, pi.ModulePath, pi.Version)
 		if err != nil {
 			return nil, err
 		}

@@ -487,14 +487,14 @@ func TestGetUnit(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for _, tc := range []struct {
-		name, dirPath, modulePath, version string
-		want                               *internal.Unit
-		wantNotFoundErr                    bool
+	for _, test := range []struct {
+		name, path, modulePath, version string
+		want                            *internal.Unit
+		wantNotFoundErr                 bool
 	}{
 		{
 			name:       "module path",
-			dirPath:    "github.com/hashicorp/vault",
+			path:       "github.com/hashicorp/vault",
 			modulePath: "github.com/hashicorp/vault",
 			version:    "v1.0.3",
 			want: newVdir("github.com/hashicorp/vault", "github.com/hashicorp/vault", "v1.0.3",
@@ -505,7 +505,7 @@ func TestGetUnit(t *testing.T) {
 		},
 		{
 			name:       "package path",
-			dirPath:    "github.com/hashicorp/vault/api",
+			path:       "github.com/hashicorp/vault/api",
 			modulePath: "github.com/hashicorp/vault",
 			version:    "v1.0.3",
 			want: newVdir("github.com/hashicorp/vault/api", "github.com/hashicorp/vault", "v1.0.3", nil,
@@ -513,42 +513,42 @@ func TestGetUnit(t *testing.T) {
 		},
 		{
 			name:       "directory path",
-			dirPath:    "github.com/hashicorp/vault/builtin",
+			path:       "github.com/hashicorp/vault/builtin",
 			modulePath: "github.com/hashicorp/vault",
 			version:    "v1.0.3",
 			want:       newVdir("github.com/hashicorp/vault/builtin", "github.com/hashicorp/vault", "v1.0.3", nil, nil),
 		},
 		{
 			name:       "stdlib directory",
-			dirPath:    "archive",
+			path:       "archive",
 			modulePath: stdlib.ModulePath,
 			version:    "v1.13.4",
 			want:       newVdir("archive", stdlib.ModulePath, "v1.13.4", nil, nil),
 		},
 		{
 			name:       "stdlib package",
-			dirPath:    "archive/zip",
+			path:       "archive/zip",
 			modulePath: stdlib.ModulePath,
 			version:    "v1.13.4",
 			want:       newVdir("archive/zip", stdlib.ModulePath, "v1.13.4", nil, newPackage("zip", "archive/zip")),
 		},
 		{
 			name:            "stdlib package - incomplete last element",
-			dirPath:         "archive/zi",
+			path:            "archive/zi",
 			modulePath:      stdlib.ModulePath,
 			version:         "v1.13.4",
 			wantNotFoundErr: true,
 		},
 		{
 			name:       "stdlib - internal directory",
-			dirPath:    "cmd/internal",
+			path:       "cmd/internal",
 			modulePath: stdlib.ModulePath,
 			version:    "v1.13.4",
 			want:       newVdir("cmd/internal", stdlib.ModulePath, "v1.13.4", nil, nil),
 		},
 		{
 			name:       "directory with readme",
-			dirPath:    "a.com/m/dir",
+			path:       "a.com/m/dir",
 			modulePath: "a.com/m",
 			version:    "v1.2.3",
 			want: newVdir("a.com/m/dir", "a.com/m", "v1.2.3", &internal.Readme{
@@ -558,7 +558,7 @@ func TestGetUnit(t *testing.T) {
 		},
 		{
 			name:       "package with readme",
-			dirPath:    "a.com/m/dir/p",
+			path:       "a.com/m/dir/p",
 			modulePath: "a.com/m",
 			version:    "v1.2.3",
 			want: newVdir("a.com/m/dir/p", "a.com/m", "v1.2.3",
@@ -569,9 +569,17 @@ func TestGetUnit(t *testing.T) {
 				newPackage("p", "a.com/m/dir/p")),
 		},
 	} {
-		t.Run(tc.name, func(t *testing.T) {
-			got, err := testDB.GetUnit(ctx, tc.dirPath, tc.modulePath, tc.version, 0, internal.AllFields)
-			if tc.wantNotFoundErr {
+		t.Run(test.name, func(t *testing.T) {
+			pathInfo := &internal.PathInfo{
+				Path:       test.path,
+				ModulePath: test.modulePath,
+				Version:    test.version,
+			}
+			if test.want != nil {
+				pathInfo.Name = test.want.Name
+			}
+			got, err := testDB.GetUnit(ctx, pathInfo, internal.AllFields)
+			if test.wantNotFoundErr {
 				if !errors.Is(err, derrors.NotFound) {
 					t.Fatalf("want %v; got = \n%+v, %v", derrors.NotFound, got, err)
 				}
@@ -588,15 +596,14 @@ func TestGetUnit(t *testing.T) {
 			}
 			// TODO(golang/go#38513): remove once we start displaying
 			// READMEs for directories instead of the top-level module.
-			tc.want.Readme = &internal.Readme{
+			test.want.Readme = &internal.Readme{
 				Filepath: sample.ReadmeFilePath,
 				Contents: sample.ReadmeContents,
 			}
-			if tc.want.Package != nil {
-				tc.want.Name = tc.want.Package.Name
-				tc.want.Imports = sample.Imports
+			if test.want.Package != nil {
+				test.want.Imports = sample.Imports
 			}
-			if diff := cmp.Diff(tc.want, got, opts...); diff != "" {
+			if diff := cmp.Diff(test.want, got, opts...); diff != "" {
 				t.Errorf("mismatch (-want, +got):\n%s", diff)
 			}
 		})
@@ -611,7 +618,6 @@ func TestGetUnitFieldSet(t *testing.T) {
 
 	// Add a module that has READMEs in a directory and a package.
 	m := sample.Module("a.com/m", "v1.2.3", "dir/p")
-	dir := findDirectory(m, "a.com/m/dir/p")
 	if err := testDB.InsertModule(ctx, m); err != nil {
 		t.Fatal(err)
 	}
@@ -662,7 +668,12 @@ func TestGetUnitFieldSet(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := testDB.GetUnit(ctx, dir.Path, dir.ModulePath, dir.Version, 0, test.fields)
+			pathInfo := &internal.PathInfo{
+				Path:       test.want.Path,
+				ModulePath: test.want.ModulePath,
+				Version:    test.want.Version,
+			}
+			got, err := testDB.GetUnit(ctx, pathInfo, test.fields)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -691,6 +702,9 @@ func newVdir(path, modulePath, version string, readme *internal.Readme, pkg *int
 		},
 		Readme:  readme,
 		Package: pkg,
+	}
+	if pkg != nil {
+		dir.Name = pkg.Name
 	}
 	return dir
 }
@@ -726,7 +740,12 @@ func TestGetUnitBypass(t *testing.T) {
 		{testDB, true},
 		{bypassDB, false},
 	} {
-		d, err := test.db.GetUnit(ctx, m.ModulePath, m.ModulePath, m.Version, 0, internal.AllFields)
+		pathInfo := &internal.PathInfo{
+			Path:       m.ModulePath,
+			ModulePath: m.ModulePath,
+			Version:    m.Version,
+		}
+		d, err := test.db.GetUnit(ctx, pathInfo, internal.AllFields)
 		if err != nil {
 			t.Fatal(err)
 		}

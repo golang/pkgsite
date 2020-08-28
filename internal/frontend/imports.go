@@ -36,7 +36,11 @@ type ImportsDetails struct {
 func fetchImportsDetails(ctx context.Context, ds internal.DataSource, pkgPath, modulePath, resolvedVersion string) (_ *ImportsDetails, err error) {
 	var dsImports []string
 	if isActiveUseUnits(ctx) && experiment.IsActive(ctx, internal.ExperimentUsePackageImports) {
-		dir, err := ds.GetUnit(ctx, pkgPath, modulePath, resolvedVersion, 0, internal.WithImports)
+		dir, err := ds.GetUnit(ctx, &internal.PathInfo{
+			Path:       pkgPath,
+			ModulePath: modulePath,
+			Version:    resolvedVersion,
+		}, internal.WithImports)
 		if err != nil {
 			return nil, err
 		}

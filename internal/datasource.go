@@ -21,7 +21,7 @@ type DataSource interface {
 	GetPathInfo(ctx context.Context, path, requestedModulePath, requestedVersion string) (_ *PathInfo, err error)
 	// GetUnit returns information about a directory, which may also be a module and/or package.
 	// The module and version must both be known.
-	GetUnit(ctx context.Context, dirPath, modulePath, version string, pathID int, fields FieldSet) (_ *Unit, err error)
+	GetUnit(ctx context.Context, pathInfo *PathInfo, fields FieldSet) (_ *Unit, err error)
 
 	// TODO(golang/go#39629): Deprecate these methods by moving the logic
 	// behind GetUnit.

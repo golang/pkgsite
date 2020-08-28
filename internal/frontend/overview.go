@@ -42,7 +42,14 @@ type OverviewDetails struct {
 // fetchOverviewDetails uses the given version to fetch an OverviewDetails.
 // versionedLinks says whether the constructed URLs should have versions.
 func fetchOverviewDetails(ctx context.Context, ds internal.DataSource, dmeta *internal.DirectoryMeta, versionedLinks bool) (*OverviewDetails, error) {
-	dir, err := ds.GetUnit(ctx, dmeta.Path, dmeta.ModulePath, dmeta.Version, dmeta.PathID, internal.WithReadme)
+	pi := &internal.PathInfo{
+		Path:              dmeta.Path,
+		ModulePath:        dmeta.ModulePath,
+		Version:           dmeta.Version,
+		IsRedistributable: dmeta.IsRedistributable,
+		Name:              dmeta.Name,
+	}
+	dir, err := ds.GetUnit(ctx, pi, internal.WithReadme)
 	if err != nil {
 		return nil, err
 	}

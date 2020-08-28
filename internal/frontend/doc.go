@@ -22,9 +22,16 @@ type DocumentationDetails struct {
 	Documentation safehtml.HTML
 }
 
-// fetchDocumentationDetails returns a DocumentationDetails constructed from doc.
+// fetchDocumentationDetails returns a DocumentationDetails.
 func fetchDocumentationDetails(ctx context.Context, ds internal.DataSource, dmeta *internal.DirectoryMeta) (_ *DocumentationDetails, err error) {
-	dir, err := ds.GetUnit(ctx, dmeta.Path, dmeta.ModulePath, dmeta.Version, dmeta.PathID, internal.WithDocumentation)
+	pi := &internal.PathInfo{
+		Path:              dmeta.Path,
+		ModulePath:        dmeta.ModulePath,
+		Version:           dmeta.Version,
+		IsRedistributable: dmeta.IsRedistributable,
+		Name:              dmeta.Name,
+	}
+	dir, err := ds.GetUnit(ctx, pi, internal.WithDocumentation)
 	if err != nil {
 		return nil, err
 	}

@@ -111,7 +111,12 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 	}
 
 	for _, dir := range want.Units {
-		got, err := testDB.GetUnit(ctx, dir.Path, want.ModulePath, want.Version, 0, internal.AllFields)
+		pathInfo := &internal.PathInfo{
+			Path:       dir.Path,
+			ModulePath: want.ModulePath,
+			Version:    want.Version,
+		}
+		got, err := testDB.GetUnit(ctx, pathInfo, internal.AllFields)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -185,7 +190,12 @@ func TestInsertModuleLicenseCheck(t *testing.T) {
 			checkHasRedistData(mi.LegacyReadmeContents, pkg.DocumentationHTML, bypass)
 
 			// New model
-			dir, err := db.GetUnit(ctx, mod.ModulePath, mod.ModulePath, mod.Version, 0, internal.AllFields)
+			pathInfo := &internal.PathInfo{
+				Path:       mod.ModulePath,
+				ModulePath: mod.ModulePath,
+				Version:    mod.Version,
+			}
+			dir, err := db.GetUnit(ctx, pathInfo, internal.AllFields)
 			if err != nil {
 				t.Fatal(err)
 			}

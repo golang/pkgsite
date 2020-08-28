@@ -19,9 +19,9 @@ import (
 )
 
 // GetUnit returns information about a directory at a path.
-func (ds *DataSource) GetUnit(ctx context.Context, fullPath, modulePath, version string, pathID int, field internal.FieldSet) (_ *internal.Unit, err error) {
-	defer derrors.Wrap(&err, "GetUnit(%q, %q, %q)", fullPath, modulePath, version)
-	return ds.directoryFromVersion(ctx, fullPath, modulePath, version)
+func (ds *DataSource) GetUnit(ctx context.Context, pi *internal.PathInfo, field internal.FieldSet) (_ *internal.Unit, err error) {
+	defer derrors.Wrap(&err, "GetUnit(%q, %q, %q)", pi.Path, pi.ModulePath, pi.Version)
+	return ds.directoryFromVersion(ctx, pi.Path, pi.ModulePath, pi.Version)
 }
 
 // GetDirectoryMeta returns information about a directory at a path.
