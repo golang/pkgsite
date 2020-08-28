@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/lib/pq"
+	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -23,10 +24,19 @@ import (
 // It returns an InvalidArgument error if the module path or version is invalid.
 func (db *DB) GetLicenses(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ []*licenses.License, err error) {
 	defer derrors.Wrap(&err, "GetLicenses(ctx, %q, %q, %q)", fullPath, modulePath, resolvedVersion)
-
-	if fullPath == "" || resolvedVersion == "" {
-		return nil, fmt.Errorf("neither fullpath nor resolvedVersion can be empty: %w", derrors.InvalidArgument)
+	if fullPath == "" || modulePath == "" || !semver.IsValid(resolvedVersion) {
+		return nil, derrors.InvalidArgument
 	}
+	pathID, err := db.getPathID(ctx, fullPath, modulePath, resolvedVersion)
+	if err != nil {
+		return nil, err
+	}
+	return db.getLicenses(ctx, fullPath, modulePath, pathID)
+}
+
+func (db *DB) getLicenses(ctx context.Context, fullPath, modulePath string, pathID int) (_ []*licenses.License, err error) {
+	defer derrors.Wrap(&err, "getLicenses(ctx, %d)", pathID)
+
 	query := `
 		SELECT
 			l.types,
@@ -44,11 +54,9 @@ func (db *DB) GetLicenses(ctx context.Context, fullPath, modulePath, resolvedVer
 		ON
 			p.module_id=m.id
 		WHERE
-			p.path = $1
-			AND m.module_path = $2
-			AND m.version = $3;`
+			p.id = $1;`
 
-	rows, err := db.db.Query(ctx, query, fullPath, modulePath, resolvedVersion)
+	rows, err := db.db.Query(ctx, query, pathID)
 	if err != nil {
 		return nil, err
 	}
