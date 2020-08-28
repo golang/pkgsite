@@ -31,7 +31,6 @@ func (db *DB) GetDirectoryMeta(ctx context.Context, path, modulePath, version st
 			p.id,
 			p.path,
 			p.name,
-			p.v1_path,
 			p.redistributable,
 			p.license_types,
 			p.license_paths
@@ -58,7 +57,6 @@ func (db *DB) GetDirectoryMeta(ctx context.Context, path, modulePath, version st
 		&dir.PathID,
 		&dir.Path,
 		database.NullIsEmpty(&dir.Name),
-		&dir.V1Path,
 		&dir.IsRedistributable,
 		pq.Array(&licenseTypes),
 		pq.Array(&licensePaths),

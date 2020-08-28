@@ -115,7 +115,6 @@ type Module struct {
 type DirectoryMeta struct {
 	ModuleInfo
 	Path              string
-	V1Path            string
 	IsRedistributable bool
 	Licenses          []*licenses.Metadata // metadata of applicable licenses
 	Name              string               // name of the package, else empty string

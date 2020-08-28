@@ -49,7 +49,6 @@ func moduleUnits(modulePath string,
 		dir := &internal.Unit{
 			DirectoryMeta: internal.DirectoryMeta{
 				Path:              dirPath,
-				V1Path:            internal.V1Path(dirPath, modulePath),
 				IsRedistributable: isRedist,
 				Licenses:          meta,
 			},

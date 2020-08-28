@@ -66,8 +66,8 @@ func cleanFetchResult(fr *FetchResult, detector *licenses.Detector) *FetchResult
 			dir.Package.Path = dir.Path
 			fr.Module.LegacyPackages = append(fr.Module.LegacyPackages, &internal.LegacyPackage{
 				Path:              dir.Path,
-				V1Path:            dir.V1Path,
 				Licenses:          dir.Licenses,
+				V1Path:            internal.V1Path(dir.Path, dir.ModulePath),
 				Name:              dir.Package.Name,
 				Synopsis:          dir.Package.Documentation.Synopsis,
 				DocumentationHTML: dir.Package.Documentation.HTML,

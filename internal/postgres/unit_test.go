@@ -440,7 +440,6 @@ func unit(path, modulePath, version string, readme *internal.Readme, pkg *intern
 		DirectoryMeta: internal.DirectoryMeta{
 			ModuleInfo:        *sample.ModuleInfo(modulePath, version),
 			Path:              path,
-			V1Path:            path,
 			IsRedistributable: true,
 			Licenses:          sample.LicenseMetadata,
 		},

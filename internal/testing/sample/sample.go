@@ -122,7 +122,6 @@ func DirectoryMeta(modulePath, suffix string) *internal.DirectoryMeta {
 		ModuleInfo:        *ModuleInfo(modulePath, VersionString),
 		Path:              p,
 		Name:              path.Base(p),
-		V1Path:            internal.V1Path(p, modulePath),
 		IsRedistributable: true,
 		Licenses:          LicenseMetadata,
 	}
@@ -259,7 +258,6 @@ func UnitEmpty(path string) *internal.Unit {
 			Path:              path,
 			IsRedistributable: true,
 			Licenses:          LicenseMetadata,
-			V1Path:            path,
 		},
 	}
 }
@@ -270,7 +268,6 @@ func UnitForModuleRoot(m *internal.LegacyModuleInfo, licenses []*licenses.Metada
 			Path:              m.ModulePath,
 			IsRedistributable: m.IsRedistributable,
 			Licenses:          licenses,
-			V1Path:            internal.SeriesPathForModule(m.ModulePath),
 		},
 	}
 	if m.LegacyReadmeFilePath != "" {
@@ -288,7 +285,6 @@ func UnitForPackage(pkg *internal.LegacyPackage) *internal.Unit {
 			Path:              pkg.Path,
 			IsRedistributable: pkg.IsRedistributable,
 			Licenses:          pkg.Licenses,
-			V1Path:            pkg.V1Path,
 		},
 		Imports: pkg.Imports,
 		Package: &internal.Package{

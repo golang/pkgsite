@@ -422,7 +422,7 @@ func insertUnits(ctx context.Context, db *database.DB, m *internal.Module, modul
 		pathValues = append(pathValues,
 			d.Path,
 			moduleID,
-			d.V1Path,
+			internal.V1Path(d.Path, m.ModulePath),
 			name,
 			pq.Array(licenseTypes),
 			pq.Array(licensePaths),

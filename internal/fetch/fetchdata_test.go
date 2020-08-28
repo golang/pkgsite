@@ -44,8 +44,7 @@ var moduleOnePackage = &testModule{
 			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "github.com/basic",
-						V1Path: "github.com/basic",
+						Path: "github.com/basic",
 					},
 					Readme: &internal.Readme{
 						Filepath: "README.md",
@@ -54,8 +53,7 @@ var moduleOnePackage = &testModule{
 				},
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "github.com/basic/foo",
-						V1Path: "github.com/basic/foo",
+						Path: "github.com/basic/foo",
 					},
 					Package: &internal.Package{
 						Name: "foo",
@@ -120,8 +118,7 @@ var moduleMultiPackage = &testModule{
 			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "github.com/my/module",
-						V1Path: "github.com/my/module",
+						Path: "github.com/my/module",
 					},
 					Readme: &internal.Readme{
 						Filepath: "README.md",
@@ -130,8 +127,7 @@ var moduleMultiPackage = &testModule{
 				},
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "github.com/my/module/bar",
-						V1Path: "github.com/my/module/bar",
+						Path: "github.com/my/module/bar",
 					},
 					Readme: &internal.Readme{
 						Filepath: "bar/README.md",
@@ -147,8 +143,7 @@ var moduleMultiPackage = &testModule{
 				},
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "github.com/my/module/foo",
-						V1Path: "github.com/my/module/foo",
+						Path: "github.com/my/module/foo",
 					},
 					Package: &internal.Package{
 						Name: "foo",
@@ -189,14 +184,12 @@ var moduleNoGoMod = &testModule{
 			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "no.mod/module",
-						V1Path: "no.mod/module",
+						Path: "no.mod/module",
 					},
 				},
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "no.mod/module/p",
-						V1Path: "no.mod/module/p",
+						Path: "no.mod/module/p",
 					},
 					Package: &internal.Package{
 						Name: "p",
@@ -256,14 +249,12 @@ var moduleBadPackages = &testModule{
 			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "bad.mod/module",
-						V1Path: "bad.mod/module",
+						Path: "bad.mod/module",
 					},
 				},
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "bad.mod/module/good",
-						V1Path: "bad.mod/module/good",
+						Path: "bad.mod/module/good",
 					},
 					Package: &internal.Package{
 						Name: "good",
@@ -325,14 +316,12 @@ var moduleBuildConstraints = &testModule{
 			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "build.constraints/module",
-						V1Path: "build.constraints/module",
+						Path: "build.constraints/module",
 					},
 				},
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "build.constraints/module/cpu",
-						V1Path: "build.constraints/module/cpu",
+						Path: "build.constraints/module/cpu",
 					},
 					Package: &internal.Package{
 						Name: "cpu",
@@ -418,8 +407,7 @@ var moduleNonRedist = &testModule{
 			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "nonredistributable.mod/module",
-						V1Path: "nonredistributable.mod/module",
+						Path: "nonredistributable.mod/module",
 					},
 					Readme: &internal.Readme{
 						Filepath: "README.md",
@@ -428,8 +416,7 @@ var moduleNonRedist = &testModule{
 				},
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "nonredistributable.mod/module/bar",
-						V1Path: "nonredistributable.mod/module/bar",
+						Path: "nonredistributable.mod/module/bar",
 					},
 					Package: &internal.Package{
 						Name: "bar",
@@ -441,8 +428,7 @@ var moduleNonRedist = &testModule{
 				},
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "nonredistributable.mod/module/bar/baz",
-						V1Path: "nonredistributable.mod/module/bar/baz",
+						Path: "nonredistributable.mod/module/bar/baz",
 					},
 					Package: &internal.Package{
 						Name: "baz",
@@ -454,8 +440,7 @@ var moduleNonRedist = &testModule{
 				},
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "nonredistributable.mod/module/foo",
-						V1Path: "nonredistributable.mod/module/foo",
+						Path: "nonredistributable.mod/module/foo",
 					},
 					Readme: &internal.Readme{
 						Filepath: "foo/README.md",
@@ -494,26 +479,22 @@ var moduleBadImportPath = &testModule{
 			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "bad.import.path.com",
-						V1Path: "bad.import.path.com",
+						Path: "bad.import.path.com",
 					},
 				},
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "bad.import.path.com/good",
-						V1Path: "bad.import.path.com/good",
+						Path: "bad.import.path.com/good",
 					},
 				},
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "bad.import.path.com/good/import",
-						V1Path: "bad.import.path.com/good/import",
+						Path: "bad.import.path.com/good/import",
 					},
 				},
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "bad.import.path.com/good/import/path",
-						V1Path: "bad.import.path.com/good/import/path",
+						Path: "bad.import.path.com/good/import/path",
 					},
 					Package: &internal.Package{
 						Name:          "foo",
@@ -570,14 +551,12 @@ var moduleDocTest = &testModule{
 			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "doc.test",
-						V1Path: "doc.test",
+						Path: "doc.test",
 					},
 				},
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "doc.test/permalink",
-						V1Path: "doc.test/permalink",
+						Path: "doc.test/permalink",
 					},
 					Package: &internal.Package{
 						Name: "permalink",
@@ -615,8 +594,7 @@ var moduleDocTooLarge = &testModule{
 			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "bigdoc.test",
-						V1Path: "bigdoc.test",
+						Path: "bigdoc.test",
 					},
 					Package: &internal.Package{
 						Name: "bigdoc",
@@ -667,8 +645,7 @@ var moduleWasm = &testModule{
 			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "github.com/my/module/js",
-						V1Path: "github.com/my/module/js",
+						Path: "github.com/my/module/js",
 					},
 					Readme: &internal.Readme{
 						Filepath: "README.md",
@@ -677,8 +654,7 @@ var moduleWasm = &testModule{
 				},
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "github.com/my/module/js/js",
-						V1Path: "github.com/my/module/js/js",
+						Path: "github.com/my/module/js/js",
 					},
 					Package: &internal.Package{
 						Name: "js",
@@ -725,8 +701,8 @@ var moduleStd = &testModule{
 			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:              "std",
-						V1Path:            "std",
+						Path: "std",
+
 						IsRedistributable: true,
 					},
 					Readme: &internal.Readme{
@@ -736,8 +712,7 @@ var moduleStd = &testModule{
 				},
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "builtin",
-						V1Path: "builtin",
+						Path: "builtin",
 					},
 					Package: &internal.Package{
 						Name: "builtin",
@@ -748,14 +723,12 @@ var moduleStd = &testModule{
 				},
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "cmd",
-						V1Path: "cmd",
+						Path: "cmd",
 					},
 				},
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "cmd/pprof",
-						V1Path: "cmd/pprof",
+						Path: "cmd/pprof",
 					},
 					Readme: &internal.Readme{
 						Filepath: "cmd/pprof/README",
@@ -789,8 +762,7 @@ var moduleStd = &testModule{
 				},
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "context",
-						V1Path: "context",
+						Path: "context",
 					},
 					Package: &internal.Package{
 						Name: "context",
@@ -802,14 +774,12 @@ var moduleStd = &testModule{
 				},
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "encoding",
-						V1Path: "encoding",
+						Path: "encoding",
 					},
 				},
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "encoding/json",
-						V1Path: "encoding/json",
+						Path: "encoding/json",
 					},
 					Package: &internal.Package{
 						Name: "json",
@@ -837,8 +807,7 @@ var moduleStd = &testModule{
 				},
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "errors",
-						V1Path: "errors",
+						Path: "errors",
 					},
 					Package: &internal.Package{
 						Name: "errors",
@@ -849,8 +818,7 @@ var moduleStd = &testModule{
 				},
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "flag",
-						V1Path: "flag",
+						Path: "flag",
 					},
 					Imports: []string{"errors", "fmt", "io", "os", "reflect", "sort", "strconv", "strings", "time"},
 					Package: &internal.Package{
@@ -886,14 +854,12 @@ var moduleMaster = &testModule{
 			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "github.com/my/module",
-						V1Path: "github.com/my/module",
+						Path: "github.com/my/module",
 					},
 				},
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "github.com/my/module/foo",
-						V1Path: "github.com/my/module/foo",
+						Path: "github.com/my/module/foo",
 					},
 					Package: &internal.Package{
 						Name: "foo",
@@ -928,14 +894,12 @@ var moduleLatest = &testModule{
 			Units: []*internal.Unit{
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "github.com/my/module",
-						V1Path: "github.com/my/module",
+						Path: "github.com/my/module",
 					},
 				},
 				{
 					DirectoryMeta: internal.DirectoryMeta{
-						Path:   "github.com/my/module/foo",
-						V1Path: "github.com/my/module/foo",
+						Path: "github.com/my/module/foo",
 					},
 					Package: &internal.Package{
 						Name: "foo",
@@ -984,14 +948,12 @@ package example_test
 				Units: []*internal.Unit{
 					{
 						DirectoryMeta: internal.DirectoryMeta{
-							Path:   path,
-							V1Path: path,
+							Path: path,
 						},
 					},
 					{
 						DirectoryMeta: internal.DirectoryMeta{
-							Path:   path + "/example",
-							V1Path: path + "/example",
+							Path: path + "/example",
 						},
 						Package: &internal.Package{
 							Name: "example",
