@@ -184,12 +184,15 @@
 </footer>
 
 <script>
-  function loadScript(src) {
-      let s = document.createElement("script");
-      s.src = src;
-      document.head.appendChild(s);
+  function loadScript(src, props = {}) {
+    let s = document.createElement('script');
+    s.src = src;
+    for (const [k, v] of Object.entries(props)) {
+      s[k] = v
+    }
+    document.head.appendChild(s);
   }
-
+  loadScript('/static/js/web-vitals.js', {type: 'module', defer: true});
   loadScript("/static/js/base.min.js");
 </script>
 
