@@ -19,9 +19,9 @@ import (
 )
 
 // GetPackagesInUnit returns all of the packages in a unit from a
-// module version, including the package that lives at dirPath, if present.
-func (db *DB) GetPackagesInUnit(ctx context.Context, dirPath, modulePath, resolvedVersion string) (_ []*internal.PackageMeta, err error) {
-	defer derrors.Wrap(&err, "DB.GetPackagesInUnit(ctx, %q, %q, %q)", dirPath, modulePath, resolvedVersion)
+// module version, including the package that lives at fullPath, if present.
+func (db *DB) GetPackagesInUnit(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ []*internal.PackageMeta, err error) {
+	defer derrors.Wrap(&err, "DB.GetPackagesInUnit(ctx, %q, %q, %q)", fullPath, modulePath, resolvedVersion)
 
 	query := `
 		SELECT
@@ -57,7 +57,7 @@ func (db *DB) GetPackagesInUnit(ctx context.Context, dirPath, modulePath, resolv
 		); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
-		if dirPath == stdlib.ModulePath || pkg.Path == dirPath || strings.HasPrefix(pkg.Path, dirPath+"/") {
+		if fullPath == stdlib.ModulePath || pkg.Path == fullPath || strings.HasPrefix(pkg.Path, fullPath+"/") {
 			lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
 			if err != nil {
 				return err

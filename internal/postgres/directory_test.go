@@ -29,13 +29,13 @@ func TestGetPackagesInUnit(t *testing.T) {
 	InsertSampleDirectoryTree(ctx, t, testDB)
 
 	for _, tc := range []struct {
-		name, dirPath, modulePath, version, wantModulePath, wantVersion string
-		wantSuffixes                                                    []string
-		wantNotFoundErr                                                 bool
+		name, fullPath, modulePath, version, wantModulePath, wantVersion string
+		wantSuffixes                                                     []string
+		wantNotFoundErr                                                  bool
 	}{
 		{
 			name:           "directory path is the module path",
-			dirPath:        "github.com/hashicorp/vault",
+			fullPath:       "github.com/hashicorp/vault",
 			modulePath:     "github.com/hashicorp/vault",
 			version:        "v1.2.3",
 			wantVersion:    "v1.2.3",
@@ -50,7 +50,7 @@ func TestGetPackagesInUnit(t *testing.T) {
 		},
 		{
 			name:           "directory path is a package path",
-			dirPath:        "github.com/hashicorp/vault",
+			fullPath:       "github.com/hashicorp/vault",
 			modulePath:     "github.com/hashicorp/vault",
 			version:        "v1.0.3",
 			wantVersion:    "v1.0.3",
@@ -63,7 +63,7 @@ func TestGetPackagesInUnit(t *testing.T) {
 		},
 		{
 			name:           "directory path is not a package or module",
-			dirPath:        "github.com/hashicorp/vault/builtin",
+			fullPath:       "github.com/hashicorp/vault/builtin",
 			modulePath:     "github.com/hashicorp/vault",
 			wantModulePath: "github.com/hashicorp/vault",
 			version:        "v1.0.3",
@@ -75,7 +75,7 @@ func TestGetPackagesInUnit(t *testing.T) {
 		},
 		{
 			name:           "stdlib module",
-			dirPath:        stdlib.ModulePath,
+			fullPath:       stdlib.ModulePath,
 			modulePath:     stdlib.ModulePath,
 			version:        "v1.13.4",
 			wantModulePath: stdlib.ModulePath,
@@ -91,7 +91,7 @@ func TestGetPackagesInUnit(t *testing.T) {
 		},
 		{
 			name:           "stdlib directory",
-			dirPath:        "archive",
+			fullPath:       "archive",
 			modulePath:     stdlib.ModulePath,
 			version:        "v1.13.4",
 			wantModulePath: stdlib.ModulePath,
@@ -103,7 +103,7 @@ func TestGetPackagesInUnit(t *testing.T) {
 		},
 		{
 			name:           "stdlib package",
-			dirPath:        "archive/zip",
+			fullPath:       "archive/zip",
 			modulePath:     stdlib.ModulePath,
 			version:        "v1.13.4",
 			wantModulePath: stdlib.ModulePath,
@@ -114,14 +114,14 @@ func TestGetPackagesInUnit(t *testing.T) {
 		},
 		{
 			name:            "stdlib package -  incomplete last element",
-			dirPath:         "archive/zi",
+			fullPath:        "archive/zi",
 			modulePath:      stdlib.ModulePath,
 			version:         "v1.13.4",
 			wantNotFoundErr: true,
 		},
 		{
 			name:           "stdlib - internal directory",
-			dirPath:        "cmd/internal",
+			fullPath:       "cmd/internal",
 			modulePath:     stdlib.ModulePath,
 			version:        "v1.13.4",
 			wantModulePath: stdlib.ModulePath,
@@ -134,7 +134,7 @@ func TestGetPackagesInUnit(t *testing.T) {
 		},
 		{
 			name:           "stdlib - directory nested within an internal directory",
-			dirPath:        "cmd/internal/obj",
+			fullPath:       "cmd/internal/obj",
 			modulePath:     stdlib.ModulePath,
 			version:        "v1.13.4",
 			wantModulePath: stdlib.ModulePath,
@@ -147,7 +147,7 @@ func TestGetPackagesInUnit(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := testDB.GetPackagesInUnit(ctx, tc.dirPath, tc.modulePath, tc.version)
+			got, err := testDB.GetPackagesInUnit(ctx, tc.fullPath, tc.modulePath, tc.version)
 			if tc.wantNotFoundErr {
 				if !errors.Is(err, derrors.NotFound) {
 					t.Fatalf("got error %v; want %v", err, derrors.NotFound)
