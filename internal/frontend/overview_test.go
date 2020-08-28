@@ -387,9 +387,9 @@ func TestPackageSubdir(t *testing.T) {
 		// stdlib package
 		{"context", stdlib.ModulePath, "context"},
 	} {
-		got := packageSubdir(test.pkgPath, test.modulePath)
+		got := internal.Suffix(test.pkgPath, test.modulePath)
 		if got != test.want {
-			t.Errorf("packageSubdir(%q, %q) = %q, want %q", test.pkgPath, test.modulePath, got, test.want)
+			t.Errorf("internal.Suffix(%q, %q) = %q, want %q", test.pkgPath, test.modulePath, got, test.want)
 		}
 	}
 }

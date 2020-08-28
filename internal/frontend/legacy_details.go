@@ -33,7 +33,7 @@ func legacyFetchPackageOverviewDetails(ctx context.Context, pkg *internal.Legacy
 	if err != nil {
 		return nil, err
 	}
-	od.PackageSourceURL = pkg.SourceInfo.DirectoryURL(packageSubdir(pkg.Path, pkg.ModulePath))
+	od.PackageSourceURL = pkg.SourceInfo.DirectoryURL(internal.Suffix(pkg.Path, pkg.ModulePath))
 	if !pkg.LegacyPackage.IsRedistributable {
 		od.Redistributable = false
 	}

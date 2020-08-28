@@ -24,7 +24,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/source"
-	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 // OverviewDetails contains all of the data that the readme template
@@ -93,20 +92,8 @@ func fetchPackageOverviewDetails(ctx context.Context, ds internal.DataSource, dm
 	if err != nil {
 		return nil, err
 	}
-	od.PackageSourceURL = dmeta.SourceInfo.DirectoryURL(packageSubdir(dmeta.Path, dmeta.ModulePath))
+	od.PackageSourceURL = dmeta.SourceInfo.DirectoryURL(internal.Suffix(dmeta.Path, dmeta.ModulePath))
 	return od, nil
-}
-
-// packageSubdir returns the subdirectory of the package relative to its module.
-func packageSubdir(pkgPath, modulePath string) string {
-	switch {
-	case pkgPath == modulePath:
-		return ""
-	case modulePath == stdlib.ModulePath:
-		return pkgPath
-	default:
-		return strings.TrimPrefix(pkgPath, modulePath+"/")
-	}
 }
 
 // ReadmeHTML sanitizes readmeContents based on bluemondy.UGCPolicy and returns
