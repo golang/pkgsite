@@ -86,7 +86,7 @@ func (db *DB) GetPackagesInUnit(ctx context.Context, fullPath, modulePath, resol
 // TODO(golang/go#39629): remove pID.
 func (db *DB) GetUnit(ctx context.Context, pi *internal.PathInfo, fields internal.FieldSet) (_ *internal.Unit, err error) {
 	defer derrors.Wrap(&err, "GetUnit(ctx, %q, %q, %q)", pi.Path, pi.ModulePath, pi.Version)
-	pathID, isRedistributable, err := db.getPathIDAndIsRedistributable(ctx, pi.Path, pi.ModulePath, pi.Version)
+	pathID, err := db.getPathID(ctx, pi.Path, pi.ModulePath, pi.Version)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (db *DB) GetUnit(ctx context.Context, pi *internal.PathInfo, fields interna
 		DirectoryMeta: internal.DirectoryMeta{
 			Path:              pi.Path,
 			PathID:            pathID,
-			IsRedistributable: isRedistributable,
+			IsRedistributable: pi.IsRedistributable,
 			ModuleInfo: internal.ModuleInfo{
 				ModulePath: pi.ModulePath,
 				Version:    pi.Version,
@@ -149,28 +149,25 @@ func (db *DB) GetUnit(ctx context.Context, pi *internal.PathInfo, fields interna
 	return u, nil
 }
 
-func (db *DB) getPathIDAndIsRedistributable(ctx context.Context, fullPath, modulePath, version string) (_ int, _ bool, err error) {
+func (db *DB) getPathID(ctx context.Context, fullPath, modulePath, version string) (_ int, err error) {
 	defer derrors.Wrap(&err, "getPathID(ctx, %q, %q, %q)", fullPath, modulePath, version)
-	var (
-		pathID            int
-		isRedistributable bool
-	)
+	var pathID int
 	query := `
-		SELECT p.id, p.redistributable
+		SELECT p.id
 		FROM paths p
 		INNER JOIN modules m ON (p.module_id = m.id)
 		WHERE
 		    p.path = $1
 		    AND m.module_path = $2
 		    AND m.version = $3;`
-	err = db.db.QueryRow(ctx, query, fullPath, modulePath, version).Scan(&pathID, &isRedistributable)
+	err = db.db.QueryRow(ctx, query, fullPath, modulePath, version).Scan(&pathID)
 	switch err {
 	case sql.ErrNoRows:
-		return 0, false, derrors.NotFound
+		return 0, derrors.NotFound
 	case nil:
-		return pathID, isRedistributable, nil
+		return pathID, nil
 	default:
-		return 0, false, err
+		return 0, err
 	}
 }
 

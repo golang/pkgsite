@@ -412,9 +412,10 @@ func TestGetUnitFieldSet(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			pathInfo := &internal.PathInfo{
-				Path:       test.want.Path,
-				ModulePath: test.want.ModulePath,
-				Version:    test.want.Version,
+				Path:              test.want.Path,
+				ModulePath:        test.want.ModulePath,
+				Version:           test.want.Version,
+				IsRedistributable: test.want.IsRedistributable,
 			}
 			got, err := testDB.GetUnit(ctx, pathInfo, test.fields)
 			if err != nil {
