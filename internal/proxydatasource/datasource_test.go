@@ -137,16 +137,16 @@ func TestDataSource_LegacyGetDirectory(t *testing.T) {
 	}
 }
 
-func TestDataSource_GetImports(t *testing.T) {
+func TestDataSource_LegacyGetImports(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
 	want := []string{"net/http"}
-	got, err := ds.GetImports(ctx, "foo.com/bar/baz", "foo.com/bar", "v1.2.0")
+	got, err := ds.LegacyGetImports(ctx, "foo.com/bar/baz", "foo.com/bar", "v1.2.0")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if diff := cmp.Diff(want, got, cmpOpts...); diff != "" {
-		t.Errorf("GetImports diff (-want +got):\n%s", diff)
+		t.Errorf("LegacyGetImports diff (-want +got):\n%s", diff)
 	}
 }
 

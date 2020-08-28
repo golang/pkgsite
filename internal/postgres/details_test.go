@@ -251,7 +251,7 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 func testGetImports(ctx context.Context, t *testing.T, path, modulePath, version string, wantImports []string, experimentNames ...string) {
 	t.Helper()
 	ctx = experiment.NewContext(ctx, experimentNames...)
-	got, err := testDB.GetImports(ctx, path, modulePath, version)
+	got, err := testDB.LegacyGetImports(ctx, path, modulePath, version)
 	if err != nil {
 		t.Fatal(err)
 	}

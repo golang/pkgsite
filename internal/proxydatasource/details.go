@@ -34,16 +34,6 @@ func (ds *DataSource) GetDirectoryMeta(ctx context.Context, fullPath, modulePath
 	return &d.DirectoryMeta, nil
 }
 
-// GetImports returns package imports as extracted from the module zip.
-func (ds *DataSource) GetImports(ctx context.Context, pkgPath, modulePath, version string) (_ []string, err error) {
-	defer derrors.Wrap(&err, "GetImports(%q, %q, %q)", pkgPath, modulePath, version)
-	vp, err := ds.LegacyGetPackage(ctx, pkgPath, modulePath, version)
-	if err != nil {
-		return nil, err
-	}
-	return vp.Imports, nil
-}
-
 // GetLicenses return licenses at path for the given module path and version.
 func (ds *DataSource) GetLicenses(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ []*licenses.License, err error) {
 	defer derrors.Wrap(&err, "GetLicenses(%q, %q, %q)", fullPath, modulePath, resolvedVersion)

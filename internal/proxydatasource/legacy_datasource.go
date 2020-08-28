@@ -152,3 +152,13 @@ func (ds *DataSource) LegacyGetModuleInfo(ctx context.Context, modulePath, versi
 	}
 	return &m.LegacyModuleInfo, nil
 }
+
+// LegacyGetImports returns package imports as extracted from the module zip.
+func (ds *DataSource) LegacyGetImports(ctx context.Context, pkgPath, modulePath, version string) (_ []string, err error) {
+	defer derrors.Wrap(&err, "LegacyGetImports(%q, %q, %q)", pkgPath, modulePath, version)
+	vp, err := ds.LegacyGetPackage(ctx, pkgPath, modulePath, version)
+	if err != nil {
+		return nil, err
+	}
+	return vp.Imports, nil
+}

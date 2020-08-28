@@ -19,7 +19,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 )
 
 // LegacyGetPackagesInModule returns packages contained in the module version
@@ -77,35 +76,19 @@ func (db *DB) LegacyGetPackagesInModule(ctx context.Context, modulePath, version
 	return packages, nil
 }
 
-// GetImports fetches and returns all of the imports for the package with
+// LegacyGetImports fetches and returns all of the imports for the package with
 // pkgPath, modulePath and version.
 //
 // The returned error may be checked with derrors.IsInvalidArgument to
 // determine if it resulted from an invalid package path or version.
-func (db *DB) GetImports(ctx context.Context, pkgPath, modulePath, version string) (paths []string, err error) {
-	defer derrors.Wrap(&err, "DB.GetImports(ctx, %q, %q, %q)", pkgPath, modulePath, version)
+func (db *DB) LegacyGetImports(ctx context.Context, pkgPath, modulePath, version string) (paths []string, err error) {
+	defer derrors.Wrap(&err, "DB.LegacyGetImports(ctx, %q, %q, %q)", pkgPath, modulePath, version)
 
 	if pkgPath == "" || version == "" || modulePath == "" {
 		return nil, fmt.Errorf("pkgPath, modulePath and version must all be non-empty: %w", derrors.InvalidArgument)
 	}
 
-	var query string
-	if experiment.IsActive(ctx, internal.ExperimentUsePackageImports) {
-		query = `
-		SELECT to_path
-		FROM package_imports i
-		INNER JOIN paths p
-		ON p.id = i.path_id
-		INNER JOIN modules m
-		ON m.id = p.module_id
-		WHERE
-			p.path = $1
-			AND m.version = $2
-			AND m.module_path = $3
-		ORDER BY
-			to_path;`
-	} else {
-		query = `
+	query := `
 		SELECT to_path
 		FROM imports
 		WHERE
@@ -114,8 +97,6 @@ func (db *DB) GetImports(ctx context.Context, pkgPath, modulePath, version strin
 			AND from_module_path = $3
 		ORDER BY
 			to_path;`
-	}
-
 	var (
 		toPath  string
 		imports []string

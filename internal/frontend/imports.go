@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -32,10 +33,19 @@ type ImportsDetails struct {
 
 // fetchImportsDetails fetches imports for the package version specified by
 // pkgPath, modulePath and version from the database and returns a ImportsDetails.
-func fetchImportsDetails(ctx context.Context, ds internal.DataSource, pkgPath, modulePath, resolvedVersion string) (*ImportsDetails, error) {
-	dsImports, err := ds.GetImports(ctx, pkgPath, modulePath, resolvedVersion)
-	if err != nil {
-		return nil, err
+func fetchImportsDetails(ctx context.Context, ds internal.DataSource, pkgPath, modulePath, resolvedVersion string) (_ *ImportsDetails, err error) {
+	var dsImports []string
+	if isActiveUseDirectories(ctx) && experiment.IsActive(ctx, internal.ExperimentUsePackageImports) {
+		dir, err := ds.GetDirectory(ctx, pkgPath, modulePath, resolvedVersion, 0, internal.WithImports)
+		if err != nil {
+			return nil, err
+		}
+		dsImports = dir.Imports
+	} else {
+		dsImports, err = ds.LegacyGetImports(ctx, pkgPath, modulePath, resolvedVersion)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var externalImports, moduleImports, std []string

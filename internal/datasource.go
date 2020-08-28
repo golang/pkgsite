@@ -20,9 +20,6 @@ type DataSource interface {
 	GetDirectory(ctx context.Context, dirPath, modulePath, version string, pathID int, fields FieldSet) (_ *Directory, err error)
 	// GetDirectoryMeta returns information about a directory.
 	GetDirectoryMeta(ctx context.Context, dirPath, modulePath, version string) (_ *DirectoryMeta, err error)
-	// GetImports returns a slice of import paths imported by the package
-	// specified by path and version.
-	GetImports(ctx context.Context, pkgPath, modulePath, version string) ([]string, error)
 	// GetLicenses returns licenses at the given path for given modulePath and version.
 	GetLicenses(ctx context.Context, fullPath, modulePath, resolvedVersion string) ([]*licenses.License, error)
 	// GetPathInfo returns information about a path.
@@ -37,6 +34,9 @@ type DataSource interface {
 	// package paths satisfy this query, it should prefer the module with
 	// the longest path.
 	LegacyGetDirectory(ctx context.Context, dirPath, modulePath, version string, fields FieldSet) (_ *LegacyDirectory, err error)
+	// LegacyGetImports returns a slice of import paths imported by the package
+	// specified by path and version.
+	LegacyGetImports(ctx context.Context, pkgPath, modulePath, version string) ([]string, error)
 	// LegacyGetModuleInfo returns the LegacyModuleInfo corresponding to modulePath and
 	// version.
 	LegacyGetModuleInfo(ctx context.Context, modulePath, version string) (*LegacyModuleInfo, error)
