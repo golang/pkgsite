@@ -21,13 +21,13 @@ import (
 // GetUnit returns information about a directory at a path.
 func (ds *DataSource) GetUnit(ctx context.Context, pi *internal.PathInfo, field internal.FieldSet) (_ *internal.Unit, err error) {
 	defer derrors.Wrap(&err, "GetUnit(%q, %q, %q)", pi.Path, pi.ModulePath, pi.Version)
-	return ds.directoryFromVersion(ctx, pi.Path, pi.ModulePath, pi.Version)
+	return ds.getUnit(ctx, pi.Path, pi.ModulePath, pi.Version)
 }
 
 // GetDirectoryMeta returns information about a directory at a path.
 func (ds *DataSource) GetDirectoryMeta(ctx context.Context, fullPath, modulePath, version string) (_ *internal.DirectoryMeta, err error) {
 	defer derrors.Wrap(&err, "GetDirectoryMeta(%q, %q, %q)", fullPath, modulePath, version)
-	d, err := ds.directoryFromVersion(ctx, fullPath, modulePath, version)
+	d, err := ds.getUnit(ctx, fullPath, modulePath, version)
 	if err != nil {
 		return nil, err
 	}
