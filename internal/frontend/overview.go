@@ -49,16 +49,16 @@ func fetchOverviewDetails(ctx context.Context, ds internal.DataSource, dmeta *in
 		IsRedistributable: dmeta.IsRedistributable,
 		Name:              dmeta.Name,
 	}
-	dir, err := ds.GetUnit(ctx, pi, internal.WithReadme)
+	u, err := ds.GetUnit(ctx, pi, internal.WithReadme)
 	if err != nil {
 		return nil, err
 	}
-	dir.DirectoryMeta = *dmeta
+	u.DirectoryMeta = *dmeta
 	var readme *internal.Readme
-	if dir.Readme != nil {
-		readme = &internal.Readme{Filepath: dir.Readme.Filepath, Contents: dir.Readme.Contents}
+	if u.Readme != nil {
+		readme = &internal.Readme{Filepath: u.Readme.Filepath, Contents: u.Readme.Contents}
 	}
-	return constructOverviewDetails(ctx, &dir.ModuleInfo, readme, dir.IsRedistributable, versionedLinks)
+	return constructOverviewDetails(ctx, &u.ModuleInfo, readme, u.IsRedistributable, versionedLinks)
 }
 
 // constructOverviewDetails uses the given module version and readme to

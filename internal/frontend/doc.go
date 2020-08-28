@@ -31,11 +31,11 @@ func fetchDocumentationDetails(ctx context.Context, ds internal.DataSource, dmet
 		IsRedistributable: dmeta.IsRedistributable,
 		Name:              dmeta.Name,
 	}
-	dir, err := ds.GetUnit(ctx, pi, internal.WithDocumentation)
+	u, err := ds.GetUnit(ctx, pi, internal.WithDocumentation)
 	if err != nil {
 		return nil, err
 	}
-	doc := dir.Package.Documentation
+	doc := u.Package.Documentation
 	return &DocumentationDetails{
 		GOOS:          doc.GOOS,
 		GOARCH:        doc.GOARCH,

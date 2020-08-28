@@ -365,21 +365,21 @@ func TestGetUnitFieldSet(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cleanFields := func(dir *internal.Unit, fields internal.FieldSet) {
+	cleanFields := func(u *internal.Unit, fields internal.FieldSet) {
 		// Remove fields based on the FieldSet specified.
-		dir.DirectoryMeta = internal.DirectoryMeta{
-			Path:              dir.Path,
+		u.DirectoryMeta = internal.DirectoryMeta{
+			Path:              u.Path,
 			IsRedistributable: true,
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath: dir.ModulePath,
-				Version:    dir.Version,
+				ModulePath: u.ModulePath,
+				Version:    u.Version,
 			},
 		}
 		if fields&internal.WithImports != 0 {
-			dir.Imports = sample.Imports
+			u.Imports = sample.Imports
 		}
-		if dir.Package != nil {
-			dir.Package.Name = ""
+		if u.Package != nil {
+			u.Package.Name = ""
 		}
 	}
 
@@ -435,7 +435,7 @@ func TestGetUnitFieldSet(t *testing.T) {
 }
 
 func newVdir(path, modulePath, version string, readme *internal.Readme, pkg *internal.Package) *internal.Unit {
-	dir := &internal.Unit{
+	u := &internal.Unit{
 		DirectoryMeta: internal.DirectoryMeta{
 			ModuleInfo:        *sample.ModuleInfo(modulePath, version),
 			Path:              path,
@@ -447,9 +447,9 @@ func newVdir(path, modulePath, version string, readme *internal.Readme, pkg *int
 		Package: pkg,
 	}
 	if pkg != nil {
-		dir.Name = pkg.Name
+		u.Name = pkg.Name
 	}
-	return dir
+	return u
 }
 
 func newPackage(name, path string) *internal.Package {

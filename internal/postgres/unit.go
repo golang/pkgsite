@@ -91,7 +91,7 @@ func (db *DB) GetUnit(ctx context.Context, pi *internal.PathInfo, fields interna
 		return nil, err
 	}
 
-	dir := &internal.Unit{
+	u := &internal.Unit{
 		DirectoryMeta: internal.DirectoryMeta{
 			Path:              pi.Path,
 			PathID:            pathID,
@@ -103,31 +103,31 @@ func (db *DB) GetUnit(ctx context.Context, pi *internal.PathInfo, fields interna
 		},
 	}
 	if fields&internal.WithReadme != 0 {
-		readme, err := db.getReadme(ctx, dir.ModulePath, dir.Version)
+		readme, err := db.getReadme(ctx, u.ModulePath, u.Version)
 		if err != nil && !errors.Is(err, derrors.NotFound) {
 			return nil, err
 		}
-		dir.Readme = readme
+		u.Readme = readme
 	}
 	if fields&internal.WithDocumentation != 0 {
-		doc, err := db.getDocumentation(ctx, dir.PathID)
+		doc, err := db.getDocumentation(ctx, u.PathID)
 		if err != nil && !errors.Is(err, derrors.NotFound) {
 			return nil, err
 		}
 		if doc != nil {
-			dir.Package = &internal.Package{
-				Path:          dir.Path,
+			u.Package = &internal.Package{
+				Path:          u.Path,
 				Documentation: doc,
 			}
 		}
 	}
 	if fields&internal.WithImports != 0 {
-		imports, err := db.getImports(ctx, dir.PathID)
+		imports, err := db.getImports(ctx, u.PathID)
 		if err != nil {
 			return nil, err
 		}
 		if len(imports) > 0 {
-			dir.Imports = imports
+			u.Imports = imports
 		}
 	}
 	if fields == internal.AllFields {
@@ -135,18 +135,18 @@ func (db *DB) GetUnit(ctx context.Context, pi *internal.PathInfo, fields interna
 		if err != nil {
 			return nil, err
 		}
-		dir.DirectoryMeta = *dmeta
-		if dir.Name != "" {
-			if dir.Package == nil {
-				dir.Package = &internal.Package{Path: dir.Path}
+		u.DirectoryMeta = *dmeta
+		if u.Name != "" {
+			if u.Package == nil {
+				u.Package = &internal.Package{Path: u.Path}
 			}
-			dir.Package.Name = dmeta.Name
+			u.Package.Name = dmeta.Name
 		}
 	}
 	if !db.bypassLicenseCheck {
-		dir.RemoveNonRedistributableData()
+		u.RemoveNonRedistributableData()
 	}
-	return dir, nil
+	return u, nil
 }
 
 func (db *DB) getPathIDAndIsRedistributable(ctx context.Context, fullPath, modulePath, version string) (_ int, _ bool, err error) {
