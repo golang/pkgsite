@@ -59,9 +59,8 @@ func moduleDirectories(modulePath string,
 		}
 		if pkg, ok := pkgLookup[dirPath]; ok {
 			dir.Package = &internal.Package{
-				Path:    pkg.Path,
-				Name:    pkg.Name,
-				Imports: pkg.Imports,
+				Path: pkg.Path,
+				Name: pkg.Name,
 				Documentation: &internal.Documentation{
 					GOOS:     pkg.GOOS,
 					GOARCH:   pkg.GOARCH,
@@ -69,6 +68,7 @@ func moduleDirectories(modulePath string,
 					HTML:     pkg.DocumentationHTML,
 				},
 			}
+			dir.Imports = pkg.Imports
 		}
 		directories = append(directories, dir)
 	}

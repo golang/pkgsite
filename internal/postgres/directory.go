@@ -109,7 +109,6 @@ func (db *DB) GetDirectory(ctx context.Context, fullPath, modulePath, version st
 		}
 		dir.Readme = readme
 	}
-
 	if field&internal.WithDocumentation != 0 {
 		doc, err := db.getDocumentation(ctx, dir.PathID)
 		if err != nil && !errors.Is(err, derrors.NotFound) {
@@ -120,6 +119,15 @@ func (db *DB) GetDirectory(ctx context.Context, fullPath, modulePath, version st
 				Path:          dir.Path,
 				Documentation: doc,
 			}
+		}
+	}
+	if field&internal.WithImports != 0 {
+		imports, err := db.getImports(ctx, dir.PathID)
+		if err != nil {
+			return nil, err
+		}
+		if len(imports) > 0 {
+			dir.Imports = imports
 		}
 	}
 	if field == internal.AllFields {
@@ -133,13 +141,6 @@ func (db *DB) GetDirectory(ctx context.Context, fullPath, modulePath, version st
 				dir.Package = &internal.Package{Path: dir.Path}
 			}
 			dir.Package.Name = dmeta.Name
-		}
-		imports, err := db.getImports(ctx, dir.PathID)
-		if err != nil {
-			return nil, err
-		}
-		if len(imports) > 0 {
-			dir.Package.Imports = imports
 		}
 	}
 	if !db.bypassLicenseCheck {

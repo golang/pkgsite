@@ -382,8 +382,8 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 		return m.Directories[i].Path < m.Directories[j].Path
 	})
 	for _, d := range m.Directories {
-		if d.Package != nil && len(d.Package.Imports) > 1 {
-			sort.Strings(d.Package.Imports)
+		if d.Package != nil && len(d.Imports) > 1 {
+			sort.Strings(d.Imports)
 		}
 	}
 	var (
@@ -432,8 +432,8 @@ func insertDirectories(ctx context.Context, db *database.DB, m *internal.Module,
 				return errors.New("saveModule: package missing Documentation.HTML")
 			}
 			pathToDoc[d.Path] = d.Package.Documentation
-			if len(d.Package.Imports) > 0 {
-				pathToImports[d.Path] = d.Package.Imports
+			if len(d.Imports) > 0 {
+				pathToImports[d.Path] = d.Imports
 			}
 		}
 	}

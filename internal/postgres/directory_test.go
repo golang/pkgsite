@@ -615,7 +615,7 @@ func TestGetDirectoryFieldSet(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cleanFields := func(dir *internal.Directory) {
+	cleanFields := func(dir *internal.Directory, field internal.FieldSet) {
 		// Remove fields based on the FieldSet specified.
 		dir.DirectoryMeta = internal.DirectoryMeta{
 			Path:              dir.Path,
@@ -625,8 +625,10 @@ func TestGetDirectoryFieldSet(t *testing.T) {
 				Version:    dir.Version,
 			},
 		}
+		if field != internal.WithImports {
+			dir.Imports = nil
+		}
 		if dir.Package != nil {
-			dir.Package.Imports = nil
 			dir.Package.Name = ""
 		}
 	}
@@ -663,7 +665,7 @@ func TestGetDirectoryFieldSet(t *testing.T) {
 				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 				cmpopts.IgnoreFields(internal.DirectoryMeta{}, "PathID"),
 			}
-			cleanFields(test.want)
+			cleanFields(test.want, test.field)
 			if diff := cmp.Diff(test.want, got, opts...); diff != "" {
 				t.Errorf("mismatch (-want, +got):\n%s", diff)
 			}
@@ -672,7 +674,7 @@ func TestGetDirectoryFieldSet(t *testing.T) {
 }
 
 func newVdir(path, modulePath, version string, readme *internal.Readme, pkg *internal.Package) *internal.Directory {
-	return &internal.Directory{
+	dir := &internal.Directory{
 		DirectoryMeta: internal.DirectoryMeta{
 			ModuleInfo:        *sample.ModuleInfo(modulePath, version),
 			Path:              path,
@@ -683,6 +685,10 @@ func newVdir(path, modulePath, version string, readme *internal.Readme, pkg *int
 		Readme:  readme,
 		Package: pkg,
 	}
+	if pkg != nil {
+		dir.Imports = sample.Imports
+	}
+	return dir
 }
 
 func newPackage(name, path string) *internal.Package {
@@ -695,7 +701,6 @@ func newPackage(name, path string) *internal.Package {
 			GOOS:     sample.GOOS,
 			GOARCH:   sample.GOARCH,
 		},
-		Imports: sample.Imports,
 	}
 }
 

@@ -75,7 +75,7 @@ func cleanFetchResult(fr *FetchResult, detector *licenses.Detector) *FetchResult
 				Name:              dir.Package.Name,
 				Synopsis:          dir.Package.Documentation.Synopsis,
 				DocumentationHTML: dir.Package.Documentation.HTML,
-				Imports:           dir.Package.Imports,
+				Imports:           dir.Imports,
 				GOOS:              dir.Package.Documentation.GOOS,
 				GOARCH:            dir.Package.Documentation.GOARCH,
 				IsRedistributable: dir.IsRedistributable,

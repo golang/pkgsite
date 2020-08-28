@@ -130,6 +130,7 @@ type Directory struct {
 	DirectoryMeta
 	Readme  *Readme
 	Package *Package
+	Imports []string
 }
 
 // PackageMeta represents the metadata of a package in a module version.
@@ -160,7 +161,6 @@ type Package struct {
 	Name          string
 	Path          string
 	Documentation *Documentation
-	Imports       []string
 }
 
 // Documentation is the rendered documentation for a given package
@@ -296,6 +296,7 @@ const StringFieldMissing = "!MISSING"
 const (
 	WithReadme FieldSet = 1 << iota
 	WithDocumentation
+	WithImports
 )
 
 // LegacyDirectory represents a directory in a module version, and all of the

@@ -294,10 +294,10 @@ func DirectoryForPackage(pkg *internal.LegacyPackage) *internal.Directory {
 			Licenses:          pkg.Licenses,
 			V1Path:            pkg.V1Path,
 		},
+		Imports: pkg.Imports,
 		Package: &internal.Package{
-			Name:    pkg.Name,
-			Path:    pkg.Path,
-			Imports: pkg.Imports,
+			Name: pkg.Name,
+			Path: pkg.Path,
 			Documentation: &internal.Documentation{
 				Synopsis: pkg.Synopsis,
 				HTML:     pkg.DocumentationHTML,
