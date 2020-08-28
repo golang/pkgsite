@@ -84,7 +84,7 @@ func (db *DB) GetPackagesInDirectory(ctx context.Context, dirPath, modulePath, r
 // GetDirectory returns a directory from the database, along with all of the
 // data associated with that directory.
 // TODO(golang/go#39629): remove pID.
-func (db *DB) GetDirectory(ctx context.Context, fullPath, modulePath, version string, pID int, field internal.FieldSet) (_ *internal.Directory, err error) {
+func (db *DB) GetDirectory(ctx context.Context, fullPath, modulePath, version string, pID int, fields internal.FieldSet) (_ *internal.Directory, err error) {
 	defer derrors.Wrap(&err, "GetDirectory(ctx, %q, %q, %q)", fullPath, modulePath, version)
 	pathID, isRedistributable, err := db.getPathIDAndIsRedistributable(ctx, fullPath, modulePath, version)
 	if err != nil {
@@ -102,14 +102,14 @@ func (db *DB) GetDirectory(ctx context.Context, fullPath, modulePath, version st
 			},
 		},
 	}
-	if field&internal.WithReadme != 0 {
+	if fields&internal.WithReadme != 0 {
 		readme, err := db.getReadme(ctx, dir.ModulePath, dir.Version)
 		if err != nil && !errors.Is(err, derrors.NotFound) {
 			return nil, err
 		}
 		dir.Readme = readme
 	}
-	if field&internal.WithDocumentation != 0 {
+	if fields&internal.WithDocumentation != 0 {
 		doc, err := db.getDocumentation(ctx, dir.PathID)
 		if err != nil && !errors.Is(err, derrors.NotFound) {
 			return nil, err
@@ -121,7 +121,7 @@ func (db *DB) GetDirectory(ctx context.Context, fullPath, modulePath, version st
 			}
 		}
 	}
-	if field&internal.WithImports != 0 {
+	if fields&internal.WithImports != 0 {
 		imports, err := db.getImports(ctx, dir.PathID)
 		if err != nil {
 			return nil, err
@@ -130,7 +130,7 @@ func (db *DB) GetDirectory(ctx context.Context, fullPath, modulePath, version st
 			dir.Imports = imports
 		}
 	}
-	if field == internal.AllFields {
+	if fields == internal.AllFields {
 		dmeta, err := db.GetDirectoryMeta(ctx, fullPath, modulePath, version)
 		if err != nil {
 			return nil, err

@@ -17,7 +17,7 @@ type DataSource interface {
 
 	// GetDirectory returns information about a directory, which may also be a module and/or package.
 	// The module and version must both be known.
-	GetDirectory(ctx context.Context, dirPath, modulePath, version string, pathID int, field FieldSet) (_ *Directory, err error)
+	GetDirectory(ctx context.Context, dirPath, modulePath, version string, pathID int, fields FieldSet) (_ *Directory, err error)
 	// GetDirectoryMeta returns information about a directory.
 	GetDirectoryMeta(ctx context.Context, dirPath, modulePath, version string) (_ *DirectoryMeta, err error)
 	// GetImports returns a slice of import paths imported by the package
