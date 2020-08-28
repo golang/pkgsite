@@ -159,7 +159,7 @@ func fetchDetailsForPackage(r *http.Request, tab string, ds internal.DataSource,
 	case tabSubdirectories:
 		return fetchDirectoryDetails(ctx, ds, dmeta, false)
 	case tabVersions:
-		return fetchVersionsDetails(ctx, ds, dmeta.Path, dmeta.V1Path, dmeta.ModulePath)
+		return fetchVersionsDetails(ctx, ds, dmeta.Path, dmeta.ModulePath)
 	case tabImports:
 		return fetchImportsDetails(ctx, ds, dmeta.Path, dmeta.ModulePath, dmeta.Version)
 	case tabImportedBy:

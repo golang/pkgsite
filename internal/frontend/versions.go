@@ -61,7 +61,7 @@ type VersionSummary struct {
 	Version string
 }
 
-func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, fullPath, v1Path, modulePath string) (*VersionsDetails, error) {
+func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, fullPath, modulePath string) (*VersionsDetails, error) {
 	db, ok := ds.(*postgres.DB)
 	if !ok {
 		// The proxydatasource does not support the imported by page.
@@ -78,7 +78,7 @@ func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, fullPath,
 		if mi.ModulePath == stdlib.ModulePath {
 			versionPath = fullPath
 		} else {
-			versionPath = pathInVersion(v1Path, mi)
+			versionPath = pathInVersion(internal.V1Path(modulePath, internal.Suffix(fullPath, modulePath)), mi)
 		}
 		return constructPackageURL(versionPath, mi.ModulePath, linkVersion(mi.Version, mi.ModulePath))
 	}
