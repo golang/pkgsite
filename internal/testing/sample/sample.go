@@ -101,10 +101,11 @@ func NowTruncated() time.Time {
 //
 // The package name is last component of the package path.
 func LegacyPackage(modulePath, suffix string) *internal.LegacyPackage {
+	p := fullPath(modulePath, suffix)
 	return &internal.LegacyPackage{
-		Name:              path.Base(fullPath(modulePath, suffix)),
-		Path:              fullPath(modulePath, suffix),
-		V1Path:            internal.V1Path(modulePath, suffix),
+		Name:              path.Base(p),
+		Path:              p,
+		V1Path:            internal.V1Path(p, modulePath),
 		Synopsis:          Synopsis,
 		IsRedistributable: true,
 		Licenses:          LicenseMetadata,
@@ -116,11 +117,12 @@ func LegacyPackage(modulePath, suffix string) *internal.LegacyPackage {
 }
 
 func DirectoryMeta(modulePath, suffix string) *internal.DirectoryMeta {
+	p := fullPath(modulePath, suffix)
 	return &internal.DirectoryMeta{
 		ModuleInfo:        *ModuleInfo(modulePath, VersionString),
-		Path:              fullPath(modulePath, suffix),
-		Name:              path.Base(fullPath(modulePath, suffix)),
-		V1Path:            internal.V1Path(modulePath, suffix),
+		Path:              p,
+		Name:              path.Base(p),
+		V1Path:            internal.V1Path(p, modulePath),
 		IsRedistributable: true,
 		Licenses:          LicenseMetadata,
 	}

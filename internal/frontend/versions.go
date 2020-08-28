@@ -78,7 +78,7 @@ func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, fullPath,
 		if mi.ModulePath == stdlib.ModulePath {
 			versionPath = fullPath
 		} else {
-			versionPath = pathInVersion(internal.V1Path(modulePath, internal.Suffix(fullPath, modulePath)), mi)
+			versionPath = pathInVersion(internal.V1Path(fullPath, modulePath), mi)
 		}
 		return constructPackageURL(versionPath, mi.ModulePath, linkVersion(mi.Version, mi.ModulePath))
 	}

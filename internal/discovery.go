@@ -90,14 +90,14 @@ func Suffix(fullPath, basePath string) string {
 	return strings.TrimPrefix(strings.TrimPrefix(fullPath, basePath), "/")
 }
 
-// V1Path returns the path for version 1 of the package whose path
-// is modulePath + "/" + suffix. If modulePath is the standard
-// library, then V1Path returns suffix.
-func V1Path(modulePath, suffix string) string {
+// V1Path returns the path for version 1 of the package whose import path
+// is fullPath. If modulePath is the standard library, then V1Path returns
+// fullPath.
+func V1Path(fullPath, modulePath string) string {
 	if modulePath == stdlib.ModulePath {
-		return suffix
+		return fullPath
 	}
-	return path.Join(SeriesPathForModule(modulePath), suffix)
+	return path.Join(SeriesPathForModule(modulePath), Suffix(fullPath, modulePath))
 }
 
 // A Module is a specific, reproducible build of a module.
