@@ -15,17 +15,21 @@ type DataSource interface {
 	// See the internal/postgres package for further documentation of these
 	// methods, particularly as they pertain to the main postgres implementation.
 
+	// GetLatestMajorVersion returns the latest major version of a module path.
+	GetLatestMajorVersion(ctx context.Context, seriesPath string) (_ string, err error)
+	// GetPathInfo returns information about a path.
+	GetPathInfo(ctx context.Context, path, requestedModulePath, requestedVersion string) (_ *PathInfo, err error)
 	// GetUnit returns information about a directory, which may also be a module and/or package.
 	// The module and version must both be known.
 	GetUnit(ctx context.Context, dirPath, modulePath, version string, pathID int, fields FieldSet) (_ *Unit, err error)
+
+	// TODO(golang/go#39629): Deprecate these methods by moving the logic
+	// behind GetUnit.
+	//
 	// GetDirectoryMeta returns information about a directory.
 	GetDirectoryMeta(ctx context.Context, dirPath, modulePath, version string) (_ *DirectoryMeta, err error)
 	// GetLicenses returns licenses at the given path for given modulePath and version.
 	GetLicenses(ctx context.Context, fullPath, modulePath, resolvedVersion string) ([]*licenses.License, error)
-	// GetPathInfo returns information about a path.
-	GetPathInfo(ctx context.Context, path, requestedModulePath, requestedVersion string) (_ *PathInfo, err error)
-	// GetLatestMajorVersion returns the latest major version of a module path.
-	GetLatestMajorVersion(ctx context.Context, seriesPath string) (_ string, err error)
 
 	// TODO(golang/go#39629): Deprecate these methods.
 	//
