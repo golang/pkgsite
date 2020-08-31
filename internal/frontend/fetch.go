@@ -228,7 +228,7 @@ func fetchRequestStatusAndResponseText(results []*fetchResult, fullPath, request
 		case derrors.ToStatus(derrors.AlternativeModule):
 			// TODO(https://golang.org/issue/40306): Make the canonical module
 			// path a clickable link.
-			return http.StatusSeeOther,
+			return http.StatusNotFound,
 				fmt.Sprintf("“%s” is not a valid package or module. Were you looking for “%s”?",
 					displayPath(fullPath, requestedVersion), fr.goModPath)
 		}
