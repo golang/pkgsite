@@ -163,7 +163,12 @@ func (c *Client) ListVersions(ctx context.Context, modulePath string) ([]string,
 // executeRequest executes an HTTP GET request for u, then calls the bodyFunc
 // on the response body, if no error occurred.
 func (c *Client) executeRequest(ctx context.Context, u string, bodyFunc func(body io.Reader) error) (err error) {
-	defer derrors.Wrap(&err, "executeRequest(ctx, %q)", u)
+	defer func() {
+		if ctx.Err() != nil {
+			err = fmt.Errorf("%v: %w", err, derrors.ProxyTimedOut)
+		}
+		derrors.Wrap(&err, "executeRequest(ctx, %q)", u)
+	}()
 	r, err := ctxhttp.Get(ctx, c.httpClient, u)
 	if err != nil {
 		return fmt.Errorf("ctxhttp.Get(ctx, client, %q): %v", u, err)
