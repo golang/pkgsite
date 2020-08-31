@@ -12,3 +12,28 @@
     event: 'gtm.js',
   });
 })();
+
+/**
+ * trackErrors creates an event listener that reports unhandled exceptions
+ * to Google Tag Manager.
+ */
+(function trackErrors() {
+  const loadErrorEvents = (window.__err && window.__err.p) || [];
+
+  const trackError = error => {
+    window.dataLayer.push({
+      event: 'error',
+      event_category: 'Script',
+      event_action: 'uncaught error',
+      event_label: (error && (error.stack || `${error.name}: ${error.message}`)) || '(not set)',
+    });
+  };
+
+  for (let event of loadErrorEvents) {
+    trackError(event.error);
+  }
+
+  window.addEventListener('error', event => {
+    trackError(event.error);
+  });
+})();
