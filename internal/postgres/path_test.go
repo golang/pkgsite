@@ -14,7 +14,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
-	"golang.org/x/pkgsite/internal/version"
 )
 
 func TestGetPathInfo(t *testing.T) {
@@ -35,20 +34,14 @@ func TestGetPathInfo(t *testing.T) {
 		{"m.com/a", "v1.1.0", "b", false},
 		{"m.com/b", "v2.0.0+incompatible", "a", true},
 	} {
-		vtype, err := version.ParseType(testModule.version)
-		if err != nil {
-			t.Fatal(err)
-		}
-
 		pkgName := path.Base(testModule.packageSuffix)
 		pkgPath := path.Join(testModule.module, testModule.packageSuffix)
 		m := &internal.Module{
 			LegacyModuleInfo: internal.LegacyModuleInfo{
 				ModuleInfo: internal.ModuleInfo{
-					ModulePath:  testModule.module,
-					Version:     testModule.version,
-					VersionType: vtype,
-					CommitTime:  time.Now(),
+					ModulePath: testModule.module,
+					Version:    testModule.version,
+					CommitTime: time.Now(),
 				},
 			},
 			LegacyPackages: []*internal.LegacyPackage{{

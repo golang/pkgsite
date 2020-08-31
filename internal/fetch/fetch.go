@@ -38,7 +38,6 @@ import (
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
-	"golang.org/x/pkgsite/internal/version"
 )
 
 var (
@@ -125,12 +124,7 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 			return fr
 		}
 	}
-	versionType, err := version.ParseType(fr.ResolvedVersion)
-	if err != nil {
-		fr.Error = fmt.Errorf("%v: %w", err, derrors.BadModule)
-		return fr
-	}
-	mod, pvs, err := processZipFile(ctx, modulePath, versionType, fr.ResolvedVersion, commitTime, zipReader, sourceClient)
+	mod, pvs, err := processZipFile(ctx, modulePath, fr.ResolvedVersion, commitTime, zipReader, sourceClient)
 	if err != nil {
 		fr.Error = err
 		return fr
@@ -149,7 +143,7 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 }
 
 // processZipFile extracts information from the module version zip.
-func processZipFile(ctx context.Context, modulePath string, versionType version.Type, resolvedVersion string, commitTime time.Time, zipReader *zip.Reader, sourceClient *source.Client) (_ *internal.Module, _ []*internal.PackageVersionState, err error) {
+func processZipFile(ctx context.Context, modulePath string, resolvedVersion string, commitTime time.Time, zipReader *zip.Reader, sourceClient *source.Client) (_ *internal.Module, _ []*internal.PackageVersionState, err error) {
 	defer derrors.Wrap(&err, "processZipFile(%q, %q)", modulePath, resolvedVersion)
 
 	ctx, span := trace.StartSpan(ctx, "fetch.processZipFile")
@@ -192,7 +186,6 @@ func processZipFile(ctx context.Context, modulePath string, versionType version.
 				ModulePath:        modulePath,
 				Version:           resolvedVersion,
 				CommitTime:        commitTime,
-				VersionType:       versionType,
 				IsRedistributable: d.ModuleIsRedistributable(),
 				HasGoMod:          hasGoMod,
 				SourceInfo:        sourceInfo,

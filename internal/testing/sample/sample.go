@@ -22,7 +22,6 @@ import (
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
-	"golang.org/x/pkgsite/internal/version"
 )
 
 // These sample values can be used to construct test cases.
@@ -138,12 +137,7 @@ func PackageMeta(modulePath, suffix string) *internal.PackageMeta {
 }
 
 func LegacyModuleInfo(modulePath, versionString string) *internal.LegacyModuleInfo {
-	vtype, err := version.ParseType(versionString)
-	if err != nil {
-		panic(err)
-	}
 	mi := ModuleInfoReleaseType(modulePath, versionString)
-	mi.VersionType = vtype
 	return &internal.LegacyModuleInfo{
 		ModuleInfo:           *mi,
 		LegacyReadmeFilePath: ReadmeFilePath,
@@ -152,12 +146,7 @@ func LegacyModuleInfo(modulePath, versionString string) *internal.LegacyModuleIn
 }
 
 func ModuleInfo(modulePath, versionString string) *internal.ModuleInfo {
-	vtype, err := version.ParseType(versionString)
-	if err != nil {
-		panic(err)
-	}
 	mi := ModuleInfoReleaseType(modulePath, versionString)
-	mi.VersionType = vtype
 	return mi
 }
 
@@ -165,10 +154,9 @@ func ModuleInfo(modulePath, versionString string) *internal.ModuleInfo {
 // ModuleInfos with "latest" for version, which should not be valid.
 func ModuleInfoReleaseType(modulePath, versionString string) *internal.ModuleInfo {
 	return &internal.ModuleInfo{
-		ModulePath:  modulePath,
-		Version:     versionString,
-		CommitTime:  CommitTime,
-		VersionType: version.TypeRelease,
+		ModulePath: modulePath,
+		Version:    versionString,
+		CommitTime: CommitTime,
 		// Assume the module path is a GitHub-like repo name.
 		SourceInfo:        source.NewGitHubInfo("https://"+modulePath, "", versionString),
 		IsRedistributable: true,

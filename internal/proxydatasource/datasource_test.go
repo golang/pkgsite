@@ -22,7 +22,6 @@ import (
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
-	"golang.org/x/pkgsite/internal/version"
 )
 
 func setup(t *testing.T) (context.Context, *DataSource, func()) {
@@ -104,7 +103,6 @@ var (
 		ModulePath:        "foo.com/bar",
 		Version:           "v1.2.0",
 		CommitTime:        time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
-		VersionType:       version.TypeRelease,
 		IsRedistributable: true,
 		HasGoMod:          true,
 	}
@@ -312,7 +310,7 @@ func TestDataSource_LegacyGetTaggedVersionsForModule(t *testing.T) {
 		&wantModuleInfo,
 		&v110,
 	}
-	ignore := cmpopts.IgnoreFields(internal.ModuleInfo{}, "CommitTime", "VersionType", "IsRedistributable", "HasGoMod")
+	ignore := cmpopts.IgnoreFields(internal.ModuleInfo{}, "CommitTime", "IsRedistributable", "HasGoMod")
 	if diff := cmp.Diff(want, got, ignore); diff != "" {
 		t.Errorf("LegacyGetTaggedVersionsForPackageSeries diff (-want +got):\n%s", diff)
 	}
@@ -336,7 +334,7 @@ func TestDataSource_LegacyGetTaggedVersionsForPackageSeries(t *testing.T) {
 		&wantModuleInfo,
 		&v110,
 	}
-	ignore := cmpopts.IgnoreFields(internal.ModuleInfo{}, "CommitTime", "VersionType", "IsRedistributable", "HasGoMod")
+	ignore := cmpopts.IgnoreFields(internal.ModuleInfo{}, "CommitTime", "IsRedistributable", "HasGoMod")
 	if diff := cmp.Diff(want, got, ignore); diff != "" {
 		t.Errorf("LegacyGetTaggedVersionsForPackageSeries diff (-want +got):\n%s", diff)
 	}

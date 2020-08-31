@@ -163,7 +163,6 @@ func (db *DB) GetModuleInfo(ctx context.Context, modulePath, version string) (_ 
 			module_path,
 			version,
 			commit_time,
-			version_type,
 			source_info,
 			redistributable,
 			has_go_mod
@@ -175,7 +174,7 @@ func (db *DB) GetModuleInfo(ctx context.Context, modulePath, version string) (_ 
 
 	var mi internal.ModuleInfo
 	row := db.db.QueryRow(ctx, query, modulePath, version)
-	if err := row.Scan(&mi.ModulePath, &mi.Version, &mi.CommitTime, &mi.VersionType,
+	if err := row.Scan(&mi.ModulePath, &mi.Version, &mi.CommitTime,
 		jsonbScanner{&mi.SourceInfo}, &mi.IsRedistributable, &mi.HasGoMod); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, derrors.NotFound
@@ -197,7 +196,6 @@ func (db *DB) LegacyGetModuleInfo(ctx context.Context, modulePath string, versio
 			commit_time,
 			readme_file_path,
 			readme_contents,
-			version_type,
 			source_info,
 			redistributable,
 			has_go_mod
@@ -217,7 +215,7 @@ func (db *DB) LegacyGetModuleInfo(ctx context.Context, modulePath string, versio
 	var mi internal.LegacyModuleInfo
 	row := db.db.QueryRow(ctx, query, args...)
 	if err := row.Scan(&mi.ModulePath, &mi.Version, &mi.CommitTime,
-		database.NullIsEmpty(&mi.LegacyReadmeFilePath), database.NullIsEmpty(&mi.LegacyReadmeContents), &mi.VersionType,
+		database.NullIsEmpty(&mi.LegacyReadmeFilePath), database.NullIsEmpty(&mi.LegacyReadmeContents),
 		jsonbScanner{&mi.SourceInfo}, &mi.IsRedistributable, &mi.HasGoMod); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("module version %s@%s: %w", modulePath, version, derrors.NotFound)

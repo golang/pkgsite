@@ -25,7 +25,6 @@ func (db *DB) GetDirectoryMeta(ctx context.Context, path, modulePath, version st
 			m.module_path,
 			m.version,
 			m.commit_time,
-			m.version_type,
 			m.redistributable,
 			m.has_go_mod,
 			m.source_info,
@@ -53,7 +52,6 @@ func (db *DB) GetDirectoryMeta(ctx context.Context, path, modulePath, version st
 		&mi.ModulePath,
 		&mi.Version,
 		&mi.CommitTime,
-		&mi.VersionType,
 		&mi.IsRedistributable,
 		&mi.HasGoMod,
 		jsonbScanner{&mi.SourceInfo},
@@ -166,7 +164,6 @@ func (db *DB) LegacyGetDirectory(ctx context.Context, dirPath, modulePath, versi
 		}
 		scanArgs = append(scanArgs,
 			&mi.CommitTime,
-			&mi.VersionType,
 			jsonbScanner{&mi.SourceInfo},
 			&mi.IsRedistributable,
 			&mi.HasGoMod)
@@ -226,7 +223,6 @@ func directoryColumns(fields internal.FieldSet) string {
 			m.readme_file_path,
 			` + readme + `
 			m.commit_time,
-			m.version_type,
 			m.source_info,
 			m.redistributable,
 			m.has_go_mod`

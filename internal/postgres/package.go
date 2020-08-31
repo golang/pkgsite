@@ -65,7 +65,6 @@ func (db *DB) LegacyGetPackage(ctx context.Context, pkgPath, modulePath, version
 			m.readme_file_path,
 			m.readme_contents,
 			m.module_path,
-			m.version_type,
 		    m.source_info,
 			m.redistributable,
 			m.has_go_mod
@@ -130,7 +129,7 @@ func (db *DB) LegacyGetPackage(ctx context.Context, pkgPath, modulePath, version
 		&pkg.V1Path, pq.Array(&licenseTypes), pq.Array(&licensePaths), &pkg.LegacyPackage.IsRedistributable,
 		database.NullIsEmpty(&docHTML), &pkg.GOOS, &pkg.GOARCH, &pkg.Version,
 		&pkg.CommitTime, database.NullIsEmpty(&pkg.LegacyReadmeFilePath), database.NullIsEmpty(&pkg.LegacyReadmeContents),
-		&pkg.ModulePath, &pkg.VersionType, jsonbScanner{&pkg.SourceInfo}, &pkg.LegacyModuleInfo.IsRedistributable,
+		&pkg.ModulePath, jsonbScanner{&pkg.SourceInfo}, &pkg.LegacyModuleInfo.IsRedistributable,
 		&pkg.HasGoMod)
 	if err != nil {
 		if err == sql.ErrNoRows {

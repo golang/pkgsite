@@ -182,7 +182,6 @@ func getPathVersions(ctx context.Context, db *DB, path string, versionTypes ...v
 		m.module_path,
 		m.version,
 		m.commit_time,
-		m.version_type,
 		m.redistributable,
 		m.has_go_mod,
 		m.source_info
@@ -216,7 +215,6 @@ func getPathVersions(ctx context.Context, db *DB, path string, versionTypes ...v
 			&mi.ModulePath,
 			&mi.Version,
 			&mi.CommitTime,
-			&mi.VersionType,
 			&mi.IsRedistributable,
 			&mi.HasGoMod,
 			jsonbScanner{&mi.SourceInfo},

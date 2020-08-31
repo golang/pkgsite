@@ -15,7 +15,6 @@ import (
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/sample"
-	"golang.org/x/pkgsite/internal/version"
 )
 
 func TestFetchSearchPage(t *testing.T) {
@@ -30,7 +29,6 @@ func TestFetchSearchPage(t *testing.T) {
 					ModulePath:        "github.com/mod/foo",
 					Version:           "v1.0.0",
 					CommitTime:        now,
-					VersionType:       version.TypeRelease,
 					IsRedistributable: true,
 				},
 				LegacyReadmeContents: "readme",
@@ -51,7 +49,6 @@ func TestFetchSearchPage(t *testing.T) {
 					ModulePath:        "github.com/mod/bar",
 					Version:           "v1.0.0",
 					CommitTime:        now,
-					VersionType:       version.TypeRelease,
 					IsRedistributable: true,
 				},
 				LegacyReadmeContents: "readme",

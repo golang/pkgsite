@@ -878,10 +878,9 @@ var moduleMaster = &testModule{
 		Module: &internal.Module{
 			LegacyModuleInfo: internal.LegacyModuleInfo{
 				ModuleInfo: internal.ModuleInfo{
-					ModulePath:  "github.com/my/module",
-					Version:     "v0.0.0-20200706064627-355bc3f705ed",
-					VersionType: "pseudo",
-					SourceInfo:  source.NewGitHubInfo("https://github.com/my/module", "", "355bc3f705ed"),
+					ModulePath: "github.com/my/module",
+					Version:    "v0.0.0-20200706064627-355bc3f705ed",
+					SourceInfo: source.NewGitHubInfo("https://github.com/my/module", "", "355bc3f705ed"),
 				},
 			},
 			Units: []*internal.Unit{

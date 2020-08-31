@@ -14,7 +14,6 @@ import (
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
-	"golang.org/x/pkgsite/internal/version"
 )
 
 const (
@@ -37,7 +36,6 @@ type ModuleInfo struct {
 	ModulePath        string
 	Version           string
 	CommitTime        time.Time
-	VersionType       version.Type
 	IsRedistributable bool
 	HasGoMod          bool // whether the module zip has a go.mod file
 	SourceInfo        *source.Info

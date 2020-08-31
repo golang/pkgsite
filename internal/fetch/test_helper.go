@@ -20,7 +20,6 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/stdlib"
-	"golang.org/x/pkgsite/internal/version"
 )
 
 var testProxyCommitTime = time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC)
@@ -40,9 +39,6 @@ func cleanFetchResult(fr *FetchResult, detector *licenses.Detector) *FetchResult
 		fr.RequestedVersion = fr.Module.Version
 	}
 	fr.ResolvedVersion = fr.Module.Version
-	if fr.Module.VersionType == "" {
-		fr.Module.VersionType = version.TypeRelease
-	}
 	if fr.Module.CommitTime.IsZero() {
 		fr.Module.CommitTime = testProxyCommitTime
 	}

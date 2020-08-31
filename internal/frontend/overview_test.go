@@ -18,7 +18,6 @@ import (
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
-	"golang.org/x/pkgsite/internal/version"
 )
 
 func TestFetchOverviewDetails(t *testing.T) {
@@ -161,9 +160,8 @@ func TestPackageOverviewDetails(t *testing.T) {
 func TestReadmeHTML(t *testing.T) {
 	ctx := context.Background()
 	aModule := &internal.ModuleInfo{
-		Version:     "v1.2.3",
-		VersionType: version.TypeRelease,
-		SourceInfo:  source.NewGitHubInfo("https://github.com/some/repo", "", "v1.2.3"),
+		Version:    "v1.2.3",
+		SourceInfo: source.NewGitHubInfo("https://github.com/some/repo", "", "v1.2.3"),
 	}
 	for _, tc := range []struct {
 		name   string
@@ -314,9 +312,8 @@ func TestReadmeHTML(t *testing.T) {
 		{
 			name: "image link with bad URL",
 			mi: &internal.ModuleInfo{
-				Version:     "v1.2.3",
-				VersionType: version.TypeRelease,
-				SourceInfo:  source.NewGitHubInfo("https://github.com/some/<script>", "", "v1.2.3"),
+				Version:    "v1.2.3",
+				SourceInfo: source.NewGitHubInfo("https://github.com/some/<script>", "", "v1.2.3"),
 			},
 			readme: &internal.Readme{
 				Filepath: "README.md",

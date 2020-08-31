@@ -169,6 +169,10 @@ func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ i
 	if err != nil {
 		return 0, err
 	}
+	versionType, err := version.ParseType(m.Version)
+	if err != nil {
+		return 0, err
+	}
 	var moduleID int
 	err = db.QueryRow(ctx,
 		`INSERT INTO modules(
@@ -199,7 +203,7 @@ func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ i
 		m.LegacyReadmeFilePath,
 		makeValidUnicode(m.LegacyReadmeContents),
 		version.ForSorting(m.Version),
-		m.VersionType,
+		versionType,
 		m.SeriesPath(),
 		sourceInfoJSON,
 		m.IsRedistributable,
