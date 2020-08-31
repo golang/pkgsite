@@ -174,14 +174,14 @@ func TestLatestMajorVersion(t *testing.T) {
 				<div class="DetailsHeader-banner$$GODISCOVERY_LATESTMAJORCLASS$$">
 					 data-version="v1.0.0" data-mpath="foo.com/bar" data-ppath="foo.com/bar/far" data-pagetype="pkg">
 					<p>
-						The latest major version is available at <a href="/$$GODISCOVERY_LATESTMAJORVERSIONURL$$">$$GODISCOVERY_LATESTMAJORVERSIONURL$$</a>
+						The latest major version is <a href="/$$GODISCOVERY_LATESTMAJORVERSIONURL$$">$$GODISCOVERY_LATESTMAJORVERSION$$</a>.
 					</p>
 				</div>`,
 			want: `
 				<div class="DetailsHeader-banner">
 					 data-version="v1.0.0" data-mpath="foo.com/bar" data-ppath="foo.com/bar/far" data-pagetype="pkg">
 					<p>
-						The latest major version is available at <a href="/foo.com/bar/v3">foo.com/bar/v3</a>
+						The latest major version is <a href="/foo.com/bar/v3">v3</a>.
 					</p>
 				</div>`,
 		},
@@ -197,14 +197,14 @@ func TestLatestMajorVersion(t *testing.T) {
 				<div class="DetailsHeader-banner$$GODISCOVERY_LATESTMAJORCLASS$$">
 					 data-version="v3.0.0" data-mpath="foo.com/bar/v3" data-ppath="foo.com/bar/far" data-pagetype="pkg">
 					<p>
-						The latest major version is available at <a href="/$$GODISCOVERY_LATESTMAJORVERSIONURL$$">$$GODISCOVERY_LATESTMAJORVERSIONURL$$</a>
+						The latest major version is <a href="/$$GODISCOVERY_LATESTMAJORVERSIONURL$$">$$GODISCOVERY_LATESTMAJORVERSION$$</a>.
 					</p>
 				</div>`,
 			want: `
 				<div class="DetailsHeader-banner DetailsHeader-banner--latest">
 					 data-version="v3.0.0" data-mpath="foo.com/bar/v3" data-ppath="foo.com/bar/far" data-pagetype="pkg">
 					<p>
-						The latest major version is available at <a href="/foo.com/bar/v3">foo.com/bar/v3</a>
+						The latest major version is <a href="/foo.com/bar/v3">v3</a>.
 					</p>
 				</div>`,
 		},

@@ -423,6 +423,23 @@ code {
 .DetailsHeader {
   margin-top: 0.75rem;
 }
+.DetailsHeader-banner {
+  align-items: center;
+  background-color: var(--gray-10);
+  display: flex;
+  justify-content: flex-start;
+  padding-top: 0.1rem;
+}
+.DetailsHeader-banner--latest {
+  display: none;
+}
+.DetailsHeader-infoIcon {
+  color: var(--gray-3);
+  flex-shrink: 0;
+  margin-left: 1rem;
+  margin-right: 0.7rem;
+  width: 1.3rem;
+}
 .DetailsHeader-breadcrumb {
   align-items: center;
   display: flex;

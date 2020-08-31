@@ -60,6 +60,10 @@ func LatestVersions(latestMinor latestMinorFunc, latestMajor latestMajorFunc) Mi
 					latestMinorClass += "--goToLatest"
 				}
 				latestMajorVersion := latestMajor(r.Context(), seriesPath)
+				latestMajorVersionText := latestMajorVersion
+				if len(latestMajorVersionText) > 0 {
+					latestMajorVersionText = latestMajorVersionText[1:]
+				}
 				latestMajorClass := ""
 				// If the latest major version is the same as the major version of the current
 				// module path, it is currently the latest version so we don't show the banner.
@@ -71,7 +75,7 @@ func LatestVersions(latestMinor latestMinorFunc, latestMajor latestMajorFunc) Mi
 				body = bytes.ReplaceAll(body, []byte(latestMinorClassPlaceholder), []byte(latestMinorClass))
 				body = bytes.ReplaceAll(body, []byte(LatestMinorVersionPlaceholder), []byte(latestMinorVersion))
 				body = bytes.ReplaceAll(body, []byte(latestMajorClassPlaceholder), []byte(latestMajorClass))
-				body = bytes.ReplaceAll(body, []byte(LatestMajorVersionPlaceholder), []byte(latestMajorVersion))
+				body = bytes.ReplaceAll(body, []byte(LatestMajorVersionPlaceholder), []byte(latestMajorVersionText))
 				body = bytes.ReplaceAll(body, []byte(LatestMajorVersionURL), []byte(seriesPath+latestMajorVersion))
 			}
 			if _, err := w.Write(body); err != nil {

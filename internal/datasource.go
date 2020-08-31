@@ -15,7 +15,7 @@ type DataSource interface {
 	// See the internal/postgres package for further documentation of these
 	// methods, particularly as they pertain to the main postgres implementation.
 
-	// GetLatestMajorVersion returns the latest major version of a module path.
+	// GetLatestMajorVersion returns the latest major version of a series path.
 	GetLatestMajorVersion(ctx context.Context, seriesPath string) (_ string, err error)
 	// GetUnitMeta returns information about a path.
 	GetUnitMeta(ctx context.Context, path, requestedModulePath, requestedVersion string) (_ *UnitMeta, err error)
