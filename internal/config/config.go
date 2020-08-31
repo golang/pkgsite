@@ -83,9 +83,15 @@ func ValidateAppVersion(appVersion string) error {
 	return nil
 }
 
-// AuthHeader is the header key used by the frontend server to know that a
-// request is coming from a known source.
-const AuthHeader = "X-Go-Discovery-Auth"
+const (
+	// BypassQuotaAuthHeader is the header key used by the frontend server to know
+	// that a request can bypass the quota server.
+	BypassQuotaAuthHeader = "X-Go-Discovery-Auth-Bypass-Quota"
+
+	// BypassCacheAuthHeader is the header key used by the frontend server to
+	// know that a request can bypass cache.
+	BypassCacheAuthHeader = "X-Go-Discovery-Auth-Bypass-Cache"
+)
 
 // Config holds shared configuration values used in instantiating our server
 // components.
@@ -320,7 +326,7 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		},
 		UseProfiler: os.Getenv("GO_DISCOVERY_USE_PROFILER") == "TRUE",
 		Teeproxy: TeeproxySettings{
-			AuthKey:          AuthHeader,
+			AuthKey:          BypassQuotaAuthHeader,
 			AuthValue:        os.Getenv("GO_DISCOVERY_TEEPROXY_AUTH_VALUE"),
 			Hosts:            parseCommaList(os.Getenv("GO_DISCOVERY_TEEPROXY_FORWARDED_HOSTS")),
 			Rate:             GetEnvFloat64("GO_DISCOVERY_TEEPROXY_RATE", 50),

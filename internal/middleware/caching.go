@@ -124,7 +124,7 @@ func Cache(name string, client *redis.Client, expirer Expirer, authValues []stri
 
 func (c *cache) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Check auth header to see if request should bypass cache.
-	authVal := r.Header.Get(config.AuthHeader)
+	authVal := r.Header.Get(config.BypassCacheAuthHeader)
 	for _, wantVal := range c.authValues {
 		if authVal == wantVal {
 			c.delegate.ServeHTTP(w, r)

@@ -141,7 +141,7 @@ func TestCache(t *testing.T) {
 			t.Fatal(err)
 		}
 		if test.bypass {
-			req.Header.Set(config.AuthHeader, "yes")
+			req.Header.Set(config.BypassCacheAuthHeader, "yes")
 		}
 		resp, err := ts.Client().Do(req)
 		if err != nil {

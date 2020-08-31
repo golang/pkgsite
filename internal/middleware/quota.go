@@ -50,7 +50,7 @@ func Quota(settings config.QuotaSettings) Middleware {
 
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			authVal := r.Header.Get(config.AuthHeader)
+			authVal := r.Header.Get(config.BypassQuotaAuthHeader)
 			for _, wantVal := range settings.AuthValues {
 				if authVal == wantVal {
 					recordQuotaMetric(r.Context(), "accepted")
