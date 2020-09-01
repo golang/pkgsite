@@ -20,9 +20,9 @@ import (
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
-// GetLicenses returns the licenses that applies to the fullPath for the given module version.
+// LegacyGetLicenses returns the licenses that applies to the fullPath for the given module version.
 // It returns an InvalidArgument error if the module path or version is invalid.
-func (db *DB) GetLicenses(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ []*licenses.License, err error) {
+func (db *DB) LegacyGetLicenses(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ []*licenses.License, err error) {
 	defer derrors.Wrap(&err, "GetLicenses(ctx, %q, %q, %q)", fullPath, modulePath, resolvedVersion)
 	if fullPath == "" || modulePath == "" || !semver.IsValid(resolvedVersion) {
 		return nil, derrors.InvalidArgument

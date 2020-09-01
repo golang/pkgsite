@@ -36,12 +36,12 @@ type LicenseMetadata struct {
 
 // fetchLicensesDetails fetches license data for the package version specified by
 // path and version from the database and returns a LicensesDetails.
-func fetchLicensesDetails(ctx context.Context, ds internal.DataSource, fullPath, modulePath, resolvedVersion string) (*LicensesDetails, error) {
-	dsLicenses, err := ds.GetLicenses(ctx, fullPath, modulePath, resolvedVersion)
+func fetchLicensesDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta) (*LicensesDetails, error) {
+	u, err := ds.GetUnit(ctx, um, internal.WithLicenses)
 	if err != nil {
 		return nil, err
 	}
-	return &LicensesDetails{Licenses: transformLicenses(modulePath, resolvedVersion, dsLicenses)}, nil
+	return &LicensesDetails{Licenses: transformLicenses(um.ModulePath, um.Version, u.LicenseContents)}, nil
 }
 
 // transformLicenses transforms licenses.License into a License

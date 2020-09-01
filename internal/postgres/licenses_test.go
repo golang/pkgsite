@@ -101,7 +101,7 @@ func TestGetLicenses(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := testDB.GetLicenses(ctx, test.fullPath, test.modulePath, test.version)
+			got, err := testDB.LegacyGetLicenses(ctx, test.fullPath, test.modulePath, test.version)
 			if !errors.Is(err, test.err) {
 				t.Fatal(err)
 			}
@@ -226,7 +226,7 @@ func TestGetLicensesBypass(t *testing.T) {
 		if legacy {
 			lics, err = db.LegacyGetModuleLicenses(ctx, sample.ModulePath, m.Version)
 		} else {
-			lics, err = db.GetLicenses(ctx, sample.ModulePath, sample.ModulePath, m.Version)
+			lics, err = db.LegacyGetLicenses(ctx, sample.ModulePath, sample.ModulePath, m.Version)
 		}
 		if err != nil {
 			t.Fatal(err)

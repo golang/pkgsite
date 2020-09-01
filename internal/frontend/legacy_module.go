@@ -52,7 +52,7 @@ func (s *Server) legacyServeModulePage(w http.ResponseWriter, r *http.Request, d
 
 func (s *Server) legacyServeModulePageWithModule(ctx context.Context, w http.ResponseWriter, r *http.Request, ds internal.DataSource,
 	mi *internal.ModuleInfo, readme *internal.Readme, requestedVersion string) error {
-	licenses, err := ds.GetLicenses(ctx, mi.ModulePath, mi.ModulePath, mi.Version)
+	licenses, err := ds.LegacyGetLicenses(ctx, mi.ModulePath, mi.ModulePath, mi.Version)
 	if err != nil {
 		return err
 	}

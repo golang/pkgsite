@@ -23,12 +23,6 @@ type DataSource interface {
 	// The module and version must both be known.
 	GetUnit(ctx context.Context, pathInfo *UnitMeta, fields FieldSet) (_ *Unit, err error)
 
-	// TODO(golang/go#39629): Deprecate these methods by moving the logic
-	// behind GetUnit.
-	//
-	// GetLicenses returns licenses at the given path for given modulePath and version.
-	GetLicenses(ctx context.Context, fullPath, modulePath, resolvedVersion string) ([]*licenses.License, error)
-
 	// TODO(golang/go#39629): Deprecate these methods.
 	//
 	// LegacyGetDirectory returns packages whose import path is in a (possibly
@@ -39,6 +33,8 @@ type DataSource interface {
 	// LegacyGetImports returns a slice of import paths imported by the package
 	// specified by path and version.
 	LegacyGetImports(ctx context.Context, pkgPath, modulePath, version string) ([]string, error)
+	// LegacyGetLicenses returns licenses at the given path for given modulePath and version.
+	LegacyGetLicenses(ctx context.Context, fullPath, modulePath, resolvedVersion string) ([]*licenses.License, error)
 	// LegacyGetModuleInfo returns the LegacyModuleInfo corresponding to modulePath and
 	// version.
 	LegacyGetModuleInfo(ctx context.Context, modulePath, version string) (*LegacyModuleInfo, error)

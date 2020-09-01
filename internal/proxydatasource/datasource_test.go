@@ -184,7 +184,7 @@ func TestDataSource_GetModuleInfo(t *testing.T) {
 	}
 }
 
-func TestDataSource_GetLicenses(t *testing.T) {
+func TestDataSource_LegacyGetLicenses(t *testing.T) {
 	t.Helper()
 	testModules := []*proxy.Module{
 		{
@@ -227,7 +227,7 @@ func TestDataSource_GetLicenses(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := ds.GetLicenses(ctx, test.fullPath, test.modulePath, "v1.1.0")
+			got, err := ds.LegacyGetLicenses(ctx, test.fullPath, test.modulePath, "v1.1.0")
 			if !errors.Is(err, test.err) {
 				t.Fatal(err)
 			}
@@ -240,7 +240,7 @@ func TestDataSource_GetLicenses(t *testing.T) {
 			})
 
 			if diff := cmp.Diff(test.want, got); diff != "" {
-				t.Errorf("GetLicenses diff (-want +got):\n%s", diff)
+				t.Errorf("LegacyGetLicenses diff (-want +got):\n%s", diff)
 			}
 		})
 	}

@@ -24,9 +24,9 @@ func (ds *DataSource) GetUnit(ctx context.Context, um *internal.UnitMeta, field 
 	return ds.getUnit(ctx, um.Path, um.ModulePath, um.Version)
 }
 
-// GetLicenses return licenses at path for the given module path and version.
-func (ds *DataSource) GetLicenses(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ []*licenses.License, err error) {
-	defer derrors.Wrap(&err, "GetLicenses(%q, %q, %q)", fullPath, modulePath, resolvedVersion)
+// LegacyGetLicenses return licenses at path for the given module path and version.
+func (ds *DataSource) LegacyGetLicenses(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ []*licenses.License, err error) {
+	defer derrors.Wrap(&err, "LegacyGetLicenses(%q, %q, %q)", fullPath, modulePath, resolvedVersion)
 	v, err := ds.getModule(ctx, modulePath, resolvedVersion)
 	if err != nil {
 		return nil, err

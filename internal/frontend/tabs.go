@@ -165,7 +165,7 @@ func fetchDetailsForPackage(r *http.Request, tab string, ds internal.DataSource,
 	case tabImportedBy:
 		return fetchImportedByDetails(ctx, ds, um.Path, um.ModulePath)
 	case tabLicenses:
-		return fetchLicensesDetails(ctx, ds, um.Path, um.ModulePath, um.Version)
+		return fetchLicensesDetails(ctx, ds, um)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
@@ -182,7 +182,7 @@ func fetchDetailsForModule(r *http.Request, tab string, ds internal.DataSource, 
 	case tabVersions:
 		return fetchModuleVersionsDetails(ctx, ds, um.ModulePath)
 	case tabLicenses:
-		return fetchLicensesDetails(ctx, ds, um.Path, um.ModulePath, um.Version)
+		return fetchLicensesDetails(ctx, ds, um)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
@@ -197,7 +197,7 @@ func fetchDetailsForDirectory(r *http.Request, tab string, ds internal.DataSourc
 	case tabSubdirectories:
 		return fetchDirectoryDetails(ctx, ds, um, false)
 	case tabLicenses:
-		return fetchLicensesDetails(ctx, ds, um.Path, um.ModulePath, um.Version)
+		return fetchLicensesDetails(ctx, ds, um)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }

@@ -13,6 +13,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/safehtml"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -146,7 +147,11 @@ func TestFetchLicensesDetails(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			wantDetails := &LicensesDetails{Licenses: transformLicenses(
 				test.modulePath, test.version, test.want)}
-			got, err := fetchLicensesDetails(ctx, testDB, test.fullPath, test.modulePath, test.version)
+			got, err := fetchLicensesDetails(ctx, testDB, &internal.UnitMeta{
+				Path:       test.fullPath,
+				ModulePath: test.modulePath,
+				Version:    test.version,
+			})
 			if err != nil {
 				t.Fatal(err)
 			}
