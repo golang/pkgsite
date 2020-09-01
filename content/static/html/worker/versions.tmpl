@@ -48,6 +48,21 @@
   <p>All times in America/New_York.</p>
   <p><a href="/">Home</a></p>
 
+  <div>
+    <h3>Statistics</h3>
+    <p>Latest timestamp from the module index: {{.LatestTimestamp | timefmt}}</p>
+    <p>Results by status:</p>
+    <table>
+      <thead><tr><th>Code</th><th>Status</th><th>Count</th></tr></thead>
+      <tbody>
+        {{range .Counts}}
+        <tr><td>{{.Code}}</td><td>{{.Desc}}</td><td>{{.Count}}</td></tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+
+
   <h3>Recent versions:</h3>
   {{template "versionTable" .Recent}}
 

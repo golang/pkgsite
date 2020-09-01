@@ -33,19 +33,10 @@ type annotation struct {
 func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error) {
 	defer derrors.Wrap(&err, "doIndexPage")
 	var (
-		stats       *postgres.VersionStats
 		experiments []*internal.Experiment
 		excluded    []string
 	)
 	g, ctx := errgroup.WithContext(r.Context())
-	g.Go(func() error {
-		var err error
-		stats, err = s.db.GetVersionStats(ctx)
-		if err != nil {
-			return annotation{err, "error fetching stats"}
-		}
-		return nil
-	})
 	g.Go(func() error {
 		var err error
 		experiments, err = s.db.GetExperiments(ctx)
@@ -59,6 +50,73 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		excluded, err = s.db.GetExcludedPrefixes(ctx)
 		if err != nil {
 			return annotation{err, "error fetching excluded"}
+		}
+		return nil
+	})
+	if err := g.Wait(); err != nil {
+		var e annotation
+		if errors.As(err, &e) {
+			log.Errorf(ctx, e.msg, err)
+		}
+		return err
+	}
+
+	page := struct {
+		Config          *config.Config
+		Env             string
+		ResourcePrefix  string
+		LatestTimestamp *time.Time
+		LocationID      string
+		Experiments     []*internal.Experiment
+		Excluded        []string
+	}{
+		Config:         s.cfg,
+		Env:            env(s.cfg.ServiceID),
+		ResourcePrefix: strings.ToLower(env(s.cfg.ServiceID)) + "-",
+		LocationID:     s.cfg.LocationID,
+		Experiments:    experiments,
+		Excluded:       excluded,
+	}
+	return renderPage(ctx, w, page, s.templates[indexTemplate])
+}
+
+func (s *Server) doVersionsPage(w http.ResponseWriter, r *http.Request) (err error) {
+	defer derrors.Wrap(&err, "doVersionsPage")
+	const pageSize = 20
+	g, ctx := errgroup.WithContext(r.Context())
+	var (
+		next, failures, recents []*internal.ModuleVersionState
+		stats                   *postgres.VersionStats
+	)
+	g.Go(func() error {
+		var err error
+		next, err = s.db.GetNextModulesToFetch(ctx, pageSize)
+		if err != nil {
+			return annotation{err, "error fetching next versions"}
+		}
+		return nil
+	})
+	g.Go(func() error {
+		var err error
+		failures, err = s.db.GetRecentFailedVersions(ctx, pageSize)
+		if err != nil {
+			return annotation{err, "error fetching recent failures"}
+		}
+		return nil
+	})
+	g.Go(func() error {
+		var err error
+		recents, err = s.db.GetRecentVersions(ctx, pageSize)
+		if err != nil {
+			return annotation{err, "error fetching recent versions"}
+		}
+		return nil
+	})
+	g.Go(func() error {
+		var err error
+		stats, err = s.db.GetVersionStats(ctx)
+		if err != nil {
+			return annotation{err, "error fetching stats"}
 		}
 		return nil
 	})
@@ -85,75 +143,21 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 	}
 	sort.Slice(counts, func(i, j int) bool { return counts[i].Code < counts[j].Code })
 	page := struct {
-		Config          *config.Config
-		Env             string
-		ResourcePrefix  string
-		LatestTimestamp *time.Time
-		Counts          []*count
-		LocationID      string
-		Experiments     []*internal.Experiment
-		Excluded        []string
+		Next, Recent, RecentFailures []*internal.ModuleVersionState
+		Config                       *config.Config
+		Env                          string
+		ResourcePrefix               string
+		LatestTimestamp              *time.Time
+		Counts                       []*count
 	}{
+		Next:            next,
+		Recent:          recents,
+		RecentFailures:  failures,
 		Config:          s.cfg,
 		Env:             env(s.cfg.ServiceID),
 		ResourcePrefix:  strings.ToLower(env(s.cfg.ServiceID)) + "-",
 		LatestTimestamp: &stats.LatestTimestamp,
 		Counts:          counts,
-		LocationID:      s.cfg.LocationID,
-		Experiments:     experiments,
-		Excluded:        excluded,
-	}
-	return renderPage(ctx, w, page, s.templates[indexTemplate])
-}
-
-func (s *Server) doVersionsPage(w http.ResponseWriter, r *http.Request) (err error) {
-	defer derrors.Wrap(&err, "doVersionsPage")
-	const pageSize = 20
-	g, ctx := errgroup.WithContext(r.Context())
-	var next, failures, recents []*internal.ModuleVersionState
-	g.Go(func() error {
-		var err error
-		next, err = s.db.GetNextModulesToFetch(ctx, pageSize)
-		if err != nil {
-			return annotation{err, "error fetching next versions"}
-		}
-		return nil
-	})
-	g.Go(func() error {
-		var err error
-		failures, err = s.db.GetRecentFailedVersions(ctx, pageSize)
-		if err != nil {
-			return annotation{err, "error fetching recent failures"}
-		}
-		return nil
-	})
-	g.Go(func() error {
-		var err error
-		recents, err = s.db.GetRecentVersions(ctx, pageSize)
-		if err != nil {
-			return annotation{err, "error fetching recent versions"}
-		}
-		return nil
-	})
-	if err := g.Wait(); err != nil {
-		var e annotation
-		if errors.As(err, &e) {
-			log.Errorf(ctx, e.msg, err)
-		}
-		return err
-	}
-	page := struct {
-		Next, Recent, RecentFailures []*internal.ModuleVersionState
-		Config                       *config.Config
-		Env                          string
-		ResourcePrefix               string
-	}{
-		Next:           next,
-		Recent:         recents,
-		RecentFailures: failures,
-		Config:         s.cfg,
-		Env:            env(s.cfg.ServiceID),
-		ResourcePrefix: strings.ToLower(env(s.cfg.ServiceID)) + "-",
 	}
 	return renderPage(ctx, w, page, s.templates[versionsTemplate])
 }
