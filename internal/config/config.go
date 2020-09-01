@@ -298,7 +298,7 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		VersionID:          GetEnv("GAE_VERSION", os.Getenv("GO_DISCOVERY_VERSION")),
 		InstanceID:         GetEnv("GAE_INSTANCE", os.Getenv("GO_DISCOVERY_INSTANCE")),
 		GoogleTagManagerID: os.Getenv("GO_DISCOVERY_GOOGLE_TAG_MANAGER_ID"),
-		QueueService:       os.Getenv("GAE_SERVICE"),
+		QueueService:       os.Getenv("GO_DISCOVERY_QUEUE_SERVICE"),
 		QueueURL:           os.Getenv("GO_DISCOVERY_QUEUE_URL"),
 		// LocationID is essentially hard-coded until we figure out a good way to
 		// determine it programmatically, but we check an environment variable in
