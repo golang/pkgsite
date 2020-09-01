@@ -84,14 +84,14 @@ func (db *DB) GetPackagesInUnit(ctx context.Context, fullPath, modulePath, resol
 // GetUnit returns a unit from the database, along with all of the
 // data associated with that unit.
 // TODO(golang/go#39629): remove pID.
-func (db *DB) GetUnit(ctx context.Context, pi *internal.UnitMeta, fields internal.FieldSet) (_ *internal.Unit, err error) {
-	defer derrors.Wrap(&err, "GetUnit(ctx, %q, %q, %q)", pi.Path, pi.ModulePath, pi.Version)
-	pathID, err := db.getPathID(ctx, pi.Path, pi.ModulePath, pi.Version)
+func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields internal.FieldSet) (_ *internal.Unit, err error) {
+	defer derrors.Wrap(&err, "GetUnit(ctx, %q, %q, %q)", um.Path, um.ModulePath, um.Version)
+	pathID, err := db.getPathID(ctx, um.Path, um.ModulePath, um.Version)
 	if err != nil {
 		return nil, err
 	}
 
-	u := &internal.Unit{UnitMeta: *pi}
+	u := &internal.Unit{UnitMeta: *um}
 	if fields&internal.WithReadme != 0 {
 		readme, err := db.getReadme(ctx, u.ModulePath, u.Version)
 		if err != nil && !errors.Is(err, derrors.NotFound) {

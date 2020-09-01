@@ -60,7 +60,7 @@ func (db *DB) GetUnitMeta(ctx context.Context, path, requestedModulePath, reques
 	var (
 		licenseTypes []string
 		licensePaths []string
-		pi           = internal.UnitMeta{Path: path}
+		um           = internal.UnitMeta{Path: path}
 	)
 	query := fmt.Sprintf(`
 		SELECT
@@ -81,12 +81,12 @@ func (db *DB) GetUnitMeta(ctx context.Context, path, requestedModulePath, reques
 		LIMIT 1
 	`, joinStmt, strings.Join(constraints, " "), orderByLatest)
 	err = db.db.QueryRow(ctx, query, args...).Scan(
-		&pi.ModulePath,
-		&pi.Version,
-		&pi.CommitTime,
-		jsonbScanner{&pi.SourceInfo},
-		&pi.Name,
-		&pi.IsRedistributable,
+		&um.ModulePath,
+		&um.Version,
+		&um.CommitTime,
+		jsonbScanner{&um.SourceInfo},
+		&um.Name,
+		&um.IsRedistributable,
 		pq.Array(&licenseTypes),
 		pq.Array(&licensePaths))
 	switch err {
@@ -97,8 +97,8 @@ func (db *DB) GetUnitMeta(ctx context.Context, path, requestedModulePath, reques
 		if err != nil {
 			return nil, err
 		}
-		pi.Licenses = lics
-		return &pi, nil
+		um.Licenses = lics
+		return &um, nil
 	default:
 		return nil, err
 	}
