@@ -30,13 +30,13 @@ type UnitMeta struct {
 }
 
 // IsPackage reports whether the path represents a package path.
-func (pi *UnitMeta) IsPackage() bool {
-	return pi.Name != ""
+func (um *UnitMeta) IsPackage() bool {
+	return um.Name != ""
 }
 
 // IsModule reports whether the path represents a module path.
-func (pi *UnitMeta) IsModule() bool {
-	return pi.ModulePath == pi.Path
+func (um *UnitMeta) IsModule() bool {
+	return um.ModulePath == um.Path
 }
 
 // Unit represents the contents of some path in the Go package/module
