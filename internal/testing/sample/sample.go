@@ -217,8 +217,8 @@ func AddPackage(m *internal.Module, p *internal.LegacyPackage) *internal.Module 
 	}
 	for pth := p.Path; len(pth) > minLen; pth = path.Dir(pth) {
 		found := false
-		for _, d := range m.Units {
-			if d.Path == pth {
+		for _, u := range m.Units {
+			if u.Path == pth {
 				found = true
 				break
 			}
@@ -230,13 +230,13 @@ func AddPackage(m *internal.Module, p *internal.LegacyPackage) *internal.Module 
 	return m
 }
 
-func AddUnit(m *internal.Module, d *internal.Unit) {
+func AddUnit(m *internal.Module, u *internal.Unit) {
 	for _, e := range m.Units {
-		if e.Path == d.Path {
+		if e.Path == u.Path {
 			panic(fmt.Sprintf("module already has path %q", e.Path))
 		}
 	}
-	m.Units = append(m.Units, d)
+	m.Units = append(m.Units, u)
 }
 
 func AddLicense(m *internal.Module, lic *licenses.License) {
@@ -245,9 +245,9 @@ func AddLicense(m *internal.Module, lic *licenses.License) {
 	if dir == "." {
 		dir = ""
 	}
-	for _, d := range m.Units {
-		if strings.TrimPrefix(d.Path, m.ModulePath+"/") == dir {
-			d.Licenses = append(d.Licenses, lic.Metadata)
+	for _, u := range m.Units {
+		if strings.TrimPrefix(u.Path, m.ModulePath+"/") == dir {
+			u.Licenses = append(u.Licenses, lic.Metadata)
 		}
 	}
 }
@@ -259,20 +259,24 @@ func UnitEmpty(path, modulePath, version string) *internal.Unit {
 }
 
 func UnitForModuleRoot(m *internal.LegacyModuleInfo, licenses []*licenses.Metadata) *internal.Unit {
-	d := &internal.Unit{UnitMeta: *UnitMeta(m.ModulePath, m.ModulePath, m.Version, "", m.IsRedistributable)}
+	u := &internal.Unit{
+		UnitMeta:        *UnitMeta(m.ModulePath, m.ModulePath, m.Version, "", m.IsRedistributable),
+		LicenseContents: Licenses,
+	}
 	if m.LegacyReadmeFilePath != "" {
-		d.Readme = &internal.Readme{
+		u.Readme = &internal.Readme{
 			Filepath: m.LegacyReadmeFilePath,
 			Contents: m.LegacyReadmeContents,
 		}
 	}
-	return d
+	return u
 }
 
 func UnitForPackage(pkg *internal.LegacyPackage, modulePath, version string) *internal.Unit {
 	return &internal.Unit{
-		UnitMeta: *UnitMeta(pkg.Path, modulePath, version, pkg.Name, pkg.IsRedistributable),
-		Imports:  pkg.Imports,
+		UnitMeta:        *UnitMeta(pkg.Path, modulePath, version, pkg.Name, pkg.IsRedistributable),
+		Imports:         pkg.Imports,
+		LicenseContents: Licenses,
 		Package: &internal.Package{
 			Name: pkg.Name,
 			Path: pkg.Path,

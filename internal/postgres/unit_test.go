@@ -363,6 +363,9 @@ func TestGetUnitFieldSet(t *testing.T) {
 		if fields&internal.WithImports != 0 {
 			u.Imports = sample.Imports
 		}
+		if fields&internal.WithLicenses == 0 {
+			u.LicenseContents = nil
+		}
 		if u.Package != nil {
 			u.Package.Name = u.Name
 		}
@@ -382,6 +385,12 @@ func TestGetUnitFieldSet(t *testing.T) {
 		{
 			name:   "WithImports",
 			fields: internal.WithImports,
+			want: unit("a.com/m/dir/p", "a.com/m", "v1.2.3",
+				nil, nil),
+		},
+		{
+			name:   "WithLicenses",
+			fields: internal.WithLicenses,
 			want: unit("a.com/m/dir/p", "a.com/m", "v1.2.3",
 				nil, nil),
 		},
@@ -431,8 +440,9 @@ func unit(path, modulePath, version string, readme *internal.Readme, pkg *intern
 			IsRedistributable: true,
 			Licenses:          sample.LicenseMetadata,
 		},
-		Readme:  readme,
-		Package: pkg,
+		LicenseContents: sample.Licenses,
+		Readme:          readme,
+		Package:         pkg,
 	}
 	if pkg != nil {
 		u.Name = pkg.Name

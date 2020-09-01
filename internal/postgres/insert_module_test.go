@@ -109,28 +109,28 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 		}
 	}
 
-	for _, dir := range want.Units {
-		got, err := testDB.GetUnit(ctx, &dir.UnitMeta, internal.AllFields)
+	for _, wantu := range want.Units {
+		got, err := testDB.GetUnit(ctx, &wantu.UnitMeta, internal.AllFields)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// TODO(golang/go#38513): remove once we start displaying
 		// READMEs for directories instead of the top-level module.
-		dir.Readme = &internal.Readme{
+		wantu.Readme = &internal.Readme{
 			Filepath: sample.ReadmeFilePath,
 			Contents: sample.ReadmeContents,
 		}
-		if dir.Package != nil {
-			dir.Name = dir.Package.Name
+		wantu.LicenseContents = sample.Licenses
+		if wantu.Package != nil {
+			wantu.Name = wantu.Package.Name
 		}
-		wantd := dir
 		opts := cmp.Options{
 			cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeFilePath"),
 			cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeContents"),
 			cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 			cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
 		}
-		if diff := cmp.Diff(wantd, got, opts); diff != "" {
+		if diff := cmp.Diff(wantu, got, opts); diff != "" {
 			t.Errorf("mismatch (-want +got):\n%s", diff)
 		}
 	}

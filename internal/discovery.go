@@ -268,6 +268,7 @@ const (
 	WithReadme FieldSet = 1 << iota
 	WithDocumentation
 	WithImports
+	WithLicenses
 )
 
 // LegacyDirectory represents a directory in a module version, and all of the

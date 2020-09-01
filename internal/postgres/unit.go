@@ -121,6 +121,13 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 			u.Imports = imports
 		}
 	}
+	if fields&internal.WithLicenses != 0 {
+		lics, err := db.getLicenses(ctx, u.Path, u.ModulePath, pathID)
+		if err != nil {
+			return nil, err
+		}
+		u.LicenseContents = lics
+	}
 	if fields == internal.AllFields {
 		if u.Name != "" {
 			if u.Package == nil {

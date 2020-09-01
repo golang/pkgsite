@@ -45,9 +45,10 @@ func (um *UnitMeta) IsModule() bool {
 // contains other units, licenses and/or READMEs."
 type Unit struct {
 	UnitMeta
-	Readme  *Readme
-	Package *Package
-	Imports []string
+	Readme          *Readme
+	Package         *Package
+	Imports         []string
+	LicenseContents []*licenses.License
 }
 
 // Documentation is the rendered documentation for a given package
