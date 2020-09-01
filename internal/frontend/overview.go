@@ -40,14 +40,7 @@ type OverviewDetails struct {
 
 // fetchOverviewDetails uses the given version to fetch an OverviewDetails.
 // versionedLinks says whether the constructed URLs should have versions.
-func fetchOverviewDetails(ctx context.Context, ds internal.DataSource, dmeta *internal.DirectoryMeta, versionedLinks bool) (*OverviewDetails, error) {
-	pi := &internal.PathInfo{
-		Path:              dmeta.Path,
-		ModulePath:        dmeta.ModulePath,
-		Version:           dmeta.Version,
-		IsRedistributable: dmeta.IsRedistributable,
-		Name:              dmeta.Name,
-	}
+func fetchOverviewDetails(ctx context.Context, ds internal.DataSource, pi *internal.PathInfo, versionedLinks bool) (*OverviewDetails, error) {
 	u, err := ds.GetUnit(ctx, pi, internal.WithReadme)
 	if err != nil {
 		return nil, err
@@ -56,7 +49,14 @@ func fetchOverviewDetails(ctx context.Context, ds internal.DataSource, dmeta *in
 	if u.Readme != nil {
 		readme = &internal.Readme{Filepath: u.Readme.Filepath, Contents: u.Readme.Contents}
 	}
-	return constructOverviewDetails(ctx, &dmeta.ModuleInfo, readme, u.IsRedistributable, versionedLinks)
+	mi := &internal.ModuleInfo{
+		ModulePath:        pi.ModulePath,
+		Version:           pi.Version,
+		CommitTime:        pi.CommitTime,
+		IsRedistributable: pi.IsRedistributable,
+		SourceInfo:        u.SourceInfo,
+	}
+	return constructOverviewDetails(ctx, mi, readme, u.IsRedistributable, versionedLinks)
 }
 
 // constructOverviewDetails uses the given module version and readme to
@@ -86,12 +86,13 @@ func constructOverviewDetails(ctx context.Context, mi *internal.ModuleInfo, read
 }
 
 // fetchPackageOverviewDetails uses data for the given versioned directory to return an OverviewDetails.
-func fetchPackageOverviewDetails(ctx context.Context, ds internal.DataSource, dmeta *internal.DirectoryMeta, versionedLinks bool) (*OverviewDetails, error) {
-	od, err := fetchOverviewDetails(ctx, ds, dmeta, versionedLinks)
+func fetchPackageOverviewDetails(ctx context.Context, ds internal.DataSource, pi *internal.PathInfo, versionedLinks bool) (*OverviewDetails, error) {
+	od, err := fetchOverviewDetails(ctx, ds, pi, versionedLinks)
 	if err != nil {
 		return nil, err
 	}
-	od.PackageSourceURL = dmeta.SourceInfo.DirectoryURL(internal.Suffix(dmeta.Path, dmeta.ModulePath))
+	od.RepositoryURL = pi.SourceInfo.RepoURL()
+	od.PackageSourceURL = pi.SourceInfo.DirectoryURL(internal.Suffix(pi.Path, pi.ModulePath))
 	return od, nil
 }
 

@@ -14,8 +14,14 @@ import (
 )
 
 func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *http.Request, ds internal.DataSource,
-	dmeta *internal.DirectoryMeta, requestedVersion string) error {
-	modHeader := createModule(&dmeta.ModuleInfo, dmeta.Licenses, requestedVersion == internal.LatestVersion)
+	pi *internal.PathInfo, requestedVersion string) error {
+	mi := &internal.ModuleInfo{
+		ModulePath:        pi.ModulePath,
+		Version:           pi.Version,
+		CommitTime:        pi.CommitTime,
+		IsRedistributable: pi.IsRedistributable,
+	}
+	modHeader := createModule(mi, pi.Licenses, requestedVersion == internal.LatestVersion)
 	tab := r.FormValue("tab")
 	settings, ok := moduleTabLookup[tab]
 	if !ok {
@@ -26,19 +32,19 @@ func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = fetchDetailsForModule(r, tab, ds, dmeta)
+		details, err = fetchDetailsForModule(r, tab, ds, pi)
 		if err != nil {
 			return fmt.Errorf("error fetching page for %q: %v", tab, err)
 		}
 	}
 	pageType := pageTypeModule
-	if dmeta.ModulePath == stdlib.ModulePath {
+	if pi.ModulePath == stdlib.ModulePath {
 		pageType = pageTypeStdLib
 	}
 
 	page := &DetailsPage{
-		basePage:       s.newBasePage(r, moduleHTMLTitle(dmeta.ModulePath)),
-		Name:           dmeta.ModulePath,
+		basePage:       s.newBasePage(r, moduleHTMLTitle(pi.ModulePath)),
+		Name:           pi.ModulePath,
 		Settings:       settings,
 		Header:         modHeader,
 		Breadcrumb:     breadcrumbPath(modHeader.ModulePath, modHeader.ModulePath, modHeader.LinkVersion),
@@ -47,8 +53,8 @@ func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *
 		Tabs:           moduleTabSettings,
 		PageType:       pageType,
 		CanonicalURLPath: constructModuleURL(
-			dmeta.ModulePath,
-			linkVersion(dmeta.Version, dmeta.ModulePath),
+			pi.ModulePath,
+			linkVersion(pi.Version, pi.ModulePath),
 		),
 	}
 	s.servePage(ctx, w, settings.TemplateName, page)

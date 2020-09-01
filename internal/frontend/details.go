@@ -123,6 +123,7 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 	if err := validatePathAndVersion(ctx, ds, urlInfo.fullPath, urlInfo.requestedVersion); err != nil {
 		return err
 	}
+	recordVersionTypeMetric(ctx, urlInfo.requestedVersion)
 
 	urlInfo.resolvedVersion = urlInfo.requestedVersion
 	if experiment.IsActive(ctx, internal.ExperimentUsePathInfo) {
@@ -156,30 +157,25 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 				}
 			}()
 		}
-	}
-	recordVersionTypeMetric(ctx, urlInfo.requestedVersion)
-	if isActiveUseUnits(ctx) {
-		return s.serveDetailsPage(w, r, ds, urlInfo)
+		if isActiveUseUnits(ctx) {
+			return s.serveDetailsPage(w, r, ds, pi, urlInfo)
+		}
 	}
 	return s.legacyServeDetailsPage(w, r, ds, urlInfo)
 }
 
 // serveDetailsPage serves a details page for a path using the paths,
 // modules, documentation, readmes, licenses, and package_imports tables.
-func (s *Server) serveDetailsPage(w http.ResponseWriter, r *http.Request, ds internal.DataSource, info *urlPathInfo) (err error) {
+func (s *Server) serveDetailsPage(w http.ResponseWriter, r *http.Request, ds internal.DataSource, pi *internal.PathInfo, info *urlPathInfo) (err error) {
 	defer derrors.Wrap(&err, "serveDetailsPage(w, r, %v)", info)
 	ctx := r.Context()
-	dmeta, err := ds.GetDirectoryMeta(ctx, info.fullPath, info.modulePath, info.resolvedVersion)
-	if err != nil {
-		return err
-	}
 	switch {
 	case info.isModule:
-		return s.serveModulePage(ctx, w, r, ds, dmeta, info.requestedVersion)
-	case dmeta.Name != "":
-		return s.servePackagePage(ctx, w, r, ds, dmeta, info.requestedVersion)
+		return s.serveModulePage(ctx, w, r, ds, pi, info.requestedVersion)
+	case pi.Name != "":
+		return s.servePackagePage(ctx, w, r, ds, pi, info.requestedVersion)
 	default:
-		return s.serveDirectoryPage(ctx, w, r, ds, dmeta, info.requestedVersion)
+		return s.serveDirectoryPage(ctx, w, r, ds, pi, info.requestedVersion)
 	}
 }
 

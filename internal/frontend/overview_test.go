@@ -147,15 +147,22 @@ func TestPackageOverviewDetails(t *testing.T) {
 				test.dir.Version,
 				internal.Suffix(test.dir.Path, test.dir.ModulePath))
 			m.Units[1].IsRedistributable = test.dir.IsRedistributable
+			m.SourceInfo = source.NewGitHubInfo("https://"+test.dir.ModulePath, "", test.dir.Version)
 
 			ctx := context.Background()
 			if err := testDB.InsertModule(ctx, m); err != nil {
 				t.Fatal(err)
 			}
-			dmeta := sample.DirectoryMeta(test.dir.ModulePath,
-				internal.Suffix(test.dir.Path, test.dir.ModulePath), test.dir.Version)
-			dmeta.IsRedistributable = test.want.Redistributable
-			got, err := fetchPackageOverviewDetails(ctx, testDB, dmeta, test.versionedLinks)
+			pi := &internal.PathInfo{
+				Path:              test.dir.Path,
+				ModulePath:        test.dir.ModulePath,
+				Version:           test.dir.Version,
+				IsRedistributable: test.dir.IsRedistributable,
+				Name:              test.dir.Name,
+				CommitTime:        test.dir.CommitTime,
+				SourceInfo:        m.SourceInfo,
+			}
+			got, err := fetchPackageOverviewDetails(ctx, testDB, pi, test.versionedLinks)
 			if err != nil {
 				t.Fatal(err)
 			}

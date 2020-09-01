@@ -23,14 +23,7 @@ type DocumentationDetails struct {
 }
 
 // fetchDocumentationDetails returns a DocumentationDetails.
-func fetchDocumentationDetails(ctx context.Context, ds internal.DataSource, dmeta *internal.DirectoryMeta) (_ *DocumentationDetails, err error) {
-	pi := &internal.PathInfo{
-		Path:              dmeta.Path,
-		ModulePath:        dmeta.ModulePath,
-		Version:           dmeta.Version,
-		IsRedistributable: dmeta.IsRedistributable,
-		Name:              dmeta.Name,
-	}
+func fetchDocumentationDetails(ctx context.Context, ds internal.DataSource, pi *internal.PathInfo) (_ *DocumentationDetails, err error) {
 	u, err := ds.GetUnit(ctx, pi, internal.WithDocumentation)
 	if err != nil {
 		return nil, err

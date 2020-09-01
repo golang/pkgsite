@@ -311,7 +311,7 @@ func TestGetUnit(t *testing.T) {
 				test.modulePath,
 				test.version,
 				test.want.Name,
-				true,
+				test.want.IsRedistributable,
 			)
 			got, err := testDB.GetUnit(ctx, pathInfo, internal.AllFields)
 			if test.wantNotFoundErr {
@@ -401,7 +401,7 @@ func TestGetUnitFieldSet(t *testing.T) {
 				test.want.ModulePath,
 				test.want.Version,
 				test.want.Name,
-				true,
+				test.want.IsRedistributable,
 			)
 			got, err := testDB.GetUnit(ctx, pathInfo, test.fields)
 			if err != nil {

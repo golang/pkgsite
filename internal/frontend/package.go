@@ -46,22 +46,28 @@ func stdlibPathForShortcut(ctx context.Context, ds internal.DataSource, shortcut
 
 // servePackagePage serves a package details page.
 func (s *Server) servePackagePage(ctx context.Context,
-	w http.ResponseWriter, r *http.Request, ds internal.DataSource, dir *internal.DirectoryMeta, requestedVersion string) error {
+	w http.ResponseWriter, r *http.Request, ds internal.DataSource, pi *internal.PathInfo, requestedVersion string) error {
+	mi := &internal.ModuleInfo{
+		ModulePath:        pi.ModulePath,
+		Version:           pi.Version,
+		CommitTime:        pi.CommitTime,
+		IsRedistributable: pi.IsRedistributable,
+	}
 	pkgHeader, err := createPackage(&internal.PackageMeta{
-		Path:              dir.Path,
-		Licenses:          dir.Licenses,
-		IsRedistributable: dir.IsRedistributable,
-		Name:              dir.Name,
-	}, &dir.ModuleInfo, requestedVersion == internal.LatestVersion)
+		Path:              pi.Path,
+		Licenses:          pi.Licenses,
+		IsRedistributable: pi.IsRedistributable,
+		Name:              pi.Name,
+	}, mi, requestedVersion == internal.LatestVersion)
 	if err != nil {
-		return fmt.Errorf("creating package header for %s@%s: %v", dir.Path, dir.Version, err)
+		return fmt.Errorf("creating package header for %s@%s: %v", pi.Path, pi.Version, err)
 	}
 
 	tab := r.FormValue("tab")
 	settings, ok := packageTabLookup[tab]
 	if !ok {
 		var tab string
-		if dir.IsRedistributable {
+		if pi.IsRedistributable {
 			tab = tabDoc
 		} else {
 			tab = tabOverview
@@ -69,26 +75,26 @@ func (s *Server) servePackagePage(ctx context.Context,
 		http.Redirect(w, r, fmt.Sprintf(r.URL.Path+"?tab=%s", tab), http.StatusFound)
 		return nil
 	}
-	canShowDetails := dir.IsRedistributable || settings.AlwaysShowDetails
+	canShowDetails := pi.IsRedistributable || settings.AlwaysShowDetails
 
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = fetchDetailsForPackage(r, tab, ds, dir)
+		details, err = fetchDetailsForPackage(r, tab, ds, pi)
 		if err != nil {
 			return fmt.Errorf("fetching page for %q: %v", tab, err)
 		}
 	}
 	var (
 		pageType = pageTypePackage
-		pageName = dir.Name
+		pageName = pi.Name
 	)
 	if pageName == "main" {
-		pageName = effectiveName(dir.Path, dir.Name)
+		pageName = effectiveName(pi.Path, pi.Name)
 		pageType = pageTypeCommand
 	}
 	page := &DetailsPage{
-		basePage: s.newBasePage(r, packageHTMLTitle(dir.Path, dir.Name)),
+		basePage: s.newBasePage(r, packageHTMLTitle(pi.Path, pi.Name)),
 		Name:     pageName,
 		Settings: settings,
 		Header:   pkgHeader,
