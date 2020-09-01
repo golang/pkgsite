@@ -68,7 +68,7 @@ func TestPackageOverviewDetails(t *testing.T) {
 		{
 			name: "redistributable",
 			dir: &internal.Unit{
-				PathInfo: *sample.PathInfo(
+				UnitMeta: *sample.UnitMeta(
 					"github.com/u/m/p",
 					"github.com/u/m",
 					"v1.2.3",
@@ -94,7 +94,7 @@ func TestPackageOverviewDetails(t *testing.T) {
 		{
 			name: "unversioned",
 			dir: &internal.Unit{
-				PathInfo: *sample.PathInfo(
+				UnitMeta: *sample.UnitMeta(
 					"github.com/u/m/p",
 					"github.com/u/m",
 					"v1.2.3",
@@ -120,7 +120,7 @@ func TestPackageOverviewDetails(t *testing.T) {
 		{
 			name: "non-redistributable",
 			dir: &internal.Unit{
-				PathInfo: *sample.PathInfo(
+				UnitMeta: *sample.UnitMeta(
 					"github.com/u/m/p",
 					"github.com/u/m",
 					"v1.2.3",
@@ -153,7 +153,7 @@ func TestPackageOverviewDetails(t *testing.T) {
 			if err := testDB.InsertModule(ctx, m); err != nil {
 				t.Fatal(err)
 			}
-			pi := &internal.PathInfo{
+			pi := &internal.UnitMeta{
 				Path:              test.dir.Path,
 				ModulePath:        test.dir.ModulePath,
 				Version:           test.dir.Version,

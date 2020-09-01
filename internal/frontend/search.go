@@ -161,7 +161,7 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 		return ""
 	}
 	if experiment.IsActive(ctx, internal.ExperimentUsePathInfo) {
-		pi, err := ds.GetPathInfo(ctx, requestedPath, internal.UnknownModulePath, internal.LatestVersion)
+		pi, err := ds.GetUnitMeta(ctx, requestedPath, internal.UnknownModulePath, internal.LatestVersion)
 		if err != nil {
 			if !errors.Is(err, derrors.NotFound) {
 				log.Errorf(ctx, "searchRequestRedirectPath(%q): %v", requestedPath, err)

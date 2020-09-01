@@ -352,19 +352,19 @@ func TestDataSource_LegacyGetModuleInfo(t *testing.T) {
 	}
 }
 
-func TestDataSource_GetPathInfo(t *testing.T) {
+func TestDataSource_GetUnitMeta(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
 
 	for _, test := range []struct {
 		path, modulePath, version string
-		want                      *internal.PathInfo
+		want                      *internal.UnitMeta
 	}{
 		{
 			path:       "foo.com/bar",
 			modulePath: "foo.com/bar",
 			version:    "v1.1.0",
-			want: &internal.PathInfo{
+			want: &internal.UnitMeta{
 				ModulePath:        "foo.com/bar",
 				Version:           "v1.1.0",
 				IsRedistributable: true,
@@ -374,7 +374,7 @@ func TestDataSource_GetPathInfo(t *testing.T) {
 			path:       "foo.com/bar/baz",
 			modulePath: "foo.com/bar",
 			version:    "v1.1.0",
-			want: &internal.PathInfo{
+			want: &internal.UnitMeta{
 				ModulePath:        "foo.com/bar",
 				Name:              "baz",
 				Version:           "v1.1.0",
@@ -385,7 +385,7 @@ func TestDataSource_GetPathInfo(t *testing.T) {
 			path:       "foo.com/bar/baz",
 			modulePath: internal.UnknownModulePath,
 			version:    "v1.1.0",
-			want: &internal.PathInfo{
+			want: &internal.UnitMeta{
 				ModulePath:        "foo.com/bar",
 				Name:              "baz",
 				Version:           "v1.1.0",
@@ -396,7 +396,7 @@ func TestDataSource_GetPathInfo(t *testing.T) {
 			path:       "foo.com/bar/baz",
 			modulePath: internal.UnknownModulePath,
 			version:    internal.LatestVersion,
-			want: &internal.PathInfo{
+			want: &internal.UnitMeta{
 				ModulePath:        "foo.com/bar",
 				Name:              "baz",
 				Version:           "v1.2.0",
@@ -405,7 +405,7 @@ func TestDataSource_GetPathInfo(t *testing.T) {
 		},
 	} {
 		t.Run(test.path, func(t *testing.T) {
-			got, err := ds.GetPathInfo(ctx, test.path, test.modulePath, test.version)
+			got, err := ds.GetUnitMeta(ctx, test.path, test.modulePath, test.version)
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -976,12 +976,12 @@ func checkPackage(ctx context.Context, t *testing.T, pkgPath string) {
 	if _, err := testDB.LegacyGetPackage(ctx, pkgPath, internal.UnknownModulePath, sample.VersionString); err != nil {
 		t.Fatal(err)
 	}
-	pi, err := testDB.GetPathInfo(ctx, pkgPath, internal.UnknownModulePath, sample.VersionString)
+	pi, err := testDB.GetUnitMeta(ctx, pkgPath, internal.UnknownModulePath, sample.VersionString)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !pi.IsPackage() {
-		t.Fatalf("testDB.GetPathInfo(%q, %q, %q): isPackage = false; want = true",
+		t.Fatalf("testDB.GetUnitMeta(%q, %q, %q): isPackage = false; want = true",
 			pkgPath, internal.UnknownModulePath, sample.VersionString)
 	}
 	dir, err := testDB.GetUnit(ctx, pi, internal.WithDocumentation)

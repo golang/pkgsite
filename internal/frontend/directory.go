@@ -41,7 +41,7 @@ type Directory struct {
 // serveDirectoryPage serves a directory view for a directory in a module
 // version.
 func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, r *http.Request, ds internal.DataSource,
-	pi *internal.PathInfo, requestedVersion string) (err error) {
+	pi *internal.UnitMeta, requestedVersion string) (err error) {
 	defer derrors.Wrap(&err, "serveDirectoryPage for %s@%s", pi.Path, requestedVersion)
 	tab := r.FormValue("tab")
 	settings, ok := directoryTabLookup[tab]
@@ -90,7 +90,7 @@ func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, 
 // the module path. However, on the package and directory view's
 // "Subdirectories" tab, we do not want to include packages whose import paths
 // are the same as the dirPath.
-func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, pi *internal.PathInfo, includeDirPath bool) (_ *Directory, err error) {
+func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, pi *internal.UnitMeta, includeDirPath bool) (_ *Directory, err error) {
 	defer derrors.Wrap(&err, "fetchDirectoryDetails(%q, %q, %q, %v)",
 		pi.Path, pi.ModulePath, pi.Version, pi.Licenses)
 

@@ -12,8 +12,8 @@ import (
 	"golang.org/x/pkgsite/internal/source"
 )
 
-// PathInfo represents metadata about a unit.
-type PathInfo struct {
+// UnitMeta represents metadata about a unit.
+type UnitMeta struct {
 	// Unit level information
 	//
 	Path              string
@@ -30,12 +30,12 @@ type PathInfo struct {
 }
 
 // IsPackage reports whether the path represents a package path.
-func (pi *PathInfo) IsPackage() bool {
+func (pi *UnitMeta) IsPackage() bool {
 	return pi.Name != ""
 }
 
 // IsModule reports whether the path represents a module path.
-func (pi *PathInfo) IsModule() bool {
+func (pi *UnitMeta) IsModule() bool {
 	return pi.ModulePath == pi.Path
 }
 
@@ -44,7 +44,7 @@ func (pi *PathInfo) IsModule() bool {
 // none of the above: a directory within a module that has no .go files, but
 // contains other units, licenses and/or READMEs."
 type Unit struct {
-	PathInfo
+	UnitMeta
 	Readme  *Readme
 	Package *Package
 	Imports []string

@@ -47,7 +47,7 @@ func moduleUnits(modulePath, version string,
 			meta = append(meta, l.Metadata)
 		}
 		dir := &internal.Unit{
-			PathInfo: internal.PathInfo{
+			UnitMeta: internal.UnitMeta{
 				ModulePath:        modulePath,
 				Version:           version,
 				Path:              dirPath,

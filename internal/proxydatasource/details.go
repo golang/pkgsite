@@ -19,7 +19,7 @@ import (
 )
 
 // GetUnit returns information about a directory at a path.
-func (ds *DataSource) GetUnit(ctx context.Context, pi *internal.PathInfo, field internal.FieldSet) (_ *internal.Unit, err error) {
+func (ds *DataSource) GetUnit(ctx context.Context, pi *internal.UnitMeta, field internal.FieldSet) (_ *internal.Unit, err error) {
 	defer derrors.Wrap(&err, "GetUnit(%q, %q, %q)", pi.Path, pi.ModulePath, pi.Version)
 	return ds.getUnit(ctx, pi.Path, pi.ModulePath, pi.Version)
 }
@@ -62,9 +62,9 @@ func (ds *DataSource) GetModuleInfo(ctx context.Context, modulePath, version str
 	return &m.ModuleInfo, nil
 }
 
-// GetPathInfo returns information about the given path.
-func (ds *DataSource) GetPathInfo(ctx context.Context, path, inModulePath, inVersion string) (_ *internal.PathInfo, err error) {
-	defer derrors.Wrap(&err, "GetPathInfo(%q, %q, %q)", path, inModulePath, inVersion)
+// GetUnitMeta returns information about the given path.
+func (ds *DataSource) GetUnitMeta(ctx context.Context, path, inModulePath, inVersion string) (_ *internal.UnitMeta, err error) {
+	defer derrors.Wrap(&err, "GetUnitMeta(%q, %q, %q)", path, inModulePath, inVersion)
 
 	var info *proxy.VersionInfo
 	if inModulePath == internal.UnknownModulePath {
@@ -78,7 +78,7 @@ func (ds *DataSource) GetPathInfo(ctx context.Context, path, inModulePath, inVer
 	if err != nil {
 		return nil, err
 	}
-	pi := &internal.PathInfo{
+	pi := &internal.UnitMeta{
 		Path:       path,
 		ModulePath: inModulePath,
 		Version:    inVersion,

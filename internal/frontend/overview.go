@@ -40,7 +40,7 @@ type OverviewDetails struct {
 
 // fetchOverviewDetails uses the given version to fetch an OverviewDetails.
 // versionedLinks says whether the constructed URLs should have versions.
-func fetchOverviewDetails(ctx context.Context, ds internal.DataSource, pi *internal.PathInfo, versionedLinks bool) (*OverviewDetails, error) {
+func fetchOverviewDetails(ctx context.Context, ds internal.DataSource, pi *internal.UnitMeta, versionedLinks bool) (*OverviewDetails, error) {
 	u, err := ds.GetUnit(ctx, pi, internal.WithReadme)
 	if err != nil {
 		return nil, err
@@ -86,7 +86,7 @@ func constructOverviewDetails(ctx context.Context, mi *internal.ModuleInfo, read
 }
 
 // fetchPackageOverviewDetails uses data for the given versioned directory to return an OverviewDetails.
-func fetchPackageOverviewDetails(ctx context.Context, ds internal.DataSource, pi *internal.PathInfo, versionedLinks bool) (*OverviewDetails, error) {
+func fetchPackageOverviewDetails(ctx context.Context, ds internal.DataSource, pi *internal.UnitMeta, versionedLinks bool) (*OverviewDetails, error) {
 	od, err := fetchOverviewDetails(ctx, ds, pi, versionedLinks)
 	if err != nil {
 		return nil, err

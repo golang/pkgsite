@@ -19,7 +19,7 @@ import (
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
-func TestGetPathInfo(t *testing.T) {
+func TestGetUnitMeta(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
@@ -56,7 +56,7 @@ func TestGetPathInfo(t *testing.T) {
 		}
 		for d := pkgPath; d != "." && len(d) >= len(testModule.module); d = path.Dir(d) {
 			dir := &internal.Unit{
-				PathInfo: internal.PathInfo{
+				UnitMeta: internal.UnitMeta{
 					Path:     d,
 					Licenses: sample.LicenseMetadata,
 				},
@@ -89,14 +89,14 @@ func TestGetPathInfo(t *testing.T) {
 	for _, test := range []struct {
 		name                  string
 		path, module, version string
-		want                  *internal.PathInfo
+		want                  *internal.UnitMeta
 	}{
 		{
 			name:    "known module and version",
 			path:    "m.com/a",
 			module:  "m.com",
 			version: "v1.2.0-pre",
-			want: &internal.PathInfo{
+			want: &internal.UnitMeta{
 				ModulePath: "m.com",
 				Version:    "v1.2.0-pre",
 				Name:       "a",
@@ -107,7 +107,7 @@ func TestGetPathInfo(t *testing.T) {
 			path:    "m.com/a/b",
 			version: "v1.1.0",
 			// The path is in two modules at v1.1.0. Prefer the longer one.
-			want: &internal.PathInfo{
+			want: &internal.UnitMeta{
 				ModulePath: "m.com/a",
 				Version:    "v1.1.0",
 				Name:       "b",
@@ -118,7 +118,7 @@ func TestGetPathInfo(t *testing.T) {
 			path:   "m.com/a",
 			module: "m.com",
 			// Choose the latest release version.
-			want: &internal.PathInfo{
+			want: &internal.UnitMeta{
 				ModulePath: "m.com",
 				Version:    "v1.1.0",
 			},
@@ -127,7 +127,7 @@ func TestGetPathInfo(t *testing.T) {
 			name: "unknown module and version",
 			path: "m.com/a/b",
 			// Select the latest release version, longest module.
-			want: &internal.PathInfo{
+			want: &internal.UnitMeta{
 				ModulePath: "m.com/a",
 				Version:    "v1.1.0",
 				Name:       "b",
@@ -137,7 +137,7 @@ func TestGetPathInfo(t *testing.T) {
 			name: "module",
 			path: "m.com",
 			// Select the latest version of the module.
-			want: &internal.PathInfo{
+			want: &internal.UnitMeta{
 				ModulePath: "m.com",
 				Version:    "v1.1.0",
 			},
@@ -147,7 +147,7 @@ func TestGetPathInfo(t *testing.T) {
 			path:    "m.com/a",
 			version: "v1.1.0",
 			// Prefer module m/a over module m, directory a.
-			want: &internal.PathInfo{
+			want: &internal.UnitMeta{
 				ModulePath: "m.com/a",
 				Version:    "v1.1.0",
 			},
@@ -155,7 +155,7 @@ func TestGetPathInfo(t *testing.T) {
 		{
 			name: "directory",
 			path: "m.com/dir",
-			want: &internal.PathInfo{
+			want: &internal.UnitMeta{
 				ModulePath: "m.com",
 				Version:    "v1.0.1",
 			},
@@ -164,7 +164,7 @@ func TestGetPathInfo(t *testing.T) {
 			name:    "module at master version",
 			path:    "m.com",
 			version: "master",
-			want: &internal.PathInfo{
+			want: &internal.UnitMeta{
 				ModulePath: "m.com",
 				Version:    "v1.2.0-pre",
 			},
@@ -173,7 +173,7 @@ func TestGetPathInfo(t *testing.T) {
 			name:    "package at master version",
 			path:    "m.com/a",
 			version: "master",
-			want: &internal.PathInfo{
+			want: &internal.UnitMeta{
 				ModulePath: "m.com",
 				Version:    "v1.2.0-pre",
 				Name:       "a",
@@ -183,7 +183,7 @@ func TestGetPathInfo(t *testing.T) {
 			name:    "incompatible module",
 			path:    "m.com/b",
 			version: "master",
-			want: &internal.PathInfo{
+			want: &internal.UnitMeta{
 				ModulePath: "m.com/b",
 				Version:    "v2.0.0+incompatible",
 			},
@@ -196,7 +196,7 @@ func TestGetPathInfo(t *testing.T) {
 			if test.version == "" {
 				test.version = internal.LatestVersion
 			}
-			test.want = sample.PathInfo(
+			test.want = sample.UnitMeta(
 				test.path,
 				test.want.ModulePath,
 				test.want.Version,
@@ -204,7 +204,7 @@ func TestGetPathInfo(t *testing.T) {
 				test.want.IsRedistributable,
 			)
 			test.want.CommitTime = sample.CommitTime
-			got, err := testDB.GetPathInfo(ctx, test.path, test.module, test.version)
+			got, err := testDB.GetUnitMeta(ctx, test.path, test.module, test.version)
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -17,11 +17,11 @@ type DataSource interface {
 
 	// GetLatestMajorVersion returns the latest major version of a module path.
 	GetLatestMajorVersion(ctx context.Context, seriesPath string) (_ string, err error)
-	// GetPathInfo returns information about a path.
-	GetPathInfo(ctx context.Context, path, requestedModulePath, requestedVersion string) (_ *PathInfo, err error)
+	// GetUnitMeta returns information about a path.
+	GetUnitMeta(ctx context.Context, path, requestedModulePath, requestedVersion string) (_ *UnitMeta, err error)
 	// GetUnit returns information about a directory, which may also be a module and/or package.
 	// The module and version must both be known.
-	GetUnit(ctx context.Context, pathInfo *PathInfo, fields FieldSet) (_ *Unit, err error)
+	GetUnit(ctx context.Context, pathInfo *UnitMeta, fields FieldSet) (_ *Unit, err error)
 
 	// TODO(golang/go#39629): Deprecate these methods by moving the logic
 	// behind GetUnit.

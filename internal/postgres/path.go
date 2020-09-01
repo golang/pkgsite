@@ -26,7 +26,7 @@ const orderByLatest = `
 				m.sort_version DESC,
 				m.module_path DESC`
 
-// GetPathInfo returns information about the "best" entity (module, path or directory) with
+// GetUnitMeta returns information about the "best" entity (module, path or directory) with
 // the given path. The module and version arguments provide additional constraints.
 // If the module is unknown, pass internal.UnknownModulePath; if the version is unknown, pass
 // internal.LatestVersion.
@@ -35,8 +35,8 @@ const orderByLatest = `
 // 1. Match the module path and or version, if they are provided;
 // 2. Prefer newer module versions to older, and release to pre-release;
 // 3. In the unlikely event of two paths at the same version, pick the longer module path.
-func (db *DB) GetPathInfo(ctx context.Context, path, requestedModulePath, requestedVersion string) (_ *internal.PathInfo, err error) {
-	defer derrors.Wrap(&err, "DB.GetPathInfo(ctx, %q, %q, %q)", path, requestedModulePath, requestedVersion)
+func (db *DB) GetUnitMeta(ctx context.Context, path, requestedModulePath, requestedVersion string) (_ *internal.UnitMeta, err error) {
+	defer derrors.Wrap(&err, "DB.GetUnitMeta(ctx, %q, %q, %q)", path, requestedModulePath, requestedVersion)
 
 	var (
 		constraints []string
@@ -60,7 +60,7 @@ func (db *DB) GetPathInfo(ctx context.Context, path, requestedModulePath, reques
 	var (
 		licenseTypes []string
 		licensePaths []string
-		pi           = internal.PathInfo{Path: path}
+		pi           = internal.UnitMeta{Path: path}
 	)
 	query := fmt.Sprintf(`
 		SELECT

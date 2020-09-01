@@ -156,7 +156,7 @@ func TestFetchDirectoryDetails(t *testing.T) {
 				err error
 			)
 			t.Run("use-directories", func(t *testing.T) {
-				pi := &internal.PathInfo{
+				pi := &internal.UnitMeta{
 					Path:              tc.dirPath,
 					ModulePath:        tc.modulePath,
 					Version:           tc.version,

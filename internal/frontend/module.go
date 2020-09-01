@@ -14,7 +14,7 @@ import (
 )
 
 func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *http.Request, ds internal.DataSource,
-	pi *internal.PathInfo, requestedVersion string) error {
+	pi *internal.UnitMeta, requestedVersion string) error {
 	mi := &internal.ModuleInfo{
 		ModulePath:        pi.ModulePath,
 		Version:           pi.Version,

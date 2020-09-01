@@ -127,7 +127,7 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 
 	urlInfo.resolvedVersion = urlInfo.requestedVersion
 	if experiment.IsActive(ctx, internal.ExperimentUsePathInfo) {
-		pi, err := ds.GetPathInfo(ctx, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion)
+		pi, err := ds.GetUnitMeta(ctx, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion)
 		if err != nil {
 			if !errors.Is(err, derrors.NotFound) {
 				return err
@@ -166,7 +166,7 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 
 // serveDetailsPage serves a details page for a path using the paths,
 // modules, documentation, readmes, licenses, and package_imports tables.
-func (s *Server) serveDetailsPage(w http.ResponseWriter, r *http.Request, ds internal.DataSource, pi *internal.PathInfo, info *urlPathInfo) (err error) {
+func (s *Server) serveDetailsPage(w http.ResponseWriter, r *http.Request, ds internal.DataSource, pi *internal.UnitMeta, info *urlPathInfo) (err error) {
 	defer derrors.Wrap(&err, "serveDetailsPage(w, r, %v)", info)
 	ctx := r.Context()
 	switch {
@@ -520,7 +520,7 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, d
 	// If frontend fetch is not enabled and we couldn't find a path at the
 	// given version, but if there's one at the latest version we can provide a
 	// link to it.
-	if _, err := ds.GetPathInfo(ctx, fullPath, modulePath, internal.LatestVersion); err != nil {
+	if _, err := ds.GetUnitMeta(ctx, fullPath, modulePath, internal.LatestVersion); err != nil {
 		if errors.Is(err, derrors.NotFound) {
 			return pathNotFoundError(ctx, pathType, fullPath, requestedVersion)
 		}

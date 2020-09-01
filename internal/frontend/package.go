@@ -46,7 +46,7 @@ func stdlibPathForShortcut(ctx context.Context, ds internal.DataSource, shortcut
 
 // servePackagePage serves a package details page.
 func (s *Server) servePackagePage(ctx context.Context,
-	w http.ResponseWriter, r *http.Request, ds internal.DataSource, pi *internal.PathInfo, requestedVersion string) error {
+	w http.ResponseWriter, r *http.Request, ds internal.DataSource, pi *internal.UnitMeta, requestedVersion string) error {
 	mi := &internal.ModuleInfo{
 		ModulePath:        pi.ModulePath,
 		Version:           pi.Version,

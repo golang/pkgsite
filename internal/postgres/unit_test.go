@@ -306,7 +306,7 @@ func TestGetUnit(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			pathInfo := sample.PathInfo(
+			pathInfo := sample.UnitMeta(
 				test.path,
 				test.modulePath,
 				test.version,
@@ -396,7 +396,7 @@ func TestGetUnitFieldSet(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			pathInfo := sample.PathInfo(
+			pathInfo := sample.UnitMeta(
 				test.want.Path,
 				test.want.ModulePath,
 				test.want.Version,
@@ -424,7 +424,7 @@ func TestGetUnitFieldSet(t *testing.T) {
 
 func unit(path, modulePath, version string, readme *internal.Readme, pkg *internal.Package) *internal.Unit {
 	u := &internal.Unit{
-		PathInfo: internal.PathInfo{
+		UnitMeta: internal.UnitMeta{
 			ModulePath:        modulePath,
 			Version:           version,
 			Path:              path,
@@ -466,7 +466,7 @@ func TestGetUnitBypass(t *testing.T) {
 		{testDB, true},
 		{bypassDB, false},
 	} {
-		pathInfo := &internal.PathInfo{
+		pathInfo := &internal.UnitMeta{
 			Path:       m.ModulePath,
 			ModulePath: m.ModulePath,
 			Version:    m.Version,

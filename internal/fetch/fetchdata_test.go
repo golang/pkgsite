@@ -43,7 +43,7 @@ var moduleOnePackage = &testModule{
 			},
 			Units: []*internal.Unit{
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "github.com/basic",
 					},
 					Readme: &internal.Readme{
@@ -52,7 +52,7 @@ var moduleOnePackage = &testModule{
 					},
 				},
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "github.com/basic/foo",
 					},
 					Package: &internal.Package{
@@ -117,7 +117,7 @@ var moduleMultiPackage = &testModule{
 			},
 			Units: []*internal.Unit{
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "github.com/my/module",
 					},
 					Readme: &internal.Readme{
@@ -126,7 +126,7 @@ var moduleMultiPackage = &testModule{
 					},
 				},
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "github.com/my/module/bar",
 					},
 					Readme: &internal.Readme{
@@ -142,7 +142,7 @@ var moduleMultiPackage = &testModule{
 					},
 				},
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "github.com/my/module/foo",
 					},
 					Package: &internal.Package{
@@ -183,12 +183,12 @@ var moduleNoGoMod = &testModule{
 			},
 			Units: []*internal.Unit{
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "no.mod/module",
 					},
 				},
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "no.mod/module/p",
 					},
 					Package: &internal.Package{
@@ -248,12 +248,12 @@ var moduleBadPackages = &testModule{
 			},
 			Units: []*internal.Unit{
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "bad.mod/module",
 					},
 				},
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "bad.mod/module/good",
 					},
 					Package: &internal.Package{
@@ -315,12 +315,12 @@ var moduleBuildConstraints = &testModule{
 			},
 			Units: []*internal.Unit{
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "build.constraints/module",
 					},
 				},
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "build.constraints/module/cpu",
 					},
 					Package: &internal.Package{
@@ -406,7 +406,7 @@ var moduleNonRedist = &testModule{
 			},
 			Units: []*internal.Unit{
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "nonredistributable.mod/module",
 					},
 					Readme: &internal.Readme{
@@ -415,7 +415,7 @@ var moduleNonRedist = &testModule{
 					},
 				},
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "nonredistributable.mod/module/bar",
 					},
 					Package: &internal.Package{
@@ -427,7 +427,7 @@ var moduleNonRedist = &testModule{
 					},
 				},
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "nonredistributable.mod/module/bar/baz",
 					},
 					Package: &internal.Package{
@@ -439,7 +439,7 @@ var moduleNonRedist = &testModule{
 					},
 				},
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "nonredistributable.mod/module/foo",
 					},
 					Readme: &internal.Readme{
@@ -478,22 +478,22 @@ var moduleBadImportPath = &testModule{
 			},
 			Units: []*internal.Unit{
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "bad.import.path.com",
 					},
 				},
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "bad.import.path.com/good",
 					},
 				},
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "bad.import.path.com/good/import",
 					},
 				},
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "bad.import.path.com/good/import/path",
 					},
 					Package: &internal.Package{
@@ -550,12 +550,12 @@ var moduleDocTest = &testModule{
 			},
 			Units: []*internal.Unit{
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "doc.test",
 					},
 				},
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "doc.test/permalink",
 					},
 					Package: &internal.Package{
@@ -593,7 +593,7 @@ var moduleDocTooLarge = &testModule{
 			},
 			Units: []*internal.Unit{
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "bigdoc.test",
 					},
 					Package: &internal.Package{
@@ -644,7 +644,7 @@ var moduleWasm = &testModule{
 			},
 			Units: []*internal.Unit{
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "github.com/my/module/js",
 					},
 					Readme: &internal.Readme{
@@ -653,7 +653,7 @@ var moduleWasm = &testModule{
 					},
 				},
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "github.com/my/module/js/js",
 					},
 					Package: &internal.Package{
@@ -700,7 +700,7 @@ var moduleStd = &testModule{
 			},
 			Units: []*internal.Unit{
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "std",
 
 						IsRedistributable: true,
@@ -711,7 +711,7 @@ var moduleStd = &testModule{
 					},
 				},
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "builtin",
 					},
 					Package: &internal.Package{
@@ -722,12 +722,12 @@ var moduleStd = &testModule{
 					},
 				},
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "cmd",
 					},
 				},
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "cmd/pprof",
 					},
 					Readme: &internal.Readme{
@@ -761,7 +761,7 @@ var moduleStd = &testModule{
 					},
 				},
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "context",
 					},
 					Package: &internal.Package{
@@ -773,12 +773,12 @@ var moduleStd = &testModule{
 					Imports: []string{"errors", "fmt", "reflect", "sync", "time"},
 				},
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "encoding",
 					},
 				},
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "encoding/json",
 					},
 					Package: &internal.Package{
@@ -806,7 +806,7 @@ var moduleStd = &testModule{
 					},
 				},
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "errors",
 					},
 					Package: &internal.Package{
@@ -817,7 +817,7 @@ var moduleStd = &testModule{
 					},
 				},
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "flag",
 					},
 					Imports: []string{"errors", "fmt", "io", "os", "reflect", "sort", "strconv", "strings", "time"},
@@ -853,12 +853,12 @@ var moduleMaster = &testModule{
 			},
 			Units: []*internal.Unit{
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "github.com/my/module",
 					},
 				},
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "github.com/my/module/foo",
 					},
 					Package: &internal.Package{
@@ -893,12 +893,12 @@ var moduleLatest = &testModule{
 			},
 			Units: []*internal.Unit{
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "github.com/my/module",
 					},
 				},
 				{
-					PathInfo: internal.PathInfo{
+					UnitMeta: internal.UnitMeta{
 						Path: "github.com/my/module/foo",
 					},
 					Package: &internal.Package{
@@ -947,12 +947,12 @@ package example_test
 				},
 				Units: []*internal.Unit{
 					{
-						PathInfo: internal.PathInfo{
+						UnitMeta: internal.UnitMeta{
 							Path: path,
 						},
 					},
 					{
-						PathInfo: internal.PathInfo{
+						UnitMeta: internal.UnitMeta{
 							Path: path + "/example",
 						},
 						Package: &internal.Package{

@@ -58,7 +58,7 @@ func cleanFetchResult(fr *FetchResult, detector *licenses.Detector) *FetchResult
 
 	shouldSetPVS := (fr.PackageVersionStates == nil)
 	for _, dir := range fr.Module.Units {
-		dir.PathInfo = internal.PathInfo{
+		dir.UnitMeta = internal.UnitMeta{
 			ModulePath:        fr.Module.ModulePath,
 			Version:           fr.Module.Version,
 			Path:              dir.Path,

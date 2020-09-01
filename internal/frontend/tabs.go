@@ -149,7 +149,7 @@ const (
 
 // fetchDetailsForPackage returns tab details by delegating to the correct detail
 // handler.
-func fetchDetailsForPackage(r *http.Request, tab string, ds internal.DataSource, pi *internal.PathInfo) (interface{}, error) {
+func fetchDetailsForPackage(r *http.Request, tab string, ds internal.DataSource, pi *internal.UnitMeta) (interface{}, error) {
 	ctx := r.Context()
 	switch tab {
 	case tabDoc:
@@ -172,7 +172,7 @@ func fetchDetailsForPackage(r *http.Request, tab string, ds internal.DataSource,
 
 // fetchDetailsForModule returns tab details by delegating to the correct detail
 // handler.
-func fetchDetailsForModule(r *http.Request, tab string, ds internal.DataSource, pi *internal.PathInfo) (interface{}, error) {
+func fetchDetailsForModule(r *http.Request, tab string, ds internal.DataSource, pi *internal.UnitMeta) (interface{}, error) {
 	ctx := r.Context()
 	switch tab {
 	case tabOverview:
@@ -189,7 +189,7 @@ func fetchDetailsForModule(r *http.Request, tab string, ds internal.DataSource, 
 
 // fetchDetailsForDirectory returns tab details by delegating to the correct
 // detail handler.
-func fetchDetailsForDirectory(r *http.Request, tab string, ds internal.DataSource, pi *internal.PathInfo) (interface{}, error) {
+func fetchDetailsForDirectory(r *http.Request, tab string, ds internal.DataSource, pi *internal.UnitMeta) (interface{}, error) {
 	ctx := r.Context()
 	switch tab {
 	case tabOverview:
