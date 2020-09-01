@@ -63,14 +63,14 @@ func moduleUnits(modulePath, version string,
 			dir.Package = &internal.Package{
 				Path: pkg.Path,
 				Name: pkg.Name,
-				Documentation: &internal.Documentation{
-					GOOS:     pkg.GOOS,
-					GOARCH:   pkg.GOARCH,
-					Synopsis: pkg.Synopsis,
-					HTML:     pkg.DocumentationHTML,
-				},
 			}
 			dir.Imports = pkg.Imports
+			dir.Documentation = &internal.Documentation{
+				GOOS:     pkg.GOOS,
+				GOARCH:   pkg.GOARCH,
+				Synopsis: pkg.Synopsis,
+				HTML:     pkg.DocumentationHTML,
+			}
 		}
 		units = append(units, dir)
 	}

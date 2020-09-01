@@ -104,13 +104,7 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 		if err != nil && !errors.Is(err, derrors.NotFound) {
 			return nil, err
 		}
-		if doc != nil {
-			u.Package = &internal.Package{
-				Path:          u.Path,
-				Name:          u.Name,
-				Documentation: doc,
-			}
-		}
+		u.Documentation = doc
 	}
 	if fields&internal.WithImports != 0 {
 		imports, err := db.getImports(ctx, pathID)
@@ -130,12 +124,10 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 	}
 	if fields == internal.AllFields {
 		if u.Name != "" {
-			if u.Package == nil {
-				u.Package = &internal.Package{
-					Path: u.Path,
-				}
+			u.Package = &internal.Package{
+				Path: u.Path,
+				Name: u.Name,
 			}
-			u.Package.Name = u.Name
 		}
 	}
 	if !db.bypassLicenseCheck {

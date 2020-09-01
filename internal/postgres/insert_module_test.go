@@ -161,7 +161,7 @@ func TestInsertModuleLicenseCheck(t *testing.T) {
 
 			mod := sample.Module(sample.ModulePath, sample.VersionString, "")
 			checkHasRedistData(mod.LegacyReadmeContents, mod.LegacyPackages[0].DocumentationHTML, true)
-			checkHasRedistData(mod.Units[0].Readme.Contents, mod.Units[0].Package.Documentation.HTML, true)
+			checkHasRedistData(mod.Units[0].Readme.Contents, mod.Units[0].Documentation.HTML, true)
 			mod.IsRedistributable = false
 			mod.LegacyPackages[0].IsRedistributable = false
 			mod.Units[0].IsRedistributable = false
@@ -187,17 +187,17 @@ func TestInsertModuleLicenseCheck(t *testing.T) {
 				ModulePath: mod.ModulePath,
 				Version:    mod.Version,
 			}
-			dir, err := db.GetUnit(ctx, pathInfo, internal.AllFields)
+			u, err := db.GetUnit(ctx, pathInfo, internal.AllFields)
 			if err != nil {
 				t.Fatal(err)
 			}
 			var readme string
-			if dir.Readme != nil {
-				readme = dir.Readme.Contents
+			if u.Readme != nil {
+				readme = u.Readme.Contents
 			}
 			var doc safehtml.HTML
-			if dir.Package != nil && dir.Package.Documentation != nil {
-				doc = dir.Package.Documentation.HTML
+			if u.Documentation != nil {
+				doc = u.Documentation.HTML
 			}
 			checkHasRedistData(readme, doc, bypass)
 		})

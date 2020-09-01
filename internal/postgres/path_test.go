@@ -63,10 +63,10 @@ func TestGetUnitMeta(t *testing.T) {
 			}
 			if d == pkgPath {
 				dir.Package = &internal.Package{
-					Path:          pkgPath,
-					Name:          pkgName,
-					Documentation: &internal.Documentation{},
+					Path: pkgPath,
+					Name: pkgName,
 				}
+				dir.Documentation = &internal.Documentation{}
 			}
 			sample.AddUnit(m, dir)
 		}

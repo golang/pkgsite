@@ -359,15 +359,15 @@ func TestGetUnitFieldSet(t *testing.T) {
 	}
 
 	cleanFields := func(u *internal.Unit, fields internal.FieldSet) {
-		// Remove fields based on the FieldSet specified.
+		// Add/remove fields based on the FieldSet specified.
+		if fields&internal.WithDocumentation != 0 {
+			u.Documentation = sample.Documentation
+		}
 		if fields&internal.WithImports != 0 {
 			u.Imports = sample.Imports
 		}
 		if fields&internal.WithLicenses == 0 {
 			u.LicenseContents = nil
-		}
-		if u.Package != nil {
-			u.Package.Name = u.Name
 		}
 	}
 
@@ -380,7 +380,7 @@ func TestGetUnitFieldSet(t *testing.T) {
 			name:   "WithDocumentation",
 			fields: internal.WithDocumentation,
 			want: unit("a.com/m/dir/p", "a.com/m", "v1.2.3",
-				nil, newPackage("p", "a.com/m/dir/p")),
+				nil, nil),
 		},
 		{
 			name:   "WithImports",
@@ -445,6 +445,7 @@ func unit(path, modulePath, version string, readme *internal.Readme, pkg *intern
 		Package:         pkg,
 	}
 	if pkg != nil {
+		u.Documentation = sample.Documentation
 		u.Name = pkg.Name
 	}
 	return u
@@ -452,9 +453,8 @@ func unit(path, modulePath, version string, readme *internal.Readme, pkg *intern
 
 func newPackage(name, path string) *internal.Package {
 	return &internal.Package{
-		Name:          name,
-		Path:          path,
-		Documentation: sample.Documentation,
+		Name: name,
+		Path: path,
 	}
 }
 
@@ -488,10 +488,10 @@ func TestGetUnitBypass(t *testing.T) {
 		if got := (d.Readme == nil); got != test.wantEmpty {
 			t.Errorf("readme empty: got %t, want %t", got, test.wantEmpty)
 		}
-		if got := (d.Package.Documentation == nil); got != test.wantEmpty {
+		if got := (d.Documentation == nil); got != test.wantEmpty {
 			t.Errorf("synopsis empty: got %t, want %t", got, test.wantEmpty)
 		}
-		if got := (d.Package.Documentation == nil); got != test.wantEmpty {
+		if got := (d.Documentation == nil); got != test.wantEmpty {
 			t.Errorf("doc empty: got %t, want %t", got, test.wantEmpty)
 		}
 

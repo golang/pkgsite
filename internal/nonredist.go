@@ -31,12 +31,10 @@ func (m *Module) RemoveNonRedistributableData() {
 	}
 }
 
-func (d *Unit) RemoveNonRedistributableData() {
-	if !d.IsRedistributable {
-		d.Readme = nil
-		if d.Package != nil {
-			d.Package.Documentation = nil
-		}
+func (u *Unit) RemoveNonRedistributableData() {
+	if !u.IsRedistributable {
+		u.Readme = nil
+		u.Documentation = nil
 	}
 }
 

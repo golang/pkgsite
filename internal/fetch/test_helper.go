@@ -65,23 +65,25 @@ func cleanFetchResult(fr *FetchResult, detector *licenses.Detector) *FetchResult
 			IsRedistributable: dir.IsRedistributable,
 			Licenses:          dir.Licenses,
 		}
+		if dir.Documentation != nil {
+			if dir.Documentation.GOOS == "" {
+				dir.Documentation.GOOS = "linux"
+				dir.Documentation.GOARCH = "amd64"
+			}
+		}
 		if dir.Package != nil {
 			dir.Name = dir.Package.Name
-			if dir.Package.Documentation.GOOS == "" {
-				dir.Package.Documentation.GOOS = "linux"
-				dir.Package.Documentation.GOARCH = "amd64"
-			}
 			dir.Package.Path = dir.Path
 			fr.Module.LegacyPackages = append(fr.Module.LegacyPackages, &internal.LegacyPackage{
 				Path:              dir.Path,
 				Licenses:          dir.Licenses,
 				V1Path:            internal.V1Path(dir.Path, dir.ModulePath),
 				Name:              dir.Package.Name,
-				Synopsis:          dir.Package.Documentation.Synopsis,
-				DocumentationHTML: dir.Package.Documentation.HTML,
+				Synopsis:          dir.Documentation.Synopsis,
+				DocumentationHTML: dir.Documentation.HTML,
 				Imports:           dir.Imports,
-				GOOS:              dir.Package.Documentation.GOOS,
-				GOARCH:            dir.Package.Documentation.GOARCH,
+				GOOS:              dir.Documentation.GOOS,
+				GOARCH:            dir.Documentation.GOARCH,
 				IsRedistributable: dir.IsRedistributable,
 			})
 			if shouldSetPVS {
@@ -177,6 +179,6 @@ func validateDocumentationHTML(t *testing.T, got, want *internal.Module) {
 		if want.Units[i].Package == nil {
 			continue
 		}
-		checkHTML("Directories", i, got.Units[i].Package.Documentation.HTML, want.Units[i].Package.Documentation.HTML)
+		checkHTML("Directories", i, got.Units[i].Documentation.HTML, want.Units[i].Documentation.HTML)
 	}
 }

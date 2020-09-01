@@ -988,7 +988,7 @@ func checkPackage(ctx context.Context, t *testing.T, pkgPath string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if dir.Package == nil || dir.Package.Documentation == nil {
+	if dir.Documentation == nil {
 		t.Fatalf("testDB.GetUnit(%q, %q, %q): documentation should not be nil",
 			um.Path, um.ModulePath, um.Version)
 	}

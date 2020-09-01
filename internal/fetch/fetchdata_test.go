@@ -55,11 +55,11 @@ var moduleOnePackage = &testModule{
 					UnitMeta: internal.UnitMeta{
 						Path: "github.com/basic/foo",
 					},
+					Documentation: &internal.Documentation{
+						Synopsis: "package foo exports a helpful constant.",
+					},
 					Package: &internal.Package{
 						Name: "foo",
-						Documentation: &internal.Documentation{
-							Synopsis: "package foo exports a helpful constant.",
-						},
 					},
 					Imports: []string{"net/http"},
 				},
@@ -135,10 +135,10 @@ var moduleMultiPackage = &testModule{
 					},
 					Package: &internal.Package{
 						Name: "bar",
-						Documentation: &internal.Documentation{
-							Synopsis: "package bar",
-							HTML:     html("Bar returns the string &#34;bar&#34;."),
-						},
+					},
+					Documentation: &internal.Documentation{
+						Synopsis: "package bar",
+						HTML:     html("Bar returns the string &#34;bar&#34;."),
 					},
 				},
 				{
@@ -147,10 +147,10 @@ var moduleMultiPackage = &testModule{
 					},
 					Package: &internal.Package{
 						Name: "foo",
-						Documentation: &internal.Documentation{
-							Synopsis: "package foo",
-							HTML:     html("FooBar returns the string &#34;foo bar&#34;."),
-						},
+					},
+					Documentation: &internal.Documentation{
+						Synopsis: "package foo",
+						HTML:     html("FooBar returns the string &#34;foo bar&#34;."),
 					},
 					Imports: []string{"fmt", "github.com/my/module/bar"},
 				},
@@ -193,10 +193,10 @@ var moduleNoGoMod = &testModule{
 					},
 					Package: &internal.Package{
 						Name: "p",
-						Documentation: &internal.Documentation{
-							Synopsis: "Package p is inside a module where a go.mod file hasn't been explicitly added yet.",
-							HTML:     html("const Year = 2009"),
-						},
+					},
+					Documentation: &internal.Documentation{
+						Synopsis: "Package p is inside a module where a go.mod file hasn't been explicitly added yet.",
+						HTML:     html("const Year = 2009"),
 					},
 				},
 			},
@@ -258,10 +258,10 @@ var moduleBadPackages = &testModule{
 					},
 					Package: &internal.Package{
 						Name: "good",
-						Documentation: &internal.Documentation{
-							Synopsis: "Package good is inside a module that has bad packages.",
-							HTML:     html(`const Good = <a href="/pkg/builtin#true">true</a>`),
-						},
+					},
+					Documentation: &internal.Documentation{
+						Synopsis: "Package good is inside a module that has bad packages.",
+						HTML:     html(`const Good = <a href="/pkg/builtin#true">true</a>`),
 					},
 				},
 			},
@@ -325,10 +325,10 @@ var moduleBuildConstraints = &testModule{
 					},
 					Package: &internal.Package{
 						Name: "cpu",
-						Documentation: &internal.Documentation{
-							Synopsis: "Package cpu implements processor feature detection used by the Go standard library.",
-							HTML:     html("const CacheLinePadSize = 3"),
-						},
+					},
+					Documentation: &internal.Documentation{
+						Synopsis: "Package cpu implements processor feature detection used by the Go standard library.",
+						HTML:     html("const CacheLinePadSize = 3"),
 					},
 				},
 			},
@@ -420,10 +420,10 @@ var moduleNonRedist = &testModule{
 					},
 					Package: &internal.Package{
 						Name: "bar",
-						Documentation: &internal.Documentation{
-							Synopsis: "package bar",
-							HTML:     html("Bar returns the string"),
-						},
+					},
+					Documentation: &internal.Documentation{
+						Synopsis: "package bar",
+						HTML:     html("Bar returns the string"),
 					},
 				},
 				{
@@ -432,10 +432,10 @@ var moduleNonRedist = &testModule{
 					},
 					Package: &internal.Package{
 						Name: "baz",
-						Documentation: &internal.Documentation{
-							Synopsis: "package baz",
-							HTML:     html("Baz returns the string"),
-						},
+					},
+					Documentation: &internal.Documentation{
+						Synopsis: "package baz",
+						HTML:     html("Baz returns the string"),
 					},
 				},
 				{
@@ -448,10 +448,10 @@ var moduleNonRedist = &testModule{
 					},
 					Package: &internal.Package{
 						Name: "foo",
-						Documentation: &internal.Documentation{
-							Synopsis: "package foo",
-							HTML:     html("FooBar returns the string"),
-						},
+					},
+					Documentation: &internal.Documentation{
+						Synopsis: "package foo",
+						HTML:     html("FooBar returns the string"),
 					},
 					Imports: []string{"fmt", "github.com/my/module/bar"},
 				},
@@ -497,9 +497,9 @@ var moduleBadImportPath = &testModule{
 						Path: "bad.import.path.com/good/import/path",
 					},
 					Package: &internal.Package{
-						Name:          "foo",
-						Documentation: &internal.Documentation{},
+						Name: "foo",
 					},
+					Documentation: &internal.Documentation{},
 				},
 			},
 		},
@@ -560,10 +560,10 @@ var moduleDocTest = &testModule{
 					},
 					Package: &internal.Package{
 						Name: "permalink",
-						Documentation: &internal.Documentation{
-							Synopsis: "Package permalink is for testing the heading permalink documentation rendering feature.",
-							HTML:     html("<h3 id=\"hdr-This_is_a_heading\">This is a heading<a href=\"#hdr-This_is_a_heading\">¶</a></h3>"),
-						},
+					},
+					Documentation: &internal.Documentation{
+						Synopsis: "Package permalink is for testing the heading permalink documentation rendering feature.",
+						HTML:     html("<h3 id=\"hdr-This_is_a_heading\">This is a heading<a href=\"#hdr-This_is_a_heading\">¶</a></h3>"),
 					},
 				},
 			},
@@ -598,10 +598,10 @@ var moduleDocTooLarge = &testModule{
 					},
 					Package: &internal.Package{
 						Name: "bigdoc",
-						Documentation: &internal.Documentation{
-							Synopsis: "This documentation is big.",
-							HTML:     html(docTooLargeReplacement),
-						},
+					},
+					Documentation: &internal.Documentation{
+						Synopsis: "This documentation is big.",
+						HTML:     html(docTooLargeReplacement),
 					},
 				},
 			},
@@ -658,11 +658,11 @@ var moduleWasm = &testModule{
 					},
 					Package: &internal.Package{
 						Name: "js",
-						Documentation: &internal.Documentation{
-							Synopsis: "Package js only works with wasm.",
-							GOOS:     "js",
-							GOARCH:   "wasm",
-						},
+					},
+					Documentation: &internal.Documentation{
+						Synopsis: "Package js only works with wasm.",
+						GOOS:     "js",
+						GOARCH:   "wasm",
 					},
 				},
 			},
@@ -716,9 +716,9 @@ var moduleStd = &testModule{
 					},
 					Package: &internal.Package{
 						Name: "builtin",
-						Documentation: &internal.Documentation{
-							Synopsis: "Package builtin provides documentation for Go's predeclared identifiers.",
-						},
+					},
+					Documentation: &internal.Documentation{
+						Synopsis: "Package builtin provides documentation for Go's predeclared identifiers.",
 					},
 				},
 				{
@@ -736,9 +736,9 @@ var moduleStd = &testModule{
 					},
 					Package: &internal.Package{
 						Name: "main",
-						Documentation: &internal.Documentation{
-							Synopsis: "Pprof interprets and displays profiles of Go programs.",
-						},
+					},
+					Documentation: &internal.Documentation{
+						Synopsis: "Pprof interprets and displays profiles of Go programs.",
 					},
 					Imports: []string{
 						"cmd/internal/objfile",
@@ -766,9 +766,9 @@ var moduleStd = &testModule{
 					},
 					Package: &internal.Package{
 						Name: "context",
-						Documentation: &internal.Documentation{
-							Synopsis: "Package context defines the Context type, which carries deadlines, cancelation signals, and other request-scoped values across API boundaries and between processes.",
-						},
+					},
+					Documentation: &internal.Documentation{
+						Synopsis: "Package context defines the Context type, which carries deadlines, cancelation signals, and other request-scoped values across API boundaries and between processes.",
 					},
 					Imports: []string{"errors", "fmt", "reflect", "sync", "time"},
 				},
@@ -783,9 +783,9 @@ var moduleStd = &testModule{
 					},
 					Package: &internal.Package{
 						Name: "json",
-						Documentation: &internal.Documentation{
-							Synopsis: "Package json implements encoding and decoding of JSON as defined in RFC 7159.",
-						},
+					},
+					Documentation: &internal.Documentation{
+						Synopsis: "Package json implements encoding and decoding of JSON as defined in RFC 7159.",
 					},
 					Imports: []string{
 						"bytes",
@@ -811,9 +811,9 @@ var moduleStd = &testModule{
 					},
 					Package: &internal.Package{
 						Name: "errors",
-						Documentation: &internal.Documentation{
-							Synopsis: "Package errors implements functions to manipulate errors.",
-						},
+					},
+					Documentation: &internal.Documentation{
+						Synopsis: "Package errors implements functions to manipulate errors.",
 					},
 				},
 				{
@@ -823,9 +823,9 @@ var moduleStd = &testModule{
 					Imports: []string{"errors", "fmt", "io", "os", "reflect", "sort", "strconv", "strings", "time"},
 					Package: &internal.Package{
 						Name: "flag",
-						Documentation: &internal.Documentation{
-							Synopsis: "Package flag implements command-line flag parsing.",
-						},
+					},
+					Documentation: &internal.Documentation{
+						Synopsis: "Package flag implements command-line flag parsing.",
 					},
 				},
 			},
@@ -863,9 +863,9 @@ var moduleMaster = &testModule{
 					},
 					Package: &internal.Package{
 						Name: "foo",
-						Documentation: &internal.Documentation{
-							Synopsis: "package foo exports a helpful constant.",
-						},
+					},
+					Documentation: &internal.Documentation{
+						Synopsis: "package foo exports a helpful constant.",
 					},
 				},
 			},
@@ -903,9 +903,9 @@ var moduleLatest = &testModule{
 					},
 					Package: &internal.Package{
 						Name: "foo",
-						Documentation: &internal.Documentation{
-							Synopsis: "package foo exports a helpful constant.",
-						},
+					},
+					Documentation: &internal.Documentation{
+						Synopsis: "package foo exports a helpful constant.",
 					},
 				},
 			},
@@ -957,10 +957,10 @@ package example_test
 						},
 						Package: &internal.Package{
 							Name: "example",
-							Documentation: &internal.Documentation{
-								Synopsis: "Package example contains examples.",
-								HTML:     docHTML,
-							},
+						},
+						Documentation: &internal.Documentation{
+							Synopsis: "Package example contains examples.",
+							HTML:     docHTML,
 						},
 					},
 				},

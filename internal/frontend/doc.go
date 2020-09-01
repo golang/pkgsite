@@ -28,11 +28,10 @@ func fetchDocumentationDetails(ctx context.Context, ds internal.DataSource, um *
 	if err != nil {
 		return nil, err
 	}
-	doc := u.Package.Documentation
 	return &DocumentationDetails{
-		GOOS:          doc.GOOS,
-		GOARCH:        doc.GOARCH,
-		Documentation: doc.HTML,
+		GOOS:          u.Documentation.GOOS,
+		GOARCH:        u.Documentation.GOARCH,
+		Documentation: u.Documentation.HTML,
 	}, nil
 }
 

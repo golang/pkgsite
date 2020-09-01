@@ -146,9 +146,8 @@ func PackageMetaFromLegacyPackage(pkg *LegacyPackage) *PackageMeta {
 // header. A Package is part of a directory.
 // It will replace LegacyPackage once everything has been migrated.
 type Package struct {
-	Name          string
-	Path          string
-	Documentation *Documentation
+	Name string
+	Path string
 }
 
 // IndexVersion holds the version information returned by the module index.

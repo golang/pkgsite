@@ -431,14 +431,12 @@ func insertUnits(ctx context.Context, db *database.DB, m *internal.Module, modul
 		if d.Readme != nil {
 			pathToReadme[d.Path] = d.Readme
 		}
-		if d.Package != nil {
-			if d.Package.Documentation != nil && d.Package.Documentation.HTML.String() == internal.StringFieldMissing {
-				return errors.New("saveModule: package missing Documentation.HTML")
-			}
-			pathToDoc[d.Path] = d.Package.Documentation
-			if len(d.Imports) > 0 {
-				pathToImports[d.Path] = d.Imports
-			}
+		if d.Documentation != nil && d.Documentation.HTML.String() == internal.StringFieldMissing {
+			return errors.New("saveModule: package missing Documentation.HTML")
+		}
+		pathToDoc[d.Path] = d.Documentation
+		if len(d.Imports) > 0 {
+			pathToImports[d.Path] = d.Imports
 		}
 	}
 

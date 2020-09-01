@@ -198,7 +198,9 @@ func Module(modulePath, version string, suffixes ...string) *internal.Module {
 			AddPackage(m, lp)
 		} else {
 			m.LegacyPackages = append(m.LegacyPackages, lp)
-			m.Units[0].Package = UnitForPackage(lp, modulePath, version).Package
+			u := UnitForPackage(lp, modulePath, version)
+			m.Units[0].Package = u.Package
+			m.Units[0].Documentation = u.Documentation
 		}
 	}
 	return m
@@ -277,15 +279,15 @@ func UnitForPackage(pkg *internal.LegacyPackage, modulePath, version string) *in
 		UnitMeta:        *UnitMeta(pkg.Path, modulePath, version, pkg.Name, pkg.IsRedistributable),
 		Imports:         pkg.Imports,
 		LicenseContents: Licenses,
+		Documentation: &internal.Documentation{
+			Synopsis: pkg.Synopsis,
+			HTML:     pkg.DocumentationHTML,
+			GOOS:     pkg.GOOS,
+			GOARCH:   pkg.GOARCH,
+		},
 		Package: &internal.Package{
 			Name: pkg.Name,
 			Path: pkg.Path,
-			Documentation: &internal.Documentation{
-				Synopsis: pkg.Synopsis,
-				HTML:     pkg.DocumentationHTML,
-				GOOS:     pkg.GOOS,
-				GOARCH:   pkg.GOARCH,
-			},
 		},
 	}
 }
