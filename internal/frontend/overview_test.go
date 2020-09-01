@@ -68,11 +68,13 @@ func TestPackageOverviewDetails(t *testing.T) {
 		{
 			name: "redistributable",
 			dir: &internal.Unit{
-				DirectoryMeta: internal.DirectoryMeta{
-					ModuleInfo:        *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
-					Path:              "github.com/u/m/p",
-					IsRedistributable: true,
-				},
+				PathInfo: *sample.PathInfo(
+					"github.com/u/m/p",
+					"github.com/u/m",
+					"v1.2.3",
+					"",
+					true,
+				),
 				Readme: &internal.Readme{
 					Filepath: "README.md",
 					Contents: "readme",
@@ -92,11 +94,13 @@ func TestPackageOverviewDetails(t *testing.T) {
 		{
 			name: "unversioned",
 			dir: &internal.Unit{
-				DirectoryMeta: internal.DirectoryMeta{
-					ModuleInfo:        *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
-					Path:              "github.com/u/m/p",
-					IsRedistributable: true,
-				},
+				PathInfo: *sample.PathInfo(
+					"github.com/u/m/p",
+					"github.com/u/m",
+					"v1.2.3",
+					"",
+					true,
+				),
 				Readme: &internal.Readme{
 					Filepath: "README.md",
 					Contents: "readme",
@@ -116,11 +120,13 @@ func TestPackageOverviewDetails(t *testing.T) {
 		{
 			name: "non-redistributable",
 			dir: &internal.Unit{
-				DirectoryMeta: internal.DirectoryMeta{
-					ModuleInfo:        *sample.ModuleInfo("github.com/u/m", "v1.2.3"),
-					Path:              "github.com/u/m/p",
-					IsRedistributable: false,
-				},
+				PathInfo: *sample.PathInfo(
+					"github.com/u/m/p",
+					"github.com/u/m",
+					"v1.2.3",
+					"",
+					false,
+				),
 			},
 			versionedLinks: true,
 			want: &OverviewDetails{
@@ -146,7 +152,10 @@ func TestPackageOverviewDetails(t *testing.T) {
 			if err := testDB.InsertModule(ctx, m); err != nil {
 				t.Fatal(err)
 			}
-			got, err := fetchPackageOverviewDetails(ctx, testDB, &test.dir.DirectoryMeta, test.versionedLinks)
+			dmeta := sample.DirectoryMeta(test.dir.ModulePath,
+				internal.Suffix(test.dir.Path, test.dir.ModulePath), test.dir.Version)
+			dmeta.IsRedistributable = test.want.Redistributable
+			got, err := fetchPackageOverviewDetails(ctx, testDB, dmeta, test.versionedLinks)
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -56,7 +56,7 @@ func TestGetPathInfo(t *testing.T) {
 		}
 		for d := pkgPath; d != "." && len(d) >= len(testModule.module); d = path.Dir(d) {
 			dir := &internal.Unit{
-				DirectoryMeta: internal.DirectoryMeta{
+				PathInfo: internal.PathInfo{
 					Path:     d,
 					Licenses: sample.LicenseMetadata,
 				},
@@ -203,13 +203,13 @@ func TestGetPathInfo(t *testing.T) {
 				test.want.Name,
 				test.want.IsRedistributable,
 			)
+			test.want.CommitTime = sample.CommitTime
 			got, err := testDB.GetPathInfo(ctx, test.path, test.module, test.version)
 			if err != nil {
 				t.Fatal(err)
 			}
 			opts := []cmp.Option{
 				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
-				cmpopts.IgnoreFields(internal.PathInfo{}, "CommitTime"),
 				cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
 			}
 			if diff := cmp.Diff(test.want, got, opts...); diff != "" {

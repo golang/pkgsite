@@ -44,7 +44,7 @@ func (pi *PathInfo) IsModule() bool {
 // none of the above: a directory within a module that has no .go files, but
 // contains other units, licenses and/or READMEs."
 type Unit struct {
-	DirectoryMeta
+	PathInfo
 	Readme  *Readme
 	Package *Package
 	Imports []string

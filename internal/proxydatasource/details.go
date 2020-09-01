@@ -31,7 +31,15 @@ func (ds *DataSource) GetDirectoryMeta(ctx context.Context, fullPath, modulePath
 	if err != nil {
 		return nil, err
 	}
-	return &d.DirectoryMeta, nil
+	return &internal.DirectoryMeta{
+		ModuleInfo: internal.ModuleInfo{
+			ModulePath: d.ModulePath,
+		},
+		Path:              d.Path,
+		IsRedistributable: d.IsRedistributable,
+		Licenses:          d.Licenses,
+		Name:              d.Name,
+	}, nil
 }
 
 // GetLicenses return licenses at path for the given module path and version.

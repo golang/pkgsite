@@ -58,7 +58,15 @@ func cleanFetchResult(fr *FetchResult, detector *licenses.Detector) *FetchResult
 
 	shouldSetPVS := (fr.PackageVersionStates == nil)
 	for _, dir := range fr.Module.Units {
+		dir.PathInfo = internal.PathInfo{
+			ModulePath:        fr.Module.ModulePath,
+			Version:           fr.Module.Version,
+			Path:              dir.Path,
+			IsRedistributable: dir.IsRedistributable,
+			Licenses:          dir.Licenses,
+		}
 		if dir.Package != nil {
+			dir.Name = dir.Package.Name
 			if dir.Package.Documentation.GOOS == "" {
 				dir.Package.Documentation.GOOS = "linux"
 				dir.Package.Documentation.GOARCH = "amd64"

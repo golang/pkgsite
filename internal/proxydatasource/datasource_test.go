@@ -376,6 +376,7 @@ func TestDataSource_GetPathInfo(t *testing.T) {
 			version:    "v1.1.0",
 			want: &internal.PathInfo{
 				ModulePath:        "foo.com/bar",
+				Name:              "baz",
 				Version:           "v1.1.0",
 				IsRedistributable: true,
 			},
@@ -386,6 +387,7 @@ func TestDataSource_GetPathInfo(t *testing.T) {
 			version:    "v1.1.0",
 			want: &internal.PathInfo{
 				ModulePath:        "foo.com/bar",
+				Name:              "baz",
 				Version:           "v1.1.0",
 				IsRedistributable: true,
 			},
@@ -396,6 +398,7 @@ func TestDataSource_GetPathInfo(t *testing.T) {
 			version:    internal.LatestVersion,
 			want: &internal.PathInfo{
 				ModulePath:        "foo.com/bar",
+				Name:              "baz",
 				Version:           "v1.2.0",
 				IsRedistributable: true,
 			},

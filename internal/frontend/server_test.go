@@ -175,6 +175,12 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 			for _, p := range ps {
 				sample.AddPackage(m, p)
 			}
+			for _, u := range m.Units {
+				if !mod.redistributable {
+					u.IsRedistributable = false
+					u.Licenses = nil
+				}
+			}
 			if err := testDB.InsertModule(ctx, m); err != nil {
 				t.Fatal(err)
 			}

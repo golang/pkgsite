@@ -52,12 +52,11 @@ func fetchOverviewDetails(ctx context.Context, ds internal.DataSource, dmeta *in
 	if err != nil {
 		return nil, err
 	}
-	u.DirectoryMeta = *dmeta
 	var readme *internal.Readme
 	if u.Readme != nil {
 		readme = &internal.Readme{Filepath: u.Readme.Filepath, Contents: u.Readme.Contents}
 	}
-	return constructOverviewDetails(ctx, &u.ModuleInfo, readme, u.IsRedistributable, versionedLinks)
+	return constructOverviewDetails(ctx, &dmeta.ModuleInfo, readme, u.IsRedistributable, versionedLinks)
 }
 
 // constructOverviewDetails uses the given module version and readme to

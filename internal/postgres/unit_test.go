@@ -276,13 +276,6 @@ func TestGetUnit(t *testing.T) {
 			want:       unit("archive/zip", stdlib.ModulePath, "v1.13.4", nil, newPackage("zip", "archive/zip")),
 		},
 		{
-			name:            "stdlib package - incomplete last element",
-			path:            "archive/zi",
-			modulePath:      stdlib.ModulePath,
-			version:         "v1.13.4",
-			wantNotFoundErr: true,
-		},
-		{
 			name:       "stdlib - internal directory",
 			path:       "cmd/internal",
 			modulePath: stdlib.ModulePath,
@@ -313,14 +306,13 @@ func TestGetUnit(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			pathInfo := &internal.PathInfo{
-				Path:       test.path,
-				ModulePath: test.modulePath,
-				Version:    test.version,
-			}
-			if test.want != nil {
-				pathInfo.Name = test.want.Name
-			}
+			pathInfo := sample.PathInfo(
+				test.path,
+				test.modulePath,
+				test.version,
+				test.want.Name,
+				true,
+			)
 			got, err := testDB.GetUnit(ctx, pathInfo, internal.AllFields)
 			if test.wantNotFoundErr {
 				if !errors.Is(err, derrors.NotFound) {
@@ -346,6 +338,7 @@ func TestGetUnit(t *testing.T) {
 			if test.want.Package != nil {
 				test.want.Imports = sample.Imports
 			}
+			test.want.SourceInfo = pathInfo.SourceInfo
 			if diff := cmp.Diff(test.want, got, opts...); diff != "" {
 				t.Errorf("mismatch (-want, +got):\n%s", diff)
 			}
@@ -367,19 +360,11 @@ func TestGetUnitFieldSet(t *testing.T) {
 
 	cleanFields := func(u *internal.Unit, fields internal.FieldSet) {
 		// Remove fields based on the FieldSet specified.
-		u.DirectoryMeta = internal.DirectoryMeta{
-			Path:              u.Path,
-			IsRedistributable: true,
-			ModuleInfo: internal.ModuleInfo{
-				ModulePath: u.ModulePath,
-				Version:    u.Version,
-			},
-		}
 		if fields&internal.WithImports != 0 {
 			u.Imports = sample.Imports
 		}
 		if u.Package != nil {
-			u.Package.Name = ""
+			u.Package.Name = u.Name
 		}
 	}
 
@@ -411,12 +396,13 @@ func TestGetUnitFieldSet(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			pathInfo := &internal.PathInfo{
-				Path:              test.want.Path,
-				ModulePath:        test.want.ModulePath,
-				Version:           test.want.Version,
-				IsRedistributable: test.want.IsRedistributable,
-			}
+			pathInfo := sample.PathInfo(
+				test.want.Path,
+				test.want.ModulePath,
+				test.want.Version,
+				test.want.Name,
+				true,
+			)
 			got, err := testDB.GetUnit(ctx, pathInfo, test.fields)
 			if err != nil {
 				t.Fatal(err)
@@ -427,6 +413,7 @@ func TestGetUnitFieldSet(t *testing.T) {
 				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 				cmpopts.IgnoreFields(internal.DirectoryMeta{}, "PathID"),
 			}
+			test.want.SourceInfo = pathInfo.SourceInfo
 			cleanFields(test.want, test.fields)
 			if diff := cmp.Diff(test.want, got, opts...); diff != "" {
 				t.Errorf("mismatch (-want, +got):\n%s", diff)
@@ -437,8 +424,9 @@ func TestGetUnitFieldSet(t *testing.T) {
 
 func unit(path, modulePath, version string, readme *internal.Readme, pkg *internal.Package) *internal.Unit {
 	u := &internal.Unit{
-		DirectoryMeta: internal.DirectoryMeta{
-			ModuleInfo:        *sample.ModuleInfo(modulePath, version),
+		PathInfo: internal.PathInfo{
+			ModulePath:        modulePath,
+			Version:           version,
 			Path:              path,
 			IsRedistributable: true,
 			Licenses:          sample.LicenseMetadata,
@@ -512,7 +500,6 @@ func TestGetUnitBypass(t *testing.T) {
 
 func findDirectory(m *internal.Module, path string) *internal.Unit {
 	for _, d := range m.Units {
-		d.ModuleInfo = m.ModuleInfo
 		if d.Path == path {
 			return d
 		}

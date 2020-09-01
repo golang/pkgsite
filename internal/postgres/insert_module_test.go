@@ -41,7 +41,7 @@ func TestInsertModule(t *testing.T) {
 		},
 		{
 			name:   "valid test with internal package",
-			module: sample.Module(sample.ModulePath, sample.VersionString, "internal/ffoo"),
+			module: sample.Module(sample.ModulePath, sample.VersionString, "internal/foo"),
 		},
 		{
 			name: "valid test with go.mod missing",
@@ -77,7 +77,6 @@ func TestInsertModule(t *testing.T) {
 			if err := testDB.InsertModule(ctx, test.module); err != nil {
 				t.Fatal(err)
 			}
-
 			checkModule(ctx, t, test.module)
 		})
 	}
@@ -111,12 +110,7 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 	}
 
 	for _, dir := range want.Units {
-		pathInfo := &internal.PathInfo{
-			Path:       dir.Path,
-			ModulePath: want.ModulePath,
-			Version:    want.Version,
-		}
-		got, err := testDB.GetUnit(ctx, pathInfo, internal.AllFields)
+		got, err := testDB.GetUnit(ctx, &dir.PathInfo, internal.AllFields)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -126,7 +120,6 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 			Filepath: sample.ReadmeFilePath,
 			Contents: sample.ReadmeContents,
 		}
-		dir.ModuleInfo = want.ModuleInfo
 		if dir.Package != nil {
 			dir.Name = dir.Package.Name
 		}
@@ -134,12 +127,11 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 		opts := cmp.Options{
 			cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeFilePath"),
 			cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeContents"),
-			cmpopts.IgnoreFields(internal.DirectoryMeta{}, "PathID"),
 			cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 			cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
 		}
 		if diff := cmp.Diff(wantd, got, opts); diff != "" {
-			t.Errorf("testDB.getDirectory(%q, %q) mismatch (-want +got):\n%s", dir.Path, want.Version, diff)
+			t.Errorf("mismatch (-want +got):\n%s", diff)
 		}
 	}
 }
@@ -240,7 +232,6 @@ func TestUpsertModule(t *testing.T) {
 	if err := testDB.InsertModule(ctx, m); err != nil {
 		t.Fatal(err)
 	}
-
 	// The changes should have been saved.
 	checkModule(ctx, t, m)
 }

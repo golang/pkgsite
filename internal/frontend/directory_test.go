@@ -156,8 +156,7 @@ func TestFetchDirectoryDetails(t *testing.T) {
 				err error
 			)
 			t.Run("use-directories", func(t *testing.T) {
-				dmeta := sample.DirectoryMeta(tc.modulePath, internal.Suffix(tc.modulePath, tc.dirPath))
-				dmeta.ModuleInfo = *mi
+				dmeta := sample.DirectoryMeta(tc.modulePath, internal.Suffix(tc.modulePath, tc.dirPath), tc.version)
 				got, err = fetchDirectoryDetails(ctx, testDB, dmeta, tc.includeDirPath)
 			})
 			t.Run("legacy", func(t *testing.T) {

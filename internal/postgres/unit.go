@@ -91,17 +91,7 @@ func (db *DB) GetUnit(ctx context.Context, pi *internal.PathInfo, fields interna
 		return nil, err
 	}
 
-	u := &internal.Unit{
-		DirectoryMeta: internal.DirectoryMeta{
-			Path:              pi.Path,
-			PathID:            pathID,
-			IsRedistributable: pi.IsRedistributable,
-			ModuleInfo: internal.ModuleInfo{
-				ModulePath: pi.ModulePath,
-				Version:    pi.Version,
-			},
-		},
-	}
+	u := &internal.Unit{PathInfo: *pi}
 	if fields&internal.WithReadme != 0 {
 		readme, err := db.getReadme(ctx, u.ModulePath, u.Version)
 		if err != nil && !errors.Is(err, derrors.NotFound) {
@@ -110,19 +100,20 @@ func (db *DB) GetUnit(ctx context.Context, pi *internal.PathInfo, fields interna
 		u.Readme = readme
 	}
 	if fields&internal.WithDocumentation != 0 {
-		doc, err := db.getDocumentation(ctx, u.PathID)
+		doc, err := db.getDocumentation(ctx, pathID)
 		if err != nil && !errors.Is(err, derrors.NotFound) {
 			return nil, err
 		}
 		if doc != nil {
 			u.Package = &internal.Package{
 				Path:          u.Path,
+				Name:          u.Name,
 				Documentation: doc,
 			}
 		}
 	}
 	if fields&internal.WithImports != 0 {
-		imports, err := db.getImports(ctx, u.PathID)
+		imports, err := db.getImports(ctx, pathID)
 		if err != nil {
 			return nil, err
 		}
@@ -131,16 +122,13 @@ func (db *DB) GetUnit(ctx context.Context, pi *internal.PathInfo, fields interna
 		}
 	}
 	if fields == internal.AllFields {
-		dmeta, err := db.GetDirectoryMeta(ctx, pi.Path, pi.ModulePath, pi.Version)
-		if err != nil {
-			return nil, err
-		}
-		u.DirectoryMeta = *dmeta
 		if u.Name != "" {
 			if u.Package == nil {
-				u.Package = &internal.Package{Path: u.Path}
+				u.Package = &internal.Package{
+					Path: u.Path,
+				}
 			}
-			u.Package.Name = dmeta.Name
+			u.Package.Name = u.Name
 		}
 	}
 	if !db.bypassLicenseCheck {

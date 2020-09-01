@@ -14,7 +14,7 @@ import (
 
 // moduleUnits returns all of the units in a given module, along
 // with the contents for those units.
-func moduleUnits(modulePath string,
+func moduleUnits(modulePath, version string,
 	pkgs []*internal.LegacyPackage,
 	readmes []*internal.Readme,
 	d *licenses.Detector) []*internal.Unit {
@@ -47,7 +47,9 @@ func moduleUnits(modulePath string,
 			meta = append(meta, l.Metadata)
 		}
 		dir := &internal.Unit{
-			DirectoryMeta: internal.DirectoryMeta{
+			PathInfo: internal.PathInfo{
+				ModulePath:        modulePath,
+				Version:           version,
 				Path:              dirPath,
 				IsRedistributable: isRedist,
 				Licenses:          meta,
@@ -57,6 +59,7 @@ func moduleUnits(modulePath string,
 			dir.Readme = r
 		}
 		if pkg, ok := pkgLookup[dirPath]; ok {
+			dir.Name = pkg.Name
 			dir.Package = &internal.Package{
 				Path: pkg.Path,
 				Name: pkg.Name,
