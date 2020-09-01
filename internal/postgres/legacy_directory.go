@@ -17,64 +17,6 @@ import (
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
-// GetDirectoryMeta information about a directory from the database.
-func (db *DB) GetDirectoryMeta(ctx context.Context, path, modulePath, version string) (_ *internal.DirectoryMeta, err error) {
-	defer derrors.Wrap(&err, "GetDirectoryMeta(ctx, %q, %q, %q)", path, modulePath, version)
-	query := `
-		SELECT
-			m.module_path,
-			m.version,
-			m.commit_time,
-			m.redistributable,
-			m.has_go_mod,
-			m.source_info,
-			p.id,
-			p.path,
-			p.name,
-			p.redistributable,
-			p.license_types,
-			p.license_paths
-		FROM modules m
-		INNER JOIN paths p
-		ON p.module_id = m.id
-		WHERE
-			p.path = $1
-			AND m.module_path = $2
-			AND m.version = $3;`
-	var (
-		mi                         internal.ModuleInfo
-		dir                        internal.DirectoryMeta
-		licenseTypes, licensePaths []string
-	)
-	row := db.db.QueryRow(ctx, query, path, modulePath, version)
-	if err := row.Scan(
-		&mi.ModulePath,
-		&mi.Version,
-		&mi.CommitTime,
-		&mi.IsRedistributable,
-		&mi.HasGoMod,
-		jsonbScanner{&mi.SourceInfo},
-		&dir.PathID,
-		&dir.Path,
-		database.NullIsEmpty(&dir.Name),
-		&dir.IsRedistributable,
-		pq.Array(&licenseTypes),
-		pq.Array(&licensePaths),
-	); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("unit %s@%s: %w", path, version, derrors.NotFound)
-		}
-		return nil, fmt.Errorf("row.Scan(): %v", err)
-	}
-	lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
-	if err != nil {
-		return nil, err
-	}
-	dir.ModuleInfo = mi
-	dir.Licenses = lics
-	return &dir, err
-}
-
 // LegacyGetDirectory returns the directory corresponding to the provided dirPath,
 // modulePath, and version. The directory will contain all packages for that
 // version, in sorted order by package path.

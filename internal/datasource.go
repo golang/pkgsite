@@ -26,8 +26,6 @@ type DataSource interface {
 	// TODO(golang/go#39629): Deprecate these methods by moving the logic
 	// behind GetUnit.
 	//
-	// GetDirectoryMeta returns information about a directory.
-	GetDirectoryMeta(ctx context.Context, dirPath, modulePath, version string) (_ *DirectoryMeta, err error)
 	// GetLicenses returns licenses at the given path for given modulePath and version.
 	GetLicenses(ctx context.Context, fullPath, modulePath, resolvedVersion string) ([]*licenses.License, error)
 

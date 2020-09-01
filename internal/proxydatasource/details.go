@@ -24,24 +24,6 @@ func (ds *DataSource) GetUnit(ctx context.Context, pi *internal.PathInfo, field 
 	return ds.getUnit(ctx, pi.Path, pi.ModulePath, pi.Version)
 }
 
-// GetDirectoryMeta returns information about a directory at a path.
-func (ds *DataSource) GetDirectoryMeta(ctx context.Context, fullPath, modulePath, version string) (_ *internal.DirectoryMeta, err error) {
-	defer derrors.Wrap(&err, "GetDirectoryMeta(%q, %q, %q)", fullPath, modulePath, version)
-	d, err := ds.getUnit(ctx, fullPath, modulePath, version)
-	if err != nil {
-		return nil, err
-	}
-	return &internal.DirectoryMeta{
-		ModuleInfo: internal.ModuleInfo{
-			ModulePath: d.ModulePath,
-		},
-		Path:              d.Path,
-		IsRedistributable: d.IsRedistributable,
-		Licenses:          d.Licenses,
-		Name:              d.Name,
-	}, nil
-}
-
 // GetLicenses return licenses at path for the given module path and version.
 func (ds *DataSource) GetLicenses(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ []*licenses.License, err error) {
 	defer derrors.Wrap(&err, "GetLicenses(%q, %q, %q)", fullPath, modulePath, resolvedVersion)
