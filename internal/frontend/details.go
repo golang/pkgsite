@@ -127,7 +127,7 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 
 	urlInfo.resolvedVersion = urlInfo.requestedVersion
 	if experiment.IsActive(ctx, internal.ExperimentUsePathInfo) {
-		pi, err := ds.GetUnitMeta(ctx, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion)
+		um, err := ds.GetUnitMeta(ctx, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion)
 		if err != nil {
 			if !errors.Is(err, derrors.NotFound) {
 				return err
@@ -138,8 +138,8 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 			}
 			return s.servePathNotFoundPage(w, r, ds, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion, pathType)
 		}
-		urlInfo.modulePath = pi.ModulePath
-		urlInfo.resolvedVersion = pi.Version
+		urlInfo.modulePath = um.ModulePath
+		urlInfo.resolvedVersion = um.Version
 
 		if isActivePathAtMaster(ctx) && urlInfo.requestedVersion == internal.MasterVersion {
 			// Since path@master is a moving target, we don't want it to be stale.
@@ -158,7 +158,7 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 			}()
 		}
 		if isActiveUseUnits(ctx) {
-			return s.serveDetailsPage(w, r, ds, pi, urlInfo)
+			return s.serveDetailsPage(w, r, ds, um, urlInfo)
 		}
 	}
 	return s.legacyServeDetailsPage(w, r, ds, urlInfo)
@@ -166,16 +166,16 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 
 // serveDetailsPage serves a details page for a path using the paths,
 // modules, documentation, readmes, licenses, and package_imports tables.
-func (s *Server) serveDetailsPage(w http.ResponseWriter, r *http.Request, ds internal.DataSource, pi *internal.UnitMeta, info *urlPathInfo) (err error) {
+func (s *Server) serveDetailsPage(w http.ResponseWriter, r *http.Request, ds internal.DataSource, um *internal.UnitMeta, info *urlPathInfo) (err error) {
 	defer derrors.Wrap(&err, "serveDetailsPage(w, r, %v)", info)
 	ctx := r.Context()
 	switch {
 	case info.isModule:
-		return s.serveModulePage(ctx, w, r, ds, pi, info.requestedVersion)
-	case pi.Name != "":
-		return s.servePackagePage(ctx, w, r, ds, pi, info.requestedVersion)
+		return s.serveModulePage(ctx, w, r, ds, um, info.requestedVersion)
+	case um.Name != "":
+		return s.servePackagePage(ctx, w, r, ds, um, info.requestedVersion)
 	default:
-		return s.serveDirectoryPage(ctx, w, r, ds, pi, info.requestedVersion)
+		return s.serveDirectoryPage(ctx, w, r, ds, um, info.requestedVersion)
 	}
 }
 

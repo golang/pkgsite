@@ -41,8 +41,8 @@ type Directory struct {
 // serveDirectoryPage serves a directory view for a directory in a module
 // version.
 func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, r *http.Request, ds internal.DataSource,
-	pi *internal.UnitMeta, requestedVersion string) (err error) {
-	defer derrors.Wrap(&err, "serveDirectoryPage for %s@%s", pi.Path, requestedVersion)
+	um *internal.UnitMeta, requestedVersion string) (err error) {
+	defer derrors.Wrap(&err, "serveDirectoryPage for %s@%s", um.Path, requestedVersion)
 	tab := r.FormValue("tab")
 	settings, ok := directoryTabLookup[tab]
 	if tab == "" || !ok || settings.Disabled {
@@ -50,31 +50,31 @@ func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, 
 		settings = directoryTabLookup[tab]
 	}
 	mi := &internal.ModuleInfo{
-		ModulePath:        pi.ModulePath,
-		Version:           pi.Version,
-		CommitTime:        pi.CommitTime,
-		IsRedistributable: pi.IsRedistributable,
+		ModulePath:        um.ModulePath,
+		Version:           um.Version,
+		CommitTime:        um.CommitTime,
+		IsRedistributable: um.IsRedistributable,
 	}
-	header := createDirectoryHeader(pi.Path, mi, pi.Licenses)
+	header := createDirectoryHeader(um.Path, mi, um.Licenses)
 	if requestedVersion == internal.LatestVersion {
-		header.URL = constructDirectoryURL(pi.Path, pi.ModulePath, internal.LatestVersion)
+		header.URL = constructDirectoryURL(um.Path, um.ModulePath, internal.LatestVersion)
 	}
-	details, err := fetchDetailsForDirectory(r, tab, ds, pi)
+	details, err := fetchDetailsForDirectory(r, tab, ds, um)
 	if err != nil {
 		return err
 	}
-	linkver := linkVersion(pi.Version, pi.ModulePath)
+	linkver := linkVersion(um.Version, um.ModulePath)
 	page := &DetailsPage{
-		basePage:         s.newBasePage(r, fmt.Sprintf("%s directory", pi.Path)),
-		Name:             pi.Path,
+		basePage:         s.newBasePage(r, fmt.Sprintf("%s directory", um.Path)),
+		Name:             um.Path,
 		Settings:         settings,
 		Header:           header,
-		Breadcrumb:       breadcrumbPath(pi.Path, pi.ModulePath, linkver),
+		Breadcrumb:       breadcrumbPath(um.Path, um.ModulePath, linkver),
 		Details:          details,
 		CanShowDetails:   true,
 		Tabs:             directoryTabSettings,
 		PageType:         pageTypeDirectory,
-		CanonicalURLPath: constructPackageURL(pi.Path, pi.ModulePath, linkver),
+		CanonicalURLPath: constructPackageURL(um.Path, um.ModulePath, linkver),
 	}
 	s.servePage(ctx, w, settings.TemplateName, page)
 	return nil
@@ -90,32 +90,32 @@ func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, 
 // the module path. However, on the package and directory view's
 // "Subdirectories" tab, we do not want to include packages whose import paths
 // are the same as the dirPath.
-func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, pi *internal.UnitMeta, includeDirPath bool) (_ *Directory, err error) {
+func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, includeDirPath bool) (_ *Directory, err error) {
 	defer derrors.Wrap(&err, "fetchDirectoryDetails(%q, %q, %q, %v)",
-		pi.Path, pi.ModulePath, pi.Version, pi.Licenses)
+		um.Path, um.ModulePath, um.Version, um.Licenses)
 
 	db, ok := ds.(*postgres.DB)
 	if !ok {
 		return nil, proxydatasourceNotSupportedErr()
 	}
-	if includeDirPath && pi.Path != pi.ModulePath && pi.Path != stdlib.ModulePath {
+	if includeDirPath && um.Path != um.ModulePath && um.Path != stdlib.ModulePath {
 		return nil, fmt.Errorf("includeDirPath can only be set to true if dirPath = modulePath: %w", derrors.InvalidArgument)
 	}
-	packages, err := db.GetPackagesInUnit(ctx, pi.Path, pi.ModulePath, pi.Version)
+	packages, err := db.GetPackagesInUnit(ctx, um.Path, um.ModulePath, um.Version)
 	mi := &internal.ModuleInfo{
-		ModulePath:        pi.ModulePath,
-		Version:           pi.Version,
-		CommitTime:        pi.CommitTime,
-		IsRedistributable: pi.IsRedistributable,
+		ModulePath:        um.ModulePath,
+		Version:           um.Version,
+		CommitTime:        um.CommitTime,
+		IsRedistributable: um.IsRedistributable,
 	}
 	if err != nil {
 		if !errors.Is(err, derrors.NotFound) {
 			return nil, err
 		}
-		header := createDirectoryHeader(pi.Path, mi, pi.Licenses)
+		header := createDirectoryHeader(um.Path, mi, um.Licenses)
 		return &Directory{DirectoryHeader: *header}, nil
 	}
-	return createDirectory(pi.Path, mi, packages, pi.Licenses, includeDirPath)
+	return createDirectory(um.Path, mi, packages, um.Licenses, includeDirPath)
 }
 
 // createDirectory constructs a *Directory for the given dirPath.

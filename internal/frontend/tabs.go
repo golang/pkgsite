@@ -149,55 +149,55 @@ const (
 
 // fetchDetailsForPackage returns tab details by delegating to the correct detail
 // handler.
-func fetchDetailsForPackage(r *http.Request, tab string, ds internal.DataSource, pi *internal.UnitMeta) (interface{}, error) {
+func fetchDetailsForPackage(r *http.Request, tab string, ds internal.DataSource, um *internal.UnitMeta) (interface{}, error) {
 	ctx := r.Context()
 	switch tab {
 	case tabDoc:
-		return fetchDocumentationDetails(ctx, ds, pi)
+		return fetchDocumentationDetails(ctx, ds, um)
 	case tabOverview:
-		return fetchPackageOverviewDetails(ctx, ds, pi, urlIsVersioned(r.URL))
+		return fetchPackageOverviewDetails(ctx, ds, um, urlIsVersioned(r.URL))
 	case tabSubdirectories:
-		return fetchDirectoryDetails(ctx, ds, pi, false)
+		return fetchDirectoryDetails(ctx, ds, um, false)
 	case tabVersions:
-		return fetchVersionsDetails(ctx, ds, pi.Path, pi.ModulePath)
+		return fetchVersionsDetails(ctx, ds, um.Path, um.ModulePath)
 	case tabImports:
-		return fetchImportsDetails(ctx, ds, pi.Path, pi.ModulePath, pi.Version)
+		return fetchImportsDetails(ctx, ds, um.Path, um.ModulePath, um.Version)
 	case tabImportedBy:
-		return fetchImportedByDetails(ctx, ds, pi.Path, pi.ModulePath)
+		return fetchImportedByDetails(ctx, ds, um.Path, um.ModulePath)
 	case tabLicenses:
-		return fetchLicensesDetails(ctx, ds, pi.Path, pi.ModulePath, pi.Version)
+		return fetchLicensesDetails(ctx, ds, um.Path, um.ModulePath, um.Version)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
 
 // fetchDetailsForModule returns tab details by delegating to the correct detail
 // handler.
-func fetchDetailsForModule(r *http.Request, tab string, ds internal.DataSource, pi *internal.UnitMeta) (interface{}, error) {
+func fetchDetailsForModule(r *http.Request, tab string, ds internal.DataSource, um *internal.UnitMeta) (interface{}, error) {
 	ctx := r.Context()
 	switch tab {
 	case tabOverview:
-		return fetchOverviewDetails(ctx, ds, pi, urlIsVersioned(r.URL))
+		return fetchOverviewDetails(ctx, ds, um, urlIsVersioned(r.URL))
 	case "packages":
-		return fetchDirectoryDetails(ctx, ds, pi, true)
+		return fetchDirectoryDetails(ctx, ds, um, true)
 	case tabVersions:
-		return fetchModuleVersionsDetails(ctx, ds, pi.ModulePath)
+		return fetchModuleVersionsDetails(ctx, ds, um.ModulePath)
 	case tabLicenses:
-		return fetchLicensesDetails(ctx, ds, pi.Path, pi.ModulePath, pi.Version)
+		return fetchLicensesDetails(ctx, ds, um.Path, um.ModulePath, um.Version)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
 
 // fetchDetailsForDirectory returns tab details by delegating to the correct
 // detail handler.
-func fetchDetailsForDirectory(r *http.Request, tab string, ds internal.DataSource, pi *internal.UnitMeta) (interface{}, error) {
+func fetchDetailsForDirectory(r *http.Request, tab string, ds internal.DataSource, um *internal.UnitMeta) (interface{}, error) {
 	ctx := r.Context()
 	switch tab {
 	case tabOverview:
-		return fetchOverviewDetails(ctx, ds, pi, urlIsVersioned(r.URL))
+		return fetchOverviewDetails(ctx, ds, um, urlIsVersioned(r.URL))
 	case tabSubdirectories:
-		return fetchDirectoryDetails(ctx, ds, pi, false)
+		return fetchDirectoryDetails(ctx, ds, um, false)
 	case tabLicenses:
-		return fetchLicensesDetails(ctx, ds, pi.Path, pi.ModulePath, pi.Version)
+		return fetchLicensesDetails(ctx, ds, um.Path, um.ModulePath, um.Version)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }

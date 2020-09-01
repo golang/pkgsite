@@ -14,14 +14,14 @@ import (
 )
 
 func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *http.Request, ds internal.DataSource,
-	pi *internal.UnitMeta, requestedVersion string) error {
+	um *internal.UnitMeta, requestedVersion string) error {
 	mi := &internal.ModuleInfo{
-		ModulePath:        pi.ModulePath,
-		Version:           pi.Version,
-		CommitTime:        pi.CommitTime,
-		IsRedistributable: pi.IsRedistributable,
+		ModulePath:        um.ModulePath,
+		Version:           um.Version,
+		CommitTime:        um.CommitTime,
+		IsRedistributable: um.IsRedistributable,
 	}
-	modHeader := createModule(mi, pi.Licenses, requestedVersion == internal.LatestVersion)
+	modHeader := createModule(mi, um.Licenses, requestedVersion == internal.LatestVersion)
 	tab := r.FormValue("tab")
 	settings, ok := moduleTabLookup[tab]
 	if !ok {
@@ -32,19 +32,19 @@ func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = fetchDetailsForModule(r, tab, ds, pi)
+		details, err = fetchDetailsForModule(r, tab, ds, um)
 		if err != nil {
 			return fmt.Errorf("error fetching page for %q: %v", tab, err)
 		}
 	}
 	pageType := pageTypeModule
-	if pi.ModulePath == stdlib.ModulePath {
+	if um.ModulePath == stdlib.ModulePath {
 		pageType = pageTypeStdLib
 	}
 
 	page := &DetailsPage{
-		basePage:       s.newBasePage(r, moduleHTMLTitle(pi.ModulePath)),
-		Name:           pi.ModulePath,
+		basePage:       s.newBasePage(r, moduleHTMLTitle(um.ModulePath)),
+		Name:           um.ModulePath,
 		Settings:       settings,
 		Header:         modHeader,
 		Breadcrumb:     breadcrumbPath(modHeader.ModulePath, modHeader.ModulePath, modHeader.LinkVersion),
@@ -53,8 +53,8 @@ func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *
 		Tabs:           moduleTabSettings,
 		PageType:       pageType,
 		CanonicalURLPath: constructModuleURL(
-			pi.ModulePath,
-			linkVersion(pi.Version, pi.ModulePath),
+			um.ModulePath,
+			linkVersion(um.Version, um.ModulePath),
 		),
 	}
 	s.servePage(ctx, w, settings.TemplateName, page)

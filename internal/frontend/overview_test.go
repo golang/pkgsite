@@ -153,7 +153,7 @@ func TestPackageOverviewDetails(t *testing.T) {
 			if err := testDB.InsertModule(ctx, m); err != nil {
 				t.Fatal(err)
 			}
-			pi := &internal.UnitMeta{
+			um := &internal.UnitMeta{
 				Path:              test.dir.Path,
 				ModulePath:        test.dir.ModulePath,
 				Version:           test.dir.Version,
@@ -162,7 +162,7 @@ func TestPackageOverviewDetails(t *testing.T) {
 				CommitTime:        test.dir.CommitTime,
 				SourceInfo:        m.SourceInfo,
 			}
-			got, err := fetchPackageOverviewDetails(ctx, testDB, pi, test.versionedLinks)
+			got, err := fetchPackageOverviewDetails(ctx, testDB, um, test.versionedLinks)
 			if err != nil {
 				t.Fatal(err)
 			}

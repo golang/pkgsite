@@ -40,8 +40,8 @@ type OverviewDetails struct {
 
 // fetchOverviewDetails uses the given version to fetch an OverviewDetails.
 // versionedLinks says whether the constructed URLs should have versions.
-func fetchOverviewDetails(ctx context.Context, ds internal.DataSource, pi *internal.UnitMeta, versionedLinks bool) (*OverviewDetails, error) {
-	u, err := ds.GetUnit(ctx, pi, internal.WithReadme)
+func fetchOverviewDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, versionedLinks bool) (*OverviewDetails, error) {
+	u, err := ds.GetUnit(ctx, um, internal.WithReadme)
 	if err != nil {
 		return nil, err
 	}
@@ -50,10 +50,10 @@ func fetchOverviewDetails(ctx context.Context, ds internal.DataSource, pi *inter
 		readme = &internal.Readme{Filepath: u.Readme.Filepath, Contents: u.Readme.Contents}
 	}
 	mi := &internal.ModuleInfo{
-		ModulePath:        pi.ModulePath,
-		Version:           pi.Version,
-		CommitTime:        pi.CommitTime,
-		IsRedistributable: pi.IsRedistributable,
+		ModulePath:        um.ModulePath,
+		Version:           um.Version,
+		CommitTime:        um.CommitTime,
+		IsRedistributable: um.IsRedistributable,
 		SourceInfo:        u.SourceInfo,
 	}
 	return constructOverviewDetails(ctx, mi, readme, u.IsRedistributable, versionedLinks)
@@ -86,13 +86,13 @@ func constructOverviewDetails(ctx context.Context, mi *internal.ModuleInfo, read
 }
 
 // fetchPackageOverviewDetails uses data for the given versioned directory to return an OverviewDetails.
-func fetchPackageOverviewDetails(ctx context.Context, ds internal.DataSource, pi *internal.UnitMeta, versionedLinks bool) (*OverviewDetails, error) {
-	od, err := fetchOverviewDetails(ctx, ds, pi, versionedLinks)
+func fetchPackageOverviewDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, versionedLinks bool) (*OverviewDetails, error) {
+	od, err := fetchOverviewDetails(ctx, ds, um, versionedLinks)
 	if err != nil {
 		return nil, err
 	}
-	od.RepositoryURL = pi.SourceInfo.RepoURL()
-	od.PackageSourceURL = pi.SourceInfo.DirectoryURL(internal.Suffix(pi.Path, pi.ModulePath))
+	od.RepositoryURL = um.SourceInfo.RepoURL()
+	od.PackageSourceURL = um.SourceInfo.DirectoryURL(internal.Suffix(um.Path, um.ModulePath))
 	return od, nil
 }
 

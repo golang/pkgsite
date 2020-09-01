@@ -23,8 +23,8 @@ type DocumentationDetails struct {
 }
 
 // fetchDocumentationDetails returns a DocumentationDetails.
-func fetchDocumentationDetails(ctx context.Context, ds internal.DataSource, pi *internal.UnitMeta) (_ *DocumentationDetails, err error) {
-	u, err := ds.GetUnit(ctx, pi, internal.WithDocumentation)
+func fetchDocumentationDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta) (_ *DocumentationDetails, err error) {
+	u, err := ds.GetUnit(ctx, um, internal.WithDocumentation)
 	if err != nil {
 		return nil, err
 	}

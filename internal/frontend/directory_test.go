@@ -156,13 +156,13 @@ func TestFetchDirectoryDetails(t *testing.T) {
 				err error
 			)
 			t.Run("use-directories", func(t *testing.T) {
-				pi := &internal.UnitMeta{
+				um := &internal.UnitMeta{
 					Path:              tc.dirPath,
 					ModulePath:        tc.modulePath,
 					Version:           tc.version,
 					IsRedistributable: true,
 				}
-				got, err = fetchDirectoryDetails(ctx, testDB, pi, tc.includeDirPath)
+				got, err = fetchDirectoryDetails(ctx, testDB, um, tc.includeDirPath)
 			})
 			t.Run("legacy", func(t *testing.T) {
 				got, err = legacyFetchDirectoryDetails(ctx, testDB,

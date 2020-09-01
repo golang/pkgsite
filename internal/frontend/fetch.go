@@ -421,7 +421,7 @@ func modulePathsToFetch(ctx context.Context, ds internal.DataSource, fullPath, m
 	if modulePath != internal.UnknownModulePath {
 		return []string{modulePath}, nil
 	}
-	pi, err := ds.GetUnitMeta(ctx, fullPath, modulePath, internal.LatestVersion)
+	um, err := ds.GetUnitMeta(ctx, fullPath, modulePath, internal.LatestVersion)
 	if err != nil && !errors.Is(err, derrors.NotFound) {
 		return nil, &serverError{
 			status: http.StatusInternalServerError,
@@ -429,7 +429,7 @@ func modulePathsToFetch(ctx context.Context, ds internal.DataSource, fullPath, m
 		}
 	}
 	if err == nil {
-		return []string{pi.ModulePath}, nil
+		return []string{um.ModulePath}, nil
 	}
 	return candidateModulePaths(fullPath)
 }
