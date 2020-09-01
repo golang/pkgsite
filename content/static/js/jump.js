@@ -26,7 +26,7 @@ const jumpDialog = document.querySelector('.JumpDialog');
 const jumpBody = jumpDialog.querySelector('.JumpDialog-body');
 const jumpList = jumpDialog.querySelector('.JumpDialog-list');
 const jumpFilter = jumpDialog.querySelector('.JumpDialog-input');
-const searchInput = document.querySelector('.js-autoComplete');
+const searchInput = document.querySelector('.js-searchFocus');
 
 if (!jumpDialog.showModal) {
   dialogPolyfill.registerDialog(jumpDialog);
@@ -282,8 +282,12 @@ document.addEventListener('keypress', function (e) {
       shortcutsDialog.showModal();
       break;
     case '/':
-      e.preventDefault();
-      searchInput.focus();
+      // Favoring the Firefox quick find feature over search input
+      // focus. See: https://github.com/golang/go/issues/41093.
+      if (searchInput && !window.navigator.userAgent.includes('Firefox')) {
+        e.preventDefault();
+        searchInput.focus();
+      }
       break;
   }
 });
