@@ -976,20 +976,20 @@ func checkPackage(ctx context.Context, t *testing.T, pkgPath string) {
 	if _, err := testDB.LegacyGetPackage(ctx, pkgPath, internal.UnknownModulePath, sample.VersionString); err != nil {
 		t.Fatal(err)
 	}
-	pi, err := testDB.GetUnitMeta(ctx, pkgPath, internal.UnknownModulePath, sample.VersionString)
+	um, err := testDB.GetUnitMeta(ctx, pkgPath, internal.UnknownModulePath, sample.VersionString)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !pi.IsPackage() {
+	if !um.IsPackage() {
 		t.Fatalf("testDB.GetUnitMeta(%q, %q, %q): isPackage = false; want = true",
 			pkgPath, internal.UnknownModulePath, sample.VersionString)
 	}
-	dir, err := testDB.GetUnit(ctx, pi, internal.WithDocumentation)
+	dir, err := testDB.GetUnit(ctx, um, internal.WithDocumentation)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if dir.Package == nil || dir.Package.Documentation == nil {
 		t.Fatalf("testDB.GetUnit(%q, %q, %q): documentation should not be nil",
-			pi.Path, pi.ModulePath, pi.Version)
+			um.Path, um.ModulePath, um.Version)
 	}
 }
