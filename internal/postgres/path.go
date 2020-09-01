@@ -57,9 +57,21 @@ func (db *DB) GetPathInfo(ctx context.Context, path, requestedModulePath, reques
 		args = append(args, requestedVersion)
 	}
 
-	pi := internal.PathInfo{Path: path}
+	var (
+		licenseTypes []string
+		licensePaths []string
+		pi           = internal.PathInfo{Path: path}
+	)
 	query := fmt.Sprintf(`
-		SELECT m.module_path, m.version, p.name, p.redistributable
+		SELECT
+		    m.module_path,
+		    m.version,
+		    m.commit_time,
+		    m.source_info,
+		    p.name,
+		    p.redistributable,
+		    p.license_types,
+		    p.license_paths
 		FROM paths p
 		INNER JOIN modules m ON (p.module_id = m.id)
 		%s
@@ -68,11 +80,24 @@ func (db *DB) GetPathInfo(ctx context.Context, path, requestedModulePath, reques
 		%s
 		LIMIT 1
 	`, joinStmt, strings.Join(constraints, " "), orderByLatest)
-	err = db.db.QueryRow(ctx, query, args...).Scan(&pi.ModulePath, &pi.Version, &pi.Name, &pi.IsRedistributable)
+	err = db.db.QueryRow(ctx, query, args...).Scan(
+		&pi.ModulePath,
+		&pi.Version,
+		&pi.CommitTime,
+		jsonbScanner{&pi.SourceInfo},
+		&pi.Name,
+		&pi.IsRedistributable,
+		pq.Array(&licenseTypes),
+		pq.Array(&licensePaths))
 	switch err {
 	case sql.ErrNoRows:
 		return nil, derrors.NotFound
 	case nil:
+		lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
+		if err != nil {
+			return nil, err
+		}
+		pi.Licenses = lics
 		return &pi, nil
 	default:
 		return nil, err

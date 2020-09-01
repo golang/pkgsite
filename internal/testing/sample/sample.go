@@ -300,6 +300,18 @@ func UnitForPackage(pkg *internal.LegacyPackage) *internal.Unit {
 	}
 }
 
+func PathInfo(path, modulePath, version, name string, isRedistributable bool) *internal.PathInfo {
+	return &internal.PathInfo{
+		ModulePath:        modulePath,
+		Version:           version,
+		Path:              path,
+		Name:              name,
+		IsRedistributable: isRedistributable,
+		Licenses:          LicenseMetadata,
+		SourceInfo:        source.NewGitHubInfo("https://"+modulePath, "", version),
+	}
+}
+
 func fullPath(modulePath, suffix string) string {
 	if modulePath != stdlib.ModulePath {
 		return path.Join(modulePath, suffix)

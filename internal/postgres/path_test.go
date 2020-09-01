@@ -8,10 +8,13 @@ import (
 	"context"
 	"path"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
@@ -39,20 +42,23 @@ func TestGetPathInfo(t *testing.T) {
 		m := &internal.Module{
 			LegacyModuleInfo: internal.LegacyModuleInfo{
 				ModuleInfo: internal.ModuleInfo{
+					CommitTime: sample.CommitTime,
 					ModulePath: testModule.module,
 					Version:    testModule.version,
-					CommitTime: time.Now(),
+					SourceInfo: source.NewGitHubInfo("https://"+testModule.module, "", testModule.version),
 				},
 			},
 			LegacyPackages: []*internal.LegacyPackage{{
-				Name: pkgName,
-				Path: pkgPath,
+				Name:     pkgName,
+				Path:     pkgPath,
+				Licenses: sample.LicenseMetadata,
 			}},
 		}
 		for d := pkgPath; d != "." && len(d) >= len(testModule.module); d = path.Dir(d) {
 			dir := &internal.Unit{
 				DirectoryMeta: internal.DirectoryMeta{
-					Path: d,
+					Path:     d,
+					Licenses: sample.LicenseMetadata,
 				},
 			}
 			if d == pkgPath {
@@ -190,12 +196,23 @@ func TestGetPathInfo(t *testing.T) {
 			if test.version == "" {
 				test.version = internal.LatestVersion
 			}
-			test.want.Path = test.path
+			test.want = sample.PathInfo(
+				test.path,
+				test.want.ModulePath,
+				test.want.Version,
+				test.want.Name,
+				test.want.IsRedistributable,
+			)
 			got, err := testDB.GetPathInfo(ctx, test.path, test.module, test.version)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(test.want, got); diff != "" {
+			opts := []cmp.Option{
+				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
+				cmpopts.IgnoreFields(internal.PathInfo{}, "CommitTime"),
+				cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
+			}
+			if diff := cmp.Diff(test.want, got, opts...); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})

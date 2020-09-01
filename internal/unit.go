@@ -5,16 +5,28 @@
 package internal
 
 import (
+	"time"
+
 	"github.com/google/safehtml"
+	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/source"
 )
 
-// PathInfo represents information about a path.
+// PathInfo represents metadata about a unit.
 type PathInfo struct {
+	// Unit level information
+	//
 	Path              string
-	ModulePath        string
-	Version           string
 	Name              string
 	IsRedistributable bool
+	Licenses          []*licenses.Metadata
+
+	// Module level information
+	//
+	Version    string
+	ModulePath string
+	CommitTime time.Time
+	SourceInfo *source.Info
 }
 
 // IsPackage reports whether the path represents a package path.
