@@ -19,9 +19,9 @@ import (
 )
 
 // GetUnit returns information about a directory at a path.
-func (ds *DataSource) GetUnit(ctx context.Context, pi *internal.UnitMeta, field internal.FieldSet) (_ *internal.Unit, err error) {
-	defer derrors.Wrap(&err, "GetUnit(%q, %q, %q)", pi.Path, pi.ModulePath, pi.Version)
-	return ds.getUnit(ctx, pi.Path, pi.ModulePath, pi.Version)
+func (ds *DataSource) GetUnit(ctx context.Context, um *internal.UnitMeta, field internal.FieldSet) (_ *internal.Unit, err error) {
+	defer derrors.Wrap(&err, "GetUnit(%q, %q, %q)", um.Path, um.ModulePath, um.Version)
+	return ds.getUnit(ctx, um.Path, um.ModulePath, um.Version)
 }
 
 // GetLicenses return licenses at path for the given module path and version.
@@ -78,19 +78,19 @@ func (ds *DataSource) GetUnitMeta(ctx context.Context, path, inModulePath, inVer
 	if err != nil {
 		return nil, err
 	}
-	pi := &internal.UnitMeta{
+	um := &internal.UnitMeta{
 		Path:       path,
 		ModulePath: inModulePath,
 		Version:    inVersion,
 	}
 	for _, d := range m.Units {
 		if d.Path == path {
-			pi.Name = d.Name
-			pi.IsRedistributable = d.IsRedistributable
+			um.Name = d.Name
+			um.IsRedistributable = d.IsRedistributable
 			break
 		}
 	}
-	return pi, nil
+	return um, nil
 }
 
 // GetExperiments is unimplemented.
