@@ -243,7 +243,7 @@ func main() {
 		}
 		jsonCreds = []byte(s)
 	}
-	client, err = auth.NewClient(jsonCreds)
+	client, err = auth.NewClient(jsonCreds, false)
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
