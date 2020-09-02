@@ -142,14 +142,6 @@ func PackageMetaFromLegacyPackage(pkg *LegacyPackage) *PackageMeta {
 	}
 }
 
-// Package is a group of one or more Go source files with the same package
-// header. A Package is part of a directory.
-// It will replace LegacyPackage once everything has been migrated.
-type Package struct {
-	Name string
-	Path string
-}
-
 // IndexVersion holds the version information returned by the module index.
 type IndexVersion struct {
 	Path      string

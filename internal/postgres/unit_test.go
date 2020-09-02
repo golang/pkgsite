@@ -240,80 +240,78 @@ func TestGetUnit(t *testing.T) {
 			path:       "github.com/hashicorp/vault",
 			modulePath: "github.com/hashicorp/vault",
 			version:    "v1.0.3",
-			want: unit("github.com/hashicorp/vault", "github.com/hashicorp/vault", "v1.0.3",
+			want: unit("github.com/hashicorp/vault", "github.com/hashicorp/vault", "v1.0.3", "",
 				&internal.Readme{
 					Filepath: sample.ReadmeFilePath,
 					Contents: sample.ReadmeContents,
-				}, nil),
+				}),
 		},
 		{
 			name:       "package path",
 			path:       "github.com/hashicorp/vault/api",
 			modulePath: "github.com/hashicorp/vault",
 			version:    "v1.0.3",
-			want: unit("github.com/hashicorp/vault/api", "github.com/hashicorp/vault", "v1.0.3", nil,
-				newPackage("api", "github.com/hashicorp/vault/api")),
+			want:       unit("github.com/hashicorp/vault/api", "github.com/hashicorp/vault", "v1.0.3", "api", nil),
 		},
 		{
 			name:       "directory path",
 			path:       "github.com/hashicorp/vault/builtin",
 			modulePath: "github.com/hashicorp/vault",
 			version:    "v1.0.3",
-			want:       unit("github.com/hashicorp/vault/builtin", "github.com/hashicorp/vault", "v1.0.3", nil, nil),
+			want:       unit("github.com/hashicorp/vault/builtin", "github.com/hashicorp/vault", "v1.0.3", "", nil),
 		},
 		{
 			name:       "stdlib directory",
 			path:       "archive",
 			modulePath: stdlib.ModulePath,
 			version:    "v1.13.4",
-			want:       unit("archive", stdlib.ModulePath, "v1.13.4", nil, nil),
+			want:       unit("archive", stdlib.ModulePath, "v1.13.4", "", nil),
 		},
 		{
 			name:       "stdlib package",
 			path:       "archive/zip",
 			modulePath: stdlib.ModulePath,
 			version:    "v1.13.4",
-			want:       unit("archive/zip", stdlib.ModulePath, "v1.13.4", nil, newPackage("zip", "archive/zip")),
+			want:       unit("archive/zip", stdlib.ModulePath, "v1.13.4", "zip", nil),
 		},
 		{
 			name:       "stdlib - internal directory",
 			path:       "cmd/internal",
 			modulePath: stdlib.ModulePath,
 			version:    "v1.13.4",
-			want:       unit("cmd/internal", stdlib.ModulePath, "v1.13.4", nil, nil),
+			want:       unit("cmd/internal", stdlib.ModulePath, "v1.13.4", "", nil),
 		},
 		{
 			name:       "directory with readme",
 			path:       "a.com/m/dir",
 			modulePath: "a.com/m",
 			version:    "v1.2.3",
-			want: unit("a.com/m/dir", "a.com/m", "v1.2.3", &internal.Readme{
+			want: unit("a.com/m/dir", "a.com/m", "v1.2.3", "", &internal.Readme{
 				Filepath: "DIR_README.md",
 				Contents: "dir readme",
-			}, nil),
+			}),
 		},
 		{
 			name:       "package with readme",
 			path:       "a.com/m/dir/p",
 			modulePath: "a.com/m",
 			version:    "v1.2.3",
-			want: unit("a.com/m/dir/p", "a.com/m", "v1.2.3",
+			want: unit("a.com/m/dir/p", "a.com/m", "v1.2.3", "p",
 				&internal.Readme{
 					Filepath: "PKG_README.md",
 					Contents: "pkg readme",
-				},
-				newPackage("p", "a.com/m/dir/p")),
+				}),
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			pathInfo := sample.UnitMeta(
+			um := sample.UnitMeta(
 				test.path,
 				test.modulePath,
 				test.version,
 				test.want.Name,
 				test.want.IsRedistributable,
 			)
-			got, err := testDB.GetUnit(ctx, pathInfo, internal.AllFields)
+			got, err := testDB.GetUnit(ctx, um, internal.AllFields)
 			if test.wantNotFoundErr {
 				if !errors.Is(err, derrors.NotFound) {
 					t.Fatalf("want %v; got = \n%+v, %v", derrors.NotFound, got, err)
@@ -335,10 +333,7 @@ func TestGetUnit(t *testing.T) {
 				Filepath: sample.ReadmeFilePath,
 				Contents: sample.ReadmeContents,
 			}
-			if test.want.Name != "" {
-				test.want.Imports = sample.Imports
-			}
-			test.want.SourceInfo = pathInfo.SourceInfo
+			test.want.SourceInfo = um.SourceInfo
 			if diff := cmp.Diff(test.want, got, opts...); diff != "" {
 				t.Errorf("mismatch (-want, +got):\n%s", diff)
 			}
@@ -379,29 +374,26 @@ func TestGetUnitFieldSet(t *testing.T) {
 		{
 			name:   "WithDocumentation",
 			fields: internal.WithDocumentation,
-			want: unit("a.com/m/dir/p", "a.com/m", "v1.2.3",
-				nil, nil),
+			want:   unit("a.com/m/dir/p", "a.com/m", "v1.2.3", "", nil),
 		},
 		{
 			name:   "WithImports",
 			fields: internal.WithImports,
-			want: unit("a.com/m/dir/p", "a.com/m", "v1.2.3",
-				nil, nil),
+			want:   unit("a.com/m/dir/p", "a.com/m", "v1.2.3", "", nil),
 		},
 		{
 			name:   "WithLicenses",
 			fields: internal.WithLicenses,
-			want: unit("a.com/m/dir/p", "a.com/m", "v1.2.3",
-				nil, nil),
+			want:   unit("a.com/m/dir/p", "a.com/m", "v1.2.3", "", nil),
 		},
 		{
 			name:   "WithReadme",
 			fields: internal.WithReadme,
-			want: unit("a.com/m/dir/p", "a.com/m", "v1.2.3",
+			want: unit("a.com/m/dir/p", "a.com/m", "v1.2.3", "",
 				&internal.Readme{
 					Filepath: "README.md",
 					Contents: "readme",
-				}, nil),
+				}),
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -431,7 +423,7 @@ func TestGetUnitFieldSet(t *testing.T) {
 	}
 }
 
-func unit(path, modulePath, version string, readme *internal.Readme, pkg *internal.Package) *internal.Unit {
+func unit(path, modulePath, version, name string, readme *internal.Readme) *internal.Unit {
 	u := &internal.Unit{
 		UnitMeta: internal.UnitMeta{
 			ModulePath:        modulePath,
@@ -439,22 +431,16 @@ func unit(path, modulePath, version string, readme *internal.Readme, pkg *intern
 			Path:              path,
 			IsRedistributable: true,
 			Licenses:          sample.LicenseMetadata,
+			Name:              name,
 		},
 		LicenseContents: sample.Licenses,
 		Readme:          readme,
 	}
-	if pkg != nil {
+	if u.IsPackage() {
+		u.Imports = sample.Imports
 		u.Documentation = sample.Documentation
-		u.Name = pkg.Name
 	}
 	return u
-}
-
-func newPackage(name, path string) *internal.Package {
-	return &internal.Package{
-		Name: name,
-		Path: path,
-	}
 }
 
 func TestGetUnitBypass(t *testing.T) {
