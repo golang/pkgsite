@@ -101,7 +101,7 @@ func NowTruncated() time.Time {
 //
 // The package name is last component of the package path.
 func LegacyPackage(modulePath, suffix string) *internal.LegacyPackage {
-	p := fullPath(modulePath, suffix)
+	p := constructFullPath(modulePath, suffix)
 	return &internal.LegacyPackage{
 		Name:              path.Base(p),
 		Path:              p,
@@ -117,7 +117,7 @@ func LegacyPackage(modulePath, suffix string) *internal.LegacyPackage {
 }
 
 func DirectoryMeta(modulePath, suffix, version string) *internal.DirectoryMeta {
-	p := fullPath(modulePath, suffix)
+	p := constructFullPath(modulePath, suffix)
 	return &internal.DirectoryMeta{
 		ModuleInfo:        *ModuleInfo(modulePath, version),
 		Path:              p,
@@ -127,11 +127,11 @@ func DirectoryMeta(modulePath, suffix, version string) *internal.DirectoryMeta {
 	}
 }
 
-func PackageMeta(modulePath, suffix string) *internal.PackageMeta {
+func PackageMeta(fullPath string) *internal.PackageMeta {
 	return &internal.PackageMeta{
-		Path:              fullPath(modulePath, suffix),
+		Path:              fullPath,
 		IsRedistributable: true,
-		Name:              path.Base(fullPath(modulePath, suffix)),
+		Name:              path.Base(fullPath),
 		Synopsis:          Synopsis,
 		Licenses:          LicenseMetadata,
 	}
@@ -299,7 +299,7 @@ func UnitMeta(path, modulePath, version, name string, isRedistributable bool) *i
 	}
 }
 
-func fullPath(modulePath, suffix string) string {
+func constructFullPath(modulePath, suffix string) string {
 	if modulePath != stdlib.ModulePath {
 		return path.Join(modulePath, suffix)
 	}

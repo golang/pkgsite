@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -24,6 +25,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
@@ -121,6 +123,14 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 			Contents: sample.ReadmeContents,
 		}
 		wantu.LicenseContents = sample.Licenses
+		var subdirectories []*internal.PackageMeta
+		for _, u := range want.Units {
+			if u.IsPackage() && (strings.HasPrefix(u.Path, wantu.Path) ||
+				wantu.Path == stdlib.ModulePath) {
+				subdirectories = append(subdirectories, sample.PackageMeta(u.Path))
+			}
+		}
+		wantu.Subdirectories = subdirectories
 		opts := cmp.Options{
 			cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeFilePath"),
 			cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeContents"),

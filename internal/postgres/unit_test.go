@@ -6,14 +6,13 @@ package postgres
 
 import (
 	"context"
-	"errors"
+	"path"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -31,7 +30,6 @@ func TestGetPackagesInUnit(t *testing.T) {
 	for _, tc := range []struct {
 		name, fullPath, modulePath, version, wantModulePath, wantVersion string
 		wantSuffixes                                                     []string
-		wantNotFoundErr                                                  bool
 	}{
 		{
 			name:           "directory path is the module path",
@@ -113,11 +111,10 @@ func TestGetPackagesInUnit(t *testing.T) {
 			},
 		},
 		{
-			name:            "stdlib package -  incomplete last element",
-			fullPath:        "archive/zi",
-			modulePath:      stdlib.ModulePath,
-			version:         "v1.13.4",
-			wantNotFoundErr: true,
+			name:       "stdlib package -  incomplete last element",
+			fullPath:   "archive/zi",
+			modulePath: stdlib.ModulePath,
+			version:    "v1.13.4",
 		},
 		{
 			name:           "stdlib - internal directory",
@@ -148,22 +145,11 @@ func TestGetPackagesInUnit(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := testDB.GetPackagesInUnit(ctx, tc.fullPath, tc.modulePath, tc.version)
-			if tc.wantNotFoundErr {
-				if !errors.Is(err, derrors.NotFound) {
-					t.Fatalf("got error %v; want %v", err, derrors.NotFound)
-				}
-				return
-			}
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			var wantPackages []*internal.PackageMeta
-			for _, suffix := range tc.wantSuffixes {
-				pkg := sample.PackageMeta(tc.wantModulePath, suffix)
-				wantPackages = append(wantPackages, pkg)
-			}
-
+			wantPackages := subdirectories(tc.modulePath, tc.wantSuffixes)
 			opts := []cmp.Option{
 				// The packages table only includes partial license information; it omits the Coverage field.
 				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
@@ -233,7 +219,6 @@ func TestGetUnit(t *testing.T) {
 	for _, test := range []struct {
 		name, path, modulePath, version string
 		want                            *internal.Unit
-		wantNotFoundErr                 bool
 	}{
 		{
 			name:       "module path",
@@ -244,42 +229,72 @@ func TestGetUnit(t *testing.T) {
 				&internal.Readme{
 					Filepath: sample.ReadmeFilePath,
 					Contents: sample.ReadmeContents,
-				}),
+				},
+				[]string{
+					"api",
+					"builtin/audit/file",
+					"builtin/audit/socket",
+				},
+			),
 		},
 		{
 			name:       "package path",
 			path:       "github.com/hashicorp/vault/api",
 			modulePath: "github.com/hashicorp/vault",
 			version:    "v1.0.3",
-			want:       unit("github.com/hashicorp/vault/api", "github.com/hashicorp/vault", "v1.0.3", "api", nil),
+			want: unit("github.com/hashicorp/vault/api", "github.com/hashicorp/vault", "v1.0.3", "api", nil,
+				[]string{
+					"api",
+				},
+			),
 		},
 		{
 			name:       "directory path",
 			path:       "github.com/hashicorp/vault/builtin",
 			modulePath: "github.com/hashicorp/vault",
 			version:    "v1.0.3",
-			want:       unit("github.com/hashicorp/vault/builtin", "github.com/hashicorp/vault", "v1.0.3", "", nil),
+			want: unit("github.com/hashicorp/vault/builtin", "github.com/hashicorp/vault", "v1.0.3", "", nil,
+				[]string{
+					"builtin/audit/file",
+					"builtin/audit/socket",
+				},
+			),
 		},
 		{
 			name:       "stdlib directory",
 			path:       "archive",
 			modulePath: stdlib.ModulePath,
 			version:    "v1.13.4",
-			want:       unit("archive", stdlib.ModulePath, "v1.13.4", "", nil),
+			want: unit("archive", stdlib.ModulePath, "v1.13.4", "", nil,
+				[]string{
+					"archive/tar",
+					"archive/zip",
+				},
+			),
 		},
 		{
 			name:       "stdlib package",
 			path:       "archive/zip",
 			modulePath: stdlib.ModulePath,
 			version:    "v1.13.4",
-			want:       unit("archive/zip", stdlib.ModulePath, "v1.13.4", "zip", nil),
+			want: unit("archive/zip", stdlib.ModulePath, "v1.13.4", "zip", nil,
+				[]string{
+					"archive/zip",
+				},
+			),
 		},
 		{
 			name:       "stdlib - internal directory",
 			path:       "cmd/internal",
 			modulePath: stdlib.ModulePath,
 			version:    "v1.13.4",
-			want:       unit("cmd/internal", stdlib.ModulePath, "v1.13.4", "", nil),
+			want: unit("cmd/internal", stdlib.ModulePath, "v1.13.4", "", nil,
+				[]string{
+					"cmd/internal/obj",
+					"cmd/internal/obj/arm",
+					"cmd/internal/obj/arm64",
+				},
+			),
 		},
 		{
 			name:       "directory with readme",
@@ -289,7 +304,11 @@ func TestGetUnit(t *testing.T) {
 			want: unit("a.com/m/dir", "a.com/m", "v1.2.3", "", &internal.Readme{
 				Filepath: "DIR_README.md",
 				Contents: "dir readme",
-			}),
+			},
+				[]string{
+					"dir/p",
+				},
+			),
 		},
 		{
 			name:       "package with readme",
@@ -300,7 +319,11 @@ func TestGetUnit(t *testing.T) {
 				&internal.Readme{
 					Filepath: "PKG_README.md",
 					Contents: "pkg readme",
-				}),
+				},
+				[]string{
+					"dir/p",
+				},
+			),
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -312,12 +335,6 @@ func TestGetUnit(t *testing.T) {
 				test.want.IsRedistributable,
 			)
 			got, err := testDB.GetUnit(ctx, um, internal.AllFields)
-			if test.wantNotFoundErr {
-				if !errors.Is(err, derrors.NotFound) {
-					t.Fatalf("want %v; got = \n%+v, %v", derrors.NotFound, got, err)
-				}
-				return
-			}
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -374,17 +391,17 @@ func TestGetUnitFieldSet(t *testing.T) {
 		{
 			name:   "WithDocumentation",
 			fields: internal.WithDocumentation,
-			want:   unit("a.com/m/dir/p", "a.com/m", "v1.2.3", "", nil),
+			want:   unit("a.com/m/dir/p", "a.com/m", "v1.2.3", "", nil, []string{}),
 		},
 		{
 			name:   "WithImports",
 			fields: internal.WithImports,
-			want:   unit("a.com/m/dir/p", "a.com/m", "v1.2.3", "", nil),
+			want:   unit("a.com/m/dir/p", "a.com/m", "v1.2.3", "", nil, []string{}),
 		},
 		{
 			name:   "WithLicenses",
 			fields: internal.WithLicenses,
-			want:   unit("a.com/m/dir/p", "a.com/m", "v1.2.3", "", nil),
+			want:   unit("a.com/m/dir/p", "a.com/m", "v1.2.3", "", nil, []string{}),
 		},
 		{
 			name:   "WithReadme",
@@ -393,7 +410,7 @@ func TestGetUnitFieldSet(t *testing.T) {
 				&internal.Readme{
 					Filepath: "README.md",
 					Contents: "readme",
-				}),
+				}, []string{}),
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -423,12 +440,12 @@ func TestGetUnitFieldSet(t *testing.T) {
 	}
 }
 
-func unit(path, modulePath, version, name string, readme *internal.Readme) *internal.Unit {
+func unit(fullPath, modulePath, version, name string, readme *internal.Readme, suffixes []string) *internal.Unit {
 	u := &internal.Unit{
 		UnitMeta: internal.UnitMeta{
 			ModulePath:        modulePath,
 			Version:           version,
-			Path:              path,
+			Path:              fullPath,
 			IsRedistributable: true,
 			Licenses:          sample.LicenseMetadata,
 			Name:              name,
@@ -436,11 +453,25 @@ func unit(path, modulePath, version, name string, readme *internal.Readme) *inte
 		LicenseContents: sample.Licenses,
 		Readme:          readme,
 	}
+
+	u.Subdirectories = subdirectories(modulePath, suffixes)
 	if u.IsPackage() {
 		u.Imports = sample.Imports
 		u.Documentation = sample.Documentation
 	}
 	return u
+}
+
+func subdirectories(modulePath string, suffixes []string) []*internal.PackageMeta {
+	var want []*internal.PackageMeta
+	for _, suffix := range suffixes {
+		p := suffix
+		if modulePath != stdlib.ModulePath {
+			p = path.Join(modulePath, suffix)
+		}
+		want = append(want, sample.PackageMeta(p))
+	}
+	return want
 }
 
 func TestGetUnitBypass(t *testing.T) {

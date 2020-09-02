@@ -59,6 +59,13 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 		}
 		u.LicenseContents = lics
 	}
+	if fields&internal.WithSubdirectories != 0 {
+		pkgs, err := db.GetPackagesInUnit(ctx, u.Path, u.ModulePath, u.Version)
+		if err != nil {
+			return nil, err
+		}
+		u.Subdirectories = pkgs
+	}
 	if !db.bypassLicenseCheck {
 		u.RemoveNonRedistributableData()
 	}
@@ -219,9 +226,6 @@ func (db *DB) GetPackagesInUnit(ctx context.Context, fullPath, modulePath, resol
 	}
 	if err := db.db.RunQuery(ctx, query, collect, modulePath, resolvedVersion); err != nil {
 		return nil, err
-	}
-	if len(packages) == 0 {
-		return nil, fmt.Errorf("unit does not contain any packages: %w", derrors.NotFound)
 	}
 	if !db.bypassLicenseCheck {
 		for _, p := range packages {

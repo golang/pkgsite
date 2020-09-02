@@ -47,6 +47,7 @@ type Unit struct {
 	UnitMeta
 	Readme          *Readme
 	Documentation   *Documentation
+	Subdirectories  []*PackageMeta
 	Imports         []string
 	LicenseContents []*licenses.License
 }
@@ -100,4 +101,5 @@ const (
 	WithDocumentation
 	WithImports
 	WithLicenses
+	WithSubdirectories
 )
