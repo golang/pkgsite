@@ -11,6 +11,7 @@ package config
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -18,6 +19,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -121,8 +123,9 @@ type Config struct {
 	// structure GTM-XXXX.
 	GoogleTagManagerID string
 
-	// MonitoredResource is the resource for the current GAE app.
-	// See https://cloud.google.com/monitoring/api/resources#tag_gae_app for more
+	// MonitoredResource represents the resource that is running the current binary.
+	// It might be a Google AppEngine app or a Kubernetes pod.
+	// See https://cloud.google.com/monitoring/api/resources for more
 	// details:
 	// "An object representing a resource that can be used for monitoring, logging,
 	// billing, or other purposes. Examples include virtual machine instances,
@@ -174,10 +177,15 @@ func (c *Config) OnAppEngine() bool {
 	return os.Getenv("GAE_ENV") == "standard"
 }
 
+// OnGKE reports whether the current process is running on GKE.
+func (c *Config) OnGKE() bool {
+	return os.Getenv("GO_DISCOVERY_ON_GKE") == "true"
+}
+
 // OnGCP reports whether the current process is running on Google Cloud
 // Platform.
 func (c *Config) OnGCP() bool {
-	return c.OnAppEngine() || os.Getenv("GO_DISCOVERY_ON_GKE") == "true"
+	return c.OnAppEngine() || c.OnGKE()
 }
 
 // StatementTimeout is the value of the Postgres statement_timeout parameter.
@@ -295,7 +303,7 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		// Resolve AppEngine identifiers
 		ProjectID:          os.Getenv("GOOGLE_CLOUD_PROJECT"),
 		ServiceID:          GetEnv("GAE_SERVICE", os.Getenv("GO_DISCOVERY_SERVICE")),
-		VersionID:          GetEnv("GAE_VERSION", os.Getenv("GO_DISCOVERY_VERSION")),
+		VersionID:          GetEnv("GAE_VERSION", os.Getenv("DOCKER_IMAGE_TAG")),
 		InstanceID:         GetEnv("GAE_INSTANCE", os.Getenv("GO_DISCOVERY_INSTANCE")),
 		GoogleTagManagerID: os.Getenv("GO_DISCOVERY_GOOGLE_TAG_MANAGER_ID"),
 		QueueService:       os.Getenv("GO_DISCOVERY_QUEUE_SERVICE"),
@@ -340,23 +348,46 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		},
 		LogLevel: os.Getenv("GO_DISCOVERY_LOG_LEVEL"),
 	}
-	cfg.MonitoredResource = &mrpb.MonitoredResource{
-		Type: "gae_app",
-		Labels: map[string]string{
-			"project_id": cfg.ProjectID,
-			"module_id":  cfg.ServiceID,
-			"version_id": cfg.VersionID,
-			"zone":       cfg.ZoneID,
-		},
-	}
-
-	if cfg.OnAppEngine() {
+	if cfg.OnGCP() {
 		// Zone is not available in the environment but can be queried via the metadata API.
 		zone, err := gceMetadata(ctx, "instance/zone")
 		if err != nil {
 			return nil, err
 		}
 		cfg.ZoneID = zone
+		switch {
+		case cfg.OnAppEngine():
+			// Use the gae_app monitored resource. It would be better to use the
+			// gae_instance monitored resource, but that's not currently supported:
+			// https://cloud.google.com/logging/docs/api/v2/resource-list#resource-types
+			cfg.MonitoredResource = &mrpb.MonitoredResource{
+				Type: "gae_app",
+				Labels: map[string]string{
+					"project_id": cfg.ProjectID,
+					"module_id":  cfg.ServiceID,
+					"version_id": cfg.VersionID,
+					"zone":       cfg.ZoneID,
+				},
+			}
+		case cfg.OnGKE():
+			cfg.MonitoredResource = &mrpb.MonitoredResource{
+				Type: "k8s_container",
+				Labels: map[string]string{
+					"project_id":     cfg.ProjectID,
+					"location":       path.Base(cfg.ZoneID),
+					"cluster_name":   "pkgsite",
+					"namespace_name": "default",
+					"container_name": "main",
+				},
+			}
+		default:
+			return nil, errors.New("on GCP but using an unknown product")
+		}
+	} else { // running locally, perhaps
+		cfg.MonitoredResource = &mrpb.MonitoredResource{
+			Type:   "global",
+			Labels: map[string]string{"project_id": cfg.ProjectID},
+		}
 	}
 	if cfg.DBHost == "" {
 		panic("DBHost is empty; impossible")

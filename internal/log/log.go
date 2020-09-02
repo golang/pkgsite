@@ -102,6 +102,13 @@ func (l *stackdriverLogger) log(ctx context.Context, s logging.Severity, payload
 // stdlibLogger uses the Go standard library logger.
 type stdlibLogger struct{}
 
+func init() {
+	// Log to stdout on GKE so the log messages are severity Info, rather than Error.
+	if os.Getenv("GO_DISCOVERY_ON_GKE") != "" {
+		log.SetOutput(os.Stdout)
+	}
+}
+
 func (stdlibLogger) log(ctx context.Context, s logging.Severity, payload interface{}) {
 	var extras []string
 	traceID, _ := ctx.Value(traceIDKey{}).(string) // if not present, traceID is ""
@@ -144,12 +151,19 @@ func UseStackdriver(ctx context.Context, cfg *config.Config, logName string) (_ 
 		return nil, err
 	}
 
-	// Configure the cloud logger using the gae_app monitored resource. It would
-	// be better to use the gae_instance monitored resource, but that's not
-	// currently supported:
-	// https://cloud.google.com/logging/docs/api/v2/resource-list#resource-types
-	parent := client.Logger(logName, logging.CommonResource(cfg.MonitoredResource))
-	child := client.Logger(logName+"-child", logging.CommonResource(cfg.MonitoredResource))
+	opts := []logging.LoggerOption{logging.CommonResource(cfg.MonitoredResource)}
+	if cfg.OnGKE() {
+		i := strings.IndexRune(cfg.ServiceID, '-')
+		if i < 0 {
+			return nil, fmt.Errorf("ServiceID %q is not in the form ENV-APP", cfg.ServiceID)
+		}
+		opts = append(opts, logging.CommonLabels(map[string]string{
+			"k8s-pod/env": cfg.ServiceID[:i],
+			"k8s-pod/app": cfg.ServiceID[i+1:],
+		}))
+	}
+	parent := client.Logger(logName, opts...)
+	child := client.Logger(logName+"-child", opts...)
 	mu.Lock()
 	defer mu.Unlock()
 	if _, ok := logger.(*stackdriverLogger); ok {
