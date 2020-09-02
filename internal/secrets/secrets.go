@@ -19,15 +19,6 @@ import (
 func Get(ctx context.Context, name string) (plaintext string, err error) {
 	defer derrors.Add(&err, "secrets.Get(ctx, %q)", name)
 
-	// Support old names temporarily, until the transition to Secrets Manager
-	// is complete.
-	switch name {
-	case "go_discovery_database_password_frontend":
-		name = "frontend-database-password"
-	case "go_discovery_database_password_etl":
-		name = "worker-database-password"
-	}
-
 	project := os.Getenv("GOOGLE_CLOUD_PROJECT")
 	if project == "" {
 		return "", errors.New("need GOOGLE_CLOUD_PROJECT environment variable")
