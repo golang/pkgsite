@@ -28,7 +28,6 @@ import (
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/dcensus"
 	"golang.org/x/pkgsite/internal/log"
-	"golang.org/x/pkgsite/internal/secrets"
 )
 
 var credsFile = flag.String("creds", "", "filename for credentials, when running locally")
@@ -228,22 +227,16 @@ func main() {
 	}
 
 	var jsonCreds []byte
-
 	if *credsFile != "" {
 		jsonCreds, err = ioutil.ReadFile(*credsFile)
 		if err != nil {
 			log.Fatal(ctx, err)
 		}
-	} else {
-		const secretName = "load-test-agent-creds"
-		log.Infof(ctx, "getting secret %q", secretName)
-		s, err := secrets.Get(context.Background(), secretName)
-		if err != nil {
-			log.Fatalf(ctx, "secrets.Get: %v", err)
-		}
-		jsonCreds = []byte(s)
 	}
-	client, err = auth.NewClient(ctx, jsonCreds, false)
+	// If there is no creds file, use application default credentials. On
+	// AppEngine, this will use the AppEngine service account, which has the
+	// necessary IAP permission.
+	client, err = auth.NewClient(ctx, jsonCreds, os.Getenv("GO_DISCOVERY_USE_EXP_AUTH") == "true")
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
