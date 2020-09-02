@@ -24,8 +24,6 @@ func (db *DB) UpdateModuleVersionStatesForReprocessing(ctx context.Context, appV
 	for _, status := range []int{
 		http.StatusOK,
 		derrors.ToStatus(derrors.HasIncompletePackages),
-		derrors.ToStatus(derrors.BadModule),
-		derrors.ToStatus(derrors.AlternativeModule),
 		derrors.ToStatus(derrors.DBModuleInsertInvalid),
 	} {
 		if err := db.UpdateModuleVersionStatesWithStatus(ctx, status, appVersion); err != nil {
