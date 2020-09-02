@@ -93,7 +93,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
 		}
 
 		logMemory(ctx, "after insertLicenses")
-		if err := insertPackages(ctx, tx, m); err != nil {
+		if err := legacyInsertPackages(ctx, tx, m); err != nil {
 			return err
 		}
 		logMemory(ctx, "after insertPackages")
@@ -245,7 +245,7 @@ func insertLicenses(ctx context.Context, db *database.DB, m *internal.Module, mo
 	return nil
 }
 
-func insertPackages(ctx context.Context, db *database.DB, m *internal.Module) (err error) {
+func legacyInsertPackages(ctx context.Context, db *database.DB, m *internal.Module) (err error) {
 	ctx, span := trace.StartSpan(ctx, "insertPackages")
 	defer span.End()
 	defer derrors.Wrap(&err, "insertPackages(ctx, %q, %q)", m.ModulePath, m.Version)
