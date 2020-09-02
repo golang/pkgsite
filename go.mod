@@ -17,7 +17,6 @@ require (
 	github.com/go-redis/redis/v7 v7.0.0-beta.4
 	github.com/golang-migrate/migrate/v4 v4.6.2
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
-	github.com/golang/protobuf v1.4.2
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
 	github.com/google/go-cmp v0.5.2
 	github.com/google/go-replayers/httpreplay v0.1.0
@@ -36,4 +35,5 @@ require (
 	google.golang.org/api v0.31.0
 	google.golang.org/genproto v0.0.0-20200831141814-d751682dd103
 	google.golang.org/grpc v1.31.1
+	google.golang.org/protobuf v1.25.0
 )

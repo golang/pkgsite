@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	proto "github.com/golang/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal/config"
 	taskspb "google.golang.org/genproto/googleapis/cloud/tasks/v2"
+	"google.golang.org/protobuf/proto"
 )
 
 func TestNewTaskID(t *testing.T) {
