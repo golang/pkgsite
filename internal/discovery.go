@@ -228,40 +228,6 @@ type SearchResult struct {
 	Approximate bool
 }
 
-// A FieldSet is a bit set of struct fields. It is used to avoid reading large
-// struct fields from the data store. FieldSet is also the type of the
-// individual bit values. (Think of them as singleton sets.)
-//
-// NoFields (the zero value) is the empty set. AllFields is the set containing
-// every field.
-//
-// FieldSet bits are unique across the entire project, because some types are
-// concatenations (via embedding) of others. For example, a
-// LegacyVersionedPackage contains the fields of both a LegacyModuleInfo and a
-// LegacyPackage, so we can't use the
-// same bits for both LegacyModuleInfo's LegacyReadmeContents field and
-// LegacyPackage's DocumentationHTML field.
-type FieldSet int64
-
-// MinimalFields is the empty FieldSet.
-const MinimalFields FieldSet = 0
-
-// AllFields is the FieldSet that contains all fields.
-const AllFields FieldSet = -1
-
-// StringFieldMissing is the value for string fields that are not present
-// in a struct. We use it to distinguish a (possibly valid) empty string
-// from a field that was never populated.
-const StringFieldMissing = "!MISSING"
-
-// FieldSet bits for fields that can be conditionally read from the data store.
-const (
-	WithReadme FieldSet = 1 << iota
-	WithDocumentation
-	WithImports
-	WithLicenses
-)
-
 // LegacyDirectory represents a directory in a module version, and all of the
 // packages inside that directory.
 type LegacyDirectory struct {
