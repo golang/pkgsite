@@ -93,6 +93,15 @@ func TestExtractURLPathInfo(t *testing.T) {
 				isModule:         false,
 			},
 		},
+		{
+			"/mod/a.com@v1.2.3/b",
+			&urlPathInfo{
+				fullPath:         "a.com/b",
+				modulePath:       "a.com",
+				requestedVersion: "v1.2.3",
+				isModule:         true,
+			},
+		},
 	} {
 		got, err := extractURLPathInfo(test.in)
 		if err != nil {

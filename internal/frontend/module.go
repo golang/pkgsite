@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -31,6 +32,7 @@ func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *
 	canShowDetails := modHeader.IsRedistributable || settings.AlwaysShowDetails
 	var details interface{}
 	if canShowDetails {
+		log.Debugf(ctx, "fetchDetailsForModule being called with um.Path=%q, um.ModulePath=%q", um.Path, um.ModulePath)
 		var err error
 		details, err = fetchDetailsForModule(r, tab, ds, um)
 		if err != nil {

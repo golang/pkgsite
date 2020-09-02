@@ -90,8 +90,8 @@ func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, 
 // "Subdirectories" tab, we do not want to include packages whose import paths
 // are the same as the dirPath.
 func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, includeDirPath bool) (_ *Directory, err error) {
-	defer derrors.Wrap(&err, "fetchDirectoryDetails(%q, %q, %q, %v)",
-		um.Path, um.ModulePath, um.Version, um.Licenses)
+	defer derrors.Wrap(&err, "fetchDirectoryDetails(%q, %q, %q, %v, %t)",
+		um.Path, um.ModulePath, um.Version, um.Licenses, includeDirPath)
 
 	if includeDirPath && um.Path != um.ModulePath && um.Path != stdlib.ModulePath {
 		return nil, fmt.Errorf("includeDirPath can only be set to true if dirPath = modulePath: %w", derrors.InvalidArgument)
