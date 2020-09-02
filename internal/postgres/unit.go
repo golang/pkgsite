@@ -60,7 +60,7 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 		u.LicenseContents = lics
 	}
 	if fields&internal.WithSubdirectories != 0 {
-		pkgs, err := db.GetPackagesInUnit(ctx, u.Path, u.ModulePath, u.Version)
+		pkgs, err := db.getPackagesInUnit(ctx, u.Path, u.ModulePath, u.Version)
 		if err != nil {
 			return nil, err
 		}
@@ -175,10 +175,10 @@ func (db *DB) getImports(ctx context.Context, pathID int) (_ []string, err error
 	return imports, nil
 }
 
-// GetPackagesInUnit returns all of the packages in a unit from a
+// getPackagesInUnit returns all of the packages in a unit from a
 // module version, including the package that lives at fullPath, if present.
-func (db *DB) GetPackagesInUnit(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ []*internal.PackageMeta, err error) {
-	defer derrors.Wrap(&err, "DB.GetPackagesInUnit(ctx, %q, %q, %q)", fullPath, modulePath, resolvedVersion)
+func (db *DB) getPackagesInUnit(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ []*internal.PackageMeta, err error) {
+	defer derrors.Wrap(&err, "DB.getPackagesInUnit(ctx, %q, %q, %q)", fullPath, modulePath, resolvedVersion)
 
 	query := `
 		SELECT

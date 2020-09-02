@@ -15,7 +15,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/licenses"
-	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -94,14 +93,10 @@ func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, um *inte
 	defer derrors.Wrap(&err, "fetchDirectoryDetails(%q, %q, %q, %v)",
 		um.Path, um.ModulePath, um.Version, um.Licenses)
 
-	db, ok := ds.(*postgres.DB)
-	if !ok {
-		return nil, proxydatasourceNotSupportedErr()
-	}
 	if includeDirPath && um.Path != um.ModulePath && um.Path != stdlib.ModulePath {
 		return nil, fmt.Errorf("includeDirPath can only be set to true if dirPath = modulePath: %w", derrors.InvalidArgument)
 	}
-	packages, err := db.GetPackagesInUnit(ctx, um.Path, um.ModulePath, um.Version)
+	u, err := ds.GetUnit(ctx, um, internal.WithSubdirectories)
 	mi := &internal.ModuleInfo{
 		ModulePath:        um.ModulePath,
 		Version:           um.Version,
@@ -115,7 +110,7 @@ func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, um *inte
 		header := createDirectoryHeader(um.Path, mi, um.Licenses)
 		return &Directory{DirectoryHeader: *header}, nil
 	}
-	return createDirectory(um.Path, mi, packages, um.Licenses, includeDirPath)
+	return createDirectory(um.Path, mi, u.Subdirectories, um.Licenses, includeDirPath)
 }
 
 // createDirectory constructs a *Directory for the given dirPath.

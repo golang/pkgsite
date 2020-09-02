@@ -144,7 +144,7 @@ func TestGetPackagesInUnit(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := testDB.GetPackagesInUnit(ctx, tc.fullPath, tc.modulePath, tc.version)
+			got, err := testDB.getPackagesInUnit(ctx, tc.fullPath, tc.modulePath, tc.version)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -180,7 +180,7 @@ func TestGetPackagesInUnitBypass(t *testing.T) {
 		{bypassDB, sample.Synopsis}, // Reading with license bypass returns the synopsis.
 		{testDB, ""},                // Without bypass, the synopsis is empty.
 	} {
-		pkgs, err := test.db.GetPackagesInUnit(ctx, m.ModulePath, m.ModulePath, m.Version)
+		pkgs, err := test.db.getPackagesInUnit(ctx, m.ModulePath, m.ModulePath, m.Version)
 		if err != nil {
 			t.Fatal(err)
 		}
