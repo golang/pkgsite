@@ -146,13 +146,6 @@ func (s *Server) fetchAndPoll(ctx context.Context, ds internal.DataSource, modul
 		return http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError)
 	}
 	results := s.checkPossibleModulePaths(ctx, db, fullPath, requestedVersion, modulePaths, true)
-	// If the context timed out or was canceled before all of the requests
-	// finished, return an error letting the user to check back later. The
-	// worker will still be processing the modules in the background.
-	if ctx.Err() != nil {
-		return http.StatusRequestTimeout,
-			fmt.Sprintf("We're still working on “%s”. Come back in a few minutes!", displayPath(fullPath, requestedVersion))
-	}
 	return fetchRequestStatusAndResponseText(results, fullPath, requestedVersion)
 }
 
@@ -223,6 +216,11 @@ func fetchRequestStatusAndResponseText(results []*fetchResult, fullPath, request
 		// path.
 		case http.StatusOK:
 			return fr.status, ""
+		case http.StatusRequestTimeout:
+			// If the context timed out or was canceled before all of the requests
+			// finished, return an error letting the user to check back later. The
+			// worker will still be processing the modules in the background.
+			return fr.status, fmt.Sprintf("We're still working on “%s”. Check back in a few minutes!", displayPath(fullPath, requestedVersion))
 		case http.StatusInternalServerError:
 			return fr.status, "Oops! Something went wrong."
 		case derrors.ToStatus(derrors.AlternativeModule):
