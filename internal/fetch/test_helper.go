@@ -72,7 +72,7 @@ func cleanFetchResult(fr *FetchResult, detector *licenses.Detector) *FetchResult
 				u.Documentation.GOARCH = "amd64"
 			}
 		}
-		if u.Name != "" {
+		if u.IsPackage() {
 			fr.Module.LegacyPackages = append(fr.Module.LegacyPackages, &internal.LegacyPackage{
 				Path:              u.Path,
 				Licenses:          u.Licenses,

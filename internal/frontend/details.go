@@ -172,7 +172,7 @@ func (s *Server) serveDetailsPage(w http.ResponseWriter, r *http.Request, ds int
 	switch {
 	case info.isModule:
 		return s.serveModulePage(ctx, w, r, ds, um, info.requestedVersion)
-	case um.Name != "":
+	case um.IsPackage():
 		return s.servePackagePage(ctx, w, r, ds, um, info.requestedVersion)
 	default:
 		return s.serveDirectoryPage(ctx, w, r, ds, um, info.requestedVersion)
