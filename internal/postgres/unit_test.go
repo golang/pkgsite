@@ -19,180 +19,6 @@ import (
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
-func TestGetPackagesInUnit(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
-
-	defer ResetTestDB(testDB, t)
-
-	InsertSampleDirectoryTree(ctx, t, testDB)
-
-	for _, tc := range []struct {
-		name, fullPath, modulePath, version, wantModulePath, wantVersion string
-		wantSuffixes                                                     []string
-	}{
-		{
-			name:           "directory path is the module path",
-			fullPath:       "github.com/hashicorp/vault",
-			modulePath:     "github.com/hashicorp/vault",
-			version:        "v1.2.3",
-			wantVersion:    "v1.2.3",
-			wantModulePath: "github.com/hashicorp/vault",
-			wantSuffixes: []string{
-				"builtin/audit/file",
-				"builtin/audit/socket",
-				"internal/foo",
-				"vault/replication",
-				"vault/seal/transit",
-			},
-		},
-		{
-			name:           "directory path is a package path",
-			fullPath:       "github.com/hashicorp/vault",
-			modulePath:     "github.com/hashicorp/vault",
-			version:        "v1.0.3",
-			wantVersion:    "v1.0.3",
-			wantModulePath: "github.com/hashicorp/vault",
-			wantSuffixes: []string{
-				"api",
-				"builtin/audit/file",
-				"builtin/audit/socket",
-			},
-		},
-		{
-			name:           "directory path is not a package or module",
-			fullPath:       "github.com/hashicorp/vault/builtin",
-			modulePath:     "github.com/hashicorp/vault",
-			wantModulePath: "github.com/hashicorp/vault",
-			version:        "v1.0.3",
-			wantVersion:    "v1.0.3",
-			wantSuffixes: []string{
-				"builtin/audit/file",
-				"builtin/audit/socket",
-			},
-		},
-		{
-			name:           "stdlib module",
-			fullPath:       stdlib.ModulePath,
-			modulePath:     stdlib.ModulePath,
-			version:        "v1.13.4",
-			wantModulePath: stdlib.ModulePath,
-			wantVersion:    "v1.13.4",
-			wantSuffixes: []string{
-				"archive/tar",
-				"archive/zip",
-				"cmd/go",
-				"cmd/internal/obj",
-				"cmd/internal/obj/arm",
-				"cmd/internal/obj/arm64",
-			},
-		},
-		{
-			name:           "stdlib directory",
-			fullPath:       "archive",
-			modulePath:     stdlib.ModulePath,
-			version:        "v1.13.4",
-			wantModulePath: stdlib.ModulePath,
-			wantVersion:    "v1.13.4",
-			wantSuffixes: []string{
-				"archive/tar",
-				"archive/zip",
-			},
-		},
-		{
-			name:           "stdlib package",
-			fullPath:       "archive/zip",
-			modulePath:     stdlib.ModulePath,
-			version:        "v1.13.4",
-			wantModulePath: stdlib.ModulePath,
-			wantVersion:    "v1.13.4",
-			wantSuffixes: []string{
-				"archive/zip",
-			},
-		},
-		{
-			name:       "stdlib package -  incomplete last element",
-			fullPath:   "archive/zi",
-			modulePath: stdlib.ModulePath,
-			version:    "v1.13.4",
-		},
-		{
-			name:           "stdlib - internal directory",
-			fullPath:       "cmd/internal",
-			modulePath:     stdlib.ModulePath,
-			version:        "v1.13.4",
-			wantModulePath: stdlib.ModulePath,
-			wantVersion:    "v1.13.4",
-			wantSuffixes: []string{
-				"cmd/internal/obj",
-				"cmd/internal/obj/arm",
-				"cmd/internal/obj/arm64",
-			},
-		},
-		{
-			name:           "stdlib - directory nested within an internal directory",
-			fullPath:       "cmd/internal/obj",
-			modulePath:     stdlib.ModulePath,
-			version:        "v1.13.4",
-			wantModulePath: stdlib.ModulePath,
-			wantVersion:    "v1.13.4",
-			wantSuffixes: []string{
-				"cmd/internal/obj",
-				"cmd/internal/obj/arm",
-				"cmd/internal/obj/arm64",
-			},
-		},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			got, err := testDB.getPackagesInUnit(ctx, tc.fullPath, tc.modulePath, tc.version)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			wantPackages := subdirectories(tc.modulePath, tc.wantSuffixes)
-			opts := []cmp.Option{
-				// The packages table only includes partial license information; it omits the Coverage field.
-				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
-			}
-			if diff := cmp.Diff(wantPackages, got, opts...); diff != "" {
-				t.Errorf("mismatch (-want +got):\n%s", diff)
-			}
-		})
-	}
-}
-
-func TestGetPackagesInUnitBypass(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
-	defer ResetTestDB(testDB, t)
-	bypassDB := NewBypassingLicenseCheck(testDB.db)
-
-	// Insert a non-redistributable module.
-	m := nonRedistributableModule()
-	if err := bypassDB.InsertModule(ctx, m); err != nil {
-		t.Fatal(err)
-	}
-
-	for _, test := range []struct {
-		db   *DB
-		want string
-	}{
-		{bypassDB, sample.Synopsis}, // Reading with license bypass returns the synopsis.
-		{testDB, ""},                // Without bypass, the synopsis is empty.
-	} {
-		pkgs, err := test.db.getPackagesInUnit(ctx, m.ModulePath, m.ModulePath, m.Version)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if len(pkgs) != 1 {
-			t.Fatal("len(pkgs) != 1")
-		}
-		if got := pkgs[0].Synopsis; got != test.want {
-			t.Errorf("bypass %t: got %q, want %q", test.db == bypassDB, got, test.want)
-		}
-	}
-}
-
 func TestGetUnit(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
@@ -509,6 +335,13 @@ func TestGetUnitBypass(t *testing.T) {
 		}
 		if got := (d.Documentation == nil); got != test.wantEmpty {
 			t.Errorf("doc empty: got %t, want %t", got, test.wantEmpty)
+		}
+		pkgs := d.Subdirectories
+		if len(pkgs) != 1 {
+			t.Fatal("len(pkgs) != 1")
+		}
+		if got := (pkgs[0].Synopsis == ""); got != test.wantEmpty {
+			t.Errorf("synopsis empty: got %t, want %t", got, test.wantEmpty)
 		}
 
 		ld, err := test.db.LegacyGetDirectory(ctx, m.ModulePath, m.ModulePath, m.Version, internal.AllFields)
