@@ -135,7 +135,7 @@ func exportToStackdriver(ctx context.Context, cfg *config.Config) {
 	// relatively memory-constrained.
 	traceExporter, err := stackdriver.NewExporter(stackdriver.Options{
 		ProjectID:                cfg.ProjectID,
-		MonitoredResource:        (*monitoredResource)(cfg.AppMonitoredResource),
+		MonitoredResource:        (*monitoredResource)(cfg.MonitoredResource),
 		TraceSpansBufferMaxBytes: 32 * 1024 * 1024, // 32 MiB
 	})
 	if err != nil {

@@ -121,13 +121,13 @@ type Config struct {
 	// structure GTM-XXXX.
 	GoogleTagManagerID string
 
-	// AppMonitoredResource is the resource for the current GAE app.
+	// MonitoredResource is the resource for the current GAE app.
 	// See https://cloud.google.com/monitoring/api/resources#tag_gae_app for more
 	// details:
 	// "An object representing a resource that can be used for monitoring, logging,
 	// billing, or other purposes. Examples include virtual machine instances,
 	// databases, and storage devices such as disks.""
-	AppMonitoredResource *mrpb.MonitoredResource
+	MonitoredResource *mrpb.MonitoredResource
 
 	// FallbackVersionLabel is used as the VersionLabel when not hosting on
 	// AppEngine.
@@ -340,7 +340,7 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		},
 		LogLevel: os.Getenv("GO_DISCOVERY_LOG_LEVEL"),
 	}
-	cfg.AppMonitoredResource = &mrpb.MonitoredResource{
+	cfg.MonitoredResource = &mrpb.MonitoredResource{
 		Type: "gae_app",
 		Labels: map[string]string{
 			"project_id": cfg.ProjectID,

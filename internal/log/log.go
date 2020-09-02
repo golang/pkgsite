@@ -143,12 +143,13 @@ func UseStackdriver(ctx context.Context, cfg *config.Config, logName string) (_ 
 	if err != nil {
 		return nil, err
 	}
+
 	// Configure the cloud logger using the gae_app monitored resource. It would
 	// be better to use the gae_instance monitored resource, but that's not
 	// currently supported:
 	// https://cloud.google.com/logging/docs/api/v2/resource-list#resource-types
-	parent := client.Logger(logName, logging.CommonResource(cfg.AppMonitoredResource))
-	child := client.Logger(logName+"-child", logging.CommonResource(cfg.AppMonitoredResource))
+	parent := client.Logger(logName, logging.CommonResource(cfg.MonitoredResource))
+	child := client.Logger(logName+"-child", logging.CommonResource(cfg.MonitoredResource))
 	mu.Lock()
 	defer mu.Unlock()
 	if _, ok := logger.(*stackdriverLogger); ok {
