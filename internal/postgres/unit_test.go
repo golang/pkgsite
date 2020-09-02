@@ -335,7 +335,7 @@ func TestGetUnit(t *testing.T) {
 				Filepath: sample.ReadmeFilePath,
 				Contents: sample.ReadmeContents,
 			}
-			if test.want.Package != nil {
+			if test.want.Name != "" {
 				test.want.Imports = sample.Imports
 			}
 			test.want.SourceInfo = pathInfo.SourceInfo
@@ -442,7 +442,6 @@ func unit(path, modulePath, version string, readme *internal.Readme, pkg *intern
 		},
 		LicenseContents: sample.Licenses,
 		Readme:          readme,
-		Package:         pkg,
 	}
 	if pkg != nil {
 		u.Documentation = sample.Documentation

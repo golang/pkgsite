@@ -121,9 +121,6 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 			Contents: sample.ReadmeContents,
 		}
 		wantu.LicenseContents = sample.Licenses
-		if wantu.Package != nil {
-			wantu.Name = wantu.Package.Name
-		}
 		opts := cmp.Options{
 			cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeFilePath"),
 			cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeContents"),

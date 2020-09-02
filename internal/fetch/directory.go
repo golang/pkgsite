@@ -60,10 +60,6 @@ func moduleUnits(modulePath, version string,
 		}
 		if pkg, ok := pkgLookup[dirPath]; ok {
 			dir.Name = pkg.Name
-			dir.Package = &internal.Package{
-				Path: pkg.Path,
-				Name: pkg.Name,
-			}
 			dir.Imports = pkg.Imports
 			dir.Documentation = &internal.Documentation{
 				GOOS:     pkg.GOOS,

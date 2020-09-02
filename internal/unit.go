@@ -47,7 +47,6 @@ type Unit struct {
 	UnitMeta
 	Readme          *Readme
 	Documentation   *Documentation
-	Package         *Package
 	Imports         []string
 	LicenseContents []*licenses.License
 }

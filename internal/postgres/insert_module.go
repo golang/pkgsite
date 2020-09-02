@@ -385,10 +385,8 @@ func insertUnits(ctx context.Context, db *database.DB, m *internal.Module, modul
 	sort.Slice(m.Units, func(i, j int) bool {
 		return m.Units[i].Path < m.Units[j].Path
 	})
-	for _, d := range m.Units {
-		if d.Package != nil && len(d.Imports) > 1 {
-			sort.Strings(d.Imports)
-		}
+	for _, u := range m.Units {
+		sort.Strings(u.Imports)
 	}
 	var (
 		pathValues    []interface{}
@@ -415,15 +413,11 @@ func insertUnits(ctx context.Context, db *database.DB, m *internal.Module, modul
 				}
 			}
 		}
-		var name string
-		if d.Package != nil {
-			name = d.Package.Name
-		}
 		pathValues = append(pathValues,
 			d.Path,
 			moduleID,
 			internal.V1Path(d.Path, m.ModulePath),
-			name,
+			d.Name,
 			pq.Array(licenseTypes),
 			pq.Array(licensePaths),
 			d.IsRedistributable,

@@ -57,39 +57,38 @@ func cleanFetchResult(fr *FetchResult, detector *licenses.Detector) *FetchResult
 	}
 
 	shouldSetPVS := (fr.PackageVersionStates == nil)
-	for _, dir := range fr.Module.Units {
-		dir.UnitMeta = internal.UnitMeta{
+	for _, u := range fr.Module.Units {
+		u.UnitMeta = internal.UnitMeta{
 			ModulePath:        fr.Module.ModulePath,
 			Version:           fr.Module.Version,
-			Path:              dir.Path,
-			IsRedistributable: dir.IsRedistributable,
-			Licenses:          dir.Licenses,
+			Path:              u.Path,
+			Name:              u.Name,
+			IsRedistributable: u.IsRedistributable,
+			Licenses:          u.Licenses,
 		}
-		if dir.Documentation != nil {
-			if dir.Documentation.GOOS == "" {
-				dir.Documentation.GOOS = "linux"
-				dir.Documentation.GOARCH = "amd64"
+		if u.Documentation != nil {
+			if u.Documentation.GOOS == "" {
+				u.Documentation.GOOS = "linux"
+				u.Documentation.GOARCH = "amd64"
 			}
 		}
-		if dir.Package != nil {
-			dir.Name = dir.Package.Name
-			dir.Package.Path = dir.Path
+		if u.Name != "" {
 			fr.Module.LegacyPackages = append(fr.Module.LegacyPackages, &internal.LegacyPackage{
-				Path:              dir.Path,
-				Licenses:          dir.Licenses,
-				V1Path:            internal.V1Path(dir.Path, dir.ModulePath),
-				Name:              dir.Package.Name,
-				Synopsis:          dir.Documentation.Synopsis,
-				DocumentationHTML: dir.Documentation.HTML,
-				Imports:           dir.Imports,
-				GOOS:              dir.Documentation.GOOS,
-				GOARCH:            dir.Documentation.GOARCH,
-				IsRedistributable: dir.IsRedistributable,
+				Path:              u.Path,
+				Licenses:          u.Licenses,
+				V1Path:            internal.V1Path(u.Path, u.ModulePath),
+				Name:              u.Name,
+				Synopsis:          u.Documentation.Synopsis,
+				DocumentationHTML: u.Documentation.HTML,
+				Imports:           u.Imports,
+				GOOS:              u.Documentation.GOOS,
+				GOARCH:            u.Documentation.GOARCH,
+				IsRedistributable: u.IsRedistributable,
 			})
 			if shouldSetPVS {
 				fr.PackageVersionStates = append(
 					fr.PackageVersionStates, &internal.PackageVersionState{
-						PackagePath: dir.Path,
+						PackagePath: u.Path,
 						ModulePath:  fr.Module.ModulePath,
 						Version:     fr.Module.Version,
 						Status:      http.StatusOK,
@@ -176,7 +175,7 @@ func validateDocumentationHTML(t *testing.T, got, want *internal.Module) {
 		checkHTML("LegacyPackages", i, got.LegacyPackages[i].DocumentationHTML, want.LegacyPackages[i].DocumentationHTML)
 	}
 	for i := 0; i < len(want.Units); i++ {
-		if want.Units[i].Package == nil {
+		if !want.Units[i].IsPackage() {
 			continue
 		}
 		checkHTML("Directories", i, got.Units[i].Documentation.HTML, want.Units[i].Documentation.HTML)

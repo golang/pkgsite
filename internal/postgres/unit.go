@@ -122,14 +122,6 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 		}
 		u.LicenseContents = lics
 	}
-	if fields == internal.AllFields {
-		if u.Name != "" {
-			u.Package = &internal.Package{
-				Path: u.Path,
-				Name: u.Name,
-			}
-		}
-	}
 	if !db.bypassLicenseCheck {
 		u.RemoveNonRedistributableData()
 	}

@@ -199,7 +199,6 @@ func Module(modulePath, version string, suffixes ...string) *internal.Module {
 		} else {
 			m.LegacyPackages = append(m.LegacyPackages, lp)
 			u := UnitForPackage(lp, modulePath, version)
-			m.Units[0].Package = u.Package
 			m.Units[0].Documentation = u.Documentation
 		}
 	}
@@ -284,10 +283,6 @@ func UnitForPackage(pkg *internal.LegacyPackage, modulePath, version string) *in
 			HTML:     pkg.DocumentationHTML,
 			GOOS:     pkg.GOOS,
 			GOARCH:   pkg.GOARCH,
-		},
-		Package: &internal.Package{
-			Name: pkg.Name,
-			Path: pkg.Path,
 		},
 	}
 }
