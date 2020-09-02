@@ -12,7 +12,8 @@ import (
 
 func TestSecureHeaders(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
-	mw := SecureHeaders()
+	enableCSP := true
+	mw := SecureHeaders(enableCSP)
 	ts := httptest.NewServer(mw(handler))
 	defer ts.Close()
 	resp, err := ts.Client().Get(ts.URL)

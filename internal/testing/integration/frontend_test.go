@@ -190,9 +190,10 @@ func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue) *httptest.S
 	if err != nil {
 		t.Fatal(err)
 	}
+	enableCSP := true
 	mw := middleware.Chain(
 		middleware.AcceptRequests(http.MethodGet, http.MethodPost),
-		middleware.SecureHeaders(),
+		middleware.SecureHeaders(enableCSP),
 		middleware.LatestVersions(s.GetLatestMinorVersion, s.GetLatestMajorVersion),
 		middleware.Experiment(experimenter),
 	)

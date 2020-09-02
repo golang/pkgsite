@@ -32,7 +32,7 @@ var scriptHashes = []string{
 
 // SecureHeaders adds a content-security-policy and other security-related
 // headers to all responses.
-func SecureHeaders() Middleware {
+func SecureHeaders(enableCSP bool) Middleware {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			csp := []string{
@@ -45,7 +45,9 @@ func SecureHeaders() Middleware {
 				fmt.Sprintf("script-src 'unsafe-inline' 'strict-dynamic' https: http: %s",
 					strings.Join(scriptHashes, " ")),
 			}
-			w.Header().Set("Content-Security-Policy", strings.Join(csp, "; "))
+			if enableCSP {
+				w.Header().Set("Content-Security-Policy", strings.Join(csp, "; "))
+			}
 			// Don't allow frame embedding.
 			w.Header().Set("X-Frame-Options", "deny")
 			// Prevent MIME sniffing.

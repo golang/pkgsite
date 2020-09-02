@@ -40,6 +40,7 @@ var (
 	_              = flag.String("static", "content/static", "path to folder containing static files served")
 	thirdPartyPath = flag.String("third_party", "third_party", "path to folder containing third-party libraries")
 	devMode        = flag.Bool("dev", false, "enable developer mode (reload templates on each page load, serve non-minified JS/CSS, etc.)")
+	disableCSP     = flag.Bool("nocsp", false, "enable Content Security Policy")
 	proxyURL       = flag.String("proxy_url", "https://proxy.golang.org", "Uses the module proxy referred to by this URL "+
 		"for direct proxy mode and frontend fetches")
 	directProxy = flag.Bool("direct_proxy", false, "if set to true, uses the module proxy referred to by this URL "+
@@ -182,8 +183,8 @@ func main() {
 		middleware.RequestLog(requestLogger),
 		middleware.AcceptRequests(http.MethodGet, http.MethodPost), // accept only GETs and POSTs
 		middleware.Quota(cfg.Quota),
-		middleware.GodocURL(),      // potentially redirects so should be early in chain
-		middleware.SecureHeaders(), // must come before any caching for nonces to work
+		middleware.GodocURL(),                  // potentially redirects so should be early in chain
+		middleware.SecureHeaders(!*disableCSP), // must come before any caching for nonces to work
 		middleware.LatestVersions(server.GetLatestMinorVersion, server.GetLatestMajorVersion), // must come before caching for version badge to work
 		middleware.Panic(panicHandler),
 		middleware.Timeout(54*time.Second),
