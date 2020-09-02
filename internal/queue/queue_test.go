@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
+	proto "github.com/golang/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal/config"
 	taskspb "google.golang.org/genproto/googleapis/cloud/tasks/v2"
 )
@@ -88,7 +88,8 @@ func TestNewTaskRequest(t *testing.T) {
 				t.Fatal(err)
 			}
 			got := gcp.newTaskRequest("mod", "v1.2.3", "suf", time.Minute)
-			if diff := cmp.Diff(test.want, got, cmpopts.IgnoreFields(taskspb.Task{}, "Name")); diff != "" {
+			test.want.Task.Name = got.Task.Name
+			if diff := cmp.Diff(test.want, got, cmp.Comparer(proto.Equal)); diff != "" {
 				t.Errorf("mismatch (-want, +got):\n%s", diff)
 			}
 		})
