@@ -31,7 +31,7 @@ func TestUpdateRedisIndexes(t *testing.T) {
 	rc := redis.NewClient(&redis.Options{Addr: mr.Addr()})
 	m1 := sample.Module("github.com/something", sample.VersionString, "apples/bananas")
 	m2 := sample.Module("github.com/something/else", sample.VersionString, "oranges/bananas")
-	m2.LegacyPackages[0].Imports = []string{m1.LegacyPackages[0].Path}
+	m2.Units[1].Imports = []string{m1.Units[1].Path}
 	if err := testDB.InsertModule(ctx, m1); err != nil {
 		t.Fatal(err)
 	}

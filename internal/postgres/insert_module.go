@@ -357,9 +357,9 @@ func insertImportsUnique(ctx context.Context, tx *database.DB, m *internal.Modul
 	}
 
 	var values []interface{}
-	for _, p := range m.LegacyPackages {
-		for _, i := range p.Imports {
-			values = append(values, p.Path, m.ModulePath, i)
+	for _, u := range m.Units {
+		for _, i := range u.Imports {
+			values = append(values, u.Path, m.ModulePath, i)
 		}
 	}
 	if len(values) == 0 {
