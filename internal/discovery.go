@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/safehtml"
 	"golang.org/x/mod/module"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
@@ -39,13 +38,6 @@ type ModuleInfo struct {
 	IsRedistributable bool
 	HasGoMod          bool // whether the module zip has a go.mod file
 	SourceInfo        *source.Info
-}
-
-// LegacyModuleInfo holds metadata associated with a module.
-type LegacyModuleInfo struct {
-	ModuleInfo
-	LegacyReadmeFilePath string
-	LegacyReadmeContents string
 }
 
 // VersionMap holds metadata associated with module queries for a version.
@@ -204,39 +196,4 @@ type SearchResult struct {
 	// can be approximate if search scanned only a subset of documents, and
 	// result count is estimated using the hyperloglog algorithm.
 	Approximate bool
-}
-
-// LegacyDirectory represents a directory in a module version, and all of the
-// packages inside that directory.
-type LegacyDirectory struct {
-	LegacyModuleInfo
-	Path     string
-	Packages []*LegacyPackage
-}
-
-// A LegacyPackage is a group of one or more Go source files with the same
-// package header. LegacyPackages are part of a module.
-type LegacyPackage struct {
-	Path              string
-	Name              string
-	Synopsis          string
-	IsRedistributable bool
-	Licenses          []*licenses.Metadata // metadata of applicable licenses
-	Imports           []string
-	DocumentationHTML safehtml.HTML
-	// The values of the GOOS and GOARCH environment variables used to parse the
-	// package.
-	GOOS   string
-	GOARCH string
-
-	// V1Path is the package path of a package with major version 1 in a given
-	// series.
-	V1Path string
-}
-
-// LegacyVersionedPackage is a LegacyPackage along with its corresponding module
-// information.
-type LegacyVersionedPackage struct {
-	LegacyPackage
-	LegacyModuleInfo
 }
