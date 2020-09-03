@@ -42,14 +42,9 @@ func (db *DB) UpdateModuleVersionStatesWithStatus(ctx context.Context, status in
 			WHERE
 				app_version < $1
 				AND status = $3;`
-	result, err := db.db.Exec(ctx, query, appVersion,
-		derrors.ToReprocessStatus(status), status)
+	affected, err := db.db.Exec(ctx, query, appVersion, derrors.ToReprocessStatus(status), status)
 	if err != nil {
 		return err
-	}
-	affected, err := result.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("result.RowsAffected(): %v", err)
 	}
 	log.Infof(ctx,
 		"Updated module_version_states with status=%d and app_version < %q to status=%d; %d affected",

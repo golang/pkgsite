@@ -79,7 +79,7 @@ func upsertModuleVersionState(ctx context.Context, db *database.DB, modulePath, 
 		sqlErrorMsg = fetchErr.Error()
 	}
 
-	result, err := db.Exec(ctx, `
+	affected, err := db.Exec(ctx, `
 			INSERT INTO module_version_states AS mvs (
 				module_path,
 				version,
@@ -115,10 +115,6 @@ func upsertModuleVersionState(ctx context.Context, db *database.DB, modulePath, 
 		appVersion, timestamp, status, goModPath, sqlErrorMsg, numPackages, isIncompatible(vers))
 	if err != nil {
 		return err
-	}
-	affected, err := result.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("result.RowsAffected(): %v", err)
 	}
 	if affected != 1 {
 		return fmt.Errorf("module version state update affected %d rows, expected exactly 1", affected)

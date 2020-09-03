@@ -19,7 +19,7 @@ import (
 )
 
 func TestPostgres_GetTaggedAndPseudoVersions(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
 	defer cancel()
 
 	var (

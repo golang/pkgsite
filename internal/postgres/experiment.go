@@ -53,27 +53,22 @@ func (db *DB) UpdateExperiment(ctx context.Context, e *internal.Experiment) (err
 	query := `UPDATE experiments
 		SET rollout = $2, description = $3
 		WHERE name = $1;`
-	res, err := db.db.Exec(ctx, query, e.Name, e.Rollout, e.Description)
+	n, err := db.db.Exec(ctx, query, e.Name, e.Rollout, e.Description)
 	if err != nil {
 		return err
 	}
-	return notFoundIfNoRows(res)
+	if n == 0 {
+		return derrors.NotFound
+	}
+	return nil
 }
 
 // RemoveExperiment removes the specified experiment.
 func (db *DB) RemoveExperiment(ctx context.Context, name string) (err error) {
 	defer derrors.Wrap(&err, "DB.RemoveExperiment(ctx, %q)", name)
-	res, err := db.db.Exec(ctx, `DELETE FROM experiments WHERE name = $1`, name)
+	n, err := db.db.Exec(ctx, `DELETE FROM experiments WHERE name = $1`, name)
 	if err != nil {
 		return err
-	}
-	return notFoundIfNoRows(res)
-}
-
-func notFoundIfNoRows(res sql.Result) error {
-	n, err := res.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("RowsAffected: %w", err)
 	}
 	if n == 0 {
 		return derrors.NotFound

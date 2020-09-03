@@ -824,13 +824,9 @@ func updateImportedByCounts(ctx context.Context, db *database.DB) (int64, error)
 		FROM computed_imported_by_counts c
 		WHERE s.package_path = c.package_path;`
 
-	res, err := db.Exec(ctx, updateStmt)
+	n, err := db.Exec(ctx, updateStmt)
 	if err != nil {
 		return 0, fmt.Errorf("error updating imported_by_count and imported_by_count_updated_at for search documents: %v", err)
-	}
-	n, err := res.RowsAffected()
-	if err != nil {
-		return 0, fmt.Errorf("RowsAffected: %v", err)
 	}
 	return n, nil
 }
@@ -955,13 +951,9 @@ func (db *DB) DeleteOlderVersionFromSearchDocuments(ctx context.Context, moduleP
 
 		// Delete all of those paths.
 		q := fmt.Sprintf(`DELETE FROM search_documents WHERE package_path IN ('%s')`, strings.Join(ppaths, `', '`))
-		res, err := tx.Exec(ctx, q)
+		n, err := tx.Exec(ctx, q)
 		if err != nil {
 			return err
-		}
-		n, err := res.RowsAffected()
-		if err != nil {
-			return fmt.Errorf("RowsAffected: %v", err)
 		}
 		log.Infof(ctx, "deleted %d rows from search_documents", n)
 		return nil

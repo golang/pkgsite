@@ -70,19 +70,10 @@ func (db *DB) Close() error {
 	return db.db.Close()
 }
 
-// Exec executes a SQL statement.
-func (db *DB) Exec(ctx context.Context, query string, args ...interface{}) (res sql.Result, err error) {
+// Exec executes a SQL statement and returns the number of rows it affected.
+func (db *DB) Exec(ctx context.Context, query string, args ...interface{}) (_ int64, err error) {
 	defer logQuery(ctx, query, args, db.instanceID)(&err)
-
-	if db.tx != nil {
-		return db.tx.ExecContext(ctx, query, args...)
-	}
-	return db.db.ExecContext(ctx, query, args...)
-}
-
-// ExecRowsAffected executes a SQL statement and returns the number of rows it affected.
-func (db *DB) ExecRowsAffected(ctx context.Context, query string, args ...interface{}) (_ int64, err error) {
-	res, err := db.Exec(ctx, query, args...)
+	res, err := db.execResult(ctx, query, args...)
 	if err != nil {
 		return 0, err
 	}
@@ -91,6 +82,14 @@ func (db *DB) ExecRowsAffected(ctx context.Context, query string, args ...interf
 		return 0, fmt.Errorf("RowsAffected: %v", err)
 	}
 	return n, nil
+}
+
+// execResult executes a SQL statement and returns a sql.Result.
+func (db *DB) execResult(ctx context.Context, query string, args ...interface{}) (res sql.Result, err error) {
+	if db.tx != nil {
+		return db.tx.ExecContext(ctx, query, args...)
+	}
+	return db.db.ExecContext(ctx, query, args...)
 }
 
 // Query runs the DB query.
