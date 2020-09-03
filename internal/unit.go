@@ -69,6 +69,15 @@ type Readme struct {
 	Contents string
 }
 
+// PackageMeta represents the metadata of a package in a module version.
+type PackageMeta struct {
+	Path              string
+	Name              string
+	Synopsis          string
+	IsRedistributable bool
+	Licenses          []*licenses.Metadata // metadata of applicable licenses
+}
+
 // A FieldSet is a bit set of struct fields. It is used to avoid reading large
 // struct fields from the data store. FieldSet is also the type of the
 // individual bit values. (Think of them as singleton sets.)

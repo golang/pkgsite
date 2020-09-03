@@ -103,15 +103,6 @@ type Module struct {
 	LegacyPackages []*LegacyPackage
 }
 
-// PackageMeta represents the metadata of a package in a module version.
-type PackageMeta struct {
-	Path              string
-	Name              string
-	Synopsis          string
-	IsRedistributable bool
-	Licenses          []*licenses.Metadata // metadata of applicable licenses
-}
-
 // IndexVersion holds the version information returned by the module index.
 type IndexVersion struct {
 	Path      string
