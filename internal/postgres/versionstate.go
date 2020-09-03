@@ -61,6 +61,10 @@ func (db *DB) UpsertModuleVersionState(ctx context.Context, modulePath, vers, ap
 		if err := upsertModuleVersionState(ctx, tx, modulePath, vers, appVersion, numPackages, timestamp, status, goModPath, fetchErr); err != nil {
 			return err
 		}
+		// Sync modules.status if the module exists in the modules table.
+		if err := updateModulesStatus(ctx, tx, modulePath, vers, status); err != nil {
+			return err
+		}
 		if len(packageVersionStates) == 0 {
 			return nil
 		}
@@ -118,6 +122,27 @@ func upsertModuleVersionState(ctx context.Context, db *database.DB, modulePath, 
 	}
 	if affected != 1 {
 		return fmt.Errorf("module version state update affected %d rows, expected exactly 1", affected)
+	}
+	return nil
+}
+
+// updateModulesStatus updates the status of the module with the given modulePath
+// and version, if it exists, in the modules table.
+func updateModulesStatus(ctx context.Context, db *database.DB, modulePath, version string, status int) (err error) {
+	defer derrors.Wrap(&err, "updateModulesStatus(%q, %q, %d)", modulePath, version, status)
+
+	query := `UPDATE modules
+			SET
+				status = $1
+			WHERE
+				module_path = $2
+				AND version = $3;`
+	affected, err := db.Exec(ctx, query, status, modulePath, version)
+	if err != nil {
+		return err
+	}
+	if affected > 1 {
+		return fmt.Errorf("module status update affected %d rows, expected at most 1", affected)
 	}
 	return nil
 }
