@@ -103,7 +103,7 @@ func fetchPackageOverviewDetails(ctx context.Context, ds internal.DataSource, um
 // It is exported to support external testing.
 func ReadmeHTML(ctx context.Context, mi *internal.ModuleInfo, readme *internal.Readme) (_ safehtml.HTML, err error) {
 	defer derrors.Wrap(&err, "readmeHTML(%s@%s)", mi.ModulePath, mi.Version)
-	if readme == nil {
+	if readme == nil || readme.Contents == "" {
 		return safehtml.HTML{}, nil
 	}
 	if !isMarkdown(readme.Filepath) {
