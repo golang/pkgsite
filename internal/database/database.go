@@ -80,6 +80,19 @@ func (db *DB) Exec(ctx context.Context, query string, args ...interface{}) (res 
 	return db.db.ExecContext(ctx, query, args...)
 }
 
+// ExecRowsAffected executes a SQL statement and returns the number of rows it affected.
+func (db *DB) ExecRowsAffected(ctx context.Context, query string, args ...interface{}) (_ int64, err error) {
+	res, err := db.Exec(ctx, query, args...)
+	if err != nil {
+		return 0, err
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("RowsAffected: %v", err)
+	}
+	return n, nil
+}
+
 // Query runs the DB query.
 func (db *DB) Query(ctx context.Context, query string, args ...interface{}) (_ *sql.Rows, err error) {
 	defer logQuery(ctx, query, args, db.instanceID)(&err)
