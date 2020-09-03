@@ -130,18 +130,6 @@ type PackageMeta struct {
 	Licenses          []*licenses.Metadata // metadata of applicable licenses
 }
 
-// PackageMetaFromLegacyPackage returns a PackageMeta based on data from a
-// LegacyPackage.
-func PackageMetaFromLegacyPackage(pkg *LegacyPackage) *PackageMeta {
-	return &PackageMeta{
-		Path:              pkg.Path,
-		IsRedistributable: pkg.IsRedistributable,
-		Name:              pkg.Name,
-		Synopsis:          pkg.Synopsis,
-		Licenses:          pkg.Licenses,
-	}
-}
-
 // IndexVersion holds the version information returned by the module index.
 type IndexVersion struct {
 	Path      string

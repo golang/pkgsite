@@ -149,7 +149,7 @@ func TestCreatePackage(t *testing.T) {
 		},
 	} {
 		t.Run(tc.label, func(t *testing.T) {
-			pm := internal.PackageMetaFromLegacyPackage(&tc.pkg.LegacyPackage)
+			pm := packageMetaFromLegacyPackage(&tc.pkg.LegacyPackage)
 			got, err := createPackage(pm, &tc.pkg.ModuleInfo, tc.linkVersion)
 			if err != nil {
 				t.Fatal(err)

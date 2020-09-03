@@ -79,7 +79,7 @@ func (s *Server) legacyServePackagePageWithPackage(w http.ResponseWriter, r *htt
 		}
 	}()
 	pkgHeader, err := createPackage(
-		internal.PackageMetaFromLegacyPackage(&pkg.LegacyPackage),
+		packageMetaFromLegacyPackage(&pkg.LegacyPackage),
 		&pkg.ModuleInfo,
 		requestedVersion == internal.LatestVersion)
 	if err != nil {
@@ -137,4 +137,16 @@ func (s *Server) legacyServePackagePageWithPackage(w http.ResponseWriter, r *htt
 	page.basePage.AllowWideContent = tab == tabDoc
 	s.servePage(r.Context(), w, settings.TemplateName, page)
 	return nil
+}
+
+// packageMetaFromLegacyPackage returns a PackageMeta based on data from a
+// LegacyPackage.
+func packageMetaFromLegacyPackage(pkg *internal.LegacyPackage) *internal.PackageMeta {
+	return &internal.PackageMeta{
+		Path:              pkg.Path,
+		IsRedistributable: pkg.IsRedistributable,
+		Name:              pkg.Name,
+		Synopsis:          pkg.Synopsis,
+		Licenses:          pkg.Licenses,
+	}
 }

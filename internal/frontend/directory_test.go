@@ -33,7 +33,7 @@ func TestFetchDirectoryDetails(t *testing.T) {
 		var wantPkgs []*Package
 		for _, suffix := range suffixes {
 			sp := sample.LegacyPackage(modulePath, suffix)
-			pm := internal.PackageMetaFromLegacyPackage(sp)
+			pm := packageMetaFromLegacyPackage(sp)
 			pkg, err := createPackage(pm, mi, false)
 			if err != nil {
 				t.Fatal(err)
