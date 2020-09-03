@@ -111,16 +111,6 @@ type Module struct {
 	LegacyPackages []*LegacyPackage
 }
 
-// DirectoryMeta represents the metadata of a directory in a module version.
-type DirectoryMeta struct {
-	ModuleInfo
-	Path              string
-	IsRedistributable bool
-	Licenses          []*licenses.Metadata // metadata of applicable licenses
-	Name              string               // name of the package, else empty string
-	PathID            int                  // only used by internal/postgres
-}
-
 // PackageMeta represents the metadata of a package in a module version.
 type PackageMeta struct {
 	Path              string

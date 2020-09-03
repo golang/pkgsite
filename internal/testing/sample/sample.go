@@ -116,17 +116,6 @@ func LegacyPackage(modulePath, suffix string) *internal.LegacyPackage {
 	}
 }
 
-func DirectoryMeta(modulePath, suffix, version string) *internal.DirectoryMeta {
-	p := constructFullPath(modulePath, suffix)
-	return &internal.DirectoryMeta{
-		ModuleInfo:        *ModuleInfo(modulePath, version),
-		Path:              p,
-		Name:              path.Base(p),
-		IsRedistributable: true,
-		Licenses:          LicenseMetadata,
-	}
-}
-
 func PackageMeta(fullPath string) *internal.PackageMeta {
 	return &internal.PackageMeta{
 		Path:              fullPath,

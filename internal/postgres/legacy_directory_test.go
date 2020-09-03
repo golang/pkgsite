@@ -268,7 +268,6 @@ func TestLegacyGetDirectory(t *testing.T) {
 				cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
 				// The packages table only includes partial license information; it omits the Coverage field.
 				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
-				cmpopts.IgnoreFields(internal.DirectoryMeta{}, "PathID"),
 			}
 			if diff := cmp.Diff(wantDirectory, got, opts...); diff != "" {
 				t.Errorf("testDB.LegacyGetDirectory(ctx, %q, %q, %q) mismatch (-want +got):\n%s", tc.dirPath, tc.modulePath, tc.version, diff)

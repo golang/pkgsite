@@ -168,7 +168,6 @@ func TestGetUnit(t *testing.T) {
 				cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
 				// The packages table only includes partial license information; it omits the Coverage field.
 				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
-				cmpopts.IgnoreFields(internal.DirectoryMeta{}, "PathID"),
 			}
 			// TODO(golang/go#38513): remove once we start displaying
 			// READMEs for directories instead of the top-level module.
@@ -255,7 +254,6 @@ func TestGetUnitFieldSet(t *testing.T) {
 				cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
 				// The packages table only includes partial license information; it omits the Coverage field.
 				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
-				cmpopts.IgnoreFields(internal.DirectoryMeta{}, "PathID"),
 			}
 			test.want.SourceInfo = pathInfo.SourceInfo
 			cleanFields(test.want, test.fields)
