@@ -137,6 +137,7 @@ func exportToStackdriver(ctx context.Context, cfg *config.Config) {
 		ProjectID:                cfg.ProjectID,
 		MonitoredResource:        (*monitoredResource)(cfg.MonitoredResource),
 		TraceSpansBufferMaxBytes: 32 * 1024 * 1024, // 32 MiB
+		DefaultMonitoringLabels:  stackdriverLabels(cfg),
 	})
 	if err != nil {
 		log.Fatalf(ctx, "error creating trace exporter: %v", err)
@@ -147,9 +148,6 @@ func exportToStackdriver(ctx context.Context, cfg *config.Config) {
 // NewViewExporter creates a StackDriver exporter for stats.
 func NewViewExporter(cfg *config.Config) (_ *stackdriver.Exporter, err error) {
 	defer derrors.Wrap(&err, "NewViewExporter()")
-
-	labels := &stackdriver.Labels{}
-	labels.Set("version", cfg.AppVersionLabel(), "Version label of the running binary")
 
 	// Views must be associated with the instance, else we run into overlapping
 	// timeseries problems. Note that generic_task is used because the
@@ -167,8 +165,16 @@ func NewViewExporter(cfg *config.Config) (_ *stackdriver.Exporter, err error) {
 				"task_id":    cfg.InstanceID,
 			},
 		},
-		DefaultMonitoringLabels: labels,
+		DefaultMonitoringLabels: stackdriverLabels(cfg),
 	})
+}
+
+func stackdriverLabels(cfg *config.Config) *stackdriver.Labels {
+	labels := &stackdriver.Labels{}
+	labels.Set("version", cfg.AppVersionLabel(), "Version label of the running binary")
+	labels.Set("env", cfg.DeploymentEnvironment(), "deployment environment")
+	labels.Set("app", cfg.Application(), "application name")
+	return labels
 }
 
 // Customizations of ochttp views. Views are updated as follows:
