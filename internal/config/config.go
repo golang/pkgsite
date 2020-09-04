@@ -342,7 +342,7 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		// Resolve AppEngine identifiers
 		ProjectID:          os.Getenv("GOOGLE_CLOUD_PROJECT"),
 		ServiceID:          GetEnv("GAE_SERVICE", os.Getenv("GO_DISCOVERY_SERVICE")),
-		VersionID:          GetEnv("GAE_VERSION", os.Getenv("DOCKER_IMAGE_TAG")),
+		VersionID:          GetEnv("GAE_VERSION", os.Getenv("DOCKER_IMAGE")),
 		InstanceID:         GetEnv("GAE_INSTANCE", os.Getenv("GO_DISCOVERY_INSTANCE")),
 		GoogleTagManagerID: os.Getenv("GO_DISCOVERY_GOOGLE_TAG_MANAGER_ID"),
 		QueueService:       os.Getenv("GO_DISCOVERY_QUEUE_SERVICE"),
