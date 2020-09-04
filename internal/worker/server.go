@@ -204,6 +204,9 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// returns an HTML page displaying information about recent versions that were processed.
 	handle("/versions", http.HandlerFunc(s.handleHTMLPage(s.doVersionsPage)))
 
+	// Health check.
+	handle("/healthz", http.HandlerFunc(s.handleHealthCheck))
+
 	// returns an HTML page displaying the homepage.
 	handle("/", http.HandlerFunc(s.handleHTMLPage(s.doIndexPage)))
 }
@@ -519,6 +522,14 @@ func (s *Server) updateExperiment(w http.ResponseWriter, r *http.Request) error 
 
 	fmt.Fprintf(w, "Updated %q experiment rollout to %d percent", name, rollout)
 	return nil
+}
+
+func (s *Server) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
+	if err := s.db.Underlying().Ping(); err != nil {
+		http.Error(w, fmt.Sprintf("DB ping failed: %v", err), http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprintln(w, "OK")
 }
 
 // Parse the template for the status page.

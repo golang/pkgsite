@@ -55,6 +55,10 @@ func New(db *sql.DB, instanceID string) *DB {
 	return &DB{db: db, instanceID: instanceID}
 }
 
+func (db *DB) Ping() error {
+	return db.db.Ping()
+}
+
 func (db *DB) InTransaction() bool {
 	return db.tx != nil
 }
