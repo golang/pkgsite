@@ -71,8 +71,8 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		Excluded        []string
 	}{
 		Config:         s.cfg,
-		Env:            env(s.cfg.ServiceID),
-		ResourcePrefix: strings.ToLower(env(s.cfg.ServiceID)) + "-",
+		Env:            env(s.cfg),
+		ResourcePrefix: strings.ToLower(env(s.cfg)) + "-",
 		LocationID:     s.cfg.LocationID,
 		Experiments:    experiments,
 		Excluded:       excluded,
@@ -154,23 +154,17 @@ func (s *Server) doVersionsPage(w http.ResponseWriter, r *http.Request) (err err
 		Recent:          recents,
 		RecentFailures:  failures,
 		Config:          s.cfg,
-		Env:             env(s.cfg.ServiceID),
-		ResourcePrefix:  strings.ToLower(env(s.cfg.ServiceID)) + "-",
+		Env:             env(s.cfg),
+		ResourcePrefix:  strings.ToLower(env(s.cfg)) + "-",
 		LatestTimestamp: &stats.LatestTimestamp,
 		Counts:          counts,
 	}
 	return renderPage(ctx, w, page, s.templates[versionsTemplate])
 }
 
-func env(serviceID string) string {
-	if serviceID == "" {
-		return "Local"
-	}
-	parts := strings.Split(serviceID, "-")
-	if len(parts) == 1 {
-		return "Prod"
-	}
-	return strings.ToUpper(parts[0][:1]) + parts[0][1:]
+func env(cfg *config.Config) string {
+	e := cfg.DeploymentEnvironment()
+	return strings.ToUpper(e[:1]) + e[1:]
 }
 
 func renderPage(ctx context.Context, w http.ResponseWriter, page interface{}, tmpl *template.Template) (err error) {

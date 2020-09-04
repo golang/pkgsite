@@ -153,13 +153,9 @@ func UseStackdriver(ctx context.Context, cfg *config.Config, logName string) (_ 
 
 	opts := []logging.LoggerOption{logging.CommonResource(cfg.MonitoredResource)}
 	if cfg.OnGKE() {
-		i := strings.IndexRune(cfg.ServiceID, '-')
-		if i < 0 {
-			return nil, fmt.Errorf("ServiceID %q is not in the form ENV-APP", cfg.ServiceID)
-		}
 		opts = append(opts, logging.CommonLabels(map[string]string{
-			"k8s-pod/env": cfg.ServiceID[:i],
-			"k8s-pod/app": cfg.ServiceID[i+1:],
+			"k8s-pod/env": cfg.DeploymentEnvironment(),
+			"k8s-pod/app": cfg.Application(),
 		}))
 	}
 	parent := client.Logger(logName, opts...)
