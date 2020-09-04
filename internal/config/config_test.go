@@ -95,3 +95,28 @@ func TestParseCommaList(t *testing.T) {
 		}
 	}
 }
+
+func TestEnvAndApp(t *testing.T) {
+	for _, test := range []struct {
+		serviceID string
+		wantEnv   string
+		wantApp   string
+	}{
+		{"default", "prod", "frontend"},
+		{"etl", "prod", "worker"},
+		{"staging-etl", "staging", "worker"},
+		{"exp-worker", "exp", "worker"},
+		{"-foo-bar", "unknownEnv", "foo-bar"},
+		{"", "local", "unknownApp"},
+	} {
+		cfg := &Config{ServiceID: test.serviceID}
+		gotEnv := cfg.DeploymentEnvironment()
+		if gotEnv != test.wantEnv {
+			t.Errorf("%q: got %q, want %q", test.serviceID, gotEnv, test.wantEnv)
+		}
+		gotApp := cfg.Application()
+		if gotApp != test.wantApp {
+			t.Errorf("%q: got %q, want %q", test.serviceID, gotApp, test.wantApp)
+		}
+	}
+}

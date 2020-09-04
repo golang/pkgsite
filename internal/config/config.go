@@ -249,6 +249,45 @@ func (c *Config) DebugAddr(dflt string) string {
 	return dflt
 }
 
+// DeploymentEnvironment returns the deployment environment this process
+// is in: usually one of "local", "exp", "dev", "staging" or "prod".
+func (c *Config) DeploymentEnvironment() string {
+	if c.ServiceID == "" {
+		return "local"
+	}
+	parts := strings.SplitN(c.ServiceID, "-", 2)
+	if len(parts) == 1 {
+		return "prod"
+	}
+	if parts[0] == "" {
+		return "unknownEnv"
+	}
+	return parts[0]
+}
+
+// Application returns the name of the running application: "worker",
+// "frontend", etc.
+func (c *Config) Application() string {
+	if c.ServiceID == "" {
+		return "unknownApp"
+	}
+	parts := strings.SplitN(c.ServiceID, "-", 2)
+	var svc string
+	if len(parts) == 1 {
+		svc = parts[0]
+	} else {
+		svc = parts[1]
+	}
+	switch svc {
+	case "default":
+		return "frontend"
+	case "etl":
+		return "worker"
+	default:
+		return svc
+	}
+}
+
 // configOverride holds selected config settings that can be dynamically overridden.
 type configOverride struct {
 	DBHost          string
