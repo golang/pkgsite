@@ -200,7 +200,7 @@ func main() {
 // It first tries the main connection info (DBConnInfo), and if that fails, it uses backup
 // connection info it if exists (DBSecondaryConnInfo).
 func openDB(ctx context.Context, cfg *config.Config, driver string) (_ *database.DB, err error) {
-	derrors.Wrap(&err, "openDB(ctx, cfg, %q)", driver)
+	defer derrors.Wrap(&err, "openDB(ctx, cfg, %q)", driver)
 	log.Infof(ctx, "opening database on host %s", cfg.DBHost)
 	ddb, err := database.Open(driver, cfg.DBConnInfo(), cfg.InstanceID)
 	if err == nil {
