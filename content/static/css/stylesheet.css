@@ -1252,8 +1252,7 @@ code {
 }
 .Documentation-exampleButtonsContainer {
   align-items: center;
-  /* This will change back to display: flex; when we enable playground buttons */
-  display: none;
+  display: flex;
   justify-content: flex-end;
   margin-top: 0.5rem;
 }
