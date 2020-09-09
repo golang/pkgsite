@@ -22,6 +22,69 @@ import (
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
+func TestPostgres_GetNestedModules(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	for _, tc := range []struct {
+		name            string
+		path            string
+		modules         []*internal.Module
+		wantModulePaths []string
+	}{
+		{
+			name: "Nested Modules in cloud.google.com/go that have the same module prefix path",
+			path: "cloud.google.com/go",
+			modules: []*internal.Module{
+				sample.Module("cloud.google.com/go", "v0.46.2", "storage", "spanner", "pubsub"),
+				sample.Module("cloud.google.com/go/storage", "v1.10.0", sample.Suffix),
+				sample.Module("cloud.google.com/go/spanner", "v1.9.0", sample.Suffix),
+				sample.Module("cloud.google.com/go/pubsub", "v1.6.1", sample.Suffix),
+			},
+			wantModulePaths: []string{
+				"cloud.google.com/go/pubsub",
+				"cloud.google.com/go/spanner",
+				"cloud.google.com/go/storage",
+			},
+		},
+		{
+			name: "Nested Modules in cloud.google.com/go that have multiple major versions",
+			path: "cloud.google.com/go",
+			modules: []*internal.Module{
+				sample.Module("cloud.google.com/go", "v0.46.2", "storage", "spanner", "pubsub"),
+				sample.Module("cloud.google.com/go/storage", "v1.10.0", sample.Suffix),
+				sample.Module("cloud.google.com/go/storage/v9", "v9.0.0", sample.Suffix),
+				sample.Module("cloud.google.com/go/storage/v11", "v11.0.0", sample.Suffix),
+			},
+			wantModulePaths: []string{
+				"cloud.google.com/go/storage/v11",
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			defer ResetTestDB(testDB, t)
+			for _, v := range tc.modules {
+				if err := testDB.InsertModule(ctx, v); err != nil {
+					t.Fatal(err)
+				}
+			}
+
+			gotModules, err := testDB.GetNestedModules(ctx, "cloud.google.com/go")
+			if err != nil {
+				t.Fatal(err)
+			}
+			var gotModulePaths []string
+			for _, mod := range gotModules {
+				gotModulePaths = append(gotModulePaths, mod.ModulePath)
+			}
+
+			if diff := cmp.Diff(tc.wantModulePaths, gotModulePaths); diff != "" {
+				t.Errorf("mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
 func TestPostgres_GetModuleInfo(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()

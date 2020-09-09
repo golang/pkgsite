@@ -210,18 +210,11 @@ func getPathVersions(ctx context.Context, db *DB, path string, versionTypes ...v
 	query := fmt.Sprintf(baseQuery, versionTypeExpr(versionTypes), queryEnd)
 	var versions []*internal.ModuleInfo
 	collect := func(rows *sql.Rows) error {
-		var mi internal.ModuleInfo
-		if err := rows.Scan(
-			&mi.ModulePath,
-			&mi.Version,
-			&mi.CommitTime,
-			&mi.IsRedistributable,
-			&mi.HasGoMod,
-			jsonbScanner{&mi.SourceInfo},
-		); err != nil {
+		mi, err := scanModuleInfo(rows.Scan)
+		if err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
-		versions = append(versions, &mi)
+		versions = append(versions, mi)
 		return nil
 	}
 	if err := db.db.RunQuery(ctx, query, collect, path); err != nil {

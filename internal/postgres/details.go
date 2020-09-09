@@ -21,6 +21,46 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 )
 
+// GetNestedModules returns the latest major version of all nested modules
+// given a modulePath path prefix.
+func (db *DB) GetNestedModules(ctx context.Context, modulePath string) (_ []*internal.ModuleInfo, err error) {
+	defer derrors.Wrap(&err, "GetNestedModules(ctx, %v)", modulePath)
+
+	query := `
+		SELECT DISTINCT ON (series_path)
+			m.module_path,
+			m.version,
+			m.commit_time,
+			m.redistributable,
+			m.has_go_mod,
+			m.source_info
+		FROM
+			modules m
+		WHERE
+			m.module_path LIKE $1 || '/%'
+		ORDER BY
+			m.series_path,
+			m.incompatible,
+			m.version_type = 'release' DESC,
+			m.sort_version DESC;
+	`
+
+	var modules []*internal.ModuleInfo
+	collect := func(rows *sql.Rows) error {
+		mi, err := scanModuleInfo(rows.Scan)
+		if err != nil {
+			return fmt.Errorf("rows.Scan(): %v", err)
+		}
+		modules = append(modules, mi)
+		return nil
+	}
+	if err := db.db.RunQuery(ctx, query, collect, modulePath); err != nil {
+		return nil, err
+	}
+
+	return modules, nil
+}
+
 // LegacyGetPackagesInModule returns packages contained in the module version
 // specified by modulePath and version. The returned packages will be sorted
 // by their package path.
@@ -163,25 +203,24 @@ func (db *DB) GetModuleInfo(ctx context.Context, modulePath, version string) (_ 
 			module_path,
 			version,
 			commit_time,
-			source_info,
 			redistributable,
-			has_go_mod
+			has_go_mod,
+			source_info
 		FROM
 			modules
 		WHERE
 			module_path = $1
 			AND version = $2;`
 
-	var mi internal.ModuleInfo
 	row := db.db.QueryRow(ctx, query, modulePath, version)
-	if err := row.Scan(&mi.ModulePath, &mi.Version, &mi.CommitTime,
-		jsonbScanner{&mi.SourceInfo}, &mi.IsRedistributable, &mi.HasGoMod); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, derrors.NotFound
-		}
+	mi, err := scanModuleInfo(row.Scan)
+	if err == sql.ErrNoRows {
+		return nil, derrors.NotFound
+	}
+	if err != nil {
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
-	return &mi, nil
+	return mi, nil
 }
 
 // LegacyGetModuleInfo fetches a module version from the database with the primary key
@@ -255,6 +294,16 @@ func (s jsonbScanner) Scan(value interface{}) (err error) {
 	// *s.ptr = *v
 	vptr.Elem().Set(v.Elem())
 	return nil
+}
+
+// scanModuleInfo constructs an *internal.ModuleInfo from the given scanner.
+func scanModuleInfo(scan func(dest ...interface{}) error) (*internal.ModuleInfo, error) {
+	var mi internal.ModuleInfo
+	if err := scan(&mi.ModulePath, &mi.Version, &mi.CommitTime,
+		&mi.IsRedistributable, &mi.HasGoMod, jsonbScanner{&mi.SourceInfo}); err != nil {
+		return nil, err
+	}
+	return &mi, nil
 }
 
 // convertDocumentation takes a string that was read from the database and

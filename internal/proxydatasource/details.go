@@ -97,3 +97,8 @@ func (ds *DataSource) GetUnitMeta(ctx context.Context, path, inModulePath, inVer
 func (*DataSource) GetExperiments(ctx context.Context) ([]*internal.Experiment, error) {
 	return nil, nil
 }
+
+// GetNestedModules will return an empty slice since it is not implemented in proxy mode.
+func (ds *DataSource) GetNestedModules(ctx context.Context, modulePath string) (_ []*internal.ModuleInfo, err error) {
+	return nil, nil
+}

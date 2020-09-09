@@ -17,6 +17,9 @@ type DataSource interface {
 
 	// GetLatestMajorVersion returns the latest major version of a series path.
 	GetLatestMajorVersion(ctx context.Context, seriesPath string) (_ string, err error)
+	// GetNestedModules returns the latest major version of all nested modules
+	// given a modulePath path prefix.
+	GetNestedModules(ctx context.Context, modulePath string) ([]*ModuleInfo, error)
 	// GetUnitMeta returns information about a path.
 	GetUnitMeta(ctx context.Context, path, requestedModulePath, requestedVersion string) (_ *UnitMeta, err error)
 	// GetUnit returns information about a directory, which may also be a module and/or package.
