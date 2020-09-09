@@ -414,7 +414,8 @@ func Init(ctx context.Context) (_ *Config, err error) {
 					"location":       path.Base(cfg.ZoneID),
 					"cluster_name":   "pkgsite",
 					"namespace_name": "default",
-					"container_name": "main",
+					"pod_name":       os.Getenv("HOSTNAME"),
+					"container_name": cfg.Application(),
 				},
 			}
 		default:
