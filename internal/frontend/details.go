@@ -169,6 +169,11 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 func (s *Server) serveDetailsPage(w http.ResponseWriter, r *http.Request, ds internal.DataSource, um *internal.UnitMeta, info *urlPathInfo) (err error) {
 	defer derrors.Wrap(&err, "serveDetailsPage(w, r, %v)", info)
 	ctx := r.Context()
+
+	if isActiveUnitPage(ctx) {
+		return s.serveUnitPage(ctx, w, r, ds, um, info.requestedVersion)
+	}
+
 	switch {
 	case info.isModule:
 		return s.serveModulePage(ctx, w, r, ds, um, info.requestedVersion)
@@ -367,6 +372,13 @@ func isActiveUseUnits(ctx context.Context) bool {
 func isActivePathAtMaster(ctx context.Context) bool {
 	return experiment.IsActive(ctx, internal.ExperimentMasterVersion) &&
 		isActiveFrontendFetch(ctx)
+}
+
+// isActiveUnitPage reports whether the experiments needed for viewing
+// unit page are active.
+func isActiveUnitPage(ctx context.Context) bool {
+	return experiment.IsActive(ctx, internal.ExperimentUnitPage) &&
+		isActiveUseUnits(ctx)
 }
 
 // pathNotFoundError returns an error page with instructions on how to

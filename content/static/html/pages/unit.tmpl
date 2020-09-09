@@ -1,0 +1,28 @@
+<!--
+  Copyright 2020 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "pre_content"}}
+  <link href="/static/css/unit.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  {{block "unit_pre_content" .}}{{end}}
+{{end}}
+
+{{define "main_content"}}
+  <div class="Container">
+    {{block "unit_header" .}}{{end}}
+    <div class="UnitContent">
+      {{if .CanShowDetails}}
+        {{template "unit_content" .}}
+      {{else}}
+        <h2>“{{.UnitContentName}}” not displayed due to license restrictions.</h2>
+        See our <a href="/license-policy">license policy</a>.
+      {{end}}
+    </div>
+  </div>
+{{end}}
+
+{{define "post_content"}}
+  {{block "unit_post_content" .}}{{end}}
+{{end}}

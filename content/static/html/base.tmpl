@@ -18,9 +18,9 @@
 {{if (.Experiments.IsActive "sidenav")}}
   <link href="/static/css/sidenav.css?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
-{{block "main_content_stylesheet" .}}{{end}}
 <link href="/third_party/dialog-polyfill/dialog-polyfill.css?version={{.AppVersionLabel}}" rel="stylesheet">
 <title>{{if .HTMLTitle}}{{.HTMLTitle}} · {{end}}pkg.go.dev</title>
+{{block "pre_content" .}}{{end}}
 <body class="Site{{if .AllowWideContent}} Site--wide{{end}}">
 <header class="Site-header Site-header--dark">
   <div class="Banner">

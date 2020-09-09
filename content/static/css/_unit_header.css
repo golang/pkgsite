@@ -1,0 +1,124 @@
+/*
+ * Copyright 2020 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+.UnitHeader {
+  border-bottom: 1px solid var(--gray-8);
+  margin-left: -1.5rem;
+  padding: 0.5rem 1.5rem 1rem;
+  padding-bottom: 1rem;
+  width: 100vw;
+}
+@media only screen and (max-width: 52rem) {
+  .UnitHeader {
+    margin-left: -1rem;
+  }
+}
+.UnitHeader-breadcrumb {
+  margin-top: 1.1rem;
+}
+.UnitHeader-breadcrumbItem {
+  color: var(--gray-4);
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+}
+.UnitHeader-breadcrumbItem:not(:last-child)::after {
+  content: '>';
+  padding: 0.5rem;
+}
+.UnitHeader-title {
+  font-size: 1.75rem;
+  line-height: 2.25rem;
+  margin-bottom: 1rem;
+  margin-top: 0.625rem;
+}
+.UnitHeader-detail {
+  align-items: center;
+  display: flex;
+  overflow: scroll;
+  white-space: nowrap;
+}
+.UnitHeader-detailItem {
+  color: var(--gray-4);
+  font-size: 0.875rem;
+}
+.UnitHeader-detailItemSmall {
+  display: none;
+}
+@media only screen and (max-width: 52rem) {
+  .UnitHeader-detailItemLarge {
+    display: none;
+  }
+  .UnitHeader-detailItemSmall {
+    display: initial;
+  }
+}
+.UnitHeader-detailItem img {
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+.UnitHeader-detailItem:not(:last-of-type):after {
+  content: '|';
+  padding: 1rem;
+}
+@media only screen and (max-width: 52rem) {
+  .UnitHeader-detailItem:not(:last-of-type):after {
+    padding: 0.5rem;
+  }
+}
+/*
+ * TODO: Replace DetailsHeader-badge with UnitHeader-versionBadge in
+ * middleware/latestversion.go after unit page is launched.
+ */
+.UnitHeader-versionBadge,
+.DetailsHeader-badge {
+  border-radius: unset;
+  color: white;
+  font-size: 0.7rem;
+  margin: -1rem 0 -1rem 0.5rem;
+  padding: 0.25rem 0.5rem;
+  text-transform: uppercase;
+  top: -0.0625rem;
+}
+@media only screen and (max-width: 52rem) {
+  .UnitHeader-versionBadge,
+  .DetailsHeader-badge {
+    margin-left: 0rem;
+    margin-right: 0.5rem;
+  }
+}
+.UnitHeader-versionBadge--latest,
+.DetailsHeader-badge--latest {
+  background: var(--turq-dark);
+}
+.UnitHeader-versionBadge--goToLatest,
+.DetailsHeader-badge--goToLatest {
+  background: var(--pink);
+}
+.UnitHeader-versionBadge--unknown,
+.DetailsHeader-badge--unknown {
+  display: none;
+}
+.UnitHeader-versionBanner {
+  background-color: var(--gray-10);
+  display: flex;
+  margin: -0.5rem 0 1rem 0;
+  padding: 0.75rem 0;
+}
+/*
+ * TODO: Replace DetailsHeader-banner with UnitHeader-versionBanner in
+ * middleware/latestversion.go after unit page is launched.
+ */
+.UnitHeader-versionBanner--latest,
+.DetailsHeader-banner--latest {
+  display: none;
+}
+.UnitHeader-detailIcon {
+  color: var(--gray-3);
+  flex-shrink: 0;
+  margin-left: 1rem;
+  margin-right: 0.7rem;
+  width: 1rem;
+}

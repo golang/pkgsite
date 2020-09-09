@@ -11,11 +11,12 @@ import (
 
 const (
 	ExperimentAutocomplete       = "autocomplete"
+	ExperimentExecutableExamples = "executable-examples"
 	ExperimentFrontendFetch      = "frontend-fetch"
 	ExperimentMasterVersion      = "master-version"
-	ExperimentExecutableExamples = "executable-examples"
 	ExperimentSidenav            = "sidenav"
 	ExperimentTranslateHTML      = "translate-html"
+	ExperimentUnitPage           = "unit-page"
 	ExperimentUseUnits           = "use-units"
 	ExperimentUsePackageImports  = "use-package-imports"
 	ExperimentUsePathInfo        = "use-path-info"
@@ -25,11 +26,12 @@ const (
 // a description of each experiment.
 var Experiments = map[string]string{
 	ExperimentAutocomplete:       "Enable autocomplete with search.",
+	ExperimentExecutableExamples: "Display executable examples with their import statements, so that they are runnable via the Go playground.",
 	ExperimentFrontendFetch:      "Enable ability to fetch a package that doesn't exist on pkg.go.dev.",
 	ExperimentMasterVersion:      "Enable viewing path@master.",
-	ExperimentExecutableExamples: "Display executable examples with their import statements, so that they are runnable via the Go playground.",
 	ExperimentSidenav:            "Display documentation index on the left sidenav.",
 	ExperimentTranslateHTML:      "Parse HTML text in READMEs, to properly display images.",
+	ExperimentUnitPage:           "Enable the redesigned details page.",
 	ExperimentUseUnits:           "Read from paths, documentation, readmes, and package_imports tables.",
 	ExperimentUsePathInfo:        "Check the paths table if a path exists, as opposed to the packages or modules table.",
 	ExperimentUsePackageImports:  "Read imports from the package_imports table.",
