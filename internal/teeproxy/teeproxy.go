@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// Package teeproxy provides functionality for running a service which tees
+// traffic to pkg.go.dev.
 package teeproxy
 
 import (

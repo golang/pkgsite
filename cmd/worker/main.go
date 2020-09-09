@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// The fetch command runs a server that fetches modules from a proxy and writes
-// them to the discovery database.
+// The worker command runs a service with the primary job of fetching modules
+// from a proxy and writing them to the database.
 package main
 
 import (

@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// Package worker provides functionality for running a worker service.
+// Its primary operation is to fetch modules from a proxy and write them to the
+// database.
 package worker
 
 import (

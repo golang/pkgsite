@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// Package frontend provides functionality for running the pkg.go.dev site.
 package frontend
 
 import (
