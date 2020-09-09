@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Command main reads from the CSS file at
+// Command css appends CSS styles to content/static/stylesheet.css.
+// It reads from the CSS file at
 // https://github.com/sindresorhus/github-markdown-css/blob/gh-pages/github-markdown.css
 // and removes all styles that do not belong to a .markdown-body <tag>.  The
 // .markdown-body class is then replaced with .Overview-readmeContent, for use
@@ -16,12 +17,11 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path"
-	"runtime"
 	"strings"
 )
 
 const (
+	cssFile              = "content/static/stylesheet.css"
 	githubStylesheet     = "https://raw.githubusercontent.com/sindresorhus/github-markdown-css/gh-pages/github-markdown.css"
 	githubREADMEClass    = ".markdown-body"
 	discoveryREADMEClass = ".Overview-readmeContent"
@@ -72,15 +72,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Get the abs path for content/static/css.
-	_, filename, _, ok := runtime.Caller(0)
-	if !ok {
-		log.Fatal("No caller information")
-	}
-	dir := path.Dir(filename)
-
-	f := dir + "/stylesheet.css"
-	file, err := os.OpenFile(f, os.O_WRONLY|os.O_APPEND, 0644)
+	file, err := os.OpenFile(cssFile, os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		log.Fatalf("os.OpenFile(f, os.O_WRONLY|os.O_APPEND, 0644): %v", err)
 	}
@@ -93,7 +85,7 @@ func main() {
 	if !*write {
 		fmt.Println("Dryrun only. Run with `-write` to write to stylesheet.css.")
 	} else {
-		fmt.Printf("Writing these properties to %q: \n", f)
+		fmt.Printf("Writing these properties to %q: \n", cssFile)
 	}
 
 	contentsToWrite := `
