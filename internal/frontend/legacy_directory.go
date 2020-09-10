@@ -66,5 +66,5 @@ func legacyCreateDirectory(dbDir *internal.LegacyDirectory, licmetas []*licenses
 		newPkg := packageMetaFromLegacyPackage(pkg)
 		packages = append(packages, newPkg)
 	}
-	return createDirectory(dbDir.Path, &dbDir.ModuleInfo, packages, licmetas, includeDirPath)
+	return createDirectory(dbDir.Path, &dbDir.ModuleInfo, packages, nil, licmetas, includeDirPath)
 }

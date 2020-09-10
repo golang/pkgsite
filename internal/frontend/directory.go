@@ -34,7 +34,8 @@ type DirectoryHeader struct {
 // Directory contains information for an individual directory.
 type Directory struct {
 	DirectoryHeader
-	Packages []*Package
+	Packages      []*Package
+	NestedModules []*internal.ModuleInfo
 }
 
 // serveDirectoryPage serves a directory view for a directory in a module
@@ -110,7 +111,11 @@ func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, um *inte
 		header := createDirectoryHeader(um.Path, mi, um.Licenses)
 		return &Directory{DirectoryHeader: *header}, nil
 	}
-	return createDirectory(um.Path, mi, u.Subdirectories, um.Licenses, includeDirPath)
+	nestedModules, err := ds.GetNestedModules(ctx, um.Path)
+	if err != nil {
+		return nil, err
+	}
+	return createDirectory(um.Path, mi, u.Subdirectories, nestedModules, um.Licenses, includeDirPath)
 }
 
 // createDirectory constructs a *Directory for the given dirPath.
@@ -122,7 +127,7 @@ func fetchDirectoryDetails(ctx context.Context, ds internal.DataSource, um *inte
 // the module path. However, on the package and directory view's
 // "Subdirectories" tab, we do not want to include packages whose import paths
 // are the same as the dirPath.
-func createDirectory(dirPath string, mi *internal.ModuleInfo, pkgMetas []*internal.PackageMeta,
+func createDirectory(dirPath string, mi *internal.ModuleInfo, pkgMetas []*internal.PackageMeta, nestedModules []*internal.ModuleInfo,
 	licmetas []*licenses.Metadata, includeDirPath bool) (_ *Directory, err error) {
 	var packages []*Package
 	for _, pm := range pkgMetas {
@@ -146,6 +151,7 @@ func createDirectory(dirPath string, mi *internal.ModuleInfo, pkgMetas []*intern
 	return &Directory{
 		DirectoryHeader: *header,
 		Packages:        packages,
+		NestedModules:   nestedModules,
 	}, nil
 }
 

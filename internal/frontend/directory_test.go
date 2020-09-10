@@ -57,7 +57,8 @@ func TestFetchDirectoryDetails(t *testing.T) {
 				Path:   dirPath,
 				URL:    constructDirectoryURL(dirPath, mi.ModulePath, linkVersion(mi.Version, mi.ModulePath)),
 			},
-			Packages: wantPkgs,
+			Packages:      wantPkgs,
+			NestedModules: nil,
 		}
 		if diff := cmp.Diff(want, got, cmp.AllowUnexported(safehtml.Identifier{})); diff != "" {
 			t.Errorf("fetchDirectoryDetails(ctx, %q, %q, %q) mismatch (-want +got):\n%s", dirPath, modulePath, version, diff)
