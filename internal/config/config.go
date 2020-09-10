@@ -325,8 +325,6 @@ type TeeproxySettings struct {
 	SuccsToGreen     int
 }
 
-const overrideBucket = "go-discovery"
-
 // Init resolves all configuration values provided by the config package. It
 // must be called before any configuration values are used.
 func Init(ctx context.Context) (_ *Config, err error) {
@@ -439,10 +437,11 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		}
 	}
 
-	// If GO_DISCOVERY_CONFIG_OVERRIDE is set, it should point to a file
-	// in overrideBucket which provides overrides for selected configuration.
-	// Use this when you want to fix something in prod quickly, without waiting
-	// to re-deploy. (Otherwise, do not use it.)
+	// If GO_DISCOVERY_CONFIG_OVERRIDE is set, it should point to a file in a
+	// bucket named after the project which provides overrides for selected
+	// configuration. Use this when you want to fix something in prod quickly,
+	// without waiting to re-deploy. (Otherwise, do not use it.)
+	overrideBucket := cfg.ProjectID
 	overrideObj := os.Getenv("GO_DISCOVERY_CONFIG_OVERRIDE")
 	if overrideObj != "" {
 		overrideBytes, err := readOverrideFile(ctx, overrideBucket, overrideObj)
