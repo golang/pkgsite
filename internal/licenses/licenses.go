@@ -144,6 +144,7 @@ var (
 		"CC0-1.0":              true,
 		"EPL-1.0":              true,
 		"EPL-2.0":              true,
+		"EUPL-1.2":             true,
 		"GPL2":                 true,
 		"GPL3":                 true,
 		"ISC":                  true,
