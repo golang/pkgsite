@@ -6,7 +6,29 @@
 
 {{define "details_content"}}
   {{if .Packages}}
-    {{template "directories" .Packages}}
+    <table class="Directories">
+      <tr>
+        <th>Path</th>
+        <th>Synopsis</th>
+      </tr>
+      {{range .Packages}}
+        <tr>
+          <td>
+            <a href="{{.URL}}">{{.PathAfterDirectory}}</a>
+          </td>
+          <td>{{.Synopsis}}</td>
+        </tr>
+      {{end}}
+      {{range .NestedModules}}
+        <tr>
+          <td>
+            <span class="Directories-moduleTag">MODULE</span>
+            <a href="/{{.ModulePath}}">{{.ModulePath}}</a>
+          </td>
+          <td></td>
+        </tr>
+      {{end}}
+    </table>
   {{else}}
     {{template "empty_content" "There are no packages in this directory!"}}
   {{end}}

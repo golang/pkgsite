@@ -1381,6 +1381,13 @@ table.Directories {
   padding-right: 1rem;
   padding-bottom: 0.5rem;
 }
+.Directories-moduleTag {
+  background-color: var(--blue);
+  border-radius: 0.15rem;
+  color: var(--gray-1);
+  font-size: 0.74rem;
+  padding: 0.2rem 0.4rem;
+}
 .Directory-header {
   margin-bottom: 2rem;
 }
