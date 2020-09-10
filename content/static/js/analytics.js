@@ -61,9 +61,12 @@
     // falling back to setTimeout with arbitrary timeout
     // of 250ms.
     if (typeof window.requestIdleCallback !== 'undefined') {
-      window.requestIdleCallback(() => {
-        reportUnhandledRejections();
-      }, {timeout: 1000});
+      window.requestIdleCallback(
+        () => {
+          reportUnhandledRejections();
+        },
+        { timeout: 1000 }
+      );
     } else {
       window.setTimeout(() => {
         reportUnhandledRejections();
