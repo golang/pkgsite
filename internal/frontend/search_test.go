@@ -231,6 +231,7 @@ func TestSearchRequestRedirectPath(t *testing.T) {
 		{"stdlib directory does redirect", "cmd/go/internal", "/cmd/go/internal"},
 		{"std does not redirect", "std", ""},
 		{"non-existent path does not redirect", "github.com/non-existent", ""},
+		{"trim URL scheme from query", "https://golang.org/x/tools", "/mod/golang.org/x/tools"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			if got := searchRequestRedirectPath(ctx, testDB, tc.query); got != tc.want {

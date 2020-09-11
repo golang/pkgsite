@@ -185,6 +185,10 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 // element (such as fmt, errors, etc.) will not redirect, to allow users to
 // search by those terms.
 func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, query string) string {
+	urlSchemeIdx := strings.Index(query, "://")
+	if urlSchemeIdx > -1 {
+		query = query[urlSchemeIdx+3:]
+	}
 	requestedPath := path.Clean(query)
 	if !strings.Contains(requestedPath, "/") {
 		return ""
