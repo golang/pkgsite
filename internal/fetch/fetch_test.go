@@ -278,8 +278,13 @@ func TestIsReadme(t *testing.T) {
 			want: false,
 		},
 		{
-			file: "Readme.go",
+			file: "readme.go",
 			name: ".go README file will return false",
+			want: false,
+		},
+		{
+			file: "readme.vendor",
+			name: ".vendor README file will return false",
 			want: false,
 		},
 		{

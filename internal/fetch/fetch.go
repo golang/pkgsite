@@ -229,18 +229,16 @@ func extractReadmesFromZip(modulePath, resolvedVersion string, r *zip.Reader) ([
 	return readmes, nil
 }
 
+var excludedReadmeExts = map[string]bool{".go": true, ".vendor": true}
+
 // isReadme reports whether file is README or if the base name of file, with or
 // without the extension, is equal to expectedFile. README.go files will return
 // false. It is case insensitive. It operates on '/'-separated paths.
 func isReadme(file string) bool {
-	base := path.Base(file)
-	if strings.EqualFold(base, "README.go") {
-		return false
-	}
 	const expectedFile = "README"
-	return strings.EqualFold(file, expectedFile) ||
-		strings.EqualFold(base, expectedFile) ||
-		strings.EqualFold(strings.TrimSuffix(base, path.Ext(base)), expectedFile)
+	base := path.Base(file)
+	ext := path.Ext(base)
+	return !excludedReadmeExts[ext] && strings.EqualFold(strings.TrimSuffix(base, ext), expectedFile)
 }
 
 // extractPackagesFromZip returns a slice of packages from the module zip r.
