@@ -121,15 +121,6 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// See the note about duplicate tasks for "/enqueue" below.
 	handle("/poll", rmw(s.errorHandler(s.handlePollIndex)))
 
-	// TODO: remove after /poll is in production and the scheduler jobs have been changed.
-	// scheduled: poll-and-queue polls the Module Index for new modules
-	// that have been published and inserts that metadata into
-	// module_version_states. It also inserts the version into the task-queue
-	// to to be fetched and processed.
-	// This endpoint is intended to be invoked periodically by a scheduler.
-	// See the note about duplicate tasks for "/requeue" below.
-	handle("/poll-and-queue", rmw(s.errorHandler(s.handleIndexAndQueue)))
-
 	// scheduled: update-imported-by-count update the imported_by_count for
 	// packages in search_documents where imported_by_count_updated_at is null
 	// or imported_by_count_updated_at < version_updated_at.
@@ -337,37 +328,6 @@ func (s *Server) handlePollIndex(w http.ResponseWriter, r *http.Request) (err er
 		return err
 	}
 	log.Infof(ctx, "Inserted %d modules from the index", len(modules))
-	return nil
-}
-
-func (s *Server) handleIndexAndQueue(w http.ResponseWriter, r *http.Request) (err error) {
-	defer derrors.Wrap(&err, "handleIndexAndQueue(%q)", r.URL.Path)
-	ctx := r.Context()
-	limit := parseLimitParam(r, 10)
-	suffixParam := r.FormValue("suffix")
-	since, err := s.db.LatestIndexTimestamp(ctx)
-	if err != nil {
-		return err
-	}
-	modules, err := s.indexClient.GetVersions(ctx, since, limit)
-	if err != nil {
-		return err
-	}
-	if err := s.db.InsertIndexVersions(ctx, modules); err != nil {
-		return err
-	}
-	log.Infof(ctx, "Scheduling modules to be fetched: %d new modules from index.golang.org", len(modules))
-	for _, version := range modules {
-		if err := s.queue.ScheduleFetch(ctx, version.Path, version.Version, suffixParam, s.taskIDChangeInterval); err != nil {
-			return err
-		}
-	}
-	log.Infof(ctx, "Successfully scheduled modules to be fetched: %d new modules from index.golang.org", len(modules))
-
-	w.Header().Set("Content-Type", "text/plain")
-	for _, v := range modules {
-		fmt.Fprintf(w, "scheduled %s@%s\n", v.Path, v.Version)
-	}
 	return nil
 }
 
