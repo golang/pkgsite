@@ -59,15 +59,19 @@ type handler struct {
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	traceID := r.Header.Get("X-Cloud-Trace-Context")
+	severity := logging.Info
+	if r.Method == http.MethodGet && r.URL.Path == "/healthz" {
+		severity = logging.Debug
+	}
 	h.logger.Log(logging.Entry{
 		HTTPRequest: &logging.HTTPRequest{Request: r},
 		Payload:     "request start",
-		Severity:    logging.Info,
+		Severity:    severity,
 		Trace:       traceID,
 	})
 	w2 := &responseWriter{ResponseWriter: w}
 	h.delegate.ServeHTTP(w2, r.WithContext(log.NewContextWithTraceID(r.Context(), traceID)))
-	s := logging.Info
+	s := severity
 	if w2.status >= 500 {
 		s = logging.Error
 	}
