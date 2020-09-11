@@ -368,16 +368,20 @@ func (s *Server) handleEnqueue(w http.ResponseWriter, r *http.Request) (err erro
 	span.Annotate([]trace.Attribute{trace.Int64Attribute("modules to fetch", int64(len(modules)))}, "processed limit")
 	w.Header().Set("Content-Type", "text/plain")
 	log.Infof(ctx, "Scheduling modules to be fetched: queuing %d modules", len(modules))
+	nEnqueued := 0
 	for _, m := range modules {
 		stats.RecordWithTags(r.Context(),
 			[]tag.Mutator{tag.Upsert(keyEnqueueStatus, strconv.Itoa(m.Status))},
 			enqueueStatus.M(int64(m.Status)))
-		if err := s.queue.ScheduleFetch(ctx, m.ModulePath, m.Version, suffixParam, s.taskIDChangeInterval); err != nil {
+		enqueued, err := s.queue.ScheduleFetch(ctx, m.ModulePath, m.Version, suffixParam, s.taskIDChangeInterval)
+		if err != nil {
 			return err
 		}
+		if enqueued {
+			nEnqueued++
+		}
 	}
-	log.Infof(ctx, "Successfully scheduled modules to be fetched: %d modules queued", len(modules))
-
+	log.Infof(ctx, "Successfully scheduled modules to be fetched: %d modules enqueued", nEnqueued)
 	return nil
 }
 
@@ -408,7 +412,7 @@ func (s *Server) doPopulateStdLib(ctx context.Context, suffix string) (string, e
 		return "", err
 	}
 	for _, v := range versions {
-		if err := s.queue.ScheduleFetch(ctx, stdlib.ModulePath, v, suffix, s.taskIDChangeInterval); err != nil {
+		if _, err := s.queue.ScheduleFetch(ctx, stdlib.ModulePath, v, suffix, s.taskIDChangeInterval); err != nil {
 			return "", fmt.Errorf("error scheduling fetch for %s: %w", v, err)
 		}
 	}
