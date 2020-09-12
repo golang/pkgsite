@@ -55,7 +55,7 @@ func main() {
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
-	cfg.Dump(os.Stderr)
+	cfg.Dump(os.Stdout)
 
 	log.SetLevel(cfg.LogLevel)
 
