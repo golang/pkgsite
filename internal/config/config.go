@@ -111,6 +111,10 @@ type Config struct {
 	// AppEngine identifiers
 	ProjectID, ServiceID, VersionID, ZoneID, InstanceID, LocationID string
 
+	// ServiceAccount is the email of the service account that this process
+	// is running as when on GCP.
+	ServiceAccount string
+
 	// QueueService is the AppEngine service that the Cloud Tasks queue should
 	// send requests to.
 	QueueService string
@@ -118,6 +122,11 @@ type Config struct {
 	// QueueURL is the URL that the Cloud Tasks queue should send requests to.
 	// It should be used when the worker is not on AppEngine.
 	QueueURL string
+
+	// QueueAudience is used to allow the Cloud Tasks queue to authorize itself
+	// to the worker. It should be the OAuth 2.0 client ID associated with the
+	// IAP that is gating access to the worker.
+	QueueAudience string
 
 	// GoogleTagManagerID is the ID used for GoogleTagManager. It has the
 	// structure GTM-XXXX.
@@ -345,6 +354,8 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		GoogleTagManagerID: os.Getenv("GO_DISCOVERY_GOOGLE_TAG_MANAGER_ID"),
 		QueueService:       os.Getenv("GO_DISCOVERY_QUEUE_SERVICE"),
 		QueueURL:           os.Getenv("GO_DISCOVERY_QUEUE_URL"),
+		QueueAudience:      os.Getenv("GO_DISCOVERY_QUEUE_AUDIENCE"),
+
 		// LocationID is essentially hard-coded until we figure out a good way to
 		// determine it programmatically, but we check an environment variable in
 		// case it needs to be overridden.
@@ -392,6 +403,11 @@ func Init(ctx context.Context) (_ *Config, err error) {
 			return nil, err
 		}
 		cfg.ZoneID = zone
+		sa, err := gceMetadata(ctx, "instance/service-accounts/default/email")
+		if err != nil {
+			return nil, err
+		}
+		cfg.ServiceAccount = sa
 		switch {
 		case cfg.OnAppEngine():
 			// Use the gae_app monitored resource. It would be better to use the
@@ -529,13 +545,15 @@ func chooseOne(configVar string) string {
 }
 
 // gceMetadata reads a metadata value from GCE.
+// For the possible values of name, see
+// https://cloud.google.com/appengine/docs/standard/java/accessing-instance-metadata.
 func gceMetadata(ctx context.Context, name string) (_ string, err error) {
 	// See https://cloud.google.com/appengine/docs/standard/java/accessing-instance-metadata.
 	// (This documentation doesn't exist for Golang, but it seems to work).
 	defer derrors.Wrap(&err, "gceMetadata(ctx, %q)", name)
 
-	const zoneURL = "http://metadata.google.internal/computeMetadata/v1/"
-	req, err := http.NewRequest("GET", zoneURL+name, nil)
+	const metadataURL = "http://metadata.google.internal/computeMetadata/v1/"
+	req, err := http.NewRequest("GET", metadataURL+name, nil)
 	if err != nil {
 		return "", fmt.Errorf("http.NewRequest: %v", err)
 	}

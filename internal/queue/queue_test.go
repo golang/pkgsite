@@ -65,9 +65,11 @@ func TestNewTaskRequest(t *testing.T) {
 		{
 			"non-AppEngine",
 			config.Config{
-				ProjectID:  "Project",
-				LocationID: "us-central1",
-				QueueURL:   "http://1.2.3.4:8000",
+				ProjectID:      "Project",
+				LocationID:     "us-central1",
+				QueueURL:       "http://1.2.3.4:8000",
+				ServiceAccount: "sa",
+				QueueAudience:  "qa",
 			},
 			&taskspb.CreateTaskRequest{
 				Parent: "projects/Project/locations/us-central1/queues/queueID",
@@ -76,6 +78,12 @@ func TestNewTaskRequest(t *testing.T) {
 						HttpRequest: &taskspb.HttpRequest{
 							HttpMethod: taskspb.HttpMethod_POST,
 							Url:        "http://1.2.3.4:8000/fetch/mod/@v/v1.2.3",
+							AuthorizationHeader: &taskspb.HttpRequest_OidcToken{
+								OidcToken: &taskspb.OidcToken{
+									ServiceAccountEmail: "sa",
+									Audience:            "qa",
+								},
+							},
 						},
 					},
 				},

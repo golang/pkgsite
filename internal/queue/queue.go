@@ -65,6 +65,11 @@ type GCP struct {
 	queueName    string // full GCP name of the queue
 	queueService string // AppEngine service to post tasks to
 	queueURL     string // non-AppEngine URL to post tasks to
+	// token holds information that lets the task queue construct an authorized request to the worker.
+	// Since the worker sits behind the IAP, the queue needs an identity token that includes the
+	// identity of a service account that has access, and the client ID for the IAP.
+	// We use the service account of the current process.
+	token *taskspb.HttpRequest_OidcToken
 }
 
 // NewGCP returns a new Queue that can be used to enqueue tasks using the
@@ -90,11 +95,25 @@ func newGCP(cfg *config.Config, client *cloudtasks.Client, queueID string) (_ *G
 	if cfg.OnAppEngine() && cfg.QueueService == "" {
 		return nil, errors.New("on AppEngine, but QueueService is empty")
 	}
+	if cfg.QueueURL != "" {
+		if cfg.ServiceAccount == "" {
+			return nil, errors.New("need ServiceAccount with QueueURL")
+		}
+		if cfg.QueueAudience == "" {
+			return nil, errors.New("need QueueAudience with QueueURL")
+		}
+	}
 	return &GCP{
 		client:       client,
 		queueName:    fmt.Sprintf("projects/%s/locations/%s/queues/%s", cfg.ProjectID, cfg.LocationID, queueID),
 		queueService: cfg.QueueService,
 		queueURL:     cfg.QueueURL,
+		token: &taskspb.HttpRequest_OidcToken{
+			OidcToken: &taskspb.OidcToken{
+				ServiceAccountEmail: cfg.ServiceAccount,
+				Audience:            cfg.QueueAudience,
+			},
+		},
 	}, nil
 }
 
@@ -137,8 +156,9 @@ func (q *GCP) newTaskRequest(modulePath, version, suffix string, taskIDChangeInt
 	} else {
 		task.MessageType = &taskspb.Task_HttpRequest{
 			HttpRequest: &taskspb.HttpRequest{
-				HttpMethod: taskspb.HttpMethod_POST,
-				Url:        q.queueURL + relativeURI,
+				HttpMethod:          taskspb.HttpMethod_POST,
+				Url:                 q.queueURL + relativeURI,
+				AuthorizationHeader: q.token,
 			},
 		}
 	}
