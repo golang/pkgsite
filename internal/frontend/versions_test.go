@@ -311,17 +311,38 @@ func TestFormatVersion(t *testing.T) {
 	}{
 		{"v1.2.3", "v1.2.3"},
 		{"v2.0.0", "v2.0.0"},
-		{"v1.2.3-alpha.1", "v1.2.3 (alpha.1)"},
-		{"v1.0.0-20190311183353-d8887717615a", "v1.0.0 (d888771)"},
-		{"v1.2.3-pre.0.20190311183353-d8887717615a", "v1.2.3 (d888771)"},
-		{"v1.2.4-0.20190311183353-d8887717615a", "v1.2.4 (d888771)"},
-		{"v1.0.0-20190311183353-d88877", "v1.0.0 (d88877)"},
+		{"v1.2.3-alpha.1", "v1.2.3-alpha.1"},
+		{"v1.0.0-20190311183353-d8887717615a", "v1.0.0-...-d888771"},
+		{"v1.2.3-pre.0.20190311183353-d8887717615a", "v1.2.3-pre.0...-d888771"},
+		{"v1.2.4-0.20190311183353-d8887717615a", "v1.2.4-0...-d888771"},
+		{"v1.0.0-20190311183353-d88877", "v1.0.0-...-d88877"},
+		{"v1.0.0-longprereleasestring", "v1.0.0-longprereleases..."},
+		{"v1.0.0-pre-release.0.20200420093620-87861123c523", "v1.0.0-pre-rele...-8786112"},
+		{"v0.0.0-20190101-123456789012", "v0.0.0-20190101-123456..."}, // prelease version that looks like pseudoversion
 	}
 
 	for _, test := range tests {
 		t.Run(test.version, func(t *testing.T) {
 			if got := formatVersion(test.version); got != test.want {
 				t.Errorf("formatVersion(%q) = %q, want %q", test.version, got, test.want)
+			}
+		})
+	}
+}
+
+func TestPseudoVersionBase(t *testing.T) {
+	tests := []struct {
+		version, want string
+	}{
+		{"v1.0.0-20190311183353-d8887717615a", "v1.0.0-"},
+		{"v1.2.3-pre.0.20190311183353-d8887717615a", "v1.2.3-pre.0"},
+		{"v1.2.4-0.20190311183353-d8887717615a", "v1.2.4-0"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.version, func(t *testing.T) {
+			if got := pseudoVersionBase(test.version); got != test.want {
+				t.Errorf("pseudoVersionBase(%q) = %q, want %q", test.version, got, test.want)
 			}
 		})
 	}

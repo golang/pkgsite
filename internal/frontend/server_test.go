@@ -48,7 +48,7 @@ func TestHTMLInjection(t *testing.T) {
 	}
 }
 
-const pseudoVersion = "v0.0.0-20190101-123456789012"
+const pseudoVersion = "v0.0.0-20140414041502-123456789012"
 
 type testModule struct {
 	path            string
@@ -228,7 +228,7 @@ func serverTestCases() []serverTestCase {
 
 	pp := *pkgV100
 	pp.Version = pseudoVersion
-	pp.FormattedVersion = "v0.0.0 (20190101-123456789012)"
+	pp.FormattedVersion = "v0.0.0-...-1234567"
 	pp.IsLatest = false
 	pkgPseudo := &pp
 
@@ -280,7 +280,7 @@ func serverTestCases() []serverTestCase {
 	}
 	mp := *mod
 	mp.Version = pseudoVersion
-	mp.FormattedVersion = "v0.0.0 (20190101-123456789012)"
+	mp.FormattedVersion = "v0.0.0-...-1234567"
 	mp.IsLatest = false
 	modPseudo := &mp
 

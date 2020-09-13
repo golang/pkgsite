@@ -190,39 +190,74 @@ func buildVersionDetails(currentModulePath string, modInfos []*internal.ModuleIn
 // formatVersion formats a more readable representation of the given version
 // string. On any parsing error, it simply returns the input unmodified.
 //
-// For prerelease versions, formatVersion separates the prerelease portion of
-// the version string into a parenthetical. i.e.
-//   formatVersion("v1.2.3-alpha") = "v1.2.3 (alpha)"
+// For pseudo versions, the version string will use a shorten commit hash of 7
+// characters to identify the version, and hide timestamp using ellipses.
 //
-// For pseudo versions, formatVersion uses a short commit hash to identify the
-// version. i.e.
-//   formatVersion("v1.2.3-20190311183353-d8887717615a") = "v.1.2.3 (d888771)"
+// For any version string longer than 25 characters, the pre-release string will be
+// truncated, such that the string displayed is exactly 25 characters, including the ellipses.
+//
+// See TestFormatVersion for examples.
 func formatVersion(v string) string {
+	const maxLen = 25
+	if len(v) <= maxLen {
+		return v
+	}
 	vType, err := version.ParseType(v)
 	if err != nil {
-		log.Errorf(context.TODO(), "Error parsing version %q: %v", v, err)
+		log.Errorf(context.TODO(), "formatVersion(%q): error parsing version: %v", v, err)
 		return v
 	}
-	pre := semver.Prerelease(v)
-	base := strings.TrimSuffix(v, pre)
-	pre = strings.TrimPrefix(pre, "-")
-	switch vType {
-	case version.TypePrerelease:
-		return fmt.Sprintf("%s (%s)", base, pre)
-	case version.TypePseudo:
-		rev := pseudoVersionRev(v)
-		commitLen := 7
-		if len(rev) < commitLen {
-			commitLen = len(rev)
-		}
-		return fmt.Sprintf("%s (%s)", base, rev[0:commitLen])
-	default:
-		return v
+	if vType != version.TypePseudo {
+		// If the version is release or prerelease, return a version string of
+		// maxLen by truncating the end of the string. maxLen is inclusive of
+		// the "..." characters.
+		return v[:maxLen-3] + "..."
 	}
+
+	// The version string will have a max length of 25:
+	// base: "vX.Y.Z-prerelease.0" = up to 15
+	// ellipse: "..." = 3
+	// commit: "-abcdefa" = 7
+	commit := shorten(pseudoVersionRev(v), 7)
+	base := shorten(pseudoVersionBase(v), 15)
+	return fmt.Sprintf("%s...-%s", base, commit)
 }
 
-// pseudoVersionRev extracts the commit identifier from a pseudo version
-// string. It assumes the pseudo version is correctly formatted.
+// shorten shortens the string s to maxLen by removing the trailing characters.
+func shorten(s string, maxLen int) string {
+	if len(s) > maxLen {
+		return s[:maxLen]
+	}
+	return s
+}
+
+// pseudoVersionRev extracts the pseudo version base, excluding the timestamp.
+// It assumes the pseudo version is correctly formatted.
+//
+// See TestPseudoVersionBase for examples.
+func pseudoVersionBase(v string) string {
+	parts := strings.Split(v, "-")
+	if len(parts) != 3 {
+		mid := strings.Join(parts[1:len(parts)-1], "-")
+		parts = []string{parts[0], mid, parts[2]}
+	}
+	// The version string will always be split into one
+	// of these 3 parts:
+	// 1. [vX.0.0, yyyymmddhhmmss, abcdefabcdef]
+	// 2. [vX.Y.Z, pre.0.yyyymmddhhmmss, abcdefabcdef]
+	// 3. [vX.Y.Z, 0.yyyymmddhhmmss, abcdefabcdef]
+	p := strings.Split(parts[1], ".")
+	var suffix string
+	if len(p) > 0 {
+		// There is a "pre.0" or "0" prefix in the second element.
+		suffix = strings.Join(p[0:len(p)-1], ".")
+	}
+	return fmt.Sprintf("%s-%s", parts[0], suffix)
+}
+
+// pseudoVersionRev extracts the first 7 characters of the commit identifier
+// from a pseudo version string. It assumes the pseudo version is correctly
+// formatted.
 func pseudoVersionRev(v string) string {
 	v = strings.TrimSuffix(v, "+incompatible")
 	j := strings.LastIndex(v, "-")
