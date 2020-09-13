@@ -18,11 +18,13 @@ import (
 
 const orderByLatest = `
 			ORDER BY
-				-- Order the versions by release then prerelease.
-				-- The default version should be the first release
-				-- version available, if one exists.
 				m.incompatible,
-				m.version_type = 'release' DESC,
+				CASE                          
+				    -- Order the versions by release then prerelease then pseudo.                        
+				    WHEN m.version_type = 'release' THEN 1
+				    WHEN m.version_type = 'prerelease' THEN 2
+				    ELSE 3
+				END,
 				m.sort_version DESC,
 				m.module_path DESC`
 

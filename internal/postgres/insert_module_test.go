@@ -356,8 +356,6 @@ func TestPostgres_ReadAndWriteModuleOtherColumns(t *testing.T) {
 }
 
 func TestLatestVersion(t *testing.T) {
-	// Verify that finding the latest version of a module prefers
-	// non-incompatible versions first.
 	defer ResetTestDB(testDB, t)
 	ctx := context.Background()
 
@@ -376,6 +374,14 @@ func TestLatestVersion(t *testing.T) {
 		{
 			version:    "v2.0.1",
 			modulePath: sample.ModulePath + "/v2",
+		},
+		{
+			version:    "v3.0.1-rc9.0.20200212222136-a4a89636720b",
+			modulePath: sample.ModulePath + "/v3",
+		},
+		{
+			version:    "v3.0.1-rc9",
+			modulePath: sample.ModulePath + "/v3",
 		},
 	} {
 		m := sample.DefaultModule()
@@ -401,6 +407,11 @@ func TestLatestVersion(t *testing.T) {
 			name:        "test v2 version",
 			modulePath:  sample.ModulePath + "/v2",
 			wantVersion: "v2.0.1",
+		},
+		{
+			name:        "test v3 version - prefer prerelease over pseudo",
+			modulePath:  sample.ModulePath + "/v3",
+			wantVersion: "v3.0.1-rc9",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
