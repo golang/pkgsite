@@ -8,6 +8,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/middleware"
@@ -56,11 +57,17 @@ type UnitPage struct {
 
 	// UnitContentName is the display name of the selected unit content template".
 	UnitContentName string
+
+	// Readme is the rendered readme HTML.
+	Readme *safehtml.HTML
+
+	// ExpandReadme is holds the expandable readme state.
+	ExpandReadme bool
 }
 
 var (
 	unitTabLookup = map[string]TabSettings{
-		"": {
+		tabDetails: {
 			DisplayName:  "Details",
 			TemplateName: "unit_details.tmpl",
 		},
@@ -70,13 +77,13 @@ var (
 			TemplateName:      "unit_versions.tmpl",
 		},
 		tabImports: {
-			DisplayName:       "Imports",
 			AlwaysShowDetails: true,
+			DisplayName:       "Imports",
 			TemplateName:      "unit_imports.tmpl",
 		},
 		tabImportedBy: {
-			DisplayName:       "Imported By",
 			AlwaysShowDetails: true,
+			DisplayName:       "Imported By",
 			TemplateName:      "unit_importedby.tmpl",
 		},
 		tabLicenses: {
@@ -99,14 +106,18 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	title, pageType := pageInfo(unit)
 	basePage := s.newBasePage(r, title)
 	basePage.AllowWideContent = true
-
 	tab := r.FormValue("tab")
 	tabSettings, ok := unitTabLookup[tab]
 	if !ok {
-		tabSettings = unitTabLookup[""]
+		tabSettings = unitTabLookup[tabDetails]
 	}
 	canShowDetails := unit.IsRedistributable || tabSettings.AlwaysShowDetails
+	readme, err := readmeContent(ctx, unit)
+	if err != nil {
+		return err
+	}
 
+	_, expandReadme := r.URL.Query()["readme"]
 	page := UnitPage{
 		basePage:   basePage,
 		Unit:       unit,
@@ -125,10 +136,31 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		PageType:        pageType,
 		CanShowDetails:  canShowDetails,
 		UnitContentName: tabSettings.DisplayName,
+		Readme:          readme,
+		ExpandReadme:    expandReadme,
 	}
 
 	s.servePage(ctx, w, tabSettings.TemplateName, page)
 	return nil
+}
+
+func readmeContent(ctx context.Context, unit *internal.Unit) (*safehtml.HTML, error) {
+	if unit.IsRedistributable && unit.Readme != nil {
+		mi := &internal.ModuleInfo{
+			ModulePath:        unit.ModulePath,
+			Version:           unit.Version,
+			CommitTime:        unit.CommitTime,
+			IsRedistributable: unit.IsRedistributable,
+			SourceInfo:        unit.SourceInfo,
+		}
+		readme, err := ReadmeHTML(ctx, mi, unit.Readme)
+		if err != nil {
+			return nil, err
+		}
+		return &readme, nil
+	}
+
+	return nil, nil
 }
 
 // pageInfo determines the title and pageType for a given unit.

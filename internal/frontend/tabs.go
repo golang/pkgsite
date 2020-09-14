@@ -138,6 +138,7 @@ func init() {
 }
 
 const (
+	tabDetails        = "details"
 	tabDoc            = "doc"
 	tabOverview       = "overview"
 	tabSubdirectories = "subdirectories"
