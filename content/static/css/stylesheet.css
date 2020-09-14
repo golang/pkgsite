@@ -1537,7 +1537,6 @@ table.Directories {
 
 .Site-footer {
   background-color: var(--slate);
-  border-top: 0.0625rem solid var(--gray-8);
   color: var(--white);
   font-size: 0.875rem;
 }

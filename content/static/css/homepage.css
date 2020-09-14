@@ -8,7 +8,6 @@
   display: flex;
   flex-direction: column;
   margin: 0 auto;
-  max-width: 38rem;
 }
 .Homepage-logo {
   display: block;
@@ -29,13 +28,13 @@
   background-position: left 0.75rem center;
   background-size: 1.5rem;
   border: 0.0625rem solid var(--gray-8);
-  border-radius: 0.5rem;
+  border-radius: 0.5rem 0 0 0.5rem;
   color: var(--gray-4);
   font-family: inherit;
   font-size: 1rem;
   height: 3rem;
   padding-left: 2.75rem;
-  width: 100%;
+  width: 37.6875rem;
 }
 .Homepage-buttonGroup {
   display: flex;
@@ -44,29 +43,39 @@
 }
 .Homepage-searchButton {
   border: none;
-  border-radius: 0.25rem;
+  border-radius: 0 0.5rem 0.5rem 0;
   background-color: var(--turq-dark);
   color: var(--white);
   cursor: pointer;
   font-family: inherit;
   font-size: 1em;
-  height: 2.5rem;
-  margin-right: 0.5rem;
+  height: 3rem;
   padding: 0 1.375rem;
+  width: 7.375rem;
 }
-a.Homepage-helpButton {
+.Homepage-searchHelp {
+  width: 100%;
+  max-width: 45.0625rem;
+  display: block;
   align-items: center;
-  display: flex;
-  border: 0.0625rem solid var(--gray-4);
-  border-radius: 0.25rem;
-  background: var(--white);
-  color: var(--gray-4);
-  font-size: 1em;
-  height: 2.5rem;
-  margin-left: 0.5rem;
-  padding: 0 1.375rem;
+  justify-content: space-between;
+  margin: auto;
+  text-align: center;
 }
-.Homepage-helpButton img {
+@media only screen and (min-width: 30rem) {
+  .Homepage-searchHelp {
+    display: flex;
+  }
+}
+a.Homepage-helpLink {
+  align-items: center;
+  display: inline-flex;
+  font-size: 1em;
+  font-weight: initial;
+  margin-right: 0.5rem;
+  white-space: nowrap;
+}
+.Homepage-helpLink img {
   height: 1rem;
   margin-left: 0.25rem;
   position: relative;
@@ -74,16 +83,30 @@ a.Homepage-helpButton {
   width: 1rem;
 }
 .Homepage-exampleSearches {
+  align-items: center;
   color: var(--gray-2);
+  display: block;
   font-size: 0.875rem;
   font-weight: 500;
-  line-height: 1.75rem;
-  margin: 1.5rem auto;
+  margin: 1.125rem auto 1rem;
   text-align: center;
+  width: 100%;
+}
+@media only screen and (min-width: 30rem) {
+  .Homepage-exampleSearches {
+    display: flex;
+  }
 }
 .Homepage-exampleSearchesLabel {
   display: block;
+  margin-bottom: 1rem;
   text-transform: uppercase;
+}
+@media only screen and (min-width: 30rem) {
+  .Homepage-exampleSearchesLabel {
+    display: inline;
+    margin-bottom: -0.1rem;
+  }
 }
 .Homepage-exampleSearch {
   color: var(--turq-dark);
@@ -91,17 +114,17 @@ a.Homepage-helpButton {
   font-weight: initial;
   padding: 0 0.625rem;
 }
-@media only screen and (min-width: 30rem) {
-  .Homepage-exampleSearchesLabel {
-    display: inline;
-  }
-}
 .Questions {
   background: var(--gray-10);
   color: var(--gray-2);
   display: flex;
   padding: 0.5rem 0;
   width: 100vw;
+}
+.Questions-header {
+  color: var(--gray-2);
+  font-weight: bold;
+  margin: 1rem 0;
 }
 .Questions-content {
   flex-grow: 1;

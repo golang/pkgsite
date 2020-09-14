@@ -16,34 +16,36 @@
 {{define "main_content"}}
   <div class="Container">
     <div class="Homepage">
-      <img class="Homepage-logo" src="/static/img/gopher-homepage.jpg" alt="">
+      <img class="Homepage-logo" src="/static/img/gopher-homepage.jpg" alt="Cartoon gopher typing">
       <form class="Homepage-searchForm" action="/search" role="search">
-        <input
-          id="AutoComplete"
-          role="textbox"
-          aria-label="Search for Go packages"
-          type="text"
-          name="q"
-          placeholder="Search for Go packages"
-          autocapitalize="off"
-          autocomplete="off"
-          autocorrect="off"
-          spellcheck="false"
-          title="Search for Go packages"
-          autofocus="true">
         <div class="Homepage-buttonGroup">
+          <input
+            id="AutoComplete"
+            role="textbox"
+            aria-label="Search for Go packages"
+            type="text"
+            name="q"
+            placeholder="Search for Go packages"
+            autocapitalize="off"
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+            title="Search for Go packages"
+            autofocus="true">
           <button type="submit" class="Homepage-searchButton">Search</button>
-          <a href="/search-help" target="_blank" rel="noopener" class="Homepage-helpButton">
-            Search help <span><img src="/static/img/icon-launch.svg" alt=""></span>
-          </a>
         </div>
       </form>
-      <div class="Homepage-exampleSearches">
-        <span class="Homepage-exampleSearchesLabel">Example searches:</span>
-        <a class="Homepage-exampleSearch" href="/search?q=http">“http”</a>
-        <a class="Homepage-exampleSearch" href="/search?q=command">“command”</a>
-        <a class="Homepage-exampleSearch" href="/search?q=yaml+OR+json+OR+xml">“yaml OR json OR xml”</a>
-      </div>
+      <span class="Homepage-searchHelp">
+        <div class="Homepage-exampleSearches">
+          <span class="Homepage-exampleSearchesLabel">Example searches:</span>
+          <a class="Homepage-exampleSearch" href="/search?q=http">“http”</a>
+          <a class="Homepage-exampleSearch" href="/search?q=command">“command”</a>
+          <a class="Homepage-exampleSearch" href="/search?q=yaml+OR+json+OR+xml">“yaml OR json OR xml”</a>
+        </div>
+        <a href="/search-help" target="_blank" rel="noopener" class="Homepage-helpLink">
+          Search help <span><img src="/static/img/icon-launch.svg" alt=""></span>
+        </a>
+      <span>
     </div>
   </div>
 {{end}}
@@ -51,7 +53,7 @@
 {{define "pre_footer"}}
   <div class="Questions">
     <div class="Questions-content">
-      <h3>Frequently asked questions:</h2>
+      <div class="Questions-header">Frequently asked questions:</div>
       <ul>
         <li><a href="https://go.dev/about#adding-a-package">How can I add a package?</a></li>
         <li><a href="https://go.dev/about#removing-a-package">How can I remove a package?</a></li>
