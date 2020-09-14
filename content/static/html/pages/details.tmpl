@@ -101,6 +101,8 @@
         <a role="tab"
           {{if .Disabled}}
             aria-disabled="true"
+          {{else if eq .Name "doc"}}
+            href="{{$header.URL}}"
           {{else}}
             href="{{$header.URL}}?tab={{.Name}}"
           {{end}}

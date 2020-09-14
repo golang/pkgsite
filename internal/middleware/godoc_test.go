@@ -42,16 +42,16 @@ func TestGodocURL(t *testing.T) {
 		},
 		{
 			desc: "Strip utm_source, set temporary cookie, and redirect",
-			path: "/cloud.google.com/go/storage?tab=doc&utm_source=godoc",
+			path: "/cloud.google.com/go/storage?utm_source=godoc",
 			code: http.StatusFound,
 			headers: map[string]string{
-				"Location":   "/cloud.google.com/go/storage?tab=doc",
+				"Location":   "/cloud.google.com/go/storage",
 				"Set-Cookie": "tmp-from-godoc=1; SameSite=Lax",
 			},
 		},
 		{
 			desc: "Delete temporary cookie; godoc URL should be set",
-			path: "/cloud.google.com/go/storage?tab=doc",
+			path: "/cloud.google.com/go/storage",
 			cookies: map[string]string{
 				"tmp-from-godoc": "1",
 			},
@@ -106,7 +106,7 @@ func TestGodoc(t *testing.T) {
 		from, to string
 	}{
 		{
-			from: "https://pkg.go.dev/cloud.google.com/go/storage?tab=doc",
+			from: "https://pkg.go.dev/cloud.google.com/go/storage",
 			to:   "https://godoc.org/cloud.google.com/go/storage?utm_source=backtogodoc",
 		},
 		{

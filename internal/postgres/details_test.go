@@ -393,36 +393,45 @@ func TestJSONBScanner(t *testing.T) {
 	}
 }
 
-func TestHackUpDocumentation(t *testing.T) {
+func TestRemovePkgPrefix(t *testing.T) {
 	tests := []struct {
 		body string
 		want string
 	}{
-		{"nothing burger", "nothing burger"},
-		{`<a href="/pkg/foo">foo</a>`, `<a href="/foo?tab=doc">foo</a>`},
-		{`<a href="/pkg/foo"`, `<a href="/pkg/foo"`},
+		// Cases where /pkg is expected to be removed.
+		{`<a href="/pkg/foo">foo</a>`, `<a href="/foo">foo</a>`},
 		{
 			`<a href="/pkg/foo"><a href="/pkg/bar">bar</a></a>`,
-			`<a href="/foo?tab=doc"><a href="/pkg/bar">bar</a></a>`,
+			`<a href="/foo"><a href="/pkg/bar">bar</a></a>`,
 		},
 		{
 			`<a href="/pkg/foo">foo</a>
 		   <a href="/pkg/bar">bar</a>`,
-			`<a href="/foo?tab=doc">foo</a>
-		   <a href="/bar?tab=doc">bar</a>`,
+			`<a href="/foo">foo</a>
+		   <a href="/bar">bar</a>`,
 		},
-		{`<ahref="/pkg/foo">foo</a>`, `<ahref="/pkg/foo">foo</a>`},
-		{`<allhref="/pkg/foo">foo</a>`, `<allhref="/pkg/foo">foo</a>`},
-		{`<a nothref="/pkg/foo">foo</a>`, `<a nothref="/pkg/foo">foo</a>`},
-		{`<a href="/pkg/foo#identifier">foo</a>`, `<a href="/foo?tab=doc#identifier">foo</a>`},
-		{`<a href="#identifier">foo</a>`, `<a href="#identifier">foo</a>`},
+		{`<a href="/pkg/foo#identifier">foo</a>`, `<a href="/foo#identifier">foo</a>`},
 		{`<span id="Indirect.Type"></span>func (in <a href="#Indirect">Indirect</a>) Type() <a href="/pkg/reflect">reflect</a>.<a href="/pkg/reflect#Type">Type</a>`,
-			`<span id="Indirect.Type"></span>func (in <a href="#Indirect">Indirect</a>) Type() <a href="/reflect?tab=doc">reflect</a>.<a href="/reflect?tab=doc#Type">Type</a>`},
+			`<span id="Indirect.Type"></span>func (in <a href="#Indirect">Indirect</a>) Type() <a href="/reflect">reflect</a>.<a href="/reflect#Type">Type</a>`},
 	}
 
 	for _, test := range tests {
-		if got := hackUpDocumentation(test.body); got != test.want {
-			t.Errorf("hackUpDocumentation(%s) = %s, want %s", test.body, got, test.want)
+		if got := removePkgPrefix(test.body); got != test.want {
+			t.Errorf("removePkgPrefix(%s) = %s, want %s", test.body, got, test.want)
+		}
+	}
+
+	// Cases where no change is expected.
+	for _, test := range []string{
+		"nothing burger",
+		`<ahref="/pkg/foo">foo</a>`,
+		`<allhref="/pkg/foo">foo</a>`,
+		`<a nothref="/pkg/foo">foo</a>`,
+		`<a href="/pkg/foo"`,
+		`<a href="#identifier">foo</a>`,
+	} {
+		if got := removePkgPrefix(test); got != test {
+			t.Errorf("removePkgPrefix(%s) = %s, want %s", test, got, test)
 		}
 	}
 }

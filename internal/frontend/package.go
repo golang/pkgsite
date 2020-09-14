@@ -63,16 +63,9 @@ func (s *Server) servePackagePage(ctx context.Context,
 		return fmt.Errorf("creating package header for %s@%s: %v", um.Path, um.Version, err)
 	}
 
-	tab := r.FormValue("tab")
-	settings, ok := packageTabLookup[tab]
-	if !ok {
-		var tab string
-		if um.IsRedistributable {
-			tab = tabDoc
-		} else {
-			tab = tabOverview
-		}
-		http.Redirect(w, r, fmt.Sprintf(r.URL.Path+"?tab=%s", tab), http.StatusFound)
+	settings, err := packageSettings(r.FormValue("tab"))
+	if err != nil {
+		http.Redirect(w, r, r.URL.Path, http.StatusFound)
 		return nil
 	}
 	canShowDetails := um.IsRedistributable || settings.AlwaysShowDetails
@@ -80,9 +73,9 @@ func (s *Server) servePackagePage(ctx context.Context,
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = fetchDetailsForPackage(r, tab, ds, um)
+		details, err = fetchDetailsForPackage(r, settings.Name, ds, um)
 		if err != nil {
-			return fmt.Errorf("fetching page for %q: %v", tab, err)
+			return fmt.Errorf("fetching page for %q: %v", settings.Name, err)
 		}
 	}
 	var (
@@ -96,7 +89,7 @@ func (s *Server) servePackagePage(ctx context.Context,
 	page := &DetailsPage{
 		basePage: s.newBasePage(r, packageHTMLTitle(um.Path, um.Name)),
 		Name:     pageName,
-		Settings: settings,
+		Settings: *settings,
 		Header:   pkgHeader,
 		Breadcrumb: breadcrumbPath(pkgHeader.Path, pkgHeader.Module.ModulePath,
 			pkgHeader.Module.LinkVersion),
@@ -109,7 +102,27 @@ func (s *Server) servePackagePage(ctx context.Context,
 			pkgHeader.Module.ModulePath,
 			pkgHeader.Module.LinkVersion),
 	}
-	page.basePage.AllowWideContent = tab == tabDoc
+	page.basePage.AllowWideContent = settings.Name == tabDoc
 	s.servePage(ctx, w, settings.TemplateName, page)
 	return nil
+}
+
+// packageSettings returns the TabSettings corresponding to tab.
+// If tab is not a valid tab from packageTabLookup or tab=doc, an error will be
+// returned and the user will be redirected to /<path> outside of this
+// function. If tab is the empty string, the user will be shown the
+// documentation page.
+func packageSettings(tab string) (*TabSettings, error) {
+	if tab == tabDoc {
+		// Redirect "/<path>?tab=doc" to "/<path>".
+		return nil, derrors.NotFound
+	}
+	if tab == "" {
+		tab = tabDoc
+	}
+	settings, ok := packageTabLookup[tab]
+	if !ok {
+		return nil, derrors.NotFound
+	}
+	return &settings, nil
 }

@@ -396,7 +396,7 @@ func serverTestCases() []serverTestCase {
 		},
 		{
 			name:           "package default",
-			urlPath:        fmt.Sprintf("/%s?tab=doc", sample.PackagePath),
+			urlPath:        fmt.Sprintf("/%s", sample.PackagePath),
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.PackageHeader(pkgV100, unversioned),
@@ -408,9 +408,9 @@ func serverTestCases() []serverTestCase {
 		},
 		{
 			name:           "package default redirect",
-			urlPath:        fmt.Sprintf("/%s", sample.PackagePath),
+			urlPath:        fmt.Sprintf("/%s?tab=doc", sample.PackagePath),
 			wantStatusCode: http.StatusFound,
-			wantLocation:   "/" + sample.ModulePath + "/foo?tab=doc",
+			wantLocation:   "/" + sample.ModulePath + "/foo",
 		},
 		{
 			name: "package default nonredistributable",
@@ -421,7 +421,7 @@ func serverTestCases() []serverTestCase {
 		},
 		{
 			name:           "package at version default",
-			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=doc", sample.ModulePath, sample.VersionString, sample.Suffix),
+			urlPath:        fmt.Sprintf("/%s@%s/%s", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.PackageHeader(pkgV100, versioned),
@@ -437,23 +437,16 @@ func serverTestCases() []serverTestCase {
 		},
 		{
 			name:           "package at version doc tab",
-			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=doc", sample.ModulePath, "v0.9.0", sample.Suffix),
+			urlPath:        fmt.Sprintf("/%s@%s/%s", sample.ModulePath, "v0.9.0", sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.PackageHeader(pkgV090, versioned),
 				in(".Documentation", text(`This is the documentation HTML`))),
 		},
 		{
-			name:           "package at version doc with hacked up links",
-			urlPath:        "/" + sample.ModulePath + "/foo/directory/hello?tab=doc",
-			wantStatusCode: http.StatusOK,
-			want: in(".Documentation",
-				in("a", href("/io?tab=doc#Writer"), text("io.Writer"))),
-		},
-		{
 			name: "package at version doc tab nonredistributable",
 			// For a non-redistributable package, the doc tab will not show the doc.
-			urlPath:        "/github.com/non_redistributable@v1.0.0/bar?tab=doc",
+			urlPath:        "/github.com/non_redistributable@v1.0.0/bar",
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.PackageHeader(pkgNonRedist, versioned),
@@ -461,7 +454,7 @@ func serverTestCases() []serverTestCase {
 		},
 		{
 			name:           "package at version doc tab, no doc",
-			urlPath:        "/github.com/pseudo@" + pseudoVersion + "/dir/baz?tab=doc",
+			urlPath:        "/github.com/pseudo@" + pseudoVersion + "/dir/baz",
 			wantStatusCode: http.StatusOK,
 			want:           in("", text("No documentation available")),
 		},
@@ -779,13 +772,13 @@ func serverTestCases() []serverTestCase {
 		},
 		{
 			name:           "cmd go package page",
-			urlPath:        "/cmd/go?tab=doc",
+			urlPath:        "/cmd/go",
 			wantStatusCode: http.StatusOK,
 			want:           pagecheck.PackageHeader(cmdGo, unversioned),
 		},
 		{
 			name:           "cmd go package page at version",
-			urlPath:        "/cmd/go@go1.13?tab=doc",
+			urlPath:        "/cmd/go@go1.13",
 			wantStatusCode: http.StatusOK,
 			want:           pagecheck.PackageHeader(cmdGo, versioned),
 		},
@@ -811,7 +804,7 @@ func serverTestCases() []serverTestCase {
 		},
 		{
 			name:           "stdlib no shortcut (net/http)",
-			urlPath:        "/net/http?tab=doc",
+			urlPath:        "/net/http",
 			wantStatusCode: http.StatusOK,
 			want:           pagecheck.ModuleHeader(netHttp, unversioned),
 		},
@@ -841,7 +834,7 @@ func serverTestCases() []serverTestCase {
 		},
 		{
 			name:                "stdlib shortcut (net/http) strip args",
-			urlPath:             "/http@go1.13?tab=doc",
+			urlPath:             "/http@go1.13",
 			wantStatusCode:      http.StatusFound,
 			wantLocation:        "/net/http",
 			requiredExperiments: experiment.NewSet(internal.ExperimentUsePathInfo),
@@ -855,7 +848,7 @@ func serverTestCases() []serverTestCase {
 		},
 		{
 			name:                "stdlib shortcut with args and trailing slash",
-			urlPath:             "/http@go1.13/?tab=doc",
+			urlPath:             "/http@go1.13/",
 			wantStatusCode:      http.StatusFound,
 			wantLocation:        "/net/http",
 			requiredExperiments: experiment.NewSet(internal.ExperimentUsePathInfo),

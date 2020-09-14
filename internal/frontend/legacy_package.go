@@ -86,16 +86,9 @@ func (s *Server) legacyServePackagePageWithPackage(w http.ResponseWriter, r *htt
 		return fmt.Errorf("creating package header for %s@%s: %v", pkg.Path, pkg.Version, err)
 	}
 
-	tab := r.FormValue("tab")
-	settings, ok := packageTabLookup[tab]
-	if !ok {
-		var tab string
-		if pkg.LegacyPackage.IsRedistributable {
-			tab = tabDoc
-		} else {
-			tab = tabOverview
-		}
-		http.Redirect(w, r, fmt.Sprintf(r.URL.Path+"?tab=%s", tab), http.StatusFound)
+	settings, err := packageSettings(r.FormValue("tab"))
+	if err != nil {
+		http.Redirect(w, r, r.URL.Path, http.StatusFound)
 		return nil
 	}
 	canShowDetails := pkg.LegacyPackage.IsRedistributable || settings.AlwaysShowDetails
@@ -103,9 +96,9 @@ func (s *Server) legacyServePackagePageWithPackage(w http.ResponseWriter, r *htt
 	var details interface{}
 	if canShowDetails {
 		var err error
-		details, err = legacyFetchDetailsForPackage(r, tab, ds, pkg)
+		details, err = legacyFetchDetailsForPackage(r, settings.Name, ds, pkg)
 		if err != nil {
-			return fmt.Errorf("fetching page for %q: %v", tab, err)
+			return fmt.Errorf("fetching page for %q: %v", settings.Name, err)
 		}
 	}
 
@@ -120,7 +113,7 @@ func (s *Server) legacyServePackagePageWithPackage(w http.ResponseWriter, r *htt
 	page := &DetailsPage{
 		basePage: s.newBasePage(r, packageHTMLTitle(pkg.Path, pkg.Name)),
 		Name:     pageName,
-		Settings: settings,
+		Settings: *settings,
 		Header:   pkgHeader,
 		Breadcrumb: breadcrumbPath(pkgHeader.Path, pkgHeader.Module.ModulePath,
 			pkgHeader.Module.LinkVersion),
@@ -134,7 +127,7 @@ func (s *Server) legacyServePackagePageWithPackage(w http.ResponseWriter, r *htt
 			linkVersion(pkg.Version, pkg.ModulePath),
 		),
 	}
-	page.basePage.AllowWideContent = tab == tabDoc
+	page.basePage.AllowWideContent = settings.Name == tabDoc
 	s.servePage(r.Context(), w, settings.TemplateName, page)
 	return nil
 }

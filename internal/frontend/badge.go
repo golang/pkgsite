@@ -26,7 +26,7 @@ func (s *Server) badgeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// The user may input a fully qualified URL (https://pkg.go.dev/net/http?tab=doc)
+	// The user may input a fully qualified URL (https://pkg.go.dev/net/http)
 	// or just a pathname (net/http). Using url.Parse we handle both cases.
 	inputURL := r.URL.Query().Get("path")
 	parsedURL, _ := url.Parse(inputURL)
