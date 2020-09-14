@@ -33,6 +33,11 @@ var (
 	// from the path specified in the go.mod file.
 	AlternativeModule = errors.New("alternative module")
 
+	// ModuleTooLarge indicates that the module is too large for us to process.
+	// This should be temporary: we should obtain sufficient resources to process
+	// any module, up to the max size allowed by the proxy.
+	ModuleTooLarge = errors.New("module too large")
+
 	// Unknown indicates that the error has unknown semantics.
 	Unknown = errors.New("unknown")
 
@@ -99,6 +104,7 @@ var codes = []struct {
 	{DBModuleInsertInvalid, 480},
 	{BadModule, 490},
 	{AlternativeModule, 491},
+	{ModuleTooLarge, 492},
 
 	{ProxyTimedOut, http.StatusGatewayTimeout},
 	// 52x and 54x errors represents modules that need to be reprocessed, and the
