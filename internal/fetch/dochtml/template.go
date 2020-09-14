@@ -36,28 +36,6 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 		"safe_id":               render.SafeGoID,
 	},
 ).Parse(`{{- "" -}}
-{{- if or .Doc .Consts .Vars .Funcs .Types .Examples.List -}}
-<nav class="Documentation-nav">
-	<ul class="Documentation-toc">
-		{{- if or .Doc (index .Examples.Map "") -}}
-			<li class="Documentation-tocItem">
-				<a href="#pkg-overview">Overview</a>
-			</li>
-		{{- end -}}
-		{{- if or .Consts .Vars .Funcs .Types .Examples.List -}}
-			<li class="Documentation-tocItem">
-				<a href="#pkg-index">Index</a>
-		  </li>
-		{{- end -}}
-		{{- if .Examples.List -}}
-			<li class="Documentation-tocItem">
-				<a href="#pkg-examples">Examples</a>
-			</li>
-		{{- end -}}
-	</ul>
-</nav>
-{{- end -}}
-
 {{if or .Doc .Consts .Vars .Funcs .Types .Examples.List}}
 	<nav class="DocNav js-sideNav">
 		<ul role="tree" aria-label="Outline">
