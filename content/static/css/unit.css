@@ -4,7 +4,8 @@
  * license that can be found in the LICENSE file.
  */
 
-@import './_unit_header.css';
+@import './unit_header.css';
+@import './unit_readme.css';
 
 .UnitContent {
   max-width: 60rem;
