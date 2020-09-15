@@ -18,8 +18,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/net/html"
-	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch/internal/doc"
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
 )
@@ -56,7 +54,7 @@ func TestRender(t *testing.T) {
 }
 
 func TestExampleRender(t *testing.T) {
-	ctx := experiment.NewContext(context.Background(), internal.ExperimentExecutableExamples)
+	ctx := context.Background()
 	fset, d := mustLoadPackage("example_test")
 
 	rawDoc, err := Render(ctx, fset, d, RenderOptions{

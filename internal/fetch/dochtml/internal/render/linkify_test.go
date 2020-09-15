@@ -15,8 +15,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/testconversions"
-	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch/internal/doc"
 )
 
@@ -396,7 +394,7 @@ func main() {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx := experiment.NewContext(context.Background(), internal.ExperimentExecutableExamples)
+			ctx := context.Background()
 			r := New(ctx, fset, pkgTime, nil)
 			got, err := r.codeString(&tc.example)
 			if err != nil {

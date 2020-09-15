@@ -21,8 +21,6 @@ import (
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/legacyconversions"
 	safetemplate "github.com/google/safehtml/template"
-	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch/internal/doc"
 	"golang.org/x/pkgsite/internal/log"
 )
@@ -139,7 +137,7 @@ func (r *Renderer) codeString(ex *doc.Example) (string, error) {
 	}
 	var buf bytes.Buffer
 
-	if experiment.IsActive(r.ctx, internal.ExperimentExecutableExamples) && ex.Play != nil {
+	if ex.Play != nil {
 		if err := format.Node(&buf, r.fset, ex.Play); err != nil {
 			return "", err
 		}

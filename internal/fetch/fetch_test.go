@@ -20,7 +20,6 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -72,7 +71,7 @@ func TestFetchModule(t *testing.T) {
 		{name: "latest version of module", mod: moduleLatest, fetchVersion: "latest"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			ctx := experiment.NewContext(context.Background(), internal.ExperimentExecutableExamples)
+			ctx := context.Background()
 			ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
 			defer cancel()
 

@@ -10,27 +10,25 @@ import (
 )
 
 const (
-	ExperimentAutocomplete       = "autocomplete"
-	ExperimentExecutableExamples = "executable-examples"
-	ExperimentFrontendFetch      = "frontend-fetch"
-	ExperimentMasterVersion      = "master-version"
-	ExperimentSidenav            = "sidenav"
-	ExperimentUnitPage           = "unit-page"
-	ExperimentUseUnits           = "use-units"
-	ExperimentUsePathInfo        = "use-path-info"
+	ExperimentAutocomplete  = "autocomplete"
+	ExperimentFrontendFetch = "frontend-fetch"
+	ExperimentMasterVersion = "master-version"
+	ExperimentSidenav       = "sidenav"
+	ExperimentUnitPage      = "unit-page"
+	ExperimentUseUnits      = "use-units"
+	ExperimentUsePathInfo   = "use-path-info"
 )
 
 // Experiments represents all of the active experiments in the codebase and
 // a description of each experiment.
 var Experiments = map[string]string{
-	ExperimentAutocomplete:       "Enable autocomplete with search.",
-	ExperimentExecutableExamples: "Display executable examples with their import statements, so that they are runnable via the Go playground.",
-	ExperimentFrontendFetch:      "Enable ability to fetch a package that doesn't exist on pkg.go.dev.",
-	ExperimentMasterVersion:      "Enable viewing path@master.",
-	ExperimentSidenav:            "Display documentation index on the left sidenav.",
-	ExperimentUnitPage:           "Enable the redesigned details page.",
-	ExperimentUseUnits:           "Read from paths, documentation, readmes, and package_imports tables.",
-	ExperimentUsePathInfo:        "Check the paths table if a path exists, as opposed to the packages or modules table.",
+	ExperimentAutocomplete:  "Enable autocomplete with search.",
+	ExperimentFrontendFetch: "Enable ability to fetch a package that doesn't exist on pkg.go.dev.",
+	ExperimentMasterVersion: "Enable viewing path@master.",
+	ExperimentSidenav:       "Display documentation index on the left sidenav.",
+	ExperimentUnitPage:      "Enable the redesigned details page.",
+	ExperimentUseUnits:      "Read from paths, documentation, readmes, and package_imports tables.",
+	ExperimentUsePathInfo:   "Check the paths table if a path exists, as opposed to the packages or modules table.",
 }
 
 // Experiment holds data associated with an experimental feature for frontend
