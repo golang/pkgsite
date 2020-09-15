@@ -107,8 +107,7 @@ func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 // Install registers server routes using the given handler registration func.
 func (s *Server) Install(handle func(string, http.Handler)) {
 	// rmw wires in error reporting to the handler. It is configured here, in
-	// Install, because not every handler should have error reporting. For
-	// example, we don't want to get an error report each time a /fetch fails.
+	// Install, because not every handler should have error reporting.
 	rmw := middleware.Identity()
 	if s.reportingClient != nil {
 		rmw = middleware.ErrorReporting(s.reportingClient.Report)
@@ -138,7 +137,7 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// fetching module versions that have a terminal error.
 	// This endpoint is intended to be invoked by a task queue with semantics like
 	// Google Cloud Task Queues.
-	handle("/fetch/", http.StripPrefix("/fetch", http.HandlerFunc(s.handleFetch)))
+	handle("/fetch/", http.StripPrefix("/fetch", rmw(http.HandlerFunc(s.handleFetch))))
 
 	// scheduled: enqueue queries the module_version_states table for the next
 	// batch of module versions to process, and enqueues them for processing.
