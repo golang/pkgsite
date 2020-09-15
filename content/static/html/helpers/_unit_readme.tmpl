@@ -5,17 +5,17 @@
 -->
 
 {{define "unit_readme"}}
-  {{if .Readme }}
-    <div class="UnitReadme {{if .ExpandReadme}}UnitReadme--expanded{{end}}" id="readme-top">
-      <h2 class="UnitReadme-title">
-        <img height="25px" width="20px" src="/static/img/pkg-icon-readme_20x16.svg">README
-      </h2>
+  <div class="UnitReadme {{if .ExpandReadme}}UnitReadme--expanded{{end}}" id="readme-top">
+    <h2 class="UnitReadme-title">
+      <img height="25px" width="20px" src="/static/img/pkg-icon-readme_20x16.svg">README
+    </h2>
+    {{if .Readme }}
       <div class="UnitReadme-content">
         <div class="Overview-readmeContent">{{.Readme}}</div>
         <div class="UnitReadme-fadeOut"></div>
       </div>
       <a class="UnitReadme-expandLink" href="?readme#readme-top">Expand ▾</a>
       <a class="UnitReadme-collapseLink" href="?#readme-top">Collapse ▴</a>
-    </div>
-  {{end}}
+    {{end}}
+  </div>
 {{end}}

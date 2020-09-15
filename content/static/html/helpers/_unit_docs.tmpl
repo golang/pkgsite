@@ -5,14 +5,14 @@
 -->
 
 {{define "unit_docs"}}
-  {{if .Unit.Documentation }}
-    <div class="UnitDocs">
-      <h2 class="UnitDocs-title">
-        <img height="25px" width="20px" src="/static/img/pkg-icon-docs_20x12.svg">Documentation
-      </h2>
+  <div class="UnitDocs">
+    <h2 class="UnitDocs-title">
+      <img height="25px" width="20px" src="/static/img/pkg-icon-docs_20x12.svg">Documentation
+    </h2>
+    {{if .Unit.Documentation }}
       <div class="Documentation">
         {{.Unit.Documentation.HTML}}
       </div>
-    </div>
-  {{end}}
+    {{end}}
+  </div>
 {{end}}

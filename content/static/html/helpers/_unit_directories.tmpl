@@ -1,0 +1,38 @@
+<!--
+  Copyright 2020 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "unit_directories"}}
+  <div class="UnitDirectories">
+    <h2 class="UnitDirectories-title">
+      <img height="25px" width="20px" src="/static/img/pkg-icon-folder_20x16.svg">Directories
+    </h2>
+    {{if .Packages}}
+      <table class="UnitDirectories-table">
+        <tr class="UnitDirectories-tableHeader">
+          <th>Path</th>
+          <th>Synopsis</th>
+        </tr>
+        {{range .Packages}}
+          <tr>
+            <td>
+              <a href="{{.URL}}">{{.PathAfterDirectory}}</a>
+            </td>
+            <td>{{.Synopsis}}</td>
+          </tr>
+        {{end}}
+        {{range .NestedModules}}
+          <tr>
+            <td>
+              <span class="UnitDirectories-moduleTag">MODULE</span>
+              <a href="/{{.ModulePath}}">{{.ModulePath}}</a>
+            </td>
+            <td></td>
+          </tr>
+        {{end}}
+      </table>
+    {{end}}
+  </div>
+{{end}}
