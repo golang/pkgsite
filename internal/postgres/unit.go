@@ -66,7 +66,9 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 		}
 		u.Subdirectories = pkgs
 	}
-	if !db.bypassLicenseCheck {
+	if db.bypassLicenseCheck {
+		u.IsRedistributable = true
+	} else {
 		u.RemoveNonRedistributableData()
 	}
 	return u, nil
@@ -227,8 +229,10 @@ func (db *DB) getPackagesInUnit(ctx context.Context, fullPath, modulePath, resol
 	if err := db.db.RunQuery(ctx, query, collect, modulePath, resolvedVersion); err != nil {
 		return nil, err
 	}
-	if !db.bypassLicenseCheck {
-		for _, p := range packages {
+	for _, p := range packages {
+		if db.bypassLicenseCheck {
+			p.IsRedistributable = true
+		} else {
 			p.RemoveNonRedistributableData()
 		}
 	}

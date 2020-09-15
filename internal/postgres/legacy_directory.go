@@ -133,7 +133,9 @@ func (db *DB) LegacyGetDirectory(ctx context.Context, dirPath, modulePath, versi
 		LegacyModuleInfo: mi,
 		Packages:         packages,
 	}
-	if !db.bypassLicenseCheck {
+	if db.bypassLicenseCheck {
+		ld.IsRedistributable = true
+	} else {
 		ld.RemoveNonRedistributableData()
 	}
 	return ld, nil

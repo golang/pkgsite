@@ -144,7 +144,7 @@ func TestModuleVersionState(t *testing.T) {
 }
 
 func TestUpsertModuleVersionStates(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
 	defer cancel()
 
 	m := sample.DefaultModule()

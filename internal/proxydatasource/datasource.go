@@ -90,8 +90,15 @@ func (ds *DataSource) getModule(ctx context.Context, modulePath, version string)
 	}
 	res := fetch.FetchModule(ctx, modulePath, version, ds.proxyClient, ds.sourceClient)
 	m := res.Module
-	if m != nil && !ds.bypassLicenseCheck {
-		m.RemoveNonRedistributableData()
+	if m != nil {
+		if ds.bypassLicenseCheck {
+			m.IsRedistributable = true
+			for _, pkg := range m.LegacyPackages {
+				pkg.IsRedistributable = true
+			}
+		} else {
+			m.RemoveNonRedistributableData()
+		}
 	}
 	ds.versionCache[key] = &versionEntry{module: m, err: err}
 	if res.Error != nil {
