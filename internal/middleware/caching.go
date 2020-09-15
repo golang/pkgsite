@@ -193,7 +193,7 @@ func (c *cache) put(ctx context.Context, key string, rec *cacheRecorder, ttl tim
 	_, err := c.client.WithContext(setCtx).Set(key, rec.buf.Bytes(), ttl).Result()
 	if err != nil {
 		recordCacheError(ctx, c.name, "SET")
-		log.Errorf(ctx, "cache set %q: %v", key, err)
+		log.Warningf(ctx, "cache set %q: %v", key, err)
 	}
 }
 
