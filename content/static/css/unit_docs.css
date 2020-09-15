@@ -1,0 +1,35 @@
+/*
+ * Copyright 2020 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+.Documentation {
+  display: block;
+}
+.DocNav {
+  display: none;
+}
+.UnitDocs {
+  margin: 2rem 0;
+}
+.UnitDocs::before {
+  content: '';
+  display: block;
+  position: relative;
+  width: 0;
+  height: 5em;
+  margin-top: -5em;
+}
+.UnitDocs-title {
+  border-bottom: 0.0625rem solid var(--gray-8);
+  display: flex;
+  font-size: 1.375rem;
+  margin: 1rem 0 0 0;
+  padding-bottom: 1rem;
+}
+.UnitDocs-title img {
+  height: 1rem;
+  margin: auto 1rem auto 0;
+  width: auto;
+}
