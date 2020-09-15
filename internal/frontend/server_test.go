@@ -826,6 +826,14 @@ func serverTestCases() []serverTestCase {
 				in("p.Error-message", text("a valid package path"))),
 		},
 		{
+
+			name:           "module page for path that is a package but not a module",
+			urlPath:        "/mod/" + sample.ModulePath + "/foo",
+			wantStatusCode: http.StatusNotFound,
+			want: in("",
+				in("h3.Error-message", text("404 Not Found"))),
+		},
+		{
 			name:                "stdlib shortcut (net/http)",
 			urlPath:             "/http",
 			wantStatusCode:      http.StatusFound,

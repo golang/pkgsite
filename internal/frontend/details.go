@@ -138,9 +138,12 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 			}
 			return s.servePathNotFoundPage(w, r, ds, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion, pathType)
 		}
+		if urlInfo.isModule && um.ModulePath != urlInfo.fullPath {
+			return s.servePathNotFoundPage(w, r, ds, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion, "module")
+		}
+
 		urlInfo.modulePath = um.ModulePath
 		urlInfo.resolvedVersion = um.Version
-
 		if isActivePathAtMaster(ctx) && urlInfo.requestedVersion == internal.MasterVersion {
 			// Since path@master is a moving target, we don't want it to be stale.
 			// As a result, we enqueue every request of path@master to the frontend
