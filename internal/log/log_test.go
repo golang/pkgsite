@@ -33,6 +33,7 @@ func TestSetLogLevel(t *testing.T) {
 		{name: "invalid level", newLevel: "xyz", wantLevel: logging.Default},
 		{name: "debug level", newLevel: "debug", wantLevel: logging.Debug},
 		{name: "info level", newLevel: "info", wantLevel: logging.Info},
+		{name: "warning level", newLevel: "warning", wantLevel: logging.Warning},
 		{name: "error level", newLevel: "error", wantLevel: logging.Error},
 		{name: "fatal level", newLevel: "fatal", wantLevel: logging.Critical},
 	}
@@ -64,6 +65,7 @@ func TestLogLevel(t *testing.T) {
 	}{
 		{name: "debug", logFunc: Debug, logMsg: debugMsg, expected: false},
 		{name: "info", logFunc: Info, logMsg: infoMsg, expected: true},
+		{name: "warning", logFunc: Warning, logMsg: infoMsg, expected: true},
 		{name: "error", logFunc: Error, logMsg: errorMsg, expected: true},
 	}
 

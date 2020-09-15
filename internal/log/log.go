@@ -106,6 +106,7 @@ func init() {
 	// Log to stdout on GKE so the log messages are severity Info, rather than Error.
 	if os.Getenv("GO_DISCOVERY_ON_GKE") != "" {
 		log.SetOutput(os.Stdout)
+
 	}
 }
 
@@ -174,6 +175,11 @@ func Infof(ctx context.Context, format string, args ...interface{}) {
 	logf(ctx, logging.Info, format, args)
 }
 
+// Warningf logs a formatted string at the Warning level.
+func Warningf(ctx context.Context, format string, args ...interface{}) {
+	logf(ctx, logging.Warning, format, args)
+}
+
 // Errorf logs a formatted string at the Error level.
 func Errorf(ctx context.Context, format string, args ...interface{}) {
 	logf(ctx, logging.Error, format, args)
@@ -196,6 +202,9 @@ func logf(ctx context.Context, s logging.Severity, format string, args []interfa
 
 // Info logs arg, which can be a string or a struct, at the Info level.
 func Info(ctx context.Context, arg interface{}) { doLog(ctx, logging.Info, arg) }
+
+// Warning logs arg, which can be a string or a struct, at the Warning level.
+func Warning(ctx context.Context, arg interface{}) { doLog(ctx, logging.Warning, arg) }
 
 // Error logs arg, which can be a string or a struct, at the Error level.
 func Error(ctx context.Context, arg interface{}) { doLog(ctx, logging.Error, arg) }
@@ -229,7 +238,7 @@ func die() {
 }
 
 // toLevel returns the logging.Severity for a given string.
-// Possible input values are "", "debug", "info", "error", "fatal".
+// Possible input values are "", "debug", "info", "warning", "error", "fatal".
 // In case of invalid string input, it maps to DefaultLevel.
 func toLevel(v string) logging.Severity {
 	v = strings.ToLower(v)
@@ -242,6 +251,8 @@ func toLevel(v string) logging.Severity {
 		return logging.Debug
 	case "info":
 		return logging.Info
+	case "warning":
+		return logging.Warning
 	case "error":
 		return logging.Error
 	case "fatal":
@@ -249,6 +260,6 @@ func toLevel(v string) logging.Severity {
 	}
 
 	// Default log level in case of invalid input.
-	log.Printf("Error: %s is invalid LogLevel. Possible values are [debug, info, error, fatal]", v)
+	log.Printf("Error: %s is invalid LogLevel. Possible values are [debug, info, warning, error, fatal]", v)
 	return logging.Default
 }
