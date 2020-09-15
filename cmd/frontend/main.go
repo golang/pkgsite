@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"cloud.google.com/go/errorreporting"
 	"cloud.google.com/go/profiler"
 	"contrib.go.opencensus.io/integrations/ocsql"
 	"github.com/go-redis/redis/v7"
@@ -179,6 +180,10 @@ func main() {
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
+	ermw := middleware.Identity()
+	if rc := reportingClient(ctx, cfg); rc != nil {
+		ermw = middleware.ErrorReporting(rc.Report)
+	}
 	mw := middleware.Chain(
 		middleware.RequestLog(requestLogger),
 		middleware.AcceptRequests(http.MethodGet, http.MethodPost), // accept only GETs and POSTs
@@ -187,6 +192,7 @@ func main() {
 		middleware.SecureHeaders(!*disableCSP), // must come before any caching for nonces to work
 		middleware.LatestVersions(server.GetLatestMinorVersion, server.GetLatestMajorVersion), // must come before caching for version badge to work
 		middleware.Panic(panicHandler),
+		ermw,
 		middleware.Timeout(54*time.Second),
 		middleware.Experiment(experimenter),
 	)
@@ -275,4 +281,20 @@ func readLocalExperiments(ctx context.Context) []*internal.Experiment {
 	}
 	log.Infof(ctx, "found %d experiment(s)", len(experiments))
 	return experiments
+}
+
+func reportingClient(ctx context.Context, cfg *config.Config) *errorreporting.Client {
+	if !cfg.OnGCP() {
+		return nil
+	}
+	reporter, err := errorreporting.NewClient(ctx, cfg.ProjectID, errorreporting.Config{
+		ServiceName: cfg.ServiceID,
+		OnError: func(err error) {
+			log.Errorf(ctx, "Error reporting failed: %v", err)
+		},
+	})
+	if err != nil {
+		log.Fatal(ctx, err)
+	}
+	return reporter
 }
