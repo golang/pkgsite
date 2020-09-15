@@ -18,7 +18,6 @@ const (
 	ExperimentTranslateHTML      = "translate-html"
 	ExperimentUnitPage           = "unit-page"
 	ExperimentUseUnits           = "use-units"
-	ExperimentUsePackageImports  = "use-package-imports"
 	ExperimentUsePathInfo        = "use-path-info"
 )
 
@@ -34,7 +33,6 @@ var Experiments = map[string]string{
 	ExperimentUnitPage:           "Enable the redesigned details page.",
 	ExperimentUseUnits:           "Read from paths, documentation, readmes, and package_imports tables.",
 	ExperimentUsePathInfo:        "Check the paths table if a path exists, as opposed to the packages or modules table.",
-	ExperimentUsePackageImports:  "Read imports from the package_imports table.",
 }
 
 // Experiment holds data associated with an experimental feature for frontend

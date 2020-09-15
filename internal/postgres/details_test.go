@@ -16,7 +16,6 @@ import (
 	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -293,12 +292,15 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 					t.Error(err)
 				}
 			}
-			t.Run("use-package-imports", func(t *testing.T) {
-				testGetImports(ctx, t, tc.path, tc.modulePath, tc.version, tc.wantImports, internal.ExperimentUsePackageImports)
-			})
-			t.Run("use-imports", func(t *testing.T) {
-				testGetImports(ctx, t, tc.path, tc.modulePath, tc.version, tc.wantImports)
-			})
+			got, err := testDB.LegacyGetImports(ctx, tc.path, tc.modulePath, tc.version)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			sort.Strings(tc.wantImports)
+			if diff := cmp.Diff(tc.wantImports, got); diff != "" {
+				t.Errorf("testDB.GetImports(%q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
+			}
 
 			gotImportedBy, err := testDB.GetImportedBy(ctx, tc.path, tc.modulePath, 100)
 			if err != nil {
@@ -308,20 +310,6 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 				t.Errorf("testDB.GetImportedBy(%q, %q) mismatch (-want +got):\n%s", tc.path, tc.modulePath, diff)
 			}
 		})
-	}
-}
-
-func testGetImports(ctx context.Context, t *testing.T, path, modulePath, version string, wantImports []string, experimentNames ...string) {
-	t.Helper()
-	ctx = experiment.NewContext(ctx, experimentNames...)
-	got, err := testDB.LegacyGetImports(ctx, path, modulePath, version)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	sort.Strings(wantImports)
-	if diff := cmp.Diff(wantImports, got); diff != "" {
-		t.Errorf("testDB.GetImports(%q, %q) mismatch (-want +got):\n%s", path, version, diff)
 	}
 }
 

@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -35,7 +34,7 @@ type ImportsDetails struct {
 // pkgPath, modulePath and version from the database and returns a ImportsDetails.
 func fetchImportsDetails(ctx context.Context, ds internal.DataSource, pkgPath, modulePath, resolvedVersion string) (_ *ImportsDetails, err error) {
 	var dsImports []string
-	if isActiveUseUnits(ctx) && experiment.IsActive(ctx, internal.ExperimentUsePackageImports) {
+	if isActiveUseUnits(ctx) {
 		u, err := ds.GetUnit(ctx, &internal.UnitMeta{
 			Path:       pkgPath,
 			ModulePath: modulePath,
