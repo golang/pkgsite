@@ -14,6 +14,7 @@
     -1 * (var(--header-height) + 3.75rem)
   ); /* Move hidden anchor content for deep linking with a sticky header. */
 }
+.Documentation-nav,
 .Documentation-index,
 .DocNav {
   display: none;

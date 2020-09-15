@@ -1147,6 +1147,16 @@ code {
      and "Package Files" is listed in the left side nav.*/
   display: none;
 }
+/**
+ * Some versions of the doc template have DocNav also on elements with these
+ * classes, which we don’t want to hide unless the sidenav experiment is active.
+ * TODO: Remove once HTML has been transitioned to use new markup.
+ */
+.Documentation-nav.DocNav,
+.Documentation-toc.DocNav {
+  display: block;
+}
+
 .Documentation {
   color: var(--gray-1);
 }
@@ -1205,10 +1215,20 @@ code {
   color: #060;
 }
 
+.Documentation-toc,
 .Documentation-overview,
 .Documentation-index,
 .Documentation-examples {
   padding-bottom: 0;
+}
+
+.Documentation-tocItem--constants,
+.Documentation-tocItem--funcsAndTypes,
+.Documentation-tocItem--functions,
+.Documentation-tocItem--types,
+.Documentation-tocItem--variables,
+.Documentation-tocItem--notes {
+  display: none;
 }
 
 .Documentation-overviewHeader,
