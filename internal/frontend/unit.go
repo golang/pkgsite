@@ -18,7 +18,9 @@ import (
 // UnitPage contains data needed to render the unit template.
 type UnitPage struct {
 	basePage
-	Unit *internal.Unit
+	Unit          *internal.Unit
+	NestedModules []*internal.ModuleInfo
+	Packages      []*Package
 
 	// Breadcrumb contains data used to render breadcrumb UI elements.
 	Breadcrumb breadcrumb
@@ -103,6 +105,21 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		return err
 	}
 
+	nestedModules, err := ds.GetNestedModules(ctx, unit.ModulePath)
+	if err != nil {
+		return err
+	}
+
+	dir, err := createDirectory(unit.Path, moduleInfo(unit), unit.Subdirectories, nestedModules, unit.Licenses, false)
+	if err != nil {
+		return err
+	}
+
+	readme, err := readmeContent(ctx, unit)
+	if err != nil {
+		return err
+	}
+
 	title, pageType := pageInfo(unit)
 	basePage := s.newBasePage(r, title)
 	basePage.AllowWideContent = true
@@ -112,17 +129,14 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		tabSettings = unitTabLookup[tabDetails]
 	}
 	canShowDetails := unit.IsRedistributable || tabSettings.AlwaysShowDetails
-	readme, err := readmeContent(ctx, unit)
-	if err != nil {
-		return err
-	}
-
 	_, expandReadme := r.URL.Query()["readme"]
 	page := UnitPage{
-		basePage:   basePage,
-		Unit:       unit,
-		Breadcrumb: displayBreadcrumb(unit, requestedVersion),
-		Title:      title,
+		basePage:      basePage,
+		Unit:          unit,
+		Packages:      dir.Packages,
+		NestedModules: nestedModules,
+		Breadcrumb:    displayBreadcrumb(unit, requestedVersion),
+		Title:         title,
 		CanonicalURLPath: constructPackageURL(
 			unit.Path,
 			unit.ModulePath,
@@ -144,15 +158,23 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	return nil
 }
 
+// moduleInfo extracts module info from a unit. This is a shim
+// for functions ReadmeHTML and createDirectory that will be removed
+// when we complete the switch to units.
+func moduleInfo(unit *internal.Unit) *internal.ModuleInfo {
+	return &internal.ModuleInfo{
+		ModulePath:        unit.ModulePath,
+		Version:           unit.Version,
+		CommitTime:        unit.CommitTime,
+		IsRedistributable: unit.IsRedistributable,
+		SourceInfo:        unit.SourceInfo,
+	}
+}
+
+// readmeContent renders the readme to html.
 func readmeContent(ctx context.Context, unit *internal.Unit) (*safehtml.HTML, error) {
 	if unit.IsRedistributable && unit.Readme != nil {
-		mi := &internal.ModuleInfo{
-			ModulePath:        unit.ModulePath,
-			Version:           unit.Version,
-			CommitTime:        unit.CommitTime,
-			IsRedistributable: unit.IsRedistributable,
-			SourceInfo:        unit.SourceInfo,
-		}
+		mi := moduleInfo(unit)
 		readme, err := ReadmeHTML(ctx, mi, unit.Readme)
 		if err != nil {
 			return nil, err
