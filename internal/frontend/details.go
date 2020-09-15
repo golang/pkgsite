@@ -418,12 +418,7 @@ func pathNotFoundErrorNew(fullPath, requestedVersion string) error {
 		status: http.StatusNotFound,
 		epage: &errorPage{
 			templateName: "fetch.tmpl",
-			messageTemplate: template.MakeTrustedTemplate(`
-				<h3 class="NotFound-message">Oops! {{.}} does not exist.</h3>
-				<p class="NotFound-message js-notFoundMessage">
-					Check that you entered it correctly, or request to fetch it.
-				</p>`),
-			MessageData: path,
+			MessageData:  path,
 		},
 	}
 }
