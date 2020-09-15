@@ -15,7 +15,6 @@ const (
 	ExperimentFrontendFetch      = "frontend-fetch"
 	ExperimentMasterVersion      = "master-version"
 	ExperimentSidenav            = "sidenav"
-	ExperimentTranslateHTML      = "translate-html"
 	ExperimentUnitPage           = "unit-page"
 	ExperimentUseUnits           = "use-units"
 	ExperimentUsePathInfo        = "use-path-info"
@@ -29,7 +28,6 @@ var Experiments = map[string]string{
 	ExperimentFrontendFetch:      "Enable ability to fetch a package that doesn't exist on pkg.go.dev.",
 	ExperimentMasterVersion:      "Enable viewing path@master.",
 	ExperimentSidenav:            "Display documentation index on the left sidenav.",
-	ExperimentTranslateHTML:      "Parse HTML text in READMEs, to properly display images.",
 	ExperimentUnitPage:           "Enable the redesigned details page.",
 	ExperimentUseUnits:           "Read from paths, documentation, readmes, and package_imports tables.",
 	ExperimentUsePathInfo:        "Check the paths table if a path exists, as opposed to the packages or modules table.",
