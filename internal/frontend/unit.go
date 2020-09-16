@@ -120,14 +120,21 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		return err
 	}
 
+	tab := r.FormValue("tab")
+	if tab == "" {
+		// Default to details tab when there is no tab param.
+		tab = tabDetails
+	}
+	tabSettings, ok := unitTabLookup[tab]
+	if !ok {
+		// Redirect to clean URL path when tab param is invalid.
+		http.Redirect(w, r, r.URL.Path, http.StatusFound)
+		return nil
+	}
+
 	title, pageType := pageInfo(unit)
 	basePage := s.newBasePage(r, title)
 	basePage.AllowWideContent = true
-	tab := r.FormValue("tab")
-	tabSettings, ok := unitTabLookup[tab]
-	if !ok {
-		tabSettings = unitTabLookup[tabDetails]
-	}
 	canShowDetails := unit.IsRedistributable || tabSettings.AlwaysShowDetails
 	_, expandReadme := r.URL.Query()["readme"]
 	page := UnitPage{
