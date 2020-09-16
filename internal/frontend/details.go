@@ -143,7 +143,7 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 
 	urlInfo.modulePath = um.ModulePath
 	urlInfo.resolvedVersion = um.Version
-	if isActivePathAtMaster(ctx) && urlInfo.requestedVersion == internal.MasterVersion {
+	if urlInfo.requestedVersion == internal.MasterVersion {
 		// Since path@master is a moving target, we don't want it to be stale.
 		// As a result, we enqueue every request of path@master to the frontend
 		// task queue, which will initiate a fetch request depending on the
@@ -319,7 +319,7 @@ func parseDetailsURLPath(urlPath string) (fullPath, modulePath, requestedVersion
 // validatePathAndVersion verifies that the requested path and version are
 // acceptable. The given path may be a module or package path.
 func validatePathAndVersion(ctx context.Context, ds internal.DataSource, fullPath, requestedVersion string) error {
-	if !isSupportedVersion(ctx, fullPath, requestedVersion) {
+	if !isSupportedVersion(fullPath, requestedVersion) {
 		return &serverError{
 			status: http.StatusBadRequest,
 			epage: &errorPage{
@@ -348,30 +348,20 @@ func validatePathAndVersion(ctx context.Context, ds internal.DataSource, fullPat
 }
 
 // isSupportedVersion reports whether the version is supported by the frontend.
-func isSupportedVersion(ctx context.Context, fullPath, requestedVersion string) bool {
+func isSupportedVersion(fullPath, requestedVersion string) bool {
 	if stdlib.Contains(fullPath) && requestedVersion == internal.MasterVersion {
 		return false
 	}
 	if requestedVersion == internal.LatestVersion || semver.IsValid(requestedVersion) {
 		return true
 	}
-	if isActivePathAtMaster(ctx) {
-		return requestedVersion == internal.MasterVersion
-	}
-	return false
+	return requestedVersion == internal.MasterVersion
 }
 
 // isActveUseUnits reports whether the experiment for reading from the
 // paths-based data model is active.
 func isActiveUseUnits(ctx context.Context) bool {
 	return experiment.IsActive(ctx, internal.ExperimentUseUnits)
-}
-
-// isActivePathAtMaster reports whether the experiment for viewing packages at
-// master is active.
-func isActivePathAtMaster(ctx context.Context) bool {
-	return experiment.IsActive(ctx, internal.ExperimentMasterVersion) &&
-		isActiveFrontendFetch(ctx)
 }
 
 // isActiveUnitPage reports whether the experiments needed for viewing

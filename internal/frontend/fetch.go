@@ -97,10 +97,7 @@ func (s *Server) serveFetch(w http.ResponseWriter, r *http.Request, ds internal.
 	if err != nil {
 		return &serverError{status: http.StatusBadRequest}
 	}
-	if !isActivePathAtMaster(ctx) && urlInfo.requestedVersion == internal.MasterVersion {
-		return &serverError{status: http.StatusBadRequest}
-	}
-	if !isSupportedVersion(ctx, urlInfo.fullPath, urlInfo.requestedVersion) ||
+	if !isSupportedVersion(urlInfo.fullPath, urlInfo.requestedVersion) ||
 		// TODO(https://golang.org/issue/39973): add support for fetching the
 		// latest and master versions of the standard library.
 		(stdlib.Contains(urlInfo.fullPath) && urlInfo.requestedVersion == internal.LatestVersion) {
@@ -128,7 +125,7 @@ func (s *Server) fetchAndPoll(ctx context.Context, ds internal.DataSource, modul
 		recordFrontendFetchMetric(ctx, status, time.Since(start))
 	}()
 
-	if !isSupportedVersion(ctx, fullPath, requestedVersion) ||
+	if !isSupportedVersion(fullPath, requestedVersion) ||
 		// TODO(https://golang.org/issue/39973): add support for fetching the
 		// latest and master versions of the standard library
 		(stdlib.Contains(fullPath) && requestedVersion == internal.LatestVersion) {

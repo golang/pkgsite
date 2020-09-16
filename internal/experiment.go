@@ -12,7 +12,6 @@ import (
 const (
 	ExperimentAutocomplete  = "autocomplete"
 	ExperimentFrontendFetch = "frontend-fetch"
-	ExperimentMasterVersion = "master-version"
 	ExperimentSidenav       = "sidenav"
 	ExperimentUnitPage      = "unit-page"
 	ExperimentUseUnits      = "use-units"
@@ -24,7 +23,6 @@ const (
 var Experiments = map[string]string{
 	ExperimentAutocomplete:  "Enable autocomplete with search.",
 	ExperimentFrontendFetch: "Enable ability to fetch a package that doesn't exist on pkg.go.dev.",
-	ExperimentMasterVersion: "Enable viewing path@master.",
 	ExperimentSidenav:       "Display documentation index on the left sidenav.",
 	ExperimentUnitPage:      "Enable the redesigned details page.",
 	ExperimentUseUnits:      "Read from paths, documentation, readmes, and package_imports tables.",

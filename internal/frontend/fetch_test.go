@@ -75,8 +75,7 @@ func TestFetch(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testFetchTimeout)
 			defer cancel()
 			ctx = experiment.NewContext(ctx,
-				internal.ExperimentFrontendFetch,
-				internal.ExperimentMasterVersion)
+				internal.ExperimentFrontendFetch)
 
 			status, responseText := s.fetchAndPoll(ctx, s.getDataSource(ctx), testModulePath, test.fullPath, test.version)
 			if status != http.StatusOK {
