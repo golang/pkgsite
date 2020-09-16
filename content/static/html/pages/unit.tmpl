@@ -12,13 +12,21 @@
 {{define "main_content"}}
   <div class="Container">
     {{block "unit_header" .}}{{end}}
-    <div class="UnitContent">
-      {{if .CanShowDetails}}
-        {{template "unit_content" .}}
-      {{else}}
-        <h2>“{{.UnitContentName}}” not displayed due to license restrictions.</h2>
-        See our <a href="/license-policy">license policy</a>.
-      {{end}}
+    <div class="Unit">
+      <div class="Unit-outline">
+        {{block "unit_outline" .}}{{end}}
+      </div>
+      <div class="Unit-content">
+        {{if .CanShowDetails}}
+            {{template "unit_content" .}}
+        {{else}}
+          <h2>“{{.UnitContentName}}” not displayed due to license restrictions.</h2>
+          See our <a href="/license-policy">license policy</a>.
+        {{end}}
+      </div>
+      <div class="Unit-meta">
+        {{block "unit_meta" .}}{{end}}
+      </div>
     </div>
   </div>
 {{end}}

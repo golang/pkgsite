@@ -1,0 +1,19 @@
+/*
+ * Copyright 2020 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+.UnitOutline {
+  display: block;
+}
+a.UnitOutline-readme {
+  align-items: center;
+  background-color: var(--gray-10);
+  color: var(--gray-2);
+  display: flex;
+  font-size: 1.125rem;
+  font-weight: 500;
+  height: 2.5rem;
+  padding-left: 1rem;
+}

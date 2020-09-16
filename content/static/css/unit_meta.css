@@ -1,0 +1,18 @@
+/*
+ * Copyright 2020 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+.UnitMeta {
+  display: block;
+}
+.UnitMeta-header {
+  font-weight: bold;
+  margin: 1.125rem 0;
+}
+.UnitMeta-repo {
+  font-size: 0.75rem;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+}

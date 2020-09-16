@@ -5,7 +5,7 @@
  */
 
 .UnitHeader {
-  border-bottom: 1px solid var(--gray-8);
+  border-bottom: 0.0625rem solid var(--gray-8);
   margin-left: -1.5rem;
   padding: 0.5rem 1.5rem 1rem;
   padding-bottom: 1rem;

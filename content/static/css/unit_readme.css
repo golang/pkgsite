@@ -5,7 +5,7 @@
  */
 
 .UnitReadme {
-  margin: 2rem 0;
+  margin-bottom: 2rem;
 }
 .UnitReadme::before {
   content: '';
@@ -37,18 +37,18 @@
   width: 100%;
   text-align: center;
   margin: 0;
-  padding: 30px 0;
+  padding: 1.875rem 0;
   background-image: linear-gradient(to bottom, transparent, var(--white));
 }
 .UnitReadme-expandLink {
   cursor: pointer;
-  padding: 10px 0;
+  padding: 0.625rem 0;
   color: var(--turq-dark);
 }
 .UnitReadme-collapseLink {
   cursor: pointer;
   display: none;
-  padding: 10px 0;
+  padding: 0.625rem 0;
   color: var(--turq-dark);
 }
 .UnitReadme--expanded .UnitReadme-content {
