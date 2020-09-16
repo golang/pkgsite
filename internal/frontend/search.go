@@ -16,7 +16,6 @@ import (
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 )
@@ -160,42 +159,17 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 	if !strings.Contains(requestedPath, "/") {
 		return ""
 	}
-	if experiment.IsActive(ctx, internal.ExperimentUsePathInfo) {
-		um, err := ds.GetUnitMeta(ctx, requestedPath, internal.UnknownModulePath, internal.LatestVersion)
-		if err != nil {
-			if !errors.Is(err, derrors.NotFound) {
-				log.Errorf(ctx, "searchRequestRedirectPath(%q): %v", requestedPath, err)
-			}
-			return ""
+	um, err := ds.GetUnitMeta(ctx, requestedPath, internal.UnknownModulePath, internal.LatestVersion)
+	if err != nil {
+		if !errors.Is(err, derrors.NotFound) {
+			log.Errorf(ctx, "searchRequestRedirectPath(%q): %v", requestedPath, err)
 		}
-		if um.IsPackage() || um.ModulePath != requestedPath {
-			return fmt.Sprintf("/%s", requestedPath)
-		}
-		return fmt.Sprintf("/mod/%s", requestedPath)
-	}
-
-	pkg, err := ds.LegacyGetPackage(ctx, requestedPath, internal.UnknownModulePath, internal.LatestVersion)
-	if err == nil {
-		return fmt.Sprintf("/%s", pkg.Path)
-	} else if !errors.Is(err, derrors.NotFound) {
-		log.Errorf(ctx, "error getting package for %s: %v", requestedPath, err)
 		return ""
 	}
-	mi, err := ds.LegacyGetModuleInfo(ctx, requestedPath, internal.LatestVersion)
-	if err == nil {
-		return fmt.Sprintf("/mod/%s", mi.ModulePath)
-	} else if !errors.Is(err, derrors.NotFound) {
-		log.Errorf(ctx, "error getting module for %s: %v", requestedPath, err)
-		return ""
+	if um.IsPackage() || um.ModulePath != requestedPath {
+		return fmt.Sprintf("/%s", requestedPath)
 	}
-	dir, err := ds.LegacyGetDirectory(ctx, requestedPath, internal.UnknownModulePath, internal.LatestVersion, internal.AllFields)
-	if err == nil {
-		return fmt.Sprintf("/%s", dir.Path)
-	} else if !errors.Is(err, derrors.NotFound) {
-		log.Errorf(ctx, "error getting directory for %s: %v", requestedPath, err)
-		return ""
-	}
-	return ""
+	return fmt.Sprintf("/mod/%s", requestedPath)
 }
 
 // searchQuery extracts a search query from the request.
