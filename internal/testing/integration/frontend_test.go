@@ -151,8 +151,7 @@ func TestModulePackageDirectoryResolution(t *testing.T) {
 			urlPath:  "/github.com/golang/found/dir",
 			wantCode: http.StatusOK,
 			want: in("",
-				in(".DetailsHeader", hasText("v1.2.4")),
-				in(".DetailsContent", hasText("I'm a package"))),
+				in(".DetailsHeader", hasText("v1.2.5"))),
 		},
 	}
 	ctx := context.Background()

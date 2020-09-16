@@ -834,32 +834,28 @@ func serverTestCases() []serverTestCase {
 				in("h3.Error-message", text("404 Not Found"))),
 		},
 		{
-			name:                "stdlib shortcut (net/http)",
-			urlPath:             "/http",
-			wantStatusCode:      http.StatusFound,
-			wantLocation:        "/net/http",
-			requiredExperiments: experiment.NewSet(internal.ExperimentUsePathInfo),
+			name:           "stdlib shortcut (net/http)",
+			urlPath:        "/http",
+			wantStatusCode: http.StatusFound,
+			wantLocation:   "/net/http",
 		},
 		{
-			name:                "stdlib shortcut (net/http) strip args",
-			urlPath:             "/http@go1.13",
-			wantStatusCode:      http.StatusFound,
-			wantLocation:        "/net/http",
-			requiredExperiments: experiment.NewSet(internal.ExperimentUsePathInfo),
+			name:           "stdlib shortcut (net/http) strip args",
+			urlPath:        "/http@go1.13",
+			wantStatusCode: http.StatusFound,
+			wantLocation:   "/net/http",
 		},
 		{
-			name:                "stdlib shortcut with trailing slash",
-			urlPath:             "/http/",
-			wantStatusCode:      http.StatusFound,
-			wantLocation:        "/net/http",
-			requiredExperiments: experiment.NewSet(internal.ExperimentUsePathInfo),
+			name:           "stdlib shortcut with trailing slash",
+			urlPath:        "/http/",
+			wantStatusCode: http.StatusFound,
+			wantLocation:   "/net/http",
 		},
 		{
-			name:                "stdlib shortcut with args and trailing slash",
-			urlPath:             "/http@go1.13/",
-			wantStatusCode:      http.StatusFound,
-			wantLocation:        "/net/http",
-			requiredExperiments: experiment.NewSet(internal.ExperimentUsePathInfo),
+			name:           "stdlib shortcut with args and trailing slash",
+			urlPath:        "/http@go1.13/",
+			wantStatusCode: http.StatusFound,
+			wantLocation:   "/net/http",
 		},
 	}
 
@@ -925,12 +921,12 @@ func TestServer(t *testing.T) {
 		{
 			name:          "use directories",
 			testCasesFunc: serverTestCases,
-			experiments:   []string{internal.ExperimentUseUnits, internal.ExperimentUsePathInfo},
+			experiments:   []string{internal.ExperimentUseUnits},
 		},
 		{
 			name:          "frontend fetch",
 			testCasesFunc: frontendFetchTestCases,
-			experiments:   []string{internal.ExperimentFrontendFetch, internal.ExperimentUsePathInfo},
+			experiments:   []string{internal.ExperimentFrontendFetch},
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {

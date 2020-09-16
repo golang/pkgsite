@@ -126,43 +126,41 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 	recordVersionTypeMetric(ctx, urlInfo.requestedVersion)
 
 	urlInfo.resolvedVersion = urlInfo.requestedVersion
-	if experiment.IsActive(ctx, internal.ExperimentUsePathInfo) {
-		um, err := ds.GetUnitMeta(ctx, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion)
-		if err != nil {
-			if !errors.Is(err, derrors.NotFound) {
-				return err
-			}
-			pathType := "package"
-			if urlInfo.isModule {
-				pathType = "module"
-			}
-			return s.servePathNotFoundPage(w, r, ds, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion, pathType)
+	um, err := ds.GetUnitMeta(ctx, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion)
+	if err != nil {
+		if !errors.Is(err, derrors.NotFound) {
+			return err
 		}
-		if urlInfo.isModule && um.ModulePath != urlInfo.fullPath {
-			return s.servePathNotFoundPage(w, r, ds, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion, "module")
+		pathType := "package"
+		if urlInfo.isModule {
+			pathType = "module"
 		}
+		return s.servePathNotFoundPage(w, r, ds, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion, pathType)
+	}
+	if urlInfo.isModule && um.ModulePath != urlInfo.fullPath {
+		return s.servePathNotFoundPage(w, r, ds, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion, "module")
+	}
 
-		urlInfo.modulePath = um.ModulePath
-		urlInfo.resolvedVersion = um.Version
-		if isActivePathAtMaster(ctx) && urlInfo.requestedVersion == internal.MasterVersion {
-			// Since path@master is a moving target, we don't want it to be stale.
-			// As a result, we enqueue every request of path@master to the frontend
-			// task queue, which will initiate a fetch request depending on the
-			// last time we tried to fetch this module version.
-			//
-			// Use a separate context here to prevent the context from being canceled
-			// elsewhere before a task is enqueued.
-			go func() {
-				ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
-				defer cancel()
-				if _, err := s.queue.ScheduleFetch(ctx, urlInfo.modulePath, internal.MasterVersion, "", s.taskIDChangeInterval); err != nil {
-					log.Errorf(ctx, "serveDetails(%q): %v", r.URL.Path, err)
-				}
-			}()
-		}
-		if isActiveUseUnits(ctx) {
-			return s.serveDetailsPage(w, r, ds, um, urlInfo)
-		}
+	urlInfo.modulePath = um.ModulePath
+	urlInfo.resolvedVersion = um.Version
+	if isActivePathAtMaster(ctx) && urlInfo.requestedVersion == internal.MasterVersion {
+		// Since path@master is a moving target, we don't want it to be stale.
+		// As a result, we enqueue every request of path@master to the frontend
+		// task queue, which will initiate a fetch request depending on the
+		// last time we tried to fetch this module version.
+		//
+		// Use a separate context here to prevent the context from being canceled
+		// elsewhere before a task is enqueued.
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+			defer cancel()
+			if _, err := s.queue.ScheduleFetch(ctx, urlInfo.modulePath, internal.MasterVersion, "", s.taskIDChangeInterval); err != nil {
+				log.Errorf(ctx, "serveDetails(%q): %v", r.URL.Path, err)
+			}
+		}()
+	}
+	if isActiveUseUnits(ctx) {
+		return s.serveDetailsPage(w, r, ds, um, urlInfo)
 	}
 	return s.legacyServeDetailsPage(w, r, ds, urlInfo)
 }
@@ -366,8 +364,7 @@ func isSupportedVersion(ctx context.Context, fullPath, requestedVersion string) 
 // isActveUseUnits reports whether the experiment for reading from the
 // paths-based data model is active.
 func isActiveUseUnits(ctx context.Context) bool {
-	return experiment.IsActive(ctx, internal.ExperimentUseUnits) &&
-		experiment.IsActive(ctx, internal.ExperimentUsePathInfo)
+	return experiment.IsActive(ctx, internal.ExperimentUseUnits)
 }
 
 // isActivePathAtMaster reports whether the experiment for viewing packages at
