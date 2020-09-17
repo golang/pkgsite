@@ -22,12 +22,14 @@ var scriptHashes = []string{
 	"'sha256-EWdCQW4XtY7zS2MZgs76+2EhMbqpaPtC+9EPGnbHBtM='",
 	// From content/static/html/pages/fetch.tmpl
 	"'sha256-1J6DWwTWs/QDZ2+ORDuUQCibmFnXXaNXYOtc0Jk6VU4='",
+	// From content/static/html/worker/index.tmpl
+	"'sha256-y5EX2GR3tCwSK0/kmqZnsWVeBROA8tA75L+I+woljOE='",
 	// From content/static/html/pages/pkg_doc.tmpl
 	"'sha256-91GG/273d2LdEV//lJMbTodGN501OuKZKYYphui+wDQ='",
 	"'sha256-Y1vZzPZ448awUtFwK5f2nES8NyyeM5dgiQ/E3klx4GM='",
 	"'sha256-gBtJYPzfgw/0FIACORDIAD08i5rxTQ5J0rhIU656A2U='",
-	// From content/static/html/worker/index.tmpl
-	"'sha256-y5EX2GR3tCwSK0/kmqZnsWVeBROA8tA75L+I+woljOE='",
+	// From content/static/html/pages/unit.tmpl
+	"'sha256-kht4ZWHMi0s488vkscDyb327GNp0nFof+j4GI7UTSFI='",
 }
 
 // SecureHeaders adds a content-security-policy and other security-related

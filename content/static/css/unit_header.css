@@ -7,13 +7,13 @@
 .UnitHeader {
   border-bottom: 0.0625rem solid var(--gray-8);
   margin-left: -1.5rem;
-  padding: 0.5rem 1.5rem 1rem;
-  padding-bottom: 1rem;
-  width: 100vw;
+  padding: 0.5rem 1.5rem 0.5rem 1.5rem;
+  width: calc(100vw - 1rem);
 }
 @media only screen and (max-width: 52rem) {
   .UnitHeader {
     margin-left: -1rem;
+    padding-left: 1rem;
   }
 }
 .UnitHeader-breadcrumb {
@@ -37,22 +37,13 @@
 .UnitHeader-detail {
   align-items: center;
   display: flex;
+  flex-wrap: wrap;
   white-space: nowrap;
 }
 .UnitHeader-detailItem {
   color: var(--gray-4);
   font-size: 0.875rem;
-}
-.UnitHeader-detailItemSmall {
-  display: none;
-}
-@media only screen and (max-width: 52rem) {
-  .UnitHeader-detailItemLarge {
-    display: none;
-  }
-  .UnitHeader-detailItemSmall {
-    display: initial;
-  }
+  margin-bottom: 0.5rem;
 }
 .UnitHeader-detailItem img {
   margin-right: 0.5rem;
@@ -80,13 +71,6 @@
   padding: 0.25rem 0.5rem;
   text-transform: uppercase;
   top: -0.0625rem;
-}
-@media only screen and (max-width: 52rem) {
-  .UnitHeader-versionBadge,
-  .DetailsHeader-badge {
-    margin-left: 0rem;
-    margin-right: 0.5rem;
-  }
 }
 .UnitHeader-versionBadge--latest,
 .DetailsHeader-badge--latest {

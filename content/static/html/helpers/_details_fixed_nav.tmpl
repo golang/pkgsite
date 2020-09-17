@@ -1,0 +1,84 @@
+<!--
+  Copyright 2020 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "details_fixed_nav"}}
+  <div class="js-fixedHeaderSentinel"></div>
+  <div class="DetailsNavFixed js-fixedHeader" aria-hidden="true">
+    <div class="DetailsNavFixed-container">
+      <a href="https://go.dev/" class="DetailsNavFixed-logoLink">
+        <img class="DetailsNavFixed-logo" src="/static/img/go-logo-blue.svg" alt="Go">
+      </a>
+      <div class="DetailsNavFixed-moduleInfo">
+        <span class="DetailsNavFixed-title">
+          {{if ne .PageType "std"}}
+            <span class="DetailsNavFixed-titleType">
+              {{if eq .PageType "mod"}}
+                Module
+              {{else if eq .PageType "dir"}}
+                Directory
+              {{else if eq .PageType "pkg"}}
+                Package
+              {{else if eq .PageType "cmd"}}
+                Command
+              {{end}}
+            </span>
+            <span class="DetailsNavFixed-titleName">{{.Title}}</span>
+          {{else}}
+            <span class="DetailsNavFixed-titleType">Standard library</span>
+            <span class="DetailsNavFixed-titleType DetailsNavFixed-titleType--small">StdLib</span>
+          {{end}}
+        </span>
+        {{with .Breadcrumb}}
+          {{if .CopyData}}
+            <button class="CopyToClipboardButton js-copyToClipboard"
+                title="Copy path to clipboard"
+                aria-label="Copy path to clipboard"
+                data-to-copy="{{.CopyData}}">
+              <img class="CopyToClipboardButton-image" src="/static/img/copy-click.svg" alt="">
+            </button>
+          {{end}}
+        {{end}}
+        <div class="DetailsNavFixed-version">{{.DisplayVersion}}</div>
+      </div>
+      <div class="DetailsNavFixed-overflowingTabList js-overflowingTabList">
+        <div role="tablist">
+          {{range .Tabs}}
+            <a role="tab"
+              {{if .Disabled}}
+                aria-disabled="true"
+              {{else}}
+                href="{{$.CanonicalURLPath}}?tab={{.Name}}"
+              {{end}}
+              {{if eq .Name $.SelectedTab.Name}}
+                aria-selected="true"
+              {{else}}
+                aria-selected="false"
+              {{end}}
+            >{{.DisplayName}}</a>
+          {{end}}
+        </div>
+        <div class="DetailsNavFixed-overflowContainer">
+          <svg class="DetailsNavFixed-overflowImage" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+            <path d="M0 0h24v24H0z" fill="none"/>
+            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+          </svg>
+          <select class="DetailsNavFixed-overflowSelect" aria-label="More">
+            {{range .Tabs}}
+              <option
+                value="{{$.CanonicalURLPath}}?tab={{.Name}}"
+                {{if .Disabled}}
+                  disabled
+                  data-always-disabled="true"
+                {{end}}
+                {{if eq .Name $.SelectedTab.Name}}selected{{end}}
+              >{{.DisplayName}}</option>
+            {{end}}
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+{{end}}

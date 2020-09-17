@@ -26,27 +26,23 @@
     <div class="UnitHeader-detail">
       <span class="UnitHeader-detailItem">
         <img class="UnitHeader-detailItemLarge" height="16px" width="16px" src="/static/img/pkg-icon-arrowBranch_16x16.svg">
-        <a class="UnitHeader-detailItemLarge" href="?tab=versions">Version {{.DisplayVersion}}</a>
+        <a href="?tab=versions">Version {{.DisplayVersion}}</a>
         <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
         <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
             data-version="{{.LinkVersion}}" data-mpath="{{.Unit.ModulePath}}" data-ppath="{{.Unit.Path}}" data-pagetype="{{.PageType}}">
           <span>Latest</span>
           <a href="{{.LatestURL}}">Go to latest</a>
         </div>
-        <a class="UnitHeader-detailItemSmall" href="?tab=versions">
-          {{.DisplayVersion}}
-        </a>
       </span>
-      <span class="UnitHeader-detailItem UnitHeader-detailItemLarge">
+      <span class="UnitHeader-detailItem">
         <img height="16px" width="16px" src="/static/img/pkg-icon-circularArrows_16x16.svg">
         {{.LastCommitTime}}
       </span>
       <span class="UnitHeader-detailItem">
         <img height="16px" width="16px" src="/static/img/pkg-icon-scale_16x16.svg">
-        {{$path := .CanonicalURLPath}}
         {{range $i, $e := .Licenses}}
           {{if $i}}, {{end}}
-          <a href="{{$path}}?tab=licenses#{{.Anchor}}">{{$e.Type}}</a>
+          <a href="{{$.CanonicalURLPath}}?tab=licenses#{{.Anchor}}">{{$e.Type}}</a>
         {{else}}
           <span>None detected</span>
           <a href="/license-policy" class="Disclaimer-link"><em>not legal advice</em></a>
@@ -55,13 +51,13 @@
       {{if .Unit.IsPackage}}
         <span class="UnitHeader-detailItem">
           <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg">
-          <a href="{{$path}}?tab=importedby">{{len .Unit.Imports}}</a>
-          <span class="UnitHeader-detailItemLarge"> Imported by</span>
+          <a href="{{$.CanonicalURLPath}}?tab=imports">{{len .Unit.Imports}}</a>
+          <span> Imports</span>
         </span>
         <span class="UnitHeader-detailItem">
           <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg">
-          <a href="{{$path}}?tab=imports">{{len .Unit.Imports}}</a>
-          <span class="UnitHeader-detailItemLarge"> Imports</span>
+          <a href="{{$.CanonicalURLPath}}?tab=importedby">{{len .Unit.Imports}}</a>
+          <span> Imported by</span>
         </span>
       {{end}}
     </div>

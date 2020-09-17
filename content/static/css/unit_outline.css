@@ -6,6 +6,7 @@
 
 .UnitOutline {
   display: block;
+  position: sticky;
 }
 a.UnitOutline-readme {
   align-items: center;

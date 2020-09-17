@@ -4,8 +4,27 @@
   license that can be found in the LICENSE file.
 -->
 
+{{define "unit_pre_content"}}
+  <link href="/static/css/unit_details.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{end}}
+
 {{define "unit_content"}}
-  {{block "unit_readme" .}}{{end}}
-  {{block "unit_docs" .}}{{end}}
-  {{block "unit_directories" .}}{{end}}
+  <div class="UnitDetails">
+    <div class="UnitDetails-outline">
+      {{block "unit_outline" .}}{{end}}
+    </div>
+    <div class="UnitDetails-content">
+      {{if .CanShowDetails}}
+        {{block "unit_readme" .}}{{end}}
+        {{block "unit_docs" .}}{{end}}
+        {{block "unit_directories" .}}{{end}}
+      {{else}}
+        <h2>“{{.UnitContentName}}” not displayed due to license restrictions.</h2>
+        See our <a href="/license-policy">license policy</a>.
+      {{end}}
+    </div>
+    <div class="UnitDetails-meta">
+      {{block "unit_meta" .}}{{end}}
+    </div>
+  </div>
 {{end}}

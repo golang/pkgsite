@@ -11,27 +11,27 @@
 @import './unit_meta.css';
 @import './unit_outline.css';
 
-.Unit {
+.UnitDetails {
   column-gap: 2rem;
   display: grid;
   grid-template-columns: minmax(0, auto);
 }
 @media only screen and (min-width: 52rem) {
-  .Unit {
+  .UnitDetails {
     grid-template-columns: 15.5rem minmax(0, auto);
   }
 }
 @media only screen and (min-width: 72rem) {
-  .Unit {
+  .UnitDetails {
     grid-template-columns: 15.5rem minmax(0, auto) 15.5rem;
   }
 }
 @media only screen and (min-width: 88rem) {
-  .Unit {
+  .UnitDetails {
     grid-template-columns: 20rem minmax(0, auto) 20rem;
   }
 }
-.Unit-outline {
+.UnitDetails-outline {
   display: none;
   height: 100vh;
   margin-top: 3rem;
@@ -39,20 +39,20 @@
   top: 0;
 }
 @media only screen and (min-width: 52rem) {
-  .Unit-outline {
+  .UnitDetails-outline {
     display: block;
   }
 }
-.Unit-content {
+.UnitDetails-content {
   margin-top: 2rem;
   max-width: 60rem;
 }
-.Unit-meta {
+.UnitDetails-meta {
   display: none;
   margin-top: 2rem;
 }
 @media only screen and (min-width: 72rem) {
-  .Unit-meta {
+  .UnitDetails-meta {
     display: block;
   }
 }

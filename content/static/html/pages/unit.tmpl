@@ -5,32 +5,21 @@
 -->
 
 {{define "pre_content"}}
-  <link href="/static/css/unit.css?version={{.AppVersionLabel}}" rel="stylesheet">
   {{block "unit_pre_content" .}}{{end}}
 {{end}}
 
 {{define "main_content"}}
   <div class="Container">
     {{block "unit_header" .}}{{end}}
-    <div class="Unit">
-      <div class="Unit-outline">
-        {{block "unit_outline" .}}{{end}}
-      </div>
-      <div class="Unit-content">
-        {{if .CanShowDetails}}
-            {{template "unit_content" .}}
-        {{else}}
-          <h2>“{{.UnitContentName}}” not displayed due to license restrictions.</h2>
-          See our <a href="/license-policy">license policy</a>.
-        {{end}}
-      </div>
-      <div class="Unit-meta">
-        {{block "unit_meta" .}}{{end}}
-      </div>
-    </div>
+    {{block "details_fixed_nav" .}}{{end}}
+    {{block "unit_content" .}}{{end}}
   </div>
 {{end}}
 
 {{define "post_content"}}
+  <div class="js-canonicalURLPath" data-canonical-url-path="{{.CanonicalURLPath}}" hidden />
+  <script>
+    loadScript('/static/js/details.min.js', {async: true, deferred: true});
+  </script>
   {{block "unit_post_content" .}}{{end}}
 {{end}}
