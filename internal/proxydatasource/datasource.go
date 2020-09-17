@@ -88,7 +88,7 @@ func (ds *DataSource) getModule(ctx context.Context, modulePath, version string)
 	if e, ok := ds.versionCache[key]; ok {
 		return e.module, e.err
 	}
-	res := fetch.FetchModule(ctx, modulePath, version, ds.proxyClient, ds.sourceClient)
+	res := fetch.FetchModule(ctx, fetch.GetModuleInfo(ctx, modulePath, version, ds.proxyClient), ds.proxyClient, ds.sourceClient)
 	m := res.Module
 	if m != nil {
 		if ds.bypassLicenseCheck {

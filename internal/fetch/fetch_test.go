@@ -91,7 +91,7 @@ func TestFetchModule(t *testing.T) {
 				Files:      test.mod.mod.Files,
 			}})
 			defer teardownProxy()
-			got := FetchModule(ctx, modulePath, fetchVersion, proxyClient, sourceClient)
+			got := FetchModule(ctx, GetModuleInfo(ctx, modulePath, fetchVersion, proxyClient), proxyClient, sourceClient)
 			if got.Error != nil {
 				t.Fatal(got.Error)
 			}
@@ -139,7 +139,7 @@ func TestFetchModule_Errors(t *testing.T) {
 			defer teardownProxy()
 
 			sourceClient := source.NewClient(sourceTimeout)
-			got := FetchModule(ctx, modulePath, "v1.0.0", proxyClient, sourceClient)
+			got := FetchModule(ctx, GetModuleInfo(ctx, modulePath, "v1.0.0", proxyClient), proxyClient, sourceClient)
 			if !errors.Is(got.Error, test.wantErr) {
 				t.Fatalf("FetchModule(ctx, %q, v1.0.0, proxyClient, sourceClient): %v; wantErr = %v)", modulePath, got.Error, test.wantErr)
 			}

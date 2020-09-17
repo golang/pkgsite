@@ -174,6 +174,22 @@ func TestZip(t *testing.T) {
 	}
 }
 
+func TestZipInfo(t *testing.T) {
+	UseTestData = true
+	defer func() { UseTestData = false }()
+
+	gotVersion, gotSize, err := ZipInfo("v1.14.6")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := "v1.14.6"; gotVersion != want {
+		t.Errorf("version: got %q, want %q", gotVersion, want)
+	}
+	if want := int64(estimatedZipSize); gotSize != want {
+		t.Errorf("size: got %d, want %d", gotSize, want)
+	}
+}
+
 func TestVersions(t *testing.T) {
 	UseTestData = true
 	defer func() { UseTestData = false }()
