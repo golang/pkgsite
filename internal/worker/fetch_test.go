@@ -993,3 +993,36 @@ func checkPackage(ctx context.Context, t *testing.T, pkgPath string) {
 			um.Path, um.ModulePath, um.Version)
 	}
 }
+
+func TestDecideToShed(t *testing.T) {
+	// By default (GO_DISCOVERY_MAX_IN_FLIGHT_ZIP_MI is unset), we should never decide to shed no matter the size of the zip.
+	got, d := decideToShed(1e10)
+	if want := false; got != want {
+		t.Fatalf("got %t, want %t", got, want)
+	}
+	d() // reset zipSizeInFlight
+	maxZipSizeInFlight = 10 * mib
+	got, d = decideToShed(3 * mib)
+	if want := false; got != want {
+		t.Fatalf("got %t, want %t", got, want)
+	}
+	if got, want := getZipSizeInFlight(), int64(3*mib); got != want {
+		t.Fatalf("got %d, want %d", got, want)
+	}
+	got, _ = decideToShed(8 * mib) // 8 + 3 > 10; shed
+	if want := true; got != want {
+		t.Fatalf("got %t, want %t", got, want)
+	}
+	d() // should decrement zipSizeInFlight
+	if got, want := getZipSizeInFlight(), int64(0); got != want {
+		t.Fatalf("got %d, want %d", got, want)
+	}
+	got, d = decideToShed(8 * mib) // 8 < 10; do not shed
+	if want := false; got != want {
+		t.Fatalf("got %t, want %t", got, want)
+	}
+	d()
+	if got, want := getZipSizeInFlight(), int64(0); got != want {
+		t.Fatalf("got %d, want %d", got, want)
+	}
+}

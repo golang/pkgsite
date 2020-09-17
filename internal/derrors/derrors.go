@@ -38,6 +38,10 @@ var (
 	// any module, up to the max size allowed by the proxy.
 	ModuleTooLarge = errors.New("module too large")
 
+	// SheddingLoad indicates that the server is overloaded and cannot process the
+	// module at this time.
+	SheddingLoad = errors.New("shedding load")
+
 	// Unknown indicates that the error has unknown semantics.
 	Unknown = errors.New("unknown")
 
@@ -98,6 +102,7 @@ var codes = []struct {
 	{NotFound, http.StatusNotFound},
 	{InvalidArgument, http.StatusBadRequest},
 	{Excluded, http.StatusForbidden},
+	{SheddingLoad, http.StatusServiceUnavailable},
 
 	// Since the following aren't HTTP statuses, pick unused codes.
 	{HasIncompletePackages, 290},

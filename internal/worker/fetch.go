@@ -127,7 +127,7 @@ func init() {
 	if m != "" {
 		v, err := strconv.ParseInt(m, 10, 64)
 		if err != nil {
-			log.Warningf(context.Background(), "could not parse GO_DISCOVERY_MAX_MODULE_ZIP_MI value %q", v)
+			log.Errorf(context.Background(), "could not parse GO_DISCOVERY_MAX_MODULE_ZIP_MI value %q", v)
 		} else {
 			maxModuleZipSize = v * mib
 		}
@@ -175,12 +175,21 @@ func fetchAndInsertModule(ctx context.Context, modulePath, requestedVersion stri
 
 	start := time.Now()
 	minfo := fetch.GetModuleInfo(ctx, modulePath, requestedVersion, proxyClient)
+	if minfo.Error == nil {
+		shouldShed, deferFunc := decideToShed(minfo.ZipSize)
+		defer deferFunc()
+		if shouldShed {
+			ft.Error = derrors.SheddingLoad
+			return ft
+		}
+	}
 	if minfo.Error == nil && minfo.ZipSize > maxModuleZipSize {
 		log.Warningf(ctx, "fetchAndInsertModule: %s@%s zip size %dMi exceeds max %dMi",
 			minfo.ModulePath, minfo.ResolvedVersion, minfo.ZipSize/mib, maxModuleZipSize/mib)
 		ft.Error = derrors.ModuleTooLarge
 		return ft
 	}
+
 	fr := fetch.FetchModule(ctx, minfo, proxyClient, sourceClient)
 	if fr == nil {
 		panic("fetch.FetchModule should never return a nil FetchResult")
