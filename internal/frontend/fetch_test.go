@@ -14,7 +14,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
@@ -74,8 +73,6 @@ func TestFetch(t *testing.T) {
 
 			ctx, cancel := context.WithTimeout(context.Background(), testFetchTimeout)
 			defer cancel()
-			ctx = experiment.NewContext(ctx,
-				internal.ExperimentFrontendFetch)
 
 			status, responseText := s.fetchAndPoll(ctx, s.getDataSource(ctx), testModulePath, test.fullPath, test.version)
 			if status != http.StatusOK {
@@ -129,7 +126,6 @@ func TestFetchErrors(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), test.fetchTimeout)
 			defer cancel()
 
-			ctx = experiment.NewContext(ctx, internal.ExperimentFrontendFetch)
 			s, _, teardown := newTestServer(t, testModulesForProxy)
 			defer teardown()
 			got, _ := s.fetchAndPoll(ctx, s.getDataSource(ctx), test.modulePath, test.fullPath, test.version)
@@ -152,9 +148,6 @@ func TestFetchPathAlreadyExists(t *testing.T) {
 		t.Run(strconv.Itoa(test.status), func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testFetchTimeout)
 			defer cancel()
-			ctx = experiment.NewContext(ctx,
-				internal.ExperimentFrontendFetch,
-			)
 			if err := testDB.InsertModule(ctx, sample.DefaultModule()); err != nil {
 				t.Fatal(err)
 			}

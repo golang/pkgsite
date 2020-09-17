@@ -84,8 +84,7 @@ func (s *Server) serveFetch(w http.ResponseWriter, r *http.Request, ds internal.
 		// There's no reason for the proxydatasource to need this codepath.
 		return proxydatasourceNotSupportedErr()
 	}
-	ctx := r.Context()
-	if !isActiveFrontendFetch(ctx) || r.Method != http.MethodPost {
+	if r.Method != http.MethodPost {
 		// If the experiment flag is not on, or the user makes a GET request,
 		// treat this as a request for the "fetch" package, which does not
 		// exist.
