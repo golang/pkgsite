@@ -8,7 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
+	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
@@ -141,5 +143,23 @@ func packageMetaFromLegacyPackage(pkg *internal.LegacyPackage) *internal.Package
 		Name:              pkg.Name,
 		Synopsis:          pkg.Synopsis,
 		Licenses:          pkg.Licenses,
+	}
+}
+
+// legacyPathFoundAtLatestError returns an error page when the fullPath exists, but
+// the version that is requested does not.
+func legacyPathFoundAtLatestError(pathType, fullPath, requestedVersion string) error {
+	return &serverError{
+		status: http.StatusNotFound,
+		epage: &errorPage{
+			messageTemplate: template.MakeTrustedTemplate(`
+				<h3 class="Error-message">{{.TType}} {{.Path}}@{{.Version}} is not available.</h3>
+				<p class="Error-message">
+				  There are other versions of this {{.Type}} that are! To view them,
+				  <a href="/{{.Path}}?tab=versions">click here</a>.
+				</p>`),
+			MessageData: struct{ TType, Type, Path, Version string }{
+				strings.Title(pathType), pathType, fullPath, displayVersion(requestedVersion, fullPath)},
+		},
 	}
 }
