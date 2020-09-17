@@ -456,8 +456,10 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, d
 		http.Redirect(w, r, fmt.Sprintf("/%s", path), http.StatusFound)
 		return
 	}
-
-	if isActiveFrontendFetch(ctx) && !stdlib.Contains(fullPath) {
+	if stdlib.Contains(fullPath) {
+		return &serverError{status: http.StatusNotFound}
+	}
+	if isActiveFrontendFetch(ctx) {
 		db, ok := ds.(*postgres.DB)
 		if !ok {
 			return pathNotFoundError(fullPath, requestedVersion)
@@ -486,12 +488,8 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, d
 			},
 		}
 	}
-
-	if requestedVersion == internal.LatestVersion || isActiveFrontendFetch(ctx) {
+	if requestedVersion == internal.LatestVersion {
 		// We already know that the fullPath does not exist at any version.
-		//
-		// If frontend fetch is enabled always show the 404 page so that the
-		// user can request the version that they want.
 		return pathNotFoundError(fullPath, requestedVersion)
 	}
 	// If frontend fetch is not enabled and we couldn't find a path at the
