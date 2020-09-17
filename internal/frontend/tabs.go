@@ -138,7 +138,7 @@ func init() {
 }
 
 const (
-	tabDetails        = "details"
+	tabDetails        = ""
 	tabDoc            = "doc"
 	tabOverview       = "overview"
 	tabSubdirectories = "subdirectories"

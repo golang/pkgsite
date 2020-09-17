@@ -65,35 +65,53 @@ type UnitPage struct {
 
 	// ExpandReadme is holds the expandable readme state.
 	ExpandReadme bool
+
+	// Tabs contains data to render the varioius tabs on each details page.
+	Tabs []TabSettings
+
+	// Settings contains settings for the selected tab.
+	SelectedTab TabSettings
 }
 
 var (
-	unitTabLookup = map[string]TabSettings{
-		tabDetails: {
+	unitTabs = []TabSettings{
+		{
+			Name:         tabDetails,
 			DisplayName:  "Details",
 			TemplateName: "unit_details.tmpl",
 		},
-		tabVersions: {
+		{
+			Name:              tabVersions,
 			AlwaysShowDetails: true,
 			DisplayName:       "Versions",
 			TemplateName:      "unit_versions.tmpl",
 		},
-		tabImports: {
+		{
+			Name:              tabImports,
 			AlwaysShowDetails: true,
 			DisplayName:       "Imports",
 			TemplateName:      "unit_imports.tmpl",
 		},
-		tabImportedBy: {
+		{
+			Name:              tabImportedBy,
 			AlwaysShowDetails: true,
 			DisplayName:       "Imported By",
 			TemplateName:      "unit_importedby.tmpl",
 		},
-		tabLicenses: {
+		{
+			Name:         tabLicenses,
 			DisplayName:  "Licenses",
 			TemplateName: "unit_licenses.tmpl",
 		},
 	}
+	unitTabLookup = make(map[string]TabSettings, len(unitTabs))
 )
+
+func init() {
+	for _, t := range unitTabs {
+		unitTabLookup[t.Name] = t
+	}
+}
 
 // serveUnitPage serves a unit page for a path using the paths,
 // modules, documentation, readmes, licenses, and package_imports tables.
@@ -144,6 +162,8 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		NestedModules: nestedModules,
 		Breadcrumb:    displayBreadcrumb(unit, requestedVersion),
 		Title:         title,
+		Tabs:          unitTabs,
+		SelectedTab:   tabSettings,
 		CanonicalURLPath: constructPackageURL(
 			unit.Path,
 			unit.ModulePath,
