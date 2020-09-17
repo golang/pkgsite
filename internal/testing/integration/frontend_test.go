@@ -141,8 +141,7 @@ func TestModulePackageDirectoryResolution(t *testing.T) {
 			urlPath:  "/github.com/golang/found@v1.2.5/dir",
 			wantCode: http.StatusOK,
 			want: in("",
-				in(".Directories", hasText("pkg")),
-				in(".DetailsHeader-badge", in(".DetailsHeader-badge--unknown"))),
+				in(".DetailsHeader", hasText("v1.2.5"))),
 		},
 		{
 			desc:     "latest package for /dir",

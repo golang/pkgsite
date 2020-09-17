@@ -101,7 +101,7 @@ func DirectoryHeader(p *Page, versionedURL bool) htmlcheck.Checker {
 		in("h1.DetailsHeader-title", exactTextCollapsed(p.Title)),
 		in("div.DetailsHeader-version", exactText(fv)),
 		// directory pages don't show a header badge
-		in("div.DetailsHeader-badge", in(".DetailsHeader-badge--unknown")),
+		in("div.DetailsHeader-version", exactText(fv)),
 		licenseInfo(p, packageURLPath(p, versionedURL)),
 		// directory module links are always versioned (see b/144217401)
 		moduleInHeader(p, true))

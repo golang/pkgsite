@@ -14,7 +14,6 @@ const (
 	ExperimentSidenav      = "sidenav"
 	ExperimentUnitPage     = "unit-page"
 	ExperimentUseUnits     = "use-units"
-	ExperimentUsePathInfo  = "use-path-info"
 )
 
 // Experiments represents all of the active experiments in the codebase and
@@ -24,7 +23,6 @@ var Experiments = map[string]string{
 	ExperimentSidenav:      "Display documentation index on the left sidenav.",
 	ExperimentUnitPage:     "Enable the redesigned details page.",
 	ExperimentUseUnits:     "Read from paths, documentation, readmes, and package_imports tables.",
-	ExperimentUsePathInfo:  "Check the paths table if a path exists, as opposed to the packages or modules table.",
 }
 
 // Experiment holds data associated with an experimental feature for frontend

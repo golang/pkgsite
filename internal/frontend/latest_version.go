@@ -10,7 +10,6 @@ import (
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 )
 
@@ -51,34 +50,13 @@ func (s *Server) GetLatestMinorVersion(ctx context.Context, packagePath, moduleP
 // we should add tests for this function.
 func latestMinorVersion(ctx context.Context, ds internal.DataSource, packagePath, modulePath, pageType string) (_ string, err error) {
 	defer derrors.Wrap(&err, "latestMinorVersion(ctx, %q, %q)", modulePath, packagePath)
-	if experiment.IsActive(ctx, internal.ExperimentUsePathInfo) {
-		fullPath := packagePath
-		if pageType == pageTypeModule || pageType == pageTypeStdLib {
-			fullPath = modulePath
-		}
-		um, err := ds.GetUnitMeta(ctx, fullPath, modulePath, internal.LatestVersion)
-		if err != nil {
-			return "", err
-		}
-		return linkVersion(um.Version, um.ModulePath), nil
+	fullPath := packagePath
+	if pageType == pageTypeModule || pageType == pageTypeStdLib {
+		fullPath = modulePath
 	}
-
-	var mi *internal.LegacyModuleInfo
-	switch pageType {
-	case pageTypeModule, pageTypeStdLib:
-		mi, err = ds.LegacyGetModuleInfo(ctx, modulePath, internal.LatestVersion)
-		if err != nil {
-			return "", err
-		}
-	case pageTypePackage, pageTypeCommand:
-		pkg, err := ds.LegacyGetPackage(ctx, packagePath, modulePath, internal.LatestVersion)
-		if err != nil {
-			return "", err
-		}
-		mi = &pkg.LegacyModuleInfo
-	default:
-		// For directories we don't have a well-defined latest version.
-		return "", nil
+	um, err := ds.GetUnitMeta(ctx, fullPath, modulePath, internal.LatestVersion)
+	if err != nil {
+		return "", err
 	}
-	return linkVersion(mi.Version, modulePath), nil
+	return linkVersion(um.Version, um.ModulePath), nil
 }
