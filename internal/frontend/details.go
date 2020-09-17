@@ -155,10 +155,10 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 			}
 		}()
 	}
-	if isActiveUseUnits(ctx) {
-		return s.serveDetailsPage(w, r, ds, um, urlInfo)
+	if isActiveUnitPage(ctx) {
+		return s.serveUnitPage(ctx, w, r, ds, um, urlInfo.requestedVersion)
 	}
-	return s.legacyServeDetailsPage(w, r, ds, urlInfo)
+	return s.serveDetailsPage(w, r, ds, um, urlInfo)
 }
 
 // serveDetailsPage serves a details page for a path using the paths,
@@ -167,26 +167,18 @@ func (s *Server) serveDetailsPage(w http.ResponseWriter, r *http.Request, ds int
 	defer derrors.Wrap(&err, "serveDetailsPage(w, r, %v)", info)
 	ctx := r.Context()
 
-	if isActiveUnitPage(ctx) {
-		return s.serveUnitPage(ctx, w, r, ds, um, info.requestedVersion)
-	}
-
-	switch {
-	case info.isModule:
-		return s.serveModulePage(ctx, w, r, ds, um, info.requestedVersion)
-	case um.IsPackage():
-		return s.servePackagePage(ctx, w, r, ds, um, info.requestedVersion)
-	default:
-		return s.serveDirectoryPage(ctx, w, r, ds, um, info.requestedVersion)
-	}
-}
-
-// legacyServeDetailsPage serves a details page for a path using the packages,
-// modules, licenses and imports tables.
-func (s *Server) legacyServeDetailsPage(w http.ResponseWriter, r *http.Request, ds internal.DataSource, info *urlPathInfo) (err error) {
-	defer derrors.Wrap(&err, "legacyServeDetailsPage(w, r, %v)", info)
 	if info.isModule {
+		if experiment.IsActive(ctx, internal.ExperimentUseUnits) {
+			return s.serveModulePage(ctx, w, r, ds, um, info.requestedVersion)
+		}
 		return s.legacyServeModulePage(w, r, ds, info.fullPath, info.requestedVersion, info.resolvedVersion)
+	}
+
+	if experiment.IsActive(ctx, internal.ExperimentUseUnits) {
+		if um.IsPackage() {
+			return s.servePackagePage(ctx, w, r, ds, um, info.requestedVersion)
+		}
+		return s.serveDirectoryPage(ctx, w, r, ds, um, info.requestedVersion)
 	}
 	return s.legacyServePackagePage(w, r, ds, info.fullPath, info.modulePath, info.requestedVersion, info.resolvedVersion)
 }
@@ -354,17 +346,11 @@ func isSupportedVersion(fullPath, requestedVersion string) bool {
 	return requestedVersion == internal.MasterVersion
 }
 
-// isActveUseUnits reports whether the experiment for reading from the
-// paths-based data model is active.
-func isActiveUseUnits(ctx context.Context) bool {
-	return experiment.IsActive(ctx, internal.ExperimentUseUnits)
-}
-
 // isActiveUnitPage reports whether the experiments needed for viewing
 // unit page are active.
 func isActiveUnitPage(ctx context.Context) bool {
 	return experiment.IsActive(ctx, internal.ExperimentUnitPage) &&
-		isActiveUseUnits(ctx)
+		experiment.IsActive(ctx, internal.ExperimentUseUnits)
 }
 
 // pathNotFoundError returns a page with an option on how to
