@@ -4,9 +4,14 @@
 
 package dochtml
 
+const (
+	IdentifierSidenavStart = `<nav class="DocNav js-sideNav">`
+	IdentifierSidenavEnd   = `</nav>`
+)
+
 const tmplSidenav = `
 {{if or .Doc .Consts .Vars .Funcs .Types .Examples.List}}
-	<nav class="DocNav js-sideNav">
+	` + IdentifierSidenavStart + `
 		<ul role="tree" aria-label="Outline">
 			{{if or .Doc (index .Examples.Map "")}}
 				<li class="DocNav-overview" role="none">
@@ -147,5 +152,5 @@ const tmplSidenav = `
 				</optgroup>
 			{{end}}
 		</select>
-	</nav>
+	` + IdentifierSidenavEnd + `
 {{end}}`

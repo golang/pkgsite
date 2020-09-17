@@ -4,9 +4,14 @@
 
 package dochtml
 
+const (
+	IdentifierBodyStart = `<div class="Documentation-content js-docContent">`
+	IdentifierBodyEnd   = `</div>`
+)
+
 const tmplBody = `
 
-<div class="Documentation-content js-docContent"> {{/* Documentation content container */}}
+` + IdentifierBodyStart + ` {{/* Documentation content container */}}
 
 {{- if or .Doc (index .Examples.Map "") -}}
 	<section class="Documentation-overview">
@@ -186,7 +191,7 @@ const tmplBody = `
 </section>
 {{- end -}}
 
-</div> {{/* End documentation content container */}}
+` + IdentifierBodyEnd + ` {{/* End documentation content container */}}
 `
 
 const tmplExample = `
