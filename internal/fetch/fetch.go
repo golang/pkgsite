@@ -137,7 +137,7 @@ func FetchModule(ctx context.Context, mi ModuleInfo, proxyClient *proxy.Client, 
 	)
 	fr.ResolvedVersion = mi.ResolvedVersion
 	if mi.ModulePath == stdlib.ModulePath {
-		zipReader, commitTime, _, err = stdlib.Zip(mi.RequestedVersion)
+		zipReader, commitTime, err = stdlib.Zip(mi.ResolvedVersion)
 		if err != nil {
 			fr.Error = err
 			return fr

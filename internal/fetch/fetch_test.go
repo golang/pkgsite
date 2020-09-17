@@ -213,7 +213,7 @@ func TestExtractReadmesFromZip(t *testing.T) {
 				err    error
 			)
 			if test.modulePath == stdlib.ModulePath {
-				reader, _, _, err = stdlib.Zip(test.version)
+				reader, _, err = stdlib.Zip(test.version)
 				if err != nil {
 					t.Fatal(err)
 				}

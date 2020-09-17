@@ -115,9 +115,9 @@ func TestZip(t *testing.T) {
 	UseTestData = true
 	defer func() { UseTestData = false }()
 
-	for _, version := range []string{"v1.14.6", "v1.12.5", "v1.3.2", "latest"} {
-		t.Run(version, func(t *testing.T) {
-			zr, gotTime, resolvedVersion, err := Zip(version)
+	for _, resolvedVersion := range []string{"v1.14.6", "v1.12.5", "v1.3.2"} {
+		t.Run(resolvedVersion, func(t *testing.T) {
+			zr, gotTime, err := Zip(resolvedVersion)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -178,7 +178,7 @@ func TestZipInfo(t *testing.T) {
 	UseTestData = true
 	defer func() { UseTestData = false }()
 
-	gotVersion, gotSize, err := ZipInfo("v1.14.6")
+	gotVersion, gotSize, err := ZipInfo("latest")
 	if err != nil {
 		t.Fatal(err)
 	}
