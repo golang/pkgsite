@@ -95,7 +95,7 @@ func TestFetchModule(t *testing.T) {
 			if got.Error != nil {
 				t.Fatal(got.Error)
 			}
-			d := licenseDetector(ctx, t, modulePath, fetchVersion, proxyClient)
+			d := licenseDetector(ctx, t, modulePath, got.ResolvedVersion, proxyClient)
 			fr := cleanFetchResult(test.mod.fr, d)
 			sortFetchResult(fr)
 			sortFetchResult(got)
