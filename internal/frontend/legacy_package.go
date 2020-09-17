@@ -40,7 +40,7 @@ func (s *Server) legacyServePackagePage(w http.ResponseWriter, r *http.Request, 
 		dbDir, err := ds.LegacyGetDirectory(ctx, pkgPath, modulePath, resolvedVersion, internal.AllFields)
 		if err != nil {
 			if errors.Is(err, derrors.NotFound) {
-				return pathNotFoundError(ctx, "package", pkgPath, requestedVersion)
+				return pathNotFoundError(pkgPath, requestedVersion)
 			}
 			return err
 		}
@@ -69,7 +69,7 @@ func (s *Server) legacyServePackagePage(w http.ResponseWriter, r *http.Request, 
 		log.Errorf(ctx, "error checking for latest package: %v", err)
 		return nil
 	}
-	return pathNotFoundError(ctx, "package", pkgPath, requestedVersion)
+	return pathNotFoundError(pkgPath, requestedVersion)
 }
 
 func (s *Server) legacyServePackagePageWithPackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource, pkg *internal.LegacyVersionedPackage, requestedVersion string) (err error) {

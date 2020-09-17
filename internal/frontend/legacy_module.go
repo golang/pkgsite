@@ -47,7 +47,7 @@ func (s *Server) legacyServeModulePage(w http.ResponseWriter, r *http.Request, d
 			log.Errorf(ctx, "error checking for latest module: %v", err)
 		}
 	}
-	return pathNotFoundError(ctx, "module", modulePath, requestedVersion)
+	return pathNotFoundError(modulePath, requestedVersion)
 }
 
 func (s *Server) legacyServeModulePageWithModule(ctx context.Context, w http.ResponseWriter, r *http.Request, ds internal.DataSource,

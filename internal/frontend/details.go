@@ -371,29 +371,9 @@ func isActiveUnitPage(ctx context.Context) bool {
 		isActiveUseUnits(ctx)
 }
 
-// pathNotFoundError returns an error page with instructions on how to
-// add a package or module to the site. pathType is always either the string
-// "package" or "module".
-func pathNotFoundError(ctx context.Context, pathType, fullPath, requestedVersion string) error {
-	if isActiveFrontendFetch(ctx) {
-		return pathNotFoundErrorNew(fullPath, requestedVersion)
-	}
-	return &serverError{
-		status: http.StatusNotFound,
-		epage: &errorPage{
-			messageTemplate: template.MakeTrustedTemplate(`<h3 class="Error-message">404 Not Found</h3>
-				 <p class="Error-message">
-				   If you think this is a valid {{.}} path, you can try fetching it following
-				   the <a href="/about#adding-a-package">instructions here</a>.
-				</p>`),
-			MessageData: pathType,
-		},
-	}
-}
-
-// pathNotFoundErrorNew returns an error page that provides the user with an
-// option to fetch a path.
-func pathNotFoundErrorNew(fullPath, requestedVersion string) error {
+// pathNotFoundError returns a page with an option on how to
+// add a package or module to the site.
+func pathNotFoundError(fullPath, requestedVersion string) error {
 	if stdlib.Contains(fullPath) {
 		return &serverError{status: http.StatusNotFound}
 	}
@@ -414,7 +394,7 @@ func pathNotFoundErrorNew(fullPath, requestedVersion string) error {
 // the version that is requested does not.
 func pathFoundAtLatestError(ctx context.Context, pathType, fullPath, requestedVersion string) error {
 	if isActiveFrontendFetch(ctx) {
-		return pathNotFoundErrorNew(fullPath, requestedVersion)
+		return pathNotFoundError(fullPath, requestedVersion)
 	}
 	return &serverError{
 		status: http.StatusNotFound,
@@ -480,7 +460,7 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, d
 	if isActiveFrontendFetch(ctx) && !stdlib.Contains(fullPath) {
 		db, ok := ds.(*postgres.DB)
 		if !ok {
-			return pathNotFoundError(ctx, pathType, fullPath, requestedVersion)
+			return pathNotFoundError(fullPath, requestedVersion)
 		}
 		modulePaths, err := candidateModulePaths(fullPath)
 		if err != nil {
@@ -492,7 +472,7 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, d
 				// If the result is statusNotFoundInVersionMap, it means that
 				// we haven't attempted to fetch this path before. Return an
 				// error page giving the user the option to fetch the path.
-				return pathNotFoundErrorNew(fullPath, requestedVersion)
+				return pathNotFoundError(fullPath, requestedVersion)
 			}
 		}
 		status, responseText := fetchRequestStatusAndResponseText(results, fullPath, requestedVersion)
@@ -512,14 +492,14 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, d
 		//
 		// If frontend fetch is enabled always show the 404 page so that the
 		// user can request the version that they want.
-		return pathNotFoundError(ctx, pathType, fullPath, requestedVersion)
+		return pathNotFoundError(fullPath, requestedVersion)
 	}
 	// If frontend fetch is not enabled and we couldn't find a path at the
 	// given version, but if there's one at the latest version we can provide a
 	// link to it.
 	if _, err := ds.GetUnitMeta(ctx, fullPath, modulePath, internal.LatestVersion); err != nil {
 		if errors.Is(err, derrors.NotFound) {
-			return pathNotFoundError(ctx, pathType, fullPath, requestedVersion)
+			return pathNotFoundError(fullPath, requestedVersion)
 		}
 		return err
 	}

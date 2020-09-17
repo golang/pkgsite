@@ -818,12 +818,11 @@ func serverTestCases() []serverTestCase {
 		},
 		{
 
-			name:           "path not found, no experiments",
+			name:           "path not found",
 			urlPath:        "/example.com/unknown",
 			wantStatusCode: http.StatusNotFound,
 			want: in("",
-				in("h3.Error-message", text("404 Not Found")),
-				in("p.Error-message", text("a valid package path"))),
+				in("h3.Fetch-message.js-fetchMessage", text("example.com/unknown"))),
 		},
 		{
 
@@ -831,7 +830,7 @@ func serverTestCases() []serverTestCase {
 			urlPath:        "/mod/" + sample.ModulePath + "/foo",
 			wantStatusCode: http.StatusNotFound,
 			want: in("",
-				in("h3.Error-message", text("404 Not Found"))),
+				in("h3.Fetch-message.js-fetchMessage", text(sample.ModulePath+"/foo"))),
 		},
 		{
 			name:           "stdlib shortcut (net/http)",
@@ -877,14 +876,6 @@ func frontendFetchTestCases() []serverTestCase {
 			wantStatusCode: http.StatusNotFound,
 			want: in("",
 				in("h3.Fetch-message.js-fetchMessage", text(sample.ModulePath+"/foo@v99.99.0"))),
-			requiredExperiments: experiment.NewSet(internal.ExperimentFrontendFetch),
-		},
-		{
-			name:           "path not found, frontend experiment",
-			urlPath:        "/example.com/unknown",
-			wantStatusCode: http.StatusNotFound,
-			want: in("",
-				in("h3.Fetch-message.js-fetchMessage", text("example.com/unknown"))),
 			requiredExperiments: experiment.NewSet(internal.ExperimentFrontendFetch),
 		},
 		{
