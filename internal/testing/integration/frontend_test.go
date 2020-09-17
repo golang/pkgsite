@@ -103,9 +103,7 @@ func TestModulePackageDirectoryResolution(t *testing.T) {
 			desc:     "non-existent version",
 			urlPath:  "/mod/github.com/golang/found@v1.1.3",
 			wantCode: http.StatusNotFound,
-			want: in(".Content",
-				hasText("not available"),
-				hasText("other versions of this module")),
+			want:     in("h3.Fetch-message.js-fetchMessage", hasText("github.com/golang/found@v1.1.3")),
 		},
 		{
 			desc:     "latest package",

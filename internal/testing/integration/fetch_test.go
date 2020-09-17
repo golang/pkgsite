@@ -10,8 +10,6 @@ import (
 	"net/http"
 	"testing"
 
-	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -20,21 +18,6 @@ import (
 
 func TestFrontendFetchForMasterVersion(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
-
-	experiments := []string{
-		internal.ExperimentFrontendFetch,
-		internal.ExperimentUsePathInfo,
-	}
-	ctx := experiment.NewContext(context.Background(), experiments...)
-	for _, e := range experiments {
-		if err := testDB.InsertExperiment(ctx, &internal.Experiment{
-			Name:        e,
-			Description: e,
-			Rollout:     100,
-		}); err != nil {
-			t.Fatal(err)
-		}
-	}
 
 	// Add sample.ModulePath@sample.VersionString to the database.
 	// Check that GET /sample.ModulePath returns a 200.
@@ -47,7 +30,8 @@ func TestFrontendFetchForMasterVersion(t *testing.T) {
 			"LICENSE":        testhelper.MITLicense,
 		},
 	}
-	q, teardown := setupQueue(ctx, t, []*proxy.Module{testModule}, experiments...)
+	ctx := context.Background()
+	q, teardown := setupQueue(ctx, t, []*proxy.Module{testModule})
 	defer teardown()
 	ts := setupFrontend(ctx, t, q)
 

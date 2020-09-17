@@ -809,12 +809,11 @@ func serverTestCases() []serverTestCase {
 			want:           pagecheck.ModuleHeader(netHttp, unversioned),
 		},
 		{
-			name:           "unknown version, no experiments",
+			name:           "unknown version",
 			urlPath:        fmt.Sprintf("/%s@%s/%s", sample.ModulePath, "v99.99.0", sample.Suffix),
 			wantStatusCode: http.StatusNotFound,
 			want: in("",
-				in("h3.Error-message", text("Package "+sample.ModulePath+"/foo@v99.99.0 is not available.")),
-				in("p.Error-message a", href("/"+sample.ModulePath+"/foo?tab=versions"))),
+				in("h3.Fetch-message.js-fetchMessage", text(sample.ModulePath+"/foo@v99.99.0"))),
 		},
 		{
 
@@ -823,6 +822,11 @@ func serverTestCases() []serverTestCase {
 			wantStatusCode: http.StatusNotFound,
 			want: in("",
 				in("h3.Fetch-message.js-fetchMessage", text("example.com/unknown"))),
+		},
+		{
+			name:           "bad request, invalid github module path",
+			urlPath:        "/github.com/foo",
+			wantStatusCode: http.StatusBadRequest,
 		},
 		{
 
@@ -861,32 +865,6 @@ func serverTestCases() []serverTestCase {
 	return testCases
 }
 
-// frontendFetchTestCases() returns test cases that are valid if
-// internal.ExperimentFrontendFetch is active.
-func frontendFetchTestCases() []serverTestCase {
-	var (
-		in   = htmlcheck.In
-		text = htmlcheck.HasText
-	)
-
-	return []serverTestCase{
-		{
-			name:           "unknown version, frontend experiment",
-			urlPath:        fmt.Sprintf("/%s@%s/%s", sample.ModulePath, "v99.99.0", sample.Suffix),
-			wantStatusCode: http.StatusNotFound,
-			want: in("",
-				in("h3.Fetch-message.js-fetchMessage", text(sample.ModulePath+"/foo@v99.99.0"))),
-			requiredExperiments: experiment.NewSet(internal.ExperimentFrontendFetch),
-		},
-		{
-			name:                "bad request, invalid github module path, frontend experiment",
-			urlPath:             "/github.com/foo",
-			wantStatusCode:      http.StatusBadRequest,
-			requiredExperiments: experiment.NewSet(internal.ExperimentFrontendFetch),
-		},
-	}
-}
-
 // TestServer checks the contents of served pages by looking for
 // strings and elements in the parsed HTML response body.
 //
@@ -913,11 +891,6 @@ func TestServer(t *testing.T) {
 			name:          "use directories",
 			testCasesFunc: serverTestCases,
 			experiments:   []string{internal.ExperimentUseUnits},
-		},
-		{
-			name:          "frontend fetch",
-			testCasesFunc: frontendFetchTestCases,
-			experiments:   []string{internal.ExperimentFrontendFetch},
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {

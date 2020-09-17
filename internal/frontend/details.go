@@ -131,14 +131,10 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 		if !errors.Is(err, derrors.NotFound) {
 			return err
 		}
-		pathType := "package"
-		if urlInfo.isModule {
-			pathType = "module"
-		}
-		return s.servePathNotFoundPage(w, r, ds, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion, pathType)
+		return s.servePathNotFoundPage(w, r, ds, urlInfo.fullPath, urlInfo.requestedVersion)
 	}
 	if urlInfo.isModule && um.ModulePath != urlInfo.fullPath {
-		return s.servePathNotFoundPage(w, r, ds, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion, "module")
+		return s.servePathNotFoundPage(w, r, ds, urlInfo.fullPath, urlInfo.requestedVersion)
 	}
 
 	urlInfo.modulePath = um.ModulePath
@@ -442,7 +438,7 @@ func parseStdLibURLPath(urlPath string) (path, requestedVersion string, err erro
 	return path, requestedVersion, nil
 }
 
-func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, ds internal.DataSource, fullPath, modulePath, requestedVersion, pathType string) (err error) {
+func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, ds internal.DataSource, fullPath, requestedVersion string) (err error) {
 	defer derrors.Wrap(&err, "servePathNotFoundPage(w, r, %q, %q)", fullPath, requestedVersion)
 
 	ctx := r.Context()
@@ -459,49 +455,33 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, d
 	if stdlib.Contains(fullPath) {
 		return &serverError{status: http.StatusNotFound}
 	}
-	if isActiveFrontendFetch(ctx) {
-		db, ok := ds.(*postgres.DB)
-		if !ok {
-			return pathNotFoundError(fullPath, requestedVersion)
-		}
-		modulePaths, err := candidateModulePaths(fullPath)
-		if err != nil {
-			return err
-		}
-		results := s.checkPossibleModulePaths(ctx, db, fullPath, requestedVersion, modulePaths, false)
-		for _, fr := range results {
-			if fr.status == statusNotFoundInVersionMap {
-				// If the result is statusNotFoundInVersionMap, it means that
-				// we haven't attempted to fetch this path before. Return an
-				// error page giving the user the option to fetch the path.
-				return pathNotFoundError(fullPath, requestedVersion)
-			}
-		}
-		status, responseText := fetchRequestStatusAndResponseText(results, fullPath, requestedVersion)
-		return &serverError{
-			status: status,
-			epage: &errorPage{
-				messageTemplate: template.MakeTrustedTemplate(`
-					<h3 class="Error-message">{{.StatusText}}</h3>
-					<p class="Error-message">{{.Response}}</p>`),
-				MessageData: struct{ StatusText, Response string }{http.StatusText(status), responseText},
-			},
-		}
-	}
-	if requestedVersion == internal.LatestVersion {
-		// We already know that the fullPath does not exist at any version.
+	db, ok := ds.(*postgres.DB)
+	if !ok {
 		return pathNotFoundError(fullPath, requestedVersion)
 	}
-	// If frontend fetch is not enabled and we couldn't find a path at the
-	// given version, but if there's one at the latest version we can provide a
-	// link to it.
-	if _, err := ds.GetUnitMeta(ctx, fullPath, modulePath, internal.LatestVersion); err != nil {
-		if errors.Is(err, derrors.NotFound) {
-			return pathNotFoundError(fullPath, requestedVersion)
-		}
+	modulePaths, err := candidateModulePaths(fullPath)
+	if err != nil {
 		return err
 	}
-	return pathFoundAtLatestError(ctx, pathType, fullPath, requestedVersion)
+	results := s.checkPossibleModulePaths(ctx, db, fullPath, requestedVersion, modulePaths, false)
+	for _, fr := range results {
+		if fr.status == statusNotFoundInVersionMap {
+			// If the result is statusNotFoundInVersionMap, it means that
+			// we haven't attempted to fetch this path before. Return an
+			// error page giving the user the option to fetch the path.
+			return pathNotFoundError(fullPath, requestedVersion)
+		}
+	}
+	status, responseText := fetchRequestStatusAndResponseText(results, fullPath, requestedVersion)
+	return &serverError{
+		status: status,
+		epage: &errorPage{
+			messageTemplate: template.MakeTrustedTemplate(`
+					<h3 class="Error-message">{{.StatusText}}</h3>
+					<p class="Error-message">{{.Response}}</p>`),
+			MessageData: struct{ StatusText, Response string }{http.StatusText(status), responseText},
+		},
+	}
 }
 
 func recordVersionTypeMetric(ctx context.Context, requestedVersion string) {
