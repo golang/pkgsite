@@ -33,26 +33,17 @@ type ImportsDetails struct {
 // fetchImportsDetails fetches imports for the package version specified by
 // pkgPath, modulePath and version from the database and returns a ImportsDetails.
 func fetchImportsDetails(ctx context.Context, ds internal.DataSource, pkgPath, modulePath, resolvedVersion string) (_ *ImportsDetails, err error) {
-	var dsImports []string
-	if isActiveUnitPage(ctx) {
-		u, err := ds.GetUnit(ctx, &internal.UnitMeta{
-			Path:       pkgPath,
-			ModulePath: modulePath,
-			Version:    resolvedVersion,
-		}, internal.WithImports)
-		if err != nil {
-			return nil, err
-		}
-		dsImports = u.Imports
-	} else {
-		dsImports, err = ds.LegacyGetImports(ctx, pkgPath, modulePath, resolvedVersion)
-		if err != nil {
-			return nil, err
-		}
+	u, err := ds.GetUnit(ctx, &internal.UnitMeta{
+		Path:       pkgPath,
+		ModulePath: modulePath,
+		Version:    resolvedVersion,
+	}, internal.WithImports)
+	if err != nil {
+		return nil, err
 	}
 
 	var externalImports, moduleImports, std []string
-	for _, p := range dsImports {
+	for _, p := range u.Imports {
 		if stdlib.Contains(p) {
 			std = append(std, p)
 		} else if strings.HasPrefix(p+"/", modulePath+"/") {

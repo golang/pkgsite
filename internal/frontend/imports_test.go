@@ -50,34 +50,25 @@ func TestFetchImportsDetails(t *testing.T) {
 			defer cancel()
 
 			module := sample.Module(sample.ModulePath, sample.VersionString, sample.Suffix)
-			module.LegacyPackages[0].Imports = tc.imports
+			// The first unit is the module and the second one is the package.
+			pkg := module.Units[1]
+			pkg.Imports = tc.imports
 
 			if err := testDB.InsertModule(ctx, module); err != nil {
 				t.Fatal(err)
 			}
 
-			pkg := firstVersionedPackage(module)
 			got, err := fetchImportsDetails(ctx, testDB, pkg.Path, pkg.ModulePath, pkg.Version)
 			if err != nil {
 				t.Fatalf("fetchImportsDetails(ctx, db, %q, %q) = %v err = %v, want %v",
-					module.LegacyPackages[0].Path, module.Version, got, err, tc.wantDetails)
+					module.Units[1].Path, module.Version, got, err, tc.wantDetails)
 			}
 
-			tc.wantDetails.ModulePath = module.LegacyModuleInfo.ModulePath
+			tc.wantDetails.ModulePath = module.ModulePath
 			if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
-				t.Errorf("fetchImportsDetails(ctx, %q, %q) mismatch (-want +got):\n%s", module.LegacyPackages[0].Path, module.Version, diff)
+				t.Errorf("fetchImportsDetails(ctx, %q, %q) mismatch (-want +got):\n%s", module.Units[1].Path, module.Version, diff)
 			}
 		})
-	}
-}
-
-// firstVersionedPackage is a helper function that returns an
-// *internal.LegacyVersionedPackage corresponding to the first package in the
-// version.
-func firstVersionedPackage(m *internal.Module) *internal.LegacyVersionedPackage {
-	return &internal.LegacyVersionedPackage{
-		LegacyPackage:    *m.LegacyPackages[0],
-		LegacyModuleInfo: m.LegacyModuleInfo,
 	}
 }
 
@@ -145,14 +136,14 @@ func TestFetchImportedByDetails(t *testing.T) {
 		t.Run(tc.pkg.Path, func(t *testing.T) {
 			otherVersion := newModule(path.Dir(tc.pkg.Path), tc.pkg)
 			otherVersion.Version = "v1.0.5"
-			vp := firstVersionedPackage(otherVersion)
-			got, err := fetchImportedByDetails(ctx, testDB, vp.Path, vp.ModulePath)
+			pkg := otherVersion.Units[1]
+			got, err := fetchImportedByDetails(ctx, testDB, pkg.Path, pkg.ModulePath)
 			if err != nil {
 				t.Fatalf("fetchImportedByDetails(ctx, db, %q) = %v err = %v, want %v",
 					tc.pkg.Path, got, err, tc.wantDetails)
 			}
 
-			tc.wantDetails.ModulePath = vp.LegacyModuleInfo.ModulePath
+			tc.wantDetails.ModulePath = pkg.ModulePath
 			if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
 				t.Errorf("fetchImportedByDetails(ctx, db, %q) mismatch (-want +got):\n%s", tc.pkg.Path, diff)
 			}
