@@ -242,6 +242,28 @@ func TestGetZipNonExist(t *testing.T) {
 	}
 }
 
+func TestGetZipSize(t *testing.T) {
+	t.Run("found", func(t *testing.T) {
+		client, teardownProxy := SetupTestClient(t, []*Module{testModule})
+		defer teardownProxy()
+		got, err := client.GetZipSize(context.Background(), sample.ModulePath, sample.VersionString)
+		if err != nil {
+			t.Error(err)
+		}
+		const want = 3235
+		if got != want {
+			t.Errorf("got %d, want %d", got, want)
+		}
+	})
+	t.Run("not found", func(t *testing.T) {
+		client, teardownProxy := SetupTestClient(t, nil)
+		defer teardownProxy()
+		if _, err := client.GetZipSize(context.Background(), sample.ModulePath, sample.VersionString); !errors.Is(err, derrors.NotFound) {
+			t.Errorf("got %v, want %v", err, derrors.NotFound)
+		}
+	})
+}
+
 func TestEncodedURL(t *testing.T) {
 	c := &Client{url: "u"}
 	for _, test := range []struct {

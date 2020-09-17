@@ -92,6 +92,29 @@ func (c *Client) GetZip(ctx context.Context, modulePath, resolvedVersion string)
 	return zipReader, nil
 }
 
+// GetZipSize gets the size in bytes of the zip from the proxy, without downloading it.
+// The version must be resolved, as by a call to Client.GetInfo.
+func (c *Client) GetZipSize(ctx context.Context, modulePath, resolvedVersion string) (_ int64, err error) {
+	defer derrors.Wrap(&err, "proxy.Client.GetZipSize(ctx, %q, %q)", modulePath, resolvedVersion)
+
+	url, err := c.escapedURL(modulePath, resolvedVersion, "zip")
+	if err != nil {
+		return 0, err
+	}
+	res, err := ctxhttp.Head(ctx, c.httpClient, url)
+	if err != nil {
+		return 0, fmt.Errorf("ctxhttp.Head(ctx, client, %q): %v", url, err)
+	}
+	defer res.Body.Close()
+	if err := responseError(res); err != nil {
+		return 0, err
+	}
+	if res.ContentLength < 0 {
+		return 0, errors.New("unknown content length")
+	}
+	return res.ContentLength, nil
+}
+
 func (c *Client) escapedURL(modulePath, version, suffix string) (_ string, err error) {
 	defer func() {
 		derrors.Wrap(&err, "Client.escapedURL(%q, %q, %q)", modulePath, version, suffix)
@@ -172,9 +195,17 @@ func (c *Client) executeRequest(ctx context.Context, u string, bodyFunc func(bod
 		return fmt.Errorf("ctxhttp.Get(ctx, client, %q): %v", u, err)
 	}
 	defer r.Body.Close()
+	if err := responseError(r); err != nil {
+		return err
+	}
+	return bodyFunc(r.Body)
+}
+
+// responseError translates the response status code to an appropriate error.
+func responseError(r *http.Response) error {
 	switch {
 	case 200 <= r.StatusCode && r.StatusCode < 300:
-		// OK.
+		return nil
 	case r.StatusCode == http.StatusNotFound,
 		r.StatusCode == http.StatusGone:
 		// Treat both 404 Not Found and 410 Gone responses
@@ -194,5 +225,4 @@ func (c *Client) executeRequest(ctx context.Context, u string, bodyFunc func(bod
 	default:
 		return fmt.Errorf("unexpected status %d %s", r.StatusCode, r.Status)
 	}
-	return bodyFunc(r.Body)
 }
