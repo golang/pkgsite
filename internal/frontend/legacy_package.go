@@ -57,7 +57,7 @@ func (s *Server) legacyServePackagePage(w http.ResponseWriter, r *http.Request, 
 	}
 	_, err = ds.LegacyGetPackage(ctx, pkgPath, modulePath, internal.LatestVersion)
 	if err == nil {
-		return pathFoundAtLatestError(ctx, "package", pkgPath, requestedVersion)
+		return legacyPathFoundAtLatestError("package", pkgPath, requestedVersion)
 	}
 	if !errors.Is(err, derrors.NotFound) {
 		// Unlike the error handling for LegacyGetDirectory above, we don't serve an

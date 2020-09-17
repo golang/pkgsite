@@ -21,7 +21,6 @@ import (
 	"golang.org/x/mod/module"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
@@ -523,10 +522,6 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 		return fr.Status, fr.Error
 	}
 	return http.StatusOK, nil
-}
-
-func isActiveFrontendFetch(ctx context.Context) bool {
-	return experiment.IsActive(ctx, internal.ExperimentFrontendFetch)
 }
 
 func recordFrontendFetchMetric(ctx context.Context, status int, latency time.Duration) {

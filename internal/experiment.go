@@ -10,23 +10,21 @@ import (
 )
 
 const (
-	ExperimentAutocomplete  = "autocomplete"
-	ExperimentFrontendFetch = "frontend-fetch"
-	ExperimentSidenav       = "sidenav"
-	ExperimentUnitPage      = "unit-page"
-	ExperimentUseUnits      = "use-units"
-	ExperimentUsePathInfo   = "use-path-info"
+	ExperimentAutocomplete = "autocomplete"
+	ExperimentSidenav      = "sidenav"
+	ExperimentUnitPage     = "unit-page"
+	ExperimentUseUnits     = "use-units"
+	ExperimentUsePathInfo  = "use-path-info"
 )
 
 // Experiments represents all of the active experiments in the codebase and
 // a description of each experiment.
 var Experiments = map[string]string{
-	ExperimentAutocomplete:  "Enable autocomplete with search.",
-	ExperimentFrontendFetch: "Enable ability to fetch a package that doesn't exist on pkg.go.dev.",
-	ExperimentSidenav:       "Display documentation index on the left sidenav.",
-	ExperimentUnitPage:      "Enable the redesigned details page.",
-	ExperimentUseUnits:      "Read from paths, documentation, readmes, and package_imports tables.",
-	ExperimentUsePathInfo:   "Check the paths table if a path exists, as opposed to the packages or modules table.",
+	ExperimentAutocomplete: "Enable autocomplete with search.",
+	ExperimentSidenav:      "Display documentation index on the left sidenav.",
+	ExperimentUnitPage:     "Enable the redesigned details page.",
+	ExperimentUseUnits:     "Read from paths, documentation, readmes, and package_imports tables.",
+	ExperimentUsePathInfo:  "Check the paths table if a path exists, as opposed to the packages or modules table.",
 }
 
 // Experiment holds data associated with an experimental feature for frontend

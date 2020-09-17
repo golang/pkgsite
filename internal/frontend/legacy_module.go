@@ -41,7 +41,7 @@ func (s *Server) legacyServeModulePage(w http.ResponseWriter, r *http.Request, d
 	if requestedVersion != internal.LatestVersion {
 		_, err = ds.LegacyGetModuleInfo(ctx, modulePath, internal.LatestVersion)
 		if err == nil {
-			return pathFoundAtLatestError(ctx, "module", modulePath, displayVersion(requestedVersion, modulePath))
+			return legacyPathFoundAtLatestError("module", modulePath, displayVersion(requestedVersion, modulePath))
 		}
 		if !errors.Is(err, derrors.NotFound) {
 			log.Errorf(ctx, "error checking for latest module: %v", err)

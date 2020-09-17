@@ -386,12 +386,9 @@ func pathNotFoundError(fullPath, requestedVersion string) error {
 	}
 }
 
-// pathFoundAtLatestError returns an error page when the fullPath exists, but
+// legacyPathFoundAtLatestError returns an error page when the fullPath exists, but
 // the version that is requested does not.
-func pathFoundAtLatestError(ctx context.Context, pathType, fullPath, requestedVersion string) error {
-	if isActiveFrontendFetch(ctx) {
-		return pathNotFoundError(fullPath, requestedVersion)
-	}
+func legacyPathFoundAtLatestError(pathType, fullPath, requestedVersion string) error {
 	return &serverError{
 		status: http.StatusNotFound,
 		epage: &errorPage{
