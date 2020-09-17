@@ -133,7 +133,7 @@ var htmlPackage = template.Must(template.New("package").Funcs(
 			<span class="DocNavMobile-selectText js-mobileNavSelectText">Outline</span>
 		</label>
 		<select id="DocNavMobile-select" class="DocNavMobile-select">
-		  <option value="">Outline</option>
+			<option value="">Outline</option>
 			{{if or .Doc (index .Examples.Map "")}}
 				<option value="pkg-overview">Overview</option>
 			{{end}}
