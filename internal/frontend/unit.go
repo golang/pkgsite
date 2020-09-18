@@ -11,6 +11,7 @@ import (
 	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -71,6 +72,10 @@ type UnitPage struct {
 
 	// Settings contains settings for the selected tab.
 	SelectedTab TabSettings
+
+	DocBody       *safehtml.HTML
+	DocOutline    *safehtml.HTML
+	MobileOutline *safehtml.HTML
 }
 
 var (
@@ -138,6 +143,25 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		return err
 	}
 
+	var docBody, docOutline, mobileOutline *safehtml.HTML
+	if unit.Documentation != nil {
+		b, err := godoc.Parse(unit.Documentation.HTML, godoc.BodySection)
+		if err != nil {
+			return err
+		}
+		docBody = &b
+		o, err := godoc.Parse(unit.Documentation.HTML, godoc.SidenavSection)
+		if err != nil {
+			return err
+		}
+		docOutline = &o
+		m, err := godoc.Parse(unit.Documentation.HTML, godoc.SidenavMobileSection)
+		if err != nil {
+			return err
+		}
+		mobileOutline = &m
+	}
+
 	tab := r.FormValue("tab")
 	if tab == "" {
 		// Default to details tab when there is no tab param.
@@ -179,6 +203,9 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		UnitContentName: tabSettings.DisplayName,
 		Readme:          readme,
 		ExpandReadme:    expandReadme,
+		DocOutline:      docOutline,
+		DocBody:         docBody,
+		MobileOutline:   mobileOutline,
 	}
 
 	s.servePage(ctx, w, tabSettings.TemplateName, page)
@@ -208,7 +235,6 @@ func readmeContent(ctx context.Context, unit *internal.Unit) (*safehtml.HTML, er
 		}
 		return &readme, nil
 	}
-
 	return nil, nil
 }
 
