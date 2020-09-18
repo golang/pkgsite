@@ -22,6 +22,11 @@ func TestParse(t *testing.T) {
 			want:    quoteSidenav,
 		},
 		{
+			name:    "sidenav-mobile",
+			section: SidenavMobileSection,
+			want:    quoteSidenavMobile,
+		},
+		{
 			name:    "body",
 			section: BodySection,
 			want:    quoteBody,

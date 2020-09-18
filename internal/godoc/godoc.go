@@ -27,8 +27,12 @@ type SectionType uint32
 const (
 	// SidenavSection is the section of the docHTML starting at
 	// dochtml.IdentifierSidenav and ending at the last </nav> tag in the
-	// docHTML.
+	// docHTML. This is inclusive of SideNavMobile.
 	SidenavSection SectionType = iota
+	// SidenavMobileSection is the section of the docHTML starting at
+	// dochtml.IdentifierMobileNavStart and ending at the last </nav> tag in the
+	// docHTML.
+	SidenavMobileSection
 	// BodySection is the section of the docHTML starting at
 	// dochtml.IdentifierBody and ending at the last </div> tag in the
 	// docHTML.
@@ -42,6 +46,8 @@ func Parse(docHTML safehtml.HTML, section SectionType) (_ safehtml.HTML, err err
 	switch section {
 	case SidenavSection:
 		return findHTML(docHTML, dochtml.IdentifierSidenavStart)
+	case SidenavMobileSection:
+		return findHTML(docHTML, dochtml.IdentifierSidenavMobileStart)
 	case BodySection:
 		return findHTML(docHTML, dochtml.IdentifierBodyStart)
 	default:

@@ -34,7 +34,9 @@ const quoteSidenav = `<nav class="DocNav js-sideNav">
          <a href="#pkg-files" role="treeitem" aria-level="1" tabindex="-1">Package Files</a>
       </li>
    </ul>
-</nav><nav class="DocNavMobile js-mobileNav">
+</nav>` + quoteSidenavMobile
+
+const quoteSidenavMobile = `<nav class="DocNavMobile js-mobileNav">
    <label for="DocNavMobile-select" class="DocNavMobile-label">
       <svg class="DocNavMobile-selectIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black" width="18px" height="18px">
          <path d="M0 0h24v24H0z" fill="none"/>
