@@ -168,6 +168,9 @@ type Config struct {
 	// Possible values are [debug, info, error, fatal].
 	// In case of invalid/empty value, all logs will be printed.
 	LogLevel string
+
+	// GCS bucket and object for dynamic config.
+	bucket, dynamicObject string
 }
 
 // AppVersionLabel returns the version label for the current instance.  This is
@@ -394,8 +397,24 @@ func Init(ctx context.Context) (_ *Config, err error) {
 			MaxTimeout:       time.Duration(GetEnvInt("GO_DISCOVERY_TEEPROXY_MAX_TIMEOUT_SECONDS", 240)) * time.Second,
 			SuccsToGreen:     GetEnvInt("GO_DISCOVERY_TEEPROXY_SUCCS_TO_GREEN", 20),
 		},
-		LogLevel: os.Getenv("GO_DISCOVERY_LOG_LEVEL"),
+		LogLevel:      os.Getenv("GO_DISCOVERY_LOG_LEVEL"),
+		bucket:        os.Getenv("GO_DISCOVERY_CONFIG_BUCKET"),
+		dynamicObject: os.Getenv("GO_DISCOVERY_CONFIG_DYNAMIC"),
 	}
+
+	// Check that the dynamic config is readable, but don't do anything with it.
+	if cfg.bucket == "" {
+		return nil, errors.New("GO_DISCOVERY_CONFIG_BUCKET must be set")
+	}
+	if cfg.dynamicObject == "" {
+		return nil, errors.New("GO_DISCOVERY_CONFIG_DYNAMIC must be set")
+	}
+	if _, err := cfg.ReadDynamic(ctx); err != nil {
+		// This should be an error, but initially, to test permissions in the prod environment,
+		// just log it.
+		log.Printf("ERROR: %v", err)
+	}
+
 	if cfg.OnGCP() {
 		// Zone is not available in the environment but can be queried via the metadata API.
 		zone, err := gceMetadata(ctx, "instance/zone")
@@ -455,17 +474,16 @@ func Init(ctx context.Context) (_ *Config, err error) {
 	}
 
 	// If GO_DISCOVERY_CONFIG_OVERRIDE is set, it should point to a file in a
-	// configured bucket project which provides overrides for selected
-	// configuration. Use this when you want to fix something in prod quickly,
-	// without waiting to re-deploy. (Otherwise, do not use it.)
-	overrideBucket := GetEnv("GO_DISCOVERY_CONFIG_BUCKET", cfg.ProjectID)
+	// configured bucket which provides overrides for selected configuration.
+	// Use this when you want to fix something in prod quickly, without waiting
+	// to re-deploy. (Otherwise, do not use it.)
 	overrideObj := os.Getenv("GO_DISCOVERY_CONFIG_OVERRIDE")
 	if overrideObj != "" {
-		overrideBytes, err := readOverrideFile(ctx, overrideBucket, overrideObj)
+		overrideBytes, err := readOverrideFile(ctx, cfg.bucket, overrideObj)
 		if err != nil {
 			log.Print(err)
 		} else {
-			log.Printf("processing overrides from gs://%s/%s", overrideBucket, overrideObj)
+			log.Printf("processing overrides from gs://%s/%s", cfg.bucket, overrideObj)
 			processOverrides(cfg, overrideBytes)
 		}
 	}
