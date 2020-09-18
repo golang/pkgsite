@@ -1633,8 +1633,8 @@ a.Footer-link--primary {
 
 /* ---------- */
 /*
-/* The CSS classes below are generated using content/static/css/main.go
-/* To update, delete the contents below and and run go run content/static/css/main.go
+/* The CSS classes below are generated using devtools/cmd/css/main.go
+/* To update, delete the contents below and and run go run devtools/cmd/css/main.go
 /*
 /* ---------- */
 
