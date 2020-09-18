@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	cssFile              = "content/static/stylesheet.css"
+	cssFile              = "content/static/css/stylesheet.css"
 	githubStylesheet     = "https://raw.githubusercontent.com/sindresorhus/github-markdown-css/gh-pages/github-markdown.css"
 	githubREADMEClass    = ".markdown-body"
 	discoveryREADMEClass = ".Overview-readmeContent"
@@ -91,8 +91,8 @@ func main() {
 	contentsToWrite := `
 /* ---------- */
 /*
-/* The CSS classes below are generated using content/static/css/main.go
-/* To update, delete the contents below and and run go run content/static/css/main.go
+/* The CSS classes below are generated using devtools/cmd/css/main.go
+/* To update, delete the contents below and and run go run devtools/cmd/css/main.go
 /*
 /* ---------- */`
 	contentsToWrite += "\n\n"
