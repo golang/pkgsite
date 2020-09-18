@@ -29,7 +29,11 @@ var scriptHashes = []string{
 	"'sha256-Y1vZzPZ448awUtFwK5f2nES8NyyeM5dgiQ/E3klx4GM='",
 	"'sha256-gBtJYPzfgw/0FIACORDIAD08i5rxTQ5J0rhIU656A2U='",
 	// From content/static/html/pages/unit.tmpl
-	"'sha256-kht4ZWHMi0s488vkscDyb327GNp0nFof+j4GI7UTSFI='",
+	"'sha256-+BVr5T0riD4oQt+Gkp306RbfejUaviIQ9oDKwN4OPak='",
+	// From content/static/html/pages/unit_details.tmpl
+	"'sha256-CFun5NgnYeEpye8qcbQPq5Ycwavi4IXuZiIzSMNqRUw='",
+	"'sha256-IHdniK/yZ8URNA2OYbc4R7BssOAe3/dFrSQW7PxEEfM='",
+	"'sha256-MBIVDkCvJUTM2/rxXDRYO9B+ovOUGLVJOww8fxur+LU='",
 }
 
 // SecureHeaders adds a content-security-policy and other security-related

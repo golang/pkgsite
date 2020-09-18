@@ -494,7 +494,9 @@ class DocPageController {
     this._mobileNavController.setSelectedId(targetId);
     if (targetId !== '') {
       const targetEl = this._contentEl.querySelector(`[id='${targetId}']`);
-      targetEl.focus();
+      if (targetEl) {
+        targetEl.focus();
+      }
     }
   }
 

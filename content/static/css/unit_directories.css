@@ -6,15 +6,14 @@
 
 .UnitDirectories {
   margin: 2rem 0;
-  overflow-x: auto;
 }
 .UnitDirectories::before {
   content: '';
   display: block;
   position: relative;
   width: 0;
-  height: 5em;
-  margin-top: -5em;
+  height: 3.5rem;
+  margin-top: -3.5rem;
 }
 .UnitDirectories-title {
   border-bottom: 0.0625rem solid var(--gray-8);
@@ -38,15 +37,12 @@
 .UnitDirectories td {
   border-bottom: 0.0625rem solid var(--gray-8);
   max-width: 32rem;
-  padding: 0.75rem 0;
-  padding-right: 1rem;
   padding: 0.5rem 1rem;
+  word-break: break-word;
 }
 .UnitDirectories th {
   text-align: left;
   border-bottom: 0.0625rem solid var(--gray-8);
-  padding-right: 1rem;
-  padding-bottom: 0.5rem 1rem;
   padding: 0.5rem 1rem;
 }
 .UnitDirectories-moduleTag {

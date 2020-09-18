@@ -4,14 +4,14 @@
   license that can be found in the LICENSE file.
 -->
 
-{{define "unit_docs"}}
-  <div class="UnitDocs">
-    <h2 class="UnitDocs-title">
-      <img height="25px" width="20px" src="/static/img/pkg-icon-docs_20x12.svg">Documentation
+{{define "unit_doc"}}
+  <div class="UnitDoc" id="doc-top">
+    <h2 class="UnitDoc-title">
+      <img height="25px" width="20px" src="/static/img/pkg-icon-doc_20x12.svg">Documentation
     </h2>
-    {{if .Unit.Documentation }}
+    {{if .DocBody}}
       <div class="Documentation">
-        {{.Unit.Documentation.HTML}}
+        {{.DocBody}}
       </div>
     {{end}}
   </div>

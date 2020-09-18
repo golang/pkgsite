@@ -7,28 +7,25 @@
 .Documentation {
   display: block;
 }
-.DocNav {
-  display: none;
-}
-.UnitDocs {
+.UnitDoc {
   margin: 2rem 0;
 }
-.UnitDocs::before {
+.UnitDoc::before {
   content: '';
   display: block;
   position: relative;
   width: 0;
-  height: 5em;
-  margin-top: -5em;
+  height: 3.5rem;
+  margin-top: -3.5rem;
 }
-.UnitDocs-title {
+.UnitDoc-title {
   border-bottom: 0.0625rem solid var(--gray-8);
   display: flex;
   font-size: 1.375rem;
   margin: 1rem 0 0 0;
   padding-bottom: 1rem;
 }
-.UnitDocs-title img {
+.UnitDoc-title img {
   height: 1rem;
   margin: auto 1rem auto 0;
   width: auto;

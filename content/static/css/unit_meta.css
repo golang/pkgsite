@@ -6,6 +6,8 @@
 
 .UnitMeta {
   display: block;
+  position: sticky;
+  top: 5rem;
 }
 .UnitMeta-header {
   font-weight: bold;

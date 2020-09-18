@@ -4,17 +4,39 @@
  * license that can be found in the LICENSE file.
  */
 
-.UnitOutline {
-  display: block;
-  position: sticky;
+.DocNav {
+  max-height: calc(100vh - var(--header-height));
+  overflow-x: unset;
+  overflow-y: unset;
+  padding-top: 0.5rem;
+  padding-left: unset;
+  position: unset;
+  top: unset;
 }
-a.UnitOutline-readme {
+@media only screen and (min-width: 52rem) {
+  .DocNav [role='tree'],
+  .DocNav [role='group'] {
+    padding: 0;
+  }
+}
+
+.UnitOutline {
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+}
+a.UnitOutline-accordian {
   align-items: center;
-  background-color: var(--gray-10);
   color: var(--gray-2);
   display: flex;
   font-size: 1.125rem;
   font-weight: 500;
   height: 2.5rem;
-  padding-left: 1rem;
+  padding: 1rem;
+}
+.UnitOutline-panel {
+  padding: 0 18px;
+  background-color: white;
+  display: block;
+  overflow: scroll;
 }

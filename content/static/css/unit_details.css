@@ -6,7 +6,7 @@
 
 @import './unit_header.css';
 @import './unit_readme.css';
-@import './unit_docs.css';
+@import './unit_doc.css';
 @import './unit_directories.css';
 @import './unit_meta.css';
 @import './unit_outline.css';
@@ -15,6 +15,7 @@
   column-gap: 2rem;
   display: grid;
   grid-template-columns: minmax(0, auto);
+  margin-top: 1rem;
 }
 @media only screen and (min-width: 52rem) {
   .UnitDetails {
@@ -33,10 +34,10 @@
 }
 .UnitDetails-outline {
   display: none;
-  height: 100vh;
-  margin-top: 3rem;
+  height: calc(100vh - 5.3475rem);
+  margin-top: 2.5rem;
   position: sticky;
-  top: 0;
+  top: 4.5rem;
 }
 @media only screen and (min-width: 52rem) {
   .UnitDetails-outline {
@@ -44,8 +45,13 @@
   }
 }
 .UnitDetails-content {
-  margin-top: 2rem;
+  margin-top: 0.5rem;
   max-width: 60rem;
+}
+@media only screen and (min-width: 52rem) {
+  .UnitDetails-content {
+    margin-top: 2rem;
+  }
 }
 .UnitDetails-meta {
   display: none;

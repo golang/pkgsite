@@ -49,6 +49,9 @@
   margin-right: 0.5rem;
   vertical-align: middle;
 }
+.UnitHeader-detailItem a > span {
+  color: var(--gray-4);
+}
 .UnitHeader-detailItem:not(:last-of-type):after {
   content: '|';
   padding: 1rem;

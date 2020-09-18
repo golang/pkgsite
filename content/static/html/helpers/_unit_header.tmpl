@@ -23,6 +23,7 @@
         The latest major version is <a href="/$$GODISCOVERY_LATESTMAJORVERSIONURL$$">$$GODISCOVERY_LATESTMAJORVERSION$$</a>.
       </span>
     </div>
+    <div class="js-fixedHeaderSentinel"></div>
     <div class="UnitHeader-detail">
       <span class="UnitHeader-detailItem">
         <img class="UnitHeader-detailItemLarge" height="16px" width="16px" src="/static/img/pkg-icon-arrowBranch_16x16.svg">
@@ -51,13 +52,15 @@
       {{if .Unit.IsPackage}}
         <span class="UnitHeader-detailItem">
           <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg">
-          <a href="{{$.CanonicalURLPath}}?tab=imports">{{len .Unit.Imports}}</a>
-          <span> Imports</span>
+          <a href="{{$.CanonicalURLPath}}?tab=imports">
+            {{len .Unit.Imports}} <span>Imports</span>
+          </a>
         </span>
         <span class="UnitHeader-detailItem">
           <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg">
-          <a href="{{$.CanonicalURLPath}}?tab=importedby">{{len .Unit.Imports}}</a>
-          <span> Imported by</span>
+          <a href="{{$.CanonicalURLPath}}?tab=importedby">
+            {{len .Unit.Imports}} <span>Imported by</span>
+          </a>
         </span>
       {{end}}
     </div>

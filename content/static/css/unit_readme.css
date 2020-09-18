@@ -12,8 +12,8 @@
   display: block;
   position: relative;
   width: 0;
-  height: 5em;
-  margin-top: -5em;
+  height: 3.5rem;
+  margin-top: -3.5rem;
 }
 .UnitReadme-title {
   border-bottom: 0.0625rem solid var(--gray-8);
