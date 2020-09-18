@@ -92,7 +92,7 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		LocationID:     s.cfg.LocationID,
 		Experiments:    experiments,
 		Excluded:       excluded,
-		LoadShedStats:  fetch.GetLoadShedStats(),
+		LoadShedStats:  fetch.ZipLoadShedStats(),
 		GoMemStats:     gms,
 		ProcessStats:   pms,
 		SystemStats:    sms,

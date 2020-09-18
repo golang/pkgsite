@@ -112,17 +112,17 @@
   <div>
     <h3>Load Shedding</h3>
     <table>
-      <tr><td>Fetches In Flight</td><td>{{.LoadShedStats.FetchesInFlight}}</td></tr>
+      <tr><td>Fetches In Flight</td><td>{{.LoadShedStats.RequestsInFlight}}</td></tr>
       <tr>
         <td>Zip Bytes In Flight</td>
-        <td>{{.LoadShedStats.ZipBytesInFlight | bytesToMi}} /
-          {{.LoadShedStats.MaxZipBytesInFlight | bytesToMi}} Mi
-          ({{pct .LoadShedStats.ZipBytesInFlight .LoadShedStats.MaxZipBytesInFlight}}%) </td>
+        <td>{{.LoadShedStats.SizeInFlight | bytesToMi}} /
+          {{.LoadShedStats.MaxSizeInFlight | bytesToMi}} Mi
+          ({{pct .LoadShedStats.SizeInFlight .LoadShedStats.MaxSizeInFlight}}%) </td>
       </tr>
       <tr>
         <td>Shedded Requests</td>
-        <td>{{.LoadShedStats.SheddedRequests}} / {{.LoadShedStats.TotalRequests}}
-          ({{pct .LoadShedStats.SheddedRequests .LoadShedStats.TotalRequests}}%)</td>
+        <td>{{.LoadShedStats.RequestsShed}} / {{.LoadShedStats.RequestsTotal}}
+          ({{pct .LoadShedStats.RequestsShed .LoadShedStats.RequestsTotal}}%)</td>
       </tr>
     </table>
   </div>

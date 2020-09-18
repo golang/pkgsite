@@ -117,7 +117,10 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 	}
 
 	// Load shed or mark module as too large.
-	shouldShed, deferFunc := decideToShed(uint64(zipSize))
+	// We treat zip size
+	// as a proxy for the total memory consumed by processing a module, and use
+	// it to decide whether we can currently afford to process a module.
+	shouldShed, deferFunc := zipLoadShedder.shouldShed(uint64(zipSize))
 	fr.Defer = deferFunc
 	if shouldShed {
 		fr.Error = derrors.SheddingLoad
@@ -805,4 +808,27 @@ func init() {
 			maxModuleZipSize = v * mib
 		}
 	}
+}
+
+var zipLoadShedder = loadShedder{maxSizeInFlight: math.MaxUint64}
+
+func init() {
+	ctx := context.Background()
+	m := os.Getenv("GO_DISCOVERY_MAX_IN_FLIGHT_ZIP_MI")
+	if m != "" {
+		mebis, err := strconv.ParseUint(m, 10, 64)
+		if err != nil {
+			log.Fatalf(ctx, "could not parse GO_DISCOVERY_MAX_IN_FLIGHT_ZIP_MI value %q", m)
+		} else if mebis == 0 {
+			log.Fatalf(ctx, "bad value for GO_DISCOVERY_MAX_IN_FLIGHT_ZIP_MI: %d. Must be >= 1.", mebis)
+		} else {
+			log.Infof(ctx, "shedding load over %dMi", mebis)
+			zipLoadShedder.maxSizeInFlight = mebis * mib
+		}
+	}
+}
+
+// ZipLoadShedStats returns a snapshot of the current LoadShedStats for zip files.
+func ZipLoadShedStats() LoadShedStats {
+	return zipLoadShedder.stats()
 }

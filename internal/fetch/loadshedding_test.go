@@ -4,28 +4,34 @@
 
 package fetch
 
-import "testing"
+import (
+	"math"
+	"testing"
+)
 
 func TestDecideToShed(t *testing.T) {
-	// By default (GO_DISCOVERY_MAX_IN_FLIGHT_ZIP_MI is unset), we should never decide to shed no matter the size of the zip.
-	got, d := decideToShed(1e10)
+	// With a large maxSizeInFlight, we should never decide to shed no matter
+	// the size.
+	ls := loadShedder{maxSizeInFlight: math.MaxUint64}
+	got, d := ls.shouldShed(1e10)
 	if want := false; got != want {
 		t.Fatalf("got %t, want %t", got, want)
 	}
-	d() // reset zipSizeInFlight
-	maxZipSizeInFlight = 10 * mib
-	got, d = decideToShed(3 * mib)
+	d() // reset sizeInFlight
+	ls.maxSizeInFlight = 10 * mib
+	got, d = ls.shouldShed(3 * mib)
 	if want := false; got != want {
 		t.Fatalf("got %t, want %t", got, want)
 	}
 	bytesInFlight := func() int {
-		return int(GetLoadShedStats().ZipBytesInFlight)
+		return int(ls.stats().SizeInFlight)
 	}
 
 	if got, want := bytesInFlight(), 3*mib; got != want {
 		t.Fatalf("got %d, want %d", got, want)
 	}
-	got, _ = decideToShed(8 * mib) // 8 + 3 > 10; shed
+	got, d2 := ls.shouldShed(8 * mib) // 8 + 3 > 10; shed
+	d2()
 	if want := true; got != want {
 		t.Fatalf("got %t, want %t", got, want)
 	}
@@ -33,7 +39,7 @@ func TestDecideToShed(t *testing.T) {
 	if got, want := bytesInFlight(), 0; got != want {
 		t.Fatalf("got %d, want %d", got, want)
 	}
-	got, d = decideToShed(8 * mib) // 8 < 10; do not shed
+	got, d = ls.shouldShed(8 * mib) // 8 < 10; do not shed
 	if want := false; got != want {
 		t.Fatalf("got %t, want %t", got, want)
 	}
