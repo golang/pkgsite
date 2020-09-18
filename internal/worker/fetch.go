@@ -176,7 +176,7 @@ func fetchAndInsertModule(ctx context.Context, modulePath, requestedVersion stri
 	start := time.Now()
 	minfo := fetch.GetModuleInfo(ctx, modulePath, requestedVersion, proxyClient)
 	if minfo.Error == nil {
-		shouldShed, deferFunc := decideToShed(minfo.ZipSize)
+		shouldShed, deferFunc := decideToShed(uint64(minfo.ZipSize))
 		defer deferFunc()
 		if shouldShed {
 			ft.Error = derrors.SheddingLoad

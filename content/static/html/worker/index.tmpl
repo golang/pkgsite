@@ -110,6 +110,36 @@
   </div>
 
   <div>
+    <h3>Load Shedding</h3>
+    <table>
+      <tr><td>Fetches In Flight</td><td>{{.LoadShedStats.FetchesInFlight}}</td></tr>
+      <tr>
+        <td>Zip Bytes In Flight</td>
+        <td>{{.LoadShedStats.ZipBytesInFlight | bytesToMi}} /
+          {{.LoadShedStats.MaxZipBytesInFlight | bytesToMi}} Mi
+          ({{pct .LoadShedStats.ZipBytesInFlight .LoadShedStats.MaxZipBytesInFlight}}%) </td>
+      </tr>
+      <tr>
+        <td>Shedded Requests</td>
+        <td>{{.LoadShedStats.SheddedRequests}} / {{.LoadShedStats.TotalRequests}}
+          ({{pct .LoadShedStats.SheddedRequests .LoadShedStats.TotalRequests}}%)</td>
+      </tr>
+    </table>
+  </div>
+
+  <div>
+    <h3>Memory</h3>
+    <table>
+      <tr><td>Go Heap</td><td>{{.GoMemStats.HeapAlloc | bytesToMi}} Mi</td></tr>
+      <tr><td>Process Virtual</td><td>{{.ProcessStats.VSize | bytesToMi}} Mi</td></tr>
+      <tr><td>Process RSS</td><td>{{.ProcessStats.RSS | bytesToMi}} Mi</td></tr>
+      <tr><td>System Free</td><td>{{.SystemStats.Free | bytesToMi}} Mi</td></tr>
+      <tr><td>System Used</td><td>{{.SystemStats.Used | bytesToMi}} Mi</td></tr>
+      <tr><td>System Available</td><td>{{.SystemStats.Available | bytesToMi}} Mi</td></tr>
+    </table>
+  </div>
+
+  <div>
     <h3>Excluded Prefixes</h3>
     {{if .Excluded}}
       <table>

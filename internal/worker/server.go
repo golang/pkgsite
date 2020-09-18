@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -502,8 +503,10 @@ func parseTemplate(staticPath, filename template.TrustedSource) (*template.Templ
 	}
 	templatePath := template.TrustedSourceJoin(staticPath, template.TrustedSourceFromConstant("html/worker"), filename)
 	return template.New(filename.String()).Funcs(template.FuncMap{
-		"truncate": truncate,
-		"timefmt":  formatTime,
+		"truncate":  truncate,
+		"timefmt":   formatTime,
+		"bytesToMi": bytesToMi,
+		"pct":       percentage,
 	}).ParseFilesFromTrustedSources(templatePath)
 }
 
@@ -534,6 +537,32 @@ func formatTime(t *time.Time) string {
 		return "Never"
 	}
 	return t.In(locNewYork).Format("2006-01-02 15:04:05")
+}
+
+// bytesToMi converts an integral value of bytes into mebibytes.
+func bytesToMi(b uint64) uint64 {
+	return b / mib
+}
+
+// percentage computes the truncated percentage of x/y.
+// It returns 0 if y is 0.
+// x and y can be any int or uint type.
+func percentage(x, y interface{}) int {
+	denom := toUint64(y)
+	if denom == 0 {
+		return 0
+	}
+	return int(toUint64(x) * 100 / denom)
+}
+
+func toUint64(n interface{}) uint64 {
+	v := reflect.ValueOf(n)
+	switch v.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return uint64(v.Int())
+	default: // assume uint
+		return v.Uint()
+	}
 }
 
 // parseLimitParam parses the query parameter with name as in integer. If the

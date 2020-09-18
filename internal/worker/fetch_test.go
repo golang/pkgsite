@@ -1006,7 +1006,11 @@ func TestDecideToShed(t *testing.T) {
 	if want := false; got != want {
 		t.Fatalf("got %t, want %t", got, want)
 	}
-	if got, want := getZipSizeInFlight(), int64(3*mib); got != want {
+	bytesInFlight := func() int {
+		return int(getLoadShedStats().ZipBytesInFlight)
+	}
+
+	if got, want := bytesInFlight(), 3*mib; got != want {
 		t.Fatalf("got %d, want %d", got, want)
 	}
 	got, _ = decideToShed(8 * mib) // 8 + 3 > 10; shed
@@ -1014,7 +1018,7 @@ func TestDecideToShed(t *testing.T) {
 		t.Fatalf("got %t, want %t", got, want)
 	}
 	d() // should decrement zipSizeInFlight
-	if got, want := getZipSizeInFlight(), int64(0); got != want {
+	if got, want := bytesInFlight(), 0; got != want {
 		t.Fatalf("got %d, want %d", got, want)
 	}
 	got, d = decideToShed(8 * mib) // 8 < 10; do not shed
@@ -1022,7 +1026,7 @@ func TestDecideToShed(t *testing.T) {
 		t.Fatalf("got %t, want %t", got, want)
 	}
 	d()
-	if got, want := getZipSizeInFlight(), int64(0); got != want {
+	if got, want := bytesInFlight(), 0; got != want {
 		t.Fatalf("got %d, want %d", got, want)
 	}
 }
