@@ -17,12 +17,14 @@ import (
 	"go/token"
 	"io"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"os"
 	"path"
 	"runtime"
 	"runtime/debug"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -46,53 +48,6 @@ var (
 	errMalformedZip             = errors.New("module zip is malformed")
 )
 
-// ModuleInfo holds some basic, easy-to-get information about a module.
-type ModuleInfo struct {
-	ModulePath       string
-	RequestedVersion string
-	ResolvedVersion  string
-	CommitTime       time.Time
-	ZipSize          int64
-	Error            error
-}
-
-// GetModuleInfo returns preliminary information about a module, from the
-// proxy's .info and .zip endpoints (the latter via HEAD only, to avoid
-// downloading the zip).
-func GetModuleInfo(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client) ModuleInfo {
-	mi := ModuleInfo{
-		ModulePath:       modulePath,
-		RequestedVersion: requestedVersion,
-	}
-	defer derrors.Wrap(&mi.Error, "GetModuleInfo(%q, %q)", modulePath, requestedVersion)
-
-	if modulePath == stdlib.ModulePath {
-		resolvedVersion, zipSize, err := stdlib.ZipInfo(requestedVersion)
-		if err != nil {
-			mi.Error = err
-			return mi
-		}
-		mi.ResolvedVersion = resolvedVersion
-		mi.ZipSize = zipSize
-		// CommitTime unknown
-		return mi
-	}
-	info, err := proxyClient.GetInfo(ctx, modulePath, requestedVersion)
-	if err != nil {
-		mi.Error = err
-		return mi
-	}
-	zipSize, err := proxyClient.GetZipSize(ctx, modulePath, info.Version)
-	if err != nil {
-		mi.Error = err
-		return mi
-	}
-	mi.ResolvedVersion = info.Version
-	mi.CommitTime = info.Time
-	mi.ZipSize = zipSize
-	return mi
-}
-
 type FetchResult struct {
 	ModulePath           string
 	RequestedVersion     string
@@ -100,52 +55,92 @@ type FetchResult struct {
 	GoModPath            string
 	Status               int
 	Error                error
+	Defer                func() // caller must defer this on all code paths
 	Module               *internal.Module
 	PackageVersionStates []*internal.PackageVersionState
 }
 
-// FetchModule queries the proxy or the Go repo using the ModuleInfo obtained
-// from GetModuleInfo. It then downloads the module zip, and processes the
-// contents to return an *internal.Module and related information.
+// FetchModule queries the proxy or the Go repo for the requested module
+// version, downloads the module zip, and processes the contents to return an
+// *internal.Module and related information.
 //
 // Even if err is non-nil, the result may contain useful information, like the go.mod path.
-func FetchModule(ctx context.Context, mi ModuleInfo, proxyClient *proxy.Client, sourceClient *source.Client) (fr *FetchResult) {
+//
+// Callers of FetchModule must
+//   defer fr.Defer()
+// immediately after the call.
+func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, sourceClient *source.Client) (fr *FetchResult) {
 	fr = &FetchResult{
-		ModulePath:       mi.ModulePath,
-		RequestedVersion: mi.RequestedVersion,
+		ModulePath:       modulePath,
+		RequestedVersion: requestedVersion,
+		Defer:            func() {},
 	}
 	defer func() {
 		if fr.Error != nil {
-			derrors.Wrap(&fr.Error, "FetchModule(%q, %q)", mi.ModulePath, mi.RequestedVersion)
+			derrors.Wrap(&fr.Error, "FetchModule(%q, %q)", modulePath, requestedVersion)
 			fr.Status = derrors.ToStatus(fr.Error)
 		}
 		if fr.Status == 0 {
 			fr.Status = http.StatusOK
 		}
-		log.Debugf(ctx, "memory after fetch of %s@%s: %dM", mi.ModulePath, mi.RequestedVersion, allocMeg())
+		log.Debugf(ctx, "memory after fetch of %s@%s: %dM", modulePath, requestedVersion, allocMeg())
 	}()
-
-	if mi.Error != nil {
-		fr.Error = mi.Error
-		return fr
-	}
 
 	var (
 		commitTime time.Time
 		zipReader  *zip.Reader
+		zipSize    int64
 		err        error
 	)
-	fr.ResolvedVersion = mi.ResolvedVersion
-	if mi.ModulePath == stdlib.ModulePath {
-		zipReader, commitTime, err = stdlib.Zip(mi.ResolvedVersion)
+	// Get the just information we need to make a load-shedding decision.
+	if modulePath == stdlib.ModulePath {
+		var resolvedVersion string
+		resolvedVersion, zipSize, err = stdlib.ZipInfo(requestedVersion)
+		if err != nil {
+			fr.Error = err
+			return fr
+		}
+		fr.ResolvedVersion = resolvedVersion
+	} else {
+		info, err := proxyClient.GetInfo(ctx, modulePath, requestedVersion)
+		if err != nil {
+			fr.Error = err
+			return fr
+		}
+		fr.ResolvedVersion = info.Version
+		commitTime = info.Time
+		zipSize, err = proxyClient.GetZipSize(ctx, modulePath, fr.ResolvedVersion)
+		if err != nil {
+			fr.Error = err
+			return fr
+		}
+	}
+
+	// Load shed or mark module as too large.
+	shouldShed, deferFunc := decideToShed(uint64(zipSize))
+	fr.Defer = deferFunc
+	if shouldShed {
+		fr.Error = derrors.SheddingLoad
+		return fr
+	}
+
+	if zipSize > maxModuleZipSize {
+		log.Warningf(ctx, "FetchModule: %s@%s zip size %dMi exceeds max %dMi",
+			modulePath, fr.ResolvedVersion, zipSize/mib, maxModuleZipSize/mib)
+		fr.Error = derrors.ModuleTooLarge
+		return fr
+	}
+
+	// Proceed with the fetch.
+	if modulePath == stdlib.ModulePath {
+		zipReader, commitTime, err = stdlib.Zip(requestedVersion)
 		if err != nil {
 			fr.Error = err
 			return fr
 		}
 		fr.GoModPath = stdlib.ModulePath
 	} else {
-		commitTime = mi.CommitTime
-		goModBytes, err := proxyClient.GetMod(ctx, mi.ModulePath, fr.ResolvedVersion)
+		goModBytes, err := proxyClient.GetMod(ctx, modulePath, fr.ResolvedVersion)
 		if err != nil {
 			fr.Error = err
 			return fr
@@ -156,27 +151,27 @@ func FetchModule(ctx context.Context, mi ModuleInfo, proxyClient *proxy.Client, 
 			return fr
 		}
 		fr.GoModPath = goModPath
-		if goModPath != mi.ModulePath {
+		if goModPath != modulePath {
 			// The module path in the go.mod file doesn't match the path of the
 			// zip file. Don't insert the module. Store an AlternativeModule
 			// status in module_version_states.
-			fr.Error = fmt.Errorf("module path=%s, go.mod path=%s: %w", mi.ModulePath, goModPath, derrors.AlternativeModule)
+			fr.Error = fmt.Errorf("module path=%s, go.mod path=%s: %w", modulePath, goModPath, derrors.AlternativeModule)
 			return fr
 		}
-		zipReader, err = proxyClient.GetZip(ctx, mi.ModulePath, fr.ResolvedVersion)
+		zipReader, err = proxyClient.GetZip(ctx, modulePath, fr.ResolvedVersion)
 		if err != nil {
 			fr.Error = err
 			return fr
 		}
 	}
-	mod, pvs, err := processZipFile(ctx, mi.ModulePath, fr.ResolvedVersion, commitTime, zipReader, sourceClient)
+	mod, pvs, err := processZipFile(ctx, modulePath, fr.ResolvedVersion, commitTime, zipReader, sourceClient)
 	if err != nil {
 		fr.Error = err
 		return fr
 	}
 	fr.Module = mod
 	fr.PackageVersionStates = pvs
-	if mi.ModulePath == stdlib.ModulePath {
+	if modulePath == stdlib.ModulePath {
 		fr.Module.HasGoMod = true
 	}
 	for _, state := range fr.PackageVersionStates {
@@ -791,4 +786,23 @@ func allocMeg() int {
 	var ms runtime.MemStats
 	runtime.ReadMemStats(&ms)
 	return int(ms.Alloc / (1024 * 1024))
+}
+
+// mib is the number of bytes in a mebibyte (Mi).
+const mib = 1024 * 1024
+
+// The largest module zip size we can comfortably process.
+// We probably will OOM if we process a module whose zip is larger.
+var maxModuleZipSize int64 = math.MaxInt64
+
+func init() {
+	m := os.Getenv("GO_DISCOVERY_MAX_MODULE_ZIP_MI")
+	if m != "" {
+		v, err := strconv.ParseInt(m, 10, 64)
+		if err != nil {
+			log.Errorf(context.Background(), "could not parse GO_DISCOVERY_MAX_MODULE_ZIP_MI value %q", v)
+		} else {
+			maxModuleZipSize = v * mib
+		}
+	}
 }

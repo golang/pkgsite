@@ -7,11 +7,8 @@ package worker
 import (
 	"context"
 	"fmt"
-	"math"
 	"net/http"
-	"os"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -115,25 +112,6 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 	return ft.Status, ft.Error
 }
 
-// mib is the number of bytes in a mebibyte (Mi).
-const mib = 1024 * 1024
-
-// The largest module zip size we can comfortably process.
-// We probably will OOM if we process a module whose zip is larger.
-var maxModuleZipSize int64 = math.MaxInt64
-
-func init() {
-	m := os.Getenv("GO_DISCOVERY_MAX_MODULE_ZIP_MI")
-	if m != "" {
-		v, err := strconv.ParseInt(m, 10, 64)
-		if err != nil {
-			log.Errorf(context.Background(), "could not parse GO_DISCOVERY_MAX_MODULE_ZIP_MI value %q", v)
-		} else {
-			maxModuleZipSize = v * mib
-		}
-	}
-}
-
 // fetchAndInsertModule fetches the given module version from the module proxy
 // or (in the case of the standard library) from the Go repo and writes the
 // resulting data to the database.
@@ -174,26 +152,11 @@ func fetchAndInsertModule(ctx context.Context, modulePath, requestedVersion stri
 	}
 
 	start := time.Now()
-	minfo := fetch.GetModuleInfo(ctx, modulePath, requestedVersion, proxyClient)
-	if minfo.Error == nil {
-		shouldShed, deferFunc := decideToShed(uint64(minfo.ZipSize))
-		defer deferFunc()
-		if shouldShed {
-			ft.Error = derrors.SheddingLoad
-			return ft
-		}
-	}
-	if minfo.Error == nil && minfo.ZipSize > maxModuleZipSize {
-		log.Warningf(ctx, "fetchAndInsertModule: %s@%s zip size %dMi exceeds max %dMi",
-			minfo.ModulePath, minfo.ResolvedVersion, minfo.ZipSize/mib, maxModuleZipSize/mib)
-		ft.Error = derrors.ModuleTooLarge
-		return ft
-	}
-
-	fr := fetch.FetchModule(ctx, minfo, proxyClient, sourceClient)
+	fr := fetch.FetchModule(ctx, modulePath, requestedVersion, proxyClient, sourceClient)
 	if fr == nil {
 		panic("fetch.FetchModule should never return a nil FetchResult")
 	}
+	defer fr.Defer()
 	ft.FetchResult = *fr
 	ft.timings["fetch.FetchModule"] = time.Since(start)
 	if ft.Error != nil {

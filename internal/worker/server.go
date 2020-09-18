@@ -543,7 +543,7 @@ func formatTime(t *time.Time) string {
 
 // bytesToMi converts an integral value of bytes into mebibytes.
 func bytesToMi(b uint64) uint64 {
-	return b / mib
+	return b / (1024 * 1024)
 }
 
 // percentage computes the truncated percentage of x/y.

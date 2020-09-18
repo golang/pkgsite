@@ -91,7 +91,8 @@ func TestFetchModule(t *testing.T) {
 				Files:      test.mod.mod.Files,
 			}})
 			defer teardownProxy()
-			got := FetchModule(ctx, GetModuleInfo(ctx, modulePath, fetchVersion, proxyClient), proxyClient, sourceClient)
+			got := FetchModule(ctx, modulePath, fetchVersion, proxyClient, sourceClient)
+			defer got.Defer()
 			if got.Error != nil {
 				t.Fatal(got.Error)
 			}
@@ -103,6 +104,7 @@ func TestFetchModule(t *testing.T) {
 				cmpopts.IgnoreFields(internal.LegacyPackage{}, "DocumentationHTML"),
 				cmpopts.IgnoreFields(internal.Documentation{}, "HTML"),
 				cmpopts.IgnoreFields(internal.PackageVersionState{}, "Error"),
+				cmpopts.IgnoreFields(FetchResult{}, "Defer"),
 				cmp.AllowUnexported(source.Info{}),
 				cmpopts.EquateEmpty(),
 			}
@@ -139,7 +141,8 @@ func TestFetchModule_Errors(t *testing.T) {
 			defer teardownProxy()
 
 			sourceClient := source.NewClient(sourceTimeout)
-			got := FetchModule(ctx, GetModuleInfo(ctx, modulePath, "v1.0.0", proxyClient), proxyClient, sourceClient)
+			got := FetchModule(ctx, modulePath, "v1.0.0", proxyClient, sourceClient)
+			defer got.Defer()
 			if !errors.Is(got.Error, test.wantErr) {
 				t.Fatalf("FetchModule(ctx, %q, v1.0.0, proxyClient, sourceClient): %v; wantErr = %v)", modulePath, got.Error, test.wantErr)
 			}

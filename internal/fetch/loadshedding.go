@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package worker
+package fetch
 
 import (
 	"context"
@@ -72,7 +72,8 @@ func decideToShed(zipSize uint64) (shouldShed bool, deferFunc func()) {
 	}
 }
 
-type loadShedStats struct {
+// LoadShedStats holds statistics about load shedding.
+type LoadShedStats struct {
 	FetchesInFlight     int
 	ZipBytesInFlight    uint64
 	MaxZipBytesInFlight uint64
@@ -80,10 +81,11 @@ type loadShedStats struct {
 	TotalRequests       int
 }
 
-func getLoadShedStats() loadShedStats {
+// GetLoadShedStats returns a snapshot of the current LoadShedStats.
+func GetLoadShedStats() LoadShedStats {
 	shedmu.Lock()
 	defer shedmu.Unlock()
-	return loadShedStats{
+	return LoadShedStats{
 		FetchesInFlight:     fetchesInFlight,
 		ZipBytesInFlight:    zipSizeInFlight,
 		MaxZipBytesInFlight: maxZipSizeInFlight,

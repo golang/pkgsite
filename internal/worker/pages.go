@@ -23,6 +23,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/sync/errgroup"
@@ -80,7 +81,7 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		LocationID      string
 		Experiments     []*internal.Experiment
 		Excluded        []string
-		LoadShedStats   loadShedStats
+		LoadShedStats   fetch.LoadShedStats
 		GoMemStats      runtime.MemStats
 		ProcessStats    processMemStats
 		SystemStats     systemMemStats
@@ -91,7 +92,7 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		LocationID:     s.cfg.LocationID,
 		Experiments:    experiments,
 		Excluded:       excluded,
-		LoadShedStats:  getLoadShedStats(),
+		LoadShedStats:  fetch.GetLoadShedStats(),
 		GoMemStats:     gms,
 		ProcessStats:   pms,
 		SystemStats:    sms,
