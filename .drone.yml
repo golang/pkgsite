@@ -1,0 +1,125 @@
+kind: pipeline
+type: kubernetes
+name: test
+
+volumes:
+- name: cache
+  temp: {}
+
+steps:
+# http://plugins.drone.io/drone-plugins/drone-s3-cache/
+- name: restore
+  image: plugins/s3-cache:1.4
+  settings:
+    pull: true
+    restore: true
+    endpoint: https://s3.ap-northeast-1.amazonaws.com
+    region: ap-northeast-1
+    path: drone.buzzvil-internal.com/cache/${DRONE_REPO_NAME}/${DRONE_SOURCE_BRANCH}
+    fallback_path: drone.buzzvil-internal.com/cache/${DRONE_REPO_NAME}/${DRONE_TARGET_BRANCH}
+    # https://github.com/drone-plugins/drone-s3-cache/pulls, not merged yet.
+    # workdir: /
+
+- name: cp-go-dir
+  image: ubuntu:latest
+  volumes:
+  - name: cache
+    path: /go
+  commands: 
+  - if [ ! -d go/pkg ]; then echo "no cache."; exit 0; fi
+  - cp -r go/* /go/
+  - rm -rf go
+
+- name: lint
+  image: golangci/golangci-lint:v1.23.6
+  commands: 
+  - golangci-lint run -E golint # default linters + golint 
+
+- name: test
+  image: golang:1.13
+  volumes:
+  - name: cache
+    path: /go
+  commands:
+  - go test ./...
+
+- name: rebuild
+  image: plugins/s3-cache:1.4
+  volumes:
+  - name: cache
+    path: /go
+  settings:
+    pull: true
+    rebuild: true
+    endpoint: https://s3.ap-northeast-1.amazonaws.com
+    region: ap-northeast-1
+    path: drone.buzzvil-internal.com/cache/${DRONE_REPO_NAME}/${DRONE_SOURCE_BRANCH}
+    fallback_path: drone.buzzvil-internal.com/cache/${DRONE_REPO_NAME}/${DRONE_TARGET_BRANCH}
+    mount:
+      - /go
+
+- name: flush
+  image: plugins/s3-cache:1.4
+  settings:
+    pull: true
+    flush: true
+    endpoint: https://s3.ap-northeast-1.amazonaws.com
+    region: ap-northeast-1
+    flush_path: drone.buzzvil-internal.com/cache/${DRONE_REPO_NAME}
+
+trigger:
+  event:
+  - pull_request
+
+---
+kind: pipeline
+type: kubernetes
+name: publish
+
+steps:
+  # prerequsites 
+  # 1. create a ECR repositry before deploy.
+  # 2. set the secret in Drone CI. please check the notes of "github read only" in 1password.
+- name: publish
+  image: plugins/ecr
+  environment:
+    PLUGIN_STORAGE_DRIVER: overlay2
+    PLUGIN_CACHE_FROM: > 
+      591756927972.dkr.ecr.ap-northeast-1.amazonaws.com/pkgsite:${DRONE_DEPLOY_TO}
+    GITHUB_TOKEN:
+      from_secret: github_token
+  settings:
+    registry: 591756927972.dkr.ecr.ap-northeast-1.amazonaws.com
+    repo: 591756927972.dkr.ecr.ap-northeast-1.amazonaws.com/pkgsite
+    region: ap-northeast-1
+    build_args_from_env:
+    - GITHUB_TOKEN
+    tags:
+    - ${DRONE_DEPLOY_TO}-${DRONE_BUILD_NUMBER}-${DRONE_COMMIT_SHA}
+    - ${DRONE_DEPLOY_TO}
+
+- name: webhook
+  image: plugins/webhook
+  settings:
+    urls: http://spin-gate.spinnaker:8084/webhooks/webhook/deploy-pkgsite
+    content_type: application/json
+    template: |
+      {
+        "image_tag": "${DRONE_DEPLOY_TO}-${DRONE_BUILD_NUMBER}-${DRONE_COMMIT_SHA}",
+        "repository": "${DRONE_REPO}",
+        "environment": "${DRONE_DEPLOY_TO}",
+        "parameters": {
+          "image_tag": "${DRONE_DEPLOY_TO}-${DRONE_BUILD_NUMBER}-${DRONE_COMMIT_SHA}",
+          "repository": "${DRONE_REPO}",
+          "environment": "${DRONE_DEPLOY_TO}"
+        }
+      }
+trigger:
+  event:
+  - promote
+  target:
+  - prod
+  - prodmini
+  - staging
+  - stagingqa
+  - dev
