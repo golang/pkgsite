@@ -115,9 +115,9 @@ func (c *Client) GetZipSize(ctx context.Context, modulePath, resolvedVersion str
 	return res.ContentLength, nil
 }
 
-func (c *Client) escapedURL(modulePath, version, suffix string) (_ string, err error) {
+func (c *Client) escapedURL(modulePath, requestedVersion, suffix string) (_ string, err error) {
 	defer func() {
-		derrors.Wrap(&err, "Client.escapedURL(%q, %q, %q)", modulePath, version, suffix)
+		derrors.Wrap(&err, "Client.escapedURL(%q, %q, %q)", modulePath, requestedVersion, suffix)
 	}()
 
 	if suffix != "info" && suffix != "mod" && suffix != "zip" {
@@ -127,23 +127,23 @@ func (c *Client) escapedURL(modulePath, version, suffix string) (_ string, err e
 	if err != nil {
 		return "", fmt.Errorf("path: %v: %w", err, derrors.InvalidArgument)
 	}
-	if version == internal.LatestVersion {
+	if requestedVersion == internal.LatestVersion {
 		if suffix != "info" {
 			return "", fmt.Errorf("cannot ask for latest with suffix %q", suffix)
 		}
 		return fmt.Sprintf("%s/%s/@latest", c.url, escapedPath), nil
 	}
-	escapedVersion, err := module.EscapeVersion(version)
+	escapedVersion, err := module.EscapeVersion(requestedVersion)
 	if err != nil {
 		return "", fmt.Errorf("version: %v: %w", err, derrors.InvalidArgument)
 	}
 	return fmt.Sprintf("%s/%s/@v/%s.%s", c.url, escapedPath, escapedVersion, suffix), nil
 }
 
-func (c *Client) readBody(ctx context.Context, modulePath, version, suffix string) (_ []byte, err error) {
-	defer derrors.Wrap(&err, "Client.readBody(%q, %q, %q)", modulePath, version, suffix)
+func (c *Client) readBody(ctx context.Context, modulePath, requestedVersion, suffix string) (_ []byte, err error) {
+	defer derrors.Wrap(&err, "Client.readBody(%q, %q, %q)", modulePath, requestedVersion, suffix)
 
-	u, err := c.escapedURL(modulePath, version, suffix)
+	u, err := c.escapedURL(modulePath, requestedVersion, suffix)
 	if err != nil {
 		return nil, err
 	}
