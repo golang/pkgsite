@@ -19,8 +19,8 @@ import (
 const orderByLatest = `
 			ORDER BY
 				m.incompatible,
-				CASE                          
-				    -- Order the versions by release then prerelease then pseudo.                        
+				CASE
+				    -- Order the versions by release then prerelease then pseudo.
 				    WHEN m.version_type = 'release' THEN 1
 				    WHEN m.version_type = 'prerelease' THEN 2
 				    ELSE 3
@@ -117,8 +117,8 @@ type dbPath struct {
 	redistributable bool
 }
 
-func (db *DB) getPathsInModule(ctx context.Context, modulePath, version string) (_ []*dbPath, err error) {
-	defer derrors.Wrap(&err, "DB.getPathsInModule(ctx, %q, %q)", modulePath, version)
+func (db *DB) getPathsInModule(ctx context.Context, modulePath, resolvedVersion string) (_ []*dbPath, err error) {
+	defer derrors.Wrap(&err, "DB.getPathsInModule(ctx, %q, %q)", modulePath, resolvedVersion)
 	query := `
 	SELECT
 		p.id,
@@ -150,7 +150,7 @@ func (db *DB) getPathsInModule(ctx context.Context, modulePath, version string) 
 		paths = append(paths, &p)
 		return nil
 	}
-	if err := db.db.RunQuery(ctx, query, collect, modulePath, version); err != nil {
+	if err := db.db.RunQuery(ctx, query, collect, modulePath, resolvedVersion); err != nil {
 		return nil, err
 	}
 	return paths, nil

@@ -920,8 +920,8 @@ func isInternalPackage(path string) bool {
 // DeleteOlderVersionFromSearchDocuments deletes from search_documents every package with
 // the given module path whose version is older than the given version.
 // It is used when fetching a module with an alternative path. See internal/worker/fetch.go:fetchAndUpdateState.
-func (db *DB) DeleteOlderVersionFromSearchDocuments(ctx context.Context, modulePath, version string) (err error) {
-	defer derrors.Wrap(&err, "DeleteOlderVersionFromSearchDocuments(ctx, %q, %q)", modulePath, version)
+func (db *DB) DeleteOlderVersionFromSearchDocuments(ctx context.Context, modulePath, resolvedVersion string) (err error) {
+	defer derrors.Wrap(&err, "DeleteOlderVersionFromSearchDocuments(ctx, %q, %q)", modulePath, resolvedVersion)
 
 	return db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
 		// Collect all package paths in search_documents with the given module path
@@ -937,7 +937,7 @@ func (db *DB) DeleteOlderVersionFromSearchDocuments(ctx context.Context, moduleP
 			if err := rows.Scan(&ppath, &v); err != nil {
 				return err
 			}
-			if semver.Compare(v, version) < 0 {
+			if semver.Compare(v, resolvedVersion) < 0 {
 				ppaths = append(ppaths, ppath)
 			}
 			return nil

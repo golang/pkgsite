@@ -93,10 +93,10 @@ func (db *DB) getLicenses(ctx context.Context, fullPath, modulePath string, path
 // LegacyGetModuleLicenses returns all licenses associated with the given module path and
 // version. These are the top-level licenses in the module zip file.
 // It returns an InvalidArgument error if the module path or version is invalid.
-func (db *DB) LegacyGetModuleLicenses(ctx context.Context, modulePath, version string) (_ []*licenses.License, err error) {
-	defer derrors.Wrap(&err, "LegacyGetModuleLicenses(ctx, %q, %q)", modulePath, version)
+func (db *DB) LegacyGetModuleLicenses(ctx context.Context, modulePath, resolvedVersion string) (_ []*licenses.License, err error) {
+	defer derrors.Wrap(&err, "LegacyGetModuleLicenses(ctx, %q, %q)", modulePath, resolvedVersion)
 
-	if modulePath == "" || version == "" {
+	if modulePath == "" || resolvedVersion == "" {
 		return nil, fmt.Errorf("neither modulePath nor version can be empty: %w", derrors.InvalidArgument)
 	}
 	query := `
@@ -107,7 +107,7 @@ func (db *DB) LegacyGetModuleLicenses(ctx context.Context, modulePath, version s
 	WHERE
 		module_path = $1 AND version = $2 AND position('/' in file_path) = 0
     `
-	rows, err := db.db.Query(ctx, query, modulePath, version)
+	rows, err := db.db.Query(ctx, query, modulePath, resolvedVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -118,10 +118,10 @@ func (db *DB) LegacyGetModuleLicenses(ctx context.Context, modulePath, version s
 // LegacyGetPackageLicenses returns all licenses associated with the given package path and
 // version.
 // It returns an InvalidArgument error if the module path or version is invalid.
-func (db *DB) LegacyGetPackageLicenses(ctx context.Context, pkgPath, modulePath, version string) (_ []*licenses.License, err error) {
-	defer derrors.Wrap(&err, "LegacyGetPackageLicenses(ctx, %q, %q, %q)", pkgPath, modulePath, version)
+func (db *DB) LegacyGetPackageLicenses(ctx context.Context, pkgPath, modulePath, resolvedVersion string) (_ []*licenses.License, err error) {
+	defer derrors.Wrap(&err, "LegacyGetPackageLicenses(ctx, %q, %q, %q)", pkgPath, modulePath, resolvedVersion)
 
-	if pkgPath == "" || version == "" {
+	if pkgPath == "" || resolvedVersion == "" {
 		return nil, fmt.Errorf("neither pkgPath nor version can be empty: %w", derrors.InvalidArgument)
 	}
 	query := `
@@ -149,7 +149,7 @@ func (db *DB) LegacyGetPackageLicenses(ctx context.Context, pkgPath, modulePath,
 			AND p.version = l.version
 			AND p.license_file_path = l.file_path;`
 
-	rows, err := db.db.Query(ctx, query, pkgPath, modulePath, version)
+	rows, err := db.db.Query(ctx, query, pkgPath, modulePath, resolvedVersion)
 	if err != nil {
 		return nil, err
 	}

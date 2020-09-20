@@ -41,9 +41,9 @@ import (
 // The returned error may be checked with
 // errors.Is(err, derrors.InvalidArgument) to determine if it was caused by an
 // invalid path or version.
-func (db *DB) LegacyGetPackage(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.LegacyVersionedPackage, err error) {
-	defer derrors.Wrap(&err, "DB.LegacyGetPackage(ctx, %q, %q)", pkgPath, version)
-	if pkgPath == "" || modulePath == "" || version == "" {
+func (db *DB) LegacyGetPackage(ctx context.Context, pkgPath, modulePath, requestedVersion string) (_ *internal.LegacyVersionedPackage, err error) {
+	defer derrors.Wrap(&err, "DB.LegacyGetPackage(ctx, %q, %q)", pkgPath, requestedVersion)
+	if pkgPath == "" || modulePath == "" || requestedVersion == "" {
 		return nil, fmt.Errorf("none of pkgPath, modulePath, or version can be empty: %w", derrors.InvalidArgument)
 	}
 
@@ -77,7 +77,7 @@ func (db *DB) LegacyGetPackage(ctx context.Context, pkgPath, modulePath, version
 			AND m.version = p.version`
 
 	if modulePath == internal.UnknownModulePath || modulePath == stdlib.ModulePath {
-		if version == internal.LatestVersion {
+		if requestedVersion == internal.LatestVersion {
 			// Only pkgPath is specified, so get the latest version of the
 			// package found in any module.
 			query += fmt.Sprintf(`
@@ -96,9 +96,9 @@ func (db *DB) LegacyGetPackage(ctx context.Context, pkgPath, modulePath, version
 			ORDER BY
 				p.module_path DESC
 			LIMIT 1;`
-			args = append(args, version)
+			args = append(args, requestedVersion)
 		}
-	} else if version == internal.LatestVersion {
+	} else if requestedVersion == internal.LatestVersion {
 		// pkgPath and modulePath are specified, so get the latest version of
 		// the package in the specified module.
 		query += fmt.Sprintf(`
@@ -116,7 +116,7 @@ func (db *DB) LegacyGetPackage(ctx context.Context, pkgPath, modulePath, version
 				p.path = $1
 				AND p.version = $2
 				AND p.module_path = $3`
-		args = append(args, version, modulePath)
+		args = append(args, requestedVersion, modulePath)
 	}
 
 	var (
@@ -133,7 +133,7 @@ func (db *DB) LegacyGetPackage(ctx context.Context, pkgPath, modulePath, version
 		&pkg.HasGoMod)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("package %s@%s: %w", pkgPath, version, derrors.NotFound)
+			return nil, fmt.Errorf("package %s@%s: %w", pkgPath, requestedVersion, derrors.NotFound)
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}

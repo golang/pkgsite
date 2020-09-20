@@ -128,8 +128,8 @@ func upsertModuleVersionState(ctx context.Context, db *database.DB, modulePath, 
 
 // updateModulesStatus updates the status of the module with the given modulePath
 // and version, if it exists, in the modules table.
-func updateModulesStatus(ctx context.Context, db *database.DB, modulePath, version string, status int) (err error) {
-	defer derrors.Wrap(&err, "updateModulesStatus(%q, %q, %d)", modulePath, version, status)
+func updateModulesStatus(ctx context.Context, db *database.DB, modulePath, resolvedVersion string, status int) (err error) {
+	defer derrors.Wrap(&err, "updateModulesStatus(%q, %q, %d)", modulePath, resolvedVersion, status)
 
 	query := `UPDATE modules
 			SET
@@ -137,7 +137,7 @@ func updateModulesStatus(ctx context.Context, db *database.DB, modulePath, versi
 			WHERE
 				module_path = $2
 				AND version = $3;`
-	affected, err := db.Exec(ctx, query, status, modulePath, version)
+	affected, err := db.Exec(ctx, query, status, modulePath, resolvedVersion)
 	if err != nil {
 		return err
 	}
@@ -289,8 +289,8 @@ func (db *DB) GetRecentVersions(ctx context.Context, limit int) (_ []*internal.M
 
 // GetModuleVersionState returns the current module version state for
 // modulePath and version.
-func (db *DB) GetModuleVersionState(ctx context.Context, modulePath, version string) (_ *internal.ModuleVersionState, err error) {
-	defer derrors.Wrap(&err, "GetModuleVersionState(ctx, %q, %q)", modulePath, version)
+func (db *DB) GetModuleVersionState(ctx context.Context, modulePath, resolvedVrsion string) (_ *internal.ModuleVersionState, err error) {
+	defer derrors.Wrap(&err, "GetModuleVersionState(ctx, %q, %q)", modulePath, resolvedVrsion)
 
 	query := fmt.Sprintf(`
 		SELECT %s
@@ -300,7 +300,7 @@ func (db *DB) GetModuleVersionState(ctx context.Context, modulePath, version str
 			module_path = $1
 			AND version = $2;`, moduleVersionStateColumns)
 
-	row := db.db.QueryRow(ctx, query, modulePath, version)
+	row := db.db.QueryRow(ctx, query, modulePath, resolvedVrsion)
 	v, err := scanModuleVersionState(row.Scan)
 	switch err {
 	case nil:
@@ -314,8 +314,8 @@ func (db *DB) GetModuleVersionState(ctx context.Context, modulePath, version str
 
 // GetPackageVersionStatesForModule returns the current package version states
 // for modulePath and version.
-func (db *DB) GetPackageVersionStatesForModule(ctx context.Context, modulePath, version string) (_ []*internal.PackageVersionState, err error) {
-	defer derrors.Wrap(&err, "GetPackageVersionState(ctx, %q, %q)", modulePath, version)
+func (db *DB) GetPackageVersionStatesForModule(ctx context.Context, modulePath, resolvedVersion string) (_ []*internal.PackageVersionState, err error) {
+	defer derrors.Wrap(&err, "GetPackageVersionState(ctx, %q, %q)", modulePath, resolvedVersion)
 
 	query := `
 		SELECT
@@ -340,7 +340,7 @@ func (db *DB) GetPackageVersionStatesForModule(ctx context.Context, modulePath, 
 		states = append(states, &s)
 		return nil
 	}
-	if err := db.db.RunQuery(ctx, query, collect, modulePath, version); err != nil {
+	if err := db.db.RunQuery(ctx, query, collect, modulePath, resolvedVersion); err != nil {
 		return nil, err
 	}
 	return states, nil
@@ -348,8 +348,8 @@ func (db *DB) GetPackageVersionStatesForModule(ctx context.Context, modulePath, 
 
 // GetPackageVersionState returns the current package version state for
 // pkgPath, modulePath and version.
-func (db *DB) GetPackageVersionState(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.PackageVersionState, err error) {
-	defer derrors.Wrap(&err, "GetPackageVersionState(ctx, %q, %q, %q)", pkgPath, modulePath, version)
+func (db *DB) GetPackageVersionState(ctx context.Context, pkgPath, modulePath, resolvedVersion string) (_ *internal.PackageVersionState, err error) {
+	defer derrors.Wrap(&err, "GetPackageVersionState(ctx, %q, %q, %q)", pkgPath, modulePath, resolvedVersion)
 
 	query := `
 		SELECT
@@ -366,7 +366,7 @@ func (db *DB) GetPackageVersionState(ctx context.Context, pkgPath, modulePath, v
 			AND version = $3;`
 
 	var pvs internal.PackageVersionState
-	err = db.db.QueryRow(ctx, query, pkgPath, modulePath, version).Scan(
+	err = db.db.QueryRow(ctx, query, pkgPath, modulePath, resolvedVersion).Scan(
 		&pvs.PackagePath, &pvs.ModulePath, &pvs.Version,
 		&pvs.Status, &pvs.Error)
 	switch err {

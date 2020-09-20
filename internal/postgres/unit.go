@@ -74,8 +74,8 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 	return u, nil
 }
 
-func (db *DB) getPathID(ctx context.Context, fullPath, modulePath, version string) (_ int, err error) {
-	defer derrors.Wrap(&err, "getPathID(ctx, %q, %q, %q)", fullPath, modulePath, version)
+func (db *DB) getPathID(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ int, err error) {
+	defer derrors.Wrap(&err, "getPathID(ctx, %q, %q, %q)", fullPath, modulePath, resolvedVersion)
 	var pathID int
 	query := `
 		SELECT p.id
@@ -85,7 +85,7 @@ func (db *DB) getPathID(ctx context.Context, fullPath, modulePath, version strin
 		    p.path = $1
 		    AND m.module_path = $2
 		    AND m.version = $3;`
-	err = db.db.QueryRow(ctx, query, fullPath, modulePath, version).Scan(&pathID)
+	err = db.db.QueryRow(ctx, query, fullPath, modulePath, resolvedVersion).Scan(&pathID)
 	switch err {
 	case sql.ErrNoRows:
 		return 0, derrors.NotFound
@@ -129,8 +129,8 @@ func (db *DB) getDocumentation(ctx context.Context, pathID int) (_ *internal.Doc
 }
 
 // getReadme returns the README corresponding to the modulePath and version.
-func (db *DB) getReadme(ctx context.Context, modulePath, version string) (_ *internal.Readme, err error) {
-	defer derrors.Wrap(&err, "getReadme(ctx, %q, %q)", modulePath, version)
+func (db *DB) getReadme(ctx context.Context, modulePath, resolvedVersion string) (_ *internal.Readme, err error) {
+	defer derrors.Wrap(&err, "getReadme(ctx, %q, %q)", modulePath, resolvedVersion)
 	// TODO(golang/go#38513): update to query on PathID and query the readmes
 	// table directly once we start displaying READMEs for directories instead
 	// of the top-level module.
@@ -145,7 +145,7 @@ func (db *DB) getReadme(ctx context.Context, modulePath, version string) (_ *int
 		WHERE
 		    m.module_path=$1
 			AND m.version=$2
-			AND m.module_path=p.path`, modulePath, version).Scan(&readme.Filepath, &readme.Contents)
+			AND m.module_path=p.path`, modulePath, resolvedVersion).Scan(&readme.Filepath, &readme.Contents)
 	switch err {
 	case sql.ErrNoRows:
 		return nil, derrors.NotFound

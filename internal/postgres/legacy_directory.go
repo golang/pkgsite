@@ -53,10 +53,10 @@ import (
 //
 // It will not match on:
 // golang.org/x/tools/g
-func (db *DB) LegacyGetDirectory(ctx context.Context, dirPath, modulePath, version string, fields internal.FieldSet) (_ *internal.LegacyDirectory, err error) {
-	defer derrors.Wrap(&err, "DB.LegacyGetDirectory(ctx, %q, %q, %q)", dirPath, modulePath, version)
+func (db *DB) LegacyGetDirectory(ctx context.Context, dirPath, modulePath, requestedVersion string, fields internal.FieldSet) (_ *internal.LegacyDirectory, err error) {
+	defer derrors.Wrap(&err, "DB.LegacyGetDirectory(ctx, %q, %q, %q)", dirPath, modulePath, requestedVersion)
 
-	if dirPath == "" || modulePath == "" || version == "" {
+	if dirPath == "" || modulePath == "" || requestedVersion == "" {
 		return nil, fmt.Errorf("none of pkgPath, modulePath, or version can be empty: %w", derrors.InvalidArgument)
 	}
 
@@ -65,9 +65,9 @@ func (db *DB) LegacyGetDirectory(ctx context.Context, dirPath, modulePath, versi
 		args  []interface{}
 	)
 	if modulePath == internal.UnknownModulePath || modulePath == stdlib.ModulePath {
-		query, args = directoryQueryWithoutModulePath(dirPath, version, fields)
+		query, args = directoryQueryWithoutModulePath(dirPath, requestedVersion, fields)
 	} else {
-		query, args = directoryQueryWithModulePath(dirPath, modulePath, version, fields)
+		query, args = directoryQueryWithModulePath(dirPath, modulePath, requestedVersion, fields)
 	}
 
 	var (
@@ -249,8 +249,8 @@ func directoryQueryWithoutModulePath(dirPath, version string, fields internal.Fi
 
 // directoryQueryWithoutModulePath returns the query and args needed to fetch a
 // directory when a module path is provided.
-func directoryQueryWithModulePath(dirPath, modulePath, version string, fields internal.FieldSet) (string, []interface{}) {
-	if version == internal.LatestVersion {
+func directoryQueryWithModulePath(dirPath, modulePath, requestedVersion string, fields internal.FieldSet) (string, []interface{}) {
+	if requestedVersion == internal.LatestVersion {
 		// dirPath and modulePath are specified, so get the latest version of
 		// the package in the specified module.
 		return fmt.Sprintf(`
@@ -294,5 +294,5 @@ func directoryQueryWithModulePath(dirPath, modulePath, version string, fields in
 			WHERE
 				tsv_parent_directories @@ $1::tsquery
 				AND p.module_path = $2
-				AND p.version = $3;`, directoryColumns(fields)), []interface{}{dirPath, modulePath, version}
+				AND p.version = $3;`, directoryColumns(fields)), []interface{}{dirPath, modulePath, requestedVersion}
 }

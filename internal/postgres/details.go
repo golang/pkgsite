@@ -64,7 +64,7 @@ func (db *DB) GetNestedModules(ctx context.Context, modulePath string) (_ []*int
 // LegacyGetPackagesInModule returns packages contained in the module version
 // specified by modulePath and version. The returned packages will be sorted
 // by their package path.
-func (db *DB) LegacyGetPackagesInModule(ctx context.Context, modulePath, version string) (_ []*internal.LegacyPackage, err error) {
+func (db *DB) LegacyGetPackagesInModule(ctx context.Context, modulePath, resolvedVersion string) (_ []*internal.LegacyPackage, err error) {
 	query := `SELECT
 		path,
 		name,
@@ -105,8 +105,8 @@ func (db *DB) LegacyGetPackagesInModule(ctx context.Context, modulePath, version
 		return nil
 	}
 
-	if err := db.db.RunQuery(ctx, query, collect, modulePath, version); err != nil {
-		return nil, fmt.Errorf("DB.LegacyGetPackagesInModule(ctx, %q, %q): %w", modulePath, version, err)
+	if err := db.db.RunQuery(ctx, query, collect, modulePath, resolvedVersion); err != nil {
+		return nil, fmt.Errorf("DB.LegacyGetPackagesInModule(ctx, %q, %q): %w", modulePath, resolvedVersion, err)
 	}
 	for _, p := range packages {
 		if db.bypassLicenseCheck {
@@ -123,10 +123,10 @@ func (db *DB) LegacyGetPackagesInModule(ctx context.Context, modulePath, version
 //
 // The returned error may be checked with derrors.IsInvalidArgument to
 // determine if it resulted from an invalid package path or version.
-func (db *DB) LegacyGetImports(ctx context.Context, pkgPath, modulePath, version string) (paths []string, err error) {
-	defer derrors.Wrap(&err, "DB.LegacyGetImports(ctx, %q, %q, %q)", pkgPath, modulePath, version)
+func (db *DB) LegacyGetImports(ctx context.Context, pkgPath, modulePath, resolvedVersion string) (paths []string, err error) {
+	defer derrors.Wrap(&err, "DB.LegacyGetImports(ctx, %q, %q, %q)", pkgPath, modulePath, resolvedVersion)
 
-	if pkgPath == "" || version == "" || modulePath == "" {
+	if pkgPath == "" || resolvedVersion == "" || modulePath == "" {
 		return nil, fmt.Errorf("pkgPath, modulePath and version must all be non-empty: %w", derrors.InvalidArgument)
 	}
 
@@ -150,7 +150,7 @@ func (db *DB) LegacyGetImports(ctx context.Context, pkgPath, modulePath, version
 		imports = append(imports, toPath)
 		return nil
 	}
-	if err := db.db.RunQuery(ctx, query, collect, pkgPath, version, modulePath); err != nil {
+	if err := db.db.RunQuery(ctx, query, collect, pkgPath, resolvedVersion, modulePath); err != nil {
 		return nil, err
 	}
 	return imports, nil
@@ -197,8 +197,8 @@ func (db *DB) GetImportedBy(ctx context.Context, pkgPath, modulePath string, lim
 
 // GetModuleInfo fetches a module version from the database with the primary key
 // (module_path, version).
-func (db *DB) GetModuleInfo(ctx context.Context, modulePath, version string) (_ *internal.ModuleInfo, err error) {
-	defer derrors.Wrap(&err, "GetModuleInfo(ctx, %q, %q)", modulePath, version)
+func (db *DB) GetModuleInfo(ctx context.Context, modulePath, resolvedVersion string) (_ *internal.ModuleInfo, err error) {
+	defer derrors.Wrap(&err, "GetModuleInfo(ctx, %q, %q)", modulePath, resolvedVersion)
 
 	query := `
 		SELECT
@@ -214,7 +214,7 @@ func (db *DB) GetModuleInfo(ctx context.Context, modulePath, version string) (_ 
 			module_path = $1
 			AND version = $2;`
 
-	row := db.db.QueryRow(ctx, query, modulePath, version)
+	row := db.db.QueryRow(ctx, query, modulePath, resolvedVersion)
 	mi, err := scanModuleInfo(row.Scan)
 	if err == sql.ErrNoRows {
 		return nil, derrors.NotFound
@@ -227,8 +227,8 @@ func (db *DB) GetModuleInfo(ctx context.Context, modulePath, version string) (_ 
 
 // LegacyGetModuleInfo fetches a module version from the database with the primary key
 // (module_path, version).
-func (db *DB) LegacyGetModuleInfo(ctx context.Context, modulePath string, version string) (_ *internal.LegacyModuleInfo, err error) {
-	defer derrors.Wrap(&err, "LegacyGetModuleInfo(ctx, %q, %q)", modulePath, version)
+func (db *DB) LegacyGetModuleInfo(ctx context.Context, modulePath string, requestedVersion string) (_ *internal.LegacyModuleInfo, err error) {
+	defer derrors.Wrap(&err, "LegacyGetModuleInfo(ctx, %q, %q)", modulePath, requestedVersion)
 
 	query := `
 		SELECT
@@ -244,13 +244,13 @@ func (db *DB) LegacyGetModuleInfo(ctx context.Context, modulePath string, versio
 			modules m`
 
 	args := []interface{}{modulePath}
-	if version == internal.LatestVersion {
+	if requestedVersion == internal.LatestVersion {
 		query += fmt.Sprintf(`
 			WHERE m.module_path = $1 %s LIMIT 1;`, orderByLatest)
 	} else {
 		query += `
 			WHERE m.module_path = $1 AND m.version = $2;`
-		args = append(args, version)
+		args = append(args, requestedVersion)
 	}
 
 	var mi internal.LegacyModuleInfo
@@ -259,7 +259,7 @@ func (db *DB) LegacyGetModuleInfo(ctx context.Context, modulePath string, versio
 		database.NullIsEmpty(&mi.LegacyReadmeFilePath), database.NullIsEmpty(&mi.LegacyReadmeContents),
 		jsonbScanner{&mi.SourceInfo}, &mi.IsRedistributable, &mi.HasGoMod); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("module version %s@%s: %w", modulePath, version, derrors.NotFound)
+			return nil, fmt.Errorf("module version %s@%s: %w", modulePath, requestedVersion, derrors.NotFound)
 		}
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}

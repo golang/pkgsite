@@ -561,7 +561,7 @@ func isIncompatible(version string) bool {
 }
 
 // isLatestVersion reports whether version is the latest version of the module.
-func isLatestVersion(ctx context.Context, db *database.DB, modulePath, version string) (_ bool, err error) {
+func isLatestVersion(ctx context.Context, db *database.DB, modulePath, resolvedVersion string) (_ bool, err error) {
 	defer derrors.Wrap(&err, "isLatestVersion(ctx, tx, %q)", modulePath)
 
 	query := fmt.Sprintf(`
@@ -577,7 +577,7 @@ func isLatestVersion(ctx context.Context, db *database.DB, modulePath, version s
 		}
 		return false, err
 	}
-	return version == v, nil
+	return resolvedVersion == v, nil
 }
 
 // validateModule checks that fields needed to insert a module into the database
@@ -687,17 +687,17 @@ func (db *DB) comparePaths(ctx context.Context, m *internal.Module) (err error) 
 }
 
 // DeleteModule deletes a Version from the database.
-func (db *DB) DeleteModule(ctx context.Context, modulePath, version string) (err error) {
-	defer derrors.Wrap(&err, "DeleteModule(ctx, db, %q, %q)", modulePath, version)
+func (db *DB) DeleteModule(ctx context.Context, modulePath, resolvedVersion string) (err error) {
+	defer derrors.Wrap(&err, "DeleteModule(ctx, db, %q, %q)", modulePath, resolvedVersion)
 	return db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
 		// We only need to delete from the modules table. Thanks to ON DELETE
 		// CASCADE constraints, that will trigger deletions from all other tables.
 		const stmt = `DELETE FROM modules WHERE module_path=$1 AND version=$2`
-		if _, err := tx.Exec(ctx, stmt, modulePath, version); err != nil {
+		if _, err := tx.Exec(ctx, stmt, modulePath, resolvedVersion); err != nil {
 			return err
 		}
 
-		if _, err = tx.Exec(ctx, `DELETE FROM version_map WHERE module_path = $1 AND resolved_version = $2`, modulePath, version); err != nil {
+		if _, err = tx.Exec(ctx, `DELETE FROM version_map WHERE module_path = $1 AND resolved_version = $2`, modulePath, resolvedVersion); err != nil {
 			return err
 		}
 
