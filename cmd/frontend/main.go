@@ -15,11 +15,11 @@ import (
 	"strings"
 	"time"
 
-	"cloud.google.com/go/errorreporting"
 	"cloud.google.com/go/profiler"
 	"contrib.go.opencensus.io/integrations/ocsql"
 	"github.com/go-redis/redis/v7"
 	"github.com/google/safehtml/template"
+	"golang.org/x/pkgsite/cmd/internal/cmdconfig"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/database"
@@ -175,8 +175,7 @@ func main() {
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
-	requestLogger := getLogger(ctx, cfg)
-	rc := reportingClient(ctx, cfg)
+	rc := cmdconfig.ReportingClient(ctx, cfg)
 	experimenter, err := middleware.NewExperimenter(ctx, 1*time.Minute, expg, rc)
 	if err != nil {
 		log.Fatal(ctx, err)
@@ -186,11 +185,11 @@ func main() {
 		ermw = middleware.ErrorReporting(rc.Report)
 	}
 	mw := middleware.Chain(
-		middleware.RequestLog(requestLogger),
+		middleware.RequestLog(cmdconfig.Logger(ctx, cfg, "frontend-log")),
 		middleware.AcceptRequests(http.MethodGet, http.MethodPost), // accept only GETs and POSTs
 		middleware.Quota(cfg.Quota),
-		middleware.GodocURL(),                  // potentially redirects so should be early in chain
-		middleware.SecureHeaders(!*disableCSP), // must come before any caching for nonces to work
+		middleware.GodocURL(),                                                                 // potentially redirects so should be early in chain
+		middleware.SecureHeaders(!*disableCSP),                                                // must come before any caching for nonces to work
 		middleware.LatestVersions(server.GetLatestMinorVersion, server.GetLatestMajorVersion), // must come before caching for version badge to work
 		middleware.Panic(panicHandler),
 		ermw,
@@ -224,16 +223,6 @@ func openDB(ctx context.Context, cfg *config.Config, driver string) (_ *database
 	log.Errorf(ctx, "database.Open for primary host %s failed with %v; trying secondary host %s ",
 		cfg.DBHost, err, cfg.DBSecondaryHost)
 	return database.Open(driver, ci, cfg.InstanceID)
-}
-func getLogger(ctx context.Context, cfg *config.Config) middleware.Logger {
-	if cfg.OnGCP() {
-		logger, err := log.UseStackdriver(ctx, cfg, "frontend-log")
-		if err != nil {
-			log.Fatal(ctx, err)
-		}
-		return logger
-	}
-	return middleware.LocalLogger{}
 }
 
 // Read a file of experiments used to initialize the local experiment source
@@ -282,20 +271,4 @@ func readLocalExperiments(ctx context.Context) []*internal.Experiment {
 	}
 	log.Infof(ctx, "found %d experiment(s)", len(experiments))
 	return experiments
-}
-
-func reportingClient(ctx context.Context, cfg *config.Config) *errorreporting.Client {
-	if !cfg.OnGCP() {
-		return nil
-	}
-	reporter, err := errorreporting.NewClient(ctx, cfg.ProjectID, errorreporting.Config{
-		ServiceName: cfg.ServiceID,
-		OnError: func(err error) {
-			log.Errorf(ctx, "Error reporting failed: %v", err)
-		},
-	})
-	if err != nil {
-		log.Fatal(ctx, err)
-	}
-	return reporter
 }

@@ -16,10 +16,10 @@ import (
 	"strings"
 	"time"
 
-	"cloud.google.com/go/errorreporting"
 	"cloud.google.com/go/profiler"
 	"github.com/go-redis/redis/v7"
 	"github.com/google/safehtml/template"
+	"golang.org/x/pkgsite/cmd/internal/cmdconfig"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/database"
@@ -103,7 +103,7 @@ func main() {
 		log.Fatalf(ctx, "queue.New: %v", err)
 	}
 
-	reportingClient := reportingClient(ctx, cfg)
+	reportingClient := cmdconfig.ReportingClient(ctx, cfg)
 	redisHAClient := getHARedis(ctx, cfg)
 	redisCacheClient := getCacheRedis(ctx, cfg)
 	experimenter, err := middleware.NewExperimenter(ctx, 1*time.Minute, func(context.Context) internal.ExperimentSource { return db }, reportingClient)
@@ -147,9 +147,8 @@ func main() {
 	if err != nil {
 		log.Fatalf(ctx, "strconv.Atoi(%q): %v", timeout, err)
 	}
-	requestLogger := logger(ctx, cfg)
 	mw := middleware.Chain(
-		middleware.RequestLog(requestLogger),
+		middleware.RequestLog(cmdconfig.Logger(ctx, cfg, "worker-log")),
 		middleware.Timeout(time.Duration(handlerTimeout)*time.Minute),
 		middleware.Experiment(experimenter),
 	)
@@ -185,33 +184,6 @@ func getRedis(ctx context.Context, host, port string, writeTimeout, readTimeout 
 		WriteTimeout: writeTimeout,
 		ReadTimeout:  readTimeout,
 	})
-}
-
-func reportingClient(ctx context.Context, cfg *config.Config) *errorreporting.Client {
-	if !cfg.OnGCP() {
-		return nil
-	}
-	reporter, err := errorreporting.NewClient(ctx, cfg.ProjectID, errorreporting.Config{
-		ServiceName: cfg.ServiceID,
-		OnError: func(err error) {
-			log.Errorf(ctx, "Error reporting failed: %v", err)
-		},
-	})
-	if err != nil {
-		log.Fatal(ctx, err)
-	}
-	return reporter
-}
-
-func logger(ctx context.Context, cfg *config.Config) middleware.Logger {
-	if cfg.OnGCP() {
-		logger, err := log.UseStackdriver(ctx, cfg, "worker-log")
-		if err != nil {
-			log.Fatal(ctx, err)
-		}
-		return logger
-	}
-	return middleware.LocalLogger{}
 }
 
 // Read a file of module versions that we should ignore because
