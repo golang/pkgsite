@@ -106,9 +106,13 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 	defer derrors.Wrap(&err, "loadPackageWithBuildContext(%q, %q, zipGoFiles, %q, %q, %+v)",
 		goos, goarch, innerPath, modulePath, sourceInfo)
 
-	packageName, allGoFiles, fset, err := loadFilesWithBuildContext(innerPath, goos, goarch, zipGoFiles)
+	packageName, goFiles, fset, err := loadFilesWithBuildContext(innerPath, goos, goarch, zipGoFiles)
 	if err != nil {
 		return nil, err
+	}
+	var allGoFiles []*ast.File
+	for _, pf := range goFiles {
+		allGoFiles = append(allGoFiles, pf)
 	}
 	d, err := loadPackageWithFiles(modulePath, innerPath, packageName, allGoFiles, fset)
 	if err != nil {
@@ -135,7 +139,11 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 	}, err
 }
 
-func loadFilesWithBuildContext(innerPath, goos, goarch string, zipGoFiles []*zip.File) (string, []*ast.File, *token.FileSet, error) {
+// loadFilesWithBuildContext loads all the Go files at innerPath that match goos
+// and goarch in the zip. It returns the package name as it occurs in the
+// source, a map of the ASTs of all the Go files, and the token.FileSet used for
+// parsing.
+func loadFilesWithBuildContext(innerPath, goos, goarch string, zipGoFiles []*zip.File) (pkgName string, fileMap map[string]*ast.File, _ *token.FileSet, _ error) {
 	// Apply build constraints to get a map from matching file names to their contents.
 	files, err := matchingFiles(goos, goarch, zipGoFiles)
 	if err != nil {
@@ -146,7 +154,7 @@ func loadFilesWithBuildContext(innerPath, goos, goarch string, zipGoFiles []*zip
 	var (
 		fset            = token.NewFileSet()
 		goFiles         = make(map[string]*ast.File)
-		allGoFiles      []*ast.File
+		nonTestFiles    = make(map[string]*ast.File)
 		packageName     string
 		packageNameFile string // Name of file where packageName came from.
 	)
@@ -158,12 +166,16 @@ func loadFilesWithBuildContext(innerPath, goos, goarch string, zipGoFiles []*zip
 			}
 			return "", nil, nil, &BadPackageError{Err: err}
 		}
-		allGoFiles = append(allGoFiles, pf)
+		// Remember all files, including test files for their examples.
+		goFiles[name] = pf
 		if strings.HasSuffix(name, "_test.go") {
 			continue
 		}
-		goFiles[name] = pf
-		if len(goFiles) == 1 {
+		// Keep track of non-test files to get the package name, and also
+		// because a directory with only test files doesn't count as a Go
+		// package.
+		nonTestFiles[name] = pf
+		if len(nonTestFiles) == 1 {
 			packageName = pf.Name.Name
 			packageNameFile = name
 		} else if pf.Name.Name != packageName {
@@ -174,12 +186,12 @@ func loadFilesWithBuildContext(innerPath, goos, goarch string, zipGoFiles []*zip
 			}}
 		}
 	}
-	if len(goFiles) == 0 {
+	if len(nonTestFiles) == 0 {
 		// This directory doesn't contain a package, or at least not one
 		// that matches this build context.
 		return "", nil, nil, derrors.NotFound
 	}
-	return packageName, allGoFiles, fset, nil
+	return packageName, goFiles, fset, nil
 }
 
 func loadPackageWithFiles(modulePath, innerPath, packageName string, allGoFiles []*ast.File, fset *token.FileSet) (_ *doc.Package, err error) {
