@@ -18,7 +18,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
-	"golang.org/x/pkgsite/internal/postgres"
+	"golang.org/x/pkgsite/internal/middleware"
 	taskspb "google.golang.org/genproto/googleapis/cloud/tasks/v2"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -31,9 +31,9 @@ type Queue interface {
 
 // New creates a new Queue with name queueName based on the configuration
 // in cfg. When running locally, Queue uses numWorkers concurrent workers.
-func New(ctx context.Context, cfg *config.Config, queueName string, numWorkers int, db *postgres.DB, processFunc inMemoryProcessFunc) (Queue, error) {
+func New(ctx context.Context, cfg *config.Config, queueName string, numWorkers int, expGetter middleware.ExperimentGetter, processFunc inMemoryProcessFunc) (Queue, error) {
 	if !cfg.OnGCP() {
-		experiments, err := db.GetExperiments(ctx)
+		experiments, err := expGetter(ctx)
 		if err != nil {
 			return nil, err
 		}

@@ -94,7 +94,7 @@ func main() {
 		log.Fatal(ctx, err)
 	}
 	sourceClient := source.NewClient(config.SourceTimeout)
-	fetchQueue, err := queue.New(ctx, cfg, queueName, *workers, db,
+	fetchQueue, err := queue.New(ctx, cfg, queueName, *workers, db.GetExperiments,
 		func(ctx context.Context, modulePath, version string) (int, error) {
 			return worker.FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, db, cfg.AppVersionLabel())
 		})

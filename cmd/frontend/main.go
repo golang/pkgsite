@@ -107,10 +107,10 @@ func main() {
 		dsg = func(context.Context) internal.DataSource { return db }
 		expg = db.GetExperiments
 		sourceClient := source.NewClient(config.SourceTimeout)
-		// queue.New uses the db argument only while it is constructing the queue.Queue.
-		// The closure passed to it is only used for testing and local execution, not in production.
-		// So it's okay that in neither case do we use a per-request connection.
-		fetchQueue, err = queue.New(ctx, cfg, queueName, *workers, db,
+		// The closure passed to queue.New is only used for testing and local
+		// execution, not in production. So it's okay that it doesn't use a
+		// per-request connection.
+		fetchQueue, err = queue.New(ctx, cfg, queueName, *workers, expg,
 			func(ctx context.Context, modulePath, version string) (int, error) {
 				return frontend.FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, db)
 			})
