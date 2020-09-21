@@ -26,6 +26,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
 	"go.opencensus.io/trace"
 	"golang.org/x/pkgsite/internal"
@@ -185,7 +186,29 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 		return nil, fmt.Errorf("%d imports found package %q; exceeds limit %d for maxImportsPerPackage", len(d.Imports), importPath, maxImportsPerPackage)
 	}
 
-	// Render documentation HTML.
+	docHTML, err := renderDocHTML(ctx, innerPath, d, fset, sourceInfo, modInfo)
+	if err != nil && !errors.Is(err, dochtml.ErrTooLarge) {
+		return nil, err
+	}
+	if modulePath == stdlib.ModulePath {
+		importPath = innerPath
+	}
+	v1path := internal.V1Path(importPath, modulePath)
+	return &goPackage{
+		path:              importPath,
+		name:              packageName,
+		synopsis:          doc.Synopsis(d.Doc),
+		v1path:            v1path,
+		imports:           d.Imports,
+		documentationHTML: docHTML,
+		goos:              goos,
+		goarch:            goarch,
+	}, err
+}
+
+// renderDocHTML renders documentation HTML for a given package.
+func renderDocHTML(ctx context.Context, innerPath string, d *doc.Package, fset *token.FileSet, sourceInfo *source.Info, modInfo *dochtml.ModuleInfo) (_ safehtml.HTML, err error) {
+	defer derrors.Wrap(&err, "renderDocHTML")
 	sourceLinkFunc := func(n ast.Node) string {
 		if sourceInfo == nil {
 			return ""
@@ -212,22 +235,9 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 	if errors.Is(err, dochtml.ErrTooLarge) {
 		docHTML = template.MustParseAndExecuteToHTML(docTooLargeReplacement)
 	} else if err != nil {
-		return nil, fmt.Errorf("dochtml.Render: %v", err)
+		return safehtml.HTML{}, err
 	}
-	if modulePath == stdlib.ModulePath {
-		importPath = innerPath
-	}
-	v1path := internal.V1Path(importPath, modulePath)
-	return &goPackage{
-		path:              importPath,
-		name:              packageName,
-		synopsis:          doc.Synopsis(d.Doc),
-		v1path:            v1path,
-		imports:           d.Imports,
-		documentationHTML: docHTML,
-		goos:              goos,
-		goarch:            goarch,
-	}, err
+	return docHTML, err
 }
 
 // matchingFiles returns a map from file names to their contents, read from zipGoFiles.

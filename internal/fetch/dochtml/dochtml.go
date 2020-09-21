@@ -26,6 +26,7 @@ import (
 	"github.com/google/safehtml/legacyconversions"
 	"github.com/google/safehtml/template"
 	"github.com/google/safehtml/uncheckedconversions"
+	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/fetch/dochtml/internal/render"
 	"golang.org/x/pkgsite/internal/fetch/internal/doc"
 )
@@ -66,7 +67,8 @@ type RenderOptions struct {
 //
 // If the rendered documentation HTML size exceeds the specified limit,
 // an error with ErrTooLarge in its chain will be returned.
-func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt RenderOptions) (safehtml.HTML, error) {
+func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt RenderOptions) (_ safehtml.HTML, err error) {
+	defer derrors.Wrap(&err, "dochtml.Render")
 	if opt.Limit == 0 {
 		const megabyte = 1000 * 1000
 		opt.Limit = 10 * megabyte
