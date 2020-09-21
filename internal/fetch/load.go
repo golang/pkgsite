@@ -149,6 +149,33 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 		return nil, nil
 	}
 
+	d, err := loadPackageWithFiles(modulePath, innerPath, packageName, allGoFiles, fset)
+	if err != nil {
+		return nil, err
+	}
+	docHTML, err := renderDocHTML(ctx, innerPath, d, fset, sourceInfo, modInfo)
+	if err != nil && !errors.Is(err, dochtml.ErrTooLarge) {
+		return nil, err
+	}
+	importPath := path.Join(modulePath, innerPath)
+	if modulePath == stdlib.ModulePath {
+		importPath = innerPath
+	}
+	v1path := internal.V1Path(importPath, modulePath)
+	return &goPackage{
+		path:              importPath,
+		name:              packageName,
+		synopsis:          doc.Synopsis(d.Doc),
+		v1path:            v1path,
+		imports:           d.Imports,
+		documentationHTML: docHTML,
+		goos:              goos,
+		goarch:            goarch,
+	}, err
+}
+
+func loadPackageWithFiles(modulePath, innerPath, packageName string, allGoFiles []*ast.File, fset *token.FileSet) (_ *doc.Package, err error) {
+	defer derrors.Wrap(&err, "loadPackageWithFiles")
 	// The "builtin" package in the standard library is a special case.
 	// We want to show documentation for all globals (not just exported ones),
 	// and avoid association of consts, vars, and factory functions with types
@@ -185,25 +212,7 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 	if len(d.Imports) > maxImportsPerPackage {
 		return nil, fmt.Errorf("%d imports found package %q; exceeds limit %d for maxImportsPerPackage", len(d.Imports), importPath, maxImportsPerPackage)
 	}
-
-	docHTML, err := renderDocHTML(ctx, innerPath, d, fset, sourceInfo, modInfo)
-	if err != nil && !errors.Is(err, dochtml.ErrTooLarge) {
-		return nil, err
-	}
-	if modulePath == stdlib.ModulePath {
-		importPath = innerPath
-	}
-	v1path := internal.V1Path(importPath, modulePath)
-	return &goPackage{
-		path:              importPath,
-		name:              packageName,
-		synopsis:          doc.Synopsis(d.Doc),
-		v1path:            v1path,
-		imports:           d.Imports,
-		documentationHTML: docHTML,
-		goos:              goos,
-		goarch:            goarch,
-	}, err
+	return d, nil
 }
 
 // renderDocHTML renders documentation HTML for a given package.
