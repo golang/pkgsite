@@ -71,7 +71,7 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, 
 	defer span.End()
 	for _, env := range goEnvs {
 		pkg, err := loadPackageWithBuildContext(ctx, env.GOOS, env.GOARCH, zipGoFiles, innerPath, sourceInfo, modInfo)
-		if err != nil && !errors.Is(err, dochtml.ErrTooLarge) {
+		if err != nil && !errors.Is(err, dochtml.ErrTooLarge) && !errors.Is(err, derrors.NotFound) {
 			return nil, err
 		}
 		if pkg != nil {
@@ -105,50 +105,11 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 	modulePath := modInfo.ModulePath
 	defer derrors.Wrap(&err, "loadPackageWithBuildContext(%q, %q, zipGoFiles, %q, %q, %+v)",
 		goos, goarch, innerPath, modulePath, sourceInfo)
-	// Apply build constraints to get a map from matching file names to their contents.
-	files, err := matchingFiles(goos, goarch, zipGoFiles)
+
+	packageName, allGoFiles, fset, err := loadFilesWithBuildContext(innerPath, goos, goarch, zipGoFiles)
 	if err != nil {
 		return nil, err
 	}
-
-	// Parse .go files and add them to the goFiles slice.
-	var (
-		fset            = token.NewFileSet()
-		goFiles         = make(map[string]*ast.File)
-		allGoFiles      []*ast.File
-		packageName     string
-		packageNameFile string // Name of file where packageName came from.
-	)
-	for name, b := range files {
-		pf, err := parser.ParseFile(fset, name, b, parser.ParseComments)
-		if err != nil {
-			if pf == nil {
-				return nil, fmt.Errorf("internal error: the source couldn't be read: %v", err)
-			}
-			return nil, &BadPackageError{Err: err}
-		}
-		allGoFiles = append(allGoFiles, pf)
-		if strings.HasSuffix(name, "_test.go") {
-			continue
-		}
-		goFiles[name] = pf
-		if len(goFiles) == 1 {
-			packageName = pf.Name.Name
-			packageNameFile = name
-		} else if pf.Name.Name != packageName {
-			return nil, &BadPackageError{Err: &build.MultiplePackageError{
-				Dir:      innerPath,
-				Packages: []string{packageName, pf.Name.Name},
-				Files:    []string{packageNameFile, name},
-			}}
-		}
-	}
-	if len(goFiles) == 0 {
-		// This directory doesn't contain a package, or at least not one
-		// that matches this build context.
-		return nil, nil
-	}
-
 	d, err := loadPackageWithFiles(modulePath, innerPath, packageName, allGoFiles, fset)
 	if err != nil {
 		return nil, err
@@ -172,6 +133,53 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 		goos:              goos,
 		goarch:            goarch,
 	}, err
+}
+
+func loadFilesWithBuildContext(innerPath, goos, goarch string, zipGoFiles []*zip.File) (string, []*ast.File, *token.FileSet, error) {
+	// Apply build constraints to get a map from matching file names to their contents.
+	files, err := matchingFiles(goos, goarch, zipGoFiles)
+	if err != nil {
+		return "", nil, nil, err
+	}
+
+	// Parse .go files and add them to the goFiles slice.
+	var (
+		fset            = token.NewFileSet()
+		goFiles         = make(map[string]*ast.File)
+		allGoFiles      []*ast.File
+		packageName     string
+		packageNameFile string // Name of file where packageName came from.
+	)
+	for name, b := range files {
+		pf, err := parser.ParseFile(fset, name, b, parser.ParseComments)
+		if err != nil {
+			if pf == nil {
+				return "", nil, nil, fmt.Errorf("internal error: the source couldn't be read: %v", err)
+			}
+			return "", nil, nil, &BadPackageError{Err: err}
+		}
+		allGoFiles = append(allGoFiles, pf)
+		if strings.HasSuffix(name, "_test.go") {
+			continue
+		}
+		goFiles[name] = pf
+		if len(goFiles) == 1 {
+			packageName = pf.Name.Name
+			packageNameFile = name
+		} else if pf.Name.Name != packageName {
+			return "", nil, nil, &BadPackageError{Err: &build.MultiplePackageError{
+				Dir:      innerPath,
+				Packages: []string{packageName, pf.Name.Name},
+				Files:    []string{packageNameFile, name},
+			}}
+		}
+	}
+	if len(goFiles) == 0 {
+		// This directory doesn't contain a package, or at least not one
+		// that matches this build context.
+		return "", nil, nil, derrors.NotFound
+	}
+	return packageName, allGoFiles, fset, nil
 }
 
 func loadPackageWithFiles(modulePath, innerPath, packageName string, allGoFiles []*ast.File, fset *token.FileSet) (_ *doc.Package, err error) {
