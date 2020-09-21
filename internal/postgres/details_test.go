@@ -21,7 +21,7 @@ import (
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
-func TestPostgres_GetNestedModules(t *testing.T) {
+func TestGetNestedModules(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
@@ -81,6 +81,53 @@ func TestPostgres_GetNestedModules(t *testing.T) {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestGetNestedModules_Excluded(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	defer ResetTestDB(testDB, t)
+
+	test := struct {
+		name            string
+		path            string
+		modules         []*internal.Module
+		wantModulePaths []string
+	}{
+		name: "Nested Modules in cloud.google.com/go that have the same module prefix path",
+		path: "cloud.google.com/go",
+		modules: []*internal.Module{
+			sample.Module("cloud.google.com/go", "v0.46.2", "storage", "spanner", "pubsub"),
+			// cloud.google.com/storage will be excluded below.
+			sample.Module("cloud.google.com/go/storage", "v1.10.0", sample.Suffix),
+			sample.Module("cloud.google.com/go/pubsub", "v1.6.1", sample.Suffix),
+			sample.Module("cloud.google.com/go/spanner", "v1.9.0", sample.Suffix),
+		},
+		wantModulePaths: []string{
+			"cloud.google.com/go/pubsub",
+			"cloud.google.com/go/spanner",
+		},
+	}
+	for _, m := range test.modules {
+		if err := testDB.InsertModule(ctx, m); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := testDB.InsertExcludedPrefix(ctx, "cloud.google.com/go/storage", "postgres", "test"); err != nil {
+		t.Fatal(err)
+	}
+
+	gotModules, err := testDB.GetNestedModules(ctx, "cloud.google.com/go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var gotModulePaths []string
+	for _, mod := range gotModules {
+		gotModulePaths = append(gotModulePaths, mod.ModulePath)
+	}
+	if diff := cmp.Diff(test.wantModulePaths, gotModulePaths); diff != "" {
+		t.Errorf("mismatch (-want +got):\n%s", diff)
 	}
 }
 
