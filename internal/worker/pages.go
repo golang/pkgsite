@@ -41,15 +41,10 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		experiments []*internal.Experiment
 		excluded    []string
 	)
+	if s.getExperiments != nil {
+		experiments = s.getExperiments()
+	}
 	g, ctx := errgroup.WithContext(r.Context())
-	g.Go(func() error {
-		var err error
-		experiments, err = s.db.GetExperiments(ctx)
-		if err != nil {
-			return annotation{err, "error fetching experiments"}
-		}
-		return nil
-	})
 	g.Go(func() error {
 		var err error
 		excluded, err = s.db.GetExcludedPrefixes(ctx)

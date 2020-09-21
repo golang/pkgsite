@@ -106,6 +106,10 @@ func main() {
 	reportingClient := reportingClient(ctx, cfg)
 	redisHAClient := getHARedis(ctx, cfg)
 	redisCacheClient := getCacheRedis(ctx, cfg)
+	experimenter, err := middleware.NewExperimenter(ctx, 1*time.Minute, func(context.Context) internal.ExperimentSource { return db }, reportingClient)
+	if err != nil {
+		log.Fatal(ctx, err)
+	}
 	server, err := worker.NewServer(cfg, worker.ServerConfig{
 		DB:                   db,
 		IndexClient:          indexClient,
@@ -117,6 +121,7 @@ func main() {
 		ReportingClient:      reportingClient,
 		TaskIDChangeInterval: config.TaskIDChangeIntervalWorker,
 		StaticPath:           template.TrustedSourceFromFlag(flag.Lookup("static").Value),
+		GetExperiments:       experimenter.Experiments,
 	})
 	if err != nil {
 		log.Fatal(ctx, err)
@@ -143,10 +148,6 @@ func main() {
 		log.Fatalf(ctx, "strconv.Atoi(%q): %v", timeout, err)
 	}
 	requestLogger := logger(ctx, cfg)
-	experimenter, err := middleware.NewExperimenter(ctx, 1*time.Minute, func(context.Context) internal.ExperimentSource { return db }, reportingClient)
-	if err != nil {
-		log.Fatal(ctx, err)
-	}
 	mw := middleware.Chain(
 		middleware.RequestLog(requestLogger),
 		middleware.Timeout(time.Duration(handlerTimeout)*time.Minute),

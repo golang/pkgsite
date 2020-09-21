@@ -64,6 +64,20 @@ func Experiment(e *Experimenter) Middleware {
 	}
 }
 
+// Experiments returns the experiments currently in use.
+func (e *Experimenter) Experiments() []*internal.Experiment {
+	// Make a copy so the caller can't modify our state.
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	exps := make([]*internal.Experiment, len(e.snapshot))
+	for i, x := range e.snapshot {
+		// Assume internal.Experiment has no pointers to mutable data.
+		nx := *x
+		exps[i] = &nx
+	}
+	return exps
+}
+
 // setExperimentsForRequest sets the experiments for a given request.
 // Experiments should be stable for a given IP address.
 func (e *Experimenter) setExperimentsForRequest(r *http.Request) *http.Request {

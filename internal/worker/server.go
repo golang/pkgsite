@@ -52,6 +52,7 @@ type Server struct {
 	taskIDChangeInterval time.Duration
 	templates            map[string]*template.Template
 	staticPath           template.TrustedSource
+	getExperiments       func() []*internal.Experiment
 }
 
 // ServerConfig contains everything needed by a Server.
@@ -66,6 +67,7 @@ type ServerConfig struct {
 	ReportingClient      *errorreporting.Client
 	TaskIDChangeInterval time.Duration
 	StaticPath           template.TrustedSource
+	GetExperiments       func() []*internal.Experiment
 }
 
 const (
@@ -88,7 +90,6 @@ func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 		indexTemplate:    t1,
 		versionsTemplate: t2,
 	}
-
 	return &Server{
 		cfg:                  cfg,
 		db:                   scfg.DB,
@@ -102,6 +103,7 @@ func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 		taskIDChangeInterval: scfg.TaskIDChangeInterval,
 		templates:            templates,
 		staticPath:           scfg.StaticPath,
+		getExperiments:       scfg.GetExperiments,
 	}, nil
 }
 
