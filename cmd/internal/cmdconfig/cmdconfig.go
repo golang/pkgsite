@@ -7,8 +7,10 @@ package cmdconfig
 
 import (
 	"context"
+	"time"
 
 	"cloud.google.com/go/errorreporting"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
@@ -41,4 +43,13 @@ func ReportingClient(ctx context.Context, cfg *config.Config) *errorreporting.Cl
 		log.Fatal(ctx, err)
 	}
 	return reporter
+}
+
+// Experimenter configures a middleware.Experimenter.
+func Experimenter(ctx context.Context, esf func(context.Context) internal.ExperimentSource, reportingClient *errorreporting.Client) *middleware.Experimenter {
+	e, err := middleware.NewExperimenter(ctx, 1*time.Minute, esf, reportingClient)
+	if err != nil {
+		log.Fatal(ctx, err)
+	}
+	return e
 }

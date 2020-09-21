@@ -176,10 +176,7 @@ func main() {
 		log.Fatal(ctx, err)
 	}
 	rc := cmdconfig.ReportingClient(ctx, cfg)
-	experimenter, err := middleware.NewExperimenter(ctx, 1*time.Minute, expg, rc)
-	if err != nil {
-		log.Fatal(ctx, err)
-	}
+	experimenter := cmdconfig.Experimenter(ctx, expg, rc)
 	ermw := middleware.Identity()
 	if rc != nil {
 		ermw = middleware.ErrorReporting(rc.Report)
