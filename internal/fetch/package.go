@@ -44,6 +44,7 @@ type goPackage struct {
 	// v1path is the package path of a package with major version 1 in a given
 	// series.
 	v1path string
+	source []byte // the source files of the package, for generating doc at serving time
 }
 
 // extractPackagesFromZip returns a slice of packages from the module zip r.

@@ -130,6 +130,13 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 	if err != nil && !errors.Is(err, dochtml.ErrTooLarge) {
 		return nil, err
 	}
+	var src []byte
+	if experiment.IsActive(ctx, internal.ExperimentInsertPackageSource) {
+		src, err = EncodeASTFiles(fset, allGoFiles)
+		if err != nil {
+			return nil, err
+		}
+	}
 	importPath := path.Join(modulePath, innerPath)
 	if modulePath == stdlib.ModulePath {
 		importPath = innerPath
@@ -144,6 +151,7 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 		documentationHTML: docHTML,
 		goos:              goos,
 		goarch:            goarch,
+		source:            src,
 	}, err
 }
 
