@@ -72,7 +72,10 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w2 := &responseWriter{ResponseWriter: w}
 	h.delegate.ServeHTTP(w2, r.WithContext(log.NewContextWithTraceID(r.Context(), traceID)))
 	s := severity
-	if w2.status >= 500 {
+	if w2.status == http.StatusServiceUnavailable {
+		// load shedding is a warning, not an error
+		s = logging.Warning
+	} else if w2.status >= 500 {
 		s = logging.Error
 	}
 	h.logger.Log(logging.Entry{
