@@ -20,32 +20,17 @@ import (
 	"golang.org/x/pkgsite/internal/experiment"
 )
 
-type testExperimentSource struct {
-	mu          sync.Mutex
-	experiments []*internal.Experiment
-}
-
-func (es *testExperimentSource) GetExperiments(ctx context.Context) ([]*internal.Experiment, error) {
-	es.mu.Lock()
-	defer es.mu.Unlock()
-	return es.experiments, nil
-}
-
-func (es *testExperimentSource) updatedExperiments(experiments []*internal.Experiment) {
-	es.mu.Lock()
-	defer es.mu.Unlock()
-	es.experiments = experiments
-}
-
 func TestSetAndLoadExperiments(t *testing.T) {
 	ctx := context.Background()
 	const testFeature = "test-feature"
-	source := &testExperimentSource{
-		experiments: []*internal.Experiment{
-			{Name: testFeature, Rollout: 100},
-		},
+	var mu sync.Mutex
+	testExps := []*internal.Experiment{{Name: testFeature, Rollout: 100}}
+	testGetter := func(context.Context) ([]*internal.Experiment, error) {
+		mu.Lock()
+		defer mu.Unlock()
+		return testExps, nil
 	}
-	experimenter, err := NewExperimenter(ctx, 10*time.Millisecond, func(context.Context) internal.ExperimentSource { return source }, nil)
+	experimenter, err := NewExperimenter(ctx, 10*time.Millisecond, testGetter, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -81,9 +66,9 @@ func TestSetAndLoadExperiments(t *testing.T) {
 		t.Fatalf("experiment %q should be active", testFeature)
 	}
 
-	source.updatedExperiments([]*internal.Experiment{
-		{Name: testFeature, Rollout: 0},
-	})
+	mu.Lock()
+	testExps = []*internal.Experiment{{Name: testFeature, Rollout: 0}}
+	mu.Unlock()
 	time.Sleep(100 * time.Millisecond)
 	makeRequest(t)
 	if featureIsOn {

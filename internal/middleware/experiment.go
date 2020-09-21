@@ -6,7 +6,6 @@ package middleware
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"hash/fnv"
 	"net/http"
@@ -27,24 +26,27 @@ type Reporter interface {
 	Report(errorreporting.Entry)
 }
 
+// ExperimentGetter is the signature of a function that gets experiments.
+type ExperimentGetter func(context.Context) ([]*internal.Experiment, error)
+
 // An Experimenter contains information about active experiments from the
 // experiment source.
 type Experimenter struct {
-	getExperimentSource func(context.Context) internal.ExperimentSource
-	reporter            Reporter
-	pollEvery           time.Duration
-	mu                  sync.Mutex
-	snapshot            []*internal.Experiment
+	getExperiments ExperimentGetter
+	reporter       Reporter
+	pollEvery      time.Duration
+	mu             sync.Mutex
+	snapshot       []*internal.Experiment
 }
 
 // NewExperimenter returns an Experimenter for use in the middleware. The
 // experimenter regularly polls for updates to the snapshot in the background.
-func NewExperimenter(ctx context.Context, pollEvery time.Duration, esf func(context.Context) internal.ExperimentSource, rep Reporter) (_ *Experimenter, err error) {
+func NewExperimenter(ctx context.Context, pollEvery time.Duration, getter ExperimentGetter, rep Reporter) (_ *Experimenter, err error) {
 	defer derrors.Wrap(&err, "middleware.NewExperimenter")
 	e := &Experimenter{
-		getExperimentSource: esf,
-		reporter:            rep,
-		pollEvery:           pollEvery,
+		getExperiments: getter,
+		reporter:       rep,
+		pollEvery:      pollEvery,
 	}
 	if err := e.loadNextSnapshot(ctx); err != nil {
 		return nil, err
@@ -123,11 +125,7 @@ func (e *Experimenter) pollUpdates(ctx context.Context) {
 // experiment source.
 func (e *Experimenter) loadNextSnapshot(ctx context.Context) (err error) {
 	defer derrors.Wrap(&err, "loadNextSnapshot")
-	es := e.getExperimentSource(ctx)
-	if es == nil {
-		return errors.New("no ExperimentSource available")
-	}
-	snapshot, err := es.GetExperiments(ctx)
+	snapshot, err := e.getExperiments(ctx)
 	if err != nil {
 		return err
 	}

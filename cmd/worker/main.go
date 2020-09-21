@@ -20,7 +20,6 @@ import (
 	"github.com/go-redis/redis/v7"
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/cmd/internal/cmdconfig"
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/dcensus"
@@ -106,7 +105,7 @@ func main() {
 	reportingClient := cmdconfig.ReportingClient(ctx, cfg)
 	redisHAClient := getHARedis(ctx, cfg)
 	redisCacheClient := getCacheRedis(ctx, cfg)
-	experimenter := cmdconfig.Experimenter(ctx, func(context.Context) internal.ExperimentSource { return db }, reportingClient)
+	experimenter := cmdconfig.Experimenter(ctx, db.GetExperiments, reportingClient)
 	server, err := worker.NewServer(cfg, worker.ServerConfig{
 		DB:                   db,
 		IndexClient:          indexClient,
