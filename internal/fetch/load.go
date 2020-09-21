@@ -31,6 +31,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch/dochtml"
 	"golang.org/x/pkgsite/internal/fetch/internal/doc"
 	"golang.org/x/pkgsite/internal/log"
@@ -112,6 +113,13 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 	}
 	var allGoFiles []*ast.File
 	for _, pf := range goFiles {
+		if experiment.IsActive(ctx, internal.ExperimentRemoveUnusedAST) {
+			// Don't strip the seemingly unexported functions from the builtin package;
+			// they are actually Go builtins like make, new, etc.
+			if !(modulePath == stdlib.ModulePath && innerPath == "builtin") {
+				removeUnusedASTNodes(pf)
+			}
+		}
 		allGoFiles = append(allGoFiles, pf)
 	}
 	d, err := loadPackageWithFiles(modulePath, innerPath, packageName, allGoFiles, fset)
@@ -379,4 +387,22 @@ func init() {
 // ZipLoadShedStats returns a snapshot of the current LoadShedStats for zip files.
 func ZipLoadShedStats() LoadShedStats {
 	return zipLoadShedder.stats()
+}
+
+// removeUnusedASTNodes removes parts of the AST not needed for documentation.
+// It doesn't remove unexported consts, vars or types, although it probably could.
+func removeUnusedASTNodes(pf *ast.File) {
+	var decls []ast.Decl
+	for _, d := range pf.Decls {
+		if f, ok := d.(*ast.FuncDecl); ok {
+			// Remove all unexported functions and function bodies.
+			if f.Name == nil || !ast.IsExported(f.Name.Name) {
+				continue
+			}
+			f.Body = nil
+		}
+		decls = append(decls, d)
+	}
+	pf.Comments = nil
+	pf.Decls = decls
 }
