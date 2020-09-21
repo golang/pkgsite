@@ -5,17 +5,14 @@
 package worker
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"runtime"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -86,6 +83,7 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		GoMemStats            runtime.MemStats
 		ProcessStats          processMemStats
 		SystemStats           systemMemStats
+		CgroupStats           map[string]uint64
 	}{
 		Config:                s.cfg,
 		Env:                   env(s.cfg),
@@ -98,6 +96,7 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		GoMemStats:            gms,
 		ProcessStats:          pms,
 		SystemStats:           sms,
+		CgroupStats:           getCgroupMemStats(),
 	}
 	return renderPage(ctx, w, page, s.templates[indexTemplate])
 }
@@ -200,93 +199,4 @@ func renderPage(ctx context.Context, w http.ResponseWriter, page interface{}, tm
 		return err
 	}
 	return nil
-}
-
-// systemMemStats holds values from the /proc/meminfo
-// file, which describes the total system memory.
-// All values are in bytes.
-type systemMemStats struct {
-	Total     uint64
-	Free      uint64
-	Available uint64
-	Used      uint64
-	Buffers   uint64
-	Cached    uint64
-}
-
-// getSystemMemStats reads the /proc/meminfo file.
-func getSystemMemStats() (systemMemStats, error) {
-	f, err := os.Open("/proc/meminfo")
-	if err != nil {
-		return systemMemStats{}, err
-	}
-	defer f.Close()
-
-	// Read the number, convert kibibytes to bytes, and set p.
-	set := func(p *uint64, words []string) {
-		if len(words) != 3 || words[2] != "kB" {
-			err = fmt.Errorf("got %+v, want 3 words, third is 'kB'", words)
-			return
-		}
-		var ki uint64
-		ki, err = strconv.ParseUint(words[1], 10, 64)
-		if err == nil {
-			*p = ki * 1024
-		}
-	}
-
-	scan := bufio.NewScanner(f)
-	var sms systemMemStats
-	for scan.Scan() {
-		words := strings.Fields(scan.Text())
-		switch words[0] {
-		case "MemTotal:":
-			set(&sms.Total, words)
-		case "MemFree:":
-			set(&sms.Free, words)
-		case "MemAvailable:":
-			set(&sms.Available, words)
-		case "Buffers:":
-			set(&sms.Buffers, words)
-		case "Cached:":
-			set(&sms.Cached, words)
-		}
-	}
-	if err != nil {
-		return systemMemStats{}, err
-	}
-	sms.Used = sms.Total - sms.Free - sms.Buffers - sms.Cached // see `man free`
-	return sms, nil
-}
-
-// processMemStats holds values that describe the current process's memory.
-// All values are in bytes.
-type processMemStats struct {
-	VSize uint64 // virtual memory size
-	RSS   uint64 // resident set size (physical memory in use)
-}
-
-func getProcessMemStats() (processMemStats, error) {
-	f, err := os.Open("/proc/self/stat")
-	if err != nil {
-		return processMemStats{}, err
-	}
-	defer f.Close()
-	// Values from `man proc`.
-	var (
-		d          int
-		s          string
-		c          byte
-		vsize, rss uint64
-	)
-	_, err = fmt.Fscanf(f, "%d %s %c %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d",
-		&d, &s, &c, &d, &d, &d, &d, &d, &d, &d, &d, &d, &d, &d, &d, &d, &d, &d, &d, &d, &d, &d, &vsize, &rss)
-	if err != nil {
-		return processMemStats{}, err
-	}
-	const pageSize = 4 * 1024 // Linux page size, from `getconf PAGESIZE`
-	return processMemStats{
-		VSize: vsize,
-		RSS:   rss * pageSize,
-	}, nil
 }
