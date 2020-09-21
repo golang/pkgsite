@@ -143,8 +143,7 @@ func main() {
 		log.Fatalf(ctx, "strconv.Atoi(%q): %v", timeout, err)
 	}
 	requestLogger := logger(ctx, cfg)
-
-	experimenter, err := middleware.NewExperimenter(ctx, 1*time.Minute, func(context.Context) internal.ExperimentSource { return db })
+	experimenter, err := middleware.NewExperimenter(ctx, 1*time.Minute, func(context.Context) internal.ExperimentSource { return db }, reportingClient)
 	if err != nil {
 		log.Fatal(ctx, err)
 	}

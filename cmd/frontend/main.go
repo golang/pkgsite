@@ -176,12 +176,13 @@ func main() {
 		log.Fatal(ctx, err)
 	}
 	requestLogger := getLogger(ctx, cfg)
-	experimenter, err := middleware.NewExperimenter(ctx, 1*time.Minute, expg)
+	rc := reportingClient(ctx, cfg)
+	experimenter, err := middleware.NewExperimenter(ctx, 1*time.Minute, expg, rc)
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
 	ermw := middleware.Identity()
-	if rc := reportingClient(ctx, cfg); rc != nil {
+	if rc != nil {
 		ermw = middleware.ErrorReporting(rc.Report)
 	}
 	mw := middleware.Chain(

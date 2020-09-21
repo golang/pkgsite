@@ -45,7 +45,7 @@ func TestSetAndLoadExperiments(t *testing.T) {
 			{Name: testFeature, Rollout: 100},
 		},
 	}
-	experimenter, err := NewExperimenter(ctx, 10*time.Millisecond, func(context.Context) internal.ExperimentSource { return source })
+	experimenter, err := NewExperimenter(ctx, 10*time.Millisecond, func(context.Context) internal.ExperimentSource { return source }, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

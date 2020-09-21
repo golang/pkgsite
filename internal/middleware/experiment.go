@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"cloud.google.com/go/errorreporting"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
@@ -21,10 +22,16 @@ import (
 
 const experimentQueryParamKey = "experiment"
 
+// A Reporter sends errors to the Error-Reporting service.
+type Reporter interface {
+	Report(errorreporting.Entry)
+}
+
 // An Experimenter contains information about active experiments from the
 // experiment source.
 type Experimenter struct {
 	getExperimentSource func(context.Context) internal.ExperimentSource
+	reporter            Reporter
 	pollEvery           time.Duration
 	mu                  sync.Mutex
 	snapshot            []*internal.Experiment
@@ -32,10 +39,11 @@ type Experimenter struct {
 
 // NewExperimenter returns an Experimenter for use in the middleware. The
 // experimenter regularly polls for updates to the snapshot in the background.
-func NewExperimenter(ctx context.Context, pollEvery time.Duration, esf func(context.Context) internal.ExperimentSource) (_ *Experimenter, err error) {
+func NewExperimenter(ctx context.Context, pollEvery time.Duration, esf func(context.Context) internal.ExperimentSource, rep Reporter) (_ *Experimenter, err error) {
 	defer derrors.Wrap(&err, "middleware.NewExperimenter")
 	e := &Experimenter{
 		getExperimentSource: esf,
+		reporter:            rep,
 		pollEvery:           pollEvery,
 	}
 	if err := e.loadNextSnapshot(ctx); err != nil {
@@ -86,6 +94,11 @@ func (e *Experimenter) pollUpdates(ctx context.Context) {
 			ctx2, cancel := context.WithTimeout(ctx, e.pollEvery)
 			if err := e.loadNextSnapshot(ctx2); err != nil {
 				log.Error(ctx, err)
+				if e.reporter != nil {
+					e.reporter.Report(errorreporting.Entry{
+						Error: fmt.Errorf("loading experiments: %v", err),
+					})
+				}
 			}
 			cancel()
 		}
