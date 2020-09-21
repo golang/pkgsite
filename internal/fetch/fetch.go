@@ -205,6 +205,21 @@ func processZipFile(ctx context.Context, modulePath string, resolvedVersion stri
 		readmeContents = r.Contents
 		break
 	}
+	var legacyPackages []*internal.LegacyPackage
+	for _, p := range packages {
+		legacyPackages = append(legacyPackages, &internal.LegacyPackage{
+			Path:              p.path,
+			Name:              p.name,
+			Synopsis:          p.synopsis,
+			Imports:           p.imports,
+			DocumentationHTML: p.documentationHTML,
+			GOOS:              p.goos,
+			GOARCH:            p.goarch,
+			V1Path:            p.v1path,
+			IsRedistributable: p.isRedistributable,
+			Licenses:          p.licenseMeta,
+		})
+	}
 	return &internal.Module{
 		LegacyModuleInfo: internal.LegacyModuleInfo{
 			ModuleInfo: internal.ModuleInfo{
@@ -218,7 +233,7 @@ func processZipFile(ctx context.Context, modulePath string, resolvedVersion stri
 			LegacyReadmeFilePath: readmeFilePath,
 			LegacyReadmeContents: readmeContents,
 		},
-		LegacyPackages: packages,
+		LegacyPackages: legacyPackages,
 		Licenses:       allLicenses,
 		Units:          moduleUnits(modulePath, resolvedVersion, packages, readmes, d),
 	}, packageVersionStates, nil

@@ -15,12 +15,12 @@ import (
 // moduleUnits returns all of the units in a given module, along
 // with the contents for those units.
 func moduleUnits(modulePath, version string,
-	pkgs []*internal.LegacyPackage,
+	pkgs []*goPackage,
 	readmes []*internal.Readme,
 	d *licenses.Detector) []*internal.Unit {
-	pkgLookup := map[string]*internal.LegacyPackage{}
+	pkgLookup := map[string]*goPackage{}
 	for _, pkg := range pkgs {
-		pkgLookup[pkg.Path] = pkg
+		pkgLookup[pkg.path] = pkg
 	}
 	dirPaths := unitPaths(modulePath, pkgs)
 
@@ -59,13 +59,13 @@ func moduleUnits(modulePath, version string,
 			dir.Readme = r
 		}
 		if pkg, ok := pkgLookup[dirPath]; ok {
-			dir.Name = pkg.Name
-			dir.Imports = pkg.Imports
+			dir.Name = pkg.name
+			dir.Imports = pkg.imports
 			dir.Documentation = &internal.Documentation{
-				GOOS:     pkg.GOOS,
-				GOARCH:   pkg.GOARCH,
-				Synopsis: pkg.Synopsis,
-				HTML:     pkg.DocumentationHTML,
+				GOOS:     pkg.goos,
+				GOARCH:   pkg.goarch,
+				Synopsis: pkg.synopsis,
+				HTML:     pkg.documentationHTML,
 			}
 		}
 		units = append(units, dir)
@@ -74,7 +74,7 @@ func moduleUnits(modulePath, version string,
 }
 
 // unitPaths returns the paths for all the units in a module.
-func unitPaths(modulePath string, packages []*internal.LegacyPackage) []string {
+func unitPaths(modulePath string, packages []*goPackage) []string {
 	shouldContinue := func(p string) bool {
 		if modulePath == stdlib.ModulePath {
 			return p != "."
@@ -84,7 +84,7 @@ func unitPaths(modulePath string, packages []*internal.LegacyPackage) []string {
 
 	pathSet := map[string]bool{modulePath: true}
 	for _, p := range packages {
-		for p := p.Path; shouldContinue(p); p = path.Dir(p) {
+		for p := p.path; shouldContinue(p); p = path.Dir(p) {
 			pathSet[p] = true
 		}
 	}

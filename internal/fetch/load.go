@@ -64,7 +64,7 @@ var goEnvs = []struct{ GOOS, GOARCH string }{
 //
 // If the package is fine except that its documentation is too large, loadPackage
 // returns both a package and a non-nil error with dochtml.ErrTooLarge in its chain.
-func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, sourceInfo *source.Info, modInfo *dochtml.ModuleInfo) (*internal.LegacyPackage, error) {
+func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, sourceInfo *source.Info, modInfo *dochtml.ModuleInfo) (*goPackage, error) {
 	ctx, span := trace.StartSpan(ctx, "fetch.loadPackage")
 	defer span.End()
 	for _, env := range goEnvs {
@@ -93,13 +93,13 @@ const docTooLargeReplacement = `<p>Documentation is too large to display.</p>`
 // zipGoFiles must contain only .go files that have been verified
 // to be of reasonable size.
 //
-// The returned LegacyPackage.Licenses field is not populated.
+// The returned Package.Licenses field is not populated.
 //
-// It returns a nil LegacyPackage if the directory doesn't contain a Go package
+// It returns a nil Package if the directory doesn't contain a Go package
 // or all .go files have been excluded by constraints.
 // A *BadPackageError error is returned if the directory
 // contains .go files but do not make up a valid package.
-func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGoFiles []*zip.File, innerPath string, sourceInfo *source.Info, modInfo *dochtml.ModuleInfo) (_ *internal.LegacyPackage, err error) {
+func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGoFiles []*zip.File, innerPath string, sourceInfo *source.Info, modInfo *dochtml.ModuleInfo) (_ *goPackage, err error) {
 	modulePath := modInfo.ModulePath
 	defer derrors.Wrap(&err, "loadPackageWithBuildContext(%q, %q, zipGoFiles, %q, %q, %+v)",
 		goos, goarch, innerPath, modulePath, sourceInfo)
@@ -217,15 +217,15 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 		importPath = innerPath
 	}
 	v1path := internal.V1Path(importPath, modulePath)
-	return &internal.LegacyPackage{
-		Path:              importPath,
-		Name:              packageName,
-		Synopsis:          doc.Synopsis(d.Doc),
-		V1Path:            v1path,
-		Imports:           d.Imports,
-		DocumentationHTML: docHTML,
-		GOOS:              goos,
-		GOARCH:            goarch,
+	return &goPackage{
+		path:              importPath,
+		name:              packageName,
+		synopsis:          doc.Synopsis(d.Doc),
+		v1path:            v1path,
+		imports:           d.Imports,
+		documentationHTML: docHTML,
+		goos:              goos,
+		goarch:            goarch,
 	}, err
 }
 

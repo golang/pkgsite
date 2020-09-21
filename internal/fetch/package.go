@@ -15,6 +15,7 @@ import (
 	"runtime/debug"
 	"strings"
 
+	"github.com/google/safehtml"
 	"go.opencensus.io/trace"
 	"golang.org/x/mod/module"
 	"golang.org/x/pkgsite/internal"
@@ -25,6 +26,26 @@ import (
 	"golang.org/x/pkgsite/internal/source"
 )
 
+// A goPackage is a group of one or more Go source files with the same
+// package header. Packages are part of a module.
+type goPackage struct {
+	path              string
+	name              string
+	synopsis          string
+	imports           []string
+	documentationHTML safehtml.HTML
+	isRedistributable bool
+	licenseMeta       []*licenses.Metadata // metadata of applicable licenses
+	// goos and goarch are environment variables used to parse the
+	// package.
+	goos   string
+	goarch string
+
+	// v1path is the package path of a package with major version 1 in a given
+	// series.
+	v1path string
+}
+
 // extractPackagesFromZip returns a slice of packages from the module zip r.
 // It matches against the given licenses to determine the subset of licenses
 // that applies to each package.
@@ -34,7 +55,7 @@ import (
 // * a maximum file size (MaxFileSize)
 // * the particular set of build contexts we consider (goEnvs)
 // * whether the import path is valid.
-func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion string, r *zip.Reader, d *licenses.Detector, sourceInfo *source.Info) (_ []*internal.LegacyPackage, _ []*internal.PackageVersionState, err error) {
+func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion string, r *zip.Reader, d *licenses.Detector, sourceInfo *source.Info) (_ []*goPackage, _ []*internal.PackageVersionState, err error) {
 	ctx, span := trace.StartSpan(ctx, "fetch.extractPackagesFromZip")
 	defer span.End()
 	defer func() {
@@ -159,7 +180,7 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion str
 	// If we got this far, the file metadata was okay.
 	// Start reading the file contents now to extract information
 	// about Go packages.
-	var pkgs []*internal.LegacyPackage
+	var pkgs []*goPackage
 	for innerPath, goFiles := range dirs {
 		if incompleteDirs[innerPath] {
 			// Something went wrong when processing this directory, so we skip.
@@ -195,13 +216,13 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion str
 		} else {
 			if d != nil { //  should only be nil for tests
 				isRedist, lics := d.PackageInfo(innerPath)
-				pkg.IsRedistributable = isRedist
+				pkg.isRedistributable = isRedist
 				for _, l := range lics {
-					pkg.Licenses = append(pkg.Licenses, l.Metadata)
+					pkg.licenseMeta = append(pkg.licenseMeta, l.Metadata)
 				}
 			}
 			pkgs = append(pkgs, pkg)
-			pkgPath = pkg.Path
+			pkgPath = pkg.path
 		}
 		code := http.StatusOK
 		if status != nil {
@@ -227,7 +248,7 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion str
 // The logic of the go tool for ignoring directories is documented at
 // https://golang.org/cmd/go/#hdr-Package_lists_and_patterns:
 //
-// 	LegacyDirectory and file names that begin with "." or "_" are ignored
+// 	Directory and file names that begin with "." or "_" are ignored
 // 	by the go tool, as are directories named "testdata".
 //
 func ignoredByGoTool(importPath string) bool {

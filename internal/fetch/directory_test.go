@@ -5,6 +5,7 @@
 package fetch
 
 import (
+	"path"
 	"sort"
 	"testing"
 
@@ -57,9 +58,9 @@ func TestDirectoryPaths(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			var packages []*internal.LegacyPackage
+			var packages []*goPackage
 			for _, suffix := range test.packageSuffixes {
-				packages = append(packages, sample.LegacyPackage(test.modulePath, suffix))
+				packages = append(packages, samplePackage(test.modulePath, suffix))
 			}
 			got := unitPaths(test.modulePath, packages)
 			sort.Strings(got)
@@ -69,4 +70,34 @@ func TestDirectoryPaths(t *testing.T) {
 			}
 		})
 	}
+}
+
+// samplePackage constructs a package with the given module path and suffix.
+//
+// If modulePath is the standard library, the package path is the
+// suffix, which must not be empty. Otherwise, the package path
+// is the concatenation of modulePath and suffix.
+//
+// The package name is last component of the package path.
+func samplePackage(modulePath, suffix string) *goPackage {
+	p := constructFullPath(modulePath, suffix)
+	return &goPackage{
+		name:              path.Base(p),
+		path:              p,
+		v1path:            internal.V1Path(p, modulePath),
+		synopsis:          sample.Synopsis,
+		isRedistributable: true,
+		licenseMeta:       sample.LicenseMetadata,
+		documentationHTML: sample.DocumentationHTML,
+		imports:           sample.Imports,
+		goos:              sample.GOOS,
+		goarch:            sample.GOARCH,
+	}
+}
+
+func constructFullPath(modulePath, suffix string) string {
+	if modulePath != stdlib.ModulePath {
+		return path.Join(modulePath, suffix)
+	}
+	return suffix
 }
