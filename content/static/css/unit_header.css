@@ -14,7 +14,12 @@
   .UnitHeader {
     margin-left: -1rem;
     padding-left: 1rem;
+    width: 100vw;
   }
+}
+.UnitHeader-container {
+  margin: auto;
+  max-width: 93.5rem;
 }
 .UnitHeader-breadcrumb {
   margin-top: 1.1rem;

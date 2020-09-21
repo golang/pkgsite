@@ -6,63 +6,65 @@
 
 {{define "unit_header"}}
   <header class="UnitHeader">
-    <div class="UnitHeader-breadcrumb">
-      {{with .Breadcrumb}}
-        {{range .Links}}
-          <span class="UnitHeader-breadcrumbItem">
-            <a href="{{.Href}}">{{.Body}}</a>
+    <div class="UnitHeader-container">
+      <div class="UnitHeader-breadcrumb">
+        {{with .Breadcrumb}}
+          {{range .Links}}
+            <span class="UnitHeader-breadcrumbItem">
+              <a href="{{.Href}}">{{.Body}}</a>
+            </span>
+          {{end}}
+          <span class="UnitHeader-breadcrumbItem">{{.Current}}</span>
+        {{end}}
+      </div>
+      <h1 class="UnitHeader-title">{{.Title}}</h1>
+      <div class="UnitHeader-versionBanner $$GODISCOVERY_LATESTMAJORCLASS$$">
+        <img height="19px" width="16px" class="UnitHeader-detailIcon" src="/static/img/pkg-icon-info_19x16.svg">
+        <span>
+          The latest major version is <a href="/$$GODISCOVERY_LATESTMAJORVERSIONURL$$">$$GODISCOVERY_LATESTMAJORVERSION$$</a>.
+        </span>
+      </div>
+      <div class="js-fixedHeaderSentinel"></div>
+      <div class="UnitHeader-detail">
+        <span class="UnitHeader-detailItem">
+          <img class="UnitHeader-detailItemLarge" height="16px" width="16px" src="/static/img/pkg-icon-arrowBranch_16x16.svg">
+          <a href="?tab=versions">Version {{.DisplayVersion}}</a>
+          <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
+          <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
+              data-version="{{.LinkVersion}}" data-mpath="{{.Unit.ModulePath}}" data-ppath="{{.Unit.Path}}" data-pagetype="{{.PageType}}">
+            <span>Latest</span>
+            <a href="{{.LatestURL}}">Go to latest</a>
+          </div>
+        </span>
+        <span class="UnitHeader-detailItem">
+          <img height="16px" width="16px" src="/static/img/pkg-icon-circularArrows_16x16.svg">
+          {{.LastCommitTime}}
+        </span>
+        <span class="UnitHeader-detailItem">
+          <img height="16px" width="16px" src="/static/img/pkg-icon-scale_16x16.svg">
+          {{range $i, $e := .Licenses}}
+            {{if $i}}, {{end}}
+            <a href="{{$.CanonicalURLPath}}?tab=licenses#{{.Anchor}}">{{$e.Type}}</a>
+          {{else}}
+            <span>None detected</span>
+            <a href="/license-policy" class="Disclaimer-link"><em>not legal advice</em></a>
+          {{end}}
+        </span>
+        {{if .Unit.IsPackage}}
+          <span class="UnitHeader-detailItem">
+            <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg">
+            <a href="{{$.CanonicalURLPath}}?tab=imports">
+              {{len .Unit.Imports}} <span>Imports</span>
+            </a>
+          </span>
+          <span class="UnitHeader-detailItem">
+            <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg">
+            <a href="{{$.CanonicalURLPath}}?tab=importedby">
+              {{len .Unit.Imports}} <span>Imported by</span>
+            </a>
           </span>
         {{end}}
-        <span class="UnitHeader-breadcrumbItem">{{.Current}}</span>
-      {{end}}
-    </div>
-    <h1 class="UnitHeader-title">{{.Title}}</h1>
-    <div class="UnitHeader-versionBanner $$GODISCOVERY_LATESTMAJORCLASS$$">
-      <img height="19px" width="16px" class="UnitHeader-detailIcon" src="/static/img/pkg-icon-info_19x16.svg">
-      <span>
-        The latest major version is <a href="/$$GODISCOVERY_LATESTMAJORVERSIONURL$$">$$GODISCOVERY_LATESTMAJORVERSION$$</a>.
-      </span>
-    </div>
-    <div class="js-fixedHeaderSentinel"></div>
-    <div class="UnitHeader-detail">
-      <span class="UnitHeader-detailItem">
-        <img class="UnitHeader-detailItemLarge" height="16px" width="16px" src="/static/img/pkg-icon-arrowBranch_16x16.svg">
-        <a href="?tab=versions">Version {{.DisplayVersion}}</a>
-        <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
-        <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
-            data-version="{{.LinkVersion}}" data-mpath="{{.Unit.ModulePath}}" data-ppath="{{.Unit.Path}}" data-pagetype="{{.PageType}}">
-          <span>Latest</span>
-          <a href="{{.LatestURL}}">Go to latest</a>
-        </div>
-      </span>
-      <span class="UnitHeader-detailItem">
-        <img height="16px" width="16px" src="/static/img/pkg-icon-circularArrows_16x16.svg">
-        {{.LastCommitTime}}
-      </span>
-      <span class="UnitHeader-detailItem">
-        <img height="16px" width="16px" src="/static/img/pkg-icon-scale_16x16.svg">
-        {{range $i, $e := .Licenses}}
-          {{if $i}}, {{end}}
-          <a href="{{$.CanonicalURLPath}}?tab=licenses#{{.Anchor}}">{{$e.Type}}</a>
-        {{else}}
-          <span>None detected</span>
-          <a href="/license-policy" class="Disclaimer-link"><em>not legal advice</em></a>
-        {{end}}
-      </span>
-      {{if .Unit.IsPackage}}
-        <span class="UnitHeader-detailItem">
-          <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg">
-          <a href="{{$.CanonicalURLPath}}?tab=imports">
-            {{len .Unit.Imports}} <span>Imports</span>
-          </a>
-        </span>
-        <span class="UnitHeader-detailItem">
-          <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg">
-          <a href="{{$.CanonicalURLPath}}?tab=importedby">
-            {{len .Unit.Imports}} <span>Imported by</span>
-          </a>
-        </span>
-      {{end}}
+      </div>
     </div>
   </header>
 {{end}}

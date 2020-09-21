@@ -6,6 +6,7 @@
 
 .UnitMeta {
   display: block;
+  overflow-wrap: break-word;
   position: sticky;
   top: 5rem;
 }
