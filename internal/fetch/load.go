@@ -64,7 +64,8 @@ var goEnvs = []struct{ GOOS, GOARCH string }{
 //
 // If the package is fine except that its documentation is too large, loadPackage
 // returns both a package and a non-nil error with dochtml.ErrTooLarge in its chain.
-func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, sourceInfo *source.Info, modInfo *dochtml.ModuleInfo) (*goPackage, error) {
+func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, sourceInfo *source.Info, modInfo *dochtml.ModuleInfo) (_ *goPackage, err error) {
+	defer derrors.Wrap(&err, "loadPackage(ctx, zipGoFiles, %q, sourceInfo, modInfo)", innerPath)
 	ctx, span := trace.StartSpan(ctx, "fetch.loadPackage")
 	defer span.End()
 	for _, env := range goEnvs {

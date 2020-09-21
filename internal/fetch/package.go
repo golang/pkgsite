@@ -56,6 +56,7 @@ type goPackage struct {
 // * the particular set of build contexts we consider (goEnvs)
 // * whether the import path is valid.
 func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion string, r *zip.Reader, d *licenses.Detector, sourceInfo *source.Info) (_ []*goPackage, _ []*internal.PackageVersionState, err error) {
+	defer derrors.Wrap(&err, "extractPackagesFromZip(ctx, %q, %q, r, d)", modulePath, resolvedVersion)
 	ctx, span := trace.StartSpan(ctx, "fetch.extractPackagesFromZip")
 	defer span.End()
 	defer func() {

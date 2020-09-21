@@ -12,11 +12,13 @@ import (
 	"strings"
 
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
 )
 
 // extractReadmesFromZip returns the file path and contents of all files from r
 // that are README files.
-func extractReadmesFromZip(modulePath, resolvedVersion string, r *zip.Reader) ([]*internal.Readme, error) {
+func extractReadmesFromZip(modulePath, resolvedVersion string, r *zip.Reader) (_ []*internal.Readme, err error) {
+	defer derrors.Wrap(&err, "extractReadmesFromZip(ctx, %q, %q, r)", modulePath, resolvedVersion)
 	var readmes []*internal.Readme
 	for _, zipFile := range r.File {
 		if isReadme(zipFile.Name) {
