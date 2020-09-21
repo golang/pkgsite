@@ -105,7 +105,7 @@ func main() {
 	reportingClient := cmdconfig.ReportingClient(ctx, cfg)
 	redisHAClient := getHARedis(ctx, cfg)
 	redisCacheClient := getCacheRedis(ctx, cfg)
-	experimenter := cmdconfig.Experimenter(ctx, db.GetExperiments, reportingClient)
+	experimenter := cmdconfig.Experimenter(ctx, cfg, db.GetExperiments, reportingClient)
 	server, err := worker.NewServer(cfg, worker.ServerConfig{
 		DB:                   db,
 		IndexClient:          indexClient,

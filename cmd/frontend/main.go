@@ -175,7 +175,7 @@ func main() {
 		log.Fatal(ctx, err)
 	}
 	rc := cmdconfig.ReportingClient(ctx, cfg)
-	experimenter := cmdconfig.Experimenter(ctx, expg, rc)
+	experimenter := cmdconfig.Experimenter(ctx, cfg, expg, rc)
 	ermw := middleware.Identity()
 	if rc != nil {
 		ermw = middleware.ErrorReporting(rc.Report)

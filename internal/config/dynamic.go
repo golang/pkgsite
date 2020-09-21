@@ -7,6 +7,7 @@ package config
 import (
 	"context"
 	"io/ioutil"
+	"log"
 
 	"cloud.google.com/go/storage"
 	"github.com/ghodss/yaml"
@@ -40,6 +41,7 @@ func (c *Config) ReadDynamic(ctx context.Context) (*DynamicConfig, error) {
 func ReadDynamic(ctx context.Context, bucket, object string) (_ *DynamicConfig, err error) {
 	defer derrors.Wrap(&err, "ReadDynamic(%q, %q)", bucket, object)
 
+	log.Printf("reading experiments from gs://%s/%s", bucket, object)
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		return nil, err

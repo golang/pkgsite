@@ -7,9 +7,11 @@ package cmdconfig
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"cloud.google.com/go/errorreporting"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
@@ -45,7 +47,26 @@ func ReportingClient(ctx context.Context, cfg *config.Config) *errorreporting.Cl
 }
 
 // Experimenter configures a middleware.Experimenter.
-func Experimenter(ctx context.Context, getter middleware.ExperimentGetter, reportingClient *errorreporting.Client) *middleware.Experimenter {
+func Experimenter(ctx context.Context, cfg *config.Config, getter middleware.ExperimentGetter, reportingClient *errorreporting.Client) *middleware.Experimenter {
+	if os.Getenv("GO_DISCOVERY_EXPERIMENTS_FROM_CONFIG") == "true" {
+		// Ignore getter, use dynamic config.
+		log.Infof(ctx, "using dynamic config for experiments")
+		getter = func(ctx context.Context) ([]*internal.Experiment, error) {
+			var exps []*internal.Experiment
+			dc, err := cfg.ReadDynamic(ctx)
+			if err != nil {
+				return nil, err
+			}
+			for _, cexp := range dc.Experiments {
+				exps = append(exps, &internal.Experiment{
+					Name:        cexp.Name,
+					Description: cexp.Description,
+					Rollout:     cexp.Rollout,
+				})
+			}
+			return exps, nil
+		}
+	}
 	e, err := middleware.NewExperimenter(ctx, 1*time.Minute, getter, reportingClient)
 	if err != nil {
 		log.Fatal(ctx, err)
