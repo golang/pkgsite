@@ -13,6 +13,7 @@ import (
 	"cloud.google.com/go/errorreporting"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/config/dynconfig"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
 )
@@ -52,19 +53,11 @@ func Experimenter(ctx context.Context, cfg *config.Config, getter middleware.Exp
 		// Ignore getter, use dynamic config.
 		log.Infof(ctx, "using dynamic config for experiments")
 		getter = func(ctx context.Context) ([]*internal.Experiment, error) {
-			var exps []*internal.Experiment
-			dc, err := cfg.ReadDynamic(ctx)
+			dc, err := dynconfig.Read(ctx, cfg.Bucket, cfg.DynamicObject)
 			if err != nil {
 				return nil, err
 			}
-			for _, cexp := range dc.Experiments {
-				exps = append(exps, &internal.Experiment{
-					Name:        cexp.Name,
-					Description: cexp.Description,
-					Rollout:     cexp.Rollout,
-				})
-			}
-			return exps, nil
+			return dc.Experiments, nil
 		}
 	}
 	e, err := middleware.NewExperimenter(ctx, 1*time.Minute, getter, reportingClient)

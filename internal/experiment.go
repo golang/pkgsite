@@ -24,6 +24,10 @@ var Experiments = map[string]string{
 // Experiment holds data associated with an experimental feature for frontend
 // or worker.
 type Experiment struct {
+	// This struct is used to decode dynamic config (see
+	// internal/config/dynconfig). Make sure that changes to this struct are
+	// coordinated with the deployment of config files.
+
 	// Name is the name of the feature.
 	Name string
 

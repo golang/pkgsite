@@ -48,6 +48,7 @@ func NewExperimenter(ctx context.Context, pollEvery time.Duration, getter Experi
 		reporter:       rep,
 		pollEvery:      pollEvery,
 	}
+	// If we can't load the initial state, then fail.
 	if err := e.loadNextSnapshot(ctx); err != nil {
 		return nil, err
 	}
@@ -109,6 +110,8 @@ func (e *Experimenter) pollUpdates(ctx context.Context) {
 		case <-ticker.C:
 			ctx2, cancel := context.WithTimeout(ctx, e.pollEvery)
 			if err := e.loadNextSnapshot(ctx2); err != nil {
+				// We already have a snapshot to fall back on, so log and report
+				// the error, but don't fail.
 				log.Error(ctx, err)
 				if e.reporter != nil {
 					e.reporter.Report(errorreporting.Entry{

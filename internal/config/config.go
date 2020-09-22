@@ -169,8 +169,10 @@ type Config struct {
 	// In case of invalid/empty value, all logs will be printed.
 	LogLevel string
 
-	// GCS bucket and object for dynamic config.
-	bucket, dynamicObject string
+	// GCS Bucket for overrides and dynamic config.
+	Bucket string
+	// GCS object name for dynamic config.
+	DynamicObject string
 }
 
 // AppVersionLabel returns the version label for the current instance.  This is
@@ -398,23 +400,17 @@ func Init(ctx context.Context) (_ *Config, err error) {
 			SuccsToGreen:     GetEnvInt("GO_DISCOVERY_TEEPROXY_SUCCS_TO_GREEN", 20),
 		},
 		LogLevel:      os.Getenv("GO_DISCOVERY_LOG_LEVEL"),
-		bucket:        os.Getenv("GO_DISCOVERY_CONFIG_BUCKET"),
-		dynamicObject: os.Getenv("GO_DISCOVERY_CONFIG_DYNAMIC"),
+		Bucket:        os.Getenv("GO_DISCOVERY_CONFIG_BUCKET"),
+		DynamicObject: os.Getenv("GO_DISCOVERY_CONFIG_DYNAMIC"),
 	}
 
 	// Check that the dynamic config is readable, but don't do anything with it.
-	if cfg.bucket == "" {
+	if cfg.Bucket == "" {
 		return nil, errors.New("GO_DISCOVERY_CONFIG_BUCKET must be set")
 	}
-	if cfg.dynamicObject == "" {
+	if cfg.DynamicObject == "" {
 		return nil, errors.New("GO_DISCOVERY_CONFIG_DYNAMIC must be set")
 	}
-	if _, err := cfg.ReadDynamic(ctx); err != nil {
-		// This should be an error, but initially, to test permissions in the prod environment,
-		// just log it.
-		log.Printf("ERROR: %v", err)
-	}
-
 	if cfg.OnGCP() {
 		// Zone is not available in the environment but can be queried via the metadata API.
 		zone, err := gceMetadata(ctx, "instance/zone")
@@ -479,11 +475,11 @@ func Init(ctx context.Context) (_ *Config, err error) {
 	// to re-deploy. (Otherwise, do not use it.)
 	overrideObj := os.Getenv("GO_DISCOVERY_CONFIG_OVERRIDE")
 	if overrideObj != "" {
-		overrideBytes, err := readOverrideFile(ctx, cfg.bucket, overrideObj)
+		overrideBytes, err := readOverrideFile(ctx, cfg.Bucket, overrideObj)
 		if err != nil {
 			log.Print(err)
 		} else {
-			log.Printf("processing overrides from gs://%s/%s", cfg.bucket, overrideObj)
+			log.Printf("processing overrides from gs://%s/%s", cfg.Bucket, overrideObj)
 			processOverrides(cfg, overrideBytes)
 		}
 	}

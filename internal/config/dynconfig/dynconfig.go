@@ -2,16 +2,20 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package config
+// Package dynconfig supports dynamic configuration for pkgsite services.
+// Dynamic configuration is read from a file and can change over the lifetime of
+// the process.
+package dynconfig
 
 import (
 	"context"
 	"io/ioutil"
-	"log"
 
 	"cloud.google.com/go/storage"
 	"github.com/ghodss/yaml"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/log"
 )
 
 // DynamicConfig holds configuration that can change over the lifetime of the
@@ -20,28 +24,14 @@ type DynamicConfig struct {
 	// Fields can be added at any time, but removing or changing a field
 	// requires careful coordination with the config file contents.
 
-	Experiments []Experiment
+	Experiments []*internal.Experiment
 }
 
-// An experiment, as dynamically configured.
-// Intended to match internal.Experiment, but we can't use
-// that directly due to an import cycle.
-type Experiment struct {
-	Name        string
-	Rollout     uint
-	Description string
-}
+// Read reads dynamic configuration from the given GCS bucket and object.
+func Read(ctx context.Context, bucket, object string) (_ *DynamicConfig, err error) {
+	defer derrors.Wrap(&err, "dynconfig.Read(%q, %q)", bucket, object)
 
-// ReadDynamic reads the dynamic configuration.
-func (c *Config) ReadDynamic(ctx context.Context) (*DynamicConfig, error) {
-	return ReadDynamic(ctx, c.bucket, c.dynamicObject)
-}
-
-// ReadDynamic reads dynamic configuration from the given GCS bucket and object.
-func ReadDynamic(ctx context.Context, bucket, object string) (_ *DynamicConfig, err error) {
-	defer derrors.Wrap(&err, "ReadDynamic(%q, %q)", bucket, object)
-
-	log.Printf("reading experiments from gs://%s/%s", bucket, object)
+	log.Infof(ctx, "reading dynamic config from gs://%s/%s", bucket, object)
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		return nil, err
@@ -56,12 +46,12 @@ func ReadDynamic(ctx context.Context, bucket, object string) (_ *DynamicConfig, 
 	if err != nil {
 		return nil, err
 	}
-	return ParseDynamic(data)
+	return Parse(data)
 }
 
-// ParseDynamic parses yamlData as a YAML description of DynamicConfig.
-func ParseDynamic(yamlData []byte) (_ *DynamicConfig, err error) {
-	defer derrors.Wrap(&err, "ParseDynamic(data)")
+// Parse parses yamlData as a YAML description of DynamicConfig.
+func Parse(yamlData []byte) (_ *DynamicConfig, err error) {
+	defer derrors.Wrap(&err, "dynconfig.Parse(data)")
 
 	var dc DynamicConfig
 	if err := yaml.Unmarshal(yamlData, &dc); err != nil {
