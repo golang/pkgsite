@@ -66,11 +66,11 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 	runtime.ReadMemStats(&gms)
 	sms, err := getSystemMemStats()
 	if err != nil {
-		return err
+		log.Errorf(ctx, "could not get system stats: %v", err)
 	}
 	pms, err := getProcessMemStats()
 	if err != nil {
-		return err
+		log.Errorf(ctx, "could not get process stats: %v", err)
 	}
 
 	page := struct {
