@@ -62,7 +62,11 @@ class FixedHeaderController {
    */
   intersectionObserverCallback(entries, observer) {
     entries.forEach(entry => {
-      this._fixedEl.setAttribute('aria-hidden', entry.isIntersecting);
+      if (entry.isIntersecting) {
+        this._fixedEl.classList.remove('UnitFixedHeader--visible');
+      } else {
+        this._fixedEl.classList.add('UnitFixedHeader--visible');
+      }
     });
   }
 }

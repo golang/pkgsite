@@ -7,7 +7,7 @@
 {{define "unit_fixed_header"}}
   <div class="UnitFixedHeader js-fixedHeader" aria-hidden="true">
     <div class="UnitFixedHeader-container">
-      <a href="https://go.dev/" class="UnitFixedHeader-logoLink">
+      <a href="https://go.dev/" class="UnitFixedHeader-logoLink" tabindex="-1">
         <img class="UnitFixedHeader-logo" src="/static/img/go-logo-blue.svg" alt="Go">
       </a>
       <div class="UnitFixedHeader-moduleInfo">
@@ -34,8 +34,8 @@
           {{if .CopyData}}
             <button class="CopyToClipboardButton js-copyToClipboard"
                 title="Copy path to clipboard"
-                aria-label="Copy path to clipboard"
-                data-to-copy="{{.CopyData}}">
+                data-to-copy="{{.CopyData}}"
+                tabindex="-1">
               <img class="CopyToClipboardButton-image" src="/static/img/copy-click.svg" alt="">
             </button>
           {{end}}
@@ -45,18 +45,9 @@
       <div class="UnitFixedHeader-overflowingTabList js-overflowingTabList">
         <div role="tablist">
           {{range .Tabs}}
-            <a role="tab"
-              {{if .Disabled}}
-                aria-disabled="true"
-              {{else}}
-                href="{{$.CanonicalURLPath}}?tab={{.Name}}"
-              {{end}}
-              {{if eq .Name $.SelectedTab.Name}}
-                aria-selected="true"
-              {{else}}
-                aria-selected="false"
-              {{end}}
-            >{{.DisplayName}}</a>
+            <a role="tab" tabindex="-1" href="{{$.CanonicalURLPath}}?tab={{.Name}}">
+              {{.DisplayName}}
+            </a>
           {{end}}
         </div>
         <div class="UnitFixedHeader-overflowContainer">
@@ -64,7 +55,7 @@
             <path d="M0 0h24v24H0z" fill="none"/>
             <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
           </svg>
-          <select class="UnitFixedHeader-overflowSelect" aria-label="More">
+          <select class="UnitFixedHeader-overflowSelect" tabindex="-1">
             {{range .Tabs}}
               <option
                 value="{{$.CanonicalURLPath}}?tab={{.Name}}"

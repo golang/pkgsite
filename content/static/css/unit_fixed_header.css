@@ -11,15 +11,13 @@
   position: fixed;
   top: 0;
   left: 0;
+  transform: translateY(calc(var(--header-height) * -1));
   transition: transform 100ms linear;
   width: 100%;
   z-index: 1000;
 }
-.UnitFixedHeader[aria-hidden='true'] {
-  transform: translateY(calc(var(--header-height) * -1));
-}
-.UnitFixedHeader [aria-hidden='true'] {
-  display: none;
+.UnitFixedHeader--visible {
+  transform: unset;
 }
 .UnitFixedHeader-container {
   align-items: center;
