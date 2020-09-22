@@ -19,6 +19,11 @@ const tmplSidenav = `
 					<a href="#pkg-overview" role="treeitem" aria-level="1" tabindex="0">Overview</a>
 				</li>
 			{{end}}
+			{{- if or .Consts .Vars .Funcs .Types .Examples.List -}}
+				<li class="DocNav-index" role="none">
+					<a href="#pkg-index" role="treeitem" aria-level="1" tabindex="0">Index</a>
+				</li>
+			{{end}}
 			{{if .Examples.List}}
 				<li class="DocNav-examples" role="none">
 					<a href="#pkg-examples" role="treeitem" aria-level="1" tabindex="-1">Examples</a>

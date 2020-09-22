@@ -16,7 +16,8 @@
 }
 .Documentation-nav,
 .Documentation-index,
-.DocNav {
+.DocNav,
+.DocNav-index {
   display: none;
 }
 .DocNavMobile {

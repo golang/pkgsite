@@ -4,6 +4,11 @@
  * license that can be found in the LICENSE file.
  */
 
+.Documentation-index,
+.DocNav,
+.DocNav-index {
+  display: block;
+}
 .DocNav {
   max-height: calc(100vh - var(--header-height));
   overflow-x: unset;
@@ -38,5 +43,5 @@ a.UnitOutline-accordian {
   padding: 0 18px;
   background-color: white;
   display: block;
-  overflow: scroll;
+  overflow-y: auto;
 }
