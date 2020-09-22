@@ -11,7 +11,7 @@
 {{define "main_content"}}
   <div class="Container">
     {{block "unit_header" .}}{{end}}
-    {{block "details_fixed_nav" .}}{{end}}
+    {{block "unit_fixed_header" .}}{{end}}
     {{block "unit_content" .}}{{end}}
   </div>
 {{end}}
@@ -19,7 +19,7 @@
 {{define "post_content"}}
   <div class="js-canonicalURLPath" data-canonical-url-path="{{.CanonicalURLPath}}" hidden />
   <script>
-    loadScript('/static/js/details.min.js', {async: true, defer: true});
+    loadScript('/static/js/unit_fixed_header.js', {type: 'module', async: true, defer: true})
   </script>
   {{block "unit_post_content" .}}{{end}}
 {{end}}

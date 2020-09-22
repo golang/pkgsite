@@ -4,16 +4,16 @@
   license that can be found in the LICENSE file.
 -->
 
-{{define "details_fixed_nav"}}
-  <div class="DetailsNavFixed js-fixedHeader" aria-hidden="true">
-    <div class="DetailsNavFixed-container">
-      <a href="https://go.dev/" class="DetailsNavFixed-logoLink">
-        <img class="DetailsNavFixed-logo" src="/static/img/go-logo-blue.svg" alt="Go">
+{{define "unit_fixed_header"}}
+  <div class="UnitFixedHeader js-fixedHeader" aria-hidden="true">
+    <div class="UnitFixedHeader-container">
+      <a href="https://go.dev/" class="UnitFixedHeader-logoLink">
+        <img class="UnitFixedHeader-logo" src="/static/img/go-logo-blue.svg" alt="Go">
       </a>
-      <div class="DetailsNavFixed-moduleInfo">
-        <span class="DetailsNavFixed-title">
+      <div class="UnitFixedHeader-moduleInfo">
+        <span class="UnitFixedHeader-title">
           {{if ne .PageType "std"}}
-            <span class="DetailsNavFixed-titleType">
+            <span class="UnitFixedHeader-titleType">
               {{if eq .PageType "mod"}}
                 Module
               {{else if eq .PageType "dir"}}
@@ -24,10 +24,10 @@
                 Command
               {{end}}
             </span>
-            <span class="DetailsNavFixed-titleName">{{.Title}}</span>
+            <span class="UnitFixedHeader-titleName">{{.Title}}</span>
           {{else}}
-            <span class="DetailsNavFixed-titleType">Standard library</span>
-            <span class="DetailsNavFixed-titleType DetailsNavFixed-titleType--small">StdLib</span>
+            <span class="UnitFixedHeader-titleType">Standard library</span>
+            <span class="UnitFixedHeader-titleType UnitFixedHeader-titleType--small">StdLib</span>
           {{end}}
         </span>
         {{with .Breadcrumb}}
@@ -40,9 +40,9 @@
             </button>
           {{end}}
         {{end}}
-        <div class="DetailsNavFixed-version">{{.DisplayVersion}}</div>
+        <div class="UnitFixedHeader-version">{{.DisplayVersion}}</div>
       </div>
-      <div class="DetailsNavFixed-overflowingTabList js-overflowingTabList">
+      <div class="UnitFixedHeader-overflowingTabList js-overflowingTabList">
         <div role="tablist">
           {{range .Tabs}}
             <a role="tab"
@@ -59,12 +59,12 @@
             >{{.DisplayName}}</a>
           {{end}}
         </div>
-        <div class="DetailsNavFixed-overflowContainer">
-          <svg class="DetailsNavFixed-overflowImage" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+        <div class="UnitFixedHeader-overflowContainer">
+          <svg class="UnitFixedHeader-overflowImage" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
             <path d="M0 0h24v24H0z" fill="none"/>
             <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
           </svg>
-          <select class="DetailsNavFixed-overflowSelect" aria-label="More">
+          <select class="UnitFixedHeader-overflowSelect" aria-label="More">
             {{range .Tabs}}
               <option
                 value="{{$.CanonicalURLPath}}?tab={{.Name}}"
