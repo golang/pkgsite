@@ -143,9 +143,15 @@ func main() {
 	if err != nil {
 		log.Fatalf(ctx, "strconv.Atoi(%q): %v", timeout, err)
 	}
+	iap := middleware.Identity()
+	if aud := os.Getenv("GO_DISCOVERY_IAP_AUDIENCE"); aud != "" {
+		iap = middleware.ValidateIAPHeader(aud)
+	}
+
 	mw := middleware.Chain(
 		middleware.RequestLog(cmdconfig.Logger(ctx, cfg, "worker-log")),
 		middleware.Timeout(time.Duration(handlerTimeout)*time.Minute),
+		iap,
 		middleware.Experiment(experimenter),
 	)
 	http.Handle("/", mw(router))
