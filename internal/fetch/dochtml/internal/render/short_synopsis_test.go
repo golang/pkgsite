@@ -35,6 +35,8 @@ func TestShortOneLineNode(t *testing.T) {
 
 		func NArgs(a, b string) (a, b string) { return }
 
+		func (mx *Mux) Issue41486(fn func(r Router)) Router { return }
+
 		type t struct{}`
 
 	want := []struct {
@@ -46,6 +48,7 @@ func TestShortOneLineNode(t *testing.T) {
 		{result: `(s) Method()`},
 		{result: `NewStruct2()`},
 		{result: `NArgs(a, b)`},
+		{result: `(mx) Issue41486(fn)`},
 		{err: true},
 	}
 

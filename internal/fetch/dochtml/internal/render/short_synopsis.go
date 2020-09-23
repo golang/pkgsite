@@ -81,9 +81,5 @@ func shortOneLineField(fset *token.FileSet, field *ast.Field, depth int) (string
 	for _, name := range field.Names {
 		names = append(names, name.Name)
 	}
-	s, err := shortOneLineNodeDepth(fset, field.Type, depth)
-	if err != nil {
-		return "", err
-	}
-	return joinStrings(names) + s, nil
+	return joinStrings(names), nil
 }
