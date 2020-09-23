@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"go.opencensus.io/trace"
 	"golang.org/x/mod/semver"
@@ -50,6 +51,12 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 	tctx, span := trace.StartSpan(ctx, "FetchAndUpdateState")
 	ctx = experiment.NewContext(tctx, experiment.FromContext(ctx).Active()...)
 	ctx = log.NewContextWithLabel(ctx, "fetch", modulePath+"@"+requestedVersion)
+	if !utf8.ValidString(modulePath) {
+		log.Errorf(ctx, "module path %q is not valid UTF-8", modulePath)
+	}
+	if !utf8.ValidString(requestedVersion) {
+		log.Errorf(ctx, "requested version %q is not valid UTF-8", requestedVersion)
+	}
 	span.AddAttributes(
 		trace.StringAttribute("modulePath", modulePath),
 		trace.StringAttribute("version", requestedVersion))

@@ -133,6 +133,7 @@ func exportToStackdriver(ctx context.Context, cfg *config.Config) {
 	}
 	view.RegisterExporter(viewExporter)
 
+	dte := &debugTraceExporter{}
 	// We want traces to be associated with the *app*, not the instance.
 	// TraceSpansBufferMaxBytes is increased from the default of 8MiB, though we
 	// can't increase *too* much because this is still running in GAE, which is
@@ -142,11 +143,13 @@ func exportToStackdriver(ctx context.Context, cfg *config.Config) {
 		MonitoredResource:        (*monitoredResource)(cfg.MonitoredResource),
 		TraceSpansBufferMaxBytes: 32 * 1024 * 1024, // 32 MiB
 		DefaultMonitoringLabels:  stackdriverLabels(cfg),
+		OnError:                  dte.onError,
 	})
 	if err != nil {
 		log.Fatalf(ctx, "error creating trace exporter: %v", err)
 	}
-	trace.RegisterExporter(traceExporter)
+	dte.exp = traceExporter
+	trace.RegisterExporter(dte)
 }
 
 // NewViewExporter creates a StackDriver exporter for stats.
@@ -174,6 +177,9 @@ func NewViewExporter(cfg *config.Config) (_ *stackdriver.Exporter, err error) {
 		ProjectID:               cfg.ProjectID,
 		MonitoredResource:       mr,
 		DefaultMonitoringLabels: stackdriverLabels(cfg),
+		OnError: func(err error) {
+			log.Errorf(context.Background(), "Stackdriver view exporter: %v", err)
+		},
 	})
 }
 

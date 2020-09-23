@@ -21,12 +21,10 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.6.2
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
-	github.com/google/addlicense v0.0.0-20190510175307-22550fa7c1b0 // indirect
 	github.com/google/go-cmp v0.5.2
 	github.com/google/go-replayers/httpreplay v0.1.0
 	github.com/google/licensecheck v0.0.0-20200805042302-c54f297c3b57
 	github.com/google/safehtml v0.0.1
-	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/lib/pq v1.2.0
 	github.com/microcosm-cc/bluemonday v1.0.2
 	github.com/russross/blackfriday/v2 v2.0.1
