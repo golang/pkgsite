@@ -1,0 +1,39 @@
+<!--
+  Copyright 2019 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "importedby"}}
+  <div class="ImportedBy">
+    {{if .ImportedBy}}
+      <p>
+        <b>Known {{pluralize .Total "importer"}}:</b> {{.Total}}{{if not .TotalIsExact}}+{{end}}
+      </p>
+      {{template "sections" .ImportedBy}}
+    {{else}}
+      {{template "empty_content" "No known importers for this package!"}}
+    {{end}}
+  </div>
+{{end}}
+
+{{define "sections"}}
+  <ul class="ImportedBy-list">
+    {{range .}}
+      {{template "section" .}}
+    {{end}}
+  </ul>
+{{end}}
+
+{{define "section"}}
+  {{if .Subs}}
+    <details>
+      <summary>{{.Prefix}} ({{.NumLines}})</summary>
+      <div class="Details-content">
+        {{template "sections" .Subs}}
+      </div>
+    </details>
+  {{else}}
+    <li class="Details-indent"><a class="u-breakWord" href="/{{.Prefix}}">{{.Prefix}}</a></li>
+  {{end}}
+{{end}}

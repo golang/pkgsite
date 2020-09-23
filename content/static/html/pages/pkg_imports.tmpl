@@ -5,34 +5,5 @@
 -->
 
 {{define "details_content"}}
-  <div>
-    {{if or .ExternalImports .InternalImports .StdLib}}
-      {{if .ExternalImports}}
-        <h2 class="Imports-heading">Imports</h2>
-        <ul class="Imports-list">
-        {{range .ExternalImports}}
-          <li><a href="/{{.}}">{{.}}</a></li>
-        {{end}}
-        </ul>
-      {{end}}
-      {{if .InternalImports}}
-        <h2 class="Imports-heading">Imports in module “{{.ModulePath}}”</h2>
-        <ul class="Imports-list">
-        {{range .InternalImports}}
-          <li><a href="/{{.}}">{{.}}</a></li>
-        {{end}}
-        </ul>
-      {{end}}
-      {{if .StdLib}}
-        <h2 class="Imports-heading">Standard Library Imports</h2>
-        <ul class="Imports-list">
-        {{range .StdLib}}
-          <li><a href="/{{.}}">{{.}}</a></li>
-        {{end}}
-        </ul>
-      {{end}}
-    {{else}}
-      {{template "empty_content" "This package does not have any imports!"}}
-    {{end}}
-  </div>
+  {{block "imports" .}}{{end}}
 {{end}}

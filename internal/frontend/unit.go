@@ -73,6 +73,10 @@ type UnitPage struct {
 	// Settings contains settings for the selected tab.
 	SelectedTab TabSettings
 
+	// PackageDetails contains data used to render the
+	// versions, licenses, imports, and importedby tabs.
+	PackageDetails interface{}
+
 	DocBody       *safehtml.HTML
 	DocOutline    *safehtml.HTML
 	MobileOutline *safehtml.HTML
@@ -206,6 +210,14 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		DocOutline:      docOutline,
 		DocBody:         docBody,
 		MobileOutline:   mobileOutline,
+	}
+
+	if tab != tabDetails {
+		packageDetails, err := fetchDetailsForPackage(r, tab, ds, &unit.UnitMeta)
+		if err != nil {
+			return err
+		}
+		page.PackageDetails = packageDetails
 	}
 
 	s.servePage(ctx, w, tabSettings.TemplateName, page)

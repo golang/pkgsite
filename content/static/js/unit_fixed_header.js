@@ -75,3 +75,10 @@ new FixedHeaderController(
   document.querySelector('.js-fixedHeaderSentinel'),
   document.querySelector('.js-fixedHeader')
 );
+
+const overflowSelect = document.querySelector('.js-overflowSelect');
+if (overflowSelect) {
+  overflowSelect.addEventListener('change', e => {
+    window.location.href = e.target.value;
+  });
+}
