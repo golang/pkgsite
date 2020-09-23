@@ -8,7 +8,7 @@
   border-bottom: 0.0625rem solid var(--gray-8);
   margin-left: -1.5rem;
   padding: 0.5rem 1.5rem 0.5rem 1.5rem;
-  width: calc(100vw - 1rem);
+  width: 100vw;
 }
 @media only screen and (max-width: 52rem) {
   .UnitHeader {

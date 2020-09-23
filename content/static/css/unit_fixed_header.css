@@ -81,7 +81,7 @@
 }
 @media only screen and (min-width: 37.5rem) {
   .UnitFixedHeader-container {
-    padding: 0 1rem 0 1.5rem;
+    padding: 0 1.5rem;
   }
   .UnitFixedHeader-logo {
     height: 1.9541rem;
@@ -139,12 +139,17 @@
   cursor: not-allowed;
 }
 .UnitFixedHeader-overflowContainer {
-  display: none;
+  display: block;
   height: 1.5rem;
   position: absolute;
   right: 0.0625rem;
   top: 1.125rem;
   width: 1.5rem;
+}
+@media only screen and (min-width: 64rem) {
+  .UnitFixedHeader-overflowContainer {
+    display: none;
+  }
 }
 .UnitFixedHeader-overflowingTabList.is-overflowing {
   padding-right: 1.5rem;
@@ -177,4 +182,42 @@
 }
 .UnitFixedHeader-overflowSelect option {
   color: var(--gray-1);
+}
+.UnitHeaderFixed-detail {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: auto;
+  white-space: nowrap;
+}
+.UnitHeaderFixed-detailItem {
+  color: var(--gray-4);
+  display: none;
+  font-size: 0.875rem;
+}
+.UnitHeaderFixed-detailItem img {
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+.UnitHeaderFixed-detailItem a > span {
+  color: var(--gray-4);
+}
+.UnitHeaderFixed-detailItem:not(:first-of-type):before {
+  content: '|';
+  padding: 1rem;
+}
+@media only screen and (max-width: 52rem) {
+  .UnitHeaderFixed-detailItem:not(:first-of-type):before {
+    padding: 0.5rem;
+  }
+}
+@media only screen and (min-width: 64rem) {
+  .UnitHeaderFixed-detailItem--md {
+    display: block;
+  }
+}
+@media only screen and (min-width: 80rem) {
+  .UnitHeaderFixed-detailItem--lg {
+    display: block;
+  }
 }
