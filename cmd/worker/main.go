@@ -12,7 +12,6 @@ import (
 	"flag"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -37,7 +36,7 @@ import (
 )
 
 var (
-	timeout   = config.GetEnv("GO_DISCOVERY_WORKER_TIMEOUT_MINUTES", "10")
+	timeout   = config.GetEnvInt("GO_DISCOVERY_WORKER_TIMEOUT_MINUTES", 10)
 	queueName = config.GetEnv("GO_DISCOVERY_WORKER_TASK_QUEUE", "")
 	workers   = flag.Int("workers", 10, "number of concurrent requests to the fetch service, when running locally")
 	// flag used in call to safehtml/template.TrustedSourceFromFlag
@@ -139,10 +138,6 @@ func main() {
 		go http.ListenAndServe(cfg.DebugAddr("localhost:8001"), dcensusServer)
 	}
 
-	handlerTimeout, err := strconv.Atoi(timeout)
-	if err != nil {
-		log.Fatalf(ctx, "strconv.Atoi(%q): %v", timeout, err)
-	}
 	iap := middleware.Identity()
 	if aud := os.Getenv("GO_DISCOVERY_IAP_AUDIENCE"); aud != "" {
 		iap = middleware.ValidateIAPHeader(aud)
@@ -150,7 +145,7 @@ func main() {
 
 	mw := middleware.Chain(
 		middleware.RequestLog(cmdconfig.Logger(ctx, cfg, "worker-log")),
-		middleware.Timeout(time.Duration(handlerTimeout)*time.Minute),
+		middleware.Timeout(time.Duration(timeout)*time.Minute),
 		iap,
 		middleware.Experiment(experimenter),
 	)

@@ -23,13 +23,13 @@ import (
 	"path"
 	"runtime"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
 	"go.opencensus.io/trace"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/fetch/dochtml"
 	"golang.org/x/pkgsite/internal/fetch/internal/doc"
@@ -347,14 +347,9 @@ const mib = 1024 * 1024
 var maxModuleZipSize int64 = math.MaxInt64
 
 func init() {
-	m := os.Getenv("GO_DISCOVERY_MAX_MODULE_ZIP_MI")
-	if m != "" {
-		v, err := strconv.ParseInt(m, 10, 64)
-		if err != nil {
-			log.Errorf(context.Background(), "could not parse GO_DISCOVERY_MAX_MODULE_ZIP_MI value %q", v)
-		} else {
-			maxModuleZipSize = v * mib
-		}
+	v := config.GetEnvInt("GO_DISCOVERY_MAX_MODULE_ZIP_MI", -1)
+	if v > 0 {
+		maxModuleZipSize = int64(v) * mib
 	}
 }
 
@@ -362,17 +357,10 @@ var zipLoadShedder = loadShedder{maxSizeInFlight: math.MaxUint64}
 
 func init() {
 	ctx := context.Background()
-	m := os.Getenv("GO_DISCOVERY_MAX_IN_FLIGHT_ZIP_MI")
-	if m != "" {
-		mebis, err := strconv.ParseUint(m, 10, 64)
-		if err != nil {
-			log.Fatalf(ctx, "could not parse GO_DISCOVERY_MAX_IN_FLIGHT_ZIP_MI value %q", m)
-		} else if mebis == 0 {
-			log.Fatalf(ctx, "bad value for GO_DISCOVERY_MAX_IN_FLIGHT_ZIP_MI: %d. Must be >= 1.", mebis)
-		} else {
-			log.Infof(ctx, "shedding load over %dMi", mebis)
-			zipLoadShedder.maxSizeInFlight = mebis * mib
-		}
+	mebis := config.GetEnvInt("GO_DISCOVERY_MAX_IN_FLIGHT_ZIP_MI", -1)
+	if mebis > 0 {
+		log.Infof(ctx, "shedding load over %dMi", mebis)
+		zipLoadShedder.maxSizeInFlight = uint64(mebis) * mib
 	}
 }
 
