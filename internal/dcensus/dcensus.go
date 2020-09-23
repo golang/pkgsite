@@ -15,6 +15,7 @@ import (
 	"contrib.go.opencensus.io/exporter/prometheus"
 	"contrib.go.opencensus.io/exporter/stackdriver"
 	"go.opencensus.io/plugin/ochttp"
+	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
@@ -24,6 +25,9 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 	mrpb "google.golang.org/genproto/googleapis/api/monitoredres"
 )
+
+// KeyStatus is a tag key named "status".
+var KeyStatus = tag.MustNewKey("status")
 
 // RouteTagger is a func that can be used to derive a dynamic route tag for an
 // incoming request.
@@ -223,3 +227,8 @@ var (
 		ServerResponseBytes,
 	}
 )
+
+// RecordWithTag is a convenience function for recording a single measurement with a single tag.
+func RecordWithTag(ctx context.Context, key tag.Key, val string, m stats.Measurement) {
+	stats.RecordWithTags(ctx, []tag.Mutator{tag.Upsert(key, val)}, m)
+}

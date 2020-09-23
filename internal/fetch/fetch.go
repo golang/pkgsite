@@ -12,11 +12,17 @@ import (
 	"fmt"
 	"net/http"
 	"path"
+	"strconv"
 	"time"
 
+	"go.opencensus.io/plugin/ochttp"
+	"go.opencensus.io/stats"
+	"go.opencensus.io/stats/view"
+	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
 	"golang.org/x/mod/modfile"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/dcensus"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
@@ -28,6 +34,44 @@ import (
 var (
 	errModuleContainsNoPackages = errors.New("module contains 0 packages")
 	errMalformedZip             = errors.New("module zip is malformed")
+)
+
+var (
+	fetchLatency = stats.Float64(
+		"go-discovery/worker/fetch-latency",
+		"Latency of a fetch request.",
+		stats.UnitMilliseconds,
+	)
+	fetchesShedded = stats.Int64(
+		"go-discovery/worker/fetch-shedded",
+		"Count of shedded fetches.",
+		stats.UnitDimensionless,
+	)
+	// FetchLatencyDistribution aggregates frontend fetch request
+	// latency by status code. It does not count shedded requests.
+	FetchLatencyDistribution = &view.View{
+		Name:        "go-discovery/worker/fetch-latency",
+		Measure:     fetchLatency,
+		Aggregation: ochttp.DefaultLatencyDistribution,
+		Description: "Fetch latency by result status.",
+		TagKeys:     []tag.Key{dcensus.KeyStatus},
+	}
+	// FetchResponseCount counts fetch responses by status.
+	FetchResponseCount = &view.View{
+		Name:        "go-discovery/worker/fetch-count",
+		Measure:     fetchLatency,
+		Aggregation: view.Count(),
+		Description: "Fetch request count by result status",
+		TagKeys:     []tag.Key{dcensus.KeyStatus},
+	}
+
+	// SheddedFetchCount counts the number of fetches that were shedded.
+	SheddedFetchCount = &view.View{
+		Name:        "go-discovery/worker/fetch-shedded",
+		Measure:     fetchesShedded,
+		Aggregation: view.Count(),
+		Description: "Count of shedded fetches",
+	}
 )
 
 type FetchResult struct {
@@ -52,6 +96,7 @@ type FetchResult struct {
 //   defer fr.Defer()
 // immediately after the call.
 func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, sourceClient *source.Client) (fr *FetchResult) {
+	start := time.Now()
 	fr = &FetchResult{
 		ModulePath:       modulePath,
 		RequestedVersion: requestedVersion,
@@ -65,6 +110,8 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 		if fr.Status == 0 {
 			fr.Status = http.StatusOK
 		}
+		latency := float64(time.Since(start).Milliseconds())
+		dcensus.RecordWithTag(ctx, dcensus.KeyStatus, strconv.Itoa(fr.Status), fetchLatency.M(latency))
 		log.Debugf(ctx, "memory after fetch of %s@%s: %dM", modulePath, requestedVersion, allocMeg())
 	}()
 
@@ -106,6 +153,7 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 	fr.Defer = deferFunc
 	if shouldShed {
 		fr.Error = derrors.SheddingLoad
+		stats.Record(ctx, fetchesShedded.M(1))
 		return fr
 	}
 

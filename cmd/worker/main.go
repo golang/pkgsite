@@ -22,6 +22,7 @@ import (
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/dcensus"
+	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/index"
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/source"
@@ -124,7 +125,11 @@ func main() {
 	router := dcensus.NewRouter(nil)
 	server.Install(router.Handle)
 
-	views := append(dcensus.ServerViews, worker.EnqueueResponseCount)
+	views := append(dcensus.ServerViews,
+		worker.EnqueueResponseCount,
+		fetch.FetchLatencyDistribution,
+		fetch.FetchResponseCount,
+		fetch.SheddedFetchCount)
 	if err := dcensus.Init(cfg, views...); err != nil {
 		log.Fatal(ctx, err)
 	}
