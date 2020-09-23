@@ -130,7 +130,7 @@ func (q *GCP) ScheduleFetch(ctx context.Context, modulePath, version, suffix str
 	enqueued = true
 	if _, err := q.client.CreateTask(ctx, req); err != nil {
 		if status.Code(err) == codes.AlreadyExists {
-			log.Infof(ctx, "ignoring duplicate task ID %s: %s@%s", req.Task.Name, modulePath, version)
+			log.Debugf(ctx, "ignoring duplicate task ID %s: %s@%s", req.Task.Name, modulePath, version)
 			enqueued = false
 		} else {
 			return false, fmt.Errorf("q.client.CreateTask(ctx, req): %v", err)
