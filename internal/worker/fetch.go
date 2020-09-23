@@ -161,7 +161,9 @@ func fetchAndInsertModule(ctx context.Context, modulePath, requestedVersion stri
 	ft.timings["fetch.FetchModule"] = time.Since(start)
 	if ft.Error != nil {
 		logf := log.Infof
-		if ft.Status >= 500 && ft.Status != derrors.ToStatus(derrors.ProxyTimedOut) {
+		if ft.Status == http.StatusServiceUnavailable {
+			logf = log.Warningf
+		} else if ft.Status >= 500 && ft.Status != derrors.ToStatus(derrors.ProxyTimedOut) {
 			logf = log.Errorf
 		}
 		logf(ctx, "Error executing fetch: %v (code %d)", ft.Error, ft.Status)
