@@ -153,18 +153,22 @@ func NewViewExporter(cfg *config.Config) (_ *stackdriver.Exporter, err error) {
 	// timeseries problems. Note that generic_task is used because the
 	// gae_instance resource type is not supported for metrics:
 	// https://cloud.google.com/monitoring/custom-metrics/creating-metrics#which-resource
-	return stackdriver.NewExporter(stackdriver.Options{
-		ProjectID: cfg.ProjectID,
-		MonitoredResource: &monitoredResource{
-			Type: "generic_task",
-			Labels: map[string]string{
-				"project_id": cfg.ProjectID,
-				"location":   cfg.LocationID,
-				"job":        cfg.ServiceID,
-				"namespace":  "go-discovery",
-				"task_id":    cfg.InstanceID,
-			},
+	mr := &monitoredResource{
+		Type: "generic_task",
+		Labels: map[string]string{
+			"project_id": cfg.ProjectID,
+			"location":   cfg.LocationID,
+			"job":        cfg.ServiceID,
+			"namespace":  "go-discovery",
+			"task_id":    cfg.InstanceID,
 		},
+	}
+	if cfg.OnGKE() {
+		mr = (*monitoredResource)(cfg.MonitoredResource)
+	}
+	return stackdriver.NewExporter(stackdriver.Options{
+		ProjectID:               cfg.ProjectID,
+		MonitoredResource:       mr,
 		DefaultMonitoringLabels: stackdriverLabels(cfg),
 	})
 }
