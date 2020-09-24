@@ -6,6 +6,7 @@
 package internal
 
 const (
+	ExperimentAltRequeue   = "alt-requeue"
 	ExperimentAutocomplete = "autocomplete"
 	ExperimentSidenav      = "sidenav"
 	ExperimentUnitPage     = "unit-page"
@@ -15,6 +16,7 @@ const (
 // Experiments represents all of the active experiments in the codebase and
 // a description of each experiment.
 var Experiments = map[string]string{
+	ExperimentAltRequeue:   "Requeue modules for reprocessing in a different order.",
 	ExperimentAutocomplete: "Enable autocomplete with search.",
 	ExperimentSidenav:      "Display documentation index on the left sidenav.",
 	ExperimentUnitPage:     "Enable the redesigned details page.",

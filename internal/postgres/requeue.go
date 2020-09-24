@@ -14,6 +14,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 )
 
@@ -73,9 +74,14 @@ var largeModulesLimit = config.GetEnvInt("GO_DISCOVERY_LARGE_MODULES_LIMIT", 100
 // towards the end, since these will incur unnecessary deletes otherwise.
 func (db *DB) GetNextModulesToFetch(ctx context.Context, limit int) (_ []*internal.ModuleVersionState, err error) {
 	defer derrors.Wrap(&err, "GetNextModulesToFetch(ctx, %d)", limit)
+	queryFmt := nextModulesToProcessQuery
+	if experiment.IsActive(ctx, internal.ExperimentAltRequeue) {
+		log.Infof(ctx, "using alternative requeue query")
+		queryFmt = nextModulesToProcessQueryAlt
+	}
 
 	var mvs []*internal.ModuleVersionState
-	query := fmt.Sprintf(nextModulesToProcessQuery, moduleVersionStateColumns)
+	query := fmt.Sprintf(queryFmt, moduleVersionStateColumns)
 
 	collect := func(rows *sql.Rows) error {
 		// Scan the last two columns separately; they are in the query only for sorting.
@@ -187,6 +193,50 @@ const nextModulesToProcessQuery = `
 				END
 		END,
 		npkg,  -- prefer fewer packages
+		module_path,
+		version -- for reproducibility
+	LIMIT $2
+`
+
+const nextModulesToProcessQueryAlt = `
+    -- Make a table of the latest versions of each module.
+	WITH latest_versions AS (
+		SELECT DISTINCT ON (module_path) module_path, version
+		FROM module_version_states
+		ORDER BY
+			module_path,
+			incompatible,
+			right(sort_version, 1) = '~' DESC, -- prefer release versions
+			sort_version DESC
+	)
+	SELECT %s, latest, npkg
+	FROM (
+		SELECT
+			%[1]s,
+			((module_path, version) IN (SELECT * FROM latest_versions)) AS latest,
+			COALESCE(num_packages, 0) AS npkg
+		FROM module_version_states
+	) s
+	WHERE next_processed_after < CURRENT_TIMESTAMP
+		AND (status = 0 OR status >= 500)
+        AND $1 = $1 -- ignore largeModulePackageThreshold
+	ORDER BY
+		CASE
+			-- new modules
+			WHEN status = 0 THEN 0
+			WHEN latest THEN
+				CASE
+					-- with SheddingLoad or ReprocessStatusOK or ReprocessHasIncompletePackages
+					WHEN status = 503 or status = 520 OR status = 521 THEN 1
+					-- with ReprocessBadModule or ReprocessAlternative or ReprocessDBModuleInsertInvalid
+					WHEN status = 540 OR status = 541 OR status = 542 THEN 2
+					ELSE 5
+				END
+			-- non-latest
+			WHEN status = 503 or status = 520 OR status = 521 THEN 3
+			WHEN status = 540 OR status = 541 OR status = 542 THEN 4
+			ELSE 5
+		END,
 		module_path,
 		version -- for reproducibility
 	LIMIT $2
