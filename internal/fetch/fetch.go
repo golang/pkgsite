@@ -40,13 +40,14 @@ var (
 	fetchLatency = stats.Float64(
 		"go-discovery/worker/fetch-latency",
 		"Latency of a fetch request.",
-		stats.UnitMilliseconds,
+		stats.UnitSeconds,
 	)
 	fetchesShedded = stats.Int64(
 		"go-discovery/worker/fetch-shedded",
 		"Count of shedded fetches.",
 		stats.UnitDimensionless,
 	)
+
 	// FetchLatencyDistribution aggregates frontend fetch request
 	// latency by status code. It does not count shedded requests.
 	FetchLatencyDistribution = &view.View{
