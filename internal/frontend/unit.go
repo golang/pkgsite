@@ -62,7 +62,7 @@ type UnitPage struct {
 	UnitContentName string
 
 	// Readme is the rendered readme HTML.
-	Readme *safehtml.HTML
+	Readme safehtml.HTML
 
 	// ExpandReadme is holds the expandable readme state.
 	ExpandReadme bool
@@ -77,9 +77,9 @@ type UnitPage struct {
 	// versions, licenses, imports, and importedby tabs.
 	PackageDetails interface{}
 
-	DocBody       *safehtml.HTML
-	DocOutline    *safehtml.HTML
-	MobileOutline *safehtml.HTML
+	DocBody       safehtml.HTML
+	DocOutline    safehtml.HTML
+	MobileOutline safehtml.HTML
 }
 
 var (
@@ -147,23 +147,23 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		return err
 	}
 
-	var docBody, docOutline, mobileOutline *safehtml.HTML
+	var docBody, docOutline, mobileOutline safehtml.HTML
 	if unit.Documentation != nil {
 		b, err := godoc.Parse(unit.Documentation.HTML, godoc.BodySection)
 		if err != nil {
 			return err
 		}
-		docBody = &b
+		docBody = b
 		o, err := godoc.Parse(unit.Documentation.HTML, godoc.SidenavSection)
 		if err != nil {
 			return err
 		}
-		docOutline = &o
+		docOutline = o
 		m, err := godoc.Parse(unit.Documentation.HTML, godoc.SidenavMobileSection)
 		if err != nil {
 			return err
 		}
-		mobileOutline = &m
+		mobileOutline = m
 	}
 
 	tab := r.FormValue("tab")
@@ -238,16 +238,16 @@ func moduleInfo(unit *internal.Unit) *internal.ModuleInfo {
 }
 
 // readmeContent renders the readme to html.
-func readmeContent(ctx context.Context, unit *internal.Unit) (*safehtml.HTML, error) {
+func readmeContent(ctx context.Context, unit *internal.Unit) (safehtml.HTML, error) {
 	if unit.IsRedistributable && unit.Readme != nil {
 		mi := moduleInfo(unit)
 		readme, err := ReadmeHTML(ctx, mi, unit.Readme)
 		if err != nil {
-			return nil, err
+			return safehtml.HTML{}, err
 		}
-		return &readme, nil
+		return readme, nil
 	}
-	return nil, nil
+	return safehtml.HTML{}, nil
 }
 
 // pageInfo determines the title and pageType for a given unit.
