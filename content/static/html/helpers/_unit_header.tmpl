@@ -17,7 +17,15 @@
           <span class="UnitHeader-breadcrumbItem">{{.Current}}</span>
         {{end}}
       </div>
-      <h1 class="UnitHeader-title">{{.Title}}</h1>
+      <h1 class="UnitHeader-title">
+        {{.Title}}
+        {{if .Unit.IsModule}}
+          <span class="UnitHeader-moduleBadge">module</span>
+        {{end}}
+        {{if .Unit.IsPackage}}
+          <span class="UnitHeader-packageBadge">package</span>
+        {{end}}
+      </h1>
       <div class="UnitHeader-versionBanner $$GODISCOVERY_LATESTMAJORCLASS$$">
         <img height="19px" width="16px" class="UnitHeader-detailIcon" src="/static/img/pkg-icon-info_19x16.svg">
         <span>

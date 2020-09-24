@@ -125,3 +125,13 @@ a.UnitHeader-backLink {
 .UnitHeader-backLink img {
   margin-right: 0.5rem;
 }
+.UnitHeader-moduleBadge,
+.UnitHeader-packageBadge {
+  border: 1px solid var(--gray-4);
+  border-radius: 0.125rem;
+  font-size: 0.6875rem;
+  height: 1rem;
+  padding: 0.1rem 0.25rem;
+  vertical-align: middle;
+  width: 3.25rem;
+}
