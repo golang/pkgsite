@@ -53,11 +53,9 @@
   <script>
     loadScript("/static/js/jump.min.js");
   </script>
-  {{if (.Experiments.IsActive "executable-examples")}}
-    <script>
-      loadScript("/static/js/playground.min.js");
-    </script>
-  {{end}}
+  <script>
+    loadScript("/static/js/playground.min.js");
+  </script>
   {{if (.Experiments.IsActive "sidenav")}}
     <script>
       loadScript('/static/js/sidenav.js');
