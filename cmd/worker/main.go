@@ -129,7 +129,8 @@ func main() {
 		worker.EnqueueResponseCount,
 		fetch.FetchLatencyDistribution,
 		fetch.FetchResponseCount,
-		fetch.SheddedFetchCount)
+		fetch.SheddedFetchCount,
+		fetch.FetchPackageCount)
 	if err := dcensus.Init(cfg, views...); err != nil {
 		log.Fatal(ctx, err)
 	}

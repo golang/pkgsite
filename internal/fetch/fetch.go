@@ -47,6 +47,11 @@ var (
 		"Count of shedded fetches.",
 		stats.UnitDimensionless,
 	)
+	fetchedPackages = stats.Int64(
+		"go-discovery/worker/fetch-package-count",
+		"Count of successfully fetched packages.",
+		stats.UnitDimensionless,
+	)
 
 	// FetchLatencyDistribution aggregates frontend fetch request
 	// latency by status code. It does not count shedded requests.
@@ -65,7 +70,13 @@ var (
 		Description: "Fetch request count by result status",
 		TagKeys:     []tag.Key{dcensus.KeyStatus},
 	}
-
+	// FetchPackageCount counts how many packages were sucessfully fetched.
+	FetchPackageCount = &view.View{
+		Name:        "go-discovery/worker/fetch-package-count",
+		Measure:     fetchedPackages,
+		Aggregation: view.Count(),
+		Description: "Count of packages successfully fetched",
+	}
 	// SheddedFetchCount counts the number of fetches that were shedded.
 	SheddedFetchCount = &view.View{
 		Name:        "go-discovery/worker/fetch-shedded",
@@ -113,6 +124,9 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 		}
 		latency := float64(time.Since(start).Milliseconds())
 		dcensus.RecordWithTag(ctx, dcensus.KeyStatus, strconv.Itoa(fr.Status), fetchLatency.M(latency))
+		if fr.Status < 300 {
+			stats.Record(ctx, fetchedPackages.M(int64(len(fr.PackageVersionStates))))
+		}
 		log.Debugf(ctx, "memory after fetch of %s@%s: %dM", modulePath, requestedVersion, allocMeg())
 	}()
 
