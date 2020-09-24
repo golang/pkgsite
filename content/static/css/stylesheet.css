@@ -116,12 +116,18 @@ code {
   flex: 1;
   padding: 0 1rem;
 }
+.Site--redesign .Site-content {
+  padding: 0;
+}
 .Site-footer {
   margin-top: 5rem;
 }
 @media only screen and (min-width: 57.7rem) {
   .Site-content {
     padding: 0 1.5rem;
+  }
+  .Site--redesign .Site-content {
+    padding: 0;
   }
 }
 
@@ -168,6 +174,9 @@ code {
 .Site--wide .Banner-inner {
   max-width: none;
 }
+.Site--redesign .Banner-inner {
+  max-width: 98rem;
+}
 .Banner-message {
   color: #fff;
   margin-right: 1.25rem;
@@ -190,6 +199,9 @@ code {
 }
 .Site--wide .Header {
   max-width: none;
+}
+.Site--redesign .Header {
+  max-width: 98rem;
 }
 .Site-header {
   background: var(--turq-dark);
@@ -590,6 +602,7 @@ code {
 .NotFound-gopher,
 .SearchResults-emptyContentGopher {
   display: block;
+  height: 15rem;
   margin: auto;
   padding: 1.25rem 0;
   width: 15rem;

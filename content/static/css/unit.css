@@ -1,0 +1,25 @@
+/*
+ * Copyright 2020 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+@import './unit_header.css';
+@import './unit_fixed_header.css';
+
+.Unit-content {
+  margin: auto;
+  max-width: 98rem;
+  min-height: 32rem;
+  padding: 0 1rem;
+}
+@media only screen and (min-width: 57.7rem) {
+  .Unit-content {
+    padding: 0 1.5rem;
+  }
+}
+.Unit-content > div,
+section {
+  margin-top: 2rem;
+  max-width: 60rem;
+}

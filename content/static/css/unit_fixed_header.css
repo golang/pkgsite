@@ -28,8 +28,8 @@
   padding: 0 0.5rem;
   position: relative;
 }
-.Site--wide .UnitFixedHeader-container {
-  max-width: none;
+.UnitFixedHeader-container {
+  max-width: 98rem;
 }
 .UnitFixedHeader-logoLink {
   margin-right: 1rem;
@@ -146,7 +146,7 @@
   top: 1.125rem;
   width: 1.5rem;
 }
-@media only screen and (min-width: 64rem) {
+@media only screen and (min-width: 80rem) {
   .UnitFixedHeader-overflowContainer {
     display: none;
   }
@@ -188,6 +188,7 @@
   display: flex;
   flex-wrap: wrap;
   margin-left: auto;
+  margin-right: 2rem;
   white-space: nowrap;
 }
 .UnitHeaderFixed-detailItem {

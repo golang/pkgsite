@@ -6,23 +6,20 @@
 
 .UnitHeader {
   border-bottom: 0.0625rem solid var(--gray-8);
-  margin-left: -1.5rem;
-  padding: 0.5rem 1.5rem 0.5rem 1.5rem;
-  width: 100vw;
+  padding: 0.5rem 1rem;
 }
-@media only screen and (max-width: 52rem) {
+@media only screen and (min-width: 57.7rem) {
   .UnitHeader {
-    margin-left: -1rem;
-    padding-left: 1rem;
-    width: 100vw;
+    border-bottom: 0.0625rem solid var(--gray-8);
+    padding: 0.5rem 1.5rem;
   }
 }
 .UnitHeader-container {
   margin: auto;
-  max-width: 93.5rem;
+  max-width: 95rem;
 }
 .UnitHeader-breadcrumb {
-  margin-top: 1.1rem;
+  margin-top: 0.5rem;
 }
 .UnitHeader-breadcrumbItem {
   color: var(--gray-4);

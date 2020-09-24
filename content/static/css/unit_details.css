@@ -4,8 +4,6 @@
  * license that can be found in the LICENSE file.
  */
 
-@import './unit_header.css';
-@import './unit_fixed_header.css';
 @import './unit_readme.css';
 @import './unit_doc.css';
 @import './unit_directories.css';
@@ -16,7 +14,16 @@
   column-gap: 2rem;
   display: grid;
   grid-template-columns: minmax(0, auto);
+  margin: auto;
   margin-top: 1rem;
+  max-width: 98rem;
+  min-height: 32rem;
+  padding: 0.5rem 1rem;
+}
+@media only screen and (min-width: 57.7rem) {
+  .UnitDetails {
+    padding: 0.5rem 1.5rem;
+  }
 }
 @media only screen and (min-width: 52rem) {
   .UnitDetails {
