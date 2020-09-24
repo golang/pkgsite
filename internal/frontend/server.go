@@ -43,6 +43,7 @@ type Server struct {
 	errorPage            []byte
 	appVersionLabel      string
 	googleTagManagerID   string
+	serveStats           bool
 
 	mu        sync.Mutex // Protects all fields below
 	templates map[string]*template.Template
@@ -61,6 +62,7 @@ type ServerConfig struct {
 	DevMode              bool
 	AppVersionLabel      string
 	GoogleTagManagerID   string
+	ServeStats           bool
 }
 
 // NewServer creates a new Server for the given database and template directory.
@@ -83,6 +85,7 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 		taskIDChangeInterval: scfg.TaskIDChangeInterval,
 		appVersionLabel:      scfg.AppVersionLabel,
 		googleTagManagerID:   scfg.GoogleTagManagerID,
+		serveStats:           scfg.ServeStats,
 	}
 	errorPageBytes, err := s.renderErrorPage(context.Background(), http.StatusInternalServerError, "error.tmpl", nil)
 	if err != nil {
@@ -119,6 +122,10 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/about", http.RedirectHandler("https://go.dev/about", http.StatusFound))
 	handle("/badge/", http.HandlerFunc(s.badgeHandler))
 	handle("/", detailHandler)
+	if s.serveStats {
+		handle("/detail-stats/",
+			middleware.Stats()(http.StripPrefix("/detail-stats", s.errorHandler(s.serveDetails))))
+	}
 	handle("/autocomplete", http.HandlerFunc(s.handleAutoCompletion))
 	handle("/robots.txt", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")

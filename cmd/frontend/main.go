@@ -134,6 +134,7 @@ func main() {
 		DevMode:              *devMode,
 		AppVersionLabel:      cfg.AppVersionLabel(),
 		GoogleTagManagerID:   cfg.GoogleTagManagerID,
+		ServeStats:           cfg.ServeStats,
 	})
 	if err != nil {
 		log.Fatalf(ctx, "frontend.NewServer: %v", err)

@@ -176,6 +176,10 @@ type Config struct {
 	// DynamicConfigLocation is the location (either a file or gs://bucket/object) for
 	// dynamic configuration.
 	DynamicConfigLocation string
+
+	// ServeStats determines whether the server has an endpoint that serves statistics for
+	// benchmarking or other purposes.
+	ServeStats bool
 }
 
 // AppVersionLabel returns the version label for the current instance.  This is
@@ -402,7 +406,8 @@ func Init(ctx context.Context) (_ *Config, err error) {
 			MaxTimeout:       time.Duration(GetEnvInt("GO_DISCOVERY_TEEPROXY_MAX_TIMEOUT_SECONDS", 240)) * time.Second,
 			SuccsToGreen:     GetEnvInt("GO_DISCOVERY_TEEPROXY_SUCCS_TO_GREEN", 20),
 		},
-		LogLevel: os.Getenv("GO_DISCOVERY_LOG_LEVEL"),
+		LogLevel:   os.Getenv("GO_DISCOVERY_LOG_LEVEL"),
+		ServeStats: os.Getenv("GO_DISCOVERY_SERVE_STATS") == "true",
 	}
 	bucket := os.Getenv("GO_DISCOVERY_CONFIG_BUCKET")
 	object := os.Getenv("GO_DISCOVERY_CONFIG_DYNAMIC")
