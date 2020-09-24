@@ -23,8 +23,4 @@ func TestGet(t *testing.T) {
 	if got != want {
 		t.Errorf("got %q, want %q", got, want)
 	}
-
-	if _, err := Get(context.Background(), "worker-database-password"); err == nil {
-		t.Error("was able to get a secret that we shouldn't")
-	}
 }
