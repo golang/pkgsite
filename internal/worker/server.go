@@ -262,7 +262,7 @@ func (s *Server) handleFetch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	msg, code := s.doFetch(r)
-	if code == http.StatusInternalServerError {
+	if code == http.StatusInternalServerError || code == http.StatusServiceUnavailable {
 		log.Infof(r.Context(), "doFetch of %s returned %d; returning that code to retry task", r.URL.Path, code)
 		http.Error(w, http.StatusText(code), code)
 		return
