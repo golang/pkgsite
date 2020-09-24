@@ -9,7 +9,11 @@ package dynconfig
 
 import (
 	"context"
+	"errors"
+	"io"
 	"io/ioutil"
+	"os"
+	"strings"
 
 	"cloud.google.com/go/storage"
 	"github.com/ghodss/yaml"
@@ -27,19 +31,38 @@ type DynamicConfig struct {
 	Experiments []*internal.Experiment
 }
 
-// Read reads dynamic configuration from the given GCS bucket and object.
-func Read(ctx context.Context, bucket, object string) (_ *DynamicConfig, err error) {
-	defer derrors.Wrap(&err, "dynconfig.Read(%q, %q)", bucket, object)
+// Read reads dynamic configuration from the given location.
+// Location may be of the form gs://bucket/object, denoting a GCS bucket.
+// Otherwise it is interpreted as a filename.
+func Read(ctx context.Context, location string) (_ *DynamicConfig, err error) {
+	defer derrors.Wrap(&err, "dynconfig.Read(%q)", location)
 
-	log.Infof(ctx, "reading dynamic config from gs://%s/%s", bucket, object)
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer client.Close()
-	r, err := client.Bucket(bucket).Object(object).NewReader(ctx)
-	if err != nil {
-		return nil, err
+	log.Infof(ctx, "reading dynamic config from %s", location)
+	var r io.ReadCloser
+	if strings.HasPrefix(location, "gs://") {
+		parts := strings.SplitN(location[5:], "/", 2)
+		if len(parts) != 2 {
+			return nil, errors.New("bad GCS URL")
+		}
+		bucket := parts[0]
+		object := parts[1]
+		if err != nil {
+			return nil, err
+		}
+		client, err := storage.NewClient(ctx)
+		if err != nil {
+			return nil, err
+		}
+		defer client.Close()
+		r, err = client.Bucket(bucket).Object(object).NewReader(ctx)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		r, err = os.Open(location)
+		if err != nil {
+			return nil, err
+		}
 	}
 	defer r.Close()
 	data, err := ioutil.ReadAll(r)

@@ -173,10 +173,9 @@ type Config struct {
 	// In case of invalid/empty value, all logs will be printed.
 	LogLevel string
 
-	// GCS Bucket for overrides and dynamic config.
-	Bucket string
-	// GCS object name for dynamic config.
-	DynamicObject string
+	// DynamicConfigLocation is the location (either a file or gs://bucket/object) for
+	// dynamic configuration.
+	DynamicConfigLocation string
 }
 
 // AppVersionLabel returns the version label for the current instance.  This is
@@ -403,17 +402,17 @@ func Init(ctx context.Context) (_ *Config, err error) {
 			MaxTimeout:       time.Duration(GetEnvInt("GO_DISCOVERY_TEEPROXY_MAX_TIMEOUT_SECONDS", 240)) * time.Second,
 			SuccsToGreen:     GetEnvInt("GO_DISCOVERY_TEEPROXY_SUCCS_TO_GREEN", 20),
 		},
-		LogLevel:      os.Getenv("GO_DISCOVERY_LOG_LEVEL"),
-		Bucket:        os.Getenv("GO_DISCOVERY_CONFIG_BUCKET"),
-		DynamicObject: os.Getenv("GO_DISCOVERY_CONFIG_DYNAMIC"),
+		LogLevel: os.Getenv("GO_DISCOVERY_LOG_LEVEL"),
 	}
-
-	// Check that the dynamic config is readable, but don't do anything with it.
-	if cfg.Bucket == "" {
-		return nil, errors.New("GO_DISCOVERY_CONFIG_BUCKET must be set")
-	}
-	if cfg.DynamicObject == "" {
-		return nil, errors.New("GO_DISCOVERY_CONFIG_DYNAMIC must be set")
+	bucket := os.Getenv("GO_DISCOVERY_CONFIG_BUCKET")
+	object := os.Getenv("GO_DISCOVERY_CONFIG_DYNAMIC")
+	if bucket != "" {
+		if object == "" {
+			return nil, errors.New("GO_DISCOVERY_CONFIG_DYNAMIC must be set if GO_DISCOVERY_CONFIG_BUCKET is")
+		}
+		cfg.DynamicConfigLocation = fmt.Sprintf("gs://%s/%s", bucket, object)
+	} else {
+		cfg.DynamicConfigLocation = object
 	}
 	if cfg.OnGCP() {
 		// Zone is not available in the environment but can be queried via the metadata API.
@@ -479,11 +478,11 @@ func Init(ctx context.Context) (_ *Config, err error) {
 	// to re-deploy. (Otherwise, do not use it.)
 	overrideObj := os.Getenv("GO_DISCOVERY_CONFIG_OVERRIDE")
 	if overrideObj != "" {
-		overrideBytes, err := readOverrideFile(ctx, cfg.Bucket, overrideObj)
+		overrideBytes, err := readOverrideFile(ctx, bucket, overrideObj)
 		if err != nil {
 			log.Print(err)
 		} else {
-			log.Printf("processing overrides from gs://%s/%s", cfg.Bucket, overrideObj)
+			log.Printf("processing overrides from gs://%s/%s", bucket, overrideObj)
 			processOverrides(cfg, overrideBytes)
 		}
 	}
