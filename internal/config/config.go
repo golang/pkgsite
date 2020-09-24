@@ -75,6 +75,10 @@ const AppVersionFormat = "20060102t150405"
 // ValidateAppVersion validates that appVersion follows the expected format
 // defined by AppVersionFormat.
 func ValidateAppVersion(appVersion string) error {
+	// Accept GKE versions, which start with the docker image name.
+	if strings.HasPrefix(appVersion, "gcr.io/") {
+		return nil
+	}
 	if _, err := time.Parse(AppVersionFormat, appVersion); err != nil {
 		// Accept alternative version, used by our AppEngine deployment script.
 		const altDateFormat = "2006-01-02t15-04"
