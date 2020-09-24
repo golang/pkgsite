@@ -42,6 +42,11 @@
   flex-wrap: wrap;
   white-space: nowrap;
 }
+@media only screen and (min-width: 52rem) {
+  .UnitHeader-detail {
+    margin-bottom: 0.5rem;
+  }
+}
 .UnitHeader-detailItem {
   color: var(--gray-4);
   font-size: 0.875rem;
@@ -109,4 +114,14 @@
   margin-left: 1rem;
   margin-right: 0.7rem;
   width: 1rem;
+}
+a.UnitHeader-backLink {
+  color: black;
+  display: block;
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+  margin: 0.5rem 0;
+}
+.UnitHeader-backLink img {
+  margin-right: 0.5rem;
 }
