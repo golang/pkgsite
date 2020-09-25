@@ -18,11 +18,20 @@ func TestDecideToShed(t *testing.T) {
 		t.Fatalf("got %t, want %t", got, want)
 	}
 	d() // reset sizeInFlight
+
+	// If nothing else is in flight, accept something too large.
 	ls.maxSizeInFlight = 10 * mib
+	got, d = ls.shouldShed(20 * mib)
+	if want := false; got != want {
+		t.Fatalf("got %t, want %t", got, want)
+	}
+	d()
+
 	got, d = ls.shouldShed(3 * mib)
 	if want := false; got != want {
 		t.Fatalf("got %t, want %t", got, want)
 	}
+
 	bytesInFlight := func() int {
 		return int(ls.stats().SizeInFlight)
 	}

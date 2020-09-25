@@ -31,7 +31,9 @@ func (ls *loadShedder) shouldShed(size uint64) (_ bool, deferFunc func()) {
 	defer ls.mu.Unlock()
 
 	ls.requestsTotal++
-	if ls.sizeInFlight+size > ls.maxSizeInFlight {
+	// Shed if size exceeds our limit--except that if nothing is being
+	// processed, accept this request to avoid starving it forever.
+	if ls.sizeInFlight > 0 && ls.sizeInFlight+size > ls.maxSizeInFlight {
 		ls.requestsShed++
 		return true, func() {}
 	}
