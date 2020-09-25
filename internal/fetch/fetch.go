@@ -167,7 +167,7 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 	shouldShed, deferFunc := zipLoadShedder.shouldShed(uint64(zipSize))
 	fr.Defer = deferFunc
 	if shouldShed {
-		fr.Error = derrors.SheddingLoad
+		fr.Error = fmt.Errorf("%w: size=%dMi", derrors.SheddingLoad, zipSize/mib)
 		stats.Record(ctx, fetchesShedded.M(1))
 		return fr
 	}
