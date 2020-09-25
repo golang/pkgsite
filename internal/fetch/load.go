@@ -162,7 +162,7 @@ func loadFilesWithBuildContext(innerPath, goos, goarch string, zipGoFiles []*zip
 	var (
 		fset            = token.NewFileSet()
 		goFiles         = make(map[string]*ast.File)
-		nonTestFiles    = make(map[string]*ast.File)
+		numNonTestFiles int
 		packageName     string
 		packageNameFile string // Name of file where packageName came from.
 	)
@@ -179,11 +179,11 @@ func loadFilesWithBuildContext(innerPath, goos, goarch string, zipGoFiles []*zip
 		if strings.HasSuffix(name, "_test.go") {
 			continue
 		}
-		// Keep track of non-test files to get the package name, and also
-		// because a directory with only test files doesn't count as a Go
-		// package.
-		nonTestFiles[name] = pf
-		if len(nonTestFiles) == 1 {
+		// Keep track of the number of non-test files to check that the package name is the same.
+		// and also because a directory with only test files doesn't count as a
+		// Go package.
+		numNonTestFiles++
+		if numNonTestFiles == 1 {
 			packageName = pf.Name.Name
 			packageNameFile = name
 		} else if pf.Name.Name != packageName {
@@ -194,7 +194,7 @@ func loadFilesWithBuildContext(innerPath, goos, goarch string, zipGoFiles []*zip
 			}}
 		}
 	}
-	if len(nonTestFiles) == 0 {
+	if numNonTestFiles == 0 {
 		// This directory doesn't contain a package, or at least not one
 		// that matches this build context.
 		return "", nil, nil, derrors.NotFound
