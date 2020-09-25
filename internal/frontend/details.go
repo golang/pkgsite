@@ -119,6 +119,11 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 		}
 	}
 	ctx := r.Context()
+	// If page statistics are enabled, use the "exp" query param to adjust
+	// the active experiments.
+	if s.serveStats {
+		ctx = setExperimentsFromQueryParam(ctx, r)
+	}
 	// Validate the fullPath and requestedVersion that were parsed.
 	if err := validatePathAndVersion(ctx, ds, urlInfo.fullPath, urlInfo.requestedVersion); err != nil {
 		return err
@@ -458,4 +463,44 @@ func recordVersionTypeMetric(ctx context.Context, requestedVersion string) {
 	stats.RecordWithTags(ctx, []tag.Mutator{
 		tag.Upsert(keyVersionType, v),
 	}, versionTypeResults.M(1))
+}
+
+func setExperimentsFromQueryParam(ctx context.Context, r *http.Request) context.Context {
+	if err := r.ParseForm(); err != nil {
+		log.Errorf(ctx, "ParseForm: %v", err)
+		return ctx
+	}
+	return newContextFromExps(ctx, r.Form["exp"])
+}
+
+// newContextFromExps adds and removes experiments from the context's experiment
+// set, creates a new set with the changes, and returns a context with the new
+// set. Each string in expMods can be either an experiment name, which means
+// that the experiment should be added, or "!" followed by an experiment name,
+// meaning that it should be removed.
+func newContextFromExps(ctx context.Context, expMods []string) context.Context {
+	var (
+		exps   []string
+		remove = map[string]bool{}
+	)
+	set := experiment.FromContext(ctx)
+	for _, exp := range expMods {
+		if strings.HasPrefix(exp, "!") {
+			exp = exp[1:]
+			if set.IsActive(exp) {
+				remove[exp] = true
+			}
+		} else if !set.IsActive(exp) {
+			exps = append(exps, exp)
+		}
+	}
+	if len(exps) == 0 && len(remove) == 0 {
+		return ctx
+	}
+	for _, a := range set.Active() {
+		if !remove[a] {
+			exps = append(exps, a)
+		}
+	}
+	return experiment.NewContext(ctx, exps...)
 }
