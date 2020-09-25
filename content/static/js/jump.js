@@ -44,7 +44,7 @@ let jumpListItems; // All the identifiers in the doc; computed only once.
 // a less precise method.
 function collectJumpListItems() {
   let items = [];
-  const doc = document.querySelector('.Documentation');
+  const doc = document.querySelector('.js-documentation');
   for (const el of doc.querySelectorAll('[data-kind]')) {
     items.push(newJumpListItem(el));
   }
