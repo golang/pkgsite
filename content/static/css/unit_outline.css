@@ -45,3 +45,26 @@ a.UnitOutline-accordian {
   display: block;
   overflow-y: auto;
 }
+.UnitOutline-jumpTo {
+  display: flex;
+  margin-bottom: 0.5rem;
+}
+.UnitOutline-jumpTo input {
+  border: 0.0625rem solid var(--gray-8);
+  height: 2rem;
+  padding-left: 1rem;
+  width: 100%;
+}
+.UnitOutline-jumpTo::after {
+  align-self: center;
+  background-color: var(--gray-9);
+  border-radius: 0.5rem;
+  color: var(--gray-6);
+  content: 'f';
+  font-size: 0.75rem;
+  padding: 0.0625rem 0;
+  position: absolute;
+  right: 0.75rem;
+  text-align: center;
+  width: 1.5rem;
+}

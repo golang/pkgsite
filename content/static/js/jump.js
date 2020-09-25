@@ -291,3 +291,10 @@ document.addEventListener('keypress', function (e) {
       break;
   }
 });
+
+const jumpOutlineInput = document.querySelector('.js-jumpToInput');
+if (jumpOutlineInput) {
+  jumpOutlineInput.addEventListener('focus', () => {
+    jumpDialog.showModal();
+  });
+}
