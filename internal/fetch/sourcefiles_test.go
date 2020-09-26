@@ -14,16 +14,9 @@ import (
 
 func TestEncodeDecodeASTFiles(t *testing.T) {
 	// Verify that we can encode and decode the Go files in this directory.
-	fset := token.NewFileSet()
-	pkgs, err := parser.ParseDir(fset, ".", nil, parser.ParseComments)
+	files, fset, err := astFilesForDir(".")
 	if err != nil {
 		t.Fatal(err)
-	}
-	var files []*ast.File
-	for _, p := range pkgs {
-		for _, f := range p.Files {
-			files = append(files, f)
-		}
 	}
 
 	data, err := EncodeASTFiles(fset, files)
@@ -79,4 +72,55 @@ func main() { a = 1 }
 		t.Fatal(err)
 	}
 	compareObjs(files[0])
+}
+
+// Compare the time to decode AST files with and without
+// removing parts of the AST not relevant to documentation.
+//
+// Run on a cloudtop 9/29/2020:
+// - data size is 3x smaller
+// - decode time is 3.5x faster
+func BenchmarkRemovingAST(b *testing.B) {
+	files, fset, err := astFilesForDir(".")
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	run := func(name string) {
+		data, err := EncodeASTFiles(fset, files)
+		if err != nil {
+			b.Fatal(err)
+		}
+		b.Logf("len(data) = %d", len(data))
+		b.Run(name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				_, _, err := DecodeASTFiles(data)
+				if err != nil {
+					b.Fatal(err)
+				}
+			}
+		})
+	}
+
+	run("not removed")
+
+	for _, f := range files {
+		removeUnusedASTNodes(f)
+	}
+	run("removed")
+}
+
+func astFilesForDir(dir string) ([]*ast.File, *token.FileSet, error) {
+	fset := token.NewFileSet()
+	pkgs, err := parser.ParseDir(fset, dir, nil, parser.ParseComments)
+	if err != nil {
+		return nil, nil, err
+	}
+	var files []*ast.File
+	for _, p := range pkgs {
+		for _, f := range p.Files {
+			files = append(files, f)
+		}
+	}
+	return files, fset, nil
 }
