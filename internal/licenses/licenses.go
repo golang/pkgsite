@@ -170,17 +170,19 @@ var (
 	}
 )
 
-// osiNameOverrides maps a licensecheck license type to the corresponding OSI
-// name, if they differ.
-var osiNameOverrides = map[string]string{
-	"GPL2": "GPL-2.0",
-	"GPL3": "GPL-3.0",
+// spdxIdentifierOverrides maps a licensecheck license type to the corresponding
+// SPDX short identifier, if they differ.
+var spdxIdentifierOverrides = map[string]string{
+	"BlueOak-1.0":  "BlueOak-1.0.0",
+	"BSD-0-Clause": "0BSD",
+	"GPL2":         "GPL-2.0",
+	"GPL3":         "GPL-3.0",
+	"NIST":         "NIST-PD",
 }
 
 // nonOSILicenses lists licenses that are not approved by OSI.
 var nonOSILicenses = map[string]bool{
 	"BlueOak-1.0":          true,
-	"BSD-0-Clause":         true,
 	"BSD-2-Clause-FreeBSD": true,
 	"CC-BY-3.0":            true,
 	"CC-BY-4.0":            true,
@@ -188,10 +190,8 @@ var nonOSILicenses = map[string]bool{
 	"CC-BY-SA-4.0":         true,
 	"CC0-1.0":              true,
 	"JSON":                 true,
-	"MIT-0":                true,
 	"NIST":                 true,
 	"OpenSSL":              true,
-	"Unlicense":            true,
 }
 
 // fileNamesLowercase has all the entries of FileNames, downcased and made a set
@@ -215,15 +215,17 @@ type AcceptedLicenseInfo struct {
 func AcceptedLicenses() []AcceptedLicenseInfo {
 	var lics []AcceptedLicenseInfo
 	for l := range redistributableLicenseTypes {
-		osiName := osiNameOverrides[l]
-		if osiName == "" {
-			osiName = l
+		identifier := spdxIdentifierOverrides[l]
+		if identifier == "" {
+			identifier = l
 		}
 		var link string
-		if !nonOSILicenses[l] {
-			link = fmt.Sprintf("https://opensource.org/licenses/%s", osiName)
+		if nonOSILicenses[l] {
+			link = fmt.Sprintf("https://spdx.org/licenses/%s.html", identifier)
+		} else {
+			link = fmt.Sprintf("https://opensource.org/licenses/%s", identifier)
 		}
-		lics = append(lics, AcceptedLicenseInfo{osiName, link})
+		lics = append(lics, AcceptedLicenseInfo{identifier, link})
 	}
 	sort.Slice(lics, func(i, j int) bool { return lics[i].Name < lics[j].Name })
 	return lics
