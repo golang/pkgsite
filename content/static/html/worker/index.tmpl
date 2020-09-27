@@ -74,6 +74,8 @@
       <tr><td>DB Host</td><td>{{.Config.DBHost}}</td></tr>
       <tr><td>Redis Cache Host</td><td>{{.Config.RedisCacheHost}}</td></tr>
       <tr><td>Redis HA Host</td><td>{{.Config.RedisHAHost}}</td></tr>
+      <tr><td>Hostname (Pod)</td><td>{{.Hostname}}</td></tr>
+      <tr><td>Age</td><td>{{timeSince .StartTime}}</td></tr>
     </table>
   </div>
 
@@ -151,12 +153,60 @@
   </div>
 
   <div>
-    <h3>Memory</h3>
+    <h3>Memory (all values in Mi)</h3>
     <table>
-      <tr><td>Go Heap</td><td>{{.GoMemStats.HeapAlloc | bytesToMi}} Mi</td></tr>
-      <tr><td>Container Limit</td><td>{{index .CgroupStats "limit" | bytesToMi}} Mi</td></tr>
-      <tr><td>Container Used</td><td>{{index .CgroupStats "usage" | bytesToMi}} Mi</td></tr>
-      <tr><td>Container Working Set</td><td>{{index .CgroupStats "workingSet" | bytesToMi}} Mi</td></tr>
+      <tr>
+        <td>Go Heap</td>
+        <td>
+          {{.GoMemStats.HeapAlloc | bytesToMi}} Alloc /
+          {{.GoMemStats.HeapInuse | bytesToMi}} In Use /
+          {{.GoMemStats.HeapIdle | bytesToMi}} Idle /
+          {{.GoMemStats.HeapReleased | bytesToMi}} Released
+        </td>
+      </tr>
+      <tr>
+        <td>Container</td>
+        <td>
+          {{index .CgroupStats "limit" | bytesToMi}} Limit /
+          {{index .CgroupStats "trueRSS" | bytesToMi}} RSS /
+          {{index .CgroupStats "usage" | bytesToMi}} Used /
+          {{index .CgroupStats "workingSet" | bytesToMi}} Working Set
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div>
+    <h3>Fetches</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Path</th>
+          <th>Version</th>
+          <th>Zip Size (Mi)</th>
+          <th>Age</th>
+          <th>Status</th>
+          <th>Error</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .Fetches}}
+          <tr>
+            <td>{{.ModulePath}}</td>
+            <td>{{.Version}}</td>
+            <td>{{.ZipSize | bytesToMi}}</td>
+            <td>
+              {{if eq .Status 0}}
+                {{timeSince .Start}}
+              {{else}}
+                {{timeSub .Finish .Start}}
+              {{end}}
+            </td>
+            <td>{{if ne .Status 0}}{{.Status}}{{end}}</td>
+            <td>{{if ge .Status 500}}{{.Error}}{{end}}</td>
+          </tr>
+        {{end}}
+      </tbody>
     </table>
   </div>
 

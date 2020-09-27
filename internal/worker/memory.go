@@ -132,6 +132,8 @@ func getCgroupMemStats() map[string]uint64 {
 		workingSet -= tif
 	}
 	m["workingSet"] = workingSet
+	// True RSS. See note on https://lwn.net/Articles/432224.
+	m["trueRSS"] = m["rss"] + m["mapped_file"]
 	return m
 }
 

@@ -12,7 +12,9 @@ import (
 	"fmt"
 	"net/http"
 	"path"
+	"sort"
 	"strconv"
+	"sync"
 	"time"
 
 	"go.opencensus.io/plugin/ochttp"
@@ -114,6 +116,7 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 		RequestedVersion: requestedVersion,
 		Defer:            func() {},
 	}
+	var fi *FetchInfo
 	defer func() {
 		if fr.Error != nil {
 			derrors.Wrap(&fr.Error, "FetchModule(%q, %q)", modulePath, requestedVersion)
@@ -126,6 +129,9 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 		dcensus.RecordWithTag(ctx, dcensus.KeyStatus, strconv.Itoa(fr.Status), fetchLatency.M(latency))
 		if fr.Status < 300 {
 			stats.Record(ctx, fetchedPackages.M(int64(len(fr.PackageVersionStates))))
+		}
+		if fi != nil {
+			finishFetchInfo(fi, fr.Status, fr.Error)
 		}
 		log.Debugf(ctx, "memory after fetch of %s@%s: %dM", modulePath, requestedVersion, allocMeg())
 	}()
@@ -180,6 +186,14 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 	}
 
 	// Proceed with the fetch.
+	fi = &FetchInfo{
+		ModulePath: modulePath,
+		Version:    fr.ResolvedVersion,
+		ZipSize:    uint64(zipSize),
+		Start:      time.Now(),
+	}
+	startFetchInfo(fi)
+
 	if modulePath == stdlib.ModulePath {
 		zipReader, commitTime, err = stdlib.Zip(requestedVersion)
 		if err != nil {
@@ -316,4 +330,68 @@ func zipContainsFilename(r *zip.Reader, name string) bool {
 		}
 	}
 	return false
+}
+
+type FetchInfo struct {
+	ModulePath string
+	Version    string
+	ZipSize    uint64
+	Start      time.Time
+	Finish     time.Time
+	Status     int
+	Error      error
+}
+
+var (
+	fetchInfoMu  sync.Mutex
+	fetchInfoMap = map[*FetchInfo]struct{}{}
+)
+
+func init() {
+	const linger = time.Minute
+	go func() {
+		for {
+			now := time.Now()
+			fetchInfoMu.Lock()
+			for fi := range fetchInfoMap {
+				if !fi.Finish.IsZero() && now.Sub(fi.Finish) > linger {
+					delete(fetchInfoMap, fi)
+				}
+			}
+			fetchInfoMu.Unlock()
+			time.Sleep(linger)
+		}
+	}()
+}
+
+func startFetchInfo(fi *FetchInfo) {
+	fetchInfoMu.Lock()
+	defer fetchInfoMu.Unlock()
+	fetchInfoMap[fi] = struct{}{}
+}
+
+func finishFetchInfo(fi *FetchInfo, status int, err error) {
+	fetchInfoMu.Lock()
+	defer fetchInfoMu.Unlock()
+	fi.Finish = time.Now()
+	fi.Status = status
+	fi.Error = err
+}
+
+// FetchInfos returns information about all fetches in progress,
+// sorted by start time.
+func FetchInfos() []*FetchInfo {
+	var fis []*FetchInfo
+	fetchInfoMu.Lock()
+	for fi := range fetchInfoMap {
+		// Copy to avoid races on Status and Error when read by
+		// worker home page.
+		cfi := *fi
+		fis = append(fis, &cfi)
+	}
+	fetchInfoMu.Unlock()
+	sort.Slice(fis, func(i, j int) bool {
+		return fis[i].Start.Before(fis[j].Start)
+	})
+	return fis
 }

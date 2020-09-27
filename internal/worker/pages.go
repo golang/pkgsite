@@ -31,6 +31,8 @@ type annotation struct {
 	msg string
 }
 
+var startTime = time.Now()
+
 // doIndexPage writes the status page. On error it returns the error and a short
 // string to be written back to the client.
 func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error) {
@@ -76,6 +78,8 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		ResourcePrefix        string
 		LatestTimestamp       *time.Time
 		LocationID            string
+		Hostname              string
+		StartTime             time.Time
 		Experiments           []*internal.Experiment
 		ExperimentsFromConfig bool
 		Excluded              []string
@@ -84,11 +88,14 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		ProcessStats          processMemStats
 		SystemStats           systemMemStats
 		CgroupStats           map[string]uint64
+		Fetches               []*fetch.FetchInfo
 	}{
 		Config:                s.cfg,
 		Env:                   env(s.cfg),
 		ResourcePrefix:        strings.ToLower(env(s.cfg)) + "-",
 		LocationID:            s.cfg.LocationID,
+		Hostname:              os.Getenv("HOSTNAME"),
+		StartTime:             startTime,
 		Experiments:           experiments,
 		ExperimentsFromConfig: os.Getenv("GO_DISCOVERY_EXPERIMENTS_FROM_CONFIG") == "true",
 		Excluded:              excluded,
@@ -97,6 +104,7 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		ProcessStats:          pms,
 		SystemStats:           sms,
 		CgroupStats:           getCgroupMemStats(),
+		Fetches:               fetch.FetchInfos(),
 	}
 	return renderPage(ctx, w, page, s.templates[indexTemplate])
 }

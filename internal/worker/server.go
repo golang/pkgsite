@@ -529,6 +529,12 @@ func parseTemplate(staticPath, filename template.TrustedSource) (*template.Templ
 		"timefmt":   formatTime,
 		"bytesToMi": bytesToMi,
 		"pct":       percentage,
+		"timeSince": func(t time.Time) time.Duration {
+			return time.Since(t).Round(time.Second)
+		},
+		"timeSub": func(t1, t2 time.Time) time.Duration {
+			return t1.Sub(t2).Round(time.Second)
+		},
 	}).ParseFilesFromTrustedSources(templatePath)
 }
 

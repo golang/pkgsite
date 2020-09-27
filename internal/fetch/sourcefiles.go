@@ -41,6 +41,7 @@ func init() {
 		&ast.FuncLit{},
 		&ast.FuncType{},
 		&ast.GenDecl{},
+		&ast.GoStmt{},
 		&ast.KeyValueExpr{},
 		&ast.IfStmt{},
 		&ast.ImportSpec{},
