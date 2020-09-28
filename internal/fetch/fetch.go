@@ -390,8 +390,12 @@ func FetchInfos() []*FetchInfo {
 		fis = append(fis, &cfi)
 	}
 	fetchInfoMu.Unlock()
+	// Order first by done-ness, then by age.
 	sort.Slice(fis, func(i, j int) bool {
-		return fis[i].Start.Before(fis[j].Start)
+		if (fis[i].Status == 0) == (fis[j].Status == 0) {
+			return fis[i].Start.Before(fis[j].Start)
+		}
+		return fis[i].Status == 0
 	})
 	return fis
 }
