@@ -198,6 +198,14 @@ const nextModulesToProcessQuery = `
 	LIMIT $2
 `
 
+// Like the standard query above, this query prioritizes latest versions.
+// However, it does not hold off large modules until the end. In fact, it tries
+// to avoid grouping modules in any way except by latest and status code:
+// processing is much smoother when they are enqueued in random order.
+//
+// To make the result deterministic for testing, we hash the module path and version
+// rather than actually choosing a random number. md5 is built in to postgres and
+// is an adequate hash for this purpose.
 const nextModulesToProcessQueryAlt = `
     -- Make a table of the latest versions of each module.
 	WITH latest_versions AS (
@@ -237,7 +245,6 @@ const nextModulesToProcessQueryAlt = `
 			WHEN status = 540 OR status = 541 OR status = 542 THEN 4
 			ELSE 5
 		END,
-		module_path,
-		version -- for reproducibility
+		md5(module_path||version) -- deterministic but effectively random
 	LIMIT $2
 `
