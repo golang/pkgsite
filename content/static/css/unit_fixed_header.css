@@ -222,3 +222,10 @@
     display: block;
   }
 }
+a.UnitFixedHeader-backLink {
+  color: black;
+  display: block;
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+  margin: auto 0 auto auto;
+}

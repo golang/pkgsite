@@ -34,50 +34,54 @@
       </div>
       <div class="js-fixedHeaderSentinel"></div>
       {{if (eq .SelectedTab.Name "")}}
-      <div class="UnitHeader-detail">
-        <span class="UnitHeader-detailItem">
-          <img class="UnitHeader-detailItemLarge" height="16px" width="16px" src="/static/img/pkg-icon-arrowBranch_16x16.svg">
-          <a href="?tab=versions">Version {{.DisplayVersion}}</a>
-          <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
-          <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
-              data-version="{{.LinkVersion}}" data-mpath="{{.Unit.ModulePath}}" data-ppath="{{.Unit.Path}}" data-pagetype="{{.PageType}}">
-            <span>Latest</span>
-            <a href="{{.LatestURL}}">Go to latest</a>
-          </div>
-        </span>
-        <span class="UnitHeader-detailItem">
-          <img height="16px" width="16px" src="/static/img/pkg-icon-circularArrows_16x16.svg">
-          {{.LastCommitTime}}
-        </span>
-        <span class="UnitHeader-detailItem">
-          <img height="16px" width="16px" src="/static/img/pkg-icon-scale_16x16.svg">
-          {{range $i, $e := .Licenses}}
-            {{if $i}}, {{end}}
-            <a href="{{$.CanonicalURLPath}}?tab=licenses#{{.Anchor}}">{{$e.Type}}</a>
-          {{else}}
-            <span>None detected</span>
-            <a href="/license-policy" class="Disclaimer-link"><em>not legal advice</em></a>
+        <div class="UnitHeader-detail">
+          <span class="UnitHeader-detailItem">
+            <img class="UnitHeader-detailItemLarge" height="16px" width="16px" src="/static/img/pkg-icon-arrowBranch_16x16.svg">
+            <a href="?tab=versions">Version {{.DisplayVersion}}</a>
+            <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
+            <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
+                data-version="{{.LinkVersion}}" data-mpath="{{.Unit.ModulePath}}" data-ppath="{{.Unit.Path}}" data-pagetype="{{.PageType}}">
+              <span>Latest</span>
+              <a href="{{.LatestURL}}">Go to latest</a>
+            </div>
+          </span>
+          <span class="UnitHeader-detailItem">
+            <img height="16px" width="16px" src="/static/img/pkg-icon-circularArrows_16x16.svg">
+            {{.LastCommitTime}}
+          </span>
+          <span class="UnitHeader-detailItem">
+            <img height="16px" width="16px" src="/static/img/pkg-icon-scale_16x16.svg">
+            {{range $i, $e := .Licenses}}
+              {{if $i}}, {{end}}
+              <a href="{{$.CanonicalURLPath}}?tab=licenses#{{.Anchor}}">{{$e.Type}}</a>
+            {{else}}
+              <span>None detected</span>
+              <a href="/license-policy" class="Disclaimer-link"><em>not legal advice</em></a>
+            {{end}}
+          </span>
+          {{if .Unit.IsPackage}}
+            <span class="UnitHeader-detailItem">
+              <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg">
+              <a href="{{$.CanonicalURLPath}}?tab=imports">
+                {{len .Unit.Imports}} <span>Imports</span>
+              </a>
+            </span>
+            <span class="UnitHeader-detailItem">
+              <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg">
+              <a href="{{$.CanonicalURLPath}}?tab=importedby">
+                {{len .Unit.Imports}} <span>Imported by</span>
+              </a>
+            </span>
           {{end}}
-        </span>
-        {{if .Unit.IsPackage}}
-          <span class="UnitHeader-detailItem">
-            <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg">
-            <a href="{{$.CanonicalURLPath}}?tab=imports">
-              {{len .Unit.Imports}} <span>Imports</span>
-            </a>
-          </span>
-          <span class="UnitHeader-detailItem">
-            <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg">
-            <a href="{{$.CanonicalURLPath}}?tab=importedby">
-              {{len .Unit.Imports}} <span>Imported by</span>
-            </a>
-          </span>
-        {{end}}
-      </div>
+        </div>
       {{else}}
-      <a class="UnitHeader-backLink" href="?">
-        <img height="16px" width="16px" src="/static/img/pkg-icon-arrowLeft_16x16.svg"> Go to package overview
-      </a>
+        <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
+        <div style="display: none;" class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
+            data-version="{{.LinkVersion}}" data-mpath="{{.Unit.ModulePath}}" data-ppath="{{.Unit.Path}}" data-pagetype="{{.PageType}}">
+        </div>
+        <a class="UnitHeader-backLink" href="?">
+          <img height="16px" width="16px" src="/static/img/pkg-icon-arrowLeft_16x16.svg"> Go to main page
+        </a>
       {{end}}
     </div>
   </header>

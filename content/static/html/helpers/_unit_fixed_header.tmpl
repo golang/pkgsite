@@ -31,66 +31,72 @@
         {{end}}
       </div>
       <div class="UnitFixedHeader-overflowingTabList">
-        <div class="UnitHeaderFixed-detail">
-          <span class="UnitHeaderFixed-detailItem UnitHeaderFixed-detailItem--md">
-            <img height="16px" width="16px" src="/static/img/pkg-icon-arrowBranch_16x16.svg">
-            <a href="?tab=versions" tabindex="-1">Version {{.DisplayVersion}}</a>
-            <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
-            <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
-                data-version="{{.LinkVersion}}" data-mpath="{{.Unit.ModulePath}}" data-ppath="{{.Unit.Path}}" data-pagetype="{{.PageType}}">
-              <span>Latest</span>
-              <a href="{{.LatestURL}}">Go to latest</a>
-            </div>
-          </span>
-          <span class="UnitHeaderFixed-detailItem UnitHeaderFixed-detailItem--md">
-            <img height="16px" width="16px" src="/static/img/pkg-icon-circularArrows_16x16.svg">
-            {{.LastCommitTime}}
-          </span>
-          <span class="UnitHeaderFixed-detailItem UnitHeaderFixed-detailItem--md">
-            <img height="16px" width="16px" src="/static/img/pkg-icon-scale_16x16.svg">
-            {{range $i, $e := .Licenses}}
-              {{if $i}}, {{end}}
-              <a href="{{$.CanonicalURLPath}}?tab=licenses#{{.Anchor}}" tabindex="-1">{{$e.Type}}</a>
-            {{else}}
-              <span>None detected</span>
-              <a href="/license-policy" class="Disclaimer-link" tabindex="-1">
-                <em>not legal advice</em>
-              </a>
-            {{end}}
-          </span>
-          {{if .Unit.IsPackage}}
-            <span class="UnitHeaderFixed-detailItem UnitHeaderFixed-detailItem--lg">
-              <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg">
-              <a href="{{$.CanonicalURLPath}}?tab=imports" tabindex="-1">
-                {{len .Unit.Imports}} <span>Imports</span>
-              </a>
+        {{if (eq .SelectedTab.Name "")}}
+          <div class="UnitHeaderFixed-detail">
+            <span class="UnitHeaderFixed-detailItem UnitHeaderFixed-detailItem--md">
+              <img height="16px" width="16px" src="/static/img/pkg-icon-arrowBranch_16x16.svg">
+              <a href="?tab=versions" tabindex="-1">Version {{.DisplayVersion}}</a>
+              <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
+              <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
+                  data-version="{{.LinkVersion}}" data-mpath="{{.Unit.ModulePath}}" data-ppath="{{.Unit.Path}}" data-pagetype="{{.PageType}}">
+                <span>Latest</span>
+                <a href="{{.LatestURL}}">Go to latest</a>
+              </div>
             </span>
-            <span class="UnitHeaderFixed-detailItem UnitHeaderFixed-detailItem--lg">
-              <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg">
-              <a href="{{$.CanonicalURLPath}}?tab=importedby" tabindex="-1">
-                {{len .Unit.Imports}} <span>Imported by</span>
-              </a>
+            <span class="UnitHeaderFixed-detailItem UnitHeaderFixed-detailItem--md">
+              <img height="16px" width="16px" src="/static/img/pkg-icon-circularArrows_16x16.svg">
+              {{.LastCommitTime}}
             </span>
-          {{end}}
-        </div>
-        <div class="UnitFixedHeader-overflowContainer">
-          <svg class="UnitFixedHeader-overflowImage" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
-            <path d="M0 0h24v24H0z" fill="none"/>
-            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-          </svg>
-          <select class="UnitFixedHeader-overflowSelect js-overflowSelect" tabindex="-1">
-            {{range .Tabs}}
-              <option
-                value="{{$.CanonicalURLPath}}?tab={{.Name}}"
-                {{if .Disabled}}
-                  disabled
-                  data-always-disabled="true"
-                {{end}}
-                {{if eq .Name $.SelectedTab.Name}}selected{{end}}
-              >{{.DisplayName}}</option>
+            <span class="UnitHeaderFixed-detailItem UnitHeaderFixed-detailItem--md">
+              <img height="16px" width="16px" src="/static/img/pkg-icon-scale_16x16.svg">
+              {{range $i, $e := .Licenses}}
+                {{if $i}}, {{end}}
+                <a href="{{$.CanonicalURLPath}}?tab=licenses#{{.Anchor}}" tabindex="-1">{{$e.Type}}</a>
+              {{else}}
+                <span>None detected</span>
+                <a href="/license-policy" class="Disclaimer-link" tabindex="-1">
+                  <em>not legal advice</em>
+                </a>
+              {{end}}
+            </span>
+            {{if .Unit.IsPackage}}
+              <span class="UnitHeaderFixed-detailItem UnitHeaderFixed-detailItem--lg">
+                <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg">
+                <a href="{{$.CanonicalURLPath}}?tab=imports" tabindex="-1">
+                  {{len .Unit.Imports}} <span>Imports</span>
+                </a>
+              </span>
+              <span class="UnitHeaderFixed-detailItem UnitHeaderFixed-detailItem--lg">
+                <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg">
+                <a href="{{$.CanonicalURLPath}}?tab=importedby" tabindex="-1">
+                  {{len .Unit.Imports}} <span>Imported by</span>
+                </a>
+              </span>
             {{end}}
-          </select>
-        </div>
+          </div>
+          <div class="UnitFixedHeader-overflowContainer">
+            <svg class="UnitFixedHeader-overflowImage" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+              <path d="M0 0h24v24H0z" fill="none"/>
+              <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+            </svg>
+            <select class="UnitFixedHeader-overflowSelect js-overflowSelect" tabindex="-1">
+              {{range .Tabs}}
+                <option
+                  value="{{$.CanonicalURLPath}}?tab={{.Name}}"
+                  {{if .Disabled}}
+                    disabled
+                    data-always-disabled="true"
+                  {{end}}
+                  {{if eq .Name $.SelectedTab.Name}}selected{{end}}
+                >{{.DisplayName}}</option>
+              {{end}}
+            </select>
+          </div>
+        {{else}}
+          <a class="UnitFixedHeader-backLink" href="?">
+            <img height="16px" width="16px" src="/static/img/pkg-icon-arrowLeft_16x16.svg"> Go to main page
+          </a>
+        {{end}}
       </div>
     </div>
   </div>
