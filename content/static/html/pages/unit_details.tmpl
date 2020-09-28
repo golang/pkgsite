@@ -16,9 +16,15 @@
     </div>
     <div class="UnitDetails-content">
       {{if .CanShowDetails}}
-        {{block "unit_readme" .}}{{end}}
-        {{block "unit_doc" .}}{{end}}
-        {{block "unit_directories" .}}{{end}}
+        {{if .Readme.String}}
+          {{block "unit_readme" .}}{{end}}
+        {{end}}
+        {{if (or .DocBody.String .Unit.IsPackage)}}
+          {{block "unit_doc" .}}{{end}}
+        {{end}}
+        {{if (or .Packages .NestedModules)}}
+          {{block "unit_directories" .}}{{end}}
+        {{end}}
       {{else}}
         <h2>“{{.UnitContentName}}” not displayed due to license restrictions.</h2>
         See our <a href="/license-policy">license policy</a>.

@@ -6,16 +6,23 @@
 
 {{define "unit_outline"}}
   <div class="UnitOutline-jumpTo">
-    <input class="js-jumpToInput" placeholder="Jump to">
+    <input class="js-jumpToInput" placeholder="Jump to"
+        {{if (not .DocOutline.String)}}disabled{{end}}>
   </div>
   <div class="UnitOutline">
-    <a class="UnitOutline-accordian" href="?readme#readme-top">README</a>
-    <a class="UnitOutline-accordian" href="#doc-top">Documentation</a>
-    <div class="UnitOutline-panel">
-      <div class="Documentation">
-        {{.DocOutline}}
+    {{if .Readme.String}}
+      <a class="UnitOutline-accordian" href="?readme#readme-top">README</a>
+    {{end}}
+    {{if (or .DocOutline.String .Unit.IsPackage)}}
+      <a class="UnitOutline-accordian" href="#doc-top">Documentation</a>
+      <div class="UnitOutline-panel">
+        <div class="Documentation">
+          {{.DocOutline}}
+        </div>
       </div>
-    </div>
-    <a class="UnitOutline-accordian" href="#directories-top">Directories</a>
+    {{end}}
+    {{if (or .Packages .NestedModules)}}
+      <a class="UnitOutline-accordian" href="#directories-top">Directories</a>
+    {{end}}
   </div>
 {{end}}
