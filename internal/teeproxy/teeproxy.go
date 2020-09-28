@@ -74,25 +74,33 @@ type RequestEvent struct {
 }
 
 var gddoToPkgGoDevRequest = map[string]string{
-	"/":                              "/",
-	"/-/about":                       "/about",
-	"/-/bootstrap.min.css":           "/404",
-	"/-/bootstrap.min.js":            "/404",
-	"/-/bot":                         "/404",
-	"/-/go":                          "/std",
-	"/-/jquery-2.0.3.min.js":         "/404",
-	"/-/refresh":                     "/404",
-	"/-/sidebar.css":                 "/404",
-	"/-/site.css":                    "/404",
-	"/-/subrepo":                     "/404",
-	"/BingSiteAuth.xml":              "/404",
-	"/C":                             "/C",
-	"/favicon.ico":                   "/favicon.ico",
-	"/google3d2f3cd4cc2bb44b.html":   "/404",
-	"/humans.txt":                    "/404",
-	"/robots.txt":                    "/404",
-	"/site.js":                       "/404",
-	"/third_party/jquery.timeago.js": "/404",
+	"/":            "/",
+	"/-/about":     "/about",
+	"/-/go":        "/std",
+	"/C":           "/C",
+	"/favicon.ico": "/favicon.ico",
+}
+
+// expected404s are a list of godoc.org URLs that we expected to 404 on
+// pkg.go.dev.
+var expected404s = map[string]bool{
+	"/-/bootstrap.min.css":           true,
+	"/-/bootstrap.min.js":            true,
+	"/-/bot":                         true,
+	"/-/jquery-2.0.3.min.js":         true,
+	"/-/refresh":                     true,
+	"/-/sidebar.css":                 true,
+	"/-/site.css":                    true,
+	"/-/site.js":                     true,
+	"/BingSiteAuth.xml":              true,
+	"/google3d2f3cd4cc2bb44b.html":   true,
+	"/humans.txt":                    true,
+	"/robots.txt":                    true,
+	"/third_party/jquery.timeago.js": true,
+
+	// TODO: add a replacement page for this before redirecting godoc.org
+	// traffic.
+	"/-/subrepo": true,
 }
 
 // statusRedBreaker is a custom HTTP status code that denotes that a request
@@ -267,6 +275,21 @@ func (s *Server) doRequest(r *http.Request) (results map[string]*RequestEvent, s
 
 	results = map[string]*RequestEvent{
 		"godoc.org": gddoEvent,
+	}
+	if _, ok := expected404s[gddoEvent.Path]; ok {
+		// Don't tee these requests, since we know they will 404.
+		return results, http.StatusOK, nil
+	}
+	for _, s := range []string{
+		"?import-graph",
+		"?status.png",
+		"?status.svg",
+		"api.godoc.org",
+	} {
+		if strings.Contains(gddoEvent.URL, s) {
+			// Don't tee these requests, since we know they will 404.
+			return results, http.StatusOK, nil
+		}
 	}
 	if len(s.hosts) > 0 {
 		rateLimited := !s.limiter.Allow()
