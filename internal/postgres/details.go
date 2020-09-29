@@ -193,52 +193,6 @@ func (db *DB) GetModuleInfo(ctx context.Context, modulePath, resolvedVersion str
 	return mi, nil
 }
 
-// LegacyGetModuleInfo fetches a module version from the database with the primary key
-// (module_path, version).
-func (db *DB) LegacyGetModuleInfo(ctx context.Context, modulePath string, requestedVersion string) (_ *internal.LegacyModuleInfo, err error) {
-	defer derrors.Wrap(&err, "LegacyGetModuleInfo(ctx, %q, %q)", modulePath, requestedVersion)
-
-	query := `
-		SELECT
-			module_path,
-			version,
-			commit_time,
-			readme_file_path,
-			readme_contents,
-			source_info,
-			redistributable,
-			has_go_mod
-		FROM
-			modules m`
-
-	args := []interface{}{modulePath}
-	if requestedVersion == internal.LatestVersion {
-		query += fmt.Sprintf(`
-			WHERE m.module_path = $1 %s LIMIT 1;`, orderByLatest)
-	} else {
-		query += `
-			WHERE m.module_path = $1 AND m.version = $2;`
-		args = append(args, requestedVersion)
-	}
-
-	var mi internal.LegacyModuleInfo
-	row := db.db.QueryRow(ctx, query, args...)
-	if err := row.Scan(&mi.ModulePath, &mi.Version, &mi.CommitTime,
-		database.NullIsEmpty(&mi.LegacyReadmeFilePath), database.NullIsEmpty(&mi.LegacyReadmeContents),
-		jsonbScanner{&mi.SourceInfo}, &mi.IsRedistributable, &mi.HasGoMod); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("module version %s@%s: %w", modulePath, requestedVersion, derrors.NotFound)
-		}
-		return nil, fmt.Errorf("row.Scan(): %v", err)
-	}
-	if db.bypassLicenseCheck {
-		mi.IsRedistributable = true
-	} else {
-		mi.RemoveNonRedistributableData()
-	}
-	return &mi, nil
-}
-
 // jsonbScanner scans a jsonb value into a Go value.
 type jsonbScanner struct {
 	ptr interface{} // a pointer to a Go struct or other JSON-serializable value

@@ -85,12 +85,12 @@ func TestInsertModule(t *testing.T) {
 }
 
 func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
-	got, err := testDB.LegacyGetModuleInfo(ctx, want.ModulePath, want.Version)
+	got, err := testDB.GetModuleInfo(ctx, want.ModulePath, want.Version)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(want.LegacyModuleInfo, *got, cmp.AllowUnexported(source.Info{})); diff != "" {
-		t.Fatalf("testDB.LegacyGetModuleInfo(%q, %q) mismatch (-want +got):\n%s", want.ModulePath, want.Version, diff)
+	if diff := cmp.Diff(want.ModuleInfo, *got, cmp.AllowUnexported(source.Info{})); diff != "" {
+		t.Fatalf("testDB.GetModuleInfo(%q, %q) mismatch (-want +got):\n%s", want.ModulePath, want.Version, diff)
 	}
 
 	for _, wantp := range want.LegacyPackages {
@@ -176,17 +176,6 @@ func TestInsertModuleLicenseCheck(t *testing.T) {
 			if err := db.InsertModule(ctx, mod); err != nil {
 				t.Fatal(err)
 			}
-
-			// Legacy model
-			mi, err := db.LegacyGetModuleInfo(ctx, mod.ModulePath, mod.Version)
-			if err != nil {
-				t.Fatal(err)
-			}
-			pkg, err := db.LegacyGetPackage(ctx, mod.ModulePath, mod.ModulePath, mod.Version)
-			if err != nil {
-				t.Fatal(err)
-			}
-			checkHasRedistData(mi.LegacyReadmeContents, pkg.DocumentationHTML, bypass)
 
 			// New model
 			pathInfo := &internal.UnitMeta{
@@ -436,7 +425,7 @@ func TestDeleteModule(t *testing.T) {
 	if err := testDB.InsertModule(ctx, v); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := testDB.LegacyGetModuleInfo(ctx, v.ModulePath, v.Version); err != nil {
+	if _, err := testDB.GetModuleInfo(ctx, v.ModulePath, v.Version); err != nil {
 		t.Fatal(err)
 	}
 
@@ -451,7 +440,7 @@ func TestDeleteModule(t *testing.T) {
 	if err := testDB.DeleteModule(ctx, v.ModulePath, v.Version); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := testDB.LegacyGetModuleInfo(ctx, v.ModulePath, v.Version); !errors.Is(err, derrors.NotFound) {
+	if _, err := testDB.GetModuleInfo(ctx, v.ModulePath, v.Version); !errors.Is(err, derrors.NotFound) {
 		t.Errorf("got %v, want NotFound", err)
 	}
 
