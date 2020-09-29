@@ -103,6 +103,17 @@ type Module struct {
 	LegacyPackages []*LegacyPackage
 }
 
+// Packages returns all of the units for a module that are packages.
+func (m *Module) Packages() []*Unit {
+	var pkgs []*Unit
+	for _, u := range m.Units {
+		if u.IsPackage() {
+			pkgs = append(pkgs, u)
+		}
+	}
+	return pkgs
+}
+
 // IndexVersion holds the version information returned by the module index.
 type IndexVersion struct {
 	Path      string
