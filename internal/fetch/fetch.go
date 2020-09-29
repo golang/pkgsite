@@ -70,7 +70,7 @@ var (
 		Description: "Fetch request count by result status",
 		TagKeys:     []tag.Key{dcensus.KeyStatus},
 	}
-	// FetchPackageCount counts how many packages were sucessfully fetched.
+	// FetchPackageCount counts how many packages were successfully fetched.
 	FetchPackageCount = &view.View{
 		Name:        "go-discovery/worker/fetch-package-count",
 		Measure:     fetchedPackages,

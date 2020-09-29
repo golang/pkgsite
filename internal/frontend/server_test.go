@@ -396,7 +396,7 @@ func serverTestCases() []serverTestCase {
 		},
 		{
 			name:           "search large offset",
-			urlPath:        fmt.Sprintf("/search?q=github.com&page=1002"),
+			urlPath:        "/search?q=github.com&page=1002",
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{

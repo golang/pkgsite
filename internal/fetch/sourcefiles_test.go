@@ -12,23 +12,6 @@ import (
 	"testing"
 )
 
-// astFilesForDir reads the Go files in dir and returns
-// them along with a FileSet.
-func astFilesForDir(dir string) (*token.FileSet, []*ast.File, error) {
-	fset := token.NewFileSet()
-	pkgs, err := parser.ParseDir(fset, dir, nil, parser.ParseComments)
-	if err != nil {
-		return nil, nil, err
-	}
-	var files []*ast.File
-	for _, p := range pkgs {
-		for _, f := range p.Files {
-			files = append(files, f)
-		}
-	}
-	return fset, files, nil
-}
-
 func TestEncodeDecodeASTFiles(t *testing.T) {
 	// Verify that we can encode and decode the Go files in this directory.
 	fset := token.NewFileSet()
