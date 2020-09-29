@@ -6,8 +6,6 @@
 
 .UnitMeta {
   display: block;
-  position: sticky;
-  top: 5rem;
 }
 .UnitMeta a {
   display: block;
