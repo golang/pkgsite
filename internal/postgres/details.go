@@ -15,9 +15,7 @@ import (
 
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/uncheckedconversions"
-	"github.com/lib/pq"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 )
 
@@ -65,63 +63,6 @@ func (db *DB) GetNestedModules(ctx context.Context, modulePath string) (_ []*int
 	}
 
 	return modules, nil
-}
-
-// LegacyGetPackagesInModule returns packages contained in the module version
-// specified by modulePath and version. The returned packages will be sorted
-// by their package path.
-func (db *DB) LegacyGetPackagesInModule(ctx context.Context, modulePath, resolvedVersion string) (_ []*internal.LegacyPackage, err error) {
-	query := `SELECT
-		path,
-		name,
-		synopsis,
-		v1_path,
-		license_types,
-		license_paths,
-		redistributable,
-		documentation,
-		goos,
-		goarch
-	FROM
-		packages
-	WHERE
-		module_path = $1
-		AND version = $2
-	ORDER BY path;`
-
-	var packages []*internal.LegacyPackage
-	collect := func(rows *sql.Rows) error {
-		var (
-			p                          internal.LegacyPackage
-			licenseTypes, licensePaths []string
-			docHTML                    string
-		)
-		if err := rows.Scan(&p.Path, &p.Name, &p.Synopsis, &p.V1Path, pq.Array(&licenseTypes),
-			pq.Array(&licensePaths), &p.IsRedistributable, database.NullIsEmpty(&docHTML),
-			&p.GOOS, &p.GOARCH); err != nil {
-			return fmt.Errorf("row.Scan(): %v", err)
-		}
-		lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
-		if err != nil {
-			return err
-		}
-		p.Licenses = lics
-		p.DocumentationHTML = convertDocumentation(docHTML)
-		packages = append(packages, &p)
-		return nil
-	}
-
-	if err := db.db.RunQuery(ctx, query, collect, modulePath, resolvedVersion); err != nil {
-		return nil, fmt.Errorf("DB.LegacyGetPackagesInModule(ctx, %q, %q): %w", modulePath, resolvedVersion, err)
-	}
-	for _, p := range packages {
-		if db.bypassLicenseCheck {
-			p.IsRedistributable = true
-		} else {
-			p.RemoveNonRedistributableData()
-		}
-	}
-	return packages, nil
 }
 
 // GetImportedBy fetches and returns all of the packages that import the

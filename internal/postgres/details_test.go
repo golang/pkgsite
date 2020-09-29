@@ -12,10 +12,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
@@ -276,46 +274,6 @@ func TestGetImportedBy(t *testing.T) {
 			}
 			if diff := cmp.Diff(tc.wantImportedBy, gotImportedBy); diff != "" {
 				t.Errorf("testDB.GetImportedBy(%q, %q) mismatch (-want +got):\n%s", tc.path, tc.modulePath, diff)
-			}
-		})
-	}
-}
-
-func TestGetPackagesInVersion(t *testing.T) {
-	testVersion := sample.Module("test.module", "v1.2.3", "", "foo")
-
-	for _, tc := range []struct {
-		name, pkgPath string
-		module        *internal.Module
-	}{
-		{
-			name:    "version with multiple packages",
-			pkgPath: "test.module",
-			module:  testVersion,
-		},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			defer ResetTestDB(testDB, t)
-			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-			defer cancel()
-
-			if err := testDB.InsertModule(ctx, tc.module); err != nil {
-				t.Error(err)
-			}
-
-			got, err := testDB.LegacyGetPackagesInModule(ctx, tc.pkgPath, tc.module.Version)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			opts := []cmp.Option{
-				cmpopts.IgnoreFields(internal.LegacyPackage{}, "Imports"),
-				// The packages table only includes partial license information; it omits the Coverage field.
-				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
-				cmp.AllowUnexported(safehtml.HTML{}),
-			}
-			if diff := cmp.Diff(tc.module.LegacyPackages, got, opts...); diff != "" {
-				t.Errorf("testDB.GetPackageInVersion(ctx, %q, %q) mismatch (-want +got):\n%s", tc.pkgPath, tc.module.Version, diff)
 			}
 		})
 	}

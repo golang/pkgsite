@@ -661,15 +661,24 @@ func (db *DB) compareLicenses(ctx context.Context, m *internal.Module) (err erro
 // are packages in the packages table that are not present in m.LegacyPackages.
 func (db *DB) comparePackages(ctx context.Context, m *internal.Module) (err error) {
 	defer derrors.Wrap(&err, "comparePackages(ctx, %q, %q)", m.ModulePath, m.Version)
-	dbPackages, err := db.LegacyGetPackagesInModule(ctx, m.ModulePath, m.Version)
+	u, err := db.GetUnit(ctx, &internal.UnitMeta{
+		ModulePath:        m.ModulePath,
+		Path:              m.ModulePath,
+		Version:           m.Version,
+		IsRedistributable: m.IsRedistributable,
+		CommitTime:        m.CommitTime,
+	}, internal.WithSubdirectories)
 	if err != nil {
+		if errors.Is(err, derrors.NotFound) {
+			return nil
+		}
 		return err
 	}
 	set := map[string]bool{}
 	for _, p := range m.LegacyPackages {
 		set[p.Path] = true
 	}
-	for _, p := range dbPackages {
+	for _, p := range u.Subdirectories {
 		if _, ok := set[p.Path]; !ok {
 			return fmt.Errorf("expected package %q in module: %w", p.Path, derrors.DBModuleInsertInvalid)
 		}
