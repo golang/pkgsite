@@ -189,6 +189,7 @@ func Module(modulePath, version string, suffixes ...string) *internal.Module {
 			m.LegacyPackages = append(m.LegacyPackages, lp)
 			u := UnitForPackage(lp, modulePath, version)
 			m.Units[0].Documentation = u.Documentation
+			m.Units[0].Name = u.Name
 		}
 	}
 	return m

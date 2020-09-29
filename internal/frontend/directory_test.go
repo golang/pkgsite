@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -32,8 +33,11 @@ func TestFetchDirectoryDetails(t *testing.T) {
 		mi := sample.ModuleInfo(modulePath, version)
 		var wantPkgs []*Package
 		for _, suffix := range suffixes {
-			sp := sample.LegacyPackage(modulePath, suffix)
-			pm := packageMetaFromLegacyPackage(sp)
+			fullPath := suffix
+			if modulePath != stdlib.ModulePath {
+				fullPath = path.Join(modulePath, suffix)
+			}
+			pm := sample.PackageMeta(fullPath)
 			pkg, err := createPackage(pm, mi, false)
 			if err != nil {
 				t.Fatal(err)
@@ -42,10 +46,10 @@ func TestFetchDirectoryDetails(t *testing.T) {
 			if pkg.PathAfterDirectory == "" {
 				pkg.PathAfterDirectory = effectiveName(pm.Path, pm.Name) + " (root)"
 			}
-			pkg.Synopsis = sp.Synopsis
-			pkg.PathAfterDirectory = internal.Suffix(sp.Path, dirPath)
+			pkg.Synopsis = pm.Synopsis
+			pkg.PathAfterDirectory = internal.Suffix(pm.Path, dirPath)
 			if pkg.PathAfterDirectory == "" {
-				pkg.PathAfterDirectory = fmt.Sprintf("%s (root)", effectiveName(sp.Path, sp.Name))
+				pkg.PathAfterDirectory = fmt.Sprintf("%s (root)", effectiveName(pm.Path, pm.Name))
 			}
 			wantPkgs = append(wantPkgs, pkg)
 		}
@@ -75,37 +79,10 @@ func TestFetchDirectoryDetails(t *testing.T) {
 			includeDirPath:  true,
 			dirPath:         "github.com/hashicorp/vault/api",
 			modulePath:      "github.com/hashicorp/vault/api",
-			version:         internal.LatestVersion,
-			wantModulePath:  "github.com/hashicorp/vault/api",
-			wantVersion:     "v1.1.2",
-			wantPkgSuffixes: []string{""},
-		},
-		{
-			name:            "only dirPath provided, includeDirPath = false, want longest module path",
-			dirPath:         "github.com/hashicorp/vault/api",
-			modulePath:      internal.UnknownModulePath,
-			version:         internal.LatestVersion,
-			wantModulePath:  "github.com/hashicorp/vault/api",
-			wantVersion:     "v1.1.2",
-			wantPkgSuffixes: nil,
-		},
-		{
-			name:            "dirPath@version, includeDirPath = false, want longest module path",
-			dirPath:         "github.com/hashicorp/vault/api",
-			modulePath:      internal.UnknownModulePath,
 			version:         "v1.1.2",
 			wantModulePath:  "github.com/hashicorp/vault/api",
 			wantVersion:     "v1.1.2",
-			wantPkgSuffixes: nil,
-		},
-		{
-			name:            "dirPath@version,  includeDirPath = false, version only exists for shorter module path",
-			dirPath:         "github.com/hashicorp/vault/api",
-			modulePath:      internal.UnknownModulePath,
-			version:         "v1.0.3",
-			wantModulePath:  "github.com/hashicorp/vault",
-			wantVersion:     "v1.0.3",
-			wantPkgSuffixes: nil,
+			wantPkgSuffixes: []string{""},
 		},
 		{
 			name:           "valid directory for modulePath@version/suffix, includeDirPath = false",
@@ -151,7 +128,6 @@ func TestFetchDirectoryDetails(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			mi := sample.ModuleInfoReleaseType(tc.modulePath, tc.version)
 			var (
 				got *Directory
 				err error
@@ -162,17 +138,24 @@ func TestFetchDirectoryDetails(t *testing.T) {
 					ModulePath:        tc.modulePath,
 					Version:           tc.version,
 					IsRedistributable: true,
+					CommitTime:        sample.CommitTime,
+					Licenses:          sample.LicenseMetadata,
 				}
 				got, err = fetchDirectoryDetails(ctx, testDB, um, tc.includeDirPath)
+				if err != nil {
+					t.Fatal(err)
+				}
+				checkDirectory(got, tc.dirPath, tc.wantModulePath, tc.wantVersion, tc.wantPkgSuffixes)
 			})
 			t.Run("legacy", func(t *testing.T) {
+				mi := sample.ModuleInfoReleaseType(tc.modulePath, tc.version)
 				got, err = legacyFetchDirectoryDetails(ctx, testDB,
 					tc.dirPath, mi, sample.LicenseMetadata, tc.includeDirPath)
+				if err != nil {
+					t.Fatal(err)
+				}
+				checkDirectory(got, tc.dirPath, tc.wantModulePath, tc.wantVersion, tc.wantPkgSuffixes)
 			})
-			if err != nil {
-				t.Fatal(err)
-			}
-			checkDirectory(got, tc.dirPath, tc.wantModulePath, tc.wantVersion, tc.wantPkgSuffixes)
 		})
 	}
 }
@@ -190,24 +173,6 @@ func TestFetchDirectoryDetailsInvalidArguments(t *testing.T) {
 		wantPkgPaths                                                    []string
 	}{
 		{
-			name:       "dirPath is empty",
-			dirPath:    "github.com/hashicorp/vault/api",
-			modulePath: "",
-			version:    internal.LatestVersion,
-		},
-		{
-			name:       "modulePath is empty",
-			dirPath:    "github.com/hashicorp/vault/api",
-			modulePath: "",
-			version:    internal.LatestVersion,
-		},
-		{
-			name:       "version is empty",
-			dirPath:    "github.com/hashicorp/vault/api",
-			modulePath: internal.UnknownModulePath,
-			version:    "",
-		},
-		{
 			name:           "dirPath is not modulePath, includeDirPath = true",
 			dirPath:        "github.com/hashicorp/vault/api",
 			modulePath:     "github.com/hashicorp/vault",
@@ -217,8 +182,15 @@ func TestFetchDirectoryDetailsInvalidArguments(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			mi := sample.ModuleInfoReleaseType(tc.modulePath, tc.version)
-			got, err := legacyFetchDirectoryDetails(ctx, testDB,
-				tc.dirPath, mi, sample.LicenseMetadata, tc.includeDirPath)
+			um := &internal.UnitMeta{
+				Path:              tc.dirPath,
+				ModulePath:        mi.ModulePath,
+				Version:           mi.Version,
+				IsRedistributable: true,
+				CommitTime:        sample.CommitTime,
+				Licenses:          sample.LicenseMetadata,
+			}
+			got, err := fetchDirectoryDetails(ctx, testDB, um, tc.includeDirPath)
 			if !errors.Is(err, derrors.InvalidArgument) {
 				t.Fatalf("expected err; got = \n%+v, %v", got, err)
 			}
