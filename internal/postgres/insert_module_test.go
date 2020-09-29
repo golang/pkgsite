@@ -93,24 +93,6 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 		t.Fatalf("testDB.GetModuleInfo(%q, %q) mismatch (-want +got):\n%s", want.ModulePath, want.Version, diff)
 	}
 
-	for _, wantp := range want.LegacyPackages {
-		got, err := testDB.LegacyGetPackage(ctx, wantp.Path, want.ModulePath, want.Version)
-		if err != nil {
-			t.Fatal(err)
-		}
-		opts := cmp.Options{
-			// The packages table only includes partial license information; it
-			// omits the Coverage field.
-			cmpopts.IgnoreFields(internal.LegacyPackage{}, "Imports"),
-			cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
-			cmpopts.EquateEmpty(),
-			cmp.AllowUnexported(safehtml.HTML{}),
-		}
-		if diff := cmp.Diff(*wantp, got.LegacyPackage, opts...); diff != "" {
-			t.Fatalf("testDB.LegacyGetPackage(%q, %q) mismatch (-want +got):\n%s", wantp.Path, want.Version, diff)
-		}
-	}
-
 	for _, wantu := range want.Units {
 		got, err := testDB.GetUnit(ctx, &wantu.UnitMeta, internal.AllFields)
 		if err != nil {
