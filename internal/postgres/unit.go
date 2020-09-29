@@ -108,7 +108,8 @@ func (db *DB) getDocumentation(ctx context.Context, pathID int) (_ *internal.Doc
 			d.goos,
 			d.goarch,
 			d.synopsis,
-			d.html
+			d.html,
+			d.source
 		FROM documentation d
 		WHERE
 		    d.path_id=$1;`, pathID).Scan(
@@ -116,6 +117,7 @@ func (db *DB) getDocumentation(ctx context.Context, pathID int) (_ *internal.Doc
 		database.NullIsEmpty(&doc.GOARCH),
 		database.NullIsEmpty(&doc.Synopsis),
 		database.NullIsEmpty(&docHTML),
+		&doc.Source,
 	)
 	switch err {
 	case sql.ErrNoRows:

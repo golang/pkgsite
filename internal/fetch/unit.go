@@ -66,6 +66,7 @@ func moduleUnits(modulePath, version string,
 				GOARCH:   pkg.goarch,
 				Synopsis: pkg.synopsis,
 				HTML:     pkg.documentationHTML,
+				Source:   pkg.source,
 			}
 		}
 		units = append(units, dir)
