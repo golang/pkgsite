@@ -87,7 +87,11 @@
 </aside>
 <div class="NavigationDrawer-scrim js-scrim" role="presentation">
 </div>
-<main class="Site-content">{{block "main_content" .}}{{end}}</main>
+{{if (.Experiments.IsActive "unit-page")}}
+  <div class="Site-content">{{block "main_content" .}}{{end}}</div>
+{{else}}
+  <main class="Site-content">{{block "main_content" .}}{{end}}</main>
+{{end}}
 <footer class="Site-footer">
   {{block "pre_footer" .}}{{end}}
   <div class="Footer">

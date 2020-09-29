@@ -62,7 +62,7 @@ const quoteBody = `<div class="Documentation-content js-docContent">
       <p>Package quote collects pithy sayings.</p>
    </section>
    <section class="Documentation-index">
-      <h2 id="pkg-index" class="Documentation-indexHeader">Index <a href="#pkg-index">¶</a></h2>
+      <h3 id="pkg-index" class="Documentation-indexHeader">Index <a href="#pkg-index">¶</a></h3>
       <ul class="Documentation-indexList">
          <li class="Documentation-indexFunction">
             <a href="#Glass">func Glass() string</a>

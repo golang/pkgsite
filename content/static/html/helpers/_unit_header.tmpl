@@ -5,7 +5,12 @@
 -->
 
 {{define "unit_header"}}
-  <header class="UnitHeader">
+  <header class="UnitHeader" role="complementary"
+      aria-label="{{if .Unit.IsCommand}}command
+      {{else if .Unit.IsPackage}}package
+      {{else if .Unit.IsModule}}module
+      {{else}}directory{{end}}
+      {{.Title}} information">
     <div class="UnitHeader-container">
       <div class="UnitHeader-breadcrumb">
         {{with .Breadcrumb}}
@@ -21,20 +26,18 @@
         <h1 class="UnitHeader-title">
           {{.Title}}
         </h1>
-        {{if .Unit.IsPackage}}
-          {{if .Unit.IsCommand}}
-            <span class="UnitHeader-badge">command</span>
-          {{else}}
-            <span class="UnitHeader-badge">package</span>
-          {{end}}
+        {{if .Unit.IsCommand}}
+          <span class="UnitHeader-badge">command</span>
+        {{else if .Unit.IsPackage}}
+          <span class="UnitHeader-badge">package</span>
         {{end}}
         {{if .Unit.IsModule}}
           <span class="UnitHeader-badge">module</span>
         {{end}}
+        {{if not (or .Unit.IsPackage .Unit.IsModule)}}
+          <span class="UnitHeader-badge">directory</span>
+        {{end}}
       </div>
-      {{if not (or .Unit.IsPackage .Unit.IsModule)}}
-        <span class="UnitHeader-badge">directory</span>
-      {{end}}
       <div class="UnitHeader-versionBanner $$GODISCOVERY_LATESTMAJORCLASS$$">
         <img height="19px" width="16px" class="UnitHeader-detailIcon" src="/static/img/pkg-icon-info_19x16.svg">
         <span>

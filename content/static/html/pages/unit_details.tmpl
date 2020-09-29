@@ -11,10 +11,15 @@
 {{define "unit_content"}}
   <div class="UnitDetails">
     {{.MobileOutline}}
-    <div class="UnitDetails-outline">
+    <div class="UnitDetails-outline" role="navigation"
+        aria-label="{{if .Unit.IsCommand}}command
+        {{else if .Unit.IsPackage}}package
+        {{else if .Unit.IsModule}}module
+        {{else}}directory{{end}}
+        details navigation">
       {{block "unit_outline" .}}{{end}}
     </div>
-    <div class="UnitDetails-content">
+    <div class="UnitDetails-content" role="main">
       {{if .CanShowDetails}}
         {{if .Readme.String}}
           {{block "unit_readme" .}}{{end}}
@@ -30,7 +35,7 @@
         See our <a href="/license-policy">license policy</a>.
       {{end}}
     </div>
-    <div class="UnitDetails-meta">
+    <div class="UnitDetails-meta" role="complementary" aria-label="links">
       {{block "unit_meta" .}}{{end}}
     </div>
   </div>
