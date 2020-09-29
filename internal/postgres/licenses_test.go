@@ -13,7 +13,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -53,10 +52,6 @@ func TestGetLicenses(t *testing.T) {
 		name, fullPath, modulePath, version string
 		want                                []*licenses.License
 	}{
-		{
-			name: "empty path",
-			err:  derrors.InvalidArgument,
-		},
 		{
 			name:       "module root",
 			fullPath:   sample.ModulePath,
@@ -101,10 +96,11 @@ func TestGetLicenses(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := testDB.LegacyGetLicenses(ctx, test.fullPath, test.modulePath, test.version)
+			u, err := testDB.GetUnit(ctx, &internal.UnitMeta{Path: test.fullPath, ModulePath: test.modulePath, Version: test.version}, internal.WithLicenses)
 			if !errors.Is(err, test.err) {
 				t.Fatal(err)
 			}
+			got := u.LicenseContents
 			sort.Slice(got, func(i, j int) bool {
 				return got[i].FilePath < got[j].FilePath
 			})
@@ -173,22 +169,17 @@ func TestGetLicensesBypass(t *testing.T) {
 	}
 
 	// check reads and the second license in the module and compares it with want.
-	check := func(bypass, legacy bool, want *licenses.License) {
+	check := func(bypass bool, want *licenses.License) {
 		t.Helper()
 		db := testDB
 		if bypass {
 			db = bypassDB
 		}
-		var lics []*licenses.License
-		var err error
-		if legacy {
-			lics, err = db.getModuleLicenses(ctx, sample.ModulePath, m.Version)
-		} else {
-			lics, err = db.LegacyGetLicenses(ctx, sample.ModulePath, sample.ModulePath, m.Version)
-		}
+		u, err := db.GetUnit(ctx, &internal.UnitMeta{Path: sample.ModulePath, ModulePath: sample.ModulePath, Version: m.Version}, internal.WithLicenses)
 		if err != nil {
 			t.Fatal(err)
 		}
+		lics := u.LicenseContents
 		if len(lics) != 2 {
 			t.Fatal("did not read two licenses")
 		}
@@ -198,14 +189,12 @@ func TestGetLicensesBypass(t *testing.T) {
 	}
 
 	// Read with license bypass includes non-redistributable license contents.
-	check(true, false, sample.NonRedistributableLicense)
-	check(true, true, sample.NonRedistributableLicense)
+	check(true, sample.NonRedistributableLicense)
 
 	// Read without license bypass does not include non-redistributable license contents.
 	nonRedist := *sample.NonRedistributableLicense
 	nonRedist.Contents = nil
-	check(false, false, &nonRedist)
-	check(false, true, &nonRedist)
+	check(false, &nonRedist)
 }
 
 func nonRedistributableModule() *internal.Module {

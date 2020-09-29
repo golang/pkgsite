@@ -14,25 +14,10 @@ import (
 	"strings"
 
 	"github.com/lib/pq"
-	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
-
-// LegacyGetLicenses returns the licenses that applies to the fullPath for the given module version.
-// It returns an InvalidArgument error if the module path or version is invalid.
-func (db *DB) LegacyGetLicenses(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ []*licenses.License, err error) {
-	defer derrors.Wrap(&err, "GetLicenses(ctx, %q, %q, %q)", fullPath, modulePath, resolvedVersion)
-	if fullPath == "" || modulePath == "" || !semver.IsValid(resolvedVersion) {
-		return nil, derrors.InvalidArgument
-	}
-	pathID, err := db.getPathID(ctx, fullPath, modulePath, resolvedVersion)
-	if err != nil {
-		return nil, err
-	}
-	return db.getLicenses(ctx, fullPath, modulePath, pathID)
-}
 
 func (db *DB) getLicenses(ctx context.Context, fullPath, modulePath string, pathID int) (_ []*licenses.License, err error) {
 	defer derrors.Wrap(&err, "getLicenses(ctx, %d)", pathID)
