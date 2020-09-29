@@ -6,9 +6,15 @@
 
 .UnitMeta {
   display: block;
-  overflow-wrap: break-word;
   position: sticky;
   top: 5rem;
+}
+.UnitMeta a {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
 }
 .UnitMeta-header {
   font-weight: bold;
