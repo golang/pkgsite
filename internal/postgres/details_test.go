@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"sort"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -271,7 +270,7 @@ func TestPostgres_GetVersionInfo_Latest(t *testing.T) {
 	}
 }
 
-func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
+func TestGetImportedBy(t *testing.T) {
 	var (
 		m1          = sample.Module("path.to/foo", "v1.1.0", "bar")
 		m2          = sample.Module("path2.to/foo", "v1.2.0", "bar2")
@@ -338,15 +337,6 @@ func TestPostgres_GetImportsAndImportedBy(t *testing.T) {
 				if err := testDB.InsertModule(ctx, v); err != nil {
 					t.Error(err)
 				}
-			}
-			got, err := testDB.LegacyGetImports(ctx, tc.path, tc.modulePath, tc.version)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			sort.Strings(tc.wantImports)
-			if diff := cmp.Diff(tc.wantImports, got); diff != "" {
-				t.Errorf("testDB.GetImports(%q, %q) mismatch (-want +got):\n%s", tc.path, tc.version, diff)
 			}
 
 			gotImportedBy, err := testDB.GetImportedBy(ctx, tc.path, tc.modulePath, 100)

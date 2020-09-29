@@ -124,44 +124,6 @@ func (db *DB) LegacyGetPackagesInModule(ctx context.Context, modulePath, resolve
 	return packages, nil
 }
 
-// LegacyGetImports fetches and returns all of the imports for the package with
-// pkgPath, modulePath and version.
-//
-// The returned error may be checked with derrors.IsInvalidArgument to
-// determine if it resulted from an invalid package path or version.
-func (db *DB) LegacyGetImports(ctx context.Context, pkgPath, modulePath, resolvedVersion string) (paths []string, err error) {
-	defer derrors.Wrap(&err, "DB.LegacyGetImports(ctx, %q, %q, %q)", pkgPath, modulePath, resolvedVersion)
-
-	if pkgPath == "" || resolvedVersion == "" || modulePath == "" {
-		return nil, fmt.Errorf("pkgPath, modulePath and version must all be non-empty: %w", derrors.InvalidArgument)
-	}
-
-	query := `
-		SELECT to_path
-		FROM imports
-		WHERE
-			from_path = $1
-			AND from_version = $2
-			AND from_module_path = $3
-		ORDER BY
-			to_path;`
-	var (
-		toPath  string
-		imports []string
-	)
-	collect := func(rows *sql.Rows) error {
-		if err := rows.Scan(&toPath); err != nil {
-			return fmt.Errorf("row.Scan(): %v", err)
-		}
-		imports = append(imports, toPath)
-		return nil
-	}
-	if err := db.db.RunQuery(ctx, query, collect, pkgPath, resolvedVersion, modulePath); err != nil {
-		return nil, err
-	}
-	return imports, nil
-}
-
 // GetImportedBy fetches and returns all of the packages that import the
 // package with path.
 // The returned error may be checked with derrors.IsInvalidArgument to
