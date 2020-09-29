@@ -126,8 +126,8 @@ func (i *Info) RawURL(pathname string) string {
 	// Special case: the standard library's source module path is set to "src",
 	// which is correct for source file links. But the README is at the repo
 	// root, not in the src directory. In other words,
-	// VersionInfo.LegacyReadmeFilePath is not relative to
-	// VersionInfo.SourceInfo.moduleDir, as it is for every other module.
+	// Module.Units[0].Readme.FilePath is not relative to
+	// Module.Units[0].SourceInfo.moduleDir, as it is for every other module.
 	// Correct for that here.
 	if i.repoURL == stdlib.GoSourceRepoURL {
 		moduleDir = ""
@@ -242,14 +242,14 @@ func (c *Client) doURL(ctx context.Context, method, url string, only200 bool) (_
 	return resp, nil
 }
 
-// LegacyModuleInfo determines the repository corresponding to the module path. It
+// ModuleInfo determines the repository corresponding to the module path. It
 // returns a URL to that repo, as well as the directory of the module relative
 // to the repo root.
 //
-// LegacyModuleInfo may fetch from arbitrary URLs, so it can be slow.
+// ModuleInfo may fetch from arbitrary URLs, so it can be slow.
 func ModuleInfo(ctx context.Context, client *Client, modulePath, version string) (info *Info, err error) {
-	defer derrors.Wrap(&err, "source.LegacyModuleInfo(ctx, %q, %q)", modulePath, version)
-	ctx, span := trace.StartSpan(ctx, "source.LegacyModuleInfo")
+	defer derrors.Wrap(&err, "source.ModuleInfo(ctx, %q, %q)", modulePath, version)
+	ctx, span := trace.StartSpan(ctx, "source.ModuleInfo")
 	defer span.End()
 
 	if modulePath == stdlib.ModulePath {
