@@ -241,3 +241,15 @@ func TestBreadcrumbPath(t *testing.T) {
 		})
 	}
 }
+
+// packageMetaFromLegacyPackage returns a PackageMeta based on data from a
+// LegacyPackage.
+func packageMetaFromLegacyPackage(pkg *internal.LegacyPackage) *internal.PackageMeta {
+	return &internal.PackageMeta{
+		Path:              pkg.Path,
+		IsRedistributable: pkg.IsRedistributable,
+		Name:              pkg.Name,
+		Synopsis:          pkg.Synopsis,
+		Licenses:          pkg.Licenses,
+	}
+}

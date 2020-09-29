@@ -173,19 +173,12 @@ func (s *Server) serveDetailsPage(w http.ResponseWriter, r *http.Request, ds int
 	ctx := r.Context()
 
 	if info.isModule {
-		if experiment.IsActive(ctx, internal.ExperimentUseUnits) {
-			return s.serveModulePage(ctx, w, r, ds, um, info.requestedVersion)
-		}
-		return s.legacyServeModulePage(w, r, ds, info.fullPath, info.requestedVersion, info.resolvedVersion)
+		return s.serveModulePage(ctx, w, r, ds, um, info.requestedVersion)
 	}
-
-	if experiment.IsActive(ctx, internal.ExperimentUseUnits) {
-		if um.IsPackage() {
-			return s.servePackagePage(ctx, w, r, ds, um, info.requestedVersion)
-		}
-		return s.serveDirectoryPage(ctx, w, r, ds, um, info.requestedVersion)
+	if um.IsPackage() {
+		return s.servePackagePage(ctx, w, r, ds, um, info.requestedVersion)
 	}
-	return s.legacyServePackagePage(w, r, ds, info.fullPath, info.modulePath, info.requestedVersion, info.resolvedVersion)
+	return s.serveDirectoryPage(ctx, w, r, ds, um, info.requestedVersion)
 }
 
 type urlPathInfo struct {

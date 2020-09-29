@@ -264,24 +264,13 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 				}
 			}
 
-			t.Run("use-directories", func(t *testing.T) {
-				got, err := fetchVersionsDetails(ctx, testDB, tc.pkg.Path, tc.pkg.ModulePath)
-				if err != nil {
-					t.Fatalf("fetchVersionsDetails(ctx, db, %q, %q): %v", tc.pkg.Path, tc.pkg.ModulePath, err)
-				}
-				if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
-					t.Errorf("mismatch (-want +got):\n%s", diff)
-				}
-			})
-			t.Run("no-experiments", func(t *testing.T) {
-				got, err := legacyFetchPackageVersionsDetails(ctx, testDB, tc.pkg.Path, tc.pkg.V1Path, tc.pkg.ModulePath)
-				if err != nil {
-					t.Fatalf("legacyFetchPackageVersionsDetails(ctx, db, %q, %q, %q): %v", tc.pkg.Path, tc.pkg.V1Path, tc.pkg.ModulePath, err)
-				}
-				if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
-					t.Errorf("mismatch (-want +got):\n%s", diff)
-				}
-			})
+			got, err := fetchVersionsDetails(ctx, testDB, tc.pkg.Path, tc.pkg.ModulePath)
+			if err != nil {
+				t.Fatalf("fetchVersionsDetails(ctx, db, %q, %q): %v", tc.pkg.Path, tc.pkg.ModulePath, err)
+			}
+			if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
+				t.Errorf("mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }

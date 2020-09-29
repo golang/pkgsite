@@ -132,30 +132,19 @@ func TestFetchDirectoryDetails(t *testing.T) {
 				got *Directory
 				err error
 			)
-			t.Run("use-directories", func(t *testing.T) {
-				um := &internal.UnitMeta{
-					Path:              tc.dirPath,
-					ModulePath:        tc.modulePath,
-					Version:           tc.version,
-					IsRedistributable: true,
-					CommitTime:        sample.CommitTime,
-					Licenses:          sample.LicenseMetadata,
-				}
-				got, err = fetchDirectoryDetails(ctx, testDB, um, tc.includeDirPath)
-				if err != nil {
-					t.Fatal(err)
-				}
-				checkDirectory(got, tc.dirPath, tc.wantModulePath, tc.wantVersion, tc.wantPkgSuffixes)
-			})
-			t.Run("legacy", func(t *testing.T) {
-				mi := sample.ModuleInfoReleaseType(tc.modulePath, tc.version)
-				got, err = legacyFetchDirectoryDetails(ctx, testDB,
-					tc.dirPath, mi, sample.LicenseMetadata, tc.includeDirPath)
-				if err != nil {
-					t.Fatal(err)
-				}
-				checkDirectory(got, tc.dirPath, tc.wantModulePath, tc.wantVersion, tc.wantPkgSuffixes)
-			})
+			um := &internal.UnitMeta{
+				Path:              tc.dirPath,
+				ModulePath:        tc.modulePath,
+				Version:           tc.version,
+				IsRedistributable: true,
+				CommitTime:        sample.CommitTime,
+				Licenses:          sample.LicenseMetadata,
+			}
+			got, err = fetchDirectoryDetails(ctx, testDB, um, tc.includeDirPath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			checkDirectory(got, tc.dirPath, tc.wantModulePath, tc.wantVersion, tc.wantPkgSuffixes)
 		})
 	}
 }

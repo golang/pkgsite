@@ -103,12 +103,3 @@ func licenseAnchors(paths []string) []safehtml.Identifier {
 	}
 	return ids
 }
-
-// licensesToMetadatas converts a slice of Licenses to a slice of Metadatas.
-func licensesToMetadatas(lics []*licenses.License) []*licenses.Metadata {
-	var ms []*licenses.Metadata
-	for _, l := range lics {
-		ms = append(ms, l.Metadata)
-	}
-	return ms
-}
