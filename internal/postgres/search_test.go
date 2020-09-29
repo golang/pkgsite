@@ -188,18 +188,6 @@ func resultGuard(resultOrder []string) func(string) func() {
 		}
 	}
 	guardTestResult := func(source string) func() {
-		// This test is inherently racy as 'estimate' results are are on a
-		// separate channel, and therefore even after guarding still race to
-		// the select statement.
-		//
-		// Since this is a concern only for testing, and since this test is
-		// rather slow anyway, just wait for a healthy amount of time in order
-		// to de-flake the test. If the test still proves flaky, we can either
-		// increase this sleep or refactor so that all asynchronous results
-		// arrive on the same channel.
-		if source == "estimate" {
-			time.Sleep(100 * time.Millisecond)
-		}
 		if await, ok := waitFor[source]; ok {
 			<-done[await]
 		}
@@ -218,42 +206,50 @@ func TestSearch(t *testing.T) {
 		wantTotal   uint64
 	}{
 		{
-			label:       "single package",
+			label:       "single package from popular",
 			modules:     importGraph("foo.com/A", "", 0),
-			resultOrder: []string{"popular", "estimate", "deep"},
+			resultOrder: []string{"popular", "deep"},
 			wantSource:  "popular",
+			wantResults: []string{"foo.com/A"},
+			wantTotal:   1,
+		},
+		{
+			label:       "single package from deep",
+			modules:     importGraph("foo.com/A", "", 0),
+			resultOrder: []string{"deep", "popular"},
+			wantSource:  "deep",
 			wantResults: []string{"foo.com/A"},
 			wantTotal:   1,
 		},
 		{
 			label:       "empty results",
 			modules:     []*internal.Module{},
-			resultOrder: []string{"deep", "estimate", "popular"},
+			resultOrder: []string{"deep", "popular"},
 			wantSource:  "deep",
 			wantResults: nil,
 		},
 		{
 			label:       "both popular and unpopular results",
 			modules:     importGraph("foo.com/popular", "bar.com/foo", 10),
-			resultOrder: []string{"popular", "estimate", "deep"},
+			resultOrder: []string{"popular", "deep"},
 			wantSource:  "popular",
 			wantResults: []string{"foo.com/popular", "bar.com/foo/importer0"},
-			wantTotal:   11, // HLL result count (happens to be right in this case)
+			wantTotal:   100, // popular assumes 100 results
 		},
 		{
-			label: "popular results, estimate before deep",
+			label: "popular before deep",
 			modules: append(importGraph("foo.com/popularA", "bar.com", 60),
 				importGraph("foo.com/popularB", "baz.com/foo", 70)...),
-			resultOrder: []string{"popular", "estimate", "deep"},
+			resultOrder: []string{"popular", "deep"},
 			wantSource:  "popular",
 			wantResults: []string{"foo.com/popularB", "foo.com/popularA"},
-			wantTotal:   76, // HLL result count (actual count is 72)
+			wantTotal:   100, // popular assumes 100 results
 		},
 		{
-			label: "popular results, deep before estimate",
+			label: "deep before popular",
 			modules: append(importGraph("foo.com/popularA", "bar.com/foo", 60),
 				importGraph("foo.com/popularB", "bar.com/foo", 70)...),
-			resultOrder: []string{"popular", "deep", "estimate"},
+			resultOrder: []string{"deep", "popular"},
 			wantSource:  "deep",
 			wantResults: []string{"foo.com/popularB", "foo.com/popularA"},
 			wantTotal:   72,
@@ -299,7 +295,7 @@ func TestSearch(t *testing.T) {
 				t.Fatal(err)
 			}
 			guardTestResult := resultGuard(test.resultOrder)
-			resp, err := testDB.hedgedSearch(ctx, "foo", 2, 0, searchers, guardTestResult)
+			resp, err := testDB.hedgedSearch(ctx, "foo", 2, 0, 100, searchers, guardTestResult)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -334,7 +330,7 @@ func TestSearchErrors(t *testing.T) {
 		for name, search := range searchers {
 			if name == searcherName {
 				name := name
-				newSearchers[name] = func(*DB, context.Context, string, int, int) searchResponse {
+				newSearchers[name] = func(*DB, context.Context, string, int, int, int) searchResponse {
 					return searchResponse{
 						source: name,
 						err:    errors.New("bad"),
@@ -357,25 +353,19 @@ func TestSearchErrors(t *testing.T) {
 		{
 			label:       "error in first result",
 			searchers:   errorIn("popular"),
-			resultOrder: []string{"popular", "estimate", "deep"},
+			resultOrder: []string{"popular", "deep"},
 			wantErr:     true,
 		},
 		{
 			label:       "return before error",
 			searchers:   errorIn("deep"),
-			resultOrder: []string{"popular", "estimate", "deep"},
+			resultOrder: []string{"popular", "deep"},
 			wantSource:  "popular",
-		},
-		{
-			label:       "error waiting for count",
-			searchers:   errorIn("deep"),
-			resultOrder: []string{"popular", "deep", "estimate"},
-			wantErr:     true,
 		},
 		{
 			label:       "counted result before error",
 			searchers:   errorIn("popular"),
-			resultOrder: []string{"deep", "popular", "estimate"},
+			resultOrder: []string{"deep", "popular"},
 			wantSource:  "deep",
 		},
 	}
@@ -394,7 +384,7 @@ func TestSearchErrors(t *testing.T) {
 				t.Fatal(err)
 			}
 			guardTestResult := resultGuard(test.resultOrder)
-			resp, err := testDB.hedgedSearch(ctx, "foo", 2, 0, test.searchers, guardTestResult)
+			resp, err := testDB.hedgedSearch(ctx, "foo", 2, 0, 100, test.searchers, guardTestResult)
 			if (err != nil) != test.wantErr {
 				t.Fatalf("hedgedSearch(): got error %v, want error: %t", err, test.wantErr)
 			}
@@ -548,7 +538,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 					tc.limit = 10
 				}
 
-				got := searcher(testDB, ctx, tc.searchQuery, tc.limit, tc.offset)
+				got := searcher(testDB, ctx, tc.searchQuery, tc.limit, tc.offset, 100)
 				if got.err != nil {
 					t.Fatal(got.err)
 				}
@@ -603,7 +593,7 @@ func TestSearchPenalties(t *testing.T) {
 
 	for method, searcher := range searchers {
 		t.Run(method, func(t *testing.T) {
-			res := searcher(testDB, ctx, "foo", 10, 0)
+			res := searcher(testDB, ctx, "foo", 10, 0, 100)
 			if res.err != nil {
 				t.Fatal(res.err)
 			}
@@ -638,7 +628,7 @@ func TestExcludedFromSearch(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Search for both packages.
-	gotResults, err := testDB.Search(ctx, domain, 10, 0)
+	gotResults, err := testDB.Search(ctx, domain, 10, 0, 100)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -670,7 +660,7 @@ func TestSearchBypass(t *testing.T) {
 		{testDB, true},
 		{bypassDB, false},
 	} {
-		rs, err := test.db.Search(ctx, m.ModulePath, 10, 0)
+		rs, err := test.db.Search(ctx, m.ModulePath, 10, 0, 100)
 		if err != nil {
 			t.Fatal(err)
 		}

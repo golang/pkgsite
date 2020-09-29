@@ -66,11 +66,6 @@ type searchResponse struct {
 	// err indicates a technical failure of the search query, or that results are
 	// not provably complete.
 	err error
-	// uncounted reports whether this response is missing total result counts. If
-	// uncounted is true, search will wait for either the hyperloglog count
-	// estimate, or for an alternate search method to return with
-	// uncounted=false.
-	uncounted bool
 }
 
 // searchEvent is used to log structured information about search events for
@@ -86,7 +81,7 @@ type searchEvent struct {
 }
 
 // A searcher is used to execute a single search request.
-type searcher func(db *DB, ctx context.Context, q string, limit, offset int) searchResponse
+type searcher func(db *DB, ctx context.Context, q string, limit, offset, maxResultCount int) searchResponse
 
 // The searchers used by Search.
 var searchers = map[string]searcher{
@@ -117,9 +112,9 @@ var searchers = map[string]searcher{
 // The gap in this optimization is search terms that are very frequent, but
 // rarely relevant: "int" or "package", for example. In these cases we'll pay
 // the penalty of a deep search that scans nearly every package.
-func (db *DB) Search(ctx context.Context, q string, limit, offset int) (_ []*internal.SearchResult, err error) {
+func (db *DB) Search(ctx context.Context, q string, limit, offset, maxResultCount int) (_ []*internal.SearchResult, err error) {
 	defer derrors.Wrap(&err, "DB.Search(ctx, %q, %d, %d)", q, limit, offset)
-	resp, err := db.hedgedSearch(ctx, q, limit, offset, searchers, nil)
+	resp, err := db.hedgedSearch(ctx, q, limit, offset, maxResultCount, searchers, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +165,7 @@ var scoreExpr = fmt.Sprintf(`
 // available result.
 // The optional guardTestResult func may be used to allow tests to control the
 // order in which search results are returned.
-func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, searchers map[string]searcher, guardTestResult func(string) func()) (*searchResponse, error) {
+func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset, maxResultCount int, searchers map[string]searcher, guardTestResult func(string) func()) (*searchResponse, error) {
 	searchStart := time.Now()
 	responses := make(chan searchResponse, len(searchers))
 	// cancel all unfinished searches when a result (or error) is returned. The
@@ -178,28 +173,12 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, sea
 	searchCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	// Asynchronously query for the estimated result count.
-	estimateChan := make(chan estimateResponse, 1)
-	go func() {
-		start := time.Now()
-		estimateResp := db.estimateResultsCount(searchCtx, q)
-		log.Debug(ctx, searchEvent{
-			Type:    "estimate",
-			Latency: time.Since(start),
-			Err:     estimateResp.err,
-		})
-		if guardTestResult != nil {
-			defer guardTestResult("estimate")()
-		}
-		estimateChan <- estimateResp
-	}()
-
 	// Fan out our search requests.
 	for _, s := range searchers {
 		s := s
 		go func() {
 			start := time.Now()
-			resp := s(db, searchCtx, q, limit, offset)
+			resp := s(db, searchCtx, q, limit, offset, maxResultCount)
 			log.Debug(ctx, searchEvent{
 				Type:    resp.source,
 				Latency: time.Since(start),
@@ -217,42 +196,6 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, sea
 	resp := <-responses
 	if resp.err != nil {
 		return nil, fmt.Errorf("%q search failed: %v", resp.source, resp.err)
-	}
-	if resp.uncounted {
-		// Since the response is uncounted, we should wait for either the count
-		// estimate to return, or for the first counted response.
-	loop:
-		for {
-			select {
-			case nextResp := <-responses:
-				switch {
-				case nextResp.err != nil:
-					// There are alternatives here: we could continue waiting for the
-					// estimate. But on the principle that errors are most likely to be
-					// caused by Postgres overload, we exit early to cancel the estimate.
-					return nil, fmt.Errorf("while waiting for count, got error from searcher %q: %v", nextResp.source, nextResp.err)
-				case !nextResp.uncounted:
-					log.Infof(ctx, "using counted search results from searcher %s", nextResp.source)
-					// use this response since it is counted.
-					resp = nextResp
-					break loop
-				}
-			case estr := <-estimateChan:
-				if estr.err != nil {
-					return nil, fmt.Errorf("error getting estimated count: %v", estr.err)
-				}
-				log.Debug(ctx, "using count estimate")
-				for _, r := range resp.results {
-					// TODO: change the return signature of search to separate
-					// result-level data from this query-level metadata.
-					r.NumResults = estr.estimate
-					r.Approximate = true
-				}
-				break loop
-			case <-ctx.Done():
-				return nil, fmt.Errorf("context deadline exceeded while waiting for estimated result count")
-			}
-		}
 	}
 	// cancel proactively here: we've got the search result we need.
 	cancel()
@@ -276,88 +219,9 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset int, sea
 
 const hllRegisterCount = 128
 
-// hllQuery estimates search result counts using the hyperloglog algorithm.
-// https://en.wikipedia.org/wiki/HyperLogLog
-//
-// Here's how this works:
-//   1) Search documents have been partitioned ~evenly into hllRegisterCount
-//   registers, using the hll_register column. For each hll_register, compute
-//   the maximum number of leading zeros of any element in the register
-//   matching our search query. This is the slowest part of the query, but
-//   since we have an index on (hll_register, hll_leading_zeros desc), we can
-//   parallelize this and it should be very quick if the density of search
-//   results is high.  To achieve this parallelization, we use a trick of
-//   selecting a subselected value from generate_series(0, hllRegisterCount-1).
-//
-//   If there are NO search results in a register, the 'zeros' column will be
-//   NULL.
-//
-//   2) From the results of (1), proceed following the 'Practical
-//   Considerations' in the wikipedia page above:
-//     https://en.wikipedia.org/wiki/HyperLogLog#Practical_Considerations
-//   Specifically, use linear counting when E < (5/2)m and there are empty
-//   registers.
-//
-//   This should work for any register count >= 128. If we are to decrease this
-//   register count, we should adjust the estimate for a_m below according to
-//   the formulas in the wikipedia article above.
-var hllQuery = fmt.Sprintf(`
-	WITH hll_data AS (
-		SELECT (
-			SELECT * FROM (
-				SELECT hll_leading_zeros
-				FROM search_documents
-				WHERE (
-					%[2]s *
-					CASE WHEN tsv_search_tokens @@ websearch_to_tsquery($1) THEN 1 ELSE 0 END
-				) > 0.1
-				AND hll_register=generate_series
-				ORDER BY hll_leading_zeros DESC
-			) t
-			LIMIT 1
-		) zeros
-		FROM generate_series(0,%[1]d-1)
-	),
-	nonempty_registers as (SELECT zeros FROM hll_data WHERE zeros IS NOT NULL)
-	SELECT
-		-- use linear counting when there are not enough results, and there is at
-		-- least one empty register, per 'Practical Considerations'.
-		CASE WHEN result_count < 2.5 * %[1]d AND empty_register_count > 0
-		THEN ((0.7213 / (1 + 1.079 / %[1]d)) * (%[1]d *
-				log(2, (%[1]d::numeric) / empty_register_count)))::int
-		ELSE result_count END AS approx_count
-	FROM (
-		SELECT
-			(
-				(0.7213 / (1 + 1.079 / %[1]d)) *  -- estimate for a_m
-				pow(%[1]d, 2) *                   -- m^2
-				(1/((%[1]d - count(1)) + SUM(POW(2, -1 * (zeros+1)))))  -- Z
-			)::int AS result_count,
-			%[1]d - count(1) AS empty_register_count
-		FROM nonempty_registers
-	) d`, hllRegisterCount, scoreExpr)
-
-type estimateResponse struct {
-	estimate uint64
-	err      error
-}
-
-// EstimateResultsCount uses the hyperloglog algorithm to estimate the number
-// of results for the given search term.
-func (db *DB) estimateResultsCount(ctx context.Context, q string) estimateResponse {
-	row := db.db.QueryRow(ctx, hllQuery, q)
-	var estimate sql.NullInt64
-	if err := row.Scan(&estimate); err != nil {
-		return estimateResponse{err: fmt.Errorf("row.Scan(): %v", err)}
-	}
-	// If estimate is NULL, then we didn't find *any* results, so should return
-	// zero (the default).
-	return estimateResponse{estimate: uint64(estimate.Int64)}
-}
-
 // deepSearch searches all packages for the query. It is slower, but results
 // are always valid.
-func (db *DB) deepSearch(ctx context.Context, q string, limit, offset int) searchResponse {
+func (db *DB) deepSearch(ctx context.Context, q string, limit, offset, maxResultCount int) searchResponse {
 	query := fmt.Sprintf(`
 		SELECT *, COUNT(*) OVER() AS total
 		FROM (
@@ -393,6 +257,11 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit, offset int) searc
 	if err != nil {
 		results = nil
 	}
+	if len(results) > 0 && results[0].NumResults > uint64(maxResultCount) {
+		for _, r := range results {
+			r.NumResults = uint64(maxResultCount)
+		}
+	}
 	return searchResponse{
 		source:  "deep",
 		results: results,
@@ -400,7 +269,7 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit, offset int) searc
 	}
 }
 
-func (db *DB) popularSearch(ctx context.Context, searchQuery string, limit, offset int) searchResponse {
+func (db *DB) popularSearch(ctx context.Context, searchQuery string, limit, offset, maxResultCount int) searchResponse {
 	query := `
 		SELECT
 			package_path,
@@ -424,18 +293,28 @@ func (db *DB) popularSearch(ctx context.Context, searchQuery string, limit, offs
 	if err != nil {
 		results = nil
 	}
+	numResults := maxResultCount
+	if offset+limit > maxResultCount || len(results) < limit {
+		// It is practically impossible that len(results) < limit, because popular
+		// search will never linearly scan everything before deep search completes,
+		// but just to be slightly more theoretically correct, if our search
+		// results are partial we know that we have exhausted all results.
+		numResults = offset + len(results)
+	}
+	for _, r := range results {
+		r.NumResults = uint64(numResults)
+	}
 	return searchResponse{
-		source:    "popular",
-		results:   results,
-		err:       err,
-		uncounted: true,
+		source:  "popular",
+		results: results,
+		err:     err,
 	}
 }
 
 // addPackageDataToSearchResults adds package information to SearchResults that is not stored
 // in the search_documents table.
 func (db *DB) addPackageDataToSearchResults(ctx context.Context, results []*internal.SearchResult) (err error) {
-	defer derrors.Wrap(&err, "DB.enrichResults(results)")
+	defer derrors.Wrap(&err, "DB.addPackageDataToSearchResults(results)")
 	if len(results) == 0 {
 		return nil
 	}

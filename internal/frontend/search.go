@@ -46,7 +46,8 @@ type SearchResult struct {
 // fetchSearchPage fetches data matching the search query from the database and
 // returns a SearchPage.
 func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pageParams paginationParams) (*SearchPage, error) {
-	dbresults, err := db.Search(ctx, query, pageParams.limit, pageParams.offset())
+	maxResultCount := maxSearchOffset + pageParams.limit
+	dbresults, err := db.Search(ctx, query, pageParams.limit, pageParams.offset(), maxResultCount)
 	if err != nil {
 		return nil, err
 	}
@@ -100,16 +101,21 @@ func approximateNumber(estimate int, sigma float64) int {
 	return int(unit * math.Round(float64(estimate)/unit))
 }
 
-// maxSearchQueryLength represents the max number of characters that a search
-// query can be. For PostgreSQL 11, there is a max length of 2K bytes:
-// https://www.postgresql.org/docs/11/textsearch-limitations.html.
-// No valid searches on pkg.go.dev will need more than the
-// maxSearchQueryLength.
-const maxSearchQueryLength = 500
+// Search constraints.
+const (
+	// maxSearchQueryLength represents the max number of characters that a search
+	// query can be. For PostgreSQL 11, there is a max length of 2K bytes:
+	// https://www.postgresql.org/docs/11/textsearch-limitations.html. No valid
+	// searches on pkg.go.dev will need more than the maxSearchQueryLength.
+	maxSearchQueryLength = 500
 
-// maxSearchOffset is the maximum allowed. offset into the search results.
-// This prevents some very CPU-intensive queries from running.
-const maxSearchOffset = 100
+	// maxSearchOffset is the maximum allowed offset into the search results.
+	// This prevents some very CPU-intensive queries from running.
+	maxSearchOffset = 90
+
+	// maxSearchPageSize is the maximum allowed limit for search results.
+	maxSearchPageSize = 100
+)
 
 // serveSearch applies database data to the search template. Handles endpoint
 // /search?q=<query>. If <query> is an exact match for a package path, the user
@@ -139,21 +145,30 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 		http.Redirect(w, r, "/", http.StatusFound)
 		return nil
 	}
-	if path := searchRequestRedirectPath(ctx, ds, query); path != "" {
-		http.Redirect(w, r, path, http.StatusFound)
-		return nil
-	}
 	pageParams := newPaginationParams(r, defaultSearchLimit)
 	if pageParams.offset() > maxSearchOffset {
 		return &serverError{
 			status: http.StatusBadRequest,
 			epage: &errorPage{
 				messageTemplate: template.MakeTrustedTemplate(
-					`<h3 class="Error-message">Search offset too large.</h3>`),
+					`<h3 class="Error-message">Search page number too large.</h3>`),
+			},
+		}
+	}
+	if pageParams.limit > maxSearchPageSize {
+		return &serverError{
+			status: http.StatusBadRequest,
+			epage: &errorPage{
+				messageTemplate: template.MakeTrustedTemplate(
+					`<h3 class="Error-message">Search page size too large.</h3>`),
 			},
 		}
 	}
 
+	if path := searchRequestRedirectPath(ctx, ds, query); path != "" {
+		http.Redirect(w, r, path, http.StatusFound)
+		return nil
+	}
 	page, err := fetchSearchPage(ctx, db, query, pageParams)
 	if err != nil {
 		return fmt.Errorf("fetchSearchPage(ctx, db, %q): %v", query, err)
