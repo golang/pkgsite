@@ -125,7 +125,7 @@ func TestGetLicenses(t *testing.T) {
 	}
 }
 
-func TestLegacyGetModuleLicenses(t *testing.T) {
+func TestGetModuleLicenses(t *testing.T) {
 	modulePath := "test.module"
 	testModule := sample.Module(modulePath, "v1.2.3", "", "foo", "bar")
 	testModule.LegacyPackages[0].Licenses = []*licenses.Metadata{{Types: []string{"ISC"}, FilePath: "LICENSE"}}
@@ -148,14 +148,14 @@ func TestLegacyGetModuleLicenses(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got, err := testDB.LegacyGetModuleLicenses(ctx, modulePath, testModule.Version)
+	got, err := testDB.getModuleLicenses(ctx, modulePath, testModule.Version)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// We only want the top-level license.
 	wantLicenses := []*licenses.License{testModule.Licenses[0]}
 	if diff := cmp.Diff(wantLicenses, got); diff != "" {
-		t.Errorf("testDB.LegacyGetModuleLicenses(ctx, %q, %q) mismatch (-want +got):\n%s", modulePath, testModule.Version, diff)
+		t.Errorf("testDB.getModuleLicenses(ctx, %q, %q) mismatch (-want +got):\n%s", modulePath, testModule.Version, diff)
 	}
 }
 
@@ -224,7 +224,7 @@ func TestGetLicensesBypass(t *testing.T) {
 		var lics []*licenses.License
 		var err error
 		if legacy {
-			lics, err = db.LegacyGetModuleLicenses(ctx, sample.ModulePath, m.Version)
+			lics, err = db.getModuleLicenses(ctx, sample.ModulePath, m.Version)
 		} else {
 			lics, err = db.LegacyGetLicenses(ctx, sample.ModulePath, sample.ModulePath, m.Version)
 		}

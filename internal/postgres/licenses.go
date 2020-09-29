@@ -90,11 +90,11 @@ func (db *DB) getLicenses(ctx context.Context, fullPath, modulePath string, path
 	return lics, nil
 }
 
-// LegacyGetModuleLicenses returns all licenses associated with the given module path and
+// getModuleLicenses returns all licenses associated with the given module path and
 // version. These are the top-level licenses in the module zip file.
 // It returns an InvalidArgument error if the module path or version is invalid.
-func (db *DB) LegacyGetModuleLicenses(ctx context.Context, modulePath, resolvedVersion string) (_ []*licenses.License, err error) {
-	defer derrors.Wrap(&err, "LegacyGetModuleLicenses(ctx, %q, %q)", modulePath, resolvedVersion)
+func (db *DB) getModuleLicenses(ctx context.Context, modulePath, resolvedVersion string) (_ []*licenses.License, err error) {
+	defer derrors.Wrap(&err, "getModuleLicenses(ctx, %q, %q)", modulePath, resolvedVersion)
 
 	if modulePath == "" || resolvedVersion == "" {
 		return nil, fmt.Errorf("neither modulePath nor version can be empty: %w", derrors.InvalidArgument)
