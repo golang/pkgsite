@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/protobuf/ptypes"
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal/config"
 	taskspb "google.golang.org/genproto/googleapis/cloud/tasks/v2"
@@ -50,6 +51,7 @@ func TestNewTaskRequest(t *testing.T) {
 			&taskspb.CreateTaskRequest{
 				Parent: "projects/Project/locations/us-central1/queues/queueID",
 				Task: &taskspb.Task{
+					DispatchDeadline: ptypes.DurationProto(maxCloudTasksTimeout),
 					MessageType: &taskspb.Task_AppEngineHttpRequest{
 						AppEngineHttpRequest: &taskspb.AppEngineHttpRequest{
 							HttpMethod:  taskspb.HttpMethod_POST,
@@ -74,6 +76,7 @@ func TestNewTaskRequest(t *testing.T) {
 			&taskspb.CreateTaskRequest{
 				Parent: "projects/Project/locations/us-central1/queues/queueID",
 				Task: &taskspb.Task{
+					DispatchDeadline: ptypes.DurationProto(maxCloudTasksTimeout),
 					MessageType: &taskspb.Task_HttpRequest{
 						HttpRequest: &taskspb.HttpRequest{
 							HttpMethod: taskspb.HttpMethod_POST,

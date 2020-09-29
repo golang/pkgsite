@@ -14,6 +14,7 @@ import (
 	"time"
 
 	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
+	"github.com/golang/protobuf/ptypes"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
@@ -139,10 +140,17 @@ func (q *GCP) ScheduleFetch(ctx context.Context, modulePath, version, suffix str
 	return enqueued, nil
 }
 
+// Maximum timeout for HTTP tasks.
+// See https://cloud.google.com/tasks/docs/creating-http-target-tasks.
+const maxCloudTasksTimeout = 30 * time.Minute
+
 func (q *GCP) newTaskRequest(modulePath, version, suffix string, taskIDChangeInterval time.Duration) *taskspb.CreateTaskRequest {
 	taskID := newTaskID(modulePath, version, time.Now(), taskIDChangeInterval)
 	relativeURI := fmt.Sprintf("/fetch/%s/@v/%s", modulePath, version)
-	task := &taskspb.Task{Name: fmt.Sprintf("%s/tasks/%s", q.queueName, taskID)}
+	task := &taskspb.Task{
+		Name:             fmt.Sprintf("%s/tasks/%s", q.queueName, taskID),
+		DispatchDeadline: ptypes.DurationProto(maxCloudTasksTimeout),
+	}
 	if q.queueService != "" {
 		task.MessageType = &taskspb.Task_AppEngineHttpRequest{
 			AppEngineHttpRequest: &taskspb.AppEngineHttpRequest{
