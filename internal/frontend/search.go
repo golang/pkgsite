@@ -107,6 +107,10 @@ func approximateNumber(estimate int, sigma float64) int {
 // maxSearchQueryLength.
 const maxSearchQueryLength = 500
 
+// maxSearchOffset is the maximum allowed. offset into the search results.
+// This prevents some very CPU-intensive queries from running.
+const maxSearchOffset = 100
+
 // serveSearch applies database data to the search template. Handles endpoint
 // /search?q=<query>. If <query> is an exact match for a package path, the user
 // will be redirected to the details page.
@@ -139,7 +143,18 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 		http.Redirect(w, r, path, http.StatusFound)
 		return nil
 	}
-	page, err := fetchSearchPage(ctx, db, query, newPaginationParams(r, defaultSearchLimit))
+	pageParams := newPaginationParams(r, defaultSearchLimit)
+	if pageParams.offset() > maxSearchOffset {
+		return &serverError{
+			status: http.StatusBadRequest,
+			epage: &errorPage{
+				messageTemplate: template.MakeTrustedTemplate(
+					`<h3 class="Error-message">Search offset too large.</h3>`),
+			},
+		}
+	}
+
+	page, err := fetchSearchPage(ctx, db, query, pageParams)
 	if err != nil {
 		return fmt.Errorf("fetchSearchPage(ctx, db, %q): %v", query, err)
 	}

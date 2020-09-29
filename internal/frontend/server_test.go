@@ -395,6 +395,11 @@ func serverTestCases() []serverTestCase {
 						text(sample.ModulePath+"/foo")))),
 		},
 		{
+			name:           "search large offset",
+			urlPath:        fmt.Sprintf("/search?q=github.com&page=1002"),
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
 			name:           "package default",
 			urlPath:        fmt.Sprintf("/%s", sample.PackagePath),
 			wantStatusCode: http.StatusOK,
