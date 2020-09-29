@@ -17,8 +17,6 @@ import (
 	"golang.org/x/pkgsite/internal/fetch/internal/doc"
 )
 
-// TODO: Hide slice elements and long strings to avoid overwhelming godoc.
-
 var (
 	// Regexp for headings.
 	headingHead = `^[\p{Lu}]`                                  // any uppercase letter
