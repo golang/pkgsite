@@ -30,6 +30,10 @@
   content: '>';
   padding: 0.5rem;
 }
+.UnitHeader-heading {
+  display: flex;
+  align-items: center;
+}
 .UnitHeader-title {
   font-size: 1.75rem;
   line-height: 2.25rem;
@@ -125,13 +129,13 @@ a.UnitHeader-backLink {
 .UnitHeader-backLink img {
   margin-right: 0.5rem;
 }
-.UnitHeader-moduleBadge,
-.UnitHeader-packageBadge {
+.UnitHeader-badge {
   border: 1px solid var(--gray-4);
   border-radius: 0.125rem;
   font-size: 0.6875rem;
-  height: 1rem;
-  padding: 0.1rem 0.25rem;
-  vertical-align: middle;
-  width: 3.25rem;
+  font-weight: 500;
+  line-height: 1rem;
+  margin-left: 0.5rem;
+  padding: 0 0.35rem;
+  text-align: center;
 }
