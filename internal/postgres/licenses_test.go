@@ -159,48 +159,6 @@ func TestGetModuleLicenses(t *testing.T) {
 	}
 }
 
-func TestLegacyGetPackageLicenses(t *testing.T) {
-	modulePath := "test.module"
-	testModule := sample.Module(modulePath, "v1.2.3", "", "foo")
-	testModule.LegacyPackages[0].Licenses = nil
-	testModule.LegacyPackages[1].Licenses = sample.LicenseMetadata
-
-	tests := []struct {
-		label, pkgPath string
-		wantLicenses   []*licenses.License
-	}{
-		{
-			label:        "package with licenses",
-			pkgPath:      "test.module/foo",
-			wantLicenses: sample.Licenses,
-		}, {
-			label:        "package with no licenses",
-			pkgPath:      "test.module",
-			wantLicenses: nil,
-		},
-	}
-
-	defer ResetTestDB(testDB, t)
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
-
-	if err := testDB.InsertModule(ctx, testModule); err != nil {
-		t.Fatal(err)
-	}
-
-	for _, test := range tests {
-		t.Run(test.label, func(t *testing.T) {
-			got, err := testDB.LegacyGetPackageLicenses(ctx, test.pkgPath, modulePath, testModule.Version)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if diff := cmp.Diff(test.wantLicenses, got); diff != "" {
-				t.Errorf("testDB.GetLicenses(ctx, %q, %q) mismatch (-want +got):\n%s", test.pkgPath, testModule.Version, diff)
-			}
-		})
-	}
-}
-
 func TestGetLicensesBypass(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()

@@ -115,48 +115,6 @@ func (db *DB) getModuleLicenses(ctx context.Context, modulePath, resolvedVersion
 	return collectLicenses(rows, db.bypassLicenseCheck)
 }
 
-// LegacyGetPackageLicenses returns all licenses associated with the given package path and
-// version.
-// It returns an InvalidArgument error if the module path or version is invalid.
-func (db *DB) LegacyGetPackageLicenses(ctx context.Context, pkgPath, modulePath, resolvedVersion string) (_ []*licenses.License, err error) {
-	defer derrors.Wrap(&err, "LegacyGetPackageLicenses(ctx, %q, %q, %q)", pkgPath, modulePath, resolvedVersion)
-
-	if pkgPath == "" || resolvedVersion == "" {
-		return nil, fmt.Errorf("neither pkgPath nor version can be empty: %w", derrors.InvalidArgument)
-	}
-	query := `
-		SELECT
-			l.types,
-			l.file_path,
-			l.contents,
-			l.coverage
-		FROM
-			licenses l
-		INNER JOIN (
-			SELECT DISTINCT ON (license_file_path)
-				module_path,
-				version,
-				unnest(license_paths) AS license_file_path
-			FROM
-				packages
-			WHERE
-				path = $1
-				AND module_path = $2
-				AND version = $3
-		) p
-		ON
-			p.module_path = l.module_path
-			AND p.version = l.version
-			AND p.license_file_path = l.file_path;`
-
-	rows, err := db.db.Query(ctx, query, pkgPath, modulePath, resolvedVersion)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	return collectLicenses(rows, db.bypassLicenseCheck)
-}
-
 // collectLicenses converts the sql rows to a list of licenses. The columns
 // must be types, file_path and contents, in that order.
 func collectLicenses(rows *sql.Rows, bypassLicenseCheck bool) ([]*licenses.License, error) {
