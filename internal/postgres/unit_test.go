@@ -341,17 +341,6 @@ func TestGetUnitBypass(t *testing.T) {
 		if got := (pkgs[0].Synopsis == ""); got != test.wantEmpty {
 			t.Errorf("synopsis empty: got %t, want %t", got, test.wantEmpty)
 		}
-
-		ld, err := test.db.LegacyGetDirectory(ctx, m.ModulePath, m.ModulePath, m.Version, internal.AllFields)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if got := (ld.Packages[0].Synopsis == ""); got != test.wantEmpty {
-			t.Errorf("legacy synopsis empty: got %t, want %t", got, test.wantEmpty)
-		}
-		if got := (ld.Packages[0].DocumentationHTML == safehtml.HTML{}); got != test.wantEmpty {
-			t.Errorf("legacy doc empty: got %t, want %t", got, test.wantEmpty)
-		}
 	}
 }
 
