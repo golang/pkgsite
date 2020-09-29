@@ -12,7 +12,6 @@ const (
 	ExperimentRemoveUnusedAST     = "remove-unused-ast"
 	ExperimentSidenav             = "sidenav"
 	ExperimentUnitPage            = "unit-page"
-	ExperimentUseUnits            = "use-units"
 )
 
 // Experiments represents all of the active experiments in the codebase and
@@ -24,7 +23,6 @@ var Experiments = map[string]string{
 	ExperimentRemoveUnusedAST:     "Prune AST prior to rendering documentation HTML.",
 	ExperimentSidenav:             "Display documentation index on the left sidenav.",
 	ExperimentUnitPage:            "Enable the redesigned details page.",
-	ExperimentUseUnits:            "Read from paths, documentation, readmes, and package_imports tables.",
 }
 
 // Experiment holds data associated with an experimental feature for frontend

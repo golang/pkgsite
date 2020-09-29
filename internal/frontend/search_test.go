@@ -11,7 +11,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -177,19 +176,9 @@ func TestApproximateNumber(t *testing.T) {
 }
 
 func TestSearchRequestRedirectPath(t *testing.T) {
-	t.Run("no experiments ", func(t *testing.T) {
-		testSearchRequestRedirectPath(t)
-	})
-	t.Run("use-paths-table", func(t *testing.T) {
-		testSearchRequestRedirectPath(t, internal.ExperimentUseUnits)
-	})
-}
-
-func testSearchRequestRedirectPath(t *testing.T, experimentNames ...string) {
 	// Experiments need to be set in the context, for DB work, and as
 	// a middleware, for request handling.
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	ctx = experiment.NewContext(ctx, experimentNames...)
 
 	defer cancel()
 	defer postgres.ResetTestDB(testDB, t)

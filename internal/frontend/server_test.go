@@ -892,11 +892,6 @@ func TestServer(t *testing.T) {
 			name:          "no experiments",
 			testCasesFunc: serverTestCases,
 		},
-		{
-			name:          "use directories",
-			testCasesFunc: serverTestCases,
-			experiments:   []string{internal.ExperimentUseUnits},
-		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			testServer(t, test.testCasesFunc(), test.experiments...)

@@ -160,7 +160,7 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 			}
 		}()
 	}
-	if isActiveUnitPage(ctx) {
+	if experiment.IsActive(ctx, internal.ExperimentUnitPage) {
 		return s.serveUnitPage(ctx, w, r, ds, um, urlInfo.requestedVersion)
 	}
 	return s.serveDetailsPage(w, r, ds, um, urlInfo)
@@ -342,13 +342,6 @@ func isSupportedVersion(fullPath, requestedVersion string) bool {
 		return true
 	}
 	return requestedVersion == internal.MasterVersion
-}
-
-// isActiveUnitPage reports whether the experiments needed for viewing
-// unit page are active.
-func isActiveUnitPage(ctx context.Context) bool {
-	return experiment.IsActive(ctx, internal.ExperimentUnitPage) &&
-		experiment.IsActive(ctx, internal.ExperimentUseUnits)
 }
 
 // pathNotFoundError returns a page with an option on how to
