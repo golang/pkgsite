@@ -10,7 +10,6 @@ package godoc
 
 import (
 	"fmt"
-	"html"
 	"regexp"
 
 	"github.com/google/safehtml"
@@ -70,6 +69,6 @@ func findHTML(docHTML safehtml.HTML, identifier string) (_ safehtml.HTML, err er
 	// sidenav sections. For the body, this will capture all content up the
 	// last </div> tag in the HTML.
 	reg := fmt.Sprintf("(%s(.|\n)*%s)", identifier, closeTag)
-	b := regexp.MustCompile(reg).FindString(html.UnescapeString(docHTML.String()))
-	return uncheckedconversions.HTMLFromStringKnownToSatisfyTypeContract(string(b)), nil
+	s := regexp.MustCompile(reg).FindString(docHTML.String())
+	return uncheckedconversions.HTMLFromStringKnownToSatisfyTypeContract(s), nil
 }

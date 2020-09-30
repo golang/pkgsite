@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/safehtml"
+	"github.com/google/safehtml/uncheckedconversions"
 )
 
 func TestParse(t *testing.T) {
@@ -34,7 +34,7 @@ func TestParse(t *testing.T) {
 	} {
 		{
 			t.Run(test.name, func(t *testing.T) {
-				got, err := Parse(safehtml.HTMLEscaped(quoteDocHTML), test.section)
+				got, err := Parse(uncheckedconversions.HTMLFromStringKnownToSatisfyTypeContract(quoteDocHTML), test.section)
 				if err != nil {
 					t.Fatal(err)
 				}
