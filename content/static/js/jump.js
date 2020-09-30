@@ -294,7 +294,7 @@ document.addEventListener('keypress', function (e) {
 
 const jumpOutlineInput = document.querySelector('.js-jumpToInput');
 if (jumpOutlineInput) {
-  jumpOutlineInput.addEventListener('focus', () => {
+  jumpOutlineInput.addEventListener('click', () => {
     jumpDialog.showModal();
   });
 }

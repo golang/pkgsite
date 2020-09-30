@@ -49,10 +49,13 @@ a.UnitOutline-accordian {
   display: flex;
   margin-bottom: 0.5rem;
 }
-.UnitOutline-jumpTo input {
+.UnitOutline-jumpTo button {
+  background-color: white;
   border: 0.0625rem solid var(--gray-8);
+  cursor: pointer;
   height: 2rem;
   padding-left: 1rem;
+  text-align: left;
   width: 100%;
 }
 .UnitOutline-jumpTo::after {

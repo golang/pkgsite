@@ -6,8 +6,9 @@
 
 {{define "unit_outline"}}
   <div class="UnitOutline-jumpTo">
-    <input class="js-jumpToInput" placeholder="Jump to"
-        {{if (not .DocOutline.String)}}disabled{{end}}>
+    <button class="UnitOutline-jumpToInput js-jumpToInput"{{if (not .DocOutline.String)}} disabled{{end}}>
+       Jump to
+    </button>
   </div>
   <div class="UnitOutline">
     {{if .Readme.String}}
