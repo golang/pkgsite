@@ -64,7 +64,7 @@ func TestReFetch(t *testing.T) {
 		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", sample.ModulePath, version, proxyClient, sourceClient, testDB, err)
 	}
 
-	if _, err := testDB.LegacyGetPackage(ctx, pkgFoo, internal.UnknownModulePath, version); err != nil {
+	if _, err := testDB.GetUnitMeta(ctx, pkgFoo, internal.UnknownModulePath, version); err != nil {
 		t.Error(err)
 	}
 
@@ -81,39 +81,52 @@ func TestReFetch(t *testing.T) {
 	if _, err := FetchAndUpdateState(ctx, sample.ModulePath, version, proxyClient, sourceClient, testDB, testAppVersion); err != nil {
 		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
 	}
-	want := &internal.LegacyVersionedPackage{
-		LegacyModuleInfo: internal.LegacyModuleInfo{
-			ModuleInfo: internal.ModuleInfo{
-				ModulePath:        sample.ModulePath,
-				Version:           version,
-				CommitTime:        time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
-				IsRedistributable: true,
-				HasGoMod:          false,
-				SourceInfo:        source.NewGitHubInfo("https://"+sample.ModulePath, "", sample.VersionString),
-			},
-			LegacyReadmeFilePath: "README.md",
-			LegacyReadmeContents: "This is a readme",
-		},
-		LegacyPackage: internal.LegacyPackage{
+	want := &internal.Unit{
+		UnitMeta: internal.UnitMeta{
+			ModulePath:        sample.ModulePath,
+			Version:           version,
+			CommitTime:        time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
+			IsRedistributable: true,
+			SourceInfo:        source.NewGitHubInfo("https://"+sample.ModulePath, "", sample.VersionString),
 			Path:              sample.ModulePath + "/bar",
 			Name:              "bar",
-			Synopsis:          "Package bar",
-			DocumentationHTML: html("Bar returns the string &#34;bar&#34;."),
-			V1Path:            sample.ModulePath + "/bar",
 			Licenses: []*licenses.Metadata{
 				{Types: []string{"MIT"}, FilePath: "LICENSE"},
 			},
-			IsRedistributable: true,
-			GOOS:              "linux",
-			GOARCH:            "amd64",
+		},
+		Readme: &internal.Readme{
+			Filepath: "README.md",
+			Contents: "This is a readme",
+		},
+		Documentation: &internal.Documentation{
+			Synopsis: "Package bar",
+			HTML:     html("Bar returns the string &#34;bar&#34;."),
+			GOOS:     "linux",
+			GOARCH:   "amd64",
 		},
 	}
-	got, err := testDB.LegacyGetPackage(ctx, pkgBar, internal.UnknownModulePath, version)
+	got, err := testDB.GetUnitMeta(ctx, pkgBar, internal.UnknownModulePath, version)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(want, got, cmpopts.IgnoreFields(internal.LegacyPackage{}, "DocumentationHTML"), cmp.AllowUnexported(source.Info{})); diff != "" {
-		t.Errorf("testDB.LegacyGetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", pkgBar, version, diff)
+	if diff := cmp.Diff(want.UnitMeta, *got, cmp.AllowUnexported(source.Info{})); diff != "" {
+		t.Fatalf("testDB.GetUnitMeta(ctx, %q, %q) mismatch (-want +got):\n%s", want.ModulePath, want.Version, diff)
+	}
+
+	gotPkg, err := testDB.GetUnit(ctx, got, internal.WithReadme|internal.WithDocumentation)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(want, gotPkg,
+		cmp.AllowUnexported(source.Info{}),
+		cmpopts.IgnoreFields(internal.Unit{}, "Documentation")); diff != "" {
+		t.Errorf("mismatch on readme (-want +got):\n%s", diff)
+	}
+	if got, want := gotPkg.Documentation, want.Documentation; got == nil || want == nil {
+		if got != want {
+			t.Fatalf("mismatch on documentation: got: %v\nwant: %v", got, want)
+		}
+		return
 	}
 
 	// Now re-fetch and verify that contents were overwritten.
