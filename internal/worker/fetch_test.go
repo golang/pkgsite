@@ -6,7 +6,6 @@ package worker
 
 import (
 	"context"
-	"net/http"
 	"sort"
 	"strings"
 	"testing"
@@ -55,31 +54,6 @@ var buildConstraintsMod = &proxy.Module{
 }
 
 var html = testconversions.MakeHTMLForTest
-
-func TestFetch_V1Path(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
-	defer postgres.ResetTestDB(testDB, t)
-	proxyClient, tearDown := proxy.SetupTestClient(t, []*proxy.Module{
-		{
-			ModulePath: sample.ModulePath,
-			Version:    sample.VersionString,
-			Files: map[string]string{
-				"foo.go":  "package foo\nconst Foo = 41",
-				"LICENSE": testhelper.MITLicense,
-			},
-		},
-	})
-	defer tearDown()
-	fetchAndCheckStatus(ctx, t, proxyClient, sample.ModulePath, sample.VersionString, http.StatusOK)
-	pkg, err := testDB.LegacyGetPackage(ctx, sample.ModulePath, internal.UnknownModulePath, sample.VersionString)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got, want := pkg.V1Path, sample.ModulePath; got != want {
-		t.Errorf("V1Path = %q, want %q", got, want)
-	}
-}
 
 func TestFetchAndUpdateState(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
