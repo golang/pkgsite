@@ -47,7 +47,19 @@ program construction.
 			doc: `The Go Project
 
 Go is an open source project.`,
-			want: `<h3 id="hdr-The_Go_Project">The Go Project<a href="#hdr-The_Go_Project">¶</a></h3>
+			want: `<p>The Go Project
+</p><p>Go is an open source project.
+</p>`,
+		},
+		{
+			name: "header gets linked",
+			doc: `Documentation.
+
+The Go Project
+
+Go is an open source project.`,
+			want: `<p>Documentation.
+</p><h3 id="hdr-The_Go_Project">The Go Project<a href="#hdr-The_Go_Project">¶</a></h3>
   <p>Go is an open source project.
 </p>`,
 		},

@@ -178,6 +178,14 @@ type (
 	}
 )
 
+// docToBlocks converts doc string into list of blocks.
+//
+// Heading block is a non-blank line, surrounded by blank lines
+// and the next non-blank line is not indented.
+//
+// Preformat block contains single line or consecutive lines which have indent greater than 0.
+//
+// Paragraph block is a default block type if a block does not fall into heading and preformat.
 func docToBlocks(doc string) []block {
 	docLines := unindent(strings.Split(strings.Trim(doc, "\n"), "\n"))
 
@@ -214,7 +222,7 @@ func docToBlocks(doc string) []block {
 		switch {
 		case indentLength(group[0]) > 0:
 			blks = append(blks, &preformat{unindent(group)})
-		case !wasHeading && len(group) == 1 && headingRx.MatchString(group[0]) && willParagraph:
+		case i != 0 && !wasHeading && len(group) == 1 && headingRx.MatchString(group[0]) && willParagraph:
 			blks = append(blks, &heading{group[0]})
 		default:
 			blks = append(blks, &paragraph{group})

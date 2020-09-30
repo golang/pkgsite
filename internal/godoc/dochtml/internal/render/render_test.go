@@ -88,7 +88,7 @@ func TestDocToBlocks(t *testing.T) {
 			The quick brown fox jumped over the lazy dog.
 			This is another sentence. La de dah!
 
-			This is a title
+			This is a heading
 
 			This is a paragraph.`,
 		want: []block{
@@ -96,8 +96,30 @@ func TestDocToBlocks(t *testing.T) {
 				"The quick brown fox jumped over the lazy dog.",
 				"This is another sentence. La de dah!",
 			}},
-			&heading{"This is a title"},
+			&heading{"This is a heading"},
 			&paragraph{lines{"This is a paragraph."}},
+		},
+	}, {
+		in: `
+			This is not a heading
+
+			The quick brown fox jumped over the lazy dog.
+			This is another sentence. La de dah!
+
+			This is not a heading
+
+				func main() {}
+
+			This is not a heading`,
+		want: []block{
+			&paragraph{lines{"This is not a heading"}},
+			&paragraph{lines{
+				"The quick brown fox jumped over the lazy dog.",
+				"This is another sentence. La de dah!",
+			}},
+			&paragraph{lines{"This is not a heading"}},
+			&preformat{lines{"func main() {}"}},
+			&paragraph{lines{"This is not a heading"}},
 		},
 	}, {
 		in: `
@@ -130,6 +152,8 @@ func TestDocToBlocks(t *testing.T) {
 		},
 	}, {
 		in: `
+			Package testing provides support for automated testing of Go packages.
+
 			Benchmarks
 
 			Functions of the form
@@ -153,6 +177,7 @@ func TestDocToBlocks(t *testing.T) {
 				    BenchmarkHello    10000000    282 ns/op
 			means that the loop ran 10000000 times at a speed of 282 ns per loop.`,
 		want: []block{
+			&paragraph{lines{"Package testing provides support for automated testing of Go packages."}},
 			&heading{"Benchmarks"},
 			&paragraph{lines{"Functions of the form"}},
 			&preformat{lines{"func BenchmarkXxx(*testing.B)"}},
