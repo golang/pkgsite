@@ -132,7 +132,7 @@ func removeCycles(f *ast.File) {
 	ast.Inspect(f, func(n ast.Node) bool {
 		switch n := n.(type) {
 		case *ast.File:
-			n.Scope = nil // doc doesn't use scopes
+			n.Scope.Objects = nil // doc doesn't use scopes
 		case *ast.Ident:
 			if n.Obj != nil {
 				if _, ok := n.Obj.Decl.(int); !ok {

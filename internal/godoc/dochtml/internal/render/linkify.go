@@ -21,7 +21,7 @@ import (
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/legacyconversions"
 	safetemplate "github.com/google/safehtml/template"
-	"golang.org/x/pkgsite/internal/fetch/internal/doc"
+	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 	"golang.org/x/pkgsite/internal/log"
 )
 

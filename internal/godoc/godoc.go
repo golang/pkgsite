@@ -8,7 +8,13 @@ package godoc
 import (
 	"go/ast"
 	"go/token"
+
+	"golang.org/x/pkgsite/internal/godoc/dochtml"
 )
+
+var ErrTooLarge = dochtml.ErrTooLarge
+
+type ModuleInfo = dochtml.ModuleInfo
 
 // A package contains everything needed to render Go documentation for a package.
 type Package struct {

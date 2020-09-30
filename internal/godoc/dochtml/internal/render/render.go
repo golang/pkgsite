@@ -14,7 +14,7 @@ import (
 	"strings"
 
 	"github.com/google/safehtml"
-	"golang.org/x/pkgsite/internal/fetch/internal/doc"
+	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
 
 var (

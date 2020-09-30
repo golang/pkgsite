@@ -15,7 +15,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/testconversions"
-	"golang.org/x/pkgsite/internal/fetch/internal/doc"
+	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
 
 func TestDocHTML(t *testing.T) {

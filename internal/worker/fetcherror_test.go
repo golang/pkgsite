@@ -19,6 +19,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/fetch"
+	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
@@ -299,7 +300,7 @@ func TestTrimLargeCode(t *testing.T) {
 		var b strings.Builder
 		b.WriteString("package bar\n\n")
 		b.WriteString("const Bar = `\n")
-		for b.Len() <= fetch.MaxDocumentationHTML {
+		for b.Len() <= godoc.MaxDocumentationHTML {
 			b.WriteString("All work and no play makes Jack a dull boy.\n")
 		}
 		b.WriteString("`\n")
@@ -310,7 +311,7 @@ func TestTrimLargeCode(t *testing.T) {
 		var b strings.Builder
 		b.WriteString("package baz\n\n")
 		b.WriteString("var Baz = []string{\n")
-		for b.Len() <= fetch.MaxDocumentationHTML {
+		for b.Len() <= godoc.MaxDocumentationHTML {
 			b.WriteString("`All work and no play makes Jack a dull boy.`,\n")
 		}
 		b.WriteString("}\n")

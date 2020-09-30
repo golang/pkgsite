@@ -8,8 +8,8 @@ import (
 	"reflect"
 
 	"github.com/google/safehtml/template"
-	"golang.org/x/pkgsite/internal/fetch/dochtml/internal/render"
-	"golang.org/x/pkgsite/internal/fetch/internal/doc"
+	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
+	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
 
 // htmlPackage is the template used to render documentation HTML.

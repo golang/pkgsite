@@ -20,7 +20,7 @@ import (
 	"golang.org/x/mod/module"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/fetch/dochtml"
+	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/source"
@@ -94,7 +94,7 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion str
 		// modInfo contains all the module information a package in the module
 		// needs to render its documentation, to be populated during phase 1
 		// and used during phase 2.
-		modInfo = &dochtml.ModuleInfo{
+		modInfo = &godoc.ModuleInfo{
 			ModulePath:      modulePath,
 			ResolvedVersion: resolvedVersion,
 			ModulePackages:  make(map[string]bool),
@@ -199,7 +199,7 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion str
 			incompleteDirs[innerPath] = true
 			status = derrors.PackageInvalidContents
 			errMsg = err.Error()
-		} else if errors.Is(err, dochtml.ErrTooLarge) {
+		} else if errors.Is(err, godoc.ErrTooLarge) {
 			status = derrors.PackageDocumentationHTMLTooLarge
 			errMsg = err.Error()
 		} else if err != nil {

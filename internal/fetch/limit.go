@@ -15,12 +15,4 @@ const (
 	MaxFileSize = 30 * megabyte
 )
 
-// MaxDocumentationHTML is a limit on the rendered documentation HTML size.
-//
-// The current limit of is based on the largest packages that
-// pkg.go.dev has encountered. See https://golang.org/issue/40576.
-//
-// It is a variable for testing.
-var MaxDocumentationHTML = 20 * megabyte
-
 const megabyte = 1000 * 1000

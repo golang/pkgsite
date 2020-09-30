@@ -27,8 +27,8 @@ import (
 	"github.com/google/safehtml/template"
 	"github.com/google/safehtml/uncheckedconversions"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/fetch/dochtml/internal/render"
-	"golang.org/x/pkgsite/internal/fetch/internal/doc"
+	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
+	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
 
 var (

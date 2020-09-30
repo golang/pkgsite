@@ -17,6 +17,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -40,8 +41,8 @@ func TestFetchModule(t *testing.T) {
 	}
 	defer func() { httpPost = origPost }()
 
-	defer func(oldmax int) { MaxDocumentationHTML = oldmax }(MaxDocumentationHTML)
-	MaxDocumentationHTML = 1 * megabyte
+	defer func(oldmax int) { godoc.MaxDocumentationHTML = oldmax }(godoc.MaxDocumentationHTML)
+	godoc.MaxDocumentationHTML = 1 * megabyte
 
 	for _, test := range []struct {
 		name         string

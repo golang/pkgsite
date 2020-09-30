@@ -15,7 +15,7 @@ import (
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/uncheckedconversions"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/fetch/dochtml"
+	"golang.org/x/pkgsite/internal/godoc/dochtml"
 )
 
 // SectionType is a section of the docHTML.

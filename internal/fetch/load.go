@@ -22,18 +22,13 @@ import (
 	"os"
 	"path"
 	"runtime"
-	"sort"
 	"strings"
 
-	"github.com/google/safehtml"
-	"github.com/google/safehtml/template"
 	"go.opencensus.io/trace"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
-	"golang.org/x/pkgsite/internal/fetch/dochtml"
-	"golang.org/x/pkgsite/internal/fetch/internal/doc"
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/source"
@@ -66,14 +61,14 @@ var goEnvs = []struct{ GOOS, GOARCH string }{
 // loadPackage returns nil, nil.
 //
 // If the package is fine except that its documentation is too large, loadPackage
-// returns both a package and a non-nil error with dochtml.ErrTooLarge in its chain.
-func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, sourceInfo *source.Info, modInfo *dochtml.ModuleInfo) (_ *goPackage, err error) {
+// returns both a package and a non-nil error with godoc.ErrTooLarge in its chain.
+func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, sourceInfo *source.Info, modInfo *godoc.ModuleInfo) (_ *goPackage, err error) {
 	defer derrors.Wrap(&err, "loadPackage(ctx, zipGoFiles, %q, sourceInfo, modInfo)", innerPath)
 	ctx, span := trace.StartSpan(ctx, "fetch.loadPackage")
 	defer span.End()
 	for _, env := range goEnvs {
 		pkg, err := loadPackageWithBuildContext(ctx, env.GOOS, env.GOARCH, zipGoFiles, innerPath, sourceInfo, modInfo)
-		if err != nil && !errors.Is(err, dochtml.ErrTooLarge) && !errors.Is(err, derrors.NotFound) {
+		if err != nil && !errors.Is(err, godoc.ErrTooLarge) && !errors.Is(err, derrors.NotFound) {
 			return nil, err
 		}
 		if pkg != nil {
@@ -103,7 +98,7 @@ const docTooLargeReplacement = `<p>Documentation is too large to display.</p>`
 // or all .go files have been excluded by constraints.
 // A *BadPackageError error is returned if the directory
 // contains .go files but do not make up a valid package.
-func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGoFiles []*zip.File, innerPath string, sourceInfo *source.Info, modInfo *dochtml.ModuleInfo) (_ *goPackage, err error) {
+func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGoFiles []*zip.File, innerPath string, sourceInfo *source.Info, modInfo *godoc.ModuleInfo) (_ *goPackage, err error) {
 	modulePath := modInfo.ModulePath
 	defer derrors.Wrap(&err, "loadPackageWithBuildContext(%q, %q, zipGoFiles, %q, %q, %+v)",
 		goos, goarch, innerPath, modulePath, sourceInfo)
@@ -113,25 +108,21 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 		return nil, err
 	}
 	docPkg := godoc.NewPackage(fset, modInfo.ModulePackages)
-	var allGoFiles []*ast.File
 	for _, pf := range goFiles {
+		var removeNodes bool
 		if experiment.IsActive(ctx, internal.ExperimentRemoveUnusedAST) {
-			removeNodes := true
+			removeNodes = true
 			// Don't strip the seemingly unexported functions from the builtin package;
 			// they are actually Go builtins like make, new, etc.
 			if !(modulePath == stdlib.ModulePath && innerPath == "builtin") {
 				removeNodes = false
 			}
-			docPkg.AddFile(pf, removeNodes)
 		}
-		allGoFiles = append(allGoFiles, pf)
+		docPkg.AddFile(pf, removeNodes)
 	}
-	d, err := loadPackageWithFiles(modulePath, innerPath, packageName, allGoFiles, fset)
-	if err != nil {
-		return nil, err
-	}
-	docHTML, err := renderDocHTML(ctx, innerPath, d, fset, sourceInfo, modInfo)
-	if err != nil && !errors.Is(err, dochtml.ErrTooLarge) {
+
+	synopsis, imports, docHTML, err := docPkg.Render(ctx, innerPath, sourceInfo, modInfo, goos, goarch)
+	if err != nil && !errors.Is(err, godoc.ErrTooLarge) {
 		return nil, err
 	}
 	var src []byte
@@ -149,9 +140,9 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 	return &goPackage{
 		path:              importPath,
 		name:              packageName,
-		synopsis:          doc.Synopsis(d.Doc),
+		synopsis:          synopsis,
 		v1path:            v1path,
-		imports:           d.Imports,
+		imports:           imports,
 		documentationHTML: docHTML,
 		goos:              goos,
 		goarch:            goarch,
@@ -169,7 +160,6 @@ func loadFilesWithBuildContext(innerPath, goos, goarch string, zipGoFiles []*zip
 	if err != nil {
 		return "", nil, nil, err
 	}
-
 	// Parse .go files and add them to the goFiles slice.
 	var (
 		fset            = token.NewFileSet()
@@ -212,81 +202,6 @@ func loadFilesWithBuildContext(innerPath, goos, goarch string, zipGoFiles []*zip
 		return "", nil, nil, derrors.NotFound
 	}
 	return packageName, goFiles, fset, nil
-}
-
-func loadPackageWithFiles(modulePath, innerPath, packageName string, allGoFiles []*ast.File, fset *token.FileSet) (_ *doc.Package, err error) {
-	defer derrors.Wrap(&err, "loadPackageWithFiles")
-	// The "builtin" package in the standard library is a special case.
-	// We want to show documentation for all globals (not just exported ones),
-	// and avoid association of consts, vars, and factory functions with types
-	// since it's not helpful (see golang.org/issue/6645).
-	var noFiltering, noTypeAssociation bool
-	if modulePath == stdlib.ModulePath && innerPath == "builtin" {
-		noFiltering = true
-		noTypeAssociation = true
-	}
-
-	// Compute package documentation.
-	importPath := path.Join(modulePath, innerPath)
-	var m doc.Mode
-	if noFiltering {
-		m |= doc.AllDecls
-	}
-	d, err := doc.NewFromFiles(fset, allGoFiles, importPath, m)
-	if err != nil {
-		return nil, fmt.Errorf("doc.NewFromFiles: %v", err)
-	}
-	if d.ImportPath != importPath || d.Name != packageName {
-		panic(fmt.Errorf("internal error: *doc.Package has an unexpected import path (%q != %q) or package name (%q != %q)", d.ImportPath, importPath, d.Name, packageName))
-	}
-	if noTypeAssociation {
-		for _, t := range d.Types {
-			d.Consts, t.Consts = append(d.Consts, t.Consts...), nil
-			d.Vars, t.Vars = append(d.Vars, t.Vars...), nil
-			d.Funcs, t.Funcs = append(d.Funcs, t.Funcs...), nil
-		}
-		sort.Slice(d.Funcs, func(i, j int) bool { return d.Funcs[i].Name < d.Funcs[j].Name })
-	}
-
-	// Process package imports.
-	if len(d.Imports) > maxImportsPerPackage {
-		return nil, fmt.Errorf("%d imports found package %q; exceeds limit %d for maxImportsPerPackage", len(d.Imports), importPath, maxImportsPerPackage)
-	}
-	return d, nil
-}
-
-// renderDocHTML renders documentation HTML for a given package.
-func renderDocHTML(ctx context.Context, innerPath string, d *doc.Package, fset *token.FileSet, sourceInfo *source.Info, modInfo *dochtml.ModuleInfo) (_ safehtml.HTML, err error) {
-	defer derrors.Wrap(&err, "renderDocHTML")
-	sourceLinkFunc := func(n ast.Node) string {
-		if sourceInfo == nil {
-			return ""
-		}
-		p := fset.Position(n.Pos())
-		if p.Line == 0 { // invalid Position
-			return ""
-		}
-		return sourceInfo.LineURL(path.Join(innerPath, p.Filename), p.Line)
-	}
-	fileLinkFunc := func(filename string) string {
-		if sourceInfo == nil {
-			return ""
-		}
-		return sourceInfo.FileURL(path.Join(innerPath, filename))
-	}
-
-	docHTML, err := dochtml.Render(ctx, fset, d, dochtml.RenderOptions{
-		FileLinkFunc:   fileLinkFunc,
-		SourceLinkFunc: sourceLinkFunc,
-		ModInfo:        modInfo,
-		Limit:          int64(MaxDocumentationHTML),
-	})
-	if errors.Is(err, dochtml.ErrTooLarge) {
-		docHTML = template.MustParseAndExecuteToHTML(docTooLargeReplacement)
-	} else if err != nil {
-		return safehtml.HTML{}, err
-	}
-	return docHTML, err
 }
 
 // matchingFiles returns a map from file names to their contents, read from zipGoFiles.
