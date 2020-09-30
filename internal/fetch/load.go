@@ -112,14 +112,17 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 	if err != nil {
 		return nil, err
 	}
+	docPkg := godoc.NewPackage(fset)
 	var allGoFiles []*ast.File
 	for _, pf := range goFiles {
 		if experiment.IsActive(ctx, internal.ExperimentRemoveUnusedAST) {
+			removeNodes := true
 			// Don't strip the seemingly unexported functions from the builtin package;
 			// they are actually Go builtins like make, new, etc.
 			if !(modulePath == stdlib.ModulePath && innerPath == "builtin") {
-				godoc.RemoveUnusedASTNodes(pf)
+				removeNodes = false
 			}
+			docPkg.AddFile(pf, removeNodes)
 		}
 		allGoFiles = append(allGoFiles, pf)
 	}
@@ -133,7 +136,7 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 	}
 	var src []byte
 	if experiment.IsActive(ctx, internal.ExperimentInsertPackageSource) {
-		src, err = godoc.EncodeASTFiles(fset, allGoFiles)
+		src, err = docPkg.Encode()
 		if err != nil {
 			return nil, err
 		}

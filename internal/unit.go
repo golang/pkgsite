@@ -66,7 +66,7 @@ type Documentation struct {
 	GOARCH   string
 	Synopsis string
 	HTML     safehtml.HTML
-	Source   []byte // encoded ast.Files; see fetch.EncodeASTFiles
+	Source   []byte // encoded ast.Files; see godoc.Package.Encode
 }
 
 // Readme is a README at the specified filepath.

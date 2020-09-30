@@ -11,6 +11,8 @@ import (
 	"go/ast"
 	"go/token"
 	"io"
+
+	"golang.org/x/pkgsite/internal/derrors"
 )
 
 // encodingType identifies the encoding being used, in case
@@ -68,50 +70,44 @@ func init() {
 	}
 }
 
-// Encode fset and files into a byte slice.
-func EncodeASTFiles(fset *token.FileSet, files []*ast.File) ([]byte, error) {
+// Encode encodes a Package into a byte slice.
+func (p *Package) Encode() (_ []byte, err error) {
+	defer derrors.Wrap(&err, "godoc.Package.Encode()")
+
 	var buf bytes.Buffer
 	io.WriteString(&buf, encodingType)
 	enc := gob.NewEncoder(&buf)
 	// Encode the fset using the Write method it provides.
-	if err := fset.Write(enc.Encode); err != nil {
+	if err := p.Fset.Write(enc.Encode); err != nil {
 		return nil, err
 	}
-	// Encode each file.
-	for _, f := range files {
-		removeCycles(f)
-		if err := enc.Encode(f); err != nil {
-			return nil, err
-		}
+	if err := enc.Encode(p.Files); err != nil {
+		return nil, err
 	}
 	return buf.Bytes(), nil
 }
 
-// Decode a byte slice encoded with EncodeASTFiles into a FileSet and a list of files.
-func DecodeASTFiles(data []byte) (*token.FileSet, []*ast.File, error) {
+// DecodPackage decodes a byte slice encoded with Package.Encode into a Package.
+func DecodePackage(data []byte) (_ *Package, err error) {
+	defer derrors.Wrap(&err, "DecodePackage()")
+
 	le := len(encodingType)
 	if len(data) < le || string(data[:le]) != encodingType {
-		return nil, nil, fmt.Errorf("want initial bytes to be %q but they aren't", encodingType)
+		return nil, fmt.Errorf("want initial bytes to be %q but they aren't", encodingType)
 	}
 	dec := gob.NewDecoder(bytes.NewReader(data[le:]))
-	fset := token.NewFileSet()
-	if err := fset.Read(dec.Decode); err != nil {
-		return nil, nil, err
+	p := &Package{}
+	p.Fset = token.NewFileSet()
+	if err := p.Fset.Read(dec.Decode); err != nil {
+		return nil, err
 	}
-	var files []*ast.File
-	for {
-		var f *ast.File
-		err := dec.Decode(&f)
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return nil, nil, err
-		}
-		fixupObjects(f)
-		files = append(files, f)
+	if err := dec.Decode(&p.Files); err != nil {
+		return nil, err
 	}
-	return fset, files, nil
+	for _, f := range p.Files {
+		fixupObjects(f.AST)
+	}
+	return p, nil
 }
 
 // removeCycles removes cycles from f. There are two sources of cycles
