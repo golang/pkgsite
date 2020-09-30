@@ -81,7 +81,7 @@ func (p *Package) Encode() (_ []byte, err error) {
 	if err := p.Fset.Write(enc.Encode); err != nil {
 		return nil, err
 	}
-	if err := enc.Encode(p.Files); err != nil {
+	if err := enc.Encode(p.gobPackage); err != nil {
 		return nil, err
 	}
 	return buf.Bytes(), nil
@@ -96,12 +96,11 @@ func DecodePackage(data []byte) (_ *Package, err error) {
 		return nil, fmt.Errorf("want initial bytes to be %q but they aren't", encodingType)
 	}
 	dec := gob.NewDecoder(bytes.NewReader(data[le:]))
-	p := &Package{}
-	p.Fset = token.NewFileSet()
+	p := NewPackage(token.NewFileSet())
 	if err := p.Fset.Read(dec.Decode); err != nil {
 		return nil, err
 	}
-	if err := dec.Decode(&p.Files); err != nil {
+	if err := dec.Decode(&p.gobPackage); err != nil {
 		return nil, err
 	}
 	for _, f := range p.Files {

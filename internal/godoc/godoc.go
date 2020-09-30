@@ -12,7 +12,11 @@ import (
 
 // A package contains everything needed to render Go documentation for a package.
 type Package struct {
-	Fset  *token.FileSet
+	Fset *token.FileSet
+	gobPackage
+}
+
+type gobPackage struct { // fields that can be directly gob-encoded
 	Files []*File
 }
 
