@@ -170,33 +170,29 @@ func TestFetchAndUpdateState(t *testing.T) {
 	})
 	defer teardownProxy()
 
-	myModuleV100 := &internal.LegacyVersionedPackage{
-		LegacyModuleInfo: internal.LegacyModuleInfo{
-			ModuleInfo: internal.ModuleInfo{
-				ModulePath: "github.com/my/module",
-				Version:    sample.VersionString,
-				CommitTime: testProxyCommitTime,
-				SourceInfo: source.NewGitHubInfo("https://github.com/my/module", "", sample.VersionString),
-
-				IsRedistributable: true,
-				HasGoMod:          true,
-			},
-			LegacyReadmeFilePath: "README.md",
-			LegacyReadmeContents: "README FILE FOR TESTING.",
-		},
-		LegacyPackage: internal.LegacyPackage{
+	myModuleV100 := &internal.Unit{
+		UnitMeta: internal.UnitMeta{
+			ModulePath:        "github.com/my/module",
+			Version:           sample.VersionString,
+			CommitTime:        testProxyCommitTime,
+			SourceInfo:        source.NewGitHubInfo("https://github.com/my/module", "", sample.VersionString),
+			IsRedistributable: true,
 			Path:              "github.com/my/module/bar",
 			Name:              "bar",
-			Synopsis:          "package bar",
-			DocumentationHTML: html("Bar returns the string &#34;bar&#34;."),
-			V1Path:            "github.com/my/module/bar",
 			Licenses: []*licenses.Metadata{
 				{Types: []string{"BSD-0-Clause"}, FilePath: "LICENSE"},
 				{Types: []string{"MIT"}, FilePath: "bar/LICENSE"},
 			},
-			IsRedistributable: true,
-			GOOS:              "linux",
-			GOARCH:            "amd64",
+		},
+		Documentation: &internal.Documentation{
+			Synopsis: "package bar",
+			HTML:     html("Bar returns the string &#34;bar&#34;."),
+			GOOS:     "linux",
+			GOARCH:   "amd64",
+		},
+		Readme: &internal.Readme{
+			Filepath: "README.md",
+			Contents: "README FILE FOR TESTING.",
 		},
 	}
 
@@ -204,7 +200,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 		modulePath  string
 		version     string
 		pkg         string
-		want        *internal.LegacyVersionedPackage
+		want        *internal.Unit
 		moreWantDoc []string // Additional substrings we expect to see in DocumentationHTML.
 		dontWantDoc []string // Substrings we expect not to see in DocumentationHTML.
 	}{
@@ -226,167 +222,142 @@ func TestFetchAndUpdateState(t *testing.T) {
 			modulePath: "nonredistributable.mod/module",
 			version:    sample.VersionString,
 			pkg:        "nonredistributable.mod/module/bar/baz",
-			want: &internal.LegacyVersionedPackage{
-				LegacyModuleInfo: internal.LegacyModuleInfo{
-					ModuleInfo: internal.ModuleInfo{
-						ModulePath:        "nonredistributable.mod/module",
-						Version:           "v1.0.0",
-						CommitTime:        testProxyCommitTime,
-						SourceInfo:        nil,
-						IsRedistributable: true,
-						HasGoMod:          true,
-					},
-					LegacyReadmeFilePath: "README.md",
-					LegacyReadmeContents: "README FILE FOR TESTING.",
-				},
-				LegacyPackage: internal.LegacyPackage{
+			want: &internal.Unit{
+				UnitMeta: internal.UnitMeta{
+					ModulePath:        "nonredistributable.mod/module",
+					Version:           "v1.0.0",
+					CommitTime:        testProxyCommitTime,
+					SourceInfo:        nil,
+					IsRedistributable: true,
 					Path:              "nonredistributable.mod/module/bar/baz",
 					Name:              "baz",
-					Synopsis:          "package baz",
-					DocumentationHTML: html("Baz returns the string &#34;baz&#34;."),
-					V1Path:            "nonredistributable.mod/module/bar/baz",
 					Licenses: []*licenses.Metadata{
 						{Types: []string{"BSD-0-Clause"}, FilePath: "LICENSE"},
 						{Types: []string{"MIT"}, FilePath: "bar/LICENSE"},
 						{Types: []string{"MIT"}, FilePath: "bar/baz/COPYING"},
 					},
-					IsRedistributable: true,
-					GOOS:              "linux",
-					GOARCH:            "amd64",
+				},
+				Documentation: &internal.Documentation{
+					Synopsis: "package baz",
+					HTML:     html("Baz returns the string &#34;baz&#34;."),
+					GOOS:     "linux",
+					GOARCH:   "amd64",
+				},
+				Readme: &internal.Readme{
+					Filepath: "README.md",
+					Contents: "README FILE FOR TESTING.",
 				},
 			},
 		}, {
 			modulePath: "nonredistributable.mod/module",
 			version:    sample.VersionString,
 			pkg:        "nonredistributable.mod/module/foo",
-			want: &internal.LegacyVersionedPackage{
-				LegacyModuleInfo: internal.LegacyModuleInfo{
-					ModuleInfo: internal.ModuleInfo{
-						ModulePath:        "nonredistributable.mod/module",
-						Version:           sample.VersionString,
-						CommitTime:        testProxyCommitTime,
-						SourceInfo:        nil,
-						IsRedistributable: true,
-						HasGoMod:          true,
-					},
-					LegacyReadmeFilePath: "README.md",
-					LegacyReadmeContents: "README FILE FOR TESTING.",
-				},
-				LegacyPackage: internal.LegacyPackage{
-					Path:     "nonredistributable.mod/module/foo",
-					Name:     "foo",
-					Synopsis: "",
-					V1Path:   "nonredistributable.mod/module/foo",
+			want: &internal.Unit{
+				UnitMeta: internal.UnitMeta{
+					ModulePath:        "nonredistributable.mod/module",
+					Version:           sample.VersionString,
+					CommitTime:        testProxyCommitTime,
+					SourceInfo:        nil,
+					IsRedistributable: false,
+					Path:              "nonredistributable.mod/module/foo",
+					Name:              "foo",
 					Licenses: []*licenses.Metadata{
 						{Types: []string{"BSD-0-Clause"}, FilePath: "LICENSE"},
 						{Types: []string{"UNKNOWN"}, FilePath: "foo/LICENSE.md"},
 					},
-					GOOS:              "linux",
-					GOARCH:            "amd64",
-					IsRedistributable: false,
 				},
 			},
 		}, {
 			modulePath: "std",
 			version:    "v1.12.5",
 			pkg:        "context",
-			want: &internal.LegacyVersionedPackage{
-				LegacyModuleInfo: internal.LegacyModuleInfo{
-					ModuleInfo: internal.ModuleInfo{
-						ModulePath:        "std",
-						Version:           "v1.12.5",
-						CommitTime:        stdlib.TestCommitTime,
-						SourceInfo:        source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
-						IsRedistributable: true,
-						HasGoMod:          true,
-					},
-					LegacyReadmeFilePath: "README.md",
-					LegacyReadmeContents: "# The Go Programming Language\n",
-				},
-				LegacyPackage: internal.LegacyPackage{
+			want: &internal.Unit{
+				UnitMeta: internal.UnitMeta{
+					ModulePath:        "std",
+					Version:           "v1.12.5",
+					CommitTime:        stdlib.TestCommitTime,
+					SourceInfo:        source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
+					IsRedistributable: true,
 					Path:              "context",
 					Name:              "context",
-					Synopsis:          "Package context defines the Context type, which carries deadlines, cancelation signals, and other request-scoped values across API boundaries and between processes.",
-					DocumentationHTML: html("This example demonstrates the use of a cancelable context to prevent a\ngoroutine leak."),
-					V1Path:            "context",
 					Licenses: []*licenses.Metadata{
 						{
 							Types:    []string{"BSD-3-Clause"},
 							FilePath: "LICENSE",
 						},
 					},
-					IsRedistributable: true,
-					GOOS:              "linux",
-					GOARCH:            "amd64",
+				},
+				Documentation: &internal.Documentation{
+					Synopsis: "Package context defines the Context type, which carries deadlines, cancelation signals, and other request-scoped values across API boundaries and between processes.",
+					HTML:     html("This example demonstrates the use of a cancelable context to prevent a\ngoroutine leak."),
+					GOOS:     "linux",
+					GOARCH:   "amd64",
+				},
+				Readme: &internal.Readme{
+					Filepath: "README.md",
+					Contents: "# The Go Programming Language\n",
 				},
 			},
 		}, {
 			modulePath: "std",
 			version:    "v1.12.5",
 			pkg:        "builtin",
-			want: &internal.LegacyVersionedPackage{
-				LegacyModuleInfo: internal.LegacyModuleInfo{
-					ModuleInfo: internal.ModuleInfo{
-						ModulePath:        "std",
-						Version:           "v1.12.5",
-						CommitTime:        stdlib.TestCommitTime,
-						SourceInfo:        source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
-						IsRedistributable: true,
-						HasGoMod:          true,
-					},
-
-					LegacyReadmeFilePath: "README.md",
-					LegacyReadmeContents: "# The Go Programming Language\n",
-				},
-				LegacyPackage: internal.LegacyPackage{
+			want: &internal.Unit{
+				UnitMeta: internal.UnitMeta{
+					ModulePath:        "std",
+					Version:           "v1.12.5",
+					CommitTime:        stdlib.TestCommitTime,
+					SourceInfo:        source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
+					IsRedistributable: true,
 					Path:              "builtin",
 					Name:              "builtin",
-					Synopsis:          "Package builtin provides documentation for Go's predeclared identifiers.",
-					DocumentationHTML: html("int64 is the set of all signed 64-bit integers."),
-					V1Path:            "builtin",
 					Licenses: []*licenses.Metadata{
 						{
 							Types:    []string{"BSD-3-Clause"},
 							FilePath: "LICENSE",
 						},
 					},
-					IsRedistributable: true,
-					GOOS:              "linux",
-					GOARCH:            "amd64",
+				},
+				Documentation: &internal.Documentation{
+					Synopsis: "Package builtin provides documentation for Go's predeclared identifiers.",
+					HTML:     html("int64 is the set of all signed 64-bit integers."),
+					GOOS:     "linux",
+					GOARCH:   "amd64",
+				},
+				Readme: &internal.Readme{
+					Filepath: "README.md",
+					Contents: "# The Go Programming Language\n",
 				},
 			},
 		}, {
 			modulePath: "std",
 			version:    "v1.12.5",
 			pkg:        "encoding/json",
-			want: &internal.LegacyVersionedPackage{
-				LegacyModuleInfo: internal.LegacyModuleInfo{
-					ModuleInfo: internal.ModuleInfo{
-						ModulePath:        "std",
-						Version:           "v1.12.5",
-						CommitTime:        stdlib.TestCommitTime,
-						SourceInfo:        source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
-						IsRedistributable: true,
-						HasGoMod:          true,
-					},
-					LegacyReadmeFilePath: "README.md",
-					LegacyReadmeContents: "# The Go Programming Language\n",
-				},
-				LegacyPackage: internal.LegacyPackage{
+			want: &internal.Unit{
+				UnitMeta: internal.UnitMeta{
+					ModulePath:        "std",
+					Version:           "v1.12.5",
+					CommitTime:        stdlib.TestCommitTime,
+					SourceInfo:        source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
+					IsRedistributable: true,
 					Path:              "encoding/json",
 					Name:              "json",
-					Synopsis:          "Package json implements encoding and decoding of JSON as defined in RFC 7159.",
-					DocumentationHTML: html("The mapping between JSON and Go values is described\nin the documentation for the Marshal and Unmarshal functions."),
-					V1Path:            "encoding/json",
 					Licenses: []*licenses.Metadata{
 						{
 							Types:    []string{"BSD-3-Clause"},
 							FilePath: "LICENSE",
 						},
 					},
-					IsRedistributable: true,
-					GOOS:              "linux",
-					GOARCH:            "amd64",
+				},
+				Documentation: &internal.Documentation{
+					HTML:     html("The mapping between JSON and Go values is described\nin the documentation for the Marshal and Unmarshal functions."),
+					Synopsis: "Package json implements encoding and decoding of JSON as defined in RFC 7159.",
+					GOOS:     "linux",
+					GOARCH:   "amd64",
+				},
+				Readme: &internal.Readme{
+					Filepath: "README.md",
+					Contents: "# The Go Programming Language\n",
 				},
 			},
 			moreWantDoc: []string{
@@ -406,28 +377,23 @@ func TestFetchAndUpdateState(t *testing.T) {
 			modulePath: buildConstraintsMod.ModulePath,
 			version:    buildConstraintsMod.Version,
 			pkg:        buildConstraintsMod.ModulePath + "/cpu",
-			want: &internal.LegacyVersionedPackage{
-				LegacyModuleInfo: internal.LegacyModuleInfo{
-					ModuleInfo: internal.ModuleInfo{
-						ModulePath:        buildConstraintsMod.ModulePath,
-						Version:           buildConstraintsMod.Version,
-						CommitTime:        testProxyCommitTime,
-						IsRedistributable: true,
-						HasGoMod:          false,
-					},
-				},
-				LegacyPackage: internal.LegacyPackage{
+			want: &internal.Unit{
+				UnitMeta: internal.UnitMeta{
+					ModulePath:        buildConstraintsMod.ModulePath,
+					Version:           buildConstraintsMod.Version,
+					CommitTime:        testProxyCommitTime,
+					IsRedistributable: true,
 					Path:              buildConstraintsMod.ModulePath + "/cpu",
 					Name:              "cpu",
-					Synopsis:          "Package cpu implements processor feature detection used by the Go standard library.",
-					DocumentationHTML: html("const CacheLinePadSize = 3"),
-					V1Path:            buildConstraintsMod.ModulePath + "/cpu",
 					Licenses: []*licenses.Metadata{
 						{Types: []string{"BSD-0-Clause"}, FilePath: "LICENSE"},
 					},
-					IsRedistributable: true,
-					GOOS:              "linux",
-					GOARCH:            "amd64",
+				},
+				Documentation: &internal.Documentation{
+					Synopsis: "Package cpu implements processor feature detection used by the Go standard library.",
+					HTML:     html("const CacheLinePadSize = 3"),
+					GOOS:     "linux",
+					GOARCH:   "amd64",
 				},
 			},
 			dontWantDoc: []string{
@@ -447,37 +413,44 @@ func TestFetchAndUpdateState(t *testing.T) {
 				t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", test.modulePath, test.version, proxyClient, sourceClient, testDB, err)
 			}
 
-			gotModuleInfo, err := testDB.GetModuleInfo(ctx, test.modulePath, test.want.Version)
+			got, err := testDB.GetUnitMeta(ctx, test.pkg, test.modulePath, test.want.Version)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(test.want.ModuleInfo, *gotModuleInfo, cmp.AllowUnexported(source.Info{})); diff != "" {
-				t.Fatalf("testDB.GetModuleInfo(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
-			}
-
-			gotPkg, err := testDB.LegacyGetPackage(ctx, test.pkg, internal.UnknownModulePath, test.version)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			sort.Slice(gotPkg.Licenses, func(i, j int) bool {
-				return gotPkg.Licenses[i].FilePath < gotPkg.Licenses[j].FilePath
+			sort.Slice(got.Licenses, func(i, j int) bool {
+				return got.Licenses[i].FilePath < got.Licenses[j].FilePath
 			})
-			if diff := cmp.Diff(test.want, gotPkg, cmpopts.IgnoreFields(internal.LegacyPackage{}, "DocumentationHTML"), cmp.AllowUnexported(source.Info{})); diff != "" {
-				t.Errorf("testDB.LegacyGetPackage(ctx, %q, %q) mismatch (-want +got):\n%s", test.pkg, test.version, diff)
+			if diff := cmp.Diff(test.want.UnitMeta, *got, cmp.AllowUnexported(source.Info{})); diff != "" {
+				t.Fatalf("testDB.GetUnitMeta(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
 			}
-			if got, want := gotPkg.DocumentationHTML.String(), test.want.DocumentationHTML.String(); len(want) == 0 && len(got) != 0 {
-				t.Errorf("got non-empty documentation but want empty:\ngot: %q\nwant: %q", got, want)
-			} else if !strings.Contains(got, want) {
-				t.Errorf("got documentation doesn't contain wanted documentation substring:\ngot: %q\nwant (substring): %q", got, want)
+
+			gotPkg, err := testDB.GetUnit(ctx, got, internal.WithReadme|internal.WithDocumentation)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := cmp.Diff(test.want, gotPkg,
+				cmp.AllowUnexported(source.Info{}),
+				cmpopts.IgnoreFields(internal.Unit{}, "Documentation")); diff != "" {
+				t.Errorf("mismatch on readme (-want +got):\n%s", diff)
+			}
+			if got, want := gotPkg.Documentation, test.want.Documentation; got == nil || want == nil {
+				if got != want {
+					t.Fatalf("mismatch on documentation: got: %v\nwant: %v", got, want)
+				}
+				return
+			}
+
+			if !strings.Contains(gotPkg.Documentation.HTML.String(), test.want.Documentation.HTML.String()) {
+				t.Errorf("got documentation doesn't contain wanted documentation substring:\ngot: %q\nwant (substring): %q",
+					gotPkg.Documentation.HTML.String(), test.want.Documentation.HTML.String())
 			}
 			for _, want := range test.moreWantDoc {
-				if got := gotPkg.DocumentationHTML.String(); !strings.Contains(got, want) {
+				if got := gotPkg.Documentation.HTML.String(); !strings.Contains(got, want) {
 					t.Errorf("got documentation doesn't contain wanted documentation substring:\ngot: %q\nwant (substring): %q", got, want)
 				}
 			}
 			for _, dontWant := range test.dontWantDoc {
-				if got := gotPkg.DocumentationHTML.String(); strings.Contains(got, dontWant) {
+				if got := gotPkg.Documentation.HTML.String(); strings.Contains(got, dontWant) {
 					t.Errorf("got documentation contains unwanted documentation substring:\ngot: %q\ndontWant (substring): %q", got, dontWant)
 				}
 			}
