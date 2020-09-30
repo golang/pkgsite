@@ -25,12 +25,6 @@ import (
 	"golang.org/x/pkgsite/internal/source"
 )
 
-const (
-	// Indicates that although we have a valid module, some packages could not be processed.
-	hasIncompletePackagesCode = 290
-	hasIncompletePackagesDesc = "incomplete packages"
-)
-
 // ProxyRemoved is a set of module@version that have been removed from the proxy,
 // even though they are still in the index.
 var ProxyRemoved = map[string]bool{}
