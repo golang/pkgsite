@@ -13,6 +13,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -160,26 +161,35 @@ func TestGetUnit(t *testing.T) {
 				test.want.Name,
 				test.want.IsRedistributable,
 			)
-			got, err := testDB.GetUnit(ctx, um, internal.AllFields)
-			if err != nil {
-				t.Fatal(err)
-			}
-			opts := []cmp.Option{
-				cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
-				// The packages table only includes partial license information; it omits the Coverage field.
-				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
-			}
-			// TODO(golang/go#38513): remove once we start displaying
-			// READMEs for directories instead of the top-level module.
-			test.want.Readme = &internal.Readme{
-				Filepath: sample.ReadmeFilePath,
-				Contents: sample.ReadmeContents,
-			}
-			test.want.SourceInfo = um.SourceInfo
-			if diff := cmp.Diff(test.want, got, opts...); diff != "" {
-				t.Errorf("mismatch (-want, +got):\n%s", diff)
-			}
+			t.Run("unit-page", func(t *testing.T) {
+				checkUnit(ctx, t, um, test.want, internal.ExperimentUnitPage)
+			})
+			t.Run("no-experiments", func(t *testing.T) {
+				test.want.Readme = &internal.Readme{
+					Filepath: sample.ReadmeFilePath,
+					Contents: sample.ReadmeContents,
+				}
+				checkUnit(ctx, t, um, test.want)
+			})
 		})
+	}
+}
+
+func checkUnit(ctx context.Context, t *testing.T, um *internal.UnitMeta, want *internal.Unit, experiments ...string) {
+	t.Helper()
+	ctx = experiment.NewContext(ctx, experiments...)
+	got, err := testDB.GetUnit(ctx, um, internal.AllFields)
+	if err != nil {
+		t.Fatal(err)
+	}
+	opts := []cmp.Option{
+		cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
+		// The packages table only includes partial license information; it omits the Coverage field.
+		cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
+	}
+	want.SourceInfo = um.SourceInfo
+	if diff := cmp.Diff(want, got, opts...); diff != "" {
+		t.Errorf("mismatch (-want, +got):\n%s", diff)
 	}
 }
 

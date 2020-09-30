@@ -15,6 +15,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -30,8 +31,13 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 
 	u := &internal.Unit{UnitMeta: *um}
 	if fields&internal.WithReadme != 0 {
-		readme, err := db.getReadme(ctx, u.ModulePath, u.Version)
-		if err != nil && !errors.Is(err, derrors.NotFound) {
+		var readme *internal.Readme
+		if experiment.IsActive(ctx, internal.ExperimentUnitPage) {
+			readme, err = db.getReadme(ctx, pathID)
+		} else {
+			readme, err = db.getModuleReadme(ctx, u.ModulePath, u.Version)
+		}
+          	if err != nil && !errors.Is(err, derrors.NotFound) {
 			return nil, err
 		}
 		u.Readme = readme
@@ -131,11 +137,26 @@ func (db *DB) getDocumentation(ctx context.Context, pathID int) (_ *internal.Doc
 }
 
 // getReadme returns the README corresponding to the modulePath and version.
-func (db *DB) getReadme(ctx context.Context, modulePath, resolvedVersion string) (_ *internal.Readme, err error) {
-	defer derrors.Wrap(&err, "getReadme(ctx, %q, %q)", modulePath, resolvedVersion)
-	// TODO(golang/go#38513): update to query on PathID and query the readmes
-	// table directly once we start displaying READMEs for directories instead
-	// of the top-level module.
+func (db *DB) getReadme(ctx context.Context, pathID int) (_ *internal.Readme, err error) {
+	defer derrors.Wrap(&err, "getReadme(ctx, %d)", pathID)
+	var readme internal.Readme
+	err = db.db.QueryRow(ctx, `
+		SELECT file_path, contents
+		FROM readmes
+		WHERE path_id=$1;`, pathID).Scan(&readme.Filepath, &readme.Contents)
+	switch err {
+	case sql.ErrNoRows:
+		return nil, derrors.NotFound
+	case nil:
+		return &readme, nil
+	default:
+		return nil, err
+	}
+}
+
+// getModuleReadme returns the README corresponding to the modulePath and version.
+func (db *DB) getModuleReadme(ctx context.Context, modulePath, resolvedVersion string) (_ *internal.Readme, err error) {
+	defer derrors.Wrap(&err, "getModuleReadme(ctx, %q, %q)", modulePath, resolvedVersion)
 	var readme internal.Readme
 	err = db.db.QueryRow(ctx, `
 		SELECT file_path, contents
