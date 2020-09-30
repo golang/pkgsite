@@ -243,7 +243,7 @@ func TestFetchAndUpdateState_SkipIncompletePackage(t *testing.T) {
 	defer teardownProxy()
 	fetchAndCheckStatus(ctx, t, proxyClient, sample.ModulePath, sample.VersionString, hasIncompletePackagesCode)
 	checkPackage(ctx, t, sample.ModulePath+"/foo")
-	if _, err := testDB.LegacyGetPackage(ctx, sample.ModulePath+"/bar", internal.UnknownModulePath, sample.VersionString); !errors.Is(err, derrors.NotFound) {
+	if _, err := testDB.GetUnitMeta(ctx, sample.ModulePath+"/bar", internal.UnknownModulePath, sample.VersionString); !errors.Is(err, derrors.NotFound) {
 		t.Errorf("got %v, want NotFound", err)
 	}
 }
@@ -407,7 +407,7 @@ func checkPackageVersionStates(ctx context.Context, t *testing.T, modulePath, ve
 
 func checkPackage(ctx context.Context, t *testing.T, pkgPath string) {
 	t.Helper()
-	if _, err := testDB.LegacyGetPackage(ctx, pkgPath, internal.UnknownModulePath, sample.VersionString); err != nil {
+	if _, err := testDB.GetUnitMeta(ctx, pkgPath, internal.UnknownModulePath, sample.VersionString); err != nil {
 		t.Fatal(err)
 	}
 	um, err := testDB.GetUnitMeta(ctx, pkgPath, internal.UnknownModulePath, sample.VersionString)
