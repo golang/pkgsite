@@ -54,6 +54,7 @@ func init() {
 		&ast.ParenExpr{},
 		&ast.RangeStmt{},
 		&ast.ReturnStmt{},
+		&ast.Scope{},
 		&ast.SelectorExpr{},
 		&ast.SliceExpr{},
 		&ast.StarExpr{},
@@ -73,6 +74,10 @@ func init() {
 // Encode encodes a Package into a byte slice.
 func (p *Package) Encode() (_ []byte, err error) {
 	defer derrors.Wrap(&err, "godoc.Package.Encode()")
+
+	for _, f := range p.Files {
+		removeCycles(f.AST)
+	}
 
 	var buf bytes.Buffer
 	io.WriteString(&buf, encodingType)

@@ -44,6 +44,10 @@ func (p *Package) Render(ctx context.Context, innerPath string, sourceInfo *sour
 	if modInfo.ModulePath == stdlib.ModulePath {
 		importPath = innerPath
 	}
+	if modInfo.ModulePackages == nil {
+		modInfo.ModulePackages = p.ModulePackagePaths
+	}
+
 	// The "builtin" package in the standard library is a special case.
 	// We want to show documentation for all globals (not just exported ones),
 	// and avoid association of consts, vars, and factory functions with types
@@ -55,7 +59,7 @@ func (p *Package) Render(ctx context.Context, innerPath string, sourceInfo *sour
 	}
 
 	// Compute package documentation.
-	var m doc.Mode
+	m := doc.PreserveAST // so we can render doc, then save the AST afterwards.
 	if noFiltering {
 		m |= doc.AllDecls
 	}
@@ -67,6 +71,7 @@ func (p *Package) Render(ctx context.Context, innerPath string, sourceInfo *sour
 	if err != nil {
 		return "", nil, safehtml.HTML{}, fmt.Errorf("doc.NewFromFiles: %v", err)
 	}
+
 	if d.ImportPath != importPath {
 		panic(fmt.Errorf("internal error: *doc.Package has an unexpected import path (%q != %q)", d.ImportPath, importPath))
 	}

@@ -40,13 +40,13 @@ type t int
 // Exp is exported.
 func Exp() {}
 
-// unexp is not exported.
+// unexp is not exported, but the comment is preserved for notes.
 func unexp() {}
 
 // M is exported.
 func (t T) M() int {}
 
-// m isn't.
+// m isn't, but the comment is preserved for notes.
 func (T) m() {}
 
 // U is an exported method of an unexported type.
@@ -80,8 +80,12 @@ type t int
 // Exp is exported.
 func Exp()
 
+// unexp is not exported, but the comment is preserved for notes.
+
 // M is exported.
 func (t T) M() int
+
+// m isn't, but the comment is preserved for notes.
 
 // U is an exported method of an unexported type.
 // Its doc is not shown, unless t is embedded
