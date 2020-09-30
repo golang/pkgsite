@@ -12,6 +12,7 @@ package godoc
 
 import (
 	"fmt"
+	"go/ast"
 	"html"
 	"regexp"
 
@@ -74,4 +75,22 @@ func findHTML(docHTML safehtml.HTML, identifier string) (_ safehtml.HTML, err er
 	reg := fmt.Sprintf("(%s(.|\n)*%s)", identifier, closeTag)
 	b := regexp.MustCompile(reg).FindString(html.UnescapeString(docHTML.String()))
 	return uncheckedconversions.HTMLFromStringKnownToSatisfyTypeContract(string(b)), nil
+}
+
+// RemoveUnusedASTNodes removes parts of the AST not needed for documentation.
+// It doesn't remove unexported consts, vars or types, although it probably could.
+func RemoveUnusedASTNodes(pf *ast.File) {
+	var decls []ast.Decl
+	for _, d := range pf.Decls {
+		if f, ok := d.(*ast.FuncDecl); ok {
+			// Remove all unexported functions and function bodies.
+			if f.Name == nil || !ast.IsExported(f.Name.Name) {
+				continue
+			}
+			f.Body = nil
+		}
+		decls = append(decls, d)
+	}
+	pf.Comments = nil
+	pf.Decls = decls
 }

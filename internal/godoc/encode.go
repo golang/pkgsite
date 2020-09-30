@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package fetch
+package godoc
 
 import (
 	"bytes"
@@ -56,6 +56,7 @@ func init() {
 		&ast.SliceExpr{},
 		&ast.StarExpr{},
 		&ast.StructType{},
+		&ast.SwitchStmt{},
 		&ast.TypeAssertExpr{},
 		&ast.TypeSpec{},
 		&ast.TypeSwitchStmt{},

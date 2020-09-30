@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package fetch
+package godoc
 
 import (
 	"bytes"
@@ -105,7 +105,7 @@ func BenchmarkRemovingAST(b *testing.B) {
 	run("not removed")
 
 	for _, f := range files {
-		removeUnusedASTNodes(f)
+		RemoveUnusedASTNodes(f)
 	}
 	run("removed")
 }
