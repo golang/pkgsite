@@ -63,7 +63,7 @@ func main() { a = 1 }
 	}
 	compareObjs(f)
 
-	p := NewPackage(fset)
+	p := NewPackage(fset, nil)
 	p.AddFile(f, false)
 	data, err := p.Encode()
 	if err != nil {
@@ -82,7 +82,7 @@ func packageForDir(dir string, removeNodes bool) (*Package, error) {
 	if err != nil {
 		return nil, err
 	}
-	p := NewPackage(fset)
+	p := NewPackage(fset, nil)
 	for _, pkg := range pkgs {
 		for _, f := range pkg.Files {
 			p.AddFile(f, removeNodes)

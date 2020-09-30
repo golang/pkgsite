@@ -96,7 +96,7 @@ func DecodePackage(data []byte) (_ *Package, err error) {
 		return nil, fmt.Errorf("want initial bytes to be %q but they aren't", encodingType)
 	}
 	dec := gob.NewDecoder(bytes.NewReader(data[le:]))
-	p := NewPackage(token.NewFileSet())
+	p := &Package{Fset: token.NewFileSet()}
 	if err := p.Fset.Read(dec.Decode); err != nil {
 		return nil, err
 	}

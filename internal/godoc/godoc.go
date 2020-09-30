@@ -17,7 +17,8 @@ type Package struct {
 }
 
 type gobPackage struct { // fields that can be directly gob-encoded
-	Files []*File
+	Files              []*File
+	ModulePackagePaths map[string]bool
 }
 
 // A File contains everything needed about a source file to render documentation.
@@ -26,9 +27,14 @@ type File struct {
 	AST  *ast.File
 }
 
-// NewPackage returns a new Package with the given fset.
-func NewPackage(fset *token.FileSet) *Package {
-	return &Package{Fset: fset}
+// NewPackage returns a new Package with the given fset and set of module package paths.
+func NewPackage(fset *token.FileSet, modPaths map[string]bool) *Package {
+	return &Package{
+		Fset: fset,
+		gobPackage: gobPackage{
+			ModulePackagePaths: modPaths,
+		},
+	}
 }
 
 // AddFile adds a file to the Package. After it returns, the contents of the ast.File
