@@ -8,13 +8,9 @@ package proxydatasource
 
 import (
 	"context"
-	"fmt"
-	"path"
-	"strings"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/proxy"
 )
 
@@ -22,33 +18,6 @@ import (
 func (ds *DataSource) GetUnit(ctx context.Context, um *internal.UnitMeta, field internal.FieldSet) (_ *internal.Unit, err error) {
 	defer derrors.Wrap(&err, "GetUnit(%q, %q, %q)", um.Path, um.ModulePath, um.Version)
 	return ds.getUnit(ctx, um.Path, um.ModulePath, um.Version)
-}
-
-// LegacyGetLicenses return licenses at path for the given module path and version.
-func (ds *DataSource) LegacyGetLicenses(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ []*licenses.License, err error) {
-	defer derrors.Wrap(&err, "LegacyGetLicenses(%q, %q, %q)", fullPath, modulePath, resolvedVersion)
-	v, err := ds.getModule(ctx, modulePath, resolvedVersion)
-	if err != nil {
-		return nil, err
-	}
-
-	var lics []*licenses.License
-
-	// ds.getModule() returns all licenses for the module version. We need to
-	// filter the licenses that applies to the specified fullPath, i.e.
-	// A license in the current or any parent directory of the specified
-	// fullPath applies to it.
-	for _, license := range v.Licenses {
-		licensePath := path.Join(modulePath, path.Dir(license.FilePath))
-		if strings.HasPrefix(fullPath, licensePath) {
-			lics = append(lics, license)
-		}
-	}
-
-	if len(lics) == 0 {
-		return nil, fmt.Errorf("path %s is missing from module %s: %w", fullPath, modulePath, derrors.NotFound)
-	}
-	return lics, nil
 }
 
 // GetModuleInfo returns the ModuleInfo as fetched from the proxy for module
