@@ -254,11 +254,9 @@ func UnitForModuleRoot(m *internal.LegacyModuleInfo, licenses []*licenses.Metada
 		UnitMeta:        *UnitMeta(m.ModulePath, m.ModulePath, m.Version, "", m.IsRedistributable),
 		LicenseContents: Licenses,
 	}
-	if m.LegacyReadmeFilePath != "" {
-		u.Readme = &internal.Readme{
-			Filepath: m.LegacyReadmeFilePath,
-			Contents: m.LegacyReadmeContents,
-		}
+	u.Readme = &internal.Readme{
+		Filepath: ReadmeFilePath,
+		Contents: ReadmeContents,
 	}
 	return u
 }

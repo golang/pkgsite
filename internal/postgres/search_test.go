@@ -154,10 +154,10 @@ func TestPathTokens(t *testing.T) {
 // a single importing module.
 func importGraph(popularPath, importerModule string, importerCount int) []*internal.Module {
 	m := sample.Module(popularPath, "v1.2.3", "")
-	m.LegacyPackages[0].Imports = nil
+	m.Packages()[0].Imports = nil
 	// Try to improve the ts_rank of the 'foo' search term.
-	m.LegacyPackages[0].Synopsis = "foo"
-	m.LegacyReadmeContents = "foo"
+	m.Packages()[0].Documentation.Synopsis = "foo"
+	m.Units[0].Readme.Contents = "foo"
 	mods := []*internal.Module{m}
 	if importerCount > 0 {
 		m := sample.Module(importerModule, "v1.2.3")
@@ -286,8 +286,8 @@ func TestSearch(t *testing.T) {
 			defer ResetTestDB(testDB, t)
 			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
-			for _, v := range test.modules {
-				if err := testDB.InsertModule(ctx, v); err != nil {
+			for _, m := range test.modules {
+				if err := testDB.InsertModule(ctx, m); err != nil {
 					t.Fatal(err)
 				}
 			}
@@ -938,6 +938,17 @@ func TestGetPackagesForSearchDocumentUpsert(t *testing.T) {
 
 	moduleA := sample.Module("mod.com", "v1.2.3",
 		"A", "A/notinternal", "A/internal", "A/internal/B")
+
+	// moduleA.Units[1] is mod.com/A.
+	moduleA.Units[1].Readme = &internal.Readme{
+		Filepath: sample.ReadmeFilePath,
+		Contents: sample.ReadmeContents,
+	}
+	// moduleA.Units[2] is mod.com/A/notinternal.
+	moduleA.Units[2].Readme = &internal.Readme{
+		Filepath: sample.ReadmeFilePath,
+		Contents: sample.ReadmeContents,
+	}
 	moduleN := nonRedistributableModule()
 	bypassDB := NewBypassingLicenseCheck(testDB.db)
 	for _, m := range []*internal.Module{moduleA, moduleN} {

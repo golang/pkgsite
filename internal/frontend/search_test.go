@@ -19,6 +19,7 @@ import (
 func TestFetchSearchPage(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
+	defer postgres.ResetTestDB(testDB, t)
 
 	var (
 		now       = sample.NowTruncated()
@@ -30,15 +31,25 @@ func TestFetchSearchPage(t *testing.T) {
 					CommitTime:        now,
 					IsRedistributable: true,
 				},
-				LegacyReadmeContents: "readme",
 			},
-			LegacyPackages: []*internal.LegacyPackage{
+			Units: []*internal.Unit{
 				{
-					Name:              "foo",
-					Path:              "/path/to/foo",
-					Synopsis:          "foo is a package.",
-					Licenses:          sample.LicenseMetadata,
-					IsRedistributable: true,
+					UnitMeta: internal.UnitMeta{
+						Name:              "foo",
+						Path:              "github.com/mod/foo",
+						Licenses:          sample.LicenseMetadata,
+						CommitTime:        now,
+						ModulePath:        "github.com/mod/foo",
+						Version:           "v1.0.0",
+						IsRedistributable: true,
+					},
+					Documentation: &internal.Documentation{
+						Synopsis: "foo is a package.",
+					},
+					Readme: &internal.Readme{
+						Filepath: "readme",
+						Contents: "readme",
+					},
 				},
 			},
 		}
@@ -50,19 +61,47 @@ func TestFetchSearchPage(t *testing.T) {
 					CommitTime:        now,
 					IsRedistributable: true,
 				},
-				LegacyReadmeContents: "readme",
 			},
-			LegacyPackages: []*internal.LegacyPackage{
+			Units: []*internal.Unit{
 				{
-					Name:              "bar",
-					Path:              "/path/to/bar",
-					Synopsis:          "bar is used by foo.",
-					Licenses:          sample.LicenseMetadata,
-					IsRedistributable: true,
+					UnitMeta: internal.UnitMeta{
+						Name:              "bar",
+						Path:              "github.com/mod/bar",
+						Licenses:          sample.LicenseMetadata,
+						CommitTime:        now,
+						ModulePath:        "github.com/mod/bar",
+						Version:           "v1.0.0",
+						IsRedistributable: true,
+					},
+					Documentation: &internal.Documentation{
+						Synopsis: "bar is used by foo.",
+					},
+					Readme: &internal.Readme{
+						Filepath: "readme",
+						Contents: "readme",
+					},
 				},
 			},
 		}
 	)
+
+	for _, m := range []*internal.Module{moduleFoo, moduleBar} {
+		// TODO(golang/go#39629): Delete once packages table is fully deprecated.
+		for _, pkg := range m.Packages() {
+			m.LegacyPackages = append(m.LegacyPackages, &internal.LegacyPackage{
+				Path:              pkg.Path,
+				Name:              pkg.Name,
+				Synopsis:          pkg.Documentation.Synopsis,
+				Licenses:          sample.LicenseMetadata,
+				IsRedistributable: pkg.IsRedistributable,
+				GOOS:              pkg.Documentation.GOOS,
+				GOARCH:            pkg.Documentation.GOARCH,
+			})
+		}
+		if err := testDB.InsertModule(ctx, m); err != nil {
+			t.Fatal(err)
+		}
+	}
 
 	for _, tc := range []struct {
 		name, query    string
@@ -70,9 +109,8 @@ func TestFetchSearchPage(t *testing.T) {
 		wantSearchPage *SearchPage
 	}{
 		{
-			name:    "want expected search page",
-			query:   "foo bar",
-			modules: []*internal.Module{moduleFoo, moduleBar},
+			name:  "want expected search page",
+			query: "foo bar",
 			wantSearchPage: &SearchPage{
 				Pagination: pagination{
 					TotalCount:  1,
@@ -85,10 +123,10 @@ func TestFetchSearchPage(t *testing.T) {
 				},
 				Results: []*SearchResult{
 					{
-						Name:           moduleBar.LegacyPackages[0].Name,
-						PackagePath:    moduleBar.LegacyPackages[0].Path,
+						Name:           moduleBar.Packages()[0].Name,
+						PackagePath:    moduleBar.Packages()[0].Path,
 						ModulePath:     moduleBar.ModulePath,
-						Synopsis:       moduleBar.LegacyPackages[0].Synopsis,
+						Synopsis:       moduleBar.Packages()[0].Documentation.Synopsis,
 						DisplayVersion: moduleBar.Version,
 						Licenses:       []string{"MIT"},
 						CommitTime:     elapsedTime(moduleBar.CommitTime),
@@ -98,9 +136,8 @@ func TestFetchSearchPage(t *testing.T) {
 			},
 		},
 		{
-			name:    "want only foo search page",
-			query:   "package",
-			modules: []*internal.Module{moduleFoo, moduleBar},
+			name:  "want only foo search page",
+			query: "package",
 			wantSearchPage: &SearchPage{
 				Pagination: pagination{
 					TotalCount:  1,
@@ -113,10 +150,10 @@ func TestFetchSearchPage(t *testing.T) {
 				},
 				Results: []*SearchResult{
 					{
-						Name:           moduleFoo.LegacyPackages[0].Name,
-						PackagePath:    moduleFoo.LegacyPackages[0].Path,
+						Name:           moduleFoo.Packages()[0].Name,
+						PackagePath:    moduleFoo.Packages()[0].Path,
 						ModulePath:     moduleFoo.ModulePath,
-						Synopsis:       moduleFoo.LegacyPackages[0].Synopsis,
+						Synopsis:       moduleFoo.Packages()[0].Documentation.Synopsis,
 						DisplayVersion: moduleFoo.Version,
 						Licenses:       []string{"MIT"},
 						CommitTime:     elapsedTime(moduleFoo.CommitTime),
@@ -127,14 +164,6 @@ func TestFetchSearchPage(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			defer postgres.ResetTestDB(testDB, t)
-
-			for _, v := range tc.modules {
-				if err := testDB.InsertModule(ctx, v); err != nil {
-					t.Fatal(err)
-				}
-			}
-
 			got, err := fetchSearchPage(ctx, testDB, tc.query, paginationParams{limit: 20, page: 1})
 			if err != nil {
 				t.Fatalf("fetchSearchPage(db, %q): %v", tc.query, err)

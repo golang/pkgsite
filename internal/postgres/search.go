@@ -441,18 +441,22 @@ func upsertSearchDocuments(ctx context.Context, db *database.DB, mod *internal.M
 	defer derrors.Wrap(&err, "UpsertSearchDocuments(ctx, %q)", mod.ModulePath)
 	ctx, span := trace.StartSpan(ctx, "UpsertSearchDocuments")
 	defer span.End()
-	for _, pkg := range mod.LegacyPackages {
+	for _, pkg := range mod.Packages() {
 		if isInternalPackage(pkg.Path) {
 			continue
 		}
-		err := UpsertSearchDocument(ctx, db, upsertSearchDocumentArgs{
-			PackagePath:    pkg.Path,
-			ModulePath:     mod.ModulePath,
-			Synopsis:       pkg.Synopsis,
-			ReadmeFilePath: mod.LegacyReadmeFilePath,
-			ReadmeContents: mod.LegacyReadmeContents,
-		})
-		if err != nil {
+		args := upsertSearchDocumentArgs{
+			PackagePath: pkg.Path,
+			ModulePath:  mod.ModulePath,
+		}
+		if pkg.Documentation != nil {
+			args.Synopsis = pkg.Documentation.Synopsis
+		}
+		if pkg.Readme != nil {
+			args.ReadmeFilePath = pkg.Readme.Filepath
+			args.ReadmeContents = pkg.Readme.Contents
+		}
+		if err := UpsertSearchDocument(ctx, db, args); err != nil {
 			return err
 		}
 	}
@@ -497,11 +501,17 @@ func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, before tim
 			sd.module_path,
 			sd.synopsis,
 			sd.redistributable,
-			m.readme_file_path,
-			m.readme_contents
-		FROM search_documents sd
-		INNER JOIN modules m
-		USING (module_path, version)
+			r.file_path,
+			r.contents
+		FROM modules m
+		INNER JOIN paths p
+		ON m.id = p.module_id
+		LEFT JOIN readmes r
+		ON p.id = r.path_id
+		INNER JOIN search_documents sd
+		ON sd.package_path = p.path
+		    AND sd.module_path = m.module_path
+		    AND sd.version = m.version
 		WHERE sd.updated_at < $1
 		LIMIT $2`
 
@@ -510,7 +520,8 @@ func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, before tim
 			a      upsertSearchDocumentArgs
 			redist bool
 		)
-		if err := rows.Scan(&a.PackagePath, &a.ModulePath, &a.Synopsis, &redist, &a.ReadmeFilePath, &a.ReadmeContents); err != nil {
+		if err := rows.Scan(&a.PackagePath, &a.ModulePath, &a.Synopsis, &redist,
+			database.NullIsEmpty(&a.ReadmeFilePath), database.NullIsEmpty(&a.ReadmeContents)); err != nil {
 			return err
 		}
 		if !redist && !db.bypassLicenseCheck {
