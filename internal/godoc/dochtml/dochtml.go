@@ -118,7 +118,8 @@ func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Render
 		return linkHTML(name, opt.SourceLinkFunc(node), "Documentation-source")
 	}
 
-	tmpl := template.Must(htmlPackage.Clone()).Funcs(map[string]interface{}{
+	h := htmlPackage()
+	tmpl := template.Must(h.Clone()).Funcs(map[string]interface{}{
 		"render_short_synopsis": r.ShortSynopsis,
 		"render_synopsis":       r.Synopsis,
 		"render_doc":            r.DocHTML,

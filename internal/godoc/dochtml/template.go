@@ -15,26 +15,28 @@ import (
 // htmlPackage is the template used to render documentation HTML.
 // TODO(golang.org/issue/5060): finalize URL scheme and design for notes,
 // then it becomes more viable to factor out inline CSS style.
-var htmlPackage = template.Must(template.New("package").Funcs(
-	map[string]interface{}{
-		"ternary": func(q, a, b interface{}) interface{} {
-			v := reflect.ValueOf(q)
-			vz := reflect.New(v.Type()).Elem()
-			if reflect.DeepEqual(v.Interface(), vz.Interface()) {
-				return b
-			}
-			return a
-		},
-		"render_short_synopsis": (*render.Renderer)(nil).ShortSynopsis,
-		"render_synopsis":       (*render.Renderer)(nil).Synopsis,
-		"render_doc":            (*render.Renderer)(nil).DocHTML,
-		"render_decl":           (*render.Renderer)(nil).DeclHTML,
-		"render_code":           (*render.Renderer)(nil).CodeHTML,
-		"file_link":             func() string { return "" },
-		"source_link":           func() string { return "" },
-		"play_url":              func(*doc.Example) string { return "" },
-		"safe_id":               render.SafeGoID,
-	},
-).Parse(tmplHTML))
+func htmlPackage() *template.Template {
+	return template.Must(template.New("package").Funcs(tmpl).Parse(tmplHTML))
+}
 
 const tmplHTML = `{{- "" -}}` + tmplSidenav + tmplBody + tmplExample
+
+var tmpl = map[string]interface{}{
+	"ternary": func(q, a, b interface{}) interface{} {
+		v := reflect.ValueOf(q)
+		vz := reflect.New(v.Type()).Elem()
+		if reflect.DeepEqual(v.Interface(), vz.Interface()) {
+			return b
+		}
+		return a
+	},
+	"render_short_synopsis": (*render.Renderer)(nil).ShortSynopsis,
+	"render_synopsis":       (*render.Renderer)(nil).Synopsis,
+	"render_doc":            (*render.Renderer)(nil).DocHTML,
+	"render_decl":           (*render.Renderer)(nil).DeclHTML,
+	"render_code":           (*render.Renderer)(nil).CodeHTML,
+	"file_link":             func() string { return "" },
+	"source_link":           func() string { return "" },
+	"play_url":              func(*doc.Example) string { return "" },
+	"safe_id":               render.SafeGoID,
+}
