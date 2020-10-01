@@ -17,7 +17,7 @@ var ErrTooLarge = dochtml.ErrTooLarge
 
 type ModuleInfo = dochtml.ModuleInfo
 
-// A package contains everything needed to render Go documentation for a package.
+// A Package contains package-level information needed to render Go documentation.
 type Package struct {
 	Fset *token.FileSet
 	gobPackage
@@ -25,6 +25,7 @@ type Package struct {
 }
 
 type gobPackage struct { // fields that can be directly gob-encoded
+	GOOS, GOARCH       string
 	Files              []*File
 	ModulePackagePaths map[string]bool
 }
@@ -36,10 +37,12 @@ type File struct {
 }
 
 // NewPackage returns a new Package with the given fset and set of module package paths.
-func NewPackage(fset *token.FileSet, modPaths map[string]bool) *Package {
+func NewPackage(fset *token.FileSet, goos, goarch string, modPaths map[string]bool) *Package {
 	return &Package{
 		Fset: fset,
 		gobPackage: gobPackage{
+			GOOS:               goos,
+			GOARCH:             goarch,
 			ModulePackagePaths: modPaths,
 		},
 	}

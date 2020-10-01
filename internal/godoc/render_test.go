@@ -30,7 +30,7 @@ func TestRender(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantSyn, wantImports, wantDoc, err := p.Render(ctx, "p", si, mi, "GOOS", "GOARCH")
+	wantSyn, wantImports, wantDoc, err := p.Render(ctx, "p", si, mi, "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,7 +40,7 @@ func TestRender(t *testing.T) {
 
 	check := func(p *Package) {
 		t.Helper()
-		gotSyn, gotImports, gotDoc, err := p.Render(ctx, "p", si, mi, "GOOS", "GOARCH")
+		gotSyn, gotImports, gotDoc, err := p.Render(ctx, "p", si, mi, "", "")
 		if err != nil {
 			t.Fatal(err)
 		}

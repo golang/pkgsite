@@ -107,7 +107,7 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 	if err != nil {
 		return nil, err
 	}
-	docPkg := godoc.NewPackage(fset, modInfo.ModulePackages)
+	docPkg := godoc.NewPackage(fset, goos, goarch, modInfo.ModulePackages)
 	for _, pf := range goFiles {
 		var removeNodes bool
 		if experiment.IsActive(ctx, internal.ExperimentRemoveUnusedAST) {

@@ -35,6 +35,8 @@ const (
 // It is a variable for testing.
 var MaxDocumentationHTML = 20 * megabyte
 
+var noDocTemplate = template.Must(template.New("").Parse(`<p>No documentation for GOOS/GOARCH {{.}}</p>`))
+
 // Render renders the documentation for the package.
 // Rendering destroys p's AST; do not call any methods of p after it returns.
 func (p *Package) Render(ctx context.Context, innerPath string, sourceInfo *source.Info, modInfo *ModuleInfo, goos, goarch string) (synopsis string, imports []string, html safehtml.HTML, err error) {
@@ -43,6 +45,14 @@ func (p *Package) Render(ctx context.Context, innerPath string, sourceInfo *sour
 
 	p.renderCalled = true
 
+	// Empty goos/goarch means we don't care.
+	if (goos != "" && goos != p.GOOS) || (goarch != "" && goarch != p.GOARCH) {
+		html, err := noDocTemplate.ExecuteToHTML(goos + "/" + goarch)
+		if err != nil {
+			return "", nil, safehtml.HTML{}, err
+		}
+		return "No documentation.", nil, html, errors.New("no doc")
+	}
 	importPath := path.Join(modInfo.ModulePath, innerPath)
 	if modInfo.ModulePath == stdlib.ModulePath {
 		importPath = innerPath
