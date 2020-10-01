@@ -180,8 +180,6 @@ func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ i
 			module_path,
 			version,
 			commit_time,
-			readme_file_path,
-			readme_contents,
 			sort_version,
 			version_type,
 			series_path,
@@ -189,20 +187,16 @@ func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ i
 			redistributable,
 			has_go_mod,
 			incompatible)
-		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
 		ON CONFLICT
 			(module_path, version)
 		DO UPDATE SET
-			readme_file_path=excluded.readme_file_path,
-			readme_contents=excluded.readme_contents,
 			source_info=excluded.source_info,
 			redistributable=excluded.redistributable
 		RETURNING id`,
 		m.ModulePath,
 		m.Version,
 		m.CommitTime,
-		m.LegacyReadmeFilePath,
-		makeValidUnicode(m.LegacyReadmeContents),
 		version.ForSorting(m.Version),
 		versionType,
 		m.SeriesPath(),
@@ -375,10 +369,6 @@ func insertUnits(ctx context.Context, db *database.DB, m *internal.Module, modul
 	ctx, span := trace.StartSpan(ctx, "insertUnits")
 	defer span.End()
 
-	if m.LegacyReadmeContents == internal.StringFieldMissing {
-		// We don't expect this to ever happen here, but checking just in case.
-		return errors.New("saveModule: version missing LegacyReadmeContents")
-	}
 	// Sort to ensure proper lock ordering, avoiding deadlocks. See
 	// b/141164828#comment8. We have seen deadlocks on package_imports and
 	// documentation.  They can occur when processing two versions of the

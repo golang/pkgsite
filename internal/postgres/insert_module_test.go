@@ -114,8 +114,6 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 		}
 		wantu.Subdirectories = subdirectories
 		opts := cmp.Options{
-			cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeFilePath"),
-			cmpopts.IgnoreFields(internal.LegacyModuleInfo{}, "LegacyReadmeContents"),
 			cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 			cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
 		}
@@ -149,7 +147,6 @@ func TestInsertModuleLicenseCheck(t *testing.T) {
 			}
 
 			mod := sample.LegacyModule(sample.ModulePath, sample.VersionString, "")
-			checkHasRedistData(mod.LegacyReadmeContents, mod.LegacyPackages[0].DocumentationHTML, true)
 			checkHasRedistData(mod.Units[0].Readme.Contents, mod.Units[0].Documentation.HTML, true)
 			mod.IsRedistributable = false
 			mod.LegacyPackages[0].IsRedistributable = false
