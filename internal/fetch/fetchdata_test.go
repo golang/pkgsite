@@ -38,8 +38,6 @@ var moduleOnePackage = &testModule{
 					ModulePath: "github.com/basic",
 					HasGoMod:   false,
 				},
-				LegacyReadmeFilePath: "README.md",
-				LegacyReadmeContents: "THIS IS A README",
 			},
 			Units: []*internal.Unit{
 				{
@@ -110,8 +108,6 @@ var moduleMultiPackage = &testModule{
 					HasGoMod:   true,
 					SourceInfo: source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
 				},
-				LegacyReadmeFilePath: "README.md",
-				LegacyReadmeContents: "README FILE FOR TESTING.",
 			},
 			Units: []*internal.Unit{
 				{
@@ -389,8 +385,6 @@ var moduleNonRedist = &testModule{
 					ModulePath: "nonredistributable.mod/module",
 					HasGoMod:   true,
 				},
-				LegacyReadmeFilePath: "README.md",
-				LegacyReadmeContents: "README FILE FOR TESTING.",
 			},
 			Units: []*internal.Unit{
 				{
@@ -615,8 +609,6 @@ var moduleWasm = &testModule{
 					ModulePath: "github.com/my/module/js",
 					SourceInfo: source.NewGitHubInfo("https://github.com/my/module", "js", "js/v1.0.0"),
 				},
-				LegacyReadmeFilePath: "README.md",
-				LegacyReadmeContents: "THIS IS A README",
 			},
 			Units: []*internal.Unit{
 				{
@@ -669,8 +661,6 @@ var moduleStd = &testModule{
 					HasGoMod:   true,
 					SourceInfo: source.NewGitHubInfo("https://github.com/golang/go", "src", "go1.12.5"),
 				},
-				LegacyReadmeFilePath: "README.md",
-				LegacyReadmeContents: "# The Go Programming Language\n",
 			},
 			Units: []*internal.Unit{
 				{

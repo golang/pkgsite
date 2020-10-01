@@ -273,15 +273,6 @@ func processZipFile(ctx context.Context, modulePath string, resolvedVersion stri
 	}
 	hasGoMod := zipContainsFilename(zipReader, path.Join(moduleVersionDir(modulePath, resolvedVersion), "go.mod"))
 
-	var readmeFilePath, readmeContents string
-	for _, r := range readmes {
-		if path.Dir(r.Filepath) != "." {
-			continue
-		}
-		readmeFilePath = r.Filepath
-		readmeContents = r.Contents
-		break
-	}
 	var legacyPackages []*internal.LegacyPackage
 	for _, p := range packages {
 		legacyPackages = append(legacyPackages, &internal.LegacyPackage{
@@ -307,8 +298,6 @@ func processZipFile(ctx context.Context, modulePath string, resolvedVersion stri
 				HasGoMod:          hasGoMod,
 				SourceInfo:        sourceInfo,
 			},
-			LegacyReadmeFilePath: readmeFilePath,
-			LegacyReadmeContents: readmeContents,
 		},
 		LegacyPackages: legacyPackages,
 		Licenses:       allLicenses,
