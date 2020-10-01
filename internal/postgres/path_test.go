@@ -40,13 +40,11 @@ func TestGetUnitMeta(t *testing.T) {
 		pkgName := path.Base(testModule.packageSuffix)
 		pkgPath := path.Join(testModule.module, testModule.packageSuffix)
 		m := &internal.Module{
-			LegacyModuleInfo: internal.LegacyModuleInfo{
-				ModuleInfo: internal.ModuleInfo{
-					CommitTime: sample.CommitTime,
-					ModulePath: testModule.module,
-					Version:    testModule.version,
-					SourceInfo: source.NewGitHubInfo("https://"+testModule.module, "", testModule.version),
-				},
+			ModuleInfo: internal.ModuleInfo{
+				CommitTime: sample.CommitTime,
+				ModulePath: testModule.module,
+				Version:    testModule.version,
+				SourceInfo: source.NewGitHubInfo("https://"+testModule.module, "", testModule.version),
 			},
 			LegacyPackages: []*internal.LegacyPackage{{
 				Name:     pkgName,

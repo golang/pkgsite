@@ -24,13 +24,11 @@ func TestFetchSearchPage(t *testing.T) {
 	var (
 		now       = sample.NowTruncated()
 		moduleFoo = &internal.Module{
-			LegacyModuleInfo: internal.LegacyModuleInfo{
-				ModuleInfo: internal.ModuleInfo{
-					ModulePath:        "github.com/mod/foo",
-					Version:           "v1.0.0",
-					CommitTime:        now,
-					IsRedistributable: true,
-				},
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath:        "github.com/mod/foo",
+				Version:           "v1.0.0",
+				CommitTime:        now,
+				IsRedistributable: true,
 			},
 			Units: []*internal.Unit{
 				{
@@ -54,13 +52,11 @@ func TestFetchSearchPage(t *testing.T) {
 			},
 		}
 		moduleBar = &internal.Module{
-			LegacyModuleInfo: internal.LegacyModuleInfo{
-				ModuleInfo: internal.ModuleInfo{
-					ModulePath:        "github.com/mod/bar",
-					Version:           "v1.0.0",
-					CommitTime:        now,
-					IsRedistributable: true,
-				},
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath:        "github.com/mod/bar",
+				Version:           "v1.0.0",
+				CommitTime:        now,
+				IsRedistributable: true,
 			},
 			Units: []*internal.Unit{
 				{

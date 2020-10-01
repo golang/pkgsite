@@ -94,8 +94,8 @@ func TestElapsedTime(t *testing.T) {
 func TestCreatePackage(t *testing.T) {
 	vpkg := func(modulePath, suffix, name string) *internal.LegacyVersionedPackage {
 		vp := &internal.LegacyVersionedPackage{
-			LegacyModuleInfo: *sample.LegacyModuleInfo(modulePath, sample.VersionString),
-			LegacyPackage:    *sample.LegacyPackage(modulePath, suffix),
+			ModuleInfo:    *sample.ModuleInfo(modulePath, sample.VersionString),
+			LegacyPackage: *sample.LegacyPackage(modulePath, suffix),
 		}
 		if name != "" {
 			vp.LegacyPackage.Name = name

@@ -9,15 +9,10 @@ import (
 	"golang.org/x/pkgsite/internal/licenses"
 )
 
-// LegacyModuleInfo holds metadata associated with a module.
-type LegacyModuleInfo struct {
-	ModuleInfo
-}
-
 // LegacyDirectory represents a directory in a module version, and all of the
 // packages inside that directory.
 type LegacyDirectory struct {
-	LegacyModuleInfo
+	ModuleInfo
 	Path     string
 	Packages []*LegacyPackage
 }
@@ -46,5 +41,5 @@ type LegacyPackage struct {
 // information.
 type LegacyVersionedPackage struct {
 	LegacyPackage
-	LegacyModuleInfo
+	ModuleInfo
 }

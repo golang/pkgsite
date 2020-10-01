@@ -94,7 +94,7 @@ func V1Path(fullPath, modulePath string) string {
 
 // A Module is a specific, reproducible build of a module.
 type Module struct {
-	LegacyModuleInfo
+	ModuleInfo
 	// Licenses holds all licenses within this module version, including those
 	// that may be contained in nested subdirectories.
 	Licenses []*licenses.License

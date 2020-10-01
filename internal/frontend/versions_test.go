@@ -157,16 +157,16 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 	)
 
 	pkg1 := &internal.LegacyVersionedPackage{
-		LegacyModuleInfo: *sample.LegacyModuleInfo(modulePath1, "v1.2.1"),
-		LegacyPackage:    *sample.LegacyPackage(modulePath1, sample.Suffix),
+		ModuleInfo:    *sample.ModuleInfo(modulePath1, "v1.2.1"),
+		LegacyPackage: *sample.LegacyPackage(modulePath1, sample.Suffix),
 	}
 	pkg2 := &internal.LegacyVersionedPackage{
-		LegacyModuleInfo: *sample.LegacyModuleInfo(modulePath2, "v2.2.1-alpha.1"),
-		LegacyPackage:    *sample.LegacyPackage(modulePath2, sample.Suffix),
+		ModuleInfo:    *sample.ModuleInfo(modulePath2, "v2.2.1-alpha.1"),
+		LegacyPackage: *sample.LegacyPackage(modulePath2, sample.Suffix),
 	}
 	nethttpPkg := &internal.LegacyVersionedPackage{
-		LegacyModuleInfo: *sample.LegacyModuleInfo("std", "v1.12.5"),
-		LegacyPackage:    *sample.LegacyPackage("std", "net/http"),
+		ModuleInfo:    *sample.ModuleInfo("std", "v1.12.5"),
+		LegacyPackage: *sample.LegacyPackage("std", "net/http"),
 	}
 	makeList := func(pkgPath, modulePath, major string, versions []string) *VersionList {
 		return &VersionList{
@@ -288,7 +288,7 @@ func TestPathInVersion(t *testing.T) {
 	for _, test := range tests {
 		mi := sample.ModuleInfo(test.modulePath, sample.VersionString)
 		if got := pathInVersion(test.v1Path, mi); got != test.want {
-			t.Errorf("pathInVersion(%q, LegacyModuleInfo{...ModulePath:%q}) = %s, want %v",
+			t.Errorf("pathInVersion(%q, ModuleInfo{...ModulePath:%q}) = %s, want %v",
 				test.v1Path, mi.ModulePath, got, test.want)
 		}
 	}

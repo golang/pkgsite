@@ -33,11 +33,9 @@ var moduleOnePackage = &testModule{
 	},
 	fr: &FetchResult{
 		Module: &internal.Module{
-			LegacyModuleInfo: internal.LegacyModuleInfo{
-				ModuleInfo: internal.ModuleInfo{
-					ModulePath: "github.com/basic",
-					HasGoMod:   false,
-				},
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath: "github.com/basic",
+				HasGoMod:   false,
 			},
 			Units: []*internal.Unit{
 				{
@@ -102,12 +100,10 @@ var moduleMultiPackage = &testModule{
 	},
 	fr: &FetchResult{
 		Module: &internal.Module{
-			LegacyModuleInfo: internal.LegacyModuleInfo{
-				ModuleInfo: internal.ModuleInfo{
-					ModulePath: "github.com/my/module",
-					HasGoMod:   true,
-					SourceInfo: source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
-				},
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath: "github.com/my/module",
+				HasGoMod:   true,
+				SourceInfo: source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
 			},
 			Units: []*internal.Unit{
 				{
@@ -165,11 +161,9 @@ var moduleNoGoMod = &testModule{
 	},
 	fr: &FetchResult{
 		Module: &internal.Module{
-			LegacyModuleInfo: internal.LegacyModuleInfo{
-				ModuleInfo: internal.ModuleInfo{
-					ModulePath: "no.mod/module",
-					HasGoMod:   false,
-				},
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath: "no.mod/module",
+				HasGoMod:   false,
 			},
 			Units: []*internal.Unit{
 				{
@@ -229,10 +223,8 @@ var moduleBadPackages = &testModule{
 	fr: &FetchResult{
 		Status: derrors.ToStatus(derrors.HasIncompletePackages),
 		Module: &internal.Module{
-			LegacyModuleInfo: internal.LegacyModuleInfo{
-				ModuleInfo: internal.ModuleInfo{
-					ModulePath: "bad.mod/module",
-				},
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath: "bad.mod/module",
 			},
 			Units: []*internal.Unit{
 				{
@@ -293,11 +285,9 @@ var moduleBuildConstraints = &testModule{
 	fr: &FetchResult{
 		Status: derrors.ToStatus(derrors.HasIncompletePackages),
 		Module: &internal.Module{
-			LegacyModuleInfo: internal.LegacyModuleInfo{
-				ModuleInfo: internal.ModuleInfo{
-					ModulePath: "build.constraints/module",
-					HasGoMod:   false,
-				},
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath: "build.constraints/module",
+				HasGoMod:   false,
 			},
 			Units: []*internal.Unit{
 				{
@@ -380,11 +370,9 @@ var moduleNonRedist = &testModule{
 	},
 	fr: &FetchResult{
 		Module: &internal.Module{
-			LegacyModuleInfo: internal.LegacyModuleInfo{
-				ModuleInfo: internal.ModuleInfo{
-					ModulePath: "nonredistributable.mod/module",
-					HasGoMod:   true,
-				},
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath: "nonredistributable.mod/module",
+				HasGoMod:   true,
 			},
 			Units: []*internal.Unit{
 				{
@@ -447,10 +435,8 @@ var moduleBadImportPath = &testModule{
 	fr: &FetchResult{
 		Status: derrors.ToStatus(derrors.HasIncompletePackages),
 		Module: &internal.Module{
-			LegacyModuleInfo: internal.LegacyModuleInfo{
-				ModuleInfo: internal.ModuleInfo{
-					ModulePath: "bad.import.path.com",
-				},
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath: "bad.import.path.com",
 			},
 			Units: []*internal.Unit{
 				{
@@ -516,11 +502,9 @@ var moduleDocTest = &testModule{
 	fr: &FetchResult{
 		GoModPath: "doc.test",
 		Module: &internal.Module{
-			LegacyModuleInfo: internal.LegacyModuleInfo{
-				ModuleInfo: internal.ModuleInfo{
-					ModulePath: "doc.test",
-					HasGoMod:   false,
-				},
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath: "doc.test",
+				HasGoMod:   false,
 			},
 			Units: []*internal.Unit{
 				{
@@ -557,11 +541,9 @@ var moduleDocTooLarge = &testModule{
 		Status:    derrors.ToStatus(derrors.HasIncompletePackages),
 		GoModPath: "bigdoc.test",
 		Module: &internal.Module{
-			LegacyModuleInfo: internal.LegacyModuleInfo{
-				ModuleInfo: internal.ModuleInfo{
-					ModulePath: "bigdoc.test",
-					HasGoMod:   false,
-				},
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath: "bigdoc.test",
+				HasGoMod:   false,
 			},
 			Units: []*internal.Unit{
 				{
@@ -604,11 +586,9 @@ var moduleWasm = &testModule{
 	},
 	fr: &FetchResult{
 		Module: &internal.Module{
-			LegacyModuleInfo: internal.LegacyModuleInfo{
-				ModuleInfo: internal.ModuleInfo{
-					ModulePath: "github.com/my/module/js",
-					SourceInfo: source.NewGitHubInfo("https://github.com/my/module", "js", "js/v1.0.0"),
-				},
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath: "github.com/my/module/js",
+				SourceInfo: source.NewGitHubInfo("https://github.com/my/module", "js", "js/v1.0.0"),
 			},
 			Units: []*internal.Unit{
 				{
@@ -653,14 +633,12 @@ var moduleStd = &testModule{
 	},
 	fr: &FetchResult{
 		Module: &internal.Module{
-			LegacyModuleInfo: internal.LegacyModuleInfo{
-				ModuleInfo: internal.ModuleInfo{
-					ModulePath: "std",
-					Version:    "v1.12.5",
-					CommitTime: stdlib.TestCommitTime,
-					HasGoMod:   true,
-					SourceInfo: source.NewGitHubInfo("https://github.com/golang/go", "src", "go1.12.5"),
-				},
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath: "std",
+				Version:    "v1.12.5",
+				CommitTime: stdlib.TestCommitTime,
+				HasGoMod:   true,
+				SourceInfo: source.NewGitHubInfo("https://github.com/golang/go", "src", "go1.12.5"),
 			},
 			Units: []*internal.Unit{
 				{
@@ -796,12 +774,10 @@ var moduleMaster = &testModule{
 	fr: &FetchResult{
 		RequestedVersion: "master",
 		Module: &internal.Module{
-			LegacyModuleInfo: internal.LegacyModuleInfo{
-				ModuleInfo: internal.ModuleInfo{
-					ModulePath: "github.com/my/module",
-					Version:    "v0.0.0-20200706064627-355bc3f705ed",
-					SourceInfo: source.NewGitHubInfo("https://github.com/my/module", "", "355bc3f705ed"),
-				},
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath: "github.com/my/module",
+				Version:    "v0.0.0-20200706064627-355bc3f705ed",
+				SourceInfo: source.NewGitHubInfo("https://github.com/my/module", "", "355bc3f705ed"),
 			},
 			Units: []*internal.Unit{
 				{
@@ -834,12 +810,10 @@ var moduleLatest = &testModule{
 	fr: &FetchResult{
 		RequestedVersion: "latest",
 		Module: &internal.Module{
-			LegacyModuleInfo: internal.LegacyModuleInfo{
-				ModuleInfo: internal.ModuleInfo{
-					ModulePath: "github.com/my/module",
-					Version:    "v1.2.4",
-					SourceInfo: source.NewGitHubInfo("https://github.com/my/module", "", "v1.2.4"),
-				},
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath: "github.com/my/module",
+				Version:    "v1.2.4",
+				SourceInfo: source.NewGitHubInfo("https://github.com/my/module", "", "v1.2.4"),
 			},
 			Units: []*internal.Unit{
 				{
@@ -887,11 +861,9 @@ package example_test
 		fr: &FetchResult{
 			GoModPath: path,
 			Module: &internal.Module{
-				LegacyModuleInfo: internal.LegacyModuleInfo{
-					ModuleInfo: internal.ModuleInfo{
-						ModulePath: path,
-						HasGoMod:   false,
-					},
+				ModuleInfo: internal.ModuleInfo{
+					ModulePath: path,
+					HasGoMod:   false,
 				},
 				Units: []*internal.Unit{
 					{

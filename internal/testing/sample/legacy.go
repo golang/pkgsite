@@ -38,13 +38,6 @@ func LegacyPackage(modulePath, suffix string) *internal.LegacyPackage {
 	}
 }
 
-func LegacyModuleInfo(modulePath, versionString string) *internal.LegacyModuleInfo {
-	mi := ModuleInfo(modulePath, versionString)
-	return &internal.LegacyModuleInfo{
-		ModuleInfo: *mi,
-	}
-}
-
 func LegacyDefaultModule() *internal.Module {
 	return LegacyAddPackage(
 		LegacyModule(ModulePath, VersionString),
@@ -54,11 +47,11 @@ func LegacyDefaultModule() *internal.Module {
 // LegacyModule creates a Module with the given path and version.
 // The list of suffixes is used to create LegacyPackages within the module.
 func LegacyModule(modulePath, version string, suffixes ...string) *internal.Module {
-	mi := LegacyModuleInfo(modulePath, version)
+	mi := ModuleInfo(modulePath, version)
 	m := &internal.Module{
-		LegacyModuleInfo: *mi,
-		LegacyPackages:   nil,
-		Licenses:         Licenses,
+		ModuleInfo:     *mi,
+		LegacyPackages: nil,
+		Licenses:       Licenses,
 	}
 	m.Units = []*internal.Unit{legacyUnitForModuleRoot(mi)}
 	for _, s := range suffixes {
@@ -101,7 +94,7 @@ func LegacyAddPackage(m *internal.Module, p *internal.LegacyPackage) *internal.M
 	return m
 }
 
-func legacyUnitForModuleRoot(m *internal.LegacyModuleInfo) *internal.Unit {
+func legacyUnitForModuleRoot(m *internal.ModuleInfo) *internal.Unit {
 	u := &internal.Unit{
 		UnitMeta:        *UnitMeta(m.ModulePath, m.ModulePath, m.Version, "", m.IsRedistributable),
 		LicenseContents: Licenses,
