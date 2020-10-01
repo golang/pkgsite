@@ -243,7 +243,7 @@ func TestGetStdlibPaths(t *testing.T) {
 			},
 		},
 	} {
-		m := sample.Module(stdlib.ModulePath, data.version, data.suffixes...)
+		m := sample.LegacyModule(stdlib.ModulePath, data.version, data.suffixes...)
 		for _, p := range m.LegacyPackages {
 			p.Imports = nil
 		}

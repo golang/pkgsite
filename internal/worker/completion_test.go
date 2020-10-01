@@ -29,8 +29,8 @@ func TestUpdateRedisIndexes(t *testing.T) {
 	// package in v2 imports the package in v1. By setting our 'popular cutoff'
 	// to 1, we can force the package in v1 to be considered popular.
 	rc := redis.NewClient(&redis.Options{Addr: mr.Addr()})
-	m1 := sample.Module("github.com/something", sample.VersionString, "apples/bananas")
-	m2 := sample.Module("github.com/something/else", sample.VersionString, "oranges/bananas")
+	m1 := sample.LegacyModule("github.com/something", sample.VersionString, "apples/bananas")
+	m2 := sample.LegacyModule("github.com/something/else", sample.VersionString, "oranges/bananas")
 	m2.Units[1].Imports = []string{m1.Units[1].Path}
 	if err := testDB.InsertModule(ctx, m1); err != nil {
 		t.Fatal(err)

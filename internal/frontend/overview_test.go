@@ -30,7 +30,7 @@ func TestFetchOverviewDetails(t *testing.T) {
 		wantDetails *OverviewDetails
 	}{
 		name:   "want expected overview details",
-		module: sample.DefaultModule(),
+		module: sample.LegacyDefaultModule(),
 		wantDetails: &OverviewDetails{
 			ModulePath:      sample.ModulePath,
 			RepositoryURL:   sample.RepositoryURL,
@@ -142,7 +142,7 @@ func TestPackageOverviewDetails(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
-			m := sample.Module(
+			m := sample.LegacyModule(
 				test.dir.ModulePath,
 				test.dir.Version,
 				internal.Suffix(test.dir.Path, test.dir.ModulePath))

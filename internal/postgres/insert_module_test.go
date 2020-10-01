@@ -39,16 +39,16 @@ func TestInsertModule(t *testing.T) {
 	}{
 		{
 			name:   "valid test",
-			module: sample.DefaultModule(),
+			module: sample.LegacyDefaultModule(),
 		},
 		{
 			name:   "valid test with internal package",
-			module: sample.Module(sample.ModulePath, sample.VersionString, "internal/foo"),
+			module: sample.LegacyModule(sample.ModulePath, sample.VersionString, "internal/foo"),
 		},
 		{
 			name: "valid test with go.mod missing",
 			module: func() *internal.Module {
-				m := sample.DefaultModule()
+				m := sample.LegacyDefaultModule()
 				m.HasGoMod = false
 				return m
 			}(),
@@ -56,7 +56,7 @@ func TestInsertModule(t *testing.T) {
 		{
 			name: "stdlib",
 			module: func() *internal.Module {
-				m := sample.Module("std", "v1.12.5")
+				m := sample.LegacyModule("std", "v1.12.5")
 				p := &internal.LegacyPackage{
 					Name:              "context",
 					Path:              "context",
@@ -65,7 +65,7 @@ func TestInsertModule(t *testing.T) {
 					IsRedistributable: true,
 					DocumentationHTML: testconversions.MakeHTMLForTest("This is the documentation HTML"),
 				}
-				return sample.AddPackage(m, p)
+				return sample.LegacyAddPackage(m, p)
 			}(),
 		},
 	} {
@@ -166,7 +166,7 @@ func TestInsertModuleLicenseCheck(t *testing.T) {
 				}
 			}
 
-			mod := sample.Module(sample.ModulePath, sample.VersionString, "")
+			mod := sample.LegacyModule(sample.ModulePath, sample.VersionString, "")
 			checkHasRedistData(mod.LegacyReadmeContents, mod.LegacyPackages[0].DocumentationHTML, true)
 			checkHasRedistData(mod.Units[0].Readme.Contents, mod.Units[0].Documentation.HTML, true)
 			mod.IsRedistributable = false
@@ -203,7 +203,7 @@ func TestInsertModuleLicenseCheck(t *testing.T) {
 func TestUpsertModule(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	m := sample.Module("upsert.org", "v1.2.3")
+	m := sample.LegacyModule("upsert.org", "v1.2.3")
 	p := &internal.LegacyPackage{
 		Name:              "p",
 		Path:              "upsert.org/dir/p",
@@ -212,7 +212,7 @@ func TestUpsertModule(t *testing.T) {
 		IsRedistributable: true,
 		DocumentationHTML: testconversions.MakeHTMLForTest("This is the documentation HTML"),
 	}
-	sample.AddPackage(m, p)
+	sample.LegacyAddPackage(m, p)
 
 	// Insert the module.
 	if err := testDB.InsertModule(ctx, m); err != nil {
@@ -256,20 +256,20 @@ func TestInsertModuleErrors(t *testing.T) {
 		},
 		{
 			name:           "nonexistent version",
-			module:         sample.DefaultModule(),
+			module:         sample.LegacyDefaultModule(),
 			wantModulePath: sample.ModulePath,
 			wantVersion:    "v1.2.3",
 		},
 		{
 			name:           "nonexistent module",
-			module:         sample.DefaultModule(),
+			module:         sample.LegacyDefaultModule(),
 			wantModulePath: "nonexistent_module_path",
 			wantVersion:    "v1.0.0",
 			wantPkgPath:    sample.PackagePath,
 		},
 		{
 			name:           "missing module path",
-			module:         sample.Module("", sample.VersionString),
+			module:         sample.LegacyModule("", sample.VersionString),
 			wantVersion:    sample.VersionString,
 			wantModulePath: sample.ModulePath,
 			wantWriteErr:   derrors.DBModuleInsertInvalid,
@@ -277,7 +277,7 @@ func TestInsertModuleErrors(t *testing.T) {
 		{
 			name: "missing version",
 			module: func() *internal.Module {
-				m := sample.DefaultModule()
+				m := sample.LegacyDefaultModule()
 				m.Version = ""
 				return m
 			}(),
@@ -288,7 +288,7 @@ func TestInsertModuleErrors(t *testing.T) {
 		{
 			name: "empty commit time",
 			module: func() *internal.Module {
-				v := sample.DefaultModule()
+				v := sample.LegacyDefaultModule()
 				v.CommitTime = time.Time{}
 				return v
 			}(),
@@ -318,7 +318,7 @@ func TestPostgres_ReadAndWriteModuleOtherColumns(t *testing.T) {
 		sortVersion, seriesPath string
 	}
 
-	v := sample.Module("github.com/user/repo/path/v2", "v1.2.3-beta.4.a", sample.Suffix)
+	v := sample.LegacyModule("github.com/user/repo/path/v2", "v1.2.3-beta.4.a", sample.Suffix)
 	want := other{
 		sortVersion: "1,2,3,~beta,4,~a",
 		seriesPath:  "github.com/user/repo/path",
@@ -373,7 +373,7 @@ func TestLatestVersion(t *testing.T) {
 			modulePath: sample.ModulePath + "/v3",
 		},
 	} {
-		m := sample.DefaultModule()
+		m := sample.LegacyDefaultModule()
 		m.Version = mod.version
 		m.ModulePath = mod.modulePath
 
@@ -420,7 +420,7 @@ func TestDeleteModule(t *testing.T) {
 	defer cancel()
 	defer ResetTestDB(testDB, t)
 
-	v := sample.DefaultModule()
+	v := sample.LegacyDefaultModule()
 
 	if err := testDB.InsertModule(ctx, v); err != nil {
 		t.Fatal(err)
@@ -477,7 +477,7 @@ func TestPostgres_NewerAlternative(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	m := sample.Module(modulePath, okVersion, "p")
+	m := sample.LegacyModule(modulePath, okVersion, "p")
 	if err := testDB.InsertModule(ctx, m); err != nil {
 		t.Fatal(err)
 	}

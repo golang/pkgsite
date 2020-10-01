@@ -38,7 +38,7 @@ func TestLegacyGetPackage(t *testing.T) {
 
 	insertModule := func(pkgPath, modulePath, version string) {
 		t.Helper()
-		m := sample.Module(modulePath, version, suffix(pkgPath, modulePath))
+		m := sample.LegacyModule(modulePath, version, suffix(pkgPath, modulePath))
 		if err := testDB.InsertModule(ctx, m); err != nil {
 			t.Fatal(err)
 		}

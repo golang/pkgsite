@@ -166,14 +166,14 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 			ps = append(ps, p)
 		}
 		for _, ver := range mod.versions {
-			m := sample.Module(mod.path, ver)
+			m := sample.LegacyModule(mod.path, ver)
 			m.SourceInfo = source.NewGitHubInfo(sample.RepositoryURL, "", ver)
 			m.IsRedistributable = mod.redistributable
 			if !m.IsRedistributable {
 				m.Licenses = nil
 			}
 			for _, p := range ps {
-				sample.AddPackage(m, p)
+				sample.LegacyAddPackage(m, p)
 			}
 			for _, u := range m.Units {
 				if !mod.redistributable {
@@ -977,7 +977,7 @@ func TestServerErrors(t *testing.T) {
 	defer cancel()
 
 	defer postgres.ResetTestDB(testDB, t)
-	sampleModule := sample.DefaultModule()
+	sampleModule := sample.LegacyDefaultModule()
 	if err := testDB.InsertModule(ctx, sampleModule); err != nil {
 		t.Fatal(err)
 	}

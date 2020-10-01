@@ -213,7 +213,7 @@ func InsertSampleDirectoryTree(ctx context.Context, t *testing.T, testDB *DB) {
 			},
 		},
 	} {
-		m := sample.Module(data.modulePath, data.version, data.suffixes...)
+		m := sample.LegacyModule(data.modulePath, data.version, data.suffixes...)
 		for _, p := range m.LegacyPackages {
 			p.Imports = nil
 		}

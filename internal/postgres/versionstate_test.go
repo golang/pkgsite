@@ -147,7 +147,7 @@ func TestUpsertModuleVersionStates(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
 	defer cancel()
 
-	m := sample.DefaultModule()
+	m := sample.LegacyDefaultModule()
 	appVersion := time.Now().String()
 
 	for _, test := range []struct {

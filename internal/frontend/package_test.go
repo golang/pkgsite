@@ -16,7 +16,7 @@ import (
 func TestStdlibPathForShortcut(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
 
-	m := sample.Module(stdlib.ModulePath, "v1.2.3",
+	m := sample.LegacyModule(stdlib.ModulePath, "v1.2.3",
 		"encoding/json",                  // one match for "json"
 		"text/template", "html/template", // two matches for "template"
 	)

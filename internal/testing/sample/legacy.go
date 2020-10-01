@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -48,29 +47,29 @@ func LegacyModuleInfo(modulePath, versionString string) *internal.LegacyModuleIn
 	}
 }
 
-func DefaultModule() *internal.Module {
-	return AddPackage(
-		Module(ModulePath, VersionString),
+func LegacyDefaultModule() *internal.Module {
+	return LegacyAddPackage(
+		LegacyModule(ModulePath, VersionString),
 		LegacyPackage(ModulePath, Suffix))
 }
 
-// Module creates a Module with the given path and version.
+// LegacyModule creates a Module with the given path and version.
 // The list of suffixes is used to create LegacyPackages within the module.
-func Module(modulePath, version string, suffixes ...string) *internal.Module {
+func LegacyModule(modulePath, version string, suffixes ...string) *internal.Module {
 	mi := LegacyModuleInfo(modulePath, version)
 	m := &internal.Module{
 		LegacyModuleInfo: *mi,
 		LegacyPackages:   nil,
 		Licenses:         Licenses,
 	}
-	m.Units = []*internal.Unit{UnitForModuleRoot(mi, LicenseMetadata)}
+	m.Units = []*internal.Unit{legacyUnitForModuleRoot(mi)}
 	for _, s := range suffixes {
 		lp := LegacyPackage(modulePath, s)
 		if s != "" {
-			AddPackage(m, lp)
+			LegacyAddPackage(m, lp)
 		} else {
 			m.LegacyPackages = append(m.LegacyPackages, lp)
-			u := UnitForPackage(lp, modulePath, version)
+			u := legacyUnitForPackage(lp, modulePath, version)
 			m.Units[0].Documentation = u.Documentation
 			m.Units[0].Name = u.Name
 		}
@@ -78,13 +77,13 @@ func Module(modulePath, version string, suffixes ...string) *internal.Module {
 	return m
 }
 
-func AddPackage(m *internal.Module, p *internal.LegacyPackage) *internal.Module {
+func LegacyAddPackage(m *internal.Module, p *internal.LegacyPackage) *internal.Module {
 	if m.ModulePath != stdlib.ModulePath && !strings.HasPrefix(p.Path, m.ModulePath) {
 		panic(fmt.Sprintf("package path %q not a prefix of module path %q",
 			p.Path, m.ModulePath))
 	}
 	m.LegacyPackages = append(m.LegacyPackages, p)
-	AddUnit(m, UnitForPackage(p, m.ModulePath, m.Version))
+	AddUnit(m, legacyUnitForPackage(p, m.ModulePath, m.Version))
 	minLen := len(m.ModulePath)
 	if m.ModulePath == stdlib.ModulePath {
 		minLen = 1
@@ -104,7 +103,7 @@ func AddPackage(m *internal.Module, p *internal.LegacyPackage) *internal.Module 
 	return m
 }
 
-func UnitForModuleRoot(m *internal.LegacyModuleInfo, licenses []*licenses.Metadata) *internal.Unit {
+func legacyUnitForModuleRoot(m *internal.LegacyModuleInfo) *internal.Unit {
 	u := &internal.Unit{
 		UnitMeta:        *UnitMeta(m.ModulePath, m.ModulePath, m.Version, "", m.IsRedistributable),
 		LicenseContents: Licenses,
@@ -118,7 +117,7 @@ func UnitForModuleRoot(m *internal.LegacyModuleInfo, licenses []*licenses.Metada
 	return u
 }
 
-func UnitForPackage(pkg *internal.LegacyPackage, modulePath, version string) *internal.Unit {
+func legacyUnitForPackage(pkg *internal.LegacyPackage, modulePath, version string) *internal.Unit {
 	return &internal.Unit{
 		UnitMeta:        *UnitMeta(pkg.Path, modulePath, version, pkg.Name, pkg.IsRedistributable),
 		Imports:         pkg.Imports,

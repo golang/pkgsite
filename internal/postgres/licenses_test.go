@@ -19,8 +19,8 @@ import (
 )
 
 func TestGetLicenses(t *testing.T) {
-	testModule := sample.Module(sample.ModulePath, "v1.2.3", "A/B")
-	stdlibModule := sample.Module(stdlib.ModulePath, "v1.13.0", "cmd/go")
+	testModule := sample.LegacyModule(sample.ModulePath, "v1.2.3", "A/B")
+	stdlibModule := sample.LegacyModule(stdlib.ModulePath, "v1.13.0", "cmd/go")
 	mit := &licenses.Metadata{Types: []string{"MIT"}, FilePath: "LICENSE"}
 	bsd := &licenses.Metadata{Types: []string{"BSD-3-Clause"}, FilePath: "A/B/LICENSE"}
 
@@ -123,7 +123,7 @@ func TestGetLicenses(t *testing.T) {
 
 func TestGetModuleLicenses(t *testing.T) {
 	modulePath := "test.module"
-	testModule := sample.Module(modulePath, "v1.2.3", "", "foo", "bar")
+	testModule := sample.LegacyModule(modulePath, "v1.2.3", "", "foo", "bar")
 	testModule.LegacyPackages[0].Licenses = []*licenses.Metadata{{Types: []string{"ISC"}, FilePath: "LICENSE"}}
 	testModule.LegacyPackages[1].Licenses = []*licenses.Metadata{{Types: []string{"MIT"}, FilePath: "foo/LICENSE"}}
 	testModule.LegacyPackages[2].Licenses = []*licenses.Metadata{{Types: []string{"GPL2"}, FilePath: "bar/LICENSE.txt"}}
@@ -198,7 +198,7 @@ func TestGetLicensesBypass(t *testing.T) {
 }
 
 func nonRedistributableModule() *internal.Module {
-	m := sample.Module(sample.ModulePath, "v1.2.3", "")
+	m := sample.LegacyModule(sample.ModulePath, "v1.2.3", "")
 	sample.AddLicense(m, sample.NonRedistributableLicense)
 	m.IsRedistributable = false
 	m.LegacyPackages[0].IsRedistributable = false

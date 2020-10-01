@@ -74,7 +74,7 @@ func TestToTsvectorParentDirectoriesStoredProcedure(t *testing.T) {
 			default:
 				suffix = tc.path[len(tc.modulePath)+1:]
 			}
-			m := sample.Module(tc.modulePath, sample.VersionString, suffix)
+			m := sample.LegacyModule(tc.modulePath, sample.VersionString, suffix)
 			if err := testDB.InsertModule(ctx, m); err != nil {
 				t.Fatal(err)
 			}

@@ -153,18 +153,18 @@ func TestPathTokens(t *testing.T) {
 // one popular package.  For performance purposes, all importers are added to
 // a single importing module.
 func importGraph(popularPath, importerModule string, importerCount int) []*internal.Module {
-	m := sample.Module(popularPath, "v1.2.3", "")
+	m := sample.LegacyModule(popularPath, "v1.2.3", "")
 	m.Packages()[0].Imports = nil
 	// Try to improve the ts_rank of the 'foo' search term.
 	m.Packages()[0].Documentation.Synopsis = "foo"
 	m.Units[0].Readme.Contents = "foo"
 	mods := []*internal.Module{m}
 	if importerCount > 0 {
-		m := sample.Module(importerModule, "v1.2.3")
+		m := sample.LegacyModule(importerModule, "v1.2.3")
 		for i := 0; i < importerCount; i++ {
 			p := sample.LegacyPackage(importerModule, fmt.Sprintf("importer%d", i))
 			p.Imports = []string{popularPath}
-			sample.AddPackage(m, p)
+			sample.LegacyAddPackage(m, p)
 		}
 		mods = append(mods, m)
 	}
@@ -527,8 +527,8 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 
 				for modulePath, pkg := range tc.packages {
 					pkg.Licenses = sample.LicenseMetadata
-					m := sample.Module(modulePath, sample.VersionString)
-					sample.AddPackage(m, pkg)
+					m := sample.LegacyModule(modulePath, sample.VersionString)
+					sample.LegacyAddPackage(m, pkg)
 					if err := testDB.InsertModule(ctx, m); err != nil {
 						t.Fatal(err)
 					}
@@ -582,7 +582,7 @@ func TestSearchPenalties(t *testing.T) {
 	}
 
 	for path, m := range modules {
-		v := sample.Module(path, sample.VersionString, "p")
+		v := sample.LegacyModule(path, sample.VersionString, "p")
 		v.LegacyPackages[0].IsRedistributable = m.redist
 		v.IsRedistributable = m.redist
 		v.HasGoMod = m.hasGoMod
@@ -619,7 +619,7 @@ func TestExcludedFromSearch(t *testing.T) {
 
 	// Insert a module with two packages.
 	const domain = "exclude.com"
-	sm := sample.Module(domain, "v1.2.3", "pkg", "exclude")
+	sm := sample.LegacyModule(domain, "v1.2.3", "pkg", "exclude")
 	if err := testDB.InsertModule(ctx, sm); err != nil {
 		t.Fatal(err)
 	}
@@ -740,7 +740,7 @@ func TestUpsertSearchDocument(t *testing.T) {
 	}
 
 	insertModule := func(version string, gomod bool) {
-		v := sample.Module(sample.ModulePath, version, "A")
+		v := sample.LegacyModule(sample.ModulePath, version, "A")
 		v.HasGoMod = gomod
 		v.LegacyPackages[0].Synopsis = "syn-" + version
 		if err := testDB.InsertModule(ctx, v); err != nil {
@@ -785,7 +785,7 @@ func TestUpsertSearchDocumentVersionHasGoMod(t *testing.T) {
 	defer cancel()
 
 	for _, hasGoMod := range []bool{true, false} {
-		m := sample.Module(fmt.Sprintf("foo.com/%t", hasGoMod), "v1.2.3", "bar")
+		m := sample.LegacyModule(fmt.Sprintf("foo.com/%t", hasGoMod), "v1.2.3", "bar")
 		m.HasGoMod = hasGoMod
 		if err := testDB.InsertModule(ctx, m); err != nil {
 			t.Fatal(err)
@@ -811,7 +811,7 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 	// insert package with suffix at version, return the module
 	insertPackageVersion := func(t *testing.T, suffix, version string, imports []string) *internal.Module {
 		t.Helper()
-		m := sample.Module("mod.com/"+suffix, version, suffix)
+		m := sample.LegacyModule("mod.com/"+suffix, version, suffix)
 		// Units[0] is the module itself.
 		pkg := m.Units[1]
 		pkg.Imports = nil
@@ -918,7 +918,7 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 
 		// Now we see an earlier version of that package, without a go.mod file, so we insert it.
 		// It should not get inserted into search_documents.
-		mAlt := sample.Module(alternativeModulePath, "v1.0.0", "A")
+		mAlt := sample.LegacyModule(alternativeModulePath, "v1.0.0", "A")
 		mAlt.LegacyPackages[0].Imports = []string{"B"}
 		if err := testDB.InsertModule(ctx, mAlt); err != nil {
 			t.Fatal(err)
@@ -936,7 +936,7 @@ func TestGetPackagesForSearchDocumentUpsert(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	moduleA := sample.Module("mod.com", "v1.2.3",
+	moduleA := sample.LegacyModule("mod.com", "v1.2.3",
 		"A", "A/notinternal", "A/internal", "A/internal/B")
 
 	// moduleA.Units[1] is mod.com/A.
@@ -1080,7 +1080,7 @@ func TestDeleteOlderVersionFromSearch(t *testing.T) {
 		wantDeleted bool
 	}
 	insert := func(m module) {
-		sm := sample.Module(m.path, m.version, m.pkg)
+		sm := sample.LegacyModule(m.path, m.version, m.pkg)
 		if err := testDB.InsertModule(ctx, sm); err != nil {
 			t.Fatal(err)
 		}

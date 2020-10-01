@@ -212,8 +212,8 @@ func TestSearchRequestRedirectPath(t *testing.T) {
 	defer cancel()
 	defer postgres.ResetTestDB(testDB, t)
 
-	golangTools := sample.Module("golang.org/x/tools", sample.VersionString, "internal/lsp")
-	std := sample.Module("std", sample.VersionString,
+	golangTools := sample.LegacyModule("golang.org/x/tools", sample.VersionString, "internal/lsp")
+	std := sample.LegacyModule("std", sample.VersionString,
 		"cmd/go", "cmd/go/internal/auth", "fmt")
 	modules := []*internal.Module{golangTools, std}
 
