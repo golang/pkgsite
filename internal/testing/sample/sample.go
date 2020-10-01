@@ -104,13 +104,6 @@ func PackageMeta(fullPath string) *internal.PackageMeta {
 }
 
 func ModuleInfo(modulePath, versionString string) *internal.ModuleInfo {
-	mi := ModuleInfoReleaseType(modulePath, versionString)
-	return mi
-}
-
-// We shouldn't need this, but some code (notably frontend/directory_test.go) creates
-// ModuleInfos with "latest" for version, which should not be valid.
-func ModuleInfoReleaseType(modulePath, versionString string) *internal.ModuleInfo {
 	return &internal.ModuleInfo{
 		ModulePath: modulePath,
 		Version:    versionString,

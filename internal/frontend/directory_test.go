@@ -170,7 +170,7 @@ func TestFetchDirectoryDetailsInvalidArguments(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			mi := sample.ModuleInfoReleaseType(tc.modulePath, tc.version)
+			mi := sample.ModuleInfo(tc.modulePath, tc.version)
 			um := &internal.UnitMeta{
 				Path:              tc.dirPath,
 				ModulePath:        mi.ModulePath,

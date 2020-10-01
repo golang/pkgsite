@@ -40,7 +40,7 @@ func LegacyPackage(modulePath, suffix string) *internal.LegacyPackage {
 }
 
 func LegacyModuleInfo(modulePath, versionString string) *internal.LegacyModuleInfo {
-	mi := ModuleInfoReleaseType(modulePath, versionString)
+	mi := ModuleInfo(modulePath, versionString)
 	return &internal.LegacyModuleInfo{
 		ModuleInfo:           *mi,
 		LegacyReadmeFilePath: ReadmeFilePath,
