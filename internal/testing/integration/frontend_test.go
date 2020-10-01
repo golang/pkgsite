@@ -266,6 +266,7 @@ func validateResponse(t *testing.T, method, testURL string, wantCode int, wantHT
 	if resp.StatusCode != wantCode {
 		t.Fatalf("%q request to %q returned status %d, want %d", method, testURL, resp.StatusCode, wantCode)
 	}
+
 	if wantHTML != nil {
 		if err := htmlcheck.Run(resp.Body, wantHTML); err != nil {
 			t.Fatal(err)

@@ -8,6 +8,7 @@ package internal
 const (
 	ExperimentAltRequeue          = "alt-requeue"
 	ExperimentAutocomplete        = "autocomplete"
+	ExperimentFrontendRenderDoc   = "frontend-render-doc"
 	ExperimentInsertPackageSource = "insert-package-source"
 	ExperimentRemoveUnusedAST     = "remove-unused-ast"
 	ExperimentSidenav             = "sidenav"
@@ -19,6 +20,7 @@ const (
 var Experiments = map[string]string{
 	ExperimentAltRequeue:          "Requeue modules for reprocessing in a different order.",
 	ExperimentAutocomplete:        "Enable autocomplete with search.",
+	ExperimentFrontendRenderDoc:   "Render documentation on the frontend if possible.",
 	ExperimentInsertPackageSource: "Insert the source code of a package in the database.",
 	ExperimentRemoveUnusedAST:     "Prune AST prior to rendering documentation HTML.",
 	ExperimentSidenav:             "Display documentation index on the left sidenav.",

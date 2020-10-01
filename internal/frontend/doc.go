@@ -8,9 +8,12 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -28,10 +31,48 @@ func fetchDocumentationDetails(ctx context.Context, ds internal.DataSource, um *
 	if err != nil {
 		return nil, err
 	}
+	if experiment.IsActive(ctx, internal.ExperimentFrontendRenderDoc) && len(u.Documentation.Source) > 0 {
+		dd, err := renderDoc(ctx, u)
+		if err != nil {
+			log.Errorf(ctx, "render doc failed: %v", err)
+			// Fall through to use stored doc.
+		} else {
+			return dd, nil
+		}
+	}
 	return &DocumentationDetails{
 		GOOS:          u.Documentation.GOOS,
 		GOARCH:        u.Documentation.GOARCH,
 		Documentation: u.Documentation.HTML,
+	}, nil
+}
+
+func renderDoc(ctx context.Context, u *internal.Unit) (*DocumentationDetails, error) {
+	start := time.Now()
+	docPkg, err := godoc.DecodePackage(u.Documentation.Source)
+	if err != nil {
+		return nil, err
+	}
+	modInfo := &godoc.ModuleInfo{
+		ModulePath:      u.ModulePath,
+		ResolvedVersion: u.Version,
+		ModulePackages:  nil, // will be provided by docPkg
+	}
+	var innerPath string
+	if u.ModulePath == stdlib.ModulePath {
+		innerPath = u.Path
+	} else if u.Path != u.ModulePath {
+		innerPath = u.Path[len(u.ModulePath)+1:]
+	}
+	_, _, html, err := docPkg.Render(ctx, innerPath, u.SourceInfo, modInfo, "", "")
+	if err != nil {
+		return nil, err
+	}
+	log.Infof(ctx, "rendered doc for %s@%s in %s", u.Path, u.Version, time.Since(start))
+	return &DocumentationDetails{
+		GOOS:          docPkg.GOOS,
+		GOARCH:        docPkg.GOARCH,
+		Documentation: html,
 	}, nil
 }
 
