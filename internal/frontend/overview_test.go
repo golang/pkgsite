@@ -47,7 +47,10 @@ func TestFetchOverviewDetails(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	readme := &internal.Readme{Filepath: tc.module.LegacyReadmeFilePath, Contents: tc.module.LegacyReadmeContents}
+	readme := &internal.Readme{
+		Filepath: sample.ReadmeFilePath,
+		Contents: sample.ReadmeContents,
+	}
 	got, err := constructOverviewDetails(ctx, &tc.module.ModuleInfo, readme, true, true)
 	if err != nil {
 		t.Fatal(err)

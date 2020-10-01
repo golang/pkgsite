@@ -12,8 +12,6 @@ import (
 // LegacyModuleInfo holds metadata associated with a module.
 type LegacyModuleInfo struct {
 	ModuleInfo
-	LegacyReadmeFilePath string
-	LegacyReadmeContents string
 }
 
 // LegacyDirectory represents a directory in a module version, and all of the

@@ -11,15 +11,7 @@ import (
 	"github.com/google/safehtml"
 )
 
-func (m *LegacyModuleInfo) RemoveNonRedistributableData() {
-	if !m.IsRedistributable {
-		m.LegacyReadmeFilePath = ""
-		m.LegacyReadmeContents = ""
-	}
-}
-
 func (m *Module) RemoveNonRedistributableData() {
-	m.LegacyModuleInfo.RemoveNonRedistributableData()
 	for _, l := range m.Licenses {
 		l.RemoveNonRedistributableData()
 	}
@@ -45,7 +37,6 @@ func (p *PackageMeta) RemoveNonRedistributableData() {
 }
 
 func (d *LegacyDirectory) RemoveNonRedistributableData() {
-	d.LegacyModuleInfo.RemoveNonRedistributableData()
 	for _, p := range d.Packages {
 		p.RemoveNonRedistributableData()
 	}
@@ -60,5 +51,4 @@ func (p *LegacyPackage) RemoveNonRedistributableData() {
 
 func (p *LegacyVersionedPackage) RemoveNonRedistributableData() {
 	p.LegacyPackage.RemoveNonRedistributableData()
-	p.LegacyModuleInfo.RemoveNonRedistributableData()
 }

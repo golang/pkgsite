@@ -41,9 +41,7 @@ func LegacyPackage(modulePath, suffix string) *internal.LegacyPackage {
 func LegacyModuleInfo(modulePath, versionString string) *internal.LegacyModuleInfo {
 	mi := ModuleInfo(modulePath, versionString)
 	return &internal.LegacyModuleInfo{
-		ModuleInfo:           *mi,
-		LegacyReadmeFilePath: ReadmeFilePath,
-		LegacyReadmeContents: ReadmeContents,
+		ModuleInfo: *mi,
 	}
 }
 
@@ -108,11 +106,9 @@ func legacyUnitForModuleRoot(m *internal.LegacyModuleInfo) *internal.Unit {
 		UnitMeta:        *UnitMeta(m.ModulePath, m.ModulePath, m.Version, "", m.IsRedistributable),
 		LicenseContents: Licenses,
 	}
-	if m.LegacyReadmeFilePath != "" {
-		u.Readme = &internal.Readme{
-			Filepath: m.LegacyReadmeFilePath,
-			Contents: m.LegacyReadmeContents,
-		}
+	u.Readme = &internal.Readme{
+		Filepath: ReadmeFilePath,
+		Contents: ReadmeContents,
 	}
 	return u
 }
