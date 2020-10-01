@@ -14,7 +14,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/google/licensecheck"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/licenses"
@@ -63,31 +62,8 @@ func setup(t *testing.T) (context.Context, *DataSource, func()) {
 }
 
 var (
-	wantLicenseMD  = sample.LicenseMetadata[0]
-	wantLicense    = &licenses.License{Metadata: wantLicenseMD}
-	wantLicenseMIT = &licenses.License{
-		Metadata: &licenses.Metadata{
-			Types:    []string{"MIT"},
-			FilePath: "LICENSE",
-			Coverage: licensecheck.Coverage{
-				Percent: 100,
-				Match:   []licensecheck.Match{{Name: "MIT", Type: licensecheck.MIT, Percent: 100, End: 1049}},
-			},
-		},
-		Contents: []byte(testhelper.MITLicense),
-	}
-	wantLicenseBSD = &licenses.License{
-		Metadata: &licenses.Metadata{
-			Types:    []string{"BSD-0-Clause"},
-			FilePath: "qux/LICENSE",
-			Coverage: licensecheck.Coverage{
-				Percent: 100,
-				Match:   []licensecheck.Match{{Name: "BSD-0-Clause", Type: licensecheck.BSD, Percent: 100, End: 633}},
-			},
-		},
-		Contents: []byte(testhelper.BSD0License),
-	}
-	wantPackage = internal.LegacyPackage{
+	wantLicenseMD = sample.LicenseMetadata[0]
+	wantPackage   = internal.LegacyPackage{
 		Path:              "foo.com/bar/baz",
 		Name:              "baz",
 		Imports:           []string{"net/http"},
@@ -104,12 +80,6 @@ var (
 		CommitTime:        time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
 		IsRedistributable: true,
 		HasGoMod:          true,
-	}
-	wantVersionedPackage = &internal.LegacyVersionedPackage{
-		LegacyModuleInfo: internal.LegacyModuleInfo{
-			ModuleInfo: wantModuleInfo,
-		},
-		LegacyPackage: wantPackage,
 	}
 	cmpOpts = append([]cmp.Option{
 		cmpopts.IgnoreFields(internal.LegacyPackage{}, "DocumentationHTML"),

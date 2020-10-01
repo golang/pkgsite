@@ -22,8 +22,6 @@ import (
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
-	"golang.org/x/pkgsite/internal/stdlib"
-	"golang.org/x/pkgsite/internal/version"
 )
 
 var _ internal.DataSource = (*DataSource)(nil)
@@ -156,121 +154,6 @@ func (ds *DataSource) findModule(ctx context.Context, pkgPath string, version st
 		return modulePath, info, nil
 	}
 	return "", nil, fmt.Errorf("unable to find module: %w", derrors.NotFound)
-}
-
-// listPackageVersions finds the longest module corresponding to pkgPath, and
-// calls the proxy /list endpoint to list its versions. If pseudo is true, it
-// filters to pseudo versions.  If pseudo is false, it filters to tagged
-// versions.
-func (ds *DataSource) listPackageVersions(ctx context.Context, pkgPath string, pseudo bool) (_ []*internal.ModuleInfo, err error) {
-	defer derrors.Wrap(&err, "listPackageVersions(%q, %t)", pkgPath, pseudo)
-	ds.mu.RLock()
-	mods := ds.packagePathToModules[pkgPath]
-	ds.mu.RUnlock()
-	var modulePath string
-	if len(mods) > 0 {
-		// Since mods is kept sorted, the first element is the longest module.
-		modulePath = mods[0]
-	} else {
-		modulePath, _, err = ds.findModule(ctx, pkgPath, internal.LatestVersion)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return ds.listModuleVersions(ctx, modulePath, pseudo)
-}
-
-// listModuleVersions finds the longest module corresponding to pkgPath, and
-// calls the proxy /list endpoint to list its versions. If pseudo is true, it
-// filters to pseudo versions.  If pseudo is false, it filters to tagged
-// versions.
-func (ds *DataSource) listModuleVersions(ctx context.Context, modulePath string, pseudo bool) (_ []*internal.ModuleInfo, err error) {
-	defer derrors.Wrap(&err, "listModuleVersions(%q, %t)", modulePath, pseudo)
-	var versions []string
-	if modulePath == stdlib.ModulePath {
-		versions, err = stdlib.Versions()
-	} else {
-		versions, err = ds.proxyClient.ListVersions(ctx, modulePath)
-	}
-	if err != nil {
-		return nil, err
-	}
-	var vis []*internal.ModuleInfo
-	ds.mu.RLock()
-	defer ds.mu.RUnlock()
-	for _, vers := range versions {
-		// In practice, the /list endpoint should only return either pseudo
-		// versions or tagged versions, but we filter here for maximum
-		// compatibility.
-		if version.IsPseudo(vers) != pseudo {
-			continue
-		}
-		if v, ok := ds.versionCache[versionKey{modulePath, vers}]; ok {
-			vis = append(vis, &v.module.ModuleInfo)
-		} else {
-			// In this case we can't produce ModuleInfo without fully processing
-			// the module zip, so we instead append a stub. We could further query
-			// for this version's /info endpoint to get commit time, but that is
-			// deferred as a potential future enhancement.
-			vis = append(vis, &internal.ModuleInfo{
-				ModulePath: modulePath,
-				Version:    vers,
-			})
-		}
-	}
-	sort.Slice(vis, func(i, j int) bool {
-		return semver.Compare(vis[i].Version, vis[j].Version) > 0
-	})
-	return vis, nil
-}
-
-// getPackageVersion finds a module at version that contains a package with
-// import path pkgPath. To do this, it first checks the cache for any module
-// satisfying this requirement, querying the proxy if none is found.
-func (ds *DataSource) getPackageVersion(ctx context.Context, pkgPath, version string) (_ *internal.Module, err error) {
-	defer derrors.Wrap(&err, "getPackageVersion(%q, %q)", pkgPath, version)
-	// First, try to retrieve this version from the cache, using our reverse
-	// indexes.
-	if modulePath, ok := ds.findModulePathForPackage(pkgPath, version); ok {
-		// This should hit the cache.
-		return ds.getModule(ctx, modulePath, version)
-	}
-	modulePath, info, err := ds.findModule(ctx, pkgPath, version)
-	if err != nil {
-		return nil, err
-	}
-	return ds.getModule(ctx, modulePath, info.Version)
-}
-
-// findModulePathForPackage looks for an existing instance of a module at
-// version that contains a package with path pkgPath. The return bool reports
-// whether a valid module path was found.
-func (ds *DataSource) findModulePathForPackage(pkgPath, version string) (string, bool) {
-	ds.mu.RLock()
-	defer ds.mu.RUnlock()
-	for _, mp := range ds.packagePathToModules[pkgPath] {
-		for _, vers := range ds.modulePathToVersions[mp] {
-			if vers == version {
-				return mp, true
-			}
-		}
-	}
-	return "", false
-}
-
-// packageFromVersion extracts the LegacyVersionedPackage for pkgPath from the
-// Version payload.
-func packageFromVersion(pkgPath string, m *internal.Module) (_ *internal.LegacyVersionedPackage, err error) {
-	defer derrors.Wrap(&err, "packageFromVersion(%q, ...)", pkgPath)
-	for _, p := range m.LegacyPackages {
-		if p.Path == pkgPath {
-			return &internal.LegacyVersionedPackage{
-				LegacyPackage:    *p,
-				LegacyModuleInfo: m.LegacyModuleInfo,
-			}, nil
-		}
-	}
-	return nil, fmt.Errorf("package missing from module %s: %w", m.ModulePath, derrors.NotFound)
 }
 
 // getUnit returns information about a unit.
