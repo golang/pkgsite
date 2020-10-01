@@ -51,6 +51,7 @@ func init() {
 		&ast.IncDecStmt{},
 		&ast.IndexExpr{},
 		&ast.InterfaceType{},
+		&ast.LabeledStmt{},
 		&ast.MapType{},
 		&ast.ParenExpr{},
 		&ast.RangeStmt{},
@@ -92,10 +93,10 @@ func (p *Package) Encode() (_ []byte, err error) {
 	enc := gob.NewEncoder(&buf)
 	// Encode the fset using the Write method it provides.
 	if err := p.Fset.Write(enc.Encode); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("p.Fset.Write: %v", err)
 	}
 	if err := enc.Encode(p.gobPackage); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("enc.Encode: %v", err)
 	}
 	for _, f := range p.Files {
 		fixupObjects(f.AST)
