@@ -61,9 +61,9 @@ const tmplBody = `
 	</section>
 	{{- end -}}
 
+	<h3 tabindex="-1" id="pkg-constants" class="Documentation-constantsHeader">Constants <a href="#pkg-constants">¶</a></h3>{{"\n"}}
 	{{- if .Consts -}}
 	<section class="Documentation-constants">
-		<h3 tabindex="-1" id="pkg-constants" class="Documentation-constantsHeader">Constants <a href="#pkg-constants">¶</a></h3>{{"\n"}}
 		{{- range .Consts -}}
 			{{- $out := render_decl .Doc .Decl -}}
 			{{- $out.Decl -}}
@@ -73,9 +73,9 @@ const tmplBody = `
 	</section>
 	{{- end -}}
 
+	<h3 tabindex="-1" id="pkg-variables" class="Documentation-variablesHeader">Variables <a href="#pkg-variables">¶</a></h3>{{"\n"}}
 	{{- if .Vars -}}
 	<section class="Documentation-variables">
-		<h3 tabindex="-1" id="pkg-variables" class="Documentation-variablesHeader">Variables <a href="#pkg-variables">¶</a></h3>{{"\n"}}
 		{{- range .Vars -}}
 			{{- $out := render_decl .Doc .Decl -}}
 			{{- $out.Decl -}}
@@ -85,6 +85,7 @@ const tmplBody = `
 	</section>
 	{{- end -}}
 
+	<h3 tabindex="-1" id="pkg-functions" class="Documentation-functionsHeader">Functions <a href="#pkg-functions">¶</a></h3>{{"\n"}}
 	{{- if .Funcs -}}
 	<section class="Documentation-functions">
 		{{- range .Funcs -}}
@@ -101,6 +102,7 @@ const tmplBody = `
 	</section>
 	{{- end -}}
 
+	<h3 tabindex="-1" id="pkg-types" class="Documentation-typesHeader">Types <a href="#pkg-types">¶</a></h3>{{"\n"}}
 	{{- if .Types -}}
 	<section class="Documentation-types">
 		{{- range .Types -}}
@@ -158,15 +160,6 @@ const tmplBody = `
 			{{- end -}}
 		</div>
 		{{- end -}}
-	</section>
-
-	<section class="Documentation-files">
-		<h3 tabindex="-1" id="pkg-files" class="Documentation-filesHeader">Package Files <a href="#pkg-files">¶</a></h3>
-		<ul class="Documentation-filesList">
-			{{- range .Filenames -}}
-				<li>{{file_link .}}</li>
-			{{- end -}}
-		</ul>
 	</section>
 	{{- end -}}
 {{- end -}}

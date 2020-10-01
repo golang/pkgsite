@@ -17,24 +17,12 @@ const tmplSidenav = `
 				<li class="DocNav-index" role="none">
 					<a href="#pkg-index" role="treeitem" aria-level="1" tabindex="0">Index</a>
 				</li>
-			{{end}}
-			{{if .Examples.List}}
-				<li class="DocNav-examples" role="none">
-					<a href="#pkg-examples" role="treeitem" aria-level="1" tabindex="-1">Examples</a>
-				</li>
-			{{end}}
-			{{if .Consts}}
 				<li class="DocNav-constants" role="none">
 					<a href="#pkg-constants" role="treeitem" aria-level="1" tabindex="-1">Constants</a>
 				</li>
-			{{end}}
-			{{if .Vars}}
 				<li class="DocNav-variables" role="none">
 					<a href="#pkg-variables" role="treeitem" aria-level="1" tabindex="-1">Variables</a>
 				</li>
-			{{end}}
-
-			{{if .Funcs}}
 				<li class="DocNav-functions" role="none">
 					<span class="DocNav-groupLabel" role="treeitem" aria-expanded="true" aria-level="1" aria-owns="nav-group-functions" tabindex="-1">Functions</span>
 					<ul role="group" id="nav-group-functions">
@@ -45,9 +33,6 @@ const tmplSidenav = `
 						{{end}}
 					</ul>
 				</li>
-			{{end}}
-
-			{{if .Types}}
 				<li class="DocNav-types" role="none">
 					<span class="DocNav-groupLabel" role="treeitem" aria-expanded="true" aria-level="1" aria-owns="nav-group-types" tabindex="-1">Types</span>
 					<ul role="group" id="nav-group-types">
@@ -77,9 +62,6 @@ const tmplSidenav = `
 						{{end}} {{/* range .Types */}}
 					</ul>
 				</li>
-			{{end}}
-
-			{{if .Notes}}
 				<li class="DocNav-notes" role="none">
 					<span class="DocNav-groupLabel" role="treeitem" aria-expanded="true" aria-level="1" aria-owns="nav-group-notes" tabindex="-1">Notes</span>
 					<ul role="group" id="nav-group-notes">
@@ -89,12 +71,6 @@ const tmplSidenav = `
 							</li>
 						{{end}}
 					</ul>
-				</li>
-			{{end}}
-
-			{{if .Filenames}}
-				<li class="DocNav-files" role="none">
-					<a href="#pkg-files" role="treeitem" aria-level="1" tabindex="-1">Package Files</a>
 				</li>
 			{{end}}
 		</ul>
