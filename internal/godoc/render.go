@@ -59,7 +59,7 @@ func (p *Package) Render(ctx context.Context, innerPath string, sourceInfo *sour
 	}
 
 	// Compute package documentation.
-	m := doc.PreserveAST // so we can render doc, then save the AST afterwards.
+	var m doc.Mode
 	if noFiltering {
 		m |= doc.AllDecls
 	}

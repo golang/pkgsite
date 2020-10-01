@@ -7,6 +7,7 @@ package godoc
 import (
 	"context"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -32,6 +33,9 @@ func TestRender(t *testing.T) {
 	wantSyn, wantImports, wantDoc, err := p.Render(ctx, "p", si, mi, "GOOS", "GOARCH")
 	if err != nil {
 		t.Fatal(err)
+	}
+	if strings.Contains(wantDoc.String(), "return") {
+		t.Fatal("doc rendered with function bodies")
 	}
 
 	check := func(p *Package) {
