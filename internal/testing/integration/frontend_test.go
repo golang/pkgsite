@@ -13,6 +13,7 @@ import (
 
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/frontend"
 	"golang.org/x/pkgsite/internal/middleware"
@@ -182,7 +183,20 @@ func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue) *httptest.S
 	mux := http.NewServeMux()
 	s.Install(mux.Handle, nil, nil)
 
-	experimenter, err := middleware.NewExperimenter(ctx, 1*time.Minute, testDB.GetExperiments, nil)
+	// Get experiments from the context. Fully roll them out.
+	expNames := experiment.FromContext(ctx).Active()
+	var exps []*internal.Experiment
+	for _, n := range expNames {
+		exps = append(exps, &internal.Experiment{
+			Name:    n,
+			Rollout: 100,
+		})
+	}
+	getter := func(context.Context) ([]*internal.Experiment, error) {
+		return exps, nil
+	}
+
+	experimenter, err := middleware.NewExperimenter(ctx, 1*time.Minute, getter, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
