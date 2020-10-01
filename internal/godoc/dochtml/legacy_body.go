@@ -9,7 +9,7 @@ const (
 	IdentifierBodyEnd   = `</div>`
 )
 
-const tmplBody = `
+const legacyTmplBody = `
 
 ` + IdentifierBodyStart + ` {{/* Documentation content container */}}
 

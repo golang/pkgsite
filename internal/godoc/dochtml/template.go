@@ -16,10 +16,10 @@ import (
 // TODO(golang.org/issue/5060): finalize URL scheme and design for notes,
 // then it becomes more viable to factor out inline CSS style.
 func htmlPackage() *template.Template {
-	return template.Must(template.New("package").Funcs(tmpl).Parse(tmplHTML))
+	return template.Must(template.New("package").Funcs(tmpl).Parse(legacyTmplHTML))
 }
 
-const tmplHTML = `{{- "" -}}` + tmplSidenav + tmplBody + tmplExample
+const legacyTmplHTML = `{{- "" -}}` + legacyTmplSidenav + legacyTmplBody + tmplExample
 
 var tmpl = map[string]interface{}{
 	"ternary": func(q, a, b interface{}) interface{} {

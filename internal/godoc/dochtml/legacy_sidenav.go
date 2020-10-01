@@ -10,7 +10,7 @@ const (
 	IdentifierSidenavEnd         = `</nav>`
 )
 
-const tmplSidenav = `
+const legacyTmplSidenav = `
 {{if or .Doc .Consts .Vars .Funcs .Types .Examples.List}}
 	` + IdentifierSidenavStart + `
 		<ul role="tree" aria-label="Outline">

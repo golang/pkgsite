@@ -11,7 +11,7 @@ import (
 )
 
 func TestTemplate(t *testing.T) {
-	if diff := cmp.Diff(fullTemplate, tmplHTML); diff != "" {
+	if diff := cmp.Diff(fullTemplate, legacyTmplHTML); diff != "" {
 		t.Errorf("mismatch (-want +got):\n%s", diff)
 	}
 }
