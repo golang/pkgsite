@@ -63,4 +63,20 @@ func TestRender(t *testing.T) {
 		t.Fatal(err)
 	}
 	check(p)
+
+	// Verify that encoding then decoding generates the same doc.
+	// We can't re-use p to encode because it's been rendered.
+	p, err = packageForDir(filepath.Join("testdata", "p"), false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bytes, err := p.Encode()
+	if err != nil {
+		t.Fatal(err)
+	}
+	p2, err := DecodePackage(bytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	check(p2)
 }

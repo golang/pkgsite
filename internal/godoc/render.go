@@ -41,6 +41,8 @@ func (p *Package) Render(ctx context.Context, innerPath string, sourceInfo *sour
 	// This is mostly copied from internal/fetch/fetch.go.
 	defer derrors.Wrap(&err, "godoc.Package.Render(%q, %q, %q, %q, %q)", modInfo.ModulePath, modInfo.ResolvedVersion, innerPath, goos, goarch)
 
+	p.renderCalled = true
+
 	importPath := path.Join(modInfo.ModulePath, innerPath)
 	if modInfo.ModulePath == stdlib.ModulePath {
 		importPath = innerPath

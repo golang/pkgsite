@@ -21,6 +21,7 @@ type ModuleInfo = dochtml.ModuleInfo
 type Package struct {
 	Fset *token.FileSet
 	gobPackage
+	renderCalled bool
 }
 
 type gobPackage struct { // fields that can be directly gob-encoded
