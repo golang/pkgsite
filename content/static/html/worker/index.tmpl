@@ -109,24 +109,6 @@
   </div>
 
   <div>
-    <h3>Load Shedding</h3>
-    <table>
-      <tr><td>Fetches In Flight</td><td>{{.LoadShedStats.RequestsInFlight}}</td></tr>
-      <tr>
-        <td>Zip Bytes In Flight</td>
-        <td>{{.LoadShedStats.SizeInFlight | bytesToMi}} /
-          {{.LoadShedStats.MaxSizeInFlight | bytesToMi}} Mi
-          ({{pct .LoadShedStats.SizeInFlight .LoadShedStats.MaxSizeInFlight}}%) </td>
-      </tr>
-      <tr>
-        <td>Shedded Requests</td>
-        <td>{{.LoadShedStats.RequestsShed}} / {{.LoadShedStats.RequestsTotal}}
-          ({{pct .LoadShedStats.RequestsShed .LoadShedStats.RequestsTotal}}%)</td>
-      </tr>
-    </table>
-  </div>
-
-  <div>
     <h3>Memory (all values in Mi)</h3>
     <table>
       <tr>
@@ -151,7 +133,25 @@
   </div>
 
   <div>
-    <h3>Fetches</h3>
+    <h3>Load Shedding</h3>
+    <table>
+      <tr><td>Fetches In Flight</td><td>{{.LoadShedStats.RequestsInFlight}}</td></tr>
+      <tr>
+        <td>Zip Bytes In Flight</td>
+        <td>{{.LoadShedStats.SizeInFlight | bytesToMi}} /
+          {{.LoadShedStats.MaxSizeInFlight | bytesToMi}} Mi
+          ({{pct .LoadShedStats.SizeInFlight .LoadShedStats.MaxSizeInFlight}}%) </td>
+      </tr>
+      <tr>
+        <td>Shedded Requests</td>
+        <td>{{.LoadShedStats.RequestsShed}} / {{.LoadShedStats.RequestsTotal}}
+          ({{pct .LoadShedStats.RequestsShed .LoadShedStats.RequestsTotal}}%)</td>
+      </tr>
+    </table>
+  </div>
+
+  <div>
+    <h3>Fetches In Flight</h3>
     <table>
       <thead>
         <tr>
@@ -159,26 +159,18 @@
           <th>Version</th>
           <th>Zip Size (Mi)</th>
           <th>Age</th>
-          <th>Status</th>
-          <th>Error</th>
         </tr>
       </thead>
       <tbody>
         {{range .Fetches}}
-          <tr>
-            <td>{{.ModulePath}}</td>
-            <td>{{.Version}}</td>
-            <td>{{.ZipSize | bytesToMi}}</td>
-            <td>
-              {{if eq .Status 0}}
-                {{timeSince .Start}}
-              {{else}}
-                {{timeSub .Finish .Start}}
-              {{end}}
-            </td>
-            <td>{{if ne .Status 0}}{{.Status}}{{end}}</td>
-            <td>{{if ge .Status 500}}{{.Error}}{{end}}</td>
-          </tr>
+          {{if eq .Status 0}}
+            <tr>
+              <td>{{.ModulePath}}</td>
+              <td>{{.Version}}</td>
+              <td>{{.ZipSize | bytesToMi}}</td>
+              <td>{{timeSince .Start}}</td>
+            </tr>
+          {{end}}
         {{end}}
       </tbody>
     </table>
