@@ -72,6 +72,9 @@ func init() {
 }
 
 // Encode encodes a Package into a byte slice.
+// During its operation, Encode modifies the AST,
+// but it restores it to a state suitable for
+// rendering before it returns.
 func (p *Package) Encode() (_ []byte, err error) {
 	defer derrors.Wrap(&err, "godoc.Package.Encode()")
 
@@ -88,6 +91,9 @@ func (p *Package) Encode() (_ []byte, err error) {
 	}
 	if err := enc.Encode(p.gobPackage); err != nil {
 		return nil, err
+	}
+	for _, f := range p.Files {
+		fixupObjects(f.AST)
 	}
 	return buf.Bytes(), nil
 }

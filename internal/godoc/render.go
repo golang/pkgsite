@@ -36,8 +36,9 @@ const (
 var MaxDocumentationHTML = 20 * megabyte
 
 // Render renders the documentation for the package.
-// This is mostly copied from internal/fetch/fetch.go.
+// Rendering destroys p's AST; do not call any methods of p after it returns.
 func (p *Package) Render(ctx context.Context, innerPath string, sourceInfo *source.Info, modInfo *ModuleInfo, goos, goarch string) (synopsis string, imports []string, html safehtml.HTML, err error) {
+	// This is mostly copied from internal/fetch/fetch.go.
 	defer derrors.Wrap(&err, "godoc.Package.Render(%q, %q, %q, %q, %q)", modInfo.ModulePath, modInfo.ResolvedVersion, innerPath, goos, goarch)
 
 	importPath := path.Join(modInfo.ModulePath, innerPath)
