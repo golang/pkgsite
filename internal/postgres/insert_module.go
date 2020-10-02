@@ -615,7 +615,7 @@ func validateModule(m *internal.Module) (err error) {
 			errReasons = append(errReasons, "invalid version")
 		}
 	}
-	if len(m.LegacyPackages) == 0 {
+	if len(m.Packages()) == 0 {
 		errReasons = append(errReasons, "module does not have any packages")
 	}
 	if len(errReasons) != 0 {
