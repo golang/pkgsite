@@ -8,8 +8,9 @@
   display: block;
 }
 .UnitDoc,
-.UnitFiles {
-  margin: 2rem 0;
+.UnitFiles,
+.UnitDoc {
+  margin-bottom: 2rem;
 }
 .UnitDoc::before,
 .UnitFiles::before {
@@ -25,7 +26,7 @@
   border-bottom: 0.0625rem solid var(--gray-8);
   display: flex;
   font-size: 1.375rem;
-  margin: 1rem 0 0 0;
+  margin: 0.5rem 0 0 0;
   padding-bottom: 1rem;
 }
 .UnitDoc-title img {

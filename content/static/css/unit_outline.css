@@ -47,7 +47,7 @@ a.UnitOutline-accordian {
 }
 .UnitOutline-jumpTo {
   display: flex;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.5625rem;
 }
 .UnitOutline-jumpTo button {
   background-color: white;
