@@ -14,17 +14,26 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
 const (
-	cssFile              = "content/static/css/stylesheet.css"
+	cssFile              = "content/static/css/readme.css"
 	githubStylesheet     = "https://raw.githubusercontent.com/sindresorhus/github-markdown-css/gh-pages/github-markdown.css"
 	githubREADMEClass    = ".markdown-body"
 	discoveryREADMEClass = ".Overview-readmeContent"
+	copyright            = `/*
+* Copyright 2019-2020 The Go Authors. All rights reserved.
+* Use of this source code is governed by a BSD-style
+* license that can be found in the LICENSE file.
+*/
+`
 )
 
 var write = flag.Bool("write", false, "append modifications to content/static/css/stylesheet.css")
@@ -53,6 +62,9 @@ func main() {
 		if atPropertyStart && shouldIncludeProperty(text) {
 			includeProperty = true
 		}
+		if remString := replaceValueWithRems(text); remString != "" {
+			text = remString
+		}
 		if text == "}" {
 			if includeProperty {
 				properties = append(properties, curr+text+"\n")
@@ -70,6 +82,10 @@ func main() {
 
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
+	}
+
+	if err := ioutil.WriteFile(cssFile, []byte(copyright), 0644); err != nil {
+		log.Fatalf("ioutil.WriteFile(f, '', 0644): %v", err)
 	}
 
 	file, err := os.OpenFile(cssFile, os.O_WRONLY|os.O_APPEND, 0644)
@@ -92,7 +108,7 @@ func main() {
 /* ---------- */
 /*
 /* The CSS classes below are generated using devtools/cmd/css/main.go
-/* To update, delete the contents below and and run go run devtools/cmd/css/main.go
+/* If the generated CSS already exists, the file is overwritten
 /*
 /* ---------- */`
 	contentsToWrite += "\n\n"
@@ -104,7 +120,7 @@ func main() {
 	contentsToWrite += `
 /* ---------- */
 /*
-/* End output from content/static/css/main.go.
+/* End output from devtools/cmd/css/main.go
 /*
 /* ---------- */`
 
@@ -131,4 +147,39 @@ func shouldIncludeProperty(property string) bool {
 		}
 	}
 	return true
+}
+
+// pxToRem returns the number value of a px string to a rem string.
+func pxToRem(value string) string {
+	valueNum, err := strconv.ParseFloat(value, 32)
+	if err != nil {
+		return ""
+	}
+	valueNum = valueNum / 16
+	return fmt.Sprintf("%frem", valueNum)
+}
+
+// replaceValueWithRems replaces the px values in a line of css with rems.
+// e.g: padding: 25px 10px => padding:
+func replaceValueWithRems(line string) string {
+	var cssLine string
+	valueRegex := regexp.MustCompile(`([-+]?[0-9]*\.?[0-9]+)px`)
+	matches := valueRegex.FindAllStringSubmatchIndex(line, -1)
+	for idx, m := range matches {
+		// e.g: "padding: 6px 13px;" => "padding: 0.375rem 0.8125rem;"
+		//       padding: [valueStartIdx][numStartIdx]25[numEndIdx]px[valueEndIdx] 10em;
+		// The value here is the full string "25px" and num is just "25".
+		valueStartIdx, valueEndIdx, numStartIdx, numEndIdx := m[0], m[1], m[2], m[3]
+		if idx == 0 {
+			cssLine += line[0:valueStartIdx]
+		}
+		cssLine += pxToRem(line[numStartIdx:numEndIdx])
+		if idx == len(matches)-1 {
+			cssLine += line[valueEndIdx:]
+		} else {
+			// If there are more matches for "px", add up until the start of the next match.
+			cssLine += line[valueEndIdx:matches[idx+1][0]]
+		}
+	}
+	return cssLine
 }
