@@ -295,6 +295,8 @@ document.addEventListener('keypress', function (e) {
 const jumpOutlineInput = document.querySelector('.js-jumpToInput');
 if (jumpOutlineInput) {
   jumpOutlineInput.addEventListener('click', () => {
+    jumpFilter.value = '';
     jumpDialog.showModal();
+    updateJumpList('');
   });
 }
