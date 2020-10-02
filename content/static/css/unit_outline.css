@@ -39,6 +39,9 @@ a.UnitOutline-accordian {
   height: 2.5rem;
   padding: 1rem;
 }
+a.UnitOutline-accordian--active {
+  background-color: var(--gray-9);
+}
 .UnitOutline-panel {
   padding: 0 18px;
   background-color: white;
