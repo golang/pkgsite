@@ -239,7 +239,7 @@ var moduleBadPackages = &testModule{
 					},
 					Documentation: &internal.Documentation{
 						Synopsis: "Package good is inside a module that has bad packages.",
-						HTML:     html(`const Good = <a href="/pkg/builtin#true">true</a>`),
+						HTML:     html(`const Good = <a href="/builtin#true">true</a>`),
 					},
 				},
 			},

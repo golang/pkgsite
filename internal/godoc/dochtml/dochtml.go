@@ -18,7 +18,6 @@ import (
 	"go/ast"
 	"go/printer"
 	"go/token"
-	pathpkg "path"
 	"sort"
 	"strings"
 
@@ -106,7 +105,7 @@ func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Render
 			if opt.ModInfo != nil {
 				versionedPath = versionedPkgPath(path, opt.ModInfo)
 			}
-			return pathpkg.Join("/pkg", versionedPath)
+			return "/" + versionedPath
 		},
 		DisableHotlinking: true,
 	})

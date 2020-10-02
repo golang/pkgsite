@@ -201,6 +201,9 @@ var packageLinkRegexp = regexp.MustCompile(`(<a href="/)pkg/([^?#"]+)((?:#[^"]*)
 // TestRemovePkgPrefix for examples. It preserves the safety of its argument.
 // That is, if docHTML is safe from XSS attacks, so is
 // removePkgPrefix(docHTML).
+//
+// Although we don't add "/pkg" to links after https://golang.org/cl/259101,
+// do not remove this function until all databases have been reprocessed.
 func removePkgPrefix(docHTML string) string {
 	return packageLinkRegexp.ReplaceAllString(docHTML, `$1$2$3`)
 }
