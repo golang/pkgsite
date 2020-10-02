@@ -27,6 +27,9 @@
         {{if (or .DocBody.String .Unit.IsPackage)}}
           {{block "unit_doc" .}}{{end}}
         {{end}}
+        {{if .SourceFiles}}
+          {{block "unit_files" .}}{{end}}
+        {{end}}
         {{if (or .Packages .NestedModules)}}
           {{block "unit_directories" .}}{{end}}
         {{end}}

@@ -22,6 +22,9 @@
         </div>
       </div>
     {{end}}
+    {{if .SourceFiles}}
+      <a class="UnitOutline-accordian" href="#files-top">Source Files</a>
+    {{end}}
     {{if (or .Packages .NestedModules)}}
       <a class="UnitOutline-accordian" href="#directories-top">Directories</a>
     {{end}}

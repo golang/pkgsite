@@ -7,10 +7,12 @@
 .Documentation {
   display: block;
 }
-.UnitDoc {
+.UnitDoc,
+.UnitFiles {
   margin: 2rem 0;
 }
-.UnitDoc::before {
+.UnitDoc::before,
+.UnitFiles::before {
   content: '';
   display: block;
   position: relative;
@@ -18,7 +20,8 @@
   height: 3.5rem;
   margin-top: -3.5rem;
 }
-.UnitDoc-title {
+.UnitDoc-title,
+.UnitFiles-title {
   border-bottom: 0.0625rem solid var(--gray-8);
   display: flex;
   font-size: 1.375rem;

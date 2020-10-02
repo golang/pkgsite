@@ -1,0 +1,20 @@
+<!--
+  Copyright 2020 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "unit_files"}}
+  <div class="UnitFiles" id="files-top">
+    <h2 class="UnitFiles-title">
+      <img height="25px" width="20px" src="/static/img/pkg-icon-doc_20x12.svg">Source Files
+    </h2>
+    <div>
+      <ul>
+        {{- range .SourceFiles -}}
+          <li><a href="{{.URL}}">{{.Name}}</a></li>
+        {{- end -}}
+      </ul>
+    </div>
+  </div>
+{{end}}

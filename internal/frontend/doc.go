@@ -7,11 +7,13 @@ package frontend
 import (
 	"context"
 	"fmt"
+	"path"
 	"strings"
 	"time"
 
 	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/log"
@@ -47,7 +49,8 @@ func fetchDocumentationDetails(ctx context.Context, ds internal.DataSource, um *
 	}, nil
 }
 
-func renderDoc(ctx context.Context, u *internal.Unit) (*DocumentationDetails, error) {
+func renderDoc(ctx context.Context, u *internal.Unit) (_ *DocumentationDetails, err error) {
+	defer derrors.Wrap(&err, "renderDoc")
 	start := time.Now()
 	docPkg, err := godoc.DecodePackage(u.Documentation.Source)
 	if err != nil {
@@ -74,6 +77,25 @@ func renderDoc(ctx context.Context, u *internal.Unit) (*DocumentationDetails, er
 		GOARCH:        docPkg.GOARCH,
 		Documentation: html,
 	}, nil
+}
+
+// sourceFiles returns the .go files for a package.
+func sourceFiles(u *internal.Unit) ([]*File, error) {
+	docPkg, err := godoc.DecodePackage(u.Documentation.Source)
+	if err != nil {
+		return nil, err
+	}
+	var files []*File
+	for _, f := range docPkg.Files {
+		if strings.HasSuffix(f.Name, "_test.go") {
+			continue
+		}
+		files = append(files, &File{
+			Name: f.Name,
+			URL:  u.SourceInfo.FileURL(path.Join(internal.Suffix(u.Path, u.ModulePath), f.Name)),
+		})
+	}
+	return files, nil
 }
 
 // fileSource returns the original filepath in the module zip where the given

@@ -82,6 +82,14 @@ type UnitPage struct {
 	DocBody       safehtml.HTML
 	DocOutline    safehtml.HTML
 	MobileOutline safehtml.HTML
+
+	// SourceFiles contains .go files for the package.
+	SourceFiles []*File
+}
+
+type File struct {
+	Name string
+	URL  string
 }
 
 var (
@@ -149,10 +157,15 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		return err
 	}
 
-	var docBody, docOutline, mobileOutline safehtml.HTML
+	var (
+		docBody, docOutline, mobileOutline safehtml.HTML
+		files                              []*File
+	)
 	if unit.Documentation != nil {
-
 		docHTML := getHTML(ctx, unit)
+		// TODO: Deprecate godoc.Parse. The sidenav and body can
+		// either be rendered using separate functions, or all this content can
+		// be passed to the template via the UnitPage struct.
 		b, err := godoc.Parse(docHTML, godoc.BodySection)
 		if err != nil {
 			return err
@@ -168,6 +181,11 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 			return err
 		}
 		mobileOutline = m
+
+		files, err = sourceFiles(unit)
+		if err != nil {
+			return err
+		}
 	}
 
 	tab := r.FormValue("tab")
@@ -213,6 +231,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		ExpandReadme:    expandReadme,
 		DocOutline:      docOutline,
 		DocBody:         docBody,
+		SourceFiles:     files,
 		MobileOutline:   mobileOutline,
 	}
 
