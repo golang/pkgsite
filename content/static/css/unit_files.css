@@ -4,13 +4,10 @@
  * license that can be found in the LICENSE file.
  */
 
-.Documentation {
-  display: block;
-}
-.UnitDoc {
+.UnitFiles {
   margin-bottom: 2rem;
 }
-.UnitDoc::before {
+.UnitFiles::before {
   content: '';
   display: block;
   position: relative;
@@ -18,26 +15,32 @@
   height: 3.5rem;
   margin-top: -3.5rem;
 }
-.UnitDoc-title {
+.UnitFiles-title {
   border-bottom: 0.0625rem solid var(--gray-8);
   display: flex;
   font-size: 1.375rem;
   margin: 0.5rem 0 0 0;
   padding-bottom: 1rem;
 }
-.UnitDoc-title img {
-  height: 1rem;
+.UnitFiles-title img {
+  height: 1.25rem;
   margin: auto 1rem auto 0;
   width: auto;
 }
-.UnitDoc-emptySection {
-  background-color: var(--gray-10);
-  color: var(--gray-2);
-  height: 12.25rem;
-  margin-top: 1.5rem;
-  text-align: center;
+.UnitFiles-fileList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  line-height: 1.5rem;
+  list-style: none;
+  padding-left: 0;
 }
-.UnitDoc-emptySection img {
-  height: 7.8125rem;
-  width: auto;
+.UnitFiles-file {
+  margin-right: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.UnitFiles-file::before {
+  content: url(/static/img/pkg-icon-file_16x12.svg);
+  margin-right: 0.75rem;
 }
