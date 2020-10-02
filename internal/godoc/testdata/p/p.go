@@ -6,7 +6,10 @@
 // of other things to say, but that's the gist of it.
 package p
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 // const
 const C = 1
@@ -15,8 +18,8 @@ const C = 1
 var V = 2
 
 // exported func
-func F() {
-	fmt.Println("ok")
+func F(t time.Time) {
+	fmt.Println(t)
 }
 
 // unexported func

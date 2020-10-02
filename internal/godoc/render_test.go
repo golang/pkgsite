@@ -30,6 +30,7 @@ func TestRender(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	wantSyn, wantImports, wantDoc, err := p.Render(ctx, "p", si, mi, "", "")
 	if err != nil {
 		t.Fatal(err)
@@ -58,7 +59,7 @@ func TestRender(t *testing.T) {
 	}
 
 	// Verify that removing AST nodes doesn't change the doc.
-	p, err = packageForDir(filepath.Join("testdata", "p"), false)
+	p, err = packageForDir(filepath.Join("testdata", "p"), true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,7 +67,7 @@ func TestRender(t *testing.T) {
 
 	// Verify that encoding then decoding generates the same doc.
 	// We can't re-use p to encode because it's been rendered.
-	p, err = packageForDir(filepath.Join("testdata", "p"), false)
+	p, err = packageForDir(filepath.Join("testdata", "p"), true)
 	if err != nil {
 		t.Fatal(err)
 	}

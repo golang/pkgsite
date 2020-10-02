@@ -32,8 +32,9 @@ type gobPackage struct { // fields that can be directly gob-encoded
 
 // A File contains everything needed about a source file to render documentation.
 type File struct {
-	Name string // full file pathname relative to zip content directory
-	AST  *ast.File
+	Name           string // full file pathname relative to zip content directory
+	AST            *ast.File
+	UnresolvedNums []int // used to handle sharing of unresolved identifiers
 }
 
 // NewPackage returns a new Package with the given fset and set of module package paths.

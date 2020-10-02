@@ -97,7 +97,7 @@ func (p *Package) Encode() (_ []byte, err error) {
 	}
 
 	for _, f := range p.Files {
-		removeCycles(f.AST)
+		removeCycles(f)
 	}
 
 	var buf bytes.Buffer
@@ -111,7 +111,7 @@ func (p *Package) Encode() (_ []byte, err error) {
 		return nil, fmt.Errorf("enc.Encode: %v", err)
 	}
 	for _, f := range p.Files {
-		fixupObjects(f.AST)
+		fixupObjects(f)
 	}
 	return buf.Bytes(), nil
 }
@@ -133,13 +133,13 @@ func DecodePackage(data []byte) (_ *Package, err error) {
 		return nil, err
 	}
 	for _, f := range p.Files {
-		fixupObjects(f.AST)
+		fixupObjects(f)
 	}
 	return p, nil
 }
 
 // removeCycles removes cycles from f. There are two sources of cycles
-// in an ast.File: Scopes and Objects.
+// in an ast.File: Scopes and Objects. Also, some Idents are shared.
 //
 // removeCycles removes all Scopes, since doc generation doesn't use them. Doc
 // generation does use Objects, and it needs object identity to be preserved
@@ -159,10 +159,14 @@ func DecodePackage(data []byte) (_ *Package, err error) {
 // numbers into Ident.Objs. We take advantage of the fact that the Data and Decl
 // fields are of type interface{}, storing the object number into Data and the
 // Decl number into Decl.
-func removeCycles(f *ast.File) {
-	f.Scope.Objects = nil // doc doesn't use scopes
+//
+// The AST includes a list of unresolved Idents, which are shared with Idents
+// in the tree itself. We assign these numbers as well, and store the numbers
+// in a separate field of File.
+func removeCycles(f *File) {
+	f.AST.Scope.Objects = nil // doc doesn't use scopes
 
-	// First pass: assign every Decl and Spec a number.
+	// First pass: assign every Decl, Spec and Ident a number.
 	// Since these aren't shared and Inspect is deterministic,
 	// this walk will produce the same sequence of Decls after encoding/decoding.
 	// Also assign a unique number to each Object we find in an Ident.
@@ -170,15 +174,18 @@ func removeCycles(f *ast.File) {
 	// produce the same sequence. So we store their numbers separately.
 	declNums := map[interface{}]int{}
 	objNums := map[*ast.Object]int{}
-	ast.Inspect(f, func(n ast.Node) bool {
+	ast.Inspect(f.AST, func(n ast.Node) bool {
 		if isRelevantDecl(n) {
 			if _, ok := declNums[n]; ok {
 				panic(fmt.Sprintf("duplicate decl %+v", n))
 			}
 			declNums[n] = len(declNums)
-		} else if id, ok := n.(*ast.Ident); ok && id.Obj != nil {
-			if _, ok := objNums[id.Obj]; !ok {
-				objNums[id.Obj] = len(objNums)
+		} else if id, ok := n.(*ast.Ident); ok {
+			declNums[id] = len(declNums) // remember Idents for Unresolved list.
+			if id.Obj != nil {
+				if _, ok := objNums[id.Obj]; !ok {
+					objNums[id.Obj] = len(objNums)
+				}
 			}
 		}
 		return true
@@ -189,7 +196,7 @@ func removeCycles(f *ast.File) {
 	// if it's not a relevant Decl.
 	// The Data field gets a number from the objNums map. (This destroys
 	// whatever might be in the Data field, but doc generation doesn't care.)
-	ast.Inspect(f, func(n ast.Node) bool {
+	ast.Inspect(f.AST, func(n ast.Node) bool {
 		id, ok := n.(*ast.Ident)
 		if !ok || id.Obj == nil {
 			return true
@@ -209,20 +216,31 @@ func removeCycles(f *ast.File) {
 		id.Obj.Decl = d
 		return true
 	})
+
+	// Replace the unresolved identifiers with their numbers.
+	f.UnresolvedNums = nil
+	for _, id := range f.AST.Unresolved {
+		// If we can't find an identifier, assume it was in a part of the AST
+		// deleted by removeUnusedASTNodes, and ignore it.
+		if num, ok := declNums[id]; ok {
+			f.UnresolvedNums = append(f.UnresolvedNums, num)
+		}
+	}
+	f.AST.Unresolved = nil
 }
 
 // fixupObjects re-establishes the original Object and Decl relationships of the
-// ast.File f.
+// File.
 //
-// f is the result of EncodeASTFiles, which uses removeCycles (see above) to
-// modify ast.Objects so that they are uniquely identified by their Data field,
-// and refer to their Decl via a number in the Decl field. fixupObjects uses
-// those values to reconstruct the same set of relationships.
-func fixupObjects(f *ast.File) {
-	// First pass: reconstruct the numbers of every Decl.
+// f is the result of Encode, which uses removeCycles (see above) to modify
+// ast.Objects so that they are uniquely identified by their Data field, and
+// refer to their Decl via a number in the Decl field. fixupObjects uses those
+// values to reconstruct the same set of relationships.
+func fixupObjects(f *File) {
+	// First pass: reconstruct the numbers of every Decl and Ident.
 	var decls []ast.Node
-	ast.Inspect(f, func(n ast.Node) bool {
-		if isRelevantDecl(n) {
+	ast.Inspect(f.AST, func(n ast.Node) bool {
+		if _, ok := n.(*ast.Ident); ok || isRelevantDecl(n) {
 			decls = append(decls, n)
 		}
 		return true
@@ -230,7 +248,7 @@ func fixupObjects(f *ast.File) {
 
 	// Second pass: replace the numbers in Ident.Objs with the right Nodes.
 	var objs []*ast.Object
-	ast.Inspect(f, func(n ast.Node) bool {
+	ast.Inspect(f.AST, func(n ast.Node) bool {
 		id, ok := n.(*ast.Ident)
 		if !ok || id.Obj == nil {
 			return true
@@ -260,6 +278,13 @@ func fixupObjects(f *ast.File) {
 		}
 		return true
 	})
+
+	// Fix up unresolved identifiers.
+	f.AST.Unresolved = make([]*ast.Ident, len(f.UnresolvedNums))
+	for i, num := range f.UnresolvedNums {
+		f.AST.Unresolved[i] = decls[num].(*ast.Ident)
+	}
+	f.UnresolvedNums = nil
 }
 
 // isRelevantDecl reports whether n is a Node for a declaration relevant to
