@@ -5,7 +5,7 @@
 package dochtml
 
 const tmplSidenav = `
-{{if or .Doc .Consts .Vars .Funcs .Types .Examples.List}}
+{{if or .Doc .Consts .Vars .Funcs .Types}}
 	` + IdentifierSidenavStart + `
 		<ul role="tree" aria-label="Outline">
 			{{if or .Doc (index .Examples.Map "")}}
@@ -13,7 +13,7 @@ const tmplSidenav = `
 					<a href="#pkg-overview" role="treeitem" aria-level="1" tabindex="0">Overview</a>
 				</li>
 			{{end}}
-			{{- if or .Consts .Vars .Funcs .Types .Examples.List -}}
+			{{- if or .Consts .Vars .Funcs .Types -}}
 				<li class="DocNav-index" role="none">
 					<a href="#pkg-index" role="treeitem" aria-level="1" tabindex="0">Index</a>
 				</li>
@@ -62,6 +62,7 @@ const tmplSidenav = `
 						{{end}} {{/* range .Types */}}
 					</ul>
 				</li>
+			    {{if .Notes}}
 				<li class="DocNav-notes" role="none">
 					<span class="DocNav-groupLabel" role="treeitem" aria-expanded="false" aria-level="1" aria-owns="nav-group-notes" tabindex="-1">Notes</span>
 					<ul role="group" id="nav-group-notes">
@@ -72,6 +73,7 @@ const tmplSidenav = `
 						{{end}}
 					</ul>
 				</li>
+			    {{end}}
 			{{end}}
 		</ul>
 	</nav>

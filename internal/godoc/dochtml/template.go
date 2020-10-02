@@ -27,7 +27,9 @@ func htmlPackage(ctx context.Context) *template.Template {
 }
 
 const (
-	tmplHTML       = `{{- "" -}}` + tmplSidenav + tmplBody + tmplExample
+	tmplHTML = `{{- "" -}}` + tmplSidenav + tmplBody + tmplExample
+
+	// legacyTmplHTML should not be edited.
 	legacyTmplHTML = `{{- "" -}}` + legacyTmplSidenav + legacyTmplBody + tmplExample
 )
 

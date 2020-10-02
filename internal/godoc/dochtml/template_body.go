@@ -7,7 +7,6 @@ package dochtml
 const tmplBody = `
 
 ` + IdentifierBodyStart + ` {{/* Documentation content container */}}
-
 {{- if or .Doc (index .Examples.Map "") -}}
 	<section class="Documentation-overview">
 		<h2 tabindex="-1" id="pkg-overview" class="Documentation-overviewHeader">Overview <a href="#pkg-overview">¶</a></h2>{{"\n\n" -}}
@@ -16,7 +15,8 @@ const tmplBody = `
 	</section>
 {{- end -}}
 
-{{- if or .Consts .Vars .Funcs .Types .Examples.List -}}
+
+{{- if or .Consts .Vars .Funcs .Types -}}
 	<section class="Documentation-index">
 		<h3 id="pkg-index" class="Documentation-indexHeader">Index <a href="#pkg-index">¶</a></h3>{{"\n\n" -}}
 		<ul class="Documentation-indexList">{{"\n" -}}
@@ -52,7 +52,7 @@ const tmplBody = `
 
 	{{- if .Examples.List -}}
 	<section class="Documentation-examples">
-		<h3 tabindex="-1" id="pkg-examples" class="Documentation-examplesHeader">Examples <a href="#pkg-examples">¶</a></h3>{{"\n" -}}
+		<h4 tabindex="-1" id="pkg-examples" class="Documentation-examplesHeader">Examples <a href="#pkg-examples">¶</a></h4>{{"\n" -}}
 		<ul class="Documentation-examplesList">{{"\n" -}}
 			{{- range .Examples.List -}}
 				<li><a href="#{{.ID}}" class="js-exampleHref">{{or .ParentID "Package"}}{{with .Suffix}} ({{.}}){{end}}</a></li>{{"\n" -}}
@@ -95,7 +95,7 @@ const tmplBody = `
         {{- range .Funcs -}}
         <div class="Documentation-function">
             {{- $id := safe_id .Name -}}
-            <h3 tabindex="-1" id="{{$id}}" data-kind="function" class="Documentation-functionHeader">func {{source_link .Name .Decl}} <a href="#{{$id}}">¶</a></h3>{{"\n"}}
+            <h4 tabindex="-1" id="{{$id}}" data-kind="function" class="Documentation-functionHeader">func {{source_link .Name .Decl}} <a href="#{{$id}}">¶</a></h4>{{"\n"}}
             {{- $out := render_decl .Doc .Decl -}}
             {{- $out.Decl -}}
             {{- $out.Doc -}}
@@ -115,7 +115,7 @@ const tmplBody = `
 		<div class="Documentation-type">
 			{{- $tname := .Name -}}
 			{{- $id := safe_id .Name -}}
-			<h3 tabindex="-1" id="{{$id}}" data-kind="type" class="Documentation-typeHeader">type {{source_link .Name .Decl}} <a href="#{{$id}}">¶</a></h3>{{"\n"}}
+			<h4 tabindex="-1" id="{{$id}}" data-kind="type" class="Documentation-typeHeader">type {{source_link .Name .Decl}} <a href="#{{$id}}">¶</a></h4>{{"\n"}}
 			{{- $out := render_decl .Doc .Decl -}}
 			{{- $out.Decl -}}
 			{{- $out.Doc -}}
@@ -143,7 +143,7 @@ const tmplBody = `
 			{{- range .Funcs -}}
 			<div class="Documentation-typeFunc">
 				{{- $id := safe_id .Name -}}
-				<h3 tabindex="-1" id="{{$id}}" data-kind="function" class="Documentation-typeFuncHeader">func {{source_link .Name .Decl}} <a href="#{{$id}}">¶</a></h3>{{"\n"}}
+				<h4 tabindex="-1" id="{{$id}}" data-kind="function" class="Documentation-typeFuncHeader">func {{source_link .Name .Decl}} <a href="#{{$id}}">¶</a></h4>{{"\n"}}
 				{{- $out := render_decl .Doc .Decl -}}
 				{{- $out.Decl -}}
 				{{- $out.Doc -}}
@@ -156,7 +156,7 @@ const tmplBody = `
 			<div class="Documentation-typeMethod">
 				{{- $name := (printf "%s.%s" $tname .Name) -}}
 				{{- $id := (safe_id $name) -}}
-				<h3 tabindex="-1" id="{{$id}}" data-kind="method" class="Documentation-typeMethodHeader">func ({{.Recv}}) {{source_link .Name .Decl}} <a href="#{{$id}}">¶</a></h3>{{"\n"}}
+				<h4 tabindex="-1" id="{{$id}}" data-kind="method" class="Documentation-typeMethodHeader">func ({{.Recv}}) {{source_link .Name .Decl}} <a href="#{{$id}}">¶</a></h4>{{"\n"}}
 				{{- $out := render_decl .Doc .Decl -}}
 				{{- $out.Decl -}}
 				{{- $out.Doc -}}
@@ -176,7 +176,7 @@ const tmplBody = `
 <section class="Documentation-notes">
 	{{- range $marker, $content := .Notes -}}
 	<div class="Documentation-note">
-		<h2 tabindex="-1" id="{{index $.NoteIDs $marker}}" class="Documentation-noteHeader">{{$marker}}s <a href="#pkg-note-{{$marker}}">¶</a></h2>
+		<h3 tabindex="-1" id="{{index $.NoteIDs $marker}}" class="Documentation-noteHeader">{{$marker}}s <a href="#pkg-note-{{$marker}}">¶</a></h3>
 		<ul class="Documentation-noteList" style="padding-left: 20px; list-style: initial;">{{"\n" -}}
 		{{- range $v := $content -}}
 			<li style="margin: 6px 0 6px 0;">{{render_doc $v.Body}}</li>
