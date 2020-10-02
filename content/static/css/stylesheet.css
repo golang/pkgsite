@@ -1311,6 +1311,18 @@ code {
   margin-right: 0.4rem;
   padding-right: 0.5rem;
 }
+.Documentation-examplePlayButton::after {
+  background-image: url(/static/img/icon-launch.svg);
+  background-repeat: no-repeat;
+  background-size: 0.875rem 1.25rem;
+  content: '';
+  display: inline-block;
+  height: 1rem;
+  left: 0.3125rem;
+  position: relative;
+  top: 0.125rem;
+  width: 1rem;
+}
 .Documentation-filesList {
   column-count: 3;
   column-width: 12.5rem;
