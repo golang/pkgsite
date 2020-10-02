@@ -330,7 +330,7 @@ func pageInfo(unit *internal.Unit) (title string, pageType string) {
 func displayBreadcrumb(unit *internal.Unit, requestedVersion string) breadcrumb {
 	bc := breadcrumbPath(unit.Path, unit.ModulePath, requestedVersion)
 	if unit.ModulePath == stdlib.ModulePath && unit.Path != stdlib.ModulePath {
-		bc.Links = append([]link{{Href: "/std", Body: "Standard Library"}}, bc.Links...)
+		bc.Links = append([]link{{Href: "/std", Body: "Standard library"}}, bc.Links...)
 	}
 	bc.Links = append([]link{{Href: "/", Body: "Discover Packages"}}, bc.Links...)
 	return bc

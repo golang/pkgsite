@@ -517,7 +517,7 @@ func serverTestCases() []serverTestCase {
 			want: in("",
 				pagecheck.PackageHeader(pkgV100, versioned),
 				in("[role='tab'][aria-selected='true']", text(`Imports`)),
-				in(".Imports-heading", text(`Standard Library Imports`)),
+				in(".Imports-heading", text(`Standard library Imports`)),
 				in(".Imports-list",
 					in("li:nth-child(1) a", href("/fmt"), text("fmt")),
 					in("li:nth-child(2) a", href("/path/to/bar"), text("path/to/bar")))),
@@ -648,7 +648,7 @@ func serverTestCases() []serverTestCase {
 				pagecheck.DirectoryHeader(dirCmd, versioned),
 				pagecheck.OverviewDetails(&pagecheck.Overview{
 					ModuleLink:     "/std@go1.13",
-					ModuleLinkText: "Standard Library",
+					ModuleLinkText: "Standard library",
 					ReadmeContent:  "readme",
 					RepoURL:        "https://" + sample.ModulePath, // wrong, but hard to change
 					ReadmeSource:   "go.googlesource.com/go/+/refs/tags/go1.13/README.md",
