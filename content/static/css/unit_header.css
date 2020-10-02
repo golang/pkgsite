@@ -23,12 +23,13 @@
 }
 .UnitHeader-breadcrumbItem {
   color: var(--gray-4);
+  display: inline-flex;
   font-size: 0.875rem;
   line-height: 1.5rem;
 }
 .UnitHeader-breadcrumbItem:not(:last-child)::after {
   content: '>';
-  padding: 0.5rem;
+  padding: 0 0.5rem;
 }
 .UnitHeader-heading {
   display: flex;

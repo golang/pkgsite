@@ -19,7 +19,17 @@
               <a href="{{.Href}}">{{.Body}}</a>
             </span>
           {{end}}
-          <span class="UnitHeader-breadcrumbItem">{{.Current}}</span>
+          <span class="UnitHeader-breadcrumbItem">
+            {{.Current}}
+            {{if .CopyData}}
+              <button class="CopyToClipboardButton js-copyToClipboard"
+                  title="Copy path to clipboard"
+                  data-to-copy="{{.CopyData}}"
+                  tabindex="-1">
+                <img class="CopyToClipboardButton-image" src="/static/img/copy-click.svg" alt="">
+              </button>
+            {{end}}
+          </span>
         {{end}}
       </div>
       <div class="UnitHeader-heading">
