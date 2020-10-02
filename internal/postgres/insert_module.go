@@ -419,9 +419,9 @@ func insertUnits(ctx context.Context, db *database.DB, m *internal.Module, modul
 		if d.Documentation != nil && d.Documentation.HTML.String() == internal.StringFieldMissing {
 			return errors.New("insertUnits: package missing Documentation.HTML")
 		}
-		if experiment.IsActive(ctx, internal.ExperimentInsertPackageSource) {
+		if d.Documentation != nil && experiment.IsActive(ctx, internal.ExperimentInsertPackageSource) {
 			if d.Documentation.Source == nil {
-				return errors.New("insertUnits: package missing source files")
+				return fmt.Errorf("insertUnits: unit %q missing source files", d.Path)
 			}
 		}
 		pathToDoc[d.Path] = d.Documentation
