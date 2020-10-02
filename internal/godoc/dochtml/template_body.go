@@ -62,49 +62,55 @@ const tmplBody = `
 	{{- end -}}
 
 	<h3 tabindex="-1" id="pkg-constants" class="Documentation-constantsHeader">Constants <a href="#pkg-constants">¶</a></h3>{{"\n"}}
-	{{- if .Consts -}}
 	<section class="Documentation-constants">
+	{{- if .Consts -}}
 		{{- range .Consts -}}
 			{{- $out := render_decl .Doc .Decl -}}
 			{{- $out.Decl -}}
 			{{- $out.Doc -}}
 			{{"\n"}}
 		{{- end -}}
-	</section>
+	{{- else -}}
+	    <div>There are no constants in this package.</div>
 	{{- end -}}
+	</section>
 
 	<h3 tabindex="-1" id="pkg-variables" class="Documentation-variablesHeader">Variables <a href="#pkg-variables">¶</a></h3>{{"\n"}}
-	{{- if .Vars -}}
 	<section class="Documentation-variables">
+	{{- if .Vars -}}
 		{{- range .Vars -}}
 			{{- $out := render_decl .Doc .Decl -}}
 			{{- $out.Decl -}}
 			{{- $out.Doc -}}
 			{{"\n"}}
 		{{- end -}}
-	</section>
+	{{- else -}}
+	    <div>There are no variables in this package.</div>
 	{{- end -}}
+	</section>
 
 	<h3 tabindex="-1" id="pkg-functions" class="Documentation-functionsHeader">Functions <a href="#pkg-functions">¶</a></h3>{{"\n"}}
-	{{- if .Funcs -}}
 	<section class="Documentation-functions">
-		{{- range .Funcs -}}
-		<div class="Documentation-function">
-			{{- $id := safe_id .Name -}}
-			<h3 tabindex="-1" id="{{$id}}" data-kind="function" class="Documentation-functionHeader">func {{source_link .Name .Decl}} <a href="#{{$id}}">¶</a></h3>{{"\n"}}
-			{{- $out := render_decl .Doc .Decl -}}
-			{{- $out.Decl -}}
-			{{- $out.Doc -}}
-			{{"\n"}}
-			{{- template "example" (index $.Examples.Map .Name) -}}
-		</div>
-		{{- end -}}
-	</section>
+	{{- if .Funcs -}}
+        {{- range .Funcs -}}
+        <div class="Documentation-function">
+            {{- $id := safe_id .Name -}}
+            <h3 tabindex="-1" id="{{$id}}" data-kind="function" class="Documentation-functionHeader">func {{source_link .Name .Decl}} <a href="#{{$id}}">¶</a></h3>{{"\n"}}
+            {{- $out := render_decl .Doc .Decl -}}
+            {{- $out.Decl -}}
+            {{- $out.Doc -}}
+            {{"\n"}}
+            {{- template "example" (index $.Examples.Map .Name) -}}
+        </div>
+        {{- end -}}
+	{{- else -}}
+	    <div>There are no functions in this package.</div>
 	{{- end -}}
+	</section>
 
 	<h3 tabindex="-1" id="pkg-types" class="Documentation-typesHeader">Types <a href="#pkg-types">¶</a></h3>{{"\n"}}
-	{{- if .Types -}}
 	<section class="Documentation-types">
+	{{- if .Types -}}
 		{{- range .Types -}}
 		<div class="Documentation-type">
 			{{- $tname := .Name -}}
@@ -160,8 +166,10 @@ const tmplBody = `
 			{{- end -}}
 		</div>
 		{{- end -}}
-	</section>
+	{{- else -}}
+	    <div>There are no types in this package.</div>
 	{{- end -}}
+	</section>
 {{- end -}}
 
 {{- if .Notes -}}
