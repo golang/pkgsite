@@ -11,7 +11,9 @@ import (
 	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc"
+	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -149,17 +151,19 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 
 	var docBody, docOutline, mobileOutline safehtml.HTML
 	if unit.Documentation != nil {
-		b, err := godoc.Parse(unit.Documentation.HTML, godoc.BodySection)
+
+		docHTML := getHTML(ctx, unit)
+		b, err := godoc.Parse(docHTML, godoc.BodySection)
 		if err != nil {
 			return err
 		}
 		docBody = b
-		o, err := godoc.Parse(unit.Documentation.HTML, godoc.SidenavSection)
+		o, err := godoc.Parse(docHTML, godoc.SidenavSection)
 		if err != nil {
 			return err
 		}
 		docOutline = o
-		m, err := godoc.Parse(unit.Documentation.HTML, godoc.SidenavMobileSection)
+		m, err := godoc.Parse(docHTML, godoc.SidenavMobileSection)
 		if err != nil {
 			return err
 		}
@@ -222,6 +226,19 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 
 	s.servePage(ctx, w, tabSettings.TemplateName, page)
 	return nil
+}
+
+func getHTML(ctx context.Context, u *internal.Unit) safehtml.HTML {
+	if experiment.IsActive(ctx, internal.ExperimentFrontendRenderDoc) && len(u.Documentation.Source) > 0 {
+		dd, err := renderDoc(ctx, u)
+		if err != nil {
+			log.Errorf(ctx, "render doc failed: %v", err)
+			// Fall through to use stored doc.
+		} else {
+			return dd.Documentation
+		}
+	}
+	return u.Documentation.HTML
 }
 
 // moduleInfo extracts module info from a unit. This is a shim
