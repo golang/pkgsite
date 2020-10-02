@@ -5,9 +5,12 @@
 package dochtml
 
 import (
+	"context"
 	"reflect"
 
 	"github.com/google/safehtml/template"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
@@ -15,11 +18,18 @@ import (
 // htmlPackage is the template used to render documentation HTML.
 // TODO(golang.org/issue/5060): finalize URL scheme and design for notes,
 // then it becomes more viable to factor out inline CSS style.
-func htmlPackage() *template.Template {
-	return template.Must(template.New("package").Funcs(tmpl).Parse(legacyTmplHTML))
+func htmlPackage(ctx context.Context) *template.Template {
+	t := template.New("package").Funcs(tmpl)
+	if experiment.IsActive(ctx, internal.ExperimentUnitPage) {
+		return template.Must(t.Parse(tmplHTML))
+	}
+	return template.Must(t.Parse(legacyTmplHTML))
 }
 
-const legacyTmplHTML = `{{- "" -}}` + legacyTmplSidenav + legacyTmplBody + tmplExample
+const (
+	tmplHTML       = `{{- "" -}}` + tmplSidenav + tmplBody + tmplExample
+	legacyTmplHTML = `{{- "" -}}` + legacyTmplSidenav + legacyTmplBody + tmplExample
+)
 
 var tmpl = map[string]interface{}{
 	"ternary": func(q, a, b interface{}) interface{} {
