@@ -7,7 +7,9 @@ package frontend
 import (
 	"context"
 	"net/http"
+	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
@@ -23,9 +25,15 @@ import (
 // UnitPage contains data needed to render the unit template.
 type UnitPage struct {
 	basePage
-	Unit          *internal.Unit
-	NestedModules []*internal.ModuleInfo
-	Packages      []*Package
+	// Unit is the unit for this page.
+	Unit *internal.Unit
+
+	// NestedModules are nested modules relative to the path for the unit.
+	NestedModules []*NestedModule
+
+	// Subdirectories are packages in subdirectories relative to the path for
+	// the unit.
+	Subdirectories []*Subdirectory
 
 	// Breadcrumb contains data used to render breadcrumb UI elements.
 	Breadcrumb breadcrumb
@@ -94,9 +102,25 @@ type UnitPage struct {
 	SourceFiles []*File
 }
 
+// File is a source file for a package.
 type File struct {
 	Name string
 	URL  string
+}
+
+// NestedModule is a nested module relative to the path of a given unit.
+// This content is used in the Directories section of the unit page.
+type NestedModule struct {
+	Suffix string // suffix after the unit path
+	URL    string
+}
+
+// Subdirectory is a package in a subdirectory relative to the path of a given
+// unit. This content is used in the Directories section of the unit page.
+type Subdirectory struct {
+	Suffix   string
+	URL      string
+	Synopsis string
 }
 
 var (
@@ -166,12 +190,11 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		}
 	}
 
-	nestedModules, err := ds.GetNestedModules(ctx, unit.ModulePath)
+	nestedModules, err := getNestedModules(ctx, ds, &unit.UnitMeta)
 	if err != nil {
 		return err
 	}
-
-	dir, err := createDirectory(unit.Path, moduleInfo(unit), unit.Subdirectories, nestedModules, unit.Licenses, false)
+	subdirectories := getSubdirectories(&unit.UnitMeta, unit.Subdirectories)
 	if err != nil {
 		return err
 	}
@@ -230,14 +253,14 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	canShowDetails := unit.IsRedistributable || tabSettings.AlwaysShowDetails
 	_, expandReadme := r.URL.Query()["readme"]
 	page := UnitPage{
-		basePage:      basePage,
-		Unit:          unit,
-		Packages:      dir.Packages,
-		NestedModules: nestedModules,
-		Breadcrumb:    displayBreadcrumb(unit, requestedVersion),
-		Title:         title,
-		Tabs:          unitTabs,
-		SelectedTab:   tabSettings,
+		basePage:       basePage,
+		Unit:           unit,
+		Subdirectories: subdirectories,
+		NestedModules:  nestedModules,
+		Breadcrumb:     displayBreadcrumb(unit, requestedVersion),
+		Title:          title,
+		Tabs:           unitTabs,
+		SelectedTab:    tabSettings,
 		CanonicalURLPath: constructPackageURL(
 			unit.Path,
 			unit.ModulePath,
@@ -334,4 +357,41 @@ func displayBreadcrumb(unit *internal.Unit, requestedVersion string) breadcrumb 
 	}
 	bc.Links = append([]link{{Href: "/", Body: "Discover Packages"}}, bc.Links...)
 	return bc
+}
+
+func getNestedModules(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta) ([]*NestedModule, error) {
+	nestedModules, err := ds.GetNestedModules(ctx, um.ModulePath)
+	if err != nil {
+		return nil, err
+	}
+	var mods []*NestedModule
+	for _, m := range nestedModules {
+		if m.SeriesPath() == internal.SeriesPathForModule(um.ModulePath) {
+			continue
+		}
+		if !strings.HasPrefix(m.ModulePath, um.Path+"/") {
+			continue
+		}
+		mods = append(mods, &NestedModule{
+			URL:    constructPackageURL(m.ModulePath, m.ModulePath, internal.LatestVersion),
+			Suffix: internal.Suffix(m.SeriesPath(), um.Path),
+		})
+	}
+	return mods, nil
+}
+
+func getSubdirectories(um *internal.UnitMeta, pkgs []*internal.PackageMeta) []*Subdirectory {
+	var sdirs []*Subdirectory
+	for _, pm := range pkgs {
+		if um.Path == pm.Path {
+			continue
+		}
+		sdirs = append(sdirs, &Subdirectory{
+			URL:      constructPackageURL(pm.Path, um.ModulePath, um.Version),
+			Suffix:   internal.Suffix(pm.Path, um.Path),
+			Synopsis: pm.Synopsis,
+		})
+	}
+	sort.Slice(sdirs, func(i, j int) bool { return sdirs[i].Suffix < sdirs[j].Suffix })
+	return sdirs
 }

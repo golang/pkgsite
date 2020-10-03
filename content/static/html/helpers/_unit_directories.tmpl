@@ -9,16 +9,16 @@
     <h2 class="UnitDirectories-title">
       <img height="25px" width="20px" src="/static/img/pkg-icon-folder_20x16.svg">Directories
     </h2>
-    {{if .Packages}}
+    {{if (or .Subdirectories .NestedModules) }}
       <table class="UnitDirectories-table">
         <tr class="UnitDirectories-tableHeader">
           <th>Path</th>
           <th>Synopsis</th>
         </tr>
-        {{range .Packages}}
+        {{range .Subdirectories}}
           <tr>
             <td>
-              <a href="{{.URL}}">{{.PathAfterDirectory}}</a>
+              <a href="{{.URL}}">{{.Suffix}}</a>
             </td>
             <td>{{.Synopsis}}</td>
           </tr>
@@ -27,7 +27,7 @@
           <tr>
             <td>
               <span class="UnitDirectories-moduleTag">MODULE</span>
-              <a href="/{{.ModulePath}}">{{.ModulePath}}</a>
+              <a href="{{.URL}}">{{.Suffix}}</a>
             </td>
             <td></td>
           </tr>

@@ -39,7 +39,7 @@
       <div class="UnitOutline-panel js-accordionPanel"
           id="files-panel" role="region" aria-labelledby="files-accordion" aria-hidden="true"></div>
     {{end}}
-    {{if (or .Packages .NestedModules)}}
+    {{if (or .Subdirectories .NestedModules)}}
       <a class="UnitOutline-accordion js-accordionTrigger" href="#directories-top"
           aria-expanded="false" aria-controls="directories-panel" id="directories-accordion">
         Directories

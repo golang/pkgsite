@@ -30,7 +30,7 @@
         {{if .SourceFiles}}
           {{block "unit_files" .}}{{end}}
         {{end}}
-        {{if (or .Packages .NestedModules)}}
+        {{if (or .Subdirectories .NestedModules)}}
           {{block "unit_directories" .}}{{end}}
         {{end}}
       {{else}}
