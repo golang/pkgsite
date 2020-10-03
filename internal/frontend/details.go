@@ -421,7 +421,7 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, d
 	}
 	results := s.checkPossibleModulePaths(ctx, db, fullPath, requestedVersion, modulePaths, false)
 	for _, fr := range results {
-		if fr.status == statusNotFoundInVersionMap {
+		if fr.status == statusNotFoundInVersionMap || fr.status == http.StatusInternalServerError {
 			// If the result is statusNotFoundInVersionMap, it means that
 			// we haven't attempted to fetch this path before. Return an
 			// error page giving the user the option to fetch the path.
