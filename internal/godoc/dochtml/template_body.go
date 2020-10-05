@@ -71,7 +71,7 @@ const tmplBody = `
 			{{"\n"}}
 		{{- end -}}
 	{{- else -}}
-	    <div>There are no constants in this package.</div>
+	  	<div class="Documentation-empty">There are no constants in this package.</div>
 	{{- end -}}
 	</section>
 
@@ -85,7 +85,7 @@ const tmplBody = `
 			{{"\n"}}
 		{{- end -}}
 	{{- else -}}
-	    <div>There are no variables in this package.</div>
+		<div class="Documentation-empty">There are no variables in this package.</div>
 	{{- end -}}
 	</section>
 
@@ -104,7 +104,7 @@ const tmplBody = `
         </div>
         {{- end -}}
 	{{- else -}}
-	    <div>There are no functions in this package.</div>
+		<div class="Documentation-empty">There are no functions in this package.</div>
 	{{- end -}}
 	</section>
 
@@ -167,25 +167,25 @@ const tmplBody = `
 		</div>
 		{{- end -}}
 	{{- else -}}
-	    <div>There are no types in this package.</div>
+		<div class="Documentation-empty">There are no types in this package.</div>
 	{{- end -}}
 	</section>
 {{- end -}}
 
 {{- if .Notes -}}
-<section class="Documentation-notes">
-	{{- range $marker, $content := .Notes -}}
-	<div class="Documentation-note">
-		<h3 tabindex="-1" id="{{index $.NoteIDs $marker}}" class="Documentation-noteHeader">{{$marker}}s <a href="#pkg-note-{{$marker}}">¶</a></h3>
-		<ul class="Documentation-noteList" style="padding-left: 20px; list-style: initial;">{{"\n" -}}
-		{{- range $v := $content -}}
-			<li style="margin: 6px 0 6px 0;">{{render_doc $v.Body}}</li>
+	<h3 tabindex="-1" id="pkg-notes" class="Documentation-notesHeader">Notes <a href="#pkg-notes">¶</a></h3>{{"\n"}}
+	<section class="Documentation-notes">
+		{{- range $marker, $content := .Notes -}}
+		<div class="Documentation-note">
+			<h3 tabindex="-1" id="{{index $.NoteIDs $marker}}" class="Documentation-noteHeader">{{$marker}}s <a href="#pkg-note-{{$marker}}">¶</a></h3>
+			<ul class="Documentation-noteList" style="padding-left: 20px; list-style: initial;">{{"\n" -}}
+			{{- range $v := $content -}}
+				<li style="margin: 6px 0 6px 0;">{{render_doc $v.Body}}</li>
+			{{- end -}}
+			</ul>{{"\n" -}}
+		</div>
 		{{- end -}}
-		</ul>{{"\n" -}}
-	</div>
-	{{- end -}}
-</section>
+	</section>
 {{- end -}}
-
 ` + IdentifierBodyEnd + ` {{/* End documentation content container */}}
 `

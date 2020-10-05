@@ -76,10 +76,11 @@ const tmplSidenav = `
 						{{end}} {{/* range .Types */}}
 					</ul>
 				</li>
-				{{if .Notes}}
+			{{end}}
+			{{if .Notes}}
 				<li class="DocNav-notes" role="none">
-					<span class="DocNav-groupLabel{{if eq (len .Notes) 0}} DocNav-groupLabel--empty{{end}} js-docNav"
-							role="treeitem" aria-expanded="false" aria-level="1" aria-owns="nav-group-notes" tabindex="-1">Notes</span>
+					<a href="#pkg-notes" class="DocNav-groupLabel{{if eq (len .Notes) 0}} DocNav-groupLabel--empty{{end}} js-docNav"
+							role="treeitem" aria-expanded="false" aria-level="1" aria-owns="nav-group-notes" tabindex="-1">Notes</a>
 					<ul role="group" id="nav-group-notes">
 						{{range $marker, $item := .Notes}}
 							<li role="none">
@@ -88,7 +89,6 @@ const tmplSidenav = `
 						{{end}}
 					</ul>
 				</li>
-			    {{end}}
 			{{end}}
 		</ul>
 	</nav>

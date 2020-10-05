@@ -1234,6 +1234,10 @@ code {
 .Documentation-examples {
   padding-bottom: 0;
 }
+.Documentation-empty {
+  color: var(--gray-3);
+  margin-top: -0.5rem;
+}
 
 .Documentation-tocItem--constants,
 .Documentation-tocItem--funcsAndTypes,
