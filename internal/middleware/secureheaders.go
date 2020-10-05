@@ -29,7 +29,7 @@ var scriptHashes = []string{
 	"'sha256-32pObeU1KY/YOSORAAjek9Hs5q6IpyYCK2QnF08OwiY='",
 	"'sha256-uQODpjQEw2CWPIl6zEmpUU1uULk5RYVCofnBw59UOOw='",
 	// From content/static/html/pages/unit.tmpl
-	"'sha256-w9JIp++N6M7QtDNJRXoowFUN84N5GWsJhUaoIDyMijk='",
+	"'sha256-hsHIJwO1h0Vzwa75j0l07kUfQ7MEZGI/HlSPB/8leZ0='",
 	// From content/static/html/pages/unit_details.tmpl
 	"'sha256-CFun5NgnYeEpye8qcbQPq5Ycwavi4IXuZiIzSMNqRUw='",
 	"'sha256-IHdniK/yZ8URNA2OYbc4R7BssOAe3/dFrSQW7PxEEfM='",

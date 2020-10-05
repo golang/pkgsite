@@ -20,6 +20,7 @@
 {{define "post_content"}}
   <div class="js-canonicalURLPath" data-canonical-url-path="{{.CanonicalURLPath}}" hidden />
   <script>
+    loadScript('/static/js/keyboard.js', {type: 'module', async: true, defer: true})
     loadScript('/static/js/unit.js', {type: 'module', async: true, defer: true})
     loadScript('/static/js/unit_fixed_header.js', {type: 'module', async: true, defer: true})
   </script>
