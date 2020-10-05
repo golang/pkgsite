@@ -35,6 +35,7 @@
   padding-left: 0;
 }
 .UnitFiles-file {
+  margin-bottom: 0.25rem;
   margin-right: 0.5rem;
   overflow: hidden;
   text-overflow: ellipsis;

@@ -222,6 +222,9 @@
     transition: transform 0.1s linear;
     width: 0;
   }
+  .DocNav-groupLabel--empty::before {
+    content: unset;
+  }
   /* Added to increase hit target on triangle above. */
   .DocNav-groupLabel::after {
     content: '';

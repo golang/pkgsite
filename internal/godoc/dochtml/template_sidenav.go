@@ -10,21 +10,32 @@ const tmplSidenav = `
 		<ul role="tree" aria-label="Outline">
 			{{if or .Doc (index .Examples.Map "")}}
 				<li class="DocNav-overview" role="none">
-					<a href="#pkg-overview" role="treeitem" aria-level="1" tabindex="0">Overview</a>
+					<a href="#pkg-overview" class="js-docNav" role="treeitem" aria-level="1" tabindex="0">Overview</a>
 				</li>
 			{{end}}
 			{{- if or .Consts .Vars .Funcs .Types -}}
 				<li class="DocNav-index" role="none">
-					<a href="#pkg-index" role="treeitem" aria-level="1" tabindex="0">Index</a>
+					<a href="#pkg-index" class="DocNav-groupLabel{{if not .Examples.List}} DocNav-groupLabel--empty{{end}} js-docNav"
+							role="treeitem" aria-expanded="false" aria-level="1" aria-owns="nav-group-index" tabindex="-1">
+						Index
+					</a>
+					<ul role="group" id="nav-group-index">
+						<li role="none">
+							<a href="#pkg-examples" role="treeitem" aria-level="2" tabindex="-1">Examples</a>
+						</li>
+					</ul>
 				</li>
 				<li class="DocNav-constants" role="none">
-					<a href="#pkg-constants" role="treeitem" aria-level="1" tabindex="-1">Constants</a>
+					<a href="#pkg-constants" class="js-docNav" role="treeitem" aria-level="1" tabindex="-1">Constants</a>
 				</li>
 				<li class="DocNav-variables" role="none">
-					<a href="#pkg-variables" role="treeitem" aria-level="1" tabindex="-1">Variables</a>
+					<a href="#pkg-variables" class="js-docNav" role="treeitem" aria-level="1" tabindex="-1">Variables</a>
 				</li>
 				<li class="DocNav-functions" role="none">
-					<span class="DocNav-groupLabel" role="treeitem" aria-expanded="false" aria-level="1" aria-owns="nav-group-functions" tabindex="-1">Functions</span>
+					<a href="#pkg-functions" class="DocNav-groupLabel{{if eq (len .Funcs) 0}} DocNav-groupLabel--empty{{end}} js-docNav"
+							role="treeitem" aria-expanded="false" aria-level="1" aria-owns="nav-group-functions" tabindex="-1">
+						Functions
+					</a>
 					<ul role="group" id="nav-group-functions">
 						{{range .Funcs}}
 							<li role="none">
@@ -34,7 +45,10 @@ const tmplSidenav = `
 					</ul>
 				</li>
 				<li class="DocNav-types" role="none">
-					<span class="DocNav-groupLabel" role="treeitem" aria-expanded="false" aria-level="1" aria-owns="nav-group-types" tabindex="-1">Types</span>
+					<a href="#pkg-types" class="DocNav-groupLabel{{if eq (len .Types) 0}} DocNav-groupLabel--empty{{end}} js-docNav"
+							role="treeitem" aria-expanded="false" aria-level="1" aria-owns="nav-group-types" tabindex="-1">
+						Types
+					</a>
 					<ul role="group" id="nav-group-types">
 						{{range .Types}}
 							{{$tname := .Name}}
@@ -42,7 +56,7 @@ const tmplSidenav = `
 								{{if or .Funcs .Methods}}
 									{{$navgroupname := (printf "nav.group.%s" $tname)}}
 									{{$navgroupid := (safe_id $navgroupname)}}
-									<a class="DocNav-groupLabel" href="#{{$tname}}" role="treeitem" aria-expanded="false" aria-level="2" data-aria-owns="{{$navgroupid}}" tabindex="-1">type {{$tname}}</a>
+									<a class="DocNav-groupLabel js-docNavType" href="#{{$tname}}" role="treeitem" aria-expanded="false" aria-level="2" data-aria-owns="{{$navgroupid}}" tabindex="-1">type {{$tname}}</a>
 									<ul role="group" id="{{$navgroupid}}">
 										{{range .Funcs}}
 											<li role="none">
@@ -62,9 +76,10 @@ const tmplSidenav = `
 						{{end}} {{/* range .Types */}}
 					</ul>
 				</li>
-			    {{if .Notes}}
+				{{if .Notes}}
 				<li class="DocNav-notes" role="none">
-					<span class="DocNav-groupLabel" role="treeitem" aria-expanded="false" aria-level="1" aria-owns="nav-group-notes" tabindex="-1">Notes</span>
+					<span class="DocNav-groupLabel{{if eq (len .Notes) 0}} DocNav-groupLabel--empty{{end}} js-docNav"
+							role="treeitem" aria-expanded="false" aria-level="1" aria-owns="nav-group-notes" tabindex="-1">Notes</span>
 					<ul role="group" id="nav-group-notes">
 						{{range $marker, $item := .Notes}}
 							<li role="none">
