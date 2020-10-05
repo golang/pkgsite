@@ -5,9 +5,13 @@
 package integration
 
 import (
+	"bufio"
+	"bytes"
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -39,8 +43,9 @@ func TestFrontendDocRender(t *testing.T) {
 					const C = 123
 
 					// F is a function.
-					func F(t time.Time, s string) T {
-						_ = C
+					func F(t time.Time, s string) (T, u) {
+						x := 3
+						x = C
 					}
 			`,
 			"file2.go": `
@@ -48,38 +53,28 @@ func TestFrontendDocRender(t *testing.T) {
 
 					var V = C
 					type T int
+					type u int
 			`,
 		},
 	}
 
-	commonExps := []string{
-		internal.ExperimentRemoveUnusedAST,
-		internal.ExperimentInsertPackageSource,
-		internal.ExperimentSidenav,
-		internal.ExperimentUnitPage,
-	}
+	// Process with saving the source.
+	processVersions(
+		experiment.NewContext(context.Background(), internal.ExperimentUnitPage, internal.ExperimentRemoveUnusedAST, internal.ExperimentInsertPackageSource),
+		t, []*proxy.Module{m})
 
-	ctx := experiment.NewContext(context.Background(), commonExps...)
-	processVersions(ctx, t, []*proxy.Module{m})
-
-	getDoc := func(exps ...string) string {
-		t.Helper()
-
-		ectx := experiment.NewContext(ctx, append(exps, commonExps...)...)
-		ts := setupFrontend(ectx, t, nil)
-		url := ts.URL + "/" + m.ModulePath
-		return getPage(ectx, t, url)
-	}
-
-	workerDoc := getDoc()
-	frontendDoc := getDoc(internal.ExperimentFrontendRenderDoc)
-
+	workerDoc := getDoc(t, m.ModulePath)
+	frontendDoc := getDoc(t, m.ModulePath, internal.ExperimentUnitPage, internal.ExperimentFrontendRenderDoc, internal.ExperimentInsertPackageSource)
 	if diff := cmp.Diff(workerDoc, frontendDoc); diff != "" {
 		t.Errorf("mismatch (-worker, +frontend):\n%s", diff)
 	}
 }
 
-func getPage(ctx context.Context, t *testing.T, url string) string {
+func getDoc(t *testing.T, modulePath string, exps ...string) string {
+	ctx := experiment.NewContext(context.Background(),
+		append(exps, internal.ExperimentSidenav, internal.ExperimentUnitPage)...)
+	ts := setupFrontend(ctx, t, nil)
+	url := ts.URL + "/" + modulePath
 	resp, err := http.Get(url)
 	if err != nil {
 		t.Fatalf("%s: %v", url, err)
@@ -92,5 +87,14 @@ func getPage(ctx context.Context, t *testing.T, url string) string {
 	if err != nil {
 		t.Fatalf("%s: %v", url, err)
 	}
-	return string(content)
+	// Remove surrounding whitespace from lines.
+	scan := bufio.NewScanner(bytes.NewReader(content))
+	var b strings.Builder
+	for scan.Scan() {
+		fmt.Fprintln(&b, strings.TrimSpace(scan.Text()))
+	}
+	if scan.Err() != nil {
+		t.Fatal(scan.Err())
+	}
+	return b.String()
 }

@@ -213,13 +213,15 @@ func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue) *httptest.S
 // TODO(https://github.com/golang/go/issues/40098): factor out this code reduce
 // duplication
 func setupQueue(ctx context.Context, t *testing.T, proxyModules []*proxy.Module, experimentNames ...string) (queue.Queue, func()) {
+	cctx, cancel := context.WithCancel(ctx)
 	proxyClient, teardown := proxy.SetupTestClient(t, proxyModules)
 	sourceClient := source.NewClient(1 * time.Second)
-	q := queue.NewInMemory(ctx, 1, experimentNames,
-		func(ctx context.Context, mpath, version string) (int, error) {
+	q := queue.NewInMemory(cctx, 1, experimentNames,
+		func(ctx context.Context, mpath, version string) (_ int, err error) {
 			return frontend.FetchAndUpdateState(ctx, mpath, version, proxyClient, sourceClient, testDB)
 		})
 	return q, func() {
+		cancel()
 		teardown()
 	}
 }

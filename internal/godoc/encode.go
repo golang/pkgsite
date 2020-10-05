@@ -12,6 +12,7 @@ import (
 	"go/ast"
 	"go/token"
 	"io"
+	"sort"
 
 	"golang.org/x/pkgsite/internal/derrors"
 )
@@ -164,8 +165,6 @@ func DecodePackage(data []byte) (_ *Package, err error) {
 // in the tree itself. We assign these numbers as well, and store the numbers
 // in a separate field of File.
 func removeCycles(f *File) {
-	f.AST.Scope.Objects = nil // doc doesn't use scopes
-
 	// First pass: assign every Decl, Spec and Ident a number.
 	// Since these aren't shared and Inspect is deterministic,
 	// this walk will produce the same sequence of Decls after encoding/decoding.
@@ -227,6 +226,21 @@ func removeCycles(f *File) {
 		}
 	}
 	f.AST.Unresolved = nil
+
+	// Remember only those scope items that have been assigned a number; the others
+	// are not relevant to doc (unexported functions, for instance).
+	f.ScopeItems = nil
+	for name, obj := range f.AST.Scope.Objects {
+		if num, ok := obj.Data.(int); ok {
+			f.ScopeItems = append(f.ScopeItems, scopeItem{name, num})
+		}
+	}
+	// Sort for deterministic encoding.
+	sort.Slice(f.ScopeItems, func(i, j int) bool {
+		return f.ScopeItems[i].Name < f.ScopeItems[j].Name
+	})
+	f.AST.Scope.Objects = nil
+
 }
 
 // fixupObjects re-establishes the original Object and Decl relationships of the
@@ -268,7 +282,6 @@ func fixupObjects(f *File) {
 			id.Obj = objs[num]
 		case num == len(objs):
 			// A new object; fix it up and remember it.
-			obj.Data = nil
 			if obj.Decl != nil {
 				obj.Decl = decls[obj.Decl.(int)]
 			}
@@ -285,6 +298,13 @@ func fixupObjects(f *File) {
 		f.AST.Unresolved[i] = decls[num].(*ast.Ident)
 	}
 	f.UnresolvedNums = nil
+
+	// Fix up file scope objects.
+	f.AST.Scope.Objects = map[string]*ast.Object{}
+	for _, item := range f.ScopeItems {
+		f.AST.Scope.Objects[item.Name] = objs[item.Num]
+	}
+	f.ScopeItems = nil
 }
 
 // isRelevantDecl reports whether n is a Node for a declaration relevant to

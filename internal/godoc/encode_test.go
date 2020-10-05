@@ -13,7 +13,7 @@ import (
 	"testing"
 )
 
-func TestEncodeDecodeASTFiles(t *testing.T) {
+func TestEncodeDecodePackage(t *testing.T) {
 	// Verify that we can encode and decode the Go files in this directory.
 	p, err := packageForDir(".", true)
 	if err != nil {
