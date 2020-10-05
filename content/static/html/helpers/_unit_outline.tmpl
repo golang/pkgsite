@@ -12,7 +12,7 @@
       </button>
     </div>
     {{if .Readme.String}}
-      <a class="UnitOutline-accordian js-accordian" href="?readme#readme-top">README</a>
+      <a class="UnitOutline-accordian js-accordian js-readmeExpand" href="?readme=expanded#readme-top">README</a>
     {{end}}
     {{if (or .DocOutline.String .Unit.IsPackage)}}
       <a class="UnitOutline-accordian js-accordian" href="#doc-top">Documentation</a>

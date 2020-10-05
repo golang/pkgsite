@@ -19,3 +19,24 @@ document.querySelectorAll('a.js-accordian').forEach((anchor, index) => {
     anchor.classList.add(activeClass);
   });
 });
+
+/**
+ * Event handlers for expanding and collapsing the readme section.
+ */
+const readme = document.querySelector('.js-readme');
+const readmeExpand = document.querySelectorAll('.js-readmeExpand');
+const readmeCollapse = document.querySelector('.js-readmeCollapse');
+if (readmeExpand && readmeExpand && readmeCollapse) {
+  readmeExpand.forEach(el =>
+    el.addEventListener('click', e => {
+      e.preventDefault();
+      readme.classList.add('UnitReadme--expanded');
+      readme.scrollIntoView();
+    })
+  );
+  readmeCollapse.addEventListener('click', e => {
+    e.preventDefault();
+    readme.classList.remove('UnitReadme--expanded');
+    readme.scrollIntoView();
+  });
+}
