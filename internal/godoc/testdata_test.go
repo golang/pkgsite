@@ -58,7 +58,7 @@ const quoteSidenavMobile = `<nav class="DocNavMobile js-mobileNav">
 
 const quoteBody = `<div class="Documentation-content js-docContent">
    <section class="Documentation-overview">
-      <h2 tabindex="-1" id="pkg-overview" class="Documentation-overviewHeader">Overview <a href="#pkg-overview">¶</a></h2>
+      <h3 tabindex="-1" id="pkg-overview" class="Documentation-overviewHeader">Overview <a href="#pkg-overview">¶</a></h3>
       <p>Package quote collects pithy sayings.</p>
    </section>
    <section class="Documentation-index">

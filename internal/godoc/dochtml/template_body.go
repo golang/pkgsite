@@ -9,7 +9,7 @@ const tmplBody = `
 ` + IdentifierBodyStart + ` {{/* Documentation content container */}}
 {{- if or .Doc (index .Examples.Map "") -}}
 	<section class="Documentation-overview">
-		<h2 tabindex="-1" id="pkg-overview" class="Documentation-overviewHeader">Overview <a href="#pkg-overview">¶</a></h2>{{"\n\n" -}}
+		<h3 tabindex="-1" id="pkg-overview" class="Documentation-overviewHeader">Overview <a href="#pkg-overview">¶</a></h3>{{"\n\n" -}}
 		{{render_doc .Doc}}{{"\n" -}}
 		{{- template "example" (index .Examples.Map "") -}}
 	</section>
