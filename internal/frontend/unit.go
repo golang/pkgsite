@@ -328,13 +328,7 @@ func pageInfo(unit *internal.Unit) (title string, pageType string) {
 // displayBreadcrumbs appends additional breadcrumb links for display
 // to those for the given unit.
 func displayBreadcrumb(unit *internal.Unit, requestedVersion string) breadcrumb {
-	v := requestedVersion
-	if unit.ModulePath == stdlib.ModulePath {
-		// TODO: Fix definition of requestedVersion, so that the
-		// requestedVersion is the goTag, not the resolved semantic version.
-		v = goTagForVersion(requestedVersion)
-	}
-	bc := breadcrumbPath(unit.Path, unit.ModulePath, v)
+	bc := breadcrumbPath(unit.Path, unit.ModulePath, requestedVersion)
 	if unit.ModulePath == stdlib.ModulePath && unit.Path != stdlib.ModulePath {
 		bc.Links = append([]link{{Href: "/std", Body: "Standard library"}}, bc.Links...)
 	}

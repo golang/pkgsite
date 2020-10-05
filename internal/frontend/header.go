@@ -189,7 +189,7 @@ func breadcrumbPath(pkgPath, modPath, requestedVersion string) breadcrumb {
 	for i := 1; i < len(dirs); i++ {
 		href := "/" + dirs[i]
 		if requestedVersion != internal.LatestVersion {
-			href += "@" + requestedVersion
+			href += "@" + linkVersion(requestedVersion, modPath)
 		}
 		el := dirs[i]
 		if i != len(dirs)-1 {
