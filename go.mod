@@ -30,6 +30,8 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.2
 	github.com/russross/blackfriday/v2 v2.0.1
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
+	github.com/yuin/goldmark v1.2.1
+	github.com/yuin/goldmark-emoji v1.0.1
 	github.com/yuin/gopher-lua v0.0.0-20190514113301-1cd887cd7036 // indirect
 	go.opencensus.io v0.22.4
 	golang.org/x/mod v0.3.0
