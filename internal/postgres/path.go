@@ -16,14 +16,23 @@ import (
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
+// orderByLatest orders paths according to the go command.
+// Versions are ordered by:
+// (1) release (non-incompatible)
+// (2) prerelease (non-incompatible)
+// (3) release, incompatible
+// (4) prerelease, incompatible
+// (5) pseudo
+// They are then sorted based on semver, then decreasing module path length (so
+// that nested modules are prefered).
 const orderByLatest = `
 			ORDER BY
-				m.incompatible,
 				CASE
-				    -- Order the versions by release then prerelease then pseudo.
-				    WHEN m.version_type = 'release' THEN 1
-				    WHEN m.version_type = 'prerelease' THEN 2
-				    ELSE 3
+					WHEN m.version_type = 'release' AND NOT m.incompatible THEN 1
+					WHEN m.version_type = 'prerelease' AND NOT m.incompatible THEN 2
+					WHEN m.version_type = 'release' THEN 3
+					WHEN m.version_type = 'prerelease' THEN 4
+					ELSE 5
 				END,
 				m.sort_version DESC,
 				m.module_path DESC`
@@ -66,14 +75,14 @@ func (db *DB) GetUnitMeta(ctx context.Context, path, requestedModulePath, reques
 	)
 	query := fmt.Sprintf(`
 		SELECT
-		    m.module_path,
-		    m.version,
-		    m.commit_time,
-		    m.source_info,
-		    p.name,
-		    p.redistributable,
-		    p.license_types,
-		    p.license_paths
+			m.module_path,
+			m.version,
+			m.commit_time,
+			m.source_info,
+			p.name,
+			p.redistributable,
+			p.license_types,
+			p.license_paths
 		FROM paths p
 		INNER JOIN modules m ON (p.module_id = m.id)
 		%s

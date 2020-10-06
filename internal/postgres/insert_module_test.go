@@ -394,6 +394,51 @@ func TestLatestVersion(t *testing.T) {
 	}
 }
 
+func TestLatestVersion_PreferIncompatibleOverPrerelease(t *testing.T) {
+	defer ResetTestDB(testDB, t)
+	ctx := context.Background()
+
+	for _, mod := range []struct {
+		version    string
+		modulePath string
+	}{
+		{
+			version:    "v0.0.0-20201007032633-0806396f153e",
+			modulePath: sample.ModulePath,
+		},
+		{
+			version:    "v2.0.0+incompatible",
+			modulePath: sample.ModulePath,
+		},
+	} {
+		m := sample.LegacyDefaultModule()
+		m.Version = mod.version
+		m.ModulePath = mod.modulePath
+
+		if err := testDB.InsertModule(ctx, m); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	for _, tc := range []struct {
+		modulePath string
+		want       string
+	}{
+		{
+			modulePath: sample.ModulePath,
+			want:       "v2.0.0+incompatible",
+		},
+	} {
+		isLatest, err := isLatestVersion(ctx, testDB.db, tc.modulePath, tc.want)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !isLatest {
+			t.Errorf("%s is not the latest version", tc.want)
+		}
+	}
+}
+
 func TestDeleteModule(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
