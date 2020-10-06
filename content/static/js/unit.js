@@ -8,18 +8,11 @@
 import { AccordionController } from './accordion.js';
 
 /**
- * Instantiates accordian controller for the left sidebar and sets
- * the panel for the current location hash as active.
+ * Instantiates accordion controller for the left sidebar.
  */
 const accordion = document.querySelector('.js-accordion');
 if (accordion) {
-  const accordionCtlr = new AccordionController(accordion);
-  const activePanel =
-    window.location.hash &&
-    document.querySelector(`a[href=${JSON.stringify(window.location.hash)}]`);
-  if (activePanel) {
-    accordionCtlr.select(activePanel);
-  }
+  new AccordionController(accordion);
 }
 
 /**

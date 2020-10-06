@@ -5,6 +5,29 @@
  * license that can be found in the LICENSE file.
  */
 
+/**
+ * Controller for an accordion element. This class will add event
+ * listeners to close and open the panels of an accordion. When
+ * initialized it will select the active panel based on the URL
+ * hash for the requested page.
+ *
+ * Accordions must have the following structure:
+ *
+ *  <div class="js-accordion">
+ *    <a role="button" class="js-accordionTrigger" href="#panel-1" aria-expanded="false" aria-controls="first-panel" id="first-accordion">
+ *      Title
+ *    </a>
+ *    <div class="js-accordionPanel" id="first-panel" role="region" aria-labelledby="first-accordion" aria-hidden="true">
+ *      Panel Content
+ *    </div>
+ *    <a role="button" class="js-accordionTrigger" href="#panel-2" aria-expanded="false" aria-controls="second-panel" id="second-accordion">
+ *      Title
+ *    </a>
+ *    <div class="js-accordionPanel" id="second-panel" role="region" aria-labelledby="second-accordion" aria-hidden="true">
+ *      Panel Content
+ *    </div>
+ *  </div>
+ */
 export class AccordionController {
   constructor(accordion) {
     this.accordion = accordion;
@@ -25,21 +48,29 @@ export class AccordionController {
         this.handleKeyPress(e);
       }
     });
+
+    const activeHash = document.querySelector(`a[href=${JSON.stringify(window.location.hash)}]`);
+    const initialTrigger =
+      this.triggers.find(
+        trigger => this.getPanel(trigger).contains(activeHash) || trigger.contains(activeHash)
+      ) || this.activeTrigger;
+
+    this.select(initialTrigger);
+  }
+
+  getPanel(trigger) {
+    return document.getElementById(trigger.getAttribute('aria-controls'));
   }
 
   select(target) {
     const isExpanded = target.getAttribute('aria-expanded') === 'true';
     if (!isExpanded) {
       target.setAttribute('aria-expanded', 'true');
-      document
-        .getElementById(target.getAttribute('aria-controls'))
-        .setAttribute('aria-hidden', 'false');
+      this.getPanel(target).setAttribute('aria-hidden', 'false');
     }
     if (this.activeTrigger !== target) {
       this.activeTrigger.setAttribute('aria-expanded', 'false');
-      document
-        .getElementById(this.activeTrigger.getAttribute('aria-controls'))
-        .setAttribute('aria-hidden', 'true');
+      this.getPanel(this.activeTrigger).setAttribute('aria-hidden', 'true');
     }
     this.activeTrigger = target;
   }
@@ -47,6 +78,7 @@ export class AccordionController {
   handleKeyPress(e) {
     const target = e.target;
     const key = e.which;
+    const SPACE = 32;
     const PAGE_UP = 33;
     const PAGE_DOWN = 34;
     const END = 35;
@@ -73,6 +105,8 @@ export class AccordionController {
         this.triggers[0].focus();
         e.preventDefault();
         break;
+      case SPACE:
+        this.select(target);
 
       default:
         break;
