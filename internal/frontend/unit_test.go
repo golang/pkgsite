@@ -11,8 +11,49 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/postgres"
+	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
+
+func TestPageInfo(t *testing.T) {
+	m := sample.LegacyModule("golang.org/x/tools", "v1.0.0", "go/packages", "cmd/godoc")
+
+	type test struct {
+		name      string
+		unit      *internal.Unit
+		wantTitle string
+		wantType  string
+	}
+	var tests []*test
+	for _, u := range m.Units {
+		switch u.Path {
+		case "golang.org/x/tools":
+			tests = append(tests, &test{"module golang.org/x/tools", u, "tools", pageTypeModule})
+		case "golang.org/x/tools/go/packages":
+			tests = append(tests, &test{"package golang.org/x/tools/go/packages", u, "packages", pageTypePackage})
+		case "golang.org/x/tools/go":
+			tests = append(tests, &test{"directory golang.org/x/tools/go", u, "go/", pageTypeDirectory})
+		case "golang.org/x/tools/cmd/godoc":
+			u.Name = "main"
+			tests = append(tests, &test{"package golang.org/x/tools/cmd/godoc", u, "godoc", pageTypeCommand})
+		case "golang.org/x/tools/cmd":
+			tests = append(tests, &test{"directory golang.org/x/tools/cmd", u, "cmd/", pageTypeDirectory})
+		default:
+			t.Fatalf("Unexpected path: %q", u.Path)
+		}
+	}
+	std := sample.LegacyModule(stdlib.ModulePath, "v1.0.0", "")
+	tests = append(tests, &test{"module std", std.Units[0], "Standard library", pageTypeStdLib})
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			gotTitle, gotType := pageInfo(test.unit)
+			if gotTitle != test.wantTitle || gotType != test.wantType {
+				t.Errorf("pageInfo(%q): %q, %q; want = %q, %q", test.unit.Path, gotTitle, gotType, test.wantTitle, test.wantType)
+			}
+		})
+	}
+}
 
 func TestGetNestedModules(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)

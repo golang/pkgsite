@@ -7,6 +7,7 @@ package frontend
 import (
 	"context"
 	"net/http"
+	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -345,7 +346,10 @@ func pageInfo(unit *internal.Unit) (title string, pageType string) {
 	if unit.IsPackage() {
 		return unit.Name, pageTypePackage
 	}
-	return unit.Path, pageTypeDirectory
+	if unit.IsModule() {
+		return path.Base(unit.Path), pageTypeModule
+	}
+	return path.Base(unit.Path) + "/", pageTypeDirectory
 }
 
 // displayBreadcrumbs appends additional breadcrumb links for display
