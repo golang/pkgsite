@@ -6,13 +6,10 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"flag"
 	"net/http"
 	"os"
-	"strconv"
-	"strings"
 	"time"
 
 	"cloud.google.com/go/profiler"
@@ -67,7 +64,6 @@ func main() {
 
 	var (
 		dsg        func(context.Context) internal.DataSource
-		expg       middleware.ExperimentGetter
 		fetchQueue queue.Queue
 	)
 	proxyClient, err := proxy.New(*proxyURL)
@@ -77,6 +73,7 @@ func main() {
 	if *bypassLicenseCheck {
 		log.Info(ctx, "BYPASSING LICENSE CHECKING: DISPLAYING NON-REDISTRIBUTABLE INFORMATION")
 	}
+	expg := cmdconfig.ExperimentGetter(ctx, cfg)
 	if *directProxy {
 		var pds *proxydatasource.DataSource
 		if *bypassLicenseCheck {
@@ -85,8 +82,6 @@ func main() {
 			pds = proxydatasource.New(proxyClient)
 		}
 		dsg = func(context.Context) internal.DataSource { return pds }
-		exps := readLocalExperiments(ctx)
-		expg = func(context.Context) ([]*internal.Experiment, error) { return exps, nil }
 	} else {
 		// Wrap the postgres driver with OpenCensus instrumentation.
 		ocDriver, err := ocsql.Register("postgres", ocsql.WithAllTraceOptions())
@@ -105,7 +100,6 @@ func main() {
 		}
 		defer db.Close()
 		dsg = func(context.Context) internal.DataSource { return db }
-		expg = db.GetExperiments
 		sourceClient := source.NewClient(config.SourceTimeout)
 		// The closure passed to queue.New is only used for testing and local
 		// execution, not in production. So it's okay that it doesn't use a
@@ -220,52 +214,4 @@ func openDB(ctx context.Context, cfg *config.Config, driver string) (_ *database
 	log.Errorf(ctx, "database.Open for primary host %s failed with %v; trying secondary host %s ",
 		cfg.DBHost, err, cfg.DBSecondaryHost)
 	return database.Open(driver, ci, cfg.InstanceID)
-}
-
-// Read a file of experiments used to initialize the local experiment source
-// for use in direct proxy mode.
-// Format of the file: each line is
-//     name,rollout
-// For each experiment.
-func readLocalExperiments(ctx context.Context) []*internal.Experiment {
-	filename := config.GetEnv("GO_DISCOVERY_LOCAL_EXPERIMENTS", "")
-	if filename == "" {
-		return nil
-	}
-	f, err := os.Open(filename)
-	if err != nil {
-		log.Fatal(ctx, err)
-	}
-	defer f.Close()
-	scan := bufio.NewScanner(f)
-	var experiments []*internal.Experiment
-	log.Infof(ctx, "reading experiments from %q for local development", filename)
-	for scan.Scan() {
-		line := strings.TrimSpace(scan.Text())
-		parts := strings.SplitN(line, ",", 3)
-		if len(parts) != 2 {
-			log.Fatalf(ctx, "invalid experiment in file: %q", line)
-		}
-		name := parts[0]
-		if name == "" {
-			log.Fatalf(ctx, "invalid experiment in file (name cannot be empty): %q", line)
-		}
-		rollout, err := strconv.ParseUint(parts[1], 10, 0)
-		if err != nil {
-			log.Fatalf(ctx, "invalid experiment in file (invalid rollout): %v", err)
-		}
-		if rollout > 100 {
-			log.Fatalf(ctx, "invalid experiment in file (rollout must be between 0 - 100): %q", line)
-		}
-		experiments = append(experiments, &internal.Experiment{
-			Name:    name,
-			Rollout: uint(rollout),
-		})
-		log.Infof(ctx, "experiment %q: rollout = %d", name, rollout)
-	}
-	if err := scan.Err(); err != nil {
-		log.Fatalf(ctx, "scanning %s: %v", filename, err)
-	}
-	log.Infof(ctx, "found %d experiment(s)", len(experiments))
-	return experiments
 }

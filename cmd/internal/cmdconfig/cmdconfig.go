@@ -7,7 +7,8 @@ package cmdconfig
 
 import (
 	"context"
-	"os"
+	"fmt"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/errorreporting"
@@ -49,25 +50,32 @@ func ReportingClient(ctx context.Context, cfg *config.Config) *errorreporting.Cl
 
 // Experimenter configures a middleware.Experimenter.
 func Experimenter(ctx context.Context, cfg *config.Config, getter middleware.ExperimentGetter, reportingClient *errorreporting.Client) *middleware.Experimenter {
-	if os.Getenv("GO_DISCOVERY_EXPERIMENTS_FROM_CONFIG") == "true" {
-		// Ignore getter, use dynamic config.
-		if cfg.DynamicConfigLocation == "" {
-			log.Warningf(ctx, "experiments are not configured")
-			getter = func(context.Context) ([]*internal.Experiment, error) { return nil, nil }
-		} else {
-			log.Infof(ctx, "using dynamic config from %s for experiments", cfg.DynamicConfigLocation)
-			getter = func(ctx context.Context) ([]*internal.Experiment, error) {
-				dc, err := dynconfig.Read(ctx, cfg.DynamicConfigLocation)
-				if err != nil {
-					return nil, err
-				}
-				return dc.Experiments, nil
-			}
-		}
-	}
 	e, err := middleware.NewExperimenter(ctx, 1*time.Minute, getter, reportingClient)
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
 	return e
+}
+
+// ExperimentGetter returns an ExperimentGetter using the config.
+func ExperimentGetter(ctx context.Context, cfg *config.Config) middleware.ExperimentGetter {
+	if cfg.DynamicConfigLocation == "" {
+		log.Warningf(ctx, "experiments are not configured")
+		return func(context.Context) ([]*internal.Experiment, error) { return nil, nil }
+	}
+	log.Infof(ctx, "using dynamic config from %s for experiments", cfg.DynamicConfigLocation)
+	return func(ctx context.Context) ([]*internal.Experiment, error) {
+		dc, err := dynconfig.Read(ctx, cfg.DynamicConfigLocation)
+		if err != nil {
+			return nil, err
+		}
+
+		var s []string
+		for _, e := range dc.Experiments {
+			s = append(s, fmt.Sprintf("%s:%d", e.Name, e.Rollout))
+		}
+		log.Infof(ctx, "read experiments %s", strings.Join(s, ", "))
+
+		return dc.Experiments, nil
+	}
 }

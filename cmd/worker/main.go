@@ -94,7 +94,8 @@ func main() {
 		log.Fatal(ctx, err)
 	}
 	sourceClient := source.NewClient(config.SourceTimeout)
-	fetchQueue, err := queue.New(ctx, cfg, queueName, *workers, db.GetExperiments,
+	expg := cmdconfig.ExperimentGetter(ctx, cfg)
+	fetchQueue, err := queue.New(ctx, cfg, queueName, *workers, expg,
 		func(ctx context.Context, modulePath, version string) (int, error) {
 			return worker.FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, db, cfg.AppVersionLabel())
 		})
@@ -105,7 +106,7 @@ func main() {
 	reportingClient := cmdconfig.ReportingClient(ctx, cfg)
 	redisHAClient := getHARedis(ctx, cfg)
 	redisCacheClient := getCacheRedis(ctx, cfg)
-	experimenter := cmdconfig.Experimenter(ctx, cfg, db.GetExperiments, reportingClient)
+	experimenter := cmdconfig.Experimenter(ctx, cfg, expg, reportingClient)
 	server, err := worker.NewServer(cfg, worker.ServerConfig{
 		DB:                   db,
 		IndexClient:          indexClient,
