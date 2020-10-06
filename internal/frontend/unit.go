@@ -391,7 +391,7 @@ func getSubdirectories(um *internal.UnitMeta, pkgs []*internal.PackageMeta) []*S
 			continue
 		}
 		sdirs = append(sdirs, &Subdirectory{
-			URL:      constructPackageURL(pm.Path, um.ModulePath, um.Version),
+			URL:      constructPackageURL(pm.Path, um.ModulePath, linkVersion(um.Version, um.ModulePath)),
 			Suffix:   internal.Suffix(pm.Path, um.Path),
 			Synopsis: pm.Synopsis,
 		})
