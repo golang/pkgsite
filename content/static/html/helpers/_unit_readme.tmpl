@@ -5,7 +5,7 @@
 -->
 
 {{define "unit_readme"}}
-  <div class="UnitReadme {{if .ExpandReadme}}UnitReadme--expanded{{end}} js-readme" id="readme-top">
+  <div class="UnitReadme {{if .ExpandReadme}}UnitReadme--expanded{{end}} js-readme" id="section-readme">
     <h2 class="UnitReadme-title">
       <img height="25px" width="20px" src="/static/img/pkg-icon-readme_20x16.svg">README
     </h2>
@@ -14,8 +14,8 @@
         <div class="Overview-readmeContent">{{.Readme}}</div>
         <div class="UnitReadme-fadeOut"></div>
       </div>
-      <a class="UnitReadme-expandLink js-readmeExpand" href="?readme=expanded#readme-top">Expand ▾</a>
-      <a class="UnitReadme-collapseLink js-readmeCollapse" href="?#readme-top">Collapse ▴</a>
+      <a class="UnitReadme-expandLink js-readmeExpand" href="?readme=expanded#section-readme">Expand ▾</a>
+      <a class="UnitReadme-collapseLink js-readmeCollapse" href="?#section-readme">Collapse ▴</a>
     {{end}}
   </div>
 {{end}}

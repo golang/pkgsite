@@ -12,7 +12,7 @@
       </button>
     </div>
     {{if .Readme.String}}
-      <a href="?readme=expanded#readme-top" class="UnitOutline-accordion js-accordionTrigger js-readmeExpand"
+      <a href="?readme=expanded#section-readme" class="UnitOutline-accordion js-accordionTrigger js-readmeExpand"
           role="button" aria-expanded="false" aria-controls="readme-panel" id="readme-accordion">
         README
       </a>
@@ -20,7 +20,7 @@
           id="readme-panel" role="region" aria-labelledby="readme-accordion" aria-hidden="true"></div>
     {{end}}
     {{if (or .DocOutline.String .Unit.IsPackage)}}
-      <a class="UnitOutline-accordion  js-accordionTrigger" href="#doc-top"
+      <a class="UnitOutline-accordion  js-accordionTrigger" href="#section-documentation"
           role="button" aria-expanded="false" aria-controls="outline-panel" id="outline-accordion">
         Documentation
       </a>
@@ -32,7 +32,7 @@
       </div>
     {{end}}
     {{if .SourceFiles}}
-      <a class="UnitOutline-accordion js-accordionTrigger" href="#files-top"
+      <a class="UnitOutline-accordion js-accordionTrigger" href="#section-sourcefiles"
           role="button" aria-expanded="false" aria-controls="files-panel" id="files-accordion">
         Source Files
       </a>
@@ -40,7 +40,7 @@
           id="files-panel" role="region" aria-labelledby="files-accordion" aria-hidden="true"></div>
     {{end}}
     {{if (or .Subdirectories .NestedModules)}}
-      <a class="UnitOutline-accordion js-accordionTrigger" href="#directories-top"
+      <a class="UnitOutline-accordion js-accordionTrigger" href="#section-directories"
           role="button" aria-expanded="false" aria-controls="directories-panel" id="directories-accordion">
         Directories
       </a>
