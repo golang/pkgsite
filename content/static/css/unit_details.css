@@ -20,6 +20,7 @@
   max-width: 98rem;
   min-height: 32rem;
   padding: 0.5rem 1rem;
+  word-break: break-word;
 }
 @media only screen and (min-width: 57.7rem) {
   .UnitDetails {
