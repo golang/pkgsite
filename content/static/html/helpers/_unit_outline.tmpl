@@ -5,28 +5,47 @@
 -->
 
 {{define "unit_outline"}}
-  <div class="UnitOutline">
+  <div class="UnitOutline js-accordion">
     <div class="UnitOutline-jumpTo">
       <button class="UnitOutline-jumpToInput js-jumpToInput"{{if (not .DocOutline.String)}} disabled{{end}}>
         Jump to
       </button>
     </div>
     {{if .Readme.String}}
-      <a class="UnitOutline-accordian js-accordian js-readmeExpand" href="?readme=expanded#readme-top">README</a>
+      <a href="?readme=expanded#readme-top" class="UnitOutline-accordion js-accordionTrigger js-readmeExpand"
+          aria-expanded="true" aria-controls="readme-panel" id="readme-accordion">
+        README
+      </a>
+      <div class="UnitOutline-panel js-accordionPanel"
+          id="readme-panel" role="region" aria-labelledby="readme-accordion" aria-hidden="false"></div>
     {{end}}
     {{if (or .DocOutline.String .Unit.IsPackage)}}
-      <a class="UnitOutline-accordian js-accordian" href="#doc-top">Documentation</a>
-      <div class="UnitOutline-panel">
+      <a class="UnitOutline-accordion  js-accordionTrigger" href="#doc-top"
+          aria-expanded="false" aria-controls="outline-panel" id="outline-accordion">
+        Documentation
+      </a>
+      <div class="UnitOutline-panel js-accordionPanel"
+          id="outline-panel" role="region" aria-labelledby="ouline-accordion" aria-hidden="true">
         <div class="Documentation">
           {{.DocOutline}}
         </div>
       </div>
     {{end}}
     {{if .SourceFiles}}
-      <a class="UnitOutline-accordian js-accordian" href="#files-top">Source Files</a>
+      <a class="UnitOutline-accordion js-accordionTrigger" href="#files-top"
+          aria-expanded="false" aria-controls="files-panel" id="files-accordion">
+        Source Files
+      </a>
+      <div class="UnitOutline-panel js-accordionPanel"
+          id="files-panel" role="region" aria-labelledby="files-accordion" aria-hidden="true"></div>
     {{end}}
     {{if (or .Packages .NestedModules)}}
-      <a class="UnitOutline-accordian js-accordian" href="#directories-top">Directories</a>
+      <a class="UnitOutline-accordion js-accordionTrigger" href="#directories-top"
+          aria-expanded="false" aria-controls="directories-panel" id="directories-accordion">
+        Directories
+      </a>
+      <div class="UnitOutline-panel js-accordionPanel"
+          id="directories-panel" role="region" aria-labelledby="directories-accordion" aria-hidden="true"></div>
     {{end}}
   </div>
 {{end}}

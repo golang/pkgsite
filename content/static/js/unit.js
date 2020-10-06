@@ -5,20 +5,22 @@
  * license that can be found in the LICENSE file.
  */
 
-// Highlights the active accordian on page load and adds event
-// listeners to update on interaction from user.
-document.querySelectorAll('a.js-accordian').forEach((anchor, index) => {
-  const activeClass = 'UnitOutline-accordian--active';
-  if (index === 0) {
-    anchor.classList.add(activeClass);
+import { AccordionController } from './accordion.js';
+
+/**
+ * Instantiates accordian controller for the left sidebar and sets
+ * the panel for the current location hash as active.
+ */
+const accordion = document.querySelector('.js-accordion');
+if (accordion) {
+  const accordionCtlr = new AccordionController(accordion);
+  const activePanel =
+    window.location.hash &&
+    document.querySelector(`a[href=${JSON.stringify(window.location.hash)}]`);
+  if (activePanel) {
+    accordionCtlr.select(activePanel);
   }
-  anchor.addEventListener('click', () => {
-    document.querySelectorAll('a.js-accordian').forEach(el => {
-      el.classList.remove(activeClass);
-    });
-    anchor.classList.add(activeClass);
-  });
-});
+}
 
 /**
  * Event handlers for expanding and collapsing the readme section.

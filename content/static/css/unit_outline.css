@@ -32,7 +32,7 @@
   position: sticky;
   top: 4.5rem;
 }
-a.UnitOutline-accordian {
+a.UnitOutline-accordion {
   align-items: center;
   color: var(--gray-2);
   display: flex;
@@ -41,7 +41,7 @@ a.UnitOutline-accordian {
   height: 2.5rem;
   padding: 1rem;
 }
-a.UnitOutline-accordian--active {
+a.UnitOutline-accordion[aria-expanded='true'] {
   background-color: var(--gray-9);
 }
 .UnitOutline-panel {
@@ -49,6 +49,9 @@ a.UnitOutline-accordian--active {
   background-color: white;
   display: block;
   overflow-y: auto;
+}
+.UnitOutline-panel[aria-hidden='true'] {
+  display: none;
 }
 .UnitOutline-jumpTo {
   display: flex;
