@@ -41,7 +41,7 @@ func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *
 	}
 	pageType := pageTypeModule
 	if um.ModulePath == stdlib.ModulePath {
-		pageType = pageTypeStdLib
+		pageType = pageTypeModuleStd
 	}
 
 	page := &DetailsPage{

@@ -12,11 +12,11 @@
       </a>
       <div class="UnitFixedHeader-moduleInfo">
         <span class="UnitFixedHeader-title">
-          {{if ne .PageType "std"}}
-            <span class="UnitFixedHeader-titleName">{{.Title}}</span>
-          {{else}}
+          {{if eq .PageType "std"}}
             <span class="UnitFixedHeader-titleType">Standard library</span>
             <span class="UnitFixedHeader-titleType UnitFixedHeader-titleType--small">StdLib</span>
+          {{else}}
+            <span class="UnitFixedHeader-titleName">{{.Title}}</span>
           {{end}}
         </span>
         {{with .Breadcrumb}}

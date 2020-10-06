@@ -67,8 +67,12 @@ type UnitPage struct {
 	// LatestURL is a url pointing to the latest version of a unit.
 	LatestURL string
 
-	// PageType is the type of page (pkg, cmd, dir, etc.).
+	// PageType is the type of page (pkg, cmd, dir, std, or mod).
 	PageType string
+
+	// PageLabels are the labels that will be displayed
+	// for a given page.
+	PageLabels []string
 
 	// CanShowDetails indicates whether details can be shown or must be
 	// hidden due to issues like license restrictions.
@@ -251,7 +255,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		return nil
 	}
 
-	title, pageType := pageInfo(unit)
+	title := pageTitle(unit)
 	basePage := s.newBasePage(r, title)
 	basePage.AllowWideContent = true
 	canShowDetails := unit.IsRedistributable || tabSettings.AlwaysShowDetails
@@ -280,7 +284,8 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		DisplayVersion:  displayVersion(unit.Version, unit.ModulePath),
 		LinkVersion:     linkVersion(unit.Version, unit.ModulePath),
 		LatestURL:       constructPackageURL(unit.Path, unit.ModulePath, middleware.LatestMinorVersionPlaceholder),
-		PageType:        pageType,
+		PageLabels:      pageLabels(unit),
+		PageType:        pageType(unit),
 		CanShowDetails:  canShowDetails,
 		UnitContentName: tabSettings.DisplayName,
 		Readme:          readme,
@@ -343,21 +348,62 @@ func readmeContent(ctx context.Context, unit *internal.Unit) (safehtml.HTML, err
 	return safehtml.HTML{}, nil
 }
 
-// pageInfo determines the title and pageType for a given unit.
-func pageInfo(unit *internal.Unit) (title string, pageType string) {
+// pageTitle determines the pageTitles for a given unit.
+// See TestPageTitlesAndTypes for examples.
+func pageTitle(unit *internal.Unit) string {
+	switch {
+	case unit.Path == stdlib.ModulePath:
+		return "Standard library"
+	case unit.IsCommand():
+		return effectiveName(unit.Path, unit.Name)
+	case unit.IsPackage():
+		return unit.Name
+	case unit.IsModule():
+		return path.Base(unit.Path)
+	default:
+		return path.Base(unit.Path) + "/"
+	}
+}
+
+// pageType determines the pageType for a given unit.
+func pageType(unit *internal.Unit) string {
 	if unit.Path == stdlib.ModulePath {
-		return "Standard library", pageTypeStdLib
+		return pageTypeModuleStd
 	}
 	if unit.IsCommand() {
-		return effectiveName(unit.Path, unit.Name), pageTypeCommand
+		return pageTypeCommand
 	}
 	if unit.IsPackage() {
-		return unit.Name, pageTypePackage
+		return pageTypePackage
 	}
 	if unit.IsModule() {
-		return path.Base(unit.Path), pageTypeModule
+		return pageTypeModule
 	}
-	return path.Base(unit.Path) + "/", pageTypeDirectory
+	return pageTypeDirectory
+}
+
+// pageLabels determines the labels to display for a given unit.
+// See TestPageTitlesAndTypes for examples.
+func pageLabels(unit *internal.Unit) []string {
+	var pageTypes []string
+	if unit.Path == stdlib.ModulePath {
+		return nil
+	}
+	if unit.IsCommand() {
+		pageTypes = append(pageTypes, pageTypeCommand)
+	} else if unit.IsPackage() {
+		pageTypes = append(pageTypes, pageTypePackage)
+	}
+	if unit.IsModule() {
+		pageTypes = append(pageTypes, pageTypeModule)
+	}
+	if !unit.IsPackage() && !unit.IsModule() {
+		pageTypes = append(pageTypes, pageTypeDirectory)
+	}
+	if stdlib.Contains(unit.Path) {
+		pageTypes = append(pageTypes, pageTypeStdlib)
+	}
+	return pageTypes
 }
 
 // displayBreadcrumbs appends additional breadcrumb links for display

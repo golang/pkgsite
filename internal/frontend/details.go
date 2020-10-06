@@ -68,7 +68,8 @@ const (
 	pageTypeDirectory = "dir"
 	pageTypePackage   = "pkg"
 	pageTypeCommand   = "cmd"
-	pageTypeStdLib    = stdlib.ModulePath
+	pageTypeStdlib    = "stdlib"
+	pageTypeModuleStd = "std"
 )
 
 var (

@@ -36,16 +36,17 @@
         <h1 class="UnitHeader-title">
           {{.Title}}
         </h1>
-        {{if .Unit.IsCommand}}
-          <span class="UnitHeader-badge">command</span>
-        {{else if .Unit.IsPackage}}
-          <span class="UnitHeader-badge">package</span>
-        {{end}}
-        {{if .Unit.IsModule}}
-          <span class="UnitHeader-badge">module</span>
-        {{end}}
-        {{if not (or .Unit.IsPackage .Unit.IsModule)}}
-          <span class="UnitHeader-badge">directory</span>
+        {{range .PageLabels}}
+          {{if ne . "std"}}
+            <span class="UnitHeader-badge">
+              {{if eq . "pkg"}}package
+              {{else if eq . "cmd"}}command
+              {{else if eq . "mod"}}module
+              {{else if eq . "dir"}}directory
+              {{else if eq . "stdlib"}}standard library
+              {{end}}
+            </span>
+          {{end}}
         {{end}}
       </div>
       <div class="UnitHeader-versionBanner $$GODISCOVERY_LATESTMAJORCLASS$$">
