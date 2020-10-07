@@ -214,6 +214,15 @@ func TestBreadcrumbPath(t *testing.T) {
 			},
 		},
 		{
+			// Special case: stdlib package.
+			"encoding/json", "std", "go1.15",
+			breadcrumb{
+				Current:  "json",
+				Links:    []link{{"/encoding@go1.15", "encoding"}},
+				CopyData: "encoding/json",
+			},
+		},
+		{
 			// Special case: stdlib module.
 			"std", "std", internal.LatestVersion,
 			breadcrumb{

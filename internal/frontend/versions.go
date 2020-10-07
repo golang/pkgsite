@@ -274,8 +274,13 @@ func displayVersion(v string, modulePath string) string {
 
 // linkVersion returns the version string, suitable for use in
 // a link to this site.
+// TODO(golang/go#41855): Clarify definition / use case for linkVersion and
+// other version strings.
 func linkVersion(v string, modulePath string) string {
 	if modulePath == stdlib.ModulePath {
+		if strings.HasPrefix(v, "go") {
+			return v
+		}
 		return goTagForVersion(v)
 	}
 	return v
