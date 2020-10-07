@@ -27,6 +27,7 @@ const jumpBody = jumpDialog.querySelector('.JumpDialog-body');
 const jumpList = jumpDialog.querySelector('.JumpDialog-list');
 const jumpFilter = jumpDialog.querySelector('.JumpDialog-input');
 const searchInput = document.querySelector('.js-searchFocus');
+const doc = document.querySelector('.js-documentation');
 
 if (!jumpDialog.showModal) {
   dialogPolyfill.registerDialog(jumpDialog);
@@ -44,7 +45,6 @@ let jumpListItems; // All the identifiers in the doc; computed only once.
 // a less precise method.
 function collectJumpListItems() {
   let items = [];
-  const doc = document.querySelector('.js-documentation');
   for (const el of doc.querySelectorAll('[data-kind]')) {
     items.push(newJumpListItem(el));
   }
@@ -256,7 +256,7 @@ if (!shortcutsDialog.showModal) {
 // Ignore a keypress if a dialog is already open, or if it is pressed on a
 // component that wants to consume it.
 document.addEventListener('keypress', function (e) {
-  if (jumpDialog.open || shortcutsDialog.open) {
+  if (jumpDialog.open || shortcutsDialog.open || !doc) {
     return;
   }
   const t = e.target.tagName;
