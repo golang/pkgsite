@@ -208,11 +208,15 @@ func removeCycles(f *File) {
 		if !ok {
 			panic(fmt.Sprintf("no number for Object %v", id.Obj))
 		}
-		d, ok := declNums[id.Obj.Decl]
-		if !ok && isRelevantDecl(id.Obj.Decl) {
-			panic(fmt.Sprintf("no number for Decl %v", id.Obj.Decl))
+		if d, ok := declNums[id.Obj.Decl]; ok {
+			id.Obj.Decl = d
+		} else {
+			// We may not have seen this Ident's Decl because the definition was
+			// removed from the AST, even though references remain. For example,
+			// an exported var initialized to a call of an unexported function.
+			// Ignore those by setting the Decl field to -1.
+			id.Obj.Decl = -1
 		}
-		id.Obj.Decl = d
 		return true
 	})
 
@@ -283,7 +287,10 @@ func fixupObjects(f *File) {
 		case num == len(objs):
 			// A new object; fix it up and remember it.
 			if obj.Decl != nil {
-				obj.Decl = decls[obj.Decl.(int)]
+				num := obj.Decl.(int)
+				if num >= 0 {
+					obj.Decl = decls[num]
+				}
 			}
 			objs = append(objs, obj)
 		case num > len(objs):

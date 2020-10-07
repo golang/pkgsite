@@ -114,7 +114,7 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 			removeNodes = true
 			// Don't strip the seemingly unexported functions from the builtin package;
 			// they are actually Go builtins like make, new, etc.
-			if !(modulePath == stdlib.ModulePath && innerPath == "builtin") {
+			if modulePath == stdlib.ModulePath && innerPath == "builtin" {
 				removeNodes = false
 			}
 		}

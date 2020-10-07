@@ -15,7 +15,7 @@ import (
 const C = 1
 
 // var
-var V = 2
+var V = unexp()
 
 // exported func
 func F(t time.Time) {
