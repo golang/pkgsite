@@ -73,9 +73,15 @@ func ExperimentGetter(ctx context.Context, cfg *config.Config) middleware.Experi
 		var s []string
 		for _, e := range dc.Experiments {
 			s = append(s, fmt.Sprintf("%s:%d", e.Name, e.Rollout))
+			if desc, ok := internal.Experiments[e.Name]; ok {
+				if e.Description == "" {
+					e.Description = desc
+				}
+			} else {
+				log.Errorf(ctx, "unknown experiment %q", e.Name)
+			}
 		}
 		log.Infof(ctx, "read experiments %s", strings.Join(s, ", "))
-
 		return dc.Experiments, nil
 	}
 }
