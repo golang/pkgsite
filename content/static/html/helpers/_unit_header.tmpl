@@ -74,7 +74,7 @@
           <span class="UnitHeader-detailItem">
             <img height="16px" width="16px" src="/static/img/pkg-icon-scale_16x16.svg">
             {{if .Licenses}}
-              <a href="{{$.CanonicalURLPath}}?tab=licenses">
+              <a href="{{$.URLPath}}?tab=licenses">
                 {{range $i, $e := .Licenses}}
                 {{if $i}}, {{end}} {{$e.Type}}
                 {{end}}
@@ -87,13 +87,13 @@
           {{if .Unit.IsPackage}}
             <span class="UnitHeader-detailItem">
               <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg">
-              <a href="{{$.CanonicalURLPath}}?tab=imports">
+              <a href="{{$.URLPath}}?tab=imports">
                 {{len .Unit.Imports}} <span>Imports</span>
               </a>
             </span>
             <span class="UnitHeader-detailItem">
               <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg">
-              <a href="{{$.CanonicalURLPath}}?tab=importedby">
+              <a href="{{$.URLPath}}?tab=importedby">
                 {{.ImportedByCount}} <span>Imported by</span>
               </a>
             </span>

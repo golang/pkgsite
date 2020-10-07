@@ -42,6 +42,9 @@ type UnitPage struct {
 	// Title is the title of the page.
 	Title string
 
+	// URLPath is the path suitable for links on the page.
+	URLPath string
+
 	// CanonicalURLPath is the representation of the URL path for the details
 	// page, after the requested version and module path have been resolved.
 	// For example, if the latest version of /my.module/pkg is version v1.5.2,
@@ -262,10 +265,15 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		Title:          title,
 		Tabs:           unitTabs,
 		SelectedTab:    tabSettings,
-		CanonicalURLPath: constructPackageURL(
+		URLPath: constructPackageURL(
 			unit.Path,
 			unit.ModulePath,
 			requestedVersion,
+		),
+		CanonicalURLPath: constructPackageURL(
+			unit.Path,
+			unit.ModulePath,
+			linkVersion(unit.Version, unit.ModulePath),
 		),
 		Licenses:        transformLicenseMetadata(unit.Licenses),
 		LastCommitTime:  elapsedTime(unit.CommitTime),

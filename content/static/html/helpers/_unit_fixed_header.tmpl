@@ -51,7 +51,7 @@
               <img height="16px" width="16px" src="/static/img/pkg-icon-scale_16x16.svg">
               {{range $i, $e := .Licenses}}
                 {{if $i}}, {{end}}
-                <a href="{{$.CanonicalURLPath}}?tab=licenses#{{.Anchor}}" tabindex="-1">{{$e.Type}}</a>
+                <a href="{{$.URLPath}}?tab=licenses#{{.Anchor}}" tabindex="-1">{{$e.Type}}</a>
               {{else}}
                 <span>None detected</span>
                 <a href="/license-policy" class="Disclaimer-link" tabindex="-1">
@@ -62,13 +62,13 @@
             {{if .Unit.IsPackage}}
               <span class="UnitHeaderFixed-detailItem UnitHeaderFixed-detailItem--lg">
                 <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg">
-                <a href="{{$.CanonicalURLPath}}?tab=imports" tabindex="-1">
+                <a href="{{$.URLPath}}?tab=imports" tabindex="-1">
                   {{len .Unit.Imports}} <span>Imports</span>
                 </a>
               </span>
               <span class="UnitHeaderFixed-detailItem UnitHeaderFixed-detailItem--lg">
                 <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg">
-                <a href="{{$.CanonicalURLPath}}?tab=importedby" tabindex="-1">
+                <a href="{{$.URLPath}}?tab=importedby" tabindex="-1">
                   {{.ImportedByCount}} <span>Imported by</span>
                 </a>
               </span>
@@ -82,7 +82,7 @@
             <select class="UnitFixedHeader-overflowSelect js-overflowSelect" tabindex="-1">
               {{range .Tabs}}
                 <option
-                  value="{{$.CanonicalURLPath}}?tab={{.Name}}"
+                  value="{{$.URLPath}}?tab={{.Name}}"
                   {{if .Disabled}}
                     disabled
                     data-always-disabled="true"
