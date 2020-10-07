@@ -131,7 +131,7 @@ var (
 	unitTabs = []TabSettings{
 		{
 			Name:         tabDetails,
-			DisplayName:  "Details",
+			DisplayName:  "Main",
 			TemplateName: "unit_details.tmpl",
 		},
 		{
