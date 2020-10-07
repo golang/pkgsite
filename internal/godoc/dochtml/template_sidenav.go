@@ -19,11 +19,13 @@ const tmplSidenav = `
 							role="treeitem" aria-expanded="false" aria-level="1" aria-owns="nav-group-index" tabindex="-1">
 						Index
 					</a>
-					<ul role="group" id="nav-group-index">
-						<li role="none">
-							<a href="#pkg-examples" role="treeitem" aria-level="2" tabindex="-1">Examples</a>
-						</li>
-					</ul>
+					{{if .Examples.List}}
+						<ul role="group" id="nav-group-index">
+							<li role="none">
+								<a href="#pkg-examples" role="treeitem" aria-level="2" tabindex="-1">Examples</a>
+							</li>
+						</ul>
+					{{end}}
 				</li>
 				<li class="DocNav-constants" role="none">
 					<a href="#pkg-constants" class="js-docNav" role="treeitem" aria-level="1" tabindex="-1">Constants</a>
