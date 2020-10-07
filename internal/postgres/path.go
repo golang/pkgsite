@@ -24,7 +24,7 @@ import (
 // (4) prerelease, incompatible
 // (5) pseudo
 // They are then sorted based on semver, then decreasing module path length (so
-// that nested modules are prefered).
+// that nested modules are preferred).
 const orderByLatest = `
 			ORDER BY
 				CASE
