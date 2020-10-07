@@ -8,6 +8,7 @@ import (
 	"archive/zip"
 	"context"
 	"net/http"
+	"os"
 	"sort"
 	"strings"
 	"testing"
@@ -19,12 +20,21 @@ import (
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/testing/sample"
+	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
 var testProxyCommitTime = time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC)
 
-func cleanFetchResult(fr *FetchResult, detector *licenses.Detector) *FetchResult {
+// cleanFetchResult adds missing information to a given FetchResult and returns
+// it. It's meant to be used with test cases in fetchdata_test and should be called
+// only once for each test case. The missing information is added here to avoid
+// having to hardcode it into each test case.
+func cleanFetchResult(t *testing.T, fr *FetchResult, detector *licenses.Detector) *FetchResult {
+	t.Helper()
+
 	fr.ModulePath = fr.Module.ModulePath
 	if fr.GoModPath == "" {
 		fr.GoModPath = fr.ModulePath
@@ -33,7 +43,7 @@ func cleanFetchResult(fr *FetchResult, detector *licenses.Detector) *FetchResult
 		fr.Status = 200
 	}
 	if fr.Module.Version == "" {
-		fr.Module.Version = "v1.0.0"
+		fr.Module.Version = sample.VersionString
 	}
 	if fr.RequestedVersion == "" {
 		fr.RequestedVersion = fr.Module.Version
@@ -98,6 +108,88 @@ func cleanFetchResult(fr *FetchResult, detector *licenses.Detector) *FetchResult
 		}
 	}
 	return fr
+}
+
+// updateFetchResultVersions updates units' and package version states' version
+// based on the type of fetching. Should be used for test cases in fetchdata_test.
+func updateFetchResultVersions(t *testing.T, fr *FetchResult, local bool) *FetchResult {
+	t.Helper()
+
+	if local {
+		for _, u := range fr.Module.Units {
+			u.UnitMeta.Version = LocalVersion
+		}
+		for _, pvs := range fr.PackageVersionStates {
+			pvs.Version = LocalVersion
+		}
+	} else {
+		for _, u := range fr.Module.Units {
+			u.UnitMeta.Version = fr.Module.Version
+		}
+		for _, pvs := range fr.PackageVersionStates {
+			pvs.Version = fr.Module.Version
+		}
+	}
+	return fr
+}
+
+// proxyFetcher is a test helper function that sets up a test proxy, fetches
+// a module using FetchModule, and returns fetch result and a license detector.
+func proxyFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *testModule, fetchVersion string) (*FetchResult, *licenses.Detector) {
+	t.Helper()
+
+	modulePath := mod.mod.ModulePath
+	version := mod.mod.Version
+	if version == "" {
+		version = sample.VersionString
+	}
+	if fetchVersion == "" {
+		fetchVersion = version
+	}
+
+	sourceClient := source.NewClient(sourceTimeout)
+	proxyClient, teardownProxy := proxy.SetupTestClient(t, []*proxy.Module{{
+		ModulePath: modulePath,
+		Version:    version,
+		Files:      mod.mod.Files,
+	}})
+	defer teardownProxy()
+	got := FetchModule(ctx, modulePath, fetchVersion, proxyClient, sourceClient)
+	if !withLicenseDetector {
+		return got, nil
+	}
+
+	d := licenseDetector(ctx, t, modulePath, got.ResolvedVersion, proxyClient)
+	return got, d
+}
+
+// localFetcher is a helper function that creates a test directory to hold a module,
+// fetches the module from the directory using FetchLocalModule, and returns a fetch
+// result, and a license detector.
+func localFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *testModule, fetchVersion string) (*FetchResult, *licenses.Detector) {
+	t.Helper()
+
+	directory, err := testhelper.CreateTestDirectory(mod.mod.Files)
+	if err != nil {
+		t.Fatalf("couldn't create test files")
+	}
+	defer os.RemoveAll(directory)
+
+	modulePath := mod.mod.ModulePath
+	sourceClient := source.NewClient(sourceTimeout)
+	got := FetchLocalModule(ctx, modulePath, directory, sourceClient)
+	if !withLicenseDetector {
+		return got, nil
+	}
+
+	zipReader, err := createZipReader(directory, modulePath, LocalVersion)
+	if err != nil {
+		t.Fatal("couldn't create zip reader")
+	}
+	d := licenses.NewDetector(modulePath, LocalVersion, zipReader, func(format string, args ...interface{}) {
+		log.Infof(ctx, format, args...)
+	})
+	return got, d
 }
 
 func licenseDetector(ctx context.Context, t *testing.T, modulePath, version string, proxyClient *proxy.Client) *licenses.Detector {

@@ -13,11 +13,15 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"runtime"
+
+	"golang.org/x/pkgsite/internal/derrors"
 )
 
 const (
@@ -105,4 +109,36 @@ func TestDataPath(rel string) string {
 		panic("unable to determine relative path")
 	}
 	return filepath.Clean(filepath.Join(filepath.Dir(filename), filepath.FromSlash(rel)))
+}
+
+// CreateTestDirectory creates a directory to hold a module when testing
+// local fetching, and returns the directory.
+func CreateTestDirectory(files map[string]string) (_ string, err error) {
+	defer derrors.Wrap(&err, "CreateTestDirectory(files)")
+	tempDir, err := ioutil.TempDir("", "")
+	if err != nil {
+		return "", err
+	}
+
+	for path, contents := range files {
+		path = filepath.Join(tempDir, path)
+
+		parent, _ := filepath.Split(path)
+		if err := os.MkdirAll(parent, 0755); err != nil {
+			return "", err
+		}
+
+		file, err := os.Create(path)
+		if err != nil {
+			return "", err
+		}
+		if _, err := file.WriteString(contents); err != nil {
+			return "", err
+		}
+		if err := file.Close(); err != nil {
+			return "", err
+		}
+	}
+
+	return tempDir, nil
 }
