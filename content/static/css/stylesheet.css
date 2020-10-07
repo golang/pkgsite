@@ -116,7 +116,7 @@ code {
   flex: 1;
   padding: 0 1rem;
 }
-.Site--redesign .Site-content {
+.Site--redesign.Site--wide .Site-content {
   padding: 0;
 }
 .Site-footer {
@@ -126,7 +126,7 @@ code {
   .Site-content {
     padding: 0 1.5rem;
   }
-  .Site--redesign .Site-content {
+  .Site--redesign.Site--wide .Site-content {
     padding: 0;
   }
 }
