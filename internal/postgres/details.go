@@ -20,7 +20,7 @@ import (
 )
 
 // GetNestedModules returns the latest major version of all nested modules
-// given a modulePath path prefix.
+// given a modulePath path prefix with or without major version.
 func (db *DB) GetNestedModules(ctx context.Context, modulePath string) (_ []*internal.ModuleInfo, err error) {
 	defer derrors.Wrap(&err, "GetNestedModules(ctx, %v)", modulePath)
 
@@ -58,7 +58,8 @@ func (db *DB) GetNestedModules(ctx context.Context, modulePath string) (_ []*int
 		}
 		return nil
 	}
-	if err := db.db.RunQuery(ctx, query, collect, modulePath); err != nil {
+	seriesPath := internal.SeriesPathForModule(modulePath)
+	if err := db.db.RunQuery(ctx, query, collect, seriesPath); err != nil {
 		return nil, err
 	}
 

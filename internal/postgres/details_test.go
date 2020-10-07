@@ -56,6 +56,17 @@ func TestGetNestedModules(t *testing.T) {
 				"cloud.google.com/go/storage/v11",
 			},
 		},
+		{
+			name: "Nested Modules in golang.org/x/tools/v2 that have the same module prefix path",
+			path: "golang.org/x/tools/v2",
+			modules: []*internal.Module{
+				sample.LegacyModule("golang.org/x/tools", "v0.0.1", sample.Suffix),
+				sample.LegacyModule("golang.org/x/tools/gopls", "v0.5.1", sample.Suffix),
+			},
+			wantModulePaths: []string{
+				"golang.org/x/tools/gopls",
+			},
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			defer ResetTestDB(testDB, t)
@@ -65,7 +76,7 @@ func TestGetNestedModules(t *testing.T) {
 				}
 			}
 
-			gotModules, err := testDB.GetNestedModules(ctx, "cloud.google.com/go")
+			gotModules, err := testDB.GetNestedModules(ctx, tc.path)
 			if err != nil {
 				t.Fatal(err)
 			}
