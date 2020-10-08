@@ -10,6 +10,7 @@ import (
 	"flag"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"cloud.google.com/go/profiler"
@@ -23,6 +24,7 @@ import (
 	"golang.org/x/pkgsite/internal/dcensus"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/frontend"
+	"golang.org/x/pkgsite/internal/localdatasource"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
@@ -43,6 +45,8 @@ var (
 		"for direct proxy mode and frontend fetches")
 	directProxy = flag.Bool("direct_proxy", false, "if set to true, uses the module proxy referred to by this URL "+
 		"as a direct backend, bypassing the database")
+	localPaths         = flag.String("local", "", "run locally, accepts a GOPATH-like collection of local paths for modules to load to memory")
+	gopathMode         = flag.Bool("gopath_mode", false, "assume that local modules' paths are relative to GOPATH/src, used only with -local")
 	bypassLicenseCheck = flag.Bool("bypass_license_check", false, "display all information, even for non-redistributable paths")
 )
 
@@ -66,52 +70,76 @@ func main() {
 		dsg        func(context.Context) internal.DataSource
 		fetchQueue queue.Queue
 	)
-	proxyClient, err := proxy.New(*proxyURL)
-	if err != nil {
-		log.Fatal(ctx, err)
-	}
 	if *bypassLicenseCheck {
 		log.Info(ctx, "BYPASSING LICENSE CHECKING: DISPLAYING NON-REDISTRIBUTABLE INFORMATION")
 	}
+
 	expg := cmdconfig.ExperimentGetter(ctx, cfg)
-	if *directProxy {
-		var pds *proxydatasource.DataSource
-		if *bypassLicenseCheck {
-			pds = proxydatasource.NewBypassingLicenseCheck(proxyClient)
+	if *localPaths != "" {
+		lds := localdatasource.New()
+		paths := filepath.SplitList(*localPaths)
+		if *gopathMode {
+			for _, path := range paths {
+				err := lds.LoadFromGOPATH(ctx, path)
+				if err != nil {
+					log.Error(ctx, err)
+				}
+			}
 		} else {
-			pds = proxydatasource.New(proxyClient)
+			for _, path := range paths {
+				err := lds.Load(ctx, path)
+				if err != nil {
+					log.Error(ctx, err)
+				}
+			}
 		}
-		dsg = func(context.Context) internal.DataSource { return pds }
+		dsg = func(context.Context) internal.DataSource { return lds }
 	} else {
-		// Wrap the postgres driver with OpenCensus instrumentation.
-		ocDriver, err := ocsql.Register("postgres", ocsql.WithAllTraceOptions())
-		if err != nil {
-			log.Fatalf(ctx, "unable to register the ocsql driver: %v\n", err)
-		}
-		ddb, err := openDB(ctx, cfg, ocDriver)
+		proxyClient, err := proxy.New(*proxyURL)
 		if err != nil {
 			log.Fatal(ctx, err)
 		}
-		var db *postgres.DB
-		if *bypassLicenseCheck {
-			db = postgres.NewBypassingLicenseCheck(ddb)
+
+		if *directProxy {
+			var pds *proxydatasource.DataSource
+			if *bypassLicenseCheck {
+				pds = proxydatasource.NewBypassingLicenseCheck(proxyClient)
+			} else {
+				pds = proxydatasource.New(proxyClient)
+			}
+			dsg = func(context.Context) internal.DataSource { return pds }
 		} else {
-			db = postgres.New(ddb)
-		}
-		defer db.Close()
-		dsg = func(context.Context) internal.DataSource { return db }
-		sourceClient := source.NewClient(config.SourceTimeout)
-		// The closure passed to queue.New is only used for testing and local
-		// execution, not in production. So it's okay that it doesn't use a
-		// per-request connection.
-		fetchQueue, err = queue.New(ctx, cfg, queueName, *workers, expg,
-			func(ctx context.Context, modulePath, version string) (int, error) {
-				return frontend.FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, db)
-			})
-		if err != nil {
-			log.Fatalf(ctx, "queue.New: %v", err)
+			// Wrap the postgres driver with OpenCensus instrumentation.
+			ocDriver, err := ocsql.Register("postgres", ocsql.WithAllTraceOptions())
+			if err != nil {
+				log.Fatalf(ctx, "unable to register the ocsql driver: %v\n", err)
+			}
+			ddb, err := openDB(ctx, cfg, ocDriver)
+			if err != nil {
+				log.Fatal(ctx, err)
+			}
+			var db *postgres.DB
+			if *bypassLicenseCheck {
+				db = postgres.NewBypassingLicenseCheck(ddb)
+			} else {
+				db = postgres.New(ddb)
+			}
+			defer db.Close()
+			dsg = func(context.Context) internal.DataSource { return db }
+			sourceClient := source.NewClient(config.SourceTimeout)
+			// The closure passed to queue.New is only used for testing and local
+			// execution, not in production. So it's okay that it doesn't use a
+			// per-request connection.
+			fetchQueue, err = queue.New(ctx, cfg, queueName, *workers, expg,
+				func(ctx context.Context, modulePath, version string) (int, error) {
+					return frontend.FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, db)
+				})
+			if err != nil {
+				log.Fatalf(ctx, "queue.New: %v", err)
+			}
 		}
 	}
+
 	var haClient *redis.Client
 	if cfg.RedisHAHost != "" {
 		haClient = redis.NewClient(&redis.Options{
