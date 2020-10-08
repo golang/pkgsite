@@ -60,11 +60,14 @@ func NewPackage(fset *token.FileSet, goos, goarch string, modPaths map[string]bo
 // AddFile adds a file to the Package. After it returns, the contents of the ast.File
 // are unsuitable for anything other than the methods of this package.
 func (p *Package) AddFile(f *ast.File, removeNodes bool) {
-	if removeNodes {
+	filename := p.Fset.Position(f.Package).Filename
+	// Don't trim anything from a test file or one in a XXX_test package; it
+	// may be part of a playable example.
+	if removeNodes && !strings.HasSuffix(filename, "_test.go") && !strings.HasSuffix(f.Name.Name, "_test") {
 		removeUnusedASTNodes(f)
 	}
 	p.Files = append(p.Files, &File{
-		Name: p.Fset.Position(f.Package).Filename,
+		Name: filename,
 		AST:  f,
 	})
 }
@@ -72,11 +75,6 @@ func (p *Package) AddFile(f *ast.File, removeNodes bool) {
 // removeUnusedASTNodes removes parts of the AST not needed for documentation.
 // It doesn't remove unexported consts, vars or types, although it probably could.
 func removeUnusedASTNodes(pf *ast.File) {
-	// Don't trim anything from a file in a XXX_test package; it
-	// may be part of a playable example.
-	if strings.HasSuffix(pf.Name.Name, "_test") {
-		return
-	}
 	var decls []ast.Decl
 	for _, d := range pf.Decls {
 		if f, ok := d.(*ast.FuncDecl); ok {
