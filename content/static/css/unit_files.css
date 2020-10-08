@@ -29,7 +29,7 @@
 }
 .UnitFiles-fileList {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(10.5rem, auto));
   line-height: 1.5rem;
   list-style: none;
   padding-left: 0;
@@ -40,8 +40,4 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-.UnitFiles-file::before {
-  content: url(/static/img/pkg-icon-file_16x12.svg);
-  margin-right: 0.75rem;
 }
