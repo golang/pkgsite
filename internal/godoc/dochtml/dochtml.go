@@ -25,7 +25,9 @@ import (
 	"github.com/google/safehtml/legacyconversions"
 	"github.com/google/safehtml/template"
 	"github.com/google/safehtml/uncheckedconversions"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
@@ -115,6 +117,17 @@ func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Render
 	}
 	sourceLink := func(name string, node ast.Node) safehtml.HTML {
 		return linkHTML(name, opt.SourceLinkFunc(node), "Documentation-source")
+	}
+
+	if experiment.IsActive(ctx, internal.ExperimentUnitPage) {
+		if p.Doc == "" &&
+			len(p.Examples) == 0 &&
+			len(p.Consts) == 0 &&
+			len(p.Vars) == 0 &&
+			len(p.Types) == 0 &&
+			len(p.Funcs) == 0 {
+			return safehtml.HTML{}, nil
+		}
 	}
 
 	h := htmlPackage(ctx)
