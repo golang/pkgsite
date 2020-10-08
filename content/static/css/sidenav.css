@@ -159,6 +159,9 @@
   .DocNav [role='group'] [role='treeitem'] {
     padding-left: 2.5rem;
   }
+  .DocNav ul[role='group'] > :last-child {
+    margin-bottom: 0.375rem;
+  }
   .DocNav [aria-selected='true'] {
     color: var(--gray-1);
     font-weight: 500;
