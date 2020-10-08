@@ -66,8 +66,8 @@ type Options struct {
 	DisablePermalinks bool
 }
 
-// docDataTmpl renders documentation. It expects a docData.
-var docDataTmpl = template.Must(template.New("").Parse(`
+// legacyDocDataTmpl renders documentation. It expects a docData.
+var legacyDocDataTmpl = template.Must(template.New("").Parse(`
 {{- range .Elements -}}
   {{- if .IsHeading -}}
     <h3 id="{{.ID}}">{{.Title}}
@@ -80,8 +80,8 @@ var docDataTmpl = template.Must(template.New("").Parse(`
   {{- end -}}
 {{end}}`))
 
-// exampleTmpl renders code for an example. It expect an Example.
-var exampleTmpl = template.Must(template.New("").Parse(`
+// legacyExampleTmpl renders code for an example. It expect an Example.
+var legacyExampleTmpl = template.Must(template.New("").Parse(`
 <pre class="Documentation-exampleCode">
 {{range .}}
   {{- if .Comment -}}
@@ -115,8 +115,8 @@ func New(ctx context.Context, fset *token.FileSet, pkg *doc.Package, opts *Optio
 		packageURL:        packageURL,
 		disableHotlinking: disableHotlinking,
 		disablePermalinks: disablePermalinks,
-		docTmpl:           docDataTmpl,
-		exampleTmpl:       exampleTmpl,
+		docTmpl:           legacyDocDataTmpl,
+		exampleTmpl:       legacyExampleTmpl,
 	}
 }
 
