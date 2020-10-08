@@ -4,11 +4,6 @@
 
 package dochtml
 
-const (
-	IdentifierBodyStart = `<div class="Documentation-content js-docContent">`
-	IdentifierBodyEnd   = `</div>`
-)
-
 const legacyTmplBody = `
 
 ` + IdentifierBodyStart + ` {{/* Documentation content container */}}

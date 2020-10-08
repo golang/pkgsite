@@ -4,6 +4,12 @@
 
 package dochtml
 
+const (
+	IdentifierSidenavStart       = `<nav class="DocNav js-sideNav">`
+	IdentifierSidenavMobileStart = `<nav class="DocNavMobile js-mobileNav">`
+	IdentifierSidenavEnd         = `</nav>`
+)
+
 const tmplSidenav = `
 {{if or .Doc .Consts .Vars .Funcs .Types}}
 	` + IdentifierSidenavStart + `

@@ -4,6 +4,11 @@
 
 package dochtml
 
+const (
+	IdentifierBodyStart = `<div class="Documentation-content js-docContent">`
+	IdentifierBodyEnd   = `</div>`
+)
+
 const tmplBody = `
 
 ` + IdentifierBodyStart + ` {{/* Documentation content container */}}
