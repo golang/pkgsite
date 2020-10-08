@@ -75,20 +75,6 @@ type docElement struct {
 	ID    safehtml.Identifier
 }
 
-// docTmpl renders documentation. It expects a docData.
-var docTmpl = template.Must(template.New("").Parse(`
-{{- range .Elements -}}
-  {{- if .IsHeading -}}
-    <h3 id="{{.ID}}">{{.Title}}
-    {{- if not $.DisablePermalinks}}<a href="#{{.ID}}">¶</a>{{end -}}
-    </h3>
-  {{else if .IsPreformat -}}
-    <pre>{{.Body}}</pre>
-  {{- else -}}
-    <p>{{.Body}}</p>
-  {{- end -}}
-{{end}}`))
-
 func (r *Renderer) declHTML(doc string, decl ast.Decl) (out struct{ Doc, Decl safehtml.HTML }) {
 	dids := newDeclIDs(decl)
 	idr := &identifierResolver{r.pids, dids, r.packageURL}
@@ -110,7 +96,7 @@ func (r *Renderer) declHTML(doc string, decl ast.Decl) (out struct{ Doc, Decl sa
 			}
 			els = append(els, el)
 		}
-		out.Doc = ExecuteToHTML(docTmpl, docData{Elements: els, DisablePermalinks: r.disablePermalinks})
+		out.Doc = ExecuteToHTML(r.docTmpl, docData{Elements: els, DisablePermalinks: r.disablePermalinks})
 	}
 	if decl != nil {
 		out.Decl = safehtml.HTMLConcat(
@@ -157,7 +143,7 @@ func (r *Renderer) codeHTML(ex *doc.Example) safehtml.HTML {
 	if err != nil {
 		log.Errorf(r.ctx, "Error converting *doc.Example into string: %v", err)
 	}
-	return codeHTML(codeStr)
+	return codeHTML(codeStr, r.exampleTmpl)
 }
 
 type codeElement struct {
@@ -165,19 +151,7 @@ type codeElement struct {
 	Comment bool
 }
 
-var codeTmpl = template.Must(template.New("").Parse(`
-<pre class="Documentation-exampleCode">
-{{range .}}
-  {{- if .Comment -}}
-    <span class="comment">{{.Text}}</span>
-  {{- else -}}
-    {{.Text}}
-  {{- end -}}
-{{end}}
-</pre>
-`))
-
-func codeHTML(src string) safehtml.HTML {
+func codeHTML(src string, codeTmpl *template.Template) safehtml.HTML {
 	var els []codeElement
 	// If code is an *ast.BlockStmt, then trim the braces.
 	var indent string
