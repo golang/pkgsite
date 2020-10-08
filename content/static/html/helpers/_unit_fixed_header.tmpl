@@ -22,7 +22,7 @@
         {{with .Breadcrumb}}
           {{if .CopyData}}
             <button class="CopyToClipboardButton js-copyToClipboard"
-                title="Copy path to clipboard"
+                title="Copy path to clipboard.&#10;&#10;{{.CopyData}}"
                 data-to-copy="{{.CopyData}}"
                 tabindex="-1">
               <img class="CopyToClipboardButton-image" src="/static/img/copy-click.svg" alt="">
