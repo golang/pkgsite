@@ -34,7 +34,7 @@
         {{if (eq .SelectedTab.Name "")}}
           <div class="UnitHeaderFixed-detail">
             <span class="UnitHeaderFixed-detailItem UnitHeaderFixed-detailItem--md">
-              <img height="16px" width="16px" src="/static/img/pkg-icon-arrowBranch_16x16.svg">
+              <img height="16px" width="16px" src="/static/img/pkg-icon-arrowBranch_16x16.svg" alt="">
               <a href="?tab=versions" tabindex="-1">Version {{.DisplayVersion}}</a>
               <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
               <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
@@ -44,11 +44,11 @@
               </div>
             </span>
             <span class="UnitHeaderFixed-detailItem UnitHeaderFixed-detailItem--md">
-              <img height="16px" width="16px" src="/static/img/pkg-icon-circularArrows_16x16.svg">
+              <img height="16px" width="16px" src="/static/img/pkg-icon-circularArrows_16x16.svg" alt="">
               {{.LastCommitTime}}
             </span>
             <span class="UnitHeaderFixed-detailItem UnitHeaderFixed-detailItem--md">
-              <img height="16px" width="16px" src="/static/img/pkg-icon-scale_16x16.svg">
+              <img height="16px" width="16px" src="/static/img/pkg-icon-scale_16x16.svg" alt="">
               {{range $i, $e := .Licenses}}
                 {{if $i}}, {{end}}
                 <a href="{{$.URLPath}}?tab=licenses#{{.Anchor}}" tabindex="-1">{{$e.Type}}</a>
@@ -61,13 +61,13 @@
             </span>
             {{if .Unit.IsPackage}}
               <span class="UnitHeaderFixed-detailItem UnitHeaderFixed-detailItem--lg">
-                <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg">
+                <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg" alt="">
                 <a href="{{$.URLPath}}?tab=imports" tabindex="-1">
                   {{len .Unit.Imports}} <span>Imports</span>
                 </a>
               </span>
               <span class="UnitHeaderFixed-detailItem UnitHeaderFixed-detailItem--lg">
-                <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg">
+                <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg" alt="">
                 <a href="{{$.URLPath}}?tab=importedby" tabindex="-1">
                   {{.ImportedByCount}} <span>Imported by</span>
                 </a>
@@ -94,7 +94,7 @@
           </div>
         {{else}}
           <a class="UnitFixedHeader-backLink" href="?">
-            <img height="16px" width="16px" src="/static/img/pkg-icon-arrowLeft_16x16.svg"> Go to main page
+            <img height="16px" width="16px" src="/static/img/pkg-icon-arrowLeft_16x16.svg" alt=""> Go to main page
           </a>
         {{end}}
       </div>

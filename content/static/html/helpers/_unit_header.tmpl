@@ -49,7 +49,7 @@
         {{end}}
       </div>
       <div class="UnitHeader-versionBanner $$GODISCOVERY_LATESTMAJORCLASS$$">
-        <img height="19px" width="16px" class="UnitHeader-detailIcon" src="/static/img/pkg-icon-info_19x16.svg">
+        <img height="19px" width="16px" class="UnitHeader-detailIcon" src="/static/img/pkg-icon-info_19x16.svg" alt="">
         <span>
           The latest major version is <a href="/$$GODISCOVERY_LATESTMAJORVERSIONURL$$">$$GODISCOVERY_LATESTMAJORVERSION$$</a>.
         </span>
@@ -58,7 +58,7 @@
       {{if (eq .SelectedTab.Name "")}}
         <div class="UnitHeader-detail">
           <span class="UnitHeader-detailItem">
-            <img class="UnitHeader-detailItemLarge" height="16px" width="16px" src="/static/img/pkg-icon-arrowBranch_16x16.svg">
+            <img class="UnitHeader-detailItemLarge" height="16px" width="16px" src="/static/img/pkg-icon-arrowBranch_16x16.svg" alt="">
             <a href="?tab=versions">Version {{.DisplayVersion}}</a>
             <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
             <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
@@ -68,11 +68,11 @@
             </div>
           </span>
           <span class="UnitHeader-detailItem">
-            <img height="16px" width="16px" src="/static/img/pkg-icon-circularArrows_16x16.svg">
+            <img height="16px" width="16px" src="/static/img/pkg-icon-circularArrows_16x16.svg" alt="">
             {{.LastCommitTime}}
           </span>
           <span class="UnitHeader-detailItem">
-            <img height="16px" width="16px" src="/static/img/pkg-icon-scale_16x16.svg">
+            <img height="16px" width="16px" src="/static/img/pkg-icon-scale_16x16.svg" alt="">
             {{if .Licenses}}
               <a href="{{$.URLPath}}?tab=licenses">
                 {{range $i, $e := .Licenses}}
@@ -86,13 +86,13 @@
           </span>
           {{if .Unit.IsPackage}}
             <span class="UnitHeader-detailItem">
-              <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg">
+              <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg" alt="">
               <a href="{{$.URLPath}}?tab=imports">
                 {{len .Unit.Imports}} <span>Imports</span>
               </a>
             </span>
             <span class="UnitHeader-detailItem">
-              <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg">
+              <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg" alt="">
               <a href="{{$.URLPath}}?tab=importedby">
                 {{.ImportedByCount}} <span>Imported by</span>
               </a>
@@ -105,7 +105,7 @@
             data-version="{{.LinkVersion}}" data-mpath="{{.Unit.ModulePath}}" data-ppath="{{.Unit.Path}}" data-pagetype="{{.PageType}}">
         </div>
         <a class="UnitHeader-backLink" href="?">
-          <img height="16px" width="16px" src="/static/img/pkg-icon-arrowLeft_16x16.svg"> Go to main page
+          <img height="16px" width="16px" src="/static/img/pkg-icon-arrowLeft_16x16.svg" alt=""> Go to main page
         </a>
       {{end}}
     </div>
