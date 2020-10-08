@@ -23,6 +23,7 @@ import (
 	"golang.org/x/net/html/atom"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/source"
 )
 
@@ -127,6 +128,12 @@ func ReadmeHTML(ctx context.Context, mi *internal.ModuleInfo, readme *internal.R
 	var walkErr error
 	rootNode.Walk(func(node *blackfriday.Node, entering bool) blackfriday.WalkStatus {
 		switch node.Type {
+		case blackfriday.Heading:
+			if experiment.IsActive(ctx, internal.ExperimentUnitPage) && node.HeadingID != "" {
+				// Prefix HeadingID with "readme-" on the unit page to prevent
+				// a namespace clash with the documentation section.
+				node.HeadingID = "readme-" + node.HeadingID
+			}
 		case blackfriday.Image, blackfriday.Link:
 			useRaw := node.Type == blackfriday.Image
 			if d := translateRelativeLink(string(node.LinkData.Destination), mi.SourceInfo, useRaw, readme); d != "" {

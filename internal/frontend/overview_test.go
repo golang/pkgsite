@@ -14,6 +14,7 @@ import (
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/testconversions"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -182,11 +183,12 @@ func TestReadmeHTML(t *testing.T) {
 		Version:    "v1.2.3",
 		SourceInfo: source.NewGitHubInfo("https://github.com/some/repo", "", "v1.2.3"),
 	}
-	for _, tc := range []struct {
-		name   string
-		mi     *internal.ModuleInfo
-		readme *internal.Readme
-		want   string
+	tests := []struct {
+		name         string
+		mi           *internal.ModuleInfo
+		readme       *internal.Readme
+		want         string
+		wantUnitPage string
 	}{
 		{
 			name: "valid markdown readme",
@@ -308,7 +310,8 @@ func TestReadmeHTML(t *testing.T) {
 				Filepath: "README.md",
 				Contents: "<img src=\"resources/logoSmall.png\" />\n\n# Heading\n",
 			},
-			want: `<p><img src="https://github.com/some/repo/raw/v1.2.3/resources/logoSmall.png"/></p>` + "\n\n" + `<h1 id="heading">Heading</h1>`,
+			want:         `<p><img src="https://github.com/some/repo/raw/v1.2.3/resources/logoSmall.png"/></p>` + "\n\n" + `<h1 id="heading">Heading</h1>`,
+			wantUnitPage: `<p><img src="https://github.com/some/repo/raw/v1.2.3/resources/logoSmall.png"/></p>` + "\n\n" + `<h1 id="readme-heading">Heading</h1>`,
 		},
 		{
 			name: "image link in embedded HTML with surrounding p tag",
@@ -317,7 +320,8 @@ func TestReadmeHTML(t *testing.T) {
 				Filepath: "README.md",
 				Contents: "<p align=\"center\"><img src=\"foo.png\" /></p>\n\n# Heading",
 			},
-			want: `<p align="center"><img src="https://github.com/some/repo/raw/v1.2.3/foo.png"/></p>` + "\n\n" + `<h1 id="heading">Heading</h1>`,
+			want:         `<p align="center"><img src="https://github.com/some/repo/raw/v1.2.3/foo.png"/></p>` + "\n\n" + `<h1 id="heading">Heading</h1>`,
+			wantUnitPage: `<p align="center"><img src="https://github.com/some/repo/raw/v1.2.3/foo.png"/></p>` + "\n\n" + `<h1 id="readme-heading">Heading</h1>`,
 		},
 		{
 			name: "image link in embedded HTML with surrounding div",
@@ -326,7 +330,8 @@ func TestReadmeHTML(t *testing.T) {
 				Filepath: "README.md",
 				Contents: "<div align=\"center\"><img src=\"foo.png\" /></div>\n\n# Heading",
 			},
-			want: `<div align="center"><img src="https://github.com/some/repo/raw/v1.2.3/foo.png"/></div>` + "\n\n" + `<h1 id="heading">Heading</h1>`,
+			want:         `<div align="center"><img src="https://github.com/some/repo/raw/v1.2.3/foo.png"/></div>` + "\n\n" + `<h1 id="heading">Heading</h1>`,
+			wantUnitPage: `<div align="center"><img src="https://github.com/some/repo/raw/v1.2.3/foo.png"/></div>` + "\n\n" + `<h1 id="readme-heading">Heading</h1>`,
 		},
 		{
 			name: "image link with bad URL",
@@ -338,7 +343,8 @@ func TestReadmeHTML(t *testing.T) {
 				Filepath: "README.md",
 				Contents: "<div align=\"center\"><img src=\"foo.png\" /></div>\n\n# Heading",
 			},
-			want: `<div align="center"><img src="https://github.com/some/%3Cscript%3E/raw/v1.2.3/foo.png"/></div>` + "\n\n" + `<h1 id="heading">Heading</h1>`,
+			want:         `<div align="center"><img src="https://github.com/some/%3Cscript%3E/raw/v1.2.3/foo.png"/></div>` + "\n\n" + `<h1 id="heading">Heading</h1>`,
+			wantUnitPage: `<div align="center"><img src="https://github.com/some/%3Cscript%3E/raw/v1.2.3/foo.png"/></div>` + "\n\n" + `<h1 id="readme-heading">Heading</h1>`,
 		},
 		{
 			name: "body has more than one child",
@@ -359,16 +365,27 @@ func TestReadmeHTML(t *testing.T) {
 			},
 			want: `<p><img src="https://github.com/some/repo/raw/v1.2.3/images/Jupyter%20Notebook_sparkline.svg"/></p>`,
 		},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			hgot, err := ReadmeHTML(ctx, tc.mi, tc.readme)
-			if err != nil {
-				t.Fatal(err)
+	}
+	checkReadme := func(ctx context.Context, t *testing.T, mi *internal.ModuleInfo, readme *internal.Readme, want string) {
+		hgot, err := ReadmeHTML(ctx, mi, readme)
+		if err != nil {
+			t.Fatal(err)
+		}
+		got := strings.TrimSpace(hgot.String())
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("readmeHTML(%v) mismatch (-want +got):\n%s", mi, diff)
+		}
+	}
+	for _, test := range tests {
+		t.Run("no experiments "+test.name, func(t *testing.T) {
+			checkReadme(ctx, t, test.mi, test.readme, test.want)
+		})
+		t.Run("unit page "+test.name, func(t *testing.T) {
+			ctx := experiment.NewContext(ctx, internal.ExperimentUnitPage)
+			if test.wantUnitPage == "" {
+				test.wantUnitPage = test.want
 			}
-			got := strings.TrimSpace(hgot.String())
-			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("readmeHTML(%v) mismatch (-want +got):\n%s", tc.mi, diff)
-			}
+			checkReadme(ctx, t, test.mi, test.readme, test.wantUnitPage)
 		})
 	}
 }
