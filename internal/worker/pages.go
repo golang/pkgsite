@@ -73,38 +73,36 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 	}
 
 	page := struct {
-		Config                *config.Config
-		Env                   string
-		ResourcePrefix        string
-		LatestTimestamp       *time.Time
-		LocationID            string
-		Hostname              string
-		StartTime             time.Time
-		Experiments           []*internal.Experiment
-		ExperimentsFromConfig bool
-		Excluded              []string
-		LoadShedStats         fetch.LoadShedStats
-		GoMemStats            runtime.MemStats
-		ProcessStats          processMemStats
-		SystemStats           systemMemStats
-		CgroupStats           map[string]uint64
-		Fetches               []*fetch.FetchInfo
+		Config          *config.Config
+		Env             string
+		ResourcePrefix  string
+		LatestTimestamp *time.Time
+		LocationID      string
+		Hostname        string
+		StartTime       time.Time
+		Experiments     []*internal.Experiment
+		Excluded        []string
+		LoadShedStats   fetch.LoadShedStats
+		GoMemStats      runtime.MemStats
+		ProcessStats    processMemStats
+		SystemStats     systemMemStats
+		CgroupStats     map[string]uint64
+		Fetches         []*fetch.FetchInfo
 	}{
-		Config:                s.cfg,
-		Env:                   env(s.cfg),
-		ResourcePrefix:        strings.ToLower(env(s.cfg)) + "-",
-		LocationID:            s.cfg.LocationID,
-		Hostname:              os.Getenv("HOSTNAME"),
-		StartTime:             startTime,
-		Experiments:           experiments,
-		ExperimentsFromConfig: os.Getenv("GO_DISCOVERY_EXPERIMENTS_FROM_CONFIG") == "true",
-		Excluded:              excluded,
-		LoadShedStats:         fetch.ZipLoadShedStats(),
-		GoMemStats:            gms,
-		ProcessStats:          pms,
-		SystemStats:           sms,
-		CgroupStats:           getCgroupMemStats(),
-		Fetches:               fetch.FetchInfos(),
+		Config:         s.cfg,
+		Env:            env(s.cfg),
+		ResourcePrefix: strings.ToLower(env(s.cfg)) + "-",
+		LocationID:     s.cfg.LocationID,
+		Hostname:       os.Getenv("HOSTNAME"),
+		StartTime:      startTime,
+		Experiments:    experiments,
+		Excluded:       excluded,
+		LoadShedStats:  fetch.ZipLoadShedStats(),
+		GoMemStats:     gms,
+		ProcessStats:   pms,
+		SystemStats:    sms,
+		CgroupStats:    getCgroupMemStats(),
+		Fetches:        fetch.FetchInfos(),
 	}
 	return renderPage(ctx, w, page, s.templates[indexTemplate])
 }

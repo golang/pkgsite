@@ -82,52 +82,26 @@
   <div class="Experiments">
     <h3>Experiments</h3>
     {{if .Experiments}}
-      {{if .ExperimentsFromConfig}}
-        <table>
-          <thead>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Rollout</th>
+          </tr>
+        </thead>
+        <tbody>
+        {{range .Experiments}}
             <tr>
-              <th>Name</th>
-              <th>Description</th>
-              <th>Rollout</th>
+              <td>{{.Name}}</td>
+              <td>{{.Description}}</td>
+              <td>{{.Rollout}}</td>
             </tr>
-          </thead>
-          <tbody>
-          {{range .Experiments}}
-              <tr>
-                <td>{{.Name}}</td>
-                <td>{{.Description}}</td>
-                <td>{{.Rollout}}</td>
-              </tr>
-          {{end}}
-          </tbody>
-        </table>
-        <p>To update experiments, modify the {{.Env}}-config.yaml file and deploy with
-          the <code>-config-only</code> flag.</p>
-      {{else}}
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Description</th>
-              <th>Rollout</th>
-              <th></th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-          {{range .Experiments}}
-            <form action="/update-experiment" method="post" target="experimentUpdateResult">
-              <tr>
-                <td>{{.Name}}<input name="name" value="{{.Name}}" readonly hidden></td>
-                <td>{{.Description}}<input name="description" value="{{.Description}}" readonly hidden></td>
-                <td><input name="rollout" size="1rem" type="number" min="0" max="100" step="1" pattern="[0-9]{0,3}" value="{{.Rollout}}" required></td>
-                <td><button>Update</button></td>
-              </tr>
-            </form>
-          {{end}}
-          </tbody>
-        </table>
-      {{end}}
+        {{end}}
+        </tbody>
+      </table>
+      <p>To update experiments, modify the {{.Env}}-config.yaml file and deploy with
+        the <code>-config-only</code> flag.</p>
     {{else}}
       <p>No experiments.</p>
     {{end}}
