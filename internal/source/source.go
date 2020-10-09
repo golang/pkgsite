@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"path"
 	"regexp"
 	"strconv"
@@ -110,6 +111,37 @@ func (i *Info) LineURL(pathname string, line int) string {
 		"base":       base,
 		"line":       strconv.Itoa(line),
 	})
+}
+
+// UsesURL returns a URL redirecting to Sourcegraph site showing the usage for a particular component of the code.
+func (i *Info) UsesURL(modulePath string, importPath string, defParts []string) string {
+	sourcegraphBaseURL := "https://sourcegraph.com/-/godoc/refs?"
+
+	var def string
+	switch len(defParts) {
+	case 1:
+		def = defParts[0]
+
+	case 2:
+		typeName, methodName := defParts[0], defParts[1]
+		typeName = strings.TrimPrefix(typeName, "*")
+		def = typeName + "/" + methodName
+
+	default:
+		panic(fmt.Errorf("%v defParts, want 1 or 2", len(defParts)))
+	}
+
+	repo := strings.TrimPrefix(modulePath, "https://")
+	pkg := strings.TrimPrefix(importPath, "https://")
+
+	q := url.Values{
+		"repo":   []string{repo},
+		"pkg":    []string{pkg},
+		"def":    []string{def},
+		"source": []string{"pkgsite"},
+	}
+
+	return sourcegraphBaseURL + q.Encode()
 }
 
 // RawURL returns a URL referring to the raw contents of a file relative to the

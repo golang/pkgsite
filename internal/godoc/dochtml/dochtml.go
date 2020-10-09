@@ -57,6 +57,7 @@ type RenderOptions struct {
 	// string to indicate that a given file should not be linked.
 	FileLinkFunc   func(file string) (url string)
 	SourceLinkFunc func(ast.Node) string
+	UsesLinkFunc   func(defParts []string) string
 	// ModInfo optionally specifies information about the module the package
 	// belongs to in order to render module-related documentation.
 	ModInfo *ModuleInfo
@@ -118,6 +119,9 @@ func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Render
 	sourceLink := func(name string, node ast.Node) safehtml.HTML {
 		return linkHTML(name, opt.SourceLinkFunc(node), "Documentation-source")
 	}
+	usesLink := func(title string, defParts ...string) safehtml.HTML {
+		return sourcegraphLinkHTML("Uses", opt.UsesLinkFunc(defParts), "Documentation-uses", title)
+	}
 
 	if experiment.IsActive(ctx, internal.ExperimentUnitPage) {
 		if p.Doc == "" &&
@@ -139,6 +143,7 @@ func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Render
 		"render_code":           r.CodeHTML,
 		"file_link":             fileLink,
 		"source_link":           sourceLink,
+		"uses_link":             usesLink,
 	})
 	data := struct {
 		RootURL string
@@ -178,6 +183,15 @@ func linkHTML(name, url, class string) safehtml.HTML {
 		return safehtml.HTMLEscaped(name)
 	}
 	return render.ExecuteToHTML(render.LinkTemplate, render.Link{Class: class, Href: url, Text: name})
+}
+
+// sourcegraphLinkHTML returns an HTML-formatted name linked to the given Sourcegraph URL.
+// A title is needed to generate the tooltip to distinguish between different components of the code.
+func sourcegraphLinkHTML(name, url, class, title string) safehtml.HTML {
+	if url == "" {
+		return safehtml.HTMLEscaped(name)
+	}
+	return render.ExecuteToHTML(render.SourcegraphLinkTemplate, render.SourcegraphLink{Class: class, Href: url, Text: name, Title: title})
 }
 
 // examples is an internal representation of all package examples.

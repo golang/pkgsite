@@ -1195,6 +1195,13 @@ code {
 .Documentation h3 a.Documentation-source {
   opacity: 1;
 }
+
+.Documentation h3 a.Documentation-uses {
+  color: #666;
+  font-size: 0.8em;
+  opacity: 0;
+}
+
 .Documentation h2:hover a,
 .Documentation h3:hover a,
 .Documentation summary:hover a,

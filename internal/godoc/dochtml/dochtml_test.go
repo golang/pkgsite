@@ -28,6 +28,7 @@ func TestRender(t *testing.T) {
 	rawDoc, err := Render(context.Background(), fset, d, RenderOptions{
 		FileLinkFunc:   func(string) string { return "file" },
 		SourceLinkFunc: func(ast.Node) string { return "src" },
+		UsesLinkFunc:   func([]string) string { return "uses" },
 	})
 	if err != nil {
 		t.Fatal(err)
