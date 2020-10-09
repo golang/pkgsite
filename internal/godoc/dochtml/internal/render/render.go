@@ -72,9 +72,9 @@ type Options struct {
 var docDataTmpl = template.Must(template.New("").Parse(`
 {{- range .Elements -}}
   {{- if .IsHeading -}}
-    <h3 id="{{.ID}}">{{.Title}}
+    <h4 id="{{.ID}}">{{.Title}}
     {{- if not $.DisablePermalinks}}<a href="#{{.ID}}">¶</a>{{end -}}
-    </h3>
+    </h4>
   {{else if .IsPreformat -}}
     <pre>{{.Body}}</pre>
   {{- else -}}
