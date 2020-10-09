@@ -43,7 +43,7 @@ all of your requests from godoc.org to pkg.go.dev, by clicking
 ## Issues
 
 If you want to report a bug or have a feature suggestion, please first check
-the [known issues](https://github.com/golang/go/labels/go.dev) to see if your
+the [known issues](https://github.com/golang/go/labels/pkgsite) to see if your
 issue is already being discussed. If an issue does not already exist, feel free
 to [file an issue](https://golang.org/s/pkgsite-feedback).
 
