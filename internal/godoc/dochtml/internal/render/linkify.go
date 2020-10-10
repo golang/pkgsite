@@ -20,7 +20,7 @@ import (
 
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/legacyconversions"
-	safetemplate "github.com/google/safehtml/template"
+	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 	"golang.org/x/pkgsite/internal/log"
 )
@@ -76,7 +76,7 @@ type docElement struct {
 }
 
 // docTmpl renders documentation. It expects a docData.
-var docTmpl = safetemplate.Must(safetemplate.New("").Parse(`
+var docTmpl = template.Must(template.New("").Parse(`
 {{- range .Elements -}}
   {{- if .IsHeading -}}
     <h3 id="{{.ID}}">{{.Title}}
@@ -114,9 +114,9 @@ func (r *Renderer) declHTML(doc string, decl ast.Decl) (out struct{ Doc, Decl sa
 	}
 	if decl != nil {
 		out.Decl = safehtml.HTMLConcat(
-			safetemplate.MustParseAndExecuteToHTML("<pre>\n"),
+			template.MustParseAndExecuteToHTML("<pre>\n"),
 			r.formatDeclHTML(decl, idr),
-			safetemplate.MustParseAndExecuteToHTML("</pre>\n"))
+			template.MustParseAndExecuteToHTML("</pre>\n"))
 	}
 	return out
 }
@@ -165,7 +165,7 @@ type codeElement struct {
 	Comment bool
 }
 
-var codeTmpl = safetemplate.Must(safetemplate.New("").Parse(`
+var codeTmpl = template.Must(template.New("").Parse(`
 <pre class="Documentation-exampleCode">
 {{range .}}
   {{- if .Comment -}}
@@ -322,7 +322,7 @@ func (r *Renderer) formatLineHTML(line string, idr *identifierResolver) safehtml
 	return safehtml.HTMLConcat(htmls...)
 }
 
-func ExecuteToHTML(tmpl *safetemplate.Template, data interface{}) safehtml.HTML {
+func ExecuteToHTML(tmpl *template.Template, data interface{}) safehtml.HTML {
 	h, err := tmpl.ExecuteToHTML(data)
 	if err != nil {
 		return safehtml.HTMLEscaped("[" + err.Error() + "]")
@@ -410,9 +410,9 @@ scan:
 		case token.COMMENT:
 			tokType = commentType
 			htmlLines[line] = append(htmlLines[line],
-				safetemplate.MustParseAndExecuteToHTML(`<span class="comment">`),
+				template.MustParseAndExecuteToHTML(`<span class="comment">`),
 				r.formatLineHTML(lit, idr),
-				safetemplate.MustParseAndExecuteToHTML(`</span>`))
+				template.MustParseAndExecuteToHTML(`</span>`))
 			lastOffset += len(lit)
 		case token.IDENT:
 			if idIdx < len(anchorPoints) && anchorPoints[idIdx].ID.String() != "" {
@@ -462,7 +462,7 @@ scan:
 	return safehtml.HTMLConcat(htmls...)
 }
 
-var anchorTemplate = safetemplate.Must(safetemplate.New("anchor").Parse(`<span id="{{.ID}}" data-kind="{{.Kind}}"></span>`))
+var anchorTemplate = template.Must(template.New("anchor").Parse(`<span id="{{.ID}}" data-kind="{{.Kind}}"></span>`))
 
 // declVisitor is used to walk over the AST and trim large string
 // literals and arrays before package documentation is rendered.
