@@ -101,13 +101,17 @@
           {{end}}
         </div>
       {{else}}
-        <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
-        <div style="display: none;" class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
-            data-version="{{.LinkVersion}}" data-mpath="{{.Unit.ModulePath}}" data-ppath="{{.Unit.Path}}" data-pagetype="{{.PageType}}">
+        <div class="UnitHeader-detail">
+          <span class="UnitHeader-detailItem">
+          <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
+          <div style="display: none;" class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
+              data-version="{{.LinkVersion}}" data-mpath="{{.Unit.ModulePath}}" data-ppath="{{.Unit.Path}}" data-pagetype="{{.PageType}}">
+          </div>
+          <a class="UnitHeader-backLink" href="?">
+            <img height="16px" width="16px" src="/static/img/pkg-icon-arrowLeft_16x16.svg" alt=""> Go to main page
+          </a>
+          </span>
         </div>
-        <a class="UnitHeader-backLink" href="?">
-          <img height="16px" width="16px" src="/static/img/pkg-icon-arrowLeft_16x16.svg" alt=""> Go to main page
-        </a>
       {{end}}
     </div>
   </header>

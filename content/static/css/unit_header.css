@@ -123,12 +123,14 @@
 a.UnitHeader-backLink {
   color: black;
   display: block;
-  font-size: 1.125rem;
-  line-height: 1.5rem;
-  margin: 0.5rem 0;
+  font-size: 1rem;
 }
 .UnitHeader-backLink img {
+  height: 0.8125rem;
   margin-right: 0.5rem;
+  position: relative;
+  top: -0.0625rem;
+  width: auto;
 }
 .UnitHeader-badge {
   border: 1px solid var(--gray-4);
