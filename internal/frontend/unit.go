@@ -348,6 +348,15 @@ func readmeContent(ctx context.Context, unit *internal.Unit) (safehtml.HTML, err
 	return safehtml.HTML{}, nil
 }
 
+const (
+	pageTypeModule    = "module"
+	pageTypeDirectory = "directory"
+	pageTypePackage   = "package"
+	pageTypeCommand   = "command"
+	pageTypeModuleStd = "std"
+	pageTypeStdlib    = "standard library"
+)
+
 // pageTitle determines the pageTitles for a given unit.
 // See TestPageTitlesAndTypes for examples.
 func pageTitle(unit *internal.Unit) string {
@@ -368,18 +377,18 @@ func pageTitle(unit *internal.Unit) string {
 // pageType determines the pageType for a given unit.
 func pageType(unit *internal.Unit) string {
 	if unit.Path == stdlib.ModulePath {
-		return legacyPageTypeModuleStd
+		return pageTypeModuleStd
 	}
 	if unit.IsCommand() {
-		return legacyPageTypeCommand
+		return pageTypeCommand
 	}
 	if unit.IsPackage() {
-		return legacyPageTypePackage
+		return pageTypePackage
 	}
 	if unit.IsModule() {
-		return legacyPageTypeModule
+		return pageTypeModule
 	}
-	return legacyPageTypeDirectory
+	return pageTypeDirectory
 }
 
 // pageLabels determines the labels to display for a given unit.
@@ -390,15 +399,15 @@ func pageLabels(unit *internal.Unit) []string {
 		return nil
 	}
 	if unit.IsCommand() {
-		pageTypes = append(pageTypes, legacyPageTypeCommand)
+		pageTypes = append(pageTypes, pageTypeCommand)
 	} else if unit.IsPackage() {
-		pageTypes = append(pageTypes, legacyPageTypePackage)
+		pageTypes = append(pageTypes, pageTypePackage)
 	}
 	if unit.IsModule() {
-		pageTypes = append(pageTypes, legacyPageTypeModule)
+		pageTypes = append(pageTypes, pageTypeModule)
 	}
 	if !unit.IsPackage() && !unit.IsModule() {
-		pageTypes = append(pageTypes, legacyPageTypeDirectory)
+		pageTypes = append(pageTypes, pageTypeDirectory)
 	}
 	if stdlib.Contains(unit.Path) {
 		pageTypes = append(pageTypes, pageTypeStdlib)

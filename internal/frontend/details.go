@@ -69,7 +69,6 @@ const (
 	legacyPageTypePackage   = "pkg"
 	legacyPageTypeCommand   = "cmd"
 	legacyPageTypeModuleStd = "std"
-	pageTypeStdlib          = "stdlib"
 )
 
 var (

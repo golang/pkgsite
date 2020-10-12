@@ -37,16 +37,7 @@
           {{.Title}}
         </h1>
         {{range .PageLabels}}
-          {{if ne . "std"}}
-            <span class="UnitHeader-badge">
-              {{if eq . "pkg"}}package
-              {{else if eq . "cmd"}}command
-              {{else if eq . "mod"}}module
-              {{else if eq . "dir"}}directory
-              {{else if eq . "stdlib"}}standard library
-              {{end}}
-            </span>
-          {{end}}
+          <span class="UnitHeader-badge">{{.}}</span>
         {{end}}
       </div>
       <div class="UnitHeader-versionBanner $$GODISCOVERY_LATESTMAJORCLASS$$">
