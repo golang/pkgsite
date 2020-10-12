@@ -185,7 +185,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	importedByCount := "0"
 	db, ok := ds.(*postgres.DB)
 	if ok {
-		importedBy, err := db.GetImportedBy(ctx, unit.Path, unit.ModulePath, importedByLimit)
+		importedBy, err := db.GetImportedBy(ctx, um.Path, um.ModulePath, importedByLimit)
 		if err != nil {
 			return err
 		}
@@ -198,16 +198,15 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		}
 	}
 
-	nestedModules, err := getNestedModules(ctx, ds, &unit.UnitMeta)
+	nestedModules, err := getNestedModules(ctx, ds, um)
 	if err != nil {
 		return err
 	}
-	subdirectories := getSubdirectories(&unit.UnitMeta, unit.Subdirectories)
+	subdirectories := getSubdirectories(um, unit.Subdirectories)
 	if err != nil {
 		return err
 	}
-
-	readme, err := readmeContent(ctx, unit)
+	readme, err := readmeContent(ctx, um, unit.Readme)
 	if err != nil {
 		return err
 	}
@@ -255,37 +254,37 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		return nil
 	}
 
-	title := pageTitle(unit)
+	title := pageTitle(um)
 	basePage := s.newBasePage(r, title)
 	basePage.AllowWideContent = true
-	canShowDetails := unit.IsRedistributable || tabSettings.AlwaysShowDetails
+	canShowDetails := um.IsRedistributable || tabSettings.AlwaysShowDetails
 	_, expandReadme := r.URL.Query()["readme"]
 	page := UnitPage{
 		basePage:       basePage,
 		Unit:           unit,
 		Subdirectories: subdirectories,
 		NestedModules:  nestedModules,
-		Breadcrumb:     displayBreadcrumb(unit, requestedVersion),
+		Breadcrumb:     displayBreadcrumb(um, requestedVersion),
 		Title:          title,
 		Tabs:           unitTabs,
 		SelectedTab:    tabSettings,
 		URLPath: constructPackageURL(
-			unit.Path,
-			unit.ModulePath,
+			um.Path,
+			um.ModulePath,
 			requestedVersion,
 		),
 		CanonicalURLPath: constructPackageURL(
-			unit.Path,
-			unit.ModulePath,
-			linkVersion(unit.Version, unit.ModulePath),
+			um.Path,
+			um.ModulePath,
+			linkVersion(um.Version, um.ModulePath),
 		),
-		Licenses:        transformLicenseMetadata(unit.Licenses),
-		LastCommitTime:  elapsedTime(unit.CommitTime),
-		DisplayVersion:  displayVersion(unit.Version, unit.ModulePath),
-		LinkVersion:     linkVersion(unit.Version, unit.ModulePath),
-		LatestURL:       constructPackageURL(unit.Path, unit.ModulePath, middleware.LatestMinorVersionPlaceholder),
-		PageLabels:      pageLabels(unit),
-		PageType:        pageType(unit),
+		Licenses:        transformLicenseMetadata(um.Licenses),
+		LastCommitTime:  elapsedTime(um.CommitTime),
+		DisplayVersion:  displayVersion(um.Version, um.ModulePath),
+		LinkVersion:     linkVersion(um.Version, um.ModulePath),
+		LatestURL:       constructPackageURL(um.Path, um.ModulePath, middleware.LatestMinorVersionPlaceholder),
+		PageLabels:      pageLabels(um),
+		PageType:        pageType(um),
 		CanShowDetails:  canShowDetails,
 		UnitContentName: tabSettings.DisplayName,
 		Readme:          readme,
@@ -298,7 +297,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	}
 
 	if tab != tabDetails {
-		packageDetails, err := fetchDetailsForPackage(r, tab, ds, &unit.UnitMeta)
+		packageDetails, err := fetchDetailsForPackage(r, tab, ds, um)
 		if err != nil {
 			return err
 		}
@@ -325,21 +324,21 @@ func getHTML(ctx context.Context, u *internal.Unit) safehtml.HTML {
 // moduleInfo extracts module info from a unit. This is a shim
 // for functions ReadmeHTML and createDirectory that will be removed
 // when we complete the switch to units.
-func moduleInfo(unit *internal.Unit) *internal.ModuleInfo {
+func moduleInfo(um *internal.UnitMeta) *internal.ModuleInfo {
 	return &internal.ModuleInfo{
-		ModulePath:        unit.ModulePath,
-		Version:           unit.Version,
-		CommitTime:        unit.CommitTime,
-		IsRedistributable: unit.IsRedistributable,
-		SourceInfo:        unit.SourceInfo,
+		ModulePath:        um.ModulePath,
+		Version:           um.Version,
+		CommitTime:        um.CommitTime,
+		IsRedistributable: um.IsRedistributable,
+		SourceInfo:        um.SourceInfo,
 	}
 }
 
 // readmeContent renders the readme to html.
-func readmeContent(ctx context.Context, unit *internal.Unit) (safehtml.HTML, error) {
-	if unit.IsRedistributable && unit.Readme != nil {
-		mi := moduleInfo(unit)
-		readme, err := ReadmeHTML(ctx, mi, unit.Readme)
+func readmeContent(ctx context.Context, um *internal.UnitMeta, readme *internal.Readme) (safehtml.HTML, error) {
+	if um.IsRedistributable && readme != nil {
+		mi := moduleInfo(um)
+		readme, err := ReadmeHTML(ctx, mi, readme)
 		if err != nil {
 			return safehtml.HTML{}, err
 		}
@@ -359,33 +358,33 @@ const (
 
 // pageTitle determines the pageTitles for a given unit.
 // See TestPageTitlesAndTypes for examples.
-func pageTitle(unit *internal.Unit) string {
+func pageTitle(um *internal.UnitMeta) string {
 	switch {
-	case unit.Path == stdlib.ModulePath:
+	case um.Path == stdlib.ModulePath:
 		return "Standard library"
-	case unit.IsCommand():
-		return effectiveName(unit.Path, unit.Name)
-	case unit.IsPackage():
-		return unit.Name
-	case unit.IsModule():
-		return path.Base(unit.Path)
+	case um.IsCommand():
+		return effectiveName(um.Path, um.Name)
+	case um.IsPackage():
+		return um.Name
+	case um.IsModule():
+		return path.Base(um.Path)
 	default:
-		return path.Base(unit.Path) + "/"
+		return path.Base(um.Path) + "/"
 	}
 }
 
 // pageType determines the pageType for a given unit.
-func pageType(unit *internal.Unit) string {
-	if unit.Path == stdlib.ModulePath {
+func pageType(um *internal.UnitMeta) string {
+	if um.Path == stdlib.ModulePath {
 		return pageTypeModuleStd
 	}
-	if unit.IsCommand() {
+	if um.IsCommand() {
 		return pageTypeCommand
 	}
-	if unit.IsPackage() {
+	if um.IsPackage() {
 		return pageTypePackage
 	}
-	if unit.IsModule() {
+	if um.IsModule() {
 		return pageTypeModule
 	}
 	return pageTypeDirectory
@@ -393,23 +392,23 @@ func pageType(unit *internal.Unit) string {
 
 // pageLabels determines the labels to display for a given unit.
 // See TestPageTitlesAndTypes for examples.
-func pageLabels(unit *internal.Unit) []string {
+func pageLabels(um *internal.UnitMeta) []string {
 	var pageTypes []string
-	if unit.Path == stdlib.ModulePath {
+	if um.Path == stdlib.ModulePath {
 		return nil
 	}
-	if unit.IsCommand() {
+	if um.IsCommand() {
 		pageTypes = append(pageTypes, pageTypeCommand)
-	} else if unit.IsPackage() {
+	} else if um.IsPackage() {
 		pageTypes = append(pageTypes, pageTypePackage)
 	}
-	if unit.IsModule() {
+	if um.IsModule() {
 		pageTypes = append(pageTypes, pageTypeModule)
 	}
-	if !unit.IsPackage() && !unit.IsModule() {
+	if !um.IsPackage() && !um.IsModule() {
 		pageTypes = append(pageTypes, pageTypeDirectory)
 	}
-	if stdlib.Contains(unit.Path) {
+	if stdlib.Contains(um.Path) {
 		pageTypes = append(pageTypes, pageTypeStdlib)
 	}
 	return pageTypes
@@ -417,9 +416,9 @@ func pageLabels(unit *internal.Unit) []string {
 
 // displayBreadcrumbs appends additional breadcrumb links for display
 // to those for the given unit.
-func displayBreadcrumb(unit *internal.Unit, requestedVersion string) breadcrumb {
-	bc := breadcrumbPath(unit.Path, unit.ModulePath, requestedVersion)
-	if unit.ModulePath == stdlib.ModulePath && unit.Path != stdlib.ModulePath {
+func displayBreadcrumb(um *internal.UnitMeta, requestedVersion string) breadcrumb {
+	bc := breadcrumbPath(um.Path, um.ModulePath, requestedVersion)
+	if um.ModulePath == stdlib.ModulePath && um.Path != stdlib.ModulePath {
 		bc.Links = append([]link{{Href: "/std", Body: "Standard library"}}, bc.Links...)
 	}
 	bc.Links = append([]link{{Href: "/", Body: "Discover Packages"}}, bc.Links...)
