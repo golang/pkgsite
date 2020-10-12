@@ -64,12 +64,12 @@ type DetailsPage struct {
 }
 
 const (
-	pageTypeModule    = "mod"
-	pageTypeDirectory = "dir"
-	pageTypePackage   = "pkg"
-	pageTypeCommand   = "cmd"
-	pageTypeStdlib    = "stdlib"
-	pageTypeModuleStd = "std"
+	legacyPageTypeModule    = "mod"
+	legacyPageTypeDirectory = "dir"
+	legacyPageTypePackage   = "pkg"
+	legacyPageTypeCommand   = "cmd"
+	legacyPageTypeModuleStd = "std"
+	pageTypeStdlib          = "stdlib"
 )
 
 var (

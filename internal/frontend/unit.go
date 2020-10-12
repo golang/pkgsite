@@ -368,18 +368,18 @@ func pageTitle(unit *internal.Unit) string {
 // pageType determines the pageType for a given unit.
 func pageType(unit *internal.Unit) string {
 	if unit.Path == stdlib.ModulePath {
-		return pageTypeModuleStd
+		return legacyPageTypeModuleStd
 	}
 	if unit.IsCommand() {
-		return pageTypeCommand
+		return legacyPageTypeCommand
 	}
 	if unit.IsPackage() {
-		return pageTypePackage
+		return legacyPageTypePackage
 	}
 	if unit.IsModule() {
-		return pageTypeModule
+		return legacyPageTypeModule
 	}
-	return pageTypeDirectory
+	return legacyPageTypeDirectory
 }
 
 // pageLabels determines the labels to display for a given unit.
@@ -390,15 +390,15 @@ func pageLabels(unit *internal.Unit) []string {
 		return nil
 	}
 	if unit.IsCommand() {
-		pageTypes = append(pageTypes, pageTypeCommand)
+		pageTypes = append(pageTypes, legacyPageTypeCommand)
 	} else if unit.IsPackage() {
-		pageTypes = append(pageTypes, pageTypePackage)
+		pageTypes = append(pageTypes, legacyPageTypePackage)
 	}
 	if unit.IsModule() {
-		pageTypes = append(pageTypes, pageTypeModule)
+		pageTypes = append(pageTypes, legacyPageTypeModule)
 	}
 	if !unit.IsPackage() && !unit.IsModule() {
-		pageTypes = append(pageTypes, pageTypeDirectory)
+		pageTypes = append(pageTypes, legacyPageTypeDirectory)
 	}
 	if stdlib.Contains(unit.Path) {
 		pageTypes = append(pageTypes, pageTypeStdlib)

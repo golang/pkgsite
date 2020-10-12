@@ -30,16 +30,16 @@ func TestPageTitlePageTypePageLabels(t *testing.T) {
 	for _, u := range m.Units {
 		switch u.Path {
 		case "golang.org/x/tools":
-			tests = append(tests, &testUnitPage{u, "module golang.org/x/tools", "tools", pageTypeModule, []string{pageTypeModule}})
+			tests = append(tests, &testUnitPage{u, "module golang.org/x/tools", "tools", legacyPageTypeModule, []string{legacyPageTypeModule}})
 		case "golang.org/x/tools/go/packages":
-			tests = append(tests, &testUnitPage{u, "package golang.org/x/tools/go/packages", "packages", pageTypePackage, []string{pageTypePackage}})
+			tests = append(tests, &testUnitPage{u, "package golang.org/x/tools/go/packages", "packages", legacyPageTypePackage, []string{legacyPageTypePackage}})
 		case "golang.org/x/tools/go":
-			tests = append(tests, &testUnitPage{u, "directory golang.org/x/tools/go", "go/", pageTypeDirectory, []string{pageTypeDirectory}})
+			tests = append(tests, &testUnitPage{u, "directory golang.org/x/tools/go", "go/", legacyPageTypeDirectory, []string{legacyPageTypeDirectory}})
 		case "golang.org/x/tools/cmd/godoc":
 			u.Name = "main"
-			tests = append(tests, &testUnitPage{u, "package golang.org/x/tools/cmd/godoc", "godoc", pageTypeCommand, []string{pageTypeCommand}})
+			tests = append(tests, &testUnitPage{u, "package golang.org/x/tools/cmd/godoc", "godoc", legacyPageTypeCommand, []string{legacyPageTypeCommand}})
 		case "golang.org/x/tools/cmd":
-			tests = append(tests, &testUnitPage{u, "directory golang.org/x/tools/cmd", "cmd/", pageTypeDirectory, []string{pageTypeDirectory}})
+			tests = append(tests, &testUnitPage{u, "directory golang.org/x/tools/cmd", "cmd/", legacyPageTypeDirectory, []string{legacyPageTypeDirectory}})
 		default:
 			t.Fatalf("Unexpected path: %q", u.Path)
 		}
@@ -47,18 +47,18 @@ func TestPageTitlePageTypePageLabels(t *testing.T) {
 
 	m2 := sample.LegacyModule("golang.org/x/tools/gopls", "v1.0.0", "")
 	m2.Units[0].Name = "main"
-	tests = append(tests, &testUnitPage{m2.Units[0], "module golang.org/x/tools/gopls", "gopls", pageTypeCommand, []string{pageTypeCommand, pageTypeModule}})
+	tests = append(tests, &testUnitPage{m2.Units[0], "module golang.org/x/tools/gopls", "gopls", legacyPageTypeCommand, []string{legacyPageTypeCommand, legacyPageTypeModule}})
 
 	std := sample.LegacyModule(stdlib.ModulePath, "v1.0.0", "cmd/go")
 	for _, u := range std.Units {
 		switch u.Path {
 		case stdlib.ModulePath:
-			tests = append(tests, &testUnitPage{u, "module std", "Standard library", pageTypeModuleStd, nil})
+			tests = append(tests, &testUnitPage{u, "module std", "Standard library", legacyPageTypeModuleStd, nil})
 		case "cmd":
-			tests = append(tests, &testUnitPage{u, "directory cmd", "cmd/", pageTypeDirectory, []string{pageTypeDirectory, pageTypeStdlib}})
+			tests = append(tests, &testUnitPage{u, "directory cmd", "cmd/", legacyPageTypeDirectory, []string{legacyPageTypeDirectory, pageTypeStdlib}})
 		case "cmd/go":
 			u.Name = "main"
-			tests = append(tests, &testUnitPage{u, "command go", "go", pageTypeCommand, []string{pageTypeCommand, pageTypeStdlib}})
+			tests = append(tests, &testUnitPage{u, "command go", "go", legacyPageTypeCommand, []string{legacyPageTypeCommand, pageTypeStdlib}})
 		default:
 			t.Fatalf("Unexpected path: %q", u.Path)
 		}

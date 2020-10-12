@@ -51,7 +51,7 @@ func (s *Server) GetLatestMinorVersion(ctx context.Context, packagePath, moduleP
 func latestMinorVersion(ctx context.Context, ds internal.DataSource, packagePath, modulePath, pageType string) (_ string, err error) {
 	defer derrors.Wrap(&err, "latestMinorVersion(ctx, %q, %q)", modulePath, packagePath)
 	fullPath := packagePath
-	if pageType == pageTypeModule || pageType == pageTypeModuleStd {
+	if pageType == legacyPageTypeModule || pageType == legacyPageTypeModuleStd {
 		fullPath = modulePath
 	}
 	um, err := ds.GetUnitMeta(ctx, fullPath, modulePath, internal.LatestVersion)

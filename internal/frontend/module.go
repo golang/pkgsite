@@ -39,9 +39,9 @@ func (s *Server) serveModulePage(ctx context.Context, w http.ResponseWriter, r *
 			return fmt.Errorf("error fetching page for %q: %v", tab, err)
 		}
 	}
-	pageType := pageTypeModule
+	pageType := legacyPageTypeModule
 	if um.ModulePath == stdlib.ModulePath {
-		pageType = pageTypeModuleStd
+		pageType = legacyPageTypeModuleStd
 	}
 
 	page := &DetailsPage{

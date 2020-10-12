@@ -79,12 +79,12 @@ func (s *Server) servePackagePage(ctx context.Context,
 		}
 	}
 	var (
-		pageType = pageTypePackage
+		pageType = legacyPageTypePackage
 		pageName = um.Name
 	)
 	if pageName == "main" {
 		pageName = effectiveName(um.Path, um.Name)
-		pageType = pageTypeCommand
+		pageType = legacyPageTypeCommand
 	}
 	page := &DetailsPage{
 		basePage: s.newBasePage(r, packageHTMLTitle(um.Path, um.Name)),

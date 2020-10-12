@@ -73,7 +73,7 @@ func (s *Server) serveDirectoryPage(ctx context.Context, w http.ResponseWriter, 
 		Details:          details,
 		CanShowDetails:   true,
 		Tabs:             directoryTabSettings,
-		PageType:         pageTypeDirectory,
+		PageType:         legacyPageTypeDirectory,
 		CanonicalURLPath: constructPackageURL(um.Path, um.ModulePath, linkver),
 	}
 	s.servePage(ctx, w, settings.TemplateName, page)
