@@ -47,7 +47,9 @@
   min-width: 0;
 }
 .UnitFixedHeader-title {
-  font: 600 1.125rem/1.5 'Work Sans', arial, sans-serif;
+  font-weight: 600;
+  font-size: 1.125rem;
+  line-height: 1.5;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
