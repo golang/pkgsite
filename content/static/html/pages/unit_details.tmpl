@@ -12,11 +12,8 @@
   <div class="UnitDetails">
     {{.MobileOutline}}
     <div class="UnitDetails-outline" role="navigation"
-        aria-label="{{if .Unit.IsCommand}}command
-        {{else if .Unit.IsPackage}}package
-        {{else if .Unit.IsModule}}module
-        {{else}}directory{{end}}
-        details navigation">
+        aria-label="{{if eq .PageType "std"}}module
+        {{else}}{{.PageType}}{{end}}details navigation">
       {{block "unit_outline" .}}{{end}}
     </div>
     <div class="UnitDetails-content" role="main">

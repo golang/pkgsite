@@ -6,11 +6,7 @@
 
 {{define "unit_header"}}
   <header class="UnitHeader" role="complementary"
-      aria-label="{{if .Unit.IsCommand}}command
-      {{else if .Unit.IsPackage}}package
-      {{else if .Unit.IsModule}}module
-      {{else}}directory{{end}}
-      {{.Title}} information">
+      aria-label="{{if eq .PageType "std"}}module{{else}}{{.PageType}}{{end}} {{.Title}} information">
     <div class="UnitHeader-container">
       <div class="UnitHeader-breadcrumb">
         {{with .Breadcrumb}}
