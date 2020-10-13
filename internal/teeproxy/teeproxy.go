@@ -276,6 +276,11 @@ func (s *Server) doRequest(r *http.Request) (results map[string]*RequestEvent, s
 	results = map[string]*RequestEvent{
 		"godoc.org": gddoEvent,
 	}
+	if gddoEvent.IsRobot {
+		// Don't tee robot requests since these will use up pkg.go.dev cache
+		// space.
+		return results, http.StatusOK, nil
+	}
 	if _, ok := expected404s[gddoEvent.Path]; ok {
 		// Don't tee these requests, since we know they will 404.
 		return results, http.StatusOK, nil
