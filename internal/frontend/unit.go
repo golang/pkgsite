@@ -77,8 +77,9 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		tab = tabMain
 	}
 	tabSettings, ok := unitTabLookup[tab]
-	if !ok {
+	if !ok || tab == tabLicenses && !um.IsRedistributable {
 		// Redirect to clean URL path when tab param is invalid.
+		// If the path is not redistributable, licenses is an invalid tab.
 		http.Redirect(w, r, r.URL.Path, http.StatusFound)
 		return nil
 	}
@@ -86,7 +87,6 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	title := pageTitle(um)
 	basePage := s.newBasePage(r, title)
 	basePage.AllowWideContent = true
-	canShowDetails := um.IsRedistributable || tabSettings.AlwaysShowDetails
 	page := UnitPage{
 		basePage:    basePage,
 		Unit:        um,
@@ -109,7 +109,6 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		LatestURL:      constructPackageURL(um.Path, um.ModulePath, middleware.LatestMinorVersionPlaceholder),
 		PageLabels:     pageLabels(um),
 		PageType:       pageType(um),
-		CanShowDetails: canShowDetails,
 	}
 	d, err := fetchDetailsForUnit(r, tab, ds, um)
 	if err != nil {

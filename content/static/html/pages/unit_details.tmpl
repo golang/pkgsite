@@ -17,7 +17,7 @@
       {{block "unit_outline" .Details}}{{end}}
     </div>
     <div class="UnitDetails-content" role="main">
-      {{if .CanShowDetails}}
+      {{if .Unit.IsRedistributable}}
         {{if .Details.Readme.String}}
           {{block "unit_readme" .Details}}{{end}}
         {{end}}

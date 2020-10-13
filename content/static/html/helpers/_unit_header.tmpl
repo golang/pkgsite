@@ -62,11 +62,20 @@
           <span class="UnitHeader-detailItem">
             <img height="16px" width="16px" src="/static/img/pkg-icon-scale_16x16.svg" alt="">
             {{if .Details.Licenses}}
-              <a href="{{$.URLPath}}?tab=licenses">
-                {{range $i, $e := .Details.Licenses}}
-                {{if $i}}, {{end}} {{$e.Type}}
-                {{end}}
-              </a>
+              {{if .Unit.IsRedistributable}}
+                <a href="{{$.URLPath}}?tab=licenses">
+                  {{range $i, $e := .Details.Licenses}}
+                    {{if $i}}, {{end}} {{$e.Type}}
+                  {{end}}
+                </a>
+              {{else}}
+                <span>
+                  {{range $i, $e := .Details.Licenses}}
+                    {{if $i}}, {{end}} {{$e.Type}}
+                  {{end}}
+                </span>
+                <a href="/license-policy" class="Disclaimer-link"><em>not legal advice</em></a>
+              {{end}}
             {{else}}
               <span>None detected</span>
               <a href="/license-policy" class="Disclaimer-link"><em>not legal advice</em></a>
