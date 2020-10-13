@@ -10,25 +10,25 @@
 
 {{define "unit_content"}}
   <div class="UnitDetails">
-    {{.MobileOutline}}
+    {{.Details.MobileOutline}}
     <div class="UnitDetails-outline" role="navigation"
         aria-label="{{if eq .PageType "std"}}module
         {{else}}{{.PageType}}{{end}}details navigation">
-      {{block "unit_outline" .}}{{end}}
+      {{block "unit_outline" .Details}}{{end}}
     </div>
     <div class="UnitDetails-content" role="main">
       {{if .CanShowDetails}}
-        {{if .Readme.String}}
-          {{block "unit_readme" .}}{{end}}
+        {{if .Details.Readme.String}}
+          {{block "unit_readme" .Details}}{{end}}
         {{end}}
-        {{if (or .DocBody.String .Unit.IsPackage)}}
-          {{block "unit_doc" .}}{{end}}
+        {{if .Details.IsPackage}}
+          {{block "unit_doc" .Details}}{{end}}
         {{end}}
-        {{if .SourceFiles}}
-          {{block "unit_files" .}}{{end}}
+        {{if .Details.SourceFiles}}
+          {{block "unit_files" .Details}}{{end}}
         {{end}}
-        {{if (or .Subdirectories .NestedModules)}}
-          {{block "unit_directories" .}}{{end}}
+        {{if (or .Details.Subdirectories .Details.NestedModules)}}
+          {{block "unit_directories" .Details}}{{end}}
         {{end}}
       {{else}}
         <h2>“{{.UnitContentName}}” not displayed due to license restrictions.</h2>

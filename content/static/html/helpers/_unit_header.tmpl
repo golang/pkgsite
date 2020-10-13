@@ -57,13 +57,13 @@
           </span>
           <span class="UnitHeader-detailItem">
             <img height="16px" width="16px" src="/static/img/pkg-icon-circularArrows_16x16.svg" alt="">
-            {{.LastCommitTime}}
+            {{.Details.CommitTime}}
           </span>
           <span class="UnitHeader-detailItem">
             <img height="16px" width="16px" src="/static/img/pkg-icon-scale_16x16.svg" alt="">
-            {{if .Licenses}}
+            {{if .Details.Licenses}}
               <a href="{{$.URLPath}}?tab=licenses">
-                {{range $i, $e := .Licenses}}
+                {{range $i, $e := .Details.Licenses}}
                 {{if $i}}, {{end}} {{$e.Type}}
                 {{end}}
               </a>
@@ -76,13 +76,13 @@
             <span class="UnitHeader-detailItem">
               <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg" alt="">
               <a href="{{$.URLPath}}?tab=imports">
-                {{len .Unit.Imports}} <span>Imports</span>
+                {{.Details.NumImports}} <span>Imports</span>
               </a>
             </span>
             <span class="UnitHeader-detailItem">
               <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg" alt="">
               <a href="{{$.URLPath}}?tab=importedby">
-                {{.ImportedByCount}} <span>Imported by</span>
+                {{.Details.ImportedByCount}} <span>Imported by</span>
               </a>
             </span>
           {{end}}

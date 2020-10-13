@@ -9,17 +9,14 @@ import (
 	"net/http"
 	"path"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
-	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
-	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -27,14 +24,7 @@ import (
 type UnitPage struct {
 	basePage
 	// Unit is the unit for this page.
-	Unit *internal.Unit
-
-	// NestedModules are nested modules relative to the path for the unit.
-	NestedModules []*NestedModule
-
-	// Subdirectories are packages in subdirectories relative to the path for
-	// the unit.
-	Subdirectories []*Subdirectory
+	Unit *internal.UnitMeta
 
 	// Breadcrumb contains data used to render breadcrumb UI elements.
 	Breadcrumb breadcrumb
@@ -50,12 +40,6 @@ type UnitPage struct {
 	// For example, if the latest version of /my.module/pkg is version v1.5.2,
 	// the canonical url for that path would be /my.module@v1.5.2/pkg
 	CanonicalURLPath string
-
-	// Licenses contains license metadata used in the header.
-	Licenses []LicenseMetadata
-
-	// Elapsed time since this version was committed.
-	LastCommitTime string
 
 	// The version string formatted for display.
 	DisplayVersion string
@@ -81,12 +65,6 @@ type UnitPage struct {
 	// UnitContentName is the display name of the selected unit content template".
 	UnitContentName string
 
-	// Readme is the rendered readme HTML.
-	Readme safehtml.HTML
-
-	// ExpandReadme is holds the expandable readme state.
-	ExpandReadme bool
-
 	// Tabs contains data to render the varioius tabs on each details page.
 	Tabs []TabSettings
 
@@ -95,39 +73,6 @@ type UnitPage struct {
 
 	// Details contains data specific to the type of page being rendered.
 	Details interface{}
-
-	// ImportedByCount is the number of packages that import this path.
-	// When the count is > limit it will read as 'limit+'. This field
-	// is not supported when using a datasource proxy.
-	ImportedByCount string
-
-	DocBody       safehtml.HTML
-	DocOutline    safehtml.HTML
-	MobileOutline safehtml.HTML
-
-	// SourceFiles contains .go files for the package.
-	SourceFiles []*File
-}
-
-// File is a source file for a package.
-type File struct {
-	Name string
-	URL  string
-}
-
-// NestedModule is a nested module relative to the path of a given unit.
-// This content is used in the Directories section of the unit page.
-type NestedModule struct {
-	Suffix string // suffix after the unit path
-	URL    string
-}
-
-// Subdirectory is a package in a subdirectory relative to the path of a given
-// unit. This content is used in the Directories section of the unit page.
-type Subdirectory struct {
-	Suffix   string
-	URL      string
-	Synopsis string
 }
 
 var (
@@ -175,71 +120,6 @@ func init() {
 func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *http.Request,
 	ds internal.DataSource, um *internal.UnitMeta, requestedVersion string) (err error) {
 	defer derrors.Wrap(&err, "serveUnitPage(ctx, w, r, ds, %v, %q)", um, requestedVersion)
-	unit, err := ds.GetUnit(ctx, um, internal.AllFields)
-	if err != nil {
-		return err
-	}
-
-	// importedByCount is not supported when using a datasource proxy.
-	importedByCount := "0"
-	db, ok := ds.(*postgres.DB)
-	if ok {
-		importedBy, err := db.GetImportedBy(ctx, um.Path, um.ModulePath, importedByLimit)
-		if err != nil {
-			return err
-		}
-		// If we reached the query limit, then we don't know the total
-		// and we'll indicate that with a '+'. For example, if the limit
-		// is 101 and we get 101 results, then we'll show '100+ Imported by'.
-		importedByCount = strconv.Itoa(len(importedBy))
-		if len(importedBy) == importedByLimit {
-			importedByCount = strconv.Itoa(len(importedBy)-1) + "+"
-		}
-	}
-
-	nestedModules, err := getNestedModules(ctx, ds, um)
-	if err != nil {
-		return err
-	}
-	subdirectories := getSubdirectories(um, unit.Subdirectories)
-	if err != nil {
-		return err
-	}
-	readme, err := readmeContent(ctx, um, unit.Readme)
-	if err != nil {
-		return err
-	}
-
-	var (
-		docBody, docOutline, mobileOutline safehtml.HTML
-		files                              []*File
-	)
-	if unit.Documentation != nil {
-		docHTML := getHTML(ctx, unit)
-		// TODO: Deprecate godoc.Parse. The sidenav and body can
-		// either be rendered using separate functions, or all this content can
-		// be passed to the template via the UnitPage struct.
-		b, err := godoc.Parse(docHTML, godoc.BodySection)
-		if err != nil {
-			return err
-		}
-		docBody = b
-		o, err := godoc.Parse(docHTML, godoc.SidenavSection)
-		if err != nil {
-			return err
-		}
-		docOutline = o
-		m, err := godoc.Parse(docHTML, godoc.SidenavMobileSection)
-		if err != nil {
-			return err
-		}
-		mobileOutline = m
-
-		files, err = sourceFiles(unit)
-		if err != nil {
-			return err
-		}
-	}
 
 	tab := r.FormValue("tab")
 	if tab == "" {
@@ -257,16 +137,13 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	basePage := s.newBasePage(r, title)
 	basePage.AllowWideContent = true
 	canShowDetails := um.IsRedistributable || tabSettings.AlwaysShowDetails
-	_, expandReadme := r.URL.Query()["readme"]
 	page := UnitPage{
-		basePage:       basePage,
-		Unit:           unit,
-		Subdirectories: subdirectories,
-		NestedModules:  nestedModules,
-		Breadcrumb:     displayBreadcrumb(um, requestedVersion),
-		Title:          title,
-		Tabs:           unitTabs,
-		SelectedTab:    tabSettings,
+		basePage:    basePage,
+		Unit:        um,
+		Breadcrumb:  displayBreadcrumb(um, requestedVersion),
+		Title:       title,
+		Tabs:        unitTabs,
+		SelectedTab: tabSettings,
 		URLPath: constructPackageURL(
 			um.Path,
 			um.ModulePath,
@@ -277,8 +154,6 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 			um.ModulePath,
 			linkVersion(um.Version, um.ModulePath),
 		),
-		Licenses:        transformLicenseMetadata(um.Licenses),
-		LastCommitTime:  elapsedTime(um.CommitTime),
 		DisplayVersion:  displayVersion(um.Version, um.ModulePath),
 		LinkVersion:     linkVersion(um.Version, um.ModulePath),
 		LatestURL:       constructPackageURL(um.Path, um.ModulePath, middleware.LatestMinorVersionPlaceholder),
@@ -286,23 +161,23 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		PageType:        pageType(um),
 		CanShowDetails:  canShowDetails,
 		UnitContentName: tabSettings.DisplayName,
-		Readme:          readme,
-		ExpandReadme:    expandReadme,
-		DocOutline:      docOutline,
-		DocBody:         docBody,
-		SourceFiles:     files,
-		MobileOutline:   mobileOutline,
-		ImportedByCount: importedByCount,
 	}
-
-	if tab != tabDetails {
-		packageDetails, err := fetchDetailsForPackage(r, tab, ds, um)
+	if tab == tabDetails {
+		_, expandReadme := r.URL.Query()["readme"]
+		d, err := fetchMainDetails(ctx, ds, um)
 		if err != nil {
 			return err
 		}
-		page.Details = packageDetails
+		d.ExpandReadme = expandReadme
+		page.Details = d
 	}
-
+	if tab != tabDetails {
+		d, err := fetchDetailsForPackage(r, tab, ds, um)
+		if err != nil {
+			return err
+		}
+		page.Details = d
+	}
 	s.servePage(ctx, w, tabSettings.TemplateName, page)
 	return nil
 }

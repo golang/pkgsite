@@ -19,7 +19,7 @@
       <div class="UnitOutline-panel js-accordionPanel"
           id="readme-panel" role="region" aria-labelledby="readme-accordion" aria-hidden="true"></div>
     {{end}}
-    {{if (or .DocOutline.String .Unit.IsPackage)}}
+    {{if .IsPackage}}
       <a class="UnitOutline-accordion  js-accordionTrigger" href="#section-documentation"
           role="button" aria-expanded="false" aria-controls="outline-panel" id="outline-accordion">
         Documentation

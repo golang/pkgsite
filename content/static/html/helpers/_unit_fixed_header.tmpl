@@ -45,11 +45,11 @@
             </span>
             <span class="UnitHeaderFixed-detailItem UnitHeaderFixed-detailItem--md">
               <img height="16px" width="16px" src="/static/img/pkg-icon-circularArrows_16x16.svg" alt="">
-              {{.LastCommitTime}}
+              {{.Details.CommitTime}}
             </span>
             <span class="UnitHeaderFixed-detailItem UnitHeaderFixed-detailItem--md">
               <img height="16px" width="16px" src="/static/img/pkg-icon-scale_16x16.svg" alt="">
-              {{range $i, $e := .Licenses}}
+              {{range $i, $e := .Details.Licenses}}
                 {{if $i}}, {{end}}
                 <a href="{{$.URLPath}}?tab=licenses#{{.Anchor}}" tabindex="-1">{{$e.Type}}</a>
               {{else}}
@@ -63,13 +63,13 @@
               <span class="UnitHeaderFixed-detailItem UnitHeaderFixed-detailItem--lg">
                 <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg" alt="">
                 <a href="{{$.URLPath}}?tab=imports" tabindex="-1">
-                  {{len .Unit.Imports}} <span>Imports</span>
+                  {{.Details.NumImports}} <span>Imports</span>
                 </a>
               </span>
               <span class="UnitHeaderFixed-detailItem UnitHeaderFixed-detailItem--lg">
                 <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg" alt="">
                 <a href="{{$.URLPath}}?tab=importedby" tabindex="-1">
-                  {{.ImportedByCount}} <span>Imported by</span>
+                  {{.Details.ImportedByCount}} <span>Imported by</span>
                 </a>
               </span>
             {{end}}
