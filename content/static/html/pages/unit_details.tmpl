@@ -24,8 +24,11 @@
       {{if and .Details.IsPackage .Unit.IsRedistributable}}
         {{block "unit_doc" .Details}}{{end}}
       {{else}}
-        <h2>Documentation not displayed due to license restrictions.</h2>
-        See our <a href="/license-policy">license policy</a>.
+        <div class="UnitDetails-contentEmpty">
+          <img src="/static/img/gopher-airplane.svg" alt="The Go Gopher"/>
+          <p>Documentation not displayed due to license restrictions.</p>
+          <p>See our <a href="/license-policy">license policy</a>.</p>
+        </div>
       {{end}}
 
       {{if .Details.SourceFiles}}

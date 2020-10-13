@@ -91,3 +91,16 @@
     ); /* Move hidden anchor content for deep linking with a sticky header. */
   }
 }
+
+.UnitDetails-contentEmpty {
+  background-color: var(--gray-10);
+  color: var(--gray-2);
+  height: 15rem;
+  padding-top: 1rem;
+  text-align: center;
+}
+
+.UnitDetails-contentEmpty img {
+  height: 7.8125rem;
+  width: auto;
+}
