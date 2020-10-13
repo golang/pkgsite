@@ -192,14 +192,3 @@ func pageLabels(um *internal.UnitMeta) []string {
 	}
 	return pageTypes
 }
-
-// displayBreadcrumbs appends additional breadcrumb links for display
-// to those for the given unit.
-func displayBreadcrumb(um *internal.UnitMeta, requestedVersion string) breadcrumb {
-	bc := breadcrumbPath(um.Path, um.ModulePath, requestedVersion)
-	if um.ModulePath == stdlib.ModulePath && um.Path != stdlib.ModulePath {
-		bc.Links = append([]link{{Href: "/std", Body: "Standard library"}}, bc.Links...)
-	}
-	bc.Links = append([]link{{Href: "/", Body: "Discover Packages"}}, bc.Links...)
-	return bc
-}
