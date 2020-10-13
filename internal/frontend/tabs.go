@@ -138,7 +138,6 @@ func init() {
 }
 
 const (
-	tabDetails              = ""
 	legacyTabDoc            = "doc"
 	legacyTabOverview       = "overview"
 	legacyTabSubdirectories = "subdirectories"

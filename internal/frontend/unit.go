@@ -75,46 +75,6 @@ type UnitPage struct {
 	Details interface{}
 }
 
-var (
-	unitTabs = []TabSettings{
-		{
-			Name:         tabDetails,
-			DisplayName:  "Main",
-			TemplateName: "unit_details.tmpl",
-		},
-		{
-			Name:              legacyTabVersions,
-			AlwaysShowDetails: true,
-			DisplayName:       "Versions",
-			TemplateName:      "unit_versions.tmpl",
-		},
-		{
-			Name:              legacyTabImports,
-			AlwaysShowDetails: true,
-			DisplayName:       "Imports",
-			TemplateName:      "unit_imports.tmpl",
-		},
-		{
-			Name:              legacyTabImportedBy,
-			AlwaysShowDetails: true,
-			DisplayName:       "Imported By",
-			TemplateName:      "unit_importedby.tmpl",
-		},
-		{
-			Name:         legacyTabLicenses,
-			DisplayName:  "Licenses",
-			TemplateName: "unit_licenses.tmpl",
-		},
-	}
-	unitTabLookup = make(map[string]TabSettings, len(unitTabs))
-)
-
-func init() {
-	for _, t := range unitTabs {
-		unitTabLookup[t.Name] = t
-	}
-}
-
 // serveUnitPage serves a unit page for a path using the paths,
 // modules, documentation, readmes, licenses, and package_imports tables.
 func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *http.Request,
@@ -124,7 +84,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	tab := r.FormValue("tab")
 	if tab == "" {
 		// Default to details tab when there is no tab param.
-		tab = tabDetails
+		tab = tabMain
 	}
 	tabSettings, ok := unitTabLookup[tab]
 	if !ok {
@@ -162,22 +122,11 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		CanShowDetails:  canShowDetails,
 		UnitContentName: tabSettings.DisplayName,
 	}
-	if tab == tabDetails {
-		_, expandReadme := r.URL.Query()["readme"]
-		d, err := fetchMainDetails(ctx, ds, um)
-		if err != nil {
-			return err
-		}
-		d.ExpandReadme = expandReadme
-		page.Details = d
+	d, err := fetchDetailsForUnit(r, tab, ds, um)
+	if err != nil {
+		return err
 	}
-	if tab != tabDetails {
-		d, err := fetchDetailsForPackage(r, tab, ds, um)
-		if err != nil {
-			return err
-		}
-		page.Details = d
-	}
+	page.Details = d
 	s.servePage(ctx, w, tabSettings.TemplateName, page)
 	return nil
 }

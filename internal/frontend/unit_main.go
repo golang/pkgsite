@@ -74,7 +74,7 @@ type Subdirectory struct {
 	Synopsis string
 }
 
-func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta) (_ *MainDetails, err error) {
+func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, expandReadme bool) (_ *MainDetails, err error) {
 	unit, err := ds.GetUnit(ctx, um, internal.AllFields)
 	if err != nil {
 		return nil, err
@@ -141,6 +141,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		}
 	}
 	return &MainDetails{
+		ExpandReadme:    expandReadme,
 		NestedModules:   nestedModules,
 		Subdirectories:  subdirectories,
 		Licenses:        transformLicenseMetadata(um.Licenses),
