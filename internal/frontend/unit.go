@@ -93,9 +93,8 @@ type UnitPage struct {
 	// Settings contains settings for the selected tab.
 	SelectedTab TabSettings
 
-	// PackageDetails contains data used to render the
-	// versions, licenses, imports, and importedby tabs.
-	PackageDetails interface{}
+	// Details contains data specific to the type of page being rendered.
+	Details interface{}
 
 	// ImportedByCount is the number of packages that import this path.
 	// When the count is > limit it will read as 'limit+'. This field
@@ -301,7 +300,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		if err != nil {
 			return err
 		}
-		page.PackageDetails = packageDetails
+		page.Details = packageDetails
 	}
 
 	s.servePage(ctx, w, tabSettings.TemplateName, page)
