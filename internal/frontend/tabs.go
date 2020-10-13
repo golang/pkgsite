@@ -36,42 +36,42 @@ type TabSettings struct {
 var (
 	packageTabSettings = []TabSettings{
 		{
-			Name:         tabDoc,
+			Name:         legacyTabDoc,
 			DisplayName:  "Doc",
 			TemplateName: "pkg_doc.tmpl",
 		},
 		{
-			Name:              tabOverview,
+			Name:              legacyTabOverview,
 			AlwaysShowDetails: true,
 			DisplayName:       "Overview",
 			TemplateName:      "overview.tmpl",
 		},
 		{
-			Name:              tabSubdirectories,
+			Name:              legacyTabSubdirectories,
 			AlwaysShowDetails: true,
 			DisplayName:       "Subdirectories",
 			TemplateName:      "subdirectories.tmpl",
 		},
 		{
-			Name:              tabVersions,
+			Name:              legacyTabVersions,
 			AlwaysShowDetails: true,
 			DisplayName:       "Versions",
 			TemplateName:      "versions.tmpl",
 		},
 		{
-			Name:              tabImports,
+			Name:              legacyTabImports,
 			DisplayName:       "Imports",
 			AlwaysShowDetails: true,
 			TemplateName:      "pkg_imports.tmpl",
 		},
 		{
-			Name:              tabImportedBy,
+			Name:              legacyTabImportedBy,
 			DisplayName:       "Imported By",
 			AlwaysShowDetails: true,
 			TemplateName:      "pkg_importedby.tmpl",
 		},
 		{
-			Name:         tabLicenses,
+			Name:         legacyTabLicenses,
 			DisplayName:  "Licenses",
 			TemplateName: "licenses.tmpl",
 		},
@@ -83,7 +83,7 @@ var (
 
 	moduleTabSettings = []TabSettings{
 		{
-			Name:              tabOverview,
+			Name:              legacyTabOverview,
 			AlwaysShowDetails: true,
 			DisplayName:       "Overview",
 			TemplateName:      "overview.tmpl",
@@ -95,13 +95,13 @@ var (
 			TemplateName:      "subdirectories.tmpl",
 		},
 		{
-			Name:              tabVersions,
+			Name:              legacyTabVersions,
 			AlwaysShowDetails: true,
 			DisplayName:       "Versions",
 			TemplateName:      "versions.tmpl",
 		},
 		{
-			Name:         tabLicenses,
+			Name:         legacyTabLicenses,
 			DisplayName:  "Licenses",
 			TemplateName: "licenses.tmpl",
 		},
@@ -111,9 +111,9 @@ var (
 
 // validDirectoryTabs indicates if a tab is enabled in the directory view.
 var validDirectoryTabs = map[string]bool{
-	tabLicenses:       true,
-	tabOverview:       true,
-	tabSubdirectories: true,
+	legacyTabLicenses:       true,
+	legacyTabOverview:       true,
+	legacyTabSubdirectories: true,
 }
 
 func init() {
@@ -138,14 +138,14 @@ func init() {
 }
 
 const (
-	tabDetails        = ""
-	tabDoc            = "doc"
-	tabOverview       = "overview"
-	tabSubdirectories = "subdirectories"
-	tabVersions       = "versions"
-	tabImports        = "imports"
-	tabImportedBy     = "importedby"
-	tabLicenses       = "licenses"
+	tabDetails              = ""
+	legacyTabDoc            = "doc"
+	legacyTabOverview       = "overview"
+	legacyTabSubdirectories = "subdirectories"
+	legacyTabVersions       = "versions"
+	legacyTabImports        = "imports"
+	legacyTabImportedBy     = "importedby"
+	legacyTabLicenses       = "licenses"
 )
 
 // fetchDetailsForPackage returns tab details by delegating to the correct detail
@@ -153,19 +153,19 @@ const (
 func fetchDetailsForPackage(r *http.Request, tab string, ds internal.DataSource, um *internal.UnitMeta) (interface{}, error) {
 	ctx := r.Context()
 	switch tab {
-	case tabDoc:
+	case legacyTabDoc:
 		return fetchDocumentationDetails(ctx, ds, um)
-	case tabOverview:
+	case legacyTabOverview:
 		return fetchPackageOverviewDetails(ctx, ds, um, urlIsVersioned(r.URL))
-	case tabSubdirectories:
+	case legacyTabSubdirectories:
 		return fetchDirectoryDetails(ctx, ds, um, false)
-	case tabVersions:
+	case legacyTabVersions:
 		return fetchVersionsDetails(ctx, ds, um.Path, um.ModulePath)
-	case tabImports:
+	case legacyTabImports:
 		return fetchImportsDetails(ctx, ds, um.Path, um.ModulePath, um.Version)
-	case tabImportedBy:
+	case legacyTabImportedBy:
 		return fetchImportedByDetails(ctx, ds, um.Path, um.ModulePath)
-	case tabLicenses:
+	case legacyTabLicenses:
 		return fetchLicensesDetails(ctx, ds, um)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
@@ -176,13 +176,13 @@ func fetchDetailsForPackage(r *http.Request, tab string, ds internal.DataSource,
 func fetchDetailsForModule(r *http.Request, tab string, ds internal.DataSource, um *internal.UnitMeta) (interface{}, error) {
 	ctx := r.Context()
 	switch tab {
-	case tabOverview:
+	case legacyTabOverview:
 		return fetchOverviewDetails(ctx, ds, um, urlIsVersioned(r.URL))
 	case "packages":
 		return fetchDirectoryDetails(ctx, ds, um, true)
-	case tabVersions:
+	case legacyTabVersions:
 		return fetchModuleVersionsDetails(ctx, ds, um.ModulePath)
-	case tabLicenses:
+	case legacyTabLicenses:
 		return fetchLicensesDetails(ctx, ds, um)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
@@ -193,11 +193,11 @@ func fetchDetailsForModule(r *http.Request, tab string, ds internal.DataSource, 
 func fetchDetailsForDirectory(r *http.Request, tab string, ds internal.DataSource, um *internal.UnitMeta) (interface{}, error) {
 	ctx := r.Context()
 	switch tab {
-	case tabOverview:
+	case legacyTabOverview:
 		return fetchOverviewDetails(ctx, ds, um, urlIsVersioned(r.URL))
-	case tabSubdirectories:
+	case legacyTabSubdirectories:
 		return fetchDirectoryDetails(ctx, ds, um, false)
-	case tabLicenses:
+	case legacyTabLicenses:
 		return fetchLicensesDetails(ctx, ds, um)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)

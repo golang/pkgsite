@@ -102,7 +102,7 @@ func (s *Server) servePackagePage(ctx context.Context,
 			pkgHeader.Module.ModulePath,
 			pkgHeader.Module.LinkVersion),
 	}
-	page.basePage.AllowWideContent = settings.Name == tabDoc
+	page.basePage.AllowWideContent = settings.Name == legacyTabDoc
 	s.servePage(ctx, w, settings.TemplateName, page)
 	return nil
 }
@@ -113,12 +113,12 @@ func (s *Server) servePackagePage(ctx context.Context,
 // function. If tab is the empty string, the user will be shown the
 // documentation page.
 func packageSettings(tab string) (*TabSettings, error) {
-	if tab == tabDoc {
+	if tab == legacyTabDoc {
 		// Redirect "/<path>?tab=doc" to "/<path>".
 		return nil, derrors.NotFound
 	}
 	if tab == "" {
-		tab = tabDoc
+		tab = legacyTabDoc
 	}
 	settings, ok := packageTabLookup[tab]
 	if !ok {
