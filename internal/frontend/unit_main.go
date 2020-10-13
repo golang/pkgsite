@@ -6,11 +6,15 @@ package frontend
 
 import (
 	"context"
+	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc"
+	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 )
 
@@ -155,4 +159,80 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		ImportedByCount: importedByCount,
 		IsPackage:       unit.IsPackage(),
 	}, nil
+}
+
+// moduleInfo extracts module info from a unit. This is a shim
+// for functions ReadmeHTML and createDirectory that will be removed
+// when we complete the switch to units.
+func moduleInfo(um *internal.UnitMeta) *internal.ModuleInfo {
+	return &internal.ModuleInfo{
+		ModulePath:        um.ModulePath,
+		Version:           um.Version,
+		CommitTime:        um.CommitTime,
+		IsRedistributable: um.IsRedistributable,
+		SourceInfo:        um.SourceInfo,
+	}
+}
+
+// readmeContent renders the readme to html.
+func readmeContent(ctx context.Context, um *internal.UnitMeta, readme *internal.Readme) (safehtml.HTML, error) {
+	if um.IsRedistributable && readme != nil {
+		mi := moduleInfo(um)
+		readme, err := ReadmeHTML(ctx, mi, readme)
+		if err != nil {
+			return safehtml.HTML{}, err
+		}
+		return readme, nil
+	}
+	return safehtml.HTML{}, nil
+}
+
+func getNestedModules(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta) ([]*NestedModule, error) {
+	nestedModules, err := ds.GetNestedModules(ctx, um.ModulePath)
+	if err != nil {
+		return nil, err
+	}
+	var mods []*NestedModule
+	for _, m := range nestedModules {
+		if m.SeriesPath() == internal.SeriesPathForModule(um.ModulePath) {
+			continue
+		}
+		if !strings.HasPrefix(m.ModulePath, um.Path+"/") {
+			continue
+		}
+		mods = append(mods, &NestedModule{
+			URL:    constructPackageURL(m.ModulePath, m.ModulePath, internal.LatestVersion),
+			Suffix: internal.Suffix(m.SeriesPath(), um.Path),
+		})
+	}
+	return mods, nil
+}
+
+func getSubdirectories(um *internal.UnitMeta, pkgs []*internal.PackageMeta) []*Subdirectory {
+	var sdirs []*Subdirectory
+	for _, pm := range pkgs {
+		if um.Path == pm.Path {
+			continue
+		}
+		sdirs = append(sdirs, &Subdirectory{
+			URL:      constructPackageURL(pm.Path, um.ModulePath, linkVersion(um.Version, um.ModulePath)),
+			Suffix:   internal.Suffix(pm.Path, um.Path),
+			Synopsis: pm.Synopsis,
+		})
+	}
+	sort.Slice(sdirs, func(i, j int) bool { return sdirs[i].Suffix < sdirs[j].Suffix })
+	return sdirs
+}
+
+func getHTML(ctx context.Context, u *internal.Unit) safehtml.HTML {
+	if experiment.IsActive(ctx, internal.ExperimentFrontendRenderDoc) && len(u.Documentation.Source) > 0 {
+		dd, err := renderDoc(ctx, u)
+		if err != nil {
+			log.Errorf(ctx, "render doc failed: %v", err)
+			// Fall through to use stored doc.
+		} else {
+			return dd.Documentation
+		}
+	}
+	return u.Documentation.HTML
 }
