@@ -79,7 +79,7 @@ type Subdirectory struct {
 }
 
 func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, expandReadme bool) (_ *MainDetails, err error) {
-	unit, err := ds.GetUnit(ctx, um, internal.AllFields)
+	unit, err := ds.GetUnit(ctx, um, internal.WithReadme|internal.WithDocumentation|internal.WithSubdirectories|internal.WithImports)
 	if err != nil {
 		return nil, err
 	}
