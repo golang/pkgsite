@@ -1024,6 +1024,15 @@ func TestDetailsTTL(t *testing.T) {
 		{mustRequest("/mod/host.com/module@v1.2.3/suffix?tab=overview", t), longTTL},
 		{mustRequest("/mod/host.com/module@v1.2.3/suffix?tab=versions", t), defaultTTL},
 		{mustRequest("/mod/host.com/module@v1.2.3/suffix?tab=importedby", t), defaultTTL},
+		{
+			func() *http.Request {
+				r := mustRequest("/host.com/module@v1.2.3/suffix?tab=overview", t)
+				r.Header.Set("user-agent",
+					"Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)")
+				return r
+			}(),
+			tinyTTL,
+		},
 	}
 	for _, test := range tests {
 		if got := detailsTTL(test.r); got != test.want {

@@ -145,10 +145,24 @@ const (
 	shortTTL = 10 * time.Minute
 	// longTTL is used when details content is essentially static.
 	longTTL = 24 * time.Hour
+	// tinyTTL is used to cache crawled pages.
+	tinyTTL = 1 * time.Minute
 )
+
+var crawlers = []string{
+	"+http://www.google.com/bot.html",
+	"+http://www.bing.com/bingbot.htm",
+	"+http://ahrefs.com/robot",
+}
 
 // detailsTTL assigns the cache TTL for package detail requests.
 func detailsTTL(r *http.Request) time.Duration {
+	userAgent := r.Header.Get("User-Agent")
+	for _, c := range crawlers {
+		if strings.Contains(userAgent, c) {
+			return tinyTTL
+		}
+	}
 	return detailsTTLForPath(r.Context(), r.URL.Path, r.FormValue("tab"))
 }
 
