@@ -7,12 +7,10 @@ package frontend
 import (
 	"context"
 	"net/http"
-	"path"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/middleware"
-	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 // UnitPage contains data needed to render the unit template.
@@ -124,71 +122,4 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	page.Details = d
 	s.servePage(ctx, w, tabSettings.TemplateName, page)
 	return nil
-}
-
-const (
-	pageTypeModule    = "module"
-	pageTypeDirectory = "directory"
-	pageTypePackage   = "package"
-	pageTypeCommand   = "command"
-	pageTypeModuleStd = "std"
-	pageTypeStdlib    = "standard library"
-)
-
-// pageTitle determines the pageTitles for a given unit.
-// See TestPageTitlesAndTypes for examples.
-func pageTitle(um *internal.UnitMeta) string {
-	switch {
-	case um.Path == stdlib.ModulePath:
-		return "Standard library"
-	case um.IsCommand():
-		return effectiveName(um.Path, um.Name)
-	case um.IsPackage():
-		return um.Name
-	case um.IsModule():
-		return path.Base(um.Path)
-	default:
-		return path.Base(um.Path) + "/"
-	}
-}
-
-// pageType determines the pageType for a given unit.
-func pageType(um *internal.UnitMeta) string {
-	if um.Path == stdlib.ModulePath {
-		return pageTypeModuleStd
-	}
-	if um.IsCommand() {
-		return pageTypeCommand
-	}
-	if um.IsPackage() {
-		return pageTypePackage
-	}
-	if um.IsModule() {
-		return pageTypeModule
-	}
-	return pageTypeDirectory
-}
-
-// pageLabels determines the labels to display for a given unit.
-// See TestPageTitlesAndTypes for examples.
-func pageLabels(um *internal.UnitMeta) []string {
-	var pageTypes []string
-	if um.Path == stdlib.ModulePath {
-		return nil
-	}
-	if um.IsCommand() {
-		pageTypes = append(pageTypes, pageTypeCommand)
-	} else if um.IsPackage() {
-		pageTypes = append(pageTypes, pageTypePackage)
-	}
-	if um.IsModule() {
-		pageTypes = append(pageTypes, pageTypeModule)
-	}
-	if !um.IsPackage() && !um.IsModule() {
-		pageTypes = append(pageTypes, pageTypeDirectory)
-	}
-	if stdlib.Contains(um.Path) {
-		pageTypes = append(pageTypes, pageTypeStdlib)
-	}
-	return pageTypes
 }

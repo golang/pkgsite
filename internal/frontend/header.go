@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/mod/module"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/licenses"
@@ -116,21 +115,6 @@ func constructPackageURL(pkgPath, modulePath, linkVersion string) string {
 		return fmt.Sprintf("/%s@%s", pkgPath, linkVersion)
 	}
 	return fmt.Sprintf("/%s@%s/%s", modulePath, linkVersion, strings.TrimPrefix(pkgPath, modulePath+"/"))
-}
-
-// effectiveName returns either the command name or package name.
-func effectiveName(pkgPath, pkgName string) string {
-	if pkgName != "main" {
-		return pkgName
-	}
-	var prefix string // package path without version
-	if pkgPath[len(pkgPath)-3:] == "/v1" {
-		prefix = pkgPath[:len(pkgPath)-3]
-	} else {
-		prefix, _, _ = module.SplitPathVersion(pkgPath)
-	}
-	_, base := path.Split(prefix)
-	return base
 }
 
 // packageHTMLTitle constructs the details page title for pkg.
