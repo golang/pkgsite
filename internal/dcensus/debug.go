@@ -35,7 +35,7 @@ func (d *debugTraceExporter) ExportSpan(s *trace.SpanData) {
 	d.err = nil
 	d.mu.Unlock()
 	if err != nil {
-		log.Errorf(ctx, "trace exporter: %v", err)
+		log.Warningf(ctx, "trace exporter: %v", err)
 		log.Debugf(ctx, "trace exporter SpanData:\n%s", dumpSpanData(s))
 	}
 }

@@ -178,7 +178,7 @@ func NewViewExporter(cfg *config.Config) (_ *stackdriver.Exporter, err error) {
 		MonitoredResource:       mr,
 		DefaultMonitoringLabels: stackdriverLabels(cfg),
 		OnError: func(err error) {
-			log.Errorf(context.Background(), "Stackdriver view exporter: %v", err)
+			log.Warningf(context.Background(), "Stackdriver view exporter: %v", err)
 		},
 	})
 }
