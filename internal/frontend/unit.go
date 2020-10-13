@@ -55,9 +55,6 @@ type UnitPage struct {
 	// hidden due to issues like license restrictions.
 	CanShowDetails bool
 
-	// UnitContentName is the display name of the selected unit content template".
-	UnitContentName string
-
 	// Tabs contains data to render the varioius tabs on each details page.
 	Tabs []TabSettings
 
@@ -107,13 +104,12 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 			um.ModulePath,
 			linkVersion(um.Version, um.ModulePath),
 		),
-		DisplayVersion:  displayVersion(um.Version, um.ModulePath),
-		LinkVersion:     linkVersion(um.Version, um.ModulePath),
-		LatestURL:       constructPackageURL(um.Path, um.ModulePath, middleware.LatestMinorVersionPlaceholder),
-		PageLabels:      pageLabels(um),
-		PageType:        pageType(um),
-		CanShowDetails:  canShowDetails,
-		UnitContentName: tabSettings.DisplayName,
+		DisplayVersion: displayVersion(um.Version, um.ModulePath),
+		LinkVersion:    linkVersion(um.Version, um.ModulePath),
+		LatestURL:      constructPackageURL(um.Path, um.ModulePath, middleware.LatestMinorVersionPlaceholder),
+		PageLabels:     pageLabels(um),
+		PageType:       pageType(um),
+		CanShowDetails: canShowDetails,
 	}
 	d, err := fetchDetailsForUnit(r, tab, ds, um)
 	if err != nil {
