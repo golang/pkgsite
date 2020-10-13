@@ -171,7 +171,7 @@ func getHARedis(ctx context.Context, cfg *config.Config) *redis.Client {
 }
 
 func getCacheRedis(ctx context.Context, cfg *config.Config) *redis.Client {
-	return getRedis(ctx, cfg.RedisCacheHost, cfg.RedisCachePort, 0, 0)
+	return getRedis(ctx, cfg.RedisCacheHost, cfg.RedisCachePort, 0, 6*time.Second)
 }
 
 func getRedis(ctx context.Context, host, port string, writeTimeout, readTimeout time.Duration) *redis.Client {
