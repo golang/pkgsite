@@ -17,22 +17,22 @@
       {{block "unit_outline" .Details}}{{end}}
     </div>
     <div class="UnitDetails-content" role="main">
-      {{if .Unit.IsRedistributable}}
-        {{if .Details.Readme.String}}
-          {{block "unit_readme" .Details}}{{end}}
-        {{end}}
-        {{if .Details.IsPackage}}
-          {{block "unit_doc" .Details}}{{end}}
-        {{end}}
-        {{if .Details.SourceFiles}}
-          {{block "unit_files" .Details}}{{end}}
-        {{end}}
-        {{if (or .Details.Subdirectories .Details.NestedModules)}}
-          {{block "unit_directories" .Details}}{{end}}
-        {{end}}
+      {{if .Details.Readme.String}}
+        {{block "unit_readme" .Details}}{{end}}
+      {{end}}
+
+      {{if and .Details.IsPackage .Unit.IsRedistributable}}
+        {{block "unit_doc" .Details}}{{end}}
       {{else}}
-        <h2>Content not displayed due to license restrictions.</h2>
+        <h2>Documentation not displayed due to license restrictions.</h2>
         See our <a href="/license-policy">license policy</a>.
+      {{end}}
+
+      {{if .Details.SourceFiles}}
+        {{block "unit_files" .Details}}{{end}}
+      {{end}}
+      {{if (or .Details.Subdirectories .Details.NestedModules)}}
+        {{block "unit_directories" .Details}}{{end}}
       {{end}}
     </div>
     <div class="UnitDetails-meta" role="complementary" aria-label="links">
