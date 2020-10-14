@@ -17,6 +17,9 @@ func TestIsExcluded(t *testing.T) {
 	if err := testDB.InsertExcludedPrefix(ctx, "bad", "someone", "because"); err != nil {
 		t.Fatal(err)
 	}
+	if err := testDB.InsertExcludedPrefix(ctx, "badslash/", "someone", "because"); err != nil {
+		t.Fatal(err)
+	}
 	for _, test := range []struct {
 		path string
 		want bool
@@ -24,8 +27,11 @@ func TestIsExcluded(t *testing.T) {
 		{"fine", false},
 		{"ba", false},
 		{"bad", true},
-		{"badness", true},
-		{"bad.com/foo", true},
+		{"badness", false},
+		{"bad/ness", true},
+		{"bad.com/foo", false},
+		{"badslash", false},
+		{"badslash/more", true},
 	} {
 		got, err := testDB.IsExcluded(ctx, test.path)
 		if err != nil {
@@ -35,4 +41,5 @@ func TestIsExcluded(t *testing.T) {
 			t.Errorf("%q: got %t, want %t", test.path, got, test.want)
 		}
 	}
+
 }

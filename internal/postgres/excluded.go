@@ -15,12 +15,20 @@ import (
 )
 
 // IsExcluded reports whether the path matches the excluded list.
+// A path matches an entry on the excluded list if it equals the entry, or
+// is a component-wise suffix of the entry.
+// So path "bad/ness" matches entries "bad" and "bad/", but path "badness"
+// matches neither of those.
 func (db *DB) IsExcluded(ctx context.Context, path string) (_ bool, err error) {
 	defer derrors.Wrap(&err, "DB.IsExcluded(ctx, %q)", path)
 
 	eps := db.expoller.Current().([]string)
 	for _, prefix := range eps {
-		if strings.HasPrefix(path, prefix) {
+		prefixSlash := prefix
+		if !strings.HasSuffix(prefix, "/") {
+			prefixSlash += "/"
+		}
+		if path == prefix || strings.HasPrefix(path, prefixSlash) {
 			log.Infof(ctx, "path %q matched excluded prefix %q", path, prefix)
 			return true, nil
 		}

@@ -619,7 +619,7 @@ func TestExcludedFromSearch(t *testing.T) {
 
 	// Insert a module with two packages.
 	const domain = "exclude.com"
-	sm := sample.LegacyModule(domain, "v1.2.3", "pkg", "exclude")
+	sm := sample.LegacyModule(domain, "v1.2.3", "pkg", "ex/clude")
 	if err := testDB.InsertModule(ctx, sm); err != nil {
 		t.Fatal(err)
 	}
