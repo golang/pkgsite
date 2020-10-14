@@ -412,6 +412,8 @@ func (s *Server) renderErrorPage(ctx context.Context, status int, templateName s
 
 // servePage is used to execute all templates for a *Server.
 func (s *Server) servePage(ctx context.Context, w http.ResponseWriter, templateName string, page interface{}) {
+	defer middleware.ElapsedStat(ctx, "servePage")()
+
 	buf, err := s.renderPage(ctx, templateName, page)
 	if err != nil {
 		log.Errorf(ctx, "s.renderPage(%q, %+v): %v", templateName, page, err)
@@ -426,6 +428,8 @@ func (s *Server) servePage(ctx context.Context, w http.ResponseWriter, templateN
 
 // renderPage executes the given templateName with page.
 func (s *Server) renderPage(ctx context.Context, templateName string, page interface{}) ([]byte, error) {
+	defer middleware.ElapsedStat(ctx, "renderPage")()
+
 	tmpl, err := s.findTemplate(templateName)
 	if err != nil {
 		return nil, err

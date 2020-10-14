@@ -17,12 +17,14 @@ import (
 	"github.com/google/safehtml/uncheckedconversions"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/middleware"
 )
 
 // GetNestedModules returns the latest major version of all nested modules
 // given a modulePath path prefix with or without major version.
 func (db *DB) GetNestedModules(ctx context.Context, modulePath string) (_ []*internal.ModuleInfo, err error) {
 	defer derrors.Wrap(&err, "GetNestedModules(ctx, %v)", modulePath)
+	defer middleware.ElapsedStat(ctx, "GetNestedModules")()
 
 	query := `
 		SELECT DISTINCT ON (series_path)
@@ -74,6 +76,8 @@ func (db *DB) GetNestedModules(ctx context.Context, modulePath string) (_ []*int
 // Instead of supporting pagination, this query runs with a limit.
 func (db *DB) GetImportedBy(ctx context.Context, pkgPath, modulePath string, limit int) (paths []string, err error) {
 	defer derrors.Wrap(&err, "GetImportedBy(ctx, %q, %q)", pkgPath, modulePath)
+	defer middleware.ElapsedStat(ctx, "GetImportedBy")()
+
 	if pkgPath == "" {
 		return nil, fmt.Errorf("pkgPath cannot be empty: %w", derrors.InvalidArgument)
 	}

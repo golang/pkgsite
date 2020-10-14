@@ -16,6 +16,7 @@ import (
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -24,6 +25,8 @@ import (
 // TODO(golang/go#39629): remove pID.
 func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields internal.FieldSet) (_ *internal.Unit, err error) {
 	defer derrors.Wrap(&err, "GetUnit(ctx, %q, %q, %q)", um.Path, um.ModulePath, um.Version)
+	defer middleware.ElapsedStat(ctx, "GetUnit")()
+
 	pathID, err := db.getPathID(ctx, um.Path, um.ModulePath, um.Version)
 	if err != nil {
 		return nil, err
@@ -37,7 +40,7 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 		} else {
 			readme, err = db.getModuleReadme(ctx, u.ModulePath, u.Version)
 		}
-          	if err != nil && !errors.Is(err, derrors.NotFound) {
+		if err != nil && !errors.Is(err, derrors.NotFound) {
 			return nil, err
 		}
 		u.Readme = readme
@@ -82,6 +85,7 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 
 func (db *DB) getPathID(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ int, err error) {
 	defer derrors.Wrap(&err, "getPathID(ctx, %q, %q, %q)", fullPath, modulePath, resolvedVersion)
+	defer middleware.ElapsedStat(ctx, "getPathID")()
 	var pathID int
 	query := `
 		SELECT p.id
@@ -105,6 +109,7 @@ func (db *DB) getPathID(ctx context.Context, fullPath, modulePath, resolvedVersi
 // getDocumentation returns the documentation corresponding to pathID.
 func (db *DB) getDocumentation(ctx context.Context, pathID int) (_ *internal.Documentation, err error) {
 	defer derrors.Wrap(&err, "getDocumentation(ctx, %d)", pathID)
+	defer middleware.ElapsedStat(ctx, "getDocumentation")()
 	var (
 		doc     internal.Documentation
 		docHTML string
@@ -139,6 +144,7 @@ func (db *DB) getDocumentation(ctx context.Context, pathID int) (_ *internal.Doc
 // getReadme returns the README corresponding to the modulePath and version.
 func (db *DB) getReadme(ctx context.Context, pathID int) (_ *internal.Readme, err error) {
 	defer derrors.Wrap(&err, "getReadme(ctx, %d)", pathID)
+	defer middleware.ElapsedStat(ctx, "getReadme")()
 	var readme internal.Readme
 	err = db.db.QueryRow(ctx, `
 		SELECT file_path, contents
@@ -182,6 +188,7 @@ func (db *DB) getModuleReadme(ctx context.Context, modulePath, resolvedVersion s
 // getImports returns the imports corresponding to pathID.
 func (db *DB) getImports(ctx context.Context, pathID int) (_ []string, err error) {
 	defer derrors.Wrap(&err, "getImports(ctx, %d)", pathID)
+	defer middleware.ElapsedStat(ctx, "getImports")()
 	var imports []string
 	collect := func(rows *sql.Rows) error {
 		var path string
@@ -204,6 +211,7 @@ func (db *DB) getImports(ctx context.Context, pathID int) (_ []string, err error
 // module version, including the package that lives at fullPath, if present.
 func (db *DB) getPackagesInUnit(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ []*internal.PackageMeta, err error) {
 	defer derrors.Wrap(&err, "DB.getPackagesInUnit(ctx, %q, %q, %q)", fullPath, modulePath, resolvedVersion)
+	defer middleware.ElapsedStat(ctx, "getPackagesInUnit")()
 
 	query := `
 		SELECT

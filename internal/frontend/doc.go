@@ -17,6 +17,7 @@ import (
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -51,6 +52,8 @@ func fetchDocumentationDetails(ctx context.Context, ds internal.DataSource, um *
 
 func renderDoc(ctx context.Context, u *internal.Unit) (_ *DocumentationDetails, err error) {
 	defer derrors.Wrap(&err, "renderDoc")
+	defer middleware.ElapsedStat(ctx, "renderDoc")()
+
 	start := time.Now()
 	docPkg, err := godoc.DecodePackage(u.Documentation.Source)
 	if err != nil {

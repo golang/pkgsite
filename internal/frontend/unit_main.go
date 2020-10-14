@@ -15,6 +15,7 @@ import (
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
 )
 
@@ -79,6 +80,8 @@ type Subdirectory struct {
 }
 
 func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, expandReadme bool) (_ *MainDetails, err error) {
+	defer middleware.ElapsedStat(ctx, "fetchMainDetails")()
+
 	unit, err := ds.GetUnit(ctx, um, internal.WithReadme|internal.WithDocumentation|internal.WithSubdirectories|internal.WithImports)
 	if err != nil {
 		return nil, err
@@ -123,6 +126,8 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		// TODO: Deprecate godoc.Parse. The sidenav and body can
 		// either be rendered using separate functions, or all this content can
 		// be passed to the template via the UnitPage struct.
+		end := middleware.ElapsedStat(ctx, "godoc Parses")
+
 		b, err := godoc.Parse(docHTML, godoc.BodySection)
 		if err != nil {
 			return nil, err
@@ -138,8 +143,11 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 			return nil, err
 		}
 		mobileOutline = m
+		end()
 
+		end = middleware.ElapsedStat(ctx, "sourceFiles")
 		files, err = sourceFiles(unit)
+		end()
 		if err != nil {
 			return nil, err
 		}
@@ -176,6 +184,8 @@ func moduleInfo(um *internal.UnitMeta) *internal.ModuleInfo {
 
 // readmeContent renders the readme to html.
 func readmeContent(ctx context.Context, um *internal.UnitMeta, readme *internal.Readme) (safehtml.HTML, error) {
+	defer middleware.ElapsedStat(ctx, "readmeContent")()
+
 	if um.IsRedistributable && readme != nil {
 		mi := moduleInfo(um)
 		readme, err := ReadmeHTML(ctx, mi, readme)

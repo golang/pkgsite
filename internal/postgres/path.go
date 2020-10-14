@@ -13,6 +13,7 @@ import (
 	"github.com/lib/pq"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -48,6 +49,7 @@ const orderByLatest = `
 // 3. In the unlikely event of two paths at the same version, pick the longer module path.
 func (db *DB) GetUnitMeta(ctx context.Context, path, requestedModulePath, requestedVersion string) (_ *internal.UnitMeta, err error) {
 	defer derrors.Wrap(&err, "DB.GetUnitMeta(ctx, %q, %q, %q)", path, requestedModulePath, requestedVersion)
+	defer middleware.ElapsedStat(ctx, "GetUnitMeta")()
 
 	var (
 		constraints []string
