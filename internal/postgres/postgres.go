@@ -44,6 +44,7 @@ func newdb(db *database.DB, bypass bool) *DB {
 			log.Errorf(context.Background(), "getting excluded prefixes: %v", err)
 		})
 	ctx, cancel := context.WithCancel(context.Background())
+	p.Poll(ctx) // Initialize the state.
 	p.Start(ctx, time.Minute)
 	return &DB{
 		db:                 db,
