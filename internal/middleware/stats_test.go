@@ -21,9 +21,13 @@ func TestStats(t *testing.T) {
 	data := []byte("this is the data we are going to serve")
 	const code = 218
 	ts := httptest.NewServer(Stats()(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
 		w.WriteHeader(code)
+		SetStat(ctx, "a", 1)
 		w.Write(data[:10])
+		SetStat(ctx, "b", 2)
 		time.Sleep(500 * time.Millisecond)
+		SetStat(ctx, "a", 3)
 		w.Write(data[10:])
 	})))
 	defer ts.Close()
@@ -50,6 +54,11 @@ func TestStats(t *testing.T) {
 		StatusCode: code,
 		Size:       len(data),
 		Hash:       h.Sum64(),
+		Other: map[string]interface{}{
+			// JSON unmarshals all numbers into float64s.
+			"a": []interface{}{float64(1), float64(3)},
+			"b": float64(2),
+		},
 	}
 	diff := cmp.Diff(want, got, cmpopts.IgnoreFields(PageStats{}, "MillisToFirstByte", "MillisToLastByte"))
 	if diff != "" {

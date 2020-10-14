@@ -13,15 +13,49 @@ import (
 	"time"
 )
 
+// statsKey is the type of the context key for stats.
+type statsKey struct{}
+
 // Stats returns a Middleware that, instead of serving the page,
 // serves statistics about the page.
 func Stats() Middleware {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			sw := newStatsResponseWriter()
-			h.ServeHTTP(sw, r)
-			sw.WriteStats(r.Context(), w)
+			ctx := context.WithValue(r.Context(), statsKey{}, sw.stats.Other)
+			h.ServeHTTP(sw, r.WithContext(ctx))
+			sw.WriteStats(ctx, w)
 		})
+	}
+}
+
+// SetStat sets a stat named key in the current context. If key already has a
+// value, the old and new value are both stored in a slice.
+func SetStat(ctx context.Context, key string, value interface{}) {
+	x := ctx.Value(statsKey{})
+	if x == nil {
+		return
+	}
+	m := x.(map[string]interface{})
+	v, ok := m[key]
+	if !ok {
+		m[key] = value
+	} else if s, ok := v.([]interface{}); ok {
+		m[key] = append(s, value)
+	} else {
+		m[key] = []interface{}{v, value}
+	}
+}
+
+// ElapsedStat records as a stat the elapsed time for a
+// function execution. Invoke like so:
+//   defer ElapsedStat(ctx, "FunctionName")()
+// The resulting stat will be called "FunctionName ms" and will
+// be the wall-clock execution time of the function in milliseconds.
+func ElapsedStat(ctx context.Context, name string) func() {
+	start := time.Now()
+	return func() {
+		SetStat(ctx, name+" ms", time.Since(start).Milliseconds())
 	}
 }
 
@@ -40,6 +74,7 @@ type PageStats struct {
 	Hash              uint64 // hash of page contents
 	Size              int    // total size of data written
 	StatusCode        int    // HTTP status
+	Other             map[string]interface{}
 }
 
 func newStatsResponseWriter() *statsResponseWriter {
@@ -47,6 +82,7 @@ func newStatsResponseWriter() *statsResponseWriter {
 		header: http.Header{},
 		start:  time.Now(),
 		hasher: fnv.New64a(),
+		stats:  PageStats{Other: map[string]interface{}{}},
 	}
 }
 
