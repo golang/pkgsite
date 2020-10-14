@@ -78,7 +78,12 @@ h6 {
 h1,
 h2,
 h3 {
-  font-weight: bold;
+  font-weight: 600;
+}
+h4,
+h5,
+h6 {
+  font-weight: 500;
 }
 h1 {
   font-size: 1.5rem;
