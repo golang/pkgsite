@@ -242,7 +242,7 @@ func TestGetStdlibPaths(t *testing.T) {
 		},
 	} {
 		m := sample.LegacyModule(stdlib.ModulePath, data.version, data.suffixes...)
-		for _, p := range m.LegacyPackages {
+		for _, p := range m.Packages() {
 			p.Imports = nil
 		}
 		if err := testDB.InsertModule(ctx, m); err != nil {
