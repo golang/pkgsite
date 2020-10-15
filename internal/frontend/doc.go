@@ -30,12 +30,18 @@ type DocumentationDetails struct {
 
 // fetchDocumentationDetails returns a DocumentationDetails.
 func fetchDocumentationDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta) (_ *DocumentationDetails, err error) {
+	derrors.Wrap(&err, "fetchDocumentationDetails(%q, %q, %q)", um.Path, um.ModulePath, um.Version)
+
 	u, err := ds.GetUnit(ctx, um, internal.WithDocumentation)
 	if err != nil {
 		return nil, err
 	}
 	if experiment.IsActive(ctx, internal.ExperimentFrontendRenderDoc) && len(u.Documentation.Source) > 0 {
-		dd, err := renderDoc(ctx, u)
+		docPkg, err := godoc.DecodePackage(u.Documentation.Source)
+		if err != nil {
+			return nil, err
+		}
+		dd, err := renderDoc(ctx, u, docPkg)
 		if err != nil {
 			log.Errorf(ctx, "render doc failed: %v", err)
 			// Fall through to use stored doc.
@@ -50,15 +56,11 @@ func fetchDocumentationDetails(ctx context.Context, ds internal.DataSource, um *
 	}, nil
 }
 
-func renderDoc(ctx context.Context, u *internal.Unit) (_ *DocumentationDetails, err error) {
+func renderDoc(ctx context.Context, u *internal.Unit, docPkg *godoc.Package) (_ *DocumentationDetails, err error) {
 	defer derrors.Wrap(&err, "renderDoc")
 	defer middleware.ElapsedStat(ctx, "renderDoc")()
 
 	start := time.Now()
-	docPkg, err := godoc.DecodePackage(u.Documentation.Source)
-	if err != nil {
-		return nil, err
-	}
 	modInfo := &godoc.ModuleInfo{
 		ModulePath:      u.ModulePath,
 		ResolvedVersion: u.Version,
@@ -83,11 +85,7 @@ func renderDoc(ctx context.Context, u *internal.Unit) (_ *DocumentationDetails, 
 }
 
 // sourceFiles returns the .go files for a package.
-func sourceFiles(u *internal.Unit) ([]*File, error) {
-	docPkg, err := godoc.DecodePackage(u.Documentation.Source)
-	if err != nil {
-		return nil, err
-	}
+func sourceFiles(u *internal.Unit, docPkg *godoc.Package) []*File {
 	var files []*File
 	for _, f := range docPkg.Files {
 		if strings.HasSuffix(f.Name, "_test.go") {
@@ -98,7 +96,7 @@ func sourceFiles(u *internal.Unit) ([]*File, error) {
 			URL:  u.SourceInfo.FileURL(path.Join(internal.Suffix(u.Path, u.ModulePath), f.Name)),
 		})
 	}
-	return files, nil
+	return files
 }
 
 // fileSource returns the original filepath in the module zip where the given

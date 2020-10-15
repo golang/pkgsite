@@ -122,7 +122,11 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		files                              []*File
 	)
 	if unit.Documentation != nil {
-		docHTML := getHTML(ctx, unit)
+		docPkg, err := godoc.DecodePackage(unit.Documentation.Source)
+		if err != nil {
+			return nil, err
+		}
+		docHTML := getHTML(ctx, unit, docPkg)
 		// TODO: Deprecate godoc.Parse. The sidenav and body can
 		// either be rendered using separate functions, or all this content can
 		// be passed to the template via the UnitPage struct.
@@ -146,7 +150,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		end()
 
 		end = middleware.ElapsedStat(ctx, "sourceFiles")
-		files, err = sourceFiles(unit)
+		files = sourceFiles(unit, docPkg)
 		end()
 		if err != nil {
 			return nil, err
@@ -234,9 +238,9 @@ func getSubdirectories(um *internal.UnitMeta, pkgs []*internal.PackageMeta) []*S
 	return sdirs
 }
 
-func getHTML(ctx context.Context, u *internal.Unit) safehtml.HTML {
+func getHTML(ctx context.Context, u *internal.Unit, docPkg *godoc.Package) safehtml.HTML {
 	if experiment.IsActive(ctx, internal.ExperimentFrontendRenderDoc) && len(u.Documentation.Source) > 0 {
-		dd, err := renderDoc(ctx, u)
+		dd, err := renderDoc(ctx, u, docPkg)
 		if err != nil {
 			log.Errorf(ctx, "render doc failed: %v", err)
 			// Fall through to use stored doc.
