@@ -844,7 +844,7 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		return sd
 	}
 
-	pkgPath := func(m *internal.Module) string { return m.LegacyPackages[0].Path }
+	pkgPath := func(m *internal.Module) string { return m.Packages()[0].Path }
 
 	t.Run("basic", func(t *testing.T) {
 		defer ResetTestDB(testDB, t)
@@ -919,7 +919,7 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		// Now we see an earlier version of that package, without a go.mod file, so we insert it.
 		// It should not get inserted into search_documents.
 		mAlt := sample.LegacyModule(alternativeModulePath, "v1.0.0", "A")
-		mAlt.LegacyPackages[0].Imports = []string{"B"}
+		mAlt.Packages()[0].Imports = []string{"B"}
 		if err := testDB.InsertModule(ctx, mAlt); err != nil {
 			t.Fatal(err)
 		}
