@@ -217,17 +217,13 @@ func TestGetImportedBy(t *testing.T) {
 		m3          = sample.LegacyModule("path3.to/foo", "v1.3.0", "bar3")
 		testModules = []*internal.Module{m1, m2, m3}
 
-		pkg1 = m1.LegacyPackages[0]
-		pkg2 = m2.LegacyPackages[0]
-		pkg3 = m3.LegacyPackages[0]
+		pkg1 = m1.Packages()[0]
+		pkg2 = m2.Packages()[0]
+		pkg3 = m3.Packages()[0]
 	)
-
 	pkg1.Imports = nil
 	pkg2.Imports = []string{pkg1.Path}
 	pkg3.Imports = []string{pkg2.Path, pkg1.Path}
-	m1.Units[1].Imports = pkg1.Imports
-	m2.Units[1].Imports = pkg2.Imports
-	m3.Units[1].Imports = pkg3.Imports
 
 	for _, tc := range []struct {
 		name, path, modulePath, version string
