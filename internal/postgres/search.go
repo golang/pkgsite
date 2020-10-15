@@ -332,22 +332,28 @@ func (db *DB) addPackageDataToSearchResults(ctx context.Context, results []*inte
 	}
 	query := fmt.Sprintf(`
 		SELECT
-			path,
-			name,
-			synopsis,
-			license_types,
-			redistributable
+			p.path,
+			p.name,
+			d.synopsis,
+			p.license_types,
+			p.redistributable
 		FROM
-			packages
+			paths p
+		INNER JOIN
+		    modules m
+		ON p.module_id = m.id
+		LEFT JOIN
+		    documentation d
+		ON p.id = d.path_id
 		WHERE
-			(path, version, module_path) IN (%s)`, strings.Join(keys, ","))
+			(p.path, m.version, m.module_path) IN (%s)`, strings.Join(keys, ","))
 	collect := func(rows *sql.Rows) error {
 		var (
 			path, name, synopsis string
 			licenseTypes         []string
 			redist               bool
 		)
-		if err := rows.Scan(&path, &name, &synopsis, pq.Array(&licenseTypes), &redist); err != nil {
+		if err := rows.Scan(&path, &name, database.NullIsEmpty(&synopsis), pq.Array(&licenseTypes), &redist); err != nil {
 			return fmt.Errorf("rows.Scan(): %v", err)
 		}
 		r, ok := resultMap[path]
