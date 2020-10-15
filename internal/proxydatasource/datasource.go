@@ -92,7 +92,7 @@ func (ds *DataSource) getModule(ctx context.Context, modulePath, version string)
 	if m != nil {
 		if ds.bypassLicenseCheck {
 			m.IsRedistributable = true
-			for _, pkg := range m.LegacyPackages {
+			for _, pkg := range m.Packages() {
 				pkg.IsRedistributable = true
 			}
 		} else {
@@ -118,7 +118,7 @@ func (ds *DataSource) getModule(ctx context.Context, modulePath, version string)
 	// be a bit more careful and check that it is new. To do this, we can
 	// leverage the invariant that module paths in packagePathToModules are kept
 	// sorted in descending order of length.
-	for _, pkg := range m.LegacyPackages {
+	for _, pkg := range m.Packages() {
 		var (
 			i   int
 			mp  string
