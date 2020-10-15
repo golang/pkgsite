@@ -124,16 +124,16 @@ func TestGetLicenses(t *testing.T) {
 func TestGetModuleLicenses(t *testing.T) {
 	modulePath := "test.module"
 	testModule := sample.LegacyModule(modulePath, "v1.2.3", "", "foo", "bar")
-	testModule.LegacyPackages[0].Licenses = []*licenses.Metadata{{Types: []string{"ISC"}, FilePath: "LICENSE"}}
-	testModule.LegacyPackages[1].Licenses = []*licenses.Metadata{{Types: []string{"MIT"}, FilePath: "foo/LICENSE"}}
-	testModule.LegacyPackages[2].Licenses = []*licenses.Metadata{{Types: []string{"GPL2"}, FilePath: "bar/LICENSE.txt"}}
+	testModule.Packages()[0].Licenses = []*licenses.Metadata{{Types: []string{"ISC"}, FilePath: "LICENSE"}}
+	testModule.Packages()[1].Licenses = []*licenses.Metadata{{Types: []string{"MIT"}, FilePath: "foo/LICENSE"}}
+	testModule.Packages()[2].Licenses = []*licenses.Metadata{{Types: []string{"GPL2"}, FilePath: "bar/LICENSE.txt"}}
 
 	defer ResetTestDB(testDB, t)
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
 	testModule.Licenses = nil
-	for _, p := range testModule.LegacyPackages {
+	for _, p := range testModule.Packages() {
 		testModule.Licenses = append(testModule.Licenses, &licenses.License{
 			Metadata: p.Licenses[0],
 			Contents: []byte(`Lorem Ipsum`),
@@ -201,7 +201,7 @@ func nonRedistributableModule() *internal.Module {
 	m := sample.LegacyModule(sample.ModulePath, "v1.2.3", "")
 	sample.AddLicense(m, sample.NonRedistributableLicense)
 	m.IsRedistributable = false
-	m.LegacyPackages[0].IsRedistributable = false
+	m.Packages()[0].IsRedistributable = false
 	m.Units[0].IsRedistributable = false
 	return m
 }
