@@ -54,6 +54,9 @@ type MainDetails struct {
 	// SourceFiles contains .go files for the package.
 	SourceFiles []*File
 
+	// RepositoryURL is the URL to the repository containing the package.
+	RepositoryURL string
+
 	// ExpandReadme is holds the expandable readme state.
 	ExpandReadme bool
 }
@@ -166,6 +169,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		DocOutline:      docOutline,
 		DocBody:         docBody,
 		SourceFiles:     files,
+		RepositoryURL:   um.SourceInfo.RepoURL(),
 		MobileOutline:   mobileOutline,
 		NumImports:      len(unit.Imports),
 		ImportedByCount: importedByCount,

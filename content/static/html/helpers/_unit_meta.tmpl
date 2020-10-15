@@ -8,8 +8,12 @@
   <div class="UnitMeta">
     <div class="UnitMeta-header">Links</div>
     <div class="UnitMeta-repo">Repository</div>
-    <a href="{{.Unit.SourceInfo.RepoURL}}" title="{{.Unit.SourceInfo.RepoURL}}">
-      {{.Unit.SourceInfo.RepoURL}}
-    </a>
+    {{if .Details.RepositoryURL}}
+      <a href="{{.Details.RepositoryURL}}" title="{{.Details.RepositoryURL}}" target="_blank" rel="noopener">
+        {{.Details.RepositoryURL}}
+      </a>
+    {{else}}
+      Repository URL not available.
+    {{end}}
   </div>
 {{end}}
