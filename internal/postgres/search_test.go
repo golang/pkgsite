@@ -740,10 +740,10 @@ func TestUpsertSearchDocument(t *testing.T) {
 	}
 
 	insertModule := func(version string, gomod bool) {
-		v := sample.LegacyModule(sample.ModulePath, version, "A")
-		v.HasGoMod = gomod
-		v.LegacyPackages[0].Synopsis = "syn-" + version
-		if err := testDB.InsertModule(ctx, v); err != nil {
+		m := sample.LegacyModule(sample.ModulePath, version, "A")
+		m.HasGoMod = gomod
+		m.Packages()[0].Documentation.Synopsis = "syn-" + version
+		if err := testDB.InsertModule(ctx, m); err != nil {
 			t.Fatal(err)
 		}
 	}

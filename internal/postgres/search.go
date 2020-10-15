@@ -392,10 +392,10 @@ var upsertSearchStatement = fmt.Sprintf(`
 	)
 	SELECT
 		p.path,
-		p.version,
-		p.module_path,
+		m.version,
+		m.module_path,
 		p.name,
-		p.synopsis,
+		d.synopsis,
 		p.license_types,
 		p.redistributable,
 		CURRENT_TIMESTAMP,
@@ -410,13 +410,15 @@ var upsertSearchStatement = fmt.Sprintf(`
 		hll_hash(p.path) & (%[1]d - 1),
 		hll_zeros(hll_hash(p.path))
 	FROM
-		packages p
+		paths p
 	INNER JOIN
 		modules m
-
 	ON
-		p.module_path = m.module_path
-		AND p.version = m.version
+		p.module_id = m.id
+	LEFT JOIN
+		documentation d
+	ON
+		p.id = d.path_id
 	WHERE
 		p.path = $1
 	%s
