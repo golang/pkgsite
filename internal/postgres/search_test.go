@@ -583,7 +583,7 @@ func TestSearchPenalties(t *testing.T) {
 
 	for path, m := range modules {
 		v := sample.LegacyModule(path, sample.VersionString, "p")
-		v.LegacyPackages[0].IsRedistributable = m.redist
+		v.Packages()[0].IsRedistributable = m.redist
 		v.IsRedistributable = m.redist
 		v.HasGoMod = m.hasGoMod
 		if err := testDB.InsertModule(ctx, v); err != nil {
