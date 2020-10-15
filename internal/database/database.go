@@ -114,8 +114,6 @@ func (db *DB) QueryRow(ctx context.Context, query string, args ...interface{}) *
 		msg := fmt.Sprintf("args=%v; elapsed=%q, start=%q, deadline=%q", args, time.Since(start), start, d)
 		if ctx.Err() != nil {
 			log.Errorf(ctx, "QueryRow context error: %v "+msg, ctx.Err())
-		} else {
-			log.Debugf(ctx, "QueryRow: "+msg)
 		}
 		logQuery(ctx, query, args, db.instanceID)(nil)
 	}()
