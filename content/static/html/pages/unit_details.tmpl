@@ -21,14 +21,16 @@
         {{block "unit_readme" .Details}}{{end}}
       {{end}}
 
-      {{if and .Details.IsPackage .Unit.IsRedistributable}}
-        {{block "unit_doc" .Details}}{{end}}
-      {{else}}
-        <div class="UnitDetails-contentEmpty">
-          <img src="/static/img/gopher-airplane.svg" alt="The Go Gopher"/>
-          <p>Documentation not displayed due to license restrictions.</p>
-          <p>See our <a href="/license-policy">license policy</a>.</p>
-        </div>
+      {{if .Details.IsPackage}}
+        {{if .Unit.IsRedistributable}}
+          {{block "unit_doc" .Details}}{{end}}
+        {{else}}
+          <div class="UnitDetails-contentEmpty">
+            <img src="/static/img/gopher-airplane.svg" alt="The Go Gopher"/>
+            <p>Documentation not displayed due to license restrictions.</p>
+            <p>See our <a href="/license-policy">license policy</a>.</p>
+          </div>
+        {{end}}
       {{end}}
 
       {{if .Details.SourceFiles}}
