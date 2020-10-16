@@ -159,14 +159,24 @@ func importGraph(popularPath, importerModule string, importerCount int) []*inter
 	m.Packages()[0].Documentation.Synopsis = "foo"
 	m.Units[0].Readme.Contents = "foo"
 	mods := []*internal.Module{m}
+
 	if importerCount > 0 {
 		m := sample.LegacyModule(importerModule, "v1.2.3")
 		for i := 0; i < importerCount; i++ {
-			p := sample.LegacyPackage(importerModule, fmt.Sprintf("importer%d", i))
-			p.Imports = []string{popularPath}
-			sample.LegacyAddPackage(m, p)
+			name := fmt.Sprintf("importer%d", i)
+			fullPath := importerModule + "/" + name
+			sample.AddUnit(m, &internal.Unit{
+				UnitMeta: *sample.UnitMeta(fullPath, importerModule, m.Version, name, true),
+				Documentation: &internal.Documentation{
+					Synopsis: sample.Synopsis,
+					HTML:     sample.DocumentationHTML,
+					GOOS:     sample.GOOS,
+					GOARCH:   sample.GOARCH,
+				},
+				Imports: []string{popularPath},
+			})
+			mods = append(mods, m)
 		}
-		mods = append(mods, m)
 	}
 	return mods
 }
