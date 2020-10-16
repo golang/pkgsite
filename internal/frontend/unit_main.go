@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"sort"
 	"strconv"
@@ -271,11 +272,13 @@ func getImportedByCount(ctx context.Context, ds internal.DataSource, unit *inter
 	if experiment.IsActive(ctx, internal.ExperimentGetUnitWithOneQuery) {
 		count = unit.NumImportedBy
 	} else {
-		importedBy, err := db.GetImportedBy(ctx, unit.Path, unit.ModulePath, importedByLimit)
+		count, err = db.GetImportedByCount(ctx, unit.Path, unit.ModulePath, importedByLimit)
 		if err != nil {
+			if err == sql.ErrNoRows {
+				return "N/A", nil
+			}
 			return "", err
 		}
-		count = len(importedBy)
 	}
 	// If we reached the query limit, then we might know the total, but we
 	// won't display past importedByLimit results. Indicate that with a '+'.

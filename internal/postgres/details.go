@@ -109,6 +109,28 @@ func (db *DB) GetImportedBy(ctx context.Context, pkgPath, modulePath string, lim
 	return importedby, nil
 }
 
+// GetImportedByCount returns the number of packages that import pkgPath.
+func (db *DB) GetImportedByCount(ctx context.Context, pkgPath, modulePath string, limit int) (_ int, err error) {
+	defer derrors.Wrap(&err, "GetImportedByCount(ctx, %q, %q)", pkgPath, modulePath)
+	defer middleware.ElapsedStat(ctx, "GetImportedByCount")()
+
+	if pkgPath == "" {
+		return 0, fmt.Errorf("pkgPath cannot be empty: %w", derrors.InvalidArgument)
+	}
+	query := `
+		SELECT imported_by_count
+		FROM
+			search_documents
+		WHERE
+			package_path = $1
+	`
+	var n int
+	if err := db.db.QueryRow(ctx, query, pkgPath).Scan(&n); err != nil {
+		return 0, err
+	}
+	return n, nil
+}
+
 // GetModuleInfo fetches a module version from the database with the primary key
 // (module_path, version).
 func (db *DB) GetModuleInfo(ctx context.Context, modulePath, resolvedVersion string) (_ *internal.ModuleInfo, err error) {
