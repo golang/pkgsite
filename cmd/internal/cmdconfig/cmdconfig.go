@@ -33,7 +33,7 @@ func Logger(ctx context.Context, cfg *config.Config, logName string) middleware.
 
 // ReportingClient configures an Error Reporting client.
 func ReportingClient(ctx context.Context, cfg *config.Config) *errorreporting.Client {
-	if !cfg.OnGCP() {
+	if !cfg.OnGCP() || cfg.DisableErrorReporting {
 		return nil
 	}
 	reporter, err := errorreporting.NewClient(ctx, cfg.ProjectID, errorreporting.Config{
