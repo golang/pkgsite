@@ -93,10 +93,6 @@ type PackageMeta struct {
 //
 // FieldSet bits are unique across the entire project, because some types are
 // concatenations (via embedding) of others. For example, a
-// LegacyVersionedPackage contains the fields of both a LegacyModuleInfo and a
-// LegacyPackage, so we can't use the
-// same bits for both LegacyModuleInfo's LegacyReadmeContents field and
-// LegacyPackage's DocumentationHTML field.
 type FieldSet int64
 
 // MinimalFields is the empty FieldSet.

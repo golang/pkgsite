@@ -36,10 +36,3 @@ type LegacyPackage struct {
 	// series.
 	V1Path string
 }
-
-// LegacyVersionedPackage is a LegacyPackage along with its corresponding module
-// information.
-type LegacyVersionedPackage struct {
-	LegacyPackage
-	ModuleInfo
-}

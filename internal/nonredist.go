@@ -48,7 +48,3 @@ func (p *LegacyPackage) RemoveNonRedistributableData() {
 		p.DocumentationHTML = safehtml.HTML{}
 	}
 }
-
-func (p *LegacyVersionedPackage) RemoveNonRedistributableData() {
-	p.LegacyPackage.RemoveNonRedistributableData()
-}
