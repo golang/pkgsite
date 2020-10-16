@@ -91,46 +91,49 @@ func TestElapsedTime(t *testing.T) {
 }
 
 func TestCreatePackage(t *testing.T) {
-	vpkg := func(modulePath, suffix, name string) *internal.LegacyVersionedPackage {
-		vp := &internal.LegacyVersionedPackage{
-			ModuleInfo:    *sample.ModuleInfo(modulePath, sample.VersionString),
-			LegacyPackage: *sample.LegacyPackage(modulePath, suffix),
-		}
-		if name != "" {
-			vp.LegacyPackage.Name = name
-		}
-		return vp
-	}
 
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		label       string
-		pkg         *internal.LegacyVersionedPackage
+		pkg         *internal.PackageMeta
+		mi          *internal.ModuleInfo
 		linkVersion bool
 		wantPkg     *Package
 	}{
 		{
 			label:       "simple package",
-			pkg:         vpkg(sample.ModulePath, sample.Suffix, ""),
+			pkg:         sample.PackageMeta(sample.ModulePath + "/" + sample.Suffix),
+			mi:          sample.ModuleInfo(sample.ModulePath, sample.VersionString),
 			linkVersion: false,
 			wantPkg:     samplePackage(),
 		},
 		{
 			label:       "simple package, latest",
-			pkg:         vpkg(sample.ModulePath, sample.Suffix, ""),
+			pkg:         sample.PackageMeta(sample.ModulePath + "/" + sample.Suffix),
+			mi:          sample.ModuleInfo(sample.ModulePath, sample.VersionString),
 			linkVersion: true,
 			wantPkg: samplePackage(func(p *Package) {
 				p.LinkVersion = internal.LatestVersion
 			}),
 		},
 		{
-			label:       "command package",
-			pkg:         vpkg(sample.ModulePath, sample.Suffix, "main"),
+			label: "command package",
+			pkg: func() *internal.PackageMeta {
+				pm := sample.PackageMeta(sample.ModulePath + "/" + sample.Suffix)
+				pm.Name = "main"
+				return pm
+			}(),
+			mi:          sample.ModuleInfo(sample.ModulePath, sample.VersionString),
 			linkVersion: false,
 			wantPkg:     samplePackage(),
 		},
 		{
-			label:       "v2 command",
-			pkg:         vpkg("pa.th/to/foo/v2", "bar", "main"),
+			label: "v2 command",
+			pkg: func() *internal.PackageMeta {
+				pm := sample.PackageMeta("pa.th/to/foo/v2/bar")
+				pm.Name = "main"
+				return pm
+			}(),
+			mi:          sample.ModuleInfo("pa.th/to/foo/v2", sample.VersionString),
 			linkVersion: false,
 			wantPkg: samplePackage(func(p *Package) {
 				p.Path = "pa.th/to/foo/v2/bar"
@@ -138,8 +141,13 @@ func TestCreatePackage(t *testing.T) {
 			}),
 		},
 		{
-			label:       "explicit v1 command",
-			pkg:         vpkg("pa.th/to/foo/v1", "", "main"),
+			label: "explicit v1 command",
+			pkg: func() *internal.PackageMeta {
+				pm := sample.PackageMeta("pa.th/to/foo/v1")
+				pm.Name = "main"
+				return pm
+			}(),
+			mi:          sample.ModuleInfo("pa.th/to/foo/v1", sample.VersionString),
 			linkVersion: false,
 			wantPkg: samplePackage(func(p *Package) {
 				p.Path = "pa.th/to/foo/v1"
@@ -147,27 +155,15 @@ func TestCreatePackage(t *testing.T) {
 			}),
 		},
 	} {
-		t.Run(tc.label, func(t *testing.T) {
-			pm := packageMetaFromLegacyPackage(&tc.pkg.LegacyPackage)
-			got, err := createPackage(pm, &tc.pkg.ModuleInfo, tc.linkVersion)
+		t.Run(test.label, func(t *testing.T) {
+			pm := sample.PackageMeta(test.pkg.Path)
+			got, err := createPackage(pm, test.mi, test.linkVersion)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(tc.wantPkg, got, cmp.AllowUnexported(safehtml.Identifier{})); diff != "" {
-				t.Errorf("createPackage(%v) mismatch (-want +got):\n%s", tc.pkg, diff)
+			if diff := cmp.Diff(test.wantPkg, got, cmp.AllowUnexported(safehtml.Identifier{})); diff != "" {
+				t.Errorf("createPackage(%v) mismatch (-want +got):\n%s", test.pkg, diff)
 			}
 		})
-	}
-}
-
-// packageMetaFromLegacyPackage returns a PackageMeta based on data from a
-// LegacyPackage.
-func packageMetaFromLegacyPackage(pkg *internal.LegacyPackage) *internal.PackageMeta {
-	return &internal.PackageMeta{
-		Path:              pkg.Path,
-		IsRedistributable: pkg.IsRedistributable,
-		Name:              pkg.Name,
-		Synopsis:          pkg.Synopsis,
-		Licenses:          pkg.Licenses,
 	}
 }
