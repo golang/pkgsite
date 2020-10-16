@@ -78,19 +78,19 @@ func TestFetchImportedByDetails(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	newModule := func(modPath string, pkgs ...*internal.LegacyPackage) *internal.Module {
+	newModule := func(modPath string, pkgs ...*internal.Unit) *internal.Module {
 		m := sample.LegacyModule(modPath, sample.VersionString)
 		for _, p := range pkgs {
-			sample.LegacyAddPackage(m, p)
+			sample.AddUnit(m, p)
 		}
 		return m
 	}
 
-	pkg1 := sample.LegacyPackage("path.to/foo", "bar")
-	pkg2 := sample.LegacyPackage("path2.to/foo", "bar2")
+	pkg1 := sample.UnitForPackage("path.to/foo", "bar")
+	pkg2 := sample.UnitForPackage("path2.to/foo", "bar2")
 	pkg2.Imports = []string{pkg1.Path}
 
-	pkg3 := sample.LegacyPackage("path3.to/foo", "bar3")
+	pkg3 := sample.UnitForPackage("path3.to/foo", "bar3")
 	pkg3.Imports = []string{pkg2.Path, pkg1.Path}
 
 	testModules := []*internal.Module{
@@ -106,7 +106,7 @@ func TestFetchImportedByDetails(t *testing.T) {
 	}
 
 	for _, tc := range []struct {
-		pkg         *internal.LegacyPackage
+		pkg         *internal.Unit
 		wantDetails *ImportedByDetails
 	}{
 		{
