@@ -93,6 +93,32 @@ func NowTruncated() time.Time {
 	return time.Now().Truncate(time.Microsecond)
 }
 
+// UnitForPackage constructs a unit with the given module path and suffix.
+//
+// If modulePath is the standard library, the package path is the
+// suffix, which must not be empty. Otherwise, the package path
+// is the concatenation of modulePath and suffix.
+//
+// The package name is last component of the package path.
+func UnitForPackage(modulePath, suffix string) *internal.Unit {
+	p := constructFullPath(modulePath, suffix)
+	return &internal.Unit{
+		UnitMeta: internal.UnitMeta{
+			Name:              path.Base(p),
+			Path:              p,
+			IsRedistributable: true,
+			Licenses:          LicenseMetadata,
+		},
+		Documentation: &internal.Documentation{
+			Synopsis: Synopsis,
+			HTML:     DocumentationHTML,
+			GOOS:     GOOS,
+			GOARCH:   GOARCH,
+		},
+		Imports: Imports,
+	}
+}
+
 func AddPackage(m *internal.Module, fullPath string) *internal.Module {
 	if m.ModulePath != stdlib.ModulePath && !strings.HasPrefix(fullPath, m.ModulePath) {
 		panic(fmt.Sprintf("package path %q not a prefix of module path %q",
