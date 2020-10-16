@@ -103,6 +103,7 @@ func ResetTestDB(db *DB, t *testing.T) {
 	if err := db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
 		if _, err := tx.Exec(ctx, `
 			TRUNCATE modules CASCADE;
+			TRUNCATE search_documents;
 			TRUNCATE version_map;
 			TRUNCATE imports_unique;`); err != nil {
 			return err
