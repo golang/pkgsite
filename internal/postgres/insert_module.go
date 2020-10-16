@@ -707,8 +707,10 @@ func (db *DB) DeleteModule(ctx context.Context, modulePath, resolvedVersion stri
 		if _, err := tx.Exec(ctx, stmt, modulePath, resolvedVersion); err != nil {
 			return err
 		}
-
 		if _, err = tx.Exec(ctx, `DELETE FROM version_map WHERE module_path = $1 AND resolved_version = $2`, modulePath, resolvedVersion); err != nil {
+			return err
+		}
+		if _, err = tx.Exec(ctx, `DELETE FROM search_documents WHERE module_path = $1 AND version = $2`, modulePath, resolvedVersion); err != nil {
 			return err
 		}
 
