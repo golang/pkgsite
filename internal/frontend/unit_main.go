@@ -131,7 +131,9 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		files                              []*File
 	)
 	if unit.Documentation != nil {
+		end := middleware.ElapsedStat(ctx, "DecodePackage")
 		docPkg, err := godoc.DecodePackage(unit.Documentation.Source)
+		end()
 		if err != nil {
 			return nil, err
 		}
@@ -139,8 +141,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		// TODO: Deprecate godoc.Parse. The sidenav and body can
 		// either be rendered using separate functions, or all this content can
 		// be passed to the template via the UnitPage struct.
-		end := middleware.ElapsedStat(ctx, "godoc Parses")
-
+		end = middleware.ElapsedStat(ctx, "godoc Parses")
 		b, err := godoc.Parse(docHTML, godoc.BodySection)
 		if err != nil {
 			return nil, err
