@@ -39,9 +39,7 @@ func LegacyPackage(modulePath, suffix string) *internal.LegacyPackage {
 }
 
 func LegacyDefaultModule() *internal.Module {
-	return LegacyAddPackage(
-		LegacyModule(ModulePath, VersionString),
-		LegacyPackage(ModulePath, Suffix))
+	return AddPackage(LegacyModule(ModulePath, VersionString), ModulePath+"/"+Suffix)
 }
 
 // LegacyModule creates a Module with the given path and version.
