@@ -19,7 +19,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/safehtml"
-	"github.com/google/safehtml/testconversions"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -54,19 +53,8 @@ func TestInsertModule(t *testing.T) {
 			}(),
 		},
 		{
-			name: "stdlib",
-			module: func() *internal.Module {
-				m := sample.LegacyModule("std", "v1.12.5")
-				p := &internal.LegacyPackage{
-					Name:              "context",
-					Path:              "context",
-					Synopsis:          "This is a package synopsis",
-					Licenses:          sample.LicenseMetadata,
-					IsRedistributable: true,
-					DocumentationHTML: testconversions.MakeHTMLForTest("This is the documentation HTML"),
-				}
-				return sample.LegacyAddPackage(m, p)
-			}(),
+			name:   "stdlib",
+			module: sample.LegacyModule("std", "v1.12.5", "context"),
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -149,7 +137,6 @@ func TestInsertModuleLicenseCheck(t *testing.T) {
 			mod := sample.LegacyModule(sample.ModulePath, sample.VersionString, "")
 			checkHasRedistData(mod.Units[0].Readme.Contents, mod.Units[0].Documentation.HTML, true)
 			mod.IsRedistributable = false
-			mod.LegacyPackages[0].IsRedistributable = false
 			mod.Units[0].IsRedistributable = false
 
 			if err := db.InsertModule(ctx, mod); err != nil {
@@ -182,16 +169,7 @@ func TestInsertModuleLicenseCheck(t *testing.T) {
 func TestUpsertModule(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	m := sample.LegacyModule("upsert.org", "v1.2.3")
-	p := &internal.LegacyPackage{
-		Name:              "p",
-		Path:              "upsert.org/dir/p",
-		Synopsis:          "This is a package synopsis",
-		Licenses:          sample.LicenseMetadata,
-		IsRedistributable: true,
-		DocumentationHTML: testconversions.MakeHTMLForTest("This is the documentation HTML"),
-	}
-	sample.LegacyAddPackage(m, p)
+	m := sample.LegacyModule("upsert.org", "v1.2.3", "dir/p")
 
 	// Insert the module.
 	if err := testDB.InsertModule(ctx, m); err != nil {
@@ -203,7 +181,7 @@ func TestUpsertModule(t *testing.T) {
 	// TODO(golang/go#38513): uncomment line below once we start displaying
 	// READMEs for directories instead of the top-level module.
 	// m.Units[0].Readme.Contents += " and more"
-	m.LegacyPackages[0].Synopsis = "New synopsis"
+
 	if err := testDB.InsertModule(ctx, m); err != nil {
 		t.Fatal(err)
 	}
@@ -505,7 +483,7 @@ func TestPostgres_NewerAlternative(t *testing.T) {
 	if err := testDB.InsertModule(ctx, m); err != nil {
 		t.Fatal(err)
 	}
-	if _, _, found := GetFromSearchDocuments(ctx, t, testDB, m.LegacyPackages[0].Path); found {
+	if _, _, found := GetFromSearchDocuments(ctx, t, testDB, m.Packages()[0].Path); found {
 		t.Fatal("found package after inserting")
 	}
 }
