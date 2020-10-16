@@ -401,26 +401,34 @@ func TestSearchErrors(t *testing.T) {
 func TestInsertSearchDocumentAndSearch(t *testing.T) {
 	var (
 		modGoCDK = "gocloud.dev"
-		pkgGoCDK = &internal.LegacyPackage{
-			Name:              "cloud",
-			Path:              "gocloud.dev/cloud",
-			Synopsis:          "Package cloud contains a library and tools for open cloud development in Go. The Go Cloud Development Kit (Go CDK)",
-			IsRedistributable: true, // required because some test cases depend on the README contents
+		pkgGoCDK = &internal.Unit{
+			UnitMeta: internal.UnitMeta{
+				Name:              "cloud",
+				Path:              "gocloud.dev/cloud",
+				IsRedistributable: true, // required because some test cases depend on the README contents
+			},
+			Documentation: &internal.Documentation{
+				Synopsis: "Package cloud contains a library and tools for open cloud development in Go. The Go Cloud Development Kit (Go CDK)",
+			},
 		}
 
 		modKube = "k8s.io"
-		pkgKube = &internal.LegacyPackage{
-			Name:              "client-go",
-			Path:              "k8s.io/client-go",
-			Synopsis:          "Package client-go implements a Go client for Kubernetes.",
-			IsRedistributable: true, // required because some test cases depend on the README contents
+		pkgKube = &internal.Unit{
+			UnitMeta: internal.UnitMeta{
+				Name:              "client-go",
+				Path:              "k8s.io/client-go",
+				IsRedistributable: true, // required because some test cases depend on the README contents
+			},
+			Documentation: &internal.Documentation{
+				Synopsis: "Package client-go implements a Go client for Kubernetes.",
+			},
 		}
 
 		kubeResult = func(score float64, numResults uint64) *internal.SearchResult {
 			return &internal.SearchResult{
 				Name:        pkgKube.Name,
 				PackagePath: pkgKube.Path,
-				Synopsis:    pkgKube.Synopsis,
+				Synopsis:    pkgKube.Documentation.Synopsis,
 				Licenses:    []string{"MIT"},
 				CommitTime:  sample.CommitTime,
 				Version:     sample.VersionString,
@@ -434,7 +442,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 			return &internal.SearchResult{
 				Name:        pkgGoCDK.Name,
 				PackagePath: pkgGoCDK.Path,
-				Synopsis:    pkgGoCDK.Synopsis,
+				Synopsis:    pkgGoCDK.Documentation.Synopsis,
 				Licenses:    []string{"MIT"},
 				CommitTime:  sample.CommitTime,
 				Version:     sample.VersionString,
@@ -453,7 +461,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 
 	for _, tc := range []struct {
 		name          string
-		packages      map[string]*internal.LegacyPackage
+		packages      map[string]*internal.Unit
 		limit, offset int
 		searchQuery   string
 		want          []*internal.SearchResult
@@ -461,7 +469,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 		{
 			name:        "two documents, single term search",
 			searchQuery: "package",
-			packages: map[string]*internal.LegacyPackage{
+			packages: map[string]*internal.Unit{
 				modGoCDK: pkgGoCDK,
 				modKube:  pkgKube,
 			},
@@ -475,7 +483,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 			limit:       1,
 			offset:      0,
 			searchQuery: "package",
-			packages: map[string]*internal.LegacyPackage{
+			packages: map[string]*internal.Unit{
 				modKube:  pkgKube,
 				modGoCDK: pkgGoCDK,
 			},
@@ -488,7 +496,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 			limit:       1,
 			offset:      1,
 			searchQuery: "package",
-			packages: map[string]*internal.LegacyPackage{
+			packages: map[string]*internal.Unit{
 				modGoCDK: pkgGoCDK,
 				modKube:  pkgKube,
 			},
@@ -499,7 +507,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 		{
 			name:        "two documents, multiple term search",
 			searchQuery: "go & cdk",
-			packages: map[string]*internal.LegacyPackage{
+			packages: map[string]*internal.Unit{
 				modGoCDK: pkgGoCDK,
 				modKube:  pkgKube,
 			},
@@ -510,7 +518,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 		{
 			name:        "one document, single term search",
 			searchQuery: "cloud",
-			packages: map[string]*internal.LegacyPackage{
+			packages: map[string]*internal.Unit{
 				modGoCDK: pkgGoCDK,
 			},
 			want: []*internal.SearchResult{
@@ -528,7 +536,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				for modulePath, pkg := range tc.packages {
 					pkg.Licenses = sample.LicenseMetadata
 					m := sample.LegacyModule(modulePath, sample.VersionString)
-					sample.LegacyAddPackage(m, pkg)
+					sample.AddUnit(m, pkg)
 					if err := testDB.InsertModule(ctx, m); err != nil {
 						t.Fatal(err)
 					}
