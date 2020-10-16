@@ -56,9 +56,6 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 	if err := db.compareLicenses(ctx, m); err != nil {
 		return err
 	}
-	if err := db.comparePackages(ctx, m); err != nil {
-		return err
-	}
 	if err := db.comparePaths(ctx, m); err != nil {
 		return err
 	}
@@ -92,12 +89,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
 		if err := insertLicenses(ctx, tx, m, moduleID); err != nil {
 			return err
 		}
-
 		logMemory(ctx, "after insertLicenses")
-		if err := legacyInsertPackages(ctx, tx, m); err != nil {
-			return err
-		}
-		logMemory(ctx, "after insertPackages")
 
 		if err := insertUnits(ctx, tx, m, moduleID); err != nil {
 			return err
@@ -236,102 +228,6 @@ func insertLicenses(ctx context.Context, db *database.DB, m *internal.Module, mo
 		}
 		return db.BulkUpsert(ctx, "licenses", licenseCols, licenseValues,
 			[]string{"module_path", "version", "file_path"})
-	}
-	return nil
-}
-
-func legacyInsertPackages(ctx context.Context, db *database.DB, m *internal.Module) (err error) {
-	ctx, span := trace.StartSpan(ctx, "insertPackages")
-	defer span.End()
-	defer derrors.Wrap(&err, "insertPackages(ctx, %q, %q)", m.ModulePath, m.Version)
-
-	// Sort to ensure proper lock ordering, avoiding deadlocks. See
-	// b/141164828#comment8. The only deadlocks we've actually seen are on
-	// imports_unique, because they can occur when processing two versions of
-	// the same module, which happens regularly. But if we were ever to process
-	// the same module and version twice, we could see deadlocks in the other
-	// bulk inserts.
-	sort.Slice(m.LegacyPackages, func(i, j int) bool {
-		return m.LegacyPackages[i].Path < m.LegacyPackages[j].Path
-	})
-	sort.Slice(m.Licenses, func(i, j int) bool {
-		return m.Licenses[i].FilePath < m.Licenses[j].FilePath
-	})
-	for _, p := range m.LegacyPackages {
-		sort.Strings(p.Imports)
-	}
-	var pkgValues, importValues []interface{}
-	for _, p := range m.LegacyPackages {
-		if p.DocumentationHTML.String() == internal.StringFieldMissing {
-			return errors.New("saveModule: package missing DocumentationHTML")
-		}
-		var licenseTypes, licensePaths []string
-		for _, l := range p.Licenses {
-			if len(l.Types) == 0 {
-				// If a license file has no detected license types, we still need to
-				// record it as applicable to the package, because we want to fail
-				// closed (meaning if there is a LICENSE file containing unknown
-				// licenses, we assume them not to be permissive of redistribution.)
-				licenseTypes = append(licenseTypes, "")
-				licensePaths = append(licensePaths, l.FilePath)
-			} else {
-				for _, typ := range l.Types {
-					licenseTypes = append(licenseTypes, typ)
-					licensePaths = append(licensePaths, l.FilePath)
-				}
-			}
-		}
-		pkgValues = append(pkgValues,
-			p.Path,
-			p.Synopsis,
-			p.Name,
-			m.Version,
-			m.ModulePath,
-			p.V1Path,
-			p.IsRedistributable,
-			makeValidUnicode(p.DocumentationHTML.String()),
-			pq.Array(licenseTypes),
-			pq.Array(licensePaths),
-			p.GOOS,
-			p.GOARCH,
-			m.CommitTime,
-		)
-		for _, i := range p.Imports {
-			importValues = append(importValues, p.Path, m.ModulePath, m.Version, i)
-		}
-	}
-	if len(pkgValues) > 0 {
-		uniqueCols := []string{"path", "module_path", "version"}
-		pkgCols := []string{
-			"path",
-			"synopsis",
-			"name",
-			"version",
-			"module_path",
-			"v1_path",
-			"redistributable",
-			"documentation",
-			"license_types",
-			"license_paths",
-			"goos",
-			"goarch",
-			"commit_time",
-		}
-		if err := db.BulkUpsert(ctx, "packages", pkgCols, pkgValues, uniqueCols); err != nil {
-			return err
-		}
-	}
-
-	if len(importValues) > 0 {
-		importCols := []string{
-			"from_path",
-			"from_module_path",
-			"from_version",
-			"to_path",
-		}
-		if err := db.BulkUpsert(ctx, "imports", importCols, importValues, importCols); err != nil {
-			return err
-		}
 	}
 	return nil
 }
@@ -641,36 +537,6 @@ func (db *DB) compareLicenses(ctx context.Context, m *internal.Module) (err erro
 	for _, l := range dbLicenses {
 		if _, ok := set[l.FilePath]; !ok {
 			return fmt.Errorf("expected license %q in module: %w", l.FilePath, derrors.DBModuleInsertInvalid)
-		}
-	}
-	return nil
-}
-
-// comparePackages compares m.LegacyPackages with the existing packages for
-// m.ModulePath and m.Version in the database. It returns an error if there
-// are packages in the packages table that are not present in m.LegacyPackages.
-func (db *DB) comparePackages(ctx context.Context, m *internal.Module) (err error) {
-	defer derrors.Wrap(&err, "comparePackages(ctx, %q, %q)", m.ModulePath, m.Version)
-	u, err := db.GetUnit(ctx, &internal.UnitMeta{
-		ModulePath:        m.ModulePath,
-		Path:              m.ModulePath,
-		Version:           m.Version,
-		IsRedistributable: m.IsRedistributable,
-		CommitTime:        m.CommitTime,
-	}, internal.WithSubdirectories)
-	if err != nil {
-		if errors.Is(err, derrors.NotFound) {
-			return nil
-		}
-		return err
-	}
-	set := map[string]bool{}
-	for _, p := range m.LegacyPackages {
-		set[p.Path] = true
-	}
-	for _, p := range u.Subdirectories {
-		if _, ok := set[p.Path]; !ok {
-			return fmt.Errorf("expected package %q in module: %w", p.Path, derrors.DBModuleInsertInvalid)
 		}
 	}
 	return nil
