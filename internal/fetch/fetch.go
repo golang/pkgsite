@@ -273,21 +273,6 @@ func processZipFile(ctx context.Context, modulePath string, resolvedVersion stri
 	}
 	hasGoMod := zipContainsFilename(zipReader, path.Join(moduleVersionDir(modulePath, resolvedVersion), "go.mod"))
 
-	var legacyPackages []*internal.LegacyPackage
-	for _, p := range packages {
-		legacyPackages = append(legacyPackages, &internal.LegacyPackage{
-			Path:              p.path,
-			Name:              p.name,
-			Synopsis:          p.synopsis,
-			Imports:           p.imports,
-			DocumentationHTML: p.documentationHTML,
-			GOOS:              p.goos,
-			GOARCH:            p.goarch,
-			V1Path:            p.v1path,
-			IsRedistributable: p.isRedistributable,
-			Licenses:          p.licenseMeta,
-		})
-	}
 	return &internal.Module{
 		ModuleInfo: internal.ModuleInfo{
 			ModulePath:        modulePath,
@@ -297,9 +282,8 @@ func processZipFile(ctx context.Context, modulePath string, resolvedVersion stri
 			HasGoMod:          hasGoMod,
 			SourceInfo:        sourceInfo,
 		},
-		LegacyPackages: legacyPackages,
-		Licenses:       allLicenses,
-		Units:          moduleUnits(modulePath, resolvedVersion, packages, readmes, d),
+		Licenses: allLicenses,
+		Units:    moduleUnits(modulePath, resolvedVersion, packages, readmes, d),
 	}, packageVersionStates, nil
 }
 

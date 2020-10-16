@@ -82,29 +82,15 @@ func cleanFetchResult(t *testing.T, fr *FetchResult, detector *licenses.Detector
 				u.Documentation.GOARCH = "amd64"
 			}
 		}
-		if u.IsPackage() {
-			fr.Module.LegacyPackages = append(fr.Module.LegacyPackages, &internal.LegacyPackage{
-				Path:              u.Path,
-				Licenses:          u.Licenses,
-				V1Path:            internal.V1Path(u.Path, u.ModulePath),
-				Name:              u.Name,
-				Synopsis:          u.Documentation.Synopsis,
-				DocumentationHTML: u.Documentation.HTML,
-				Imports:           u.Imports,
-				GOOS:              u.Documentation.GOOS,
-				GOARCH:            u.Documentation.GOARCH,
-				IsRedistributable: u.IsRedistributable,
-			})
-			if shouldSetPVS {
-				fr.PackageVersionStates = append(
-					fr.PackageVersionStates, &internal.PackageVersionState{
-						PackagePath: u.Path,
-						ModulePath:  fr.Module.ModulePath,
-						Version:     fr.Module.Version,
-						Status:      http.StatusOK,
-					},
-				)
-			}
+		if u.IsPackage() && shouldSetPVS {
+			fr.PackageVersionStates = append(
+				fr.PackageVersionStates, &internal.PackageVersionState{
+					PackagePath: u.Path,
+					ModulePath:  fr.Module.ModulePath,
+					Version:     fr.Module.Version,
+					Status:      http.StatusOK,
+				},
+			)
 		}
 	}
 	return fr
@@ -216,9 +202,6 @@ func licenseDetector(ctx context.Context, t *testing.T, modulePath, version stri
 }
 
 func sortFetchResult(fr *FetchResult) {
-	sort.Slice(fr.Module.LegacyPackages, func(i, j int) bool {
-		return fr.Module.LegacyPackages[i].Path < fr.Module.LegacyPackages[j].Path
-	})
 	sort.Slice(fr.Module.Units, func(i, j int) bool {
 		return fr.Module.Units[i].Path < fr.Module.Units[j].Path
 	})
@@ -231,11 +214,6 @@ func sortFetchResult(fr *FetchResult) {
 	for _, dir := range fr.Module.Units {
 		sort.Slice(dir.Licenses, func(i, j int) bool {
 			return dir.Licenses[i].FilePath < dir.Licenses[j].FilePath
-		})
-	}
-	for _, pkg := range fr.Module.LegacyPackages {
-		sort.Slice(pkg.Licenses, func(i, j int) bool {
-			return pkg.Licenses[i].FilePath < pkg.Licenses[j].FilePath
 		})
 	}
 }
@@ -261,10 +239,6 @@ func validateDocumentationHTML(t *testing.T, got, want *internal.Module) {
 				t.Errorf("doc for %s[%d]:\nmissing %q; got\n%q", msg, i, want, got)
 			}
 		}
-	}
-
-	for i := 0; i < len(want.LegacyPackages); i++ {
-		checkHTML("LegacyPackages", i, got.LegacyPackages[i].DocumentationHTML, want.LegacyPackages[i].DocumentationHTML)
 	}
 	for i := 0; i < len(want.Units); i++ {
 		if !want.Units[i].IsPackage() {
