@@ -6,7 +6,6 @@ package postgres
 
 import (
 	"context"
-	"path"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -37,34 +36,7 @@ func TestGetUnitMeta(t *testing.T) {
 		{"m.com/a", "v1.1.0", "b", false},
 		{"m.com/b", "v2.0.0+incompatible", "a", true},
 	} {
-		pkgName := path.Base(testModule.packageSuffix)
-		pkgPath := path.Join(testModule.module, testModule.packageSuffix)
-		m := &internal.Module{
-			ModuleInfo: internal.ModuleInfo{
-				CommitTime: sample.CommitTime,
-				ModulePath: testModule.module,
-				Version:    testModule.version,
-				SourceInfo: source.NewGitHubInfo("https://"+testModule.module, "", testModule.version),
-			},
-			LegacyPackages: []*internal.LegacyPackage{{
-				Name:     pkgName,
-				Path:     pkgPath,
-				Licenses: sample.LicenseMetadata,
-			}},
-		}
-		for d := pkgPath; d != "." && len(d) >= len(testModule.module); d = path.Dir(d) {
-			dir := &internal.Unit{
-				UnitMeta: internal.UnitMeta{
-					Path:     d,
-					Licenses: sample.LicenseMetadata,
-				},
-			}
-			if d == pkgPath {
-				dir.Name = pkgName
-				dir.Documentation = &internal.Documentation{}
-			}
-			sample.AddUnit(m, dir)
-		}
+		m := sample.LegacyModule(testModule.module, testModule.version, testModule.packageSuffix)
 		if err := testDB.InsertModule(ctx, m); err != nil {
 			t.Fatal(err)
 		}
@@ -92,9 +64,10 @@ func TestGetUnitMeta(t *testing.T) {
 			module:  "m.com",
 			version: "v1.2.0-pre",
 			want: &internal.UnitMeta{
-				ModulePath: "m.com",
-				Version:    "v1.2.0-pre",
-				Name:       "a",
+				ModulePath:        "m.com",
+				Version:           "v1.2.0-pre",
+				Name:              "a",
+				IsRedistributable: true,
 			},
 		},
 		{
@@ -103,9 +76,10 @@ func TestGetUnitMeta(t *testing.T) {
 			version: "v1.1.0",
 			// The path is in two modules at v1.1.0. Prefer the longer one.
 			want: &internal.UnitMeta{
-				ModulePath: "m.com/a",
-				Version:    "v1.1.0",
-				Name:       "b",
+				ModulePath:        "m.com/a",
+				Version:           "v1.1.0",
+				Name:              "b",
+				IsRedistributable: true,
 			},
 		},
 		{
@@ -114,8 +88,9 @@ func TestGetUnitMeta(t *testing.T) {
 			module: "m.com",
 			// Choose the latest release version.
 			want: &internal.UnitMeta{
-				ModulePath: "m.com",
-				Version:    "v1.1.0",
+				ModulePath:        "m.com",
+				Version:           "v1.1.0",
+				IsRedistributable: true,
 			},
 		},
 		{
@@ -123,9 +98,10 @@ func TestGetUnitMeta(t *testing.T) {
 			path: "m.com/a/b",
 			// Select the latest release version, longest module.
 			want: &internal.UnitMeta{
-				ModulePath: "m.com/a",
-				Version:    "v1.1.0",
-				Name:       "b",
+				ModulePath:        "m.com/a",
+				Version:           "v1.1.0",
+				Name:              "b",
+				IsRedistributable: true,
 			},
 		},
 		{
@@ -133,8 +109,9 @@ func TestGetUnitMeta(t *testing.T) {
 			path: "m.com",
 			// Select the latest version of the module.
 			want: &internal.UnitMeta{
-				ModulePath: "m.com",
-				Version:    "v1.1.0",
+				ModulePath:        "m.com",
+				Version:           "v1.1.0",
+				IsRedistributable: true,
 			},
 		},
 		{
@@ -143,16 +120,18 @@ func TestGetUnitMeta(t *testing.T) {
 			version: "v1.1.0",
 			// Prefer module m/a over module m, directory a.
 			want: &internal.UnitMeta{
-				ModulePath: "m.com/a",
-				Version:    "v1.1.0",
+				ModulePath:        "m.com/a",
+				Version:           "v1.1.0",
+				IsRedistributable: true,
 			},
 		},
 		{
 			name: "directory",
 			path: "m.com/dir",
 			want: &internal.UnitMeta{
-				ModulePath: "m.com",
-				Version:    "v1.0.1",
+				ModulePath:        "m.com",
+				Version:           "v1.0.1",
+				IsRedistributable: true,
 			},
 		},
 		{
@@ -160,8 +139,9 @@ func TestGetUnitMeta(t *testing.T) {
 			path:    "m.com",
 			version: "master",
 			want: &internal.UnitMeta{
-				ModulePath: "m.com",
-				Version:    "v1.2.0-pre",
+				ModulePath:        "m.com",
+				Version:           "v1.2.0-pre",
+				IsRedistributable: true,
 			},
 		},
 		{
@@ -169,9 +149,10 @@ func TestGetUnitMeta(t *testing.T) {
 			path:    "m.com/a",
 			version: "master",
 			want: &internal.UnitMeta{
-				ModulePath: "m.com",
-				Version:    "v1.2.0-pre",
-				Name:       "a",
+				ModulePath:        "m.com",
+				Version:           "v1.2.0-pre",
+				Name:              "a",
+				IsRedistributable: true,
 			},
 		},
 		{
@@ -179,8 +160,9 @@ func TestGetUnitMeta(t *testing.T) {
 			path:    "m.com/b",
 			version: "master",
 			want: &internal.UnitMeta{
-				ModulePath: "m.com/b",
-				Version:    "v2.0.0+incompatible",
+				ModulePath:        "m.com/b",
+				Version:           "v2.0.0+incompatible",
+				IsRedistributable: true,
 			},
 		},
 	} {
