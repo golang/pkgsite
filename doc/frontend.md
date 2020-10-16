@@ -27,14 +27,15 @@ experiments:
 
 You can run the frontend locally like so:
 
-    go run ./cmd/frontend [-dev] [-direct_proxy]
+    go run ./cmd/frontend [-dev] [-direct_proxy] [-local .]
 
 - The `-dev` flag reloads templates on each page load.
 
-The frontend can use one of two datasources:
+The frontend can use one of three datasources:
 
 - Postgres database
-- proxy service
+- Proxy service
+- Local filesystem
 
 The `Datasource` interface implementation is available at internal/datasource.go.
 
@@ -48,6 +49,12 @@ on how to [set up](postgres.md) and
 your local database with packages of your choice.
 
 You can then run the frontend with: `go run ./cmd/frontend`
+
+You can also use `-local` flag to run the frontend with an in-memory datasource
+populated with modules loaded from your local filesystem. This allows you to run
+the frontend without setting up a database and to view documentation of local
+modules without requiring a proxy. `-local` accepts a GOPATH-like string containing
+paths of modules to load into memory.
 
 If you add, change or remove any inline scripts in templates, run
 `devtools/cmd/csphash` to update the hashes. Running `all.bash`
