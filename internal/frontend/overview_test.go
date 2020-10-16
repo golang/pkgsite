@@ -58,7 +58,7 @@ func TestFetchOverviewDetails(t *testing.T) {
 	}
 	if diff := cmp.Diff(tc.wantDetails, got, cmp.AllowUnexported(safehtml.HTML{})); diff != "" {
 		t.Errorf("constructOverviewDetails(%q, %q) mismatch (-want +got):\n%s",
-			tc.module.LegacyPackages[0].Path, tc.module.Version, diff)
+			tc.module.Packages()[0].Path, tc.module.Version, diff)
 	}
 }
 

@@ -18,9 +18,6 @@ func (m *Module) RemoveNonRedistributableData() {
 	for _, d := range m.Units {
 		d.RemoveNonRedistributableData()
 	}
-	for _, p := range m.LegacyPackages {
-		p.RemoveNonRedistributableData()
-	}
 }
 
 func (u *Unit) RemoveNonRedistributableData() {

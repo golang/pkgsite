@@ -99,8 +99,6 @@ type Module struct {
 	// that may be contained in nested subdirectories.
 	Licenses []*licenses.License
 	Units    []*Unit
-
-	LegacyPackages []*LegacyPackage
 }
 
 // Packages returns all of the units for a module that are packages.

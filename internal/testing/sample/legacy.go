@@ -45,13 +45,12 @@ func LegacyDefaultModule() *internal.Module {
 }
 
 // LegacyModule creates a Module with the given path and version.
-// The list of suffixes is used to create LegacyPackages within the module.
+// The list of suffixes is used to create Units within the module.
 func LegacyModule(modulePath, version string, suffixes ...string) *internal.Module {
 	mi := ModuleInfo(modulePath, version)
 	m := &internal.Module{
-		ModuleInfo:     *mi,
-		LegacyPackages: nil,
-		Licenses:       Licenses,
+		ModuleInfo: *mi,
+		Licenses:   Licenses,
 	}
 	m.Units = []*internal.Unit{legacyUnitForModuleRoot(mi)}
 	for _, s := range suffixes {
@@ -59,7 +58,6 @@ func LegacyModule(modulePath, version string, suffixes ...string) *internal.Modu
 		if s != "" {
 			LegacyAddPackage(m, lp)
 		} else {
-			m.LegacyPackages = append(m.LegacyPackages, lp)
 			u := legacyUnitForPackage(lp, modulePath, version)
 			m.Units[0].Documentation = u.Documentation
 			m.Units[0].Name = u.Name
@@ -73,7 +71,6 @@ func LegacyAddPackage(m *internal.Module, p *internal.LegacyPackage) *internal.M
 		panic(fmt.Sprintf("package path %q not a prefix of module path %q",
 			p.Path, m.ModulePath))
 	}
-	m.LegacyPackages = append(m.LegacyPackages, p)
 	AddUnit(m, legacyUnitForPackage(p, m.ModulePath, m.Version))
 	minLen := len(m.ModulePath)
 	if m.ModulePath == stdlib.ModulePath {

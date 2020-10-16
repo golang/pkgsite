@@ -18,7 +18,7 @@ type LegacyDirectory struct {
 }
 
 // A LegacyPackage is a group of one or more Go source files with the same
-// package header. LegacyPackages are part of a module.
+// package header.
 type LegacyPackage struct {
 	Path              string
 	Name              string

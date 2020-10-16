@@ -80,20 +80,7 @@ func TestFetchSearchPage(t *testing.T) {
 			},
 		}
 	)
-
 	for _, m := range []*internal.Module{moduleFoo, moduleBar} {
-		// TODO(golang/go#39629): Delete once packages table is fully deprecated.
-		for _, pkg := range m.Packages() {
-			m.LegacyPackages = append(m.LegacyPackages, &internal.LegacyPackage{
-				Path:              pkg.Path,
-				Name:              pkg.Name,
-				Synopsis:          pkg.Documentation.Synopsis,
-				Licenses:          sample.LicenseMetadata,
-				IsRedistributable: pkg.IsRedistributable,
-				GOOS:              pkg.Documentation.GOOS,
-				GOARCH:            pkg.Documentation.GOARCH,
-			})
-		}
 		if err := testDB.InsertModule(ctx, m); err != nil {
 			t.Fatal(err)
 		}

@@ -73,9 +73,6 @@ func (ds *DataSource) fetch(ctx context.Context, modulePath, localPath string) e
 	for _, unit := range fr.Module.Units {
 		unit.IsRedistributable = true
 	}
-	for _, pkg := range fr.Module.LegacyPackages {
-		pkg.IsRedistributable = true
-	}
 
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
