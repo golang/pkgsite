@@ -4,6 +4,6 @@
 
 BEGIN;
 
-ALTER TABLE search_documents DROP CONSTRAINT IF EXISTS search_documents_package_path_fkey;
+ALTER TABLE search_documents DROP CONSTRAINT IF EXISTS search_documents_package_path_module_path_version_fkey;
 
 END;
