@@ -110,6 +110,11 @@ func (db *DB) GetUnitMeta(ctx context.Context, path, requestedModulePath, reques
 		if err != nil {
 			return nil, err
 		}
+
+		if db.bypassLicenseCheck {
+			um.IsRedistributable = true
+		}
+
 		um.Licenses = lics
 		return &um, nil
 	default:

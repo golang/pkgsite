@@ -205,3 +205,16 @@ func nonRedistributableModule() *internal.Module {
 	m.Units[0].IsRedistributable = false
 	return m
 }
+
+func makeModuleNonRedistributable(m *internal.Module) {
+	sample.AddLicense(m, sample.NonRedistributableLicense)
+	m.IsRedistributable = false
+
+	for _, p := range m.Packages() {
+		p.IsRedistributable = false
+	}
+
+	for i := range m.Units {
+		m.Units[i].IsRedistributable = false
+	}
+}
