@@ -93,20 +93,23 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		return nil, err
 	}
 
-	// importedByCount is not supported when using a datasource proxy.
-	importedByCount := "0"
-	db, ok := ds.(*postgres.DB)
-	if ok {
-		importedBy, err := db.GetImportedBy(ctx, um.Path, um.ModulePath, importedByLimit)
-		if err != nil {
-			return nil, err
-		}
-		// If we reached the query limit, then we don't know the total
-		// and we'll indicate that with a '+'. For example, if the limit
-		// is 101 and we get 101 results, then we'll show '100+ Imported by'.
-		importedByCount = strconv.Itoa(len(importedBy))
-		if len(importedBy) == importedByLimit {
-			importedByCount = strconv.Itoa(len(importedBy)-1) + "+"
+	importedByCount := strconv.Itoa(unit.NumImportedBy)
+	if !experiment.IsActive(ctx, internal.ExperimentGetUnitWithOneQuery) {
+		// importedByCount is not supported when using a datasource proxy.
+		importedByCount = "0"
+		db, ok := ds.(*postgres.DB)
+		if ok {
+			importedBy, err := db.GetImportedBy(ctx, um.Path, um.ModulePath, importedByLimit)
+			if err != nil {
+				return nil, err
+			}
+			// If we reached the query limit, then we don't know the total
+			// and we'll indicate that with a '+'. For example, if the limit
+			// is 101 and we get 101 results, then we'll show '100+ Imported by'.
+			importedByCount = strconv.Itoa(len(importedBy))
+			if len(importedBy) == importedByLimit {
+				importedByCount = strconv.Itoa(len(importedBy)-1) + "+"
+			}
 		}
 	}
 

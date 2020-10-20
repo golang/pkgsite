@@ -55,6 +55,8 @@ type Unit struct {
 	Subdirectories  []*PackageMeta
 	Imports         []string
 	LicenseContents []*licenses.License
+	NumImports      int
+	NumImportedBy   int
 }
 
 // Documentation is the rendered documentation for a given package

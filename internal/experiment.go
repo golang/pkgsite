@@ -9,6 +9,7 @@ const (
 	ExperimentAltRequeue          = "alt-requeue"
 	ExperimentAutocomplete        = "autocomplete"
 	ExperimentFrontendRenderDoc   = "frontend-render-doc"
+	ExperimentGetUnitWithOneQuery = "get-unit-with-one-query"
 	ExperimentGoldmark            = "goldmark"
 	ExperimentInsertPackageSource = "insert-package-source"
 	ExperimentRemoveUnusedAST     = "remove-unused-ast"
@@ -22,6 +23,7 @@ var Experiments = map[string]string{
 	ExperimentAltRequeue:          "Requeue modules for reprocessing in a different order.",
 	ExperimentAutocomplete:        "Enable autocomplete with search.",
 	ExperimentFrontendRenderDoc:   "Render documentation on the frontend if possible.",
+	ExperimentGetUnitWithOneQuery: "Fetch data for GetUnit using a single query.",
 	ExperimentGoldmark:            "Enable the usage of rendering markdown using goldmark instead of blackfriday.",
 	ExperimentInsertPackageSource: "Insert the source code of a package in the database.",
 	ExperimentRemoveUnusedAST:     "Prune AST prior to rendering documentation HTML.",

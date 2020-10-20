@@ -25,8 +25,11 @@ import (
 // TODO(golang/go#39629): remove pID.
 func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields internal.FieldSet) (_ *internal.Unit, err error) {
 	defer derrors.Wrap(&err, "GetUnit(ctx, %q, %q, %q)", um.Path, um.ModulePath, um.Version)
-	defer middleware.ElapsedStat(ctx, "GetUnit")()
+	if experiment.IsActive(ctx, internal.ExperimentGetUnitWithOneQuery) && fields&internal.WithDocumentation|fields&internal.WithReadme != 0 {
+		return db.getUnitWithAllFields(ctx, um)
+	}
 
+	defer middleware.ElapsedStat(ctx, "GetUnit")()
 	pathID, err := db.getPathID(ctx, um.Path, um.ModulePath, um.Version)
 	if err != nil {
 		return nil, err
@@ -268,4 +271,78 @@ func (db *DB) getPackagesInUnit(ctx context.Context, fullPath, modulePath, resol
 		}
 	}
 	return packages, nil
+}
+
+func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta) (_ *internal.Unit, err error) {
+	defer derrors.Wrap(&err, "getUnitWithAllFields(ctx, %q, %q, %q)", um.Path, um.ModulePath, um.Version)
+	defer middleware.ElapsedStat(ctx, "getUnitWithAllFields")()
+
+	query := `
+        SELECT
+			d.goos,
+			d.goarch,
+			d.synopsis,
+			d.source,
+			r.file_path,
+			r.contents,
+			COALESCE((
+				SELECT COUNT(path_id)
+				FROM package_imports
+				WHERE path_id = p.id
+				GROUP BY path_id
+				), 0) AS num_imports,
+			COALESCE((
+				SELECT COUNT(DISTINCT from_path)
+				FROM imports_unique
+				WHERE to_path = $1
+				AND from_module_path <> $2
+				), 0) AS num_imported_by
+		FROM paths p
+		INNER JOIN modules m
+		ON p.module_id = m.id
+		LEFT JOIN documentation d
+		ON d.path_id = p.id
+		LEFT JOIN readmes r
+		ON r.path_id = p.id
+		WHERE
+			p.path = $1
+			AND m.module_path = $2
+			AND m.version = $3
+			;`
+
+	var (
+		d internal.Documentation
+		r internal.Readme
+		u internal.Unit
+	)
+	err = db.db.QueryRow(ctx, query, um.Path, um.ModulePath, um.Version).Scan(
+		database.NullIsEmpty(&d.GOOS),
+		database.NullIsEmpty(&d.GOARCH),
+		database.NullIsEmpty(&d.Synopsis),
+		&d.Source,
+		database.NullIsEmpty(&r.Filepath),
+		database.NullIsEmpty(&r.Contents),
+		&u.NumImports,
+		&u.NumImportedBy,
+	)
+	switch err {
+	case sql.ErrNoRows:
+		return nil, derrors.NotFound
+	case nil:
+		if d.GOOS != "" {
+			u.Documentation = &d
+		}
+		if r.Filepath != "" {
+			u.Readme = &r
+		}
+	default:
+		return nil, err
+	}
+	pkgs, err := db.getPackagesInUnit(ctx, um.Path, um.ModulePath, um.Version)
+	if err != nil {
+		return nil, err
+	}
+	u.Subdirectories = pkgs
+	u.UnitMeta = *um
+	return &u, nil
 }

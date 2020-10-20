@@ -161,10 +161,13 @@ func TestGetUnit(t *testing.T) {
 				test.want.Name,
 				test.want.IsRedistributable,
 			)
-			t.Run("unit-page", func(t *testing.T) {
+			t.Run("unit page with one query", func(t *testing.T) {
+				checkUnit(ctx, t, um, test.want, internal.ExperimentUnitPage, internal.ExperimentGetUnitWithOneQuery)
+			})
+			t.Run("unit page", func(t *testing.T) {
 				checkUnit(ctx, t, um, test.want, internal.ExperimentUnitPage)
 			})
-			t.Run("no-experiments", func(t *testing.T) {
+			t.Run("no experiments", func(t *testing.T) {
 				test.want.Readme = &internal.Readme{
 					Filepath: sample.ReadmeFilePath,
 					Contents: sample.ReadmeContents,
@@ -188,8 +191,16 @@ func checkUnit(ctx context.Context, t *testing.T, um *internal.UnitMeta, want *i
 		cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 	}
 	want.SourceInfo = um.SourceInfo
-	if diff := cmp.Diff(want, got, opts...); diff != "" {
-		t.Errorf("mismatch (-want, +got):\n%s", diff)
+	if experiment.IsActive(ctx, internal.ExperimentGetUnitWithOneQuery) {
+		want.NumImports = len(want.Imports)
+		opts = append(opts,
+			cmpopts.IgnoreFields(internal.Documentation{}, "HTML"),
+			cmpopts.IgnoreFields(internal.Unit{}, "Imports"),
+			cmpopts.IgnoreFields(internal.Unit{}, "LicenseContents"),
+		)
+		if diff := cmp.Diff(want, got, opts...); diff != "" {
+			t.Errorf("mismatch (-want, +got):\n%s", diff)
+		}
 	}
 }
 
