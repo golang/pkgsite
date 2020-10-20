@@ -57,6 +57,9 @@ type MainDetails struct {
 	// RepositoryURL is the URL to the repository containing the package.
 	RepositoryURL string
 
+	// SourceURL is the URL to the source of the package.
+	SourceURL string
+
 	// ExpandReadme is holds the expandable readme state.
 	ExpandReadme bool
 }
@@ -170,6 +173,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		DocBody:         docBody,
 		SourceFiles:     files,
 		RepositoryURL:   um.SourceInfo.RepoURL(),
+		SourceURL:       um.SourceInfo.DirectoryURL(internal.Suffix(um.Path, um.ModulePath)),
 		MobileOutline:   mobileOutline,
 		NumImports:      len(unit.Imports),
 		ImportedByCount: importedByCount,

@@ -18,6 +18,27 @@
   margin: auto 1rem auto 0;
   width: auto;
 }
+.UnitFiles-titleLink {
+  position: relative;
+}
+.UnitFiles-titleLink a {
+  bottom: 1rem;
+  font-size: 0.875rem;
+  position: absolute;
+  right: 0;
+}
+.UnitFiles-titleLink a:after {
+  background-image: url(/static/img/icon-launch.svg);
+  background-repeat: no-repeat;
+  background-size: 0.875rem 1.25rem;
+  content: '';
+  display: inline-block;
+  height: 1rem;
+  left: 0.3125rem;
+  position: relative;
+  top: 0.125rem;
+  width: 1rem;
+}
 .UnitFiles-fileList {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(10.5rem, auto));
