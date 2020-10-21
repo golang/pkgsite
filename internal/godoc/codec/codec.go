@@ -15,9 +15,14 @@ import (
 	"fmt"
 	"math"
 	"reflect"
+	"runtime"
 )
 
 // An Encoder encodes Go values into a sequence of bytes.
+// To use an Encoder:
+// - Create one with NewEncoder.
+// - Call the Encode method one or more times.
+// - Retrieve the resulting bytes by calling Bytes.
 type Encoder struct {
 	buf      []byte
 	typeNums map[reflect.Type]int
@@ -28,6 +33,32 @@ func NewEncoder() *Encoder {
 	return &Encoder{
 		typeNums: map[reflect.Type]int{},
 	}
+}
+
+// Encode encodes x.
+func (e *Encoder) Encode(x interface{}) (err error) {
+	defer func() { handlePanic(&err, recover()) }()
+	e.EncodeAny(x)
+	return nil
+}
+
+func handlePanic(errp *error, recovered interface{}) {
+	if recovered == nil {
+		// No panic; do nothing.
+		return
+	}
+	// If the panic is from the Go runtime, re-panic.
+	if _, ok := recovered.(runtime.Error); ok {
+		panic(recovered)
+	}
+	// If the panic value is any other error, set errp
+	// and return normally.
+	if err, ok := recovered.(error); ok {
+		*errp = err
+		return
+	}
+	// Panic on anything else.
+	panic(recovered)
 }
 
 func (e *Encoder) fail(err error) {
@@ -47,6 +78,9 @@ func (e *Encoder) Bytes() []byte {
 }
 
 // A Decoder decodes a Go value encoded by an Encoder.
+// To use a Decoder:
+// - Pass NewDecoder the return value of Encoder.Bytes.
+// - Call the Decode method once for each call to Encoder.Encode.
 type Decoder struct {
 	buf       []byte
 	i         int
@@ -56,6 +90,15 @@ type Decoder struct {
 // NewDecoder returns a Decoder for the given bytes.
 func NewDecoder(data []byte) *Decoder {
 	return &Decoder{buf: data, i: 0}
+}
+
+// Decode decodes a value encoded with Encoder.Encode.
+func (d *Decoder) Decode() (_ interface{}, err error) {
+	defer func() { handlePanic(&err, recover()) }()
+	if d.typeInfos == nil {
+		d.decodeInitial()
+	}
+	return d.DecodeAny(), nil
 }
 
 func (d *Decoder) fail(err error) {
@@ -357,6 +400,9 @@ func (d *Decoder) DecodeAny() interface{} {
 		d.failf("DecodeAny: bad list length %d", n)
 	}
 	num := d.DecodeUint()
+	if num >= uint64(len(d.typeInfos)) {
+		d.failf("type number %d out of range", num)
+	}
 	ti := d.typeInfos[num]
 	return ti.decode(d)
 }

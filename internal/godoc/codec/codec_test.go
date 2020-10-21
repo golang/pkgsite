@@ -6,6 +6,7 @@ package codec
 
 import (
 	"math"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -140,5 +141,74 @@ func TestAny(t *testing.T) {
 		if g != w {
 			t.Errorf("got %v, want %v", g, w)
 		}
+	}
+}
+
+func TestEncodeDecode(t *testing.T) {
+	want := []interface{}{"bar", nil, 1, -5, 98.6, uint64(1 << 63), "Luke Luck likes lakes", true}
+	e := NewEncoder()
+	for _, w := range want {
+		if err := e.Encode(w); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	d := NewDecoder(e.Bytes())
+	for _, w := range want {
+		g, err := d.Decode()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if g != w {
+			t.Errorf("got %v, want %v", g, w)
+		}
+	}
+}
+
+func TestEncodeErrors(t *testing.T) {
+	// The only encoding error is an unregistered type.
+	e := NewEncoder()
+	type MyInt int
+	checkMessage(t, e.Encode(MyInt(0)), "unregistered")
+}
+
+func TestDecodeErrors(t *testing.T) {
+	for _, test := range []struct {
+		offset  int
+		change  byte
+		message string
+	}{
+		// d.buf[d.i:] should look like: nValues 2 0 nBytes 4 ...
+		// Induce errors by changing some bytes.
+		{0, startCode, "bad code"},   // mess with the intial code
+		{1, 5, "bad list length"},    // mess with the list length
+		{2, 1, "out of range"},       // mess with the type number
+		{3, nValuesCode, "bad code"}, // mess with the uint code
+		{4, 5, "bad length"},         // mess with the uint length
+	} {
+		d := NewDecoder(mustEncode(t, uint64(3000)))
+		d.decodeInitial()
+		d.buf[d.i+test.offset] = test.change
+		_, err := d.Decode()
+		checkMessage(t, err, test.message)
+	}
+}
+
+func mustEncode(t *testing.T, x interface{}) []byte {
+	t.Helper()
+	e := NewEncoder()
+	if err := e.Encode(x); err != nil {
+		t.Fatal(err)
+	}
+	return e.Bytes()
+}
+
+func checkMessage(t *testing.T, err error, target string) {
+	t.Helper()
+	if err == nil {
+		t.Error("want error, got nil")
+	}
+	if !strings.Contains(err.Error(), target) {
+		t.Errorf("error %q does not contain %q", err, target)
 	}
 }
