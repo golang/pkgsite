@@ -14,16 +14,28 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+	"reflect"
 )
 
 // An Encoder encodes Go values into a sequence of bytes.
 type Encoder struct {
-	buf []byte
+	buf      []byte
+	typeNums map[reflect.Type]int
 }
 
 // NewEncoder returns an Encoder.
 func NewEncoder() *Encoder {
-	return &Encoder{}
+	return &Encoder{
+		typeNums: map[reflect.Type]int{},
+	}
+}
+
+func (e *Encoder) fail(err error) {
+	panic(err)
+}
+
+func (e *Encoder) failf(format string, args ...interface{}) {
+	e.fail(fmt.Errorf(format, args...))
 }
 
 // Bytes returns the encoded byte slice.
@@ -300,4 +312,99 @@ func (d *Decoder) StartList() int {
 		return 0
 	}
 	return int(d.DecodeUint())
+}
+
+// EncodeAny encodes a Go type. The type must have
+// been registered with Register.
+func (e *Encoder) EncodeAny(x interface{}) {
+	// Encode a nil interface value with a zero.
+	if x == nil {
+		e.writeByte(0)
+		return
+	}
+	// Find the typeInfo for the type, which has the encoder.
+	t := reflect.TypeOf(x)
+	ti := typeInfosByType[t]
+	if ti == nil {
+		e.failf("unregistered type %s", t)
+	}
+	// Assign a number to the type if we haven't already.
+	num, ok := e.typeNums[t]
+	if !ok {
+		e.typeNums[t] = len(e.typeNums)
+	}
+	// Encode a pair (2-element list) of the type number and the encoded value.
+	e.StartList(2)
+	e.EncodeUint(uint64(num))
+	ti.encode(e, x)
+}
+
+//////////////// Type Registry
+
+// All types subject to encoding must be registered, even
+// builtin types.
+
+// A typeInfo describes how to encode and decode a type.
+type typeInfo struct {
+	name   string // e.g. "go/ast.File"
+	encode encodeFunc
+	decode decodeFunc
+}
+
+type (
+	encodeFunc func(*Encoder, interface{})
+	decodeFunc func(*Decoder) interface{}
+)
+
+var (
+	typeInfosByName = map[string]*typeInfo{}
+	typeInfosByType = map[reflect.Type]*typeInfo{}
+)
+
+// Register records the type of x for use by Encoders and Decoders.
+func Register(x interface{}, enc encodeFunc, dec decodeFunc) {
+	t := reflect.TypeOf(x)
+	tn := typeName(t)
+	if _, ok := typeInfosByName[tn]; ok {
+		panic(fmt.Sprintf("codec.Register: duplicate type %s (typeName=%q)", t, tn))
+	}
+	ti := &typeInfo{
+		name:   tn,
+		encode: enc,
+		decode: dec,
+	}
+	typeInfosByName[ti.name] = ti
+	typeInfosByType[t] = ti
+}
+
+// typeName returns the full, qualified name for a type.
+func typeName(t reflect.Type) string {
+	if t.PkgPath() == "" {
+		return t.String()
+	}
+	return t.PkgPath() + "." + t.Name()
+}
+
+func init() {
+	Register(int64(0),
+		func(e *Encoder, x interface{}) { e.EncodeInt(x.(int64)) },
+		func(d *Decoder) interface{} { return d.DecodeInt() })
+	Register(uint64(0),
+		func(e *Encoder, x interface{}) { e.EncodeUint(x.(uint64)) },
+		func(d *Decoder) interface{} { return d.DecodeUint() })
+	Register(int(0),
+		func(e *Encoder, x interface{}) { e.EncodeInt(int64(x.(int))) },
+		func(d *Decoder) interface{} { return int(d.DecodeInt()) })
+	Register(float64(0),
+		func(e *Encoder, x interface{}) { e.EncodeFloat(x.(float64)) },
+		func(d *Decoder) interface{} { return d.DecodeFloat() })
+	Register(false,
+		func(e *Encoder, x interface{}) { e.EncodeBool(x.(bool)) },
+		func(d *Decoder) interface{} { return d.DecodeBool() })
+	Register("",
+		func(e *Encoder, x interface{}) { e.EncodeString(x.(string)) },
+		func(d *Decoder) interface{} { return d.DecodeString() })
+	Register([]byte(nil),
+		func(e *Encoder, x interface{}) { e.EncodeBytes(x.([]byte)) },
+		func(d *Decoder) interface{} { return d.DecodeBytes() })
 }
