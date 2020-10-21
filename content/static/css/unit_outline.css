@@ -91,3 +91,6 @@ a.UnitOutline-accordion[aria-expanded='true'] {
   text-align: center;
   top: 0.5rem;
 }
+.UnitOutline-jumpToInput:disabled {
+  background-color: var(--gray-9);
+}
