@@ -44,3 +44,27 @@ func TestLowLevelIO(t *testing.T) {
 		t.Errorf("got %d, want %d", got, u64)
 	}
 }
+
+func TestUint(t *testing.T) {
+	const (
+		small = 99
+		u32   = 999
+		u64   = math.MaxUint32 + 1
+	)
+
+	e := NewEncoder()
+	e.EncodeUint(small)
+	e.EncodeUint(u32)
+	e.EncodeUint(u64)
+
+	d := NewDecoder(e.Bytes())
+	if got := d.DecodeUint(); got != small {
+		t.Errorf("got %d, want %d", got, small)
+	}
+	if got := d.DecodeUint(); got != u32 {
+		t.Errorf("got %d, want %d", got, u32)
+	}
+	if got := d.DecodeUint(); got != u64 {
+		t.Errorf("got %d, want %d", got, u64)
+	}
+}

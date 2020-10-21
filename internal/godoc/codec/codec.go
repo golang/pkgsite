@@ -12,6 +12,7 @@ package codec
 
 import (
 	"encoding/binary"
+	"fmt"
 	"math"
 )
 
@@ -39,6 +40,18 @@ type Decoder struct {
 // NewDecoder returns a Decoder for the given bytes.
 func NewDecoder(data []byte) *Decoder {
 	return &Decoder{buf: data, i: 0}
+}
+
+func (d *Decoder) fail(err error) {
+	panic(err)
+}
+
+func (d *Decoder) failf(format string, args ...interface{}) {
+	d.fail(fmt.Errorf(format, args...))
+}
+
+func (d *Decoder) badcode(c byte) {
+	d.failf("bad code: %d", c)
 }
 
 //////////////// Low-level I/O
@@ -152,4 +165,25 @@ func (e *Encoder) EncodeUint(u uint64) {
 		e.writeByte(8)
 		e.writeUint64(u)
 	}
+}
+
+// DecodeUint decodes a uint64.
+func (d *Decoder) DecodeUint() uint64 {
+	b := d.readByte()
+	switch {
+	case b < endCode:
+		return uint64(b)
+	case b == nBytesCode:
+		switch n := d.readByte(); n {
+		case 4:
+			return uint64(d.readUint32())
+		case 8:
+			return d.readUint64()
+		default:
+			d.failf("DecodeUint: bad length %d", n)
+		}
+	default:
+		d.badcode(b)
+	}
+	return 0
 }
