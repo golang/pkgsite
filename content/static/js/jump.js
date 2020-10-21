@@ -28,6 +28,7 @@ const jumpList = jumpDialog.querySelector('.JumpDialog-list');
 const jumpFilter = jumpDialog.querySelector('.JumpDialog-input');
 const searchInput = document.querySelector('.js-searchFocus');
 const doc = document.querySelector('.js-documentation');
+const docIndex = document.querySelector('.js-docIndex');
 
 if (!jumpDialog.showModal) {
   dialogPolyfill.registerDialog(jumpDialog);
@@ -275,7 +276,7 @@ document.addEventListener('keypress', function (e) {
     case 'F':
       e.preventDefault();
       jumpFilter.value = '';
-      jumpDialog.showModal();
+      showJumpDialogModal();
       updateJumpList('');
       break;
     case '?':
@@ -296,7 +297,18 @@ const jumpOutlineInput = document.querySelector('.js-jumpToInput');
 if (jumpOutlineInput) {
   jumpOutlineInput.addEventListener('click', () => {
     jumpFilter.value = '';
-    jumpDialog.showModal();
+    showJumpDialogModal();
     updateJumpList('');
   });
+  // If the doc does not contain an index disable the button.
+  if (!docIndex) {
+    jumpOutlineInput.setAttribute('disabled', true);
+  }
+}
+
+function showJumpDialogModal() {
+  // If the doc does not contain an index do not open the modal.
+  if (docIndex) {
+    jumpDialog.showModal();
+  }
 }
