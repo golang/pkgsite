@@ -40,13 +40,17 @@ func (e *Encoder) failf(format string, args ...interface{}) {
 
 // Bytes returns the encoded byte slice.
 func (e *Encoder) Bytes() []byte {
-	return e.buf
+	data := e.buf                 // remember the data
+	e.buf = nil                   // start with a fresh buffer
+	e.encodeInitial()             // encode metadata
+	return append(e.buf, data...) // concatenate metadata and data
 }
 
 // A Decoder decodes a Go value encoded by an Encoder.
 type Decoder struct {
-	buf []byte
-	i   int
+	buf       []byte
+	i         int
+	typeInfos []*typeInfo
 }
 
 // NewDecoder returns a Decoder for the given bytes.
@@ -331,12 +335,62 @@ func (e *Encoder) EncodeAny(x interface{}) {
 	// Assign a number to the type if we haven't already.
 	num, ok := e.typeNums[t]
 	if !ok {
-		e.typeNums[t] = len(e.typeNums)
+		num = len(e.typeNums)
+		e.typeNums[t] = num
 	}
 	// Encode a pair (2-element list) of the type number and the encoded value.
 	e.StartList(2)
 	e.EncodeUint(uint64(num))
 	ti.encode(e, x)
+}
+
+// DecodeAny decodes a value encoded by EncodeAny.
+func (d *Decoder) DecodeAny() interface{} {
+	// If we're looking at a zero, this is a nil interface.
+	if d.curByte() == 0 {
+		d.readByte() // consume the byte
+		return nil
+	}
+	// Otherwise, we should have a two-item list: type number and value.
+	n := d.StartList()
+	if n != 2 {
+		d.failf("DecodeAny: bad list length %d", n)
+	}
+	num := d.DecodeUint()
+	ti := d.typeInfos[num]
+	return ti.decode(d)
+}
+
+// encodeInitial encodes metadata that appears at the start of the
+// encoded byte slice.
+func (e *Encoder) encodeInitial() {
+	// Encode the list of type names we saw, in the order we
+	// assigned numbers to them.
+	names := make([]string, len(e.typeNums))
+	for t, num := range e.typeNums {
+		names[num] = typeName(t)
+	}
+	e.StartList(len(names))
+	for _, n := range names {
+		e.EncodeString(n)
+	}
+}
+
+// decodeInitial decodes metadata that appears at the start of the
+// encoded byte slice.
+func (d *Decoder) decodeInitial() {
+	// Decode the list of type names. The number of a type is its position in
+	// the list.
+	n := d.StartList()
+	d.typeInfos = make([]*typeInfo, n)
+	for num := 0; num < n; num++ {
+		name := d.DecodeString()
+		ti := typeInfosByName[name]
+		if ti == nil {
+			d.failf("unregistered type: %s", name)
+		}
+		d.typeInfos[num] = ti
+	}
 }
 
 //////////////// Type Registry

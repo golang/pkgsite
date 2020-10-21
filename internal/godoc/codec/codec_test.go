@@ -28,6 +28,7 @@ func TestLowLevelIO(t *testing.T) {
 	e.writeUint64(u64)
 
 	d := NewDecoder(e.Bytes())
+	d.decodeInitial()
 	if got := d.readByte(); got != b {
 		t.Fatalf("got %d, want %d", got, b)
 	}
@@ -52,6 +53,7 @@ func TestUint(t *testing.T) {
 		e.EncodeUint(u)
 	}
 	d := NewDecoder(e.Bytes())
+	d.decodeInitial()
 	for _, want := range uints {
 		if got := d.DecodeUint(); got != want {
 			t.Errorf("got %d, want %d", got, want)
@@ -66,6 +68,7 @@ func TestInt(t *testing.T) {
 		e.EncodeInt(i)
 	}
 	d := NewDecoder(e.Bytes())
+	d.decodeInitial()
 	for _, want := range ints {
 		if got := d.DecodeInt(); got != want {
 			t.Errorf("got %d, want %d", got, want)
@@ -87,6 +90,7 @@ func TestBasicTypes(t *testing.T) {
 	e.EncodeFloat(f)
 
 	d := NewDecoder(e.Bytes())
+	d.decodeInitial()
 	gots := []interface{}{
 		d.DecodeBytes(),
 		d.DecodeString(),
@@ -108,6 +112,7 @@ func TestList(t *testing.T) {
 	}
 
 	d := NewDecoder(e.Bytes())
+	d.decodeInitial()
 	n := d.StartList()
 	if n < 0 {
 		t.Fatal("got nil")
@@ -118,5 +123,22 @@ func TestList(t *testing.T) {
 	}
 	if !cmp.Equal(got, want) {
 		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+func TestAny(t *testing.T) {
+	want := []interface{}{"bar", nil, 1, -5, 98.6, uint64(1 << 63), "Luke Luck likes lakes", true}
+	e := NewEncoder()
+	for _, w := range want {
+		e.EncodeAny(w)
+	}
+
+	d := NewDecoder(e.Bytes())
+	d.decodeInitial()
+	for _, w := range want {
+		g := d.DecodeAny()
+		if g != w {
+			t.Errorf("got %v, want %v", g, w)
+		}
 	}
 }
