@@ -187,3 +187,25 @@ func (d *Decoder) DecodeUint() uint64 {
 	}
 	return 0
 }
+
+// EncodeInt encodes a signed integer.
+func (e *Encoder) EncodeInt(i int64) {
+	// Encode small negative as well as small positive integers efficiently.
+	// Algorithm from gob; see "Encoding Details" at https://pkg.go.dev/encoding/gob.
+	var u uint64
+	if i < 0 {
+		u = (^uint64(i) << 1) | 1 // complement i, bit 0 is 1
+	} else {
+		u = (uint64(i) << 1) // do not complement i, bit 0 is 0
+	}
+	e.EncodeUint(u)
+}
+
+// DecodeInt decodes a signed integer.
+func (d *Decoder) DecodeInt() int64 {
+	u := d.DecodeUint()
+	if u&1 == 1 {
+		return int64(^(u >> 1))
+	}
+	return int64(u >> 1)
+}

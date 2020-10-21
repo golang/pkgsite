@@ -46,25 +46,29 @@ func TestLowLevelIO(t *testing.T) {
 }
 
 func TestUint(t *testing.T) {
-	const (
-		small = 99
-		u32   = 999
-		u64   = math.MaxUint32 + 1
-	)
-
 	e := NewEncoder()
-	e.EncodeUint(small)
-	e.EncodeUint(u32)
-	e.EncodeUint(u64)
-
+	uints := []uint64{99, 999, math.MaxUint32 + 1}
+	for _, u := range uints {
+		e.EncodeUint(u)
+	}
 	d := NewDecoder(e.Bytes())
-	if got := d.DecodeUint(); got != small {
-		t.Errorf("got %d, want %d", got, small)
+	for _, want := range uints {
+		if got := d.DecodeUint(); got != want {
+			t.Errorf("got %d, want %d", got, want)
+		}
 	}
-	if got := d.DecodeUint(); got != u32 {
-		t.Errorf("got %d, want %d", got, u32)
+}
+
+func TestInt(t *testing.T) {
+	e := NewEncoder()
+	ints := []int64{99, 999, math.MaxUint32 + 1, -123}
+	for _, i := range ints {
+		e.EncodeInt(i)
 	}
-	if got := d.DecodeUint(); got != u64 {
-		t.Errorf("got %d, want %d", got, u64)
+	d := NewDecoder(e.Bytes())
+	for _, want := range ints {
+		if got := d.DecodeInt(); got != want {
+			t.Errorf("got %d, want %d", got, want)
+		}
 	}
 }
