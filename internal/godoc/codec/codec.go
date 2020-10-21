@@ -209,3 +209,73 @@ func (d *Decoder) DecodeInt() int64 {
 	}
 	return int64(u >> 1)
 }
+
+// encodeLen encodes the length of a byte sequence.
+func (e *Encoder) encodeLen(n int) {
+	e.writeByte(nBytesCode)
+	e.EncodeUint(uint64(n))
+}
+
+// decodeLen decodes the length of a byte sequence.
+func (d *Decoder) decodeLen() int {
+	if b := d.readByte(); b != nBytesCode {
+		d.badcode(b)
+	}
+	return int(d.DecodeUint())
+}
+
+// EncodeBytes encodes a byte slice.
+func (e *Encoder) EncodeBytes(b []byte) {
+	e.encodeLen(len(b))
+	e.writeBytes(b)
+}
+
+// DecodeBytes decodes a byte slice.
+// It does no copying.
+func (d *Decoder) DecodeBytes() []byte {
+	return d.readBytes(d.decodeLen())
+}
+
+// EncodeString encodes a string.
+func (e *Encoder) EncodeString(s string) {
+	e.encodeLen(len(s))
+	e.writeString(s)
+}
+
+// DecodeString decodes a string.
+func (d *Decoder) DecodeString() string {
+	return d.readString(d.decodeLen())
+}
+
+// EncodeBool encodes a bool.
+func (e *Encoder) EncodeBool(b bool) {
+	if b {
+		e.writeByte(1)
+	} else {
+		e.writeByte(0)
+	}
+}
+
+// DecodeBool decodes a bool.
+func (d *Decoder) DecodeBool() bool {
+	b := d.readByte()
+	switch b {
+	case 0:
+		return false
+	case 1:
+		return true
+	default:
+		d.failf("bad bool: %d", b)
+		return false
+	}
+}
+
+// EncodeFloat encodes a float64.
+func (e *Encoder) EncodeFloat(f float64) {
+	e.EncodeUint(math.Float64bits(f))
+}
+
+// DecodeFloat decodes a float64.
+func (d *Decoder) DecodeFloat() float64 {
+	return math.Float64frombits(d.DecodeUint())
+}

@@ -72,3 +72,29 @@ func TestInt(t *testing.T) {
 		}
 	}
 }
+
+func TestBasicTypes(t *testing.T) {
+	e := NewEncoder()
+	var (
+		by = []byte{1, 2, 3}
+		s  = "hello"
+		b  = true
+		f  = 3.14
+	)
+	e.EncodeBytes(by)
+	e.EncodeString(s)
+	e.EncodeBool(b)
+	e.EncodeFloat(f)
+
+	d := NewDecoder(e.Bytes())
+	gots := []interface{}{
+		d.DecodeBytes(),
+		d.DecodeString(),
+		d.DecodeBool(),
+		d.DecodeFloat(),
+	}
+	wants := []interface{}{by, s, b, f}
+	if !cmp.Equal(gots, wants) {
+		t.Errorf("got %v, want %v", gots, wants)
+	}
+}
