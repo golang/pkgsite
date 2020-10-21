@@ -38,6 +38,7 @@ func Generate(w io.Writer, packageName string, vs ...interface{}) error {
 	}
 	g.initialTemplate = newTemplate("initial", initial)
 	g.sliceTemplate = newTemplate("slice", slice)
+	g.mapTemplate = newTemplate("map", mapBody)
 
 	for _, v := range vs {
 		g.todo = append(g.todo, reflect.TypeOf(v))
@@ -70,6 +71,7 @@ type generator struct {
 	done            map[reflect.Type]bool
 	initialTemplate *template.Template
 	sliceTemplate   *template.Template
+	mapTemplate     *template.Template
 }
 
 func (g *generator) generate() ([]byte, error) {
@@ -118,6 +120,8 @@ func (g *generator) gen(t reflect.Type) ([]byte, error) {
 	switch t.Kind() {
 	case reflect.Slice:
 		return g.genSlice(t)
+	case reflect.Map:
+		return g.genMap(t)
 	default:
 		return nil, errors.New("unimplemented")
 	}
@@ -131,6 +135,19 @@ func (g *generator) genSlice(t reflect.Type) ([]byte, error) {
 	}{
 		Type:   t,
 		ElType: et,
+	})
+}
+
+func (g *generator) genMap(t reflect.Type) ([]byte, error) {
+	et := t.Elem()
+	kt := t.Key()
+	g.todo = append(g.todo, kt, et)
+	return execute(g.mapTemplate, struct {
+		Type, ElType, KeyType reflect.Type
+	}{
+		Type:    t,
+		ElType:  et,
+		KeyType: kt,
 	})
 }
 
@@ -283,5 +300,47 @@ func init() {
   codec.Register({{goName .Type}}(nil),
     func(e *codec.Encoder, x interface{}) { encode_{{funcName .Type}}(e, x.({{goName .Type}})) },
     func(d *codec.Decoder) interface{} { var x {{goName .Type}}; decode_{{funcName .Type}}(d, &x); return x })
+}
+`
+
+// Template body for a map type.
+// A map of size N is encoded as a list of length 2N, containing alternating
+// keys and values.
+//
+// In the decode function, we declare a variable v to hold the decoded map value
+// rather than decoding directly into m[v]. This is necessary for decode
+// functions that take pointers: you can't take a pointer to a map element.
+const mapBody = `
+func encode_{{funcName .Type}}(e *codec.Encoder, m {{goName .Type}}) {
+	if m == nil {
+		e.EncodeUint(0)
+		return
+	}
+	e.StartList(2*len(m))
+	for k, v := range m {
+		{{encodeStmt .KeyType "k"}}
+		{{encodeStmt .ElType "v"}}
+	}
+}
+
+func decode_{{funcName .Type}}(d *codec.Decoder, p *{{goName .Type}}) {
+	n2 := d.StartList()
+	if n2 < 0 { return }
+	n := n2/2
+	m := make({{goName .Type}}, n)
+	var k {{goName .KeyType}}
+	var v {{goName .ElType}}
+	for i := 0; i < n; i++ {
+		{{decodeStmt .KeyType "k"}}
+		{{decodeStmt .ElType "v"}}
+		m[k] = v
+	}
+	*p = m
+}
+
+func init() {
+	codec.Register({{goName .Type}}(nil),
+	func(e *codec.Encoder, x interface{}) { encode_{{funcName .Type}}(e, x.({{goName .Type}})) },
+	func(d *codec.Decoder) interface{} { var x {{goName .Type}}; decode_{{funcName .Type}}(d, &x); return x })
 }
 `

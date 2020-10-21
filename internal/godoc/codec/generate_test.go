@@ -43,18 +43,24 @@ func TestGoName(t *testing.T) {
 	}
 }
 
-func TestGenerateSlice(t *testing.T) {
+func TestGenerate(t *testing.T) {
+	testGenerate(t, "slice", [][]int(nil))
+	testGenerate(t, "map", map[string]bool(nil))
+}
+
+func testGenerate(t *testing.T, name string, x interface{}) {
+	t.Helper()
 	var buf bytes.Buffer
-	if err := Generate(&buf, "somepkg", [][]int(nil)); err != nil {
+	if err := Generate(&buf, "somepkg", x); err != nil {
 		t.Fatal(err)
 	}
 	got := buf.String()
 	if *update {
-		writeGolden(t, "slice", got)
+		writeGolden(t, name, got)
 	} else {
-		want := readGolden(t, "slice")
+		want := readGolden(t, name)
 		if diff := cmp.Diff(want, got); diff != "" {
-			t.Errorf("mismatch (-want, +got):\n%s", diff)
+			t.Errorf("%s: mismatch (-want, +got):\n%s", name, diff)
 		}
 	}
 }
