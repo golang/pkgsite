@@ -98,3 +98,25 @@ func TestBasicTypes(t *testing.T) {
 		t.Errorf("got %v, want %v", gots, wants)
 	}
 }
+
+func TestList(t *testing.T) {
+	e := NewEncoder()
+	want := []string{"Green", "eggs", "and", "ham"}
+	e.StartList(len(want))
+	for _, s := range want {
+		e.EncodeString(s)
+	}
+
+	d := NewDecoder(e.Bytes())
+	n := d.StartList()
+	if n < 0 {
+		t.Fatal("got nil")
+	}
+	got := make([]string, n)
+	for i := 0; i < n; i++ {
+		got[i] = d.DecodeString()
+	}
+	if !cmp.Equal(got, want) {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}

@@ -279,3 +279,25 @@ func (e *Encoder) EncodeFloat(f float64) {
 func (d *Decoder) DecodeFloat() float64 {
 	return math.Float64frombits(d.DecodeUint())
 }
+
+// StartList should be called before encoding any sequence of variable-length
+// values.
+func (e *Encoder) StartList(len int) {
+	e.writeByte(nValuesCode)
+	e.EncodeUint(uint64(len))
+}
+
+// StartList should be called before decoding any sequence of variable-length
+// values. It returns -1 if the encoded list was nil. Otherwise, it returns the
+// length of the sequence.
+func (d *Decoder) StartList() int {
+	b := d.readByte()
+	if b == 0 { // used for nil
+		return -1
+	}
+	if b != nValuesCode {
+		d.badcode(b)
+		return 0
+	}
+	return int(d.DecodeUint())
+}
