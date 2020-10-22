@@ -427,7 +427,7 @@ const structBody = `
 « $funcName := funcName .Type »
 « $goName := goName .Type »
 func encode_«$funcName»(e *codec.Encoder, x *«$goName») {
-	if !e.StartStruct(x==nil) { return }
+	if !e.StartStruct(x==nil, x) { return }
 	«range $i, $f := .Fields»
 		«- if $f.Zero -»
 			if x.«$f.Name» != «$f.Zero» {
@@ -442,8 +442,14 @@ func encode_«$funcName»(e *codec.Encoder, x *«$goName») {
 }
 
 func decode_«$funcName»(d *codec.Decoder, p **«$goName») {
-	if !d.StartStruct() { return }
+	proceed, ref := d.StartStruct()
+	if !proceed { return }
+	if ref != nil {
+		*p = ref.(*«$goName»)
+		return
+	}
 	var x «$goName»
+	d.StoreRef(&x)
 	for {
 		n := d.NextStructField()
 		if n < 0 { break }

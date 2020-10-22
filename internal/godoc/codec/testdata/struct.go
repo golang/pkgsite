@@ -15,7 +15,7 @@ import (
 )
 
 func encode_ast_BasicLit(e *codec.Encoder, x *ast.BasicLit) {
-	if !e.StartStruct(x == nil) {
+	if !e.StartStruct(x == nil, x) {
 		return
 	}
 	if x.ValuePos != 0 {
@@ -34,10 +34,16 @@ func encode_ast_BasicLit(e *codec.Encoder, x *ast.BasicLit) {
 }
 
 func decode_ast_BasicLit(d *codec.Decoder, p **ast.BasicLit) {
-	if !d.StartStruct() {
+	proceed, ref := d.StartStruct()
+	if !proceed {
+		return
+	}
+	if ref != nil {
+		*p = ref.(*ast.BasicLit)
 		return
 	}
 	var x ast.BasicLit
+	d.StoreRef(&x)
 	for {
 		n := d.NextStructField()
 		if n < 0 {

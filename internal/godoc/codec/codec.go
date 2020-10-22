@@ -26,12 +26,14 @@ import (
 type Encoder struct {
 	buf      []byte
 	typeNums map[reflect.Type]int
+	seen     map[interface{}]uint64 // for references; see StartStruct
 }
 
 // NewEncoder returns an Encoder.
 func NewEncoder() *Encoder {
 	return &Encoder{
 		typeNums: map[reflect.Type]int{},
+		seen:     map[interface{}]uint64{},
 	}
 }
 
@@ -85,6 +87,7 @@ type Decoder struct {
 	buf       []byte
 	i         int
 	typeInfos []*typeInfo
+	refs      []interface{} // list of struct pointers, in the order seen
 }
 
 // NewDecoder returns a Decoder for the given bytes.
@@ -198,9 +201,11 @@ func (d *Decoder) readUint64() uint64 {
 // like a Go slice or array. The slice []string{"hi", "bye"} is encoded as
 //   nValues 2 nBytes 2 'h' 'i' nBytes 3 'b' 'y' 'e'
 //
+// The ref code is used to refer to an earlier encoded value. It is followed by
+// a uint denoting the index data of the value to use.
+//
 // The start and end codes delimit a value whose length is unknown beforehand.
 // It is used for structs.
-// TODO: describe ref in a later CL.
 const (
 	nBytesCode  = 255 - iota // uint n follows, then n bytes
 	nValuesCode              // uint n follows, then n values
@@ -369,30 +374,51 @@ func (d *Decoder) StartList() int {
 //////////////// Struct Support
 
 // StartStruct should be called before encoding a struct pointer. The isNil
-// argument says whether the pointer is nil. If StartStruct returns false,
-// encoding should not proceed.
-func (e *Encoder) StartStruct(isNil bool) bool {
+// argument says whether the pointer is nil. The p argument is the struct
+// pointer. If StartStruct returns false, encoding should not proceed.
+func (e *Encoder) StartStruct(isNil bool, p interface{}) bool {
 	if isNil {
 		e.EncodeUint(0)
 		return false
 	}
+	if u, ok := e.seen[p]; ok {
+		// If we have already seen this struct pointer,
+		// encode a reference to it.
+		e.writeByte(refCode)
+		e.EncodeUint(u)
+		return false // Caller should not encode the struct.
+	}
+	// Note that we have seen this pointer, and assign it
+	// its position in the encoding.
+	e.seen[p] = uint64(len(e.seen))
 	e.writeByte(startCode)
 	return true
 }
 
-// StartStruct should be called before decoding a struct pointer.
-// If it returns false, decoding should not proceed.
-func (d *Decoder) StartStruct() bool {
+// StartStruct should be called before decoding a struct pointer. If it returns
+// false, decoding should not proceed. If it returns true and the second return
+// value is non-nil, it is a reference to a previous value and should be used
+// instead of proceeding with decoding.
+func (d *Decoder) StartStruct() (bool, interface{}) {
 	b := d.readByte()
 	switch b {
 	case 0: // nil; do not set the pointer
-		return false
+		return false, nil
+	case refCode:
+		u := d.DecodeUint()
+		return true, d.refs[u]
 	case startCode:
-		return true
+		return true, nil
 	default:
 		d.badcode(b)
-		return false
+		return false, nil // unreached, needed for compiler
 	}
+}
+
+// StoreRef should be called by a struct decoder immediately after it allocates
+// a struct pointer.
+func (d *Decoder) StoreRef(p interface{}) {
+	d.refs = append(d.refs, p)
 }
 
 // EndStruct should be called after encoding a struct.

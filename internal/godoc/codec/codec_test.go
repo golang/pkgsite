@@ -244,3 +244,80 @@ func TestSkip(t *testing.T) {
 		}
 	}
 }
+
+type node struct {
+	Value int
+	Next  *node
+}
+
+func TestSharing(t *testing.T) {
+	n := &node{Value: 1, Next: &node{Value: 2}}
+	n.Next.Next = n // create a cycle
+	d := NewDecoder(mustEncode(t, n))
+	g, err := d.Decode()
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := g.(*node)
+	if !cmp.Equal(got, n) {
+		t.Error("did not preserve cycle")
+	}
+}
+
+// The following three functions were generated with
+//   Generate(os.Stdout, "p", node{})
+// and pasted here. They should be kept in sync
+// with the output of Generate.
+func encode_node(e *Encoder, x *node) {
+	if !e.StartStruct(x == nil, x) {
+		return
+	}
+	if x.Value != 0 {
+		e.EncodeUint(0)
+		e.EncodeInt(int64(x.Value))
+	}
+	if x.Next != nil {
+		e.EncodeUint(1)
+		encode_node(e, x.Next)
+	}
+	e.EndStruct()
+}
+
+func decode_node(d *Decoder, p **node) {
+	proceed, ref := d.StartStruct()
+	if !proceed {
+		return
+	}
+	if ref != nil {
+		*p = ref.(*node)
+		return
+	}
+	var x node
+	d.StoreRef(&x)
+	for {
+		n := d.NextStructField()
+		if n < 0 {
+			break
+		}
+		switch n {
+		case 0:
+			x.Value = int(d.DecodeInt())
+		case 1:
+			decode_node(d, &x.Next)
+
+		default:
+			d.UnknownField("node", n)
+		}
+		*p = &x
+	}
+}
+
+func init() {
+	Register(&node{},
+		func(e *Encoder, x interface{}) { encode_node(e, x.(*node)) },
+		func(d *Decoder) interface{} {
+			var x *node
+			decode_node(d, &x)
+			return x
+		})
+}
