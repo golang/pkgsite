@@ -37,8 +37,8 @@ func Generate(w io.Writer, packageName string, vs ...interface{}) error {
 		return template.Must(template.New(name).Delims("«", "»").Funcs(funcs).Parse(body))
 	}
 
-	g.initialTemplate = newTemplate("initial", initial)
-	g.sliceTemplate = newTemplate("slice", slice)
+	g.initialTemplate = newTemplate("initial", initialBody)
+	g.sliceTemplate = newTemplate("slice", sliceBody)
 	g.mapTemplate = newTemplate("map", mapBody)
 
 	for _, v := range vs {
@@ -252,7 +252,7 @@ func (g *generator) funcName(t reflect.Type) string {
 }
 
 // Template body for the beginning of the file.
-const initial = `
+const initialBody = `
 // Copyright 2020 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
@@ -274,9 +274,11 @@ import (
 
 `
 
-// Template body for a slice type.
-const slice = `
-func encode_«funcName .Type»(e *codec.Encoder, s «goName .Type») {
+// Template body for a sliceBody type.
+const sliceBody = `
+« $funcName := funcName .Type »
+« $goName := goName .Type »
+func encode_«$funcName»(e *codec.Encoder, s «$goName») {
 	if s == nil {
 		e.EncodeUint(0)
 		return
@@ -287,7 +289,7 @@ func encode_«funcName .Type»(e *codec.Encoder, s «goName .Type») {
 	}
 }
 
-func decode_«funcName .Type»(d *codec.Decoder, p *«goName .Type») {
+func decode_«$funcName»(d *codec.Decoder, p *«$goName») {
 	n := d.StartList()
 	if n < 0 { return }
 	s := make([]«goName .ElType», n)
@@ -298,9 +300,9 @@ func decode_«funcName .Type»(d *codec.Decoder, p *«goName .Type») {
 }
 
 func init() {
-  codec.Register(«goName .Type»(nil),
-    func(e *codec.Encoder, x interface{}) { encode_«funcName .Type»(e, x.(«goName .Type»)) },
-    func(d *codec.Decoder) interface{} { var x «goName .Type»; decode_«funcName .Type»(d, &x); return x })
+  codec.Register(«$goName»(nil),
+    func(e *codec.Encoder, x interface{}) { encode_«$funcName»(e, x.(«$goName»)) },
+    func(d *codec.Decoder) interface{} { var x «$goName»; decode_«$funcName»(d, &x); return x })
 }
 `
 
@@ -312,7 +314,9 @@ func init() {
 // rather than decoding directly into m[v]. This is necessary for decode
 // functions that take pointers: you can't take a pointer to a map element.
 const mapBody = `
-func encode_«funcName .Type»(e *codec.Encoder, m «goName .Type») {
+« $funcName := funcName .Type »
+« $goName := goName .Type »
+func encode_«$funcName»(e *codec.Encoder, m «$goName») {
 	if m == nil {
 		e.EncodeUint(0)
 		return
@@ -324,11 +328,11 @@ func encode_«funcName .Type»(e *codec.Encoder, m «goName .Type») {
 	}
 }
 
-func decode_«funcName .Type»(d *codec.Decoder, p *«goName .Type») {
+func decode_«$funcName»(d *codec.Decoder, p *«$goName») {
 	n2 := d.StartList()
 	if n2 < 0 { return }
 	n := n2/2
-	m := make(«goName .Type», n)
+	m := make(«$goName», n)
 	var k «goName .KeyType»
 	var v «goName .ElType»
 	for i := 0; i < n; i++ {
@@ -340,8 +344,8 @@ func decode_«funcName .Type»(d *codec.Decoder, p *«goName .Type») {
 }
 
 func init() {
-	codec.Register(«goName .Type»(nil),
-	func(e *codec.Encoder, x interface{}) { encode_«funcName .Type»(e, x.(«goName .Type»)) },
-	func(d *codec.Decoder) interface{} { var x «goName .Type»; decode_«funcName .Type»(d, &x); return x })
+	codec.Register(«$goName»(nil),
+	func(e *codec.Encoder, x interface{}) { encode_«$funcName»(e, x.(«$goName»)) },
+	func(d *codec.Decoder) interface{} { var x «$goName»; decode_«$funcName»(d, &x); return x })
 }
 `
