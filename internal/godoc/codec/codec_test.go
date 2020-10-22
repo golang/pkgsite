@@ -212,3 +212,35 @@ func checkMessage(t *testing.T, err error, target string) {
 		t.Errorf("error %q does not contain %q", err, target)
 	}
 }
+
+func TestSkip(t *testing.T) {
+	e := NewEncoder()
+	values := []interface{}{
+		1,
+		false,
+		"yes",
+		"no",
+		65000,
+	}
+	for _, v := range values {
+		if err := e.Encode(v); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	d := NewDecoder(e.Bytes())
+	// Skip odd indexes.
+	for i, want := range values {
+		if i%2 == 0 {
+			got, err := d.Decode()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !cmp.Equal(got, want) {
+				t.Errorf("got %v, want %v", got, want)
+			}
+		} else {
+			d.skip()
+		}
+	}
+}

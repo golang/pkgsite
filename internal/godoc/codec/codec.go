@@ -414,7 +414,39 @@ func (d *Decoder) NextStructField() int {
 // UnknownField should be called by a struct decoder
 // when it sees a field number that it doesn't know.
 func (d *Decoder) UnknownField(typeName string, num int) {
-	d.failf("unknown field #%d in %s", num, typeName)
+	d.skip()
+}
+
+// skip reads past a value in the input.
+func (d *Decoder) skip() {
+	b := d.readByte()
+	if b < endCode {
+		// Small integers represent themselves in a single byte.
+		return
+	}
+	switch b {
+	case nBytesCode:
+		// A uint n and n bytes follow. It is efficient to call readBytes here
+		// because it does no allocation.
+		d.readBytes(int(d.DecodeUint()))
+	case nValuesCode:
+		// A uint n and n values follow.
+		n := int(d.DecodeUint())
+		for i := 0; i < n; i++ {
+			d.skip()
+		}
+	case refCode:
+		// A uint follows.
+		d.DecodeUint()
+	case startCode:
+		// Skip until we see endCode.
+		for d.curByte() != endCode {
+			d.skip()
+		}
+		d.readByte() // consume the endCode byte
+	default:
+		d.badcode(b)
+	}
 }
 
 //////////////// Encoding Arbitrary Values
