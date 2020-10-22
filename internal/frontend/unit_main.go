@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"context"
+	"errors"
 	"sort"
 	"strconv"
 	"strings"
@@ -135,6 +136,12 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		docPkg, err := godoc.DecodePackage(unit.Documentation.Source)
 		end()
 		if err != nil {
+			if errors.Is(err, godoc.ErrInvalidEncodingType) {
+				// Instead of returning a 500, return a 404 so the user can
+				// reprocess the documentation.
+				log.Errorf(ctx, "fetchMainDetails(%q, %q, %q): %v", um.Path, um.ModulePath, um.Version, err)
+				return nil, pathNotFoundError(um.Path, um.ModulePath)
+			}
 			return nil, err
 		}
 		docHTML := getHTML(ctx, unit, docPkg)

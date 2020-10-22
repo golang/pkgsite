@@ -23,6 +23,10 @@ import (
 // It should be a four-byte string.
 const encodingType = "AST1"
 
+// ErrInvalidEncodingType is returned when the data to DecodePackage has an
+// invalid encodingType.
+var ErrInvalidEncodingType = fmt.Errorf("want initial bytes to be %q but they aren't", encodingType)
+
 // Register ast types for gob, so it can decode concrete types that are stored
 // in interface variables.
 func init() {
@@ -123,7 +127,7 @@ func DecodePackage(data []byte) (_ *Package, err error) {
 
 	le := len(encodingType)
 	if len(data) < le || string(data[:le]) != encodingType {
-		return nil, fmt.Errorf("want initial bytes to be %q but they aren't", encodingType)
+		return nil, ErrInvalidEncodingType
 	}
 	dec := gob.NewDecoder(bytes.NewReader(data[le:]))
 	p := &Package{Fset: token.NewFileSet()}
