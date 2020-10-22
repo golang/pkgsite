@@ -75,7 +75,9 @@ type ImportedByDetails struct {
 	TotalIsExact bool // if false, then there may be more than Total
 }
 
-const importedByLimit = 20001
+// importedByLimit is the maximum number of importers displayed on the imported
+// by page.
+var importedByLimit = 20001
 
 // etchImportedByDetails fetches importers for the package version specified by
 // path and version from the database and returns a ImportedByDetails.

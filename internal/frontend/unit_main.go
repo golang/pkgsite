@@ -13,6 +13,7 @@ import (
 
 	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/log"
@@ -94,26 +95,6 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		return nil, err
 	}
 
-	importedByCount := strconv.Itoa(unit.NumImportedBy)
-	if !experiment.IsActive(ctx, internal.ExperimentGetUnitWithOneQuery) {
-		// importedByCount is not supported when using a datasource proxy.
-		importedByCount = "0"
-		db, ok := ds.(*postgres.DB)
-		if ok {
-			importedBy, err := db.GetImportedBy(ctx, um.Path, um.ModulePath, importedByLimit)
-			if err != nil {
-				return nil, err
-			}
-			// If we reached the query limit, then we don't know the total
-			// and we'll indicate that with a '+'. For example, if the limit
-			// is 101 and we get 101 results, then we'll show '100+ Imported by'.
-			importedByCount = strconv.Itoa(len(importedBy))
-			if len(importedBy) == importedByLimit {
-				importedByCount = strconv.Itoa(len(importedBy)-1) + "+"
-			}
-		}
-	}
-
 	nestedModules, err := getNestedModules(ctx, ds, um)
 	if err != nil {
 		return nil, err
@@ -123,6 +104,10 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		return nil, err
 	}
 	readme, err := readmeContent(ctx, um, unit.Readme)
+	if err != nil {
+		return nil, err
+	}
+	importedByCount, err := getImportedByCount(ctx, ds, unit)
 	if err != nil {
 		return nil, err
 	}
@@ -268,4 +253,36 @@ func getHTML(ctx context.Context, u *internal.Unit, docPkg *godoc.Package) safeh
 		}
 	}
 	return u.Documentation.HTML
+}
+
+// getImportedByCount fetches the imported by count for the unit and returns a
+// string to be displayed. If the datasource does not support imported by, it
+// will return N/A.
+func getImportedByCount(ctx context.Context, ds internal.DataSource, unit *internal.Unit) (_ string, err error) {
+	defer derrors.Wrap(&err, "getImportedByCount(%q, %q, %q)", unit.Path, unit.ModulePath, unit.Version)
+	defer middleware.ElapsedStat(ctx, "getImportedByCount")()
+
+	db, ok := ds.(*postgres.DB)
+	if !ok {
+		return "N/A", nil
+	}
+
+	var count int
+	if experiment.IsActive(ctx, internal.ExperimentGetUnitWithOneQuery) {
+		count = unit.NumImportedBy
+	} else {
+		importedBy, err := db.GetImportedBy(ctx, unit.Path, unit.ModulePath, importedByLimit)
+		if err != nil {
+			return "", err
+		}
+		count = len(importedBy)
+	}
+	// If we reached the query limit, then we might know the total, but we
+	// won't display past importedByLimit results. Indicate that with a '+'.
+	// For example, if the limit is 101 and we get 101 results, then we'll show
+	// '100+ Imported by'.
+	if count >= importedByLimit {
+		return strconv.Itoa(count-1) + "+", nil
+	}
+	return strconv.Itoa(count), nil
 }

@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"context"
+	"path"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -82,6 +83,73 @@ func TestGetNestedModules(t *testing.T) {
 			}
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestGetImportedByCount(t *testing.T) {
+	defer postgres.ResetTestDB(testDB, t)
+
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	newModule := func(modPath string, pkgs ...*internal.Unit) *internal.Module {
+		m := sample.LegacyModule(modPath, sample.VersionString)
+		for _, p := range pkgs {
+			sample.AddUnit(m, p)
+		}
+		return m
+	}
+
+	pkg1 := sample.UnitForPackage("path.to/foo", "bar")
+	pkg2 := sample.UnitForPackage("path2.to/foo", "bar2")
+	pkg2.Imports = []string{pkg1.Path}
+
+	pkg3 := sample.UnitForPackage("path3.to/foo", "bar3")
+	pkg3.Imports = []string{pkg2.Path, pkg1.Path}
+
+	testModules := []*internal.Module{
+		newModule("path.to/foo", pkg1),
+		newModule("path2.to/foo", pkg2),
+		newModule("path3.to/foo", pkg3),
+	}
+
+	for _, m := range testModules {
+		if err := testDB.InsertModule(ctx, m); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	importedByLimit = 2
+	for _, tc := range []struct {
+		pkg  *internal.Unit
+		want string
+	}{
+		{
+			pkg:  pkg3,
+			want: "0",
+		},
+		{
+			pkg:  pkg2,
+			want: "1",
+		},
+		{
+			pkg:  pkg1,
+			want: "1+",
+		},
+	} {
+		t.Run(tc.pkg.Path, func(t *testing.T) {
+			otherVersion := newModule(path.Dir(tc.pkg.Path), tc.pkg)
+			otherVersion.Version = "v1.0.5"
+			pkg := otherVersion.Units[1]
+			got, err := getImportedByCount(ctx, testDB, pkg)
+			if err != nil {
+				t.Fatalf("getImportedByCount(ctx, db, %q) = %v err = %v, want %v",
+					tc.pkg.Path, got, err, tc.want)
+			}
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("getImportedByCount(ctx, db, %q) mismatch (-want +got):\n%s", tc.pkg.Path, diff)
 			}
 		})
 	}
