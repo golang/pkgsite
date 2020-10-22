@@ -112,7 +112,7 @@ func (p *Package) Encode() (_ []byte, err error) {
 	if err := p.Fset.Write(enc.Encode); err != nil {
 		return nil, fmt.Errorf("p.Fset.Write: %v", err)
 	}
-	if err := enc.Encode(p.gobPackage); err != nil {
+	if err := enc.Encode(p.encPackage); err != nil {
 		return nil, fmt.Errorf("enc.Encode: %v", err)
 	}
 	for _, f := range p.Files {
@@ -134,7 +134,7 @@ func DecodePackage(data []byte) (_ *Package, err error) {
 	if err := p.Fset.Read(dec.Decode); err != nil {
 		return nil, err
 	}
-	if err := dec.Decode(&p.gobPackage); err != nil {
+	if err := dec.Decode(&p.encPackage); err != nil {
 		return nil, err
 	}
 	for _, f := range p.Files {
@@ -328,3 +328,20 @@ func isRelevantDecl(n interface{}) bool {
 		return false
 	}
 }
+
+// The following types are used by the fast codec.
+//
+// If you add or rearrage any fields, run go generate on this package.
+//
+// If you remove a field, you will have to hand-edit encode_ast.go
+// just to make this package compile before running go generate.
+// Do not remove the field name from the "Fields of" comment, however.
+//
+// If you rename a field, the field's values in existing encoded
+// data will be lost. Renaming a field is like deleting the old one
+// and adding a new one.
+
+//go:generate go run ./gen
+
+// Used by the gen program to generate encodings for unexported types.
+var TypesToGenerate = []interface{}{&encPackage{}}

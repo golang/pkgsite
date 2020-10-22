@@ -20,11 +20,11 @@ type ModuleInfo = dochtml.ModuleInfo
 // A Package contains package-level information needed to render Go documentation.
 type Package struct {
 	Fset *token.FileSet
-	gobPackage
+	encPackage
 	renderCalled bool
 }
 
-type gobPackage struct { // fields that can be directly gob-encoded
+type encPackage struct { // fields that can be directly gob-encoded
 	GOOS, GOARCH       string
 	Files              []*File
 	ModulePackagePaths map[string]bool
@@ -36,8 +36,8 @@ type File struct {
 	AST  *ast.File
 	// The following fields are only for encoding and decoding. They are public
 	// only because gob requires them to be. Clients should ignore them.
-	UnresolvedNums []int       // used to handle sharing of unresolved identifiers
-	ScopeItems     []scopeItem // sorted by name for deterministic encoding
+	UnresolvedNums []int       `codec:"-"` // used to handle sharing of unresolved identifiers
+	ScopeItems     []scopeItem `codec:"-"` // sorted by name for deterministic encoding
 }
 
 type scopeItem struct {
@@ -49,7 +49,7 @@ type scopeItem struct {
 func NewPackage(fset *token.FileSet, goos, goarch string, modPaths map[string]bool) *Package {
 	return &Package{
 		Fset: fset,
-		gobPackage: gobPackage{
+		encPackage: encPackage{
 			GOOS:               goos,
 			GOARCH:             goarch,
 			ModulePackagePaths: modPaths,

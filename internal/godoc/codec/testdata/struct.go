@@ -8,9 +8,7 @@ package somepkg
 
 import (
 	"go/ast"
-
 	"go/token"
-
 	"golang.org/x/pkgsite/internal/godoc/codec"
 )
 

@@ -101,6 +101,9 @@ func generate(w io.Writer, packageName string, fieldNames map[string][]string, v
 	// Mark the built-in types as done.
 	for _, t := range builtinTypes {
 		g.done[t] = true
+		if t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Struct {
+			g.done[t.Elem()] = true
+		}
 	}
 	// The empty interface doesn't need any additional code. It's tricky to get
 	// its reflect.Type: we need to dereference the pointer type.
@@ -435,7 +438,7 @@ package «.Package»
 import (
 	«range .Imports»
 		"«.»"
-	«end»
+	«- end»
 )
 
 `
