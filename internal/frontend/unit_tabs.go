@@ -5,6 +5,7 @@
 package frontend
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -59,9 +60,8 @@ func init() {
 
 // fetchDetailsForPackage returns tab details by delegating to the correct detail
 // handler.
-func fetchDetailsForUnit(r *http.Request, tab string, ds internal.DataSource, um *internal.UnitMeta) (_ interface{}, err error) {
+func fetchDetailsForUnit(ctx context.Context, r *http.Request, tab string, ds internal.DataSource, um *internal.UnitMeta) (_ interface{}, err error) {
 	defer derrors.Wrap(&err, "fetchDetailsForUnit(r, %q, ds, um=%q,%q,%q)", tab, um.Path, um.ModulePath, um.Version)
-	ctx := r.Context()
 	switch tab {
 	case tabMain:
 		_, expandReadme := r.URL.Query()["readme"]

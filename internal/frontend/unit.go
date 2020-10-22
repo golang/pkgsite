@@ -110,7 +110,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		PageLabels:     pageLabels(um),
 		PageType:       pageType(um),
 	}
-	d, err := fetchDetailsForUnit(r, tab, ds, um)
+	d, err := fetchDetailsForUnit(ctx, r, tab, ds, um)
 	if err != nil {
 		return err
 	}
