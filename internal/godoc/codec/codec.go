@@ -197,9 +197,10 @@ func (d *Decoder) readUint64() uint64 {
 // The nValues code is for sequences of values whose size is known beforehand,
 // like a Go slice or array. The slice []string{"hi", "bye"} is encoded as
 //   nValues 2 nBytes 2 'h' 'i' nBytes 3 'b' 'y' 'e'
-
-// TODO: describe ref, start and end in later CLs.
-
+//
+// The start and end codes delimit a value whose length is unknown beforehand.
+// It is used for structs.
+// TODO: describe ref in a later CL.
 const (
 	nBytesCode  = 255 - iota // uint n follows, then n bytes
 	nValuesCode              // uint n follows, then n values
@@ -364,6 +365,59 @@ func (d *Decoder) StartList() int {
 	}
 	return int(d.DecodeUint())
 }
+
+//////////////// Struct Support
+
+// StartStruct should be called before encoding a struct pointer. The isNil
+// argument says whether the pointer is nil. If StartStruct returns false,
+// encoding should not proceed.
+func (e *Encoder) StartStruct(isNil bool) bool {
+	if isNil {
+		e.EncodeUint(0)
+		return false
+	}
+	e.writeByte(startCode)
+	return true
+}
+
+// StartStruct should be called before decoding a struct pointer.
+// If it returns false, decoding should not proceed.
+func (d *Decoder) StartStruct() bool {
+	b := d.readByte()
+	switch b {
+	case 0: // nil; do not set the pointer
+		return false
+	case startCode:
+		return true
+	default:
+		d.badcode(b)
+		return false
+	}
+}
+
+// EndStruct should be called after encoding a struct.
+func (e *Encoder) EndStruct() {
+	e.writeByte(endCode)
+}
+
+// NextStructField should be called by a struct decoder in a loop.
+// It returns the field number of the next encoded field, or -1
+// if there are no more fields.
+func (d *Decoder) NextStructField() int {
+	if d.curByte() == endCode {
+		d.readByte() // consume the end byte
+		return -1
+	}
+	return int(d.DecodeUint())
+}
+
+// UnknownField should be called by a struct decoder
+// when it sees a field number that it doesn't know.
+func (d *Decoder) UnknownField(typeName string, num int) {
+	d.failf("unknown field #%d in %s", num, typeName)
+}
+
+//////////////// Encoding Arbitrary Values
 
 // EncodeAny encodes a Go type. The type must have
 // been registered with Register.

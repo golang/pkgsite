@@ -7,9 +7,6 @@
 package somepkg
 
 import (
-	"reflect"
-	"unsafe"
-
 	"golang.org/x/pkgsite/internal/godoc/codec"
 )
 

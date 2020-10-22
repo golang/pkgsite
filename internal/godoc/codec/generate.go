@@ -6,7 +6,6 @@ package codec
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"go/format"
 	"io"
@@ -40,6 +39,7 @@ func Generate(w io.Writer, packageName string, vs ...interface{}) error {
 	g.initialTemplate = newTemplate("initial", initialBody)
 	g.sliceTemplate = newTemplate("slice", sliceBody)
 	g.mapTemplate = newTemplate("map", mapBody)
+	g.structTemplate = newTemplate("struct", structBody)
 
 	for _, v := range vs {
 		g.todo = append(g.todo, reflect.TypeOf(v))
@@ -73,10 +73,13 @@ type generator struct {
 	initialTemplate *template.Template
 	sliceTemplate   *template.Template
 	mapTemplate     *template.Template
+	structTemplate  *template.Template
 }
 
 func (g *generator) generate() ([]byte, error) {
-	importMap := map[string]bool{}
+	importMap := map[string]bool{
+		"golang.org/x/pkgsite/internal/godoc/codec": true,
+	}
 	var pieces [][]byte
 	for len(g.todo) > 0 {
 		t := g.todo[0]
@@ -89,7 +92,9 @@ func (g *generator) generate() ([]byte, error) {
 			if err != nil {
 				return nil, err
 			}
-			pieces = append(pieces, code)
+			if code != nil {
+				pieces = append(pieces, code)
+			}
 			// We use the same code for T and *T, so both are done.
 			g.done[t] = true
 			g.done[reflect.PtrTo(t)] = true
@@ -123,9 +128,12 @@ func (g *generator) gen(t reflect.Type) ([]byte, error) {
 		return g.genSlice(t)
 	case reflect.Map:
 		return g.genMap(t)
-	default:
-		return nil, errors.New("unimplemented")
+	case reflect.Struct:
+		return g.genStruct(t)
+	case reflect.Ptr:
+		return g.gen(t.Elem())
 	}
+	return nil, nil
 }
 
 func (g *generator) genSlice(t reflect.Type) ([]byte, error) {
@@ -150,6 +158,70 @@ func (g *generator) genMap(t reflect.Type) ([]byte, error) {
 		ElType:  et,
 		KeyType: kt,
 	})
+}
+
+func (g *generator) genStruct(t reflect.Type) ([]byte, error) {
+	fields := exportedFields(t)
+	for _, f := range fields {
+		ft := f.Type
+		if ft.Kind() == reflect.Ptr {
+			ft = ft.Elem()
+		}
+		g.todo = append(g.todo, ft)
+	}
+	return execute(g.structTemplate, struct {
+		Type   reflect.Type
+		Fields []field
+	}{
+		Type:   t,
+		Fields: fields,
+	})
+}
+
+// A field holds the information necessary to generate the encoder for a struct field.
+type field struct {
+	Name string
+	Type reflect.Type
+	Zero string // representation of the type's zero value
+}
+
+// exportedFields returns the exported fields of the struct type t that
+// should be encoded, in the proper order.
+// Exported fields of embedded, unexported types are not included.
+func exportedFields(t reflect.Type) []field {
+	var fs []field
+	for i := 0; i < t.NumField(); i++ {
+		f := t.Field(i)
+		if f.PkgPath == "" { // exported
+			fs = append(fs, field{
+				Name: f.Name,
+				Type: f.Type,
+				Zero: zeroValue(f.Type),
+			})
+		}
+	}
+	return fs
+}
+
+// zeroValue returns the string representation of a zero value of type t,
+// or the empty string if there isn't one.
+func zeroValue(t reflect.Type) string {
+	switch t.Kind() {
+	case reflect.Bool:
+		return "false"
+	case reflect.String:
+		return `""`
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return "0"
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return "0"
+	case reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128:
+		return "0"
+	case reflect.Ptr, reflect.Slice, reflect.Map, reflect.Interface:
+		return "nil"
+	default:
+		return ""
+	}
 }
 
 func execute(tmpl *template.Template, data interface{}) ([]byte, error) {
@@ -262,14 +334,9 @@ const initialBody = `
 package «.Package»
 
 import (
-  "reflect"
-  "unsafe"
-
-  «range .Imports»
-  «.»
-  «end»
-
-  "golang.org/x/pkgsite/internal/godoc/codec"
+	«range .Imports»
+		"«.»"
+	«end»
 )
 
 `
@@ -307,6 +374,7 @@ func init() {
 `
 
 // Template body for a map type.
+// A nil map is encoded as a zero.
 // A map of size N is encoded as a list of length 2N, containing alternating
 // keys and values.
 //
@@ -347,5 +415,57 @@ func init() {
 	codec.Register(«$goName»(nil),
 	func(e *codec.Encoder, x interface{}) { encode_«$funcName»(e, x.(«$goName»)) },
 	func(d *codec.Decoder) interface{} { var x «$goName»; decode_«$funcName»(d, &x); return x })
+}
+`
+
+// Template body for a (pointer to a) struct type.
+// A nil pointer is encoded as a zero. (This is done in Encoder.StartStruct.)
+// Otherwise, a struct is encoded as the start code, its exported fields, then
+// the end code. Each non-zero field is encoded as its field number followed by
+// its value. A field that equals its zero value isn't encoded.
+const structBody = `
+« $funcName := funcName .Type »
+« $goName := goName .Type »
+func encode_«$funcName»(e *codec.Encoder, x *«$goName») {
+	if !e.StartStruct(x==nil) { return }
+	«range $i, $f := .Fields»
+		«- if $f.Zero -»
+			if x.«$f.Name» != «$f.Zero» {
+		«- end»
+		e.EncodeUint(«$i»)
+		«encodeStmt .Type (print "x." $f.Name)»
+		«- if $f.Zero -»
+		}
+		«- end»
+	«end -»
+	e.EndStruct()
+}
+
+func decode_«$funcName»(d *codec.Decoder, p **«$goName») {
+	if !d.StartStruct() { return }
+	var x «$goName»
+	for {
+		n := d.NextStructField()
+		if n < 0 { break }
+		switch n {
+		«range $i, $f := .Fields -»
+			case «$i»:
+	        «decodeStmt $f.Type (print "x." $f.Name)»
+		«end»
+		default:
+			d.UnknownField("«$goName»", n)
+		}
+		*p = &x
+	}
+}
+
+func init() {
+	codec.Register(&«$goName»{},
+		func(e *codec.Encoder, x interface{}) { encode_«$funcName»(e, x.(*«$goName»)) },
+		func(d *codec.Decoder) interface{} {
+			var x *«$goName»
+			decode_«$funcName»(d, &x)
+			return x
+		})
 }
 `
