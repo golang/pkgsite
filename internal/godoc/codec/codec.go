@@ -115,7 +115,7 @@ func (d *Decoder) readUint64() uint64 {
 // the string "hi" is represented as:
 //   nBytes 2 'h' 'i'
 //
-// Unsigned integers that can't fit into the intial byte are encoded as byte
+// Unsigned integers that can't fit into the initial byte are encoded as byte
 // sequences of length 4 or 8, holding little-endian uint32 or uint64 values. We
 // use uint32s where possible to save space. We could have saved more space by
 // also considering 16-byte numbers, or using a variable-length encoding like
