@@ -113,7 +113,7 @@ func (d *Decoder) badcode(c byte) {
 	d.failf("bad code: %d", c)
 }
 
-//////////////// Low-level I/O
+//////////////// Reading From and Writing To the Buffer
 
 func (e *Encoder) writeByte(b byte) {
 	e.buf = append(e.buf, b)
@@ -181,10 +181,10 @@ func (d *Decoder) readUint64() uint64 {
 // integers. For example, the number 17 is represented by the single byte 17.
 // Only five byte values have special meaning.
 //
-// nBytes (255) indicates that an unsigned integer N is encoded next,
+// The nBytes code indicates that an unsigned integer N is encoded next,
 // followed by N bytes of data. This is used to represent strings and byte
-// slices, as well numbers bigger than can fit into the initial byte. For example,
-// the string "hi" is represented as:
+// slices, as well numbers bigger than can fit into the initial byte. For
+// example, the string "hi" is represented as:
 //   nBytes 2 'h' 'i'
 //
 // Unsigned integers that can't fit into the initial byte are encoded as byte
@@ -194,7 +194,11 @@ func (d *Decoder) readUint64() uint64 {
 // varints or gob's representation, but it didn't seem worth the additional
 // complexity.
 //
-// TODO: describe nValues, ref, start and end in later CLs.
+// The nValues code is for sequences of values whose size is known beforehand,
+// like a Go slice or array. The slice []string{"hi", "bye"} is encoded as
+//   nValues 2 nBytes 2 'h' 'i' nBytes 3 'b' 'y' 'e'
+
+// TODO: describe ref, start and end in later CLs.
 
 const (
 	nBytesCode  = 255 - iota // uint n follows, then n bytes

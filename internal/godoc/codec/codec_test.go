@@ -180,7 +180,7 @@ func TestDecodeErrors(t *testing.T) {
 	}{
 		// d.buf[d.i:] should look like: nValues 2 0 nBytes 4 ...
 		// Induce errors by changing some bytes.
-		{0, startCode, "bad code"},   // mess with the intial code
+		{0, startCode, "bad code"},   // mess with the initial code
 		{1, 5, "bad list length"},    // mess with the list length
 		{2, 1, "out of range"},       // mess with the type number
 		{3, nValuesCode, "bad code"}, // mess with the uint code
