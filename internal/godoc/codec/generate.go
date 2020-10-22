@@ -5,25 +5,75 @@
 package codec
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"go/format"
 	"io"
+	"os"
 	"reflect"
 	"sort"
 	"strings"
 	"text/template"
 )
 
-// Generate write a Go file to w with definitions for encoding values using
-// this package. It generates code for the type of each value in vs, as well
+// GenerateFile writes encoders and decoders to filename.
+// It generates code for the type of each given value, as well
 // as any types they depend on.
 // packageName is the name following the file's package declaration.
+func GenerateFile(filename, packageName string, values ...interface{}) error {
+	fieldNames, err := readFieldNames(filename)
+	if err != nil {
+		return err
+	}
+	f, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	err = generate(f, packageName, fieldNames, values...)
+	err2 := f.Close()
+	if err != nil {
+		return err
+	}
+	return err2
+}
 
-func Generate(w io.Writer, packageName string, vs ...interface{}) error {
+// readFieldNames scan filename, if it exists, to get the previous field names for structs.
+// It returns a map from struct name to list of field names.
+func readFieldNames(filename string) (map[string][]string, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	defer f.Close()
+	m := map[string][]string{}
+	scan := bufio.NewScanner(f)
+	for scan.Scan() {
+		line := scan.Text()
+		if strings.HasPrefix(line, "// Fields of ") {
+			// form of line: // Fields of STRUCTNAME: NAME1 NAME2 ...
+			parts := strings.Fields(line)
+			structName := parts[3][:len(parts[3])-1] // remove final colon
+			m[structName] = parts[4:]
+		}
+	}
+	if err := scan.Err(); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func generate(w io.Writer, packageName string, fieldNames map[string][]string, vs ...interface{}) error {
 	g := &generator{
-		pkg:  packageName,
-		done: map[reflect.Type]bool{},
+		pkg:        packageName,
+		done:       map[reflect.Type]bool{},
+		fieldNames: fieldNames,
+	}
+	if g.fieldNames == nil {
+		g.fieldNames = map[string][]string{}
 	}
 	funcs := template.FuncMap{
 		"funcName":   g.funcName,
@@ -70,6 +120,7 @@ type generator struct {
 	pkg             string
 	todo            []reflect.Type
 	done            map[reflect.Type]bool
+	fieldNames      map[string][]string
 	initialTemplate *template.Template
 	sliceTemplate   *template.Template
 	mapTemplate     *template.Template
@@ -161,14 +212,22 @@ func (g *generator) genMap(t reflect.Type) ([]byte, error) {
 }
 
 func (g *generator) genStruct(t reflect.Type) ([]byte, error) {
-	fields := exportedFields(t)
+	fn := g.funcName(t)
+	var fields []field
+	fields = exportedFields(t, g.fieldNames[fn])
+	var names []string
 	for _, f := range fields {
+		names = append(names, f.Name)
 		ft := f.Type
+		if ft == nil {
+			continue
+		}
 		if ft.Kind() == reflect.Ptr {
 			ft = ft.Elem()
 		}
 		g.todo = append(g.todo, ft)
 	}
+	g.fieldNames[fn] = names // Update list field names.
 	return execute(g.structTemplate, struct {
 		Type   reflect.Type
 		Fields []field
@@ -188,19 +247,52 @@ type field struct {
 // exportedFields returns the exported fields of the struct type t that
 // should be encoded, in the proper order.
 // Exported fields of embedded, unexported types are not included.
-func exportedFields(t reflect.Type) []field {
-	var fs []field
+// If there was a previous ordering, it is preserved, and new fields are
+// added to the end.
+// If a field was removed, we keep its number so as not to break existing
+// encoded values. It will appear in the return value with an empty type.
+//
+// One drawback of this scheme is that it is not possible to rename a field.
+// A rename will look like an addition and a removal.
+func exportedFields(t reflect.Type, oldNames []string) []field {
+	// Record the positions of the field names previously used for this struct,
+	// so we can preserve them.
+	fieldPos := map[string]int{}
+	for i, n := range oldNames {
+		fieldPos[n] = i
+	}
+
+	// If there are any new exported fields, assign them positions after the
+	// existing ones.
 	for i := 0; i < t.NumField(); i++ {
 		f := t.Field(i)
-		if f.PkgPath == "" { // exported
-			fs = append(fs, field{
+		if f.PkgPath == "" { // A field is exported if its PkgPath is empty.
+			if _, ok := fieldPos[f.Name]; !ok {
+				fieldPos[f.Name] = len(fieldPos)
+			}
+		}
+	}
+
+	// Populate the field structs, in the right order.
+	fields := make([]field, len(fieldPos))
+	for i := 0; i < t.NumField(); i++ {
+		f := t.Field(i)
+		if pos, ok := fieldPos[f.Name]; ok {
+			fields[pos] = field{
 				Name: f.Name,
 				Type: f.Type,
 				Zero: zeroValue(f.Type),
-			})
+			}
 		}
 	}
-	return fs
+	// Add back in the removed names, so their positions can be preserved in the
+	// future.
+	for i, n := range oldNames {
+		if fields[i].Name == "" {
+			fields[i].Name = n
+		}
+	}
+	return fields
 }
 
 // zeroValue returns the string representation of a zero value of type t,
@@ -423,19 +515,27 @@ func init() {
 // Otherwise, a struct is encoded as the start code, its exported fields, then
 // the end code. Each non-zero field is encoded as its field number followed by
 // its value. A field that equals its zero value isn't encoded.
+//
+// The comment listing the field names is used when re-generating the file,
+// to make sure we don't alter the existing mapping from field names to numbers.
 const structBody = `
 « $funcName := funcName .Type »
 « $goName := goName .Type »
+
+// Fields of «$funcName»:«range .Fields» «.Name»«end»
+
 func encode_«$funcName»(e *codec.Encoder, x *«$goName») {
 	if !e.StartStruct(x==nil, x) { return }
 	«range $i, $f := .Fields»
-		«- if $f.Zero -»
-			if x.«$f.Name» != «$f.Zero» {
-		«- end»
-		e.EncodeUint(«$i»)
-		«encodeStmt .Type (print "x." $f.Name)»
-		«- if $f.Zero -»
-		}
+		«- if $f.Type -»
+			«- if $f.Zero -»
+				if x.«$f.Name» != «$f.Zero» {
+			«- end»
+			e.EncodeUint(«$i»)
+			«encodeStmt .Type (print "x." $f.Name)»
+			«- if $f.Zero -»
+			}
+			«- end»
 		«- end»
 	«end -»
 	e.EndStruct()
@@ -455,9 +555,11 @@ func decode_«$funcName»(d *codec.Decoder, p **«$goName») {
 		if n < 0 { break }
 		switch n {
 		«range $i, $f := .Fields -»
-			case «$i»:
-	        «decodeStmt $f.Type (print "x." $f.Name)»
-		«end»
+			«- if $f.Type -»
+				case «$i»:
+		        «decodeStmt $f.Type (print "x." $f.Name)»
+			«end -»
+		«end -»
 		default:
 			d.UnknownField("«$goName»", n)
 		}

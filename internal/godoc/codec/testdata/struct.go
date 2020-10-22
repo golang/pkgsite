@@ -14,6 +14,8 @@ import (
 	"golang.org/x/pkgsite/internal/godoc/codec"
 )
 
+// Fields of ast_BasicLit: ValuePos Kind Value
+
 func encode_ast_BasicLit(e *codec.Encoder, x *ast.BasicLit) {
 	if !e.StartStruct(x == nil, x) {
 		return
@@ -56,7 +58,6 @@ func decode_ast_BasicLit(d *codec.Decoder, p **ast.BasicLit) {
 			x.Kind = token.Token(d.DecodeInt())
 		case 2:
 			x.Value = d.DecodeString()
-
 		default:
 			d.UnknownField("ast.BasicLit", n)
 		}

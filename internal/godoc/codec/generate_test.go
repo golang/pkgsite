@@ -53,7 +53,7 @@ func TestGenerate(t *testing.T) {
 func testGenerate(t *testing.T, name string, x interface{}) {
 	t.Helper()
 	var buf bytes.Buffer
-	if err := Generate(&buf, "somepkg", x); err != nil {
+	if err := generate(&buf, "somepkg", nil, x); err != nil {
 		t.Fatal(err)
 	}
 	got := buf.String()
@@ -81,4 +81,52 @@ func readGolden(t *testing.T, name string) string {
 		t.Fatal(err)
 	}
 	return string(data)
+}
+
+func TestExportedFields(t *testing.T) {
+	type ef struct {
+		A int
+		B bool
+		C string
+	}
+
+	check := func(want, got []field) {
+		t.Helper()
+		diff := cmp.Diff(want, got,
+			cmp.Comparer(func(t1, t2 reflect.Type) bool { return t1 == t2 }))
+		if diff != "" {
+			t.Errorf("mismatch (-want, +got):\n%s", diff)
+		}
+	}
+
+	// First time we see ef, no previous fields.
+	got := exportedFields(reflect.TypeOf(ef{}), nil)
+	want := []field{
+		{"A", reflect.TypeOf(0), "0"},
+		{"B", reflect.TypeOf(false), "false"},
+		{"C", reflect.TypeOf(""), `""`},
+	}
+	check(want, got)
+
+	// Imagine that the previous ef had fields C and A in that order, but not B.
+	// We should preserve the existing ordering and add B at the end.
+	got = exportedFields(reflect.TypeOf(ef{}), []string{"C", "A"})
+	want = []field{
+		{"C", reflect.TypeOf(""), `""`},
+		{"A", reflect.TypeOf(0), "0"},
+		{"B", reflect.TypeOf(false), "false"},
+	}
+	check(want, got)
+
+	// Imagine instead that there had been a field D that was removed.
+	// We still keep the names, but the entry for "D" has a nil type.
+	got = exportedFields(reflect.TypeOf(ef{}), []string{"A", "D", "B", "C"})
+	want = []field{
+		{"A", reflect.TypeOf(0), "0"},
+		{"D", nil, ""},
+		{"B", reflect.TypeOf(false), "false"},
+		{"C", reflect.TypeOf(""), `""`},
+	}
+	check(want, got)
+
 }
