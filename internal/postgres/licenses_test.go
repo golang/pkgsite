@@ -209,7 +209,7 @@ func nonRedistributableModule() *internal.Module {
 // makeModuleNonRedistributable mutates the passed-in module by marking it
 // non-redistributable along with each of its packages and units. It allows
 // us to re-use existing test data without defining a non-redistributable
-// countepart to each.
+// counterpart to each.
 func makeModuleNonRedistributable(m *internal.Module) {
 	sample.AddLicense(m, sample.NonRedistributableLicense)
 	m.IsRedistributable = false
