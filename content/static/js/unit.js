@@ -35,3 +35,23 @@ if (readmeExpand && readmeExpand && readmeCollapse) {
     readme.scrollIntoView();
   });
 }
+
+/**
+ * Disable unavailable sections in navigation dropdown on mobile.
+ */
+const readmeOption = document.querySelector('.js-readmeOption');
+if (!readme) {
+  readmeOption.setAttribute('disabled', true);
+}
+
+const unitFiles = document.querySelector('.js-unitFiles');
+const filesOption = document.querySelector('.js-filesOption');
+if (!unitFiles) {
+  filesOption.setAttribute('disabled', true);
+}
+
+const unitDirectories = document.querySelector('.js-unitDirectories');
+const directoriesOption = document.querySelector('.js-directoriesOption');
+if (!unitDirectories) {
+  directoriesOption.setAttribute('disabled', true);
+}

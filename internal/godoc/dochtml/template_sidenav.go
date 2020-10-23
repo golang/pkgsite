@@ -109,18 +109,24 @@ const tmplSidenav = `
 		</label>
 		<select id="DocNavMobile-select" class="DocNavMobile-select">
 			<option value="">Outline</option>
-			{{if or .Doc (index .Examples.Map "")}}
-				<option value="pkg-overview">Overview</option>
-			{{end}}
-			{{if .Examples.List}}
-				<option value="pkg-examples">Examples</option>
-			{{end}}
-			{{if .Consts}}
-				<option value="pkg-constants">Constants</option>
-			{{end}}
-			{{if .Vars}}
-				<option value="pkg-variables">Variables</option>
-			{{end}}
+			<option class="js-readmeOption" value="section-readme">README</option>
+			<optgroup label="Documentation">
+				{{if or .Doc (index .Examples.Map "")}}
+					<option value="pkg-overview">Overview</option>
+				{{end}}
+				{{if or .Consts .Vars .Funcs .Types}}
+					<option value="pkg-index">Index</option>
+				{{end}}
+				{{if .Examples.List}}
+					<option value="pkg-examples">Examples</option>
+				{{end}}
+				{{if .Consts}}
+					<option value="pkg-constants">Constants</option>
+				{{end}}
+				{{if .Vars}}
+					<option value="pkg-variables">Variables</option>
+				{{end}}
+			</optgroup>
 
 			{{if .Funcs}}
 				<optgroup label="Functions">
@@ -152,6 +158,8 @@ const tmplSidenav = `
 					{{end}}
 				</optgroup>
 			{{end}}
+			<option class="js-sourcefilesOption" value="section-sourcefiles">Source Files</option>
+			<option class="js-directoriesOption" value="section-directories">Directories</option>
 		</select>
 	` + IdentifierSidenavEnd + `
 {{end}}`
