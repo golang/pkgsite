@@ -8,6 +8,7 @@ package internal
 const (
 	ExperimentAltRequeue          = "alt-requeue"
 	ExperimentAutocomplete        = "autocomplete"
+	ExperimentFasterDecoding      = "faster-decoding"
 	ExperimentFrontendRenderDoc   = "frontend-render-doc"
 	ExperimentGetUnitWithOneQuery = "get-unit-with-one-query"
 	ExperimentGoldmark            = "goldmark"
@@ -22,6 +23,7 @@ const (
 var Experiments = map[string]string{
 	ExperimentAltRequeue:          "Requeue modules for reprocessing in a different order.",
 	ExperimentAutocomplete:        "Enable autocomplete with search.",
+	ExperimentFasterDecoding:      "Decode ASTs faster.",
 	ExperimentFrontendRenderDoc:   "Render documentation on the frontend if possible.",
 	ExperimentGetUnitWithOneQuery: "Fetch data for GetUnit using a single query.",
 	ExperimentGoldmark:            "Enable the usage of rendering markdown using goldmark instead of blackfriday.",

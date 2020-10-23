@@ -6,6 +6,7 @@ package godoc
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -19,18 +20,20 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 )
 
 var packageToTest string = filepath.Join(runtime.GOROOT(), "src", "net", "http")
 
 func TestEncodeDecodePackage(t *testing.T) {
 	// Verify that we can encode and decode the Go files in this directory.
-	p, err := packageForDir(packageToTest, true)
+	p, err := packageForDir(".", true)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	data, err := p.Encode()
+	data, err := p.Encode(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +41,7 @@ func TestEncodeDecodePackage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data2, err := p2.Encode()
+	data2, err := p2.Encode(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,6 +52,7 @@ func TestEncodeDecodePackage(t *testing.T) {
 
 func TestObjectIdentity(t *testing.T) {
 	// Check that encoding and decoding preserves object identity.
+	ctx := context.Background()
 	const file = `
 package p
 var a int
@@ -75,7 +79,7 @@ func main() { a = 1 }
 
 	p := NewPackage(fset, "linux", "amd64", nil)
 	p.AddFile(f, false)
-	data, err := p.Encode()
+	data, err := p.Encode(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,7 +118,7 @@ func BenchmarkRemovingAST(b *testing.B) {
 			if err != nil {
 				b.Fatal(err)
 			}
-			data, err := p.Encode()
+			data, err := p.Encode(context.Background())
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -136,11 +140,11 @@ func TestFastEncode(t *testing.T) {
 	}
 	var want, got bytes.Buffer
 	printPackage(&want, p)
-	data, err := p.FastEncode()
+	data, err := p.Encode(experiment.NewContext(context.Background(), internal.ExperimentFasterDecoding))
 	if err != nil {
 		t.Fatal(err)
 	}
-	p2, err := FastDecodePackage(data)
+	p2, err := DecodePackage(data)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -283,7 +287,7 @@ func BenchmarkEncoding(b *testing.B) {
 	}
 	b.Run("gob", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			_, err := p.Encode()
+			_, err := p.gobEncode()
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -291,7 +295,7 @@ func BenchmarkEncoding(b *testing.B) {
 	})
 	b.Run("fast", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			_, err := p.FastEncode()
+			_, err := p.fastEncode()
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -306,26 +310,26 @@ func BenchmarkDecoding(b *testing.B) {
 		b.Fatal(err)
 	}
 	b.Run("gob", func(b *testing.B) {
-		data, err := p.Encode()
+		data, err := p.gobEncode()
 		if err != nil {
 			b.Fatal(err)
 		}
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			_, err := DecodePackage(data)
+			_, err := gobDecodePackage(data[encodingTypeLen:])
 			if err != nil {
 				b.Fatal(err)
 			}
 		}
 	})
 	b.Run("fast", func(b *testing.B) {
-		data, err := p.FastEncode()
+		data, err := p.fastEncode()
 		if err != nil {
 			b.Fatal(err)
 		}
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			_, err := FastDecodePackage(data)
+			_, err := fastDecodePackage(data[encodingTypeLen:])
 			if err != nil {
 				b.Fatal(err)
 			}

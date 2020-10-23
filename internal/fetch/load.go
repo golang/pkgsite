@@ -125,7 +125,7 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 	// it enough to make Render work.
 	var src []byte
 	if experiment.IsActive(ctx, internal.ExperimentInsertPackageSource) {
-		src, err = docPkg.Encode()
+		src, err = docPkg.Encode(ctx)
 		if err != nil {
 			return nil, err
 		}

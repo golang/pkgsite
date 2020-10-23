@@ -6,6 +6,7 @@ package godoc
 
 import (
 	"bytes"
+	"context"
 	"encoding/gob"
 	"errors"
 	"fmt"
@@ -14,7 +15,9 @@ import (
 	"io"
 	"sort"
 
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/codec"
 )
 
@@ -28,7 +31,7 @@ const (
 
 // ErrInvalidEncodingType is returned when the data to DecodePackage has an
 // invalid encoding type.
-var ErrInvalidEncodingType = fmt.Errorf("want initial bytes to be %q but they aren't", gobEncodingType)
+var ErrInvalidEncodingType = fmt.Errorf("want initial bytes to be %q or %q but they aren't", gobEncodingType, fastEncodingType)
 
 // Register ast types for gob, so it can decode concrete types that are stored
 // in interface variables.
@@ -97,9 +100,17 @@ func init() {
 // During its operation, Encode modifies the AST,
 // but it restores it to a state suitable for
 // rendering before it returns.
-func (p *Package) Encode() (_ []byte, err error) {
+func (p *Package) Encode(ctx context.Context) (_ []byte, err error) {
 	defer derrors.Wrap(&err, "godoc.Package.Encode()")
 
+	if experiment.IsActive(ctx, internal.ExperimentFasterDecoding) {
+		return p.fastEncode()
+	} else {
+		return p.gobEncode()
+	}
+}
+
+func (p *Package) gobEncode() (_ []byte, err error) {
 	if p.renderCalled {
 		return nil, errors.New("can't Encode after Render")
 	}
@@ -128,10 +139,21 @@ func (p *Package) Encode() (_ []byte, err error) {
 func DecodePackage(data []byte) (_ *Package, err error) {
 	defer derrors.Wrap(&err, "DecodePackage()")
 
-	if len(data) < encodingTypeLen || string(data[:encodingTypeLen]) != gobEncodingType {
+	if len(data) < encodingTypeLen {
 		return nil, ErrInvalidEncodingType
 	}
-	dec := gob.NewDecoder(bytes.NewReader(data[encodingTypeLen:]))
+	switch string(data[:encodingTypeLen]) {
+	case gobEncodingType:
+		return gobDecodePackage(data[encodingTypeLen:])
+	case fastEncodingType:
+		return fastDecodePackage(data[encodingTypeLen:])
+	default:
+		return nil, ErrInvalidEncodingType
+	}
+}
+
+func gobDecodePackage(data []byte) (_ *Package, err error) {
+	dec := gob.NewDecoder(bytes.NewReader(data))
 	p := &Package{Fset: token.NewFileSet()}
 	if err := p.Fset.Read(dec.Decode); err != nil {
 		return nil, err
@@ -331,7 +353,7 @@ func isRelevantDecl(n interface{}) bool {
 	}
 }
 
-func (p *Package) FastEncode() (_ []byte, err error) {
+func (p *Package) fastEncode() (_ []byte, err error) {
 	defer derrors.Wrap(&err, "godoc.Package.FastEncode()")
 
 	var buf bytes.Buffer
@@ -351,13 +373,10 @@ func (p *Package) FastEncode() (_ []byte, err error) {
 	return buf.Bytes(), nil
 }
 
-func FastDecodePackage(data []byte) (_ *Package, err error) {
+func fastDecodePackage(data []byte) (_ *Package, err error) {
 	defer derrors.Wrap(&err, "FastDecodePackage()")
 
-	if len(data) < encodingTypeLen || string(data[:encodingTypeLen]) != fastEncodingType {
-		return nil, fmt.Errorf("want initial bytes to be %q but they aren't", fastEncodingType)
-	}
-	dec := codec.NewDecoder(data[encodingTypeLen:])
+	dec := codec.NewDecoder(data)
 	x, err := dec.Decode()
 	if err != nil {
 		return nil, err
