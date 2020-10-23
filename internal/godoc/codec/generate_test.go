@@ -87,6 +87,7 @@ func TestExportedFields(t *testing.T) {
 	type ef struct {
 		A int
 		B bool
+		I int `codec:"-"` // this field will be ignored
 		C string
 	}
 
@@ -128,5 +129,4 @@ func TestExportedFields(t *testing.T) {
 		{"C", reflect.TypeOf(""), `""`},
 	}
 	check(want, got)
-
 }
