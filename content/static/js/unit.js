@@ -19,9 +19,10 @@ if (accordion) {
  * Event handlers for expanding and collapsing the readme section.
  */
 const readme = document.querySelector('.js-readme');
+const readmeContent = document.querySelector('.js-readmeContent');
 const readmeExpand = document.querySelectorAll('.js-readmeExpand');
 const readmeCollapse = document.querySelector('.js-readmeCollapse');
-if (readmeExpand && readmeExpand && readmeCollapse) {
+if (readme && readmeContent && readmeExpand.length && readmeCollapse) {
   readmeExpand.forEach(el =>
     el.addEventListener('click', e => {
       e.preventDefault();
@@ -32,7 +33,10 @@ if (readmeExpand && readmeExpand && readmeCollapse) {
   readmeCollapse.addEventListener('click', e => {
     e.preventDefault();
     readme.classList.remove('UnitReadme--expanded');
-    readme.scrollIntoView();
+    readmeExpand[1].scrollIntoView({ block: 'center' });
+  });
+  readmeContent.addEventListener('keyup', e => {
+    readme.classList.add('UnitReadme--expanded');
   });
 }
 

@@ -11,11 +11,11 @@
     </h2>
     {{if .Readme.String }}
       <div class="UnitReadme-content">
-        <div class="Overview-readmeContent">{{.Readme}}</div>
+        <div class="Overview-readmeContent js-readmeContent">{{.Readme}}</div>
         <div class="UnitReadme-fadeOut"></div>
       </div>
       <a class="UnitReadme-expandLink js-readmeExpand" href="?readme=expanded#section-readme">Expand ▾</a>
-      <a class="UnitReadme-collapseLink js-readmeCollapse" href="?#section-readme">Collapse ▴</a>
+      <a class="UnitReadme-collapseLink js-readmeCollapse" href="#">Collapse ▴</a>
     {{end}}
   </div>
 {{end}}
