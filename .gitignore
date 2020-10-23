@@ -23,6 +23,7 @@ crash.log
 private
 internal/**/go.sum
 cmd/*/*.yaml
+experiment.yaml
 
 #### GKE
 go-discovery*.json

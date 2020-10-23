@@ -9,24 +9,13 @@ For additional information on functionality of the worker, see the
 
 The main program lives in `cmd/worker`.
 
-### Experiments
-
-Set environment variable `GO_DISCOVERY_CONFIG_DYNAMIC` to the filename of a file
-containing experiments in YAML format. The file can be empty, but it must exist.
-Example:
-
-```
-experiments:
-  - name: sidenav
-    rollout: 100
-    description: Display documentation index on the left sidenav.
-```
-
 ### Running
 
 You can run the worker locally like so:
 
     go run ./cmd/worker
+
+See [experiment.md](experiment.md) for instructions how to enable experiments.
 
 ### Populating data locally using the worker
 
