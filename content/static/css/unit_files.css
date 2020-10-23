@@ -40,16 +40,10 @@
   width: 1rem;
 }
 .UnitFiles-fileList {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(10.5rem, auto));
+  column-count: 5;
+  column-width: 12.5rem;
   line-height: 1.5rem;
   list-style: none;
   padding-left: 0;
-}
-.UnitFiles-file {
-  margin-bottom: 0.25rem;
-  margin-right: 0.5rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  word-break: break-all;
 }
