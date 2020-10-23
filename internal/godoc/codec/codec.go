@@ -601,6 +601,8 @@ func typeName(t reflect.Type) string {
 	return t.PkgPath() + "." + t.Name()
 }
 
+var builtinTypes []reflect.Type
+
 func init() {
 	Register(int64(0),
 		func(e *Encoder, x interface{}) { e.EncodeInt(x.(int64)) },
@@ -623,4 +625,8 @@ func init() {
 	Register([]byte(nil),
 		func(e *Encoder, x interface{}) { e.EncodeBytes(x.([]byte)) },
 		func(d *Decoder) interface{} { return d.DecodeBytes() })
+
+	for t := range typeInfosByType {
+		builtinTypes = append(builtinTypes, t)
+	}
 }

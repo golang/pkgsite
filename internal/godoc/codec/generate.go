@@ -98,8 +98,8 @@ func generate(w io.Writer, packageName string, fieldNames map[string][]string, v
 		g.todo = append(g.todo, reflect.TypeOf(v))
 	}
 
-	// Mark the types we already know about as done.
-	for t := range typeInfosByType {
+	// Mark the built-in types as done.
+	for _, t := range builtinTypes {
 		g.done[t] = true
 	}
 	// The empty interface doesn't need any additional code. It's tricky to get
