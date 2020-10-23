@@ -60,12 +60,16 @@ a.UnitOutline-accordion[aria-expanded='true'] {
 .UnitOutline-jumpTo button {
   background-color: white;
   border: 0.0625rem solid var(--gray-8);
+  border-radius: 0.25rem;
   color: var(--gray-4);
   cursor: pointer;
   height: 2rem;
   padding-left: 1.5rem;
   text-align: left;
   width: 100%;
+}
+.UnitOutline-jumpTo button:hover:not([disabled]) {
+  border-color: var(--gray-7);
 }
 .UnitOutline-jumpTo::after {
   align-self: center;
