@@ -1200,6 +1200,7 @@ pre {
 }
 .Documentation h2 a,
 .Documentation h3 a,
+.Documentation h4 a,
 .Documentation summary a {
   opacity: 0;
 }
@@ -1211,6 +1212,7 @@ pre {
 }
 .Documentation h2:hover a,
 .Documentation h3:hover a,
+.Documentation h4:hover a,
 .Documentation summary:hover a,
 .Documentation summary:focus a {
   opacity: 1;
