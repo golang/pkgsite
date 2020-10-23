@@ -15,17 +15,20 @@ import (
 	"sort"
 
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/godoc/codec"
 )
 
-// encodingType identifies the encoding being used, in case
-// we ever use a different one and need to distinguish them
+// The encoding type identifies the encoding being used, to distinguish them
 // when reading from the DB.
-// It should be a four-byte string.
-const encodingType = "AST1"
+const (
+	encodingTypeLen  = 4 // all encoding types must be this many bytes
+	gobEncodingType  = "AST1"
+	fastEncodingType = "AST2"
+)
 
 // ErrInvalidEncodingType is returned when the data to DecodePackage has an
-// invalid encodingType.
-var ErrInvalidEncodingType = fmt.Errorf("want initial bytes to be %q but they aren't", encodingType)
+// invalid encoding type.
+var ErrInvalidEncodingType = fmt.Errorf("want initial bytes to be %q but they aren't", gobEncodingType)
 
 // Register ast types for gob, so it can decode concrete types that are stored
 // in interface variables.
@@ -106,7 +109,7 @@ func (p *Package) Encode() (_ []byte, err error) {
 	}
 
 	var buf bytes.Buffer
-	io.WriteString(&buf, encodingType)
+	io.WriteString(&buf, gobEncodingType)
 	enc := gob.NewEncoder(&buf)
 	// Encode the fset using the Write method it provides.
 	if err := p.Fset.Write(enc.Encode); err != nil {
@@ -125,11 +128,10 @@ func (p *Package) Encode() (_ []byte, err error) {
 func DecodePackage(data []byte) (_ *Package, err error) {
 	defer derrors.Wrap(&err, "DecodePackage()")
 
-	le := len(encodingType)
-	if len(data) < le || string(data[:le]) != encodingType {
+	if len(data) < encodingTypeLen || string(data[:encodingTypeLen]) != gobEncodingType {
 		return nil, ErrInvalidEncodingType
 	}
-	dec := gob.NewDecoder(bytes.NewReader(data[le:]))
+	dec := gob.NewDecoder(bytes.NewReader(data[encodingTypeLen:]))
 	p := &Package{Fset: token.NewFileSet()}
 	if err := p.Fset.Read(dec.Decode); err != nil {
 		return nil, err
@@ -329,17 +331,78 @@ func isRelevantDecl(n interface{}) bool {
 	}
 }
 
-// The following types are used by the fast codec.
-//
-// If you add or rearrage any fields, run go generate on this package.
-//
-// If you remove a field, you will have to hand-edit encode_ast.go
-// just to make this package compile before running go generate.
-// Do not remove the field name from the "Fields of" comment, however.
-//
-// If you rename a field, the field's values in existing encoded
-// data will be lost. Renaming a field is like deleting the old one
-// and adding a new one.
+func (p *Package) FastEncode() (_ []byte, err error) {
+	defer derrors.Wrap(&err, "godoc.Package.FastEncode()")
+
+	var buf bytes.Buffer
+	io.WriteString(&buf, fastEncodingType)
+	enc := codec.NewEncoder()
+	fsb, err := fsetToBytes(p.Fset)
+	if err != nil {
+		return nil, err
+	}
+	if err := enc.Encode(fsb); err != nil {
+		return nil, err
+	}
+	if err := enc.Encode(&p.encPackage); err != nil {
+		return nil, err
+	}
+	buf.Write(enc.Bytes())
+	return buf.Bytes(), nil
+}
+
+func FastDecodePackage(data []byte) (_ *Package, err error) {
+	defer derrors.Wrap(&err, "FastDecodePackage()")
+
+	if len(data) < encodingTypeLen || string(data[:encodingTypeLen]) != fastEncodingType {
+		return nil, fmt.Errorf("want initial bytes to be %q but they aren't", fastEncodingType)
+	}
+	dec := codec.NewDecoder(data[encodingTypeLen:])
+	x, err := dec.Decode()
+	if err != nil {
+		return nil, err
+	}
+	fsetBytes, ok := x.([]byte)
+	if !ok {
+		return nil, fmt.Errorf("first decoded value is %T, wanted []byte", fsetBytes)
+	}
+	fset, err := fsetFromBytes(fsetBytes)
+	if err != nil {
+		return nil, err
+	}
+	x, err = dec.Decode()
+	if err != nil {
+		return nil, err
+	}
+	ep, ok := x.(*encPackage)
+	if !ok {
+		return nil, fmt.Errorf("second decoded value is %T, wanted *encPackage", ep)
+	}
+	return &Package{
+		Fset:       fset,
+		encPackage: *ep,
+	}, nil
+}
+
+// token.FileSet uses some unexported types in its encoding, so we can't use our
+// own codec from it. Instead we use gob and encode the resulting bytes.
+func fsetToBytes(fset *token.FileSet) ([]byte, error) {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	if err := fset.Write(enc.Encode); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+func fsetFromBytes(data []byte) (*token.FileSet, error) {
+	dec := gob.NewDecoder(bytes.NewReader(data))
+	fset := token.NewFileSet()
+	if err := fset.Read(dec.Decode); err != nil {
+		return nil, err
+	}
+	return fset, nil
+}
 
 //go:generate go run ./gen
 

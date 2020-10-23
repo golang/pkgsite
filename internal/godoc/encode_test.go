@@ -10,12 +10,22 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"io"
+	"path/filepath"
+	"reflect"
+	"runtime"
+	"sort"
+	"strings"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
+
+var packageToTest string = filepath.Join(runtime.GOROOT(), "src", "net", "http")
 
 func TestEncodeDecodePackage(t *testing.T) {
 	// Verify that we can encode and decode the Go files in this directory.
-	p, err := packageForDir(".", true)
+	p, err := packageForDir(packageToTest, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -100,7 +110,7 @@ func packageForDir(dir string, removeNodes bool) (*Package, error) {
 func BenchmarkRemovingAST(b *testing.B) {
 	for _, removeNodes := range []bool{false, true} {
 		b.Run(fmt.Sprintf("removeNodes=%t", removeNodes), func(b *testing.B) {
-			p, err := packageForDir(".", removeNodes)
+			p, err := packageForDir(packageToTest, removeNodes)
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -117,4 +127,217 @@ func BenchmarkRemovingAST(b *testing.B) {
 			}
 		})
 	}
+}
+
+func TestFastEncode(t *testing.T) {
+	p, err := packageForDir(packageToTest, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var want, got bytes.Buffer
+	printPackage(&want, p)
+	data, err := p.FastEncode()
+	if err != nil {
+		t.Fatal(err)
+	}
+	p2, err := FastDecodePackage(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	printPackage(&got, p2)
+	// Diff the textual output of printPackage, because cmp.Diff takes too long
+	// on the Packages themselves.
+	if diff := cmp.Diff(want.String(), got.String()); diff != "" {
+		t.Errorf("package differs after decoding (-want, +got):\n%s", diff)
+	}
+}
+
+// printPackage outputs a human-readable form of p to w, deterministically. (The
+// ast.Fprint function does not print ASTs deterministically: it is subject to
+// random-order map iteration.) The output is designed to be diffed.
+func printPackage(w io.Writer, p *Package) error {
+	if err := printFileSet(w, p.Fset); err != nil {
+		return err
+	}
+	if _, err := fmt.Fprintf(w, "GOOS %q, GOARCH %q\n", p.GOOS, p.GOARCH); err != nil {
+		return err
+	}
+	var mpps []string
+	for k := range p.ModulePackagePaths {
+		mpps = append(mpps, k)
+	}
+	sort.Strings(mpps)
+	if _, err := fmt.Fprintf(w, "ModulePackagePaths: %v\n", mpps); err != nil {
+		return err
+	}
+
+	for _, pf := range p.Files {
+		if _, err := fmt.Fprintf(w, "---- %s\n", pf.Name); err != nil {
+			return err
+		}
+		if err := printNode(w, pf.AST); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func printNode(w io.Writer, root ast.Node) error {
+	var err error
+	seen := map[interface{}]int{}
+
+	pr := func(format string, args ...interface{}) {
+		if err == nil {
+			_, err = fmt.Fprintf(w, format, args...)
+		}
+	}
+
+	indent := func(d int) {
+		for i := 0; i < d; i++ {
+			pr("  ")
+		}
+	}
+
+	var prValue func(interface{}, int)
+	prValue = func(x interface{}, depth int) {
+		indent(depth)
+		if x == nil || reflect.ValueOf(x).IsNil() {
+			pr("nil\n")
+			return
+		}
+		ts := strings.TrimPrefix(fmt.Sprintf("%T", x), "*ast.")
+		if idx, ok := seen[x]; ok {
+			pr("%s@%d\n", ts, idx)
+			return
+		}
+		idx := len(seen)
+		seen[x] = idx
+		pr("%s#%d", ts, idx)
+		if obj, ok := x.(*ast.Object); ok {
+			pr(" %s %s %v\n", obj.Name, obj.Kind, obj.Data)
+			prValue(obj.Decl, depth+1)
+			return
+		}
+		n, ok := x.(ast.Node)
+		if !ok {
+			pr(" %v\n", x)
+			return
+		}
+		pr(" %d-%d", n.Pos(), n.End())
+		switch n := n.(type) {
+		case *ast.Ident:
+			pr(" %q\n", n.Name)
+			if n.Obj != nil {
+				prValue(n.Obj, depth+1)
+			}
+		case *ast.BasicLit:
+			pr(" %s %s %d\n", n.Value, n.Kind, n.ValuePos)
+		case *ast.UnaryExpr:
+			pr(" %s\n", n.Op)
+		case *ast.BinaryExpr:
+			pr(" %s\n", n.Op)
+		case *ast.Comment:
+			pr(" %q\n", n.Text)
+		case *ast.File:
+			// Doc, Name and Decls are walked, but not Scope or Unresolved.
+			if n.Scope != nil {
+				pr(" Scope.Outer: %p\n", n.Scope.Outer)
+				var keys []string
+				for k := range n.Scope.Objects {
+					keys = append(keys, k)
+				}
+				sort.Strings(keys)
+				for _, k := range keys {
+					pr("  key %q\n", k)
+					prValue(n.Scope.Objects[k], depth+1)
+				}
+			}
+			indent(depth)
+			pr("unresolved:\n")
+			for _, id := range n.Unresolved {
+				prValue(id, depth+1)
+			}
+		default:
+			pr("\n")
+		}
+		ast.Inspect(n, func(m ast.Node) bool {
+			if m == n {
+				return true
+			}
+			if m != nil {
+				prValue(m, depth+1)
+			}
+			return false
+		})
+	}
+
+	prValue(root, 0)
+	return err
+}
+
+// Compare the time it takes to encode with gob vs. internal/codec.
+func BenchmarkEncoding(b *testing.B) {
+	p, err := packageForDir(packageToTest, true)
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.Run("gob", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, err := p.Encode()
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+	b.Run("fast", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, err := p.FastEncode()
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+}
+
+// Compare the time it takes to decode with gob vs. internal/codec.
+func BenchmarkDecoding(b *testing.B) {
+	p, err := packageForDir(packageToTest, true)
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.Run("gob", func(b *testing.B) {
+		data, err := p.Encode()
+		if err != nil {
+			b.Fatal(err)
+		}
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			_, err := DecodePackage(data)
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+	b.Run("fast", func(b *testing.B) {
+		data, err := p.FastEncode()
+		if err != nil {
+			b.Fatal(err)
+		}
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			_, err := FastDecodePackage(data)
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+}
+
+func printFileSet(w io.Writer, fset *token.FileSet) error {
+	var err error
+	fset.Iterate(func(f *token.File) bool {
+		_, err = fmt.Fprintf(w, "%s %d %d %d\n", f.Name(), f.Base(), f.Size(), f.LineCount())
+		return err == nil
+	})
+	return err
 }

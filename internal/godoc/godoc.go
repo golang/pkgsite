@@ -24,7 +24,19 @@ type Package struct {
 	renderCalled bool
 }
 
-type encPackage struct { // fields that can be directly gob-encoded
+// encPackage holds the fields of Package that can be directly encoded.
+//
+// If you add any fields, run go generate on this package.
+//
+// If you remove a field, you will have to hand-edit encode_ast.go
+// just to make this package compile before running go generate.
+// Do not remove the field name from the "Fields of" comment, however,
+// or existing encoded data will decode incorrectly.
+//
+// If you rename a field, the field's values in existing encoded
+// data will be lost. Renaming a field is like deleting the old field
+// and adding a new one.
+type encPackage struct { // fields that can be directly encoded
 	GOOS, GOARCH       string
 	Files              []*File
 	ModulePackagePaths map[string]bool
