@@ -143,13 +143,13 @@ func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Render
 	data := struct {
 		RootURL string
 		*doc.Package
-		Examples *examples
-		NoteIDs  map[string]safehtml.Identifier
+		Examples    *examples
+		NoteHeaders map[string]noteHeader
 	}{
-		RootURL:  "/pkg",
-		Package:  p,
-		Examples: collectExamples(p),
-		NoteIDs:  buildNoteIDs(p.Notes),
+		RootURL:     "/pkg",
+		Package:     p,
+		Examples:    collectExamples(p),
+		NoteHeaders: buildNoteHeaders(p.Notes),
 	}
 	return executeToHTMLWithLimit(tmpl, data, opt.Limit)
 }
@@ -276,14 +276,24 @@ func exampleID(id, suffix string) safehtml.Identifier {
 	}
 }
 
-// buildNoteIDs constructs safehtml identifiers from note markers.
-// It returns a map from each marker to its corresponding safehtml ID.
-func buildNoteIDs(notes map[string][]*doc.Note) map[string]safehtml.Identifier {
-	ids := map[string]safehtml.Identifier{}
+// noteHeader contains informations the template needs to render
+// the note related HTML tags in documentation page.
+type noteHeader struct {
+	SafeIdentifier safehtml.Identifier
+	Label          string
+}
+
+// buildNoteHeaders constructs note headers from note markers.
+// It returns a map from each marker to its corresponding noteHeader.
+func buildNoteHeaders(notes map[string][]*doc.Note) map[string]noteHeader {
+	headers := map[string]noteHeader{}
 	for marker := range notes {
-		ids[marker] = safehtml.IdentifierFromConstantPrefix("pkg-note", marker)
+		headers[marker] = noteHeader{
+			SafeIdentifier: safehtml.IdentifierFromConstantPrefix("pkg-note", marker),
+			Label:          strings.Title(strings.ToLower(marker)),
+		}
 	}
-	return ids
+	return headers
 }
 
 // versionedPkgPath transforms package paths to contain the same version as the

@@ -18,6 +18,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/net/html"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
 )
@@ -46,8 +48,75 @@ func TestRender(t *testing.T) {
 	})
 
 	checker := htmlcheck.In(".Documentation-note",
-		htmlcheck.In("h2", htmlcheck.HasAttr("id", "pkg-note-BUG")),
+		htmlcheck.In("h2", htmlcheck.HasAttr("id", "pkg-note-BUG"), htmlcheck.HasExactText("Bugs ¶")),
 		htmlcheck.In("a", htmlcheck.HasHref("#pkg-note-BUG")))
+	if err := checker(htmlDoc); err != nil {
+		t.Errorf("note check: %v", err)
+	}
+
+	checker = htmlcheck.In(".Documentation-index",
+		htmlcheck.In(".Documentation-indexNote", htmlcheck.In("a", htmlcheck.HasHref("#pkg-note-BUG"), htmlcheck.HasExactText("Bugs"))))
+	if err := checker(htmlDoc); err != nil {
+		t.Errorf("note check: %v", err)
+	}
+
+	checker = htmlcheck.In(".DocNav-notes",
+		htmlcheck.In("#nav-group-notes", htmlcheck.In("li", htmlcheck.In("a", htmlcheck.HasHref("#pkg-note-BUG"), htmlcheck.HasExactText("Bugs")))))
+	if err := checker(htmlDoc); err != nil {
+		t.Errorf("note check: %v", err)
+	}
+
+	checker = htmlcheck.In("#DocNavMobile-select",
+		htmlcheck.In("optgroup[label=Notes]", htmlcheck.In("option", htmlcheck.HasAttr("value", "pkg-note-BUG"), htmlcheck.HasExactText("Bugs"))))
+	if err := checker(htmlDoc); err != nil {
+		t.Errorf("note check: %v", err)
+	}
+}
+
+func TestRenderExperimental(t *testing.T) {
+	fset, d := mustLoadPackage("everydecl")
+
+	rawDoc, err := Render(experiment.NewContext(context.Background(), internal.ExperimentUnitPage), fset, d, RenderOptions{
+		FileLinkFunc:   func(string) string { return "file" },
+		SourceLinkFunc: func(ast.Node) string { return "src" },
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	htmlDoc, err := html.Parse(strings.NewReader(rawDoc.String()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Check that there are no duplicate id attributes.
+	t.Run("duplicate ids", func(t *testing.T) {
+		testDuplicateIDs(t, htmlDoc)
+	})
+	t.Run("ids-and-kinds", func(t *testing.T) {
+		// Check that the id and data-kind labels are right.
+		testIDsAndKinds(t, htmlDoc)
+	})
+
+	checker := htmlcheck.In(".Documentation-note",
+		htmlcheck.In("h3", htmlcheck.HasAttr("id", "pkg-note-BUG"), htmlcheck.HasExactText("Bugs ¶")),
+		htmlcheck.In("a", htmlcheck.HasHref("#pkg-note-BUG")))
+	if err := checker(htmlDoc); err != nil {
+		t.Errorf("note check: %v", err)
+	}
+
+	checker = htmlcheck.In(".Documentation-index",
+		htmlcheck.In(".Documentation-indexNote", htmlcheck.In("a", htmlcheck.HasHref("#pkg-note-BUG"), htmlcheck.HasExactText("Bugs"))))
+	if err := checker(htmlDoc); err != nil {
+		t.Errorf("note check: %v", err)
+	}
+
+	checker = htmlcheck.In(".DocNav-notes",
+		htmlcheck.In("#nav-group-notes", htmlcheck.In("li", htmlcheck.In("a", htmlcheck.HasHref("#pkg-note-BUG"), htmlcheck.HasExactText("Bugs")))))
+	if err := checker(htmlDoc); err != nil {
+		t.Errorf("note check: %v", err)
+	}
+
+	checker = htmlcheck.In("#DocNavMobile-select",
+		htmlcheck.In("optgroup[label=Notes]", htmlcheck.In("option", htmlcheck.HasAttr("value", "pkg-note-BUG"), htmlcheck.HasExactText("Bugs"))))
 	if err := checker(htmlDoc); err != nil {
 		t.Errorf("note check: %v", err)
 	}

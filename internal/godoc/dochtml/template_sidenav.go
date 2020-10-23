@@ -92,7 +92,7 @@ const tmplSidenav = `
 					<ul role="group" id="nav-group-notes">
 						{{range $marker, $item := .Notes}}
 							<li role="none">
-								<a href="#pkg-note-{{$marker}}" role="treeitem" aria-level="2" tabindex="-1">{{$marker}}s</a>
+								<a href="#pkg-note-{{$marker}}" role="treeitem" aria-level="2" tabindex="-1">{{(index $.NoteHeaders $marker).Label}}s</a>
 							</li>
 						{{end}}
 					</ul>
@@ -154,7 +154,7 @@ const tmplSidenav = `
 			{{if .Notes}}
 				<optgroup label="Notes">
 					{{range $marker, $item := .Notes}}
-						<option value="pkg-note-{{$marker}}">{{$marker}}s</option>
+						<option value="pkg-note-{{$marker}}">{{(index $.NoteHeaders $marker).Label}}s</option>
 					{{end}}
 				</optgroup>
 			{{end}}

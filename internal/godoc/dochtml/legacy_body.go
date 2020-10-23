@@ -45,7 +45,7 @@ const legacyTmplBody = `
 			{{- end -}}
 
 			{{- range $marker, $item := .Notes -}}
-			<li class="Documentation-indexNote"><a href="#pkg-note-{{$marker}}">{{$marker}}s</a></li>
+			<li class="Documentation-indexNote"><a href="#pkg-note-{{$marker}}">{{(index $.NoteHeaders $marker).Label}}s</a></li>
 			{{- end -}}
 		</ul>{{"\n" -}}
 	</section>
@@ -175,7 +175,7 @@ const legacyTmplBody = `
 <section class="Documentation-notes">
 	{{- range $marker, $content := .Notes -}}
 	<div class="Documentation-note">
-		<h2 tabindex="-1" id="{{index $.NoteIDs $marker}}" class="Documentation-noteHeader">{{$marker}}s <a href="#pkg-note-{{$marker}}">¶</a></h2>
+		<h2 tabindex="-1" id="{{(index $.NoteHeaders $marker).SafeIdentifier}}" class="Documentation-noteHeader">{{(index $.NoteHeaders $marker).Label}}s <a href="#pkg-note-{{$marker}}">¶</a></h2>
 		<ul class="Documentation-noteList" style="padding-left: 20px; list-style: initial;">{{"\n" -}}
 		{{- range $v := $content -}}
 			<li style="margin: 6px 0 6px 0;">{{render_doc $v.Body}}</li>
