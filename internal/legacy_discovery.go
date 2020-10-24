@@ -9,14 +9,6 @@ import (
 	"golang.org/x/pkgsite/internal/licenses"
 )
 
-// LegacyDirectory represents a directory in a module version, and all of the
-// packages inside that directory.
-type LegacyDirectory struct {
-	ModuleInfo
-	Path     string
-	Packages []*LegacyPackage
-}
-
 // A LegacyPackage is a group of one or more Go source files with the same
 // package header.
 type LegacyPackage struct {

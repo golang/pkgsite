@@ -33,12 +33,6 @@ func (p *PackageMeta) RemoveNonRedistributableData() {
 	}
 }
 
-func (d *LegacyDirectory) RemoveNonRedistributableData() {
-	for _, p := range d.Packages {
-		p.RemoveNonRedistributableData()
-	}
-}
-
 func (p *LegacyPackage) RemoveNonRedistributableData() {
 	if !p.IsRedistributable {
 		p.Synopsis = ""
