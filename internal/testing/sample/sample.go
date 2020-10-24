@@ -151,6 +151,7 @@ func UnitForPackage(path, modulePath, version, name string, isRedistributable bo
 		},
 		LicenseContents: Licenses,
 		Imports:         Imports,
+		NumImports:      len(Imports),
 	}
 }
 

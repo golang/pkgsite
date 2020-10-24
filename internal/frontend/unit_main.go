@@ -171,7 +171,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		RepositoryURL:   um.SourceInfo.RepoURL(),
 		SourceURL:       um.SourceInfo.DirectoryURL(internal.Suffix(um.Path, um.ModulePath)),
 		MobileOutline:   mobileOutline,
-		NumImports:      len(unit.Imports),
+		NumImports:      unit.NumImports,
 		ImportedByCount: importedByCount,
 		IsPackage:       unit.IsPackage(),
 	}, nil

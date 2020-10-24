@@ -223,6 +223,7 @@ func TestGetUnitFieldSet(t *testing.T) {
 		}
 		if fields&internal.WithImports != 0 {
 			u.Imports = sample.Imports
+			u.NumImports = len(sample.Imports)
 		}
 		if fields&internal.WithLicenses == 0 {
 			u.LicenseContents = nil
@@ -302,6 +303,7 @@ func unit(fullPath, modulePath, version, name string, readme *internal.Readme, s
 	u.Subdirectories = subdirectories(modulePath, suffixes)
 	if u.IsPackage() {
 		u.Imports = sample.Imports
+		u.NumImports = len(sample.Imports)
 		u.Documentation = sample.Documentation
 	}
 	return u

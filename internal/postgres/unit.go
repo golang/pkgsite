@@ -62,6 +62,7 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 		}
 		if len(imports) > 0 {
 			u.Imports = imports
+			u.NumImports = len(imports)
 		}
 	}
 	if fields&internal.WithLicenses != 0 {
