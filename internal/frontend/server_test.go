@@ -15,7 +15,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
 	"github.com/google/safehtml/testconversions"
 	"golang.org/x/net/html"
@@ -148,37 +147,33 @@ var testModules = []testModule{
 
 func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 	for _, mod := range mods {
-		var ps []*internal.LegacyPackage
+		var (
+			suffixes []string
+			pkgs     = make(map[string]testPackage)
+		)
 		for _, pkg := range mod.packages {
-			p := sample.LegacyPackage(mod.path, pkg.suffix)
-			p.DocumentationHTML = safehtml.HTML{}
-			if pkg.name != "" {
-				p.Name = pkg.name
-			}
-			if pkg.doc != "" {
-				p.DocumentationHTML = testconversions.MakeHTMLForTest(pkg.doc)
-			}
-			if !mod.redistributable {
-				p.Licenses = nil
-				p.IsRedistributable = false
-			}
-			p.V1Path = sample.V1Path
-			ps = append(ps, p)
+			suffixes = append(suffixes, pkg.suffix)
+			pkgs[pkg.suffix] = pkg
 		}
 		for _, ver := range mod.versions {
-			m := sample.LegacyModule(mod.path, ver)
+			m := sample.LegacyModule(mod.path, ver, suffixes...)
 			m.SourceInfo = source.NewGitHubInfo(sample.RepositoryURL, "", ver)
 			m.IsRedistributable = mod.redistributable
 			if !m.IsRedistributable {
 				m.Licenses = nil
 			}
-			for _, p := range ps {
-				sample.LegacyAddPackage(m, p)
-			}
 			for _, u := range m.Units {
+				if pkg, ok := pkgs[internal.Suffix(u.Path, m.ModulePath)]; ok {
+					if pkg.name != "" {
+						u.Name = pkg.name
+					}
+					u.Documentation.HTML = testconversions.MakeHTMLForTest(pkg.doc)
+				}
 				if !mod.redistributable {
 					u.IsRedistributable = false
 					u.Licenses = nil
+					u.Documentation = nil
+					u.Readme = nil
 				}
 			}
 			if err := testDB.InsertModule(ctx, m); err != nil {
