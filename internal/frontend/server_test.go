@@ -884,12 +884,36 @@ func unitPageTestCases() []serverTestCase {
 		ModuleURL:        "/mod/" + sample.ModulePath,
 	}
 
+	netHttp := &pagecheck.Page{
+		Title:            "Package http",
+		ModulePath:       "http",
+		Version:          "go1.13",
+		LicenseType:      sample.LicenseType,
+		LicenseFilePath:  sample.LicenseFilePath,
+		ModuleURL:        "/net/http",
+		PackageURLFormat: "/net/http%s",
+		IsLatest:         true,
+		LatestLink:       "/net/http@go1.13",
+	}
+
 	return []serverTestCase{
 		{
 			name:           "package default",
 			urlPath:        fmt.Sprintf("/%s", sample.PackagePath),
 			wantStatusCode: http.StatusOK,
 			want:           pagecheck.UnitHeader(pkgV100, unversioned),
+		},
+		{
+			name:           "stdlib no shortcut (net/http)",
+			urlPath:        "/net/http",
+			wantStatusCode: http.StatusOK,
+			want:           pagecheck.UnitHeader(netHttp, unversioned),
+		},
+		{
+			name:           "stdlib no shortcut (net/http) versioned",
+			urlPath:        "/net/http@go1.13",
+			wantStatusCode: http.StatusOK,
+			want:           pagecheck.UnitHeader(netHttp, versioned),
 		},
 	}
 }
