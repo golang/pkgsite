@@ -3483,7 +3483,7 @@ func init() {
 
 func encode_slice_ast_Expr(e *codec.Encoder, s []ast.Expr) {
 	if s == nil {
-		e.EncodeUint(0)
+		e.EncodeNil()
 		return
 	}
 	e.StartList(len(s))
@@ -3512,7 +3512,7 @@ func init() {
 
 func encode_slice_ast_Stmt(e *codec.Encoder, s []ast.Stmt) {
 	if s == nil {
-		e.EncodeUint(0)
+		e.EncodeNil()
 		return
 	}
 	e.StartList(len(s))
@@ -3541,7 +3541,7 @@ func init() {
 
 func encode_slice_ast_Comment(e *codec.Encoder, s []*ast.Comment) {
 	if s == nil {
-		e.EncodeUint(0)
+		e.EncodeNil()
 		return
 	}
 	e.StartList(len(s))
@@ -3570,7 +3570,7 @@ func init() {
 
 func encode_slice_ast_Field(e *codec.Encoder, s []*ast.Field) {
 	if s == nil {
-		e.EncodeUint(0)
+		e.EncodeNil()
 		return
 	}
 	e.StartList(len(s))
@@ -3599,7 +3599,7 @@ func init() {
 
 func encode_slice_ast_Ident(e *codec.Encoder, s []*ast.Ident) {
 	if s == nil {
-		e.EncodeUint(0)
+		e.EncodeNil()
 		return
 	}
 	e.StartList(len(s))
@@ -3628,7 +3628,7 @@ func init() {
 
 func encode_slice_ast_Spec(e *codec.Encoder, s []ast.Spec) {
 	if s == nil {
-		e.EncodeUint(0)
+		e.EncodeNil()
 		return
 	}
 	e.StartList(len(s))
@@ -3730,7 +3730,7 @@ func init() {
 
 func encode_map_string_ast_Object(e *codec.Encoder, m map[string]*ast.Object) {
 	if m == nil {
-		e.EncodeUint(0)
+		e.EncodeNil()
 		return
 	}
 	e.StartList(2 * len(m))
@@ -3769,7 +3769,7 @@ func init() {
 
 func encode_slice_File(e *codec.Encoder, s []*File) {
 	if s == nil {
-		e.EncodeUint(0)
+		e.EncodeNil()
 		return
 	}
 	e.StartList(len(s))
@@ -3798,7 +3798,7 @@ func init() {
 
 func encode_map_string_bool(e *codec.Encoder, m map[string]bool) {
 	if m == nil {
-		e.EncodeUint(0)
+		e.EncodeNil()
 		return
 	}
 	e.StartList(2 * len(m))
@@ -3979,7 +3979,7 @@ func init() {
 
 func encode_slice_ast_Decl(e *codec.Encoder, s []ast.Decl) {
 	if s == nil {
-		e.EncodeUint(0)
+		e.EncodeNil()
 		return
 	}
 	e.StartList(len(s))
@@ -4008,7 +4008,7 @@ func init() {
 
 func encode_slice_ast_ImportSpec(e *codec.Encoder, s []*ast.ImportSpec) {
 	if s == nil {
-		e.EncodeUint(0)
+		e.EncodeNil()
 		return
 	}
 	e.StartList(len(s))
@@ -4041,7 +4041,7 @@ func init() {
 
 func encode_slice_ast_CommentGroup(e *codec.Encoder, s []*ast.CommentGroup) {
 	if s == nil {
-		e.EncodeUint(0)
+		e.EncodeNil()
 		return
 	}
 	e.StartList(len(s))

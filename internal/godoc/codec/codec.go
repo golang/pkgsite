@@ -182,8 +182,15 @@ func (d *Decoder) readUint64() uint64 {
 //
 // Most of the values of that initial byte can be devoted to small unsigned
 // integers. For example, the number 17 is represented by the single byte 17.
-// Only five byte values have special meaning.
+// Only a few byte values have special meaning.
 //
+// The nil code indicates that the value is nil. We don't absolutely need this:
+// we could always represent the nil value for a type as something that couldn't
+// be mistaken for an encoded value of that type. For instance, we could use 0
+// for nil in the case of slices (which always begin with the nValues code), and
+// for pointers to numbers like *int, we could use something like "nBytes 0".
+// But it is simpler to have a reserved value for nil.
+
 // The nBytes code indicates that an unsigned integer N is encoded next,
 // followed by N bytes of data. This is used to represent strings and byte
 // slices, as well numbers bigger than can fit into the initial byte. For
@@ -207,11 +214,20 @@ func (d *Decoder) readUint64() uint64 {
 // The start and end codes delimit a value whose length is unknown beforehand.
 // It is used for structs.
 const (
-	nBytesCode  = 255 - iota // uint n follows, then n bytes
-	nValuesCode              // uint n follows, then n values
-	refCode                  // uint n follows, referring to a previous value
-	startCode                // start of a value of indeterminate length
-	endCode                  // end of a value that began with with start
+	nilCode = 255 - iota // a nil value
+	// reserve a few values for future use
+	reserved1
+	reserved2
+	reserved3
+	reserved4
+	reserved5
+	reserved6
+	reserved7
+	nBytesCode  // uint n follows, then n bytes
+	nValuesCode // uint n follows, then n values
+	refCode     // uint n follows, referring to a previous value
+	startCode   // start of a value of indeterminate length
+	endCode     // end of a value that began with start
 	// Bytes less than endCode represent themselves.
 )
 
@@ -349,6 +365,10 @@ func (d *Decoder) DecodeFloat() float64 {
 	return math.Float64frombits(d.DecodeUint())
 }
 
+func (e *Encoder) EncodeNil() {
+	e.writeByte(nilCode)
+}
+
 // StartList should be called before encoding any sequence of variable-length
 // values.
 func (e *Encoder) StartList(len int) {
@@ -360,15 +380,15 @@ func (e *Encoder) StartList(len int) {
 // values. It returns -1 if the encoded list was nil. Otherwise, it returns the
 // length of the sequence.
 func (d *Decoder) StartList() int {
-	b := d.readByte()
-	if b == 0 { // used for nil
+	switch b := d.readByte(); b {
+	case nilCode:
 		return -1
-	}
-	if b != nValuesCode {
+	case nValuesCode:
+		return int(d.DecodeUint())
+	default:
 		d.badcode(b)
 		return 0
 	}
-	return int(d.DecodeUint())
 }
 
 //////////////// Struct Support
@@ -378,7 +398,7 @@ func (d *Decoder) StartList() int {
 // pointer. If StartStruct returns false, encoding should not proceed.
 func (e *Encoder) StartStruct(isNil bool, p interface{}) bool {
 	if isNil {
-		e.EncodeUint(0)
+		e.EncodeNil()
 		return false
 	}
 	if u, ok := e.seen[p]; ok {
@@ -402,7 +422,7 @@ func (e *Encoder) StartStruct(isNil bool, p interface{}) bool {
 func (d *Decoder) StartStruct() (bool, interface{}) {
 	b := d.readByte()
 	switch b {
-	case 0: // nil; do not set the pointer
+	case nilCode: // do not set the pointer
 		return false, nil
 	case refCode:
 		u := d.DecodeUint()
@@ -451,6 +471,8 @@ func (d *Decoder) skip() {
 		return
 	}
 	switch b {
+	case nilCode:
+		// Nothing follows.
 	case nBytesCode:
 		// A uint n and n bytes follow. It is efficient to call readBytes here
 		// because it does no allocation.

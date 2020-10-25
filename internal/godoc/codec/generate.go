@@ -449,7 +449,7 @@ const sliceBody = `
 « $goName := goName .Type »
 func encode_«$funcName»(e *codec.Encoder, s «$goName») {
 	if s == nil {
-		e.EncodeUint(0)
+		e.EncodeNil()
 		return
 	}
 	e.StartList(len(s))
@@ -488,7 +488,7 @@ const mapBody = `
 « $goName := goName .Type »
 func encode_«$funcName»(e *codec.Encoder, m «$goName») {
 	if m == nil {
-		e.EncodeUint(0)
+		e.EncodeNil()
 		return
 	}
 	e.StartList(2*len(m))

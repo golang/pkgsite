@@ -12,7 +12,7 @@ import (
 
 func encode_slice_slice_int(e *codec.Encoder, s [][]int) {
 	if s == nil {
-		e.EncodeUint(0)
+		e.EncodeNil()
 		return
 	}
 	e.StartList(len(s))
@@ -41,7 +41,7 @@ func init() {
 
 func encode_slice_int(e *codec.Encoder, s []int) {
 	if s == nil {
-		e.EncodeUint(0)
+		e.EncodeNil()
 		return
 	}
 	e.StartList(len(s))

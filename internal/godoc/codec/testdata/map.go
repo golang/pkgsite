@@ -12,7 +12,7 @@ import (
 
 func encode_map_string_bool(e *codec.Encoder, m map[string]bool) {
 	if m == nil {
-		e.EncodeUint(0)
+		e.EncodeNil()
 		return
 	}
 	e.StartList(2 * len(m))
