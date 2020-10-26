@@ -7,10 +7,6 @@
 
 package internal
 
-import (
-	"github.com/google/safehtml"
-)
-
 func (m *Module) RemoveNonRedistributableData() {
 	for _, l := range m.Licenses {
 		l.RemoveNonRedistributableData()
@@ -30,12 +26,5 @@ func (u *Unit) RemoveNonRedistributableData() {
 func (p *PackageMeta) RemoveNonRedistributableData() {
 	if !p.IsRedistributable {
 		p.Synopsis = ""
-	}
-}
-
-func (p *LegacyPackage) RemoveNonRedistributableData() {
-	if !p.IsRedistributable {
-		p.Synopsis = ""
-		p.DocumentationHTML = safehtml.HTML{}
 	}
 }

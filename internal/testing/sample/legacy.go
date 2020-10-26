@@ -12,29 +12,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 )
 
-// LegacyPackage constructs a package with the given module path and suffix.
-//
-// If modulePath is the standard library, the package path is the
-// suffix, which must not be empty. Otherwise, the package path
-// is the concatenation of modulePath and suffix.
-//
-// The package name is last component of the package path.
-func LegacyPackage(modulePath, suffix string) *internal.LegacyPackage {
-	p := constructFullPath(modulePath, suffix)
-	return &internal.LegacyPackage{
-		Name:              path.Base(p),
-		Path:              p,
-		V1Path:            internal.V1Path(p, modulePath),
-		Synopsis:          Synopsis,
-		IsRedistributable: true,
-		Licenses:          LicenseMetadata,
-		DocumentationHTML: DocumentationHTML,
-		Imports:           Imports,
-		GOOS:              GOOS,
-		GOARCH:            GOARCH,
-	}
-}
-
 func LegacyDefaultModule() *internal.Module {
 	fp := constructFullPath(ModulePath, Suffix)
 	return AddPackage(LegacyModule(ModulePath, VersionString), UnitForPackage(fp, ModulePath, VersionString, path.Base(fp), true))
