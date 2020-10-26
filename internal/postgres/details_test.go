@@ -32,10 +32,10 @@ func TestGetNestedModules(t *testing.T) {
 			name: "Nested Modules in cloud.google.com/go that have the same module prefix path",
 			path: "cloud.google.com/go",
 			modules: []*internal.Module{
-				sample.LegacyModule("cloud.google.com/go", "v0.46.2", "storage", "spanner", "pubsub"),
-				sample.LegacyModule("cloud.google.com/go/storage", "v1.10.0", sample.Suffix),
-				sample.LegacyModule("cloud.google.com/go/spanner", "v1.9.0", sample.Suffix),
-				sample.LegacyModule("cloud.google.com/go/pubsub", "v1.6.1", sample.Suffix),
+				sample.Module("cloud.google.com/go", "v0.46.2", "storage", "spanner", "pubsub"),
+				sample.Module("cloud.google.com/go/storage", "v1.10.0", sample.Suffix),
+				sample.Module("cloud.google.com/go/spanner", "v1.9.0", sample.Suffix),
+				sample.Module("cloud.google.com/go/pubsub", "v1.6.1", sample.Suffix),
 			},
 			wantModulePaths: []string{
 				"cloud.google.com/go/pubsub",
@@ -47,10 +47,10 @@ func TestGetNestedModules(t *testing.T) {
 			name: "Nested Modules in cloud.google.com/go that have multiple major versions",
 			path: "cloud.google.com/go",
 			modules: []*internal.Module{
-				sample.LegacyModule("cloud.google.com/go", "v0.46.2", "storage", "spanner", "pubsub"),
-				sample.LegacyModule("cloud.google.com/go/storage", "v1.10.0", sample.Suffix),
-				sample.LegacyModule("cloud.google.com/go/storage/v9", "v9.0.0", sample.Suffix),
-				sample.LegacyModule("cloud.google.com/go/storage/v11", "v11.0.0", sample.Suffix),
+				sample.Module("cloud.google.com/go", "v0.46.2", "storage", "spanner", "pubsub"),
+				sample.Module("cloud.google.com/go/storage", "v1.10.0", sample.Suffix),
+				sample.Module("cloud.google.com/go/storage/v9", "v9.0.0", sample.Suffix),
+				sample.Module("cloud.google.com/go/storage/v11", "v11.0.0", sample.Suffix),
 			},
 			wantModulePaths: []string{
 				"cloud.google.com/go/storage/v11",
@@ -60,8 +60,8 @@ func TestGetNestedModules(t *testing.T) {
 			name: "Nested Modules in golang.org/x/tools/v2 that have the same module prefix path",
 			path: "golang.org/x/tools/v2",
 			modules: []*internal.Module{
-				sample.LegacyModule("golang.org/x/tools", "v0.0.1", sample.Suffix),
-				sample.LegacyModule("golang.org/x/tools/gopls", "v0.5.1", sample.Suffix),
+				sample.Module("golang.org/x/tools", "v0.0.1", sample.Suffix),
+				sample.Module("golang.org/x/tools/gopls", "v0.5.1", sample.Suffix),
 			},
 			wantModulePaths: []string{
 				"golang.org/x/tools/gopls",
@@ -106,11 +106,11 @@ func TestGetNestedModules_Excluded(t *testing.T) {
 		name: "Nested Modules in cloud.google.com/go that have the same module prefix path",
 		path: "cloud.google.com/go",
 		modules: []*internal.Module{
-			sample.LegacyModule("cloud.google.com/go", "v0.46.2", "storage", "spanner", "pubsub"),
+			sample.Module("cloud.google.com/go", "v0.46.2", "storage", "spanner", "pubsub"),
 			// cloud.google.com/storage will be excluded below.
-			sample.LegacyModule("cloud.google.com/go/storage", "v1.10.0", sample.Suffix),
-			sample.LegacyModule("cloud.google.com/go/pubsub", "v1.6.1", sample.Suffix),
-			sample.LegacyModule("cloud.google.com/go/spanner", "v1.9.0", sample.Suffix),
+			sample.Module("cloud.google.com/go/storage", "v1.10.0", sample.Suffix),
+			sample.Module("cloud.google.com/go/pubsub", "v1.6.1", sample.Suffix),
+			sample.Module("cloud.google.com/go/spanner", "v1.9.0", sample.Suffix),
 		},
 		wantModulePaths: []string{
 			"cloud.google.com/go/pubsub",
@@ -156,9 +156,9 @@ func TestPostgres_GetModuleInfo(t *testing.T) {
 			path:    "mod.1",
 			version: "v1.0.2",
 			modules: []*internal.Module{
-				sample.LegacyModule("mod.1", "v1.1.0", sample.Suffix),
-				sample.LegacyModule("mod.1", "v1.0.2", sample.Suffix),
-				sample.LegacyModule("mod.1", "v1.0.0", sample.Suffix),
+				sample.Module("mod.1", "v1.1.0", sample.Suffix),
+				sample.Module("mod.1", "v1.0.2", sample.Suffix),
+				sample.Module("mod.1", "v1.0.0", sample.Suffix),
 			},
 			wantIndex: 1,
 		},
@@ -167,9 +167,9 @@ func TestPostgres_GetModuleInfo(t *testing.T) {
 			path:    "mod.2",
 			version: "v1.0.3",
 			modules: []*internal.Module{
-				sample.LegacyModule("mod.2", "v1.1.0", sample.Suffix),
-				sample.LegacyModule("mod.2", "v1.0.2", sample.Suffix),
-				sample.LegacyModule("mod.2", "v1.0.0", sample.Suffix),
+				sample.Module("mod.2", "v1.1.0", sample.Suffix),
+				sample.Module("mod.2", "v1.0.2", sample.Suffix),
+				sample.Module("mod.2", "v1.0.0", sample.Suffix),
 			},
 			wantErr: derrors.NotFound,
 		},
@@ -212,9 +212,9 @@ func TestPostgres_GetModuleInfo(t *testing.T) {
 
 func TestGetImportedBy(t *testing.T) {
 	var (
-		m1          = sample.LegacyModule("path.to/foo", "v1.1.0", "bar")
-		m2          = sample.LegacyModule("path2.to/foo", "v1.2.0", "bar2")
-		m3          = sample.LegacyModule("path3.to/foo", "v1.3.0", "bar3")
+		m1          = sample.Module("path.to/foo", "v1.1.0", "bar")
+		m2          = sample.Module("path2.to/foo", "v1.2.0", "bar2")
+		m3          = sample.Module("path3.to/foo", "v1.3.0", "bar3")
 		testModules = []*internal.Module{m1, m2, m3}
 
 		pkg1 = m1.Packages()[0]

@@ -42,7 +42,7 @@ func TestInsertModule(t *testing.T) {
 		},
 		{
 			name:   "valid test with internal package",
-			module: sample.LegacyModule(sample.ModulePath, sample.VersionString, "internal/foo"),
+			module: sample.Module(sample.ModulePath, sample.VersionString, "internal/foo"),
 		},
 		{
 			name: "valid test with go.mod missing",
@@ -54,7 +54,7 @@ func TestInsertModule(t *testing.T) {
 		},
 		{
 			name:   "stdlib",
-			module: sample.LegacyModule("std", "v1.12.5", "context"),
+			module: sample.Module("std", "v1.12.5", "context"),
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -134,7 +134,7 @@ func TestInsertModuleLicenseCheck(t *testing.T) {
 				}
 			}
 
-			mod := sample.LegacyModule(sample.ModulePath, sample.VersionString, "")
+			mod := sample.Module(sample.ModulePath, sample.VersionString, "")
 			checkHasRedistData(mod.Units[0].Readme.Contents, mod.Units[0].Documentation.HTML, true)
 			mod.IsRedistributable = false
 			mod.Units[0].IsRedistributable = false
@@ -169,7 +169,7 @@ func TestInsertModuleLicenseCheck(t *testing.T) {
 func TestUpsertModule(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	m := sample.LegacyModule("upsert.org", "v1.2.3", "dir/p")
+	m := sample.Module("upsert.org", "v1.2.3", "dir/p")
 
 	// Insert the module.
 	if err := testDB.InsertModule(ctx, m); err != nil {
@@ -226,7 +226,7 @@ func TestInsertModuleErrors(t *testing.T) {
 		},
 		{
 			name:           "missing module path",
-			module:         sample.LegacyModule("", sample.VersionString),
+			module:         sample.Module("", sample.VersionString),
 			wantVersion:    sample.VersionString,
 			wantModulePath: sample.ModulePath,
 			wantWriteErr:   derrors.DBModuleInsertInvalid,
@@ -275,7 +275,7 @@ func TestPostgres_ReadAndWriteModuleOtherColumns(t *testing.T) {
 		sortVersion, seriesPath string
 	}
 
-	v := sample.LegacyModule("github.com/user/repo/path/v2", "v1.2.3-beta.4.a", sample.Suffix)
+	v := sample.Module("github.com/user/repo/path/v2", "v1.2.3-beta.4.a", sample.Suffix)
 	want := other{
 		sortVersion: "1,2,3,~beta,4,~a",
 		seriesPath:  "github.com/user/repo/path",
@@ -479,7 +479,7 @@ func TestPostgres_NewerAlternative(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	m := sample.LegacyModule(modulePath, okVersion, "p")
+	m := sample.Module(modulePath, okVersion, "p")
 	if err := testDB.InsertModule(ctx, m); err != nil {
 		t.Fatal(err)
 	}

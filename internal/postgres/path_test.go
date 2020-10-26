@@ -37,7 +37,7 @@ func TestGetUnitMeta(t *testing.T) {
 		{"m.com/a", "v1.1.0", "b", false},
 		{"m.com/b", "v2.0.0+incompatible", "a", true},
 	} {
-		m := sample.LegacyModule(testModule.module, testModule.version, testModule.packageSuffix)
+		m := sample.Module(testModule.module, testModule.version, testModule.packageSuffix)
 		if err := testDB.InsertModule(ctx, m); err != nil {
 			t.Fatal(err)
 		}
@@ -216,7 +216,7 @@ func TestGetUnitMetaBypass(t *testing.T) {
 		{"m.com/a", "v1.1.0", "b", false},
 		{"m.com/b", "v2.0.0+incompatible", "a", true},
 	} {
-		m := sample.LegacyModule(testModule.module, testModule.version, testModule.packageSuffix)
+		m := sample.Module(testModule.module, testModule.version, testModule.packageSuffix)
 		makeModuleNonRedistributable(m)
 
 		if err := bypassDB.InsertModule(ctx, m); err != nil {
@@ -417,7 +417,7 @@ func TestGetStdlibPaths(t *testing.T) {
 			},
 		},
 	} {
-		m := sample.LegacyModule(stdlib.ModulePath, data.version, data.suffixes...)
+		m := sample.Module(stdlib.ModulePath, data.version, data.suffixes...)
 		for _, p := range m.Packages() {
 			p.Imports = nil
 		}

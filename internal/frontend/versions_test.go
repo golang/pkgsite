@@ -23,9 +23,9 @@ var (
 
 func sampleModule(modulePath, version string, versionType version.Type, packages ...*internal.Unit) *internal.Module {
 	if len(packages) == 0 {
-		return sample.LegacyModule(modulePath, version, sample.Suffix)
+		return sample.Module(modulePath, version, sample.Suffix)
 	}
-	m := sample.LegacyModule(modulePath, version)
+	m := sample.Module(modulePath, version)
 	for _, p := range packages {
 		sample.AddUnit(m, p)
 	}

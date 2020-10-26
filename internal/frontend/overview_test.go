@@ -146,7 +146,7 @@ func TestPackageOverviewDetails(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
-			m := sample.LegacyModule(
+			m := sample.Module(
 				test.dir.ModulePath,
 				test.dir.Version,
 				internal.Suffix(test.dir.Path, test.dir.ModulePath))

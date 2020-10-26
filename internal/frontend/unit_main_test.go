@@ -21,14 +21,14 @@ func TestGetNestedModules(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
 
 	for _, m := range []*internal.Module{
-		sample.LegacyModule("cloud.google.com/go", "v0.46.2", "storage", "spanner", "pubsub"),
-		sample.LegacyModule("cloud.google.com/go/pubsub", "v1.6.1", sample.Suffix),
-		sample.LegacyModule("cloud.google.com/go/spanner", "v1.9.0", sample.Suffix),
-		sample.LegacyModule("cloud.google.com/go/storage", "v1.10.0", sample.Suffix),
-		sample.LegacyModule("cloud.google.com/go/storage/v11", "v11.0.0", sample.Suffix),
-		sample.LegacyModule("cloud.google.com/go/storage/v9", "v9.0.0", sample.Suffix),
-		sample.LegacyModule("cloud.google.com/go/storage/module", "v1.10.0", sample.Suffix),
-		sample.LegacyModule("cloud.google.com/go/v2", "v2.0.0", "storage", "spanner", "pubsub"),
+		sample.Module("cloud.google.com/go", "v0.46.2", "storage", "spanner", "pubsub"),
+		sample.Module("cloud.google.com/go/pubsub", "v1.6.1", sample.Suffix),
+		sample.Module("cloud.google.com/go/spanner", "v1.9.0", sample.Suffix),
+		sample.Module("cloud.google.com/go/storage", "v1.10.0", sample.Suffix),
+		sample.Module("cloud.google.com/go/storage/v11", "v11.0.0", sample.Suffix),
+		sample.Module("cloud.google.com/go/storage/v9", "v9.0.0", sample.Suffix),
+		sample.Module("cloud.google.com/go/storage/module", "v1.10.0", sample.Suffix),
+		sample.Module("cloud.google.com/go/v2", "v2.0.0", "storage", "spanner", "pubsub"),
 	} {
 		if err := testDB.InsertModule(ctx, m); err != nil {
 			t.Fatal(err)
@@ -95,7 +95,7 @@ func TestGetImportedByCount(t *testing.T) {
 	defer cancel()
 
 	newModule := func(modPath string, pkgs ...*internal.Unit) *internal.Module {
-		m := sample.LegacyModule(modPath, sample.VersionString)
+		m := sample.Module(modPath, sample.VersionString)
 		for _, p := range pkgs {
 			sample.AddUnit(m, p)
 		}

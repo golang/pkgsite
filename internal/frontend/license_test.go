@@ -44,10 +44,10 @@ func TestLicenseAnchors(t *testing.T) {
 }
 
 func TestFetchLicensesDetails(t *testing.T) {
-	testModule := sample.LegacyModule(sample.ModulePath, "v1.2.3", "A/B")
-	stdlibModule := sample.LegacyModule(stdlib.ModulePath, "v1.13.0", "cmd/go")
+	testModule := sample.Module(sample.ModulePath, "v1.2.3", "A/B")
+	stdlibModule := sample.Module(stdlib.ModulePath, "v1.13.0", "cmd/go")
 	crlfPath := "github.com/crlf/module_name"
-	crlfModule := sample.LegacyModule(crlfPath, "v1.2.3", "A")
+	crlfModule := sample.Module(crlfPath, "v1.2.3", "A")
 
 	mit := &licenses.Metadata{Types: []string{"MIT"}, FilePath: "LICENSE"}
 	bsd := &licenses.Metadata{Types: []string{"BSD-3-Clause"}, FilePath: "A/B/LICENSE"}

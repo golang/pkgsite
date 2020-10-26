@@ -14,12 +14,12 @@ import (
 
 func LegacyDefaultModule() *internal.Module {
 	fp := constructFullPath(ModulePath, Suffix)
-	return AddPackage(LegacyModule(ModulePath, VersionString), UnitForPackage(fp, ModulePath, VersionString, path.Base(fp), true))
+	return AddPackage(Module(ModulePath, VersionString), UnitForPackage(fp, ModulePath, VersionString, path.Base(fp), true))
 }
 
-// LegacyModule creates a Module with the given path and version.
+// Module creates a Module with the given path and version.
 // The list of suffixes is used to create Units within the module.
-func LegacyModule(modulePath, version string, suffixes ...string) *internal.Module {
+func Module(modulePath, version string, suffixes ...string) *internal.Module {
 	mi := ModuleInfo(modulePath, version)
 	m := &internal.Module{
 		ModuleInfo: *mi,

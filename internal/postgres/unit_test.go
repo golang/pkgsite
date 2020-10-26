@@ -28,7 +28,7 @@ func TestGetUnit(t *testing.T) {
 	InsertSampleDirectoryTree(ctx, t, testDB)
 
 	// Add a module that has READMEs in a directory and a package.
-	m := sample.LegacyModule("a.com/m", "v1.2.3", "dir/p")
+	m := sample.Module("a.com/m", "v1.2.3", "dir/p")
 	d := findDirectory(m, "a.com/m/dir")
 	d.Readme = &internal.Readme{
 		Filepath: "DIR_README.md",
@@ -211,7 +211,7 @@ func TestGetUnitFieldSet(t *testing.T) {
 	defer ResetTestDB(testDB, t)
 
 	// Add a module that has READMEs in a directory and a package.
-	m := sample.LegacyModule("a.com/m", "v1.2.3", "dir/p")
+	m := sample.Module("a.com/m", "v1.2.3", "dir/p")
 	if err := testDB.InsertModule(ctx, m); err != nil {
 		t.Fatal(err)
 	}

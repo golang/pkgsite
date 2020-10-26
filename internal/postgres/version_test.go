@@ -32,31 +32,31 @@ func TestGetVersions(t *testing.T) {
 		rootModule            = "golang.org/foo/bar"
 		nestedModule          = "golang.org/foo/bar/api"
 		testModules           = []*internal.Module{
-			sample.LegacyModule(stdlib.ModulePath, "v1.15.0-beta.1", "cmd/go"),
-			sample.LegacyModule(stdlib.ModulePath, "v1.14.6", "cmd/go"),
-			sample.LegacyModule(taggedModuleV3, "v3.2.0-beta", "bar"),
-			sample.LegacyModule(taggedModuleV3, "v3.2.0-alpha.2", "bar"),
-			sample.LegacyModule(taggedModuleV3, "v3.2.0-alpha.1", "bar"),
-			sample.LegacyModule(taggedModuleV3, "v3.1.0", "bar"),
-			sample.LegacyModule(taggedModuleV3, "v3.0.0", "bar"),
-			sample.LegacyModule(taggedModuleV2, "v2.0.1", "bar"),
-			sample.LegacyModule(taggedAndPseudoModule, "v1.5.3-pre1", "bar"),
-			sample.LegacyModule(taggedAndPseudoModule, "v1.5.2", "bar"),
-			sample.LegacyModule(taggedAndPseudoModule, "v0.0.0-20200101120000-000000000000", "bar"),
-			sample.LegacyModule(otherModule, "v3.0.0", "thing"),
-			sample.LegacyModule(incompatibleModule, "v2.0.0+incompatible", "module"),
-			sample.LegacyModule(incompatibleModule, "v0.0.0", "module"),
-			sample.LegacyModule(rootModule, "v1.0.3", "api"),
-			sample.LegacyModule(rootModule, "v0.11.6", "api"),
-			sample.LegacyModule(nestedModule, "v1.0.4", "api"),
-			sample.LegacyModule(nestedModule, "v1.0.3", "api"),
+			sample.Module(stdlib.ModulePath, "v1.15.0-beta.1", "cmd/go"),
+			sample.Module(stdlib.ModulePath, "v1.14.6", "cmd/go"),
+			sample.Module(taggedModuleV3, "v3.2.0-beta", "bar"),
+			sample.Module(taggedModuleV3, "v3.2.0-alpha.2", "bar"),
+			sample.Module(taggedModuleV3, "v3.2.0-alpha.1", "bar"),
+			sample.Module(taggedModuleV3, "v3.1.0", "bar"),
+			sample.Module(taggedModuleV3, "v3.0.0", "bar"),
+			sample.Module(taggedModuleV2, "v2.0.1", "bar"),
+			sample.Module(taggedAndPseudoModule, "v1.5.3-pre1", "bar"),
+			sample.Module(taggedAndPseudoModule, "v1.5.2", "bar"),
+			sample.Module(taggedAndPseudoModule, "v0.0.0-20200101120000-000000000000", "bar"),
+			sample.Module(otherModule, "v3.0.0", "thing"),
+			sample.Module(incompatibleModule, "v2.0.0+incompatible", "module"),
+			sample.Module(incompatibleModule, "v0.0.0", "module"),
+			sample.Module(rootModule, "v1.0.3", "api"),
+			sample.Module(rootModule, "v0.11.6", "api"),
+			sample.Module(nestedModule, "v1.0.4", "api"),
+			sample.Module(nestedModule, "v1.0.3", "api"),
 		}
 	)
 
 	// Add 12 pseudo versions to the test modules. Below we only
 	// expect to return the 10 most recent.
 	for i := 1; i <= 12; i++ {
-		testModules = append(testModules, sample.LegacyModule(pseudoModule, fmt.Sprintf("v0.0.0-202001011200%02d-000000000000", i), "blog"))
+		testModules = append(testModules, sample.Module(pseudoModule, fmt.Sprintf("v0.0.0-202001011200%02d-000000000000", i), "blog"))
 	}
 
 	defer ResetTestDB(testDB, t)
@@ -241,7 +241,7 @@ func TestGetLatestMajorVersion(t *testing.T) {
 		"foo.com/bar/v3",
 		"bar.com/foo",
 	} {
-		m := sample.LegacyModule(modulePath, sample.VersionString, sample.Suffix)
+		m := sample.Module(modulePath, sample.VersionString, sample.Suffix)
 		if err := testDB.InsertModule(ctx, m); err != nil {
 			t.Fatal(err)
 		}

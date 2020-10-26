@@ -212,7 +212,7 @@ func InsertSampleDirectoryTree(ctx context.Context, t *testing.T, testDB *DB) {
 			},
 		},
 	} {
-		m := sample.LegacyModule(data.modulePath, data.version, data.suffixes...)
+		m := sample.Module(data.modulePath, data.version, data.suffixes...)
 		if err := testDB.InsertModule(ctx, m); err != nil {
 			t.Fatal(err)
 		}

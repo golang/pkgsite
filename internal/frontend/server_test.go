@@ -156,7 +156,7 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 			pkgs[pkg.suffix] = pkg
 		}
 		for _, ver := range mod.versions {
-			m := sample.LegacyModule(mod.path, ver, suffixes...)
+			m := sample.Module(mod.path, ver, suffixes...)
 			m.SourceInfo = source.NewGitHubInfo(sample.RepositoryURL, "", ver)
 			m.IsRedistributable = mod.redistributable
 			if !m.IsRedistributable {

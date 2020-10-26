@@ -24,7 +24,7 @@ type testUnitPage struct {
 func TestPageTitlePageTypePageLabels(t *testing.T) {
 
 	var tests []*testUnitPage
-	m := sample.LegacyModule("golang.org/x/tools", "v1.0.0", "go/packages", "cmd/godoc")
+	m := sample.Module("golang.org/x/tools", "v1.0.0", "go/packages", "cmd/godoc")
 	for _, u := range m.Units {
 		um := &u.UnitMeta
 		switch um.Path {
@@ -44,11 +44,11 @@ func TestPageTitlePageTypePageLabels(t *testing.T) {
 		}
 	}
 
-	m2 := sample.LegacyModule("golang.org/x/tools/gopls", "v1.0.0", "")
+	m2 := sample.Module("golang.org/x/tools/gopls", "v1.0.0", "")
 	m2.Units[0].Name = "main"
 	tests = append(tests, &testUnitPage{&m2.Units[0].UnitMeta, "module golang.org/x/tools/gopls", "gopls", pageTypeCommand, []string{pageTypeCommand, pageTypeModule}})
 
-	std := sample.LegacyModule(stdlib.ModulePath, "v1.0.0", "cmd/go")
+	std := sample.Module(stdlib.ModulePath, "v1.0.0", "cmd/go")
 	for _, u := range std.Units {
 		um := &u.UnitMeta
 		switch um.Path {

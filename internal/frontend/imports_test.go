@@ -49,7 +49,7 @@ func TestFetchImportsDetails(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 			defer cancel()
 
-			module := sample.LegacyModule(sample.ModulePath, sample.VersionString, sample.Suffix)
+			module := sample.Module(sample.ModulePath, sample.VersionString, sample.Suffix)
 			// The first unit is the module and the second one is the package.
 			pkg := module.Units[1]
 			pkg.Imports = tc.imports
@@ -79,7 +79,7 @@ func TestFetchImportedByDetails(t *testing.T) {
 	defer cancel()
 
 	newModule := func(modPath string, pkgs ...*internal.Unit) *internal.Module {
-		m := sample.LegacyModule(modPath, sample.VersionString)
+		m := sample.Module(modPath, sample.VersionString)
 		for _, p := range pkgs {
 			sample.AddUnit(m, p)
 		}
