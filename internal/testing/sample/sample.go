@@ -100,22 +100,17 @@ func NowTruncated() time.Time {
 // is the concatenation of modulePath and suffix.
 //
 // The package name is last component of the package path.
-func UnitForPackage(modulePath, suffix string) *internal.Unit {
-	p := constructFullPath(modulePath, suffix)
+func UnitForPackage(path, modulePath, version, name string, isRedistributable bool) *internal.Unit {
 	return &internal.Unit{
-		UnitMeta: internal.UnitMeta{
-			Name:              path.Base(p),
-			Path:              p,
-			IsRedistributable: true,
-			Licenses:          LicenseMetadata,
-		},
+		UnitMeta: *UnitMeta(path, modulePath, version, name, isRedistributable),
 		Documentation: &internal.Documentation{
 			Synopsis: Synopsis,
 			HTML:     DocumentationHTML,
 			GOOS:     GOOS,
 			GOARCH:   GOARCH,
 		},
-		Imports: Imports,
+		LicenseContents: Licenses,
+		Imports:         Imports,
 	}
 }
 

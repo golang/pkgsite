@@ -50,13 +50,13 @@ func LegacyModule(modulePath, version string, suffixes ...string) *internal.Modu
 		ModuleInfo: *mi,
 		Licenses:   Licenses,
 	}
-	m.Units = []*internal.Unit{legacyUnitForModuleRoot(mi)}
+	m.Units = []*internal.Unit{UnitForModuleRoot(mi)}
 	for _, s := range suffixes {
 		lp := LegacyPackage(modulePath, s)
 		if s != "" {
 			LegacyAddPackage(m, lp)
 		} else {
-			u := legacyUnitForPackage(lp, modulePath, version)
+			u := UnitForPackage(lp.Path, modulePath, version, lp.Name, lp.IsRedistributable)
 			m.Units[0].Documentation = u.Documentation
 			m.Units[0].Name = u.Name
 		}
@@ -69,7 +69,7 @@ func LegacyAddPackage(m *internal.Module, p *internal.LegacyPackage) *internal.M
 		panic(fmt.Sprintf("package path %q not a prefix of module path %q",
 			p.Path, m.ModulePath))
 	}
-	AddUnit(m, legacyUnitForPackage(p, m.ModulePath, m.Version))
+	AddUnit(m, UnitForPackage(p.Path, m.ModulePath, m.Version, p.Name, p.IsRedistributable))
 	minLen := len(m.ModulePath)
 	if m.ModulePath == stdlib.ModulePath {
 		minLen = 1
@@ -89,7 +89,7 @@ func LegacyAddPackage(m *internal.Module, p *internal.LegacyPackage) *internal.M
 	return m
 }
 
-func legacyUnitForModuleRoot(m *internal.ModuleInfo) *internal.Unit {
+func UnitForModuleRoot(m *internal.ModuleInfo) *internal.Unit {
 	u := &internal.Unit{
 		UnitMeta:        *UnitMeta(m.ModulePath, m.ModulePath, m.Version, "", m.IsRedistributable),
 		LicenseContents: Licenses,
@@ -99,18 +99,4 @@ func legacyUnitForModuleRoot(m *internal.ModuleInfo) *internal.Unit {
 		Contents: ReadmeContents,
 	}
 	return u
-}
-
-func legacyUnitForPackage(pkg *internal.LegacyPackage, modulePath, version string) *internal.Unit {
-	return &internal.Unit{
-		UnitMeta:        *UnitMeta(pkg.Path, modulePath, version, pkg.Name, pkg.IsRedistributable),
-		Imports:         pkg.Imports,
-		LicenseContents: Licenses,
-		Documentation: &internal.Documentation{
-			Synopsis: pkg.Synopsis,
-			HTML:     pkg.DocumentationHTML,
-			GOOS:     pkg.GOOS,
-			GOARCH:   pkg.GOARCH,
-		},
-	}
 }

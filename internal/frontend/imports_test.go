@@ -86,11 +86,11 @@ func TestFetchImportedByDetails(t *testing.T) {
 		return m
 	}
 
-	pkg1 := sample.UnitForPackage("path.to/foo", "bar")
-	pkg2 := sample.UnitForPackage("path2.to/foo", "bar2")
+	pkg1 := sample.UnitForPackage("path.to/foo/bar", "path.to/foo", sample.VersionString, "bar", true)
+	pkg2 := sample.UnitForPackage("path2.to/foo/bar2", "path2.to/foo", sample.VersionString, "bar2", true)
 	pkg2.Imports = []string{pkg1.Path}
 
-	pkg3 := sample.UnitForPackage("path3.to/foo", "bar3")
+	pkg3 := sample.UnitForPackage("path3.to/foo/bar3", "path3.to/foor", sample.VersionString, "bar3", true)
 	pkg3.Imports = []string{pkg2.Path, pkg1.Path}
 
 	testModules := []*internal.Module{
