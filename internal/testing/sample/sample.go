@@ -114,27 +114,17 @@ func UnitForPackage(path, modulePath, version, name string, isRedistributable bo
 	}
 }
 
-func AddPackage(m *internal.Module, fullPath string) *internal.Module {
-	if m.ModulePath != stdlib.ModulePath && !strings.HasPrefix(fullPath, m.ModulePath) {
+func AddPackage(m *internal.Module, pkg *internal.Unit) *internal.Module {
+	if m.ModulePath != stdlib.ModulePath && !strings.HasPrefix(pkg.Path, m.ModulePath) {
 		panic(fmt.Sprintf("package path %q not a prefix of module path %q",
-			fullPath, m.ModulePath))
+			pkg.Path, m.ModulePath))
 	}
-	AddUnit(m, &internal.Unit{
-		UnitMeta:        *UnitMeta(fullPath, m.ModulePath, m.Version, path.Base(fullPath), true),
-		Imports:         Imports,
-		LicenseContents: Licenses,
-		Documentation: &internal.Documentation{
-			Synopsis: Synopsis,
-			HTML:     DocumentationHTML,
-			GOOS:     GOOS,
-			GOARCH:   GOARCH,
-		},
-	})
+	AddUnit(m, UnitForPackage(pkg.Path, m.ModulePath, m.Version, pkg.Name, pkg.IsRedistributable))
 	minLen := len(m.ModulePath)
 	if m.ModulePath == stdlib.ModulePath {
 		minLen = 1
 	}
-	for pth := fullPath; len(pth) > minLen; pth = path.Dir(pth) {
+	for pth := pkg.Path; len(pth) > minLen; pth = path.Dir(pth) {
 		found := false
 		for _, u := range m.Units {
 			if u.Path == pth {

@@ -7,12 +7,9 @@
 package sample
 
 import (
-	"fmt"
 	"path"
-	"strings"
 
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 // LegacyPackage constructs a package with the given module path and suffix.
@@ -39,7 +36,8 @@ func LegacyPackage(modulePath, suffix string) *internal.LegacyPackage {
 }
 
 func LegacyDefaultModule() *internal.Module {
-	return AddPackage(LegacyModule(ModulePath, VersionString), ModulePath+"/"+Suffix)
+	fp := constructFullPath(ModulePath, Suffix)
+	return AddPackage(LegacyModule(ModulePath, VersionString), UnitForPackage(fp, ModulePath, VersionString, path.Base(fp), true))
 }
 
 // LegacyModule creates a Module with the given path and version.
@@ -52,38 +50,14 @@ func LegacyModule(modulePath, version string, suffixes ...string) *internal.Modu
 	}
 	m.Units = []*internal.Unit{UnitForModuleRoot(mi)}
 	for _, s := range suffixes {
-		lp := LegacyPackage(modulePath, s)
+		fp := constructFullPath(modulePath, s)
+		lp := UnitForPackage(fp, modulePath, VersionString, path.Base(fp), m.IsRedistributable)
 		if s != "" {
-			LegacyAddPackage(m, lp)
+			AddPackage(m, lp)
 		} else {
 			u := UnitForPackage(lp.Path, modulePath, version, lp.Name, lp.IsRedistributable)
 			m.Units[0].Documentation = u.Documentation
 			m.Units[0].Name = u.Name
-		}
-	}
-	return m
-}
-
-func LegacyAddPackage(m *internal.Module, p *internal.LegacyPackage) *internal.Module {
-	if m.ModulePath != stdlib.ModulePath && !strings.HasPrefix(p.Path, m.ModulePath) {
-		panic(fmt.Sprintf("package path %q not a prefix of module path %q",
-			p.Path, m.ModulePath))
-	}
-	AddUnit(m, UnitForPackage(p.Path, m.ModulePath, m.Version, p.Name, p.IsRedistributable))
-	minLen := len(m.ModulePath)
-	if m.ModulePath == stdlib.ModulePath {
-		minLen = 1
-	}
-	for pth := p.Path; len(pth) > minLen; pth = path.Dir(pth) {
-		found := false
-		for _, u := range m.Units {
-			if u.Path == pth {
-				found = true
-				break
-			}
-		}
-		if !found {
-			AddUnit(m, UnitEmpty(pth, m.ModulePath, m.Version))
 		}
 	}
 	return m
