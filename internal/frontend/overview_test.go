@@ -31,7 +31,7 @@ func TestFetchOverviewDetails(t *testing.T) {
 		wantDetails *OverviewDetails
 	}{
 		name:   "want expected overview details",
-		module: sample.LegacyDefaultModule(),
+		module: sample.DefaultModule(),
 		wantDetails: &OverviewDetails{
 			ModulePath:      sample.ModulePath,
 			RepositoryURL:   sample.RepositoryURL,

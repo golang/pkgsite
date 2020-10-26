@@ -38,7 +38,7 @@ func TestInsertModule(t *testing.T) {
 	}{
 		{
 			name:   "valid test",
-			module: sample.LegacyDefaultModule(),
+			module: sample.DefaultModule(),
 		},
 		{
 			name:   "valid test with internal package",
@@ -47,7 +47,7 @@ func TestInsertModule(t *testing.T) {
 		{
 			name: "valid test with go.mod missing",
 			module: func() *internal.Module {
-				m := sample.LegacyDefaultModule()
+				m := sample.DefaultModule()
 				m.HasGoMod = false
 				return m
 			}(),
@@ -213,13 +213,13 @@ func TestInsertModuleErrors(t *testing.T) {
 		},
 		{
 			name:           "nonexistent version",
-			module:         sample.LegacyDefaultModule(),
+			module:         sample.DefaultModule(),
 			wantModulePath: sample.ModulePath,
 			wantVersion:    "v1.2.3",
 		},
 		{
 			name:           "nonexistent module",
-			module:         sample.LegacyDefaultModule(),
+			module:         sample.DefaultModule(),
 			wantModulePath: "nonexistent_module_path",
 			wantVersion:    "v1.0.0",
 			wantPkgPath:    sample.PackagePath,
@@ -234,7 +234,7 @@ func TestInsertModuleErrors(t *testing.T) {
 		{
 			name: "missing version",
 			module: func() *internal.Module {
-				m := sample.LegacyDefaultModule()
+				m := sample.DefaultModule()
 				m.Version = ""
 				return m
 			}(),
@@ -245,7 +245,7 @@ func TestInsertModuleErrors(t *testing.T) {
 		{
 			name: "empty commit time",
 			module: func() *internal.Module {
-				v := sample.LegacyDefaultModule()
+				v := sample.DefaultModule()
 				v.CommitTime = time.Time{}
 				return v
 			}(),
@@ -330,7 +330,7 @@ func TestLatestVersion(t *testing.T) {
 			modulePath: sample.ModulePath + "/v3",
 		},
 	} {
-		m := sample.LegacyDefaultModule()
+		m := sample.DefaultModule()
 		m.Version = mod.version
 		m.ModulePath = mod.modulePath
 
@@ -389,7 +389,7 @@ func TestLatestVersion_PreferIncompatibleOverPrerelease(t *testing.T) {
 			modulePath: sample.ModulePath,
 		},
 	} {
-		m := sample.LegacyDefaultModule()
+		m := sample.DefaultModule()
 		m.Version = mod.version
 		m.ModulePath = mod.modulePath
 
@@ -422,7 +422,7 @@ func TestDeleteModule(t *testing.T) {
 	defer cancel()
 	defer ResetTestDB(testDB, t)
 
-	v := sample.LegacyDefaultModule()
+	v := sample.DefaultModule()
 
 	if err := testDB.InsertModule(ctx, v); err != nil {
 		t.Fatal(err)

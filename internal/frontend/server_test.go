@@ -972,7 +972,7 @@ func TestServerErrors(t *testing.T) {
 	defer cancel()
 
 	defer postgres.ResetTestDB(testDB, t)
-	sampleModule := sample.LegacyDefaultModule()
+	sampleModule := sample.DefaultModule()
 	if err := testDB.InsertModule(ctx, sampleModule); err != nil {
 		t.Fatal(err)
 	}

@@ -148,7 +148,7 @@ func TestFetchPathAlreadyExists(t *testing.T) {
 		t.Run(strconv.Itoa(test.status), func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testFetchTimeout)
 			defer cancel()
-			if err := testDB.InsertModule(ctx, sample.LegacyDefaultModule()); err != nil {
+			if err := testDB.InsertModule(ctx, sample.DefaultModule()); err != nil {
 				t.Fatal(err)
 			}
 			if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{

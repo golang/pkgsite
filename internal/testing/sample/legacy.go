@@ -12,7 +12,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 )
 
-func LegacyDefaultModule() *internal.Module {
+func DefaultModule() *internal.Module {
 	fp := constructFullPath(ModulePath, Suffix)
 	return AddPackage(Module(ModulePath, VersionString), UnitForPackage(fp, ModulePath, VersionString, path.Base(fp), true))
 }
