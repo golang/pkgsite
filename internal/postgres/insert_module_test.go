@@ -22,6 +22,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -31,6 +32,7 @@ import (
 func TestInsertModule(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
 	defer cancel()
+	ctx = experiment.NewContext(ctx, internal.ExperimentInsertPackageSource)
 
 	for _, test := range []struct {
 		name   string
@@ -169,6 +171,7 @@ func TestInsertModuleLicenseCheck(t *testing.T) {
 func TestUpsertModule(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
+	ctx = experiment.NewContext(ctx, internal.ExperimentInsertPackageSource)
 	m := sample.Module("upsert.org", "v1.2.3", "dir/p")
 
 	// Insert the module.

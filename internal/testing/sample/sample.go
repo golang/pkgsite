@@ -17,12 +17,13 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/licensecheck"
-	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
+
+//go:generate go run gen_documentation.go
 
 // These sample values can be used to construct test cases.
 var (
@@ -50,23 +51,16 @@ var (
 		},
 		Contents: []byte(`unknown`),
 	}
-	DocumentationHTML = template.MustParseAndExecuteToHTML("This is the documentation HTML")
-	PackageName       = "foo"
-	Suffix            = "foo"
-	PackagePath       = path.Join(ModulePath, Suffix)
-	V1Path            = PackagePath
-	Imports           = []string{"path/to/bar", "fmt"}
-	Synopsis          = "This is a package synopsis"
-	ReadmeFilePath    = "README.md"
-	ReadmeContents    = "readme"
-	GOOS              = "linux"
-	GOARCH            = "amd64"
-	Documentation     = &internal.Documentation{
-		Synopsis: Synopsis,
-		HTML:     DocumentationHTML,
-		GOOS:     GOOS,
-		GOARCH:   GOARCH,
-	}
+	PackageName    = "foo"
+	Suffix         = "foo"
+	PackagePath    = path.Join(ModulePath, Suffix)
+	V1Path         = PackagePath
+	Imports        = []string{"path/to/bar", "fmt"}
+	Synopsis       = "This is a package synopsis"
+	ReadmeFilePath = "README.md"
+	ReadmeContents = "readme"
+	GOOS           = "linux"
+	GOARCH         = "amd64"
 )
 
 // LicenseCmpOpts are options to use when comparing licenses with the cmp package.
@@ -146,6 +140,7 @@ func UnitForPackage(path, modulePath, version, name string, isRedistributable bo
 		Documentation: &internal.Documentation{
 			Synopsis: Synopsis,
 			HTML:     DocumentationHTML,
+			Source:   DocumentationSource,
 			GOOS:     GOOS,
 			GOARCH:   GOARCH,
 		},

@@ -23,7 +23,7 @@ import (
 func TestGetUnit(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-
+	ctx = experiment.NewContext(ctx, internal.ExperimentInsertPackageSource)
 	defer ResetTestDB(testDB, t)
 	InsertSampleDirectoryTree(ctx, t, testDB)
 
@@ -208,6 +208,7 @@ func TestGetUnitFieldSet(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
+	ctx = experiment.NewContext(ctx, internal.ExperimentInsertPackageSource)
 	defer ResetTestDB(testDB, t)
 
 	// Add a module that has READMEs in a directory and a package.

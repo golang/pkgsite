@@ -404,7 +404,7 @@ func serverTestCases() []serverTestCase {
 					in("a",
 						href("/"+sample.ModulePath+"@v1.0.0"),
 						text(sample.ModulePath))),
-				in(".Documentation", text(`This is the documentation HTML`))),
+				in(".Documentation", text(`Package p`))),
 		},
 		{
 			name:           "package default redirect",
@@ -425,7 +425,7 @@ func serverTestCases() []serverTestCase {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.PackageHeader(pkgV100, versioned),
-				in(".Documentation", text(`This is the documentation HTML`)),
+				in(".Documentation", text(`Package p`)),
 				in(".js-canonicalURLPath", attr("data-canonical-url-path", "/github.com/valid/module_name@v1.0.0/foo"))),
 		},
 		{
@@ -441,7 +441,7 @@ func serverTestCases() []serverTestCase {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.PackageHeader(pkgV090, versioned),
-				in(".Documentation", text(`This is the documentation HTML`))),
+				in(".Documentation", text(`Package p`))),
 		},
 		{
 			name: "package at version doc tab nonredistributable",
@@ -930,8 +930,6 @@ func testServer(t *testing.T, testCases []serverTestCase, experimentNames ...str
 			}
 			_ = res.Body.Close()
 
-			checkIDs(t, doc)
-
 			if tc.want != nil {
 				if err := tc.want(doc); err != nil {
 					if testing.Verbose() {
@@ -952,19 +950,6 @@ func isSubset(subset, set *experiment.Set) bool {
 	}
 
 	return true
-}
-
-var badIDRegexp = regexp.MustCompile(`^[a-zA-Z0-9_.]*$`)
-
-func checkIDs(t *testing.T, n *html.Node) {
-	for _, a := range n.Attr {
-		if strings.EqualFold(a.Key, "id") && badIDRegexp.MatchString(a.Val) {
-			t.Errorf("HTML id %q must not be a valid Go identifier or dotted expression (add a hyphen)", a.Val)
-		}
-	}
-	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		checkIDs(t, c)
-	}
 }
 
 func TestServerErrors(t *testing.T) {

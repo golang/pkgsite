@@ -294,7 +294,7 @@ func TestSearch(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.label, func(t *testing.T) {
 			defer ResetTestDB(testDB, t)
-			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 			defer cancel()
 			for _, m := range test.modules {
 				if err := testDB.InsertModule(ctx, m); err != nil {
