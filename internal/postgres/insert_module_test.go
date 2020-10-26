@@ -267,7 +267,7 @@ func TestInsertModuleErrors(t *testing.T) {
 
 func TestPostgres_ReadAndWriteModuleOtherColumns(t *testing.T) {
 	// Verify that InsertModule correctly populates the columns in the versions
-	// table that are not in the LegacyModuleInfo struct.
+	// table that are not in the ModuleInfo struct.
 	defer ResetTestDB(testDB, t)
 	ctx := context.Background()
 
