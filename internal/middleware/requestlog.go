@@ -65,9 +65,11 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	h.logger.Log(logging.Entry{
 		HTTPRequest: &logging.HTTPRequest{Request: r},
-		Payload:     "request start",
-		Severity:    severity,
-		Trace:       traceID,
+		Payload: map[string]string{
+			"requestType": "request start",
+		},
+		Severity: severity,
+		Trace:    traceID,
 	})
 	w2 := &responseWriter{ResponseWriter: w}
 	h.delegate.ServeHTTP(w2, r.WithContext(log.NewContextWithTraceID(r.Context(), traceID)))
@@ -84,10 +86,32 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			Status:  translateStatus(w2.status),
 			Latency: time.Since(start),
 		},
-		Payload:  "request end",
+		Payload: map[string]interface{}{
+			"requestType": "request end",
+			"isRobot":     isRobot(r.Header.Get("User-Agent")),
+		},
 		Severity: s,
 		Trace:    traceID,
 	})
+}
+
+var browserAgentPrefixes = []string{
+	"MobileSafari/",
+	"Mozilla/",
+	"Opera/",
+	"Safari/",
+}
+
+func isRobot(userAgent string) bool {
+	if strings.Contains(strings.ToLower(userAgent), "bot/") || strings.Contains(userAgent, "robot") {
+		return true
+	}
+	for _, b := range browserAgentPrefixes {
+		if strings.HasPrefix(userAgent, b+"/") {
+			return false
+		}
+	}
+	return true
 }
 
 type responseWriter struct {
