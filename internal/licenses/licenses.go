@@ -131,6 +131,7 @@ var (
 		"AGPL-3.0":             true,
 		"Apache-2.0":           true,
 		"Artistic-2.0":         true,
+		"Beerware":             true,
 		"BlueOak-1.0":          true,
 		"BSD-0-Clause":         true,
 		"BSD-2-Clause":         true,
@@ -182,6 +183,7 @@ var spdxIdentifierOverrides = map[string]string{
 
 // nonOSILicenses lists licenses that are not approved by OSI.
 var nonOSILicenses = map[string]bool{
+	"Beerware":             true,
 	"BlueOak-1.0":          true,
 	"BSD-2-Clause-FreeBSD": true,
 	"CC-BY-3.0":            true,
