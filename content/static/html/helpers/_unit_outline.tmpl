@@ -7,7 +7,7 @@
 {{define "unit_outline"}}
   <div class="UnitOutline js-accordion">
     <div class="UnitOutline-jumpTo">
-      <button class="UnitOutline-jumpToInput js-jumpToInput">
+      <button class="UnitOutline-jumpToInput js-jumpToInput"{{if (not .DocOutline.String)}} disabled{{end}}>
         Jump to
       </button>
     </div>

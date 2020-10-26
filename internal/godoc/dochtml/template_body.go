@@ -22,7 +22,7 @@ const tmplBody = `
 
 
 {{- if or .Consts .Vars .Funcs .Types -}}
-	<section class="Documentation-index js-docIndex">
+	<section class="Documentation-index">
 		<h3 id="pkg-index" class="Documentation-indexHeader">Index <a href="#pkg-index">¶</a></h3>{{"\n\n" -}}
 		<ul class="Documentation-indexList">{{"\n" -}}
 			{{- if .Consts -}}<li class="Documentation-indexConstants"><a href="#pkg-constants">Constants</a></li>{{"\n"}}{{- end -}}
