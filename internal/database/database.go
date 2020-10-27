@@ -108,14 +108,14 @@ func (db *DB) Query(ctx context.Context, query string, args ...interface{}) (_ *
 
 // QueryRow runs the query and returns a single row.
 func (db *DB) QueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
+	defer logQuery(ctx, query, args, db.instanceID)(nil)
 	start := time.Now()
 	defer func() {
-		d, _ := ctx.Deadline()
-		msg := fmt.Sprintf("args=%v; elapsed=%q, start=%q, deadline=%q", args, time.Since(start), start, d)
 		if ctx.Err() != nil {
+			d, _ := ctx.Deadline()
+			msg := fmt.Sprintf("args=%v; elapsed=%q, start=%q, deadline=%q", args, time.Since(start), start, d)
 			log.Errorf(ctx, "QueryRow context error: %v "+msg, ctx.Err())
 		}
-		logQuery(ctx, query, args, db.instanceID)(nil)
 	}()
 	if db.tx != nil {
 		return db.tx.QueryRowContext(ctx, query, args...)
