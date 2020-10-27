@@ -282,7 +282,7 @@ func getImportedByCount(ctx context.Context, ds internal.DataSource, unit *inter
 	// For example, if the limit is 101 and we get 101 results, then we'll show
 	// '100+ Imported by'.
 	if count >= importedByLimit {
-		return strconv.Itoa(count-1) + "+", nil
+		return strconv.Itoa(importedByLimit-1) + "+", nil
 	}
 	return strconv.Itoa(count), nil
 }
