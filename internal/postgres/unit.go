@@ -293,10 +293,11 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta) (
 				GROUP BY path_id
 				), 0) AS num_imports,
 			COALESCE((
-				SELECT COUNT(DISTINCT from_path)
-				FROM imports_unique
-				WHERE to_path = $1
-				AND from_module_path <> $2
+				SELECT imported_by_count
+				FROM search_documents
+				-- Only package_path is needed b/c it is the PK for
+				-- search_documents.
+				WHERE package_path = $1
 				), 0) AS num_imported_by
 		FROM paths p
 		INNER JOIN modules m
@@ -308,8 +309,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta) (
 		WHERE
 			p.path = $1
 			AND m.module_path = $2
-			AND m.version = $3
-			;`
+			AND m.version = $3;`
 
 	var (
 		d internal.Documentation
