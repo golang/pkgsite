@@ -87,7 +87,6 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	}
 	checkNotInTable("search_documents", "module_path")
 	checkNotInTable("imports_unique", "from_module_path")
-	checkNotInTable("imports", "from_module_path")
 }
 
 func TestFetchAndUpdateState_Excluded(t *testing.T) {
