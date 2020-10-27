@@ -31,13 +31,15 @@ var (
 	RepositoryURL   = "https://github.com/valid/module_name"
 	VersionString   = "v1.0.0"
 	CommitTime      = NowTruncated()
+	LicenseType     = "MIT"
+	LicenseFilePath = "LICENSE"
 	LicenseMetadata = []*licenses.Metadata{
 		{
-			Types:    []string{"MIT"},
-			FilePath: "LICENSE",
+			Types:    []string{LicenseType},
+			FilePath: LicenseFilePath,
 			Coverage: licensecheck.Coverage{
 				Percent: 100,
-				Match:   []licensecheck.Match{{Name: "MIT", Type: licensecheck.MIT, Percent: 100}},
+				Match:   []licensecheck.Match{{Name: LicenseType, Type: licensecheck.MIT, Percent: 100}},
 			},
 		},
 	}

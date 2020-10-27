@@ -871,27 +871,16 @@ func unitPageTestCases() []serverTestCase {
 		unversioned = false
 	)
 
-	var (
-	//in   = htmlcheck.In
-	//text = htmlcheck.HasText
-	//attr = htmlcheck.HasAttr
-
-	// href checks for an exact match in an href attribute.
-	//href = func(val string) htmlcheck.Checker {
-	//return attr("href", "^"+regexp.QuoteMeta(val)+"$")
-	//}
-	)
-
 	pkgV100 := &pagecheck.Page{
 		Title:            "Package foo",
 		ModulePath:       sample.ModulePath,
-		Version:          "v1.0.0",
-		Suffix:           "foo",
+		Version:          sample.VersionString,
+		Suffix:           sample.Suffix,
 		IsLatest:         true,
-		LatestLink:       "/" + sample.ModulePath + "@v1.0.0/foo",
-		LicenseType:      "MIT",
-		LicenseFilePath:  "LICENSE",
-		PackageURLFormat: "/" + sample.ModulePath + "%s/foo",
+		LatestLink:       "/" + sample.ModulePath + "@" + sample.VersionString + "/" + sample.Suffix,
+		LicenseType:      sample.LicenseType,
+		LicenseFilePath:  sample.LicenseFilePath,
+		PackageURLFormat: "/" + sample.ModulePath + "%s/" + sample.Suffix,
 		ModuleURL:        "/mod/" + sample.ModulePath,
 	}
 
