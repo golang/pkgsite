@@ -227,7 +227,7 @@ func insertLicenses(ctx context.Context, db *database.DB, m *internal.Module, mo
 			"module_id",
 		}
 		return db.BulkUpsert(ctx, "licenses", licenseCols, licenseValues,
-			[]string{"module_path", "version", "file_path"})
+			[]string{"module_id", "file_path"})
 	}
 	return nil
 }
