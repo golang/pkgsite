@@ -865,6 +865,46 @@ func serverTestCases() []serverTestCase {
 	return testCases
 }
 
+func unitPageTestCases() []serverTestCase {
+	const (
+		versioned   = true
+		unversioned = false
+	)
+
+	var (
+	//in   = htmlcheck.In
+	//text = htmlcheck.HasText
+	//attr = htmlcheck.HasAttr
+
+	// href checks for an exact match in an href attribute.
+	//href = func(val string) htmlcheck.Checker {
+	//return attr("href", "^"+regexp.QuoteMeta(val)+"$")
+	//}
+	)
+
+	pkgV100 := &pagecheck.Page{
+		Title:            "Package foo",
+		ModulePath:       sample.ModulePath,
+		Version:          "v1.0.0",
+		Suffix:           "foo",
+		IsLatest:         true,
+		LatestLink:       "/" + sample.ModulePath + "@v1.0.0/foo",
+		LicenseType:      "MIT",
+		LicenseFilePath:  "LICENSE",
+		PackageURLFormat: "/" + sample.ModulePath + "%s/foo",
+		ModuleURL:        "/mod/" + sample.ModulePath,
+	}
+
+	return []serverTestCase{
+		{
+			name:           "package default",
+			urlPath:        fmt.Sprintf("/%s", sample.PackagePath),
+			wantStatusCode: http.StatusOK,
+			want:           pagecheck.UnitHeader(pkgV100, unversioned),
+		},
+	}
+}
+
 // TestServer checks the contents of served pages by looking for
 // strings and elements in the parsed HTML response body.
 //
@@ -886,6 +926,17 @@ func TestServer(t *testing.T) {
 		{
 			name:          "no experiments",
 			testCasesFunc: serverTestCases,
+		},
+		{
+			name: "unit page",
+			experiments: []string{
+				internal.ExperimentUnitPage,
+				internal.ExperimentFrontendRenderDoc,
+				internal.ExperimentGetUnitWithOneQuery,
+				internal.ExperimentInsertPackageSource,
+				internal.ExperimentSidenav,
+			},
+			testCasesFunc: unitPageTestCases,
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {

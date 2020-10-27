@@ -107,6 +107,35 @@ func DirectoryHeader(p *Page, versionedURL bool) htmlcheck.Checker {
 		moduleInHeader(p, true))
 }
 
+func UnitHeader(p *Page, versionedURL bool) htmlcheck.Checker {
+	urlPath := packageURLPath(p, versionedURL)
+	curBreadcrumb := path.Base(p.Suffix)
+	if p.Suffix == "" {
+		curBreadcrumb = p.ModulePath
+	}
+	return in("header.UnitHeader",
+		in("span.UnitHeader-breadcrumbItem:last-child", text(curBreadcrumb)),
+		in("div.UnitHeader-detail",
+			in("span.UnitHeader-detailItem:nth-child(1)",
+				in("a",
+					href("?tab=versions"),
+					exactText("Version "+p.Version))),
+			in("span.UnitHeader-detailItem:nth-child(2)",
+				text("0 hours ago")),
+			in("span.UnitHeader-detailItem:nth-child(3)",
+				in("a",
+					href(urlPath+"?tab=licenses"),
+					text(p.LicenseType))),
+			in("span.UnitHeader-detailItem:nth-child(4)",
+				in("a",
+					href(urlPath+"?tab=imports"),
+					text("[0-9]+ Imports"))),
+			in("span.UnitHeader-detailItem:nth-child(5)",
+				in("a",
+					href(urlPath+"?tab=importedby"),
+					text(`[0-9]+ Imported by`)))))
+}
+
 // SubdirectoriesDetails checks the detail section of a subdirectories tab.
 // If firstHref isn't empty, it and firstText should exactly match
 // href and text of the first link in the Directories table.
