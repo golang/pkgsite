@@ -5,10 +5,10 @@
 package dochtml
 
 const legacyTmplSidenav = `
-{{if or .Doc .Consts .Vars .Funcs .Types .Examples.List}}
+{{- if or .Doc .Consts .Vars .Funcs .Types .Examples.List}}
 	` + IdentifierSidenavStart + `
 		<ul role="tree" aria-label="Outline">
-			{{if or .Doc (index .Examples.Map "")}}
+			{{- if or .Doc (index .Examples.Map "") }}
 				<li class="DocNav-overview" role="none">
 					<a href="#pkg-overview" role="treeitem" aria-level="1" tabindex="0">Overview</a>
 				</li>
@@ -17,86 +17,86 @@ const legacyTmplSidenav = `
 				<li class="DocNav-index" role="none">
 					<a href="#pkg-index" role="treeitem" aria-level="1" tabindex="0">Index</a>
 				</li>
-			{{end}}
-			{{if .Examples.List}}
+			{{- end}}
+			{{- if .Examples.List}}
 				<li class="DocNav-examples" role="none">
 					<a href="#pkg-examples" role="treeitem" aria-level="1" tabindex="-1">Examples</a>
 				</li>
-			{{end}}
-			{{if .Consts}}
+			{{- end}}
+			{{- if .Consts}}
 				<li class="DocNav-constants" role="none">
 					<a href="#pkg-constants" role="treeitem" aria-level="1" tabindex="-1">Constants</a>
 				</li>
-			{{end}}
-			{{if .Vars}}
+			{{- end}}
+			{{- if .Vars}}
 				<li class="DocNav-variables" role="none">
 					<a href="#pkg-variables" role="treeitem" aria-level="1" tabindex="-1">Variables</a>
 				</li>
-			{{end}}
+			{{- end}}
 
-			{{if .Funcs}}
+			{{- if .Funcs}}
 				<li class="DocNav-functions" role="none">
 					<span class="DocNav-groupLabel" role="treeitem" aria-expanded="true" aria-level="1" aria-owns="nav-group-functions" tabindex="-1">Functions</span>
 					<ul role="group" id="nav-group-functions">
-						{{range .Funcs}}
+						{{- range .Funcs}}
 							<li role="none">
 								<a href="#{{.Name}}" title="{{render_short_synopsis .Decl}}" role="treeitem" aria-level="2" tabindex="-1">{{render_short_synopsis .Decl}}</a>
 							</li>
-						{{end}}
+						{{- end}}
 					</ul>
 				</li>
-			{{end}}
+			{{- end}}
 
-			{{if .Types}}
+			{{- if .Types}}
 				<li class="DocNav-types" role="none">
 					<span class="DocNav-groupLabel" role="treeitem" aria-expanded="true" aria-level="1" aria-owns="nav-group-types" tabindex="-1">Types</span>
 					<ul role="group" id="nav-group-types">
-						{{range .Types}}
-							{{$tname := .Name}}
+						{{- range .Types}}
+							{{- $tname := .Name}}
 							<li role="none">
-								{{if or .Funcs .Methods}}
-									{{$navgroupname := (printf "nav.group.%s" $tname)}}
-									{{$navgroupid := (safe_id $navgroupname)}}
+								{{- if or .Funcs .Methods}}
+									{{- $navgroupname := (printf "nav.group.%s" $tname)}}
+									{{- $navgroupid := (safe_id $navgroupname)}}
 									<a class="DocNav-groupLabel" href="#{{$tname}}" role="treeitem" aria-expanded="true" aria-level="2" data-aria-owns="{{$navgroupid}}" tabindex="-1">type {{$tname}}</a>
 									<ul role="group" id="{{$navgroupid}}">
-										{{range .Funcs}}
+										{{- range .Funcs}}
 											<li role="none">
 												<a href="#{{.Name}}" title="{{render_short_synopsis .Decl}}" role="treeitem" aria-level="3" tabindex="-1">{{render_short_synopsis .Decl}}</a>
 											</li>
-										{{end}}
-										{{range .Methods}}
+										{{- end}}
+										{{- range .Methods}}
 											<li role="none">
 												<a href="#{{$tname}}.{{.Name}}" title="{{render_short_synopsis .Decl}}" role="treeitem" aria-level="3" tabindex="-1">{{render_short_synopsis .Decl}}</a>
 											</li>
-										{{end}}
+										{{- end}}
 									</ul>
-								{{else}}
+								{{- else}}
 									<a href="#{{$tname}}" role="treeitem" aria-level="2" tabindex="-1">type {{$tname}}</a>
-								{{end}} {{/* if or .Funcs .Methods */}}
+								{{- end -}} {{/* if or .Funcs .Methods */}}
 							</li>
-						{{end}} {{/* range .Types */}}
+						{{- end -}} {{/* range .Types */}}
 					</ul>
 				</li>
-			{{end}}
+			{{- end}}
 
-			{{if .Notes}}
+			{{- if .Notes}}
 				<li class="DocNav-notes" role="none">
 					<span class="DocNav-groupLabel" role="treeitem" aria-expanded="true" aria-level="1" aria-owns="nav-group-notes" tabindex="-1">Notes</span>
 					<ul role="group" id="nav-group-notes">
-						{{range $marker, $item := .Notes}}
+						{{- range $marker, $item := .Notes}}
 							<li role="none">
 								<a href="#pkg-note-{{$marker}}" role="treeitem" aria-level="2" tabindex="-1">{{$marker}}s</a>
 							</li>
-						{{end}}
+						{{- end}}
 					</ul>
 				</li>
-			{{end}}
+			{{- end}}
 
-			{{if .Filenames}}
+			{{- if .Filenames}}
 				<li class="DocNav-files" role="none">
 					<a href="#pkg-files" role="treeitem" aria-level="1" tabindex="-1">Package Files</a>
 				</li>
-			{{end}}
+			{{- end}}
 		</ul>
 	</nav>
 	` + IdentifierSidenavMobileStart + `
@@ -108,49 +108,49 @@ const legacyTmplSidenav = `
 		</label>
 		<select id="DocNavMobile-select" class="DocNavMobile-select">
 			<option value="">Outline</option>
-			{{if or .Doc (index .Examples.Map "")}}
+			{{- if or .Doc (index .Examples.Map "")}}
 				<option value="pkg-overview">Overview</option>
-			{{end}}
-			{{if .Examples.List}}
+			{{- end}}
+			{{- if .Examples.List}}
 				<option value="pkg-examples">Examples</option>
-			{{end}}
-			{{if .Consts}}
+			{{- end}}
+			{{- if .Consts}}
 				<option value="pkg-constants">Constants</option>
-			{{end}}
-			{{if .Vars}}
+			{{- end}}
+			{{- if .Vars}}
 				<option value="pkg-variables">Variables</option>
-			{{end}}
+			{{- end}}
 
-			{{if .Funcs}}
+			{{- if .Funcs}}
 				<optgroup label="Functions">
-					{{range .Funcs}}
+					{{- range .Funcs}}
 						<option value="{{.Name}}">{{render_short_synopsis .Decl}}</option>
-					{{end}}
+					{{- end}}
 				</optgroup>
-			{{end}}
+			{{- end}}
 
-			{{if .Types}}
+			{{- if .Types}}
 				<optgroup label="Types">
-					{{range .Types}}
-						{{$tname := .Name}}
+					{{- range .Types}}
+						{{- $tname := .Name}}
 						<option value="{{$tname}}">type {{$tname}}</option>
-						{{range .Funcs}}
+						{{- range .Funcs}}
 							<option value="{{.Name}}">{{render_short_synopsis .Decl}}</option>
-						{{end}}
-						{{range .Methods}}
+						{{- end}}
+						{{- range .Methods}}
 							<option value="{{$tname}}.{{.Name}}">{{render_short_synopsis .Decl}}</option>
-						{{end}}
-					{{end}} {{/* range .Types */}}
+						{{- end}}
+					{{- end -}} {{/* range .Types */}}
 				</optgroup>
-			{{end}}
+			{{- end}}
 
-			{{if .Notes}}
+			{{- if .Notes}}
 				<optgroup label="Notes">
-					{{range $marker, $item := .Notes}}
+					{{- range $marker, $item := .Notes}}
 						<option value="pkg-note-{{$marker}}">{{$marker}}s</option>
-					{{end}}
+					{{- end}}
 				</optgroup>
-			{{end}}
+			{{- end}}
 		</select>
 	` + IdentifierSidenavEnd + `
 {{end}}`

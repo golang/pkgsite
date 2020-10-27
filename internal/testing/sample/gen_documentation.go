@@ -49,7 +49,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	f, err := os.Create("documentation.gen.go")
+	const filename = "documentation.gen.go"
+	f, err := os.Create(filename)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -82,4 +83,5 @@ var (
 	if err := f.Close(); err != nil {
 		log.Fatal(err)
 	}
+	fmt.Printf("Wrote %s\n", filename)
 }

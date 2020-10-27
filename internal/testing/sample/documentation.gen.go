@@ -16,112 +16,65 @@ var (
 	DocumentationHTML = testconversions.MakeHTMLForTest(`
 	<nav class="DocNav js-sideNav">
 		<ul role="tree" aria-label="Outline">
-			
 				<li class="DocNav-overview" role="none">
 					<a href="#pkg-overview" role="treeitem" aria-level="1" tabindex="0">Overview</a>
 				</li>
 			<li class="DocNav-index" role="none">
 					<a href="#pkg-index" role="treeitem" aria-level="1" tabindex="0">Index</a>
 				</li>
-			
-			
 				<li class="DocNav-examples" role="none">
 					<a href="#pkg-examples" role="treeitem" aria-level="1" tabindex="-1">Examples</a>
 				</li>
-			
-			
 				<li class="DocNav-constants" role="none">
 					<a href="#pkg-constants" role="treeitem" aria-level="1" tabindex="-1">Constants</a>
 				</li>
-			
-			
 				<li class="DocNav-variables" role="none">
 					<a href="#pkg-variables" role="treeitem" aria-level="1" tabindex="-1">Variables</a>
 				</li>
-			
-
-			
 				<li class="DocNav-functions" role="none">
 					<span class="DocNav-groupLabel" role="treeitem" aria-expanded="true" aria-level="1" aria-owns="nav-group-functions" tabindex="-1">Functions</span>
 					<ul role="group" id="nav-group-functions">
-						
 							<li role="none">
 								<a href="#F" title="F(t)" role="treeitem" aria-level="2" tabindex="-1">F(t)</a>
 							</li>
-						
 					</ul>
 				</li>
-			
-
-			
 				<li class="DocNav-types" role="none">
 					<span class="DocNav-groupLabel" role="treeitem" aria-expanded="true" aria-level="1" aria-owns="nav-group-types" tabindex="-1">Types</span>
 					<ul role="group" id="nav-group-types">
-						
-							
 							<li role="none">
-								
 									<a href="#I" role="treeitem" aria-level="2" tabindex="-1">type I</a>
-								 
 							</li>
-						
-							
 							<li role="none">
-								
 									<a href="#S1" role="treeitem" aria-level="2" tabindex="-1">type S1</a>
-								 
 							</li>
-						
-							
 							<li role="none">
-								
 									<a href="#S2" role="treeitem" aria-level="2" tabindex="-1">type S2</a>
-								 
 							</li>
-						
-							
 							<li role="none">
-								
-									
-									
 									<a class="DocNav-groupLabel" href="#T" role="treeitem" aria-expanded="true" aria-level="2" data-aria-owns="nav.group.T" tabindex="-1">type T</a>
 									<ul role="group" id="nav.group.T">
-										
 											<li role="none">
 												<a href="#TF" title="TF()" role="treeitem" aria-level="3" tabindex="-1">TF()</a>
 											</li>
-										
-										
 											<li role="none">
 												<a href="#T.M" title="M()" role="treeitem" aria-level="3" tabindex="-1">M()</a>
 											</li>
-										
 									</ul>
-								 
 							</li>
-						 
 					</ul>
 				</li>
-			
-
-			
 				<li class="DocNav-notes" role="none">
 					<span class="DocNav-groupLabel" role="treeitem" aria-expanded="true" aria-level="1" aria-owns="nav-group-notes" tabindex="-1">Notes</span>
 					<ul role="group" id="nav-group-notes">
-						
 							<li role="none">
 								<a href="#pkg-note-BUG" role="treeitem" aria-level="2" tabindex="-1">BUGs</a>
 							</li>
-						
 					</ul>
 				</li>
-			
-
-			
 				<li class="DocNav-files" role="none">
 					<a href="#pkg-files" role="treeitem" aria-level="1" tabindex="-1">Package Files</a>
 				</li>
-			
 		</ul>
 	</nav>
 	<nav class="DocNavMobile js-mobileNav">
@@ -133,64 +86,24 @@ var (
 		</label>
 		<select id="DocNavMobile-select" class="DocNavMobile-select">
 			<option value="">Outline</option>
-			
 				<option value="pkg-overview">Overview</option>
-			
-			
 				<option value="pkg-examples">Examples</option>
-			
-			
 				<option value="pkg-constants">Constants</option>
-			
-			
 				<option value="pkg-variables">Variables</option>
-			
-
-			
 				<optgroup label="Functions">
-					
 						<option value="F">F(t)</option>
-					
 				</optgroup>
-			
-
-			
 				<optgroup label="Types">
-					
-						
 						<option value="I">type I</option>
-						
-						
-					
-						
 						<option value="S1">type S1</option>
-						
-						
-					
-						
 						<option value="S2">type S2</option>
-						
-						
-					
-						
 						<option value="T">type T</option>
-						
 							<option value="TF">TF()</option>
-						
-						
 							<option value="T.M">M()</option>
-						
-					 
 				</optgroup>
-			
-
-			
 				<optgroup label="Notes">
-					
 						<option value="pkg-note-BUG">BUGs</option>
-					
 				</optgroup>
-			
 		</select>
 	</nav>
 
