@@ -100,7 +100,7 @@ const tmplBody = `
         {{- range .Funcs -}}
         <div class="Documentation-function">
             {{- $id := safe_id .Name -}}
-            <h4 tabindex="-1" id="{{$id}}" data-kind="function" class="Documentation-functionHeader">func {{source_link .Name .Decl}} <a href="#{{$id}}">¶</a></h4>{{"\n"}}
+            <h4 tabindex="-1" id="{{$id}}" data-kind="function" class="Documentation-functionHeader">func {{source_link .Name .Decl}} <a class="Documentation-idLink" href="#{{$id}}">¶</a></h4>{{"\n"}}
             {{- $out := render_decl .Doc .Decl -}}
             {{- $out.Decl -}}
             {{- $out.Doc -}}
@@ -120,7 +120,7 @@ const tmplBody = `
 		<div class="Documentation-type">
 			{{- $tname := .Name -}}
 			{{- $id := safe_id .Name -}}
-			<h4 tabindex="-1" id="{{$id}}" data-kind="type" class="Documentation-typeHeader">type {{source_link .Name .Decl}} <a href="#{{$id}}">¶</a></h4>{{"\n"}}
+			<h4 tabindex="-1" id="{{$id}}" data-kind="type" class="Documentation-typeHeader">type {{source_link .Name .Decl}} <a class="Documentation-idLink" href="#{{$id}}">¶</a></h4>{{"\n"}}
 			{{- $out := render_decl .Doc .Decl -}}
 			{{- $out.Decl -}}
 			{{- $out.Doc -}}
@@ -148,7 +148,7 @@ const tmplBody = `
 			{{- range .Funcs -}}
 			<div class="Documentation-typeFunc">
 				{{- $id := safe_id .Name -}}
-				<h4 tabindex="-1" id="{{$id}}" data-kind="function" class="Documentation-typeFuncHeader">func {{source_link .Name .Decl}} <a href="#{{$id}}">¶</a></h4>{{"\n"}}
+				<h4 tabindex="-1" id="{{$id}}" data-kind="function" class="Documentation-typeFuncHeader">func {{source_link .Name .Decl}} <a class="Documentation-idLink" href="#{{$id}}">¶</a></h4>{{"\n"}}
 				{{- $out := render_decl .Doc .Decl -}}
 				{{- $out.Decl -}}
 				{{- $out.Doc -}}
@@ -161,7 +161,7 @@ const tmplBody = `
 			<div class="Documentation-typeMethod">
 				{{- $name := (printf "%s.%s" $tname .Name) -}}
 				{{- $id := (safe_id $name) -}}
-				<h4 tabindex="-1" id="{{$id}}" data-kind="method" class="Documentation-typeMethodHeader">func ({{.Recv}}) {{source_link .Name .Decl}} <a href="#{{$id}}">¶</a></h4>{{"\n"}}
+				<h4 tabindex="-1" id="{{$id}}" data-kind="method" class="Documentation-typeMethodHeader">func ({{.Recv}}) {{source_link .Name .Decl}} <a class="Documentation-idLink" href="#{{$id}}">¶</a></h4>{{"\n"}}
 				{{- $out := render_decl .Doc .Decl -}}
 				{{- $out.Decl -}}
 				{{- $out.Doc -}}

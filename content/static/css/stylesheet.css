@@ -1200,7 +1200,7 @@ pre {
 }
 .Documentation h2 a,
 .Documentation h3 a,
-.Documentation h4 a,
+.Documentation h4 a.Documentation-idLink,
 .Documentation summary a {
   opacity: 0;
 }
