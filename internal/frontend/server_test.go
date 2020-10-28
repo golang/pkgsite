@@ -946,7 +946,6 @@ func TestServer(t *testing.T) {
 				internal.ExperimentUnitPage,
 				internal.ExperimentFrontendRenderDoc,
 				internal.ExperimentGetUnitWithOneQuery,
-				internal.ExperimentInsertPackageSource,
 				internal.ExperimentSidenav,
 			},
 			testCasesFunc: unitPageTestCases,

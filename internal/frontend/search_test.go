@@ -43,6 +43,7 @@ func TestFetchSearchPage(t *testing.T) {
 					},
 					Documentation: &internal.Documentation{
 						Synopsis: "foo is a package.",
+						Source:   []byte{},
 					},
 					Readme: &internal.Readme{
 						Filepath: "readme",
@@ -71,6 +72,7 @@ func TestFetchSearchPage(t *testing.T) {
 					},
 					Documentation: &internal.Documentation{
 						Synopsis: "bar is used by foo.",
+						Source:   []byte{},
 					},
 					Readme: &internal.Readme{
 						Filepath: "readme",

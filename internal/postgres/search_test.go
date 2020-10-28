@@ -165,16 +165,18 @@ func importGraph(popularPath, importerModule string, importerCount int) []*inter
 		for i := 0; i < importerCount; i++ {
 			name := fmt.Sprintf("importer%d", i)
 			fullPath := importerModule + "/" + name
-			sample.AddUnit(m, &internal.Unit{
+			u := &internal.Unit{
 				UnitMeta: *sample.UnitMeta(fullPath, importerModule, m.Version, name, true),
 				Documentation: &internal.Documentation{
 					Synopsis: sample.Synopsis,
-					HTML:     sample.DocumentationHTML,
 					GOOS:     sample.GOOS,
 					GOARCH:   sample.GOARCH,
+					HTML:     sample.DocumentationHTML,
+					Source:   []byte{},
 				},
 				Imports: []string{popularPath},
-			})
+			}
+			sample.AddUnit(m, u)
 			mods = append(mods, m)
 		}
 	}
@@ -294,7 +296,7 @@ func TestSearch(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.label, func(t *testing.T) {
 			defer ResetTestDB(testDB, t)
-			ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 			defer cancel()
 			for _, m := range test.modules {
 				if err := testDB.InsertModule(ctx, m); err != nil {
@@ -419,6 +421,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 			},
 			Documentation: &internal.Documentation{
 				Synopsis: "Package cloud contains a library and tools for open cloud development in Go. The Go Cloud Development Kit (Go CDK)",
+				Source:   []byte{},
 			},
 		}
 
@@ -431,6 +434,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 			},
 			Documentation: &internal.Documentation{
 				Synopsis: "Package client-go implements a Go client for Kubernetes.",
+				Source:   []byte{},
 			},
 		}
 

@@ -60,11 +60,11 @@ func TestFrontendDocRender(t *testing.T) {
 
 	// Process with saving the source.
 	processVersions(
-		experiment.NewContext(context.Background(), internal.ExperimentUnitPage, internal.ExperimentRemoveUnusedAST, internal.ExperimentInsertPackageSource),
+		experiment.NewContext(context.Background(), internal.ExperimentUnitPage, internal.ExperimentRemoveUnusedAST),
 		t, []*proxy.Module{m})
 
 	workerDoc := getDoc(t, m.ModulePath)
-	frontendDoc := getDoc(t, m.ModulePath, internal.ExperimentUnitPage, internal.ExperimentFrontendRenderDoc, internal.ExperimentInsertPackageSource)
+	frontendDoc := getDoc(t, m.ModulePath, internal.ExperimentUnitPage, internal.ExperimentFrontendRenderDoc)
 	if diff := cmp.Diff(workerDoc, frontendDoc); diff != "" {
 		t.Errorf("mismatch (-worker, +frontend):\n%s", diff)
 	}

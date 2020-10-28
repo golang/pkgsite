@@ -123,12 +123,9 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 
 	// Encode before rendering: both operations mess with the AST, but Encode restores
 	// it enough to make Render work.
-	var src []byte
-	if experiment.IsActive(ctx, internal.ExperimentInsertPackageSource) {
-		src, err = docPkg.Encode(ctx)
-		if err != nil {
-			return nil, err
-		}
+	src, err := docPkg.Encode(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	synopsis, imports, docHTML, err := docPkg.Render(ctx, innerPath, sourceInfo, modInfo, goos, goarch)

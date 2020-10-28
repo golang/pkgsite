@@ -24,7 +24,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
@@ -315,7 +314,7 @@ func insertUnits(ctx context.Context, db *database.DB, m *internal.Module, modul
 		if d.Documentation != nil && d.Documentation.HTML.String() == internal.StringFieldMissing {
 			return errors.New("insertUnits: package missing Documentation.HTML")
 		}
-		if d.Documentation != nil && experiment.IsActive(ctx, internal.ExperimentInsertPackageSource) {
+		if d.Documentation != nil {
 			if d.Documentation.Source == nil {
 				return fmt.Errorf("insertUnits: unit %q missing source files", d.Path)
 			}
@@ -394,16 +393,10 @@ func insertUnits(ctx context.Context, db *database.DB, m *internal.Module, modul
 				continue
 			}
 			id := pathToID[path]
-			docValues = append(docValues, id, doc.GOOS, doc.GOARCH, doc.Synopsis, makeValidUnicode(doc.HTML.String()))
-			if experiment.IsActive(ctx, internal.ExperimentInsertPackageSource) {
-				docValues = append(docValues, doc.Source)
-			}
+			docValues = append(docValues, id, doc.GOOS, doc.GOARCH, doc.Synopsis, makeValidUnicode(doc.HTML.String()), doc.Source)
 		}
 		uniqueCols := []string{"path_id", "goos", "goarch"}
-		docCols := append(uniqueCols, "synopsis", "html")
-		if experiment.IsActive(ctx, internal.ExperimentInsertPackageSource) {
-			docCols = append(docCols, "source")
-		}
+		docCols := append(uniqueCols, "synopsis", "html", "source")
 		if err := db.BulkUpsert(ctx, "documentation", docCols, docValues, uniqueCols); err != nil {
 			return err
 		}
