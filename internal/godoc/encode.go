@@ -423,7 +423,7 @@ func fsetFromBytes(data []byte) (*token.FileSet, error) {
 	return fset, nil
 }
 
-//go:generate go run ./gen
+//go:generate go run gen_ast.go
 
 // Used by the gen program to generate encodings for unexported types.
 var TypesToGenerate = []interface{}{&encPackage{}}

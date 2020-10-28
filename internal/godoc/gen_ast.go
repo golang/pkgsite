@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// +build ignore
+
 package main
 
 import (
@@ -74,9 +76,7 @@ func main() {
 	// write their names here, but the godoc package can provide us with values of those types,
 	// which the reflect package can examine.
 	types = append(types, godoc.TypesToGenerate...)
-	// This is run by a "go generate" command in the internal/godoc directory, so that
-	// is the current working directory. That is where we want the output file to be.
-	const filename = "encode_ast.go"
+	const filename = "encode_ast.gen.go"
 	if err := codec.GenerateFile(filename, "godoc", types...); err != nil {
 		log.Fatal(err)
 	}
