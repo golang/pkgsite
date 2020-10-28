@@ -8,15 +8,15 @@
   <header class="UnitHeader" role="complementary"
       aria-label="{{if eq .PageType "std"}}module{{else}}{{.PageType}}{{end}} {{.Title}} information">
     <div class="UnitHeader-container">
-      <div class="UnitHeader-breadcrumb">
+      <div class="UnitHeader-breadcrumb" data-test-id="UnitHeader-breadcrumb">
         {{with .Breadcrumb}}
           {{range .Links}}
-            <span class="UnitHeader-breadcrumbItem">
+            <span class="UnitHeader-breadcrumbItem" data-test-id="UnitHeader-breadcrumbItem">
               <a href="{{.Href}}">{{.Body}}</a>
             </span>
           {{end}}
           <span class="UnitHeader-breadcrumbItem">
-            {{.Current}}
+            <span data-test-id="UnitHeader-breadcrumbCurrent">{{.Current}}</span>
             {{if .CopyData}}
               <button class="CopyToClipboardButton js-copyToClipboard"
                   title="Copy path to clipboard.&#10;&#10;{{.CopyData}}"
@@ -29,7 +29,7 @@
         {{end}}
       </div>
       <div class="UnitHeader-heading">
-        <h1 class="UnitHeader-title">
+        <h1 class="UnitHeader-title" data-test-id="UnitHeader-title">
           {{.Title}}
         </h1>
         {{range .PageLabels}}
@@ -45,7 +45,7 @@
       <div class="js-fixedHeaderSentinel"></div>
       {{if (eq .SelectedTab.Name "")}}
         <div class="UnitHeader-detail">
-          <span class="UnitHeader-detailItem">
+          <span class="UnitHeader-detailItem" data-test-id="UnitHeader-version">
             <img class="UnitHeader-detailItemLarge" height="16px" width="16px" src="/static/img/pkg-icon-arrowBranch_16x16.svg" alt="">
             <a href="?tab=versions">Version {{.DisplayVersion}}</a>
             <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
@@ -55,24 +55,24 @@
               <a href="{{.LatestURL}}">Go to latest</a>
             </div>
           </span>
-          <span class="UnitHeader-detailItem">
+          <span class="UnitHeader-detailItem" data-test-id="UnitHeader-commitTime">
             <img height="16px" width="16px" src="/static/img/pkg-icon-circularArrows_16x16.svg" alt="">
             {{.Details.CommitTime}}
           </span>
-          <span class="UnitHeader-detailItem">
+          <span class="UnitHeader-detailItem" data-test-id="UnitHeader-licenses">
             <img height="16px" width="16px" src="/static/img/pkg-icon-scale_16x16.svg" alt="">
-            {{if .Details.Licenses}}
-              {{if .Unit.IsRedistributable}}
-                <a href="{{$.URLPath}}?tab=licenses">
-                  {{range $i, $e := .Details.Licenses}}
-                    {{if $i}}, {{end}} {{$e.Type}}
-                  {{end}}
+            {{- if .Details.Licenses -}}
+              {{- if .Unit.IsRedistributable -}}
+                <a href="{{$.URLPath}}?tab=licenses" data-test-id="UnitHeader-license">
+                  {{- range $i, $e := .Details.Licenses -}}
+                    {{if $i}}, {{end}}{{$e.Type}}
+                  {{- end -}}
                 </a>
               {{else}}
                 <span>
-                  {{range $i, $e := .Details.Licenses}}
+                  {{- range $i, $e := .Details.Licenses -}}
                     {{if $i}}, {{end}} {{$e.Type}}
-                  {{end}}
+                  {{- end -}}
                 </span>
                 <a href="/license-policy" class="Disclaimer-link"><em>not legal advice</em></a>
               {{end}}
@@ -82,13 +82,13 @@
             {{end}}
           </span>
           {{if .Unit.IsPackage}}
-            <span class="UnitHeader-detailItem">
+            <span class="UnitHeader-detailItem" data-test-id="UnitHeader-imports">
               <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg" alt="">
               <a href="{{$.URLPath}}?tab=imports">
                 {{.Details.NumImports}} <span>Imports</span>
               </a>
             </span>
-            <span class="UnitHeader-detailItem">
+            <span class="UnitHeader-detailItem" data-test-id="UnitHeader-importedby">
               <img height="16px" width="16px" src="/static/img/pkg-icon-boxClosed_16x16.svg" alt="">
               <a href="{{$.URLPath}}?tab=importedby">
                 {{.Details.ImportedByCount}} <span>Imported by</span>

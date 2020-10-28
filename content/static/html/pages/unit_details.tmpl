@@ -9,14 +9,14 @@
 {{end}}
 
 {{define "unit_content"}}
-  <div class="UnitDetails">
+  <div class="UnitDetails" data-test-id="UnitDetails">
     {{.Details.MobileOutline}}
     <div class="UnitDetails-outline" role="navigation"
         aria-label="{{if eq .PageType "std"}}module
         {{else}}{{.PageType}}{{end}}details navigation">
       {{block "unit_outline" .Details}}{{end}}
     </div>
-    <div class="UnitDetails-content" role="main">
+    <div class="UnitDetails-content" role="main" data-test-id="UnitDetails-content">
       {{if .Details.Readme.String}}
         {{block "unit_readme" .Details}}{{end}}
       {{end}}
