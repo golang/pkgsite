@@ -271,11 +271,15 @@ func exportedFields(t reflect.Type, oldNames []string) []field {
 	// existing ones.
 	for i := 0; i < t.NumField(); i++ {
 		f := t.Field(i)
-		if f.PkgPath != "" { // A field is exported if its PkgPath is empty.
+		if f.PkgPath != "" { // Ignore unexported fields. A field is exported if its PkgPath is empty.
 			continue
 		}
 		// Ignore a field if it has a struct tag with "-", like encoding/json.
 		if tag, _ := f.Tag.Lookup(fieldTagKey); tag == "-" {
+			continue
+		}
+		// Ignore fields of function and channel type.
+		if f.Type.Kind() == reflect.Chan || f.Type.Kind() == reflect.Func {
 			continue
 		}
 		if _, ok := fieldPos[f.Name]; !ok {
