@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"math"
 	"reflect"
-	"runtime"
 )
 
 // An Encoder encodes Go values into a sequence of bytes.
@@ -33,36 +32,39 @@ func NewEncoder() *Encoder {
 
 // Encode encodes x.
 func (e *Encoder) Encode(x interface{}) (err error) {
-	defer func() { handlePanic(&err, recover()) }()
+	defer handlePanic(&err)
 	e.EncodeAny(x)
 	return nil
 }
 
-func handlePanic(errp *error, recovered interface{}) {
-	if recovered == nil {
+func handlePanic(errp *error) {
+	r := recover()
+	if r == nil {
 		// No panic; do nothing.
 		return
 	}
-	// If the panic is from the Go runtime, re-panic.
-	if _, ok := recovered.(runtime.Error); ok {
-		panic(recovered)
+	// If the panic is not from this package, re-panic.
+	cerr, ok := r.(codecError)
+	if !ok {
+		panic(r)
 	}
-	// If the panic value is any other error, set errp
-	// and return normally.
-	if err, ok := recovered.(error); ok {
-		*errp = err
-		return
-	}
-	// Panic on anything else.
-	panic(recovered)
+	// Otherwise, set errp and return normally.
+	*errp = cerr.err
+	return
 }
 
-func (e *Encoder) fail(err error) {
-	panic(err)
+// codecError wraps errors from this package so handlePanic
+// can distinguish them.
+type codecError struct {
+	err error
 }
 
-func (e *Encoder) failf(format string, args ...interface{}) {
-	e.fail(fmt.Errorf(format, args...))
+func fail(err error) {
+	panic(codecError{err})
+}
+
+func failf(format string, args ...interface{}) {
+	fail(fmt.Errorf(format, args...))
 }
 
 // Bytes returns the encoded byte slice.
@@ -91,23 +93,15 @@ func NewDecoder(data []byte) *Decoder {
 
 // Decode decodes a value encoded with Encoder.Encode.
 func (d *Decoder) Decode() (_ interface{}, err error) {
-	defer func() { handlePanic(&err, recover()) }()
+	defer handlePanic(&err)
 	if d.typeInfos == nil {
 		d.decodeInitial()
 	}
 	return d.DecodeAny(), nil
 }
 
-func (d *Decoder) fail(err error) {
-	panic(err)
-}
-
-func (d *Decoder) failf(format string, args ...interface{}) {
-	d.fail(fmt.Errorf(format, args...))
-}
-
-func (d *Decoder) badcode(c byte) {
-	d.failf("bad code: %d", c)
+func badcode(c byte) {
+	failf("bad code: %d", c)
 }
 
 //////////////// Reading From and Writing To the Buffer
@@ -223,10 +217,10 @@ func (d *Decoder) DecodeUint() uint64 {
 		case 8:
 			return d.readUint64()
 		default:
-			d.failf("DecodeUint: bad length %d", n)
+			failf("DecodeUint: bad length %d", n)
 		}
 	default:
-		d.badcode(b)
+		badcode(b)
 	}
 	return 0
 }
@@ -262,7 +256,7 @@ func (e *Encoder) encodeLen(n int) {
 // decodeLen decodes the length of a byte sequence.
 func (d *Decoder) decodeLen() int {
 	if b := d.readByte(); b != nBytesCode {
-		d.badcode(b)
+		badcode(b)
 	}
 	return int(d.DecodeUint())
 }
@@ -308,7 +302,7 @@ func (d *Decoder) DecodeBool() bool {
 	case 1:
 		return true
 	default:
-		d.failf("bad bool: %d", b)
+		failf("bad bool: %d", b)
 		return false
 	}
 }
@@ -344,7 +338,7 @@ func (d *Decoder) StartList() int {
 	case nValuesCode:
 		return int(d.DecodeUint())
 	default:
-		d.badcode(b)
+		badcode(b)
 		return 0
 	}
 }
@@ -388,7 +382,7 @@ func (d *Decoder) StartStruct() (bool, interface{}) {
 	case startCode:
 		return true, nil
 	default:
-		d.badcode(b)
+		badcode(b)
 		return false, nil // unreached, needed for compiler
 	}
 }
@@ -451,7 +445,7 @@ func (d *Decoder) skip() {
 		}
 		d.readByte() // consume the endCode byte
 	default:
-		d.badcode(b)
+		badcode(b)
 	}
 }
 
@@ -469,7 +463,7 @@ func (e *Encoder) EncodeAny(x interface{}) {
 	t := reflect.TypeOf(x)
 	ti := typeInfosByType[t]
 	if ti == nil {
-		e.failf("unregistered type %s", t)
+		failf("unregistered type %s", t)
 	}
 	// Assign a number to the type if we haven't already.
 	num, ok := e.typeNums[t]
@@ -493,11 +487,11 @@ func (d *Decoder) DecodeAny() interface{} {
 	// Otherwise, we should have a two-item list: type number and value.
 	n := d.StartList()
 	if n != 2 {
-		d.failf("DecodeAny: bad list length %d", n)
+		failf("DecodeAny: bad list length %d", n)
 	}
 	num := d.DecodeUint()
 	if num >= uint64(len(d.typeInfos)) {
-		d.failf("type number %d out of range", num)
+		failf("type number %d out of range", num)
 	}
 	ti := d.typeInfos[num]
 	return ti.decode(d)
@@ -529,7 +523,7 @@ func (d *Decoder) decodeInitial() {
 		name := d.DecodeString()
 		ti := typeInfosByName[name]
 		if ti == nil {
-			d.failf("unregistered type: %s", name)
+			failf("unregistered type: %s", name)
 		}
 		d.typeInfos[num] = ti
 	}
