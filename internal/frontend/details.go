@@ -309,17 +309,7 @@ func parseDetailsURLPath(urlPath string) (fullPath, modulePath, requestedVersion
 // acceptable. The given path may be a module or package path.
 func validatePathAndVersion(ctx context.Context, ds internal.DataSource, fullPath, requestedVersion string) error {
 	if !isSupportedVersion(fullPath, requestedVersion) {
-		return &serverError{
-			status: http.StatusBadRequest,
-			epage: &errorPage{
-				messageTemplate: template.MakeTrustedTemplate(`
-					<h3 class="Error-message">{{.Version}} is not a valid semantic version.</h3>
-					<p class="Error-message">
-					  To search for packages like {{.Path}}, <a href="/search?q={{.Path}}">click here</a>.
-					</p>`),
-				MessageData: struct{ Path, Version string }{fullPath, requestedVersion},
-			},
-		}
+		return invalidVersionError(fullPath, requestedVersion)
 	}
 	db, ok := ds.(*postgres.DB)
 	if !ok {
@@ -350,6 +340,9 @@ func isSupportedVersion(fullPath, requestedVersion string) bool {
 // pathNotFoundError returns a page with an option on how to
 // add a package or module to the site.
 func pathNotFoundError(fullPath, requestedVersion string) error {
+	if !isSupportedVersion(fullPath, requestedVersion) {
+		return invalidVersionError(fullPath, requestedVersion)
+	}
 	if stdlib.Contains(fullPath) {
 		return &serverError{status: http.StatusNotFound}
 	}
@@ -362,6 +355,20 @@ func pathNotFoundError(fullPath, requestedVersion string) error {
 		epage: &errorPage{
 			templateName: "fetch.tmpl",
 			MessageData:  path,
+		},
+	}
+}
+
+func invalidVersionError(fullPath, requestedVersion string) error {
+	return &serverError{
+		status: http.StatusBadRequest,
+		epage: &errorPage{
+			messageTemplate: template.MakeTrustedTemplate(`
+					<h3 class="Error-message">{{.Version}} is not a valid semantic version.</h3>
+					<p class="Error-message">
+					  To search for packages like {{.Path}}, <a href="/search?q={{.Path}}">click here</a>.
+					</p>`),
+			MessageData: struct{ Path, Version string }{fullPath, requestedVersion},
 		},
 	}
 }
