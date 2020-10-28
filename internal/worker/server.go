@@ -118,6 +118,18 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 		rmw = middleware.ErrorReporting(s.reportingClient.Report)
 	}
 
+	// Each AppEngine instance is created in response to a start request, which
+	// is an empty HTTP GET request to /_ah/start when scaling is set to manual
+	// or basic, and /_ah/warmup when scaling is automatic and min_instances is
+	// set. AppEngine sends this request to bring an instance into existence.
+	// See details for /_ah/start at
+	// https://cloud.google.com/appengine/docs/standard/go/how-instances-are-managed#startup
+	// and for /_ah/warmup at
+	// https://cloud.google.com/appengine/docs/standard/go/configuring-warmup-requests.
+	handle("/_ah/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Infof(r.Context(), "Request made to %q", r.URL.Path)
+	}))
+
 	// scheduled: poll polls the Module Index for new modules
 	// that have been published and inserts that metadata into
 	// module_version_states.

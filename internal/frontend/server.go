@@ -108,6 +108,17 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 		detailHandler = middleware.Cache("details", redisClient, detailsTTL, authValues)(detailHandler)
 		searchHandler = middleware.Cache("search", redisClient, middleware.TTL(defaultTTL), authValues)(searchHandler)
 	}
+	// Each AppEngine instance is created in response to a start request, which
+	// is an empty HTTP GET request to /_ah/start when scaling is set to manual
+	// or basic, and /_ah/warmup when scaling is automatic and min_instances is
+	// set. AppEngine sends this request to bring an instance into existence.
+	// See details for /_ah/start at
+	// https://cloud.google.com/appengine/docs/standard/go/how-instances-are-managed#startup
+	// and for /_ah/warmup at
+	// https://cloud.google.com/appengine/docs/standard/go/configuring-warmup-requests.
+	handle("/_ah/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Infof(r.Context(), "Request made to %q", r.URL.Path)
+	}))
 	handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(s.staticPath.String()))))
 	handle("/third_party/", http.StripPrefix("/third_party", http.FileServer(http.Dir(s.thirdPartyPath))))
 	handle("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
