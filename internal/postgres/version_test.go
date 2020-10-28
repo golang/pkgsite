@@ -230,6 +230,7 @@ func TestGetVersions(t *testing.T) {
 		})
 	}
 }
+
 func TestGetLatestMajorVersion(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
