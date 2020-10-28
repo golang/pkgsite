@@ -443,12 +443,16 @@ func lock(ctx context.Context, tx *database.DB, modulePath string) (err error) {
 	hasher := fnv.New64()
 	io.WriteString(hasher, modulePath) // Writing to a hash.Hash never returns an error.
 	h := int64(hasher.Sum64())
-	log.Debugf(ctx, "locking %s (%d) ...", modulePath, h)
+	if !database.QueryLoggingDisabled {
+		log.Debugf(ctx, "locking %s (%d) ...", modulePath, h)
+	}
 	// See https://www.postgresql.org/docs/11/functions-admin.html#FUNCTIONS-ADVISORY-LOCKS.
 	if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock($1)`, h); err != nil {
 		return err
 	}
-	log.Debugf(ctx, "locking %s (%d) succeeded", modulePath, h)
+	if !database.QueryLoggingDisabled {
+		log.Debugf(ctx, "locking %s (%d) succeeded", modulePath, h)
+	}
 	return nil
 }
 
