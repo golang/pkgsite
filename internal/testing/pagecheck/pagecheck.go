@@ -107,33 +107,78 @@ func DirectoryHeader(p *Page, versionedURL bool) htmlcheck.Checker {
 		moduleInHeader(p, true))
 }
 
-func UnitHeader(p *Page, versionedURL bool) htmlcheck.Checker {
+// UnitHeader checks a main page header for a unit.
+func UnitHeader(p *Page, versionedURL bool, isPackage bool) htmlcheck.Checker {
 	urlPath := packageURLPath(p, versionedURL)
 	curBreadcrumb := path.Base(p.Suffix)
 	if p.Suffix == "" {
 		curBreadcrumb = p.ModulePath
 	}
+	licenseText := p.LicenseType
+	licenseLink := urlPath + "?tab=licenses"
+	if p.LicenseType == "" {
+		licenseText = "not legal advice"
+		licenseLink = "/license-policy"
+	}
+
+	importsDetails := in("",
+		in(`[data-test-id="UnitHeader-imports"]`,
+			in("a",
+				href(urlPath+"?tab=imports"),
+				text("[0-9]+ Imports"))),
+		in(`[data-test-id="UnitHeader-importedby"]`,
+			in("a",
+				href(urlPath+"?tab=importedby"),
+				text(`[0-9]+ Imported by`))))
+	if !isPackage {
+		importsDetails = nil
+	}
+
 	return in("header.UnitHeader",
-		in("span.UnitHeader-breadcrumbItem:last-child", text(curBreadcrumb)),
-		in("div.UnitHeader-detail",
-			in("span.UnitHeader-detailItem:nth-child(1)",
-				in("a",
-					href("?tab=versions"),
-					exactText("Version "+p.Version))),
-			in("span.UnitHeader-detailItem:nth-child(2)",
-				text("0 hours ago")),
-			in("span.UnitHeader-detailItem:nth-child(3)",
-				in("a",
-					href(urlPath+"?tab=licenses"),
-					text(p.LicenseType))),
-			in("span.UnitHeader-detailItem:nth-child(4)",
-				in("a",
-					href(urlPath+"?tab=imports"),
-					text("[0-9]+ Imports"))),
-			in("span.UnitHeader-detailItem:nth-child(5)",
-				in("a",
-					href(urlPath+"?tab=importedby"),
-					text(`[0-9]+ Imported by`)))))
+		in(`[data-test-id="UnitHeader-breadcrumbCurrent"]`, text(curBreadcrumb)),
+		in(`[data-test-id="UnitHeader-title"]`, text(p.Title)),
+		in(`[data-test-id="UnitHeader-version"]`,
+			in("a",
+				href("?tab=versions"),
+				exactText("Version "+p.FormattedVersion))),
+		in(`[data-test-id="UnitHeader-commitTime"]`,
+			text("0 hours ago")),
+		in(`[data-test-id="UnitHeader-licenses"]`,
+			in("a",
+				href(licenseLink),
+				text(licenseText))),
+		importsDetails)
+}
+
+// UnitReadme checks the readme section of the main page.
+func UnitReadme() htmlcheck.Checker {
+	return in(".UnitReadme",
+		in(`[data-test-id="Unit-readmeContent"]`, text("readme")),
+	)
+}
+
+// UnitDoc checks the doc section of the main page.
+func UnitDoc() htmlcheck.Checker {
+	return in(".Documentation", text(`Overview`))
+}
+
+// UnitDirectories checks the directories section of the main page.
+// If firstHref isn't empty, it and firstText should exactly match
+// href and text of the first link in the Directories table.
+func UnitDirectories(firstHref, firstText string) htmlcheck.Checker {
+	var link htmlcheck.Checker
+	if firstHref != "" {
+		link = in(`[data-test-id="UnitDirectories-table"] a`, href(firstHref), exactText(firstText))
+	}
+	return in("",
+		in("th:nth-child(1)", text("^Path$")),
+		in("th:nth-child(2)", text("^Synopsis$")),
+		link)
+}
+
+// CanonicalURLPath checks the canonical url for the unit on the page.
+func CanonicalURLPath(path string) htmlcheck.Checker {
+	return in(".js-canonicalURLPath", attr("data-canonical-url-path", path))
 }
 
 // SubdirectoriesDetails checks the detail section of a subdirectories tab.
