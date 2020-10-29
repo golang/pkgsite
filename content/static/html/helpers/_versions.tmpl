@@ -29,7 +29,11 @@
       {{if .OtherModules}}
         <h2>Versions in this module</h2>
       {{end}}
-      {{template "module_list" .ThisModule}}
+      {{if .ThisModule}}
+        {{template "module_list" .ThisModule}}
+      {{else}}
+        <p class="Versions-message">There are no tagged versions of this module.</p>
+      {{end}}
       {{if .OtherModules}}
         <h2>Other modules containing this package</h2>
         {{template "module_list" .OtherModules}}
