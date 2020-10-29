@@ -45,8 +45,6 @@ func experimentsYAML() ([]byte, error) {
 	return yaml.Marshal(&data)
 }
 
-const filename = "experiment.yaml"
-
 func writeConfigFile(data []byte) error {
 	path, err := os.Getwd()
 	if err != nil {
