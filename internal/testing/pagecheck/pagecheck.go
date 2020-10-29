@@ -29,6 +29,7 @@ type Page struct {
 	LatestLink       string // href of "Go to latest" link
 	PackageURLFormat string // the relative package URL, with one %s for "@version"; also used for dirs
 	ModuleURL        string // the relative module URL
+	CommitTime       string
 }
 
 // Overview describes the contents of the overview tab.
@@ -125,13 +126,18 @@ func UnitHeader(p *Page, versionedURL bool, isPackage bool) htmlcheck.Checker {
 		in(`[data-test-id="UnitHeader-imports"]`,
 			in("a",
 				href(urlPath+"?tab=imports"),
-				text("[0-9]+ Imports"))),
+				text(`[0-9]+\+? Imports`))),
 		in(`[data-test-id="UnitHeader-importedby"]`,
 			in("a",
 				href(urlPath+"?tab=importedby"),
-				text(`[0-9]+ Imported by`))))
+				text(`[0-9]+\+? Imported by`))))
 	if !isPackage {
 		importsDetails = nil
+	}
+
+	commitTime := p.CommitTime
+	if commitTime == "" {
+		commitTime = "0 hours ago"
 	}
 
 	return in("header.UnitHeader",
@@ -142,7 +148,7 @@ func UnitHeader(p *Page, versionedURL bool, isPackage bool) htmlcheck.Checker {
 				href("?tab=versions"),
 				exactText("Version "+p.FormattedVersion))),
 		in(`[data-test-id="UnitHeader-commitTime"]`,
-			text("0 hours ago")),
+			text(commitTime)),
 		in(`[data-test-id="UnitHeader-licenses"]`,
 			in("a",
 				href(licenseLink),
