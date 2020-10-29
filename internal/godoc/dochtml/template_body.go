@@ -57,7 +57,7 @@ const tmplBody = `
 
 	{{- if .Examples.List -}}
 	<section class="Documentation-examples">
-		<h4 tabindex="-1" id="pkg-examples" class="Documentation-examplesHeader">Examples <a href="#pkg-examples">¶</a></h4>{{"\n" -}}
+		<h4 tabindex="-1" id="pkg-examples" class="Documentation-examplesHeader">Examples <a class="Documentation-idLink" href="#pkg-examples">¶</a></h4>{{"\n" -}}
 		<ul class="Documentation-examplesList">{{"\n" -}}
 			{{- range .Examples.List -}}
 				<li><a href="#{{.ID}}" class="js-exampleHref">{{or .ParentID "Package"}}{{with .Suffix}} ({{.}}){{end}}</a></li>{{"\n" -}}

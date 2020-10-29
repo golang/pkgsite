@@ -73,7 +73,7 @@ var docDataTmpl = template.Must(template.New("").Parse(`
 {{- range .Elements -}}
   {{- if .IsHeading -}}
     <h4 id="{{.ID}}">{{.Title}}
-    {{- if not $.DisablePermalinks}} <a href="#{{.ID}}">¶</a>{{end -}}
+    {{- if not $.DisablePermalinks}} <a class="Documentation-idLink" href="#{{.ID}}">¶</a>{{end -}}
     </h4>
   {{else if .IsPreformat -}}
     <pre>{{.Body}}</pre>
