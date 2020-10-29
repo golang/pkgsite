@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"sort"
 	"strings"
 	"time"
 
@@ -96,6 +97,7 @@ func sourceFiles(u *internal.Unit, docPkg *godoc.Package) []*File {
 			URL:  u.SourceInfo.FileURL(path.Join(internal.Suffix(u.Path, u.ModulePath), f.Name)),
 		})
 	}
+	sort.Slice(files, func(i, j int) bool { return files[i].Name < files[j].Name })
 	return files
 }
 
