@@ -48,9 +48,8 @@ func handlePanic(errp *error) {
 	if !ok {
 		panic(r)
 	}
-	// Otherwise, set errp and return normally.
+	// Otherwise, set errp.
 	*errp = cerr.err
-	return
 }
 
 // codecError wraps errors from this package so handlePanic
