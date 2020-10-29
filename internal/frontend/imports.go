@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -79,7 +81,7 @@ type ImportedByDetails struct {
 // by page.
 var importedByLimit = 20001
 
-// etchImportedByDetails fetches importers for the package version specified by
+// fetchImportedByDetails fetches importers for the package version specified by
 // path and version from the database and returns a ImportedByDetails.
 func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath, modulePath string) (*ImportedByDetails, error) {
 	db, ok := ds.(*postgres.DB)
@@ -92,12 +94,24 @@ func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath
 	if err != nil {
 		return nil, err
 	}
+
+	importedByCount := len(importedBy)
+	if experiment.IsActive(ctx, internal.ExperimentGetUnitWithOneQuery) {
+		importedByCount, err = db.GetImportedByCount(ctx, pkgPath, modulePath, importedByLimit)
+		if err != nil {
+			return nil, err
+		}
+		if importedByCount != len(importedBy) {
+			log.Errorf(ctx, "fetchImportedByDetails: mismatch on importedByCount; GetImportedByCount = %d; GetImportedBy = %d", importedByCount, len(importedBy))
+		}
+	}
+
 	// If we reached the query limit, then we don't know the total.
 	// Say so, and show one less than the limit.
 	// For example, if the limit is 101 and we get 101 results, then we'll
 	// say there are more than 100, and show the first 100.
 	totalIsExact := true
-	if len(importedBy) == importedByLimit {
+	if importedByCount == importedByLimit {
 		importedBy = importedBy[:len(importedBy)-1]
 		totalIsExact = false
 	}
@@ -105,7 +119,7 @@ func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath
 	return &ImportedByDetails{
 		ModulePath:   modulePath,
 		ImportedBy:   sections,
-		Total:        len(importedBy),
+		Total:        importedByCount,
 		TotalIsExact: totalIsExact,
 	}, nil
 }

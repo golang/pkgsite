@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
@@ -105,7 +106,7 @@ func TestFetchImportedByDetails(t *testing.T) {
 		}
 	}
 
-	for _, tc := range []struct {
+	tests := []struct {
 		pkg         *internal.Unit
 		wantDetails *ImportedByDetails
 	}{
@@ -132,21 +133,33 @@ func TestFetchImportedByDetails(t *testing.T) {
 				TotalIsExact: true,
 			},
 		},
-	} {
-		t.Run(tc.pkg.Path, func(t *testing.T) {
-			otherVersion := newModule(path.Dir(tc.pkg.Path), tc.pkg)
+	}
+
+	checkFetchImportedByDetails := func(ctx context.Context, pkg *internal.Unit, wantDetails *ImportedByDetails) {
+		got, err := fetchImportedByDetails(ctx, testDB, pkg.Path, pkg.ModulePath)
+		if err != nil {
+			t.Fatalf("fetchImportedByDetails(ctx, db, %q) = %v err = %v, want %v",
+				pkg.Path, got, err, wantDetails)
+		}
+		wantDetails.ModulePath = pkg.ModulePath
+		if diff := cmp.Diff(wantDetails, got); diff != "" {
+			t.Errorf("fetchImportedByDetails(ctx, db, %q) mismatch (-want +got):\n%s", pkg.Path, diff)
+		}
+	}
+	for _, test := range tests {
+		t.Run(test.pkg.Path, func(t *testing.T) {
+			otherVersion := newModule(path.Dir(test.pkg.Path), test.pkg)
 			otherVersion.Version = "v1.0.5"
 			pkg := otherVersion.Units[1]
-			got, err := fetchImportedByDetails(ctx, testDB, pkg.Path, pkg.ModulePath)
-			if err != nil {
-				t.Fatalf("fetchImportedByDetails(ctx, db, %q) = %v err = %v, want %v",
-					tc.pkg.Path, got, err, tc.wantDetails)
-			}
 
-			tc.wantDetails.ModulePath = pkg.ModulePath
-			if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
-				t.Errorf("fetchImportedByDetails(ctx, db, %q) mismatch (-want +got):\n%s", tc.pkg.Path, diff)
-			}
+			t.Run("no experiments "+test.pkg.Name, func(t *testing.T) {
+				checkFetchImportedByDetails(ctx, pkg, test.wantDetails)
+			})
+			t.Run("get imported by from search_documents "+test.pkg.Name, func(t *testing.T) {
+				ctx := experiment.NewContext(ctx, internal.ExperimentGetUnitWithOneQuery)
+				testDB.UpdateSearchDocumentsImportedByCount(ctx)
+				checkFetchImportedByDetails(ctx, pkg, test.wantDetails)
+			})
 		})
 	}
 }
