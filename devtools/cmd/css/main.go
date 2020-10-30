@@ -59,6 +59,9 @@ func main() {
 	)
 	for scanner.Scan() {
 		text := scanner.Text()
+		if headerString := replaceHeaderTag(text); headerString != "" {
+			text = headerString
+		}
 		if atPropertyStart && shouldIncludeProperty(text) {
 			includeProperty = true
 		}
@@ -129,6 +132,21 @@ func main() {
 	if _, err := file.WriteString(contentsToWrite); err != nil {
 		log.Fatalf("file.WriteString(%q): %v", contentsToWrite, err)
 	}
+}
+
+// replaceHeaderTag finds any header tags in a line of text and increases
+// the header level by 2. replaceHeader tag returns the replaced string if a
+// header tag is found and returns an empty string if not
+func replaceHeaderTag(property string) string {
+	headerMap := map[string]string{
+		"h1": "h3", "h2": "h4", "h3": "h5", "h4": "h6", "h5": "div[aria-level=7]", "h6": "div[aria-level=8]",
+	}
+	for k, v := range headerMap {
+		if strings.Contains(property, k) {
+			return strings.ReplaceAll(property, k, v)
+		}
+	}
+	return ""
 }
 
 // shouldIncludeProperty reports whether this property should be included in

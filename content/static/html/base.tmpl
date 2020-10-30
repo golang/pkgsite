@@ -14,7 +14,11 @@
 <meta name="Description" content="Go is an open source programming language that makes it easy to build simple, reliable, and efficient software.">
 <meta class="js-gtmID" data-gtmid="{{.GoogleTagManagerID}}">
 <link href="/static/css/stylesheet.css?version={{.AppVersionLabel}}" rel="stylesheet">
-<link href="/static/css/legacy_readme.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{if (.Experiments.IsActive "goldmark")}}
+  <link href="/static/css/readme.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{else}}
+  <link href="/static/css/legacy_readme.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{end}}
 {{if (.Experiments.IsActive "sidenav")}}
   <link href="/static/css/sidenav.css?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}

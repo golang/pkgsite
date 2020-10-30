@@ -28,7 +28,7 @@
   font-weight: inherit;
   font-weight: bolder;
 }
-.Overview-readmeContent h1 {
+.Overview-readmeContent h3 {
   font-size: 2em;
   margin: 0.67em 0;
 }
@@ -114,43 +114,43 @@
   border-radius: 0.1875rem;
   box-shadow: inset 0 -0.0625rem 0 #d1d5da;
 }
-.Overview-readmeContent h1,
-.Overview-readmeContent h2,
 .Overview-readmeContent h3,
 .Overview-readmeContent h4,
 .Overview-readmeContent h5,
-.Overview-readmeContent h6 {
+.Overview-readmeContent h6,
+.Overview-readmeContent div[aria-level='7'],
+.Overview-readmeContent div[aria-level='8'] {
   margin-top: 0;
   margin-bottom: 0;
 }
-.Overview-readmeContent h1 {
-  font-size: 2rem;
-}
-.Overview-readmeContent h1,
-.Overview-readmeContent h2 {
-  font-weight: 600;
-}
-.Overview-readmeContent h2 {
-  font-size: 1.5rem;
-}
 .Overview-readmeContent h3 {
-  font-size: 1.25rem;
+  font-size: 2rem;
 }
 .Overview-readmeContent h3,
 .Overview-readmeContent h4 {
   font-weight: 600;
 }
 .Overview-readmeContent h4 {
-  font-size: 1rem;
+  font-size: 1.5rem;
 }
 .Overview-readmeContent h5 {
-  font-size: 0.875rem;
+  font-size: 1.25rem;
 }
 .Overview-readmeContent h5,
 .Overview-readmeContent h6 {
   font-weight: 600;
 }
 .Overview-readmeContent h6 {
+  font-size: 1rem;
+}
+.Overview-readmeContent div[aria-level='7'] {
+  font-size: 0.875rem;
+}
+.Overview-readmeContent div[aria-level='7'],
+.Overview-readmeContent div[aria-level='8'] {
+  font-weight: 600;
+}
+.Overview-readmeContent div[aria-level='8'] {
   font-size: 0.75rem;
 }
 .Overview-readmeContent p {
@@ -247,38 +247,38 @@
 .Overview-readmeContent blockquote > :last-child {
   margin-bottom: 0;
 }
-.Overview-readmeContent h1,
-.Overview-readmeContent h2,
 .Overview-readmeContent h3,
 .Overview-readmeContent h4,
 .Overview-readmeContent h5,
-.Overview-readmeContent h6 {
+.Overview-readmeContent h6,
+.Overview-readmeContent div[aria-level='7'],
+.Overview-readmeContent div[aria-level='8'] {
   margin-top: 1.5rem;
   margin-bottom: 1rem;
   font-weight: 600;
   line-height: 1.25;
 }
-.Overview-readmeContent h1 {
+.Overview-readmeContent h3 {
   font-size: 2em;
 }
-.Overview-readmeContent h1,
-.Overview-readmeContent h2 {
+.Overview-readmeContent h3,
+.Overview-readmeContent h4 {
   padding-bottom: 0.3em;
   border-bottom: 0.0625rem solid #eaecef;
 }
-.Overview-readmeContent h2 {
+.Overview-readmeContent h4 {
   font-size: 1.5em;
 }
-.Overview-readmeContent h3 {
+.Overview-readmeContent h5 {
   font-size: 1.25em;
 }
-.Overview-readmeContent h4 {
+.Overview-readmeContent h6 {
   font-size: 1em;
 }
-.Overview-readmeContent h5 {
+.Overview-readmeContent div[aria-level='7'] {
   font-size: 0.875em;
 }
-.Overview-readmeContent h6 {
+.Overview-readmeContent div[aria-level='8'] {
   font-size: 0.85em;
   color: #6a737d;
 }
