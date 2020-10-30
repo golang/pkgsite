@@ -17,6 +17,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/safehtml/template"
 	"golang.org/x/net/html"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/experiment"
@@ -24,7 +25,10 @@ import (
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
 )
 
+var templateSource = template.TrustedSourceFromConstant("../../../content/static/html/doc")
+
 func TestRender(t *testing.T) {
+	LoadTemplates(templateSource)
 	fset, d := mustLoadPackage("everydecl")
 
 	rawDoc, err := Render(context.Background(), fset, d, RenderOptions{
@@ -74,6 +78,7 @@ func TestRender(t *testing.T) {
 }
 
 func TestRenderExperimental(t *testing.T) {
+	LoadTemplates(templateSource)
 	fset, d := mustLoadPackage("everydecl")
 
 	rawDoc, err := Render(experiment.NewContext(context.Background(), internal.ExperimentUnitPage), fset, d, RenderOptions{
@@ -123,6 +128,7 @@ func TestRenderExperimental(t *testing.T) {
 }
 
 func TestExampleRender(t *testing.T) {
+	LoadTemplates(templateSource)
 	ctx := context.Background()
 	fset, d := mustLoadPackage("example_test")
 

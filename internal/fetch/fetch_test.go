@@ -16,9 +16,11 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/godoc"
+	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -30,7 +32,10 @@ var (
 	sourceTimeout = 1 * time.Second
 )
 
+var templateSource = template.TrustedSourceFromConstant("../../content/static/html/doc")
+
 func TestFetchModule(t *testing.T) {
+	dochtml.LoadTemplates(templateSource)
 	stdlib.UseTestData = true
 
 	// Stub out the function used to share playground snippets

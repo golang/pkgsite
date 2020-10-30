@@ -12,9 +12,11 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/fetch"
+	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
@@ -77,6 +79,7 @@ func setup(t *testing.T) (context.Context, func(), *DataSource, error) {
 		},
 	}
 
+	dochtml.LoadTemplates(template.TrustedSourceFromConstant("../../content/static/html/doc"))
 	datasource = New()
 	ctx, cancel = context.WithTimeout(context.Background(), 20*time.Second)
 	for _, module := range modules {

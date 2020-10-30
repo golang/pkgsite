@@ -14,8 +14,10 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -24,6 +26,8 @@ import (
 
 func setup(t *testing.T) (context.Context, *DataSource, func()) {
 	t.Helper()
+	dochtml.LoadTemplates(template.TrustedSourceFromConstant("../../content/static/html/doc"))
+
 	contents := map[string]string{
 		"go.mod":     "module foo.com/bar",
 		"LICENSE":    testhelper.MITLicense,

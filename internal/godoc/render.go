@@ -37,6 +37,10 @@ var MaxDocumentationHTML = 20 * megabyte
 
 var noDocTemplate = template.Must(template.New("").Parse(`<p>No documentation for GOOS/GOARCH {{.}}</p>`))
 
+// A Renderer renders documentation for a Package.
+type Renderer struct {
+}
+
 // Render renders the documentation for the package.
 // Rendering destroys p's AST; do not call any methods of p after it returns.
 func (p *Package) Render(ctx context.Context, innerPath string, sourceInfo *source.Info, modInfo *ModuleInfo, goos, goarch string) (synopsis string, imports []string, html safehtml.HTML, err error) {

@@ -16,10 +16,12 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/safehtml/template"
 	"go.opencensus.io/trace"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/index"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
@@ -37,6 +39,7 @@ var (
 
 func TestMain(m *testing.M) {
 	httpClient = &http.Client{Transport: fakeTransport{}}
+	dochtml.LoadTemplates(template.TrustedSourceFromConstant("../../content/static/html/doc"))
 	postgres.RunDBTests("discovery_worker_test", m, &testDB)
 }
 

@@ -21,6 +21,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
@@ -73,6 +74,8 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 	if err != nil {
 		return nil, fmt.Errorf("error parsing templates: %v", err)
 	}
+	docTemplateDir := template.TrustedSourceJoin(templateDir, template.TrustedSourceFromConstant("doc"))
+	dochtml.LoadTemplates(docTemplateDir)
 	s := &Server{
 		getDataSource:        scfg.DataSourceGetter,
 		queue:                scfg.Queue,

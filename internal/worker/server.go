@@ -29,6 +29,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/index"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
@@ -87,11 +88,11 @@ func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 	if err != nil {
 		return nil, err
 	}
+	dochtml.LoadTemplates(template.TrustedSourceJoin(scfg.StaticPath, template.TrustedSourceFromConstant("html/doc")))
 	templates := map[string]*template.Template{
 		indexTemplate:    t1,
 		versionsTemplate: t2,
 	}
-
 	return &Server{
 		cfg:                  cfg,
 		db:                   scfg.DB,
