@@ -51,14 +51,14 @@ func getPathVersions(ctx context.Context, db *DB, path string, versionTypes ...v
 		m.has_go_mod,
 		m.source_info
 	FROM modules m
-	INNER JOIN paths p
+	INNER JOIN units p
 		ON p.module_id = m.id
 	LEFT JOIN documentation d
 		ON d.path_id = p.id
 	WHERE
 		p.v1_path = (
 			SELECT p2.v1_path
-			FROM paths as p2
+			FROM units as p2
 			WHERE p2.path = $1
 			LIMIT 1
 		)

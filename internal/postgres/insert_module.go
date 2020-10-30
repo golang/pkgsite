@@ -335,11 +335,11 @@ func insertUnits(ctx context.Context, db *database.DB, m *internal.Module, modul
 			"license_paths",
 			"redistributable",
 		}
-		logMemory(ctx, "before inserting into paths")
+		logMemory(ctx, "before inserting into units")
 
 		uniqueCols := []string{"path", "module_id"}
 		returningCols := []string{"id", "path"}
-		if err := db.BulkUpsertReturning(ctx, "paths", pathCols, pathValues, uniqueCols, returningCols, func(rows *sql.Rows) error {
+		if err := db.BulkUpsertReturning(ctx, "units", pathCols, pathValues, uniqueCols, returningCols, func(rows *sql.Rows) error {
 			var (
 				pathID int
 				path   string

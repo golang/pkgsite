@@ -33,7 +33,7 @@ func (db *DB) getLicenses(ctx context.Context, fullPath, modulePath string, path
 		FROM
 			licenses l
 		INNER JOIN
-			paths p
+			units p
 		ON
 			p.module_id=l.module_id
 		INNER JOIN

@@ -93,7 +93,7 @@ func (db *DB) getPathID(ctx context.Context, fullPath, modulePath, resolvedVersi
 	var pathID int
 	query := `
 		SELECT p.id
-		FROM paths p
+		FROM units p
 		INNER JOIN modules m ON (p.module_id = m.id)
 		WHERE
 		    p.path = $1
@@ -171,7 +171,7 @@ func (db *DB) getModuleReadme(ctx context.Context, modulePath, resolvedVersion s
 	err = db.db.QueryRow(ctx, `
 		SELECT file_path, contents
 		FROM modules m
-		INNER JOIN paths p
+		INNER JOIN units p
 		ON p.module_id = m.id
 		INNER JOIN readmes r
 		ON p.id = r.path_id
@@ -226,7 +226,7 @@ func (db *DB) getPackagesInUnit(ctx context.Context, fullPath, modulePath, resol
 			p.license_types,
 			p.license_paths
 		FROM modules m
-		INNER JOIN paths p
+		INNER JOIN units p
 		ON p.module_id = m.id
 		INNER JOIN documentation d
 		ON d.path_id = p.id
@@ -299,7 +299,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta) (
 				-- search_documents.
 				WHERE package_path = $1
 				), 0) AS num_imported_by
-		FROM paths p
+		FROM units p
 		INNER JOIN modules m
 		ON p.module_id = m.id
 		LEFT JOIN documentation d

@@ -338,7 +338,7 @@ func (db *DB) addPackageDataToSearchResults(ctx context.Context, results []*inte
 			p.license_types,
 			p.redistributable
 		FROM
-			paths p
+			units p
 		INNER JOIN
 		    modules m
 		ON p.module_id = m.id
@@ -410,7 +410,7 @@ var upsertSearchStatement = fmt.Sprintf(`
 		hll_hash(p.path) & (%[1]d - 1),
 		hll_zeros(hll_hash(p.path))
 	FROM
-		paths p
+		units p
 	INNER JOIN
 		modules m
 	ON
@@ -512,7 +512,7 @@ func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, before tim
 			r.file_path,
 			r.contents
 		FROM modules m
-		INNER JOIN paths p
+		INNER JOIN units p
 		ON m.id = p.module_id
 		LEFT JOIN readmes r
 		ON p.id = r.path_id

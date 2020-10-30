@@ -85,7 +85,7 @@ func (db *DB) GetUnitMeta(ctx context.Context, path, requestedModulePath, reques
 			p.redistributable,
 			p.license_types,
 			p.license_paths
-		FROM paths p
+		FROM units p
 		INNER JOIN modules m ON (p.module_id = m.id)
 		%s
 		WHERE p.path = $1
@@ -146,7 +146,7 @@ func (db *DB) getPathsInModule(ctx context.Context, modulePath, resolvedVersion 
 		p.license_paths,
 		p.redistributable
 	FROM
-		paths p
+		units p
 	INNER JOIN
 		modules m
 	ON
@@ -183,7 +183,7 @@ func (db *DB) GetStdlibPathsWithSuffix(ctx context.Context, suffix string) (path
 
 	q := `
 		SELECT path
-		FROM paths
+		FROM units
 		WHERE module_id = (
 			-- latest release version of stdlib
 			SELECT id
