@@ -250,7 +250,7 @@ func (s *Server) handleRepopulateSearchDocuments(w http.ResponseWriter, r *http.
 	}
 
 	for _, args := range sdargs {
-		if err := postgres.UpsertSearchDocument(ctx, s.db.Underlying(), args); err != nil {
+		if err := s.db.UpsertSearchDocument(ctx, s.db.Underlying(), args); err != nil {
 			return err
 		}
 	}

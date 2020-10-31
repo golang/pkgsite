@@ -445,8 +445,8 @@ var upsertSearchStatement = fmt.Sprintf(`
 
 // upsertSearchDocuments adds search information for mod ot the search_documents table.
 // It assumes that all non-redistributable data has been removed from mod.
-func upsertSearchDocuments(ctx context.Context, db *database.DB, mod *internal.Module) (err error) {
-	defer derrors.Wrap(&err, "UpsertSearchDocuments(ctx, %q)", mod.ModulePath)
+func (db *DB) upsertSearchDocuments(ctx context.Context, ddb *database.DB, mod *internal.Module) (err error) {
+	defer derrors.Wrap(&err, "upsertSearchDocuments(ctx, %q)", mod.ModulePath)
 	ctx, span := trace.StartSpan(ctx, "UpsertSearchDocuments")
 	defer span.End()
 	for _, pkg := range mod.Packages() {
@@ -464,7 +464,7 @@ func upsertSearchDocuments(ctx context.Context, db *database.DB, mod *internal.M
 			args.ReadmeFilePath = pkg.Readme.Filepath
 			args.ReadmeContents = pkg.Readme.Contents
 		}
-		if err := UpsertSearchDocument(ctx, db, args); err != nil {
+		if err := db.UpsertSearchDocument(ctx, ddb, args); err != nil {
 			return err
 		}
 	}
@@ -484,8 +484,8 @@ type upsertSearchDocumentArgs struct {
 //
 // The given module should have already been validated via a call to
 // validateModule.
-func UpsertSearchDocument(ctx context.Context, db *database.DB, args upsertSearchDocumentArgs) (err error) {
-	defer derrors.Wrap(&err, "UpsertSearchDocument(ctx, db, %q, %q)", args.PackagePath, args.ModulePath)
+func (db *DB) UpsertSearchDocument(ctx context.Context, ddb *database.DB, args upsertSearchDocumentArgs) (err error) {
+	defer derrors.Wrap(&err, "DB.UpsertSearchDocument(ctx, ddb, %q, %q)", args.PackagePath, args.ModulePath)
 
 	// Only summarize the README if the package and module have the same path.
 	if args.PackagePath != args.ModulePath {
@@ -494,7 +494,7 @@ func UpsertSearchDocument(ctx context.Context, db *database.DB, args upsertSearc
 	}
 	pathTokens := strings.Join(GeneratePathTokens(args.PackagePath), " ")
 	sectionB, sectionC, sectionD := SearchDocumentSections(args.Synopsis, args.ReadmeFilePath, args.ReadmeContents)
-	_, err = db.Exec(ctx, upsertSearchStatement, args.PackagePath, pathTokens, sectionB, sectionC, sectionD)
+	_, err = ddb.Exec(ctx, upsertSearchStatement, args.PackagePath, pathTokens, sectionB, sectionC, sectionD)
 	return err
 }
 
