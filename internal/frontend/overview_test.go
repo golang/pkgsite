@@ -34,7 +34,7 @@ func TestFetchOverviewDetails(t *testing.T) {
 		module: sample.DefaultModule(),
 		wantDetails: &OverviewDetails{
 			ModulePath:      sample.ModulePath,
-			RepositoryURL:   sample.RepositoryURL,
+			RepositoryURL:   "https://" + sample.RepositoryURL,
 			ReadMe:          testconversions.MakeHTMLForTest("<p>readme</p>\n"),
 			ReadMeSource:    sample.ModulePath + "@v1.0.0/README.md",
 			ModuleURL:       "/mod/" + sample.ModulePath + "@v1.0.0",
@@ -88,8 +88,8 @@ func TestPackageOverviewDetails(t *testing.T) {
 			want: &OverviewDetails{
 				ModulePath:       "github.com/u/m",
 				ModuleURL:        "/mod/github.com/u/m@v1.2.3",
-				RepositoryURL:    "https://github.com/u/m",
-				PackageSourceURL: "https://github.com/u/m/tree/v1.2.3/p",
+				RepositoryURL:    "github.com/u/m",
+				PackageSourceURL: "github.com/u/m/tree/v1.2.3/p",
 				ReadMe:           testconversions.MakeHTMLForTest("<p>readme</p>\n"),
 				ReadMeSource:     "github.com/u/m@v1.2.3/README.md",
 				Redistributable:  true,
@@ -114,8 +114,8 @@ func TestPackageOverviewDetails(t *testing.T) {
 			want: &OverviewDetails{
 				ModulePath:       "github.com/u/m",
 				ModuleURL:        "/mod/github.com/u/m",
-				RepositoryURL:    "https://github.com/u/m",
-				PackageSourceURL: "https://github.com/u/m/tree/v1.2.3/p",
+				RepositoryURL:    "github.com/u/m",
+				PackageSourceURL: "github.com/u/m/tree/v1.2.3/p",
 				ReadMe:           testconversions.MakeHTMLForTest("<p>readme</p>\n"),
 				ReadMeSource:     "github.com/u/m@v1.2.3/README.md",
 				Redistributable:  true,
@@ -136,8 +136,8 @@ func TestPackageOverviewDetails(t *testing.T) {
 			want: &OverviewDetails{
 				ModulePath:       "github.com/u/m",
 				ModuleURL:        "/mod/github.com/u/m@v1.2.3",
-				RepositoryURL:    "https://github.com/u/m",
-				PackageSourceURL: "https://github.com/u/m/tree/v1.2.3/p",
+				RepositoryURL:    "github.com/u/m",
+				PackageSourceURL: "github.com/u/m/tree/v1.2.3/p",
 				ReadMe:           safehtml.HTML{},
 				ReadMeSource:     "",
 				Redistributable:  false,
@@ -151,7 +151,7 @@ func TestPackageOverviewDetails(t *testing.T) {
 				test.dir.Version,
 				internal.Suffix(test.dir.Path, test.dir.ModulePath))
 			m.Units[1].IsRedistributable = test.dir.IsRedistributable
-			m.SourceInfo = source.NewGitHubInfo("https://"+test.dir.ModulePath, "", test.dir.Version)
+			m.SourceInfo = source.NewGitHubInfo(test.dir.ModulePath, "", test.dir.Version)
 
 			ctx := context.Background()
 			if err := testDB.InsertModule(ctx, m); err != nil {

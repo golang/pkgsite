@@ -28,7 +28,7 @@ import (
 // These sample values can be used to construct test cases.
 var (
 	ModulePath      = "github.com/valid/module_name"
-	RepositoryURL   = "https://github.com/valid/module_name"
+	RepositoryURL   = ModulePath
 	VersionString   = "v1.0.0"
 	CommitTime      = NowTruncated()
 	LicenseType     = "MIT"

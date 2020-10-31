@@ -19,12 +19,12 @@
       <h2>Source Code</h2>
       <p class="Overview-sourceCodeLink">
         {{if .RepositoryURL}}
-          Repository: <a href="{{.RepositoryURL}}" target="_blank" rel="noopener">{{.RepositoryURL}}</a><br/>
+          Repository: <a href="{{.RepositoryURL}}" target="_blank" rel="noopener">{{removeURLScheme .RepositoryURL}}</a><br/>
         {{else}}
           Source code link not available.
         {{end}}
         {{if .PackageSourceURL}}
-          Package: <a href="{{.PackageSourceURL}}" target="_blank" rel="noopener">{{.PackageSourceURL}}</a>
+          Package: <a href="{{.PackageSourceURL}}" target="_blank" rel="noopener">{{removeURLScheme .PackageSourceURL}}</a>
         {{end}}
       </p>
     </div>
