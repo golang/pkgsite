@@ -90,7 +90,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
 		}
 		logMemory(ctx, "after insertLicenses")
 
-		if err := insertUnits(ctx, tx, m, moduleID); err != nil {
+		if err := db.insertUnits(ctx, tx, m, moduleID); err != nil {
 			return err
 		}
 		logMemory(ctx, "after insertUnits")
@@ -259,7 +259,7 @@ func insertImportsUnique(ctx context.Context, tx *database.DB, m *internal.Modul
 	return tx.BulkUpsert(ctx, "imports_unique", cols, values, cols)
 }
 
-func insertUnits(ctx context.Context, db *database.DB, m *internal.Module, moduleID int) (err error) {
+func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Module, moduleID int) (err error) {
 	defer derrors.Wrap(&err, "insertUnits(ctx, tx, %q, %q)", m.ModulePath, m.Version)
 	ctx, span := trace.StartSpan(ctx, "insertUnits")
 	defer span.End()
@@ -378,8 +378,9 @@ func insertUnits(ctx context.Context, db *database.DB, m *internal.Module, modul
 			id := pathToID[path]
 			readmeValues = append(readmeValues, id, readme.Filepath, readmeContents)
 		}
-		readmeCols := []string{"path_id", "file_path", "contents"}
-		if err := db.BulkUpsert(ctx, "readmes", readmeCols, readmeValues, []string{"path_id"}); err != nil {
+		rcol := pdb.unitIDColumn(ctx, "readmes")
+		readmeCols := []string{rcol, "file_path", "contents"}
+		if err := db.BulkUpsert(ctx, "readmes", readmeCols, readmeValues, []string{rcol}); err != nil {
 			return err
 		}
 	}
@@ -395,7 +396,7 @@ func insertUnits(ctx context.Context, db *database.DB, m *internal.Module, modul
 			id := pathToID[path]
 			docValues = append(docValues, id, doc.GOOS, doc.GOARCH, doc.Synopsis, makeValidUnicode(doc.HTML.String()), doc.Source)
 		}
-		uniqueCols := []string{"path_id", "goos", "goarch"}
+		uniqueCols := []string{pdb.unitIDColumn(ctx, "documentation"), "goos", "goarch"}
 		docCols := append(uniqueCols, "synopsis", "html", "source")
 		if err := db.BulkUpsert(ctx, "documentation", docCols, docValues, uniqueCols); err != nil {
 			return err
@@ -414,7 +415,7 @@ func insertUnits(ctx context.Context, db *database.DB, m *internal.Module, modul
 			importValues = append(importValues, id, toPath)
 		}
 	}
-	importCols := []string{"path_id", "to_path"}
+	importCols := []string{pdb.unitIDColumn(ctx, "package_imports"), "to_path"}
 	return db.BulkUpsert(ctx, "package_imports", importCols, importValues, importCols)
 }
 

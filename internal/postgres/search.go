@@ -344,9 +344,9 @@ func (db *DB) addPackageDataToSearchResults(ctx context.Context, results []*inte
 		ON p.module_id = m.id
 		LEFT JOIN
 		    documentation d
-		ON p.id = d.path_id
+		ON p.id = d.%s
 		WHERE
-			(p.path, m.version, m.module_path) IN (%s)`, strings.Join(keys, ","))
+			(p.path, m.version, m.module_path) IN (%s)`, db.unitIDColumn(ctx, "documentation"), strings.Join(keys, ","))
 	collect := func(rows *sql.Rows) error {
 		var (
 			path, name, synopsis string
@@ -418,7 +418,7 @@ var upsertSearchStatement = fmt.Sprintf(`
 	LEFT JOIN
 		documentation d
 	ON
-		p.id = d.path_id
+		p.id = d.%%s
 	WHERE
 		p.path = $1
 	%s
@@ -494,7 +494,8 @@ func (db *DB) UpsertSearchDocument(ctx context.Context, ddb *database.DB, args u
 	}
 	pathTokens := strings.Join(GeneratePathTokens(args.PackagePath), " ")
 	sectionB, sectionC, sectionD := SearchDocumentSections(args.Synopsis, args.ReadmeFilePath, args.ReadmeContents)
-	_, err = ddb.Exec(ctx, upsertSearchStatement, args.PackagePath, pathTokens, sectionB, sectionC, sectionD)
+	stmt := fmt.Sprintf(upsertSearchStatement, db.unitIDColumn(ctx, "documentation"))
+	_, err = ddb.Exec(ctx, stmt, args.PackagePath, pathTokens, sectionB, sectionC, sectionD)
 	return err
 }
 
@@ -503,7 +504,11 @@ func (db *DB) UpsertSearchDocument(ctx context.Context, ddb *database.DB, args u
 func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, before time.Time, limit int) (argsList []upsertSearchDocumentArgs, err error) {
 	defer derrors.Wrap(&err, "GetPackagesForSearchDocumentUpsert(ctx, %s, %d)", before, limit)
 
-	query := `
+	idcol := db.unitIDColumn(ctx, "readmes")
+	if err != nil {
+		return nil, err
+	}
+	query := fmt.Sprintf(`
 		SELECT
 			sd.package_path,
 			sd.module_path,
@@ -515,13 +520,13 @@ func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, before tim
 		INNER JOIN units p
 		ON m.id = p.module_id
 		LEFT JOIN readmes r
-		ON p.id = r.path_id
+		ON p.id = r.%s
 		INNER JOIN search_documents sd
 		ON sd.package_path = p.path
 		    AND sd.module_path = m.module_path
 		    AND sd.version = m.version
 		WHERE sd.updated_at < $1
-		LIMIT $2`
+		LIMIT $2`, idcol)
 
 	collect := func(rows *sql.Rows) error {
 		var (

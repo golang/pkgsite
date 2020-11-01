@@ -54,7 +54,7 @@ func getPathVersions(ctx context.Context, db *DB, path string, versionTypes ...v
 	INNER JOIN units p
 		ON p.module_id = m.id
 	LEFT JOIN documentation d
-		ON d.path_id = p.id
+		ON d.%s = p.id
 	WHERE
 		p.v1_path = (
 			SELECT p2.v1_path
@@ -76,7 +76,7 @@ func getPathVersions(ctx context.Context, db *DB, path string, versionTypes ...v
 	} else if len(versionTypes) == 1 && versionTypes[0] == version.TypePseudo {
 		queryEnd = `LIMIT 10;`
 	}
-	query := fmt.Sprintf(baseQuery, versionTypeExpr(versionTypes), queryEnd)
+	query := fmt.Sprintf(baseQuery, db.unitIDColumn(ctx, "documentation"), versionTypeExpr(versionTypes), queryEnd)
 	var versions []*internal.ModuleInfo
 	collect := func(rows *sql.Rows) error {
 		mi, err := scanModuleInfo(rows.Scan)
