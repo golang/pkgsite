@@ -198,6 +198,8 @@ func fetchDetailsForDirectory(r *http.Request, tab string, ds internal.DataSourc
 		return fetchDirectoryDetails(ctx, ds, um, false)
 	case legacyTabLicenses:
 		return fetchLicensesDetails(ctx, ds, um)
+	case tabVersions:
+		return fetchVersionsDetails(ctx, ds, um.Path, um.ModulePath)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }
