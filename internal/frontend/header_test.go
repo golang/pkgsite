@@ -23,7 +23,7 @@ func samplePackage(mutators ...func(*Package)) *Package {
 		Module: Module{
 			DisplayVersion:    sample.VersionString,
 			LinkVersion:       sample.VersionString,
-			CommitTime:        "0 hours ago",
+			CommitTime:        time.Now().Format("Jan _2, 2006"),
 			ModulePath:        sample.ModulePath,
 			IsRedistributable: true,
 			Licenses:          transformLicenseMetadata(sample.LicenseMetadata),
@@ -40,51 +40,31 @@ func samplePackage(mutators ...func(*Package)) *Package {
 	return p
 }
 
-func TestElapsedTime(t *testing.T) {
+func TestAbsoluteTime(t *testing.T) {
 	now := sample.NowTruncated()
 	testCases := []struct {
-		name        string
-		date        time.Time
-		elapsedTime string
+		name         string
+		date         time.Time
+		absoluteTime string
 	}{
 		{
-			name:        "one_hour_ago",
-			date:        now.Add(time.Hour * -1),
-			elapsedTime: "1 hour ago",
+			name:         "today",
+			date:         now.Add(time.Hour),
+			absoluteTime: now.Add(time.Hour).Format("Jan _2, 2006"),
 		},
 		{
-			name:        "hours_ago",
-			date:        now.Add(time.Hour * -2),
-			elapsedTime: "2 hours ago",
-		},
-		{
-			name:        "today",
-			date:        now.Add(time.Hour * -8),
-			elapsedTime: "today",
-		},
-		{
-			name:        "one_day_ago",
-			date:        now.Add(time.Hour * 24 * -1),
-			elapsedTime: "1 day ago",
-		},
-		{
-			name:        "days_ago",
-			date:        now.Add(time.Hour * 24 * -5),
-			elapsedTime: "5 days ago",
-		},
-		{
-			name:        "more_than_6_days_ago",
-			date:        now.Add(time.Hour * 24 * -14),
-			elapsedTime: now.Add(time.Hour * 24 * -14).Format("Jan _2, 2006"),
+			name:         "a_week_ago",
+			date:         now.Add(time.Hour * 24 * -5),
+			absoluteTime: now.Add(time.Hour * 24 * -5).Format("Jan _2, 2006"),
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			elapsedTime := elapsedTime(tc.date)
+			absoluteTime := absoluteTime(tc.date)
 
-			if elapsedTime != tc.elapsedTime {
-				t.Errorf("elapsedTime(%q) = %s, want %s", tc.date, elapsedTime, tc.elapsedTime)
+			if absoluteTime != tc.absoluteTime {
+				t.Errorf("absoluteTime(%q) = %s, want %s", tc.date, absoluteTime, tc.absoluteTime)
 			}
 		})
 	}

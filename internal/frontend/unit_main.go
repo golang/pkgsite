@@ -164,7 +164,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		NestedModules:   nestedModules,
 		Subdirectories:  subdirectories,
 		Licenses:        transformLicenseMetadata(um.Licenses),
-		CommitTime:      elapsedTime(um.CommitTime),
+		CommitTime:      absoluteTime(um.CommitTime),
 		Readme:          readme,
 		DocOutline:      docOutline,
 		DocBody:         docBody,

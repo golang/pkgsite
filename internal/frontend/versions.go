@@ -163,7 +163,7 @@ func buildVersionDetails(currentModulePath string, modInfos []*internal.ModuleIn
 		key := VersionListKey{ModulePath: mi.ModulePath, Major: major}
 		vs := &VersionSummary{
 			Link:       linkify(mi),
-			CommitTime: elapsedTime(mi.CommitTime),
+			CommitTime: absoluteTime(mi.CommitTime),
 			Version:    linkVersion(mi.Version, mi.ModulePath),
 		}
 		if _, ok := lists[key]; !ok {

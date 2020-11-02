@@ -7,6 +7,7 @@ package frontend
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
@@ -18,7 +19,7 @@ import (
 var (
 	modulePath1 = "test.com/module"
 	modulePath2 = "test.com/module/v2"
-	commitTime  = "0 hours ago"
+	commitTime  = time.Now().Format("Jan _2, 2006")
 )
 
 func sampleModule(modulePath, version string, versionType version.Type, packages ...*internal.Unit) *internal.Module {

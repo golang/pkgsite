@@ -7,6 +7,7 @@ package frontend
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -225,6 +226,56 @@ func TestSearchRequestRedirectPath(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			if got := searchRequestRedirectPath(ctx, testDB, tc.query); got != tc.want {
 				t.Errorf("searchRequestRedirectPath(ctx, %q) = %q; want = %q", tc.query, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestElapsedTime(t *testing.T) {
+	now := sample.NowTruncated()
+	testCases := []struct {
+		name        string
+		date        time.Time
+		elapsedTime string
+	}{
+		{
+			name:        "one_hour_ago",
+			date:        now.Add(time.Hour * -1),
+			elapsedTime: "1 hour ago",
+		},
+		{
+			name:        "hours_ago",
+			date:        now.Add(time.Hour * -2),
+			elapsedTime: "2 hours ago",
+		},
+		{
+			name:        "today",
+			date:        now.Add(time.Hour * -8),
+			elapsedTime: "today",
+		},
+		{
+			name:        "one_day_ago",
+			date:        now.Add(time.Hour * 24 * -1),
+			elapsedTime: "1 day ago",
+		},
+		{
+			name:        "days_ago",
+			date:        now.Add(time.Hour * 24 * -5),
+			elapsedTime: "5 days ago",
+		},
+		{
+			name:        "more_than_6_days_ago",
+			date:        now.Add(time.Hour * 24 * -14),
+			elapsedTime: now.Add(time.Hour * 24 * -14).Format("Jan _2, 2006"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			elapsedTime := elapsedTime(tc.date)
+
+			if elapsedTime != tc.elapsedTime {
+				t.Errorf("elapsedTime(%q) = %s, want %s", tc.date, elapsedTime, tc.elapsedTime)
 			}
 		})
 	}

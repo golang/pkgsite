@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"path"
 	"regexp"
+	"time"
 
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
@@ -137,7 +138,7 @@ func UnitHeader(p *Page, versionedURL bool, isPackage bool) htmlcheck.Checker {
 
 	commitTime := p.CommitTime
 	if commitTime == "" {
-		commitTime = "0 hours ago"
+		commitTime = time.Now().Format("Jan _2, 2006")
 	}
 
 	return in("header.UnitHeader",

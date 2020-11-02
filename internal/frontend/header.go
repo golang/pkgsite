@@ -87,7 +87,7 @@ func createModule(mi *internal.ModuleInfo, licmetas []*licenses.Metadata, latest
 		DisplayVersion:    displayVersion(mi.Version, mi.ModulePath),
 		LinkVersion:       linkVersion(mi.Version, mi.ModulePath),
 		ModulePath:        mi.ModulePath,
-		CommitTime:        elapsedTime(mi.CommitTime),
+		CommitTime:        absoluteTime(mi.CommitTime),
 		IsRedistributable: mi.IsRedistributable,
 		Licenses:          transformLicenseMetadata(licmetas),
 		URL:               constructModuleURL(mi.ModulePath, urlVersion),
@@ -135,28 +135,8 @@ func moduleHTMLTitle(modulePath string) string {
 	return modulePath + " module"
 }
 
-// elapsedTime takes a date and returns returns human-readable,
-// relative timestamps based on the following rules:
-// (1) 'X hours ago' when X < 6
-// (2) 'today' between 6 hours and 1 day ago
-// (3) 'Y days ago' when Y < 6
-// (4) A date formatted like "Jan 2, 2006" for anything further back
-func elapsedTime(date time.Time) string {
-	elapsedHours := int(time.Since(date).Hours())
-	if elapsedHours == 1 {
-		return "1 hour ago"
-	} else if elapsedHours < 6 {
-		return fmt.Sprintf("%d hours ago", elapsedHours)
-	}
-
-	elapsedDays := elapsedHours / 24
-	if elapsedDays < 1 {
-		return "today"
-	} else if elapsedDays == 1 {
-		return "1 day ago"
-	} else if elapsedDays < 6 {
-		return fmt.Sprintf("%d days ago", elapsedDays)
-	}
-
+// absoluteTime takes a date and returns returns a human-readable,
+// date with the format mmm d, yyyy:
+func absoluteTime(date time.Time) string {
 	return date.Format("Jan _2, 2006")
 }

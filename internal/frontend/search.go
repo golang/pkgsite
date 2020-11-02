@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
@@ -209,4 +210,30 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 // searchQuery extracts a search query from the request.
 func searchQuery(r *http.Request) string {
 	return strings.TrimSpace(r.FormValue("q"))
+}
+
+// elapsedTime takes a date and returns returns human-readable,
+// relative timestamps based on the following rules:
+// (1) 'X hours ago' when X < 6
+// (2) 'today' between 6 hours and 1 day ago
+// (3) 'Y days ago' when Y < 6
+// (4) A date formatted like "Jan 2, 2006" for anything further back
+func elapsedTime(date time.Time) string {
+	elapsedHours := int(time.Since(date).Hours())
+	if elapsedHours == 1 {
+		return "1 hour ago"
+	} else if elapsedHours < 6 {
+		return fmt.Sprintf("%d hours ago", elapsedHours)
+	}
+
+	elapsedDays := elapsedHours / 24
+	if elapsedDays < 1 {
+		return "today"
+	} else if elapsedDays == 1 {
+		return "1 day ago"
+	} else if elapsedDays < 6 {
+		return fmt.Sprintf("%d days ago", elapsedDays)
+	}
+
+	return date.Format("Jan _2, 2006")
 }
