@@ -125,10 +125,15 @@ func (db *DB) GetImportedByCount(ctx context.Context, pkgPath, modulePath string
 			package_path = $1
 	`
 	var n int
-	if err := db.db.QueryRow(ctx, query, pkgPath).Scan(&n); err != nil {
+	err = db.db.QueryRow(ctx, query, pkgPath).Scan(&n)
+	switch err {
+	case sql.ErrNoRows:
+		return 0, nil
+	case nil:
+		return n, nil
+	default:
 		return 0, err
 	}
-	return n, nil
 }
 
 // GetModuleInfo fetches a module version from the database with the primary key
