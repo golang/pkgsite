@@ -170,18 +170,22 @@ func moduleInfo(um *internal.UnitMeta) *internal.ModuleInfo {
 }
 
 // readmeContent renders the readme to html.
-func readmeContent(ctx context.Context, um *internal.UnitMeta, readme *internal.Readme) (safehtml.HTML, error) {
+func readmeContent(ctx context.Context, um *internal.UnitMeta, readme *internal.Readme) (_ safehtml.HTML, err error) {
 	defer middleware.ElapsedStat(ctx, "readmeContent")()
-
-	if um.IsRedistributable && readme != nil {
-		mi := moduleInfo(um)
-		readme, err := ReadmeHTML(ctx, mi, readme)
-		if err != nil {
-			return safehtml.HTML{}, err
-		}
-		return readme, nil
+	if !um.IsRedistributable || readme == nil {
+		return safehtml.HTML{}, nil
 	}
-	return safehtml.HTML{}, nil
+	mi := moduleInfo(um)
+	var readmeHTML safehtml.HTML
+	if experiment.IsActive(ctx, internal.ExperimentGoldmark) {
+		readmeHTML, err = ReadmeHTML(ctx, mi, readme)
+	} else {
+		readmeHTML, err = LegacyReadmeHTML(ctx, mi, readme)
+	}
+	if err != nil {
+		return safehtml.HTML{}, err
+	}
+	return readmeHTML, nil
 }
 
 func getNestedModules(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta) ([]*NestedModule, error) {
