@@ -119,10 +119,17 @@ func (p *Package) Render(ctx context.Context, innerPath string, sourceInfo *sour
 		}
 		return sourceInfo.FileURL(path.Join(innerPath, filename))
 	}
+	usesLinkFunc := func(defParts []string) string {
+		if sourceInfo == nil {
+			return ""
+		}
+		return sourceInfo.UsesURL(modInfo.ModulePath, importPath, defParts)
+	}
 
 	docHTML, err := dochtml.Render(ctx, p.Fset, d, dochtml.RenderOptions{
 		FileLinkFunc:   fileLinkFunc,
 		SourceLinkFunc: sourceLinkFunc,
+		UsesLinkFunc:   usesLinkFunc,
 		ModInfo:        modInfo,
 		Limit:          int64(MaxDocumentationHTML),
 	})

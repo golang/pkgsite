@@ -49,6 +49,7 @@ var tmpl = map[string]interface{}{
 	"render_code":           (*render.Renderer)(nil).CodeHTML,
 	"file_link":             func() string { return "" },
 	"source_link":           func() string { return "" },
+	"uses_link":             func() string { return "" },
 	"play_url":              func(*doc.Example) string { return "" },
 	"safe_id":               render.SafeGoID,
 }
