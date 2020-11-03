@@ -112,7 +112,6 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 	if err != nil {
 		return nil, err
 	}
-
 	var (
 		docBody, docOutline, mobileOutline safehtml.HTML
 		files                              []*File
@@ -130,34 +129,13 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 			}
 			return nil, err
 		}
-		docHTML := getHTML(ctx, unit, docPkg)
-		// TODO: Deprecate godoc.Parse. The sidenav and body can
-		// either be rendered using separate functions, or all this content can
-		// be passed to the template via the UnitPage struct.
-		end = middleware.ElapsedStat(ctx, "godoc Parses")
-		b, err := godoc.Parse(docHTML, godoc.BodySection)
+		docBody, docOutline, mobileOutline, err = getHTML(ctx, unit, docPkg)
 		if err != nil {
 			return nil, err
 		}
-		docBody = b
-		o, err := godoc.Parse(docHTML, godoc.SidenavSection)
-		if err != nil {
-			return nil, err
-		}
-		docOutline = o
-		m, err := godoc.Parse(docHTML, godoc.SidenavMobileSection)
-		if err != nil {
-			return nil, err
-		}
-		mobileOutline = m
-		end()
-
 		end = middleware.ElapsedStat(ctx, "sourceFiles")
 		files = sourceFiles(unit, docPkg)
 		end()
-		if err != nil {
-			return nil, err
-		}
 	}
 	return &MainDetails{
 		ExpandReadme:    expandReadme,
@@ -243,17 +221,36 @@ func getSubdirectories(um *internal.UnitMeta, pkgs []*internal.PackageMeta) []*S
 	return sdirs
 }
 
-func getHTML(ctx context.Context, u *internal.Unit, docPkg *godoc.Package) safehtml.HTML {
+func getHTML(ctx context.Context, u *internal.Unit, docPkg *godoc.Package) (body, outline, mobileOutline safehtml.HTML, err error) {
+	defer derrors.Wrap(&err, "getHTML %s", u.Path)
+
+	docHTML := u.Documentation.HTML
 	if experiment.IsActive(ctx, internal.ExperimentFrontendRenderDoc) && len(u.Documentation.Source) > 0 {
 		dd, err := renderDoc(ctx, u, docPkg)
 		if err != nil {
 			log.Errorf(ctx, "render doc failed: %v", err)
-			// Fall through to use stored doc.
 		} else {
-			return dd.Documentation
+			docHTML = dd.Documentation
 		}
 	}
-	return u.Documentation.HTML
+	// TODO: Deprecate godoc.Parse. The sidenav and body can
+	// either be rendered using separate functions, or all this content can
+	// be passed to the template via the UnitPage struct.
+	end := middleware.ElapsedStat(ctx, "godoc Parses")
+	b, err := godoc.Parse(docHTML, godoc.BodySection)
+	if err != nil {
+		return safehtml.HTML{}, safehtml.HTML{}, safehtml.HTML{}, err
+	}
+	o, err := godoc.Parse(docHTML, godoc.SidenavSection)
+	if err != nil {
+		return safehtml.HTML{}, safehtml.HTML{}, safehtml.HTML{}, err
+	}
+	m, err := godoc.Parse(docHTML, godoc.SidenavMobileSection)
+	if err != nil {
+		return safehtml.HTML{}, safehtml.HTML{}, safehtml.HTML{}, err
+	}
+	end()
+	return b, o, m, nil
 }
 
 // getImportedByCount fetches the imported by count for the unit and returns a
