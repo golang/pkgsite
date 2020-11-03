@@ -137,3 +137,13 @@ func (p *Package) Render(ctx context.Context, innerPath string, sourceInfo *sour
 	}
 	return doc.Synopsis(d.Doc), d.Imports, docHTML, err
 }
+
+// RenderParts renders the documentation for the package in parts.
+// Rendering destroys p's AST; do not call any methods of p after it returns.
+func (p *Package) RenderParts(ctx context.Context, innerPath string, sourceInfo *source.Info, modInfo *ModuleInfo) (body, outline, mobileOutline safehtml.HTML, err error) {
+	_, _, html, err := p.Render(ctx, innerPath, sourceInfo, modInfo, "", "")
+	if err != nil {
+		return safehtml.HTML{}, safehtml.HTML{}, safehtml.HTML{}, err
+	}
+	return ParseDoc(ctx, html)
+}

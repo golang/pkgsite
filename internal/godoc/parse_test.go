@@ -34,7 +34,7 @@ func TestParse(t *testing.T) {
 	} {
 		{
 			t.Run(test.name, func(t *testing.T) {
-				got, err := Parse(uncheckedconversions.HTMLFromStringKnownToSatisfyTypeContract(quoteDocHTML), test.section)
+				got, err := parse(uncheckedconversions.HTMLFromStringKnownToSatisfyTypeContract(quoteDocHTML), test.section)
 				if err != nil {
 					t.Fatal(err)
 				}
