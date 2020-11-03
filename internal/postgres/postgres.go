@@ -73,19 +73,19 @@ func (db *DB) unitIDColumn(ctx context.Context, table string) string {
 	rows, err := db.db.Query(ctx, fmt.Sprintf(`SELECT * FROM %s LIMIT 1`, table))
 	if err != nil {
 		log.Errorf(ctx, "unitIDColumn: %v", err)
-		return "path_id"
+		return "unit_id"
 	}
 	defer rows.Close()
 	_ = rows.Next()
 	cols, err := rows.Columns()
 	if err != nil {
 		log.Errorf(ctx, "unitIDColumn: rows.Columns: %v", err)
-		return "path_id"
+		return "unit_id"
 	}
 	for _, c := range cols {
 		if c == "unit_id" {
 			return c
 		}
 	}
-	return "path_id"
+	return "unit_id"
 }
