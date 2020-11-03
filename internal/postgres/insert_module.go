@@ -259,6 +259,10 @@ func insertImportsUnique(ctx context.Context, tx *database.DB, m *internal.Modul
 	return tx.BulkUpsert(ctx, "imports_unique", cols, values, cols)
 }
 
+// insertUnits inserts the units for a module into the units table.
+//
+// It can be assume that at least one unit is a package, and there are one or
+// more units in the module.
 func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Module, moduleID int) (err error) {
 	defer derrors.Wrap(&err, "insertUnits(ctx, tx, %q, %q)", m.ModulePath, m.Version)
 	ctx, span := trace.StartSpan(ctx, "insertUnits")
@@ -274,17 +278,41 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 	for _, u := range m.Units {
 		sort.Strings(u.Imports)
 	}
+
+	var pathValues []interface{}
+	for _, u := range m.Units {
+		pathValues = append(pathValues, u.Path)
+	}
+	// Insert data into the paths table.
+	pathCols := []string{"path"}
+	uniquePathCols := []string{"path"}
+	returningPathCols := []string{"id", "path"}
+
+	pathToID := map[string]int{}
+	if err := db.BulkUpsertReturning(ctx, "paths", pathCols, pathValues, uniquePathCols, returningPathCols, func(rows *sql.Rows) error {
+		var (
+			pathID int
+			path   string
+		)
+		if err := rows.Scan(&pathID, &path); err != nil {
+			return err
+		}
+		pathToID[path] = pathID
+		return nil
+	}); err != nil {
+		return err
+	}
+
 	var (
-		pathValues    []interface{}
-		paths         []string
-		pathToID      = map[string]int{}
+		unitValues    []interface{}
+		pathToUnitID  = map[string]int{}
 		pathToReadme  = map[string]*internal.Readme{}
 		pathToDoc     = map[string]*internal.Documentation{}
 		pathToImports = map[string][]string{}
 	)
-	for _, d := range m.Units {
+	for _, u := range m.Units {
 		var licenseTypes, licensePaths []string
-		for _, l := range d.Licenses {
+		for _, l := range u.Licenses {
 			if len(l.Types) == 0 {
 				// If a license file has no detected license types, we still need to
 				// record it as applicable to the package, because we want to fail
@@ -299,60 +327,61 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 				}
 			}
 		}
-		pathValues = append(pathValues,
-			d.Path,
+		unitValues = append(unitValues,
+			u.Path,
+			pathToID[u.Path],
 			moduleID,
-			internal.V1Path(d.Path, m.ModulePath),
-			d.Name,
+			internal.V1Path(u.Path, m.ModulePath),
+			u.Name,
 			pq.Array(licenseTypes),
 			pq.Array(licensePaths),
-			d.IsRedistributable,
+			u.IsRedistributable,
 		)
-		if d.Readme != nil {
-			pathToReadme[d.Path] = d.Readme
+		if u.Readme != nil {
+			pathToReadme[u.Path] = u.Readme
 		}
-		if d.Documentation != nil && d.Documentation.HTML.String() == internal.StringFieldMissing {
+		if u.Documentation != nil && u.Documentation.HTML.String() == internal.StringFieldMissing {
 			return errors.New("insertUnits: package missing Documentation.HTML")
 		}
-		if d.Documentation != nil {
-			if d.Documentation.Source == nil {
-				return fmt.Errorf("insertUnits: unit %q missing source files", d.Path)
+		if u.Documentation != nil {
+			if u.Documentation.Source == nil {
+				return fmt.Errorf("insertUnits: unit %q missing source files", u.Path)
 			}
 		}
-		pathToDoc[d.Path] = d.Documentation
-		if len(d.Imports) > 0 {
-			pathToImports[d.Path] = d.Imports
+		pathToDoc[u.Path] = u.Documentation
+		if len(u.Imports) > 0 {
+			pathToImports[u.Path] = u.Imports
 		}
 	}
 
-	if len(pathValues) > 0 {
-		pathCols := []string{
-			"path",
-			"module_id",
-			"v1_path",
-			"name",
-			"license_types",
-			"license_paths",
-			"redistributable",
-		}
-		logMemory(ctx, "before inserting into units")
+	// Insert data into the units table.
+	unitCols := []string{
+		"path",
+		"path_id",
+		"module_id",
+		"v1_path",
+		"name",
+		"license_types",
+		"license_paths",
+		"redistributable",
+	}
+	uniqueUnitCols := []string{"path", "module_id"}
+	returningUnitCols := []string{"id", "path"}
 
-		uniqueCols := []string{"path", "module_id"}
-		returningCols := []string{"id", "path"}
-		if err := db.BulkUpsertReturning(ctx, "units", pathCols, pathValues, uniqueCols, returningCols, func(rows *sql.Rows) error {
-			var (
-				pathID int
-				path   string
-			)
-			if err := rows.Scan(&pathID, &path); err != nil {
-				return err
-			}
-			pathToID[path] = pathID
-			paths = append(paths, path)
-			return nil
-		}); err != nil {
+	var paths []string
+	if err := db.BulkUpsertReturning(ctx, "units", unitCols, unitValues, uniqueUnitCols, returningUnitCols, func(rows *sql.Rows) error {
+		var (
+			unitID int
+			path   string
+		)
+		if err := rows.Scan(&unitID, &path); err != nil {
 			return err
 		}
+		pathToUnitID[path] = unitID
+		paths = append(paths, path)
+		return nil
+	}); err != nil {
+		return err
 	}
 
 	// Sort to ensure proper lock ordering, avoiding deadlocks. See
@@ -361,7 +390,6 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 	// same module, which happens regularly.
 	sort.Strings(paths)
 	if len(pathToReadme) > 0 {
-		logMemory(ctx, "before inserting into readmes")
 		var readmeValues []interface{}
 		for _, path := range paths {
 			readme, ok := pathToReadme[path]
@@ -375,8 +403,8 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 				continue
 			}
 
-			id := pathToID[path]
-			readmeValues = append(readmeValues, id, readme.Filepath, readmeContents)
+			unitID := pathToUnitID[path]
+			readmeValues = append(readmeValues, unitID, readme.Filepath, readmeContents)
 		}
 		rcol := pdb.unitIDColumn(ctx, "readmes")
 		readmeCols := []string{rcol, "file_path", "contents"}
@@ -386,15 +414,14 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 	}
 
 	if len(pathToDoc) > 0 {
-		logMemory(ctx, "before inserting into documentation")
 		var docValues []interface{}
 		for _, path := range paths {
 			doc := pathToDoc[path]
 			if doc == nil {
 				continue
 			}
-			id := pathToID[path]
-			docValues = append(docValues, id, doc.GOOS, doc.GOARCH, doc.Synopsis, makeValidUnicode(doc.HTML.String()), doc.Source)
+			unitID := pathToUnitID[path]
+			docValues = append(docValues, unitID, doc.GOOS, doc.GOARCH, doc.Synopsis, makeValidUnicode(doc.HTML.String()), doc.Source)
 		}
 		uniqueCols := []string{pdb.unitIDColumn(ctx, "documentation"), "goos", "goarch"}
 		docCols := append(uniqueCols, "synopsis", "html", "source")
@@ -403,16 +430,15 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 		}
 	}
 
-	logMemory(ctx, "before inserting into package_imports")
 	var importValues []interface{}
 	for _, pkgPath := range paths {
 		imports, ok := pathToImports[pkgPath]
 		if !ok {
 			continue
 		}
-		id := pathToID[pkgPath]
+		unitID := pathToUnitID[pkgPath]
 		for _, toPath := range imports {
-			importValues = append(importValues, id, toPath)
+			importValues = append(importValues, unitID, toPath)
 		}
 	}
 	importCols := []string{pdb.unitIDColumn(ctx, "package_imports"), "to_path"}
