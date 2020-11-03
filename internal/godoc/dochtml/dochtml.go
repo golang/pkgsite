@@ -151,7 +151,7 @@ func RenderParts(ctx context.Context, fset *token.FileSet, p *doc.Package, opt R
 	if err != nil {
 		return safehtml.HTML{}, safehtml.HTML{}, safehtml.HTML{}, err
 	}
-	return body, safehtml.HTMLConcat(outline, mobileOutline), mobileOutline, nil
+	return body, outline, mobileOutline, nil
 }
 
 // renderInfo returns the functions and data needed to render the doc.
