@@ -24,16 +24,21 @@ var (
 // LoadTemplates reads and parses the templates used to generate documentation.
 func LoadTemplates(dir template.TrustedSource) {
 	loadOnce.Do(func() {
-		example := template.TrustedSourceJoin(dir, template.TrustedSourceFromConstant("example.tmpl"))
+		join := template.TrustedSourceJoin
+		tc := template.TrustedSourceFromConstant
 
-		load := func(ts template.TrustedSource) *template.Template {
-			return template.Must(template.New(ts.String()).
-				Funcs(tmpl).
-				ParseFilesFromTrustedSources(template.TrustedSourceJoin(dir, ts), example))
-		}
-
-		legacyTemplate = load(template.TrustedSourceFromConstant("legacy.tmpl"))
-		unitTemplate = load(template.TrustedSourceFromConstant("unit.tmpl"))
+		example := join(dir, tc("example.tmpl"))
+		legacyTemplate = template.Must(template.New("legacy.tmpl").
+			Funcs(tmpl).
+			ParseFilesFromTrustedSources(join(dir, tc("legacy.tmpl")), example))
+		unitTemplate = template.Must(template.New("unit.tmpl").
+			Funcs(tmpl).
+			ParseFilesFromTrustedSources(
+				join(dir, tc("unit.tmpl")),
+				join(dir, tc("sidenav.tmpl")),
+				join(dir, tc("sidenav-mobile.tmpl")),
+				join(dir, tc("body.tmpl")),
+				example))
 	})
 }
 
