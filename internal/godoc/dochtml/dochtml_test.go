@@ -30,7 +30,6 @@ var templateSource = template.TrustedSourceFromConstant("../../../content/static
 func TestRender(t *testing.T) {
 	LoadTemplates(templateSource)
 	fset, d := mustLoadPackage("everydecl")
-
 	rawDoc, err := Render(context.Background(), fset, d, RenderOptions{
 		FileLinkFunc:   func(string) string { return "file" },
 		SourceLinkFunc: func(ast.Node) string { return "src" },
@@ -88,6 +87,7 @@ func TestRenderExperimental(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	htmlDoc, err := html.Parse(strings.NewReader(rawDoc.String()))
 	if err != nil {
 		t.Fatal(err)
@@ -123,6 +123,66 @@ func TestRenderExperimental(t *testing.T) {
 	checker = htmlcheck.In("#DocNavMobile-select",
 		htmlcheck.In("optgroup[label=Notes]", htmlcheck.In("option", htmlcheck.HasAttr("value", "pkg-note-BUG"), htmlcheck.HasExactText("Bugs"))))
 	if err := checker(htmlDoc); err != nil {
+		t.Errorf("note check: %v", err)
+	}
+}
+
+func TestRenderParts(t *testing.T) {
+	LoadTemplates(templateSource)
+	fset, d := mustLoadPackage("everydecl")
+
+	ctx := experiment.NewContext(context.Background(), internal.ExperimentUnitPage)
+	body, sidenav, mobile, err := RenderParts(ctx, fset, d, RenderOptions{
+		FileLinkFunc:   func(string) string { return "file" },
+		SourceLinkFunc: func(ast.Node) string { return "src" },
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	bodyDoc, err := html.Parse(strings.NewReader(body.String()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	sidenavDoc, err := html.Parse(strings.NewReader(sidenav.String()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	mobileDoc, err := html.Parse(strings.NewReader(mobile.String()))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Check that there are no duplicate id attributes.
+	t.Run("duplicate ids", func(t *testing.T) {
+		testDuplicateIDs(t, bodyDoc)
+	})
+	t.Run("ids-and-kinds", func(t *testing.T) {
+		// Check that the id and data-kind labels are right.
+		testIDsAndKinds(t, bodyDoc)
+	})
+
+	checker := htmlcheck.In(".Documentation-note",
+		htmlcheck.In("h3", htmlcheck.HasAttr("id", "pkg-note-BUG"), htmlcheck.HasExactText("Bugs ¶")),
+		htmlcheck.In("a", htmlcheck.HasHref("#pkg-note-BUG")))
+	if err := checker(bodyDoc); err != nil {
+		t.Errorf("note check: %v", err)
+	}
+
+	checker = htmlcheck.In(".Documentation-index",
+		htmlcheck.In(".Documentation-indexNote", htmlcheck.In("a", htmlcheck.HasHref("#pkg-note-BUG"), htmlcheck.HasExactText("Bugs"))))
+	if err := checker(bodyDoc); err != nil {
+		t.Errorf("note check: %v", err)
+	}
+
+	checker = htmlcheck.In(".DocNav-notes",
+		htmlcheck.In("#nav-group-notes", htmlcheck.In("li", htmlcheck.In("a", htmlcheck.HasHref("#pkg-note-BUG"), htmlcheck.HasExactText("Bugs")))))
+	if err := checker(sidenavDoc); err != nil {
+		t.Errorf("note check: %v", err)
+	}
+
+	checker = htmlcheck.In("#DocNavMobile-select",
+		htmlcheck.In("optgroup[label=Notes]", htmlcheck.In("option", htmlcheck.HasAttr("value", "pkg-note-BUG"), htmlcheck.HasExactText("Bugs"))))
+	if err := checker(mobileDoc); err != nil {
 		t.Errorf("note check: %v", err)
 	}
 }

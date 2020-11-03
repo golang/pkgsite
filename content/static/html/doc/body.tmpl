@@ -3,8 +3,6 @@
   Use of this source code is governed by a BSD-style
   license that can be found in the LICENSE file.
 -->
-
-{{- define "body" -}}
 <div class="Documentation-content js-docContent"> {{/* Documentation content container */}}
 {{- if or .Doc (index .Examples.Map "") -}}
 	<section class="Documentation-overview">
@@ -187,4 +185,3 @@
 	</section>
 {{- end -}}
 </div> {{/* End documentation content container */}}
-{{- end -}}

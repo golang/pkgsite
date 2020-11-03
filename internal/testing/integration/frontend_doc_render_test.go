@@ -87,11 +87,14 @@ func getDoc(t *testing.T, modulePath string, exps ...string) string {
 	if err != nil {
 		t.Fatalf("%s: %v", url, err)
 	}
-	// Remove surrounding whitespace from lines.
+	// Remove surrounding whitespace from lines, and blank lines.
 	scan := bufio.NewScanner(bytes.NewReader(content))
 	var b strings.Builder
 	for scan.Scan() {
-		fmt.Fprintln(&b, strings.TrimSpace(scan.Text()))
+		line := strings.TrimSpace(scan.Text())
+		if len(line) > 0 {
+			fmt.Fprintln(&b, line)
+		}
 	}
 	if scan.Err() != nil {
 		t.Fatal(scan.Err())

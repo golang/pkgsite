@@ -101,6 +101,59 @@ func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Render
 	return executeToHTMLWithLimit(tmpl, data, opt.Limit)
 }
 
+// Render renders package documentation HTML for the
+// provided file set and package, in separate parts.
+//
+// If any of the rendered documentation part HTML sizes exceeds the specified limit,
+// an error with ErrTooLarge in its chain will be returned.
+func RenderParts(ctx context.Context, fset *token.FileSet, p *doc.Package, opt RenderOptions) (body, outline, mobileOutline safehtml.HTML, err error) {
+	defer derrors.Wrap(&err, "dochtml.RenderParts")
+
+	if !experiment.IsActive(ctx, internal.ExperimentUnitPage) {
+		return safehtml.HTML{}, safehtml.HTML{}, safehtml.HTML{}, errors.New("should only be called if the unit-page experiment is active")
+	}
+
+	if opt.Limit == 0 {
+		const megabyte = 1000 * 1000
+		opt.Limit = 10 * megabyte
+	}
+
+	funcs, data := renderInfo(ctx, fset, p, opt)
+	p = data.Package
+	if p.Doc == "" &&
+		len(p.Examples) == 0 &&
+		len(p.Consts) == 0 &&
+		len(p.Vars) == 0 &&
+		len(p.Types) == 0 &&
+		len(p.Funcs) == 0 {
+		return safehtml.HTML{}, safehtml.HTML{}, safehtml.HTML{}, nil
+	}
+	h := htmlPackage(ctx)
+	tmpl := template.Must(h.Clone()).Funcs(funcs)
+
+	exec := func(name string) safehtml.HTML {
+		if err != nil {
+			return safehtml.HTML{}
+		}
+		t := tmpl.Lookup(name)
+		if t == nil {
+			err = fmt.Errorf("missing %s", name)
+			return safehtml.HTML{}
+		}
+		var html safehtml.HTML
+		html, err = executeToHTMLWithLimit(t, data, opt.Limit)
+		return html
+	}
+
+	body = exec("body.tmpl")
+	outline = exec("sidenav.tmpl")
+	mobileOutline = exec("sidenav-mobile.tmpl")
+	if err != nil {
+		return safehtml.HTML{}, safehtml.HTML{}, safehtml.HTML{}, err
+	}
+	return body, safehtml.HTMLConcat(outline, mobileOutline), mobileOutline, nil
+}
+
 // renderInfo returns the functions and data needed to render the doc.
 func renderInfo(ctx context.Context, fset *token.FileSet, p *doc.Package, opt RenderOptions) (map[string]interface{}, templateData) {
 	// Make a copy to avoid modifying caller's *doc.Package.
@@ -174,6 +227,7 @@ func executeToHTMLWithLimit(tmpl *template.Template, data interface{}, limit int
 	} else if err != nil {
 		return safehtml.HTML{}, fmt.Errorf("dochtml.Render: %v", err)
 	}
+
 	// This is safe because we're executing a safehtml template and not modifying the result afterwards.
 	// We're just doing what safehtml/template.Template.ExecuteToHTML does
 	// (https://github.com/google/safehtml/blob/b8ae3e5e1ce3/template/template.go#L136).

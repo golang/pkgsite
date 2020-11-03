@@ -20,6 +20,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/frontend"
+	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/index"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
@@ -32,6 +33,7 @@ import (
 var testDB *postgres.DB
 
 func TestMain(m *testing.M) {
+	dochtml.LoadTemplates(template.TrustedSourceFromConstant("../../../content/static/html/doc"))
 	postgres.RunDBTests("discovery_integration_test", m, &testDB)
 }
 

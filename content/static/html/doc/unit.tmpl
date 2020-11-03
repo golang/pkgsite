@@ -5,7 +5,7 @@
 -->
 
 {{if or .Doc .Consts .Vars .Funcs .Types}}
-	{{- template "sidenav" . -}}
-	{{- template "sidenav-mobile" . -}}
+	{{template "sidenav.tmpl" .}}
+	{{template "sidenav-mobile.tmpl" .}}
 {{end}}
-{{- template "body" . -}}
+{{template "body.tmpl" .}}

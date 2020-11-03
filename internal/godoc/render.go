@@ -157,9 +157,19 @@ func (p *Package) renderOptions(innerPath string, sourceInfo *source.Info, modIn
 // RenderParts renders the documentation for the package in parts.
 // Rendering destroys p's AST; do not call any methods of p after it returns.
 func (p *Package) RenderParts(ctx context.Context, innerPath string, sourceInfo *source.Info, modInfo *ModuleInfo) (body, outline, mobileOutline safehtml.HTML, err error) {
-	_, _, html, err := p.Render(ctx, innerPath, sourceInfo, modInfo, "", "")
+	p.renderCalled = true
+
+	d, err := p.docPackage(innerPath, modInfo)
 	if err != nil {
 		return safehtml.HTML{}, safehtml.HTML{}, safehtml.HTML{}, err
 	}
-	return ParseDoc(ctx, html)
+	opts := p.renderOptions(innerPath, sourceInfo, modInfo)
+	b, o, m, err := dochtml.RenderParts(ctx, p.Fset, d, opts)
+	if errors.Is(err, ErrTooLarge) {
+		return template.MustParseAndExecuteToHTML(docTooLargeReplacement), safehtml.HTML{}, safehtml.HTML{}, err
+	}
+	if err != nil {
+		return safehtml.HTML{}, safehtml.HTML{}, safehtml.HTML{}, fmt.Errorf("dochtml.Render: %v", err)
+	}
+	return b, o, m, nil
 }
