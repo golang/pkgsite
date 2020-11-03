@@ -50,7 +50,7 @@ func ParseDoc(ctx context.Context, docHTML safehtml.HTML) (body, outline, mobile
 	// TODO: Deprecate this. The sidenav and body can
 	// either be rendered using separate functions, or all this content can
 	// be passed to the template via the UnitPage struct.
-	defer middleware.ElapsedStat(ctx, "godoc.ParseDoc")
+	defer middleware.ElapsedStat(ctx, "godoc.ParseDoc")()
 	b, err := parse(docHTML, BodySection)
 	if err != nil {
 		return safehtml.HTML{}, safehtml.HTML{}, safehtml.HTML{}, err
