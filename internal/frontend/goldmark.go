@@ -41,8 +41,11 @@ func (g *ASTTransformer) Transform(node *ast.Document, reader text.Reader, pc pa
 			if d := translateRelativeLink(string(v.Destination), g.info, false, g.readme); d != "" {
 				v.Destination = []byte(d)
 			}
+		case *ast.Heading:
+			if id, ok := v.AttributeString("id"); ok {
+				v.SetAttributeString("id", append([]byte("readme-"), id.([]byte)...))
+			}
 		}
-
 		return ast.WalkContinue, nil
 	})
 }

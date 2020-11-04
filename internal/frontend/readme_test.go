@@ -20,12 +20,11 @@ func TestReadme(t *testing.T) {
 	ctx := experiment.NewContext(context.Background(), internal.ExperimentGoldmark)
 	unit := sample.UnitEmpty(sample.PackagePath, sample.ModulePath, sample.VersionString)
 	for _, tc := range []struct {
-		name         string
-		unit         *internal.Unit
-		readme       *internal.Readme
-		wantHTML     string
-		wantUnitPage string
-		wantOutline  []*Heading
+		name        string
+		unit        *internal.Unit
+		readme      *internal.Readme
+		wantHTML    string
+		wantOutline []*Heading
 	}{
 		{
 			name: "Top level heading of h4 becomes h3, and following header levels become hN-1",
@@ -34,11 +33,11 @@ func TestReadme(t *testing.T) {
 				Filepath: sample.ReadmeFilePath,
 				Contents: "#### Four\n\n##### Five",
 			},
-			wantHTML: "<h3 class=\"h4\" id=\"four\">Four</h3>\n" +
-				"<h4 class=\"h5\" id=\"five\">Five</h4>",
+			wantHTML: "<h3 class=\"h4\" id=\"readme-four\">Four</h3>\n" +
+				"<h4 class=\"h5\" id=\"readme-five\">Five</h4>",
 			wantOutline: []*Heading{
-				{Level: 4, Text: "Four", ID: "four"},
-				{Level: 5, Text: "Five", ID: "five"},
+				{Level: 4, Text: "Four", ID: "readme-four"},
+				{Level: 5, Text: "Five", ID: "readme-five"},
 			},
 		},
 		{
@@ -48,12 +47,12 @@ func TestReadme(t *testing.T) {
 				Filepath: sample.ReadmeFilePath,
 				Contents: "#### Four\n\n##### Five\n\n###### Six",
 			},
-			wantHTML: "<h3 class=\"h4\" id=\"four\">Four</h3>\n" +
-				"<h4 class=\"h5\" id=\"five\">Five</h4>\n" +
-				"<h5 class=\"h6\" id=\"six\">Six</h5>",
+			wantHTML: "<h3 class=\"h4\" id=\"readme-four\">Four</h3>\n" +
+				"<h4 class=\"h5\" id=\"readme-five\">Five</h4>\n" +
+				"<h5 class=\"h6\" id=\"readme-six\">Six</h5>",
 			wantOutline: []*Heading{
-				{Level: 4, Text: "Four", ID: "four"},
-				{Level: 5, Text: "Five", ID: "five"},
+				{Level: 4, Text: "Four", ID: "readme-four"},
+				{Level: 5, Text: "Five", ID: "readme-five"},
 			},
 		},
 		{
@@ -63,12 +62,12 @@ func TestReadme(t *testing.T) {
 				Filepath: sample.ReadmeFilePath,
 				Contents: "## Two\n\n# One\n\n### Three",
 			},
-			wantHTML: "<h3 class=\"h2\" id=\"two\">Two</h3>\n" +
-				"<h2 class=\"h1\" id=\"one\">One</h2>\n" +
-				"<h4 class=\"h3\" id=\"three\">Three</h4>",
+			wantHTML: "<h3 class=\"h2\" id=\"readme-two\">Two</h3>\n" +
+				"<h2 class=\"h1\" id=\"readme-one\">One</h2>\n" +
+				"<h4 class=\"h3\" id=\"readme-three\">Three</h4>",
 			wantOutline: []*Heading{
-				{Level: 2, Text: "Two", ID: "two"},
-				{Level: 1, Text: "One", ID: "one"},
+				{Level: 2, Text: "Two", ID: "readme-two"},
+				{Level: 1, Text: "One", ID: "readme-one"},
 			},
 		},
 		{
@@ -78,13 +77,13 @@ func TestReadme(t *testing.T) {
 				Filepath: sample.ReadmeFilePath,
 				Contents: "# One\n\n#### Four\n\n#### Four",
 			},
-			wantHTML: "<h3 class=\"h1\" id=\"one\">One</h3>\n" +
-				"<h6 class=\"h4\" id=\"four\">Four</h6>\n" +
-				"<h6 class=\"h4\" id=\"four-1\">Four</h6>",
+			wantHTML: "<h3 class=\"h1\" id=\"readme-one\">One</h3>\n" +
+				"<h6 class=\"h4\" id=\"readme-four\">Four</h6>\n" +
+				"<h6 class=\"h4\" id=\"readme-four-1\">Four</h6>",
 			wantOutline: []*Heading{
-				{Level: 1, Text: "One", ID: "one"},
-				{Level: 4, Text: "Four", ID: "four"},
-				{Level: 4, Text: "Four", ID: "four-1"},
+				{Level: 1, Text: "One", ID: "readme-one"},
+				{Level: 4, Text: "Four", ID: "readme-four"},
+				{Level: 4, Text: "Four", ID: "readme-four-1"},
 			},
 		},
 		{
@@ -94,12 +93,12 @@ func TestReadme(t *testing.T) {
 				Filepath: sample.ReadmeFilePath,
 				Contents: "### Three\n\n## Two\n\n# One",
 			},
-			wantHTML: "<h3 class=\"h3\" id=\"three\">Three</h3>\n" +
-				"<h2 class=\"h2\" id=\"two\">Two</h2>\n" +
-				"<h1 class=\"h1\" id=\"one\">One</h1>",
+			wantHTML: "<h3 class=\"h3\" id=\"readme-three\">Three</h3>\n" +
+				"<h2 class=\"h2\" id=\"readme-two\">Two</h2>\n" +
+				"<h1 class=\"h1\" id=\"readme-one\">One</h1>",
 			wantOutline: []*Heading{
-				{Level: 2, Text: "Two", ID: "two"},
-				{Level: 1, Text: "One", ID: "one"},
+				{Level: 2, Text: "Two", ID: "readme-two"},
+				{Level: 1, Text: "One", ID: "readme-one"},
 			},
 		},
 		{
@@ -109,9 +108,9 @@ func TestReadme(t *testing.T) {
 				Filepath: sample.ReadmeFilePath,
 				Contents: "# :zap: Zap \n\n :joy:",
 			},
-			wantHTML: "<h3 class=\"h1\" id=\"zap-zap\">⚡ Zap</h3>\n<p>😂</p>",
+			wantHTML: "<h3 class=\"h1\" id=\"readme-zap-zap\">⚡ Zap</h3>\n<p>😂</p>",
 			wantOutline: []*Heading{
-				{Level: 1, Text: " Zap", ID: "zap-zap"},
+				{Level: 1, Text: " Zap", ID: "readme-zap-zap"},
 			},
 		},
 		{
@@ -247,11 +246,9 @@ func TestReadme(t *testing.T) {
 				Contents: "<img src=\"resources/logoSmall.png\" />\n\n# Heading\n",
 			},
 			wantHTML: `<p><img src="https://github.com/valid/module_name/raw/v1.0.0/resources/logoSmall.png"/></p>` + "\n" +
-				`<h3 class="h1" id="heading">Heading</h3>`,
-			wantUnitPage: `<p><img src="https://github.com/valid/module_name/raw/v1.0.0/resources/logoSmall.png"/></p>` + "\n" +
-				`<h3 class="h1" id="heading">Heading</h3>`,
+				`<h3 class="h1" id="readme-heading">Heading</h3>`,
 			wantOutline: []*Heading{
-				{Level: 1, Text: "Heading", ID: "heading"},
+				{Level: 1, Text: "Heading", ID: "readme-heading"},
 			},
 		},
 		{
@@ -262,11 +259,9 @@ func TestReadme(t *testing.T) {
 				Contents: "<p align=\"center\"><img src=\"foo.png\" /></p>\n\n# Heading",
 			},
 			wantHTML: `<p align="center"><img src="https://github.com/valid/module_name/raw/v1.0.0/foo.png"/></p>` + "\n" +
-				`<h3 class="h1" id="heading">Heading</h3>`,
-			wantUnitPage: `<p align="center"><img src="https://github.com/valid/module_name/raw/v1.0.0/foo.png"/></p>` + "\n" +
-				`<h3 class="h1" id="heading">Heading</h3>`,
+				`<h3 class="h1" id="readme-heading">Heading</h3>`,
 			wantOutline: []*Heading{
-				{Level: 1, Text: "Heading", ID: "heading"},
+				{Level: 1, Text: "Heading", ID: "readme-heading"},
 			},
 		},
 		{
@@ -277,11 +272,9 @@ func TestReadme(t *testing.T) {
 				Contents: "<div align=\"center\"><img src=\"foo.png\" /></div>\n\n# Heading",
 			},
 			wantHTML: `<div align="center"><img src="https://github.com/valid/module_name/raw/v1.0.0/foo.png"/></div>` + "\n" +
-				`<h3 class="h1" id="heading">Heading</h3>`,
-			wantUnitPage: `<div align="center"><img src="https://github.com/valid/module_name/raw/v1.0.0/foo.png"/></div>` + "\n" +
-				`<h3 class="h1" id="heading">Heading</h3>`,
+				`<h3 class="h1" id="readme-heading">Heading</h3>`,
 			wantOutline: []*Heading{
-				{Level: 1, Text: "Heading", ID: "heading"},
+				{Level: 1, Text: "Heading", ID: "readme-heading"},
 			},
 		},
 		{
@@ -297,11 +290,9 @@ func TestReadme(t *testing.T) {
 				Contents: "<div align=\"center\"><img src=\"foo.png\" /></div>\n\n# Heading",
 			},
 			wantHTML: `<div align="center"><img src="https://github.com/some/%3Cscript%3E/raw/v1.2.3/foo.png"/></div>` + "\n" +
-				`<h3 class="h1" id="heading">Heading</h3>`,
-			wantUnitPage: `<div align="center"><img src="https://github.com/some/%3Cscript%3E/raw/v1.2.3/foo.png"/></div>` + "\n" +
-				`<h3 class="h1" id="heading">Heading</h3>`,
+				`<h3 class="h1" id="readme-heading">Heading</h3>`,
 			wantOutline: []*Heading{
-				{Level: 1, Text: "Heading", ID: "heading"},
+				{Level: 1, Text: "Heading", ID: "readme-heading"},
 			},
 		},
 		{
