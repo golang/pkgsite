@@ -44,6 +44,10 @@ type MainDetails struct {
 	// Readme is the rendered readme HTML.
 	Readme safehtml.HTML
 
+	// ReadmeOutline is a collection of headings from the readme file
+	// used to render the readme outline in the sidebar.
+	ReadmeOutline []*Heading
+
 	// ImportedByCount is the number of packages that import this path.
 	// When the count is > limit it will read as 'limit+'. This field
 	// is not supported when using a datasource proxy.
@@ -104,7 +108,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 	if err != nil {
 		return nil, err
 	}
-	readme, err := readmeContent(ctx, um, unit.Readme)
+	readme, readmeOutline, err := readmeContent(ctx, unit)
 	if err != nil {
 		return nil, err
 	}
@@ -144,6 +148,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		Licenses:        transformLicenseMetadata(um.Licenses),
 		CommitTime:      absoluteTime(um.CommitTime),
 		Readme:          readme,
+		ReadmeOutline:   readmeOutline,
 		DocOutline:      docOutline,
 		DocBody:         docBody,
 		SourceFiles:     files,
@@ -169,23 +174,28 @@ func moduleInfo(um *internal.UnitMeta) *internal.ModuleInfo {
 	}
 }
 
-// readmeContent renders the readme to html.
-func readmeContent(ctx context.Context, um *internal.UnitMeta, readme *internal.Readme) (_ safehtml.HTML, err error) {
+// readmeContent renders the readme to html and collects the headings
+// into an outline when the goldmark experiment active.
+func readmeContent(ctx context.Context, u *internal.Unit) (_ safehtml.HTML, _ []*Heading, err error) {
+	defer derrors.Wrap(&err, "readmeContent(%q, %q, %q)", u.Path, u.ModulePath, u.Version)
 	defer middleware.ElapsedStat(ctx, "readmeContent")()
-	if !um.IsRedistributable || readme == nil {
-		return safehtml.HTML{}, nil
+	if !u.IsRedistributable {
+		return safehtml.HTML{}, nil, nil
 	}
-	mi := moduleInfo(um)
-	var readmeHTML safehtml.HTML
+	mi := moduleInfo(&u.UnitMeta)
+	var (
+		readmeHTML    safehtml.HTML
+		readmeOutline []*Heading
+	)
 	if experiment.IsActive(ctx, internal.ExperimentGoldmark) {
-		readmeHTML, err = ReadmeHTML(ctx, mi, readme)
+		readmeHTML, readmeOutline, err = Readme(ctx, u)
 	} else {
-		readmeHTML, err = LegacyReadmeHTML(ctx, mi, readme)
+		readmeHTML, err = LegacyReadmeHTML(ctx, mi, u.Readme)
 	}
 	if err != nil {
-		return safehtml.HTML{}, err
+		return safehtml.HTML{}, nil, err
 	}
-	return readmeHTML, nil
+	return readmeHTML, readmeOutline, nil
 }
 
 func getNestedModules(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta) ([]*NestedModule, error) {

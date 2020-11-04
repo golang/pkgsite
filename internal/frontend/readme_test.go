@@ -16,26 +16,31 @@ import (
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
-func TestGoldmarkReadmeHTML(t *testing.T) {
+func TestReadme(t *testing.T) {
 	ctx := experiment.NewContext(context.Background(), internal.ExperimentGoldmark)
 	mod := &internal.ModuleInfo{
 		Version:    sample.VersionString,
 		SourceInfo: source.NewGitHubInfo(sample.ModulePath, "", sample.VersionString),
 	}
 	for _, tc := range []struct {
-		name   string
-		mi     *internal.ModuleInfo
-		readme *internal.Readme
-		want   string
+		name        string
+		mi          *internal.ModuleInfo
+		readme      *internal.Readme
+		wantHTML    string
+		wantOutline []*Heading
 	}{
 		{
-			name: "Top level heading is h3 from ####, and following header levels become hN-1",
+			name: "Top level heading of h4 becomes h3, and following header levels become hN-1",
 			mi:   mod,
 			readme: &internal.Readme{
 				Filepath: sample.ReadmeFilePath,
 				Contents: "#### Heading Rank 4\n\n##### Heading Rank 5",
 			},
-			want: "<h3 class=\"h4\" id=\"heading-rank-4\">Heading Rank 4</h3>\n<h4 class=\"h5\" id=\"heading-rank-5\">Heading Rank 5</h4>",
+			wantHTML: "<h3 class=\"h4\" id=\"heading-rank-4\">Heading Rank 4</h3>\n<h4 class=\"h5\" id=\"heading-rank-5\">Heading Rank 5</h4>",
+			wantOutline: []*Heading{
+				{Level: 4, Text: "Heading Rank 4", ID: "heading-rank-4"},
+				{Level: 5, Text: "Heading Rank 5", ID: "heading-rank-5"},
+			},
 		},
 		{
 			name: "Github markdown emoji markup is properly rendered",
@@ -44,17 +49,29 @@ func TestGoldmarkReadmeHTML(t *testing.T) {
 				Filepath: sample.ReadmeFilePath,
 				Contents: "# :zap: Zap \n\n :joy:",
 			},
-			want: "<h3 class=\"h1\" id=\"zap-zap\">⚡ Zap</h3>\n<p>😂</p>",
+			wantHTML: "<h3 class=\"h1\" id=\"zap-zap\">⚡ Zap</h3>\n<p>😂</p>",
+			wantOutline: []*Heading{
+				{Level: 1, Text: " Zap", ID: "zap-zap"},
+			},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			hgot, err := ReadmeHTML(ctx, tc.mi, tc.readme)
+			unit := internal.Unit{
+				Readme: tc.readme,
+				UnitMeta: internal.UnitMeta{
+					SourceInfo: tc.mi.SourceInfo,
+				},
+			}
+			html, gotOutline, err := Readme(ctx, &unit)
 			if err != nil {
 				t.Fatal(err)
 			}
-			got := strings.TrimSpace(hgot.String())
-			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("ReadmeHTML(%v) mismatch (-want +got):\n%s", tc.mi, diff)
+			gotHTML := strings.TrimSpace(html.String())
+			if diff := cmp.Diff(tc.wantHTML, gotHTML); diff != "" {
+				t.Errorf("Readme(%v) html mismatch (-want +got):\n%s", tc.mi, diff)
+			}
+			if diff := cmp.Diff(tc.wantOutline, gotOutline); diff != "" {
+				t.Errorf("Readme(%v) outline mismatch (-want +got):\n%s", tc.mi, diff)
 			}
 		})
 	}

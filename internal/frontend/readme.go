@@ -7,6 +7,7 @@ package frontend
 import (
 	"bytes"
 	"context"
+	"math"
 
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
@@ -14,6 +15,7 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/yuin/goldmark"
 	emoji "github.com/yuin/goldmark-emoji"
+	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer"
@@ -24,24 +26,42 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 )
 
-// ReadmeHTML sanitizes readmeContents based on bluemondy.UGCPolicy and returns
-// a safehtml.HTML. If readmeFilePath indicates that this is a markdown file,
-// it will also render the markdown contents using goldmark.
+// Heading holds data about a heading within a readme used in the
+// sidebar template to render the readme outline.
+type Heading struct {
+	// Level is the original level of the heading.
+	Level int
+	// Text is the content from the readme contained within a heading.
+	Text string
+	// ID corresponds to the ID attribute for a heading element
+	// and is also used in an href to the corresponding section
+	// within the readme outline. All ids are prefixed with readme-
+	// to avoid name collisions.
+	ID string
+}
+
+// Readme sanitizes readmeContents and returns a safehtml.HTML. If the readme filepath
+// indicates that this is a markdown file, it will render the markdown contents and
+// generate an outline from the parsed readmeContent's ast. Headings are prefixed with
+// "readme-" and heading levels are adjusted to start at h3 in order to nest them
+// properly within the rest of the page. The readme's original styling is preserved
+// in the html by giving headings a css class styled identical to their original
+// heading level.
 //
 // This function is exported for use in an external tool that uses this package to
 // compare readme files to see how changes in processing will affect them.
-func ReadmeHTML(ctx context.Context, mi *internal.ModuleInfo, readme *internal.Readme) (_ safehtml.HTML, err error) {
-	defer derrors.Wrap(&err, "ReadmeHTML(%s@%s)", mi.ModulePath, mi.Version)
-	if readme == nil || readme.Contents == "" {
-		return safehtml.HTML{}, nil
+func Readme(ctx context.Context, u *internal.Unit) (_ safehtml.HTML, _ []*Heading, err error) {
+	defer derrors.Wrap(&err, "Readme(%q, %q, %q)", u.Path, u.ModulePath, u.Version)
+	if u.Readme == nil || u.Readme.Contents == "" {
+		return safehtml.HTML{}, nil, nil
 	}
-	if !isMarkdown(readme.Filepath) {
+	if !isMarkdown(u.Readme.Filepath) {
 		t := template.Must(template.New("").Parse(`<pre class="readme">{{.}}</pre>`))
-		h, err := t.ExecuteToHTML(readme.Contents)
+		h, err := t.ExecuteToHTML(u.Readme.Contents)
 		if err != nil {
-			return safehtml.HTML{}, err
+			return safehtml.HTML{}, nil, err
 		}
-		return h, nil
+		return h, nil, nil
 	}
 
 	// Sets priority value so that we always use our custom transformer
@@ -62,8 +82,8 @@ func ReadmeHTML(ctx context.Context, mi *internal.ModuleInfo, readme *internal.R
 			// use translateRelativeLink and translateHTML to modify the AST
 			// before it is rendered.
 			parser.WithASTTransformers(util.Prioritized(&ASTTransformer{
-				info:   mi.SourceInfo,
-				readme: readme,
+				info:   u.SourceInfo,
+				readme: u.Readme,
 			}, ASTTransformerPriority)),
 		),
 		// These extensions lets users write HTML code in the README. This is
@@ -76,26 +96,26 @@ func ReadmeHTML(ctx context.Context, mi *internal.ModuleInfo, readme *internal.R
 	)
 	gdMarkdown.Renderer().AddOptions(
 		renderer.WithNodeRenderers(
-			util.Prioritized(NewHTMLRenderer(mi.SourceInfo, readme), 100),
+			util.Prioritized(NewHTMLRenderer(u.SourceInfo, u.Readme), 100),
 		),
 	)
-
-	var b bytes.Buffer
-	contents := []byte(readme.Contents)
-	gdRenderer := gdMarkdown.Renderer()
+	contents := []byte(u.Readme.Contents)
 	gdParser := gdMarkdown.Parser()
-
 	reader := text.NewReader(contents)
 	doc := gdParser.Parse(reader)
+	gdRenderer := gdMarkdown.Renderer()
 
+	var b bytes.Buffer
 	if err := gdRenderer.Render(&b, contents, doc); err != nil {
-		return safehtml.HTML{}, nil
+		return safehtml.HTML{}, nil, nil
 	}
-	return sanitizeGoldmarkHTML(&b), nil
+	htmlContent := sanitizeHTML(&b)
+	outline := readmeOutline(doc, contents)
+	return htmlContent, outline, nil
 }
 
-// sanitizeGoldmarkHTML sanitizes HTML from a bytes.Buffer so that it is safe.
-func sanitizeGoldmarkHTML(b *bytes.Buffer) safehtml.HTML {
+// sanitizeHTML sanitizes HTML from a bytes.Buffer so that it is safe.
+func sanitizeHTML(b *bytes.Buffer) safehtml.HTML {
 	p := bluemonday.UGCPolicy()
 
 	p.AllowAttrs("width", "align").OnElements("img")
@@ -110,4 +130,44 @@ func sanitizeGoldmarkHTML(b *bytes.Buffer) safehtml.HTML {
 
 	s := string(p.SanitizeBytes(b.Bytes()))
 	return uncheckedconversions.HTMLFromStringKnownToSatisfyTypeContract(s)
+}
+
+// readmeOutline collects the headings from a readme into an outline
+// of the document. It keeps only the top two levels of nesting from
+// any set of headings. See tests for heading levels in TestReadme
+// for behavior.
+func readmeOutline(doc ast.Node, contents []byte) []*Heading {
+	var headings []*Heading
+	// l1 and l2 are used to keep track of the top two heading levels.
+	l1, l2 := math.MaxInt8, math.MaxInt8
+
+	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if n.Kind() == ast.KindHeading && entering {
+			heading := n.(*ast.Heading)
+			text := n.Text(contents)
+			section := Heading{
+				Level: heading.Level,
+				Text:  string(text),
+			}
+			if id, ok := heading.AttributeString("id"); ok {
+				section.ID = string(id.([]byte))
+			}
+			headings = append(headings, &section)
+			if heading.Level < l1 {
+				l2, l1 = l1, heading.Level
+			} else if heading.Level < l2 && heading.Level != l1 {
+				l2 = heading.Level
+			}
+			return ast.WalkSkipChildren, nil
+		}
+		return ast.WalkContinue, nil
+	})
+
+	var filtered []*Heading
+	for _, h := range headings {
+		if h.Level <= l2 {
+			filtered = append(filtered, h)
+		}
+	}
+	return filtered
 }

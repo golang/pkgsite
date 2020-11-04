@@ -134,7 +134,7 @@ func blackfridayReadmeHTML(ctx context.Context, readme *internal.Readme, mi *int
 	if walkErr != nil {
 		return safehtml.HTML{}, walkErr
 	}
-	return sanitizeHTML(b), nil
+	return legacySanitizeHTML(b), nil
 }
 
 // LegacyReadmeHTML sanitizes readmeContents based on bluemondy.UGCPolicy and returns
@@ -160,8 +160,8 @@ func LegacyReadmeHTML(ctx context.Context, mi *internal.ModuleInfo, readme *inte
 	return blackfridayReadmeHTML(ctx, readme, mi)
 }
 
-// sanitizeHTML reads HTML from r and sanitizes it to ensure it is safe.
-func sanitizeHTML(r io.Reader) safehtml.HTML {
+// legacySanitizeHTML reads HTML from r and sanitizes it to ensure it is safe.
+func legacySanitizeHTML(r io.Reader) safehtml.HTML {
 	// bluemonday.UGCPolicy allows a broad selection of HTML elements and
 	// attributes that are safe for user generated content. This policy does
 	// not allow iframes, object, embed, styles, script, etc.
