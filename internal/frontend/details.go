@@ -431,7 +431,23 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, d
 	}
 	results := s.checkPossibleModulePaths(ctx, db, fullPath, requestedVersion, modulePaths, false)
 	for _, fr := range results {
-		if fr.status == statusNotFoundInVersionMap || fr.status == http.StatusInternalServerError {
+		if fr.status == http.StatusInternalServerError {
+			// Instead of serving a 404, provide the user with instructions on
+			// how to manually fetch the package. If the task change interval
+			// has passed, s.checkPossibleModulePaths will return
+			// statusNotFoundInVersionMap.
+			return &serverError{
+				status: http.StatusNotFound,
+				epage: &errorPage{
+					messageTemplate: template.MakeTrustedTemplate(`
+					    <h3 class="Error-message">{{.StatusText}}</h3>
+					    <p class="Error-message">Check that you entered the URL correctly, or try fetching it following the
+                        <a href="/about#adding-a-package">instructions here</a>.</p>`),
+					MessageData: struct{ StatusText string }{http.StatusText(http.StatusNotFound)},
+				},
+			}
+		}
+		if fr.status == statusNotFoundInVersionMap {
 			// If the result is statusNotFoundInVersionMap, it means that
 			// we haven't attempted to fetch this path before. Return an
 			// error page giving the user the option to fetch the path.

@@ -179,6 +179,7 @@ func (s *Server) checkPossibleModulePaths(ctx context.Context, db *postgres.DB,
 				fr.err = err
 				fr.status = http.StatusInternalServerError
 			}
+
 			// After the fetch request is enqueued, poll the database until it has been
 			// inserted or the request times out.
 			fr = pollForPath(ctx, db, pollEvery, fullPath, modulePath, requestedVersion, s.taskIDChangeInterval)
@@ -335,10 +336,13 @@ func checkForPath(ctx context.Context, db *postgres.DB,
 		status:     vm.Status,
 		goModPath:  vm.GoModPath,
 	}
+
 	switch fr.status {
+	case http.StatusInternalServerError:
+		fr.err = fmt.Errorf("%q: %v", http.StatusText(fr.status), vm.Error)
+		return fr
 	case http.StatusNotFound,
-		derrors.ToStatus(derrors.DBModuleInsertInvalid),
-		http.StatusInternalServerError:
+		derrors.ToStatus(derrors.DBModuleInsertInvalid):
 		if time.Since(vm.UpdatedAt) > taskIDChangeInterval {
 			// If the duration of taskIDChangeInterval has passed since
 			// a module_path was last inserted into version_map with a failed status,
