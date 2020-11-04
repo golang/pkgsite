@@ -138,6 +138,7 @@ func (s *Server) fetchAndPoll(ctx context.Context, ds internal.DataSource, modul
 		if errors.As(err, &serr) {
 			return serr.status, http.StatusText(serr.status)
 		}
+		log.Errorf(ctx, "fetchAndPoll(ctx, ds, q, %q, %q, %q): %v", modulePath, fullPath, requestedVersion, err)
 		return http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError)
 	}
 	results := s.checkPossibleModulePaths(ctx, db, fullPath, requestedVersion, modulePaths, true)
@@ -169,16 +170,19 @@ func (s *Server) checkPossibleModulePaths(ctx context.Context, db *postgres.DB,
 			// have already attempted to fetch it in the past. If so, just
 			// return the result from that fetch process.
 			fr := checkForPath(ctx, db, fullPath, modulePath, requestedVersion, s.taskIDChangeInterval)
+			log.Debugf(ctx, "initial checkForPath(ctx, db, %q, %q, %q, %d): status=%d, err=%v", fullPath, modulePath, requestedVersion, s.taskIDChangeInterval, fr.status, fr.err)
 			if !shouldQueue || fr.status != statusNotFoundInVersionMap {
 				results[i] = fr
 				return
 			}
+
 			// A row for this modulePath and requestedVersion combination does not
 			// exist in version_map. Enqueue the module version to be fetched.
 			if _, err := s.queue.ScheduleFetch(ctx, modulePath, requestedVersion, "", s.taskIDChangeInterval); err != nil {
 				fr.err = err
 				fr.status = http.StatusInternalServerError
 			}
+			log.Debugf(ctx, "queued %s@%s to frontend-fetch task queue", modulePath, requestedVersion)
 
 			// After the fetch request is enqueued, poll the database until it has been
 			// inserted or the request times out.
