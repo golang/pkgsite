@@ -78,13 +78,14 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		// Default to details tab when there is no tab param.
 		tab = tabMain
 	}
-	tabSettings, ok := unitTabLookup[tab]
-	if !ok || tab == tabLicenses && !um.IsRedistributable {
+
+	if !isValidTab(tab, um) {
 		// Redirect to clean URL path when tab param is invalid.
 		// If the path is not redistributable, licenses is an invalid tab.
 		http.Redirect(w, r, r.URL.Path, http.StatusFound)
 		return nil
 	}
+	tabSettings := unitTabLookup[tab]
 
 	title := pageTitle(um)
 	basePage := s.newBasePage(r, title)
@@ -111,6 +112,20 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	page.Details = d
 	s.servePage(ctx, w, tabSettings.TemplateName, page)
 	return nil
+}
+
+// isValidTab reports whether the tab is valid for the given unit.
+func isValidTab(tab string, um *internal.UnitMeta) bool {
+	if _, ok := unitTabLookup[tab]; !ok {
+		return false
+	}
+	if tab == tabLicenses && !um.IsRedistributable {
+		return false
+	}
+	if !um.IsPackage() && (tab == tabImports || tab == tabImportedBy) {
+		return false
+	}
+	return true
 }
 
 // unitURLPath returns a URL path that refers to the given unit at the requested

@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
 func TestUnitURLPath(t *testing.T) {
@@ -69,6 +70,62 @@ func TestCanonicalURLPath(t *testing.T) {
 		got := canonicalURLPath(um)
 		if got != test.want {
 			t.Errorf("canonicalURLPath(%q, %q, %q) = %q, want %q", test.path, test.modpath, test.version, got, test.want)
+		}
+	}
+}
+
+func TestIsValidTab(t *testing.T) {
+	testTabs := []string{
+		"invalidTab",
+		tabMain,
+		tabVersions,
+		tabImports,
+		tabImportedBy,
+		tabLicenses,
+	}
+	for _, test := range []struct {
+		name     string
+		um       *internal.UnitMeta
+		wantTabs []string
+	}{
+		{
+			name:     "module",
+			um:       sample.UnitMeta(sample.ModulePath, sample.ModulePath, sample.VersionString, "", true),
+			wantTabs: []string{tabMain, tabVersions, tabLicenses},
+		},
+		{
+			name:     "directory",
+			um:       sample.UnitMeta(sample.ModulePath+"/go", sample.ModulePath, sample.VersionString, "", true),
+			wantTabs: []string{tabMain, tabVersions, tabLicenses},
+		},
+		{
+			name:     "package",
+			um:       sample.UnitMeta(sample.ModulePath+"/go/packages", sample.ModulePath, sample.VersionString, "packages", true),
+			wantTabs: []string{tabMain, tabVersions, tabImports, tabImportedBy, tabLicenses},
+		},
+		{
+			name:     "command",
+			um:       sample.UnitMeta(sample.ModulePath+"/cmd", sample.ModulePath, sample.VersionString, "main", true),
+			wantTabs: []string{tabMain, tabVersions, tabImports, tabImportedBy, tabLicenses},
+		},
+		{
+			name:     "non-redist pkg",
+			um:       sample.UnitMeta(sample.ModulePath+"/go/packages", sample.ModulePath, sample.VersionString, "packages", false),
+			wantTabs: []string{tabMain, tabVersions, tabImports, tabImportedBy},
+		},
+	} {
+		validTabs := map[string]bool{}
+		for _, w := range test.wantTabs {
+			validTabs[w] = true
+		}
+		for _, tab := range testTabs {
+			t.Run(test.name, func(t *testing.T) {
+				got := isValidTab(tab, test.um)
+				_, want := validTabs[tab]
+				if got != want {
+					t.Errorf("mismatch for %q on tab %q: got %t; want %t", test.um.Path, tab, got, want)
+				}
+			})
 		}
 	}
 }
