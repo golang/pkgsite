@@ -114,12 +114,11 @@ func (db *DB) getPathID(ctx context.Context, fullPath, modulePath, resolvedVersi
 func (db *DB) getDocumentation(ctx context.Context, pathID int) (_ *internal.Documentation, err error) {
 	defer derrors.Wrap(&err, "getDocumentation(ctx, %d)", pathID)
 	defer middleware.ElapsedStat(ctx, "getDocumentation")()
-	dcol := db.unitIDColumn(ctx, "documentation")
 	var (
 		doc     internal.Documentation
 		docHTML string
 	)
-	err = db.db.QueryRow(ctx, fmt.Sprintf(`
+	err = db.db.QueryRow(ctx, `
 		SELECT
 			d.goos,
 			d.goarch,
@@ -128,7 +127,7 @@ func (db *DB) getDocumentation(ctx context.Context, pathID int) (_ *internal.Doc
 			d.source
 		FROM documentation d
 		WHERE
-		    d.%s=$1;`, dcol), pathID).Scan(
+		    d.unit_id=$1;`, pathID).Scan(
 		database.NullIsEmpty(&doc.GOOS),
 		database.NullIsEmpty(&doc.GOARCH),
 		database.NullIsEmpty(&doc.Synopsis),
@@ -151,11 +150,10 @@ func (db *DB) getReadme(ctx context.Context, pathID int) (_ *internal.Readme, er
 	defer derrors.Wrap(&err, "getReadme(ctx, %d)", pathID)
 	defer middleware.ElapsedStat(ctx, "getReadme")()
 	var readme internal.Readme
-	rcol := db.unitIDColumn(ctx, "readmes")
-	err = db.db.QueryRow(ctx, fmt.Sprintf(`
+	err = db.db.QueryRow(ctx, `
 		SELECT file_path, contents
 		FROM readmes
-		WHERE %s=$1;`, rcol), pathID).Scan(&readme.Filepath, &readme.Contents)
+		WHERE unit_id=$1;`, pathID).Scan(&readme.Filepath, &readme.Contents)
 	switch err {
 	case sql.ErrNoRows:
 		return nil, derrors.NotFound
@@ -170,18 +168,17 @@ func (db *DB) getReadme(ctx context.Context, pathID int) (_ *internal.Readme, er
 func (db *DB) getModuleReadme(ctx context.Context, modulePath, resolvedVersion string) (_ *internal.Readme, err error) {
 	defer derrors.Wrap(&err, "getModuleReadme(ctx, %q, %q)", modulePath, resolvedVersion)
 	var readme internal.Readme
-	rcol := db.unitIDColumn(ctx, "readmes")
-	err = db.db.QueryRow(ctx, fmt.Sprintf(`
+	err = db.db.QueryRow(ctx, `
 		SELECT file_path, contents
 		FROM modules m
 		INNER JOIN units p
 		ON p.module_id = m.id
 		INNER JOIN readmes r
-		ON p.id = r.%s
+		ON p.id = r.unit_id
 		WHERE
 		    m.module_path=$1
 			AND m.version=$2
-			AND m.module_path=p.path`, rcol), modulePath, resolvedVersion).Scan(&readme.Filepath, &readme.Contents)
+			AND m.module_path=p.path`, modulePath, resolvedVersion).Scan(&readme.Filepath, &readme.Contents)
 	switch err {
 	case sql.ErrNoRows:
 		return nil, derrors.NotFound
@@ -205,11 +202,10 @@ func (db *DB) getImports(ctx context.Context, pathID int) (_ []string, err error
 		imports = append(imports, path)
 		return nil
 	}
-	pcol := db.unitIDColumn(ctx, "package_imports")
-	if err := db.db.RunQuery(ctx, fmt.Sprintf(`
+	if err := db.db.RunQuery(ctx, `
 		SELECT to_path
 		FROM package_imports
-		WHERE %s = $1`, pcol), collect, pathID); err != nil {
+		WHERE unit_id = $1`, collect, pathID); err != nil {
 		return nil, err
 	}
 	return imports, nil
@@ -221,7 +217,7 @@ func (db *DB) getPackagesInUnit(ctx context.Context, fullPath, modulePath, resol
 	defer derrors.Wrap(&err, "DB.getPackagesInUnit(ctx, %q, %q, %q)", fullPath, modulePath, resolvedVersion)
 	defer middleware.ElapsedStat(ctx, "getPackagesInUnit")()
 
-	query := fmt.Sprintf(`
+	query := `
 		SELECT
 			p.path,
 			p.name,
@@ -233,11 +229,11 @@ func (db *DB) getPackagesInUnit(ctx context.Context, fullPath, modulePath, resol
 		INNER JOIN units p
 		ON p.module_id = m.id
 		INNER JOIN documentation d
-		ON d.%s = p.id
+		ON d.unit_id = p.id
 		WHERE
 			m.module_path = $1
 			AND m.version = $2
-		ORDER BY path;`, db.unitIDColumn(ctx, "documentation"))
+		ORDER BY path;`
 	var packages []*internal.PackageMeta
 	collect := func(rows *sql.Rows) error {
 		var (
@@ -282,10 +278,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta) (
 	defer derrors.Wrap(&err, "getUnitWithAllFields(ctx, %q, %q, %q)", um.Path, um.ModulePath, um.Version)
 	defer middleware.ElapsedStat(ctx, "getUnitWithAllFields")()
 
-	pcol := db.unitIDColumn(ctx, "package_imports")
-	dcol := db.unitIDColumn(ctx, "documentation")
-	rcol := db.unitIDColumn(ctx, "readmes")
-	query := fmt.Sprintf(`
+	query := `
         SELECT
 			d.goos,
 			d.goarch,
@@ -294,10 +287,10 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta) (
 			r.file_path,
 			r.contents,
 			COALESCE((
-				SELECT COUNT(%s)
+				SELECT COUNT(unit_id)
 				FROM package_imports
-				WHERE %[1]s = p.id
-				GROUP BY %[1]s
+				WHERE unit_id = p.id
+				GROUP BY unit_id
 				), 0) AS num_imports,
 			COALESCE((
 				SELECT imported_by_count
@@ -310,14 +303,13 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta) (
 		INNER JOIN modules m
 		ON p.module_id = m.id
 		LEFT JOIN documentation d
-		ON d.%s = p.id
+		ON d.unit_id = p.id
 		LEFT JOIN readmes r
-		ON r.%s = p.id
+		ON r.unit_id = p.id
 		WHERE
 			p.path = $1
 			AND m.module_path = $2
-			AND m.version = $3;`,
-		pcol, dcol, rcol)
+			AND m.version = $3;`
 
 	var (
 		d internal.Documentation

@@ -8,7 +8,6 @@ package postgres
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"golang.org/x/pkgsite/internal/database"
@@ -64,28 +63,4 @@ func (db *DB) Close() error {
 // Underlying returns the *database.DB inside db.
 func (db *DB) Underlying() *database.DB {
 	return db.db
-}
-
-// unitIDColumn returns the name of the column that is the foreign key to the units table.
-// This is temporary, until we rename all the "path_id" columns to "unit_id".
-func (db *DB) unitIDColumn(ctx context.Context, table string) string {
-	// Make a trivial query.
-	rows, err := db.db.Query(ctx, fmt.Sprintf(`SELECT * FROM %s LIMIT 1`, table))
-	if err != nil {
-		log.Errorf(ctx, "unitIDColumn: %v", err)
-		return "unit_id"
-	}
-	defer rows.Close()
-	_ = rows.Next()
-	cols, err := rows.Columns()
-	if err != nil {
-		log.Errorf(ctx, "unitIDColumn: rows.Columns: %v", err)
-		return "unit_id"
-	}
-	for _, c := range cols {
-		if c == "unit_id" {
-			return c
-		}
-	}
-	return "unit_id"
 }
