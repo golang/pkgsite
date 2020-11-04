@@ -72,6 +72,21 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		log.Errorf(ctx, "could not get process stats: %v", err)
 	}
 
+	var logsURL string
+	if s.cfg.OnGKE() {
+		env := s.cfg.DeploymentEnvironment()
+		cluster := "pkgsite"
+		if env != "exp" {
+			cluster = env + "-" + cluster
+		}
+		logsURL = `https://pantheon.corp.google.com/logs/query;query=resource.type%3D%22k8s_container%22%20resource.labels.cluster_name%3D%22` +
+			cluster +
+			`%22%20resource.labels.container_name%3D%22worker%22?project=` +
+			s.cfg.ProjectID
+	} else {
+		logsURL = `https://cloud.google.com/console/logs/viewer?resource=gae_app%2Fmodule_id%2F` + s.cfg.ServiceID + `&project=` +
+			s.cfg.ProjectID
+	}
 	page := struct {
 		Config          *config.Config
 		Env             string
@@ -88,6 +103,7 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		SystemStats     systemMemStats
 		CgroupStats     map[string]uint64
 		Fetches         []*fetch.FetchInfo
+		LogsURL         string
 	}{
 		Config:         s.cfg,
 		Env:            env(s.cfg),
@@ -103,6 +119,7 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		SystemStats:    sms,
 		CgroupStats:    getCgroupMemStats(),
 		Fetches:        fetch.FetchInfos(),
+		LogsURL:        logsURL,
 	}
 	return renderPage(ctx, w, page, s.templates[indexTemplate])
 }
