@@ -48,7 +48,6 @@ const (
 
 // ParseDoc splits docHTML into sections.
 func ParseDoc(ctx context.Context, docHTML safehtml.HTML) (body, outline, mobileOutline safehtml.HTML, err error) {
-	fmt.Println("################ ParseDoc")
 	// TODO: Deprecate this. The sidenav and body can
 	// either be rendered using separate functions, or all this content can
 	// be passed to the template via the UnitPage struct.
