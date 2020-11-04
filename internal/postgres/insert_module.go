@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"hash/fnv"
 	"io"
-	"runtime"
 	"sort"
 	"strings"
 	"unicode/utf8"
@@ -77,23 +76,17 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
 	ctx, span := trace.StartSpan(ctx, "saveModule")
 	defer span.End()
 
-	logMemory(ctx, "at start of saveModule")
 	return db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
 		moduleID, err := insertModule(ctx, tx, m)
 		if err != nil {
 			return err
 		}
-		logMemory(ctx, "after insertModule")
-
 		if err := insertLicenses(ctx, tx, m, moduleID); err != nil {
 			return err
 		}
-		logMemory(ctx, "after insertLicenses")
-
 		if err := db.insertUnits(ctx, tx, m, moduleID); err != nil {
 			return err
 		}
-		logMemory(ctx, "after insertUnits")
 
 		// Obtain a transaction-scoped exclusive advisory lock on the module
 		// path. The transaction that holds the lock is the only one that can
@@ -639,18 +632,4 @@ func makeValidUnicode(s string) string {
 		}
 	}
 	return b.String()
-}
-
-var MemoryLoggingDisabled = true
-
-func logMemory(ctx context.Context, msg string) {
-	if !MemoryLoggingDisabled {
-		log.Debugf(ctx, "memory %s: %dM", msg, allocMeg())
-	}
-}
-
-func allocMeg() int {
-	var ms runtime.MemStats
-	runtime.ReadMemStats(&ms)
-	return int(ms.Alloc / (1024 * 1024))
 }
