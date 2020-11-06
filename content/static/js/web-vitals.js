@@ -35,9 +35,3 @@ getFID(sendToGTM);
 
 // Largest Contentful Paint (https://web.dev/lcp/)
 getLCP(sendToGTM);
-
-// First Contentful Paint (https://web.dev/fcp/)
-getFCP(sendToGTM);
-
-// Time to First Byte: (https://web.dev/time-to-first-byte/)
-getTTFB(sendToGTM);
