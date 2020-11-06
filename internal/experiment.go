@@ -13,7 +13,6 @@ const (
 	ExperimentGetUnitWithOneQuery = "get-unit-with-one-query"
 	ExperimentGoldmark            = "goldmark"
 	ExperimentRemoveUnusedAST     = "remove-unused-ast"
-	ExperimentSidenav             = "sidenav"
 	ExperimentUnitPage            = "unit-page"
 )
 
@@ -27,7 +26,6 @@ var Experiments = map[string]string{
 	ExperimentGetUnitWithOneQuery: "Fetch data for GetUnit using a single query.",
 	ExperimentGoldmark:            "Enable the usage of rendering markdown using goldmark instead of blackfriday.",
 	ExperimentRemoveUnusedAST:     "Prune AST prior to rendering documentation HTML.",
-	ExperimentSidenav:             "Display documentation index on the left sidenav.",
 	ExperimentUnitPage:            "Enable the redesigned details page.",
 }
 

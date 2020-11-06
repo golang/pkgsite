@@ -56,9 +56,7 @@
   <script>
     loadScript("/static/js/playground.min.js");
   </script>
-  {{if (.Experiments.IsActive "sidenav")}}
-    <script>
-      loadScript('/static/js/legacy_sidenav.js');
-    </script>
-  {{end}}
+  <script>
+    loadScript('/static/js/legacy_sidenav.js');
+  </script>
 {{end}}

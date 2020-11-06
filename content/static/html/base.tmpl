@@ -19,9 +19,7 @@
 {{else}}
   <link href="/static/css/legacy_readme.css?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
-{{if (.Experiments.IsActive "sidenav")}}
-  <link href="/static/css/sidenav.css?version={{.AppVersionLabel}}" rel="stylesheet">
-{{end}}
+<link href="/static/css/sidenav.css?version={{.AppVersionLabel}}" rel="stylesheet">
 <link href="/third_party/dialog-polyfill/dialog-polyfill.css?version={{.AppVersionLabel}}" rel="stylesheet">
 <title>{{if .HTMLTitle}}{{.HTMLTitle}} · {{end}}pkg.go.dev</title>
 {{block "pre_content" .}}{{end}}
