@@ -25,27 +25,22 @@ var (
 	unitTabs = []TabSettings{
 		{
 			Name:         tabMain,
-			DisplayName:  "Main",
 			TemplateName: "unit_details.tmpl",
 		},
 		{
 			Name:         tabVersions,
-			DisplayName:  "Versions",
 			TemplateName: "unit_versions.tmpl",
 		},
 		{
 			Name:         tabImports,
-			DisplayName:  "Imports",
 			TemplateName: "unit_imports.tmpl",
 		},
 		{
 			Name:         tabImportedBy,
-			DisplayName:  "Imported By",
 			TemplateName: "unit_importedby.tmpl",
 		},
 		{
 			Name:         tabLicenses,
-			DisplayName:  "Licenses",
 			TemplateName: "unit_licenses.tmpl",
 		},
 	}

@@ -57,9 +57,6 @@ type UnitPage struct {
 	// hidden due to issues like license restrictions.
 	CanShowDetails bool
 
-	// Tabs contains data to render the varioius tabs on each details page.
-	Tabs []TabSettings
-
 	// Settings contains settings for the selected tab.
 	SelectedTab TabSettings
 
@@ -95,7 +92,6 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		Unit:             um,
 		Breadcrumb:       displayBreadcrumb(um, requestedVersion),
 		Title:            title,
-		Tabs:             unitTabs,
 		SelectedTab:      tabSettings,
 		URLPath:          unitURLPath(um, requestedVersion),
 		CanonicalURLPath: canonicalURLPath(um),

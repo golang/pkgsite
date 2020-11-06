@@ -83,15 +83,20 @@
               <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
             </svg>
             <select class="UnitFixedHeader-overflowSelect js-overflowSelect" tabindex="-1">
-              {{range .Tabs}}
-                <option
-                  value="{{$.URLPath}}?tab={{.Name}}"
-                  {{if .Disabled}}
-                    disabled
-                    data-always-disabled="true"
-                  {{end}}
-                  {{if eq .Name $.SelectedTab.Name}}selected{{end}}
-                >{{.DisplayName}}</option>
+              <option>Main</option>
+              <option value="{{$.URLPath}}?tab=versions">
+                Versions
+              </option>
+              <option value="{{$.URLPath}}?tab=licenses">
+                Licenses
+              </option>
+              {{if .Unit.IsPackage}}
+                <option value="{{$.URLPath}}?tab=imports">
+                  Imports
+                </option>
+                <option value="{{$.URLPath}}?tab=importedby">
+                  Imported By
+                </option>
               {{end}}
             </select>
           </div>
