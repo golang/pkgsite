@@ -61,7 +61,8 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 
 	// If there were any errors processing the module then we didn't insert it.
 	// Delete it in case we are reprocessing an existing module.
-	if ft.Status >= 400 {
+	// However, don't delete if the error was internal, or we are shedding load.
+	if ft.Status >= 400 && ft.Status < 500 {
 		if err := deleteModule(ctx, db, ft); err != nil {
 			log.Error(ctx, err)
 			ft.Error = err
