@@ -1269,6 +1269,11 @@ pre {
   margin-bottom: 0.5rem;
 }
 
+.Documentation-constants br:last-of-type,
+.Documentation-variables br:last-of-type {
+  display: none;
+}
+
 .Documentation-build {
   color: var(--gray-3);
   font-size: 0.875rem;
