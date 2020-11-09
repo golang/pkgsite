@@ -459,7 +459,7 @@ func Init(ctx context.Context) (_ *Config, err error) {
 				Labels: map[string]string{
 					"project_id":     cfg.ProjectID,
 					"location":       path.Base(cfg.ZoneID),
-					"cluster_name":   "pkgsite",
+					"cluster_name":   cfg.DeploymentEnvironment() + "-pkgsite",
 					"namespace_name": "default",
 					"pod_name":       os.Getenv("HOSTNAME"),
 					"container_name": cfg.Application(),
