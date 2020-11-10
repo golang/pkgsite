@@ -8,6 +8,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"math"
 	"sort"
 	"strconv"
 	"strings"
@@ -256,24 +258,49 @@ func getImportedByCount(ctx context.Context, ds internal.DataSource, unit *inter
 		return "N/A", nil
 	}
 
+	// Get an exact number for a small limit, to determine whether we should
+	// fetch data from search_documents and display an approximate count, or
+	// just use the exact count.
+	importedBy, err := db.GetImportedBy(ctx, unit.Path, unit.ModulePath, mainPageImportedByLimit)
+	if err != nil {
+		return "", err
+	}
+	if len(importedBy) < mainPageImportedByLimit {
+		// Exact number is less than the limit, so just return that.
+		return strconv.Itoa(len(importedBy)), nil
+	}
+
+	// Exact number is greater than the limit, so fetch an approximate value
+	// from search_documents.num_imported_by. This number might be different
+	// than the result of GetImportedBy because alternative modules and internal
+	// packages are excluded.
 	var count int
 	if experiment.IsActive(ctx, internal.ExperimentGetUnitWithOneQuery) {
 		count = unit.NumImportedBy
 	} else {
-		count, err = db.GetImportedByCount(ctx, unit.Path, unit.ModulePath, importedByLimit)
+		count, err = db.GetImportedByCount(ctx, unit.Path, unit.ModulePath, tabImportedByLimit)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				return "N/A", nil
+				log.Errorf(ctx, "missing search_documents row for path %s, module path %s", unit.Path, unit.ModulePath)
+				return "", nil
 			}
 			return "", err
 		}
+		if count < mainPageImportedByLimit {
+			count = mainPageImportedByLimit
+		}
 	}
-	// If we reached the query limit, then we might know the total, but we
-	// won't display past importedByLimit results. Indicate that with a '+'.
-	// For example, if the limit is 101 and we get 101 results, then we'll show
-	// '100+ Imported by'.
-	if count >= importedByLimit {
-		return strconv.Itoa(importedByLimit-1) + "+", nil
+	// Treat the result as approximate.
+	return fmt.Sprintf("%d+", approximateLowerBound(count)), nil
+}
+
+// approximateLowerBound rounds n down to a multiple of a power of 10.
+// See the test for examples.
+func approximateLowerBound(n int) int {
+	if n == 0 {
+		return 0
 	}
-	return strconv.Itoa(count), nil
+	f := float64(n)
+	powerOf10 := math.Pow(10, math.Floor(math.Log10(f)))
+	return int(powerOf10 * math.Floor(f/powerOf10))
 }

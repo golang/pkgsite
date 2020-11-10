@@ -77,9 +77,14 @@ type ImportedByDetails struct {
 	TotalIsExact bool // if false, then there may be more than Total
 }
 
-// importedByLimit is the maximum number of importers displayed on the imported
-// by page.
-var importedByLimit = 20001
+var (
+	// mainPageImportedByLimit determines whether the main (unit) page displays
+	// an exact or an approximate number of importers.
+	mainPageImportedByLimit = 21
+	// tabImportedByLimit is the maximum number of importers displayed on the imported
+	// by page.
+	tabImportedByLimit = 20001
+)
 
 // fetchImportedByDetails fetches importers for the package version specified by
 // path and version from the database and returns a ImportedByDetails.
@@ -90,14 +95,14 @@ func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath
 		return nil, proxydatasourceNotSupportedErr()
 	}
 
-	importedBy, err := db.GetImportedBy(ctx, pkgPath, modulePath, importedByLimit)
+	importedBy, err := db.GetImportedBy(ctx, pkgPath, modulePath, tabImportedByLimit)
 	if err != nil {
 		return nil, err
 	}
 
 	importedByCount := len(importedBy)
 	if experiment.IsActive(ctx, internal.ExperimentGetUnitWithOneQuery) {
-		importedByCount, err = db.GetImportedByCount(ctx, pkgPath, modulePath, importedByLimit)
+		importedByCount, err = db.GetImportedByCount(ctx, pkgPath, modulePath, tabImportedByLimit)
 		if err != nil {
 			return nil, err
 		}
@@ -111,7 +116,7 @@ func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath
 	// For example, if the limit is 101 and we get 101 results, then we'll
 	// say there are more than 100, and show the first 100.
 	totalIsExact := true
-	if importedByCount == importedByLimit {
+	if importedByCount == tabImportedByLimit {
 		importedBy = importedBy[:len(importedBy)-1]
 		totalIsExact = false
 	}

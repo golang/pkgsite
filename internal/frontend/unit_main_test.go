@@ -121,7 +121,8 @@ func TestGetImportedByCount(t *testing.T) {
 		}
 	}
 
-	importedByLimit = 2
+	mainPageImportedByLimit = 2
+	tabImportedByLimit = 3
 	for _, tc := range []struct {
 		pkg  *internal.Unit
 		want string
@@ -132,11 +133,11 @@ func TestGetImportedByCount(t *testing.T) {
 		},
 		{
 			pkg:  pkg2,
-			want: "0", //should be "1"; off because search_documents is stale
+			want: "1",
 		},
 		{
 			pkg:  pkg1,
-			want: "0", // should be "1+"; see above
+			want: "2+",
 		},
 	} {
 		t.Run(tc.pkg.Path, func(t *testing.T) {
@@ -152,5 +153,26 @@ func TestGetImportedByCount(t *testing.T) {
 				t.Errorf("getImportedByCount(ctx, db, %q) mismatch (-want +got):\n%s", tc.pkg.Path, diff)
 			}
 		})
+	}
+}
+
+func TestApproximateLowerBound(t *testing.T) {
+	for _, test := range []struct {
+		in, want int
+	}{
+		{0, 0},
+		{1, 1},
+		{5, 5},
+		{10, 10},
+		{11, 10},
+		{23, 20},
+		{57, 50},
+		{124, 100},
+		{2593, 2000},
+	} {
+		got := approximateLowerBound(test.in)
+		if got != test.want {
+			t.Errorf("approximateLowerBound(%d) = %d, want %d", test.in, got, test.want)
+		}
 	}
 }
