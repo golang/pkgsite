@@ -19,7 +19,7 @@ import (
 var (
 	modulePath1 = "test.com/module"
 	modulePath2 = "test.com/module/v2"
-	commitTime  = time.Now().Format("Jan _2, 2006")
+	commitTime  = sample.CommitTime.In(time.UTC).Format("Jan _2, 2006")
 )
 
 func sampleModule(modulePath, version string, versionType version.Type, packages ...*internal.Unit) *internal.Module {

@@ -138,7 +138,7 @@ func UnitHeader(p *Page, versionedURL bool, isPackage bool) htmlcheck.Checker {
 
 	commitTime := p.CommitTime
 	if commitTime == "" {
-		commitTime = time.Now().Format("Jan _2, 2006")
+		commitTime = time.Now().In(time.UTC).Format("Jan _2, 2006")
 	}
 
 	return in("header.UnitHeader",
