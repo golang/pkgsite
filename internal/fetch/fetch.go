@@ -125,7 +125,7 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 		if fr.Status == 0 {
 			fr.Status = http.StatusOK
 		}
-		latency := float64(time.Since(start).Milliseconds())
+		latency := float64(time.Since(start).Seconds())
 		dcensus.RecordWithTag(ctx, dcensus.KeyStatus, strconv.Itoa(fr.Status), fetchLatency.M(latency))
 		if fr.Status < 300 {
 			stats.Record(ctx, fetchedPackages.M(int64(len(fr.PackageVersionStates))))
