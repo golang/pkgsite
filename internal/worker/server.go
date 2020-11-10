@@ -212,6 +212,10 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// Health check.
 	handle("/healthz", http.HandlerFunc(s.handleHealthCheck))
 
+	handle("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "content/static/img/worker-favicon.ico")
+	}))
+
 	// returns an HTML page displaying the homepage.
 	handle("/", http.HandlerFunc(s.handleHTMLPage(s.doIndexPage)))
 }
@@ -267,10 +271,6 @@ func (s *Server) handleFetch(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `<p><a href="/fetch/rsc.io/quote/@v/v1.0.0">Fetch an example module</a></p>`)
 		return
 	}
-	if r.URL.Path == "/favicon.ico" {
-		return
-	}
-
 	msg, code := s.doFetch(r)
 	if code == http.StatusInternalServerError || code == http.StatusServiceUnavailable {
 		log.Infof(r.Context(), "doFetch of %s returned %d; returning that code to retry task", r.URL.Path, code)
