@@ -14,7 +14,6 @@ import (
 	"sync"
 	"time"
 
-	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
@@ -49,12 +48,22 @@ var (
 		"Latency of a frontend fetch request.",
 		stats.UnitMilliseconds,
 	)
+
 	// FetchLatencyDistribution aggregates frontend fetch request
 	// latency by status code.
 	FetchLatencyDistribution = &view.View{
-		Name:        "go-discovery/frontend-fetch/latency",
-		Measure:     frontendFetchLatency,
-		Aggregation: ochttp.DefaultLatencyDistribution,
+		Name:    "go-discovery/frontend-fetch/latency",
+		Measure: frontendFetchLatency,
+		// Modified from ochttp.DefaultLatencyDistribution to remove high
+		// values. Because our unit is seconds rather than milliseconds, the
+		// high values are too large (100000 = 27 hours). The main consequence
+		// is that the Fetch Latency heatmap on the dashboard is less
+		// informative.
+		Aggregation: view.Distribution(
+			1, 2, 3, 4, 5, 6, 8, 10, 13, 16, 20, 25, 30, 40, 50, 65, 80, 100,
+			130, 160, 200, 250, 300, 400, 500, 650, 800, 1000,
+			30*60, // half hour: the max time an HTTP task can run
+			60*60),
 		Description: "FrontendFetch latency, by result source query type.",
 		TagKeys:     []tag.Key{keyFetchStatus},
 	}
