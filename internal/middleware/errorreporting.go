@@ -18,7 +18,8 @@ func ErrorReporting(report func(errorreporting.Entry)) Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w2 := &responseWriter{ResponseWriter: w}
 			h.ServeHTTP(w2, r)
-			if w2.status >= 500 {
+			// Don't report 503s; they are a normal consequence of load shedding.
+			if w2.status >= 500 && w2.status != http.StatusServiceUnavailable {
 				e := errorreporting.Entry{
 					Error: fmt.Errorf("handler for %q returned status code %d", r.URL.Path, w2.status),
 					Req:   r,
