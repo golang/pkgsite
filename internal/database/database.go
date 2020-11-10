@@ -45,7 +45,10 @@ func Open(driverName, dbinfo, instanceID string) (_ *DB, err error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := db.Ping(); err != nil {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if err := db.PingContext(ctx); err != nil {
 		return nil, err
 	}
 	return New(db, instanceID), nil
