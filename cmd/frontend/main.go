@@ -74,7 +74,10 @@ func main() {
 		log.Info(ctx, "BYPASSING LICENSE CHECKING: DISPLAYING NON-REDISTRIBUTABLE INFORMATION")
 	}
 
+	log.Infof(ctx, "cmd/frontend: initializing cmdconfig.ExperimentGetter")
 	expg := cmdconfig.ExperimentGetter(ctx, cfg)
+	log.Infof(ctx, "cmd/frontend: initialized cmdconfig.ExperimentGetter")
+
 	if *localPaths != "" {
 		lds := localdatasource.New()
 		paths := filepath.SplitList(*localPaths)
@@ -114,10 +117,14 @@ func main() {
 			if err != nil {
 				log.Fatalf(ctx, "unable to register the ocsql driver: %v\n", err)
 			}
+
+			log.Infof(ctx, "cmd/frontend: openDB start")
 			ddb, err := openDB(ctx, cfg, ocDriver)
 			if err != nil {
 				log.Fatal(ctx, err)
 			}
+			log.Infof(ctx, "cmd/frontend: openDB finished")
+
 			var db *postgres.DB
 			if *bypassLicenseCheck {
 				db = postgres.NewBypassingLicenseCheck(ddb)
@@ -198,7 +205,10 @@ func main() {
 		log.Fatal(ctx, err)
 	}
 	rc := cmdconfig.ReportingClient(ctx, cfg)
+	log.Infof(ctx, "cmd/frontend: initializing cmdconfig.Experimenter")
 	experimenter := cmdconfig.Experimenter(ctx, cfg, expg, rc)
+	log.Infof(ctx, "cmd/frontend: initialized cmdconfig.Experimenter")
+
 	ermw := middleware.Identity()
 	if rc != nil {
 		ermw = middleware.ErrorReporting(rc.Report)
@@ -232,8 +242,10 @@ func openDB(ctx context.Context, cfg *config.Config, driver string) (_ *database
 	log.Infof(ctx, "opening database on host %s", cfg.DBHost)
 	ddb, err := database.Open(driver, cfg.DBConnInfo(), cfg.InstanceID)
 	if err == nil {
+		log.Infof(ctx, "connected to primary host: %s", cfg.DBHost)
 		return ddb, nil
 	}
+
 	ci := cfg.DBSecondaryConnInfo()
 	if ci == "" {
 		log.Infof(ctx, "no secondary DB host")
@@ -241,5 +253,10 @@ func openDB(ctx context.Context, cfg *config.Config, driver string) (_ *database
 	}
 	log.Errorf(ctx, "database.Open for primary host %s failed with %v; trying secondary host %s ",
 		cfg.DBHost, err, cfg.DBSecondaryHost)
-	return database.Open(driver, ci, cfg.InstanceID)
+	db, err := database.Open(driver, ci, cfg.InstanceID)
+	if err != nil {
+		return nil, err
+	}
+	log.Infof(ctx, "connected to secondary host %s", cfg.DBSecondaryHost)
+	return db, nil
 }
