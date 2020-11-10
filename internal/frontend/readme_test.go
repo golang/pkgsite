@@ -317,6 +317,20 @@ func TestReadme(t *testing.T) {
 			wantHTML:    `<img src="https://github.com/valid/module_name/raw/v1.0.0/images/Jupyter%20Notebook_sparkline.svg"/>`,
 			wantOutline: nil,
 		},
+		{
+			name: "relative link to local heading is prefixed with readme-",
+			unit: unit,
+			readme: &internal.Readme{
+				Filepath: "README.md",
+				Contents: `[Local Heading](#local-heading)` + "\n" +
+					`# Local Heading`,
+			},
+			wantHTML: `<p><a href="#readme-local-heading" rel="nofollow">Local Heading</a></p>` + "\n" +
+				`<h3 class="h1" id="readme-local-heading">Local Heading</h3>`,
+			wantOutline: []*Heading{
+				{Level: 1, Text: "Local Heading", ID: "readme-local-heading"},
+			},
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.unit.Readme = tc.readme

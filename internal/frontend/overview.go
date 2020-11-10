@@ -199,7 +199,7 @@ func translateRelativeLink(dest string, info *source.Info, useRaw bool, readme *
 	}
 	if destURL.Path == "" {
 		// This is a fragment; leave it.
-		return ""
+		return "#readme-" + destURL.Fragment
 	}
 	// Paths are relative to the README location.
 	destPath := path.Join(path.Dir(readme.Filepath), path.Clean(trimmedEscapedPath(destURL)))

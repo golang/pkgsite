@@ -365,6 +365,15 @@ func TestBlackfridayReadmeHTML(t *testing.T) {
 			},
 			want: `<p><img src="https://github.com/some/repo/raw/v1.2.3/images/Jupyter%20Notebook_sparkline.svg"/></p>`,
 		},
+		{
+			name: "relative link to local heading is prefixed with readme-",
+			mi:   aModule,
+			readme: &internal.Readme{
+				Filepath: "README.md",
+				Contents: `[Local Heading](#heading-id)`,
+			},
+			want: `<p><a href="#readme-heading-id" rel="nofollow">Local Heading</a></p>`,
+		},
 	}
 	checkReadme := func(ctx context.Context, t *testing.T, mi *internal.ModuleInfo, readme *internal.Readme, want string) {
 		hgot, err := LegacyReadmeHTML(ctx, mi, readme)
