@@ -404,6 +404,20 @@ func parseStdLibURLPath(urlPath string) (path, requestedVersion string, err erro
 	return path, requestedVersion, nil
 }
 
+// errUnitNotFoundWithoutFetch returns a 404 with instructions to the user on
+// how to manually fetch the package. No fetch button is provided. This is used
+// for very large modules or modules that previously 500ed.
+var errUnitNotFoundWithoutFetch = &serverError{
+	status: http.StatusNotFound,
+	epage: &errorPage{
+		messageTemplate: template.MakeTrustedTemplate(`
+					    <h3 class="Error-message">{{.StatusText}}</h3>
+					    <p class="Error-message">Check that you entered the URL correctly or try fetching it following the
+                        <a href="/about#adding-a-package">instructions here</a>.</p>`),
+		MessageData: struct{ StatusText string }{http.StatusText(http.StatusNotFound)},
+	},
+}
+
 func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, ds internal.DataSource, fullPath, requestedVersion string) (err error) {
 	defer derrors.Wrap(&err, "servePathNotFoundPage(w, r, %q, %q)", fullPath, requestedVersion)
 
@@ -432,20 +446,7 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, d
 	results := s.checkPossibleModulePaths(ctx, db, fullPath, requestedVersion, modulePaths, false)
 	for _, fr := range results {
 		if fr.status == http.StatusInternalServerError {
-			// Instead of serving a 404, provide the user with instructions on
-			// how to manually fetch the package. If the task change interval
-			// has passed, s.checkPossibleModulePaths will return
-			// statusNotFoundInVersionMap.
-			return &serverError{
-				status: http.StatusNotFound,
-				epage: &errorPage{
-					messageTemplate: template.MakeTrustedTemplate(`
-					    <h3 class="Error-message">{{.StatusText}}</h3>
-					    <p class="Error-message">Check that you entered the URL correctly, or try fetching it following the
-                        <a href="/about#adding-a-package">instructions here</a>.</p>`),
-					MessageData: struct{ StatusText string }{http.StatusText(http.StatusNotFound)},
-				},
-			}
+			return errUnitNotFoundWithoutFetch
 		}
 		if fr.status == statusNotFoundInVersionMap {
 			// If the result is statusNotFoundInVersionMap, it means that

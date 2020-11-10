@@ -129,7 +129,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 				// Instead of returning a 500, return a 404 so the user can
 				// reprocess the documentation.
 				log.Errorf(ctx, "fetchMainDetails(%q, %q, %q): %v", um.Path, um.ModulePath, um.Version, err)
-				return nil, pathNotFoundError(um.Path, um.Version)
+				return nil, errUnitNotFoundWithoutFetch
 			}
 			return nil, err
 		}
