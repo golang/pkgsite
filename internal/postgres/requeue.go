@@ -14,7 +14,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 )
 
@@ -75,10 +74,6 @@ var largeModulesLimit = config.GetEnvInt("GO_DISCOVERY_LARGE_MODULES_LIMIT", 100
 func (db *DB) GetNextModulesToFetch(ctx context.Context, limit int) (_ []*internal.ModuleVersionState, err error) {
 	defer derrors.Wrap(&err, "GetNextModulesToFetch(ctx, %d)", limit)
 	queryFmt := nextModulesToProcessQuery
-	if experiment.IsActive(ctx, internal.ExperimentAltRequeue) {
-		log.Infof(ctx, "using alternative requeue query")
-		queryFmt = nextModulesToProcessQueryAlt
-	}
 
 	var mvs []*internal.ModuleVersionState
 	query := fmt.Sprintf(queryFmt, moduleVersionStateColumns)
@@ -134,79 +129,14 @@ func (db *DB) GetNextModulesToFetch(ctx context.Context, limit int) (_ []*intern
 	return mvs, nil
 }
 
-const nextModulesToProcessQuery = `
-    -- Make a table of the latest versions of each module.
-	WITH latest_versions AS (
-		SELECT DISTINCT ON (module_path) module_path, version
-		FROM module_version_states
-		ORDER BY
-			module_path,
-			incompatible,
-			right(sort_version, 1) = '~' DESC, -- prefer release versions
-			sort_version DESC
-	)
-	SELECT %s, latest, npkg
-	FROM (
-		SELECT
-			%[1]s,
-			((module_path, version) IN (SELECT * FROM latest_versions)) AS latest,
-			COALESCE(num_packages, 0) AS npkg
-		FROM module_version_states
-	) s
-	WHERE next_processed_after < CURRENT_TIMESTAMP
-		AND (status = 0 OR status >= 500)
-	ORDER BY
-		CASE
-			 -- new modules
-			 WHEN status = 0 THEN 0
-			 WHEN npkg < $1 THEN		-- non-large modules
-				CASE
-					WHEN latest THEN	-- latest version
-						CASE
-							-- with ReprocessStatusOK or ReprocessHasIncompletePackages
-							WHEN status = 520 OR status = 521 THEN 1
-							-- with ReprocessBadModule or ReprocessAlternative or ReprocessDBModuleInsertInvalid
-							WHEN status = 540 OR status = 541 OR status = 542 THEN 2
-							ELSE 9
-						END
-					ELSE				-- non-latest version
-						CASE
-							WHEN status = 520 OR status = 521 THEN 3
-							WHEN status = 540 OR status = 541 OR status = 542 THEN 4
-							ELSE 9
-						END
-				END
-			ELSE						-- large modules
-				CASE
-					WHEN latest THEN	-- latest version
-						CASE
-							WHEN status = 520 OR status = 521 THEN 5
-							WHEN status = 540 OR status = 541 OR status = 542 THEN 6
-							ELSE 9
-						END
-					ELSE				-- non-latest version
-						CASE
-							WHEN status = 520 OR status = 521 THEN 7
-							WHEN status = 540 OR status = 541 OR status = 542 THEN 8
-							ELSE 9
-						END
-				END
-		END,
-		npkg,  -- prefer fewer packages
-		module_path,
-		version -- for reproducibility
-	LIMIT $2
-`
-
-// Like the standard query above, this query prioritizes latest versions.
-// However, it does not hold off large modules until the end. In fact, it tries
+// This query prioritizes latest versions, but other than that, it tries
 // to avoid grouping modules in any way except by latest and status code:
 // processing is much smoother when they are enqueued in random order.
 //
 // To make the result deterministic for testing, we hash the module path and version
 // rather than actually choosing a random number. md5 is built in to postgres and
 // is an adequate hash for this purpose.
-const nextModulesToProcessQueryAlt = `
+const nextModulesToProcessQuery = `
     -- Make a table of the latest versions of each module.
 	WITH latest_versions AS (
 		SELECT DISTINCT ON (module_path) module_path, version
