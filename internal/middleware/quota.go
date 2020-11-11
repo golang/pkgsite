@@ -8,7 +8,6 @@ import (
 	"context"
 	"net"
 	"net/http"
-	"strconv"
 	"strings"
 	"sync"
 
@@ -53,14 +52,15 @@ func Quota(settings config.QuotaSettings) Middleware {
 			authVal := r.Header.Get(config.BypassQuotaAuthHeader)
 			for _, wantVal := range settings.AuthValues {
 				if authVal == wantVal {
-					recordQuotaMetric(r.Context(), "accepted")
+					recordQuotaMetric(r.Context(), "bypassed")
 					log.Infof(r.Context(), "Quota: accepting %q", authVal)
 					h.ServeHTTP(w, r)
 					return
 				}
 			}
 
-			key := ipKey(r.Header.Get("X-Forwarded-For"))
+			header := r.Header.Get("X-Forwarded-For")
+			key := ipKey(header)
 			// key is empty if we couldn't parse an IP, or there is no IP.
 			// Fail open in this case: allow serving.
 			var limiter *rate.Limiter
@@ -75,7 +75,18 @@ func Quota(settings config.QuotaSettings) Middleware {
 				mu.Unlock()
 			}
 			blocked := limiter != nil && !limiter.Allow()
-			recordQuotaMetric(r.Context(), strconv.FormatBool(blocked))
+			var mv string
+			switch {
+			case header == "":
+				mv = "no header"
+			case key == "":
+				mv = "bad header"
+			case blocked:
+				mv = "blocked"
+			default:
+				mv = "allowed"
+			}
+			recordQuotaMetric(r.Context(), mv)
 			if blocked && settings.RecordOnly != nil && !*settings.RecordOnly {
 				const tmr = http.StatusTooManyRequests
 				http.Error(w, http.StatusText(tmr), tmr)

@@ -7,7 +7,6 @@ package middleware
 import (
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"testing"
 	"time"
 
@@ -149,7 +148,7 @@ func collectViewData(t *testing.T) map[bool]int {
 		t.Fatal(err)
 	}
 	for _, row := range rows {
-		blocked, err := strconv.ParseBool(row.Tags[0].Value)
+		blocked := row.Tags[0].Value == "blocked"
 		if err != nil {
 			t.Fatalf("collectViewData: %v", err)
 		}
