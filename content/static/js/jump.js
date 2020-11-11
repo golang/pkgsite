@@ -147,32 +147,31 @@ function updateJumpList(filter) {
     jumpList.firstChild.remove();
   }
 
-	// makeLinkHtml creates the link name HTML for a list item. item is the DOM
-	// item. item.name.substr(boldStart, boldEnd) will be bolded.
-  var makeLinkHtml = (item, boldStart, boldEnd) => {
-    return (
-      item.name.substr(0, boldStart) +
-      '<b>' +
-      item.name.substr(boldStart, boldEnd) +
-      '</b>' +
-      item.name.substr(boldEnd)
-    );
-  };
-  console.log('filter is', filter);
-
   if (filter) {
-		// A filter is set. We treat the filter as a substring that can appear in
-		// an item name (case insensitive), and find the following matches - in
-		// order of priority:
-		//
-		// 1. Exact matches (the filter matches the item's name exactly)
-		// 2. Prefix matches (the item's name starts with filter)
-		// 3. Infix matches (the filter is a substring of the item's name)
+    // A filter is set. We treat the filter as a substring that can appear in
+    // an item name (case insensitive), and find the following matches - in
+    // order of priority:
+    //
+    // 1. Exact matches (the filter matches the item's name exactly)
+    // 2. Prefix matches (the item's name starts with filter)
+    // 3. Infix matches (the filter is a substring of the item's name)
     const filterLowerCase = filter.toLowerCase();
 
     let exactMatches = [];
     let prefixMatches = [];
     let infixMatches = [];
+
+    // makeLinkHtml creates the link name HTML for a list item. item is the DOM
+    // item. item.name.substr(boldStart, boldEnd) will be bolded.
+    var makeLinkHtml = (item, boldStart, boldEnd) => {
+      return (
+        item.name.substr(0, boldStart) +
+        '<b>' +
+        item.name.substr(boldStart, boldEnd) +
+        '</b>' +
+        item.name.substr(boldEnd)
+      );
+    };
 
     for (const item of jumpListItems) {
       const nameLowerCase = item.name.toLowerCase();
@@ -191,15 +190,12 @@ function updateJumpList(filter) {
         }
       }
     }
-    console.log('exact', exactMatches);
-    console.log('prefix', prefixMatches);
-    console.log('infix', infixMatches);
 
-		for (const item of exactMatches.concat(prefixMatches).concat(infixMatches)) {
+    for (const item of exactMatches.concat(prefixMatches).concat(infixMatches)) {
       jumpList.appendChild(item.link);
-		}
+    }
   } else {
-		// No filter set; display all items in their existing order.
+    // No filter set; display all items in their existing order.
     for (const item of jumpListItems) {
       item.link.innerHTML = item.name + ' <i>' + item.kind + '</i>';
       jumpList.appendChild(item.link);
