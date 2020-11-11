@@ -714,7 +714,15 @@ func compareImportedByCounts(ctx context.Context, db *database.DB) (err error) {
 // Note that if a package is never imported, its imported_by_count column will
 // be the default (0) and its imported_by_count_updated_at column will never be set.
 func updateImportedByCounts(ctx context.Context, db *database.DB) (int64, error) {
+	// Lock the entire table to avoid deadlock. Without the lock, the update can
+	// fail because module inserts are concurrently modifying rows of
+	// search_documents.
+	// See https://www.postgresql.org/docs/11/explicit-locking.html for what locks mean.
+	// See https://www.postgresql.org/docs/11/sql-lock.html for the LOCK
+	// statement, notably the paragraph beginning "If a transaction of this sort
+	// is going to change the data...".
 	const updateStmt = `
+		LOCK TABLE search_documents IN SHARE ROW EXCLUSIVE MODE;
 		UPDATE search_documents s
 		SET
 			imported_by_count = c.imported_by_count,
