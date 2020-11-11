@@ -256,6 +256,7 @@ func openDB(ctx context.Context, cfg *config.Config, driver string) (_ *database
 // load loads local modules from pathList.
 func load(ctx context.Context, ds *localdatasource.DataSource, pathList string) {
 	paths := filepath.SplitList(pathList)
+	loaded := len(paths)
 	for _, path := range paths {
 		var err error
 		if *gopathMode {
@@ -265,6 +266,11 @@ func load(ctx context.Context, ds *localdatasource.DataSource, pathList string) 
 		}
 		if err != nil {
 			log.Error(ctx, err)
+			loaded--
 		}
+	}
+
+	if loaded == 0 {
+		log.Fatalf(ctx, "failed to load module(s) at %s", pathList)
 	}
 }
