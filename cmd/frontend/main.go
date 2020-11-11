@@ -80,22 +80,6 @@ func main() {
 
 	if *localPaths != "" {
 		lds := localdatasource.New()
-		paths := filepath.SplitList(*localPaths)
-		if *gopathMode {
-			for _, path := range paths {
-				err := lds.LoadFromGOPATH(ctx, path)
-				if err != nil {
-					log.Error(ctx, err)
-				}
-			}
-		} else {
-			for _, path := range paths {
-				err := lds.Load(ctx, path)
-				if err != nil {
-					log.Error(ctx, err)
-				}
-			}
-		}
 		dsg = func(context.Context) internal.DataSource { return lds }
 	} else {
 		proxyClient, err := proxy.New(*proxyURL)
@@ -168,6 +152,14 @@ func main() {
 	if err != nil {
 		log.Fatalf(ctx, "frontend.NewServer: %v", err)
 	}
+
+	if *localPaths != "" {
+		lds, ok := dsg(ctx).(*localdatasource.DataSource)
+		if ok {
+			load(ctx, lds, *localPaths)
+		}
+	}
+
 	router := dcensus.NewRouter(frontend.TagRoute)
 	var cacheClient *redis.Client
 	if cfg.RedisCacheHost != "" {
@@ -259,4 +251,20 @@ func openDB(ctx context.Context, cfg *config.Config, driver string) (_ *database
 	}
 	log.Infof(ctx, "connected to secondary host %s", cfg.DBSecondaryHost)
 	return db, nil
+}
+
+// load loads local modules from pathList.
+func load(ctx context.Context, ds *localdatasource.DataSource, pathList string) {
+	paths := filepath.SplitList(pathList)
+	for _, path := range paths {
+		var err error
+		if *gopathMode {
+			err = ds.LoadFromGOPATH(ctx, path)
+		} else {
+			err = ds.Load(ctx, path)
+		}
+		if err != nil {
+			log.Error(ctx, err)
+		}
+	}
 }
