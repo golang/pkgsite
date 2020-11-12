@@ -165,11 +165,11 @@ function updateJumpList(filter) {
     // item. item.name.substr(boldStart, boldEnd) will be bolded.
     var makeLinkHtml = (item, boldStart, boldEnd) => {
       return (
-        item.name.substr(0, boldStart) +
+        item.name.substring(0, boldStart) +
         '<b>' +
-        item.name.substr(boldStart, boldEnd) +
+        item.name.substring(boldStart, boldEnd) +
         '</b>' +
-        item.name.substr(boldEnd)
+        item.name.substring(boldEnd)
       );
     };
 
