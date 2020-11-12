@@ -13,7 +13,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 	"golang.org/x/pkgsite/internal/complete"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
@@ -112,7 +112,7 @@ func completeWithIndex(ctx context.Context, r *redis.Client, q, indexKey string,
 	// We bound our search in two ways: (1) by setting Max to the smallest string
 	// that lexically greater than q but does not start with q, and (2) by
 	// setting an arbitrary limit of 1000 results.
-	entries, err := r.WithContext(ctx).ZRangeByLex(indexKey, &redis.ZRangeBy{
+	entries, err := r.ZRangeByLex(ctx, indexKey, &redis.ZRangeBy{
 		Min:   "(" + q,
 		Max:   "(" + nextPrefix(q),
 		Count: 1000,

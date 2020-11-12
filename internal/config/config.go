@@ -10,6 +10,7 @@ package config
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -323,6 +324,7 @@ type configOverride struct {
 
 // QuotaSettings is config for internal/middleware/quota.go
 type QuotaSettings struct {
+	Disable    bool
 	QPS        int // allowed queries per second, per IP block
 	Burst      int // maximum requests per second, per block; the size of the token bucket
 	MaxEntries int // maximum number of entries to keep track of
@@ -332,6 +334,7 @@ type QuotaSettings struct {
 	// AuthValues is the set of values that could be set on the AuthHeader, in
 	// order to bypass checks by the quota server.
 	AuthValues []string
+	HMACKey    []byte `json:"-"` // key for obfuscating IPs
 }
 
 // TeeproxySettings contains the configuration values for the teeproxy. See
@@ -391,10 +394,14 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		RedisHAHost:          os.Getenv("GO_DISCOVERY_REDIS_HA_HOST"),
 		RedisHAPort:          GetEnv("GO_DISCOVERY_REDIS_HA_PORT", "6379"),
 		Quota: QuotaSettings{
-			QPS:        10,
-			Burst:      20,
-			MaxEntries: 1000,
-			RecordOnly: func() *bool { t := true; return &t }(),
+			Disable:    os.Getenv("GO_DISCOVERY_DISABLE_QUOTA") == "TRUE",
+			QPS:        GetEnvInt("GO_DISCOVERY_QUOTA_QPS", 10),
+			Burst:      20,   // ignored in redis-based quota implementation
+			MaxEntries: 1000, // ignored in redis-based quota implementation
+			RecordOnly: func() *bool {
+				t := (os.Getenv("GO_DISCOVERY_QUOTA_RECORD_ONLY") != "FALSE")
+				return &t
+			}(),
 			AuthValues: parseCommaList(os.Getenv("GO_DISCOVERY_AUTH_VALUES")),
 		},
 		UseProfiler: os.Getenv("GO_DISCOVERY_USE_PROFILER") == "TRUE",
@@ -481,6 +488,22 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		if err != nil {
 			return nil, fmt.Errorf("could not get database password secret: %v", err)
 		}
+	}
+	if cfg.Quota.Disable {
+		log.Print("quota enforcement disabled")
+	} else {
+		s, err := secrets.Get(ctx, "quota-hmac-key")
+		if err != nil {
+			return nil, err
+		}
+		hmacKey, err := hex.DecodeString(s)
+		if err != nil {
+			return nil, err
+		}
+		if len(hmacKey) < 16 {
+			return nil, errors.New("HMAC secret must be at least 16 bytes")
+		}
+		cfg.Quota.HMACKey = hmacKey
 	}
 
 	// If GO_DISCOVERY_CONFIG_OVERRIDE is set, it should point to a file in a

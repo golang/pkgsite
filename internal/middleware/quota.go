@@ -6,11 +6,18 @@ package middleware
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"errors"
+	"io"
 	"net"
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
+	"github.com/go-redis/redis/v8"
+	rrate "github.com/go-redis/redis_rate/v9"
 	"github.com/golang/groupcache/lru"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
@@ -37,13 +44,13 @@ var (
 	}
 )
 
-// Quota implements a simple IP-based rate limiter. Each set of incoming IP
+// LegacyQuota implements a simple IP-based rate limiter. Each set of incoming IP
 // addresses with the same low-order byte gets qps requests per second, with the
 // given burst.
 // Information is kept in an LRU cache of size maxEntries.
 //
 // If a request is disallowed, a 429 (TooManyRequests) will be served.
-func Quota(settings config.QuotaSettings) Middleware {
+func LegacyQuota(settings config.QuotaSettings) Middleware {
 	var mu sync.Mutex
 	cache := lru.New(settings.MaxEntries)
 
@@ -111,7 +118,75 @@ func ipKey(s string) string {
 	if ip == nil {
 		return ""
 	}
-	// Zero out last byte, to cover ranges.
+	// Zero out last byte, to cover ranges of IPv4 addresses. (It's less clear what the
+	// effect will be on IPv6 addresses: it will certainly cover a range of them, but we
+	// don't know if that range is likely to be allocated to a single organization.)
 	ip[len(ip)-1] = 0
 	return ip.String()
+}
+
+// Quota implements a simple IP-based rate limiter. Each set of incoming IP
+// addresses with the same low-order byte gets settings.QPS requests per second.
+//
+// Information is kept in a redis instance.
+//
+// If a request is disallowed, a 429 (TooManyRequests) will be served.
+func Quota(settings config.QuotaSettings, client *redis.Client) Middleware {
+	return func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			if settings.Disable {
+				recordQuotaMetric(ctx, "disabled")
+				h.ServeHTTP(w, r)
+				return
+			}
+			authVal := r.Header.Get(config.BypassQuotaAuthHeader)
+			for _, wantVal := range settings.AuthValues {
+				if authVal == wantVal {
+					recordQuotaMetric(ctx, "bypassed")
+					log.Infof(ctx, "Quota: accepting %q", authVal)
+					h.ServeHTTP(w, r)
+					return
+				}
+			}
+			blocked, reason := enforceQuota(ctx, client, settings.QPS, r.Header.Get("X-Forwarded-For"), settings.HMACKey)
+			recordQuotaMetric(ctx, reason)
+			if blocked && settings.RecordOnly != nil && !*settings.RecordOnly {
+				const tmr = http.StatusTooManyRequests
+				http.Error(w, http.StatusText(tmr), tmr)
+				return
+			}
+			h.ServeHTTP(w, r)
+		})
+	}
+}
+
+func enforceQuota(ctx context.Context, client *redis.Client, qps int, header string, hmacKey []byte) (blocked bool, reason string) {
+	// Fail open if header is missing or can't be parsed.
+	if header == "" {
+		return false, "no header"
+	}
+	key := ipKey(header)
+	if key == "" {
+		return false, "bad header"
+	}
+	mac := hmac.New(sha256.New, hmacKey)
+	io.WriteString(mac, key)
+	rrateKey := string(mac.Sum(nil))
+	res, err := rrate.NewLimiter(client.WithTimeout(15*time.Millisecond)).Allow(ctx, rrateKey, rrate.PerSecond(qps))
+	if err != nil {
+		log.Errorf(ctx, "quota: redis limiter: %v", err)
+		if errors.Is(err, context.DeadlineExceeded) {
+			return false, "timeout"
+		}
+		var nerr *net.OpError
+		if errors.As(err, &nerr) && nerr.Timeout() {
+			return false, "timeout"
+		}
+		return false, "error"
+	}
+	if res.Allowed > 0 {
+		return false, "allowed"
+	}
+	return true, "blocked"
 }

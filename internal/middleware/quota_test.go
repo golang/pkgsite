@@ -5,18 +5,21 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
+	"github.com/alicebob/miniredis/v2"
+	"github.com/go-redis/redis/v8"
 	"github.com/google/go-cmp/cmp"
 	"go.opencensus.io/stats/view"
 	"golang.org/x/pkgsite/internal/config"
 )
 
-func TestQuota(t *testing.T) {
-	mw := Quota(config.QuotaSettings{QPS: 1, Burst: 2, MaxEntries: 1, RecordOnly: boolptr(false)})
+func TestLegacyQuota(t *testing.T) {
+	mw := LegacyQuota(config.QuotaSettings{QPS: 1, Burst: 2, MaxEntries: 1, RecordOnly: boolptr(false)})
 	var npass int
 	h := func(w http.ResponseWriter, r *http.Request) {
 		npass++
@@ -69,9 +72,9 @@ func TestQuota(t *testing.T) {
 	}
 }
 
-func TestQuotaRecordOnly(t *testing.T) {
+func TestLegacyQuotaRecordOnly(t *testing.T) {
 	// Like TestQuota, but with in RecordOnly mode nothing is actually blocked.
-	mw := Quota(config.QuotaSettings{QPS: 1, Burst: 2, MaxEntries: 1, RecordOnly: boolptr(true)})
+	mw := LegacyQuota(config.QuotaSettings{QPS: 1, Burst: 2, MaxEntries: 1, RecordOnly: boolptr(true)})
 	npass := 0
 	h := func(w http.ResponseWriter, r *http.Request) {
 		npass++
@@ -105,9 +108,9 @@ func TestQuotaRecordOnly(t *testing.T) {
 	}
 }
 
-func TestQuotaBadKey(t *testing.T) {
+func TestLegacyQuotaBadKey(t *testing.T) {
 	// Verify that invalid IP addresses are not blocked.
-	mw := Quota(config.QuotaSettings{QPS: 1, Burst: 2, MaxEntries: 1, RecordOnly: boolptr(true)})
+	mw := LegacyQuota(config.QuotaSettings{QPS: 1, Burst: 2, MaxEntries: 1, RecordOnly: boolptr(true)})
 	npass := 0
 	h := func(w http.ResponseWriter, r *http.Request) {
 		npass++
@@ -177,3 +180,33 @@ func TestIPKey(t *testing.T) {
 }
 
 func boolptr(b bool) *bool { return &b }
+
+func TestEnforceQuota(t *testing.T) {
+	ctx := context.Background()
+	s, err := miniredis.Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+
+	c := redis.NewClient(&redis.Options{Addr: s.Addr()})
+	defer c.Close()
+
+	const qps = 5
+	check := func(n int, ip string, want bool) {
+		t.Helper()
+		for i := 0; i < n; i++ {
+			blocked, _ := enforceQuota(ctx, c, qps, ip+",x", []byte{1, 2, 3, 4})
+			got := !blocked
+			if got != want {
+				t.Errorf("%d: got %t, want %t", i, got, want)
+			}
+		}
+	}
+
+	check(qps, "1.2.3.4", true) // first qps requests are allowed
+	check(1, "1.2.3.4", false)  // anything after that fails
+	check(1, "1.2.3.5", false)  // low-order byte doesn't matter
+	check(qps, "1.2.4.1", true) // other IP is allowed
+	check(1, "1.2.4.9", false)  // other IP blocked after qps requests
+}

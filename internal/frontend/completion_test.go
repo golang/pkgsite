@@ -9,12 +9,13 @@ import (
 	"testing"
 
 	"github.com/alicebob/miniredis/v2"
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal/complete"
 )
 
 func TestAutoCompletion(t *testing.T) {
+	ctx := context.Background()
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Fatal(err)
@@ -44,9 +45,9 @@ func TestAutoCompletion(t *testing.T) {
 			zs = append(zs, &redis.Z{Member: cmpl.Encode()})
 		}
 		if v > 0 {
-			r.ZAdd(complete.PopularKey, zs...)
+			r.ZAdd(ctx, complete.PopularKey, zs...)
 		} else {
-			r.ZAdd(complete.RemainingKey, zs...)
+			r.ZAdd(ctx, complete.RemainingKey, zs...)
 		}
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)

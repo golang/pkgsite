@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/alicebob/miniredis/v2"
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 	"golang.org/x/pkgsite/internal/complete"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -44,7 +44,7 @@ func TestUpdateRedisIndexes(t *testing.T) {
 	if err := updateRedisIndexes(ctx, testDB.Underlying(), rc, 1); err != nil {
 		t.Fatal(err)
 	}
-	popCount, err := rc.ZCount(complete.PopularKey, "0", "0").Result()
+	popCount, err := rc.ZCount(ctx, complete.PopularKey, "0", "0").Result()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,7 +52,7 @@ func TestUpdateRedisIndexes(t *testing.T) {
 	if popCount != 4 {
 		t.Errorf("got %d popular autocompletions, want %d", popCount, 4)
 	}
-	remCount, err := rc.ZCount(complete.RemainingKey, "0", "0").Result()
+	remCount, err := rc.ZCount(ctx, complete.RemainingKey, "0", "0").Result()
 	if err != nil {
 		t.Fatal(err)
 	}

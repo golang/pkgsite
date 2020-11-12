@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/errorreporting"
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 	"github.com/google/safehtml/template"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
@@ -480,7 +480,7 @@ func (s *Server) clearCache(w http.ResponseWriter, r *http.Request) error {
 	if s.redisCacheClient == nil {
 		return errors.New("redis cache client is not configured")
 	}
-	status := s.redisCacheClient.FlushAll()
+	status := s.redisCacheClient.FlushAll(r.Context())
 	if status.Err() != nil {
 		return status.Err()
 	}

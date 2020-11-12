@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 	"golang.org/x/pkgsite/internal/complete"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -72,7 +72,7 @@ func updateRedisIndexes(ctx context.Context, db *database.DB, redisClient *redis
 
 	// Check for an ongoing update operation, as described above.
 	tempKeyPattern := fmt.Sprintf("%s*-*", complete.KeyPrefix)
-	existing, _, err := redisClient.Scan(0, tempKeyPattern, 1).Result()
+	existing, _, err := redisClient.Scan(ctx, 0, tempKeyPattern, 1).Result()
 	if err != nil {
 		return fmt.Errorf(`redis error: Scan(%q): %v`, tempKeyPattern, err)
 	}
@@ -87,10 +87,10 @@ func updateRedisIndexes(ctx context.Context, db *database.DB, redisClient *redis
 
 	// Always clean up: DEL succeeds even if the keys have been renamed.
 	defer func() {
-		if _, err := redisClient.Del(keyPop).Result(); err != nil {
+		if _, err := redisClient.Del(ctx, keyPop).Result(); err != nil {
 			log.Errorf(ctx, "redisClient.Del(%q): %v", keyPop, err)
 		}
-		if _, err := redisClient.Del(keyRem).Result(); err != nil {
+		if _, err := redisClient.Del(ctx, keyRem).Result(); err != nil {
 			log.Errorf(ctx, "redisClient.Del(%q): %v", keyRem, err)
 		}
 	}()
@@ -102,7 +102,7 @@ func updateRedisIndexes(ctx context.Context, db *database.DB, redisClient *redis
 	// flush executes the current pipeline and resets its state.
 	flush := func() error {
 		log.Infof(ctx, "Writing completion data pipeline of size %d.", pipeSize)
-		if _, err := pipe.ExecContext(ctx); err != nil {
+		if _, err := pipe.Exec(ctx); err != nil {
 			return fmt.Errorf("redis error: pipe.Exec: %v", err)
 		}
 		// As of writing this is unnecessary as ExecContext resets the pipeline
@@ -137,10 +137,10 @@ func updateRedisIndexes(ctx context.Context, db *database.DB, redisClient *redis
 		switch {
 		case partial.Importers >= cutoff:
 			havePopular = true
-			pipe.ZAdd(keyPop, zs...)
+			pipe.ZAdd(ctx, keyPop, zs...)
 		default:
 			haveRemaining = true
-			pipe.ZAdd(keyRem, zs...)
+			pipe.ZAdd(ctx, keyRem, zs...)
 		}
 		pipeSize += len(zs)
 		if pipeSize > batchSize {
@@ -171,13 +171,13 @@ func updateRedisIndexes(ctx context.Context, db *database.DB, redisClient *redis
 	pipe.Close()
 	if havePopular {
 		log.Infof(ctx, "Renaming %q to %q", keyPop, complete.PopularKey)
-		if _, err := redisClient.Rename(keyPop, complete.PopularKey).Result(); err != nil {
+		if _, err := redisClient.Rename(ctx, keyPop, complete.PopularKey).Result(); err != nil {
 			return fmt.Errorf(`redis error: Rename(%q, %q): %v`, keyPop, complete.PopularKey, err)
 		}
 	}
 	if haveRemaining {
 		log.Infof(ctx, "Renaming %q to %q", keyRem, complete.RemainingKey)
-		if _, err := redisClient.Rename(keyRem, complete.RemainingKey).Result(); err != nil {
+		if _, err := redisClient.Rename(ctx, keyRem, complete.RemainingKey).Result(); err != nil {
 			return fmt.Errorf(`redis error: Rename(%q, %q): %v`, keyRem, complete.RemainingKey, err)
 		}
 	}

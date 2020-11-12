@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/alicebob/miniredis/v2"
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 	"github.com/google/go-cmp/cmp"
 	"go.opencensus.io/stats/view"
 	"golang.org/x/pkgsite/internal/config"

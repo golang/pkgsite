@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/profiler"
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 	"github.com/google/safehtml/template"
 	_ "github.com/jackc/pgx/v4/stdlib" // for pgx driver
 	"golang.org/x/pkgsite/cmd/internal/cmdconfig"

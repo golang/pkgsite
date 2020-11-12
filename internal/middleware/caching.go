@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
@@ -159,7 +159,7 @@ func (c *cache) get(ctx context.Context, key string) (io.Reader, bool) {
 	// fall back to un-cached serving if redis is unavailable.
 	getCtx, cancelGet := context.WithTimeout(ctx, 100*time.Millisecond)
 	defer cancelGet()
-	val, err := c.client.WithContext(getCtx).Get(key).Bytes()
+	val, err := c.client.Get(getCtx, key).Bytes()
 	if err == redis.Nil {
 		return nil, false
 	}
@@ -190,7 +190,7 @@ func (c *cache) put(ctx context.Context, key string, rec *cacheRecorder, ttl tim
 	log.Infof(ctx, "caching response of length %d for %s", rec.buf.Len(), key)
 	setCtx, cancelSet := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancelSet()
-	_, err := c.client.WithContext(setCtx).Set(key, rec.buf.Bytes(), ttl).Result()
+	_, err := c.client.Set(setCtx, key, rec.buf.Bytes(), ttl).Result()
 	if err != nil {
 		recordCacheError(ctx, c.name, "SET")
 		log.Warningf(ctx, "cache set %q: %v", key, err)

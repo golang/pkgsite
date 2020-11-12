@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/profiler"
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/cmd/internal/cmdconfig"
 	"golang.org/x/pkgsite/internal"
@@ -190,7 +190,7 @@ func main() {
 	mw := middleware.Chain(
 		middleware.RequestLog(cmdconfig.Logger(ctx, cfg, "frontend-log")),
 		middleware.AcceptRequests(http.MethodGet, http.MethodPost), // accept only GETs and POSTs
-		middleware.Quota(cfg.Quota),
+		middleware.Quota(cfg.Quota, cacheClient),
 		middleware.GodocURL(),                                                                 // potentially redirects so should be early in chain
 		middleware.SecureHeaders(!*disableCSP),                                                // must come before any caching for nonces to work
 		middleware.LatestVersions(server.GetLatestMinorVersion, server.GetLatestMajorVersion), // must come before caching for version badge to work
