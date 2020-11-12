@@ -146,27 +146,62 @@ function updateJumpList(filter) {
   while (jumpList.firstChild) {
     jumpList.firstChild.remove();
   }
-  // Make a regexp corresponding to filter. The result will match any string
-  // containing filter, case-insensitively. Escape the regexp metacharacters in
-  // filter.
-  const re = new RegExp(filter.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, '\\$1'), 'gi');
-  for (const item of jumpListItems) {
-    var name = item.name;
-    if (filter) {
-      // Boldify the substring of name matching the filter.
-      name = name.replace(re, function (s) {
-        return '<b>' + s + '</b>';
-      });
-      if (name == item.name) {
-        // We didn't change name, so it didn't match the filter.
-        continue;
+
+  if (filter) {
+    // A filter is set. We treat the filter as a substring that can appear in
+    // an item name (case insensitive), and find the following matches - in
+    // order of priority:
+    //
+    // 1. Exact matches (the filter matches the item's name exactly)
+    // 2. Prefix matches (the item's name starts with filter)
+    // 3. Infix matches (the filter is a substring of the item's name)
+    const filterLowerCase = filter.toLowerCase();
+
+    let exactMatches = [];
+    let prefixMatches = [];
+    let infixMatches = [];
+
+    // makeLinkHtml creates the link name HTML for a list item. item is the DOM
+    // item. item.name.substr(boldStart, boldEnd) will be bolded.
+    var makeLinkHtml = (item, boldStart, boldEnd) => {
+      return (
+        item.name.substring(0, boldStart) +
+        '<b>' +
+        item.name.substring(boldStart, boldEnd) +
+        '</b>' +
+        item.name.substring(boldEnd)
+      );
+    };
+
+    for (const item of jumpListItems) {
+      const nameLowerCase = item.name.toLowerCase();
+
+      if (nameLowerCase === filterLowerCase) {
+        item.link.innerHTML = makeLinkHtml(item, 0, item.name.length);
+        exactMatches.push(item);
+      } else if (nameLowerCase.startsWith(filterLowerCase)) {
+        item.link.innerHTML = makeLinkHtml(item, 0, filter.length);
+        prefixMatches.push(item);
+      } else {
+        var index = nameLowerCase.indexOf(filterLowerCase);
+        if (index > -1) {
+          item.link.innerHTML = makeLinkHtml(item, index, index + filter.length);
+          infixMatches.push(item);
+        }
       }
     }
-    // The text we display includes the name (with filter match bolded), and the
-    // kind in italics.
-    item.link.innerHTML = name + ' <i>' + item.kind + '</i>';
-    jumpList.appendChild(item.link);
+
+    for (const item of exactMatches.concat(prefixMatches).concat(infixMatches)) {
+      jumpList.appendChild(item.link);
+    }
+  } else {
+    // No filter set; display all items in their existing order.
+    for (const item of jumpListItems) {
+      item.link.innerHTML = item.name + ' <i>' + item.kind + '</i>';
+      jumpList.appendChild(item.link);
+    }
   }
+
   jumpBody.scrollTop = 0;
   if (jumpList.children.length > 0) {
     setActiveJumpItem(0);
