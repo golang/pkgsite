@@ -19,17 +19,18 @@
   margin-top: 1rem;
   max-width: 98rem;
   min-height: 32rem;
-  padding: 0.5rem 1rem;
+  padding: 0 1rem;
   word-break: break-word;
 }
 @media only screen and (min-width: 57.7rem) {
   .UnitDetails {
-    padding: 0.5rem 1.5rem;
+    padding: 0 1.5rem;
   }
 }
 @media only screen and (min-width: 52rem) {
   .UnitDetails {
     grid-template-columns: 15.5rem minmax(32.5rem, 43.125rem);
+    margin-top: 0;
   }
 }
 @media only screen and (min-width: 64rem) {
