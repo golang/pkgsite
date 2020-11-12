@@ -48,3 +48,10 @@ paths of modules to load into memory.
 If you add, change or remove any inline scripts in templates, run
 `devtools/cmd/csphash` to update the hashes. Running `all.bash`
 will do that as well.
+
+### Compiling JS sources
+
+The frontend serves compiled and minified JS. If you're modifying any JS code, make
+sure to run `devtools/compile_js.sh` for the changes to take effect. This script will
+require Docker to be installed.
+
