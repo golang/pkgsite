@@ -278,7 +278,7 @@ func getImportedByCount(ctx context.Context, ds internal.DataSource, unit *inter
 	if experiment.IsActive(ctx, internal.ExperimentGetUnitWithOneQuery) {
 		count = unit.NumImportedBy
 	} else {
-		count, err = db.GetImportedByCount(ctx, unit.Path, unit.ModulePath, tabImportedByLimit)
+		count, err = db.GetImportedByCount(ctx, unit.Path, unit.ModulePath)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				log.Errorf(ctx, "missing search_documents row for path %s, module path %s", unit.Path, unit.ModulePath)

@@ -110,7 +110,7 @@ func (db *DB) GetImportedBy(ctx context.Context, pkgPath, modulePath string, lim
 }
 
 // GetImportedByCount returns the number of packages that import pkgPath.
-func (db *DB) GetImportedByCount(ctx context.Context, pkgPath, modulePath string, limit int) (_ int, err error) {
+func (db *DB) GetImportedByCount(ctx context.Context, pkgPath, modulePath string) (_ int, err error) {
 	defer derrors.Wrap(&err, "GetImportedByCount(ctx, %q, %q)", pkgPath, modulePath)
 	defer middleware.ElapsedStat(ctx, "GetImportedByCount")()
 

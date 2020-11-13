@@ -102,7 +102,7 @@ func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath
 
 	importedByCount := len(importedBy)
 	if experiment.IsActive(ctx, internal.ExperimentGetUnitWithOneQuery) {
-		importedByCount, err = db.GetImportedByCount(ctx, pkgPath, modulePath, tabImportedByLimit)
+		importedByCount, err = db.GetImportedByCount(ctx, pkgPath, modulePath)
 		if err != nil {
 			return nil, err
 		}
