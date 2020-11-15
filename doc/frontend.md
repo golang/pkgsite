@@ -54,4 +54,3 @@ will do that as well.
 The frontend serves compiled and minified JS. If you're modifying any JS code, make
 sure to run `devtools/compile_js.sh` for the changes to take effect. This script will
 require Docker to be installed.
-
