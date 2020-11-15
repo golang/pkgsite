@@ -208,9 +208,7 @@ func TagRoute(route string, r *http.Request) string {
 	if tab := r.FormValue("tab"); tab != "" {
 		// Verify that the tab value actually exists, otherwise this is unsanitized
 		// input and could result in unbounded cardinality in our metrics.
-		_, pkgOK := packageTabLookup[tab]
-		_, modOK := moduleTabLookup[tab]
-		if pkgOK || modOK {
+		if _, ok := unitTabLookup[tab]; ok {
 			if tag != "" {
 				tag += "-"
 			}
