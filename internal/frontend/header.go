@@ -6,14 +6,10 @@ package frontend
 
 import (
 	"fmt"
-	"path"
 	"strings"
 	"time"
 
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/licenses"
-	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -39,72 +35,6 @@ type Module struct {
 	URL               string // relative to this site
 	LatestURL         string // link with latest-version placeholder, relative to this site
 	Licenses          []LicenseMetadata
-}
-
-// createPackage returns a *Package based on the fields of the specified
-// internal package and version info.
-//
-// latestRequested indicates whether the user requested the latest
-// version of the package. If so, the returned Package.URL will have the
-// structure /<path> instead of /<path>@<version>.
-func createPackage(pkg *internal.PackageMeta, mi *internal.ModuleInfo, latestRequested bool) (_ *Package, err error) {
-	defer derrors.Wrap(&err, "createPackage(%v, %v, %t)", pkg, mi, latestRequested)
-
-	var modLicenses []*licenses.Metadata
-	for _, lm := range pkg.Licenses {
-		if path.Dir(lm.FilePath) == "." {
-			modLicenses = append(modLicenses, lm)
-		}
-	}
-
-	m := createModule(mi, modLicenses, latestRequested)
-	urlVersion := m.LinkVersion
-	if latestRequested {
-		urlVersion = internal.LatestVersion
-	}
-	return &Package{
-		Path:              pkg.Path,
-		IsRedistributable: pkg.IsRedistributable,
-		Licenses:          transformLicenseMetadata(pkg.Licenses),
-		Module:            *m,
-		URL:               constructPackageURL(pkg.Path, mi.ModulePath, urlVersion),
-		LatestURL:         constructPackageURL(pkg.Path, mi.ModulePath, middleware.LatestMinorVersionPlaceholder),
-	}, nil
-}
-
-// createModule returns a *Module based on the fields of the specified
-// versionInfo.
-//
-// latestRequested indicates whether the user requested the latest
-// version of the package. If so, the returned Module.URL will have the
-// structure /<path> instead of /<path>@<version>.
-func createModule(mi *internal.ModuleInfo, licmetas []*licenses.Metadata, latestRequested bool) *Module {
-	urlVersion := linkVersion(mi.Version, mi.ModulePath)
-	if latestRequested {
-		urlVersion = internal.LatestVersion
-	}
-	return &Module{
-		DisplayVersion:    displayVersion(mi.Version, mi.ModulePath),
-		LinkVersion:       linkVersion(mi.Version, mi.ModulePath),
-		ModulePath:        mi.ModulePath,
-		CommitTime:        absoluteTime(mi.CommitTime),
-		IsRedistributable: mi.IsRedistributable,
-		Licenses:          transformLicenseMetadata(licmetas),
-		URL:               constructModuleURL(mi.ModulePath, urlVersion),
-		LatestURL:         constructModuleURL(mi.ModulePath, middleware.LatestMinorVersionPlaceholder),
-	}
-}
-
-func constructModuleURL(modulePath, linkVersion string) string {
-	url := "/"
-	if modulePath != stdlib.ModulePath {
-		url += "mod/"
-	}
-	url += modulePath
-	if linkVersion != internal.LatestVersion {
-		url += "@" + linkVersion
-	}
-	return url
 }
 
 func constructPackageURL(pkgPath, modulePath, linkVersion string) string {
