@@ -9,8 +9,6 @@ import (
 	"strings"
 
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
-	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -99,17 +97,7 @@ func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath
 	if err != nil {
 		return nil, err
 	}
-
 	importedByCount := len(importedBy)
-	if experiment.IsActive(ctx, internal.ExperimentGetUnitWithOneQuery) {
-		importedByCount, err = db.GetImportedByCount(ctx, pkgPath, modulePath)
-		if err != nil {
-			return nil, err
-		}
-		if importedByCount != len(importedBy) {
-			log.Errorf(ctx, "fetchImportedByDetails: mismatch on importedByCount; GetImportedByCount = %d; GetImportedBy = %d", importedByCount, len(importedBy))
-		}
-	}
 
 	// If we reached the query limit, then we don't know the total.
 	// Say so, and show one less than the limit.
