@@ -117,16 +117,6 @@ func constructPackageURL(pkgPath, modulePath, linkVersion string) string {
 	return fmt.Sprintf("/%s@%s/%s", modulePath, linkVersion, strings.TrimPrefix(pkgPath, modulePath+"/"))
 }
 
-// packageHTMLTitle constructs the details page title for pkg.
-// The string will appear in the <title> element (and thus
-// the browser tab).
-func packageHTMLTitle(pkgPath, pkgName string) string {
-	if pkgName != "main" {
-		return pkgName + " package"
-	}
-	return effectiveName(pkgPath, pkgName) + " command"
-}
-
 // absoluteTime takes a date and returns returns a human-readable,
 // date with the format mmm d, yyyy:
 func absoluteTime(date time.Time) string {

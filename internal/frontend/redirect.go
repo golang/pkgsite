@@ -6,7 +6,6 @@ package frontend
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -48,87 +47,4 @@ func stdlibPathForShortcut(ctx context.Context, ds internal.DataSource, shortcut
 	}
 	// No matches, or ambiguous.
 	return "", nil
-}
-
-// servePackagePage serves a package details page.
-func (s *Server) servePackagePage(ctx context.Context,
-	w http.ResponseWriter, r *http.Request, ds internal.DataSource, um *internal.UnitMeta, requestedVersion string) error {
-	mi := &internal.ModuleInfo{
-		ModulePath:        um.ModulePath,
-		Version:           um.Version,
-		CommitTime:        um.CommitTime,
-		IsRedistributable: um.IsRedistributable,
-	}
-	pkgHeader, err := createPackage(&internal.PackageMeta{
-		Path:              um.Path,
-		Licenses:          um.Licenses,
-		IsRedistributable: um.IsRedistributable,
-		Name:              um.Name,
-	}, mi, requestedVersion == internal.LatestVersion)
-	if err != nil {
-		return fmt.Errorf("creating package header for %s@%s: %v", um.Path, um.Version, err)
-	}
-
-	settings, err := packageSettings(r.FormValue("tab"))
-	if err != nil {
-		http.Redirect(w, r, r.URL.Path, http.StatusFound)
-		return nil
-	}
-	canShowDetails := um.IsRedistributable || settings.AlwaysShowDetails
-
-	var details interface{}
-	if canShowDetails {
-		var err error
-		details, err = fetchDetailsForPackage(r, settings.Name, ds, um)
-		if err != nil {
-			return fmt.Errorf("fetching page for %q: %v", settings.Name, err)
-		}
-	}
-	var (
-		pageType = legacyPageTypePackage
-		pageName = um.Name
-	)
-	if pageName == "main" {
-		pageName = effectiveName(um.Path, um.Name)
-		pageType = legacyPageTypeCommand
-	}
-	page := &DetailsPage{
-		basePage: s.newBasePage(r, packageHTMLTitle(um.Path, um.Name)),
-		Name:     pageName,
-		Settings: *settings,
-		Header:   pkgHeader,
-		Breadcrumb: breadcrumbPath(pkgHeader.Path, pkgHeader.Module.ModulePath,
-			pkgHeader.Module.LinkVersion),
-		Details:        details,
-		CanShowDetails: canShowDetails,
-		Tabs:           packageTabSettings,
-		PageType:       pageType,
-		CanonicalURLPath: constructPackageURL(
-			pkgHeader.Path,
-			pkgHeader.Module.ModulePath,
-			pkgHeader.Module.LinkVersion),
-	}
-	page.basePage.AllowWideContent = settings.Name == legacyTabDoc
-	s.servePage(ctx, w, settings.TemplateName, page)
-	return nil
-}
-
-// packageSettings returns the TabSettings corresponding to tab.
-// If tab is not a valid tab from packageTabLookup or tab=doc, an error will be
-// returned and the user will be redirected to /<path> outside of this
-// function. If tab is the empty string, the user will be shown the
-// documentation page.
-func packageSettings(tab string) (*TabSettings, error) {
-	if tab == legacyTabDoc {
-		// Redirect "/<path>?tab=doc" to "/<path>".
-		return nil, derrors.NotFound
-	}
-	if tab == "" {
-		tab = legacyTabDoc
-	}
-	settings, ok := packageTabLookup[tab]
-	if !ok {
-		return nil, derrors.NotFound
-	}
-	return &settings, nil
 }

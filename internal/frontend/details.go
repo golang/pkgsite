@@ -64,14 +64,6 @@ type DetailsPage struct {
 	CanonicalURLPath string
 }
 
-const (
-	legacyPageTypeModule    = "mod"
-	legacyPageTypeDirectory = "dir"
-	legacyPageTypePackage   = "pkg"
-	legacyPageTypeCommand   = "cmd"
-	legacyPageTypeModuleStd = "std"
-)
-
 var (
 	keyVersionType     = tag.MustNewKey("frontend.version_type")
 	versionTypeResults = stats.Int64(
@@ -163,19 +155,7 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 			}
 		}()
 	}
-	if experiment.IsActive(ctx, internal.ExperimentUnitPage) {
-		return s.serveUnitPage(ctx, w, r, ds, um, urlInfo.requestedVersion)
-	}
-	return s.serveDetailsPage(w, r, ds, um, urlInfo)
-}
-
-// serveDetailsPage serves a details page for a path using the paths,
-// modules, documentation, readmes, licenses, and package_imports tables.
-func (s *Server) serveDetailsPage(w http.ResponseWriter, r *http.Request, ds internal.DataSource, um *internal.UnitMeta, info *urlPathInfo) (err error) {
-	defer derrors.Wrap(&err, "serveDetailsPage(w, r, %v)", info)
-	ctx := r.Context()
-
-	return s.servePackagePage(ctx, w, r, ds, um, info.requestedVersion)
+	return s.serveUnitPage(ctx, w, r, ds, um, urlInfo.requestedVersion)
 }
 
 type urlPathInfo struct {
