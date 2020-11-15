@@ -127,14 +127,6 @@ func packageHTMLTitle(pkgPath, pkgName string) string {
 	return effectiveName(pkgPath, pkgName) + " command"
 }
 
-// moduleHTMLTitle constructs the <title> contents, for tabs in the browser.
-func moduleHTMLTitle(modulePath string) string {
-	if modulePath == stdlib.ModulePath {
-		return "stdlib"
-	}
-	return modulePath + " module"
-}
-
 // absoluteTime takes a date and returns returns a human-readable,
 // date with the format mmm d, yyyy:
 func absoluteTime(date time.Time) string {

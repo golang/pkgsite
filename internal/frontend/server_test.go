@@ -273,57 +273,6 @@ func serverTestCases() []serverTestCase {
 		PackageURLFormat: "/cmd/go%s",
 		ModuleURL:        "/std",
 	}
-	mod := &pagecheck.Page{
-		ModulePath:      sample.ModulePath,
-		Title:           "Module " + sample.ModulePath,
-		ModuleURL:       "/mod/" + sample.ModulePath,
-		Version:         "v1.0.0",
-		LicenseType:     "MIT",
-		LicenseFilePath: "LICENSE",
-		IsLatest:        true,
-		LatestLink:      "/mod/" + sample.ModulePath + "@v1.0.0",
-	}
-	mp := *mod
-	mp.Version = pseudoVersion
-	mp.FormattedVersion = "v0.0.0-...-1234567"
-	mp.IsLatest = false
-	modPseudo := &mp
-
-	mod2 := &pagecheck.Page{
-		ModulePath:       "github.com/pseudo",
-		Title:            "Module github.com/pseudo",
-		ModuleURL:        "/mod/github.com/pseudo",
-		LatestLink:       "/mod/github.com/pseudo@" + pseudoVersion,
-		Version:          pseudoVersion,
-		FormattedVersion: mp.FormattedVersion,
-		LicenseType:      "MIT",
-		LicenseFilePath:  "LICENSE",
-		IsLatest:         true,
-	}
-	dirPseudo := &pagecheck.Page{
-		ModulePath:       "github.com/pseudo",
-		Title:            "Directory github.com/pseudo/dir",
-		ModuleURL:        "/mod/github.com/pseudo",
-		LatestLink:       "/mod/github.com/pseudo@" + pseudoVersion + "/dir",
-		Suffix:           "dir",
-		Version:          pseudoVersion,
-		FormattedVersion: mp.FormattedVersion,
-		LicenseType:      "MIT",
-		LicenseFilePath:  "LICENSE",
-		IsLatest:         true,
-		PackageURLFormat: "/github.com/pseudo%s/dir",
-	}
-
-	std := &pagecheck.Page{
-		Title:           "Standard library",
-		ModulePath:      "std",
-		Version:         "go1.13",
-		LicenseType:     "MIT",
-		LicenseFilePath: "LICENSE",
-		ModuleURL:       "/std",
-		IsLatest:        true,
-		LatestLink:      "/std@go1.13",
-	}
 
 	netHttp := &pagecheck.Page{
 		Title:           "Package http",
@@ -590,23 +539,6 @@ func serverTestCases() []serverTestCase {
 				pagecheck.SubdirectoriesDetails("/"+sample.ModulePath+"@v1.0.0/foo/directory/hello", "hello")),
 		},
 		{
-			name:           "directory@version subdirectories pseudoversion",
-			urlPath:        "/github.com/pseudo@" + pseudoVersion + "/dir?tab=subdirectories",
-			wantStatusCode: http.StatusOK,
-			want: in("",
-				pagecheck.DirectoryHeader(dirPseudo, versioned),
-				pagecheck.SubdirectoriesDetails("/github.com/pseudo@"+pseudoVersion+"/dir/baz", "baz")),
-		},
-		{
-			name:           "directory subdirectories pseudoversion",
-			urlPath:        "/github.com/pseudo/dir?tab=subdirectories",
-			wantStatusCode: http.StatusOK,
-			want: in("",
-				pagecheck.DirectoryHeader(dirPseudo, unversioned),
-				// TODO(golang/go#39630) link should be unversioned.
-				pagecheck.SubdirectoriesDetails("/github.com/pseudo@"+pseudoVersion+"/dir/baz", "baz")),
-		},
-		{
 			name:           "directory overview",
 			urlPath:        fmt.Sprintf("/%s?tab=overview", sample.PackagePath+"/directory"),
 			wantStatusCode: http.StatusOK,
@@ -668,119 +600,6 @@ func serverTestCases() []serverTestCase {
 				pagecheck.LicenseDetails("MIT", "Lorem Ipsum", "go.googlesource.com/go/+/refs/tags/go1.13/LICENSE")),
 		},
 		{
-			name:           "module default",
-			urlPath:        fmt.Sprintf("/mod/%s", sample.ModulePath),
-			wantStatusCode: http.StatusOK,
-			// Show the readme tab by default.
-			// Fall back to the latest version, show readme tab by default.
-			want: in("",
-				pagecheck.ModuleHeader(mod, unversioned),
-				pagecheck.OverviewDetails(&pagecheck.Overview{
-					ModuleLink:     "/mod/" + sample.ModulePath,
-					ModuleLinkText: sample.ModulePath,
-					ReadmeContent:  "readme",
-					RepoURL:        "https://" + sample.ModulePath,
-					ReadmeSource:   sample.ModulePath + "@v1.0.0/README.md",
-				}),
-				pagecheck.CanonicalURLPath("/mod/github.com/valid/module_name@v1.0.0")),
-		},
-		{
-			name:           "module overview",
-			urlPath:        fmt.Sprintf("/mod/%s?tab=overview", sample.ModulePath),
-			wantStatusCode: http.StatusOK,
-			// Show the readme tab by default.
-			// Fall back to the latest version, show readme tab by default.
-			want: in("",
-				pagecheck.ModuleHeader(mod, unversioned),
-				pagecheck.OverviewDetails(&pagecheck.Overview{
-					ModuleLink:     "/mod/" + sample.ModulePath,
-					ModuleLinkText: sample.ModulePath,
-					ReadmeContent:  "readme",
-					RepoURL:        "https://" + sample.ModulePath,
-					ReadmeSource:   sample.ModulePath + "@v1.0.0/README.md",
-				})),
-		},
-		{
-			name:           "module overview pseudoversion latest",
-			urlPath:        "/mod/github.com/pseudo?tab=overview",
-			wantStatusCode: http.StatusOK,
-			// Show the readme tab by default.
-			// Fall back to the latest version, show readme tab by default.
-			want: in("",
-				pagecheck.ModuleHeader(mod2, unversioned),
-				in(".Overview-module a",
-					href("/mod/github.com/pseudo"),
-					text("^github.com/pseudo$")),
-				in(".Overview-readmeContent", text(`readme`))),
-		},
-		{
-			name:           "module packages tab latest version",
-			urlPath:        fmt.Sprintf("/mod/%s?tab=packages", sample.ModulePath),
-			wantStatusCode: http.StatusOK,
-			// Fall back to the latest version.
-			want: in("",
-				pagecheck.ModuleHeader(mod, unversioned),
-				in(".Directories", text(`This is a package synopsis`)),
-				in("div.DetailsHeader-version", text("v1.0.0"))),
-		},
-		{
-			name:           "module at version overview tab",
-			urlPath:        fmt.Sprintf("/mod/%s@%s?tab=overview", sample.ModulePath, sample.VersionString),
-			wantStatusCode: http.StatusOK,
-			want: in("",
-				pagecheck.ModuleHeader(mod, versioned),
-				pagecheck.OverviewDetails(&pagecheck.Overview{
-					ModuleLink:     fmt.Sprintf("/mod/%s@%s", sample.ModulePath, sample.VersionString),
-					ModuleLinkText: sample.ModulePath,
-					ReadmeContent:  "readme",
-					RepoURL:        "https://" + sample.ModulePath,
-					ReadmeSource:   sample.ModulePath + "@v1.0.0/README.md",
-				})),
-		},
-		{
-			name:           "module at version overview tab, pseudoversion",
-			urlPath:        fmt.Sprintf("/mod/%s@%s?tab=overview", sample.ModulePath, pseudoVersion),
-			wantStatusCode: http.StatusOK,
-			want: in("",
-				pagecheck.ModuleHeader(modPseudo, versioned),
-				pagecheck.OverviewDetails(&pagecheck.Overview{
-					ModuleLink:     fmt.Sprintf("/mod/%s@%s", sample.ModulePath, pseudoVersion),
-					ModuleLinkText: sample.ModulePath,
-					ReadmeContent:  "readme",
-					RepoURL:        "https://" + sample.ModulePath,
-					ReadmeSource:   sample.ModulePath + "@" + pseudoVersion + "/README.md",
-				})),
-		},
-		{
-			name:           "module at version packages tab",
-			urlPath:        fmt.Sprintf("/mod/%s@%s?tab=packages", sample.ModulePath, sample.VersionString),
-			wantStatusCode: http.StatusOK,
-			want: in("",
-				pagecheck.ModuleHeader(mod, versioned),
-				in(".Directories", text(`This is a package synopsis`))),
-		},
-		{
-			name:           "module at version versions tab",
-			urlPath:        fmt.Sprintf("/mod/%s@%s?tab=versions", sample.ModulePath, sample.VersionString),
-			wantStatusCode: http.StatusOK,
-			want: in("",
-				pagecheck.ModuleHeader(mod, versioned),
-				in("[role='tab'][aria-selected='true']", text(`Versions`)),
-				in("div.Versions", text("v1")),
-				in("li.Versions-item",
-					in("a",
-						href("/mod/"+sample.ModulePath+"@v1.0.0"),
-						text("v1.0.0")))),
-		},
-		{
-			name:           "module at version licenses tab",
-			urlPath:        fmt.Sprintf("/mod/%s@%s?tab=licenses", sample.ModulePath, sample.VersionString),
-			wantStatusCode: http.StatusOK,
-			want: in("",
-				pagecheck.ModuleHeader(mod, versioned),
-				pagecheck.LicenseDetails("MIT", "Lorem Ipsum", sample.ModulePath+"@v1.0.0/LICENSE")),
-		},
-		{
 			name:           "cmd go package page",
 			urlPath:        "/cmd/go",
 			wantStatusCode: http.StatusOK,
@@ -791,18 +610,6 @@ func serverTestCases() []serverTestCase {
 			urlPath:        "/cmd/go@go1.13",
 			wantStatusCode: http.StatusOK,
 			want:           pagecheck.PackageHeader(cmdGo, versioned),
-		},
-		{
-			name:           "standard library module page",
-			urlPath:        "/std",
-			wantStatusCode: http.StatusOK,
-			want:           pagecheck.ModuleHeader(std, unversioned),
-		},
-		{
-			name:           "standard library module page at version",
-			urlPath:        "/std@go1.13",
-			wantStatusCode: http.StatusOK,
-			want:           pagecheck.ModuleHeader(std, versioned),
 		},
 		{
 			name:           "bad version",
@@ -837,14 +644,6 @@ func serverTestCases() []serverTestCase {
 			name:           "bad request, invalid github module path",
 			urlPath:        "/github.com/foo",
 			wantStatusCode: http.StatusBadRequest,
-		},
-		{
-
-			name:           "module page for path that is a package but not a module",
-			urlPath:        "/mod/" + sample.ModulePath + "/foo",
-			wantStatusCode: http.StatusNotFound,
-			want: in("",
-				in("h3.Fetch-message.js-fetchMessage", text(sample.ModulePath+"/foo"))),
 		},
 		{
 			name:           "stdlib shortcut (net/http)",

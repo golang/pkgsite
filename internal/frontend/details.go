@@ -175,9 +175,6 @@ func (s *Server) serveDetailsPage(w http.ResponseWriter, r *http.Request, ds int
 	defer derrors.Wrap(&err, "serveDetailsPage(w, r, %v)", info)
 	ctx := r.Context()
 
-	if info.isModule {
-		return s.serveModulePage(ctx, w, r, ds, um, info.requestedVersion)
-	}
 	if um.IsPackage() {
 		return s.servePackagePage(ctx, w, r, ds, um, info.requestedVersion)
 	}
