@@ -85,22 +85,6 @@ func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, fullPath,
 	return buildVersionDetails(modulePath, versions, linkify), nil
 }
 
-func fetchModuleVersionsDetails(ctx context.Context, ds internal.DataSource, modulePath string) (*VersionsDetails, error) {
-	db, ok := ds.(*postgres.DB)
-	if !ok {
-		// The proxydatasource does not support the imported by page.
-		return nil, proxydatasourceNotSupportedErr()
-	}
-	versions, err := db.GetVersionsForPath(ctx, modulePath)
-	if err != nil {
-		return nil, err
-	}
-	linkify := func(m *internal.ModuleInfo) string {
-		return constructModuleURL(m.ModulePath, linkVersion(m.Version, m.ModulePath))
-	}
-	return buildVersionDetails(modulePath, versions, linkify), nil
-}
-
 // pathInVersion constructs the full import path of the package corresponding
 // to mi, given its v1 path. To do this, we first compute the suffix of the
 // package path in the given module series, and then append it to the real
