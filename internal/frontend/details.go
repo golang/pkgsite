@@ -175,10 +175,7 @@ func (s *Server) serveDetailsPage(w http.ResponseWriter, r *http.Request, ds int
 	defer derrors.Wrap(&err, "serveDetailsPage(w, r, %v)", info)
 	ctx := r.Context()
 
-	if um.IsPackage() {
-		return s.servePackagePage(ctx, w, r, ds, um, info.requestedVersion)
-	}
-	return s.serveDirectoryPage(ctx, w, r, ds, um, info.requestedVersion)
+	return s.servePackagePage(ctx, w, r, ds, um, info.requestedVersion)
 }
 
 type urlPathInfo struct {

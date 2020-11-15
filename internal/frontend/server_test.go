@@ -285,28 +285,6 @@ func serverTestCases() []serverTestCase {
 		LatestLink:      "/net/http@go1.13",
 	}
 
-	dir := &pagecheck.Page{
-		Title:            "Directory " + sample.ModulePath + "/foo/directory",
-		ModulePath:       sample.ModulePath,
-		Version:          "v1.0.0",
-		Suffix:           "foo/directory",
-		LicenseType:      "MIT",
-		LicenseFilePath:  "LICENSE",
-		ModuleURL:        "/mod/" + sample.ModulePath,
-		PackageURLFormat: "/" + sample.ModulePath + "%s/foo/directory",
-	}
-
-	dirCmd := &pagecheck.Page{
-		Title:            "Directory cmd",
-		ModulePath:       "std",
-		Version:          "go1.13",
-		Suffix:           "cmd",
-		LicenseType:      "MIT",
-		LicenseFilePath:  "LICENSE",
-		ModuleURL:        "/std",
-		PackageURLFormat: "/cmd%s",
-	}
-
 	testCases := []serverTestCase{
 		{
 			name:           "static",
@@ -442,17 +420,6 @@ func serverTestCases() []serverTestCase {
 				in(".DetailsContent", text(`not displayed due to license restrictions`))),
 		},
 		{
-			name:           "package at version subdirectories tab",
-			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=subdirectories", sample.ModulePath, sample.VersionString, sample.Suffix),
-			wantStatusCode: http.StatusOK,
-			want: in("",
-				pagecheck.PackageHeader(pkgV100, versioned),
-				in(".Directories",
-					in("a",
-						href(fmt.Sprintf("/%s@%s/%s/directory/hello", sample.ModulePath, sample.VersionString, sample.Suffix)),
-						text("directory/hello")))),
-		},
-		{
 			name:           "package at version versions tab",
 			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=versions", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
@@ -513,91 +480,6 @@ func serverTestCases() []serverTestCase {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.PackageHeader(pkgInc, versioned)),
-		},
-		{
-			name:           "directory subdirectories",
-			urlPath:        fmt.Sprintf("/%s", sample.PackagePath+"/directory"),
-			wantStatusCode: http.StatusOK,
-			want: in("",
-				pagecheck.DirectoryHeader(dir, unversioned),
-				in("div.DetailsHeader-breadcrumb",
-					in("a:nth-of-type(1)",
-						href("/"+sample.ModulePath+"@v1.0.0"),
-						text(sample.ModulePath)),
-					in("a:nth-of-type(2)",
-						href("/"+sample.ModulePath+"/foo@v1.0.0"),
-						text("foo"))),
-				// TODO(golang/go#39630) link should be unversioned.
-				pagecheck.SubdirectoriesDetails("/"+sample.ModulePath+"@v1.0.0/foo/directory/hello", "hello")),
-		},
-		{
-			name:           "directory@version subdirectories",
-			urlPath:        "/" + sample.ModulePath + "@v1.0.0/foo/directory",
-			wantStatusCode: http.StatusOK,
-			want: in("",
-				pagecheck.DirectoryHeader(dir, versioned),
-				pagecheck.SubdirectoriesDetails("/"+sample.ModulePath+"@v1.0.0/foo/directory/hello", "hello")),
-		},
-		{
-			name:           "directory overview",
-			urlPath:        fmt.Sprintf("/%s?tab=overview", sample.PackagePath+"/directory"),
-			wantStatusCode: http.StatusOK,
-			want: in("",
-				pagecheck.DirectoryHeader(dir, unversioned),
-				pagecheck.OverviewDetails(&pagecheck.Overview{
-					ModuleLink:     "/mod/" + sample.ModulePath,
-					ModuleLinkText: dir.ModulePath,
-					RepoURL:        "https://" + sample.ModulePath,
-					ReadmeContent:  "readme",
-					ReadmeSource:   sample.ModulePath + "@v1.0.0/README.md",
-				}),
-				pagecheck.CanonicalURLPath("/github.com/valid/module_name@v1.0.0/foo")),
-		},
-		{
-			name:           "directory licenses",
-			urlPath:        fmt.Sprintf("/%s?tab=licenses", sample.PackagePath+"/directory"),
-			wantStatusCode: http.StatusOK,
-			want: in("",
-				pagecheck.DirectoryHeader(dir, unversioned),
-				pagecheck.LicenseDetails("MIT", "Lorem Ipsum", sample.ModulePath+"@v1.0.0/LICENSE")),
-		},
-		{
-			name:           "stdlib directory default",
-			urlPath:        "/cmd",
-			wantStatusCode: http.StatusOK,
-			want: in("",
-				pagecheck.DirectoryHeader(dirCmd, unversioned),
-				pagecheck.SubdirectoriesDetails("", "")),
-		},
-		{
-			name:           "stdlib directory subdirectories",
-			urlPath:        "/cmd@go1.13?tab=subdirectories",
-			wantStatusCode: http.StatusOK,
-			want: in("",
-				pagecheck.DirectoryHeader(dirCmd, versioned),
-				pagecheck.SubdirectoriesDetails("", "")),
-		},
-		{
-			name:           "stdlib directory overview",
-			urlPath:        "/cmd@go1.13?tab=overview",
-			wantStatusCode: http.StatusOK,
-			want: in("",
-				pagecheck.DirectoryHeader(dirCmd, versioned),
-				pagecheck.OverviewDetails(&pagecheck.Overview{
-					ModuleLink:     "/std@go1.13",
-					ModuleLinkText: "Standard library",
-					ReadmeContent:  "readme",
-					RepoURL:        "https://" + sample.ModulePath, // wrong, but hard to change
-					ReadmeSource:   "go.googlesource.com/go/+/refs/tags/go1.13/README.md",
-				})),
-		},
-		{
-			name:           "stdlib directory licenses",
-			urlPath:        "/cmd@go1.13?tab=licenses",
-			wantStatusCode: http.StatusOK,
-			want: in("",
-				pagecheck.DirectoryHeader(dirCmd, versioned),
-				pagecheck.LicenseDetails("MIT", "Lorem Ipsum", "go.googlesource.com/go/+/refs/tags/go1.13/LICENSE")),
 		},
 		{
 			name:           "cmd go package page",

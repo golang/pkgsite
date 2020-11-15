@@ -156,29 +156,12 @@ func fetchDetailsForPackage(r *http.Request, tab string, ds internal.DataSource,
 		return fetchDocumentationDetails(ctx, ds, um)
 	case legacyTabOverview:
 		return fetchPackageOverviewDetails(ctx, ds, um, urlIsVersioned(r.URL))
-	case legacyTabSubdirectories:
-		return fetchDirectoryDetails(ctx, ds, um, false)
 	case legacyTabVersions:
 		return fetchVersionsDetails(ctx, ds, um.Path, um.ModulePath)
 	case legacyTabImports:
 		return fetchImportsDetails(ctx, ds, um.Path, um.ModulePath, um.Version)
 	case legacyTabImportedBy:
 		return fetchImportedByDetails(ctx, ds, um.Path, um.ModulePath)
-	case legacyTabLicenses:
-		return fetchLicensesDetails(ctx, ds, um)
-	}
-	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
-}
-
-// fetchDetailsForDirectory returns tab details by delegating to the correct
-// detail handler.
-func fetchDetailsForDirectory(r *http.Request, tab string, ds internal.DataSource, um *internal.UnitMeta) (interface{}, error) {
-	ctx := r.Context()
-	switch tab {
-	case legacyTabOverview:
-		return fetchOverviewDetails(ctx, ds, um, urlIsVersioned(r.URL))
-	case legacyTabSubdirectories:
-		return fetchDirectoryDetails(ctx, ds, um, false)
 	case legacyTabLicenses:
 		return fetchLicensesDetails(ctx, ds, um)
 	}
