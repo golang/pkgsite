@@ -6,11 +6,14 @@ package frontend
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 // UnitPage contains data needed to render the unit template.
@@ -93,11 +96,11 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		Breadcrumb:       displayBreadcrumb(um, requestedVersion),
 		Title:            title,
 		SelectedTab:      tabSettings,
-		URLPath:          unitURLPath(um, requestedVersion),
+		URLPath:          constructUnitURL(um.Path, um.ModulePath, requestedVersion),
 		CanonicalURLPath: canonicalURLPath(um),
 		DisplayVersion:   displayVersion(um.Version, um.ModulePath),
 		LinkVersion:      linkVersion(um.Version, um.ModulePath),
-		LatestURL:        constructPackageURL(um.Path, um.ModulePath, middleware.LatestMinorVersionPlaceholder),
+		LatestURL:        constructUnitURL(um.Path, um.ModulePath, middleware.LatestMinorVersionPlaceholder),
 		PageLabels:       pageLabels(um),
 		PageType:         pageType(um),
 	}
@@ -124,22 +127,22 @@ func isValidTab(tab string, um *internal.UnitMeta) bool {
 	return true
 }
 
-// unitURLPath returns a URL path that refers to the given unit at the requested
+// constructUnitURL returns a URL path that refers to the given unit at the requested
 // version. If requestedVersion is "latest", then the resulting path has no
 // version; otherwise, it has requestedVersion.
-func unitURLPath(um *internal.UnitMeta, requestedVersion string) string {
+func constructUnitURL(fullPath, modulePath, requestedVersion string) string {
 	if requestedVersion == internal.LatestVersion {
-		return constructPackageURL(um.Path, um.ModulePath, requestedVersion)
+		return "/" + fullPath
 	}
-	return constructPackageURL(um.Path, um.ModulePath, linkVersion(requestedVersion, um.ModulePath))
+	v := linkVersion(requestedVersion, modulePath)
+	if fullPath == modulePath || modulePath == stdlib.ModulePath {
+		return fmt.Sprintf("/%s@%s", fullPath, v)
+	}
+	return fmt.Sprintf("/%s@%s/%s", modulePath, v, strings.TrimPrefix(fullPath, modulePath+"/"))
 }
 
 // canonicalURLPath constructs a URL path to the unit that always includes the
 // resolved version.
 func canonicalURLPath(um *internal.UnitMeta) string {
-	return constructPackageURL(
-		um.Path,
-		um.ModulePath,
-		linkVersion(um.Version, um.ModulePath),
-	)
+	return constructUnitURL(um.Path, um.ModulePath, linkVersion(um.Version, um.ModulePath))
 }

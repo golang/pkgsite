@@ -36,7 +36,7 @@ func TestUnitURLPath(t *testing.T) {
 			"/math@go1.2.3",
 		},
 	} {
-		got := unitURLPath(&internal.UnitMeta{Path: test.path, ModulePath: test.modpath}, test.version)
+		got := constructUnitURL(test.path, test.modpath, test.version)
 		if got != test.want {
 			t.Errorf("unitURLPath(%q, %q, %q) = %q, want %q", test.path, test.modpath, test.version, got, test.want)
 		}

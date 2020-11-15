@@ -214,7 +214,7 @@ func getNestedModules(ctx context.Context, ds internal.DataSource, um *internal.
 			continue
 		}
 		mods = append(mods, &NestedModule{
-			URL:    constructPackageURL(m.ModulePath, m.ModulePath, internal.LatestVersion),
+			URL:    constructUnitURL(m.ModulePath, m.ModulePath, internal.LatestVersion),
 			Suffix: internal.Suffix(m.SeriesPath(), um.Path),
 		})
 	}
@@ -228,7 +228,7 @@ func getSubdirectories(um *internal.UnitMeta, pkgs []*internal.PackageMeta) []*S
 			continue
 		}
 		sdirs = append(sdirs, &Subdirectory{
-			URL:      constructPackageURL(pm.Path, um.ModulePath, linkVersion(um.Version, um.ModulePath)),
+			URL:      constructUnitURL(pm.Path, um.ModulePath, linkVersion(um.Version, um.ModulePath)),
 			Suffix:   internal.Suffix(pm.Path, um.Path),
 			Synopsis: pm.Synopsis,
 		})

@@ -85,7 +85,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 		return &VersionList{
 			VersionListKey: VersionListKey{ModulePath: modulePath, Major: major},
 			Versions: versionSummaries(pkgPath, versions, func(path, version string) string {
-				return constructPackageURL(pkgPath, modulePath, version)
+				return constructUnitURL(pkgPath, modulePath, version)
 			}),
 		}
 	}

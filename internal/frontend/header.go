@@ -5,9 +5,7 @@
 package frontend
 
 import (
-	"fmt"
 	"path"
-	"strings"
 	"time"
 
 	"golang.org/x/mod/module"
@@ -95,16 +93,6 @@ func effectiveName(pkgPath, pkgName string) string {
 	}
 	_, base := path.Split(prefix)
 	return base
-}
-
-func constructPackageURL(pkgPath, modulePath, linkVersion string) string {
-	if linkVersion == internal.LatestVersion {
-		return "/" + pkgPath
-	}
-	if pkgPath == modulePath || modulePath == stdlib.ModulePath {
-		return fmt.Sprintf("/%s@%s", pkgPath, linkVersion)
-	}
-	return fmt.Sprintf("/%s@%s/%s", modulePath, linkVersion, strings.TrimPrefix(pkgPath, modulePath+"/"))
 }
 
 // absoluteTime takes a date and returns returns a human-readable,
