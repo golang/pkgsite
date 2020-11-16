@@ -77,6 +77,7 @@ var gddoToPkgGoDevRequest = map[string]string{
 	"/":            "/",
 	"/-/about":     "/about",
 	"/-/go":        "/std",
+	"/-/subrepo":   "/search?q=golang.org/x",
 	"/C":           "/C",
 	"/favicon.ico": "/favicon.ico",
 }
@@ -97,10 +98,6 @@ var expected404s = map[string]bool{
 	"/humans.txt":                    true,
 	"/robots.txt":                    true,
 	"/third_party/jquery.timeago.js": true,
-
-	// TODO: add a replacement page for this before redirecting godoc.org
-	// traffic.
-	"/-/subrepo": true,
 }
 
 // statusRedBreaker is a custom HTTP status code that denotes that a request

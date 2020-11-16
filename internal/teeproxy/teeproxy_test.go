@@ -28,6 +28,10 @@ func TestPkgGoDevPath(t *testing.T) {
 			want: "/about",
 		},
 		{
+			path: "/-/subrepo",
+			want: "/search?q=golang.org/x",
+		},
+		{
 			path: "/net/http",
 			want: "/net/http",
 		},
