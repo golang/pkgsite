@@ -187,7 +187,7 @@ func (s *Server) checkPossibleModulePaths(ctx context.Context, db *postgres.DB,
 
 			// A row for this modulePath and requestedVersion combination does not
 			// exist in version_map. Enqueue the module version to be fetched.
-			if _, err := s.queue.ScheduleFetch(ctx, modulePath, requestedVersion, "", s.taskIDChangeInterval); err != nil {
+			if _, err := s.queue.ScheduleFetch(ctx, modulePath, requestedVersion, ""); err != nil {
 				fr.err = err
 				fr.status = http.StatusInternalServerError
 			}

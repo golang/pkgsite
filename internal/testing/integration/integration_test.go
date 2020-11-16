@@ -84,15 +84,14 @@ func TestEndToEndProcessing(t *testing.T) {
 		return worker.FetchAndUpdateState(ctx, mpath, version, proxyClient, sourceClient, testDB, "test")
 	})
 	workerServer, err := worker.NewServer(&config.Config{}, worker.ServerConfig{
-		DB:                   testDB,
-		IndexClient:          indexClient,
-		ProxyClient:          proxyClient,
-		SourceClient:         source.NewClient(1 * time.Second),
-		RedisHAClient:        redisHAClient,
-		RedisCacheClient:     redisCacheClient,
-		Queue:                queue,
-		TaskIDChangeInterval: 10 * time.Minute,
-		StaticPath:           template.TrustedSourceFromConstant("../../../content/static"),
+		DB:               testDB,
+		IndexClient:      indexClient,
+		ProxyClient:      proxyClient,
+		SourceClient:     source.NewClient(1 * time.Second),
+		RedisHAClient:    redisHAClient,
+		RedisCacheClient: redisCacheClient,
+		Queue:            queue,
+		StaticPath:       template.TrustedSourceFromConstant("../../../content/static"),
 	})
 	if err != nil {
 		t.Fatal(err)

@@ -42,34 +42,32 @@ import (
 
 // Server can be installed to serve the go discovery worker.
 type Server struct {
-	cfg                  *config.Config
-	indexClient          *index.Client
-	proxyClient          *proxy.Client
-	sourceClient         *source.Client
-	redisHAClient        *redis.Client
-	redisCacheClient     *redis.Client
-	db                   *postgres.DB
-	queue                queue.Queue
-	reportingClient      *errorreporting.Client
-	taskIDChangeInterval time.Duration
-	templates            map[string]*template.Template
-	staticPath           template.TrustedSource
-	getExperiments       func() []*internal.Experiment
+	cfg              *config.Config
+	indexClient      *index.Client
+	proxyClient      *proxy.Client
+	sourceClient     *source.Client
+	redisHAClient    *redis.Client
+	redisCacheClient *redis.Client
+	db               *postgres.DB
+	queue            queue.Queue
+	reportingClient  *errorreporting.Client
+	templates        map[string]*template.Template
+	staticPath       template.TrustedSource
+	getExperiments   func() []*internal.Experiment
 }
 
 // ServerConfig contains everything needed by a Server.
 type ServerConfig struct {
-	DB                   *postgres.DB
-	IndexClient          *index.Client
-	ProxyClient          *proxy.Client
-	SourceClient         *source.Client
-	RedisHAClient        *redis.Client
-	RedisCacheClient     *redis.Client
-	Queue                queue.Queue
-	ReportingClient      *errorreporting.Client
-	TaskIDChangeInterval time.Duration
-	StaticPath           template.TrustedSource
-	GetExperiments       func() []*internal.Experiment
+	DB               *postgres.DB
+	IndexClient      *index.Client
+	ProxyClient      *proxy.Client
+	SourceClient     *source.Client
+	RedisHAClient    *redis.Client
+	RedisCacheClient *redis.Client
+	Queue            queue.Queue
+	ReportingClient  *errorreporting.Client
+	StaticPath       template.TrustedSource
+	GetExperiments   func() []*internal.Experiment
 }
 
 const (
@@ -94,19 +92,18 @@ func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 		versionsTemplate: t2,
 	}
 	return &Server{
-		cfg:                  cfg,
-		db:                   scfg.DB,
-		indexClient:          scfg.IndexClient,
-		proxyClient:          scfg.ProxyClient,
-		sourceClient:         scfg.SourceClient,
-		redisHAClient:        scfg.RedisHAClient,
-		redisCacheClient:     scfg.RedisCacheClient,
-		queue:                scfg.Queue,
-		reportingClient:      scfg.ReportingClient,
-		taskIDChangeInterval: scfg.TaskIDChangeInterval,
-		templates:            templates,
-		staticPath:           scfg.StaticPath,
-		getExperiments:       scfg.GetExperiments,
+		cfg:              cfg,
+		db:               scfg.DB,
+		indexClient:      scfg.IndexClient,
+		proxyClient:      scfg.ProxyClient,
+		sourceClient:     scfg.SourceClient,
+		redisHAClient:    scfg.RedisHAClient,
+		redisCacheClient: scfg.RedisCacheClient,
+		queue:            scfg.Queue,
+		reportingClient:  scfg.ReportingClient,
+		templates:        templates,
+		staticPath:       scfg.StaticPath,
+		getExperiments:   scfg.GetExperiments,
 	}, nil
 }
 
@@ -172,7 +169,7 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// batch of module versions to process, and enqueues them for processing.
 	// Normally this will not cause duplicate processing, because Cloud Tasks
 	// are de-duplicated. That does not apply after a task has been finished or
-	// deleted for Server.taskIDChangeInterval (see
+	// deleted for about an hour
 	// https://cloud.google.com/tasks/docs/reference/rpc/google.cloud.tasks.v2#createtaskrequest,
 	// under "Task De-duplication"). If you cannot wait, you can force
 	// duplicate tasks by providing any string as the "suffix" query parameter.
@@ -395,7 +392,7 @@ func (s *Server) handleEnqueue(w http.ResponseWriter, r *http.Request) (err erro
 		sem <- struct{}{}
 		go func() {
 			defer func() { <-sem }()
-			enqueued, err := s.queue.ScheduleFetch(ctx, m.ModulePath, m.Version, suffixParam, s.taskIDChangeInterval)
+			enqueued, err := s.queue.ScheduleFetch(ctx, m.ModulePath, m.Version, suffixParam)
 			mu.Lock()
 			if err != nil {
 				log.Errorf(ctx, "enqueuing: %v", err)
@@ -444,7 +441,7 @@ func (s *Server) doPopulateStdLib(ctx context.Context, suffix string) (string, e
 		return "", err
 	}
 	for _, v := range versions {
-		if _, err := s.queue.ScheduleFetch(ctx, stdlib.ModulePath, v, suffix, s.taskIDChangeInterval); err != nil {
+		if _, err := s.queue.ScheduleFetch(ctx, stdlib.ModulePath, v, suffix); err != nil {
 			return "", fmt.Errorf("error scheduling fetch for %s: %w", v, err)
 		}
 	}

@@ -183,12 +183,11 @@ func TestWorker(t *testing.T) {
 			})
 
 			s, err := NewServer(&config.Config{}, ServerConfig{
-				DB:                   testDB,
-				IndexClient:          indexClient,
-				ProxyClient:          proxyClient,
-				SourceClient:         sourceClient,
-				Queue:                q,
-				TaskIDChangeInterval: 10 * time.Minute,
+				DB:           testDB,
+				IndexClient:  indexClient,
+				ProxyClient:  proxyClient,
+				SourceClient: sourceClient,
+				Queue:        q,
 			})
 			if err != nil {
 				t.Fatal(err)

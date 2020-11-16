@@ -225,10 +225,6 @@ const StatementTimeout = 10 * time.Minute
 // to fetch source code from third party URLs.
 const SourceTimeout = 1 * time.Minute
 
-// TaskIDChangeIntervalWorker is the time period during which a given module
-// version can be re-enqueued to fetch tasks.
-const TaskIDChangeIntervalWorker = 3 * time.Hour
-
 // TaskIDChangeIntervalFrontend is the time period during which a given module
 // version can be re-enqueued to frontend tasks.
 const TaskIDChangeIntervalFrontend = 30 * time.Minute

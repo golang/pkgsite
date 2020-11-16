@@ -108,17 +108,16 @@ func main() {
 	redisCacheClient := getCacheRedis(ctx, cfg)
 	experimenter := cmdconfig.Experimenter(ctx, cfg, expg, reportingClient)
 	server, err := worker.NewServer(cfg, worker.ServerConfig{
-		DB:                   db,
-		IndexClient:          indexClient,
-		ProxyClient:          proxyClient,
-		SourceClient:         sourceClient,
-		RedisHAClient:        redisHAClient,
-		RedisCacheClient:     redisCacheClient,
-		Queue:                fetchQueue,
-		ReportingClient:      reportingClient,
-		TaskIDChangeInterval: config.TaskIDChangeIntervalWorker,
-		StaticPath:           template.TrustedSourceFromFlag(flag.Lookup("static").Value),
-		GetExperiments:       experimenter.Experiments,
+		DB:               db,
+		IndexClient:      indexClient,
+		ProxyClient:      proxyClient,
+		SourceClient:     sourceClient,
+		RedisHAClient:    redisHAClient,
+		RedisCacheClient: redisCacheClient,
+		Queue:            fetchQueue,
+		ReportingClient:  reportingClient,
+		StaticPath:       template.TrustedSourceFromFlag(flag.Lookup("static").Value),
+		GetExperiments:   experimenter.Experiments,
 	})
 	if err != nil {
 		log.Fatal(ctx, err)

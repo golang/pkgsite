@@ -6,7 +6,6 @@ package queue
 
 import (
 	"testing"
-	"time"
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/google/go-cmp/cmp"
@@ -16,22 +15,18 @@ import (
 )
 
 func TestNewTaskID(t *testing.T) {
-	// Verify that the task ID is the same within taskIDChangeInterval and changes
-	// afterwards.
-	var (
-		module               = "mod"
-		version              = "ver"
-		taskIDChangeInterval = 3 * time.Hour
-	)
-	tm := time.Now().Truncate(taskIDChangeInterval)
-	id1 := newTaskID(module, version, tm, taskIDChangeInterval)
-	id2 := newTaskID(module, version, tm.Add(taskIDChangeInterval/2), taskIDChangeInterval)
-	if id1 != id2 {
-		t.Error("wanted same task ID, got different")
-	}
-	id3 := newTaskID(module, version, tm.Add(taskIDChangeInterval+1), taskIDChangeInterval)
-	if id1 == id3 {
-		t.Error("wanted different task ID, got same")
+	for _, test := range []struct {
+		modulePath, version string
+		want                string
+	}{
+		{"m-1", "v2", "acc5-m-1_vv2"},
+		{"my_module", "v1.2.3", "0cb9-my__module_vv1_o2_o3"},
+		{"µπΩ/github.com", "v2.3.4-ß", "a49c-_00b5_03c0_03a9_-github_ocom_vv2_o3_o4-_00df"},
+	} {
+		got := newTaskID(test.modulePath, test.version)
+		if got != test.want {
+			t.Errorf("%s@%s: got %s, want %s", test.modulePath, test.version, got, test.want)
+		}
 	}
 }
 
@@ -98,7 +93,7 @@ func TestNewTaskRequest(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			got := gcp.newTaskRequest("mod", "v1.2.3", "suf", time.Minute)
+			got := gcp.newTaskRequest("mod", "v1.2.3", "suf")
 			test.want.Task.Name = got.Task.Name
 			if diff := cmp.Diff(test.want, got, cmp.Comparer(proto.Equal)); diff != "" {
 				t.Errorf("mismatch (-want, +got):\n%s", diff)
