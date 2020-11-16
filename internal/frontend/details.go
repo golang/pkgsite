@@ -58,22 +58,6 @@ type DetailsPage struct {
 	CanonicalURLPath string
 }
 
-var (
-	keyVersionType     = tag.MustNewKey("frontend.version_type")
-	versionTypeResults = stats.Int64(
-		"go-discovery/frontend_version_type_count",
-		"The version type of a request to package, module, or directory page.",
-		stats.UnitDimensionless,
-	)
-	VersionTypeCount = &view.View{
-		Name:        "go-discovery/frontend_version_type/result_count",
-		Measure:     versionTypeResults,
-		Aggregation: view.Count(),
-		Description: "version type results, by latest, master, or semver",
-		TagKeys:     []tag.Key{keyVersionType},
-	}
-)
-
 // serveDetails handles requests for package/directory/module details pages. It
 // expects paths of the form "[/mod]/<module-path>[@<version>?tab=<tab>]".
 // stdlib module pages are handled at "/std", and requests to "/mod/std" will
@@ -175,6 +159,22 @@ func proxydatasourceNotSupportedErr() error {
 		},
 	}
 }
+
+var (
+	keyVersionType     = tag.MustNewKey("frontend.version_type")
+	versionTypeResults = stats.Int64(
+		"go-discovery/frontend_version_type_count",
+		"The version type of a request to package, module, or directory page.",
+		stats.UnitDimensionless,
+	)
+	VersionTypeCount = &view.View{
+		Name:        "go-discovery/frontend_version_type/result_count",
+		Measure:     versionTypeResults,
+		Aggregation: view.Count(),
+		Description: "version type results, by latest, master, or semver",
+		TagKeys:     []tag.Key{keyVersionType},
+	}
+)
 
 func recordVersionTypeMetric(ctx context.Context, requestedVersion string) {
 	// Tag versions based on latest, master and semver.
