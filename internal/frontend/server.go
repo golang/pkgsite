@@ -127,9 +127,10 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(s.staticPath.String())))
 	}))
+	handle("/mod/", http.HandlerFunc(s.handleModuleDetailsRedirect))
+	handle("/pkg/", http.HandlerFunc(s.handlePackageDetailsRedirect))
 	handle("/fetch/", fetchHandler)
 	handle("/play/", http.HandlerFunc(s.handlePlay))
-	handle("/pkg/", http.HandlerFunc(s.handlePackageDetailsRedirect))
 	handle("/search", searchHandler)
 	handle("/search-help", s.staticPageHandler("search_help.tmpl", "Search Help - go.dev"))
 	handle("/license-policy", s.licensePolicyHandler())

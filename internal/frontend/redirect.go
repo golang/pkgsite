@@ -22,6 +22,12 @@ func (s *Server) handlePackageDetailsRedirect(w http.ResponseWriter, r *http.Req
 	http.Redirect(w, r, urlPath, http.StatusMovedPermanently)
 }
 
+// handleModuleDetailsRedirect redirects all redirects to "/mod" to "/".
+func (s *Server) handleModuleDetailsRedirect(w http.ResponseWriter, r *http.Request) {
+	urlPath := strings.TrimPrefix(r.URL.Path, "/mod")
+	http.Redirect(w, r, urlPath, http.StatusMovedPermanently)
+}
+
 // stdlibPathForShortcut returns a path in the stdlib that shortcut should redirect to,
 // or the empty string if there is no such path.
 func stdlibPathForShortcut(ctx context.Context, ds internal.DataSource, shortcut string) (path string, err error) {
