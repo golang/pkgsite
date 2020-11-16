@@ -12,7 +12,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
-	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -47,36 +46,7 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, d
 	if stdlib.Contains(fullPath) {
 		return &serverError{status: http.StatusNotFound}
 	}
-	db, ok := ds.(*postgres.DB)
-	if !ok {
-		return pathNotFoundError(fullPath, requestedVersion)
-	}
-	modulePaths, err := candidateModulePaths(fullPath)
-	if err != nil {
-		return err
-	}
-	results := s.checkPossibleModulePaths(ctx, db, fullPath, requestedVersion, modulePaths, false)
-	for _, fr := range results {
-		if fr.status == http.StatusInternalServerError {
-			return errUnitNotFoundWithoutFetch
-		}
-		if fr.status == statusNotFoundInVersionMap {
-			// If the result is statusNotFoundInVersionMap, it means that
-			// we haven't attempted to fetch this path before. Return an
-			// error page giving the user the option to fetch the path.
-			return pathNotFoundError(fullPath, requestedVersion)
-		}
-	}
-	status, responseText := fetchRequestStatusAndResponseText(results, fullPath, requestedVersion)
-	return &serverError{
-		status: status,
-		epage: &errorPage{
-			messageTemplate: template.MakeTrustedTemplate(`
-					<h3 class="Error-message">{{.StatusText}}</h3>
-					<p class="Error-message">{{.Response}}</p>`),
-			MessageData: struct{ StatusText, Response string }{http.StatusText(status), responseText},
-		},
-	}
+	return pathNotFoundError(fullPath, requestedVersion)
 }
 
 // pathNotFoundError returns a page with an option on how to
