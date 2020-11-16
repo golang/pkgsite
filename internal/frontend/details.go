@@ -158,7 +158,7 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 		go func() {
 			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 			defer cancel()
-			if _, err := s.queue.ScheduleFetch(ctx, urlInfo.modulePath, internal.MasterVersion, ","); err != nil {
+			if _, err := s.queue.ScheduleFetch(ctx, urlInfo.modulePath, internal.MasterVersion, ""); err != nil {
 				log.Errorf(ctx, "serveDetails(%q): %v", r.URL.Path, err)
 			}
 		}()
