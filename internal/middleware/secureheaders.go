@@ -13,8 +13,8 @@ import (
 var scriptHashes = []string{
 	// From content/static/html/base.tmpl
 	"'sha256-CgM7SjnSbDyuIteS+D1CQuSnzyKwL0qtXLU6ZW2hB+g='",
-	"'sha256-LIQd8c4GSueKwR3q2fz3AB92cOdy2Ld7ox8pfvMPHns='",
 	"'sha256-dwce5DnVX7uk6fdvvNxQyLTH/cJrTMDK6zzrdKwdwcg='",
+	"'sha256-Q0lBU5W61U2Bjmznl8iFgTCLw4PWCtS1taSwwNz3iGk='",
 	// From content/static/html/pages/badge.tmpl
 	"'sha256-T7xOt6cgLji3rhOWyKK7t5XKv8+LASQwOnHiHHy8Kwk='",
 	// From content/static/html/pages/fetch.tmpl
