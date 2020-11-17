@@ -106,10 +106,8 @@ func parseDetailsURLPath(urlPath string) (_ *urlPathInfo, err error) {
 			info.fullPath = info.fullPath + "/" + suffix
 		}
 	}
-	// The full path must be a valid import path (that is, package path), even if it denotes
-	// a module, directory or collection.
-	if err := module.CheckImportPath(info.fullPath); err != nil {
-		return nil, fmt.Errorf("module.CheckImportPath(%q): %v", info.fullPath, err)
+	if !isValidPath(info.fullPath) {
+		return nil, fmt.Errorf("isValidPath(%q) is false", info.fullPath)
 	}
 	return info, nil
 }
@@ -121,8 +119,8 @@ func parseStdLibURLPath(urlPath string) (_ *urlPathInfo, err error) {
 	//   /<path>@<tag> or /<path>
 	parts := strings.SplitN(urlPath, "@", 2)
 	fullPath := strings.TrimSuffix(strings.TrimPrefix(parts[0], "/"), "/")
-	if err := module.CheckImportPath(fullPath); err != nil {
-		return nil, fmt.Errorf("module.CheckImportPath(%q): %v", fullPath, err)
+	if !isValidPath(fullPath) {
+		return nil, fmt.Errorf("isValidPath(%q) is false", fullPath)
 	}
 
 	info := &urlPathInfo{
@@ -138,6 +136,20 @@ func parseStdLibURLPath(urlPath string) (_ *urlPathInfo, err error) {
 		return nil, fmt.Errorf("invalid Go tag for url: %q", urlPath)
 	}
 	return info, nil
+}
+
+// isValidPath reports whether a requested path could be a valid unit.
+func isValidPath(fullPath string) bool {
+	if err := module.CheckImportPath(fullPath); err != nil {
+		return false
+	}
+	parts := strings.Split(fullPath, "/")
+	if _, ok := vcsHostsWithThreeElementRepoName[parts[0]]; ok {
+		if len(parts) < 3 {
+			return false
+		}
+	}
+	return true
 }
 
 // validatePathAndVersion verifies that the requested path and version are

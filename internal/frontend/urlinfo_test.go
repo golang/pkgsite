@@ -117,6 +117,11 @@ func TestExtractURLPathInfo_Errors(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name:    "invalid url for github.com",
+			url:     "/github.com/foo",
+			wantErr: true,
+		},
+		{
 			name:    "invalid url missing module",
 			url:     "@v1.0.0",
 			wantErr: true,
