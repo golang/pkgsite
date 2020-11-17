@@ -92,7 +92,6 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 	}
 	recordVersionTypeMetric(ctx, urlInfo.requestedVersion)
 
-	urlInfo.resolvedVersion = urlInfo.requestedVersion
 	um, err := ds.GetUnitMeta(ctx, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion)
 	if err != nil {
 		if !errors.Is(err, derrors.NotFound) {
@@ -100,9 +99,6 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 		}
 		return s.servePathNotFoundPage(w, r, ds, urlInfo.fullPath, urlInfo.requestedVersion)
 	}
-
-	urlInfo.modulePath = um.ModulePath
-	urlInfo.resolvedVersion = um.Version
 	if urlInfo.requestedVersion == internal.MasterVersion {
 		// Since path@master is a moving target, we don't want it to be stale.
 		// As a result, we enqueue every request of path@master to the frontend

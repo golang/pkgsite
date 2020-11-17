@@ -31,8 +31,6 @@ type urlPathInfo struct {
 	// of the following: "latest", "master", a Go version tag, or a semantic
 	// version.
 	requestedVersion string
-	// resolvedVersion is the semantic version stored in the database.
-	resolvedVersion string
 }
 
 // extractURLPathInfo extracts information from a request to pkg.go.dev.
