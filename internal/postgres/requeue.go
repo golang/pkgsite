@@ -94,7 +94,7 @@ func (db *DB) GetNextModulesToFetch(ctx context.Context, limit int) (_ []*intern
 		mvs = append(mvs, mv)
 		return nil
 	}
-	if err := db.db.RunQuery(ctx, query, collect, largeModulePackageThreshold, limit); err != nil {
+	if err := db.db.RunQuery(ctx, query, collect, limit); err != nil {
 		return nil, err
 	}
 	if len(mvs) == 0 {
@@ -157,7 +157,6 @@ const nextModulesToProcessQuery = `
 	) s
 	WHERE next_processed_after < CURRENT_TIMESTAMP
 		AND (status = 0 OR status >= 500)
-        AND $1 = $1 -- ignore largeModulePackageThreshold
 	ORDER BY
 		CASE
 			-- new modules
@@ -176,5 +175,5 @@ const nextModulesToProcessQuery = `
 			ELSE 5
 		END,
 		md5(module_path||version) -- deterministic but effectively random
-	LIMIT $2
+	LIMIT $1
 `
