@@ -152,12 +152,7 @@ func isValidPath(fullPath string) bool {
 	return true
 }
 
-// validatePathAndVersion verifies that the requested path and version are
-// acceptable. The given path may be a module or package path.
-func validatePathAndVersion(ctx context.Context, ds internal.DataSource, fullPath, requestedVersion string) error {
-	if !isSupportedVersion(fullPath, requestedVersion) {
-		return invalidVersionError(fullPath, requestedVersion)
-	}
+func checkExcluded(ctx context.Context, ds internal.DataSource, fullPath string) error {
 	db, ok := ds.(*postgres.DB)
 	if !ok {
 		return nil

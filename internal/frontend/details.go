@@ -36,6 +36,13 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 		return nil
 	}
 
+	ctx := r.Context()
+	// If page statistics are enabled, use the "exp" query param to adjust
+	// the active experiments.
+	if s.serveStats {
+		ctx = setExperimentsFromQueryParam(ctx, r)
+	}
+
 	urlInfo, err := extractURLPathInfo(r.URL.Path)
 	if err != nil {
 		return &serverError{
@@ -43,17 +50,12 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 			err:    err,
 		}
 	}
-	ctx := r.Context()
-	// If page statistics are enabled, use the "exp" query param to adjust
-	// the active experiments.
-	if s.serveStats {
-		ctx = setExperimentsFromQueryParam(ctx, r)
+	if !isSupportedVersion(urlInfo.fullPath, urlInfo.requestedVersion) {
+		return invalidVersionError(urlInfo.fullPath, urlInfo.requestedVersion)
 	}
-	// Validate the fullPath and requestedVersion that were parsed.
-	if err := validatePathAndVersion(ctx, ds, urlInfo.fullPath, urlInfo.requestedVersion); err != nil {
+	if err := checkExcluded(ctx, ds, urlInfo.fullPath); err != nil {
 		return err
 	}
-	recordVersionTypeMetric(ctx, urlInfo.requestedVersion)
 
 	um, err := ds.GetUnitMeta(ctx, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion)
 	if err != nil {
@@ -62,6 +64,7 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 		}
 		return s.servePathNotFoundPage(w, r, ds, urlInfo.fullPath, urlInfo.requestedVersion)
 	}
+	recordVersionTypeMetric(ctx, urlInfo.requestedVersion)
 	if urlInfo.requestedVersion == internal.MasterVersion {
 		// Since path@master is a moving target, we don't want it to be stale.
 		// As a result, we enqueue every request of path@master to the frontend

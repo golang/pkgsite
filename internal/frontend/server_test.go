@@ -79,6 +79,9 @@ type serverTestCase struct {
 	requiredExperiments *experiment.Set
 }
 
+// Units with this prefix will be marked as excluded.
+const excludedModulePath = "github.com/module/excluded"
+
 var testModules = []testModule{
 	{
 		// An ordinary module, with three versions.
@@ -144,6 +147,17 @@ var testModules = []testModule{
 			{
 				name:   "http",
 				suffix: "net/http",
+			},
+		},
+	},
+	{
+		path:            excludedModulePath,
+		redistributable: true,
+		versions:        []string{sample.VersionString},
+		packages: []testPackage{
+			{
+				name:   "pkg",
+				suffix: "pkg",
 			},
 		},
 	},
@@ -288,6 +302,11 @@ func serverTestCases() []serverTestCase {
 			name:           "bad request, invalid github module path",
 			urlPath:        "/github.com/foo",
 			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:           "excluded",
+			urlPath:        "/" + excludedModulePath + "/pkg",
+			wantStatusCode: http.StatusNotFound,
 		},
 		{
 			name:           "stdlib shortcut (net/http)",
@@ -705,6 +724,9 @@ func testServer(t *testing.T, testCases []serverTestCase, experimentNames ...str
 	// middleware, for request handling.
 	ctx = experiment.NewContext(ctx, experimentNames...)
 	insertTestModules(ctx, t, testModules)
+	if err := testDB.InsertExcludedPrefix(ctx, excludedModulePath, "testuser", "testreason"); err != nil {
+		t.Fatal(err)
+	}
 	_, handler, _ := newTestServer(t, nil, experimentNames...)
 
 	experimentsSet := experiment.NewSet(experimentNames...)

@@ -6,7 +6,6 @@ package frontend
 
 import (
 	"context"
-	"net/http"
 	"sort"
 	"testing"
 
@@ -14,6 +13,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
 func TestExtractURLPathInfo(t *testing.T) {
@@ -151,35 +151,6 @@ func TestExtractURLPathInfo_Errors(t *testing.T) {
 	}
 }
 
-func TestValidatePathAndVersion(t *testing.T) {
-	tests := []struct {
-		path, version string
-		want          int
-	}{
-		{"import/path", "v1.2.3", http.StatusOK},
-		{"import/path", "v1.2.bad", http.StatusBadRequest},
-	}
-
-	for _, test := range tests {
-		err := validatePathAndVersion(context.Background(), fakeDataSource{}, test.path, test.version)
-		var got int
-		if err == nil {
-			got = 200
-		} else if serr, ok := err.(*serverError); ok {
-			got = serr.status
-		} else {
-			got = -1
-		}
-		if got != test.want {
-			t.Errorf("validatePathAndVersion(ctx, ds, %q, %q): got code %d, want %d", test.path, test.version, got, test.want)
-		}
-	}
-}
-
-type fakeDataSource struct {
-	internal.DataSource
-}
-
 func TestNewContextFromExps(t *testing.T) {
 	for _, test := range []struct {
 		mods []string
@@ -204,6 +175,28 @@ func TestNewContextFromExps(t *testing.T) {
 		sort.Strings(got)
 		if !cmp.Equal(got, test.want) {
 			t.Errorf("mods=%v:\ngot  %v\nwant %v", test.mods, got, test.want)
+		}
+	}
+}
+
+func TestIsSupportedVersion(t *testing.T) {
+	tests := []struct {
+		path, version string
+		want          bool
+	}{
+		{sample.ModulePath, "v1.2.3", true},
+		{sample.ModulePath, "v1.2.bad", false},
+		{sample.ModulePath, "latest", true},
+		{sample.ModulePath, "master", true},
+		{"net/http", "v1.2.3", true}, // isSupportedVersion expects the goTag is already converted to semver
+		{"net/http", "v1.2.3.bad", false},
+		{"net/http", "latest", true},
+		{"net/http", "master", false},
+	}
+	for _, test := range tests {
+		got := isSupportedVersion(test.path, test.version)
+		if got != test.want {
+			t.Errorf("isSupportedVersion(ctx, ds, %q, %q) = %t, want %t", test.path, test.version, got, test.want)
 		}
 	}
 }
