@@ -12,7 +12,6 @@ import (
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -100,7 +99,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		CanonicalURLPath: canonicalURLPath(um),
 		DisplayVersion:   displayVersion(um.Version, um.ModulePath),
 		LinkVersion:      linkVersion(um.Version, um.ModulePath),
-		LatestURL:        constructUnitURL(um.Path, um.ModulePath, middleware.LatestMinorVersionPlaceholder),
+		LatestURL:        constructUnitURL(um.Path, um.ModulePath, internal.LatestVersion),
 		PageLabels:       pageLabels(um),
 		PageType:         pageType(um),
 	}
