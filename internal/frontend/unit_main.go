@@ -19,6 +19,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc"
+	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
@@ -136,7 +137,8 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 			return nil, err
 		}
 		docBody, docOutline, mobileOutline, err = getHTML(ctx, unit, docPkg)
-		if err != nil {
+		// If err  is ErrTooLarge, then docBody will have an appropriate message.
+		if err != nil && !errors.Is(err, dochtml.ErrTooLarge) {
 			return nil, err
 		}
 		end = middleware.ElapsedStat(ctx, "sourceFiles")
