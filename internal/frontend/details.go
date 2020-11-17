@@ -78,10 +78,6 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 		// (This is what godoc.org does.)
 		http.Redirect(w, r, "https://golang.org/doc/articles/c_go_cgo.html", http.StatusMovedPermanently)
 		return nil
-	case "/mod/std":
-		// The stdlib module page is hosted at "/std".
-		http.Redirect(w, r, "/std", http.StatusMovedPermanently)
-		return nil
 	}
 
 	urlInfo, err := extractURLPathInfo(r.URL.Path)
