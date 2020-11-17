@@ -29,7 +29,6 @@ func TestExtractURLPathInfo(t *testing.T) {
 				fullPath:         "a.com",
 				modulePath:       internal.UnknownModulePath,
 				requestedVersion: internal.LatestVersion,
-				isModule:         false,
 			},
 		},
 		{
@@ -38,7 +37,6 @@ func TestExtractURLPathInfo(t *testing.T) {
 				fullPath:         "a.com",
 				modulePath:       internal.UnknownModulePath,
 				requestedVersion: "v1.2.3",
-				isModule:         false,
 			},
 		},
 		{
@@ -47,7 +45,6 @@ func TestExtractURLPathInfo(t *testing.T) {
 				fullPath:         "a.com/b",
 				modulePath:       "a.com",
 				requestedVersion: "v1.2.3",
-				isModule:         false,
 			},
 		},
 		{
@@ -56,7 +53,6 @@ func TestExtractURLPathInfo(t *testing.T) {
 				fullPath:         "encoding/json",
 				modulePath:       "std",
 				requestedVersion: internal.LatestVersion,
-				isModule:         false,
 			},
 		},
 		{
@@ -65,25 +61,6 @@ func TestExtractURLPathInfo(t *testing.T) {
 				fullPath:         "encoding/json",
 				modulePath:       "std",
 				requestedVersion: "v1.12.0",
-				isModule:         false,
-			},
-		},
-		{
-			"/mod/a.com",
-			&urlPathInfo{
-				fullPath:         "a.com",
-				modulePath:       internal.UnknownModulePath,
-				requestedVersion: internal.LatestVersion,
-				isModule:         true,
-			},
-		},
-		{
-			"/mod/a.com@v1.2.3",
-			&urlPathInfo{
-				fullPath:         "a.com",
-				modulePath:       internal.UnknownModulePath,
-				requestedVersion: "v1.2.3",
-				isModule:         true,
 			},
 		},
 		{
@@ -92,16 +69,6 @@ func TestExtractURLPathInfo(t *testing.T) {
 				fullPath:         "moda.com",
 				modulePath:       internal.UnknownModulePath,
 				requestedVersion: internal.LatestVersion,
-				isModule:         false,
-			},
-		},
-		{
-			"/mod/a.com@v1.2.3/b",
-			&urlPathInfo{
-				fullPath:         "a.com/b",
-				modulePath:       "a.com",
-				requestedVersion: "v1.2.3",
-				isModule:         true,
 			},
 		},
 	} {

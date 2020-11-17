@@ -24,8 +24,6 @@ type urlPathInfo struct {
 	// fullPath is the full import path corresponding to the requested
 	// package/module/directory page.
 	fullPath string
-	// isModule indicates whether the /mod page should be shown.
-	isModule bool
 	// modulePath is the path of the module corresponding to the fullPath and
 	// resolvedVersion. If unknown, it is set to internal.UnknownModulePath.
 	modulePath string
@@ -37,23 +35,15 @@ type urlPathInfo struct {
 	resolvedVersion string
 }
 
+// extractURLPathInfo extracts information from a request to pkg.go.dev.
+// If an error is returned, the user will be served an http.StatusBadRequest.
 func extractURLPathInfo(urlPath string) (_ *urlPathInfo, err error) {
 	defer derrors.Wrap(&err, "extractURLPathInfo(%q)", urlPath)
 
 	info := &urlPathInfo{}
-	if strings.HasPrefix(urlPath, "/mod/") {
-		urlPath = strings.TrimPrefix(urlPath, "/mod")
-		info.isModule = true
-	}
-	// Parse the fullPath, modulePath and requestedVersion, based on whether
-	// the path is in the stdlib. If unable to parse these elements, return
-	// http.StatusBadRequest.
 	if parts := strings.SplitN(strings.TrimPrefix(urlPath, "/"), "@", 2); stdlib.Contains(parts[0]) {
 		info.fullPath, info.requestedVersion, err = parseStdLibURLPath(urlPath)
 		info.modulePath = stdlib.ModulePath
-		if info.fullPath == stdlib.ModulePath {
-			info.isModule = true
-		}
 	} else {
 		info.fullPath, info.modulePath, info.requestedVersion, err = parseDetailsURLPath(urlPath)
 	}

@@ -111,9 +111,6 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 		}
 		return s.servePathNotFoundPage(w, r, ds, urlInfo.fullPath, urlInfo.requestedVersion)
 	}
-	if urlInfo.isModule && um.ModulePath != urlInfo.fullPath {
-		return s.servePathNotFoundPage(w, r, ds, urlInfo.fullPath, urlInfo.requestedVersion)
-	}
 
 	urlInfo.modulePath = um.ModulePath
 	urlInfo.resolvedVersion = um.Version
