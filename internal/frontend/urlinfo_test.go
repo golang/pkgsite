@@ -7,7 +7,6 @@ package frontend
 import (
 	"context"
 	"net/http"
-	"net/url"
 	"sort"
 	"testing"
 
@@ -19,123 +18,99 @@ import (
 
 func TestExtractURLPathInfo(t *testing.T) {
 	for _, test := range []struct {
-		in   string
-		want *urlPathInfo // nil => want non-nil error
+		name, url string
+		want      *urlPathInfo // nil => want non-nil error
 	}{
-		{"", nil},
 		{
-			"/a.com",
-			&urlPathInfo{
-				fullPath:         "a.com",
+			name: "path at latest",
+			url:  "/github.com/hashicorp/vault/api",
+			want: &urlPathInfo{
 				modulePath:       internal.UnknownModulePath,
+				fullPath:         "github.com/hashicorp/vault/api",
 				requestedVersion: internal.LatestVersion,
 			},
 		},
 		{
-			"/a.com@v1.2.3",
-			&urlPathInfo{
-				fullPath:         "a.com",
+			name: "path at version in nested module",
+			url:  "/github.com/hashicorp/vault/api@v1.0.3",
+			want: &urlPathInfo{
 				modulePath:       internal.UnknownModulePath,
-				requestedVersion: "v1.2.3",
+				fullPath:         "github.com/hashicorp/vault/api",
+				requestedVersion: "v1.0.3",
 			},
 		},
 		{
-			"/a.com@v1.2.3/b",
-			&urlPathInfo{
-				fullPath:         "a.com/b",
-				modulePath:       "a.com",
-				requestedVersion: "v1.2.3",
+			name: "package at version in parent module",
+			url:  "/github.com/hashicorp/vault@v1.0.3/api",
+			want: &urlPathInfo{
+				modulePath:       "github.com/hashicorp/vault",
+				fullPath:         "github.com/hashicorp/vault/api",
+				requestedVersion: "v1.0.3",
 			},
 		},
 		{
-			"/encoding/json",
-			&urlPathInfo{
-				fullPath:         "encoding/json",
-				modulePath:       "std",
+			name: "package at version trailing slash",
+			url:  "/github.com/hashicorp/vault/api@v1.0.3/",
+			want: &urlPathInfo{
+				modulePath:       internal.UnknownModulePath,
+				fullPath:         "github.com/hashicorp/vault/api",
+				requestedVersion: "v1.0.3",
+			},
+		},
+		{
+			name: "stdlib module",
+			url:  "/std",
+			want: &urlPathInfo{
+				modulePath:       stdlib.ModulePath,
+				fullPath:         "std",
 				requestedVersion: internal.LatestVersion,
 			},
 		},
 		{
-			"/encoding/json@go1.12",
-			&urlPathInfo{
-				fullPath:         "encoding/json",
-				modulePath:       "std",
-				requestedVersion: "v1.12.0",
+			name: "stdlib module at version",
+			url:  "/std@go1.14",
+			want: &urlPathInfo{
+				modulePath:       stdlib.ModulePath,
+				fullPath:         "std",
+				requestedVersion: "v1.14.0",
 			},
 		},
 		{
-			"/moda.com",
-			&urlPathInfo{
-				fullPath:         "moda.com",
-				modulePath:       internal.UnknownModulePath,
+			name: "stdlib",
+			url:  "/net/http",
+			want: &urlPathInfo{
+				modulePath:       stdlib.ModulePath,
+				fullPath:         "net/http",
 				requestedVersion: internal.LatestVersion,
+			},
+		},
+		{
+			name: "stdlib at version",
+			url:  "/net/http@go1.14",
+			want: &urlPathInfo{
+				modulePath:       stdlib.ModulePath,
+				fullPath:         "net/http",
+				requestedVersion: "v1.14.0",
 			},
 		},
 	} {
-		got, err := extractURLPathInfo(test.in)
-		if err != nil {
-			if test.want != nil {
-				t.Errorf("%q: got error %v", test.in, err)
+		t.Run(test.name, func(t *testing.T) {
+			got, err := extractURLPathInfo(test.url)
+			if err != nil {
+				t.Fatalf("extractURLPathInfo(%q): %v", test.url, err)
 			}
-			continue
-		}
-		if test.want == nil {
-			t.Errorf("%q: got no error, wanted one", test.in)
-			continue
-		}
-		if diff := cmp.Diff(test.want, got, cmp.AllowUnexported(urlPathInfo{})); diff != "" {
-			t.Errorf("%q: mismatch (-want, +got):\n%s", test.in, diff)
-		}
+			if diff := cmp.Diff(test.want, got, cmp.AllowUnexported(urlPathInfo{})); diff != "" {
+				t.Errorf("%q: mismatch (-want, +got):\n%s", test.url, diff)
+			}
+		})
 	}
 }
 
-func TestParseDetailsURLPath(t *testing.T) {
+func TestExtractURLPathInfo_Errors(t *testing.T) {
 	testCases := []struct {
 		name, url, wantModulePath, wantFullPath, wantVersion string
 		wantErr                                              bool
 	}{
-		{
-			name:           "latest",
-			url:            "/github.com/hashicorp/vault/api",
-			wantModulePath: internal.UnknownModulePath,
-			wantFullPath:   "github.com/hashicorp/vault/api",
-			wantVersion:    internal.LatestVersion,
-		},
-		{
-			name:           "package at version in nested module",
-			url:            "/github.com/hashicorp/vault/api@v1.0.3",
-			wantModulePath: internal.UnknownModulePath,
-			wantFullPath:   "github.com/hashicorp/vault/api",
-			wantVersion:    "v1.0.3",
-		},
-		{
-			name:           "package at version in parent module",
-			url:            "/github.com/hashicorp/vault@v1.0.3/api",
-			wantModulePath: "github.com/hashicorp/vault",
-			wantFullPath:   "github.com/hashicorp/vault/api",
-			wantVersion:    "v1.0.3",
-		},
-		{
-			name:           "package at version trailing slash",
-			url:            "/github.com/hashicorp/vault/api@v1.0.3/",
-			wantModulePath: internal.UnknownModulePath,
-			wantFullPath:   "github.com/hashicorp/vault/api",
-			wantVersion:    "v1.0.3",
-		},
-		{
-			name:           "stdlib",
-			url:            "net/http",
-			wantModulePath: stdlib.ModulePath,
-			wantFullPath:   "net/http",
-			wantVersion:    internal.LatestVersion,
-		},
-		{
-			name:           "stdlib at version",
-			url:            "net/http@go1.14",
-			wantModulePath: stdlib.ModulePath,
-			wantFullPath:   "net/http",
-			wantVersion:    "go1.14",
-		},
 		{
 			name:    "invalid url",
 			url:     "/",
@@ -159,18 +134,13 @@ func TestParseDetailsURLPath(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			u, parseErr := url.Parse(tc.url)
-			if parseErr != nil {
-				t.Errorf("url.Parse(%q): %v", tc.url, parseErr)
-			}
-
-			gotPkg, gotModule, gotVersion, err := parseDetailsURLPath(u.Path)
+			got, err := extractURLPathInfo(tc.url)
 			if (err != nil) != tc.wantErr {
-				t.Fatalf("parseDetailsURLPath(%q) error = (%v); want error %t)", u, err, tc.wantErr)
+				t.Fatalf("extractURLPathInfo(%q) error = (%v); want error %t)", tc.url, err, tc.wantErr)
 			}
-			if !tc.wantErr && (tc.wantModulePath != gotModule || tc.wantVersion != gotVersion || tc.wantFullPath != gotPkg) {
-				t.Fatalf("parseDetailsURLPath(%q): %q, %q, %q, %v; want = %q, %q, %q, want err %t",
-					u, gotPkg, gotModule, gotVersion, err, tc.wantFullPath, tc.wantModulePath, tc.wantVersion, tc.wantErr)
+			if !tc.wantErr && (tc.wantModulePath != got.modulePath || tc.wantVersion != got.requestedVersion || tc.wantFullPath != got.fullPath) {
+				t.Fatalf("extractURLPathInfo(%q): %q, %q, %q, %v; want = %q, %q, %q, want err %t",
+					tc.url, got.fullPath, got.modulePath, got.requestedVersion, err, tc.wantFullPath, tc.wantModulePath, tc.wantVersion, tc.wantErr)
 			}
 		})
 	}

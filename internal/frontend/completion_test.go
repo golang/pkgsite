@@ -28,14 +28,14 @@ func TestAutoCompletion(t *testing.T) {
 		"github.com/something@v2.0.0/foo": 80,
 	}
 	for k, v := range pathData {
-		pkgPath, modPath, version, err := parseDetailsURLPath(k)
+		got, err := parseDetailsURLPath(k)
 		if err != nil {
 			t.Fatal(err)
 		}
 		partial := complete.Completion{
-			PackagePath: pkgPath,
-			ModulePath:  modPath,
-			Version:     version,
+			PackagePath: got.fullPath,
+			ModulePath:  got.modulePath,
+			Version:     got.requestedVersion,
 			Importers:   v,
 		}
 		completions := complete.PathCompletions(partial)

@@ -38,17 +38,11 @@ type urlPathInfo struct {
 func extractURLPathInfo(urlPath string) (_ *urlPathInfo, err error) {
 	defer derrors.Wrap(&err, "extractURLPathInfo(%q)", urlPath)
 
-	info := &urlPathInfo{}
-	if parts := strings.SplitN(strings.TrimPrefix(urlPath, "/"), "@", 2); stdlib.Contains(parts[0]) {
-		info.fullPath, info.requestedVersion, err = parseStdLibURLPath(urlPath)
-		info.modulePath = stdlib.ModulePath
-	} else {
-		info.fullPath, info.modulePath, info.requestedVersion, err = parseDetailsURLPath(urlPath)
+	parts := strings.SplitN(strings.TrimPrefix(urlPath, "/"), "@", 2)
+	if stdlib.Contains(parts[0]) {
+		return parseStdLibURLPath(urlPath)
 	}
-	if err != nil {
-		return nil, err
-	}
-	return info, nil
+	return parseDetailsURLPath(urlPath)
 }
 
 // parseDetailsURLPath parses a URL path that refers (or may refer) to something
@@ -75,7 +69,7 @@ func extractURLPathInfo(urlPath string) (_ *urlPathInfo, err error) {
 // In one case, we do a little more than parse the urlPath into parts: if the full path
 // could be a part of the standard library (because it has no '.'), we assume it
 // is and set the modulePath to indicate the standard library.
-func parseDetailsURLPath(urlPath string) (fullPath, modulePath, requestedVersion string, err error) {
+func parseDetailsURLPath(urlPath string) (_ *urlPathInfo, err error) {
 	defer derrors.Wrap(&err, "parseDetailsURLPath(%q)", urlPath)
 
 	// This splits urlPath into either:
@@ -85,69 +79,65 @@ func parseDetailsURLPath(urlPath string) (fullPath, modulePath, requestedVersion
 	// or
 	//  /<module-path>/<suffix>, @<version>
 	parts := strings.SplitN(urlPath, "@", 2)
-	basePath := strings.TrimSuffix(strings.TrimPrefix(parts[0], "/"), "/")
-	if len(parts) == 1 { // no '@'
-		modulePath = internal.UnknownModulePath
-		requestedVersion = internal.LatestVersion
-		fullPath = basePath
-	} else {
-		// Parse the version and suffix from parts[1], the string after the '@'.
+	info := &urlPathInfo{
+		fullPath:         strings.TrimSuffix(strings.TrimPrefix(parts[0], "/"), "/"),
+		modulePath:       internal.UnknownModulePath,
+		requestedVersion: internal.LatestVersion,
+	}
+	if len(parts) != 1 {
+		// The urlPath contains a "@". Parse the version and suffix from
+		// parts[1], the string after the '@'.
 		endParts := strings.Split(parts[1], "/")
-		suffix := strings.Join(endParts[1:], "/")
+
+		// Parse the requestedVersion from the urlPath.
 		// The first path component after the '@' is the version.
-		requestedVersion = endParts[0]
 		// You cannot explicitly write "latest" for the version.
-		if requestedVersion == internal.LatestVersion {
-			return "", "", "", fmt.Errorf("invalid version: %q", requestedVersion)
+		if endParts[0] == internal.LatestVersion {
+			return nil, fmt.Errorf("invalid version: %q", info.requestedVersion)
 		}
-		if suffix == "" {
-			// "@version" occurred at the end of the path; we don't know the module path.
-			modulePath = internal.UnknownModulePath
-			fullPath = basePath
-		} else {
-			// "@version" occurred in the middle of the path; the part before it
+		info.requestedVersion = endParts[0]
+
+		// Parse the suffix following the "@version" from the urlPath.
+		suffix := strings.Join(endParts[1:], "/")
+		if suffix != "" {
+			// If "@version" occurred in the middle of the path, the part before it
 			// is the module path.
-			modulePath = basePath
-			fullPath = basePath + "/" + suffix
+			info.modulePath = info.fullPath
+			info.fullPath = info.fullPath + "/" + suffix
 		}
 	}
 	// The full path must be a valid import path (that is, package path), even if it denotes
 	// a module, directory or collection.
-	if err := module.CheckImportPath(fullPath); err != nil {
-		return "", "", "", fmt.Errorf("malformed path %q: %v", fullPath, err)
+	if err := module.CheckImportPath(info.fullPath); err != nil {
+		return nil, fmt.Errorf("module.CheckImportPath(%q): %v", info.fullPath, err)
 	}
-
-	// If the full path is (or could be) in the standard library, change the
-	// module path to say so. But in that case, disallow versions in the middle,
-	// like "net@go1.14/http". That says that the module is "net", and it isn't.
-	if stdlib.Contains(fullPath) {
-		if modulePath != internal.UnknownModulePath {
-			return "", "", "", fmt.Errorf("non-final version in standard library path %q", urlPath)
-		}
-		modulePath = stdlib.ModulePath
-	}
-	return fullPath, modulePath, requestedVersion, nil
+	return info, nil
 }
 
-func parseStdLibURLPath(urlPath string) (path, requestedVersion string, err error) {
+func parseStdLibURLPath(urlPath string) (_ *urlPathInfo, err error) {
 	defer derrors.Wrap(&err, "parseStdLibURLPath(%q)", urlPath)
 
 	// This splits urlPath into either:
 	//   /<path>@<tag> or /<path>
 	parts := strings.SplitN(urlPath, "@", 2)
-	path = strings.TrimSuffix(strings.TrimPrefix(parts[0], "/"), "/")
-	if err := module.CheckImportPath(path); err != nil {
-		return "", "", err
+	fullPath := strings.TrimSuffix(strings.TrimPrefix(parts[0], "/"), "/")
+	if err := module.CheckImportPath(fullPath); err != nil {
+		return nil, fmt.Errorf("module.CheckImportPath(%q): %v", fullPath, err)
 	}
 
+	info := &urlPathInfo{
+		fullPath:   fullPath,
+		modulePath: stdlib.ModulePath,
+	}
 	if len(parts) == 1 {
-		return path, internal.LatestVersion, nil
+		info.requestedVersion = internal.LatestVersion
+		return info, nil
 	}
-	requestedVersion = stdlib.VersionForTag(strings.TrimSuffix(parts[1], "/"))
-	if requestedVersion == "" {
-		return "", "", fmt.Errorf("invalid Go tag for url: %q", urlPath)
+	info.requestedVersion = stdlib.VersionForTag(strings.TrimSuffix(parts[1], "/"))
+	if info.requestedVersion == "" {
+		return nil, fmt.Errorf("invalid Go tag for url: %q", urlPath)
 	}
-	return path, requestedVersion, nil
+	return info, nil
 }
 
 // validatePathAndVersion verifies that the requested path and version are

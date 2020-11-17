@@ -194,12 +194,12 @@ func detailsTTLForPath(ctx context.Context, urlPath, tab string) time.Duration {
 	if strings.HasPrefix(urlPath, "/mod") {
 		urlPath = strings.TrimPrefix(urlPath, "/mod")
 	}
-	_, _, version, err := parseDetailsURLPath(urlPath)
+	info, err := parseDetailsURLPath(urlPath)
 	if err != nil {
 		log.Errorf(ctx, "falling back to default TTL: %v", err)
 		return defaultTTL
 	}
-	if version == internal.LatestVersion {
+	if info.requestedVersion == internal.LatestVersion {
 		return shortTTL
 	}
 	if tab == "importedby" || tab == "versions" {
