@@ -211,6 +211,12 @@ func serverTestCases() []serverTestCase {
 
 	testCases := []serverTestCase{
 		{
+			name:           "C",
+			urlPath:        "/C",
+			wantStatusCode: http.StatusMovedPermanently,
+			wantLocation:   "https://golang.org/doc/articles/c_go_cgo.html",
+		},
+		{
 			name:           "static",
 			urlPath:        "/static/",
 			wantStatusCode: http.StatusOK,

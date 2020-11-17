@@ -68,15 +68,8 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 	if r.Method != http.MethodGet {
 		return &serverError{status: http.StatusMethodNotAllowed}
 	}
-
-	switch r.URL.Path {
-	case "/":
+	if r.URL.Path == "/" {
 		s.staticPageHandler("index.tmpl", "")(w, r)
-		return nil
-	case "/C":
-		// Package "C" is a special case: redirect to the Go Blog article on cgo.
-		// (This is what godoc.org does.)
-		http.Redirect(w, r, "https://golang.org/doc/articles/c_go_cgo.html", http.StatusMovedPermanently)
 		return nil
 	}
 
