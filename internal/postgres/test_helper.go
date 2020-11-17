@@ -105,6 +105,7 @@ func ResetTestDB(db *DB, t *testing.T) {
 			TRUNCATE modules CASCADE;
 			TRUNCATE search_documents;
 			TRUNCATE version_map;
+			TRUNCATE paths;
 			TRUNCATE imports_unique;`); err != nil {
 			return err
 		}

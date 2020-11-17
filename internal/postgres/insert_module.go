@@ -272,17 +272,10 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 		sort.Strings(u.Imports)
 	}
 
-	var pathValues []interface{}
-	for _, u := range m.Units {
-		pathValues = append(pathValues, u.Path)
-	}
-	// Insert data into the paths table.
-	pathCols := []string{"path"}
-	uniquePathCols := []string{"path"}
-	returningPathCols := []string{"id", "path"}
-
+	// Add new unit paths to the paths table.
 	pathToID := map[string]int{}
-	if err := db.BulkUpsertReturning(ctx, "paths", pathCols, pathValues, uniquePathCols, returningPathCols, func(rows *sql.Rows) error {
+
+	collect := func(rows *sql.Rows) error {
 		var (
 			pathID int
 			path   string
@@ -292,8 +285,37 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 		}
 		pathToID[path] = pathID
 		return nil
-	}); err != nil {
+	}
+
+	// Read all existing paths for this module, to avoid a large bulk upsert.
+	// (We've seen these bulk upserts hang for so long that they time out (10
+	// minutes)).
+	var curPaths []string
+	for _, u := range m.Units {
+		curPaths = append(curPaths, u.Path)
+	}
+	if err := db.RunQuery(ctx, `SELECT id, path FROM paths WHERE path = ANY($1)`,
+		collect, pq.Array(curPaths)); err != nil {
 		return err
+	}
+
+	log.Debugf(ctx, "insertUnits(%q): read %d paths", m.ModulePath, len(pathToID))
+	// Insert any unit paths that we don't already have.
+	var pathValues []interface{}
+	for _, u := range m.Units {
+		if _, ok := pathToID[u.Path]; !ok {
+			pathValues = append(pathValues, u.Path)
+		}
+	}
+	if len(pathValues) > 0 {
+		log.Debugf(ctx, "insertUnits(%q): upserting %d paths", m.ModulePath, len(pathValues))
+		// Insert data into the paths table.
+		pathCols := []string{"path"}
+		uniquePathCols := []string{"path"}
+		returningPathCols := []string{"id", "path"}
+		if err := db.BulkUpsertReturning(ctx, "paths", pathCols, pathValues, uniquePathCols, returningPathCols, collect); err != nil {
+			return err
+		}
 	}
 
 	var (
