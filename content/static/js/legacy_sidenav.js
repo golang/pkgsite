@@ -210,6 +210,42 @@ class DocNavTreeController {
     if (el.hasAttribute('aria-expanded')) {
       this.toggleItemExpandedState(el);
     }
+    this.closeInactiveDocNavGroups(el);
+    this.closeInactiveDocNavTypeGroups(el);
+  }
+
+  /**
+   * Closes inactive top level nav groups when a new tree item clicked.
+   * @param {!Element} el
+   * @private
+   */
+  closeInactiveDocNavGroups(el) {
+    if (el.classList.contains('js-docNav')) {
+      document.querySelectorAll('.js-docNav').forEach(nav => {
+        if (nav.getAttribute('aria-expanded') === 'true' && nav !== el) {
+          nav.setAttribute('aria-expanded', 'false');
+        }
+      });
+      this.updateVisibleItems();
+      this._focusedIndex = this._visibleItems.indexOf(el);
+    }
+  }
+
+  /**
+   * Closes inactive type level nav groups when a new tree item clicked.
+   * @param {!Element} el
+   * @private
+   */
+  closeInactiveDocNavTypeGroups(el) {
+    if (el.classList.contains('js-docNavType')) {
+      document.querySelectorAll('.js-docNavType').forEach(nav => {
+        if (nav.getAttribute('aria-expanded') === 'true' && nav !== el) {
+          nav.setAttribute('aria-expanded', 'false');
+        }
+      });
+      this.updateVisibleItems();
+      this._focusedIndex = this._visibleItems.indexOf(el);
+    }
   }
 
   /**

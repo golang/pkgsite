@@ -33,7 +33,7 @@ var scriptHashes = []string{
 	// From content/static/html/pages/unit_details.tmpl
 	"'sha256-CFun5NgnYeEpye8qcbQPq5Ycwavi4IXuZiIzSMNqRUw='",
 	"'sha256-IHdniK/yZ8URNA2OYbc4R7BssOAe3/dFrSQW7PxEEfM='",
-	"'sha256-MBIVDkCvJUTM2/rxXDRYO9B+ovOUGLVJOww8fxur+LU='",
+	"'sha256-n5SNZQqoMuOrVKSN3pszZlsWNIrr5HaLOezim/jDLuk='",
 }
 
 // SecureHeaders adds a content-security-policy and other security-related

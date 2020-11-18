@@ -9,7 +9,7 @@
 @import './unit_files.css';
 @import './unit_directories.css';
 @import './unit_meta.css';
-@import './unit_outline.css';
+@import './legacy_unit_outline.css';
 
 .UnitDetails {
   column-gap: 2rem;

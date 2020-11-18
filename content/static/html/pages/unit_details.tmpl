@@ -14,7 +14,7 @@
     <div class="UnitDetails-outline" role="navigation"
         aria-label="{{if eq .PageType "std"}}module
         {{else}}{{.PageType}}{{end}}details navigation">
-      {{block "unit_outline" .Details}}{{end}}
+      {{block "legacy_unit_outline" .Details}}{{end}}
     </div>
     <div class="UnitDetails-content" role="main" data-test-id="UnitDetails-content">
       {{if .Details.Readme.String}}
@@ -85,6 +85,6 @@
     loadScript("/static/js/playground.min.js", {async: true, defer: true});
   </script>
   <script>
-    loadScript('/static/js/sidenav.js', {async: true, defer: true});
+    loadScript('/static/js/legacy_sidenav.js', {async: true, defer: true});
   </script>
 {{end}}
