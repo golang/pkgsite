@@ -6,9 +6,7 @@ package frontend
 
 import (
 	"context"
-	"errors"
 	"net/http"
-	"time"
 
 	"github.com/google/safehtml/template"
 	"go.opencensus.io/stats"
@@ -16,8 +14,6 @@ import (
 	"go.opencensus.io/tag"
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
 )
 
@@ -56,32 +52,7 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 	if err := checkExcluded(ctx, ds, urlInfo.fullPath); err != nil {
 		return err
 	}
-
-	um, err := ds.GetUnitMeta(ctx, urlInfo.fullPath, urlInfo.modulePath, urlInfo.requestedVersion)
-	if err != nil {
-		if !errors.Is(err, derrors.NotFound) {
-			return err
-		}
-		return s.servePathNotFoundPage(w, r, ds, urlInfo.fullPath, urlInfo.requestedVersion)
-	}
-	recordVersionTypeMetric(ctx, urlInfo.requestedVersion)
-	if urlInfo.requestedVersion == internal.MasterVersion {
-		// Since path@master is a moving target, we don't want it to be stale.
-		// As a result, we enqueue every request of path@master to the frontend
-		// task queue, which will initiate a fetch request depending on the
-		// last time we tried to fetch this module version.
-		//
-		// Use a separate context here to prevent the context from being canceled
-		// elsewhere before a task is enqueued.
-		go func() {
-			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
-			defer cancel()
-			if _, err := s.queue.ScheduleFetch(ctx, urlInfo.modulePath, internal.MasterVersion, ""); err != nil {
-				log.Errorf(ctx, "serveDetails(%q): %v", r.URL.Path, err)
-			}
-		}()
-	}
-	return s.serveUnitPage(ctx, w, r, ds, um, urlInfo.requestedVersion)
+	return s.serveUnitPage(ctx, w, r, ds, urlInfo)
 }
 
 func invalidVersionError(fullPath, requestedVersion string) error {

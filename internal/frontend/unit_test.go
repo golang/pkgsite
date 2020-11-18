@@ -76,7 +76,6 @@ func TestCanonicalURLPath(t *testing.T) {
 
 func TestIsValidTab(t *testing.T) {
 	testTabs := []string{
-		"invalidTab",
 		tabMain,
 		tabVersions,
 		tabImports,
@@ -120,7 +119,7 @@ func TestIsValidTab(t *testing.T) {
 		}
 		for _, tab := range testTabs {
 			t.Run(test.name, func(t *testing.T) {
-				got := isValidTab(tab, test.um)
+				got := isValidTabForUnit(tab, test.um)
 				_, want := validTabs[tab]
 				if got != want {
 					t.Errorf("mismatch for %q on tab %q: got %t; want %t", test.um.Path, tab, got, want)

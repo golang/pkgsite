@@ -6,12 +6,15 @@ package frontend
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -69,33 +72,62 @@ type UnitPage struct {
 // serveUnitPage serves a unit page for a path using the paths,
 // modules, documentation, readmes, licenses, and package_imports tables.
 func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *http.Request,
-	ds internal.DataSource, um *internal.UnitMeta, requestedVersion string) (err error) {
-	defer derrors.Wrap(&err, "serveUnitPage(ctx, w, r, ds, %v, %q)", um, requestedVersion)
+	ds internal.DataSource, info *urlPathInfo) (err error) {
+	defer derrors.Wrap(&err, "serveUnitPage(ctx, w, r, ds, %v)", info)
 
 	tab := r.FormValue("tab")
 	if tab == "" {
 		// Default to details tab when there is no tab param.
 		tab = tabMain
 	}
+	// Redirect to clean URL path when tab param is invalid.
+	if _, ok := unitTabLookup[tab]; !ok {
+		http.Redirect(w, r, r.URL.Path, http.StatusFound)
+	}
 
-	if !isValidTab(tab, um) {
-		// Redirect to clean URL path when tab param is invalid.
-		// If the path is not redistributable, licenses is an invalid tab.
+	um, err := ds.GetUnitMeta(ctx, info.fullPath, info.modulePath, info.requestedVersion)
+	if err != nil {
+		if !errors.Is(err, derrors.NotFound) {
+			return err
+		}
+		return s.servePathNotFoundPage(w, r, ds, info.fullPath, info.requestedVersion)
+	}
+
+	recordVersionTypeMetric(ctx, info.requestedVersion)
+	if info.requestedVersion == internal.MasterVersion {
+		// Since path@master is a moving target, we don't want it to be stale.
+		// As a result, we enqueue every request of path@master to the frontend
+		// task queue, which will initiate a fetch request depending on the
+		// last time we tried to fetch this module version.
+		//
+		// Use a separate context here to prevent the context from being canceled
+		// elsewhere before a task is enqueued.
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+			defer cancel()
+			if _, err := s.queue.ScheduleFetch(ctx, info.modulePath, internal.MasterVersion, ""); err != nil {
+				log.Errorf(ctx, "serveDetails(%q): %v", r.URL.Path, err)
+			}
+		}()
+	}
+
+	if !isValidTabForUnit(tab, um) {
+		// Redirect to clean URL path when tab param is invalid for the unit
+		// type.
 		http.Redirect(w, r, r.URL.Path, http.StatusFound)
 		return nil
 	}
 	tabSettings := unitTabLookup[tab]
-
 	title := pageTitle(um)
 	basePage := s.newBasePage(r, title)
 	basePage.AllowWideContent = true
 	page := UnitPage{
 		basePage:         basePage,
 		Unit:             um,
-		Breadcrumb:       displayBreadcrumb(um, requestedVersion),
+		Breadcrumb:       displayBreadcrumb(um, info.requestedVersion),
 		Title:            title,
 		SelectedTab:      tabSettings,
-		URLPath:          constructUnitURL(um.Path, um.ModulePath, requestedVersion),
+		URLPath:          constructUnitURL(um.Path, um.ModulePath, info.requestedVersion),
 		CanonicalURLPath: canonicalURLPath(um),
 		DisplayVersion:   displayVersion(um.Version, um.ModulePath),
 		LinkVersion:      linkVersion(um.Version, um.ModulePath),
@@ -112,11 +144,9 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	return nil
 }
 
-// isValidTab reports whether the tab is valid for the given unit.
-func isValidTab(tab string, um *internal.UnitMeta) bool {
-	if _, ok := unitTabLookup[tab]; !ok {
-		return false
-	}
+// isValidTabForUnit reports whether the tab is valid for the given unit.
+// It is assumed that tab is a key in unitTabLookup.
+func isValidTabForUnit(tab string, um *internal.UnitMeta) bool {
 	if tab == tabLicenses && !um.IsRedistributable {
 		return false
 	}
