@@ -20,8 +20,8 @@ import (
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
-func (db *DB) getLicenses(ctx context.Context, fullPath, modulePath string, pathID int) (_ []*licenses.License, err error) {
-	defer derrors.Wrap(&err, "getLicenses(ctx, %d)", pathID)
+func (db *DB) getLicenses(ctx context.Context, fullPath, modulePath string, unitID int) (_ []*licenses.License, err error) {
+	defer derrors.Wrap(&err, "getLicenses(ctx, %d)", unitID)
 	defer middleware.ElapsedStat(ctx, "getLicenses")()
 
 	query := `
@@ -43,7 +43,7 @@ func (db *DB) getLicenses(ctx context.Context, fullPath, modulePath string, path
 		WHERE
 			p.id = $1;`
 
-	rows, err := db.db.Query(ctx, query, pathID)
+	rows, err := db.db.Query(ctx, query, unitID)
 	if err != nil {
 		return nil, err
 	}

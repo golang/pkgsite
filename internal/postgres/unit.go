@@ -135,7 +135,7 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 	}
 
 	defer middleware.ElapsedStat(ctx, "GetUnit")()
-	pathID, err := db.getPathID(ctx, um.Path, um.ModulePath, um.Version)
+	unitID, err := db.getUnitID(ctx, um.Path, um.ModulePath, um.Version)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +144,7 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 	if fields&internal.WithReadme != 0 {
 		var readme *internal.Readme
 		if experiment.IsActive(ctx, internal.ExperimentUnitPage) {
-			readme, err = db.getReadme(ctx, pathID)
+			readme, err = db.getReadme(ctx, unitID)
 		} else {
 			readme, err = db.getModuleReadme(ctx, u.ModulePath, u.Version)
 		}
@@ -154,14 +154,14 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 		u.Readme = readme
 	}
 	if fields&internal.WithDocumentation != 0 {
-		doc, err := db.getDocumentation(ctx, pathID)
+		doc, err := db.getDocumentation(ctx, unitID)
 		if err != nil && !errors.Is(err, derrors.NotFound) {
 			return nil, err
 		}
 		u.Documentation = doc
 	}
 	if fields&internal.WithImports != 0 {
-		imports, err := db.getImports(ctx, pathID)
+		imports, err := db.getImports(ctx, unitID)
 		if err != nil {
 			return nil, err
 		}
@@ -171,7 +171,7 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 		}
 	}
 	if fields&internal.WithLicenses != 0 {
-		lics, err := db.getLicenses(ctx, u.Path, u.ModulePath, pathID)
+		lics, err := db.getLicenses(ctx, u.Path, u.ModulePath, unitID)
 		if err != nil {
 			return nil, err
 		}
@@ -192,10 +192,10 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 	return u, nil
 }
 
-func (db *DB) getPathID(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ int, err error) {
+func (db *DB) getUnitID(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ int, err error) {
 	defer derrors.Wrap(&err, "getPathID(ctx, %q, %q, %q)", fullPath, modulePath, resolvedVersion)
 	defer middleware.ElapsedStat(ctx, "getPathID")()
-	var pathID int
+	var unitID int
 	query := `
 		SELECT p.id
 		FROM units p
@@ -204,20 +204,20 @@ func (db *DB) getPathID(ctx context.Context, fullPath, modulePath, resolvedVersi
 		    p.path = $1
 		    AND m.module_path = $2
 		    AND m.version = $3;`
-	err = db.db.QueryRow(ctx, query, fullPath, modulePath, resolvedVersion).Scan(&pathID)
+	err = db.db.QueryRow(ctx, query, fullPath, modulePath, resolvedVersion).Scan(&unitID)
 	switch err {
 	case sql.ErrNoRows:
 		return 0, derrors.NotFound
 	case nil:
-		return pathID, nil
+		return unitID, nil
 	default:
 		return 0, err
 	}
 }
 
-// getDocumentation returns the documentation corresponding to pathID.
-func (db *DB) getDocumentation(ctx context.Context, pathID int) (_ *internal.Documentation, err error) {
-	defer derrors.Wrap(&err, "getDocumentation(ctx, %d)", pathID)
+// getDocumentation returns the documentation corresponding to unitID.
+func (db *DB) getDocumentation(ctx context.Context, unitID int) (_ *internal.Documentation, err error) {
+	defer derrors.Wrap(&err, "getDocumentation(ctx, %d)", unitID)
 	defer middleware.ElapsedStat(ctx, "getDocumentation")()
 	var (
 		doc     internal.Documentation
@@ -232,7 +232,7 @@ func (db *DB) getDocumentation(ctx context.Context, pathID int) (_ *internal.Doc
 			d.source
 		FROM documentation d
 		WHERE
-		    d.unit_id=$1;`, pathID).Scan(
+		    d.unit_id=$1;`, unitID).Scan(
 		database.NullIsEmpty(&doc.GOOS),
 		database.NullIsEmpty(&doc.GOARCH),
 		database.NullIsEmpty(&doc.Synopsis),
@@ -251,14 +251,14 @@ func (db *DB) getDocumentation(ctx context.Context, pathID int) (_ *internal.Doc
 }
 
 // getReadme returns the README corresponding to the modulePath and version.
-func (db *DB) getReadme(ctx context.Context, pathID int) (_ *internal.Readme, err error) {
-	defer derrors.Wrap(&err, "getReadme(ctx, %d)", pathID)
+func (db *DB) getReadme(ctx context.Context, unitID int) (_ *internal.Readme, err error) {
+	defer derrors.Wrap(&err, "getReadme(ctx, %d)", unitID)
 	defer middleware.ElapsedStat(ctx, "getReadme")()
 	var readme internal.Readme
 	err = db.db.QueryRow(ctx, `
 		SELECT file_path, contents
 		FROM readmes
-		WHERE unit_id=$1;`, pathID).Scan(&readme.Filepath, &readme.Contents)
+		WHERE unit_id=$1;`, unitID).Scan(&readme.Filepath, &readme.Contents)
 	switch err {
 	case sql.ErrNoRows:
 		return nil, derrors.NotFound
@@ -294,9 +294,9 @@ func (db *DB) getModuleReadme(ctx context.Context, modulePath, resolvedVersion s
 	}
 }
 
-// getImports returns the imports corresponding to pathID.
-func (db *DB) getImports(ctx context.Context, pathID int) (_ []string, err error) {
-	defer derrors.Wrap(&err, "getImports(ctx, %d)", pathID)
+// getImports returns the imports corresponding to unitID.
+func (db *DB) getImports(ctx context.Context, unitID int) (_ []string, err error) {
+	defer derrors.Wrap(&err, "getImports(ctx, %d)", unitID)
 	defer middleware.ElapsedStat(ctx, "getImports")()
 	var imports []string
 	collect := func(rows *sql.Rows) error {
@@ -310,7 +310,7 @@ func (db *DB) getImports(ctx context.Context, pathID int) (_ []string, err error
 	if err := db.db.RunQuery(ctx, `
 		SELECT to_path
 		FROM package_imports
-		WHERE unit_id = $1`, collect, pathID); err != nil {
+		WHERE unit_id = $1`, collect, unitID); err != nil {
 		return nil, err
 	}
 	return imports, nil
