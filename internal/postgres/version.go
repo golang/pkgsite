@@ -51,20 +51,20 @@ func getPathVersions(ctx context.Context, db *DB, path string, versionTypes ...v
 		m.has_go_mod,
 		m.source_info
 	FROM modules m
-	INNER JOIN units p
-		ON p.module_id = m.id
+	INNER JOIN units u
+		ON u.module_id = m.id
 	LEFT JOIN documentation d
-		ON d.unit_id = p.id
+		ON d.unit_id = u.id
 	WHERE
-		p.v1_path = (
-			SELECT p2.v1_path
-			FROM units as p2
-			WHERE p2.path = $1
+		u.v1_path = (
+			SELECT u2.v1_path
+			FROM units as u2
+			WHERE u2.path = $1
 			LIMIT 1
 		)
 		AND version_type in (%s)
 		-- Packages must have documentation source
-		AND (p.name = '' OR d.source IS NOT NULL)
+		AND (u.name = '' OR d.source IS NOT NULL)
 	ORDER BY
 		m.incompatible,
 		m.module_path DESC,

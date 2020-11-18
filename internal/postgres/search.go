@@ -332,21 +332,21 @@ func (db *DB) addPackageDataToSearchResults(ctx context.Context, results []*inte
 	}
 	query := fmt.Sprintf(`
 		SELECT
-			p.path,
-			p.name,
+			u.path,
+			u.name,
 			d.synopsis,
-			p.license_types,
-			p.redistributable
+			u.license_types,
+			u.redistributable
 		FROM
-			units p
+			units u
 		INNER JOIN
 		    modules m
-		ON p.module_id = m.id
+		ON u.module_id = m.id
 		LEFT JOIN
 		    documentation d
-		ON p.id = d.unit_id
+		ON u.id = d.unit_id
 		WHERE
-			(p.path, m.version, m.module_path) IN (%s)`, strings.Join(keys, ","))
+			(u.path, m.version, m.module_path) IN (%s)`, strings.Join(keys, ","))
 	collect := func(rows *sql.Rows) error {
 		var (
 			path, name, synopsis string
@@ -391,13 +391,13 @@ var upsertSearchStatement = fmt.Sprintf(`
 		hll_leading_zeros
 	)
 	SELECT
-		p.path,
+		u.path,
 		m.version,
 		m.module_path,
-		p.name,
+		u.name,
 		d.synopsis,
-		p.license_types,
-		p.redistributable,
+		u.license_types,
+		u.redistributable,
 		CURRENT_TIMESTAMP,
 		m.commit_time,
 		m.has_go_mod,
@@ -407,20 +407,20 @@ var upsertSearchStatement = fmt.Sprintf(`
 			SETWEIGHT(TO_TSVECTOR($4), 'C') ||
 			SETWEIGHT(TO_TSVECTOR($5), 'D')
 		),
-		hll_hash(p.path) & (%[1]d - 1),
-		hll_zeros(hll_hash(p.path))
+		hll_hash(u.path) & (%[1]d - 1),
+		hll_zeros(hll_hash(u.path))
 	FROM
-		units p
+		units u
 	INNER JOIN
 		modules m
 	ON
-		p.module_id = m.id
+		u.module_id = m.id
 	LEFT JOIN
 		documentation d
 	ON
-		p.id = d.unit_id
+		u.id = d.unit_id
 	WHERE
-		p.path = $1
+		u.path = $1
 	%s
 	LIMIT 1
 	ON CONFLICT (package_path)
@@ -512,12 +512,12 @@ func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, before tim
 			r.file_path,
 			r.contents
 		FROM modules m
-		INNER JOIN units p
-		ON m.id = p.module_id
+		INNER JOIN units u
+		ON m.id = u.module_id
 		LEFT JOIN readmes r
-		ON p.id = r.unit_id
+		ON u.id = r.unit_id
 		INNER JOIN search_documents sd
-		ON sd.package_path = p.path
+		ON sd.package_path = u.path
 		    AND sd.module_path = m.module_path
 		    AND sd.version = m.version
 		WHERE sd.updated_at < $1

@@ -63,14 +63,14 @@ func (db *DB) GetUnitMeta(ctx context.Context, path, requestedModulePath, reques
 			m.version,
 			m.commit_time,
 			m.source_info,
-			p.name,
-			p.redistributable,
-			p.license_types,
-			p.license_paths
-		FROM units p
-		INNER JOIN modules m ON (p.module_id = m.id)
+			u.name,
+			u.redistributable,
+			u.license_types,
+			u.license_paths
+		FROM units u
+		INNER JOIN modules m ON (u.module_id = m.id)
 		%s
-		WHERE p.path = $1
+		WHERE u.path = $1
 		%s
 		%s
 		LIMIT 1
@@ -197,11 +197,11 @@ func (db *DB) getUnitID(ctx context.Context, fullPath, modulePath, resolvedVersi
 	defer middleware.ElapsedStat(ctx, "getPathID")()
 	var unitID int
 	query := `
-		SELECT p.id
-		FROM units p
-		INNER JOIN modules m ON (p.module_id = m.id)
+		SELECT u.id
+		FROM units u
+		INNER JOIN modules m ON (u.module_id = m.id)
 		WHERE
-		    p.path = $1
+		    u.path = $1
 		    AND m.module_path = $2
 		    AND m.version = $3;`
 	err = db.db.QueryRow(ctx, query, fullPath, modulePath, resolvedVersion).Scan(&unitID)
@@ -276,14 +276,14 @@ func (db *DB) getModuleReadme(ctx context.Context, modulePath, resolvedVersion s
 	err = db.db.QueryRow(ctx, `
 		SELECT file_path, contents
 		FROM modules m
-		INNER JOIN units p
-		ON p.module_id = m.id
+		INNER JOIN units u
+		ON u.module_id = m.id
 		INNER JOIN readmes r
-		ON p.id = r.unit_id
+		ON u.id = r.unit_id
 		WHERE
 		    m.module_path=$1
 			AND m.version=$2
-			AND m.module_path=p.path`, modulePath, resolvedVersion).Scan(&readme.Filepath, &readme.Contents)
+			AND m.module_path=u.path`, modulePath, resolvedVersion).Scan(&readme.Filepath, &readme.Contents)
 	switch err {
 	case sql.ErrNoRows:
 		return nil, derrors.NotFound
@@ -324,17 +324,17 @@ func (db *DB) getPackagesInUnit(ctx context.Context, fullPath, modulePath, resol
 
 	query := `
 		SELECT
-			p.path,
-			p.name,
-			p.redistributable,
+			u.path,
+			u.name,
+			u.redistributable,
 			d.synopsis,
-			p.license_types,
-			p.license_paths
+			u.license_types,
+			u.license_paths
 		FROM modules m
-		INNER JOIN units p
-		ON p.module_id = m.id
+		INNER JOIN units u
+		ON u.module_id = m.id
 		INNER JOIN documentation d
-		ON d.unit_id = p.id
+		ON d.unit_id = u.id
 		WHERE
 			m.module_path = $1
 			AND m.version = $2
@@ -394,7 +394,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta) (
 			COALESCE((
 				SELECT COUNT(unit_id)
 				FROM package_imports
-				WHERE unit_id = p.id
+				WHERE unit_id = u.id
 				GROUP BY unit_id
 				), 0) AS num_imports,
 			COALESCE((
@@ -404,15 +404,15 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta) (
 				-- search_documents.
 				WHERE package_path = $1
 				), 0) AS num_imported_by
-		FROM units p
+		FROM units u
 		INNER JOIN modules m
-		ON p.module_id = m.id
+		ON u.module_id = m.id
 		LEFT JOIN documentation d
-		ON d.unit_id = p.id
+		ON d.unit_id = u.id
 		LEFT JOIN readmes r
-		ON r.unit_id = p.id
+		ON r.unit_id = u.id
 		WHERE
-			p.path = $1
+			u.path = $1
 			AND m.module_path = $2
 			AND m.version = $3;`
 
@@ -468,20 +468,20 @@ func (db *DB) getPathsInModule(ctx context.Context, modulePath, resolvedVersion 
 	defer derrors.Wrap(&err, "DB.getPathsInModule(ctx, %q, %q)", modulePath, resolvedVersion)
 	query := `
 	SELECT
-		p.id,
-		p.path,
-		p.module_id,
-		p.v1_path,
-		p.name,
-		p.license_types,
-		p.license_paths,
-		p.redistributable
+		u.id,
+		u.path,
+		u.module_id,
+		u.v1_path,
+		u.name,
+		u.license_types,
+		u.license_paths,
+		u.redistributable
 	FROM
-		units p
+		units u
 	INNER JOIN
 		modules m
 	ON
-		p.module_id = m.id
+		u.module_id = m.id
 	WHERE
 		m.module_path = $1
 		AND m.version = $2

@@ -33,15 +33,15 @@ func (db *DB) getLicenses(ctx context.Context, fullPath, modulePath string, unit
 		FROM
 			licenses l
 		INNER JOIN
-			units p
+			units u
 		ON
-			p.module_id=l.module_id
+			u.module_id=l.module_id
 		INNER JOIN
 			modules m
 		ON
-			p.module_id=m.id
+			u.module_id=m.id
 		WHERE
-			p.id = $1;`
+			u.id = $1;`
 
 	rows, err := db.db.Query(ctx, query, unitID)
 	if err != nil {
