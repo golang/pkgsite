@@ -21,43 +21,6 @@ import (
 	"golang.org/x/pkgsite/internal/middleware"
 )
 
-// DetailsPage contains data for a package of module details template.
-type DetailsPage struct {
-	basePage
-
-	// Name is the name of the package or command name, or the full
-	// directory or module path.
-	Name string
-
-	// PageType is the type of page (pkg, cmd, dir, etc.).
-	PageType string
-
-	// CanShowDetails indicates whether details can be shown or must be
-	// hidden due to issues like license restrictions.
-	CanShowDetails bool
-
-	// Settings contains tab-specific metadata.
-	Settings TabSettings
-
-	// Details contains data specific to the type of page being rendered.
-	Details interface{}
-
-	// Header contains data to be rendered in the heading of all details pages.
-	Header interface{}
-
-	// Breadcrumb contains data used to render breadcrumb UI elements.
-	Breadcrumb breadcrumb
-
-	// Tabs contains data to render the varioius tabs on each details page.
-	Tabs []TabSettings
-
-	// CanonicalURLPath is the representation of the URL path for the details
-	// page, after the requested version and module path have been resolved.
-	// For example, if the latest version of /my.module/pkg is version v1.5.2,
-	// the canonical url for that path would be /my.module@v1.5.2/pkg
-	CanonicalURLPath string
-}
-
 // serveDetails handles requests for package/directory/module details pages. It
 // expects paths of the form "[/mod]/<module-path>[@<version>?tab=<tab>]".
 // stdlib module pages are handled at "/std", and requests to "/mod/std" will
