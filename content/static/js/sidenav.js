@@ -142,6 +142,10 @@ class DocNavTreeController {
     if (!this._selectedEl) {
       return;
     }
+
+    if (this._selectedEl.getAttribute('aria-level') === '1') {
+      this._selectedEl.setAttribute('aria-expanded', 'true');
+    }
     this._selectedEl.setAttribute('aria-selected', 'true');
     this.expandAllParents(this._selectedEl);
     this.scrollElementIntoView(this._selectedEl);
@@ -211,7 +215,6 @@ class DocNavTreeController {
       this.toggleItemExpandedState(el);
     }
     this.closeInactiveDocNavGroups(el);
-    this.closeInactiveDocNavTypeGroups(el);
   }
 
   /**
@@ -220,25 +223,9 @@ class DocNavTreeController {
    * @private
    */
   closeInactiveDocNavGroups(el) {
-    if (el.classList.contains('js-docNav')) {
-      document.querySelectorAll('.js-docNav').forEach(nav => {
-        if (nav.getAttribute('aria-expanded') === 'true' && nav !== el) {
-          nav.setAttribute('aria-expanded', 'false');
-        }
-      });
-      this.updateVisibleItems();
-      this._focusedIndex = this._visibleItems.indexOf(el);
-    }
-  }
-
-  /**
-   * Closes inactive type level nav groups when a new tree item clicked.
-   * @param {!Element} el
-   * @private
-   */
-  closeInactiveDocNavTypeGroups(el) {
-    if (el.classList.contains('js-docNavType')) {
-      document.querySelectorAll('.js-docNavType').forEach(nav => {
+    if (el.hasAttribute('aria-expanded')) {
+      const level = el.getAttribute('aria-level');
+      document.querySelectorAll(`[aria-level="${level}"]`).forEach(nav => {
         if (nav.getAttribute('aria-expanded') === 'true' && nav !== el) {
           nav.setAttribute('aria-expanded', 'false');
         }
@@ -482,7 +469,7 @@ class DocPageController {
    * @param {Element} contentEl
    */
   constructor(sideNavEl, mobileNavEl, contentEl) {
-    if (!sideNavEl || !mobileNavEl || !contentEl) {
+    if (!sideNavEl || !contentEl) {
       console.warn('Unable to find all elements needed for navigation');
       return;
     }
@@ -507,7 +494,9 @@ class DocPageController {
      * @type {!MobileNavController}
      * @private
      */
-    this._mobileNavController = new MobileNavController(mobileNavEl);
+    if (mobileNavEl) {
+      this._mobileNavController = new MobileNavController(mobileNavEl);
+    }
 
     this.updateSelectedIdFromWindowHash();
   }
@@ -527,7 +516,9 @@ class DocPageController {
   updateSelectedIdFromWindowHash() {
     const targetId = this.targetIdFromLocationHash();
     this._navController.setSelectedId(targetId);
-    this._mobileNavController.setSelectedId(targetId);
+    if (this._mobileNavController) {
+      this._mobileNavController.setSelectedId(targetId);
+    }
     if (targetId !== '') {
       const targetEl = this._contentEl.querySelector(`[id='${targetId}']`);
       if (targetEl) {
@@ -640,7 +631,7 @@ class MobileNavController {
 }
 
 new DocPageController(
-  document.querySelector('.js-sideNav'),
+  document.querySelector('.js-tree'),
   document.querySelector('.js-mobileNav'),
-  document.querySelector('.js-docContent')
+  document.querySelector('.js-unitDetailsContent')
 );

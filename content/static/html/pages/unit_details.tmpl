@@ -14,9 +14,13 @@
     <div class="UnitDetails-outline" role="navigation"
         aria-label="{{if eq .PageType "std"}}module
         {{else}}{{.PageType}}{{end}}details navigation">
-      {{block "legacy_unit_outline" .Details}}{{end}}
+      {{if (.Experiments.IsActive "readme-outline")}}
+        {{block "unit_outline" .Details}}{{end}}
+      {{else}}
+        {{block "legacy_unit_outline" .Details}}{{end}}
+      {{end}}
     </div>
-    <div class="UnitDetails-content" role="main" data-test-id="UnitDetails-content">
+    <div class="UnitDetails-content js-unitDetailsContent" role="main" data-test-id="UnitDetails-content">
       {{if .Details.Readme.String}}
         {{block "unit_readme" .Details}}{{end}}
       {{end}}
@@ -84,7 +88,13 @@
   <script>
     loadScript("/static/js/playground.min.js", {async: true, defer: true});
   </script>
-  <script>
-    loadScript('/static/js/legacy_sidenav.js', {async: true, defer: true});
-  </script>
+  {{if (.Experiments.IsActive "readme-outline")}}
+    <script>
+      loadScript('/static/js/sidenav.js', {type: 'module', async: true, defer: true})
+    </script>
+  {{else}}
+    <script>
+      loadScript('/static/js/legacy_sidenav.js', {async: true, defer: true});
+    </script>
+  {{end}}
 {{end}}

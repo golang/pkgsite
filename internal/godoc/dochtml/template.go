@@ -25,19 +25,20 @@ var (
 func LoadTemplates(dir template.TrustedSource) {
 	loadOnce.Do(func() {
 		join := template.TrustedSourceJoin
-		test := template.TrustedSourceFromConstant
+		tc := template.TrustedSourceFromConstant
 
-		example := join(dir, test("example.tmpl"))
+		example := join(dir, tc("example.tmpl"))
 		legacyTemplate = template.Must(template.New("legacy.tmpl").
 			Funcs(tmpl).
-			ParseFilesFromTrustedSources(join(dir, test("legacy.tmpl")), example))
+			ParseFilesFromTrustedSources(join(dir, tc("legacy.tmpl")), example))
 		unitTemplate = template.Must(template.New("unit.tmpl").
 			Funcs(tmpl).
 			ParseFilesFromTrustedSources(
-				join(dir, test("unit.tmpl")),
-				join(dir, test("sidenav.tmpl")),
-				join(dir, test("sidenav-mobile.tmpl")),
-				join(dir, test("body.tmpl")),
+				join(dir, tc("unit.tmpl")),
+				join(dir, tc("outline.tmpl")),
+				join(dir, tc("sidenav.tmpl")),
+				join(dir, tc("sidenav-mobile.tmpl")),
+				join(dir, tc("body.tmpl")),
 				example))
 	})
 }

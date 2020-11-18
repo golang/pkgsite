@@ -7,7 +7,11 @@
 {{define "pre_content"}}
   <link href="/static/css/unit.css?version={{.AppVersionLabel}}" rel="stylesheet">
   {{block "unit_pre_content" .}}{{end}}
-  <link href="/static/css/legacy_unit_outline.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  {{if (.Experiments.IsActive "readme-outline")}}
+    <link href="/static/css/unit_outline.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  {{else}}
+    <link href="/static/css/legacy_unit_outline.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  {{end}}
 {{end}}
 
 {{define "main_content"}}

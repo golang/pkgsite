@@ -147,6 +147,9 @@ func RenderParts(ctx context.Context, fset *token.FileSet, p *doc.Package, opt R
 
 	body = exec("body.tmpl")
 	outline = exec("sidenav.tmpl")
+	if experiment.IsActive(ctx, internal.ExperimentReadmeOutline) {
+		outline = exec("outline.tmpl")
+	}
 	mobileOutline = exec("sidenav-mobile.tmpl")
 	if err != nil {
 		return safehtml.HTML{}, safehtml.HTML{}, safehtml.HTML{}, err

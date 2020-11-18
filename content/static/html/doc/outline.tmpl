@@ -1,0 +1,109 @@
+<!--
+  Copyright 2020 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+<ul role="group" id="doc-outline">
+  {{if or .Doc (index .Examples.Map "")}}
+    <li role="none">
+      <a href="#pkg-overview" role="treeitem" aria-level="2" tabindex="-1">Overview</a>
+    </li>
+  {{end}}
+  {{- if or .Consts .Vars .Funcs .Types -}}
+    <li class="DocNav-overview" role="none">
+      <a href="#pkg-index" role="treeitem" aria-level="2" tabindex="-1" aria-owns="nav-group-index"
+          {{if .Examples.List}} aria-expanded="false"{{end}}>
+        Index
+      </a>
+      {{if .Examples.List}}
+        <ul role="group" id="nav-group-index">
+          <li role="none">
+            <a href="#pkg-examples" role="treeitem" aria-level="3" tabindex="-1">Examples</a>
+          </li>
+        </ul>
+      {{end}}
+    </li>
+    <li class="DocNav-constants" role="none">
+      <a href="#pkg-constants" role="treeitem" aria-level="2" tabindex="-1">Constants</a>
+    </li>
+    <li class="DocNav-variables" role="none">
+      <a href="#pkg-variables" role="treeitem" aria-level="2" tabindex="-1">Variables</a>
+    </li>
+    <li class="DocNav-functions" role="none">
+      <a href="#pkg-functions" role="treeitem" aria-level="2" tabindex="-1" aria-owns="nav-group-functions"
+           {{if gt (len .Funcs) 0}}aria-expanded="false"{{end}}>
+        Functions
+      </a>
+      <ul role="group" id="nav-group-functions">
+        {{range .Funcs}}
+          <li role="none">
+            <a href="#{{.Name}}" role="treeitem" aria-level="3" tabindex="-1"
+                 title="{{render_short_synopsis .Decl}}">
+              {{render_short_synopsis .Decl}}
+            </a>
+          </li>
+        {{end}}
+      </ul>
+    </li>
+    <li class="DocNav-types" role="none">
+      <a href="#pkg-types" role="treeitem" aria-level="2" tabindex="-1" aria-owns="nav-group-types"
+           {{if gt (len .Types) 0}}aria-expanded="false"{{end}}>
+        Types
+      </a>
+      <ul role="group" id="nav-group-types">
+        {{range .Types}}
+          {{$tname := .Name}}
+          <li role="none">
+            {{if or .Funcs .Methods}}
+              {{$navgroupname := (printf "nav.group.%s" $tname)}}
+              {{$navgroupid := (safe_id $navgroupname)}}
+              <a href="#{{$tname}}" role="treeitem" aria-expanded="false" aria-level="3" tabindex="-1"
+                   data-aria-owns="{{$navgroupid}}">
+                type {{$tname}}
+              </a>
+              <ul role="group" id="{{$navgroupid}}">
+                {{range .Funcs}}
+                  <li role="none">
+                    <a href="#{{.Name}}" role="treeitem" aria-level="4" tabindex="-1"
+                        title="{{render_short_synopsis .Decl}}">
+                      {{render_short_synopsis .Decl}}
+                    </a>
+                  </li>
+                {{end}}
+                {{range .Methods}}
+                  <li role="none">
+                    <a href="#{{$tname}}.{{.Name}}" role="treeitem" aria-level="4" tabindex="-1"
+                        title="{{render_short_synopsis .Decl}}">
+                      {{render_short_synopsis .Decl}}
+                    </a>
+                  </li>
+                {{end}}
+              </ul>
+            {{else}}
+              <a href="#{{$tname}}" role="treeitem" aria-level="3" tabindex="-1">
+                type {{$tname}}
+              </a>
+            {{end}} {{/* if or .Funcs .Methods */}}
+          </li>
+        {{end}} {{/* range .Types */}}
+      </ul>
+    </li>
+  {{end}}
+  {{if .Notes}}
+    <li role="none">
+      <a href="#pkg-notes" role="treeitem" aria-expanded="false" aria-level="2" tabindex="-1"
+           aria-owns="nav-group-notes">
+        Notes
+      </a>
+      <ul role="group" id="nav-group-notes">
+        {{range $marker, $item := .Notes}}
+          <li role="none">
+            <a href="#pkg-note-{{$marker}}" role="treeitem" aria-level="3" tabindex="-1">
+              {{(index $.NoteHeaders $marker).Label}}s
+            </a>
+          </li>
+        {{end}}
+      </ul>
+    </li>
+  {{end}}
+</ul>

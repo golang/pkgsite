@@ -5,47 +5,56 @@
 -->
 
 {{define "unit_outline"}}
-  <div class="UnitOutline js-accordion">
+  <div class="UnitOutline">
     <div class="UnitOutline-jumpTo">
       <button class="UnitOutline-jumpToInput js-jumpToInput">
         Jump to ...
       </button>
     </div>
-    {{if .Readme.String}}
-      <a href="?readme=expanded#section-readme" class="UnitOutline-accordion js-accordionTrigger js-readmeExpand"
-          role="button" aria-expanded="false" aria-controls="readme-panel" id="readme-accordion">
-        README
-      </a>
-      <div class="UnitOutline-panel js-accordionPanel"
-          id="readme-panel" role="region" aria-labelledby="readme-accordion" aria-hidden="true"></div>
-    {{end}}
-    {{if .IsPackage}}
-      <a class="UnitOutline-accordion  js-accordionTrigger" href="#section-documentation"
-          role="button" aria-expanded="false" aria-controls="outline-panel" id="outline-accordion">
-        Documentation
-      </a>
-      <div class="UnitOutline-panel js-accordionPanel"
-          id="outline-panel" role="region" aria-labelledby="outline-accordion" aria-hidden="true">
-        <div class="Documentation">
+    <ul class="js-tree" role="tree" aria-label="Outline">
+      {{if .Readme.String}}
+        <li role="none" class="js-readmeOutline">
+          <a href="#section-readme" role="treeitem" aria-expanded="false" aria-selected="false"
+              aria-level="1" aria-owns="readme-outline" tabindex="0">
+            README
+          </a>
+          <ul role="group" id="readme-outline">
+            {{range .ReadmeOutline}}
+              <li role="none">
+                <a href="#{{.ID}}" role="treeitem" aria-selected="false" aria-level="2"
+                    tabindex="-1">
+                  {{.Text}}
+                </a>
+              </li>
+            {{end}}
+          </ul>
+        </li>
+      {{end}}
+      {{if .IsPackage}}
+        <li role="none">
+          <a href="#section-documentation" role="treeitem" aria-expanded="false" aria-level="1"
+              aria-selected="false"aria-owns="doc-outline" tabindex="-1">
+            Documentation
+          </a>
           {{.DocOutline}}
-        </div>
-      </div>
-    {{end}}
-    {{if .SourceFiles}}
-      <a class="UnitOutline-accordion js-accordionTrigger" href="#section-sourcefiles"
-          role="button" aria-expanded="false" aria-controls="files-panel" id="files-accordion">
-        Source Files
-      </a>
-      <div class="UnitOutline-panel js-accordionPanel"
-          id="files-panel" role="region" aria-labelledby="files-accordion" aria-hidden="true"></div>
-    {{end}}
-    {{if (or .Subdirectories .NestedModules)}}
-      <a class="UnitOutline-accordion js-accordionTrigger" href="#section-directories"
-          role="button" aria-expanded="false" aria-controls="directories-panel" id="directories-accordion">
-        Directories
-      </a>
-      <div class="UnitOutline-panel js-accordionPanel"
-          id="directories-panel" role="region" aria-labelledby="directories-accordion" aria-hidden="true"></div>
-    {{end}}
+        </li>
+      {{end}}
+      {{if .SourceFiles}}
+        <li role="none">
+          <a href="#section-sourcefiles" role="treeitem" aria-expanded="false"
+              aria-selected="false" aria-level="1" tabindex="-1">
+            Source Files
+          </a>
+        </li>
+      {{end}}
+      {{if (or .Subdirectories .NestedModules)}}
+        <li role="none">
+          <a href="#section-directories" role="treeitem" aria-expanded="false"
+              aria-selected="false" aria-level="1" tabindex="-1">
+            Directories
+          </a>
+        </li>
+      {{end}}
+    </ul>
   </div>
 {{end}}

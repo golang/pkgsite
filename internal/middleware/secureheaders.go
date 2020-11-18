@@ -33,7 +33,8 @@ var scriptHashes = []string{
 	// From content/static/html/pages/unit_details.tmpl
 	"'sha256-CFun5NgnYeEpye8qcbQPq5Ycwavi4IXuZiIzSMNqRUw='",
 	"'sha256-IHdniK/yZ8URNA2OYbc4R7BssOAe3/dFrSQW7PxEEfM='",
-	"'sha256-n5SNZQqoMuOrVKSN3pszZlsWNIrr5HaLOezim/jDLuk='",
+	"'sha256-5ThDRcuVP5qPTu7X6eUxhVjOI8mccPcKwzrWDReVV24='",
+	"'sha256-FZ2G7vOsuMYf1kUB+6G3sewY2N9djmeB36q2IBEdBUE='",
 }
 
 // SecureHeaders adds a content-security-policy and other security-related
