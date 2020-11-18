@@ -11,6 +11,7 @@ const (
 	ExperimentFrontendRenderDoc   = "frontend-render-doc"
 	ExperimentGetUnitWithOneQuery = "get-unit-with-one-query"
 	ExperimentGoldmark            = "goldmark"
+	ExperimentReadmeOutline       = "readme-outline"
 	ExperimentRemoveUnusedAST     = "remove-unused-ast"
 	ExperimentUnitPage            = "unit-page"
 )
@@ -23,6 +24,7 @@ var Experiments = map[string]string{
 	ExperimentFrontendRenderDoc:   "Render documentation on the frontend if possible.",
 	ExperimentGetUnitWithOneQuery: "Fetch data for GetUnit using a single query.",
 	ExperimentGoldmark:            "Enable the usage of rendering markdown using goldmark instead of blackfriday.",
+	ExperimentReadmeOutline:       "Enable the readme outline in the side nav.",
 	ExperimentRemoveUnusedAST:     "Prune AST prior to rendering documentation HTML.",
 	ExperimentUnitPage:            "Enable the redesigned details page.",
 }
