@@ -83,6 +83,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	// Redirect to clean URL path when tab param is invalid.
 	if _, ok := unitTabLookup[tab]; !ok {
 		http.Redirect(w, r, r.URL.Path, http.StatusFound)
+		return nil
 	}
 
 	um, err := ds.GetUnitMeta(ctx, info.fullPath, info.modulePath, info.requestedVersion)
