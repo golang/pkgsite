@@ -507,7 +507,7 @@ func isLatestVersion(ctx context.Context, db *database.DB, modulePath, resolvedV
 	query := fmt.Sprintf(`
 		SELECT version FROM modules m WHERE m.module_path = $1
 		%s
-		LIMIT 1`, orderByLatest)
+		LIMIT 1`, orderByLatestStmt)
 
 	row := db.QueryRow(ctx, query, modulePath)
 	var v string

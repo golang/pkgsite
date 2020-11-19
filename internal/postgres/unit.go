@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/lib/pq"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
@@ -29,53 +30,43 @@ import (
 // 1. Match the module path and or version, if they are provided;
 // 2. Prefer newer module versions to older, and release to pre-release;
 // 3. In the unlikely event of two paths at the same version, pick the longer module path.
-func (db *DB) GetUnitMeta(ctx context.Context, path, requestedModulePath, requestedVersion string) (_ *internal.UnitMeta, err error) {
-	defer derrors.Wrap(&err, "DB.GetUnitMeta(ctx, %q, %q, %q)", path, requestedModulePath, requestedVersion)
+func (db *DB) GetUnitMeta(ctx context.Context, fullPath, requestedModulePath, requestedVersion string) (_ *internal.UnitMeta, err error) {
+	defer derrors.Wrap(&err, "DB.GetUnitMeta(ctx, %q, %q, %q)", fullPath, requestedModulePath, requestedVersion)
 	defer middleware.ElapsedStat(ctx, "GetUnitMeta")()
 
-	var (
-		constraints []string
-		joinStmt    string
-	)
-	args := []interface{}{path}
+	query := squirrel.Select(
+		"m.module_path",
+		"m.version",
+		"m.commit_time",
+		"m.source_info",
+		"u.name",
+		"u.redistributable",
+		"u.license_types",
+		"u.license_paths",
+	).From("modules m").Join(
+		"units u on u.module_id = m.id").Where(squirrel.Eq{"u.path": fullPath})
+
 	if requestedModulePath != internal.UnknownModulePath {
-		constraints = append(constraints, fmt.Sprintf("AND m.module_path = $%d", len(args)+1))
-		args = append(args, requestedModulePath)
+		query = query.Where(squirrel.Eq{"m.module_path": requestedModulePath})
 	}
 	switch requestedVersion {
 	case internal.LatestVersion:
 	case internal.MasterVersion:
-		joinStmt = "INNER JOIN version_map vm ON (vm.module_id = m.id)"
-		constraints = append(constraints, "AND vm.requested_version = 'master'")
+		query = query.Join("version_map vm ON m.id = vm.module_id").Where("vm.requested_version = 'master'")
 	default:
-		constraints = append(constraints, fmt.Sprintf("AND m.version = $%d", len(args)+1))
-		args = append(args, requestedVersion)
+		query = query.Where(squirrel.Eq{"version": requestedVersion})
 	}
-
 	var (
 		licenseTypes []string
 		licensePaths []string
-		um           = internal.UnitMeta{Path: path}
+		um           = internal.UnitMeta{Path: fullPath}
 	)
-	query := fmt.Sprintf(`
-		SELECT
-			m.module_path,
-			m.version,
-			m.commit_time,
-			m.source_info,
-			u.name,
-			u.redistributable,
-			u.license_types,
-			u.license_paths
-		FROM units u
-		INNER JOIN modules m ON (u.module_id = m.id)
-		%s
-		WHERE u.path = $1
-		%s
-		%s
-		LIMIT 1
-	`, joinStmt, strings.Join(constraints, " "), orderByLatest)
-	err = db.db.QueryRow(ctx, query, args...).Scan(
+	q, args, err := orderByLatest(query).PlaceholderFormat(squirrel.Dollar).ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("squirrel.ToSql: %v", err)
+	}
+
+	err = db.db.QueryRow(ctx, q, args...).Scan(
 		&um.ModulePath,
 		&um.Version,
 		&um.CommitTime,
@@ -113,7 +104,21 @@ func (db *DB) GetUnitMeta(ctx context.Context, path, requestedModulePath, reques
 // (5) pseudo
 // They are then sorted based on semver, then decreasing module path length (so
 // that nested modules are preferred).
-const orderByLatest = `
+func orderByLatest(q squirrel.SelectBuilder) squirrel.SelectBuilder {
+	return q.OrderBy(
+		`CASE
+			WHEN m.version_type = 'release' AND NOT m.incompatible THEN 1
+			WHEN m.version_type = 'prerelease' AND NOT m.incompatible THEN 2
+			WHEN m.version_type = 'release' THEN 3
+			WHEN m.version_type = 'prerelease' THEN 4
+			ELSE 5
+		END`,
+		"m.sort_version DESC",
+		"m.module_path DESC",
+	)
+}
+
+const orderByLatestStmt = `
 			ORDER BY
 				CASE
 					WHEN m.version_type = 'release' AND NOT m.incompatible THEN 1
@@ -201,9 +206,9 @@ func (db *DB) getUnitID(ctx context.Context, fullPath, modulePath, resolvedVersi
 		FROM units u
 		INNER JOIN modules m ON (u.module_id = m.id)
 		WHERE
-		    u.path = $1
-		    AND m.module_path = $2
-		    AND m.version = $3;`
+			u.path = $1
+			AND m.module_path = $2
+			AND m.version = $3;`
 	err = db.db.QueryRow(ctx, query, fullPath, modulePath, resolvedVersion).Scan(&unitID)
 	switch err {
 	case sql.ErrNoRows:

@@ -119,7 +119,7 @@ func (db *DB) GetLatestMajorVersion(ctx context.Context, seriesPath string) (_ s
 		WHERE
 			m.series_path = $1
 		%s
-		LIMIT 1;`, orderByLatest)
+		LIMIT 1;`, orderByLatestStmt)
 	row := db.db.QueryRow(ctx, latestModulePathQuery, seriesPath)
 	if err := row.Scan(&latestPath); err != nil {
 		return "", err

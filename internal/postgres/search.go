@@ -441,7 +441,7 @@ var upsertSearchStatement = fmt.Sprintf(`
 			THEN search_documents.version_updated_at
 			ELSE CURRENT_TIMESTAMP
 			END)
-	;`, hllRegisterCount, orderByLatest)
+	;`, hllRegisterCount, orderByLatestStmt)
 
 // upsertSearchDocuments adds search information for mod ot the search_documents table.
 // It assumes that all non-redistributable data has been removed from mod.

@@ -9,6 +9,7 @@ require (
 	contrib.go.opencensus.io/exporter/prometheus v0.1.0
 	contrib.go.opencensus.io/exporter/stackdriver v0.13.4
 	contrib.go.opencensus.io/integrations/ocsql v0.1.4
+	github.com/Masterminds/squirrel v1.4.0
 	github.com/alicebob/miniredis/v2 v2.10.1
 	github.com/andybalholm/cascadia v1.1.0
 	github.com/aws/aws-sdk-go v1.34.29 // indirect
