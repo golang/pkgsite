@@ -61,7 +61,7 @@ func (db *DB) GetUnitMeta(ctx context.Context, fullPath, requestedModulePath, re
 		licensePaths []string
 		um           = internal.UnitMeta{Path: fullPath}
 	)
-	q, args, err := orderByLatest(query).PlaceholderFormat(squirrel.Dollar).ToSql()
+	q, args, err := orderByLatest(query).ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("squirrel.ToSql: %v", err)
 	}
@@ -115,7 +115,7 @@ func orderByLatest(q squirrel.SelectBuilder) squirrel.SelectBuilder {
 		END`,
 		"m.sort_version DESC",
 		"m.module_path DESC",
-	)
+	).PlaceholderFormat(squirrel.Dollar)
 }
 
 const orderByLatestStmt = `

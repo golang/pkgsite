@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Masterminds/squirrel"
 	"golang.org/x/mod/module"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -111,16 +112,15 @@ func (db *DB) GetLatestMajorVersion(ctx context.Context, seriesPath string) (_ s
 	defer derrors.Wrap(&err, "DB.GetLatestMajorVersion(ctx, %q)", seriesPath)
 
 	var latestPath string
-	latestModulePathQuery := fmt.Sprintf(`
-		SELECT
-			m.module_path
-		FROM
-			modules m
-		WHERE
-			m.series_path = $1
-		%s
-		LIMIT 1;`, orderByLatestStmt)
-	row := db.db.QueryRow(ctx, latestModulePathQuery, seriesPath)
+	q, args, err := orderByLatest(squirrel.Select("m.module_path").
+		From("modules m").
+		Where(squirrel.Eq{"m.series_path": seriesPath})).
+		Limit(1).
+		ToSql()
+	if err != nil {
+		return "", err
+	}
+	row := db.db.QueryRow(ctx, q, args...)
 	if err := row.Scan(&latestPath); err != nil {
 		return "", err
 	}
