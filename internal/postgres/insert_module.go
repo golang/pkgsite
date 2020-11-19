@@ -16,6 +16,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/lib/pq"
 	"go.opencensus.io/trace"
 	"golang.org/x/mod/module"
@@ -496,15 +497,18 @@ func isIncompatible(version string) bool {
 }
 
 // isLatestVersion reports whether version is the latest version of the module.
-func isLatestVersion(ctx context.Context, db *database.DB, modulePath, resolvedVersion string) (_ bool, err error) {
+func isLatestVersion(ctx context.Context, ddb *database.DB, modulePath, resolvedVersion string) (_ bool, err error) {
 	defer derrors.Wrap(&err, "isLatestVersion(ctx, tx, %q)", modulePath)
 
-	query := fmt.Sprintf(`
-		SELECT version FROM modules m WHERE m.module_path = $1
-		%s
-		LIMIT 1`, orderByLatestStmt)
-
-	row := db.QueryRow(ctx, query, modulePath)
+	q, args, err := orderByLatest(squirrel.Select("m.version").
+		From("modules m").
+		Where(squirrel.Eq{"m.module_path": modulePath})).
+		Limit(1).
+		ToSql()
+	if err != nil {
+		return false, err
+	}
+	row := ddb.QueryRow(ctx, q, args...)
 	var v string
 	if err := row.Scan(&v); err != nil {
 		if err == sql.ErrNoRows {
