@@ -19,7 +19,7 @@ import (
 func TestReadme(t *testing.T) {
 	ctx := experiment.NewContext(context.Background(), internal.ExperimentGoldmark)
 	unit := sample.UnitEmpty(sample.PackagePath, sample.ModulePath, sample.VersionString)
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		name        string
 		unit        *internal.Unit
 		readme      *internal.Readme
@@ -332,18 +332,18 @@ func TestReadme(t *testing.T) {
 			},
 		},
 	} {
-		t.Run(tc.name, func(t *testing.T) {
-			tc.unit.Readme = tc.readme
-			html, gotOutline, err := Readme(ctx, tc.unit)
+		t.Run(test.name, func(t *testing.T) {
+			test.unit.Readme = test.readme
+			html, gotOutline, err := Readme(ctx, test.unit)
 			if err != nil {
 				t.Fatal(err)
 			}
 			gotHTML := strings.TrimSpace(html.String())
-			if diff := cmp.Diff(tc.wantHTML, gotHTML); diff != "" {
-				t.Errorf("Readme(%v) html mismatch (-want +got):\n%s", tc.unit.UnitMeta, diff)
+			if diff := cmp.Diff(test.wantHTML, gotHTML); diff != "" {
+				t.Errorf("Readme(%v) html mismatch (-want +got):\n%s", test.unit.UnitMeta, diff)
 			}
-			if diff := cmp.Diff(tc.wantOutline, gotOutline); diff != "" {
-				t.Errorf("Readme(%v) outline mismatch (-want +got):\n%s", tc.unit.UnitMeta, diff)
+			if diff := cmp.Diff(test.wantOutline, gotOutline); diff != "" {
+				t.Errorf("Readme(%v) outline mismatch (-want +got):\n%s", test.unit.UnitMeta, diff)
 			}
 		})
 	}

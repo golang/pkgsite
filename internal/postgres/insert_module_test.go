@@ -256,11 +256,11 @@ func TestInsertModuleErrors(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, test := range testCases {
+		t.Run(test.name, func(t *testing.T) {
 			defer ResetTestDB(testDB, t)
-			if err := testDB.InsertModule(ctx, tc.module); !errors.Is(err, tc.wantWriteErr) {
-				t.Errorf("error: %v, want write error: %v", err, tc.wantWriteErr)
+			if err := testDB.InsertModule(ctx, test.module); !errors.Is(err, test.wantWriteErr) {
+				t.Errorf("error: %v, want write error: %v", err, test.wantWriteErr)
 			}
 		})
 	}
@@ -340,7 +340,7 @@ func TestLatestVersion(t *testing.T) {
 		}
 	}
 
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		name        string
 		modulePath  string
 		wantVersion string
@@ -361,13 +361,13 @@ func TestLatestVersion(t *testing.T) {
 			wantVersion: "v3.0.1-rc9",
 		},
 	} {
-		t.Run(tc.name, func(t *testing.T) {
-			isLatest, err := isLatestVersion(ctx, testDB.db, tc.modulePath, tc.wantVersion)
+		t.Run(test.name, func(t *testing.T) {
+			isLatest, err := isLatestVersion(ctx, testDB.db, test.modulePath, test.wantVersion)
 			if err != nil {
 				t.Fatal(err)
 			}
 			if !isLatest {
-				t.Errorf("%s is not the latest version", tc.wantVersion)
+				t.Errorf("%s is not the latest version", test.wantVersion)
 			}
 		})
 	}
@@ -399,7 +399,7 @@ func TestLatestVersion_PreferIncompatibleOverPrerelease(t *testing.T) {
 		}
 	}
 
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		modulePath string
 		want       string
 	}{
@@ -408,12 +408,12 @@ func TestLatestVersion_PreferIncompatibleOverPrerelease(t *testing.T) {
 			want:       "v2.0.0+incompatible",
 		},
 	} {
-		isLatest, err := isLatestVersion(ctx, testDB.db, tc.modulePath, tc.want)
+		isLatest, err := isLatestVersion(ctx, testDB.db, test.modulePath, test.want)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if !isLatest {
-			t.Errorf("%s is not the latest version", tc.want)
+			t.Errorf("%s is not the latest version", test.want)
 		}
 	}
 }

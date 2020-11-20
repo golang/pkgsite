@@ -139,18 +139,18 @@ func XTestParentFinishesChild(t testingT) {
 	// The parent's children should contain the two cancelable children.
 	pc := parent.(*cancelCtx)
 	cc := cancelChild.(*cancelCtx)
-	tc := timerChild.(*timerCtx)
+	test := timerChild.(*timerCtx)
 	pc.mu.Lock()
-	if len(pc.children) != 2 || !contains(pc.children, cc) || !contains(pc.children, tc) {
+	if len(pc.children) != 2 || !contains(pc.children, cc) || !contains(pc.children, test) {
 		t.Errorf("bad linkage: pc.children = %v, want %v and %v",
-			pc.children, cc, tc)
+			pc.children, cc, test)
 	}
 	pc.mu.Unlock()
 
 	if p, ok := parentCancelCtx(cc.Context); !ok || p != pc {
 		t.Errorf("bad linkage: parentCancelCtx(cancelChild.Context) = %v, %v want %v, true", p, ok, pc)
 	}
-	if p, ok := parentCancelCtx(tc.Context); !ok || p != pc {
+	if p, ok := parentCancelCtx(test.Context); !ok || p != pc {
 		t.Errorf("bad linkage: parentCancelCtx(timerChild.Context) = %v, %v want %v, true", p, ok, pc)
 	}
 

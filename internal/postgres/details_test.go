@@ -22,7 +22,7 @@ func TestGetNestedModules(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		name            string
 		path            string
 		modules         []*internal.Module
@@ -68,15 +68,15 @@ func TestGetNestedModules(t *testing.T) {
 			},
 		},
 	} {
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run(test.name, func(t *testing.T) {
 			defer ResetTestDB(testDB, t)
-			for _, v := range tc.modules {
+			for _, v := range test.modules {
 				if err := testDB.InsertModule(ctx, v); err != nil {
 					t.Fatal(err)
 				}
 			}
 
-			gotModules, err := testDB.GetNestedModules(ctx, tc.path)
+			gotModules, err := testDB.GetNestedModules(ctx, test.path)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -85,7 +85,7 @@ func TestGetNestedModules(t *testing.T) {
 				gotModulePaths = append(gotModulePaths, mod.ModulePath)
 			}
 
-			if diff := cmp.Diff(tc.wantModulePaths, gotModulePaths); diff != "" {
+			if diff := cmp.Diff(test.wantModulePaths, gotModulePaths); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -181,28 +181,28 @@ func TestPostgres_GetModuleInfo(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			for _, v := range tc.modules {
+	for _, test := range testCases {
+		t.Run(test.name, func(t *testing.T) {
+			for _, v := range test.modules {
 				if err := testDB.InsertModule(ctx, v); err != nil {
 					t.Error(err)
 				}
 			}
 
-			gotVI, err := testDB.GetModuleInfo(ctx, tc.path, tc.version)
+			gotVI, err := testDB.GetModuleInfo(ctx, test.path, test.version)
 			if err != nil {
-				if tc.wantErr == nil {
+				if test.wantErr == nil {
 					t.Fatalf("got unexpected error %v", err)
 				}
-				if !errors.Is(err, tc.wantErr) {
-					t.Fatalf("got error %v, want Is(%v)", err, tc.wantErr)
+				if !errors.Is(err, test.wantErr) {
+					t.Fatalf("got error %v, want Is(%v)", err, test.wantErr)
 				}
 				return
 			}
-			if tc.wantIndex >= len(tc.modules) {
+			if test.wantIndex >= len(test.modules) {
 				t.Fatal("wantIndex too large")
 			}
-			wantVI := &tc.modules[tc.wantIndex].ModuleInfo
+			wantVI := &test.modules[test.wantIndex].ModuleInfo
 			if diff := cmp.Diff(wantVI, gotVI, cmpopts.EquateEmpty(), cmp.AllowUnexported(source.Info{})); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
@@ -225,7 +225,7 @@ func TestGetImportedBy(t *testing.T) {
 	pkg2.Imports = []string{pkg1.Path}
 	pkg3.Imports = []string{pkg2.Path, pkg1.Path}
 
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		name, path, modulePath, version string
 		wantImports                     []string
 		wantImportedBy                  []string
@@ -263,7 +263,7 @@ func TestGetImportedBy(t *testing.T) {
 			wantImportedBy: []string{pkg3.Path},
 		},
 	} {
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run(test.name, func(t *testing.T) {
 			defer ResetTestDB(testDB, t)
 
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
@@ -275,12 +275,12 @@ func TestGetImportedBy(t *testing.T) {
 				}
 			}
 
-			gotImportedBy, err := testDB.GetImportedBy(ctx, tc.path, tc.modulePath, 100)
+			gotImportedBy, err := testDB.GetImportedBy(ctx, test.path, test.modulePath, 100)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(tc.wantImportedBy, gotImportedBy); diff != "" {
-				t.Errorf("testDB.GetImportedBy(%q, %q) mismatch (-want +got):\n%s", tc.path, tc.modulePath, diff)
+			if diff := cmp.Diff(test.wantImportedBy, gotImportedBy); diff != "" {
+				t.Errorf("testDB.GetImportedBy(%q, %q) mismatch (-want +got):\n%s", test.path, test.modulePath, diff)
 			}
 		})
 	}

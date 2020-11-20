@@ -137,15 +137,15 @@ func TestExtractURLPathInfo_Errors(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			got, err := extractURLPathInfo(tc.url)
-			if (err != nil) != tc.wantErr {
-				t.Fatalf("extractURLPathInfo(%q) error = (%v); want error %t)", tc.url, err, tc.wantErr)
+	for _, test := range testCases {
+		t.Run(test.name, func(t *testing.T) {
+			got, err := extractURLPathInfo(test.url)
+			if (err != nil) != test.wantErr {
+				t.Fatalf("extractURLPathInfo(%q) error = (%v); want error %t)", test.url, err, test.wantErr)
 			}
-			if !tc.wantErr && (tc.wantModulePath != got.modulePath || tc.wantVersion != got.requestedVersion || tc.wantFullPath != got.fullPath) {
+			if !test.wantErr && (test.wantModulePath != got.modulePath || test.wantVersion != got.requestedVersion || test.wantFullPath != got.fullPath) {
 				t.Fatalf("extractURLPathInfo(%q): %q, %q, %q, %v; want = %q, %q, %q, want err %t",
-					tc.url, got.fullPath, got.modulePath, got.requestedVersion, err, tc.wantFullPath, tc.wantModulePath, tc.wantVersion, tc.wantErr)
+					test.url, got.fullPath, got.modulePath, got.requestedVersion, err, test.wantFullPath, test.wantModulePath, test.wantVersion, test.wantErr)
 			}
 		})
 	}

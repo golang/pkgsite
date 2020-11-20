@@ -731,21 +731,21 @@ func testServer(t *testing.T, testCases []serverTestCase, experimentNames ...str
 
 	experimentsSet := experiment.NewSet(experimentNames...)
 
-	for _, tc := range testCases {
-		if !isSubset(tc.requiredExperiments, experimentsSet) {
+	for _, test := range testCases {
+		if !isSubset(test.requiredExperiments, experimentsSet) {
 			continue
 		}
 
-		t.Run(tc.name, func(t *testing.T) { // remove initial '/' for name
+		t.Run(test.name, func(t *testing.T) { // remove initial '/' for name
 			w := httptest.NewRecorder()
-			handler.ServeHTTP(w, httptest.NewRequest("GET", tc.urlPath, nil))
+			handler.ServeHTTP(w, httptest.NewRequest("GET", test.urlPath, nil))
 			res := w.Result()
-			if res.StatusCode != tc.wantStatusCode {
-				t.Errorf("GET %q = %d, want %d", tc.urlPath, res.StatusCode, tc.wantStatusCode)
+			if res.StatusCode != test.wantStatusCode {
+				t.Errorf("GET %q = %d, want %d", test.urlPath, res.StatusCode, test.wantStatusCode)
 			}
-			if tc.wantLocation != "" {
-				if got := res.Header.Get("Location"); got != tc.wantLocation {
-					t.Errorf("Location: got %q, want %q", got, tc.wantLocation)
+			if test.wantLocation != "" {
+				if got := res.Header.Get("Location"); got != test.wantLocation {
+					t.Errorf("Location: got %q, want %q", got, test.wantLocation)
 				}
 			}
 			doc, err := html.Parse(res.Body)
@@ -754,8 +754,8 @@ func testServer(t *testing.T, testCases []serverTestCase, experimentNames ...str
 			}
 			_ = res.Body.Close()
 
-			if tc.want != nil {
-				if err := tc.want(doc); err != nil {
+			if test.want != nil {
+				if err := test.want(doc); err != nil {
 					if testing.Verbose() {
 						html.Render(os.Stdout, doc)
 					}

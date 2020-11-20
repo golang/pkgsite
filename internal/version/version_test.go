@@ -143,10 +143,10 @@ func TestParseVersionType(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			if gotVt, err := ParseType(tc.version); (tc.wantErr == (err != nil)) && tc.wantVersionType != gotVt {
-				t.Errorf("parseVersionType(%v) = %v, want %v", tc.version, gotVt, tc.wantVersionType)
+	for _, test := range testCases {
+		t.Run(test.name, func(t *testing.T) {
+			if gotVt, err := ParseType(test.version); (test.wantErr == (err != nil)) && test.wantVersionType != gotVt {
+				t.Errorf("parseVersionType(%v) = %v, want %v", test.version, gotVt, test.wantVersionType)
 			}
 		})
 	}

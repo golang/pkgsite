@@ -50,7 +50,7 @@ func TestMain(m *testing.M) {
 func TestBulkInsert(t *testing.T) {
 	table := "test_bulk_insert"
 
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		name           string
 		columns        []string
 		values         []interface{}
@@ -126,7 +126,7 @@ func TestBulkInsert(t *testing.T) {
 			wantCount:      1,
 		},
 	} {
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run(test.name, func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 			defer cancel()
 
@@ -147,10 +147,10 @@ func TestBulkInsert(t *testing.T) {
 
 			var err error
 			var returned []string
-			if tc.wantReturned == nil {
-				err = testDB.BulkInsert(ctx, table, tc.columns, tc.values, tc.conflictAction)
+			if test.wantReturned == nil {
+				err = testDB.BulkInsert(ctx, table, test.columns, test.values, test.conflictAction)
 			} else {
-				err = testDB.BulkInsertReturning(ctx, table, tc.columns, tc.values, tc.conflictAction,
+				err = testDB.BulkInsertReturning(ctx, table, test.columns, test.values, test.conflictAction,
 					[]string{"colA"}, func(rows *sql.Rows) error {
 						var r string
 						if err := rows.Scan(&r); err != nil {
@@ -160,13 +160,13 @@ func TestBulkInsert(t *testing.T) {
 						return nil
 					})
 			}
-			if tc.wantErr && err == nil || !tc.wantErr && err != nil {
-				t.Errorf("got error %v, wantErr %t", err, tc.wantErr)
+			if test.wantErr && err == nil || !test.wantErr && err != nil {
+				t.Errorf("got error %v, wantErr %t", err, test.wantErr)
 			}
 			if err != nil {
 				return
 			}
-			if tc.wantCount != 0 {
+			if test.wantCount != 0 {
 				var count int
 				query := "SELECT COUNT(*) FROM " + table
 				row := testDB.QueryRow(ctx, query)
@@ -174,14 +174,14 @@ func TestBulkInsert(t *testing.T) {
 				if err != nil {
 					t.Fatalf("testDB.queryRow(%q): %v", query, err)
 				}
-				if count != tc.wantCount {
-					t.Errorf("testDB.queryRow(%q) = %d; want = %d", query, count, tc.wantCount)
+				if count != test.wantCount {
+					t.Errorf("testDB.queryRow(%q) = %d; want = %d", query, count, test.wantCount)
 				}
 			}
-			if tc.wantReturned != nil {
+			if test.wantReturned != nil {
 				sort.Strings(returned)
-				if !cmp.Equal(returned, tc.wantReturned) {
-					t.Errorf("returned: got %v, want %v", returned, tc.wantReturned)
+				if !cmp.Equal(returned, test.wantReturned) {
+					t.Errorf("returned: got %v, want %v", returned, test.wantReturned)
 				}
 			}
 		})

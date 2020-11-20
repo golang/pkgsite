@@ -63,10 +63,10 @@ func TestGodocURL(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.desc, func(t *testing.T) {
-			req := httptest.NewRequest("GET", tc.path, nil)
-			for k, v := range tc.cookies {
+	for _, test := range testCases {
+		t.Run(test.desc, func(t *testing.T) {
+			req := httptest.NewRequest("GET", test.path, nil)
+			for k, v := range test.cookies {
 				req.AddCookie(&http.Cookie{
 					Name:  k,
 					Value: v,
@@ -76,7 +76,7 @@ func TestGodocURL(t *testing.T) {
 			mwh.ServeHTTP(w, req)
 			resp := w.Result()
 			defer resp.Body.Close()
-			if got, want := resp.StatusCode, tc.code; got != want {
+			if got, want := resp.StatusCode, test.code; got != want {
 				t.Errorf("Status code = %d; want %d", got, want)
 			}
 			if resp.StatusCode >= 200 && resp.StatusCode < 300 {
@@ -84,11 +84,11 @@ func TestGodocURL(t *testing.T) {
 				if err != nil {
 					t.Fatalf("ioutil.ReadAll(resp.Body) = %v", err)
 				}
-				if got, want := body, tc.body; !bytes.Equal(got, want) {
+				if got, want := body, test.body; !bytes.Equal(got, want) {
 					t.Errorf("Response body = %q; want %q", got, want)
 				}
 			}
-			for k, v := range tc.headers {
+			for k, v := range test.headers {
 				if _, ok := resp.Header[k]; !ok {
 					t.Errorf("%q not present in response headers", k)
 					continue
@@ -147,14 +147,14 @@ func TestGodoc(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
-		u, err := url.Parse(tc.from)
+	for _, test := range testCases {
+		u, err := url.Parse(test.from)
 		if err != nil {
-			t.Errorf("url.Parse(%q): %v", tc.from, err)
+			t.Errorf("url.Parse(%q): %v", test.from, err)
 			continue
 		}
 		to := godoc(u)
-		if got, want := to, tc.to; got != want {
+		if got, want := to, test.to; got != want {
 			t.Errorf("godocURL(%q) = %q; want %q", u, got, want)
 		}
 	}

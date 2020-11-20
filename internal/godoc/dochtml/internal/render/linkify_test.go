@@ -300,7 +300,7 @@ func mustParse(t *testing.T, fset *token.FileSet, filename, src string) *ast.Fil
 
 func TestExampleCode(t *testing.T) {
 	fset := token.NewFileSet()
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		name    string
 		example doc.Example
 		want    string
@@ -405,14 +405,14 @@ func main() {
 `,
 		},
 	} {
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run(test.name, func(t *testing.T) {
 			ctx := context.Background()
 			r := New(ctx, fset, pkgTime, nil)
-			got, err := r.codeString(&tc.example)
+			got, err := r.codeString(&test.example)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(tc.want, got); diff != "" {
+			if diff := cmp.Diff(test.want, got); diff != "" {
 				t.Errorf("mismatch (-want +got):%s", diff)
 			}
 		})

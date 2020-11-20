@@ -11,7 +11,7 @@ import (
 )
 
 func TestPagination(t *testing.T) {
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		page, numResults, wantNumPages, wantOffset, wantPrev, wantNext int
 		name                                                           string
 	}{
@@ -70,29 +70,29 @@ func TestPagination(t *testing.T) {
 			wantNext:     0,
 		},
 	} {
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run(test.name, func(t *testing.T) {
 			testLimit := 10
-			if got := numPages(testLimit, tc.numResults); got != tc.wantNumPages {
+			if got := numPages(testLimit, test.numResults); got != test.wantNumPages {
 				t.Errorf("numPages(%d, %d) = %d; want = %d",
-					testLimit, tc.numResults, got, tc.wantNumPages)
+					testLimit, test.numResults, got, test.wantNumPages)
 			}
-			if got := offset(tc.page, testLimit); got != tc.wantOffset {
+			if got := offset(test.page, testLimit); got != test.wantOffset {
 				t.Errorf("offset(%d, %d) = %d; want = %d",
-					tc.page, testLimit, got, tc.wantOffset)
+					test.page, testLimit, got, test.wantOffset)
 			}
-			if got := prev(tc.page); got != tc.wantPrev {
-				t.Errorf("prev(%d) = %d; want = %d", tc.page, got, tc.wantPrev)
+			if got := prev(test.page); got != test.wantPrev {
+				t.Errorf("prev(%d) = %d; want = %d", test.page, got, test.wantPrev)
 			}
-			if got := next(tc.page, testLimit, tc.numResults); got != tc.wantNext {
+			if got := next(test.page, testLimit, test.numResults); got != test.wantNext {
 				t.Errorf("next(%d, %d, %d) = %d; want = %d",
-					tc.page, testLimit, tc.numResults, got, tc.wantNext)
+					test.page, testLimit, test.numResults, got, test.wantNext)
 			}
 		})
 	}
 }
 
 func TestPagesToDisplay(t *testing.T) {
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		name                         string
 		page, numPages, numToDisplay int
 		wantPages                    []int
@@ -189,10 +189,10 @@ func TestPagesToDisplay(t *testing.T) {
 			wantPages:    []int{1, 2, 3, 4, 5, 6},
 		},
 	} {
-		t.Run(tc.name, func(t *testing.T) {
-			got := pagesToLink(tc.page, tc.numPages, tc.numToDisplay)
-			if diff := cmp.Diff(got, tc.wantPages); diff != "" {
-				t.Errorf("pagesToLink(%d, %d, %d) = %v; want = %v", tc.page, tc.numPages, tc.numToDisplay, got, tc.wantPages)
+		t.Run(test.name, func(t *testing.T) {
+			got := pagesToLink(test.page, test.numPages, test.numToDisplay)
+			if diff := cmp.Diff(got, test.wantPages); diff != "" {
+				t.Errorf("pagesToLink(%d, %d, %d) = %v; want = %v", test.page, test.numPages, test.numToDisplay, got, test.wantPages)
 			}
 		})
 	}

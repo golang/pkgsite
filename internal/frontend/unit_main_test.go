@@ -35,7 +35,7 @@ func TestGetNestedModules(t *testing.T) {
 		}
 	}
 
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		modulePath string
 		want       []*NestedModule
 	}{
@@ -73,15 +73,15 @@ func TestGetNestedModules(t *testing.T) {
 			},
 		},
 	} {
-		t.Run(tc.modulePath, func(t *testing.T) {
+		t.Run(test.modulePath, func(t *testing.T) {
 			got, err := getNestedModules(ctx, testDB, &internal.UnitMeta{
-				Path:       tc.modulePath,
-				ModulePath: tc.modulePath,
+				Path:       test.modulePath,
+				ModulePath: test.modulePath,
 			})
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(tc.want, got); diff != "" {
+			if diff := cmp.Diff(test.want, got); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -123,7 +123,7 @@ func TestGetImportedByCount(t *testing.T) {
 
 	mainPageImportedByLimit = 2
 	tabImportedByLimit = 3
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		pkg  *internal.Unit
 		want string
 	}{
@@ -140,17 +140,17 @@ func TestGetImportedByCount(t *testing.T) {
 			want: "2+",
 		},
 	} {
-		t.Run(tc.pkg.Path, func(t *testing.T) {
-			otherVersion := newModule(path.Dir(tc.pkg.Path), tc.pkg)
+		t.Run(test.pkg.Path, func(t *testing.T) {
+			otherVersion := newModule(path.Dir(test.pkg.Path), test.pkg)
 			otherVersion.Version = "v1.0.5"
 			pkg := otherVersion.Units[1]
 			got, err := getImportedByCount(ctx, testDB, pkg)
 			if err != nil {
 				t.Fatalf("getImportedByCount(ctx, db, %q) = %v err = %v, want %v",
-					tc.pkg.Path, got, err, tc.want)
+					test.pkg.Path, got, err, test.want)
 			}
-			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("getImportedByCount(ctx, db, %q) mismatch (-want +got):\n%s", tc.pkg.Path, diff)
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("getImportedByCount(ctx, db, %q) mismatch (-want +got):\n%s", test.pkg.Path, diff)
 			}
 		})
 	}

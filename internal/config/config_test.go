@@ -12,7 +12,7 @@ import (
 )
 
 func TestValidateAppVersion(t *testing.T) {
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		in      string
 		wantErr bool
 	}{
@@ -23,9 +23,9 @@ func TestValidateAppVersion(t *testing.T) {
 		{"2019-09-12t13070400", true},
 		{"2019-09-11t22-14-0400-2f4680648b319545c55c6149536f0a74527901f6", false},
 	} {
-		err := ValidateAppVersion(tc.in)
-		if (err != nil) != tc.wantErr {
-			t.Errorf("ValidateAppVersion(%q) = %v, want error = %t", tc.in, err, tc.wantErr)
+		err := ValidateAppVersion(test.in)
+		if (err != nil) != test.wantErr {
+			t.Errorf("ValidateAppVersion(%q) = %v, want error = %t", test.in, err, test.wantErr)
 		}
 	}
 }

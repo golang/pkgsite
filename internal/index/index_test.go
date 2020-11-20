@@ -23,7 +23,7 @@ func TestGetVersions(t *testing.T) {
 		{Path: "github.com/my/module/v2", Version: "v2.0.0"},
 	}
 
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		name     string
 		limit    int
 		versions []*internal.IndexVersion
@@ -44,16 +44,16 @@ func TestGetVersions(t *testing.T) {
 			limit: 10,
 		},
 	} {
-		t.Run(tc.name, func(t *testing.T) {
-			client, teardown := SetupTestIndex(t, tc.versions)
+		t.Run(test.name, func(t *testing.T) {
+			client, teardown := SetupTestIndex(t, test.versions)
 			defer teardown()
 
 			since := time.Time{}
-			got, err := client.GetVersions(ctx, since, tc.limit)
+			got, err := client.GetVersions(ctx, since, test.limit)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(tc.want, got); diff != "" {
+			if diff := cmp.Diff(test.want, got); diff != "" {
 				t.Errorf("client.GetVersions(ctx, %q) mismatch (-want +got):\n%s", since, diff)
 			}
 		})

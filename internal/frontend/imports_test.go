@@ -17,7 +17,7 @@ import (
 )
 
 func TestFetchImportsDetails(t *testing.T) {
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		name        string
 		imports     []string
 		wantDetails *ImportsDetails
@@ -44,7 +44,7 @@ func TestFetchImportsDetails(t *testing.T) {
 			},
 		},
 	} {
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run(test.name, func(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
 
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
@@ -53,7 +53,7 @@ func TestFetchImportsDetails(t *testing.T) {
 			module := sample.Module(sample.ModulePath, sample.VersionString, sample.Suffix)
 			// The first unit is the module and the second one is the package.
 			pkg := module.Units[1]
-			pkg.Imports = tc.imports
+			pkg.Imports = test.imports
 
 			if err := testDB.InsertModule(ctx, module); err != nil {
 				t.Fatal(err)
@@ -62,11 +62,11 @@ func TestFetchImportsDetails(t *testing.T) {
 			got, err := fetchImportsDetails(ctx, testDB, pkg.Path, pkg.ModulePath, pkg.Version)
 			if err != nil {
 				t.Fatalf("fetchImportsDetails(ctx, db, %q, %q) = %v err = %v, want %v",
-					module.Units[1].Path, module.Version, got, err, tc.wantDetails)
+					module.Units[1].Path, module.Version, got, err, test.wantDetails)
 			}
 
-			tc.wantDetails.ModulePath = module.ModulePath
-			if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
+			test.wantDetails.ModulePath = module.ModulePath
+			if diff := cmp.Diff(test.wantDetails, got); diff != "" {
 				t.Errorf("fetchImportsDetails(ctx, %q, %q) mismatch (-want +got):\n%s", module.Units[1].Path, module.Version, diff)
 			}
 		})

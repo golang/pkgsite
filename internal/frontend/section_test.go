@@ -11,7 +11,7 @@ import (
 )
 
 func TestNextPrefixAccount(t *testing.T) {
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		path, want1, want2 string
 	}{
 		{"", "", ""},
@@ -27,28 +27,28 @@ func TestNextPrefixAccount(t *testing.T) {
 		{"example.com/foo", "example.com/", "example.com/foo"},
 		{"example.com/foo/bar", "example.com/", "example.com/foo/"},
 	} {
-		got1 := nextPrefixAccount(tc.path, "")
-		if got1 != tc.want1 {
-			t.Errorf(`nextPrefixAccount(%q, "") = %q, want %q`, tc.path, got1, tc.want1)
+		got1 := nextPrefixAccount(test.path, "")
+		if got1 != test.want1 {
+			t.Errorf(`nextPrefixAccount(%q, "") = %q, want %q`, test.path, got1, test.want1)
 			continue
 		}
-		got2 := nextPrefixAccount(tc.path, got1)
-		if got2 != tc.want2 {
-			t.Errorf(`nextPrefixAccount(%q, %q) = %q, want %q`, tc.path, got1, got2, tc.want2)
+		got2 := nextPrefixAccount(test.path, got1)
+		if got2 != test.want2 {
+			t.Errorf(`nextPrefixAccount(%q, %q) = %q, want %q`, test.path, got1, got2, test.want2)
 			continue
 		}
 		if got2 == "" {
 			continue
 		}
-		got3 := nextPrefixAccount(tc.path, got2)
+		got3 := nextPrefixAccount(test.path, got2)
 		if got3 != "" {
-			t.Errorf(`nextPrefixAccount(%q, %q) = %q, want ""`, tc.path, got2, got3)
+			t.Errorf(`nextPrefixAccount(%q, %q) = %q, want ""`, test.path, got2, got3)
 		}
 	}
 }
 
 func TestPrefixSections(t *testing.T) {
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		lines []string
 		want  []*Section
 	}{
@@ -103,9 +103,9 @@ func TestPrefixSections(t *testing.T) {
 			},
 		},
 	} {
-		got := Sections(tc.lines, nextPrefixAccount)
-		if diff := cmp.Diff(tc.want, got); diff != "" {
-			t.Errorf("%v: mismatch (-want, +got):\n%s", tc.lines, diff)
+		got := Sections(test.lines, nextPrefixAccount)
+		if diff := cmp.Diff(test.want, got); diff != "" {
+			t.Errorf("%v: mismatch (-want, +got):\n%s", test.lines, diff)
 		}
 	}
 }

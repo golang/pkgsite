@@ -102,12 +102,12 @@ func TestAbsoluteTime(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			absoluteTime := absoluteTime(tc.date)
+	for _, test := range testCases {
+		t.Run(test.name, func(t *testing.T) {
+			absoluteTime := absoluteTime(test.date)
 
-			if absoluteTime != tc.absoluteTime {
-				t.Errorf("absoluteTime(%q) = %s, want %s", tc.date, absoluteTime, tc.absoluteTime)
+			if absoluteTime != test.absoluteTime {
+				t.Errorf("absoluteTime(%q) = %s, want %s", test.date, absoluteTime, test.absoluteTime)
 			}
 		})
 	}

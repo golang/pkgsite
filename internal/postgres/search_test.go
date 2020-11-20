@@ -27,7 +27,7 @@ import (
 )
 
 func TestPathTokens(t *testing.T) {
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		path string
 		want []string
 	}{
@@ -140,10 +140,10 @@ func TestPathTokens(t *testing.T) {
 			want: nil,
 		},
 	} {
-		t.Run(tc.path, func(t *testing.T) {
-			got := GeneratePathTokens(tc.path)
-			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("generatePathTokens(%q) mismatch (-want +got):\n%s", tc.path, diff)
+		t.Run(test.path, func(t *testing.T) {
+			got := GeneratePathTokens(test.path)
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("generatePathTokens(%q) mismatch (-want +got):\n%s", test.path, diff)
 			}
 		})
 	}
@@ -473,7 +473,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 		cloudScore    = 0.8654518127441406
 	)
 
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		name          string
 		packages      map[string]*internal.Unit
 		limit, offset int
@@ -541,13 +541,13 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 		},
 	} {
 		for method, searcher := range searchers {
-			t.Run(tc.name+":"+method, func(t *testing.T) {
+			t.Run(test.name+":"+method, func(t *testing.T) {
 				defer ResetTestDB(testDB, t)
 
 				ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 				defer cancel()
 
-				for modulePath, pkg := range tc.packages {
+				for modulePath, pkg := range test.packages {
 					pkg.Licenses = sample.LicenseMetadata
 					m := sample.Module(modulePath, sample.VersionString)
 					sample.AddUnit(m, pkg)
@@ -556,11 +556,11 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 					}
 				}
 
-				if tc.limit < 1 {
-					tc.limit = 10
+				if test.limit < 1 {
+					test.limit = 10
 				}
 
-				got := searcher(testDB, ctx, tc.searchQuery, tc.limit, tc.offset, 100)
+				got := searcher(testDB, ctx, test.searchQuery, test.limit, test.offset, 100)
 				if got.err != nil {
 					t.Fatal(got.err)
 				}
@@ -568,14 +568,14 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				if err := testDB.addPackageDataToSearchResults(ctx, got.results); err != nil {
 					t.Fatal(err)
 				}
-				if len(got.results) != len(tc.want) {
-					t.Errorf("testDB.Search(%v, %d, %d) mismatch: len(got) = %d, want = %d\n", tc.searchQuery, tc.limit, tc.offset, len(got.results), len(tc.want))
+				if len(got.results) != len(test.want) {
+					t.Errorf("testDB.Search(%v, %d, %d) mismatch: len(got) = %d, want = %d\n", test.searchQuery, test.limit, test.offset, len(got.results), len(test.want))
 				}
 
 				// The searchers differ in these two fields.
 				opt := cmpopts.IgnoreFields(internal.SearchResult{}, "Approximate", "NumResults")
-				if diff := cmp.Diff(tc.want, got.results, opt); diff != "" {
-					t.Errorf("testDB.Search(%v, %d, %d) mismatch (-want +got):\n%s", tc.searchQuery, tc.limit, tc.offset, diff)
+				if diff := cmp.Diff(test.want, got.results, opt); diff != "" {
+					t.Errorf("testDB.Search(%v, %d, %d) mismatch (-want +got):\n%s", test.searchQuery, test.limit, test.offset, diff)
 				}
 			})
 		}

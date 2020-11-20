@@ -76,20 +76,20 @@ func main() {
 			code:   http.StatusInternalServerError,
 		},
 	}
-	for _, tc := range testCases {
-		t.Run(tc.desc, func(t *testing.T) {
-			body := strings.NewReader(tc.body)
+	for _, test := range testCases {
+		t.Run(test.desc, func(t *testing.T) {
+			body := strings.NewReader(test.body)
 
-			req, err := http.NewRequest(tc.method, "/play", body)
+			req, err := http.NewRequest(test.method, "/play", body)
 			if err != nil {
 				t.Fatal(err)
 			}
 			req.Header.Set("Content-Type", "text/plain; charset=utf-8")
 			w := httptest.NewRecorder()
-			makeFetchPlayRequest(w, req, tc.pgURL)
+			makeFetchPlayRequest(w, req, test.pgURL)
 
 			res := w.Result()
-			if got, want := res.StatusCode, tc.code; got != want {
+			if got, want := res.StatusCode, test.code; got != want {
 				t.Errorf("Status Code = %d; want %d", got, want)
 			}
 
@@ -98,7 +98,7 @@ func main() {
 				if err != nil {
 					t.Fatal(err)
 				}
-				wantID := tc.shareID
+				wantID := test.shareID
 				if !*playground {
 					wantID = testShareID
 				}

@@ -212,20 +212,20 @@ func TestGetVersions(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, test := range testCases {
+		t.Run(test.name, func(t *testing.T) {
 			var want []*internal.ModuleInfo
-			for _, w := range tc.want {
+			for _, w := range test.want {
 				mod := sample.ModuleInfo(w.ModulePath, w.Version)
 				want = append(want, mod)
 			}
 
-			got, err := testDB.GetVersionsForPath(ctx, tc.path)
+			got, err := testDB.GetVersionsForPath(ctx, test.path)
 			if err != nil {
 				t.Fatal(err)
 			}
 			if diff := cmp.Diff(want, got, cmp.AllowUnexported(source.Info{})); diff != "" {
-				t.Errorf("testDB.GetVersionsForPath(%q) mismatch (-want +got):\n%s", tc.path, diff)
+				t.Errorf("testDB.GetVersionsForPath(%q) mismatch (-want +got):\n%s", test.path, diff)
 			}
 		})
 	}
@@ -248,7 +248,7 @@ func TestGetLatestMajorVersion(t *testing.T) {
 		}
 	}
 
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		seriesPath  string
 		wantVersion string
 		wantErr     error
@@ -266,17 +266,17 @@ func TestGetLatestMajorVersion(t *testing.T) {
 			wantErr:    sql.ErrNoRows,
 		},
 	} {
-		gotVersion, err := testDB.GetLatestMajorVersion(ctx, tc.seriesPath)
+		gotVersion, err := testDB.GetLatestMajorVersion(ctx, test.seriesPath)
 		if err != nil {
-			if tc.wantErr == nil {
+			if test.wantErr == nil {
 				t.Fatalf("got unexpected error %v", err)
 			}
-			if !errors.Is(err, tc.wantErr) {
-				t.Errorf("got err = %v, want Is(%v)", err, tc.wantErr)
+			if !errors.Is(err, test.wantErr) {
+				t.Errorf("got err = %v, want Is(%v)", err, test.wantErr)
 			}
 		}
-		if gotVersion != tc.wantVersion {
-			t.Errorf("testDB.GetLatestMajorVersion(%v) = %v, want = %v", tc.seriesPath, gotVersion, tc.wantVersion)
+		if gotVersion != test.wantVersion {
+			t.Errorf("testDB.GetLatestMajorVersion(%v) = %v, want = %v", test.seriesPath, gotVersion, test.wantVersion)
 		}
 	}
 }

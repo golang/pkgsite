@@ -14,7 +14,7 @@ import (
 )
 
 func TestTagForVersion(t *testing.T) {
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		name    string
 		version string
 		want    string
@@ -76,14 +76,14 @@ func TestTagForVersion(t *testing.T) {
 			wantErr: true,
 		},
 	} {
-		t.Run(tc.name, func(t *testing.T) {
-			got, err := TagForVersion(tc.version)
-			if (err != nil) != tc.wantErr {
-				t.Errorf("TagForVersion(%q) = %q, %v, wantErr %v", tc.version, got, err, tc.wantErr)
+		t.Run(test.name, func(t *testing.T) {
+			got, err := TagForVersion(test.version)
+			if (err != nil) != test.wantErr {
+				t.Errorf("TagForVersion(%q) = %q, %v, wantErr %v", test.version, got, err, test.wantErr)
 				return
 			}
-			if got != tc.want {
-				t.Errorf("TagForVersion(%q) = %q, %v, wanted %q, %v", tc.version, got, err, tc.want, nil)
+			if got != test.want {
+				t.Errorf("TagForVersion(%q) = %q, %v, wanted %q, %v", test.version, got, err, test.want, nil)
 			}
 		})
 	}
@@ -216,7 +216,7 @@ func TestVersions(t *testing.T) {
 }
 
 func TestVersionForTag(t *testing.T) {
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		in, want string
 	}{
 		{"", ""},
@@ -231,9 +231,9 @@ func TestVersionForTag(t *testing.T) {
 		{"weekly.2012-02-14", ""},
 		{"latest", "latest"},
 	} {
-		got := VersionForTag(tc.in)
-		if got != tc.want {
-			t.Errorf("VersionForTag(%q) = %q, want %q", tc.in, got, tc.want)
+		got := VersionForTag(test.in)
+		if got != test.want {
+			t.Errorf("VersionForTag(%q) = %q, want %q", test.in, got, test.want)
 		}
 	}
 }

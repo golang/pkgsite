@@ -11,7 +11,7 @@ import (
 )
 
 func TestSeriesPathForModule(t *testing.T) {
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		modulePath, wantSeriesPath string
 	}{
 		{
@@ -31,9 +31,9 @@ func TestSeriesPathForModule(t *testing.T) {
 			wantSeriesPath: "gopkg.in/russross/blackfriday",
 		},
 	} {
-		t.Run(tc.modulePath, func(t *testing.T) {
-			if got := SeriesPathForModule(tc.modulePath); got != tc.wantSeriesPath {
-				t.Errorf("SeriesPathForModule(%q) = %q; want = %q", tc.modulePath, got, tc.wantSeriesPath)
+		t.Run(test.modulePath, func(t *testing.T) {
+			if got := SeriesPathForModule(test.modulePath); got != test.wantSeriesPath {
+				t.Errorf("SeriesPathForModule(%q) = %q; want = %q", test.modulePath, got, test.wantSeriesPath)
 			}
 		})
 	}

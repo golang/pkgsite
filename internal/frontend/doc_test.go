@@ -13,7 +13,7 @@ import (
 )
 
 func TestFileSource(t *testing.T) {
-	for _, tc := range []struct {
+	for _, test := range []struct {
 		modulePath, version, filePath, want string
 	}{
 		{
@@ -35,9 +35,9 @@ func TestFileSource(t *testing.T) {
 			want:       fmt.Sprintf("go.googlesource.com/go/+/refs/heads/master/%s", "README.md"),
 		},
 	} {
-		t.Run(fmt.Sprintf("%s@%s/%s", tc.modulePath, tc.version, tc.filePath), func(t *testing.T) {
-			if got := fileSource(tc.modulePath, tc.version, tc.filePath); got != tc.want {
-				t.Errorf("fileSource(%q, %q, %q) = %q; want = %q", tc.modulePath, tc.version, tc.filePath, got, tc.want)
+		t.Run(fmt.Sprintf("%s@%s/%s", test.modulePath, test.version, test.filePath), func(t *testing.T) {
+			if got := fileSource(test.modulePath, test.version, test.filePath); got != test.want {
+				t.Errorf("fileSource(%q, %q, %q) = %q; want = %q", test.modulePath, test.version, test.filePath, got, test.want)
 			}
 		})
 	}
