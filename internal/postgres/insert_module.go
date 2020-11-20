@@ -210,13 +210,12 @@ func insertLicenses(ctx context.Context, db *database.DB, m *internal.Module, mo
 		if err != nil {
 			return fmt.Errorf("marshalling %+v: %v", l.Coverage, err)
 		}
-		licenseValues = append(licenseValues, m.ModulePath, m.Version,
-			l.FilePath, makeValidUnicode(string(l.Contents)), pq.Array(l.Types), covJSON, moduleID)
+		licenseValues = append(licenseValues, l.FilePath,
+			makeValidUnicode(string(l.Contents)), pq.Array(l.Types), covJSON,
+			moduleID)
 	}
 	if len(licenseValues) > 0 {
 		licenseCols := []string{
-			"module_path",
-			"version",
 			"file_path",
 			"contents",
 			"types",
