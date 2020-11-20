@@ -143,11 +143,17 @@ func readmeOutline(doc ast.Node, contents []byte) []*Heading {
 
 	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if n.Kind() == ast.KindHeading && entering {
+			var buffer bytes.Buffer
+			for c := n.FirstChild(); c != nil; c = c.NextSibling() {
+				// We keep only text content from the headings.
+				if c.Kind() == ast.KindText {
+					buffer.Write(c.Text(contents))
+				}
+			}
 			heading := n.(*ast.Heading)
-			text := n.Text(contents)
 			section := Heading{
 				Level: heading.Level,
-				Text:  string(text),
+				Text:  buffer.String(),
 			}
 			if id, ok := heading.AttributeString("id"); ok {
 				section.ID = string(id.([]byte))
