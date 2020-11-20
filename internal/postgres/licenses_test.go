@@ -144,7 +144,17 @@ func TestGetModuleLicenses(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got, err := testDB.getModuleLicenses(ctx, modulePath, testModule.Version)
+	var moduleID int
+	query := `
+		SELECT m.id
+		FROM modules m
+		WHERE
+		    m.module_path = $1
+		    AND m.version = $2;`
+	if err := testDB.db.QueryRow(ctx, query, modulePath, testModule.Version).Scan(&moduleID); err != nil {
+		t.Fatal(err)
+	}
+	got, err := testDB.getModuleLicenses(ctx, moduleID)
 	if err != nil {
 		t.Fatal(err)
 	}
