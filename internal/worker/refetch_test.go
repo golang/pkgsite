@@ -103,22 +103,34 @@ func TestReFetch(t *testing.T) {
 			GOOS:     "linux",
 			GOARCH:   "amd64",
 		},
+		Subdirectories: []*internal.PackageMeta{
+			{
+				Path:              "github.com/valid/module_name/bar",
+				Name:              "bar",
+				Synopsis:          "Package bar",
+				IsRedistributable: true,
+				Licenses:          sample.LicenseMetadata,
+			},
+		},
 	}
 	got, err := testDB.GetUnitMeta(ctx, pkgBar, internal.UnknownModulePath, version)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(want.UnitMeta, *got, cmp.AllowUnexported(source.Info{})); diff != "" {
+	if diff := cmp.Diff(want.UnitMeta, *got,
+		cmp.AllowUnexported(source.Info{}),
+		cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage")); diff != "" {
 		t.Fatalf("testDB.GetUnitMeta(ctx, %q, %q) mismatch (-want +got):\n%s", want.ModulePath, want.Version, diff)
 	}
 
-	gotPkg, err := testDB.GetUnit(ctx, got, internal.WithReadme|internal.WithDocumentation)
+	gotPkg, err := testDB.GetUnit(ctx, got, internal.WithMain)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if diff := cmp.Diff(want, gotPkg,
 		cmp.AllowUnexported(source.Info{}),
-		cmpopts.IgnoreFields(internal.Unit{}, "Documentation")); diff != "" {
+		cmpopts.IgnoreFields(internal.Unit{}, "Documentation"),
+		cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage")); diff != "" {
 		t.Errorf("mismatch on readme (-want +got):\n%s", diff)
 	}
 	if got, want := gotPkg.Documentation, want.Documentation; got == nil || want == nil {

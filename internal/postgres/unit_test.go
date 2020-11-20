@@ -214,11 +214,19 @@ func TestGetUnitFieldSet(t *testing.T) {
 
 	cleanFields := func(u *internal.Unit, fields internal.FieldSet) {
 		// Add/remove fields based on the FieldSet specified.
-		if fields&internal.WithDocumentation != 0 {
+		if fields&internal.WithMain != 0 {
 			u.Documentation = sample.Documentation
-		}
-		if fields&internal.WithReadme != 0 {
 			u.Readme = readme
+			u.NumImports = len(sample.Imports)
+			u.Subdirectories = []*internal.PackageMeta{
+				{
+					Path:              "a.com/m/dir/p",
+					Name:              "p",
+					Synopsis:          sample.Synopsis,
+					IsRedistributable: true,
+					Licenses:          sample.LicenseMetadata,
+				},
+			}
 		}
 		if fields&internal.WithImports != 0 {
 			u.Imports = sample.Imports
@@ -235,9 +243,9 @@ func TestGetUnitFieldSet(t *testing.T) {
 		want   *internal.Unit
 	}{
 		{
-			name:   "WithDocumentation",
-			fields: internal.WithDocumentation,
-			want:   unit("a.com/m/dir/p", "a.com/m", "v1.2.3", "", nil, []string{}),
+			name:   "WithMain",
+			fields: internal.WithMain,
+			want:   unit("a.com/m/dir/p", "a.com/m", "v1.2.3", "", readme, []string{}),
 		},
 		{
 			name:   "WithImports",
@@ -248,12 +256,6 @@ func TestGetUnitFieldSet(t *testing.T) {
 			name:   "WithLicenses",
 			fields: internal.WithLicenses,
 			want:   unit("a.com/m/dir/p", "a.com/m", "v1.2.3", "", nil, []string{}),
-		},
-		{
-			name:   "WithReadme",
-			fields: internal.WithReadme,
-			want: unit("a.com/m/dir/p", "a.com/m", "v1.2.3", "",
-				readme, []string{}),
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {

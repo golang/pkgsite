@@ -99,11 +99,10 @@ type Subdirectory struct {
 func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, expandReadme bool) (_ *MainDetails, err error) {
 	defer middleware.ElapsedStat(ctx, "fetchMainDetails")()
 
-	unit, err := ds.GetUnit(ctx, um, internal.WithReadme|internal.WithDocumentation|internal.WithSubdirectories|internal.WithImports)
+	unit, err := ds.GetUnit(ctx, um, internal.WithMain)
 	if err != nil {
 		return nil, err
 	}
-
 	nestedModules, err := getNestedModules(ctx, ds, um)
 	if err != nil {
 		return nil, err

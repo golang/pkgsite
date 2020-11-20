@@ -234,6 +234,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 						{Types: []string{"UNKNOWN"}, FilePath: "foo/LICENSE.md"},
 					},
 				},
+				NumImports: 2,
 			},
 		}, {
 			modulePath: "std",
@@ -255,6 +256,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 						},
 					},
 				},
+				NumImports: 5,
 				Documentation: &internal.Documentation{
 					Synopsis: "Package context defines the Context type, which carries deadlines, cancelation signals, and other request-scoped values across API boundaries and between processes.",
 					GOOS:     "linux",
@@ -309,6 +311,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 						},
 					},
 				},
+				NumImports: 15,
 				Documentation: &internal.Documentation{
 					Synopsis: "Package json implements encoding and decoding of JSON as defined in RFC 7159.",
 					GOOS:     "linux",
@@ -380,14 +383,15 @@ func TestFetchAndUpdateState(t *testing.T) {
 				t.Fatalf("testDB.GetUnitMeta(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
 			}
 
-			gotPkg, err := testDB.GetUnit(ctx, got, internal.WithReadme|internal.WithDocumentation)
+			gotPkg, err := testDB.GetUnit(ctx, got, internal.WithMain)
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			if diff := cmp.Diff(test.want, gotPkg,
 				cmp.AllowUnexported(source.Info{}),
-				cmpopts.IgnoreFields(internal.Unit{}, "Documentation")); diff != "" {
+				cmpopts.IgnoreFields(internal.Unit{}, "Documentation"),
+				cmpopts.IgnoreFields(internal.Unit{}, "Subdirectories")); diff != "" {
 				t.Errorf("mismatch on readme (-want +got):\n%s", diff)
 			}
 			if got, want := gotPkg.Documentation, test.want.Documentation; got == nil || want == nil {

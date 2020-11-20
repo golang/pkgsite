@@ -7,7 +7,6 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -16,7 +15,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -134,8 +132,16 @@ const orderByLatestStmt = `
 // associated with that unit.
 func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields internal.FieldSet) (_ *internal.Unit, err error) {
 	defer derrors.Wrap(&err, "GetUnit(ctx, %q, %q, %q)", um.Path, um.ModulePath, um.Version)
-	if experiment.IsActive(ctx, internal.ExperimentGetUnitWithOneQuery) && fields&internal.WithDocumentation|fields&internal.WithReadme != 0 {
-		return db.getUnitWithAllFields(ctx, um)
+
+	u := &internal.Unit{UnitMeta: *um}
+	if fields&internal.WithMain != 0 {
+		u, err = db.getUnitWithAllFields(ctx, um)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if fields&internal.WithImports == 0 && fields&internal.WithLicenses == 0 {
+		return u, nil
 	}
 
 	defer middleware.ElapsedStat(ctx, "GetUnit")()
@@ -144,21 +150,6 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 		return nil, err
 	}
 
-	u := &internal.Unit{UnitMeta: *um}
-	if fields&internal.WithReadme != 0 {
-		readme, err := db.getReadme(ctx, unitID)
-		if err != nil && !errors.Is(err, derrors.NotFound) {
-			return nil, err
-		}
-		u.Readme = readme
-	}
-	if fields&internal.WithDocumentation != 0 {
-		doc, err := db.getDocumentation(ctx, unitID)
-		if err != nil && !errors.Is(err, derrors.NotFound) {
-			return nil, err
-		}
-		u.Documentation = doc
-	}
 	if fields&internal.WithImports != 0 {
 		imports, err := db.getImports(ctx, unitID)
 		if err != nil {
@@ -175,13 +166,6 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 			return nil, err
 		}
 		u.LicenseContents = lics
-	}
-	if fields&internal.WithSubdirectories != 0 {
-		pkgs, err := db.getPackagesInUnit(ctx, u.Path, u.ModulePath, u.Version)
-		if err != nil {
-			return nil, err
-		}
-		u.Subdirectories = pkgs
 	}
 	if db.bypassLicenseCheck {
 		u.IsRedistributable = true
@@ -211,56 +195,6 @@ func (db *DB) getUnitID(ctx context.Context, fullPath, modulePath, resolvedVersi
 		return unitID, nil
 	default:
 		return 0, err
-	}
-}
-
-// getDocumentation returns the documentation corresponding to unitID.
-func (db *DB) getDocumentation(ctx context.Context, unitID int) (_ *internal.Documentation, err error) {
-	defer derrors.Wrap(&err, "getDocumentation(ctx, %d)", unitID)
-	defer middleware.ElapsedStat(ctx, "getDocumentation")()
-	var (
-		doc internal.Documentation
-	)
-	err = db.db.QueryRow(ctx, `
-		SELECT
-			d.goos,
-			d.goarch,
-			d.synopsis,
-			d.source
-		FROM documentation d
-		WHERE
-		    d.unit_id=$1;`, unitID).Scan(
-		database.NullIsEmpty(&doc.GOOS),
-		database.NullIsEmpty(&doc.GOARCH),
-		database.NullIsEmpty(&doc.Synopsis),
-		&doc.Source,
-	)
-	switch err {
-	case sql.ErrNoRows:
-		return nil, derrors.NotFound
-	case nil:
-		return &doc, nil
-	default:
-		return nil, err
-	}
-}
-
-// getReadme returns the README corresponding to the modulePath and version.
-func (db *DB) getReadme(ctx context.Context, unitID int) (_ *internal.Readme, err error) {
-	defer derrors.Wrap(&err, "getReadme(ctx, %d)", unitID)
-	defer middleware.ElapsedStat(ctx, "getReadme")()
-	var readme internal.Readme
-	err = db.db.QueryRow(ctx, `
-		SELECT file_path, contents
-		FROM readmes
-		WHERE unit_id=$1;`, unitID).Scan(&readme.Filepath, &readme.Contents)
-	switch err {
-	case sql.ErrNoRows:
-		return nil, derrors.NotFound
-	case nil:
-		return &readme, nil
-	default:
-		return nil, err
 	}
 }
 
