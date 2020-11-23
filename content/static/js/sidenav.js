@@ -108,7 +108,7 @@ class DocNavTreeController {
    * @return {undefined}
    */
   setFocusedIndex(index) {
-    if (index === this._focusedIndex) {
+    if (index === this._focusedIndex || index === -1) {
       return;
     }
 

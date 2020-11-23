@@ -331,6 +331,51 @@ func TestReadme(t *testing.T) {
 				{Level: 1, Text: "Local Heading", ID: "readme-local-heading"},
 			},
 		},
+		{
+			name: "non-text content is removed from outline text",
+			unit: unit,
+			readme: &internal.Readme{
+				Filepath: "README.md",
+				Contents: `# Heading [![Image](file.svg)](link.html)
+				`,
+			},
+			wantHTML: `<h3 class="h1" id="readme-heading">Heading <a href="https://github.com/valid/module_name/blob/v1.0.0/link.html" rel="nofollow"><img src="https://github.com/valid/module_name/raw/v1.0.0/file.svg" alt="Image"/></a></h3>`,
+			wantOutline: []*Heading{
+				{Level: 1, Text: "Heading ", ID: "readme-heading"},
+			},
+		},
+		{
+			name: "duplicated headings ids have incremental suffix",
+			unit: unit,
+			readme: &internal.Readme{
+				Filepath: "README.md",
+				Contents: "# Heading\n## Heading\n## Heading",
+			},
+			wantHTML: `<h3 class="h1" id="readme-heading">Heading</h3>` + "\n" +
+				`<h4 class="h2" id="readme-heading-1">Heading</h4>` + "\n" +
+				`<h4 class="h2" id="readme-heading-2">Heading</h4>`,
+			wantOutline: []*Heading{
+				{Level: 1, Text: "Heading", ID: "readme-heading"},
+				{Level: 2, Text: "Heading", ID: "readme-heading-1"},
+				{Level: 2, Text: "Heading", ID: "readme-heading-2"},
+			},
+		},
+		{
+			name: "only letters and numbers are preserved in ids",
+			unit: unit,
+			readme: &internal.Readme{
+				Filepath: "README.md",
+				Contents: "# Heading 😎\n## 👾\n## Heading 🚀",
+			},
+			wantHTML: `<h3 class="h1" id="readme-heading">Heading 😎</h3>` + "\n" +
+				`<h4 class="h2" id="readme-heading-1">👾</h4>` + "\n" +
+				`<h4 class="h2" id="readme-heading-2">Heading 🚀</h4>`,
+			wantOutline: []*Heading{
+				{Level: 1, Text: "Heading 😎", ID: "readme-heading"},
+				{Level: 2, Text: "👾", ID: "readme-heading-1"},
+				{Level: 2, Text: "Heading 🚀", ID: "readme-heading-2"},
+			},
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			test.unit.Readme = test.readme

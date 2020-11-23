@@ -8,6 +8,9 @@ package frontend
 
 import (
 	"fmt"
+	"regexp"
+	"strings"
+	"unicode"
 
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
@@ -40,10 +43,6 @@ func (g *ASTTransformer) Transform(node *ast.Document, reader text.Reader, pc pa
 		case *ast.Link:
 			if d := translateRelativeLink(string(v.Destination), g.info, false, g.readme); d != "" {
 				v.Destination = []byte(d)
-			}
-		case *ast.Heading:
-			if id, ok := v.AttributeString("id"); ok {
-				v.SetAttributeString("id", append([]byte("readme-"), id.([]byte)...))
 			}
 		}
 		return ast.WalkContinue, nil
@@ -160,4 +159,54 @@ func (r *HTMLRenderer) renderRawHTML(w util.BufWriter, source []byte, node ast.N
 	}
 	_, _ = w.WriteString("<!-- raw HTML omitted -->")
 	return ast.WalkSkipChildren, nil
+}
+
+// ids is a collection of element ids in document.
+type ids struct {
+	values map[string]bool
+}
+
+// NewIDs creates a collection of element ids in a document.
+func NewIDs() parser.IDs {
+	return &ids{
+		values: map[string]bool{},
+	}
+}
+
+// Generate turns heading content from a markdown document into a heading id.
+// First HTML markup and markdown images are stripped then unicode letters
+// and numbers are used to generate the final result. Finally, all heading ids
+// are prefixed with "readme-" to avoid name collisions with other ids on the
+// unit page. Duplicated heading ids are given an incremental suffix. See
+// readme_test.go for examples.
+func (s *ids) Generate(value []byte, kind ast.NodeKind) []byte {
+	// Matches strings like `<tag attr="value">Text</tag>` or `[![Text](file.svg)](link.html)`.
+	r := regexp.MustCompile(`(<[^<>]+>|\[\!\[[^\]]+]\([^\)]+\)\]\([^\)]+\))`)
+	str := r.ReplaceAllString(string(value), "")
+	f := func(c rune) bool {
+		return !unicode.IsLetter(c) && !unicode.IsNumber(c)
+	}
+	str = strings.Join(strings.FieldsFunc(str, f), "-")
+	str = strings.ToLower(str)
+	if len(str) == 0 {
+		if kind == ast.KindHeading {
+			str = "heading"
+		} else {
+			str = "id"
+		}
+	}
+	key := str
+	for i := 1; ; i++ {
+		if _, ok := s.values[key]; !ok {
+			s.values[key] = true
+			break
+		}
+		key = fmt.Sprintf("%s-%d", str, i)
+	}
+	return []byte("readme-" + key)
+}
+
+// Put implements Put from the goldmark parser IDs interface.
+func (s *ids) Put(value []byte) {
+	s.values[string(value)] = true
 }

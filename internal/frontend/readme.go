@@ -102,7 +102,8 @@ func Readme(ctx context.Context, u *internal.Unit) (_ safehtml.HTML, _ []*Headin
 	contents := []byte(u.Readme.Contents)
 	gdParser := gdMarkdown.Parser()
 	reader := text.NewReader(contents)
-	doc := gdParser.Parse(reader)
+	pctx := parser.NewContext(parser.WithIDs(NewIDs()))
+	doc := gdParser.Parse(reader, parser.WithContext(pctx))
 	gdRenderer := gdMarkdown.Renderer()
 
 	var b bytes.Buffer
