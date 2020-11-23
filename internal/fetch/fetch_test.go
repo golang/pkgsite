@@ -105,7 +105,7 @@ func TestFetchModule(t *testing.T) {
 				sortFetchResult(fr)
 				sortFetchResult(got)
 				opts := []cmp.Option{
-					cmpopts.IgnoreFields(internal.Documentation{}, "HTML", "Source"),
+					cmpopts.IgnoreFields(internal.Documentation{}, "Source"),
 					cmpopts.IgnoreFields(internal.PackageVersionState{}, "Error"),
 					cmpopts.IgnoreFields(FetchResult{}, "Defer"),
 					cmp.AllowUnexported(source.Info{}),
@@ -127,7 +127,7 @@ func TestFetchModule(t *testing.T) {
 				if diff := cmp.Diff(fr, got, opts...); diff != "" {
 					t.Fatalf("mismatch (-want +got):\n%s", diff)
 				}
-				validateDocumentationHTML(t, got.Module, fr.Module)
+				validateDocumentationHTML(t, got.Module, test.mod.docStrings)
 			})
 		}
 	}

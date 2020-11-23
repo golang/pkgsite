@@ -171,7 +171,6 @@ func importGraph(popularPath, importerModule string, importerCount int) []*inter
 					Synopsis: sample.Synopsis,
 					GOOS:     sample.GOOS,
 					GOARCH:   sample.GOARCH,
-					HTML:     sample.DocumentationHTML,
 					Source:   []byte{},
 				},
 				Imports: []string{popularPath},

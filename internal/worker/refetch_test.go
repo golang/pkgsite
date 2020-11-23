@@ -103,7 +103,6 @@ func TestReFetch(t *testing.T) {
 		},
 		Documentation: &internal.Documentation{
 			Synopsis: "Package bar",
-			HTML:     html("Bar returns the string &#34;bar&#34;."),
 			GOOS:     "linux",
 			GOARCH:   "amd64",
 		},

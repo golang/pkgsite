@@ -65,7 +65,6 @@ func moduleUnits(modulePath, version string,
 				GOOS:     pkg.goos,
 				GOARCH:   pkg.goarch,
 				Synopsis: pkg.synopsis,
-				HTML:     pkg.documentationHTML,
 				Source:   pkg.source,
 			}
 		}

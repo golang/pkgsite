@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/google/safehtml"
+	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
@@ -239,13 +240,15 @@ func getSubdirectories(um *internal.UnitMeta, pkgs []*internal.PackageMeta) []*S
 	return sdirs
 }
 
+const missingDocReplacement = `<p>Documentation is missing.</p>`
+
 func getHTML(ctx context.Context, u *internal.Unit, docPkg *godoc.Package) (body, outline, mobileOutline safehtml.HTML, err error) {
 	defer derrors.Wrap(&err, "getHTML(%s)", u.Path)
 
 	if len(u.Documentation.Source) > 0 {
 		return renderDocParts(ctx, u, docPkg)
 	}
-	return godoc.ParseDoc(ctx, u.Documentation.HTML)
+	return template.MustParseAndExecuteToHTML(missingDocReplacement), safehtml.HTML{}, safehtml.HTML{}, nil
 }
 
 // getImportedByCount fetches the imported by count for the unit and returns a

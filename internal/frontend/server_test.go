@@ -16,7 +16,6 @@ import (
 	"time"
 
 	"github.com/google/safehtml/template"
-	"github.com/google/safehtml/testconversions"
 	"golang.org/x/net/html"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/experiment"
@@ -185,7 +184,6 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 					if pkg.name != "" {
 						u.Name = pkg.name
 					}
-					u.Documentation.HTML = testconversions.MakeHTMLForTest(pkg.doc)
 					if pkg.readmeContents != "" {
 						u.Readme = &internal.Readme{
 							Contents: pkg.readmeContents,

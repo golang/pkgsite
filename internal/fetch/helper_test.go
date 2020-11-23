@@ -7,6 +7,7 @@ package fetch
 import (
 	"archive/zip"
 	"context"
+	"errors"
 	"net/http"
 	"os"
 	"sort"
@@ -14,9 +15,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/proxy"
@@ -218,32 +219,45 @@ func sortFetchResult(fr *FetchResult) {
 	}
 }
 
-// validateDocumentationHTML checks that the doc HTML contains a set of
-// substrings. The desired strings consist of the "want" module's documentation
-// fields, with multiple substrings separated by '~'.
-func validateDocumentationHTML(t *testing.T, got, want *internal.Module) {
-	t.Helper()
-	defer func() {
-		if r := recover(); r != nil {
-			t.Fatalf("Recovered in checkDocumentationHTML: %v \n; diff = %s", r, cmp.Diff(want, got))
-		}
-	}()
-
-	checkHTML := func(msg string, i int, hGot, hWant safehtml.HTML) {
-		t.Helper()
-		got := hGot.String()
-		// Treat the wanted DocumentationHTML as a set of substrings to look for, separated by ~.
-		for _, want := range strings.Split(hWant.String(), "~") {
-			want = strings.TrimSpace(want)
-			if !strings.Contains(got, want) {
-				t.Errorf("doc for %s[%d]:\nmissing %q; got\n%q", msg, i, want, got)
+// validateDocumentationHTML checks that the doc HTMLs for units in the module
+// contain a set of substrings.
+func validateDocumentationHTML(t *testing.T, got *internal.Module, want map[string][]string) {
+	ctx := context.Background()
+	for _, u := range got.Units {
+		if wantStrings := want[u.Path]; wantStrings != nil {
+			gotDoc, err := renderDocBody(ctx, u)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, w := range wantStrings {
+				if !strings.Contains(gotDoc, w) {
+					t.Errorf("doc for %s:\nmissing %q; got\n%q", u.Path, w, gotDoc)
+				}
 			}
 		}
 	}
-	for i := 0; i < len(want.Units); i++ {
-		if !want.Units[i].IsPackage() {
-			continue
-		}
-		checkHTML("Directories", i, got.Units[i].Documentation.HTML, want.Units[i].Documentation.HTML)
+}
+
+func renderDocBody(ctx context.Context, u *internal.Unit) (string, error) {
+	docPkg, err := godoc.DecodePackage(u.Documentation.Source)
+	if err != nil {
+		return "", err
 	}
+	modInfo := &godoc.ModuleInfo{
+		ModulePath:      u.ModulePath,
+		ResolvedVersion: u.Version,
+		ModulePackages:  nil, // will be provided by docPkg
+	}
+	var innerPath string
+	if u.ModulePath == stdlib.ModulePath {
+		innerPath = u.Path
+	} else if u.Path != u.ModulePath {
+		innerPath = u.Path[len(u.ModulePath)+1:]
+	}
+	ctx = experiment.NewContext(ctx, internal.ExperimentUnitPage)
+	body, _, _, err := docPkg.RenderParts(ctx, innerPath, u.SourceInfo, modInfo)
+	if err != nil && !errors.Is(err, godoc.ErrTooLarge) {
+		return "", err
+	}
+	return body.String(), nil
 }

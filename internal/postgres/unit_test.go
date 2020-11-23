@@ -193,7 +193,6 @@ func checkUnit(ctx context.Context, t *testing.T, um *internal.UnitMeta, want *i
 	if experiment.IsActive(ctx, internal.ExperimentGetUnitWithOneQuery) {
 		want.NumImports = len(want.Imports)
 		opts = append(opts,
-			cmpopts.IgnoreFields(internal.Documentation{}, "HTML"),
 			cmpopts.IgnoreFields(internal.Unit{}, "Imports"),
 			cmpopts.IgnoreFields(internal.Unit{}, "LicenseContents"),
 		)

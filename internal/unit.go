@@ -7,7 +7,6 @@ package internal
 import (
 	"time"
 
-	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
 )
@@ -67,7 +66,6 @@ type Documentation struct {
 	GOOS     string
 	GOARCH   string
 	Synopsis string
-	HTML     safehtml.HTML
 	Source   []byte // encoded ast.Files; see godoc.Package.Encode
 }
 

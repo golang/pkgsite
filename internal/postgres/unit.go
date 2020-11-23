@@ -225,15 +225,13 @@ func (db *DB) getDocumentation(ctx context.Context, unitID int) (_ *internal.Doc
 	defer derrors.Wrap(&err, "getDocumentation(ctx, %d)", unitID)
 	defer middleware.ElapsedStat(ctx, "getDocumentation")()
 	var (
-		doc     internal.Documentation
-		docHTML string
+		doc internal.Documentation
 	)
 	err = db.db.QueryRow(ctx, `
 		SELECT
 			d.goos,
 			d.goarch,
 			d.synopsis,
-			d.html,
 			d.source
 		FROM documentation d
 		WHERE
@@ -241,14 +239,12 @@ func (db *DB) getDocumentation(ctx context.Context, unitID int) (_ *internal.Doc
 		database.NullIsEmpty(&doc.GOOS),
 		database.NullIsEmpty(&doc.GOARCH),
 		database.NullIsEmpty(&doc.Synopsis),
-		database.NullIsEmpty(&docHTML),
 		&doc.Source,
 	)
 	switch err {
 	case sql.ErrNoRows:
 		return nil, derrors.NotFound
 	case nil:
-		doc.HTML = convertDocumentation(docHTML)
 		return &doc, nil
 	default:
 		return nil, err

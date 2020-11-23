@@ -92,7 +92,6 @@ var (
 		HasGoMod:          true,
 	}
 	cmpOpts = append([]cmp.Option{
-		cmpopts.IgnoreFields(internal.Documentation{}, "HTML"),
 		cmpopts.IgnoreFields(licenses.License{}, "Contents"),
 	}, sample.LicenseCmpOpts...)
 )
