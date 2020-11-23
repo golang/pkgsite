@@ -15,6 +15,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/testconversions"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
 
@@ -59,7 +61,7 @@ The Go Project
 
 Go is an open source project.`,
 			want: `<p>Documentation.
-</p><h3 id="hdr-The_Go_Project">The Go Project<a href="#hdr-The_Go_Project">¶</a></h3>
+</p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project">¶</a></h4>
   <p>Go is an open source project.
 </p>`,
 		},
@@ -103,7 +105,7 @@ TLSUnique contains the tls-unique channel binding value (see RFC
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			r := New(context.Background(), nil, pkgTime, nil)
+			r := New(experiment.NewContext(context.Background(), internal.ExperimentUnitPage), nil, pkgTime, nil)
 			got := r.declHTML(test.doc, nil).Doc
 			want := testconversions.MakeHTMLForTest(test.want)
 			if diff := cmp.Diff(want, got, cmp.AllowUnexported(safehtml.HTML{})); diff != "" {
@@ -280,7 +282,7 @@ b := 1
 `,
 		},
 	} {
-		out := codeHTML(test.in, legacyExampleTmpl)
+		out := codeHTML(test.in, exampleTmpl)
 		got := strings.TrimSpace(string(out.String()))
 		want := strings.TrimSpace(test.want)
 		if got != want {
