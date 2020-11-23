@@ -161,16 +161,9 @@ func TestGetUnit(t *testing.T) {
 				test.want.IsRedistributable,
 			)
 			t.Run("unit page with one query", func(t *testing.T) {
-				checkUnit(ctx, t, um, test.want, internal.ExperimentUnitPage, internal.ExperimentGetUnitWithOneQuery)
-			})
-			t.Run("unit page", func(t *testing.T) {
-				checkUnit(ctx, t, um, test.want, internal.ExperimentUnitPage)
+				checkUnit(ctx, t, um, test.want, internal.ExperimentGetUnitWithOneQuery)
 			})
 			t.Run("no experiments", func(t *testing.T) {
-				test.want.Readme = &internal.Readme{
-					Filepath: sample.ReadmeFilePath,
-					Contents: sample.ReadmeContents,
-				}
 				checkUnit(ctx, t, um, test.want)
 			})
 		})
@@ -208,8 +201,13 @@ func TestGetUnitFieldSet(t *testing.T) {
 
 	defer ResetTestDB(testDB, t)
 
+	readme := &internal.Readme{
+		Filepath: "a.com/m/dir/p/README.md",
+		Contents: "readme",
+	}
 	// Add a module that has READMEs in a directory and a package.
 	m := sample.Module("a.com/m", "v1.2.3", "dir/p")
+	m.Packages()[0].Readme = readme
 	if err := testDB.InsertModule(ctx, m); err != nil {
 		t.Fatal(err)
 	}
@@ -218,6 +216,9 @@ func TestGetUnitFieldSet(t *testing.T) {
 		// Add/remove fields based on the FieldSet specified.
 		if fields&internal.WithDocumentation != 0 {
 			u.Documentation = sample.Documentation
+		}
+		if fields&internal.WithReadme != 0 {
+			u.Readme = readme
 		}
 		if fields&internal.WithImports != 0 {
 			u.Imports = sample.Imports
@@ -252,10 +253,7 @@ func TestGetUnitFieldSet(t *testing.T) {
 			name:   "WithReadme",
 			fields: internal.WithReadme,
 			want: unit("a.com/m/dir/p", "a.com/m", "v1.2.3", "",
-				&internal.Readme{
-					Filepath: "README.md",
-					Contents: "readme",
-				}, []string{}),
+				readme, []string{}),
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {

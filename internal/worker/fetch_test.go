@@ -67,10 +67,10 @@ func TestFetchAndUpdateState(t *testing.T) {
 		{
 			ModulePath: "github.com/my/module",
 			Files: map[string]string{
-				"go.mod":      "module github.com/my/module\n\ngo 1.12",
-				"LICENSE":     testhelper.BSD0License,
-				"README.md":   "README FILE FOR TESTING.",
-				"bar/LICENSE": testhelper.MITLicense,
+				"go.mod":        "module github.com/my/module\n\ngo 1.12",
+				"LICENSE":       testhelper.BSD0License,
+				"bar/README.md": "README FILE FOR TESTING.",
+				"bar/LICENSE":   testhelper.MITLicense,
 				"bar/bar.go": `
 					// package bar
 					package bar
@@ -162,7 +162,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 			GOARCH:   "amd64",
 		},
 		Readme: &internal.Readme{
-			Filepath: "README.md",
+			Filepath: "bar/README.md",
 			Contents: "README FILE FOR TESTING.",
 		},
 	}
@@ -214,10 +214,6 @@ func TestFetchAndUpdateState(t *testing.T) {
 					GOOS:     "linux",
 					GOARCH:   "amd64",
 				},
-				Readme: &internal.Readme{
-					Filepath: "README.md",
-					Contents: "README FILE FOR TESTING.",
-				},
 			},
 			wantDoc: []string{"Baz returns the string &#34;baz&#34;."},
 		}, {
@@ -264,10 +260,6 @@ func TestFetchAndUpdateState(t *testing.T) {
 					GOOS:     "linux",
 					GOARCH:   "amd64",
 				},
-				Readme: &internal.Readme{
-					Filepath: "README.md",
-					Contents: "# The Go Programming Language\n",
-				},
 			},
 			wantDoc: []string{"This example demonstrates the use of a cancelable context to prevent a\ngoroutine leak."},
 		}, {
@@ -295,10 +287,6 @@ func TestFetchAndUpdateState(t *testing.T) {
 					GOOS:     "linux",
 					GOARCH:   "amd64",
 				},
-				Readme: &internal.Readme{
-					Filepath: "README.md",
-					Contents: "# The Go Programming Language\n",
-				},
 			},
 			wantDoc: []string{"int64 is the set of all signed 64-bit integers."},
 		}, {
@@ -325,10 +313,6 @@ func TestFetchAndUpdateState(t *testing.T) {
 					Synopsis: "Package json implements encoding and decoding of JSON as defined in RFC 7159.",
 					GOOS:     "linux",
 					GOARCH:   "amd64",
-				},
-				Readme: &internal.Readme{
-					Filepath: "README.md",
-					Contents: "# The Go Programming Language\n",
 				},
 			},
 			wantDoc: []string{

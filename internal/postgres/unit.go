@@ -130,9 +130,8 @@ const orderByLatestStmt = `
 				m.sort_version DESC,
 				m.module_path DESC`
 
-// GetUnit returns a unit from the database, along with all of the
-// data associated with that unit.
-// TODO(golang/go#39629): remove pID.
+// GetUnit returns a unit from the database, along with all of the data
+// associated with that unit.
 func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields internal.FieldSet) (_ *internal.Unit, err error) {
 	defer derrors.Wrap(&err, "GetUnit(ctx, %q, %q, %q)", um.Path, um.ModulePath, um.Version)
 	if experiment.IsActive(ctx, internal.ExperimentGetUnitWithOneQuery) && fields&internal.WithDocumentation|fields&internal.WithReadme != 0 {
@@ -147,12 +146,7 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 
 	u := &internal.Unit{UnitMeta: *um}
 	if fields&internal.WithReadme != 0 {
-		var readme *internal.Readme
-		if experiment.IsActive(ctx, internal.ExperimentUnitPage) {
-			readme, err = db.getReadme(ctx, unitID)
-		} else {
-			readme, err = db.getModuleReadme(ctx, u.ModulePath, u.Version)
-		}
+		readme, err := db.getReadme(ctx, unitID)
 		if err != nil && !errors.Is(err, derrors.NotFound) {
 			return nil, err
 		}
@@ -260,31 +254,6 @@ func (db *DB) getReadme(ctx context.Context, unitID int) (_ *internal.Readme, er
 		SELECT file_path, contents
 		FROM readmes
 		WHERE unit_id=$1;`, unitID).Scan(&readme.Filepath, &readme.Contents)
-	switch err {
-	case sql.ErrNoRows:
-		return nil, derrors.NotFound
-	case nil:
-		return &readme, nil
-	default:
-		return nil, err
-	}
-}
-
-// getModuleReadme returns the README corresponding to the modulePath and version.
-func (db *DB) getModuleReadme(ctx context.Context, modulePath, resolvedVersion string) (_ *internal.Readme, err error) {
-	defer derrors.Wrap(&err, "getModuleReadme(ctx, %q, %q)", modulePath, resolvedVersion)
-	var readme internal.Readme
-	err = db.db.QueryRow(ctx, `
-		SELECT file_path, contents
-		FROM modules m
-		INNER JOIN units u
-		ON u.module_id = m.id
-		INNER JOIN readmes r
-		ON u.id = r.unit_id
-		WHERE
-		    m.module_path=$1
-			AND m.version=$2
-			AND m.module_path=u.path`, modulePath, resolvedVersion).Scan(&readme.Filepath, &readme.Contents)
 	switch err {
 	case sql.ErrNoRows:
 		return nil, derrors.NotFound

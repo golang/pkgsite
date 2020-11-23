@@ -42,10 +42,10 @@ func TestReFetch(t *testing.T) {
 		}
 		pkgBar = sample.ModulePath + "/bar"
 		foobar = map[string]string{
-			"foo/foo.go": "// Package foo\npackage foo\n\nconst Foo = 42",
-			"README.md":  "This is a readme",
-			"LICENSE":    testhelper.MITLicense,
-			"bar/bar.go": "// Package bar\npackage bar\n\nconst Bar = 21",
+			"LICENSE":       testhelper.MITLicense,
+			"bar/README.md": "This is a readme",
+			"bar/bar.go":    "// Package bar\npackage bar\n\nconst Bar = 21",
+			"foo/foo.go":    "// Package foo\npackage foo\n\nconst Foo = 42",
 		}
 	)
 
@@ -95,7 +95,7 @@ func TestReFetch(t *testing.T) {
 			},
 		},
 		Readme: &internal.Readme{
-			Filepath: "README.md",
+			Filepath: "bar/README.md",
 			Contents: "This is a readme",
 		},
 		Documentation: &internal.Documentation{

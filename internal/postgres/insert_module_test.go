@@ -86,12 +86,6 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		// TODO(golang/go#38513): remove once we start displaying
-		// READMEs for directories instead of the top-level module.
-		wantu.Readme = &internal.Readme{
-			Filepath: sample.ReadmeFilePath,
-			Contents: sample.ReadmeContents,
-		}
 		wantu.LicenseContents = sample.Licenses
 		var subdirectories []*internal.PackageMeta
 		for _, u := range want.Units {
@@ -172,9 +166,7 @@ func TestUpsertModule(t *testing.T) {
 	// Change the module, and re-insert.
 	m.IsRedistributable = !m.IsRedistributable
 	m.Licenses[0].Contents = append(m.Licenses[0].Contents, " and more"...)
-	// TODO(golang/go#38513): uncomment line below once we start displaying
-	// READMEs for directories instead of the top-level module.
-	// m.Units[0].Readme.Contents += " and more"
+	m.Units[0].Readme.Contents += " and more"
 
 	if err := testDB.InsertModule(ctx, m); err != nil {
 		t.Fatal(err)
