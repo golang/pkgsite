@@ -49,6 +49,11 @@ if (readme && readmeContent && readmeOutline && readmeExpand.length && readmeCol
   readmeOutline.addEventListener('click', e => {
     readme.classList.add('UnitReadme--expanded');
   });
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+      readme.classList.add('UnitReadme--expanded');
+    }
+  });
 }
 
 /**
