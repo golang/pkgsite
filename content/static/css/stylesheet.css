@@ -283,11 +283,11 @@ pre {
 }
 .Header-menuItem--active a:link,
 .Header-menuItem--active a:visited {
-  border-top-color: var(--turq-med);
+  border-bottom-color: var(--turq-med);
   font-weight: bold;
 }
 .Header-menuItem a:hover {
-  border-top-color: var(--pink);
+  border-bottom-color: var(--white);
 }
 .Header-navOpen {
   background: no-repeat center/2rem url('/static/img/menu-24px-white.svg');
