@@ -300,18 +300,21 @@ func init() {
 	}
 }
 
-var zipLoadShedder = loadShedder{maxSizeInFlight: math.MaxUint64}
+var zipLoadShedder *loadShedder
 
 func init() {
 	ctx := context.Background()
 	mebis := config.GetEnvInt("GO_DISCOVERY_MAX_IN_FLIGHT_ZIP_MI", -1)
 	if mebis > 0 {
 		log.Infof(ctx, "shedding load over %dMi", mebis)
-		zipLoadShedder.maxSizeInFlight = uint64(mebis) * mib
+		zipLoadShedder = &loadShedder{maxSizeInFlight: uint64(mebis) * mib}
 	}
 }
 
 // ZipLoadShedStats returns a snapshot of the current LoadShedStats for zip files.
 func ZipLoadShedStats() LoadShedStats {
-	return zipLoadShedder.stats()
+	if zipLoadShedder != nil {
+		return zipLoadShedder.stats()
+	}
+	return LoadShedStats{}
 }

@@ -159,37 +159,38 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 		}
 		fr.ResolvedVersion = info.Version
 		commitTime = info.Time
-		zipSize, err = proxyClient.GetZipSize(ctx, modulePath, fr.ResolvedVersion)
-		if err != nil {
-			fr.Error = err
-			return fr
+		if zipLoadShedder != nil {
+			zipSize, err = proxyClient.GetZipSize(ctx, modulePath, fr.ResolvedVersion)
+			if err != nil {
+				fr.Error = err
+				return fr
+			}
 		}
 	}
-
-	// Load shed or mark module as too large.
-	// We treat zip size
-	// as a proxy for the total memory consumed by processing a module, and use
-	// it to decide whether we can currently afford to process a module.
-	shouldShed, deferFunc := zipLoadShedder.shouldShed(uint64(zipSize))
-	fr.Defer = deferFunc
-	if shouldShed {
-		fr.Error = fmt.Errorf("%w: size=%dMi", derrors.SheddingLoad, zipSize/mib)
-		stats.Record(ctx, fetchesShedded.M(1))
-		return fr
-	}
-
-	if zipSize > maxModuleZipSize {
-		log.Warningf(ctx, "FetchModule: %s@%s zip size %dMi exceeds max %dMi",
-			modulePath, fr.ResolvedVersion, zipSize/mib, maxModuleZipSize/mib)
-		fr.Error = derrors.ModuleTooLarge
-		return fr
+	if zipLoadShedder != nil {
+		// Load shed or mark module as too large.
+		// We treat zip size as a proxy for the total memory consumed by
+		// processing a module, and use it to decide whether we can currently
+		// afford to process a module.
+		shouldShed, deferFunc := zipLoadShedder.shouldShed(uint64(zipSize))
+		fr.Defer = deferFunc
+		if shouldShed {
+			fr.Error = fmt.Errorf("%w: size=%dMi", derrors.SheddingLoad, zipSize/mib)
+			stats.Record(ctx, fetchesShedded.M(1))
+			return fr
+		}
+		if zipSize > maxModuleZipSize {
+			log.Warningf(ctx, "FetchModule: %s@%s zip size %dMi exceeds max %dMi",
+				modulePath, fr.ResolvedVersion, zipSize/mib, maxModuleZipSize/mib)
+			fr.Error = derrors.ModuleTooLarge
+			return fr
+		}
 	}
 
 	// Proceed with the fetch.
 	fi = &FetchInfo{
 		ModulePath: modulePath,
 		Version:    fr.ResolvedVersion,
-		ZipSize:    uint64(zipSize),
 		Start:      time.Now(),
 	}
 	startFetchInfo(fi)
@@ -306,7 +307,6 @@ func zipContainsFilename(r *zip.Reader, name string) bool {
 type FetchInfo struct {
 	ModulePath string
 	Version    string
-	ZipSize    uint64
 	Start      time.Time
 	Finish     time.Time
 	Status     int
