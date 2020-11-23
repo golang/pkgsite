@@ -64,7 +64,7 @@ func TestFrontendDocRender(t *testing.T) {
 		t, []*proxy.Module{m})
 
 	workerDoc := getDoc(t, m.ModulePath)
-	frontendDoc := getDoc(t, m.ModulePath, internal.ExperimentUnitPage, internal.ExperimentFrontendRenderDoc)
+	frontendDoc := getDoc(t, m.ModulePath, internal.ExperimentUnitPage)
 	if diff := cmp.Diff(workerDoc, frontendDoc); diff != "" {
 		t.Errorf("mismatch (-worker, +frontend):\n%s", diff)
 	}

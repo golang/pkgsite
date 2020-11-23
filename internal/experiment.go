@@ -8,7 +8,6 @@ package internal
 const (
 	ExperimentAutocomplete        = "autocomplete"
 	ExperimentFasterDecoding      = "faster-decoding"
-	ExperimentFrontendRenderDoc   = "frontend-render-doc"
 	ExperimentGetUnitWithOneQuery = "get-unit-with-one-query"
 	ExperimentGoldmark            = "goldmark"
 	ExperimentReadmeOutline       = "readme-outline"
@@ -21,7 +20,6 @@ const (
 var Experiments = map[string]string{
 	ExperimentAutocomplete:        "Enable autocomplete with search.",
 	ExperimentFasterDecoding:      "Decode ASTs faster.",
-	ExperimentFrontendRenderDoc:   "Render documentation on the frontend if possible.",
 	ExperimentGetUnitWithOneQuery: "Fetch data for GetUnit using a single query.",
 	ExperimentGoldmark:            "Enable the usage of rendering markdown using goldmark instead of blackfriday.",
 	ExperimentReadmeOutline:       "Enable the readme outline in the side nav.",

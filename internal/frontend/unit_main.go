@@ -242,7 +242,7 @@ func getSubdirectories(um *internal.UnitMeta, pkgs []*internal.PackageMeta) []*S
 func getHTML(ctx context.Context, u *internal.Unit, docPkg *godoc.Package) (body, outline, mobileOutline safehtml.HTML, err error) {
 	defer derrors.Wrap(&err, "getHTML(%s)", u.Path)
 
-	if experiment.IsActive(ctx, internal.ExperimentFrontendRenderDoc) && len(u.Documentation.Source) > 0 {
+	if len(u.Documentation.Source) > 0 {
 		return renderDocParts(ctx, u, docPkg)
 	}
 	return godoc.ParseDoc(ctx, u.Documentation.HTML)
