@@ -15,8 +15,6 @@ import (
 
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
-	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
 
@@ -139,20 +137,14 @@ func New(ctx context.Context, fset *token.FileSet, pkg *doc.Package, opts *Optio
 	}
 	pids := newPackageIDs(pkg, others...)
 
-	d := legacyDocDataTmpl
-	e := legacyExampleTmpl
-	if experiment.IsActive(ctx, internal.ExperimentUnitPage) {
-		d = docDataTmpl
-		e = exampleTmpl
-	}
 	return &Renderer{
 		fset:              fset,
 		pids:              pids,
 		packageURL:        packageURL,
 		disableHotlinking: disableHotlinking,
 		disablePermalinks: disablePermalinks,
-		docTmpl:           d,
-		exampleTmpl:       e,
+		docTmpl:           docDataTmpl,
+		exampleTmpl:       exampleTmpl,
 	}
 }
 

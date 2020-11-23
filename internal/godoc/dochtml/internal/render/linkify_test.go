@@ -15,8 +15,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/testconversions"
-	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
 
@@ -105,7 +103,7 @@ TLSUnique contains the tls-unique channel binding value (see RFC
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			r := New(experiment.NewContext(context.Background(), internal.ExperimentUnitPage), nil, pkgTime, nil)
+			r := New(context.Background(), nil, pkgTime, nil)
 			got := r.declHTML(test.doc, nil).Doc
 			want := testconversions.MakeHTMLForTest(test.want)
 			if diff := cmp.Diff(want, got, cmp.AllowUnexported(safehtml.HTML{})); diff != "" {

@@ -16,7 +16,6 @@ import (
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 	"golang.org/x/pkgsite/internal/source"
@@ -196,6 +195,5 @@ func RenderPartsFromUnit(ctx context.Context, u *internal.Unit) (body, outline, 
 	} else if u.Path != u.ModulePath {
 		innerPath = u.Path[len(u.ModulePath)+1:]
 	}
-	ctx = experiment.NewContext(ctx, internal.ExperimentUnitPage)
 	return docPkg.RenderParts(ctx, innerPath, u.SourceInfo, modInfo)
 }

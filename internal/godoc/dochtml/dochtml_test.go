@@ -19,8 +19,6 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/safehtml/template"
 	"golang.org/x/net/html"
-	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
 )
@@ -30,57 +28,8 @@ var templateSource = template.TrustedSourceFromConstant("../../../content/static
 func TestRender(t *testing.T) {
 	LoadTemplates(templateSource)
 	fset, d := mustLoadPackage("everydecl")
+
 	rawDoc, err := Render(context.Background(), fset, d, RenderOptions{
-		FileLinkFunc:   func(string) string { return "file" },
-		SourceLinkFunc: func(ast.Node) string { return "src" },
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	htmlDoc, err := html.Parse(strings.NewReader(rawDoc.String()))
-	if err != nil {
-		t.Fatal(err)
-	}
-	// Check that there are no duplicate id attributes.
-	t.Run("duplicate ids", func(t *testing.T) {
-		testDuplicateIDs(t, htmlDoc)
-	})
-	t.Run("ids-and-kinds", func(t *testing.T) {
-		// Check that the id and data-kind labels are right.
-		testIDsAndKinds(t, htmlDoc)
-	})
-
-	checker := htmlcheck.In(".Documentation-note",
-		htmlcheck.In("h2", htmlcheck.HasAttr("id", "pkg-note-BUG"), htmlcheck.HasExactText("Bugs ¶")),
-		htmlcheck.In("a", htmlcheck.HasHref("#pkg-note-BUG")))
-	if err := checker(htmlDoc); err != nil {
-		t.Errorf("note check: %v", err)
-	}
-
-	checker = htmlcheck.In(".Documentation-index",
-		htmlcheck.In(".Documentation-indexNote", htmlcheck.In("a", htmlcheck.HasHref("#pkg-note-BUG"), htmlcheck.HasExactText("Bugs"))))
-	if err := checker(htmlDoc); err != nil {
-		t.Errorf("note check: %v", err)
-	}
-
-	checker = htmlcheck.In(".DocNav-notes",
-		htmlcheck.In("#nav-group-notes", htmlcheck.In("li", htmlcheck.In("a", htmlcheck.HasHref("#pkg-note-BUG"), htmlcheck.HasExactText("Bugs")))))
-	if err := checker(htmlDoc); err != nil {
-		t.Errorf("note check: %v", err)
-	}
-
-	checker = htmlcheck.In("#DocNavMobile-select",
-		htmlcheck.In("optgroup[label=Notes]", htmlcheck.In("option", htmlcheck.HasAttr("value", "pkg-note-BUG"), htmlcheck.HasExactText("Bugs"))))
-	if err := checker(htmlDoc); err != nil {
-		t.Errorf("note check: %v", err)
-	}
-}
-
-func TestRenderExperimental(t *testing.T) {
-	LoadTemplates(templateSource)
-	fset, d := mustLoadPackage("everydecl")
-
-	rawDoc, err := Render(experiment.NewContext(context.Background(), internal.ExperimentUnitPage), fset, d, RenderOptions{
 		FileLinkFunc:   func(string) string { return "file" },
 		SourceLinkFunc: func(ast.Node) string { return "src" },
 	})
@@ -131,7 +80,7 @@ func TestRenderParts(t *testing.T) {
 	LoadTemplates(templateSource)
 	fset, d := mustLoadPackage("everydecl")
 
-	ctx := experiment.NewContext(context.Background(), internal.ExperimentUnitPage)
+	ctx := context.Background()
 	body, sidenav, mobile, err := RenderParts(ctx, fset, d, RenderOptions{
 		FileLinkFunc:   func(string) string { return "file" },
 		SourceLinkFunc: func(ast.Node) string { return "src" },

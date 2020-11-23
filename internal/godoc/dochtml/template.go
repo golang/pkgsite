@@ -5,20 +5,20 @@
 package dochtml
 
 import (
-	"context"
 	"reflect"
 	"sync"
 
 	"github.com/google/safehtml/template"
-	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
 
 var (
-	loadOnce                     sync.Once
-	unitTemplate, legacyTemplate *template.Template
+	loadOnce sync.Once
+
+	// TODO(golang.org/issue/5060): finalize URL scheme and design for notes,
+	// then it becomes more viable to factor out inline CSS style.
+	unitTemplate *template.Template
 )
 
 // LoadTemplates reads and parses the templates used to generate documentation.
@@ -28,9 +28,6 @@ func LoadTemplates(dir template.TrustedSource) {
 		tc := template.TrustedSourceFromConstant
 
 		example := join(dir, tc("example.tmpl"))
-		legacyTemplate = template.Must(template.New("legacy.tmpl").
-			Funcs(tmpl).
-			ParseFilesFromTrustedSources(join(dir, tc("legacy.tmpl")), example))
 		unitTemplate = template.Must(template.New("unit.tmpl").
 			Funcs(tmpl).
 			ParseFilesFromTrustedSources(
@@ -41,19 +38,6 @@ func LoadTemplates(dir template.TrustedSource) {
 				join(dir, tc("body.tmpl")),
 				example))
 	})
-}
-
-// htmlPackage returns the template used to render documentation HTML.
-// TODO(golang.org/issue/5060): finalize URL scheme and design for notes,
-// then it becomes more viable to factor out inline CSS style.
-func htmlPackage(ctx context.Context) *template.Template {
-	if unitTemplate == nil || legacyTemplate == nil {
-		panic("dochtml.LoadTemplates never called")
-	}
-	if experiment.IsActive(ctx, internal.ExperimentUnitPage) {
-		return unitTemplate
-	}
-	return legacyTemplate
 }
 
 var tmpl = map[string]interface{}{

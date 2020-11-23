@@ -85,19 +85,15 @@ func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Render
 
 	funcs, data := renderInfo(ctx, fset, p, opt)
 	p = data.Package
-	if experiment.IsActive(ctx, internal.ExperimentUnitPage) {
-		if p.Doc == "" &&
-			len(p.Examples) == 0 &&
-			len(p.Consts) == 0 &&
-			len(p.Vars) == 0 &&
-			len(p.Types) == 0 &&
-			len(p.Funcs) == 0 {
-			return safehtml.HTML{}, nil
-		}
+	if p.Doc == "" &&
+		len(p.Examples) == 0 &&
+		len(p.Consts) == 0 &&
+		len(p.Vars) == 0 &&
+		len(p.Types) == 0 &&
+		len(p.Funcs) == 0 {
+		return safehtml.HTML{}, nil
 	}
-
-	h := htmlPackage(ctx)
-	tmpl := template.Must(h.Clone()).Funcs(funcs)
+	tmpl := template.Must(unitTemplate.Clone()).Funcs(funcs)
 	return executeToHTMLWithLimit(tmpl, data, opt.Limit)
 }
 
@@ -108,10 +104,6 @@ func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Render
 // an error with ErrTooLarge in its chain will be returned.
 func RenderParts(ctx context.Context, fset *token.FileSet, p *doc.Package, opt RenderOptions) (body, outline, mobileOutline safehtml.HTML, err error) {
 	defer derrors.Wrap(&err, "dochtml.RenderParts")
-
-	if !experiment.IsActive(ctx, internal.ExperimentUnitPage) {
-		return safehtml.HTML{}, safehtml.HTML{}, safehtml.HTML{}, errors.New("should only be called if the unit-page experiment is active")
-	}
 
 	if opt.Limit == 0 {
 		const megabyte = 1000 * 1000
@@ -128,8 +120,7 @@ func RenderParts(ctx context.Context, fset *token.FileSet, p *doc.Package, opt R
 		len(p.Funcs) == 0 {
 		return safehtml.HTML{}, safehtml.HTML{}, safehtml.HTML{}, nil
 	}
-	h := htmlPackage(ctx)
-	tmpl := template.Must(h.Clone()).Funcs(funcs)
+	tmpl := template.Must(unitTemplate.Clone()).Funcs(funcs)
 
 	exec := func(name string) safehtml.HTML {
 		if err != nil {
