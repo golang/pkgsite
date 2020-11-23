@@ -13,8 +13,9 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/google/safehtml/testconversions"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
@@ -52,8 +53,6 @@ var buildConstraintsMod = &proxy.Module{
 		"ignore/ignore.go": "// +build ignore\n\npackage ignore",
 	},
 }
-
-var html = testconversions.MakeHTMLForTest
 
 func TestFetchAndUpdateState(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
@@ -160,7 +159,6 @@ func TestFetchAndUpdateState(t *testing.T) {
 		},
 		Documentation: &internal.Documentation{
 			Synopsis: "package bar",
-			HTML:     html("Bar returns the string &#34;bar&#34;."),
 			GOOS:     "linux",
 			GOARCH:   "amd64",
 		},
@@ -175,7 +173,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 		version     string
 		pkg         string
 		want        *internal.Unit
-		moreWantDoc []string // Additional substrings we expect to see in DocumentationHTML.
+		wantDoc     []string // Substrings we expect to see in DocumentationHTML.
 		dontWantDoc []string // Substrings we expect not to see in DocumentationHTML.
 	}{
 		{
@@ -183,6 +181,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 			version:    sample.VersionString,
 			pkg:        "github.com/my/module/bar",
 			want:       myModuleV100,
+			wantDoc:    []string{"Bar returns the string &#34;bar&#34;."},
 		},
 		{
 			modulePath: "github.com/my/module",
@@ -213,7 +212,6 @@ func TestFetchAndUpdateState(t *testing.T) {
 				},
 				Documentation: &internal.Documentation{
 					Synopsis: "package baz",
-					HTML:     html("Baz returns the string &#34;baz&#34;."),
 					GOOS:     "linux",
 					GOARCH:   "amd64",
 				},
@@ -222,6 +220,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 					Contents: "README FILE FOR TESTING.",
 				},
 			},
+			wantDoc: []string{"Baz returns the string &#34;baz&#34;."},
 		}, {
 			modulePath: "nonredistributable.mod/module",
 			version:    sample.VersionString,
@@ -263,7 +262,6 @@ func TestFetchAndUpdateState(t *testing.T) {
 				},
 				Documentation: &internal.Documentation{
 					Synopsis: "Package context defines the Context type, which carries deadlines, cancelation signals, and other request-scoped values across API boundaries and between processes.",
-					HTML:     html("This example demonstrates the use of a cancelable context to prevent a\ngoroutine leak."),
 					GOOS:     "linux",
 					GOARCH:   "amd64",
 				},
@@ -272,6 +270,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 					Contents: "# The Go Programming Language\n",
 				},
 			},
+			wantDoc: []string{"This example demonstrates the use of a cancelable context to prevent a\ngoroutine leak."},
 		}, {
 			modulePath: "std",
 			version:    "v1.12.5",
@@ -294,7 +293,6 @@ func TestFetchAndUpdateState(t *testing.T) {
 				},
 				Documentation: &internal.Documentation{
 					Synopsis: "Package builtin provides documentation for Go's predeclared identifiers.",
-					HTML:     html("int64 is the set of all signed 64-bit integers."),
 					GOOS:     "linux",
 					GOARCH:   "amd64",
 				},
@@ -303,6 +301,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 					Contents: "# The Go Programming Language\n",
 				},
 			},
+			wantDoc: []string{"int64 is the set of all signed 64-bit integers."},
 		}, {
 			modulePath: "std",
 			version:    "v1.12.5",
@@ -324,7 +323,6 @@ func TestFetchAndUpdateState(t *testing.T) {
 					},
 				},
 				Documentation: &internal.Documentation{
-					HTML:     html("The mapping between JSON and Go values is described\nin the documentation for the Marshal and Unmarshal functions."),
 					Synopsis: "Package json implements encoding and decoding of JSON as defined in RFC 7159.",
 					GOOS:     "linux",
 					GOARCH:   "amd64",
@@ -334,7 +332,8 @@ func TestFetchAndUpdateState(t *testing.T) {
 					Contents: "# The Go Programming Language\n",
 				},
 			},
-			moreWantDoc: []string{
+			wantDoc: []string{
+				"The mapping between JSON and Go values is described\nin the documentation for the Marshal and Unmarshal functions.",
 				"Example (CustomMarshalJSON)",
 				`<summary class="Documentation-exampleDetailsHeader">Example (CustomMarshalJSON) <a href="#example-package-CustomMarshalJSON">¶</a></summary>`,
 				"Package (CustomMarshalJSON)",
@@ -365,11 +364,11 @@ func TestFetchAndUpdateState(t *testing.T) {
 				},
 				Documentation: &internal.Documentation{
 					Synopsis: "Package cpu implements processor feature detection used by the Go standard library.",
-					HTML:     html("const CacheLinePadSize = 3"),
 					GOOS:     "linux",
 					GOARCH:   "amd64",
 				},
 			},
+			wantDoc: []string{"const CacheLinePadSize = 3"},
 			dontWantDoc: []string{
 				"const CacheLinePadSize = 1",
 				"const CacheLinePadSize = 2",
@@ -402,6 +401,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			if diff := cmp.Diff(test.want, gotPkg,
 				cmp.AllowUnexported(source.Info{}),
 				cmpopts.IgnoreFields(internal.Unit{}, "Documentation")); diff != "" {
@@ -413,21 +413,46 @@ func TestFetchAndUpdateState(t *testing.T) {
 				}
 				return
 			}
-
-			if !strings.Contains(gotPkg.Documentation.HTML.String(), test.want.Documentation.HTML.String()) {
-				t.Errorf("got documentation doesn't contain wanted documentation substring:\ngot: %q\nwant (substring): %q",
-					gotPkg.Documentation.HTML.String(), test.want.Documentation.HTML.String())
-			}
-			for _, want := range test.moreWantDoc {
-				if got := gotPkg.Documentation.HTML.String(); !strings.Contains(got, want) {
-					t.Errorf("got documentation doesn't contain wanted documentation substring:\ngot: %q\nwant (substring): %q", got, want)
+			if gotPkg.Documentation != nil {
+				gotDoc, err := renderDocBody(ctx, gotPkg)
+				if err != nil {
+					t.Fatal(err)
 				}
-			}
-			for _, dontWant := range test.dontWantDoc {
-				if got := gotPkg.Documentation.HTML.String(); strings.Contains(got, dontWant) {
-					t.Errorf("got documentation contains unwanted documentation substring:\ngot: %q\ndontWant (substring): %q", got, dontWant)
+				for _, want := range test.wantDoc {
+					if !strings.Contains(gotDoc, want) {
+						t.Errorf("got documentation doesn't contain wanted documentation substring:\ngot: %q\nwant (substring): %q", gotDoc, want)
+					}
+				}
+				for _, dontWant := range test.dontWantDoc {
+					if strings.Contains(gotDoc, dontWant) {
+						t.Errorf("got documentation contains unwanted documentation substring:\ngot: %q\ndontWant (substring): %q", gotDoc, dontWant)
+					}
 				}
 			}
 		})
 	}
+}
+
+func renderDocBody(ctx context.Context, u *internal.Unit) (string, error) {
+	docPkg, err := godoc.DecodePackage(u.Documentation.Source)
+	if err != nil {
+		return "", err
+	}
+	modInfo := &godoc.ModuleInfo{
+		ModulePath:      u.ModulePath,
+		ResolvedVersion: u.Version,
+		ModulePackages:  nil, // will be provided by docPkg
+	}
+	var innerPath string
+	if u.ModulePath == stdlib.ModulePath {
+		innerPath = u.Path
+	} else if u.Path != u.ModulePath {
+		innerPath = u.Path[len(u.ModulePath)+1:]
+	}
+	ctx = experiment.NewContext(ctx, internal.ExperimentUnitPage)
+	body, _, _, err := docPkg.RenderParts(ctx, innerPath, u.SourceInfo, modInfo)
+	if err != nil {
+		return "", err
+	}
+	return body.String(), nil
 }

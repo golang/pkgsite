@@ -16,13 +16,16 @@ import (
 	"log"
 	"os"
 
+	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal/godoc"
+	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
 func main() {
 	ctx := context.Background()
+	dochtml.LoadTemplates(template.TrustedSourceFromConstant("../../../content/static/html/doc"))
 	fset := token.NewFileSet()
 	pkgs, err := parser.ParseDir(fset, "../../godoc/testdata/p", nil, parser.ParseComments)
 	if err != nil {
@@ -75,7 +78,6 @@ var (
 		Synopsis: Synopsis,
 		GOOS:     GOOS,
 		GOARCH:   GOARCH,
-		HTML:     DocumentationHTML,
 		Source:   DocumentationSource,
 	}
 )

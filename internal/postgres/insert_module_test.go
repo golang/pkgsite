@@ -124,18 +124,15 @@ func TestInsertModuleLicenseCheck(t *testing.T) {
 			} else {
 				db = testDB
 			}
-			checkHasRedistData := func(readme string, doc safehtml.HTML, want bool) {
+			checkHasRedistData := func(readme string, want bool) {
 				t.Helper()
 				if got := readme != ""; got != want {
 					t.Errorf("readme: got %t, want %t", got, want)
 				}
-				if got := doc.String() != ""; got != want {
-					t.Errorf("doc: got %t, want %t", got, want)
-				}
 			}
 
 			mod := sample.Module(sample.ModulePath, sample.VersionString, "")
-			checkHasRedistData(mod.Units[0].Readme.Contents, mod.Units[0].Documentation.HTML, true)
+			checkHasRedistData(mod.Units[0].Readme.Contents, true)
 			mod.IsRedistributable = false
 			mod.Units[0].IsRedistributable = false
 
@@ -157,11 +154,7 @@ func TestInsertModuleLicenseCheck(t *testing.T) {
 			if u.Readme != nil {
 				readme = u.Readme.Contents
 			}
-			var doc safehtml.HTML
-			if u.Documentation != nil {
-				doc = u.Documentation.HTML
-			}
-			checkHasRedistData(readme, doc, bypass)
+			checkHasRedistData(readme, bypass)
 		})
 	}
 }

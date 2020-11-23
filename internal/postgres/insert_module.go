@@ -359,13 +359,8 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 		if u.Readme != nil {
 			pathToReadme[u.Path] = u.Readme
 		}
-		if u.Documentation != nil && u.Documentation.HTML.String() == internal.StringFieldMissing {
-			return errors.New("insertUnits: package missing Documentation.HTML")
-		}
-		if u.Documentation != nil {
-			if u.Documentation.Source == nil {
-				return fmt.Errorf("insertUnits: unit %q missing source files", u.Path)
-			}
+		if u.Documentation != nil && u.Documentation.Source == nil {
+			return fmt.Errorf("insertUnits: unit %q missing source files", u.Path)
 		}
 		pathToDoc[u.Path] = u.Documentation
 		if len(u.Imports) > 0 {
@@ -439,7 +434,7 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 				continue
 			}
 			unitID := pathToUnitID[path]
-			docValues = append(docValues, unitID, doc.GOOS, doc.GOARCH, doc.Synopsis, makeValidUnicode(doc.HTML.String()), doc.Source)
+			docValues = append(docValues, unitID, doc.GOOS, doc.GOARCH, doc.Synopsis, "", doc.Source)
 		}
 		uniqueCols := []string{"unit_id", "goos", "goarch"}
 		docCols := append(uniqueCols, "synopsis", "html", "source")

@@ -141,7 +141,6 @@ func UnitForPackage(path, modulePath, version, name string, isRedistributable bo
 		UnitMeta: *UnitMeta(path, modulePath, version, name, isRedistributable),
 		Documentation: &internal.Documentation{
 			Synopsis: Synopsis,
-			HTML:     DocumentationHTML,
 			Source:   DocumentationSource,
 			GOOS:     GOOS,
 			GOARCH:   GOARCH,
