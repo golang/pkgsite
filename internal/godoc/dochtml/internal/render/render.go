@@ -93,33 +93,6 @@ var exampleTmpl = template.Must(template.New("").Parse(`
 </pre>
 `))
 
-// legacyDocDataTmpl renders documentation. It expects a docData.
-var legacyDocDataTmpl = template.Must(template.New("").Parse(`
-{{- range .Elements -}}
-  {{- if .IsHeading -}}
-    <h3 id="{{.ID}}">{{.Title}}
-    {{- if not $.DisablePermalinks}}<a href="#{{.ID}}">¶</a>{{end -}}
-    </h3>
-  {{else if .IsPreformat -}}
-    <pre>{{.Body}}</pre>
-  {{- else -}}
-    <p>{{.Body}}</p>
-  {{- end -}}
-{{end}}`))
-
-// legacyExampleTmpl renders code for an example. It expect an Example.
-var legacyExampleTmpl = template.Must(template.New("").Parse(`
-<pre class="Documentation-exampleCode">
-{{range .}}
-  {{- if .Comment -}}
-    <span class="comment">{{.Text}}</span>
-  {{- else -}}
-    {{.Text}}
-  {{- end -}}
-{{end}}
-</pre>
-`))
-
 func New(ctx context.Context, fset *token.FileSet, pkg *doc.Package, opts *Options) *Renderer {
 	var others []*doc.Package
 	var packageURL func(string) string
