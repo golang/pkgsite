@@ -248,6 +248,7 @@ func getHTML(ctx context.Context, u *internal.Unit, docPkg *godoc.Package) (body
 	if len(u.Documentation.Source) > 0 {
 		return renderDocParts(ctx, u, docPkg)
 	}
+	log.Errorf(ctx, "unit %s (%s@%s) missing documentation source", u.Path, u.ModulePath, u.Version)
 	return template.MustParseAndExecuteToHTML(missingDocReplacement), safehtml.HTML{}, safehtml.HTML{}, nil
 }
 
