@@ -434,10 +434,10 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 				continue
 			}
 			unitID := pathToUnitID[path]
-			docValues = append(docValues, unitID, doc.GOOS, doc.GOARCH, doc.Synopsis, "", doc.Source)
+			docValues = append(docValues, unitID, doc.GOOS, doc.GOARCH, doc.Synopsis, doc.Source)
 		}
 		uniqueCols := []string{"unit_id", "goos", "goarch"}
-		docCols := append(uniqueCols, "synopsis", "html", "source")
+		docCols := append(uniqueCols, "synopsis", "source")
 		if err := db.BulkUpsert(ctx, "documentation", docCols, docValues, uniqueCols); err != nil {
 			return err
 		}
