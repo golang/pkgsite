@@ -14,15 +14,12 @@ import (
 	"time"
 
 	"cloud.google.com/go/profiler"
-	"contrib.go.opencensus.io/integrations/ocsql"
 	"github.com/go-redis/redis/v7"
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/cmd/internal/cmdconfig"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
-	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/dcensus"
-	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/frontend"
 	"golang.org/x/pkgsite/internal/localdatasource"
 	"golang.org/x/pkgsite/internal/log"
@@ -96,24 +93,9 @@ func main() {
 			}
 			dsg = func(context.Context) internal.DataSource { return pds }
 		} else {
-			// Wrap the postgres driver with OpenCensus instrumentation.
-			ocDriver, err := ocsql.Register(cfg.DBDriver, ocsql.WithAllTraceOptions())
+			db, err := cmdconfig.OpenDB(ctx, cfg, *bypassLicenseCheck)
 			if err != nil {
-				log.Fatalf(ctx, "unable to register the ocsql driver: %v\n", err)
-			}
-
-			log.Infof(ctx, "cmd/frontend: openDB start")
-			ddb, err := openDB(ctx, cfg, ocDriver)
-			if err != nil {
-				log.Fatal(ctx, err)
-			}
-			log.Infof(ctx, "cmd/frontend: openDB finished")
-
-			var db *postgres.DB
-			if *bypassLicenseCheck {
-				db = postgres.NewBypassingLicenseCheck(ddb)
-			} else {
-				db = postgres.New(ddb)
+				log.Fatalf(ctx, "%v", err)
 			}
 			defer db.Close()
 			dsg = func(context.Context) internal.DataSource { return db }
@@ -220,37 +202,6 @@ func main() {
 	addr := cfg.HostAddr("localhost:8080")
 	log.Infof(ctx, "Listening on addr %s", addr)
 	log.Fatal(ctx, http.ListenAndServe(addr, mw(router)))
-}
-
-// TODO(https://github.com/golang/go/issues/40097): factor out to reduce
-// duplication with cmd/worker/main.go.
-
-// openDB opens a connection to a database with the given driver, using connection info from
-// the given config.
-// It first tries the main connection info (DBConnInfo), and if that fails, it uses backup
-// connection info it if exists (DBSecondaryConnInfo).
-func openDB(ctx context.Context, cfg *config.Config, driver string) (_ *database.DB, err error) {
-	defer derrors.Wrap(&err, "openDB(ctx, cfg, %q)", driver)
-	log.Infof(ctx, "opening database on host %s", cfg.DBHost)
-	ddb, err := database.Open(driver, cfg.DBConnInfo(), cfg.InstanceID)
-	if err == nil {
-		log.Infof(ctx, "connected to primary host: %s", cfg.DBHost)
-		return ddb, nil
-	}
-
-	ci := cfg.DBSecondaryConnInfo()
-	if ci == "" {
-		log.Infof(ctx, "no secondary DB host")
-		return nil, err
-	}
-	log.Errorf(ctx, "database.Open for primary host %s failed with %v; trying secondary host %s ",
-		cfg.DBHost, err, cfg.DBSecondaryHost)
-	db, err := database.Open(driver, ci, cfg.InstanceID)
-	if err != nil {
-		return nil, err
-	}
-	log.Infof(ctx, "connected to secondary host %s", cfg.DBSecondaryHost)
-	return db, nil
 }
 
 // load loads local modules from pathList.

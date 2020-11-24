@@ -12,11 +12,16 @@ import (
 	"time"
 
 	"cloud.google.com/go/errorreporting"
+	"contrib.go.opencensus.io/integrations/ocsql"
+	_ "github.com/jackc/pgx/v4/stdlib" // for pgx driver
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/config/dynconfig"
+	"golang.org/x/pkgsite/internal/database"
+	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/postgres"
 )
 
 // Logger configures a middleware.Logger.
@@ -84,4 +89,40 @@ func ExperimentGetter(ctx context.Context, cfg *config.Config) middleware.Experi
 		log.Infof(ctx, "read experiments %s", strings.Join(s, ", "))
 		return dc.Experiments, nil
 	}
+}
+
+// OpenDB opens the postgres database specified by the config.
+// It first tries the main connection info (DBConnInfo), and if that fails, it uses backup
+// connection info it if exists (DBSecondaryConnInfo).
+func OpenDB(ctx context.Context, cfg *config.Config, bypassLicenseCheck bool) (_ *postgres.DB, err error) {
+	defer derrors.Wrap(&err, "cmdconfig.OpenDB(ctx, cfg)")
+
+	// Wrap the postgres driver with OpenCensus instrumentation.
+	ocDriver, err := ocsql.Register(cfg.DBDriver, ocsql.WithAllTraceOptions())
+	if err != nil {
+		return nil, fmt.Errorf("unable to register the ocsql driver: %v", err)
+	}
+	log.Infof(ctx, "opening database on host %s", cfg.DBHost)
+	ddb, err := database.Open(ocDriver, cfg.DBConnInfo(), cfg.InstanceID)
+	if err == nil {
+		log.Infof(ctx, "connected to primary host: %s", cfg.DBHost)
+	} else {
+		ci := cfg.DBSecondaryConnInfo()
+		if ci == "" {
+			log.Infof(ctx, "no secondary DB host")
+			return nil, err
+		}
+		log.Errorf(ctx, "database.Open for primary host %s failed with %v; trying secondary host %s ",
+			cfg.DBHost, err, cfg.DBSecondaryHost)
+		ddb, err = database.Open(ocDriver, ci, cfg.InstanceID)
+		if err != nil {
+			return nil, err
+		}
+		log.Infof(ctx, "connected to secondary host %s", cfg.DBSecondaryHost)
+	}
+	log.Infof(ctx, "database open finished")
+	if bypassLicenseCheck {
+		return postgres.NewBypassingLicenseCheck(ddb), nil
+	}
+	return postgres.New(ddb), nil
 }
