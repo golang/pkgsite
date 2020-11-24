@@ -37,15 +37,20 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 	var err error
-	testDB, err = Open("postgres", dbtest.DBConnURI(testDBName), "test")
-	if err != nil {
-		log.Fatalf("Open: %v %[1]T", err)
+	for _, driver := range []string{"postgres", "pgx"} {
+		log.Printf("with driver %q", driver)
+		testDB, err = Open(driver, dbtest.DBConnURI(testDBName), "test")
+		if err != nil {
+			log.Fatalf("Open: %v %[1]T", err)
+		}
+		code := m.Run()
+		if err := testDB.Close(); err != nil {
+			log.Fatal(err)
+		}
+		if code != 0 {
+			os.Exit(code)
+		}
 	}
-	code := m.Run()
-	if err := testDB.Close(); err != nil {
-		log.Fatal(err)
-	}
-	os.Exit(code)
 }
 
 func TestBulkInsert(t *testing.T) {

@@ -17,6 +17,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jackc/pgconn"
 	"github.com/lib/pq"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
@@ -186,8 +187,7 @@ func (db *DB) transactWithRetry(ctx context.Context, opts *sql.TxOptions, txFunc
 	const maxRetries = 30
 	for i := 0; i <= maxRetries; i++ {
 		err = db.transact(ctx, opts, txFunc)
-		var perr *pq.Error
-		if errors.As(err, &perr) && perr.Code == serializationFailureCode {
+		if isSerializationFailure(err) {
 			db.mu.Lock()
 			if i > db.maxRetries {
 				db.maxRetries = i
@@ -201,6 +201,19 @@ func (db *DB) transactWithRetry(ctx context.Context, opts *sql.TxOptions, txFunc
 		return err
 	}
 	return fmt.Errorf("reached max number of tries due to serialization failure (%d)", maxRetries)
+}
+
+func isSerializationFailure(err error) bool {
+	// The underlying error type depends on the driver. Try both pq and pgx types.
+	var perr *pq.Error
+	if errors.As(err, &perr) && perr.Code == serializationFailureCode {
+		return true
+	}
+	var gerr *pgconn.PgError
+	if errors.As(err, &gerr) && gerr.Code == serializationFailureCode {
+		return true
+	}
+	return false
 }
 
 func (db *DB) transact(ctx context.Context, opts *sql.TxOptions, txFunc func(*DB) error) (err error) {
