@@ -60,7 +60,7 @@ func TestFrontendDocRender(t *testing.T) {
 
 	// Process with saving the source.
 	processVersions(
-		experiment.NewContext(context.Background(), internal.ExperimentUnitPage, internal.ExperimentRemoveUnusedAST),
+		experiment.NewContext(context.Background(), internal.ExperimentUnitPage),
 		t, []*proxy.Module{m})
 
 	workerDoc := getDoc(t, m.ModulePath)

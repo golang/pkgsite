@@ -28,7 +28,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/source"
@@ -108,13 +107,11 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 	docPkg := godoc.NewPackage(fset, goos, goarch, modInfo.ModulePackages)
 	for _, pf := range goFiles {
 		var removeNodes bool
-		if experiment.IsActive(ctx, internal.ExperimentRemoveUnusedAST) {
-			removeNodes = true
-			// Don't strip the seemingly unexported functions from the builtin package;
-			// they are actually Go builtins like make, new, etc.
-			if modulePath == stdlib.ModulePath && innerPath == "builtin" {
-				removeNodes = false
-			}
+		removeNodes = true
+		// Don't strip the seemingly unexported functions from the builtin package;
+		// they are actually Go builtins like make, new, etc.
+		if modulePath == stdlib.ModulePath && innerPath == "builtin" {
+			removeNodes = false
 		}
 		docPkg.AddFile(pf, removeNodes)
 	}
