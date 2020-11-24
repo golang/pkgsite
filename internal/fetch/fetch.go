@@ -191,6 +191,7 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 	fi = &FetchInfo{
 		ModulePath: modulePath,
 		Version:    fr.ResolvedVersion,
+		ZipSize:    uint64(zipSize),
 		Start:      time.Now(),
 	}
 	startFetchInfo(fi)
@@ -307,6 +308,7 @@ func zipContainsFilename(r *zip.Reader, name string) bool {
 type FetchInfo struct {
 	ModulePath string
 	Version    string
+	ZipSize    uint64
 	Start      time.Time
 	Finish     time.Time
 	Status     int
