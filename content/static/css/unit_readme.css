@@ -21,6 +21,9 @@
   max-height: 20rem;
   overflow: hidden;
 }
+.UnitReadme-content ul {
+  line-height: 1.5rem;
+}
 .UnitReadme-fadeOut {
   position: absolute;
   bottom: 0;
