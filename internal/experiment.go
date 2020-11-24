@@ -6,25 +6,23 @@
 package internal
 
 const (
-	ExperimentAutocomplete        = "autocomplete"
-	ExperimentFasterDecoding      = "faster-decoding"
-	ExperimentGetUnitWithOneQuery = "get-unit-with-one-query"
-	ExperimentGoldmark            = "goldmark"
-	ExperimentReadmeOutline       = "readme-outline"
-	ExperimentRemoveUnusedAST     = "remove-unused-ast"
-	ExperimentUnitPage            = "unit-page"
+	ExperimentAutocomplete    = "autocomplete"
+	ExperimentFasterDecoding  = "faster-decoding"
+	ExperimentGoldmark        = "goldmark"
+	ExperimentReadmeOutline   = "readme-outline"
+	ExperimentRemoveUnusedAST = "remove-unused-ast"
+	ExperimentUnitPage        = "unit-page"
 )
 
 // Experiments represents all of the active experiments in the codebase and
 // a description of each experiment.
 var Experiments = map[string]string{
-	ExperimentAutocomplete:        "Enable autocomplete with search.",
-	ExperimentFasterDecoding:      "Decode ASTs faster.",
-	ExperimentGetUnitWithOneQuery: "Fetch data for GetUnit using a single query.",
-	ExperimentGoldmark:            "Enable the usage of rendering markdown using goldmark instead of blackfriday.",
-	ExperimentReadmeOutline:       "Enable the readme outline in the side nav.",
-	ExperimentRemoveUnusedAST:     "Prune AST prior to rendering documentation HTML.",
-	ExperimentUnitPage:            "Enable the redesigned details page.",
+	ExperimentAutocomplete:    "Enable autocomplete with search.",
+	ExperimentFasterDecoding:  "Decode ASTs faster.",
+	ExperimentGoldmark:        "Enable the usage of rendering markdown using goldmark instead of blackfriday.",
+	ExperimentReadmeOutline:   "Enable the readme outline in the side nav.",
+	ExperimentRemoveUnusedAST: "Prune AST prior to rendering documentation HTML.",
+	ExperimentUnitPage:        "Enable the redesigned details page.",
 }
 
 // Experiment holds data associated with an experimental feature for frontend

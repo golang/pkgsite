@@ -10,7 +10,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
@@ -134,27 +133,14 @@ func TestGetImportedByCount(t *testing.T) {
 	} {
 		pkg := test.mod.Packages()[0]
 		t.Run(test.mod.ModulePath, func(t *testing.T) {
-			t.Run("no-experiments", func(t *testing.T) {
-				got, err := getImportedByCount(ctx, testDB, pkg)
-				if err != nil {
-					t.Fatalf("getImportedByCount(ctx, db, %q) = %v err = %v, want %v",
-						pkg.Path, got, err, test.want)
-				}
-				if diff := cmp.Diff(test.want, got); diff != "" {
-					t.Errorf("getImportedByCount(ctx, db, %q) mismatch (-want +got):\n%s", pkg.Path, diff)
-				}
-			})
-			t.Run("with experiment", func(t *testing.T) {
-				ctx := experiment.NewContext(ctx, internal.ExperimentGetUnitWithOneQuery)
-				got, err := getImportedByCount(ctx, testDB, pkg)
-				if err != nil {
-					t.Fatalf("getImportedByCount(ctx, db, %q) = %v err = %v, want %v",
-						pkg.Path, got, err, test.want)
-				}
-				if diff := cmp.Diff(test.want, got); diff != "" {
-					t.Errorf("getImportedByCount(ctx, db, %q) mismatch (-want +got):\n%s", pkg.Path, diff)
-				}
-			})
+			got, err := getImportedByCount(ctx, testDB, pkg)
+			if err != nil {
+				t.Fatalf("getImportedByCount(ctx, db, %q) = %v err = %v, want %v",
+					pkg.Path, got, err, test.want)
+			}
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("getImportedByCount(ctx, db, %q) mismatch (-want +got):\n%s", pkg.Path, diff)
+			}
 		})
 	}
 }

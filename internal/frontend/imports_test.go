@@ -11,7 +11,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
@@ -151,15 +150,7 @@ func TestFetchImportedByDetails(t *testing.T) {
 			otherVersion := newModule(path.Dir(test.pkg.Path), test.pkg)
 			otherVersion.Version = "v1.0.5"
 			pkg := otherVersion.Units[1]
-
-			t.Run("no experiments "+test.pkg.Name, func(t *testing.T) {
-				checkFetchImportedByDetails(ctx, pkg, test.wantDetails)
-			})
-			t.Run("get imported by from search_documents "+test.pkg.Name, func(t *testing.T) {
-				ctx := experiment.NewContext(ctx, internal.ExperimentGetUnitWithOneQuery)
-				testDB.UpdateSearchDocumentsImportedByCount(ctx)
-				checkFetchImportedByDetails(ctx, pkg, test.wantDetails)
-			})
+			checkFetchImportedByDetails(ctx, pkg, test.wantDetails)
 		})
 	}
 }

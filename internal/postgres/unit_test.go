@@ -160,12 +160,7 @@ func TestGetUnit(t *testing.T) {
 				test.want.Name,
 				test.want.IsRedistributable,
 			)
-			t.Run("unit page with one query", func(t *testing.T) {
-				checkUnit(ctx, t, um, test.want, internal.ExperimentGetUnitWithOneQuery)
-			})
-			t.Run("no experiments", func(t *testing.T) {
-				checkUnit(ctx, t, um, test.want)
-			})
+			checkUnit(ctx, t, um, test.want)
 		})
 	}
 }
@@ -183,15 +178,13 @@ func checkUnit(ctx context.Context, t *testing.T, um *internal.UnitMeta, want *i
 		cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 	}
 	want.SourceInfo = um.SourceInfo
-	if experiment.IsActive(ctx, internal.ExperimentGetUnitWithOneQuery) {
-		want.NumImports = len(want.Imports)
-		opts = append(opts,
-			cmpopts.IgnoreFields(internal.Unit{}, "Imports"),
-			cmpopts.IgnoreFields(internal.Unit{}, "LicenseContents"),
-		)
-		if diff := cmp.Diff(want, got, opts...); diff != "" {
-			t.Errorf("mismatch (-want, +got):\n%s", diff)
-		}
+	want.NumImports = len(want.Imports)
+	opts = append(opts,
+		cmpopts.IgnoreFields(internal.Unit{}, "Imports"),
+		cmpopts.IgnoreFields(internal.Unit{}, "LicenseContents"),
+	)
+	if diff := cmp.Diff(want, got, opts...); diff != "" {
+		t.Errorf("mismatch (-want, +got):\n%s", diff)
 	}
 }
 

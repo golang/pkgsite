@@ -6,7 +6,6 @@ package frontend
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"math"
@@ -279,24 +278,8 @@ func getImportedByCount(ctx context.Context, ds internal.DataSource, unit *inter
 	// from search_documents.num_imported_by. This number might be different
 	// than the result of GetImportedBy because alternative modules and internal
 	// packages are excluded.
-	var count int
-	if experiment.IsActive(ctx, internal.ExperimentGetUnitWithOneQuery) {
-		count = unit.NumImportedBy
-	} else {
-		count, err = db.GetImportedByCount(ctx, unit.Path, unit.ModulePath)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				log.Errorf(ctx, "missing search_documents row for path %s, module path %s", unit.Path, unit.ModulePath)
-				return "", nil
-			}
-			return "", err
-		}
-		if count < mainPageImportedByLimit {
-			count = mainPageImportedByLimit
-		}
-	}
 	// Treat the result as approximate.
-	return fmt.Sprintf("%d+", approximateLowerBound(count)), nil
+	return fmt.Sprintf("%d+", approximateLowerBound(unit.NumImportedBy)), nil
 }
 
 // approximateLowerBound rounds n down to a multiple of a power of 10.

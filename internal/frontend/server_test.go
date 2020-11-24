@@ -701,7 +701,6 @@ func TestServer(t *testing.T) {
 			name: "unit page",
 			experiments: []string{
 				internal.ExperimentUnitPage,
-				internal.ExperimentGetUnitWithOneQuery,
 			},
 			testCasesFunc: unitPageTestCases,
 		},
