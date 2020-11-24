@@ -6,11 +6,11 @@ package frontend
 
 import (
 	"context"
-	"path"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
@@ -94,28 +94,20 @@ func TestGetImportedByCount(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	newModule := func(modPath string, pkgs ...*internal.Unit) *internal.Module {
-		m := sample.Module(modPath, sample.VersionString)
-		for _, p := range pkgs {
-			sample.AddUnit(m, p)
-		}
+	newModule := func(modPath string, imports []string, numImportedBy int) *internal.Module {
+		m := sample.Module(modPath, sample.VersionString, "")
+		m.Packages()[0].Imports = imports
+		m.Packages()[0].NumImportedBy = numImportedBy
 		return m
 	}
 
-	pkg1 := sample.UnitForPackage("path.to/foo/bar", "path.to/foo", sample.VersionString, "bar", true)
-	pkg2 := sample.UnitForPackage("path2.to/foo/bar2", "path.to/foo", sample.VersionString, "bar", true)
-	pkg2.Imports = []string{pkg1.Path}
-
-	pkg3 := sample.UnitForPackage("path3.to/foo/bar3", "path.to/foo", sample.VersionString, "bar3", true)
-	pkg3.Imports = []string{pkg2.Path, pkg1.Path}
-
-	testModules := []*internal.Module{
-		newModule("path.to/foo", pkg1),
-		newModule("path2.to/foo", pkg2),
-		newModule("path3.to/foo", pkg3),
-	}
-
-	for _, m := range testModules {
+	p1 := "path.to/foo"
+	p2 := "path2.to/foo"
+	p3 := "path3.to/foo"
+	mod1 := newModule(p1, nil, 2)
+	mod2 := newModule(p2, []string{p1}, 1)
+	mod3 := newModule(p3, []string{p1, p2}, 0)
+	for _, m := range []*internal.Module{mod1, mod2, mod3} {
 		if err := testDB.InsertModule(ctx, m); err != nil {
 			t.Fatal(err)
 		}
@@ -124,34 +116,45 @@ func TestGetImportedByCount(t *testing.T) {
 	mainPageImportedByLimit = 2
 	tabImportedByLimit = 3
 	for _, test := range []struct {
-		pkg  *internal.Unit
+		mod  *internal.Module
 		want string
 	}{
 		{
-			pkg:  pkg3,
+			mod:  mod3,
 			want: "0",
 		},
 		{
-			pkg:  pkg2,
+			mod:  mod2,
 			want: "1",
 		},
 		{
-			pkg:  pkg1,
+			mod:  mod1,
 			want: "2+",
 		},
 	} {
-		t.Run(test.pkg.Path, func(t *testing.T) {
-			otherVersion := newModule(path.Dir(test.pkg.Path), test.pkg)
-			otherVersion.Version = "v1.0.5"
-			pkg := otherVersion.Units[1]
-			got, err := getImportedByCount(ctx, testDB, pkg)
-			if err != nil {
-				t.Fatalf("getImportedByCount(ctx, db, %q) = %v err = %v, want %v",
-					test.pkg.Path, got, err, test.want)
-			}
-			if diff := cmp.Diff(test.want, got); diff != "" {
-				t.Errorf("getImportedByCount(ctx, db, %q) mismatch (-want +got):\n%s", test.pkg.Path, diff)
-			}
+		pkg := test.mod.Packages()[0]
+		t.Run(test.mod.ModulePath, func(t *testing.T) {
+			t.Run("no-experiments", func(t *testing.T) {
+				got, err := getImportedByCount(ctx, testDB, pkg)
+				if err != nil {
+					t.Fatalf("getImportedByCount(ctx, db, %q) = %v err = %v, want %v",
+						pkg.Path, got, err, test.want)
+				}
+				if diff := cmp.Diff(test.want, got); diff != "" {
+					t.Errorf("getImportedByCount(ctx, db, %q) mismatch (-want +got):\n%s", pkg.Path, diff)
+				}
+			})
+			t.Run("with experiment", func(t *testing.T) {
+				ctx := experiment.NewContext(ctx, internal.ExperimentGetUnitWithOneQuery)
+				got, err := getImportedByCount(ctx, testDB, pkg)
+				if err != nil {
+					t.Fatalf("getImportedByCount(ctx, db, %q) = %v err = %v, want %v",
+						pkg.Path, got, err, test.want)
+				}
+				if diff := cmp.Diff(test.want, got); diff != "" {
+					t.Errorf("getImportedByCount(ctx, db, %q) mismatch (-want +got):\n%s", pkg.Path, diff)
+				}
+			})
 		})
 	}
 }
