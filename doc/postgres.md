@@ -118,6 +118,9 @@ the previous version, and to migrate "down" to the previous version. See
 [golang-migrate/migrate/MIGRATIONS.md](https://github.com/golang-migrate/migrate/blob/master/MIGRATIONS.md)
 for details.
 
+If your migration requires that data be transformed, or that all modules must be
+reprocessed, explain in the `up.sql` file how to carry out the data migration.
+
 ### Applying migrations for local development
 
 Use the `migrate` CLI:
