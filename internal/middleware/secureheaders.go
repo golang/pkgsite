@@ -18,16 +18,10 @@ var scriptHashes = []string{
 	"'sha256-dwce5DnVX7uk6fdvvNxQyLTH/cJrTMDK6zzrdKwdwcg='",
 	// From content/static/html/pages/badge.tmpl
 	"'sha256-T7xOt6cgLji3rhOWyKK7t5XKv8+LASQwOnHiHHy8Kwk='",
-	// From content/static/html/pages/details.tmpl
-	"'sha256-EWdCQW4XtY7zS2MZgs76+2EhMbqpaPtC+9EPGnbHBtM='",
 	// From content/static/html/pages/fetch.tmpl
 	"'sha256-1J6DWwTWs/QDZ2+ORDuUQCibmFnXXaNXYOtc0Jk6VU4='",
 	// From content/static/html/worker/index.tmpl
 	"'sha256-y5EX2GR3tCwSK0/kmqZnsWVeBROA8tA75L+I+woljOE='",
-	// From content/static/html/pages/pkg_doc.tmpl
-	"'sha256-91GG/273d2LdEV//lJMbTodGN501OuKZKYYphui+wDQ='",
-	"'sha256-ABETDefmLMyKpLsjAartd0H1SHvPVqmVWv6841qII1U='",
-	"'sha256-uQODpjQEw2CWPIl6zEmpUU1uULk5RYVCofnBw59UOOw='",
 	// From content/static/html/pages/unit.tmpl
 	"'sha256-hsHIJwO1h0Vzwa75j0l07kUfQ7MEZGI/HlSPB/8leZ0='",
 	// From content/static/html/pages/unit_details.tmpl

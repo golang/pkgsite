@@ -4,6 +4,8 @@
  * license that can be found in the LICENSE file.
  */
 
+@import './readme.css';
+@import './sidenav.css';
 @import './unit_readme.css';
 @import './unit_doc.css';
 @import './unit_files.css';

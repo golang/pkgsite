@@ -504,14 +504,6 @@ func parsePageTemplates(base template.TrustedSource) (map[string]*template.Templ
 		{tsc("unit_imports.tmpl"), tsc("unit.tmpl")},
 		{tsc("unit_licenses.tmpl"), tsc("unit.tmpl")},
 		{tsc("unit_versions.tmpl"), tsc("unit.tmpl")},
-		{tsc("overview.tmpl"), tsc("details.tmpl")},
-		{tsc("subdirectories.tmpl"), tsc("details.tmpl")},
-		{tsc("pkg_doc.tmpl"), tsc("details.tmpl")},
-		{tsc("pkg_importedby.tmpl"), tsc("details.tmpl")},
-		{tsc("pkg_imports.tmpl"), tsc("details.tmpl")},
-		{tsc("licenses.tmpl"), tsc("details.tmpl")},
-		{tsc("versions.tmpl"), tsc("details.tmpl")},
-		{tsc("not_implemented.tmpl"), tsc("details.tmpl")},
 	}
 
 	templates := make(map[string]*template.Template)
