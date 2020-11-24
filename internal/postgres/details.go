@@ -13,8 +13,6 @@ import (
 	"reflect"
 	"regexp"
 
-	"github.com/google/safehtml"
-	"github.com/google/safehtml/uncheckedconversions"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/middleware"
@@ -203,18 +201,6 @@ func scanModuleInfo(scan func(dest ...interface{}) error) (*internal.ModuleInfo,
 		return nil, err
 	}
 	return &mi, nil
-}
-
-// convertDocumentation takes a string that was read from the database and
-// converts it to a safehtml.HTML.
-//
-// It rewrites documentation links by stripping the /pkg path prefix. It
-// preserves the safety of its argument. That is, if docHTML is safe
-// from XSS attacks, so is replaceDocumentationLinks(docHTML).
-func convertDocumentation(docHTML string) safehtml.HTML {
-	doc := removePkgPrefix(docHTML)
-	// We trust the data in our database and the transformation done by removePkgPrefix.
-	return uncheckedconversions.HTMLFromStringKnownToSatisfyTypeContract(doc)
 }
 
 // packageLinkRegexp matches cross-package identifier links that have been

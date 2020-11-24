@@ -7,17 +7,13 @@ package fetch
 import (
 	"archive/zip"
 	"context"
-	"errors"
 	"net/http"
 	"os"
 	"sort"
-	"strings"
 	"testing"
 	"time"
 
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
-	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/proxy"
@@ -217,47 +213,4 @@ func sortFetchResult(fr *FetchResult) {
 			return dir.Licenses[i].FilePath < dir.Licenses[j].FilePath
 		})
 	}
-}
-
-// validateDocumentationHTML checks that the doc HTMLs for units in the module
-// contain a set of substrings.
-func validateDocumentationHTML(t *testing.T, got *internal.Module, want map[string][]string) {
-	ctx := context.Background()
-	for _, u := range got.Units {
-		if wantStrings := want[u.Path]; wantStrings != nil {
-			gotDoc, err := renderDocBody(ctx, u)
-			if err != nil {
-				t.Fatal(err)
-			}
-			for _, w := range wantStrings {
-				if !strings.Contains(gotDoc, w) {
-					t.Errorf("doc for %s:\nmissing %q; got\n%q", u.Path, w, gotDoc)
-				}
-			}
-		}
-	}
-}
-
-func renderDocBody(ctx context.Context, u *internal.Unit) (string, error) {
-	docPkg, err := godoc.DecodePackage(u.Documentation.Source)
-	if err != nil {
-		return "", err
-	}
-	modInfo := &godoc.ModuleInfo{
-		ModulePath:      u.ModulePath,
-		ResolvedVersion: u.Version,
-		ModulePackages:  nil, // will be provided by docPkg
-	}
-	var innerPath string
-	if u.ModulePath == stdlib.ModulePath {
-		innerPath = u.Path
-	} else if u.Path != u.ModulePath {
-		innerPath = u.Path[len(u.ModulePath)+1:]
-	}
-	ctx = experiment.NewContext(ctx, internal.ExperimentUnitPage)
-	body, _, _, err := docPkg.RenderParts(ctx, innerPath, u.SourceInfo, modInfo)
-	if err != nil && !errors.Is(err, godoc.ErrTooLarge) {
-		return "", err
-	}
-	return body.String(), nil
 }

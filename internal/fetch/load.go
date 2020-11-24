@@ -81,8 +81,6 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, 
 // httpPost allows package fetch tests to stub out playground URL fetches.
 var httpPost = http.Post
 
-const docTooLargeReplacement = `<p>Documentation is too large to display.</p>`
-
 // loadPackageWithBuildContext loads a Go package made of .go files in zipGoFiles
 // using a build context constructed from the given GOOS and GOARCH values.
 // modulePath is stdlib.ModulePath for the Go standard library and the module

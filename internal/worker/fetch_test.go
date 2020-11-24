@@ -14,7 +14,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/postgres"
@@ -414,10 +413,11 @@ func TestFetchAndUpdateState(t *testing.T) {
 				return
 			}
 			if gotPkg.Documentation != nil {
-				gotDoc, err := renderDocBody(ctx, gotPkg)
+				body, _, _, err := godoc.RenderPartsFromUnit(ctx, gotPkg)
 				if err != nil {
 					t.Fatal(err)
 				}
+				gotDoc := body.String()
 				for _, want := range test.wantDoc {
 					if !strings.Contains(gotDoc, want) {
 						t.Errorf("got documentation doesn't contain wanted documentation substring:\ngot: %q\nwant (substring): %q", gotDoc, want)
@@ -431,28 +431,4 @@ func TestFetchAndUpdateState(t *testing.T) {
 			}
 		})
 	}
-}
-
-func renderDocBody(ctx context.Context, u *internal.Unit) (string, error) {
-	docPkg, err := godoc.DecodePackage(u.Documentation.Source)
-	if err != nil {
-		return "", err
-	}
-	modInfo := &godoc.ModuleInfo{
-		ModulePath:      u.ModulePath,
-		ResolvedVersion: u.Version,
-		ModulePackages:  nil, // will be provided by docPkg
-	}
-	var innerPath string
-	if u.ModulePath == stdlib.ModulePath {
-		innerPath = u.Path
-	} else if u.Path != u.ModulePath {
-		innerPath = u.Path[len(u.ModulePath)+1:]
-	}
-	ctx = experiment.NewContext(ctx, internal.ExperimentUnitPage)
-	body, _, _, err := docPkg.RenderParts(ctx, innerPath, u.SourceInfo, modInfo)
-	if err != nil {
-		return "", err
-	}
-	return body.String(), nil
 }

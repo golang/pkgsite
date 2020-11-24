@@ -10,6 +10,7 @@ import (
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -580,7 +581,7 @@ var moduleDocTooLarge = &testModule{
 		},
 	},
 	docStrings: map[string][]string{
-		"bigdoc.test": {docTooLargeReplacement},
+		"bigdoc.test": {godoc.DocTooLargeReplacement},
 	},
 }
 

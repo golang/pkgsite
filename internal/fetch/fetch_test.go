@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -132,6 +133,27 @@ func TestFetchModule(t *testing.T) {
 		}
 	}
 }
+
+// validateDocumentationHTML checks that the doc HTMLs for units in the module
+// contain a set of substrings.
+func validateDocumentationHTML(t *testing.T, got *internal.Module, want map[string][]string) {
+	ctx := context.Background()
+	for _, u := range got.Units {
+		if wantStrings := want[u.Path]; wantStrings != nil {
+			body, _, _, err := godoc.RenderPartsFromUnit(ctx, u)
+			if err != nil && !errors.Is(err, godoc.ErrTooLarge) {
+				t.Fatal(err)
+			}
+			gotDoc := body.String()
+			for _, w := range wantStrings {
+				if !strings.Contains(gotDoc, w) {
+					t.Errorf("doc for %s:\nmissing %q; got\n%q", u.Path, w, gotDoc)
+				}
+			}
+		}
+	}
+}
+
 func TestFetchModule_Errors(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
