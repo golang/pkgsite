@@ -67,7 +67,7 @@ func main() {
 	readProxyRemoved(ctx)
 
 	// Wrap the postgres driver with OpenCensus instrumentation.
-	driverName, err := ocsql.Register("postgres", ocsql.WithAllTraceOptions())
+	driverName, err := ocsql.Register(cfg.DBDriver, ocsql.WithAllTraceOptions())
 	if err != nil {
 		log.Fatalf(ctx, "unable to register the ocsql driver: %v\n", err)
 	}

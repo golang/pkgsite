@@ -88,7 +88,11 @@ func SetupTestDB(dbName string) (_ *DB, err error) {
 			return nil, fmt.Errorf("unfixable error migrating database: %v.\nConsider running ./devtools/drop_test_dbs.sh", err)
 		}
 	}
-	db, err := database.Open("postgres", dbtest.DBConnURI(dbName), "test")
+	driver := os.Getenv("GO_DISCOVERY_DATABASE_DRIVER")
+	if driver == "" {
+		driver = "postgres"
+	}
+	db, err := database.Open(driver, dbtest.DBConnURI(dbName), "test")
 	if err != nil {
 		return nil, err
 	}

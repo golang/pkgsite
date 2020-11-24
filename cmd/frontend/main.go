@@ -97,7 +97,7 @@ func main() {
 			dsg = func(context.Context) internal.DataSource { return pds }
 		} else {
 			// Wrap the postgres driver with OpenCensus instrumentation.
-			ocDriver, err := ocsql.Register("postgres", ocsql.WithAllTraceOptions())
+			ocDriver, err := ocsql.Register(cfg.DBDriver, ocsql.WithAllTraceOptions())
 			if err != nil {
 				log.Fatalf(ctx, "unable to register the ocsql driver: %v\n", err)
 			}
