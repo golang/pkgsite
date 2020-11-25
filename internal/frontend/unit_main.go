@@ -110,7 +110,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 	if err != nil {
 		return nil, err
 	}
-	readme, readmeOutline, err := readmeContent(ctx, unit)
+	readme, err := readmeContent(ctx, unit)
 	if err != nil {
 		return nil, err
 	}
@@ -150,8 +150,8 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		Subdirectories:  subdirectories,
 		Licenses:        transformLicenseMetadata(um.Licenses),
 		CommitTime:      absoluteTime(um.CommitTime),
-		Readme:          readme,
-		ReadmeOutline:   readmeOutline,
+		Readme:          readme.HTML,
+		ReadmeOutline:   readme.Outline,
 		DocOutline:      parts.Outline,
 		DocBody:         parts.Body,
 		SourceFiles:     files,
@@ -179,26 +179,27 @@ func moduleInfo(um *internal.UnitMeta) *internal.ModuleInfo {
 
 // readmeContent renders the readme to html and collects the headings
 // into an outline when the goldmark experiment active.
-func readmeContent(ctx context.Context, u *internal.Unit) (_ safehtml.HTML, _ []*Heading, err error) {
+func readmeContent(ctx context.Context, u *internal.Unit) (_ *Readme, err error) {
 	defer derrors.Wrap(&err, "readmeContent(%q, %q, %q)", u.Path, u.ModulePath, u.Version)
 	defer middleware.ElapsedStat(ctx, "readmeContent")()
 	if !u.IsRedistributable {
-		return safehtml.HTML{}, nil, nil
+		return &Readme{}, nil
 	}
 	mi := moduleInfo(&u.UnitMeta)
-	var (
-		readmeHTML    safehtml.HTML
-		readmeOutline []*Heading
-	)
+	var readme *Readme
 	if experiment.IsActive(ctx, internal.ExperimentGoldmark) {
-		readmeHTML, readmeOutline, err = Readme(ctx, u)
+		readme, err = ProcessReadme(ctx, u)
 	} else {
-		readmeHTML, err = LegacyReadmeHTML(ctx, mi, u.Readme)
+		var h safehtml.HTML
+		h, err = LegacyReadmeHTML(ctx, mi, u.Readme)
+		if err == nil {
+			readme = &Readme{HTML: h}
+		}
 	}
 	if err != nil {
-		return safehtml.HTML{}, nil, err
+		return nil, err
 	}
-	return readmeHTML, readmeOutline, nil
+	return readme, nil
 }
 
 func getNestedModules(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta) ([]*NestedModule, error) {

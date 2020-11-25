@@ -40,34 +40,44 @@ type Heading struct {
 	ID string
 }
 
-// Readme sanitizes readmeContents and returns a safehtml.HTML. If the readme filepath
-// indicates that this is a markdown file, it will render the markdown contents and
-// generate an outline from the parsed readmeContent's ast. Headings are prefixed with
-// "readme-" and heading levels are adjusted to start at h3 in order to nest them
-// properly within the rest of the page. The readme's original styling is preserved
-// in the html by giving headings a css class styled identical to their original
-// heading level.
+// Readme holds the result of processing a REAME file.
+type Readme struct {
+	HTML    safehtml.HTML // rendered HTML
+	Outline []*Heading    // document headings
+	Links   []link        // links from the "Links" section
+}
+
+// ProcessReadme processes the README of unit u, if it has one.
+// Processing includes rendering and sanitizing the HTML or Markdown,
+// and extracting headings and links.
 //
-// This function is exported for use in an external tool that uses this package to
-// compare readme files to see how changes in processing will affect them.
-func Readme(ctx context.Context, u *internal.Unit) (_ safehtml.HTML, _ []*Heading, err error) {
-	defer derrors.Wrap(&err, "Readme(%q, %q, %q)", u.Path, u.ModulePath, u.Version)
+// Headings are prefixed with "readme-" and heading levels are adjusted to start
+// at h3 in order to nest them properly within the rest of the page. The
+// readme's original styling is preserved in the html by giving headings a css
+// class styled identical to their original heading level.
+//
+//  The extracted links are for display outside of the readme contents.
+//
+// This function is exported for use by external tools.
+func ProcessReadme(ctx context.Context, u *internal.Unit) (_ *Readme, err error) {
+	defer derrors.Wrap(&err, "ProcessReadme(%q, %q, %q)", u.Path, u.ModulePath, u.Version)
 	if u.Readme == nil || u.Readme.Contents == "" {
-		return safehtml.HTML{}, nil, nil
+		return &Readme{}, nil
 	}
 	if !isMarkdown(u.Readme.Filepath) {
 		t := template.Must(template.New("").Parse(`<pre class="readme">{{.}}</pre>`))
 		h, err := t.ExecuteToHTML(u.Readme.Contents)
 		if err != nil {
-			return safehtml.HTML{}, nil, err
+			return nil, err
 		}
-		return h, nil, nil
+		return &Readme{HTML: h}, nil
 	}
 
 	// Sets priority value so that we always use our custom transformer
 	// instead of the default ones. The default values are in:
 	// https://github.com/yuin/goldmark/blob/7b90f04af43131db79ec320be0bd4744079b346f/parser/parser.go#L567
 	const astTransformerPriority = 10000
+	el := &extractLinks{}
 	gdMarkdown := goldmark.New(
 		goldmark.WithParserOptions(
 			// WithHeadingAttribute allows us to include other attributes in
@@ -81,10 +91,14 @@ func Readme(ctx context.Context, u *internal.Unit) (_ safehtml.HTML, _ []*Headin
 			// Include custom ASTTransformer using the readme and module info to
 			// use translateRelativeLink and translateHTML to modify the AST
 			// before it is rendered.
-			parser.WithASTTransformers(util.Prioritized(&astTransformer{
-				info:   u.SourceInfo,
-				readme: u.Readme,
-			}, astTransformerPriority)),
+			parser.WithASTTransformers(
+				util.Prioritized(&astTransformer{
+					info:   u.SourceInfo,
+					readme: u.Readme,
+				}, astTransformerPriority),
+				// Extract links after we have transformed the URLs.
+				util.Prioritized(el, astTransformerPriority+1),
+			),
 		),
 		// These extensions lets users write HTML code in the README. This is
 		// fine since we process the contents using bluemonday after.
@@ -108,11 +122,13 @@ func Readme(ctx context.Context, u *internal.Unit) (_ safehtml.HTML, _ []*Headin
 
 	var b bytes.Buffer
 	if err := gdRenderer.Render(&b, contents, doc); err != nil {
-		return safehtml.HTML{}, nil, nil
+		return &Readme{}, nil
 	}
-	htmlContent := sanitizeHTML(&b)
-	outline := readmeOutline(doc, contents)
-	return htmlContent, outline, nil
+	return &Readme{
+		HTML:    sanitizeHTML(&b),
+		Outline: readmeOutline(doc, contents),
+		Links:   el.links,
+	}, nil
 }
 
 // sanitizeHTML sanitizes HTML from a bytes.Buffer so that it is safe.

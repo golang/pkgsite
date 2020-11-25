@@ -7,6 +7,8 @@
 package frontend
 
 import (
+	"bytes"
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -19,6 +21,7 @@ import (
 	"github.com/yuin/goldmark/text"
 	"github.com/yuin/goldmark/util"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/source"
 )
 
@@ -209,4 +212,58 @@ func (s *ids) Generate(value []byte, kind ast.NodeKind) []byte {
 // Put implements Put from the goldmark parser IDs interface.
 func (s *ids) Put(value []byte) {
 	s.values[string(value)] = true
+}
+
+type extractLinks struct {
+	inLinksHeading bool
+	links          []link
+}
+
+// The name of the heading from which we extract links.
+const linkHeadingText = "Links"
+
+var linkHeadingBytes = []byte(linkHeadingText) // for faster comparison to node contents
+
+// Transform extracts links from the "Links" section of a README.
+func (e *extractLinks) Transform(node *ast.Document, reader text.Reader, pc parser.Context) {
+	err := ast.Walk(node, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if !entering {
+			return ast.WalkContinue, nil
+		}
+		switch n := n.(type) {
+
+		case *ast.Heading:
+			// We are in the links heading from the point we see a heading with
+			// linkHeadingText until the point we see the next heading.
+			if e.inLinksHeading {
+				return ast.WalkStop, nil
+			}
+			if bytes.Equal(n.Text(reader.Source()), linkHeadingBytes) {
+				e.inLinksHeading = true
+			}
+
+		case *ast.ListItem:
+			// When in the links heading, extract links from list items.
+			if !e.inLinksHeading {
+				return ast.WalkSkipChildren, nil
+			}
+			// We expect the pattern: ListItem -> TextBlock -> Link, with no
+			// other children.
+			if tb, ok := n.FirstChild().(*ast.TextBlock); ok {
+				if l, ok := tb.FirstChild().(*ast.Link); ok && l.NextSibling() == nil {
+					// Record the link.
+					e.links = append(e.links, link{
+						Href: string(l.Destination),
+						Body: string(l.Text(reader.Source())),
+					})
+				}
+			}
+			return ast.WalkSkipChildren, nil
+		}
+
+		return ast.WalkContinue, nil
+	})
+	if err != nil {
+		log.Errorf(context.Background(), "extractLinks.Transform: %v", err)
+	}
 }

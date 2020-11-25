@@ -8,6 +8,7 @@ import (
 	"context"
 	"strings"
 	"testing"
+	"unicode"
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
@@ -379,17 +380,153 @@ func TestReadme(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			test.unit.Readme = test.readme
-			html, gotOutline, err := Readme(ctx, test.unit)
+			readme, err := ProcessReadme(ctx, test.unit)
 			if err != nil {
 				t.Fatal(err)
 			}
-			gotHTML := strings.TrimSpace(html.String())
+			gotHTML := strings.TrimSpace(readme.HTML.String())
 			if diff := cmp.Diff(test.wantHTML, gotHTML); diff != "" {
 				t.Errorf("Readme(%v) html mismatch (-want +got):\n%s", test.unit.UnitMeta, diff)
 			}
-			if diff := cmp.Diff(test.wantOutline, gotOutline); diff != "" {
+			if diff := cmp.Diff(test.wantOutline, readme.Outline); diff != "" {
 				t.Errorf("Readme(%v) outline mismatch (-want +got):\n%s", test.unit.UnitMeta, diff)
 			}
 		})
+	}
+}
+
+func TestReadmeLinks(t *testing.T) {
+	ctx := experiment.NewContext(context.Background(), internal.ExperimentGoldmark)
+	unit := sample.UnitEmpty(sample.PackagePath, sample.ModulePath, sample.VersionString)
+	for _, test := range []struct {
+		name     string
+		contents string
+		want     []link
+	}{
+		{
+			name: "no links",
+			contents: `
+				# Heading
+				Some stuff.
+			`,
+			want: nil,
+		},
+		{
+			name: "simple links",
+			contents: `
+				# Heading
+				Some stuff.
+
+				## Links
+				Here are some links:
+
+				- [a](http://a)
+				- [b](http://b)
+
+				Whatever.
+
+				1. [c](http://c)
+			`,
+			want: []link{
+				{"http://a", "a"},
+				{"http://b", "b"},
+				{"http://c", "c"},
+			},
+		},
+		{
+			name: "ignore links not in a list",
+			contents: `
+				# Links
+				Try [a](http://a).
+				- [b](http://b)
+			`,
+			want: []link{
+				{"http://b", "b"},
+			},
+		},
+		{
+			name: "ignore extra text",
+			contents: `
+				# Links
+				- Try [a](http://a).
+				- [b](http://b)
+			`,
+			want: []link{
+				{"http://b", "b"},
+			},
+		},
+		{
+			name: "ignore sub-headings",
+			contents: `
+				# Links
+				- [a](http://a)
+				## Sub
+				- [b](http://b)
+				## Links
+				- [c](http://c)
+			`,
+			want: []link{{"http://a", "a"}},
+		},
+		{
+			name: "ignore nested links",
+			contents: `
+				# Links
+				- [a](http://a)
+				   - [b](http://b)
+				- [c](http://c)
+			`,
+			want: []link{
+				{"http://a", "a"},
+				{"http://c", "c"},
+			},
+		},
+		{
+			name: "two links sections",
+			contents: `
+				# Links
+				- [a](http://a)
+				# Links
+				- [b](http://b)
+			`,
+			want: []link{{"http://a", "a"}},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			unit.Readme = &internal.Readme{
+				Filepath: "README.md",
+				Contents: unindent(test.contents),
+			}
+			got, err := ProcessReadme(ctx, unit)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := cmp.Diff(test.want, got.Links); diff != "" {
+				t.Errorf("mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+// unindent removes indentation from s. It assumes that s starts with an initial
+// newline followed by one or more indented lines.
+func unindent(s string) string {
+	i := strings.IndexFunc(s, func(r rune) bool { return !unicode.IsSpace(r) })
+	if i < 0 {
+		return s
+	}
+	indent := s[:i]
+	return strings.ReplaceAll(s, indent, "\n")[1:]
+}
+
+func TestUnindent(t *testing.T) {
+	s := `
+		a
+		 - b
+		c
+	`
+	got := unindent(s)
+	want := "a\n - b\nc\n\t"
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
 	}
 }
