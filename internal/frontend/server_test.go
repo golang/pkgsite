@@ -210,132 +210,6 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 // serverTestCase(), a new test generator should be created and added to
 // TestServer().
 func serverTestCases() []serverTestCase {
-	var (
-		in   = htmlcheck.In
-		text = htmlcheck.HasText
-		attr = htmlcheck.HasAttr
-
-		// href checks for an exact match in an href attribute.
-		href = func(val string) htmlcheck.Checker {
-			return attr("href", "^"+regexp.QuoteMeta(val)+"$")
-		}
-	)
-
-	testCases := []serverTestCase{
-		{
-			name:           "C",
-			urlPath:        "/C",
-			wantStatusCode: http.StatusMovedPermanently,
-			wantLocation:   "https://golang.org/doc/articles/c_go_cgo.html",
-		},
-		{
-			name:           "static",
-			urlPath:        "/static/",
-			wantStatusCode: http.StatusOK,
-			want:           in("", text("css"), text("html"), text("img"), text("js")),
-		},
-		{
-			name:           "license policy",
-			urlPath:        "/license-policy",
-			wantStatusCode: http.StatusOK,
-			want: in("",
-				in(".Content-header", text("License Disclaimer")),
-				in(".Content",
-					text("The Go website displays license information"),
-					text("this is not legal advice"))),
-		},
-		{
-			// just check that it returns 200
-			name:           "favicon",
-			urlPath:        "/favicon.ico",
-			wantStatusCode: http.StatusOK,
-			want:           nil,
-		},
-		{
-			name:           "robots.txt",
-			urlPath:        "/robots.txt",
-			wantStatusCode: http.StatusOK,
-			want:           in("", text("User-agent: *"), text(regexp.QuoteMeta("Disallow: /search?*"))),
-		},
-		{
-			name:           "search",
-			urlPath:        fmt.Sprintf("/search?q=%s", sample.PackageName),
-			wantStatusCode: http.StatusOK,
-			want: in("",
-				in(".SearchResults-resultCount", text("2 results")),
-				in(".SearchSnippet-header",
-					in("a",
-						href("/"+sample.ModulePath+"/foo"),
-						text(sample.ModulePath+"/foo")))),
-		},
-		{
-			name:           "search large offset",
-			urlPath:        "/search?q=github.com&page=1002",
-			wantStatusCode: http.StatusBadRequest,
-		},
-		{
-			name:           "bad version",
-			urlPath:        fmt.Sprintf("/%s@%s/%s", sample.ModulePath, "v1-2", sample.Suffix),
-			wantStatusCode: http.StatusBadRequest,
-			want: in("",
-				in("h3.Error-message", text("v1-2 is not a valid semantic version.")),
-				in("p.Error-message a", href(`/search?q=github.com%2fvalid%2fmodule_name%2ffoo`))),
-		},
-		{
-			name:           "unknown version",
-			urlPath:        fmt.Sprintf("/%s@%s/%s", sample.ModulePath, "v99.99.0", sample.Suffix),
-			wantStatusCode: http.StatusNotFound,
-			want: in("",
-				in("h3.Fetch-message.js-fetchMessage", text(sample.ModulePath+"/foo@v99.99.0"))),
-		},
-		{
-
-			name:           "path not found",
-			urlPath:        "/example.com/unknown",
-			wantStatusCode: http.StatusNotFound,
-			want: in("",
-				in("h3.Fetch-message.js-fetchMessage", text("example.com/unknown"))),
-		},
-		{
-			name:           "bad request, invalid github module path",
-			urlPath:        "/github.com/foo",
-			wantStatusCode: http.StatusBadRequest,
-		},
-		{
-			name:           "excluded",
-			urlPath:        "/" + excludedModulePath + "/pkg",
-			wantStatusCode: http.StatusNotFound,
-		},
-		{
-			name:           "stdlib shortcut (net/http)",
-			urlPath:        "/http",
-			wantStatusCode: http.StatusFound,
-			wantLocation:   "/net/http",
-		},
-		{
-			name:           "stdlib shortcut (net/http) strip args",
-			urlPath:        "/http@go1.13",
-			wantStatusCode: http.StatusFound,
-			wantLocation:   "/net/http",
-		},
-		{
-			name:           "stdlib shortcut with trailing slash",
-			urlPath:        "/http/",
-			wantStatusCode: http.StatusFound,
-			wantLocation:   "/net/http",
-		},
-		{
-			name:           "stdlib shortcut with args and trailing slash",
-			urlPath:        "/http@go1.13/",
-			wantStatusCode: http.StatusFound,
-			wantLocation:   "/net/http",
-		},
-	}
-
-	return testCases
-}
-
-func unitPageTestCases() []serverTestCase {
 	const (
 		versioned   = true
 		unversioned = false
@@ -474,6 +348,114 @@ func unitPageTestCases() []serverTestCase {
 	}
 
 	return []serverTestCase{
+		{
+			name:           "C",
+			urlPath:        "/C",
+			wantStatusCode: http.StatusMovedPermanently,
+			wantLocation:   "https://golang.org/doc/articles/c_go_cgo.html",
+		},
+		{
+			name:           "static",
+			urlPath:        "/static/",
+			wantStatusCode: http.StatusOK,
+			want:           in("", text("css"), text("html"), text("img"), text("js")),
+		},
+		{
+			name:           "license policy",
+			urlPath:        "/license-policy",
+			wantStatusCode: http.StatusOK,
+			want: in("",
+				in(".Content-header", text("License Disclaimer")),
+				in(".Content",
+					text("The Go website displays license information"),
+					text("this is not legal advice"))),
+		},
+		{
+			// just check that it returns 200
+			name:           "favicon",
+			urlPath:        "/favicon.ico",
+			wantStatusCode: http.StatusOK,
+			want:           nil,
+		},
+		{
+			name:           "robots.txt",
+			urlPath:        "/robots.txt",
+			wantStatusCode: http.StatusOK,
+			want:           in("", text("User-agent: *"), text(regexp.QuoteMeta("Disallow: /search?*"))),
+		},
+		{
+			name:           "search",
+			urlPath:        fmt.Sprintf("/search?q=%s", sample.PackageName),
+			wantStatusCode: http.StatusOK,
+			want: in("",
+				in(".SearchResults-resultCount", text("2 results")),
+				in(".SearchSnippet-header",
+					in("a",
+						href("/"+sample.ModulePath+"/foo"),
+						text(sample.ModulePath+"/foo")))),
+		},
+		{
+			name:           "search large offset",
+			urlPath:        "/search?q=github.com&page=1002",
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:           "bad version",
+			urlPath:        fmt.Sprintf("/%s@%s/%s", sample.ModulePath, "v1-2", sample.Suffix),
+			wantStatusCode: http.StatusBadRequest,
+			want: in("",
+				in("h3.Error-message", text("v1-2 is not a valid semantic version.")),
+				in("p.Error-message a", href(`/search?q=github.com%2fvalid%2fmodule_name%2ffoo`))),
+		},
+		{
+			name:           "unknown version",
+			urlPath:        fmt.Sprintf("/%s@%s/%s", sample.ModulePath, "v99.99.0", sample.Suffix),
+			wantStatusCode: http.StatusNotFound,
+			want: in("",
+				in("h3.Fetch-message.js-fetchMessage", text(sample.ModulePath+"/foo@v99.99.0"))),
+		},
+		{
+
+			name:           "path not found",
+			urlPath:        "/example.com/unknown",
+			wantStatusCode: http.StatusNotFound,
+			want: in("",
+				in("h3.Fetch-message.js-fetchMessage", text("example.com/unknown"))),
+		},
+		{
+			name:           "bad request, invalid github module path",
+			urlPath:        "/github.com/foo",
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:           "excluded",
+			urlPath:        "/" + excludedModulePath + "/pkg",
+			wantStatusCode: http.StatusNotFound,
+		},
+		{
+			name:           "stdlib shortcut (net/http)",
+			urlPath:        "/http",
+			wantStatusCode: http.StatusFound,
+			wantLocation:   "/net/http",
+		},
+		{
+			name:           "stdlib shortcut (net/http) strip args",
+			urlPath:        "/http@go1.13",
+			wantStatusCode: http.StatusFound,
+			wantLocation:   "/net/http",
+		},
+		{
+			name:           "stdlib shortcut with trailing slash",
+			urlPath:        "/http/",
+			wantStatusCode: http.StatusFound,
+			wantLocation:   "/net/http",
+		},
+		{
+			name:           "stdlib shortcut with args and trailing slash",
+			urlPath:        "/http@go1.13/",
+			wantStatusCode: http.StatusFound,
+			wantLocation:   "/net/http",
+		},
 		{
 			name:           "package default",
 			urlPath:        fmt.Sprintf("/%s", sample.PackagePath),
@@ -696,10 +678,6 @@ func TestServer(t *testing.T) {
 		{
 			name:          "no experiments",
 			testCasesFunc: serverTestCases,
-		},
-		{
-			name:          "unit page",
-			testCasesFunc: unitPageTestCases,
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
