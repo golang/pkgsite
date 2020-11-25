@@ -67,7 +67,7 @@ func Readme(ctx context.Context, u *internal.Unit) (_ safehtml.HTML, _ []*Headin
 	// Sets priority value so that we always use our custom transformer
 	// instead of the default ones. The default values are in:
 	// https://github.com/yuin/goldmark/blob/7b90f04af43131db79ec320be0bd4744079b346f/parser/parser.go#L567
-	const ASTTransformerPriority = 10000
+	const astTransformerPriority = 10000
 	gdMarkdown := goldmark.New(
 		goldmark.WithParserOptions(
 			// WithHeadingAttribute allows us to include other attributes in
@@ -81,10 +81,10 @@ func Readme(ctx context.Context, u *internal.Unit) (_ safehtml.HTML, _ []*Headin
 			// Include custom ASTTransformer using the readme and module info to
 			// use translateRelativeLink and translateHTML to modify the AST
 			// before it is rendered.
-			parser.WithASTTransformers(util.Prioritized(&ASTTransformer{
+			parser.WithASTTransformers(util.Prioritized(&astTransformer{
 				info:   u.SourceInfo,
 				readme: u.Readme,
-			}, ASTTransformerPriority)),
+			}, astTransformerPriority)),
 		),
 		// These extensions lets users write HTML code in the README. This is
 		// fine since we process the contents using bluemonday after.
@@ -96,13 +96,13 @@ func Readme(ctx context.Context, u *internal.Unit) (_ safehtml.HTML, _ []*Headin
 	)
 	gdMarkdown.Renderer().AddOptions(
 		renderer.WithNodeRenderers(
-			util.Prioritized(NewHTMLRenderer(u.SourceInfo, u.Readme), 100),
+			util.Prioritized(newHTMLRenderer(u.SourceInfo, u.Readme), 100),
 		),
 	)
 	contents := []byte(u.Readme.Contents)
 	gdParser := gdMarkdown.Parser()
 	reader := text.NewReader(contents)
-	pctx := parser.NewContext(parser.WithIDs(NewIDs()))
+	pctx := parser.NewContext(parser.WithIDs(newIDs()))
 	doc := gdParser.Parse(reader, parser.WithContext(pctx))
 	gdRenderer := gdMarkdown.Renderer()
 

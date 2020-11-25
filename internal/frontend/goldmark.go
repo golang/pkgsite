@@ -22,15 +22,15 @@ import (
 	"golang.org/x/pkgsite/internal/source"
 )
 
-// ASTTransformer is a default transformer of the goldmark tree. We pass in
+// astTransformer is a default transformer of the goldmark tree. We pass in
 // readme information to use for the link transformations.
-type ASTTransformer struct {
+type astTransformer struct {
 	info   *source.Info
 	readme *internal.Readme
 }
 
 // Transform transforms the given AST tree.
-func (g *ASTTransformer) Transform(node *ast.Document, reader text.Reader, pc parser.Context) {
+func (g *astTransformer) Transform(node *ast.Document, reader text.Reader, pc parser.Context) {
 	_ = ast.Walk(node, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if !entering {
 			return ast.WalkContinue, nil
@@ -49,9 +49,9 @@ func (g *ASTTransformer) Transform(node *ast.Document, reader text.Reader, pc pa
 	})
 }
 
-// HTMLRenderer is a renderer.NodeRenderer implementation that renders
+// htmlRenderer is a renderer.NodeRenderer implementation that renders
 // pkg.go.dev readme features.
-type HTMLRenderer struct {
+type htmlRenderer struct {
 	html.Config
 	info   *source.Info
 	readme *internal.Readme
@@ -60,9 +60,9 @@ type HTMLRenderer struct {
 	offset       int
 }
 
-// NewHTMLRenderer creates a new HTMLRenderer for a readme.
-func NewHTMLRenderer(info *source.Info, readme *internal.Readme, opts ...html.Option) renderer.NodeRenderer {
-	r := &HTMLRenderer{
+// newHTMLRenderer creates a new HTMLRenderer for a readme.
+func newHTMLRenderer(info *source.Info, readme *internal.Readme, opts ...html.Option) renderer.NodeRenderer {
+	r := &htmlRenderer{
 		info:         info,
 		readme:       readme,
 		Config:       html.NewConfig(),
@@ -76,13 +76,13 @@ func NewHTMLRenderer(info *source.Info, readme *internal.Readme, opts ...html.Op
 }
 
 // RegisterFuncs implements renderer.NodeRenderer.RegisterFuncs.
-func (r *HTMLRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
+func (r *htmlRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(ast.KindHeading, r.renderHeading)
 	reg.Register(ast.KindHTMLBlock, r.renderHTMLBlock)
 	reg.Register(ast.KindRawHTML, r.renderRawHTML)
 }
 
-func (r *HTMLRenderer) renderHeading(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+func (r *htmlRenderer) renderHeading(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
 	n := node.(*ast.Heading)
 	if r.firstHeading {
 		// The offset ensures the first heading is always an <h3>.
@@ -112,7 +112,7 @@ func (r *HTMLRenderer) renderHeading(w util.BufWriter, source []byte, node ast.N
 
 // renderHTMLBlock is copied directly from the goldmark source code and
 // modified to call translateHTML in every block
-func (r *HTMLRenderer) renderHTMLBlock(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+func (r *htmlRenderer) renderHTMLBlock(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
 	n := node.(*ast.HTMLBlock)
 	if entering {
 		if r.Unsafe {
@@ -141,7 +141,7 @@ func (r *HTMLRenderer) renderHTMLBlock(w util.BufWriter, source []byte, node ast
 	return ast.WalkContinue, nil
 }
 
-func (r *HTMLRenderer) renderRawHTML(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+func (r *htmlRenderer) renderRawHTML(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
 	if !entering {
 		return ast.WalkSkipChildren, nil
 	}
@@ -166,8 +166,8 @@ type ids struct {
 	values map[string]bool
 }
 
-// NewIDs creates a collection of element ids in a document.
-func NewIDs() parser.IDs {
+// newIDs creates a collection of element ids in a document.
+func newIDs() parser.IDs {
 	return &ids{
 		values: map[string]bool{},
 	}
