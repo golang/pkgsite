@@ -698,10 +698,7 @@ func TestServer(t *testing.T) {
 			testCasesFunc: serverTestCases,
 		},
 		{
-			name: "unit page",
-			experiments: []string{
-				internal.ExperimentUnitPage,
-			},
+			name:          "unit page",
 			testCasesFunc: unitPageTestCases,
 		},
 	} {

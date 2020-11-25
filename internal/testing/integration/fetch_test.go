@@ -10,8 +10,6 @@ import (
 	"net/http"
 	"testing"
 
-	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -32,7 +30,7 @@ func TestFrontendFetchForMasterVersion(t *testing.T) {
 			"LICENSE":        testhelper.MITLicense,
 		},
 	}
-	ctx := experiment.NewContext(context.Background(), internal.ExperimentUnitPage)
+	ctx := context.Background()
 	q, teardown := setupQueue(ctx, t, []*proxy.Module{testModule})
 	defer teardown()
 	ts := setupFrontend(ctx, t, q)

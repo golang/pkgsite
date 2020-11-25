@@ -15,7 +15,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
@@ -60,19 +59,18 @@ func TestFrontendDocRender(t *testing.T) {
 
 	// Process with saving the source.
 	processVersions(
-		experiment.NewContext(context.Background(), internal.ExperimentUnitPage),
+		experiment.NewContext(context.Background()),
 		t, []*proxy.Module{m})
 
 	workerDoc := getDoc(t, m.ModulePath)
-	frontendDoc := getDoc(t, m.ModulePath, internal.ExperimentUnitPage)
+	frontendDoc := getDoc(t, m.ModulePath)
 	if diff := cmp.Diff(workerDoc, frontendDoc); diff != "" {
 		t.Errorf("mismatch (-worker, +frontend):\n%s", diff)
 	}
 }
 
 func getDoc(t *testing.T, modulePath string, exps ...string) string {
-	ctx := experiment.NewContext(context.Background(),
-		append(exps, internal.ExperimentUnitPage)...)
+	ctx := experiment.NewContext(context.Background(), exps...)
 	ts := setupFrontend(ctx, t, nil)
 	url := ts.URL + "/" + modulePath
 	resp, err := http.Get(url)

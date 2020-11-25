@@ -12,7 +12,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -226,16 +225,10 @@ func TestBlackfridayReadmeHTML(t *testing.T) {
 		}
 	}
 	for _, test := range tests {
-		t.Run("no experiments "+test.name, func(t *testing.T) {
-			checkReadme(ctx, t, test.mi, test.readme, test.want)
-		})
-		t.Run("unit page "+test.name, func(t *testing.T) {
-			ctx := experiment.NewContext(ctx, internal.ExperimentUnitPage)
-			if test.wantUnitPage == "" {
-				test.wantUnitPage = test.want
-			}
-			checkReadme(ctx, t, test.mi, test.readme, test.wantUnitPage)
-		})
+		if test.wantUnitPage == "" {
+			test.wantUnitPage = test.want
+		}
+		checkReadme(ctx, t, test.mi, test.readme, test.wantUnitPage)
 	}
 }
 

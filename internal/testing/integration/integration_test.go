@@ -19,7 +19,6 @@ import (
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/index"
 	"golang.org/x/pkgsite/internal/postgres"
@@ -38,7 +37,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestEndToEndProcessing(t *testing.T) {
-	ctx, cancel := context.WithTimeout(experiment.NewContext(context.Background(), internal.ExperimentUnitPage), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	defer postgres.ResetTestDB(testDB, t)

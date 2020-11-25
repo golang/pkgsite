@@ -23,11 +23,10 @@ import (
 	"golang.org/x/net/html/atom"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/source"
 )
 
-func blackfridayReadmeHTML(ctx context.Context, readme *internal.Readme, mi *internal.ModuleInfo) (safehtml.HTML, error) {
+func blackfridayReadmeHTML(readme *internal.Readme, mi *internal.ModuleInfo) (safehtml.HTML, error) {
 	// blackfriday.Run() uses CommonHTMLFlags and CommonExtensions by default.
 	renderer := blackfriday.NewHTMLRenderer(blackfriday.HTMLRendererParameters{Flags: blackfriday.CommonHTMLFlags})
 	parser := blackfriday.New(blackfriday.WithExtensions(blackfriday.CommonExtensions | blackfriday.AutoHeadingIDs))
@@ -41,7 +40,7 @@ func blackfridayReadmeHTML(ctx context.Context, readme *internal.Readme, mi *int
 	rootNode.Walk(func(node *blackfriday.Node, entering bool) blackfriday.WalkStatus {
 		switch node.Type {
 		case blackfriday.Heading:
-			if experiment.IsActive(ctx, internal.ExperimentUnitPage) && node.HeadingID != "" {
+			if node.HeadingID != "" {
 				// Prefix HeadingID with "readme-" on the unit page to prevent
 				// a namespace clash with the documentation section.
 				node.HeadingID = "readme-" + node.HeadingID
@@ -87,7 +86,7 @@ func LegacyReadmeHTML(ctx context.Context, mi *internal.ModuleInfo, readme *inte
 		return h, nil
 	}
 
-	return blackfridayReadmeHTML(ctx, readme, mi)
+	return blackfridayReadmeHTML(readme, mi)
 }
 
 // legacySanitizeHTML reads HTML from r and sanitizes it to ensure it is safe.

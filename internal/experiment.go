@@ -10,7 +10,6 @@ const (
 	ExperimentFasterDecoding = "faster-decoding"
 	ExperimentGoldmark       = "goldmark"
 	ExperimentReadmeOutline  = "readme-outline"
-	ExperimentUnitPage       = "unit-page"
 )
 
 // Experiments represents all of the active experiments in the codebase and
@@ -20,7 +19,6 @@ var Experiments = map[string]string{
 	ExperimentFasterDecoding: "Decode ASTs faster.",
 	ExperimentGoldmark:       "Enable the usage of rendering markdown using goldmark instead of blackfriday.",
 	ExperimentReadmeOutline:  "Enable the readme outline in the side nav.",
-	ExperimentUnitPage:       "Enable the redesigned details page.",
 }
 
 // Experiment holds data associated with an experimental feature for frontend
