@@ -352,7 +352,7 @@ func serverTestCases() []serverTestCase {
 			name:           "C",
 			urlPath:        "/C",
 			wantStatusCode: http.StatusMovedPermanently,
-			wantLocation:   "https://golang.org/doc/articles/c_go_cgo.html",
+			wantLocation:   "/cmd/cgo",
 		},
 		{
 			name:           "static",

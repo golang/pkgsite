@@ -137,10 +137,9 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/about", http.RedirectHandler("https://go.dev/about", http.StatusFound))
 	handle("/badge/", http.HandlerFunc(s.badgeHandler))
 	handle("/C", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Package "C" is a special case: redirect to the Go Blog article on
-		// cgo.
-		// (This is what godoc.org does.)
-		http.Redirect(w, r, "https://golang.org/doc/articles/c_go_cgo.html", http.StatusMovedPermanently)
+		// Package "C" is a special case: redirect to /cmd/cgo.
+		// (This is what golang.org/C does.)
+		http.Redirect(w, r, "/cmd/cgo", http.StatusMovedPermanently)
 	}))
 	handle("/", detailHandler)
 	if s.serveStats {
