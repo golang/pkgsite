@@ -12,13 +12,30 @@ Usage: $0 [up|down|force|version] {#}"
 EOUSAGE
 }
 
+database_user="postgres"
+if [[ $GO_DISCOVERY_DATABASE_USER != "" ]]; then
+  database_user=$GO_DISCOVERY_DATABASE_USER
+fi
+database_password=""
+if [[ $GO_DISCOVERY_DATABASE_PASSWORD != "" ]]; then
+  database_password=$GO_DISCOVERY_DATABASE_PASSWORD
+fi
+database_host="localhost"
+if [[ $GO_DISCOVERY_DATABASE_HOST != "" ]]; then
+  database_host=$GO_DISCOVERY_DATABASE_HOST
+fi
+database_name='discovery-db'
+if [[ $GO_DISCOVERY_DATABASE_NAME != "" ]]; then
+  database_name=$GO_DISCOVERY_DATABASE_NAME
+fi
+
 # Redirect stderr to stdout because migrate outputs to stderr, and we want
 # to be able to use ordinary output redirection.
 case "$1" in
   up|down|force|version)
     migrate \
       -source file:migrations \
-      -database "postgres://postgres@localhost:5432/discovery-db?sslmode=disable" \
+      -database "postgresql://$database_user:$database_password@$database_host:5432/$database_name?sslmode=disable" \
       "$@" 2>&1
     ;;
   *)
