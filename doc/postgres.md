@@ -62,7 +62,7 @@ Tests require a Postgres instance. If you followed the docker setup in step 1 in
 then you have one.
 
 When running `go test ./...`, database tests will not run if you don't have
-postgres running. To run these tests, set `GO_DISCOVERY_RUN_TESTDB=true`.
+postgres running. To run these tests, set `GO_DISCOVERY_TESTDB=true`.
 Alternatively, you can run `./all.bash`, which will run the database tests.
 
 Tests use the following environment variables:
