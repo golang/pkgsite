@@ -307,8 +307,6 @@ func (c *Config) Application() string {
 	switch svc {
 	case "default":
 		return "frontend"
-	case "etl":
-		return "worker"
 	default:
 		return svc
 	}

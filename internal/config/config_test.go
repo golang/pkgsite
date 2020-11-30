@@ -103,8 +103,6 @@ func TestEnvAndApp(t *testing.T) {
 		wantApp   string
 	}{
 		{"default", "prod", "frontend"},
-		{"etl", "prod", "worker"},
-		{"staging-etl", "staging", "worker"},
 		{"exp-worker", "exp", "worker"},
 		{"-foo-bar", "unknownEnv", "foo-bar"},
 		{"", "local", "unknownApp"},
