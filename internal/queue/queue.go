@@ -96,9 +96,6 @@ func newGCP(cfg *config.Config, client *cloudtasks.Client, queueID string) (_ *G
 	if cfg.QueueService != "" && cfg.QueueURL != "" {
 		return nil, errors.New("both  QueueService and QueueURL are non-empty")
 	}
-	if cfg.OnAppEngine() && cfg.QueueService == "" {
-		return nil, errors.New("on AppEngine, but QueueService is empty")
-	}
 	if cfg.QueueURL != "" {
 		if cfg.ServiceAccount == "" {
 			return nil, errors.New("need ServiceAccount with QueueURL")
