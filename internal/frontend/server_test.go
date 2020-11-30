@@ -679,6 +679,11 @@ func TestServer(t *testing.T) {
 			name:          "no experiments",
 			testCasesFunc: serverTestCases,
 		},
+		{
+			name:          "goldmark and readme outline experiments",
+			testCasesFunc: serverTestCases,
+			experiments: []string{internal.ExperimentReadmeOutline, internal.ExperimentGoldmark},
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			testServer(t, test.testCasesFunc(), test.experiments...)
