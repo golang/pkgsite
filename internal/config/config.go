@@ -318,7 +318,7 @@ type configOverride struct {
 
 // QuotaSettings is config for internal/middleware/quota.go
 type QuotaSettings struct {
-	Disable    bool
+	Enable     bool
 	QPS        int // allowed queries per second, per IP block
 	Burst      int // maximum requests per second, per block; the size of the token bucket
 	MaxEntries int // maximum number of entries to keep track of
@@ -387,7 +387,7 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		RedisHAHost:          os.Getenv("GO_DISCOVERY_REDIS_HA_HOST"),
 		RedisHAPort:          GetEnv("GO_DISCOVERY_REDIS_HA_PORT", "6379"),
 		Quota: QuotaSettings{
-			Disable:    os.Getenv("GO_DISCOVERY_DISABLE_QUOTA") == "TRUE",
+			Enable:     os.Getenv("GO_DISCOVERY_ENABLE_QUOTA") == "TRUE",
 			QPS:        GetEnvInt("GO_DISCOVERY_QUOTA_QPS", 10),
 			Burst:      20,   // ignored in redis-based quota implementation
 			MaxEntries: 1000, // ignored in redis-based quota implementation
@@ -482,9 +482,7 @@ func Init(ctx context.Context) (_ *Config, err error) {
 			return nil, fmt.Errorf("could not get database password secret: %v", err)
 		}
 	}
-	if cfg.Quota.Disable {
-		log.Print("quota enforcement disabled")
-	} else {
+	if cfg.Quota.Enable {
 		s, err := secrets.Get(ctx, "quota-hmac-key")
 		if err != nil {
 			return nil, err
@@ -497,6 +495,8 @@ func Init(ctx context.Context) (_ *Config, err error) {
 			return nil, errors.New("HMAC secret must be at least 16 bytes")
 		}
 		cfg.Quota.HMACKey = hmacKey
+	} else {
+		log.Print("quota enforcement disabled")
 	}
 
 	// If GO_DISCOVERY_CONFIG_OVERRIDE is set, it should point to a file in a

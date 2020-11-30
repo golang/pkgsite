@@ -135,7 +135,7 @@ func Quota(settings config.QuotaSettings, client *redis.Client) Middleware {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			if settings.Disable {
+			if !settings.Enable {
 				recordQuotaMetric(ctx, "disabled")
 				h.ServeHTTP(w, r)
 				return
