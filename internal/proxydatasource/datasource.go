@@ -99,10 +99,14 @@ func (ds *DataSource) getModule(ctx context.Context, modulePath, version string)
 			m.RemoveNonRedistributableData()
 		}
 	}
-	ds.versionCache[key] = &versionEntry{module: m, err: err}
+
 	if res.Error != nil {
+		if !errors.Is(ctx.Err(), context.Canceled) {
+			ds.versionCache[key] = &versionEntry{module: m, err: res.Error}
+		}
 		return nil, res.Error
 	}
+	ds.versionCache[key] = &versionEntry{module: m, err: err}
 
 	// Since we hold the lock and missed the cache, we can assume that we have
 	// never seen this module version. Therefore the following insert-and-sort
