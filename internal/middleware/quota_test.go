@@ -196,10 +196,10 @@ func TestEnforceQuota(t *testing.T) {
 	check := func(n int, ip string, want bool) {
 		t.Helper()
 		for i := 0; i < n; i++ {
-			blocked, _ := enforceQuota(ctx, c, qps, ip+",x", []byte{1, 2, 3, 4})
+			blocked, reason := enforceQuota(ctx, c, qps, ip+",x", []byte{1, 2, 3, 4})
 			got := !blocked
 			if got != want {
-				t.Errorf("%d: got %t, want %t", i, got, want)
+				t.Errorf("%d: got %t, want %t (reason=%q)", i, got, want, reason)
 			}
 		}
 	}
