@@ -36,6 +36,7 @@ func LoadTemplates(dir template.TrustedSource) {
 				join(dir, tc("sidenav.tmpl")),
 				join(dir, tc("sidenav-mobile.tmpl")),
 				join(dir, tc("body.tmpl")),
+				join(dir, tc("links.tmpl")),
 				example))
 	})
 }
@@ -49,13 +50,14 @@ var tmpl = map[string]interface{}{
 		}
 		return a
 	},
-	"render_short_synopsis": (*render.Renderer)(nil).ShortSynopsis,
-	"render_synopsis":       (*render.Renderer)(nil).Synopsis,
-	"render_doc":            (*render.Renderer)(nil).DocHTML,
-	"render_decl":           (*render.Renderer)(nil).DeclHTML,
-	"render_code":           (*render.Renderer)(nil).CodeHTML,
-	"file_link":             func() string { return "" },
-	"source_link":           func() string { return "" },
-	"play_url":              func(*doc.Example) string { return "" },
-	"safe_id":               render.SafeGoID,
+	"render_short_synopsis":    (*render.Renderer)(nil).ShortSynopsis,
+	"render_synopsis":          (*render.Renderer)(nil).Synopsis,
+	"render_doc":               (*render.Renderer)(nil).DocHTML,
+	"render_doc_extract_links": (*render.Renderer)(nil).DocHTML,
+	"render_decl":              (*render.Renderer)(nil).DeclHTML,
+	"render_code":              (*render.Renderer)(nil).CodeHTML,
+	"file_link":                func() string { return "" },
+	"source_link":              func() string { return "" },
+	"play_url":                 func(*doc.Example) string { return "" },
+	"safe_id":                  render.SafeGoID,
 }

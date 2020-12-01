@@ -1,0 +1,10 @@
+<!--
+  Copyright 2020 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+<ul class="Documentation-links">
+{{range (call .Links) -}}
+	<li><a {{with .Class}}class="{{.}}" {{end}}href="{{.Href}}">{{.Text}}</a></li>
+{{end -}}
+</ul>

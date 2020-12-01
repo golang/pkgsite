@@ -107,6 +107,10 @@ func TestRenderParts(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	links, err := html.Parse(strings.NewReader(parts.Links.String()))
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// Check that there are no duplicate id attributes.
 	t.Run("duplicate ids", func(t *testing.T) {
@@ -139,6 +143,12 @@ func TestRenderParts(t *testing.T) {
 	checker = in("#DocNavMobile-select",
 		in("optgroup[label=Notes]", in("option", hasAttr("value", "pkg-note-BUG"), hasExactText("Bugs"))))
 	if err := checker(mobileDoc); err != nil {
+		t.Errorf("note check: %v", err)
+	}
+
+	checker = htmlcheck.In(".Documentation-links",
+		htmlcheck.In("li", htmlcheck.In("a", htmlcheck.HasHref("https://go.googlesource.com/pkgsite"), htmlcheck.HasExactText("pkgsite repo"))))
+	if err := checker(links); err != nil {
 		t.Errorf("note check: %v", err)
 	}
 }

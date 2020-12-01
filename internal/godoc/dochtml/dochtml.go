@@ -69,6 +69,7 @@ type templateData struct {
 	*doc.Package
 	Examples    *examples
 	NoteHeaders map[string]noteHeader
+	Links       func() []render.Link
 }
 
 // Render renders package documentation HTML for the
@@ -102,6 +103,7 @@ type Parts struct {
 	Body          safehtml.HTML // main body of doc
 	Outline       safehtml.HTML // outline for large screens
 	MobileOutline safehtml.HTML // outline for mobile
+	Links         safehtml.HTML // "Links" section of package doc
 }
 
 // Render renders package documentation HTML for the
@@ -154,6 +156,9 @@ func RenderParts(ctx context.Context, fset *token.FileSet, p *doc.Package, opt R
 		Body:          exec("body.tmpl"),
 		Outline:       outline,
 		MobileOutline: exec("sidenav-mobile.tmpl"),
+		// Links must be rendered after body, because the call to
+		// render_doc_extract_links in body.tmpl creates the links.
+		Links: exec("links.tmpl"),
 	}
 	if err != nil {
 		return nil, err
@@ -207,19 +212,21 @@ func renderInfo(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Re
 		return linkHTML(name, opt.SourceLinkFunc(node), "Documentation-source")
 	}
 	funcs := map[string]interface{}{
-		"render_short_synopsis": r.ShortSynopsis,
-		"render_synopsis":       r.Synopsis,
-		"render_doc":            r.DocHTML,
-		"render_decl":           r.DeclHTML,
-		"render_code":           r.CodeHTML,
-		"file_link":             fileLink,
-		"source_link":           sourceLink,
+		"render_short_synopsis":    r.ShortSynopsis,
+		"render_synopsis":          r.Synopsis,
+		"render_doc":               r.DocHTML,
+		"render_doc_extract_links": r.DocHTMLExtractLinks,
+		"render_decl":              r.DeclHTML,
+		"render_code":              r.CodeHTML,
+		"file_link":                fileLink,
+		"source_link":              sourceLink,
 	}
 	data := templateData{
 		RootURL:     "/pkg",
 		Package:     p,
 		Examples:    collectExamples(p),
 		NoteHeaders: buildNoteHeaders(p.Notes),
+		Links:       r.Links,
 	}
 	return funcs, data
 }

@@ -5,6 +5,13 @@
 // Package everydecl has every form of declaration known to dochtml.
 // It is designed to test that the generated HTML has the right id and data-kind
 // attributes.
+//
+//
+// Links
+//
+// - pkgsite repo, https://go.googlesource.com/pkgsite
+// - Play with Go, https://play-with-go.dev
+//
 package everydecl
 
 // const
