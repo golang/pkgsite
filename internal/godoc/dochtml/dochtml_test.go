@@ -25,6 +25,13 @@ import (
 
 var templateSource = template.TrustedSourceFromConstant("../../../content/static/html/doc")
 
+var (
+	in           = htmlcheck.In
+	hasAttr      = htmlcheck.HasAttr
+	hasHref      = htmlcheck.HasHref
+	hasExactText = htmlcheck.HasExactText
+)
+
 func TestRender(t *testing.T) {
 	LoadTemplates(templateSource)
 	fset, d := mustLoadPackage("everydecl")
@@ -50,27 +57,27 @@ func TestRender(t *testing.T) {
 		testIDsAndKinds(t, htmlDoc)
 	})
 
-	checker := htmlcheck.In(".Documentation-note",
-		htmlcheck.In("h3", htmlcheck.HasAttr("id", "pkg-note-BUG"), htmlcheck.HasExactText("Bugs ¶")),
-		htmlcheck.In("a", htmlcheck.HasHref("#pkg-note-BUG")))
+	checker := in(".Documentation-note",
+		in("h3", hasAttr("id", "pkg-note-BUG"), hasExactText("Bugs ¶")),
+		in("a", hasHref("#pkg-note-BUG")))
 	if err := checker(htmlDoc); err != nil {
 		t.Errorf("note check: %v", err)
 	}
 
-	checker = htmlcheck.In(".Documentation-index",
-		htmlcheck.In(".Documentation-indexNote", htmlcheck.In("a", htmlcheck.HasHref("#pkg-note-BUG"), htmlcheck.HasExactText("Bugs"))))
+	checker = in(".Documentation-index",
+		in(".Documentation-indexNote", in("a", hasHref("#pkg-note-BUG"), hasExactText("Bugs"))))
 	if err := checker(htmlDoc); err != nil {
 		t.Errorf("note check: %v", err)
 	}
 
-	checker = htmlcheck.In(".DocNav-notes",
-		htmlcheck.In("#nav-group-notes", htmlcheck.In("li", htmlcheck.In("a", htmlcheck.HasHref("#pkg-note-BUG"), htmlcheck.HasExactText("Bugs")))))
+	checker = in(".DocNav-notes",
+		in("#nav-group-notes", in("li", in("a", hasHref("#pkg-note-BUG"), hasExactText("Bugs")))))
 	if err := checker(htmlDoc); err != nil {
 		t.Errorf("note check: %v", err)
 	}
 
-	checker = htmlcheck.In("#DocNavMobile-select",
-		htmlcheck.In("optgroup[label=Notes]", htmlcheck.In("option", htmlcheck.HasAttr("value", "pkg-note-BUG"), htmlcheck.HasExactText("Bugs"))))
+	checker = in("#DocNavMobile-select",
+		in("optgroup[label=Notes]", in("option", hasAttr("value", "pkg-note-BUG"), hasExactText("Bugs"))))
 	if err := checker(htmlDoc); err != nil {
 		t.Errorf("note check: %v", err)
 	}
@@ -110,27 +117,27 @@ func TestRenderParts(t *testing.T) {
 		testIDsAndKinds(t, bodyDoc)
 	})
 
-	checker := htmlcheck.In(".Documentation-note",
-		htmlcheck.In("h3", htmlcheck.HasAttr("id", "pkg-note-BUG"), htmlcheck.HasExactText("Bugs ¶")),
-		htmlcheck.In("a", htmlcheck.HasHref("#pkg-note-BUG")))
+	checker := in(".Documentation-note",
+		in("h3", hasAttr("id", "pkg-note-BUG"), hasExactText("Bugs ¶")),
+		in("a", hasHref("#pkg-note-BUG")))
 	if err := checker(bodyDoc); err != nil {
 		t.Errorf("note check: %v", err)
 	}
 
-	checker = htmlcheck.In(".Documentation-index",
-		htmlcheck.In(".Documentation-indexNote", htmlcheck.In("a", htmlcheck.HasHref("#pkg-note-BUG"), htmlcheck.HasExactText("Bugs"))))
+	checker = in(".Documentation-index",
+		in(".Documentation-indexNote", in("a", hasHref("#pkg-note-BUG"), hasExactText("Bugs"))))
 	if err := checker(bodyDoc); err != nil {
 		t.Errorf("note check: %v", err)
 	}
 
-	checker = htmlcheck.In(".DocNav-notes",
-		htmlcheck.In("#nav-group-notes", htmlcheck.In("li", htmlcheck.In("a", htmlcheck.HasHref("#pkg-note-BUG"), htmlcheck.HasExactText("Bugs")))))
+	checker = in(".DocNav-notes",
+		in("#nav-group-notes", in("li", in("a", hasHref("#pkg-note-BUG"), hasExactText("Bugs")))))
 	if err := checker(sidenavDoc); err != nil {
 		t.Errorf("note check: %v", err)
 	}
 
-	checker = htmlcheck.In("#DocNavMobile-select",
-		htmlcheck.In("optgroup[label=Notes]", htmlcheck.In("option", htmlcheck.HasAttr("value", "pkg-note-BUG"), htmlcheck.HasExactText("Bugs"))))
+	checker = in("#DocNavMobile-select",
+		in("optgroup[label=Notes]", in("option", hasAttr("value", "pkg-note-BUG"), hasExactText("Bugs"))))
 	if err := checker(mobileDoc); err != nil {
 		t.Errorf("note check: %v", err)
 	}
