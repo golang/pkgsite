@@ -123,7 +123,7 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 		return nil, err
 	}
 
-	synopsis, imports, docHTML, err := docPkg.Render(ctx, innerPath, sourceInfo, modInfo, goos, goarch)
+	synopsis, imports, _, err := docPkg.Render(ctx, innerPath, sourceInfo, modInfo, goos, goarch)
 	if err != nil && !errors.Is(err, godoc.ErrTooLarge) {
 		return nil, err
 	}
@@ -133,15 +133,14 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 	}
 	v1path := internal.V1Path(importPath, modulePath)
 	return &goPackage{
-		path:              importPath,
-		name:              packageName,
-		synopsis:          synopsis,
-		v1path:            v1path,
-		imports:           imports,
-		documentationHTML: docHTML,
-		goos:              goos,
-		goarch:            goarch,
-		source:            src,
+		path:     importPath,
+		name:     packageName,
+		synopsis: synopsis,
+		v1path:   v1path,
+		imports:  imports,
+		goos:     goos,
+		goarch:   goarch,
+		source:   src,
 	}, err
 }
 

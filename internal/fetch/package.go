@@ -15,7 +15,6 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/google/safehtml"
 	"go.opencensus.io/trace"
 	"golang.org/x/mod/module"
 	"golang.org/x/pkgsite/internal"
@@ -33,7 +32,6 @@ type goPackage struct {
 	name              string
 	synopsis          string
 	imports           []string
-	documentationHTML safehtml.HTML
 	isRedistributable bool
 	licenseMeta       []*licenses.Metadata // metadata of applicable licenses
 	// goos and goarch are environment variables used to parse the
