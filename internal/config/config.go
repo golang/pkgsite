@@ -124,10 +124,6 @@ type Config struct {
 	// is running as when on GCP.
 	ServiceAccount string
 
-	// QueueService is the AppEngine service that the Cloud Tasks queue should
-	// send requests to.
-	QueueService string
-
 	// QueueURL is the URL that the Cloud Tasks queue should send requests to.
 	// It should be used when the worker is not on AppEngine.
 	QueueURL string
@@ -369,7 +365,6 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		VersionID:          GetEnv("GAE_VERSION", os.Getenv("DOCKER_IMAGE")),
 		InstanceID:         GetEnv("GAE_INSTANCE", os.Getenv("GO_DISCOVERY_INSTANCE")),
 		GoogleTagManagerID: os.Getenv("GO_DISCOVERY_GOOGLE_TAG_MANAGER_ID"),
-		QueueService:       os.Getenv("GO_DISCOVERY_QUEUE_SERVICE"),
 		QueueURL:           os.Getenv("GO_DISCOVERY_QUEUE_URL"),
 		QueueAudience:      os.Getenv("GO_DISCOVERY_QUEUE_AUDIENCE"),
 

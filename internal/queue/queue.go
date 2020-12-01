@@ -58,17 +58,16 @@ func New(ctx context.Context, cfg *config.Config, queueName string, numWorkers i
 	if err != nil {
 		return nil, err
 	}
-	log.Infof(ctx, "enqueuing at %s with queueService=%q, queueURL=%q", g.queueName, g.queueService, g.queueURL)
+	log.Infof(ctx, "enqueuing at %s with queueURL=%q", g.queueName, g.queueURL)
 	return g, nil
 }
 
 // GCP provides a Queue implementation backed by the Google Cloud Tasks
 // API.
 type GCP struct {
-	client       *cloudtasks.Client
-	queueName    string // full GCP name of the queue
-	queueService string // AppEngine service to post tasks to
-	queueURL     string // non-AppEngine URL to post tasks to
+	client    *cloudtasks.Client
+	queueName string // full GCP name of the queue
+	queueURL  string // non-AppEngine URL to post tasks to
 	// token holds information that lets the task queue construct an authorized request to the worker.
 	// Since the worker sits behind the IAP, the queue needs an identity token that includes the
 	// identity of a service account that has access, and the client ID for the IAP.
@@ -90,25 +89,19 @@ func newGCP(cfg *config.Config, client *cloudtasks.Client, queueID string) (_ *G
 	if cfg.LocationID == "" {
 		return nil, errors.New("empty LocationID")
 	}
-	if cfg.QueueService == "" && cfg.QueueURL == "" {
-		return nil, errors.New("both QueueService and QueueURL are empty")
+	if cfg.QueueURL == "" {
+		return nil, errors.New("empty QueueURL")
 	}
-	if cfg.QueueService != "" && cfg.QueueURL != "" {
-		return nil, errors.New("both  QueueService and QueueURL are non-empty")
+	if cfg.ServiceAccount == "" {
+		return nil, errors.New("empty ServiceAccount")
 	}
-	if cfg.QueueURL != "" {
-		if cfg.ServiceAccount == "" {
-			return nil, errors.New("need ServiceAccount with QueueURL")
-		}
-		if cfg.QueueAudience == "" {
-			return nil, errors.New("need QueueAudience with QueueURL")
-		}
+	if cfg.QueueAudience == "" {
+		return nil, errors.New("empty QueueAudience")
 	}
 	return &GCP{
-		client:       client,
-		queueName:    fmt.Sprintf("projects/%s/locations/%s/queues/%s", cfg.ProjectID, cfg.LocationID, queueID),
-		queueService: cfg.QueueService,
-		queueURL:     cfg.QueueURL,
+		client:    client,
+		queueName: fmt.Sprintf("projects/%s/locations/%s/queues/%s", cfg.ProjectID, cfg.LocationID, queueID),
+		queueURL:  cfg.QueueURL,
 		token: &taskspb.HttpRequest_OidcToken{
 			OidcToken: &taskspb.OidcToken{
 				ServiceAccountEmail: cfg.ServiceAccount,
@@ -151,24 +144,12 @@ func (q *GCP) newTaskRequest(modulePath, version, suffix string) *taskspb.Create
 		Name:             fmt.Sprintf("%s/tasks/%s", q.queueName, taskID),
 		DispatchDeadline: ptypes.DurationProto(maxCloudTasksTimeout),
 	}
-	if q.queueService != "" {
-		task.MessageType = &taskspb.Task_AppEngineHttpRequest{
-			AppEngineHttpRequest: &taskspb.AppEngineHttpRequest{
-				HttpMethod:  taskspb.HttpMethod_POST,
-				RelativeUri: relativeURI,
-				AppEngineRouting: &taskspb.AppEngineRouting{
-					Service: q.queueService,
-				},
-			},
-		}
-	} else {
-		task.MessageType = &taskspb.Task_HttpRequest{
-			HttpRequest: &taskspb.HttpRequest{
-				HttpMethod:          taskspb.HttpMethod_POST,
-				Url:                 q.queueURL + relativeURI,
-				AuthorizationHeader: q.token,
-			},
-		}
+	task.MessageType = &taskspb.Task_HttpRequest{
+		HttpRequest: &taskspb.HttpRequest{
+			HttpMethod:          taskspb.HttpMethod_POST,
+			Url:                 q.queueURL + relativeURI,
+			AuthorizationHeader: q.token,
+		},
 	}
 	req := &taskspb.CreateTaskRequest{
 		Parent: q.queueName,
