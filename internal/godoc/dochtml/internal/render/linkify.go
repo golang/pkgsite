@@ -266,6 +266,7 @@ func (r *Renderer) formatLineHTML(line string, idr *identifierResolver) safehtml
 		htmls = append(htmls, ExecuteToHTML(LinkTemplate, Link{Href: href, Text: text}))
 	}
 
+	line = convertQuotes(line)
 	for len(line) > 0 {
 		m0, m1 := len(line), len(line)
 		if m := matchRx.FindStringIndex(line); m != nil {
@@ -692,4 +693,16 @@ func generateAnchorLinks(idr *identifierResolver, decl ast.Decl) map[*ast.Ident]
 		return true
 	})
 	return m
+}
+
+const (
+	ulquo = "“"
+	urquo = "”"
+)
+
+var unicodeQuoteReplacer = strings.NewReplacer("``", ulquo, "''", urquo)
+
+// convertQuotes turns `` into “ and '' into ”.
+func convertQuotes(text string) string {
+	return unicodeQuoteReplacer.Replace(text)
 }

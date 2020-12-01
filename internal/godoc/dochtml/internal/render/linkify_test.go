@@ -152,6 +152,11 @@ TLSUnique contains the tls-unique channel binding value (see RFC
 				{Text: "title2", Href: "url2"},
 			},
 		},
+		{
+			name: "escape back ticks in quotes",
+			doc:  "For more detail, run ``go help test'' and ``go help testflag''",
+			want: `<p>For more detail, run “go help test” and “go help testflag”` + "\n" + "</p>",
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			extractLinks := test.extractLinks
@@ -515,6 +520,21 @@ func TestParseLink(t *testing.T) {
 		got := parseLink(test.line)
 		if !cmp.Equal(got, test.want) {
 			t.Errorf("%q: got %+v, want %+v\n", test.line, got, test.want)
+		}
+	}
+}
+
+func TestCommentEscape(t *testing.T) {
+	commentTests := []struct {
+		in, out string
+	}{
+		{"typically invoked as ``go tool asm'',", `typically invoked as “go tool asm”,`},
+		{"For more detail, run ``go help test'' and ``go help testflag''", `For more detail, run “go help test” and “go help testflag”`},
+	}
+	for i, test := range commentTests {
+		out := convertQuotes(test.in)
+		if out != test.out {
+			t.Errorf("#%d: mismatch\nhave: %q\nwant: %q", i, out, test.out)
 		}
 	}
 }
