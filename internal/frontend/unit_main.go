@@ -119,8 +119,8 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		return nil, err
 	}
 	var (
-		docBody, docOutline, mobileOutline safehtml.HTML
-		files                              []*File
+		parts = &dochtml.Parts{}
+		files []*File
 	)
 	if unit.Documentation != nil {
 		end := middleware.ElapsedStat(ctx, "DecodePackage")
@@ -135,7 +135,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 			}
 			return nil, err
 		}
-		docBody, docOutline, mobileOutline, err = getHTML(ctx, unit, docPkg)
+		parts, err = getHTML(ctx, unit, docPkg)
 		// If err  is ErrTooLarge, then docBody will have an appropriate message.
 		if err != nil && !errors.Is(err, dochtml.ErrTooLarge) {
 			return nil, err
@@ -152,12 +152,12 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		CommitTime:      absoluteTime(um.CommitTime),
 		Readme:          readme,
 		ReadmeOutline:   readmeOutline,
-		DocOutline:      docOutline,
-		DocBody:         docBody,
+		DocOutline:      parts.Outline,
+		DocBody:         parts.Body,
 		SourceFiles:     files,
 		RepositoryURL:   um.SourceInfo.RepoURL(),
 		SourceURL:       um.SourceInfo.DirectoryURL(internal.Suffix(um.Path, um.ModulePath)),
-		MobileOutline:   mobileOutline,
+		MobileOutline:   parts.MobileOutline,
 		NumImports:      unit.NumImports,
 		ImportedByCount: importedByCount,
 		IsPackage:       unit.IsPackage(),
@@ -240,14 +240,14 @@ func getSubdirectories(um *internal.UnitMeta, pkgs []*internal.PackageMeta) []*S
 
 const missingDocReplacement = `<p>Documentation is missing.</p>`
 
-func getHTML(ctx context.Context, u *internal.Unit, docPkg *godoc.Package) (body, outline, mobileOutline safehtml.HTML, err error) {
+func getHTML(ctx context.Context, u *internal.Unit, docPkg *godoc.Package) (_ *dochtml.Parts, err error) {
 	defer derrors.Wrap(&err, "getHTML(%s)", u.Path)
 
 	if len(u.Documentation.Source) > 0 {
 		return renderDocParts(ctx, u, docPkg)
 	}
 	log.Errorf(ctx, "unit %s (%s@%s) missing documentation source", u.Path, u.ModulePath, u.Version)
-	return template.MustParseAndExecuteToHTML(missingDocReplacement), safehtml.HTML{}, safehtml.HTML{}, nil
+	return &dochtml.Parts{Body: template.MustParseAndExecuteToHTML(missingDocReplacement)}, nil
 }
 
 // getImportedByCount fetches the imported by count for the unit and returns a

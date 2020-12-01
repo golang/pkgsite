@@ -140,11 +140,11 @@ func validateDocumentationHTML(t *testing.T, got *internal.Module, want map[stri
 	ctx := context.Background()
 	for _, u := range got.Units {
 		if wantStrings := want[u.Path]; wantStrings != nil {
-			body, _, _, err := godoc.RenderPartsFromUnit(ctx, u)
+			parts, err := godoc.RenderPartsFromUnit(ctx, u)
 			if err != nil && !errors.Is(err, godoc.ErrTooLarge) {
 				t.Fatal(err)
 			}
-			gotDoc := body.String()
+			gotDoc := parts.Body.String()
 			for _, w := range wantStrings {
 				if !strings.Contains(gotDoc, w) {
 					t.Errorf("doc for %s:\nmissing %q; got\n%q", u.Path, w, gotDoc)

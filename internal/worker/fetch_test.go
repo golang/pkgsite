@@ -401,11 +401,11 @@ func TestFetchAndUpdateState(t *testing.T) {
 				return
 			}
 			if gotPkg.Documentation != nil {
-				body, _, _, err := godoc.RenderPartsFromUnit(ctx, gotPkg)
+				parts, err := godoc.RenderPartsFromUnit(ctx, gotPkg)
 				if err != nil {
 					t.Fatal(err)
 				}
-				gotDoc := body.String()
+				gotDoc := parts.Body.String()
 				for _, want := range test.wantDoc {
 					if !strings.Contains(gotDoc, want) {
 						t.Errorf("got documentation doesn't contain wanted documentation substring:\ngot: %q\nwant (substring): %q", gotDoc, want)

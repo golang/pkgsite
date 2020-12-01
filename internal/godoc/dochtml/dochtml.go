@@ -97,12 +97,19 @@ func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Render
 	return executeToHTMLWithLimit(tmpl, data, opt.Limit)
 }
 
+// Parts contains HTML for each part of the documentation.
+type Parts struct {
+	Body          safehtml.HTML // main body of doc
+	Outline       safehtml.HTML // outline for large screens
+	MobileOutline safehtml.HTML // outline for mobile
+}
+
 // Render renders package documentation HTML for the
 // provided file set and package, in separate parts.
 //
 // If any of the rendered documentation part HTML sizes exceeds the specified limit,
 // an error with ErrTooLarge in its chain will be returned.
-func RenderParts(ctx context.Context, fset *token.FileSet, p *doc.Package, opt RenderOptions) (body, outline, mobileOutline safehtml.HTML, err error) {
+func RenderParts(ctx context.Context, fset *token.FileSet, p *doc.Package, opt RenderOptions) (_ *Parts, err error) {
 	defer derrors.Wrap(&err, "dochtml.RenderParts")
 
 	if opt.Limit == 0 {
@@ -118,7 +125,7 @@ func RenderParts(ctx context.Context, fset *token.FileSet, p *doc.Package, opt R
 		len(p.Vars) == 0 &&
 		len(p.Types) == 0 &&
 		len(p.Funcs) == 0 {
-		return safehtml.HTML{}, safehtml.HTML{}, safehtml.HTML{}, nil
+		return &Parts{}, nil
 	}
 	tmpl := template.Must(unitTemplate.Clone()).Funcs(funcs)
 
@@ -136,16 +143,22 @@ func RenderParts(ctx context.Context, fset *token.FileSet, p *doc.Package, opt R
 		return html
 	}
 
-	body = exec("body.tmpl")
-	outline = exec("sidenav.tmpl")
+	var outline safehtml.HTML
 	if experiment.IsActive(ctx, internal.ExperimentReadmeOutline) {
 		outline = exec("outline.tmpl")
+	} else {
+		outline = exec("sidenav.tmpl")
 	}
-	mobileOutline = exec("sidenav-mobile.tmpl")
+
+	parts := &Parts{
+		Body:          exec("body.tmpl"),
+		Outline:       outline,
+		MobileOutline: exec("sidenav-mobile.tmpl"),
+	}
 	if err != nil {
-		return safehtml.HTML{}, safehtml.HTML{}, safehtml.HTML{}, err
+		return nil, err
 	}
-	return body, outline, mobileOutline, nil
+	return parts, nil
 }
 
 // renderInfo returns the functions and data needed to render the doc.

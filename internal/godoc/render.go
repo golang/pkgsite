@@ -159,30 +159,30 @@ func (p *Package) renderOptions(innerPath string, sourceInfo *source.Info, modIn
 
 // RenderParts renders the documentation for the package in parts.
 // Rendering destroys p's AST; do not call any methods of p after it returns.
-func (p *Package) RenderParts(ctx context.Context, innerPath string, sourceInfo *source.Info, modInfo *ModuleInfo) (body, outline, mobileOutline safehtml.HTML, err error) {
+func (p *Package) RenderParts(ctx context.Context, innerPath string, sourceInfo *source.Info, modInfo *ModuleInfo) (_ *dochtml.Parts, err error) {
 	p.renderCalled = true
 
 	d, err := p.docPackage(innerPath, modInfo)
 	if err != nil {
-		return safehtml.HTML{}, safehtml.HTML{}, safehtml.HTML{}, err
+		return nil, err
 	}
 	opts := p.renderOptions(innerPath, sourceInfo, modInfo)
-	b, o, m, err := dochtml.RenderParts(ctx, p.Fset, d, opts)
+	parts, err := dochtml.RenderParts(ctx, p.Fset, d, opts)
 	if errors.Is(err, ErrTooLarge) {
-		return template.MustParseAndExecuteToHTML(DocTooLargeReplacement), safehtml.HTML{}, safehtml.HTML{}, err
+		return &dochtml.Parts{Body: template.MustParseAndExecuteToHTML(DocTooLargeReplacement)}, nil
 	}
 	if err != nil {
-		return safehtml.HTML{}, safehtml.HTML{}, safehtml.HTML{}, fmt.Errorf("dochtml.Render: %v", err)
+		return nil, fmt.Errorf("dochtml.Render: %v", err)
 	}
-	return b, o, m, nil
+	return parts, nil
 }
 
 // RenderPartsFromUnit is a convenience function that first decodes the source
 // in the unit, which must exist, and then calls RenderParts.
-func RenderPartsFromUnit(ctx context.Context, u *internal.Unit) (body, outline, mobileOutline safehtml.HTML, err error) {
+func RenderPartsFromUnit(ctx context.Context, u *internal.Unit) (_ *dochtml.Parts, err error) {
 	docPkg, err := DecodePackage(u.Documentation.Source)
 	if err != nil {
-		return safehtml.HTML{}, safehtml.HTML{}, safehtml.HTML{}, err
+		return nil, err
 	}
 	modInfo := &ModuleInfo{
 		ModulePath:      u.ModulePath,

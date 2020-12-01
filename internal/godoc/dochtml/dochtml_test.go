@@ -81,22 +81,22 @@ func TestRenderParts(t *testing.T) {
 	fset, d := mustLoadPackage("everydecl")
 
 	ctx := context.Background()
-	body, sidenav, mobile, err := RenderParts(ctx, fset, d, RenderOptions{
+	parts, err := RenderParts(ctx, fset, d, RenderOptions{
 		FileLinkFunc:   func(string) string { return "file" },
 		SourceLinkFunc: func(ast.Node) string { return "src" },
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	bodyDoc, err := html.Parse(strings.NewReader(body.String()))
+	bodyDoc, err := html.Parse(strings.NewReader(parts.Body.String()))
 	if err != nil {
 		t.Fatal(err)
 	}
-	sidenavDoc, err := html.Parse(strings.NewReader(sidenav.String()))
+	sidenavDoc, err := html.Parse(strings.NewReader(parts.Outline.String()))
 	if err != nil {
 		t.Fatal(err)
 	}
-	mobileDoc, err := html.Parse(strings.NewReader(mobile.String()))
+	mobileDoc, err := html.Parse(strings.NewReader(parts.MobileOutline.String()))
 	if err != nil {
 		t.Fatal(err)
 	}
