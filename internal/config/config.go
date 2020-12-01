@@ -387,17 +387,17 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		RedisHAHost:          os.Getenv("GO_DISCOVERY_REDIS_HA_HOST"),
 		RedisHAPort:          GetEnv("GO_DISCOVERY_REDIS_HA_PORT", "6379"),
 		Quota: QuotaSettings{
-			Enable:     os.Getenv("GO_DISCOVERY_ENABLE_QUOTA") == "TRUE",
+			Enable:     os.Getenv("GO_DISCOVERY_ENABLE_QUOTA") == "true",
 			QPS:        GetEnvInt("GO_DISCOVERY_QUOTA_QPS", 10),
 			Burst:      20,   // ignored in redis-based quota implementation
 			MaxEntries: 1000, // ignored in redis-based quota implementation
 			RecordOnly: func() *bool {
-				t := (os.Getenv("GO_DISCOVERY_QUOTA_RECORD_ONLY") != "FALSE")
+				t := (os.Getenv("GO_DISCOVERY_QUOTA_RECORD_ONLY") != "false")
 				return &t
 			}(),
 			AuthValues: parseCommaList(os.Getenv("GO_DISCOVERY_AUTH_VALUES")),
 		},
-		UseProfiler: os.Getenv("GO_DISCOVERY_USE_PROFILER") == "TRUE",
+		UseProfiler: os.Getenv("GO_DISCOVERY_USE_PROFILER") == "true",
 		Teeproxy: TeeproxySettings{
 			AuthKey:          BypassQuotaAuthHeader,
 			AuthValue:        os.Getenv("GO_DISCOVERY_TEEPROXY_AUTH_VALUE"),
