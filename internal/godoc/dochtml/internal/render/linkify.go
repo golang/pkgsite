@@ -75,26 +75,42 @@ type docElement struct {
 	ID    safehtml.Identifier
 }
 
-func (r *Renderer) declHTML(doc string, decl ast.Decl) (out struct{ Doc, Decl safehtml.HTML }) {
+func (r *Renderer) declHTML(doc string, decl ast.Decl, extractLinks bool) (out struct{ Doc, Decl safehtml.HTML }) {
 	dids := newDeclIDs(decl)
 	idr := &identifierResolver{r.pids, dids, r.packageURL}
 	if doc != "" {
 		var els []docElement
+		inLinks := false
 		for _, blk := range docToBlocks(doc) {
 			var el docElement
 			switch blk := blk.(type) {
 			case *paragraph:
-				el.Body = r.linesToHTML(blk.lines, idr)
+				if inLinks {
+					r.links = append(r.links, parseLinks(blk.lines)...)
+				} else {
+					el.Body = r.linesToHTML(blk.lines, idr)
+					els = append(els, el)
+				}
 			case *preformat:
-				el.IsPreformat = true
-				el.Body = r.linesToHTML(blk.lines, nil)
+				if inLinks {
+					r.links = append(r.links, parseLinks(blk.lines)...)
+				} else {
+					el.IsPreformat = true
+					el.Body = r.linesToHTML(blk.lines, nil)
+					els = append(els, el)
+				}
 			case *heading:
-				el.IsHeading = true
-				el.Title = blk.title
-				id := badAnchorRx.ReplaceAllString(blk.title, "_")
-				el.ID = safehtml.IdentifierFromConstantPrefix("hdr", id)
+				if extractLinks && blk.title == "Links" {
+					inLinks = true
+				} else {
+					inLinks = false
+					el.IsHeading = true
+					el.Title = blk.title
+					id := badAnchorRx.ReplaceAllString(blk.title, "_")
+					el.ID = safehtml.IdentifierFromConstantPrefix("hdr", id)
+					els = append(els, el)
+				}
 			}
-			els = append(els, el)
 		}
 		out.Doc = ExecuteToHTML(r.docTmpl, docData{Elements: els, DisablePermalinks: r.disablePermalinks})
 	}
@@ -105,6 +121,36 @@ func (r *Renderer) declHTML(doc string, decl ast.Decl) (out struct{ Doc, Decl sa
 			template.MustParseAndExecuteToHTML("</pre>\n"))
 	}
 	return out
+}
+
+// parseLinks extracts links from lines.
+func parseLinks(lines []string) []Link {
+	var links []Link
+	for _, l := range lines {
+		if link := parseLink(l); link != nil {
+			links = append(links, *link)
+		}
+	}
+	return links
+}
+
+// If line is of the form "- title, url", then parseLink returns
+// a Link with the title and url. Otherwise it returns nil.
+// The line already has leading whitespace trimmed.
+func parseLink(line string) *Link {
+	if !strings.HasPrefix(line, "- ") && !strings.HasPrefix(line, "-\t") {
+		return nil
+	}
+	parts := strings.SplitN(line[2:], ",", 2)
+	if len(parts) != 2 {
+		return nil
+	}
+	text := strings.TrimSpace(parts[0])
+	href := strings.TrimSpace(parts[1])
+	return &Link{
+		Text: text,
+		Href: href,
+	}
 }
 
 func (r *Renderer) linesToHTML(lines []string, idr *identifierResolver) safehtml.HTML {

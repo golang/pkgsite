@@ -6,6 +6,7 @@ package render
 
 import (
 	"context"
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -19,10 +20,31 @@ import (
 )
 
 func TestDocHTML(t *testing.T) {
+	linksDoc := `Documentation.
+
+The Go Project
+
+Go is an open source project.
+
+
+Links
+
+- title1, url1
+
+  -		title2 , url2
+
+
+Header
+
+More doc.
+`
+
 	for _, test := range []struct {
-		name string
-		doc  string
-		want string
+		name         string
+		doc          string
+		extractLinks []bool // nil means both
+		want         string
+		wantLinks    []Link
 	}{
 		{
 			name: "short documentation is rendered",
@@ -101,13 +123,53 @@ TLSUnique contains the tls-unique channel binding value (see RFC
 			want: `<p>link <a href="http://foo">http://foo</a>&#34;&gt;&lt;script&gt;evil&lt;/script&gt;
 </p>`,
 		},
+		{
+			name:         "Links section is not extracted",
+			extractLinks: []bool{false},
+			doc:          linksDoc,
+			want: `<p>Documentation.
+</p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project">¶</a></h4>
+  <p>Go is an open source project.
+</p><h4 id="hdr-Links">Links <a class="Documentation-idLink" href="#hdr-Links">¶</a></h4>
+  <p>- title1, url1
+</p><pre>-		title2 , url2
+</pre><h4 id="hdr-Header">Header <a class="Documentation-idLink" href="#hdr-Header">¶</a></h4>
+  <p>More doc.
+</p>`,
+		},
+		{
+			name:         "Links section is extracted",
+			extractLinks: []bool{true},
+			doc:          linksDoc,
+			want: `<p>Documentation.
+</p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project">¶</a></h4>
+  <p>Go is an open source project.
+</p><h4 id="hdr-Header">Header <a class="Documentation-idLink" href="#hdr-Header">¶</a></h4>
+  <p>More doc.
+</p>`,
+			wantLinks: []Link{
+				{Text: "title1", Href: "url1"},
+				{Text: "title2", Href: "url2"},
+			},
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			r := New(context.Background(), nil, pkgTime, nil)
-			got := r.declHTML(test.doc, nil).Doc
-			want := testconversions.MakeHTMLForTest(test.want)
-			if diff := cmp.Diff(want, got, cmp.AllowUnexported(safehtml.HTML{})); diff != "" {
-				t.Errorf("r.declHTML() mismatch (-want +got)\n%s", diff)
+			extractLinks := test.extractLinks
+			if extractLinks == nil {
+				extractLinks = []bool{false, true}
+			}
+			for _, el := range extractLinks {
+				t.Run(fmt.Sprintf("extractLinks=%t", el), func(t *testing.T) {
+					r := New(context.Background(), nil, pkgTime, nil)
+					got := r.declHTML(test.doc, nil, el).Doc
+					want := testconversions.MakeHTMLForTest(test.want)
+					if diff := cmp.Diff(want, got, cmp.AllowUnexported(safehtml.HTML{})); diff != "" {
+						t.Errorf("r.declHTML() mismatch (-want +got)\n%s", diff)
+					}
+					if diff := cmp.Diff(test.wantLinks, r.Links()); diff != "" {
+						t.Errorf("r.Links() mismatch (-want +got)\n%s", diff)
+					}
+				})
 			}
 		})
 	}
@@ -416,5 +478,24 @@ func main() {
 				t.Errorf("mismatch (-want +got):%s", diff)
 			}
 		})
+	}
+}
+
+func TestParseLink(t *testing.T) {
+	for _, test := range []struct {
+		line string
+		want *Link
+	}{
+		{"", nil},
+		{"foo", nil},
+		{"- a b", nil},
+		{"- a, b", &Link{Text: "a", Href: "b"}},
+		{"- a, b, c", &Link{Text: "a", Href: "b, c"}},
+		{"- a \t, https://b.com?x=1&y=2  ", &Link{Text: "a", Href: "https://b.com?x=1&y=2"}},
+	} {
+		got := parseLink(test.line)
+		if !cmp.Equal(got, test.want) {
+			t.Errorf("%q: got %+v, want %+v\n", test.line, got, test.want)
+		}
 	}
 }

@@ -39,6 +39,7 @@ type Renderer struct {
 	ctx               context.Context
 	docTmpl           *template.Template
 	exampleTmpl       *template.Template
+	links             []Link // Links removed from package overview to be displayed elsewhere.
 }
 
 type Options struct {
@@ -157,7 +158,18 @@ func (r *Renderer) Synopsis(n ast.Node) string {
 //
 // DocHTML is intended for documentation for the package and examples.
 func (r *Renderer) DocHTML(doc string) safehtml.HTML {
-	return r.declHTML(doc, nil).Doc
+	return r.declHTML(doc, nil, false).Doc
+}
+
+// DocHTMLExtractLinks is like DocHTML, but as a side-effect, the "Links"
+// heading of doc is removed and its links are extracted.
+func (r *Renderer) DocHTMLExtractLinks(doc string) safehtml.HTML {
+	return r.declHTML(doc, nil, true).Doc
+}
+
+// Links returns the links extracted by DocHTMLExtractLinks.
+func (r *Renderer) Links() []Link {
+	return r.links
 }
 
 // DeclHTML formats the doc and decl and returns a tuple of
@@ -175,7 +187,7 @@ func (r *Renderer) DocHTML(doc string) safehtml.HTML {
 func (r *Renderer) DeclHTML(doc string, decl ast.Decl) (out struct{ Doc, Decl safehtml.HTML }) {
 	// This returns an anonymous struct instead of multiple return values since
 	// the template package only allows single return values.
-	return r.declHTML(doc, decl)
+	return r.declHTML(doc, decl, false)
 }
 
 // CodeHTML formats example code. If the code is a single block statement,
