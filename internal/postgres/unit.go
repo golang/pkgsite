@@ -47,11 +47,9 @@ func (db *DB) GetUnitMeta(ctx context.Context, fullPath, requestedModulePath, re
 	if requestedModulePath != internal.UnknownModulePath {
 		query = query.Where(squirrel.Eq{"m.module_path": requestedModulePath})
 	}
-	switch requestedVersion {
-	case internal.LatestVersion:
-	case internal.MasterVersion:
-		query = query.Join("version_map vm ON m.id = vm.module_id").Where("vm.requested_version = 'master'")
-	default:
+	if _, ok := internal.DefaultBranches[requestedVersion]; ok {
+		query = query.Join("version_map vm ON m.id = vm.module_id").Where("vm.requested_version = ? ", requestedVersion)
+	} else if requestedVersion != internal.LatestVersion {
 		query = query.Where(squirrel.Eq{"version": requestedVersion})
 	}
 	var (

@@ -44,7 +44,12 @@ func TestFetch(t *testing.T) {
 		{
 			name:     "path at master package is in module root",
 			fullPath: testModulePath,
-			version:  internal.MasterVersion,
+			version:  "master",
+		},
+		{
+			name:     "path at main package is in module root",
+			fullPath: testModulePath,
+			version:  "main",
 		},
 		{
 			name:     "path at latest package is in module root",
@@ -64,7 +69,12 @@ func TestFetch(t *testing.T) {
 		{
 			name:     "directory at master package is not in module root",
 			fullPath: testModulePath + "/bar",
-			version:  internal.MasterVersion,
+			version:  "master",
+		},
+		{
+			name:     "directory at main package is not in module root",
+			fullPath: testModulePath + "/bar",
+			version:  "main",
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {

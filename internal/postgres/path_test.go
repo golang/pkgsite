@@ -43,7 +43,7 @@ func TestGetUnitMeta(t *testing.T) {
 		}
 		requested := m.Version
 		if testModule.isMaster {
-			requested = internal.MasterVersion
+			requested = "master"
 		}
 		if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
 			ModulePath:       m.ModulePath,
@@ -224,7 +224,7 @@ func TestGetUnitMetaBypass(t *testing.T) {
 		}
 		requested := m.Version
 		if testModule.isMaster {
-			requested = internal.MasterVersion
+			requested = "master"
 		}
 		if err := bypassDB.UpsertVersionMap(ctx, &internal.VersionMap{
 			ModulePath:       m.ModulePath,

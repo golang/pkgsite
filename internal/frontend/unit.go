@@ -95,7 +95,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	}
 
 	recordVersionTypeMetric(ctx, info.requestedVersion)
-	if info.requestedVersion == internal.MasterVersion {
+	if _, ok := internal.DefaultBranches[info.requestedVersion]; ok {
 		// Since path@master is a moving target, we don't want it to be stale.
 		// As a result, we enqueue every request of path@master to the frontend
 		// task queue, which will initiate a fetch request depending on the
@@ -106,7 +106,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		go func() {
 			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 			defer cancel()
-			if _, err := s.queue.ScheduleFetch(ctx, info.modulePath, internal.MasterVersion, ""); err != nil {
+			if _, err := s.queue.ScheduleFetch(ctx, info.modulePath, info.requestedVersion, ""); err != nil {
 				log.Errorf(ctx, "serveDetails(%q): %v", r.URL.Path, err)
 			}
 		}()

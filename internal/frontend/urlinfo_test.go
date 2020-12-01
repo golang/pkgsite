@@ -188,10 +188,12 @@ func TestIsSupportedVersion(t *testing.T) {
 		{sample.ModulePath, "v1.2.bad", false},
 		{sample.ModulePath, "latest", true},
 		{sample.ModulePath, "master", true},
+		{sample.ModulePath, "main", true},
 		{"net/http", "v1.2.3", true}, // isSupportedVersion expects the goTag is already converted to semver
 		{"net/http", "v1.2.3.bad", false},
 		{"net/http", "latest", true},
 		{"net/http", "master", false},
+		{"net/http", "main", false},
 	}
 	for _, test := range tests {
 		got := isSupportedVersion(test.path, test.version)
