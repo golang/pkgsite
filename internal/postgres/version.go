@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/Masterminds/squirrel"
-	"golang.org/x/mod/module"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/version"
@@ -103,30 +102,35 @@ func versionTypeExpr(vts []version.Type) string {
 	return strings.Join(vs, ", ")
 }
 
-// GetLatestMajorVersion returns the latest major version string of a module
-// path. For example, in the module path "github.com/casbin/casbin", there
-// is another path with a greater major version
-// "github.com/casbin/casbin/v3". This function will return "/v3" or an
-// empty string if there is no major version string at the end.
-func (db *DB) GetLatestMajorVersion(ctx context.Context, seriesPath string) (_ string, err error) {
-	defer derrors.Wrap(&err, "DB.GetLatestMajorVersion(ctx, %q)", seriesPath)
+// GetLatestMajorVersion returns the latest module path and the full package path
+// of the latest version found, given the fullPath and the modulePath.
+// For example, in the module path "github.com/casbin/casbin", there
+// is another module path with a greater major version "github.com/casbin/casbin/v3".
+// This function will return "github.com/casbin/casbin/v3" or the input module path
+// if no later module path was found. It also returns the full package path at the
+// latest module version if it exists. If not, it returns the module path.
+func (db *DB) GetLatestMajorVersion(ctx context.Context, fullPath, modulePath string) (_ string, _ string, err error) {
+	defer derrors.Wrap(&err, "DB.GetLatestMajorVersion(ctx, %q, %q)", fullPath, modulePath)
 
-	var latestPath string
-	q, args, err := orderByLatest(squirrel.Select("m.module_path").
+	seriesPath := internal.SeriesPathForModule(modulePath)
+	v1Path := internal.V1Path(fullPath, modulePath)
+	q, args, err := orderByLatest(squirrel.Select("m.module_path, u.path").
 		From("modules m").
+		LeftJoin("units u ON u.module_id = m.id").
 		Where(squirrel.Eq{"m.series_path": seriesPath})).
+		OrderByClause(`CASE
+			WHEN u.v1_path = ? THEN 1
+			ELSE 2
+		END`, v1Path).
 		Limit(1).
 		ToSql()
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
+	var latestModulePath, latestPackagePath string
 	row := db.db.QueryRow(ctx, q, args...)
-	if err := row.Scan(&latestPath); err != nil {
-		return "", err
+	if err := row.Scan(&latestModulePath, &latestPackagePath); err != nil {
+		return "", "", err
 	}
-	_, majorPath, ok := module.SplitPathVersion(latestPath)
-	if !ok {
-		return "", fmt.Errorf("module.SplitPathVersion(%q): %v", latestPath, majorPath)
-	}
-	return majorPath, nil
+	return latestModulePath, latestPackagePath, nil
 }

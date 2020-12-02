@@ -236,37 +236,55 @@ func TestGetLatestMajorVersion(t *testing.T) {
 	defer cancel()
 
 	defer ResetTestDB(testDB, t)
-	for _, modulePath := range []string{
-		"foo.com/bar",
-		"foo.com/bar/v2",
-		"foo.com/bar/v3",
-		"bar.com/foo",
+	for _, m := range []*internal.Module{
+		sample.Module("foo.com/bar", "v1.1.1", "baz", "faz"),
+		sample.Module("foo.com/bar/v2", "v2.0.5", "baz", "faz"),
+		sample.Module("foo.com/bar/v3", "v3.0.1", "baz"),
+		sample.Module("bar.com/foo", sample.VersionString, sample.Suffix),
 	} {
-		m := sample.Module(modulePath, sample.VersionString, sample.Suffix)
 		if err := testDB.InsertModule(ctx, m); err != nil {
 			t.Fatal(err)
 		}
 	}
 
 	for _, test := range []struct {
-		seriesPath  string
-		wantVersion string
-		wantErr     error
+		fullPath        string
+		modulePath      string
+		wantModulePath  string
+		wantPackagePath string
+		wantErr         error
 	}{
 		{
-			seriesPath:  "foo.com/bar",
-			wantVersion: "/v3",
+			fullPath:        "foo.com/bar",
+			modulePath:      "foo.com/bar",
+			wantModulePath:  "foo.com/bar/v3",
+			wantPackagePath: "foo.com/bar/v3",
 		},
 		{
-			seriesPath:  "bar.com/foo",
-			wantVersion: "",
+			fullPath:        "bar.com/foo",
+			modulePath:      "bar.com/foo",
+			wantModulePath:  "bar.com/foo",
+			wantPackagePath: "bar.com/foo",
 		},
 		{
-			seriesPath: "boo.com/far",
+			fullPath:   "boo.com/far",
+			modulePath: "boo.com/far",
 			wantErr:    sql.ErrNoRows,
 		},
+		{
+			fullPath:        "foo.com/bar/baz",
+			modulePath:      "foo.com/bar",
+			wantModulePath:  "foo.com/bar/v3",
+			wantPackagePath: "foo.com/bar/v3/baz",
+		},
+		{
+			fullPath:        "foo.com/bar/faz",
+			modulePath:      "foo.com/bar",
+			wantModulePath:  "foo.com/bar/v3",
+			wantPackagePath: "foo.com/bar/v3",
+		},
 	} {
-		gotVersion, err := testDB.GetLatestMajorVersion(ctx, test.seriesPath)
+		gotVersion, gotPath, err := testDB.GetLatestMajorVersion(ctx, test.fullPath, test.modulePath)
 		if err != nil {
 			if test.wantErr == nil {
 				t.Fatalf("got unexpected error %v", err)
@@ -275,8 +293,8 @@ func TestGetLatestMajorVersion(t *testing.T) {
 				t.Errorf("got err = %v, want Is(%v)", err, test.wantErr)
 			}
 		}
-		if gotVersion != test.wantVersion {
-			t.Errorf("testDB.GetLatestMajorVersion(%v) = %v, want = %v", test.seriesPath, gotVersion, test.wantVersion)
+		if gotVersion != test.wantModulePath || gotPath != test.wantPackagePath {
+			t.Errorf("testDB.GetLatestMajorVersion(%v, %v) = (%v, %v), want = (%v, %v)", test.fullPath, test.modulePath, gotVersion, gotPath, test.wantModulePath, test.wantPackagePath)
 		}
 	}
 }

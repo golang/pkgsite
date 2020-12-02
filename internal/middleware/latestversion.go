@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"golang.org/x/mod/module"
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/log"
 )
 
@@ -28,7 +27,7 @@ const (
 var latestInfoRegexp = regexp.MustCompile(`data-version="([^"]*)" data-mpath="([^"]*)" data-ppath="([^"]*)" data-pagetype="([^"]*)"`)
 
 type latestMinorFunc func(ctx context.Context, packagePath, modulePath, pageType string) string
-type latestMajorFunc func(ctx context.Context, seriesPath string) string
+type latestMajorFunc func(ctx context.Context, fullPath, modulePath string) (string, string)
 
 // LatestVersions replaces the HTML placeholder values for the badge and banner
 // that displays whether the version of the package or module being served is
@@ -45,7 +44,6 @@ func LatestVersions(latestMinor latestMinorFunc, latestMajor latestMajorFunc) Mi
 				// The template package converts '+' to its HTML entity.
 				version = strings.Replace(version, "&#43;", "+", -1)
 				modulePath := string(matches[2])
-				seriesPath := internal.SeriesPathForModule(modulePath)
 				_, majorVersion, _ := module.SplitPathVersion(modulePath)
 				packagePath := string(matches[3])
 				pageType := string(matches[4])
@@ -59,10 +57,11 @@ func LatestVersions(latestMinor latestMinorFunc, latestMajor latestMajorFunc) Mi
 				default:
 					latestMinorClass += "--goToLatest"
 				}
-				latestMajorVersion := latestMajor(r.Context(), seriesPath)
-				latestMajorVersionText := latestMajorVersion
-				if len(latestMajorVersionText) > 0 {
-					latestMajorVersionText = latestMajorVersionText[1:]
+				latestModulePath, latestPackagePath := latestMajor(r.Context(), packagePath, modulePath)
+				_, latestMajorVersion, ok := module.SplitPathVersion(latestModulePath)
+				var latestMajorVersionText string
+				if ok && len(latestMajorVersion) > 0 {
+					latestMajorVersionText = latestMajorVersion[1:]
 				}
 				latestMajorClass := ""
 				// If the latest major version is the same as the major version of the current
@@ -76,7 +75,7 @@ func LatestVersions(latestMinor latestMinorFunc, latestMajor latestMajorFunc) Mi
 				body = bytes.ReplaceAll(body, []byte(LatestMinorVersionPlaceholder), []byte(latestMinorVersion))
 				body = bytes.ReplaceAll(body, []byte(latestMajorClassPlaceholder), []byte(latestMajorClass))
 				body = bytes.ReplaceAll(body, []byte(LatestMajorVersionPlaceholder), []byte(latestMajorVersionText))
-				body = bytes.ReplaceAll(body, []byte(LatestMajorVersionURL), []byte(seriesPath+latestMajorVersion))
+				body = bytes.ReplaceAll(body, []byte(LatestMajorVersionURL), []byte(latestPackagePath))
 			}
 			if _, err := w.Write(body); err != nil {
 				log.Errorf(r.Context(), "LatestVersions, writing: %v", err)

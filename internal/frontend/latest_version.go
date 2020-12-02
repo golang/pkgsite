@@ -13,19 +13,18 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 )
 
-// GetLatestMajorVersion returns the major version of a package or module.
-// If a module isn't found from the series path or an error ocurs, an empty string is returned
+// GetLatestMajorVersion returns the latest module path and the full package path
+// of any major version found given the fullPath and the modulePath.
 // It is intended to be used as an argument to middleware.LatestVersions.
-func (s *Server) GetLatestMajorVersion(ctx context.Context, seriesPath string) string {
-	mv, err := s.getDataSource(ctx).GetLatestMajorVersion(ctx, seriesPath)
+func (s *Server) GetLatestMajorVersion(ctx context.Context, fullPath, modulePath string) (_ string, _ string) {
+	latestModulePath, latestPackagePath, err := s.getDataSource(ctx).GetLatestMajorVersion(ctx, fullPath, modulePath)
 	if err != nil {
 		if !errors.Is(err, derrors.NotFound) {
 			log.Errorf(ctx, "GetLatestMajorVersion: %v", err)
 		}
-		return ""
+		return "", ""
 	}
-
-	return mv
+	return latestModulePath, latestPackagePath
 }
 
 // GetLatestMinorVersion returns the latest minor version of the package or module.

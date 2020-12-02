@@ -19,18 +19,22 @@ import (
 
 // Page describes a discovery site web page for a package, module or directory.
 type Page struct {
-	ModulePath       string
-	Suffix           string // package or directory path after module path; empty for a module
-	Version          string
-	FormattedVersion string
-	Title            string
-	LicenseType      string
-	LicenseFilePath  string
-	IsLatest         bool   // is this the latest version of this module?
-	LatestLink       string // href of "Go to latest" link
-	PackageURLFormat string // the relative package URL, with one %s for "@version"; also used for dirs
-	ModuleURL        string // the relative module URL
-	CommitTime       string
+	ModulePath         string
+	Suffix             string // package or directory path after module path; empty for a module
+	Version            string
+	FormattedVersion   string
+	Title              string
+	LicenseType        string
+	LicenseFilePath    string
+	IsLatest           bool   // is this the latest version of this module?
+	LatestLink         string // href of "Go to latest" link
+	LatestMajorVersion string // is the suffix of the latest major version, empty if v0 or v1
+	// link to the latest major version for this package, or if the package does not exist
+	// link to the latest major version
+	LatestMajorVersionLink string
+	PackageURLFormat       string // the relative package URL, with one %s for "@version"; also used for dirs
+	ModuleURL              string // the relative module URL
+	CommitTime             string
 }
 
 // Overview describes the contents of the overview tab.
@@ -141,9 +145,24 @@ func UnitHeader(p *Page, versionedURL bool, isPackage bool) htmlcheck.Checker {
 		commitTime = time.Now().In(time.UTC).Format("Jan _2, 2006")
 	}
 
+	versionBannerClass := "UnitHeader-versionBanner"
+	if p.IsLatest {
+		versionBannerClass += "  DetailsHeader-banner--latest"
+	}
+
 	return in("header.UnitHeader",
 		in(`[data-test-id="UnitHeader-breadcrumbCurrent"]`, text(curBreadcrumb)),
 		in(`[data-test-id="UnitHeader-title"]`, text(p.Title)),
+		in(`[data-test-id="UnitHeader-versionBanner"]`,
+			attr("class", versionBannerClass),
+			in("span",
+				text("The highest tagged major version is "),
+				in("a",
+					href(p.LatestMajorVersionLink),
+					exactText(p.LatestMajorVersion),
+				),
+			),
+		),
 		in(`[data-test-id="UnitHeader-version"]`,
 			in("a",
 				href("?tab=versions"),

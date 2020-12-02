@@ -175,13 +175,16 @@ func (ds *DataSource) getUnit(ctx context.Context, fullPath, modulePath, version
 	return nil, fmt.Errorf("%q missing from module %s: %w", fullPath, m.ModulePath, derrors.NotFound)
 }
 
-// GetLatestMajorVersion finds the latest major version of a modulePath that
-// is found in the proxy by iterating through vN versions.
-func (ds *DataSource) GetLatestMajorVersion(ctx context.Context, seriesPath string) (_ string, err error) {
-	// We are checking if the series path is valid so that we can forward the error if not.
+// GetLatestMajorVersion returns the latest module path and the full package path
+// of the latest version found in the proxy by iterating through vN versions.
+// This function does not attempt to find whether the full path exists
+// in the new major version.
+func (ds *DataSource) GetLatestMajorVersion(ctx context.Context, fullPath, modulePath string) (_ string, _ string, err error) {
+	// We are checking if the full path is valid so that we can forward the error if not.
+	seriesPath := internal.SeriesPathForModule(modulePath)
 	_, err = ds.proxyClient.GetInfo(ctx, seriesPath, internal.LatestVersion)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	const startVersion = 2
 	// We start checking versions from "/v2", since v1 and v0 versions don't
@@ -192,12 +195,13 @@ func (ds *DataSource) GetLatestMajorVersion(ctx context.Context, seriesPath stri
 		_, err := ds.proxyClient.GetInfo(ctx, query, internal.LatestVersion)
 		if errors.Is(err, derrors.NotFound) {
 			if v == 2 {
-				return "", nil
+				return modulePath, fullPath, nil
 			}
-			return fmt.Sprintf("/v%d", v-1), nil
+			latestModulePath := fmt.Sprintf("%s/v%d", seriesPath, v-1)
+			return latestModulePath, latestModulePath, nil
 		}
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 	}
 }

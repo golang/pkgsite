@@ -115,6 +115,52 @@ var testModules = []testModule{
 		},
 	},
 	{
+		// A module with a greater major version available.
+		path:            "github.com/v2major/module_name",
+		redistributable: true,
+		versions:        []string{"v1.0.0"},
+		packages: []testPackage{
+			{
+				suffix:         "bar",
+				doc:            sample.DocumentationHTML.String(),
+				readmeContents: sample.ReadmeContents,
+				readmeFilePath: sample.ReadmeFilePath,
+			},
+			{
+				suffix: "bar/directory/hello",
+				doc:    `<a href="/pkg/io#Writer">io.Writer</a>`,
+			},
+			{
+				suffix:         "buz",
+				doc:            sample.DocumentationHTML.String(),
+				readmeContents: sample.ReadmeContents,
+				readmeFilePath: sample.ReadmeFilePath,
+			},
+			{
+				suffix: "buz/directory/hello",
+				doc:    `<a href="/pkg/io#Writer">io.Writer</a>`,
+			},
+		},
+	},
+	{
+		// A v2 of the previous module, with one version.
+		path:            "github.com/v2major/module_name/v2",
+		redistributable: true,
+		versions:        []string{"v2.0.0"},
+		packages: []testPackage{
+			{
+				suffix:         "bar",
+				doc:            sample.DocumentationHTML.String(),
+				readmeContents: sample.ReadmeContents,
+				readmeFilePath: sample.ReadmeFilePath,
+			},
+			{
+				suffix: "bar/directory/hello",
+				doc:    `<a href="/pkg/io#Writer">io.Writer</a>`,
+			},
+		},
+	},
+	{
 		// A non-redistributable module.
 		path:            "github.com/non_redistributable",
 		redistributable: false,
@@ -271,18 +317,59 @@ func serverTestCases() []serverTestCase {
 	)
 
 	pkgV100 := &pagecheck.Page{
-		Title:            "foo",
-		ModulePath:       sample.ModulePath,
-		Version:          sample.VersionString,
-		FormattedVersion: sample.VersionString,
-		Suffix:           sample.Suffix,
-		IsLatest:         true,
-		LatestLink:       "/" + sample.ModulePath + "@" + sample.VersionString + "/" + sample.Suffix,
-		LicenseType:      sample.LicenseType,
-		LicenseFilePath:  sample.LicenseFilePath,
-		PackageURLFormat: "/" + sample.ModulePath + "%s/" + sample.Suffix,
-		ModuleURL:        "/" + sample.ModulePath,
+		Title:                  "foo",
+		ModulePath:             sample.ModulePath,
+		Version:                sample.VersionString,
+		FormattedVersion:       sample.VersionString,
+		Suffix:                 sample.Suffix,
+		IsLatest:               true,
+		LatestLink:             "/" + sample.ModulePath + "@" + sample.VersionString + "/" + sample.Suffix,
+		LatestMajorVersionLink: "/" + sample.ModulePath + "/" + sample.Suffix,
+		LicenseType:            sample.LicenseType,
+		LicenseFilePath:        sample.LicenseFilePath,
+		PackageURLFormat:       "/" + sample.ModulePath + "%s/" + sample.Suffix,
+		ModuleURL:              "/" + sample.ModulePath,
 	}
+
+	v2pkgV100 := &pagecheck.Page{
+		Title:                  "bar",
+		ModulePath:             "github.com/v2major/module_name",
+		Version:                "v1.0.0",
+		FormattedVersion:       "v1.0.0",
+		Suffix:                 "bar",
+		IsLatest:               false,
+		LatestLink:             "/github.com/v2major/module_name@v1.0.0/bar",
+		LatestMajorVersion:     "v2",
+		LatestMajorVersionLink: "/github.com/v2major/module_name/v2/bar",
+		LicenseType:            sample.LicenseType,
+		LicenseFilePath:        sample.LicenseFilePath,
+		PackageURLFormat:       "/github.com/v2major/module_name%s/bar",
+		ModuleURL:              "/github.com/v2major/module_name",
+	}
+
+	v2pkgV1Buz := *v2pkgV100
+	v2pkgV1Buz.Title = "buz"
+	v2pkgV1Buz.Suffix = "buz"
+	v2pkgV1Buz.LatestLink = "/github.com/v2major/module_name@v1.0.0/buz"
+	v2pkgV1Buz.LatestMajorVersionLink = "/github.com/v2major/module_name/v2"
+	v2pkgV1Buz.PackageURLFormat = "/github.com/v2major/module_name%s/buz"
+
+	v2pkgV200 := &pagecheck.Page{
+		Title:                  "bar",
+		ModulePath:             "github.com/v2major/module_name/v2",
+		Version:                "v2.0.0",
+		FormattedVersion:       "v2.0.0",
+		Suffix:                 "bar",
+		IsLatest:               true,
+		LatestLink:             "/github.com/v2major/module_name/v2@v2.0.0/bar",
+		LatestMajorVersion:     "v2",
+		LatestMajorVersionLink: "/github.com/v2major/module_name/v2/bar",
+		LicenseType:            sample.LicenseType,
+		LicenseFilePath:        sample.LicenseFilePath,
+		PackageURLFormat:       "/github.com/v2major/module_name/v2%s/bar",
+		ModuleURL:              "/github.com/v2major/module_name/v2",
+	}
+
 	p9 := *pkgV100
 	p9.Version = "v0.9.0"
 	p9.FormattedVersion = "v0.9.0"
@@ -296,54 +383,58 @@ func serverTestCases() []serverTestCase {
 	pkgPseudo := &pp
 
 	pkgInc := &pagecheck.Page{
-		Title:            "inc",
-		ModulePath:       "github.com/incompatible",
-		Version:          "v1.0.0+incompatible",
-		FormattedVersion: "v1.0.0+incompatible",
-		Suffix:           "dir/inc",
-		IsLatest:         true,
-		LatestLink:       "/github.com/incompatible@v1.0.0+incompatible/dir/inc",
-		LicenseType:      "MIT",
-		LicenseFilePath:  "LICENSE",
-		PackageURLFormat: "/github.com/incompatible%s/dir/inc",
-		ModuleURL:        "/github.com/incompatible",
+		Title:                  "inc",
+		ModulePath:             "github.com/incompatible",
+		Version:                "v1.0.0+incompatible",
+		FormattedVersion:       "v1.0.0+incompatible",
+		Suffix:                 "dir/inc",
+		IsLatest:               true,
+		LatestLink:             "/github.com/incompatible@v1.0.0+incompatible/dir/inc",
+		LatestMajorVersionLink: "/github.com/incompatible/dir/inc",
+		LicenseType:            "MIT",
+		LicenseFilePath:        "LICENSE",
+		PackageURLFormat:       "/github.com/incompatible%s/dir/inc",
+		ModuleURL:              "/github.com/incompatible",
 	}
 
 	pkgNonRedist := &pagecheck.Page{
-		Title:            "bar",
-		ModulePath:       "github.com/non_redistributable",
-		Version:          "v1.0.0",
-		FormattedVersion: "v1.0.0",
-		Suffix:           "bar",
-		IsLatest:         true,
-		LatestLink:       "/github.com/non_redistributable@v1.0.0/bar",
-		LicenseType:      "",
-		PackageURLFormat: "/github.com/non_redistributable%s/bar",
-		ModuleURL:        "/github.com/non_redistributable",
+		Title:                  "bar",
+		ModulePath:             "github.com/non_redistributable",
+		Version:                "v1.0.0",
+		FormattedVersion:       "v1.0.0",
+		Suffix:                 "bar",
+		IsLatest:               true,
+		LatestLink:             "/github.com/non_redistributable@v1.0.0/bar",
+		LatestMajorVersionLink: "/github.com/non_redistributable/bar",
+		LicenseType:            "",
+		PackageURLFormat:       "/github.com/non_redistributable%s/bar",
+		ModuleURL:              "/github.com/non_redistributable",
 	}
 
 	dir := &pagecheck.Page{
-		Title:            "directory/",
-		ModulePath:       sample.ModulePath,
-		Version:          "v1.0.0",
-		FormattedVersion: "v1.0.0",
-		Suffix:           "foo/directory",
-		LicenseType:      "MIT",
-		LicenseFilePath:  "LICENSE",
-		ModuleURL:        "/" + sample.ModulePath,
-		PackageURLFormat: "/" + sample.ModulePath + "%s/foo/directory",
+		Title:                  "directory/",
+		ModulePath:             sample.ModulePath,
+		Version:                "v1.0.0",
+		FormattedVersion:       "v1.0.0",
+		Suffix:                 "foo/directory",
+		LicenseType:            "MIT",
+		LicenseFilePath:        "LICENSE",
+		ModuleURL:              "/" + sample.ModulePath,
+		PackageURLFormat:       "/" + sample.ModulePath + "%s/foo/directory",
+		LatestMajorVersionLink: "/github.com/valid/module_name/foo/directory",
 	}
 
 	mod := &pagecheck.Page{
-		ModulePath:       sample.ModulePath,
-		Title:            "module_name",
-		ModuleURL:        "/" + sample.ModulePath,
-		Version:          "v1.0.0",
-		FormattedVersion: "v1.0.0",
-		LicenseType:      "MIT",
-		LicenseFilePath:  "LICENSE",
-		IsLatest:         true,
-		LatestLink:       "/" + sample.ModulePath + "@v1.0.0",
+		ModulePath:             sample.ModulePath,
+		Title:                  "module_name",
+		ModuleURL:              "/" + sample.ModulePath,
+		Version:                "v1.0.0",
+		FormattedVersion:       "v1.0.0",
+		LicenseType:            "MIT",
+		LicenseFilePath:        "LICENSE",
+		IsLatest:               true,
+		LatestLink:             "/" + sample.ModulePath + "@v1.0.0",
+		LatestMajorVersionLink: "/" + sample.ModulePath,
 	}
 	mp := *mod
 	mp.Version = pseudoVersion
@@ -351,42 +442,45 @@ func serverTestCases() []serverTestCase {
 	mp.IsLatest = false
 
 	dirPseudo := &pagecheck.Page{
-		ModulePath:       "github.com/pseudo",
-		Title:            "dir/",
-		ModuleURL:        "/github.com/pseudo",
-		LatestLink:       "/github.com/pseudo@" + pseudoVersion + "/dir",
-		Suffix:           "dir",
-		Version:          pseudoVersion,
-		FormattedVersion: mp.FormattedVersion,
-		LicenseType:      "MIT",
-		LicenseFilePath:  "LICENSE",
-		IsLatest:         true,
-		PackageURLFormat: "/github.com/pseudo%s/dir",
+		ModulePath:             "github.com/pseudo",
+		Title:                  "dir/",
+		ModuleURL:              "/github.com/pseudo",
+		LatestLink:             "/github.com/pseudo@" + pseudoVersion + "/dir",
+		LatestMajorVersionLink: "/github.com/pseudo/dir",
+		Suffix:                 "dir",
+		Version:                pseudoVersion,
+		FormattedVersion:       mp.FormattedVersion,
+		LicenseType:            "MIT",
+		LicenseFilePath:        "LICENSE",
+		IsLatest:               true,
+		PackageURLFormat:       "/github.com/pseudo%s/dir",
 	}
 
 	dirCmd := &pagecheck.Page{
-		Title:            "cmd",
-		ModulePath:       "std",
-		Version:          "go1.13",
-		FormattedVersion: "go1.13",
-		Suffix:           "cmd",
-		LicenseType:      "MIT",
-		LicenseFilePath:  "LICENSE",
-		ModuleURL:        "/std",
-		PackageURLFormat: "/cmd%s",
+		Title:                  "cmd",
+		ModulePath:             "std",
+		Version:                "go1.13",
+		FormattedVersion:       "go1.13",
+		Suffix:                 "cmd",
+		LicenseType:            "MIT",
+		LicenseFilePath:        "LICENSE",
+		ModuleURL:              "/std",
+		PackageURLFormat:       "/cmd%s",
+		LatestMajorVersionLink: "/cmd",
 	}
 
 	netHttp := &pagecheck.Page{
-		Title:            "http",
-		ModulePath:       "http",
-		Version:          "go1.13",
-		FormattedVersion: "go1.13",
-		LicenseType:      sample.LicenseType,
-		LicenseFilePath:  sample.LicenseFilePath,
-		ModuleURL:        "/net/http",
-		PackageURLFormat: "/net/http%s",
-		IsLatest:         true,
-		LatestLink:       "/net/http@go1.13",
+		Title:                  "http",
+		ModulePath:             "http",
+		Version:                "go1.13",
+		FormattedVersion:       "go1.13",
+		LicenseType:            sample.LicenseType,
+		LicenseFilePath:        sample.LicenseFilePath,
+		ModuleURL:              "/net/http",
+		PackageURLFormat:       "/net/http%s",
+		IsLatest:               true,
+		LatestLink:             "/net/http@go1.13",
+		LatestMajorVersionLink: "/net/http",
 	}
 
 	return []serverTestCase{
@@ -518,6 +612,39 @@ func serverTestCases() []serverTestCase {
 				pagecheck.UnitHeader(pkgNonRedist, unversioned, isPackage),
 				in(".UnitDetails-content", hasText(`not displayed due to license restrictions`)),
 			),
+		},
+		{
+			name:           "v2 package at v1",
+			urlPath:        fmt.Sprintf("/%s@%s/%s", v2pkgV100.ModulePath, v2pkgV100.Version, v2pkgV100.Suffix),
+			wantStatusCode: http.StatusOK,
+			want: in("",
+				pagecheck.UnitHeader(v2pkgV100, versioned, isPackage),
+				pagecheck.UnitReadme(),
+				pagecheck.UnitDoc(),
+				pagecheck.UnitDirectories(fmt.Sprintf("/%s@%s/%s/directory/hello", v2pkgV100.ModulePath, v2pkgV100.Version, v2pkgV100.Suffix), "directory/hello"),
+				pagecheck.CanonicalURLPath("/github.com/v2major/module_name@v1.0.0/bar")),
+		},
+		{
+			name:           "v2 module with v1 package that does not exist in v2",
+			urlPath:        fmt.Sprintf("/%s@%s/%s", v2pkgV1Buz.ModulePath, v2pkgV1Buz.Version, v2pkgV1Buz.Suffix),
+			wantStatusCode: http.StatusOK,
+			want: in("",
+				pagecheck.UnitHeader(&v2pkgV1Buz, versioned, isPackage),
+				pagecheck.UnitReadme(),
+				pagecheck.UnitDoc(),
+				pagecheck.UnitDirectories(fmt.Sprintf("/%s@%s/%s/directory/hello", v2pkgV1Buz.ModulePath, v2pkgV1Buz.Version, v2pkgV1Buz.Suffix), "directory/hello"),
+				pagecheck.CanonicalURLPath("/github.com/v2major/module_name@v1.0.0/buz")),
+		},
+		{
+			name:           "v2 package at v2",
+			urlPath:        fmt.Sprintf("/%s@%s/%s", v2pkgV200.ModulePath, v2pkgV200.Version, v2pkgV200.Suffix),
+			wantStatusCode: http.StatusOK,
+			want: in("",
+				pagecheck.UnitHeader(v2pkgV200, versioned, isPackage),
+				pagecheck.UnitReadme(),
+				pagecheck.UnitDoc(),
+				pagecheck.UnitDirectories(fmt.Sprintf("/%s@%s/%s/directory/hello", v2pkgV200.ModulePath, v2pkgV200.Version, v2pkgV200.Suffix), "directory/hello"),
+				pagecheck.CanonicalURLPath("/github.com/v2major/module_name/v2@v2.0.0/bar")),
 		},
 		{
 			name:           "package at version default",

@@ -170,11 +170,12 @@ func (ds *DataSource) findModule(pkgPath string) (_ string, err error) {
 	return "", fmt.Errorf("%s not loaded: %w", pkgPath, derrors.NotFound)
 }
 
-// GetLatestMajorVersion returns the latest major version of a series path.
+// GetLatestMajorVersion returns the latest major version and the full package path
+// of any major version found given the seriesPath and the v1Path.
 // When fetching local modules, version is not accounted for, so an empty
 // string is returned.
-func (ds *DataSource) GetLatestMajorVersion(ctx context.Context, seriesPath string) (string, error) {
-	return "", nil
+func (ds *DataSource) GetLatestMajorVersion(ctx context.Context, seriesPath string, v1Path string) (string, string, error) {
+	return "", "", nil
 }
 
 // GetNestedModules is not implemented.
