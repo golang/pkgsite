@@ -48,9 +48,7 @@ function collectJumpListItems() {
   for (const el of doc.querySelectorAll('[data-kind]')) {
     items.push(newJumpListItem(el));
   }
-  if (items.length == 0) {
-    items = collectJumpListItemsFallback(doc);
-  }
+
   // Clicking on any of the links closes the dialog.
   for (const item of items) {
     item.link.addEventListener('click', function () {
@@ -61,22 +59,6 @@ function collectJumpListItems() {
   items.sort(function (a, b) {
     return a.lower.localeCompare(b.lower);
   });
-  return items;
-}
-
-function collectJumpListItemsFallback(doc) {
-  const items = [];
-  // TODO(https://golang.org/issue/42956): remove dedup code.
-  const seen = {};
-  // Attempt to find the relevant elements by looking through every element in the
-  // .Documentation DOM that has an id attribute of a certain form.
-  for (const el of doc.querySelectorAll('*[id]')) {
-    const id = el.getAttribute('id');
-    if (!seen[id] && /^[^_][^-]*$/.test(id)) {
-      seen[id] = true;
-      items.push(newJumpListItem(el));
-    }
-  }
   return items;
 }
 
