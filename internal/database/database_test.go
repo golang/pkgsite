@@ -17,6 +17,9 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/jackc/pgconn"
+	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/stdlib"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/testing/dbtest"
 )
@@ -444,4 +447,40 @@ func TestTransactSerializable(t *testing.T) {
 		sum[r.Class-1] += r.Value
 	}
 
+}
+
+func TestCopyDoesNotUpsert(t *testing.T) {
+	// This test verifies that copying rows into a table will not overwrite existing rows.
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	conn, err := testDB.db.Conn(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, stmt := range []string{
+		`DROP TABLE IF EXISTS test_copy`,
+		`CREATE TABLE test_copy (i  INTEGER PRIMARY KEY)`,
+		`INSERT INTO test_copy (i) VALUES (1)`,
+	} {
+		if _, err := testDB.Exec(ctx, stmt); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	err = conn.Raw(func(c interface{}) error {
+		stdConn, ok := c.(*stdlib.Conn)
+		if !ok {
+			t.Skip("DB driver is not pgx")
+		}
+		rows := [][]interface{}{{1}, {2}}
+		_, err = stdConn.Conn().CopyFrom(ctx, []string{"test_copy"}, []string{"i"}, pgx.CopyFromRows(rows))
+		return err
+	})
+
+	const constraintViolationCode = "23505"
+	var gerr *pgconn.PgError
+	if !errors.As(err, &gerr) || gerr.Code != constraintViolationCode {
+		t.Errorf("got %v, wanted code %s", gerr, constraintViolationCode)
+	}
 }
