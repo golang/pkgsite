@@ -266,10 +266,9 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 	ctx, span := trace.StartSpan(ctx, "insertUnits")
 	defer span.End()
 
-	// Sort to ensure proper lock ordering, avoiding deadlocks. See
-	// b/141164828#comment8. We have seen deadlocks on package_imports and
-	// documentation.  They can occur when processing two versions of the
-	// same module, which happens regularly.
+	// Sort to ensure proper lock ordering, avoiding deadlocks. We have seen
+	// deadlocks on package_imports and documentation. They can occur when
+	// processing two versions of the same module, which happens regularly.
 	sort.Slice(m.Units, func(i, j int) bool {
 		return m.Units[i].Path < m.Units[j].Path
 	})
@@ -399,10 +398,9 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 		return err
 	}
 
-	// Sort to ensure proper lock ordering, avoiding deadlocks. See
-	// b/141164828#comment8. We have seen deadlocks on package_imports and
-	// documentation.  They can occur when processing two versions of the
-	// same module, which happens regularly.
+	// Sort to ensure proper lock ordering, avoiding deadlocks. We have seen
+	// deadlocks on package_imports and documentation. They can occur when
+	// processing two versions of the same module, which happens regularly.
 	sort.Strings(paths)
 	if len(pathToReadme) > 0 {
 		var readmeValues []interface{}
