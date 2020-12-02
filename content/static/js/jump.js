@@ -66,8 +66,7 @@ function collectJumpListItems() {
 
 function collectJumpListItemsFallback(doc) {
   const items = [];
-  // A map from id to bool, to dedup DOM ids. The doc DOM has duplicate ids (b/143456059).
-  // We assume the first one is the one we want.
+  // TODO(https://golang.org/issue/42956): remove dedup code.
   const seen = {};
   // Attempt to find the relevant elements by looking through every element in the
   // .Documentation DOM that has an id attribute of a certain form.
@@ -105,7 +104,7 @@ function newJumpListItem(el) {
 }
 
 // guessKind tries to guess the kind of el by looking around the DOM.
-// Fixing b/143456714 would make this unnecessary.
+// TODO(https://golang.org/issue/42957): remove.
 function guessKind(el) {
   switch (el.getAttribute('class')) {
     case 'Documentation-functionHeader':

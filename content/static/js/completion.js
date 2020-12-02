@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
     onSelection: feedback => {
       if (feedback.selection.value.PackagePath) {
         // Navigate directly to the package.
-        // TODO (b/149016238): update ARIA attributes to reflect this.
+        // TODO (https://golang.org/issue/42955): update ARIA attributes to reflect this.
         window.location.href = '/' + feedback.selection.value.PackagePath;
       }
     },
