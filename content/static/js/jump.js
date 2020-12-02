@@ -92,41 +92,12 @@ function newJumpListItem(el) {
   a.setAttribute('href', '#' + name);
   a.setAttribute('tabindex', '-1');
   let kind = el.getAttribute('data-kind');
-  if (!kind) {
-    kind = guessKind(el);
-  }
   return {
     link: a,
     name: name,
     kind: kind,
     lower: name.toLowerCase(), // for sorting
   };
-}
-
-// guessKind tries to guess the kind of el by looking around the DOM.
-// TODO(https://golang.org/issue/42957): remove.
-function guessKind(el) {
-  switch (el.getAttribute('class')) {
-    case 'Documentation-functionHeader':
-    case 'Documentation-typeFuncHeader':
-      return 'function';
-    case 'Documentation-typeHeader':
-      return 'type';
-    case 'Documentation-typeMethodHeader':
-      return 'method';
-    default:
-      const sec = el.closest('section');
-      switch (sec.getAttribute('class')) {
-        case 'Documentation-variables':
-          return 'variable';
-        case 'Documentation-constants':
-          return 'constant';
-        case 'Documentation-types':
-          return 'field';
-        default:
-          return '';
-      }
-  }
 }
 
 let lastFilterValue; // The last contents of the filter text box.
