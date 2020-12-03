@@ -592,8 +592,7 @@ func init() {
 // giteaTransformCommit transforms commits for the Gitea code hosting system.
 func giteaTransformCommit(commit string, isHash bool) string {
 	// Hashes use "commit", tags use "tag".
-	// Short hashes aren't currently supported, but we build the URL
-	// anyway in the hope that someday they will be.
+	// Short hashes are supported as of v1.14.0.
 	if isHash {
 		return "commit/" + commit
 	}
