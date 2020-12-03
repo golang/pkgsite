@@ -1,5 +1,7 @@
 # Pkg.go.dev
 
+[![Go Reference](https://pkg.go.dev/badge/golang.org/x/pkgsite.svg)](https://pkg.go.dev/golang.org/x/pkgsite)
+
 ## A site for discovering Go packages
 
 Pkg.go.dev is a website for discovering and evaluating Go packages and modules.
