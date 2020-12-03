@@ -15,5 +15,9 @@
     {{else}}
       Repository URL not available.
     {{end}}
+    {{range .Details.ReadmeLinks}}
+      <div class="UnitMeta-repo">{{.Body}}</div>
+      <a href="{{.Href}}" title="{{.Href}}" target="_blank" rel="noopener">{{.Href}}</a>
+    {{end}}
   </div>
 {{end}}

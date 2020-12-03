@@ -20,7 +20,7 @@ import (
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer"
 	goldmarkHtml "github.com/yuin/goldmark/renderer/html"
-	"github.com/yuin/goldmark/text"
+	gmtext "github.com/yuin/goldmark/text"
 	"github.com/yuin/goldmark/util"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -115,7 +115,7 @@ func ProcessReadme(ctx context.Context, u *internal.Unit) (_ *Readme, err error)
 	)
 	contents := []byte(u.Readme.Contents)
 	gdParser := gdMarkdown.Parser()
-	reader := text.NewReader(contents)
+	reader := gmtext.NewReader(contents)
 	pctx := parser.NewContext(parser.WithIDs(newIDs()))
 	doc := gdParser.Parse(reader, parser.WithContext(pctx))
 	gdRenderer := gdMarkdown.Renderer()

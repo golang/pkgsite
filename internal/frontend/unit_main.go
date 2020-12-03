@@ -51,6 +51,10 @@ type MainDetails struct {
 	// used to render the readme outline in the sidebar.
 	ReadmeOutline []*Heading
 
+	// ReadmeLinks are from the "Links" section of the readme file,
+	// and are displayed on the right sidebar.
+	ReadmeLinks []link
+
 	// ImportedByCount is the number of packages that import this path.
 	// When the count is > limit it will read as 'limit+'. This field
 	// is not supported when using a datasource proxy.
@@ -152,6 +156,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		CommitTime:      absoluteTime(um.CommitTime),
 		Readme:          readme.HTML,
 		ReadmeOutline:   readme.Outline,
+		ReadmeLinks:     readme.Links,
 		DocOutline:      parts.Outline,
 		DocBody:         parts.Body,
 		SourceFiles:     files,

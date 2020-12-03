@@ -81,6 +81,15 @@ type serverTestCase struct {
 // Units with this prefix will be marked as excluded.
 const excludedModulePath = "github.com/module/excluded"
 
+const linksReadme = `
+# Heading
+Stuff
+
+## Links
+- [title1](http://url1)
+- [title2](javascript://pwned)
+`
+
 var testModules = []testModule{
 	{
 		// An ordinary module, with three versions.
@@ -150,6 +159,20 @@ var testModules = []testModule{
 		},
 	},
 	{
+		// A module with links.
+		path:            "github.com/links",
+		redistributable: true,
+		versions:        []string{"v1.0.0"},
+		packages: []testPackage{
+			{
+				suffix:         "pkg",
+				doc:            sample.DocumentationHTML.String(),
+				readmeContents: linksReadme,
+				readmeFilePath: sample.ReadmeFilePath,
+			},
+		},
+	},
+	{
 		path:            excludedModulePath,
 		redistributable: true,
 		versions:        []string{sample.VersionString},
@@ -205,6 +228,17 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 	}
 }
 
+var (
+	in      = htmlcheck.In
+	hasText = htmlcheck.HasText
+	attr    = htmlcheck.HasAttr
+
+	// href checks for an exact match in an href attribute.
+	href = func(val string) htmlcheck.Checker {
+		return attr("href", "^"+regexp.QuoteMeta(val)+"$")
+	}
+)
+
 // serverTestCases are the test cases valid for any experiment. For experiments
 // that modify any part of the behaviour covered by the test cases in
 // serverTestCase(), a new test generator should be created and added to
@@ -215,17 +249,6 @@ func serverTestCases() []serverTestCase {
 		unversioned = false
 		isPackage   = true
 		isDirectory = false
-	)
-
-	var (
-		in   = htmlcheck.In
-		text = htmlcheck.HasText
-		attr = htmlcheck.HasAttr
-
-		// href checks for an exact match in an href attribute.
-		href = func(val string) htmlcheck.Checker {
-			return attr("href", "^"+regexp.QuoteMeta(val)+"$")
-		}
 	)
 
 	pkgV100 := &pagecheck.Page{
@@ -358,17 +381,17 @@ func serverTestCases() []serverTestCase {
 			name:           "static",
 			urlPath:        "/static/",
 			wantStatusCode: http.StatusOK,
-			want:           in("", text("css"), text("html"), text("img"), text("js")),
+			want:           in("", hasText("css"), hasText("html"), hasText("img"), hasText("js")),
 		},
 		{
 			name:           "license policy",
 			urlPath:        "/license-policy",
 			wantStatusCode: http.StatusOK,
 			want: in("",
-				in(".Content-header", text("License Disclaimer")),
+				in(".Content-header", hasText("License Disclaimer")),
 				in(".Content",
-					text("The Go website displays license information"),
-					text("this is not legal advice"))),
+					hasText("The Go website displays license information"),
+					hasText("this is not legal advice"))),
 		},
 		{
 			// just check that it returns 200
@@ -381,18 +404,18 @@ func serverTestCases() []serverTestCase {
 			name:           "robots.txt",
 			urlPath:        "/robots.txt",
 			wantStatusCode: http.StatusOK,
-			want:           in("", text("User-agent: *"), text(regexp.QuoteMeta("Disallow: /search?*"))),
+			want:           in("", hasText("User-agent: *"), hasText(regexp.QuoteMeta("Disallow: /search?*"))),
 		},
 		{
 			name:           "search",
 			urlPath:        fmt.Sprintf("/search?q=%s", sample.PackageName),
 			wantStatusCode: http.StatusOK,
 			want: in("",
-				in(".SearchResults-resultCount", text("2 results")),
+				in(".SearchResults-resultCount", hasText("2 results")),
 				in(".SearchSnippet-header",
 					in("a",
 						href("/"+sample.ModulePath+"/foo"),
-						text(sample.ModulePath+"/foo")))),
+						hasText(sample.ModulePath+"/foo")))),
 		},
 		{
 			name:           "search large offset",
@@ -404,7 +427,7 @@ func serverTestCases() []serverTestCase {
 			urlPath:        fmt.Sprintf("/%s@%s/%s", sample.ModulePath, "v1-2", sample.Suffix),
 			wantStatusCode: http.StatusBadRequest,
 			want: in("",
-				in("h3.Error-message", text("v1-2 is not a valid semantic version.")),
+				in("h3.Error-message", hasText("v1-2 is not a valid semantic version.")),
 				in("p.Error-message a", href(`/search?q=github.com%2fvalid%2fmodule_name%2ffoo`))),
 		},
 		{
@@ -412,7 +435,7 @@ func serverTestCases() []serverTestCase {
 			urlPath:        fmt.Sprintf("/%s@%s/%s", sample.ModulePath, "v99.99.0", sample.Suffix),
 			wantStatusCode: http.StatusNotFound,
 			want: in("",
-				in("h3.Fetch-message.js-fetchMessage", text(sample.ModulePath+"/foo@v99.99.0"))),
+				in("h3.Fetch-message.js-fetchMessage", hasText(sample.ModulePath+"/foo@v99.99.0"))),
 		},
 		{
 
@@ -420,7 +443,7 @@ func serverTestCases() []serverTestCase {
 			urlPath:        "/example.com/unknown",
 			wantStatusCode: http.StatusNotFound,
 			want: in("",
-				in("h3.Fetch-message.js-fetchMessage", text("example.com/unknown"))),
+				in("h3.Fetch-message.js-fetchMessage", hasText("example.com/unknown"))),
 		},
 		{
 			name:           "bad request, invalid github module path",
@@ -474,7 +497,7 @@ func serverTestCases() []serverTestCase {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.UnitHeader(pkgNonRedist, unversioned, isPackage),
-				in(".UnitDetails-content", text(`not displayed due to license restrictions`)),
+				in(".UnitDetails-content", hasText(`not displayed due to license restrictions`)),
 			),
 		},
 		{
@@ -494,7 +517,7 @@ func serverTestCases() []serverTestCase {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.UnitHeader(pkgNonRedist, versioned, isPackage),
-				in(".UnitDetails-content", text(`not displayed due to license restrictions`)),
+				in(".UnitDetails-content", hasText(`not displayed due to license restrictions`)),
 			),
 		},
 		{
@@ -513,41 +536,41 @@ func serverTestCases() []serverTestCase {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.UnitHeader(pkgNonRedist, versioned, isPackage),
-				in(".UnitDetails-content", text(`not displayed due to license restrictions`))),
+				in(".UnitDetails-content", hasText(`not displayed due to license restrictions`))),
 		},
 		{
 			name:           "package at version versions page",
 			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=versions", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in(".Versions",
-				text(`v1`),
+				hasText(`v1`),
 				in("a",
 					href("/"+sample.ModulePath+"@v1.0.0/foo"),
-					text("v1.0.0"))),
+					hasText("v1.0.0"))),
 		},
 		{
 			name:           "package at version imports page",
 			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=imports", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
-				in(".Imports-heading", text(`Standard library Imports`)),
+				in(".Imports-heading", hasText(`Standard library Imports`)),
 				in(".Imports-list",
-					in("li:nth-child(1) a", href("/fmt"), text("fmt")),
-					in("li:nth-child(2) a", href("/path/to/bar"), text("path/to/bar")))),
+					in("li:nth-child(1) a", href("/fmt"), hasText("fmt")),
+					in("li:nth-child(2) a", href("/path/to/bar"), hasText("path/to/bar")))),
 		},
 		{
 			name:           "package at version imported by tab",
 			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=importedby", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
-				in(".EmptyContent-message", text(`No known importers for this package`))),
+				in(".EmptyContent-message", hasText(`No known importers for this package`))),
 		},
 		{
 			name:           "package at version imported by tab second page",
 			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=importedby&page=2", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
-				in(".EmptyContent-message", text(`No known importers for this package`))),
+				in(".EmptyContent-message", hasText(`No known importers for this package`))),
 		},
 		{
 			name:           "package at version licenses tab",
@@ -680,8 +703,19 @@ func TestServer(t *testing.T) {
 			testCasesFunc: serverTestCases,
 		},
 		{
-			name:          "goldmark and readme outline experiments",
-			testCasesFunc: serverTestCases,
+			name: "goldmark and readme outline experiments",
+			testCasesFunc: func() []serverTestCase {
+				return append(serverTestCases(), serverTestCase{
+					name:           "links",
+					urlPath:        "/github.com/links/pkg",
+					wantStatusCode: http.StatusOK,
+					want: in(".UnitMeta",
+						in("div:nth-of-type(3)", hasText("title1")),
+						in("a:nth-of-type(2)", href("http://url1"), hasText("http://url1")),
+						in("div:nth-of-type(4)", hasText("title2")),
+						in("a:nth-of-type(3)", href("about:invalid#zGoSafez"), hasText("javascript://pwned"))),
+				})
+			},
 			experiments: []string{internal.ExperimentReadmeOutline, internal.ExperimentGoldmark},
 		},
 	} {
