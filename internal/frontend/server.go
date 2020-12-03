@@ -132,7 +132,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/fetch/", fetchHandler)
 	handle("/play/", http.HandlerFunc(s.handlePlay))
 	handle("/search", searchHandler)
-	handle("/search-help", s.staticPageHandler("search_help.tmpl", "Search Help - go.dev"))
+	handle("/search-help", s.staticPageHandler("search_help.tmpl", "Search Help"))
 	handle("/license-policy", s.licensePolicyHandler())
 	handle("/about", http.RedirectHandler("https://go.dev/about", http.StatusFound))
 	handle("/badge/", http.HandlerFunc(s.badgeHandler))

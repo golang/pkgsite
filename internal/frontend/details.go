@@ -28,7 +28,7 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 		return &serverError{status: http.StatusMethodNotAllowed}
 	}
 	if r.URL.Path == "/" {
-		s.staticPageHandler("index.tmpl", "")(w, r)
+		s.staticPageHandler("index.tmpl", "Home")(w, r)
 		return nil
 	}
 
