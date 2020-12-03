@@ -179,7 +179,8 @@ func TestWorker(t *testing.T) {
 
 			// Use 10 workers to have parallelism consistent with the worker binary.
 			q := queue.NewInMemory(ctx, 10, nil, func(ctx context.Context, mpath, version string) (int, error) {
-				return FetchAndUpdateState(ctx, mpath, version, proxyClient, sourceClient, testDB, "")
+				code, _, err := FetchAndUpdateState(ctx, mpath, version, proxyClient, sourceClient, testDB, "")
+				return code, err
 			})
 
 			s, err := NewServer(&config.Config{}, ServerConfig{

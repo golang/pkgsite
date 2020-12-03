@@ -287,16 +287,16 @@ func (s *Server) handleFetch(w http.ResponseWriter, r *http.Request) {
 
 // doFetch executes a fetch request and returns the msg and status.
 func (s *Server) doFetch(r *http.Request) (string, int) {
-	modulePath, version, err := parseModulePathAndVersion(r.URL.Path)
+	modulePath, requestedVersion, err := parseModulePathAndVersion(r.URL.Path)
 	if err != nil {
 		return err.Error(), http.StatusBadRequest
 	}
 
-	code, err := FetchAndUpdateState(r.Context(), modulePath, version, s.proxyClient, s.sourceClient, s.db, s.cfg.AppVersionLabel())
+	code, resolvedVersion, err := FetchAndUpdateState(r.Context(), modulePath, requestedVersion, s.proxyClient, s.sourceClient, s.db, s.cfg.AppVersionLabel())
 	if err != nil {
 		return err.Error(), code
 	}
-	return fmt.Sprintf("fetched and updated %s@%s", modulePath, version), code
+	return fmt.Sprintf("fetched and updated %s@%s", modulePath, resolvedVersion), code
 }
 
 // parseModulePathAndVersion returns the module and version specified by p. p

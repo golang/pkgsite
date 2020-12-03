@@ -39,7 +39,7 @@ type fetchTask struct {
 // the module_version_states table according to the result. It returns an HTTP
 // status code representing the result of the fetch operation, and a non-nil
 // error if this status code is not 200.
-func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, sourceClient *source.Client, db *postgres.DB, appVersionLabel string) (_ int, err error) {
+func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, sourceClient *source.Client, db *postgres.DB, appVersionLabel string) (_ int, resolvedVersion string, err error) {
 	defer derrors.Wrap(&err, "FetchAndUpdateState(%q, %q)", modulePath, requestedVersion)
 
 	tctx, span := trace.StartSpan(ctx, "FetchAndUpdateState")
@@ -88,7 +88,7 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 		// resolvedVersion. This fetch request does not need to be recorded in
 		// module_version_states, since that table is only used to track
 		// modules that have been published to index.golang.org.
-		return ft.Status, ft.Error
+		return ft.Status, ft.ResolvedVersion, ft.Error
 	}
 
 	// Update the module_version_states table with the new status of
@@ -108,10 +108,10 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 			ft.Error = fmt.Errorf("db.UpsertModuleVersionState: %v, original error: %v", err, ft.Error)
 		}
 		logTaskResult(ctx, ft, "Failed to update module version state")
-		return http.StatusInternalServerError, ft.Error
+		return http.StatusInternalServerError, ft.ResolvedVersion, ft.Error
 	}
 	logTaskResult(ctx, ft, "Updated module version state")
-	return ft.Status, ft.Error
+	return ft.Status, ft.ResolvedVersion, ft.Error
 }
 
 // fetchAndInsertModule fetches the given module version from the module proxy

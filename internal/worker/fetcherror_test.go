@@ -334,7 +334,7 @@ func TestTrimLargeCode(t *testing.T) {
 func fetchAndCheckStatus(ctx context.Context, t *testing.T, proxyClient *proxy.Client, modulePath, version string, wantCode int) {
 	t.Helper()
 	sourceClient := source.NewClient(sourceTimeout)
-	code, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB, testAppVersion)
+	code, _, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB, testAppVersion)
 	switch code {
 	case http.StatusOK:
 		if err != nil {

@@ -80,7 +80,8 @@ func TestEndToEndProcessing(t *testing.T) {
 	// back to worker, rather than calling fetch itself.
 	sourceClient := source.NewClient(1 * time.Second)
 	queue := queue.NewInMemory(ctx, 10, nil, func(ctx context.Context, mpath, version string) (int, error) {
-		return worker.FetchAndUpdateState(ctx, mpath, version, proxyClient, sourceClient, testDB, "test")
+		code, _, err := worker.FetchAndUpdateState(ctx, mpath, version, proxyClient, sourceClient, testDB, "test")
+		return code, err
 	})
 	workerServer, err := worker.NewServer(&config.Config{}, worker.ServerConfig{
 		DB:               testDB,

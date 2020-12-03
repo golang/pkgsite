@@ -83,7 +83,8 @@ func main() {
 	expg := cmdconfig.ExperimentGetter(ctx, cfg)
 	fetchQueue, err := queue.New(ctx, cfg, queueName, *workers, expg,
 		func(ctx context.Context, modulePath, version string) (int, error) {
-			return worker.FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, db, cfg.AppVersionLabel())
+			code, _, err := worker.FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, db, cfg.AppVersionLabel())
+			return code, err
 		})
 	if err != nil {
 		log.Fatalf(ctx, "queue.New: %v", err)
