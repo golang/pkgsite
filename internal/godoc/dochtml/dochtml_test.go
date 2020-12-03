@@ -19,6 +19,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/safehtml/template"
 	"golang.org/x/net/html"
+	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
 )
@@ -107,11 +108,6 @@ func TestRenderParts(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	links, err := html.Parse(strings.NewReader(parts.Links.String()))
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	// Check that there are no duplicate id attributes.
 	t.Run("duplicate ids", func(t *testing.T) {
 		testDuplicateIDs(t, bodyDoc)
@@ -146,10 +142,12 @@ func TestRenderParts(t *testing.T) {
 		t.Errorf("note check: %v", err)
 	}
 
-	checker = htmlcheck.In(".Documentation-links",
-		htmlcheck.In("li", htmlcheck.In("a", htmlcheck.HasHref("https://go.googlesource.com/pkgsite"), htmlcheck.HasExactText("pkgsite repo"))))
-	if err := checker(links); err != nil {
-		t.Errorf("note check: %v", err)
+	wantLinks := []render.Link{
+		{Href: "https://go.googlesource.com/pkgsite", Text: "pkgsite repo"},
+		{Href: "https://play-with-go.dev", Text: "Play with Go"},
+	}
+	if diff := cmp.Diff(wantLinks, parts.Links); diff != "" {
+		t.Errorf("links mismatch (-want, +got):\n%s", diff)
 	}
 }
 

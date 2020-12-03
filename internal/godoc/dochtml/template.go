@@ -36,7 +36,6 @@ func LoadTemplates(dir template.TrustedSource) {
 				join(dir, tc("sidenav.tmpl")),
 				join(dir, tc("sidenav-mobile.tmpl")),
 				join(dir, tc("body.tmpl")),
-				join(dir, tc("links.tmpl")),
 				example))
 	})
 }

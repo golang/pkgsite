@@ -55,6 +55,10 @@ type MainDetails struct {
 	// and are displayed on the right sidebar.
 	ReadmeLinks []link
 
+	// DocLinks are from the "Links" section of the Go package documentation,
+	// and are displayed on the right sidebar.
+	DocLinks []link
+
 	// ImportedByCount is the number of packages that import this path.
 	// When the count is > limit it will read as 'limit+'. This field
 	// is not supported when using a datasource proxy.
@@ -123,8 +127,9 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		return nil, err
 	}
 	var (
-		parts = &dochtml.Parts{}
-		files []*File
+		docParts = &dochtml.Parts{}
+		docLinks []link
+		files    []*File
 	)
 	if unit.Documentation != nil {
 		end := middleware.ElapsedStat(ctx, "DecodePackage")
@@ -139,10 +144,13 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 			}
 			return nil, err
 		}
-		parts, err = getHTML(ctx, unit, docPkg)
+		docParts, err = getHTML(ctx, unit, docPkg)
 		// If err  is ErrTooLarge, then docBody will have an appropriate message.
 		if err != nil && !errors.Is(err, dochtml.ErrTooLarge) {
 			return nil, err
+		}
+		for _, l := range docParts.Links {
+			docLinks = append(docLinks, link{Href: l.Href, Body: l.Text})
 		}
 		end = middleware.ElapsedStat(ctx, "sourceFiles")
 		files = sourceFiles(unit, docPkg)
@@ -157,12 +165,13 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		Readme:          readme.HTML,
 		ReadmeOutline:   readme.Outline,
 		ReadmeLinks:     readme.Links,
-		DocOutline:      parts.Outline,
-		DocBody:         parts.Body,
+		DocLinks:        docLinks,
+		DocOutline:      docParts.Outline,
+		DocBody:         docParts.Body,
 		SourceFiles:     files,
 		RepositoryURL:   um.SourceInfo.RepoURL(),
 		SourceURL:       um.SourceInfo.DirectoryURL(internal.Suffix(um.Path, um.ModulePath)),
-		MobileOutline:   parts.MobileOutline,
+		MobileOutline:   docParts.MobileOutline,
 		NumImports:      unit.NumImports,
 		ImportedByCount: importedByCount,
 		IsPackage:       unit.IsPackage(),

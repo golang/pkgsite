@@ -709,11 +709,16 @@ func TestServer(t *testing.T) {
 					name:           "links",
 					urlPath:        "/github.com/links/pkg",
 					wantStatusCode: http.StatusOK,
+					// There is one div before the actual links appear, hence
+					// the numbers are off by one.
 					want: in(".UnitMeta",
 						in("div:nth-of-type(3)", hasText("title1")),
 						in("a:nth-of-type(2)", href("http://url1"), hasText("http://url1")),
 						in("div:nth-of-type(4)", hasText("title2")),
-						in("a:nth-of-type(3)", href("about:invalid#zGoSafez"), hasText("javascript://pwned"))),
+						in("a:nth-of-type(3)", href("about:invalid#zGoSafez"), hasText("javascript://pwned")),
+						in("div:nth-of-type(5)", hasText("pkg.go.dev")),
+						in("a:nth-of-type(4)", href("https://pkg.go.dev"), hasText("https://pkg.go.dev")),
+					),
 				})
 			},
 			experiments: []string{internal.ExperimentReadmeOutline, internal.ExperimentGoldmark},

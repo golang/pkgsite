@@ -69,7 +69,6 @@ type templateData struct {
 	*doc.Package
 	Examples    *examples
 	NoteHeaders map[string]noteHeader
-	Links       func() []render.Link
 }
 
 // Render renders package documentation HTML for the
@@ -84,7 +83,7 @@ func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Render
 		opt.Limit = 10 * megabyte
 	}
 
-	funcs, data := renderInfo(ctx, fset, p, opt)
+	funcs, data, _ := renderInfo(ctx, fset, p, opt)
 	p = data.Package
 	if p.Doc == "" &&
 		len(p.Examples) == 0 &&
@@ -103,7 +102,7 @@ type Parts struct {
 	Body          safehtml.HTML // main body of doc
 	Outline       safehtml.HTML // outline for large screens
 	MobileOutline safehtml.HTML // outline for mobile
-	Links         safehtml.HTML // "Links" section of package doc
+	Links         []render.Link // "Links" section of package doc
 }
 
 // Render renders package documentation HTML for the
@@ -119,7 +118,7 @@ func RenderParts(ctx context.Context, fset *token.FileSet, p *doc.Package, opt R
 		opt.Limit = 10 * megabyte
 	}
 
-	funcs, data := renderInfo(ctx, fset, p, opt)
+	funcs, data, links := renderInfo(ctx, fset, p, opt)
 	p = data.Package
 	if p.Doc == "" &&
 		len(p.Examples) == 0 &&
@@ -156,9 +155,9 @@ func RenderParts(ctx context.Context, fset *token.FileSet, p *doc.Package, opt R
 		Body:          exec("body.tmpl"),
 		Outline:       outline,
 		MobileOutline: exec("sidenav-mobile.tmpl"),
-		// Links must be rendered after body, because the call to
+		// links must be called after body, because the call to
 		// render_doc_extract_links in body.tmpl creates the links.
-		Links: exec("links.tmpl"),
+		Links: links(),
 	}
 	if err != nil {
 		return nil, err
@@ -167,7 +166,7 @@ func RenderParts(ctx context.Context, fset *token.FileSet, p *doc.Package, opt R
 }
 
 // renderInfo returns the functions and data needed to render the doc.
-func renderInfo(ctx context.Context, fset *token.FileSet, p *doc.Package, opt RenderOptions) (map[string]interface{}, templateData) {
+func renderInfo(ctx context.Context, fset *token.FileSet, p *doc.Package, opt RenderOptions) (map[string]interface{}, templateData, func() []render.Link) {
 	// Make a copy to avoid modifying caller's *doc.Package.
 	p2 := *p
 	p = &p2
@@ -226,9 +225,8 @@ func renderInfo(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Re
 		Package:     p,
 		Examples:    collectExamples(p),
 		NoteHeaders: buildNoteHeaders(p.Notes),
-		Links:       r.Links,
 	}
-	return funcs, data
+	return funcs, data, r.Links
 }
 
 // executeToHTMLWithLimit executes tmpl on data and returns the result as a safehtml.HTML.
