@@ -33,7 +33,8 @@ func pageTitle(um *internal.UnitMeta) string {
 	case um.IsPackage():
 		return um.Name
 	case um.IsModule():
-		return path.Base(um.Path)
+		prefix, _, _ := module.SplitPathVersion(um.Path)
+		return path.Base(prefix)
 	default:
 		return path.Base(um.Path) + "/"
 	}

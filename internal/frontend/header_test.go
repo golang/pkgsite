@@ -49,6 +49,9 @@ func TestPageTitlePageTypePageLabels(t *testing.T) {
 	m2.Units[0].Name = "main"
 	tests = append(tests, &testUnitPage{&m2.Units[0].UnitMeta, "module golang.org/x/tools/gopls", "gopls", pageTypeCommand, []string{pageTypeCommand, pageTypeModule}})
 
+	m3 := sample.Module("mvdan.cc/sh/v3", "v3.0.0")
+	tests = append(tests, &testUnitPage{&m3.Units[0].UnitMeta, "module mvdan.cc/sh/v3", "sh", pageTypeModule, []string{pageTypeModule}})
+
 	std := sample.Module(stdlib.ModulePath, "v1.0.0", "cmd/go")
 	for _, u := range std.Units {
 		um := &u.UnitMeta
