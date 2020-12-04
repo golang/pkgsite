@@ -65,8 +65,10 @@ func LegacyQuota(settings config.QuotaSettings) Middleware {
 					return
 				}
 			}
-
-			header := r.Header.Get("X-Forwarded-For")
+			header := r.Header.Get("X-Godoc-Forwarded-For")
+			if header == "" {
+				header = r.Header.Get("X-Forwarded-For")
+			}
 			key := ipKey(header)
 			// key is empty if we couldn't parse an IP, or there is no IP.
 			// Fail open in this case: allow serving.
