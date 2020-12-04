@@ -127,13 +127,19 @@ check_script_hashes() {
   runcmd go run ./devtools/cmd/csphash content/static/html/**/*.tmpl
 }
 
+# run_prettier runs prettier on CSS, JS, and MD files. Uses globally
+# installed prettier if available or a dockerized installation as a
+# fallback.
 run_prettier() {
-  if ! [ -x "$(command -v prettier)" ]; then
+  FILES='content/static/**/*.{js,css} **/*.md'
+  if [[ -x "$(command -v prettier)" ]]; then
+    runcmd prettier --write $FILES
+  elif [[ -x "$(command -v docker-compose)" && "$(docker images -q pkgsite_npm)" ]]; then
+    runcmd docker-compose -f devtools/config/docker-compose.yaml run --entrypoint=npx \
+    npm prettier --write $FILES
+  else
     err "prettier must be installed: see https://prettier.io/docs/en/install.html"
   fi
-  runcmd prettier --write content/static/css/*.css
-  runcmd prettier --write content/static/js/*.js
-  runcmd prettier --write **/*.md
 }
 
 standard_linters() {

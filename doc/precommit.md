@@ -41,6 +41,6 @@ executed in the commit hook. Notably, the `prettier` command is not run,
 because it has a dependency on nodejs, which is otherwise not needed and which
 not all developers have installed on their system.
 
-If you are modifying CSS or Javascript, install prettier as described at
-https://prettier.io/docs/en/install.html, and run `./all.bash prettier` to
-format your changes before mailing your CL.
+If you are modifying CSS or Javascript and you do not have docker installed,
+install prettier as described at https://prettier.io/docs/en/install.html,
+and run `./all.bash prettier` to format your changes before mailing your CL.
