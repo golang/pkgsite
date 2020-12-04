@@ -23,8 +23,8 @@ if (pathEl && htmlEl && markdownEl && badgeEl) {
     const origin = window.location.origin;
     const href = `${origin}/${e.target.value}`;
     const imgSrc = `${origin}/badge/${e.target.value}`;
-    htmlEl.value = `<a href="${href}"><img src="${imgSrc}" alt="PkgGoDev"></a>`;
-    markdownEl.value = `[![PkgGoDev](${imgSrc})](${href})`;
+    htmlEl.value = `<a href="${href}"><img src="${imgSrc}" alt="Go Reference"></a>`;
+    markdownEl.value = `[![Go Reference](${imgSrc})](${href})`;
     badgeEl.href = href;
   });
 }
