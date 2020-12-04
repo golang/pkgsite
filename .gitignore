@@ -39,3 +39,6 @@ results.bin
 #### VS Code Debugger Files ####
 .vscode
 __debug_bin
+
+#### NPM ####
+node_modules

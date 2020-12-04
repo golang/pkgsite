@@ -1,0 +1,15 @@
+{
+  "name": "pkgsite",
+  "license": "BSD-3-Clause",
+  "repository": {
+    "url": "https://go.googlesource.com/pkgsite"
+  },
+  "private": true,
+  "scripts": {
+    "license-check": "jsgl --local ."
+  },
+  "dependencies": {
+    "js-green-licenses": "^2.0.1",
+    "prettier": "2.1.2"
+  }
+}

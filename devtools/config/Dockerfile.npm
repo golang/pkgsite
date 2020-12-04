@@ -1,0 +1,9 @@
+FROM node:14.15.1
+
+WORKDIR /pkgsite
+
+COPY package.json package-lock.json ./
+
+RUN npm ci
+
+ENTRYPOINT [ "npm", "run" ]

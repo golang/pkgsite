@@ -1,0 +1,13 @@
+version: '3'
+services:
+  npm:
+    build:
+      context: ../../
+      dockerfile: devtools/config/Dockerfile.npm
+    image: pkgsite_npm
+    init: true
+    ports:
+      - '5000:5000'
+    volumes:
+      - ../..:/pkgsite
+      - /pkgsite/node_modules
