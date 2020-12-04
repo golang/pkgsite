@@ -24,6 +24,7 @@ import (
 	"github.com/yuin/goldmark/util"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/source"
 )
 
 // Heading holds data about a heading within a readme used in the
@@ -61,12 +62,16 @@ type Readme struct {
 // This function is exported for use by external tools.
 func ProcessReadme(ctx context.Context, u *internal.Unit) (_ *Readme, err error) {
 	defer derrors.Wrap(&err, "ProcessReadme(%q, %q, %q)", u.Path, u.ModulePath, u.Version)
-	if u.Readme == nil || u.Readme.Contents == "" {
+	return processReadme(u.Readme, u.SourceInfo)
+}
+
+func processReadme(readme *internal.Readme, sourceInfo *source.Info) (_ *Readme, err error) {
+	if readme == nil || readme.Contents == "" {
 		return &Readme{}, nil
 	}
-	if !isMarkdown(u.Readme.Filepath) {
+	if !isMarkdown(readme.Filepath) {
 		t := template.Must(template.New("").Parse(`<pre class="readme">{{.}}</pre>`))
-		h, err := t.ExecuteToHTML(u.Readme.Contents)
+		h, err := t.ExecuteToHTML(readme.Contents)
 		if err != nil {
 			return nil, err
 		}
@@ -93,8 +98,8 @@ func ProcessReadme(ctx context.Context, u *internal.Unit) (_ *Readme, err error)
 			// before it is rendered.
 			parser.WithASTTransformers(
 				util.Prioritized(&astTransformer{
-					info:   u.SourceInfo,
-					readme: u.Readme,
+					info:   sourceInfo,
+					readme: readme,
 				}, astTransformerPriority),
 				// Extract links after we have transformed the URLs.
 				util.Prioritized(el, astTransformerPriority+1),
@@ -110,10 +115,10 @@ func ProcessReadme(ctx context.Context, u *internal.Unit) (_ *Readme, err error)
 	)
 	gdMarkdown.Renderer().AddOptions(
 		renderer.WithNodeRenderers(
-			util.Prioritized(newHTMLRenderer(u.SourceInfo, u.Readme), 100),
+			util.Prioritized(newHTMLRenderer(sourceInfo, readme), 100),
 		),
 	)
-	contents := []byte(u.Readme.Contents)
+	contents := []byte(readme.Contents)
 	gdParser := gdMarkdown.Parser()
 	reader := gmtext.NewReader(contents)
 	pctx := parser.NewContext(parser.WithIDs(newIDs()))

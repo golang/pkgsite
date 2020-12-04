@@ -404,3 +404,28 @@ func (db *DB) getPathsInModule(ctx context.Context, modulePath, resolvedVersion 
 	}
 	return paths, nil
 }
+
+// GetModuleReadme returns the README corresponding to the modulePath and version.
+func (db *DB) GetModuleReadme(ctx context.Context, modulePath, resolvedVersion string) (_ *internal.Readme, err error) {
+	defer derrors.Wrap(&err, "GetModuleReadme(ctx, %q, %q)", modulePath, resolvedVersion)
+	var readme internal.Readme
+	err = db.db.QueryRow(ctx, `
+		SELECT file_path, contents
+		FROM modules m
+		INNER JOIN units u
+		ON u.module_id = m.id
+		INNER JOIN readmes r
+		ON u.id = r.unit_id
+		WHERE
+		    m.module_path=$1
+			AND m.version=$2
+			AND m.module_path=u.path`, modulePath, resolvedVersion).Scan(&readme.Filepath, &readme.Contents)
+	switch err {
+	case sql.ErrNoRows:
+		return nil, derrors.NotFound
+	case nil:
+		return &readme, nil
+	default:
+		return nil, err
+	}
+}

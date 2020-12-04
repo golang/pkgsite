@@ -21,4 +21,6 @@ type DataSource interface {
 	GetUnit(ctx context.Context, pathInfo *UnitMeta, fields FieldSet) (_ *Unit, err error)
 	// GetUnitMeta returns information about a path.
 	GetUnitMeta(ctx context.Context, path, requestedModulePath, requestedVersion string) (_ *UnitMeta, err error)
+	// GetModuleReadme gets the readme for the module.
+	GetModuleReadme(ctx context.Context, modulePath, resolvedVersion string) (*Readme, error)
 }

@@ -51,13 +51,18 @@ type MainDetails struct {
 	// used to render the readme outline in the sidebar.
 	ReadmeOutline []*Heading
 
-	// ReadmeLinks are from the "Links" section of the readme file,
-	// and are displayed on the right sidebar.
+	// ReadmeLinks are from the "Links" section of this unit's readme file, and
+	// are displayed on the right sidebar.
 	ReadmeLinks []link
 
 	// DocLinks are from the "Links" section of the Go package documentation,
 	// and are displayed on the right sidebar.
 	DocLinks []link
+
+	// ModuleReadmeLinks are from the "Links" section of this unit's module, if
+	// the unit is not itself a module. They are displayed on the right sidebar.
+	// See https://golang.org/issue/42968.
+	ModuleReadmeLinks []link
 
 	// ImportedByCount is the number of packages that import this path.
 	// When the count is > limit it will read as 'limit+'. This field
@@ -127,9 +132,9 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		return nil, err
 	}
 	var (
-		docParts = &dochtml.Parts{}
-		docLinks []link
-		files    []*File
+		docParts           = &dochtml.Parts{}
+		docLinks, modLinks []link
+		files              []*File
 	)
 	if unit.Documentation != nil {
 		end := middleware.ElapsedStat(ctx, "DecodePackage")
@@ -156,25 +161,42 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		files = sourceFiles(unit, docPkg)
 		end()
 	}
+	// If the unit is not a module, fetch the module readme to extract its
+	// links.
+	// In the unlikely event that the module is redistributable but the unit is
+	// not, we will not show the module links on the unit page.
+	if unit.Path != unit.ModulePath && unit.IsRedistributable && experiment.IsActive(ctx, internal.ExperimentGoldmark) {
+		modReadme, err := ds.GetModuleReadme(ctx, unit.ModulePath, unit.Version)
+		if err != nil {
+			return nil, err
+		}
+		rm, err := processReadme(modReadme, um.SourceInfo)
+		if err != nil {
+			return nil, err
+		}
+		modLinks = rm.Links
+	}
+
 	return &MainDetails{
-		ExpandReadme:    expandReadme,
-		NestedModules:   nestedModules,
-		Subdirectories:  subdirectories,
-		Licenses:        transformLicenseMetadata(um.Licenses),
-		CommitTime:      absoluteTime(um.CommitTime),
-		Readme:          readme.HTML,
-		ReadmeOutline:   readme.Outline,
-		ReadmeLinks:     readme.Links,
-		DocLinks:        docLinks,
-		DocOutline:      docParts.Outline,
-		DocBody:         docParts.Body,
-		SourceFiles:     files,
-		RepositoryURL:   um.SourceInfo.RepoURL(),
-		SourceURL:       um.SourceInfo.DirectoryURL(internal.Suffix(um.Path, um.ModulePath)),
-		MobileOutline:   docParts.MobileOutline,
-		NumImports:      unit.NumImports,
-		ImportedByCount: importedByCount,
-		IsPackage:       unit.IsPackage(),
+		ExpandReadme:      expandReadme,
+		NestedModules:     nestedModules,
+		Subdirectories:    subdirectories,
+		Licenses:          transformLicenseMetadata(um.Licenses),
+		CommitTime:        absoluteTime(um.CommitTime),
+		Readme:            readme.HTML,
+		ReadmeOutline:     readme.Outline,
+		ReadmeLinks:       readme.Links,
+		DocLinks:          docLinks,
+		ModuleReadmeLinks: modLinks,
+		DocOutline:        docParts.Outline,
+		DocBody:           docParts.Body,
+		SourceFiles:       files,
+		RepositoryURL:     um.SourceInfo.RepoURL(),
+		SourceURL:         um.SourceInfo.DirectoryURL(internal.Suffix(um.Path, um.ModulePath)),
+		MobileOutline:     docParts.MobileOutline,
+		NumImports:        unit.NumImports,
+		ImportedByCount:   importedByCount,
+		IsPackage:         unit.IsPackage(),
 	}, nil
 }
 

@@ -71,3 +71,8 @@ func (*DataSource) GetExperiments(ctx context.Context) ([]*internal.Experiment, 
 func (ds *DataSource) GetNestedModules(ctx context.Context, modulePath string) (_ []*internal.ModuleInfo, err error) {
 	return nil, nil
 }
+
+// GetModuleReadme is unimplemented.
+func (ds *DataSource) GetModuleReadme(ctx context.Context, modulePath, resolvedVersion string) (*internal.Readme, error) {
+	return nil, nil
+}

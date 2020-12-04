@@ -15,13 +15,15 @@
     {{else}}
       Repository URL not available.
     {{end}}
-    {{range .Details.ReadmeLinks}}
-      <div class="UnitMeta-repo">{{.Body}}</div>
-      <a href="{{.Href}}" title="{{.Href}}" target="_blank" rel="noopener">{{.Href}}</a>
-    {{end}}
-    {{range .Details.DocLinks}}
-      <div class="UnitMeta-repo">{{.Body}}</div>
-      <a href="{{.Href}}" title="{{.Href}}" target="_blank" rel="noopener">{{.Href}}</a>
-    {{end}}
+    {{template "unit_meta_links" .Details.ReadmeLinks}}
+    {{template "unit_meta_links" .Details.DocLinks}}
+    {{template "unit_meta_links" .Details.ModuleReadmeLinks}}
   </div>
+{{end}}
+
+{{define "unit_meta_links"}}
+  {{range .}}
+    <div class="UnitMeta-repo">{{.Body}}</div>
+    <a href="{{.Href}}" title="{{.Href}}" target="_blank" rel="noopener">{{.Href}}</a>
+  {{end}}
 {{end}}

@@ -181,3 +181,8 @@ func (ds *DataSource) GetLatestMajorVersion(ctx context.Context, seriesPath stri
 func (ds *DataSource) GetNestedModules(ctx context.Context, modulePath string) ([]*internal.ModuleInfo, error) {
 	return nil, nil
 }
+
+// GetModuleReadme is not implemented.
+func (*DataSource) GetModuleReadme(ctx context.Context, modulePath, resolvedVersion string) (*internal.Readme, error) {
+	return nil, nil
+}

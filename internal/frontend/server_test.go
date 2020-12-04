@@ -81,13 +81,18 @@ type serverTestCase struct {
 // Units with this prefix will be marked as excluded.
 const excludedModulePath = "github.com/module/excluded"
 
-const linksReadme = `
+const moduleLinksReadme = `
 # Heading
 Stuff
 
 ## Links
 - [title1](http://url1)
 - [title2](javascript://pwned)
+`
+
+const packageLinksReadme = `
+# Links
+- [pkg title](http://url2)
 `
 
 var testModules = []testModule{
@@ -160,15 +165,29 @@ var testModules = []testModule{
 	},
 	{
 		// A module with links.
-		path:            "github.com/links",
+		path:            "github.com/links/mod",
 		redistributable: true,
 		versions:        []string{"v1.0.0"},
 		packages: []testPackage{
 			{
-				suffix:         "pkg",
+				suffix:         "",
+				readmeFilePath: sample.ReadmeFilePath, // required
+				readmeContents: moduleLinksReadme,
+			},
+			{
+				// This package has no readme, just links in its godoc. So the
+				// UnitMeta (right sidebar) links will be from the godoc and
+				// module readme.
+				suffix: "no_readme",
+				doc:    sample.DocumentationHTML.String(),
+			},
+			{
+				// This package has a readme as well as godoc links, so the
+				// UnitMeta links will be from all three places.
+				suffix:         "has_readme",
+				readmeFilePath: "has_readme/README.md", // required
+				readmeContents: packageLinksReadme,
 				doc:            sample.DocumentationHTML.String(),
-				readmeContents: linksReadme,
-				readmeFilePath: sample.ReadmeFilePath,
 			},
 		},
 	},
@@ -680,6 +699,54 @@ func serverTestCases() []serverTestCase {
 	}
 }
 
+func checkLink(n int, title, url, body string) htmlcheck.Checker {
+	// The first div under .UnitMeta is "Links" and the second is the
+	// repository, so div numbers below start with 3. There is no "a" for
+	// "Links", so the "a" numbers are off by one.
+	return in("",
+		in(fmt.Sprintf("div:nth-of-type(%d)", n+2), hasText(title)),
+		in(fmt.Sprintf("a:nth-of-type(%d)", n+1), href(url), hasText(body)))
+}
+
+var linksTestCases = []serverTestCase{
+	{
+		name:           "module links",
+		urlPath:        "/github.com/links/mod",
+		wantStatusCode: http.StatusOK,
+		want: in(".UnitMeta",
+			// Module readme links.
+			checkLink(1, "title1", "http://url1", "http://url1"),
+			checkLink(2, "title2", "about:invalid#zGoSafez", "javascript://pwned"),
+		),
+	},
+	{
+		name:           "no_readme package links",
+		urlPath:        "/github.com/links/mod/no_readme",
+		wantStatusCode: http.StatusOK,
+		want: in(".UnitMeta",
+			// Package doc links are first.
+			checkLink(1, "pkg.go.dev", "https://pkg.go.dev", "https://pkg.go.dev"),
+			// Then module readmes.
+			checkLink(2, "title1", "http://url1", "http://url1"),
+			checkLink(3, "title2", "about:invalid#zGoSafez", "javascript://pwned"),
+		),
+	},
+	{
+		name:           "has_readme package links",
+		urlPath:        "/github.com/links/mod/has_readme",
+		wantStatusCode: http.StatusOK,
+		want: in(".UnitMeta",
+			// Package readme links are first.
+			checkLink(1, "pkg title", "http://url2", "http://url2"),
+			// Package doc links are second.
+			checkLink(2, "pkg.go.dev", "https://pkg.go.dev", "https://pkg.go.dev"),
+			// Module readme links are third.
+			checkLink(3, "title1", "http://url1", "http://url1"),
+			checkLink(4, "title2", "about:invalid#zGoSafez", "javascript://pwned"),
+		),
+	},
+}
+
 // TestServer checks the contents of served pages by looking for
 // strings and elements in the parsed HTML response body.
 //
@@ -705,21 +772,7 @@ func TestServer(t *testing.T) {
 		{
 			name: "goldmark and readme outline experiments",
 			testCasesFunc: func() []serverTestCase {
-				return append(serverTestCases(), serverTestCase{
-					name:           "links",
-					urlPath:        "/github.com/links/pkg",
-					wantStatusCode: http.StatusOK,
-					// There is one div before the actual links appear, hence
-					// the numbers are off by one.
-					want: in(".UnitMeta",
-						in("div:nth-of-type(3)", hasText("title1")),
-						in("a:nth-of-type(2)", href("http://url1"), hasText("http://url1")),
-						in("div:nth-of-type(4)", hasText("title2")),
-						in("a:nth-of-type(3)", href("about:invalid#zGoSafez"), hasText("javascript://pwned")),
-						in("div:nth-of-type(5)", hasText("pkg.go.dev")),
-						in("a:nth-of-type(4)", href("https://pkg.go.dev"), hasText("https://pkg.go.dev")),
-					),
-				})
+				return append(serverTestCases(), linksTestCases...)
 			},
 			experiments: []string{internal.ExperimentReadmeOutline, internal.ExperimentGoldmark},
 		},
