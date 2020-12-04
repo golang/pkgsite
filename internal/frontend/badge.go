@@ -13,8 +13,12 @@ import (
 
 type badgePage struct {
 	basePage
+	// SiteURL is hostname, including a https:// prefix.
 	SiteURL string
-	Path    string
+	// LinkPath is the URL path of the badge will link to.
+	LinkPath string
+	// BadgePath is the URL path of the badge SVG.
+	BadgePath string
 }
 
 // badgeHandler serves a Go SVG badge image for requests to /badge/<path>
@@ -35,9 +39,10 @@ func (s *Server) badgeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page := badgePage{
-		basePage: s.newBasePage(r, "Badge generation tool"),
-		SiteURL:  "https://" + r.Host,
-		Path:     path,
+		basePage:  s.newBasePage(r, "Badge generation tool"),
+		SiteURL:   "https://" + r.Host,
+		LinkPath:  path,
+		BadgePath: "badge/" + path + ".svg",
 	}
 	s.servePage(r.Context(), w, "badge.tmpl", page)
 }

@@ -32,35 +32,19 @@ func TestBadgeHandler_ServeBadgeTool(t *testing.T) {
 		},
 		{
 			"/badge/?path=net/http",
-			`<a href="https://example.com/net/http"><img src="https://example.com/badge/net/http" alt="Go Reference"></a>`,
-		},
-		{
-			"/badge/?path=net/http?tab=imports",
-			`<a href="https://example.com/net/http?tab=imports"><img src="https://example.com/badge/net/http?tab=imports" alt="Go Reference"></a>`,
+			`<a href="https://example.com/net/http"><img src="https://example.com/badge/net/http.svg" alt="Go Reference"></a>`,
 		},
 		{
 			"/badge/?path=https://pkg.go.dev/net/http",
-			`<a href="https://example.com/net/http"><img src="https://example.com/badge/net/http" alt="Go Reference"></a>`,
-		},
-		{
-			"/badge/?path=https://pkg.go.dev/net/http?tab=imports",
-			`<a href="https://example.com/net/http?tab=imports"><img src="https://example.com/badge/net/http?tab=imports" alt="Go Reference"></a>`,
+			`<a href="https://example.com/net/http"><img src="https://example.com/badge/net/http.svg" alt="Go Reference"></a>`,
 		},
 		{
 			"/badge/?path=github.com/google/uuid",
-			"[![Go Reference](https://example.com/badge/github.com/google/uuid)](https://example.com/github.com/google/uuid)",
-		},
-		{
-			"/badge/?path=github.com/google/uuid?tab=imports",
-			"[![Go Reference](https://example.com/badge/github.com/google/uuid?tab=imports)](https://example.com/github.com/google/uuid?tab=imports)",
+			"[![Go Reference](https://example.com/badge/github.com/google/uuid.svg)](https://example.com/github.com/google/uuid)",
 		},
 		{
 			"/badge/?path=https://pkg.go.dev/github.com/google/uuid",
-			"[![Go Reference](https://example.com/badge/github.com/google/uuid)](https://example.com/github.com/google/uuid)",
-		},
-		{
-			"/badge/?path=https://pkg.go.dev/github.com/google/uuid?tab=imports",
-			"[![Go Reference](https://example.com/badge/github.com/google/uuid?tab=imports)](https://example.com/github.com/google/uuid?tab=imports)",
+			"[![Go Reference](https://example.com/badge/github.com/google/uuid.svg)](https://example.com/github.com/google/uuid)",
 		},
 		{
 			"/badge/?path=https://google.com",
@@ -68,7 +52,7 @@ func TestBadgeHandler_ServeBadgeTool(t *testing.T) {
 		},
 		{
 			"/badge/?path=https://google.com/github.com/google/uuid",
-			"[![Go Reference](https://example.com/badge/github.com/google/uuid)](https://example.com/github.com/google/uuid)",
+			"[![Go Reference](https://example.com/badge/github.com/google/uuid.svg)](https://example.com/github.com/google/uuid)",
 		},
 	}
 

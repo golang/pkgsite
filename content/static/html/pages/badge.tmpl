@@ -12,8 +12,8 @@
       <label class="Badge-formElement">
         Badge
         <div class="Badge-previewLink">
-          <a class="js-badgeExampleButton" href="{{.SiteURL}}/{{.Path}}">
-            <img class="Badge-badgeIcon" src="/static/img/badge" alt="Go Reference">
+          <a class="js-badgeExampleButton" href="{{.SiteURL}}/{{.LinkPath}}">
+            <img class="Badge-badgeIcon" src="/static/img/badge.svg" alt="Go Reference">
           </a>
         </div>
       </label>
@@ -21,27 +21,27 @@
         <label class="Badge-formElement">
           URL
           <input name="path" class="js-toolsPathInput"
-              value="{{.Path}}" placeholder="e.g., https://pkg.go.dev/golang.org/x/pkgsite">
+              value="{{.LinkPath}}" placeholder="e.g., https://pkg.go.dev/golang.org/x/pkgsite">
         </label>
         <label class="Badge-formElement">
           <button type="submit" class="Badge-submitButton">Create</button>
         </label>
       </form>
       <div class="Badge-snippetContainer">
-        {{if .Path}}
+        {{if .LinkPath}}
           <label class="Badge-formElement">
             HTML
             <input title="Click to copy HTML" name="html" class="Badge-clickToCopy js-toolsCopySnippet" type="text"
-                value='<a href="{{.SiteURL}}/{{.Path}}"><img src="{{.SiteURL}}/badge/{{.Path}}" alt="Go Reference"></a>' readonly>
+                value='<a href="{{.SiteURL}}/{{.LinkPath}}"><img src="{{.SiteURL}}/{{.BadgePath}}" alt="Go Reference"></a>' readonly>
           </label>
           <label class="Badge-formElement">
             Markdown
             <input title="Click to copy markdown" name="markdown" class="Badge-clickToCopy js-toolsCopySnippet" type="text"
-                value="[![Go Reference]({{.SiteURL}}/badge/{{.Path}})]({{.SiteURL}}/{{.Path}})" readonly>
+                value="[![Go Reference]({{.SiteURL}}/{{.BadgePath}})]({{.SiteURL}}/{{.LinkPath}})" readonly>
           </label>
         {{else}}
           <div class="Badge-gopherLanding">
-            <img src="/static/img/gopher-airplane" alt="The Go Gopher"/>
+            <img src="/static/img/gopher-airplane.svg" alt="The Go Gopher"/>
             <p>Type a pkg.go.dev URL above to create a badge link.</p>
           </div>
         {{end}}
