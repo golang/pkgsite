@@ -9,6 +9,7 @@
 }
 .UnitMeta a {
   display: block;
+  margin-bottom: 1rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
