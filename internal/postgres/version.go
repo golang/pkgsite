@@ -128,9 +128,14 @@ func (db *DB) GetLatestMajorVersion(ctx context.Context, fullPath, modulePath st
 		return "", "", err
 	}
 	var latestModulePath, latestPackagePath string
-	row := db.db.QueryRow(ctx, q, args...)
-	if err := row.Scan(&latestModulePath, &latestPackagePath); err != nil {
+	if err := db.db.QueryRow(ctx, q, args...).Scan(&latestModulePath, &latestPackagePath); err != nil {
 		return "", "", err
+	}
+	// If the package path is not the one we're expecting, then it doesn't exist
+	// in the latest module version (or it would have been sorted first by the
+	// OrderByClause above).
+	if internal.V1Path(latestPackagePath, latestModulePath) != v1Path {
+		return latestModulePath, latestModulePath, nil
 	}
 	return latestModulePath, latestPackagePath, nil
 }
