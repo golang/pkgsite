@@ -7,6 +7,7 @@ package internal
 
 const (
 	ExperimentAutocomplete       = "autocomplete"
+	ExperimentGetUnitMetaQuery   = "get-unit-meta-query"
 	ExperimentGoldmark           = "goldmark"
 	ExperimentReadmeOutline      = "readme-outline"
 	ExperimentUnitSidebarDetails = "unit-sidebar-details"
@@ -16,6 +17,7 @@ const (
 // a description of each experiment.
 var Experiments = map[string]string{
 	ExperimentAutocomplete:       "Enable autocomplete with search.",
+	ExperimentGetUnitMetaQuery:   "Enable the new get unit meta query, which reads from the paths table.",
 	ExperimentGoldmark:           "Enable the usage of rendering markdown using goldmark instead of blackfriday.",
 	ExperimentReadmeOutline:      "Enable the readme outline in the side nav.",
 	ExperimentUnitSidebarDetails: "Enable the details section in the right sidebar.",

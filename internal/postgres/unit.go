@@ -15,6 +15,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -32,7 +33,15 @@ func (db *DB) GetUnitMeta(ctx context.Context, fullPath, requestedModulePath, re
 	defer derrors.Wrap(&err, "DB.GetUnitMeta(ctx, %q, %q, %q)", fullPath, requestedModulePath, requestedVersion)
 	defer middleware.ElapsedStat(ctx, "GetUnitMeta")()
 
-	q, args, err := legacyGetUnitMetaQuery(fullPath, requestedModulePath, requestedVersion).ToSql()
+	var (
+		q    string
+		args []interface{}
+	)
+	if experiment.IsActive(ctx, internal.ExperimentGetUnitMetaQuery) {
+		q, args, err = getUnitMetaQuery(fullPath, requestedModulePath, requestedVersion).PlaceholderFormat(squirrel.Dollar).ToSql()
+	} else {
+		q, args, err = legacyGetUnitMetaQuery(fullPath, requestedModulePath, requestedVersion).PlaceholderFormat(squirrel.Dollar).ToSql()
+	}
 	if err != nil {
 		return nil, fmt.Errorf("squirrel.ToSql: %v", err)
 	}
@@ -69,6 +78,52 @@ func (db *DB) GetUnitMeta(ctx context.Context, fullPath, requestedModulePath, re
 	default:
 		return nil, err
 	}
+}
+
+func getUnitMetaQuery(fullPath, requestedModulePath, requestedVersion string) squirrel.SelectBuilder {
+	query := squirrel.Select(
+		"m.module_path",
+		"m.version",
+		"m.commit_time",
+		"m.source_info",
+		"u.name",
+		"u.redistributable",
+		"u.license_types",
+		"u.license_paths",
+	)
+	if requestedVersion != internal.LatestVersion {
+		query = query.From("modules m").Join("units u on u.module_id = m.id").Where(squirrel.Eq{"u.path": fullPath})
+		if requestedModulePath != internal.UnknownModulePath {
+			query = query.Where(squirrel.Eq{"m.module_path": requestedModulePath})
+		}
+		if internal.DefaultBranches[requestedVersion] {
+			query = query.Join("version_map vm ON m.id = vm.module_id").Where("vm.requested_version = ? ", requestedVersion)
+		} else if requestedVersion != internal.LatestVersion {
+			query = query.Where(squirrel.Eq{"version": requestedVersion})
+		}
+		return orderByLatest(query).Limit(1)
+	}
+
+	// Use a nested select to fetch the latest version of the unit, then JOIN
+	// on units to fetch other relevant information. This allows us to use the
+	// index on units.id and paths.path to get the latest path. We can then
+	// look up only the relevant information from the units table.
+	nestedSelect := orderByLatest(squirrel.Select(
+		"m.id",
+		"m.module_path",
+		"m.version",
+		"m.commit_time",
+		"m.source_info",
+		"u.id AS unit_id",
+	).From("modules m").
+		Join("units u ON u.module_id = m.id").
+		Join("paths p ON p.id = u.path_id").
+		Where(squirrel.Eq{"p.path": fullPath}))
+	if requestedModulePath != internal.UnknownModulePath {
+		nestedSelect = nestedSelect.Where(squirrel.Eq{"m.module_path": requestedModulePath})
+	}
+	nestedSelect = nestedSelect.Limit(1)
+	return query.From("units u").JoinClause(nestedSelect.Prefix("JOIN (").Suffix(") m ON u.id = m.unit_id"))
 }
 
 func legacyGetUnitMetaQuery(fullPath, requestedModulePath, requestedVersion string) squirrel.SelectBuilder {
