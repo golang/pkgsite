@@ -144,6 +144,15 @@ func isValidPath(fullPath string) bool {
 		return false
 	}
 	parts := strings.Split(fullPath, "/")
+	if parts[0] == "golang.org" {
+		if fullPath == "golang.org/dl" {
+			return true
+		}
+		if len(parts) >= 3 && parts[1] == "x" {
+			return true
+		}
+		return false
+	}
 	if _, ok := vcsHostsWithThreeElementRepoName[parts[0]]; ok {
 		if len(parts) < 3 {
 			return false

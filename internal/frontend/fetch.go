@@ -450,7 +450,6 @@ var vcsHostsWithThreeElementRepoName = map[string]bool{
 	"gitee.com":     true,
 	"github.com":    true,
 	"gitlab.com":    true,
-	"golang.org":    true,
 }
 
 // maxPathsToFetch is the number of modulePaths that are fetched from a single
@@ -461,6 +460,12 @@ var maxPathsToFetch = 10
 // candidateModulePaths returns the potential module paths that could contain
 // the fullPath. The paths are returned in reverse length order.
 func candidateModulePaths(fullPath string) (_ []string, err error) {
+	if !isValidPath(fullPath) {
+		return nil, &serverError{
+			status: http.StatusBadRequest,
+			err:    fmt.Errorf("isValidPath(%q): false", fullPath),
+		}
+	}
 	var (
 		path        string
 		modulePaths []string

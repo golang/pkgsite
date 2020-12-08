@@ -179,6 +179,31 @@ func TestNewContextFromExps(t *testing.T) {
 	}
 }
 
+func TestIsValidPath(t *testing.T) {
+	tests := []struct {
+		path string
+		want bool
+	}{
+		{"net/http", true},
+		{"github.com/foo", false},
+		{"github.com/foo", false},
+		{"/github.com/foo/bar", false},
+		{"github.com/foo/bar/", false},
+		{"github.com/foo/bar", true},
+		{"github.com/foo/bar/baz", true},
+		{"golang.org/dl", true},
+		{"golang.org/x", false},
+		{"golang.org/x/tools", true},
+		{"golang.org/x/tools/go/packages", true},
+	}
+	for _, test := range tests {
+		got := isValidPath(test.path)
+		if got != test.want {
+			t.Errorf("isValidPath(ctx, ds, %q) = %t, want %t", test.path, got, test.want)
+		}
+	}
+}
+
 func TestIsSupportedVersion(t *testing.T) {
 	tests := []struct {
 		path, version string
