@@ -481,6 +481,19 @@ func executeTemplate(ctx context.Context, templateName string, tmpl *template.Te
 	return buf.Bytes(), nil
 }
 
+var templateFuncs = template.FuncMap{
+	"add": func(i, j int) int { return i + j },
+	"pluralize": func(i int, s string) string {
+		if i == 1 {
+			return s
+		}
+		return s + "s"
+	},
+	"commaseparate": func(s []string) string {
+		return strings.Join(s, ", ")
+	},
+}
+
 // parsePageTemplates parses html templates contained in the given base
 // directory in order to generate a map of Name->*template.Template.
 //
@@ -507,18 +520,7 @@ func parsePageTemplates(base template.TrustedSource) (map[string]*template.Templ
 
 	templates := make(map[string]*template.Template)
 	for _, set := range htmlSets {
-		t, err := template.New("base.tmpl").Funcs(template.FuncMap{
-			"add": func(i, j int) int { return i + j },
-			"pluralize": func(i int, s string) string {
-				if i == 1 {
-					return s
-				}
-				return s + "s"
-			},
-			"commaseparate": func(s []string) string {
-				return strings.Join(s, ", ")
-			},
-		}).ParseFilesFromTrustedSources(join(base, tsc("base.tmpl")))
+		t, err := template.New("base.tmpl").Funcs(templateFuncs).ParseFilesFromTrustedSources(join(base, tsc("base.tmpl")))
 		if err != nil {
 			return nil, fmt.Errorf("ParseFiles: %v", err)
 		}

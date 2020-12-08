@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/google/safehtml/template"
+	"github.com/jba/templatecheck"
 	"golang.org/x/net/html"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/experiment"
@@ -1104,5 +1105,65 @@ func newTestServer(t *testing.T, proxyModules []*proxy.Module, experimentNames .
 	return s, mw(mux), func() {
 		teardown()
 		postgres.ResetTestDB(testDB, t)
+	}
+}
+
+func TestCheckTemplates(t *testing.T) {
+	// Perform additional checks on parsed templates.
+	staticPath := template.TrustedSourceFromConstant("../../content/static")
+	templateDir := template.TrustedSourceJoin(staticPath, template.TrustedSourceFromConstant("html"))
+	templates, err := parsePageTemplates(templateDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range []struct {
+		name    string
+		subs    []string
+		typeval interface{}
+	}{
+		{"badge", nil, badgePage{}},
+		// error.tmpl omitted because relies on an associated "message" template
+		// that's parsed on demand; see renderErrorPage above.
+		{"fetch", nil, errorPage{}},
+		{"index", nil, basePage{}},
+		{"license_policy", nil, licensePolicyPage{}},
+		{"search", nil, SearchPage{}},
+		{"search_help", nil, basePage{}},
+		{"unit_details", nil, UnitPage{}},
+		{
+			"unit_details",
+			[]string{"unit_outline", "legacy_unit_outline", "unit_readme", "unit_doc", "unit_files", "unit_directories"},
+			MainDetails{},
+		},
+		{"unit_importedby", nil, UnitPage{}},
+		{"unit_importedby", []string{"importedby"}, ImportedByDetails{}},
+		{"unit_imports", nil, UnitPage{}},
+		{"unit_imports", []string{"imports"}, ImportsDetails{}},
+		{"unit_licenses", nil, UnitPage{}},
+		{"unit_licenses", []string{"licenses"}, LicensesDetails{}},
+		{"unit_versions", nil, UnitPage{}},
+		{"unit_versions", []string{"versions"}, VersionsDetails{}},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			tm := templates[c.name+".tmpl"]
+			if tm == nil {
+				t.Fatalf("no template %q", c.name)
+			}
+			if c.subs == nil {
+				if err := templatecheck.CheckSafe(tm, c.typeval, templateFuncs); err != nil {
+					t.Fatal(err)
+				}
+			} else {
+				for _, n := range c.subs {
+					s := tm.Lookup(n)
+					if s == nil {
+						t.Fatalf("no sub-template %q of %q", n, c.name)
+					}
+					if err := templatecheck.CheckSafe(s, c.typeval, templateFuncs); err != nil {
+						t.Fatalf("%s: %v", n, err)
+					}
+				}
+			}
+		})
 	}
 }

@@ -27,9 +27,10 @@ require (
 	github.com/google/go-cmp v0.5.2
 	github.com/google/go-replayers/httpreplay v0.1.0
 	github.com/google/licensecheck v0.0.0-20200805042302-c54f297c3b57
-	github.com/google/safehtml v0.0.1
+	github.com/google/safehtml v0.0.2
 	github.com/jackc/pgconn v1.7.2
 	github.com/jackc/pgx/v4 v4.9.2
+	github.com/jba/templatecheck v0.2.0
 	github.com/lib/pq v1.3.0
 	github.com/microcosm-cc/bluemonday v1.0.2
 	github.com/russross/blackfriday/v2 v2.0.1
@@ -42,6 +43,7 @@ require (
 	golang.org/x/net v0.0.0-20200904194848-62affa334b73
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 	golang.org/x/sys v0.0.0-20200922070232-aee5d888a860 // indirect
+	golang.org/x/text v0.3.4 // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
 	google.golang.org/api v0.32.0
 	google.golang.org/genproto v0.0.0-20200923140941-5646d36feee1
