@@ -32,37 +32,15 @@ func (db *DB) GetUnitMeta(ctx context.Context, fullPath, requestedModulePath, re
 	defer derrors.Wrap(&err, "DB.GetUnitMeta(ctx, %q, %q, %q)", fullPath, requestedModulePath, requestedVersion)
 	defer middleware.ElapsedStat(ctx, "GetUnitMeta")()
 
-	query := squirrel.Select(
-		"m.module_path",
-		"m.version",
-		"m.commit_time",
-		"m.source_info",
-		"m.has_go_mod",
-		"u.name",
-		"u.redistributable",
-		"u.license_types",
-		"u.license_paths",
-	).From("modules m").Join(
-		"units u on u.module_id = m.id").Where(squirrel.Eq{"u.path": fullPath})
-
-	if requestedModulePath != internal.UnknownModulePath {
-		query = query.Where(squirrel.Eq{"m.module_path": requestedModulePath})
-	}
-	if _, ok := internal.DefaultBranches[requestedVersion]; ok {
-		query = query.Join("version_map vm ON m.id = vm.module_id").Where("vm.requested_version = ? ", requestedVersion)
-	} else if requestedVersion != internal.LatestVersion {
-		query = query.Where(squirrel.Eq{"version": requestedVersion})
+	q, args, err := legacyGetUnitMetaQuery(fullPath, requestedModulePath, requestedVersion).ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("squirrel.ToSql: %v", err)
 	}
 	var (
 		licenseTypes []string
 		licensePaths []string
 		um           = internal.UnitMeta{Path: fullPath}
 	)
-	q, args, err := orderByLatest(query).ToSql()
-	if err != nil {
-		return nil, fmt.Errorf("squirrel.ToSql: %v", err)
-	}
-
 	err = db.db.QueryRow(ctx, q, args...).Scan(
 		&um.ModulePath,
 		&um.Version,
@@ -91,6 +69,31 @@ func (db *DB) GetUnitMeta(ctx context.Context, fullPath, requestedModulePath, re
 	default:
 		return nil, err
 	}
+}
+
+func legacyGetUnitMetaQuery(fullPath, requestedModulePath, requestedVersion string) squirrel.SelectBuilder {
+	query := squirrel.Select(
+		"m.module_path",
+		"m.version",
+		"m.commit_time",
+		"m.source_info",
+		"m.has_go_mod",
+		"u.name",
+		"u.redistributable",
+		"u.license_types",
+		"u.license_paths",
+	).From("modules m").
+		Join("units u on u.module_id = m.id").
+		Where(squirrel.Eq{"u.path": fullPath})
+	if requestedModulePath != internal.UnknownModulePath {
+		query = query.Where(squirrel.Eq{"m.module_path": requestedModulePath})
+	}
+	if _, ok := internal.DefaultBranches[requestedVersion]; ok {
+		query = query.Join("version_map vm ON m.id = vm.module_id").Where("vm.requested_version = ? ", requestedVersion)
+	} else if requestedVersion != internal.LatestVersion {
+		query = query.Where(squirrel.Eq{"version": requestedVersion})
+	}
+	return orderByLatest(query)
 }
 
 // orderByLatest orders paths according to the go command.
