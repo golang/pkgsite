@@ -107,7 +107,7 @@ func isRobot(userAgent string) bool {
 		return true
 	}
 	for _, b := range browserAgentPrefixes {
-		if strings.HasPrefix(userAgent, b+"/") {
+		if strings.HasPrefix(userAgent, b) {
 			return false
 		}
 	}

@@ -137,7 +137,7 @@ func TestIsRobot(t *testing.T) {
 		"Safari/15609.1.20.111.8 CFNetwork/1125.2 Darwin/19.4.0 (x86_64)",
 		"MobileSafari/604.1 CFNetwork/1126 Darwin/19.5.0",
 	} {
-		if !isRobot(test) {
+		if isRobot(test) {
 			t.Errorf("isRobot(%q) = true; want = false", test)
 		}
 	}
