@@ -177,14 +177,12 @@ func enforceQuota(ctx context.Context, client *redis.Client, qps int, header str
 	rrateKey := string(mac.Sum(nil))
 	res, err := rrate.NewLimiter(client.WithTimeout(15*time.Millisecond)).Allow(ctx, rrateKey, rrate.PerSecond(qps))
 	if err != nil {
-		log.Errorf(ctx, "quota: redis limiter: %v", err)
-		if errors.Is(err, context.DeadlineExceeded) {
-			return false, "timeout"
-		}
 		var nerr *net.OpError
-		if errors.As(err, &nerr) && nerr.Timeout() {
+		if errors.Is(err, context.DeadlineExceeded) || (errors.As(err, &nerr) && nerr.Timeout()) {
+			log.Warningf(ctx, "quota: redis limiter: %v", err)
 			return false, "timeout"
 		}
+		log.Errorf(ctx, "quota: redis limiter: %v", err)
 		return false, "error"
 	}
 	if res.Allowed > 0 {
