@@ -167,14 +167,16 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 	// not, we will not show the module links on the unit page.
 	if unit.Path != unit.ModulePath && unit.IsRedistributable && experiment.IsActive(ctx, internal.ExperimentGoldmark) {
 		modReadme, err := ds.GetModuleReadme(ctx, unit.ModulePath, unit.Version)
-		if err != nil {
+		if err != nil && !errors.Is(err, derrors.NotFound) {
 			return nil, err
 		}
-		rm, err := processReadme(modReadme, um.SourceInfo)
-		if err != nil {
-			return nil, err
+		if err == nil {
+			rm, err := processReadme(modReadme, um.SourceInfo)
+			if err != nil {
+				return nil, err
+			}
+			modLinks = rm.Links
 		}
-		modLinks = rm.Links
 	}
 
 	return &MainDetails{
