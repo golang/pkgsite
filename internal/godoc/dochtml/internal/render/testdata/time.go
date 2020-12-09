@@ -852,3 +852,20 @@ func FixedZone(name string, offset int) *Location {
 func LoadLocation(name string) (*Location, error) {
 	return nil, nil
 }
+
+type TooLongLiteral struct {
+	// The name.
+	Name string
+
+	// The labels.
+	Labels int `A struct tag that happens to be a string literal that is too long to display, according to the stringBasicLitSize function in linkify.go.`
+
+	unexp int
+}
+
+type Iface interface {
+	// Method comment.
+	M()
+
+	u()
+}

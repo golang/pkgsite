@@ -206,6 +206,7 @@ func TestDeclHTML(t *testing.T) {
 			want: `type Ticker struct {
 <span id="Ticker.C" data-kind="field"></span>	C &lt;-chan <a href="#Time">Time</a> <span class="comment">// The channel on which the ticks are delivered.</span>
 	<span class="comment">// contains filtered or unexported fields</span>
+
 }`,
 		},
 		{
@@ -218,12 +219,38 @@ func TestDeclHTML(t *testing.T) {
 			symbol: "After",
 			want:   `func After(d <a href="#Duration">Duration</a>) &lt;-chan <a href="#Time">Time</a>`,
 		},
+		{
+			name:   "interface",
+			symbol: "Iface",
+			want: `type Iface interface {
+<span id="Iface.M" data-kind="method"></span>	<span class="comment">// Method comment.</span>
+	M()
+
+	<span class="comment">// contains filtered or unexported methods</span>
+
+}`,
+		},
+		{
+			name:   "long literal",
+			symbol: "TooLongLiteral",
+			want: `type TooLongLiteral struct {
+<span id="TooLongLiteral.Name" data-kind="field"></span>	<span class="comment">// The name.</span>
+	Name <a href="/builtin#string">string</a>
+
+<span id="TooLongLiteral.Labels" data-kind="field"></span>	<span class="comment">// The labels.</span>
+	Labels <a href="/builtin#int">int</a> &#34;&#34; <span class="comment">/* 137 byte string literal not displayed */</span>
+
+	<span class="comment">// contains filtered or unexported fields</span>
+
+}`,
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			decl := declForName(t, pkgTime, test.symbol)
 			r := New(context.Background(), fsetTime, pkgTime, nil)
 			got := r.DeclHTML("", decl).Decl.String()
 			if diff := cmp.Diff(test.want, got); diff != "" {
+				fmt.Println(got)
 				t.Errorf("mismatch (-want +got)\n%s", diff)
 			}
 		})

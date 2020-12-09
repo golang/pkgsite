@@ -376,7 +376,8 @@ func (r *Renderer) formatDeclHTML(decl ast.Decl, idr *identifierResolver) safeht
 		return true
 	})
 
-	// Trim large string literals and slices.
+	// Trim large string literals and composite literals.
+	//ast.Fprint(os.Stdout, nil, decl, nil)
 	v := &declVisitor{}
 	ast.Walk(v, decl)
 
@@ -481,35 +482,67 @@ scan:
 
 var anchorTemplate = template.Must(template.New("anchor").Parse(`<span id="{{.ID}}" data-kind="{{.Kind}}"></span>`))
 
-// declVisitor is used to walk over the AST and trim large string
-// literals and arrays before package documentation is rendered.
-// Comments are added to Comments to indicate that a part of the
-// original code is not displayed.
+// declVisitor is an ast.Visitor that trims
+// large string literals and composite literals.
 type declVisitor struct {
+	// Comments is a collection of existing documentation in the ast.Decl,
+	// with additional comments to indicate when a part of the original
+	// code is not displayed.
 	Comments []*ast.CommentGroup
+}
+
+type afterVisitor struct {
+	v ast.Visitor
+	f func()
+}
+
+func (v *afterVisitor) Visit(n ast.Node) ast.Visitor {
+	if n == nil {
+		v.f()
+	}
+	return v.v
 }
 
 // Visit implements ast.Visitor.
 func (v *declVisitor) Visit(n ast.Node) ast.Visitor {
+
+	addComment := func(pos token.Pos, text string) {
+		v.Comments = append(v.Comments,
+			&ast.CommentGroup{List: []*ast.Comment{{
+				Slash: pos,
+				Text:  text,
+			}}})
+	}
+
 	switch n := n.(type) {
 	case *ast.BasicLit:
 		if n.Kind == token.STRING && len(n.Value) > 128 {
-			v.Comments = append(v.Comments,
-				&ast.CommentGroup{List: []*ast.Comment{{
-					Slash: n.Pos(),
-					Text:  stringBasicLitSize(n.Value),
-				}}})
+			addComment(n.Pos(), stringBasicLitSize(n.Value))
 			n.Value = `""`
 		}
 	case *ast.CompositeLit:
 		if len(n.Elts) > 100 {
-			v.Comments = append(v.Comments,
-				&ast.CommentGroup{List: []*ast.Comment{{
-					Slash: n.Lbrace,
-					Text:  fmt.Sprintf("/* %d elements not displayed */", len(n.Elts)),
-				}}})
+			addComment(n.Lbrace, fmt.Sprintf("/* %d elements not displayed */", len(n.Elts)))
 			n.Elts = n.Elts[:0]
 		}
+
+	case *ast.StructType:
+		if n.Incomplete && n.Fields != nil {
+			return &afterVisitor{v, func() {
+				addComment(n.Fields.Closing-1, "// contains filtered or unexported fields")
+			}}
+		}
+
+	case *ast.InterfaceType:
+		if n.Incomplete && n.Methods != nil {
+			return &afterVisitor{v, func() {
+				addComment(n.Methods.Closing-1, "// contains filtered or unexported methods")
+			}}
+		}
+
+	case *ast.CommentGroup:
+		v.Comments = append(v.Comments, n) // Preserve existing documentation in the ast.Decl.
+		return nil                         // No need to visit individual comments of the comment group.
 	}
 	return v
 }
