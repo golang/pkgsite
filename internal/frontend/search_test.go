@@ -159,6 +159,7 @@ func TestFetchSearchPage(t *testing.T) {
 				cmp.AllowUnexported(SearchPage{}, pagination{}),
 				cmpopts.IgnoreFields(licenses.Metadata{}, "FilePath"),
 				cmpopts.IgnoreFields(pagination{}, "Approximate"),
+				cmpopts.IgnoreFields(basePage{}, "MetaDescription"),
 			}
 			if diff := cmp.Diff(test.wantSearchPage, got, opts...); diff != "" {
 				t.Errorf("fetchSearchPage(db, %q) mismatch (-want +got):\n%s", test.query, diff)

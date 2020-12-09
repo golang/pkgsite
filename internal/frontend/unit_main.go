@@ -74,6 +74,10 @@ type MainDetails struct {
 	MobileOutline safehtml.HTML
 	IsPackage     bool
 
+	// DocSynopsis is used as the content for the <meta name="Description">
+	// tag on the main unit page.
+	DocSynopsis string
+
 	// SourceFiles contains .go files for the package.
 	SourceFiles []*File
 
@@ -135,8 +139,10 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		docParts           = &dochtml.Parts{}
 		docLinks, modLinks []link
 		files              []*File
+		synopsis           string
 	)
 	if unit.Documentation != nil {
+		synopsis = unit.Documentation.Synopsis
 		end := middleware.ElapsedStat(ctx, "DecodePackage")
 		docPkg, err := godoc.DecodePackage(unit.Documentation.Source)
 		end()
@@ -192,6 +198,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		ModuleReadmeLinks: modLinks,
 		DocOutline:        docParts.Outline,
 		DocBody:           docParts.Body,
+		DocSynopsis:       synopsis,
 		SourceFiles:       files,
 		RepositoryURL:     um.SourceInfo.RepoURL(),
 		SourceURL:         um.SourceInfo.DirectoryURL(internal.Suffix(um.Path, um.ModulePath)),

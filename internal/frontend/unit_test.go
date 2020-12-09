@@ -128,3 +128,27 @@ func TestIsValidTab(t *testing.T) {
 		}
 	}
 }
+
+func TestMetaDescription(t *testing.T) {
+	for _, test := range []struct {
+		synopsis, want string
+	}{
+		{
+			synopsis: "",
+			want:     "",
+		},
+		{
+			synopsis: "Hello, world.",
+			want:     `<meta name="Description" content="Hello, world.">`,
+		},
+		{
+			synopsis: `"><script>alert();</script><br`,
+			want:     `<meta name="Description" content="&#34;&gt;&lt;script&gt;alert();&lt;/script&gt;&lt;br">`,
+		},
+	} {
+		got := metaDescription(test.synopsis).String()
+		if got != test.want {
+			t.Errorf("metaDescription(%q) = %q, want %q", test.synopsis, got, test.want)
+		}
+	}
+}

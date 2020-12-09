@@ -11,7 +11,11 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="Description" content="Go is an open source programming language that makes it easy to build simple, reliable, and efficient software.">
+{{if .MetaDescription.String}}
+  {{.MetaDescription}}
+{{else}}
+  <meta name="Description" content="Go is an open source programming language that makes it easy to build simple, reliable, and efficient software.">
+{{end}}
 <meta class="js-gtmID" data-gtmid="{{.GoogleTagManagerID}}">
 <link href="/static/css/stylesheet.css?version={{.AppVersionLabel}}" rel="stylesheet">
 <link href="/third_party/dialog-polyfill/dialog-polyfill.css?version={{.AppVersionLabel}}" rel="stylesheet">

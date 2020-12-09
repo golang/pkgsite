@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/safehtml"
+	"github.com/google/safehtml/uncheckedconversions"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
@@ -141,8 +143,26 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		return err
 	}
 	page.Details = d
+	main, ok := d.(*MainDetails)
+	if ok {
+		page.MetaDescription = metaDescription(main.ImportedByCount)
+	}
 	s.servePage(ctx, w, tabSettings.TemplateName, page)
 	return nil
+}
+
+// metaDescription uses a safehtml escape hatch to build HTML used
+// to render the <meta name="Description"> for unit pages as a
+// workaround for https://github.com/google/safehtml/issues/6.
+func metaDescription(synopsis string) safehtml.HTML {
+	if synopsis == "" {
+		return safehtml.HTML{}
+	}
+	return safehtml.HTMLConcat(
+		uncheckedconversions.HTMLFromStringKnownToSatisfyTypeContract(`<meta name="Description" content="`),
+		safehtml.HTMLEscaped(synopsis),
+		uncheckedconversions.HTMLFromStringKnownToSatisfyTypeContract(`">`),
+	)
 }
 
 // isValidTabForUnit reports whether the tab is valid for the given unit.

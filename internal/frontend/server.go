@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -236,6 +237,9 @@ func (s *Server) staticPageHandler(templateName, title string) http.HandlerFunc 
 type basePage struct {
 	// HTMLTitle is the value to use in the page’s <title> tag.
 	HTMLTitle string
+
+	// MetaDescription is the html used for rendering the <meta name="Description"> tag.
+	MetaDescription safehtml.HTML
 
 	// Query is the current search query (if applicable).
 	Query string
