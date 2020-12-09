@@ -27,6 +27,7 @@ func TestGetNestedModules(t *testing.T) {
 		sample.Module("cloud.google.com/go/storage/v11", "v11.0.0", sample.Suffix),
 		sample.Module("cloud.google.com/go/storage/v9", "v9.0.0", sample.Suffix),
 		sample.Module("cloud.google.com/go/storage/module", "v1.10.0", sample.Suffix),
+		sample.Module("cloud.google.com/go/storage/v9/module", "v9.0.0", sample.Suffix),
 		sample.Module("cloud.google.com/go/v2", "v2.0.0", "storage", "spanner", "pubsub"),
 	} {
 		if err := testDB.InsertModule(ctx, m); err != nil {
@@ -35,8 +36,9 @@ func TestGetNestedModules(t *testing.T) {
 	}
 
 	for _, test := range []struct {
-		modulePath string
-		want       []*NestedModule
+		modulePath     string
+		subdirectories []*Subdirectory
+		want           []*NestedModule
 	}{
 		{
 			modulePath: "cloud.google.com/go",
@@ -57,6 +59,10 @@ func TestGetNestedModules(t *testing.T) {
 					Suffix: "storage/module",
 					URL:    "/cloud.google.com/go/storage/module",
 				},
+				{
+					Suffix: "storage/v9/module",
+					URL:    "/cloud.google.com/go/storage/v9/module",
+				},
 			},
 		},
 		{
@@ -69,6 +75,32 @@ func TestGetNestedModules(t *testing.T) {
 					Suffix: "module",
 					URL:    "/cloud.google.com/go/storage/module",
 				},
+				{
+					Suffix: "v9/module",
+					URL:    "/cloud.google.com/go/storage/v9/module",
+				},
+			},
+		},
+		{
+			modulePath: "cloud.google.com/go/storage",
+			subdirectories: []*Subdirectory{
+				{
+					Suffix: "module",
+					URL:    "/cloud.google.com/go/storage/module",
+				},
+				{
+					Suffix: "v9/module",
+					URL:    "/cloud.google.com/go/storage/v9/module",
+				},
+			},
+		},
+		{
+			modulePath: "cloud.google.com/go/storage/v9",
+			subdirectories: []*Subdirectory{
+				{
+					Suffix: "module",
+					URL:    "/cloud.google.com/go/storage/v9/module",
+				},
 			},
 		},
 	} {
@@ -76,7 +108,7 @@ func TestGetNestedModules(t *testing.T) {
 			got, err := getNestedModules(ctx, testDB, &internal.UnitMeta{
 				Path:       test.modulePath,
 				ModulePath: test.modulePath,
-			})
+			}, test.subdirectories)
 			if err != nil {
 				t.Fatal(err)
 			}

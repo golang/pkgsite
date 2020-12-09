@@ -130,11 +130,11 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 	if err != nil {
 		return nil, err
 	}
-	nestedModules, err := getNestedModules(ctx, ds, um)
+	subdirectories := getSubdirectories(um, unit.Subdirectories)
 	if err != nil {
 		return nil, err
 	}
-	subdirectories := getSubdirectories(um, unit.Subdirectories)
+	nestedModules, err := getNestedModules(ctx, ds, um, subdirectories)
 	if err != nil {
 		return nil, err
 	}
@@ -267,10 +267,16 @@ func readmeContent(ctx context.Context, u *internal.Unit) (_ *Readme, err error)
 	return readme, nil
 }
 
-func getNestedModules(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta) ([]*NestedModule, error) {
+func getNestedModules(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, sds []*Subdirectory) ([]*NestedModule, error) {
 	nestedModules, err := ds.GetNestedModules(ctx, um.ModulePath)
 	if err != nil {
 		return nil, err
+	}
+	// Build a map of existing suffixes in subdirectories to filter out nested modules
+	// which have the same suffix.
+	excludedSuffixes := make(map[string]bool)
+	for _, dir := range sds {
+		excludedSuffixes[dir.Suffix] = true
 	}
 	var mods []*NestedModule
 	for _, m := range nestedModules {
@@ -280,9 +286,13 @@ func getNestedModules(ctx context.Context, ds internal.DataSource, um *internal.
 		if !strings.HasPrefix(m.ModulePath, um.Path+"/") {
 			continue
 		}
+		suffix := internal.Suffix(m.SeriesPath(), um.Path)
+		if excludedSuffixes[suffix] {
+			continue
+		}
 		mods = append(mods, &NestedModule{
 			URL:    constructUnitURL(m.ModulePath, m.ModulePath, internal.LatestVersion),
-			Suffix: internal.Suffix(m.SeriesPath(), um.Path),
+			Suffix: suffix,
 		})
 	}
 	return mods, nil
