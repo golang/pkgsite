@@ -112,30 +112,33 @@ func versionTypeExpr(vts []version.Type) string {
 func (db *DB) GetLatestMajorVersion(ctx context.Context, fullPath, modulePath string) (_ string, _ string, err error) {
 	defer derrors.Wrap(&err, "DB.GetLatestMajorVersion(ctx, %q, %q)", fullPath, modulePath)
 
+	var (
+		modID   int
+		modPath string
+	)
 	seriesPath := internal.SeriesPathForModule(modulePath)
-	v1Path := internal.V1Path(fullPath, modulePath)
-	q, args, err := orderByLatest(squirrel.Select("m.module_path, u.path").
+	q, args, err := orderByLatest(squirrel.Select("m.module_path", "m.id").
 		From("modules m").
-		LeftJoin("units u ON u.module_id = m.id").
 		Where(squirrel.Eq{"m.series_path": seriesPath})).
-		OrderByClause(`CASE
-			WHEN u.v1_path = ? THEN 1
-			ELSE 2
-		END`, v1Path).
 		Limit(1).
 		ToSql()
 	if err != nil {
 		return "", "", err
 	}
-	var latestModulePath, latestPackagePath string
-	if err := db.db.QueryRow(ctx, q, args...).Scan(&latestModulePath, &latestPackagePath); err != nil {
+	row := db.db.QueryRow(ctx, q, args...)
+	if err := row.Scan(&modPath, &modID); err != nil {
 		return "", "", err
 	}
-	// If the package path is not the one we're expecting, then it doesn't exist
-	// in the latest module version (or it would have been sorted first by the
-	// OrderByClause above).
-	if internal.V1Path(latestPackagePath, latestModulePath) != v1Path {
-		return latestModulePath, latestModulePath, nil
+
+	v1Path := internal.V1Path(fullPath, modulePath)
+	row = db.db.QueryRow(ctx, `SELECT path FROM units WHERE v1_path = $1 AND module_id = $2;`, v1Path, modID)
+	var path string
+	switch row.Scan(&path) {
+	case nil:
+		return modPath, path, nil
+	case sql.ErrNoRows:
+		return modPath, modPath, nil
+	default:
+		return "", "", err
 	}
-	return latestModulePath, latestPackagePath, nil
 }
