@@ -222,8 +222,10 @@ func main() {
 	cfg.Dump(os.Stderr)
 
 	log.SetLevel(cfg.LogLevel)
-	if _, err := log.UseStackdriver(ctx, cfg, "prober-log"); err != nil {
-		log.Fatal(ctx, err)
+	if cfg.OnGCP() {
+		if _, err := log.UseStackdriver(ctx, cfg, "prober-log"); err != nil {
+			log.Fatal(ctx, err)
+		}
 	}
 
 	var jsonCreds []byte
@@ -256,6 +258,7 @@ func main() {
 		http.ServeFile(w, r, "content/static/img/favicon.ico")
 	})
 	http.HandleFunc("/", handleProbe)
+	http.HandleFunc("/check", handleCheck)
 
 	addr := cfg.HostAddr("localhost:8080")
 	log.Infof(ctx, "Listening on addr %s", addr)
@@ -265,10 +268,12 @@ func main() {
 // ProbeStatus records the result if a single probe attempt
 type ProbeStatus struct {
 	Probe   *Probe
+	Code    int    // status code of response
 	Text    string // describes what happened: "OK", or "FAILED" with a reason
 	Latency int    // in milliseconds
 }
 
+// handleProbe runs probes and displays their results. It always returns a 200.
 func handleProbe(w http.ResponseWriter, r *http.Request) {
 	statuses := runProbes(r.Context())
 	var data = struct {
@@ -289,6 +294,28 @@ func handleProbe(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// handleCheck runs probes, and returns a 200 only if they all succeed.
+// Otherwise it returns the status code of the first failing response.
+func handleCheck(w http.ResponseWriter, r *http.Request) {
+	statuses := runProbes(r.Context())
+	var bads []*ProbeStatus
+	for _, s := range statuses {
+		if s.Code != http.StatusOK {
+			bads = append(bads, s)
+		}
+	}
+	w.Header().Set("Content-Type", "text/plain")
+	if len(bads) == 0 {
+		fmt.Fprintf(w, "All probes succeeded.\n")
+	} else {
+		w.WriteHeader(bads[0].Code)
+		fmt.Fprintf(w, "SOME PROBES FAILED:\n")
+		for _, b := range bads {
+			fmt.Fprintf(w, "%3d /%s\n", b.Code, b.Probe.RelativeURL)
+		}
+	}
+}
+
 func runProbes(ctx context.Context) []*ProbeStatus {
 	var statuses []*ProbeStatus
 	for _, p := range probes {
@@ -302,7 +329,10 @@ func runProbes(ctx context.Context) []*ProbeStatus {
 }
 
 func runProbe(ctx context.Context, p *Probe) *ProbeStatus {
-	status := &ProbeStatus{Probe: p}
+	status := &ProbeStatus{
+		Probe: p,
+		Code:  499, // not a real code; means request never sent
+	}
 	url := baseURL + "/" + p.RelativeURL
 	log.Infof(ctx, "running %s = %s", p.Name, url)
 	defer func() {
@@ -337,6 +367,7 @@ func runProbe(ctx context.Context, p *Probe) *ProbeStatus {
 		return status
 	}
 	defer res.Body.Close()
+	status.Code = res.StatusCode
 	if res.StatusCode != http.StatusOK {
 		status.Text = fmt.Sprintf("FAILED with status %s", res.Status)
 		record(res.Status)
