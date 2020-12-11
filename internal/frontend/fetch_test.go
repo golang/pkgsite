@@ -95,38 +95,42 @@ func TestFetch(t *testing.T) {
 
 func TestFetchErrors(t *testing.T) {
 	for _, test := range []struct {
-		name, modulePath, fullPath, version string
-		fetchTimeout                        time.Duration
-		want                                int
+		name, modulePath, fullPath, version, wantErrorMessage string
+		fetchTimeout                                          time.Duration
+		want                                                  int
 	}{
 		{
-			name:       "non-existent module",
-			modulePath: "github.com/nonexistent",
-			fullPath:   "github.com/nonexistent",
-			version:    internal.LatestVersion,
-			want:       http.StatusNotFound,
+			name:             "non-existent module",
+			modulePath:       "github.com/nonexistent",
+			fullPath:         "github.com/nonexistent",
+			version:          internal.LatestVersion,
+			want:             http.StatusNotFound,
+			wantErrorMessage: "\"github.com/nonexistent\" could not be found.",
 		},
 		{
-			name:       "version invalid",
-			modulePath: testModulePath,
-			fullPath:   testModulePath,
-			version:    "random-version",
-			want:       http.StatusBadRequest,
+			name:             "version invalid",
+			modulePath:       testModulePath,
+			fullPath:         testModulePath,
+			version:          "random-version",
+			want:             http.StatusBadRequest,
+			wantErrorMessage: "Bad Request",
 		},
 		{
-			name:       "module found but package does not exist",
-			modulePath: testModulePath,
-			fullPath:   "github.com/module/pkg-nonexistent",
-			version:    internal.LatestVersion,
-			want:       http.StatusNotFound,
+			name:             "module found but package does not exist",
+			modulePath:       testModulePath,
+			fullPath:         "github.com/module/pkg-nonexistent",
+			version:          internal.LatestVersion,
+			want:             http.StatusNotFound,
+			wantErrorMessage: "Package github.com/module/pkg-nonexistent could not be found, but you can view module “github.com/module” at &lt;a href=&#39;https://pkg.go.dev/github.com/module&#39;&gt;pkg.go.dev/github.com/module&lt;/a&gt;.",
 		},
 		{
-			name:         "module exists but fetch timed out",
-			modulePath:   testModulePath,
-			fullPath:     testModulePath,
-			version:      internal.LatestVersion,
-			fetchTimeout: 1 * time.Millisecond,
-			want:         http.StatusRequestTimeout,
+			name:             "module exists but fetch timed out",
+			modulePath:       testModulePath,
+			fullPath:         testModulePath,
+			version:          internal.LatestVersion,
+			fetchTimeout:     1 * time.Millisecond,
+			want:             http.StatusRequestTimeout,
+			wantErrorMessage: "We're still working on “github.com/module”. Check back in a few minutes!",
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -138,10 +142,16 @@ func TestFetchErrors(t *testing.T) {
 
 			s, _, teardown := newTestServer(t, testModulesForProxy)
 			defer teardown()
-			got, _ := s.fetchAndPoll(ctx, s.getDataSource(ctx), test.modulePath, test.fullPath, test.version)
+			got, err := s.fetchAndPoll(ctx, s.getDataSource(ctx), test.modulePath, test.fullPath, test.version)
+
 			if got != test.want {
 				t.Fatalf("fetchAndPoll(ctx, testDB, q, %q, %q, %q): %d; want = %d",
 					test.modulePath, test.fullPath, test.version, got, test.want)
+			}
+
+			if err != test.wantErrorMessage {
+				t.Fatalf("fetchAndPoll(ctx, testDB, q, %q, %q, %q): %d; wantErrorMessage = %s",
+					test.modulePath, test.fullPath, test.version, got, test.wantErrorMessage)
 			}
 		})
 	}

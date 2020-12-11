@@ -29,5 +29,7 @@ async function fetchPath() {
   const responseText = await response.text();
   document.querySelector('.js-fetchLoading').style.display = 'none';
   document.querySelector('.js-fetchMessageSecondary').textContent = '';
-  document.querySelector('.js-fetchMessage').textContent = responseText;
+  const responseTextParsedDOM = new DOMParser().parseFromString(responseText, 'text/html');
+  document.querySelector('.js-fetchMessage').innerHTML =
+    responseTextParsedDOM.documentElement.textContent;
 }

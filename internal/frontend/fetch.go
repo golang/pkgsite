@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/safehtml/template"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
@@ -233,11 +234,13 @@ func fetchRequestStatusAndResponseText(results []*fetchResult, fullPath, request
 		case http.StatusInternalServerError:
 			return fr.status, "Oops! Something went wrong."
 		case derrors.ToStatus(derrors.AlternativeModule):
-			// TODO(https://golang.org/issue/40306): Make the canonical module
-			// path a clickable link.
-			return http.StatusNotFound,
-				fmt.Sprintf("“%s” is not a valid package or module. Were you looking for “%s”?",
-					displayPath(fullPath, requestedVersion), fr.goModPath)
+			t := template.Must(template.New("").Parse(`{{.}}`))
+			h, err := t.ExecuteToHTML(fmt.Sprintf("%s is not a valid path. Were you looking for “<a href='https://pkg.go.dev/%s'>%s</a>”?",
+				displayPath(fullPath, requestedVersion), fr.goModPath, fr.goModPath))
+			if err != nil {
+				return http.StatusInternalServerError, err.Error()
+			}
+			return http.StatusNotFound, h.String()
 		}
 
 		// A module was found for a prefix of the path, but the path did not exist
@@ -251,13 +254,17 @@ func fetchRequestStatusAndResponseText(results []*fetchResult, fullPath, request
 		}
 	}
 	if moduleMatchingPathPrefix != "" {
-		// TODO(https://golang.org/issue/40306): Make the link clickable.
-		return http.StatusNotFound,
-			fmt.Sprintf("Package “%s” could not be found, but you can view module “%s” at https://pkg.go.dev/%s.",
-				displayPath(fullPath, requestedVersion),
-				displayPath(moduleMatchingPathPrefix, requestedVersion),
-				displayPath(moduleMatchingPathPrefix, requestedVersion),
-			)
+		t := template.Must(template.New("").Parse(`{{.}}`))
+		h, err := t.ExecuteToHTML(fmt.Sprintf("Package %s could not be found, but you can view module “%s” at <a href='https://pkg.go.dev/%s'>pkg.go.dev/%s</a>.",
+			displayPath(fullPath, requestedVersion),
+			displayPath(moduleMatchingPathPrefix, requestedVersion),
+			displayPath(moduleMatchingPathPrefix, requestedVersion),
+			displayPath(moduleMatchingPathPrefix, requestedVersion),
+		))
+		if err != nil {
+			return http.StatusInternalServerError, err.Error()
+		}
+		return http.StatusNotFound, h.String()
 	}
 	p := fullPath
 	if requestedVersion != internal.LatestVersion {
