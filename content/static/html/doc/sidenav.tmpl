@@ -4,90 +4,90 @@
   license that can be found in the LICENSE file.
 -->
 <nav class="DocNav js-sideNav">
-	<ul role="tree" aria-label="Outline">
-		{{if or .Doc (index .Examples.Map "")}}
-			<li class="DocNav-overview" role="none">
-				<a href="#pkg-overview" class="js-docNav" role="treeitem" aria-level="1" tabindex="0">Overview</a>
-			</li>
-		{{end}}
-		{{- if or .Consts .Vars .Funcs .Types -}}
-			<li class="DocNav-index" role="none">
-				<a href="#pkg-index" class="DocNav-groupLabel{{if not .Examples.List}} DocNav-groupLabel--empty{{end}} js-docNav"
-						role="treeitem" aria-expanded="false" aria-level="1" aria-owns="nav-group-index" tabindex="-1">
-					Index
-				</a>
-				{{if .Examples.List}}
-					<ul role="group" id="nav-group-index">
-						<li role="none">
-							<a href="#pkg-examples" role="treeitem" aria-level="2" tabindex="-1">Examples</a>
-						</li>
-					</ul>
-				{{end}}
-			</li>
-			<li class="DocNav-constants" role="none">
-				<a href="#pkg-constants" class="js-docNav" role="treeitem" aria-level="1" tabindex="-1">Constants</a>
-			</li>
-			<li class="DocNav-variables" role="none">
-				<a href="#pkg-variables" class="js-docNav" role="treeitem" aria-level="1" tabindex="-1">Variables</a>
-			</li>
-			<li class="DocNav-functions" role="none">
-				<a href="#pkg-functions" class="DocNav-groupLabel{{if eq (len .Funcs) 0}} DocNav-groupLabel--empty{{end}} js-docNav"
-						role="treeitem" aria-expanded="false" aria-level="1" aria-owns="nav-group-functions" tabindex="-1">
-					Functions
-				</a>
-				<ul role="group" id="nav-group-functions">
-					{{range .Funcs}}
-						<li role="none">
-							<a href="#{{.Name}}" title="{{render_short_synopsis .Decl}}" role="treeitem" aria-level="2" tabindex="-1">{{render_short_synopsis .Decl}}</a>
-						</li>
-					{{end}}
-				</ul>
-			</li>
-			<li class="DocNav-types" role="none">
-				<a href="#pkg-types" class="DocNav-groupLabel{{if eq (len .Types) 0}} DocNav-groupLabel--empty{{end}} js-docNav"
-						role="treeitem" aria-expanded="false" aria-level="1" aria-owns="nav-group-types" tabindex="-1">
-					Types
-				</a>
-				<ul role="group" id="nav-group-types">
-					{{range .Types}}
-						{{$tname := .Name}}
-						<li role="none">
-							{{if or .Funcs .Methods}}
-								{{$navgroupname := (printf "nav.group.%s" $tname)}}
-								{{$navgroupid := (safe_id $navgroupname)}}
-								<a class="DocNav-groupLabel js-docNavType" href="#{{$tname}}" role="treeitem" aria-expanded="false" aria-level="2" data-aria-owns="{{$navgroupid}}" tabindex="-1">type {{$tname}}</a>
-								<ul role="group" id="{{$navgroupid}}">
-									{{range .Funcs}}
-										<li role="none">
-											<a href="#{{.Name}}" title="{{render_short_synopsis .Decl}}" role="treeitem" aria-level="3" tabindex="-1">{{render_short_synopsis .Decl}}</a>
-										</li>
-									{{end}}
-									{{range .Methods}}
-										<li role="none">
-											<a href="#{{$tname}}.{{.Name}}" title="{{render_short_synopsis .Decl}}" role="treeitem" aria-level="3" tabindex="-1">{{render_short_synopsis .Decl}}</a>
-										</li>
-									{{end}}
-								</ul>
-							{{else}}
-								<a href="#{{$tname}}" role="treeitem" aria-level="2" tabindex="-1">type {{$tname}}</a>
-							{{end}} {{/* if or .Funcs .Methods */}}
-						</li>
-					{{end}} {{/* range .Types */}}
-				</ul>
-			</li>
-		{{end}}
-		{{if .Notes}}
-			<li class="DocNav-notes" role="none">
-				<a href="#pkg-notes" class="DocNav-groupLabel{{if eq (len .Notes) 0}} DocNav-groupLabel--empty{{end}} js-docNav"
-						role="treeitem" aria-expanded="false" aria-level="1" aria-owns="nav-group-notes" tabindex="-1">Notes</a>
-				<ul role="group" id="nav-group-notes">
-					{{range $marker, $item := .Notes}}
-						<li role="none">
-							<a href="#pkg-note-{{$marker}}" role="treeitem" aria-level="2" tabindex="-1">{{(index $.NoteHeaders $marker).Label}}s</a>
-						</li>
-					{{end}}
-				</ul>
-			</li>
-		{{end}}
-	</ul>
+  <ul role="tree" aria-label="Outline">
+    {{if or .Doc (index .Examples.Map "")}}
+      <li class="DocNav-overview" role="none">
+        <a href="#pkg-overview" class="js-docNav" role="treeitem" aria-level="1" tabindex="0">Overview</a>
+      </li>
+    {{end}}
+    {{- if or .Consts .Vars .Funcs .Types -}}
+      <li class="DocNav-index" role="none">
+        <a href="#pkg-index" class="DocNav-groupLabel{{if not .Examples.List}} DocNav-groupLabel--empty{{end}} js-docNav"
+            role="treeitem" aria-expanded="false" aria-level="1" aria-owns="nav-group-index" tabindex="-1">
+          Index
+        </a>
+        {{if .Examples.List}}
+          <ul role="group" id="nav-group-index">
+            <li role="none">
+              <a href="#pkg-examples" role="treeitem" aria-level="2" tabindex="-1">Examples</a>
+            </li>
+          </ul>
+        {{end}}
+      </li>
+      <li class="DocNav-constants" role="none">
+        <a href="#pkg-constants" class="js-docNav" role="treeitem" aria-level="1" tabindex="-1">Constants</a>
+      </li>
+      <li class="DocNav-variables" role="none">
+        <a href="#pkg-variables" class="js-docNav" role="treeitem" aria-level="1" tabindex="-1">Variables</a>
+      </li>
+      <li class="DocNav-functions" role="none">
+        <a href="#pkg-functions" class="DocNav-groupLabel{{if eq (len .Funcs) 0}} DocNav-groupLabel--empty{{end}} js-docNav"
+            role="treeitem" aria-expanded="false" aria-level="1" aria-owns="nav-group-functions" tabindex="-1">
+          Functions
+        </a>
+        <ul role="group" id="nav-group-functions">
+          {{range .Funcs}}
+            <li role="none">
+              <a href="#{{.Name}}" title="{{render_short_synopsis .Decl}}" role="treeitem" aria-level="2" tabindex="-1">{{render_short_synopsis .Decl}}</a>
+            </li>
+          {{end}}
+        </ul>
+      </li>
+      <li class="DocNav-types" role="none">
+        <a href="#pkg-types" class="DocNav-groupLabel{{if eq (len .Types) 0}} DocNav-groupLabel--empty{{end}} js-docNav"
+            role="treeitem" aria-expanded="false" aria-level="1" aria-owns="nav-group-types" tabindex="-1">
+          Types
+        </a>
+        <ul role="group" id="nav-group-types">
+          {{range .Types}}
+            {{$tname := .Name}}
+            <li role="none">
+              {{if or .Funcs .Methods}}
+                {{$navgroupname := (printf "nav.group.%s" $tname)}}
+                {{$navgroupid := (safe_id $navgroupname)}}
+                <a class="DocNav-groupLabel js-docNavType" href="#{{$tname}}" role="treeitem" aria-expanded="false" aria-level="2" data-aria-owns="{{$navgroupid}}" tabindex="-1">type {{$tname}}</a>
+                <ul role="group" id="{{$navgroupid}}">
+                  {{range .Funcs}}
+                    <li role="none">
+                      <a href="#{{.Name}}" title="{{render_short_synopsis .Decl}}" role="treeitem" aria-level="3" tabindex="-1">{{render_short_synopsis .Decl}}</a>
+                    </li>
+                  {{end}}
+                  {{range .Methods}}
+                    <li role="none">
+                      <a href="#{{$tname}}.{{.Name}}" title="{{render_short_synopsis .Decl}}" role="treeitem" aria-level="3" tabindex="-1">{{render_short_synopsis .Decl}}</a>
+                    </li>
+                  {{end}}
+                </ul>
+              {{else}}
+                <a href="#{{$tname}}" role="treeitem" aria-level="2" tabindex="-1">type {{$tname}}</a>
+              {{end}} {{/* if or .Funcs .Methods */}}
+            </li>
+          {{end}} {{/* range .Types */}}
+        </ul>
+      </li>
+    {{end}}
+    {{if .Notes}}
+      <li class="DocNav-notes" role="none">
+        <a href="#pkg-notes" class="DocNav-groupLabel{{if eq (len .Notes) 0}} DocNav-groupLabel--empty{{end}} js-docNav"
+            role="treeitem" aria-expanded="false" aria-level="1" aria-owns="nav-group-notes" tabindex="-1">Notes</a>
+        <ul role="group" id="nav-group-notes">
+          {{range $marker, $item := .Notes}}
+            <li role="none">
+              <a href="#pkg-note-{{$marker}}" role="treeitem" aria-level="2" tabindex="-1">{{(index $.NoteHeaders $marker).Label}}s</a>
+            </li>
+          {{end}}
+        </ul>
+      </li>
+    {{end}}
+  </ul>
 </nav>

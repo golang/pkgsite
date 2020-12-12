@@ -249,9 +249,9 @@ func main() {
 </pre>
 </div>
 <div class="Documentation-exampleButtonsContainer">
-				<p class="Documentation-exampleError" role="alert" aria-atomic="true"></p>
-				<button class="Documentation-examplePlayButton" aria-label="Play Code">Play</button>
-			</div></details>`,
+        <p class="Documentation-exampleError" role="alert" aria-atomic="true"></p>
+        <button class="Documentation-examplePlayButton" aria-label="Play Code">Play</button>
+      </div></details>`,
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
