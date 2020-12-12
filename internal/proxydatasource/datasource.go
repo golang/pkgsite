@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"path"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -182,13 +183,27 @@ func (ds *DataSource) getUnit(ctx context.Context, fullPath, modulePath, version
 func (ds *DataSource) GetLatestMajorVersion(ctx context.Context, fullPath, modulePath string) (_ string, _ string, err error) {
 	// We are checking if the full path is valid so that we can forward the error if not.
 	seriesPath := internal.SeriesPathForModule(modulePath)
-	_, err = ds.proxyClient.GetInfo(ctx, seriesPath, internal.LatestVersion)
+	info, err := ds.proxyClient.GetInfo(ctx, seriesPath, internal.LatestVersion)
 	if err != nil {
 		return "", "", err
 	}
-	const startVersion = 2
-	// We start checking versions from "/v2", since v1 and v0 versions don't
-	// have a major version at the end of the modulepath.
+
+	// Converting version numbers to integers may cause an overflow, as version
+	// numbers need not fit into machine integers.
+	// While using Atoi is wrong, for it to fail, the version number must reach a
+	// value higher than at least 2^31, which is unlikely.
+	startVersion, err := strconv.Atoi(strings.TrimPrefix(semver.Major(info.Version), "v"))
+	if err != nil {
+		return "", "", err
+	}
+	startVersion++
+
+	// We start checking versions from "/v2" or higher, since v1 and v0 versions
+	// don't have a major version at the end of the modulepath.
+	if startVersion < 2 {
+		startVersion = 2
+	}
+
 	for v := startVersion; ; v++ {
 		query := fmt.Sprintf("%s/v%d", seriesPath, v)
 

@@ -212,6 +212,13 @@ func TestDataSource_GetLatestMajorVersion(t *testing.T) {
 		{
 			ModulePath: "bar.com/foo",
 		},
+		{
+			ModulePath: "incompatible.com/bar",
+			Version:    "v2.1.1+incompatible",
+		},
+		{
+			ModulePath: "incompatible.com/bar/v3",
+		},
 	}
 	client, teardownProxy := proxy.SetupTestClient(t, testModules)
 	defer teardownProxy()
@@ -248,6 +255,12 @@ func TestDataSource_GetLatestMajorVersion(t *testing.T) {
 			modulePath:      "foo.com/bar",
 			wantModulePath:  "foo.com/bar/v3",
 			wantPackagePath: "foo.com/bar/v3",
+		},
+		{
+			fullPath:        "incompatible.com/bar",
+			modulePath:      "incompatible.com/bar",
+			wantModulePath:  "incompatible.com/bar/v3",
+			wantPackagePath: "incompatible.com/bar/v3",
 		},
 	} {
 		gotVersion, gotPath, err := ds.GetLatestMajorVersion(ctx, test.fullPath, test.modulePath)
