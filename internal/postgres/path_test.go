@@ -35,6 +35,10 @@ func TestGetUnitMeta(t *testing.T) {
 		{"m.com", "v2.0.0+incompatible", "a", false},
 		{"m.com/a", "v1.1.0", "b", false},
 		{"m.com/b", "v2.0.0+incompatible", "a", true},
+		{"cloud.google.com/go", "v0.69.0", "pubsublite", false},
+		{"cloud.google.com/go/pubsublite", "v0.4.0", "", false},
+		{"cloud.google.com/go", "v0.74.0", "compute/metadata", false},
+		{"cloud.google.com/go/compute/metadata", "v0.0.0-20181115181204-d50f0e9b2506", "", false},
 	} {
 		m := sample.Module(testModule.module, testModule.version, testModule.packageSuffix)
 		if err := testDB.InsertModule(ctx, m); err != nil {
@@ -162,6 +166,26 @@ func TestGetUnitMeta(t *testing.T) {
 			want: &internal.UnitMeta{
 				ModulePath:        "m.com/b",
 				Version:           "v2.0.0+incompatible",
+				IsRedistributable: true,
+			},
+		},
+		{
+			name: "prefer pubsublite nested module",
+			path: "cloud.google.com/go/pubsublite",
+			want: &internal.UnitMeta{
+				ModulePath:        "cloud.google.com/go/pubsublite",
+				Name:              "pubsublite",
+				Version:           "v0.4.0",
+				IsRedistributable: true,
+			},
+		},
+		{
+			name: "prefer compute metadata in main module",
+			path: "cloud.google.com/go/compute/metadata",
+			want: &internal.UnitMeta{
+				ModulePath:        "cloud.google.com/go",
+				Name:              "metadata",
+				Version:           "v0.74.0",
 				IsRedistributable: true,
 			},
 		},

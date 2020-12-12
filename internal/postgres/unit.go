@@ -111,8 +111,8 @@ func orderByLatest(q squirrel.SelectBuilder) squirrel.SelectBuilder {
 			WHEN m.version_type = 'prerelease' THEN 4
 			ELSE 5
 		END`,
-		"m.sort_version DESC",
 		"m.module_path DESC",
+		"m.sort_version DESC",
 	).PlaceholderFormat(squirrel.Dollar)
 }
 
