@@ -253,7 +253,7 @@ func fetchRequestStatusAndResponseText(results []*fetchResult, fullPath, request
 	if moduleMatchingPathPrefix != "" {
 		// TODO(https://golang.org/issue/40306): Make the link clickable.
 		return http.StatusNotFound,
-			fmt.Sprintf("Package “%s” could not be found, but you can view module “%s” at https://pkg.go.dev/mod/%s.",
+			fmt.Sprintf("Package “%s” could not be found, but you can view module “%s” at https://pkg.go.dev/%s.",
 				displayPath(fullPath, requestedVersion),
 				displayPath(moduleMatchingPathPrefix, requestedVersion),
 				displayPath(moduleMatchingPathPrefix, requestedVersion),

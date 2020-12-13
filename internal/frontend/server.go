@@ -191,9 +191,6 @@ func detailsTTLForPath(ctx context.Context, urlPath, tab string) time.Duration {
 	if urlPath == "/" {
 		return defaultTTL
 	}
-	if strings.HasPrefix(urlPath, "/mod") {
-		urlPath = strings.TrimPrefix(urlPath, "/mod")
-	}
 	info, err := parseDetailsURLPath(urlPath)
 	if err != nil {
 		log.Errorf(ctx, "falling back to default TTL: %v", err)

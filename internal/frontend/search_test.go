@@ -214,7 +214,7 @@ func TestSearchRequestRedirectPath(t *testing.T) {
 		query string
 		want  string
 	}{
-		{"module", "golang.org/x/tools", "/mod/golang.org/x/tools"},
+		{"module", "golang.org/x/tools", "/golang.org/x/tools"},
 		{"directory", "golang.org/x/tools/internal", "/golang.org/x/tools/internal"},
 		{"package", "golang.org/x/tools/internal/lsp", "/golang.org/x/tools/internal/lsp"},
 		{"stdlib package does not redirect", "errors", ""},
@@ -222,7 +222,7 @@ func TestSearchRequestRedirectPath(t *testing.T) {
 		{"stdlib directory does redirect", "cmd/go/internal", "/cmd/go/internal"},
 		{"std does not redirect", "std", ""},
 		{"non-existent path does not redirect", "github.com/non-existent", ""},
-		{"trim URL scheme from query", "https://golang.org/x/tools", "/mod/golang.org/x/tools"},
+		{"trim URL scheme from query", "https://golang.org/x/tools", "/golang.org/x/tools"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			if got := searchRequestRedirectPath(ctx, testDB, test.query); got != test.want {

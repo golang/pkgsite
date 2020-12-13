@@ -18,7 +18,7 @@ import (
 )
 
 // serveDetails handles requests for package/directory/module details pages. It
-// expects paths of the form "[/mod]/<module-path>[@<version>?tab=<tab>]".
+// expects paths of the form "/<module-path>[@<version>?tab=<tab>]".
 // stdlib module pages are handled at "/std", and requests to "/mod/std" will
 // be redirected to that path.
 func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {

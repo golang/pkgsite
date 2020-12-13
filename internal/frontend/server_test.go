@@ -1019,11 +1019,6 @@ func TestDetailsTTL(t *testing.T) {
 		{mustRequest("/host.com/module@v1.2.3/suffix?tab=overview", t), longTTL},
 		{mustRequest("/host.com/module@v1.2.3/suffix?tab=versions", t), defaultTTL},
 		{mustRequest("/host.com/module@v1.2.3/suffix?tab=importedby", t), defaultTTL},
-		{mustRequest("/mod/host.com/module@v1.2.3/suffix", t), longTTL},
-		{mustRequest("/mod/host.com/module/suffix", t), shortTTL},
-		{mustRequest("/mod/host.com/module@v1.2.3/suffix?tab=overview", t), longTTL},
-		{mustRequest("/mod/host.com/module@v1.2.3/suffix?tab=versions", t), defaultTTL},
-		{mustRequest("/mod/host.com/module@v1.2.3/suffix?tab=importedby", t), defaultTTL},
 		{
 			func() *http.Request {
 				r := mustRequest("/host.com/module@v1.2.3/suffix?tab=overview", t)
