@@ -61,11 +61,7 @@
   <section class="Documentation-constants">
   {{- if .Consts -}}
     {{- range .Consts -}}
-      {{- $out := render_decl .Doc .Decl -}}
-      {{- $out.Decl -}}
-      {{- $out.Doc -}}
-      <br/>
-      {{"\n"}}
+      {{- template "declaration" . -}}
     {{- end -}}
   {{- else -}}
       <div class="Documentation-empty">This section is empty.</div>
@@ -76,11 +72,7 @@
   <section class="Documentation-variables">
   {{- if .Vars -}}
     {{- range .Vars -}}
-      {{- $out := render_decl .Doc .Decl -}}
-      {{- $out.Decl -}}
-      {{- $out.Doc -}}
-      <br/>
-      {{"\n"}}
+      {{- template "declaration" . -}}
     {{- end -}}
   {{- else -}}
     <div class="Documentation-empty">This section is empty.</div>
@@ -94,10 +86,7 @@
         <div class="Documentation-function">
             {{- $id := safe_id .Name -}}
             <h4 tabindex="-1" id="{{$id}}" data-kind="function" class="Documentation-functionHeader">func {{source_link .Name .Decl}} <a class="Documentation-idLink" href="#{{$id}}">¶</a></h4>{{"\n"}}
-            {{- $out := render_decl .Doc .Decl -}}
-            {{- $out.Decl -}}
-            {{- $out.Doc -}}
-            {{"\n"}}
+            {{- template "declaration" . -}}
             {{- template "example" (index $.Examples.Map .Name) -}}
         </div>
         {{- end -}}
@@ -114,27 +103,18 @@
       {{- $tname := .Name -}}
       {{- $id := safe_id .Name -}}
       <h4 tabindex="-1" id="{{$id}}" data-kind="type" class="Documentation-typeHeader">type {{source_link .Name .Decl}} <a class="Documentation-idLink" href="#{{$id}}">¶</a></h4>{{"\n"}}
-      {{- $out := render_decl .Doc .Decl -}}
-      {{- $out.Decl -}}
-      {{- $out.Doc -}}
-      {{"\n"}}
+      {{- template "declaration" . -}}
       {{- template "example" (index $.Examples.Map .Name) -}}
 
       {{- range .Consts -}}
       <div class="Documentation-typeConstant">
-        {{- $out := render_decl .Doc .Decl -}}
-        {{- $out.Decl -}}
-        {{- $out.Doc -}}
-        {{"\n"}}
+        {{- template "declaration" . -}}
       </div>
       {{- end -}}
 
       {{- range .Vars -}}
       <div class="Documentation-typeVariable">
-        {{- $out := render_decl .Doc .Decl -}}
-        {{- $out.Decl -}}
-        {{- $out.Doc -}}
-        {{"\n"}}
+        {{- template "declaration" . -}}
       </div>
       {{- end -}}
 
@@ -142,10 +122,7 @@
       <div class="Documentation-typeFunc">
         {{- $id := safe_id .Name -}}
         <h4 tabindex="-1" id="{{$id}}" data-kind="function" class="Documentation-typeFuncHeader">func {{source_link .Name .Decl}} <a class="Documentation-idLink" href="#{{$id}}">¶</a></h4>{{"\n"}}
-        {{- $out := render_decl .Doc .Decl -}}
-        {{- $out.Decl -}}
-        {{- $out.Doc -}}
-        {{"\n"}}
+        {{- template "declaration" . -}}
         {{- template "example" (index $.Examples.Map .Name) -}}
       </div>
       {{- end -}}
@@ -155,10 +132,7 @@
         {{- $name := (printf "%s.%s" $tname .Name) -}}
         {{- $id := (safe_id $name) -}}
         <h4 tabindex="-1" id="{{$id}}" data-kind="method" class="Documentation-typeMethodHeader">func ({{.Recv}}) {{source_link .Name .Decl}} <a class="Documentation-idLink" href="#{{$id}}">¶</a></h4>{{"\n"}}
-        {{- $out := render_decl .Doc .Decl -}}
-        {{- $out.Decl -}}
-        {{- $out.Doc -}}
-        {{"\n"}}
+        {{- template "declaration" . -}}
         {{- template "example" (index $.Examples.Map $name) -}}
       </div>
       {{- end -}}
