@@ -184,8 +184,7 @@ func TestDeclHTML(t *testing.T) {
 		{
 			name:   "const",
 			symbol: "Nanosecond",
-			want: `<pre>
-const (
+			want: `const (
 <span id="Nanosecond" data-kind="constant"></span>	Nanosecond  <a href="#Duration">Duration</a> = 1
 <span id="Microsecond" data-kind="constant"></span>	Microsecond          = 1000 * <a href="#Nanosecond">Nanosecond</a>
 <span id="Millisecond" data-kind="constant"></span>	Millisecond          = 1000 * <a href="#Microsecond">Microsecond</a> <span class="comment">// comment</span>
@@ -194,39 +193,30 @@ const (
 	comment */</span>
 <span id="Minute" data-kind="constant"></span>	Minute = 60 * <a href="#Second">Second</a>
 <span id="Hour" data-kind="constant"></span>	Hour   = 60 * <a href="#Minute">Minute</a>
-)</pre>
-`,
+)`,
 		},
 		{
 			name:   "var",
 			symbol: "UTC",
-			want: `<pre>
-<span id="UTC" data-kind="variable"></span>var UTC *<a href="#Location">Location</a> = &amp;utcLoc</pre>
-`,
+			want:   `<span id="UTC" data-kind="variable"></span>var UTC *<a href="#Location">Location</a> = &amp;utcLoc`,
 		},
 		{
 			name:   "type",
 			symbol: "Ticker",
-			want: `<pre>
-type Ticker struct {
+			want: `type Ticker struct {
 <span id="Ticker.C" data-kind="field"></span>	C &lt;-chan <a href="#Time">Time</a> <span class="comment">// The channel on which the ticks are delivered.</span>
 	<span class="comment">// contains filtered or unexported fields</span>
-}</pre>
-`,
+}`,
 		},
 		{
 			name:   "func",
 			symbol: "Sleep",
-			want: `<pre>
-func Sleep(d <a href="#Duration">Duration</a>)</pre>
-`,
+			want:   `func Sleep(d <a href="#Duration">Duration</a>)`,
 		},
 		{
 			name:   "method",
 			symbol: "After",
-			want: `<pre>
-func After(d <a href="#Duration">Duration</a>) &lt;-chan <a href="#Time">Time</a></pre>
-`,
+			want:   `func After(d <a href="#Duration">Duration</a>) &lt;-chan <a href="#Time">Time</a>`,
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {

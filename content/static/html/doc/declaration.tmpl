@@ -6,7 +6,9 @@
 
 {{- define "declaration" -}}
   {{- $out := render_decl .Doc .Decl -}}
-  {{- $out.Decl -}}
+  {{if $out.Decl}}
+    <pre>{{- $out.Decl -}}</pre>
+  {{end}}
   {{- $out.Doc -}}
   {{"\n"}}
 {{- end -}}

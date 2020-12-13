@@ -115,10 +115,7 @@ func (r *Renderer) declHTML(doc string, decl ast.Decl, extractLinks bool) (out s
 		out.Doc = ExecuteToHTML(r.docTmpl, docData{Elements: els, DisablePermalinks: r.disablePermalinks})
 	}
 	if decl != nil {
-		out.Decl = safehtml.HTMLConcat(
-			template.MustParseAndExecuteToHTML("<pre>\n"),
-			r.formatDeclHTML(decl, idr),
-			template.MustParseAndExecuteToHTML("</pre>\n"))
+		out.Decl = r.formatDeclHTML(decl, idr)
 	}
 	return out
 }
