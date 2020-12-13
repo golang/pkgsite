@@ -323,7 +323,8 @@ func serverTestCases() []serverTestCase {
 		Version:                sample.VersionString,
 		FormattedVersion:       sample.VersionString,
 		Suffix:                 sample.Suffix,
-		IsLatest:               true,
+		IsLatestMinor:          true,
+		IsLatestMajor:          true,
 		LatestLink:             "/" + sample.ModulePath + "@" + sample.VersionString + "/" + sample.Suffix,
 		LatestMajorVersionLink: "/" + sample.ModulePath + "/" + sample.Suffix,
 		LicenseType:            sample.LicenseType,
@@ -338,7 +339,8 @@ func serverTestCases() []serverTestCase {
 		Version:                "v1.0.0",
 		FormattedVersion:       "v1.0.0",
 		Suffix:                 "bar",
-		IsLatest:               false,
+		IsLatestMinor:          true,
+		IsLatestMajor:          false,
 		LatestLink:             "/github.com/v2major/module_name@v1.0.0/bar",
 		LatestMajorVersion:     "v2",
 		LatestMajorVersionLink: "/github.com/v2major/module_name/v2/bar",
@@ -351,6 +353,8 @@ func serverTestCases() []serverTestCase {
 	v2pkgV1Buz := *v2pkgV100
 	v2pkgV1Buz.Title = "buz"
 	v2pkgV1Buz.Suffix = "buz"
+	v2pkgV1Buz.IsLatestMajor = false
+	v2pkgV1Buz.IsLatestMinor = true
 	v2pkgV1Buz.LatestLink = "/github.com/v2major/module_name@v1.0.0/buz"
 	v2pkgV1Buz.LatestMajorVersionLink = "/github.com/v2major/module_name/v2"
 	v2pkgV1Buz.PackageURLFormat = "/github.com/v2major/module_name%s/buz"
@@ -361,7 +365,8 @@ func serverTestCases() []serverTestCase {
 		Version:                "v2.0.0",
 		FormattedVersion:       "v2.0.0",
 		Suffix:                 "bar",
-		IsLatest:               true,
+		IsLatestMinor:          true,
+		IsLatestMajor:          true,
 		LatestLink:             "/github.com/v2major/module_name/v2@v2.0.0/bar",
 		LatestMajorVersion:     "v2",
 		LatestMajorVersionLink: "/github.com/v2major/module_name/v2/bar",
@@ -374,13 +379,15 @@ func serverTestCases() []serverTestCase {
 	p9 := *pkgV100
 	p9.Version = "v0.9.0"
 	p9.FormattedVersion = "v0.9.0"
-	p9.IsLatest = false
+	p9.IsLatestMinor = false
+	p9.IsLatestMajor = true
 	pkgV090 := &p9
 
 	pp := *pkgV100
 	pp.Version = pseudoVersion
 	pp.FormattedVersion = "v0.0.0-...-1234567"
-	pp.IsLatest = false
+	pp.IsLatestMinor = false
+	p9.IsLatestMajor = false
 	pkgPseudo := &pp
 
 	pkgInc := &pagecheck.Page{
@@ -389,7 +396,8 @@ func serverTestCases() []serverTestCase {
 		Version:                "v1.0.0+incompatible",
 		FormattedVersion:       "v1.0.0+incompatible",
 		Suffix:                 "dir/inc",
-		IsLatest:               true,
+		IsLatestMinor:          true,
+		IsLatestMajor:          true,
 		LatestLink:             "/github.com/incompatible@v1.0.0+incompatible/dir/inc",
 		LatestMajorVersionLink: "/github.com/incompatible/dir/inc",
 		LicenseType:            "MIT",
@@ -404,7 +412,8 @@ func serverTestCases() []serverTestCase {
 		Version:                "v1.0.0",
 		FormattedVersion:       "v1.0.0",
 		Suffix:                 "bar",
-		IsLatest:               true,
+		IsLatestMinor:          true,
+		IsLatestMajor:          true,
 		LatestLink:             "/github.com/non_redistributable@v1.0.0/bar",
 		LatestMajorVersionLink: "/github.com/non_redistributable/bar",
 		LicenseType:            "",
@@ -420,6 +429,8 @@ func serverTestCases() []serverTestCase {
 		Suffix:                 "foo/directory",
 		LicenseType:            "MIT",
 		LicenseFilePath:        "LICENSE",
+		IsLatestMinor:          true,
+		IsLatestMajor:          true,
 		ModuleURL:              "/" + sample.ModulePath,
 		PackageURLFormat:       "/" + sample.ModulePath + "%s/foo/directory",
 		LatestMajorVersionLink: "/github.com/valid/module_name/foo/directory",
@@ -433,14 +444,16 @@ func serverTestCases() []serverTestCase {
 		FormattedVersion:       "v1.0.0",
 		LicenseType:            "MIT",
 		LicenseFilePath:        "LICENSE",
-		IsLatest:               true,
+		IsLatestMinor:          true,
+		IsLatestMajor:          true,
 		LatestLink:             "/" + sample.ModulePath + "@v1.0.0",
 		LatestMajorVersionLink: "/" + sample.ModulePath,
 	}
 	mp := *mod
 	mp.Version = pseudoVersion
 	mp.FormattedVersion = "v0.0.0-...-1234567"
-	mp.IsLatest = false
+	mp.IsLatestMinor = false
+	mp.IsLatestMajor = true
 
 	dirPseudo := &pagecheck.Page{
 		ModulePath:             "github.com/pseudo",
@@ -453,7 +466,8 @@ func serverTestCases() []serverTestCase {
 		FormattedVersion:       mp.FormattedVersion,
 		LicenseType:            "MIT",
 		LicenseFilePath:        "LICENSE",
-		IsLatest:               true,
+		IsLatestMinor:          true,
+		IsLatestMajor:          true,
 		PackageURLFormat:       "/github.com/pseudo%s/dir",
 	}
 
@@ -465,6 +479,8 @@ func serverTestCases() []serverTestCase {
 		Suffix:                 "cmd",
 		LicenseType:            "MIT",
 		LicenseFilePath:        "LICENSE",
+		IsLatestMajor:          true,
+		IsLatestMinor:          true,
 		ModuleURL:              "/std",
 		PackageURLFormat:       "/cmd%s",
 		LatestMajorVersionLink: "/cmd",
@@ -479,7 +495,8 @@ func serverTestCases() []serverTestCase {
 		LicenseFilePath:        sample.LicenseFilePath,
 		ModuleURL:              "/net/http",
 		PackageURLFormat:       "/net/http%s",
-		IsLatest:               true,
+		IsLatestMinor:          true,
+		IsLatestMajor:          true,
 		LatestLink:             "/net/http@go1.13",
 		LatestMajorVersionLink: "/net/http",
 	}

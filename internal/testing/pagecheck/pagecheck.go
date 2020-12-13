@@ -26,7 +26,8 @@ type Page struct {
 	Title              string
 	LicenseType        string
 	LicenseFilePath    string
-	IsLatest           bool   // is this the latest version of this module?
+	IsLatestMinor      bool   // path is in the latest minor version of this module
+	IsLatestMajor      bool   // path is in the latest major version of this series
 	LatestLink         string // href of "Go to latest" link
 	LatestMajorVersion string // is the suffix of the latest major version, empty if v0 or v1
 	// link to the latest major version for this package, or if the package does not exist
@@ -135,16 +136,16 @@ func UnitHeader(p *Page, versionedURL bool, isPackage bool) htmlcheck.Checker {
 		commitTime = time.Now().In(time.UTC).Format("Jan _2, 2006")
 	}
 
-	versionBannerClass := "UnitHeader-versionBanner"
-	if p.IsLatest {
-		versionBannerClass += "  DetailsHeader-banner--latest"
+	majorVersionBannerClass := "UnitHeader-majorVersionBanner"
+	if p.IsLatestMajor {
+		majorVersionBannerClass += "  DetailsHeader-banner--latest"
 	}
 
 	return in("header.UnitHeader",
 		in(`[data-test-id="UnitHeader-breadcrumbCurrent"]`, text(curBreadcrumb)),
 		in(`[data-test-id="UnitHeader-title"]`, text(p.Title)),
-		in(`[data-test-id="UnitHeader-versionBanner"]`,
-			attr("class", versionBannerClass),
+		in(`[data-test-id="UnitHeader-majorVersionBanner"]`,
+			attr("class", majorVersionBannerClass),
 			in("span",
 				text("The highest tagged major version is "),
 				in("a",
@@ -229,7 +230,7 @@ func LicenseDetails(ltype, bodySubstring, source string) htmlcheck.Checker {
 // versionBadge checks the latest-version badge on a header.
 func versionBadge(p *Page) htmlcheck.Checker {
 	class := "DetailsHeader-badge"
-	if p.IsLatest {
+	if p.IsLatestMinor {
 		class += "--latest"
 	} else {
 		class += "--goToLatest"

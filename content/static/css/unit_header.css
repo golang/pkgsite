@@ -99,17 +99,17 @@
 .DetailsHeader-badge--unknown {
   display: none;
 }
-.UnitHeader-versionBanner {
+.UnitHeader-majorVersionBanner {
   background-color: var(--gray-10);
   display: flex;
   margin: -0.5rem 0 1rem 0;
   padding: 0.75rem 0;
 }
 /*
- * TODO: Replace DetailsHeader-banner with UnitHeader-versionBanner in
+ * TODO: Replace DetailsHeader-banner with UnitHeader-majorVersionBanner in
  * middleware/latestversion.go after unit page is launched.
  */
-.UnitHeader-versionBanner--latest,
+.UnitHeader-majorVersionBanner--latest,
 .DetailsHeader-banner--latest {
   display: none;
 }
