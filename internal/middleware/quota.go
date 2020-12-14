@@ -151,7 +151,11 @@ func Quota(settings config.QuotaSettings, client *redis.Client) Middleware {
 					return
 				}
 			}
-			blocked, reason := enforceQuota(ctx, client, settings.QPS, r.Header.Get("X-Forwarded-For"), settings.HMACKey)
+			header := r.Header.Get("X-Godoc-Forwarded-For")
+			if header == "" {
+				header = r.Header.Get("X-Forwarded-For")
+			}
+			blocked, reason := enforceQuota(ctx, client, settings.QPS, header, settings.HMACKey)
 			recordQuotaMetric(ctx, reason)
 			if blocked && settings.RecordOnly != nil && !*settings.RecordOnly {
 				const tmr = http.StatusTooManyRequests
