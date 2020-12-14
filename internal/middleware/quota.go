@@ -13,18 +13,15 @@ import (
 	"net"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/go-redis/redis/v8"
 	rrate "github.com/go-redis/redis_rate/v9"
-	"github.com/golang/groupcache/lru"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/log"
-	"golang.org/x/time/rate"
 )
 
 var (
@@ -43,68 +40,6 @@ var (
 		TagKeys:     []tag.Key{keyQuotaBlocked},
 	}
 )
-
-// LegacyQuota implements a simple IP-based rate limiter. Each set of incoming IP
-// addresses with the same low-order byte gets qps requests per second, with the
-// given burst.
-// Information is kept in an LRU cache of size maxEntries.
-//
-// If a request is disallowed, a 429 (TooManyRequests) will be served.
-func LegacyQuota(settings config.QuotaSettings) Middleware {
-	var mu sync.Mutex
-	cache := lru.New(settings.MaxEntries)
-
-	return func(h http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			authVal := r.Header.Get(config.BypassQuotaAuthHeader)
-			for _, wantVal := range settings.AuthValues {
-				if authVal == wantVal {
-					recordQuotaMetric(r.Context(), "bypassed")
-					log.Infof(r.Context(), "Quota: accepting %q", authVal)
-					h.ServeHTTP(w, r)
-					return
-				}
-			}
-			header := r.Header.Get("X-Godoc-Forwarded-For")
-			if header == "" {
-				header = r.Header.Get("X-Forwarded-For")
-			}
-			key := ipKey(header)
-			// key is empty if we couldn't parse an IP, or there is no IP.
-			// Fail open in this case: allow serving.
-			var limiter *rate.Limiter
-			if key != "" {
-				mu.Lock()
-				if v, ok := cache.Get(key); ok {
-					limiter = v.(*rate.Limiter)
-				} else {
-					limiter = rate.NewLimiter(rate.Limit(settings.QPS), settings.Burst)
-					cache.Add(key, limiter)
-				}
-				mu.Unlock()
-			}
-			blocked := limiter != nil && !limiter.Allow()
-			var mv string
-			switch {
-			case header == "":
-				mv = "no header"
-			case key == "":
-				mv = "bad header"
-			case blocked:
-				mv = "blocked"
-			default:
-				mv = "allowed"
-			}
-			recordQuotaMetric(r.Context(), mv)
-			if blocked && settings.RecordOnly != nil && !*settings.RecordOnly {
-				const tmr = http.StatusTooManyRequests
-				http.Error(w, http.StatusText(tmr), tmr)
-				return
-			}
-			h.ServeHTTP(w, r)
-		})
-	}
-}
 
 func recordQuotaMetric(ctx context.Context, blocked string) {
 	stats.RecordWithTags(ctx, []tag.Mutator{
